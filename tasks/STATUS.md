@@ -11,8 +11,8 @@ A playable minimum where three techniques actually decide something.
 |---|---|---|---|
 | T0 | Bootstrap: pinned Godot on the large disk | done | 4.7.2-stable, SHA-512 verified |
 | T1 | Gates before the code | done | 14 gates, all in `make check` |
-| T2 | `ai_core` and the board | done | 34 tests; see the wave 07 review's hole |
-| T3 | `ai_search`: A\*, BFS, DFS, Dijkstra | done | 72 tests, 3 vectors, 300-board property |
+| T2 | `ai_core` and the board | done | reviewed three times; see the wave 07 record |
+| T3 | `ai_search`: A\*, BFS, DFS, Dijkstra | done | 3 vectors and a 300-board property check |
 | T4 | `ai_planning`: STRIPS, and a PDDL reader in Python | todo | needs T2 |
 | T5 | Dataset and training (Python) | todo | needs T2, T3 |
 | T6 | `ai_learning`: inference, and the attack/retreat decision | todo | needs T5 |
@@ -74,10 +74,37 @@ been profiled: `_cheapest` and the closed set are both linear scans, documented
 as such, and the benchmark that would justify a heap has not been run because
 the answer to needing one is `AStarGrid2D`.
 
+**What its own review then found, after all of that.** Twelve findings, in
+[docs/reviews/08-ai-search.md](../docs/reviews/08-ai-search.md), and the first
+is the one worth reading: `dijkstra.gd` carried the textbook improvement branch
+and its header called that branch "the line worth reading them for". Measured
+with a counter, it fires **0 times in 250 boards** -- against 165 for A\* on the
+same boards -- because `_cheapest` reads `g` as it is now, so the cell taken off
+is already final. The duplicate guard beside it was dead for the same reason and
+its comment was a byte-for-byte copy of A\*'s, citing A\*'s measurement as its
+own. Both are gone and the header says what is actually true, including that a
+binary heap keyed at insertion brings both straight back.
+
+Next to it, a retraction: `astar.gd` claimed a stale `f` "would send the search
+the wrong way". Freezing `f` across 241 boards changed neither the cost nor the
+expansion count, not once. The line stays, for a different and honest reason.
+
+Three more worth knowing before touching this code: **no search validated its
+start** (`from = (-1, 2)` came back `reached`, with a path walking in from
+nowhere, and the vector runner accepted it because every *step* was legal); the
+runner was **a gate with no planted case for any of its rules**, which
+`lint-selftests` cannot help with because it finds gates by the name
+`scripts/check_*.py`; and the demo **hid the thing it exists to show** -- the
+expansion rectangles buried the mud band exactly when the picture completed.
+
 **Next: T4** -- `ai_planning`: STRIPS, and a PDDL reader in Python. It is the
 first task with a Python half, so `make test-python` stops being a placeholder,
 and the first addon that must not reach into `ai_search` -- the gate for that
 has been inspecting a real addon only since wave 7.
+
+**Start T4 by reviewing T3.** Three reviews in this project have now each found
+real defects in work the previous one had passed over or never reached. That is
+the argument for the rule, not against it.
 
 ---
 
