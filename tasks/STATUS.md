@@ -18,6 +18,39 @@ A playable minimum where three techniques actually decide something.
 | T6 | `ai_learning`: inference, and the attack/retreat decision | todo | needs T5 |
 | T7 | Close the slice: docs, ADRs, `make release` | todo | needs T3, T4, T6 |
 
+## Milestone 2 — three games, three families of technique
+
+Each game is chosen for the technique it makes obvious. The order is not
+arbitrary: strategy finishes what T4 starts, stealth is the cheapest to build
+and teaches the most per hour, and the fighting game is last of the three
+because hitboxes and frame timing are a great deal of work that is not AI.
+
+| # | Task | State | Notes |
+|---|---|---|---|
+| T8 | A board you can read | todo | T2's manual check failed; five measured defects |
+| T9 | Art that is not a coloured square | todo | CC0 now, generated later, and an ADR |
+| T10 | The tactical scenario | todo | five units, two towers, terrain that matters |
+| T11 | The planner plays | todo | STRIPS drives a faction; needs T4 |
+| T12 | Three difficulties, honestly | todo | horizon and depth, never cheating |
+| T13 | `ai_fuzzy`, from a library that already exists | todo | ported, not reinvented |
+| T14 | The stealth scenario | todo | perception, suspicion, influence maps |
+| T15 | `ai_behaviour`: the three ways to decide | todo | FSM, tree, GOAP, beside STRIPS |
+| T16 | The fighting scenario | todo | mostly not AI, and says so |
+| T17 | The opponent model | todo | n-grams you can print |
+| T18 | Behaviour cloning, and what a learned model buys | todo | the comparison is the task |
+
+## Milestone 3 — real time, last
+
+Deliberately last. It needs the content of T10, the difficulty knobs of T12, a
+second state core, and everything the three earlier games taught about making
+an AI legible. Built first it would have been a large pile of code with no
+lesson in it.
+
+| # | Task | State | Notes |
+|---|---|---|---|
+| T19 | The real-time core | todo | starts by trying to prove itself unnecessary |
+| T20 | The RTS demo | todo | build orders against the clock, fog of war |
+
 ---
 
 ## Resuming after 2026-10-12 (wave 8)
@@ -106,6 +139,20 @@ has been inspecting a real addon only since wave 7.
 **Start T4 by reviewing T3.** Three reviews in this project have now each found
 real defects in work the previous one had passed over or never reached. That is
 the argument for the rule, not against it.
+
+**Milestones 2 and 3 are written and queued**, thirteen task files from a
+board you can read through to an RTS. Three decisions are already taken and are
+in the task files rather than left to be rediscovered: the strategy game is
+**turn-based first**, because `BoardState.apply` copies the units into a new
+state and that is right for search and wrong for two hundred units at sixty
+frames a second; art is **CC0 now and generated later**, because hours spent
+fighting a diffusion model are hours not spent on the AI; and the **RTS is
+last**, after all three games.
+
+**T8 is first, and it exists because the manual check worked.** The owner ran
+`make run` and could not tell what he was looking at. That is T2's
+`## Manual check` doing exactly what it is for, and the task file carries the
+five measured reasons rather than "make it nicer".
 
 **One finding is open and waiting on the owner**, recorded at the end of
 [the wave 07 review](../docs/reviews/07-ai-core-and-the-board.md): eleven of the
