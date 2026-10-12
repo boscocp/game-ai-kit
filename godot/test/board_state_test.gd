@@ -179,6 +179,107 @@ func test_the_state_does_not_alias_the_units_it_was_given() -> void:
 	assert_int(state.units.size()).is_equal(1)
 
 
+func test_a_move_naming_a_unit_that_is_not_there_is_refused() -> void:
+	var state: BoardState = _two_unit_board()
+
+	assert_str(state.why_refused(Move.new(99, _walk_east(Vector2i(1, 1), 1)))).contains(
+		"no unit with id 99"
+	)
+	assert_object(state.apply(Move.new(99, _walk_east(Vector2i(1, 1), 1)))).is_null()
+
+
+func test_applying_a_move_keeps_whose_turn_it_is_and_the_turn_number() -> void:
+	# The copy used to be built without either, and nothing noticed: a search
+	# one move deep would have handed the turn to faction 0 and reset the
+	# episode counter.
+	var state: BoardState = _two_unit_board().end_turn().end_turn()
+	var next: BoardState = state.apply(Move.new(1, _walk_east(Vector2i(1, 1), 1)))
+
+	assert_int(next.current_faction).is_equal(state.current_faction)
+	assert_int(next.turn_number).is_equal(state.turn_number)
+
+
+func test_end_turn_leaves_the_original_state_untouched() -> void:
+	# Immutability was tested for apply and not for end_turn, so end_turn could
+	# have been rewriting the state a search was still holding.
+	var state: BoardState = _two_unit_board()
+	var after: BoardState = state.end_turn()
+
+	assert_int(state.current_faction).is_equal(RED)
+	assert_int(state.turn_number).is_equal(0)
+	assert_int(after.current_faction).is_equal(BLUE)
+
+
+func test_end_turn_honours_the_faction_count_and_the_points_it_is_given() -> void:
+	# Both arguments had defaults, no caller in a test, and no assertion.
+	var state: BoardState = _two_unit_board()
+	var three_sided: BoardState = state.end_turn(3, 7)
+
+	assert_int(three_sided.current_faction).is_equal(1)
+	assert_int(three_sided.unit_by_id(2).movement_points).is_equal(7)
+	assert_int(three_sided.end_turn(3, 7).current_faction).is_equal(2)
+	assert_int(three_sided.end_turn(3, 7).end_turn(3, 7).current_faction).is_equal(0)
+
+
+func test_end_turn_with_no_factions_does_not_divide_by_zero() -> void:
+	# `% 0` is an engine error that returned null from the one type whose apply
+	# argues that refusing with an error in the log is worse than refusing with
+	# a value.
+	var after: BoardState = _two_unit_board().end_turn(0)
+
+	assert_object(after).is_not_null()
+	assert_int(after.current_faction).is_equal(0)
+
+
+func test_a_unit_may_walk_back_over_its_own_starting_cell() -> void:
+	# The exemption that allows this is what makes a loop legal, and nothing
+	# was testing it.
+	var state: BoardState = _two_unit_board()
+	var loop: Array[Vector2i] = [Vector2i(2, 1), Vector2i(1, 1)]
+
+	assert_str(state.why_refused(Move.new(1, loop))).is_equal(BoardState.LEGAL)
+	assert_vector(state.apply(Move.new(1, loop)).unit_by_id(1).cell).is_equal(Vector2i(1, 1))
+
+
+func test_two_units_sharing_an_id_cannot_walk_through_each_other() -> void:
+	# They could, and they stacked on one cell: the occupancy rule exempted
+	# "the same unit" by comparing ids rather than identity.
+	var graph := GridGraph.new(6, 3)
+	var twins: Array[Unit] = [
+		Unit.new(1, RED, Vector2i(1, 1)),
+		Unit.new(1, RED, Vector2i(3, 1)),
+	]
+	var state := BoardState.new(graph, twins, RED)
+
+	assert_str(state.why_refused(Move.new(1, _walk_east(Vector2i(1, 1), 2)))).contains(
+		"occupied"
+	)
+
+
+func test_a_cheap_cell_cannot_refund_movement() -> void:
+	var state: BoardState = _two_unit_board()
+	state.graph.set_cost(Vector2i(2, 1), -5)
+	var before: int = state.unit_by_id(1).movement_points
+
+	var next: BoardState = state.apply(Move.new(1, _walk_east(Vector2i(1, 1), 1)))
+
+	assert_int(next.unit_by_id(1).movement_points).is_less(before)
+
+
+func test_neither_faction_may_move_out_of_turn() -> void:
+	# Only one direction was tested, so the faction check could be loosened
+	# from "not equal" to "greater than" with the suite still green.
+	var red_to_move: BoardState = _two_unit_board()
+	var blue_to_move: BoardState = red_to_move.end_turn()
+
+	assert_str(red_to_move.why_refused(Move.new(2, _walk_east(Vector2i(4, 1), 1)))).contains(
+		"faction"
+	)
+	assert_str(blue_to_move.why_refused(Move.new(1, _walk_east(Vector2i(1, 1), 1)))).contains(
+		"faction"
+	)
+
+
 # A 6x3 board of flat ground, red's unit 1 at (1, 1) and blue's unit 2 at (4, 1).
 func _two_unit_board() -> BoardState:
 	var graph := GridGraph.new(6, 3)

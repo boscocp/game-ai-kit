@@ -9,6 +9,7 @@
 ## What the screen has to make obvious, and what the manual check in T2 asks
 ## for: whose turn it is, which unit is selected, where it may go, and why a
 ## refused move was refused.
+class_name BoardGame
 extends Node2D
 
 const COLUMNS: int = 12
@@ -61,6 +62,20 @@ func _click_cell(cell: Vector2i) -> void:
 func _try_step(cell: Vector2i) -> void:
 	var unit: Unit = _state.unit_by_id(_selected_id)
 	if unit == null:
+		_last_refusal = "nothing is selected -- click one of your own units first"
+		_refresh()
+		return
+	# Without this, a click on the far side of the board was refused with "a
+	# step is one cell, no diagonals", which is true of the move this scene
+	# built and is not the reason it could not be made. The reason is that this
+	# scene cannot build a route at all, and the player deserves to be told
+	# that rather than a rule they did not break.
+	if not GridGraph.DIRECTIONS.has(cell - unit.cell):
+		_last_refusal = (
+			"that is more than one step away, and this scene moves one cell "
+			+ "at a time -- routes arrive with ai_search in T3"
+		)
+		_refresh()
 		return
 	var path: Array[Vector2i] = [cell]
 	var move := Move.new(unit.id, path)

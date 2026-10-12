@@ -53,3 +53,75 @@ func test_a_duplicate_does_not_share_terrain() -> void:
 
 	assert_bool(graph.is_blocked(Vector2i(0, 0))).is_false()
 	assert_bool(copy.is_blocked(Vector2i(0, 0))).is_true()
+
+func test_a_cost_below_one_is_clamped_and_blocked_stays_blocked() -> void:
+	# A negative cost used to be accepted, and a move across it refunded
+	# movement: a unit with three points finished a move with eight.
+	var graph := GridGraph.new(3, 3)
+	graph.set_cost(Vector2i(1, 1), -5)
+	assert_int(graph.cost_at(Vector2i(1, 1))).is_equal(GridGraph.DEFAULT_COST)
+
+	graph.set_cost(Vector2i(2, 2), 0)
+	assert_int(graph.cost_at(Vector2i(2, 2))).is_equal(GridGraph.DEFAULT_COST)
+
+	# BLOCKED is the one value outside the range, and stays itself.
+	graph.block(Vector2i(0, 0))
+	assert_int(graph.cost_at(Vector2i(0, 0))).is_equal(GridGraph.BLOCKED)
+
+
+func test_the_constructors_cost_reaches_every_cell() -> void:
+	# The third parameter had no caller and no test, which is how a parameter
+	# quietly stops working.
+	var rough := GridGraph.new(2, 2, 4)
+
+	assert_int(rough.cost_at(Vector2i(0, 0))).is_equal(4)
+	assert_int(rough.cost_at(Vector2i(1, 1))).is_equal(4)
+
+
+func test_terrain_lands_on_the_cell_it_was_put_on() -> void:
+	# The board is row-major, and on a square board a transposed index is
+	# invisible: every test passed with the indexing swapped. A board that is
+	# not square is what tells them apart.
+	var graph := GridGraph.new(4, 2)
+	graph.set_cost(Vector2i(3, 0), 7)
+
+	assert_int(graph.cost_at(Vector2i(3, 0))).is_equal(7)
+	assert_int(graph.cost_at(Vector2i(0, 1))).is_equal(GridGraph.DEFAULT_COST)
+	assert_bool(graph.contains(Vector2i(3, 1))).is_true()
+	assert_bool(graph.contains(Vector2i(0, 2))).is_false()
+
+
+func test_the_directions_are_the_four_cardinals_in_a_declared_order() -> void:
+	# The order is documented as a contract -- a search that breaks ties by
+	# insertion order must behave the same on every machine -- and reversing it
+	# left every test green.
+	assert_int(GridGraph.DIRECTIONS.size()).is_equal(4)
+	assert_vector(GridGraph.DIRECTIONS[0]).is_equal(Vector2i(0, -1))
+	assert_vector(GridGraph.DIRECTIONS[1]).is_equal(Vector2i(1, 0))
+	assert_vector(GridGraph.DIRECTIONS[2]).is_equal(Vector2i(0, 1))
+	assert_vector(GridGraph.DIRECTIONS[3]).is_equal(Vector2i(-1, 0))
+
+
+func test_neighbours_come_back_in_that_same_order() -> void:
+	var found: Array[Vector2i] = GridGraph.new(3, 3).neighbours(Vector2i(1, 1))
+
+	assert_vector(found[0]).is_equal(Vector2i(1, 0))
+	assert_vector(found[1]).is_equal(Vector2i(2, 1))
+	assert_vector(found[2]).is_equal(Vector2i(1, 2))
+	assert_vector(found[3]).is_equal(Vector2i(0, 1))
+
+
+func test_writing_off_the_board_changes_nothing_on_it() -> void:
+	var graph := GridGraph.new(2, 2)
+	graph.set_cost(Vector2i(5, 5), 9)
+	graph.set_cost(Vector2i(-1, 0), 9)
+
+	assert_int(graph.cost_at(Vector2i(0, 0))).is_equal(GridGraph.DEFAULT_COST)
+	assert_int(graph.cost_at(Vector2i(1, 1))).is_equal(GridGraph.DEFAULT_COST)
+
+
+func test_a_negative_height_is_clamped_like_a_negative_width() -> void:
+	var graph := GridGraph.new(3, -4)
+
+	assert_int(graph.height).is_equal(0)
+	assert_bool(graph.contains(Vector2i(0, 0))).is_false()

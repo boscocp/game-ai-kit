@@ -59,7 +59,8 @@ lint-review: ## This branch has a review record and may be merged
 # --- the gate --------------------------------------------------------------
 
 .PHONY: check
-check: check-no-engine lint-disk-layout test-godot ## Run every gate
+check: check-no-engine lint-disk-layout test-godot test-vectors \
+       test-search-properties ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability \
@@ -146,6 +147,18 @@ lint-selftests: ## Run every gate's own --self-test
 .PHONY: test-python
 test-python: ## Python unit tests (stdlib only, no install step)
 	@$(PYTHON) -m unittest discover -s python/tests -t python -q
+
+.PHONY: test-vectors
+test-vectors: ## The conformance vectors in spec/, against the addon
+	@# The vectors live outside the Godot project so the Python side can be
+	@# held to the same answers. Godot reads an absolute path in a
+	@# non-exported build, so the directory goes in after `--`.
+	@$(GODOT) --headless --path godot -s res://test/vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/search
+
+.PHONY: test-search-properties
+test-search-properties: ## A* agrees with Dijkstra, over a few hundred boards
+	@$(GODOT) --headless --path godot -s res://test/search_properties.gd
 
 .PHONY: test-godot
 test-godot: ## Godot tests, headless (gdUnit4)

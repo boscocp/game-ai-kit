@@ -79,3 +79,14 @@ jobs:
       - run: make lint-disk-layout
         env:
           GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
+
+      # The conformance vectors and the A* property run here rather than in the
+      # gates job: both need the engine. They are separate steps so a failure
+      # names which one, and they are in `make check` too -- check_workflow.py
+      # refuses a gate in `check` that CI never reaches.
+      - run: make test-vectors
+        env:
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
+      - run: make test-search-properties
+        env:
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain

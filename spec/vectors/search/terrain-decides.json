@@ -1,0 +1,16 @@
+{
+  "name": "terrain decides",
+  "why": "The straight route is the short one and the dear one. Breadth-first cannot see cost and takes it; Dijkstra and A* go round. This is the whole reason the kit has more than one search.",
+  "costs": [
+    [1, 1, 1, 1, 1],
+    [1, 9, 9, 9, 1],
+    [1, 1, 1, 1, 1]
+  ],
+  "from": [0, 1],
+  "to": [4, 1],
+  "expect": {
+    "reached": true,
+    "cheapest_cost": 6,
+    "fewest_steps": 4
+  }
+}

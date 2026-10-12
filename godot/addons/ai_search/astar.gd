@@ -78,9 +78,10 @@ func _relax(graph: GridGraph, current: Vector2i, goal: Vector2i,
 ## than one to enter**: a route cannot be shorter than the number of steps, and
 ## each step costs at least one, so the guess cannot exceed the truth.
 ##
-## Set a terrain cost of zero anywhere and that stops being true -- the guess
-## may then exceed what the route really costs, A* may return a dearer path
-## than Dijkstra, and the conformance vectors assume it does not. This sentence
-## is the warning; `GridGraph` does not forbid a zero.
+## That condition used to be a warning in this comment, with nothing behind it.
+## It is now a rule in `GridGraph.set_cost`, which clamps any cost below one to
+## one and keeps `BLOCKED` as the only value outside the range. A board that
+## would break this heuristic can no longer be built, which is a better place
+## for the condition than a paragraph nobody reads at the moment they need it.
 func heuristic(cell: Vector2i, goal: Vector2i) -> int:
 	return absi(cell.x - goal.x) + absi(cell.y - goal.y)

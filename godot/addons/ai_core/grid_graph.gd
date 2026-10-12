@@ -53,7 +53,7 @@ func _init(grid_width: int, grid_height: int, cost: int = DEFAULT_COST) -> void:
 	height = maxi(grid_height, 0)
 	_costs = PackedInt32Array()
 	_costs.resize(width * height)
-	_costs.fill(cost)
+	_costs.fill(cost if cost == BLOCKED else maxi(cost, DEFAULT_COST))
 
 
 ## True when the cell is on the board at all.
@@ -75,10 +75,17 @@ func cost_at(cell: Vector2i) -> int:
 
 
 ## Set what it costs to enter this cell. Off-board is ignored, not an error.
+##
+## A cost is `BLOCKED` or at least `DEFAULT_COST`; anything between is clamped.
+## That is not tidiness. A negative cost used to be accepted, and then a move
+## across it *refunded* movement -- a unit with three points finished a move
+## with eight. It also broke the one guarantee A* offers: Manhattan distance is
+## admissible exactly because no step can cost less than one, and `astar.gd`
+## used to carry that as a warning in prose. It is a rule here now instead.
 func set_cost(cell: Vector2i, cost: int) -> void:
 	if not contains(cell):
 		return
-	_costs[cell.y * width + cell.x] = cost
+	_costs[cell.y * width + cell.x] = cost if cost == BLOCKED else maxi(cost, DEFAULT_COST)
 
 
 ## Make this cell impassable.

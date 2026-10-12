@@ -1,0 +1,14 @@
+{
+  "name": "walled off",
+  "why": "The goal is sealed behind a complete wall. Every search must say so rather than returning a path that cannot be walked, and must still report the region it did explore -- a failed search's expansion is the picture of what is reachable.",
+  "costs": [
+    [1, 1, -1, 1, 1],
+    [1, 1, -1, 1, 1],
+    [1, 1, -1, 1, 1]
+  ],
+  "from": [0, 1],
+  "to": [4, 1],
+  "expect": {
+    "reached": false
+  }
+}
