@@ -15,3 +15,11 @@ __pycache__/
 # Generated model weights live in dist/, never committed from a local run.
 # The checked-in weights.json under godot/addons/ai_learning/ is produced by
 # `make train` and committed deliberately, so it is NOT ignored here.
+
+# gdUnit4 writes HTML/XML reports next to the project on every run.
+godot/reports/
+
+# gdUnit4 is installed by `make bootstrap`, not vendored. 509 files of someone
+# else's code would dominate the history of a repository whose point is that
+# you can read it. See docs/adr/0004.
+godot/addons/gdUnit4/

@@ -46,6 +46,16 @@ import zipfile
 REQUIRED_FILES = ("LICENSE", "NOTICE")
 COPYRIGHT_HOLDER = "Adalberto Pereira"
 
+# Third-party addons vendored into godot/addons/. They carry their own licence
+# and must NOT carry this project's NOTICE -- putting our NOTICE in someone
+# else's folder is a false attribution claim, not a formality.
+#
+# Declared one by one on purpose. Inferring "not ours" from the absence of a
+# file would mean a folder dropped in by accident silently stops being checked.
+VENDORED = {
+    "gdUnit4": "MIT -- github.com/godot-gdunit-labs/gdUnit4, pinned in .pinned-version",
+}
+
 
 def check_root(repo: pathlib.Path) -> list[str]:
     """Report a missing or hollow LICENSE/NOTICE at the repository root."""
@@ -75,6 +85,20 @@ def check_addons(repo: pathlib.Path) -> list[str]:
         # is work in progress and not shippable yet.
         if not (addon / "plugin.cfg").exists():
             continue
+
+        if addon.name in VENDORED:
+            # Someone else's code: it keeps its own licence and must not wear
+            # ours. Both halves are asserted, so a vendored addon cannot be
+            # used as a way to ship unlicensed code either.
+            if not (addon / "LICENSE").exists():
+                findings.append(f"L6 vendored {addon.name} has no licence of its own")
+            if (addon / "NOTICE").exists():
+                findings.append(
+                    f"L7 vendored {addon.name} carries this project's NOTICE; "
+                    "that claims authorship we do not have"
+                )
+            continue
+
         for name in REQUIRED_FILES:
             if not (addon / name).exists():
                 findings.append(f"L4 {addon.name} would ship without {name}")
@@ -159,6 +183,23 @@ def self_test() -> int:
         draft = make_repo(root / "draft")
         (draft / "godot" / "addons" / "ai_llm").mkdir(parents=True)
         expect("addon without plugin.cfg", quiet(draft), 0)
+
+        # A declared third-party addon keeps its own licence and skips ours.
+        vendored_name = next(iter(VENDORED))
+        vendored_ok = make_repo(root / "vendored-ok")
+        bundled = make_addon(vendored_ok, vendored_name, with_files=False)
+        (bundled / "LICENSE").write_text("MIT License\n")
+        expect("vendored addon with its own licence", quiet(vendored_ok), 0)
+
+        # Planted: vendored code shipped with no licence at all.
+        vendored_bare = make_repo(root / "vendored-bare")
+        make_addon(vendored_bare, vendored_name, with_files=False)
+        expect("vendored addon with no licence", quiet(vendored_bare), 1)
+
+        # Planted: our NOTICE dropped into someone else's addon.
+        vendored_claimed = make_repo(root / "vendored-claimed")
+        claimed = make_addon(vendored_claimed, vendored_name, with_files=True)
+        expect("our NOTICE inside a vendored addon", quiet(vendored_claimed), 1)
 
         # Planted: a release zip that lost the attribution.
         shipped = make_repo(root / "shipped")

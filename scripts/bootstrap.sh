@@ -22,6 +22,7 @@ if [[ "${1:-}" == "--self-test" ]]; then
   exit 0
 fi
 
+here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 toolchain=${1:?usage: bootstrap.sh TOOLCHAIN_DIR GODOT_VERSION}
 version=${2:?usage: bootstrap.sh TOOLCHAIN_DIR GODOT_VERSION}
 
@@ -63,5 +64,28 @@ mkdir -p "$toolchain/xdg"
 # Create editor_data/ now so check_disk_layout.py can assert ._sc_ is honoured
 # without waiting for someone to open the editor.
 env XDG_DATA_HOME="$toolchain/xdg" "$binary" --headless --version >/dev/null
+
+# gdUnit4: the test framework, installed rather than vendored. Pinned by tag
+# and verified by SHA-256 -- the project publishes no release assets, so the
+# source archive is what there is to pin.
+gdunit_tag="v6.2.2"
+gdunit_sha="ddb44730ffb9cd77fd70d283753450759b00c5016143d7572bf63625f64d5433"
+gdunit_dest="$here/godot/addons/gdUnit4"
+
+if [[ -f "$gdunit_dest/.pinned-version" ]] && grep -q "$gdunit_tag" "$gdunit_dest/.pinned-version"; then
+  echo "bootstrap: gdUnit4 $gdunit_tag already installed"
+else
+  echo "bootstrap: downloading gdUnit4 $gdunit_tag"
+  work=$(mktemp -d)
+  trap 'rm -rf "$work"' EXIT
+  curl -fsSL -o "$work/gdunit4.zip" \
+    "https://github.com/godot-gdunit-labs/gdUnit4/archive/refs/tags/${gdunit_tag}.zip"
+  echo "$gdunit_sha  $work/gdunit4.zip" | sha256sum -c -
+  unzip -q "$work/gdunit4.zip" -d "$work"
+  rm -rf "$gdunit_dest"
+  mkdir -p "$(dirname "$gdunit_dest")"
+  mv "$work"/gdUnit4-*/addons/gdUnit4 "$gdunit_dest"
+  printf '%s\nsha256:%s\n' "$gdunit_tag" "$gdunit_sha" > "$gdunit_dest/.pinned-version"
+fi
 
 echo "bootstrap: ok -- $("$binary" --headless --version)"

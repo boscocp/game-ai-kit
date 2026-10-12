@@ -10,13 +10,67 @@ A playable minimum where three techniques actually decide something.
 | # | Task | State | Notes |
 |---|---|---|---|
 | T0 | Bootstrap: pinned Godot on the large disk | **done** | 4.7.2-stable, SHA-512 verified |
-| T1 | Gates before the code | wip | 5 of ~12 written |
+| T1 | Gates before the code | wip | 5 of ~12 written; gdUnit4 wired |
 | T2 | `ai_core` and the board | todo | grid, units, turns, no AI |
 | T3 | `ai_search`: A\*, BFS, DFS, Dijkstra | todo | needs T2 |
 | T4 | `ai_planning`: STRIPS, and a PDDL reader in Python | todo | needs T2 |
 | T5 | Dataset and training (Python) | todo | needs T2, T3 |
 | T6 | `ai_learning`: inference, and the attack/retreat decision | todo | needs T5 |
 | T7 | Close the slice: docs, ADRs, `make release` | todo | needs T3, T4, T6 |
+
+---
+
+## Resuming after 2026-10-12 (wave 2)
+
+**What landed.** gdUnit4 v6.2.2 installed by `make bootstrap`, pinned by tag and
+verified by SHA-256. Two tests in `godot/test/smoke_test.gd`, and
+`make test-godot` is now part of `make check`. The licence gate learned to tell
+a third-party addon from one of ours.
+
+**A decision reversed before it became history.** gdUnit4 was first vendored
+into the repository. Staging it showed **509 files** of someone else's code
+about to enter a repository whose premise is that you can read it. Switched to
+install-at-bootstrap and gitignored; `docs/adr/0004` records why, including the
+alternatives (submodule, writing a small runner) and what it costs: a fresh
+clone must bootstrap before it can test.
+
+**Three things the previous section got wrong, found by running them.**
+
+1. `make test-godot` did not work. It ran `--path godot --quit` on a project
+   with no main scene, which exits 1 -- and, despite `--headless`, popped a
+   **zenity dialog** on the desktop. Replaced with a script entry point.
+2. A rule was about to be written claiming Godot's exit code carries no
+   information. Measured instead, and it is false: a parse error exits 1 and
+   `quit(3)` exits 3. Godot propagates. The rule was not written.
+3. gdUnit4 **refuses headless mode** unless given `--ignoreHeadlessMode`,
+   because Godot does not deliver `InputEvent` there. That is now a standing
+   constraint: a test in this repo must never depend on simulated input.
+
+**What the licence gate found.** Vendoring gdUnit4 made `check_license.py` fire:
+it would have required this project's NOTICE inside someone else's addon. The
+gate now has a declared `VENDORED` table -- a vendored addon must carry its own
+licence and must **not** carry ours, since our NOTICE in their folder claims
+authorship we do not have. Declared one by one, never inferred.
+
+**Still not proven.** The test suite has two tests and neither touches a line of
+this project's own code, because none exists yet. What proves the runner can
+fail is the planted failure: changing `2 + 2 == 4` to `== 5` gives exit 100, and
+restoring it gives 0. Re-run that before trusting any future green.
+
+**Known dangling reference.** `NOTICE` and `README.md` point at
+`https://github.com/boscocp/game-ai-kit`, which returns 404 -- the repository is
+local only, with no remote and nothing published. When `check_links.py` lands it
+will flag this; the URL is the intended home, so it belongs in the link
+exceptions file with that reason, not removed.
+
+**Next:** the gates still missing -- `check_acceptance.py`, `check_status.py`,
+`check_readability.py`, `check_no_employer_refs.py`, `check_tiers.py`,
+`check_doc_freshness.py`, `check_addon_deps.py`, `check_links.py`,
+`check_workflow.py` -- then CONTRIBUTING.md and the CI workflow. Note that
+`desk-panel`'s `check_acceptance.py` has no `--self-test`; the port must gain
+one, and its non-terminating-command rules need replacing (they are about `adb`
+and a Python server; here the equivalent is a Godot invocation without
+`--headless`).
 
 ---
 

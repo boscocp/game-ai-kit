@@ -30,7 +30,7 @@ bootstrap: ## Install the pinned Godot on the large disk (SHA-verified)
 # --- the gate --------------------------------------------------------------
 
 .PHONY: check
-check: lint-disk-layout lint-renderer lint-license lint-selftests test-python ## Run every gate
+check: lint-disk-layout lint-renderer lint-license lint-selftests test-python test-godot ## Run every gate
 
 .PHONY: lint-disk-layout
 lint-disk-layout: ## Nothing of the toolchain may land on the small disk
@@ -65,8 +65,12 @@ test-python: ## Python unit tests (stdlib only, no install step)
 	@$(PYTHON) -m unittest discover -s python/tests -t python -q
 
 .PHONY: test-godot
-test-godot: ## Godot tests, headless
-	@$(GODOT) --headless --path godot --quit
+test-godot: ## Godot tests, headless (gdUnit4)
+	@# --ignoreHeadlessMode is required: gdUnit4 refuses headless by default
+	@# because Godot does not deliver InputEvents there. Tests in this repo
+	@# must therefore never depend on simulated input -- they assert logic.
+	@$(GODOT) --headless --path godot \
+		-s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -a test
 
 # --- housekeeping ----------------------------------------------------------
 
