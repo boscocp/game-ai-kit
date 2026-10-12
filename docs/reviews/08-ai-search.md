@@ -88,7 +88,13 @@ property script. Breadth-first and depth-first differ by exactly the pop.
 ## What was done about them
 
 All twelve are fixed in `a68860e`, with four tests closing the survivors that
-were not dead code, and the pop-site comments in `3b07b3e`.
+were not dead code. The pop-site comments discussed at the end of this section
+landed in the same commit as this record.
+
+(The first version of this paragraph cited a commit hash for those comments.
+The hash did not exist — it was written before the commit was made and never
+checked. It is corrected here rather than quietly dropped, because a plausible
+identifier that resolves to nothing is worse than no identifier at all.)
 
 Dijkstra lost both inert rules, and its header now says the thing worth knowing:
 it does not revisit **here** because of how this frontier is built, and a binary
