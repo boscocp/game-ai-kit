@@ -127,6 +127,24 @@ Findings that survive both steps go in `docs/godot/`, with the source URL and a
 - **A test runner that finds nothing also exits 0.** `python/tests` needs its
   `__init__.py` for `discover -t python` to import it; without it the suite
   errors, and the day it stops erroring it may simply be finding nothing.
+- **A new `class_name` is invisible until the project is imported.** Write a new
+  `.gd` with a `class_name`, run `make test-godot`, and every file that uses it
+  fails with `Could not find type "X" in the current scope` — which reads like a
+  typo and is not one. The global class list is a cache under `godot/.godot/`.
+  Run `./scripts/godot --headless --path godot --import` once after adding a
+  class, and the `.uid` file it writes beside the script is committed with it.
+- **A failing gdUnit4 suite hides the tests after it.** It stops at the first
+  failing test in that file, and the ones it never ran are not counted as
+  skipped. So the case count in a *red* run is not the number of tests in the
+  file. Measured on v6.2.2; see `docs/godot/addon-anatomy.md`.
+- **The forbidden-term list is untracked and a checkout can delete it.**
+  `scripts/forbidden-term-hashes.txt` is gitignored (ADR 0005), but it was
+  *tracked* until wave 6 — so checking out anything older and coming back
+  removes it from disk, and `check_no_employer_refs.py` then cheerfully reports
+  that it checked nothing. The note it prints on every run is the only warning
+  you get. Restore it with
+  `git show d11fc91:scripts/forbidden-term-hashes.txt > scripts/forbidden-term-hashes.txt`,
+  or rebuild it with `--add-term`.
 
 ## How to resume work
 
