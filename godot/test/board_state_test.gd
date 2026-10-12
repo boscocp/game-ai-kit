@@ -192,11 +192,17 @@ func test_applying_a_move_keeps_whose_turn_it_is_and_the_turn_number() -> void:
 	# The copy used to be built without either, and nothing noticed: a search
 	# one move deep would have handed the turn to faction 0 and reset the
 	# episode counter.
-	var state: BoardState = _two_unit_board().end_turn().end_turn()
-	var next: BoardState = state.apply(Move.new(1, _walk_east(Vector2i(1, 1), 1)))
+	# Blue's turn, deliberately: the first version of this test ran two turns
+	# and ended back on faction 0, so a copy that hardcoded 0 passed it. A test
+	# whose expected value is also the broken value is measuring nothing.
+	var state: BoardState = _two_unit_board().end_turn()
+	assert_int(state.current_faction).is_equal(BLUE)
 
-	assert_int(next.current_faction).is_equal(state.current_faction)
+	var next: BoardState = state.apply(Move.new(2, _walk_east(Vector2i(4, 1), 1)))
+
+	assert_int(next.current_faction).is_equal(BLUE)
 	assert_int(next.turn_number).is_equal(state.turn_number)
+	assert_int(next.turn_number).is_equal(1)
 
 
 func test_end_turn_leaves_the_original_state_untouched() -> void:

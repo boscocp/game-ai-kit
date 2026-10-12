@@ -60,6 +60,13 @@ func _init(grid_width: int, grid_height: int, cost: int = DEFAULT_COST) -> void:
 ##
 ## Separate from `is_blocked` deliberately: off-board and blocked are different
 ## failures, and a caller that cannot tell them apart writes a worse message.
+##
+## Both bounds matter, and the lower one is not symmetry. Deleting the
+## `cell.y < height` test and running the suite does not produce a failure: it
+## produces a **hang**. `neighbours` then hands back cells below the board, the
+## searches walk downwards forever, and the run burns its timeout instead of
+## reporting anything. A test that cannot fail is bad; one that cannot finish is
+## worse, because on CI it looks like a slow job rather than a broken one.
 func contains(cell: Vector2i) -> bool:
 	return cell.x >= 0 and cell.y >= 0 and cell.x < width and cell.y < height
 
