@@ -65,6 +65,12 @@ static func _living_copies(given: Array[Unit]) -> Array[Unit]:
 
 
 ## The unit with this id, or null.
+##
+## Ids are the caller's to keep unique, and nothing here enforces it: a board
+## built with two units sharing an id answers with the first and the second
+## becomes unmovable, because `apply` resolves the mover through here. Measured,
+## not assumed. It is a scenario bug rather than a state this type can refuse,
+## and it is written down so the search in T3 does not have to rediscover it.
 func unit_by_id(unit_id: int) -> Unit:
 	for unit: Unit in units:
 		if unit.id == unit_id:

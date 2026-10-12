@@ -44,8 +44,13 @@ var _costs: PackedInt32Array
 
 
 func _init(grid_width: int, grid_height: int, cost: int = DEFAULT_COST) -> void:
-	width = grid_width
-	height = grid_height
+	# A negative dimension is a caller's arithmetic going wrong, and the first
+	# version passed it straight to `resize`, which logged an engine error and
+	# left a graph reporting `width = -2`. An empty board is the one honest
+	# reading of "minus two columns": nothing is on it, every cell is off it,
+	# and no error is written to a log nobody is reading.
+	width = maxi(grid_width, 0)
+	height = maxi(grid_height, 0)
 	_costs = PackedInt32Array()
 	_costs.resize(width * height)
 	_costs.fill(cost)

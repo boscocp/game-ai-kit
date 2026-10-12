@@ -35,6 +35,17 @@ func test_blocked_is_not_merely_expensive() -> void:
 	assert_int(graph.cost_at(Vector2i(1, 1))).is_equal(GridGraph.BLOCKED)
 
 
+func test_a_negative_dimension_gives_an_empty_board_and_no_engine_error() -> void:
+	# Passing the negative straight to resize logged an engine error and left a
+	# graph claiming `width = -2`: broken, and quiet about it.
+	var graph := GridGraph.new(-2, 3)
+
+	assert_int(graph.width).is_equal(0)
+	assert_bool(graph.contains(Vector2i(0, 0))).is_false()
+	assert_int(graph.cost_at(Vector2i(0, 0))).is_equal(GridGraph.BLOCKED)
+	assert_int(graph.neighbours(Vector2i(0, 0)).size()).is_equal(0)
+
+
 func test_a_duplicate_does_not_share_terrain() -> void:
 	var graph := GridGraph.new(2, 2)
 	var copy: GridGraph = graph.duplicate_graph()
