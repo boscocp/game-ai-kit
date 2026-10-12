@@ -30,10 +30,17 @@ does not hold: a rule violated twice becomes a script.
 10. **Nothing from the author's employer enters this repo** — no name, no
     internal measurement, no file copied from a private repository, no
     work-domain example. The examples here are games.
+11. **One branch per wave, and the review lands before the merge.** Not after.
+    The reviewer is a context that did not write the code — the same head
+    writing the code, the test and the check is the symmetry everything else
+    here exists to break. `.githooks/pre-commit` refuses a commit on `main`,
+    and `make wave-merge` refuses a branch with no review record.
 
 ## Commands
 
 ```bash
+make wave-start BRANCH=wave/NN-slug   # cut a branch from a current main
+make wave-merge                       # merge it, once reviewed
 make bootstrap     # install the pinned Godot on the large disk, SHA-verified
 make check         # every gate; this is what CI runs
 make test-python   # stdlib unittest, no install step

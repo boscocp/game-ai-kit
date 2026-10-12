@@ -27,6 +27,35 @@ bootstrap: ## Install the pinned Godot on the large disk (SHA-verified)
 	@bash scripts/bootstrap.sh "$(TOOLCHAIN)" "$(GODOT_VERSION)"
 	@$(MAKE) --no-print-directory lint-disk-layout
 
+# --- the wave ---------------------------------------------------------------
+#
+# One branch per wave, and the review lands before the merge. The pre-commit
+# hook refuses a commit on main, because the rule written as prose did not hold.
+
+.PHONY: wave-start
+wave-start: ## Cut a wave branch from a current main: make wave-start BRANCH=wave/NN-slug
+	@test -n "$(BRANCH)" || { echo "usage: make wave-start BRANCH=wave/NN-slug" >&2; exit 2; }
+	@$(PYTHON) scripts/check_branch_base.py --check-base
+	@git switch -c "$(BRANCH)"
+	@echo
+	@echo "On $(BRANCH). When the work is done:"
+	@echo "  1. make check"
+	@echo "  2. have the diff reviewed by something that did not write it"
+	@echo "  3. write docs/reviews/$(notdir $(BRANCH)).md"
+	@echo "  4. make wave-merge"
+
+.PHONY: wave-merge
+wave-merge: ## Merge the current wave into main, once it has been reviewed
+	@$(PYTHON) scripts/check_branch_base.py --check-review
+	@$(MAKE) --no-print-directory check
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	git switch main && git merge --no-ff --no-edit "$$branch" && \
+	echo "merged $$branch into main"
+
+.PHONY: lint-review
+lint-review: ## This branch has a review record and may be merged
+	@$(PYTHON) scripts/check_branch_base.py --check-review
+
 # --- the gate --------------------------------------------------------------
 
 .PHONY: check
