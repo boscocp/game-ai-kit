@@ -30,8 +30,17 @@ bootstrap: ## Install the pinned Godot on the large disk (SHA-verified)
 # --- the gate --------------------------------------------------------------
 
 .PHONY: check
-check: lint-disk-layout lint-renderer lint-readability lint-license lint-employer-refs \
-       lint-docs-freshness lint-selftests test-python test-godot ## Run every gate
+check: lint-tasks lint-status lint-disk-layout lint-renderer lint-readability \
+       lint-license lint-employer-refs lint-docs-freshness lint-selftests \
+       test-python test-godot ## Run every gate
+
+.PHONY: lint-tasks
+lint-tasks: ## Invariant 3: every acceptance criterion is a command
+	@$(PYTHON) scripts/check_acceptance.py
+
+.PHONY: lint-status
+lint-status: ## The index and the task files agree
+	@$(PYTHON) scripts/check_status.py
 
 .PHONY: lint-disk-layout
 lint-disk-layout: ## Nothing of the toolchain may land on the small disk

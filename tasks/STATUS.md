@@ -9,14 +9,51 @@ A playable minimum where three techniques actually decide something.
 
 | # | Task | State | Notes |
 |---|---|---|---|
-| T0 | Bootstrap: pinned Godot on the large disk | **done** | 4.7.2-stable, SHA-512 verified |
-| T1 | Gates before the code | wip | 8 of ~12 written |
+| T0 | Bootstrap: pinned Godot on the large disk | done | 4.7.2-stable, SHA-512 verified |
+| T1 | Gates before the code | wip | 10 of 12 written |
 | T2 | `ai_core` and the board | todo | grid, units, turns, no AI |
 | T3 | `ai_search`: A\*, BFS, DFS, Dijkstra | todo | needs T2 |
 | T4 | `ai_planning`: STRIPS, and a PDDL reader in Python | todo | needs T2 |
 | T5 | Dataset and training (Python) | todo | needs T2, T3 |
 | T6 | `ai_learning`: inference, and the attack/retreat decision | todo | needs T5 |
 | T7 | Close the slice: docs, ADRs, `make release` | todo | needs T3, T4, T6 |
+
+---
+
+## Resuming after 2026-10-12 (wave 4)
+
+**What landed.** `check_acceptance.py` and `check_status.py`, and the eight task
+files T0–T7 they check. `make check` runs ten gate self-tests plus both suites,
+green. T0 and T1 were written retroactively rather than excused as bootstrap
+rows: their Acceptance blocks record the commands that were actually run,
+including the two negative controls.
+
+**The acceptance gate caught two bugs in itself, and then one in me.**
+
+1. Its first non-terminating rule used a lookahead for `--headless` after the
+   word `godot`. In `--path godot` the word appears twice, and the second
+   occurrence has no `--headless` after it, so a correct criterion was reported
+   as broken. Replaced with a per-line check that only matches Godot in command
+   position, which is also easier to read.
+2. Its "the assertion sits in the comment" rule required a pipe before `grep`,
+   so the same mistake written without a pipe passed. Broadened.
+3. Then it rejected this repository's own T3, because the Acceptance prose used
+   the word "plausible". That was the rule working: Acceptance prose is exactly
+   where a human verdict hides. The sentence was rewritten, not the rule.
+
+**Two dangling references, deliberately.** T2's acceptance calls
+`check_addon_deps.py` and T7's calls `check_tiers.py` and `scripts/release.py`.
+None exists yet. They are named now so that writing them is part of finishing
+T1, rather than something remembered later; running those tasks' acceptance
+today fails on a missing file, which is the correct state for a `todo` task.
+
+**Next, to finish T1:** `check_addon_deps.py` (invariant 2: no addon imports
+another), `check_tiers.py` (invariant 5: no lesson above tier 1), then
+`check_links.py` and `check_workflow.py` ported from `desk-panel`,
+`CONTRIBUTING.md`, and `.github/workflows/ci.yml` running the same strings the
+Makefile does. The link gate will flag `github.com/boscocp/game-ai-kit`, which
+404s because nothing is published; it belongs in the exceptions file with that
+reason. Then T2, which is the first real GDScript.
 
 ---
 
