@@ -94,3 +94,27 @@ which is the one failure mode that invariant exists for.
 gdUnit4 refuses headless mode unless given `--ignoreHeadlessMode`, because Godot
 does not deliver `InputEvent` in that mode. Tests here therefore assert logic
 and never simulated input. `make test-godot` passes the flag.
+
+## A failing test hides the tests after it in the same suite
+
+Measured on gdUnit4 v6.2.2 while writing T2, three times, by accident: a suite
+of ten tests whose third one fails reports
+
+```
+Statistics: 3 test cases | 0 errors | 2 failures | 0 flaky | 0 skipped
+```
+
+The other seven are not run, and they are **not** counted as skipped. The run
+stops at the first failing test in that suite and moves to the next file.
+
+Two consequences, both practical:
+
+- a failing run tells you about one defect, never all of them, so fix and
+  re-run rather than reading the first red as the whole list;
+- the case count in a *failing* run is not the number of tests in the file. The
+  count is only trustworthy in a green run, which is the run where it matters
+  least -- so when a count drops, check whether tests were deleted or whether
+  something above them started failing.
+
+What makes this safe is the green run: `make test-godot` reports every case it
+executed, and the number is in the output rather than implied.
