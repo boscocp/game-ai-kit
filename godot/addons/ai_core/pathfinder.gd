@@ -20,9 +20,12 @@
 ##   rediscovered in each addon;
 ## * every cell in it is passable on `graph` at the time of the call;
 ## * consecutive cells are cardinal neighbours;
-## * an empty array means *no route exists*, and is never used to mean "the
-##   unit is already there" -- that case also returns empty, and the caller
-##   tells them apart by comparing `from` and `to` itself;
+## * an empty array means the search produced no steps. Two things produce
+##   that -- there is no route, and `from` is already `to` -- and this contract
+##   does not distinguish them, because a caller that needs to can compare
+##   `from` with `to` in one line. An implementation may report the difference
+##   through a richer result type of its own; this interface stays an array, so
+##   nothing here depends on a type another addon owns;
 ## * the call does not change `graph`.
 ##
 ## When not to use it: anything that needs the cost of the route as well. Ask

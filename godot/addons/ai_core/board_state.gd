@@ -66,11 +66,16 @@ static func _living_copies(given: Array[Unit]) -> Array[Unit]:
 
 ## The unit with this id, or null.
 ##
-## Ids are the caller's to keep unique, and nothing here enforces it: a board
-## built with two units sharing an id answers with the first and the second
-## becomes unmovable, because `apply` resolves the mover through here. Measured,
-## not assumed. It is a scenario bug rather than a state this type can refuse,
-## and it is written down so the search in T3 does not have to rediscover it.
+## Ids are the caller's to keep unique, and nothing here enforces it: with two
+## units sharing an id this answers with the first, so the second can never be
+## named by a move and is effectively frozen. Measured.
+##
+## The first version of this comment claimed that and stopped there, and it was
+## wrong about something worse: the duplicate was not merely frozen, the two
+## units **walked through each other and stacked on one cell**, because the
+## occupancy rule exempted "the same unit" by comparing ids. That is fixed; the
+## freezing is not, because it is a bug in whoever built the scenario rather
+## than a state this type can refuse.
 func unit_by_id(unit_id: int) -> Unit:
 	for unit: Unit in units:
 		if unit.id == unit_id:
@@ -79,6 +84,12 @@ func unit_by_id(unit_id: int) -> Unit:
 
 
 ## The unit standing on this cell, or null.
+##
+## Two units cannot legally occupy one cell -- `why_refused` sees to that -- but
+## a caller can *build* a state in which they do, and then this answers with the
+## one earliest in `units`. That is a consequence of the loop rather than a
+## design, and it is written down because a reviewer could not tell which it
+## was.
 func unit_at(cell: Vector2i) -> Unit:
 	for unit: Unit in units:
 		if unit.cell == cell:
@@ -90,7 +101,10 @@ func unit_at(cell: Vector2i) -> Unit:
 ##
 ## The reason is a sentence rather than an error code because both callers need
 ## it in words: the interface shows it to a player, and a failing test that
-## prints "unit 2 is not this faction's to move" is a test you can read.
+## prints "unit 2 belongs to faction 1, and faction 0 is to move" is a test you
+## can read. (That is the message the code below actually emits. The first
+## version of this comment invented a tidier one, which is the kind of comment
+## this repository counts as a finding.)
 func why_refused(move: Move) -> String:
 	var unit: Unit = unit_by_id(move.unit_id)
 	if unit == null:
@@ -100,6 +114,11 @@ func why_refused(move: Move) -> String:
 		return "unit %d belongs to faction %d, and faction %d is to move" % [
 			unit.id, unit.faction, current_faction,
 		]
+	# The route is judged before the bill. A move that is both impossible and
+	# unaffordable reports the impossibility, because "there is a wall there"
+	# is the thing the player has to act on and "you cannot afford it" would
+	# send them looking for more movement points. The order is a decision, so
+	# it is written here and tested.
 	var walk: String = _why_walk_refused(unit, move)
 	if walk != LEGAL:
 		return walk
@@ -127,14 +146,20 @@ func apply(move: Move) -> BoardState:
 	return next
 
 
-## The same state with the turn passed to the next faction.
+## A **new** state with the turn passed to the next faction. This one is not
+## touched -- the same promise `apply` makes, for the same reason, and it was
+## stated only for `apply`.
 ##
 ## Movement is restored on the units that are about to move, not on everyone:
 ## a unit's remaining points are part of what an opponent can see and reason
 ## about, and wiping them on both sides throws that away.
 func end_turn(factions: int = 2, points_per_turn: int = 3) -> BoardState:
 	var next: BoardState = duplicate_state()
-	next.current_faction = (current_faction + 1) % factions
+	# `% 0` is a modulo-by-zero engine error that returns null from here -- on
+	# the one type whose `apply` argues, two functions up, that refusing with
+	# an error in the log is worse than refusing with a value. A board has at
+	# least one side.
+	next.current_faction = (current_faction + 1) % maxi(factions, 1)
 	next.turn_number = turn_number + 1
 	for unit: Unit in next.units:
 		if unit.faction == next.current_faction:
@@ -142,14 +167,22 @@ func end_turn(factions: int = 2, points_per_turn: int = 3) -> BoardState:
 	return next
 
 
-## An independent copy: the units are copied, the graph is shared.
+## An independent copy of the units. **The graph is shared, not copied.**
 ##
-## There is no copying loop here, because the constructor already copies what
-## it is given. Writing one in both places is how the two drift.
+## There is no copying loop here, because the constructor already copies the
+## units it is given. Writing one in both places is how the two drift.
 ##
-## Sharing the graph is safe only because nothing on this type changes terrain.
-## The day something does, it has to call `graph.duplicate_graph()` first, and
-## this comment is the warning that it must.
+## The graph is deliberately shared: a search builds thousands of states and
+## copying the terrain into each one would dominate everything else. The cost of
+## that choice is real and is stated rather than hidden -- `graph` is a public
+## field, so `state.graph.block(cell)` changes the terrain under **every** state
+## that shares it, including the one a search is still exploring. An earlier
+## version of this comment said that nothing on this type changes terrain, which
+## was not true even of this repository's own tests.
+##
+## Build the terrain before you build the state. If terrain must change during
+## play, copy it first with `graph.duplicate_graph()` and build a state on the
+## copy.
 func duplicate_state() -> BoardState:
 	return BoardState.new(graph, units, current_faction, turn_number)
 
@@ -185,6 +218,11 @@ func _why_step_refused(unit: Unit, previous: Vector2i, step: Vector2i) -> String
 	if graph.is_blocked(step):
 		return "%s is blocked" % step
 	var occupant: Unit = unit_at(step)
-	if occupant != null and occupant.id != unit.id:
+	# The exemption is for the unit *itself* walking back over its own cell,
+	# so it compares identity rather than id. Comparing ids meant that a board
+	# built with two units sharing one id let them walk through each other and
+	# **stack on one cell** -- measured, and the reverse of what the doc on
+	# `unit_by_id` used to claim.
+	if occupant != null and occupant != unit:
 		return "%s is occupied by unit %d" % [step, occupant.id]
 	return LEGAL

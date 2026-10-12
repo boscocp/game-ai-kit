@@ -25,6 +25,15 @@ func find_path(graph: GridGraph, from: Vector2i, to: Vector2i) -> Array[Vector2i
 
 const FORGETFUL_POLICY: String = "extends DecisionPolicy\n"
 
+const DUTIFUL_POLICY: String = """
+extends DecisionPolicy
+
+
+func choose(state: BoardState, unit_id: int) -> Move:
+	var unit: Unit = state.unit_by_id(unit_id)
+	return Move.new(unit_id, [] as Array[Vector2i]) if unit != null else Move.new(unit_id, [])
+"""
+
 const INSTANTIATES_THE_INTERFACE: String = """
 extends RefCounted
 
@@ -41,6 +50,15 @@ func test_a_pathfinder_that_forgets_find_path_does_not_load() -> void:
 func test_a_pathfinder_that_implements_find_path_loads() -> void:
 	var dutiful := GDScript.new()
 	dutiful.source_code = DUTIFUL_PATHFINDER
+
+	assert_int(dutiful.reload()).is_equal(OK)
+
+
+func test_a_policy_that_implements_choose_loads() -> void:
+	# The pathfinder had a dutiful twin and the policy did not, so nothing
+	# proved an implementable DecisionPolicy exists.
+	var dutiful := GDScript.new()
+	dutiful.source_code = DUTIFUL_POLICY
 
 	assert_int(dutiful.reload()).is_equal(OK)
 

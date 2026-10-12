@@ -179,6 +179,155 @@ func test_the_state_does_not_alias_the_units_it_was_given() -> void:
 	assert_int(state.units.size()).is_equal(1)
 
 
+func test_a_move_naming_a_unit_that_is_not_there_is_refused() -> void:
+	var state: BoardState = _two_unit_board()
+
+	assert_str(state.why_refused(Move.new(99, _walk_east(Vector2i(1, 1), 1)))).contains(
+		"no unit with id 99"
+	)
+	assert_object(state.apply(Move.new(99, _walk_east(Vector2i(1, 1), 1)))).is_null()
+
+
+func test_applying_a_move_keeps_whose_turn_it_is_and_the_turn_number() -> void:
+	# The copy used to be built without either, and nothing noticed: a search
+	# one move deep would have handed the turn to faction 0 and reset the
+	# episode counter.
+	# Blue's turn, deliberately: the first version of this test ran two turns
+	# and ended back on faction 0, so a copy that hardcoded 0 passed it. A test
+	# whose expected value is also the broken value is measuring nothing.
+	var state: BoardState = _two_unit_board().end_turn()
+	assert_int(state.current_faction).is_equal(BLUE)
+
+	var next: BoardState = state.apply(Move.new(2, _walk_east(Vector2i(4, 1), 1)))
+
+	assert_int(next.current_faction).is_equal(BLUE)
+	assert_int(next.turn_number).is_equal(state.turn_number)
+	assert_int(next.turn_number).is_equal(1)
+
+
+func test_end_turn_leaves_the_original_state_untouched() -> void:
+	# Immutability was tested for apply and not for end_turn, so end_turn could
+	# have been rewriting the state a search was still holding.
+	var state: BoardState = _two_unit_board()
+	var after: BoardState = state.end_turn()
+
+	assert_int(state.current_faction).is_equal(RED)
+	assert_int(state.turn_number).is_equal(0)
+	assert_int(after.current_faction).is_equal(BLUE)
+
+
+func test_end_turn_honours_the_faction_count_and_the_points_it_is_given() -> void:
+	# Both arguments had defaults, no caller in a test, and no assertion.
+	var state: BoardState = _two_unit_board()
+	var three_sided: BoardState = state.end_turn(3, 7)
+
+	assert_int(three_sided.current_faction).is_equal(1)
+	assert_int(three_sided.unit_by_id(2).movement_points).is_equal(7)
+	assert_int(three_sided.end_turn(3, 7).current_faction).is_equal(2)
+	assert_int(three_sided.end_turn(3, 7).end_turn(3, 7).current_faction).is_equal(0)
+
+
+func test_end_turn_with_no_factions_does_not_divide_by_zero() -> void:
+	# `% 0` is an engine error that returned null from the one type whose apply
+	# argues that refusing with an error in the log is worse than refusing with
+	# a value.
+	var after: BoardState = _two_unit_board().end_turn(0)
+
+	assert_object(after).is_not_null()
+	assert_int(after.current_faction).is_equal(0)
+
+
+func test_a_unit_may_walk_back_over_its_own_starting_cell() -> void:
+	# The exemption that allows this is what makes a loop legal, and nothing
+	# was testing it.
+	var state: BoardState = _two_unit_board()
+	var loop: Array[Vector2i] = [Vector2i(2, 1), Vector2i(1, 1)]
+
+	assert_str(state.why_refused(Move.new(1, loop))).is_equal(BoardState.LEGAL)
+	assert_vector(state.apply(Move.new(1, loop)).unit_by_id(1).cell).is_equal(Vector2i(1, 1))
+
+
+func test_two_units_sharing_an_id_cannot_walk_through_each_other() -> void:
+	# They could, and they stacked on one cell: the occupancy rule exempted
+	# "the same unit" by comparing ids rather than identity.
+	var graph := GridGraph.new(6, 3)
+	var twins: Array[Unit] = [
+		Unit.new(1, RED, Vector2i(1, 1)),
+		Unit.new(1, RED, Vector2i(3, 1)),
+	]
+	var state := BoardState.new(graph, twins, RED)
+
+	assert_str(state.why_refused(Move.new(1, _walk_east(Vector2i(1, 1), 2)))).contains(
+		"occupied"
+	)
+
+
+func test_a_cheap_cell_cannot_refund_movement() -> void:
+	var state: BoardState = _two_unit_board()
+	state.graph.set_cost(Vector2i(2, 1), -5)
+	var before: int = state.unit_by_id(1).movement_points
+
+	var next: BoardState = state.apply(Move.new(1, _walk_east(Vector2i(1, 1), 1)))
+
+	assert_int(next.unit_by_id(1).movement_points).is_less(before)
+
+
+func test_neither_faction_may_move_out_of_turn() -> void:
+	# Only one direction was tested, so the faction check could be loosened
+	# from "not equal" to "greater than" with the suite still green.
+	var red_to_move: BoardState = _two_unit_board()
+	var blue_to_move: BoardState = red_to_move.end_turn()
+
+	assert_str(red_to_move.why_refused(Move.new(2, _walk_east(Vector2i(4, 1), 1)))).contains(
+		"faction"
+	)
+	assert_str(blue_to_move.why_refused(Move.new(1, _walk_east(Vector2i(1, 1), 1)))).contains(
+		"faction"
+	)
+
+
+func test_the_route_is_judged_before_the_bill() -> void:
+	# A move that is both impossible and unaffordable reports the wall, not the
+	# price: "there is a wall there" is what a player can act on. Which of the
+	# two wins was a consequence of statement order and nothing held it.
+	var state: BoardState = _two_unit_board()
+	state.graph.block(Vector2i(2, 1))
+	var far: Array[Vector2i] = [
+		Vector2i(2, 1), Vector2i(3, 1), Vector2i(3, 0), Vector2i(2, 0),
+	]
+
+	assert_str(state.why_refused(Move.new(1, far))).contains("blocked")
+
+
+func test_a_cell_two_units_were_built_on_answers_with_the_first() -> void:
+	# They cannot get there legally, but a caller can build it, and which unit
+	# this returns decides what a refusal says.
+	var stacked: Array[Unit] = [
+		Unit.new(7, RED, Vector2i(2, 2)),
+		Unit.new(8, BLUE, Vector2i(2, 2)),
+	]
+	var state := BoardState.new(GridGraph.new(5, 5), stacked, RED)
+
+	assert_int(state.unit_at(Vector2i(2, 2)).id).is_equal(7)
+
+
+func test_a_copy_keeps_a_units_health() -> void:
+	# duplicate_unit's health argument was passed and never checked, and the
+	# dead are dropped before any copy happens, so nothing exercised it.
+	var wounded: Array[Unit] = [Unit.new(1, RED, Vector2i(1, 1), 4)]
+	var state := BoardState.new(GridGraph.new(4, 4), wounded, RED)
+
+	assert_int(state.unit_by_id(1).health).is_equal(4)
+	assert_int(state.end_turn().unit_by_id(1).health).is_equal(4)
+
+
+func test_a_nonsense_faction_count_still_lands_on_a_real_faction() -> void:
+	var after: BoardState = _two_unit_board().end_turn(-2)
+
+	assert_int(after.current_faction).is_equal(0)
+	assert_bool(after.current_faction >= 0).is_true()
+
+
 # A 6x3 board of flat ground, red's unit 1 at (1, 1) and blue's unit 2 at (4, 1).
 func _two_unit_board() -> BoardState:
 	var graph := GridGraph.new(6, 3)

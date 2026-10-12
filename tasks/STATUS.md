@@ -12,11 +12,72 @@ A playable minimum where three techniques actually decide something.
 | T0 | Bootstrap: pinned Godot on the large disk | done | 4.7.2-stable, SHA-512 verified |
 | T1 | Gates before the code | done | 14 gates, all in `make check` |
 | T2 | `ai_core` and the board | done | 34 tests; see the wave 07 review's hole |
-| T3 | `ai_search`: A\*, BFS, DFS, Dijkstra | todo | needs T2 |
+| T3 | `ai_search`: A\*, BFS, DFS, Dijkstra | done | 72 tests, 3 vectors, 300-board property |
 | T4 | `ai_planning`: STRIPS, and a PDDL reader in Python | todo | needs T2 |
 | T5 | Dataset and training (Python) | todo | needs T2, T3 |
 | T6 | `ai_learning`: inference, and the attack/retreat decision | todo | needs T5 |
 | T7 | Close the slice: docs, ADRs, `make release` | todo | needs T3, T4, T6 |
+
+---
+
+## Resuming after 2026-10-12 (wave 8)
+
+**What landed.** T3: `ai_search` with breadth-first, depth-first, Dijkstra and
+A\* over `GridGraph`, each implementing `Pathfinder`. A `SearchResult` that
+carries what was expanded and what was still waiting. Three conformance vectors
+in `spec/vectors/search/` with a runner, a property check over 300 random
+boards, and a demo that draws the expansion in the order it happened. `make
+check` is green and now includes `make test-vectors` and
+`make test-search-properties`, both wired into CI as well.
+
+Also here, because T3 could not be trusted without it: the fixes from **two**
+independent reviews of `ai_core`, which was merged in wave 7 with a review that
+arrived truncated. Mixing them into this branch rather than cutting a separate
+wave is a deliberate exception -- A\* is wrong on a board with a negative cost,
+and that board was buildable.
+
+**The property check found a defect instead of confirming the code.** The claim
+T3 asks for is that A\* expands no more cells than Dijkstra. Over 300 random
+boards the costs agreed everywhere -- the heuristic is admissible -- and A\*
+expanded **more** on 14 of them, which is the reverse of the reason it exists.
+Neither costed search had a closed set, so a cell improved after being queued
+was taken off the frontier twice and `expanded` was counting pops rather than
+cells. That is also what the demo would have drawn. With the guard: 0 of 300.
+
+**Three things the reviews found that were defects rather than gaps.** A
+negative terrain cost was legal and *refunded* movement -- a unit with three
+points finished a move with eight -- and it broke the one guarantee A\* offers,
+since Manhattan distance is admissible exactly because no step costs less than
+one. A cost is now `BLOCKED` or at least one, so the condition `astar.gd`
+carried in prose is a rule. Two units sharing an id walked through each other
+and **stacked on one cell**, because the occupancy rule compared ids rather than
+identity. And `end_turn(0)` was a modulo-by-zero engine error returning null, on
+the one type whose `apply` argues against exactly that.
+
+**A test whose expected value is also the broken value measures nothing.** Two
+of this session's own tests were that: one asserted a copy keeps whose turn it
+is while ending on faction 0, so a copy hardcoding 0 passed; one asserted a
+closed set on a board where no cell is ever re-queued. Both were found by
+mutation and both are rewritten -- the second against a 4x4 board that was
+*searched for* rather than invented.
+
+**One mutation is recorded rather than closed.** Deleting the lower bound in
+`GridGraph.contains` does not fail the suite, it **hangs** it: `neighbours`
+hands back cells below the board and the searches walk downwards forever. On CI
+that reads as a slow job rather than a broken one. The sentence is in the doc
+comment of the rule that prevents it.
+
+**Not proven.** The demo's legibility is still a person's job -- five tests hold
+that it loads, that stepping replays rather than re-runs, and that its board
+actually makes the four disagree, which is the demo's own premise. Nothing has
+been profiled: `_cheapest` and the closed set are both linear scans, documented
+as such, and the benchmark that would justify a heap has not been run because
+the answer to needing one is `AStarGrid2D`.
+
+**Next: T4** -- `ai_planning`: STRIPS, and a PDDL reader in Python. It is the
+first task with a Python half, so `make test-python` stops being a placeholder,
+and the first addon that must not reach into `ai_search` -- the gate for that
+has been inspecting a real addon only since wave 7.
 
 ---
 
