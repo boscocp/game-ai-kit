@@ -13,7 +13,7 @@
 # `SearchVector`, where `search_vector_test.gd` can hand it broken vectors and
 # watch it object -- a review deleted three of those rules one at a time, from
 # here, and every gate stayed green. `lint-selftests` could not have helped:
-# it finds gates by the name `scripts/check_*.py`.
+# it only ever looks inside `scripts/`, and this is GDScript.
 #
 # Exit codes: 0 every vector passes, 1 a vector failed, 2 the vectors could not
 # be read -- which includes finding none at all. A conformance run that

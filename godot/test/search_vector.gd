@@ -3,8 +3,13 @@
 ## This is separate from the runner that reads the files because a runner is a
 ## `SceneTree` and a `SceneTree` is awkward to test. The rules live here, where
 ## a test suite can hand them a deliberately broken vector and watch them say
-## so -- which `lint-selftests` cannot do for the runner, since it finds gates
-## by the name `scripts/check_*.py` and this one is GDScript.
+## so.
+##
+## `lint-selftests` was never going to do it: `run_selftests.py` runs every
+## script **in `scripts/`** that offers a `--self-test`, and insists on one from
+## anything named `check_*.py`. It does not look outside `scripts/` and it runs
+## Python and shell, so a gate written in GDScript under `godot/` is invisible
+## to it whatever it is called.
 ##
 ## That mattered: a review deleted three of the runner's rules one at a time and
 ## every gate stayed green.

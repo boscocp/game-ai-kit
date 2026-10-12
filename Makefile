@@ -44,6 +44,17 @@ wave-start: ## Cut a wave branch from a current main: make wave-start BRANCH=wav
 	@echo "  3. write docs/reviews/$(notdir $(BRANCH)).md"
 	@echo "  4. make wave-merge"
 
+.PHONY: wave
+wave: ## Cut the branch for the next unblocked task and print its prompt
+	@# Does not do the work -- there is no command that writes a wave. It puts
+	@# you at the start of one: the branch cut, the task file named, and the
+	@# resuming section printed, which is what a fresh session reads first.
+	@$(PYTHON) scripts/next_wave.py
+
+.PHONY: wave-next
+wave-next: ## Which task and branch come next, without cutting anything
+	@$(PYTHON) scripts/next_wave.py --dry-run
+
 .PHONY: wave-merge
 wave-merge: ## Merge the current wave into main, once it has been reviewed
 	@$(PYTHON) scripts/check_branch_base.py --check-review
@@ -167,6 +178,20 @@ test-godot: ## Godot tests, headless (gdUnit4)
 	@# must therefore never depend on simulated input -- they assert logic.
 	@$(GODOT) --headless --path godot \
 		-s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -a test
+
+# --- looking at it ---------------------------------------------------------
+#
+# These open a window, so they are the two targets `make check` must never
+# depend on: a gate that waits for somebody to close a window is a gate that
+# hangs CI. Everything automated here runs --headless.
+
+.PHONY: run
+run: ## Play the board: click a unit, click a neighbouring cell, space ends the turn
+	@$(GODOT) --path godot
+
+.PHONY: demo-search
+demo-search: ## The four searches on one board: 1-4 choose, space steps, enter finishes
+	@$(GODOT) --path godot res://demos/search/search_demo.tscn
 
 # --- housekeeping ----------------------------------------------------------
 
