@@ -57,7 +57,15 @@ run was given a timeout.
    its rules.** Ragged `costs` rows were padded or truncated in silence and the
    vector still "conformed"; a `from` outside the board was never rejected; and
    one assertion could never fire. `lint-selftests` could not have caught this:
-   it finds gates by the name `scripts/check_*.py`, and this one is GDScript.
+   it only ever looks inside `scripts/`, and this one is GDScript.
+
+   *Correction, made after this record was merged.* The sentence above first
+   read "it finds gates by the name `scripts/check_*.py`", taken from the
+   review and repeated into four other files without being checked.
+   `run_selftests.py` runs **every** script in `scripts/` that offers a
+   `--self-test`; the `check_*.py` rule is about which files are *required* to
+   have one. The hole is real and the reason given for it was wrong, which is
+   the same defect this wave found twice in the code.
 
 10. The demo's `COLUMNS` and `ROWS` read as adjustable beside a hardcoded start,
     goal and mud row. Change either and it silently showed "no route" with its

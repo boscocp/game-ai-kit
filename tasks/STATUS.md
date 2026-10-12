@@ -93,8 +93,9 @@ Three more worth knowing before touching this code: **no search validated its
 start** (`from = (-1, 2)` came back `reached`, with a path walking in from
 nowhere, and the vector runner accepted it because every *step* was legal); the
 runner was **a gate with no planted case for any of its rules**, which
-`lint-selftests` cannot help with because it finds gates by the name
-`scripts/check_*.py`; and the demo **hid the thing it exists to show** -- the
+`lint-selftests` cannot help with because it only ever looks inside `scripts/`
+and the runner is GDScript; and the demo **hid the thing it exists to show** --
+the
 expansion rectangles buried the mud band exactly when the picture completed.
 
 **Next: T4** -- `ai_planning`: STRIPS, and a PDDL reader in Python. It is the

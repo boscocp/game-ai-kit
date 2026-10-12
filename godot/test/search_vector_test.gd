@@ -1,8 +1,8 @@
 # The conformance runner is a gate, and until now it was a gate with no planted
 # cases. A review deleted three of its rules one at a time -- the walkability
 # check, the shape check, the empty-expansion check -- and every gate in the
-# repository stayed green. `lint-selftests` could not have caught that: it
-# finds gates by the name `scripts/check_*.py`.
+# repository stayed green. `lint-selftests` could not have caught that: it only
+# ever looks inside `scripts/`, and this is GDScript.
 #
 # So the rules moved into SearchVector, and these are the cases it must reject.
 extends GdUnitTestSuite
