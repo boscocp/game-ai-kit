@@ -42,9 +42,12 @@ import tempfile
 
 TASK_FILE_RE = re.compile(r"^(T\d+(?:\.\d+)?)-")
 ROW_RE = re.compile(r"^\|\s*(T\d+(?:\.\d+)?)\s*\|\s*([^|]*?)\s*\|\s*\*{0,2}([a-z]+)\*{0,2}\s*\|", re.M)
-# `Size: M · Prereqs: T2, ADR 0004 · Files: ...` -- either separator, because a
-# middle dot is easy to lose in an editor and the rule should survive that.
-PREREQ_RE = re.compile(r"^Size:.*?Prereqs:\s*([^·\n]+?)(?:\s+[·-]\s+\S|\s*$)", re.M)
+# `Prereqs: T2, ADR 0004`, wherever it sits on the header line. Anchoring it to
+# a line starting with `Size:` meant reordering the header, or dropping it,
+# switched the prerequisite and cycle checks off without a word -- a dangling
+# prereq then passed. Either separator is accepted, because a middle dot is
+# easy to lose in an editor and the rule should survive that.
+PREREQ_RE = re.compile(r"^.*?\bPrereqs:\s*([^·\n]+?)(?:\s+[·-]\s+\S|\s*$)", re.M)
 ADR_RE = re.compile(r"^ADR\s+\d{4}$", re.I)
 
 ALLOWED_STATES = {"todo", "wip", "blocked", "done"}
@@ -56,9 +59,20 @@ def task_id(path: pathlib.Path) -> str:
     return found.group(1) if found else ""
 
 
-def index_rows(status_text: str) -> dict[str, str]:
-    """Every `| T3 | Title | state |` row in the index, id to state."""
-    return {found[0]: found[2] for found in ROW_RE.findall(status_text)}
+def index_rows(status_text: str) -> tuple[dict[str, str], list[str]]:
+    """Every `| T3 | Title | state |` row, plus any id listed more than once.
+
+    A dict comprehension kept the last duplicate, so a row with a nonsense state
+    followed by a valid one for the same id passed. Two rows for one task is
+    itself a problem: the reader cannot tell which is current.
+    """
+    rows: dict[str, str] = {}
+    duplicates = []
+    for identifier, _title, state in ROW_RE.findall(status_text):
+        if identifier in rows:
+            duplicates.append(identifier)
+        rows[identifier] = state
+    return rows, duplicates
 
 
 def prerequisites(text: str) -> list[str]:
@@ -109,8 +123,8 @@ def run(tasks: pathlib.Path) -> int:
         print(f"S1 no task files in {tasks} -- this gate would pass on an empty tree")
         return 1
 
-    rows = index_rows(status_file.read_text(encoding="utf-8"))
-    findings = []
+    rows, duplicates = index_rows(status_file.read_text(encoding="utf-8"))
+    findings = [f"S8 STATUS.md lists {identifier} more than once" for identifier in duplicates]
 
     for identifier in sorted(files):
         if identifier not in rows:
@@ -239,6 +253,22 @@ def self_test() -> int:
             root, "adr", status_text(("T2", "todo")),
             {"T2": task_text("T2", "ADR 0004")},
         )), 0)
+
+        # Planted: the header reordered so it no longer starts with Size:. The
+        # prerequisite half used to switch itself off entirely.
+        reordered = task_text("T2", "T7").replace(
+            "Size: M · Prereqs: T7 · Files: `godot/`",
+            "Prereqs: T7 · Size: M · Files: `godot/`")
+        expect("reordered header, dangling prereq", quiet(build(
+            root, "reordered", status_text(("T2", "todo")), {"T2": reordered},
+        )), 1)
+
+        # Planted: two rows for the same id, the bad state first. The dict used
+        # to keep the last one and report nothing.
+        twice = status_text(("T2", "nonsense")) + "| T2 | A task | todo | |\n"
+        expect("duplicate row", quiet(build(
+            root, "twice", twice, {"T2": task_text("T2")},
+        )), 1)
 
         # Planted: a cycle.
         expect("cycle in the graph", quiet(build(

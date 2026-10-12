@@ -68,9 +68,27 @@ def check_base(repo: pathlib.Path) -> list[str]:
     if git(repo, "status", "--porcelain"):
         problems.append("B1 the working tree is dirty; commit or stash before branching")
 
+    # Branching from wherever you happen to be stacks the new wave on the old
+    # one. This was not checked at all, so cutting a branch while still on the
+    # previous wave's branch passed.
+    current = git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    if current != "main":
+        problems.append(f"B4 you are on {current}, not main; a wave branches from main")
+
     has_remote = bool(git(repo, "remote"))
     if has_remote:
-        subprocess.run(["git", "-C", str(repo), "fetch", "--quiet", "origin"], check=False)
+        fetched = subprocess.run(
+            ["git", "-C", str(repo), "fetch", "--quiet", "origin"],
+            capture_output=True, check=False,
+        )
+        # A failed fetch used to be ignored, which left origin/main at whatever
+        # it was last time: `main..origin/main` then counted zero and the check
+        # passed while main was behind. A check that cannot see is not a check
+        # that passes.
+        if fetched.returncode != 0:
+            return problems + [
+                "B5 could not fetch origin; staleness is unknown, so this is not a pass"
+            ]
         try:
             behind = git(repo, "rev-list", "--count", "main..origin/main")
         except subprocess.CalledProcessError:
@@ -176,6 +194,20 @@ def self_test() -> int:
 
         clean = make_repo(root, "clean")
         expect("clean tree, no remote", quiet(clean, "base"), 0)
+
+        # Planted: cutting a branch while still on the previous wave's branch.
+        on_branch = make_repo(root, "onbranch")
+        subprocess.run(["git", "-C", str(on_branch), "switch", "-qc", "wave/04-old"],
+                       check=True, capture_output=True, env=_isolated_env())
+        expect("not on main", quiet(on_branch, "base"), 1)
+
+        # Planted: a remote that cannot be reached. Ignoring the failed fetch
+        # left origin/main stale and the comparison vacuously green.
+        unreachable = make_repo(root, "unreachable")
+        subprocess.run(["git", "-C", str(unreachable), "remote", "add", "origin",
+                        "file:///nonexistent/repo.git"],
+                       check=True, capture_output=True, env=_isolated_env())
+        expect("unreachable remote", quiet(unreachable, "base"), 1)
 
         # Planted: an uncommitted change.
         dirty = make_repo(root, "dirty")

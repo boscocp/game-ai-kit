@@ -41,9 +41,10 @@ jobs:
           # shallow clone it would walk almost nothing and pass -- a gate
           # reporting green because it was not given the history to look at.
           fetch-depth: 0
-      - run: make lint-tasks lint-status lint-renderer lint-readability
-      - run: make lint-license lint-employer-refs lint-docs-freshness
-      - run: make lint-selftests
+      # One target, not a hand-written list. The list here used to be a second
+      # definition of what `make check` runs minus the engine-dependent part,
+      # and two lists drift the first time one of them gains a target.
+      - run: make check-no-engine
 
       # A hook cannot see a pull request. The commit messages on the branch go
       # through .githooks/commit-msg locally, but the PR's own title and body
@@ -58,14 +59,7 @@ jobs:
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
-        run: |
-          python3 - <<'EOF' > /tmp/pr-message.txt
-          import os
-          print(os.environ["PR_TITLE"].strip())
-          print()
-          print(os.environ.get("PR_BODY") or "")
-          EOF
-          python3 scripts/check_commit_msg.py /tmp/pr-message.txt
+        run: make lint-pr-message
 
   # Tier 2: the engine. Bootstrap runs here on every build, which means the
   # bootstrap path is exercised by CI rather than only on the author's desk.

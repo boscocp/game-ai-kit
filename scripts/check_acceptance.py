@@ -363,6 +363,12 @@ def self_test() -> int:
         )
         expect("bad criterion quoted in prose", quiet(tasks_with(root, "quoting", quoting)), 0)
 
+        # Planted: `curl -w`, which prints a status code and always exits 0.
+        # Mutation showed deleting this rule left the self-test green.
+        curl_w = GOOD_TASK.replace(
+            "make test-godot", 'curl -sS -o /dev/null -w "%{http_code}" http://localhost:8000/')
+        expect("curl -w always exits 0", quiet(tasks_with(root, "curlw", curl_w)), 1)
+
         # --- cases from a fresh-context review of this gate ------------------
 
         # Planted: an empty fence. findall returned [""], which is truthy, so

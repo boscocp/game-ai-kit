@@ -41,6 +41,7 @@ import pathlib
 import subprocess
 import sys
 import tempfile
+import tarfile
 import zipfile
 
 REQUIRED_FILES = ("LICENSE", "NOTICE")
@@ -66,6 +67,10 @@ def check_root(repo: pathlib.Path) -> list[str]:
             findings.append(f"L1 {name} missing at the repository root")
         elif path.stat().st_size == 0:
             findings.append(f"L2 {name} is empty")
+        elif name == "LICENSE" and "Apache License" not in path.read_text(encoding="utf-8"):
+            # Only NOTICE had a content check, so a LICENSE reading
+            # `TODO: pick a licence` passed.
+            findings.append("L8 LICENSE does not contain the Apache licence text")
 
     notice = repo / "NOTICE"
     if notice.exists() and COPYRIGHT_HOLDER not in notice.read_text(encoding="utf-8"):
@@ -107,24 +112,48 @@ def check_addons(repo: pathlib.Path) -> list[str]:
     return findings
 
 
-def check_release_zips(repo: pathlib.Path) -> list[str]:
-    """Report a built artifact that lost its attribution on the way out."""
+def archive_entries(archive: pathlib.Path) -> list[str]:
+    """Every path inside a .zip or .tar.gz, as written."""
+    if archive.suffix == ".zip":
+        with zipfile.ZipFile(archive) as bundle:
+            return bundle.namelist()
+    with tarfile.open(archive) as bundle:
+        return bundle.getnames()
+
+
+def check_release_archives(repo: pathlib.Path) -> list[str]:
+    """Report a built artifact that lost its attribution on the way out.
+
+    The check used to compare basenames anywhere in the archive, so an addon
+    shipping bare passed as long as *something* named LICENSE was bundled --
+    a vendored dependency's licence satisfied it. The files must sit at the
+    archive's own root, or at the root of its single top-level folder, which is
+    where someone unpacking it will look. Tarballs were not examined at all.
+    """
     findings = []
     dist = repo / "dist"
     if not dist.exists():
         return findings
 
-    for archive in sorted(dist.glob("*.zip")):
-        with zipfile.ZipFile(archive) as bundle:
-            names = [pathlib.PurePosixPath(n).name for n in bundle.namelist()]
+    archives = sorted(
+        path for path in dist.iterdir()
+        if path.suffix == ".zip" or path.name.endswith((".tar.gz", ".tgz"))
+    )
+    for archive in archives:
+        entries = [pathlib.PurePosixPath(entry) for entry in archive_entries(archive)]
+        # Depth 0 is the archive root; depth 1 covers the usual single wrapper
+        # folder, `ai_search/LICENSE`.
+        shallow = {entry.name for entry in entries if len(entry.parts) <= 2}
         for name in REQUIRED_FILES:
-            if name not in names:
-                findings.append(f"L5 {archive.name} does not contain {name}")
+            if name not in shallow:
+                findings.append(
+                    f"L5 {archive.name} has no {name} at its root or in its top folder"
+                )
     return findings
 
 
 def run(repo: pathlib.Path) -> int:
-    findings = check_root(repo) + check_addons(repo) + check_release_zips(repo)
+    findings = check_root(repo) + check_addons(repo) + check_release_archives(repo)
     for finding in findings:
         print(finding)
     return 1 if findings else 0
@@ -170,6 +199,13 @@ def self_test() -> int:
         (no_notice / "NOTICE").unlink()
         expect("missing NOTICE", quiet(no_notice), 1)
 
+        # Planted: a zero-byte NOTICE. The "hollow" case below writes TODO and
+        # is caught by the holder check, so mutation showed the size rule was
+        # never the thing that fired.
+        zero_byte = make_repo(root / "zerobyte")
+        (zero_byte / "NOTICE").write_text("")
+        expect("zero-byte NOTICE", quiet(zero_byte), 1)
+
         # Planted: NOTICE present but hollowed out.
         hollow = make_repo(root / "hollow")
         (hollow / "NOTICE").write_text("TODO\n")
@@ -211,6 +247,32 @@ def self_test() -> int:
         with zipfile.ZipFile(shipped / "dist" / "ai_search.zip", "w") as bundle:
             bundle.writestr("ai_search/plugin.cfg", "[plugin]\n")
         expect("zip without NOTICE", quiet(shipped), 1)
+
+        # Planted: an addon shipping bare, with a dependency's licence deeper
+        # in the archive satisfying the basename check.
+        deep = make_repo(root / "deep")
+        make_addon(deep, "ai_search", with_files=True)
+        (deep / "dist").mkdir()
+        with zipfile.ZipFile(deep / "dist" / "ai_search.zip", "w") as bundle:
+            bundle.writestr("ai_search/plugin.cfg", "[plugin]\n")
+            bundle.writestr("ai_search/vendor/other/LICENSE", "MIT\n")
+            bundle.writestr("ai_search/vendor/other/NOTICE", "someone else\n")
+        expect("attribution only deep in the archive", quiet(deep), 1)
+
+        # Planted: a tarball, which was not examined at all.
+        tarred = make_repo(root / "tarred")
+        make_addon(tarred, "ai_search", with_files=True)
+        (tarred / "dist").mkdir()
+        with tarfile.open(tarred / "dist" / "kit.tar.gz", "w:gz") as bundle:
+            lone = tarred / "plugin.cfg"
+            lone.write_text("[plugin]\n")
+            bundle.add(lone, arcname="kit/plugin.cfg")
+        expect("tarball without attribution", quiet(tarred), 1)
+
+        # Planted: a LICENSE that says nothing. Only NOTICE had a content check.
+        placeholder = make_repo(root / "placeholder")
+        (placeholder / "LICENSE").write_text("TODO: pick a licence\n")
+        expect("placeholder LICENSE", quiet(placeholder), 1)
 
         script = pathlib.Path(__file__).resolve()
         extra = subprocess.run(

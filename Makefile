@@ -59,9 +59,30 @@ lint-review: ## This branch has a review record and may be merged
 # --- the gate --------------------------------------------------------------
 
 .PHONY: check
-check: lint-tasks lint-status lint-disk-layout lint-renderer lint-readability \
+check: check-no-engine lint-disk-layout test-godot ## Run every gate
+
+.PHONY: check-no-engine
+check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability \
        lint-license lint-employer-refs lint-docs-freshness lint-selftests \
-       test-python test-godot ## Run every gate
+       test-python ## Every gate that does not need the engine installed
+	@# CI's gate job runs exactly this. It used to hand-list the targets,
+	@# because `check` includes lint-disk-layout, which cannot run where the
+	@# toolchain is not installed -- two lists that drift the first time one of
+	@# them gains a target.
+
+.PHONY: lint-commits
+lint-commits: ## Recent commit subjects obey the message rules
+	@# The script's own docstring claimed CI ran it over the history. Nothing
+	@# did: it was reachable only from the hook and from lint-selftests, so the
+	@# stdin mode and the published-exceptions table served a caller that did
+	@# not exist. Now it has one.
+	@git log --format=%s -30 | $(PYTHON) scripts/check_commit_msg.py -
+
+.PHONY: lint-pr-message
+lint-pr-message: ## Check a PR title and body held in PR_TITLE and PR_BODY
+	@# CI used to inline this, while the workflow's own header said every job
+	@# runs a Makefile target and nothing else.
+	@$(PYTHON) scripts/check_pr_message.py
 
 .PHONY: lint-tasks
 lint-tasks: ## Invariant 3: every acceptance criterion is a command

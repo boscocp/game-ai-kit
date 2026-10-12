@@ -369,6 +369,12 @@ def self_test() -> int:
         untyped_var = GOOD.replace("var dx: int = absi", "var dx = absi")
         expect("untyped var", quiet(project(root, "novar", untyped_var)), 1)
 
+        # Planted: a single-letter *parameter*. Mutation showed that deleting
+        # this rule left the self-test green -- it was covered only by var.
+        letter_param = GOOD.replace("func heuristic(from: Vector2i, to: Vector2i) -> float:",
+                                    "func heuristic(q: Vector2i, to: Vector2i) -> float:")
+        expect("single-letter parameter", quiet(project(root, "letterparam", letter_param)), 1)
+
         # Planted: a single-letter name that is not on the allowlist.
         bad_name = GOOD.replace("var dx: int =", "var q: int =")
         expect("single-letter name", quiet(project(root, "badname", bad_name)), 1)
