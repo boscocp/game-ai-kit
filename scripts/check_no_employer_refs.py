@@ -108,13 +108,28 @@ def offending_tokens(text: str, hashes: set[str]) -> set[str]:
     return hits
 
 
-def scan_tree(repo: pathlib.Path, hashes: set[str]) -> list[str]:
-    """Report forbidden terms in the files git is tracking."""
-    listing = subprocess.run(
+def tree_files(repo: pathlib.Path) -> list[str]:
+    """Tracked files, plus untracked ones git would let you add.
+
+    Tracked-only was the original mistake: writing the term into a new file and
+    running the gate gave a clean result, and it only appeared after `git add`.
+    The moment someone most wants this gate is before the first add. Ignored
+    files stay out -- they are not going anywhere.
+    """
+    tracked = subprocess.run(
         ["git", "-C", str(repo), "ls-files"], capture_output=True, text=True, check=True
-    )
+    ).stdout.splitlines()
+    untracked = subprocess.run(
+        ["git", "-C", str(repo), "ls-files", "--others", "--exclude-standard"],
+        capture_output=True, text=True, check=True,
+    ).stdout.splitlines()
+    return sorted(set(tracked) | set(untracked))
+
+
+def scan_tree(repo: pathlib.Path, hashes: set[str]) -> list[str]:
+    """Report forbidden terms anywhere in the working tree."""
     findings = []
-    for name in listing.stdout.splitlines():
+    for name in tree_files(repo):
         if name in SKIP_PATHS:
             continue
         path = repo / name
@@ -222,6 +237,19 @@ def self_test() -> int:
 
         # Planted: an empty hash list. A gate that cannot fail is not a gate.
         expect("no terms listed", quiet(make_repo(root, "noterms", [])), 1)
+
+        # Planted: the term in a file that was never added. This used to pass
+        # clean, and the moment someone wants this gate is before the first add.
+        untracked = make_repo(root, "untracked", [secret])
+        (untracked / "draft.md").write_text(f"notes from the {secret} handbook\n")
+        expect("term in an untracked file", quiet(untracked, history=False), 1)
+
+        # An ignored file is not a finding: it is not going anywhere.
+        ignored = make_repo(root, "ignored", [secret])
+        (ignored / ".gitignore").write_text("scratch/\n")
+        (ignored / "scratch").mkdir()
+        (ignored / "scratch" / "notes.md").write_text(f"{secret} scratch\n")
+        expect("term in an ignored file", quiet(ignored, history=False), 0)
 
         # Planted: the term in a tracked file.
         in_tree = make_repo(root, "intree", [secret])

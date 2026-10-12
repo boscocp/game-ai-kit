@@ -51,7 +51,13 @@ import sys
 import tempfile
 
 TASK_FILE_RE = re.compile(r"^(T\d+(?:\.\d+)?)-")
-FENCE_RE = re.compile(r"```[a-z]*\n(.*?)```", re.S)
+FENCE_RE = re.compile(r"```([a-z]*)\n(.*?)```", re.S)
+
+# Only a fence tagged as a shell holds commands. A review found that changing
+# ```bash to ```text disabled both halves of this gate at once: the content
+# stopped being read as commands, and because prose is the body minus fences,
+# it stopped being read as prose too. Untagged counts as shell.
+SHELL_TAGS = {"", "bash", "sh", "shell", "console"}
 
 # A criterion whose verdict is read by a person instead of by the shell.
 PROSE_VERDICT = [
@@ -61,12 +67,37 @@ PROSE_VERDICT = [
     (re.compile(r"#\s*should (?:be|show|print)", re.I), "prose verdict '# should ...' -- assert it"),
 ]
 
-# A Godot invocation at the start of a command, which is the only position
-# where it is the program being run. A later `godot` is an argument -- `--path
-# godot` names the folder -- and an earlier version of this rule matched that
-# and reported a correct criterion as broken. The self-test keeps it honest.
-GODOT_INVOCATION = re.compile(r"(?:^|\||&&|;)\s*(?:\./)?(?:scripts/)?godot\b")
+# A Godot invocation, allowing for an interpreter and environment prefixes:
+# `godot`, `./scripts/godot`, `bash scripts/godot`, `FOO=1 bash scripts/godot`.
+# A review found the bare form missed all three.
+GODOT_INVOCATION = re.compile(
+    r"^(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*"       # env assignments
+    r"(?:(?:bash|sh|exec|time)\s+)*"             # an interpreter, or none
+    r"(?:\./)?(?:[\w./-]*/)?godot\b"
+)
 EDITOR_FLAG = re.compile(r"\s(?:--editor|-e)(?:\s|$)")
+
+# Everything that turns a command's exit status into a constant. These are what
+# a person writes when a criterion is inconvenient, which is exactly when the
+# criterion matters.
+SILENCERS = (
+    ("|| true", "`|| true` discards the exit status the criterion is made of"),
+    ("||true", "`||true` discards the exit status the criterion is made of"),
+    ("|| :", "`|| :` discards the exit status the criterion is made of"),
+    ("; true", "`; true` discards the exit status of the command before it"),
+    ("set +e", "`set +e` stops the block failing at all"),
+)
+
+
+def split_commands(line: str) -> list[str]:
+    """One shell line broken into the commands it actually runs.
+
+    The whole line was the unit before, and a review showed what that costs:
+    `godot --headless --version && godot --path godot -s x.gd` passed, because
+    the first invocation's flag covered for the second. Each command is now
+    judged on its own.
+    """
+    return [part.strip() for part in re.split(r"&&|\|\||[;|]", line) if part.strip()]
 
 
 def non_terminating(commands: str) -> list[str]:
@@ -77,12 +108,25 @@ def non_terminating(commands: str) -> list[str]:
     """
     problems = []
     for line in commands.splitlines():
-        if not GODOT_INVOCATION.search(line):
-            continue
-        if "--headless" not in line:
-            problems.append("a Godot invocation without --headless opens a window and never returns")
-        if EDITOR_FLAG.search(line):
-            problems.append("`--editor` opens the editor and never returns")
+        for command in split_commands(line):
+            if not GODOT_INVOCATION.match(command):
+                continue
+            if "--headless" not in command:
+                problems.append(
+                    f"`{command[:48]}` invokes Godot without --headless; it opens a window "
+                    "and never returns"
+                )
+            if EDITOR_FLAG.search(command):
+                problems.append("`--editor` opens the editor and never returns")
+    return problems
+
+
+def silenced(commands: str) -> list[str]:
+    """Criteria whose exit status was switched off."""
+    problems = []
+    for marker, message in SILENCERS:
+        if marker in commands:
+            problems.append(message)
     return problems
 
 # A command whose exit status says nothing about the assertion.
@@ -132,14 +176,35 @@ def check_file(path: pathlib.Path) -> list[str]:
     if body is None:
         return [f"{path.name}: no `## Acceptance` section"]
 
-    blocks = FENCE_RE.findall(body)
-    if not blocks:
+    fences = FENCE_RE.findall(body)
+    # An empty fence used to satisfy this: findall returned [""], which is
+    # truthy, so the "prose only" branch never fired. The gate failed its own
+    # question -- does this pass on an empty scene?
+    command_blocks = [body_text for tag, body_text in fences
+                      if tag in SHELL_TAGS and body_text.strip()]
+    if not command_blocks:
         problems.append(f"{path.name}: Acceptance has no command block -- it is prose only")
-    commands = "\n".join(blocks)
+    commands = "\n".join(command_blocks)
 
-    # Prose is checked with inline `code` spans removed, so a task may quote the
-    # wrong way of writing a criterion while explaining why it is wrong.
-    prose = re.sub(r"`[^`]*`", "", FENCE_RE.sub("", body))
+    # Prose is the body minus the *command* fences only. A ```text fence is
+    # prose that happens to be indented, and is read as such.
+    # `text` holds the whole file and is needed further down -- naming the loop
+    # variable `text` here shadowed it, and the Requires: check then searched a
+    # code fence instead of the file. The self-test caught it; the name stays
+    # distinct.
+    prose_source = body
+    for tag, fence_body in fences:
+        if tag in SHELL_TAGS:
+            prose_source = prose_source.replace(fence_body, "")
+    # Inline `code` spans are dropped so a task may quote the wrong way of
+    # writing a criterion while explaining why it is wrong.
+    prose = re.sub(r"`[^`]*`", "", prose_source)
+
+    # A human verdict hides just as well in a trailing comment inside the fence.
+    for line in commands.splitlines():
+        comment = line.split("#", 1)
+        if len(comment) == 2:
+            prose += "\n" + comment[1]
 
     for pattern, message in PROSE_VERDICT:
         if pattern.search(commands) or pattern.search(prose):
@@ -147,7 +212,7 @@ def check_file(path: pathlib.Path) -> list[str]:
     for pattern, message in ALWAYS_ZERO:
         if pattern.search(commands):
             problems.append(f"{path.name}: {message}")
-    for message in non_terminating(commands):
+    for message in non_terminating(commands) + silenced(commands):
         problems.append(f"{path.name}: {message}")
 
     looking = HUMAN_VERDICT.search(prose)
@@ -297,6 +362,55 @@ def self_test() -> int:
             "Four search algorithms. Do not write `# no output` as a criterion.",
         )
         expect("bad criterion quoted in prose", quiet(tasks_with(root, "quoting", quoting)), 0)
+
+        # --- cases from a fresh-context review of this gate ------------------
+
+        # Planted: an empty fence. findall returned [""], which is truthy, so
+        # the "prose only" branch never fired. The gate failed its own question.
+        empty_fence = GOOD_TASK.replace(
+            "make test-godot\npython3 scripts/check_readability.py", "")
+        expect("empty code fence", quiet(tasks_with(root, "emptyfence", empty_fence)), 1)
+
+        # Planted: ```text instead of ```bash. This used to disable both halves
+        # at once -- not commands, and not prose either.
+        text_fence = GOOD_TASK.replace(
+            "```bash\nmake test-godot\npython3 scripts/check_readability.py\n```",
+            "```text\nThe tests pass and the demo looks right.\n```")
+        expect("prose inside a text fence", quiet(tasks_with(root, "textfence", text_fence)), 1)
+
+        # Planted: two invocations on one line, the first one's flag covering
+        # for the second. The whole line used to be the unit.
+        covered = GOOD_TASK.replace(
+            "make test-godot",
+            "./scripts/godot --headless --version && ./scripts/godot --path godot -s res://x.gd")
+        expect("second invocation uncovered", quiet(tasks_with(root, "covered", covered)), 1)
+
+        # Planted: an interpreter prefix, which the bare pattern missed.
+        via_bash = GOOD_TASK.replace("make test-godot", "bash scripts/godot --path godot")
+        expect("bash scripts/godot", quiet(tasks_with(root, "viabash", via_bash)), 1)
+
+        # Planted: an environment prefix as well.
+        with_env = GOOD_TASK.replace(
+            "make test-godot", "GAK_TOOLCHAIN=/tmp/tc bash scripts/godot --path godot")
+        expect("env prefix", quiet(tasks_with(root, "withenv", with_env)), 1)
+
+        # Planted: the exit status switched off. This is what a person writes
+        # when a criterion is inconvenient, which is when it matters most.
+        for label, suffix in (
+            ("|| true", "make test-godot || true"),
+            ("; true", "python3 scripts/check_readability.py; true"),
+            ("set +e", "set +e\nmake check"),
+        ):
+            silenced_task = GOOD_TASK.replace("make test-godot", suffix)
+            expect(f"silenced with {label}",
+                   quiet(tasks_with(root, f"silenced-{label.replace(' ', '')}", silenced_task)), 1)
+
+        # Planted: a human verdict as a trailing comment inside the fence, where
+        # the prose check never looked.
+        in_fence = GOOD_TASK.replace(
+            "make test-godot",
+            "make test-godot   # then watch the unit attack and confirm it looks right")
+        expect("human verdict in a fence comment", quiet(tasks_with(root, "infence", in_fence)), 1)
 
         script = pathlib.Path(__file__).resolve()
         extra = subprocess.run(

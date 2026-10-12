@@ -71,7 +71,17 @@ ALLOWED_SHORT_NAMES = {
 VENDORED_DIRS = {"gdUnit4"}
 
 FUNC_RE = re.compile(r"^([\t ]*)func\s+([A-Za-z_][A-Za-z0-9_]*)\s*\((.*?)\)\s*(->\s*\S+)?\s*:")
-VAR_RE = re.compile(r"^\s*(?:@\w+(?:\([^)]*\))?\s+)?(?:static\s+)?var\s+([A-Za-z_][A-Za-z0-9_]*)\s*(:=|:|=)")
+# The operator is optional: `var running_total` with no initialiser is legal
+# GDScript and untyped, and requiring an operator meant the gate never saw it.
+# `const` is matched too -- it was not checked at all.
+VAR_RE = re.compile(
+    r"^\s*(?:@\w+(?:\([^)]*\))?\s+)?(?:static\s+)?(var|const)\s+"
+    r"([A-Za-z_][A-Za-z0-9_]*)\s*(:=|:|=)?"
+)
+# `for q in range(3)` binds a name just as a declaration does.
+FOR_RE = re.compile(r"^\s*for\s+([A-Za-z_][A-Za-z0-9_]*)\s+in\b")
+# Opens a function, whether or not the parentheses close on the same line.
+OPENS_FUNC = re.compile(r"^[\t ]*func\s+[A-Za-z_][A-Za-z0-9_]*\s*\(")
 PARAM_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)\s*(:\s*[^=]+)?(=.*)?$")
 
 
@@ -102,14 +112,18 @@ def check_functions(path: pathlib.Path, lines: list[str], label: str) -> list[st
     is_test = path.name.endswith("_test.gd")
 
     for index, line in enumerate(lines):
-        match = FUNC_RE.match(line)
+        signature = join_signature(lines, index)
+        if signature is None:
+            continue
+        joined, span = signature
+        match = FUNC_RE.match(joined)
         if match is None:
             continue
 
         _indent, name, params, return_type = match.groups()
         number = index + 1
         base_columns = indent_columns(line)
-        body = function_body(lines, index, base_columns)
+        body = function_body(lines, index + span - 1, base_columns)
 
         if len(body) > MAX_FUNCTION_LINES:
             findings.append(
@@ -148,6 +162,25 @@ def indent_columns(line: str) -> int:
     """
     leading = line[: len(line) - len(line.lstrip("\t "))]
     return len(leading.expandtabs(INDENT_COLUMNS))
+
+
+def join_signature(lines: list[str], start: int) -> tuple[str, int] | None:
+    """One logical signature, and how many lines it spans.
+
+    A signature split across lines is legal GDScript, and matching only
+    single-line ones skipped the whole function: untyped parameters and a
+    missing return type went unreported. Returns None when this line does not
+    open a function at all. Gives up after a dozen lines rather than scanning
+    the file -- an unbalanced parenthesis is a syntax error, not a signature.
+    """
+    if not OPENS_FUNC.match(lines[start]):
+        return None
+    joined = ""
+    for offset, line in enumerate(lines[start:start + 12]):
+        joined += line.rstrip() if offset == 0 else " " + line.strip()
+        if joined.count("(") <= joined.count(")"):
+            return joined, offset + 1
+    return None
 
 
 def function_body(lines: list[str], start: int, base_columns: int) -> list[str]:
@@ -232,18 +265,25 @@ def split_params(params: str) -> list[str]:
 
 
 def check_variables(lines: list[str], label: str) -> list[str]:
-    """Every `var` is typed, by annotation or by `:=` inference."""
+    """Every `var` and `const` is typed, and no bound name is a bare letter."""
     findings = []
     for index, line in enumerate(lines):
+        number = index + 1
+
+        loop = FOR_RE.match(line)
+        if loop and len(loop.group(1)) == 1 and loop.group(1) not in ALLOWED_SHORT_NAMES:
+            findings.append(f"{label}:{number} loop variable {loop.group(1)} is a single-letter name")
+
         match = VAR_RE.match(line)
         if match is None:
             continue
-        name, operator = match.groups()
-        number = index + 1
-        if operator == "=":
-            findings.append(f"{label}:{number} var {name} is untyped; use `: Type` or `:=`")
+        keyword, name, operator = match.groups()
+        if operator in ("=", None):
+            findings.append(
+                f"{label}:{number} {keyword} {name} is untyped; use `: Type` or `:=`"
+            )
         if len(name) == 1 and name not in ALLOWED_SHORT_NAMES:
-            findings.append(f"{label}:{number} var {name} is a single-letter name")
+            findings.append(f"{label}:{number} {keyword} {name} is a single-letter name")
     return findings
 
 
@@ -402,6 +442,46 @@ def self_test() -> int:
             "\t)\n"
         )
         expect("tab then spaces for alignment", quiet(project(root, "aligned", aligned)), 0)
+
+        # Planted: a signature split across lines. The single-line pattern used
+        # to skip the whole function, so two untyped parameters and a missing
+        # return type went unreported.
+        multiline = (
+            "## Why this exists.\n"
+            "func pathfind(\n"
+            "\tstart,\n"
+            "\tgoal\n"
+            "):\n"
+            "\treturn []\n"
+        )
+        expect("multi-line signature", quiet(project(root, "multiline", multiline)), 1)
+
+        # The same signature written correctly must still pass, or the fix
+        # would just be a new way to fire on good code.
+        multiline_ok = (
+            "## Why this exists.\n"
+            "func pathfind(\n"
+            "\tstart: Vector2i,\n"
+            "\tgoal: Vector2i\n"
+            ") -> Array:\n"
+            "\treturn []\n"
+        )
+        expect("multi-line signature, typed", quiet(project(root, "mlok", multiline_ok)), 0)
+
+        # Planted: a declaration with no initialiser. Legal, untyped, and the
+        # pattern required an operator so it never matched.
+        no_initialiser = GOOD.replace("var dx: int = absi(from.x - to.x)", "var running_total")
+        expect("var with no initialiser", quiet(project(root, "noinit", no_initialiser)), 1)
+
+        # Planted: const was not checked at all.
+        untyped_const = GOOD.replace("var dx: int = absi(from.x - to.x)", "const LIMIT = 3")
+        expect("untyped const", quiet(project(root, "const", untyped_const)), 1)
+
+        # Planted: a single-letter loop variable, which only var and parameters
+        # were ever checked for.
+        loop_letter = GOOD.replace("for i in range(3):", "for q in range(3):").replace(
+            "total += i", "total += q")
+        expect("single-letter loop variable", quiet(project(root, "loopq", loop_letter)), 1)
 
         script = pathlib.Path(__file__).resolve()
         extra = subprocess.run(
