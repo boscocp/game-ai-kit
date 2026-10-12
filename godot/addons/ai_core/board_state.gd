@@ -84,6 +84,12 @@ func unit_by_id(unit_id: int) -> Unit:
 
 
 ## The unit standing on this cell, or null.
+##
+## Two units cannot legally occupy one cell -- `why_refused` sees to that -- but
+## a caller can *build* a state in which they do, and then this answers with the
+## one earliest in `units`. That is a consequence of the loop rather than a
+## design, and it is written down because a reviewer could not tell which it
+## was.
 func unit_at(cell: Vector2i) -> Unit:
 	for unit: Unit in units:
 		if unit.cell == cell:
@@ -108,6 +114,11 @@ func why_refused(move: Move) -> String:
 		return "unit %d belongs to faction %d, and faction %d is to move" % [
 			unit.id, unit.faction, current_faction,
 		]
+	# The route is judged before the bill. A move that is both impossible and
+	# unaffordable reports the impossibility, because "there is a wall there"
+	# is the thing the player has to act on and "you cannot afford it" would
+	# send them looking for more movement points. The order is a decision, so
+	# it is written here and tested.
 	var walk: String = _why_walk_refused(unit, move)
 	if walk != LEGAL:
 		return walk
@@ -135,7 +146,9 @@ func apply(move: Move) -> BoardState:
 	return next
 
 
-## The same state with the turn passed to the next faction.
+## A **new** state with the turn passed to the next faction. This one is not
+## touched -- the same promise `apply` makes, for the same reason, and it was
+## stated only for `apply`.
 ##
 ## Movement is restored on the units that are about to move, not on everyone:
 ## a unit's remaining points are part of what an opponent can see and reason

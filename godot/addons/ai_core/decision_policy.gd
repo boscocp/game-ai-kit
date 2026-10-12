@@ -14,6 +14,9 @@
 ##
 ## An implementation must guarantee:
 ##
+## * the returned move's `unit_id` is the `unit_id` it was given. Obvious, and
+##   it was missing: this interface handed a policy a unit to think about and
+##   then said nothing about which unit the answer was for;
 ## * the returned move is legal on `state` -- `state.why_refused(move)` returns
 ##   `BoardState.LEGAL` -- or the policy returns a move with an empty path,
 ##   which means "hold";

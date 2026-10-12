@@ -286,6 +286,48 @@ func test_neither_faction_may_move_out_of_turn() -> void:
 	)
 
 
+func test_the_route_is_judged_before_the_bill() -> void:
+	# A move that is both impossible and unaffordable reports the wall, not the
+	# price: "there is a wall there" is what a player can act on. Which of the
+	# two wins was a consequence of statement order and nothing held it.
+	var state: BoardState = _two_unit_board()
+	state.graph.block(Vector2i(2, 1))
+	var far: Array[Vector2i] = [
+		Vector2i(2, 1), Vector2i(3, 1), Vector2i(3, 0), Vector2i(2, 0),
+	]
+
+	assert_str(state.why_refused(Move.new(1, far))).contains("blocked")
+
+
+func test_a_cell_two_units_were_built_on_answers_with_the_first() -> void:
+	# They cannot get there legally, but a caller can build it, and which unit
+	# this returns decides what a refusal says.
+	var stacked: Array[Unit] = [
+		Unit.new(7, RED, Vector2i(2, 2)),
+		Unit.new(8, BLUE, Vector2i(2, 2)),
+	]
+	var state := BoardState.new(GridGraph.new(5, 5), stacked, RED)
+
+	assert_int(state.unit_at(Vector2i(2, 2)).id).is_equal(7)
+
+
+func test_a_copy_keeps_a_units_health() -> void:
+	# duplicate_unit's health argument was passed and never checked, and the
+	# dead are dropped before any copy happens, so nothing exercised it.
+	var wounded: Array[Unit] = [Unit.new(1, RED, Vector2i(1, 1), 4)]
+	var state := BoardState.new(GridGraph.new(4, 4), wounded, RED)
+
+	assert_int(state.unit_by_id(1).health).is_equal(4)
+	assert_int(state.end_turn().unit_by_id(1).health).is_equal(4)
+
+
+func test_a_nonsense_faction_count_still_lands_on_a_real_faction() -> void:
+	var after: BoardState = _two_unit_board().end_turn(-2)
+
+	assert_int(after.current_faction).is_equal(0)
+	assert_bool(after.current_faction >= 0).is_true()
+
+
 # A 6x3 board of flat ground, red's unit 1 at (1, 1) and blue's unit 2 at (4, 1).
 func _two_unit_board() -> BoardState:
 	var graph := GridGraph.new(6, 3)
