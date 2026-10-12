@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Three lines, then delegation: the hook and CI must never disagree about what
+# a valid commit message is. Opt in with `make hooks` -- git does not run hooks
+# from a fresh clone, and that is a security property worth keeping.
+set -euo pipefail
+exec python3 "$(git rev-parse --show-toplevel)/scripts/check_commit_msg.py" "$1"

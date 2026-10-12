@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# The only way this repo invokes Godot.
+#
+# Keeping the whole toolchain off the small disk needs TWO mechanisms, not one,
+# and that is why nobody should call the binary directly:
+#
+#   1. `._sc_` next to the binary (self-contained mode) redirects editor data,
+#      settings and export templates -- the part that grows past 1 GB.
+#   2. XDG_DATA_HOME redirects the project's `user://` directory, which
+#      self-contained mode does NOT cover. Measured on 4.7.2: without it,
+#      `--import` alone recreates ~/.local/share/godot/app_userdata/.
+#
+# check_disk_layout.py fails if either one stops working.
+set -euo pipefail
+
+here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+toolchain=${GAK_TOOLCHAIN:-/mnt/games/gamedev/toolchain}
+binary="$toolchain/godot/godot"
+
+if [[ ! -x "$binary" ]]; then
+  echo "scripts/godot: toolchain missing at $binary -- run 'make bootstrap'" >&2
+  exit 2
+fi
+
+want=$(tr -d '[:space:]' < "$here/.godot-version")
+have=$("$binary" --headless --version 2>/dev/null | head -1)
+if [[ "$have" != "${want%-stable}.stable"* ]]; then
+  echo "scripts/godot: pinned $want but toolchain reports $have" >&2
+  exit 2
+fi
+
+exec env XDG_DATA_HOME="$toolchain/xdg" "$binary" "$@"

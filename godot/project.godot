@@ -1,0 +1,23 @@
+; Engine configuration file.
+; Renderer is pinned to "gl_compatibility" on purpose: tier 2 of this project
+; must run on integrated graphics from ~2015. check_renderer.py fails if this
+; line changes or if a 3D node appears under game/ or demos/.
+
+config_version=5
+
+[application]
+
+config/name="game-ai-kit"
+config/description="Teaching AI in games, one readable piece at a time."
+config/features=PackedStringArray("4.7", "GL Compatibility")
+run/main_scene=""
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

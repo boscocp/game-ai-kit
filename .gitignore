@@ -1,0 +1,17 @@
+# Godot
+.godot/
+godot/.godot/
+*.import
+export_presets.cfg
+
+# Build and release output
+dist/
+build/
+
+# Python
+__pycache__/
+*.pyc
+
+# Generated model weights live in dist/, never committed from a local run.
+# The checked-in weights.json under godot/addons/ai_learning/ is produced by
+# `make train` and committed deliberately, so it is NOT ignored here.
