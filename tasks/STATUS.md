@@ -11,12 +11,92 @@ A playable minimum where three techniques actually decide something.
 |---|---|---|---|
 | T0 | Bootstrap: pinned Godot on the large disk | done | 4.7.2-stable, SHA-512 verified |
 | T1 | Gates before the code | done | 14 gates, all in `make check` |
-| T2 | `ai_core` and the board | todo | grid, units, turns, no AI |
+| T2 | `ai_core` and the board | done | 34 tests; see the wave 07 review's hole |
 | T3 | `ai_search`: A\*, BFS, DFS, Dijkstra | todo | needs T2 |
 | T4 | `ai_planning`: STRIPS, and a PDDL reader in Python | todo | needs T2 |
 | T5 | Dataset and training (Python) | todo | needs T2, T3 |
 | T6 | `ai_learning`: inference, and the attack/retreat decision | todo | needs T5 |
 | T7 | Close the slice: docs, ADRs, `make release` | todo | needs T3, T4, T6 |
+
+---
+
+## Resuming after 2026-10-12 (wave 7)
+
+**What landed.** T2: `ai_core` and a board you can play with a mouse.
+`GridGraph`, `Unit`, `Move` and `BoardState` under
+`godot/addons/ai_core/`, two interfaces (`Pathfinder`, `DecisionPolicy`) that
+say what an implementation must guarantee, a `TileMapLayer` view under
+`godot/game/`, and 21 tests. `make check` is green, engine included.
+
+**The gates stopped inspecting nothing.** Before this wave `check_addon_deps.py`
+and `check_renderer.py` printed that they had found no addons and no scenes;
+both now read real files and say nothing, which is the first time either has
+actually held its invariant. The licence gate fired the moment `ai_core`
+appeared, exactly as designed: an addon that would ship without LICENSE and
+NOTICE. Both are in the folder now, as copies rather than symlinks, because the
+promise is that you copy the folder and it works.
+
+**Three design decisions worth knowing before T3.**
+
+- **A `Move` carries its own path.** The board rules on whether a walk is
+  legal; it never works one out. That is what lets `ai_core` hold no
+  algorithms: A\*, a planner and a human clicking a tile all produce the same
+  type. `ai_search` fills in the route and nothing else changes.
+- **`apply` returns a new state**, and `why_refused` returns a sentence rather
+  than a code. A search tries illegal moves constantly, so refusing must be
+  cheap and must not fill the log with engine errors.
+- **The path excludes the starting cell.** Cost is paid on entering a cell. The
+  first version included the start and every cost calculation grew an "except
+  the first one" clause, which is where off-by-one bugs live.
+
+**Measured, not assumed: a failing gdUnit4 suite hides the tests after it.** A
+suite of ten whose third test fails reports three cases and stops; the other
+seven are not run and are not counted as skipped. Found by hitting it three
+times while writing the board tests. It is in `docs/godot/addon-anatomy.md`,
+because a red run that lists one defect is not a red run that lists them all.
+
+**Two of this wave's own tests were wrong in the same way**, and the board
+caught them: both walked a unit straight through the square the *other* unit was
+standing on, so they passed or failed for a reason that had nothing to do with
+what they claimed to test. The movement-points test now turns north, and the
+terrain test rounds the top of the board.
+
+**What the review changed, and what it could not.** A fresh context found three
+things, the worst of them in the interfaces: they claimed GDScript has no
+`abstract` keyword and used `push_error` with a default return instead. It has
+`@abstract`, enforced at load time -- measured twice -- and the defaults those
+files returned were values their own contracts define as legitimate answers, so
+a forgotten override looked exactly like an implementation that had decided to
+do nothing. `ai_search` is the next task and the first caller. See
+[the review](../docs/reviews/07-ai-core-and-the-board.md) for the other two and
+for the five this session found afterwards.
+
+**That review is incomplete and the record says so.** The reviewer's report was
+truncated in transport partway through its third finding, and three requests for
+the rest went unanswered. It said 13 of its 35 mutations survived; which 13 was
+in the part that was lost. This wave therefore merges knowing a context that did
+not write the code found things nobody has read. The 21-mutation sweep run
+afterwards does not replace it: it was written by the session that wrote the
+code, which is the symmetry invariant 12 exists to break.
+
+**Not proven.** Nothing has pathfound anything: the scene moves a unit one cell
+per click, which is honest -- a route is a search and the search is T3. The view
+is checked by four tests for the half that is mechanical (the tile set builds,
+a cost chooses a tile, a repaint forgets the old board); whether the board is
+*legible* is still the manual check in T2 and still needs a person.
+
+**Next: T3** -- `ai_search`: A\*, BFS, DFS and Dijkstra over `GridGraph`,
+implementing `Pathfinder`. It is the first addon that must not depend on
+another, so `check_addon_deps.py` gets its first real question, and the click
+that moves one cell becomes a click that moves along a route. Three things it
+needs that do not exist yet: a `make test-vectors` target (and therefore a CI
+step, or `check_workflow.py` refuses it), `godot/demos/search/`, and
+`godot/test/search_properties.gd`, which T3's acceptance runs directly with
+`-s` rather than through gdUnit4.
+
+**Start T3 by reviewing T2.** Not as a formality: the review that should have
+covered it is missing its tail, and `ai_core` is what every later lesson is
+built on.
 
 ---
 
