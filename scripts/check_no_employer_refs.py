@@ -158,6 +158,33 @@ def tree_files(repo: pathlib.Path) -> list[str]:
     return sorted(set(tracked) | set(untracked))
 
 
+def read_as_text(path: pathlib.Path) -> str | None:
+    """A file's text, or None when it is genuinely binary.
+
+    Catching UnicodeDecodeError and moving on treated a latin-1 or UTF-16 text
+    file exactly like a PNG: skipped, silently. A file with no NUL byte is text
+    in some encoding, and prose hides in it just as well, so it is decoded
+    leniently rather than dropped.
+    """
+    try:
+        raw = path.read_bytes()
+    except OSError:
+        return None
+    return decode_leniently(raw)
+
+
+def decode_leniently(raw: bytes) -> str | None:
+    """Text in whatever encoding it is in; None for genuinely binary bytes."""
+    if b"\x00" in raw:
+        return None
+    for encoding in ("utf-8", "utf-16", "latin-1"):
+        try:
+            return raw.decode(encoding)
+        except (UnicodeDecodeError, UnicodeError):
+            continue
+    return None
+
+
 def scan_tree(repo: pathlib.Path, hashes: set[str]) -> list[str]:
     """Report forbidden terms anywhere in the working tree."""
     findings = []
@@ -165,10 +192,9 @@ def scan_tree(repo: pathlib.Path, hashes: set[str]) -> list[str]:
         if name in SKIP_PATHS:
             continue
         path = repo / name
-        try:
-            text = path.read_text(encoding="utf-8")
-        except (UnicodeDecodeError, OSError):
-            continue  # binary or unreadable: not where prose hides
+        text = read_as_text(path)
+        if text is None:
+            continue
         for token in sorted(offending_tokens(text, hashes)):
             findings.append(f"E1 {name}: forbidden term {token!r}")
     return findings
@@ -209,9 +235,8 @@ def scan_history(repo: pathlib.Path, hashes: set[str]) -> list[str]:
             ["git", "-C", str(repo), "cat-file", "-p", object_id],
             capture_output=True, check=False,
         )
-        try:
-            text = blob.stdout.decode("utf-8")
-        except UnicodeDecodeError:
+        text = decode_leniently(blob.stdout)
+        if text is None:
             continue
         for token in sorted(offending_tokens(text, hashes)):
             findings.append(f"E3 history: {name} once contained the forbidden term {token!r}")
@@ -339,6 +364,19 @@ def self_test() -> int:
                        check=True, capture_output=True, env=env)
         expect("term in the author identity", quiet(identity), 3)
 
+        # Planted: the term in a latin-1 file. Catching UnicodeDecodeError and
+        # moving on treated it exactly like a PNG.
+        latin = make_repo(root, "latin", [secret])
+        (latin / "legacy.txt").write_bytes(f"caf\u00e9 from {secret}\n".encode("latin-1"))
+        git(latin, "add", "-A")
+        expect("term in a latin-1 file", quiet(latin, history=False), 1)
+
+        # A real binary must still be skipped, or the gate becomes noise.
+        binary = make_repo(root, "binary", [secret])
+        (binary / "image.png").write_bytes(b"\x89PNG\r\n\x1a\n\x00" + secret.encode())
+        git(binary, "add", "-A")
+        expect("term-like bytes inside a binary", quiet(binary, history=False), 0)
+
         # An ordinary word that merely starts the same way is not a finding.
         innocent = make_repo(root, "innocent", [secret])
         (innocent / "z.md").write_text("The acme of readable code.\n")
@@ -410,7 +448,11 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--self-test", action="store_true")
     try:
         args = parser.parse_args(argv)
-    except SystemExit:
+    except SystemExit as exit_request:
+        # argparse raises SystemExit for `--help` too, with code 0. Catching it
+        # blindly turned a successful --help into exit 2 in every gate here.
+        if exit_request.code == 0:
+            raise
         return 2
 
     if args.self_test:

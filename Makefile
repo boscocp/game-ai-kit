@@ -120,37 +120,7 @@ lint-license: ## LICENSE and NOTICE present, and in every release artifact
 
 .PHONY: lint-selftests
 lint-selftests: ## Run every gate's own --self-test
-	@# Discovered by glob, never by a list: a gate left out of a list is a gate
-	@# that silently stops running. Keep going after the first failure so one
-	@# broken script does not hide the others.
-	@# The interpreter comes from the shebang, never from a `python || bash`
-	@# fallback. The fallback looked harmless and was not: a review found that
-	@# when a Python self-test fails, bash then reads the same file, treats the
-	@# backticks inside its module docstring as command substitution, and runs
-	@# whatever they contain. One gate's docstring says `adb logcat`, which on a
-	@# machine with adb installed streams forever -- so a failing self-test
-	@# hung the target instead of reporting FAIL. Nobody investigates a green,
-	@# and nobody investigates a spinner either.
-	@#
-	@# timeout is the second half: a self-test that hangs on its own must fail
-	@# loudly rather than burn a CI job to its six-hour limit.
-	@failed=0; \
-	for script in $$(grep -l -- '--self-test' scripts/*.py scripts/*.sh 2>/dev/null); do \
-		printf '%-40s ' "$$script"; \
-		case "$$(head -1 "$$script")" in \
-			*python*) runner="$(PYTHON)" ;; \
-			*bash*|*/sh) runner="bash" ;; \
-			*) echo "NO SHEBANG"; failed=1; continue ;; \
-		esac; \
-		if timeout 120 "$$runner" "$$script" --self-test >/dev/null 2>&1; then \
-			echo ok; \
-		else \
-			status=$$?; \
-			if [ $$status -eq 124 ]; then echo "TIMEOUT"; else echo "FAIL"; fi; \
-			failed=1; \
-		fi; \
-	done; \
-	exit $$failed
+	@$(PYTHON) scripts/run_selftests.py
 
 .PHONY: test-python
 test-python: ## Python unit tests (stdlib only, no install step)

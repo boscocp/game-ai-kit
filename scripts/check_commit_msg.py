@@ -257,6 +257,11 @@ def main(argv):
         return 2
     if args[0] == "--self-test":
         return _self_test()
+    if args[0] in ("-h", "--help"):
+        # A gate that exits non-zero when asked for help teaches whoever asked
+        # that it is broken.
+        print(__doc__)
+        return 0
     if len(args) > 1:
         print("check_commit_msg: one message at a time", file=sys.stderr)
         return 2

@@ -73,6 +73,9 @@ def self_test() -> int:
 def main(argv: list[str]) -> int:
     if argv and argv[0] == "--self-test":
         return self_test()
+    if argv and argv[0] in ("-h", "--help"):
+        print(__doc__)
+        return 0
     if argv:
         print(__doc__, file=sys.stderr)
         return 2
