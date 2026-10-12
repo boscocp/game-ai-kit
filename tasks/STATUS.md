@@ -10,7 +10,7 @@ A playable minimum where three techniques actually decide something.
 | # | Task | State | Notes |
 |---|---|---|---|
 | T0 | Bootstrap: pinned Godot on the large disk | **done** | 4.7.2-stable, SHA-512 verified |
-| T1 | Gates before the code | wip | 4 of ~12 written |
+| T1 | Gates before the code | wip | 5 of ~12 written |
 | T2 | `ai_core` and the board | todo | grid, units, turns, no AI |
 | T3 | `ai_search`: A\*, BFS, DFS, Dijkstra | todo | needs T2 |
 | T4 | `ai_planning`: STRIPS, and a PDDL reader in Python | todo | needs T2 |
@@ -44,9 +44,10 @@ to find; its self-test is what proves it can fail. `make` collapses every recipe
 failure to exit 2, so a gate's own exit codes must be read by calling the script
 directly.
 
-**Next:** finish T1. The gates still missing are `check_commit_msg.py` (the hook
-already delegates to it, so the hook is currently broken by design until it
-exists), `check_acceptance.py`, `check_status.py`, `check_readability.py`,
+**Next:** finish T1. `check_commit_msg.py` is done and the hook is live
+(`make hooks`); it blocks assistant attribution in both forms, so overriding the
+machine's global hook costs nothing. The gates still missing are
+`check_acceptance.py`, `check_status.py`, `check_readability.py`,
 `check_no_employer_refs.py`, `check_tiers.py`, `check_doc_freshness.py`,
 `check_addon_deps.py`, `check_links.py`, `check_workflow.py`. Port the first
 few from `desk-panel`, which is the only repository code is ported from here.
