@@ -14,16 +14,15 @@ saying "never mention X" is itself a mention of X. So the repository stores
 **salted SHA-256 hashes** of the forbidden terms, never the terms. The script
 hashes every word it finds and compares.
 
-**This does not hide the term, and an earlier version of this docstring was
-wrong to imply it did.** A review brute-forced the stored entry from the
-published salt and length in 0.02 seconds. For a term of four characters the
-hash file *is* the name to anyone who tries, so the claim "the term is not
-published" was false. What the file honestly buys is that the name is not
-sitting in the repository in plain text for a reader, a search engine or a
-grep -- which is worth having, and is not the same thing as secrecy.
+**The hash file is not in the repository.** An earlier version of this
+docstring claimed storing a term's length was "a small thing to give away" and
+that the term was "not published". A review brute-forced the entry from the
+published salt and length in 0.02 seconds: for a short term the file *is* the
+name, which is precisely what invariant 10 forbids.
 
-Whether that is enough is a decision for the repository's owner, recorded in an
-ADR rather than assumed here.
+So the list is gitignored and lives only on the machine of whoever runs this.
+Build it with `--add-term`, which reads from a hidden prompt. See
+`docs/adr/0005`.
 
 Add a term without ever writing it down:
 
@@ -169,9 +168,16 @@ def offending_tokens(text: str, hashes: set[tuple[int, str]]) -> set[str]:
             # The end is deliberately not anchored, so a term with a suffix
             # glued on still matches.
             origin = positions[start]
+            end = positions[start + length - 1]
             if origin > 0 and text[origin - 1].isalnum():
                 continue
-            hits.add(text[positions[start]:positions[start + length - 1] + 1])
+            # A name is not written across a line break. A wrapped URL is: a
+            # commit message here wrapped one mid-word, which left the start of
+            # the next line looking like a word start and fired on this
+            # project's own history.
+            if "\n" in text[origin:end + 1]:
+                continue
+            hits.add(text[origin:end + 1])
     return hits
 
 
@@ -281,8 +287,15 @@ def scan_history(repo: pathlib.Path, hashes: set[str]) -> list[str]:
 def run(repo: pathlib.Path, check_history: bool) -> int:
     hashes = load_hashes(repo)
     if not hashes:
-        print(f"E0 {TERMS_FILE} lists no terms; this gate cannot fail as it stands")
-        return 1
+        # Absent is the normal state for anyone but the author: the list is
+        # gitignored on purpose. Printing it on every run means the author
+        # notices the day their own copy goes missing, which is the only way
+        # this can fail quietly.
+        print(
+            f"E0 note: no {TERMS_FILE} on this machine, so nothing was checked. "
+            "Build it with --add-term; it is gitignored by design (docs/adr/0005)."
+        )
+        return 0
 
     tree = scan_tree(repo, hashes)
     history = scan_history(repo, hashes) if check_history else []
@@ -334,8 +347,11 @@ def self_test() -> int:
         clean = make_repo(root, "clean", [secret])
         expect("clean repository", quiet(clean), 0)
 
-        # Planted: an empty hash list. A gate that cannot fail is not a gate.
-        expect("no terms listed", quiet(make_repo(root, "noterms", [])), 1)
+        # An absent list is the normal state for anyone but the author -- it
+        # is gitignored by design (docs/adr/0005). It prints a note and passes;
+        # what keeps that from being invisible is that the note prints on every
+        # run, and every case below proves the gate can still fail.
+        expect("no terms listed", quiet(make_repo(root, "noterms", [])), 0)
 
         # Planted: the term in a file that was never added. This used to pass
         # clean, and the moment someone wants this gate is before the first add.
@@ -429,6 +445,20 @@ def self_test() -> int:
             + f"also wrap{secret[0]}/{secret[1:]} here\n")
         git(midword, "add", "-A")
         expect("match starting mid-word", quiet(midword, history=False), 0)
+
+        # Planted: a line break inside what would otherwise match. This fired
+        # on this repository's own history, where a commit message wrapped a
+        # URL mid-word.
+        #
+        # The first version of this case put the split inside a longer word, so
+        # the word-start rule above rejected it first and deleting the line-break
+        # rule left the self-test green. The match now begins at a word start,
+        # which leaves the line break as the only thing standing between it and
+        # a finding.
+        wrapped = make_repo(root, "wrapped", [secret])
+        (wrapped / "wrap.md").write_text(f"see host.example/{secret[0]}\n{secret[1:]}/x\n")
+        git(wrapped, "add", "-A")
+        expect("match spanning a line break", quiet(wrapped, history=False), 0)
 
         # An ordinary word that merely starts the same way is not a finding.
         innocent = make_repo(root, "innocent", [secret])
