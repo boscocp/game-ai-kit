@@ -30,7 +30,8 @@ bootstrap: ## Install the pinned Godot on the large disk (SHA-verified)
 # --- the gate --------------------------------------------------------------
 
 .PHONY: check
-check: lint-disk-layout lint-renderer lint-license lint-selftests test-python test-godot ## Run every gate
+check: lint-disk-layout lint-renderer lint-readability lint-license lint-employer-refs \
+       lint-docs-freshness lint-selftests test-python test-godot ## Run every gate
 
 .PHONY: lint-disk-layout
 lint-disk-layout: ## Nothing of the toolchain may land on the small disk
@@ -39,6 +40,20 @@ lint-disk-layout: ## Nothing of the toolchain may land on the small disk
 .PHONY: lint-renderer
 lint-renderer: ## Renderer stays Compatibility; no 3D nodes in game/ or demos/
 	@$(PYTHON) scripts/check_renderer.py
+
+.PHONY: lint-readability
+lint-readability: ## Invariant 1: the code is teaching material before a library
+	@$(PYTHON) scripts/check_readability.py
+
+.PHONY: lint-employer-refs
+lint-employer-refs: ## Nothing of the author's day job, in the tree or the history
+	@# Exit 3 means the term is in git history, which deleting a file does not
+	@# fix. make flattens that to 2, so read the script's own code if it fails.
+	@$(PYTHON) scripts/check_no_employer_refs.py
+
+.PHONY: lint-docs-freshness
+lint-docs-freshness: ## Every doc page declares its half-life, and is inside it
+	@$(PYTHON) scripts/check_doc_freshness.py
 
 .PHONY: lint-license
 lint-license: ## LICENSE and NOTICE present, and in every release artifact

@@ -10,13 +10,65 @@ A playable minimum where three techniques actually decide something.
 | # | Task | State | Notes |
 |---|---|---|---|
 | T0 | Bootstrap: pinned Godot on the large disk | **done** | 4.7.2-stable, SHA-512 verified |
-| T1 | Gates before the code | wip | 5 of ~12 written; gdUnit4 wired |
+| T1 | Gates before the code | wip | 8 of ~12 written |
 | T2 | `ai_core` and the board | todo | grid, units, turns, no AI |
 | T3 | `ai_search`: A\*, BFS, DFS, Dijkstra | todo | needs T2 |
 | T4 | `ai_planning`: STRIPS, and a PDDL reader in Python | todo | needs T2 |
 | T5 | Dataset and training (Python) | todo | needs T2, T3 |
 | T6 | `ai_learning`: inference, and the attack/retreat decision | todo | needs T5 |
 | T7 | Close the slice: docs, ADRs, `make release` | todo | needs T3, T4, T6 |
+
+---
+
+## Resuming after 2026-10-12 (wave 3)
+
+**What landed.** Three gates: `check_readability.py` (invariant 1, mechanical
+half), `check_doc_freshness.py` (the three half-life layers), and
+`check_no_employer_refs.py` (tree and history). `make check` runs eight gate
+self-tests plus both test suites, and is green.
+
+**What reading the documentation first changed.** Four Godot facts were checked
+against the 4.7 docs rather than assumed, and one of them was a live bug:
+
+- a `plugin.cfg` requires an `@tool` script extending `EditorPlugin`. The
+  library addons here need none, because `class_name` registers a class
+  project-wide with no plugin. `check_license.py` had been using `plugin.cfg` as
+  the marker for "shippable addon", so a library addon was **skipped in
+  silence** -- a gate failing open. Fixed, and the self-test case inverted.
+- the Asset Library does not require `plugin.cfg`, does require `LICENSE` at the
+  repository root, and **does** offer Apache-2.0. The tutorial page lists a few
+  licences as examples and briefly looked like it ruled Apache out; the live
+  filter has it.
+- `TileMapLayer`, not `TileMap` -- the latter is deprecated in 4.x.
+- `AStarGrid2D` is engine core in C++ with four heuristics, which is what the
+  README's "when not to use this" should point at.
+
+All four are in `docs/godot/addon-anatomy.md` with source URLs and a
+`verified_on` date. `CLAUDE.md` gained the rule: read the documentation for the
+pinned version first, then measure to confirm.
+
+**How the employer gate avoids the obvious contradiction.** A gate searching for
+a company name must contain that name, and a file saying "never mention X" is a
+mention of X. The repository stores **salted SHA-256 hashes** instead, with a
+prefix rule so one stored term also catches its compounds. `--add-term` reads
+from a hidden prompt, so adding one never puts it in a file or a shell history.
+The list is seeded with a single term derived from the work email domain;
+**internal repository, client and project names are not on it yet** and should
+be added with `--add-term`.
+
+**Not proven.** The readability gate has only ever seen `smoke_test.gd`, which
+is exempt from its doc-comment rule. It was confirmed to find real files by
+planting an untyped function there (five findings, exit 1), but it has never
+run against an addon, because none exists. The employer gate's history scan
+walks every blob ever committed, which is fast on four commits and has not been
+timed on a real history.
+
+**Next:** `check_acceptance.py` and `check_status.py` (port from `desk-panel`,
+and note that the former has **no** `--self-test` there -- the port must gain
+one, and its non-terminating-command rules are about `adb` and a Python server,
+which here means a Godot invocation without `--headless`). Then
+`check_addon_deps.py`, `check_tiers.py`, `check_links.py`, `check_workflow.py`,
+CONTRIBUTING.md and the CI workflow. After that, T2.
 
 ---
 

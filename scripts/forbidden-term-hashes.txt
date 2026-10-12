@@ -1,0 +1,9 @@
+# Salted SHA-256 of each forbidden term, one per line. The terms themselves
+# are deliberately not here -- see scripts/check_no_employer_refs.py.
+# Add one with: python3 scripts/check_no_employer_refs.py --add-term
+#
+# Seeded with the employer's name, derived from the work email domain.
+# Internal repository, client and project names are NOT here yet: add each
+# with --add-term, which reads from a hidden prompt so the term never
+# reaches a file or a shell history.
+83db4e329fbb6bd47292efe1a634c5c4a030cd433def4f46c15e50a2acefe1fe
