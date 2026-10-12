@@ -63,6 +63,12 @@ HALF_LIFE_DAYS = {"concept": 730, "practice": 182, "tool": 91}
 # reader cannot tell how much to trust it.
 FOLDER_LAYER = {"concepts": "concept", "godot": "practice", "local-llm": "tool"}
 
+# Folders under docs/ that are dated records rather than living pages, and so
+# carry no half-life: an ADR is amended in place, a review and a wave note are
+# snapshots of a day. Anything else under docs/ is a page whose layer nobody
+# declared, which is the state this gate exists to prevent.
+EXEMPT_FOLDERS = {"adr", "reviews", "harness-notes", "images"}
+
 REQUIRED_FIELDS = ("half_life", "verified_on", "tier", "source", "invalidated_if")
 
 BLOCK_RE = re.compile(r"<!--\s*doc-meta\s*\n(.*?)-->", re.S)
@@ -75,9 +81,14 @@ MIN_INVALIDATION_WORDS = 4
 
 def parse_block(text: str) -> tuple[dict[str, str] | None, list[str]]:
     """Return the page's doc-meta fields, plus any problems with the block."""
-    match = BLOCK_RE.search(text)
-    if match is None:
+    blocks = list(BLOCK_RE.finditer(text))
+    if not blocks:
         return None, ["M1 no <!-- doc-meta ... --> block"]
+    if len(blocks) > 1:
+        # Only the first was ever read, so a second one -- expired, or
+        # contradicting the first -- went unseen.
+        return None, [f"M14 {len(blocks)} doc-meta blocks; a page declares its layer once"]
+    match = blocks[0]
 
     fields: dict[str, str] = {}
     problems = []
@@ -144,20 +155,46 @@ def check_fields(fields: dict[str, str], folder: str, today: datetime.date) -> l
     return problems
 
 
+def layered_pages(docs: pathlib.Path) -> tuple[list[pathlib.Path], list[str]]:
+    """Pages that must declare a half-life, plus pages in no declared layer.
+
+    `rglob`, not `glob`, and over all of docs/ rather than three hard-coded
+    folders: a review found that a page one directory deeper, or in a folder
+    nobody had thought of, was simply never looked at.
+    """
+    pages, orphans = [], []
+    for path in sorted(docs.rglob("*.md")):
+        relative = path.relative_to(docs)
+        top = relative.parts[0] if len(relative.parts) > 1 else ""
+        if top in FOLDER_LAYER:
+            pages.append(path)
+        elif top not in EXEMPT_FOLDERS:
+            orphans.append(
+                f"{relative}: M15 in no declared layer -- move it under "
+                f"{'/, '.join(FOLDER_LAYER)}/ or add the folder to EXEMPT_FOLDERS with a reason"
+            )
+    return pages, orphans
+
+
+def layer_of(path: pathlib.Path, docs: pathlib.Path) -> str:
+    """The top-level folder under docs/ that decides a page's layer."""
+    return path.relative_to(docs).parts[0]
+
+
 def run(docs: pathlib.Path, today: datetime.date) -> int:
-    pages = [p for folder in FOLDER_LAYER for p in sorted((docs / folder).glob("*.md"))]
-    if not pages:
+    pages, orphans = layered_pages(docs)
+    if not pages and not orphans:
         # An empty tree passing is the failure mode this project refuses, so an
         # absence of pages is reported rather than silently accepted.
         print(f"M0 no documentation pages under {docs}/{{{','.join(FOLDER_LAYER)}}}")
         return 1
 
-    findings = []
+    findings = list(orphans)
     for page in pages:
         label = page.relative_to(docs)
         fields, problems = parse_block(page.read_text(encoding="utf-8"))
         if fields is not None:
-            problems += check_fields(fields, page.parent.name, today)
+            problems += check_fields(fields, layer_of(page, docs), today)
         findings += [f"{label}: {problem}" for problem in problems]
 
     for finding in findings:
@@ -252,6 +289,31 @@ def self_test() -> int:
         # Planted: a tier outside 0-3.
         expect("bad tier", quiet(docs_with(root, "badtier", "godot", page_text(tier="9"))), 1)
 
+        # Planted: a page one directory deeper. `.glob` never saw it.
+        nested = root / "nested"
+        (nested / "godot" / "deep").mkdir(parents=True)
+        (nested / "godot" / "deep" / "page.md").write_text("# No metadata\n")
+        expect("page in a nested folder", quiet(nested), 1)
+
+        # Planted: a page in a folder nobody declared a layer for.
+        unknown = docs_with(root, "unknown", "godot", page_text())
+        (unknown / "tutorials").mkdir()
+        (unknown / "tutorials" / "intro.md").write_text("# No metadata\n")
+        expect("page in an undeclared folder", quiet(unknown), 1)
+
+        # A dated record is exempt and must not be a finding.
+        records = docs_with(root, "records", "godot", page_text())
+        (records / "adr").mkdir()
+        (records / "adr" / "0001-a.md").write_text("# 0001 - A decision\n")
+        expect("ADR without doc-meta", quiet(records), 0)
+
+        # Planted: two doc-meta blocks, the second expired. Only the first was
+        # ever read.
+        doubled = page_text() + "\n<!-- doc-meta\nhalf_life: tool\n" \
+            "verified_on: 2020-01-01\ntier: 2\nsource: https://x.example/\n" \
+            "invalidated_if: this never stops being wrong\n-->\n"
+        expect("two doc-meta blocks", quiet(docs_with(root, "doubled", "godot", doubled)), 1)
+
         script = pathlib.Path(__file__).resolve()
         extra = subprocess.run(
             [sys.executable, str(script), "--unknown-flag"], capture_output=True
@@ -271,7 +333,11 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--self-test", action="store_true")
     try:
         args = parser.parse_args(argv)
-    except SystemExit:
+    except SystemExit as exit_request:
+        # argparse raises SystemExit for `--help` too, with code 0. Catching it
+        # blindly turned a successful --help into exit 2 in every gate here.
+        if exit_request.code == 0:
+            raise
         return 2
 
     if args.self_test:

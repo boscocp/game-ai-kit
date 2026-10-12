@@ -46,6 +46,10 @@ LEAK_PATHS = (
     ".local/share/godot",
     ".config/godot",
     ".cache/godot",
+    # Added after a review pointed out the list was three fixed paths and the
+    # engine has more than three places to write.
+    ".local/state/godot",
+    ".godot",
 )
 
 DEFAULT_TOOLCHAIN = "/mnt/games/gamedev/toolchain"
@@ -72,8 +76,10 @@ def check_toolchain(toolchain: pathlib.Path) -> list[str]:
     binary = toolchain / "godot" / "godot"
     marker = toolchain / "godot" / "._sc_"
 
-    if not binary.exists():
-        findings.append(f"D2 no Godot binary at {binary} -- run 'make bootstrap'")
+    # `exists()` was true for a *directory* named godot/godot, which then
+    # satisfied every other check here.
+    if not binary.is_file() or not os.access(binary, os.X_OK):
+        findings.append(f"D2 no executable Godot at {binary} -- run 'make bootstrap'")
         return findings
     if not marker.exists():
         findings.append(f"D3 self-contained marker missing: {marker}")
@@ -124,7 +130,9 @@ def self_test() -> int:
         clean_home.mkdir()
         good_toolchain = root / "toolchain"
         (good_toolchain / "godot" / "editor_data").mkdir(parents=True)
-        (good_toolchain / "godot" / "godot").write_text("#!/bin/sh\n")
+        binary = good_toolchain / "godot" / "godot"
+        binary.write_text("#!/bin/sh\n")
+        binary.chmod(0o755)
         (good_toolchain / "godot" / "._sc_").touch()
         repo_off_home = root / "repo"
         repo_off_home.mkdir()
@@ -140,7 +148,24 @@ def self_test() -> int:
         no_marker = root / "no-marker"
         (no_marker / "godot" / "editor_data").mkdir(parents=True)
         (no_marker / "godot" / "godot").write_text("#!/bin/sh\n")
+        (no_marker / "godot" / "godot").chmod(0o755)
         expect("missing ._sc_", quiet(repo_off_home, no_marker, clean_home), 1)
+
+        # Planted: a directory where the binary should be. exists() said yes.
+        a_directory = root / "adirectory"
+        (a_directory / "godot" / "godot").mkdir(parents=True)
+        (a_directory / "godot" / "editor_data").mkdir()
+        (a_directory / "godot" / "._sc_").touch()
+        expect("a directory named godot/godot", quiet(repo_off_home, a_directory, clean_home), 1)
+
+        # Planted: a non-executable file where the binary should be.
+        not_executable = root / "notexec"
+        (not_executable / "godot" / "editor_data").mkdir(parents=True)
+        (not_executable / "godot" / "godot").write_text("#!/bin/sh\n")
+        (not_executable / "godot" / "godot").chmod(0o644)
+        (not_executable / "godot" / "._sc_").touch()
+        expect("binary without the execute bit",
+               quiet(repo_off_home, not_executable, clean_home), 1)
 
         # Planted: no toolchain at all.
         expect("absent toolchain", quiet(repo_off_home, root / "nowhere", clean_home), 1)
@@ -172,7 +197,11 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--self-test", action="store_true")
     try:
         args = parser.parse_args(argv)
-    except SystemExit:
+    except SystemExit as exit_request:
+        # argparse raises SystemExit for `--help` too, with code 0. Catching it
+        # blindly turned a successful --help into exit 2 in every gate here.
+        if exit_request.code == 0:
+            raise
         return 2
 
     if args.self_test:

@@ -6,8 +6,26 @@ something.
 
 ## The invariants
 
-Every one of these has a gate. An invariant without a gate is prose, and prose
-does not hold: a rule violated twice becomes a script.
+An invariant without a gate is prose, and prose does not hold: a rule violated
+twice becomes a script. This section used to claim every invariant had one. It
+did not, and a review said so -- four of them are still prose, and they are
+marked. **Marked, not quietly dropped**: an unenforced rule you know about is
+worth keeping, and one you believe is enforced is worse than none.
+
+| | gate |
+|---|---|
+| 1 readable | `check_readability.py` |
+| 2 addon independence | **none yet** -- `check_addon_deps.py`, named in T2 |
+| 3 acceptance is a command | `check_acceptance.py` |
+| 4 gate rejects a planted case | `make lint-selftests` runs them; that each one *has* a planted case is still read by a person |
+| 5 no lesson above tier 1 | **none yet** -- `check_tiers.py`, named in T7 |
+| 6 no training at game time | **none yet** -- `check_no_training.py`, named in T6 |
+| 7 LLM output validated | **none yet** -- arrives with the addon |
+| 8 toolchain on the large disk | `check_disk_layout.py` |
+| 9 LICENSE and NOTICE ship | `check_license.py` |
+| 10 nothing from the employer | `check_no_employer_refs.py` |
+| 11 no tooling byline | `check_commit_msg.py`, `check_pr_message.py` |
+| 12 branch per wave, review first | `.githooks/pre-commit`, `check_branch_base.py` |
 
 1. **The code is teaching material before it is a library.** When this conflicts
    with any other rule below, this one wins. See "Readable by a person".
@@ -30,10 +48,20 @@ does not hold: a rule violated twice becomes a script.
 10. **Nothing from the author's employer enters this repo** — no name, no
     internal measurement, no file copied from a private repository, no
     work-domain example. The examples here are games.
+11. **No tooling byline in a commit, a PR title or a PR body.** One author.
+    Enforced by `.githooks/commit-msg` and, because a hook cannot see a pull
+    request, by a CI step that checks the PR's own title and body.
+12. **One branch per wave, and the review lands before the merge.** Not after.
+    The reviewer is a context that did not write the code — the same head
+    writing the code, the test and the check is the symmetry everything else
+    here exists to break. `.githooks/pre-commit` refuses a commit on `main`,
+    and `make wave-merge` refuses a branch with no review record.
 
 ## Commands
 
 ```bash
+make wave-start BRANCH=wave/NN-slug   # cut a branch from a current main
+make wave-merge                       # merge it, once reviewed
 make bootstrap     # install the pinned Godot on the large disk, SHA-verified
 make check         # every gate; this is what CI runs
 make test-python   # stdlib unittest, no install step

@@ -1,0 +1,80 @@
+# Every job runs a Makefile target and nothing else.
+#
+# check_workflow.py asserts that: a workflow with its own copy of a command is
+# a second definition that will drift from the first, and the drift is only
+# noticed when CI passes something that fails locally, or the reverse.
+#
+# No `continue-on-error:` anywhere, deliberately. A step allowed to fail is a
+# check that reports green while knowing better.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Read-only. Nothing here publishes, comments or writes a tag.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Tier 1: everything someone with nothing but Python installed can run.
+  # Deliberately has no install step -- the Python here is standard library
+  # only, and the absence of a `pip install` line is an assertion about that.
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: make test-python
+
+  # The gates. These need no engine, so they run on their own and fail fast.
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # check_no_employer_refs.py walks every blob ever committed. With a
+          # shallow clone it would walk almost nothing and pass -- a gate
+          # reporting green because it was not given the history to look at.
+          fetch-depth: 0
+      # One target, not a hand-written list. The list here used to be a second
+      # definition of what `make check` runs minus the engine-dependent part,
+      # and two lists drift the first time one of them gains a target.
+      - run: make check-no-engine
+
+      # A hook cannot see a pull request. The commit messages on the branch go
+      # through .githooks/commit-msg locally, but the PR's own title and body
+      # are written in a browser and reach main through the squash message --
+      # so they are checked here, where they exist.
+      #
+      # Title and body arrive through `env:`, never interpolated into the shell:
+      # a PR title is attacker-controlled text, and `${{ }}` inside a `run:`
+      # would evaluate it as part of the command.
+      - name: the PR's own title and body obey the same rules
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: make lint-pr-message
+
+  # Tier 2: the engine. Bootstrap runs here on every build, which means the
+  # bootstrap path is exercised by CI rather than only on the author's desk.
+  godot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/toolchain
+          key: godot-${{ hashFiles('.godot-version', 'scripts/bootstrap.sh') }}
+      - run: make bootstrap TOOLCHAIN=${{ runner.temp }}/toolchain
+      - run: make test-godot
+        env:
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
+      - run: make lint-disk-layout
+        env:
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain

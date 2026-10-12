@@ -60,12 +60,32 @@ THREE_D_TYPES = (
     "CollisionShape3D",
 )
 
-SCENE_TYPE = re.compile(r'\[node name="[^"]*" type="([A-Za-z0-9_]+)"')
-SCRIPT_EXTENDS = re.compile(r"^\s*extends\s+([A-Za-z0-9_]+)", re.MULTILINE)
+# `type=` anywhere in the node line, not immediately after `name=`: Godot
+# writes `parent=` between them whenever the node is not a root, so the strict
+# form matched only root nodes and a nested Camera3D passed.
+SCENE_TYPE = re.compile(r'\[node\b[^\]]*\btype="([A-Za-z0-9_]+)"')
+# Both ways a script reaches a 3D type: inheriting it, and constructing one.
+# Only `extends` was matched, so `var world := Node3D.new()` passed.
+SCRIPT_TYPE = re.compile(
+    r"^\s*extends\s+([A-Za-z0-9_]+)|\b([A-Za-z0-9_]+)\.new\s*\(", re.MULTILINE
+)
 
 # Directories whose contents must stay 2D. addons/ is deliberately absent: an
 # addon is a library and may legitimately offer 3D helpers later.
 TIER_TWO_DIRS = ("game", "demos")
+
+
+def strip_comments(text: str) -> str:
+    """Drop the lines Godot ignores.
+
+    A `.godot` file comments with `;`. An earlier version of this check read the
+    first match anywhere in the file, so commenting the compliant line out and
+    adding a different one below it left the gate green while the engine loaded
+    the other renderer -- confirmed by asking the running engine what it had.
+    Commenting a line out while trying something, and forgetting to undo it, is
+    the most ordinary way this happens.
+    """
+    return "\n".join(line for line in text.splitlines() if not line.lstrip().startswith(";"))
 
 
 def check_rendering_method(project_file: pathlib.Path) -> list[str]:
@@ -73,21 +93,38 @@ def check_rendering_method(project_file: pathlib.Path) -> list[str]:
     if not project_file.exists():
         return [f"R0 no project.godot at {project_file}"]
 
-    text = project_file.read_text(encoding="utf-8")
-    declared = re.search(r'renderer/rendering_method\s*=\s*"([^"]+)"', text)
-    if declared is None:
+    text = strip_comments(project_file.read_text(encoding="utf-8"))
+    declared = re.findall(r'renderer/rendering_method\s*=\s*"([^"]+)"', text)
+    if not declared:
         return [f"R1 {project_file} does not declare renderer/rendering_method"]
-    if declared.group(1) != REQUIRED_METHOD:
-        return [
-            f"R2 {project_file} uses {declared.group(1)!r}; "
-            f"tier 2 requires {REQUIRED_METHOD!r}"
-        ]
-    return []
+
+    # Every live declaration is checked, not just the first. Two of them is
+    # already a problem -- whichever one the engine honours, a reader cannot
+    # tell which is in force.
+    findings = []
+    for method in declared:
+        if method != REQUIRED_METHOD:
+            findings.append(
+                f"R2 {project_file} uses {method!r}; tier 2 requires {REQUIRED_METHOD!r}"
+            )
+    if len(declared) > 1 and not findings:
+        findings.append(
+            f"R4 {project_file} declares renderer/rendering_method {len(declared)} times; "
+            "keep one, so which is in force is readable"
+        )
+    return findings
 
 
 def check_no_3d_nodes(godot_dir: pathlib.Path) -> list[str]:
-    """Report any 3D node declared under the tier-2 directories."""
+    """Report any 3D node declared under the tier-2 directories.
+
+    Prints a note when there is nothing to inspect. `game/` and `demos/` are
+    empty while the kit is being built, so this half of the gate passes today
+    by looking at no files at all -- which is worth seeing rather than reading
+    as a clean result.
+    """
     findings = []
+    inspected = 0
     for directory in TIER_TWO_DIRS:
         root = godot_dir / directory
         if not root.exists():
@@ -96,10 +133,17 @@ def check_no_3d_nodes(godot_dir: pathlib.Path) -> list[str]:
             if path.suffix not in (".tscn", ".gd"):
                 continue
             text = path.read_text(encoding="utf-8")
-            pattern = SCENE_TYPE if path.suffix == ".tscn" else SCRIPT_EXTENDS
+            inspected += 1
+            pattern = SCENE_TYPE if path.suffix == ".tscn" else SCRIPT_TYPE
             for found in pattern.findall(text):
-                if found in THREE_D_TYPES:
-                    findings.append(f"R3 {path} uses {found}; tier 2 is 2D only")
+                # SCRIPT_TYPE has two groups; exactly one matches per hit.
+                names = [found] if isinstance(found, str) else [n for n in found if n]
+                for name in names:
+                    if name in THREE_D_TYPES:
+                        findings.append(f"R3 {path} uses {name}; tier 2 is 2D only")
+    if inspected == 0:
+        print(f"R5 note: no scenes or scripts under {'/, '.join(TIER_TWO_DIRS)}/ "
+              "-- the 2D rule passed by inspecting nothing")
     return findings
 
 
@@ -167,6 +211,47 @@ def self_test() -> int:
         )
         expect("3D named in a comment", quiet(prose), 0)
 
+        # Planted: a nested node, where Godot writes `parent=` between `name=`
+        # and `type=`. The strict pattern matched only root nodes.
+        nested3d = make_project(root / "nested3d", REQUIRED_METHOD)
+        (nested3d / "demos" / "n.tscn").write_text(
+            '[node name="Cam" parent="." type="Camera3D"]\n')
+        expect("nested 3D node", quiet(nested3d), 1)
+
+        # Planted: a 3D type constructed rather than inherited.
+        constructed = make_project(root / "constructed", REQUIRED_METHOD)
+        (constructed / "game" / "spawn.gd").write_text(
+            "extends Node2D\n\n\nfunc _ready() -> void:\n\tvar world := Node3D.new()\n")
+        expect("3D type constructed", quiet(constructed), 1)
+
+        # Planted: the compliant line commented out, a different one below it.
+        # The gate used to pass this while the engine loaded forward_plus.
+        commented = make_project(root / "commented", REQUIRED_METHOD)
+        (commented / "project.godot").write_text(
+            f'config_version=5\n\n[rendering]\n\n'
+            f';renderer/rendering_method="{REQUIRED_METHOD}"\n'
+            f'renderer/rendering_method="forward_plus"\n'
+        )
+        expect("compliant line commented out", quiet(commented), 1)
+
+        # Planted: declared twice, both compliant. A reader cannot tell which
+        # one the engine honours, so it is a finding of its own.
+        twice = make_project(root / "twice", REQUIRED_METHOD)
+        (twice / "project.godot").write_text(
+            f'config_version=5\n\n[rendering]\n\n'
+            f'renderer/rendering_method="{REQUIRED_METHOD}"\n'
+            f'renderer/rendering_method="{REQUIRED_METHOD}"\n'
+        )
+        expect("declared twice", quiet(twice), 1)
+
+        # A comment that merely mentions the other renderer is not a finding.
+        mentions = make_project(root / "mentions", REQUIRED_METHOD)
+        (mentions / "project.godot").write_text(
+            f'config_version=5\n\n; do not switch to forward_plus: it raises the floor\n'
+            f'[rendering]\n\nrenderer/rendering_method="{REQUIRED_METHOD}"\n'
+        )
+        expect("other renderer named in a comment", quiet(mentions), 0)
+
         # Planted: no project file at all.
         expect("missing project.godot", quiet(root / "nowhere"), 1)
 
@@ -188,7 +273,11 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--self-test", action="store_true")
     try:
         args = parser.parse_args(argv)
-    except SystemExit:
+    except SystemExit as exit_request:
+        # argparse raises SystemExit for `--help` too, with code 0. Catching it
+        # blindly turned a successful --help into exit 2 in every gate here.
+        if exit_request.code == 0:
+            raise
         return 2
 
     if args.self_test:

@@ -1,9 +1,12 @@
-# Salted SHA-256 of each forbidden term, one per line. The terms themselves
+# One term per line, as `<length>:<salted SHA-256>`. The terms themselves
 # are deliberately not here -- see scripts/check_no_employer_refs.py.
 # Add one with: python3 scripts/check_no_employer_refs.py --add-term
 #
+# The length is stored so a window of that size can slide along the text:
+# a hash cannot be searched for inside a longer string, and without it a
+# hyphen or a space defeated the gate. It is not a secret -- the point is
+# that the term is not published, not that it is unguessable.
+#
 # Seeded with the employer's name, derived from the work email domain.
-# Internal repository, client and project names are NOT here yet: add each
-# with --add-term, which reads from a hidden prompt so the term never
-# reaches a file or a shell history.
-83db4e329fbb6bd47292efe1a634c5c4a030cd433def4f46c15e50a2acefe1fe
+# Internal repository, client and project names are NOT here yet.
+4:83db4e329fbb6bd47292efe1a634c5c4a030cd433def4f46c15e50a2acefe1fe

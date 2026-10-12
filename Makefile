@@ -27,12 +27,62 @@ bootstrap: ## Install the pinned Godot on the large disk (SHA-verified)
 	@bash scripts/bootstrap.sh "$(TOOLCHAIN)" "$(GODOT_VERSION)"
 	@$(MAKE) --no-print-directory lint-disk-layout
 
+# --- the wave ---------------------------------------------------------------
+#
+# One branch per wave, and the review lands before the merge. The pre-commit
+# hook refuses a commit on main, because the rule written as prose did not hold.
+
+.PHONY: wave-start
+wave-start: ## Cut a wave branch from a current main: make wave-start BRANCH=wave/NN-slug
+	@test -n "$(BRANCH)" || { echo "usage: make wave-start BRANCH=wave/NN-slug" >&2; exit 2; }
+	@$(PYTHON) scripts/check_branch_base.py --check-base
+	@git switch -c "$(BRANCH)"
+	@echo
+	@echo "On $(BRANCH). When the work is done:"
+	@echo "  1. make check"
+	@echo "  2. have the diff reviewed by something that did not write it"
+	@echo "  3. write docs/reviews/$(notdir $(BRANCH)).md"
+	@echo "  4. make wave-merge"
+
+.PHONY: wave-merge
+wave-merge: ## Merge the current wave into main, once it has been reviewed
+	@$(PYTHON) scripts/check_branch_base.py --check-review
+	@$(MAKE) --no-print-directory check
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	git switch main && git merge --no-ff --no-edit "$$branch" && \
+	echo "merged $$branch into main"
+
+.PHONY: lint-review
+lint-review: ## This branch has a review record and may be merged
+	@$(PYTHON) scripts/check_branch_base.py --check-review
+
 # --- the gate --------------------------------------------------------------
 
 .PHONY: check
-check: lint-tasks lint-status lint-disk-layout lint-renderer lint-readability \
+check: check-no-engine lint-disk-layout test-godot ## Run every gate
+
+.PHONY: check-no-engine
+check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability \
        lint-license lint-employer-refs lint-docs-freshness lint-selftests \
-       test-python test-godot ## Run every gate
+       test-python ## Every gate that does not need the engine installed
+	@# CI's gate job runs exactly this. It used to hand-list the targets,
+	@# because `check` includes lint-disk-layout, which cannot run where the
+	@# toolchain is not installed -- two lists that drift the first time one of
+	@# them gains a target.
+
+.PHONY: lint-commits
+lint-commits: ## Recent commit subjects obey the message rules
+	@# The script's own docstring claimed CI ran it over the history. Nothing
+	@# did: it was reachable only from the hook and from lint-selftests, so the
+	@# stdin mode and the published-exceptions table served a caller that did
+	@# not exist. Now it has one.
+	@git log --format=%s -30 | $(PYTHON) scripts/check_commit_msg.py -
+
+.PHONY: lint-pr-message
+lint-pr-message: ## Check a PR title and body held in PR_TITLE and PR_BODY
+	@# CI used to inline this, while the workflow's own header said every job
+	@# runs a Makefile target and nothing else.
+	@$(PYTHON) scripts/check_pr_message.py
 
 .PHONY: lint-tasks
 lint-tasks: ## Invariant 3: every acceptance criterion is a command
@@ -70,19 +120,7 @@ lint-license: ## LICENSE and NOTICE present, and in every release artifact
 
 .PHONY: lint-selftests
 lint-selftests: ## Run every gate's own --self-test
-	@# Discovered by glob, never by a list: a gate left out of a list is a gate
-	@# that silently stops running. Keep going after the first failure so one
-	@# broken script does not hide the others.
-	@failed=0; \
-	for script in $$(grep -l -- '--self-test' scripts/*.py scripts/*.sh 2>/dev/null); do \
-		printf '%-40s ' "$$script"; \
-		if $(PYTHON) "$$script" --self-test >/dev/null 2>&1 || bash "$$script" --self-test >/dev/null 2>&1; then \
-			echo ok; \
-		else \
-			echo FAIL; failed=1; \
-		fi; \
-	done; \
-	exit $$failed
+	@$(PYTHON) scripts/run_selftests.py
 
 .PHONY: test-python
 test-python: ## Python unit tests (stdlib only, no install step)

@@ -70,8 +70,18 @@ ALLOWED_SHORT_NAMES = {
 # Third-party code under addons/ that this project does not author.
 VENDORED_DIRS = {"gdUnit4"}
 
-FUNC_RE = re.compile(r"^(\t*)func\s+([A-Za-z_][A-Za-z0-9_]*)\s*\((.*?)\)\s*(->\s*\S+)?\s*:")
-VAR_RE = re.compile(r"^\s*(?:@\w+(?:\([^)]*\))?\s+)?(?:static\s+)?var\s+([A-Za-z_][A-Za-z0-9_]*)\s*(:=|:|=)")
+FUNC_RE = re.compile(r"^([\t ]*)func\s+([A-Za-z_][A-Za-z0-9_]*)\s*\((.*?)\)\s*(->\s*\S+)?\s*:")
+# The operator is optional: `var running_total` with no initialiser is legal
+# GDScript and untyped, and requiring an operator meant the gate never saw it.
+# `const` is matched too -- it was not checked at all.
+VAR_RE = re.compile(
+    r"^\s*(?:@\w+(?:\([^)]*\))?\s+)?(?:static\s+)?(var|const)\s+"
+    r"([A-Za-z_][A-Za-z0-9_]*)\s*(:=|:|=)?"
+)
+# `for q in range(3)` binds a name just as a declaration does.
+FOR_RE = re.compile(r"^\s*for\s+([A-Za-z_][A-Za-z0-9_]*)\s+in\b")
+# Opens a function, whether or not the parentheses close on the same line.
+OPENS_FUNC = re.compile(r"^[\t ]*func\s+[A-Za-z_][A-Za-z0-9_]*\s*\(")
 PARAM_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)\s*(:\s*[^=]+)?(=.*)?$")
 
 
@@ -102,20 +112,25 @@ def check_functions(path: pathlib.Path, lines: list[str], label: str) -> list[st
     is_test = path.name.endswith("_test.gd")
 
     for index, line in enumerate(lines):
-        match = FUNC_RE.match(line)
+        signature = join_signature(lines, index)
+        if signature is None:
+            continue
+        joined, span = signature
+        match = FUNC_RE.match(joined)
         if match is None:
             continue
 
-        indent, name, params, return_type = match.groups()
+        _indent, name, params, return_type = match.groups()
         number = index + 1
-        body = function_body(lines, index, len(indent))
+        base_columns = indent_columns(line)
+        body = function_body(lines, index + span - 1, base_columns)
 
         if len(body) > MAX_FUNCTION_LINES:
             findings.append(
                 f"{label}:{number} {name}() is {len(body)} lines; {MAX_FUNCTION_LINES} is the limit"
             )
 
-        depth = deepest_nesting(body, len(indent))
+        depth = deepest_nesting(body, base_columns)
         if depth > MAX_NESTING:
             findings.append(f"{label}:{number} {name}() nests {depth} deep; {MAX_NESTING} is the limit")
 
@@ -132,11 +147,47 @@ def check_functions(path: pathlib.Path, lines: list[str], label: str) -> list[st
     return findings
 
 
-def function_body(lines: list[str], start: int, indent_width: int) -> list[str]:
+# One indentation level, in columns. A tab counts as this many, so a file that
+# mixes the two is still measured rather than silently skipped.
+INDENT_COLUMNS = 4
+
+
+def indent_columns(line: str) -> int:
+    """Leading whitespace in columns, tabs expanded.
+
+    Measuring by counting tabs was the original mistake: a space-indented file
+    produced an empty function body, which turned the length, nesting and
+    parameter checks off without reporting anything. A gate that goes quiet on
+    input it does not recognise is a gate that passes the day it matters.
+    """
+    leading = line[: len(line) - len(line.lstrip("\t "))]
+    return len(leading.expandtabs(INDENT_COLUMNS))
+
+
+def join_signature(lines: list[str], start: int) -> tuple[str, int] | None:
+    """One logical signature, and how many lines it spans.
+
+    A signature split across lines is legal GDScript, and matching only
+    single-line ones skipped the whole function: untyped parameters and a
+    missing return type went unreported. Returns None when this line does not
+    open a function at all. Gives up after a dozen lines rather than scanning
+    the file -- an unbalanced parenthesis is a syntax error, not a signature.
+    """
+    if not OPENS_FUNC.match(lines[start]):
+        return None
+    joined = ""
+    for offset, line in enumerate(lines[start:start + 12]):
+        joined += line.rstrip() if offset == 0 else " " + line.strip()
+        if joined.count("(") <= joined.count(")"):
+            return joined, offset + 1
+    return None
+
+
+def function_body(lines: list[str], start: int, base_columns: int) -> list[str]:
     """The lines belonging to the function that starts at `start`."""
     body = []
     for line in lines[start + 1:]:
-        if line.strip() and not line.startswith("\t" * (indent_width + 1)):
+        if line.strip() and indent_columns(line) <= base_columns:
             break
         body.append(line)
     while body and not body[-1].strip():
@@ -144,15 +195,29 @@ def function_body(lines: list[str], start: int, indent_width: int) -> list[str]:
     return body
 
 
-def deepest_nesting(body: list[str], base_indent: int) -> int:
-    """How many tabs past the function signature the deepest line sits."""
+def deepest_nesting(body: list[str], base_columns: int) -> int:
+    """How many indentation levels past the signature the deepest line sits."""
     deepest = 0
     for line in body:
         if not line.strip() or line.lstrip().startswith("#"):
             continue
-        tabs = len(line) - len(line.lstrip("\t"))
-        deepest = max(deepest, tabs - base_indent)
+        levels = (indent_columns(line) - base_columns) // INDENT_COLUMNS
+        deepest = max(deepest, levels)
     return deepest
+
+
+def check_indentation(lines: list[str], label: str) -> list[str]:
+    """GDScript indents with tabs. The style guide says so, and so does this.
+
+    Only a line *starting* with a space is reported: a tab followed by spaces is
+    ordinary alignment inside a call and flagging it would make the gate a
+    nuisance, which is how gates get switched off.
+    """
+    findings = []
+    for index, line in enumerate(lines):
+        if line.startswith(" ") and line.strip():
+            findings.append(f"{label}:{index + 1} indents with spaces; GDScript uses tabs")
+    return findings
 
 
 def has_doc_comment(lines: list[str], func_index: int) -> bool:
@@ -200,18 +265,25 @@ def split_params(params: str) -> list[str]:
 
 
 def check_variables(lines: list[str], label: str) -> list[str]:
-    """Every `var` is typed, by annotation or by `:=` inference."""
+    """Every `var` and `const` is typed, and no bound name is a bare letter."""
     findings = []
     for index, line in enumerate(lines):
+        number = index + 1
+
+        loop = FOR_RE.match(line)
+        if loop and len(loop.group(1)) == 1 and loop.group(1) not in ALLOWED_SHORT_NAMES:
+            findings.append(f"{label}:{number} loop variable {loop.group(1)} is a single-letter name")
+
         match = VAR_RE.match(line)
         if match is None:
             continue
-        name, operator = match.groups()
-        number = index + 1
-        if operator == "=":
-            findings.append(f"{label}:{number} var {name} is untyped; use `: Type` or `:=`")
+        keyword, name, operator = match.groups()
+        if operator in ("=", None):
+            findings.append(
+                f"{label}:{number} {keyword} {name} is untyped; use `: Type` or `:=`"
+            )
         if len(name) == 1 and name not in ALLOWED_SHORT_NAMES:
-            findings.append(f"{label}:{number} var {name} is a single-letter name")
+            findings.append(f"{label}:{number} {keyword} {name} is a single-letter name")
     return findings
 
 
@@ -220,6 +292,7 @@ def run(root: pathlib.Path) -> int:
     for path in gdscript_files(root):
         label = str(path.relative_to(root)) if path.is_relative_to(root) else str(path)
         lines = path.read_text(encoding="utf-8").splitlines()
+        findings += check_indentation(lines, label)
         findings += check_file_length(path, lines, label)
         findings += check_functions(path, lines, label)
         findings += check_variables(lines, label)
@@ -296,6 +369,12 @@ def self_test() -> int:
         untyped_var = GOOD.replace("var dx: int = absi", "var dx = absi")
         expect("untyped var", quiet(project(root, "novar", untyped_var)), 1)
 
+        # Planted: a single-letter *parameter*. Mutation showed that deleting
+        # this rule left the self-test green -- it was covered only by var.
+        letter_param = GOOD.replace("func heuristic(from: Vector2i, to: Vector2i) -> float:",
+                                    "func heuristic(q: Vector2i, to: Vector2i) -> float:")
+        expect("single-letter parameter", quiet(project(root, "letterparam", letter_param)), 1)
+
         # Planted: a single-letter name that is not on the allowlist.
         bad_name = GOOD.replace("var dx: int =", "var q: int =")
         expect("single-letter name", quiet(project(root, "badname", bad_name)), 1)
@@ -335,6 +414,81 @@ def self_test() -> int:
         (vendor / "messy.gd").write_text("func whatever(a, b):\n\tvar z = 1\n")
         expect("vendored code ignored", quiet(root / "vendor"), 0)
 
+        # Planted: the exact file a review used to show this gate going quiet.
+        # Indented with spaces, it used to produce an empty function body, which
+        # switched off the length, nesting and parameter checks without saying
+        # anything. It must now report BOTH the spaces and the nesting.
+        spaced = (
+            "## Why this exists.\n"
+            "func enormous() -> void:\n"
+            "    if true:\n"
+            "        if true:\n"
+            "            if true:\n"
+            "                if true:\n"
+            "                    if true:\n"
+            "                        print(\"six deep\")\n"
+        )
+        spaced_root = project(root, "spaced", spaced)
+        expect("space-indented and over-nested", quiet(spaced_root), 1)
+        with contextlib.redirect_stdout(io.StringIO()) as captured:
+            run(spaced_root)
+        reported = captured.getvalue()
+        if "indents with spaces" not in reported:
+            failures.append("space-indented file: the spaces themselves were not reported")
+        if "nests" not in reported:
+            failures.append("space-indented file: nesting was not measured through the spaces")
+
+        # A tab followed by spaces is alignment inside a call, not a finding.
+        aligned = (
+            "## Why this exists.\n"
+            "func thing(first: int, second: int) -> int:\n"
+            "\treturn maxi(\n"
+            "\t\tfirst,\n"
+            "\t\tsecond,\n"
+            "\t)\n"
+        )
+        expect("tab then spaces for alignment", quiet(project(root, "aligned", aligned)), 0)
+
+        # Planted: a signature split across lines. The single-line pattern used
+        # to skip the whole function, so two untyped parameters and a missing
+        # return type went unreported.
+        multiline = (
+            "## Why this exists.\n"
+            "func pathfind(\n"
+            "\tstart,\n"
+            "\tgoal\n"
+            "):\n"
+            "\treturn []\n"
+        )
+        expect("multi-line signature", quiet(project(root, "multiline", multiline)), 1)
+
+        # The same signature written correctly must still pass, or the fix
+        # would just be a new way to fire on good code.
+        multiline_ok = (
+            "## Why this exists.\n"
+            "func pathfind(\n"
+            "\tstart: Vector2i,\n"
+            "\tgoal: Vector2i\n"
+            ") -> Array:\n"
+            "\treturn []\n"
+        )
+        expect("multi-line signature, typed", quiet(project(root, "mlok", multiline_ok)), 0)
+
+        # Planted: a declaration with no initialiser. Legal, untyped, and the
+        # pattern required an operator so it never matched.
+        no_initialiser = GOOD.replace("var dx: int = absi(from.x - to.x)", "var running_total")
+        expect("var with no initialiser", quiet(project(root, "noinit", no_initialiser)), 1)
+
+        # Planted: const was not checked at all.
+        untyped_const = GOOD.replace("var dx: int = absi(from.x - to.x)", "const LIMIT = 3")
+        expect("untyped const", quiet(project(root, "const", untyped_const)), 1)
+
+        # Planted: a single-letter loop variable, which only var and parameters
+        # were ever checked for.
+        loop_letter = GOOD.replace("for i in range(3):", "for q in range(3):").replace(
+            "total += i", "total += q")
+        expect("single-letter loop variable", quiet(project(root, "loopq", loop_letter)), 1)
+
         script = pathlib.Path(__file__).resolve()
         extra = subprocess.run(
             [sys.executable, str(script), "--unknown-flag"], capture_output=True
@@ -353,7 +507,11 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--self-test", action="store_true")
     try:
         args = parser.parse_args(argv)
-    except SystemExit:
+    except SystemExit as exit_request:
+        # argparse raises SystemExit for `--help` too, with code 0. Catching it
+        # blindly turned a successful --help into exit 2 in every gate here.
+        if exit_request.code == 0:
+            raise
         return 2
 
     if args.self_test:

@@ -69,7 +69,11 @@ TERMS_FILE = "scripts/forbidden-term-hashes.txt"
 # colliding with the list.
 MIN_TOKEN = 4
 
-TOKEN_RE = re.compile(r"[a-z][a-z0-9_-]{2,}")
+# Letters and digits only. Including `-` meant a hyphen defeated the prefix
+# rule: with one term stored, `acme-corp` and `Acme Corp` both slipped through
+# while `ACMECORP` was caught. Splitting on every separator makes the three
+# spellings the same two tokens.
+TOKEN_RE = re.compile(r"[a-z][a-z0-9]{2,}")
 
 # Scanning the gate's own file would be circular, and the hash list is hashes.
 SKIP_PATHS = {TERMS_FILE, "scripts/check_no_employer_refs.py"}
@@ -80,48 +84,117 @@ def digest(term: str) -> str:
     return hashlib.sha256((SALT + term.strip().lower()).encode("utf-8")).hexdigest()
 
 
-def load_hashes(repo: pathlib.Path) -> set[str]:
-    """Read the hash list, ignoring blank lines and comments."""
+def load_hashes(repo: pathlib.Path) -> set[tuple[int, str]]:
+    """Read the list as (length, hash) pairs, ignoring blanks and comments.
+
+    The length is stored because a hash cannot be searched for inside a longer
+    string: without it, the only possible test is "is this whole token the
+    term", and a review showed that a hyphen or a space then defeated the gate
+    entirely -- `acme-corp` and `Acme Corp` passed while `ACMECORP` was caught.
+    Knowing the length lets a window of that size slide along the text.
+
+    The length is a small thing to give away, and this was never cryptography:
+    the point is that the term is not *published*, not that it is unguessable.
+    """
     path = repo / TERMS_FILE
     if not path.exists():
         return set()
-    hashes = set()
+    pairs = set()
     for line in path.read_text(encoding="utf-8").splitlines():
         line = line.split("#", 1)[0].strip()
-        if line:
-            hashes.add(line)
-    return hashes
+        if not line:
+            continue
+        length, _, value = line.partition(":")
+        if value and length.isdigit():
+            pairs.add((int(length), value))
+    return pairs
 
 
-def offending_tokens(text: str, hashes: set[str]) -> set[str]:
-    """Every token in `text` whose hash, or a prefix's hash, is on the list.
+def squash(text: str) -> str:
+    """Lowercase, keeping only letters and digits.
 
-    Prefixes are checked so that one stored term covers its compounds: a term
-    stored once also matches the same word with a suffix glued on.
+    Separators are dropped rather than split on, so the term survives being
+    written with a hyphen, an underscore, a space or a full stop between its
+    parts. Joining across unrelated words is possible in principle; for a term
+    of four characters or more it has not happened in practice, and this gate
+    errs towards reporting.
     """
+    return "".join(char for char in text.lower() if char.isalnum())
+
+
+def offending_tokens(text: str, hashes: set[tuple[int, str]]) -> set[str]:
+    """Every stretch of `text` that hashes to a stored term.
+
+    Matching is on the squashed text, so a term also matches when it carries a
+    prefix or a suffix, or a separator inside it.
+    """
+    flat = squash(text)
     hits = set()
-    for token in set(TOKEN_RE.findall(text.lower())):
-        for size in range(MIN_TOKEN, len(token) + 1):
-            if digest(token[:size]) in hashes:
-                hits.add(token)
-                break
+    for length, value in hashes:
+        if length > len(flat):
+            continue
+        for start in range(len(flat) - length + 1):
+            window = flat[start:start + length]
+            if digest(window) == value:
+                hits.add(window)
     return hits
 
 
-def scan_tree(repo: pathlib.Path, hashes: set[str]) -> list[str]:
-    """Report forbidden terms in the files git is tracking."""
-    listing = subprocess.run(
+def tree_files(repo: pathlib.Path) -> list[str]:
+    """Tracked files, plus untracked ones git would let you add.
+
+    Tracked-only was the original mistake: writing the term into a new file and
+    running the gate gave a clean result, and it only appeared after `git add`.
+    The moment someone most wants this gate is before the first add. Ignored
+    files stay out -- they are not going anywhere.
+    """
+    tracked = subprocess.run(
         ["git", "-C", str(repo), "ls-files"], capture_output=True, text=True, check=True
-    )
+    ).stdout.splitlines()
+    untracked = subprocess.run(
+        ["git", "-C", str(repo), "ls-files", "--others", "--exclude-standard"],
+        capture_output=True, text=True, check=True,
+    ).stdout.splitlines()
+    return sorted(set(tracked) | set(untracked))
+
+
+def read_as_text(path: pathlib.Path) -> str | None:
+    """A file's text, or None when it is genuinely binary.
+
+    Catching UnicodeDecodeError and moving on treated a latin-1 or UTF-16 text
+    file exactly like a PNG: skipped, silently. A file with no NUL byte is text
+    in some encoding, and prose hides in it just as well, so it is decoded
+    leniently rather than dropped.
+    """
+    try:
+        raw = path.read_bytes()
+    except OSError:
+        return None
+    return decode_leniently(raw)
+
+
+def decode_leniently(raw: bytes) -> str | None:
+    """Text in whatever encoding it is in; None for genuinely binary bytes."""
+    if b"\x00" in raw:
+        return None
+    for encoding in ("utf-8", "utf-16", "latin-1"):
+        try:
+            return raw.decode(encoding)
+        except (UnicodeDecodeError, UnicodeError):
+            continue
+    return None
+
+
+def scan_tree(repo: pathlib.Path, hashes: set[str]) -> list[str]:
+    """Report forbidden terms anywhere in the working tree."""
     findings = []
-    for name in listing.stdout.splitlines():
+    for name in tree_files(repo):
         if name in SKIP_PATHS:
             continue
         path = repo / name
-        try:
-            text = path.read_text(encoding="utf-8")
-        except (UnicodeDecodeError, OSError):
-            continue  # binary or unreadable: not where prose hides
+        text = read_as_text(path)
+        if text is None:
+            continue
         for token in sorted(offending_tokens(text, hashes)):
             findings.append(f"E1 {name}: forbidden term {token!r}")
     return findings
@@ -131,12 +204,19 @@ def scan_history(repo: pathlib.Path, hashes: set[str]) -> list[str]:
     """Report forbidden terms in commit messages and in every blob ever committed."""
     findings = []
 
+    # Author and committer identity, not just the message. A commit authored
+    # from a work address carries the domain in the object itself, and the
+    # seeded term is derived from exactly that domain -- so this was the most
+    # on-point thing the scan could miss. `rev-list --objects` does not list
+    # commit objects with a path, so they never reached the blob loop either.
     messages = subprocess.run(
-        ["git", "-C", str(repo), "log", "--format=%H%n%B"],
+        ["git", "-C", str(repo), "log", "--format=%H%n%an%n%ae%n%cn%n%ce%n%B"],
         capture_output=True, text=True, check=True,
     )
     for token in sorted(offending_tokens(messages.stdout, hashes)):
-        findings.append(f"E2 a commit message contains the forbidden term {token!r}")
+        findings.append(
+            f"E2 a commit message or author identity contains the forbidden term {token!r}"
+        )
 
     revisions = subprocess.run(
         ["git", "-C", str(repo), "rev-list", "--all", "--objects"],
@@ -155,9 +235,8 @@ def scan_history(repo: pathlib.Path, hashes: set[str]) -> list[str]:
             ["git", "-C", str(repo), "cat-file", "-p", object_id],
             capture_output=True, check=False,
         )
-        try:
-            text = blob.stdout.decode("utf-8")
-        except UnicodeDecodeError:
+        text = decode_leniently(blob.stdout)
+        if text is None:
             continue
         for token in sorted(offending_tokens(text, hashes)):
             findings.append(f"E3 history: {name} once contained the forbidden term {token!r}")
@@ -206,7 +285,7 @@ def self_test() -> int:
                        check=True, capture_output=True)
         if terms is not None:
             (repo / TERMS_FILE).write_text(
-                "\n".join(digest(term) for term in terms) + "\n"
+                "\n".join(f"{len(term)}:{digest(term)}" for term in terms) + "\n"
             )
         (repo / "README.md").write_text("A game kit about pathfinding and planning.\n")
         git(repo, "add", "-A")
@@ -222,6 +301,19 @@ def self_test() -> int:
 
         # Planted: an empty hash list. A gate that cannot fail is not a gate.
         expect("no terms listed", quiet(make_repo(root, "noterms", [])), 1)
+
+        # Planted: the term in a file that was never added. This used to pass
+        # clean, and the moment someone wants this gate is before the first add.
+        untracked = make_repo(root, "untracked", [secret])
+        (untracked / "draft.md").write_text(f"notes from the {secret} handbook\n")
+        expect("term in an untracked file", quiet(untracked, history=False), 1)
+
+        # An ignored file is not a finding: it is not going anywhere.
+        ignored = make_repo(root, "ignored", [secret])
+        (ignored / ".gitignore").write_text("scratch/\n")
+        (ignored / "scratch").mkdir()
+        (ignored / "scratch" / "notes.md").write_text(f"{secret} scratch\n")
+        expect("term in an ignored file", quiet(ignored, history=False), 0)
 
         # Planted: the term in a tracked file.
         in_tree = make_repo(root, "intree", [secret])
@@ -252,6 +344,38 @@ def self_test() -> int:
         (compound / "y.md").write_text(f"see the {secret}ai handbook\n")
         git(compound, "add", "-A")
         expect("compound of a stored term", quiet(compound, history=False), 1)
+
+        # Planted: the term spelled with a separator. A hyphen or a space used
+        # to defeat the prefix rule entirely.
+        for label, spelling in (("hyphen", "acme-corp"), ("space", "Acme Corp")):
+            separated = make_repo(root, f"sep-{label}", [secret])
+            (separated / "n.md").write_text(f"from {spelling} internal docs\n")
+            git(separated, "add", "-A")
+            expect(f"term split by a {label}", quiet(separated, history=False), 1)
+
+        # Planted: the term in the author identity rather than the message.
+        identity = make_repo(root, "identity", [secret])
+        (identity / "p.md").write_text("ordinary\n")
+        git(identity, "add", "-A")
+        env = _isolated_env()
+        env["GIT_AUTHOR_EMAIL"] = f"someone@{secret}.com"
+        env["GIT_COMMITTER_EMAIL"] = f"someone@{secret}.com"
+        subprocess.run(["git", "-C", str(identity), "commit", "-qm", "docs: a note"],
+                       check=True, capture_output=True, env=env)
+        expect("term in the author identity", quiet(identity), 3)
+
+        # Planted: the term in a latin-1 file. Catching UnicodeDecodeError and
+        # moving on treated it exactly like a PNG.
+        latin = make_repo(root, "latin", [secret])
+        (latin / "legacy.txt").write_bytes(f"caf\u00e9 from {secret}\n".encode("latin-1"))
+        git(latin, "add", "-A")
+        expect("term in a latin-1 file", quiet(latin, history=False), 1)
+
+        # A real binary must still be skipped, or the gate becomes noise.
+        binary = make_repo(root, "binary", [secret])
+        (binary / "image.png").write_bytes(b"\x89PNG\r\n\x1a\n\x00" + secret.encode())
+        git(binary, "add", "-A")
+        expect("term-like bytes inside a binary", quiet(binary, history=False), 0)
 
         # An ordinary word that merely starts the same way is not a finding.
         innocent = make_repo(root, "innocent", [secret])
@@ -300,7 +424,7 @@ def add_term(repo: pathlib.Path) -> int:
 
     path = repo / TERMS_FILE
     existing = load_hashes(repo)
-    new = digest(term)
+    new = (len(term.strip().lower()), digest(term))
     if new in existing:
         print("already on the list")
         return 0
@@ -311,7 +435,7 @@ def add_term(repo: pathlib.Path) -> int:
         "# Add one with: python3 scripts/check_no_employer_refs.py --add-term\n"
     )
     with path.open("a", encoding="utf-8") as handle:
-        handle.write(header + new + "\n")
+        handle.write(f"{header}{new[0]}:{new[1]}\n")
     print(f"added; the list now has {len(existing) + 1} terms")
     return 0
 
@@ -324,7 +448,11 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--self-test", action="store_true")
     try:
         args = parser.parse_args(argv)
-    except SystemExit:
+    except SystemExit as exit_request:
+        # argparse raises SystemExit for `--help` too, with code 0. Catching it
+        # blindly turned a successful --help into exit 2 in every gate here.
+        if exit_request.code == 0:
+            raise
         return 2
 
     if args.self_test:

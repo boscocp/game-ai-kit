@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Refuse a commit made directly on main.
+#
+# This is not a preference. The first four waves of this repository went
+# straight onto main with no branch and no review -- seven commits of gate code
+# read by nobody but their author, which is the exact symmetry the whole
+# apparatus exists to break. A sentence in CLAUDE.md did not prevent it, and a
+# gate that has to be remembered would not have either.
+#
+# Deliberate exception, visible in the shell history of whoever takes it:
+#   GAK_ALLOW_MAIN=1 git commit ...
+set -euo pipefail
+
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+if [[ "$branch" == "main" && "${GAK_ALLOW_MAIN:-}" != "1" ]]; then
+  cat >&2 <<'MSG'
+pre-commit: refusing a commit on main.
+
+Work happens on a branch, one per wave, and the review lands before the merge:
+
+    make wave-start BRANCH=wave/05-a-slug
+    ... work, commit ...
+    make wave-merge
+
+To commit here anyway, say so out loud:
+
+    GAK_ALLOW_MAIN=1 git commit ...
+MSG
+  exit 1
+fi
