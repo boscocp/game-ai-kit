@@ -80,6 +80,36 @@ func test_the_board_is_read_row_major() -> void:
 	assert_int(graph.cost_at(Vector2i(3, 0))).is_equal(7)
 
 
+# A search that walks one legal step and then claims it arrived. Every rule the
+# runner had was about the steps -- each follows the last, each lands on ground
+# a unit may enter -- and all of them hold for this. It is the same shape as the
+# unvalidated `from` the wave 08 review found, at the other end of the path.
+class StrollsOffAndSaysItArrived extends Search:
+	func _explore(graph: GridGraph, from: Vector2i, _to: Vector2i) -> SearchResult:
+		var step: Array[Vector2i] = [graph.neighbours(from)[0]]
+		var looked_at: Array[Vector2i] = [from]
+		return SearchResult.new(step, looked_at, [] as Array[Vector2i], 1, true)
+
+
+func test_a_legal_path_to_the_wrong_cell_is_reported() -> void:
+	var problems: Array[String] = SearchVector.check(
+		"strolling", _good(), {"liar": StrollsOffAndSaysItArrived.new()}
+	)
+
+	assert_int(problems.size()).is_equal(1)
+	assert_str(problems[0]).contains("does not arrive")
+
+
+func test_a_search_that_starts_on_its_goal_arrives_with_no_steps() -> void:
+	# The one empty path that is an arrival, and the reason the rule above is
+	# not simply "a path must have a last cell".
+	var standing: Dictionary = _good()
+	standing["to"] = [0, 0]
+	standing["expect"] = {"reached": true, "cheapest_cost": 0, "fewest_steps": 0}
+
+	assert_int(SearchVector.check("standing", standing, _searches()).size()).is_equal(0)
+
+
 # A 3x3 of flat ground, corner to corner: four steps, cost four.
 func _good() -> Dictionary:
 	return {
