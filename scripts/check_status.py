@@ -42,12 +42,14 @@ import tempfile
 
 TASK_FILE_RE = re.compile(r"^(T\d+(?:\.\d+)?)-")
 ROW_RE = re.compile(r"^\|\s*(T\d+(?:\.\d+)?)\s*\|\s*([^|]*?)\s*\|\s*\*{0,2}([a-z]+)\*{0,2}\s*\|", re.M)
-# `Prereqs: T2, ADR 0004`, wherever it sits on the header line. Anchoring it to
-# a line starting with `Size:` meant reordering the header, or dropping it,
-# switched the prerequisite and cycle checks off without a word -- a dangling
-# prereq then passed. Either separator is accepted, because a middle dot is
-# easy to lose in an editor and the rule should survive that.
-PREREQ_RE = re.compile(r"^.*?\bPrereqs:\s*([^·\n]+?)(?:\s+[·-]\s+\S|\s*$)", re.M)
+# The header line: the one carrying both `Size:` and `Prereqs:`, in either
+# order. Two earlier versions of this were wrong in opposite directions.
+# Anchoring on `^Size:` meant reordering the header switched the prerequisite
+# and cycle checks off. Replacing it with "any line mentioning Prereqs:" was
+# worse: `.search()` takes the first match anywhere in the file, so a sentence
+# of prose above the header won and a dangling prerequisite passed green.
+# Requiring both fields on one line is what actually identifies the header.
+HEADER_RE = re.compile(r"^(?=[^\n]*\bSize:)[^\n]*\bPrereqs:\s*([^·\n]+?)(?:\s+[·-]\s+\S|\s*$)", re.M)
 ADR_RE = re.compile(r"^ADR\s+\d{4}$", re.I)
 
 ALLOWED_STATES = {"todo", "wip", "blocked", "done"}
@@ -77,10 +79,13 @@ def index_rows(status_text: str) -> tuple[dict[str, str], list[str]]:
 
 def prerequisites(text: str) -> list[str]:
     """The ids and ADRs a task declares it waits on."""
-    found = PREREQ_RE.search(text)
-    if found is None:
-        return []
-    raw = found.group(1).strip()
+    headers = HEADER_RE.findall(text)
+    if not headers:
+        # No header at all is not "no prerequisites": it is a task file that
+        # does not say, which the caller reports rather than reading as none.
+        return ["<no header>"]
+    found_raw = headers[0]
+    raw = found_raw.strip()
     if raw.lower() in NO_PREREQS:
         return []
     return [item.strip() for item in raw.split(",") if item.strip()]
@@ -141,6 +146,11 @@ def run(tasks: pathlib.Path) -> int:
     for identifier, path in sorted(files.items()):
         needed = []
         for item in prerequisites(path.read_text(encoding="utf-8")):
+            if item == "<no header>":
+                findings.append(
+                    f"S9 {path.name}: no header line carrying both `Size:` and `Prereqs:`"
+                )
+                continue
             if ADR_RE.match(item):
                 continue  # a decision not yet taken is the normal case
             if not TASK_FILE_RE.match(item + "-"):
@@ -261,6 +271,26 @@ def self_test() -> int:
             "Prereqs: T7 · Size: M · Files: `godot/`")
         expect("reordered header, dangling prereq", quiet(build(
             root, "reordered", status_text(("T2", "todo")), {"T2": reordered},
+        )), 1)
+
+        # Planted: a sentence mentioning Prereqs: above the header. The second
+        # version of this pattern read that line instead of the header, so a
+        # dangling prerequisite passed green.
+        prose_above = (
+            "# T2 - A task\n\n"
+            "This one is independent, so Prereqs: none\n\n"
+            "Size: M · Prereqs: T99 · Files: `godot/`\n\n"
+            "## Acceptance\n\n```bash\nmake check\n```\n"
+        )
+        expect("prose mentioning Prereqs above the header", quiet(build(
+            root, "proseprereq", status_text(("T2", "todo")), {"T2": prose_above},
+        )), 1)
+
+        # Planted: a task file with no header line at all. Reading that as "no
+        # prerequisites" is how a file with none silently has none checked.
+        expect("no header line", quiet(build(
+            root, "noheader", status_text(("T2", "todo")),
+            {"T2": "# T2 - A task\n\n## Acceptance\n\n```bash\nmake check\n```\n"},
         )), 1)
 
         # Planted: two rows for the same id, the bad state first. The dict used

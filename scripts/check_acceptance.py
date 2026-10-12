@@ -162,6 +162,49 @@ HUMAN_VERDICT = re.compile(
 NEEDS_LOCAL_MODEL = re.compile(r"\bollama\b|localhost:11434|\bapi/chat\b")
 
 
+def split_commands_and_prose(body: str) -> tuple[str, str]:
+    """The Acceptance section split into what runs and what a person reads.
+
+    Walked line by line rather than carved up with regexes. The regex version
+    stripped shell fences from the body and then dropped inline `code` spans
+    with a backtick pattern -- which ate the body of every remaining fence,
+    because a fence is delimited by backticks. The result was that a ```text
+    fence was neither commands nor prose, and the fix meant to cover that case
+    did nothing at all. Deleting it left the self-test green.
+
+    A trailing comment inside a command is prose too: a human verdict hides
+    there just as well as in a paragraph.
+    """
+    commands, prose = [], []
+    fence_tag: str | None = None
+
+    for line in body.splitlines():
+        opening = re.match(r"^\s*```([a-z]*)\s*$", line)
+        if opening and fence_tag is None:
+            fence_tag = opening.group(1)
+            continue
+        if opening is not None and fence_tag is not None:
+            fence_tag = None
+            continue
+        if line.strip().startswith("```") and fence_tag is not None:
+            fence_tag = None
+            continue
+
+        if fence_tag is None:
+            # Inline `code` spans are dropped so a task may quote the wrong way
+            # of writing a criterion while explaining why it is wrong.
+            prose.append(re.sub(r"`[^`]*`", "", line))
+        elif fence_tag in SHELL_TAGS:
+            commands.append(line)
+            head, _, comment = line.partition("#")
+            if comment:
+                prose.append(comment)
+        else:
+            prose.append(line)
+
+    return "\n".join(commands), "\n".join(prose)
+
+
 def acceptance_section(text: str) -> str | None:
     """The body of the `## Acceptance` section, or None when there is none."""
     found = re.search(r"^##\s+Acceptance\s*$(.*?)(?=^##\s|\Z)", text, re.M | re.S)
@@ -176,35 +219,12 @@ def check_file(path: pathlib.Path) -> list[str]:
     if body is None:
         return [f"{path.name}: no `## Acceptance` section"]
 
-    fences = FENCE_RE.findall(body)
-    # An empty fence used to satisfy this: findall returned [""], which is
-    # truthy, so the "prose only" branch never fired. The gate failed its own
-    # question -- does this pass on an empty scene?
-    command_blocks = [body_text for tag, body_text in fences
-                      if tag in SHELL_TAGS and body_text.strip()]
-    if not command_blocks:
+    commands, prose = split_commands_and_prose(body)
+    if not commands.strip():
+        # An empty fence used to satisfy this: findall returned [""], which is
+        # truthy, so the "prose only" branch never fired. The gate failed its
+        # own question -- does this pass on an empty scene?
         problems.append(f"{path.name}: Acceptance has no command block -- it is prose only")
-    commands = "\n".join(command_blocks)
-
-    # Prose is the body minus the *command* fences only. A ```text fence is
-    # prose that happens to be indented, and is read as such.
-    # `text` holds the whole file and is needed further down -- naming the loop
-    # variable `text` here shadowed it, and the Requires: check then searched a
-    # code fence instead of the file. The self-test caught it; the name stays
-    # distinct.
-    prose_source = body
-    for tag, fence_body in fences:
-        if tag in SHELL_TAGS:
-            prose_source = prose_source.replace(fence_body, "")
-    # Inline `code` spans are dropped so a task may quote the wrong way of
-    # writing a criterion while explaining why it is wrong.
-    prose = re.sub(r"`[^`]*`", "", prose_source)
-
-    # A human verdict hides just as well in a trailing comment inside the fence.
-    for line in commands.splitlines():
-        comment = line.split("#", 1)
-        if len(comment) == 2:
-            prose += "\n" + comment[1]
 
     for pattern, message in PROSE_VERDICT:
         if pattern.search(commands) or pattern.search(prose):
@@ -377,12 +397,21 @@ def self_test() -> int:
             "make test-godot\npython3 scripts/check_readability.py", "")
         expect("empty code fence", quiet(tasks_with(root, "emptyfence", empty_fence)), 1)
 
-        # Planted: ```text instead of ```bash. This used to disable both halves
-        # at once -- not commands, and not prose either.
+        # Planted: a ```text fence *beside* a valid command block. The earlier
+        # case replaced the bash fence, so it passed through the "no command
+        # block" branch and never exercised the prose separation at all --
+        # deleting that code left the self-test green.
         text_fence = GOOD_TASK.replace(
             "```bash\nmake test-godot\npython3 scripts/check_readability.py\n```",
-            "```text\nThe tests pass and the demo looks right.\n```")
-        expect("prose inside a text fence", quiet(tasks_with(root, "textfence", text_fence)), 1)
+            "```bash\nmake test-godot\n```\n\n```text\n"
+            "Open the demo and confirm it looks right.\n```")
+        expect("human verdict in a text fence", quiet(tasks_with(root, "textfence", text_fence)), 1)
+
+        # Replacing the command block entirely is still "prose only".
+        prose_fence = GOOD_TASK.replace(
+            "```bash\nmake test-godot\npython3 scripts/check_readability.py\n```",
+            "```text\nThe tests pass.\n```")
+        expect("only a text fence", quiet(tasks_with(root, "proseonly", prose_fence)), 1)
 
         # Planted: two invocations on one line, the first one's flag covering
         # for the second. The whole line used to be the unit.

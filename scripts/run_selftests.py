@@ -38,12 +38,16 @@ from __future__ import annotations
 
 import argparse
 import pathlib
+import re
 import subprocess
 import sys
 import tempfile
 
 TIMEOUT_SECONDS = 120
 MARKER = "--self-test"
+
+# A file named this way is a gate, whether or not it still says so.
+GATE_NAME_RE = re.compile(r"^check_[a-z0-9_]+\.py$")
 
 
 def interpreter_for(script: pathlib.Path) -> str | None:
@@ -57,15 +61,28 @@ def interpreter_for(script: pathlib.Path) -> str | None:
     return None
 
 
-def gates(scripts_dir: pathlib.Path) -> list[pathlib.Path]:
-    """Every script that offers a --self-test, found by glob."""
-    found = []
+def gates(scripts_dir: pathlib.Path) -> tuple[list[pathlib.Path], list[str]]:
+    """Every script offering a --self-test, plus gates that have lost theirs.
+
+    Discovery is in two parts, because one was not enough. Searching for the
+    string alone meant a gate that renamed, broke or lost its flag simply
+    vanished from the list and the run stayed green -- the exact hole this
+    runner exists to close, reproduced by the thing meant to close it.
+
+    So a file named `check_*.py` is a gate *by its name*, and a gate with no
+    self-test is a finding rather than an absence. Anything else carrying the
+    marker is run as well.
+    """
+    found, missing = [], []
     for path in sorted(scripts_dir.iterdir()):
         if path.suffix not in (".py", ".sh") or not path.is_file():
             continue
-        if MARKER in path.read_text(encoding="utf-8", errors="replace"):
+        has_marker = MARKER in path.read_text(encoding="utf-8", errors="replace")
+        if has_marker:
             found.append(path)
-    return found
+        elif GATE_NAME_RE.match(path.name):
+            missing.append(f"{path.name}: named like a gate but offers no {MARKER}")
+    return found, missing
 
 
 def run_one(script: pathlib.Path, timeout: int) -> tuple[str, bool]:
@@ -84,12 +101,14 @@ def run_one(script: pathlib.Path, timeout: int) -> tuple[str, bool]:
 
 
 def run(scripts_dir: pathlib.Path, timeout: int) -> int:
-    found = gates(scripts_dir)
-    if not found:
+    found, missing = gates(scripts_dir)
+    if not found and not missing:
         print(f"no scripts with a {MARKER} in {scripts_dir}")
         return 2
 
-    failed = False
+    failed = bool(missing)
+    for complaint in missing:
+        print(f"{complaint:<40} NO SELF-TEST")
     for script in found:
         # Keep going after the first failure, so one broken gate does not hide
         # the state of the others.
@@ -138,6 +157,23 @@ def self_test() -> int:
         if run(folder, 5) != 1:
             failures.append("a script with no shebang was not reported")
         headless.unlink()
+
+        # Planted: a gate that lost its flag. Searching for the string alone
+        # made it vanish from the list while the run stayed green -- the one
+        # hole this runner was written to close.
+        lost = folder / "check_lost.py"
+        lost.write_text("#!/usr/bin/env python3\n# --selftest\nraise SystemExit(0)\n")
+        if run(folder, 5) != 1:
+            failures.append("a gate that lost its --self-test did not fail the run")
+        lost.unlink()
+
+        # A helper that is not named like a gate and has no self-test is not a
+        # finding, or every utility in scripts/ becomes one.
+        helper = folder / "helper.py"
+        helper.write_text("#!/usr/bin/env python3\nprint('hi')\n")
+        if run(folder, 5) != 0:
+            failures.append("a plain helper was reported as a missing gate")
+        helper.unlink()
 
         # Planted: an empty directory must be usage, never a pass.
         empty = folder / "empty"
