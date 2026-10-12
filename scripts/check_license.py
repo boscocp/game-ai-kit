@@ -81,11 +81,13 @@ def check_addons(repo: pathlib.Path) -> list[str]:
         return findings
 
     for addon in sorted(p for p in addons.iterdir() if p.is_dir()):
-        # A folder is only an addon once it declares itself one. Anything else
-        # is work in progress and not shippable yet.
-        if not (addon / "plugin.cfg").exists():
-            continue
-
+        # Every folder under addons/ counts. An earlier version used the
+        # presence of plugin.cfg as the marker for "shippable", which was wrong
+        # twice over: the library addons here have no plugin.cfg at all (a
+        # plugin.cfg requires an @tool script extending EditorPlugin, and
+        # `class_name` already registers a class project-wide without one), and
+        # a marker-based rule fails open -- a new addon would be skipped in
+        # silence, which is the kind of green this project refuses.
         if addon.name in VENDORED:
             # Someone else's code: it keeps its own licence and must not wear
             # ours. Both halves are asserted, so a vendored addon cannot be
@@ -151,7 +153,6 @@ def self_test() -> int:
     def make_addon(repo: pathlib.Path, name: str, with_files: bool) -> pathlib.Path:
         addon = repo / "godot" / "addons" / name
         addon.mkdir(parents=True)
-        (addon / "plugin.cfg").write_text("[plugin]\nname=\"%s\"\n" % name)
         if with_files:
             for required in REQUIRED_FILES:
                 (addon / required).write_text("copy\n")
@@ -179,10 +180,12 @@ def self_test() -> int:
         make_addon(bare, "ai_planning", with_files=False)
         expect("addon without LICENSE", quiet(bare), 1)
 
-        # A folder with no plugin.cfg is work in progress, not a finding.
-        draft = make_repo(root / "draft")
-        (draft / "godot" / "addons" / "ai_llm").mkdir(parents=True)
-        expect("addon without plugin.cfg", quiet(draft), 0)
+        # Planted: a library addon with no plugin.cfg -- which is the normal
+        # shape here -- must still be required to carry the attribution. This
+        # case used to pass, and that was the bug.
+        library = make_repo(root / "library")
+        (library / "godot" / "addons" / "ai_llm").mkdir(parents=True)
+        expect("library addon without plugin.cfg", quiet(library), 1)
 
         # A declared third-party addon keeps its own licence and skips ours.
         vendored_name = next(iter(VENDORED))

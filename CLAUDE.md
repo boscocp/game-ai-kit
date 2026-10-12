@@ -65,6 +65,25 @@ the algorithm file reads top to bottom like the pseudocode in the book, and each
 addon opens with a 5–10 line header saying what it solves, the complexity, and
 **when not to use it**.
 
+## Check the documentation before writing the rule
+
+Measuring a behaviour by crashing into it works, and it is still the expensive
+way round. Before writing a rule, a gate or a line of code that depends on how
+Godot behaves, **read the official documentation for the version in
+`.godot-version`**, then measure to confirm. Three things in this repository
+were wrong because that order was reversed:
+
+- a rule was nearly written claiming Godot's exit code carries no information
+  (it propagates: parse error 1, `quit(3)` 3);
+- `make test-godot` ran a form that cannot work and popped a desktop dialog
+  under `--headless`;
+- `check_license.py` used `plugin.cfg` as the marker for a shippable addon,
+  when the library addons here correctly have none -- `class_name` registers a
+  class project-wide with no plugin at all.
+
+Findings that survive both steps go in `docs/godot/`, with the source URL and a
+`verified_on` date, because that is the layer with a six-month half-life.
+
 ## Traps that have already cost time
 
 - **`make` collapses every failure to exit 2.** The scripts are careful to
