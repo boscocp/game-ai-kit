@@ -14,10 +14,14 @@
 #      already done the first two.
 #
 # The domains are generated from a fixed seed, so a failure is reproducible.
-# A planner that never returned would hang this script rather than fail it --
-# on CI that reads as a slow job rather than a broken one, which is the same
-# trap `GridGraph.contains` carries a note about. The budget is what stands
-# between the two, and trial 0 of a hung run is the last line printed.
+#
+# A planner that never returned would hang this script rather than fail it, and
+# on CI that reads as a slow job rather than a broken one -- the same trap
+# `GridGraph.contains` carries a note about. The budget in `StripsPlanner` is
+# what stands between the two. This file prints **nothing** until every trial
+# has run, so a hang leaves no line at all to say where it stopped; an earlier
+# version of this paragraph claimed the opposite, which is the kind of comment
+# that is worse than no comment, because it is read at the moment it matters.
 #
 # Run it directly; T4's acceptance is this command and its exit code:
 #
@@ -26,12 +30,24 @@ extends SceneTree
 
 const TRIALS: int = 400
 const SEED: int = 20261012
-const PREDICATES: int = 8
-const ACTIONS: int = 6
+
+# Twelve actions over six predicates, which is not the first shape this file
+# generated. It was eight predicates and six actions, and almost every domain
+# it produced was a chain: 66 of 400 solvable, no two routes to the same world
+# of different lengths, and so nothing for the shortest-plan property to see --
+# a stack passed it. Crowding more actions into fewer predicates is what makes
+# the frontier's order decide the answer: 218 solvable, 156 plans measured, and
+# the stack now fails 19 of them.
+const PREDICATES: int = 6
+const ACTIONS: int = 12
 
 # Larger than 2^PREDICATES, so no honest search here can reach it. That is what
 # makes `gave_up` a finding rather than a possibility in these trials.
 const BUDGET: int = 1000
+
+# How deep the exhaustive check below will go. Its cost is ACTIONS to the power
+# of the depth, so this is where the property stops being free.
+const DEEPEST_EXHAUSTIVE_CHECK: int = 5
 
 
 func _init() -> void:
@@ -48,6 +64,7 @@ func _run_trials() -> Array[String]:
 	var planner := StripsPlanner.new()
 	var failures: Array[String] = []
 	var solved: int = 0
+	var checked_for_shorter: int = 0
 
 	for trial: int in range(TRIALS):
 		var actions: Array[StripsAction] = _random_domain(random)
@@ -55,24 +72,38 @@ func _run_trials() -> Array[String]:
 		var goal: PackedStringArray = _random_predicates(random, 2)
 		var result: PlanResult = planner.plan(actions, start, goal, BUDGET)
 		solved += 1 if result.solved else 0
+		checked_for_shorter += 1 if _is_measurable(result) else 0
 		failures += _check(trial, result, actions, start, goal)
 
-	# Printed because a property run where every trial fell the same way is a
-	# run that proved half of what it claims. Both numbers have to be non-zero
-	# for the two claims above to have been exercised at all.
+	# A run where every trial fell the same way proves half of what it claims,
+	# and this used to be a sentence beside a `print` -- so `TRIALS = 0`
+	# reported "0 trials, 0 failures" and passed, and so did a generator whose
+	# every goal was unreachable, with the plan-replay half never running once.
+	# The two claims are only both exercised when both numbers are non-zero.
 	print("planner properties: %d of %d domains had a plan" % [solved, TRIALS])
+	if solved == 0 or solved == TRIALS:
+		failures.append(
+			"%d of %d domains had a plan, so only one of the two claims ran"
+			% [solved, TRIALS]
+		)
+	print("planner properties: %d plans measured against an exhaustive search"
+		% checked_for_shorter)
+	if checked_for_shorter == 0:
+		failures.append("no plan was checked for a shorter one")
 	return failures
 
 
 # What this trial's answer has to satisfy, whichever way it came out.
 func _check(trial: int, result: PlanResult, actions: Array[StripsAction],
 		start: WorldState, goal: PackedStringArray) -> Array[String]:
-	if result.visited > BUDGET:
-		return ["trial %d: visited %d states, and the budget was %d"
-			% [trial, result.visited, BUDGET]]
+	# There was a `result.visited > BUDGET` guard here. It cannot fire --
+	# `plan` returns the moment `visited` reaches the budget -- so it was a
+	# check that could only ever go green, which is the thing this repository
+	# is arranged against. What the budget is actually worth is pinned in
+	# `planning_test.gd`, where a run stopped at 3 states reports exactly 3.
 	if not result.solved:
 		return _check_no_plan(trial, result, actions, start, goal)
-	return _check_the_plan_runs(trial, result, start, goal)
+	return _check_the_plan_runs(trial, result, actions, start, goal)
 
 
 # No plan: an empty one, and an honest reason for it.
@@ -91,9 +122,10 @@ func _check_no_plan(trial: int, result: PlanResult, actions: Array[StripsAction]
 	return problems
 
 
-# A plan: every step runs where the plan puts it, and the goal holds at the end.
-func _check_the_plan_runs(trial: int, result: PlanResult, start: WorldState,
-		goal: PackedStringArray) -> Array[String]:
+# A plan: every step runs where the plan puts it, the goal holds at the end,
+# and no shorter plan exists.
+func _check_the_plan_runs(trial: int, result: PlanResult, actions: Array[StripsAction],
+		start: WorldState, goal: PackedStringArray) -> Array[String]:
 	var world: WorldState = start
 	for index: int in range(result.steps.size()):
 		var action: StripsAction = result.steps[index]
@@ -103,7 +135,43 @@ func _check_the_plan_runs(trial: int, result: PlanResult, start: WorldState,
 
 	if not world.holds_all(goal):
 		return ["trial %d: the plan ran to the end and the goal does not hold" % trial]
+	if _is_measurable(result) and _a_shorter_plan_exists(actions, start, goal,
+			result.steps.size() - 1):
+		return ["trial %d: %d steps, and a shorter plan exists"
+			% [trial, result.steps.size()]]
 	return []
+
+
+# True when this plan is short enough to measure against an exhaustive search.
+#
+# The search below has no visited set and no frontier, so its cost is the
+# branching factor to the power of the depth. Past a handful of steps that is
+# the rest of the afternoon, and a property check nobody runs proves nothing.
+func _is_measurable(result: PlanResult) -> bool:
+	return result.solved and result.steps.size() > 0 \
+		and result.steps.size() - 1 <= DEEPEST_EXHAUSTIVE_CHECK
+
+
+# Is there any plan of `depth` steps or fewer? Every sequence, tried.
+#
+# This is the slow truth the planner is measured against, and it is deliberately
+# written the other way round: no queue, no visited set, nothing shared with the
+# code it is checking. A review turned the planner's queue into a stack and
+# every gate in the repository stayed green, because the shortest-plan claim --
+# the only claim breadth-first makes -- was asserted by nothing.
+func _a_shorter_plan_exists(actions: Array[StripsAction], world: WorldState,
+		goal: PackedStringArray, depth: int) -> bool:
+	if depth <= 0:
+		return false
+	for action: StripsAction in actions:
+		if not action.is_applicable(world):
+			continue
+		var next: WorldState = action.apply(world)
+		if next.holds_all(goal):
+			return true
+		if _a_shorter_plan_exists(actions, next, goal, depth - 1):
+			return true
+	return false
 
 
 # The sentence for a step that cannot run, kept out of the loop above so the
@@ -121,8 +189,10 @@ func _random_domain(random: RandomNumberGenerator) -> Array[StripsAction]:
 	var actions: Array[StripsAction] = []
 	for index: int in range(ACTIONS):
 		var needs: PackedStringArray = _random_predicates(random, 2)
+		# `_random_predicates` never returns an empty list, so the guard this
+		# line used to carry -- `and not needs.is_empty()` -- was always true.
 		var deletes := PackedStringArray()
-		if random.randf() < 0.5 and not needs.is_empty():
+		if random.randf() < 0.5:
 			deletes.append(needs[random.randi_range(0, needs.size() - 1)])
 		actions.append(StripsAction.new(
 			"action_%d" % index, needs, deletes, _random_predicates(random, 1)

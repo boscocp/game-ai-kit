@@ -19,7 +19,7 @@ extends RefCounted
 # type and this is what everybody uses instead: membership is a hash lookup,
 # where an array would be a linear scan on the one path that runs millions of
 # times.
-var _facts: Dictionary
+var _facts: Dictionary[String, bool]
 
 
 func _init(predicates: PackedStringArray = PackedStringArray()) -> void:
@@ -28,7 +28,11 @@ func _init(predicates: PackedStringArray = PackedStringArray()) -> void:
 		_facts[predicate] = true
 
 
-## True when this predicate holds here.
+## True when this predicate is one of the things true in this state.
+##
+## A predicate nobody has made true is simply absent: there is no third answer
+## between true and false, and that closed-world assumption is why a STRIPS
+## domain never has to list everything that is *not* the case.
 func holds(predicate: String) -> bool:
 	return _facts.has(predicate)
 

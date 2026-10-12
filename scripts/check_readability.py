@@ -453,6 +453,15 @@ def self_test() -> int:
         )
         expect("static func, over-nested", quiet(project(root, "staticdeep", static_deep)), 1)
 
+        # Planted: a static function with no return type. Four checks run on a
+        # declaration and three of them had a case here; this is the fourth.
+        static_no_return = GOOD + (
+            "\n\n## Why this exists.\nstatic func measure(first: int, second: int):\n"
+            "\treturn first + second\n"
+        )
+        expect("static func, no return type",
+               quiet(project(root, "staticret", static_no_return)), 1)
+
         # The same function written properly must still pass.
         static_ok = GOOD + (
             "\n\n## Why this exists.\nstatic func measure(first: int, second: int) -> int:\n"

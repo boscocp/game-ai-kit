@@ -15,8 +15,15 @@ extends RefCounted
 ## What it is called, in the domain and in a printed plan.
 var name: String
 
+## What the world must already satisfy. All of them, never some of them: a
+## STRIPS precondition is a conjunction and there is no way to write "or".
 var preconditions: PackedStringArray
+
+## What stops being true. This is the list a domain forgets, and a domain that
+## forgets it plans a world where nothing is ever spent.
 var deletes: PackedStringArray
+
+## What starts being true.
 var adds: PackedStringArray
 
 
@@ -29,7 +36,9 @@ func _init(action_name: String, needs: PackedStringArray,
 	adds = starts_being_true
 
 
-## True when this action may run in this state.
+## True when the world already satisfies every one of this action's
+## preconditions, which is the only question STRIPS ever asks about an action
+## before running it.
 func is_applicable(state: WorldState) -> bool:
 	return state.holds_all(preconditions)
 

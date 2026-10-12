@@ -54,15 +54,43 @@ func test_an_action_whose_preconditions_are_unmet_is_not_applicable() -> void:
 
 
 func test_the_planner_returns_the_fewest_actions_not_the_first_route_it_finds() -> void:
-	# The short route is written last on purpose: a planner taking the newest
-	# world off the frontier instead of the oldest answers with the long one,
-	# and both answers are "a plan".
+	# The only claim breadth-first makes, and it was unpinned: the first
+	# version of this test forked at the *start*, where the goal is generated
+	# during the very first expansion whatever order the frontier is read in.
+	# A review turned the queue into a stack and all 118 tests, 400 property
+	# trials and 3 vectors stayed green.
+	#
+	# This domain forks one level down and declares the long branch last, which
+	# is the shape that tells the two apart: a stack walks into the annex and
+	# answers with four actions where three exist.
 	var result: PlanResult = StripsPlanner.new().plan(
-		_two_routes(), WorldState.new(["at_start"]), PackedStringArray(["arrived"])
+		_a_fork_one_level_down(), WorldState.new(["at_start"]),
+		PackedStringArray(["arrived"])
 	)
 
 	assert_bool(result.solved).is_true()
-	assert_array(result.action_names()).is_equal(PackedStringArray(["the_short_way"]))
+	assert_array(result.action_names()).is_equal(PackedStringArray([
+		"open_the_door", "the_short_way_one", "the_short_way_two",
+	]))
+
+
+func test_a_world_reached_twice_is_not_planned_through_twice() -> void:
+	# Without the visited set the planner walks in a circle on any domain where
+	# an action can be undone -- and spends its whole budget doing it, which it
+	# would then have to report as "I gave up" on a domain of four states. The
+	# claim this suite makes about the frontier was, before this test, made by
+	# nothing in it: deleting the dedup left every case here green.
+	# A small budget on purpose. Without the visited set this domain burns the
+	# default one, and the failing run took 24 seconds -- a red gate nobody
+	# wants to wait for is a red gate somebody switches off.
+	var result: PlanResult = StripsPlanner.new().plan(
+		_a_door_that_opens_and_shuts(), WorldState.new(["shut"]),
+		PackedStringArray(["somewhere_else_entirely"]), 50
+	)
+
+	assert_bool(result.solved).is_false()
+	assert_bool(result.gave_up).is_false()
+	assert_int(result.visited).is_less_equal(2)
 
 
 func test_a_goal_that_already_holds_is_an_empty_plan_that_is_still_solved() -> void:
@@ -141,13 +169,31 @@ func test_the_planner_does_not_change_the_world_it_was_handed() -> void:
 	)
 
 
-# Two ways from `at_start` to `arrived`: three actions, or one. The one-action
-# route is declared last, so a planner that does not take the oldest world off
-# its frontier will find the long one first.
-func _two_routes() -> Array[StripsAction]:
+# One door, then a fork: two steps by the stairs, three through the annex.
+#
+# The fork is deliberately *not* at the start. The goal is tested on each world
+# as it is generated, so a domain that forks at the start reaches the goal
+# during the first expansion whichever end of the frontier is read -- which is
+# why the test this replaces could not fail.
+#
+# The long branch is declared last, so a stack reaches it first and comes back
+# with four actions where three exist.
+func _a_fork_one_level_down() -> Array[StripsAction]:
 	return [
-		StripsAction.new("the_long_way_one", ["at_start"], [], ["halfway"]),
-		StripsAction.new("the_long_way_two", ["halfway"], [], ["nearly_there"]),
-		StripsAction.new("the_long_way_three", ["nearly_there"], [], ["arrived"]),
-		StripsAction.new("the_short_way", ["at_start"], [], ["arrived"]),
+		StripsAction.new("open_the_door", ["at_start"], ["at_start"], ["in_the_hall"]),
+		StripsAction.new("the_short_way_one", ["in_the_hall"], [], ["by_the_stairs"]),
+		StripsAction.new("the_short_way_two", ["by_the_stairs"], [], ["arrived"]),
+		StripsAction.new("the_long_way_one", ["in_the_hall"], [], ["in_the_annex"]),
+		StripsAction.new("the_long_way_two", ["in_the_annex"], [], ["on_the_roof"]),
+		StripsAction.new("the_long_way_three", ["on_the_roof"], [], ["arrived"]),
+	]
+
+
+# A door that can be opened and shut again, and a goal neither state reaches.
+# There are two worlds here and a planner without a visited set will visit them
+# until its budget runs out.
+func _a_door_that_opens_and_shuts() -> Array[StripsAction]:
+	return [
+		StripsAction.new("open_it", ["shut"], ["shut"], ["open"]),
+		StripsAction.new("shut_it", ["open"], ["open"], ["shut"]),
 	]
