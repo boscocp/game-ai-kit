@@ -1,0 +1,15 @@
+{
+  "name": "already won",
+  "why": "The goal holds before anything runs. The answer is an empty plan that is nonetheless solved, which is the one case where an empty plan is not a failure -- and the reason PlanResult carries a flag rather than letting the caller read the step count.",
+  "domain": "already-won-domain.pddl",
+  "problem": "already-won-problem.pddl",
+  "actions": [
+    {"name": "scout_the_enemy", "preconditions": ["enemy_beaten"], "deletes": [], "adds": ["enemy_scouted"]}
+  ],
+  "init": ["enemy_beaten"],
+  "goal": ["enemy_beaten"],
+  "expect": {
+    "solved": true,
+    "steps": 0
+  }
+}

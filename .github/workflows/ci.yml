@@ -90,3 +90,6 @@ jobs:
       - run: make test-search-properties
         env:
           GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
+      - run: make test-planner-properties
+        env:
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain

@@ -71,7 +71,7 @@ lint-review: ## This branch has a review record and may be merged
 
 .PHONY: check
 check: check-no-engine lint-disk-layout test-godot test-vectors \
-       test-search-properties ## Run every gate
+       test-search-properties test-planner-properties ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability \
@@ -160,16 +160,35 @@ test-python: ## Python unit tests (stdlib only, no install step)
 	@$(PYTHON) -m unittest discover -s python/tests -t python -q
 
 .PHONY: test-vectors
-test-vectors: ## The conformance vectors in spec/, against the addon
+test-vectors: test-search-vectors test-planning-vectors ## Every conformance vector in spec/
+	@# One target per family, so a failure names which one rather than which
+	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
+	@# follows the prerequisites.
+
+.PHONY: test-search-vectors
+test-search-vectors: ## The search vectors, against ai_search
 	@# The vectors live outside the Godot project so the Python side can be
 	@# held to the same answers. Godot reads an absolute path in a
 	@# non-exported build, so the directory goes in after `--`.
 	@$(GODOT) --headless --path godot -s res://test/vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/search
 
+.PHONY: test-planning-vectors
+test-planning-vectors: ## The planning vectors, against ai_planning
+	@# Only half of each planning vector is checked here: this side plans over
+	@# the domain the JSON spells out. The other half -- that the PDDL files
+	@# beside it describe the same domain -- is `make test-python`, because the
+	@# reader is Python and a game does not parse a domain file in a frame.
+	@$(GODOT) --headless --path godot -s res://test/planning_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/planning
+
 .PHONY: test-search-properties
 test-search-properties: ## A* agrees with Dijkstra, over a few hundred boards
 	@$(GODOT) --headless --path godot -s res://test/search_properties.gd
+
+.PHONY: test-planner-properties
+test-planner-properties: ## A plan can be run, and an unsolvable domain says so
+	@$(GODOT) --headless --path godot -s res://test/planner_properties.gd
 
 .PHONY: test-godot
 test-godot: ## Godot tests, headless (gdUnit4)
