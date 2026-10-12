@@ -45,6 +45,7 @@ jobs:
       # definition of what `make check` runs minus the engine-dependent part,
       # and two lists drift the first time one of them gains a target.
       - run: make check-no-engine
+      - run: make lint-links-remote
 
       # A hook cannot see a pull request. The commit messages on the branch go
       # through .githooks/commit-msg locally, but the PR's own title and body

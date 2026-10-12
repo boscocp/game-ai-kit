@@ -23,3 +23,10 @@ godot/reports/
 # else's code would dominate the history of a repository whose point is that
 # you can read it. See docs/adr/0004.
 godot/addons/gdUnit4/
+
+# The forbidden-term list is deliberately NOT in the repository. A review
+# brute-forced a short term from the published salt and length in 0.02s, so a
+# committed hash file is the employer's name in the repository -- the thing
+# invariant 10 forbids. It lives only on the author's machine now, built by
+# `python3 scripts/check_no_employer_refs.py --add-term`. See docs/adr/0005.
+scripts/forbidden-term-hashes.txt

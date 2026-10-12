@@ -10,13 +10,66 @@ A playable minimum where three techniques actually decide something.
 | # | Task | State | Notes |
 |---|---|---|---|
 | T0 | Bootstrap: pinned Godot on the large disk | done | 4.7.2-stable, SHA-512 verified |
-| T1 | Gates before the code | wip | 10 of 12 written |
+| T1 | Gates before the code | done | 14 gates, all in `make check` |
 | T2 | `ai_core` and the board | todo | grid, units, turns, no AI |
 | T3 | `ai_search`: A\*, BFS, DFS, Dijkstra | todo | needs T2 |
 | T4 | `ai_planning`: STRIPS, and a PDDL reader in Python | todo | needs T2 |
 | T5 | Dataset and training (Python) | todo | needs T2, T3 |
 | T6 | `ai_learning`: inference, and the attack/retreat decision | todo | needs T5 |
 | T7 | Close the slice: docs, ADRs, `make release` | todo | needs T3, T4, T6 |
+
+---
+
+## Resuming after 2026-10-12 (wave 6)
+
+**What landed.** The last four gates and T1's close (`check_addon_deps.py`,
+`check_tiers.py`, `check_links.py`, `check_workflow.py`), two rounds of fixes,
+ADR 0005, and the review of all of it in
+[docs/reviews/06-the-last-gates.md](../docs/reviews/06-the-last-gates.md). Nine
+confirmed findings, all fixed on the branch. `make check` is green, engine
+included.
+
+**The session that wrote this wave ended before it could finish**, and what it
+left behind was enough to resume from: the branch, the task files, and a last
+commit message that named the open decision instead of leaving it to be
+rediscovered. That is the resuming log doing its job, and it is worth saying
+once -- the cost of writing the paragraph was far below the cost of the session
+that would have had to reconstruct it.
+
+**Wave 5 has no section here**, and that is not an omission being hidden: its
+record went to `docs/reviews/05-the-wave-flow.md` when the review flow landed,
+and nobody wrote the STATUS entry. The reviews directory is now where a wave's
+findings live; this log is for what the next session needs to pick up.
+
+**The gate for invariant 10 was violating invariant 10.** Three of the nine
+findings are that, in three places: it exempted its own file from its own scan,
+so the one spot where a match gets quoted while being documented was the one
+spot nothing watched; the same quote had reached two commit messages, which is
+what turned `make check` red; and its line-break planted case never reached the
+rule it was filed under. The two unmerged commits were rebuilt to remove the
+term from the message *and* the file content, and the backup branch was deleted
+-- a ref holding the old blobs is the term still being in the repository.
+
+**A question about Godot was settled by measuring it.** `check_addon_deps.py`
+only knew the `res://addons/other/` spelling of a cross-addon dependency. On the
+pinned 4.7.2, `preload("../ai_b/x.gd")` from inside `addons/ai_a/` parses,
+resolves and runs. The gate catches both now, and the measurement is in
+`docs/godot/addon-anatomy.md` with the engine version, where the six-month
+half-life rule can reach it.
+
+**Still open, and it is the owner's call, not a defect.** Rebuilding those two
+commits left the old objects unreachable but still in `.git`. `git gc
+--prune=now` removes them; this session did not have permission to run it.
+
+**Not proven.** Four of the gates have still never seen the thing they are
+about: there are no addons, no scenes and no lessons above tier 1, and three of
+them say so on every run rather than passing in silence. The only thing standing
+behind this wave's fixes is a mutation sweep written by the same session that
+wrote the fixes.
+
+**Next: T2** -- `ai_core` and the board. The first real GDScript in the
+repository, and the first time `check_readability.py` and `check_addon_deps.py`
+look at something instead of printing that they found nothing.
 
 ---
 
@@ -51,9 +104,13 @@ today fails on a missing file, which is the correct state for a `todo` task.
 another), `check_tiers.py` (invariant 5: no lesson above tier 1), then
 `check_links.py` and `check_workflow.py` ported from `desk-panel`,
 `CONTRIBUTING.md`, and `.github/workflows/ci.yml` running the same strings the
-Makefile does. The link gate will flag `github.com/boscocp/game-ai-kit`, which
-404s because nothing is published; it belongs in the exceptions file with that
-reason. Then T2, which is the first real GDScript.
+Makefile does. Then T2, which is the first real GDScript.
+
+Correction to the line that was here: it predicted the link gate would flag
+`github.com/boscocp/game-ai-kit`. It does not, and the prediction was wrong --
+that URL appears only in `NOTICE`, which is not markdown, and inside backticks
+in this file. There is no markdown link to it, so there is nothing for the gate
+to follow. No exception is needed.
 
 ---
 
