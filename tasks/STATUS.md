@@ -106,6 +106,14 @@ has been inspecting a real addon only since wave 7.
 real defects in work the previous one had passed over or never reached. That is
 the argument for the rule, not against it.
 
+**One finding is open and waiting on the owner**, recorded at the end of
+[the wave 07 review](../docs/reviews/07-ai-core-and-the-board.md): eleven of the
+twelve addon files have headers longer than the 5-10 lines `CLAUDE.md` asks
+for, several by two or three times, and the longest are long because they carry
+measurements this project asked for. Either the headers get cut or the rule
+gets rewritten, and a session failing a rule should not be the one to quietly
+change it.
+
 ---
 
 ## Resuming after 2026-10-12 (wave 7)

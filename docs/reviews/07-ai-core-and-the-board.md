@@ -118,3 +118,50 @@ code found things in it that nobody has read. The 21-mutation sweep that stands
 in for them was written by the same session as the code — the exact symmetry
 invariant 12 exists to break. The next wave should begin by reviewing this one,
 and should treat `ai_core` as unreviewed below the three findings above.
+
+## Still open, and recorded late
+
+The reviewer's findings 4 to 11 arrived after this record was written, in a
+message that reached the session hours later. Findings 4 to 10 were fixed in
+wave 8 and are described there. **Finding 11 was neither fixed nor recorded**,
+which is how a review finding disappears, so it is written down here.
+
+> Headers exceed the 5-10 line guidance in every file; `board_state.gd:45` and
+> `:53` carry doc comments that paraphrase their signatures; `board_state.gd`
+> does not read top to bottom -- `why_refused` calls `_why_walk_refused`, which
+> lives past four unrelated public functions.
+
+Measured afterwards, across both addons, counting `##` lines before the class
+declaration:
+
+| file | header lines |
+|---|---|
+| `ai_core/unit.gd` | 9 |
+| `ai_core/move.gd` | 14 |
+| `ai_search/search_result.gd` | 14 |
+| `ai_search/breadth_first.gd` | 14 |
+| `ai_core/grid_graph.gd` | 15 |
+| `ai_search/search.gd` | 15 |
+| `ai_core/board_state.gd` | 16 |
+| `ai_search/depth_first.gd` | 16 |
+| `ai_search/astar.gd` | 22 |
+| `ai_core/decision_policy.gd` | 29 |
+| `ai_search/dijkstra.gd` | 30 |
+| `ai_core/pathfinder.gd` | 32 |
+
+Eleven of twelve files are over the guideline, several by two or three times,
+and the worst offenders are the worst *because* of work this project asked for:
+`dijkstra.gd` is 30 lines because it now carries the measurement showing its
+textbook branch cannot execute, and `pathfinder.gd` is 32 because it explains
+what `@abstract` replaced and why.
+
+**This is the owner's decision and it is deliberately not taken here.** Either
+the code is wrong and those headers should be cut to ten lines, which means
+deleting measurements that cost real time to obtain — or the rule is wrong and
+`CLAUDE.md` should say what a header is actually for and how long that takes.
+A session that silently edits a rule it is failing has done something worse
+than failing it.
+
+The other two halves of the finding are smaller and are not decisions: two doc
+comments that paraphrase their signatures should be rewritten or removed, and
+`why_refused` should sit near the helper it calls.
