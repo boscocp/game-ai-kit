@@ -74,6 +74,17 @@ func test_a_blocked_cell_is_refused() -> void:
 	assert_str(state.why_refused(move)).contains("blocked")
 
 
+func test_a_step_off_the_board_says_so_rather_than_saying_blocked() -> void:
+	var state: BoardState = _two_unit_board()
+	# West twice from (1, 1) leaves the board. Off-board is *also* blocked, so
+	# without this the "is it on the board" rule could be deleted outright and
+	# nothing noticed: the blocked rule caught every case and only the message
+	# changed. A message is the whole value of that rule.
+	var path: Array[Vector2i] = [Vector2i(0, 1), Vector2i(-1, 1)]
+
+	assert_str(state.why_refused(Move.new(1, path))).contains("off the board")
+
+
 func test_a_diagonal_step_is_refused() -> void:
 	var state: BoardState = _two_unit_board()
 	var path: Array[Vector2i] = [Vector2i(2, 2)]
