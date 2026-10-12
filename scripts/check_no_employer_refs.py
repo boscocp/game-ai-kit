@@ -14,9 +14,16 @@ saying "never mention X" is itself a mention of X. So the repository stores
 **salted SHA-256 hashes** of the forbidden terms, never the terms. The script
 hashes every word it finds and compares.
 
-This is not cryptography and does not pretend to be: anyone who guesses a term
-can confirm it. It stops the name from being *published*, which is the actual
-requirement.
+**This does not hide the term, and an earlier version of this docstring was
+wrong to imply it did.** A review brute-forced the stored entry from the
+published salt and length in 0.02 seconds. For a term of four characters the
+hash file *is* the name to anyone who tries, so the claim "the term is not
+published" was false. What the file honestly buys is that the name is not
+sitting in the repository in plain text for a reader, a search engine or a
+grep -- which is worth having, and is not the same thing as secrecy.
+
+Whether that is enough is a decision for the repository's owner, recorded in an
+ADR rather than assumed here.
 
 Add a term without ever writing it down:
 
@@ -69,14 +76,13 @@ TERMS_FILE = "scripts/forbidden-term-hashes.txt"
 # colliding with the list.
 MIN_TOKEN = 4
 
-# Letters and digits only. Including `-` meant a hyphen defeated the prefix
-# rule: with one term stored, `acme-corp` and `Acme Corp` both slipped through
-# while `ACMECORP` was caught. Splitting on every separator makes the three
-# spellings the same two tokens.
-TOKEN_RE = re.compile(r"[a-z][a-z0-9]{2,}")
-
-# Scanning the gate's own file would be circular, and the hash list is hashes.
-SKIP_PATHS = {TERMS_FILE, "scripts/check_no_employer_refs.py"}
+# The hash list is hashes, so scanning it finds nothing. This file used to be
+# exempt too, on the grounds that scanning the gate is circular. It is not: this
+# file holds a salt and some rules, never a term. What the exemption actually
+# bought was the one place in the repository where a match could be quoted while
+# being documented and no gate would object -- and it was, four times. The
+# comments below describe their false positives instead of reproducing them.
+SKIP_PATHS = {TERMS_FILE}
 
 
 def digest(term: str) -> str:
@@ -93,8 +99,8 @@ def load_hashes(repo: pathlib.Path) -> set[tuple[int, str]]:
     entirely -- `acme-corp` and `Acme Corp` passed while `ACMECORP` was caught.
     Knowing the length lets a window of that size slide along the text.
 
-    The length is a small thing to give away, and this was never cryptography:
-    the point is that the term is not *published*, not that it is unguessable.
+    The length makes a short term cheap to brute-force -- see the module
+    docstring, which no longer claims otherwise.
     """
     path = repo / TERMS_FILE
     if not path.exists():
@@ -110,33 +116,62 @@ def load_hashes(repo: pathlib.Path) -> set[tuple[int, str]]:
     return pairs
 
 
-def squash(text: str) -> str:
-    """Lowercase, keeping only letters and digits.
+# How many separators a single match may span. One covers `acme-corp` and
+# `Acme Corp`; more than that is welding unrelated words together, which a
+# review measured happening on real prose: scanning 601 files of ordinary
+# documentation produced a hit welded out of a URL path and the two words that
+# followed it, in a file where the term appears zero times.
+MAX_SEPARATORS_INSIDE_A_MATCH = 1
+
+
+def squash(text: str) -> tuple[str, list[int]]:
+    """Lowercase letters and digits only, plus where each came from.
 
     Separators are dropped rather than split on, so the term survives being
     written with a hyphen, an underscore, a space or a full stop between its
-    parts. Joining across unrelated words is possible in principle; for a term
-    of four characters or more it has not happened in practice, and this gate
-    errs towards reporting.
+    parts. The positions come back too, so a match can be asked how much
+    punctuation it had to swallow to exist.
     """
-    return "".join(char for char in text.lower() if char.isalnum())
+    kept, positions = [], []
+    for index, char in enumerate(text.lower()):
+        if char.isalnum():
+            kept.append(char)
+            positions.append(index)
+    return "".join(kept), positions
 
 
 def offending_tokens(text: str, hashes: set[tuple[int, str]]) -> set[str]:
     """Every stretch of `text` that hashes to a stored term.
 
-    Matching is on the squashed text, so a term also matches when it carries a
-    prefix or a suffix, or a separator inside it.
+    Matching is on the squashed text, so a term is found when it carries a
+    suffix or has a separator inside it. Two things keep that from welding
+    unrelated words together: a match may swallow at most one separator, and it
+    must begin where a word begins.
     """
-    flat = squash(text)
+    flat, positions = squash(text)
     hits = set()
     for length, value in hashes:
         if length > len(flat):
             continue
         for start in range(len(flat) - length + 1):
             window = flat[start:start + length]
-            if digest(window) == value:
-                hits.add(window)
+            if digest(window) != value:
+                continue
+            # How much punctuation this match had to swallow. A term written
+            # with one separator is the case worth catching; three is two
+            # unrelated words welded into a coincidence.
+            span = positions[start + length - 1] - positions[start] + 1
+            if span - length > MAX_SEPARATORS_INSIDE_A_MATCH:
+                continue
+            # A mention of a name starts a word. The false positive that
+            # survived the separator limit sat inside a URL path: one separator,
+            # and the match began in the middle of a longer word.
+            # The end is deliberately not anchored, so a term with a suffix
+            # glued on still matches.
+            origin = positions[start]
+            if origin > 0 and text[origin - 1].isalnum():
+                continue
+            hits.add(text[positions[start]:positions[start + length - 1] + 1])
     return hits
 
 
@@ -376,6 +411,24 @@ def self_test() -> int:
         (binary / "image.png").write_bytes(b"\x89PNG\r\n\x1a\n\x00" + secret.encode())
         git(binary, "add", "-A")
         expect("term-like bytes inside a binary", quiet(binary, history=False), 0)
+
+        # Planted: the shape a review found on real documentation -- unrelated
+        # words whose letters happen to spell the term once the punctuation is
+        # removed. Matching across that much separator is a coincidence, not a
+        # mention.
+        welded = make_repo(root, "welded", [secret])
+        (welded / "w.md").write_text("see acm.e/c-o-r-p for details\n")
+        git(welded, "add", "-A")
+        expect("letters welded across punctuation", quiet(welded, history=False), 0)
+
+        # Planted: the exact survivor measured on real documentation -- the
+        # term's letters starting in the middle of another word.
+        midword = make_repo(root, "midword", [secret])
+        (midword / "m.md").write_text(
+            f"see host.example/proj{secret[0]}/{secret[1:]} and co\n"
+            + f"also wrap{secret[0]}/{secret[1:]} here\n")
+        git(midword, "add", "-A")
+        expect("match starting mid-word", quiet(midword, history=False), 0)
 
         # An ordinary word that merely starts the same way is not a finding.
         innocent = make_repo(root, "innocent", [secret])

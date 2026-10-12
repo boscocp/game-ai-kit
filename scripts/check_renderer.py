@@ -115,6 +115,24 @@ def check_rendering_method(project_file: pathlib.Path) -> list[str]:
     return findings
 
 
+def strip_gdscript_comments(text: str) -> str:
+    """Drop `#` comments, leaving `#` inside a string alone."""
+    kept = []
+    for line in text.splitlines():
+        quote = None
+        for index, char in enumerate(line):
+            if quote:
+                if char == quote:
+                    quote = None
+            elif char in "\"'":
+                quote = char
+            elif char == "#":
+                line = line[:index]
+                break
+        kept.append(line)
+    return "\n".join(kept)
+
+
 def check_no_3d_nodes(godot_dir: pathlib.Path) -> list[str]:
     """Report any 3D node declared under the tier-2 directories.
 
@@ -134,6 +152,11 @@ def check_no_3d_nodes(godot_dir: pathlib.Path) -> list[str]:
                 continue
             text = path.read_text(encoding="utf-8")
             inspected += 1
+            if path.suffix == ".gd":
+                # A GDScript comment is where a header says when *not* to use
+                # the addon, which CLAUDE.md requires -- and `Node3D.new()`
+                # written there was being reported as a use of it.
+                text = strip_gdscript_comments(text)
             pattern = SCENE_TYPE if path.suffix == ".tscn" else SCRIPT_TYPE
             for found in pattern.findall(text):
                 # SCRIPT_TYPE has two groups; exactly one matches per hit.
@@ -203,13 +226,23 @@ def self_test() -> int:
         (script3d / "game" / "y.gd").write_text("extends CharacterBody3D\n")
         expect("script extends 3D", quiet(script3d), 1)
 
-        # The word "Node3D" inside a comment must NOT be a finding: a gate that
-        # fires on prose gets disabled by the first person it annoys.
+        # A comment must NOT be a finding, including one saying when not to
+        # reach for a 3D type -- which is what every addon header here has to
+        # carry. A gate that fires on its own house style gets switched off.
         prose = make_project(root / "prose", REQUIRED_METHOD)
         (prose / "game" / "z.gd").write_text(
-            "extends Node2D\n\n# This kit is 2D; do not reach for Node3D here.\n"
+            "extends Node2D\n\n## Do not reach for Node3D.new() here: this kit is 2D.\n"
         )
-        expect("3D named in a comment", quiet(prose), 0)
+        expect("3D constructor named in a comment", quiet(prose), 0)
+
+        # But a string holding the name is still not a use, and a real use on
+        # the same file still is.
+        mixed = make_project(root / "mixed", REQUIRED_METHOD)
+        (mixed / "game" / "m.gd").write_text(
+            'extends Node2D\n\n\nfunc _ready() -> void:\n'
+            '\tprint("not a Node3D")\n\tvar real := Camera3D.new()\n'
+        )
+        expect("comment clean, real use caught", quiet(mixed), 1)
 
         # Planted: a nested node, where Godot writes `parent=` between `name=`
         # and `type=`. The strict pattern matched only root nodes.

@@ -132,18 +132,6 @@ def silenced(commands: str) -> list[str]:
 # A command whose exit status says nothing about the assertion.
 ALWAYS_ZERO = [
     (
-        # `... | grep -q "Compatibility"   # the renderer must be this` matches
-        # the label whatever the value is. The assertion lives in the comment,
-        # where the shell cannot reach it.
-        # Matches grep at the start of a command as well as after a pipe: the
-        # assertion hides in the comment either way.
-        re.compile(
-            r"(?:^|\|)\s*grep\b[^\n#]*#[^\n]*\b(?:names?|shows?|prints?|must|should|appears?)\b",
-            re.I | re.M,
-        ),
-        "the grep matches a label while the assertion sits in its comment -- grep for the value",
-    ),
-    (
         re.compile(r"curl[^\n|]*-w[^\n|]*$", re.M),
         "`curl -w` prints the code but always exits 0 -- pipe it into `grep -qx`",
     ),
@@ -346,12 +334,16 @@ def self_test() -> int:
                                  "./scripts/godot --headless --path godot -s res://x.gd")
         expect("Godot with --headless", quiet(tasks_with(root, "fine", fine)), 0)
 
-        # Planted: a grep whose assertion lives in its comment.
-        label_grep = GOOD_TASK.replace(
+        # The rule this case used to cover is gone -- see the docstring. What
+        # is asserted now is the opposite: a grep that greps a value and says
+        # why must pass, because a gate that fires on correct work gets
+        # switched off.
+        explained_grep = GOOD_TASK.replace(
             "make test-godot",
-            'grep -q "rendering_method" godot/project.godot   # must show Compatibility',
+            "grep -q 'gl_compatibility' godot/project.godot   # the renderer must stay",
         )
-        expect("assertion in a comment", quiet(tasks_with(root, "labelgrep", label_grep)), 1)
+        expect("a grep that explains itself",
+               quiet(tasks_with(root, "explainedgrep", explained_grep)), 0)
 
         # Planted: a human verdict in the Acceptance prose rather than below it.
         looking = GOOD_TASK.replace(

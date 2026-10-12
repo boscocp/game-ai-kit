@@ -97,7 +97,19 @@ def run_one(script: pathlib.Path, timeout: int) -> tuple[str, bool]:
         )
     except subprocess.TimeoutExpired:
         return f"TIMEOUT after {timeout}s", False
-    return ("ok", True) if done.returncode == 0 else ("FAIL", False)
+    if done.returncode == 0:
+        return "ok", True
+    # The shell version this replaced printed nothing on failure either, and a
+    # review called that a regression in the dimension the rewrite was
+    # justified on: a red gate that says only FAIL tells you to go run it
+    # yourself, which is the step the runner exists to save.
+    output = (done.stdout + done.stderr).decode("utf-8", errors="replace").strip()
+    return ("FAIL\n" + indent(output)) if output else "FAIL", False
+
+
+def indent(text: str) -> str:
+    """Four spaces in front of every line, so a gate's output reads as its own."""
+    return "\n".join("    " + line for line in text.splitlines())
 
 
 def run(scripts_dir: pathlib.Path, timeout: int) -> int:
