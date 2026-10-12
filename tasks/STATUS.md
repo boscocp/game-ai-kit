@@ -10,7 +10,7 @@ A playable minimum where three techniques actually decide something.
 | # | Task | State | Notes |
 |---|---|---|---|
 | T0 | Bootstrap: pinned Godot on the large disk | done | 4.7.2-stable, SHA-512 verified |
-| T1 | Gates before the code | wip | 10 of 12 written |
+| T1 | Gates before the code | done | 14 gates, all in `make check` |
 | T2 | `ai_core` and the board | todo | grid, units, turns, no AI |
 | T3 | `ai_search`: A\*, BFS, DFS, Dijkstra | todo | needs T2 |
 | T4 | `ai_planning`: STRIPS, and a PDDL reader in Python | todo | needs T2 |
@@ -51,9 +51,13 @@ today fails on a missing file, which is the correct state for a `todo` task.
 another), `check_tiers.py` (invariant 5: no lesson above tier 1), then
 `check_links.py` and `check_workflow.py` ported from `desk-panel`,
 `CONTRIBUTING.md`, and `.github/workflows/ci.yml` running the same strings the
-Makefile does. The link gate will flag `github.com/boscocp/game-ai-kit`, which
-404s because nothing is published; it belongs in the exceptions file with that
-reason. Then T2, which is the first real GDScript.
+Makefile does. Then T2, which is the first real GDScript.
+
+Correction to the line that was here: it predicted the link gate would flag
+`github.com/boscocp/game-ai-kit`. It does not, and the prediction was wrong --
+that URL appears only in `NOTICE`, which is not markdown, and inside backticks
+in this file. There is no markdown link to it, so there is nothing for the gate
+to follow. No exception is needed.
 
 ---
 

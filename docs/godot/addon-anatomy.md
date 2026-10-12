@@ -6,6 +6,7 @@ verified_on: 2026-10-12
 tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/plugins/editor/making_plugins.html ; https://docs.godotengine.org/en/stable/community/asset_library/submitting_to_assetlib.html ; https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html
 invalidated_if: Godot changes how class_name registers, or the Asset Library starts requiring plugin.cfg
+teaches: none
 -->
 
 > How the addons in this repository are shaped, and why they are not editor

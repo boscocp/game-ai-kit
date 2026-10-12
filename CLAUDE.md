@@ -15,10 +15,10 @@ worth keeping, and one you believe is enforced is worse than none.
 | | gate |
 |---|---|
 | 1 readable | `check_readability.py` |
-| 2 addon independence | **none yet** -- `check_addon_deps.py`, named in T2 |
+| 2 addon independence | `check_addon_deps.py` — but no addon exists yet, so it prints that it inspected nothing |
 | 3 acceptance is a command | `check_acceptance.py` |
 | 4 gate rejects a planted case | `make lint-selftests` runs them; that each one *has* a planted case is still read by a person |
-| 5 no lesson above tier 1 | **none yet** -- `check_tiers.py`, named in T7 |
+| 5 no lesson above tier 1 | `check_tiers.py`, via each page's `teaches:` field |
 | 6 no training at game time | **none yet** -- `check_no_training.py`, named in T6 |
 | 7 LLM output validated | **none yet** -- arrives with the addon |
 | 8 toolchain on the large disk | `check_disk_layout.py` |

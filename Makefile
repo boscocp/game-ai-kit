@@ -63,7 +63,8 @@ check: check-no-engine lint-disk-layout test-godot ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability \
-       lint-license lint-employer-refs lint-docs-freshness lint-selftests \
+       lint-addon-deps lint-tiers lint-links lint-workflow lint-license \
+       lint-employer-refs lint-docs-freshness lint-selftests \
        test-python ## Every gate that does not need the engine installed
 	@# CI's gate job runs exactly this. It used to hand-list the targets,
 	@# because `check` includes lint-disk-layout, which cannot run where the
@@ -113,6 +114,26 @@ lint-employer-refs: ## Nothing of the author's day job, in the tree or the histo
 .PHONY: lint-docs-freshness
 lint-docs-freshness: ## Every doc page declares its half-life, and is inside it
 	@$(PYTHON) scripts/check_doc_freshness.py
+
+.PHONY: lint-addon-deps
+lint-addon-deps: ## Invariant 2: no addon reaches into another
+	@$(PYTHON) scripts/check_addon_deps.py
+
+.PHONY: lint-tiers
+lint-tiers: ## Invariant 5: no lesson lives only above tier 1
+	@$(PYTHON) scripts/check_tiers.py
+
+.PHONY: lint-links
+lint-links: ## Local markdown links resolve
+	@$(PYTHON) scripts/check_links.py
+
+.PHONY: lint-links-remote
+lint-links-remote: ## Every URL answers; CI runs this, a laptop on a train does not
+	@$(PYTHON) scripts/check_links.py --remote
+
+.PHONY: lint-workflow
+lint-workflow: ## CI runs Makefile targets, and reaches every gate
+	@$(PYTHON) scripts/check_workflow.py
 
 .PHONY: lint-license
 lint-license: ## LICENSE and NOTICE present, and in every release artifact
