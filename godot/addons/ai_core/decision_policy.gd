@@ -5,6 +5,13 @@
 ## all three the same way, which is what makes the lessons comparable: swap the
 ## policy, keep the board, watch what changes.
 ##
+## `@abstract` is the enforcement, for the reason set out in `pathfinder.gd`:
+## the engine refuses to load a subclass that has not replaced these, and the
+## `push_error` this file used to rely on returned a move with an empty path --
+## which the contract below defines as the legitimate answer "hold". A policy
+## that had forgotten to think looked exactly like a policy that had decided to
+## wait.
+##
 ## An implementation must guarantee:
 ##
 ## * the returned move is legal on `state` -- `state.why_refused(move)` returns
@@ -17,11 +24,10 @@
 ##
 ## When not to use it: a decision spanning several turns. That is a plan, and a
 ## plan is a sequence of these, produced by `ai_planning`.
+@abstract
 class_name DecisionPolicy
 extends RefCounted
 
 
 ## The move this policy would make for `unit_id` on `state`.
-func choose(state: BoardState, unit_id: int) -> Move:
-	push_error("DecisionPolicy.choose must be overridden; %s %d" % [state, unit_id])
-	return Move.new(unit_id, [] as Array[Vector2i])
+@abstract func choose(state: BoardState, unit_id: int) -> Move

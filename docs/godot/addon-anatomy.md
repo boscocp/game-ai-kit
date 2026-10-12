@@ -5,7 +5,7 @@ half_life: practice
 verified_on: 2026-10-12
 tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/plugins/editor/making_plugins.html ; https://docs.godotengine.org/en/stable/community/asset_library/submitting_to_assetlib.html ; https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html
-invalidated_if: Godot changes how class_name registers, how a relative preload resolves, or the Asset Library starts requiring plugin.cfg
+invalidated_if: Godot changes how class_name registers, how a relative preload resolves, how @abstract is enforced, or the Asset Library starts requiring plugin.cfg
 teaches: none
 -->
 
@@ -94,6 +94,56 @@ which is the one failure mode that invariant exists for.
 gdUnit4 refuses headless mode unless given `--ignoreHeadlessMode`, because Godot
 does not deliver `InputEvent` in that mode. Tests here therefore assert logic
 and never simulated input. `make test-godot` passes the flag.
+
+## GDScript has `@abstract`, and it is enforced at load time
+
+This was written here the wrong way round once, which is why the section
+exists. The interfaces in `ai_core` originally carried a comment saying there
+was no `abstract` keyword in GDScript and that the alternative was `push_error`
+with a default return.
+
+Both halves were wrong on 4.7.2-stable, measured:
+
+```gdscript
+@abstract
+class_name Pathfinder
+extends RefCounted
+
+@abstract func find_path(graph: GridGraph, from: Vector2i, to: Vector2i) -> Array[Vector2i]
+```
+
+A subclass that does not replace `find_path` does not load:
+
+```
+Parse Error: Class "ForgetfulChild" must implement "Pathfinder.find_path()"
+and other inherited abstract methods or be marked as "@abstract".
+```
+
+A subclass that replaces it parses clean. `Pathfinder.new()` is refused too.
+gdUnit4's own source uses the same construct, which is the second-cheapest
+confirmation available and was sitting in `addons/` the whole time.
+
+**Why the replaced mechanism was worse than nothing.** `push_error` with a
+default return does not stop anything; it writes to a log. And the default each
+interface returned — an empty array, an empty path — is a value its own
+contract defines as a legitimate answer: "no route exists", "hold this turn".
+So a forgotten override was indistinguishable from a working implementation
+that had decided to do nothing, in exactly the build where nobody reads logs.
+
+**Testing it.** A subclass that forgets an abstract method cannot be written in
+a test file, because the file would not parse. Build it at run time instead:
+
+```gdscript
+var built := GDScript.new()
+built.source_code = "extends Pathfinder\n"
+built.reload()  # non-OK, and the engine logs a parse error
+```
+
+gdUnit4 fails a test on any engine error, so wrap it in `assert_error(...)
+.is_runtime_error(any_string())`. And note that a GDScript lambda captures a
+local **by value**: assigning to an outer `var` inside the closure does nothing,
+which made the first version of that test assert on a variable that could never
+change. Carry the result out in an array, which is a reference.
 
 ## A failing test hides the tests after it in the same suite
 

@@ -1,9 +1,17 @@
 ## What `ai_search` must provide: a route between two cells, or nothing.
 ##
-## This is an interface, and in GDScript an interface is a base class whose
-## methods fail loudly. There is no `abstract` keyword, so the choice is between
-## a comment asking politely and a method that refuses to be inherited without
-## being replaced. This file is the second one.
+## This is an interface, and GDScript has one: `@abstract`, on the class and on
+## each method. The engine then refuses to load a subclass that has not replaced
+## them -- a parse error at load time, not a message in a log nobody reads.
+##
+## The first version of this file said the keyword did not exist, and used
+## `push_error` with a default return instead. That was wrong twice. It was
+## wrong about the engine, measured on the pinned 4.7.2 and written up in
+## `docs/godot/addon-anatomy.md`. And the mechanism was worse than the one it
+## claimed not to have: the default it returned was an **empty array**, which
+## this very file defines below as the legitimate answer "no route exists". A
+## forgotten override was indistinguishable from a search that found nothing,
+## in exactly the build where nobody is watching the log.
 ##
 ## An implementation must guarantee:
 ##
@@ -19,11 +27,10 @@
 ##
 ## When not to use it: anything that needs the cost of the route as well. Ask
 ## the returned path with `Move.cost_on`, which is the one definition of cost.
+@abstract
 class_name Pathfinder
 extends RefCounted
 
 
 ## A route from `from` to `to`, or an empty array when there is none.
-func find_path(graph: GridGraph, from: Vector2i, to: Vector2i) -> Array[Vector2i]:
-	push_error("Pathfinder.find_path must be overridden; %s %s %s" % [graph, from, to])
-	return []
+@abstract func find_path(graph: GridGraph, from: Vector2i, to: Vector2i) -> Array[Vector2i]

@@ -121,6 +121,53 @@ func test_end_turn_restores_movement_only_for_the_side_about_to_move() -> void:
 	assert_int(blue_turn.unit_by_id(1).movement_points).is_equal(1)
 
 
+func test_a_dead_unit_never_reaches_the_board() -> void:
+	var graph := GridGraph.new(6, 3)
+	var given: Array[Unit] = [
+		Unit.new(1, RED, Vector2i(1, 1)),
+		Unit.new(2, BLUE, Vector2i(4, 1), 0),
+	]
+	var state := BoardState.new(graph, given, RED)
+
+	# One rule, and every view of the board agrees with it. Letting a corpse in
+	# made four of them disagree: it blocked a cell, was invisible to units_of,
+	# and collected fresh movement at the start of its side's turn.
+	assert_int(state.units.size()).is_equal(1)
+	assert_object(state.unit_by_id(2)).is_null()
+	assert_object(state.unit_at(Vector2i(4, 1))).is_null()
+	assert_int(state.units_of(BLUE).size()).is_equal(0)
+	assert_int(state.end_turn().units_of(BLUE).size()).is_equal(0)
+
+
+func test_the_cell_a_dead_unit_stood_on_is_not_blocked() -> void:
+	var graph := GridGraph.new(6, 3)
+	var given: Array[Unit] = [
+		Unit.new(1, RED, Vector2i(1, 1)),
+		Unit.new(2, BLUE, Vector2i(4, 1), 0),
+	]
+	var state := BoardState.new(graph, given, RED)
+
+	assert_str(state.why_refused(Move.new(1, _walk_east(Vector2i(1, 1), 3)))).is_equal(
+		BoardState.LEGAL
+	)
+
+
+func test_the_state_does_not_alias_the_units_it_was_given() -> void:
+	var graph := GridGraph.new(6, 3)
+	var mine := Unit.new(1, RED, Vector2i(1, 1))
+	var given: Array[Unit] = [mine]
+	var state := BoardState.new(graph, given, RED)
+
+	# Whoever built the state kept a reference to the unit. The state must not
+	# move when they do, or the immutability every search depends on is a
+	# comment rather than a property.
+	mine.cell = Vector2i(5, 2)
+	given.append(Unit.new(9, BLUE, Vector2i(0, 0)))
+
+	assert_vector(state.unit_by_id(1).cell).is_equal(Vector2i(1, 1))
+	assert_int(state.units.size()).is_equal(1)
+
+
 # A 6x3 board of flat ground, red's unit 1 at (1, 1) and blue's unit 2 at (4, 1).
 func _two_unit_board() -> BoardState:
 	var graph := GridGraph.new(6, 3)

@@ -23,7 +23,8 @@ const LEGAL: String = ""
 
 var graph: GridGraph
 
-## Every unit, dead ones already removed.
+## Every unit on the board. A state never holds a dead one: `_init` drops them,
+## which is the only place that rule lives.
 var units: Array[Unit]
 
 ## Which faction moves now.
@@ -37,9 +38,30 @@ var turn_number: int
 func _init(board: GridGraph, board_units: Array[Unit], faction: int = 0,
 		turn: int = 0) -> void:
 	graph = board
-	units = board_units
+	units = _living_copies(board_units)
 	current_faction = faction
 	turn_number = turn
+
+
+# Every living unit, copied. Both rules this type depends on live here and
+# nowhere else, which is why every other method can be read without asking
+# what might be in `units`.
+#
+# Copying is why the header's immutability claim is true. The first version
+# assigned the caller's array straight in, so whoever built the state could
+# keep a reference to a unit and move it afterwards -- the state said one
+# thing and the caller saw another.
+#
+# Dropping the dead is the other half. Nothing in T2 reduces health, so a dead
+# unit can only arrive by being built that way, and letting one in made four
+# parts of this file disagree: it blocked a cell, was invisible to `units_of`,
+# and was handed fresh movement by `end_turn`.
+static func _living_copies(given: Array[Unit]) -> Array[Unit]:
+	var kept: Array[Unit] = []
+	for unit: Unit in given:
+		if unit.is_alive():
+			kept.append(unit.duplicate_unit())
+	return kept
 
 
 ## The unit with this id, or null.
@@ -66,9 +88,8 @@ func unit_at(cell: Vector2i) -> Unit:
 func why_refused(move: Move) -> String:
 	var unit: Unit = unit_by_id(move.unit_id)
 	if unit == null:
+		# A dead unit is not on the board, so this is also the answer for one.
 		return "no unit with id %d is on the board" % move.unit_id
-	if not unit.is_alive():
-		return "unit %d is dead" % unit.id
 	if unit.faction != current_faction:
 		return "unit %d belongs to faction %d, and faction %d is to move" % [
 			unit.id, unit.faction, current_faction,
@@ -117,21 +138,21 @@ func end_turn(factions: int = 2, points_per_turn: int = 3) -> BoardState:
 
 ## An independent copy: the units are copied, the graph is shared.
 ##
+## There is no copying loop here, because the constructor already copies what
+## it is given. Writing one in both places is how the two drift.
+##
 ## Sharing the graph is safe only because nothing on this type changes terrain.
 ## The day something does, it has to call `graph.duplicate_graph()` first, and
 ## this comment is the warning that it must.
 func duplicate_state() -> BoardState:
-	var copies: Array[Unit] = []
-	for unit: Unit in units:
-		copies.append(unit.duplicate_unit())
-	return BoardState.new(graph, copies, current_faction, turn_number)
+	return BoardState.new(graph, units, current_faction, turn_number)
 
 
-## Every unit of a faction that is still alive.
+## Every unit of a faction. They are all alive; see `units`.
 func units_of(faction: int) -> Array[Unit]:
 	var found: Array[Unit] = []
 	for unit: Unit in units:
-		if unit.faction == faction and unit.is_alive():
+		if unit.faction == faction:
 			found.append(unit)
 	return found
 

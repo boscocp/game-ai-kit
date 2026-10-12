@@ -70,7 +70,17 @@ ALLOWED_SHORT_NAMES = {
 # Third-party code under addons/ that this project does not author.
 VENDORED_DIRS = {"gdUnit4"}
 
-FUNC_RE = re.compile(r"^([\t ]*)func\s+([A-Za-z_][A-Za-z0-9_]*)\s*\((.*?)\)\s*(->\s*\S+)?\s*:")
+# An annotation may sit in front of `func`, and `@abstract` routinely does.
+# Without this the gate did not see such a declaration at all: an abstract
+# method could take untyped parameters, return nothing in particular and carry
+# no doc comment, in the one kind of file whose whole content is signatures.
+# The trailing colon is optional for the same reason -- an abstract method has
+# no body and so no colon.
+ANNOTATIONS = r"(?:@\w+(?:\([^)]*\))?[\t ]+)*"
+FUNC_RE = re.compile(
+    r"^([\t ]*)" + ANNOTATIONS
+    + r"func\s+([A-Za-z_][A-Za-z0-9_]*)\s*\((.*?)\)\s*(->\s*\S+)?\s*:?\s*$"
+)
 # The operator is optional: `var running_total` with no initialiser is legal
 # GDScript and untyped, and requiring an operator meant the gate never saw it.
 # `const` is matched too -- it was not checked at all.
@@ -81,7 +91,7 @@ VAR_RE = re.compile(
 # `for q in range(3)` binds a name just as a declaration does.
 FOR_RE = re.compile(r"^\s*for\s+([A-Za-z_][A-Za-z0-9_]*)\s+in\b")
 # Opens a function, whether or not the parentheses close on the same line.
-OPENS_FUNC = re.compile(r"^[\t ]*func\s+[A-Za-z_][A-Za-z0-9_]*\s*\(")
+OPENS_FUNC = re.compile(r"^[\t ]*" + ANNOTATIONS + r"func\s+[A-Za-z_][A-Za-z0-9_]*\s*\(")
 PARAM_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)\s*(:\s*[^=]+)?(=.*)?$")
 
 
@@ -325,6 +335,18 @@ func _ready() -> void:
 """
 
 
+ABSTRACT = """\
+## What a search must provide.
+@abstract
+class_name ProbePathfinder
+extends RefCounted
+
+
+## A route from `start`, or an empty array when there is none.
+@abstract func find_path(graph: GridGraph, start: Vector2i) -> Array
+"""
+
+
 def self_test() -> int:
     failures = []
 
@@ -364,6 +386,37 @@ def self_test() -> int:
         untyped_param = GOOD.replace("func heuristic(from: Vector2i, to: Vector2i) -> float:",
                                      "func heuristic(from, to: Vector2i) -> float:")
         expect("untyped parameter", quiet(project(root, "noparam", untyped_param)), 1)
+
+        # An abstract declaration is readable when it says what it takes and
+        # what it returns, and carries the doc comment that is the whole point
+        # of an interface file.
+        expect("abstract func, fully typed", quiet(project(root, "abs", ABSTRACT)), 0)
+
+        # Planted: an abstract method with an untyped parameter. The gate used
+        # to skip the line entirely, because `@abstract` sits in front of
+        # `func` and nothing matched.
+        abstract_untyped = ABSTRACT.replace(
+            "@abstract func find_path(graph: GridGraph, start: Vector2i) -> Array",
+            "@abstract func find_path(graph, start: Vector2i) -> Array",
+        )
+        expect("abstract func, untyped parameter",
+               quiet(project(root, "absparam", abstract_untyped)), 1)
+
+        # Planted: an abstract method with no return type.
+        abstract_no_return = ABSTRACT.replace(
+            "@abstract func find_path(graph: GridGraph, start: Vector2i) -> Array",
+            "@abstract func find_path(graph: GridGraph, start: Vector2i)",
+        )
+        expect("abstract func, no return type",
+               quiet(project(root, "absret", abstract_no_return)), 1)
+
+        # Planted: an abstract method with no doc comment. An interface file is
+        # nothing but signatures, so an undocumented one says nothing at all.
+        abstract_undocumented = ABSTRACT.replace(
+            "## A route from `start`, or an empty array when there is none.\n", ""
+        )
+        expect("abstract func, no doc comment",
+               quiet(project(root, "absdoc", abstract_undocumented)), 1)
 
         # Planted: an untyped var.
         untyped_var = GOOD.replace("var dx: int = absi", "var dx = absi")
