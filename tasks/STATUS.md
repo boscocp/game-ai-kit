@@ -13,7 +13,7 @@ A playable minimum where three techniques actually decide something.
 | T1 | Gates before the code | done | 14 gates, all in `make check` |
 | T2 | `ai_core` and the board | done | reviewed three times; see the wave 07 record |
 | T3 | `ai_search`: A\*, BFS, DFS, Dijkstra | done | 3 vectors and a 300-board property check |
-| T4 | `ai_planning`: STRIPS, and a PDDL reader in Python | todo | needs T2 |
+| T4 | `ai_planning`: STRIPS, and a PDDL reader in Python | done | 8 steps, 14 states; 3 vectors read from both languages |
 | T5 | Dataset and training (Python) | todo | needs T2, T3 |
 | T6 | `ai_learning`: inference, and the attack/retreat decision | todo | needs T5 |
 | T7 | Close the slice: docs, ADRs, `make release` | todo | needs T3, T4, T6 |
@@ -52,6 +52,80 @@ lesson in it.
 | T20 | The RTS demo | todo | build orders against the clock, fog of war |
 
 ---
+
+## Resuming after 2026-10-12 (wave 14)
+
+**What landed.** T4: `ai_planning` -- `WorldState`, `StripsAction`,
+`StripsPlanner` and `PlanResult`, with the game's domain written out in full in
+`game_domain.gd`. Forward state-space search over worlds rather than cells: a
+queue, so the first plan found has the fewest actions; a visited set, because
+several routes reach the same world; and a budget, so "no plan" can say whether
+the **space** was exhausted or the **search** was. `python/gameaikit/pddl/`
+reads a domain somebody else wrote, in propositional STRIPS only. Three vectors
+in `spec/vectors/planning/`, each a JSON file beside two PDDL files: GDScript
+plans over the JSON, Python asserts the PDDL says the same thing, and the
+runner replays every plan rather than reading the planner's own `solved`.
+
+**The domain is the lesson.** The barracks and the unit are paid for out of one
+bank, so the node has to be mined twice: eight steps, 14 states. A reactive rule
+that trains a unit whenever it can afford one never builds the barracks and
+never attacks. Checked against an exhaustive enumeration written from the JSON
+with no repo code in it -- 8 is the shortest, and the same sequence.
+
+**The review found the claim the whole addon rests on was pinned by nothing.**
+Turning the frontier into a stack -- `pop_front` to `pop_back`, one word -- left
+118 unit tests, 400 property trials and 3 conformance vectors green. A stack
+returns four actions where three exist, so it is a wrong answer and not an
+equivalent mutant. The test named for the shortest-plan claim forked at the
+*start*, where the goal is generated during the first expansion whichever end
+of the frontier is read.
+
+**And the property written to fix that could not see it either.** The first
+generator -- eight predicates over six actions -- produced chains: 66 of 400
+solvable and no two routes of different lengths to the same world. Six
+predicates over twelve actions forks: 218 solvable, 156 plans measured against
+an exhaustive search that shares no code with the planner, 19 of them failing
+under a stack. **A property is only as good as the inputs that reach it**, and
+that is the sentence this wave cost most to learn.
+
+**Fifteen findings in all**, in
+[docs/reviews/14-ai-planning.md](../docs/reviews/14-ai-planning.md). Five more
+in the PDDL reader that it accepted after promising to refuse: a section written
+twice silently kept the second, `:effect (and)` walked past the refusal written
+for an action that does nothing, a bare word was read as a predicate, a
+duplicate action name was accepted where the cross-language comparison is keyed
+by name, and `:parameters` could be missing entirely. Nine rules in
+`PlanningVector` and seven in the reader had **no planted case at all** --
+deleting them left every gate green, under headers claiming the opposite.
+
+**Two things T3 left behind, found by the re-read the wave 08 note asked for.**
+The search conformance runner never checked that a path **ends at the goal** --
+every rule it had was about the steps, so a legal stroll to the wrong cell
+conformed, in work two reviews had passed. And `check_readability.py` matched
+neither of its patterns against `static func`, so it had been reading
+`search_vector.gd` -- a file that is nothing but static functions -- as empty.
+Fixing the pattern produced no cascade: the existing tree was clean, and the
+only two findings were in this wave's own new files.
+
+**Not proven.** T4's manual check is still a person's job: whether someone who
+has never seen STRIPS can read `game_domain.gd` and tell what the AI is
+reasoning about. Nothing has been profiled; `WorldState.key()` sorts and joins
+on every generated state, which is the obvious cost and has not been measured
+against anything.
+
+**Still open, and carried forward.** The eleven over-long addon headers from the
+wave 07 review are still waiting on the owner. Planning has no page under
+`docs/`, so `check_tiers.py` cannot see the lesson at either tier until T7. The
+`doc-meta` blocks in `spec/vectors/*/README.md` declare a `half_life` the docs
+gate does not know, and no gate looks outside `docs/` to say so.
+
+**Next: T5** -- the dataset and the training, which is the first task whose
+output is a *file* rather than code: Python trains and emits weights, GDScript
+only infers, and `check_no_training.py` is the gate invariant 6 still does not
+have.
+
+Read tasks/T5-dataset-and-training.md next, then: make check, write the review
+record, make wave-merge.
 
 ## Resuming after 2026-10-12 (wave 8)
 
