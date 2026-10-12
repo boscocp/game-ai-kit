@@ -68,21 +68,44 @@ SCRIPT_EXTENDS = re.compile(r"^\s*extends\s+([A-Za-z0-9_]+)", re.MULTILINE)
 TIER_TWO_DIRS = ("game", "demos")
 
 
+def strip_comments(text: str) -> str:
+    """Drop the lines Godot ignores.
+
+    A `.godot` file comments with `;`. An earlier version of this check read the
+    first match anywhere in the file, so commenting the compliant line out and
+    adding a different one below it left the gate green while the engine loaded
+    the other renderer -- confirmed by asking the running engine what it had.
+    Commenting a line out while trying something, and forgetting to undo it, is
+    the most ordinary way this happens.
+    """
+    return "\n".join(line for line in text.splitlines() if not line.lstrip().startswith(";"))
+
+
 def check_rendering_method(project_file: pathlib.Path) -> list[str]:
     """Report a project that no longer pins the Compatibility renderer."""
     if not project_file.exists():
         return [f"R0 no project.godot at {project_file}"]
 
-    text = project_file.read_text(encoding="utf-8")
-    declared = re.search(r'renderer/rendering_method\s*=\s*"([^"]+)"', text)
-    if declared is None:
+    text = strip_comments(project_file.read_text(encoding="utf-8"))
+    declared = re.findall(r'renderer/rendering_method\s*=\s*"([^"]+)"', text)
+    if not declared:
         return [f"R1 {project_file} does not declare renderer/rendering_method"]
-    if declared.group(1) != REQUIRED_METHOD:
-        return [
-            f"R2 {project_file} uses {declared.group(1)!r}; "
-            f"tier 2 requires {REQUIRED_METHOD!r}"
-        ]
-    return []
+
+    # Every live declaration is checked, not just the first. Two of them is
+    # already a problem -- whichever one the engine honours, a reader cannot
+    # tell which is in force.
+    findings = []
+    for method in declared:
+        if method != REQUIRED_METHOD:
+            findings.append(
+                f"R2 {project_file} uses {method!r}; tier 2 requires {REQUIRED_METHOD!r}"
+            )
+    if len(declared) > 1 and not findings:
+        findings.append(
+            f"R4 {project_file} declares renderer/rendering_method {len(declared)} times; "
+            "keep one, so which is in force is readable"
+        )
+    return findings
 
 
 def check_no_3d_nodes(godot_dir: pathlib.Path) -> list[str]:
@@ -166,6 +189,34 @@ def self_test() -> int:
             "extends Node2D\n\n# This kit is 2D; do not reach for Node3D here.\n"
         )
         expect("3D named in a comment", quiet(prose), 0)
+
+        # Planted: the compliant line commented out, a different one below it.
+        # The gate used to pass this while the engine loaded forward_plus.
+        commented = make_project(root / "commented", REQUIRED_METHOD)
+        (commented / "project.godot").write_text(
+            f'config_version=5\n\n[rendering]\n\n'
+            f';renderer/rendering_method="{REQUIRED_METHOD}"\n'
+            f'renderer/rendering_method="forward_plus"\n'
+        )
+        expect("compliant line commented out", quiet(commented), 1)
+
+        # Planted: declared twice, both compliant. A reader cannot tell which
+        # one the engine honours, so it is a finding of its own.
+        twice = make_project(root / "twice", REQUIRED_METHOD)
+        (twice / "project.godot").write_text(
+            f'config_version=5\n\n[rendering]\n\n'
+            f'renderer/rendering_method="{REQUIRED_METHOD}"\n'
+            f'renderer/rendering_method="{REQUIRED_METHOD}"\n'
+        )
+        expect("declared twice", quiet(twice), 1)
+
+        # A comment that merely mentions the other renderer is not a finding.
+        mentions = make_project(root / "mentions", REQUIRED_METHOD)
+        (mentions / "project.godot").write_text(
+            f'config_version=5\n\n; do not switch to forward_plus: it raises the floor\n'
+            f'[rendering]\n\nrenderer/rendering_method="{REQUIRED_METHOD}"\n'
+        )
+        expect("other renderer named in a comment", quiet(mentions), 0)
 
         # Planted: no project file at all.
         expect("missing project.godot", quiet(root / "nowhere"), 1)

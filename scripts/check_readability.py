@@ -70,7 +70,7 @@ ALLOWED_SHORT_NAMES = {
 # Third-party code under addons/ that this project does not author.
 VENDORED_DIRS = {"gdUnit4"}
 
-FUNC_RE = re.compile(r"^(\t*)func\s+([A-Za-z_][A-Za-z0-9_]*)\s*\((.*?)\)\s*(->\s*\S+)?\s*:")
+FUNC_RE = re.compile(r"^([\t ]*)func\s+([A-Za-z_][A-Za-z0-9_]*)\s*\((.*?)\)\s*(->\s*\S+)?\s*:")
 VAR_RE = re.compile(r"^\s*(?:@\w+(?:\([^)]*\))?\s+)?(?:static\s+)?var\s+([A-Za-z_][A-Za-z0-9_]*)\s*(:=|:|=)")
 PARAM_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)\s*(:\s*[^=]+)?(=.*)?$")
 
@@ -106,16 +106,17 @@ def check_functions(path: pathlib.Path, lines: list[str], label: str) -> list[st
         if match is None:
             continue
 
-        indent, name, params, return_type = match.groups()
+        _indent, name, params, return_type = match.groups()
         number = index + 1
-        body = function_body(lines, index, len(indent))
+        base_columns = indent_columns(line)
+        body = function_body(lines, index, base_columns)
 
         if len(body) > MAX_FUNCTION_LINES:
             findings.append(
                 f"{label}:{number} {name}() is {len(body)} lines; {MAX_FUNCTION_LINES} is the limit"
             )
 
-        depth = deepest_nesting(body, len(indent))
+        depth = deepest_nesting(body, base_columns)
         if depth > MAX_NESTING:
             findings.append(f"{label}:{number} {name}() nests {depth} deep; {MAX_NESTING} is the limit")
 
@@ -132,11 +133,28 @@ def check_functions(path: pathlib.Path, lines: list[str], label: str) -> list[st
     return findings
 
 
-def function_body(lines: list[str], start: int, indent_width: int) -> list[str]:
+# One indentation level, in columns. A tab counts as this many, so a file that
+# mixes the two is still measured rather than silently skipped.
+INDENT_COLUMNS = 4
+
+
+def indent_columns(line: str) -> int:
+    """Leading whitespace in columns, tabs expanded.
+
+    Measuring by counting tabs was the original mistake: a space-indented file
+    produced an empty function body, which turned the length, nesting and
+    parameter checks off without reporting anything. A gate that goes quiet on
+    input it does not recognise is a gate that passes the day it matters.
+    """
+    leading = line[: len(line) - len(line.lstrip("\t "))]
+    return len(leading.expandtabs(INDENT_COLUMNS))
+
+
+def function_body(lines: list[str], start: int, base_columns: int) -> list[str]:
     """The lines belonging to the function that starts at `start`."""
     body = []
     for line in lines[start + 1:]:
-        if line.strip() and not line.startswith("\t" * (indent_width + 1)):
+        if line.strip() and indent_columns(line) <= base_columns:
             break
         body.append(line)
     while body and not body[-1].strip():
@@ -144,15 +162,29 @@ def function_body(lines: list[str], start: int, indent_width: int) -> list[str]:
     return body
 
 
-def deepest_nesting(body: list[str], base_indent: int) -> int:
-    """How many tabs past the function signature the deepest line sits."""
+def deepest_nesting(body: list[str], base_columns: int) -> int:
+    """How many indentation levels past the signature the deepest line sits."""
     deepest = 0
     for line in body:
         if not line.strip() or line.lstrip().startswith("#"):
             continue
-        tabs = len(line) - len(line.lstrip("\t"))
-        deepest = max(deepest, tabs - base_indent)
+        levels = (indent_columns(line) - base_columns) // INDENT_COLUMNS
+        deepest = max(deepest, levels)
     return deepest
+
+
+def check_indentation(lines: list[str], label: str) -> list[str]:
+    """GDScript indents with tabs. The style guide says so, and so does this.
+
+    Only a line *starting* with a space is reported: a tab followed by spaces is
+    ordinary alignment inside a call and flagging it would make the gate a
+    nuisance, which is how gates get switched off.
+    """
+    findings = []
+    for index, line in enumerate(lines):
+        if line.startswith(" ") and line.strip():
+            findings.append(f"{label}:{index + 1} indents with spaces; GDScript uses tabs")
+    return findings
 
 
 def has_doc_comment(lines: list[str], func_index: int) -> bool:
@@ -220,6 +252,7 @@ def run(root: pathlib.Path) -> int:
     for path in gdscript_files(root):
         label = str(path.relative_to(root)) if path.is_relative_to(root) else str(path)
         lines = path.read_text(encoding="utf-8").splitlines()
+        findings += check_indentation(lines, label)
         findings += check_file_length(path, lines, label)
         findings += check_functions(path, lines, label)
         findings += check_variables(lines, label)
@@ -334,6 +367,41 @@ def self_test() -> int:
         vendor.mkdir(parents=True)
         (vendor / "messy.gd").write_text("func whatever(a, b):\n\tvar z = 1\n")
         expect("vendored code ignored", quiet(root / "vendor"), 0)
+
+        # Planted: the exact file a review used to show this gate going quiet.
+        # Indented with spaces, it used to produce an empty function body, which
+        # switched off the length, nesting and parameter checks without saying
+        # anything. It must now report BOTH the spaces and the nesting.
+        spaced = (
+            "## Why this exists.\n"
+            "func enormous() -> void:\n"
+            "    if true:\n"
+            "        if true:\n"
+            "            if true:\n"
+            "                if true:\n"
+            "                    if true:\n"
+            "                        print(\"six deep\")\n"
+        )
+        spaced_root = project(root, "spaced", spaced)
+        expect("space-indented and over-nested", quiet(spaced_root), 1)
+        with contextlib.redirect_stdout(io.StringIO()) as captured:
+            run(spaced_root)
+        reported = captured.getvalue()
+        if "indents with spaces" not in reported:
+            failures.append("space-indented file: the spaces themselves were not reported")
+        if "nests" not in reported:
+            failures.append("space-indented file: nesting was not measured through the spaces")
+
+        # A tab followed by spaces is alignment inside a call, not a finding.
+        aligned = (
+            "## Why this exists.\n"
+            "func thing(first: int, second: int) -> int:\n"
+            "\treturn maxi(\n"
+            "\t\tfirst,\n"
+            "\t\tsecond,\n"
+            "\t)\n"
+        )
+        expect("tab then spaces for alignment", quiet(project(root, "aligned", aligned)), 0)
 
         script = pathlib.Path(__file__).resolve()
         extra = subprocess.run(
