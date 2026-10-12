@@ -76,7 +76,15 @@ VENDORED_DIRS = {"gdUnit4"}
 # no doc comment, in the one kind of file whose whole content is signatures.
 # The trailing colon is optional for the same reason -- an abstract method has
 # no body and so no colon.
-ANNOTATIONS = r"(?:@\w+(?:\([^)]*\))?[\t ]+)*"
+#
+# `static` is here for a harsher reason. It was not, and a `static func` matched
+# nothing: the gate skipped the declaration whole, so its length, its nesting,
+# its parameter types and its doc comment were all unchecked. `search_vector.gd`
+# is nothing but static functions and was being read by this gate as an empty
+# file. `VAR_RE` below had always handled `static var`, which is how the hole
+# stayed invisible -- the keyword was clearly in mind when that line was
+# written.
+ANNOTATIONS = r"(?:@\w+(?:\([^)]*\))?[\t ]+)*(?:static[\t ]+)?"
 FUNC_RE = re.compile(
     r"^([\t ]*)" + ANNOTATIONS
     + r"func\s+([A-Za-z_][A-Za-z0-9_]*)\s*\((.*?)\)\s*(->\s*\S+)?\s*:?\s*$"
@@ -417,6 +425,49 @@ def self_test() -> int:
         )
         expect("abstract func, no doc comment",
                quiet(project(root, "absdoc", abstract_undocumented)), 1)
+
+        # Planted: a static function with an untyped parameter. `static func`
+        # matched nothing at all, so everything about such a declaration went
+        # unchecked -- in a repository whose conformance rules are a file of
+        # them.
+        static_untyped = GOOD + (
+            "\n\n## Why this exists.\nstatic func measure(first, second: int) -> int:\n"
+            "\treturn first + second\n"
+        )
+        expect("static func, untyped parameter",
+               quiet(project(root, "staticparam", static_untyped)), 1)
+
+        # Planted: a static function with no doc comment.
+        static_undocumented = GOOD + (
+            "\n\nstatic func measure(first: int, second: int) -> int:\n"
+            "\treturn first + second\n"
+        )
+        expect("static func, no doc comment",
+               quiet(project(root, "staticdoc", static_undocumented)), 1)
+
+        # Planted: a static function nested past the limit. Length and nesting
+        # were skipped along with everything else.
+        static_deep = GOOD + (
+            "\n\n## Why this exists.\nstatic func deep() -> void:\n"
+            "\tif true:\n\t\tif true:\n\t\t\tif true:\n\t\t\t\tprint(1)\n"
+        )
+        expect("static func, over-nested", quiet(project(root, "staticdeep", static_deep)), 1)
+
+        # Planted: a static function with no return type. Four checks run on a
+        # declaration and three of them had a case here; this is the fourth.
+        static_no_return = GOOD + (
+            "\n\n## Why this exists.\nstatic func measure(first: int, second: int):\n"
+            "\treturn first + second\n"
+        )
+        expect("static func, no return type",
+               quiet(project(root, "staticret", static_no_return)), 1)
+
+        # The same function written properly must still pass.
+        static_ok = GOOD + (
+            "\n\n## Why this exists.\nstatic func measure(first: int, second: int) -> int:\n"
+            "\treturn first + second\n"
+        )
+        expect("static func, fully typed", quiet(project(root, "staticok", static_ok)), 0)
 
         # Planted: an untyped var.
         untyped_var = GOOD.replace("var dx: int = absi", "var dx = absi")

@@ -1,0 +1,16 @@
+{
+  "name": "no army to send",
+  "why": "The first link of the chain is missing: nothing puts an army at the node, so node_held can never become true and neither can anything after it. The planner has to come back with an empty plan and the word impossible -- not a budget it ran out of, and not a hang.",
+  "domain": "no-army-domain.pddl",
+  "problem": "no-army-problem.pddl",
+  "actions": [
+    {"name": "take_the_node", "preconditions": ["army_at_node"], "deletes": [], "adds": ["node_held"]},
+    {"name": "mine_the_node", "preconditions": ["node_held"], "deletes": [], "adds": ["resources_banked"]},
+    {"name": "attack", "preconditions": ["resources_banked"], "deletes": [], "adds": ["enemy_beaten"]}
+  ],
+  "init": [],
+  "goal": ["enemy_beaten"],
+  "expect": {
+    "solved": false
+  }
+}

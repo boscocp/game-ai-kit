@@ -1,0 +1,21 @@
+{
+  "name": "the supply chain",
+  "why": "The chain the whole addon exists for: to attack you need a unit, to train one you need a barracks and resources, and the barracks spends the same bank the unit does -- so the node has to be mined twice. A reactive rule that trains a unit whenever it can afford one never builds the barracks, and never attacks.",
+  "domain": "supply-chain-domain.pddl",
+  "problem": "supply-chain-problem.pddl",
+  "actions": [
+    {"name": "march_to_node", "preconditions": ["army_in_reserve"], "deletes": ["army_in_reserve"], "adds": ["army_at_node"]},
+    {"name": "take_the_node", "preconditions": ["army_at_node"], "deletes": [], "adds": ["node_held"]},
+    {"name": "mine_the_node", "preconditions": ["node_held"], "deletes": [], "adds": ["resources_banked"]},
+    {"name": "build_barracks", "preconditions": ["resources_banked"], "deletes": ["resources_banked"], "adds": ["barracks_built"]},
+    {"name": "train_unit", "preconditions": ["resources_banked", "barracks_built"], "deletes": ["resources_banked"], "adds": ["unit_trained"]},
+    {"name": "scout_the_enemy", "preconditions": ["army_at_node"], "deletes": [], "adds": ["enemy_scouted"]},
+    {"name": "attack", "preconditions": ["unit_trained", "enemy_scouted"], "deletes": ["unit_trained"], "adds": ["enemy_beaten"]}
+  ],
+  "init": ["army_in_reserve"],
+  "goal": ["enemy_beaten"],
+  "expect": {
+    "solved": true,
+    "steps": 8
+  }
+}

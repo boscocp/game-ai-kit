@@ -66,7 +66,9 @@ static func check(name: String, data: Dictionary, searches: Dictionary) -> Array
 
 	for label: String in searches:
 		var search: Search = searches[label]
-		problems += _check_one(name, label, search.search(graph, from, to), graph, from, expected)
+		problems += _check_one(
+			name, label, search.search(graph, from, to), graph, from, to, expected
+		)
 	return problems
 
 
@@ -107,7 +109,7 @@ static func _why_ends_are_wrong(data: Dictionary, width: int, height: int) -> St
 
 
 static func _check_one(name: String, label: String, result: SearchResult, graph: GridGraph,
-		from: Vector2i, expected: Dictionary) -> Array[String]:
+		from: Vector2i, to: Vector2i, expected: Dictionary) -> Array[String]:
 	var problems: Array[String] = []
 	var should_reach: bool = expected["reached"]
 
@@ -121,6 +123,9 @@ static func _check_one(name: String, label: String, result: SearchResult, graph:
 	var unwalkable: String = _why_unwalkable(graph, from, result.path)
 	if unwalkable != "":
 		problems.append("%s/%s: the path cannot be walked -- %s" % [name, label, unwalkable])
+	var astray: String = _why_it_does_not_arrive(from, to, result.path)
+	if astray != "":
+		problems.append("%s/%s: the path does not arrive -- %s" % [name, label, astray])
 	return problems + _check_numbers(name, label, result, expected)
 
 
@@ -146,6 +151,30 @@ static func _check_failure(name: String, label: String, result: SearchResult) ->
 	if result.cost != GridGraph.BLOCKED:
 		problems.append("%s/%s: unreachable, but cost is %d" % [name, label, result.cost])
 	return problems
+
+
+# Where the path finishes, which nothing here used to look at.
+#
+# Every other rule in this file is about the *steps*: that each one follows the
+# last and lands on ground a unit may enter. All of them hold for a path that
+# walks somewhere else entirely, so a search could report `reached` and hand
+# back a legal stroll to the wrong cell and conform. The same shape as the
+# finding the wave 08 review recorded about `from`: every step was legal, and
+# the ends were nobody's business.
+#
+# An empty path is the one case with two readings, and the contract in
+# `pathfinder.gd` settles it: a search that starts on its goal has no steps to
+# report, and anything else with no steps did not arrive.
+static func _why_it_does_not_arrive(from: Vector2i, to: Vector2i,
+		path: Array[Vector2i]) -> String:
+	if path.is_empty():
+		if from == to:
+			return ""
+		return "it has no steps, and %s is not %s" % [from, to]
+	var last: Vector2i = path[path.size() - 1]
+	if last != to:
+		return "it ends on %s, and the goal is %s" % [last, to]
+	return ""
 
 
 static func _why_unwalkable(graph: GridGraph, from: Vector2i,
