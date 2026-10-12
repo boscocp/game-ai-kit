@@ -2,8 +2,8 @@
 ##
 ## It is in this kit to be looked at, not to be used. Change `pop_front` to
 ## `pop_back` in breadth-first and you have it: a stack instead of a queue, one
-## character of difference, and a completely different shape on screen. The
-## demo draws them side by side because that is the lesson.
+## call of difference, and a completely different shape on screen. The demo
+## draws them one after the other because that is the lesson.
 ##
 ## Complexity: O(V + E), the same as breadth-first. Cheap, and cheap is not the
 ## problem.
@@ -18,16 +18,18 @@ class_name DepthFirstSearch
 extends Search
 
 
-## Some route to the goal, with no claim about it beyond existing.
-func search(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
+# Some route to the goal, with no claim about it beyond existing.
+func _explore(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 	var frontier: Array[Vector2i] = [from]
 	var came_from: Dictionary = {from: NO_PARENT}
 	var expanded: Array[Vector2i] = []
 
 	while not frontier.is_empty():
-		# The back of the queue: the newest cell. Breadth-first takes the
-		# oldest. That is the entire difference, and it is why this file is
-		# worth reading beside that one rather than instead of it.
+		# The back of the stack: the newest cell. Breadth-first takes the
+		# oldest one off the front. That is the entire difference, and it is
+		# why this file is worth reading beside that one rather than instead
+		# of it. (This array was called "the queue" here, which is the one
+		# thing it is not.)
 		var current: Vector2i = frontier.pop_back()
 		expanded.append(current)
 		if current == to:

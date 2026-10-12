@@ -157,6 +157,70 @@ func test_the_frontier_is_empty_when_a_search_exhausts_the_map() -> void:
 	assert_int(result.frontier.size()).is_equal(0)
 
 
+func test_depth_first_is_not_breadth_first() -> void:
+	# Turning `pop_back` into `pop_front` makes depth-first *be* breadth-first,
+	# and nothing in the suite noticed: the demo's entire lesson was ungated.
+	var graph := GridGraph.new(6, 6)
+	var breadth: SearchResult = BreadthFirstSearch.new().search(
+		graph, Vector2i(0, 0), Vector2i(3, 0)
+	)
+	var depth: SearchResult = DepthFirstSearch.new().search(
+		graph, Vector2i(0, 0), Vector2i(3, 0)
+	)
+
+	assert_int(breadth.path.size()).is_equal(3)
+	assert_bool(depth.path.size() > breadth.path.size()).override_failure_message(
+		"depth-first found a path of %d, breadth-first %d -- it is behaving like a queue"
+		% [depth.path.size(), breadth.path.size()]
+	).is_true()
+
+
+func test_the_cost_counts_every_cell_entered_including_the_first() -> void:
+	# `_cost_of` skipping the first cell of the path left `make test-godot`
+	# green: every cost this suite checked was either zero or compared against
+	# another search. Only the conformance vectors caught it, and a unit test
+	# should not need them to.
+	var graph := GridGraph.new(4, 1)
+	graph.set_cost(Vector2i(1, 0), 5)
+
+	var result: SearchResult = DijkstraSearch.new().search(
+		graph, Vector2i(0, 0), Vector2i(3, 0)
+	)
+
+	assert_int(result.path.size()).is_equal(3)
+	assert_int(result.cost).is_equal(7)
+
+
+func test_a_start_that_is_not_on_the_board_finds_nothing() -> void:
+	# It used to come back `reached`, with a path that walked in from nowhere,
+	# and the conformance runner's walkability check accepted it because every
+	# individual step was legal.
+	for search: Search in _all_searches():
+		var result: SearchResult = search.search(
+			GridGraph.new(5, 5), Vector2i(-1, 2), Vector2i(3, 2)
+		)
+
+		assert_bool(result.reached).is_false()
+		assert_int(result.path.size()).is_equal(0)
+		assert_int(result.expanded.size()).is_equal(0)
+
+
+func test_a_start_inside_a_wall_may_still_walk_out_of_it() -> void:
+	# Cost is paid on entering a cell, never on leaving one, and something may
+	# well have put a unit in a wall. This is the deliberate other half of the
+	# rule above, so that "guard the start" does not quietly become "refuse
+	# anything awkward".
+	var graph := GridGraph.new(5, 5)
+	graph.block(Vector2i(1, 2))
+
+	var result: SearchResult = DijkstraSearch.new().search(
+		graph, Vector2i(1, 2), Vector2i(3, 2)
+	)
+
+	assert_bool(result.reached).is_true()
+	assert_int(result.cost).is_equal(2)
+
+
 # An A* whose guess is always zero, which makes it Dijkstra by definition.
 class _ZeroHeuristicAStar extends AStarSearch:
 	func heuristic(_cell: Vector2i, _goal: Vector2i) -> int:

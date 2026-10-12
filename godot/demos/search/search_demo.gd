@@ -25,9 +25,13 @@ const NAMES: Array[String] = ["breadth-first", "depth-first", "dijkstra", "a*"]
 @onready var _expansion: ExpansionView = $ExpansionView
 @onready var _status: Label = $Interface/Status
 
+# Derived rather than written out. They were `Vector2i(1, 5)` and
+# `Vector2i(14, 5)` beside a `COLUMNS` and a `ROWS` that looked adjustable:
+# change either constant and the demo silently showed "no route" with its
+# markers drawn off the board.
 var _graph: GridGraph
-var _from := Vector2i(1, 5)
-var _to := Vector2i(14, 5)
+var _from := Vector2i(1, ROWS / 2)
+var _to := Vector2i(COLUMNS - 2, ROWS / 2)
 var _chosen: int = 0
 var _revealed: int = 0
 var _result: SearchResult
@@ -106,9 +110,9 @@ func _status_line() -> String:
 func _build_board() -> GridGraph:
 	var graph := GridGraph.new(COLUMNS, ROWS)
 	for column: int in range(COLUMNS):
-		graph.set_cost(Vector2i(column, 5), MUD)
+		graph.set_cost(Vector2i(column, _from.y), MUD)
 	for row: int in range(0, ROWS - 2):
-		graph.block(Vector2i(8, row))
+		graph.block(Vector2i(COLUMNS / 2, row))
 	graph.set_cost(_from, GridGraph.DEFAULT_COST)
 	graph.set_cost(_to, GridGraph.DEFAULT_COST)
 	return graph

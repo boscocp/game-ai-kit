@@ -16,16 +16,17 @@ class_name BreadthFirstSearch
 extends Search
 
 
-## The route with the fewest steps, ignoring what a step costs.
-func search(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
+# The route with the fewest steps, ignoring what a step costs.
+func _explore(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 	var frontier: Array[Vector2i] = [from]
 	var came_from: Dictionary = {from: NO_PARENT}
 	var expanded: Array[Vector2i] = []
 
 	while not frontier.is_empty():
 		# The front of the queue: the oldest cell, which is what makes this
-		# breadth-first. Taking it off the back instead is depth-first, and
-		# that single character is the whole difference between the two files.
+		# breadth-first. `pop_back` instead of `pop_front` -- a queue instead
+		# of a stack -- is depth-first, and that one call is the whole
+		# difference between the two files.
 		var current: Vector2i = frontier.pop_front()
 		expanded.append(current)
 		if current == to:

@@ -15,8 +15,12 @@
 class_name ExpansionView
 extends Node2D
 
-const EARLY: Color = Color(0.16, 0.20, 0.34, 0.85)
-const LATE: Color = Color(0.45, 0.78, 0.95, 0.85)
+# Translucent, and inset, so the board stays visible underneath. At full tile
+# size and 0.85 alpha the expansion buried the mud band completely -- so the
+# one thing the demo exists to show, *why* Dijkstra goes round, disappeared
+# exactly when the picture was finished.
+const EARLY: Color = Color(0.16, 0.20, 0.34, 0.50)
+const LATE: Color = Color(0.45, 0.78, 0.95, 0.50)
 const FRONTIER: Color = Color(0.95, 0.80, 0.35, 0.90)
 const PATH: Color = Color(1.0, 0.95, 0.85, 1.0)
 const START: Color = Color(0.45, 0.85, 0.45)
@@ -25,6 +29,7 @@ const GOAL: Color = Color(0.95, 0.45, 0.45)
 const PATH_WIDTH: float = 3.0
 const MARKER_RADIUS: float = 7.0
 const FRONTIER_INSET: float = 6.0
+const EXPANSION_INSET: float = 8.0
 
 var _result: SearchResult
 var _board: BoardView
@@ -61,7 +66,7 @@ func _draw_expansion() -> void:
 	var total: int = maxi(_result.expanded.size() - 1, 1)
 	for index: int in range(mini(_revealed, _result.expanded.size())):
 		var shade: Color = EARLY.lerp(LATE, float(index) / float(total))
-		draw_rect(_cell_rect(_result.expanded[index], 0.0), shade)
+		draw_rect(_cell_rect(_result.expanded[index], EXPANSION_INSET), shade)
 
 
 # What the search had not got to when it stopped. On A* this is most of the

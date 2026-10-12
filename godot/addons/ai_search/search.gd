@@ -23,13 +23,32 @@ const NO_PARENT: Vector2i = Vector2i(-1, -1)
 
 
 ## The whole result: the route, what was expanded, and what was still waiting.
-@abstract func search(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult
+##
+## The start is checked here rather than in each algorithm, because it is the
+## same check four times and none of them had it. Measured before this existed:
+## `from = (-1, 2)` on a 5x5 board came back `reached`, with a path that walked
+## in from nowhere -- and the conformance runner's own walkability check
+## accepted it, because every *step* was legal.
+##
+## A start that is merely **blocked** is allowed through: a unit can be standing
+## in a wall because something put it there, and cost is paid on entering a
+## cell, never on leaving one. A start that is not on the board at all is not a
+## cell, and there is nothing to search from.
+func search(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
+	if not graph.contains(from):
+		return SearchResult.nothing_found([] as Array[Vector2i], [] as Array[Vector2i])
+	return _explore(graph, from, to)
 
 
 ## The `Pathfinder` contract, which is this one's answer with the work thrown
 ## away.
 func find_path(graph: GridGraph, from: Vector2i, to: Vector2i) -> Array[Vector2i]:
 	return search(graph, from, to).path
+
+
+# One algorithm, on a start already known to be on the board. This is the part
+# that differs between the four files, and it is the only part they implement.
+@abstract func _explore(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult
 
 
 # Walk the chain of parents back from the goal, then turn it round.

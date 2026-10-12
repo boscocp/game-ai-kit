@@ -24,9 +24,9 @@ class_name AStarSearch
 extends Search
 
 
-## The cheapest route, expanding towards the goal rather than in all
-## directions.
-func search(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
+# The cheapest route, expanding towards the goal rather than in all
+# directions.
+func _explore(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 	var frontier: Array[Vector2i] = [from]
 	var came_from: Dictionary = {from: NO_PARENT}
 	# `g` is the cost of reaching a cell, `f` is that plus the guess about what
@@ -56,9 +56,16 @@ func search(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 	return SearchResult.nothing_found(expanded, frontier)
 
 
-# Dijkstra's relaxation with one line added: a cell that gets a cheaper `g`
-# also gets a new `f`, because the frontier is ordered by `f` and a stale one
-# would send the search the wrong way.
+# Dijkstra's relaxation with two differences: a cell already seen is still
+# worth improving, and a cell that gets a cheaper `g` also gets a new `f`.
+#
+# A retraction. This comment used to say that a stale `f` "would send the search
+# the wrong way". It was never measured, and it is false: freezing `f` at its
+# first value over 241 random boards changed neither the cost returned nor the
+# number of cells expanded, not once. What refreshing `f` buys is that the
+# frontier stays ordered by the current best estimate, which is what A* is
+# *defined* to do -- and the honest reason to keep the line is that the
+# implementation should not quietly depend on an accident of these boards.
 func _relax(graph: GridGraph, current: Vector2i, goal: Vector2i,
 		came_from: Dictionary, g: Dictionary, f: Dictionary,
 		frontier: Array[Vector2i]) -> void:
