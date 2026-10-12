@@ -20,7 +20,7 @@ Each file is one board and one question.
 
 ```json
 {
-  "name": "short name, used in failure messages",
+  "name": "a short label for a reader; the file name is what failures quote",
   "why": "what this board is for -- the sentence a reader needs",
   "costs": [[1, 1, 1], [1, -1, 1]],
   "from": [0, 0],

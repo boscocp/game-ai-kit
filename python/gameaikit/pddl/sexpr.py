@@ -65,6 +65,20 @@ def parse(text: str) -> list[list]:
     return forms
 
 
+def unparse(form: object) -> str:
+    """A form printed back as the text it came from.
+
+    Only error messages use it, and that is the whole reason it exists: a
+    message reading ``(at ?x)`` is about the file the author wrote, and one
+    reading ``['at', '?x']`` is about this reader's internals.
+    """
+    if isinstance(form, str):
+        return form
+    if isinstance(form, list):
+        return "(" + " ".join(unparse(item) for item in form) + ")"
+    return repr(form)
+
+
 def _read_form(tokens: list[tuple[str, int]], position: int) -> tuple[object, int]:
     """One form, and where the next one starts."""
     token, line = tokens[position]

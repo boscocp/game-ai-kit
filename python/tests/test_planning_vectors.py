@@ -17,7 +17,7 @@ import json
 import pathlib
 import unittest
 
-from gameaikit.pddl import read_domain, read_problem
+from gameaikit.pddl import Action, Domain, Problem, read_domain, read_problem
 
 VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "planning"
 
@@ -33,7 +33,7 @@ def vector_files() -> list[pathlib.Path]:
     return sorted(VECTORS.glob("*.json"))
 
 
-def lists_of(action) -> tuple[frozenset, frozenset, frozenset]:
+def lists_of(action: Action) -> tuple[frozenset, frozenset, frozenset]:
     """One action's three lists, as sets, for comparing across languages."""
     return (
         frozenset(action.preconditions),
@@ -43,11 +43,16 @@ def lists_of(action) -> tuple[frozenset, frozenset, frozenset]:
 
 
 def lists_of_entry(entry: dict) -> tuple[frozenset, frozenset, frozenset]:
-    """The same three lists, out of the JSON."""
+    """The same three lists, out of the JSON.
+
+    Folded to lower case on this side too. The reader folds because PDDL is
+    case-insensitive, and comparing a folded name against an unfolded one would
+    report a difference that is not one.
+    """
     return (
-        frozenset(entry["preconditions"]),
-        frozenset(entry["deletes"]),
-        frozenset(entry["adds"]),
+        frozenset(name.lower() for name in entry["preconditions"]),
+        frozenset(name.lower() for name in entry["deletes"]),
+        frozenset(name.lower() for name in entry["adds"]),
     )
 
 
@@ -69,9 +74,18 @@ class ThePddlMatchesTheJson(unittest.TestCase):
             vector = json.loads(path.read_text(encoding="utf-8"))
             domain = read_domain((VECTORS / vector["domain"]).read_text(encoding="utf-8"))
             with self.subTest(vector=path.name):
+                # Both sides are keyed by name, so the count is asserted
+                # separately: two actions sharing a name collapse into one
+                # entry, and `assertEqual` on the dictionaries would not see
+                # the one that went missing. A vector with no actions at all
+                # compares `{}` with `{}`, which is the shape of a test that
+                # passes while measuring nothing.
+                self.assertGreater(len(vector["actions"]), 0)
+                self.assertEqual(len(domain.actions), len(vector["actions"]))
                 self.assertEqual(
                     {action.name: lists_of(action) for action in domain.actions},
-                    {entry["name"]: lists_of_entry(entry) for entry in vector["actions"]},
+                    {entry["name"].lower(): lists_of_entry(entry)
+                     for entry in vector["actions"]},
                 )
 
     def test_the_start_and_the_goal_are_the_same(self) -> None:
@@ -79,8 +93,10 @@ class ThePddlMatchesTheJson(unittest.TestCase):
             vector = json.loads(path.read_text(encoding="utf-8"))
             problem = read_problem((VECTORS / vector["problem"]).read_text(encoding="utf-8"))
             with self.subTest(vector=path.name):
-                self.assertEqual(set(problem.init), set(vector["init"]))
-                self.assertEqual(set(problem.goal), set(vector["goal"]))
+                self.assertEqual(set(problem.init),
+                                 {name.lower() for name in vector["init"]})
+                self.assertEqual(set(problem.goal),
+                                 {name.lower() for name in vector["goal"]})
 
     def test_each_problem_is_for_the_domain_beside_it(self) -> None:
         # Two vectors whose files were copied and half-edited would otherwise
@@ -107,7 +123,7 @@ class ThePddlIsInternallyHonest(unittest.TestCase):
                 self.assertEqual(self.used(domain, problem) - declared, set())
 
     @staticmethod
-    def used(domain, problem) -> set:
+    def used(domain: Domain, problem: Problem) -> set:
         """Every predicate named anywhere in a domain and its problem."""
         names = set(problem.init) | set(problem.goal)
         for action in domain.actions:

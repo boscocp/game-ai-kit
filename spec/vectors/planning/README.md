@@ -26,7 +26,7 @@ perfectly and plans wrongly, and only the comparison catches it.
 
 ```json
 {
-  "name": "short name, used in failure messages",
+  "name": "a short label for a reader; the file name is what failures quote",
   "why": "what this domain is for -- the sentence a reader needs",
   "domain": "name-domain.pddl",
   "problem": "name-problem.pddl",
