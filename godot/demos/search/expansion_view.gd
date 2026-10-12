@@ -1,0 +1,90 @@
+## Draws what a search looked at, in the order it looked at it.
+##
+## The path is the boring half. Four algorithms return the same route on an
+## open board and arrive at it completely differently, and the only place that
+## difference exists is the expansion -- so this view draws the expansion first
+## and the path on top of it.
+##
+## Colour carries order: the earliest cells are dark, the latest are bright.
+## That is what makes depth-first legible as a mistake rather than as noise --
+## you can see it commit to one direction and keep going.
+##
+## When not to use it: a board large enough that one rectangle per expanded
+## cell matters. At that size you want the whole thing in a shader, and the
+## lesson is no longer about the algorithm.
+class_name ExpansionView
+extends Node2D
+
+const EARLY: Color = Color(0.16, 0.20, 0.34, 0.85)
+const LATE: Color = Color(0.45, 0.78, 0.95, 0.85)
+const FRONTIER: Color = Color(0.95, 0.80, 0.35, 0.90)
+const PATH: Color = Color(1.0, 0.95, 0.85, 1.0)
+const START: Color = Color(0.45, 0.85, 0.45)
+const GOAL: Color = Color(0.95, 0.45, 0.45)
+
+const PATH_WIDTH: float = 3.0
+const MARKER_RADIUS: float = 7.0
+const FRONTIER_INSET: float = 6.0
+
+var _result: SearchResult
+var _board: BoardView
+var _revealed: int = 0
+var _from: Vector2i
+var _to: Vector2i
+
+
+## Show `revealed` cells of this search's expansion, and the path once it is
+## all revealed. Stepping is replaying: nothing is searched again.
+func show_search(result: SearchResult, board: BoardView, revealed: int,
+		from: Vector2i, to: Vector2i) -> void:
+	_result = result
+	_board = board
+	_revealed = revealed
+	_from = from
+	_to = to
+	queue_redraw()
+
+
+func _draw() -> void:
+	if _result == null or _board == null:
+		return
+	_draw_expansion()
+	if _revealed >= _result.expanded.size():
+		_draw_frontier()
+		_draw_path()
+	_draw_marker(_from, START)
+	_draw_marker(_to, GOAL)
+
+
+# Every cell taken off the frontier so far, dark to bright in that order.
+func _draw_expansion() -> void:
+	var total: int = maxi(_result.expanded.size() - 1, 1)
+	for index: int in range(mini(_revealed, _result.expanded.size())):
+		var shade: Color = EARLY.lerp(LATE, float(index) / float(total))
+		draw_rect(_cell_rect(_result.expanded[index], 0.0), shade)
+
+
+# What the search had not got to when it stopped. On A* this is most of the
+# board, and that is the entire argument for the heuristic.
+func _draw_frontier() -> void:
+	for cell: Vector2i in _result.frontier:
+		draw_rect(_cell_rect(cell, FRONTIER_INSET), FRONTIER, false, 2.0)
+
+
+func _draw_path() -> void:
+	if _result.path.is_empty():
+		return
+	var points := PackedVector2Array([_board.centre_of(_from)])
+	for cell: Vector2i in _result.path:
+		points.append(_board.centre_of(cell))
+	draw_polyline(points, PATH, PATH_WIDTH)
+
+
+func _draw_marker(cell: Vector2i, colour: Color) -> void:
+	draw_circle(_board.centre_of(cell), MARKER_RADIUS, colour)
+
+
+func _cell_rect(cell: Vector2i, inset: float) -> Rect2:
+	var side: float = float(BoardView.TILE_PIXELS)
+	var corner: Vector2 = _board.centre_of(cell) - Vector2(side, side) * 0.5
+	return Rect2(corner + Vector2(inset, inset) * 0.5, Vector2(side, side) - Vector2(inset, inset))
