@@ -9,7 +9,9 @@ who wants only A* copies two folders and is done.
 
 The dependency that has no path in it
 -------------------------------------
-Catching `preload("res://addons/other/x.gd")` is the easy half. The half that
+Catching `preload("res://addons/other/x.gd")` is the easy half -- and it is not
+even all of that half: a relative `preload("../other/x.gd")` resolves on the
+pinned engine, measured rather than assumed, so it is caught too. The half that
 matters is `class_name`: a class declared in one addon is registered across the
 whole project, so a file in `ai_planning` can write `AStarSearch.find_path(...)`
 with no import, no path, and nothing to grep for except the name itself. It
@@ -29,7 +31,7 @@ when installed alone.
 Exit codes
 ----------
 0   every addon stands alone
-1   a cross-addon dependency (each one printed)
+1   a cross-addon dependency, or one class_name declared twice
 2   wrong usage, or a path that cannot be read
 
 Usage
@@ -57,6 +59,7 @@ VENDORED = {"gdUnit4"}
 
 CLASS_NAME_RE = re.compile(r"^\s*class_name\s+([A-Za-z_][A-Za-z0-9_]*)", re.M)
 RES_PATH_RE = re.compile(r'res://addons/([A-Za-z0-9_]+)/')
+QUOTED_LOAD_RE = re.compile(r'\b(?:pre)?load\(\s*["\']([^"\']+)["\']')
 
 
 def addon_dirs(addons: pathlib.Path) -> list[pathlib.Path]:
@@ -87,35 +90,86 @@ def check(addons: pathlib.Path) -> list[str]:
         print(f"A0 note: no addons under {addons} yet -- this gate inspected nothing")
         return []
 
+    declared = {addon.name: declared_classes(addon) for addon in folders}
+    findings = []
+
+    # A class_name is registered project-wide, so two addons declaring the same
+    # one is an error in Godot rather than a style question -- and it used to be
+    # invisible here, because the owner was kept in a dict and the second addon
+    # simply overwrote the first.
     owner_of: dict[str, str] = {}
     for addon in folders:
-        for name in declared_classes(addon):
+        for name in sorted(declared[addon.name]):
+            if name in owner_of:
+                findings.append(
+                    f"A3 {addon.name} and {owner_of[name]} both declare {name}; "
+                    "a class_name is registered project-wide and may be declared once"
+                )
+                continue
             owner_of[name] = addon.name
 
-    findings = []
     for addon in folders:
+        own = declared[addon.name]
         for path in sorted(addon.rglob("*.gd")):
-            text = path.read_text(encoding="utf-8")
-            relative = path.relative_to(addons.parent.parent)
+            findings += mentions_of_another_addon(path, addon, addons, own, owner_of)
+    return findings
 
-            # The easy half: a resource path naming another addon.
-            for referenced in sorted(set(RES_PATH_RE.findall(text))):
-                if referenced not in (addon.name, SHARED) and referenced not in VENDORED:
-                    findings.append(
-                        f"A1 {relative} loads from addons/{referenced}/; "
-                        f"only {SHARED} may be shared"
-                    )
 
-            # The half with no path in it: a class another addon registers.
-            own = declared_classes(addon)
-            for name, owner in sorted(owner_of.items()):
-                if owner in (addon.name, SHARED) or name in own:
-                    continue
-                if re.search(rf"\b{re.escape(name)}\b", text):
-                    findings.append(
-                        f"A2 {relative} mentions {name}, which {owner} declares; "
-                        f"installing {addon.name} alone would break"
-                    )
+def mentions_of_another_addon(path: pathlib.Path, addon: pathlib.Path,
+                              addons: pathlib.Path, own: set[str],
+                              owner_of: dict[str, str]) -> list[str]:
+    """Both halves of the dependency, read off one file."""
+    text = path.read_text(encoding="utf-8")
+    relative = path.relative_to(addons.parent.parent)
+    findings = []
+
+    # The easy half: a resource path naming another addon.
+    for referenced in sorted(set(RES_PATH_RE.findall(text))):
+        if referenced not in (addon.name, SHARED) and referenced not in VENDORED:
+            findings.append(
+                f"A1 {relative} loads from addons/{referenced}/; "
+                f"only {SHARED} may be shared"
+            )
+
+    findings += climbs_out_of_the_addon(path, addon, addons, text)
+
+    # The half with no path in it: a class another addon registers.
+    for name, owner in sorted(owner_of.items()):
+        if owner in (addon.name, SHARED) or name in own:
+            continue
+        if re.search(rf"\b{re.escape(name)}\b", text):
+            findings.append(
+                f"A2 {relative} mentions {name}, which {owner} declares; "
+                f"installing {addon.name} alone would break"
+            )
+    return findings
+
+
+def climbs_out_of_the_addon(path: pathlib.Path, addon: pathlib.Path,
+                           addons: pathlib.Path, text: str) -> list[str]:
+    """A relative load that lands in a different addon.
+
+    `res://addons/other/` is the spelling this gate was written for, and it is
+    not the only one that works. Measured on the pinned engine rather than
+    assumed: a script in `addons/ai_a/` doing `preload("../ai_b/x.gd")` resolves
+    and runs, which is the same dependency wearing a different path.
+    """
+    findings = []
+    for target in sorted(set(QUOTED_LOAD_RE.findall(text))):
+        if "://" in target:
+            continue  # res:// and user:// are the other rule's business
+        landed = (path.parent / target).resolve()
+        try:
+            inside = landed.relative_to(addons.resolve())
+        except ValueError:
+            continue  # out of the addons tree entirely, and not this rule
+        referenced = inside.parts[0] if inside.parts else ""
+        if not referenced or referenced in (addon.name, SHARED) or referenced in VENDORED:
+            continue
+        findings.append(
+            f"A4 {path.relative_to(addons.parent.parent)} loads {target}, which "
+            f"lands in addons/{referenced}/; only {SHARED} may be shared"
+        )
     return findings
 
 
@@ -201,6 +255,32 @@ def self_test() -> int:
                 search + '\nconst Helper := preload("res://addons/ai_search/helper.gd")\n',
             "ai_search/helper.gd": "class_name AStarHelper\nextends RefCounted\n",
         })), 0)
+
+        # Planted: the dependency written as a relative path. Measured on
+        # 4.7.2: this resolves and runs, so it is not a theoretical spelling.
+        expect("relative preload across addons", quiet(build(root, "relative", {
+            "ai_core/grid_graph.gd": core,
+            "ai_search/astar.gd": search,
+            "ai_planning/strips.gd":
+                'class_name StripsPlanner\nextends RefCounted\n\n'
+                'const Search := preload("../ai_search/astar.gd")\n',
+        })), 1)
+
+        # A relative load inside the addon's own folder is ordinary.
+        expect("relative load within the addon", quiet(build(root, "relself", {
+            "ai_core/grid_graph.gd": core,
+            "ai_search/astar.gd": search + '\nconst Helper := preload("helper.gd")\n',
+            "ai_search/helper.gd": "class_name AStarHelper\nextends RefCounted\n",
+        })), 0)
+
+        # Planted: the same class_name declared by two addons. Godot
+        # registers these project-wide, so this is a load error, and the gate
+        # used to resolve it silently by keeping whichever it read last.
+        expect("same class_name in two addons", quiet(build(root, "collide", {
+            "ai_core/grid_graph.gd": core,
+            "ai_search/astar.gd": search,
+            "ai_planning/astar.gd": search,
+        })), 1)
 
         # The vendored test framework is not ours and is not shipped.
         expect("references gdUnit4", quiet(build(root, "vendored", {

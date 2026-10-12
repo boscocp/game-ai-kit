@@ -9,8 +9,10 @@ and stops trusting the rest of the page.
 
 Two halves, deliberately split
 ------------------------------
-The **local** half -- links to files and anchors in this repository -- runs in
-`make check`, because it costs nothing and is nobody's network.
+The **local** half -- links to files in this repository, and to headings on
+those files -- runs in `make check`, because it costs nothing and is nobody's
+network. A heading's anchor is built the way GitHub builds it, and a repeated
+heading's `-1` suffix is accepted.
 
 The **remote** half needs `--remote`, and CI runs it. Keeping it out of the
 default means a gate does not start failing because a laptop is on a train, and
@@ -24,7 +26,7 @@ nothing after it is how an exceptions file turns into a graveyard.
 Exit codes
 ----------
 0   every link resolves, or is excepted with a reason
-1   a link does not resolve (each one printed)
+1   a link does not resolve, or names a heading that is not there
 2   wrong usage, or no markdown where it was expected
 
 Usage
@@ -53,7 +55,15 @@ TIMEOUT_SECONDS = 20
 # `[text](target)`, with the target stopping at a space (which starts a title).
 LINK_RE = re.compile(r"\[[^\]]*\]\(\s*([^)\s]+)")
 
-SKIPPED_SCHEMES = ("mailto:", "data:", "#")
+SKIPPED_SCHEMES = ("mailto:", "data:")
+
+# A heading, and an explicit `<a id="...">` for a page that names its own.
+HEADING_RE = re.compile(r"^#{1,6}\s+(.*?)\s*$", re.M)
+EXPLICIT_ID_RE = re.compile(r"""<a\s[^>]*\b(?:name|id)\s*=\s*["']([^"']+)["']""", re.I)
+
+# Two headings with the same text get `-1`, `-2` appended, so a link carrying
+# one is not a dead link.
+NUMBERED_RE = re.compile(r"^(.*)-\d+$")
 
 
 def markdown_files(repo: pathlib.Path) -> list[pathlib.Path]:
@@ -88,20 +98,55 @@ def load_exceptions(repo: pathlib.Path) -> tuple[set[str], list[str]]:
     return excepted, problems
 
 
+def anchors_in(path: pathlib.Path) -> set[str]:
+    """Every fragment a reader could land on in this page.
+
+    A heading's anchor is built the way GitHub builds it: lowercased, anything
+    that is not a letter, digit, space or hyphen dropped, spaces turned into
+    hyphens. That also disposes of the `**` and the backticks in a heading,
+    which is why no markdown is stripped first.
+    """
+    text = path.read_text(encoding="utf-8")
+    found = set(EXPLICIT_ID_RE.findall(text))
+    for heading in HEADING_RE.findall(text):
+        slug = re.sub(r"[^a-z0-9 -]", "", heading.lower()).strip().replace(" ", "-")
+        if slug:
+            found.add(slug)
+    return found
+
+
 def check_local(path: pathlib.Path, repo: pathlib.Path, targets: list[str]) -> list[str]:
-    """Report a link to a file in this repository that is not there."""
+    """Report a link to a file, or to a heading, that is not there.
+
+    The anchor half was in this docstring long before it was in the code: a
+    fragment used to be cut off and thrown away, so `#anything` passed and the
+    planted case for it pointed at a heading in a different file.
+    """
     findings = []
     for target in targets:
         if target.startswith(("http://", "https://")) or target.startswith(SKIPPED_SCHEMES):
             continue
-        # An anchor on a local path still names a file.
-        file_part = target.split("#", 1)[0]
-        if not file_part:
-            continue
-        resolved = (path.parent / file_part).resolve()
+        file_part, _, fragment = target.partition("#")
+        # A bare `#fragment` is a link into this same page.
+        resolved = (path.parent / file_part).resolve() if file_part else path
         if not resolved.exists():
             findings.append(f"K1 {path.relative_to(repo)}: {target} does not exist")
+            continue
+        if fragment and resolved.suffix == ".md":
+            findings += check_anchor(path, repo, target, resolved, fragment)
     return findings
+
+
+def check_anchor(path: pathlib.Path, repo: pathlib.Path, target: str,
+                 resolved: pathlib.Path, fragment: str) -> list[str]:
+    """Report a fragment that no heading on the target page produces."""
+    anchors = anchors_in(resolved)
+    if fragment.lower() in anchors:
+        return []
+    numbered = NUMBERED_RE.match(fragment.lower())
+    if numbered and numbered.group(1) in anchors:
+        return []
+    return [f"K5 {path.relative_to(repo)}: {target} names no heading on that page"]
 
 
 def check_remote(path: pathlib.Path, repo: pathlib.Path, targets: list[str],
@@ -173,7 +218,8 @@ def self_test() -> int:
         root = pathlib.Path(workspace)
 
         expect("links that resolve", quiet(build(root, "good", {
-            "README.md": "See [the guide](docs/guide.md) and [a heading](#a-heading).\n",
+            "README.md": "# A heading\n\nSee [the guide](docs/guide.md) and "
+                         "[here](#a-heading).\n",
             "docs/guide.md": "# A heading\n",
         })), 0)
 
@@ -186,10 +232,34 @@ def self_test() -> int:
             "README.md": "See [the guide](docs/missing.md).\n",
         })), 1)
 
-        # A link with an anchor still names a real file.
+        # A link with an anchor still names a real file, and now a real
+        # heading on it.
         expect("link with an anchor", quiet(build(root, "anchor", {
             "README.md": "See [a part](docs/guide.md#somewhere).\n",
             "docs/guide.md": "# Somewhere\n",
+        })), 0)
+
+        # Planted: the file is there and the heading is not. Before this, the
+        # fragment was cut off and thrown away, so every one of these passed.
+        expect("dead anchor on a real file", quiet(build(root, "deadanchor", {
+            "README.md": "See [a part](docs/guide.md#nowhere).\n",
+            "docs/guide.md": "# Somewhere\n",
+        })), 1)
+
+        # Planted: an anchor into this same page, naming nothing.
+        expect("dead anchor on this page", quiet(build(root, "selfanchor", {
+            "README.md": "# A heading\n\nSee [here](#other-heading).\n",
+        })), 1)
+
+        # A heading with formatting and punctuation still slugifies.
+        expect("heading with punctuation", quiet(build(root, "punct", {
+            "README.md": "## The `make` target, and why\n\n"
+                         "See [here](#the-make-target-and-why).\n",
+        })), 0)
+
+        # GitHub numbers a repeated heading, and that is not a dead link.
+        expect("repeated heading", quiet(build(root, "repeat", {
+            "README.md": "# Notes\n\n# Notes\n\nSee [the second](#notes-1).\n",
         })), 0)
 
         # A remote URL is not a local link, and the local half ignores it.

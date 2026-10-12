@@ -127,12 +127,7 @@ def check(repo: pathlib.Path) -> list[str]:
     for target in list(invoked):
         reachable |= target_prerequisites(makefile, target)
     for gate in sorted(target_prerequisites(makefile, "check") - NOT_A_GATE):
-        if gate in reachable:
-            continue
-        expanded = set()
-        for target in invoked:
-            expanded |= target_prerequisites(makefile, target)
-        if gate not in expanded:
+        if gate not in reachable:
             findings.append(f"W5 `make {gate}` is in `make check` but CI never reaches it")
 
     return findings
@@ -182,13 +177,19 @@ jobs:
 def self_test() -> int:
     failures = []
 
-    def expect(label: str, got: int, want: int) -> None:
-        if got != want:
-            failures.append(f"{label}: expected exit {want}, got {got}")
+    def expect(label: str, got: tuple[int, str], want: int, code: str = "") -> None:
+        exit_code, output = got
+        if exit_code != want:
+            failures.append(f"{label}: expected exit {want}, got {exit_code}")
+        elif code and code not in output:
+            failures.append(
+                f"{label}: expected a {code} finding, got {output.strip() or 'nothing'!r}"
+            )
 
-    def quiet(repo: pathlib.Path) -> int:
-        with contextlib.redirect_stdout(io.StringIO()):
-            return run(repo)
+    def quiet(repo: pathlib.Path) -> tuple[int, str]:
+        stream = io.StringIO()
+        with contextlib.redirect_stdout(stream):
+            return run(repo), stream.getvalue()
 
     def build(root: pathlib.Path, name: str, makefile: str, workflow: str) -> pathlib.Path:
         repo = root / name
@@ -206,21 +207,21 @@ def self_test() -> int:
         # Planted: a step that is not a make target at all.
         expect("a raw command", quiet(build(root, "raw", MAKEFILE_TEXT,
             WORKFLOW_TEXT.replace("      - run: make test-python",
-                                  "      - run: python3 scripts/something.py"))), 1)
+                                  "      - run: python3 scripts/something.py"))), 1, "W3")
 
         # Planted: a multi-line block, which is a second definition by nature.
         expect("a multi-line block", quiet(build(root, "block", MAKEFILE_TEXT,
             WORKFLOW_TEXT.replace("      - run: make test-python",
-                                  "      - run: |\n          echo one\n          echo two"))), 1)
+                                  "      - run: |\n          echo one\n          echo two"))), 1, "W2")
 
         # Planted: a target CI runs that the Makefile has not got.
         expect("a target that does not exist", quiet(build(root, "ghost", MAKEFILE_TEXT,
-            WORKFLOW_TEXT.replace("make test-python", "make test-nothing"))), 1)
+            WORKFLOW_TEXT.replace("make test-python", "make test-nothing"))), 1, "W4")
 
         # Planted: a gate in `make check` that CI never reaches.
         expect("a gate CI never runs", quiet(build(root, "missed", MAKEFILE_TEXT,
             WORKFLOW_TEXT.replace("      - run: make lint-one lint-two\n",
-                                  "      - run: make lint-one\n"))), 1)
+                                  "      - run: make lint-one\n"))), 1, "W5")
 
         # A variable override is not a target.
         expect("a variable override", quiet(build(root, "override", MAKEFILE_TEXT,
@@ -234,13 +235,13 @@ def self_test() -> int:
 
         # Planted: a workflow with no steps checks nothing.
         expect("no run steps", quiet(build(root, "nosteps", MAKEFILE_TEXT,
-            "name: ci\njobs:\n  gates:\n    steps:\n      - uses: actions/checkout@abc\n")), 1)
+            "name: ci\njobs:\n  gates:\n    steps:\n      - uses: actions/checkout@abc\n")), 1, "W1")
 
         script = pathlib.Path(__file__).resolve()
         extra = subprocess.run(
             [sys.executable, str(script), "--unknown-flag"], capture_output=True
         )
-        expect("unknown flag", extra.returncode, 2)
+        expect("unknown flag", (extra.returncode, ""), 2)
 
     for failure in failures:
         print(f"self-test FAIL: {failure}")

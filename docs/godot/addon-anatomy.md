@@ -5,7 +5,7 @@ half_life: practice
 verified_on: 2026-10-12
 tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/plugins/editor/making_plugins.html ; https://docs.godotengine.org/en/stable/community/asset_library/submitting_to_assetlib.html ; https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html
-invalidated_if: Godot changes how class_name registers, or the Asset Library starts requiring plugin.cfg
+invalidated_if: Godot changes how class_name registers, how a relative preload resolves, or the Asset Library starts requiring plugin.cfg
 teaches: none
 -->
 
@@ -69,6 +69,25 @@ Checked rather than assumed, because the rules shape the release step:
 Octile and Chebyshev heuristics with four diagonal modes. It will beat anything
 here on throughput. That is the honest recommendation in the README, and this
 kit's job is to explain what it is doing.
+
+## A path does not have to say `res://` to cross an addon
+
+Invariant 2 is about one addon reaching into another, and the obvious spelling
+is `preload("res://addons/other/x.gd")`. It is not the only one that works.
+
+Measured on 4.7.2-stable, not assumed: a script in `addons/ai_a/` containing
+
+```gdscript
+const Other := preload("../ai_b/probe_b.gd")
+```
+
+parses, resolves and calls into `ai_b` with no `res://` anywhere. GDScript
+resolves a relative path against the directory of the file doing the loading,
+which is what `preload` documents, and nothing stops that path from climbing.
+
+So `check_addon_deps.py` checks both spellings. A gate that knew only the
+`res://` form would have passed the dependency that actually breaks on install,
+which is the one failure mode that invariant exists for.
 
 ## Testing constraint
 
