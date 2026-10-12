@@ -130,6 +130,42 @@ def check_review(repo: pathlib.Path, branch: str) -> list[str]:
             return [f"R4 {record.name} has no {heading!r} section"]
         if len(section.group(1).split()) < 10:
             return [f"R5 {record.name}: {heading!r} says almost nothing"]
+
+    return check_branch_has_work(repo, branch, slug)
+
+
+def check_branch_has_work(repo: pathlib.Path, branch: str, slug: str) -> list[str]:
+    """The branch has something to merge, and the record is part of it.
+
+    Both of these were found by falling into them, in one go. A commit was
+    refused by the message hook -- wrong type in the subject -- so nothing was
+    committed; the review record was sitting in the working tree where
+    `record.exists()` found it; `make check` passed, because it also reads the
+    working tree; and `make wave-merge` merged a branch identical to main and
+    printed "merged". Every gate was green and nothing had happened.
+
+    So: the branch must be ahead of main, and the record must be in the
+    branch's own tree rather than merely on the disk beside it.
+    """
+    try:
+        ahead = git(repo, "rev-list", "--count", f"main..{branch}")
+    except subprocess.CalledProcessError:
+        return [f"R6 cannot compare {branch} with main -- is it a branch that exists?"]
+    if ahead == "0":
+        return [
+            f"R7 {branch} has no commit that main has not got -- there is nothing "
+            "to merge, and a refused commit looks exactly like this"
+        ]
+
+    committed = subprocess.run(
+        ["git", "-C", str(repo), "cat-file", "-e", f"{branch}:{REVIEW_DIR}/{slug}.md"],
+        capture_output=True, check=False,
+    )
+    if committed.returncode != 0:
+        return [
+            f"R8 {REVIEW_DIR}/{slug}.md exists on disk but is not committed on "
+            f"{branch} -- the record merges with the work or it is not a record"
+        ]
     return []
 
 
@@ -223,21 +259,79 @@ def self_test() -> int:
         # Planted: a well-named branch with no review record.
         expect("no review record", quiet(clean, "review", "wave/05-gates"), 1)
 
-        # With the record present, the merge is allowed.
-        reviewed = make_repo(root, "reviewed")
-        (reviewed / REVIEW_DIR).mkdir(parents=True)
-        (reviewed / REVIEW_DIR / "05-gates.md").write_text(REVIEW_TEMPLATE)
-        expect("review record present", quiet(reviewed, "review", "wave/05-gates"), 0)
+        def with_record(name: str, text: str, commit: bool = True) -> pathlib.Path:
+            """A repo on a real branch with a real commit, like the live case."""
+            repo = make_repo(root, name)
+            env = _isolated_env()
+            subprocess.run(["git", "-C", str(repo), "switch", "-qc", "wave/05-gates"],
+                           check=True, capture_output=True)
+            (repo / REVIEW_DIR).mkdir(parents=True)
+            (repo / REVIEW_DIR / "05-gates.md").write_text(text)
+            (repo / "work.txt").write_text("the wave's actual work\n")
+            if commit:
+                subprocess.run(["git", "-C", str(repo), "add", "-A"],
+                               check=True, capture_output=True, env=env)
+                subprocess.run(["git", "-C", str(repo), "commit", "-qm", "feat: a wave"],
+                               check=True, capture_output=True, env=env)
+            return repo
+
+        expect("review record present",
+               quiet(with_record("reviewed", REVIEW_TEMPLATE), "review", "wave/05-gates"), 0)
 
         # Planted: a record with the headings but nothing under them. An empty
         # form is the way a process turns into a formality.
-        hollow = make_repo(root, "hollow")
-        (hollow / REVIEW_DIR).mkdir(parents=True)
-        (hollow / REVIEW_DIR / "05-gates.md").write_text(
+        hollow = with_record("hollow",
             "# Review\n\n## What was reviewed\n\n## Findings\n\nnone\n\n"
-            "## What was done about them\n\nnothing\n"
-        )
+            "## What was done about them\n\nnothing\n")
         expect("hollow review record", quiet(hollow, "review", "wave/05-gates"), 1)
+
+        # Planted: the commit was refused, so the branch is empty and the record
+        # is only on disk. Every other check passes and there is nothing to
+        # merge -- this is the live case that produced these two rules.
+        refused = with_record("refused", REVIEW_TEMPLATE, commit=False)
+        expect("a branch with no commits", quiet(refused, "review", "wave/05-gates"), 1)
+
+        # Planted: a branch name that is not a branch. The record is on disk,
+        # so every rule above it passes and this is the only one left to catch
+        # it -- which is why it needs a case where nothing else can fire.
+        ghost = make_repo(root, "ghost")
+        (ghost / REVIEW_DIR).mkdir(parents=True)
+        (ghost / REVIEW_DIR / "05-gates.md").write_text(REVIEW_TEMPLATE)
+        expect("a branch that does not exist",
+               quiet(ghost, "review", "wave/05-gates"), 1)
+
+        # Planted: an empty branch whose record is already committed -- on main,
+        # from an earlier wave. R8 cannot fire here because the record *is* in
+        # the branch's tree, so this is the only case where R7 is the reason.
+        # Without it, deleting R7 left the self-test green: the case above was
+        # failing for R8's reason and R7 was decorative.
+        inherited = make_repo(root, "inherited")
+        env = _isolated_env()
+        (inherited / REVIEW_DIR).mkdir(parents=True)
+        (inherited / REVIEW_DIR / "05-gates.md").write_text(REVIEW_TEMPLATE)
+        subprocess.run(["git", "-C", str(inherited), "add", "-A"],
+                       check=True, capture_output=True, env=env)
+        subprocess.run(["git", "-C", str(inherited), "commit", "-qm", "docs: a record"],
+                       check=True, capture_output=True, env=env)
+        subprocess.run(["git", "-C", str(inherited), "switch", "-qc", "wave/05-gates"],
+                       check=True, capture_output=True)
+        expect("an empty branch with an inherited record",
+               quiet(inherited, "review", "wave/05-gates"), 1)
+
+        # Planted: work committed, record left behind in the working tree.
+        uncommitted = make_repo(root, "uncommitted")
+        env = _isolated_env()
+        subprocess.run(["git", "-C", str(uncommitted), "switch", "-qc", "wave/05-gates"],
+                       check=True, capture_output=True)
+        (uncommitted / "work.txt").write_text("committed work\n")
+        subprocess.run(["git", "-C", str(uncommitted), "add", "work.txt"],
+                       check=True, capture_output=True, env=env)
+        subprocess.run(["git", "-C", str(uncommitted), "commit", "-qm", "feat: a wave"],
+                       check=True, capture_output=True, env=env)
+        (uncommitted / REVIEW_DIR).mkdir(parents=True)
+        (uncommitted / REVIEW_DIR / "05-gates.md").write_text(REVIEW_TEMPLATE)
+        expect("record on disk but not committed",
+               quiet(uncommitted, "review", "wave/05-gates"), 1)
 
         script = pathlib.Path(__file__).resolve()
         extra = subprocess.run(
