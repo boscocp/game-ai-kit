@@ -71,8 +71,16 @@ date.
 ## Commit messages
 
 Conventional commits, lowercase, imperative, 80 characters or fewer in the
-subject. `scripts/check_commit_msg.py` checks the shape, never the content, and
-rejects assistant attribution trailers. The body is for *why*; it can be long.
+subject. `scripts/check_commit_msg.py` checks the shape, never the content. The
+body is for *why*; it can be long.
+
+**No tooling byline, anywhere.** Commits, pull request titles and pull request
+bodies carry one author and no assistant attribution — no `Co-Authored-By:`, no
+"Generated with", no robot emoji. This is checked in two places, because a hook
+cannot see a pull request: `.githooks/commit-msg` locally, and a CI step that
+reads the PR's title and body through `env:` and runs them through the same
+script. A squash merge turns that PR body into a commit message on `main`, which
+is exactly why it is checked there rather than trusted.
 
 ## The CLAUDE.md files
 

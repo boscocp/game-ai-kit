@@ -30,7 +30,10 @@ does not hold: a rule violated twice becomes a script.
 10. **Nothing from the author's employer enters this repo** — no name, no
     internal measurement, no file copied from a private repository, no
     work-domain example. The examples here are games.
-11. **One branch per wave, and the review lands before the merge.** Not after.
+11. **No tooling byline in a commit, a PR title or a PR body.** One author.
+    Enforced by `.githooks/commit-msg` and, because a hook cannot see a pull
+    request, by a CI step that checks the PR's own title and body.
+12. **One branch per wave, and the review lands before the merge.** Not after.
     The reviewer is a context that did not write the code — the same head
     writing the code, the test and the check is the symmetry everything else
     here exists to break. `.githooks/pre-commit` refuses a commit on `main`,
