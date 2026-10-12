@@ -56,6 +56,11 @@ func find_path(graph: GridGraph, from: Vector2i, to: Vector2i) -> Array[Vector2i
 # The result excludes `from` and includes `to`, which is what `Pathfinder`
 # promises and what `Move` expects: cost is paid on entering a cell, and you
 # never pay to stand where you already are.
+#
+# A broken chain crashes here with "invalid key", and that is left deliberate.
+# It can only happen if an algorithm reports reaching a cell it never recorded
+# arriving at, which is a bug in that algorithm -- and the alternative, quietly
+# returning a shorter path, is a wrong answer dressed as a right one.
 static func _rebuild(came_from: Dictionary, from: Vector2i, to: Vector2i) -> Array[Vector2i]:
 	var backwards: Array[Vector2i] = []
 	var cell: Vector2i = to

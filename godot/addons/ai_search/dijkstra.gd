@@ -43,9 +43,15 @@ func _explore(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 	var expanded: Array[Vector2i] = []
 
 	while not frontier.is_empty():
-		# The globally cheapest cell on the frontier, and therefore one whose
-		# cost is already final. A* cannot say that, which is why A* carries a
-		# guard here and this file does not.
+		# Here is the whole algorithm: take the cell with the smallest `g`.
+		# `_cheapest` walks the frontier and returns the index of the lowest
+		# number beside it -- that is all it does, and it lives in `search.gd`
+		# only because A* needs the same walk with `f`.
+		#
+		# Because that number is the true cost so far, the cell taken off is
+		# the globally cheapest and its cost is already final. A* cannot say
+		# that, which is why A* carries a duplicate guard here and this file
+		# does not.
 		var current: Vector2i = frontier.pop_at(_cheapest(frontier, g))
 		expanded.append(current)
 		if current == to:

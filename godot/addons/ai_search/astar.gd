@@ -37,6 +37,12 @@ func _explore(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 	var expanded: Array[Vector2i] = []
 
 	while not frontier.is_empty():
+		# Here is the whole algorithm: take the cell with the smallest `f`.
+		# `_cheapest` walks the frontier and returns the index of the lowest
+		# number beside it -- that is all it does, and it is written out in
+		# `search.gd` only because Dijkstra needs the same walk with `g`.
+		# Breadth-first takes the oldest cell instead; everything else in these
+		# four files is bookkeeping around that one choice.
 		var current: Vector2i = frontier.pop_at(_cheapest(frontier, f))
 		# A cell improved after it was queued is queued again, so the frontier
 		# can hold the same cell twice -- an old entry with a dear number and a
