@@ -41,6 +41,7 @@ import argparse
 import contextlib
 import io
 import pathlib
+import re
 import subprocess
 import sys
 import tempfile
@@ -115,31 +116,50 @@ def check_addons(repo: pathlib.Path) -> list[str]:
     return findings
 
 
-def archive_files(archive: pathlib.Path) -> tuple[list[pathlib.PurePosixPath], set[pathlib.PurePosixPath]]:
-    """Every path inside a .zip, .whl or .tar.gz, and the ones that count.
+# Every archive shape this gate opens. `.tar.xz` and a bare `.tar` were not in
+# the list, so one dropped into dist/ was never examined.
+TAR_SUFFIXES = (".tar", ".tar.gz", ".tgz", ".tar.bz2", ".tar.xz")
 
-    A path *counts* when it is a regular file with something in it. A review
-    planted a directory named `NOTICE/` in a wheel and an empty NOTICE in
-    another, and both satisfied a rule that only compared names -- the root
-    files had a content check and the archives had none.
+
+def archive_files(archive: pathlib.Path) -> tuple[list[pathlib.PurePosixPath],
+                                                   dict[pathlib.PurePosixPath, bytes]]:
+    """Every path inside an archive, and the attribution files that count.
+
+    A file *counts* when it is a regular file with something in it -- not a
+    directory, not a link, not empty. A review planted a directory named
+    `NOTICE/`, an empty NOTICE and a link named NOTICE, and each satisfied a
+    rule that only compared names. Their bytes come back too, because the
+    content has to be checked as well: a NOTICE reading `TODO` passed.
+
+    `.` -- the root, as `tar -C dir -czf x.tar.gz .` writes it -- is not a
+    path anything can be inside, and it crashed the top-folder rule.
     """
     if archive.suffix in (".zip", ".whl"):
         with zipfile.ZipFile(archive) as bundle:
             members = bundle.infolist()
             paths = [pathlib.PurePosixPath(member.filename) for member in members]
             counted = {
-                pathlib.PurePosixPath(member.filename) for member in members
-                if not member.is_dir() and member.file_size > 0
+                pathlib.PurePosixPath(member.filename): bundle.read(member)
+                for member in members
+                if not member.is_dir() and not is_zip_link(member) and member.file_size > 0
+                and pathlib.PurePosixPath(member.filename).name in REQUIRED_FILES
             }
-            return paths, counted
-    with tarfile.open(archive) as bundle:
-        members = bundle.getmembers()
-        paths = [pathlib.PurePosixPath(member.name) for member in members]
-        counted = {
-            pathlib.PurePosixPath(member.name) for member in members
-            if member.isfile() and member.size > 0
-        }
-        return paths, counted
+    else:
+        with tarfile.open(archive) as bundle:
+            members = bundle.getmembers()
+            paths = [pathlib.PurePosixPath(member.name) for member in members]
+            counted = {
+                pathlib.PurePosixPath(member.name): bundle.extractfile(member).read()
+                for member in members
+                if member.isfile() and member.size > 0
+                and pathlib.PurePosixPath(member.name).name in REQUIRED_FILES
+            }
+    return [path for path in paths if path.parts], counted
+
+
+def is_zip_link(member: zipfile.ZipInfo) -> bool:
+    """A symbolic link stored the Unix way: the file type sits in the high bits."""
+    return (member.external_attr >> 16) & 0o170000 == 0o120000
 
 
 def check_release_archives(repo: pathlib.Path) -> list[str]:
@@ -150,6 +170,10 @@ def check_release_archives(repo: pathlib.Path) -> list[str]:
     a vendored dependency's licence satisfied it. The files must sit at the
     archive's own root, or at the root of its single top-level folder, which is
     where someone unpacking it will look. Tarballs were not examined at all.
+
+    And they must be *this repository's* files, byte for byte (L10). The root
+    copies get a content check; the archive copies used to get a size check,
+    so a release whose NOTICE read `TODO` passed.
     """
     findings = []
     dist = repo / "dist"
@@ -158,40 +182,51 @@ def check_release_archives(repo: pathlib.Path) -> list[str]:
 
     archives = sorted(
         path for path in dist.iterdir()
-        if path.suffix in (".zip", ".whl") or path.name.endswith((".tar.gz", ".tgz"))
+        if path.suffix in (".zip", ".whl") or path.name.endswith(TAR_SUFFIXES)
     )
     for archive in archives:
         paths, counted = archive_files(archive)
         if archive.suffix == ".whl":
-            findings.extend(check_wheel(archive.name, counted))
-            continue
-        attributed = attributed_names(paths, counted)
+            located = wheel_licences(archive.name, counted)
+            if located is None:
+                findings.append(f"L9 {archive.name} is not named like a wheel")
+                continue
+            code, where = "L9", "in its .dist-info/licenses/"
+        else:
+            located = attributed_files(paths, counted)
+            code, where = "L5", "at its root or in its top folder"
         for name in REQUIRED_FILES:
-            if name not in attributed:
-                findings.append(
-                    f"L5 {archive.name} has no {name} at its root or in its top folder"
-                )
+            if name not in located:
+                findings.append(f"{code} {archive.name} has no {name} {where}")
+            elif (repo / name).exists() and located[name] != (repo / name).read_bytes():
+                findings.append(f"L10 {archive.name} carries a {name} that is not the "
+                                "repository's own")
     return findings
 
 
-def attributed_names(paths: list[pathlib.PurePosixPath],
-                     counted: set[pathlib.PurePosixPath]) -> set[str]:
-    """Names of the files at an archive's root, or in its one top folder.
+def attributed_files(paths: list[pathlib.PurePosixPath],
+                     counted: dict[pathlib.PurePosixPath, bytes]) -> dict[str, bytes]:
+    """The attribution files at an archive's root, or in its one top folder.
 
     *One* is the rule, and it was only in the prose: the depth test alone
     passed a zip holding `ai_search/astar.gd` beside `vendor/LICENSE`, where
     the attribution belongs to the second folder and not the first. A folder
     counts only when every path in the archive is inside it.
     """
-    names = {path.name for path in counted if len(path.parts) == 1}
-    tops = {path.parts[0] for path in paths}
-    if len(tops) == 1:
-        names |= {path.name for path in counted if len(path.parts) == 2}
-    return names
+    found = {path.name: data for path, data in counted.items() if len(path.parts) == 1}
+    if len({path.parts[0] for path in paths}) == 1:
+        found.update({path.name: data for path, data in counted.items()
+                      if len(path.parts) == 2})
+    return found
 
 
-def check_wheel(name: str, counted: set[pathlib.PurePosixPath]) -> list[str]:
-    """Report a wheel whose licence files are not where an installer puts them.
+def canonical(distribution: str) -> str:
+    """A distribution name as installers compare it: case and `-_.` runs folded."""
+    return re.sub(r"[-_.]+", "_", distribution).lower()
+
+
+def wheel_licences(name: str, counted: dict[pathlib.PurePosixPath, bytes]) -> dict[str, bytes] | None:
+    """The licence files in a wheel's own `.dist-info/licenses/`, or None for a misnamed wheel.
 
     A wheel is a zip, and the zip rule would pass one with a NOTICE at
     `gameaikit/NOTICE` -- inside the package, at depth two. An installer copies
@@ -199,18 +234,25 @@ def check_wheel(name: str, counted: set[pathlib.PurePosixPath]) -> list[str]:
     Wheels were not examined at all until release.py started building one,
     and its own self-test found the hole: five artifacts, four findings.
 
-    Only the wheel's *own* `.dist-info` counts -- the one its filename names.
-    Any folder ending in `.dist-info` used to, so a dependency's NOTICE bundled
-    alongside satisfied the rule for the package, which is the hole L5's
-    docstring says was closed for zips.
+    Only the wheel's *own* `.dist-info` counts -- the one its filename names,
+    compared the way installers compare names, so `PyYAML-6.0.1.dist-info`
+    inside `pyyaml-6.0.1-...whl` is its own. Any folder ending in `.dist-info`
+    used to count, so a dependency's NOTICE satisfied the rule for the package.
     """
-    distribution, version = name.split("-")[:2]
-    own = f"{distribution}-{version}.dist-info"
-    return [
-        f"L9 {name} has no {required} in its .dist-info/licenses/"
-        for required in REQUIRED_FILES
-        if pathlib.PurePosixPath(own, "licenses", required) not in counted
-    ]
+    parts = name[:-len(".whl")].split("-")
+    if len(parts) < 5:
+        return None
+    own = (canonical(parts[0]), parts[1])
+    found = {}
+    for path, data in counted.items():
+        if len(path.parts) != 3 or path.parts[1] != "licenses":
+            continue
+        folder = path.parts[0]
+        if folder.endswith(".dist-info") and "-" in folder:
+            distribution, _, version = folder[:-len(".dist-info")].rpartition("-")
+            if (canonical(distribution), version) == own:
+                found[path.name] = data
+    return found
 
 
 def run(repo: pathlib.Path) -> int:
@@ -230,14 +272,31 @@ def self_test() -> int:
         if got != want:
             failures.append(f"{label}: expected exit {want}, got {got}")
 
+    def expect_only(label: str, path: pathlib.Path, code: str) -> None:
+        """A planted case fails, and on the rule it plants -- not one next door."""
+        printed = io.StringIO()
+        with contextlib.redirect_stdout(printed):
+            got = run(path)
+        lines = printed.getvalue().splitlines()
+        if got != 1 or not lines or not all(line.startswith(code + " ") for line in lines):
+            failures.append(f"{label}: expected only {code}, got exit {got}: {lines}")
+
     def quiet(path: pathlib.Path) -> int:
         with contextlib.redirect_stdout(io.StringIO()):
             return run(path)
 
+    # What a planted repository's root carries. Archives in the planted cases
+    # carry the same bytes, so each case fails on the rule it plants and not
+    # on L10 -- a case passing through a different rule proves nothing.
+    ROOT_TEXT = {
+        "LICENSE": "Apache License\nVersion 2.0\n",
+        "NOTICE": f"game-ai-kit\nCopyright 2026 {COPYRIGHT_HOLDER}\n",
+    }
+
     def make_repo(root: pathlib.Path) -> pathlib.Path:
         root.mkdir(parents=True, exist_ok=True)
-        (root / "LICENSE").write_text("Apache License\nVersion 2.0\n")
-        (root / "NOTICE").write_text(f"game-ai-kit\nCopyright 2026 {COPYRIGHT_HOLDER}\n")
+        for name, text in ROOT_TEXT.items():
+            (root / name).write_text(text)
         return root
 
     def make_addon(repo: pathlib.Path, name: str, with_files: bool) -> pathlib.Path:
@@ -307,7 +366,7 @@ def self_test() -> int:
         (shipped / "dist").mkdir()
         with zipfile.ZipFile(shipped / "dist" / "ai_search.zip", "w") as bundle:
             bundle.writestr("ai_search/plugin.cfg", "[plugin]\n")
-        expect("zip without NOTICE", quiet(shipped), 1)
+        expect_only("zip without NOTICE", shipped, "L5")
 
         # Planted: an addon shipping bare, with a dependency's licence deeper
         # in the archive satisfying the basename check.
@@ -318,7 +377,7 @@ def self_test() -> int:
             bundle.writestr("ai_search/plugin.cfg", "[plugin]\n")
             bundle.writestr("ai_search/vendor/other/LICENSE", "MIT\n")
             bundle.writestr("ai_search/vendor/other/NOTICE", "someone else\n")
-        expect("attribution only deep in the archive", quiet(deep), 1)
+        expect_only("attribution only deep in the archive", deep, "L5")
 
         # Planted: a tarball, which was not examined at all.
         tarred = make_repo(root / "tarred")
@@ -328,7 +387,7 @@ def self_test() -> int:
             lone = tarred / "plugin.cfg"
             lone.write_text("[plugin]\n")
             bundle.add(lone, arcname="kit/plugin.cfg")
-        expect("tarball without attribution", quiet(tarred), 1)
+        expect_only("tarball without attribution", tarred, "L5")
 
         # A wheel with both files where PEP 639 puts them passes.
         wheeled = make_repo(root / "wheeled")
@@ -336,41 +395,45 @@ def self_test() -> int:
         with zipfile.ZipFile(wheeled / "dist" / "kit-1.0.0-py3-none-any.whl", "w") as bundle:
             bundle.writestr("kit/__init__.py", "")
             for required in REQUIRED_FILES:
-                bundle.writestr(f"kit-1.0.0.dist-info/licenses/{required}", "copy\n")
+                bundle.writestr(f"kit-1.0.0.dist-info/licenses/{required}", ROOT_TEXT[required])
         expect("wheel with its licences in .dist-info", quiet(wheeled), 0)
 
         # Planted: a wheel without NOTICE. Wheels were not opened at all.
         bare_wheel = make_repo(root / "bare-wheel")
         (bare_wheel / "dist").mkdir()
         with zipfile.ZipFile(bare_wheel / "dist" / "kit-1.0.0-py3-none-any.whl", "w") as bundle:
-            bundle.writestr("kit-1.0.0.dist-info/licenses/LICENSE", "copy\n")
-        expect("wheel without NOTICE", quiet(bare_wheel), 1)
+            bundle.writestr("kit-1.0.0.dist-info/licenses/LICENSE", ROOT_TEXT["LICENSE"])
+        expect_only("wheel without NOTICE", bare_wheel, "L9")
 
         # Planted, each found by a review that crafted the wheel by hand: a
         # NOTICE that is a directory, one that is empty, and one belonging to a
         # dependency bundled alongside rather than to the wheel itself.
         crafted = {
             "directory": [("kit-1.0.0.dist-info/licenses/NOTICE/", "")],
+            # zipfile lets a directory entry carry bytes; a size check alone
+            # then counts it, which made the directory test look redundant.
+            "directory-with-data": [("kit-1.0.0.dist-info/licenses/NOTICE/",
+                                     ROOT_TEXT["NOTICE"])],
             "empty": [("kit-1.0.0.dist-info/licenses/NOTICE", "")],
-            "foreign": [("other-2.0.dist-info/licenses/NOTICE", "copy\n")],
+            "foreign": [("other-2.0.dist-info/licenses/NOTICE", ROOT_TEXT["NOTICE"])],
         }
         for label, extra in crafted.items():
             wheel_repo = make_repo(root / f"crafted-{label}")
             (wheel_repo / "dist").mkdir()
             wheel_path = wheel_repo / "dist" / "kit-1.0.0-py3-none-any.whl"
             with zipfile.ZipFile(wheel_path, "w") as bundle:
-                bundle.writestr("kit-1.0.0.dist-info/licenses/LICENSE", "copy\n")
+                bundle.writestr("kit-1.0.0.dist-info/licenses/LICENSE", ROOT_TEXT["LICENSE"])
                 for entry_name, content in extra:
                     bundle.writestr(entry_name, content)
-            expect(f"wheel with a {label} NOTICE", quiet(wheel_repo), 1)
+            expect_only(f"wheel with a {label} NOTICE", wheel_repo, "L9")
 
         # Planted: an empty NOTICE in an addon zip.
         hollow_zip = make_repo(root / "hollow-zip")
         (hollow_zip / "dist").mkdir()
         with zipfile.ZipFile(hollow_zip / "dist" / "ai_search.zip", "w") as bundle:
-            bundle.writestr("ai_search/LICENSE", "copy\n")
+            bundle.writestr("ai_search/LICENSE", ROOT_TEXT["LICENSE"])
             bundle.writestr("ai_search/NOTICE", "")
-        expect("zip with an empty NOTICE", quiet(hollow_zip), 1)
+        expect_only("zip with an empty NOTICE", hollow_zip, "L5")
 
         # Planted: two top folders, the attribution in the one that is not the
         # addon. The depth rule alone passed this.
@@ -378,38 +441,100 @@ def self_test() -> int:
         (two_tops / "dist").mkdir()
         with zipfile.ZipFile(two_tops / "dist" / "ai_search.zip", "w") as bundle:
             bundle.writestr("ai_search/astar.gd", "extends Node\n")
-            bundle.writestr("vendor/LICENSE", "copy\n")
-            bundle.writestr("vendor/NOTICE", "copy\n")
-        expect("zip whose attribution is in a second folder", quiet(two_tops), 1)
+            bundle.writestr("vendor/LICENSE", ROOT_TEXT["LICENSE"])
+            bundle.writestr("vendor/NOTICE", ROOT_TEXT["NOTICE"])
+        expect_only("zip whose attribution is in a second folder", two_tops, "L5")
 
         # Planted: a NOTICE somewhere other than .dist-info/licenses/. Each
-        # path defeats exactly one of the three conditions in check_wheel, so
+        # path defeats exactly one of the conditions in wheel_licences, so
         # deleting any one of them turns one of these green. Written out rather
         # than generated, so a path deleted from the list is a visible diff.
         misplaced_notices = (
             "kit/licenses/NOTICE",                          # not in .dist-info
             "kit-1.0.0.dist-info/legal/NOTICE",             # not in licenses/
             "kit-1.0.0.dist-info/licenses/vendor/NOTICE",   # someone else's, deeper
+            # the right name and version on a folder that is not .dist-info;
+            # the suffix is ten characters, as long as the one the rule strips
+            "kit-1.0.0.something/licenses/NOTICE",
         )
         for index, misplaced_path in enumerate(misplaced_notices):
             misplaced = make_repo(root / f"misplaced-wheel-{index}")
             (misplaced / "dist").mkdir()
             wheel_path = misplaced / "dist" / "kit-1.0.0-py3-none-any.whl"
             with zipfile.ZipFile(wheel_path, "w") as bundle:
-                bundle.writestr("kit-1.0.0.dist-info/licenses/LICENSE", "copy\n")
-                bundle.writestr(misplaced_path, "copy\n")
-            expect(f"wheel with NOTICE at {misplaced_path}", quiet(misplaced), 1)
+                bundle.writestr("kit-1.0.0.dist-info/licenses/LICENSE", ROOT_TEXT["LICENSE"])
+                bundle.writestr(misplaced_path, ROOT_TEXT["NOTICE"])
+            expect_only(f"wheel with NOTICE at {misplaced_path}", misplaced, "L9")
 
         # Planted: a tarball whose NOTICE is empty. The content rule is
         # written twice, once per archive format, and each needs its case.
         hollow_tar = make_repo(root / "hollow-tar")
         (hollow_tar / "dist").mkdir()
         with tarfile.open(hollow_tar / "dist" / "kit.tar.gz", "w:gz") as bundle:
-            for member_name, content in (("kit/LICENSE", b"copy\n"), ("kit/NOTICE", b"")):
+            for member_name, content in (("kit/LICENSE", ROOT_TEXT["LICENSE"].encode()), ("kit/NOTICE", b"")):
                 member = tarfile.TarInfo(member_name)
                 member.size = len(content)
                 bundle.addfile(member, io.BytesIO(content))
-        expect("tarball with an empty NOTICE", quiet(hollow_tar), 1)
+        expect_only("tarball with an empty NOTICE", hollow_tar, "L5")
+
+        # Planted: attribution present, in place, and not ours (L10). The
+        # archive copies had only a size check, so `TODO` passed.
+        for suffix, prefix in ((".zip", "ai_search/"), ("-1.0.0-py3-none-any.whl",
+                                                         "kit-1.0.0.dist-info/licenses/")):
+            impostor = make_repo(root / f"impostor{suffix}")
+            (impostor / "dist").mkdir()
+            name = ("ai_search" if suffix == ".zip" else "kit") + suffix
+            with zipfile.ZipFile(impostor / "dist" / name, "w") as bundle:
+                bundle.writestr(f"{prefix}LICENSE", "x\n")
+                bundle.writestr(f"{prefix}NOTICE", "TODO\n")
+            expect_only(f"{name} whose attribution is not the repository's", impostor, "L10")
+
+        # Planted: a link named NOTICE, which is not a NOTICE.
+        linked = make_repo(root / "linked")
+        (linked / "dist").mkdir()
+        with zipfile.ZipFile(linked / "dist" / "ai_search.zip", "w") as bundle:
+            bundle.writestr("ai_search/LICENSE", ROOT_TEXT["LICENSE"])
+            link = zipfile.ZipInfo("ai_search/NOTICE")
+            link.create_system = 3
+            link.external_attr = (0o120777 << 16)
+            bundle.writestr(link, "../../NOTICE")
+        expect_only("zip whose NOTICE is a link", linked, "L5")
+
+        # Planted: a bare `.tar.xz`, a shape that was never opened.
+        xz = make_repo(root / "xz")
+        (xz / "dist").mkdir()
+        with tarfile.open(xz / "dist" / "kit.tar.xz", "w:xz") as bundle:
+            member = tarfile.TarInfo("kit/plugin.cfg")
+            bundle.addfile(member, io.BytesIO(b""))
+        expect_only("a .tar.xz without attribution", xz, "L5")
+
+        # Two ordinary shapes that crashed the gate with a traceback and exit 1:
+        # a tarball with a `.` member, as `tar -C dir -czf x .` writes it, and
+        # a wheel whose name has no version in it.
+        dotted = make_repo(root / "dotted")
+        (dotted / "dist").mkdir()
+        with tarfile.open(dotted / "dist" / "kit.tar.gz", "w:gz") as bundle:
+            bundle.addfile(tarfile.TarInfo("."))
+            for required in REQUIRED_FILES:
+                content = ROOT_TEXT[required].encode()
+                member = tarfile.TarInfo(f"./{required}")
+                member.size = len(content)
+                bundle.addfile(member, io.BytesIO(content))
+        expect("a tarball with a '.' member", quiet(dotted), 0)
+        unnamed = make_repo(root / "unnamed")
+        (unnamed / "dist").mkdir()
+        with zipfile.ZipFile(unnamed / "dist" / "kit.whl", "w") as bundle:
+            bundle.writestr("kit/__init__.py", "")
+        expect_only("a wheel not named like one", unnamed, "L9")
+
+        # A third-party wheel whose .dist-info is spelled as its project spells
+        # itself, as installers accept, passes.
+        spelled = make_repo(root / "spelled")
+        (spelled / "dist").mkdir()
+        with zipfile.ZipFile(spelled / "dist" / "pyyaml-6.0.1-py3-none-any.whl", "w") as bundle:
+            for required in REQUIRED_FILES:
+                bundle.writestr(f"PyYAML-6.0.1.dist-info/licenses/{required}", ROOT_TEXT[required])
+        expect("a wheel whose .dist-info is spelled differently", quiet(spelled), 0)
 
         # Planted: a LICENSE that says nothing. Only NOTICE had a content check.
         placeholder = make_repo(root / "placeholder")

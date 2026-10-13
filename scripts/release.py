@@ -362,33 +362,91 @@ def check_the_wheel(root: pathlib.Path) -> list[str]:
 
 
 def check_only_the_commit_ships(root: pathlib.Path) -> list[str]:
-    """An edit, a staged file and an untracked one all stay out of the release.
+    """No edit, staged file or untracked file reaches any artifact, or the root copies.
 
     Planted in a clone of this repository, because planting them here would
-    change the working tree of whoever runs the self-test.
+    change the working tree of whoever runs the self-test. Planted in *every*
+    source the build reads -- an addon, the Python package, the root LICENSE,
+    NOTICE and VERSION -- and every artifact is opened: the first version of
+    this check planted in one addon and opened one zip, so reading the
+    package or the attribution off disk passed it.
     """
     clone = root / "clone"
     subprocess.run(["git", "clone", "-q", str(REPO), str(clone)], check=True)
-    addon = clone / "godot" / "addons" / shipped_addons(clone)[0]
-    edited = sorted(path for path in addon.iterdir() if path.suffix == ".gd")[0]
-    edited.write_text(edited.read_text() + "# UNCOMMITTED\n")
-    (addon / "staged_only.gd").write_text("# STAGED\n")
-    subprocess.run(["git", "-C", str(clone), "add", "--", str(addon / "staged_only.gd")],
-                   check=True)
-    (addon / "untracked.gd").write_text("# UNTRACKED\n")
+    package = clone / "python" / PACKAGE
+    for folder in (clone / "godot" / "addons" / shipped_addons(clone)[0], package / "pddl"):
+        source = sorted(path for path in folder.iterdir()
+                        if path.suffix in (".gd", ".py"))[0]
+        source.write_text(source.read_text() + "# UNCOMMITTED\n")
+        (folder / f"staged_only{source.suffix}").write_text("# STAGED\n")
+        subprocess.run(["git", "-C", str(clone), "add", "--",
+                        str(folder / f"staged_only{source.suffix}")], check=True)
+        (folder / f"untracked{source.suffix}").write_text("# UNTRACKED\n")
+    for name in ATTRIBUTION:
+        (clone / name).write_text((clone / name).read_text() + "UNCOMMITTED\n")
     (clone / "VERSION").write_text("9.9.9\n")
 
-    shipped = quiet_build(clone, root / "from-clone")
-    with zipfile.ZipFile(shipped[0]) as bundle:
-        names = bundle.namelist()
-        content = b"".join(bundle.read(name) for name in names)
-    failures = []
-    for mark in (b"UNCOMMITTED", b"STAGED", b"UNTRACKED"):
-        if mark in content:
-            failures.append(f"a file marked {mark.decode()} stayed out of the release")
+    output = root / "from-clone"
+    shipped = quiet_build(clone, output)
+    content = b"".join(archive_bytes(path) for path in shipped)
+    content += b"".join((output / name).read_bytes() for name in ATTRIBUTION)
+    failures = [f"a change marked {mark.decode()} stayed out of the release"
+                for mark in (b"UNCOMMITTED", b"STAGED", b"UNTRACKED") if mark in content]
     if any("9.9.9" in path.name for path in shipped):
         failures.append("an uncommitted VERSION stayed out of the release")
     return failures
+
+
+def archive_bytes(archive: pathlib.Path) -> bytes:
+    """Every entry's name and content, run together, to search for a marker."""
+    with zipfile.ZipFile(archive) as bundle:
+        return b"".join(name.encode() + bundle.read(name) for name in bundle.namelist())
+
+
+def check_contents(root: pathlib.Path) -> list[str]:
+    """Each artifact holds exactly what HEAD holds for it, plus the files added.
+
+    A review dropped every `.gd` from the addon zips, and then one module from
+    the wheel, and nothing noticed: the gate looks for attribution and the
+    import probe loads three modules. The list is written out here from HEAD
+    rather than taken from the build, so the build cannot agree with itself.
+    """
+    failures = []
+    version = read_version(REPO)
+    artifacts = quiet_build(REPO, root / "contents")
+    for archive in artifacts:
+        with zipfile.ZipFile(archive) as bundle:
+            held = {name: bundle.read(name) for name in bundle.namelist()}
+        expected = expected_contents(archive, version)
+        if set(held) != set(expected):
+            failures.append(f"{archive.name} holds {sorted(set(held) ^ set(expected))[:4]} "
+                            "beyond or short of HEAD")
+            continue
+        changed = [name for name, data in expected.items()
+                   if data is not None and held[name] != data]
+        if changed:
+            failures.append(f"{archive.name} changes {changed[:4]}")
+    return failures
+
+
+def expected_contents(archive: pathlib.Path, version: str) -> dict[str, bytes | None]:
+    """Name to committed bytes for one artifact; None where the build writes the file."""
+    attribution_files = {name: committed_bytes(REPO, name) for name in ATTRIBUTION}
+    if archive.suffix == ".zip":
+        addon = archive.name.rsplit("-", 1)[0]
+        prefix = f"godot/addons/{addon}/"
+        expected = {f"{addon}/{path[len(prefix):]}": committed_bytes(REPO, path)
+                    for path in committed_files(REPO, prefix)}
+        expected.update({f"{addon}/{name}": data for name, data in attribution_files.items()})
+        expected[f"{addon}/VERSION"] = f"{version}\n".encode()
+        return expected
+    info = f"{PACKAGE}-{version}.dist-info"
+    expected = {path[len("python/"):]: committed_bytes(REPO, path)
+                for path in committed_files(REPO, f"python/{PACKAGE}/")}
+    expected.update({f"{info}/licenses/{name}": data
+                     for name, data in attribution_files.items()})
+    expected.update({f"{info}/{name}": None for name in ("METADATA", "WHEEL", "RECORD")})
+    return expected
 
 
 def check_refusals(root: pathlib.Path) -> list[str]:
@@ -428,7 +486,8 @@ def check_stale_artifacts(root: pathlib.Path) -> list[str]:
 
 def self_test() -> int:
     checks = (check_the_gate_agrees, check_reproducible_and_stamped, check_the_wheel,
-              check_only_the_commit_ships, check_refusals, check_stale_artifacts)
+              check_only_the_commit_ships, check_contents, check_refusals,
+              check_stale_artifacts)
     failures = []
     with tempfile.TemporaryDirectory() as workspace:
         for check in checks:
@@ -468,21 +527,39 @@ def stamped_version(archive: pathlib.Path) -> str | None:
             if archive.suffix == ".zip" and name.count("/") == 1 and name.endswith("/VERSION"):
                 return bundle.read(name).decode().strip()
             if archive.suffix == ".whl" and name.endswith(".dist-info/METADATA"):
-                return header_fields(bundle.read(name)).get("Version")
+                return header_fields(bundle.read(name))[0].get("Version")
     return None
 
 
-def header_fields(text: bytes) -> dict[str, list[str] | str]:
-    """`Key: value` lines as a dict; a key written twice keeps every value as a list."""
+# Fields a METADATA or WHEEL file may carry more than once. Any other field
+# written twice is a malformed file, and reading it as a list hid that.
+REPEATABLE_FIELDS = {"License-File", "Classifier", "Requires-Dist", "Tag", "Provides-Extra"}
+
+
+def header_fields(text: bytes) -> tuple[dict[str, list[str] | str], list[str]]:
+    """`Key: value` lines up to the first blank one, and what is wrong with them.
+
+    The format is email headers: a blank line ends them and anything after is
+    the description. The first version read every line, so a stray blank line
+    after `Metadata-Version` left a file pip refuses -- every later field is
+    description to pip -- and this read it as complete.
+    """
     fields: dict[str, list[str] | str] = {}
+    problems = []
     for line in text.decode().splitlines():
-        key, _, value = line.partition(": ")
-        if key in fields:
-            earlier = fields[key]
-            fields[key] = (earlier if isinstance(earlier, list) else [earlier]) + [value]
+        if not line:
+            break
+        key, separator, value = line.partition(": ")
+        if not separator:
+            problems.append(f"header line {line!r} is not 'Key: value'")
+        elif key in fields and key not in REPEATABLE_FIELDS:
+            problems.append(f"{key} is written twice")
+        elif key in REPEATABLE_FIELDS:
+            fields.setdefault(key, [])
+            fields[key].append(value)
         else:
             fields[key] = value
-    return fields
+    return fields, problems
 
 
 def wheel_problems(wheel: pathlib.Path) -> list[str]:
@@ -503,18 +580,20 @@ def wheel_problems(wheel: pathlib.Path) -> list[str]:
         for required in ("WHEEL", "METADATA", "RECORD"):
             if f"{info}/{required}" not in names:
                 return problems + [f"no {info}/{required}"]
-        problems += wheel_file_problems(header_fields(bundle.read(f"{info}/WHEEL")))
+        wheel_fields, malformed = header_fields(bundle.read(f"{info}/WHEEL"))
+        problems += malformed + wheel_file_problems(wheel_fields)
         licences = sorted(name.rsplit("/", 1)[1] for name in names
                           if name.startswith(f"{info}/licenses/"))
-        problems += metadata_problems(header_fields(bundle.read(f"{info}/METADATA")),
-                                      distribution, version, licences)
+        metadata_fields, malformed = header_fields(bundle.read(f"{info}/METADATA"))
+        problems += malformed + metadata_problems(metadata_fields, distribution,
+                                                  version, licences)
         problems += record_problems(bundle, f"{info}/RECORD")
     return problems
 
 
 def wheel_file_problems(fields: dict) -> list[str]:
     """The WHEEL file of a pure wheel tagged py3-none-any."""
-    expected = {"Wheel-Version": "1.0", "Root-Is-Purelib": "true", "Tag": "py3-none-any"}
+    expected = {"Wheel-Version": "1.0", "Root-Is-Purelib": "true", "Tag": ["py3-none-any"]}
     return [f"WHEEL {key} is {fields.get(key)!r}"
             for key, value in expected.items() if fields.get(key) != value]
 
@@ -526,12 +605,16 @@ def metadata_problems(fields: dict, distribution: str, version: str,
                 for key, value in (("Metadata-Version", "2.4"), ("Name", distribution),
                                    ("Version", version), ("License-Expression", "Apache-2.0"))
                 if fields.get(key) != value]
-    declared = fields.get("License-File", [])
-    declared = sorted(declared if isinstance(declared, list) else [declared])
+    declared = sorted(fields.get("License-File", []))
     if declared != licences:
         problems.append(f"License-File declares {declared}, licenses/ holds {licences}")
-    if "Requires-Python" not in fields:
-        problems.append("METADATA has no Requires-Python")
+    # Exactly the floor this script means, and one the interpreter running the
+    # tests clears -- presence alone passed `>=3.99`, which no installer takes.
+    floor = fields.get("Requires-Python")
+    if floor != REQUIRES_PYTHON:
+        problems.append(f"Requires-Python is {floor!r}, not {REQUIRES_PYTHON!r}")
+    elif sys.version_info[:2] < tuple(int(part) for part in floor[2:].split(".")):
+        problems.append(f"Requires-Python {floor} excludes the Python running this")
     return problems
 
 
@@ -542,6 +625,8 @@ def record_problems(bundle: zipfile.ZipFile, record_name: str) -> list[str]:
     listed = {row.split(",")[0]: row.split(",")[1:] for row in rows}
     if listed.pop(record_name, None) != ["", ""]:
         problems.append("RECORD lists itself without a hash")
+    for phantom in sorted(set(listed) - set(bundle.namelist())):
+        problems.append(f"RECORD lists {phantom}, which the wheel does not hold")
     for name in sorted(set(bundle.namelist()) - {record_name}):
         hashed, size = listed.get(name, ["", ""])
         algorithm, _, encoded = hashed.partition("=")
