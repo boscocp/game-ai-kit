@@ -2,7 +2,7 @@
 ##
 ## `ai_learning` implements it with a trained model, and that is the one
 ## implementation so far. `ai_planning` is meant to be the second, once T11 puts
-## the planner on the board -- today `StripsPlanner` plans over its own worlds
+## the planner on the board -- today the planner plans over its own worlds
 ## and nothing in the game calls it. The point of one interface is that the
 ## game calls every policy the same way, which is what makes the lessons
 ## comparable: swap the policy, keep the board, watch what changes.
