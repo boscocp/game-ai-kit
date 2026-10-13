@@ -1,0 +1,246 @@
+{
+  "name": "the shapes, edge by edge",
+  "why": "Every edge a trapezoid has, asked at its corners and halfway along its slopes: a triangle written with three points, a trapezoid, a shoulder whose rise is vertical, and one on the far edge of the range. The sets leave a gap between 7 and 8 on purpose, so one case can ask a rule base with a hole in it what it concludes -- and the answer is null, not a number that looks like one.",
+  "controller": {
+    "inputs": [
+      {
+        "name": "reach",
+        "minimum": 0,
+        "maximum": 10,
+        "sets": {
+          "close": [
+            0,
+            2,
+            4
+          ],
+          "edge": [
+            0,
+            0,
+            1,
+            2
+          ],
+          "mid": [
+            3,
+            4,
+            6,
+            7
+          ],
+          "far": [
+            8,
+            9,
+            10,
+            10
+          ]
+        }
+      }
+    ],
+    "outputs": [
+      {
+        "name": "answer",
+        "minimum": 0,
+        "maximum": 10,
+        "samples": 3,
+        "sets": {
+          "yes": [
+            0,
+            5,
+            10
+          ]
+        }
+      }
+    ],
+    "rules": [
+      {
+        "if": [
+          [
+            "reach",
+            "close"
+          ],
+          [
+            "reach",
+            "mid"
+          ],
+          [
+            "reach",
+            "far"
+          ]
+        ],
+        "connective": "or",
+        "then": [
+          "answer",
+          "yes"
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "kind": "membership",
+      "variable": "reach",
+      "set": "close",
+      "value": 0,
+      "why": "a triangle's first corner",
+      "degree": 0.0
+    },
+    {
+      "kind": "membership",
+      "variable": "reach",
+      "set": "close",
+      "value": 1,
+      "why": "halfway up",
+      "degree": 0.5
+    },
+    {
+      "kind": "membership",
+      "variable": "reach",
+      "set": "close",
+      "value": 2,
+      "why": "the peak, which is one point wide",
+      "degree": 1.0
+    },
+    {
+      "kind": "membership",
+      "variable": "reach",
+      "set": "close",
+      "value": 3.5,
+      "why": "three quarters of the way down",
+      "degree": 0.25
+    },
+    {
+      "kind": "membership",
+      "variable": "reach",
+      "set": "close",
+      "value": 4,
+      "why": "the last corner",
+      "degree": 0.0
+    },
+    {
+      "kind": "membership",
+      "variable": "reach",
+      "set": "edge",
+      "value": 0,
+      "why": "the corner of a vertical rise: 1, and no division by zero",
+      "degree": 1.0
+    },
+    {
+      "kind": "membership",
+      "variable": "reach",
+      "set": "edge",
+      "value": 1.5,
+      "why": "halfway down",
+      "degree": 0.5
+    },
+    {
+      "kind": "membership",
+      "variable": "reach",
+      "set": "edge",
+      "value": -0.5,
+      "why": "before the vertical rise: outside, and a membership case is not clamped",
+      "degree": 0.0
+    },
+    {
+      "kind": "membership",
+      "variable": "reach",
+      "set": "mid",
+      "value": 3.25,
+      "why": "a quarter up",
+      "degree": 0.25
+    },
+    {
+      "kind": "membership",
+      "variable": "reach",
+      "set": "mid",
+      "value": 4,
+      "why": "where the top begins",
+      "degree": 1.0
+    },
+    {
+      "kind": "membership",
+      "variable": "reach",
+      "set": "mid",
+      "value": 6,
+      "why": "where the top ends",
+      "degree": 1.0
+    },
+    {
+      "kind": "membership",
+      "variable": "reach",
+      "set": "mid",
+      "value": 6.75,
+      "why": "a quarter of the way from the end",
+      "degree": 0.25
+    },
+    {
+      "kind": "membership",
+      "variable": "reach",
+      "set": "far",
+      "value": 10,
+      "why": "the shoulder at the range's end",
+      "degree": 1.0
+    },
+    {
+      "kind": "membership",
+      "variable": "reach",
+      "set": "far",
+      "value": 10.5,
+      "why": "past the shoulder's last point: 0, because membership is not clamped -- fuzzifying is",
+      "degree": 0.0
+    },
+    {
+      "kind": "fuzzify",
+      "variable": "reach",
+      "value": 10.5,
+      "why": "the same value, fuzzified: clamped to 10 first, so far is fully true",
+      "degrees": {
+        "close": 0.0,
+        "edge": 0.0,
+        "mid": 0.0,
+        "far": 1.0
+      }
+    },
+    {
+      "kind": "fuzzify",
+      "variable": "reach",
+      "value": 3.5,
+      "why": "three sets at once, one of them at zero",
+      "degrees": {
+        "close": 0.25,
+        "edge": 0.0,
+        "mid": 0.5,
+        "far": 0.0
+      }
+    },
+    {
+      "kind": "evaluate",
+      "name": "in-the-gap",
+      "why": "no set covers 7.5, so no rule fires and there is nothing to balance: null",
+      "inputs": {
+        "reach": 7.5
+      },
+      "activations": {
+        "answer": {
+          "yes": 0.0
+        }
+      },
+      "outputs": {
+        "answer": null
+      }
+    },
+    {
+      "kind": "evaluate",
+      "name": "covered",
+      "why": "a rule fires, and a symmetric triangle balances in its middle",
+      "inputs": {
+        "reach": 5
+      },
+      "activations": {
+        "answer": {
+          "yes": 1.0
+        }
+      },
+      "outputs": {
+        "answer": 5.0
+      }
+    }
+  ]
+}

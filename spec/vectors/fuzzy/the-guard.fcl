@@ -1,0 +1,35 @@
+VAR_INPUT
+    distance
+    light
+END
+VAR_OUTPUT
+    alertness
+END
+
+FUZZIFY distance
+    RANGE = 0,20
+    near = 0,0,3,7
+    medium = 3,7,10,14
+    far = 10,14,20,20
+END
+
+FUZZIFY light
+    RANGE = 0,1
+    dark = 0,0,0.2,0.5
+    bright = 0.2,0.5,1,1
+END
+
+DEFUZZIFY alertness
+    RANGE = 0,100
+    SAMPLES = 101
+    calm = 0,0,10,40
+    suspicious = 20,45,55,80
+    alarmed = 60,90,100,100
+END
+
+RULEBLOCK
+    RULE 1 = IF distance IS near AND light IS bright THEN alertness IS alarmed
+    RULE 2 = IF distance IS near AND light IS dark THEN alertness IS suspicious
+    RULE 3 = IF distance IS medium AND light IS bright THEN alertness IS suspicious
+    RULE 4 = IF distance IS far OR light IS dark THEN alertness IS calm
+END

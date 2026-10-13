@@ -1,0 +1,289 @@
+{
+  "name": "the guard",
+  "why": "A guard deciding how alert to be from how far away the player is and how well lit. Four rules, two of them AND, one OR -- the controller T14 starts from, and the one `the-guard.fcl` beside this file describes in the text form, which `make test-python` reads and compares.",
+  "controller": {
+    "inputs": [
+      {
+        "name": "distance",
+        "minimum": 0,
+        "maximum": 20,
+        "sets": {
+          "near": [
+            0,
+            0,
+            3,
+            7
+          ],
+          "medium": [
+            3,
+            7,
+            10,
+            14
+          ],
+          "far": [
+            10,
+            14,
+            20,
+            20
+          ]
+        }
+      },
+      {
+        "name": "light",
+        "minimum": 0,
+        "maximum": 1,
+        "sets": {
+          "dark": [
+            0,
+            0,
+            0.2,
+            0.5
+          ],
+          "bright": [
+            0.2,
+            0.5,
+            1,
+            1
+          ]
+        }
+      }
+    ],
+    "outputs": [
+      {
+        "name": "alertness",
+        "minimum": 0,
+        "maximum": 100,
+        "samples": 101,
+        "sets": {
+          "calm": [
+            0,
+            0,
+            10,
+            40
+          ],
+          "suspicious": [
+            20,
+            45,
+            55,
+            80
+          ],
+          "alarmed": [
+            60,
+            90,
+            100,
+            100
+          ]
+        }
+      }
+    ],
+    "rules": [
+      {
+        "if": [
+          [
+            "distance",
+            "near"
+          ],
+          [
+            "light",
+            "bright"
+          ]
+        ],
+        "connective": "and",
+        "then": [
+          "alertness",
+          "alarmed"
+        ]
+      },
+      {
+        "if": [
+          [
+            "distance",
+            "near"
+          ],
+          [
+            "light",
+            "dark"
+          ]
+        ],
+        "connective": "and",
+        "then": [
+          "alertness",
+          "suspicious"
+        ]
+      },
+      {
+        "if": [
+          [
+            "distance",
+            "medium"
+          ],
+          [
+            "light",
+            "bright"
+          ]
+        ],
+        "connective": "and",
+        "then": [
+          "alertness",
+          "suspicious"
+        ]
+      },
+      {
+        "if": [
+          [
+            "distance",
+            "far"
+          ],
+          [
+            "light",
+            "dark"
+          ]
+        ],
+        "connective": "or",
+        "then": [
+          "alertness",
+          "calm"
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "kind": "evaluate",
+      "name": "close-and-lit",
+      "why": "one rule, fully true",
+      "inputs": {
+        "distance": 2,
+        "light": 0.9
+      },
+      "activations": {
+        "alertness": {
+          "calm": 0.0,
+          "suspicious": 0.0,
+          "alarmed": 1.0
+        }
+      },
+      "outputs": {
+        "alertness": 86.281045751634
+      }
+    },
+    {
+      "kind": "evaluate",
+      "name": "far-and-lit",
+      "why": "the OR rule, through its first half",
+      "inputs": {
+        "distance": 16,
+        "light": 0.9
+      },
+      "activations": {
+        "alertness": {
+          "calm": 1.0,
+          "suspicious": 0.0,
+          "alarmed": 0.0
+        }
+      },
+      "outputs": {
+        "alertness": 13.718954248366
+      }
+    },
+    {
+      "kind": "evaluate",
+      "name": "suspicious-only",
+      "why": "medium and bright, and nothing else: rule 3 alone, which is what the next case leans away from",
+      "inputs": {
+        "distance": 8.5,
+        "light": 0.9
+      },
+      "activations": {
+        "alertness": {
+          "calm": 0.0,
+          "suspicious": 1.0,
+          "alarmed": 0.0
+        }
+      },
+      "outputs": {
+        "alertness": 50.0
+      }
+    },
+    {
+      "kind": "evaluate",
+      "name": "between-near-and-medium",
+      "why": "near and medium both half true, so rule 1 (alarmed) and rule 3 (suspicious) fire at a half each -- and the answer lies strictly between what each gives alone",
+      "inputs": {
+        "distance": 5,
+        "light": 0.9
+      },
+      "between": [
+        "suspicious-only",
+        "close-and-lit"
+      ],
+      "activations": {
+        "alertness": {
+          "calm": 0.0,
+          "suspicious": 0.5,
+          "alarmed": 0.5
+        }
+      },
+      "outputs": {
+        "alertness": 63.18248042251
+      }
+    },
+    {
+      "kind": "evaluate",
+      "name": "everything-at-once",
+      "why": "every rule at a half: AND takes the smaller of two halves, OR the larger of nought and a half, and suspicious is concluded by two rules and takes the stronger",
+      "inputs": {
+        "distance": 5,
+        "light": 0.35
+      },
+      "activations": {
+        "alertness": {
+          "calm": 0.5,
+          "suspicious": 0.5,
+          "alarmed": 0.5
+        }
+      },
+      "outputs": {
+        "alertness": 50.0
+      }
+    },
+    {
+      "kind": "evaluate",
+      "name": "close-in-the-dark",
+      "why": "rule 2 and the OR rule through its second half: a player close by in the dark is suspicious and calm at once, which a boolean guard cannot be",
+      "inputs": {
+        "distance": 1,
+        "light": 0.1
+      },
+      "activations": {
+        "alertness": {
+          "calm": 1.0,
+          "suspicious": 1.0,
+          "alarmed": 0.0
+        }
+      },
+      "outputs": {
+        "alertness": 35.028135990621
+      }
+    },
+    {
+      "kind": "evaluate",
+      "name": "beyond-the-range",
+      "why": "twenty-five cells is clamped to twenty: the guard stays calm rather than having no opinion",
+      "inputs": {
+        "distance": 25,
+        "light": 0.9
+      },
+      "activations": {
+        "alertness": {
+          "calm": 1.0,
+          "suspicious": 0.0,
+          "alarmed": 0.0
+        }
+      },
+      "outputs": {
+        "alertness": 13.718954248366
+      }
+    }
+  ]
+}
