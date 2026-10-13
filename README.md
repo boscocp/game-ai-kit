@@ -7,17 +7,22 @@ strategy game where each of them actually decides something. The code is written
 to be read: if a passage is fast and unreadable, it loses to the slow and
 readable one.
 
-> Status: early. The first vertical slice (board + A\* + STRIPS + logistic
-> regression) is being built. Nothing is published to the Asset Library yet.
+> Status: the first vertical slice is complete -- a board, four searches, a
+> STRIPS planner and two trained regressions, each with a page explaining it.
+> Nothing is published to the Asset Library yet; `make release` builds the zips.
 
 ## What it covers
 
-| piece | what it decides in the game |
-|---|---|
-| `ai_search` | A\*, BFS, DFS, Dijkstra — how a unit gets there |
-| `ai_planning` | STRIPS — *to attack I need a unit; to have a unit I need resources* |
-| `ai_learning` | logistic regression — attack or retreat; linear regression — which target is closer to falling |
-| `ai_llm` | a local model as an advisor, with everything it says validated before it becomes an action |
+| piece | what it decides | in `make run` today | read |
+|---|---|---|---|
+| `ai_search` | A\*, BFS, DFS, Dijkstra — how a unit gets there | routes blue's units | [why](docs/concepts/search.md) · [how](docs/godot/search.md) |
+| `ai_planning` | STRIPS — *to attack I need a unit; to have a unit I need resources* | **not yet** — T11 puts it on the board | [why](docs/concepts/planning.md) · [how](docs/godot/planning.md) |
+| `ai_learning` | logistic regression — attack or retreat; linear regression — which target is closer to falling | plays blue, and says why on screen | [why](docs/concepts/learning.md) · [how](docs/godot/learning.md) |
+| `ai_llm` | a local model as an advisor, with everything it says validated before it becomes an action | **not written**, and no task scheduled yet | -- |
+
+`ai_core` sits under all of them: the board, the units, and the two interfaces
+the others implement. Take any one addon and `ai_core` with it, and nothing
+else.
 
 Machine learning is applied to **specific pieces**, never to the whole game.
 That is the point. A logistic regression that decides *attack or retreat* has
@@ -33,30 +38,68 @@ Four tiers. **No lesson lives only in the expensive tier.**
 | **0** | nothing | read `docs/concepts/` — the algorithms and why they work |
 | **1** | Python 3 (already on Linux and macOS) | read a PDDL domain and check it, train the regressions, read the weights. Standard library only — **no pip, no numpy, no install step** |
 | **2** | Godot 4 (~130 MB, runs on integrated graphics) | play the game, open the demos, modify the addons |
-| **3** | a GPU with some VRAM | run a local LLM for real |
+| **3** | a GPU with some VRAM | run a local LLM for real — once `ai_llm` exists; nothing needs this tier yet |
 
 The game targets 1280×720 at 60 fps on integrated graphics, using the
 Compatibility (OpenGL) renderer. There are no 3D nodes and no large assets.
 
-The LLM addon ships three transports — `replay` (recorded responses, needs
-nothing, and is the default in the demos), `ollama`, and any OpenAI-compatible
-endpoint. The replay transport is not a consolation prize: it is the same object
-the tests use as a fixture, and it teaches the part that matters most, which is
-**validating a model's output before it becomes an action**.
+The plan for the LLM addon, when it is written, is three transports —
+`replay` (recorded responses, needing nothing, the default in the demos),
+`ollama`, and any OpenAI-compatible endpoint. Replay is not a consolation
+prize: it is the same object the tests use as a fixture, and it teaches the
+part that matters most, which is **validating a model's output before it
+becomes an action**.
+
+## What you will see
+
+<!-- Recordings pending: headless Godot rasterises nothing, so no command in
+this repository can capture one. Recording them is a person's job; see the
+manual check in tasks/T7-close-the-slice.md. -->
+
+**The game** (`make run`). A 12×8 board, a wall down the middle with rough
+ground on either side, and two nodes worth taking. Red is yours: click a unit, click a
+neighbouring cell, space ends the turn. Blue is played by the trained models,
+and under the status line each blue unit says what it decided and the number
+it decided on, in the shape *unit 1 attacks unit 2: p(win) 0.95 at or above
+0.50*.
+
+**The search demo** (`make demo-search`). One board, four searches. Keys 1–4
+choose the algorithm, space reveals the next cell it expanded, enter reveals
+the rest. Breadth-first walks through the mud; Dijkstra goes round having
+spread out in rings; A\* goes round having looked at far less.
+
+*Recordings of both are still to be made.*
 
 ## Getting started
 
-```bash
-make bootstrap   # downloads the pinned Godot to the large disk, SHA-512 verified
-make check       # every gate
-make godot-version
-```
-
-Tier 1 needs none of that:
+Tier 1, with nothing but Python:
 
 ```bash
 python3 -m unittest discover -s python/tests -t python
+PYTHONPATH=python python3 -m gameaikit.training.report   # what the models learned
 ```
+
+Tier 2, with the engine:
+
+```bash
+make bootstrap     # downloads the pinned Godot to the large disk, SHA-512 verified
+make run           # play the board
+make demo-search   # the four searches, side by side
+make check         # every gate
+```
+
+## Using one addon in your own project
+
+```bash
+make release       # dist/: one zip per addon, and the Python wheel
+```
+
+Unzip `ai_core-<version>.zip` and the addon you want into your project's
+`res://addons/`. There is no plugin to enable: every class registers itself
+with `class_name`. Each zip carries `LICENSE`, `NOTICE` and `VERSION`, and the
+release step refuses to call a build good until a separate gate has opened
+every archive and found them. The decisions behind all this are in
+[`docs/adr/`](docs/adr/).
 
 ## Licence, and what the credit actually obliges
 
