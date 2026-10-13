@@ -1,0 +1,187 @@
+{
+  "name": "two rules, overlapping",
+  "why": "The smallest controller where fuzzy logic does anything a boolean cannot. One input, one output, two rules, and eleven samples so every number can be checked by hand -- the arithmetic is in spec/vectors/fuzzy/README.md. The case `both` is the one T13 asks for: two rules firing at once land strictly between what each gives alone, and a defuzzifier that takes the strongest rule's term returns one of the two ends instead.",
+  "controller": {
+    "inputs": [
+      {
+        "name": "noise",
+        "minimum": 0,
+        "maximum": 10,
+        "sets": {
+          "quiet": [
+            0,
+            0,
+            2,
+            6
+          ],
+          "loud": [
+            4,
+            8,
+            10,
+            10
+          ]
+        }
+      }
+    ],
+    "outputs": [
+      {
+        "name": "alertness",
+        "minimum": 0,
+        "maximum": 100,
+        "samples": 11,
+        "sets": {
+          "calm": [
+            0,
+            0,
+            20,
+            50
+          ],
+          "alarmed": [
+            50,
+            80,
+            100,
+            100
+          ]
+        }
+      }
+    ],
+    "rules": [
+      {
+        "if": [
+          [
+            "noise",
+            "quiet"
+          ]
+        ],
+        "then": [
+          "alertness",
+          "calm"
+        ]
+      },
+      {
+        "if": [
+          [
+            "noise",
+            "loud"
+          ]
+        ],
+        "then": [
+          "alertness",
+          "alarmed"
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "kind": "evaluate",
+      "name": "only-calm",
+      "why": "quiet is fully true and loud not at all, so the answer is calm's own centroid",
+      "inputs": {
+        "noise": 1
+      },
+      "activations": {
+        "alertness": {
+          "calm": 1.0,
+          "alarmed": 0.0
+        }
+      },
+      "outputs": {
+        "alertness": 15.833333333333
+      }
+    },
+    {
+      "kind": "evaluate",
+      "name": "only-alarmed",
+      "why": "the mirror image",
+      "inputs": {
+        "noise": 9
+      },
+      "activations": {
+        "alertness": {
+          "calm": 0.0,
+          "alarmed": 1.0
+        }
+      },
+      "outputs": {
+        "alertness": 84.166666666667
+      }
+    },
+    {
+      "kind": "evaluate",
+      "name": "both",
+      "why": "both rules at a quarter: the whole of fuzzy logic in one number",
+      "inputs": {
+        "noise": 5
+      },
+      "between": [
+        "only-calm",
+        "only-alarmed"
+      ],
+      "activations": {
+        "alertness": {
+          "calm": 0.25,
+          "alarmed": 0.25
+        }
+      },
+      "outputs": {
+        "alertness": 50.0
+      }
+    },
+    {
+      "kind": "evaluate",
+      "name": "leaning-calm",
+      "why": "unequal strengths, three to one, so the answer is pulled towards calm rather than sitting at the middle -- a defuzzifier that ignored the strengths would still say 50",
+      "inputs": {
+        "noise": 4.5
+      },
+      "between": [
+        "only-calm",
+        "both"
+      ],
+      "activations": {
+        "alertness": {
+          "calm": 0.375,
+          "alarmed": 0.125
+        }
+      },
+      "outputs": {
+        "alertness": 34.915254237288
+      }
+    },
+    {
+      "kind": "evaluate",
+      "name": "clamped-below",
+      "why": "below the range: clamped to 0, where quiet is fully true, rather than falling off every set",
+      "inputs": {
+        "noise": -3
+      },
+      "activations": {
+        "alertness": {
+          "calm": 1.0,
+          "alarmed": 0.0
+        }
+      },
+      "outputs": {
+        "alertness": 15.833333333333
+      }
+    },
+    {
+      "kind": "evaluate",
+      "name": "clamped-above",
+      "why": "above the range: clamped to 10, where loud is fully true",
+      "inputs": {
+        "noise": 40
+      },
+      "activations": {
+        "alertness": {
+          "calm": 0.0,
+          "alarmed": 1.0
+        }
+      },
+      "outputs": {
+        "alertness": 84.166666666667
+      }
+    }
+  ]
+}

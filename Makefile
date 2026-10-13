@@ -195,7 +195,7 @@ train: ## Fit both models and publish weights.json to dist/ and to the addon
 		--write $(CURDIR)/dist --write $(CURDIR)/godot/addons/ai_learning
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -226,6 +226,14 @@ test-learning-vectors: ## The learning vectors, against ai_learning
 	@# between the two halves is worth.
 	@$(GODOT) --headless --path godot -s res://test/learning_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/learning
+
+.PHONY: test-fuzzy-vectors
+test-fuzzy-vectors: ## The fuzzy vectors, against ai_fuzzy
+	@# The same file, read twice: here through the addon, and in
+	@# `make test-python` through gameaikit.fuzzy, which also checks that the
+	@# text controller beside a vector describes the same thing as its JSON.
+	@$(GODOT) --headless --path godot -s res://test/fuzzy_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/fuzzy
 
 .PHONY: test-search-properties
 test-search-properties: ## A* agrees with Dijkstra, over a few hundred boards
