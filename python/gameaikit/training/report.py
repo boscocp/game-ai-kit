@@ -46,7 +46,7 @@ def dump(training: Training) -> str:
     ]
     lines += _section("combat", training.combat, COMBAT_FEATURES)
     lines += _section("capture", training.capture, CAPTURE_FEATURES)
-    lines += _capture_caveat()
+    lines += _capture_caveat(training)
     return "\n".join(lines) + "\n"
 
 
@@ -106,24 +106,33 @@ def _score_sentence(name: str, fitted: Fitted) -> list[str]:
     ]
 
 
-def _capture_caveat() -> list[str]:
-    """The two things about this data a reader has to be told."""
+def _capture_caveat(training: Training) -> list[str]:
+    """The two things about this data a reader has to be told.
+
+    The numbers come from the run that is printing them. They were constants
+    here, which meant a sixty-game report quoting the thousand-game figures --
+    measured prose inside generated output, which is the one place a stale
+    number is indistinguishable from a fresh one.
+    """
+    combat = training.combat
     return [
         "",
         "Two things the numbers above do not say",
         "---------------------------------------",
         "  The lookup table is the honest yardstick, not the majority class.",
         "  These features are small integers, so most held-back rows have an",
-        "  exact twin among the rows that were trained on -- 83% of them. A",
-        "  table that answers with the twin's outcome already scores most of",
-        "  what the model scores, and the majority class flatters both. Four",
-        "  weights cannot memorise 976 distinct situations, so this model's",
-        "  score is honest; one with capacity would have to be read against",
-        "  the table rather than against the majority.",
+        f"  exact twin among the rows that were trained on -- {combat.twinned_share:.0%}",
+        f"  of them, over {combat.distinct_rows} distinct situations. A table that",
+        "  answers with the twin's outcome already scores most of what the",
+        "  model scores, and the majority class flatters both. Four weights",
+        "  cannot memorise that many answers, so this model's score is honest;",
+        "  one with capacity would have to be read against the table rather",
+        "  than against the majority.",
         "",
         "  The capture rows are censored, and not in the obvious way. Only a",
-        "  game where somebody took the node writes one, and games end instead",
-        "  by one side being destroyed -- 608 of 2000, against 0 that ran out",
+        "  game where somebody took the node writes one, and the rest end with",
+        "  one side destroyed instead. Measured over 2000 games of this",
+        "  simulator: 1392 captures, 608 wipe-outs and none at all running out",
         "  of turns. So the missing rows are the lopsided games, and lopsided",
         "  is exactly what `own_units` and `enemy_units` measure.",
     ]
@@ -201,13 +210,24 @@ def _check_model(name: str, model: dict) -> list[str]:
         if all(weight == 0.0 for weight in model[column]):
             findings.append(f"W5 {name} learned nothing: every {column} is zero")
         for number in model[column]:
-            if number != number or number in (float("inf"), float("-inf")):
+            if not _is_a_number(number):
                 findings.append(f"W4 {name} published {number} in {column}, "
                                 "which is not a number")
-    if model["bias"] != model["bias"]:
+    if not _is_a_number(model["bias"]):
         findings.append(f"W4 {name} published {model['bias']} as its bias, "
                         "which is not a number")
     return findings
+
+
+def _is_a_number(value: float) -> bool:
+    """False for nan and for either infinity.
+
+    Both halves matter and the second was dropped once already, while this
+    function was being widened to cover a second column: a bias of `inf`
+    passed every rule here, and `json.dump` writes `Infinity` without
+    complaint for the game to load.
+    """
+    return value == value and value not in (float("inf"), float("-inf"))
 
 
 def main(argv: list[str]) -> int:

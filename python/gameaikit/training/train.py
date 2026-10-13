@@ -39,16 +39,28 @@ class Fitted:
     #:
     #: The four features are small integers, so the feature space is small:
     #: 2937 combat rows cover 976 distinct vectors, and 83% of holdout rows
-    #: have an *exact* twin in the training set. Answering with that twin's
-    #: label scores 0.848 where the majority class scores 0.690 -- so the
-    #: majority baseline flatters the model by about fifteen points, and this
-    #: is the number that says what the fitting is really worth.
+    #: have an *exact* twin in the training set.
+    #:
+    #: Two numbers get confused here, so both are written out. Over the
+    #: **twinned rows alone**, answering with the twin's label scores 0.848.
+    #: Over the **whole holdout** -- twinned rows from the table, the rest from
+    #: the commoner answer -- it scores 0.8177, and that is what this field
+    #: carries and what the report prints. Against the model's 0.8780 and the
+    #: majority class's 0.6900, the majority baseline flatters the fitting by
+    #: 12.8 points rather than the 18.8 it appears to be worth.
     #:
     #: It is published rather than asserted on. A four-weight model cannot
     #: memorise 976 answers, so beating the table is not required of it; a
     #: model with capacity, as in T18, would have to be read against this
     #: column rather than against the majority class.
     memoriser: float
+
+    #: The share of held-back rows that have an exact feature twin among the
+    #: rows trained on, and how many distinct vectors those rows cover. Carried
+    #: because the report quotes both, and quoting them from a constant meant a
+    #: sixty-game report cheerfully printing the thousand-game figures.
+    twinned_share: float
+    distinct_rows: int
 
     holdout_rows: int
 
@@ -108,9 +120,11 @@ def _fit_combat(combats: list[Combat], shuffle_labels: bool) -> Fitted:
     remembered = _memoriser(rows, labels, held_rows, _commoner_label(labels))
     return Fitted(
         model=model,
-        score=_accuracy(model, held_rows, held_labels),
+        score=_share_right(_predictions_of(model, held_rows), held_labels),
         baseline=_majority_share(held_labels),
         memoriser=_share_right(remembered, held_labels),
+        twinned_share=_twinned_share(rows, held_rows),
+        distinct_rows=len({tuple(row) for row in rows}),
         holdout_rows=len(holdout),
         training_games=frozenset(row.game for row in training),
         holdout_games=frozenset(row.game for row in holdout),
@@ -136,9 +150,12 @@ def _fit_capture(captures: list[Capture], shuffle_labels: bool) -> Fitted:
     remembered = _memoriser(rows, labels, held_rows, guess)
     return Fitted(
         model=model,
-        score=-_mean_absolute_error(model, held_rows, held_labels),
-        baseline=-_mean_absolute_error(None, held_rows, held_labels, guess),
+        score=-_mean_absolute_difference(
+            _predictions_of(model, held_rows), held_labels),
+        baseline=-_mean_absolute_difference([guess] * len(held_labels), held_labels),
         memoriser=-_mean_absolute_difference(remembered, held_labels),
+        twinned_share=_twinned_share(rows, held_rows),
+        distinct_rows=len({tuple(row) for row in rows}),
         holdout_rows=len(holdout),
         training_games=frozenset(row.game for row in training),
         holdout_games=frozenset(row.game for row in holdout),
@@ -195,14 +212,37 @@ def _memoriser(rows: list[list[float]], labels: list[float],
     ]
 
 
+def _twinned_share(rows: list[list[float]], held_rows: list[list[float]]) -> float:
+    """How much of the holdout is, feature for feature, already in training."""
+    seen = {tuple(row) for row in rows}
+    if not held_rows:
+        return 0.0
+    return sum(1 for row in held_rows if tuple(row) in seen) / len(held_rows)
+
+
 def _commoner_label(labels: list[float]) -> float:
     """Whichever of 0 and 1 turns up more often."""
     ones = sum(1 for label in labels if label >= 0.5)
     return 1.0 if ones * 2 >= len(labels) else 0.0
 
 
+def _predictions_of(model: Model, rows: list[list[float]]) -> list[float]:
+    """What the model says about each row.
+
+    Everything downstream scores a *list of predictions*, never a model, so
+    the model, the lookup table and the constant guess are all scored by the
+    same two functions. There used to be two of each -- one taking a model and
+    one taking predictions -- which meant two copies of the half-way threshold
+    that had to agree, in the file that defines what the scores mean.
+    """
+    return [model.predict(row) for row in rows]
+
+
 def _share_right(predictions: list[float], labels: list[float]) -> float:
-    """The share of predictions that fall on the right side of a half."""
+    """The share of predictions that fall on the right side of a half.
+
+    The one place the threshold lives.
+    """
     right = sum(
         1 for predicted, label in zip(predictions, labels)
         if (predicted >= 0.5) == (label >= 0.5)
@@ -211,31 +251,12 @@ def _share_right(predictions: list[float], labels: list[float]) -> float:
 
 
 def _mean_absolute_difference(predictions: list[float], labels: list[float]) -> float:
-    """Mean |predicted - actual|, for predictions that came from no model."""
+    """Mean |predicted - actual|. The one place the error is defined."""
     return sum(abs(predicted - label)
                for predicted, label in zip(predictions, labels)) / len(labels)
-
-
-def _accuracy(model: Model, rows: list[list[float]], labels: list[float]) -> float:
-    """The share of rows whose outcome the model calls correctly."""
-    right = sum(
-        1 for row, label in zip(rows, labels)
-        if (model.predict(row) >= 0.5) == (label >= 0.5)
-    )
-    return right / len(rows)
 
 
 def _majority_share(labels: list[float]) -> float:
     """What you score by always answering with the commoner outcome."""
     ones = sum(1 for label in labels if label >= 0.5)
     return max(ones, len(labels) - ones) / len(labels)
-
-
-def _mean_absolute_error(model: Model | None, rows: list[list[float]],
-                         labels: list[float], guess: float = 0.0) -> float:
-    """Mean |predicted - actual|, or |guess - actual| when there is no model."""
-    total = 0.0
-    for row, label in zip(rows, labels):
-        predicted = guess if model is None else model.predict(row)
-        total += abs(predicted - label)
-    return total / len(rows)

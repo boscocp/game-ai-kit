@@ -51,8 +51,8 @@ def fitted(score: float, baseline: float, kind: str = "logistic") -> Fitted:
     model = Model(kind=kind, features=features, weights=(1.0, 1.0, 1.0, 1.0),
                   bias=0.0, comparable_weights=(1.0, 1.0, 1.0, 1.0), rows_trained_on=10)
     return Fitted(model=model, score=score, baseline=baseline, memoriser=baseline,
-                  holdout_rows=10, training_games=frozenset({1, 2}),
-                  holdout_games=frozenset({3}))
+                  twinned_share=0.0, distinct_rows=10, holdout_rows=10,
+                  training_games=frozenset({1, 2}), holdout_games=frozenset({3}))
 
 
 def training(combat_score: float, combat_baseline: float,
@@ -134,6 +134,23 @@ class TheReportsRules(unittest.TestCase):
         broken["models"]["combat"]["bias"] = float("nan")
 
         self.assertIn("W4", report.findings_for(broken, broken)[0])
+
+    def test_a_weight_that_is_an_infinity_is_reported(self) -> None:
+        # The half of W4 that nothing tested, which is how it came to be
+        # dropped during a rewrite of the other half. A diverged fit publishes
+        # inf, and json.dump writes `Infinity` for the game to load.
+        diverged = copy.deepcopy(sound_report())
+        diverged["models"]["combat"]["weights"][2] = float("inf")
+
+        self.assertIn("W4", report.findings_for(diverged, diverged)[0])
+
+    def test_an_infinite_bias_is_reported_too(self) -> None:
+        # The bias is published separately from the weights, and the check on
+        # it was the one that lost its infinity branch.
+        diverged = copy.deepcopy(sound_report())
+        diverged["models"]["capture"]["bias"] = float("-inf")
+
+        self.assertIn("W4", report.findings_for(diverged, diverged)[0])
 
     def test_a_model_that_learned_nothing_is_reported(self) -> None:
         flat = copy.deepcopy(sound_report())
@@ -224,11 +241,20 @@ class TheScoringItself(unittest.TestCase):
     def test_accuracy_counts_a_probability_over_a_half_as_a_yes(self) -> None:
         # The threshold, which a mutation can drop entirely: comparing the
         # probability with the label directly scores nearly everything wrong.
+        # One function holds it now -- there were two, which is two copies of
+        # a number that has to agree.
         model = self.model_on(weight=1.0, bias=0.0)
-        rows = [[4.0], [-4.0], [4.0], [-4.0]]
+        predictions = train._predictions_of(model, [[4.0], [-4.0], [4.0], [-4.0]])
 
-        self.assertEqual(train._accuracy(model, rows, [1.0, 0.0, 1.0, 0.0]), 1.0)
-        self.assertEqual(train._accuracy(model, rows, [0.0, 1.0, 0.0, 1.0]), 0.0)
+        self.assertEqual(train._share_right(predictions, [1.0, 0.0, 1.0, 0.0]), 1.0)
+        self.assertEqual(train._share_right(predictions, [0.0, 1.0, 0.0, 1.0]), 0.0)
+
+    def test_the_model_is_scored_through_the_same_path_as_the_lookup_table(self) -> None:
+        # Both go through `_predictions_of` then `_share_right`, so the model
+        # and the yardstick it is compared with cannot be scored differently.
+        model = self.model_on(weight=1.0, bias=0.0)
+
+        self.assertEqual(train._predictions_of(model, [[0.0]]), [0.5])
 
     def test_the_majority_share_is_the_commoner_answer_not_the_positive_one(self) -> None:
         # Without the max(), a set that is 80% negative reports a baseline of
@@ -238,10 +264,10 @@ class TheScoringItself(unittest.TestCase):
 
     def test_mean_absolute_error_is_the_distance_not_the_difference(self) -> None:
         model = self.model_on(weight=1.0, bias=0.0, kind="linear")
-        rows = [[3.0], [5.0]]
+        predictions = train._predictions_of(model, [[3.0], [5.0]])
 
         # Errors of -2 and +2 average to zero if the absolute is dropped.
-        self.assertEqual(train._mean_absolute_error(model, rows, [5.0, 3.0]), 2.0)
+        self.assertEqual(train._mean_absolute_difference(predictions, [5.0, 3.0]), 2.0)
 
     def test_the_capture_model_is_scored_so_that_bigger_is_better(self) -> None:
         # Both halves are negated mean errors. Dropping the minus signs makes
@@ -263,6 +289,20 @@ class TheScoringItself(unittest.TestCase):
 
         self.assertAlmostEqual(model.weights[0], 2.0, places=2)
         self.assertAlmostEqual(model.weights[1], 0.003, places=5)
+
+
+    def test_the_twinned_share_is_measured_on_the_run_that_reports_it(self) -> None:
+        # It was a constant in the report's prose, so a sixty-game run printed
+        # the thousand-game figure. Sixty games produce no exact twins at all.
+        few = train.run(games=60)
+
+        self.assertEqual(few.combat.twinned_share, 0.0)
+        self.assertGreater(few.combat.distinct_rows, 0)
+
+    def test_twins_appear_as_the_feature_space_fills_up(self) -> None:
+        # The share is saturation, not a defect: four small integers have only
+        # so many combinations, and more games keep landing on the same ones.
+        self.assertGreater(train.run(games=400).combat.twinned_share, 0.3)
 
 
 class TheClockAssertion(unittest.TestCase):
