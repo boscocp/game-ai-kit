@@ -1,13 +1,13 @@
 # T15 — `ai_behaviour`: the four ways to decide
 
-Size: L · Prereqs: T14 · Files: `godot/addons/ai_behaviour/`, `godot/demos/behaviour/`
+Size: L · Prereqs: T14, T11 · Files: `godot/addons/ai_behaviour/`, `godot/demos/behaviour/`
 
 ## Goal
 
 A finite state machine, a behaviour tree, GOAP and an HTN — the same guard,
 written four times, on the same board.
 
-Written three times on purpose. The question a reader actually has is not "what
+Written four times on purpose. The question a reader actually has is not "what
 is a behaviour tree", it is "when would I use one instead of the thing I have",
 and that question is only answerable side by side. STRIPS from T11 is the
 fourth corner of the comparison and is already written.
@@ -25,8 +25,9 @@ fourth corner of the comparison and is already written.
 4. HTN: the same guard as tasks decomposed by methods, planned forward from
    the current state. The comparison with GOAP is the one shipped games made:
    at one studio a forward HTN was "considerably faster" than the GOAP system
-   before it (Humphreys, Game AI Pro ch. 12). GOAP and STRIPS search backward
-   from the goal, and HTN can return a partial plan. Measure both on this
+   before it (Humphreys, Game AI Pro ch. 12). GOAP searches backward from the
+   goal (this kit's STRIPS planner searches forward, so say which you
+   compare), and HTN can return a partial plan. Measure both on this
    guard, with the same counters T11 uses, and say whether the claim holds
    here.
 5. One table, in the addon's header, saying when each of the five is the right

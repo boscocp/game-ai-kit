@@ -1,6 +1,6 @@
 # T20 — The RTS demo
 
-Size: L · Prereqs: T19, T12 · Files: `godot/game/rts/`
+Size: L · Prereqs: T19, T12, T15, T25 · Files: `godot/game/rts/`
 
 ## Goal
 
@@ -33,7 +33,11 @@ large pile of code with no lesson in it.
    theoretical, and which the influence maps from T14 already know how to draw.
 6. Group movement with the flow fields from T19.
 7. The difficulty levels and the human-likeness axis from T12 and T25, still
-   not cheating.
+   not cheating, plus the knobs only a clock makes possible: a reaction delay
+   drawn from recorded human play, and a cap on actions per minute in the
+   spirit of AlphaStar's. T25's league runs here too, adding actions per minute
+   and reaction time to its human-likeness measures, and its meter shows each
+   team's share of T19's frame budget.
 
 ## Acceptance
 

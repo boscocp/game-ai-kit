@@ -30,10 +30,11 @@ delete this task.
 5. **A frame budget the planner shares.** Movement and flow fields are not
    the only per-frame cost. The strategic planner (ADR 0010) and the
    influence maps run in slices spread across frames, as Killzone 3's anytime
-   path planners and Dill's spatial reasoning do, and the budget states each
-   slice's share in milliseconds. The StarCraft survey puts strategy on a scale
-   of minutes and reactive control near a second, which is how much of a frame
-   each deserves.
+   path planners do, and the budget states each slice's share in
+   milliseconds. The StarCraft survey puts strategy on a scale of minutes and
+   reactive control near a second. That is how *often* each layer needs to
+   decide, not how much of a frame it gets: a strategic replan may be heavy and
+   rare, so it is the one that has to be cut into slices.
 6. An ADR recording why there are two cores, so the next reader does not assume
    it was an accident.
 

@@ -14,8 +14,11 @@ teaches people to reach for it when they should not.
 
 ## Steps
 
-1. Record human matches to a dataset, reusing T5's format. The replay
-   determinism from T16 is what makes a recorded match reusable.
+1. Record human matches to a dataset, one row per decision: what the player
+   saw, and what they did. That is the format T25's recorder writes, and
+   whichever of the two tasks comes first defines it; T5's rows, one per
+   combat, cannot be cloned from. The replay determinism from T16 is what makes
+   a recorded match reusable.
 2. Train in Python, standard library only — no pip, no numpy, no install step.
    A small MLP or multinomial logistic regression over the same context the
    n-gram sees, so the comparison is fair.

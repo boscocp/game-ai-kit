@@ -45,11 +45,16 @@ make test-godot
 That script plays each level against each other level over a fixed seed set and
 asserts the ordering holds: harder beats easier more often than the reverse,
 by a margin the script states as a number. A difficulty ladder that is not
-monotonic is not a ladder.
+monotonic is not a ladder. The human-likeness knobs T25 adds are held off
+here, because they cost strength too; T25 re-asserts this ordering with them
+on.
 
 ```bash
-grep -qv "cheat\|bonus_resources\|extra_vision" godot/addons/ai_planning/difficulty.gd
+! grep -q "cheat\|bonus_resources\|extra_vision" godot/addons/ai_planning/difficulty.gd
 ```
+
+That line used to read `grep -qv`, which succeeds whenever any single line of
+the file does not match -- so it passed on a file full of cheats.
 
 ## Manual check
 

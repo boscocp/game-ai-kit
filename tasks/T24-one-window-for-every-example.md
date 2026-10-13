@@ -54,9 +54,9 @@ not suggest the game reads a `.pddl` file at runtime unless, by then, it does.
 4. **`make menu`** opens it during development, and becomes the project's main
    scene. `make run` and every `make demo-<name>` keep working and open one
    example directly, which is still the fastest way to work on one.
-5. **`make export`**: a Linux x86_64 build of the menu, into `dist/`. The
-   export templates are installed by `make bootstrap`, pinned and
-   SHA-verified, on the large disk (invariant 8; ADR 0002 already measured
+5. **`make export`**: a Linux x86_64 build of the menu, into `dist/`. Today
+   `make bootstrap` installs the editor only; this task extends it to fetch
+   the export templates, pinned and SHA-verified, on the large disk (invariant 8; ADR 0002 already measured
    them at over 1 GB). Other platforms only once this one works, and each one
    as its own decision.
 6. **`make release`** ships the executable as one more zip, with `LICENSE` and

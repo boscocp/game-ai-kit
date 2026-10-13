@@ -30,8 +30,13 @@ plan, which is why planning is taught on a strategy game and not on a maze.
    stays as the readable version. Beside it go h_max (admissible, so the plan
    stays shortest) and h_add (guides harder, gives up shortest), after Bonet
    and Geffner (2001). The state is held as bits rather than as the sorted,
-   joined string `WorldState.key()` builds today. Every call has a budget, and
-   one that runs out returns the best plan so far, labelled as such.
+   joined string `WorldState.key()` builds today -- twice per generated world,
+   `strips_planner.gd` calls it twice. Every call has a budget. Breadth-first
+   and A\* have no complete plan until they finish, so a call that runs out
+   returns the partial plan to the expanded world with the lowest `h`,
+   labelled as partial, and the game acts on its first step only. If that
+   proves too weak, depth-first branch and bound (Churchill and Buro) has a
+   complete plan early and is the alternative to measure.
 7. **Measure before choosing.** Worlds visited and milliseconds per plan, for
    breadth-first, h_max and h_add, with strings against bits, on this task's
    real domain. Publish the table in the addon header and in
@@ -68,9 +73,11 @@ grep -q "domain" spec/pddl/tactics-domain.pddl
 
 That script runs every search the task builds over the same seeded problems
 and asserts three things. h_max's plans are exactly as short as breadth-first's,
-because an admissible heuristic must not change the answer. Neither heuristic
-visits more worlds than breadth-first on any problem. And a call given a budget
-returns within it. It prints the table step 7 publishes, so the numbers in the
+because an admissible heuristic must not change the answer. On the seeded set
+-- not on every problem, which no theorem promises, since h_add can wander and
+breadth-first here tests the goal on generation while A\* tests it on
+expansion -- each heuristic visits fewer worlds in total than breadth-first.
+And a call given a budget returns within it. It prints the table step 7 publishes, so the numbers in the
 docs have a command behind them.
 
 ## Manual check

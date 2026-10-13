@@ -8,9 +8,10 @@ it is accepted or amended on what they find)
 `ai_planning` is a breadth-first STRIPS planner over a domain also written in
 PDDL. That is right for teaching and for its eight-fact domain, where it visits
 14 worlds. An RTS opponent has numeric resources, build times, many units and
-a clock that does not wait. Breadth-first over all of that visits up to two to
-the power of the number of facts, and `WorldState.key()` sorts and joins
-strings for every world it generates.
+a clock that does not wait. Over boolean facts alone, breadth-first visits
+up to two to the power of their number, and numeric resources make the space
+unbounded unless they are abstracted. `WorldState.key()` also sorts and joins
+strings for every world generated, twice per world.
 
 The question "PDDL or STRIPS, which is faster" has no answer, because they are
 not alternatives: PDDL is the language and STRIPS the model it describes. The
@@ -22,8 +23,11 @@ and how often. The sources are in
 
 1. **Only the strategy layer plans.** It plans over goals and abstracted
    resources, never over the whole army. Tactics are utility scores over
-   regions and influence maps, and units use A\* and flow fields. This is the
-   layering of the StarCraft survey and of Killzone 3's bots.
+   regions and influence maps, and units use A\* and flow fields. The layers
+   are the StarCraft survey's. Putting the only planner at the top is *this
+   kit's* choice for an RTS: the shipped games cited plan per agent or per
+   squad (F.E.A.R., Killzone 3, Horizon), which suits a handful of agents
+   rather than an army, while the RTS research plans the build order.
 2. **Under the plan, the economy is priority queues.** That is what AoE II,
    Supreme Commander and 0 A.D. ship. It is also the baseline a planner has to
    beat before it earns its cost.
@@ -46,16 +50,18 @@ and how often. The sources are in
 ## Alternatives considered
 
 - **Breadth-first STRIPS over the whole game.** Rejected: van der Sterren
-  (2013) reports GOAP and HTN struggling on a multi-unit state space, and every
-  shipped title found plans at the top only.
+  (2013) reports GOAP and HTN struggling on a multi-unit state space, and none
+  of the shipped titles found runs one search over everything.
 - **A general PDDL 2.1 planner, at runtime or as the reference.** Rejected for
   runtime: it is an external process, not GDScript, and not reachable at tier
-  1. Chan et al. found SAPA, MIPS-XXL, SGPlan and LPG all failed on RTS
-  resource production. One stays useful *offline*, to check a level 1 domain.
-- **GOAP per unit, as in F.E.A.R.** Rejected as the RTS design. F.E.A.R.
-  planned per soldier because its fights were small, and Orkin says it had no
-  complex squad behaviours; an RTS needs a commander. GOAP is still taught, in
-  T15.
+  1. Chan et al. report that SAPA, MIPS-XXL, SGPlan, LPG, LPG-td and TM-LPSAT
+  could not satisfactorily solve RTS resource production. One stays useful *offline*, to check a level 1 domain.
+- **A planner per unit or per squad, as in F.E.A.R. and Killzone 3.** Not
+  chosen for the RTS. Those games plan for a handful of agents, and Orkin says
+  F.E.A.R. had no complex squad behaviours at all. An RTS has an army whose
+  economy and build order need deciding by somebody. GOAP and HTN are still
+  taught in T15, and T25's league can field a team that plans low down, which
+  is how this choice gets tested rather than assumed.
 - **Rules and priority queues only, no planner.** This is what most shipped
   RTS economies are, and it is kept as the baseline. Rejected as the whole
   answer: planning is the lesson this kit is building towards, and Churchill

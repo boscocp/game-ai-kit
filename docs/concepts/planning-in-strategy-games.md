@@ -5,7 +5,7 @@ half_life: concept
 verified_on: 2026-10-13
 tier: 0
 source: https://web.archive.org/web/2020/https://www.cs.mun.ca/~dchurchill/publications/pdf/starcraft_survey.pdf ; https://ojs.aaai.org/index.php/AIIDE/article/view/12435/12294 ; https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter12_Exploring_HTN_Planners_through_Example.pdf ; https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter29_Hierarchical_AI_for_Multiplayer_Bots_in_Killzone_3.pdf ; https://pages.cs.wisc.edu/~dyer/cs540/handouts/gdc2006_orkin_jeff_fear.pdf
-invalidated_if: a survey or shipped title shows a whole-game state-space planner running an RTS opponent within a frame budget, which would undo the layering this page recommends
+invalidated_if: a survey or shipped title shows a single state-space planner running a whole RTS opponent within a frame budget, which would undo the split this page recommends
 teaches: strategy-ai
 -->
 
@@ -16,11 +16,17 @@ teaches: strategy-ai
 
 ## The short answer
 
-**Nobody plans the whole game.** Both the shipped titles and the research
-literature split an opponent into layers that work on different time scales.
-They plan only at the top, and only over a small, abstracted problem. Lower
-down, they use rules, scores and cheap searches. Each layer also replans on a
-cadence or when its plan breaks, never on every frame.
+**Nobody plans the whole game in one search.** Both the shipped titles and
+the research literature split an opponent into layers that work on different
+time scales, and each planner they use works on a small piece of the problem.
+*Which* layer plans differs. The shipped games below mostly plan per agent or
+per squad: F.E.A.R.'s soldiers, Killzone 3's bots and Horizon's machines. The
+RTS research plans the build order, at the strategic layer. Everything else is
+rules, scores and cheap searches.
+
+For the RTS enemy, this kit chooses to plan **at the strategic layer only**.
+That is a choice, made for an RTS's scale, and the reasons are given at the
+end of this page. It is not a description of what every game does.
 
 That changes the question. The choice between PDDL and STRIPS was never about
 speed: PDDL is the language a domain is written in, and STRIPS is the model
@@ -36,11 +42,12 @@ records how few planning approaches survive real time: "the real-time
 constraints of RTS games limit the planning approaches that can be applied,
 HTN and case-based planning being the only ones explored so far."
 
-Shipped games draw the same picture. Killzone 3's multiplayer bots are "set
-up as a three-layered hierarchy, where each layer controls the layer below it
-and information flows back" (commander, squad, individual). In F.E.A.R., the
-planning was done per soldier, and the squads were a simple periodic
-coordinator. Orkin is blunt about it: "we actually did not have any complex
+Shipped games layer too, though they put the planner lower down. Killzone 3's
+multiplayer bots are "set up as a three-layered hierarchy, where each layer
+controls the layer below it and information flows back" (commander, squad,
+individual). The HTN planner there is the *individual* bot's, and the
+commander assigns objectives. In F.E.A.R., the planning was done per soldier,
+and the squads were a simple periodic coordinator. Orkin is blunt about it: "we actually did not have any complex
 squad behaviors at all in F.E.A.R." The tactics players saw emerged from the
 combination.
 
@@ -56,9 +63,9 @@ combination.
 
 - Age of Empires II's AI is a set of rules: "Facts are conditions that must
   be true for a rule to execute… Actions tell the AI player to do something."
-  The rules are evaluated in periodic passes. The community reference for the
-  Definitive Edition says "any script pass that lasts less than 20
-  milliseconds will not cause lag".
+  The rules are evaluated in periodic passes. The community reference's page
+  on command performance says, of the Definitive Edition, "any script pass
+  that lasts less than 20 milliseconds will not cause lag".
 - Supreme Commander's base-building AI, in the community-maintained source,
   keeps a list where "A task has a priority. The tasks with the highest
   priority are evaluated first. Each task has a series of conditions
@@ -67,13 +74,16 @@ combination.
   budget. Its queue manager "picks which items to fund with resources until no
   more resources are left to distribute".
 
-**Where a planner does appear, it sits at the top and reruns at a rate.**
+**Where a planner does appear, it works on a small problem and reruns at a
+rate.**
 
-- The Killzone 3 bots rerun their HTN planner "at a fixed rate" and keep the
-  new plan only if it is better. Their strategic path planners are "updated
-  incrementally using an anytime algorithm". The authors then rebuilt the
-  commander itself as an HTN planner, which the chapter reports as an
-  experiment to consider for future titles, not as shipped.
+- Each Killzone 3 bot has "a custom planner that is based on the Hierarchical
+  Task Network (HTN) planner architecture". The bot reruns it "at a fixed
+  rate" and keeps the new plan only if it is better. The squads' strategic path
+  planners are "updated incrementally using an anytime algorithm". The shipped
+  commander assigns objectives by weight, without a planner. The authors then
+  expressed the commander as an HTN planner too, which the chapter lists under
+  future work for later titles, not as shipped.
 - Horizon Zero Dawn's AI uses "a combination of HTN planning and utility based
   decision making": the network gives the structure, and scores choose between
   options.
@@ -83,22 +93,32 @@ combination.
 - At the studio that shipped both, a forward HTN beat GOAP on speed. Humphreys
   writes that it "allowed the HTN planner in Transformers: Fall of Cybertron to
   be considerably faster than our GOAP system used in Transformers: War for
-  Cybertron". He also notes that GOAP and STRIPS variants "use a backward
-  search", while HTN works forward from the current state. That is what lets an
-  HTN return a partial plan.
+  Cybertron". He also notes that "GOAP and STRIPS planner variants" "use a
+  backward search", from the goal, while HTN works forward from the current
+  state. That is what lets an HTN return a partial plan. This kit's own
+  `StripsPlanner` searches forward, from the start. Humphreys means the
+  regression planners GOAP is built on, not every STRIPS planner.
 - Van der Sterren's chapter on multi-unit manoeuvres warns that "GOAP and, to
   a lesser extent, standard HTN planners struggle to search efficiently in such
   a large state-space": one search over a whole army does not scale.
 
 **Attack timing and targets are scored, not planned.** Dill's spatial
 reasoning chapter, from the RTS Kohan II, scores regions: "we launch our
-attacks against regions". He also warns that "you're going to have to
-timeslice the calculations". Mark's modular influence maps stay cheap by
-stamping precomputed templates.
+attacks against regions". He says the region graph would have to be
+recomputed as the map changes, which is beyond his chapter, and that "you're
+going to have to timeslice the calculations" to do it. Mark's modular
+influence maps stay cheap by stamping precomputed templates.
 
-**Unbounded strategic search costs a launch.** Of Total War: Rome II, Tommy
-Thompson writes that "the campaign AI took quite a long time to make its
-decisions in the launch build".
+**A bounded search can still be slow to ship.** Total War: Rome II's campaign
+AI used Monte Carlo tree search, and it was bounded: Tommy Thompson writes
+that "the MCTS is limited such that it doesn't search all the way to the
+goal", looking "one turn ahead before starting random playouts", and that "the
+anytime property of the algorithm ensures we will still get a useful and
+intelligent decision". Even so, "the campaign AI took quite a long time to
+make its decisions in the launch build", and was patched for weeks. The
+article does not give a cause. The lesson worth taking is narrower than
+"unbounded search is slow": a budget per decision has to be measured on the
+shipping game, not assumed from the algorithm.
 
 ## What the research does
 
@@ -117,11 +137,13 @@ It replans in increments, such as 60-second horizons in 15-second steps.
 
 **General numeric planners lost on exactly this problem.** PDDL 2.1 (Fox and
 Long, 2003) adds numbers at level 2 and durative actions at level 3; the
-kit's domain is level 1. Chan and colleagues (2007) wrote the RTS
-resource-production problem in PDDL 2.1, tried general temporal planners
-(SAPA, MIPS-XXL, SGPlan, LPG), and found "none of them could satisfactorily
-solve the RTS resource production problem". A planner built for the domain,
-with a scheduler, did, within 0.1 to 0.5 seconds a search.
+kit's domain is level 1. Chan and colleagues wrote the RTS
+resource-production problem in PDDL 2.1. Their workshop paper reports, from
+their earlier work, that general temporal planners (SAPA, MIPS-XXL, SGPlan,
+LPG, LPG-td and TM-LPSAT) were tried and "none of them could satisfactorily
+solve the RTS resource production problem". Their own planner, built for the
+domain and paired with a scheduler, ran under a time limit they set at 0.1
+seconds a search, and 0.5 for the harder problems.
 
 **The standard way to make a STRIPS search fast is a heuristic**, the same lesson
 as A\* over Dijkstra, applied to worlds:
@@ -138,8 +160,9 @@ as A\* over Dijkstra, applied to worlds:
 **HTN** (SHOP2: Nau and colleagues, 2003) plans by decomposing tasks with
 methods the designer writes, and "generates the steps of each plan in the same
 order that those steps will later be executed, so it knows the current state".
-Kelly, Botea and Koenig (2008) start from the constraint every game has: "the
-CPU and memory resources available to game AI modules at runtime are scarce."
+Kelly, Botea and Koenig (2008) start from the constraint every game has, "the
+CPU and memory resources available to game AI modules at runtime are scarce",
+and their answer is to do the HTN planning *offline*, before the game runs.
 
 **Search belongs in combat too, with a hard budget.** Churchill, Saffidine and
 Buro (2012) ran their combat search with 5 ms an episode, because "the 2011
@@ -149,10 +172,15 @@ moving at once, which is a tactical problem, not a build-order one.
 
 ## What this kit takes from it
 
-1. **The RTS enemy plans at the strategy layer only.** It plans over a small
-   domain of goals and abstracted resources, never over the whole army.
-   Tactics are utility scores over regions and influence maps; units use A\*
-   and flow fields.
+1. **The RTS enemy plans at the strategy layer only -- this kit's choice.**
+   The shipped games above put their planners on agents and squads, which
+   suits a handful of soldiers. An RTS has an army, and van der Sterren warns
+   that planners "struggle to search efficiently" over many units. Its
+   research plans the build order instead. So the commander plans over a small
+   domain of goals and abstracted resources. Tactics are utility scores over
+   regions and influence maps, and units use A\* and flow fields. T25's
+   league is where a team that plans lower down can show this choice was
+   wrong.
 2. **The economy under the plan is priority queues.** That is what AoE II,
    Supreme Commander and 0 A.D. do, and it is the honest baseline any planner
    has to beat.
@@ -165,12 +193,12 @@ moving at once, which is a tactical problem, not a build-order one.
    rate and time jumping to the next legal action, after Churchill and Buro.
    The PDDL stays at level 1, and a level 2 or 3 version is documentation,
    because the general planners for those levels lost on this problem.
-5. **It replans on a cadence and on failure.** That means a fixed rate plus
-   invalidation, as in Killzone 3, with the work spread across frames. A plan
-   computed for the next three minutes does not need recomputing every
-   sixteenth of a second.
-6. **HTN goes beside GOAP and STRIPS in T15.** Shipped games moved from one to
-   the other for speed, and the comparison is the lesson. Whether the RTS
+5. **It replans on a cadence and on failure.** A fixed rate as Killzone 3's
+   bots use, periodic passes as AoE II's rules use, plus invalidation, with the
+   work spread across frames. A plan computed for the next three minutes does
+   not need recomputing every sixteenth of a second.
+6. **HTN goes beside GOAP and STRIPS in T15.** One studio moved from GOAP to
+   HTN for speed, and the comparison is the lesson. Whether the RTS
    commander ends up HTN or heuristic STRIPS is T20's measurement to make.
 
 These are recorded as a decision in [ADR 0010](../adr/0010-the-rts-enemy-plans-at-the-top.md).
@@ -200,8 +228,10 @@ checked against its text.
   <https://www.guerrilla-games.com/read/the-ai-of-horizon-zero-dawn>
 - Thompson, T. (2018). *Revolutionary Warfare: The AI of Total War, Part 3.*
   Game Developer. <https://www.gamedeveloper.com/design/revolutionary-warfare-the-ai-of-total-war-part-3->
-- AoE2 AI Scripting Encyclopedia (community reference, Definitive Edition).
-  <https://airef.github.io/resources/articles/intro-to-commands.html>
+- AoE2 AI Scripting Encyclopedia (community reference, Definitive Edition):
+  rules, <https://airef.github.io/resources/articles/intro-to-commands.html>,
+  and command performance,
+  <https://airef.github.io/resources/articles/command-performance.html>
 - 0 A.D. Petra AI, `PETRA.QueueManager` API documentation.
   <https://docs.wildfiregames.com/javascript/petra/PETRA.QueueManager.html>
 - FAForever, `lua/sim/BuilderManager.lua` (community-maintained Supreme
@@ -220,7 +250,9 @@ checked against its text.
   AIIDE 7. <https://ojs.aaai.org/index.php/AIIDE/article/view/12435/12294>
 - Chan, H., Fern, A., Ray, S., Wilson, N., Ventura, C. (2007). *Extending
   Online Planning for Resource Production in Real-Time Strategy Games with
-  Search.* ICAPS 2007 workshop.
+  Search.* ICAPS 2007 workshop. The comparison with general planners it
+  quotes is from the same authors' earlier ICAPS 2007 paper, *Online Planning
+  for Resource Production in Real-Time Strategy Games*, which was not opened.
   <https://icaps07-satellite.icaps-conference.org/workshop8/Extending%20Online%20Planning%20for%20Resource%20Production%20in%20Real-Time%20Strategy%20Games%20with%20Search.pdf>
 - Hoffmann, J., Nebel, B. (2001). *The FF Planning System.* JAIR 14.
   <https://arxiv.org/abs/1106.0675>
