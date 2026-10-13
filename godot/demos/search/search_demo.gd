@@ -24,6 +24,7 @@ const NAMES: Array[String] = ["breadth-first", "depth-first", "dijkstra", "a*"]
 @onready var _board: BoardView = $BoardView
 @onready var _expansion: ExpansionView = $ExpansionView
 @onready var _status: Label = $Interface/Status
+@onready var _legend: Legend = $Interface/Legend
 
 # Derived rather than written out. They were `Vector2i(1, 5)` and
 # `Vector2i(14, 5)` beside a `COLUMNS` and a `ROWS` that looked adjustable:
@@ -38,6 +39,17 @@ var _result: SearchResult
 
 
 func _ready() -> void:
+	_legend.set_entries([
+		[ExpansionView.NEXT, "expanded next"],
+		[ExpansionView.EARLY, "expanded early"],
+		[ExpansionView.LATE, "expanded late"],
+		[ExpansionView.FRONTIER, "frontier: what it chooses among"],
+		[ExpansionView.PATH, "the route found"],
+		[ExpansionView.START, "start"],
+		[ExpansionView.GOAL, "goal"],
+		[BoardView.SWATCHES[1], "mud: dear to cross"],
+		[BoardView.SWATCHES[2], "wall"],
+	] as Array[Array])
 	_graph = _build_board()
 	_board.draw_board(_graph, [] as Array[Vector2i])
 	_choose(0)
@@ -67,6 +79,53 @@ func choose_search(index: int) -> void:
 	_choose(index)
 
 
+## One decision: the search takes one more cell off its frontier.
+##
+## The step every example offers (T21), so a person can stop on the frame where
+## the search did something surprising and read why.
+func step_decision() -> void:
+	step(1)
+
+
+## What the search is reasoning with right now -- the same cells the overlay
+## draws -- for `test/demo_overlays.gd` to check is there.
+func decision_overlay() -> Dictionary:
+	var about_to: Variant = _result.expanded[_revealed] if _revealed < _result.expanded.size() else null
+	var overlay: Dictionary = {
+		"algorithm": NAMES[_chosen],
+		"expanded": _result.expanded.slice(0, _revealed),
+		"frontier": frontier_after(_revealed),
+	}
+	if about_to != null:
+		overlay["about_to_expand"] = about_to
+	else:
+		overlay["route"] = _result.path
+	return overlay
+
+
+## The frontier as it stood after `revealed` cells were expanded.
+##
+## `SearchResult` keeps only the frontier at the end, and the replay needs it
+## at every step. All four searches put every unseen passable neighbour of a
+## cell on the frontier as they expand it -- except the goal's, because they
+## stop there -- so the frontier after k expansions is every cell seen by then
+## that has not been expanded. `search_demo_test.gd` holds this against the
+## real final frontier of all four, which is how it can be trusted.
+func frontier_after(revealed: int) -> Array[Vector2i]:
+	var expanded: Array[Vector2i] = _result.expanded.slice(0, revealed)
+	var seen: Array[Vector2i] = [_from]
+	for cell: Vector2i in expanded:
+		if cell != _to:
+			_see_neighbours(cell, seen)
+	return seen.filter(func(cell: Vector2i) -> bool: return not cell in expanded)
+
+
+func _see_neighbours(cell: Vector2i, seen: Array[Vector2i]) -> void:
+	for neighbour: Vector2i in _graph.neighbours(cell):
+		if not _graph.is_blocked(neighbour) and not neighbour in seen:
+			seen.append(neighbour)
+
+
 ## Reveal `count` more expanded cells, stopping at the end.
 func step(count: int) -> void:
 	_revealed = mini(_revealed + count, _result.expanded.size())
@@ -92,7 +151,7 @@ func _choose(index: int) -> void:
 
 
 func _refresh() -> void:
-	_expansion.show_search(_result, _board, _revealed, _from, _to)
+	_expansion.show_search(_result, _board, _revealed, _from, _to, frontier_after(_revealed))
 	_status.text = _status_line()
 
 

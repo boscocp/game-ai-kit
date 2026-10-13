@@ -41,8 +41,15 @@ func _draw() -> void:
 			continue
 		var centre: Vector2 = _board.centre_of(unit.cell)
 		draw_circle(centre, RADIUS, _colour_of(unit.faction))
+		_draw_id(centre, unit.id)
 		if unit.id == _selected_id:
 			draw_arc(centre, RADIUS + OUTLINE, 0.0, TAU, 24, Color.WHITE, OUTLINE)
+
+
+# The id, because every reason on the screen names units by it.
+func _draw_id(centre: Vector2, unit_id: int) -> void:
+	draw_string(ThemeDB.fallback_font, centre + Vector2(-4.0, 5.0), str(unit_id),
+			HORIZONTAL_ALIGNMENT_LEFT, -1.0, 13, Color.WHITE)
 
 
 # The colour of a faction, clamped to the colours there are.

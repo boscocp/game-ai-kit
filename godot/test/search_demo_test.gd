@@ -85,3 +85,23 @@ func _mounted_demo() -> SearchDemo:
 func _status_of(demo: SearchDemo) -> String:
 	var label: Label = demo.get_node("Interface/Status")
 	return label.text
+
+
+func test_the_replayed_frontier_ends_as_the_real_one_for_all_four() -> void:
+	# `frontier_after` derives the frontier at each step from the expansion,
+	# because the result keeps only the last one. At the last step the
+	# derivation must equal what each search actually left, or the frontier
+	# drawn while stepping is invented.
+	var demo: SearchDemo = _mounted_demo()
+	for index: int in range(4):
+		demo.choose_search(index)
+		var derived: Array[Vector2i] = demo.frontier_after(demo._result.expanded.size())
+		var real: Array[Vector2i] = demo._result.frontier
+		assert_array(derived).contains_exactly_in_any_order(real)
+
+
+func test_the_frontier_is_drawn_while_stepping() -> void:
+	var demo: SearchDemo = _mounted_demo()
+	demo.step(3)
+	assert_array(demo.decision_overlay()["frontier"]).is_not_empty()
+	assert_that(demo.decision_overlay()["about_to_expand"]).is_equal(demo._result.expanded[3])

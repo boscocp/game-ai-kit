@@ -15,12 +15,29 @@ const DIRECTIONS: Dictionary = {
 @onready var _board: BoardView = $BoardView
 @onready var _view: StealthView = $StealthView
 @onready var _status: Label = $Interface/Status
+@onready var _legend: Legend = $Interface/Legend
 
 var world: StealthWorld
 var _show_danger: bool = false
 
 
 func _ready() -> void:
+	_legend.set_entries([
+		[StealthView.STATE_COLOURS[StealthGuard.PATROL], "guard on its round"],
+		[StealthView.STATE_COLOURS[StealthGuard.INVESTIGATE], "guard going to look"],
+		[StealthView.STATE_COLOURS[StealthGuard.ALERT], "guard giving chase"],
+		[Color.TRANSPARENT, "  bar: suspicion, white tick: target"],
+		[Color.TRANSPARENT, "  dots: next steps, ring: where it"],
+		[Color.TRANSPARENT, "  thinks you are, line: its facing"],
+		[StealthView.SIGHT, "what a guard sees"],
+		[StealthView.DANGER, "danger map (D)"],
+		[StealthView.EXIT, "the way out"],
+		[StealthView.PLAYER, "you"],
+		[BoardView.SWATCHES[BoardView.PLAIN.x], "floor, lit"],
+		[StealthView.DARKNESS, "shade: dark, harder to see you"],
+		[BoardView.SWATCHES[BoardView.ROUGH.x], "trees: slow, block sight"],
+		[BoardView.SWATCHES[BoardView.WALL.x], "wall"],
+	] as Array[Array])
 	restart()
 
 
@@ -49,6 +66,30 @@ func restart() -> void:
 func press(direction: Vector2i, sprint: bool = false) -> void:
 	world.play(direction, sprint)
 	_refresh()
+
+
+## One decision: the player waits, and every guard takes its turn.
+func step_decision() -> void:
+	press(Vector2i.ZERO)
+
+
+## What every guard is reasoning with: its state, its suspicion, where the
+## rules pull it, what it was given, what it sees, where it thinks you are
+## and where it is about to walk.
+func decision_overlay() -> Dictionary:
+	var guards: Array[Dictionary] = []
+	for guard: StealthGuard in world.guards:
+		guards.append({
+			"state": guard.state,
+			"suspicion": guard.suspicion.level,
+			"alarm": guard.suspicion.alarm,
+			"inputs": guard.suspicion.inputs,
+			"rules": guard.suspicion.activations,
+			"sees": world.cone.visible_cells(world.room.graph, guard.unit.cell, guard.facing),
+			"thinks_you_are": guard.last_known if guard.last_known != StealthGuard.NOWHERE else "nowhere yet",
+			"next_steps": guard.upcoming(4) if not guard.route.is_empty() else "looking round",
+		})
+	return {"guards": guards}
 
 
 ## Show or hide the danger map.

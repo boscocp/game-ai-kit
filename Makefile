@@ -72,10 +72,10 @@ lint-review: ## This branch has a review record and may be merged
 .PHONY: check
 check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-search-properties test-planner-properties test-perception-properties \
-       test-decisions ## Run every gate
+       test-decisions test-demo-overlays ## Run every gate
 
 .PHONY: check-no-engine
-check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability \
+check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability lint-demos \
        lint-addon-deps lint-tiers lint-links lint-workflow lint-license \
        lint-employer-refs lint-docs-freshness lint-no-training lint-selftests \
        test-python test-models ## Every gate that does not need the engine installed
@@ -113,6 +113,10 @@ lint-disk-layout: ## Nothing of the toolchain may land on the small disk
 .PHONY: lint-renderer
 lint-renderer: ## Renderer stays Compatibility; no 3D nodes in game/ or demos/
 	@$(PYTHON) scripts/check_renderer.py
+
+.PHONY: lint-demos
+lint-demos: ## Invariant 13: every example has a target, a scene, a legend and its decision
+	@$(PYTHON) scripts/check_demos.py
 
 .PHONY: lint-readability
 lint-readability: ## Invariant 1: the code is teaching material before a library
@@ -249,6 +253,12 @@ test-perception-properties: ## Sight is symmetric, walls block both ways, suspic
 	@# T14's acceptance, as a target so CI runs the same command. Four
 	@# properties over three hundred generated maps, from a fixed seed.
 	@$(GODOT) --headless --path godot -s res://test/perception_properties.gd
+
+.PHONY: test-demo-overlays
+test-demo-overlays: ## Every example, stepped headless: its overlay holds the AI's reasoning
+	@# The engine half of invariant 13; `lint-demos` is the half without it.
+	@# Neither can see the screen, and the seeing is each example's manual check.
+	@$(GODOT) --headless --path godot -s res://test/demo_overlays.gd
 
 .PHONY: test-decisions
 test-decisions: ## The two fights the learned opponent has to get right, and a node
