@@ -1,18 +1,13 @@
 ## The numbers the models were fitted on, read off a live board.
 ##
-## This is the half of inference that gets quietly wrong. The weights are
-## published and cannot drift; the *features* are computed twice, once in the
-## Python simulator that made the data and once here, and a radius counted
-## differently or a terrain read from the wrong cell produces a sound-looking
-## prediction about a situation that never happened.
+## This is the half of inference that drifts. Weights are published and cannot;
+## features are computed twice -- once in the Python simulator that made the
+## data, once here -- so a radius counted differently gives a sound-looking
+## prediction about a situation that never happened. Nothing here invents a
+## number: every convention comes out of the weights file, and the vectors in
+## `spec/vectors/learning/` hold both languages to the same rows.
 ##
-## So nothing here invents a number. Every convention -- how near is near, what
-## a unit with no friends reports, what range of ground the data covered --
-## comes out of the weights file, and the vectors in `spec/vectors/learning/`
-## hold these functions to the same rows the Python side produces.
-##
-## When not to use it: a board that is not this kit's. These four features
-## describe a fight between two units on a grid, and that is all.
+## When not to use it: any board but this kit's. Four features, one grid.
 class_name BoardFeatures
 extends RefCounted
 
@@ -58,6 +53,14 @@ static func combat_row(state: BoardState, attacker: Unit, defender: Unit,
 ## Measured from whichever of the faction's units is nearest, which is the one
 ## the training data measured from -- not from the unit being decided for. A
 ## row built per unit would be a different feature wearing the same name.
+##
+## **`enemy_units` assumes two sides.** Python counts `living(1 - faction)`,
+## which is "the other side" and has no meaning with three; this counts
+## everyone who is not mine. On a two-faction board they are the same number
+## and every vector is two-faction, so nothing holds them together on a board
+## with three -- measured: one own unit, one of faction 1 and two of faction
+## 2 gives 3 here and 1 there. `ai_core` allows three sides, so this is a
+## limit of what the model was fitted on rather than of the board.
 static func capture_row(state: BoardState, faction: int, node: Vector2i,
 		published: ModelFile) -> Dictionary:
 	var own: Array[Unit] = state.units_of(faction)
@@ -103,17 +106,38 @@ static func _friends_near(state: BoardState, unit: Unit, cell: Vector2i,
 
 
 # How far this unit's closest friend is, or the sentinel for having none.
+#
+# The sentinel is the *fallback*, never a cap, and the first version of this
+# function seeded the accumulator with it -- which quietly made "I am alone"
+# and "my nearest friend is sixteen cells away" the same number. It survived
+# review and both conformance vectors, because the vector boards are five and
+# six cells wide and the sentinel is fifteen. The board `make run` ships is
+# twelve by eight, where Manhattan distance reaches eighteen.
+#
+# A real distance above the sentinel is **not** clamped. It is out of the
+# range the model was fitted on and there is no honest number to replace it
+# with: terrain has one, because the worst ground is a real category, and
+# this has none -- reporting fifteen would tell the model nobody is coming
+# while a friend is on the way.
 static func _nearest_friend(state: BoardState, unit: Unit,
 		published: ModelFile) -> int:
-	var closest: int = published.convention("reinforcement_distance_when_alone")
+	var closest: int = -1
 	for other: Unit in state.units_of(unit.faction):
-		if other != unit:
-			closest = mini(closest, distance_between(other.cell, unit.cell))
+		var apart: int = distance_between(other.cell, unit.cell)
+		if other != unit and (closest < 0 or apart < closest):
+			closest = apart
+	if closest < 0:
+		return published.convention("reinforcement_distance_when_alone")
 	return closest
 
 
-# Whichever of these units stands closest to a cell, ties going to the lowest
-# id so two runs of the same board decide the same way.
+# Whichever of these units stands closest to a cell.
+#
+# A tie goes to the earliest in `state.units`, which is deterministic and is
+# also what Python's `min(...)` does over `board.living(faction)` -- the two
+# languages agree by both taking the first. An earlier version of this comment
+# claimed the tie went to the lowest id, which the code has never done and no
+# vector pins either way.
 static func _nearest_to(units: Array[Unit], cell: Vector2i) -> Unit:
 	var best: Unit = units[0]
 	for unit: Unit in units:

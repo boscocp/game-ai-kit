@@ -1,17 +1,13 @@
 ## Loads `weights.json`, or says in one sentence why it will not.
 ##
-## Everything here is about refusing. A model built from a file that was half
-## read is a model that predicts from zeros, and a policy consulting it makes
-## decisions nobody can tell apart from decisions -- so a file with anything
-## wrong with it yields no models at all and an `error` to put on the screen.
+## Everything here is about refusing. A model built from a half-read file
+## predicts from zeros, and nobody can tell that from a decision -- so a file
+## with anything wrong with it yields no models at all and an `error` to put
+## on screen. The rules are in `_why_wrong`, each with a code, and
+## `from_dictionary` is public so a test can plant each one.
 ##
-## The rules are in `_why_wrong`, each with a code, and `from_dictionary` is
-## public so a test can hand them content that is broken in one specific way.
-## A rule reachable only by writing a real file is a rule nobody plants a case
-## against.
-##
-## When not to use it: a format that is not this one. The shape is what
-## `gameaikit.training.report` writes and is described in its own header.
+## When not to use it: any format but the one `gameaikit.training.report`
+## writes, which that module's header describes.
 class_name ModelFile
 extends RefCounted
 
@@ -128,8 +124,12 @@ static func _why_wrong(data: Dictionary) -> String:
 
 # One model: present, the right shape, and every number a number.
 static func _why_model_is_wrong(name: String, entry: Variant) -> String:
+	# M10 rather than a second M4. Two rules shared that code until a review
+	# pointed out that a test asserting `contains("M4")` could not tell which
+	# of them had fired -- and a planted case that cannot name its rule is
+	# half a planted case. The numbering is identifiers, not an order.
 	if not (entry is Dictionary):
-		return "M4 model `%s` is not an object" % name
+		return "M10 model `%s` is not an object" % name
 	for field: String in MODEL_FIELDS:
 		if not entry.has(field):
 			return "M4 model `%s` has no `%s`" % [name, field]
@@ -188,6 +188,14 @@ static func _why_conventions_are_wrong(data: Dictionary) -> String:
 		var value: Variant = published.get(name)
 		if not _is_a_number(value) or float(value) <= 0.0:
 			return _not_a_convention(name, value)
+	# Each number is sound on its own and the pair can still be nonsense.
+	# Reversed, `BoardFeatures.terrain_at` clamps with a minimum above its
+	# maximum -- which `clampi` answers rather than refuses, so every cell on
+	# the board would come back as the same wrong number.
+	if int(published["cheapest_ground"]) > int(published["dearest_ground"]):
+		return "M9 feature_conventions says the cheapest ground (%s) costs more than the dearest (%s)" % [
+			published["cheapest_ground"], published["dearest_ground"],
+		]
 	return ""
 
 

@@ -74,24 +74,52 @@ func test_a_case_that_reads_a_board_when_there_is_none_is_refused() -> void:
 	assert_str(LearningVector.why_not_a_vector(data)).contains("V6")
 
 
+func test_a_board_that_is_not_an_object_is_refused() -> void:
+	# One of four rules review found deletable with the suite green, in a file
+	# whose header says every rule here has a planted case.
+	assert_str(LearningVector.why_not_a_vector(
+		_but({"board": "three by three"}))).contains("`board` is not an object")
+
+
+func test_a_board_with_no_cells_at_all_is_refused() -> void:
+	# Width *and* height: with only the width zeroed, the row-count rule
+	# catches it first and this case would be passing on somebody else's
+	# work -- which is what it was doing when it was written.
+	assert_str(_why_the_board_is_wrong(
+		{"width": 0, "height": 0, "costs": []})).contains("holds nothing")
+
+
+func test_a_unit_that_is_not_an_object_is_refused() -> void:
+	assert_str(_why_the_board_is_wrong(
+		{"units": [_unit(1, 0, 0, 0), "a soldier"]})).contains("a unit is not an object")
+
+
+func test_a_prediction_that_is_an_infinity_is_refused() -> void:
+	# JSON cannot spell one and `1e400` parses to one. A case claiming INF
+	# passes any model that also answers INF, which is every model with an
+	# infinite bias -- and the weights file is the only thing refusing those.
+	assert_str(_why_one_case_is_wrong({"prediction": INF})).contains("V4")
+
+
 func test_a_board_missing_a_field_is_refused() -> void:
 	var board: Dictionary = _board()
 	board.erase("costs")
 
-	assert_str(LearningVector.why_not_a_vector(_but({"board": board}))).contains("V7")
+	assert_str(LearningVector.why_not_a_vector(
+		_but({"board": board}))).contains("has no `costs`")
 
 
 func test_a_board_with_the_wrong_number_of_cost_rows_is_refused() -> void:
-	assert_str(_why_the_board_is_wrong({"costs": [[1, 1, 1]]})).contains("V7")
+	assert_str(_why_the_board_is_wrong({"costs": [[1, 1, 1]]})).contains("rows")
 
 
 func test_a_row_of_costs_of_the_wrong_width_is_refused() -> void:
 	assert_str(_why_the_board_is_wrong(
-		{"costs": [[1, 1, 1], [1, 1], [1, 1, 1]]})).contains("V7")
+		{"costs": [[1, 1, 1], [1, 1], [1, 1, 1]]})).contains("entries")
 
 
 func test_a_board_with_nothing_on_it_is_refused() -> void:
-	assert_str(_why_the_board_is_wrong({"units": []})).contains("V7")
+	assert_str(_why_the_board_is_wrong({"units": []})).contains("no units on it")
 
 
 func test_two_units_sharing_an_id_are_refused() -> void:
@@ -100,19 +128,19 @@ func test_two_units_sharing_an_id_are_refused() -> void:
 	# other unit.
 	assert_str(_why_the_board_is_wrong({"units": [
 		_unit(1, 0, 0, 0), _unit(1, 1, 1, 0),
-	]})).contains("V7")
+	]})).contains("share the id")
 
 
 func test_two_units_on_one_cell_are_refused() -> void:
 	assert_str(_why_the_board_is_wrong({"units": [
 		_unit(1, 0, 0, 0), _unit(2, 1, 0, 0),
-	]})).contains("V7")
+	]})).contains("stand on")
 
 
 func test_a_unit_standing_off_the_board_is_refused() -> void:
 	assert_str(_why_the_board_is_wrong({"units": [
 		_unit(1, 0, 0, 0), _unit(2, 1, 7, 7),
-	]})).contains("V7")
+	]})).contains("off the board")
 
 
 func test_a_unit_with_no_health_is_refused() -> void:
@@ -121,7 +149,8 @@ func test_a_unit_with_no_health_is_refused() -> void:
 	var dead: Dictionary = _unit(2, 1, 1, 0)
 	dead["health"] = 0
 
-	assert_str(_why_the_board_is_wrong({"units": [_unit(1, 0, 0, 0), dead]})).contains("V7")
+	assert_str(_why_the_board_is_wrong(
+		{"units": [_unit(1, 0, 0, 0), dead]})).contains("no health")
 
 
 func test_a_fight_naming_a_unit_that_is_not_there_is_refused() -> void:

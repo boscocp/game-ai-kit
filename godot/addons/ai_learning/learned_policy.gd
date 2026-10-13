@@ -1,18 +1,13 @@
 ## A turn decided by two fitted models: fight this, or walk at that.
 ##
-## The combat model answers *will this attack work*, and the answer is a
-## probability compared against one threshold -- which is the whole of the
-## attack-or-retreat decision, and is deliberately a number a designer can
-## turn. The capture model answers *how long will this node take*, and the
-## lower of two answers is where the unit walks.
+## *Will this attack work* comes back as a probability and is compared against
+## one threshold -- the whole of the attack-or-retreat decision, and a number a
+## designer can turn. *How long will this node take* comes back as turns, and
+## the lower of two is where the unit walks. Nothing here trains.
 ##
-## Nothing here trains. The weights were fitted in Python and published; this
-## multiplies them by four numbers. That is invariant 6, and `make
-## lint-no-training` is the gate on it.
-##
-## When not to use it: a decision the model was not fitted for. These weights
-## describe fights between two units on a grid, and a policy that consults
-## them about anything else is reading tea leaves with a straight face.
+## When not to use it: a decision these weights were not fitted for. They
+## describe fights between two units on a grid, and a policy that asks them
+## about anything else is reading tea leaves with a straight face.
 class_name LearnedPolicy
 extends DecisionPolicy
 
@@ -105,7 +100,7 @@ func _fight_or_break_off(state: BoardState, unit: Unit,
 			unit.id, "the combat model was handed a row it cannot read")
 	if chance >= _threshold:
 		return LearnedDecision.attack(
-			unit.id, _move_at(state, unit, opponent.cell, true),
+			unit.id, _move_at(state, unit, opponent.cell),
 			opponent, chance, _threshold)
 	return LearnedDecision.retreat(
 		unit.id, _move_away_from(state, unit, opponent.cell),
@@ -113,6 +108,14 @@ func _fight_or_break_off(state: BoardState, unit: Unit,
 
 
 # Walk at whichever node the capture model puts first.
+#
+# That model was fitted on *opening* positions paired with the turn the node
+# fell, and this asks it every turn, on boards with fewer units and shorter
+# distances than it ever saw. The number it answers is therefore a comparison
+# between two nodes rather than a count of turns anybody should quote: the
+# ordering is what the policy uses, and the ordering is the part that
+# survives being asked out of population. Terrain extrapolation gets a clamp
+# a few lines away; this one has no honest correction, so it is said instead.
 func _advance_on_a_node(state: BoardState, unit: Unit) -> LearnedDecision:
 	if _nodes.is_empty():
 		return LearnedDecision.hold(unit.id, "no node was given to walk at")
@@ -122,7 +125,7 @@ func _advance_on_a_node(state: BoardState, unit: Unit) -> LearnedDecision:
 			unit.id, "the capture model was handed a row it cannot read")
 	var best: Dictionary = ranked[0]
 	return LearnedDecision.advance(
-		unit.id, _move_at(state, unit, best["cell"], false),
+		unit.id, _move_at(state, unit, best["cell"]),
 		best["cell"], best["turns"], _runner_up(ranked))
 
 
@@ -178,16 +181,18 @@ func _fight_within_reach(state: BoardState, unit: Unit) -> Unit:
 
 # A move towards a cell: the route, trimmed to what this unit can afford.
 #
-# `stop_short` leaves the last cell out, which is how a unit closes with an
-# enemy: the cell the enemy stands on is occupied, and a move onto it is not
-# a move the board allows. Until T10 there is no attack to follow it with, so
-# an attack here is a unit arriving in contact and waiting.
-func _move_at(state: BoardState, unit: Unit, target: Vector2i,
-		stop_short: bool) -> Move:
-	var route: Array[Vector2i] = _route_to(state, unit, target)
-	if stop_short and not route.is_empty() and route[route.size() - 1] == target:
-		route.remove_at(route.size() - 1)
-	return _affordable(state, unit, route)
+# There is no "stop one short of an enemy" rule here, and there used to be.
+# It was two lines dropping the last cell of the route, and review showed it
+# could be deleted with every gate green -- not for want of a test, but
+# because the board already refuses a move onto an occupied cell and
+# `_affordable` cuts the route there. One rule, in one place, rather than a
+# belt that reads like the mechanism.
+#
+# So walking at a node enters it, and walking at an enemy stops in contact,
+# out of the same call. Until T10 there is no attack to follow that with:
+# an attack here is a unit arriving beside the enemy and waiting.
+func _move_at(state: BoardState, unit: Unit, target: Vector2i) -> Move:
+	return _affordable(state, unit, _route_to(state, unit, target))
 
 
 # A move that puts distance between this unit and a cell.

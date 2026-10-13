@@ -119,12 +119,17 @@ func _end_turn() -> void:
 	_refresh()
 
 
-# Every unit of the AI's side decides, in id order, and plays what it decided.
+# Every unit of the AI's side decides in turn, and plays what it decided.
 #
 # One unit at a time against the state the one before it left, rather than all
 # of them deciding on the opening position: a unit that has watched a friend
 # walk away is a unit whose `numeric_advantage` has changed, and deciding on a
 # board that no longer exists is the oldest bug in turn-based AI.
+#
+# The loop holds a list taken before the first move and `_state` is replaced
+# inside it, which looks like exactly that bug and is not: only each unit's
+# id is read from the list, and the policy is handed the live state. The
+# order is `state.units` order, which this scenario happens to build by id.
 func _play_the_ai_turn() -> void:
 	_ai_reasons = PackedStringArray()
 	var unusable: String = _policy.why_unusable()

@@ -1,6 +1,6 @@
 {
   "name": "the arithmetic, with nothing else in the way",
-  "why": "Two models nobody fitted, so the numbers can be read off by hand. The two extreme rows are the point: a logit of -800 overflows the obvious spelling of a sigmoid on both sides of this repository, and a model that dies on one unusual row is a model that dies mid-game.",
+  "why": "Two models nobody fitted, so the numbers can be read off by hand. The two extreme rows are the point, and asymmetrically: a logit of -800 raises OverflowError in the obvious Python spelling of a sigmoid, while the same spelling in GDScript saturates to the right answer -- measured, not assumed. What the rows pin is that neither side crashes and both saturate the same way.",
   "feature_conventions": {
     "nearby_radius": 2,
     "reinforcement_distance_when_alone": 15,
@@ -67,7 +67,7 @@
     {
       "kind": "row",
       "model": "swing",
-      "why": "the branch that stops exp overflowing",
+      "why": "the row that overflows the Python spelling, and saturates in GDScript",
       "features": {
         "one": -800,
         "two": 0

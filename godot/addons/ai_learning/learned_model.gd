@@ -1,15 +1,12 @@
 ## One fitted model, read back in: what it looks at, and what it concludes.
 ##
 ## The arithmetic is one line -- `w·x + b` -- plus a squash through a sigmoid
-## when the question is a yes-or-no one. That is the whole of inference, and
-## writing it out is the lesson: the expensive half of machine learning is the
-## fitting, it happened in Python, and a game never has to do any of it.
-##
-## Complexity: one multiply-add per feature. Here that is four.
+## when the question is yes-or-no. That is the whole of inference: the
+## expensive half of machine learning is the fitting, which happened in
+## Python. Complexity is one multiply-add per feature, so here it is four.
 ##
 ## When not to use it: a model that is not one number per feature -- a tree, a
-## hidden layer, anything with structure. This type is deliberately the
-## smallest thing that can carry what `gameaikit.training` publishes.
+## hidden layer, anything with structure.
 class_name LearnedModel
 extends RefCounted
 
@@ -77,12 +74,18 @@ func predict_named(values: Dictionary) -> float:
 	return predict(row)
 
 
-## The logistic squash, written so it cannot overflow.
+## The logistic squash, in the two branches the Python side needs.
 ##
-## `1.0 / (1.0 + exp(-value))` overflows for a value near -710 on a double,
-## and the two branches here are the same function. This mirrors `sigmoid` in
-## `gameaikit.training.descent`, line for line, because the conformance
-## vectors in `spec/vectors/learning/` hold the two to the same answers.
+## **The branches are not needed here, and this comment used to claim they
+## were.** Measured on the pinned engine: `exp` saturates to `inf` rather than
+## raising, so the naive `1.0 / (1.0 + exp(-value))` returns 1.0 at a logit of
+## +1000 and 0.0 at -1000 -- the correctly rounded answers. In Python the same
+## spelling raises `OverflowError` around -710, which is a training run dying
+## two thousand steps in because one row was unusual.
+##
+## They stay because this file is read beside `gameaikit.training.descent` and
+## the conformance vectors hold the two to the same answers: one shape, two
+## languages. That is a reason, and "it would overflow" was not one.
 static func sigmoid(value: float) -> float:
 	if value >= 0.0:
 		return 1.0 / (1.0 + exp(-value))

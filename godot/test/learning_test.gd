@@ -155,6 +155,20 @@ func test_a_model_missing_a_field_is_refused() -> void:
 	assert_str(_with_model(model).error).contains("M4")
 
 
+func test_a_model_that_is_not_an_object_at_all_is_refused() -> void:
+	# Found missing by review: this rule could be deleted with every gate in
+	# the repository staying green.
+	assert_str(_but({"models": {"combat": "0.5, probably"}}).error).contains("M10")
+
+
+func test_a_feature_name_that_is_not_a_string_is_refused() -> void:
+	# The other rule review found with no planted case. Rows are matched by
+	# name, and a name that is a number matches nothing the game can build.
+	var model: Dictionary = _a_model({"features": [7], "weights": [1.0]})
+
+	assert_str(_with_model(model).error).contains("M6")
+
+
 func test_a_kind_nothing_can_evaluate_is_refused() -> void:
 	# Named rather than guessed at. A file asking for a kind of model this
 	# addon does not implement is a file from a later lesson, and quietly
@@ -208,8 +222,49 @@ func test_a_radius_of_zero_is_refused() -> void:
 	}}).error).contains("M9")
 
 
+func test_a_terrain_range_the_wrong_way_round_is_refused() -> void:
+	# Both numbers are positive and the pair is nonsense. Unrefused, the
+	# clamp in `BoardFeatures` runs with a minimum above its maximum, which
+	# `clampi` answers rather than objects to.
+	assert_str(_but({"feature_conventions": {
+		"nearby_radius": 2,
+		"reinforcement_distance_when_alone": 15,
+		"cheapest_ground": 3,
+		"dearest_ground": 1,
+	}}).error).contains("M9")
+
+
 func test_a_convention_nobody_publishes_answers_minus_one() -> void:
 	assert_int(_published().convention("neerby_radius")).is_equal(-1)
+
+
+func test_a_friend_further_away_than_the_sentinel_is_not_reported_as_absent() -> void:
+	# The sentinel is a fallback, never a cap. Seeding the search with it made
+	# "I am alone" and "my nearest friend is seventeen cells away" the same
+	# number -- on a board wider than the one the data came from, which is the
+	# board `make run` ships.
+	var state := BoardState.new(GridGraph.new(20, 3), [
+		Unit.new(1, 0, Vector2i(0, 0), 10, 3),
+		Unit.new(2, 0, Vector2i(19, 1), 10, 3),
+		Unit.new(3, 1, Vector2i(1, 0), 10, 3),
+	] as Array[Unit], 0)
+
+	var row: Dictionary = BoardFeatures.combat_row(
+		state, state.unit_by_id(1), state.unit_by_id(3), _published())
+
+	assert_int(row["reinforcement_distance"]).is_equal(20)
+
+
+func test_a_unit_with_no_friends_left_reports_the_sentinel() -> void:
+	var state := BoardState.new(GridGraph.new(20, 3), [
+		Unit.new(1, 0, Vector2i(0, 0), 10, 3),
+		Unit.new(3, 1, Vector2i(1, 0), 10, 3),
+	] as Array[Unit], 0)
+
+	var row: Dictionary = BoardFeatures.combat_row(
+		state, state.unit_by_id(1), state.unit_by_id(3), _published())
+
+	assert_int(row["reinforcement_distance"]).is_equal(15)
 
 
 func test_a_wall_reads_as_the_dearest_ground_the_data_covered() -> void:
@@ -245,6 +300,25 @@ func test_a_unit_already_on_the_node_has_the_cheapest_ground_on_the_way() -> voi
 
 	assert_float(row["terrain_on_the_way"]).is_equal_approx(1.0, 1e-12)
 	assert_int(row["distance_to_node"]).is_equal(0)
+
+
+func test_enemy_units_counts_every_side_that_is_not_mine() -> void:
+	# Deliberate, and a divergence: Python counts `living(1 - faction)`, which
+	# is "the other side" and means nothing with three of them. Pinned here so
+	# that the generalisation is a decision rather than an accident -- and
+	# read the note on `capture_row` before relying on this feature at all on
+	# a board with three sides.
+	var state := BoardState.new(GridGraph.new(6, 6), [
+		Unit.new(1, 0, Vector2i(0, 0), 10, 3),
+		Unit.new(2, 1, Vector2i(1, 0), 10, 3),
+		Unit.new(3, 2, Vector2i(2, 0), 10, 3),
+		Unit.new(4, 2, Vector2i(3, 0), 10, 3),
+	] as Array[Unit], 0)
+
+	var row: Dictionary = BoardFeatures.capture_row(state, 0, Vector2i(5, 5), _published())
+
+	assert_int(row["own_units"]).is_equal(1)
+	assert_int(row["enemy_units"]).is_equal(3)
 
 
 func test_a_side_with_nothing_on_the_board_produces_no_row() -> void:

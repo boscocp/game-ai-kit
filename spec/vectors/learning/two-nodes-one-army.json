@@ -1,6 +1,6 @@
 {
   "name": "two nodes, and which one is quicker for whom",
-  "why": "The capture features are measured from whichever of a faction's units is nearest the node -- not from the unit being decided for -- and the two nodes here are nearest to different units of the same side. A side measuring from the wrong unit, or averaging terrain along a route it chose rather than the fixed one, disagrees on the second node and not the first.",
+  "why": "The capture features are measured from whichever of a faction's units is nearest the node -- not from the unit being decided for -- and the two nodes here are nearest to different units of the same side. A side measuring from the wrong unit, or averaging terrain along a route it chose rather than the fixed one, disagrees on the second node and not the first. The fourth case is the one that pins the route order itself: it is the only node on this board that is reached by moving on both axes through ground that differs, so swapping the two loops changes its answer and nothing else's -- which is how a review found the first three could not tell the orders apart.",
   "feature_conventions": {
     "nearby_radius": 2,
     "reinforcement_distance_when_alone": 15,
@@ -134,6 +134,22 @@
         "terrain_on_the_way": 1.5
       },
       "prediction": 3.400198
+    },
+    {
+      "kind": "capture",
+      "faction": 1,
+      "node": [
+        3,
+        3
+      ],
+      "why": "along x and then y, through ground that makes the order visible",
+      "features": {
+        "distance_to_node": 4,
+        "own_units": 1,
+        "enemy_units": 2,
+        "terrain_on_the_way": 1.75
+      },
+      "prediction": 4.8957375
     }
   ]
 }

@@ -10,6 +10,14 @@
 # goes that way. A policy whose "attack" walks backwards passes a check on the
 # label alone, and that is the shape of the bug this file exists to catch.
 #
+# What these do NOT catch, measured rather than assumed: a wrong feature. All
+# three stayed green under five separate mutations of `BoardFeatures` -- a
+# sign flipped on `numeric_advantage`, terrain read from the attacker's cell,
+# reinforcement measured from the defender, the nearest unit swapped for the
+# first, the terrain clamp deleted. These boards are lopsided enough that the
+# decision survives a mangled row. That coverage is the conformance vectors'
+# job, and the two should not be read as one.
+#
 #     ./scripts/godot --headless --path godot -s res://test/decision_scenarios.gd
 #
 # Exit codes: 0 every scenario went the way it had to, 1 one did not, 2 the
@@ -43,14 +51,18 @@ func _init() -> void:
 	quit(1 if not failures.is_empty() else 0)
 
 
-# A healthy unit with a friend beside it, three cells from a badly hurt enemy
-# standing on open ground. Every feature points one way, and an opponent that
-# will not take this fight will not take any.
+# A healthy unit three cells from a badly hurt enemy on open ground, with a
+# friend close enough to the *defender* to count. Every feature points one
+# way, and an opponent that will not take this fight will not take any.
+#
+# The friend was at (7,4) and that claim was false: four cells from the
+# defender is outside `nearby_radius`, so it moved `reinforcement_distance`
+# and left `numeric_advantage` at zero. Measured, and moved to (5,4).
 func _the_fight_it_should_take(published: ModelFile) -> Array[String]:
 	var state := BoardState.new(GridGraph.new(9, 7), [
 		Unit.new(1, RED, Vector2i(4, 3), 4, POINTS),
 		Unit.new(2, BLUE, Vector2i(7, 3), 16, POINTS),
-		Unit.new(3, BLUE, Vector2i(7, 4), 12, POINTS),
+		Unit.new(3, BLUE, Vector2i(5, 4), 12, POINTS),
 	] as Array[Unit], BLUE)
 
 	var decision: LearnedDecision = _policy(published).decide(state, 2)

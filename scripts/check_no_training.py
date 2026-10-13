@@ -381,8 +381,17 @@ def self_test() -> int:
             sound, **{str(GODOT / "game" / "ai.gd"):
                       "# No gradient is computed here; see python/.\nvar steps: int = 0\n"}))), 3)
 
-        # ...and in a string, which is where the planner's own domain lives.
+        # ...and in a string. The word has to be one the gate actually
+        # looks for: this planted `"train_the_unit"` until a review pointed
+        # out that `train` is deliberately absent from the vocabulary, so the
+        # case passed whether or not strings were stripped at all.
         expect("a word inside a string", quiet(build(root, "string", dict(
+            sound, **{str(GODOT / "game" / "domain.gd"):
+                      'var label: String = "gradient of the hill"\n'}))), 3)
+
+        # The planner's own domain, which is why `train` is not a word this
+        # gate knows. A game that trains units is a game, not a fit.
+        expect("the planner's domain", quiet(build(root, "domain", dict(
             sound, **{str(GODOT / "game" / "domain.gd"):
                       'var action: String = "train_the_unit"\n'}))), 3)
 
@@ -431,6 +440,19 @@ def self_test() -> int:
         # above is what proves the gate can still fail.
         expect("no learning addon", quiet(build(root, "empty", {
             str(GODOT / "game" / "main.gd"): "var turn: int = 0\n"})), 0)
+
+        # Planted: the two unreadable files. Both used to be a traceback on
+        # exit 1, which every caller reads as a finding.
+        broken = build(root, "brokenjson", dict(
+            sound, **{str(WEIGHTS): "{ not json at all"}))
+        expect("a weights file that is not JSON",
+               (main(["--repo", str(broken), "--skip-retrain"]), ""), 2)
+
+        unreadable = build(root, "notutf8", dict(sound))
+        (unreadable / GODOT / "game" / "ai.gd").parent.mkdir(parents=True, exist_ok=True)
+        (unreadable / GODOT / "game" / "ai.gd").write_bytes(b"var name := \xff\xfe\n")
+        expect("a script that is not UTF-8",
+               (main(["--repo", str(unreadable), "--skip-retrain"]), ""), 2)
 
         failures += _self_test_the_comparison()
 
@@ -493,7 +515,13 @@ def main(argv: list[str]) -> int:
     repo = pathlib.Path(args.repo or pathlib.Path(__file__).resolve().parent.parent)
     try:
         return run(repo, retrain=not args.skip_retrain)
-    except OSError as error:
+    except (OSError, ValueError) as error:
+        # ValueError as well as OSError, and the docstring promised it before
+        # the code did. A malformed weights.json raises JSONDecodeError and a
+        # .gd file that is not UTF-8 raises UnicodeDecodeError; both are
+        # ValueErrors, both used to come out as a traceback on exit 1 -- the
+        # code reserved for "violations found, each one printed", which is
+        # indistinguishable from a finding to every caller.
         print(f"check_no_training: cannot read a file: {error}", file=sys.stderr)
         return 2
 

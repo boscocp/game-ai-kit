@@ -132,6 +132,30 @@ func test_an_enemy_too_far_to_reach_is_not_a_fight_worth_weighing() -> void:
 	assert_str(_policy(0.1).decide(state, 2).action).is_equal(LearnedDecision.ADVANCE)
 
 
+func test_two_enemies_the_same_distance_away_are_decided_by_id() -> void:
+	# Which fight gets weighed when two are tied was pinned by nothing:
+	# review flipped the comparison and every gate stayed green. The higher
+	# id is first in the array on purpose, so array order cannot pass this.
+	var state := BoardState.new(GridGraph.new(9, 7), [
+		Unit.new(5, 0, Vector2i(6, 3), 10, 4),
+		Unit.new(1, 0, Vector2i(2, 3), 10, 4),
+		Unit.new(2, 1, Vector2i(4, 3), 10, 4),
+	] as Array[Unit], 1)
+
+	assert_int(_policy(0.9).decide(state, 2).opponent_id).is_equal(1)
+
+
+func test_an_enemy_exactly_in_reach_is_weighed_and_one_step_further_is_not() -> void:
+	# `movement_points + 1` -- the points it has, plus the step that puts it
+	# in contact. Review dropped the `+ 1` and nothing went red, because no
+	# board sat on the boundary.
+	var in_reach: BoardState = _with_enemy_at(Vector2i(11, 3))
+	var out_of_reach: BoardState = _with_enemy_at(Vector2i(12, 3))
+
+	assert_str(_policy(0.1).decide(in_reach, 2).action).is_equal(LearnedDecision.RETREAT)
+	assert_str(_policy(0.1).decide(out_of_reach, 2).action).is_equal(LearnedDecision.ADVANCE)
+
+
 func test_the_node_with_the_lower_prediction_is_the_one_walked_at() -> void:
 	var state := BoardState.new(GridGraph.new(14, 7), [
 		Unit.new(1, 0, Vector2i(0, 3), 10, 4),
@@ -180,6 +204,43 @@ func test_a_unit_with_no_way_out_still_names_its_decision() -> void:
 	assert_array(decision.move.path).is_empty()
 
 
+func test_a_route_the_unit_cannot_pay_for_is_cut_to_what_it_can() -> void:
+	# Review found that deleting the whole of `_affordable` left 203 tests,
+	# three scenarios and twelve vectors green: every route the other tests
+	# produce was affordable already. Rough ground everywhere and three
+	# points buys exactly one step of it.
+	var graph := GridGraph.new(9, 7, 3)
+	var state := BoardState.new(graph, [
+		Unit.new(1, 0, Vector2i(4, 3), 10, 3),
+		Unit.new(2, 1, Vector2i(7, 3), 10, 3),
+	] as Array[Unit], 1)
+
+	var move: Move = _policy(0.9).choose(state, 2)
+
+	assert_array(move.path).has_size(1)
+	assert_int(move.cost_on(graph)).is_equal(3)
+	assert_str(state.why_refused(move)).is_equal(BoardState.LEGAL)
+
+
+func test_two_nodes_the_model_cannot_separate_are_ordered_by_coordinate() -> void:
+	# A determinism rule, and review found nothing holding it: reducing the
+	# comparison to the prediction alone left every gate green. Two nodes the
+	# same distance away get the same number out of the model below, so the
+	# only thing deciding is the tie-break.
+	var state := BoardState.new(GridGraph.new(9, 9), [
+		Unit.new(1, 0, Vector2i(0, 0), 10, 4),
+		Unit.new(2, 1, Vector2i(4, 4), 10, 4),
+	] as Array[Unit], 1)
+	var far: Array[Vector2i] = [Vector2i(8, 4), Vector2i(0, 4)]
+	var near: Array[Vector2i] = [Vector2i(0, 4), Vector2i(8, 4)]
+
+	var one: LearnedPolicy = LearnedPolicy.new(_file(_always(0.1), _distance_model()), far)
+	var other: LearnedPolicy = LearnedPolicy.new(_file(_always(0.1), _distance_model()), near)
+
+	assert_vector(one.decide(state, 2).target).is_equal(Vector2i(0, 4))
+	assert_vector(other.decide(state, 2).target).is_equal(Vector2i(0, 4))
+
+
 func test_every_move_a_policy_returns_is_one_the_board_allows() -> void:
 	# The interface's own requirement, over every decision these tests make.
 	var state: BoardState = _two_sides()
@@ -210,6 +271,14 @@ func test_without_a_pathfinder_it_still_gets_closer() -> void:
 		_file(_always(0.9)), NODES).decide(state, 2)
 
 	assert_vector(decision.move.destination(Vector2i(7, 3))).is_equal(Vector2i(5, 3))
+
+
+# Blue at (7,3) with three points, and one enemy wherever this needs it.
+func _with_enemy_at(cell: Vector2i) -> BoardState:
+	return BoardState.new(GridGraph.new(14, 7), [
+		Unit.new(1, 0, cell, 10, 3),
+		Unit.new(2, 1, Vector2i(7, 3), 10, 3),
+	] as Array[Unit], 1)
 
 
 # One enemy three cells away on open ground, blue to move.

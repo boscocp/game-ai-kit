@@ -78,6 +78,17 @@ vector cannot confirm a mistake that the two sides happen to share.
   `godot/test/learning_test.gd`, not here. Every board in these vectors stays
   inside the trained range, which is what makes the two sides comparable at
   all.
+- **`enemy_units` on a board with three sides.** Python counts
+  `living(1 - faction)` — *the other side*, which has no meaning with three of
+  them — and GDScript counts everyone who is not mine. On two factions they
+  are the same number, and every board here has two. A vector on a
+  three-faction board could not be written without encoding a disagreement,
+  because neither spelling is right there: this is a limit of the feature the
+  model was fitted on, not of the board, and it is named in `capture_row`'s
+  own doc comment rather than quietly left for somebody to find. Review found
+  it by changing each side to the other's rule and watching both suites stay
+  green.
+
 - **The tie-break** when two of a faction's units are the same distance from a
   node. Both sides happen to take the first in board order; no vector depends
   on it, because a correct implementation that chose the other would be failed
@@ -92,8 +103,14 @@ vector cannot confirm a mistake that the two sides happen to share.
 `1e-9`, scaled by the size of the expected answer. Two doubles running the
 same formula agree to about `1e-16` relative, so this catches a different
 formula and never a different maths library. One consequence is honest and
-worth knowing: the deliberately extreme row, whose answer underflows to zero,
-is pinned only to within `1e-9` of zero. What it is really there for is that
-neither side crashes -- `1 / (1 + exp(-x))` raises on the Python side and
-returns an infinity on the GDScript one, and both are wrong answers to a row a
-game could produce.
+worth knowing: the deliberately extreme row, whose answer saturates to zero,
+is pinned only to within `1e-9` of zero.
+
+What that row is really there for is **asymmetric, and this file used to claim
+otherwise**. On the Python side `1 / (1 + exp(-x))` raises `OverflowError`
+around -710, which kills a training run because one row was unusual. On the
+GDScript side it does not: measured on the pinned engine, `exp` saturates to
+`inf` and `1 / (1 + inf)` is `0.0`, which is the correct answer at every logit
+— replacing the two-branch sigmoid with the naive one leaves every vector and
+every test green. The branches are kept there so the two files read alike, not
+because the engine needs them, and the row pins that neither side crashes.
