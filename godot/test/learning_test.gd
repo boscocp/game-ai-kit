@@ -166,7 +166,7 @@ func test_a_feature_name_that_is_not_a_string_is_refused() -> void:
 	# name, and a name that is a number matches nothing the game can build.
 	var model: Dictionary = _a_model({"features": [7], "weights": [1.0]})
 
-	assert_str(_with_model(model).error).contains("M6")
+	assert_str(_with_model(model).error).contains("not a string")
 
 
 func test_a_kind_nothing_can_evaluate_is_refused() -> void:
@@ -181,11 +181,12 @@ func test_a_feature_listed_twice_is_refused() -> void:
 	# can never be applied and a row that quietly means something else.
 	var model: Dictionary = _a_model({"features": ["one", "one"], "weights": [1.0, 2.0]})
 
-	assert_str(_with_model(model).error).contains("M6")
+	assert_str(_with_model(model).error).contains("twice")
 
 
 func test_a_model_with_no_features_is_refused() -> void:
-	assert_str(_with_model(_a_model({"features": [], "weights": []})).error).contains("M6")
+	assert_str(_with_model(_a_model({"features": [], "weights": []})).error).contains(
+		"lists no features")
 
 
 func test_a_weight_missing_from_a_feature_is_refused() -> void:
@@ -208,7 +209,8 @@ func test_a_file_with_no_conventions_is_refused() -> void:
 	var data: Dictionary = SOUND.duplicate(true)
 	data.erase("feature_conventions")
 
-	assert_str(ModelFile.from_dictionary(data, "the test").error).contains("M9")
+	assert_str(ModelFile.from_dictionary(data, "the test").error).contains(
+		"no feature_conventions block")
 
 
 func test_a_radius_of_zero_is_refused() -> void:
@@ -219,7 +221,7 @@ func test_a_radius_of_zero_is_refused() -> void:
 		"reinforcement_distance_when_alone": 15,
 		"cheapest_ground": 1,
 		"dearest_ground": 3,
-	}}).error).contains("M9")
+	}}).error).contains("needs a positive number")
 
 
 func test_a_terrain_range_the_wrong_way_round_is_refused() -> void:
@@ -231,7 +233,7 @@ func test_a_terrain_range_the_wrong_way_round_is_refused() -> void:
 		"reinforcement_distance_when_alone": 15,
 		"cheapest_ground": 3,
 		"dearest_ground": 1,
-	}}).error).contains("M9")
+	}}).error).contains("costs more than the dearest")
 
 
 func test_a_convention_nobody_publishes_answers_minus_one() -> void:

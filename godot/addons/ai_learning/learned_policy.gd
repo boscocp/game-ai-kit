@@ -1,13 +1,13 @@
 ## A turn decided by two fitted models: fight this, or walk at that.
 ##
-## *Will this attack work* comes back as a probability and is compared against
-## one threshold -- the whole of the attack-or-retreat decision, and a number a
+## *Will this attack work* comes back as a probability, compared against one
+## threshold -- the whole of the attack-or-retreat decision, and a number a
 ## designer can turn. *How long will this node take* comes back as turns, and
-## the lower of two is where the unit walks. Nothing here trains.
+## the lower of two is where the unit walks. Nothing here trains: that is
+## invariant 6, and `make lint-no-training` is the gate on it.
 ##
 ## When not to use it: a decision these weights were not fitted for. They
-## describe fights between two units on a grid, and a policy that asks them
-## about anything else is reading tea leaves with a straight face.
+## describe fights between two units on a grid, and nothing else.
 class_name LearnedPolicy
 extends DecisionPolicy
 

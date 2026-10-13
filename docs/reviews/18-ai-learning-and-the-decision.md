@@ -290,6 +290,18 @@ The second round found four more:
   the argument `docs/godot/reading-json-in-godot.md` makes about the noisy
   JSON parser, made against this repository's own gate.
 
+The addon half of the same round found one more, and it is the sharpest
+comment on this wave's own standard: **`M6` and `M9` each still covered three
+rules**, in the commit that split `M4` into two for exactly that reason and
+converted every `V7` case to assert on message text. The new terrain-range
+rule had walked straight into one of them. All six now fail at their own
+named test.
+
+It also found that cutting the headers had removed the only pointer in the
+code from the addon that exists because of invariant 6 to the gate on it.
+`grep -rn lint-no-training --include="*.gd"` returned nothing. It is back,
+inside the ten-line budget, by rewrapping the paragraph it was cut from.
+
 And one of the fixes for *those* silently did nothing: a scripted edit whose
 target string had moved, applied without an assertion, reported success and
 changed no bytes. It was caught by the self-test immediately. The same defect
@@ -310,7 +322,16 @@ not looked at:
   reinforcement and farthest-instead-of-nearest were each caught on both sides
   separately;
 - **every rule that did have a planted case is load-bearing** — seventeen of
-  them deleted one at a time, each turning the suite red;
+  them deleted one at a time, each turning the suite red, and after the
+  tightening all fifteen board and case rules fail a test by the right
+  *name* rather than merely the right code;
+- **deleting `stop_short` changed no behaviour**, measured rather than
+  reasoned: 4000 random boards with walls, rough ground, two to five units and
+  zero to five movement points, each attack move computed both ways, with a
+  real pathfinder and without — 16,198 moves compared, 0 differ;
+- the `_affordable` case fails for the reason it claims and specifically for
+  the *cost* rule: disabling only the bill, and leaving the occupancy check
+  in place, still fails it;
 - `make train` really is one fit written to two directories; retraining really
   is deterministic; the published conventions really are the simulator's own,
   and changing `NEARBY` or `WIDTH` turns the suite red in several places;
