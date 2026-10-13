@@ -33,7 +33,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T11 | The planner plays | todo | STRIPS drives a faction; needs T4 |
 | T12 | Three difficulties, honestly | todo | horizon and depth, never cheating; five levels if they stay ordered |
 | T13 | `ai_fuzzy`, from a library that already exists | done | rewritten, not ported: the library was C# and its core was missing (ADR 0011); 3 vectors read from both languages |
-| T14 | The stealth scenario | todo | perception, suspicion, influence maps |
+| T14 | The stealth scenario | done | `ai_perception`, fuzzy suspicion, three guard states; 4 properties over 300 maps |
 | T15 | `ai_behaviour`: the four ways to decide | todo | FSM, tree, GOAP, HTN, beside STRIPS |
 | T16 | The fighting scenario | todo | mostly not AI, and says so |
 | T17 | The opponent model | todo | n-grams you can print |
@@ -71,6 +71,36 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-13 (wave 22)
+
+**What landed.** T14.
+- `godot/addons/ai_perception/` sees, hears and keeps an influence map. Its
+  line of sight is Bresenham's, drawn from one fixed end, which makes it
+  symmetric. It does not slip between walls meeting at a corner, and trees
+  block sight as well as costing movement.
+- `godot/game/stealth/` puts it to work. Suspicion is a fuzzy controller on
+  `ai_fuzzy` that never falls while the player is in sight. Guards have
+  three states with hysteresis, and walk A* routes around each other.
+- `make demo-stealth` draws each guard's cone, its suspicion bar chasing the
+  controller's target, its next steps and where it thinks you are. It also
+  writes out every input and term.
+- The acceptance, `make test-perception-properties`, checks four properties
+  over 300 maps, plus the line against geometry.
+
+**Playing it found what mutating could not.** A guard that reached the
+player turned its back. The cone on screen was not the cone that decided.
+Two guards head on spun forever. All three were legal moves and wrong
+behaviour, and each now has a test. **A reviewer driving the game turn by
+turn is worth asking for again.** See
+[docs/reviews/22-the-stealth-scenario.md](../docs/reviews/22-the-stealth-scenario.md).
+
+**Not proven.** Whether the suspicion bar reads as a decision is the manual
+check, and a person's. The default room is honest but not hard. The fixes
+were not re-reviewed by a fresh context.
+
+**Next.** `make wave` picks the next ready row. Two reviewers in one checkout
+interfered with each other this wave, so give each its own worktree.
 
 ## Resuming after 2026-10-13 (wave 21)
 

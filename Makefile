@@ -71,7 +71,8 @@ lint-review: ## This branch has a review record and may be merged
 
 .PHONY: check
 check: check-no-engine lint-disk-layout test-godot test-vectors \
-       test-search-properties test-planner-properties test-decisions ## Run every gate
+       test-search-properties test-planner-properties test-perception-properties \
+       test-decisions ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability \
@@ -243,6 +244,12 @@ test-search-properties: ## A* agrees with Dijkstra, over a few hundred boards
 test-planner-properties: ## A plan can be run, and an unsolvable domain says so
 	@$(GODOT) --headless --path godot -s res://test/planner_properties.gd
 
+.PHONY: test-perception-properties
+test-perception-properties: ## Sight is symmetric, walls block both ways, suspicion holds in sight
+	@# T14's acceptance, as a target so CI runs the same command. Four
+	@# properties over three hundred generated maps, from a fixed seed.
+	@$(GODOT) --headless --path godot -s res://test/perception_properties.gd
+
 .PHONY: test-decisions
 test-decisions: ## The two fights the learned opponent has to get right, and a node
 	@# T6's acceptance, as a target so that CI runs the same command. It plays
@@ -271,6 +278,10 @@ run: ## Play the board: click a unit, click a neighbouring cell, space ends the 
 .PHONY: demo-search
 demo-search: ## The four searches on one board: 1-4 choose, space steps, enter finishes
 	@$(GODOT) --path godot res://demos/search/search_demo.tscn
+
+.PHONY: demo-stealth
+demo-stealth: ## Cross the hall unseen: arrows walk, shift sprints, space waits, D shows danger
+	@$(GODOT) --path godot res://game/stealth/stealth.tscn
 
 # --- shipping --------------------------------------------------------------
 
