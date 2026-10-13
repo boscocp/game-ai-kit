@@ -15,9 +15,9 @@ teaches people to reach for it when they should not.
 ## Steps
 
 1. Record human matches to a dataset, one row per decision: what the player
-   saw, and what they did. That is the format T25's recorder writes, and
-   whichever of the two tasks comes first defines it; T5's rows, one per
-   combat, cannot be cloned from. The replay determinism from T16 is what makes
+   saw, and what they did. T5's rows, one per combat, cannot be cloned from.
+   T25 records the tactical board in the same shape of row; the data differs,
+   and only the method is shared, which is how T25's Cloned team uses it. The replay determinism from T16 is what makes
    a recorded match reusable.
 2. Train in Python, standard library only — no pip, no numpy, no install step.
    A small MLP or multinomial logistic regression over the same context the

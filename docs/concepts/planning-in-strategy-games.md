@@ -19,9 +19,9 @@ teaches: strategy-ai
 **Nobody plans the whole game in one search.** Both the shipped titles and
 the research literature split an opponent into layers that work on different
 time scales, and each planner they use works on a small piece of the problem.
-*Which* layer plans differs. The shipped games below mostly plan per agent or
-per squad: F.E.A.R.'s soldiers, Killzone 3's bots and Horizon's machines. The
-RTS research plans the build order, at the strategic layer. Everything else is
+*Which* layer plans differs. The shipped games below plan per agent or per
+squad: F.E.A.R.'s soldiers, and Killzone 3's bots and squads. The RTS
+research plans the build order, at the strategic layer. Everything else is
 rules, scores and cheap searches.
 
 For the RTS enemy, this kit chooses to plan **at the strategic layer only**.
@@ -45,7 +45,8 @@ HTN and case-based planning being the only ones explored so far."
 Shipped games layer too, though they put the planner lower down. Killzone 3's
 multiplayer bots are "set up as a three-layered hierarchy, where each layer
 controls the layer below it and information flows back" (commander, squad,
-individual). The HTN planner there is the *individual* bot's, and the
+individual). Both the individual bots and the squads plan with HTN -- a
+squad "generates and monitors a plan using the HTN planner" -- while the
 commander assigns objectives. In F.E.A.R., the planning was done per soldier,
 and the squads were a simple periodic coordinator. Orkin is blunt about it: "we actually did not have any complex
 squad behaviors at all in F.E.A.R." The tactics players saw emerged from the
@@ -96,17 +97,19 @@ rate.**
   Cybertron". He also notes that "GOAP and STRIPS planner variants" "use a
   backward search", from the goal, while HTN works forward from the current
   state. That is what lets an HTN return a partial plan. This kit's own
-  `StripsPlanner` searches forward, from the start. Humphreys means the
-  regression planners GOAP is built on, not every STRIPS planner.
+  `StripsPlanner` searches forward, from the start, so this kit reads his
+  remark as being about the regression planners GOAP is built on, not every
+  STRIPS planner.
 - Van der Sterren's chapter on multi-unit manoeuvres warns that "GOAP and, to
   a lesser extent, standard HTN planners struggle to search efficiently in such
   a large state-space": one search over a whole army does not scale.
 
 **Attack timing and targets are scored, not planned.** Dill's spatial
 reasoning chapter, from the RTS Kohan II, scores regions: "we launch our
-attacks against regions". He says the region graph would have to be
-recomputed as the map changes, which is beyond his chapter, and that "you're
-going to have to timeslice the calculations" to do it. Mark's modular
+attacks against regions". On a map whose terrain can change, he says the
+regions would have to be recomputed, that this is not simple and "neither is
+likely to run in a single frame", and that "you're going to have to
+timeslice the calculations". Mark's modular
 influence maps stay cheap by stamping precomputed templates.
 
 **A bounded search can still be slow to ship.** Total War: Rome II's campaign
@@ -115,7 +118,8 @@ that "the MCTS is limited such that it doesn't search all the way to the
 goal", looking "one turn ahead before starting random playouts", and that "the
 anytime property of the algorithm ensures we will still get a useful and
 intelligent decision". Even so, "the campaign AI took quite a long time to
-make its decisions in the launch build", and was patched for weeks. The
+make its decisions in the launch build", and the game was patched
+aggressively for several weeks after launch. The
 article does not give a cause. The lesson worth taking is narrower than
 "unbounded search is slow": a budget per decision has to be measured on the
 shipping game, not assumed from the algorithm.

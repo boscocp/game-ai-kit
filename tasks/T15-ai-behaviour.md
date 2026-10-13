@@ -10,7 +10,7 @@ written four times, on the same board.
 Written four times on purpose. The question a reader actually has is not "what
 is a behaviour tree", it is "when would I use one instead of the thing I have",
 and that question is only answerable side by side. STRIPS from T11 is the
-fourth corner of the comparison and is already written.
+fifth corner of the comparison and is already written.
 
 ## Steps
 

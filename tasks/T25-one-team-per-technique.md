@@ -49,7 +49,7 @@ say which part it delegates:
 | HTN | hierarchical task network | T15 |
 | Planner | heuristic STRIPS, as ADR 0010 sets out | T11 |
 | Learned | the trained regressions, for its units; production delegated to Rules, and labelled so | T6 |
-| Cloned | behaviour cloning, once it exists | T18 |
+| Cloned | behaviour cloning trained on this board's recordings (step 3), with T18's method once T18 exists | T18 |
 
 A team joins when its task is done. A league with three teams is already a
 lesson, so this task does not wait for all eight.
@@ -66,9 +66,10 @@ lesson, so this task does not wait for all eight.
    strength a game can ship.
 3. **A recorder and the human reference.** The recorder writes one row per
    decision: the board as the side to move saw it, and the move it made. That
-   is a new format, not T5's, whose rows are one per combat. It is the format
-   T18 needs to clone behaviour from, so T18 reads these files rather than
-   inventing its own. The owner plays and records at least twenty matches
+   is a new format, not T5's, whose rows are one per combat. T18 clones a
+   fighting game from its own recordings; what the two share is the *shape* of
+   a row -- what was seen, what was done -- not the data, and the Cloned team
+   is trained on these files. The owner plays and records at least twenty matches
    against the Rules team, committed under `spec/recordings/`. Without them
    step 4 has no reference, and the task says so rather than inventing one.
 4. **Human-likeness, measured, on the measures a turn-based board has.**
@@ -88,7 +89,11 @@ lesson, so this task does not wait for all eight.
 5. **A human-likeness axis, separate from T12's strength axis.** These are
    limits that make a team play like a person and hand it nothing: a cap on
    how many units it attends to in a turn, occasional inattention to a unit,
-   and noise in which of its near-best moves it picks. T20 adds the clock's
+   and mistakes of the kinds people make, drawn from the recordings. That is
+   not T12's evaluation noise. T12's noise is uniform and exists to lower
+   strength; this one is shaped like the errors in the recordings and exists
+   to look human. Both cost strength, which is why the league re-asserts the
+   ordering. T20 adds the clock's
    knobs, a reaction delay and a cap on actions per minute. Each is a named
    knob, documented where T12's knobs are. A level is then a point on two
    axes, and because these knobs cost strength as well, the league re-asserts
@@ -104,7 +109,8 @@ lesson, so this task does not wait for all eight.
      here, T19's share of a frame once T20 brings the league to real time --
      turning red past it;
    - **work**: worlds, nodes or rules evaluated this decision, where the
-     technique has such a count, and how often it replanned in the last minute;
+     technique has such a count, and how often it replanned in the last thirty
+     decisions;
    - **efficiency**: what the cost bought -- the team's material and income
      lead per millisecond spent, over a rolling window -- so that a strong
      team that is also expensive can be told apart from a cheap one that is
@@ -163,8 +169,8 @@ defect this asserts against.
 
 A blind test, in the spirit of BotPrize, whose judges played against hidden
 opponents. Seat someone who did not build the teams for a set of matches
-against opponents that are sometimes a person over the network or at the next
-seat, sometimes a team, and ask after each which it was. Report how often each
+against opponents that are sometimes a person at the next seat, out of sight,
+sometimes a team, and ask after each which it was. Report how often each
 team was taken for a person. A team chosen
 for being human-like that nobody mistakes for a human has failed this task,
 whatever its distances say.

@@ -50,11 +50,15 @@ here, because they cost strength too; T25 re-asserts this ordering with them
 on.
 
 ```bash
-! grep -q "cheat\|bonus_resources\|extra_vision" godot/addons/ai_planning/difficulty.gd
+test -f godot/addons/ai_planning/difficulty.gd
+! grep -vE '^[[:space:]]*#' godot/addons/ai_planning/difficulty.gd | grep -qE 'cheat|bonus_resources|extra_vision'
 ```
 
-That line used to read `grep -qv`, which succeeds whenever any single line of
-the file does not match -- so it passed on a file full of cheats.
+The second line used to read `grep -qv`, which succeeds whenever any single
+line of the file does not match, so it passed on a file full of cheats. Its
+first fix, `! grep -q`, passed on a missing file (grep's exit 2, negated) and
+failed on a doc comment saying the levels never cheat. Now the file must
+exist, and only lines of code are searched.
 
 ## Manual check
 

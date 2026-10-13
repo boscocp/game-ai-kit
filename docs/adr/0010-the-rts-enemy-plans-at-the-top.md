@@ -11,7 +11,7 @@ PDDL. That is right for teaching and for its eight-fact domain, where it visits
 a clock that does not wait. Over boolean facts alone, breadth-first visits
 up to two to the power of their number, and numeric resources make the space
 unbounded unless they are abstracted. `WorldState.key()` also sorts and joins
-strings for every world generated, twice per world.
+strings for every world generated, twice for each one not seen before.
 
 The question "PDDL or STRIPS, which is faster" has no answer, because they are
 not alternatives: PDDL is the language and STRIPS the model it describes. The
@@ -26,7 +26,7 @@ and how often. The sources are in
    regions and influence maps, and units use A\* and flow fields. The layers
    are the StarCraft survey's. Putting the only planner at the top is *this
    kit's* choice for an RTS: the shipped games cited plan per agent or per
-   squad (F.E.A.R., Killzone 3, Horizon), which suits a handful of agents
+   squad (F.E.A.R., Killzone 3), which suits a handful of agents
    rather than an army, while the RTS research plans the build order.
 2. **Under the plan, the economy is priority queues.** That is what AoE II,
    Supreme Commander and 0 A.D. ship. It is also the baseline a planner has to

@@ -30,11 +30,13 @@ plan, which is why planning is taught on a strategy game and not on a maze.
    stays as the readable version. Beside it go h_max (admissible, so the plan
    stays shortest) and h_add (guides harder, gives up shortest), after Bonet
    and Geffner (2001). The state is held as bits rather than as the sorted,
-   joined string `WorldState.key()` builds today -- twice per generated world,
-   `strips_planner.gd` calls it twice. Every call has a budget. Breadth-first
-   and A\* have no complete plan until they finish, so a call that runs out
-   returns the partial plan to the expanded world with the lowest `h`,
-   labelled as partial, and the game acts on its first step only. If that
+   joined string `WorldState.key()` builds today, which `strips_planner.gd`
+   computes twice for every world it has not seen before. Every heuristic call
+   has a budget. A\* has no complete plan until it finishes, so a call that
+   runs out returns the partial plan to the expanded world with the lowest
+   `h`, labelled as partial, and the game acts on its first step only.
+   Breadth-first has no `h` and no useful partial plan: it is the readable
+   baseline, run unbudgeted in the benchmark and never in the game. If that
    proves too weak, depth-first branch and bound (Churchill and Buro) has a
    complete plan early and is the alternative to measure.
 7. **Measure before choosing.** Worlds visited and milliseconds per plan, for
