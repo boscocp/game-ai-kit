@@ -1,0 +1,78 @@
+game-ai-kit: what the two models learned
+========================================
+
+Trained on 1500 simulated games (dice seed 20261012).
+A quarter of the games were held back by seed 70402 and never
+fitted on -- held back whole, because several fights come out of one
+game and they share a board, a set of units and a run of dice.
+
+How to read the two columns
+---------------------------
+`per unit` is what the game applies: multiply it by the raw number --
+a health difference of 7, terrain of 3 -- and add the bias.
+`per sd` is the same model with every feature put on one scale, and it
+is the column to compare across rows. A big `per unit` weight on a
+feature that never varies much is not an important feature; it is a
+feature measured in small units.
+
+
+will this attack work?
+----------------------
+  2224 rows trained on, 713 held back
+  right about 87.8% of held-back fights, against
+  69.0% for always saying 'the attacker loses'
+  and 81.8% for looking the fight up in a table
+  of the fights it was trained on
+
+  feature                     per unit      per sd
+  health_difference            +0.5081     +2.2714
+  numeric_advantage            +1.8326     +1.4135
+  defender_terrain             -1.6312     -1.3315
+  reinforcement_distance       -0.1238     -0.6191
+  (bias)                       +3.3937
+
+how long will this node take?
+-----------------------------
+  772 rows trained on, 257 held back
+  wrong by 0.56 turns on average, against
+  1.10 for always guessing the training mean
+  and 0.78 for looking the situation up in a table
+  of the games it was trained on
+
+  feature                     per unit      per sd
+  distance_to_node             +0.6980     +1.0959
+  terrain_on_the_way           +0.3978     +0.1968
+  own_units                    +0.0897     +0.0721
+  enemy_units                  +0.0876     +0.0707
+  (bias)                       +1.1424
+
+What the game needs to know that is not a weight
+------------------------------------------------
+  nearby_radius = 2: how close another unit must be to count
+  towards numeric_advantage.
+  reinforcement_distance_when_alone = 15: what a unit with no
+  living friends reports. It is the training board's width, so it sits
+  outside every real distance -- a game that reports its own, smaller
+  width instead is saying 'far' where the data said 'nobody is coming'.
+  terrain ran from 1 to 3, and no board here has a
+  wall on it. Anything outside that range is extrapolation, and the
+  game is expected to clamp rather than to invent a number.
+
+Two things the numbers above do not say
+---------------------------------------
+  The lookup table is the honest yardstick, not the majority class.
+  These features are small integers, so most held-back rows have an
+  exact twin among the rows that were trained on -- 83%
+  of them, over 867 distinct situations. A table that
+  answers with the twin's outcome already scores most of what the
+  model scores, and the majority class flatters both. Four weights
+  cannot memorise that many answers, so this model's score is honest;
+  one with capacity would have to be read against the table rather
+  than against the majority.
+
+  The capture rows are censored, and not in the obvious way. Only a
+  game where somebody took the node writes one, and the rest end with
+  one side destroyed instead. Measured over 2000 games of this
+  simulator: 1392 captures, 608 wipe-outs and none at all running out
+  of turns. So the missing rows are the lopsided games, and lopsided
+  is exactly what `own_units` and `enemy_units` measure.

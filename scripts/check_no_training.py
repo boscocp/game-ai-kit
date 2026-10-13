@@ -1,0 +1,760 @@
+#!/usr/bin/env python3
+"""Hold invariant 6: Python trains and emits weights, GDScript only infers.
+
+The rule
+--------
+No training at game time. Fitting is a batch job that runs on a desk, writes a
+file and is reviewed; inference is four multiplications in a frame. Mixing the
+two is how a game ships a model nobody can reproduce, and the first symptom is
+an opponent that plays differently on two machines and identically to no
+recorded version of itself.
+
+So the split is physical. `python/gameaikit/training/` descends a gradient;
+`godot/addons/ai_learning/` multiplies published weights by a feature row and
+stops. This gate is four claims about that split:
+
+  * N1 no GDScript *code* uses the vocabulary of fitting;
+  * N2 nothing in the inference addon writes a file, and nothing in GDScript
+    writes over the weights;
+  * N3 no GDScript assigns to a model's weights after it is built -- which is
+    the update step itself, whatever it is called;
+  * N4 the committed weights are the Python pipeline's own output, and a fresh
+    run still produces them.
+
+N4 is the one with teeth. The other three are about the shape of the code and
+could all pass over a weights file somebody typed by hand.
+
+What this gate cannot do
+------------------------
+Recognise a training loop written in innocent words. A function called
+`_improve_the_numbers` that walks a gradient trips N1 on nothing and N3 only
+if it assigns to something called `weights`. That hole is real and is left
+open deliberately: the alternative is a list of verbs long enough to fire on
+the word `fit` in a comment about a window, and a gate that fires on good code
+teaches people to switch it off.
+
+`train` is deliberately not in the vocabulary. This game's planner trains
+units, in a domain written out in GDScript, and the word belongs to the game
+before it belongs to machine learning.
+
+Exit codes
+----------
+0   training lives on the Python side
+1   violations found (each one printed)
+2   wrong usage, or a file that cannot be read
+3   the Python pipeline could not be run, so N4 checked nothing
+
+Usage
+-----
+    check_no_training.py [--repo PATH] [--skip-retrain]
+    check_no_training.py --self-test
+"""
+
+from __future__ import annotations
+
+import argparse
+import contextlib
+import io
+import json
+import math
+import pathlib
+import re
+import subprocess
+import sys
+import tempfile
+
+# Where each half of the split lives.
+GODOT = pathlib.Path("godot")
+LEARNING_ADDON = pathlib.Path("godot") / "addons" / "ai_learning"
+WEIGHTS = LEARNING_ADDON / "weights.json"
+
+# The readable half of the same fit, shipped in the same folder. `report.py`
+# calls it "the one that matters here", and until a review rewrote it to claim
+# 999999 games and watched this gate pass, nothing in the repository had ever
+# read it: no target, no CI step, no test. It costs one string comparison
+# against a training run N4 is performing anyway.
+READABLE = LEARNING_ADDON / "weights.txt"
+TRAINER = "gameaikit.training.report"
+
+# Third-party GDScript this project does not author.
+VENDORED_DIRS = {"gdUnit4"}
+
+# The vocabulary of fitting. Each entry is a word that has no other job in a
+# game, which is the whole test for putting one here.
+FITTING_WORDS = {
+    "gradient": "the direction a fit moves in; a game has no use for one",
+    "backprop": "the chain rule through a network, by its short name",
+    "backpropagate": "the same, spelled out",
+    "learning_rate": "how far along the gradient to step",
+    "epoch": "one pass over a training set",
+    "optimizer": "the thing that holds the update rule",
+    "optimiser": "the same, spelled the other way",
+    "sgd": "stochastic gradient descent, by its initials",
+    "standardise": "centring and scaling rows, which happens before a fit",
+    "standardize": "the same, spelled the other way",
+}
+
+WORD_RE = {word: re.compile(rf"\b{re.escape(word)}\b", re.I) for word in FITTING_WORDS}
+
+# Writing a file. `FileAccess.WRITE` covers the two open modes that truncate;
+# the store_* calls are what a writer then does, and are listed separately so
+# a handle obtained some other way is still caught.
+WRITING_RE = re.compile(
+    r"FileAccess\.(?:WRITE|WRITE_READ)\b"
+    r"|FileAccess\.open_encrypted\w*\s*\("
+    r"|\.store_(?:string|var|line|buffer|8|16|32|64|float|double|real|csv_line)\s*\("
+    r"|ResourceSaver\.save\s*\("
+)
+
+# Assigning to a model's numbers. Two shapes: writing another object's weights
+# at all, and the compound assignment that *is* the update step.
+MEMBER_WRITE_RE = re.compile(r"\b[A-Za-z_][\w.]*\.(weights|bias)\s*(?:\[[^\]]*\])?\s*=[^=]")
+UPDATE_RE = re.compile(r"\b(weights|bias)\s*(?:\[[^\]]*\])?\s*(?:\+|-|\*|/)=")
+
+# The same update step with the numbers called something else, and this one
+# applies **only inside the inference addon**. A review defeated N1 to N3 with
+# thirty-four lines of honest gradient descent whose accumulator was called
+# `_numbers`, which is exactly the hole the docstring admits to. The verb list
+# cannot be lengthened without firing on good code -- but the one directory
+# that is read-only by construction can be held to a stricter rule, and it
+# contains no line of this shape at all.
+ADDON_UPDATE_RE = re.compile(r"\w+\[[^\]]*\]\s*(?:\+|-|\*|/)=")
+
+# The same step again, written out rather than compounded. The first version
+# of the rule above pinned the one spelling a review happened to use, and the
+# next review walked past it with `_numbers[index] = _numbers[index] - step`
+# and with `_numbers.set(index, _numbers[index] - step)` -- the second being
+# the idiomatic form for the packed array the weights actually live in.
+#
+# Both read the value back out of the thing they are writing into, which is
+# what an update step is and what no inference does.
+#
+# They are crude, and they are safe only because of the scope. Measured over
+# every .gd file in the project: **zero** matches inside the inference addon
+# and three outside it -- `ai_search/dijkstra.gd` relaxing `g[step] = g[current]
+# + cost`, which is correct code, and two that are not update steps at all but
+# type declarations the regex misreads. A rule this blunt applied repo-wide
+# would be a nuisance, and a nuisance is a rule somebody switches off; applied
+# to one directory that contains no such line by construction, it costs
+# nothing and closes the evasion.
+#
+# This is a spelling arms race and the docstring says so. What it buys is that
+# the planted cases pin the rule rather than one sentence that tripped it.
+ADDON_READBACK_RE = re.compile(r"(\w+)\[[^\]]*\]\s*=[^=].*?\b\1\[")
+ADDON_SETBACK_RE = re.compile(r"\b(\w+)\.set\s*\([^,]+,.*?\b\1\[")
+
+# How far two runs of a deterministic pipeline may differ. The weights are
+# published rounded to six decimals precisely so that two machines can agree
+# on the text.
+#
+# It errs strict, and a review measured which way: a weight moved by exactly
+# `1e-6` is *rejected*, because the float difference comes out as
+# 1.0000000000287e-6 and the comparison is `<=`. So this admits a difference
+# below one unit in the last published place, not one of exactly that size --
+# which is the right direction for a gate and was not what the comment said.
+TOLERANCE = 1e-6
+
+
+def gdscript_files(root: pathlib.Path) -> list[pathlib.Path]:
+    """Every .gd file this project authors, vendored code excluded."""
+    if not root.is_dir():
+        return []
+    return [
+        path for path in sorted(root.rglob("*.gd"))
+        if not any(part in VENDORED_DIRS for part in path.parts)
+    ]
+
+
+def code_only(text: str) -> str:
+    """The same file with its comments and string literals blanked out.
+
+    Prose about training is not training, and this gate would be unusable
+    without that distinction: every file in the inference addon explains, in
+    its header, what it is deliberately not doing. Blanked rather than removed
+    so that line numbers survive.
+    """
+    kept = []
+    for line in text.splitlines():
+        kept.append(_strip_line(line))
+    return "\n".join(kept)
+
+
+def _strip_line(line: str) -> str:
+    """One line, with anything quoted or commented replaced by spaces."""
+    out = []
+    quote = ""
+    for character in line:
+        if quote:
+            out.append(" ")
+            if character == quote:
+                quote = ""
+            continue
+        if character in "\"'":
+            quote = character
+            out.append(" ")
+            continue
+        if character == "#":
+            break
+        out.append(character)
+    return "".join(out)
+
+
+def check_vocabulary(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
+    """N1: no GDScript code uses a word that only fitting needs."""
+    findings = []
+    for path in gdscript_files(root):
+        code = code_only(path.read_text(encoding="utf-8"))
+        for number, line in enumerate(code.splitlines(), start=1):
+            for word, pattern in WORD_RE.items():
+                if pattern.search(line):
+                    findings.append(
+                        f"N1 {_label(path, repo)}:{number} uses `{word}` in code -- "
+                        f"{FITTING_WORDS[word]}"
+                    )
+    return findings
+
+
+def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
+    """N2 and N3: the addon writes nothing, and nobody rewrites the weights."""
+    findings = []
+    for path in gdscript_files(root):
+        raw = path.read_text(encoding="utf-8").splitlines()
+        code = code_only("\n".join(raw)).splitlines()
+        inside_addon = LEARNING_ADDON.name in path.parts
+        # Both spellings of the line. The write is read off the stripped one,
+        # because `# we never FileAccess.WRITE here` is a sentence; the path
+        # is read off the raw one, because a path *is* a string literal and
+        # stripping it leaves the rule nothing to match. That was not a guess
+        # -- the planted case for it passed until both were read.
+        for number, (line, written) in enumerate(zip(raw, code), start=1):
+            label = f"{_label(path, repo)}:{number}"
+            if not WRITING_RE.search(written):
+                continue
+            if inside_addon:
+                findings.append(
+                    f"N2 {label} writes a file; the inference addon only reads")
+            elif WEIGHTS.name in line:
+                findings.append(f"N2 {label} writes over the weights file")
+        for number, written in enumerate(code, start=1):
+            label = f"{_label(path, repo)}:{number}"
+            if MEMBER_WRITE_RE.search(written) or UPDATE_RE.search(written):
+                findings.append(
+                    f"N3 {label} assigns to a model's weights; "
+                    "a fitted model is read-only at game time")
+            elif inside_addon and _accumulates(written):
+                findings.append(
+                    f"N3 {label} reads an indexed value back into itself; inside "
+                    "the inference addon that is an update step whatever it is called")
+    return findings
+
+
+def _accumulates(line: str) -> bool:
+    """True for a line that writes a value computed from itself.
+
+    Three spellings of one thing: `x[i] -= d`, `x[i] = x[i] - d`, and
+    `x.set(i, x[i] - d)`. Inference reads weights; only fitting writes them.
+    """
+    return bool(ADDON_UPDATE_RE.search(line)
+                or ADDON_READBACK_RE.search(line)
+                or ADDON_SETBACK_RE.search(line))
+
+
+def check_weights(repo: pathlib.Path, retrain: bool,
+                  trained: tuple[dict, str] | None = None) -> tuple[list[str], bool]:
+    """N4: the committed weights are what the Python pipeline produces.
+
+    Returns the findings and whether the pipeline actually ran. A gate that
+    quietly skips its only expensive claim is a gate reporting green about
+    something it did not look at, so the caller turns a skip into its own
+    exit code.
+    """
+    if not (repo / LEARNING_ADDON).is_dir():
+        print(f"N0 note: no {LEARNING_ADDON} yet -- N4 inspected nothing")
+        return [], True
+
+    path = repo / WEIGHTS
+    if not path.exists():
+        return [f"N4 {WEIGHTS} is missing; run `make train`"], True
+    committed = json.loads(path.read_text(encoding="utf-8"))
+    if not str(committed.get("generated_by", "")).startswith(TRAINER):
+        return [
+            f"N4 {WEIGHTS} says it was generated by "
+            f"{committed.get('generated_by')!r}, not by {TRAINER}"
+        ], True
+
+    if not retrain:
+        return [], False
+    # Injectable, so a planted case can hand this function a fit and assert
+    # that both halves of N4 are reached. The three cases for the dump rule
+    # were testing the helper, and deleting the *call* left the self-test
+    # green -- the rule was planted and its wiring was not.
+    trained = trained if trained is not None else fresh_training(repo)
+    if trained is None:
+        return [], False
+    fresh, readable = trained
+    findings = differences_between(committed, fresh, WEIGHTS.name)
+    return findings + _differences_in_the_dump(repo, readable), True
+
+
+def _differences_in_the_dump(repo: pathlib.Path, readable: str) -> list[str]:
+    """The readable weights ship beside the JSON and must come from the same fit."""
+    path = repo / READABLE
+    if not path.exists():
+        return [f"N4 {READABLE} is missing; `make train` writes it beside the JSON"]
+    if path.read_text(encoding="utf-8") != readable:
+        return [f"N4 {READABLE} is not what this pipeline writes; run `make train`"]
+    return []
+
+
+def fresh_training(repo: pathlib.Path) -> tuple[dict, str] | None:
+    """Both published artifacts as the pipeline writes them right now.
+
+    One fit, both artifacts, because that is how `make train` produces them
+    and comparing them against two different runs would be comparing the
+    committed pair against a pair that never existed together.
+    """
+    sys.path.insert(0, str(repo / "python"))
+    try:
+        from gameaikit.training import report, train  # noqa: PLC0415
+    except ImportError as error:
+        print(f"N0 the training pipeline could not be imported: {error}")
+        return None
+    training = train.run()
+    return report.as_json(training), report.dump(training)
+
+
+def differences_between(committed: object, fresh: object, where: str) -> list[str]:
+    """Every place the committed weights and a fresh run disagree.
+
+    Pure, and public, so a test can hand it two reports that differ in one
+    specific way rather than training for four seconds to find out whether the
+    rule works.
+    """
+    if isinstance(committed, dict) and isinstance(fresh, dict):
+        return _differences_in_dicts(committed, fresh, where)
+    if isinstance(committed, list) and isinstance(fresh, list):
+        if len(committed) != len(fresh):
+            return [f"N4 {where} has {len(committed)} entries, a fresh run has "
+                    f"{len(fresh)}"]
+        return [finding
+                for index, (one, other) in enumerate(zip(committed, fresh))
+                for finding in differences_between(one, other, f"{where}[{index}]")]
+    if _both_numbers(committed, fresh):
+        # The type as well as the value. `2224` and `2224.0` compare equal and
+        # are not the same published artifact: one is a count and the other is
+        # a count that has been through something that rounds.
+        if isinstance(committed, float) != isinstance(fresh, float):
+            return [f"N4 {where} is {committed!r}, and a fresh run gives {fresh!r} "
+                    "-- the same number, published as a different kind"]
+        if not math.isclose(committed, fresh, rel_tol=0.0, abs_tol=TOLERANCE):
+            return [f"N4 {where} is {committed}, and a fresh run gives {fresh}"]
+        return []
+    if committed != fresh:
+        return [f"N4 {where} is {committed!r}, and a fresh run gives {fresh!r}"]
+    return []
+
+
+def _differences_in_dicts(committed: dict, fresh: dict, where: str) -> list[str]:
+    """The same comparison over two objects, keys included."""
+    findings = []
+    for key in sorted(set(committed) | set(fresh)):
+        if key not in committed:
+            findings.append(f"N4 {where}.{key} is missing; run `make train`")
+        elif key not in fresh:
+            findings.append(f"N4 {where}.{key} is no longer produced by the pipeline")
+        else:
+            findings += differences_between(committed[key], fresh[key], f"{where}.{key}")
+    return findings
+
+
+def _both_numbers(one: object, other: object) -> bool:
+    """True for two numbers, and false for the booleans that pretend to be."""
+    return (isinstance(one, (int, float)) and not isinstance(one, bool)
+            and isinstance(other, (int, float)) and not isinstance(other, bool))
+
+
+def _label(path: pathlib.Path, repo: pathlib.Path) -> str:
+    """The path as a reader would type it, when it is inside the repository."""
+    try:
+        return str(path.resolve().relative_to(repo.resolve()))
+    except ValueError:
+        return str(path)
+
+
+def run(repo: pathlib.Path, retrain: bool = True) -> int:
+    findings = check_vocabulary(repo / GODOT, repo)
+    findings += check_writing(repo / GODOT, repo)
+    weights_findings, ran = check_weights(repo, retrain)
+    findings += weights_findings
+    for finding in findings:
+        print(finding)
+    if findings:
+        return 1
+    return 0 if ran else 3
+
+
+# --- self-test -------------------------------------------------------------
+
+
+INFERENCE = """\
+## Multiplies published weights by a row. Nothing here fits anything: the
+## gradient descent that produced these numbers is in Python, and this file
+## exists so that it stays there.
+class_name LearnedModel
+extends RefCounted
+
+var weights: PackedFloat64Array
+var bias: float
+
+
+func _init(given: PackedFloat64Array, given_bias: float) -> void:
+\tweights = given
+\tbias = given_bias
+"""
+
+SOUND_WEIGHTS = {
+    "generated_by": "gameaikit.training.report",
+    "games": 1500,
+    "feature_conventions": {"nearby_radius": 2},
+    "models": {"combat": {"weights": [0.5081, 1.8326], "bias": 3.3937}},
+}
+
+
+def self_test() -> int:
+    failures = []
+
+    def expect(label: str, got: tuple[int, str], want: int, code: str = "") -> None:
+        exit_code, output = got
+        if exit_code != want:
+            failures.append(f"{label}: expected exit {want}, got {exit_code} ({output!r})")
+        elif code and code not in output:
+            failures.append(
+                f"{label}: expected a {code} finding, got {output.strip() or 'nothing'!r}")
+
+    def quietly(argv: list[str]) -> int:
+        """`main` with both streams caught.
+
+        The three cases that use this go through `main` rather than `run`,
+        because what they are about is its exit code -- and `main` reports an
+        unreadable file on stderr, which `quiet` does not catch. Without it, a
+        *passing* self-test printed three error lines: the argument
+        docs/godot/reading-json-in-godot.md makes against the noisy JSON
+        parser, made against this file.
+        """
+        with contextlib.redirect_stdout(io.StringIO()), \
+                contextlib.redirect_stderr(io.StringIO()):
+            return main(argv)
+
+    def quiet(repo: pathlib.Path) -> tuple[int, str]:
+        stream = io.StringIO()
+        with contextlib.redirect_stdout(stream):
+            return run(repo, retrain=False), stream.getvalue()
+
+    def build(root: pathlib.Path, name: str, files: dict[str, str]) -> pathlib.Path:
+        repo = root / name
+        for relative, text in files.items():
+            path = repo / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text)
+        return repo
+
+    sound = {
+        str(LEARNING_ADDON / "learned_model.gd"): INFERENCE,
+        str(WEIGHTS): json.dumps(SOUND_WEIGHTS),
+    }
+
+    with tempfile.TemporaryDirectory() as workspace:
+        root = pathlib.Path(workspace)
+
+        # Inference beside a published weights file. This is the shape the
+        # project promises and it must pass -- including the header above,
+        # which says `gradient` in a comment about not having one.
+        expect("inference only", quiet(build(root, "good", dict(sound))), 3)
+
+        # Planted: the vocabulary of fitting, in code rather than in prose.
+        expect("a learning rate in code", quiet(build(root, "rate", dict(
+            sound, **{str(LEARNING_ADDON / "fitter.gd"):
+                      "const learning_rate: float = 0.1\n"}))), 1, "N1")
+
+        expect("a gradient in code", quiet(build(root, "grad", dict(
+            sound, **{str(GODOT / "game" / "ai.gd"):
+                      "var gradient: float = 0.0\n"}))), 1, "N1")
+
+        # The same word in a comment is prose about training, not training.
+        expect("a gradient in a comment", quiet(build(root, "comment", dict(
+            sound, **{str(GODOT / "game" / "ai.gd"):
+                      "# No gradient is computed here; see python/.\nvar steps: int = 0\n"}))), 3)
+
+        # ...and in a string. The word has to be one the gate actually
+        # looks for: this planted `"train_the_unit"` until a review pointed
+        # out that `train` is deliberately absent from the vocabulary, so the
+        # case passed whether or not strings were stripped at all.
+        expect("a word inside a string", quiet(build(root, "string", dict(
+            sound, **{str(GODOT / "game" / "domain.gd"):
+                      'var label: String = "gradient of the hill"\n'}))), 3)
+
+        # The planner's own domain, which is why `train` is not a word this
+        # gate knows. A game that trains units is a game, not a fit.
+        expect("the planner's domain", quiet(build(root, "domain", dict(
+            sound, **{str(GODOT / "game" / "domain.gd"):
+                      'var action: String = "train_the_unit"\n'}))), 3)
+
+        # Planted: the inference addon writing a file.
+        expect("the addon writes a file", quiet(build(root, "writes", dict(
+            sound, **{str(LEARNING_ADDON / "saver.gd"):
+                      'var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)\n'}))),
+            1, "N2")
+
+        # A file *read* is the addon's whole job.
+        expect("the addon reads a file", quiet(build(root, "reads", dict(
+            sound, **{str(LEARNING_ADDON / "loader.gd"):
+                      'var file: FileAccess = FileAccess.open(path, FileAccess.READ)\n'}))), 3)
+
+        # Planted: something outside the addon writing over the weights.
+        expect("the game rewrites the weights", quiet(build(root, "rewrite", dict(
+            sound, **{str(GODOT / "game" / "ai.gd"):
+                      'var out: FileAccess = FileAccess.open("res://weights.json", FileAccess.WRITE)\n'}))),
+            1, "N2")
+
+        # Planted: the update step itself, under any name at all.
+        expect("the update step", quiet(build(root, "update", dict(
+            sound, **{str(GODOT / "game" / "ai.gd"):
+                      "\tweights[index] -= rate * error\n"}))), 1, "N3")
+
+        expect("writing another model's weights", quiet(build(root, "member", dict(
+            sound, **{str(GODOT / "game" / "ai.gd"):
+                      "\tmodel.weights = fresh\n"}))), 1, "N3")
+
+        # Setting one's own fields in a constructor is how a model is built.
+        expect("a constructor", quiet(build(root, "ctor", dict(sound))), 3)
+
+        # Planted: no weights file where the addon is.
+        expect("no weights file", quiet(build(root, "noweights", {
+            str(LEARNING_ADDON / "learned_model.gd"): INFERENCE})), 1, "N4")
+
+        # Planted: weights nobody generated. The numbers may be perfect; what
+        # is missing is any claim that a pipeline produced them.
+        expect("hand-written weights", quiet(build(root, "byhand", dict(
+            sound, **{str(WEIGHTS): json.dumps(
+                dict(SOUND_WEIGHTS, generated_by="a person, carefully"))}))), 1, "N4")
+
+        # No addon at all is the state of any checkout before T6, and of one
+        # that took `ai_search` and left this behind: a note, not a finding.
+        # Nothing infers, so nothing can be training to do it. Every case
+        # above is what proves the gate can still fail.
+        expect("no learning addon", quiet(build(root, "empty", {
+            str(GODOT / "game" / "main.gd"): "var turn: int = 0\n"})), 0)
+
+        # Planted: the two unreadable files. Both used to be a traceback on
+        # exit 1, which every caller reads as a finding.
+        broken = build(root, "brokenjson", dict(
+            sound, **{str(WEIGHTS): "{ not json at all"}))
+        expect("a weights file that is not JSON",
+               (quietly(["--repo", str(broken), "--skip-retrain"]), ""), 2)
+
+        unreadable = build(root, "notutf8", dict(sound))
+        (unreadable / GODOT / "game" / "ai.gd").parent.mkdir(parents=True, exist_ok=True)
+        (unreadable / GODOT / "game" / "ai.gd").write_bytes(b"var name := \xff\xfe\n")
+        expect("a script that is not UTF-8",
+               (quietly(["--repo", str(unreadable), "--skip-retrain"]), ""), 2)
+
+        # Planted: every other way of writing a file. Only `FileAccess.WRITE`
+        # had a case, so three of the four alternatives in WRITING_RE could be
+        # deleted with the self-test green.
+        for spelling in ['file.store_string("x")',
+                         'ResourceSaver.save(thing, path)',
+                         'FileAccess.open_encrypted(path, 2, key)',
+                         'FileAccess.open(path, FileAccess.WRITE_READ)']:
+            expect(f"the addon writing with {spelling[:20]}", quiet(build(
+                root, "w" + str(abs(hash(spelling))), dict(
+                    sound, **{str(LEARNING_ADDON / "saver.gd"): spelling + "\n"}))),
+                1, "N2")
+
+        # The vocabulary, written out. A loop over `FITTING_WORDS` -- which is
+        # what this was first -- proves every word in the list fires, and
+        # **cannot notice a word being deleted from the list**, because the
+        # loop shrinks with it. Measured: dropping `backprop` left the
+        # self-test green. So the words are named here as well, and the two
+        # mechanisms catch different things: this one catches the list losing
+        # an entry, the loop below catches an entry that does not work.
+        named = {
+            "gradient", "backprop", "backpropagate", "learning_rate", "epoch",
+            "optimizer", "optimiser", "sgd", "standardise", "standardize",
+        }
+        if set(FITTING_WORDS) != named:
+            failures.append(
+                "the vocabulary has changed: "
+                f"{sorted(set(FITTING_WORDS) ^ named)} -- a word added to the gate "
+                "needs naming here too, and a word removed needs a reason")
+
+        for word in sorted(FITTING_WORDS):
+            # The word on its own, not as part of a longer identifier: the
+            # rules match whole words, so `gradient_value` is not `gradient`
+            # and planting that would have been ten cases proving nothing.
+            expect(f"the word {word}", quiet(build(root, "word_" + word, dict(
+                sound, **{str(GODOT / "game" / "fit.gd"): f"var value: float = {word}\n"}))),
+                1, "N1")
+
+        # Planted: the vendored exclusion. It was inert -- gdUnit4 happens to
+        # contain none of these words -- so nothing would have noticed it
+        # being deleted.
+        vendored = str(GODOT / "addons" / "gdUnit4" / "src" / "Fitter.gd")
+        expect("a forbidden word in vendored code", quiet(build(root, "vendored2", dict(
+            sound, **{vendored: "var learning_rate: float = 0.1\n"}))), 3)
+
+        # Planted: the update step with the numbers called something else,
+        # inside the addon. Thirty-four lines of real gradient descent got
+        # past N1 to N3 during review by doing exactly this -- and a second
+        # review then walked past the first fix with the other two spellings,
+        # so all three are here. A case that pins one sentence rather than
+        # the rule is the defect this file is most prone to.
+        for spelling in ["\t_numbers[index] -= STEP * slope\n",
+                         "\t_numbers[index] = _numbers[index] - STEP * slope\n",
+                         "\t_numbers.set(index, _numbers[index] - STEP * slope)\n"]:
+            expect(f"an update spelled {spelling.strip()[:28]}", quiet(build(
+                root, "evasion" + str(abs(hash(spelling))), dict(
+                    sound, **{str(LEARNING_ADDON / "fitter.gd"): spelling}))), 1, "N3")
+
+        # ...and the same lines outside the addon, which are ordinary code: a
+        # running total, a score, a cost table in a search.
+        for ordinary in ["\t_points[index] -= cost\n",
+                         "\tg[step] = g[current] + graph.cost_at(step)\n"]:
+            expect(f"ordinary code: {ordinary.strip()[:24]}", quiet(build(
+                root, "tally" + str(abs(hash(ordinary))), dict(
+                    sound, **{str(GODOT / "game" / "score.gd"): ordinary}))), 3)
+
+        # ...and the two indexed writes the inference addon legitimately makes,
+        # which must not become findings: neither reads its target back.
+        for legitimate in ['\tloaded._models[name] = _model_from(entry)\n',
+                           "\tseen[feature] = true\n"]:
+            expect(f"the addon writing {legitimate.strip()[:24]}", quiet(build(
+                root, "legit" + str(abs(hash(legitimate))), dict(
+                    sound, **{str(LEARNING_ADDON / "loader.gd"): legitimate}))), 3)
+
+        # Planted: a --repo that is not there at all.
+        expect("a path that is not a repository",
+               (quietly(["--repo", str(root / "nowhere")]), ""), 2)
+
+        # Planted: the call site of the dump rule, not only the rule. Deleting
+        # the call left the self-test green, because the three cases below
+        # reach the helper directly.
+        wired = build(root, "wired", dict(sound))
+        (wired / READABLE).write_text("what the pipeline writes\n")
+        with contextlib.redirect_stdout(io.StringIO()):
+            found, _ran = check_weights(
+                wired, True, trained=(SOUND_WEIGHTS, "something else entirely\n"))
+        if not any("weights.txt" in finding for finding in found):
+            failures.append("check_weights never reached the readable dump")
+
+        failures += _self_test_the_dump(root)
+        failures += _self_test_the_comparison()
+
+        script = pathlib.Path(__file__).resolve()
+        extra = subprocess.run(
+            [sys.executable, str(script), "--unknown-flag"], capture_output=True)
+        expect("unknown flag", (extra.returncode, ""), 2)
+
+    for failure in failures:
+        print(f"self-test FAIL: {failure}")
+    print(f"self-test: {'ok' if not failures else str(len(failures)) + ' failure(s)'}")
+    return 1 if failures else 0
+
+
+def _self_test_the_dump(root: pathlib.Path) -> list[str]:
+    """The readable half, handed text rather than a four-second pipeline.
+
+    Separate from the self-test's other cases because they all run with
+    `--skip-retrain`, which is exactly the path that does not reach this rule
+    -- so a case written up there would have proved nothing.
+    """
+    failures = []
+    repo = root / "dump"
+    (repo / READABLE).parent.mkdir(parents=True, exist_ok=True)
+
+    (repo / READABLE).write_text("what the model learned\n")
+    if _differences_in_the_dump(repo, "what the model learned\n"):
+        failures.append("a dump that matches the pipeline was reported as drifted")
+
+    if not _differences_in_the_dump(repo, "trained on 999999 games\n"):
+        failures.append("a dump the pipeline did not write was not reported")
+
+    (repo / READABLE).unlink()
+    if not _differences_in_the_dump(repo, "anything at all\n"):
+        failures.append("a missing dump was not reported")
+    return failures
+
+
+def _self_test_the_comparison() -> list[str]:
+    """N4's own rule, handed two reports rather than a four-second pipeline."""
+    failures = []
+    fresh = json.loads(json.dumps(SOUND_WEIGHTS))
+
+    if differences_between(SOUND_WEIGHTS, fresh, "w"):
+        failures.append("two identical reports were reported as different")
+
+    drifted = json.loads(json.dumps(SOUND_WEIGHTS))
+    drifted["models"]["combat"]["weights"][0] = 0.5082
+    if not differences_between(SOUND_WEIGHTS, drifted, "w"):
+        failures.append("a weight that moved was not reported")
+
+    rounded = json.loads(json.dumps(SOUND_WEIGHTS))
+    rounded["models"]["combat"]["bias"] = 3.3937004
+    if differences_between(SOUND_WEIGHTS, rounded, "w"):
+        failures.append("a difference inside the published rounding was reported")
+
+    renamed = json.loads(json.dumps(SOUND_WEIGHTS))
+    renamed["feature_conventions"] = {"nearby_distance": 2}
+    if len(differences_between(SOUND_WEIGHTS, renamed, "w")) != 2:
+        failures.append("a renamed convention was not reported as both a loss and a gain")
+
+    counted = json.loads(json.dumps(SOUND_WEIGHTS))
+    counted["models"]["combat"]["weights"].append(0.0)
+    if not differences_between(SOUND_WEIGHTS, counted, "w"):
+        failures.append("a weight appearing from nowhere was not reported")
+
+    # A count republished as a float is the same number and a different
+    # artifact. `math.isclose` called them equal until a review asked.
+    retyped = json.loads(json.dumps(SOUND_WEIGHTS))
+    retyped["games"] = float(retyped["games"])
+    if not differences_between(SOUND_WEIGHTS, retyped, "w"):
+        failures.append("a number republished as a float was not reported")
+    return failures
+
+
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(add_help=True, description=__doc__)
+    parser.add_argument("--repo", default=None)
+    parser.add_argument("--skip-retrain", action="store_true")
+    parser.add_argument("--self-test", action="store_true")
+    try:
+        args = parser.parse_args(argv)
+    except SystemExit as exit_request:
+        if exit_request.code == 0:
+            raise
+        return 2
+
+    if args.self_test:
+        return self_test()
+
+    repo = pathlib.Path(args.repo or pathlib.Path(__file__).resolve().parent.parent)
+    # A typo'd path used to come back as a confident green, by way of the
+    # "no addon here yet" note. *Does this pass on an empty scene* is the
+    # question invariant 4 asks of every gate, and this one answered yes.
+    if not repo.is_dir():
+        print(f"check_no_training: no such directory: {repo}", file=sys.stderr)
+        return 2
+    try:
+        return run(repo, retrain=not args.skip_retrain)
+    except (OSError, ValueError) as error:
+        # ValueError as well as OSError, and the docstring promised it before
+        # the code did. A malformed weights.json raises JSONDecodeError and a
+        # .gd file that is not UTF-8 raises UnicodeDecodeError; both are
+        # ValueErrors, both used to come out as a traceback on exit 1 -- the
+        # code reserved for "violations found, each one printed", which is
+        # indistinguishable from a finding to every caller.
+        print(f"check_no_training: cannot read a file: {error}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

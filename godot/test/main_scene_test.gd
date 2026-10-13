@@ -58,13 +58,46 @@ func test_a_click_into_the_wall_is_refused_in_the_wall_s_own_words() -> void:
 	assert_str(_status_of(main)).contains("blocked")
 
 
-func test_ending_the_turn_hands_the_board_to_the_other_side() -> void:
+func test_ending_the_turn_lets_the_ai_play_and_hands_the_board_back() -> void:
+	# Blue is not a side you wait for: ending your turn runs its whole turn
+	# and returns the board, so two turn numbers go by on one press.
 	var main: BoardGame = _mounted_scene()
 
 	main._end_turn()
 
-	assert_str(_status_of(main)).contains("blue to move")
-	assert_str(_status_of(main)).contains("turn 1")
+	assert_str(_status_of(main)).contains("red to move")
+	assert_str(_status_of(main)).contains("turn 2")
+
+
+func test_the_ai_says_what_it_decided_and_the_number_it_decided_on() -> void:
+	# Invariant 13: the screen shows the decision, not only its result. A
+	# retreat with no probability beside it is indistinguishable from a unit
+	# that had nowhere to go.
+	var main: BoardGame = _mounted_scene()
+
+	main._end_turn()
+
+	assert_str(_status_of(main)).contains("p(win)")
+	assert_str(_status_of(main)).contains("retreats from")
+
+
+func test_the_ai_actually_moves_its_units() -> void:
+	var main: BoardGame = _mounted_scene()
+	var before: Vector2i = main._state.unit_by_id(4).cell
+
+	main._end_turn()
+
+	assert_vector(main._state.unit_by_id(4).cell).is_not_equal(before)
+
+
+func test_the_player_cannot_move_the_ai_s_units() -> void:
+	# The board already refuses it; this is here because the AI side is now
+	# played by code and nothing else asserts that the mouse stays off it.
+	var main: BoardGame = _mounted_scene()
+
+	main._click_cell(main._state.unit_by_id(3).cell)
+
+	assert_int(main._selected_id).is_not_equal(3)
 
 
 func _mounted_scene() -> BoardGame:

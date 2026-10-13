@@ -1,14 +1,16 @@
-## The playable board: a scenario, two factions, and a mouse.
+## The playable board: a scenario, two factions, a mouse, and an opponent that
+## decides with a trained model.
 ##
-## There is no AI in this scene, deliberately. T2 builds the state every later
-## lesson decides on, and the way to be sure the state is right is to play it by
-## hand first. When `ai_search` lands, clicking a far cell will ask it for a
-## route; until then a click moves one cell, because a route is a search and a
-## search does not belong in `ai_core` or in a view.
+## Red is yours and moves a cell at a time. Blue is played by `ai_learning`:
+## when your turn ends, each of its units asks the combat model whether a
+## fight in reach is worth taking, and walks at whichever node the capture
+## model says it can hold soonest.
 ##
-## What the screen has to make obvious, and what the manual check in T2 asks
-## for: whose turn it is, which unit is selected, where it may go, and why a
-## refused move was refused.
+## The screen has to make the decision visible, not just its result -- a unit
+## stepping backwards looks the same whether a model gave it a 3% chance or
+## whether it had nowhere else to go. So every blue unit's reason, with the
+## number in it, goes under the status line. That is invariant 13, and the
+## manual check in T6 is whether a person can read it.
 class_name BoardGame
 extends Node2D
 
@@ -22,6 +24,13 @@ const FACTIONS: int = 2
 const RED: int = 0
 const BLUE: int = 1
 
+## The side the learned policy plays. Red is the player's.
+const AI_FACTION: int = BLUE
+
+## The two cells worth taking. Two, because choosing between them is the
+## capture model's whole job -- with one node there is nothing to predict.
+const NODES: Array[Vector2i] = [Vector2i(10, 1), Vector2i(2, 6)]
+
 @onready var _board: BoardView = $BoardView
 @onready var _units: UnitView = $UnitView
 @onready var _status: Label = $Interface/Status
@@ -30,9 +39,20 @@ var _state: BoardState
 var _selected_id: int = -1
 var _last_refusal: String = ""
 
+var _policy: LearnedPolicy
+
+# What blue decided last turn, in its own words. Shown until it decides again.
+var _ai_reasons: PackedStringArray = PackedStringArray()
+
 
 func _ready() -> void:
 	_state = _build_scenario()
+	# The search goes in from here rather than from inside the policy: a route
+	# is a search, and no addon may depend on another. The game owns both and
+	# is the right place to introduce them.
+	_policy = LearnedPolicy.new(
+		ModelFile.load_from(ModelFile.DEFAULT_PATH), NODES,
+		LearnedPolicy.DEFAULT_THRESHOLD, AStarSearch.new())
 	_select_first_unit_of_the_side_to_move()
 	_refresh()
 
@@ -92,8 +112,36 @@ func _try_step(cell: Vector2i) -> void:
 func _end_turn() -> void:
 	_state = _state.end_turn(FACTIONS, POINTS_PER_TURN)
 	_last_refusal = ""
+	if _state.current_faction == AI_FACTION:
+		_play_the_ai_turn()
+		_state = _state.end_turn(FACTIONS, POINTS_PER_TURN)
 	_select_first_unit_of_the_side_to_move()
 	_refresh()
+
+
+# Every unit of the AI's side decides in turn, and plays what it decided.
+#
+# One unit at a time against the state the one before it left, rather than all
+# of them deciding on the opening position: a unit that has watched a friend
+# walk away is a unit whose `numeric_advantage` has changed, and deciding on a
+# board that no longer exists is the oldest bug in turn-based AI.
+#
+# The loop holds a list taken before the first move and `_state` is replaced
+# inside it, which looks like exactly that bug and is not: only each unit's
+# id is read from the list, and the policy is handed the live state. The
+# order is `state.units` order, which this scenario happens to build by id.
+func _play_the_ai_turn() -> void:
+	_ai_reasons = PackedStringArray()
+	var unusable: String = _policy.why_unusable()
+	if unusable != "":
+		_ai_reasons.append("blue cannot think: " + unusable)
+		return
+	for unit: Unit in _state.units_of(AI_FACTION):
+		var decision: LearnedDecision = _policy.decide(_state, unit.id)
+		_ai_reasons.append(decision.reason)
+		var next: BoardState = _state.apply(decision.move)
+		if next != null:
+			_state = next
 
 
 # Whoever is to move starts with one of their units in hand, so the first click
@@ -104,7 +152,7 @@ func _select_first_unit_of_the_side_to_move() -> void:
 
 
 func _refresh() -> void:
-	_board.draw_board(_state.graph, _affordable_steps())
+	_board.draw_board(_state.graph, _affordable_steps(), NODES)
 	_units.show_state(_state, _board, _selected_id)
 	_status.text = _status_line()
 
@@ -133,11 +181,18 @@ func _status_line() -> String:
 	]
 	if _last_refusal != BoardState.LEGAL:
 		line += "\nrefused: " + _last_refusal
+	for reason: String in _ai_reasons:
+		line += "\n" + reason
 	return line
 
 
-# Two units a board apart, a wall to walk around and a patch of rough ground to
-# pay for. Small enough to read, and enough terrain that a route is a choice.
+# Two units a side, a wall to walk around, rough ground to pay for, and two
+# nodes that are not equally far from everybody.
+#
+# Built so the AI has something to decide rather than something to do. Blue's
+# healthy unit starts within reach of red's hurt one, which the combat model
+# likes; blue's own hurt unit starts beside red's healthy one, which it does
+# not -- so the first AI turn shows an attack and a retreat side by side.
 func _build_scenario() -> BoardState:
 	var graph := GridGraph.new(COLUMNS, ROWS)
 	for row: int in range(1, ROWS - 2):
@@ -148,6 +203,8 @@ func _build_scenario() -> BoardState:
 
 	var units: Array[Unit] = [
 		Unit.new(1, RED, Vector2i(1, 4), 10, POINTS_PER_TURN),
-		Unit.new(2, BLUE, Vector2i(10, 3), 10, POINTS_PER_TURN),
+		Unit.new(2, RED, Vector2i(9, 5), 14, POINTS_PER_TURN),
+		Unit.new(3, BLUE, Vector2i(10, 3), 15, POINTS_PER_TURN),
+		Unit.new(4, BLUE, Vector2i(9, 6), 6, POINTS_PER_TURN),
 	]
 	return BoardState.new(graph, units, RED)

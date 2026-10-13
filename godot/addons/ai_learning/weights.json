@@ -1,0 +1,60 @@
+{
+  "generated_by": "gameaikit.training.report",
+  "games": 1500,
+  "data_seed": 20261012,
+  "split_seed": 70402,
+  "feature_conventions": {
+    "nearby_radius": 2,
+    "reinforcement_distance_when_alone": 15,
+    "cheapest_ground": 1,
+    "dearest_ground": 3
+  },
+  "models": {
+    "combat": {
+      "kind": "logistic",
+      "features": [
+        "health_difference",
+        "numeric_advantage",
+        "defender_terrain",
+        "reinforcement_distance"
+      ],
+      "weights": [
+        0.508109,
+        1.832607,
+        -1.631166,
+        -0.123779
+      ],
+      "bias": 3.393734,
+      "comparable_weights": [
+        2.271354,
+        1.413487,
+        -1.331513,
+        -0.619055
+      ],
+      "rows_trained_on": 2224
+    },
+    "capture": {
+      "kind": "linear",
+      "features": [
+        "distance_to_node",
+        "own_units",
+        "enemy_units",
+        "terrain_on_the_way"
+      ],
+      "weights": [
+        0.698048,
+        0.089746,
+        0.087648,
+        0.397774
+      ],
+      "bias": 1.142399,
+      "comparable_weights": [
+        1.095879,
+        0.072087,
+        0.070654,
+        0.196793
+      ],
+      "rows_trained_on": 772
+    }
+  }
+}

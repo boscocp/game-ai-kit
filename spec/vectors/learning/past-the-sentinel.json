@@ -1,0 +1,151 @@
+{
+  "name": "a friend further away than the sentinel",
+  "why": "The sentinel a lone unit reports is the training board's width, 15, and the distances on this board run past it. A side that seeds its search with the sentinel instead of falling back on it reports 15 here and agrees with the other side everywhere else -- which is what happened, and what the two small boards in the other vectors could never have shown. The second case is the contrast: a unit that really is alone, on the same board, reporting the same 15 honestly.",
+  "feature_conventions": {
+    "nearby_radius": 2,
+    "reinforcement_distance_when_alone": 15,
+    "cheapest_ground": 1,
+    "dearest_ground": 3
+  },
+  "models": {
+    "combat": {
+      "kind": "logistic",
+      "features": [
+        "health_difference",
+        "numeric_advantage",
+        "defender_terrain",
+        "reinforcement_distance"
+      ],
+      "weights": [
+        0.508109,
+        1.832607,
+        -1.631166,
+        -0.123779
+      ],
+      "bias": 3.393734
+    }
+  },
+  "board": {
+    "width": 20,
+    "height": 3,
+    "costs": [
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    ],
+    "units": [
+      {
+        "id": 1,
+        "faction": 0,
+        "x": 0,
+        "y": 0,
+        "health": 12
+      },
+      {
+        "id": 2,
+        "faction": 0,
+        "x": 19,
+        "y": 1,
+        "health": 10
+      },
+      {
+        "id": 3,
+        "faction": 1,
+        "x": 1,
+        "y": 0,
+        "health": 9
+      }
+    ]
+  },
+  "cases": [
+    {
+      "kind": "combat",
+      "attacker": 1,
+      "defender": 3,
+      "why": "a friend twenty cells away is twenty, not the sentinel",
+      "features": {
+        "health_difference": 3,
+        "numeric_advantage": 0,
+        "defender_terrain": 1,
+        "reinforcement_distance": 20
+      },
+      "prediction": 0.692389652018
+    },
+    {
+      "kind": "combat",
+      "attacker": 3,
+      "defender": 1,
+      "why": "the last unit of its side, on the same board, reporting the sentinel",
+      "features": {
+        "health_difference": -3,
+        "numeric_advantage": 0,
+        "defender_terrain": 1,
+        "reinforcement_distance": 15
+      },
+      "prediction": 0.165419573411
+    }
+  ]
+}

@@ -93,3 +93,10 @@ jobs:
       - run: make test-planner-properties
         env:
           GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
+
+      # The learned opponent, against the weights that are committed. Here
+      # rather than in the gates job for the same reason as the two above:
+      # it needs the engine.
+      - run: make test-decisions
+        env:
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain

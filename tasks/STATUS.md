@@ -15,7 +15,7 @@ A playable minimum where three techniques actually decide something.
 | T3 | `ai_search`: A\*, BFS, DFS, Dijkstra | done | 3 vectors and a 300-board property check |
 | T4 | `ai_planning`: STRIPS, and a PDDL reader in Python | done | 8 steps, 14 states; 3 vectors read from both languages |
 | T5 | Dataset and training (Python) | done | 87.8% against a 69.0% baseline, and 81.8% for a lookup table |
-| T6 | `ai_learning`: inference, and the attack/retreat decision | todo | needs T5 |
+| T6 | `ai_learning`: inference, and the attack/retreat decision | done | 4 vectors read from both languages; invariant 6 finally has a gate |
 | T7 | Close the slice: docs, ADRs, `make release` | todo | needs T3, T4, T6 |
 
 ## Milestone 2 — three games, three families of technique
@@ -69,6 +69,109 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-13 (wave 18)
+
+**What landed.** T6: `godot/addons/ai_learning/` loads the weights Python
+published and does nothing but infer. `LearnedModel` is `w·x + b` and a
+sigmoid; `ModelFile` refuses a malformed file in one sentence with a code and
+hands back *no* models rather than half of one; `BoardFeatures` reads the four
+combat and four capture features off a live `BoardState`; `LearnedPolicy`
+compares one probability against one threshold and takes the lower of two
+predicted capture times. Blue in `make run` is played by it and says on screen
+what it decided and the number it decided on. `check_no_training.py` gives
+invariant 6 the gate it has never had, and `spec/vectors/learning/` holds the
+two languages to the same rows and the same arithmetic.
+
+**Two of the four combat features cannot be computed from a board.** How near
+counts as near, and what a unit with no living friends reports -- and the
+second is the *training* board's width, so a game helpfully reporting its own
+would say "far" where the data said "nobody is coming". They are published in
+`weights.json` now, with the range of terrain the data covered, and the game
+reads them rather than keeping a copy. A number two languages must agree on,
+living in two files, is a number that will one day differ.
+
+**The bug worth remembering is the one no vector could have caught.**
+`_nearest_friend` seeded its search with the sentinel instead of falling back
+on it, so "I am alone" and "my nearest friend is seventeen away" were the same
+number. The two board-carrying vectors are 5x4 and 6x4 -- longest distance 8,
+sentinel 15 -- and the board `make run` ships is 12x8, where it reaches 18.
+**A conformance vector only tests the range its board can reach.** There is a
+fourth vector now, on a board twenty wide, and it goes red against the old
+code.
+
+**The sentinel is clean by luck, not by design.** Over the 2937 training rows
+the real distances run 1 to 11 and none reaches 15 -- but the simulator's
+geometry permits 16. Worth knowing before T18 leans on that feature.
+
+**Twenty-one rules were deletable with every gate green**, found by two
+reviews deleting them one at a time: the whole of `_affordable` (the only
+thing making every returned move legal -- no test had ever produced a route
+the unit could not pay for), four tie-breaks and boundaries, four board rules
+in the vector loader, two of `ModelFile`'s refusals, three of the four ways
+the gate recognises a file being written, eight of its ten forbidden words,
+and its vendored-code exclusion.
+
+Each has a case now, and **each case was then run against the mutation that
+motivated it** rather than assumed to work. That caught three failures in the
+fixes themselves: one case was hidden behind an earlier failure in the same
+suite (the gdUnit4 trap `CLAUDE.md` warns about); two were passing through a
+*different* rule, because eleven board rules all answer the code `V7` and
+`contains("V7")` cannot tell them apart; and the planted case for
+`open_encrypted` contained `FileAccess.WRITE`, so the alternative next door
+was catching it.
+
+**A planted case written as a loop over the rule list cannot notice the list
+shrinking.** Planting one case per forbidden word by iterating the vocabulary
+proves every word fires and goes green the moment a word is deleted, because
+the loop shrinks with it. Both are needed: the literal list catches the
+deletion, the loop catches an entry that does not work -- and the loop earned
+its place immediately, catching a planted `gradient_value` that
+`\bgradient\b` never matched.
+
+**T6's headline acceptance command proves less than it reads like.** The three
+decision scenarios stayed green under all five mutations of the feature
+extraction. They are about nerve; the arithmetic is the vectors' job, and the
+file says so now.
+
+**The fixes needed reviewing as much as the code did.** Both reviewers were
+sent back over the repairs, and found four more defects in them -- including a
+rule whose three planted cases all reached the helper and none reached the
+*call site*, so deleting the call left the self-test green. Seven of this
+wave's fixes were themselves wrong on first writing. Budget for that.
+
+**Thirty-four lines of real gradient descent got past the new gate**, inside
+the inference addon, by calling its accumulator `_numbers`. The docstring
+admits that hole and is right to refuse a longer list of verbs, which would
+fire on good code -- but the one directory that is read-only by construction
+can be held to a stricter rule, so any compound arithmetic assignment into an
+indexed value is now a finding **there and nowhere else**.
+
+**A measurement that belongs in anyone's Godot notes:** the static
+`JSON.parse_string` prints an engine error of its own before returning null,
+where `JSON.new().parse()` returns the code quietly and hands over the
+message. Found because a *passing* test printed a stack trace. Written up in
+[docs/godot/reading-json-in-godot.md](../docs/godot/reading-json-in-godot.md).
+
+**Not proven.** The manual check is a person's job: whether the retreat reads
+as a decision rather than a bug, and whether the overlay makes the probability
+legible. Nothing is profiled. `enemy_units` has no three-faction meaning in
+either language -- documented and pinned, not solved.
+
+**Still open, and carried forward.** The eleven over-long addon headers from
+wave 07 still wait on the owner -- this wave added four and then cut them, so
+the count is unchanged. Planning and learning still have no pages under
+`docs/`, so `check_tiers.py` sees neither lesson until T7. The `doc-meta`
+blocks in `spec/vectors/*/README.md` still declare a `half_life` the docs gate
+does not know. Nothing enforces a line width. And the search and planning
+vector runners still use the noisy JSON parser.
+
+**Next: T7** -- close the slice: the docs pages that make `check_tiers.py` see
+planning and learning at tier 1, the ADRs, and `make release`. It is the last
+task in milestone 1.
+
+Read tasks/T7-close-the-slice.md next, then: make check, write the review
+record, make wave-merge.
 
 ## Resuming after 2026-10-13 (wave 15)
 
