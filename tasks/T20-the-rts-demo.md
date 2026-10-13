@@ -12,10 +12,55 @@ ladder from T12, the second core from T19, and everything the three earlier
 games taught about making an AI legible. Built first, it would have been a
 large pile of code with no lesson in it.
 
+## The minimum game
+
+Built backwards from the AIs: each feature is here because some technique has
+nothing interesting to decide without it, and nothing is here for any other
+reason.
+
+| the AI | is only interesting if the game has | without it |
+|---|---|---|
+| rules and priority queues | an economy with more than one thing to spend on at once | a linear script |
+| FSM and behaviour tree | units whose state changes: gather, defend, retreat, chase | one state, nothing to see |
+| STRIPS, GOAP, HTN | a chain of dependencies paid from one contested bank, and a population cap | a two-step plan any rule matches |
+| utility and influence maps | regions worth different things: expansions, a chokepoint | nowhere to choose to attack |
+| A\* and flow fields | terrain with costs, obstacles, and groups moving together | a straight line does it |
+| the learned model (T6) | fights whose outcome is uncertain and depends on numbers, terrain and reinforcement | nothing to predict |
+| human-likeness (T25) | real time, where actions per minute matter, and fog of war | nothing to be slow at or miss |
+
+**What it has:**
+
+1. **Economy**: two resources, as in Churchill and Buro's StarCraft build
+   orders, so that spending is a trade. Workers that gather them, and a
+   population cap that forces a supply building, which lengthens the
+   dependency chain without new rules.
+2. **Production**: a base, a barracks and **one** technology building that
+   unlocks the third combat unit. Everything takes time to build, and that
+   time is what makes a build order a decision.
+3. **Units**: a worker and **three** combat units in a rock-paper-scissors
+   counter table, taken from T10's five. Three are enough for countering and
+   scouting to pay off in real time.
+4. **Map**: two starting bases, two or three expansions with resources, one
+   chokepoint, and terrain with costs. That is the least that makes
+   "expand", "attack where" and flow fields real choices.
+5. **Fog of war and scouting**: without them there is no uncertainty, the
+   influence maps have nothing to estimate, and half of the human-likeness
+   test disappears.
+6. **Combat**: damage, range and health, with a little randomness drawn from
+   the match seed. No special abilities.
+7. **An end**: destroying the base, or a time limit with a stated tiebreak.
+   The league needs every match to finish.
+
+**What it leaves out, on purpose:** air and naval units, heroes, active
+abilities, formations, a tech tree deeper than one building, and diplomacy.
+Each is work that gives none of the AIs above a new decision. One of them
+comes back only with a task that names the AI it is for.
+
 ## Steps
 
-1. The tactical content from T10, moved onto the real-time core. The unit
-   types, towers, buildings and terrain are the same; what changes is time.
+1. The minimum game above, on the real-time core, built from T10's content:
+   the same terrain, three of its five unit types, its towers and buildings.
+   What changes is time.
 2. **Three layers, as ADR 0010 sets out**: a commander that plans, squads
    that score, units that move. Only the commander plans. Squads choose
    regions by utility over the influence maps (Dill's Kohan II chapter);

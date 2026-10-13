@@ -35,7 +35,24 @@ delete this task.
    reactive control near a second. That is how *often* each layer needs to
    decide, not how much of a frame it gets: a strategic replan may be heavy and
    rare, so it is the one that has to be cut into slices.
-6. An ADR recording why there are two cores, so the next reader does not assume
+6. **The simulation T20's league and its AIs need**, which matter more than
+   any content:
+   - **deterministic and headless, faster than real time.** A fixed timestep,
+     every random draw from the match seed, nothing depending on rendering or
+     the wall clock. The league plays hundreds of matches, and a simulation
+     that runs only as fast as it can be watched makes T25 impossible in real
+     time;
+   - **one command interface for people and AIs**: move, attack, gather, build,
+     train. An AI acts only through it, which is what holds the never-cheat
+     rule and lets actions per minute be counted the same way for everyone;
+   - **each side sees only its own view.** An AI reads the world through its
+     side's fog, never the whole state;
+   - **counters built in**: time per decision and work done, which feed both
+     T25's league table and its on-screen meter;
+   - **recording and replay** of a match from its seed and its commands, for
+     the blind test, for T25's human reference, and for finding out why an AI
+     did something strange.
+7. An ADR recording why there are two cores, so the next reader does not assume
    it was an accident.
 
 ## Acceptance
@@ -52,6 +69,17 @@ python3 scripts/check_addon_deps.py
 That script holds the whole task honest: it runs both cores at the stated scale
 and asserts the frame budget. If `ai_core` passes it, this addon should not
 exist and the script says so by passing without it.
+
+```bash
+./scripts/godot --headless --path godot -s res://test/rts_simulation.gd
+```
+
+That script holds step 6. It plays one match twice from the same seed and
+asserts the final states are identical. It replays the recorded commands and
+asserts the same end again. It asserts the match ran faster than real time,
+and prints by how much. It asserts that a side's view contains no enemy unit
+outside that side's sight. And it asserts that an AI's action that bypasses
+the command interface is refused.
 
 ## Manual check
 
