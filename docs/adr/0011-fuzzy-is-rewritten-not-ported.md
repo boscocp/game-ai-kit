@@ -8,7 +8,7 @@ T13 says the author already has a fuzzy library "in Python", that the task
 ports it rather than inventing it again, and that this means there is no
 licence question. Reading the library at
 [github.com/boscocp/Fuzzy-library](https://github.com/boscocp/Fuzzy-library)
-(one commit, July 2020) showed that two of those three claims were wrong:
+(ten commits, all on 30 July 2020) showed that two of those three claims were wrong:
 
 - **It is C#, not Python.** The README says it was written to teach AI in
   Unity.
@@ -17,7 +17,8 @@ licence question. Reading the library at
   called `ControleFuzzy`, and no file defines that class. What is published
   is three data classes (`TermFuzzy`, `VarFuzzy`, `RuleFuzzy`), a reader for
   a text format (`FuzzyReader.cs`), and an example file (`FLC.txt`). As
-  published it does not compile.
+  published it does not compile, and the reader is part of why: it builds a
+  `ControleFuzzy` and calls three of its methods.
 - **The licence claim holds**, for a narrower reason than the task gives.
   The repository has no licence file, so nobody else may copy it. The author
   of that repository and of this one is the same person, and that is why
@@ -47,14 +48,20 @@ What does not carry over, and why:
   between its conditions, and nothing said which one binds tighter. Here a
   rule has one connective. Two rules say the same thing without the
   ambiguity.
-- **Carrying on past an error.** `FuzzyReader` printed `Key = ... is not
-  found` and kept reading, so a rule with a misspelled set was dropped and
-  the controller still evaluated. Every error is a refusal with a line
-  number now.
-- **Mutable degrees stored on the terms.** `TermFuzzy.SetPertinence` wrote
-  each evaluation's result into the controller's own data, so a controller
-  could not be asked two questions at once and an old answer could leak into
-  a new one. Here evaluation returns its degrees and changes nothing.
+- **Carrying on past an error.** When a condition named a set it could not
+  find, `FuzzyReader` caught the `KeyNotFoundException`, printed a message
+  (which named the keyword, `Key = IF is not found.`, rather than the key),
+  and skipped *that condition* -- but still built the rule at `THEN`. A
+  misspelling therefore made a rule broader rather than removing it, with its
+  operator list now out of step with its conditions. Here every error is a
+  refusal: a mistake on a line names the line, and a missing piece names what
+  is missing.
+- **Mutable degrees stored on the terms.** `TermFuzzy` has a `pertinence`
+  field with a setter, and `RuleFuzzy` sets its conclusion's through
+  `SetActivatorPertinence`. The callers would be in the missing class, so how
+  they were used is an inference: the shape stores each evaluation's degrees
+  in the controller's own data, where a second question would overwrite the
+  first. Here evaluation returns its degrees and changes nothing.
 - **The Gaussian shape** in `TypeFunction`, which nothing used.
 
 Added, because the old format had nowhere to say it:
@@ -78,8 +85,9 @@ Added, because the old format had nowhere to say it:
   together. Sampling is what the textbooks show, and the sample count is
   printed in the controller.
 - **Leave the text reader out.** Rejected. It is the one piece of the old
-  library that was working code, and without it "rewritten from" would mean
-  only "inspired by".
+  library that was more than data -- not working code, since it builds the
+  missing class -- and without it "rewritten from" would mean only
+  "inspired by".
 
 ## Consequences
 

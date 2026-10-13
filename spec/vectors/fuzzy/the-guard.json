@@ -188,14 +188,33 @@
     },
     {
       "kind": "evaluate",
+      "name": "suspicious-only",
+      "why": "medium and bright, and nothing else: rule 3 alone, which is what the next case leans away from",
+      "inputs": {
+        "distance": 8.5,
+        "light": 0.9
+      },
+      "activations": {
+        "alertness": {
+          "calm": 0.0,
+          "suspicious": 1.0,
+          "alarmed": 0.0
+        }
+      },
+      "outputs": {
+        "alertness": 50.0
+      }
+    },
+    {
+      "kind": "evaluate",
       "name": "between-near-and-medium",
-      "why": "near and medium both half true: alarmed and suspicious at a half each, so the answer is between the two",
+      "why": "near and medium both half true, so rule 1 (alarmed) and rule 3 (suspicious) fire at a half each -- and the answer lies strictly between what each gives alone",
       "inputs": {
         "distance": 5,
         "light": 0.9
       },
       "between": [
-        "far-and-lit",
+        "suspicious-only",
         "close-and-lit"
       ],
       "activations": {

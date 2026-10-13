@@ -42,7 +42,11 @@ def sweep(controller: RuleBase, swept: str, held: dict[str, float],
 
 
 def draw(controller: RuleBase, swept: str, held: dict[str, float]) -> str:
-    """The sweep as text: the input down the side, each output as a bar."""
+    """The sweep as text: the input down the side, the first output as a bar.
+
+    One output, because one bar per row is what stays readable at sixty
+    characters; a controller with two outputs is plotted one at a time.
+    """
     output = controller.outputs[0]
     lines = [f"{output.name} against {swept}, holding {held or 'nothing'}"]
     for value, outputs in sweep(controller, swept, held):
@@ -69,8 +73,17 @@ def main(argv: list[str]) -> int:
     except (OSError, ValueError) as problem:
         print(f"plot: {problem}", file=sys.stderr)
         return 2
-    if arguments.swept not in {one.name for one in controller.inputs}:
+    inputs = {one.name for one in controller.inputs}
+    if arguments.swept not in inputs:
         print(f"plot: {arguments.swept} is not an input", file=sys.stderr)
+        return 2
+    # A held value for no input, or for the one being swept, would be ignored
+    # in silence -- and a plot of something other than what was asked for is
+    # worse than no plot.
+    stray = sorted(name for name in held if name not in inputs or name == arguments.swept)
+    if stray:
+        print(f"plot: {', '.join(stray)} cannot be held: not an input, or the swept one",
+              file=sys.stderr)
         return 2
     try:
         print(draw(controller, arguments.swept, held))

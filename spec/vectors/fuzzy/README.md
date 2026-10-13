@@ -24,9 +24,15 @@ A rule base with overlapping rules has to produce a value **strictly between**
 the outputs of its two rules. That one number is the whole of fuzzy logic, and
 it is exactly what a broken defuzzifier gets wrong. A case carrying
 `"between": [a, b]` claims this against two earlier cases, and both runners
-check that the inequality is strict. There are three such claims:
-`two-rules-overlap.json` has `both` and `leaning-calm`, and `the-guard.json`
-has `between-near-and-medium`.
+check that the inequality is strict. The one T13 names is `both` in
+`two-rules-overlap.json`, between `only-calm` and `only-alarmed` -- each rule
+alone -- and `make test-python` fails if it disappears. Two more hold the
+same idea: `leaning-calm` lies between `only-calm` and `both`, and the
+guard's `between-near-and-medium` lies between `suspicious-only` (rule 3
+alone) and `close-and-lit` (rule 1 alone), the two rules it fires.
+
+A misspelt key is refused rather than ignored, on both sides: `"betwen"`
+would otherwise drop the claim while every number still passed.
 
 A defuzzifier that keeps only the strongest rule's term was planted on the
 Python side. It fails five cases here and the slope test in `test_fuzzy.py`.
@@ -96,10 +102,14 @@ their JSON.
 
 ## What they deliberately do not pin
 
-- **Refusals.** Each side refuses a broken controller with the same code
-  (`F1`–`F8`), but GDScript reports it from `problem()` and Python raises.
-  Unit tests hold the refusals on each side, in `godot/test/fuzzy_test.gd`
-  and `python/tests/test_fuzzy.py`.
+- **Refusals.** Both sides refuse a broken controller with the same codes,
+  `F1`–`F7`; GDScript reports it from `problem()` and Python raises. An input
+  that is missing or not a finite number is Python's `F8`, and GDScript's
+  empty `fuzzify` and NaN outputs. Each side also refuses an output set no
+  sample point reaches, because concluding it would add nothing and the
+  answer would be a NaN that claims no rule fired. Unit tests hold the
+  refusals on each side, in `godot/test/fuzzy_test.gd`,
+  `python/tests/test_fuzzy.py` and `python/tests/test_fuzzy_loading.py`.
 - **The text reader.** It exists only in Python, so there is nothing to
   disagree with. Its refusals are in `python/tests/test_fcl_reader.py`.
 

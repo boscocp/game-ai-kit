@@ -28,9 +28,11 @@ import math
 class FuzzyError(ValueError):
     """A controller that cannot be evaluated, said in one sentence with a code.
 
-    The codes are shared with the GDScript side (`FuzzyRuleBase.problem`), so
-    a test on either side can tell which rule refused, rather than matching on
-    wording that a later edit is free to improve.
+    `F1`-`F7` are shared with the GDScript side (`FuzzyRuleBase.problem`).
+    `F8`, an input missing or not a finite number, is Python's: GDScript
+    answers it with an empty `fuzzify`. `F0` is the JSON reader's and `F9` the
+    text reader's, and neither has a GDScript twin. A code says which rule;
+    where several refusals share one, the tests match the sentence.
     """
 
 
@@ -73,11 +75,13 @@ class FuzzySet:
             raise FuzzyError(f"F1 set {self.name!r} has points out of order: {points}")
 
     def degree(self, value: float) -> float:
-        """How far `value` belongs to this set, from 0 (not at all) to 1.
+        """How far a finite `value` belongs to this set, from 0 (not at all) to 1.
 
         The flat top is tested before either slope, and that order is what
         lets a vertical edge -- `rise_start == rise_end`, a shoulder -- answer
-        1 at its corner instead of dividing by zero.
+        1 at its corner instead of dividing by zero. A NaN fails every
+        comparison and *would* reach a division, which is why `fuzzify`
+        refuses one before it gets here.
         """
         if value < self.rise_start or value > self.fall_end:
             return 0.0
@@ -107,6 +111,8 @@ class Variable:
 
     def check(self, is_output: bool) -> None:
         """Refuse a variable that cannot be read or cannot be sampled."""
+        if not (math.isfinite(self.minimum) and math.isfinite(self.maximum)):
+            raise FuzzyError(f"F2 variable {self.name!r} has a range that is not finite")
         if not self.minimum < self.maximum:
             raise FuzzyError(f"F2 variable {self.name!r} has an empty range")
         if not self.sets:
@@ -114,8 +120,10 @@ class Variable:
         names = [one.name for one in self.sets]
         if len(set(names)) != len(names):
             raise FuzzyError(f"F2 variable {self.name!r} names a set twice")
-        if is_output and self.samples < 2:
-            raise FuzzyError(f"F3 output {self.name!r} needs at least two samples")
+        if is_output and (isinstance(self.samples, bool) or not isinstance(self.samples, int)
+                          or self.samples < 2):
+            raise FuzzyError(f"F3 output {self.name!r} needs a whole number of samples, "
+                             "at least two")
         for one in self.sets:
             one.check()
 
@@ -124,6 +132,14 @@ class Variable:
         return next((one for one in self.sets if one.name == name), None)
 
     def fuzzify(self, value: float) -> dict[str, float]:
-        """Every set's degree for one crisp value, clamped into the range first."""
+        """Every set's degree for one crisp value, clamped into the range first.
+
+        A value that is not a finite number is refused rather than clamped:
+        NaN survives `min` and `max` unchanged and then divides by zero on a
+        shoulder, and a string is not a distance however it is spelled.
+        """
+        if isinstance(value, bool) or not isinstance(value, (int, float)) \
+                or not math.isfinite(value):
+            raise FuzzyError(f"F8 {self.name} is {value!r}, not a finite number")
         clamped = min(max(value, self.minimum), self.maximum)
         return {one.name: one.degree(clamped) for one in self.sets}

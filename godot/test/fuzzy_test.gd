@@ -68,11 +68,15 @@ func test_points_out_of_order_are_refused() -> void:
 
 
 func test_the_wrong_number_of_points_is_refused() -> void:
-	assert_str(_term("two", [0, 1]).problem()).starts_with("F1")
+	assert_str(_term("two", [0, 1]).problem()).contains("three or four points")
 
 
 func test_a_point_that_is_not_a_number_is_refused() -> void:
-	assert_str(_term("hole", [0, NAN, 2]).problem()).starts_with("F1")
+	assert_str(_term("hole", [0, NAN, 2]).problem()).contains("not a number")
+
+
+func test_an_infinite_point_is_refused() -> void:
+	assert_str(_term("forever", [0, 1, INF]).problem()).contains("not a number")
 
 
 func test_a_sound_set_has_no_problem() -> void:
@@ -82,6 +86,11 @@ func test_a_sound_set_has_no_problem() -> void:
 func test_an_input_is_clamped_before_it_is_fuzzified() -> void:
 	assert_dict(_noise().fuzzify(-5.0)).is_equal(_noise().fuzzify(0.0))
 	assert_float(_noise().fuzzify(50.0)["loud"]).is_equal(1.0)
+
+
+func test_an_infinite_range_is_refused() -> void:
+	var endless := FuzzyVariable.new("endless", 0, INF, _sets({"one": [0, 1, 1]}))
+	assert_str(endless.problem(false)).contains("not finite")
 
 
 func test_an_empty_range_is_refused() -> void:
@@ -122,6 +131,58 @@ func test_a_term_concluded_twice_takes_the_stronger_rule() -> void:
 	var strengths: Dictionary = _controller(rules).activations({"noise": 4.5})
 	assert_float(strengths["alertness"]["calm"]).is_equal(0.375)
 	assert_float(strengths["alertness"]["alarmed"]).is_equal(0.0)
+
+
+func test_a_controller_reports_its_input_s_problem() -> void:
+	var broken := FuzzyVariable.new("noise", 0, 10, _sets({"quiet": [0, 4, 3, 5], "loud": [4, 8, 10]}))
+	var controller := FuzzyRuleBase.new([broken] as Array[FuzzyVariable],
+			[_alertness()] as Array[FuzzyVariable], _controller().rules)
+	assert_str(controller.problem()).starts_with("F1")
+
+
+func test_a_controller_reports_its_output_s_problem() -> void:
+	# The sentence, not only the code: with one sample the sampling check also
+	# answers F3, and it hid the deletion of this one when the test said F3.
+	var controller := FuzzyRuleBase.new([_noise()] as Array[FuzzyVariable],
+			[_alertness(1)] as Array[FuzzyVariable], _controller().rules)
+	assert_str(controller.problem()).contains("whole number of samples")
+
+
+func test_a_controller_reports_a_broken_set_in_its_output() -> void:
+	var broken := FuzzyVariable.new("alertness", 0, 100,
+			_sets({"calm": [0, 30, 20, 50], "alarmed": [50, 80, 100, 100]}), 11)
+	var controller := FuzzyRuleBase.new([_noise()] as Array[FuzzyVariable],
+			[broken] as Array[FuzzyVariable], _controller().rules)
+	assert_str(controller.problem()).starts_with("F1")
+
+
+func test_a_controller_reports_an_empty_range() -> void:
+	var flat := FuzzyVariable.new("noise", 5, 5, _sets({"quiet": [5, 5, 5], "loud": [5, 5, 5]}))
+	var controller := FuzzyRuleBase.new([flat] as Array[FuzzyVariable],
+			[_alertness()] as Array[FuzzyVariable], _controller().rules)
+	assert_str(controller.problem()).starts_with("F2")
+
+
+func test_an_output_set_no_sample_reaches_is_refused() -> void:
+	# Concluded at full strength it adds nothing, and the answer would be NAN
+	# -- which everywhere else here means that no rule fired.
+	for points: Array in [[150, 180, 200, 200], [81, 85, 89]]:
+		var sets: Array[FuzzySet] = _sets({"calm": [0, 0, 20, 50], "alarmed": points})
+		var narrow := FuzzyVariable.new("alertness", 0, 100, sets, 11)
+		var outputs: Array[FuzzyVariable] = [narrow]
+		var controller := FuzzyRuleBase.new([_noise()] as Array[FuzzyVariable], outputs, _controller().rules)
+		assert_str(controller.problem()).contains("no sample point")
+
+
+func test_a_rule_added_after_construction_is_still_checked() -> void:
+	var controller: FuzzyRuleBase = _controller()
+	controller.rules.append(_rule([["noise", "quiet"]], ["ghost", "x"]))
+	assert_str(controller.problem()).starts_with("F7")
+	assert_bool(is_nan(controller.evaluate({"noise": 1.0})["alertness"])).is_true()
+
+
+func test_a_rule_with_no_conditions_has_no_strength() -> void:
+	assert_bool(is_nan(_rule([], ["alertness", "calm"]).strength({}))).is_true()
 
 
 func test_a_sound_controller_has_no_problem() -> void:
@@ -173,6 +234,12 @@ func test_a_malformed_condition_is_refused_rather_than_read() -> void:
 func test_a_controller_with_a_problem_answers_nan_rather_than_a_number() -> void:
 	var rule: FuzzyRule = _rule([["noise", "quiet"]], ["alertness", "calm"], "xor")
 	assert_bool(is_nan(_with_rule(rule).evaluate({"noise": 1.0})["alertness"])).is_true()
+
+
+func test_an_input_that_is_not_a_finite_number_answers_nan() -> void:
+	# NAN once came back as a confident 50.0, and "abc" as 0.0 read as quiet.
+	for value: Variant in [NAN, INF, "abc", "9", true, null]:
+		assert_bool(is_nan(_controller().evaluate({"noise": value})["alertness"])).is_true()
 
 
 func test_a_missing_input_answers_nan_rather_than_reading_zero() -> void:

@@ -35,6 +35,28 @@ def close_enough(found: float, expected: float | None) -> bool:
     return abs(found - expected) <= TOLERANCE * max(1.0, abs(expected))
 
 
+#: Every key a case of each kind may carry. A misspelt key is otherwise
+#: ignored in silence, and `"betwen"` drops the very claim T13 asks for while
+#: every number in the file still passes.
+CASE_KEYS = {
+    "membership": {"kind", "why", "variable", "set", "value", "degree"},
+    "fuzzify": {"kind", "why", "variable", "value", "degrees"},
+    "evaluate": {"kind", "why", "name", "inputs", "activations", "outputs", "between"},
+}
+
+
+def strictly_between(found: float, one: float, other: float) -> bool:
+    """`found` lies strictly inside the interval the other two make."""
+    low, high = sorted((one, other))
+    return low < found < high
+
+
+def all_cases() -> list[tuple[str, dict]]:
+    """Every case of every vector, with the file it came from."""
+    return [(path.name, case) for path in vector_files()
+            for case in json.loads(path.read_text(encoding="utf-8"))["cases"]]
+
+
 class FuzzyVectorTests(unittest.TestCase):
     def test_there_are_vectors_to_check(self) -> None:
         self.assertGreaterEqual(len(vector_files()), FEWEST_VECTORS)
@@ -48,14 +70,38 @@ class FuzzyVectorTests(unittest.TestCase):
                 with self.subTest(vector=path.name, case=case.get("name", case["why"])):
                     self._check(controller, case, answers)
 
-    def test_a_between_claim_is_strict(self) -> None:
-        # T13 asks for one case whose answer lies strictly between two others.
-        # A file that loses its `between` claims still passes every number in
-        # it, so the claim's presence is checked here rather than assumed.
-        claims = [case for path in vector_files()
-                  for case in json.loads(path.read_text(encoding="utf-8"))["cases"]
-                  if "between" in case]
-        self.assertGreaterEqual(len(claims), 2)
+    def test_the_case_t13_asks_for_is_present(self) -> None:
+        # The two rules' own outputs on either side, by name: counting claims
+        # let the one T13 names be deleted while the count stayed above two.
+        found = {(name, case.get("name")): case for name, case in all_cases()}
+        both = found[("two-rules-overlap.json", "both")]
+        self.assertEqual(both["between"], ["only-calm", "only-alarmed"])
+
+    def test_every_case_carries_only_the_keys_its_kind_allows(self) -> None:
+        for name, case in all_cases():
+            with self.subTest(vector=name, case=case.get("name", case.get("why"))):
+                self.assertIn(case.get("kind"), CASE_KEYS)
+                self.assertLessEqual(set(case), CASE_KEYS[case["kind"]])
+
+    def test_the_check_applies_between_to_an_answer_at_one_end(self) -> None:
+        # The planted case for the *call site*: the helper below has its own,
+        # and deleting the line that calls it left every other test green.
+        vector = json.loads((VECTORS / "two-rules-overlap.json").read_text(encoding="utf-8"))
+        controller = from_dictionary(vector["controller"])
+        answers: dict = {}
+        cases = {case["name"]: case for case in vector["cases"]}
+        for name in ("only-calm", "only-alarmed"):
+            self._check_evaluation(controller, cases[name], answers)
+        at_one_end = dict(cases["only-calm"], name="planted",
+                          between=["only-calm", "only-alarmed"])
+        with self.assertRaises(AssertionError):
+            self._check_evaluation(controller, at_one_end, answers)
+
+    def test_strictly_between_refuses_an_end(self) -> None:
+        # The planted case for the check below: an answer equal to one end.
+        self.assertFalse(strictly_between(15.0, 15.0, 85.0))
+        self.assertFalse(strictly_between(85.0, 15.0, 85.0))
+        self.assertTrue(strictly_between(50.0, 85.0, 15.0))
 
     def test_the_text_file_describes_the_same_controller(self) -> None:
         for text_path in sorted(VECTORS.glob("*.fcl")):
@@ -90,9 +136,9 @@ class FuzzyVectorTests(unittest.TestCase):
         answers[case["name"]] = found
         for output in case["outputs"]:
             if "between" in case:
-                low, high = sorted(answers[name][output] for name in case["between"])
-                self.assertLess(low, found[output])
-                self.assertLess(found[output], high)
+                one, other = (answers[name][output] for name in case["between"])
+                self.assertTrue(strictly_between(found[output], one, other),
+                                (output, found[output], one, other))
 
 
 if __name__ == "__main__":

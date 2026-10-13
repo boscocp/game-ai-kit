@@ -204,3 +204,89 @@ func test_nan_compares_equal_only_to_a_claimed_null() -> void:
 	assert_bool(FuzzyVector.close_enough(NAN, null)).is_true()
 	assert_bool(FuzzyVector.close_enough(0.0, null)).is_false()
 	assert_bool(FuzzyVector.close_enough(NAN, 0.0)).is_false()
+
+
+func test_a_kind_that_is_not_a_word_is_refused() -> void:
+	assert_str(_why(_with_case(0, "kind", null))).contains("V2")
+	assert_str(_why(_with_case(0, "kind", 3.0))).contains("V2")
+
+
+func test_a_misspelt_key_is_refused() -> void:
+	var data: Dictionary = _sound()
+	data["cases"][4]["betwen"] = data["cases"][4]["between"]
+	data["cases"][4].erase("between")
+	assert_str(_why(data)).contains("V2")
+
+
+func test_between_on_a_membership_case_is_refused() -> void:
+	assert_str(_why(_with_case(0, "between", ["calm", "alarmed"]))).contains("V2")
+
+
+func test_a_variable_with_no_name_is_refused() -> void:
+	var data: Dictionary = _sound()
+	data["controller"]["outputs"][0].erase("name")
+	assert_str(_why(data)).contains("V3")
+
+
+func test_a_point_that_is_null_is_refused() -> void:
+	var data: Dictionary = _sound()
+	data["controller"]["inputs"][0]["sets"]["quiet"] = [0.0, null, 2.0, 6.0]
+	assert_str(_why(data)).contains("V3")
+
+
+func test_fractional_samples_are_refused() -> void:
+	var data: Dictionary = _sound()
+	data["controller"]["outputs"][0]["samples"] = 11.7
+	assert_str(_why(data)).contains("V3")
+
+
+func test_one_sample_is_the_controller_s_refusal() -> void:
+	var data: Dictionary = _sound()
+	data["controller"]["outputs"][0]["samples"] = 1.0
+	assert_str(_why(data)).contains("F3")
+
+
+func test_an_evaluation_whose_name_is_not_a_word_is_refused() -> void:
+	assert_str(_why(_with_case(2, "name", 3.0))).contains("V5")
+
+
+func test_an_evaluation_given_a_word_for_an_input_is_refused() -> void:
+	assert_str(_why(_with_case(2, "inputs", {"noise": "abc"}))).contains("V5")
+
+
+func test_an_evaluation_claiming_no_activations_for_an_output_is_refused() -> void:
+	assert_str(_why(_with_case(2, "activations", {}))).contains("V5")
+
+
+func test_an_activation_that_is_not_terms_is_refused() -> void:
+	# This one used to abort the check part-way and exit 0, skipping the
+	# case's answer and every `between` naming it.
+	assert_str(_why(_with_case(2, "activations", {"alertness": 5.0}))).contains("V5")
+
+
+func test_a_strength_claimed_as_a_word_is_refused() -> void:
+	var wrong: Dictionary = {"alertness": {"calm": 1.0, "alarmed": "zero"}}
+	assert_str(_why(_with_case(2, "activations", wrong))).contains("V5")
+
+
+func test_an_answer_claimed_as_a_word_is_refused() -> void:
+	assert_str(_why(_with_case(2, "outputs", {"alertness": "fifteen"}))).contains("V5")
+
+
+func test_a_fuzzified_degree_claimed_as_a_word_is_refused() -> void:
+	assert_str(_why(_with_case(1, "degrees", {"quiet": 0.25, "loud": "a quarter"}))).contains("V4")
+
+
+func test_between_naming_something_other_than_words_is_refused() -> void:
+	assert_str(_why(_with_case(4, "between", [1.0, 2.0]))).contains("V6")
+
+
+func test_between_may_name_the_higher_case_first() -> void:
+	assert_array(FuzzyVector.check("reversed", _with_case(4, "between", ["alarmed", "calm"]))).is_empty()
+
+
+func test_an_answer_one_part_in_a_million_off_fails() -> void:
+	# Holds the tolerance near where it claims to be: a margin loosened to
+	# 1e-4 passed every other test in this file.
+	var off: float = 50.0 * (1.0 + 1e-6)
+	assert_array(FuzzyVector.check("close", _with_case(4, "outputs", {"alertness": off}))).has_size(1)

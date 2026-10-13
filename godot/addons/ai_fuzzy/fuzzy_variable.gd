@@ -29,6 +29,8 @@ func _init(variable_name: String, low: float, high: float,
 
 ## Why this variable cannot be read or sampled, or "" when it can.
 func problem(is_output: bool) -> String:
+	if not (is_finite(minimum) and is_finite(maximum)):
+		return "F2 variable %s has a range that is not finite" % name
 	if not minimum < maximum:
 		return "F2 variable %s has an empty range" % name
 	if sets.is_empty():
@@ -39,7 +41,7 @@ func problem(is_output: bool) -> String:
 			return "F2 variable %s names a set twice" % name
 		seen[one.name] = true
 	if is_output and samples < 2:
-		return "F3 output %s needs at least two samples" % name
+		return "F3 output %s needs a whole number of samples, at least two" % name
 	for one: FuzzySet in sets:
 		if one.problem() != "":
 			return one.problem()
@@ -55,6 +57,10 @@ func set_named(set_name: String) -> FuzzySet:
 
 
 ## Every set's degree for one crisp value, clamped into the range first.
+##
+## The value must be finite; `FuzzyRuleBase.fuzzify` refuses one that is not
+## before it gets here, because NaN survives `clampf` and every comparison in
+## `FuzzySet.degree`, and comes out as NaN degrees that `maxf` then spreads.
 func fuzzify(value: float) -> Dictionary[String, float]:
 	var clamped: float = clampf(value, minimum, maximum)
 	var degrees: Dictionary[String, float] = {}

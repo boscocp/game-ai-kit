@@ -32,7 +32,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T10 | The tactical scenario | todo | five units, two towers, terrain that matters |
 | T11 | The planner plays | todo | STRIPS drives a faction; needs T4 |
 | T12 | Three difficulties, honestly | todo | horizon and depth, never cheating; five levels if they stay ordered |
-| T13 | `ai_fuzzy`, from a library that already exists | todo | ported, not reinvented |
+| T13 | `ai_fuzzy`, from a library that already exists | done | rewritten, not ported: the library was C# and its core was missing (ADR 0011); 3 vectors read from both languages |
 | T14 | The stealth scenario | todo | perception, suspicion, influence maps |
 | T15 | `ai_behaviour`: the four ways to decide | todo | FSM, tree, GOAP, HTN, beside STRIPS |
 | T16 | The fighting scenario | todo | mostly not AI, and says so |
@@ -71,6 +71,51 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-13 (wave 21)
+
+**What landed.** T13: `godot/addons/ai_fuzzy/` holds membership (one
+trapezoid, of which a triangle and a shoulder are special cases), a rule base
+(AND is min, OR is max, and each term takes its strongest rule), and the
+centroid, sampled at points the controller itself declares.
+`python/gameaikit/fuzzy/` holds the same three steps, a reader for the old
+library's text format, and `python -m gameaikit.fuzzy.plot`, which draws a
+controller's curve in the terminal for the manual check.
+`spec/vectors/fuzzy/` holds three vectors, computed in exact fractions by a
+script that imports nothing from the repository. They include the case T13
+asks for: two overlapping rules land strictly between what each gives alone.
+
+**The task's premise was wrong, and the code was written rather than
+ported.** The "Python library" is C#, and the class doing fuzzification,
+inference and defuzzification is not in its repository. ADR 0011 records
+what carried over (the shapes, AND/OR rules, the centroid, the `FLC.txt`
+format) and what did not. Review then found that the ADR itself had three
+claims about the old code wrong. **A description of someone else's code
+needs checking against the code**, the same lesson wave 20 learned about
+sources.
+
+**Twenty-two review findings**, in
+[docs/reviews/21-ai-fuzzy.md](../docs/reviews/21-ai-fuzzy.md). The worst:
+- a malformed vector made the runner skip the strictly-between claim and
+  still exit 0;
+- GDScript answered a NaN input with a confident 50.0, where Python divided
+  by zero.
+
+Both are fixed. Every survivor both reviewers reported was re-run as a
+mutation against its fix: 19 in GDScript, 24 in Python. **The fixes were
+not reviewed by a fresh context.**
+
+**Not proven.** The manual check is a person's: plot the guard and look at
+the curve (the command is in the review record). A slope test holds the half
+a command can. Nothing is profiled.
+
+**Still open, and carried forward.** Everything wave 20 listed, including the
+sequencing question. `make wave` will pick the next ready row; T14, the
+stealth scenario, is the one that consumes `ai_fuzzy`, and T21 (every
+example can be watched) is still listed after it.
+
+Read the task file `make wave` names, then: make check, write the review
+record, make wave-merge.
 
 ## Resuming after 2026-10-13 (wave 20)
 

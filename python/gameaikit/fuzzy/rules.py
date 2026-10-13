@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import dataclasses
 
-from .defuzzify import centroid
+from .defuzzify import centroid, sample_points
 from .membership import FuzzyError, Variable
 
 #: How a rule joins its conditions. One connective per rule: mixing them
@@ -73,6 +73,7 @@ class RuleBase:
             variable.check(is_output=False)
         for variable in self.outputs:
             variable.check(is_output=True)
+            _check_every_set_is_sampled(variable)
         names = [variable.name for variable in self.inputs + self.outputs]
         if len(set(names)) != len(names):
             raise FuzzyError("F4 two variables share a name")
@@ -121,6 +122,21 @@ class RuleBase:
         strengths = self.activations(values)
         return {output.name: centroid(output, strengths[output.name])
                 for output in self.outputs}
+
+
+def _check_every_set_is_sampled(output: Variable) -> None:
+    """Refuse an output term the centroid would never see.
+
+    A term lying outside the range, or narrow enough to fall between two
+    sample points, can be concluded at full strength and still add nothing to
+    the pile -- and the answer is then NaN, which everywhere else here means
+    that no rule fired. That is a lie this check exists to prevent.
+    """
+    points = sample_points(output)
+    for one in output.sets:
+        if max(one.degree(point) for point in points) == 0.0:
+            raise FuzzyError(f"F3 output {output.name!r}: no sample point falls inside "
+                             f"set {one.name!r}")
 
 
 def _names_a_set(variables: tuple[Variable, ...], variable: str, term: str) -> bool:

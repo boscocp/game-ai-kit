@@ -15,6 +15,15 @@ const TOLERANCE: float = 1e-9
 
 const KINDS: Array[String] = ["membership", "fuzzify", "evaluate"]
 
+## Every key a case of each kind may carry. A misspelt key would otherwise be
+## ignored in silence, and `"betwen"` drops the very claim T13 asks for while
+## every number in the file still passes.
+const CASE_KEYS: Dictionary = {
+	"membership": ["kind", "why", "variable", "set", "value", "degree"],
+	"fuzzify": ["kind", "why", "variable", "value", "degrees"],
+	"evaluate": ["kind", "why", "name", "inputs", "activations", "outputs", "between"],
+}
+
 
 ## Why this dictionary is not a usable vector, or "" when it is one.
 static func why_not_a_vector(data: Dictionary) -> String:
@@ -129,15 +138,22 @@ static func _compare_terms(label: String, found: Dictionary, expected: Dictionar
 
 static func _why_a_case_is_wrong(controller: FuzzyRuleBase, case: Variant,
 		earlier: Array[String]) -> String:
-	if not (case is Dictionary) or not (case.get("kind") in KINDS):
+	# `is String` before `in`: asking a typed Array[String] about a null or a
+	# number prints an engine error with a backtrace, before the clean refusal.
+	if not (case is Dictionary) or not (case.get("kind") is String) or not (case["kind"] in KINDS):
 		return "V2 a case is an object whose kind is one of %s" % [KINDS]
+	for key: Variant in case:
+		if not (key in CASE_KEYS[case["kind"]]):
+			return "V2 a case of kind %s carries no `%s`" % [case["kind"], key]
 	if case["kind"] == "evaluate":
 		return _why_an_evaluation_is_wrong(controller, case, earlier)
 	var variable: FuzzyVariable = _input_named(controller, str(case.get("variable", "")))
 	if variable == null or not (case.get("value") is float):
 		return "V4 a %s case names an input and a value" % case["kind"]
 	if case["kind"] == "fuzzify":
-		return "" if case.get("degrees") is Dictionary else "V4 a fuzzify case claims `degrees`"
+		if _all_numbers(case.get("degrees"), false):
+			return ""
+		return "V4 a fuzzify case claims `degrees`, a number for each set"
 	if variable.set_named(str(case.get("set", ""))) == null or not (case.get("degree") is float):
 		return "V4 a membership case names one of the input's sets and claims a `degree`"
 	return ""
@@ -151,16 +167,39 @@ static func _why_an_evaluation_is_wrong(controller: FuzzyRuleBase, case: Diction
 	if not (case.get("name") is String) or case["name"] in earlier:
 		return "V5 an evaluate case has a `name` no earlier case used"
 	if controller.fuzzify(case["inputs"]).is_empty():
-		return "V5 an evaluate case gives every input a value"
+		return "V5 an evaluate case gives every input a finite number"
+	if not _all_numbers(case["outputs"], true):
+		return "V5 an evaluate case claims a number, or null, for each output"
 	for output: FuzzyVariable in controller.outputs:
 		if not case["outputs"].has(output.name) or not case["activations"].has(output.name):
 			return "V5 an evaluate case claims every output, %s included" % output.name
-	if case.has("between"):
-		var named: Variant = case["between"]
-		if not (named is Array) or named.size() != 2 or not (named[0] in earlier and named[1] in earlier):
-			return "V6 `between` names two earlier evaluate cases"
+		if not _all_numbers(case["activations"][output.name], false):
+			return "V5 an evaluate case claims a strength for each term of %s" % output.name
+	if case.has("between") and not _names_two(case["between"], earlier):
+		return "V6 `between` names two earlier evaluate cases"
 	earlier.append(case["name"])
 	return ""
+
+
+# A dictionary whose every value is a number -- or null, where null is allowed
+# to mean "no rule fired". `float("zero")` is 0.0, so a claim written as a
+# word would otherwise compare equal to an answer of nought.
+static func _all_numbers(claims: Variant, null_allowed: bool) -> bool:
+	if not (claims is Dictionary):
+		return false
+	for value: Variant in claims.values():
+		if not (value is float or (null_allowed and value == null)):
+			return false
+	return true
+
+
+static func _names_two(named: Variant, earlier: Array[String]) -> bool:
+	if not (named is Array) or named.size() != 2:
+		return false
+	for name: Variant in named:
+		if not (name is String) or not (name in earlier):
+			return false
+	return true
 
 
 static func _input_named(controller: FuzzyRuleBase, variable_name: String) -> FuzzyVariable:
@@ -189,17 +228,23 @@ static func _variables(entries: Variant, is_output: bool) -> Array[FuzzyVariable
 static func _variable(entry: Variant, is_output: bool) -> FuzzyVariable:
 	if not (entry is Dictionary) or not (entry.get("sets") is Dictionary):
 		return null
+	if not (entry.get("name") is String):
+		return null
 	for field: String in ["minimum", "maximum"] + (["samples"] if is_output else []):
 		if not (entry.get(field) is float):
 			return null
+	# 11.0 is how JSON hands Godot an 11; 11.7 is not a number of samples.
+	if is_output and floorf(entry["samples"]) != entry["samples"]:
+		return null
 	var sets: Array[FuzzySet] = []
 	for set_name: String in entry["sets"]:
-		if not (entry["sets"][set_name] is Array):
+		var points: Variant = entry["sets"][set_name]
+		# A null in a list would become 0.0 in a PackedFloat64Array.
+		if not (points is Array) or not (points as Array).all(func(point: Variant) -> bool: return point is float):
 			return null
-		sets.append(FuzzySet.new(set_name, PackedFloat64Array(entry["sets"][set_name])))
+		sets.append(FuzzySet.new(set_name, PackedFloat64Array(points)))
 	var samples: int = int(entry["samples"]) if is_output else 0
-	return FuzzyVariable.new(str(entry.get("name", "")), entry["minimum"], entry["maximum"],
-			sets, samples)
+	return FuzzyVariable.new(entry["name"], entry["minimum"], entry["maximum"], sets, samples)
 
 
 static func _rules(entries: Variant) -> Array[FuzzyRule]:
