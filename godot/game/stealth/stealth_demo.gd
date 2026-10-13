@@ -61,7 +61,8 @@ func toggle_danger() -> void:
 func status_text() -> String:
 	var lines: Array[String] = [_headline()]
 	for guard: StealthGuard in world.guards:
-		lines.append("guard %d  %s  ·  %s" % [guard.unit.id, guard.reason, _terms(guard.suspicion)])
+		lines.append("guard %d  %s  ·  %s  ·  %s" % [
+			guard.unit.id, guard.reason, _inputs(guard.suspicion), _terms(guard.suspicion)])
 	return "\n".join(lines)
 
 
@@ -74,6 +75,16 @@ func _headline() -> String:
 	var ending: String = {StealthWorld.ESCAPED: "  ·  ESCAPED", StealthWorld.CAUGHT: "  ·  CAUGHT"}.get(world.outcome, "")
 	return "turn %d%s  ·  arrows walk  ·  shift sprints  ·  space waits  ·  D danger  ·  R restarts" % [
 		world.turn, ending]
+
+
+# What the controller was given: the half of the decision a person needs to
+# see to tell why one guard sits at 12 while another jumps to 48.
+func _inputs(suspicion: Suspicion) -> String:
+	var given: Dictionary = suspicion.inputs
+	if given.is_empty():
+		return "nothing perceived yet"
+	return "distance %.1f  light %.2f  noise %.2f  silence %d" % [
+		given["distance"], given["light"], given["noise"], int(given["silence"])]
 
 
 func _terms(suspicion: Suspicion) -> String:

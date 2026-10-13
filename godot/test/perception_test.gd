@@ -44,6 +44,66 @@ func test_a_line_is_the_same_cells_from_either_end() -> void:
 	assert_array(forwards).has_size(4)
 
 
+func test_a_shallow_line_passes_through_the_cells_on_the_segment() -> void:
+	var expected: Array[Vector2i] = [Vector2i(1, 0), Vector2i(2, 1), Vector2i(3, 1), Vector2i(4, 2)]
+	assert_array(LineOfSight.cells_between(Vector2i(0, 0), Vector2i(5, 2))).is_equal(expected)
+
+
+func test_a_steep_line_passes_through_the_cells_on_the_segment() -> void:
+	var expected: Array[Vector2i] = [Vector2i(0, 1), Vector2i(1, 2), Vector2i(1, 3), Vector2i(2, 4)]
+	assert_array(LineOfSight.cells_between(Vector2i(0, 0), Vector2i(2, 5))).is_equal(expected)
+
+
+func test_a_line_upwards_passes_through_the_cells_on_the_segment() -> void:
+	var expected: Array[Vector2i] = [Vector2i(1, 0), Vector2i(2, -1), Vector2i(3, -1), Vector2i(4, -2)]
+	assert_array(LineOfSight.cells_between(Vector2i(0, 0), Vector2i(5, -2))).is_equal(expected)
+
+
+func test_sight_does_not_slip_between_two_walls_meeting_at_a_corner() -> void:
+	var graph: GridGraph = _open()
+	graph.block(Vector2i(1, 0))
+	graph.block(Vector2i(0, 1))
+	assert_bool(LineOfSight.clear(graph, Vector2i(0, 0), Vector2i(1, 1))).is_false()
+	assert_bool(LineOfSight.clear(graph, Vector2i(1, 1), Vector2i(0, 0))).is_false()
+	assert_bool(LineOfSight.clear(graph, Vector2i(0, 0), Vector2i(3, 3))).is_false()
+
+
+func test_one_wall_at_a_corner_does_not_block_a_diagonal() -> void:
+	var graph: GridGraph = _open()
+	graph.block(Vector2i(1, 0))
+	assert_bool(LineOfSight.clear(graph, Vector2i(0, 0), Vector2i(1, 1))).is_true()
+
+
+func test_a_cell_exactly_on_the_cone_s_edge_is_seen() -> void:
+	# The diagonal measures 45.00000125 degrees; an exact comparison missed it.
+	var cone := VisionCone.new(5.0, 45.0)
+	assert_bool(cone.sees(_open(), Vector2i(4, 4), Vector2i.RIGHT, Vector2i(5, 5))).is_true()
+	assert_bool(VisionCone.new(5.0, 90.0).sees(_open(), Vector2i(4, 4), Vector2i.RIGHT, Vector2i(4, 2))).is_true()
+
+
+func test_a_target_off_the_board_is_never_seen() -> void:
+	assert_bool(VisionCone.new(5.0, 90.0).sees(_open(), Vector2i(6, 4), Vector2i.RIGHT, Vector2i(9, 4))).is_false()
+
+
+func test_a_watcher_with_no_reach_sees_only_its_own_cell() -> void:
+	var cone := VisionCone.new(0.0, 45.0)
+	assert_array(cone.visible_cells(_open(), Vector2i(4, 4), Vector2i.RIGHT)).is_equal([Vector2i(4, 4)] as Array[Vector2i])
+	assert_float(cone.closeness(Vector2i(4, 4), Vector2i(4, 4))).is_equal(1.0)
+	assert_float(cone.closeness(Vector2i(4, 4), Vector2i(5, 4))).is_equal(0.0)
+
+
+func test_nan_raises_nothing() -> void:
+	var map := InfluenceMap.new(2, 2)
+	map.raise_to(Vector2i(0, 0), NAN)
+	assert_float(map.value_at(Vector2i(0, 0))).is_equal(0.0)
+
+
+func test_watchers_without_a_facing_each_are_refused_as_a_whole() -> void:
+	var map := InfluenceMap.of_watchers(_open(), VisionCone.new(3.0, 45.0),
+			[Vector2i(2, 2), Vector2i(6, 6)] as Array[Vector2i], [Vector2i.RIGHT] as Array[Vector2i])
+	assert_float(map.strongest()).is_equal(0.0)
+
+
 func test_a_watcher_sees_its_own_cell() -> void:
 	var cone := VisionCone.new(3.0, 10.0)
 	assert_bool(cone.sees(_open(), Vector2i(4, 4), Vector2i.RIGHT, Vector2i(4, 4))).is_true()

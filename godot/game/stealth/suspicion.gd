@@ -5,7 +5,8 @@
 ## how long since -- and answers how alarming that is. The level then moves a
 ## share of the way towards that answer, so it rises and falls rather than
 ## snapping, and **it never falls while the player is in sight**: a guard
-## looking at you does not calm down because you stepped into the shade. With
+## looking at you does not calm down because you stepped into the shade -- so
+## an alert guard that still sees you, however far off and dim, stays alert. With
 ## nothing to go on it settles near 12, not 0: that is where the shape of
 ## "calm" balances, and a centroid never lands on the edge of a shape.
 class_name Suspicion
@@ -32,6 +33,9 @@ var alarm: float = 0.0
 
 ## Each output term's strength last turn: the *why* the overlay draws.
 var activations: Dictionary = {}
+
+## What the controller was given last turn, by input name.
+var inputs: Dictionary = {}
 
 var _controller: FuzzyRuleBase = Suspicion.build_controller()
 
@@ -79,6 +83,7 @@ func observe(seen: bool, distance: float, light: float, noise: float) -> void:
 		"noise": noise,
 		"silence": float(unseen_for),
 	}
+	inputs = values
 	activations = _controller.activations(values)
 	alarm = _controller.evaluate(values)["alarm"]
 	var step: float = RATE * (alarm - level)

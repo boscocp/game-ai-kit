@@ -43,7 +43,13 @@ func _init(room_graph: GridGraph, lamps: Array[Vector2i], start: Vector2i, way_o
 
 
 ## The room the demo opens on: a hall split by a wall with two doors, a copse
-## to hide in, two lamps, and two guards on their rounds.
+## to hide in, two lamps, two guards on their rounds and a sentry who stands
+## and looks round.
+##
+## Not a hard room. Walking straight across wins, because suspicion takes a
+## few turns to climb and a walker is gone by then -- but that walk drives a
+## guard to ALERT on the way, so the number the demo is about rises and falls
+## on the obvious route. Making the room *hard* is level design, not AI.
 static func default_room() -> StealthRoom:
 	var room_graph := GridGraph.new(COLUMNS, ROWS)
 	for row: int in range(ROWS):
@@ -52,10 +58,11 @@ static func default_room() -> StealthRoom:
 	for cell: Vector2i in [Vector2i(4, 4), Vector2i(5, 4), Vector2i(4, 5), Vector2i(5, 5),
 			Vector2i(13, 6), Vector2i(14, 6), Vector2i(13, 7)]:
 		room_graph.set_cost(cell, TREE)
-	var lamps: Array[Vector2i] = [Vector2i(9, 2), Vector2i(14, 9)]
+	var lamps: Array[Vector2i] = [Vector2i(9, 2), Vector2i(14, 5)]
 	var rounds_walked: Array[Array] = [
 		[Vector2i(2, 2), Vector2i(7, 2), Vector2i(7, 9), Vector2i(2, 9)],
 		[Vector2i(11, 1), Vector2i(16, 1), Vector2i(16, 10), Vector2i(11, 10)],
+		[Vector2i(11, 4)],
 	]
 	return StealthRoom.new(room_graph, lamps, Vector2i(1, 6), Vector2i(16, 5), rounds_walked)
 

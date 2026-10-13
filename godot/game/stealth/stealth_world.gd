@@ -3,8 +3,8 @@
 ## Turn-based like the rest of the kit (ADR 0006): one key press is one turn,
 ## so a person can stop and read what every guard is thinking before the next.
 ## The player is a `Unit` on the room's `GridGraph`, and so is every guard.
-## Reaching the exit wins; a chasing guard next to the player who can see
-## them ends it the other way.
+## Reaching the exit wins, even halfway through a sprint; an alert guard next
+## to the player, facing them with nothing between, ends it the other way.
 class_name StealthWorld
 extends RefCounted
 
@@ -48,9 +48,7 @@ func play(direction: Vector2i, sprint: bool = false) -> bool:
 		return false
 	var steps: int = 0
 	for _attempt: int in range(2 if sprint else 1):
-		if direction != Vector2i.ZERO and _can_enter(player.cell + direction):
-			player.cell += direction
-			steps += 1
+		steps += 1 if _step(direction) else 0
 	last_noise = 0.0 if steps == 0 else (SPRINT_NOISE if sprint else WALK_NOISE)
 	_guards_answer()
 	turn += 1
@@ -79,12 +77,22 @@ func _guards_answer() -> void:
 		guard.take_turn(room, cone, player, last_noise, _occupied_except(guard))
 		if _catches(guard):
 			outcome = CAUGHT
+			return
 
 
 func _catches(guard: StealthGuard) -> bool:
-	var adjacent: bool = absi(guard.unit.cell.x - player.cell.x) + absi(guard.unit.cell.y - player.cell.y) <= 1
-	return guard.state == StealthGuard.ALERT and adjacent \
-			and cone.sees(room.graph, guard.unit.cell, Vector2i.ZERO, player.cell)
+	var gap: Vector2i = (guard.unit.cell - player.cell).abs()
+	return guard.state == StealthGuard.ALERT and gap.x + gap.y == 1 \
+			and cone.sees(room.graph, guard.unit.cell, guard.facing, player.cell)
+
+
+# One cell of the player's move, or none: a sprint stops on the exit rather
+# than running over it.
+func _step(direction: Vector2i) -> bool:
+	if player.cell == room.exit or direction == Vector2i.ZERO or not _can_enter(player.cell + direction):
+		return false
+	player.cell += direction
+	return true
 
 
 func _can_enter(cell: Vector2i) -> bool:

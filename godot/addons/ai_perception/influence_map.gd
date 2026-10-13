@@ -2,7 +2,7 @@
 ##
 ## Sources raise cells to a value, and a cell keeps the strongest: two guards
 ## watching one cell make it no more watched than the nearer one does. Values
-## stay within [0, 1], so a watcher's own cell, at 1, is always the maximum.
+## stay within [0, 1], so a watcher's own cell, at 1, is the maximum.
 ## Building one from watchers costs one `VisionCone.visible_cells` each.
 ##
 ## When not to use it: when influence should spread or add up -- territory in
@@ -25,14 +25,21 @@ func _init(map_width: int, map_height: int) -> void:
 
 
 ## The danger a set of watchers puts on a board: every cell each one sees,
-## by how near it is, and each watcher's own cell at 1.
+## by how near it is. A watcher sees its own cell at closeness 1, so a watcher
+## standing on the board holds the map's maximum; one off it marks nothing
+## there, since off the board there is nothing to mark.
+##
+## `eyes` and `facings` are pairs, index by index. Lists of different lengths
+## are a caller's mistake, and the map is then empty rather than built from
+## whichever watchers happened to have a partner.
 static func of_watchers(graph: GridGraph, cone: VisionCone, eyes: Array[Vector2i],
 		facings: Array[Vector2i]) -> InfluenceMap:
 	var map := InfluenceMap.new(graph.width, graph.height)
-	for index: int in range(mini(eyes.size(), facings.size())):
+	if eyes.size() != facings.size():
+		return map
+	for index: int in range(eyes.size()):
 		for cell: Vector2i in cone.visible_cells(graph, eyes[index], facings[index]):
 			map.raise_to(cell, cone.closeness(eyes[index], cell))
-		map.raise_to(eyes[index], 1.0)
 	return map
 
 
@@ -43,16 +50,18 @@ func value_at(cell: Vector2i) -> float:
 	return _values[cell.y * width + cell.x]
 
 
-## Raise a cell to `value`, clamped into [0, 1]; a lower value changes nothing.
+## Raise a cell to `value`, clamped into [0, 1]; a lower value, or NaN,
+## changes nothing.
 func raise_to(cell: Vector2i, value: float) -> void:
-	if not _contains(cell):
+	if not _contains(cell) or is_nan(value):
 		return
 	var index: int = cell.y * width + cell.x
 	_values[index] = maxf(_values[index], clampf(value, 0.0, 1.0))
 
 
 ## Where watchers will be soon: the cells of a route, from `strength` at the
-## first down to nearly nothing at the last.
+## first, falling by an equal share each cell, to `strength / length` at the
+## last.
 ##
 ## A guard two steps from a corner makes the corner dangerous before it can
 ## see round it, which is the thing a player is actually afraid of.
