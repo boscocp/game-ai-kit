@@ -39,3 +39,8 @@ python3 scripts/release.py --build --skip-notice --output /tmp/bad-release
 
 Hand the README to someone who has never opened Godot and watch where they get
 stuck. That is the page that needs rewriting, whatever the gates say.
+
+Record the game (`make run`, through one blue turn so its reasons appear) and
+the search demo (`make demo-search`, A\* and Dijkstra one after the other), and
+put both in the README's "What you will see" section. No command here can do
+it: `--headless` uses the dummy rendering driver and nothing is rasterised.

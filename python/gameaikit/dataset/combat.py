@@ -6,11 +6,11 @@ function of the features, a logistic regression would recover the coefficients
 exactly and the lesson would be circular -- the model would have "learned" the
 line somebody wrote three files away.
 
-So a fight here is rounds of dice: two sides trade damage, terrain reduces what
-the attacker gets through, a numeric advantage adds to it, and a unit that was
-a few cells away can arrive partway through. The relationship between the
-features and the outcome is real, noisy and **not** the shape of the model that
-will be fitted to it. What the weights then say is an approximation somebody
+So a fight here is rounds of dice: two sides trade damage, the defender's
+terrain adds to the damage it returns, a numeric advantage adds to the blows of
+whichever side holds it, and a unit that was a few cells away can arrive
+partway through. The relationship between the features and the outcome is
+real, noisy and **not** the shape of the model that will be fitted to it. What the weights then say is an approximation somebody
 can be wrong about, which is the only kind worth printing.
 
 When not to use it: as the game's combat. The game has none yet; T10 brings

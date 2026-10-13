@@ -264,6 +264,16 @@ run: ## Play the board: click a unit, click a neighbouring cell, space ends the 
 demo-search: ## The four searches on one board: 1-4 choose, space steps, enter finishes
 	@$(GODOT) --path godot res://demos/search/search_demo.tscn
 
+# --- shipping --------------------------------------------------------------
+
+.PHONY: release
+release: ## One zip per addon and the Python wheel into dist/, attribution checked
+	@# The build does not get to say it attributed anything: the same gate
+	@# that reads the repository opens every archive it wrote and looks.
+	@# `release.py --skip-notice` builds a release that must fail it.
+	@$(PYTHON) scripts/release.py --build
+	@$(PYTHON) scripts/check_license.py
+
 # --- housekeeping ----------------------------------------------------------
 
 .PHONY: godot-version
