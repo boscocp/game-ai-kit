@@ -12,7 +12,10 @@ in the artifacts. So:
   * every addon under godot/addons/ carries its own copy, because the Godot
     Asset Library ships one addon folder at a time and a user who installs only
     `ai_search` must still receive the attribution;
-  * every zip produced under dist/ contains both.
+  * every zip produced under dist/ contains both, at its root or in its one
+    top folder;
+  * every wheel under dist/ carries both in its `.dist-info/licenses/`, which
+    is where PEP 639 puts a wheel's licence files and where pip installs them.
 
 Why this gate exists
 --------------------
@@ -113,8 +116,8 @@ def check_addons(repo: pathlib.Path) -> list[str]:
 
 
 def archive_entries(archive: pathlib.Path) -> list[str]:
-    """Every path inside a .zip or .tar.gz, as written."""
-    if archive.suffix == ".zip":
+    """Every path inside a .zip, .whl or .tar.gz, as written."""
+    if archive.suffix in (".zip", ".whl"):
         with zipfile.ZipFile(archive) as bundle:
             return bundle.namelist()
     with tarfile.open(archive) as bundle:
@@ -137,10 +140,13 @@ def check_release_archives(repo: pathlib.Path) -> list[str]:
 
     archives = sorted(
         path for path in dist.iterdir()
-        if path.suffix == ".zip" or path.name.endswith((".tar.gz", ".tgz"))
+        if path.suffix in (".zip", ".whl") or path.name.endswith((".tar.gz", ".tgz"))
     )
     for archive in archives:
         entries = [pathlib.PurePosixPath(entry) for entry in archive_entries(archive)]
+        if archive.suffix == ".whl":
+            findings.extend(check_wheel(archive.name, entries))
+            continue
         # Depth 0 is the archive root; depth 1 covers the usual single wrapper
         # folder, `ai_search/LICENSE`.
         shallow = {entry.name for entry in entries if len(entry.parts) <= 2}
@@ -150,6 +156,26 @@ def check_release_archives(repo: pathlib.Path) -> list[str]:
                     f"L5 {archive.name} has no {name} at its root or in its top folder"
                 )
     return findings
+
+
+def check_wheel(name: str, entries: list[pathlib.PurePosixPath]) -> list[str]:
+    """Report a wheel whose licence files are not where an installer puts them.
+
+    A wheel is a zip, and the zip rule would pass one with a NOTICE at
+    `gameaikit/NOTICE` -- inside the package, at depth two. An installer copies
+    that as module data and nobody reading the installed metadata finds it.
+    Wheels were not examined at all until release.py started building one,
+    and its own self-test found the hole: five artifacts, four findings.
+    """
+    licensed = {
+        entry.name for entry in entries
+        if len(entry.parts) == 3
+        and entry.parts[0].endswith(".dist-info") and entry.parts[1] == "licenses"
+    }
+    return [
+        f"L9 {name} has no {required} in its .dist-info/licenses/"
+        for required in REQUIRED_FILES if required not in licensed
+    ]
 
 
 def run(repo: pathlib.Path) -> int:
@@ -269,6 +295,40 @@ def self_test() -> int:
             bundle.add(lone, arcname="kit/plugin.cfg")
         expect("tarball without attribution", quiet(tarred), 1)
 
+        # A wheel with both files where PEP 639 puts them passes.
+        wheeled = make_repo(root / "wheeled")
+        (wheeled / "dist").mkdir()
+        with zipfile.ZipFile(wheeled / "dist" / "kit-1.0.0-py3-none-any.whl", "w") as bundle:
+            bundle.writestr("kit/__init__.py", "")
+            for required in REQUIRED_FILES:
+                bundle.writestr(f"kit-1.0.0.dist-info/licenses/{required}", "copy\n")
+        expect("wheel with its licences in .dist-info", quiet(wheeled), 0)
+
+        # Planted: a wheel without NOTICE. Wheels were not opened at all.
+        bare_wheel = make_repo(root / "bare-wheel")
+        (bare_wheel / "dist").mkdir()
+        with zipfile.ZipFile(bare_wheel / "dist" / "kit-1.0.0-py3-none-any.whl", "w") as bundle:
+            bundle.writestr("kit-1.0.0.dist-info/licenses/LICENSE", "copy\n")
+        expect("wheel without NOTICE", quiet(bare_wheel), 1)
+
+        # Planted: a NOTICE somewhere other than .dist-info/licenses/. Each
+        # path defeats exactly one of the three conditions in check_wheel, so
+        # deleting any one of them turns one of these green. Written out rather
+        # than generated, so a path deleted from the list is a visible diff.
+        misplaced_notices = (
+            "kit/licenses/NOTICE",                          # not in .dist-info
+            "kit-1.0.0.dist-info/legal/NOTICE",             # not in licenses/
+            "kit-1.0.0.dist-info/licenses/vendor/NOTICE",   # someone else's, deeper
+        )
+        for index, misplaced_path in enumerate(misplaced_notices):
+            misplaced = make_repo(root / f"misplaced-wheel-{index}")
+            (misplaced / "dist").mkdir()
+            wheel_path = misplaced / "dist" / "kit-1.0.0-py3-none-any.whl"
+            with zipfile.ZipFile(wheel_path, "w") as bundle:
+                bundle.writestr("kit-1.0.0.dist-info/licenses/LICENSE", "copy\n")
+                bundle.writestr(misplaced_path, "copy\n")
+            expect(f"wheel with NOTICE at {misplaced_path}", quiet(misplaced), 1)
+
         # Planted: a LICENSE that says nothing. Only NOTICE had a content check.
         placeholder = make_repo(root / "placeholder")
         (placeholder / "LICENSE").write_text("TODO: pick a licence\n")
@@ -305,7 +365,7 @@ def main(argv: list[str]) -> int:
     repo = pathlib.Path(args.repo or pathlib.Path(__file__).resolve().parent.parent)
     try:
         return run(repo)
-    except (OSError, zipfile.BadZipFile) as error:
+    except (OSError, zipfile.BadZipFile, tarfile.TarError) as error:
         print(f"check_license: cannot read a file: {error}", file=sys.stderr)
         return 2
 
