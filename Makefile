@@ -71,12 +71,12 @@ lint-review: ## This branch has a review record and may be merged
 
 .PHONY: check
 check: check-no-engine lint-disk-layout test-godot test-vectors \
-       test-search-properties test-planner-properties ## Run every gate
+       test-search-properties test-planner-properties test-decisions ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability \
        lint-addon-deps lint-tiers lint-links lint-workflow lint-license \
-       lint-employer-refs lint-docs-freshness lint-selftests \
+       lint-employer-refs lint-docs-freshness lint-no-training lint-selftests \
        test-python test-models ## Every gate that does not need the engine installed
 	@# CI's gate job runs exactly this. It used to hand-list the targets,
 	@# because `check` includes lint-disk-layout, which cannot run where the
@@ -127,6 +127,14 @@ lint-employer-refs: ## Nothing of the author's day job, in the tree or the histo
 lint-docs-freshness: ## Every doc page declares its half-life, and is inside it
 	@$(PYTHON) scripts/check_doc_freshness.py
 
+.PHONY: lint-no-training
+lint-no-training: ## Invariant 6: Python trains, GDScript only infers
+	@# Exit 3 means the Python pipeline could not be run, so the one claim
+	@# with teeth -- that the committed weights are its own output -- checked
+	@# nothing. make flattens that to 2; call the script directly to tell the
+	@# two apart. It retrains, which costs about four seconds.
+	@$(PYTHON) scripts/check_no_training.py
+
 .PHONY: lint-addon-deps
 lint-addon-deps: ## Invariant 2: no addon reaches into another
 	@$(PYTHON) scripts/check_addon_deps.py
@@ -175,14 +183,19 @@ test-models: ## The properties T5 asks of the two fitted models
 		--assert-runs-under-seconds 30
 
 .PHONY: train
-train: ## Fit both models and write dist/weights.json and dist/weights.txt
-	@# The artifacts are not committed from here. dist/ is gitignored, and the
-	@# copy the game loads is committed deliberately in T6, where there is an
-	@# addon to put it in.
-	@PYTHONPATH=python $(PYTHON) -m gameaikit.training.report --write $(CURDIR)/dist
+train: ## Fit both models and publish weights.json to dist/ and to the addon
+	@# Two destinations out of one fit. dist/ is the gitignored staging copy;
+	@# godot/addons/ai_learning/ is the one the game loads and the one that is
+	@# committed, which is why .gitignore exempts it by name.
+	@#
+	@# Running this does not usually change the committed file: the pipeline is
+	@# deterministic, and `make lint-no-training` fails if the two have come
+	@# apart. A diff here after a run is therefore news rather than noise.
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.training.report \
+		--write $(CURDIR)/dist --write $(CURDIR)/godot/addons/ai_learning
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -204,6 +217,16 @@ test-planning-vectors: ## The planning vectors, against ai_planning
 	@$(GODOT) --headless --path godot -s res://test/planning_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/planning
 
+.PHONY: test-learning-vectors
+test-learning-vectors: ## The learning vectors, against ai_learning
+	@# Half of each learning vector is checked here -- the board produces this
+	@# row, and the model turns it into this number. The other half is the
+	@# same two claims on the Python side, in `make test-python`, because a
+	@# split between training and inference is worth what the agreement
+	@# between the two halves is worth.
+	@$(GODOT) --headless --path godot -s res://test/learning_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/learning
+
 .PHONY: test-search-properties
 test-search-properties: ## A* agrees with Dijkstra, over a few hundred boards
 	@$(GODOT) --headless --path godot -s res://test/search_properties.gd
@@ -211,6 +234,13 @@ test-search-properties: ## A* agrees with Dijkstra, over a few hundred boards
 .PHONY: test-planner-properties
 test-planner-properties: ## A plan can be run, and an unsolvable domain says so
 	@$(GODOT) --headless --path godot -s res://test/planner_properties.gd
+
+.PHONY: test-decisions
+test-decisions: ## The two fights the learned opponent has to get right, and a node
+	@# T6's acceptance, as a target so that CI runs the same command. It plays
+	@# against the *published* weights rather than a hand-made model, so a
+	@# retrained opponent that stops taking a fight it should take fails here.
+	@$(GODOT) --headless --path godot -s res://test/decision_scenarios.gd
 
 .PHONY: test-godot
 test-godot: ## Godot tests, headless (gdUnit4)

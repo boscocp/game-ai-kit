@@ -22,7 +22,40 @@ import pathlib
 import sys
 
 from ..dataset.rows import CAPTURE_FEATURES, COMBAT_FEATURES
+from ..dataset.board import CHEAPEST_GROUND, DEAREST_GROUND
+from ..dataset.simulate import NEARBY, WIDTH
 from .train import DATA_SEED, SPLIT_SEED, Fitted, Training, run
+
+#: Numbers the *game* has to know to build a feature row, and could otherwise
+#: work out wrongly from its own board.
+#:
+#: Both were discovered by writing the GDScript side of `health_difference` and
+#: its three neighbours and finding that two of the four could not be computed
+#: from the board alone:
+#:
+#: * `nearby_radius` is how close another unit has to be to count towards
+#:   `numeric_advantage`. It is a rule of the simulator, invisible in the
+#:   weights, and a game using 1 or 3 instead feeds the model a feature that is
+#:   not the one it was fitted to;
+#: * `reinforcement_distance_when_alone` is the sentinel a unit with no living
+#:   friends reports. It is the *training* board's width, which is the point:
+#:   a game whose board is twelve wide and which helpfully reports 12 is
+#:   reporting "quite far", where the model was taught "nobody is coming";
+#: * `cheapest_ground` and `dearest_ground` are the range of terrain the data
+#:   was gathered on. Every board in `simulate.py` draws its costs from it and
+#:   none of them has a wall, so a game with a wall or with ground costing 6
+#:   is asking the model about terrain it has never seen. Publishing the range
+#:   lets the game say so -- see `BoardFeatures` -- instead of extrapolating
+#:   in silence.
+#:
+#: They are published rather than documented because a number two languages
+#: must agree on, living in two files, is a number that will one day differ.
+FEATURE_CONVENTIONS = {
+    "nearby_radius": NEARBY,
+    "reinforcement_distance_when_alone": WIDTH,
+    "cheapest_ground": CHEAPEST_GROUND,
+    "dearest_ground": DEAREST_GROUND,
+}
 
 #: What each model is for, in the words someone would use to ask for it.
 QUESTIONS = {
@@ -46,6 +79,7 @@ def dump(training: Training) -> str:
     ]
     lines += _section("combat", training.combat, COMBAT_FEATURES)
     lines += _section("capture", training.capture, CAPTURE_FEATURES)
+    lines += _conventions_block()
     lines += _capture_caveat(training)
     return "\n".join(lines) + "\n"
 
@@ -106,6 +140,30 @@ def _score_sentence(name: str, fitted: Fitted) -> list[str]:
     ]
 
 
+def _conventions_block() -> list[str]:
+    """The numbers a game needs that are not weights.
+
+    In the readable dump as well as in the JSON, because a person comparing
+    the game's behaviour against this file has to be able to see that the
+    radius the game counted friends within is the radius the data was built
+    with.
+    """
+    return [
+        "",
+        "What the game needs to know that is not a weight",
+        "------------------------------------------------",
+        f"  nearby_radius = {NEARBY}: how close another unit must be to count",
+        "  towards numeric_advantage.",
+        f"  reinforcement_distance_when_alone = {WIDTH}: what a unit with no",
+        "  living friends reports. It is the training board's width, so it sits",
+        "  outside every real distance -- a game that reports its own, smaller",
+        "  width instead is saying 'far' where the data said 'nobody is coming'.",
+        f"  terrain ran from {CHEAPEST_GROUND} to {DEAREST_GROUND}, and no board here has a",
+        "  wall on it. Anything outside that range is extrapolation, and the",
+        "  game is expected to clamp rather than to invent a number.",
+    ]
+
+
 def _capture_caveat(training: Training) -> list[str]:
     """The two things about this data a reader has to be told.
 
@@ -145,6 +203,7 @@ def as_json(training: Training) -> dict:
         "games": training.games,
         "data_seed": DATA_SEED,
         "split_seed": SPLIT_SEED,
+        "feature_conventions": dict(FEATURE_CONVENTIONS),
         "models": {
             "combat": training.combat.model.to_dict(),
             "capture": training.capture.model.to_dict(),
@@ -185,8 +244,30 @@ def findings_for(first: dict, second: dict) -> list[str]:
     if first != second:
         findings.append("W1 two runs of the same pipeline produced different weights")
 
+    findings += _check_conventions(first.get("feature_conventions"))
     for name, model in sorted(first["models"].items()):
         findings += _check_model(name, model)
+    return findings
+
+
+def _check_conventions(published: dict | None) -> list[str]:
+    """The feature conventions are there, and are numbers a game can use.
+
+    A missing block is the finding that matters. The game reads these to build
+    a row, and the one thing worse than publishing the wrong radius is
+    publishing none -- the reader then falls back on a number of its own, which
+    is the arrangement this block exists to end.
+    """
+    if not isinstance(published, dict):
+        return ["W6 the report publishes no feature_conventions block"]
+    findings = []
+    for name in sorted(FEATURE_CONVENTIONS):
+        value = published.get(name)
+        if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+            findings.append(
+                f"W6 feature_conventions.{name} is {value!r}, and the game needs "
+                "a positive whole number"
+            )
     return findings
 
 
@@ -233,7 +314,10 @@ def _is_a_number(value: float) -> bool:
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(add_help=True, description=__doc__)
     parser.add_argument("--check", action="store_true")
-    parser.add_argument("--write", default=None, metavar="DIR")
+    # Repeatable: one training run, written to every directory given. The
+    # staging copy under dist/ and the copy the game loads come out of the
+    # same fit, which is the only way the two can be asserted to agree.
+    parser.add_argument("--write", action="append", default=None, metavar="DIR")
     try:
         args = parser.parse_args(argv)
     except SystemExit as exit_request:
@@ -250,8 +334,9 @@ def main(argv: list[str]) -> int:
 
     training = run()
     if args.write:
-        for path in write(pathlib.Path(args.write), training):
-            print(f"wrote {path}")
+        for directory in args.write:
+            for path in write(pathlib.Path(directory), training):
+                print(f"wrote {path}")
         return 0
 
     print(dump(training), end="")

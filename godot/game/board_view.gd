@@ -24,6 +24,7 @@ const PLAIN: Vector2i = Vector2i(0, 0)
 const ROUGH: Vector2i = Vector2i(1, 0)
 const WALL: Vector2i = Vector2i(2, 0)
 const REACHABLE: Vector2i = Vector2i(3, 0)
+const NODE: Vector2i = Vector2i(4, 0)
 
 const SOURCE_ID: int = 0
 
@@ -33,6 +34,7 @@ const SWATCHES: Array[Color] = [
 	Color(0.35, 0.29, 0.17),
 	Color(0.10, 0.10, 0.12),
 	Color(0.25, 0.42, 0.46),
+	Color(0.52, 0.45, 0.20),
 ]
 
 ## What counts as rough ground when choosing a tile. Terrain here is a cost,
@@ -44,12 +46,19 @@ func _ready() -> void:
 	tile_set = _build_tile_set()
 
 
-## Paint the whole board, then mark the cells the selected unit can afford.
+## Paint the whole board, mark the cells the selected unit can afford, and
+## mark the nodes both sides are playing for.
 ##
 ## Repainting everything on every change is the readable choice and costs
 ## nothing at this size: the alternative is tracking which cells are dirty,
 ## which is a cache, and a cache is a second source of truth.
-func draw_board(graph: GridGraph, reachable: Array[Vector2i]) -> void:
+##
+## The nodes go on last, so a node stays visible when the selected unit could
+## step onto it. That is the right way round for watching the AI: what it is
+## walking at has to be on the screen, and a cell the player can reach is
+## also a cell the player can see a unit standing next to.
+func draw_board(graph: GridGraph, reachable: Array[Vector2i],
+		nodes: Array[Vector2i] = [] as Array[Vector2i]) -> void:
 	clear()
 	for y: int in range(graph.height):
 		for x: int in range(graph.width):
@@ -57,6 +66,8 @@ func draw_board(graph: GridGraph, reachable: Array[Vector2i]) -> void:
 			set_cell(cell, SOURCE_ID, _tile_for(graph.cost_at(cell)))
 	for cell: Vector2i in reachable:
 		set_cell(cell, SOURCE_ID, REACHABLE)
+	for cell: Vector2i in nodes:
+		set_cell(cell, SOURCE_ID, NODE)
 
 
 ## The board cell under a point in this layer's own coordinates.

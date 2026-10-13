@@ -1,0 +1,98 @@
+{
+  "name": "the arithmetic, with nothing else in the way",
+  "why": "Two models nobody fitted, so the numbers can be read off by hand. The two extreme rows are the point: a logit of -800 overflows the obvious spelling of a sigmoid on both sides of this repository, and a model that dies on one unusual row is a model that dies mid-game.",
+  "feature_conventions": {
+    "nearby_radius": 2,
+    "reinforcement_distance_when_alone": 15,
+    "cheapest_ground": 1,
+    "dearest_ground": 3
+  },
+  "models": {
+    "swing": {
+      "kind": "logistic",
+      "features": [
+        "one",
+        "two"
+      ],
+      "weights": [
+        1.0,
+        -1.0
+      ],
+      "bias": 0.5
+    },
+    "plain": {
+      "kind": "linear",
+      "features": [
+        "one",
+        "two"
+      ],
+      "weights": [
+        2.0,
+        0.25
+      ],
+      "bias": -1.0
+    }
+  },
+  "cases": [
+    {
+      "kind": "row",
+      "model": "swing",
+      "why": "the bias alone",
+      "features": {
+        "one": 0,
+        "two": 0
+      },
+      "prediction": 0.622459331202
+    },
+    {
+      "kind": "row",
+      "model": "swing",
+      "why": "both weights pulling",
+      "features": {
+        "one": 3,
+        "two": -2
+      },
+      "prediction": 0.995929862284
+    },
+    {
+      "kind": "row",
+      "model": "swing",
+      "why": "a logit far above anything a game produces",
+      "features": {
+        "one": 800,
+        "two": 0
+      },
+      "prediction": 1.0
+    },
+    {
+      "kind": "row",
+      "model": "swing",
+      "why": "the branch that stops exp overflowing",
+      "features": {
+        "one": -800,
+        "two": 0
+      },
+      "prediction": 0.0
+    },
+    {
+      "kind": "row",
+      "model": "plain",
+      "why": "a linear answer is the number itself",
+      "features": {
+        "one": 4,
+        "two": 8
+      },
+      "prediction": 9.0
+    },
+    {
+      "kind": "row",
+      "model": "plain",
+      "why": "a feature that is not a whole number",
+      "features": {
+        "one": -1.5,
+        "two": 0
+      },
+      "prediction": -4.0
+    }
+  ]
+}

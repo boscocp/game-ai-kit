@@ -1,0 +1,139 @@
+{
+  "name": "two nodes, and which one is quicker for whom",
+  "why": "The capture features are measured from whichever of a faction's units is nearest the node -- not from the unit being decided for -- and the two nodes here are nearest to different units of the same side. A side measuring from the wrong unit, or averaging terrain along a route it chose rather than the fixed one, disagrees on the second node and not the first.",
+  "feature_conventions": {
+    "nearby_radius": 2,
+    "reinforcement_distance_when_alone": 15,
+    "cheapest_ground": 1,
+    "dearest_ground": 3
+  },
+  "models": {
+    "capture": {
+      "kind": "linear",
+      "features": [
+        "distance_to_node",
+        "own_units",
+        "enemy_units",
+        "terrain_on_the_way"
+      ],
+      "weights": [
+        0.698048,
+        0.089746,
+        0.087648,
+        0.397774
+      ],
+      "bias": 1.142399
+    }
+  },
+  "board": {
+    "width": 6,
+    "height": 4,
+    "costs": [
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        3,
+        3,
+        2,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        3,
+        2,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    ],
+    "units": [
+      {
+        "id": 1,
+        "faction": 0,
+        "x": 0,
+        "y": 0,
+        "health": 10
+      },
+      {
+        "id": 2,
+        "faction": 0,
+        "x": 2,
+        "y": 3,
+        "health": 10
+      },
+      {
+        "id": 3,
+        "faction": 1,
+        "x": 5,
+        "y": 1,
+        "health": 10
+      }
+    ]
+  },
+  "cases": [
+    {
+      "kind": "capture",
+      "faction": 0,
+      "node": [
+        3,
+        1
+      ],
+      "why": "nearest is the unit at (2,3); the route goes along x first and crosses the rough ground",
+      "features": {
+        "distance_to_node": 3,
+        "own_units": 2,
+        "enemy_units": 1,
+        "terrain_on_the_way": 2.0
+      },
+      "prediction": 4.299231
+    },
+    {
+      "kind": "capture",
+      "faction": 0,
+      "node": [
+        0,
+        2
+      ],
+      "why": "the other node of the same side is nearest a different unit, and the walk is all open ground",
+      "features": {
+        "distance_to_node": 2,
+        "own_units": 2,
+        "enemy_units": 1,
+        "terrain_on_the_way": 1.0
+      },
+      "prediction": 3.203409
+    },
+    {
+      "kind": "capture",
+      "faction": 1,
+      "node": [
+        3,
+        1
+      ],
+      "why": "the same node for the other side: closer, outnumbered, and quicker than both",
+      "features": {
+        "distance_to_node": 2,
+        "own_units": 1,
+        "enemy_units": 2,
+        "terrain_on_the_way": 1.5
+      },
+      "prediction": 3.400198
+    }
+  ]
+}

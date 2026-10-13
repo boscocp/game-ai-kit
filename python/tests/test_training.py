@@ -12,6 +12,7 @@ import dataclasses
 import unittest
 
 from gameaikit.dataset.rows import CAPTURE_FEATURES, COMBAT_FEATURES
+from gameaikit.dataset import simulate
 from gameaikit.dataset.simulate import collect
 from gameaikit.training import evaluate, report
 from gameaikit.training.models import Model
@@ -23,6 +24,7 @@ from gameaikit.training.train import Fitted, Training, run
 def sound_report() -> dict:
     """A report with nothing wrong with it, for the rules to pass."""
     return {
+        "feature_conventions": dict(report.FEATURE_CONVENTIONS),
         "models": {
             "combat": {
                 "features": list(COMBAT_FEATURES),
@@ -151,6 +153,37 @@ class TheReportsRules(unittest.TestCase):
         diverged["models"]["capture"]["bias"] = float("-inf")
 
         self.assertIn("W4", report.findings_for(diverged, diverged)[0])
+
+    def test_a_report_with_no_feature_conventions_is_caught(self) -> None:
+        # The block the game reads to build a row. Published since T6: without
+        # it the GDScript side falls back on numbers of its own, which is the
+        # arrangement the block exists to end.
+        bare = sound_report()
+        del bare["feature_conventions"]
+        self.assertIn("W6", report.findings_for(bare, bare)[0])
+
+    def test_a_convention_that_is_not_a_number_is_caught(self) -> None:
+        wrong = sound_report()
+        wrong["feature_conventions"]["nearby_radius"] = "two"
+        self.assertIn("W6", report.findings_for(wrong, wrong)[0])
+
+    def test_a_convention_of_zero_is_caught(self) -> None:
+        # Zero is the value a missing key reads as once somebody writes
+        # `conventions.get(name, 0)` on the other side, and it is a radius
+        # that counts nobody.
+        zeroed = sound_report()
+        zeroed["feature_conventions"]["nearby_radius"] = 0
+        self.assertIn("W6", report.findings_for(zeroed, zeroed)[0])
+
+    def test_the_published_conventions_are_the_simulator_s_own(self) -> None:
+        # Not a restatement of the constant: it asserts that what the report
+        # publishes is what `simulate.py` actually used, so renaming or
+        # retuning either number there cannot leave the game reading a stale
+        # copy of it.
+        published = report.as_json(training(0.9, 0.7))["feature_conventions"]
+        self.assertEqual(published["nearby_radius"], simulate.NEARBY)
+        self.assertEqual(
+            published["reinforcement_distance_when_alone"], simulate.WIDTH)
 
     def test_a_model_that_learned_nothing_is_reported(self) -> None:
         flat = copy.deepcopy(sound_report())
