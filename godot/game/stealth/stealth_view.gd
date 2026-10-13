@@ -80,6 +80,9 @@ func _draw_guard(guard: StealthGuard) -> void:
 		draw_arc(_board.centre_of(guard.last_known), 10.0, 0.0, TAU, 24, colour, 2.0)
 	draw_circle(centre, 11.0, colour)
 	draw_line(centre, centre + Vector2(guard.facing) * 14.0, Color.WHITE, 2.0)
+	# The number the status lines call it by.
+	draw_string(ThemeDB.fallback_font, centre + Vector2(-4.0, 5.0), str(guard.unit.id),
+			HORIZONTAL_ALIGNMENT_LEFT, -1.0, 13, Color.BLACK)
 	_draw_bar(centre + Vector2(-BAR_WIDTH / 2.0, -TILE * 0.6), guard.suspicion, colour)
 
 

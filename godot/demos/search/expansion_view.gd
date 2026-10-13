@@ -37,12 +37,14 @@ var _board: BoardView
 var _revealed: int = 0
 var _from: Vector2i
 var _to: Vector2i
+var _frontier: Array[Vector2i] = []
 
 
 ## Show `revealed` cells of this search's expansion, and the path once it is
 ## all revealed. Stepping is replaying: nothing is searched again.
 func show_search(result: SearchResult, board: BoardView, revealed: int,
-		from: Vector2i, to: Vector2i) -> void:
+		from: Vector2i, to: Vector2i, frontier: Array[Vector2i]) -> void:
+	_frontier = frontier
 	_result = result
 	_board = board
 	_revealed = revealed
@@ -55,8 +57,8 @@ func _draw() -> void:
 	if _result == null or _board == null:
 		return
 	_draw_expansion()
+	_draw_frontier()
 	if _revealed >= _result.expanded.size():
-		_draw_frontier()
 		_draw_path()
 	else:
 		# The cell the search takes next, before it takes it: what it is about
@@ -74,10 +76,11 @@ func _draw_expansion() -> void:
 		draw_rect(_cell_rect(_result.expanded[index], EXPANSION_INSET), shade)
 
 
-# What the search had not got to when it stopped. On A* this is most of the
-# board, and that is the entire argument for the heuristic.
+# What the search is choosing among, step by step -- and, when it stops, what
+# it never got to. On A* that is most of the board, and that is the entire
+# argument for the heuristic.
 func _draw_frontier() -> void:
-	for cell: Vector2i in _result.frontier:
+	for cell: Vector2i in _frontier:
 		draw_rect(_cell_rect(cell, FRONTIER_INSET), FRONTIER, false, 2.0)
 
 

@@ -35,6 +35,7 @@ const NODES: Array[Vector2i] = [Vector2i(10, 1), Vector2i(2, 6)]
 @onready var _units: UnitView = $UnitView
 @onready var _status: Label = $Interface/Status
 @onready var _legend: Legend = $Interface/Legend
+@onready var _plan_view: PlanView = $PlanView
 
 var _state: BoardState
 var _selected_id: int = -1
@@ -42,19 +43,27 @@ var _last_refusal: String = ""
 
 var _policy: LearnedPolicy
 
-# What blue decided last turn, in its own words. Shown until it decides again.
+# What blue has played this turn, in its own words, and the decision it is
+# about to play -- decided and drawn, not yet played.
 var _ai_reasons: PackedStringArray = PackedStringArray()
+var _played: Array[LearnedDecision] = []
+var _plan: LearnedDecision = null
+
+# Blue's units that have still to decide this turn, by id.
+var _blue_to_decide: Array[int] = []
 
 
 func _ready() -> void:
 	_legend.set_entries([
-		[UnitView.FACTION_COLOURS[RED], "red: yours"],
+		[UnitView.FACTION_COLOURS[RED], "red: yours (numbers are ids)"],
 		[UnitView.FACTION_COLOURS[BLUE], "blue: the learned opponent"],
-		[BoardView.SWATCHES[BoardView.REACHABLE.x], "where the selected unit can step"],
+		[Color.WHITE, "ring: the unit in hand"],
+		[PlanView.ROUTE, "blue's next move, not yet played"],
+		[BoardView.SWATCHES[BoardView.REACHABLE.x], "where the unit in hand can step"],
 		[BoardView.SWATCHES[BoardView.NODE.x], "a node both sides want"],
+		[BoardView.SWATCHES[BoardView.PLAIN.x], "open ground"],
 		[BoardView.SWATCHES[BoardView.ROUGH.x], "rough ground: dear to cross"],
 		[BoardView.SWATCHES[BoardView.WALL.x], "wall"],
-		[Color.WHITE, "below: blue's reasons, with its numbers"],
 	] as Array[Array])
 	_state = _build_scenario()
 	# The search goes in from here rather than from inside the policy: a route
@@ -79,6 +88,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 # A click either picks up one of your units or tries to step onto a cell.
 func _click_cell(cell: Vector2i) -> void:
+	if _state.current_faction == AI_FACTION:
+		_last_refusal = "blue is deciding -- space plays the move it has drawn"
+		_refresh()
+		return
 	var occupant: Unit = _state.unit_at(cell)
 	if occupant != null and occupant.faction == _state.current_faction:
 		_selected_id = occupant.id
@@ -120,50 +133,71 @@ func _try_step(cell: Vector2i) -> void:
 
 
 func _end_turn() -> void:
-	_state = _state.end_turn(FACTIONS, POINTS_PER_TURN)
-	_last_refusal = ""
+	step_decision()
+
+
+## Space, and the step every example offers (T21): one decision at a time.
+##
+## On red's turn it ends red's turn, and blue's first unit decides -- decides
+## and is drawn, not played. Each press after that plays the move on screen
+## and lets the next unit decide, and the press after blue's last move hands
+## the board back. So every blue decision is on the screen before it happens.
+func step_decision() -> void:
 	if _state.current_faction == AI_FACTION:
-		_play_the_ai_turn()
+		_play_the_plan()
+	else:
 		_state = _state.end_turn(FACTIONS, POINTS_PER_TURN)
+		_ai_reasons = PackedStringArray()
+		_played.clear()
+		_blue_to_decide.assign(_state.units_of(AI_FACTION).map(func(unit: Unit) -> int: return unit.id))
+		_plan_the_next_unit()
+	_last_refusal = ""
 	_select_first_unit_of_the_side_to_move()
 	_refresh()
 
 
-## One decision: red's turn ends, and blue decides and plays its own.
-##
-## Space does the same. It is here under the name every example shares (T21).
-func step_decision() -> void:
-	_end_turn()
-
-
-## What blue reasoned with last turn: each unit's reason, with its number.
+## What blue is reasoning with: every decision this turn, the one about to be
+## played last, each with the number it was made on.
 func decision_overlay() -> Dictionary:
-	return {"deciding": "blue", "reasons": _ai_reasons}
+	var decisions: Array[Dictionary] = []
+	for decision: LearnedDecision in _played + ([_plan] if _plan != null else []):
+		var entry: Dictionary = {"unit": decision.unit_id, "action": decision.action}
+		entry.merge({"number": PlanView.number_of(decision), "reason": decision.reason})
+		if is_finite(decision.win_probability):
+			entry["p_win"] = decision.win_probability
+		if is_finite(decision.predicted_turns):
+			entry["turns"] = decision.predicted_turns
+		entry["played"] = decision != _plan
+		decisions.append(entry)
+	return {"decisions": decisions}
 
 
-# Every unit of the AI's side decides in turn, and plays what it decided.
-#
-# One unit at a time against the state the one before it left, rather than all
-# of them deciding on the opening position: a unit that has watched a friend
-# walk away is a unit whose `numeric_advantage` has changed, and deciding on a
-# board that no longer exists is the oldest bug in turn-based AI.
-#
-# The loop holds a list taken before the first move and `_state` is replaced
-# inside it, which looks like exactly that bug and is not: only each unit's
-# id is read from the list, and the policy is handed the live state. The
-# order is `state.units` order, which this scenario happens to build by id.
-func _play_the_ai_turn() -> void:
-	_ai_reasons = PackedStringArray()
+# Play the move on screen, then let the next unit decide.
+func _play_the_plan() -> void:
+	_ai_reasons.append(_plan.reason)
+	_played.append(_plan)
+	var next: BoardState = _state.apply(_plan.move)
+	if next != null:
+		_state = next
+	_plan_the_next_unit()
+
+
+# The next blue unit decides against the board as it is now, after the moves
+# already played -- a unit that has watched a friend walk away has a different
+# `numeric_advantage`, and deciding on a board that no longer exists is the
+# oldest bug in turn-based AI. With nobody left to decide, blue's turn ends.
+func _plan_the_next_unit() -> void:
+	_plan = null
 	var unusable: String = _policy.why_unusable()
 	if unusable != "":
 		_ai_reasons.append("blue cannot think: " + unusable)
-		return
-	for unit: Unit in _state.units_of(AI_FACTION):
-		var decision: LearnedDecision = _policy.decide(_state, unit.id)
-		_ai_reasons.append(decision.reason)
-		var next: BoardState = _state.apply(decision.move)
-		if next != null:
-			_state = next
+		_blue_to_decide.clear()
+	while _plan == null and not _blue_to_decide.is_empty():
+		var unit_id: int = _blue_to_decide.pop_front()
+		if _state.unit_by_id(unit_id) != null:
+			_plan = _policy.decide(_state, unit_id)
+	if _plan == null:
+		_state = _state.end_turn(FACTIONS, POINTS_PER_TURN)
 
 
 # Whoever is to move starts with one of their units in hand, so the first click
@@ -176,6 +210,7 @@ func _select_first_unit_of_the_side_to_move() -> void:
 func _refresh() -> void:
 	_board.draw_board(_state.graph, _affordable_steps(), NODES)
 	_units.show_state(_state, _board, _selected_id)
+	_plan_view.show_plan(_plan, _state, _board)
 	_status.text = _status_line()
 
 
@@ -198,13 +233,16 @@ func _status_line() -> String:
 	var side: String = "red" if _state.current_faction == RED else "blue"
 	var unit: Unit = _state.unit_by_id(_selected_id)
 	var points: String = "-" if unit == null else str(unit.movement_points)
-	var line: String = "turn %d  ·  %s to move  ·  movement left: %s  ·  space ends the turn" % [
-		_state.turn_number, side, points,
+	var space: String = "space plays blue's next move" if _plan != null else "space ends the turn"
+	var line: String = "turn %d  ·  %s to move  ·  movement left: %s  ·  %s" % [
+		_state.turn_number, side, points, space,
 	]
 	if _last_refusal != BoardState.LEGAL:
 		line += "\nrefused: " + _last_refusal
 	for reason: String in _ai_reasons:
 		line += "\n" + reason
+	if _plan != null:
+		line += "\nnext, not yet played: " + _plan.reason
 	return line
 
 

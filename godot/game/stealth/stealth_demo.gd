@@ -26,12 +26,17 @@ func _ready() -> void:
 		[StealthView.STATE_COLOURS[StealthGuard.PATROL], "guard on its round"],
 		[StealthView.STATE_COLOURS[StealthGuard.INVESTIGATE], "guard going to look"],
 		[StealthView.STATE_COLOURS[StealthGuard.ALERT], "guard giving chase"],
+		[Color.TRANSPARENT, "  bar: suspicion, white tick: target"],
+		[Color.TRANSPARENT, "  dots: next steps, ring: where it"],
+		[Color.TRANSPARENT, "  thinks you are, line: its facing"],
 		[StealthView.SIGHT, "what a guard sees"],
-		[Color.WHITE, "bar: suspicion  ·  tick: where the rules pull it"],
 		[StealthView.DANGER, "danger map (D)"],
-		[StealthView.DARKNESS, "darkness: harder to be seen"],
 		[StealthView.EXIT, "the way out"],
 		[StealthView.PLAYER, "you"],
+		[BoardView.SWATCHES[BoardView.PLAIN.x], "floor, lit"],
+		[StealthView.DARKNESS, "shade: dark, harder to see you"],
+		[BoardView.SWATCHES[BoardView.ROUGH.x], "trees: slow, block sight"],
+		[BoardView.SWATCHES[BoardView.WALL.x], "wall"],
 	] as Array[Array])
 	restart()
 
@@ -69,7 +74,8 @@ func step_decision() -> void:
 
 
 ## What every guard is reasoning with: its state, its suspicion, where the
-## rules pull it, what it was given and where it is about to walk.
+## rules pull it, what it was given, what it sees, where it thinks you are
+## and where it is about to walk.
 func decision_overlay() -> Dictionary:
 	var guards: Array[Dictionary] = []
 	for guard: StealthGuard in world.guards:
@@ -80,6 +86,8 @@ func decision_overlay() -> Dictionary:
 			"inputs": guard.suspicion.inputs,
 			"rules": guard.suspicion.activations,
 			"sees": world.cone.visible_cells(world.room.graph, guard.unit.cell, guard.facing),
+			"thinks_you_are": guard.last_known if guard.last_known != StealthGuard.NOWHERE else "nowhere yet",
+			"next_steps": guard.upcoming(4) if not guard.route.is_empty() else "looking round",
 		})
 	return {"guards": guards}
 

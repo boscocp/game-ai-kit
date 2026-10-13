@@ -50,12 +50,27 @@ data the overlay draws, handed to a test rather than to the screen.
 
 **Each half has its own check:**
 - **`make lint-demos`** (`scripts/check_demos.py`, no engine) holds the
-  structure. Every example has its target, its help line, a scene that
-  exists, a legend and both functions, and it is listed in
-  `test/demo_overlays.gd`. A Makefile with no example at all is a finding.
-- **`make test-demo-overlays`** opens each example headless, takes three
-  decisions, and requires every field of the overlay to hold something. An
-  empty list, a list of empty words or a NaN all fail.
+  structure. Every example has:
+  - one target with a help line, whose recipe opens a window (`--headless`
+    is refused);
+  - a scene that exists, with a node running the legend;
+  - a root script with both functions;
+  - a place in `SCENES` in `test/demo_overlays.gd` (a comment does not
+    count).
+  
+  A scene on disk that offers `step_decision` with no target is a finding,
+  and so is a Makefile with no example at all.
+- **`make test-demo-overlays`** opens each example headless and takes three
+  decisions. It fails on:
+  - any engine error;
+  - an overlay that did not change;
+  - a field that holds nothing (an empty list, a list of empty words, an
+    empty packed array, a NaN);
+  - the field the example's task names being missing, or not a number where
+    it must be one;
+  - a legend line that says nothing, or runs off the screen.
+  
+  Each rule is first shown a planted example it must reject.
 
 Neither one can tell whether a person can read the screen. That is each
 example's manual check, and the question is the same for all of them: **can
@@ -68,4 +83,4 @@ you tell what the AI is about to do, and why, before it does it?**
    script.
 3. Put a `Legend` in the scene, and add the scene to `SCENES` in
    `test/demo_overlays.gd`.
-4. Run `make lint-demos`. It names the first part that is missing.
+4. Run `make lint-demos`. It names every part that is missing.

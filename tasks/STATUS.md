@@ -39,7 +39,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T17 | The opponent model | todo | n-grams you can print |
 | T18 | Behaviour cloning, and what a learned model buys | todo | the comparison is the task |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
-| T21 | Every example can be watched | todo | **before T8**: the standing rule for every example after it |
+| T21 | Every example can be watched | done | `check_demos.py` and `demo_overlays.gd`; blue's decision now drawn before it is played |
 | T24 | One window for every example | todo | a menu, a card per example naming its techniques, and an executable; needs T21 |
 
 ## Milestone 3 — real time, last
@@ -71,6 +71,31 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-13 (wave 23)
+
+**What landed.** T21. Invariant 13 has a gate in two halves:
+- `make lint-demos` holds the structure: a target that opens a window, a
+  legend, and `step_decision()` and `decision_overlay()`.
+- `make test-demo-overlays` steps every example headless. It fails on an
+  engine error, on an overlay that does not change, on an empty field or a
+  missing required field, and on a legend that says nothing or runs off the
+  screen.
+
+Every rule in both halves first rejects a planted case. The convention is in
+[docs/godot/examples.md](../docs/godot/examples.md).
+
+**The board itself failed the task.** Blue decided and played its whole
+turn on one press, so the decision was never on screen before it happened.
+It now plays one decision per press, drawn first. The gate had passed it,
+because it accepted a full overlay without asking whether it ever changed.
+See [docs/reviews/23-every-example-can-be-watched.md](../docs/reviews/23-every-example-can-be-watched.md).
+
+**For the owner.** `CLAUDE.md`'s invariant table still says invariant 13 has
+no gate. That file is yours, so it was left alone.
+
+**Not proven.** Whether a person can read each example is the manual check.
+The fixes were not re-reviewed.
 
 ## Resuming after 2026-10-13 (wave 22)
 
