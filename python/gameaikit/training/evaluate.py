@@ -87,8 +87,8 @@ def describe(training: Training) -> list[str]:
 def _line(name: str, fitted: Fitted, units: str) -> str:
     return (
         f"{name:8} score {fitted.score:+.4f}  baseline {fitted.baseline:+.4f}  "
-        f"gain {fitted.beats_baseline_by():+.4f} ({units}, "
-        f"{fitted.holdout_rows} held-back rows)"
+        f"lookup {fitted.memoriser:+.4f}  gain {fitted.beats_baseline_by():+.4f} "
+        f"({units}, {fitted.holdout_rows} held-back rows)"
     )
 
 

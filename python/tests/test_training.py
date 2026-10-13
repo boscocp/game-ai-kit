@@ -40,7 +40,8 @@ def fitted(score: float, baseline: float) -> Fitted:
     """A fitted model that scored whatever the test needs it to have scored."""
     model = Model(kind="logistic", features=COMBAT_FEATURES, weights=(1.0, 1.0, 1.0, 1.0),
                   bias=0.0, comparable_weights=(1.0, 1.0, 1.0, 1.0), rows_trained_on=10)
-    return Fitted(model=model, score=score, baseline=baseline, holdout_rows=10)
+    return Fitted(model=model, score=score, baseline=baseline,
+                  memoriser=baseline, holdout_rows=10)
 
 
 def training(combat_score: float, combat_baseline: float,

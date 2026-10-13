@@ -37,8 +37,11 @@ STRONGEST_UNIT = 18
 #: Turns a faction must hold the node alone before it counts as captured.
 HOLD_NEEDED = 3
 
-#: After this many turns the game is a draw and produces no capture row. See
-#: the censoring note in `rows.Capture`.
+#: The bound on the turn loop. It is not a game rule and it has never been
+#: reached: measured over 2000 games the longest capture took 10 turns, and no
+#: game at all ended by running out of turns -- they end by capture or by one
+#: side being destroyed. It stays because the loop needs a bound; it is not the
+#: reason any capture row is missing. See the censoring note in `rows.Capture`.
 TURN_LIMIT = 40
 
 #: How far "nearby" is, when counting who is close enough to matter to a fight.
@@ -61,7 +64,7 @@ def collect(games: int, seed: int) -> tuple[list[Combat], list[Capture]]:
 def _play(board: Board, game: int, combats: list[Combat],
           rng: random.Random) -> Capture | None:
     """One game, to a capture, a wipe-out or the turn limit."""
-    opening = {faction: _opening_shape(board, faction) for faction in (0, 1)}
+    opening = {faction: opening_features(board, faction) for faction in (0, 1)}
     held = {0: 0, 1: 0}
 
     for turn in range(1, TURN_LIMIT + 1):
@@ -79,9 +82,13 @@ def _play(board: Board, game: int, combats: list[Combat],
 def _take_faction_turn(board: Board, faction: int, game: int,
                        combats: list[Combat], rng: random.Random) -> None:
     """Every living unit of a faction moves, then fights if it can."""
+    # No "is it still alive" guard, and that is measured rather than assumed.
+    # Within one faction's turn the only unit that can die is the one acting --
+    # a fight kills either the attacker or a defender of the *other* side -- so
+    # a unit in this snapshot is always still alive by the time it is reached.
+    # The guard that used to be here fired 0 times in 500 games, and deleting
+    # it changed not one row.
     for unit in sorted(board.living(faction), key=lambda one: one.unit_id):
-        if not unit.is_alive():
-            continue  # it was killed earlier in this same turn
         if adjacent_enemy(board, unit) is None:
             walk(board, unit, board.node)
         enemy = adjacent_enemy(board, unit)
@@ -98,18 +105,35 @@ def _fight(board: Board, attacker: Unit, defender: Unit, game: int,
     dataset with rows that are nearly copies of each other -- and a holdout
     split cannot tell a near-copy from an unseen situation.
     """
-    row = _describe(board, attacker, defender)
+    seen = fight_features(board, attacker, defender)
     won = combat.resolve(
-        attacker.health, defender.health, row["numeric_advantage"],
-        row["defender_terrain"], row["reinforcement_distance"], rng,
+        attacker.health, defender.health, seen["numeric_advantage"],
+        seen["defender_terrain"], seen["reinforcement_distance"], rng,
     )
-    combats.append(Combat(attacker_won=won, game=game, **row))
+    # Written out field by field rather than splatted in. `Combat(**seen)` was
+    # the one place where renaming a feature would have been accepted in
+    # silence, in a file whose whole output is those names.
+    combats.append(Combat(
+        health_difference=seen["health_difference"],
+        numeric_advantage=seen["numeric_advantage"],
+        defender_terrain=seen["defender_terrain"],
+        reinforcement_distance=seen["reinforcement_distance"],
+        attacker_won=won,
+        game=game,
+    ))
     loser = defender if won else attacker
     loser.health = 0
 
 
-def _describe(board: Board, attacker: Unit, defender: Unit) -> dict:
-    """The four numbers a model gets to see about a fight, before it happens."""
+def fight_features(board: Board, attacker: Unit, defender: Unit) -> dict[str, int]:
+    """The four numbers a model gets to see about a fight, before it happens.
+
+    Public, and named, because this is where the dataset is actually made. It
+    was private and no test built a board and looked at a row, so a review
+    could flip the sign of `numeric_advantage`, read `defender_terrain` from
+    the attacker's cell, or measure the reinforcement from the wrong unit, and
+    the whole suite stayed green while the data changed underneath it.
+    """
     return {
         "health_difference": attacker.health - defender.health,
         "numeric_advantage": (
@@ -151,8 +175,12 @@ def _count_the_hold(held: dict[int, int], holder: int | None) -> None:
         held[faction] = held[faction] + 1 if faction == holder else 0
 
 
-def _opening_shape(board: Board, faction: int) -> dict:
-    """What a faction's position looked like before anybody moved."""
+def opening_features(board: Board, faction: int) -> dict[str, float]:
+    """What a faction's position looked like before anybody moved.
+
+    Public for the same reason as `fight_features`: it is half of the second
+    dataset, and nothing used to pin which side of the game it described.
+    """
     own = board.living(faction)
     nearest = min(own, key=lambda unit: distance(unit.cell(), board.node))
     return {
@@ -163,9 +191,21 @@ def _opening_shape(board: Board, faction: int) -> dict:
     }
 
 
-def _capture_row(opening: dict, turn: int, game: int) -> Capture:
-    """The opening position of whoever took the node, and when they took it."""
-    return Capture(turns_taken=turn, game=game, **opening)
+def _capture_row(opening: dict[str, float], turn: int, game: int) -> Capture:
+    """The opening position of whoever took the node, and when they took it.
+
+    The *capturing* faction's opening position. Handing it the other side's was
+    green across the whole suite until a test pinned it, and the rows it
+    produced looked perfectly reasonable.
+    """
+    return Capture(
+        distance_to_node=int(opening["distance_to_node"]),
+        own_units=int(opening["own_units"]),
+        enemy_units=int(opening["enemy_units"]),
+        terrain_on_the_way=opening["terrain_on_the_way"],
+        turns_taken=turn,
+        game=game,
+    )
 
 
 def _terrain_between(board: Board, start: tuple[int, int],

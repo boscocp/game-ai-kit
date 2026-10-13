@@ -41,6 +41,21 @@ class Combat:
     and that unit can arrive partway through -- a feature that is informative
     only because of a rule somebody chose, which is worth knowing before
     reading anything into its weight.
+
+    Two measured things to know before reading these numbers:
+
+    * **a fifth of the rows carry a sentinel, not a distance.** A unit with no
+      living friends reports `Board.width`, which is 15 where real distances
+      run 1 to 11. That is a category wearing a number: 19.6% of rows, and
+      attackers in them win 13.9% of the time against 36.9% for the rest. A
+      linear model reads 15 as "very far", which points the right way by luck.
+      Capping it at the real maximum instead scores 0.885 against 0.878, a
+      difference of five rows in seven hundred -- not enough to choose on, and
+      enough to say out loud;
+    * **`numeric_advantage` is one-sided.** It is positive on 8.4% of rows and
+      reaches +2 on eleven of nearly three thousand, because the fixed policy
+      attacks whatever it touches rather than waiting for the numbers. Its
+      weight is almost entirely an estimate about being *out*numbered.
     """
 
     health_difference: int
@@ -51,9 +66,18 @@ class Combat:
 
     #: Which game this fight happened in. Not a feature -- it is what lets the
     #: holdout be split by game rather than by row. Several fights from one
-    #: game share a board, a set of units and a run of dice, so a split that
-    #: put some of them in training and the rest in the holdout would be
-    #: scoring the model on situations it had already half seen.
+    #: game share a board, a set of units and a run of dice, so a row split
+    #: would score the model partly on boards it had been fitted on.
+    #:
+    #: **It does not make the holdout unseen, and this comment used to imply
+    #: that it did.** The four features are small integers, so the whole
+    #: feature space is small: 2937 rows cover only 976 distinct vectors, and
+    #: 83% of holdout rows have an *exact* feature twin in the training set.
+    #: Voting that twin's label scores 0.848, against 0.878 for the model and
+    #: 0.690 for the majority class -- which is why `report.py` publishes that
+    #: number too. A four-weight model has no room to memorise 976 answers, so
+    #: the score here is honest; a model with capacity, as in T18, would be
+    #: measured by this holdout as cleverer than it is.
     game: int
 
     def features(self) -> list[float]:
@@ -65,11 +89,18 @@ class Combat:
 class Capture:
     """One node taken, and how many turns it took from the start of the game.
 
-    Only games where the node *was* captured produce one of these, which makes
-    this dataset censored: the slowest captures are the ones that never
-    finished inside the turn limit and so are not here. The number a model fits
-    to it is therefore a little optimistic, and that is a property of the data
-    rather than of the fitting -- see the note in `training/report.py`.
+    Only games where the node *was* captured produce one of these, so this
+    dataset is censored -- but **not in the way this comment used to claim**.
+    It said the missing games were the slowest, still unfinished at the turn
+    limit. Measured over 2000 games: 1392 captures, 608 wipe-outs and **zero**
+    games reaching the limit, with the longest capture taking 10 turns of a
+    permitted 40.
+
+    So the missing rows are the games where one side was destroyed before
+    anybody held the node, and that is a worse bias than the one that was
+    documented: a wipe-out is far likelier when the sides are uneven, so the
+    model never sees the games that were lopsided, and `own_units` and
+    `enemy_units` are exactly the features that describe being lopsided.
     """
 
     distance_to_node: int

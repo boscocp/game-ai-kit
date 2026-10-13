@@ -94,27 +94,38 @@ def _score_sentence(name: str, fitted: Fitted) -> list[str]:
     if name == "combat":
         return [
             f"right about {fitted.score:.1%} of held-back fights, against",
-            f"{fitted.baseline:.1%} for always saying 'the attacker loses':",
-            f"worth {fitted.beats_baseline_by():.1%}",
+            f"{fitted.baseline:.1%} for always saying 'the attacker loses'",
+            f"and {fitted.memoriser:.1%} for looking the fight up in a table",
+            "of the fights it was trained on",
         ]
     return [
         f"wrong by {-fitted.score:.2f} turns on average, against",
-        f"{-fitted.baseline:.2f} for always guessing the training mean:",
-        f"saves {fitted.beats_baseline_by():.2f} turns of error",
+        f"{-fitted.baseline:.2f} for always guessing the training mean",
+        f"and {-fitted.memoriser:.2f} for looking the situation up in a table",
+        "of the games it was trained on",
     ]
 
 
 def _capture_caveat() -> list[str]:
-    """The thing about the capture data a reader has to be told."""
+    """The two things about this data a reader has to be told."""
     return [
         "",
-        "One caveat on the second model",
-        "------------------------------",
-        "  Only games where the node was actually captured produce a row, so",
-        "  the slowest captures -- the ones still unfinished at the turn limit",
-        "  -- are missing from the data entirely. Any number it predicts is a",
-        "  little optimistic, and that is a property of how the rows were",
-        "  gathered rather than of how they were fitted.",
+        "Two things the numbers above do not say",
+        "---------------------------------------",
+        "  The lookup table is the honest yardstick, not the majority class.",
+        "  These features are small integers, so most held-back rows have an",
+        "  exact twin among the rows that were trained on -- 83% of them. A",
+        "  table that answers with the twin's outcome already scores most of",
+        "  what the model scores, and the majority class flatters both. Four",
+        "  weights cannot memorise 976 distinct situations, so this model's",
+        "  score is honest; one with capacity would have to be read against",
+        "  the table rather than against the majority.",
+        "",
+        "  The capture rows are censored, and not in the obvious way. Only a",
+        "  game where somebody took the node writes one, and games end instead",
+        "  by one side being destroyed -- 608 of 2000, against 0 that ran out",
+        "  of turns. So the missing rows are the lopsided games, and lopsided",
+        "  is exactly what `own_units` and `enemy_units` measure.",
     ]
 
 

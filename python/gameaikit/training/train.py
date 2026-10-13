@@ -33,6 +33,22 @@ class Fitted:
     model: Model
     score: float
     baseline: float
+
+    #: What a lookup table of the training rows scores on the same holdout.
+    #:
+    #: The four features are small integers, so the feature space is small:
+    #: 2937 combat rows cover 976 distinct vectors, and 83% of holdout rows
+    #: have an *exact* twin in the training set. Answering with that twin's
+    #: label scores 0.848 where the majority class scores 0.690 -- so the
+    #: majority baseline flatters the model by about fifteen points, and this
+    #: is the number that says what the fitting is really worth.
+    #:
+    #: It is published rather than asserted on. A four-weight model cannot
+    #: memorise 976 answers, so beating the table is not required of it; a
+    #: model with capacity, as in T18, would have to be read against this
+    #: column rather than against the majority class.
+    memoriser: float
+
     holdout_rows: int
 
     #: Which games each side of the split was drawn from. Carried so that the
@@ -83,10 +99,12 @@ def _fit_combat(combats: list, shuffle_labels: bool) -> Fitted:
     model = _fit(rows, labels, "logistic", COMBAT_FEATURES)
     held_rows = [row.features() for row in holdout]
     held_labels = [1.0 if row.attacker_won else 0.0 for row in holdout]
+    remembered = _memoriser(rows, labels, held_rows, _commoner_label(labels))
     return Fitted(
         model=model,
         score=_accuracy(model, held_rows, held_labels),
         baseline=_majority_share(held_labels),
+        memoriser=_share_right(remembered, held_labels),
         holdout_rows=len(holdout),
         training_games=frozenset(row.game for row in training),
         holdout_games=frozenset(row.game for row in holdout),
@@ -106,10 +124,12 @@ def _fit_capture(captures: list, shuffle_labels: bool) -> Fitted:
     held_rows = [row.features() for row in holdout]
     held_labels = [float(row.turns_taken) for row in holdout]
     guess = sum(labels) / len(labels)
+    remembered = _memoriser(rows, labels, held_rows, guess)
     return Fitted(
         model=model,
         score=-_mean_absolute_error(model, held_rows, held_labels),
         baseline=-_mean_absolute_error(None, held_rows, held_labels, guess),
+        memoriser=-_mean_absolute_difference(remembered, held_labels),
         holdout_rows=len(holdout),
         training_games=frozenset(row.game for row in training),
         holdout_games=frozenset(row.game for row in holdout),
@@ -146,6 +166,47 @@ def _maybe_shuffled(labels: list[float], shuffle: bool) -> list[float]:
     shuffled = list(labels)
     random.Random(SPLIT_SEED + 1).shuffle(shuffled)
     return shuffled
+
+
+def _memoriser(rows: list[list[float]], labels: list[float],
+               held_rows: list[list[float]], fallback: float) -> list[float]:
+    """What a lookup table of the training rows answers for each holdout row.
+
+    Not a model: a dictionary from an exact feature vector to the mean label
+    of the training rows that had it, falling back to the overall answer when
+    a holdout row is genuinely new. It is here as a yardstick -- a score that
+    beats the majority class but not this table is a score explained by the
+    holdout rows having been seen before in all but name.
+    """
+    table: dict[tuple, list[float]] = {}
+    for row, label in zip(rows, labels):
+        table.setdefault(tuple(row), []).append(label)
+    return [
+        sum(table[tuple(row)]) / len(table[tuple(row)])
+        if tuple(row) in table else fallback
+        for row in held_rows
+    ]
+
+
+def _commoner_label(labels: list[float]) -> float:
+    """Whichever of 0 and 1 turns up more often."""
+    ones = sum(1 for label in labels if label >= 0.5)
+    return 1.0 if ones * 2 >= len(labels) else 0.0
+
+
+def _share_right(predictions: list[float], labels: list[float]) -> float:
+    """The share of predictions that fall on the right side of a half."""
+    right = sum(
+        1 for predicted, label in zip(predictions, labels)
+        if (predicted >= 0.5) == (label >= 0.5)
+    )
+    return right / len(labels)
+
+
+def _mean_absolute_difference(predictions: list[float], labels: list[float]) -> float:
+    """Mean |predicted - actual|, for predictions that came from no model."""
+    return sum(abs(predicted - label)
+               for predicted, label in zip(predictions, labels)) / len(labels)
 
 
 def _accuracy(model: Model, rows: list[list[float]], labels: list[float]) -> float:
