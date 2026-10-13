@@ -147,7 +147,7 @@ class TheBoardsProduceTheRowsTheVectorsWriteDown(unittest.TestCase):
                 if produced is None:
                     continue
                 checked += 1
-                with self.subTest(vector=path.name, case=case["why"]):
+                with self.subTest(vector=path.name, case=case.get("why", case["kind"])):
                     self.assertEqual(
                         sorted(produced), sorted(case["features"]),
                         "the row has different features from the vector")
@@ -166,7 +166,11 @@ class TheModelsAnswerWhatTheVectorsClaim(unittest.TestCase):
             data = json.loads(path.read_text())
             for case in data["cases"]:
                 model = data["models"][model_name(case)]
-                with self.subTest(vector=path.name, case=case["why"]):
+                # `.get`, because a vector with no `why` is refused by the
+                # GDScript half with a sentence and used to die here with
+                # `KeyError: 'why'` -- which names a dictionary key at the
+                # author of a vector, in the one half they may be running.
+                with self.subTest(vector=path.name, case=case.get("why", case["kind"])):
                     answered = predict(model, case["features"])
                     self.assertTrue(
                         close_enough(answered, case["prediction"]),

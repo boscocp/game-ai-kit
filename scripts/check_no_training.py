@@ -120,6 +120,29 @@ UPDATE_RE = re.compile(r"\b(weights|bias)\s*(?:\[[^\]]*\])?\s*(?:\+|-|\*|/)=")
 # contains no line of this shape at all.
 ADDON_UPDATE_RE = re.compile(r"\w+\[[^\]]*\]\s*(?:\+|-|\*|/)=")
 
+# The same step again, written out rather than compounded. The first version
+# of the rule above pinned the one spelling a review happened to use, and the
+# next review walked past it with `_numbers[index] = _numbers[index] - step`
+# and with `_numbers.set(index, _numbers[index] - step)` -- the second being
+# the idiomatic form for the packed array the weights actually live in.
+#
+# Both read the value back out of the thing they are writing into, which is
+# what an update step is and what no inference does.
+#
+# They are crude, and they are safe only because of the scope. Measured over
+# every .gd file in the project: **zero** matches inside the inference addon
+# and three outside it -- `ai_search/dijkstra.gd` relaxing `g[step] = g[current]
+# + cost`, which is correct code, and two that are not update steps at all but
+# type declarations the regex misreads. A rule this blunt applied repo-wide
+# would be a nuisance, and a nuisance is a rule somebody switches off; applied
+# to one directory that contains no such line by construction, it costs
+# nothing and closes the evasion.
+#
+# This is a spelling arms race and the docstring says so. What it buys is that
+# the planted cases pin the rule rather than one sentence that tripped it.
+ADDON_READBACK_RE = re.compile(r"(\w+)\[[^\]]*\]\s*=[^=].*?\b\1\[")
+ADDON_SETBACK_RE = re.compile(r"\b(\w+)\.set\s*\([^,]+,.*?\b\1\[")
+
 # How far two runs of a deterministic pipeline may differ. The weights are
 # published rounded to six decimals precisely so that two machines can agree
 # on the text.
@@ -218,14 +241,26 @@ def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
                 findings.append(
                     f"N3 {label} assigns to a model's weights; "
                     "a fitted model is read-only at game time")
-            elif inside_addon and ADDON_UPDATE_RE.search(written):
+            elif inside_addon and _accumulates(written):
                 findings.append(
-                    f"N3 {label} accumulates into an indexed value; inside the "
-                    "inference addon that is an update step whatever it is called")
+                    f"N3 {label} reads an indexed value back into itself; inside "
+                    "the inference addon that is an update step whatever it is called")
     return findings
 
 
-def check_weights(repo: pathlib.Path, retrain: bool) -> tuple[list[str], bool]:
+def _accumulates(line: str) -> bool:
+    """True for a line that writes a value computed from itself.
+
+    Three spellings of one thing: `x[i] -= d`, `x[i] = x[i] - d`, and
+    `x.set(i, x[i] - d)`. Inference reads weights; only fitting writes them.
+    """
+    return bool(ADDON_UPDATE_RE.search(line)
+                or ADDON_READBACK_RE.search(line)
+                or ADDON_SETBACK_RE.search(line))
+
+
+def check_weights(repo: pathlib.Path, retrain: bool,
+                  trained: tuple[dict, str] | None = None) -> tuple[list[str], bool]:
     """N4: the committed weights are what the Python pipeline produces.
 
     Returns the findings and whether the pipeline actually ran. A gate that
@@ -249,7 +284,11 @@ def check_weights(repo: pathlib.Path, retrain: bool) -> tuple[list[str], bool]:
 
     if not retrain:
         return [], False
-    trained = fresh_training(repo)
+    # Injectable, so a planted case can hand this function a fit and assert
+    # that both halves of N4 are reached. The three cases for the dump rule
+    # were testing the helper, and deleting the *call* left the self-test
+    # green -- the rule was planted and its wiring was not.
+    trained = trained if trained is not None else fresh_training(repo)
     if trained is None:
         return [], False
     fresh, readable = trained
@@ -392,6 +431,20 @@ def self_test() -> int:
             failures.append(
                 f"{label}: expected a {code} finding, got {output.strip() or 'nothing'!r}")
 
+    def quietly(argv: list[str]) -> int:
+        """`main` with both streams caught.
+
+        The three cases that use this go through `main` rather than `run`,
+        because what they are about is its exit code -- and `main` reports an
+        unreadable file on stderr, which `quiet` does not catch. Without it, a
+        *passing* self-test printed three error lines: the argument
+        docs/godot/reading-json-in-godot.md makes against the noisy JSON
+        parser, made against this file.
+        """
+        with contextlib.redirect_stdout(io.StringIO()), \
+                contextlib.redirect_stderr(io.StringIO()):
+            return main(argv)
+
     def quiet(repo: pathlib.Path) -> tuple[int, str]:
         stream = io.StringIO()
         with contextlib.redirect_stdout(stream):
@@ -497,13 +550,13 @@ def self_test() -> int:
         broken = build(root, "brokenjson", dict(
             sound, **{str(WEIGHTS): "{ not json at all"}))
         expect("a weights file that is not JSON",
-               (main(["--repo", str(broken), "--skip-retrain"]), ""), 2)
+               (quietly(["--repo", str(broken), "--skip-retrain"]), ""), 2)
 
         unreadable = build(root, "notutf8", dict(sound))
         (unreadable / GODOT / "game" / "ai.gd").parent.mkdir(parents=True, exist_ok=True)
         (unreadable / GODOT / "game" / "ai.gd").write_bytes(b"var name := \xff\xfe\n")
         expect("a script that is not UTF-8",
-               (main(["--repo", str(unreadable), "--skip-retrain"]), ""), 2)
+               (quietly(["--repo", str(unreadable), "--skip-retrain"]), ""), 2)
 
         # Planted: every other way of writing a file. Only `FileAccess.WRITE`
         # had a case, so three of the four alternatives in WRITING_RE could be
@@ -551,20 +604,47 @@ def self_test() -> int:
 
         # Planted: the update step with the numbers called something else,
         # inside the addon. Thirty-four lines of real gradient descent got
-        # past N1 to N3 during review by doing exactly this.
-        expect("an update step under another name", quiet(build(root, "evasion", dict(
-            sound, **{str(LEARNING_ADDON / "fitter.gd"):
-                      "\t_numbers[index] -= STEP * slope\n"}))), 1, "N3")
+        # past N1 to N3 during review by doing exactly this -- and a second
+        # review then walked past the first fix with the other two spellings,
+        # so all three are here. A case that pins one sentence rather than
+        # the rule is the defect this file is most prone to.
+        for spelling in ["\t_numbers[index] -= STEP * slope\n",
+                         "\t_numbers[index] = _numbers[index] - STEP * slope\n",
+                         "\t_numbers.set(index, _numbers[index] - STEP * slope)\n"]:
+            expect(f"an update spelled {spelling.strip()[:28]}", quiet(build(
+                root, "evasion" + str(abs(hash(spelling))), dict(
+                    sound, **{str(LEARNING_ADDON / "fitter.gd"): spelling}))), 1, "N3")
 
-        # ...and the same line outside the addon, which is ordinary code: a
-        # running total, a score, a cooldown.
-        expect("an accumulator outside the addon", quiet(build(root, "tally", dict(
-            sound, **{str(GODOT / "game" / "score.gd"):
-                      "\t_points[index] -= cost\n"}))), 3)
+        # ...and the same lines outside the addon, which are ordinary code: a
+        # running total, a score, a cost table in a search.
+        for ordinary in ["\t_points[index] -= cost\n",
+                         "\tg[step] = g[current] + graph.cost_at(step)\n"]:
+            expect(f"ordinary code: {ordinary.strip()[:24]}", quiet(build(
+                root, "tally" + str(abs(hash(ordinary))), dict(
+                    sound, **{str(GODOT / "game" / "score.gd"): ordinary}))), 3)
+
+        # ...and the two indexed writes the inference addon legitimately makes,
+        # which must not become findings: neither reads its target back.
+        for legitimate in ['\tloaded._models[name] = _model_from(entry)\n',
+                           "\tseen[feature] = true\n"]:
+            expect(f"the addon writing {legitimate.strip()[:24]}", quiet(build(
+                root, "legit" + str(abs(hash(legitimate))), dict(
+                    sound, **{str(LEARNING_ADDON / "loader.gd"): legitimate}))), 3)
 
         # Planted: a --repo that is not there at all.
         expect("a path that is not a repository",
-               (main(["--repo", str(root / "nowhere")]), ""), 2)
+               (quietly(["--repo", str(root / "nowhere")]), ""), 2)
+
+        # Planted: the call site of the dump rule, not only the rule. Deleting
+        # the call left the self-test green, because the three cases below
+        # reach the helper directly.
+        wired = build(root, "wired", dict(sound))
+        (wired / READABLE).write_text("what the pipeline writes\n")
+        with contextlib.redirect_stdout(io.StringIO()):
+            found, _ran = check_weights(
+                wired, True, trained=(SOUND_WEIGHTS, "something else entirely\n"))
+        if not any("weights.txt" in finding for finding in found):
+            failures.append("check_weights never reached the readable dump")
 
         failures += _self_test_the_dump(root)
         failures += _self_test_the_comparison()

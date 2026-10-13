@@ -265,6 +265,36 @@ read.
   positive and the pair still nonsense, and `clampi(value, 3, 1)` answers
   rather than objects. Refused now, with a planted case.
 
+### The fixes were reviewed too, and four of them were wrong
+
+Both reviewers were sent back over the repairs rather than the original code,
+because the first round had already produced three fixes that fixed nothing.
+The second round found four more:
+
+- **a rule can be planted and its call site unheld.** `_differences_in_the_dump`
+  had three planted cases and nothing proved `check_weights` ever called it:
+  deleting the call left the self-test green. The fit is injectable now, and a
+  case hands it a mismatched pair and asserts the finding comes back;
+- **the addon update rule pinned one sentence, not the rule.** It matched
+  `_numbers[index] -= step`, and the same trainer walked past it twice over
+  with `_numbers[index] = _numbers[index] - step` and with
+  `_numbers.set(index, _numbers[index] - step)` — the second being the
+  idiomatic form for the packed array the weights actually live in. All three
+  spellings are rules now, each planted, with counter-cases for the two
+  indexed writes the addon legitimately makes;
+- the Python half still died with `KeyError: 'why'` where the GDScript half
+  now refuses the vector with a sentence — and `test-python` is a target an
+  author may run alone;
+- **a passing self-test printed three error lines**, because three new cases
+  called `main` directly and it reports unreadable files on stderr. That is
+  the argument `docs/godot/reading-json-in-godot.md` makes about the noisy
+  JSON parser, made against this repository's own gate.
+
+And one of the fixes for *those* silently did nothing: a scripted edit whose
+target string had moved, applied without an assertion, reported success and
+changed no bytes. It was caught by the self-test immediately. The same defect
+as everything else in this section, one level up.
+
 ## What held up
 
 Worth recording, because a review that only lists faults implies the rest was

@@ -134,6 +134,12 @@ decision scenarios stayed green under all five mutations of the feature
 extraction. They are about nerve; the arithmetic is the vectors' job, and the
 file says so now.
 
+**The fixes needed reviewing as much as the code did.** Both reviewers were
+sent back over the repairs, and found four more defects in them -- including a
+rule whose three planted cases all reached the helper and none reached the
+*call site*, so deleting the call left the self-test green. Seven of this
+wave's fixes were themselves wrong on first writing. Budget for that.
+
 **Thirty-four lines of real gradient descent got past the new gate**, inside
 the inference addon, by calling its accumulator `_numbers`. The docstring
 admits that hole and is right to refuse a longer list of verbs, which would
