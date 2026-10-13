@@ -72,6 +72,46 @@ because it is driven better, and a command proves every car runs one physics.
 
 ---
 
+## Resuming after 2026-10-13 (wave 20)
+
+**What landed.** A mini wave of research and planning, with no code.
+[How strategy games plan](../docs/concepts/planning-in-strategy-games.md)
+gathers twenty-four sources, shipped games and research, with every
+quotation checked against its text. ADR 0010 is **proposed**: the RTS enemy
+plans at the strategic layer only, with a heuristic, a budget per call and a
+cadence, over a priority-queue economy. T11 and T20 are to measure it. New
+tasks: **T24**, one window that opens every example, with a card naming each
+one's techniques, and an exported executable; and **T25**, a league of one team
+per technique, scored separately on strength and on how human it plays,
+with a live cost and efficiency meter. T20 now opens with **the minimum RTS**,
+built backwards from what each AI needs to decide, and T19 with the
+simulation the league depends on.
+
+**The research corrected its own first reading.** The page first said
+strategy games "plan only at the top". Killzone 3's bots and squads plan with
+HTN, and F.E.A.R. planned per soldier. What the sources support is that
+nobody plans the whole game in one search. Planning at the top only is this
+kit's choice for an RTS, and is now said as one. **A summary of sources
+needs reviewing against the sources as much as code does against its
+tests.**
+
+**The answer to "PDDL or STRIPS, which is faster" is that the question is
+wrong.** PDDL is the language and STRIPS the model it describes. Speed comes
+from which layer plans, over how small a problem, with what search, and how
+often.
+
+**Not proven.** Everything in ADR 0010 is a reading of other people's games
+until T11's benchmark and T20's match produce numbers. The third round of
+this wave's fixes was not reviewed again.
+
+**Still open, and carried forward.** Everything wave 19 listed. Also the
+sequencing question, now bigger: `make wave` picks **T13**, while T21 says it
+comes before T8, and T24 (which needs T21) and T25 are where the owner's
+latest requests live. If they should come sooner, move their rows up.
+
+Read the task file `make wave` names, then: make check, write the review
+record, make wave-merge.
+
 ## Resuming after 2026-10-13 (wave 19)
 
 **What landed.** T7, and with it milestone 1. Planning and learning have a
