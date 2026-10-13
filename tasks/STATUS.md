@@ -38,6 +38,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T16 | The fighting scenario | todo | mostly not AI, and says so |
 | T17 | The opponent model | todo | n-grams you can print |
 | T18 | Behaviour cloning, and what a learned model buys | todo | the comparison is the task |
+| T21 | Every example can be watched | todo | **before T8**: the standing rule for every example after it |
 
 ## Milestone 3 — real time, last
 
@@ -50,6 +51,22 @@ lesson in it.
 |---|---|---|---|
 | T19 | The real-time core | todo | starts by trying to prove itself unnecessary |
 | T20 | The RTS demo | todo | build orders against the clock, fog of war |
+
+## Milestone 4 — driving, which is the first thing not on a grid
+
+A fourth game, after the three strategy ones and after the RTS, because that is
+the order the owner wants to build them in. It earns its place by teaching a
+family nothing before it does: every decision in this kit so far picks a cell
+or an action, and a car picks *how hard to turn, right now*.
+
+It is also the genre where difficulty most often cheats, which makes it the
+best place to show the T12 rule holding under pressure: the hard car is hard
+because it is driven better, and a command proves every car runs one physics.
+
+| # | Task | State | Notes |
+|---|---|---|---|
+| T22 | `ai_steering`: not on a grid | todo | seek, arrive, pursue, avoid; needs T21 |
+| T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
 

@@ -1,6 +1,6 @@
 # T8 — A board you can read
 
-Size: S · Prereqs: T2 · Files: `godot/game/`, `godot/demos/search/`
+Size: S · Prereqs: T2, T21 · Files: `godot/game/`, `godot/demos/search/`
 
 ## Goal
 

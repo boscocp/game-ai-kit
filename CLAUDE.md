@@ -8,14 +8,15 @@ something.
 
 An invariant without a gate is prose, and prose does not hold: a rule violated
 twice becomes a script. This section used to claim every invariant had one. It
-did not, and a review said so -- four of them are still prose, and they are
-marked. **Marked, not quietly dropped**: an unenforced rule you know about is
-worth keeping, and one you believe is enforced is worse than none.
+did not, and a review said so. Four are still prose or only half held -- 4, 6,
+7 and 13 -- and they are marked. **Marked, not quietly dropped**: an unenforced
+rule you know about is worth keeping, and one you believe is enforced is worse
+than none.
 
 | | gate |
 |---|---|
 | 1 readable | `check_readability.py` |
-| 2 addon independence | `check_addon_deps.py` — but no addon exists yet, so it prints that it inspected nothing |
+| 2 addon independence | `check_addon_deps.py` — fully held since wave 7, when there was a second addon for it to inspect |
 | 3 acceptance is a command | `check_acceptance.py` |
 | 4 gate rejects a planted case | `make lint-selftests` runs them; that each one *has* a planted case is still read by a person |
 | 5 no lesson above tier 1 | `check_tiers.py`, via each page's `teaches:` field |
@@ -26,6 +27,7 @@ worth keeping, and one you believe is enforced is worse than none.
 | 10 nothing from the employer | `check_no_employer_refs.py` |
 | 11 no tooling byline | `check_commit_msg.py`, `check_pr_message.py` |
 | 12 branch per wave, review first | `.githooks/pre-commit`, `check_branch_base.py` |
+| 13 every example can be watched | **none yet** -- `check_demos.py`, named in T21 |
 
 1. **The code is teaching material before it is a library.** When this conflicts
    with any other rule below, this one wins. See "Readable by a person".
@@ -56,6 +58,20 @@ worth keeping, and one you believe is enforced is worse than none.
     writing the code, the test and the check is the symmetry everything else
     here exists to break. `.githooks/pre-commit` refuses a commit on `main`,
     and `make wave-merge` refuses a branch with no review record.
+
+13. **Every example can be watched, and shows the decision rather than only the
+    outcome.** A person opens it and sees what the AI is about to do and why --
+    the search's frontier, the planner's current step, the probability the
+    learned policy computed, the line the racing AI is steering to. An example
+    that shows only the result teaches only the result.
+
+    This one is deliberately **not** fully gateable, and pretending otherwise
+    would be worse than leaving it open. Measured on the pinned engine:
+    `--headless` uses the dummy rendering driver, nothing is rasterised, and
+    `Viewport.get_texture().get_image()` returns null -- so no command in this
+    repository can look at a picture. `check_demos.py` holds the half that can
+    be held (the example exists, its scene loads, the decision overlay is
+    populated) and the seeing stays a person's job, under `## Manual check`.
 
 ## Commands
 
