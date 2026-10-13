@@ -77,7 +77,7 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability \
        lint-addon-deps lint-tiers lint-links lint-workflow lint-license \
        lint-employer-refs lint-docs-freshness lint-selftests \
-       test-python ## Every gate that does not need the engine installed
+       test-python test-models ## Every gate that does not need the engine installed
 	@# CI's gate job runs exactly this. It used to hand-list the targets,
 	@# because `check` includes lint-disk-layout, which cannot run where the
 	@# toolchain is not installed -- two lists that drift the first time one of
@@ -158,6 +158,28 @@ lint-selftests: ## Run every gate's own --self-test
 .PHONY: test-python
 test-python: ## Python unit tests (stdlib only, no install step)
 	@$(PYTHON) -m unittest discover -s python/tests -t python -q
+
+.PHONY: test-models
+test-models: ## The properties T5 asks of the two fitted models
+	@# Five commands rather than one, because each is a different claim and a
+	@# failure should name which. They cost about twenty seconds between them:
+	@# the pipeline is simulated, fitted and scored from scratch every time,
+	@# which is the price of never having a stale number in a gate.
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.training.report --check
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.training.evaluate \
+		--assert-beats-majority-baseline
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.training.evaluate \
+		--shuffled-labels --assert-no-better-than-baseline
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.training.evaluate --assert-no-leak
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.training.evaluate \
+		--assert-runs-under-seconds 30
+
+.PHONY: train
+train: ## Fit both models and write dist/weights.json and dist/weights.txt
+	@# The artifacts are not committed from here. dist/ is gitignored, and the
+	@# copy the game loads is committed deliberately in T6, where there is an
+	@# addon to put it in.
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.training.report --write $(CURDIR)/dist
 
 .PHONY: test-vectors
 test-vectors: test-search-vectors test-planning-vectors ## Every conformance vector in spec/

@@ -14,7 +14,7 @@ A playable minimum where three techniques actually decide something.
 | T2 | `ai_core` and the board | done | reviewed three times; see the wave 07 record |
 | T3 | `ai_search`: A\*, BFS, DFS, Dijkstra | done | 3 vectors and a 300-board property check |
 | T4 | `ai_planning`: STRIPS, and a PDDL reader in Python | done | 8 steps, 14 states; 3 vectors read from both languages |
-| T5 | Dataset and training (Python) | todo | needs T2, T3 |
+| T5 | Dataset and training (Python) | done | 87.8% against a 69.0% baseline, and 81.8% for a lookup table |
 | T6 | `ai_learning`: inference, and the attack/retreat decision | todo | needs T5 |
 | T7 | Close the slice: docs, ADRs, `make release` | todo | needs T3, T4, T6 |
 
@@ -52,6 +52,90 @@ lesson in it.
 | T20 | The RTS demo | todo | build orders against the clock, fog of war |
 
 ---
+
+## Resuming after 2026-10-13 (wave 15)
+
+**What landed.** T5: `python/gameaikit/dataset/` simulates games with a fixed
+policy and writes down every fight and every captured node -- 1500 games give
+2937 combats and 1029 captures -- and `python/gameaikit/training/` fits a
+logistic regression to *will this attack work* and a linear one to *how long
+will this node take*, by gradient descent, standard library only. `make train`
+writes `dist/weights.json` and a readable `weights.txt`; `make test-models`
+runs the five acceptance commands and is part of `make check`.
+
+**Combat is dice rather than a formula, on purpose.** If the chance of winning
+were a logistic function of the features, a logistic regression would recover
+the line somebody wrote three files away and the lesson would be circular. The
+model is right about 87.8% of held-back fights against 69.0% for always saying
+the attacker loses, and every weight has the sign the simulator's rules imply.
+
+**The two models share one update rule.** Log loss through a sigmoid and
+squared error through a linear prediction have the same gradient with respect
+to the weights -- exactly for the first, up to a factor of two for the second,
+which disappears into the learning rate. That is why there is one `fit` and not
+two, and the factor is now written down because the file exists to be rederived.
+
+**The majority baseline was flattering the model by fifteen points.** The
+features are small integers, so 2937 rows cover 976 distinct vectors and 83% of
+held-back rows have an **exact twin** among the rows trained on. A lookup table
+of training rows scores 0.8177 where the majority class scores 0.6900 and the
+model scores 0.8780. The report publishes all three now. Four weights cannot
+memorise 976 answers so this score is honest -- but **T18's behaviour cloning
+has capacity, and must be read against the table rather than the majority**.
+
+**The control does not catch what T5 said it catches.** The task file claimed a
+shuffled-label run catches a leak in the features. Both leaks were planted and
+measured: the label appended to every row scores 1.0000 honestly and exactly
+the baseline shuffled, and a contaminated split scores 0.8794 honestly and
+exactly the baseline shuffled. The control **passes both**, because shuffling
+destroys the leaked relationship along with the honest ones. It is still worth
+running -- it tests that the score is measured against labels the fitting never
+saw -- and the leaks themselves now need `--assert-no-leak`, which asks the two
+questions directly.
+
+**Thirteen findings from two reviews**, in
+[docs/reviews/15-dataset-and-training.md](../docs/reviews/15-dataset-and-training.md).
+The two worst were in the two places this wave is about: nothing had ever built
+a board and looked at the feature row it produced, so eight mutations changed
+the data in silence; and the leak check's "suspiciously perfect" rule was gated
+on the model being logistic, so planting the label into the *capture* features
+gave a model wrong by 0.0000 turns and nothing objected. Both are pinned now,
+with twenty-two mutations run red across the two halves.
+
+**Two numbers that were about the measuring rather than the thing.** A
+published 0.8808 came from a 500-step probe where the pipeline fits 2000 and
+gives 0.8794. And an earlier convergence measurement was five runs of the same
+step count, because `steps: int = STEPS` in a signature captures the constant at
+import. Both corrected; both worth remembering before quoting a number from a
+scratch script.
+
+**Not proven.** The manual check is still a person's job: whether the weight
+dump explains, from those numbers alone, what the model learned. Nothing is
+profiled. The "no friends left" sentinel on a fifth of combat rows is
+documented rather than fixed -- capping it instead scores 0.885 against 0.878,
+five rows in seven hundred, and every alternative is arbitrary in its own way.
+
+**Still open, and carried forward.** The eleven over-long addon headers from
+wave 07 still wait on the owner. Planning and learning have no pages under
+`docs/`, so `check_tiers.py` sees neither lesson until T7. The `doc-meta`
+blocks in `spec/vectors/*/README.md` still declare a `half_life` the docs gate
+does not know. And a new one: **nothing enforces a line width**, the tree
+breaks 88 columns in both directions, and mechanical wrapping made it worse --
+either it becomes a rule with a gate or it stops being raised in review.
+
+**A trap worth adding to CLAUDE.md, which is the owner's file:** mutating a
+Python file in place can alias a `.pyc` written in the same second and **fake a
+green**. Run mutation sweeps with `PYTHONDONTWRITEBYTECODE=1` or in a clone.
+
+**Next: T6** -- `ai_learning`: the addon loads `weights.json` and does nothing
+but infer, the decision gets wired into the game's AI turn, and
+`check_no_training.py` finally gives invariant 6 the gate it has never had. The
+conformance vector there is the one that matters: the GDScript inference and
+the Python training have to agree on the same arithmetic, and the weights are
+published rounded to six decimals so that they can.
+
+Read tasks/T6-ai-learning-and-the-decision.md next, then: make check, write the
+review record, make wave-merge.
 
 ## Resuming after 2026-10-12 (wave 14)
 
