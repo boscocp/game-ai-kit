@@ -74,12 +74,25 @@ exist and the script says so by passing without it.
 ./scripts/godot --headless --path godot -s res://test/rts_simulation.gd
 ```
 
-That script holds step 6. It plays one match twice from the same seed and
-asserts the final states are identical. It replays the recorded commands and
-asserts the same end again. It asserts the match ran faster than real time,
-and prints by how much. It asserts that a side's view contains no enemy unit
-outside that side's sight. And it asserts that an AI's action that bypasses
-the command interface is refused.
+That script holds step 6, before any of T20's AIs exist: the match is driven
+by a seeded, scripted stream of commands for both sides. It asserts:
+
+- **determinism**: the match played twice from one seed ends in the same
+  state, compared by a digest of the serialised world, never by `==` on
+  objects, which compares references;
+- **nothing outside the interface**: the recorded commands, replayed with no
+  AI attached, reach the same digest. Any change made to the world outside
+  the interface makes the replay diverge, which is how a bypass shows up in a
+  language with no access control. The object an AI receives is a view with no
+  reference to the mutable world. And commands the interface must reject --
+  moving an enemy unit, training without resources, acting on an unseen unit
+  -- are each rejected and leave the digest unchanged;
+- **speed**: the match runs at least ten times faster than real time, and the
+  ratio is printed, since a league of hundreds of matches needs that margin;
+- **fog**: an enemy planted outside a side's sight is absent from its view,
+  and one planted inside it is present, so an empty view cannot pass;
+- **counters**: after the match, every side's decision-time and work counters
+  are non-zero and add up to the per-decision log.
 
 ## Manual check
 

@@ -36,7 +36,8 @@ plan, which is why planning is taught on a strategy game and not on a maze.
    runs out returns the partial plan to the expanded world with the lowest
    `h`, labelled as partial, and the game acts on its first step only.
    Breadth-first has no `h` and no useful partial plan: it is the readable
-   baseline, run unbudgeted in the benchmark and never in the game. If that
+   baseline, run in the benchmark with a budget large enough to finish (and
+   reported if it is hit), and never in the game. If that
    proves too weak, depth-first branch and bound (Churchill and Buro) has a
    complete plan early and is the alternative to measure.
 7. **Measure before choosing.** Worlds visited and milliseconds per plan, for

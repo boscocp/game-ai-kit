@@ -22,7 +22,8 @@ human-looking*, or *strong and inhuman*, on purpose.
 ## Steps
 
 1. One knob per axis, named and documented: plan horizon in actions, search
-   depth in plies, evaluation noise as a fraction.
+   depth in plies, evaluation noise as a fraction, drawn uniformly from the
+   seed.
 2. Presets built from those knobs, and nothing else: three first, then five
    (very easy to very hard) if every neighbouring pair is measurably ordered.
    A level that cannot be told apart from its neighbour is not a level, and is
@@ -50,17 +51,31 @@ here, because they cost strength too; T25 re-asserts this ordering with them
 on.
 
 ```bash
-test -f godot/addons/ai_planning/difficulty.gd
-! grep -vE '^[[:space:]]*#' godot/addons/ai_planning/difficulty.gd | grep -qE 'cheat|bonus_resources|extra_vision'
+./scripts/godot --headless --path godot -s res://test/difficulty_knobs.gd
 ```
 
-The second line used to read `grep -qv`, which succeeds whenever any single
-line of the file does not match, so it passed on a file full of cheats. Its
-first fix, `! grep -q`, passed on a missing file (grep's exit 2, negated) and
-failed on a doc comment saying the levels never cheat. Now the file must
-exist, and only lines of code are searched.
+That script is the real never-cheat check, and it is an allowlist. It asserts
+that every preset sets exactly the documented knobs and nothing else, and that
+an AI at any level is built with the same resources, vision and command
+interface as the player. A list of forbidden names misses a cheat that is
+simply renamed; a list of what is allowed does not.
+
+```bash
+test -s godot/addons/ai_planning/difficulty.gd && ! sed 's/#.*//' godot/addons/ai_planning/difficulty.gd | grep -qiwE 'cheat|cheats|bonus_resources|extra_vision'
+```
+
+A cheap tripwire beside it, on one line so that it cannot pass in parts. It
+began as `grep -qv`, which succeeds whenever any one line does not match and
+so passed on a file full of cheats. Its first fix passed on a missing file and
+failed on a comment saying the levels never cheat. Now the file must exist and
+be non-empty, comments are stripped, case is ignored and whole words are
+matched; this was checked on six planted files. A string literal can still
+trip it, which is the cost of a tripwire.
 
 ## Manual check
+
+Read `difficulty.gd` once in review for a cheat under a name no command
+knows. That is the part of never-cheating no gate can hold.
 
 Play a game at each level. The hardest should feel like it is thinking further
 ahead, not like it is being given things, and losing to it should be

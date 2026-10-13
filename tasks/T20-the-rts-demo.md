@@ -26,7 +26,7 @@ reason.
 | utility and influence maps | regions worth different things: expansions, a chokepoint | nowhere to choose to attack |
 | A\* and flow fields | terrain with costs, obstacles, and groups moving together | a straight line does it |
 | the learned model (T6) | fights whose outcome is uncertain and depends on numbers, terrain and reinforcement | nothing to predict |
-| human-likeness (T25) | real time, where actions per minute matter, and fog of war | nothing to be slow at or miss |
+| human-likeness (T25) | gains its clock measures with real time, and its scouting with fog of war | only the turn-based measures |
 
 **What it has:**
 
@@ -43,9 +43,10 @@ reason.
 4. **Map**: two starting bases, two or three expansions with resources, one
    chokepoint, and terrain with costs. That is the least that makes
    "expand", "attack where" and flow fields real choices.
-5. **Fog of war and scouting**: without them there is no uncertainty, the
-   influence maps have nothing to estimate, and half of the human-likeness
-   test disappears.
+5. **Fog of war and scouting**, and T10's tower that sees, which is how a
+   side buys vision without spending a unit. Without them there is no
+   uncertainty, the influence maps have nothing to estimate, and the scouting
+   half of the human-likeness test disappears.
 6. **Combat**: damage, range and health, with a little randomness drawn from
    the match seed. No special abilities.
 7. **An end**: destroying the base, or a time limit with a stated tiebreak.
@@ -58,9 +59,12 @@ comes back only with a task that names the AI it is for.
 
 ## Steps
 
-1. The minimum game above, on the real-time core, built from T10's content:
-   the same terrain, three of its five unit types, its towers and buildings.
-   What changes is time.
+1. The minimum game above, on the real-time core, built from T10's content.
+   Its terrain is kept, with water impassable to all three units, since the
+   type that crossed it is not among them. Three of its five unit types are
+   kept, and of its two towers only the one that sees. Its one producer and
+   one upgrade become the four buildings above, and its one resource becomes
+   two, each for the reason the list gives. What changes is time.
 2. **Three layers, as ADR 0010 sets out**: a commander that plans, squads
    that score, units that move. Only the commander plans. Squads choose
    regions by utility over the influence maps (Dill's Kohan II chapter);
