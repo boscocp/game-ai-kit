@@ -4,7 +4,8 @@ Size: M · Prereqs: T11 · Files: `godot/game/`, `godot/addons/ai_planning/`
 
 ## Goal
 
-Three difficulty levels, and none of them cheat.
+Difficulty levels -- three to start, five once the knobs prove monotonic -- and
+none of them cheat.
 
 The usual way to make a hard AI is to give it more resources, more vision or a
 lower cooldown than the player has. That is a lie told to the player, and it
@@ -12,12 +13,21 @@ teaches nothing. Here difficulty is **how much the AI is allowed to think**:
 the plan horizon, the search depth, and how much noise is added to its
 evaluation before it chooses.
 
+**Strength is one axis, and only one.** How well the AI plays and how human it
+looks while playing are different things, and a game often wants the second
+more than the first. That axis is T25's. This task builds strength alone, and
+leaves the two kinds of knob separate so that a level can be *weak and
+human-looking*, or *strong and inhuman*, on purpose.
+
 ## Steps
 
 1. One knob per axis, named and documented: plan horizon in actions, search
    depth in plies, evaluation noise as a fraction.
-2. Three presets built from those knobs, and nothing else. If a fourth knob
-   appears, it is written down and justified in the same place.
+2. Presets built from those knobs, and nothing else: three first, then five
+   (very easy to very hard) if every neighbouring pair is measurably ordered.
+   A level that cannot be told apart from its neighbour is not a level, and is
+   cut rather than kept for the menu. If another knob appears, it is written
+   down and justified in the same place.
 3. AI against AI, so the levels can be measured rather than felt: run the
    match headless, N times, and report the win rate.
 4. The player can take either side at any level.

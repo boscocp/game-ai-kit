@@ -27,7 +27,14 @@ delete this task.
    `unit_at` is O(n) per lookup and an RTS does thousands per frame.
 4. Flow-field pathing for groups, beside the per-unit A\* from T3. One unit
    asks a question; two hundred units ask the same question and should pay once.
-5. An ADR recording why there are two cores, so the next reader does not assume
+5. **A frame budget the planner shares.** Movement and flow fields are not
+   the only per-frame cost. The strategic planner (ADR 0010) and the
+   influence maps run in slices spread across frames, as Killzone 3's anytime
+   path planners and Dill's spatial reasoning do, and the budget states each
+   slice's share in milliseconds. The StarCraft survey puts strategy on a scale
+   of minutes and reactive control near a second, which is how much of a frame
+   each deserves.
+6. An ADR recording why there are two cores, so the next reader does not assume
    it was an accident.
 
 ## Acceptance

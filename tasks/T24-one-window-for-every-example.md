@@ -20,10 +20,12 @@ one arrives through it.
    the code can follow -- *where each unit walks*, *which building to raise
    next*, *whether to take this fight*.
 2. **The techniques, by name**, each with one line on the part it plays. For
-   the RTS (T20) that is at least STRIPS planning over the PDDL domain (the
-   build order), A\* (one unit's route), flow fields (a group's movement) and
-   influence maps (what the fog hides). That is what T19 and T20 say they use.
-   The card lists what the scene actually runs, not what the genre suggests.
+   the RTS (T20) that is at least a commander planning over the PDDL domain
+   (the build order), priority queues (the economy), utility over influence
+   maps (where squads go and what the fog hides), A\* (one unit's route) and
+   flow fields (a group's movement). That is what ADR 0010 and T19-T20 say
+   they use. The card lists what the scene actually runs, not what the genre
+   suggests.
 3. **What to watch**: the one thing on screen that shows the decision, from
    T21's overlay -- *the frontier spreading*, *the plan's current step lit*.
 
