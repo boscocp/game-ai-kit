@@ -7,10 +7,13 @@ else -- including **the update rule** -- is identical:
 
     gradient = mean over rows of (prediction - label) * feature
 
-That is not a coincidence and it is worth a minute. Squared error through a
-linear prediction and log loss through a sigmoid have the same derivative with
-respect to the weights, which is why one `fit` below serves both and why the
-two models are not two files.
+That is not a coincidence and it is worth a minute. For log loss through a
+sigmoid this expression **is** the gradient exactly. For squared error through
+a linear prediction it is the gradient of *half* the squared error: the plain
+one is twice this, and the factor of two disappears into `RATE`, which is a
+number nobody derived anyway. Said out loud because this file exists to be
+rederived by the reader, and a reader who does the calculus and comes out with
+a 2 should find it accounted for rather than wonder which of you is wrong.
 
 Features are standardised before fitting and the scaling is folded back into
 the weights afterwards, so what comes out applies to raw game numbers and the
@@ -25,6 +28,10 @@ the fast enough one.
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
+
+#: What a model does with `w·x + b`: weights, bias and one row, in, number out.
+Predictor = Callable[[list[float], float, list[float]], float]
 
 #: How many passes over the data. Fixed rather than "until it converges",
 #: because a fixed number is reproducible and a convergence test is one more
@@ -66,8 +73,9 @@ def logistic_prediction(weights: list[float], bias: float, row: list[float]) -> 
     return sigmoid(linear_prediction(weights, bias, row))
 
 
-def fit(rows: list[list[float]], labels: list[float], predict,
-        steps: int | None = None, rate: float | None = None) -> tuple[list[float], float]:
+def fit(rows: list[list[float]], labels: list[float], predict: Predictor,
+        steps: int | None = None,
+        rate: float | None = None) -> tuple[list[float], float]:
     """Fit weights and a bias by gradient descent, and return them.
 
     Full batch: every row contributes to every step, in the order they were
@@ -98,7 +106,7 @@ def fit(rows: list[list[float]], labels: list[float], predict,
 
 
 def _gradient(rows: list[list[float]], labels: list[float], weights: list[float],
-              bias: float, predict) -> tuple[list[float], float]:
+              bias: float, predict: Predictor) -> tuple[list[float], float]:
     """The mean of `(prediction - label) * feature` over every row.
 
     The same expression for both models, which is the thing worth noticing in

@@ -190,14 +190,23 @@ def _check_model(name: str, model: dict) -> list[str]:
             f"W2 {name} publishes {model['features']}, and the dataset declares "
             f"{list(declared)}"
         )
-    if len(model["weights"]) != len(model["features"]):
-        findings.append(f"W3 {name} has {len(model['weights'])} weights for "
-                        f"{len(model['features'])} features")
-    for number in list(model["weights"]) + [model["bias"]]:
-        if number != number or number in (float("inf"), float("-inf")):
-            findings.append(f"W4 {name} published {number}, which is not a number")
-    if all(weight == 0.0 for weight in model["weights"]):
-        findings.append(f"W5 {name} learned nothing: every weight is zero")
+    # Both columns, not just the first. `comparable_weights` is the one a
+    # person reads to decide what the model learned, and it was unchecked: a
+    # model could publish four sound weights beside four zeros, or beside three
+    # of them, and nothing here would have said so.
+    for column in ("weights", "comparable_weights"):
+        if len(model[column]) != len(model["features"]):
+            findings.append(f"W3 {name} has {len(model[column])} {column} for "
+                            f"{len(model['features'])} features")
+        if all(weight == 0.0 for weight in model[column]):
+            findings.append(f"W5 {name} learned nothing: every {column} is zero")
+        for number in model[column]:
+            if number != number or number in (float("inf"), float("-inf")):
+                findings.append(f"W4 {name} published {number} in {column}, "
+                                "which is not a number")
+    if model["bias"] != model["bias"]:
+        findings.append(f"W4 {name} published {model['bias']} as its bias, "
+                        "which is not a number")
     return findings
 
 

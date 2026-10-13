@@ -9,8 +9,9 @@ deterministic.
 from __future__ import annotations
 
 import dataclasses
+import random
 
-from ..dataset.rows import CAPTURE_FEATURES, COMBAT_FEATURES
+from ..dataset.rows import CAPTURE_FEATURES, COMBAT_FEATURES, Capture, Combat
 from ..dataset.simulate import collect
 from . import descent
 from .models import PREDICTORS, Model
@@ -56,8 +57,13 @@ class Fitted:
     #: the training set scores a model on situations it has already seen, and
     #: the shuffled-label control cannot see that happening -- measured, see
     #: `evaluate.check_no_leak`.
-    training_games: frozenset = frozenset()
-    holdout_games: frozenset = frozenset()
+    #:
+    #: No default. They used to default to the empty set, which made E4 -- "was
+    #: this scored on a game it was trained on" -- pass without looking at
+    #: anything for every `Fitted` built without them, including the one the
+    #: tests build.
+    training_games: frozenset
+    holdout_games: frozenset
 
     def beats_baseline_by(self) -> float:
         """How much better than the baseline, in the score's own units."""
@@ -89,7 +95,7 @@ def run(games: int = GAMES, shuffle_labels: bool = False) -> Training:
     )
 
 
-def _fit_combat(combats: list, shuffle_labels: bool) -> Fitted:
+def _fit_combat(combats: list[Combat], shuffle_labels: bool) -> Fitted:
     """Will this attack work? Scored as accuracy against the majority class."""
     training, holdout = split_by_game(combats, SPLIT_SEED)
     rows = [row.features() for row in training]
@@ -111,10 +117,13 @@ def _fit_combat(combats: list, shuffle_labels: bool) -> Fitted:
     )
 
 
-def _fit_capture(captures: list, shuffle_labels: bool) -> Fitted:
-    """How long will this take? Scored as mean absolute error, lower better --
-    so the score is reported as the error *saved* against always guessing the
-    training mean, which keeps "bigger is better" true of both models."""
+def _fit_capture(captures: list[Capture], shuffle_labels: bool) -> Fitted:
+    """How long will this take?
+
+    Scored as mean absolute error, which is lower-is-better -- so the score is
+    carried negated, and every comparison in this kit stays "bigger is better"
+    for both models. The minus signs below are that convention and not a slip.
+    """
     training, holdout = split_by_game(captures, SPLIT_SEED)
     rows = [row.features() for row in training]
     labels = _maybe_shuffled([float(row.turns_taken) for row in training],
@@ -161,8 +170,6 @@ def _maybe_shuffled(labels: list[float], shuffle: bool) -> list[float]:
     """
     if not shuffle:
         return labels
-    import random
-
     shuffled = list(labels)
     random.Random(SPLIT_SEED + 1).shuffle(shuffled)
     return shuffled

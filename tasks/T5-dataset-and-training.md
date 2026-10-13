@@ -30,7 +30,7 @@ make test-python
 PYTHONPATH=python python3 -m gameaikit.training.report --check
 ```
 
-Three properties, because an accuracy number alone proves very little:
+Four properties, because an accuracy number alone proves very little:
 
 ```bash
 PYTHONPATH=python python3 -m gameaikit.training.evaluate --assert-beats-majority-baseline
@@ -51,7 +51,7 @@ features. It does not, and both halves were planted and measured in wave 15:
 - the label itself appended to every feature row — the honest run scores
   **1.0000** and the control still lands exactly on the baseline, so it passes;
 - the holdout rows left in the training set as well — the honest run scores
-  0.8808 against an uncontaminated 0.8780, and the control passes again.
+  0.8794 against an uncontaminated 0.8780, and the control passes again.
 
 Shuffling the training labels destroys the leaked relationship along with every
 honest one, so the model collapses to the base rate whatever was wrong with the

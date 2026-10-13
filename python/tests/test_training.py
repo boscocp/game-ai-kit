@@ -6,6 +6,7 @@ for seven seconds is a rule nobody plants a case against, and the wave before
 this one found nine of exactly those in a conformance runner.
 """
 
+import argparse
 import copy
 import dataclasses
 import unittest
@@ -15,6 +16,7 @@ from gameaikit.dataset.simulate import collect
 from gameaikit.training import evaluate, report
 from gameaikit.training.models import Model
 from gameaikit.training.split import split_by_game
+from gameaikit.training import train
 from gameaikit.training.train import Fitted, Training, run
 
 
@@ -25,29 +27,39 @@ def sound_report() -> dict:
             "combat": {
                 "features": list(COMBAT_FEATURES),
                 "weights": [1.0, 2.0, -3.0, -0.5],
+                "comparable_weights": [2.0, 1.4, -1.3, -0.6],
                 "bias": 0.5,
             },
             "capture": {
                 "features": list(CAPTURE_FEATURES),
                 "weights": [1.0, 0.1, 0.1, 0.4],
+                "comparable_weights": [1.1, 0.2, 0.1, 0.1],
                 "bias": 1.0,
             },
         },
     }
 
 
-def fitted(score: float, baseline: float) -> Fitted:
-    """A fitted model that scored whatever the test needs it to have scored."""
-    model = Model(kind="logistic", features=COMBAT_FEATURES, weights=(1.0, 1.0, 1.0, 1.0),
+def fitted(score: float, baseline: float, kind: str = "logistic") -> Fitted:
+    """A fitted model that scored whatever the test needs it to have scored.
+
+    The two game sets are disjoint here, so a test about something else is not
+    quietly also testing E4. They carry no default on `Fitted` on purpose --
+    an empty pair made E4 pass without looking at anything.
+    """
+    features = COMBAT_FEATURES if kind == "logistic" else CAPTURE_FEATURES
+    model = Model(kind=kind, features=features, weights=(1.0, 1.0, 1.0, 1.0),
                   bias=0.0, comparable_weights=(1.0, 1.0, 1.0, 1.0), rows_trained_on=10)
-    return Fitted(model=model, score=score, baseline=baseline,
-                  memoriser=baseline, holdout_rows=10)
+    return Fitted(model=model, score=score, baseline=baseline, memoriser=baseline,
+                  holdout_rows=10, training_games=frozenset({1, 2}),
+                  holdout_games=frozenset({3}))
 
 
 def training(combat_score: float, combat_baseline: float,
              capture_score: float = -0.5, capture_baseline: float = -1.0) -> Training:
     return Training(combat=fitted(combat_score, combat_baseline),
-                    capture=fitted(capture_score, capture_baseline), games=10)
+                    capture=fitted(capture_score, capture_baseline, kind="linear"),
+                    games=10)
 
 
 class SplittingByGame(unittest.TestCase):
@@ -130,7 +142,7 @@ class TheReportsRules(unittest.TestCase):
         self.assertIn("W5", report.findings_for(flat, flat)[0])
 
 
-class TheThreeProperties(unittest.TestCase):
+class TheBaselineProperties(unittest.TestCase):
     def test_a_model_no_better_than_the_baseline_is_not_worth_shipping(self) -> None:
         self.assertTrue(evaluate.check_beats_baseline(training(0.70, 0.69)))
 
@@ -162,8 +174,8 @@ class TheLeaksTheControlCannotSee(unittest.TestCase):
             fitted(0.88, 0.69), training_games=frozenset({1, 2, 3}),
             holdout_games=frozenset({3, 4}),
         )
-        findings = evaluate.check_no_leak(
-            Training(combat=overlapping, capture=fitted(-0.5, -1.0), games=10))
+        findings = evaluate.check_no_leak(Training(
+            combat=overlapping, capture=fitted(-0.5, -1.0, kind="linear"), games=10))
 
         self.assertTrue(findings)
         self.assertIn("not held out", findings[0])
@@ -178,15 +190,16 @@ class TheLeaksTheControlCannotSee(unittest.TestCase):
         self.assertIn("told the answer", findings[0])
 
     def test_an_honest_pipeline_has_neither(self) -> None:
-        honest = dataclasses.replace(
-            fitted(0.88, 0.69), training_games=frozenset({1, 2}),
-            holdout_games=frozenset({3}),
-        )
-        self.assertEqual(
-            evaluate.check_no_leak(
-                Training(combat=honest, capture=fitted(-0.5, -1.0), games=10)),
-            [],
-        )
+        self.assertEqual(evaluate.check_no_leak(training(0.88, 0.69)), [])
+
+    def test_a_capture_model_that_is_never_wrong_is_caught_too(self) -> None:
+        # This half was missing: the check was gated on the model being
+        # logistic, so planting `turns_taken` into the capture features gave a
+        # perfect model and `--assert-no-leak` said nothing at all.
+        findings = evaluate.check_no_leak(training(0.88, 0.69, capture_score=-0.0))
+
+        self.assertTrue(findings)
+        self.assertIn("this exact", findings[0])
 
     def test_the_control_passes_a_model_that_was_told_the_answer(self) -> None:
         # Recorded rather than fixed, because it is a property of the control
@@ -195,6 +208,87 @@ class TheLeaksTheControlCannotSee(unittest.TestCase):
         told = training(0.69, 0.69, capture_score=-1.0, capture_baseline=-1.0)
 
         self.assertEqual(evaluate.check_no_better_than_baseline(told), [])
+
+
+class TheScoringItself(unittest.TestCase):
+    """Four rules that `make test-models` catches and the unit suite did not.
+
+    A gate catching them is not nothing, but it takes twenty seconds and says
+    "the model got worse"; these say which line was wrong.
+    """
+
+    def model_on(self, weight: float, bias: float, kind: str = "logistic") -> Model:
+        return Model(kind=kind, features=("only",), weights=(weight,), bias=bias,
+                     comparable_weights=(weight,), rows_trained_on=1)
+
+    def test_accuracy_counts_a_probability_over_a_half_as_a_yes(self) -> None:
+        # The threshold, which a mutation can drop entirely: comparing the
+        # probability with the label directly scores nearly everything wrong.
+        model = self.model_on(weight=1.0, bias=0.0)
+        rows = [[4.0], [-4.0], [4.0], [-4.0]]
+
+        self.assertEqual(train._accuracy(model, rows, [1.0, 0.0, 1.0, 0.0]), 1.0)
+        self.assertEqual(train._accuracy(model, rows, [0.0, 1.0, 0.0, 1.0]), 0.0)
+
+    def test_the_majority_share_is_the_commoner_answer_not_the_positive_one(self) -> None:
+        # Without the max(), a set that is 80% negative reports a baseline of
+        # 0.2 and every model looks miraculous.
+        self.assertEqual(train._majority_share([0.0] * 8 + [1.0] * 2), 0.8)
+        self.assertEqual(train._majority_share([1.0] * 8 + [0.0] * 2), 0.8)
+
+    def test_mean_absolute_error_is_the_distance_not_the_difference(self) -> None:
+        model = self.model_on(weight=1.0, bias=0.0, kind="linear")
+        rows = [[3.0], [5.0]]
+
+        # Errors of -2 and +2 average to zero if the absolute is dropped.
+        self.assertEqual(train._mean_absolute_error(model, rows, [5.0, 3.0]), 2.0)
+
+    def test_the_capture_model_is_scored_so_that_bigger_is_better(self) -> None:
+        # Both halves are negated mean errors. Dropping the minus signs makes
+        # a worse model score higher, in a comparison that reads fine.
+        result = train.run(games=40)
+
+        self.assertLess(result.capture.score, 0.0)
+        self.assertLess(result.capture.baseline, 0.0)
+        self.assertGreater(result.capture.beats_baseline_by(), 0.0)
+
+    def test_fitting_works_when_one_feature_is_a_thousand_times_the_other(self) -> None:
+        # What the standardisation buys. At this rate an unstandardised fit
+        # does not converge on these numbers, and deleting it left every unit
+        # test green because every other fixture here is already on one scale.
+        rows = [[float(a), 1000.0 * b] for a in range(-4, 5) for b in range(-4, 5)]
+        labels = [2.0 * row[0] + 0.003 * row[1] + 1.0 for row in rows]
+
+        model = train._fit(rows, labels, "linear", ("small", "large"))
+
+        self.assertAlmostEqual(model.weights[0], 2.0, places=2)
+        self.assertAlmostEqual(model.weights[1], 0.003, places=5)
+
+
+class TheClockAssertion(unittest.TestCase):
+    """E3 had no planted case at all: `if False:` there left the unit suite and
+    all five acceptance commands green."""
+
+    def arguments(self, seconds: float | None) -> argparse.Namespace:
+        return argparse.Namespace(
+            shuffled_labels=False, assert_beats_majority_baseline=False,
+            assert_no_better_than_baseline=False, assert_no_leak=False,
+            assert_runs_under_seconds=seconds,
+        )
+
+    def test_a_pipeline_over_its_budget_is_reported(self) -> None:
+        findings = evaluate._assertions(self.arguments(5.0), training(0.88, 0.69), 9.0)
+
+        self.assertTrue(findings)
+        self.assertIn("E3", findings[0])
+
+    def test_a_pipeline_inside_its_budget_is_not(self) -> None:
+        self.assertEqual(
+            evaluate._assertions(self.arguments(30.0), training(0.88, 0.69), 3.6), [])
+
+    def test_no_budget_asked_for_is_no_assertion_made(self) -> None:
+        self.assertEqual(
+            evaluate._assertions(self.arguments(None), training(0.88, 0.69), 900.0), [])
 
 
 class TheWholePipelineOnFewGames(unittest.TestCase):

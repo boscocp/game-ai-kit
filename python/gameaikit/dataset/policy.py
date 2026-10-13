@@ -35,7 +35,8 @@ def adjacent_enemy(board: Board, unit: Unit) -> Unit | None:
     return None
 
 
-def step_toward(board: Board, unit: Unit, target: tuple[int, int]) -> tuple[int, int] | None:
+def step_toward(board: Board, unit: Unit,
+                target: tuple[int, int]) -> tuple[int, int] | None:
     """The neighbouring cell that gets closest to `target`, or None.
 
     None means every way forward is occupied or none gets any closer -- a unit

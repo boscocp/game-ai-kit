@@ -3,7 +3,7 @@
 An accuracy on its own proves very little. 87.8% sounds good until you notice
 that always answering "the attacker loses" scores 69.0% on the same rows, and
 a *leak* in the features would produce a high number just as happily as
-learning would. So there are three assertions here and each is a command with
+learning would. So there are four assertions here and each is a command with
 an exit code:
 
     --assert-beats-majority-baseline      the model is worth more than the
@@ -28,7 +28,7 @@ measured:
   **1.0000** and the shuffled control scores exactly the baseline, 0.6900, so
   the control **passes**;
 * the holdout rows left in the training set as well -- the honest run scores
-  0.8808 against an uncontaminated 0.8780, and again the control passes.
+  0.8794 against an uncontaminated 0.8780, and again the control passes.
 
 The reason is the same both times: shuffling the training labels destroys the
 leaked relationship along with every honest one, so the model has nothing left
@@ -73,6 +73,15 @@ NOISE_ALLOWANCE = 0.02
 #: honest combat model scores 0.878, and appending the label to every feature
 #: row scores 1.000.
 TOO_GOOD = 0.99
+
+#: The same rule for a model that answers with a number rather than a
+#: yes-or-no: an average error this small is not a good fit either. Measured,
+#: the honest capture model is wrong by 0.56 turns; planting `turns_taken` into
+#: its own features gets the error to 0.0000.
+#:
+#: This half was missing, and the check was gated on the model being logistic
+#: -- so the one leak it exists to catch passed silently on half the kit.
+TOO_GOOD_AN_ERROR = 0.10
 
 
 def describe(training: Training) -> list[str]:
@@ -142,12 +151,24 @@ def check_no_leak(training: Training) -> list[str]:
                 f"E4 {name} was scored on {len(shared)} game(s) it was also "
                 "trained on; the holdout is not held out"
             )
-        if fitted.model.kind == "logistic" and fitted.score >= TOO_GOOD:
-            findings.append(
-                f"E5 {name} scored {fitted.score:.4f} on fights decided by "
-                "dice; a model this certain has been told the answer"
-            )
+        findings += _why_it_is_too_good(name, fitted)
     return findings
+
+
+def _why_it_is_too_good(name: str, fitted: Fitted) -> list[str]:
+    """A score no honest fit to dice-driven data reaches, in the units of
+    whichever model is being asked."""
+    if fitted.model.kind == "logistic" and fitted.score >= TOO_GOOD:
+        return [
+            f"E5 {name} scored {fitted.score:.4f} on fights decided by dice; "
+            "a model this certain has been told the answer"
+        ]
+    if fitted.model.kind == "linear" and -fitted.score <= TOO_GOOD_AN_ERROR:
+        return [
+            f"E5 {name} is wrong by only {-fitted.score:.4f} turns; a model "
+            "this exact has been told the answer"
+        ]
+    return []
 
 
 def main(argv: list[str]) -> int:
@@ -188,10 +209,10 @@ def _assertions(args: argparse.Namespace, training: Training,
         findings += check_no_better_than_baseline(training)
     if args.assert_no_leak:
         findings += check_no_leak(training)
-    if args.assert_runs_under_seconds is not None and took > args.assert_runs_under_seconds:
+    budget = args.assert_runs_under_seconds
+    if budget is not None and took > budget:
         findings.append(
-            f"E3 the pipeline took {took:.2f}s and was given "
-            f"{args.assert_runs_under_seconds:.0f}s"
+            f"E3 the pipeline took {took:.2f}s and was given {budget:.0f}s"
         )
     return findings
 

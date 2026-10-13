@@ -161,7 +161,7 @@ test-python: ## Python unit tests (stdlib only, no install step)
 
 .PHONY: test-models
 test-models: ## The properties T5 asks of the two fitted models
-	@# Four commands rather than one, because each is a different claim and a
+	@# Five commands rather than one, because each is a different claim and a
 	@# failure should name which. They cost about twenty seconds between them:
 	@# the pipeline is simulated, fitted and scored from scratch every time,
 	@# which is the price of never having a stale number in a gate.

@@ -86,7 +86,8 @@ class Board:
 
     def living(self, faction: int) -> list[Unit]:
         """Every unit of a faction that is still alive."""
-        return [unit for unit in self.units if unit.is_alive() and unit.faction == faction]
+        return [unit for unit in self.units
+            if unit.is_alive() and unit.faction == faction]
 
     def neighbours(self, cell: tuple[int, int]) -> list[tuple[int, int]]:
         """The cells one cardinal step away that are on the board."""
