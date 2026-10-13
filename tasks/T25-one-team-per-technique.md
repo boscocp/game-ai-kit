@@ -79,7 +79,29 @@ lesson, so this task does not wait for all eight.
    inattention. Each is a named knob, documented where T12's knobs are.
    A level is then a point on two axes. *Easy and human* is as possible as
    *hard and inhuman*, and the menu offers both.
-5. **The lesson, written down**: a `docs/concepts/` page reading the league's
+5. **A cost and efficiency meter on screen, per team, during the match.** The
+   league table says who spent what after the fact. The meter shows it while
+   the fight happens, which is invariant 13 applied to cost: watch the planner
+   spike when it replans, and watch the rules team spend almost nothing. For
+   each team, beside its units:
+   - **cost**: milliseconds of this frame's decision, a rolling average and the
+     95th percentile, drawn as a bar against the team's share of the frame
+     budget (T19), turning red past it;
+   - **work**: worlds, nodes or rules evaluated this decision, where the
+     technique has such a count, and how often it replanned in the last minute;
+   - **efficiency**: what the cost bought -- the team's material and income
+     lead per millisecond spent, over a rolling window -- so that a strong
+     team that is also expensive can be told apart from a cheap one that is
+     nearly as strong;
+   - a small history graph of the last thirty seconds, so a spike can be found
+     after it has passed.
+
+   One rule keeps the meter honest. It reads the **same counters** the league
+   runner records, so the screen and the table cannot disagree. Measuring
+   costs something too: the meter's own time is measured, and it is shown
+   apart from the teams' costs, so it is never charged to any of them. A
+   toggle hides it for the human-likeness clips in the manual check.
+6. **The lesson, written down**: a `docs/concepts/` page reading the league's
    table. Which technique is strongest, which most human, what each costs,
    and when you would choose the one that is neither.
 
@@ -99,6 +121,17 @@ prints the table the docs page quotes, so every number there has a command
 behind it.
 
 ```bash
+./scripts/godot --headless --path godot -s res://test/league_meter.gd
+```
+
+That script plays one seeded match with the meter attached. It asserts that
+every team's meter is populated after its first decision, and that the
+meter's totals equal the counters the league runner logged for that match. It
+also asserts that the meter's own cost is recorded apart from every team's,
+so that showing the numbers never changes them. It cannot assert the bars are
+legible; that is the manual check.
+
+```bash
 PYTHONPATH=python python3 -m gameaikit.league.likeness --check
 ```
 
@@ -115,6 +148,11 @@ playing, mix them, and ask someone who did not build the teams to say which
 are human. Report how often each team was taken for a person. A team chosen
 for being human-like that nobody mistakes for a human has failed this task,
 whatever its distances say.
+
+Watch one match between the cheapest and the most expensive team with the
+meter on. You should be able to point at the moment the expensive team
+replanned and say what made it, and to say from the efficiency line alone
+whether its extra cost bought anything in that fight.
 
 Then play against the team the league ranks most human, at a strength you can
 beat. It should lose in ways you can recognise from your own mistakes.
