@@ -26,6 +26,28 @@ plan, which is why planning is taught on a strategy game and not on a maze.
    why that choice.
 5. The plan must be inspectable. A planner you cannot watch think is a planner
    nobody will trust or debug: print the plan, and draw it on the board.
+6. **A heuristic, a bit-packed state and a budget** (ADR 0010). Breadth-first
+   stays as the readable version. Beside it go h_max (admissible, so the plan
+   stays shortest) and h_add (guides harder, gives up shortest), after Bonet
+   and Geffner (2001). The state is held as bits rather than as the sorted,
+   joined string `WorldState.key()` builds today, which `strips_planner.gd`
+   computes twice for every world it has not seen before. Every heuristic call
+   has a budget. A\* has no complete plan until it finishes, so a call that
+   runs out returns the partial plan to the expanded world with the lowest
+   `h`, labelled as partial, and the game acts on its first step only.
+   Breadth-first has no `h` and no useful partial plan: it is the readable
+   baseline, run in the benchmark with a budget large enough to finish (and
+   reported if it is hit), and never in the game. If that
+   proves too weak, depth-first branch and bound (Churchill and Buro) has a
+   complete plan early and is the alternative to measure.
+7. **Measure before choosing.** Worlds visited and milliseconds per plan, for
+   breadth-first, h_max and h_add, with strings against bits, on this task's
+   real domain. Publish the table in the addon header and in
+   [planning in strategy games](../docs/concepts/planning-in-strategy-games.md),
+   whatever it says. The heuristic the game uses is the one the table picks.
+8. **Replan on a cadence and on failure**, never every turn by default: a
+   fixed interval plus invalidation when a predicate the plan relies on
+   changes, as Killzone 3's bots do. Write down the interval and why.
 
 ## Acceptance
 
@@ -47,6 +69,19 @@ is merely returned is not a plan that works.
 ```bash
 grep -q "domain" spec/pddl/tactics-domain.pddl
 ```
+
+```bash
+./scripts/godot --headless --path godot -s res://test/planner_benchmark.gd
+```
+
+That script runs every search the task builds over the same seeded problems
+and asserts three things. h_max's plans are exactly as short as breadth-first's,
+because an admissible heuristic must not change the answer. On the seeded set
+-- not on every problem, which no theorem promises, since h_add can wander and
+breadth-first here tests the goal on generation while A\* tests it on
+expansion -- each heuristic visits fewer worlds in total than breadth-first.
+And a call given a budget returns within it. It prints the table step 7 publishes, so the numbers in the
+docs have a command behind them.
 
 ## Manual check
 

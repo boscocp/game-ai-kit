@@ -1,6 +1,6 @@
 # T20 — The RTS demo
 
-Size: L · Prereqs: T19, T12 · Files: `godot/game/rts/`
+Size: L · Prereqs: T19, T12, T15, T25 · Files: `godot/game/rts/`
 
 ## Goal
 
@@ -12,17 +12,81 @@ ladder from T12, the second core from T19, and everything the three earlier
 games taught about making an AI legible. Built first, it would have been a
 large pile of code with no lesson in it.
 
+## The minimum game
+
+Built backwards from the AIs: each feature is here because some technique has
+nothing interesting to decide without it, and nothing is here for any other
+reason.
+
+| the AI | is only interesting if the game has | without it |
+|---|---|---|
+| rules and priority queues | an economy with more than one thing to spend on at once | a linear script |
+| FSM and behaviour tree | units whose state changes: gather, defend, retreat, chase | one state, nothing to see |
+| STRIPS, GOAP, HTN | a chain of dependencies paid from one contested bank, and a population cap | a two-step plan any rule matches |
+| utility and influence maps | regions worth different things: expansions, a chokepoint | nowhere to choose to attack |
+| A\* and flow fields | terrain with costs, obstacles, and groups moving together | a straight line does it |
+| the learned model (T6) | fights whose outcome is uncertain and depends on numbers, terrain and reinforcement | nothing to predict |
+| human-likeness (T25) | gains its clock measures with real time, and its scouting with fog of war | only the turn-based measures |
+
+**What it has:**
+
+1. **Economy**: two resources, as in Churchill and Buro's StarCraft build
+   orders, so that spending is a trade. Workers that gather them, and a
+   population cap that forces a supply building, which lengthens the
+   dependency chain without new rules.
+2. **Production**: a base, a barracks and **one** technology building that
+   unlocks the third combat unit. Everything takes time to build, and that
+   time is what makes a build order a decision.
+3. **Units**: a worker and **three** combat units in a rock-paper-scissors
+   counter table, taken from T10's five. Three are enough for countering and
+   scouting to pay off in real time.
+4. **Map**: two starting bases, two or three expansions with resources, one
+   chokepoint, and terrain with costs. That is the least that makes
+   "expand", "attack where" and flow fields real choices.
+5. **Fog of war and scouting**, and T10's tower that sees, which is how a
+   side buys vision without spending a unit. Without them there is no
+   uncertainty, the influence maps have nothing to estimate, and the scouting
+   half of the human-likeness test disappears.
+6. **Combat**: damage, range and health, with a little randomness drawn from
+   the match seed. No special abilities.
+7. **An end**: destroying the base, or a time limit with a stated tiebreak.
+   The league needs every match to finish.
+
+**What it leaves out, on purpose:** air and naval units, heroes, active
+abilities, formations, a tech tree deeper than one building, and diplomacy.
+Each is work that gives none of the AIs above a new decision. One of them
+comes back only with a task that names the AI it is for.
+
 ## Steps
 
-1. The tactical content from T10, moved onto the real-time core. The unit
-   types, towers, buildings and terrain are the same; what changes is time.
-2. Build orders as plans: the same PDDL domain, replanned against a world that
-   does not wait. The difference between this and T11 is the whole lesson of
-   the task.
-3. Fog of war, which makes planning under uncertainty real rather than
+1. The minimum game above, on the real-time core, built from T10's content.
+   Its terrain is kept, with water impassable to all three units, since the
+   type that crossed it is not among them. Three of its five unit types are
+   kept, and of its two towers only the one that sees. Its one producer and
+   one upgrade become the four buildings above, and its one resource becomes
+   two, each for the reason the list gives. What changes is time.
+2. **Three layers, as ADR 0010 sets out**: a commander that plans, squads
+   that score, units that move. Only the commander plans. Squads choose
+   regions by utility over the influence maps (Dill's Kohan II chapter);
+   units take A\* or a flow field.
+3. **The economy as priority queues** under the commander, which is what AoE
+   II, Supreme Commander and 0 A.D. ship. A commander that does not beat the
+   queues alone has not earned its cost, and the match test says which.
+4. Build orders as plans: the PDDL domain at level 1, with resources as income
+   rates and time jumping to the next legal action rather than stepping frame
+   by frame (Churchill and Buro, 2011). It is replanned on T11's cadence
+   against a world that does not wait, and that difference from T11 is the
+   lesson of the task. Whether the commander is T11's heuristic STRIPS or
+   T15's HTN is measured here, and ADR 0010 is amended with the answer.
+5. Fog of war, which makes planning under uncertainty real rather than
    theoretical, and which the influence maps from T14 already know how to draw.
-4. Group movement with the flow fields from T19.
-5. Three difficulties, built from T12's knobs and still not cheating.
+6. Group movement with the flow fields from T19.
+7. The difficulty levels and the human-likeness axis from T12 and T25, still
+   not cheating, plus the knobs only a clock makes possible: a reaction delay
+   drawn from recorded human play, and a cap on actions per minute in the
+   spirit of AlphaStar's. T25's league runs here too, adding actions per minute
+   and reaction time to its human-likeness measures, and its meter shows each
+   team's share of T19's frame budget.
 
 ## Acceptance
 
@@ -35,8 +99,10 @@ make check
 ```
 
 That script plays a full AI-against-AI match headless with a fixed seed and
-asserts it terminates, that the winner is consistent across runs, and that the
-frame budget from T19 held throughout. A match that only works when somebody is
+asserts it terminates, that the winner is consistent across runs, that the
+frame budget from T19 held throughout, and that no single planning call
+exceeded its budget. It also plays the commander against the priority queues
+alone and prints the win rate. A match that only works when somebody is
 watching is not a match that works.
 
 ## Manual check
