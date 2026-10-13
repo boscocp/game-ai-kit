@@ -3,7 +3,7 @@
 
 What it builds
 --------------
-Into `OUTPUT/dist/`, from what is committed and nothing else:
+Into `OUTPUT/dist/`, from the commit at HEAD and nothing else:
 
   * `ai_<name>-<version>.zip` for every addon under godot/addons/ that has
     tracked files, with a single top folder `ai_<name>/` holding LICENSE,
@@ -23,11 +23,14 @@ having no install step. A pure-Python wheel is a zip with three small text
 files in a `.dist-info` folder; writing them is fifty lines and needs nothing
 installed, where calling a build backend would need setuptools first.
 
-Why only tracked files
-----------------------
+Why HEAD, and not the folder
+----------------------------
 What ships is what was reviewed. Walking the folder would pick up whatever
-happens to be lying in it -- a scratch file, a `.import` cache -- and the
-release would contain something no commit does.
+happens to be lying in it -- a scratch file, a `.import` cache. And listing
+tracked paths is not enough either: the first version did that and then read
+the bytes off disk, so a review edited a tracked file and staged a new one
+without committing either, and both shipped. Paths and bytes both come from
+git now, so an edit nobody committed cannot reach an artifact.
 
 Why `--skip-notice` exists
 --------------------------
@@ -36,14 +39,16 @@ the root copy alone, so the *only* fault is inside the archives; a gate that
 went red on the missing root file would be going red for the wrong reason. The
 self-test asserts that every finding is about an archive.
 
-Every build is byte-for-byte reproducible: entries are sorted and every
-timestamp is the zip format's earliest, so two builds of one commit are equal
-and a difference between them is a difference in the source.
+Every build is byte-for-byte reproducible: entries are sorted, every
+timestamp is the zip format's earliest, and the system each entry claims to
+have been made on is fixed, so two builds of one commit are equal on any
+machine and a difference between them is a difference in the source.
 
 Exit codes
 ----------
 0   built
-1   refused: VERSION malformed, or an addon or the package has no files
+1   refused: VERSION malformed, an addon or the package has no files, or
+    the output would land inside the repository's own dist/
 2   wrong usage, or not run inside a git checkout
 
 Usage
@@ -61,7 +66,6 @@ import hashlib
 import io
 import pathlib
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -89,21 +93,34 @@ class Refused(Exception):
     """The build would produce something that should not ship."""
 
 
-def tracked_files(repo: pathlib.Path, folder: str) -> list[str]:
-    """Every committed path under `folder`, relative to the repository."""
+def committed_files(repo: pathlib.Path, folder: str) -> list[str]:
+    """Every path under `folder` in the commit at HEAD -- not staged, not on disk."""
     listing = subprocess.run(
-        ["git", "-C", str(repo), "ls-files", "-z", "--", folder],
+        ["git", "-C", str(repo), "ls-tree", "-r", "-z", "--name-only", "HEAD", "--", folder],
         capture_output=True, check=True, text=True,
     )
     return sorted(path for path in listing.stdout.split("\0") if path)
 
 
-def read_version(repo: pathlib.Path) -> str:
-    """The version every artifact is stamped with, from the one file that holds it."""
-    version = (repo / "VERSION").read_text(encoding="utf-8").strip()
+def committed_bytes(repo: pathlib.Path, path: str) -> bytes:
+    """A file's content as HEAD has it, whatever the working tree says."""
+    return subprocess.run(
+        ["git", "-C", str(repo), "show", f"HEAD:{path}"],
+        capture_output=True, check=True,
+    ).stdout
+
+
+def checked_version(text: str) -> str:
+    """The version, or a refusal when it is not major.minor.patch."""
+    version = text.strip()
     if not VERSION_RE.match(version):
         raise Refused(f"VERSION reads {version!r}, which is not major.minor.patch")
     return version
+
+
+def read_version(repo: pathlib.Path) -> str:
+    """The version every artifact is stamped with, from the one file that holds it."""
+    return checked_version(committed_bytes(repo, "VERSION").decode("utf-8"))
 
 
 def add_entry(bundle: zipfile.ZipFile, name: str, data: bytes) -> None:
@@ -111,13 +128,16 @@ def add_entry(bundle: zipfile.ZipFile, name: str, data: bytes) -> None:
     entry = zipfile.ZipInfo(name, date_time=EPOCH)
     entry.compress_type = zipfile.ZIP_DEFLATED
     entry.external_attr = 0o644 << 16
+    # Unix, whatever machine builds it. Left to the default, a build on
+    # Windows writes 0 here and the two releases of one commit differ.
+    entry.create_system = 3
     bundle.writestr(entry, data)
 
 
 def attribution(repo: pathlib.Path, skip_notice: bool) -> dict[str, bytes]:
     """The files every artifact must carry, minus NOTICE when planting a fault."""
     names = [name for name in ATTRIBUTION if not (skip_notice and name == "NOTICE")]
-    return {name: (repo / name).read_bytes() for name in names}
+    return {name: committed_bytes(repo, name) for name in names}
 
 
 def build_addon(repo: pathlib.Path, addon: str, version: str,
@@ -131,8 +151,8 @@ def build_addon(repo: pathlib.Path, addon: str, version: str,
     """
     prefix = f"godot/addons/{addon}/"
     files = {
-        path[len(prefix):]: (repo / path).read_bytes()
-        for path in tracked_files(repo, prefix)
+        path[len(prefix):]: committed_bytes(repo, path)
+        for path in committed_files(repo, prefix)
         if path[len(prefix):] not in ATTRIBUTION
     }
     if not files:
@@ -183,8 +203,8 @@ def build_wheel(repo: pathlib.Path, version: str,
     format says a reader knows the file it is reading is the last word.
     """
     files = {
-        path[len("python/"):]: (repo / path).read_bytes()
-        for path in tracked_files(repo, f"python/{PACKAGE}/")
+        path[len("python/"):]: committed_bytes(repo, path)
+        for path in committed_files(repo, f"python/{PACKAGE}/")
     }
     if not files:
         raise Refused(f"python/{PACKAGE} has no committed files to ship")
@@ -211,7 +231,7 @@ def shipped_addons(repo: pathlib.Path) -> list[str]:
     """Addons with committed files. gdUnit4 is installed, not committed, so it is not one."""
     names = {
         pathlib.PurePosixPath(path).parts[2]
-        for path in tracked_files(repo, "godot/addons/")
+        for path in committed_files(repo, "godot/addons/")
     }
     return sorted(names)
 
@@ -231,6 +251,12 @@ def clear_previous(dist: pathlib.Path) -> None:
 def build(repo: pathlib.Path, output: pathlib.Path, skip_notice: bool) -> list[pathlib.Path]:
     """Every artifact, into `output/dist/`, with the attribution at `output/`."""
     version = read_version(repo)
+    # The repository's own dist/ is where the gate looks for archives, and
+    # only at its top. A release rooted there writes them one level down,
+    # where nothing checks them.
+    if output.resolve().is_relative_to((repo / "dist").resolve()):
+        raise Refused(f"{output} is inside the repository's dist/; "
+                      "use the repository itself or a folder outside it")
     dist = output / "dist"
     dist.mkdir(parents=True, exist_ok=True)
     clear_previous(dist)
@@ -239,7 +265,7 @@ def build(repo: pathlib.Path, output: pathlib.Path, skip_notice: bool) -> list[p
     # the archives, and the gate must find it there.
     if output.resolve() != repo.resolve():
         for name in ATTRIBUTION:
-            shutil.copyfile(repo / name, output / name)
+            (output / name).write_bytes(committed_bytes(repo, name))
 
     artifacts = [
         build_addon(repo, addon, version, dist, skip_notice)
@@ -250,6 +276,9 @@ def build(repo: pathlib.Path, output: pathlib.Path, skip_notice: bool) -> list[p
 
 
 # --- self-test -------------------------------------------------------------
+#
+# Each check returns the labels of what failed, so the runner at the bottom
+# can say which claim broke rather than that something did.
 
 
 def license_gate(release: pathlib.Path) -> tuple[int, list[str]]:
@@ -262,97 +291,157 @@ def license_gate(release: pathlib.Path) -> tuple[int, list[str]]:
     return result.returncode, result.stdout.splitlines()
 
 
-def self_test() -> int:
+def quiet_build(repo: pathlib.Path, output: pathlib.Path,
+                skip_notice: bool = False) -> list[pathlib.Path]:
+    """A build whose list of artifacts is not printed."""
+    with contextlib.redirect_stdout(io.StringIO()):
+        return build(repo, output, skip_notice)
+
+
+def check_the_gate_agrees(root: pathlib.Path) -> list[str]:
+    """A complete release passes the gate; one without NOTICE fails it, per artifact."""
     failures = []
+    artifacts = quiet_build(REPO, root / "good")
+    code, findings = license_gate(root / "good")
+    if code != 0:
+        failures.append(f"a complete release passes the gate (got {code}: {findings})")
+    if len(artifacts) != len(shipped_addons(REPO)) + 1:
+        failures.append("one zip per addon plus the wheel")
 
-    def expect(label: str, condition: bool) -> None:
-        if not condition:
-            failures.append(label)
+    # Planted: every artifact without NOTICE. The gate must fail, and fail
+    # once per artifact on the archive rule -- not on the root file, which
+    # this build deliberately leaves in place.
+    planted = quiet_build(REPO, root / "bad", skip_notice=True)
+    code, findings = license_gate(root / "bad")
+    if code != 1:
+        failures.append("a release without NOTICE fails the gate")
+    if not all(line.startswith(("L5 ", "L9 ")) for line in findings):
+        failures.append(f"every finding is about an archive (got {findings})")
+    if len(findings) != len(planted):
+        failures.append(f"one finding per artifact (got {len(findings)} for {len(planted)})")
+    return failures
 
-    def quiet_build(output: pathlib.Path, skip_notice: bool) -> list[pathlib.Path]:
-        with contextlib.redirect_stdout(io.StringIO()):
-            return build(REPO, output, skip_notice)
 
-    with tempfile.TemporaryDirectory() as workspace:
-        root = pathlib.Path(workspace)
+def check_reproducible_and_stamped(root: pathlib.Path) -> list[str]:
+    """Two builds are the same bytes, carry no clock, and say their version."""
+    failures = []
+    first = quiet_build(REPO, root / "first")
+    second = quiet_build(REPO, root / "second")
+    if [path.read_bytes() for path in first] != [path.read_bytes() for path in second]:
+        failures.append("the build is reproducible")
+    # Comparing two builds is not enough on its own: both run inside the same
+    # second, so a date read from the clock would match too.
+    if not all(entries_are_fixed(path) for path in first):
+        failures.append("every entry carries the fixed date and system")
+    version = read_version(REPO)
+    if not all(stamped_version(path) == version for path in first):
+        failures.append("every artifact is stamped with VERSION")
+    return failures
 
-        good = root / "good"
-        artifacts = quiet_build(good, skip_notice=False)
-        code, findings = license_gate(good)
-        expect(f"a complete release passes the gate (got {code}: {findings})", code == 0)
-        expect("one zip per addon plus the wheel",
-               len(artifacts) == len(shipped_addons(REPO)) + 1)
 
-        # Planted: every artifact without NOTICE. The gate must fail, and fail
-        # once per artifact on the archive rule -- not on the root file, which
-        # this build deliberately leaves in place.
-        bad = root / "bad"
-        planted = quiet_build(bad, skip_notice=True)
-        code, findings = license_gate(bad)
-        expect("a release without NOTICE fails the gate", code == 1)
-        expect(f"every finding is about an archive (got {findings})",
-               all(line.startswith(("L5 ", "L9 ")) for line in findings))
-        expect(f"one finding per artifact (got {len(findings)} for {len(planted)})",
-               len(findings) == len(planted))
+def check_the_wheel(root: pathlib.Path) -> list[str]:
+    """The wheel is well formed by the spec, and its modules import once unpacked."""
+    wheel = quiet_build(REPO, root / "wheel")[-1]
+    failures = [f"the wheel is well formed: {problem}" for problem in wheel_problems(wheel)]
+    # Unpacked the way an installer unpacks a pure wheel. Importing from the
+    # zip directly is wrong for this package: `dataset/` and `training/` are
+    # namespace packages, which zipimport does not find.
+    site = root / "site-packages"
+    with zipfile.ZipFile(wheel) as bundle:
+        bundle.extractall(site)
+    probe = subprocess.run(
+        [sys.executable, "-I", "-c",
+         f"import sys; sys.path.insert(0, {str(site)!r}); "
+         "import gameaikit.pddl.reader, gameaikit.dataset.simulate, "
+         "gameaikit.training.report"],
+        capture_output=True, text=True, cwd=root,
+    )
+    if probe.returncode != 0:
+        failures.append(f"the wheel imports ({probe.stderr.strip()})")
+    return failures
 
-        # Two builds of one commit are the same bytes. Comparing two builds is
-        # not enough on its own: both run inside the same second, so a date
-        # read from the clock would match too. Every entry's date is read.
-        again = quiet_build(root / "again", skip_notice=False)
-        expect("the build is reproducible",
-               [path.read_bytes() for path in artifacts]
-               == [path.read_bytes() for path in again])
-        expect("every entry carries the fixed date",
-               all(dates_are_fixed(path) for path in artifacts))
 
-        # Every artifact is stamped with the version in VERSION.
-        version = read_version(REPO)
-        expect("every artifact is stamped with VERSION",
-               all(stamped_version(path) == version for path in artifacts))
+def check_only_the_commit_ships(root: pathlib.Path) -> list[str]:
+    """An edit, a staged file and an untracked one all stay out of the release.
 
-        # The wheel is a wheel: unpacked the way an installer unpacks a pure
-        # one, its modules import, and its RECORD matches what it holds.
-        # Importing from the zip directly is stricter than any installer and
-        # wrong for this package -- `dataset/` and `training/` are namespace
-        # packages, which zipimport does not find.
-        wheel = artifacts[-1]
-        site = root / "site-packages"
-        with zipfile.ZipFile(wheel) as bundle:
-            bundle.extractall(site)
-        probe = subprocess.run(
-            [sys.executable, "-I", "-c",
-             f"import sys; sys.path.insert(0, {str(site)!r}); "
-             "import gameaikit.pddl.reader, gameaikit.dataset.simulate, "
-             "gameaikit.training.report"],
-            capture_output=True, text=True, cwd=root,
-        )
-        expect(f"the wheel imports ({probe.stderr.strip()})", probe.returncode == 0)
-        expect("RECORD hashes every entry", record_is_true(wheel))
+    Planted in a clone of this repository, because planting them here would
+    change the working tree of whoever runs the self-test.
+    """
+    clone = root / "clone"
+    subprocess.run(["git", "clone", "-q", str(REPO), str(clone)], check=True)
+    addon = clone / "godot" / "addons" / shipped_addons(clone)[0]
+    edited = sorted(path for path in addon.iterdir() if path.suffix == ".gd")[0]
+    edited.write_text(edited.read_text() + "# UNCOMMITTED\n")
+    (addon / "staged_only.gd").write_text("# STAGED\n")
+    subprocess.run(["git", "-C", str(clone), "add", "--", str(addon / "staged_only.gd")],
+                   check=True)
+    (addon / "untracked.gd").write_text("# UNTRACKED\n")
+    (clone / "VERSION").write_text("9.9.9\n")
 
-        # Planted: a malformed VERSION is refused rather than stamped.
-        fake = root / "fake-repo"
-        fake.mkdir()
-        (fake / "VERSION").write_text("0.1\n")
+    shipped = quiet_build(clone, root / "from-clone")
+    with zipfile.ZipFile(shipped[0]) as bundle:
+        names = bundle.namelist()
+        content = b"".join(bundle.read(name) for name in names)
+    failures = []
+    for mark in (b"UNCOMMITTED", b"STAGED", b"UNTRACKED"):
+        if mark in content:
+            failures.append(f"a file marked {mark.decode()} stayed out of the release")
+    if any("9.9.9" in path.name for path in shipped):
+        failures.append("an uncommitted VERSION stayed out of the release")
+    return failures
+
+
+def check_refusals(root: pathlib.Path) -> list[str]:
+    """Versions that are not major.minor.patch, and an output inside dist/, are refused."""
+    failures = []
+    for written in ("0.1", "0.1.0-rc1", "v0.1.0", "0.1.0.1"):
         try:
-            read_version(fake)
-            expect("a malformed VERSION is refused", False)
+            checked_version(written + "\n")
+            failures.append(f"VERSION {written!r} is refused")
         except Refused:
             pass
+    if checked_version("0.1.0\n") != "0.1.0":
+        failures.append("VERSION 0.1.0 is accepted")
+    try:
+        build(REPO, REPO / "dist" / "nested", skip_notice=False)
+        failures.append("an output inside the repository's dist/ is refused")
+    except Refused:
+        pass
+    return failures
 
-        # Planted: a stale artifact from an earlier version is removed, and a
-        # file `make train` staged in dist/ is not.
-        (good / "dist" / "ai_search-0.0.1.zip").write_bytes(b"stale")
-        (good / "dist" / "weights.json").write_text("{}")
-        quiet_build(good, skip_notice=False)
-        expect("a stale artifact is cleared",
-               not (good / "dist" / "ai_search-0.0.1.zip").exists())
-        expect("weights.json is left alone", (good / "dist" / "weights.json").exists())
+
+def check_stale_artifacts(root: pathlib.Path) -> list[str]:
+    """Artifacts of an earlier version are cleared; what `make train` staged is not."""
+    release = root / "stale"
+    quiet_build(REPO, release)
+    stale = [release / "dist" / "ai_search-0.0.1.zip",
+             release / "dist" / f"{PACKAGE}-0.0.1-py3-none-any.whl"]
+    for path in stale:
+        path.write_bytes(b"stale")
+    (release / "dist" / "weights.json").write_text("{}")
+    quiet_build(REPO, release)
+    failures = [f"{path.name} is cleared" for path in stale if path.exists()]
+    if not (release / "dist" / "weights.json").exists():
+        failures.append("weights.json is left alone")
+    return failures
+
+
+def self_test() -> int:
+    checks = (check_the_gate_agrees, check_reproducible_and_stamped, check_the_wheel,
+              check_only_the_commit_ships, check_refusals, check_stale_artifacts)
+    failures = []
+    with tempfile.TemporaryDirectory() as workspace:
+        for check in checks:
+            area = pathlib.Path(workspace) / check.__name__
+            area.mkdir()
+            failures.extend(check(area))
 
     unknown = subprocess.run(
         [sys.executable, str(pathlib.Path(__file__).resolve()), "--unknown-flag"],
         capture_output=True,
     )
-    expect("an unknown flag exits 2", unknown.returncode == 2)
+    if unknown.returncode != 2:
+        failures.append("an unknown flag exits 2")
 
     for failure in failures:
         print(f"self-test FAIL: {failure}")
@@ -360,10 +449,16 @@ def self_test() -> int:
     return 1 if failures else 0
 
 
-def dates_are_fixed(archive: pathlib.Path) -> bool:
-    """No entry carries the time it was built at."""
+def entries_are_fixed(archive: pathlib.Path) -> bool:
+    """No entry carries the time or system it was built on, and each one is readable.
+
+    The mode matters beyond reproducibility: left at zero, `unzip` on Linux
+    honours it and writes files nobody can open.
+    """
     with zipfile.ZipFile(archive) as bundle:
-        return all(entry.date_time == EPOCH for entry in bundle.infolist())
+        return all(entry.date_time == EPOCH and entry.create_system == 3
+                   and entry.external_attr == 0o644 << 16
+                   for entry in bundle.infolist())
 
 
 def stamped_version(archive: pathlib.Path) -> str | None:
@@ -373,21 +468,91 @@ def stamped_version(archive: pathlib.Path) -> str | None:
             if archive.suffix == ".zip" and name.count("/") == 1 and name.endswith("/VERSION"):
                 return bundle.read(name).decode().strip()
             if archive.suffix == ".whl" and name.endswith(".dist-info/METADATA"):
-                fields = dict(line.split(": ", 1)
-                              for line in bundle.read(name).decode().splitlines())
-                return fields.get("Version")
+                return header_fields(bundle.read(name)).get("Version")
     return None
 
 
-def record_is_true(wheel: pathlib.Path) -> bool:
-    """Every entry but RECORD is listed in RECORD with its real hash and size."""
+def header_fields(text: bytes) -> dict[str, list[str] | str]:
+    """`Key: value` lines as a dict; a key written twice keeps every value as a list."""
+    fields: dict[str, list[str] | str] = {}
+    for line in text.decode().splitlines():
+        key, _, value = line.partition(": ")
+        if key in fields:
+            earlier = fields[key]
+            fields[key] = (earlier if isinstance(earlier, list) else [earlier]) + [value]
+        else:
+            fields[key] = value
+    return fields
+
+
+def wheel_problems(wheel: pathlib.Path) -> list[str]:
+    """What the wheel spec asks of a pure wheel, checked without the code that wrote it.
+
+    A review found the first self-test called a wheel valid when it was a zip
+    that imported: a missing WHEEL file, a missing `Name:`, a misnamed
+    `.dist-info` and a wrong filename tag all passed it, and pip refused every
+    one. RECORD was checked by recomputing each row with the function that
+    wrote it, which agrees with itself whatever the encoding. Every check here
+    reads the archive cold.
+    """
+    distribution, version, *tags = wheel.stem.split("-")
+    info = f"{distribution}-{version}.dist-info"
+    problems = [] if tags == ["py3", "none", "any"] else [f"filename tag {tags}"]
     with zipfile.ZipFile(wheel) as bundle:
-        names = bundle.namelist()
-        record_name = next(name for name in names if name.endswith(".dist-info/RECORD"))
-        listed = bundle.read(record_name).decode().splitlines()
-        expected = [record_line(name, bundle.read(name))
-                    for name in sorted(names) if name != record_name]
-    return listed == expected + [f"{record_name},,"]
+        names = set(bundle.namelist())
+        for required in ("WHEEL", "METADATA", "RECORD"):
+            if f"{info}/{required}" not in names:
+                return problems + [f"no {info}/{required}"]
+        problems += wheel_file_problems(header_fields(bundle.read(f"{info}/WHEEL")))
+        licences = sorted(name.rsplit("/", 1)[1] for name in names
+                          if name.startswith(f"{info}/licenses/"))
+        problems += metadata_problems(header_fields(bundle.read(f"{info}/METADATA")),
+                                      distribution, version, licences)
+        problems += record_problems(bundle, f"{info}/RECORD")
+    return problems
+
+
+def wheel_file_problems(fields: dict) -> list[str]:
+    """The WHEEL file of a pure wheel tagged py3-none-any."""
+    expected = {"Wheel-Version": "1.0", "Root-Is-Purelib": "true", "Tag": "py3-none-any"}
+    return [f"WHEEL {key} is {fields.get(key)!r}"
+            for key, value in expected.items() if fields.get(key) != value]
+
+
+def metadata_problems(fields: dict, distribution: str, version: str,
+                      licences: list[str]) -> list[str]:
+    """METADATA names this wheel, and declares each file in `licenses/` (PEP 639)."""
+    problems = [f"METADATA {key} is {fields.get(key)!r}"
+                for key, value in (("Metadata-Version", "2.4"), ("Name", distribution),
+                                   ("Version", version), ("License-Expression", "Apache-2.0"))
+                if fields.get(key) != value]
+    declared = fields.get("License-File", [])
+    declared = sorted(declared if isinstance(declared, list) else [declared])
+    if declared != licences:
+        problems.append(f"License-File declares {declared}, licenses/ holds {licences}")
+    if "Requires-Python" not in fields:
+        problems.append("METADATA has no Requires-Python")
+    return problems
+
+
+def record_problems(bundle: zipfile.ZipFile, record_name: str) -> list[str]:
+    """Every other entry is in RECORD, hashed sha256 in unpadded urlsafe base64."""
+    problems = []
+    rows = bundle.read(record_name).decode().splitlines()
+    listed = {row.split(",")[0]: row.split(",")[1:] for row in rows}
+    if listed.pop(record_name, None) != ["", ""]:
+        problems.append("RECORD lists itself without a hash")
+    for name in sorted(set(bundle.namelist()) - {record_name}):
+        hashed, size = listed.get(name, ["", ""])
+        algorithm, _, encoded = hashed.partition("=")
+        data = bundle.read(name)
+        if algorithm != "sha256" or "=" in encoded or not re.fullmatch(r"[A-Za-z0-9_-]+", encoded):
+            problems.append(f"RECORD hash for {name} is not unpadded urlsafe sha256")
+        elif base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4)) != hashlib.sha256(data).digest():
+            problems.append(f"RECORD hash for {name} is wrong")
+        if size != str(len(data)):
+            problems.append(f"RECORD size for {name} is wrong")
+    return problems
 
 
 def main(argv: list[str]) -> int:
@@ -395,7 +560,9 @@ def main(argv: list[str]) -> int:
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--build", action="store_true")
     parser.add_argument("--output", default=None,
-                        help="release root; archives go to OUTPUT/dist (default: the repo)")
+                        help="release root, relative to the current directory; "
+                             "archives go to OUTPUT/dist, and earlier ai_*-*.zip and "
+                             "gameaikit-*.whl there are removed (default: the repo)")
     parser.add_argument("--skip-notice", action="store_true",
                         help="plant a fault: build every artifact without NOTICE")
     parser.add_argument("--self-test", action="store_true")
