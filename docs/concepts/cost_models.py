@@ -75,6 +75,7 @@ def random_board(rng: random.Random) -> tuple[dict, dict, int, int]:
 
 
 def main() -> None:
+    """Both cost rules over the same boards, so the only difference is the rule."""
     rng = random.Random(SEED)
     per_cell = [0, 0]
     per_edge = [0, 0]

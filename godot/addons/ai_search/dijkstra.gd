@@ -16,14 +16,14 @@
 ## the improvement branch and the closed-set guard that A\* needs are not
 ## written here, because code that cannot execute cannot be read as if it does.
 ##
-## A binary heap does not change that, whatever this header once said; charge
-## the cost per *edge* and it does. `docs/concepts/cost_models.py` measures both.
+## A binary heap does not change that; charging the cost per *edge* does.
+## `docs/concepts/cost_models.py` measures both.
 ##
 ## Complexity: O(V²), because picking the cheapest is a linear scan of the
 ## frontier. With a heap it is O(E log V), and on these costs needs no more
-## code than this file has. The scan is
-## the readable choice and the kit says so out loud in `search.gd`; the version
-## with the heap is called `AStarGrid2D` and is already in the engine.
+## code than this file has. The scan is the readable choice and the kit says so
+## out loud in `search.gd`; the version with the heap is called `AStarGrid2D`
+## and is already in the engine.
 ##
 ## When not to use it: when you know roughly where the goal is. Dijkstra does
 ## not, so it expands in every direction equally and looks at most of the map.

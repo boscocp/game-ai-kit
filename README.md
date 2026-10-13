@@ -57,12 +57,12 @@ this repository can capture one. Recording them is a person's job; see the
 manual check in tasks/T7-close-the-slice.md. -->
 
 **The game** (`make run`). A 12×8 board, a wall down the middle with rough
-ground on either side, and two nodes worth taking. Red is yours: click a unit, click a
-neighbouring cell, space ends the turn. Blue is played by the trained models,
-and under the status line each blue unit says what it decided and the number
-it decided on. End your first turn without moving and it says: *unit 3 attacks unit 2:
-p(win) 0.97 at or above 0.50*, and *unit 4 retreats from unit 2: p(win) 0.33
-below 0.50*.
+ground on either side, and two nodes worth taking. Red is yours: click a unit,
+click a neighbouring cell, space ends the turn. Blue is played by the trained
+models, and under the status line each blue unit says what it decided and the
+number it decided on. End your first turn without moving and it says: *unit 3
+attacks unit 2: p(win) 0.97 at or above 0.50*, and *unit 4 retreats from unit
+2: p(win) 0.33 below 0.50*.
 
 **The search demo** (`make demo-search`). One board, four searches. Keys 1–4
 choose the algorithm, space reveals the next cell it expanded, enter reveals

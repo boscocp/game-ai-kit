@@ -46,8 +46,9 @@ condition: the guess `h` must never be **more** than the real remaining cost.
 A guess with that property is called *admissible*, and with one A\* returns a
 route exactly as cheap as Dijkstra's -- while looking at fewer cells, because
 cells pointing away from the goal get a large `h` and wait. How many fewer
-depends on the board: 90 against 125 on the demo's, and about a tenth fewer
-over the 300 random boards `make test-search-properties` draws.
+depends on the board: 90 against 125 on the demo's, and never more on any of
+the random boards `make test-search-properties` draws -- which is the claim
+that command checks, rather than a ratio nothing prints.
 
 The guess here is Manhattan distance: how many cardinal steps lie between two
 cells, ignoring what is in the way. It is admissible **because no cell costs

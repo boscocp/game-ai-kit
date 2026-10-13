@@ -52,9 +52,9 @@ accounted for there.
 The rows come from simulated games. A fight is rounds of dice -- the
 defender's terrain adds to the damage it hits back with, the side with more
 units nearby hits harder, a friend nearby can arrive halfway -- and **not** a
-logistic formula. If the outcome were computed
-by the same shape of function being fitted, the model would recover the line
-somebody wrote three files away and the lesson would be circular. Here the
+logistic formula. If the outcome were computed by the same shape of function
+being fitted, the model would recover the line somebody wrote three files away
+and the lesson would be circular. Here the
 weights are an approximation that can be wrong, which is the only kind worth
 printing.
 

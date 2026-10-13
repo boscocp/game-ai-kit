@@ -18,9 +18,9 @@ real-time game cannot pay, and the fix -- mutate in place, keep an undo stack
 ## Decision
 
 The strategy game is turn-based first, shaped like Advance Wars rather than
-StarCraft (T10), and reuses `ai_core` exactly as it is. The RTS comes last,
-after the three games of milestone 2, in its own milestone, with the core it
-needs (T19).
+StarCraft (T10), and reuses `ai_core` exactly as it is. The RTS comes after
+the three games of milestone 2, in milestone 3, with the core it needs
+(T19).
 
 ## Alternatives considered
 
