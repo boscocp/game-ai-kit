@@ -16,7 +16,7 @@ A playable minimum where three techniques actually decide something.
 | T4 | `ai_planning`: STRIPS, and a PDDL reader in Python | done | 8 steps, 14 states; 3 vectors read from both languages |
 | T5 | Dataset and training (Python) | done | 87.8% against a 69.0% baseline, and 81.8% for a lookup table |
 | T6 | `ai_learning`: inference, and the attack/retreat decision | done | 4 vectors read from both languages; invariant 6 finally has a gate |
-| T7 | Close the slice: docs, ADRs, `make release` | todo | needs T3, T4, T6 |
+| T7 | Close the slice: docs, ADRs, `make release` | done | 6 doc pages, 4 ADRs; a release the gate opens and checks |
 
 ## Milestone 2 — three games, three families of technique
 
@@ -69,6 +69,71 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-13 (wave 19)
+
+**What landed.** T7, and with it milestone 1. Planning and learning have a
+concept page at tier 1 and a Godot page at tier 2 each, search has both too,
+and `check_tiers.py` sees all three lessons now and goes red when a tier-1 page
+is removed. Every snippet on the Godot pages was run on 4.7.2 and shows what
+it printed. ADRs 0006-0009 record four decisions that had lived only in task
+files and comments. The README says which addons `make run` uses, and no
+longer lists `ai_llm`, which has no code and no task, as if it shipped.
+`make release` builds one zip per addon and a wheel written by hand, from
+HEAD, byte-for-byte reproducible. `check_license.py` opens every one of them
+and compares the attribution with what HEAD holds.
+
+**The release took three review rounds, and each found that the last fix had
+been tested in one place.** The first draft shipped the working tree: it
+listed tracked paths and read the bytes off disk. The fix's self-test planted
+strays in one addon and opened one zip, so reading the wheel or the
+attribution off disk still passed it. The content check written next built its
+expectation with the build's own helpers, so a defect one function down agreed
+with itself. **A check is only as independent as the code it does not
+share.** It reads HEAD through `git archive` now. Every mutation a reviewer
+reported surviving was re-run against its fix, in sweeps of 26, 22 and 10
+mutations that also cover each new rule. Two survive, and neither is a hole. See
+[the review](../docs/reviews/19-close-the-slice.md).
+
+**The third round's fixes were not reviewed by a fourth context.** They were
+checked by planting each mutation the reviewer described and watching it go
+red. Worth a fresh pair of eyes before the release is used for real.
+
+**A header two reviews had passed was teaching the wrong cause.** `dijkstra.gd`
+said it never improves a cell because its frontier is a linear scan, and that
+a binary heap would bring the improvements back. The real reason is that a
+cost belongs to the cell *entered*. A heap on these costs makes 0
+improvements over 300 boards, and 1674 once the cost is charged per edge.
+`docs/concepts/cost_models.py` prints both. The wave 08 section below still
+carries the old claim, as a dated record should.
+
+**Two numbers had no command behind them**, and one moved when it got one:
+1533 became 1674 because the draw order changed. **A sentence copied from a
+docstring is only as true as the docstring.** The terrain rule went from
+`combat.py`'s docstring, which contradicts its own code, into a concept page
+and an ADR.
+
+**Not proven.** The manual check is a person's: hand the README to someone who
+has never opened Godot, and record the game and the search demo. No command
+can, because `--headless` rasterises nothing, and the README has a marked
+place for both recordings.
+
+**Still open, and carried forward.** The eleven over-long addon headers from
+wave 07 still wait on the owner. The `doc-meta` blocks in
+`spec/vectors/*/README.md` still declare a `half_life` the docs gate does not
+know. Nothing enforces a line width, and `check_readability.py` does not
+measure `scripts/` at all, where `check_license.py`'s `self_test` is over 300
+lines. The search and planning vector runners still use the noisy JSON parser.
+The Godot pages cite `/en/stable/` docs rather than the pinned version's, as
+every page here does.
+
+**A sequencing question for the owner.** `make wave` now picks **T13**,
+because it takes the first ready row in the table and T21 is listed last in
+milestone 2, although its note says it comes **before T8**. If T21 should come
+next, move its row up. This session did not reorder the plan.
+
+Read the task file `make wave` names, then: make check, write the review
+record, make wave-merge.
 
 ## Resuming after 2026-10-13 (wave 18)
 
