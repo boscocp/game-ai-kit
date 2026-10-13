@@ -39,6 +39,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T17 | The opponent model | todo | n-grams you can print |
 | T18 | Behaviour cloning, and what a learned model buys | todo | the comparison is the task |
 | T21 | Every example can be watched | todo | **before T8**: the standing rule for every example after it |
+| T24 | One window for every example | todo | a menu, a card per example naming its techniques, and an executable; needs T21 |
 
 ## Milestone 3 — real time, last
 
