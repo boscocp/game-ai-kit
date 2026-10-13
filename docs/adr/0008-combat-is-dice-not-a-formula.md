@@ -15,9 +15,9 @@ model, and it has learned nothing: the lesson is circular.
 ## Decision
 
 A fight in `python/gameaikit/dataset/combat.py` is rounds of dice. Both sides
-trade damage, terrain reduces what the attacker gets through, a numeric
-advantage adds to it, and a friend a few cells away can arrive partway
-through. The relationship between the features and the outcome is real,
+trade damage, the defender's terrain adds to the damage it returns, a
+numeric advantage adds to the blows of whichever side holds it, and a friend a
+few cells away can arrive partway through. The relationship between the features and the outcome is real,
 noisy, and **not** the shape of the model fitted to it.
 
 ## Alternatives considered

@@ -34,9 +34,13 @@ same rows and to the same arithmetic.
 
 - **Document the conventions.** Rejected: documentation is the second file
   that will differ.
-- **Compute the sentinel from the game's own board.** Rejected: that is
-  exactly the bug, and it was one -- a unit alone and a unit whose friend is
-  seventeen cells away became the same number on the game's board.
+- **Compute the sentinel from the game's own board.** Rejected: on the
+  game's 12-wide board a unit alone would report 12, which the model reads as
+  a friend twelve cells off rather than as nobody coming. (The bug this
+  feature actually had was a different one, and it is the reason a value
+  shared is not the same as a value used correctly: `_nearest_friend` seeded
+  its minimum with the sentinel, so a friend seventeen away and no friend at
+  all became the same number.)
 - **Publish full-precision weights.** Rejected: the vectors compare to `1e-9`,
   and printing a double in one language and parsing it in another is a
   rounding question nobody needs to have.

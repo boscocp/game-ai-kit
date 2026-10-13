@@ -16,14 +16,12 @@
 ## the improvement branch and the closed-set guard that A\* needs are not
 ## written here, because code that cannot execute cannot be read as if it does.
 ##
-## This header used to say the cause was the frontier's linear scan, and that
-## a binary heap would bring both back. It would not: a heap keyed at insertion,
-## on these costs, made 0 improvements over 300 boards. Charge the cost to the
-## *edge* -- to where you come from as well as where you go -- and the same heap
-## made 1533. Give `GridGraph` edge costs and this file needs the branch back.
+## A binary heap does not change that, whatever this header once said; charge
+## the cost per *edge* and it does. `docs/concepts/cost_models.py` measures both.
 ##
 ## Complexity: O(V²), because picking the cheapest is a linear scan of the
-## frontier. With a heap it is O(E log V), with the caveat above. The scan is
+## frontier. With a heap it is O(E log V), and on these costs needs no more
+## code than this file has. The scan is
 ## the readable choice and the kit says so out loud in `search.gd`; the version
 ## with the heap is called `AStarGrid2D` and is already in the engine.
 ##
@@ -51,8 +49,10 @@ func _explore(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 		# only because A* needs the same walk with `f`.
 		#
 		# Because that number is the true cost so far, the cell taken off is
-		# the globally cheapest and its cost is already final. A* cannot say
-		# that, which is why A* carries a duplicate guard here and this file
+		# the globally cheapest and its cost is already final -- and since no
+		# cell is ever improved, no cell is ever queued twice. A* improves
+		# cells still waiting and queues them again, which leaves stale copies
+		# behind, and that is why it carries a duplicate guard and this file
 		# does not.
 		var current: Vector2i = frontier.pop_at(_cheapest(frontier, g))
 		expanded.append(current)

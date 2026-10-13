@@ -19,8 +19,10 @@ having no install step.
 - the wheel is a pure `py3-none-any` zip with `METADATA`, `WHEEL` and
   `RECORD` written out, and the attribution in `.dist-info/licenses/`, where
   PEP 639 puts it;
-- only files `git ls-files` lists are shipped, so the release contains nothing
-  a commit does not;
+- paths and bytes are both read from the commit at `HEAD` (`git ls-tree`,
+  `git show`), so an edit, a staged file or an untracked one cannot ship. The
+  first version listed tracked paths and read the bytes off disk, and a review
+  shipped an uncommitted edit through it;
 - every entry has a fixed date and mode, and the build is byte-for-byte
   reproducible.
 

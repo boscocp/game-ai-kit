@@ -60,13 +60,15 @@ manual check in tasks/T7-close-the-slice.md. -->
 ground on either side, and two nodes worth taking. Red is yours: click a unit, click a
 neighbouring cell, space ends the turn. Blue is played by the trained models,
 and under the status line each blue unit says what it decided and the number
-it decided on, in the shape *unit 1 attacks unit 2: p(win) 0.95 at or above
-0.50*.
+it decided on. End your first turn without moving and it says: *unit 3 attacks unit 2:
+p(win) 0.97 at or above 0.50*, and *unit 4 retreats from unit 2: p(win) 0.33
+below 0.50*.
 
 **The search demo** (`make demo-search`). One board, four searches. Keys 1–4
 choose the algorithm, space reveals the next cell it expanded, enter reveals
 the rest. Breadth-first walks through the mud; Dijkstra goes round having
-spread out in rings; A\* goes round having looked at far less.
+spread out in rings; A\* goes round having expanded 90 cells to
+Dijkstra's 125.
 
 *Recordings of both are still to be made.*
 
@@ -84,7 +86,7 @@ Tier 2, with the engine:
 ```bash
 make bootstrap     # downloads the pinned Godot to the large disk, SHA-512 verified
 make run           # play the board
-make demo-search   # the four searches, side by side
+make demo-search   # the four searches on one board, one at a time
 make check         # every gate
 ```
 

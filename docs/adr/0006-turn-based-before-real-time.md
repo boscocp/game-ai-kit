@@ -19,7 +19,8 @@ real-time game cannot pay, and the fix -- mutate in place, keep an undo stack
 
 The strategy game is turn-based first, shaped like Advance Wars rather than
 StarCraft (T10), and reuses `ai_core` exactly as it is. The RTS comes last,
-after all three games, in its own milestone, with the core it needs (T19).
+after the three games of milestone 2, in its own milestone, with the core it
+needs (T19).
 
 ## Alternatives considered
 
@@ -32,9 +33,10 @@ after all three games, in its own milestone, with the core it needs (T19).
 
 ## Consequences
 
-- Every technique so far is taught on a value it may copy freely, which is
-  why the search, the planner and the learned policy all take a `BoardState`
-  and none of them can corrupt it.
+- Every technique so far decides on a value and changes nothing it is
+  handed: the learned policy reads a `BoardState`, the search a `GridGraph`,
+  and the planner its own `WorldState`, which, like the board, answers an
+  action with a new value rather than by changing itself.
 - The copy is a known cost with a named limit, written in `board_state.gd`'s
   header: when copying the unit list per node matters, this core is the
   wrong one.
