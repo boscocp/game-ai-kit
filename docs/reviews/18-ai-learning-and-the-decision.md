@@ -182,6 +182,78 @@ deliberately *not* in the vocabulary, so the case passed whether or not
 strings were stripped at all. It plants `"gradient of the hill"` now, and the
 planner's domain word has a case of its own saying why it is allowed.
 
+### The shipped artifact nobody ever read
+
+`weights.txt` is 78 committed lines inside the published addon, and
+`report.py` calls it "the one that matters here". The reviewer rewrote it to
+claim 999999 simulated games and `check_no_training.py` exited 0: no gate, no
+target and no CI step had ever mentioned the file. N4 now compares it against
+the same fresh training run it already performs, which costs one string
+comparison.
+
+### A gate whose own vocabulary was mostly unplanted
+
+Of the four ways `WRITING_RE` recognises a file being written, one had a
+planted case; of the ten words in `FITTING_WORDS`, two did. The vendored-code
+exclusion had none either, and deleting it changed nothing — gdUnit4 happens
+to contain none of these words, so the exclusion was inert rather than
+load-bearing.
+
+**The first fix was wrong in an instructive way.** Planting a case per word by
+looping over `FITTING_WORDS` proves every word in the list fires, and cannot
+notice a word being *deleted from the list*, because the loop shrinks with it:
+dropping `backprop` left the self-test green. The vocabulary is now also
+written out by hand in the self-test, so the two mechanisms catch different
+things — the literal set catches the list losing an entry, the loop catches an
+entry that does not work. The loop earned its place by catching one
+immediately: the first version planted `gradient_value`, which `\bgradient\b`
+does not match.
+
+A second case of the same shape: the planted case for `open_encrypted`
+contained `FileAccess.WRITE`, so it was being caught by the alternative next
+door and proved nothing about the one it was written for.
+
+### A real trainer got past N1, N2 and N3
+
+The reviewer put 34 lines of honest batch gradient descent inside the
+inference addon — 2000 passes, its own sigmoid, the update step spelled
+`_numbers[index] -= STEP * slope` — and both the gate and the readability
+check passed it. The docstring admits this hole and is right to refuse a
+longer verb list, which would fire on good code.
+
+But the hole can be narrowed without lengthening anything. Inside
+`godot/addons/ai_learning/` — one directory, read-only by construction, which
+today contains no line of the shape at all — **any** compound arithmetic
+assignment into an indexed value is now a finding. That closes exactly this
+evasion and cannot fire anywhere else in the tree. A running total in the game
+is still a running total.
+
+### `why` was required by one half of the conformance run and optional by the other
+
+Python did `case["why"]`; GDScript did `case.get("why", case["kind"])`. A
+vector written without it gave Python a `KeyError` naming a dictionary key
+rather than the vector, and GDScript a clean pass. It is a V-rule now, with a
+planted case, because a case with no `why` is a case whose failure nobody can
+read.
+
+### Smaller, and all fixed
+
+- the Python tolerance had no planted case: widening it to `1e-1` left the
+  suite green, because every vector agrees to about 1e-13 and nothing sat near
+  the edge. The GDScript half had one. Three cases now;
+- N4 could not see a number republished as a different kind — `2224` against
+  `2224.0` — because `math.isclose` calls them equal;
+- `--repo` pointing at nothing exited **0**, by way of the "no addon here yet"
+  note. A typo'd path was a confident green, which is precisely the question
+  invariant 4 tells you to ask of a gate;
+- the test tying the published conventions to the simulator's own constants
+  checked two of the four: hard-coding either terrain bound as a literal left
+  it green;
+- the comment on N4's tolerance said it "allows one unit in that last place".
+  Measured: a weight moved by exactly `1e-6` is rejected, because the float
+  difference is 1.0000000000287e-6. The code errs strict and the comment did
+  not say so.
+
 ### Two suspicions, both acted on
 
 - the capture model is fitted on *opening* positions and the policy asks it
@@ -193,6 +265,30 @@ planner's domain word has a case of its own saying why it is allowed.
   positive and the pair still nonsense, and `clampi(value, 3, 1)` answers
   rather than objects. Refused now, with a planted case.
 
+## What held up
+
+Worth recording, because a review that only lists faults implies the rest was
+not looked at:
+
+- **every number in the vectors is right.** All twelve feature rows were
+  recomputed by hand from the boards and the definitions in `simulate.py`, and
+  all twelve predictions independently in Python: maximum deviation 4.5e-13,
+  and the three linear ones exact to the last published digit;
+- **the two halves really are independent.** No shared code, neither reads a
+  number the other produced, and each checks the produced row and the
+  prediction against the *file*. Sign flips, wrong-cell terrain, wrong-unit
+  reinforcement and farthest-instead-of-nearest were each caught on both sides
+  separately;
+- **every rule that did have a planted case is load-bearing** — seventeen of
+  them deleted one at a time, each turning the suite red;
+- `make train` really is one fit written to two directories; retraining really
+  is deterministic; the published conventions really are the simulator's own,
+  and changing `NEARBY` or `WIDTH` turns the suite red in several places;
+- `docs/godot/reading-json-in-godot.md` was reproduced verbatim on the pinned
+  engine, error text and all;
+- the wiring holds: the new gate is discovered by glob rather than by a list,
+  and every new target is reached by CI.
+
 ## What was done about them
 
 Everything above is fixed on this branch. Every rule that had no planted case
@@ -201,8 +297,9 @@ motivated it** rather than assumed to work — which caught two that were
 passing through some other rule, and one that was hidden behind an earlier
 failure in the same suite.
 
-`make check` is green: 217 gdUnit4 cases, four learning vectors among three families, two property
-runs, three decision scenarios.
+`make check` is green: 219 gdUnit4 cases, three vector families (fifteen
+learning cases over four files among them), two property runs, three decision
+scenarios.
 
 Carried forward, deliberately:
 

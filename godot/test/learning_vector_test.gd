@@ -63,6 +63,20 @@ func test_a_prediction_that_is_not_a_number_is_refused() -> void:
 	assert_str(_why_one_case_is_wrong({"prediction": "about a half"})).contains("V4")
 
 
+func test_a_case_that_does_not_say_what_it_is_for_is_refused() -> void:
+	# Both halves require it now. Python read `case["why"]` and raised a
+	# KeyError naming a dictionary key rather than the vector; this side
+	# defaulted and said nothing.
+	var case: Dictionary = _row_case()
+	case.erase("why")
+
+	assert_str(LearningVector.why_not_a_vector(_but({"cases": [case]}))).contains("V10")
+
+
+func test_a_case_whose_reason_is_blank_is_refused_too() -> void:
+	assert_str(_why_one_case_is_wrong({"why": "   "})).contains("V10")
+
+
 func test_a_case_about_a_model_the_vector_does_not_publish_is_refused() -> void:
 	assert_str(_why_one_case_is_wrong({"model": "random_forest"})).contains("V5")
 

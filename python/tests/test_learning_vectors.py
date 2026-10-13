@@ -113,6 +113,28 @@ class TheVectorsThemselves(unittest.TestCase):
                 self.assertEqual(carried, report.FEATURE_CONVENTIONS)
 
 
+class TheToleranceItself(unittest.TestCase):
+    """The margin, which had nothing holding it on this side.
+
+    Widening `TOLERANCE` to 1e-1 left the whole suite green: every vector
+    agrees to about 1e-13, so no case was near enough to the edge to notice.
+    The GDScript half had a case for this and Python did not.
+    """
+
+    def test_the_last_places_of_a_double_are_within_it(self) -> None:
+        self.assertTrue(close_enough(0.5, 0.5 + 1e-12))
+        self.assertTrue(close_enough(9.0, 9.0 + 1e-9))
+
+    def test_a_thousandth_is_not(self) -> None:
+        self.assertFalse(close_enough(0.5, 0.501))
+        self.assertFalse(close_enough(4.299231, 4.299232))
+
+    def test_it_scales_with_the_size_of_the_answer(self) -> None:
+        # Absolute at and below 1, relative above it, so a prediction of 9.0
+        # is held as tightly as one of 0.6 rather than nine times as loosely.
+        self.assertFalse(close_enough(1000.0, 1000.0 + 1e-5))
+
+
 class TheBoardsProduceTheRowsTheVectorsWriteDown(unittest.TestCase):
     """Feature extraction, which is the half that drifts without saying so."""
 

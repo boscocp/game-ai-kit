@@ -67,6 +67,13 @@ import tempfile
 GODOT = pathlib.Path("godot")
 LEARNING_ADDON = pathlib.Path("godot") / "addons" / "ai_learning"
 WEIGHTS = LEARNING_ADDON / "weights.json"
+
+# The readable half of the same fit, shipped in the same folder. `report.py`
+# calls it "the one that matters here", and until a review rewrote it to claim
+# 999999 games and watched this gate pass, nothing in the repository had ever
+# read it: no target, no CI step, no test. It costs one string comparison
+# against a training run N4 is performing anyway.
+READABLE = LEARNING_ADDON / "weights.txt"
 TRAINER = "gameaikit.training.report"
 
 # Third-party GDScript this project does not author.
@@ -104,9 +111,24 @@ WRITING_RE = re.compile(
 MEMBER_WRITE_RE = re.compile(r"\b[A-Za-z_][\w.]*\.(weights|bias)\s*(?:\[[^\]]*\])?\s*=[^=]")
 UPDATE_RE = re.compile(r"\b(weights|bias)\s*(?:\[[^\]]*\])?\s*(?:\+|-|\*|/)=")
 
+# The same update step with the numbers called something else, and this one
+# applies **only inside the inference addon**. A review defeated N1 to N3 with
+# thirty-four lines of honest gradient descent whose accumulator was called
+# `_numbers`, which is exactly the hole the docstring admits to. The verb list
+# cannot be lengthened without firing on good code -- but the one directory
+# that is read-only by construction can be held to a stricter rule, and it
+# contains no line of this shape at all.
+ADDON_UPDATE_RE = re.compile(r"\w+\[[^\]]*\]\s*(?:\+|-|\*|/)=")
+
 # How far two runs of a deterministic pipeline may differ. The weights are
 # published rounded to six decimals precisely so that two machines can agree
-# on the text; this allows one unit in that last place and nothing more.
+# on the text.
+#
+# It errs strict, and a review measured which way: a weight moved by exactly
+# `1e-6` is *rejected*, because the float difference comes out as
+# 1.0000000000287e-6 and the comparison is `<=`. So this admits a difference
+# below one unit in the last published place, not one of exactly that size --
+# which is the right direction for a gate and was not what the comment said.
 TOLERANCE = 1e-6
 
 
@@ -191,10 +213,15 @@ def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
             elif WEIGHTS.name in line:
                 findings.append(f"N2 {label} writes over the weights file")
         for number, written in enumerate(code, start=1):
+            label = f"{_label(path, repo)}:{number}"
             if MEMBER_WRITE_RE.search(written) or UPDATE_RE.search(written):
                 findings.append(
-                    f"N3 {_label(path, repo)}:{number} assigns to a model's weights; "
+                    f"N3 {label} assigns to a model's weights; "
                     "a fitted model is read-only at game time")
+            elif inside_addon and ADDON_UPDATE_RE.search(written):
+                findings.append(
+                    f"N3 {label} accumulates into an indexed value; inside the "
+                    "inference addon that is an update step whatever it is called")
     return findings
 
 
@@ -222,21 +249,39 @@ def check_weights(repo: pathlib.Path, retrain: bool) -> tuple[list[str], bool]:
 
     if not retrain:
         return [], False
-    fresh = fresh_weights(repo)
-    if fresh is None:
+    trained = fresh_training(repo)
+    if trained is None:
         return [], False
-    return differences_between(committed, fresh, WEIGHTS.name), True
+    fresh, readable = trained
+    findings = differences_between(committed, fresh, WEIGHTS.name)
+    return findings + _differences_in_the_dump(repo, readable), True
 
 
-def fresh_weights(repo: pathlib.Path) -> dict | None:
-    """What the Python pipeline produces right now, or None if it cannot run."""
+def _differences_in_the_dump(repo: pathlib.Path, readable: str) -> list[str]:
+    """The readable weights ship beside the JSON and must come from the same fit."""
+    path = repo / READABLE
+    if not path.exists():
+        return [f"N4 {READABLE} is missing; `make train` writes it beside the JSON"]
+    if path.read_text(encoding="utf-8") != readable:
+        return [f"N4 {READABLE} is not what this pipeline writes; run `make train`"]
+    return []
+
+
+def fresh_training(repo: pathlib.Path) -> tuple[dict, str] | None:
+    """Both published artifacts as the pipeline writes them right now.
+
+    One fit, both artifacts, because that is how `make train` produces them
+    and comparing them against two different runs would be comparing the
+    committed pair against a pair that never existed together.
+    """
     sys.path.insert(0, str(repo / "python"))
     try:
         from gameaikit.training import report, train  # noqa: PLC0415
     except ImportError as error:
         print(f"N0 the training pipeline could not be imported: {error}")
         return None
-    return report.as_json(train.run())
+    training = train.run()
+    return report.as_json(training), report.dump(training)
 
 
 def differences_between(committed: object, fresh: object, where: str) -> list[str]:
@@ -256,6 +301,12 @@ def differences_between(committed: object, fresh: object, where: str) -> list[st
                 for index, (one, other) in enumerate(zip(committed, fresh))
                 for finding in differences_between(one, other, f"{where}[{index}]")]
     if _both_numbers(committed, fresh):
+        # The type as well as the value. `2224` and `2224.0` compare equal and
+        # are not the same published artifact: one is a count and the other is
+        # a count that has been through something that rounds.
+        if isinstance(committed, float) != isinstance(fresh, float):
+            return [f"N4 {where} is {committed!r}, and a fresh run gives {fresh!r} "
+                    "-- the same number, published as a different kind"]
         if not math.isclose(committed, fresh, rel_tol=0.0, abs_tol=TOLERANCE):
             return [f"N4 {where} is {committed}, and a fresh run gives {fresh}"]
         return []
@@ -454,6 +505,68 @@ def self_test() -> int:
         expect("a script that is not UTF-8",
                (main(["--repo", str(unreadable), "--skip-retrain"]), ""), 2)
 
+        # Planted: every other way of writing a file. Only `FileAccess.WRITE`
+        # had a case, so three of the four alternatives in WRITING_RE could be
+        # deleted with the self-test green.
+        for spelling in ['file.store_string("x")',
+                         'ResourceSaver.save(thing, path)',
+                         'FileAccess.open_encrypted(path, 2, key)',
+                         'FileAccess.open(path, FileAccess.WRITE_READ)']:
+            expect(f"the addon writing with {spelling[:20]}", quiet(build(
+                root, "w" + str(abs(hash(spelling))), dict(
+                    sound, **{str(LEARNING_ADDON / "saver.gd"): spelling + "\n"}))),
+                1, "N2")
+
+        # The vocabulary, written out. A loop over `FITTING_WORDS` -- which is
+        # what this was first -- proves every word in the list fires, and
+        # **cannot notice a word being deleted from the list**, because the
+        # loop shrinks with it. Measured: dropping `backprop` left the
+        # self-test green. So the words are named here as well, and the two
+        # mechanisms catch different things: this one catches the list losing
+        # an entry, the loop below catches an entry that does not work.
+        named = {
+            "gradient", "backprop", "backpropagate", "learning_rate", "epoch",
+            "optimizer", "optimiser", "sgd", "standardise", "standardize",
+        }
+        if set(FITTING_WORDS) != named:
+            failures.append(
+                "the vocabulary has changed: "
+                f"{sorted(set(FITTING_WORDS) ^ named)} -- a word added to the gate "
+                "needs naming here too, and a word removed needs a reason")
+
+        for word in sorted(FITTING_WORDS):
+            # The word on its own, not as part of a longer identifier: the
+            # rules match whole words, so `gradient_value` is not `gradient`
+            # and planting that would have been ten cases proving nothing.
+            expect(f"the word {word}", quiet(build(root, "word_" + word, dict(
+                sound, **{str(GODOT / "game" / "fit.gd"): f"var value: float = {word}\n"}))),
+                1, "N1")
+
+        # Planted: the vendored exclusion. It was inert -- gdUnit4 happens to
+        # contain none of these words -- so nothing would have noticed it
+        # being deleted.
+        vendored = str(GODOT / "addons" / "gdUnit4" / "src" / "Fitter.gd")
+        expect("a forbidden word in vendored code", quiet(build(root, "vendored2", dict(
+            sound, **{vendored: "var learning_rate: float = 0.1\n"}))), 3)
+
+        # Planted: the update step with the numbers called something else,
+        # inside the addon. Thirty-four lines of real gradient descent got
+        # past N1 to N3 during review by doing exactly this.
+        expect("an update step under another name", quiet(build(root, "evasion", dict(
+            sound, **{str(LEARNING_ADDON / "fitter.gd"):
+                      "\t_numbers[index] -= STEP * slope\n"}))), 1, "N3")
+
+        # ...and the same line outside the addon, which is ordinary code: a
+        # running total, a score, a cooldown.
+        expect("an accumulator outside the addon", quiet(build(root, "tally", dict(
+            sound, **{str(GODOT / "game" / "score.gd"):
+                      "\t_points[index] -= cost\n"}))), 3)
+
+        # Planted: a --repo that is not there at all.
+        expect("a path that is not a repository",
+               (main(["--repo", str(root / "nowhere")]), ""), 2)
+
+        failures += _self_test_the_dump(root)
         failures += _self_test_the_comparison()
 
         script = pathlib.Path(__file__).resolve()
@@ -465,6 +578,30 @@ def self_test() -> int:
         print(f"self-test FAIL: {failure}")
     print(f"self-test: {'ok' if not failures else str(len(failures)) + ' failure(s)'}")
     return 1 if failures else 0
+
+
+def _self_test_the_dump(root: pathlib.Path) -> list[str]:
+    """The readable half, handed text rather than a four-second pipeline.
+
+    Separate from the self-test's other cases because they all run with
+    `--skip-retrain`, which is exactly the path that does not reach this rule
+    -- so a case written up there would have proved nothing.
+    """
+    failures = []
+    repo = root / "dump"
+    (repo / READABLE).parent.mkdir(parents=True, exist_ok=True)
+
+    (repo / READABLE).write_text("what the model learned\n")
+    if _differences_in_the_dump(repo, "what the model learned\n"):
+        failures.append("a dump that matches the pipeline was reported as drifted")
+
+    if not _differences_in_the_dump(repo, "trained on 999999 games\n"):
+        failures.append("a dump the pipeline did not write was not reported")
+
+    (repo / READABLE).unlink()
+    if not _differences_in_the_dump(repo, "anything at all\n"):
+        failures.append("a missing dump was not reported")
+    return failures
 
 
 def _self_test_the_comparison() -> list[str]:
@@ -494,6 +631,13 @@ def _self_test_the_comparison() -> list[str]:
     counted["models"]["combat"]["weights"].append(0.0)
     if not differences_between(SOUND_WEIGHTS, counted, "w"):
         failures.append("a weight appearing from nowhere was not reported")
+
+    # A count republished as a float is the same number and a different
+    # artifact. `math.isclose` called them equal until a review asked.
+    retyped = json.loads(json.dumps(SOUND_WEIGHTS))
+    retyped["games"] = float(retyped["games"])
+    if not differences_between(SOUND_WEIGHTS, retyped, "w"):
+        failures.append("a number republished as a float was not reported")
     return failures
 
 
@@ -513,6 +657,12 @@ def main(argv: list[str]) -> int:
         return self_test()
 
     repo = pathlib.Path(args.repo or pathlib.Path(__file__).resolve().parent.parent)
+    # A typo'd path used to come back as a confident green, by way of the
+    # "no addon here yet" note. *Does this pass on an empty scene* is the
+    # question invariant 4 asks of every gate, and this one answered yes.
+    if not repo.is_dir():
+        print(f"check_no_training: no such directory: {repo}", file=sys.stderr)
+        return 2
     try:
         return run(repo, retrain=not args.skip_retrain)
     except (OSError, ValueError) as error:

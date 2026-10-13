@@ -12,7 +12,7 @@ import dataclasses
 import unittest
 
 from gameaikit.dataset.rows import CAPTURE_FEATURES, COMBAT_FEATURES
-from gameaikit.dataset import simulate
+from gameaikit.dataset import board, simulate
 from gameaikit.dataset.simulate import collect
 from gameaikit.training import evaluate, report
 from gameaikit.training.models import Model
@@ -184,6 +184,10 @@ class TheReportsRules(unittest.TestCase):
         self.assertEqual(published["nearby_radius"], simulate.NEARBY)
         self.assertEqual(
             published["reinforcement_distance_when_alone"], simulate.WIDTH)
+        # All four, not two: hard-coding either terrain bound as a literal in
+        # report.py left this green, which is the drift it exists to catch.
+        self.assertEqual(published["cheapest_ground"], board.CHEAPEST_GROUND)
+        self.assertEqual(published["dearest_ground"], board.DEAREST_GROUND)
 
     def test_a_model_that_learned_nothing_is_reported(self) -> None:
         flat = copy.deepcopy(sound_report())

@@ -84,7 +84,7 @@ static func check(name: String, data: Dictionary) -> Array[String]:
 # One case: the row the board produces, and what the model says about it.
 static func _check_case(name: String, case: Dictionary, state: BoardState,
 		published: ModelFile) -> Array[String]:
-	var label: String = "%s [%s]" % [name, str(case.get("why", case["kind"]))]
+	var label: String = "%s [%s]" % [name, str(case["why"])]
 	var failures: Array[String] = []
 	var expected: Dictionary = case["features"]
 	var row: Dictionary = _row_for(case, state, published)
@@ -235,6 +235,12 @@ static func _why_a_case_is_wrong(data: Dictionary, case: Variant,
 		return "V3 case %d gives the model no features" % index
 	if not _is_a_number(entry.get("prediction")):
 		return "V4 case %d claims no prediction" % index
+	# Required, and it used to be required by the Python half only -- which
+	# read `case["why"]` and died with a KeyError naming a dictionary key
+	# rather than the vector, while this side quietly defaulted. A case with
+	# no `why` is a case whose failure nobody can read.
+	if not (entry.get("why") is String) or str(entry["why"]).strip_edges() == "":
+		return "V10 case %d does not say what it is for" % index
 	return _why_the_case_cannot_be_run(data, entry, index)
 
 

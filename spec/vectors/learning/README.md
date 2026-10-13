@@ -78,7 +78,10 @@ vector cannot confirm a mistake that the two sides happen to share.
   `godot/test/learning_test.gd`, not here. Every board in these vectors stays
   inside the trained range, which is what makes the two sides comparable at
   all.
-- **`enemy_units` on a board with three sides.** Python counts
+- **`enemy_units` on a board with three sides** — and `a-fight-in-cover.json`
+  does put a faction-2 unit on a board, so this needs saying rather than
+  assuming: the *combat* features are defined for any number of sides, and
+  the *capture* features are defined for two. Python counts
   `living(1 - faction)` — *the other side*, which has no meaning with three of
   them — and GDScript counts everyone who is not mine. On two factions they
   are the same number, and every board here has two. A vector on a

@@ -104,19 +104,42 @@ code.
 the real distances run 1 to 11 and none reaches 15 -- but the simulator's
 geometry permits 16. Worth knowing before T18 leans on that feature.
 
-**Six rules were deletable with every gate green**, found by the review
-deleting them: the whole of `_affordable` (the only thing making every
-returned move legal -- no test had ever produced a route the unit could not
-pay for), two tie-breaks, the reach boundary, and two of `ModelFile`'s
-refusals. Each has a test now, and each test was then run against the mutation
-that motivated it rather than assumed to work -- one of them turned out to be
-hidden behind an earlier failure in the same suite, which is the gdUnit4 trap
-`CLAUDE.md` already warns about.
+**Twenty-one rules were deletable with every gate green**, found by two
+reviews deleting them one at a time: the whole of `_affordable` (the only
+thing making every returned move legal -- no test had ever produced a route
+the unit could not pay for), four tie-breaks and boundaries, four board rules
+in the vector loader, two of `ModelFile`'s refusals, three of the four ways
+the gate recognises a file being written, eight of its ten forbidden words,
+and its vendored-code exclusion.
+
+Each has a case now, and **each case was then run against the mutation that
+motivated it** rather than assumed to work. That caught three failures in the
+fixes themselves: one case was hidden behind an earlier failure in the same
+suite (the gdUnit4 trap `CLAUDE.md` warns about); two were passing through a
+*different* rule, because eleven board rules all answer the code `V7` and
+`contains("V7")` cannot tell them apart; and the planted case for
+`open_encrypted` contained `FileAccess.WRITE`, so the alternative next door
+was catching it.
+
+**A planted case written as a loop over the rule list cannot notice the list
+shrinking.** Planting one case per forbidden word by iterating the vocabulary
+proves every word fires and goes green the moment a word is deleted, because
+the loop shrinks with it. Both are needed: the literal list catches the
+deletion, the loop catches an entry that does not work -- and the loop earned
+its place immediately, catching a planted `gradient_value` that
+`\bgradient\b` never matched.
 
 **T6's headline acceptance command proves less than it reads like.** The three
 decision scenarios stayed green under all five mutations of the feature
 extraction. They are about nerve; the arithmetic is the vectors' job, and the
 file says so now.
+
+**Thirty-four lines of real gradient descent got past the new gate**, inside
+the inference addon, by calling its accumulator `_numbers`. The docstring
+admits that hole and is right to refuse a longer list of verbs, which would
+fire on good code -- but the one directory that is read-only by construction
+can be held to a stricter rule, so any compound arithmetic assignment into an
+indexed value is now a finding **there and nowhere else**.
 
 **A measurement that belongs in anyone's Godot notes:** the static
 `JSON.parse_string` prints an engine error of its own before returning null,
