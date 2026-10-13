@@ -25,6 +25,7 @@ const FRONTIER: Color = Color(0.95, 0.80, 0.35, 0.90)
 const PATH: Color = Color(1.0, 0.95, 0.85, 1.0)
 const START: Color = Color(0.45, 0.85, 0.45)
 const GOAL: Color = Color(0.95, 0.45, 0.45)
+const NEXT: Color = Color(1.0, 1.0, 1.0, 0.95)
 
 const PATH_WIDTH: float = 3.0
 const MARKER_RADIUS: float = 7.0
@@ -57,6 +58,10 @@ func _draw() -> void:
 	if _revealed >= _result.expanded.size():
 		_draw_frontier()
 		_draw_path()
+	else:
+		# The cell the search takes next, before it takes it: what it is about
+		# to do, which is the question invariant 13 asks of every example.
+		draw_rect(_cell_rect(_result.expanded[_revealed], FRONTIER_INSET), NEXT, false, 3.0)
 	_draw_marker(_from, START)
 	_draw_marker(_to, GOAL)
 

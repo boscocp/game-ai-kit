@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://game/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://game/board_view.gd" id="2_board"]
 [ext_resource type="Script" path="res://game/unit_view.gd" id="3_units"]
+[ext_resource type="Script" path="res://game/legend.gd" id="9_legend"]
 
 [node name="Main" type="Node2D"]
 position = Vector2(80, 80)
@@ -22,3 +23,10 @@ offset_top = 620.0
 offset_right = 1256.0
 offset_bottom = 700.0
 text = "loading"
+
+[node name="Legend" type="Control" parent="Interface"]
+offset_left = 980.0
+offset_top = 40.0
+offset_right = 1270.0
+offset_bottom = 300.0
+script = ExtResource("9_legend")

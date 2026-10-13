@@ -34,6 +34,7 @@ const NODES: Array[Vector2i] = [Vector2i(10, 1), Vector2i(2, 6)]
 @onready var _board: BoardView = $BoardView
 @onready var _units: UnitView = $UnitView
 @onready var _status: Label = $Interface/Status
+@onready var _legend: Legend = $Interface/Legend
 
 var _state: BoardState
 var _selected_id: int = -1
@@ -46,6 +47,15 @@ var _ai_reasons: PackedStringArray = PackedStringArray()
 
 
 func _ready() -> void:
+	_legend.set_entries([
+		[UnitView.FACTION_COLOURS[RED], "red: yours"],
+		[UnitView.FACTION_COLOURS[BLUE], "blue: the learned opponent"],
+		[BoardView.SWATCHES[BoardView.REACHABLE.x], "where the selected unit can step"],
+		[BoardView.SWATCHES[BoardView.NODE.x], "a node both sides want"],
+		[BoardView.SWATCHES[BoardView.ROUGH.x], "rough ground: dear to cross"],
+		[BoardView.SWATCHES[BoardView.WALL.x], "wall"],
+		[Color.WHITE, "below: blue's reasons, with its numbers"],
+	] as Array[Array])
 	_state = _build_scenario()
 	# The search goes in from here rather than from inside the policy: a route
 	# is a search, and no addon may depend on another. The game owns both and
@@ -117,6 +127,18 @@ func _end_turn() -> void:
 		_state = _state.end_turn(FACTIONS, POINTS_PER_TURN)
 	_select_first_unit_of_the_side_to_move()
 	_refresh()
+
+
+## One decision: red's turn ends, and blue decides and plays its own.
+##
+## Space does the same. It is here under the name every example shares (T21).
+func step_decision() -> void:
+	_end_turn()
+
+
+## What blue reasoned with last turn: each unit's reason, with its number.
+func decision_overlay() -> Dictionary:
+	return {"deciding": "blue", "reasons": _ai_reasons}
 
 
 # Every unit of the AI's side decides in turn, and plays what it decided.

@@ -24,6 +24,7 @@ const NAMES: Array[String] = ["breadth-first", "depth-first", "dijkstra", "a*"]
 @onready var _board: BoardView = $BoardView
 @onready var _expansion: ExpansionView = $ExpansionView
 @onready var _status: Label = $Interface/Status
+@onready var _legend: Legend = $Interface/Legend
 
 # Derived rather than written out. They were `Vector2i(1, 5)` and
 # `Vector2i(14, 5)` beside a `COLUMNS` and a `ROWS` that looked adjustable:
@@ -38,6 +39,17 @@ var _result: SearchResult
 
 
 func _ready() -> void:
+	_legend.set_entries([
+		[ExpansionView.NEXT, "expanded next"],
+		[ExpansionView.EARLY, "expanded early"],
+		[ExpansionView.LATE, "expanded late"],
+		[ExpansionView.FRONTIER, "still waiting when it stopped"],
+		[ExpansionView.PATH, "the route found"],
+		[ExpansionView.START, "start"],
+		[ExpansionView.GOAL, "goal"],
+		[BoardView.SWATCHES[1], "mud: dear to cross"],
+		[BoardView.SWATCHES[2], "wall"],
+	] as Array[Array])
 	_graph = _build_board()
 	_board.draw_board(_graph, [] as Array[Vector2i])
 	_choose(0)
@@ -65,6 +77,25 @@ func searches() -> Array[Search]:
 ## Run one algorithm on the current board and start its replay from nothing.
 func choose_search(index: int) -> void:
 	_choose(index)
+
+
+## One decision: the search takes one more cell off its frontier.
+##
+## The step every example offers (T21), so a person can stop on the frame where
+## the search did something surprising and read why.
+func step_decision() -> void:
+	step(1)
+
+
+## What the search is reasoning with right now -- the same cells the overlay
+## draws -- for `test/demo_overlays.gd` to check is there.
+func decision_overlay() -> Dictionary:
+	var about_to: Variant = _result.expanded[_revealed] if _revealed < _result.expanded.size() else null
+	return {
+		"algorithm": NAMES[_chosen],
+		"expanded": _result.expanded.slice(0, _revealed),
+		"about_to_expand": about_to if about_to != null else "finished",
+	}
 
 
 ## Reveal `count` more expanded cells, stopping at the end.

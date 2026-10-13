@@ -15,12 +15,24 @@ const DIRECTIONS: Dictionary = {
 @onready var _board: BoardView = $BoardView
 @onready var _view: StealthView = $StealthView
 @onready var _status: Label = $Interface/Status
+@onready var _legend: Legend = $Interface/Legend
 
 var world: StealthWorld
 var _show_danger: bool = false
 
 
 func _ready() -> void:
+	_legend.set_entries([
+		[StealthView.STATE_COLOURS[StealthGuard.PATROL], "guard on its round"],
+		[StealthView.STATE_COLOURS[StealthGuard.INVESTIGATE], "guard going to look"],
+		[StealthView.STATE_COLOURS[StealthGuard.ALERT], "guard giving chase"],
+		[StealthView.SIGHT, "what a guard sees"],
+		[Color.WHITE, "bar: suspicion  ·  tick: where the rules pull it"],
+		[StealthView.DANGER, "danger map (D)"],
+		[StealthView.DARKNESS, "darkness: harder to be seen"],
+		[StealthView.EXIT, "the way out"],
+		[StealthView.PLAYER, "you"],
+	] as Array[Array])
 	restart()
 
 
@@ -49,6 +61,27 @@ func restart() -> void:
 func press(direction: Vector2i, sprint: bool = false) -> void:
 	world.play(direction, sprint)
 	_refresh()
+
+
+## One decision: the player waits, and every guard takes its turn.
+func step_decision() -> void:
+	press(Vector2i.ZERO)
+
+
+## What every guard is reasoning with: its state, its suspicion, where the
+## rules pull it, what it was given and where it is about to walk.
+func decision_overlay() -> Dictionary:
+	var guards: Array[Dictionary] = []
+	for guard: StealthGuard in world.guards:
+		guards.append({
+			"state": guard.state,
+			"suspicion": guard.suspicion.level,
+			"alarm": guard.suspicion.alarm,
+			"inputs": guard.suspicion.inputs,
+			"rules": guard.suspicion.activations,
+			"sees": world.cone.visible_cells(world.room.graph, guard.unit.cell, guard.facing),
+		})
+	return {"guards": guards}
 
 
 ## Show or hide the danger map.
