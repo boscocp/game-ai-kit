@@ -40,6 +40,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import io
+import lzma
 import pathlib
 import re
 import subprocess
@@ -47,6 +48,7 @@ import sys
 import tempfile
 import tarfile
 import zipfile
+import zlib
 
 REQUIRED_FILES = ("LICENSE", "NOTICE")
 COPYRIGHT_HOLDER = "Adalberto Pereira"
@@ -120,6 +122,18 @@ def check_addons(repo: pathlib.Path) -> list[str]:
 # the list, so one dropped into dist/ was never examined.
 TAR_SUFFIXES = (".tar", ".tar.gz", ".tgz", ".tar.bz2", ".tar.xz")
 
+# Everything reading an archive's bytes can raise when the archive is broken.
+# Each of these escaped as a traceback and exit 1 -- the findings code -- once
+# the gate began reading content: an encrypted entry, an unknown compression
+# method, corrupt deflate data, a truncated `.tar.xz`. Broken is exit 2.
+UNREADABLE = (OSError, EOFError, RuntimeError, NotImplementedError,
+              zipfile.BadZipFile, tarfile.TarError, zlib.error, lzma.LZMAError)
+
+# Larger than any attribution file, and read no further: a NOTICE that
+# decompresses to a gigabyte is not this repository's, and finding that out
+# should not cost a gigabyte. Such an entry is read as not ours (L10).
+MAX_ATTRIBUTION_BYTES = 1 << 20
+
 
 def archive_files(archive: pathlib.Path) -> tuple[list[pathlib.PurePosixPath],
                                                    dict[pathlib.PurePosixPath, bytes]]:
@@ -139,7 +153,8 @@ def archive_files(archive: pathlib.Path) -> tuple[list[pathlib.PurePosixPath],
             members = bundle.infolist()
             paths = [pathlib.PurePosixPath(member.filename) for member in members]
             counted = {
-                pathlib.PurePosixPath(member.filename): bundle.read(member)
+                pathlib.PurePosixPath(member.filename):
+                    bundle.read(member) if member.file_size <= MAX_ATTRIBUTION_BYTES else None
                 for member in members
                 if not member.is_dir() and not is_zip_link(member) and member.file_size > 0
                 and pathlib.PurePosixPath(member.filename).name in REQUIRED_FILES
@@ -149,7 +164,9 @@ def archive_files(archive: pathlib.Path) -> tuple[list[pathlib.PurePosixPath],
             members = bundle.getmembers()
             paths = [pathlib.PurePosixPath(member.name) for member in members]
             counted = {
-                pathlib.PurePosixPath(member.name): bundle.extractfile(member).read()
+                pathlib.PurePosixPath(member.name):
+                    bundle.extractfile(member).read() if member.size <= MAX_ATTRIBUTION_BYTES
+                    else None
                 for member in members
                 if member.isfile() and member.size > 0
                 and pathlib.PurePosixPath(member.name).name in REQUIRED_FILES
@@ -160,6 +177,34 @@ def archive_files(archive: pathlib.Path) -> tuple[list[pathlib.PurePosixPath],
 def is_zip_link(member: zipfile.ZipInfo) -> bool:
     """A symbolic link stored the Unix way: the file type sits in the high bits."""
     return (member.external_attr >> 16) & 0o170000 == 0o120000
+
+
+def committed_attribution(repo: pathlib.Path) -> dict[str, bytes]:
+    """The LICENSE and NOTICE an artifact must carry: HEAD's, or the root's outside git.
+
+    An archive's copy used to be compared with the file on disk, and two
+    ordinary checkouts then failed a correct release: one whose line endings
+    git converts (Git for Windows does by default), and one with NOTICE edited
+    and not yet committed -- where the message blamed the archives, which held
+    exactly what was committed. `release.py` builds from HEAD, so HEAD is what
+    to compare with. A release folder, as `--output` writes it, is not a
+    checkout, and its root copies are HEAD's already.
+    """
+    # `git -C` searches upwards, so a release folder that happens to sit inside
+    # some other checkout would be compared with that checkout's files.
+    toplevel = subprocess.run(["git", "-C", str(repo), "rev-parse", "--show-toplevel"],
+                              capture_output=True, text=True)
+    is_checkout = (toplevel.returncode == 0
+                   and pathlib.Path(toplevel.stdout.strip()).resolve() == repo.resolve())
+    baseline = {}
+    for name in REQUIRED_FILES:
+        committed = subprocess.run(["git", "-C", str(repo), "show", f"HEAD:{name}"],
+                                   capture_output=True) if is_checkout else None
+        if committed is not None and committed.returncode == 0:
+            baseline[name] = committed.stdout
+        elif (repo / name).exists():
+            baseline[name] = (repo / name).read_bytes()
+    return baseline
 
 
 def check_release_archives(repo: pathlib.Path) -> list[str]:
@@ -184,23 +229,33 @@ def check_release_archives(repo: pathlib.Path) -> list[str]:
         path for path in dist.iterdir()
         if path.suffix in (".zip", ".whl") or path.name.endswith(TAR_SUFFIXES)
     )
+    baseline = committed_attribution(repo)
     for archive in archives:
-        paths, counted = archive_files(archive)
-        if archive.suffix == ".whl":
-            located = wheel_licences(archive.name, counted)
-            if located is None:
-                findings.append(f"L9 {archive.name} is not named like a wheel")
-                continue
-            code, where = "L9", "in its .dist-info/licenses/"
-        else:
-            located = attributed_files(paths, counted)
-            code, where = "L5", "at its root or in its top folder"
-        for name in REQUIRED_FILES:
-            if name not in located:
-                findings.append(f"{code} {archive.name} has no {name} {where}")
-            elif (repo / name).exists() and located[name] != (repo / name).read_bytes():
-                findings.append(f"L10 {archive.name} carries a {name} that is not the "
-                                "repository's own")
+        findings.extend(check_one_archive(archive, baseline))
+    return findings
+
+
+def check_one_archive(archive: pathlib.Path, baseline: dict[str, bytes]) -> list[str]:
+    """Where an archive keeps its attribution, whether it is ours, and whether it stays inside."""
+    paths, counted = archive_files(archive)
+    # A member at `../x` or `/x` lands outside the folder it is unpacked into,
+    # and both used to count as the archive's one top folder.
+    findings = [f"L11 {archive.name} has a member outside its own folder: {path}"
+                for path in paths if path.is_absolute() or ".." in path.parts]
+    if archive.suffix == ".whl":
+        located = wheel_licences(archive.name, counted)
+        if located is None:
+            return findings + [f"L9 {archive.name} is not named like a wheel"]
+        code, where = "L9", "in its .dist-info/licenses/"
+    else:
+        located = attributed_files(paths, counted)
+        code, where = "L5", "at its root or in its top folder"
+    for name in REQUIRED_FILES:
+        if name not in located:
+            findings.append(f"{code} {archive.name} has no {name} {where}")
+        elif name in baseline and located[name] != baseline[name]:
+            findings.append(f"L10 {archive.name} carries a {name} that is not the one "
+                            "committed -- rebuild it with `make release`")
     return findings
 
 
@@ -225,7 +280,8 @@ def canonical(distribution: str) -> str:
     return re.sub(r"[-_.]+", "_", distribution).lower()
 
 
-def wheel_licences(name: str, counted: dict[pathlib.PurePosixPath, bytes]) -> dict[str, bytes] | None:
+def wheel_licences(name: str,
+                   counted: dict[pathlib.PurePosixPath, bytes]) -> dict[str, bytes] | None:
     """The licence files in a wheel's own `.dist-info/licenses/`, or None for a misnamed wheel.
 
     A wheel is a zip, and the zip rule would pass one with a NOTICE at
@@ -471,7 +527,9 @@ def self_test() -> int:
         hollow_tar = make_repo(root / "hollow-tar")
         (hollow_tar / "dist").mkdir()
         with tarfile.open(hollow_tar / "dist" / "kit.tar.gz", "w:gz") as bundle:
-            for member_name, content in (("kit/LICENSE", ROOT_TEXT["LICENSE"].encode()), ("kit/NOTICE", b"")):
+            planted_members = (("kit/LICENSE", ROOT_TEXT["LICENSE"].encode()),
+                               ("kit/NOTICE", b""))
+            for member_name, content in planted_members:
                 member = tarfile.TarInfo(member_name)
                 member.size = len(content)
                 bundle.addfile(member, io.BytesIO(content))
@@ -527,14 +585,85 @@ def self_test() -> int:
             bundle.writestr("kit/__init__.py", "")
         expect_only("a wheel not named like one", unnamed, "L9")
 
-        # A third-party wheel whose .dist-info is spelled as its project spells
-        # itself, as installers accept, passes.
+        # A .dist-info spelled as its project spells itself -- `PyYAML` inside
+        # `pyyaml-...whl` -- is the wheel's own, as installers accept. The
+        # case tests the name match only: it carries this repository's files,
+        # and a real third-party wheel in dist/ is refused on L10, because
+        # dist/ is where this repository's own artifacts go.
         spelled = make_repo(root / "spelled")
         (spelled / "dist").mkdir()
         with zipfile.ZipFile(spelled / "dist" / "pyyaml-6.0.1-py3-none-any.whl", "w") as bundle:
             for required in REQUIRED_FILES:
                 bundle.writestr(f"PyYAML-6.0.1.dist-info/licenses/{required}", ROOT_TEXT[required])
         expect("a wheel whose .dist-info is spelled differently", quiet(spelled), 0)
+
+        # Planted: members outside the folder they unpack into, both ways.
+        for label, prefix in (("parent", "../"), ("absolute", "/")):
+            escaping = make_repo(root / f"escaping-{label}")
+            (escaping / "dist").mkdir()
+            with zipfile.ZipFile(escaping / "dist" / "ai_search.zip", "w") as bundle:
+                for required in REQUIRED_FILES:
+                    bundle.writestr(f"{prefix}{required}", ROOT_TEXT[required])
+                bundle.writestr(f"{prefix}astar.gd", "extends Node\n")
+            expect_only(f"zip with {label} member paths", escaping, "L11")
+
+        # Planted: a NOTICE past the size any attribution has. It is read as
+        # not ours, and not read in full.
+        swollen = make_repo(root / "swollen")
+        (swollen / "dist").mkdir()
+        with zipfile.ZipFile(swollen / "dist" / "ai_search.zip", "w",
+                             compression=zipfile.ZIP_DEFLATED) as bundle:
+            bundle.writestr("ai_search/LICENSE", ROOT_TEXT["LICENSE"])
+            bundle.writestr("ai_search/NOTICE", b"\0" * (MAX_ATTRIBUTION_BYTES + 1))
+        expect_only("zip with a NOTICE too large to be ours", swollen, "L10")
+
+        # Planted: an archive whose NOTICE cannot be decompressed. Broken is
+        # exit 2, not a traceback and not a finding.
+        corrupt = make_repo(root / "corrupt")
+        (corrupt / "dist").mkdir()
+        corrupt_zip = corrupt / "dist" / "ai_search.zip"
+        with zipfile.ZipFile(corrupt_zip, "w", compression=zipfile.ZIP_DEFLATED) as bundle:
+            bundle.writestr("ai_search/LICENSE", ROOT_TEXT["LICENSE"])
+            bundle.writestr("ai_search/NOTICE", ROOT_TEXT["NOTICE"] * 50)
+        damaged = bytearray(corrupt_zip.read_bytes())
+        start = damaged.index(b"ai_search/NOTICE") + len("ai_search/NOTICE")
+        damaged[start:start + 40] = b"\xff" * 40
+        corrupt_zip.write_bytes(bytes(damaged))
+        with contextlib.redirect_stderr(io.StringIO()):
+            expect("a zip whose NOTICE cannot be read", main(["--repo", str(corrupt)]), 2)
+
+        # A checkout whose line endings differ from the commit, as Git for
+        # Windows makes by default, carries a correct release. Comparing with
+        # the file on disk failed every artifact on L10.
+        converted = make_repo(root / "converted")
+        git = ["git", "-C", str(converted), "-c", "user.name=t", "-c", "user.email=t@t"]
+        subprocess.run(git[:3] + ["init", "-q"], check=True)
+        subprocess.run(git + ["add", "LICENSE", "NOTICE"], check=True)
+        subprocess.run(git + ["commit", "-q", "-m", "attribution"], check=True)
+        for required in REQUIRED_FILES:
+            (converted / required).write_bytes(ROOT_TEXT[required].replace("\n", "\r\n").encode())
+        (converted / "dist").mkdir()
+        with zipfile.ZipFile(converted / "dist" / "ai_search.zip", "w") as bundle:
+            for required in REQUIRED_FILES:
+                bundle.writestr(f"ai_search/{required}", ROOT_TEXT[required])
+        expect("a checkout with converted line endings", quiet(converted), 0)
+
+        # Planted: a release folder sitting inside some other checkout. `git -C`
+        # searches upwards, and that checkout's NOTICE is not this release's.
+        outer = root / "outer"
+        outer.mkdir()
+        git = ["git", "-C", str(outer), "-c", "user.name=t", "-c", "user.email=t@t"]
+        subprocess.run(git[:3] + ["init", "-q"], check=True)
+        for required in REQUIRED_FILES:
+            (outer / required).write_text("someone else's\n")
+        subprocess.run(git + ["add", "LICENSE", "NOTICE"], check=True)
+        subprocess.run(git + ["commit", "-q", "-m", "other"], check=True)
+        nested = make_repo(outer / "release")
+        (nested / "dist").mkdir()
+        with zipfile.ZipFile(nested / "dist" / "ai_search.zip", "w") as bundle:
+            for required in REQUIRED_FILES:
+                bundle.writestr(f"ai_search/{required}", ROOT_TEXT[required])
+        expect("a release folder inside another checkout", quiet(nested), 0)
 
         # Planted: a LICENSE that says nothing. Only NOTICE had a content check.
         placeholder = make_repo(root / "placeholder")
@@ -572,7 +701,7 @@ def main(argv: list[str]) -> int:
     repo = pathlib.Path(args.repo or pathlib.Path(__file__).resolve().parent.parent)
     try:
         return run(repo)
-    except (OSError, zipfile.BadZipFile, tarfile.TarError) as error:
+    except UNREADABLE as error:
         print(f"check_license: cannot read a file: {error}", file=sys.stderr)
         return 2
 

@@ -68,6 +68,7 @@ import pathlib
 import re
 import subprocess
 import sys
+import tarfile
 import tempfile
 import zipfile
 
@@ -305,8 +306,6 @@ def check_the_gate_agrees(root: pathlib.Path) -> list[str]:
     code, findings = license_gate(root / "good")
     if code != 0:
         failures.append(f"a complete release passes the gate (got {code}: {findings})")
-    if len(artifacts) != len(shipped_addons(REPO)) + 1:
-        failures.append("one zip per addon plus the wheel")
 
     # Planted: every artifact without NOTICE. The gate must fail, and fail
     # once per artifact on the archive rule -- not on the root file, which
@@ -374,9 +373,12 @@ def check_only_the_commit_ships(root: pathlib.Path) -> list[str]:
     clone = root / "clone"
     subprocess.run(["git", "clone", "-q", str(REPO), str(clone)], check=True)
     package = clone / "python" / PACKAGE
-    for folder in (clone / "godot" / "addons" / shipped_addons(clone)[0], package / "pddl"):
-        source = sorted(path for path in folder.iterdir()
-                        if path.suffix in (".gd", ".py"))[0]
+    sources = [sorted((clone / "godot" / "addons").rglob("*.gd")),
+               sorted(package.rglob("*.py"))]
+    if not all(sources):
+        return ["the clone has an addon script and a package module to plant beside"]
+    for source in (found[0] for found in sources):
+        folder = source.parent
         source.write_text(source.read_text() + "# UNCOMMITTED\n")
         (folder / f"staged_only{source.suffix}").write_text("# STAGED\n")
         subprocess.run(["git", "-C", str(clone), "add", "--",
@@ -404,49 +406,71 @@ def archive_bytes(archive: pathlib.Path) -> bytes:
 
 
 def check_contents(root: pathlib.Path) -> list[str]:
-    """Each artifact holds exactly what HEAD holds for it, plus the files added.
+    """The release is exactly what HEAD holds: every addon, every file, nothing else.
 
     A review dropped every `.gd` from the addon zips, and then one module from
     the wheel, and nothing noticed: the gate looks for attribution and the
-    import probe loads three modules. The list is written out here from HEAD
-    rather than taken from the build, so the build cannot agree with itself.
+    import probe loads three modules. The first check written for it then
+    built its expectation with the build's own helpers, so the same defect one
+    function down -- `committed_files` skipping `.gd`, or one addon instead of
+    four -- agreed with itself. The expectation comes from `git archive` now,
+    a reader of HEAD that shares nothing with the build.
     """
-    failures = []
-    version = read_version(REPO)
+    tree = head_archive(REPO)
+    version = tree["VERSION"].decode().strip()
+    expected = expected_release(tree, version)
     artifacts = quiet_build(REPO, root / "contents")
-    for archive in artifacts:
-        with zipfile.ZipFile(archive) as bundle:
-            held = {name: bundle.read(name) for name in bundle.namelist()}
-        expected = expected_contents(archive, version)
-        if set(held) != set(expected):
-            failures.append(f"{archive.name} holds {sorted(set(held) ^ set(expected))[:4]} "
-                            "beyond or short of HEAD")
+    built = {path.name: path for path in artifacts}
+    if set(built) != set(expected):
+        return [f"the release is {sorted(built)}, HEAD calls for {sorted(expected)}"]
+    failures = []
+    for name, wanted in expected.items():
+        with zipfile.ZipFile(built[name]) as bundle:
+            listed = bundle.namelist()
+            held = {entry: bundle.read(entry) for entry in listed}
+        if len(listed) != len(held):
+            failures.append(f"{name} writes an entry twice")
+        if set(held) != set(wanted):
+            failures.append(f"{name} differs from HEAD by {sorted(set(held) ^ set(wanted))[:4]}")
             continue
-        changed = [name for name, data in expected.items()
-                   if data is not None and held[name] != data]
+        changed = [entry for entry, data in wanted.items()
+                   if data is not None and held[entry] != data]
         if changed:
-            failures.append(f"{archive.name} changes {changed[:4]}")
+            failures.append(f"{name} changes {changed[:4]}")
     return failures
 
 
-def expected_contents(archive: pathlib.Path, version: str) -> dict[str, bytes | None]:
-    """Name to committed bytes for one artifact; None where the build writes the file."""
-    attribution_files = {name: committed_bytes(REPO, name) for name in ATTRIBUTION}
-    if archive.suffix == ".zip":
-        addon = archive.name.rsplit("-", 1)[0]
+def head_archive(repo: pathlib.Path) -> dict[str, bytes]:
+    """Every file HEAD holds that a release reads, by path, through `git archive`."""
+    exported = subprocess.run(
+        ["git", "-C", str(repo), "archive", "--format=tar", "HEAD", "--",
+         "godot/addons", f"python/{PACKAGE}", *ATTRIBUTION, "VERSION"],
+        capture_output=True, check=True,
+    ).stdout
+    with tarfile.open(fileobj=io.BytesIO(exported)) as bundle:
+        return {member.name: bundle.extractfile(member).read()
+                for member in bundle.getmembers() if member.isfile()}
+
+
+def expected_release(tree: dict[str, bytes], version: str) -> dict[str, dict[str, bytes | None]]:
+    """Artifact name to its entries and their bytes; None where the build writes the file."""
+    attribution_files = {name: tree[name] for name in ATTRIBUTION}
+    addons = sorted({path.split("/")[2] for path in tree if path.startswith("godot/addons/")})
+    release: dict[str, dict[str, bytes | None]] = {}
+    for addon in addons:
         prefix = f"godot/addons/{addon}/"
-        expected = {f"{addon}/{path[len(prefix):]}": committed_bytes(REPO, path)
-                    for path in committed_files(REPO, prefix)}
-        expected.update({f"{addon}/{name}": data for name, data in attribution_files.items()})
-        expected[f"{addon}/VERSION"] = f"{version}\n".encode()
-        return expected
+        entries = {f"{addon}/{path[len(prefix):]}": data
+                   for path, data in tree.items() if path.startswith(prefix)}
+        entries.update({f"{addon}/{name}": data for name, data in attribution_files.items()})
+        entries[f"{addon}/VERSION"] = f"{version}\n".encode()
+        release[f"{addon}-{version}.zip"] = entries
     info = f"{PACKAGE}-{version}.dist-info"
-    expected = {path[len("python/"):]: committed_bytes(REPO, path)
-                for path in committed_files(REPO, f"python/{PACKAGE}/")}
-    expected.update({f"{info}/licenses/{name}": data
-                     for name, data in attribution_files.items()})
-    expected.update({f"{info}/{name}": None for name in ("METADATA", "WHEEL", "RECORD")})
-    return expected
+    wheel = {path[len("python/"):]: data
+             for path, data in tree.items() if path.startswith(f"python/{PACKAGE}/")}
+    wheel.update({f"{info}/licenses/{name}": data for name, data in attribution_files.items()})
+    wheel.update({f"{info}/{name}": None for name in ("METADATA", "WHEEL", "RECORD")})
+    release[f"{PACKAGE}-{version}-py3-none-any.whl"] = wheel
+    return release
 
 
 def check_refusals(root: pathlib.Path) -> list[str]:
@@ -460,6 +484,14 @@ def check_refusals(root: pathlib.Path) -> list[str]:
             pass
     if checked_version("0.1.0\n") != "0.1.0":
         failures.append("VERSION 0.1.0 is accepted")
+    # Two shapes the build does not write today and the spec allows: a folded
+    # line and a field that may repeat. The reader must not call them broken.
+    _, problems = header_fields(b"Keywords: one\n  folded\nProject-URL: a, b\nProject-URL: c, d\n")
+    if problems:
+        failures.append(f"a folded line and a repeated Project-URL are read cleanly ({problems})")
+    _, problems = header_fields(b"Name: one\nName: two\n")
+    if not problems:
+        failures.append("a single-use field written twice is refused")
     try:
         build(REPO, REPO / "dist" / "nested", skip_notice=False)
         failures.append("an output inside the repository's dist/ is refused")
@@ -531,9 +563,14 @@ def stamped_version(archive: pathlib.Path) -> str | None:
     return None
 
 
-# Fields a METADATA or WHEEL file may carry more than once. Any other field
-# written twice is a malformed file, and reading it as a list hid that.
-REPEATABLE_FIELDS = {"License-File", "Classifier", "Requires-Dist", "Tag", "Provides-Extra"}
+# Fields a METADATA or WHEEL file may carry more than once: the multiple-use
+# fields of core metadata 2.4, and WHEEL's `Tag`. Any other field written
+# twice is a malformed file, and reading it as a list hid that.
+REPEATABLE_FIELDS = {
+    "Platform", "Supported-Platform", "Classifier", "Requires-Dist",
+    "Requires-External", "Project-URL", "Provides-Extra", "Provides-Dist",
+    "Obsoletes-Dist", "Dynamic", "License-File", "Tag",
+}
 
 
 def header_fields(text: bytes) -> tuple[dict[str, list[str] | str], list[str]]:
@@ -546,9 +583,16 @@ def header_fields(text: bytes) -> tuple[dict[str, list[str] | str], list[str]]:
     """
     fields: dict[str, list[str] | str] = {}
     problems = []
+    key = ""
     for line in text.decode().splitlines():
         if not line:
             break
+        if line[0] in " \t" and fields:
+            # A folded line continues the field before it, as email headers
+            # do -- except `Summary`, which core metadata defines as one line.
+            if key == "Summary":
+                problems.append("Summary runs over more than one line")
+            continue
         key, separator, value = line.partition(": ")
         if not separator:
             problems.append(f"header line {line!r} is not 'Key: value'")
@@ -633,7 +677,8 @@ def record_problems(bundle: zipfile.ZipFile, record_name: str) -> list[str]:
         data = bundle.read(name)
         if algorithm != "sha256" or "=" in encoded or not re.fullmatch(r"[A-Za-z0-9_-]+", encoded):
             problems.append(f"RECORD hash for {name} is not unpadded urlsafe sha256")
-        elif base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4)) != hashlib.sha256(data).digest():
+        elif (base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4))
+              != hashlib.sha256(data).digest()):
             problems.append(f"RECORD hash for {name} is wrong")
         if size != str(len(data)):
             problems.append(f"RECORD size for {name} is wrong")
