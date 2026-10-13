@@ -1,9 +1,11 @@
 ## What anything that decides a unit's turn must provide: a state in, a move out.
 ##
-## `ai_planning` implements it with STRIPS, `ai_learning` with a trained model,
-## and a scripted opponent implements it with four lines of `if`. The game calls
-## all three the same way, which is what makes the lessons comparable: swap the
-## policy, keep the board, watch what changes.
+## `ai_learning` implements it with a trained model, and that is the one
+## implementation so far. `ai_planning` is meant to be the second, once T11 puts
+## the planner on the board -- today `StripsPlanner` plans over its own worlds
+## and nothing in the game calls it. The point of one interface is that the
+## game calls every policy the same way, which is what makes the lessons
+## comparable: swap the policy, keep the board, watch what changes.
 ##
 ## `@abstract` is the enforcement, for the reason set out in `pathfinder.gd`:
 ## the engine refuses to load a subclass that has not replaced these, and the

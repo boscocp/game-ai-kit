@@ -75,10 +75,10 @@ static func _rebuild(came_from: Dictionary, from: Vector2i, to: Vector2i) -> Arr
 # was reached from.
 #
 # Breadth-first and depth-first share this exactly: neither looks at cost, so
-# neither ever revisits a cell. Dijkstra and A* cannot use it, because the
-# whole point of a cost is that a cell seen already may still be worth
-# improving -- each of those files carries its own version, which is the line
-# worth reading them for.
+# neither ever revisits a cell. Dijkstra and A* carry their own version,
+# because they must record what each cell cost to reach -- and A*'s improves a
+# cell already seen, which on these boards Dijkstra never has to (its header
+# says why). That difference is the line worth reading them for.
 static func _enqueue_unseen(graph: GridGraph, current: Vector2i,
 		came_from: Dictionary, frontier: Array[Vector2i]) -> void:
 	for step: Vector2i in graph.neighbours(current):

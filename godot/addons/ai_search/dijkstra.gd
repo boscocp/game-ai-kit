@@ -5,20 +5,22 @@
 ## costs, and the route round it wins on its own merits rather than because
 ## somebody special-cased it.
 ##
-## **It does not revisit a cell, and that is a property of this frontier rather
-## than of Dijkstra.** The textbook version keeps improving cells it has already
-## seen, because a long way round can arrive cheaper. Here it never happens:
-## `_cheapest` scans the frontier and reads `g` as it is *now*, so the cell
-## taken off is always the globally cheapest and its cost is already final.
-## Measured over 250 random boards -- 0 improvements and 0 duplicate
-## expansions, against 165 and 131 for A\* on the same boards. So the
-## improvement branch and the closed-set guard that A\* needs are not written
-## here, because code that cannot execute cannot be read as if it does.
+## **It does not revisit a cell, and that is a property of this board's costs
+## rather than of Dijkstra.** The textbook version keeps improving cells it has
+## already seen, because a long way round can arrive cheaper. Here it cannot:
+## a cost belongs to the cell *entered*, so every route into a cell pays the
+## same last step, and the first route to reach it came from a cell no dearer
+## than any that will be expanded later. Measured over 250 random boards -- 0
+## improvements and 0 duplicate expansions, against 165 and 131 for A\* on the
+## same boards, which takes cells off in order of `g + h` rather than `g`. So
+## the improvement branch and the closed-set guard that A\* needs are not
+## written here, because code that cannot execute cannot be read as if it does.
 ##
-## Put the frontier in a binary heap keyed at insertion and both come back
-## immediately: an entry's priority is then frozen at insert time and stale
-## copies appear. That is the trade this file is making, and it is the reason
-## the heap is not a free upgrade.
+## This header used to say the cause was the frontier's linear scan, and that
+## a binary heap would bring both back. It would not: a heap keyed at insertion,
+## on these costs, made 0 improvements over 300 boards. Charge the cost to the
+## *edge* -- to where you come from as well as where you go -- and the same heap
+## made 1533. Give `GridGraph` edge costs and this file needs the branch back.
 ##
 ## Complexity: O(V²), because picking the cheapest is a linear scan of the
 ## frontier. With a heap it is O(E log V), with the caveat above. The scan is
