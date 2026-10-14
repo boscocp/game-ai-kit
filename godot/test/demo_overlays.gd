@@ -23,6 +23,7 @@
 extends SceneTree
 
 const SCENES: Array[String] = [
+	"res://game/checkers/checkers.tscn",
 	"res://game/main.tscn",
 	"res://demos/search/search_demo.tscn",
 	"res://game/stealth/stealth.tscn",
@@ -31,6 +32,7 @@ const SCENES: Array[String] = [
 ## The field each example's task says its overlay must carry, and whether it
 ## must be a number. Found anywhere in the overlay, at any depth.
 const REQUIRED: Dictionary = {
+	"res://game/checkers/checkers.tscn": ["value", true],
 	"res://game/main.tscn": ["p_win", true],
 	"res://demos/search/search_demo.tscn": ["frontier", false],
 	"res://game/stealth/stealth.tscn": ["suspicion", true],

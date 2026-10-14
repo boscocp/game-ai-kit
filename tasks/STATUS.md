@@ -28,7 +28,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | # | Task | State | Notes |
 |---|---|---|---|
 | T8 | A board you can read | done | 48 px, centred, costs written, the highlight an overlay; manual check still a person's |
-| T27 | Checkers, and minimax | todo | `make run` becomes a game nobody needs explained; new `ai_adversarial`; the old board becomes `demo-skirmish` |
+| T27 | Checkers, and minimax | done | `make run` is checkers against `ai_adversarial`; depth 4 by default (~50 ms); depth 6 stalls the frame up to ~730 ms with kings; the old board is `demo-skirmish`; manual check still a person's |
 | T28 | Tic-tac-toe, and a machine that learns it | todo | MENACE, matchboxes and beads, trained in Python and shown on the squares |
 | T29 | A search board you can edit | todo | paint walls and mud, drag start and goal, the four searches rerun |
 | T30 | The tactical game, against the computer | todo | Advance Wars style turns, a rule-based blue, becomes `demo-tactical` |
@@ -78,6 +78,37 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-14 (wave 26)
+
+**What landed.** T27: `make run` is checkers, red against the computer.
+- `ai_adversarial` holds minimax and alpha-beta, after Russell & Norvig
+  chapter 5. A root move that alpha-beta cut short is marked a bound
+  ("≤ x"), and only when something below it was actually cut.
+- `godot/game/checkers/` holds the English draughts rules with their source,
+  the hand-written evaluation T32 will replace, and the scene.
+- White draws every move it considered with its value, a pink arrow on the
+  one it will play, and the line of play it expects. Space plays it; 1-6 set
+  the depth.
+- A multi-jump is played one hop per click, which is also how a person picks
+  between two jumps to the same square.
+- The old board is `make demo-skirmish`.
+
+**The review's worst findings.** A king's capture back to its own square
+locked the game, a bound read as "wins", and eleven of nineteen mutations
+survived the suite. All are fixed and re-run; see
+[docs/reviews/26-checkers-and-minimax.md](../docs/reviews/26-checkers-and-minimax.md).
+
+**Left open, on purpose.**
+- The search runs in the frame: depth 6 measured up to ~730 ms with kings.
+- Wins are not depth-adjusted, and with a big lead white can shuffle into
+  the 40-move draw. The status counts down to it, and the concept page
+  calls it the horizon.
+
+**Not proven.** T27's manual check, by somebody who knows checkers and has
+not read the code.
+
+**Next:** `make wave` cuts T28, tic-tac-toe with MENACE.
 
 ## Resuming after 2026-10-13 (tasks: games people already know)
 
