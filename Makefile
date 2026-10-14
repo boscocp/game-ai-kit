@@ -267,21 +267,30 @@ test-perception-properties: ## Sight is symmetric, walls block both ways, suspic
 	@# properties over three hundred generated maps, from a fixed seed.
 	@$(GODOT) --headless --path godot -s res://test/perception_properties.gd
 
+.PHONY: import
+import: ## Import the art, which a fresh checkout cannot load without
+	@# Measured on 4.7.2: a project with no .godot/ folder answers
+	@# load("res://assets/....png") with "No loader found", because a run imports
+	@# nothing -- only the editor does, and `--import` is the editor doing it
+	@# headless. Cheap when nothing changed. See docs/godot/importing-art.md.
+	@$(GODOT) --headless --path godot --import >/dev/null 2>&1 || \
+		{ echo "import: the engine refused to import the project" >&2; exit 2; }
+
 .PHONY: test-demo-overlays
-test-demo-overlays: ## Every example, stepped headless: its overlay holds the AI's reasoning
+test-demo-overlays: import ## Every example, stepped headless: its overlay holds the AI's reasoning
 	@# The engine half of invariant 13; `lint-demos` is the half without it.
 	@# Neither can see the screen, and the seeing is each example's manual check.
 	@$(GODOT) --headless --path godot -s res://test/demo_overlays.gd
 
 .PHONY: test-decisions
-test-decisions: ## The two fights the learned opponent has to get right, and a node
+test-decisions: import ## The two fights the learned opponent has to get right, and a node
 	@# T6's acceptance, as a target so that CI runs the same command. It plays
 	@# against the *published* weights rather than a hand-made model, so a
 	@# retrained opponent that stops taking a fight it should take fails here.
 	@$(GODOT) --headless --path godot -s res://test/decision_scenarios.gd
 
 .PHONY: test-godot
-test-godot: ## Godot tests, headless (gdUnit4)
+test-godot: import ## Godot tests, headless (gdUnit4)
 	@# --ignoreHeadlessMode is required: gdUnit4 refuses headless by default
 	@# because Godot does not deliver InputEvents there. Tests in this repo
 	@# must therefore never depend on simulated input -- they assert logic.
@@ -295,31 +304,31 @@ test-godot: ## Godot tests, headless (gdUnit4)
 # hangs CI. Everything automated here runs --headless.
 
 .PHONY: run
-run: ## Checkers against minimax: click a piece, click a green square; space plays white's move, 1-6 sets its depth
+run: import ## Checkers against minimax: click a piece, click a green square; space plays white's move, 1-6 sets its depth
 	@# T27: the first thing a person opens is a game nobody needs explained.
 	@# The project's main scene is the checkers board, so this names none.
 	@$(GODOT) --path godot
 
 .PHONY: demo-skirmish
-demo-skirmish: ## The learned policy plays blue: click a unit, click a neighbouring cell, space ends the turn
+demo-skirmish: import ## The learned policy plays blue: click a unit, click a neighbouring cell, space ends the turn
 	@# Until T27 this was `make run`. Where the policy finally plays is T30's
 	@# question: blue on the tactical board, one controller among several.
 	@$(GODOT) --path godot res://game/main.tscn
 
 .PHONY: demo-tictactoe
-demo-tictactoe: ## MENACE, the matchbox machine, moves first: space draws its bead, click a square, 1-4 its age, M perfect play
+demo-tictactoe: import ## MENACE, the matchbox machine, moves first: space draws its bead, click a square, 1-4 its age, M perfect play
 	@$(GODOT) --path godot res://game/tictactoe/tictactoe.tscn
 
 .PHONY: demo-search
-demo-search: ## The four searches on a board you can paint: drag to edit, 1-4 choose, space steps, B boards
+demo-search: import ## The four searches on a board you can paint: drag to edit, 1-4 choose, space steps, B boards
 	@$(GODOT) --path godot res://demos/search/search_demo.tscn
 
 .PHONY: demo-stealth
-demo-stealth: ## Cross the hall unseen: arrows walk, shift sprints, space waits, D shows danger
+demo-stealth: import ## Cross the hall unseen: arrows walk, shift sprints, space waits, D shows danger
 	@$(GODOT) --path godot res://game/stealth/stealth.tscn
 
 .PHONY: demo-tactical
-demo-tactical: ## Advance Wars style tactics against a rule-based blue: click to move, W waits, 1-5 build, Z undo, space ends the turn
+demo-tactical: import ## Advance Wars style tactics against a rule-based blue: click to move, W waits, 1-5 build, Z undo, space ends the turn
 	@$(GODOT) --path godot res://game/tactical/tactical.tscn
 
 # --- shipping --------------------------------------------------------------

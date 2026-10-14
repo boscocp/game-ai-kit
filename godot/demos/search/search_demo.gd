@@ -76,8 +76,8 @@ func _ready() -> void:
 		[ExpansionView.PATH, "line: the route found"],
 		[ExpansionView.START, "green dot: start"],
 		[ExpansionView.GOAL, "red dot: goal"],
-		[BoardView.SWATCHES[BoardView.ROUGH.x], "mud: costs the number on it"],
-		[BoardView.SWATCHES[BoardView.WALL.x], "wall"],
+		[BoardView.tile_texture(BoardView.ROUGH), "mud: costs the number on it"],
+		[BoardView.tile_texture(BoardView.WALL), "wall"],
 	] as Array[Array])
 	load_board(0)
 

@@ -10,21 +10,23 @@ extends RefCounted
 const CELL: float = TicTacToeExample.CELL
 const BIG: int = 34
 const SMALL: int = 15
+## How much of a square an X or an O covers.
+const MARK_SIZE: float = 0.66
 
 
-## The grid and the pieces on it.
+## The grid and the pieces on it. The marks are white pictures from `Art`,
+## tinted with each side's colour; the X and the O differ in shape first.
 static func draw_board(canvas: CanvasItem, board: String) -> void:
 	for line: int in range(1, 3):
 		canvas.draw_line(Vector2(line * CELL, 0.0), Vector2(line * CELL, 3.0 * CELL), TicTacToeExample.GRID_COLOUR, 4.0)
 		canvas.draw_line(Vector2(0.0, line * CELL), Vector2(3.0 * CELL, line * CELL), TicTacToeExample.GRID_COLOUR, 4.0)
 	for square: int in range(9):
-		var centre: Vector2 = centre_of(square)
+		var mark: Vector2 = Vector2.ONE * CELL * MARK_SIZE
+		var box := Rect2(centre_of(square) - mark / 2.0, mark)
 		if board[square] == TicTacToeBoard.CROSS:
-			var arm: float = CELL * 0.3
-			canvas.draw_line(centre - Vector2(arm, arm), centre + Vector2(arm, arm), TicTacToeExample.CROSS_COLOUR, 12.0)
-			canvas.draw_line(centre + Vector2(-arm, arm), centre + Vector2(arm, -arm), TicTacToeExample.CROSS_COLOUR, 12.0)
+			canvas.draw_texture_rect(Art.texture(Art.CROSS), box, false, TicTacToeExample.CROSS_COLOUR)
 		elif board[square] == TicTacToeBoard.NOUGHT:
-			canvas.draw_arc(centre, CELL * 0.3, 0.0, TAU, 48, TicTacToeExample.NOUGHT_COLOUR, 12.0)
+			canvas.draw_texture_rect(Art.texture(Art.NOUGHT), box, false, TicTacToeExample.NOUGHT_COLOUR)
 
 
 ## On each empty square: its beads as a number and as a bar, and the chance

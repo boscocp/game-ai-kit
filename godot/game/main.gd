@@ -60,15 +60,15 @@ var _blue_to_decide: Array[int] = []
 
 func _ready() -> void:
 	_legend.set_entries([
-		[UnitView.FACTION_COLOURS[RED], "red: yours (numbers are ids)"],
-		[UnitView.FACTION_COLOURS[BLUE], "blue: the learned opponent"],
-		[Color.TRANSPARENT, "white ring round a unit: the one in hand"],
+		[Art.texture(Art.unit_path(RED, Art.NO_TYPE)), "red: yours (numbers are ids)"],
+		[Art.texture(Art.unit_path(BLUE, Art.NO_TYPE)), "blue: the learned opponent"],
+		[Color.TRANSPARENT, "white frame round a unit: the one in hand"],
 		[PlanView.ROUTE, "blue's next move, not yet played"],
 		[BoardView.REACHABLE, "where the unit in hand can step"],
-		[BoardView.SWATCHES[BoardView.NODE.x], "a node both sides want"],
-		[BoardView.SWATCHES[BoardView.PLAIN.x], "open ground"],
-		[BoardView.SWATCHES[BoardView.ROUGH.x], "rough ground: costs the number on it"],
-		[BoardView.SWATCHES[BoardView.WALL.x], "wall"],
+		[BoardView.tile_texture(BoardView.NODE), "a node both sides want"],
+		[BoardView.tile_texture(BoardView.PLAIN), "open ground"],
+		[BoardView.tile_texture(BoardView.ROUGH), "rough ground: costs the number on it"],
+		[BoardView.tile_texture(BoardView.WALL), "wall"],
 	] as Array[Array])
 	_state = _build_scenario()
 	BoardLayout.lay_out(self, _state.graph, _status, _legend)

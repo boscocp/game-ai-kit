@@ -9,12 +9,34 @@
 extends GdUnitTestSuite
 
 
-func test_the_tile_set_has_one_tile_per_swatch() -> void:
+func test_the_tile_set_has_one_tile_per_picture() -> void:
 	var view: BoardView = _mounted_view()
 	assert_object(view.tile_set).is_not_null()
 
 	var source: TileSetAtlasSource = view.tile_set.get_source(BoardView.SOURCE_ID)
-	assert_int(source.get_tiles_count()).is_equal(BoardView.SWATCHES.size())
+	assert_int(source.get_tiles_count()).is_equal(Art.TERRAIN.size())
+
+
+# Each column of the atlas is its own picture. Stitching every tile from the
+# same file, or the same column, would build a tile set of the right size that
+# draws one kind of ground everywhere.
+func test_every_tile_in_the_atlas_is_a_different_picture() -> void:
+	var view: BoardView = _mounted_view()
+	var atlas: Image = view.tile_set.get_source(BoardView.SOURCE_ID).texture.get_image()
+	var seen: Dictionary = {}
+	for index: int in range(Art.TERRAIN.size()):
+		var region := Rect2i(index * BoardView.TILE_PIXELS, 0, BoardView.TILE_PIXELS, BoardView.TILE_PIXELS)
+		seen[atlas.get_region(region).get_data()] = index
+	assert_int(seen.size()).is_equal(Art.TERRAIN.size())
+
+
+# A picture with see-through parts is laid over open ground: a tree on the
+# board stands on grass, not on the window behind it.
+func test_a_tile_with_see_through_parts_is_laid_over_open_ground() -> void:
+	var trees: Image = BoardView.tile_image(BoardView.TREES)
+	var corner: Color = trees.get_pixel(0, 0)
+	assert_float(corner.a).is_equal(1.0)
+	assert_that(corner).is_equal(BoardView.tile_image(BoardView.PLAIN).get_pixel(0, 0))
 
 
 func test_the_cost_of_a_cell_chooses_its_tile() -> void:

@@ -16,6 +16,13 @@ in the artifacts. So:
     top folder;
   * every wheel under dist/ carries both in its `.dist-info/licenses/`, which
     is where PEP 639 puts a wheel's licence files and where pip installs them.
+  * every picture committed under godot/assets/ is listed, by path, in
+    godot/assets/LICENCES.md with its pack and its licence -- and every row
+    there names a file that is committed.
+
+The art rule reads `git ls-files`, not the disk. T31 lets a person generate
+their own pictures into the same folders, gitignored, and those are theirs:
+nothing to attribute and nothing for this gate to trip on.
 
 Why this gate exists
 --------------------
@@ -311,8 +318,59 @@ def wheel_licences(name: str,
     return found
 
 
+# The art and the table that attributes it. Files beside the pictures that
+# are not pictures: the table itself, and Godot's `.import` sidecars, which
+# hold import settings and are the engine's, not an artist's.
+ASSETS = "godot/assets"
+ASSET_LIST = "LICENCES.md"
+ASSET_ROW = re.compile(r"^\|\s*`([^`]+)`\s*\|(.*)\|\s*$")
+
+
+def check_assets(repo: pathlib.Path) -> list[str]:
+    """Report committed art the table does not attribute, and rows for no file."""
+    committed = tracked_assets(repo)
+    if not committed:
+        return []
+    table = repo / ASSETS / ASSET_LIST
+    if not table.exists():
+        return [f"L14 {ASSETS} has {len(committed)} committed file(s) and no {ASSET_LIST}"]
+    rows = asset_rows(table.read_text(encoding="utf-8"))
+    findings = []
+    for path in committed:
+        if path not in rows:
+            findings.append(f"L11 {ASSETS}/{path} is committed and not listed in {ASSET_LIST}")
+    for path, (pack, licence) in rows.items():
+        if not pack or not licence:
+            findings.append(f"L12 {ASSET_LIST} lists {path} without its pack and licence")
+        if path not in committed:
+            findings.append(f"L13 {ASSET_LIST} lists {path}, which is not committed")
+    return findings
+
+
+def tracked_assets(repo: pathlib.Path) -> list[str]:
+    """Committed pictures under godot/assets/, relative to it."""
+    if not (repo / ASSETS).is_dir():
+        return []
+    listed = subprocess.run(["git", "-C", str(repo), "ls-files", "-z", "--", ASSETS],
+                            capture_output=True, check=True).stdout.decode()
+    paths = [name[len(ASSETS) + 1:] for name in listed.split("\0") if name]
+    return [path for path in paths if path != ASSET_LIST and not path.endswith(".import")]
+
+
+def asset_rows(text: str) -> dict[str, tuple[str, str]]:
+    """Each table row's path, with its pack (second column) and licence (last)."""
+    rows = {}
+    for line in text.splitlines():
+        match = ASSET_ROW.match(line)
+        if match:
+            columns = [column.strip() for column in match[2].split("|")]
+            rows[match[1]] = (columns[0], columns[-1] if len(columns) > 1 else "")
+    return rows
+
+
 def run(repo: pathlib.Path) -> int:
-    findings = check_root(repo) + check_addons(repo) + check_release_archives(repo)
+    findings = (check_root(repo) + check_addons(repo) + check_release_archives(repo)
+                + check_assets(repo))
     for finding in findings:
         print(finding)
     return 1 if findings else 0
@@ -670,6 +728,8 @@ def self_test() -> int:
         (placeholder / "LICENSE").write_text("TODO: pick a licence\n")
         expect("placeholder LICENSE", quiet(placeholder), 1)
 
+        art_cases(root, make_repo, expect, expect_only, quiet)
+
         script = pathlib.Path(__file__).resolve()
         extra = subprocess.run(
             [sys.executable, str(script), "--unknown-flag"], capture_output=True
@@ -680,6 +740,61 @@ def self_test() -> int:
         print(f"self-test FAIL: {failure}")
     print(f"self-test: {'ok' if not failures else str(len(failures)) + ' failure(s)'}")
     return 1 if failures else 0
+
+
+def art_cases(root, make_repo, expect, expect_only, quiet) -> None:
+    """The art rule's planted cases, each against a git repository of its own."""
+    good_row = "| `units/runner.png` | Tiny Battle | `tile_0149.png` | CC0 1.0 |\n"
+
+    def art_repo(name: str, table: str | None, pictures: list[str],
+                 ignored: list[str] = ()) -> pathlib.Path:
+        repo = make_repo(root / name)
+        git = ["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@t"]
+        subprocess.run(git[:3] + ["init", "-q"], check=True)
+        assets = repo / ASSETS
+        for picture in list(pictures) + list(ignored):
+            (assets / picture).parent.mkdir(parents=True, exist_ok=True)
+            (assets / picture).write_bytes(b"\x89PNG")
+        if table is not None:
+            (assets / ASSET_LIST).write_text("| path | pack | file | licence |\n|---|---|---|---|\n" + table)
+        (repo / ".gitignore").write_text("".join(f"{ASSETS}/{path}\n" for path in ignored))
+        subprocess.run(git + ["add", "-A"], check=True)
+        subprocess.run(git + ["commit", "-q", "-m", "art"], check=True)
+        return repo
+
+    listed = art_repo("art-listed", good_row, ["units/runner.png", "units/runner.png.import"])
+    expect("every picture listed; the .import sidecar is not art", quiet(listed), 0)
+
+    # T31: a person's generated picture, gitignored, is theirs and unlisted.
+    generated = art_repo("art-generated", good_row, ["units/runner.png"], ignored=["units/ram.png"])
+    expect("a gitignored generated picture", quiet(generated), 0)
+
+    unlisted = art_repo("art-unlisted", good_row, ["units/runner.png", "units/ram.png"])
+    expect_only("a committed picture nobody attributed", unlisted, "L11")
+
+    no_licence = art_repo("art-no-licence", "| `units/runner.png` | Tiny Battle | `tile_0149.png` |  |\n",
+                          ["units/runner.png"])
+    expect_only("a row without its licence", no_licence, "L12")
+
+    no_pack = art_repo("art-no-pack", "| `units/runner.png` |  | `tile_0149.png` | CC0 1.0 |\n",
+                       ["units/runner.png"])
+    expect_only("a row without its pack", no_pack, "L12")
+
+    stale = art_repo("art-stale", good_row + "| `units/ram.png` | Tiny Battle | `tile_0152.png` | CC0 1.0 |\n",
+                     ["units/runner.png"])
+    expect_only("a row for a file that is not committed", stale, "L13")
+
+    no_table = art_repo("art-no-table", None, ["units/runner.png"])
+    expect_only("committed art and no table", no_table, "L14")
+
+    # Art where git cannot say what is committed: exit 2, never a quiet 0.
+    loose = make_repo(root / "art-not-a-checkout")
+    (loose / ASSETS).mkdir(parents=True)
+    (loose / ASSETS / "ram.png").write_bytes(b"\x89PNG")
+    script = pathlib.Path(__file__).resolve()
+    outside = subprocess.run([sys.executable, str(script), "--repo", str(loose)],
+                             capture_output=True, env={"GIT_CEILING_DIRECTORIES": str(root), "PATH": "/usr/bin:/bin"})
+    expect("art git cannot account for", outside.returncode, 2)
 
 
 def main(argv: list[str]) -> int:
@@ -701,7 +816,9 @@ def main(argv: list[str]) -> int:
     repo = pathlib.Path(args.repo or pathlib.Path(__file__).resolve().parent.parent)
     try:
         return run(repo)
-    except UNREADABLE as error:
+    except UNREADABLE + (subprocess.CalledProcessError,) as error:
+        # The art rule asks git what is committed. Art in a folder git cannot
+        # answer for is a question this gate cannot settle, not a clean pass.
         print(f"check_license: cannot read a file: {error}", file=sys.stderr)
         return 2
 

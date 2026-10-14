@@ -33,10 +33,10 @@ func _ready() -> void:
 		[StealthView.DANGER, "danger map (D)"],
 		[StealthView.EXIT, "the way out"],
 		[StealthView.PLAYER, "you"],
-		[BoardView.SWATCHES[BoardView.PLAIN.x], "floor, lit"],
+		[BoardView.tile_texture(BoardView.PLAIN), "floor, lit"],
 		[StealthView.DARKNESS, "shade: dark, harder to see you"],
-		[BoardView.SWATCHES[BoardView.ROUGH.x], "trees: slow, block sight"],
-		[BoardView.SWATCHES[BoardView.WALL.x], "wall"],
+		[BoardView.tile_texture(BoardView.TREES), "trees: slow, block sight"],
+		[BoardView.tile_texture(BoardView.WALL), "wall"],
 	] as Array[Array])
 	restart()
 
@@ -58,7 +58,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## A fresh room, every guard calm and at the start of its round.
 func restart() -> void:
 	world = StealthWorld.new(StealthRoom.default_room())
-	_board.draw_board(world.room.graph, [] as Array[Vector2i])
+	_board.draw_board(world.room.graph, [] as Array[Vector2i], [] as Array[Vector2i], _trees())
 	_refresh()
 
 
@@ -134,3 +134,15 @@ func _terms(suspicion: Suspicion) -> String:
 	for term: String in strengths:
 		parts.append("%s %.2f" % [term, strengths[term]])
 	return "rules: " + ("  ".join(parts) if not parts.is_empty() else "none yet")
+
+
+# The room's dear ground is trees, which the board would otherwise draw from
+# their cost alone as rough ground.
+func _trees() -> Dictionary:
+	var tiles: Dictionary = {}
+	var graph: GridGraph = world.room.graph
+	for index: int in range(graph.width * graph.height):
+		var cell := Vector2i(index % graph.width, index / graph.width)
+		if graph.cost_at(cell) == StealthRoom.TREE:
+			tiles[cell] = BoardView.TREES
+	return tiles
