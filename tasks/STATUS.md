@@ -28,7 +28,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | # | Task | State | Notes |
 |---|---|---|---|
 | T8 | A board you can read | done | 48 px, centred, costs written, the highlight an overlay; manual check still a person's |
-| T27 | Checkers, and minimax | todo | `make run` becomes a game nobody needs explained; new `ai_adversarial`; the old board becomes `demo-skirmish` |
+| T27 | Checkers, and minimax | done | `make run` is checkers against `ai_adversarial`; depth 4 by default, 363 ms worst at depth 6; the old board is `demo-skirmish`; manual check still a person's |
 | T28 | Tic-tac-toe, and a machine that learns it | todo | MENACE, matchboxes and beads, trained in Python and shown on the squares |
 | T29 | A search board you can edit | todo | paint walls and mud, drag start and goal, the four searches rerun |
 | T30 | The tactical game, against the computer | todo | Advance Wars style turns, a rule-based blue, becomes `demo-tactical` |

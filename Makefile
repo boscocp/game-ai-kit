@@ -282,8 +282,16 @@ test-godot: ## Godot tests, headless (gdUnit4)
 # hangs CI. Everything automated here runs --headless.
 
 .PHONY: run
-run: ## Play the board: click a unit, click a neighbouring cell, space ends the turn
+run: ## Checkers against minimax: click a piece, click a green square; space plays white's move, 1-6 sets its depth
+	@# T27: the first thing a person opens is a game nobody needs explained.
+	@# The project's main scene is the checkers board, so this names none.
 	@$(GODOT) --path godot
+
+.PHONY: demo-skirmish
+demo-skirmish: ## The learned policy plays blue: click a unit, click a neighbouring cell, space ends the turn
+	@# Until T27 this was `make run`. Where the policy finally plays is T30's
+	@# question: blue on the tactical board, one controller among several.
+	@$(GODOT) --path godot res://game/main.tscn
 
 .PHONY: demo-search
 demo-search: ## The four searches on one board: 1-4 choose, space steps, enter finishes

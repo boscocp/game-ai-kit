@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-13
+verified_on: 2026-10-14
 tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html ; https://docs.godotengine.org/en/stable/classes/class_scenetree.html
 invalidated_if: --headless starts rasterising, or a SceneTree script's added nodes become ready without a frame passing
@@ -17,6 +17,18 @@ rather than only the outcome. The kit had already been bitten twice without
 it:
 - the board could not be read at all (T8 exists because of this);
 - the search demo drew over the one thing it existed to show.
+
+## The examples, and what each one teaches
+
+| target | the game | the technique | what is drawn |
+|---|---|---|---|
+| `make run` | checkers, you against white | minimax with alpha-beta (`ai_adversarial`) | every move white considered with its value, the one it will play in gold, the positions searched and the moves cut |
+| `make demo-skirmish` | the 12×8 skirmish board | logistic and linear regression (`ai_learning`), A\* routes (`ai_search`) | each blue unit's decision and the probability it was made on |
+| `make demo-search` | one board, four searches | BFS, DFS, Dijkstra, A\* (`ai_search`) | the expansion order, the frontier, the route |
+| `make demo-stealth` | cross a hall unseen | sight and hearing (`ai_perception`), fuzzy suspicion (`ai_fuzzy`) | each guard's cone, suspicion and state |
+
+`make run` is the project's main scene, so it names no scene in its recipe.
+Until T27 it opened the skirmish board, which is now `demo-skirmish`.
 
 ## The five parts
 

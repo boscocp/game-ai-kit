@@ -13,11 +13,12 @@ readable one.
 
 ## What it covers
 
-| piece | what it decides | in `make run` today | read |
+| piece | what it decides | where you see it | read |
 |---|---|---|---|
-| `ai_search` | A\*, BFS, DFS, Dijkstra — how a unit gets there | routes blue's units | [why](docs/concepts/search.md) · [how](docs/godot/search.md) |
+| `ai_adversarial` | minimax and alpha-beta — the best move, *given that the opponent replies as well as it can* | plays white in `make run`, and draws every move it considered with its value | [why](docs/concepts/minimax.md) |
+| `ai_search` | A\*, BFS, DFS, Dijkstra — how a unit gets there | routes blue's units in `make demo-skirmish` | [why](docs/concepts/search.md) · [how](docs/godot/search.md) |
 | `ai_planning` | STRIPS — *to attack I need a unit; to have a unit I need resources* | **not yet** — T11 puts it on the board | [why](docs/concepts/planning.md) · [how](docs/godot/planning.md) |
-| `ai_learning` | logistic regression — attack or retreat; linear regression — which target is closer to falling | plays blue, and says why on screen | [why](docs/concepts/learning.md) · [how](docs/godot/learning.md) |
+| `ai_learning` | logistic regression — attack or retreat; linear regression — which target is closer to falling | plays blue in `make demo-skirmish`, and says why on screen | [why](docs/concepts/learning.md) · [how](docs/godot/learning.md) |
 | `ai_llm` | a local model as an advisor, with everything it says validated before it becomes an action | **not written**, and no task scheduled yet | -- |
 
 `ai_core` sits under all of them: the board, the units, and the two interfaces
@@ -56,7 +57,15 @@ becomes an action**.
 this repository can capture one. Recording them is a person's job; see the
 manual check in tasks/T7-close-the-slice.md. -->
 
-**The game** (`make run`). A 12×8 board, a wall down the middle with rough
+**Checkers** (`make run`). You are red and move first, against the computer
+as white. Click a piece and the squares it can reach turn green; when a
+capture is compulsory, the pieces that can take are ringed. On white's turn
+the board shows every move it considered, with its value -- white's lead
+after looking that many moves ahead -- and the gold one is what it will
+play. Space plays it. Keys 1–6 set how far it looks, and the panel says how
+many positions that cost and how many moves alpha-beta never had to look at.
+
+**The skirmish** (`make demo-skirmish`). Until T27 this was `make run`. A 12×8 board, a wall down the middle with rough
 ground on either side, and two nodes worth taking. Red is yours: click a unit,
 click a neighbouring cell, space ends the turn. Blue is played by the trained
 models, and under the status line each blue unit says what it decided and the
@@ -70,7 +79,7 @@ the rest. Breadth-first walks through the mud; Dijkstra goes round having
 spread out in rings; A\* goes round having expanded 90 cells to
 Dijkstra's 125.
 
-*Recordings of both are still to be made.*
+*Recordings of all three are still to be made.*
 
 ## Getting started
 
@@ -85,7 +94,8 @@ Tier 2, with the engine:
 
 ```bash
 make bootstrap     # downloads the pinned Godot to the large disk, SHA-512 verified
-make run           # play the board
+make run           # checkers against minimax and alpha-beta
+make demo-skirmish # the learned policy plays blue on the skirmish board
 make demo-search   # the four searches on one board, one at a time
 make check         # every gate
 ```

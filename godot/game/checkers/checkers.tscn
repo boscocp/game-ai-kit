@@ -1,0 +1,36 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://game/checkers/checkers.gd" id="1_checkers"]
+[ext_resource type="Script" path="res://game/checkers/checkers_view.gd" id="2_view"]
+[ext_resource type="Script" path="res://game/legend.gd" id="9_legend"]
+
+[node name="Checkers" type="Node2D"]
+script = ExtResource("1_checkers")
+
+[node name="CheckersView" type="Node2D" parent="."]
+position = Vector2(56, 40)
+script = ExtResource("2_view")
+
+[node name="Interface" type="CanvasLayer" parent="."]
+
+[node name="Status" type="Label" parent="Interface"]
+offset_left = 32.0
+offset_top = 660.0
+offset_right = 1256.0
+offset_bottom = 716.0
+text = "loading"
+
+[node name="Decision" type="Label" parent="Interface"]
+offset_left = 680.0
+offset_top = 230.0
+offset_right = 1270.0
+offset_bottom = 650.0
+theme_override_font_sizes/font_size = 15
+text = "loading"
+
+[node name="Legend" type="Control" parent="Interface"]
+offset_left = 680.0
+offset_top = 36.0
+offset_right = 1270.0
+offset_bottom = 220.0
+script = ExtResource("9_legend")
