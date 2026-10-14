@@ -6,10 +6,11 @@
 ## table names a file, and swapping the file is the whole change.
 ##
 ## Every file is CC0 and listed in `res://assets/LICENCES.md`, by path, with
-## its pack. `check_license.py` refuses one that is not.
+## its pack and its sha256. `check_license.py` refuses a committed picture
+## that is not listed, not CC0, or not the file its row names.
 ##
-## Pictures arrive at whatever size their author drew them -- the pack's are
-## 16 and 64 pixels -- and each view scales to its own cell. A generated file
+## Pictures arrive at whatever size their author drew them -- the pack's run
+## from 16 to 100 pixels -- and each view scales to its own cell. A generated file
 ## at 512 pixels works unchanged.
 ##
 ## When not to use it: a game with hundreds of sprites, which wants Godot's

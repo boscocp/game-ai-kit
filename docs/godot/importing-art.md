@@ -59,6 +59,21 @@ The same step also refreshes the global class list, which is the trap in
 `CLAUDE.md` about a new `class_name` being invisible until the project is
 imported.
 
+## A picture that fails to import poisons its sidecar
+
+Found by the wave 30 review, and measured again:
+- with garbage written over `terrain/trees.png`, `--import` **exits 0** and
+  prints three `ERROR` lines (`ERR_FILE_CORRUPT`);
+- it rewrites the committed `trees.png.import` to `valid=false`;
+- putting the right picture back does **not** recover. A plain `--import`,
+  even after touching the file, leaves the sidecar invalid and the picture
+  unloadable;
+- `git checkout -- trees.png.import` and importing again does.
+
+So `make import` treats any `ERROR` in the engine's output as a failure, and
+any sidecar under `godot/assets/` marked `valid=false` as another, and says how
+to recover. T31 will write pictures, which makes this its trap more than T9's.
+
 ## A texture loaded in `_draw` must outlive `_draw`
 
 Not in the documentation, and found by looking at a screenshot.

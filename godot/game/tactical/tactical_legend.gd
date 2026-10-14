@@ -24,16 +24,15 @@ static func entries(types: Dictionary) -> Array[Array]:
 		[BoardView.tile_texture(BoardView.WATER), "water: only waders cross"],
 		[BoardView.tile_texture(BoardView.BRIDGE), "bridge: the only dry crossing"],
 	]
-	for name: String in Art.UNIT_FILES:
-		if types.has(name):
-			lines.append([_picture(TacticalScenario.RED, name), _describe(types[name], types)])
+	for name: String in types:
+		lines.append([_picture(TacticalScenario.RED, name), describe(types[name], types)])
 	return lines
 
 
-# "runner: moves 6, beats mortar, ram" -- the name, and the two facts that
-# make the type a choice. A type that beats every building says so in three
-# words: the ram's three names ran the legend off a 1280-pixel screen.
-static func _describe(kind: UnitType, types: Dictionary) -> String:
+## "runner: moves 6, beats mortar, ram" -- the name, and the two facts that
+## make the type a choice. A type that beats every building says so in three
+## words: the ram's three names ran the legend off a 1280-pixel screen.
+static func describe(kind: UnitType, types: Dictionary) -> String:
 	var motion: String = "moves %d" % kind.movement if kind.mobile else "fixed"
 	var buildings: Array[String] = []
 	for name: String in types:

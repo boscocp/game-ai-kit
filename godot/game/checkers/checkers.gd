@@ -44,7 +44,7 @@ func _ready() -> void:
 	_legend.set_entries([
 		[Art.texture(Art.RED_MAN), "red: you, moving up the board, first"],
 		[Art.texture(Art.WHITE_MAN), "white: the computer, moving down"],
-		[Art.texture(Art.CROWN), "crown: a king, moves both ways"],
+		[Art.texture(Art.CROWN), "crown: a king, moves both ways", CheckersView.CROWN],
 		[CheckersView.SELECTED, "yellow ring: the piece in your hand"],
 		[CheckersView.MUST_CAPTURE, "orange ring: must capture; cross: taken"],
 		[CheckersView.TARGET, "green: where the piece in hand can go"],

@@ -21,7 +21,8 @@ const TEXT_SIZE: int = 14
 var _ground: Texture2D
 
 ## Each entry is `[Color, String]` or `[Texture2D, String]`: the swatch and
-## what it stands for.
+## what it stands for. A picture may carry a third element, the tint the board
+## draws it with, so the legend shows what the board shows.
 var entries: Array[Array] = []
 
 
@@ -37,7 +38,8 @@ func _draw() -> void:
 		var top: float = index * LINE
 		var square := Rect2(0.0, top + 2.0, SWATCH, SWATCH)
 		if entries[index][0] is Texture2D:
-			draw_texture_rect(entries[index][0], square, false)
+			var tint: Color = entries[index][2] if entries[index].size() > 2 else Color.WHITE
+			draw_texture_rect(entries[index][0], square, false, tint)
 		else:
 			_draw_swatch(square, entries[index][0])
 		var words: String = entries[index][1]

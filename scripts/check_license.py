@@ -46,8 +46,10 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import hashlib
 import io
 import lzma
+import os
 import pathlib
 import re
 import subprocess
@@ -323,49 +325,105 @@ def wheel_licences(name: str,
 # hold import settings and are the engine's, not an artist's.
 ASSETS = "godot/assets"
 ASSET_LIST = "LICENCES.md"
-ASSET_ROW = re.compile(r"^\|\s*`([^`]+)`\s*\|(.*)\|\s*$")
+# The table's header, cell for cell. Read by name rather than by position, so
+# a row that lost a cell cannot have its pack read as its licence.
+ASSET_COLUMNS = ("path", "pack", "file in the pack", "licence", "sha256")
+# The licences a committed picture may carry. Only CC0 today: anything else
+# needs a decision about attribution first, and a decision is not a typo.
+ALLOWED_LICENCES = ("CC0 1.0",)
+# Text the table must not be read from: a fenced block or an HTML comment can
+# show a row without granting one.
+NOT_TABLE = re.compile(r"```.*?```|<!--.*?-->", re.DOTALL)
 
 
 def check_assets(repo: pathlib.Path) -> list[str]:
-    """Report committed art the table does not attribute, and rows for no file."""
+    """Report committed art the table does not attribute, and rows for no file.
+
+    The sha256 is what makes a row mean *this* picture. Without it, a generated
+    file written over a CC0 path and committed would still be credited to the
+    pack -- the path is listed, so the path rule is satisfied.
+    """
     committed = tracked_assets(repo)
     if not committed:
         return []
     table = repo / ASSETS / ASSET_LIST
-    if not table.exists():
-        return [f"L14 {ASSETS} has {len(committed)} committed file(s) and no {ASSET_LIST}"]
-    rows = asset_rows(table.read_text(encoding="utf-8"))
-    findings = []
-    for path in committed:
+    rows, findings = asset_rows(table.read_text(encoding="utf-8")) if table.exists() else (None, [])
+    if rows is None:
+        return [f"L14 {ASSETS} has {len(committed)} committed file(s) and no {ASSET_LIST} table "
+                f"headed {' | '.join(ASSET_COLUMNS)}"]
+    pictures = [path for path in committed if not path.endswith(".import")]
+    for path in pictures:
         if path not in rows:
             findings.append(f"L11 {ASSETS}/{path} is committed and not listed in {ASSET_LIST}")
-    for path, (pack, licence) in rows.items():
-        if not pack or not licence:
-            findings.append(f"L12 {ASSET_LIST} lists {path} without its pack and licence")
-        if path not in committed:
-            findings.append(f"L13 {ASSET_LIST} lists {path}, which is not committed")
+        elif rows[path] is not None and rows[path]["sha256"] != committed_sha256(repo, path):
+            findings.append(f"L17 {ASSETS}/{path} is not the file its row attributes: its sha256 differs")
+    for path in sorted(set(rows) - set(pictures)):
+        findings.append(f"L13 {ASSET_LIST} lists {path}, which is not committed")
+    for path in committed:
+        if path.endswith(".import") and path.removesuffix(".import") not in pictures:
+            findings.append(f"L16 {ASSETS}/{path} is an import sidecar with no picture beside it")
     return findings
 
 
 def tracked_assets(repo: pathlib.Path) -> list[str]:
-    """Committed pictures under godot/assets/, relative to it."""
+    """Files under godot/assets/ in git's index, relative to it, bar the table."""
     if not (repo / ASSETS).is_dir():
         return []
     listed = subprocess.run(["git", "-C", str(repo), "ls-files", "-z", "--", ASSETS],
                             capture_output=True, check=True).stdout.decode()
     paths = [name[len(ASSETS) + 1:] for name in listed.split("\0") if name]
-    return [path for path in paths if path != ASSET_LIST and not path.endswith(".import")]
+    return [path for path in paths if path != ASSET_LIST]
 
 
-def asset_rows(text: str) -> dict[str, tuple[str, str]]:
-    """Each table row's path, with its pack (second column) and licence (last)."""
-    rows = {}
-    for line in text.splitlines():
-        match = ASSET_ROW.match(line)
-        if match:
-            columns = [column.strip() for column in match[2].split("|")]
-            rows[match[1]] = (columns[0], columns[-1] if len(columns) > 1 else "")
-    return rows
+def committed_sha256(repo: pathlib.Path, path: str) -> str:
+    """The sha256 of a file as git's index holds it, which is what a commit takes."""
+    blob = subprocess.run(["git", "-C", str(repo), "show", f":{ASSETS}/{path}"],
+                          capture_output=True, check=True).stdout
+    return hashlib.sha256(blob).hexdigest()
+
+
+def asset_rows(text: str) -> tuple[dict[str, dict[str, str] | None] | None, list[str]]:
+    """The table's rows by path, and what is wrong with any of them.
+
+    A malformed row maps its path to None: it is reported once, as malformed,
+    rather than a second time as a picture nobody listed. The whole answer is
+    None when there is no table with the expected header, and nothing in the
+    file then counts as attribution.
+    """
+    lines = [line.strip() for line in NOT_TABLE.sub("", text).splitlines()]
+    header = "| " + " | ".join(ASSET_COLUMNS) + " |"
+    if header not in lines:
+        return None, []
+    rows: dict[str, dict[str, str] | None] = {}
+    findings = []
+    for line in lines[lines.index(header) + 2:]:
+        if not line.startswith("|"):
+            break
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        problem = row_problem(cells)
+        path = cells[0].strip("`")
+        if path in rows:
+            findings.append(f"L15 {ASSET_LIST} lists {path} twice")
+        elif problem:
+            findings.append(f"L12 {ASSET_LIST} row for {path or '(no path)'}: {problem}")
+            rows[path] = None
+        else:
+            rows[path] = dict(zip(ASSET_COLUMNS, [path] + cells[1:]))
+    return rows, findings
+
+
+def row_problem(cells: list[str]) -> str:
+    """Why a row attributes nothing, or an empty string when it is whole."""
+    if len(cells) != len(ASSET_COLUMNS):
+        return f"{len(cells)} cells where the header has {len(ASSET_COLUMNS)}"
+    row = dict(zip(ASSET_COLUMNS, cells))
+    if not row["path"].startswith("`") or not row["pack"]:
+        return "no path in backticks, or no pack"
+    if row["licence"] not in ALLOWED_LICENCES:
+        return f"licence {row['licence']!r} is not one of {', '.join(ALLOWED_LICENCES)}"
+    if not re.fullmatch(r"[0-9a-f]{64}", row["sha256"]):
+        return "no sha256"
+    return ""
 
 
 def run(repo: pathlib.Path) -> int:
@@ -742,58 +800,115 @@ def self_test() -> int:
     return 1 if failures else 0
 
 
-def art_cases(root, make_repo, expect, expect_only, quiet) -> None:
-    """The art rule's planted cases, each against a git repository of its own."""
-    good_row = "| `units/runner.png` | Tiny Battle | `tile_0149.png` | CC0 1.0 |\n"
+# --- the art rule's planted cases --------------------------------------------
 
-    def art_repo(name: str, table: str | None, pictures: list[str],
-                 ignored: list[str] = ()) -> pathlib.Path:
-        repo = make_repo(root / name)
-        git = ["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@t"]
-        subprocess.run(git[:3] + ["init", "-q"], check=True)
-        assets = repo / ASSETS
-        for picture in list(pictures) + list(ignored):
-            (assets / picture).parent.mkdir(parents=True, exist_ok=True)
-            (assets / picture).write_bytes(b"\x89PNG")
-        if table is not None:
-            (assets / ASSET_LIST).write_text("| path | pack | file | licence |\n|---|---|---|---|\n" + table)
-        (repo / ".gitignore").write_text("".join(f"{ASSETS}/{path}\n" for path in ignored))
-        subprocess.run(git + ["add", "-A"], check=True)
-        subprocess.run(git + ["commit", "-q", "-m", "art"], check=True)
-        return repo
+PICTURE = b"\x89PNG one"
+OTHER_PICTURE = b"\x89PNG another"
 
-    listed = art_repo("art-listed", good_row, ["units/runner.png", "units/runner.png.import"])
-    expect("every picture listed; the .import sidecar is not art", quiet(listed), 0)
 
+def art_row(path: str, licence: str = "CC0 1.0", picture: bytes = PICTURE, pack: str = "Tiny Battle") -> str:
+    """One table row attributing `picture` at `path`."""
+    digest = hashlib.sha256(picture).hexdigest()
+    return f"| `{path}` | {pack} | `tile_0149.png` | {licence} | {digest} |\n"
+
+
+def art_repo(repo: pathlib.Path, table: str | None, pictures: dict[str, bytes],
+             ignored: tuple[str, ...] = ()) -> pathlib.Path:
+    """A git repository with these pictures in its index and this table.
+
+    Staged, not committed: the rule reads the index, and a commit would only
+    add a way for the case to fail on a machine that signs commits.
+    """
+    git = ["git", "-C", str(repo)]
+    subprocess.run(git + ["init", "-q"], check=True)
+    assets = repo / ASSETS
+    for path, data in list(pictures.items()) + [(path, PICTURE) for path in ignored]:
+        (assets / path).parent.mkdir(parents=True, exist_ok=True)
+        (assets / path).write_bytes(data)
+    if table is not None:
+        header = "| " + " | ".join(ASSET_COLUMNS) + " |\n|" + "---|" * len(ASSET_COLUMNS) + "\n"
+        (assets / ASSET_LIST).write_text(header + table)
+    (repo / ".gitignore").write_text("".join(f"{ASSETS}/{path}\n" for path in ignored))
+    subprocess.run(git + ["add", "-A"], check=True)
+    return repo
+
+
+def art_cases(root: pathlib.Path, make_repo, expect, expect_only, quiet) -> None:
+    """Every art rule, each against a repository of its own."""
+    runner = {"units/runner.png": PICTURE}
+
+    def case(name: str, table: str | None, pictures: dict[str, bytes], **extra) -> pathlib.Path:
+        return art_repo(make_repo(root / name), table, pictures, **extra)
+
+    listed = case("art-listed", art_row("units/runner.png"), runner | {"units/runner.png.import": b"[remap]"})
+    expect("every picture listed; its .import sidecar is not art", quiet(listed), 0)
     # T31: a person's generated picture, gitignored, is theirs and unlisted.
-    generated = art_repo("art-generated", good_row, ["units/runner.png"], ignored=["units/ram.png"])
+    generated = case("art-generated", art_row("units/runner.png"), runner, ignored=("generated/ram.png",))
     expect("a gitignored generated picture", quiet(generated), 0)
 
-    unlisted = art_repo("art-unlisted", good_row, ["units/runner.png", "units/ram.png"])
-    expect_only("a committed picture nobody attributed", unlisted, "L11")
+    planted = {
+        "L11": case("art-unlisted", art_row("units/runner.png"), runner | {"units/ram.png": OTHER_PICTURE}),
+        "L13": case("art-stale", art_row("units/runner.png") + art_row("units/ram.png"), runner),
+        "L14": case("art-no-table", None, runner),
+        "L15": case("art-twice", art_row("units/runner.png") * 2, runner),
+        "L16": case("art-orphan-import", art_row("units/runner.png"), runner | {"units/ram.png.import": b"[remap]"}),
+        # A generated picture written over a CC0 path: listed, and not that file.
+        "L17": case("art-overwritten", art_row("units/runner.png"), {"units/runner.png": OTHER_PICTURE}),
+    }
+    for code, repo in planted.items():
+        expect_only(f"planted {code}", repo, code)
+    art_table_cases(root, make_repo, case, expect, expect_only)
+    art_row_cases(root, case, expect_only)
+    art_outside_git(root, make_repo, expect)
 
-    no_licence = art_repo("art-no-licence", "| `units/runner.png` | Tiny Battle | `tile_0149.png` |  |\n",
-                          ["units/runner.png"])
-    expect_only("a row without its licence", no_licence, "L12")
 
-    no_pack = art_repo("art-no-pack", "| `units/runner.png` |  | `tile_0149.png` | CC0 1.0 |\n",
-                       ["units/runner.png"])
-    expect_only("a row without its pack", no_pack, "L12")
+def art_table_cases(root: pathlib.Path, make_repo, case, expect, expect_only) -> None:
+    """What counts as the table, and which copy of a picture is the one judged."""
+    runner = {"units/runner.png": PICTURE}
+    header = "| " + " | ".join(ASSET_COLUMNS) + " |\n|" + "---|" * len(ASSET_COLUMNS) + "\n"
+    for name, text in {"rows with no header": art_row("units/runner.png"),
+                       "a table only inside a fence": "```\n" + header + art_row("units/runner.png") + "```\n",
+                       "a table only inside a comment": "<!--\n" + header + art_row("units/runner.png") + "-->\n"}.items():
+        repo = case("art-" + name.replace(" ", "-"), None, runner)
+        (repo / ASSETS / ASSET_LIST).write_text(text)
+        expect_only(name, repo, "L14")
+    # The index is what a commit takes. A picture changed on disk and not
+    # staged is not yet anybody's attribution problem.
+    unstaged = case("art-unstaged-edit", art_row("units/runner.png"), runner)
+    (unstaged / ASSETS / "units/runner.png").write_bytes(OTHER_PICTURE)
+    expect("a picture edited on disk, not staged", quiet_run(unstaged), 0)
 
-    stale = art_repo("art-stale", good_row + "| `units/ram.png` | Tiny Battle | `tile_0152.png` | CC0 1.0 |\n",
-                     ["units/runner.png"])
-    expect_only("a row for a file that is not committed", stale, "L13")
 
-    no_table = art_repo("art-no-table", None, ["units/runner.png"])
-    expect_only("committed art and no table", no_table, "L14")
+def quiet_run(repo: pathlib.Path) -> int:
+    """`run`, with its findings swallowed."""
+    with contextlib.redirect_stdout(io.StringIO()):
+        return run(repo)
 
-    # Art where git cannot say what is committed: exit 2, never a quiet 0.
+
+def art_row_cases(root: pathlib.Path, case, expect_only) -> None:
+    """L12: each way a row can look like attribution without being one."""
+    runner = {"units/runner.png": PICTURE}
+    whole = art_row("units/runner.png")
+    malformed = {
+        "no licence": whole.replace("CC0 1.0", ""),
+        "a licence that is not allowed": art_row("units/runner.png", licence="All rights reserved"),
+        "no pack": art_row("units/runner.png", pack=""),
+        "a cell missing": whole.replace("| `tile_0149.png` ", ""),
+        "an extra cell": whole.rstrip("\n") + " a note |\n",
+        "no sha256": whole.replace(hashlib.sha256(PICTURE).hexdigest(), ""),
+    }
+    for label, row in malformed.items():
+        expect_only(f"a row with {label}", case("art-row-" + label.replace(" ", "-"), row, runner), "L12")
+
+
+def art_outside_git(root: pathlib.Path, make_repo, expect) -> None:
+    """Art where git cannot say what is committed: exit 2, never a quiet 0."""
     loose = make_repo(root / "art-not-a-checkout")
     (loose / ASSETS).mkdir(parents=True)
-    (loose / ASSETS / "ram.png").write_bytes(b"\x89PNG")
+    (loose / ASSETS / "ram.png").write_bytes(PICTURE)
     script = pathlib.Path(__file__).resolve()
-    outside = subprocess.run([sys.executable, str(script), "--repo", str(loose)],
-                             capture_output=True, env={"GIT_CEILING_DIRECTORIES": str(root), "PATH": "/usr/bin:/bin"})
+    outside = subprocess.run([sys.executable, str(script), "--repo", str(loose)], capture_output=True,
+                             env={**os.environ, "GIT_CEILING_DIRECTORIES": str(root)})
     expect("art git cannot account for", outside.returncode, 2)
 
 

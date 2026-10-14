@@ -48,18 +48,31 @@ func show_state(state: BoardState, board: BoardView, selected_id: int) -> void:
 	queue_redraw()
 
 
+## Every picture this view draws, as data: unit id to texture, for the units
+## alive. `_draw` draws exactly this, so a test can hold which picture each
+## unit gets without a screen -- headless, no screen exists.
+func pictures() -> Dictionary:
+	var drawn: Dictionary = {}
+	if _state == null:
+		return drawn
+	for unit: Unit in _state.units:
+		if unit.is_alive():
+			drawn[unit.id] = picture_for(unit)
+	return drawn
+
+
 func _draw() -> void:
 	if _state == null or _board == null:
 		return
+	var drawn: Dictionary = pictures()
 	for unit: Unit in _state.units:
-		if not unit.is_alive():
-			continue
-		_draw_unit(unit, _board.centre_of(unit.cell))
+		if drawn.has(unit.id):
+			_draw_unit(unit, drawn[unit.id], _board.centre_of(unit.cell))
 
 
-func _draw_unit(unit: Unit, centre: Vector2) -> void:
+func _draw_unit(unit: Unit, picture: Texture2D, centre: Vector2) -> void:
 	var square := Rect2(centre - Vector2(RADIUS, RADIUS), Vector2(RADIUS, RADIUS) * 2.0)
-	draw_texture_rect(picture_for(unit), square, false, colour_for(unit))
+	draw_texture_rect(picture, square, false, colour_for(unit))
 	_draw_corner_id(centre, unit.id)
 	if unit.id == _selected_id:
 		draw_rect(square.grow(OUTLINE), Color.WHITE, false, OUTLINE)

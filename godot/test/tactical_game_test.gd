@@ -451,6 +451,56 @@ func test_once_the_game_is_over_nothing_moves_until_r() -> void:
 	assert_int(scene.state.current_faction).is_equal(RED)
 
 
+# --- the pictures (T9) ------------------------------------------------------
+
+# Which picture each piece gets is the point of T9: the board draws exactly
+# `pictures()`, and each unit's must be its side's picture of its kind.
+func test_every_piece_is_drawn_as_its_side_s_picture_of_its_kind() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var drawn: Dictionary = (scene.get_node("UnitView") as UnitView).pictures()
+	var alive: int = 0
+	for unit: Unit in scene.state.units:
+		if unit.is_alive():
+			alive += 1
+			assert_object(drawn[unit.id]).is_same(Art.texture(Art.unit_path(unit.faction, unit.type.type_name)))
+	assert_int(drawn.size()).is_equal(alive)
+
+
+func test_two_kinds_on_one_side_are_two_pictures() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var drawn: Dictionary = (scene.get_node("UnitView") as UnitView).pictures()
+	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
+	var shield: Unit = _first_of(scene.state, RED, TacticalRules.SHIELD)
+	assert_object(drawn[runner.id]).is_not_same(drawn[shield.id])
+
+
+func test_the_board_draws_trees_water_and_the_bridge_as_themselves() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var board: BoardView = scene.get_node("BoardView")
+	var kinds: Dictionary = {
+		TacticalRules.TREES: BoardView.TREES, TacticalRules.WATER: BoardView.WATER,
+		TacticalRules.BRIDGE: BoardView.BRIDGE, TacticalRules.ROCK: BoardView.WALL,
+	}
+	for letter: String in kinds:
+		for cell: Vector2i in TacticalRules.cells_of(TacticalScenario.MAP, letter):
+			assert_vector(board.get_cell_atlas_coords(cell)).is_equal(kinds[letter])
+
+
+func test_the_legend_has_one_line_per_kind_of_piece_with_its_picture() -> void:
+	var types: Dictionary = TacticalRules.unit_types()
+	var lines: Array[Array] = TacticalLegend.entries(types)
+	for name: String in types:
+		var line: Array = [Art.texture(Art.unit_path(RED, name)), TacticalLegend.describe(types[name], types)]
+		assert_bool(lines.has(line)).override_failure_message(name + " has no legend line").is_true()
+
+
+func test_only_the_ram_is_said_to_beat_every_building() -> void:
+	var types: Dictionary = TacticalRules.unit_types()
+	assert_str(TacticalLegend.describe(types[TacticalRules.RAM], types)).is_equal("ram: moves 2, beats every building")
+	assert_str(TacticalLegend.describe(types[TacticalRules.RUNNER], types)).is_equal("runner: moves 6, beats mortar, ram")
+	assert_str(TacticalLegend.describe(types[TacticalRules.WATCHTOWER], types)).is_equal("watchtower: fixed")
+
+
 # --- helpers ---------------------------------------------------------------
 
 # A controller that never does anything: enough to show the scene asks

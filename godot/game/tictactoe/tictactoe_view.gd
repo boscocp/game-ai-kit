@@ -20,13 +20,21 @@ static func draw_board(canvas: CanvasItem, board: String) -> void:
 	for line: int in range(1, 3):
 		canvas.draw_line(Vector2(line * CELL, 0.0), Vector2(line * CELL, 3.0 * CELL), TicTacToeExample.GRID_COLOUR, 4.0)
 		canvas.draw_line(Vector2(0.0, line * CELL), Vector2(3.0 * CELL, line * CELL), TicTacToeExample.GRID_COLOUR, 4.0)
+	var mark: Vector2 = Vector2.ONE * CELL * MARK_SIZE
 	for square: int in range(9):
-		var mark: Vector2 = Vector2.ONE * CELL * MARK_SIZE
-		var box := Rect2(centre_of(square) - mark / 2.0, mark)
-		if board[square] == TicTacToeBoard.CROSS:
-			canvas.draw_texture_rect(Art.texture(Art.CROSS), box, false, TicTacToeExample.CROSS_COLOUR)
-		elif board[square] == TicTacToeBoard.NOUGHT:
-			canvas.draw_texture_rect(Art.texture(Art.NOUGHT), box, false, TicTacToeExample.NOUGHT_COLOUR)
+		var picture: String = picture_of(board[square])
+		if not picture.is_empty():
+			var colour: Color = TicTacToeExample.CROSS_COLOUR if board[square] == TicTacToeBoard.CROSS else TicTacToeExample.NOUGHT_COLOUR
+			canvas.draw_texture_rect(Art.texture(picture), Rect2(centre_of(square) - mark / 2.0, mark), false, colour)
+
+
+## The picture a square's mark is drawn with, or nothing for an empty square.
+static func picture_of(mark: String) -> String:
+	if mark == TicTacToeBoard.CROSS:
+		return Art.CROSS
+	if mark == TicTacToeBoard.NOUGHT:
+		return Art.NOUGHT
+	return ""
 
 
 ## On each empty square: its beads as a number and as a bar, and the chance

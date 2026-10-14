@@ -123,10 +123,21 @@ func _draw_pieces() -> void:
 
 func _draw_piece(square: Vector2i, player: int, radius: float) -> void:
 	var centre: Vector2 = centre_of(square)
-	var man: String = Art.RED_MAN if player == CheckersBoard.RED else Art.WHITE_MAN
-	draw_texture_rect(Art.texture(man), _box(centre, radius), false)
-	if CheckersBoard.is_king(_board.piece_at(square)):
-		draw_texture_rect(Art.texture(Art.CROWN), _box(centre, radius * 0.6), false, CROWN)
+	var layers: Array[String] = pictures_of(_board.piece_at(square))
+	draw_texture_rect(Art.texture(layers[0]), _box(centre, radius), false)
+	if layers.size() > 1:
+		draw_texture_rect(Art.texture(layers[1]), _box(centre, radius * 0.6), false, CROWN)
+
+
+## The pictures a piece is drawn with, bottom first: its side's man, and a
+## crown on top when it is a king. The draw uses exactly this, so a test holds
+## that a king wears a crown and a white man is white.
+static func pictures_of(piece: int) -> Array[String]:
+	var man: String = Art.RED_MAN if CheckersBoard.owner_of(piece) == CheckersBoard.RED else Art.WHITE_MAN
+	var layers: Array[String] = [man]
+	if CheckersBoard.is_king(piece):
+		layers.append(Art.CROWN)
+	return layers
 
 
 # The square a picture of this radius fills, round a centre.

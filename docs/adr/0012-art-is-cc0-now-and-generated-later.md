@@ -44,14 +44,22 @@ What keeps the readability the old rule protected:
   that knows a path. The board's atlas is still built in code -- stitched from
   the files rather than filled with colours -- so a reader still sees what a
   tile is without opening the editor.
-- **Only what is drawn is committed.** Thirty files, 88 KB.
+- **Only what is drawn is committed.** Thirty pictures, 24 KB between them.
+- **Each row in the table carries the file's sha256**, and the gate compares
+  it with what git's index holds. A row attributes one file, not whatever is
+  later written at its path.
 
 **Generated art is deferred, not rejected.** T31 is the pipeline: a local
 model, downloaded separately and fenced off from every lesson, writing a
-person's own pictures to the same paths, gitignored. That is why the paths are
-a contract (one file per role, stable names), why `check_license.py` lists
-files and not folders, and why it reads `git ls-files`: a generated file is
-not committed, so it has nothing to attribute and the gate never sees it.
+person's own pictures to **a folder of their own that git ignores**, which
+`Art` will prefer when a file is there. Not to the same paths: git cannot
+ignore a path it already tracks, so a generated picture written over a CC0
+file is a modification that can be committed -- and the first version of this
+gate, which only checked that the path was listed, then credited it to the
+pack. The review showed that, and it is why each row now carries a sha256. The
+paths are still a contract (one role per file, stable names), the gate still
+lists files and not folders, and it reads git's index: a gitignored generated
+file has nothing to attribute and the gate never sees it.
 This task buys the visuals with hours; the generator would have cost weeks of
 fighting a diffusion model, and those are weeks not spent on the AI the
 repository exists to teach.
@@ -79,6 +87,13 @@ picture was made, and every example runs on the committed CC0 set.
 - **The `.import` sidecars are committed** for `godot/assets/` only, as
   Godot's documentation says to: they hold the import settings and the uid.
   The rest of the tree still ignores them.
+- **The checkers board is still two flat colours.** A checkerboard is two
+  colours by definition, and no pack had one worth a file. The pieces are
+  pictures.
+- **The two sides differ by colour.** Red and blue pieces of one kind share a
+  silhouette, as they do in the pack. Kinds differ in shape; sides, red against
+  blue, differ in hue and in brightness, and the manual check says whether that
+  is enough.
 - **The tile palette's brightness argument is gone with the palette.** T8
   chose colours that differ in brightness as well as hue. The pictures differ
   in shape -- trees, a rock, water, a road, a flag -- and the manual check is

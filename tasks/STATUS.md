@@ -32,7 +32,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T28 | Tic-tac-toe, and a machine that learns it | done | MENACE in Python, 304 boxes, four ages; `make demo-tictactoe`; N5/N6 in `check_no_training.py`; strength criterion changed to vs-perfect by the owner: Michie's rewards lock in a move that wins three in four, and the published machine still loses 10 in 1,000 to a random player |
 | T29 | A search board you can edit | done | paint, erase, drag the dots, price mud; four named boards each with a checked promise; manual check still a person's |
 | T30 | The tactical game, against the computer | done | `make demo-tactical`: spent units, undo, a confirmed end of turn; blue is a `BlueController`, rules today; blue walks at the workshop, not the nearest enemy (changed, pending the owner); 40-round draw; manual check still a person's |
-| T9 | Art that is not a coloured square | todo | Kenney CC0 for checkers, tic-tac-toe and the tactical game; laid out so T31 can swap any file |
+| T9 | Art that is not a coloured square | done | 30 CC0 pictures from four Kenney packs, each listed with its sha256; `art.gd` the one path table; `make import` before any scene; manual check still a person's |
 | T31 | Generate your own art, locally | todo | a local image model, downloaded separately; each user generates their own (gitignored), the repo keeps a few examples; default FLUX.2 klein 4B (owner's pick), measured first; tier 3 and optional |
 | T32 | Checkers with a learned evaluation | todo | after Samuel (1959 paper): the same search, weights fitted in Python, and a match |
 | T10 | The tactical scenario | done | five types, two towers, a workshop, funds, a forge, a river with one bridge; manual check: terrain yes, type feel waits on T26 |
@@ -78,6 +78,47 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-14 (wave 30)
+
+**What landed.** T9: the games draw pictures, not coloured squares.
+- Thirty CC0 pictures from four Kenney packs:
+  - the tactical game: five silhouettes for the kinds that walk, three
+    buildings, a red and a blue copy of each;
+  - checkers: chips, and a crown on a king;
+  - noughts and crosses: an X and an O.
+- Each file is the pack's own, byte for byte. `godot/assets/LICENCES.md`
+  lists it by path, with its pack, CC0 1.0 and its sha256.
+- `godot/game/art.gd` is the only code that names a path. Trees are a tile
+  of their own now, and the legends show the pictures.
+- ADR 0012 records the reversal of "no binary art", and the tier argument.
+
+**Measured on the way**, in
+[docs/godot/importing-art.md](../docs/godot/importing-art.md):
+- a run imports nothing, so `make import` precedes every target that starts
+  the engine, CI included;
+- a texture loaded in `_draw` and let go draws as a white square, so `Art`
+  keeps what it loads;
+- a picture that fails to import poisons its committed `.import`, so
+  `make import` fails on it and says how to recover.
+
+**The review's worst findings.**
+- T31's plan, "same paths, gitignored", could not work, and the gate would
+  have credited generated art to Kenney. Rows now carry sha256s, and T31
+  writes to a gitignored folder of its own.
+- Nothing tested which picture a unit was drawn with.
+- The licence rule took any licence and a row with a cell missing.
+
+All are fixed. 29 of the 42 engine mutations had survived; every one that
+is not visual is now caught. See
+[docs/reviews/30-art-that-is-not-a-coloured-square.md](../docs/reviews/30-art-that-is-not-a-coloured-square.md).
+
+**Not proven.** T9's manual check: someone who does not know which is
+which looks at screenshots. The tactical sides differ by colour only, as in
+the pack, and the checkers board is still two flat colours.
+
+**Next:** `make wave` cuts T31. The owner added a test to its bake-off: a
+12-frame walk cycle of one unit.
 
 ## Resuming after 2026-10-14 (wave 29)
 
