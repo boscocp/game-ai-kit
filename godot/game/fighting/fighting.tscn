@@ -1,0 +1,37 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://game/fighting/fighting.gd" id="1_fighting"]
+[ext_resource type="Script" path="res://game/fighting/fight_view.gd" id="2_view"]
+[ext_resource type="Script" path="res://game/legend.gd" id="9_legend"]
+
+[node name="Fighting" type="Node2D"]
+script = ExtResource("1_fighting")
+
+[node name="FightView" type="Node2D" parent="."]
+position = Vector2(20, 60)
+script = ExtResource("2_view")
+
+[node name="Interface" type="CanvasLayer" parent="."]
+
+[node name="Status" type="Label" parent="Interface"]
+offset_left = 32.0
+offset_top = 630.0
+offset_right = 1256.0
+offset_bottom = 716.0
+theme_override_font_sizes/font_size = 15
+text = "loading"
+
+[node name="Decision" type="Label" parent="Interface"]
+offset_left = 690.0
+offset_top = 226.0
+offset_right = 1270.0
+offset_bottom = 620.0
+theme_override_font_sizes/font_size = 15
+text = "loading"
+
+[node name="Legend" type="Control" parent="Interface"]
+offset_left = 690.0
+offset_top = 30.0
+offset_right = 1270.0
+offset_bottom = 214.0
+script = ExtResource("9_legend")

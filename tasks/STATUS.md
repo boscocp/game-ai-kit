@@ -42,7 +42,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T13 | `ai_fuzzy`, from a library that already exists | done | rewritten, not ported: the library was C# and its core was missing (ADR 0011); 3 vectors read from both languages |
 | T14 | The stealth scenario | done | `ai_perception`, fuzzy suspicion, three guard states; 4 properties over 300 maps |
 | T15 | `ai_behaviour`: the four ways to decide | todo | FSM, tree, GOAP, HTN, beside STRIPS |
-| T16 | The fighting scenario | todo | mostly not AI, and says so |
+| T16 | The fighting scenario | wip | mostly not AI, and says so |
 | T17 | The opponent model | todo | n-grams you can print |
 | T18 | Behaviour cloning, and what a learned model buys | todo | the comparison is the task |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
