@@ -28,8 +28,8 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | # | Task | State | Notes |
 |---|---|---|---|
 | T8 | A board you can read | done | 48 px, centred, costs written, the highlight an overlay; manual check still a person's |
-| T9 | Art that is not a coloured square | todo | CC0 now, generated later, and an ADR |
-| T10 | The tactical scenario | todo | five units, two towers, terrain that matters |
+| T9 | Art that is not a coloured square | todo | CC0 now, generated later, and an ADR; after T10, so there are five types to draw |
+| T10 | The tactical scenario | done | five types, two towers, a workshop, funds and a forge; a river with one bridge; no combat yet (T26) |
 | T11 | The planner plays | todo | STRIPS drives a faction; needs T4 |
 | T12 | Three difficulties, honestly | todo | horizon and depth, never cheating; five levels if they stay ordered |
 | T13 | `ai_fuzzy`, from a library that already exists | done | rewritten, not ported: the library was C# and its core was missing (ADR 0011); 3 vectors read from both languages |
@@ -39,6 +39,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T17 | The opponent model | todo | n-grams you can print |
 | T18 | Behaviour cloning, and what a learned model buys | todo | the comparison is the task |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
+| T26 | Combat on the board | todo | reach and the counter table start to matter; the dataset is rebuilt from the game (ADR 0008) |
 | T21 | Every example can be watched | done | `check_demos.py` and `demo_overlays.gd`; blue's decision now drawn before it is played |
 | T24 | One window for every example | todo | a menu, a card per example naming its techniques, and an executable; needs T21 |
 

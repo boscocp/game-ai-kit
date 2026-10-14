@@ -23,6 +23,11 @@ const FACTION_COLOURS: Array[Color] = [
 	Color(0.30, 0.50, 0.80),
 ]
 
+## A short label per `UnitType.type_name`, drawn instead of the id when the
+## scene gives one. Until T9 brings silhouettes, two letters are how five
+## types are told apart without relying on colour.
+var labels: Dictionary = {}
+
 var _state: BoardState
 var _board: BoardView
 var _selected_id: int = -1
@@ -42,16 +47,36 @@ func _draw() -> void:
 	for unit: Unit in _state.units:
 		if not unit.is_alive():
 			continue
-		var centre: Vector2 = _board.centre_of(unit.cell)
+		_draw_unit(unit, _board.centre_of(unit.cell))
+
+
+# A circle for what walks, a square for what stands: a tower or a building
+# reads as fixed before anyone reads its label.
+func _draw_unit(unit: Unit, centre: Vector2) -> void:
+	var fixed: bool = unit.type != null and not unit.type.mobile
+	var square := Rect2(centre - Vector2(RADIUS, RADIUS), Vector2(RADIUS, RADIUS) * 2.0)
+	if fixed:
+		draw_rect(square, _colour_of(unit.faction))
+	else:
 		draw_circle(centre, RADIUS, _colour_of(unit.faction))
-		_draw_id(centre, unit.id)
-		if unit.id == _selected_id:
-			draw_arc(centre, RADIUS + OUTLINE, 0.0, TAU, 24, Color.WHITE, OUTLINE)
+	_draw_label(centre, _label_of(unit))
+	if unit.id != _selected_id:
+		return
+	if fixed:
+		draw_rect(square.grow(OUTLINE), Color.WHITE, false, OUTLINE)
+	else:
+		draw_arc(centre, RADIUS + OUTLINE, 0.0, TAU, 24, Color.WHITE, OUTLINE)
 
 
-# The id, because every reason on the screen names units by it.
-func _draw_id(centre: Vector2, unit_id: int) -> void:
-	var words: String = str(unit_id)
+# The type's label when the scene gave one, the id otherwise -- the id because
+# every reason on the screen names units by it.
+func _label_of(unit: Unit) -> String:
+	if unit.type != null and labels.has(unit.type.type_name):
+		return labels[unit.type.type_name]
+	return str(unit.id)
+
+
+func _draw_label(centre: Vector2, words: String) -> void:
 	var width: float = ThemeDB.fallback_font.get_string_size(
 			words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, ID_TEXT_SIZE).x
 	draw_string(ThemeDB.fallback_font, centre + Vector2(-width / 2.0, ID_TEXT_SIZE * 0.35), words,

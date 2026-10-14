@@ -36,10 +36,6 @@ const AI_FACTION: int = BLUE
 ## capture model's whole job -- with one node there is nothing to predict.
 const NODES: Array[Vector2i] = [Vector2i(10, 1), Vector2i(2, 6)]
 
-## Space between the board and the panels beside it, and between a panel and
-## the edge of the window.
-const GUTTER: float = 24.0
-
 @onready var _board: BoardView = $BoardView
 @onready var _units: UnitView = $UnitView
 @onready var _status: Label = $Interface/Status
@@ -75,7 +71,7 @@ func _ready() -> void:
 		[BoardView.SWATCHES[BoardView.WALL.x], "wall"],
 	] as Array[Array])
 	_state = _build_scenario()
-	_lay_out()
+	BoardLayout.lay_out(self, _state.graph, _status, _legend)
 	# The search goes in from here rather than from inside the policy: a route
 	# is a search, and no addon may depend on another. The game owns both and
 	# is the right place to introduce them.
@@ -243,23 +239,6 @@ func _affordable_steps() -> Array[Vector2i]:
 		if _state.why_refused(Move.new(unit.id, path)) == BoardState.LEGAL:
 			found.append(step)
 	return found
-
-
-## The board's top-left corner, the status and the legend, all derived from
-## the board's size and the window the project asks for.
-##
-## The window the project asks for, not `get_viewport_rect()`: headless, the
-## root viewport is 100x100 (measured on the pinned engine), and a layout that
-## depends on where it is run cannot be tested where the tests run.
-func _lay_out() -> void:
-	var window := Vector2(
-		ProjectSettings.get_setting("display/window/size/viewport_width"),
-		ProjectSettings.get_setting("display/window/size/viewport_height"))
-	position = BoardView.offset_to_centre(_state.graph, window)
-	var board := Rect2(position, BoardView.pixel_size(_state.graph))
-	_status.position = Vector2(GUTTER, board.position.y)
-	_status.size = Vector2(board.position.x - 2.0 * GUTTER, window.y - board.position.y - GUTTER)
-	_legend.position = Vector2(board.end.x + GUTTER, board.position.y)
 
 
 # Whose turn, what is in hand, what to do about it -- in the order a first-time

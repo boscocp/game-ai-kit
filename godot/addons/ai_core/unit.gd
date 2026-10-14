@@ -4,6 +4,9 @@
 ## moment it does, every addon that wants to reason about a move has to go
 ## through the unit's opinion of it. `BoardState` decides; a unit is a fact.
 ##
+## What a unit *is* -- how far it moves, what it beats -- lives in its
+## `UnitType`; what it *has left* lives here.
+##
 ## When not to use it: anything with inventory, abilities or status effects.
 ## This is the minimum a turn-based board needs, kept small so the AI lessons
 ## are about deciding and not about bookkeeping.
@@ -29,14 +32,20 @@ var movement_points: int
 ## two units that are equal in every field are still two different units.
 var id: int
 
+## What kind of piece it is, or null for the untyped units every scenario
+## before T10 was built with. Shared, never copied: a type is data that no
+## move changes.
+var type: UnitType
+
 
 func _init(unit_id: int, unit_faction: int, start: Vector2i,
-		unit_health: int = 10, points: int = 3) -> void:
+		unit_health: int = 10, points: int = 3, kind: UnitType = null) -> void:
 	id = unit_id
 	faction = unit_faction
 	cell = start
 	health = unit_health
 	movement_points = points
+	type = kind
 
 
 ## An independent copy, same identity.
@@ -45,7 +54,7 @@ func _init(unit_id: int, unit_faction: int, start: Vector2i,
 ## has to be copied too -- otherwise the "new" state shares units with the old
 ## one and a move quietly rewrites history.
 func duplicate_unit() -> Unit:
-	return Unit.new(id, faction, cell, health, movement_points)
+	return Unit.new(id, faction, cell, health, movement_points, type)
 
 
 ## True when this unit still belongs on the board.
