@@ -38,7 +38,7 @@ Four tiers. **No lesson lives only in the expensive tier.**
 | **0** | nothing | read `docs/concepts/` — the algorithms and why they work |
 | **1** | Python 3 (already on Linux and macOS) | read a PDDL domain and check it, train the regressions, read the weights. Standard library only — **no pip, no numpy, no install step** |
 | **2** | Godot 4 (~130 MB, runs on integrated graphics) | play the game, open the demos, modify the addons |
-| **3** | a GPU with some VRAM | run a local LLM for real — once `ai_llm` exists; nothing needs this tier yet |
+| **3** | a GPU with some VRAM | run a local LLM for real, once `ai_llm` exists; generate the kit's art with a local image model, once T31 exists. Optional: the art is committed, so nothing needs this tier |
 
 The game targets 1280×720 at 60 fps on integrated graphics, using the
 Compatibility (OpenGL) renderer. There are no 3D nodes and no large assets.

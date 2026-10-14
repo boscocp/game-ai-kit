@@ -1,6 +1,6 @@
 # T9 — Art that is not a coloured square
 
-Size: M · Prereqs: T8, T10 · Files: `godot/assets/`, `docs/adr/`
+Size: M · Prereqs: T8, T10, T27, T28, T30 · Files: `godot/assets/`, `docs/adr/`
 
 ## Goal
 
@@ -21,8 +21,16 @@ What the ADR must say: that art is a **development-time** input and does not
 move any lesson above tier 1 — the reader gets the committed PNGs and never
 needs the GPU, which is the same shape as invariant 6, where Python trains and
 GDScript only infers. And that generated art is deferred, not rejected: the
-pipeline is a later task, and this one buys the visual with hours instead of
-weeks.
+pipeline is T31, and this one buys the visual with hours instead of weeks.
+
+**Which games it draws.** After the owner played the examples, they were
+reworked around games people already know. So the art covers:
+- the checkers board and pieces (T27);
+- tic-tac-toe (T28);
+- the tactical game's five unit types, towers, workshop and terrain (T30).
+
+Pick the packs for those. Lay the art out so that T31 can replace any file
+with a generated one without touching code: stable paths, one `TileSet`.
 
 ## Steps
 
