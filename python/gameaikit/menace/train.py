@@ -2,7 +2,7 @@
 
 Nothing here prints or writes: `report.py` does. The same seed gives the same
 games and so the same beads, which is what lets the published file be checked
-against a fresh run (`check_no_training.py`, N5).
+against a fresh run (`check_no_training.py`, N6).
 """
 
 from __future__ import annotations

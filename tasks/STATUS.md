@@ -29,7 +29,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 |---|---|---|---|
 | T8 | A board you can read | done | 48 px, centred, costs written, the highlight an overlay; manual check still a person's |
 | T27 | Checkers, and minimax | done | `make run` is checkers against `ai_adversarial`; depth 4 by default (~50 ms); depth 6 stalls the frame up to ~730 ms with kings; the old board is `demo-skirmish`; manual check still a person's |
-| T28 | Tic-tac-toe, and a machine that learns it | done | MENACE in Python, 304 boxes, four ages; `make demo-tictactoe`; N5/N6 in `check_no_training.py`; strength criterion changed to vs-perfect by the owner (Michie's rewards keep losing ~1% to random) |
+| T28 | Tic-tac-toe, and a machine that learns it | done | MENACE in Python, 304 boxes, four ages; `make demo-tictactoe`; N5/N6 in `check_no_training.py`; strength criterion changed to vs-perfect by the owner: Michie's rewards lock in a move that wins three in four, and the published machine still loses 10 in 1,000 to a random player |
 | T29 | A search board you can edit | todo | paint walls and mud, drag start and goal, the four searches rerun |
 | T30 | The tactical game, against the computer | todo | Advance Wars style turns, a rule-based blue, becomes `demo-tactical` |
 | T9 | Art that is not a coloured square | todo | Kenney CC0 for checkers, tic-tac-toe and the tactical game; laid out so T31 can swap any file |
@@ -78,6 +78,46 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-14 (wave 27)
+
+**What landed.** T28: `make demo-tictactoe`, noughts and crosses against
+MENACE, Donald Michie's 1961 matchbox machine.
+- MENACE trains in Python with the standard library only:
+  - 304 boxes, 1 + 12 + 108 + 183, with Michie's beads and rewards;
+  - 5,000 games against a random player, then 5,000 against a perfect one;
+  - four ages published in `godot/game/tictactoe/menace_beads.json`.
+- The game only draws. Each empty square shows its beads and their chance,
+  the panel numbers every bead, and M shows what perfect play makes of each
+  square.
+- Invariant 6 now covers beads:
+  - N5 is a net for bead writes in GDScript;
+  - N6 trains again and compares with the published file;
+  - the store is read-only in the engine, which is the actual guarantee.
+- `spec/vectors/menace/` carries the uniform draw itself, because the two
+  languages' random generators differ.
+
+**The criterion changed, by the owner's choice.** Michie's rules never stop
+losing to a random player: they lock in a move that wins three in four over
+one that wins every time. The tests hold the published seed against the
+perfect player instead. Over ten seeds, the vs-perfect claim holds on nine;
+on the tenth a box drains and MENACE resigns. `python3 -m
+gameaikit.menace.report --seeds 10` prints the table, and the concept page
+quotes it.
+
+**The review's worst findings.**
+- N5 missed the real bead store, which the engine's read-only store now
+  closes.
+- The new criterion had been measured on one seed.
+- The panel's draw could not be checked against its own list.
+
+All are fixed; see
+[docs/reviews/27-tic-tac-toe-and-menace.md](../docs/reviews/27-tic-tac-toe-and-menace.md).
+
+**Not proven.** T28's manual check: play the 10-game machine and then the
+10,000-game one, and feel the difference.
+
+**Next:** `make wave` cuts T29, a search board you can edit.
 
 ## Resuming after 2026-10-14 (wave 26)
 

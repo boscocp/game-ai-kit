@@ -29,21 +29,30 @@ static func draw_board(canvas: CanvasItem, board: String) -> void:
 
 ## On each empty square: its beads as a number and as a bar, and the chance
 ## of drawing one. A square that is another one turned says which, because its
-## beads are that square's.
-static func draw_beads(canvas: CanvasItem, squares: Array[Dictionary]) -> void:
+## beads are that square's; the last square left says the move is forced.
+static func draw_beads(canvas: CanvasItem, squares: Array) -> void:
 	var font: Font = ThemeDB.fallback_font
+	var grey := Color(0.7, 0.7, 0.7)
 	for entry: Dictionary in squares:
 		var corner: Vector2 = Vector2(entry["square"] % 3, entry["square"] / 3) * CELL
-		if entry.has("same_move_as"):
-			_write(canvas, font, corner + Vector2(12.0, CELL * 0.55), "same move as", SMALL, Color(0.7, 0.7, 0.7))
-			_write(canvas, font, corner + Vector2(12.0, CELL * 0.55 + 18.0), "the " + square_name(entry["same_move_as"]), SMALL, Color(0.7, 0.7, 0.7))
+		if entry.get("forced", false):
+			_write(canvas, font, corner + Vector2(14.0, CELL * 0.5), "forced", SMALL + 7, TicTacToeExample.BEAD_COLOUR)
+			_write(canvas, font, corner + Vector2(14.0, CELL * 0.5 + 22.0), "the last square", SMALL, TicTacToeExample.BEAD_COLOUR)
 			continue
-		var probability: float = entry["probability"]
-		_write(canvas, font, corner + Vector2(14.0, CELL * 0.5), str(entry["beads"]), BIG, TicTacToeExample.BEAD_COLOUR)
-		_write(canvas, font, corner + Vector2(14.0, CELL * 0.5 + 24.0), "beads · %d%%" % roundi(probability * 100.0), SMALL, TicTacToeExample.BEAD_COLOUR)
-		var bar := Rect2(corner + Vector2(10.0, CELL - 26.0), Vector2((CELL - 20.0) * probability, 14.0))
-		canvas.draw_rect(Rect2(bar.position, Vector2(CELL - 20.0, 14.0)), Color(1, 1, 1, 0.12))
-		canvas.draw_rect(bar, TicTacToeExample.BEAD_COLOUR)
+		if entry.has("same_move_as"):
+			_write(canvas, font, corner + Vector2(12.0, CELL * 0.55), "same move as", SMALL, grey)
+			_write(canvas, font, corner + Vector2(12.0, CELL * 0.55 + 18.0), "the " + square_name(entry["same_move_as"]), SMALL, grey)
+			continue
+		_draw_bead_count(canvas, font, corner, entry["beads"], entry["probability"])
+
+
+static func _draw_bead_count(canvas: CanvasItem, font: Font, corner: Vector2, beads: int, probability: float) -> void:
+	var noun: String = "bead" if beads == 1 else "beads"
+	_write(canvas, font, corner + Vector2(14.0, CELL * 0.5 + 4.0), str(beads), BIG, TicTacToeExample.BEAD_COLOUR)
+	_write(canvas, font, corner + Vector2(14.0, CELL * 0.5 + 26.0), "%s · %s" % [noun, TicTacToePanel.percent(probability)], SMALL, TicTacToeExample.BEAD_COLOUR)
+	var full := Rect2(corner + Vector2(10.0, CELL - 26.0), Vector2(CELL - 20.0, 14.0))
+	canvas.draw_rect(full, Color(1, 1, 1, 0.12))
+	canvas.draw_rect(Rect2(full.position, Vector2(full.size.x * probability, full.size.y)), TicTacToeExample.BEAD_COLOUR)
 
 
 ## A frame round the square MENACE last played.
@@ -52,18 +61,29 @@ static func draw_chosen(canvas: CanvasItem, square: int) -> void:
 	canvas.draw_rect(Rect2(corner + Vector2(5.0, 5.0), Vector2(CELL - 10.0, CELL - 10.0)), TicTacToeExample.CHOSEN_COLOUR, false, 4.0)
 
 
-## Along the top of each empty square, what it is worth to the player to move
-## with both sides perfect; the square minimax would play is framed.
-static func draw_minimax(canvas: CanvasItem, board: String) -> void:
+## Along the top of each empty square, what taking it leads to with perfect
+## play, for whoever moves now. The best squares are framed -- unless every
+## square is as good, when framing one would pick a favourite that is not there.
+static func draw_perfect(canvas: CanvasItem, perfect: Dictionary) -> void:
 	var font: Font = ThemeDB.fallback_font
-	var values: Dictionary = TicTacToeSolver.square_values(board)
+	var who: String = "if X takes it" if perfect["for"] == TicTacToeExample.MENACE_SIDE else "if you take it"
+	var values: Dictionary = perfect["values"]
 	for square: int in values:
 		var corner: Vector2 = Vector2(square % 3, square / 3) * CELL
-		_write(canvas, font, corner + Vector2(12.0, 26.0), "perfect: " + TicTacToeSolver.words(values[square]), SMALL, TicTacToeExample.MINIMAX_COLOUR)
-	var best: int = TicTacToeSolver.best_square(board)
-	if best != -1:
-		var corner: Vector2 = Vector2(best % 3, best / 3) * CELL
-		canvas.draw_rect(Rect2(corner + Vector2(12.0, 12.0), Vector2(CELL - 24.0, CELL - 24.0)), TicTacToeExample.MINIMAX_COLOUR, false, 2.0)
+		_write(canvas, font, corner + Vector2(10.0, 22.0), "%s: %s" % [who, TicTacToeSolver.words(values[square])], SMALL - 2, TicTacToeExample.MINIMAX_COLOUR)
+	if (perfect["best"] as Array).size() == values.size():
+		return
+	for square: int in perfect["best"]:
+		var corner: Vector2 = Vector2(square % 3, square / 3) * CELL
+		canvas.draw_rect(Rect2(corner + Vector2(8.0, 30.0), Vector2(CELL - 16.0, CELL - 38.0)), TicTacToeExample.MINIMAX_COLOUR, false, 2.0)
+
+
+## A line through three in a row, when somebody has them.
+static func draw_winning_line(canvas: CanvasItem, board: String) -> void:
+	for line: Array in TicTacToeBoard.LINES:
+		var first: String = board[line[0]]
+		if first != TicTacToeBoard.EMPTY and first == board[line[1]] and first == board[line[2]]:
+			canvas.draw_line(centre_of(line[0]), centre_of(line[2]), Color(1, 1, 1, 0.9), 10.0)
 
 
 ## The middle of a square, in the board's own coordinates.

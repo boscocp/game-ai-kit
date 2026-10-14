@@ -19,7 +19,7 @@ text = "loading"
 
 [node name="Decision" type="Label" parent="Interface"]
 offset_left = 640.0
-offset_top = 180.0
+offset_top = 226.0
 offset_right = 1270.0
 offset_bottom = 620.0
 theme_override_font_sizes/font_size = 15
@@ -27,7 +27,7 @@ text = "loading"
 
 [node name="Legend" type="Control" parent="Interface"]
 offset_left = 640.0
-offset_top = 40.0
+offset_top = 30.0
 offset_right = 1270.0
-offset_bottom = 170.0
+offset_bottom = 214.0
 script = ExtResource("9_legend")

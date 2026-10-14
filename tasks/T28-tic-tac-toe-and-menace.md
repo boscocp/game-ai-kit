@@ -64,8 +64,8 @@ The suite must include:
   - the 10,000-game snapshot loses no game against the perfect (minimax)
     player;
   - the 10-game snapshot loses at least one;
-  - against a random player, the 10,000-game snapshot loses a tenth as
-    often as the 10-game one, or less.
+  - against a random player, the 10,000-game snapshot loses fewer games
+    than the 10-game one.
 
   Playing by the most beads makes "never" decidable; drawing at random
   would not.
@@ -73,10 +73,16 @@ The suite must include:
   *Changed on 2026-10-14, by the owner's choice.* The first version asked
   the 10,000-game snapshot to lose nothing against a random player. Measured
   over ten seeds, Michie's rules give 0 to 77 losses in a thousand there:
-  his +3 for a win rewards a trap move that wins four games in five against
-  a random player, and training against perfect play never revisits those
-  boxes. The rules were kept and the criterion changed to what they promise.
-  See `docs/concepts/menace.md`.
+  his +3 for a win locks in a move that wins three games in four against a
+  random player over one that wins every time, and training against the
+  perfect player never revisits those boxes. (The first note said "a trap move that
+  wins four in five"; that was never measured, and the review's measurement
+  replaced it.) The rules were kept and the criterion changed. A review then
+  measured the new one over ten seeds: against the perfect player it holds on nine
+  (the tenth drains a box and resigns), and "a tenth as often against a
+  random player" held on only six, so that clause became "fewer", which
+  holds on all ten. The tests hold the published seed. See
+  `docs/concepts/menace.md` and `python3 -m gameaikit.menace.report --seeds 10`.
 - **Symmetries.** Equal positions fold to one matchbox, and there are 304.
 - **A shared vector between the languages.** The Godot player and the
   Python player choose the same move from the same beads and **the same

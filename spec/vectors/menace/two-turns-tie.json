@@ -1,0 +1,29 @@
+{
+ "description": "A board two of the eight turns put into the same box. XO.....OX turned a quarter clockwise and a quarter anticlockwise both give ..XO.OX.., and they send the box's squares to different real squares: box square 0 is the real square 6 by the first and 2 by the second. The rule is the first turn in the fixed order, the clockwise quarter, and both languages must keep that order. The box is its own half turn, so 0 and 8, 1 and 7 are one move each, and 0, 1 and 4 hold beads.",
+ "cases": [
+  {
+   "name": "the first bead is box square 0, the real board's square 6",
+   "board": "XO.....OX",
+   "box": "..XO.OX..",
+   "beads": [1, 2, 0, 0, 3, 0, 0, 0, 0],
+   "draw": 0.0,
+   "move": 6
+  },
+  {
+   "name": "the second and third beads are box square 1, the real board's square 3",
+   "board": "XO.....OX",
+   "box": "..XO.OX..",
+   "beads": [1, 2, 0, 0, 3, 0, 0, 0, 0],
+   "draw": 0.3,
+   "move": 3
+  },
+  {
+   "name": "the centre stays the centre",
+   "board": "XO.....OX",
+   "box": "..XO.OX..",
+   "beads": [1, 2, 0, 0, 3, 0, 0, 0, 0],
+   "draw": 0.9,
+   "move": 4
+  }
+ ]
+}

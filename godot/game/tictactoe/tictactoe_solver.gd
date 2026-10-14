@@ -53,6 +53,18 @@ static func best_square(board: String) -> int:
 	return best
 
 
+## Every square as good as the best one. All of them, not the first: on the
+## empty board every square draws, and naming one of them made a machine that
+## chose the centre look as if it had got the opening wrong.
+static func best_squares(board: String) -> Array[int]:
+	var values: Dictionary = square_values(board)
+	var found: Array[int] = []
+	for square: int in values:
+		if values[square] == values[best_square(board)]:
+			found.append(square)
+	return found
+
+
 ## How a value reads on the board.
 static func words(worth: int) -> String:
 	return {WIN: "wins", DRAW: "draws", LOSS: "loses"}[worth]

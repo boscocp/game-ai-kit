@@ -46,8 +46,11 @@ func _ready() -> void:
 		[NOUGHT_COLOUR, "O: you"],
 		[BEAD_COLOUR, "number and bar: beads for that move"],
 		[Color.TRANSPARENT, "   and the chance one of them is drawn"],
+		[Color(0.7, 0.7, 0.7), "grey: the same move turned or mirrored,"],
+		[Color.TRANSPARENT, "   so it shares one colour of bead"],
 		[CHOSEN_COLOUR, "pink square: the move MENACE drew"],
-		[MINIMAX_COLOUR, "green (M): what perfect play makes of it"],
+		[MINIMAX_COLOUR, "green (M): what each square leads to with"],
+		[Color.TRANSPARENT, "   perfect play, for whoever moves now"],
 	] as Array[Array])
 	_menace = MenacePlayer.load_published()
 	# The youngest first: the manual check plays the 10-game machine, then the
@@ -107,26 +110,48 @@ func menace_moves(chance: float) -> void:
 	var moves: Array[int] = TicTacToeBoard.moves(_board)
 	if moves.is_empty() or TicTacToeBoard.to_move(_board) != MENACE_SIDE:
 		return
+	var total: int = 0
+	for beads_here: int in _menace.beads_for(age(), _board):
+		total += beads_here
 	var square: int = moves[0] if moves.size() == 1 else _menace.move_for(age(), _board, chance)
-	_last_draw = {"chance": chance, "square": square, "board": _board, "age": age()}
+	_last_draw = {"chance": chance, "square": square, "board": _board, "age": age(),
+			"forced": moves.size() == 1, "total": total, "bead": mini(floori(chance * total) + 1, total)}
 	if square != -1:
 		_board = TicTacToeBoard.play(_board, square)
 	_refresh()
 
 
 ## What MENACE is reasoning with: the box, every empty square's beads and
-## chance, the bead it last drew, and what perfect play would do instead.
+## chance in the order they are laid out for the draw, the bead it last drew,
+## and what perfect play makes of each square.
 func decision_overlay() -> Dictionary:
 	var looking_at: String = _deciding_board()
-	var overlay: Dictionary = {"age": age(), "box": TicTacToeBoard.canonical(looking_at)[0],
-			"squares": _menace.squares_for(age(), looking_at),
-			"pending": TicTacToeBoard.to_move(_board) == MENACE_SIDE}
-	if not TicTacToeBoard.moves(looking_at).is_empty():
-		overlay["minimax_square"] = TicTacToeSolver.best_square(looking_at)
+	var overlay: Dictionary = {"age": _deciding_age(), "box": TicTacToeBoard.canonical(looking_at)[0],
+			"squares": squares_for(looking_at, _deciding_age()), "over": _is_over(),
+			"pending": not _is_over() and TicTacToeBoard.to_move(_board) == MENACE_SIDE}
+	if not _is_over():
+		overlay["perfect"] = _perfect_play()
 	if not _last_draw.is_empty():
-		overlay["chance"] = _last_draw["chance"]
+		for key: String in ["chance", "bead", "total", "forced"]:
+			overlay[key] = _last_draw[key]
 		overlay["chosen"] = _last_draw["square"]
+		overlay["drawn_at_age"] = _last_draw["age"]
 	return overlay
+
+
+# What perfect play makes of the board in front of the player to move.
+func _perfect_play() -> Dictionary:
+	var values: Dictionary = TicTacToeSolver.square_values(_board)
+	return {"values": values, "best": TicTacToeSolver.best_squares(_board), "for": TicTacToeBoard.to_move(_board)}
+
+
+## What each empty square holds for MENACE on `board`. With one square left
+## there is no box: the move is forced, and the square says so.
+func squares_for(board: String, at_age: int) -> Array[Dictionary]:
+	var moves: Array[int] = TicTacToeBoard.moves(board)
+	if moves.size() == 1:
+		return [{"square": moves[0], "beads": 0, "probability": 1.0, "forced": true}] as Array[Dictionary]
+	return _menace.squares_for(at_age, board)
 
 
 ## The games MENACE had played before the snapshot now playing.
@@ -147,11 +172,24 @@ func _handle_key(keycode: Key) -> void:
 
 
 # The position MENACE's beads are about: the one in front of it on its turn,
-# and the one it last drew from on yours, so its reasoning stays on show.
+# and the one it last drew from on yours or once the game is over, so its
+# reasoning stays on show and a finished board never shows an empty box.
 func _deciding_board() -> String:
-	if TicTacToeBoard.to_move(_board) == MENACE_SIDE or _last_draw.is_empty():
+	var menace_to_move: bool = TicTacToeBoard.to_move(_board) == MENACE_SIDE
+	if _last_draw.is_empty() or (menace_to_move and not _is_over()):
 		return _board
 	return _last_draw["board"]
+
+
+# The age whose beads are on show: the one playing now on MENACE's turn, and
+# the one that drew the last move otherwise -- a draw made at 10 games shown
+# beside the 10,000-game box used to name a square that box would not give.
+func _deciding_age() -> int:
+	return age() if _deciding_board() == _board or _last_draw.is_empty() else _last_draw["age"]
+
+
+func _is_over() -> bool:
+	return TicTacToeBoard.winner(_board) != "" or _menace_resigned()
 
 
 func _menace_resigned() -> bool:
@@ -169,15 +207,18 @@ func _refresh() -> void:
 	if not is_node_ready():
 		return
 	queue_redraw()
-	_status.text = TicTacToePanel.status(_board, age(), show_minimax, _menace_resigned(), _message)
-	_panel.text = TicTacToePanel.describe(decision_overlay(), _board)
+	var overlay: Dictionary = decision_overlay()
+	_status.text = TicTacToePanel.status(_board, overlay, age(), show_minimax, _message)
+	_panel.text = TicTacToePanel.describe(overlay)
 
 
 func _draw() -> void:
 	TicTacToeView.draw_board(self, _board)
-	if TicTacToeBoard.winner(_board) == "" and TicTacToeBoard.to_move(_board) == MENACE_SIDE:
-		TicTacToeView.draw_beads(self, _menace.squares_for(age(), _board))
+	var overlay: Dictionary = decision_overlay()
+	if overlay["pending"]:
+		TicTacToeView.draw_beads(self, overlay["squares"])
 	if not _last_draw.is_empty() and _last_draw["square"] != -1:
 		TicTacToeView.draw_chosen(self, _last_draw["square"])
-	if show_minimax and TicTacToeBoard.winner(_board) == "":
-		TicTacToeView.draw_minimax(self, _board)
+	if show_minimax and overlay.has("perfect"):
+		TicTacToeView.draw_perfect(self, overlay["perfect"])
+	TicTacToeView.draw_winning_line(self, _board)

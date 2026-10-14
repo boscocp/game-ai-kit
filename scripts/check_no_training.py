@@ -85,23 +85,54 @@ TRAINER = "gameaikit.training.report"
 BEADS = GODOT / "game" / "tictactoe" / "menace_beads.json"
 BEAD_TRAINER = "gameaikit.menace.report"
 
-# Writing a bead count. GDScript that holds bead counts calls them `beads`, so
-# that this rule can see them -- `menace_player.gd` called them `counts` once,
-# and `counts[square] += 1` would have walked past it. Any name containing the
-# word beads counts, which is broad on purpose: a helper called `last_with_beads`
-# tripped it, and was renamed rather than the rule narrowed. Two shapes, read off the code with strings and comments
-# blanked: assigning to anything called `beads` (indexed or not, compounded or
-# not), or calling a method that changes it in place; and writing through two
-# indexes into a box, `boxes[box][square] += 3`, which is a bead count under
-# another name. A declaration -- `var beads: PackedInt32Array = ...` -- builds a
-# list and changes nobody's beads, and is allowed. So is filling a table of
-# boxes one box at a time, `boxes[box] = PackedInt32Array(counts)`: one index
-# is a box arriving from the file, two are a bead changing.
-BEAD_ASSIGN_RE = re.compile(r"^\s*(?:[\w.]*\.)?\w*beads\w*\s*(?:\[[^\]]*\])*\s*[-+*/]?=(?!=)")
-BEAD_METHOD_RE = re.compile(
-    r"\b\w*beads\w*\s*(?:\[[^\]]*\])*\.(?:set|append|append_array|push_back|push_front|insert"
-    r"|fill|resize|remove_at|erase|clear|reverse|sort)\s*\(")
-BOX_WRITE_RE = re.compile(r"\b\w*box\w*\s*\[[^\]]*\]\s*\[[^\]]*\]\s*[-+*/]?=(?!=)")
+# Writing a bead count. This rule is a net for the common spellings; the
+# guarantee is the engine's. `MenacePlayer` keeps every box in a read-only
+# Array inside read-only Dictionaries, and measured on the pinned engine any
+# write through any path -- an index, `+=`, a copy of the reference, a
+# replaced box, `clear()` -- is refused and changes nothing. A gdUnit test
+# holds that the store is read-only at every level.
+#
+# The net has two meshes. Anywhere under godot/, a name containing `bead`.
+# Inside the noughts-and-crosses game, where the beads live, also names with
+# `box`, `snapshot` or `count` -- because there the beads are reached as
+# `_snapshots[age][box][square]`, and the first version of this rule, looking
+# only for `beads`, let `player._snapshots[10][box][4] += 100` straight past.
+# The wider mesh is not used elsewhere: "box" is a label's rectangle in the
+# checkers view.
+#
+# Searched anywhere on a line, not only at its start, so `if done: beads[0] = 1`
+# and `var x := 0; beads[0] += 1` are seen. What is allowed: a declaration
+# (`var beads: Array[int] = ...`), and an object setting its own store in its
+# constructor (`_snapshots = published`) -- the shape N3 allows for weights.
+BEAD_WORD = r"bead"
+BEAD_GAME_WORDS = r"(?:bead|box|snapshot|count)"
+BEAD_GAME = GODOT / "game" / "tictactoe"
+
+
+def _bead_patterns(words: str) -> list[re.Pattern]:
+    """The shapes of a write to something whose name contains `words`."""
+    name = rf"\w*{words}\w*"
+    return [
+        # An indexed write, compounded or not: beads[i] += 1, a[b][c] = 0.
+        re.compile(rf"\b[\w.]*?{name}\s*(?:\[[^\]]*\])+\s*[-+*/]?=(?!=)", re.I),
+        # A compound write to the whole name: beads += other.
+        re.compile(rf"\b{name}\s*[-+*/]=", re.I),
+        # Another object's store replaced: player._snapshots = {}.
+        re.compile(rf"\.{name}\s*=(?!=)", re.I),
+        # A bare reassignment of a bead list, outside a declaration.
+        re.compile(rf"(?:^|;|:)\s*\w*{BEAD_WORD}\w*\s*=(?!=)", re.I),
+        # A method that changes it in place.
+        re.compile(rf"\b[\w.]*?{name}\s*(?:\[[^\]]*\])*\.(?:set|append|append_array|push_back|push_front"
+                   r"|insert|fill|resize|remove_at|erase|clear|reverse|sort|merge|assign|encode_\w+)\s*\(", re.I),
+    ]
+
+
+BEAD_PATTERNS = _bead_patterns(BEAD_WORD)
+BEAD_GAME_PATTERNS = _bead_patterns(BEAD_GAME_WORDS)
+
+# `obj.set("_snapshots", ...)` names its target in a string, which the code
+# view blanks, so this one is read off the raw line.
+BEAD_SET_BY_NAME_RE = re.compile(r"\.set\s*\(\s*[\"'][^\"']*(?:bead|box|snapshot)", re.I)
 
 # Third-party GDScript this project does not author.
 VENDORED_DIRS = {"gdUnit4"}
@@ -262,6 +293,9 @@ def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
                     f"N2 {label} writes a file; the inference addon only reads")
             elif WEIGHTS.name in line:
                 findings.append(f"N2 {label} writes over the weights file")
+            elif BEADS.stem in line or BEAD_GAME.name in path.parts:
+                findings.append(f"N2 {label} writes a file where MENACE's beads live; "
+                                "the game only reads them")
         for number, written in enumerate(code, start=1):
             label = f"{_label(path, repo)}:{number}"
             if MEMBER_WRITE_RE.search(written) or UPDATE_RE.search(written):
@@ -280,15 +314,31 @@ def check_bead_writes(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
     MENACE learns, so a bead written in the game is training at game time."""
     findings = []
     for path in gdscript_files(root):
-        code = code_only(path.read_text(encoding="utf-8"))
-        for number, line in enumerate(code.splitlines(), start=1):
-            if line.lstrip().startswith(("var ", "const ")):
-                continue
-            if BEAD_ASSIGN_RE.search(line) or BEAD_METHOD_RE.search(line) or BOX_WRITE_RE.search(line):
+        raw = path.read_text(encoding="utf-8").splitlines()
+        code = code_only("\n".join(raw)).splitlines()
+        in_game = BEAD_GAME.name in path.parts
+        patterns = BEAD_GAME_PATTERNS if in_game else BEAD_PATTERNS
+        for number, (line, written) in enumerate(zip(raw, code), start=1):
+            if _writes_a_bead(written, patterns) or (in_game and BEAD_SET_BY_NAME_RE.search(line)):
                 findings.append(
                     f"N5 {_label(path, repo)}:{number} changes a bead count; MENACE learns "
                     "in Python, and the game only draws from the published beads")
     return findings
+
+
+def _writes_a_bead(code: str, patterns: list[re.Pattern]) -> bool:
+    """True for a line with a statement that writes through a bead name.
+
+    Statement by statement, because `;` joins several on one line. A
+    declaration is skipped as a whole: in GDScript an assignment is not an
+    expression, so nothing inside a `var` initialiser can write anything.
+    """
+    for statement in code.split(";"):
+        if statement.strip().startswith(("var ", "const ", "static var ")):
+            continue
+        if any(pattern.search(statement) for pattern in patterns):
+            return True
+    return False
 
 
 def check_beads(repo: pathlib.Path, retrain: bool,
@@ -730,30 +780,60 @@ def self_test() -> int:
             failures.append("check_weights never reached the readable dump")
 
         # Planted: a bead written in GDScript, every spelling of it. T28's
-        # acceptance names this case: before N5, `beads[move] += 1` passed.
+        # acceptance names the first: before N5, `beads[move] += 1` passed.
+        # The rest are the ones a review walked past the first version with.
+        game_file = str(GODOT / "game" / "tictactoe" / "menace_player.gd")
         for spelling in ["\tbeads[move] += 1\n",
                          "\tbox.beads[square] -= 1\n",
                          "\t_beads = PackedInt32Array([4, 4, 0, 0, 4, 0, 0, 0, 0])\n",
                          "\tbeads.set(square, beads[square] + 3)\n",
                          "\tbeads[square] = beads[square] + 3\n",
                          "\tsnapshot.beads.fill(0)\n",
-                         "\t_boxes[box][square] += 3\n"]:
-            expect(f"a bead written as {spelling.strip()[:30]}", quiet(build(
+                         "\t_boxes[box][square] += 3\n",
+                         "\tplayer._snapshots[10][box][4] += 100\n",
+                         "\t_snapshots[age][box] = PackedInt32Array([99, 0, 0, 0, 0, 0, 0, 0, 0])\n",
+                         "\t_snapshots[age][box].set(square, 99)\n",
+                         "\t_snapshots.clear()\n",
+                         "\t_snapshots[age].merge(other)\n",
+                         '\tplayer.set("_snapshots", {})\n',
+                         "\tcounts[square] += 1\n",
+                         "\tbead_counts[0] += 1\n",
+                         "\tBEADS[0] = 1\n",
+                         "\tbox[square] += 1\n",
+                         "\tbeads.encode_s32(0, 99)\n",
+                         "\tvar x := 0; beads[move] += 1\n",
+                         "\tif true: beads[move] += 1\n",
+                         "\tpass; beads[move] += 1\n"]:
+            expect(f"a bead written as {spelling.strip()[:34]}", quiet(build(
                 root, "bead" + str(abs(hash(spelling))), dict(
-                    sound, **{str(GODOT / "game" / "tictactoe" / "menace_player.gd"): spelling}))),
+                    sound, **{game_file: spelling, str(BEADS): json.dumps(SOUND_BEADS)}))),
                 1, "N5")
 
-        # ...and what reading the beads legitimately looks like: a declaration,
-        # a table filled box by box from the file, and a bead count read.
-        for reading in ["\tvar beads: PackedInt32Array = PackedInt32Array(entry)\n",
-                        "\tboxes[box] = PackedInt32Array(counts)\n",
+        # ...and outside the game the wide mesh is off: a label's box in the
+        # checkers view is not a matchbox.
+        expect("a box elsewhere", quiet(build(root, "elsewhere", dict(
+            sound, **{str(GODOT / "game" / "checkers" / "view.gd"): "\tboxes.append(rect)\n\tbox.position.y += 2.0\n"}))), 3)
+
+        # Planted: the bead file written from GDScript.
+        expect("the bead file written", quiet(build(root, "beadfile", dict(
+            sound, **{str(GODOT / "game" / "ai.gd"):
+                      'var out: FileAccess = FileAccess.open("res://game/tictactoe/menace_beads.json", FileAccess.WRITE)\n'}))),
+            1, "N2")
+
+        # ...and what reading the beads legitimately looks like: declarations,
+        # a fresh row filled before it is made read-only, a constructor
+        # setting its own store, a bead count read.
+        for reading in ["\tvar beads: Array[int] = beads_for(age, board)\n",
+                        "\tvar row: Array[int] = []\n\trow.assign(published[key])\n\ttable[key] = row\n",
+                        "\t_snapshots = published\n",
                         "\tvar total: int = beads[square] + beads[0]\n",
+                        "\tfor count: int in beads:\n\t\ttotal += count\n",
+                        "\tif beads[0] <= 3 and beads[1] >= 2 and beads[2] != 0:\n\t\tpass\n",
                         '\tvar words: String = "beads[move] += 1"\n',
                         "\t# never beads[move] += 1 here\n"]:
             expect(f"reading beads: {reading.strip()[:30]}", quiet(build(
                 root, "read" + str(abs(hash(reading))), dict(
-                    sound, **{str(GODOT / "game" / "tictactoe" / "menace_player.gd"): reading,
-                              str(BEADS): json.dumps(SOUND_BEADS)}))), 3)
+                    sound, **{game_file: reading, str(BEADS): json.dumps(SOUND_BEADS)}))), 3)
 
         failures += _self_test_the_beads(root)
         failures += _self_test_the_dump(root)

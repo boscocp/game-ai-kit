@@ -7,6 +7,7 @@ in the repository is the one this pipeline writes, not one typed by hand.
 
     python3 -m gameaikit.menace.report                 print each age's record
     python3 -m gameaikit.menace.report --write DIR     write menace_beads.json
+    python3 -m gameaikit.menace.report --seeds 10      the same training from ten seeds
 
 Exit codes: 0 done, 2 wrong usage.
 """
@@ -22,7 +23,7 @@ import sys
 from . import board as game
 from .matchbox import REWARDS, STARTING_BEADS, Menace
 from .opponents import perfect_move, random_move
-from .train import AGAINST_RANDOM, SEED, run, greedy_record
+from .train import AGAINST_RANDOM, SEED, SNAPSHOTS, greedy_record, run
 
 FILE_NAME = "menace_beads.json"
 
@@ -60,6 +61,23 @@ def text(snapshots: dict[int, Menace]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def spread(seeds: int) -> str:
+    """The 10- and 10,000-game machines' losses from `seeds` different seeds.
+
+    The published file is one seed. This is how far that seed can be trusted
+    to speak for Michie's rules: the doc quotes these numbers, not one run's.
+    """
+    lines = ["losses in 1000 games, playing the favourite bead",
+             "seed   10 vs random  10k vs random   10 vs perfect  10k vs perfect"]
+    for seed in range(1, seeds + 1):
+        snapshots = run(seed)
+        young, old = snapshots[min(SNAPSHOTS)], snapshots[max(SNAPSHOTS)]
+        losses = [greedy_record(machine, MEASURED_GAMES, MEASURE_SEED, opponent)[game.NOUGHT]
+                  for opponent in (random_move, perfect_move) for machine in (young, old)]
+        lines.append(f"{seed:>4} {losses[0]:>13} {losses[1]:>14} {losses[2]:>15} {losses[3]:>15}")
+    return "\n".join(lines) + "\n"
+
+
 def _record(record: dict[str, int]) -> str:
     return (f"won {record[game.CROSS]:>4}, drew {record[game.DRAW]:>4}, "
             f"lost {record[game.NOUGHT]:>4}")
@@ -87,12 +105,16 @@ def as_text(published: dict) -> str:
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(add_help=True, description=__doc__)
     parser.add_argument("--write", action="append", default=None, metavar="DIR")
+    parser.add_argument("--seeds", type=int, default=0, metavar="N")
     try:
         args = parser.parse_args(argv)
     except SystemExit as exit_request:
         if exit_request.code == 0:
             raise
         return 2
+    if args.seeds:
+        print(spread(args.seeds), end="")
+        return 0
     snapshots = run()
     if args.write:
         for directory in args.write:

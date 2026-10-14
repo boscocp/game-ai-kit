@@ -52,8 +52,8 @@ every move from there loses, and MENACE **resigns**.
 It is reinforcement learning, with no network, no gradient and no
 equations: the outcome of a game, handed back to every decision that led to
 it. The credit is shared out crudely -- a good move made early in a game
-lost through a blunder later is punished just the same -- and given enough
-games, that washes out.
+lost through a blunder later is punished just the same. Given enough games
+much of that washes out, but not all of it, as the next section measures.
 
 ## What it learnt, measured
 
@@ -70,30 +70,55 @@ against each opponent (`python3 -m gameaikit.menace.report`):
 | 1,000 games | 969 / 22 / 9 | 0 / 1000 / 0 |
 | 10,000 games | 968 / 22 / 10 | 0 / 1000 / 0 |
 
-Against perfect play it learns quickly never to lose. Against a random
-player it **still loses about one game in a hundred**, and that is not a bug
-in the code. It is what Michie's rewards ask for.
+That is one training run, from the seed the game uses. The same training
+from ten seeds (`python3 -m gameaikit.menace.report --seeds 10`), as losses
+in 1,000 games:
 
-### Why it never stops losing to a random player
+| | lost, fewest to most |
+|---|---|
+| 10 games, vs random | 91 to 396 |
+| 10,000 games, vs random | 0 to 77; fewer than at 10 games on every seed |
+| 10 games, vs perfect | 294 to 1000 |
+| 10,000 games, vs perfect | 0 on nine seeds; **1000 on one** |
 
-A random player blunders. A move that sets a trap -- one a perfect player
-would punish -- wins four games in five against one, and loses the fifth. The
-rewards add three beads for each of the four wins and take one away for the
-loss, so the trap move gains beads steadily, and a favourite box can hold
-hundreds of them. Then the random player stumbles on the reply that beats
-it.
+Two things in that table are not bugs in the code. They are what Michie's
+rules do.
 
-Training against the perfect player afterwards does not undo this. A
-perfect player never walks into those positions, so the boxes holding the
-traps are never drawn from again, and never corrected.
+### It locks in a move that wins often enough
 
-The task this kit was built from asked for a machine that never loses to a
-random player. Measured over ten seeds, Michie's rules gave one between 0
-and 77 losses in a thousand. The choice was between keeping his rules and
-measuring what they promise, or changing them until the number came out
-right. The rules were kept: the tests hold that the 10,000-game machine
-loses nothing to perfect play, that the 10-game one does, and that against a
-random player it loses a tenth as often or less.
+In the published machine, one box -- crosses on the centre and the bottom
+left, noughts on the top right and the middle right -- holds 191 beads for the
+top left and 56 for the bottom right. Played on against a random player, the
+top left wins three games in four and loses the fourth. The bottom right
+wins every time.
+
+The rules cannot tell those apart well enough. Three wins add nine beads and
+the loss takes one away, so the worse move gains beads steadily and the
+better one never catches up: its head start in beads is what decides which
+one gets drawn, and so which one gets the next nine. A favourite box can hold
+hundreds of beads, and the rare loss it allows is never trained away.
+Training against the perfect player afterwards does not help either: a
+perfect player never walks into the position, so the box is never drawn from
+again.
+
+### A box can run dry
+
+On one seed of ten, the box for a position MENACE can still draw empties.
+Each move there led, sooner or later, to a loss -- the blocking move
+included, lost through a blunder later in the same game -- and every loss
+took its bead. An empty box resigns, so that machine resigns every game that
+reaches it, against any opponent.
+
+### What the tests hold
+
+The task asked for a machine that never loses to a random player. Michie's
+rules do not give one, on most seeds. The owner chose to keep his rules and
+hold what the published machine does, against what it is weakest and
+strongest at:
+
+- after 10,000 games it loses no game of 1,000 to perfect play;
+- after 10 games it loses some;
+- against a random player, it loses fewer games after 10,000 than after 10.
 
 ## The same game, the other way: minimax
 
