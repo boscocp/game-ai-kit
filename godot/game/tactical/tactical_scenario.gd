@@ -35,6 +35,16 @@ const MAP: Array[String] = [
 ]
 
 
+## The river runs down columns 6 and 7; a cell left of column 7 is on red's
+## bank, and the bridge's two cells sit one on each.
+const RIVER_MIDDLE: int = 7
+
+
+## True when the two cells are on opposite banks of the river.
+static func across_the_river(here: Vector2i, there: Vector2i) -> bool:
+	return (here.x < RIVER_MIDDLE) != (there.x < RIVER_MIDDLE)
+
+
 ## A fresh game: red to move, both sides with their buildings, two soldiers
 ## each and the starting funds.
 static func build() -> BoardState:

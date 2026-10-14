@@ -150,14 +150,15 @@ func test_the_placements_are_the_same_turned_half_round() -> void:
 		assert_str(mirror.type.type_name).is_equal(unit.type.type_name)
 
 
-func test_ending_the_turn_pays_the_next_side_and_hands_it_a_piece() -> void:
+func test_ending_the_turn_pays_blue_and_hands_it_the_board() -> void:
 	var scene: TacticalGame = _mounted_scene()
 
 	scene.end_turn()
+	scene.end_turn()   # the second press, past "units have not moved"
 
 	assert_str(_status_of(scene)).contains("blue to move")
 	assert_str(_status_of(scene)).contains("funds %d" % (TacticalRules.STARTING_FUNDS + TacticalRules.INCOME))
-	assert_str(_status_of(scene)).contains("in hand: runner")
+	assert_str(_status_of(scene)).contains("blue is thinking with rules")
 
 
 func test_the_scene_comes_up_with_funds_and_a_piece_in_hand() -> void:

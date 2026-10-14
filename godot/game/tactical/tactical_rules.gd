@@ -93,6 +93,20 @@ static func cells_of(rows: Array[String], terrain: String) -> Array[Vector2i]:
 	return found
 
 
+## The first cell beside `producer` with room for a new `kind` -- room, not
+## legality: asking the whole order about every cell hears "you cannot afford
+## it" each time and concludes there is no room, which is what the first
+## version told a player who was simply out of funds. When there is no room,
+## the producer's own cell, so the order is refused for that.
+static func free_cell_beside(state: BoardState, producer: Unit, kind: UnitType) -> Vector2i:
+	if producer == null:
+		return Vector2i(-1, -1)
+	for step: Vector2i in GridGraph.DIRECTIONS:
+		if state.why_no_room(producer, kind, producer.cell + step) == BoardState.LEGAL:
+			return producer.cell + step
+	return producer.cell
+
+
 # The five a workshop builds, and the cycle between them: the runner is fast
 # and cheap and catches what is slow (mortar, ram); the shield holds the line
 # against runners and waders; the mortar outranges the shield; the wader goes

@@ -17,6 +17,9 @@ const ID_TEXT_SIZE: int = 18
 ## The id in a cell's corner, when the piece's own label is a type: messages
 ## still name units by id, and a reader has to find "unit 4" on the board.
 const CORNER_TEXT_SIZE: int = 12
+## How far a spent unit's colour is pulled towards grey.
+const SPENT_GREY: Color = Color(0.45, 0.45, 0.45)
+const SPENT_AMOUNT: float = 0.65
 
 ## Faction colours, by faction number. A scenario with more sides than this
 ## draws the extras in the last colour rather than crashing -- a missing colour
@@ -30,6 +33,11 @@ const FACTION_COLOURS: Array[Color] = [
 ## scene gives one. Until T9 brings silhouettes, two letters are how five
 ## types are told apart without relying on colour.
 var labels: Dictionary = {}
+
+## Units that have acted this turn, drawn greyed out -- the Advance Wars
+## convention, so a person never has to click a unit to learn it is done.
+## Empty unless a scene has turns of that kind.
+var spent: Array[int] = []
 
 var _state: BoardState
 var _board: BoardView
@@ -58,10 +66,13 @@ func _draw() -> void:
 func _draw_unit(unit: Unit, centre: Vector2) -> void:
 	var fixed: bool = unit.type != null and not unit.type.mobile
 	var square := Rect2(centre - Vector2(RADIUS, RADIUS), Vector2(RADIUS, RADIUS) * 2.0)
+	var colour: Color = _colour_of(unit.faction)
+	if unit.id in spent:
+		colour = colour.lerp(SPENT_GREY, SPENT_AMOUNT)
 	if fixed:
-		draw_rect(square, _colour_of(unit.faction))
+		draw_rect(square, colour)
 	else:
-		draw_circle(centre, RADIUS, _colour_of(unit.faction))
+		draw_circle(centre, RADIUS, colour)
 	_draw_label(centre, _label_of(unit))
 	if _label_of(unit) != str(unit.id):
 		_draw_corner_id(centre, unit.id)

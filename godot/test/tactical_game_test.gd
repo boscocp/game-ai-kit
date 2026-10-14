@@ -1,0 +1,503 @@
+# T30: the tactical game against the computer. Red's turns as Advance Wars
+# plays them -- spent units, the next unit picked for you, undo, a confirmed
+# end of turn -- and blue played by rules, every decision shown before it is
+# played and every one legal, over many games.
+extends GdUnitTestSuite
+
+const RED: int = TacticalScenario.RED
+const BLUE: int = TacticalScenario.BLUE
+const RED_WORKSHOP := Vector2i(1, 7)
+const BLUE_WORKSHOP := Vector2i(12, 1)
+
+
+# --- red's turn --------------------------------------------------------------
+
+func test_a_spent_unit_cannot_move_again_this_turn() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
+	var first: Vector2i = runner.cell + Vector2i(-1, 0)
+	scene.click_cell(first)
+	assert_vector(scene.state.unit_by_id(runner.id).cell).is_equal(first)
+
+	scene.click_cell(runner.cell + Vector2i(-1, 0))   # pick it up again
+	scene.click_cell(first + Vector2i(-1, 0))         # and try one more step
+
+	assert_vector(scene.state.unit_by_id(runner.id).cell).is_equal(first)
+	assert_str(_status_of(scene)).contains("has moved this turn")
+
+
+func test_a_spent_unit_offers_no_reach() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
+	scene.click_cell(runner.cell + Vector2i(-1, 0))
+
+	scene.click_cell(runner.cell + Vector2i(-1, 0))
+
+	assert_array(scene._steps_in_reach()).is_empty()
+
+
+func test_moving_selects_the_next_unspent_unit() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
+	var shield: Unit = _first_of(scene.state, RED, TacticalRules.SHIELD)
+	assert_int(scene._selected_id).is_equal(runner.id)
+
+	scene.click_cell(runner.cell + Vector2i(-1, 0))
+
+	assert_int(scene._selected_id).is_equal(shield.id)
+
+
+func test_once_every_unit_has_moved_nothing_is_in_hand_and_the_screen_says_so() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
+	var shield: Unit = _first_of(scene.state, RED, TacticalRules.SHIELD)
+	scene.click_cell(runner.cell + Vector2i(-1, 0))
+	scene.click_cell(shield.cell)   # in hand already: it waits
+
+	assert_int(scene._selected_id).is_equal(-1)
+	assert_str(_status_of(scene)).contains("every unit has moved")
+
+
+func test_units_can_be_moved_in_any_order() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
+	var shield: Unit = _first_of(scene.state, RED, TacticalRules.SHIELD)
+	scene.click_cell(shield.cell)
+	var target: Vector2i = shield.cell + Vector2i(1, 0)
+
+	scene.click_cell(target)
+
+	assert_vector(scene.state.unit_by_id(shield.id).cell).is_equal(target)
+	assert_int(scene._selected_id).is_equal(runner.id)
+
+
+func test_clicking_the_unit_in_hand_has_it_wait() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
+
+	scene.click_cell(runner.cell)
+
+	assert_bool(scene._turn.is_spent(runner.id)).is_true()
+	assert_vector(scene.state.unit_by_id(runner.id).cell).is_equal(runner.cell)
+
+
+func test_undo_restores_the_unit_and_its_spent_state() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
+	scene.click_cell(runner.cell + Vector2i(-1, 0))
+
+	scene.undo()
+
+	var back: Unit = scene.state.unit_by_id(runner.id)
+	assert_vector(back.cell).is_equal(runner.cell)
+	assert_int(back.movement_points).is_equal(runner.movement_points)
+	assert_bool(scene._turn.is_spent(runner.id)).is_false()
+
+
+func test_undo_takes_back_a_build_and_the_money() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	scene.click_cell(RED_WORKSHOP)
+	scene.build(TacticalRules.BUILDABLE.find(TacticalRules.RUNNER))
+	assert_int(scene.state.units_of(RED).size()).is_equal(6)
+
+	scene.undo()
+
+	assert_int(scene.state.units_of(RED).size()).is_equal(5)
+	assert_int(scene.state.funds_of(RED)).is_equal(TacticalRules.STARTING_FUNDS)
+	assert_bool(scene._turn.is_spent(scene.state.unit_at(RED_WORKSHOP).id)).is_false()
+
+
+func test_undo_goes_back_as_far_as_the_start_of_the_turn_and_no_further() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var start: BoardState = scene.state
+	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
+	scene.click_cell(runner.cell + Vector2i(-1, 0))
+	scene.click_cell(_first_of(scene.state, RED, TacticalRules.SHIELD).cell)
+
+	scene.undo()
+	scene.undo()
+	scene.undo()
+
+	assert_object(scene.state).is_same(start)
+	assert_str(_status_of(scene)).contains("nothing to take back")
+
+
+func test_a_workshop_builds_once_a_turn() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	scene.click_cell(RED_WORKSHOP)
+	scene.build(TacticalRules.BUILDABLE.find(TacticalRules.RUNNER))
+
+	scene.build(TacticalRules.BUILDABLE.find(TacticalRules.RUNNER))
+
+	assert_int(scene.state.units_of(RED).size()).is_equal(6)
+	assert_str(_status_of(scene)).contains("already built this turn")
+
+
+func test_ending_the_turn_with_units_unspent_asks_first() -> void:
+	var scene: TacticalGame = _mounted_scene()
+
+	scene.end_turn()
+
+	assert_int(scene.state.current_faction).is_equal(RED)
+	assert_str(_status_of(scene)).contains("2 unit(s) have not moved")
+
+
+func test_any_other_action_cancels_the_question() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	scene.end_turn()
+	scene.click_cell(_first_of(scene.state, RED, TacticalRules.RUNNER).cell + Vector2i(-1, 0))
+
+	scene.end_turn()
+
+	assert_int(scene.state.current_faction).is_equal(RED)
+
+
+func test_ending_the_turn_with_every_unit_spent_does_not_ask() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	scene.click_cell(_first_of(scene.state, RED, TacticalRules.RUNNER).cell)
+	scene.click_cell(_first_of(scene.state, RED, TacticalRules.SHIELD).cell)
+
+	scene.end_turn()
+
+	assert_int(scene.state.current_faction).is_equal(BLUE)
+
+
+func test_the_end_turn_button_ends_the_turn() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var button: Button = scene.get_node("Interface/EndTurn")
+
+	button.pressed.emit()
+	button.pressed.emit()
+
+	assert_int(scene.state.current_faction).is_equal(BLUE)
+	assert_bool(button.disabled).is_true()
+
+
+func test_the_undo_button_takes_back_a_move() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var button: Button = scene.get_node("Interface/Undo")
+	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
+	assert_bool(button.disabled).is_true()
+	scene.click_cell(runner.cell + Vector2i(-1, 0))
+	assert_bool(button.disabled).is_false()
+
+	button.pressed.emit()
+
+	assert_vector(scene.state.unit_by_id(runner.id).cell).is_equal(runner.cell)
+
+
+func test_spent_units_are_drawn_greyed() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
+	scene.click_cell(runner.cell)
+	var view: UnitView = scene.get_node("UnitView")
+
+	assert_array(view.spent).contains([runner.id])
+
+
+# --- blue ------------------------------------------------------------------
+
+func test_blue_shows_its_decision_before_playing_it() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	scene.step_decision()   # red's turn ends
+	var shown: TacticalDecision = scene._blue_turn.next
+	var before: BoardState = scene.state
+	assert_object(shown).is_not_null()
+	assert_str(scene.decision_overlay()["next"]["why"]).is_equal(shown.reason)
+	assert_object(scene.state).is_same(before)
+
+	scene.step_decision()
+
+	assert_object(scene._blue_turn.played.back()).is_same(shown)
+
+
+func test_blue_s_next_walk_is_drawn() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	scene.step_decision()
+	scene.step_decision()   # the workshop's decision is played; a walk is next
+	var intent: IntentView = scene.get_node("IntentView")
+
+	assert_str(scene._blue_turn.next.kind()).is_equal("move")
+	assert_object(intent._decision).is_same(scene._blue_turn.next)
+
+
+func test_blue_builds_what_beats_the_most_red_pieces() -> void:
+	# Red has a runner and a shield on the move, and three buildings. A shield
+	# beats the runner; a mortar beats the shield; a ram would beat all three
+	# buildings but needs the forge. Shield and mortar tie at one, and the tie
+	# goes to the earlier type.
+	var state: BoardState = _blue_to_move(TacticalScenario.build())
+	var decision: TacticalDecision = RuleBasedBlue.new().decide_build(state, state.unit_at(BLUE_WORKSHOP).id)
+
+	assert_str(decision.kind()).is_equal("build")
+	assert_str(decision.order.unit_type.type_name).is_equal(TacticalRules.SHIELD)
+	assert_str(decision.reason).contains("no combat until T26")
+
+
+func test_blue_builds_the_counter_to_whatever_red_has_most_of() -> void:
+	var state: BoardState = _blue_to_move(TacticalScenario.build())
+	var shield: UnitType = TacticalRules.unit_types()[TacticalRules.SHIELD]
+	for cell: Vector2i in [Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)]:
+		state.units.append(Unit.new(state.next_id, RED, cell, 10, 3, shield))
+		state.next_id += 1
+
+	var decision: TacticalDecision = RuleBasedBlue.new().decide_build(state, state.unit_at(BLUE_WORKSHOP).id)
+
+	assert_str(decision.order.unit_type.type_name).is_equal(TacticalRules.MORTAR)
+
+
+func test_blue_builds_nothing_it_cannot_pay_for() -> void:
+	var state: BoardState = _blue_to_move(TacticalScenario.build())
+	state.funds[BLUE] = 0
+
+	var decision: TacticalDecision = RuleBasedBlue.new().decide_build(state, state.unit_at(BLUE_WORKSHOP).id)
+
+	assert_str(decision.kind()).is_equal("hold")
+
+
+func test_blue_walks_towards_the_nearest_red_piece_over_the_bridge() -> void:
+	var state: BoardState = _blue_to_move(TacticalScenario.build())
+	var runner: Unit = _first_of(state, BLUE, TacticalRules.RUNNER)
+	var blue := RuleBasedBlue.new()
+	var target: Unit = blue._nearest_enemy(state, runner)
+	var before: int = TacticalReach.route_costs(state.graph_for(runner), target.cell)[runner.cell]
+
+	var decision: TacticalDecision = blue.decide_move(state, runner.id)
+
+	var after: int = TacticalReach.route_costs(state.graph_for(runner), target.cell)[decision.target]
+	assert_int(after).is_less(before)
+	assert_str(decision.reason).contains("making for the bridge")
+
+
+func test_blue_s_workshop_decides_before_anyone_walks() -> void:
+	# So what it builds is on the board, and in the way, before a unit plans
+	# a route through that cell.
+	# The workshop is moved to the end of the unit list, so that being asked
+	# first is the rule's doing and not the list's.
+	var state: BoardState = _blue_to_move(TacticalScenario.build())
+	var workshop: Unit = state.unit_at(BLUE_WORKSHOP)
+	state.units.erase(workshop)
+	state.units.append(workshop)
+	var turn := BlueTurn.new(RuleBasedBlue.new())
+
+	turn.begin(state)
+
+	assert_int(turn.next.unit_id).is_equal(state.unit_at(BLUE_WORKSHOP).id)
+
+
+func test_route_costs_are_the_cheapest_walks_dijkstra_finds() -> void:
+	# Held against `ai_search`'s Dijkstra, which shares no code with it, from
+	# both workshops' doors, to every cell either can reach -- trees and all.
+	var state: BoardState = TacticalScenario.build()
+	for from: Vector2i in [RED_WORKSHOP + Vector2i(1, 0), BLUE_WORKSHOP + Vector2i(-1, 0)]:
+		var costs: Dictionary = TacticalReach.route_costs(state.graph, from)
+		for cell: Vector2i in costs:
+			assert_int(costs[cell]).is_equal(DijkstraSearch.new().search(state.graph, from, cell).cost)
+
+
+func test_blue_aims_at_the_red_piece_with_the_cheapest_walk() -> void:
+	var state: BoardState = _blue_to_move(TacticalScenario.build())
+	for runner: Unit in state.units_of(BLUE):
+		if not runner.type.mobile:
+			continue
+		var chosen: Unit = RuleBasedBlue.new()._nearest_enemy(state, runner)
+		var graph: GridGraph = state.graph_for(runner)
+		var chosen_cost: int = DijkstraSearch.new().search(graph, runner.cell, chosen.cell).cost
+		for enemy: Unit in state.units_of(RED):
+			assert_int(chosen_cost).is_less_equal(DijkstraSearch.new().search(graph, runner.cell, enemy.cell).cost)
+
+
+func test_blue_s_turn_is_legal_on_every_decision_over_many_seeded_games() -> void:
+	# Red plays at random -- walks, waits, builds -- so blue meets boards
+	# nobody wrote by hand. Every blue decision is put to the board before it
+	# is played.
+	var decisions: int = 0
+	for seed_number: int in range(25):
+		decisions += _play_seeded_game(seed_number, 12)
+	assert_int(decisions).is_greater(25 * 12 * 2)
+
+
+func test_blue_is_whichever_controller_the_scene_was_given() -> void:
+	var scene: TacticalGame = (load("res://game/tactical/tactical.tscn") as PackedScene).instantiate()
+	scene.blue = _HoldingBlue.new()
+	add_child(scene)
+	auto_free(scene)
+
+	scene.step_decision()
+
+	assert_str(scene.decision_overlay()["controller"]).is_equal("holds")
+	assert_str((scene.get_node("Interface/Header") as Label).text).contains("never moves")
+
+
+func test_the_screen_says_what_game_this_is_and_who_plays_blue() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var header: String = (scene.get_node("Interface/Header") as Label).text
+
+	assert_str(header).contains("in the style of Advance Wars")
+	assert_str(header).contains("take the enemy workshop")
+	assert_str(header).contains("rules, not a plan")
+
+
+# --- the end of a game -----------------------------------------------------
+
+func test_no_side_has_won_at_the_start() -> void:
+	var state: BoardState = TacticalScenario.build()
+
+	assert_int(TacticalVictory.winner(state)).is_equal(TacticalVictory.NOBODY)
+	assert_int(TacticalVictory.winner(_blue_to_move(state))).is_equal(TacticalVictory.NOBODY)
+
+
+func test_red_wins_by_standing_beside_blue_s_workshop_at_the_start_of_its_turn() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
+	scene.state.unit_by_id(runner.id).cell = BLUE_WORKSHOP + Vector2i(-1, 0)
+
+	_play_until_red_or_over(scene)
+
+	assert_int(scene.winner).is_equal(RED)
+	assert_str(_status_of(scene)).contains("red wins")
+	assert_str(_status_of(scene)).contains("Provisional")
+
+
+func test_standing_there_is_not_enough_until_the_turn_comes_round() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
+	scene.state.unit_by_id(runner.id).cell = BLUE_WORKSHOP + Vector2i(-1, 0)
+
+	scene.step_decision()   # blue's turn begins: blue has not lost yet
+
+	assert_int(scene.winner).is_equal(TacticalVictory.NOBODY)
+
+
+func test_blue_wins_the_same_way() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var runner: Unit = _first_of(scene.state, BLUE, TacticalRules.RUNNER)
+	scene.state.unit_by_id(runner.id).cell = RED_WORKSHOP + Vector2i(0, -1)
+
+	scene.step_decision()
+
+	assert_int(scene.winner).is_equal(BLUE)
+
+
+func test_a_tower_beside_the_workshop_takes_nothing() -> void:
+	var state: BoardState = TacticalScenario.build()
+	var tower: Unit = _first_of(state, RED, TacticalRules.BOLT_TOWER)
+	state.unit_by_id(tower.id).cell = BLUE_WORKSHOP + Vector2i(-1, 0)
+
+	assert_int(TacticalVictory.winner(state)).is_equal(TacticalVictory.NOBODY)
+
+
+func test_once_the_game_is_over_nothing_moves_until_r() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var runner: Unit = _first_of(scene.state, BLUE, TacticalRules.RUNNER)
+	scene.state.unit_by_id(runner.id).cell = RED_WORKSHOP + Vector2i(0, -1)
+	scene.step_decision()
+	var finished: BoardState = scene.state
+
+	scene.step_decision()
+	scene.click_cell(Vector2i(5, 5))
+
+	assert_object(scene.state).is_same(finished)
+	scene._press(KEY_R)
+	assert_int(scene.winner).is_equal(TacticalVictory.NOBODY)
+	assert_int(scene.state.current_faction).is_equal(RED)
+
+
+# --- helpers ---------------------------------------------------------------
+
+# A controller that never does anything: enough to show the scene asks
+# whichever one it was given.
+class _HoldingBlue extends BlueController:
+	func controller_name() -> String:
+		return "holds"
+
+	func describe() -> String:
+		return "a controller that never moves"
+
+	func decide_build(state: BoardState, workshop_id: int) -> TacticalDecision:
+		return TacticalDecision.hold(workshop_id, "holds", state.unit_by_id(workshop_id).cell)
+
+	func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
+		return TacticalDecision.hold(unit_id, "holds", state.unit_by_id(unit_id).cell)
+
+
+# One game of `rounds` rounds, red at random, every blue decision checked.
+# Returns how many blue decisions were checked.
+func _play_seeded_game(seed_number: int, rounds: int) -> int:
+	var random := RandomNumberGenerator.new()
+	random.seed = seed_number
+	var state: BoardState = TacticalScenario.build()
+	var turn := BlueTurn.new(RuleBasedBlue.new())
+	var checked: int = 0
+	for round_number: int in range(rounds):
+		state = _random_red_turn(state, random)
+		turn.begin(state)
+		var label: String = "seed %d, round %d" % [seed_number, round_number]
+		while not turn.finished():
+			state = _checked_play(state, turn, label)
+			checked += 1
+		assert_array(turn.refused).is_empty()
+		state = state.end_turn(TacticalScenario.FACTIONS, 0, TacticalRules.INCOME)
+	return checked
+
+
+func _checked_play(state: BoardState, turn: BlueTurn, label: String) -> BoardState:
+	assert_str(_why_refused(state, turn.next)).override_failure_message(
+		"%s: %s" % [label, turn.next.reason]).is_equal(BoardState.LEGAL)
+	return turn.play(state)
+
+
+func _why_refused(state: BoardState, decision: TacticalDecision) -> String:
+	match decision.kind():
+		"move":
+			return state.why_refused(decision.move)
+		"build":
+			return state.why_production_refused(decision.order)
+	return BoardState.LEGAL
+
+
+# Red's turn played by a coin: a random build if one is affordable, then each
+# walker to a random cell it can reach, or nowhere.
+func _random_red_turn(state: BoardState, random: RandomNumberGenerator) -> BoardState:
+	var workshop: Unit = state.unit_at(RED_WORKSHOP)
+	var kind: UnitType = TacticalRules.unit_types()[TacticalRules.BUILDABLE[random.randi_range(0, 3)]]
+	var built: BoardState = state.produce(ProductionOrder.new(workshop.id, kind,
+		TacticalRules.free_cell_beside(state, workshop, kind)))
+	if built != null:
+		state = built
+	for unit: Unit in state.units_of(RED):
+		var walks: Array = TacticalReach.walks_for(state, unit).values()
+		if not walks.is_empty():
+			var path: Array[Vector2i] = []
+			path.assign(walks[random.randi_range(0, walks.size() - 1)])
+			state = state.apply(Move.new(unit.id, path))
+	return state.end_turn(TacticalScenario.FACTIONS, 0, TacticalRules.INCOME)
+
+
+func _play_until_red_or_over(scene: TacticalGame) -> void:
+	scene.step_decision()
+	for guard: int in range(50):
+		if scene.winner != TacticalVictory.NOBODY or scene._reds_turn():
+			return
+		scene.step_decision()
+
+
+func _blue_to_move(state: BoardState) -> BoardState:
+	return state.end_turn(TacticalScenario.FACTIONS, 0, TacticalRules.INCOME)
+
+
+func _mounted_scene() -> TacticalGame:
+	var scene: TacticalGame = auto_free((load("res://game/tactical/tactical.tscn") as PackedScene).instantiate())
+	add_child(scene)
+	return scene
+
+
+func _status_of(scene: TacticalGame) -> String:
+	return (scene.get_node("Interface/Status") as Label).text
+
+
+func _first_of(state: BoardState, faction: int, type_name: String) -> Unit:
+	for unit: Unit in state.units_of(faction):
+		if unit.type.type_name == type_name:
+			return unit
+	return null

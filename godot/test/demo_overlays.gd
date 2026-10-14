@@ -27,6 +27,7 @@ const SCENES: Array[String] = [
 	"res://game/main.tscn",
 	"res://demos/search/search_demo.tscn",
 	"res://game/stealth/stealth.tscn",
+	"res://game/tactical/tactical.tscn",
 	"res://game/tictactoe/tictactoe.tscn",
 ]
 
@@ -37,6 +38,7 @@ const REQUIRED: Dictionary = {
 	"res://game/main.tscn": ["p_win", true],
 	"res://demos/search/search_demo.tscn": ["frontier", false],
 	"res://game/stealth/stealth.tscn": ["suspicion", true],
+	"res://game/tactical/tactical.tscn": ["why", false],
 	"res://game/tictactoe/tictactoe.tscn": ["probability", true],
 }
 

@@ -92,7 +92,16 @@ paints wall, mud or open ground (W, M, G), right-drag erases, the dots drag,
 and B steps through a maze, an open field and a trap for depth-first. Every
 change searches again, and a goal walled off is answered "no route".
 
-*Recordings of all four are still to be made.*
+**Tactics** (`make demo-tactical`). Turns in the style of Advance Wars, you
+as red against the computer as blue, over a river with one bridge. Click a
+unit and everywhere it can reach lights up; click a lit cell and it walks
+there and greys out until your next turn. Z takes back, space ends the turn.
+Blue plays by two rules -- build what beats the most of your pieces, walk at
+the nearest one -- and each of its decisions is drawn in pink, with why,
+before space plays it. Stand a unit beside the enemy workshop at the start
+of your turn to win (provisional, until combat arrives).
+
+*Recordings of all five are still to be made.*
 
 ## Getting started
 
@@ -111,6 +120,7 @@ make run           # checkers against minimax and alpha-beta
 make demo-skirmish # the learned policy plays blue on the skirmish board
 make demo-tictactoe # MENACE, the matchbox machine, at four ages of training
 make demo-search   # the four searches on a board you can paint
+make demo-tactical # Advance Wars style turns against a rule-based blue
 make check         # every gate
 ```
 
