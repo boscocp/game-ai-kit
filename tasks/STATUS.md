@@ -31,7 +31,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T27 | Checkers, and minimax | done | `make run` is checkers against `ai_adversarial`; depth 4 by default (~50 ms); depth 6 stalls the frame up to ~730 ms with kings; the old board is `demo-skirmish`; manual check still a person's |
 | T28 | Tic-tac-toe, and a machine that learns it | done | MENACE in Python, 304 boxes, four ages; `make demo-tictactoe`; N5/N6 in `check_no_training.py`; strength criterion changed to vs-perfect by the owner: Michie's rewards lock in a move that wins three in four, and the published machine still loses 10 in 1,000 to a random player |
 | T29 | A search board you can edit | done | paint, erase, drag the dots, price mud; four named boards each with a checked promise; manual check still a person's |
-| T30 | The tactical game, against the computer | todo | Advance Wars style turns, a rule-based blue, becomes `demo-tactical` |
+| T30 | The tactical game, against the computer | done | `make demo-tactical`: spent units, undo, a confirmed end of turn; blue is a `BlueController`, rules today; blue walks at the workshop, not the nearest enemy (changed, pending the owner); 40-round draw; manual check still a person's |
 | T9 | Art that is not a coloured square | todo | Kenney CC0 for checkers, tic-tac-toe and the tactical game; laid out so T31 can swap any file |
 | T31 | Generate your own art, locally | todo | a local image model, downloaded separately; each user generates their own (gitignored), the repo keeps a few examples; default FLUX.2 klein 4B (owner's pick), measured first; tier 3 and optional |
 | T32 | Checkers with a learned evaluation | todo | after Samuel (1959 paper): the same search, weights fitted in Python, and a match |
@@ -78,6 +78,43 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-14 (wave 29)
+
+**What landed.** T30: `make demo-tactical` replaces `play-tactical`. You play
+red against the computer, with turns in the style of Advance Wars:
+- click a unit and its reach lights up; click a lit cell and it walks and
+  greys out. The next unit that can still move is put in your hand;
+- W waits, Z (or the button) takes back anything done this turn, and ending
+  the turn asks first while units are unspent;
+- blue is whichever `BlueController` the scene is given. Today that is
+  `RuleBasedBlue`: it builds what beats the most red pieces and walks every
+  unit at red's workshop;
+- each decision is drawn in pink with its reason before space plays it, and
+  enter plays the rest of the turn;
+- a unit beside the enemy workshop at the start of its side's turn wins
+  (provisional until T26). After 40 rounds the game is a draw.
+
+**For the owner: one rule differs from the task file.** T30 says blue
+"walks each unit at the nearest enemy". The review measured that it never
+wins: the nearest enemy is a bolt tower, and after 60 rounds blue had thirty
+shields round it. Blue now walks at red's workshop, and beats a red that
+only waits in round 5. The draw is also new. Both are noted in the task
+file. Change them back if the original rule was the point.
+
+**The review's worst findings.**
+- Blue could not win.
+- Nothing held that red's units come fresh at red's next turn.
+- After the game ended, blue's next move was still drawn.
+- The first click on the unit already in hand spent it.
+
+All are fixed, and the 15 mutations behind them re-run red but one. That
+one is a guard made redundant, so it was removed. See
+[docs/reviews/29-the-tactical-game-against-the-computer.md](../docs/reviews/29-the-tactical-game-against-the-computer.md).
+
+**Not proven.** T30's manual check: play a game reading only the screen.
+
+**Next:** `make wave` cuts the next ready row.
 
 ## Resuming after 2026-10-14 (wave 28)
 

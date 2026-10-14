@@ -318,10 +318,8 @@ demo-search: ## The four searches on a board you can paint: drag to edit, 1-4 ch
 demo-stealth: ## Cross the hall unseen: arrows walk, shift sprints, space waits, D shows danger
 	@$(GODOT) --path godot res://game/stealth/stealth.tscn
 
-.PHONY: play-tactical
-play-tactical: ## The tactical scenario, two people at one mouse: 1-5 build, U forge, space ends the turn
-	@# Not demo-*: no AI decides anything here yet, so it is not an example in
-	@# invariant 13's sense. T11 gives one side to the planner and renames it.
+.PHONY: demo-tactical
+demo-tactical: ## Advance Wars style tactics against a rule-based blue: click to move, W waits, 1-5 build, Z undo, space ends the turn
 	@$(GODOT) --path godot res://game/tactical/tactical.tscn
 
 # --- shipping --------------------------------------------------------------

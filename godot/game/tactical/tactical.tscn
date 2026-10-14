@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://game/tactical/tactical.gd" id="1_tactical"]
 [ext_resource type="Script" path="res://game/board_view.gd" id="2_board"]
 [ext_resource type="Script" path="res://game/unit_view.gd" id="3_units"]
+[ext_resource type="Script" path="res://game/tactical/intent_view.gd" id="4_intent"]
 [ext_resource type="Script" path="res://game/legend.gd" id="9_legend"]
 
 [node name="Tactical" type="Node2D"]
@@ -14,7 +15,33 @@ script = ExtResource("2_board")
 [node name="UnitView" type="Node2D" parent="."]
 script = ExtResource("3_units")
 
+[node name="IntentView" type="Node2D" parent="."]
+script = ExtResource("4_intent")
+
 [node name="Interface" type="CanvasLayer" parent="."]
+
+[node name="Header" type="Label" parent="Interface"]
+offset_left = 24.0
+offset_top = 12.0
+offset_right = 1256.0
+offset_bottom = 84.0
+theme_override_font_sizes/font_size = 16
+text = "loading"
+horizontal_alignment = 1
+
+[node name="EndTurn" type="Button" parent="Interface"]
+offset_left = 464.0
+offset_top = 604.0
+offset_right = 624.0
+offset_bottom = 640.0
+text = "End turn (space)"
+
+[node name="Undo" type="Button" parent="Interface"]
+offset_left = 656.0
+offset_top = 604.0
+offset_right = 816.0
+offset_bottom = 640.0
+text = "Undo (Z)"
 
 [node name="Status" type="Label" parent="Interface"]
 offset_right = 280.0

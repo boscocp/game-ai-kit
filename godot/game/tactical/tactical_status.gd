@@ -15,11 +15,24 @@ extends RefCounted
 ## hand (or null), the last refusal (or "") and what just happened (or "").
 static func text(state: BoardState, in_hand: Unit, refusal: String, news: String = "") -> String:
 	var lines: Array[String] = [_headline(state), _piece(in_hand), _what_to_do(state, in_hand)]
-	lines.append("space ends your turn; the next side is paid %d" % TacticalRules.INCOME)
+	lines.append("Z takes back the last thing you did  ·  space ends your turn, and blue is paid %d" % TacticalRules.INCOME)
 	if news != "":
 		lines.append("\n" + news)
 	if refusal != BoardState.LEGAL:
 		lines.append("\nrefused: " + refusal)
+	return "\n".join(lines)
+
+
+## What the status says on blue's turn: who is playing it, what it is about
+## to do and why, and what to press.
+static func blue_text(state: BoardState, turn: BlueTurn, controller: BlueController) -> String:
+	var lines: Array[String] = [_headline(state), "blue is thinking with %s" % controller.controller_name()]
+	if turn.next != null:
+		lines.append("\nnext (drawn in pink): unit %d %s" % [turn.next.unit_id, turn.next.reason])
+		lines.append("\nspace plays it  ·  enter plays the rest of blue's turn")
+	else:
+		lines.append("\nblue has finished its turn. Space hands it back to red")
+	lines.append("\n%d decision(s) played this turn" % turn.played.size())
 	return "\n".join(lines)
 
 
@@ -62,7 +75,7 @@ static func _what_to_do(state: BoardState, unit: Unit) -> String:
 		return "a %s cannot move. Click another of your pieces." % unit.type.type_name
 	if unit.movement_points == 0:
 		return "this unit has no movement left. Click another of your pieces."
-	return "click a highlighted cell to walk there: everywhere lit is in reach this turn. A step costs the number on the cell, or 1."
+	return "click a lit cell to walk there, and the unit is spent until your next turn; W has it wait where it is. A step costs the number on the cell, or 1."
 
 
 static func _price_list() -> String:

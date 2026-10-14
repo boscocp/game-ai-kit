@@ -45,5 +45,5 @@ The suite must include:
 
 ## Manual check
 
-Play three turns of `make play-tactical`. A runner sent at a mortar should
+Play three turns of `make demo-tactical`. A runner sent at a mortar should
 usually win, and the same runner sent at a shield should usually lose.

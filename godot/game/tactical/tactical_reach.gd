@@ -30,6 +30,35 @@ static func walks_for(state: BoardState, unit: Unit) -> Dictionary:
 	return _legal_walks(state, unit, came_from)
 
 
+## Cell -> what the cheapest walk from `from` costs, for every cell the
+## graph lets anything reach, with no limit on movement and nobody in the
+## way. The same flood as `walks_for`, asked a different question: not
+## "where can I go this turn" but "how far is everything".
+static func route_costs(graph: GridGraph, from: Vector2i) -> Dictionary:
+	var spent: Dictionary = {from: 0}
+	var frontier: Array[Vector2i] = [from]
+	while not frontier.is_empty():
+		var here: Vector2i = _cheapest(frontier, spent)
+		frontier.erase(here)
+		frontier.append_array(_relax(graph, here, spent))
+	return spent
+
+
+# The neighbours of `here` that a walk through it reaches more cheaply than
+# any found so far -- written into `spent` and returned to be flooded on.
+# Taken cheapest first, with the cost charged for the cell entered, the first
+# walk to reach a cell is already its cheapest, so "more cheaply" only ever
+# means "for the first time" here: the reason `dijkstra.gd` gives, measured.
+static func _relax(graph: GridGraph, here: Vector2i, spent: Dictionary) -> Array[Vector2i]:
+	var improved: Array[Vector2i] = []
+	for next: Vector2i in graph.neighbours(here):
+		var cost: int = spent[here] + graph.cost_at(next)
+		if cost < spent.get(next, cost + 1):
+			spent[next] = cost
+			improved.append(next)
+	return improved
+
+
 # The neighbours of `here` reached more cheaply through it than any way found
 # so far, and still affordable -- written down, and returned to be expanded.
 static func _expand(state: BoardState, unit: Unit, here: Vector2i, spent: Dictionary,
