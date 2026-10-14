@@ -78,8 +78,10 @@ whether it fits. The first step, on the owner's machine:
 - record peak VRAM and seconds per image, in fp8 and with CPU offload,
   since the page's own "~13 GB" is over the card's 12.
 
-If neither setting fits in 12 GB, or the sprites are unusable, fall back to
-Z-Image-Turbo and say so in the ADR. Otherwise klein 4B is the default,
+**Z-Image-Turbo is the reserve**, the owner's choice too. Fall back to it if
+neither setting fits in 12 GB, or if the owner looks at the five sprites and
+judges them poor. Run the same five prompts on it, and say in the ADR which
+was taken and why. Otherwise klein 4B is the default,
 pinned by revision and SHA. The table, the measurements and the choice go in
 the ADR.
 
