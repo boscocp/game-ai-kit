@@ -33,7 +33,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T29 | A search board you can edit | todo | paint walls and mud, drag start and goal, the four searches rerun |
 | T30 | The tactical game, against the computer | todo | Advance Wars style turns, a rule-based blue, becomes `demo-tactical` |
 | T9 | Art that is not a coloured square | todo | Kenney CC0 for checkers, tic-tac-toe and the tactical game; laid out so T31 can swap any file |
-| T31 | Generate your own art, locally | todo | a local image model, downloaded separately; each user generates their own (gitignored), the repo keeps a few examples; tier 3 and optional |
+| T31 | Generate your own art, locally | todo | a local image model, downloaded separately; each user generates their own (gitignored), the repo keeps a few examples; default FLUX.2 klein 4B (owner's pick), measured first; tier 3 and optional |
 | T32 | Checkers with a learned evaluation | todo | Samuel, 1959: the same search, weights fitted in Python, and a match |
 | T10 | The tactical scenario | done | five types, two towers, a workshop, funds, a forge, a river with one bridge; manual check: terrain yes, type feel waits on T26 |
 | T11 | The planner plays | todo | STRIPS drives a faction; needs T4, and T26 for attacks; `ai_learning` still routes on `state.graph`, wrong for a wader |

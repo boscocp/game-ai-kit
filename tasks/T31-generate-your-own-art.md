@@ -70,19 +70,23 @@ Three caveats travel with the table:
 - These models move fast. If this task starts months after 2026-10-13,
   redo the research before the bake-off.
 
-**The choice is measured, not read.** The first step is a bake-off on the
-owner's machine:
-- the same five prompts the kit needs (a unit, a tower, a terrain tile, a
-  checkers piece, the board);
-- the two candidates, with peak VRAM and seconds per image recorded;
-- the owner picks by eye.
+**The owner chose FLUX.2 [klein] 4B with the pixel-art LoRA** as the default
+(2026-10-13), after reading the table above. What is left to measure is
+whether it fits. The first step, on the owner's machine:
+- generate the same five prompts the kit needs (a unit, a tower, a terrain
+  tile, a checkers piece, the board) with klein 4B and the LoRA;
+- record peak VRAM and seconds per image, in fp8 and with CPU offload,
+  since the page's own "~13 GB" is over the card's 12.
 
-The winner becomes the default, pinned by revision and SHA. The table, the
-measurements and the pick go in the ADR.
+If neither setting fits in 12 GB, or the sprites are unusable, fall back to
+Z-Image-Turbo and say so in the ADR. Otherwise klein 4B is the default,
+pinned by revision and SHA. The table, the measurements and the choice go in
+the ADR.
 
 ## Steps
 
-0. **The bake-off above**, with its numbers committed to the ADR.
+0. **The measurement above**: klein 4B fits in 12 GB, or the fallback is
+   taken. The numbers go in the ADR.
 1. **An ADR, with the trade-off written out**: in the repository and
    fenced, rather than a separate repository or no generator at all.
 2. **`make artgen-bootstrap`** creates an isolated environment under the
