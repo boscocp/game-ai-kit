@@ -1,0 +1,88 @@
+{
+  "comment": "The models the generator can run, each pinned by revision and by the sha256 of its weights, with its licence. `default` is what `make artgen` uses; MODEL=<name> picks another. Every committed example records the model that made it.",
+  "default": "zimage",
+  "default_comment": "Chosen on 2026-10-14 by the owner, after the same seven prompts on both: Z-Image-Turbo drew cleaner, flatter pixel art that reads at 32 pixels; klein drew more detailed, illustrated pictures. See ADR 0013.",
+  "models": {
+    "zimage": {
+      "pipeline": "ZImagePipeline",
+      "repo": "Tongyi-MAI/Z-Image-Turbo",
+      "revision": "f332072aa78be7aecdf3ee76d5c247082da564a6",
+      "licence": "Apache-2.0",
+      "licence_url": "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/blob/f332072aa78be7aecdf3ee76d5c247082da564a6/README.md",
+      "fetch": [
+        "model_index.json",
+        "scheduler/*",
+        "text_encoder/*",
+        "tokenizer/*",
+        "transformer/*",
+        "vae/*"
+      ],
+      "sha256": {
+        "text_encoder/model-00001-of-00003.safetensors": "328a91d3122359d5547f9d79521205bc0a46e1f79a792dfe650e99fc2d651223",
+        "text_encoder/model-00002-of-00003.safetensors": "6cd087b316306a68c562436b5492edbcf6e16c6dba3a1308279caa5a58e21ca5",
+        "text_encoder/model-00003-of-00003.safetensors": "7ca841ee75b9c61267c0c6148fd8d096d3d21b6d3e161256a9b878154f91fc52",
+        "transformer/diffusion_pytorch_model-00001-of-00003.safetensors": "95facd593e2549e8252acb571c653d57f7ddb7f1060d4e81712f152555a88804",
+        "transformer/diffusion_pytorch_model-00002-of-00003.safetensors": "a4bbe43ee184a1fb5af4b412d27555f532893bdc3165b1149e304ed82b5d7015",
+        "transformer/diffusion_pytorch_model-00003-of-00003.safetensors": "aba4e37a590e63210878160a718d916d80398f4e1f78ab6c9b2b2a00d92769fa",
+        "vae/diffusion_pytorch_model.safetensors": "f5b59a26851551b67ae1fe58d32e76486e1e812def4696a4bea97f16604d40a3",
+        "tokenizer/tokenizer.json": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4"
+      },
+      "settings": {
+        "size": 1024,
+        "steps": 9,
+        "guidance": 0.0
+      },
+      "settings_comment": "The model card's: 9 steps (8 forward passes), guidance 0 -- the Turbo model uses no guidance and no negative prompt.",
+      "fp8": true,
+      "fp8_comment": "Measured: its transformer is about 12.3 GB in bfloat16, over a 12 GB card on its own, and model offload ran out of memory. Stored in 8-bit floats and computed in bfloat16 it peaked at 8.3 GB, 13 s a picture. Group offload with streams instead sat at 0% GPU for seven minutes and was stopped.",
+      "licence_comment": "The repository has no LICENSE file at this revision; the licence is the model card's metadata, read through the Hugging Face API on 2026-10-14."
+    },
+    "klein": {
+      "repo": "black-forest-labs/FLUX.2-klein-4B",
+      "revision": "e7b7dc27f91deacad38e78976d1f2b499d76a294",
+      "licence": "Apache-2.0",
+      "licence_url": "https://huggingface.co/black-forest-labs/FLUX.2-klein-4B/blob/e7b7dc27f91deacad38e78976d1f2b499d76a294/LICENSE.md",
+      "fetch": [
+        "model_index.json",
+        "LICENSE.md",
+        "scheduler/*",
+        "text_encoder/*",
+        "tokenizer/*",
+        "transformer/*",
+        "vae/*"
+      ],
+      "sha256": {
+        "text_encoder/model-00001-of-00002.safetensors": "8c0506e7f4936fa7e26183a4fd8da4e2bdbc5990ba64ae441f965d51228f36ea",
+        "text_encoder/model-00002-of-00002.safetensors": "82f2bd839378541b0557bfabaf37c7d3d637071fdcb73302dedd7cf61162ce07",
+        "tokenizer/tokenizer.json": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+        "transformer/diffusion_pytorch_model.safetensors": "9f29f9edcfdae452a653ffb51a534ca4decd389952c225724ff3b94042612a6e",
+        "vae/diffusion_pytorch_model.safetensors": "ca70d2202afe6415bdbcb8793ba8cd99fd159cfe6192381504d6c4d3036e0f04"
+      },
+      "pipeline": "Flux2KleinPipeline",
+      "settings": {
+        "size": 512,
+        "steps": 4,
+        "guidance": 1.0
+      },
+      "fp8": false,
+      "lora": {
+        "repo": "Limbicnation/pixel-art-lora",
+        "revision": "0ac8e5c3400af68228811edc324721e25fc26777",
+        "licence": "Apache-2.0",
+        "licence_url": "https://huggingface.co/Limbicnation/pixel-art-lora/blob/0ac8e5c3400af68228811edc324721e25fc26777/LICENSE",
+        "fetch": [
+          "pytorch_lora_weights.safetensors",
+          "LICENSE",
+          "README.md"
+        ],
+        "weights": "pytorch_lora_weights.safetensors",
+        "sha256": {
+          "pytorch_lora_weights.safetensors": "72ac6e652196cd9f450d4d3256d197978d3fa690e22dc21361d3bd4fb4e8250e"
+        },
+        "scale": 0.125,
+        "scale_comment": "Measured, not taken from the card. The LoRA is rsLoRA (rank 64, alpha 128), which diffusers scales by alpha/sqrt(rank) = 16; the card's 'strength 0.85-1.4' is ComfyUI's, which scales by alpha/rank = 2. At 1.0 here the output was black noise, at 0.25 a blur, at 0.125 -- 2/16, the card's 1.0 -- a clean sprite.",
+        "training_data_comment": "The card says its training images are CC0, and gives two sizes for that dataset (500 and 1,010). A claim, not checked."
+      }
+    }
+  }
+}

@@ -4,6 +4,20 @@
 # in colour -- the reason T9 exists.
 extends GdUnitTestSuite
 
+# Where generated pictures are looked for, kept to restore after each test.
+var _generated_before: String
+
+
+# Every test here judges the committed CC0 pictures, never a person's own
+# generated ones, so the folder those would come from is pointed nowhere.
+func before_test() -> void:
+	_generated_before = Art.generated
+	Art.generated = Art.ROOT + "no-such-folder/"
+
+
+func after_test() -> void:
+	Art.generated = _generated_before
+
 
 func test_every_path_in_the_art_table_is_a_picture() -> void:
 	for path: String in Art.every_path():
@@ -141,3 +155,54 @@ func _silhouette(path: String) -> PackedByteArray:
 		for x: int in range(image.get_width()):
 			mask.append(1 if image.get_pixel(x, y).a > 0.5 else 0)
 	return mask
+
+
+# T31: with no generated pictures, every path the game draws is the CC0 file.
+# `before_test` points the folder at one that cannot exist rather than trusting
+# it to be empty: it is a person's own, and their art must not turn `make
+# check` red -- which it did, the first time this ran beside generated art.
+func test_with_nothing_generated_every_picture_is_the_cc0_file() -> void:
+	for path: String in Art.every_path():
+		assert_str(Art.resolve(path)).is_equal(path)
+
+
+# A picture at the same place under the generated folder is drawn instead.
+# The folder is pointed at one that exists, since the real one is a person's
+# and may be empty: "crown.png" below the checkers folder is a real file.
+func test_a_generated_picture_is_drawn_instead_of_the_cc0_one() -> void:
+	Art.generated = Art.ROOT + "checkers/"
+	var chosen: String = Art.resolve(Art.ROOT + "crown.png")
+	var missing: String = Art.resolve(Art.ROOT + "nothing.png")
+	assert_str(chosen).is_equal(Art.ROOT + "checkers/crown.png")
+	assert_str(missing).is_equal(Art.ROOT + "nothing.png")
+
+
+# T31's manifest and this table must name the same pictures: an entry the game
+# never draws is generated for nothing, and a picture with no entry can never
+# be generated. The manifest sits outside the Godot project, so it is read
+# through the disk.
+func test_the_generator_s_manifest_names_exactly_the_pictures_the_game_draws() -> void:
+	var manifest_path: String = ProjectSettings.globalize_path("res://").path_join("../tools/artgen/manifest.json")
+	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(manifest_path))
+	var named: Array[String] = []
+	for entry: Dictionary in manifest["assets"]:
+		named.append(Art.ROOT + entry["path"])
+	named.sort()
+	var drawn: Array[String] = Art.every_path()
+	drawn.sort()
+	assert_array(named).is_equal(drawn)
+
+
+# `texture` goes through `resolve`: a person's picture is the one drawn, not
+# only the one `resolve` would name.
+func test_the_texture_drawn_is_the_generated_one_when_there_is_one() -> void:
+	Art.generated = Art.ROOT + "checkers/"
+	assert_object(Art.texture(Art.ROOT + "crown.png")).is_same(load(Art.ROOT + "checkers/crown.png"))
+
+
+# A file the engine has not imported cannot be drawn however present it is,
+# so `resolve` asks the resource loader and not the disk. `project.godot` is
+# a file at the root of the project and is no picture.
+func test_a_file_that_is_not_an_imported_picture_is_not_used() -> void:
+	Art.generated = "res://"
+	assert_str(Art.resolve(Art.ROOT + "project.godot")).is_equal(Art.ROOT + "project.godot")

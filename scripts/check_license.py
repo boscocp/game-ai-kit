@@ -16,9 +16,13 @@ in the artifacts. So:
     top folder;
   * every wheel under dist/ carries both in its `.dist-info/licenses/`, which
     is where PEP 639 puts a wheel's licence files and where pip installs them.
-  * every picture committed under godot/assets/ is listed, by path, in
-    godot/assets/LICENCES.md with its pack and its licence -- and every row
-    there names a file that is committed.
+  * every picture committed under godot/assets/, bar the generated examples,
+    is listed, by path, in godot/assets/LICENCES.md with its pack, its CC0
+    licence and its sha256 -- and every row there names a file that is
+    committed (L11-L17);
+  * every picture in godot/assets/generated-examples/ is named in the art
+    generator's manifest, unchanged, made by a model tools/artgen/model.json
+    pins under an allowed licence, which NOTICE credits (L16, L18-L24).
 
 The art rule reads `git ls-files`, not the disk. T31 lets a person generate
 their own pictures into the same folders, gitignored, and those are theirs:
@@ -48,6 +52,7 @@ import argparse
 import contextlib
 import hashlib
 import io
+import json
 import lzma
 import os
 import pathlib
@@ -136,7 +141,8 @@ TAR_SUFFIXES = (".tar", ".tar.gz", ".tgz", ".tar.bz2", ".tar.xz")
 # the gate began reading content: an encrypted entry, an unknown compression
 # method, corrupt deflate data, a truncated `.tar.xz`. Broken is exit 2.
 UNREADABLE = (OSError, EOFError, RuntimeError, NotImplementedError,
-              zipfile.BadZipFile, tarfile.TarError, zlib.error, lzma.LZMAError)
+              zipfile.BadZipFile, tarfile.TarError, zlib.error, lzma.LZMAError,
+              json.JSONDecodeError)
 
 # Larger than any attribution file, and read no further: a NOTICE that
 # decompresses to a gigabyte is not this repository's, and finding that out
@@ -343,7 +349,8 @@ def check_assets(repo: pathlib.Path) -> list[str]:
     file written over a CC0 path and committed would still be credited to the
     pack -- the path is listed, so the path rule is satisfied.
     """
-    committed = tracked_assets(repo)
+    # Generated examples are accounted for by the manifest, in check_examples.
+    committed = [path for path in tracked_assets(repo) if not path.startswith(EXAMPLES + "/")]
     if not committed:
         return []
     table = repo / ASSETS / ASSET_LIST
@@ -426,9 +433,113 @@ def row_problem(cells: list[str]) -> str:
     return ""
 
 
+# T31's generated pictures. The few committed as examples live in one folder,
+# and the generator's manifest names each with what made it; a person's own
+# generated set is gitignored and none of this gate's business.
+EXAMPLES = "generated-examples"
+MANIFEST = "tools/artgen/manifest.json"
+MODELS = "tools/artgen/model.json"
+# What a committed example must say about itself.
+EXAMPLE_FIELDS = ("file", "sha256", "model", "licence")
+# The licences a model whose output is committed may carry. A model's licence
+# decides whether its pictures may be redistributed, so this is a decision
+# made once, not a field anyone may fill in.
+ALLOWED_MODEL_LICENCES = ("Apache-2.0",)
+
+
+def check_examples(repo: pathlib.Path) -> list[str]:
+    """Report generated pictures committed where they should not be, or unexplained.
+
+    What this holds: every committed file in the examples folder is named in
+    the manifest, unchanged, made by a model `model.json` pins at that
+    revision, under an allowed licence that NOTICE credits; and the manifest
+    names no example anywhere else. What it cannot hold: a generated picture
+    committed outside that folder *and* listed in LICENCES.md as a pack's,
+    with its sha256 -- a PNG does not say what made it, and that row would be
+    a lie a person tells, which review is for.
+    """
+    examples = manifest_examples(repo)
+    findings = [f"L23 a manifest example lacks {', '.join(EXAMPLE_FIELDS)}: {example}"
+                for example in examples if not all(example.get(field) for field in EXAMPLE_FIELDS)]
+    examples = [example for example in examples if all(example.get(field) for field in EXAMPLE_FIELDS)]
+    findings += example_files(repo, {example["file"]: example for example in examples})
+    credits, unknown = example_models(repo, examples)
+    return findings + unknown + check_examples_notice(repo, credits)
+
+
+def manifest_examples(repo: pathlib.Path) -> list[dict]:
+    """The examples the generator's manifest names, or none without a manifest."""
+    manifest_file = repo / MANIFEST
+    if not manifest_file.exists():
+        return []
+    return json.loads(manifest_file.read_text(encoding="utf-8")).get("examples", [])
+
+
+def example_files(repo: pathlib.Path, named: dict[str, dict]) -> list[str]:
+    """L16, L18-L21: the files in the examples folder against the manifest's list."""
+    tracked = [path for path in tracked_assets(repo) if path.startswith(EXAMPLES + "/")]
+    committed = [path for path in tracked if not path.endswith(".import")]
+    findings = [f"L16 {ASSETS}/{path} is an import sidecar with no picture beside it"
+                for path in tracked if path.endswith(".import") and path.removesuffix(".import") not in committed]
+    for path in committed:
+        if path not in named:
+            findings.append(f"L18 {ASSETS}/{path} is a committed generated picture the manifest does not name")
+        elif named[path]["sha256"] != committed_sha256(repo, path):
+            findings.append(f"L19 {ASSETS}/{path} is not the picture the manifest names: its sha256 differs")
+    for path in named:
+        if not path.startswith(EXAMPLES + "/"):
+            findings.append(f"L20 the manifest names an example at {path}, outside {ASSETS}/{EXAMPLES}/")
+        elif path not in committed:
+            findings.append(f"L21 the manifest names an example at {path}, which is not committed")
+    return findings
+
+
+def pinned_models(repo: pathlib.Path) -> dict[str, list[tuple[str, str]]]:
+    """Each model `model.json` pins, as an example records it, with the
+    repositories and licences that made it: the base, and its LoRA if any."""
+    models_file = repo / MODELS
+    if not models_file.exists():
+        return {}
+    pinned = {}
+    for model in json.loads(models_file.read_text(encoding="utf-8")).get("models", {}).values():
+        parts = [model] + ([model["lora"]] if "lora" in model else [])
+        name = " + ".join(f"{part['repo']}@{part['revision']}" for part in parts)
+        pinned[name] = [(part["repo"], part["licence"]) for part in parts]
+    return pinned
+
+
+def example_models(repo: pathlib.Path, examples: list[dict]) -> tuple[set[tuple[str, str]], list[str]]:
+    """L24: each example's model is pinned, at that revision, under an allowed
+    licence -- taken from model.json, never from the example's own word."""
+    pinned = pinned_models(repo)
+    credits, findings = set(), []
+    for example in examples:
+        parts = pinned.get(example["model"])
+        if parts is None:
+            findings.append(f"L24 {example['file']} was made by {example['model']}, "
+                            f"which {MODELS} does not pin at that revision")
+            continue
+        for part_repo, licence in parts:
+            if licence not in ALLOWED_MODEL_LICENCES or example["licence"] != parts[0][1]:
+                findings.append(f"L24 {example['file']}: {part_repo} is {licence} and the example says "
+                                f"{example['licence']}; allowed: {', '.join(ALLOWED_MODEL_LICENCES)}")
+            credits.add((part_repo, licence))
+    return credits, findings
+
+
+def check_examples_notice(repo: pathlib.Path, credits: set[tuple[str, str]]) -> list[str]:
+    """L22: NOTICE credits each model behind an example, with its licence, on one
+    line as `repo (licence` -- a mention somewhere of each word is not a credit."""
+    notice_file = repo / "NOTICE"
+    lines = notice_file.read_text(encoding="utf-8").splitlines() if notice_file.exists() else []
+    return [f"L22 NOTICE has no line crediting {model} ({licence}), which made a committed example"
+            for model, licence in sorted(credits)
+            if not any(f"{model} ({licence}" in line for line in lines)]
+
+
 def run(repo: pathlib.Path) -> int:
     findings = (check_root(repo) + check_addons(repo) + check_release_archives(repo)
-                + check_assets(repo))
+                + check_assets(repo) + check_examples(repo))
     for finding in findings:
         print(finding)
     return 1 if findings else 0
@@ -860,6 +971,85 @@ def art_cases(root: pathlib.Path, make_repo, expect, expect_only, quiet) -> None
     art_table_cases(root, make_repo, case, expect, expect_only)
     art_row_cases(root, case, expect_only)
     art_outside_git(root, make_repo, expect)
+    example_cases(root, make_repo, expect, expect_only)
+    example_unreadable(root, make_repo, expect)
+
+
+PLANTED_MODEL = {"repo": "black-forest-labs/FLUX.2-klein-4B", "revision": "e7b7", "licence": "Apache-2.0"}
+PLANTED_MADE_BY = "black-forest-labs/FLUX.2-klein-4B@e7b7"
+PLANTED_CREDIT = "black-forest-labs/FLUX.2-klein-4B (Apache-2.0, https://example.org)"
+
+
+def example_repo(repo: pathlib.Path, examples: list[dict], pictures: dict[str, bytes],
+                 notice: str = PLANTED_CREDIT, model: dict | None = None) -> pathlib.Path:
+    """A repository with generated examples committed, a manifest, a pinned
+    model and a NOTICE."""
+    (repo / "NOTICE").write_text((repo / "NOTICE").read_text() + notice + "\n")
+    (repo / MANIFEST).parent.mkdir(parents=True)
+    (repo / MANIFEST).write_text(json.dumps({"assets": [], "examples": examples}))
+    (repo / MODELS).write_text(json.dumps({"models": {"planted": model or PLANTED_MODEL}}))
+    return art_repo(repo, None, pictures)
+
+
+def example(path: str, picture: bytes = PICTURE, made_by: str = PLANTED_MADE_BY,
+            licence: str = "Apache-2.0") -> dict:
+    """A manifest example naming `picture` at `path`."""
+    return {"file": path, "sha256": hashlib.sha256(picture).hexdigest(), "model": made_by, "licence": licence}
+
+
+def example_cases(root: pathlib.Path, make_repo, expect, expect_only) -> None:
+    """T31's rules: generated pictures committed only as named examples."""
+    inside = f"{EXAMPLES}/units/red/runner.png"
+    good = {inside: PICTURE}
+    named = example_repo(make_repo(root / "ex-named"), [example(inside)], good)
+    expect("a named example, its model pinned and credited", quiet_run(named), 0)
+
+    def planted(name: str, examples: list[dict], pictures: dict[str, bytes] = good, **extra) -> pathlib.Path:
+        return example_repo(make_repo(root / name), examples, pictures, **extra)
+
+    cases = {
+        "L16": planted("ex-orphan-import", [example(inside)], good | {f"{EXAMPLES}/ghost.png.import": b"[remap]"}),
+        "L18": planted("ex-unnamed", [], good),
+        "L19": planted("ex-changed", [example(inside, OTHER_PICTURE)]),
+        "L20": planted("ex-outside", [example("units/red/runner.png"), example(inside)]),
+        "L21": planted("ex-missing", [example(inside), example(f"{EXAMPLES}/ram.png")]),
+        "L23": planted("ex-malformed", [example(inside), {"file": inside}]),
+    }
+    for code, repo in cases.items():
+        expect_only(f"planted {code}", repo, code)
+    example_credit_cases(root, planted, inside, expect_only)
+
+
+def example_credit_cases(root: pathlib.Path, planted, inside: str, expect_only) -> None:
+    """L22 and L24: who made an example, and whether NOTICE says so."""
+    cases = {
+        # A NOTICE that names the model only to deny it was a credit, while each
+        # word appearing somewhere was enough.
+        "a NOTICE denying the model": ("L22", planted("ex-denied", [example(inside)],
+            notice="not black-forest-labs/FLUX.2-klein-4B, and not Apache-2.0")),
+        "a NOTICE naming the model only": ("L22", planted("ex-model-only", [example(inside)],
+            notice="black-forest-labs/FLUX.2-klein-4B")),
+        "a NOTICE naming the licence only": ("L22", planted("ex-licence-only", [example(inside)],
+            notice="Apache-2.0")),
+        "an example at an unpinned revision": ("L24", planted("ex-revision",
+            [example(inside, made_by="black-forest-labs/FLUX.2-klein-4B@0000")])),
+        "an example from an unknown model": ("L24", planted("ex-unknown",
+            [example(inside, made_by="black-forest-labs/FLUX.2-klein@e7b7")])),
+        "an example claiming another licence": ("L24", planted("ex-claims", [example(inside, licence="CC0 1.0")])),
+        "a model under a licence not allowed": ("L24", planted("ex-licence", [example(inside, licence="NC")],
+            notice="black-forest-labs/FLUX.2-klein-4B (NC", model=PLANTED_MODEL | {"licence": "NC"})),
+    }
+    for label, (code, repo) in cases.items():
+        expect_only(label, repo, code)
+
+
+def example_unreadable(root: pathlib.Path, make_repo, expect) -> None:
+    """A manifest that is not JSON is unreadable: exit 2, not a finding."""
+    broken = example_repo(make_repo(root / "ex-broken-json"), [], {})
+    (broken / MANIFEST).write_text("{ not json")
+    script = pathlib.Path(__file__).resolve()
+    result = subprocess.run([sys.executable, str(script), "--repo", str(broken)], capture_output=True)
+    expect("a manifest that is not JSON", result.returncode, 2)
 
 
 def art_table_cases(root: pathlib.Path, make_repo, case, expect, expect_only) -> None:
@@ -910,6 +1100,8 @@ def art_outside_git(root: pathlib.Path, make_repo, expect) -> None:
     outside = subprocess.run([sys.executable, str(script), "--repo", str(loose)], capture_output=True,
                              env={**os.environ, "GIT_CEILING_DIRECTORIES": str(root)})
     expect("art git cannot account for", outside.returncode, 2)
+
+
 
 
 def main(argv: list[str]) -> int:

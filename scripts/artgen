@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# The only way this repo runs the art generator (T31).
+#
+# The generator needs torch, a diffusion library and tens of gigabytes of model,
+# and every one of them caches under $HOME by default: pip in ~/.cache/pip,
+# Hugging Face in ~/.cache/huggingface, torch in ~/.cache/torch, Triton in
+# ~/.triton, the CUDA driver's compiled kernels in ~/.nv. That is the trap
+# scripts/godot exists for, again, so the same answer: one wrapper sets every
+# cache to the toolchain directory on the large disk (invariant 8), and nothing
+# calls the environment's python directly. check_disk_layout.py fails if a
+# model cache appears under $HOME.
+#
+# Usage:
+#   scripts/artgen bootstrap        create the environment and fetch the model
+#   scripts/artgen <args...>        run tools/artgen/generate.py with <args>
+#   scripts/artgen --self-test      the usage contract, for lint-selftests
+#
+# Exit codes: 0 done, 1 the generator failed, 2 wrong usage or no environment.
+set -euo pipefail
+
+here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+toolchain=${GAK_TOOLCHAIN:-/mnt/games/gamedev/toolchain}
+home="$toolchain/artgen"
+python="$home/venv/bin/python"
+
+export PIP_CACHE_DIR="$home/cache/pip"
+export HF_HOME="$home/cache/huggingface"
+export TORCH_HOME="$home/cache/torch"
+export XDG_CACHE_HOME="$home/cache/xdg"
+export TRITON_CACHE_DIR="$home/cache/triton"
+export CUDA_CACHE_PATH="$home/cache/nv"
+# Downloads only through bootstrap, which pins what it fetches. A run that
+# finds a file missing fails rather than fetching whatever is newest.
+export HF_HUB_OFFLINE=1
+export HF_HUB_DISABLE_TELEMETRY=1
+export PYTHONNOUSERSITE=1
+
+# What would let a cache land on the small disk, or a run fetch unpinned
+# files: the toolchain under $HOME, a cache outside the toolchain, or Hugging
+# Face allowed online. Empty when the environment is sound.
+problems() {
+  local root=$1
+  case "$(realpath -m "$root")/" in "$(realpath -m "$HOME")"/*) echo "the toolchain $root is under \$HOME";; esac
+  for variable in PIP_CACHE_DIR HF_HOME TORCH_HOME XDG_CACHE_HOME TRITON_CACHE_DIR CUDA_CACHE_PATH; do
+    [[ "${!variable:-}" == "$root"/* ]] || echo "$variable is outside the toolchain"
+  done
+  [[ "${HF_HUB_OFFLINE:-}" == 1 ]] || echo "HF_HUB_OFFLINE is not 1, so a run could fetch unpinned files"
+}
+
+if [[ "${1:-}" == "--self-test" ]]; then
+  found=$(problems "$toolchain")
+  [[ -z "$found" ]] || { echo "self-test FAIL: $found"; exit 1; }
+  # Planted: a toolchain on the small disk must be refused. Comparing each
+  # cache against the toolchain alone said yes to it, since the toolchain is
+  # what the caches were built from.
+  [[ "$(problems "$HOME/toolchain")" == *"under \$HOME"* ]] || { echo "self-test FAIL: a toolchain under \$HOME passed"; exit 1; }
+  # Planted: Hugging Face allowed online.
+  [[ "$(HF_HUB_OFFLINE=0 problems "$toolchain")" == *HF_HUB_OFFLINE* ]] || { echo "self-test FAIL: HF_HUB_OFFLINE=0 passed"; exit 1; }
+  echo "self-test: ok"
+  exit 0
+fi
+
+found=$(problems "$toolchain")
+[[ -z "$found" ]] || { echo "scripts/artgen: $found" >&2; exit 2; }
+
+if [[ "${1:-}" == "bootstrap" ]]; then
+  shift
+  exec "$here/tools/artgen/bootstrap.sh" "$home" "$@"
+fi
+
+if [[ ! -x "$python" ]]; then
+  echo "scripts/artgen: no environment at $home -- run 'make artgen-bootstrap'" >&2
+  exit 2
+fi
+
+exec "$python" -I "$here/tools/artgen/generate.py" "$@"

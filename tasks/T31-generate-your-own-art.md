@@ -84,6 +84,14 @@ whether it fits. The first step, on the owner's machine:
   tile, a checkers piece, the board) with klein 4B and the LoRA;
 - record peak VRAM and seconds per image, in fp8 and with CPU offload,
   since the page's own "~13 GB" is over the card's 12.
+- **a 12-frame walk cycle of one unit** (added by the owner on 2026-10-14,
+  from a designer's advice: frame-to-frame consistency is where general
+  image models fail most, and a low pixel density may hide it). Two ways,
+  both recorded: one image asking for the whole sheet, and twelve images each
+  given the previous frame as a reference. The owner judges the strip and a
+  looping GIF; no command can. Nothing in the kit animates units yet, so this
+  is evidence for the ADR, not a feature. If it is good, animating units is
+  a task of its own.
 
 **Z-Image-Turbo is the reserve**, the owner's choice too. Fall back to it if
 neither setting fits in 12 GB, or if the owner looks at the five sprites and
@@ -184,3 +192,26 @@ checkout, then regenerate the unit sprites in a different style preset:
 - `git status` shows nothing new to commit.
 
 Delete the generated directory, and the game is back on the CC0 art.
+
+## Decided on the way (2026-10-14)
+
+- **The default is Z-Image-Turbo, not klein**, the owner's choice after the
+  same seven prompts on both. The task named klein the default and Z-Image
+  the reserve "if the owner judges them poor"; the owner judged the first
+  klein set "very ugly" and the Z-Image set better. Klein stays in
+  `model.json`. The numbers are in ADR 0013.
+- **Three committed examples**, approved by the owner: a red shield, a blue
+  mortar and a water tile.
+- **Walking became T33.** The walk-cycle probe this task asked for is in
+  ADR 0013: twelve frames from a general model failed; three frames a
+  direction at 32 px with a dedicated LoRA worked.
+- **What made a person's pictures is recorded beside them**, in
+  `godot/assets/generated/made-by.json` (gitignored with them), rather than
+  written into the committed manifest: the manifest is the source and is
+  shared, a person's set is theirs. The manifest holds no per-entry model or
+  negative prompt; the model is `model.json`'s, and neither model uses a
+  negative prompt (both run without guidance).
+- **The fence, stated exactly**: `make check` never runs the generator, but
+  reads its manifest twice (the licence gate and one Godot test). The
+  acceptance grep does not look in `godot/test/`, which is where that test
+  names it.

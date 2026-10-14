@@ -1,0 +1,299 @@
+{
+  "comment": "The source of every generated picture: one entry per picture the game draws, at the path Art names below res://assets/. `make artgen` writes each to godot/assets/generated/<path>, which git ignores. The PNGs are this file's output, and `examples` names the few that are committed, under godot/assets/generated-examples/.",
+  "styles": {
+    "pixel": {
+      "prefix": "A clean 16-bit pixel art game sprite, in the style of a classic handheld tactics game: a bold dark outline, flat shading with two tones per colour, a simple chunky readable silhouette, no fine detail, no text. ",
+      "sprite": " The object is centred and fully visible, isolated on a flat solid {background} background, with no shadow and no ground.",
+      "tile": " The texture fills the whole square edge to edge, seamless, with no border, no frame and no objects."
+    },
+    "toy": {
+      "prefix": "A clean pixel art game sprite of a painted wooden toy, glossy and rounded, bright cheerful colours, a bold dark outline, no fine detail, no text. ",
+      "sprite": " The object is centred and fully visible, isolated on a flat solid {background} background, with no shadow and no ground.",
+      "tile": " The texture fills the whole square edge to edge, seamless, with no border, no frame and no objects."
+    }
+  },
+  "styles_comment": "A style is a prefix shared by every picture and a suffix by kind. Measured on 2026-10-14: the prefix written as sentences, not keywords, is what held thirty pictures to one look -- the first set, prompted in keywords, mixed near-photographic trucks with tiny painted soldiers. Not 'transparent background', as the LoRA card suggests: the model then paints the grey checkerboard that stands for transparency. Not magenta either: it came out crimson, close to the red team. Pure green came out as a different green in every picture, which is why the background is read from each picture's own border. Asking for '32x32' or '64x64' in the prompt changed nothing measurable; the size is the post-processing's.",
+  "default_style": "pixel",
+  "team_colours_comment": "Each side's colour is given as a hex code tied to a part of the object, as the FLUX.2 prompting guide advises; a colour named only in words drifted between pictures.",
+  "seeds_comment": "A kind's red and blue pictures share a seed, so the two sides get one design in two colours; with a seed each they came out as two different machines.",
+  "post": {
+    "sprite": "the background, the border's colour where it joins the border, becomes transparent; the picture is cropped to what remains and padded square; then one colour per cell down to `pixels` square, and at most `colours` colours",
+    "tile": "one colour per cell down to `pixels` square, and at most `colours` colours; it stays opaque"
+  },
+  "assets": [
+    {
+      "path": "units/red/runner.png",
+      "kind": "sprite",
+      "prompt": "A small fast armoured scout truck with big wheels, seen from the side facing right, its body painted red #C0392B.",
+      "seed": 101,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/blue/runner.png",
+      "kind": "sprite",
+      "prompt": "A small fast armoured scout truck with big wheels, seen from the side facing right, its body painted blue #2E6FD8.",
+      "seed": 101,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/red/shield.png",
+      "kind": "sprite",
+      "prompt": "A short sturdy foot soldier holding a large rectangular tower shield and a short spear, seen from the side facing right, wearing red #C0392B armour.",
+      "seed": 102,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/blue/shield.png",
+      "kind": "sprite",
+      "prompt": "A short sturdy foot soldier holding a large rectangular tower shield and a short spear, seen from the side facing right, wearing blue #2E6FD8 armour.",
+      "seed": 102,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/red/mortar.png",
+      "kind": "sprite",
+      "prompt": "A small mortar cannon on two wheels with its barrel angled up, seen from the side facing right, painted red #C0392B.",
+      "seed": 103,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/blue/mortar.png",
+      "kind": "sprite",
+      "prompt": "A small mortar cannon on two wheels with its barrel angled up, seen from the side facing right, painted blue #2E6FD8.",
+      "seed": 103,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/red/wader.png",
+      "kind": "sprite",
+      "prompt": "A small amphibious landing boat with a flat hull, seen from the side facing right, its hull painted red #C0392B.",
+      "seed": 104,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/blue/wader.png",
+      "kind": "sprite",
+      "prompt": "A small amphibious landing boat with a flat hull, seen from the side facing right, its hull painted blue #2E6FD8.",
+      "seed": 104,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/red/ram.png",
+      "kind": "sprite",
+      "prompt": "A heavy wooden battering ram on four wheels with an iron head and a sloped roof, seen from the side facing right, with red #C0392B trim.",
+      "seed": 105,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/blue/ram.png",
+      "kind": "sprite",
+      "prompt": "A heavy wooden battering ram on four wheels with an iron head and a sloped roof, seen from the side facing right, with blue #2E6FD8 trim.",
+      "seed": 105,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/red/bolt_tower.png",
+      "kind": "sprite",
+      "prompt": "A squat round stone defensive tower with a large crossbow on its roof, with red #C0392B banners.",
+      "seed": 106,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/blue/bolt_tower.png",
+      "kind": "sprite",
+      "prompt": "A squat round stone defensive tower with a large crossbow on its roof, with blue #2E6FD8 banners.",
+      "seed": 106,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/red/watchtower.png",
+      "kind": "sprite",
+      "prompt": "A tall thin wooden lookout tower on stilts with a small roofed platform, with a red #C0392B flag on top.",
+      "seed": 107,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/blue/watchtower.png",
+      "kind": "sprite",
+      "prompt": "A tall thin wooden lookout tower on stilts with a small roofed platform, with a blue #2E6FD8 flag on top.",
+      "seed": 107,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/red/workshop.png",
+      "kind": "sprite",
+      "prompt": "A small square factory workshop with a chimney and a big gear sign on the wall, its roof painted red #C0392B.",
+      "seed": 108,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/blue/workshop.png",
+      "kind": "sprite",
+      "prompt": "A small square factory workshop with a chimney and a big gear sign on the wall, its roof painted blue #2E6FD8.",
+      "seed": 108,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/red/soldier.png",
+      "kind": "sprite",
+      "prompt": "A short sturdy foot soldier with a rifle and a round helmet, seen from the side facing right, wearing a red #C0392B uniform.",
+      "seed": 109,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "units/blue/soldier.png",
+      "kind": "sprite",
+      "prompt": "A short sturdy foot soldier with a rifle and a round helmet, seen from the side facing right, wearing a blue #2E6FD8 uniform.",
+      "seed": 109,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "terrain/plain.png",
+      "kind": "tile",
+      "prompt": "Short green grass seen from directly above, flat and even, with a few lighter tufts.",
+      "seed": 110,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "terrain/rough.png",
+      "kind": "tile",
+      "prompt": "Wet brown mud seen from directly above, with small dark puddles.",
+      "seed": 111,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "terrain/water.png",
+      "kind": "tile",
+      "prompt": "Calm blue water seen from directly above, with a few small white ripples.",
+      "seed": 112,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "terrain/bridge.png",
+      "kind": "tile",
+      "prompt": "Wooden bridge planks seen from directly above, the planks running left to right.",
+      "seed": 113,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "terrain/trees.png",
+      "kind": "sprite",
+      "prompt": "Two round dark green pine trees side by side, seen from slightly above.",
+      "seed": 114,
+      "pixels": 32,
+      "colours": 16,
+      "background": "pure magenta (#FF00FF)"
+    },
+    {
+      "path": "terrain/wall.png",
+      "kind": "sprite",
+      "prompt": "One large grey boulder, seen from slightly above.",
+      "seed": 115,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "terrain/node.png",
+      "kind": "sprite",
+      "prompt": "A small white flag on a wooden pole, planted in a little mound of earth.",
+      "seed": 116,
+      "pixels": 32,
+      "colours": 16
+    },
+    {
+      "path": "checkers/red_man.png",
+      "kind": "sprite",
+      "prompt": "A single round flat draughts checker piece seen from directly above, a thick red #C0392B disc with a raised rim.",
+      "seed": 117,
+      "pixels": 48,
+      "colours": 12
+    },
+    {
+      "path": "checkers/white_man.png",
+      "kind": "sprite",
+      "prompt": "A single round flat draughts checker piece seen from directly above, a thick ivory white disc with a raised rim.",
+      "seed": 118,
+      "pixels": 48,
+      "colours": 12
+    },
+    {
+      "path": "checkers/crown.png",
+      "kind": "sprite",
+      "prompt": "A simple golden king's crown with three points, seen from the front.",
+      "seed": 119,
+      "pixels": 48,
+      "colours": 12
+    },
+    {
+      "path": "tictactoe/cross.png",
+      "kind": "sprite",
+      "prompt": "A bold thick letter X made of two chunky white strokes with a dark outline.",
+      "seed": 120,
+      "pixels": 48,
+      "colours": 12
+    },
+    {
+      "path": "tictactoe/nought.png",
+      "kind": "sprite",
+      "prompt": "A bold thick white ring, the letter O, with a dark outline.",
+      "seed": 121,
+      "pixels": 48,
+      "colours": 12
+    }
+  ],
+  "examples": [
+    {
+      "asset": "units/red/shield.png",
+      "file": "generated-examples/units/red/shield.png",
+      "sha256": "fadf095c7dcf1784efaa4d548977888fd0d3d212c8e06f88bc622feca9a6ca68",
+      "model": "Tongyi-MAI/Z-Image-Turbo@f332072aa78be7aecdf3ee76d5c247082da564a6",
+      "licence": "Apache-2.0",
+      "style": "pixel",
+      "seed": 102,
+      "generated_on": "2026-10-14"
+    },
+    {
+      "asset": "units/blue/mortar.png",
+      "file": "generated-examples/units/blue/mortar.png",
+      "sha256": "59446d2d2250408249ce970c8661672c5c3a77a34b120c4a1c9dbb9085cbd77f",
+      "model": "Tongyi-MAI/Z-Image-Turbo@f332072aa78be7aecdf3ee76d5c247082da564a6",
+      "licence": "Apache-2.0",
+      "style": "pixel",
+      "seed": 103,
+      "generated_on": "2026-10-14"
+    },
+    {
+      "asset": "terrain/water.png",
+      "file": "generated-examples/terrain/water.png",
+      "sha256": "c8dfb9e7b79455683c3721e9f86ffc7c6f7da29ef4bda853e0479a132c80e88b",
+      "model": "Tongyi-MAI/Z-Image-Turbo@f332072aa78be7aecdf3ee76d5c247082da564a6",
+      "licence": "Apache-2.0",
+      "style": "pixel",
+      "seed": 112,
+      "generated_on": "2026-10-14"
+    }
+  ],
+  "background_comment": "A sprite stands on pure green unless its entry names another colour: anything green -- the trees -- would be cleared away with its background, so it asks for magenta."
+}

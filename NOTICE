@@ -12,3 +12,14 @@ If you ship a game that uses this kit, a credit is appreciated but not required
 beyond what the License mandates:
 
     AI routines: game-ai-kit by Adalberto Pereira
+
+Third-party art
+---------------
+The pictures under godot/assets/ (bar the folder below) are CC0 1.0, from
+Kenney (www.kenney.nl); each is listed with its pack in
+godot/assets/LICENCES.md.
+
+The few pictures under godot/assets/generated-examples/ were generated with
+Tongyi-MAI/Z-Image-Turbo (Apache-2.0, https://huggingface.co/Tongyi-MAI/Z-Image-Turbo).
+Each is listed, with its prompt, seed and model revision, in
+tools/artgen/manifest.json.

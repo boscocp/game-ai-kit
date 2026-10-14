@@ -33,7 +33,8 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T29 | A search board you can edit | done | paint, erase, drag the dots, price mud; four named boards each with a checked promise; manual check still a person's |
 | T30 | The tactical game, against the computer | done | `make demo-tactical`: spent units, undo, a confirmed end of turn; blue is a `BlueController`, rules today; blue walks at the workshop, not the nearest enemy (changed, pending the owner); 40-round draw; manual check still a person's |
 | T9 | Art that is not a coloured square | done | 30 CC0 pictures from four Kenney packs, each listed with its sha256; `art.gd` the one path table; `make import` before any scene; manual check still a person's |
-| T31 | Generate your own art, locally | todo | a local image model, downloaded separately; each user generates their own (gitignored), the repo keeps a few examples; default FLUX.2 klein 4B (owner's pick), measured first; tier 3 and optional |
+| T31 | Generate your own art, locally | done | `make artgen`: Z-Image-Turbo (owner's pick after a bake-off against FLUX.2 klein), fp8 + offload in 8.3 GB; gitignored output the game prefers, CC0 the default; 3 committed examples; ADR 0013 |
+| T33 | Units that walk | todo | frames in the game and units that move along their route; packs first, then the svntax walk LoRA on klein-base, which the owner judged good enough in T31 |
 | T32 | Checkers with a learned evaluation | todo | after Samuel (1959 paper): the same search, weights fitted in Python, and a match |
 | T10 | The tactical scenario | done | five types, two towers, a workshop, funds, a forge, a river with one bridge; manual check: terrain yes, type feel waits on T26 |
 | T11 | The planner plays | todo | STRIPS drives a faction; needs T4, and T26 for attacks; `ai_learning` still routes on `state.graph`, wrong for a wader |

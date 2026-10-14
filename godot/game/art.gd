@@ -1,13 +1,14 @@
 ## Every picture the games draw, by the path it lives at.
 ##
-## The paths are a contract, not a convenience. T31 lets a person generate
-## their own art and drop it in place of any file here; that only works if
-## nothing else in the code names a picture. So the views ask this table, the
-## table names a file, and swapping the file is the whole change.
+## The paths are a contract, not a convenience: nothing else in the code
+## names a picture. So the views ask this table, the table names a file, and
+## swapping the file is the whole change.
 ##
-## Every file is CC0 and listed in `res://assets/LICENCES.md`, by path, with
-## its pack and its sha256. `check_license.py` refuses a committed picture
-## that is not listed, not CC0, or not the file its row names.
+## Every path here is a CC0 file, listed in `res://assets/LICENCES.md` with its
+## pack and its sha256. A person may generate their own pictures (T31): they
+## go under `GENERATED`, at the same path below it, and a picture there is
+## drawn instead of the CC0 one. That folder is gitignored, so it is theirs;
+## empty, the game is back on the CC0 art.
 ##
 ## Pictures arrive at whatever size their author drew them -- the pack's run
 ## from 16 to 100 pixels -- and each view scales to its own cell. A generated file
@@ -20,6 +21,10 @@ class_name Art
 extends RefCounted
 
 const ROOT: String = "res://assets/"
+
+## Where a person's own pictures go, mirroring the paths below `ROOT`. A static
+## variable rather than a constant only so a test can point it elsewhere.
+static var generated: String = ROOT + "generated/"
 
 ## The ground, one picture per kind of tile, in the order `BoardView`'s atlas
 ## columns are numbered. A picture with see-through parts -- trees, a rock, a
@@ -66,7 +71,7 @@ const CROWN: String = ROOT + "checkers/crown.png"
 const CROSS: String = ROOT + "tictactoe/cross.png"
 const NOUGHT: String = ROOT + "tictactoe/nought.png"
 
-# Every picture loaded so far, by path. See `texture`.
+# Every picture loaded so far, by folder and path. See `texture`.
 static var _kept: Dictionary = {}
 
 
@@ -98,6 +103,20 @@ static func every_path() -> Array[String]:
 ## freed, the draw command still names it, and on 4.7.2 the picture came out a
 ## white square -- for exactly the pieces no legend happened to be holding.
 static func texture(path: String) -> Texture2D:
-	if not _kept.has(path):
-		_kept[path] = load(path) as Texture2D
-	return _kept[path]
+	# Kept by the folder a picture may come from as well as by its path, so a
+	# view asking every frame does not ask the resource loader every frame --
+	# 12.6 microseconds a call, measured -- and a test moving the folder still
+	# gets the picture from the new one.
+	var key: String = generated + "|" + path
+	if not _kept.has(key):
+		_kept[key] = load(resolve(path)) as Texture2D
+	return _kept[key]
+
+
+## The file a path is drawn from: the person's own picture when there is one
+## at the same place under `generated`, the CC0 file otherwise. Asks the
+## resource loader, not the disk, because a picture Godot has not imported
+## cannot be loaded however present it is.
+static func resolve(path: String) -> String:
+	var own: String = generated + path.trim_prefix(ROOT)
+	return own if ResourceLoader.exists(own) else path
