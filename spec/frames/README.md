@@ -31,5 +31,10 @@ Per move: `startup`, `active` and `recovery` frames, counted from 1;
 front of the body, out only on active frames; `hurtbox_reach`, how far in
 front the fighter can be hit from its first active frame to its last
 recovery frame; and a `cancel_window` with the moves it `cancels_into`, open
-only once the move has connected. Every number is a whole number: a fraction
-of a frame would round differently somewhere, and a replay would drift.
+only once the move has connected. Every number is a whole number and none is
+negative: a fraction of a frame would round differently somewhere, and a
+replay would drift. `FightData` refuses a file that breaks any of this, or
+names a button or a cancel target that does not exist.
+
+A change here changes how the recorded fight in `godot/test/fight_log.json`
+plays out, and so its digests: run `make record-replay`, and read the diff.

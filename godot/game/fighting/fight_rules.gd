@@ -34,6 +34,9 @@ static func step(state: FightState, inputs: Array[int], data: FightData) -> Figh
 		_read_input(next.fighters[index], inputs[index], next.frame, data)
 	for index: int in range(2):
 		_act(next.fighters[index], inputs[index], data)
+		if next.fighters[index].cancelled_from != "":
+			next.events.append("p%d cancels %s into %s" % [index + 1, next.fighters[index].cancelled_from, next.fighters[index].move])
+			next.fighters[index].cancelled_from = ""
 	_separate(next, data)
 	_face_each_other(next)
 	var attackers: Array[int] = _connections(next, data)
@@ -73,7 +76,9 @@ static func _act(fighter: FighterState, held: int, data: FightData) -> void:
 # fighter free, and a buffered move starts on that same frame.
 static func _advance_move(fighter: FighterState, data: FightData) -> void:
 	fighter.move_frame += 1
+	var cancelled_from: String = fighter.move
 	if _cancel_is_open(fighter, data) and _start_buffered(fighter, data, true):
+		fighter.cancelled_from = cancelled_from
 		return
 	if fighter.move_frame > data.length_of(fighter.character, fighter.move):
 		fighter.move = ""
@@ -106,16 +111,18 @@ static func _start_buffered(fighter: FighterState, data: FightData, as_cancel: b
 	return true
 
 
-# Step 3. Two bodies may not overlap: each gives way by half. Then both are
-# kept on the stage, and one pinned to a wall leaves the other to give way.
+# Step 3. Two bodies may not overlap: each gives way by half, rounded up, so
+# an odd overlap leaves a one-unit gap rather than favouring a side -- the
+# mirror image of any push is the same push. Then both are kept on the stage,
+# and one pinned to a wall leaves the other to give way.
 static func _separate(state: FightState, data: FightData) -> void:
 	var left: FighterState = state.fighters[0] if state.fighters[0].x <= state.fighters[1].x else state.fighters[1]
 	var right: FighterState = state.fighters[1] if left == state.fighters[0] else state.fighters[0]
 	var need: int = _body(left, data) + _body(right, data)
 	var overlap: int = need - (right.x - left.x)
 	if overlap > 0:
-		left.x -= overlap / 2
-		right.x += overlap - overlap / 2
+		left.x -= (overlap + 1) / 2
+		right.x += (overlap + 1) / 2
 	_keep_on_stage(state, data)
 	overlap = need - (right.x - left.x)
 	if overlap > 0 and left.x == _body(left, data):
@@ -191,7 +198,7 @@ static func _apply(state: FightState, attacker: int, move: String, outcome: Stri
 	var defender: FighterState = state.fighters[1 - attacker]
 	var frames: Dictionary = data.move(hitter.character, move)
 	hitter.connected = hitter.move != ""
-	defender.x += hitter.facing * data.number("pushback")
+	_push_back(state, hitter, defender, data)
 	if outcome == "block":
 		defender.stun = int(frames["blockstun"])
 		defender.stun_kind = "block"
@@ -205,11 +212,28 @@ static func _apply(state: FightState, attacker: int, move: String, outcome: Stri
 		defender.move = ""
 		defender.move_frame = 0
 		defender.connected = false
-	state.events.append("p%d %s p%d with %s" % [attacker + 1, _verb(outcome), 2 - attacker, move])
+	state.events.append("p%d %s p%d with %s%s" % [attacker + 1, _verb(outcome), 2 - attacker, move, _reason(outcome)])
 
 
 static func _verb(outcome: String) -> String:
 	return {"block": "is blocked by", "counter-hit": "counter-hits", "hit": "hits"}[outcome]
+
+
+# Why the table resolved it so, in words, so the overlay teaches the table.
+static func _reason(outcome: String) -> String:
+	return {"block": " (holding away)", "counter-hit": " (caught starting up)", "hit": ""}[outcome]
+
+
+# Step 8's pushback. The defender is pushed away; what a wall stops it from
+# taking, the attacker takes instead, backwards -- so a fighter in the corner
+# is not a free place to keep hitting from, as in most fighting games.
+static func _push_back(state: FightState, hitter: FighterState, defender: FighterState, data: FightData) -> void:
+	var push: int = data.number("pushback")
+	var width: int = int(data.table["stage"]["width"])
+	var wanted: int = defender.x + hitter.facing * push
+	var allowed: int = clampi(wanted, _body(defender, data), width - _body(defender, data))
+	defender.x = allowed
+	hitter.x -= hitter.facing * absi(wanted - allowed)
 
 
 # Step 9.

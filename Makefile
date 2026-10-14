@@ -359,6 +359,10 @@ demo-tactical: import ## Advance Wars style tactics against a rule-based blue: c
 demo-fighting: import ## Training mode, you against a dummy: A/D walk, J/K/L attack, hold away to block, M dummy mode, P pause, space one frame
 	@$(GODOT) --path godot res://game/fighting/fighting.tscn
 
+.PHONY: record-replay
+record-replay: import ## Record the recorded fight's per-frame digests again, after a deliberate change to the rules
+	@$(GODOT) --headless --path godot -s res://test/replay_determinism.gd -- --record
+
 .PHONY: test-replay
 test-replay: import ## Replay the recorded fight twice; the two runs must agree on every frame
 	@$(GODOT) --headless --path godot -s res://test/replay_determinism.gd

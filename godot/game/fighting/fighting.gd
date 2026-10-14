@@ -23,11 +23,12 @@ const JAB_EVERY: int = 60
 
 var data: FightData = FightData.read()
 var state: FightState
-## What the dummy does: an entry of `MODES`.
-var dummy_mode: String = "stand"
+## What the dummy does: an entry of `MODES`. It starts jabbing, so a fight
+## opens with something to look at.
+var dummy_mode: String = "jab"
 var paused: bool = false
 ## Every frame's inputs since the fight began, as `FightReplay` reads them.
-var log: Array = []
+var input_log: Array = []
 var _characters: Array[String] = ["lancer", "dancer"]
 
 @onready var _view: FightView = $FightView
@@ -74,15 +75,20 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## The opening frame, the log emptied.
 func restart() -> void:
+	if data.refusal != "":
+		_refresh()
+		return
 	state = FightState.starting(data, _characters[0], _characters[1])
-	log.clear()
+	input_log.clear()
 	_refresh()
 
 
 ## One frame: read both inputs, resolve, and keep them in the log.
 func step_decision() -> void:
+	if data.refusal != "":
+		return
 	var inputs: Array[int] = [_held_keys(), _dummy_input()]
-	log.append([inputs[0], inputs[1]])
+	input_log.append([inputs[0], inputs[1]])
 	state = FightRules.step(state, inputs, data)
 	_refresh()
 
@@ -130,6 +136,9 @@ func _dummy_input() -> int:
 
 func _refresh() -> void:
 	if not is_node_ready():
+		return
+	if data.refusal != "":
+		_status.text = "the frame data was refused: " + data.refusal
 		return
 	_view.show_fight(state, data)
 	_status.text = ("A/D walk, J light, K heavy, L special, hold away to block  ·  C swap characters  ·  "

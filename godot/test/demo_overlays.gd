@@ -41,7 +41,7 @@ const REQUIRED: Dictionary = {
 	"res://game/stealth/stealth.tscn": ["suspicion", true],
 	"res://game/tactical/tactical.tscn": ["why", false],
 	"res://game/tictactoe/tictactoe.tscn": ["probability", true],
-	"res://game/fighting/fighting.tscn": ["frame", true],
+	"res://game/fighting/fighting.tscn": ["phase", false],
 }
 
 ## Decisions each example takes before it is asked. More than one, so an

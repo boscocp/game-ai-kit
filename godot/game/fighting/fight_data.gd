@@ -6,9 +6,10 @@
 ## `spec/frames/characters.json`, which is where T17 and T18 read it from
 ## Python; a test holds the two byte for byte.
 ##
-## The file is checked when it is read. A move missing a number, or holding a
-## fraction, is refused with the reason: a frame count of 6.5 would play, and
-## two machines would disagree about it.
+## The file is checked when it is read, every number in it: a move missing a
+## number, or holding a fraction or a negative, is refused with the reason. A
+## frame count of 6.5 would play, and two machines would disagree about it;
+## negative damage would heal.
 ##
 ## When not to use it: a game whose moves are animation-driven, with boxes
 ## drawn per frame in an editor. That is the same data with a tool in front.
@@ -82,6 +83,11 @@ func _problem() -> String:
 	for key: String in ["stage", "buffer_frames", "pushback", "counter_hit", "characters"]:
 		if not table.has(key):
 			return "the frame data has no `%s`" % key
+	var stage: Variant = table["stage"]
+	var tops: Array = [table["buffer_frames"], table["pushback"], table["counter_hit"].get("damage_percent"),
+			table["counter_hit"].get("extra_hitstun"), stage.get("width")] + Array(stage.get("starts", [null]))
+	if not tops.all(_is_count):
+		return "the stage, buffer, pushback and counter-hit numbers must all be whole and not negative"
 	for name: String in table["characters"]:
 		var problem: String = _character_problem(name, table["characters"][name])
 		if problem != "":
@@ -91,25 +97,42 @@ func _problem() -> String:
 
 func _character_problem(name: String, numbers: Dictionary) -> String:
 	for key: String in CHARACTER_NUMBERS:
-		if not _is_whole(numbers.get(key)):
+		if not _is_count(numbers.get(key)):
 			return "%s's %s is not a whole number" % [name, key]
-	for move_name: String in numbers.get("moves", {}):
-		var problem: String = _move_problem(name, move_name, numbers["moves"][move_name])
+	if not numbers.get("moves") is Dictionary or numbers["moves"].is_empty():
+		return "%s has no moves" % name
+	for move_name: String in numbers["moves"]:
+		var problem: String = _move_problem(name, move_name, numbers["moves"][move_name], numbers["moves"])
 		if problem != "":
 			return problem
 	return ""
 
 
-func _move_problem(name: String, move_name: String, frames: Dictionary) -> String:
+func _move_problem(name: String, move_name: String, frames: Dictionary, moves: Dictionary) -> String:
+	var label: String = "%s's %s" % [name, move_name]
 	for key: String in MOVE_NUMBERS:
-		if not _is_whole(frames.get(key)):
-			return "%s's %s has no whole-number %s" % [name, move_name, key]
+		if not _is_count(frames.get(key)):
+			return "%s has no whole, non-negative %s" % [label, key]
 	if int(frames["startup"]) < 1 or int(frames["active"]) < 1:
-		return "%s's %s must have at least one startup and one active frame" % [name, move_name]
+		return "%s must have at least one startup and one active frame" % label
+	if not FightInput.BUTTONS.has(frames.get("button")):
+		return "%s has no button among %s" % [label, FightInput.BUTTONS.keys()]
+	if not _is_span(frames.get("hitbox")) or not _is_span(frames.get("cancel_window")):
+		return "%s needs a hitbox and a cancel window, each two whole numbers, near first" % label
+	for target: Variant in frames.get("cancels_into", [null]):
+		if not moves.has(target):
+			return "%s cancels into %s, which is not one of its moves" % [label, target]
 	return ""
 
 
-# True for a number with nothing after the point: JSON reads every number as
-# a float, so 6 and 6.0 are the same and 6.5 is not.
-static func _is_whole(value: Variant) -> bool:
-	return (value is float or value is int) and float(value) == floorf(float(value))
+# True for a number with nothing after the point that is not negative: JSON
+# reads every number as a float, so 6 and 6.0 are the same and 6.5 is not.
+static func _is_count(value: Variant) -> bool:
+	return (value is float or value is int) and float(value) == floorf(float(value)) and float(value) >= 0.0
+
+
+# Two counts, the first no larger than the second: a hitbox's near and far
+# edge, or a cancel window's first and last frame.
+static func _is_span(value: Variant) -> bool:
+	return value is Array and (value as Array).size() == 2 and (value as Array).all(_is_count) \
+			and float(value[0]) <= float(value[1])

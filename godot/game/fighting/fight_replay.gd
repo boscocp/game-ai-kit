@@ -14,12 +14,12 @@ class_name FightReplay
 extends RefCounted
 
 
-## The digest of every frame `log` produces, the opening frame first.
-## `log` is `{"characters": [first, second], "inputs": [[p1, p2], ...]}`.
-static func digests(log: Dictionary, data: FightData) -> Array[String]:
-	var state: FightState = FightState.starting(data, log["characters"][0], log["characters"][1])
+## The digest of every frame `input_log` produces, the opening frame first.
+## `input_log` is `{"characters": [first, second], "inputs": [[p1, p2], ...]}`.
+static func digests(input_log: Dictionary, data: FightData) -> Array[String]:
+	var state: FightState = FightState.starting(data, input_log["characters"][0], input_log["characters"][1])
 	var found: Array[String] = [state.digest()]
-	for pair: Array in log["inputs"]:
+	for pair: Array in input_log["inputs"]:
 		var inputs: Array[int] = [int(pair[0]), int(pair[1])]
 		state = FightRules.step(state, inputs, data)
 		found.append(state.digest())
@@ -35,13 +35,13 @@ static func first_difference(first: Array[String], second: Array[String]) -> int
 	return -1 if first.size() == second.size() else mini(first.size(), second.size())
 
 
-## The events of every frame `log` produces, joined: what the replay showed
+## The events of every frame `input_log` produces, joined: what the replay showed
 ## happening, so a test can ask whether a log exercises a hit, a block or a
 ## trade at all.
-static func events(log: Dictionary, data: FightData) -> String:
-	var state: FightState = FightState.starting(data, log["characters"][0], log["characters"][1])
+static func events(input_log: Dictionary, data: FightData) -> String:
+	var state: FightState = FightState.starting(data, input_log["characters"][0], input_log["characters"][1])
 	var seen: PackedStringArray = PackedStringArray()
-	for pair: Array in log["inputs"]:
+	for pair: Array in input_log["inputs"]:
 		state = FightRules.step(state, [int(pair[0]), int(pair[1])] as Array[int], data)
 		seen.append_array(state.events)
 	return ", ".join(seen)

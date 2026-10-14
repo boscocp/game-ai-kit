@@ -17,12 +17,12 @@
  "resolution": [
   "1. Inputs: each fighter's newly pressed button is buffered for `buffer_frames` frames; the latest press replaces an older one.",
   "2. Both fighters act at once, each from the state the frame began with: a stunned fighter counts its stun down; a fighter in a move advances one frame, or cancels into a buffered move when the cancel window is open and the move has connected; an idle fighter starts a buffered move or walks.",
-  "3. Bodies may not overlap: two that do are pushed apart equally; then both are kept on the stage.",
+  "3. Bodies may not overlap: two that do each give way by half the overlap, rounded up, so neither side is favoured; then both are kept on the stage, and one pinned to a wall leaves the other to give way.",
   "4. Every hitbox out this frame is tested against the other fighter's hurtbox, both at once, before either result is applied.",
   "5. A connection is blocked if the defender is idle or already blocking and holds away from the attacker: blockstun, no damage. Otherwise it hits: damage and hitstun, and the defender's move is lost.",
   "6. A counter-hit is a hit on a defender still in the startup of a move: `counter_hit.damage_percent` of the damage, and `extra_hitstun` more frames.",
   "7. A trade is both connecting on the same frame: both are applied, in full, to both.",
-  "8. A connection pushes the defender `pushback` units away, and a move connects at most once.",
+  "8. A connection pushes the defender `pushback` units away; what a wall stops it from taking, the attacker takes instead, backwards. A move connects at most once.",
   "9. A fighter at 0 health has lost; both at 0 on one frame is a draw."
  ],
  "characters": {

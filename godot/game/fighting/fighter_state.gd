@@ -34,6 +34,9 @@ var buffered: String = ""
 var buffered_until: int = -1
 ## The input it held on the frame before, to tell a press from a hold.
 var held_before: int = 0
+## The move it cancelled out of this frame, for the frame's events only; the
+## rules clear it as soon as they have said so, and it is never copied.
+var cancelled_from: String = ""
 
 
 func _init(character_name: String = "", standing_at: int = 0, starting_health: int = 0) -> void:

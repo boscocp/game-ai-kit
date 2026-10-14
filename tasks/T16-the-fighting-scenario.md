@@ -75,5 +75,21 @@ them, and a trade should resolve the way the table says it does.
   jabs. Invariant 13 is read as: show the resolution, since that is the
   decision being made.
 - **The recorded log** (`godot/test/fight_log.json`) was scripted, not
-  played by hand, so that every resolution happens at least once; the
-  determinism script refuses a log that does not make them happen.
+  played by hand, so that a hit, a block, a counter-hit, a cancel and a
+  trade each happen at least once; the determinism script refuses a log
+  missing any of those five. It does not reach a knockout; the rules suite
+  holds the knockout and the double-knockout draw.
+- **The determinism check compares against a record**, not only against a
+  second run in the same process, which would agree about anything fixed for
+  the life of a process. `godot/test/fight_log_digests.txt` holds every
+  frame's digest; `make record-replay` rewrites it after a deliberate rules
+  change. It plants a changed input for each player, and a moved fighter the
+  digest must show. Found by the wave 34 review.
+- **Separation splits an odd overlap evenly, rounded up**, so pushing right
+  and pushing left are mirror images; and **pushback against a wall is taken
+  by the attacker**, as in most fighting games, so the corner is not free
+  pressure. Both are in the resolution order. Found by the wave 34 review.
+- **Events say why**: "counter-hits ... (caught starting up)", "is blocked
+  by ... (holding away)", "cancels jab into kick".
+- **No round timer** yet: a training mode does not need one. T17 decides
+  whether its logged sessions do.

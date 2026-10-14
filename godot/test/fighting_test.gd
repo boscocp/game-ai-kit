@@ -143,13 +143,13 @@ func test_the_lancer_reaches_further_and_the_dancer_is_quicker() -> void:
 
 
 func test_a_replay_of_the_same_inputs_is_the_same_fight() -> void:
-	var log: Dictionary = {"characters": ["lancer", "dancer"], "inputs": _hold(30, [RIGHT, LEFT]) + [[LIGHT, LIGHT]] + _hold(30, [0, 0])}
-	assert_int(FightReplay.first_difference(FightReplay.digests(log, _data), FightReplay.digests(log, _data))).is_equal(-1)
+	var input_log: Dictionary = {"characters": ["lancer", "dancer"], "inputs": _hold(30, [RIGHT, LEFT]) + [[LIGHT, LIGHT]] + _hold(30, [0, 0])}
+	assert_int(FightReplay.first_difference(FightReplay.digests(input_log, _data), FightReplay.digests(input_log, _data))).is_equal(-1)
 
 
 # --- the scene ---------------------------------------------------------------
 
-# The log the scene keeps is a replay of what it showed: T17 reads it.
+# The input_log the scene keeps is a replay of what it showed: T17 reads it.
 func test_the_scene_s_log_replays_to_the_fight_on_screen() -> void:
 	var scene: FightingExample = auto_free(load("res://game/fighting/fighting.tscn").instantiate())
 	add_child(scene)
@@ -157,9 +157,9 @@ func test_the_scene_s_log_replays_to_the_fight_on_screen() -> void:
 	scene.dummy_mode = "jab"
 	for frame: int in range(90):
 		scene.step_decision()
-	var log: Dictionary = {"characters": [scene.state.fighters[0].character, scene.state.fighters[1].character],
-			"inputs": scene.log}
-	var replayed: Array[String] = FightReplay.digests(log, _data)
+	var input_log: Dictionary = {"characters": [scene.state.fighters[0].character, scene.state.fighters[1].character],
+			"inputs": scene.input_log}
+	var replayed: Array[String] = FightReplay.digests(input_log, _data)
 	assert_str(replayed[replayed.size() - 1]).is_equal(scene.state.digest())
 
 
@@ -181,6 +181,140 @@ func test_the_panel_names_the_move_its_frame_and_its_phase() -> void:
 	var words: String = FightingPanel.describe(state, _data, true)
 	assert_str(words).contains("thrust, frame 2 of %d, startup" % _data.length_of("lancer", "thrust"))
 	assert_str(words).contains("paused")
+
+
+# --- the wave 34 review: one test per rule ------------------------------------
+
+# A press is kept for exactly `buffer_frames` frames: on the last of them it
+# still comes out, one frame later it is gone.
+func test_the_buffer_lasts_exactly_its_frames() -> void:
+	var length: int = _data.length_of("lancer", "thrust")
+	var keep: int = _data.number("buffer_frames")
+	for early: int in [0, 1]:
+		var pressed_on: int = length + 2 - keep - early
+		var inputs: Array = [[HEAVY, 0]] + _hold(pressed_on - 2, [0, 0]) + [[LIGHT, 0]]
+		inputs += _hold(length + 1 - pressed_on, [0, 0])
+		var state: FightState = _play(_fight(), inputs)
+		var expected: String = "jab" if early == 0 else ""
+		assert_int(state.frame).is_equal(length + 1)
+		assert_str(state.fighters[0].move).override_failure_message("pressed %d early" % early).is_equal(expected)
+
+
+func test_a_cancel_happens_on_the_window_s_last_frame_and_not_after() -> void:
+	var window: Array = _data.move("dancer", "jab")["cancel_window"]
+	var last: int = int(window[1])
+	var on_time: FightState = _play(_fight_at(520, 580), [[0, LIGHT]] + _hold(last - 2, [0, 0]) + [[0, HEAVY]])
+	assert_str(on_time.fighters[1].move).is_equal("kick")
+	var late: FightState = _play(_fight_at(520, 580), [[0, LIGHT]] + _hold(last - 1, [0, 0]) + [[0, HEAVY]])
+	assert_str(late.fighters[1].move).is_equal("jab")
+	assert_str(_all_events(_fight_at(520, 580), [[0, LIGHT]] + _hold(last - 2, [0, 0]) + [[0, HEAVY]])).contains(
+			"p2 cancels jab into kick")
+
+
+func test_a_move_cancels_only_into_the_moves_it_lists() -> void:
+	var opens: int = int(_data.move("lancer", "jab")["cancel_window"][0])
+	var listed: FightState = _play(_fight_at(520, 580), [[LIGHT, 0]] + _hold(opens, [0, 0]) + [[HEAVY, 0]])
+	assert_str(listed.fighters[0].move).is_equal("thrust")
+	var unlisted: FightState = _play(_fight_at(520, 580), [[LIGHT, 0]] + _hold(opens, [0, 0]) + [[FightInput.SPECIAL, 0]])
+	assert_str(unlisted.fighters[0].move).is_equal("jab")
+
+
+func test_a_hit_pushes_the_defender_away() -> void:
+	var before: FightState = _fight_at(440, 560)
+	var inputs: Array = [[HEAVY, 0]] + _hold(int(_data.move("lancer", "thrust")["startup"]), [0, 0])
+	var after: FightState = _play(before, inputs)
+	assert_str(", ".join(after.events)).contains("p1 hits p2")
+	assert_int(after.fighters[1].x).is_equal(560 + _data.number("pushback"))
+	assert_int(after.fighters[0].x).is_equal(440)
+
+
+# Against a wall the defender cannot go back, so the attacker does.
+func test_against_a_wall_the_attacker_takes_the_pushback() -> void:
+	var inputs: Array = [[HEAVY, 0]] + _hold(int(_data.move("lancer", "thrust")["startup"]), [0, 0])
+	var after: FightState = _play(_fight_at(480, 618), inputs)
+	assert_int(after.fighters[1].x).is_equal(618)
+	assert_int(after.fighters[0].x).is_equal(480 - _data.number("pushback"))
+
+
+func test_two_knockouts_on_one_frame_are_a_draw() -> void:
+	var start: FightState = _fight_at(530, 618)
+	start.fighters[0].health = 1
+	start.fighters[1].health = 1
+	var inputs: Array = [[FightInput.SPECIAL, 0]] + _hold(4, [0, 0]) + [[0, FightInput.SPECIAL]] + _hold(10, [0, 0])
+	assert_int(_play(start, inputs).winner).is_equal(FightState.DRAW)
+
+
+# Holding away blocks while free or already blocking -- and not in hitstun.
+func test_a_fighter_already_blocking_blocks_again_and_one_in_hitstun_cannot() -> void:
+	for kind: String in ["block", "hit"]:
+		var state: FightState = _fight_at(480, 560)
+		state.fighters[0].move = "thrust"
+		state.fighters[0].move_frame = int(_data.move("lancer", "thrust")["startup"])
+		state.fighters[1].stun = 5
+		state.fighters[1].stun_kind = kind
+		var after: FightState = FightRules.step(state, [0, RIGHT] as Array[int], _data)
+		var expected: String = "is blocked by" if kind == "block" else "hits"
+		assert_str(", ".join(after.events)).override_failure_message(kind).contains(expected)
+
+
+func test_a_counter_hit_adds_its_hitstun() -> void:
+	# The dancer presses on frame 2; its jab is active from its own frame 4,
+	# frame 5 of the fight, the frame the counter-hit lands on.
+	var state: FightState = _play(_fight_at(546, 618), [[LIGHT, 0], [0, LIGHT]] + _hold(3, [0, 0]))
+	assert_str(", ".join(state.events)).contains("counter-hits")
+	var expected: int = int(_data.move("dancer", "jab")["hitstun"]) + int(_data.table["counter_hit"]["extra_hitstun"])
+	assert_int(state.fighters[0].stun).is_equal(expected)
+
+
+func test_a_fighter_in_a_move_keeps_facing_the_way_it_was() -> void:
+	var state: FightState = _fight_at(300, 340)
+	state.fighters[0].move = "thrust"
+	state.fighters[0].move_frame = 1
+	state.fighters[1].x = 200
+	var after: FightState = FightRules.step(state, [0, 0] as Array[int], _data)
+	assert_int(after.fighters[0].facing).is_equal(1)
+	assert_int(after.fighters[1].facing).is_equal(1)
+
+
+# The mirror image of a push is the same push: a dancer walking right into
+# another moves the pair exactly as one walking left does, mirrored.
+func test_pushing_right_and_pushing_left_are_mirror_images() -> void:
+	var width: int = int(_data.table["stage"]["width"])
+	var rightwards: FightState = FightState.starting(_data, "dancer", "dancer")
+	rightwards.fighters[0].x = 300
+	rightwards.fighters[1].x = 345
+	var leftwards: FightState = rightwards.copy()
+	leftwards.fighters[0].x = width - 345
+	leftwards.fighters[1].x = width - 300
+	leftwards.fighters[0].facing = 1
+	leftwards.fighters[1].facing = -1
+	for frame: int in range(9):
+		rightwards = FightRules.step(rightwards, [RIGHT, 0] as Array[int], _data)
+		leftwards = FightRules.step(leftwards, [0, LEFT] as Array[int], _data)
+	assert_int(rightwards.fighters[0].x).is_equal(width - leftwards.fighters[1].x)
+	assert_int(rightwards.fighters[1].x).is_equal(width - leftwards.fighters[0].x)
+
+
+func test_boxes_that_touch_at_an_edge_overlap() -> void:
+	assert_bool(FightBoxes.overlap([0, 10] as Array[int], [10, 20] as Array[int])).is_true()
+	assert_bool(FightBoxes.overlap([0, 9] as Array[int], [10, 20] as Array[int])).is_false()
+
+
+func test_frame_data_that_breaks_a_rule_is_refused() -> void:
+	var path: String = "user://planted_characters.json"
+	var cases: Dictionary = {
+		"startup": func(jab: Dictionary) -> void: jab["startup"] = 0,
+		"damage": func(jab: Dictionary) -> void: jab["damage"] = -40,
+		"cancels into": func(jab: Dictionary) -> void: jab["cancels_into"] = ["uppercut"],
+		"button": func(jab: Dictionary) -> void: jab.erase("button"),
+		"hitbox": func(jab: Dictionary) -> void: jab["hitbox"] = [14, 50.5],
+	}
+	for expected: String in cases:
+		var table: Dictionary = _data.table.duplicate(true)
+		(cases[expected] as Callable).call(table["characters"]["dancer"]["moves"]["jab"])
+		FileAccess.open(path, FileAccess.WRITE).store_string(JSON.stringify(table))
+		assert_str(FightData.read(path).refusal).override_failure_message(expected).contains(expected)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
 # --- helpers -------------------------------------------------------------------
