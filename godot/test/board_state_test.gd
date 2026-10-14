@@ -328,6 +328,101 @@ func test_a_nonsense_faction_count_still_lands_on_a_real_faction() -> void:
 	assert_bool(after.current_faction >= 0).is_true()
 
 
+
+
+func test_a_unit_walks_on_its_own_type_s_cost_map() -> void:
+	# T10: a cell blocked on the board can be open to one mover. The first
+	# version checked the step against the board's map and the bill against
+	# the unit's, so a boat paid for the water and was refused it anyway.
+	var board := GridGraph.new(3, 1)
+	board.block(Vector2i(1, 0))
+	var open := GridGraph.new(3, 1)
+	var boat := UnitType.new("boat", 3, 1, 1, 1)
+	boat.mover = "water"
+	var state := BoardState.new(board, [Unit.new(1, RED, Vector2i.ZERO, 10, 3, boat)] as Array[Unit])
+	state.movement_graphs = {"water": open}
+	var into_the_water := Move.new(1, [Vector2i(1, 0)] as Array[Vector2i])
+
+	assert_str(state.why_refused(into_the_water)).is_equal(BoardState.LEGAL)
+	assert_object(state.duplicate_state().graph_for(state.units[0])).is_same(open)
+
+
+func test_an_untyped_unit_walks_on_the_board() -> void:
+	var state: BoardState = _two_unit_board()
+	state.movement_graphs = {"water": GridGraph.new(1, 1)}
+
+	assert_object(state.graph_for(state.units[0])).is_same(state.graph)
+
+
+func test_a_typed_unit_gets_its_type_s_movement_each_turn() -> void:
+	var fast := UnitType.new("fast", 6, 1, 1, 1)
+	var state := BoardState.new(GridGraph.new(4, 4), [Unit.new(1, BLUE, Vector2i.ZERO, 10, 0, fast)] as Array[Unit])
+
+	assert_int(state.end_turn(2, 3).unit_by_id(1).movement_points).is_equal(6)
+
+
+func test_income_goes_to_the_side_about_to_move() -> void:
+	var state: BoardState = _two_unit_board()
+
+	var after: BoardState = state.end_turn(2, 3, 5)
+
+	assert_int(after.funds_of(BLUE)).is_equal(5)
+	assert_int(after.funds_of(RED)).is_equal(0)
+	assert_int(state.funds_of(BLUE)).is_equal(0)
+
+
+func test_buying_leaves_the_state_it_was_bought_on_untouched() -> void:
+	# The promise `apply` makes, kept by the two new ways a state changes.
+	var state: BoardState = _two_unit_board()
+	state.funds[RED] = 10
+
+	var bought: BoardState = state.buy(Upgrade.new("forge", 4))
+
+	assert_int(state.funds_of(RED)).is_equal(10)
+	assert_bool(state.owns(RED, "forge")).is_false()
+	assert_int(bought.funds_of(RED)).is_equal(6)
+	assert_str(bought.why_upgrade_refused(Upgrade.new("forge", 4))).contains("already owns")
+
+
+func test_a_new_unit_gets_an_id_nobody_else_has() -> void:
+	var maker := UnitType.new("maker", 0, 0, 1, 0, false)
+	var soldier := UnitType.new("soldier", 3, 1, 1, 1)
+	maker.produces.assign(["soldier"])
+	var units: Array[Unit] = [Unit.new(7, RED, Vector2i(1, 1), 10, 0, maker), Unit.new(3, RED, Vector2i(3, 3))]
+	var state := BoardState.new(GridGraph.new(4, 4), units)
+	state.funds[RED] = 1
+
+	var built: BoardState = state.produce(ProductionOrder.new(7, soldier, Vector2i(1, 2)))
+
+	assert_int(built.unit_at(Vector2i(1, 2)).id).is_equal(8)
+
+
+func test_an_order_is_refused_off_the_producer_s_side() -> void:
+	var maker := UnitType.new("maker", 0, 0, 1, 0, false)
+	var soldier := UnitType.new("soldier", 3, 1, 1, 0)
+	maker.produces.assign(["soldier"])
+	var state := BoardState.new(GridGraph.new(4, 4), [Unit.new(1, RED, Vector2i(1, 1), 10, 0, maker)] as Array[Unit])
+
+	assert_str(state.why_production_refused(ProductionOrder.new(1, soldier, Vector2i(3, 3)))).contains("not next to")
+
+
+func test_a_new_unit_never_takes_a_dead_unit_s_id() -> void:
+	# `Unit.id` promises an id is never reused. Counting from the living
+	# broke that whenever the highest id died: a stored move naming the dead
+	# unit would command the new one.
+	var maker := UnitType.new("maker", 0, 0, 1, 0, false)
+	var soldier := UnitType.new("soldier", 3, 1, 1, 0)
+	maker.produces.assign(["soldier"])
+	var units: Array[Unit] = [Unit.new(1, RED, Vector2i(1, 1), 10, 0, maker), Unit.new(5, RED, Vector2i(3, 3), 0)]
+	var state := BoardState.new(GridGraph.new(4, 4), units)
+
+	var built: BoardState = state.produce(ProductionOrder.new(1, soldier, Vector2i(1, 2)))
+	var again: BoardState = built.produce(ProductionOrder.new(1, soldier, Vector2i(1, 0)))
+
+	assert_int(built.unit_at(Vector2i(1, 2)).id).is_equal(6)
+	assert_int(again.unit_at(Vector2i(1, 0)).id).is_equal(7)
+
+
 # A 6x3 board of flat ground, red's unit 1 at (1, 1) and blue's unit 2 at (4, 1).
 func _two_unit_board() -> BoardState:
 	var graph := GridGraph.new(6, 3)

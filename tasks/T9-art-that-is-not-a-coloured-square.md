@@ -1,6 +1,6 @@
 # T9 — Art that is not a coloured square
 
-Size: M · Prereqs: T8 · Files: `godot/assets/`, `docs/adr/`
+Size: M · Prereqs: T8, T10 · Files: `godot/assets/`, `docs/adr/`
 
 ## Goal
 

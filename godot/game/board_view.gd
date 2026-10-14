@@ -36,6 +36,8 @@ const PLAIN: Vector2i = Vector2i(0, 0)
 const ROUGH: Vector2i = Vector2i(1, 0)
 const WALL: Vector2i = Vector2i(2, 0)
 const NODE: Vector2i = Vector2i(3, 0)
+const WATER: Vector2i = Vector2i(4, 0)
+const BRIDGE: Vector2i = Vector2i(5, 0)
 
 const SOURCE_ID: int = 0
 
@@ -49,6 +51,8 @@ const SWATCHES: Array[Color] = [
 	Color(0.74, 0.60, 0.38),
 	Color(0.13, 0.13, 0.15),
 	Color(0.95, 0.78, 0.25),
+	Color(0.20, 0.40, 0.72),
+	Color(0.55, 0.38, 0.22),
 ]
 
 ## The cells the unit in hand can reach: a tint and a border over the terrain,
@@ -98,8 +102,12 @@ func _ready() -> void:
 ## Terrain and nodes are tiles. The reachable cells are not: they are kept and
 ## drawn over the tiles by `_draw_marks`, so a rough cell you can step onto still
 ## looks rough and still says what it costs.
+##
+## `terrain` names a tile for cells whose cost alone cannot say what they are:
+## water is blocked to most units, like a wall, and is not a wall. Terrain is
+## the game's idea, so the scene passes it in rather than the graph carrying it.
 func draw_board(graph: GridGraph, reachable: Array[Vector2i],
-		nodes: Array[Vector2i] = [] as Array[Vector2i]) -> void:
+		nodes: Array[Vector2i] = [] as Array[Vector2i], terrain: Dictionary = {}) -> void:
 	clear()
 	_graph = graph
 	_reachable = reachable
@@ -107,6 +115,8 @@ func draw_board(graph: GridGraph, reachable: Array[Vector2i],
 		for x: int in range(graph.width):
 			var cell := Vector2i(x, y)
 			set_cell(cell, SOURCE_ID, _tile_for(graph.cost_at(cell)))
+	for cell: Vector2i in terrain:
+		set_cell(cell, SOURCE_ID, terrain[cell])
 	for cell: Vector2i in nodes:
 		set_cell(cell, SOURCE_ID, NODE)
 	if _marks != null:

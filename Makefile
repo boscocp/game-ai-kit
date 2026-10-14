@@ -293,6 +293,12 @@ demo-search: ## The four searches on one board: 1-4 choose, space steps, enter f
 demo-stealth: ## Cross the hall unseen: arrows walk, shift sprints, space waits, D shows danger
 	@$(GODOT) --path godot res://game/stealth/stealth.tscn
 
+.PHONY: play-tactical
+play-tactical: ## The tactical scenario, two people at one mouse: 1-5 build, U forge, space ends the turn
+	@# Not demo-*: no AI decides anything here yet, so it is not an example in
+	@# invariant 13's sense. T11 gives one side to the planner and renames it.
+	@$(GODOT) --path godot res://game/tactical/tactical.tscn
+
 # --- shipping --------------------------------------------------------------
 
 .PHONY: release

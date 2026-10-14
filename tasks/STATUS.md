@@ -28,9 +28,9 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | # | Task | State | Notes |
 |---|---|---|---|
 | T8 | A board you can read | done | 48 px, centred, costs written, the highlight an overlay; manual check still a person's |
-| T9 | Art that is not a coloured square | todo | CC0 now, generated later, and an ADR |
-| T10 | The tactical scenario | todo | five units, two towers, terrain that matters |
-| T11 | The planner plays | todo | STRIPS drives a faction; needs T4 |
+| T9 | Art that is not a coloured square | todo | CC0 now, generated later, and an ADR; after T10, so there are five types to draw |
+| T10 | The tactical scenario | done | five types, two towers, a workshop, funds, a forge, a river with one bridge; manual check: terrain yes, type feel waits on T26 |
+| T11 | The planner plays | todo | STRIPS drives a faction; needs T4, and T26 for attacks; `ai_learning` still routes on `state.graph`, wrong for a wader |
 | T12 | Three difficulties, honestly | todo | horizon and depth, never cheating; five levels if they stay ordered |
 | T13 | `ai_fuzzy`, from a library that already exists | done | rewritten, not ported: the library was C# and its core was missing (ADR 0011); 3 vectors read from both languages |
 | T14 | The stealth scenario | done | `ai_perception`, fuzzy suspicion, three guard states; 4 properties over 300 maps |
@@ -39,6 +39,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T17 | The opponent model | todo | n-grams you can print |
 | T18 | Behaviour cloning, and what a learned model buys | todo | the comparison is the task |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
+| T26 | Combat on the board | todo | reach and the counter table start to matter; the dataset is rebuilt from the game (ADR 0008) |
 | T21 | Every example can be watched | done | `check_demos.py` and `demo_overlays.gd`; blue's decision now drawn before it is played |
 | T24 | One window for every example | todo | a menu, a card per example naming its techniques, and an executable; needs T21 |
 
@@ -71,6 +72,37 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-13 (wave 25)
+
+**The order changed.** T9 (art) was next, and it asks for five unit types
+to be five silhouettes, but there were no unit types. The owner chose to do
+T10 first. T9 now depends on T10, and `make wave` agrees.
+
+**What landed.** T10, the tactical scenario, played with
+`make play-tactical`:
+- `ai_core` has `UnitType`, `Upgrade` and `ProductionOrder`, and
+  `BoardState` holds funds, upgrades and a cost map per kind of mover.
+- Five types in a counter cycle, a bolt tower, a watchtower, a workshop and
+  a forge.
+- A river with one bridge. Only the wader crosses water.
+- The highlight shows everywhere a piece can walk this turn
+  (`TacticalReach`).
+
+It is not `demo-*`, because nothing in it decides yet. T11 gives one side to
+the planner and renames it.
+
+**Combat is not in it.** ADR 0008 says the dataset must be rebuilt from the
+game's combat once it exists. That is T26, a new task, and T11 now depends
+on it.
+
+**The review's worst finding.** Out of funds, a build said the workshop had
+no room. Three tests did not hold what they were named for: the cycle, the
+"only" bridge, and what a wader pays. They do now. See
+[docs/reviews/25-the-tactical-scenario.md](../docs/reviews/25-the-tactical-scenario.md).
+
+**Not proven.** T10's manual check, by a person. The play review passed it
+for terrain and said type feel waits on T26. The fixes were not re-reviewed.
 
 ## Resuming after 2026-10-13 (wave 24)
 
