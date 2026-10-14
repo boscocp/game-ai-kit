@@ -115,6 +115,22 @@ not see costs: a route costing 98. Dijkstra goes round for 21, having expanded
 125 cells to be sure. A\* goes round for the same 21, having expanded 90. The
 difference between the last two is the whole value of `h`.
 
+That board teaches one lesson, so the board can be edited. Paint walls and
+mud, drag the start and the goal, or press B for three more, each with the
+lesson it was drawn for written under it:
+
+- **a maze** with one way through: all four find the same route, cost 36,
+  and only the work differs -- A\* 41 cells, Dijkstra 51. In a corridor the
+  heuristic points through walls, and buys little;
+- **an open field**: A\* expands 14 cells to Dijkstra's 130;
+- **a trap for depth-first**: the goal two cells to the right. Depth-first
+  pushes its neighbours up, right, down, left and takes the last one pushed,
+  so it sets off left, sweeps the board, and arrives by a route costing 40.
+
+Edit one, and the screen says whether it still shows what it was for. Wall
+the goal off and every search answers "no route", having expanded the whole
+region the start could reach -- which is what "no route" costs.
+
 ## When not to use any of these
 
 When you need throughput. These are written to be read: the frontier is a

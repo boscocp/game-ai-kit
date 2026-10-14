@@ -24,6 +24,13 @@ offset_right = 1256.0
 offset_bottom = 700.0
 text = "loading"
 
+[node name="Help" type="Label" parent="Interface"]
+offset_left = 980.0
+offset_top = 290.0
+offset_right = 1270.0
+offset_bottom = 590.0
+text = "loading"
+
 [node name="Legend" type="Control" parent="Interface"]
 offset_left = 980.0
 offset_top = 40.0
