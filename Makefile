@@ -72,7 +72,7 @@ lint-review: ## This branch has a review record and may be merged
 .PHONY: check
 check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-search-properties test-planner-properties test-perception-properties \
-       test-decisions test-demo-overlays ## Run every gate
+       test-decisions test-demo-overlays test-replay ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability lint-demos \
@@ -354,6 +354,18 @@ demo-stealth: import ## Cross the hall unseen: arrows walk, shift sprints, space
 .PHONY: demo-tactical
 demo-tactical: import ## Advance Wars style tactics against a rule-based blue: click to move, W waits, 1-5 build, Z undo, space ends the turn
 	@$(GODOT) --path godot res://game/tactical/tactical.tscn
+
+.PHONY: demo-fighting
+demo-fighting: import ## Training mode, you against a dummy: A/D walk, J/K/L attack, hold away to block, M dummy mode, P pause, space one frame
+	@$(GODOT) --path godot res://game/fighting/fighting.tscn
+
+.PHONY: record-replay
+record-replay: import ## Record the recorded fight's per-frame digests again, after a deliberate change to the rules
+	@$(GODOT) --headless --path godot -s res://test/replay_determinism.gd -- --record
+
+.PHONY: test-replay
+test-replay: import ## Replay the recorded fight twice; the two runs must agree on every frame
+	@$(GODOT) --headless --path godot -s res://test/replay_determinism.gd
 
 # --- your own art (T31: optional, tier 3, needs a GPU) ----------------------
 #

@@ -42,7 +42,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T13 | `ai_fuzzy`, from a library that already exists | done | rewritten, not ported: the library was C# and its core was missing (ADR 0011); 3 vectors read from both languages |
 | T14 | The stealth scenario | done | `ai_perception`, fuzzy suspicion, three guard states; 4 properties over 300 maps |
 | T15 | `ai_behaviour`: the four ways to decide | todo | FSM, tree, GOAP, HTN, beside STRIPS |
-| T16 | The fighting scenario | todo | mostly not AI, and says so |
+| T16 | The fighting scenario | done | mostly not AI, and says so: frame data in `spec/frames/`, one axis, whole numbers, the resolution order written and tested rule by rule; a recorded log replays to committed per-frame digests; `make demo-fighting` is a training mode; manual check still a person's |
 | T17 | The opponent model | todo | n-grams you can print |
 | T18 | Behaviour cloning, and what a learned model buys | todo | the comparison is the task |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
@@ -79,6 +79,39 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-14 (wave 34)
+
+**What landed.** T16: the fighting scenario, with no AI yet.
+- Two characters on one axis: the lancer has reach and starts slowly; the
+  dancer is quick and short.
+- Every number is in `spec/frames/characters.json`. The game reads a copy,
+  held byte for byte. The order a frame resolves in is written there and
+  followed step by step in `FightRules`: the buffer, acting, separation,
+  every box tested at once, block or hit, counter-hit, trade, pushback,
+  knockout.
+- The engine uses whole numbers and an immutable state per frame. A
+  recorded log (`godot/test/fight_log.json`) must replay to the per-frame
+  digests committed beside it, and to the same digests twice. `make
+  record-replay` rewrites them after a deliberate change.
+- `make demo-fighting` is a training mode: you against a dummy that stands,
+  blocks or jabs, every box drawn, and space steps one frame.
+
+**The review's worst findings.**
+- The determinism check could not see player two, or anything fixed for the
+  life of a process.
+- Half the resolution order had no test.
+- The separation favoured the right-hand side.
+
+All are fixed, and the 17 surviving mutations re-run are now killed. See
+[docs/reviews/34-the-fighting-scenario.md](../docs/reviews/34-the-fighting-scenario.md).
+
+**Not proven.** T16's manual check: play both characters against the dummy.
+Moves should come out when asked, and a trade should resolve as the table
+says.
+
+**Next:** `make wave` cuts the next ready row. T17, the opponent model,
+starts by reading `spec/frames/` from Python.
 
 ## Resuming after 2026-10-14 (wave 33)
 

@@ -1,0 +1,165 @@
+{
+ "description": "Frame data for the fighting scenario (T16), as data: every number a fight is resolved by, and none in code. One unit is one pixel; every position, speed and box is a whole number, so two runs cannot round differently. A frame is 1/60 s. A move's frames count from 1: `startup` frames before it can hit, then `active` frames when its hitbox is out, then `recovery` frames before its owner can act again.",
+ "frames_per_second": 60,
+ "stage": {
+  "width": 640,
+  "starts": [
+   220,
+   420
+  ]
+ },
+ "buffer_frames": 8,
+ "pushback": 14,
+ "counter_hit": {
+  "damage_percent": 125,
+  "extra_hitstun": 4
+ },
+ "resolution": [
+  "1. Inputs: each fighter's newly pressed button is buffered for `buffer_frames` frames; the latest press replaces an older one.",
+  "2. Both fighters act at once, each from the state the frame began with: a stunned fighter counts its stun down; a fighter in a move advances one frame, or cancels into a buffered move when the cancel window is open and the move has connected; an idle fighter starts a buffered move or walks.",
+  "3. Bodies may not overlap: two that do each give way by half the overlap, rounded up, so neither side is favoured; then both are kept on the stage, and one pinned to a wall leaves the other to give way.",
+  "4. Every hitbox out this frame is tested against the other fighter's hurtbox, both at once, before either result is applied.",
+  "5. A connection is blocked if the defender is idle or already blocking and holds away from the attacker: blockstun, no damage. Otherwise it hits: damage and hitstun, and the defender's move is lost.",
+  "6. A counter-hit is a hit on a defender still in the startup of a move: `counter_hit.damage_percent` of the damage, and `extra_hitstun` more frames.",
+  "7. A trade is both connecting on the same frame: both are applied, in full, to both.",
+  "8. A connection pushes the defender `pushback` units away; what a wall stops it from taking, the attacker takes instead, backwards. A move connects at most once.",
+  "9. A fighter at 0 health has lost; both at 0 on one frame is a draw."
+ ],
+ "characters": {
+  "lancer": {
+   "description": "reach: long pokes that start slowly, and slow feet",
+   "health": 1000,
+   "walk_speed": 2,
+   "body": 26,
+   "moves": {
+    "jab": {
+     "button": "light",
+     "startup": 6,
+     "active": 3,
+     "recovery": 11,
+     "damage": 40,
+     "hitstun": 15,
+     "blockstun": 11,
+     "hitbox": [
+      18,
+      92
+     ],
+     "hurtbox_reach": 60,
+     "cancel_window": [
+      7,
+      14
+     ],
+     "cancels_into": [
+      "thrust"
+     ]
+    },
+    "thrust": {
+     "button": "heavy",
+     "startup": 13,
+     "active": 4,
+     "recovery": 22,
+     "damage": 95,
+     "hitstun": 22,
+     "blockstun": 15,
+     "hitbox": [
+      18,
+      150
+     ],
+     "hurtbox_reach": 110,
+     "cancel_window": [
+      0,
+      0
+     ],
+     "cancels_into": []
+    },
+    "sweep": {
+     "button": "special",
+     "startup": 10,
+     "active": 5,
+     "recovery": 26,
+     "damage": 70,
+     "hitstun": 26,
+     "blockstun": 12,
+     "hitbox": [
+      10,
+      120
+     ],
+     "hurtbox_reach": 100,
+     "cancel_window": [
+      0,
+      0
+     ],
+     "cancels_into": []
+    }
+   }
+  },
+  "dancer": {
+   "description": "speed: quick hands with little reach, and quick feet",
+   "health": 900,
+   "walk_speed": 5,
+   "body": 22,
+   "moves": {
+    "jab": {
+     "button": "light",
+     "startup": 3,
+     "active": 2,
+     "recovery": 7,
+     "damage": 30,
+     "hitstun": 13,
+     "blockstun": 9,
+     "hitbox": [
+      14,
+      50
+     ],
+     "hurtbox_reach": 30,
+     "cancel_window": [
+      4,
+      9
+     ],
+     "cancels_into": [
+      "kick",
+      "flurry"
+     ]
+    },
+    "kick": {
+     "button": "heavy",
+     "startup": 7,
+     "active": 3,
+     "recovery": 14,
+     "damage": 70,
+     "hitstun": 18,
+     "blockstun": 12,
+     "hitbox": [
+      14,
+      72
+     ],
+     "hurtbox_reach": 52,
+     "cancel_window": [
+      0,
+      0
+     ],
+     "cancels_into": []
+    },
+    "flurry": {
+     "button": "special",
+     "startup": 5,
+     "active": 8,
+     "recovery": 16,
+     "damage": 55,
+     "hitstun": 16,
+     "blockstun": 10,
+     "hitbox": [
+      10,
+      58
+     ],
+     "hurtbox_reach": 40,
+     "cancel_window": [
+      0,
+      0
+     ],
+     "cancels_into": []
+    }
+   }
+  }
+ }
+}
