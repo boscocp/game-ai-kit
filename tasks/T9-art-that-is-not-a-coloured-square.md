@@ -60,11 +60,25 @@ test -f godot/assets/LICENCES.md
 grep -qi "cc0\|creative commons" godot/assets/LICENCES.md
 ```
 
-`check_license.py` must gain a rule, with its planted case: an asset directory
-with files and no `LICENCES.md` naming their origin is a finding.
+`check_license.py` must gain a rule, with its planted case. It covers
+**tracked** files only (`git ls-files`), so that a user's gitignored
+generated art (T31) never trips it:
+- every committed asset file is listed, by path, in `LICENCES.md` with its
+  pack and licence;
+- an asset file listed nowhere is a finding.
+
+Listing files, not directories, is what lets T31 tell a CC0 file from a
+generated one.
+
+The suite must include a test that every path in the game's `TileSet` and
+sprite table exists. Those paths are the stable contract T31 swaps files
+behind.
 
 ## Manual check
 
-The five unit types are distinguishable at a glance, in a screenshot, by
-somebody who does not know which is which. Colour alone does not count — a
-colour-blind reader is a reader.
+In screenshots, by somebody who does not know which is which:
+- the tactical game's five unit types are distinguishable at a glance;
+- the checkers men and kings of both sides are distinguishable at a glance;
+- tic-tac-toe's marks are distinguishable at a glance.
+
+Colour alone does not count: a colour-blind reader is a reader.

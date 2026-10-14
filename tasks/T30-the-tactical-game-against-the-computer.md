@@ -19,24 +19,36 @@ play like it. Name the reference only; borrow no art, names or units.
    - Click a destination, and the unit moves and is spent: drawn greyed
      out, and it cannot move again this turn.
    - The next unspent unit is selected for you.
-   - You may pick your units in any order, and undo a move until the unit
-     acts.
+   - You may pick your units in any order, and undo any move until the
+     turn ends. There is nothing to "act" with before T26 brings combat;
+     when it does, an attack ends the chance to undo.
    - End turn is a key and a button. It asks for confirmation while units
      are still unspent.
 2. **The computer plays blue.** Until T11's planner exists, blue is a
    simple opponent written as rules:
-   - it builds what beats what it sees;
+   - it builds the type that beats the most enemy units it sees, by the
+     counter table. That choice has no consequence until T26 brings combat,
+     and the scene says so;
    - it walks each unit at the nearest enemy, or at the bridge.
 
-   It is labelled on screen as rules, not a plan. It is the baseline T11
-   must beat, and T12 measures it.
-3. **Its decisions are shown before they are played** (invariant 13): what
+   It is labelled on screen as rules, not a plan.
+3. **Blue is a controller chosen from several, not one fixed AI.** Blue is
+   whichever `DecisionPolicy` the scene was given, and a key or a menu line
+   names it:
+   - the rules above (this task);
+   - the planner (T11);
+   - the learned policy, once T26 gives it a real combat to decide about.
+
+   That is how three "blue"s share one board without one replacing another,
+   and how T11 and T12 can play them against each other. T11 and T12 name
+   the rule-based blue as their baseline.
+4. **Its decisions are shown before they are played** (invariant 13): what
    it will build and why, and where each unit will walk. Then the scene
    becomes `make demo-tactical`, and an example under `check_demos.py`.
-4. **One line on screen**: "tactics in the style of Advance Wars: build,
+5. **One line on screen**: "tactics in the style of Advance Wars: build,
    cross the river, take the enemy workshop". Plus what the computer is
    using.
-5. **A win condition**, so a game ends: take or destroy the enemy workshop.
+6. **A win condition**, so a game ends: take or destroy the enemy workshop.
    Destroying needs T26; until then, taking it is standing a unit on the
    cell beside it at the start of your turn, and that is written down as
    provisional.

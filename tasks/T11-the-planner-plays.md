@@ -11,6 +11,11 @@ planner from T4 stops being a demonstration and becomes an opponent.
 This is the task the whole kit has been walking towards. A build order *is* a
 plan, which is why planning is taught on a strategy game and not on a maze.
 
+**The baseline.** T30 builds a rule-based blue for the tactical board. That
+is the opponent this planner must beat, played through the same
+`DecisionPolicy` slot, so "beats a reflex" is a measured result and not a
+claim.
+
 ## Steps
 
 1. The domain: actions with preconditions and effects, in PDDL, read by the

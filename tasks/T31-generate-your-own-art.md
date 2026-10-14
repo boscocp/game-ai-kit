@@ -1,6 +1,6 @@
 # T31 — Generate your own art, with a model on your own machine
 
-Size: L · Prereqs: T9 · Files: `tools/artgen/`, `godot/assets/`, `docs/adr/`, `scripts/check_license.py`, `Makefile`
+Size: L · Prereqs: T9 · Files: `tools/artgen/`, `godot/assets/`, `docs/adr/`, `docs/howto/`, `scripts/check_license.py`, `scripts/check_disk_layout.py`, `scripts/artgen`, `Makefile`, `NOTICE`
 
 ## Goal
 
@@ -42,8 +42,15 @@ So:
 - `tools/artgen/` is not under `python/`. `make test-python` does not
   import it, and `make check` never runs it.
 - Its Python environment and the model weights live on the large disk
-  (invariant 8). Nothing goes in `$HOME`, and the weights are never
-  committed.
+  (invariant 8), and the weights are never committed. **That does not hold
+  by itself.**
+  - pip, Hugging Face and torch all cache under `~/.cache` by default. That
+    is the same trap as Godot's `user://`, which needed `XDG_DATA_HOME`.
+  - So the generator is only ever invoked through `scripts/artgen`, a
+    wrapper like `scripts/godot`. It sets `HF_HOME`, `PIP_CACHE_DIR`,
+    `TORCH_HOME` and `XDG_CACHE_HOME` to the toolchain directory.
+  - `check_disk_layout.py` gains those paths, with a planted case: a model
+    cache under `$HOME` is a finding.
 - It is tier 3 in the README's table: optional, like a local LLM.
 
 ## Which model: researched, then measured
@@ -108,7 +115,12 @@ the ADR.
    **`make artgen STYLE=...`** swaps a style preset, a shared prompt suffix,
    so a whole new look is one command.
 5. **Where the output goes, and what the game reads.**
-   - `make artgen` writes to `godot/assets/generated/`, which git ignores.
+   - `make artgen` writes to `godot/assets/generated/`, which git ignores,
+     then runs `./scripts/godot --headless --path godot --import`. Godot
+     does not `load()` a PNG it has not imported.
+   - An exported build (T24) carries what is in the project when it is
+     exported. A user's generated art ships in *their* export, and the
+     kit's release carries the CC0 art. Say so in the how-to.
    - The game reads art through the same `TileSet` and sprite paths T9 set
      up. For each asset, it uses the generated file when there is one and
      the CC0 file otherwise. Swapping art changes files, not code.
@@ -117,12 +129,21 @@ the ADR.
 6. **A few committed examples** in `godot/assets/generated-examples/`,
    chosen to show the range (a unit, a tile, a piece) and kept small. They
    are what the README shows, and the proof the manifest works.
-7. **`check_license.py` gains a rule, with its planted case.** Every
-   committed PNG under `godot/assets/generated-examples/` has a manifest
-   entry naming its model and licence, and a PNG without one is a finding.
-   The gate reads the manifest and never runs the model. A generated PNG
-   committed outside that directory is also a finding, so one person's art
-   set does not slip into everyone's checkout.
+7. **`check_license.py` gains rules, each with its planted case.** They read
+   tracked files only (`git ls-files`): a user's gitignored generated
+   directory is not the repository's business, and a rule that read the
+   disk would fire on it.
+   - **Every committed PNG is accounted for**: listed by file in T9's
+     `LICENCES.md` (CC0) or in the manifest (generated). That is what makes
+     the next rule decidable. A stray PNG outside both looks the same
+     whatever made it, and is a finding either way.
+   - **A manifest entry's PNG lives in `godot/assets/generated-examples/`.**
+     A generated file committed anywhere else is a finding, so one person's
+     art set does not slip into everyone's checkout.
+   - **The committed examples carry their model and its licence in
+     `NOTICE`** (invariant 9).
+
+   The gate reads the manifest and never runs the model.
 8. **`docs/howto/generate-art.md`**: the hardware it needs and how long a
    full run takes, measured on a named GPU and not guessed. Also how to
    restyle, how to add one asset, and what to do without a GPU (keep the
@@ -132,18 +153,27 @@ the ADR.
 
 ```bash
 make check
+make lint-selftests
 python3 scripts/check_license.py
-test -f tools/artgen/manifest.json
+python3 scripts/check_disk_layout.py
 ```
 
 ```bash
-# The fence holds: nothing outside tools/ imports the generator.
+# The fence holds in both directions: nothing in the kit's code mentions the
+# generator, and no gate `make check` runs reaches it.
+test -n "$(ls python/ godot/addons/ godot/game/)"
 ! grep -rn "artgen" python/ godot/addons/ godot/game/
+! make -n check | grep -q "artgen"
 ```
 
-`check_license.py`'s new rules are born with their planted cases: a committed
-generated PNG with no manifest entry, and one committed outside the examples
-directory.
+The suite must include:
+- **The fallback.** With the generated directory empty, every asset in the
+  manifest resolves to a CC0 file, and the game loads.
+- **The planted cases**, one for each new rule:
+  - a committed PNG listed in neither `LICENCES.md` nor the manifest;
+  - a generated PNG outside the examples directory;
+  - an example missing from `NOTICE`;
+  - a model cache under `$HOME`.
 
 ## Manual check
 

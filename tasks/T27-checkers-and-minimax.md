@@ -1,6 +1,6 @@
 # T27 — Checkers, and minimax
 
-Size: L · Prereqs: T21 · Files: `godot/addons/ai_adversarial/`, `godot/game/checkers/`, `Makefile`, `spec/`
+Size: L · Prereqs: T21 · Files: `godot/addons/ai_adversarial/` (with LICENSE and NOTICE), `godot/game/checkers/`, `godot/project.godot`, `Makefile`, `README.md`, `docs/concepts/`, `docs/godot/examples.md`
 
 ## Goal
 
@@ -20,15 +20,21 @@ will *they* do?", which is why it comes first.
    - minimax, then the same search with alpha-beta;
    - a fixed depth, and an evaluation function the game hands in.
 
-   The file reads top to bottom like the pseudocode in Russell & Norvig. Keep
-   the names `alpha` and `beta`: they are the literature's names, and belong
-   on the readability gate's allowlist like `g`, `h` and `f`.
-2. **The rules of checkers in `godot/game/checkers/`**, as the game's, not
-   `ai_core`'s:
-   - 8x8, diagonal moves, forced captures and multi-jumps;
-   - crowning, and a draw after N moves without a capture.
-
-   Write down which variant (English draughts) and its source.
+   The file reads top to bottom like the pseudocode in Russell & Norvig,
+   *Artificial Intelligence: A Modern Approach*, 4th edition, chapter 5. Keep
+   the literature's names `alpha` and `beta`. They are whole words, so the
+   readability gate already allows them; nothing needs adding to its list.
+2. **The rules of English draughts in `godot/game/checkers/`**, as the
+   game's, not `ai_core`'s, with the source written down:
+   - 8x8, dark squares only; men move and capture diagonally forward only,
+     and kings both ways;
+   - capturing is compulsory, but when several captures exist the player may
+     choose any of them (no majority rule). A capture sequence, once begun,
+     must be completed;
+   - a man that reaches the far row is crowned, and **crowning ends the
+     move**, even mid-jump;
+   - a draw by the 40-move rule: 40 moves by each side with no capture and
+     no man moved.
 3. **A hand-written evaluation**: pieces, kings, advancement. It is short,
    and it is the thing T32 replaces with a learned one.
 4. **Play against the AI**, red against the computer, never two people at
@@ -43,10 +49,13 @@ will *they* do?", which is why it comes first.
 
    Then a key, or a short delay, plays the move. A depth control (1 to 6)
    makes the cost of looking further visible.
-6. **Retire the current board from `make run`.** It is the learned policy's
-   example, and it is kept as `make demo-skirmish` until T26 gives that
-   policy a real combat on the tactical board, where it is folded in. The
-   README and `docs/godot/examples.md` say which target teaches what.
+6. **Retire the current board from `make run`.** `run/main_scene` in
+   `project.godot` points at the checkers scene. The current board, the
+   learned policy's example, is kept as `make demo-skirmish`. Where that
+   policy finally lives is T30's question: blue on the tactical board is
+   one controller chosen among several. T24 later makes the menu the main
+   scene, and `make run` keeps opening checkers. The README and
+   `docs/godot/examples.md` say which target teaches what.
 
 ## Acceptance
 
@@ -54,17 +63,33 @@ will *they* do?", which is why it comes first.
 make test-godot
 make lint-demos
 make test-demo-overlays
+make lint-license
 python3 scripts/check_addon_deps.py
 python3 scripts/check_readability.py
+grep -q 'run/main_scene="res://game/checkers/' godot/project.godot
+grep -q '^demo-skirmish:' Makefile
 ```
 
 The suite must include:
-- minimax and alpha-beta return the same move and value on a set of
-  positions, and alpha-beta searches fewer;
-- a forced capture is the only legal move when it exists;
-- a multi-jump is one move;
-- crowning;
-- at depth 1, the AI takes a free piece.
+- **Minimax against alpha-beta.** Over a set of positions:
+  - both return the same value;
+  - with a fixed move order and tie-break, both return the same move;
+  - alpha-beta never searches more positions, and searches fewer in total.
+- **Forced capture.** When a capture exists, only captures are legal.
+- **Free choice among captures.** With two captures available, either may
+  be played.
+- **Multi-jumps.** A multi-jump is one move, and it must be completed.
+- **Crowning.** A man is crowned on the far row, and crowning ends the move
+  mid-jump.
+- **The 40-move draw.**
+- **Lookahead.** The test must be one only lookahead passes:
+  - the position has two captures, one of which loses the piece to an
+    immediate recapture;
+  - at depth 2 or more the AI takes the other;
+  - at depth 1 it may not.
+
+  A test that a capture is taken when one exists cannot fail, because
+  captures are compulsory.
 
 ## Manual check
 

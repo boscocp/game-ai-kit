@@ -34,7 +34,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T30 | The tactical game, against the computer | todo | Advance Wars style turns, a rule-based blue, becomes `demo-tactical` |
 | T9 | Art that is not a coloured square | todo | Kenney CC0 for checkers, tic-tac-toe and the tactical game; laid out so T31 can swap any file |
 | T31 | Generate your own art, locally | todo | a local image model, downloaded separately; each user generates their own (gitignored), the repo keeps a few examples; default FLUX.2 klein 4B (owner's pick), measured first; tier 3 and optional |
-| T32 | Checkers with a learned evaluation | todo | Samuel, 1959: the same search, weights fitted in Python, and a match |
+| T32 | Checkers with a learned evaluation | todo | after Samuel (1959 paper): the same search, weights fitted in Python, and a match |
 | T10 | The tactical scenario | done | five types, two towers, a workshop, funds, a forge, a river with one bridge; manual check: terrain yes, type feel waits on T26 |
 | T11 | The planner plays | todo | STRIPS drives a faction; needs T4, and T26 for attacks; `ai_learning` still routes on `state.graph`, wrong for a wader |
 | T12 | Three difficulties, honestly | todo | horizon and depth, never cheating; five levels if they stay ordered |
@@ -99,11 +99,12 @@ against the computer, and to say the technique on screen.
   fenced off from every lesson. Each user generates their own art, which
   git ignores; the repository keeps CC0 art as the default and a few
   generated examples.
-- T32: a learned checkers evaluation, in the style of Samuel.
+- T32: a learned checkers evaluation, after Samuel.
 
 **What is not lost.** The logistic-regression policy in today's `make run`
-becomes `demo-skirmish` in T27, and folds into the tactical game once T26
-gives it a real combat.
+becomes `demo-skirmish` in T27. T30 makes blue on the tactical board a
+controller chosen among several (rules, planner, learned), which is where
+that policy can play once T26 gives it a real combat.
 
 **Next:** `make wave` cuts T27.
 

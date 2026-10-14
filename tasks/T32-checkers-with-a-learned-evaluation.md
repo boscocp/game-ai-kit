@@ -1,27 +1,50 @@
 # T32 — Checkers with a learned evaluation
 
-Size: M · Prereqs: T27, T5 · Files: `python/gameaikit/`, `godot/game/checkers/`, `spec/`
+Size: L · Prereqs: T27, T5 · Files: `python/gameaikit/`, `godot/game/checkers/`, `spec/`, `Makefile`, `scripts/check_no_training.py`
 
 ## Goal
 
-In 1959 Arthur Samuel wrote a checkers program that searched with minimax
-and **learned the weights of its evaluation**: how much a king is worth
-against a man, how much the centre matters. That is where the phrase
-"machine learning" comes from. T27 builds the search with a hand-written
-evaluation. This task replaces the hand with data, and measures what that
-buys.
+Arthur Samuel's checkers program, begun on IBM machines in the early 1950s
+and described in his 1959 paper "Some Studies in Machine Learning Using the
+Game of Checkers", searched with minimax and **learned the weights of its
+evaluation**. He is widely credited with popularising the phrase "machine
+learning". T27 builds the search with a hand-written evaluation. This task
+replaces the hand with data, and measures what that buys.
+
+**This is after Samuel, not Samuel.** As the paper describes it:
+- the piece-advantage term was held fixed while the other coefficients were
+  learned;
+- the program moved its evaluation towards the values a deeper search
+  backed up, an ancestor of temporal-difference learning, rather than
+  fitting game results.
+
+This task fits game results, because that is the trainer T5 already has.
+The concept page says which is which. Check every claim about the 1959
+paper against the paper itself before it goes on a page.
 
 ## Steps
 
-1. Positions from games played by the T27 AI against itself, labelled with
-   the result, in Python, standard library only (tier 1).
-2. A linear evaluation over the same features T27 hand-weighted, fitted in
-   Python, with the trainer from T5. Published as data, read in Godot, and
-   never trained there (invariant 6).
-3. **A match**: hand-written against learned, at the same depth, over many
+1. **The rules and the search in Python too**, standard library only
+   (tier 1). Self-play happens where training happens, so checkers needs a
+   Python port. A rules vector, a set of positions with their legal moves,
+   is read by both languages, so the two cannot drift.
+2. **Self-play that is not one game replayed.** Fixed-depth minimax with a
+   fixed move order plays the same game every time. Randomise the opening
+   moves, by a recorded seed, and record how many distinct games resulted.
+   Positions are labelled with the game's result.
+3. **A linear evaluation** over the same features T27 hand-weighted, fitted
+   in Python with the trainer from T5. Published as data, read in Godot,
+   and never trained there (invariant 6). Beside it, a shuffled-labels
+   control, as T5 has: weights fitted to scrambled results must play no
+   better than chance against the hand-written evaluation.
+4. **The gate learns about it.** `check_no_training.py` knows only
+   `ai_learning`'s `weights.json`. Extend it to the checkers weights:
+   regenerated from their seed, and never written in GDScript. Each new
+   rule gets a planted case.
+5. **A match**: hand-written against learned, at the same depth, over many
    seeded games, with the score published beside the weights. The
    comparison is the task, as in T18.
-4. In the game, a toggle between the two evaluations. The decision overlay
+6. In the game, a toggle between the two evaluations. The decision overlay
    shows each feature's contribution to a position's score, so a person can
    see *why* the learned one prefers a move.
 
@@ -31,11 +54,19 @@ buys.
 make test-python
 make test-godot
 make lint-no-training
+make lint-selftests
+make test-checkers-vectors
 make test-vectors
 ```
 
+`test-checkers-vectors` is a new sub-target, added to `test-vectors`'
+prerequisites. That list is fixed, and a family left out of it never runs.
+
 The suite must include:
+- the rules vector: both languages produce the same legal moves for every
+  position in it;
 - the Godot and Python evaluations agree on a shared vector of positions;
+- the shuffled-labels control does no better than chance;
 - the published match result is reproduced from its seed.
 
 ## Manual check

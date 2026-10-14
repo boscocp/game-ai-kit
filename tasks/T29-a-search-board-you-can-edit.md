@@ -1,6 +1,6 @@
 # T29 — A search board you can edit
 
-Size: S · Prereqs: T8 · Files: `godot/demos/search/`
+Size: M · Prereqs: T8 · Files: `godot/demos/search/`
 
 ## Goal
 
@@ -35,9 +35,10 @@ python3 scripts/check_readability.py
 The suite must include:
 - painting a wall over the only gap makes every search report no route;
 - moving the goal re-runs the search;
-- erasing restores the cost the cell had;
-- each named board loads and its four searches still disagree where the
-  board says they should.
+- erasing a painted cell makes it open ground, at `GridGraph.DEFAULT_COST`;
+- each named board carries its own expectation (for example "A\* expands
+  fewer cells than Dijkstra", or "depth-first's route costs more than
+  Dijkstra's"), and a test loads every board and checks its expectation.
 
 ## Manual check
 
