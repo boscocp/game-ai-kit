@@ -18,7 +18,7 @@ directory is not editor data. The second mechanism, XDG_DATA_HOME, covers it.
 Two mechanisms means two ways to silently regress, so both are asserted here
 rather than trusted.
 
-The art generator (T31) has the same trap, larger: a 17 GB model that Hugging
+The art generator (T31) has the same trap, larger: tens of GB of model that Hugging
 Face, torch and Triton would all cache under ~/.cache by default. scripts/artgen
 points every one of them at the toolchain directory, and the paths below say
 where they would land if it stopped.
@@ -60,6 +60,9 @@ LEAK_PATHS = (
     # machine other software already keeps caches there, so their presence
     # says nothing about this repository. That pip and the driver honour
     # PIP_CACHE_DIR and CUDA_CACHE_PATH was measured instead, by mtime.
+    # The three below are shared with any other machine-learning project, so
+    # a developer with one will see this fire: that is the price of catching
+    # a 30 GB model landing on the small disk, and the message says where from.
     ".cache/huggingface",
     ".cache/torch",
     ".triton",
@@ -69,7 +72,7 @@ DEFAULT_TOOLCHAIN = "/mnt/games/gamedev/toolchain"
 
 
 def find_leaks(home: pathlib.Path) -> list[str]:
-    """Report any Godot directory that exists under home and is not empty.
+    """Report any Godot directory, or model cache, that exists under home.
 
     An empty leftover directory is reported too: it means a mechanism stopped
     working, and the files follow the directory.
@@ -162,6 +165,12 @@ def self_test() -> int:
         model_home = root / "model-home"
         (model_home / ".cache/huggingface/hub/models--some--model").mkdir(parents=True)
         expect("a model cache under home", quiet(repo_off_home, good_toolchain, model_home), 1)
+        # Planted: torch's and Triton's caches, each on its own -- with only
+        # the Hugging Face case, deleting either path from the list stayed green.
+        for leak in (".cache/torch/hub", ".triton/cache"):
+            leaked_home = root / ("leak-" + leak.replace("/", "-"))
+            (leaked_home / leak).mkdir(parents=True)
+            expect(f"{leak} under home", quiet(repo_off_home, good_toolchain, leaked_home), 1)
 
         # Planted: someone removed the self-contained marker.
         no_marker = root / "no-marker"

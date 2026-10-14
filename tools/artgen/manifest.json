@@ -3,12 +3,12 @@
   "styles": {
     "pixel": {
       "prefix": "A clean 16-bit pixel art game sprite, in the style of a classic handheld tactics game: a bold dark outline, flat shading with two tones per colour, a simple chunky readable silhouette, no fine detail, no text. ",
-      "sprite": " The object is centred and fully visible, isolated on a flat solid pure green (#00FF00) background, with no shadow and no ground.",
+      "sprite": " The object is centred and fully visible, isolated on a flat solid {background} background, with no shadow and no ground.",
       "tile": " The texture fills the whole square edge to edge, seamless, with no border, no frame and no objects."
     },
     "toy": {
       "prefix": "A clean pixel art game sprite of a painted wooden toy, glossy and rounded, bright cheerful colours, a bold dark outline, no fine detail, no text. ",
-      "sprite": " The object is centred and fully visible, isolated on a flat solid pure green (#00FF00) background, with no shadow and no ground.",
+      "sprite": " The object is centred and fully visible, isolated on a flat solid {background} background, with no shadow and no ground.",
       "tile": " The texture fills the whole square edge to edge, seamless, with no border, no frame and no objects."
     }
   },
@@ -203,7 +203,8 @@
       "prompt": "Two round dark green pine trees side by side, seen from slightly above.",
       "seed": 114,
       "pixels": 32,
-      "colours": 16
+      "colours": 16,
+      "background": "pure magenta (#FF00FF)"
     },
     {
       "path": "terrain/wall.png",
@@ -293,5 +294,6 @@
       "seed": 112,
       "generated_on": "2026-10-14"
     }
-  ]
+  ],
+  "background_comment": "A sprite stands on pure green unless its entry names another colour: anything green -- the trees -- would be cleared away with its background, so it asks for magenta."
 }

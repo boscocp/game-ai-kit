@@ -21,8 +21,11 @@ model, and the list of pictures the game needs is the game's own
 because generation breaks two promises the rest of the kit keeps -- Python
 with the standard library only, and no lesson above tier 1:
 
-- `tools/artgen/` is outside `python/`; `make check` never runs it, and
-  nothing in `python/`, `godot/addons/` or `godot/game/` names it.
+- `tools/artgen/` is outside `python/`, and nothing in `python/`,
+  `godot/addons/` or `godot/game/` names it. `make check` never runs the
+  generator; it does *read* the generator's manifest, twice -- the licence
+  gate checks the committed examples against it, and a test checks it names
+  exactly the pictures `Art` draws.
 - It runs only through `scripts/artgen`, which points pip, Hugging Face,
   torch, Triton and the CUDA kernel cache at the toolchain directory on the
   large disk. Measured: after installing 63 packages (7 GB) and fetching 55 GB of
@@ -79,10 +82,20 @@ a source found in research and then measured:
 - the two sides of a kind sharing a seed, so they are one design in two
   colours.
 
-**Asking for "32x32" or "64x64" changed nothing.** On klein, the median run
-of one colour -- the size of a fake pixel -- was the same with and without it
-(8.4, 16.7, 13.6, 6.2 against 8.3, 18.1, 13.7, 6.2 for four of the pictures).
-The size is the post-processing's.
+**Asking for "32x32" or "64x64" did not make the pixels bigger.** On klein,
+the median run of one colour -- the size of a fake pixel, in a 512-pixel
+frame -- for the seven pictures:
+
+| prompt | truck | shield | mortar | tower | trees | checker | X |
+|---|---|---|---|---|---|---|---|
+| no size | 8.4 | 16.7 | 13.6 | 6.2 | 46.5 | 18.7 | 30.1 |
+| "32x32" | 8.3 | 18.1 | 13.7 | 6.2 | 41.3 | 17.0 | 23.0 |
+| "64x64" | 8.3 | 15.1 | 15.3 | 6.2 | 46.3 | 17.1 | 23.0 |
+
+Five barely move; the X shrank by a quarter with either size, the opposite of
+what asking for big pixels should do, and the two sizes gave the same. The
+pictures looked alike. Z-Image was not measured: that run was lost to a power
+cut. The size comes from the post-processing.
 
 **Walking is a task of its own (T33).** Twelve frames from a general model
 failed both ways: one sheet drew twelve soldiers in random poses, and twelve
@@ -93,11 +106,27 @@ undistilled base; the owner judged it good enough to go on with.
 ## Consequences
 
 - A fresh checkout loses nothing: no GPU, no download, the CC0 art.
-- `make artgen-bootstrap` costs about 24 GB for packages and klein, 33 GB
-  more for Z-Image, all on the large disk.
+- `make artgen-bootstrap` costs about 40 GB on the large disk: 7 GB of
+  packages and 33 GB of Z-Image. Klein, fetched only when asked for, is
+  16 GB more.
+- The lock pins wheels for CPython 3.14 on x86_64 Linux, and bootstrap
+  refuses another Python rather than half install.
 - Generated pictures still have flaws a person sees and no gate does: the
   grass tile draws its own dark border, and the watchtower came out thin.
   They are a person's own, regenerated with another seed or style.
-- The examples are Apache-2.0 model output, credited in `NOTICE`; the
-  licence rules (L18-L23) hold that every committed generated picture is a
-  named example in its folder, unchanged, with its model credited.
+- The examples are Apache-2.0 model output, credited in `NOTICE`. What the
+  licence rules (L16, L18-L24) hold: every file in the examples folder is a
+  named example, unchanged, made by a model `model.json` pins at that
+  revision under an allowed licence, credited in `NOTICE` on one line; and
+  the manifest names no example elsewhere. What they cannot hold: a
+  generated picture committed outside that folder *and* entered in
+  `LICENCES.md` as a pack's, with its sha256. A PNG does not say what made
+  it; that row would be a false statement by a person, which is review's to
+  catch.
+- The numbers above came from probe scripts run beside the toolchain, not
+  from a committed command: `generate.py measure` reproduces the per-picture
+  times and peaks, not the walk or the size probes, and two of the probes
+  were lost to a power cut. T33 brings walking into the generator.
+- The pixel-art LoRA's card says its training images are CC0. That is a
+  claim, with two sizes given for the dataset (500 and 1,010), and was not
+  checked; it no longer matters for the default, which uses no LoRA.

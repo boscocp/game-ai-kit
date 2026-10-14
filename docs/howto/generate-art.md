@@ -18,8 +18,10 @@ teaches: none
 Measured on an RTX 5070 (12 GB, Blackwell), 30 GB of RAM, Python 3.14:
 
 - **an NVIDIA GPU with 12 GB of VRAM.** The default model peaked at 8.3 GB;
-- **about 70 GB on the large disk**: 7 GB of packages, 55 GB of weights
-  with both models. Nothing goes to `$HOME`;
+- **CPython 3.14 on x86_64 Linux**: the lock pins wheels for it, and
+  bootstrap refuses another;
+- **about 40 GB on the large disk**: 7 GB of packages and 33 GB for the
+  default model, 16 GB more for the other. Nothing goes to `$HOME`;
 - **a first run of about 7 minutes** to install and download, more on a slow
   line.
 
@@ -34,7 +36,8 @@ make artgen-clean         # back to the CC0 art
 
 `make artgen` took about 8 minutes for the 30 pictures with Z-Image-Turbo,
 13.5 s a picture after the first. Its output is gitignored and is yours:
-`git status` shows nothing new.
+`git status` shows nothing new. Beside the pictures, `made-by.json` records
+the model, style, seed and prompt behind each one.
 
 ## Changing the look
 
@@ -63,6 +66,9 @@ make artgen-clean         # back to the CC0 art
 
 - **A grey checkerboard round the object**: a prompt asked for a transparent
   background. Ask for flat green; the generator removes it.
+- **"opaque pixels ... after its background was removed"**: a green object
+  on the green background cleared to nothing, and the picture was not saved.
+  Give its entry `"background": "pure magenta (#FF00FF)"`, as the trees have.
 - **Black noise**: a LoRA at full weight. The pixel-art LoRA's weight is
   0.125 in `model.json`, for reasons the ADR gives.
 - **The game shows the old picture**: Godot draws only imported pictures.

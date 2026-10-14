@@ -191,3 +191,18 @@ func test_the_generator_s_manifest_names_exactly_the_pictures_the_game_draws() -
 	var drawn: Array[String] = Art.every_path()
 	drawn.sort()
 	assert_array(named).is_equal(drawn)
+
+
+# `texture` goes through `resolve`: a person's picture is the one drawn, not
+# only the one `resolve` would name.
+func test_the_texture_drawn_is_the_generated_one_when_there_is_one() -> void:
+	Art.generated = Art.ROOT + "checkers/"
+	assert_object(Art.texture(Art.ROOT + "crown.png")).is_same(load(Art.ROOT + "checkers/crown.png"))
+
+
+# A file the engine has not imported cannot be drawn however present it is,
+# so `resolve` asks the resource loader and not the disk. `project.godot` is
+# a file at the root of the project and is no picture.
+func test_a_file_that_is_not_an_imported_picture_is_not_used() -> void:
+	Art.generated = "res://"
+	assert_str(Art.resolve(Art.ROOT + "project.godot")).is_equal(Art.ROOT + "project.godot")

@@ -75,7 +75,9 @@ def gates(scripts_dir: pathlib.Path) -> tuple[list[pathlib.Path], list[str]]:
     """
     found, missing = [], []
     for path in sorted(scripts_dir.iterdir()):
-        if path.suffix not in (".py", ".sh") or not path.is_file():
+        # A script with no suffix counts too: scripts/artgen is one, and while
+        # only .py and .sh were looked at its self-test never ran.
+        if path.suffix not in (".py", ".sh", "") or not path.is_file():
             continue
         has_marker = MARKER in path.read_text(encoding="utf-8", errors="replace")
         if has_marker:
@@ -178,6 +180,14 @@ def self_test() -> int:
         if run(folder, 5) != 1:
             failures.append("a gate that lost its --self-test did not fail the run")
         lost.unlink()
+
+        # Planted: a wrapper with no suffix, like scripts/artgen, whose
+        # self-test fails. Looking only at .py and .sh never ran it.
+        wrapper = folder / "wrapper"
+        wrapper.write_text("#!/usr/bin/env bash\n# --self-test\nexit 1\n")
+        if run(folder, 5) != 1:
+            failures.append("a failing self-test in a script with no suffix was not run")
+        wrapper.unlink()
 
         # A helper that is not named like a gate and has no self-test is not a
         # finding, or every utility in scripts/ becomes one.

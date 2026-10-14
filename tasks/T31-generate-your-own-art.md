@@ -205,3 +205,13 @@ Delete the generated directory, and the game is back on the CC0 art.
 - **Walking became T33.** The walk-cycle probe this task asked for is in
   ADR 0013: twelve frames from a general model failed; three frames a
   direction at 32 px with a dedicated LoRA worked.
+- **What made a person's pictures is recorded beside them**, in
+  `godot/assets/generated/made-by.json` (gitignored with them), rather than
+  written into the committed manifest: the manifest is the source and is
+  shared, a person's set is theirs. The manifest holds no per-entry model or
+  negative prompt; the model is `model.json`'s, and neither model uses a
+  negative prompt (both run without guidance).
+- **The fence, stated exactly**: `make check` never runs the generator, but
+  reads its manifest twice (the licence gate and one Godot test). The
+  acceptance grep does not look in `godot/test/`, which is where that test
+  names it.

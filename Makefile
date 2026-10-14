@@ -348,7 +348,7 @@ demo-tactical: import ## Advance Wars style tactics against a rule-based blue: c
 # loses nothing. See docs/howto/generate-art.md.
 
 .PHONY: artgen-bootstrap
-artgen-bootstrap: ## Create the art generator's environment and fetch its model (about 24 GB, large disk)
+artgen-bootstrap: ## Create the art generator's environment and fetch its default model (about 40 GB, large disk)
 	@scripts/artgen bootstrap
 	@$(MAKE) --no-print-directory lint-disk-layout
 
