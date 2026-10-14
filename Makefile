@@ -311,7 +311,7 @@ demo-tictactoe: ## MENACE, the matchbox machine, moves first: space draws its be
 	@$(GODOT) --path godot res://game/tictactoe/tictactoe.tscn
 
 .PHONY: demo-search
-demo-search: ## The four searches on one board: 1-4 choose, space steps, enter finishes
+demo-search: ## The four searches on a board you can paint: drag to edit, 1-4 choose, space steps, B boards
 	@$(GODOT) --path godot res://demos/search/search_demo.tscn
 
 .PHONY: demo-stealth

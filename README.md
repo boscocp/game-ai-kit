@@ -83,11 +83,14 @@ and the chance of drawing one. Space draws. Keys 1–4 swap in the machine
 after 10, 100, 1,000 or 10,000 games of training -- done beforehand in
 Python -- and M shows what perfect play makes of each square.
 
-**The search demo** (`make demo-search`). One board, four searches. Keys 1–4
-choose the algorithm, space reveals the next cell it expanded, enter reveals
-the rest. Breadth-first walks through the mud; Dijkstra goes round having
-spread out in rings; A\* goes round having expanded 90 cells to
-Dijkstra's 125.
+**The search demo** (`make demo-search`). Four searches on a board you can
+paint. Keys 1–4 choose the algorithm, space reveals the next cell it
+expanded, enter reveals the rest. On the first board breadth-first walks
+through the mud; Dijkstra goes round having spread out in rings; A\* goes
+round having expanded 90 cells to Dijkstra's 125. Then change it: left-drag
+paints wall, mud or open ground (W, M, G), right-drag erases, the dots drag,
+and B steps through a maze, an open field and a trap for depth-first. Every
+change searches again, and a goal walled off is answered "no route".
 
 *Recordings of all four are still to be made.*
 
@@ -107,7 +110,7 @@ make bootstrap     # downloads the pinned Godot to the large disk, SHA-512 verif
 make run           # checkers against minimax and alpha-beta
 make demo-skirmish # the learned policy plays blue on the skirmish board
 make demo-tictactoe # MENACE, the matchbox machine, at four ages of training
-make demo-search   # the four searches on one board, one at a time
+make demo-search   # the four searches on a board you can paint
 make check         # every gate
 ```
 
