@@ -199,8 +199,14 @@ train: ## Fit both models and publish weights.json to dist/ and to the addon
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.training.report \
 		--write $(CURDIR)/dist --write $(CURDIR)/godot/addons/ai_learning
 
+.PHONY: train-menace
+train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac-toe game
+	@# Deterministic: `make lint-no-training` trains again and fails if the
+	@# committed file has come apart from what this writes.
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
+
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -239,6 +245,13 @@ test-fuzzy-vectors: ## The fuzzy vectors, against ai_fuzzy
 	@# text controller beside a vector describes the same thing as its JSON.
 	@$(GODOT) --headless --path godot -s res://test/fuzzy_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/fuzzy
+
+.PHONY: test-menace-vectors
+test-menace-vectors: ## The MENACE vectors, against the game's bead player
+	@# The other half is `make test-python`. Each case carries the uniform draw
+	@# itself, because Python's generator and Godot's differ.
+	@$(GODOT) --headless --path godot -s res://test/menace_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/menace
 
 .PHONY: test-search-properties
 test-search-properties: ## A* agrees with Dijkstra, over a few hundred boards
@@ -292,6 +305,10 @@ demo-skirmish: ## The learned policy plays blue: click a unit, click a neighbour
 	@# Until T27 this was `make run`. Where the policy finally plays is T30's
 	@# question: blue on the tactical board, one controller among several.
 	@$(GODOT) --path godot res://game/main.tscn
+
+.PHONY: demo-tictactoe
+demo-tictactoe: ## MENACE, the matchbox machine, moves first: space draws its bead, click a square, 1-4 its age, M perfect play
+	@$(GODOT) --path godot res://game/tictactoe/tictactoe.tscn
 
 .PHONY: demo-search
 demo-search: ## The four searches on one board: 1-4 choose, space steps, enter finishes

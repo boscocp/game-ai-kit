@@ -29,7 +29,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 |---|---|---|---|
 | T8 | A board you can read | done | 48 px, centred, costs written, the highlight an overlay; manual check still a person's |
 | T27 | Checkers, and minimax | done | `make run` is checkers against `ai_adversarial`; depth 4 by default (~50 ms); depth 6 stalls the frame up to ~730 ms with kings; the old board is `demo-skirmish`; manual check still a person's |
-| T28 | Tic-tac-toe, and a machine that learns it | todo | MENACE, matchboxes and beads, trained in Python and shown on the squares |
+| T28 | Tic-tac-toe, and a machine that learns it | done | MENACE in Python, 304 boxes, four ages; `make demo-tictactoe`; N5/N6 in `check_no_training.py`; strength criterion changed to vs-perfect by the owner (Michie's rewards keep losing ~1% to random) |
 | T29 | A search board you can edit | todo | paint walls and mud, drag start and goal, the four searches rerun |
 | T30 | The tactical game, against the computer | todo | Advance Wars style turns, a rule-based blue, becomes `demo-tactical` |
 | T9 | Art that is not a coloured square | todo | Kenney CC0 for checkers, tic-tac-toe and the tactical game; laid out so T31 can swap any file |

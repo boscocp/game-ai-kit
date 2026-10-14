@@ -1,0 +1,6 @@
+{
+ "description": "A box with no beads left: every move from here has led to a loss, and MENACE resigns. There is no move to make, whatever the draw.",
+ "cases": [
+  {"name": "no beads, no move", "board": ".........", "box": ".........", "beads": [0, 0, 0, 0, 0, 0, 0, 0, 0], "draw": 0.5, "move": null}
+ ]
+}

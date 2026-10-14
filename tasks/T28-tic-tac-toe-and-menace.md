@@ -60,13 +60,23 @@ make lint-selftests
 
 The suite must include:
 - **Strength, measured by a decidable test.** MENACE moves first and
-  always picks its most-beaded move:
-  - the 10,000-game snapshot loses no game of 1,000 seeded games against a
-    random player;
-  - the 10-game snapshot loses at least one.
+  always picks its most-beaded move, over 1,000 seeded games:
+  - the 10,000-game snapshot loses no game against the perfect (minimax)
+    player;
+  - the 10-game snapshot loses at least one;
+  - against a random player, the 10,000-game snapshot loses a tenth as
+    often as the 10-game one, or less.
 
   Playing by the most beads makes "never" decidable; drawing at random
   would not.
+
+  *Changed on 2026-10-14, by the owner's choice.* The first version asked
+  the 10,000-game snapshot to lose nothing against a random player. Measured
+  over ten seeds, Michie's rules give 0 to 77 losses in a thousand there:
+  his +3 for a win rewards a trap move that wins four games in five against
+  a random player, and training against perfect play never revisits those
+  boxes. The rules were kept and the criterion changed to what they promise.
+  See `docs/concepts/menace.md`.
 - **Symmetries.** Equal positions fold to one matchbox, and there are 304.
 - **A shared vector between the languages.** The Godot player and the
   Python player choose the same move from the same beads and **the same

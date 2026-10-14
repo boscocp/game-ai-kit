@@ -27,6 +27,7 @@ const SCENES: Array[String] = [
 	"res://game/main.tscn",
 	"res://demos/search/search_demo.tscn",
 	"res://game/stealth/stealth.tscn",
+	"res://game/tictactoe/tictactoe.tscn",
 ]
 
 ## The field each example's task says its overlay must carry, and whether it
@@ -36,6 +37,7 @@ const REQUIRED: Dictionary = {
 	"res://game/main.tscn": ["p_win", true],
 	"res://demos/search/search_demo.tscn": ["frontier", false],
 	"res://game/stealth/stealth.tscn": ["suspicion", true],
+	"res://game/tictactoe/tictactoe.tscn": ["probability", true],
 }
 
 ## Decisions each example takes before it is asked. More than one, so an

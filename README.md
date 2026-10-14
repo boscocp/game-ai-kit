@@ -16,6 +16,7 @@ readable one.
 | piece | what it decides | where you see it | read |
 |---|---|---|---|
 | `ai_adversarial` | minimax and alpha-beta — the best move, *given that the opponent replies as well as it can* | plays white in `make run`, and draws every move it considered with its value | [why](docs/concepts/minimax.md) |
+| MENACE, in `python/gameaikit/menace/` | reinforcement learning with 304 matchboxes — which move in noughts and crosses | plays crosses in `make demo-tictactoe`, its beads on every square | [why](docs/concepts/menace.md) |
 | `ai_search` | A\*, BFS, DFS, Dijkstra — how a unit gets there | routes blue's units in `make demo-skirmish` | [why](docs/concepts/search.md) · [how](docs/godot/search.md) |
 | `ai_planning` | STRIPS — *to attack I need a unit; to have a unit I need resources* | **not yet** — T11 puts it on the board | [why](docs/concepts/planning.md) · [how](docs/godot/planning.md) |
 | `ai_learning` | logistic regression — attack or retreat; linear regression — which target is closer to falling | plays blue in `make demo-skirmish`, and says why on screen | [why](docs/concepts/learning.md) · [how](docs/godot/learning.md) |
@@ -75,13 +76,20 @@ number it decided on. End your first turn without moving and it says: *unit 3
 attacks unit 2: p(win) 0.97 at or above 0.50*, and *unit 4 retreats from unit
 2: p(win) 0.33 below 0.50*.
 
+**Noughts and crosses** (`make demo-tictactoe`). MENACE, Donald Michie's
+1961 machine of matchboxes and beads, plays crosses and moves first. On its
+turn every empty square shows how many beads its box holds for that move,
+and the chance of drawing one. Space draws. Keys 1–4 swap in the machine
+after 10, 100, 1,000 or 10,000 games of training -- done beforehand in
+Python -- and M shows what perfect play makes of each square.
+
 **The search demo** (`make demo-search`). One board, four searches. Keys 1–4
 choose the algorithm, space reveals the next cell it expanded, enter reveals
 the rest. Breadth-first walks through the mud; Dijkstra goes round having
 spread out in rings; A\* goes round having expanded 90 cells to
 Dijkstra's 125.
 
-*Recordings of all three are still to be made.*
+*Recordings of all four are still to be made.*
 
 ## Getting started
 
@@ -98,6 +106,7 @@ Tier 2, with the engine:
 make bootstrap     # downloads the pinned Godot to the large disk, SHA-512 verified
 make run           # checkers against minimax and alpha-beta
 make demo-skirmish # the learned policy plays blue on the skirmish board
+make demo-tictactoe # MENACE, the matchbox machine, at four ages of training
 make demo-search   # the four searches on one board, one at a time
 make check         # every gate
 ```
