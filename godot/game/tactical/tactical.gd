@@ -78,6 +78,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Start again: red to move, nobody spent, nobody winning.
 func new_game() -> void:
 	state = TacticalScenario.build()
+	_units.reset()
 	winner = TacticalVictory.NOBODY
 	_blue_turn = BlueTurn.new(blue)
 	_start_red_turn()
@@ -210,10 +211,10 @@ func step_decision() -> void:
 func _play_blue_decision() -> void:
 	var decision: TacticalDecision = _blue_turn.next
 	var walker: Unit = state.unit_by_id(decision.unit_id)
-	var start: Vector2i = walker.cell if walker != null else Vector2i.ZERO
 	state = _blue_turn.play(state)
+	# A refused decision is not in `played`, and a hold or a build is no walk.
 	if decision.move != null and decision in _blue_turn.played:
-		_units.walk(decision.unit_id, start, decision.move.path)
+		_units.walk(decision.unit_id, walker.cell, decision.move.path)
 	_refresh()
 
 

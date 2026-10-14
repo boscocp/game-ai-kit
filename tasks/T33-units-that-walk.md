@@ -1,6 +1,6 @@
 # T33 — Units that walk
 
-Size: M · Prereqs: T31 · Files: `godot/game/unit_view.gd`, `godot/game/art.gd`, `godot/assets/`, `tools/artgen/`, `docs/adr/`
+Size: M · Prereqs: T31 · Files: `godot/game/unit_view.gd`, `godot/game/art.gd`, `godot/game/tactical/`, `godot/game/main.gd`, `godot/test/`, `godot/assets/`, `tools/artgen/`, `docs/adr/`
 
 ## Goal
 

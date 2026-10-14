@@ -107,13 +107,13 @@
         "vae/diffusion_pytorch_model.safetensors": "ca70d2202afe6415bdbcb8793ba8cd99fd159cfe6192381504d6c4d3036e0f04"
       },
       "text_encoder_from": "klein",
-      "text_encoder_comment": "The base model's text encoder is byte for byte the distilled model's -- the same sha256 in both repositories' listings, measured in T31 -- so it is loaded from `klein` rather than fetched a second time, 8 GB saved.",
+      "text_encoder_comment": "The base model's text encoder is byte for byte the distilled model's -- the same sha256 in both repositories' listings, measured in T31 and again in T33's review -- so it is taken from `klein`'s repository, the encoder's files only, rather than fetched under a second name.",
       "settings": {
         "size": 512,
         "steps": 50,
         "guidance": 4.0
       },
-      "settings_comment": "The LoRA card's: 512 pixels, the size of the sheets it was trained on; the base model's 50 steps and guidance 4. Measured in T31: 23-48 s a sheet, 8.3 GB peak, with model offload.",
+      "settings_comment": "The LoRA card's: 512 pixels, the size of the sheets it was trained on; the base model's 50 steps and guidance 4. Measured on 2026-10-14, nine sheets between T31 and T33: 23-57 s a sheet, the first of a run the slowest, 8.3 GB peak, with model offload.",
       "fp8": false,
       "lora": {
         "repo": "svntax-dev/pixel_spritesheet_4walk_small_lora_v1",
@@ -132,7 +132,11 @@
         "scale": 1.0,
         "scale_comment": "Unscaled, as T31 measured it: the sheet the owner judged good enough was made at the adapter's default.",
         "training_data_comment": "The card credits its training sheets to a template by George Bailey, CC BY 4.0 (https://opengameart.org/content/16x16-game-assets). Whether a sheet made with it owes that attribution is not settled here, so no sheet it makes is committed: they stay in the gitignored folder, a person's own."
-      }
+      },
+      "kinds": [
+        "walk"
+      ],
+      "kinds_comment": "It makes only walking sheets: given a still sprite's prompt, the LoRA still draws a 4 by 4 sheet. The generator refuses any other kind."
     }
   }
 }

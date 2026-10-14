@@ -43,10 +43,12 @@ func _init(file: String, frame_side: int, inside: Rect2i, facing_rows: Dictionar
 
 
 ## Puny Characters' layout, which both its soldiers share: 32-pixel frames, 24
-## across, and a row for each of eight facings, clockwise from facing the
-## reader. The walk is stand, left foot, stand, right foot -- columns 0, 2, 0,
+## across, and a row for each of eight facings, starting facing the reader
+## and turning towards the right -- down, down-right, right, and on round to
+## down-left. The walk is stand, left foot, stand, right foot -- columns 0, 2, 0,
 ## 3, read off the sheet, since the pack ships no table. Measured on all four
-## sheets, the figure never leaves the 22-pixel square at (5, 3).
+## sheets, the figure never leaves the 22-pixel square at (5, 3) in the
+## frames drawn here; the attack frames reach further, and are never drawn.
 static func puny(file: String) -> UnitSheet:
 	var facing: Dictionary = {Vector2i.DOWN: 0, Vector2i.RIGHT: 2, Vector2i.UP: 4, Vector2i.LEFT: 6}
 	return UnitSheet.new(file, 32, Rect2i(5, 3, 22, 22), facing, [0, 2, 0, 3] as Array[int], 0)
@@ -54,7 +56,9 @@ static func puny(file: String) -> UnitSheet:
 
 ## The generator's layout, which is the walk LoRA's (T31, T33): a 4 by 4 grid
 ## of 32-pixel frames, a row each facing down, left, right and up, three
-## walking frames and one pose. The middle walking frame is the one standing.
+## walking frames and one pose. The card does not say which frame is the
+## figure standing; the middle one is taken, as in RPG Maker's sheets, whose
+## three-frame walk this resembles -- an assumption, not the card's word.
 static func generated(file: String) -> UnitSheet:
 	var facing: Dictionary = {Vector2i.DOWN: 0, Vector2i.LEFT: 1, Vector2i.RIGHT: 2, Vector2i.UP: 3}
 	return UnitSheet.new(file, 32, Rect2i(0, 0, 32, 32), facing, [0, 1, 2, 1] as Array[int], 1)

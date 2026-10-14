@@ -60,8 +60,8 @@ var _blue_to_decide: Array[int] = []
 
 func _ready() -> void:
 	_legend.set_entries([
-		[Art.texture(Art.unit_path(RED, Art.NO_TYPE)), "red: yours (numbers are ids)"],
-		[Art.texture(Art.unit_path(BLUE, Art.NO_TYPE)), "blue: the learned opponent"],
+		[UnitView.legend_picture(RED, Art.NO_TYPE), "red: yours (numbers are ids)"],
+		[UnitView.legend_picture(BLUE, Art.NO_TYPE), "blue: the learned opponent"],
 		[Color.TRANSPARENT, "white frame round a unit: the one in hand"],
 		[PlanView.ROUTE, "blue's next move, not yet played"],
 		[BoardView.REACHABLE, "where the unit in hand can step"],

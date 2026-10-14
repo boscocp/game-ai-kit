@@ -4,9 +4,10 @@
 ## terrain is repainted when the map changes, units every time anybody moves.
 ## Keeping them apart also keeps each `_draw` short enough to read in one go.
 ##
-## Each unit is its side's picture of its kind, from `Art`: five kinds that walk
-## are five silhouettes, and the three that stand are buildings. Its id sits in
-## the cell's corner, because every reason on the screen names units by id.
+## Each unit is its side's picture of its kind, from `Art`: a walking figure
+## for the kinds on legs, a still silhouette for the machines, and a building
+## for the three that stand. Its id sits in the cell's corner, because every
+## reason on the screen names units by id.
 ##
 ## T33 makes them move. A kind with a sheet -- the figures on legs -- marches
 ## on the spot, as Advance Wars' units do, and stands still once it has acted.
@@ -44,7 +45,8 @@ const BOB_RATE: float = 12.0
 ## convention, so a person never has to click a unit to learn it is done.
 ## Empty unless a scene has turns of that kind.
 var spent: Array[int] = []
-## Seconds of animation so far. Moved only by `advance`.
+## Seconds of animation so far. The game moves it only through `advance`; a
+## test may set it, to stop the march at a known frame.
 var clock: float = 0.0
 
 var _state: BoardState
@@ -56,8 +58,8 @@ var _facing: Dictionary = {}
 
 
 func _ready() -> void:
-	# The pack is pixel art drawn at 16 pixels; smoothed up to a tile, it blurs
-	# into a different picture.
+	# Both packs are pixel art, 16-pixel tiles and 32-pixel frames; smoothed up
+	# to a tile, either blurs into a different picture.
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 
@@ -78,6 +80,14 @@ func show_state(state: BoardState, board: BoardView, selected_id: int) -> void:
 		var unit: Unit = state.unit_by_id(unit_id)
 		if unit == null or unit.cell != (_walks[unit_id] as UnitWalk).destination():
 			_walks.erase(unit_id)
+	queue_redraw()
+
+
+## Forget every walk and every facing: a new game, whose units may reuse the
+## ids of the last one's and must not walk on from where those stopped.
+func reset() -> void:
+	_walks.clear()
+	_facing.clear()
 	queue_redraw()
 
 
@@ -137,7 +147,7 @@ func frame_of(unit: Unit) -> Rect2:
 	var sheet: UnitSheet = _sheet_of(unit)
 	if sheet == null:
 		return Rect2()
-	var facing: Vector2i = _facing.get(unit.id, _default_facing(unit))
+	var facing: Vector2i = _facing.get(unit.id, _facing_before_walking(unit.faction))
 	if _walks.has(unit.id):
 		return sheet.walking(facing, int(clock * WALK_RATE))
 	if unit.id in spent:
@@ -175,6 +185,20 @@ static func picture_for(unit: Unit) -> Texture2D:
 	return Art.texture(Art.unit_path(unit.faction, _type_name_of(unit)))
 
 
+## What a legend shows for a side's kind of piece: the frame the board draws
+## it standing in, facing as it faces before it has walked, or its still
+## picture. A legend showing the still picture of a kind the board draws as a
+## figure names a piece nobody can find.
+static func legend_picture(faction: int, type_name: String) -> Texture2D:
+	var sheet: UnitSheet = Art.sheet_for(faction, type_name)
+	if sheet == null:
+		return Art.texture(Art.unit_path(faction, type_name))
+	var frame := AtlasTexture.new()
+	frame.atlas = Art.texture(sheet.path)
+	frame.region = sheet.standing(_facing_before_walking(faction))
+	return frame
+
+
 ## The tint a unit's picture is drawn with: none, or grey once it is spent.
 func colour_for(unit: Unit) -> Color:
 	return SPENT_TINT if unit.id in spent else Color.WHITE
@@ -190,8 +214,8 @@ static func _type_name_of(unit: Unit) -> String:
 
 # Before a unit has walked anywhere it faces the other side: red across the
 # board to the right, everyone else to the left.
-static func _default_facing(unit: Unit) -> Vector2i:
-	return Vector2i.RIGHT if unit.faction == 0 else Vector2i.LEFT
+static func _facing_before_walking(faction: int) -> Vector2i:
+	return Vector2i.RIGHT if faction == 0 else Vector2i.LEFT
 
 
 # The id, small, in the bottom-right corner of the cell, outlined so it reads

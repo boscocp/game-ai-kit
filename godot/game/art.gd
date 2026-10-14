@@ -95,8 +95,8 @@ static func unit_path(faction: int, type_name: String) -> String:
 	return ROOT + "units/%s/%s" % [side, file]
 
 
-## The sheet a side's kind of piece walks with, or null for a kind that has
-## none and is drawn with its still picture.
+## The sheet a side's kind of piece walks with, or null for a kind drawn
+## with its still picture.
 ##
 ## The table comes with the file: a person's generated sheet is the walk
 ## LoRA's 4 by 4, the committed one is the pack's 24 by 8, and reading either
@@ -107,7 +107,7 @@ static func sheet_for(faction: int, type_name: String) -> UnitSheet:
 	var path: String = sheet_path(faction, type_name)
 	var key: String = generated + "|" + path
 	if not _sheets.has(key):
-		_sheets[key] = table_for(path, resolve(path))
+		_sheets[key] = _usable_sheet(faction, type_name, path)
 	return _sheets[key]
 
 
@@ -116,6 +116,26 @@ static func sheet_for(faction: int, type_name: String) -> UnitSheet:
 ## is a person's own.
 static func table_for(path: String, drawn_from: String) -> UnitSheet:
 	return UnitSheet.puny(path) if drawn_from == path else UnitSheet.generated(path)
+
+
+## `sheet` when a picture `size` pixels across divides into its table, and
+## null otherwise, so the unit is drawn with its still picture rather than
+## with slices of the wrong frames. A person's own sheet is the one that can
+## come out the wrong size; the committed ones are held by a test.
+static func sheet_if_it_fits(sheet: UnitSheet, size: Vector2i) -> UnitSheet:
+	return sheet if sheet.fits(size) else null
+
+
+# The sheet to draw, or null for the still picture. A person who generated
+# their own still picture of a kind, and no sheet, sees their picture: the
+# pack's figure would otherwise hide what they made (T31's promise).
+static func _usable_sheet(faction: int, type_name: String, path: String) -> UnitSheet:
+	var still: String = unit_path(faction, type_name)
+	var own_sheet: bool = resolve(path) != path
+	if resolve(still) != still and not own_sheet:
+		return null
+	var sheet: UnitSheet = table_for(path, resolve(path))
+	return sheet_if_it_fits(sheet, Vector2i(texture(path).get_size()))
 
 
 ## Where a side's sheet of a kind of piece lives, beside its still picture.

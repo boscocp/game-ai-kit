@@ -177,6 +177,83 @@ func test_blue_walks_the_route_its_decision_was_drawn_with() -> void:
 	assert_vector(view.position_of(scene.state.unit_by_id(decision.unit_id))).is_equal_approx(halfway, Vector2(0.01, 0.01))
 
 
+# --- the wave 32 review ----------------------------------------------------
+
+# Only machines bob: a figure walking a straight row stays on the row's line.
+func test_a_figure_does_not_bob_as_it_walks() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var view: UnitView = _view_of(scene)
+	var board: BoardView = scene.get_node("BoardView")
+	var shield: Unit = _first_of(scene.state, RED, TacticalRules.SHIELD)
+	view.walk(shield.id, shield.cell, [shield.cell + Vector2i.LEFT] as Array[Vector2i])
+	view.clock = 0.0
+
+	view.advance(0.01 + 1.0 / UnitView.BOB_RATE)
+
+	assert_float(view.position_of(shield).y).is_equal(board.centre_of(shield.cell).y)
+
+
+# Faster on the move than at rest: the frame a walker shows is the walk rate's.
+func test_a_walking_figure_steps_at_the_walking_rate() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var view: UnitView = _view_of(scene)
+	var shield: Unit = _first_of(scene.state, RED, TacticalRules.SHIELD)
+	var sheet: UnitSheet = Art.sheet_for(RED, TacticalRules.SHIELD)
+	view.walk(shield.id, shield.cell, [shield.cell + Vector2i.LEFT] as Array[Vector2i])
+	view.clock = 0.0
+
+	view.advance(1.0 / UnitView.WALK_RATE + 0.001)   # one walking step, no marching one yet
+
+	assert_that(view.frame_of(shield)).is_equal(sheet.walking(Vector2i.LEFT, 1))
+	assert_that(sheet.walking(Vector2i.LEFT, 1)).is_not_equal(sheet.walking(Vector2i.LEFT, 0))
+
+
+func test_a_blue_figure_faces_left_until_it_walks() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var view: UnitView = _view_of(scene)
+	var blue := Unit.new(99, BLUE, Vector2i.ZERO, 10, 3)
+	var sheet: UnitSheet = Art.sheet_for(BLUE, Art.NO_TYPE)
+	assert_that(view.frame_of(blue)).is_equal(sheet.walking(Vector2i.LEFT, 0))
+
+
+# A new game reuses the last one's ids; its figures must not walk on, or face
+# the way the last game's walked.
+func test_a_new_game_forgets_walks_and_facings() -> void:
+	var scene: TacticalGame = _mounted_scene()
+	var view: UnitView = _view_of(scene)
+	var shield: Unit = _first_of(scene.state, RED, TacticalRules.SHIELD)
+	view.walk(shield.id, shield.cell, [shield.cell + Vector2i.LEFT] as Array[Vector2i])
+	view.advance(UnitWalk.SECONDS_PER_CELL / 2.0)
+	view.clock = 0.0
+
+	scene.new_game()
+
+	var sheet: UnitSheet = Art.sheet_for(RED, TacticalRules.SHIELD)
+	assert_bool(view.is_walking(shield.id)).is_false()
+	assert_that(view.frame_of(scene.state.unit_by_id(shield.id))).is_equal(sheet.walking(Vector2i.RIGHT, 0))
+
+
+# The legend shows the frame the board draws, not a picture nobody can find
+# on the board.
+func test_the_legend_shows_a_figure_as_the_board_draws_it() -> void:
+	var sheet: UnitSheet = Art.sheet_for(RED, TacticalRules.SHIELD)
+	var figure := UnitView.legend_picture(RED, TacticalRules.SHIELD) as AtlasTexture
+	assert_object(figure).is_not_null()
+	assert_object(figure.atlas).is_same(Art.texture(sheet.path))
+	assert_that(figure.region).is_equal(sheet.standing(Vector2i.RIGHT))
+	var machine: Texture2D = UnitView.legend_picture(RED, TacticalRules.RUNNER)
+	assert_object(machine).is_same(Art.texture(Art.unit_path(RED, TacticalRules.RUNNER)))
+
+
+func test_the_tactical_legend_draws_the_shield_as_a_figure() -> void:
+	var types: Dictionary = TacticalRules.unit_types()
+	for line: Array in TacticalLegend.entries(types):
+		if (line[1] as String).begins_with(TacticalRules.SHIELD + ":"):
+			assert_object(line[0] as AtlasTexture).is_not_null()
+			return
+	fail("no legend line for the shield")
+
+
 # --- helpers -------------------------------------------------------------------
 
 func _mounted_scene() -> TacticalGame:

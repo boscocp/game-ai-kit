@@ -47,4 +47,4 @@ static func describe(kind: UnitType, types: Dictionary) -> String:
 
 
 static func _picture(faction: int, type_name: String) -> Texture2D:
-	return Art.texture(Art.unit_path(faction, type_name))
+	return UnitView.legend_picture(faction, type_name)

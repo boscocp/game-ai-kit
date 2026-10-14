@@ -490,9 +490,13 @@ func test_the_board_draws_trees_water_and_the_bridge_as_themselves() -> void:
 func test_the_legend_has_one_line_per_kind_of_piece_with_its_picture() -> void:
 	var types: Dictionary = TacticalRules.unit_types()
 	var lines: Array[Array] = TacticalLegend.entries(types)
+	var described: Dictionary = {}
+	for line: Array in lines:
+		described[line[1]] = line[0]
 	for name: String in types:
-		var line: Array = [Art.texture(Art.unit_path(RED, name)), TacticalLegend.describe(types[name], types)]
-		assert_bool(lines.has(line)).override_failure_message(name + " has no legend line").is_true()
+		var words: String = TacticalLegend.describe(types[name], types)
+		assert_bool(described.has(words)).override_failure_message(name + " has no legend line").is_true()
+		_assert_same_picture(described.get(words), UnitView.legend_picture(RED, name))
 
 
 func test_only_the_ram_is_said_to_beat_every_building() -> void:
@@ -589,6 +593,16 @@ func _mounted_scene() -> TacticalGame:
 	var scene: TacticalGame = auto_free((load("res://game/tactical/tactical.tscn") as PackedScene).instantiate())
 	add_child(scene)
 	return scene
+
+
+# Two legend pictures are the same when they are one texture, or two frames
+# of one sheet at one place: a frame is built afresh each time it is asked for.
+func _assert_same_picture(shown: Variant, expected: Texture2D) -> void:
+	if expected is AtlasTexture:
+		assert_object((shown as AtlasTexture).atlas).is_same((expected as AtlasTexture).atlas)
+		assert_that((shown as AtlasTexture).region).is_equal((expected as AtlasTexture).region)
+	else:
+		assert_object(shown).is_same(expected)
 
 
 # The file a unit should be drawn from: its sheet if its kind walks on legs,

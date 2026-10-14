@@ -29,12 +29,12 @@ Measured on an RTX 5070 (12 GB, Blackwell), 30 GB of RAM, Python 3.14:
 
 ```bash
 make artgen-bootstrap     # once: the environment and the default model, verified by sha256
-make artgen               # every picture the game draws, into godot/assets/generated/
+make artgen               # every still picture the game draws, into godot/assets/generated/
 make demo-tactical        # the game, drawn with them
 make artgen-clean         # back to the CC0 art
 ```
 
-`make artgen` took about 8 minutes for the 30 pictures with Z-Image-Turbo,
+`make artgen` took about 8 minutes for the 30 still pictures with Z-Image-Turbo,
 13.5 s a picture after the first. Its output is gitignored and is yours:
 `git status` shows nothing new. Beside the pictures, `made-by.json` records
 the model, style, seed and prompt behind each one.
@@ -61,12 +61,15 @@ their own: FLUX.2 klein base and a LoRA trained on one 4 by 4 grid, three
 walking frames and a pose for each of four facings.
 
 ```bash
-scripts/artgen bootstrap klein-walk    # once: klein base, the walk LoRA, and klein for its text encoder
+scripts/artgen bootstrap klein-walk    # once: klein base, the walk LoRA, and klein's text encoder alone
 make artgen ONLY="units/red/shield_walk.png units/blue/shield_walk.png units/red/soldier_walk.png units/blue/soldier_walk.png"
 make import
 ```
 
-Measured on 2026-10-14: 23-42 s a sheet, 8.3 GB of VRAM. A `walk` entry's
+Measured on 2026-10-14, nine sheets between T31 and T33: 23-57 s a sheet,
+the first of a run the slowest, and 8.3 GB of VRAM. A plain `make artgen`
+leaves the walking sheets out and says so; they are made only when named, as
+above, and `MODEL=klein-walk` refuses anything that is not one. A `walk` entry's
 prompt is the figure alone; the generator puts it inside the LoRA's own
 sentence for its grid, and no style applies. The game reads a sheet of yours
 through the LoRA's table, never the pack's.

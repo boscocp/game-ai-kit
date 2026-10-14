@@ -72,6 +72,9 @@ SHADE_STEP = 24
 # another: green is far from both teams' colours, and the wrong choice for
 # anything green, which names its own.
 DEFAULT_BACKGROUND = "pure green (#00FF00)"
+# What a model that borrows a text encoder takes from the model it borrows
+# from: the encoder alone, not its transformer (T33).
+ENCODER_FILES = ["text_encoder/*"]
 # The walk LoRA's own sentence for its grid, from its model card, word for
 # word: it was trained on this, and a sheet asked for in other words came out
 # as figures in random poses (T31).
@@ -102,7 +105,8 @@ def load_pipeline(model: dict) -> diffusers.DiffusionPipeline:
     parts = {}
     if "text_encoder_from" in model:
         _, donor = model_config(model["text_encoder_from"])
-        donor_folder = snapshot_download(donor["repo"], revision=donor["revision"], allow_patterns=donor["fetch"])
+        donor_folder = snapshot_download(donor["repo"], revision=donor["revision"],
+                                         allow_patterns=ENCODER_FILES)
         parts["text_encoder"] = transformers.AutoModelForCausalLM.from_pretrained(
             f"{donor_folder}/text_encoder", dtype=torch.bfloat16)
     pipe = getattr(diffusers, model["pipeline"]).from_pretrained(folder, dtype=torch.bfloat16, **parts)
@@ -328,23 +332,47 @@ def make(model_name: str | None, style_name: str | None, only: list[str]) -> int
 
     Entries are made one model at a time, each model loaded once: an entry
     that names its own model -- a walking sheet -- gets that one, and every
-    other entry the one asked for.
+    other entry the one asked for. An entry with its own model is made only
+    when named in `only`: that model is a fetch of its own, and a plain run
+    must work with what `make artgen-bootstrap` fetched. The record is
+    written after each model, so a later one failing to load keeps what the
+    earlier ones made.
     """
     manifest = json.loads((HERE / "manifest.json").read_text(encoding="utf-8"))
     style_name = style_name or manifest["default_style"]
-    entries = [entry for entry in manifest["assets"] if not only or entry["path"] in only]
+    entries = [entry for entry in manifest["assets"]
+               if entry["path"] in only or (not only and "model" not in entry)]
     unknown = sorted(set(only) - {entry["path"] for entry in entries})
     if unknown:
         print(f"artgen: not in the manifest: {', '.join(unknown)}", file=sys.stderr)
         return 2
+    skipped = [entry["path"] for entry in manifest["assets"] if not only and "model" in entry]
+    if skipped:
+        print(f"artgen: {len(skipped)} walking sheet(s) left out; they need their own model -- "
+              "see docs/howto/generate-art.md, 'Walking sheets'")
+    by_model = entries_by_model(entries, model_name)
+    if isinstance(by_model, str):
+        print(f"artgen: {by_model}", file=sys.stderr)
+        return 2
+    record = made_record()
+    failed = 0
+    for name, group in by_model.items():
+        failed += make_with(name, group, manifest["styles"][style_name], style_name, record)
+        (GENERATED / MADE_RECORD).write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
+    return 1 if failed else 0
+
+
+def entries_by_model(entries: list[dict], model_name: str | None) -> dict[str, list[dict]] | str:
+    """The entries grouped by the model that makes each, or why one cannot be
+    made: a model that lists the `kinds` it makes refuses every other kind --
+    the walk LoRA turns a still sprite's prompt into a sheet."""
     by_model: dict[str, list[dict]] = {}
     for entry in entries:
-        by_model.setdefault(model_config(entry.get("model", model_name))[0], []).append(entry)
-    record = made_record()
-    failed = sum(make_with(name, group, manifest["styles"][style_name], style_name, record)
-                 for name, group in by_model.items())
-    (GENERATED / MADE_RECORD).write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
-    return 1 if failed else 0
+        name, model = model_config(entry.get("model", model_name))
+        if entry["kind"] not in model.get("kinds", [entry["kind"]]):
+            return f"{entry['path']} is a {entry['kind']}, and {name} makes only {', '.join(model['kinds'])}"
+        by_model.setdefault(name, []).append(entry)
+    return by_model
 
 
 def make_with(name: str, entries: list[dict], style: dict, style_name: str, record: dict) -> int:

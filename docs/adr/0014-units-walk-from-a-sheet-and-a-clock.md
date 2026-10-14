@@ -45,7 +45,7 @@ through its move" -- is an assertion, not a screenshot.
 
 **Advance Wars' conventions, kept.** Figures march on the spot at rest,
 faster on the move, and stand still, greyed, once spent. Before its first
-walk a figure faces the other side.
+walk a figure faces the other side: red to the right, blue to the left.
 
 **A sheet's table travels with where it came from.** The pack's sheet is 24
 frames by 8 facings; the generator's is the walk LoRA's 4 by 4. `UnitSheet`
@@ -59,18 +59,25 @@ sheet it makes owes that attribution is not settled here, so its sheets stay
 in the gitignored folder, a person's own, and no example is committed. The
 model is FLUX.2 klein *base* (the card: the distilled model "ruins the
 quality of the pixels"), borrowing the distilled model's text encoder,
-which is the same file.
+which is the same file -- only the encoder's files are fetched from it.
 
 ## Consequences
 
 - `pictures()` now names a sheet for a figure on legs, not its still
-  picture; the still picture stays the fallback, and the legend still shows
-  it.
+  picture. The still picture stays the fallback: for a kind with no sheet,
+  for a sheet that does not divide into its table, and for a person who
+  generated their own still picture of a kind but no sheet of it -- T31
+  promised their picture would be drawn. The legends show the frame the
+  board draws, so the shield in the legend is the shield on the board.
 - The decision overlay is unchanged: blue's route is drawn before it is
   played, and the walk then follows that route.
 - What a headless run holds is the frame and the point `_draw` is handed,
   never the picture. Whether walking units read better than still ones is
   the manual check, and the owner's.
 - A generated sheet that comes out wrong is a person's to regenerate with
-  another seed; the game does not judge it beyond `fits`, which checks only
-  that its size divides into its table.
+  another seed. The game judges it only by `fits`, which `Art.sheet_for`
+  calls on every sheet: a size that does not divide into its table is drawn
+  as the still picture instead.
+- `make artgen` with nothing named makes only the still pictures: a walking
+  sheet needs its own model, fetched on its own, and is made only when named.
+- A new game forgets every walk and facing: ids repeat from game to game.

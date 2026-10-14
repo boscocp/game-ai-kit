@@ -44,6 +44,13 @@ def fetch(part: dict) -> list[str]:
     return problems
 
 
+def encoder_of(donor: dict) -> dict:
+    """The part of a model that is its text encoder: its repository and
+    revision, the encoder's files alone, and their hashes."""
+    hashes = {name: digest for name, digest in donor["sha256"].items() if name.startswith("text_encoder/")}
+    return {"repo": donor["repo"], "revision": donor["revision"], "fetch": ["text_encoder/*"], "sha256": hashes}
+
+
 def main(argv: list[str]) -> int:
     if len(argv) not in (1, 2):
         print("usage: fetch.py MODEL_JSON [NAME]", file=sys.stderr)
@@ -55,9 +62,10 @@ def main(argv: list[str]) -> int:
         return 2
     model = config["models"][name]
     problems = fetch(model) + (fetch(model["lora"]) if "lora" in model else [])
-    # A model that borrows another's text encoder needs that model on disk too.
+    # A model that borrows another's text encoder needs that encoder on disk
+    # too, and only that: the donor's transformer would be 7.75 GB unused.
     if "text_encoder_from" in model:
-        problems += fetch(config["models"][model["text_encoder_from"]])
+        problems += fetch(encoder_of(config["models"][model["text_encoder_from"]]))
     for problem in problems:
         print(f"artgen fetch: {problem}", file=sys.stderr)
     return 1 if problems else 0
