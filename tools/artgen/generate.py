@@ -7,19 +7,19 @@ which keeps every cache on the large disk.
 
 Two commands:
 
-    make    [--style NAME] [--only PATH ...]
+    make    [--model NAME] [--style NAME] [--only PATH ...]
             Generate the pictures `manifest.json` names into
             godot/assets/generated/, which git ignores and the game prefers.
-    measure OUT_DIR [--fp8]
-            The bake-off T31 opens with: five pictures the kit needs and a
-            12-frame walk cycle, with seconds and peak VRAM for each, written
-            to OUT_DIR/report.json beside the pictures.
+    measure OUT_DIR [--model NAME]
+            Four pictures the kit needs and a whole board, each with its
+            seconds and peak VRAM, in OUT_DIR/report.json beside them: how a
+            model was judged against another.
 
-The model is the one `model.json` pins. The base is loaded in bfloat16 with
-model CPU offload: the transformer and the text encoder are about 7.8 GB and
-8 GB, over a 12 GB card together and under it one at a time, and offload keeps
-only the part running on the GPU. `--fp8` also stores the transformer's weights
-in 8-bit floats, computing in bfloat16.
+Every model is one `model.json` pins, loaded in bfloat16 with model CPU
+offload, which keeps only the part running on the GPU: a text encoder of
+about 8 GB and a transformer of 8 to 12 GB fit a 12 GB card one at a time and
+not together. A model marked `fp8` stores its transformer's weights in 8-bit
+floats and computes in bfloat16.
 
 Exit codes: 0 done, 1 a generation failed, 2 wrong usage.
 """
@@ -33,8 +33,8 @@ import pathlib
 import sys
 import time
 
+import diffusers
 import torch
-from diffusers import Flux2KleinPipeline
 from huggingface_hub import snapshot_download
 from PIL import Image
 
@@ -46,40 +46,52 @@ GENERATED = ASSETS / "generated"
 # background: the sum of the three channels' differences, out of 765. Measured
 # on the 2026-10-14 bake-off, where the asked-for green came out in shades.
 BACKGROUND_DISTANCE = 110
+# The same, for background enclosed by the object, which only its colour can
+# identify: tight enough that the trees' dark green is never taken for it.
+ENCLOSED_DISTANCE = 60
 
 
 # --- the model ---------------------------------------------------------------
 
-def load_pipeline(fp8: bool) -> Flux2KleinPipeline:
-    """The pinned base model with the pinned LoRA, ready to run with offload."""
+def model_config(name: str | None) -> tuple[str, dict]:
+    """A model's name and its entry in model.json; the default when none is named."""
     config = json.loads((HERE / "model.json").read_text(encoding="utf-8"))
-    base, lora = config["base"], config["lora"]
-    base_folder = snapshot_download(base["repo"], revision=base["revision"], allow_patterns=base["fetch"])
-    lora_folder = snapshot_download(lora["repo"], revision=lora["revision"], allow_patterns=lora["fetch"])
-    pipe = Flux2KleinPipeline.from_pretrained(base_folder, dtype=torch.bfloat16)
-    pipe.load_lora_weights(lora_folder, weight_name=lora["weights"], adapter_name="style")
-    pipe.set_adapters(["style"], adapter_weights=[lora["scale"]])
-    if fp8:
+    chosen = name or config["default"]
+    if chosen not in config["models"]:
+        raise KeyError(f"no model {chosen!r}; model.json has {', '.join(config['models'])}")
+    return chosen, config["models"][chosen]
+
+
+def load_pipeline(model: dict) -> diffusers.DiffusionPipeline:
+    """A pinned model, with its LoRA if it has one, ready to run with offload."""
+    folder = snapshot_download(model["repo"], revision=model["revision"], allow_patterns=model["fetch"])
+    pipe = getattr(diffusers, model["pipeline"]).from_pretrained(folder, dtype=torch.bfloat16)
+    if "lora" in model:
+        lora = model["lora"]
+        lora_folder = snapshot_download(lora["repo"], revision=lora["revision"], allow_patterns=lora["fetch"])
+        pipe.load_lora_weights(lora_folder, weight_name=lora["weights"], adapter_name="style")
+        pipe.set_adapters(["style"], adapter_weights=[lora["scale"]])
+    if model["fp8"]:
         pipe.transformer.enable_layerwise_casting(storage_dtype=torch.float8_e4m3fn,
                                                   compute_dtype=torch.bfloat16)
     pipe.enable_model_cpu_offload()
     return pipe
 
 
-def model_names() -> dict[str, str]:
+def made_by(model: dict) -> str:
     """What made a picture, as the manifest and NOTICE record it."""
-    config = json.loads((HERE / "model.json").read_text(encoding="utf-8"))
-    return {part: f"{config[part]['repo']}@{config[part]['revision']}" for part in ("base", "lora")}
+    names = [f"{model['repo']}@{model['revision']}"]
+    if "lora" in model:
+        names.append(f"{model['lora']['repo']}@{model['lora']['revision']}")
+    return " + ".join(names)
 
 
-def run_model(pipe: Flux2KleinPipeline, prompt: str, seed: int, settings: dict,
-              size: tuple[int, int] = (0, 0), reference: Image.Image | None = None) -> Image.Image:
+def run_model(pipe: diffusers.DiffusionPipeline, prompt: str, seed: int, settings: dict,
+              size: tuple[int, int] = (0, 0)) -> Image.Image:
     """One picture from one prompt and one seed. Same seed, same picture."""
     width, height = size if size != (0, 0) else (settings["size"], settings["size"])
-    extra = {"image": reference} if reference is not None else {}
     return pipe(prompt=prompt, num_inference_steps=settings["steps"], guidance_scale=settings["guidance"],
-                width=width, height=height, generator=torch.Generator("cpu").manual_seed(seed),
-                **extra).images[0]
+                width=width, height=height, generator=torch.Generator("cpu").manual_seed(seed)).images[0]
 
 
 # --- turning a generated picture into a game's ---------------------------------
@@ -100,20 +112,33 @@ def clear_background(picture: Image.Image) -> Image.Image:
     width, height = rgb.size
     pixels = rgb.load()
     key = border_colour(rgb)
-    background = bytearray(width * height)
+    reached = bytearray(width * height)
     frontier = [(x, y) for x in range(width) for y in (0, height - 1)]
     frontier += [(x, y) for y in range(height) for x in (0, width - 1)]
     while frontier:
         x, y = frontier.pop()
-        if not (0 <= x < width and 0 <= y < height) or background[y * width + x]:
+        if not (0 <= x < width and 0 <= y < height) or reached[y * width + x]:
             continue
         if sum(abs(channel - wanted) for channel, wanted in zip(pixels[x, y], key)) >= BACKGROUND_DISTANCE:
             continue
-        background[y * width + x] = 1
+        reached[y * width + x] = 1
         frontier += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+    enclosed = enclosed_background(rgb, key)
+    background = bytes(edge or inside for edge, inside in zip(reached, enclosed))
     result = rgb.convert("RGBA")
     result.putalpha(Image.frombytes("L", (width, height), bytes(0 if flag else 255 for flag in background)))
     return result
+
+
+def enclosed_background(rgb: Image.Image, key: tuple[int, int, int]) -> bytearray:
+    """Background the border cannot reach: the inside of an O, the gap in a tower.
+
+    Only pixels much nearer the key than `BACKGROUND_DISTANCE` count, because
+    nothing connects them to the edge to say they are background. Measured:
+    the first Z-Image set kept a green disc inside its O.
+    """
+    return bytearray(1 if sum(abs(channel - wanted) for channel, wanted in zip(pixel, key)) < ENCLOSED_DISTANCE
+                     else 0 for pixel in rgb.get_flattened_data())
 
 
 def border_colour(rgb: Image.Image) -> tuple[int, int, int]:
@@ -192,7 +217,7 @@ def styled(prompt: str, style: dict, kind: str = "sprite") -> str:
 
 # --- make ----------------------------------------------------------------------
 
-def make(style_name: str | None, only: list[str]) -> int:
+def make(model_name: str | None, style_name: str | None, only: list[str]) -> int:
     """Generate every manifest entry, or the ones named, into GENERATED."""
     manifest = json.loads((HERE / "manifest.json").read_text(encoding="utf-8"))
     style = manifest["styles"][style_name or manifest["default_style"]]
@@ -201,39 +226,30 @@ def make(style_name: str | None, only: list[str]) -> int:
     if unknown:
         print(f"artgen: not in the manifest: {', '.join(unknown)}", file=sys.stderr)
         return 2
-    pipe = load_pipeline(fp8=False)
+    name, model = model_config(model_name)
+    pipe = load_pipeline(model)
     for entry in entries:
         started = time.monotonic()
-        raw = run_model(pipe, styled(entry["prompt"], style, entry["kind"]), entry["seed"], manifest["settings"])
+        raw = run_model(pipe, styled(entry["prompt"], style, entry["kind"]), entry["seed"], model["settings"])
         destination = GENERATED / entry["path"]
         destination.parent.mkdir(parents=True, exist_ok=True)
         finish(raw, entry).save(destination)
-        print(f"artgen: {entry['path']} in {time.monotonic() - started:.1f} s")
+        print(f"artgen: {entry['path']} with {name} in {time.monotonic() - started:.1f} s")
     return 0
 
 
 # --- measure ---------------------------------------------------------------------
 
-# The five pictures T31 measures: a unit, a tower, a terrain tile, a checkers
-# piece, and a whole board.
+# What a model is judged on: a unit, a tower, a terrain tile, a checkers piece,
+# and a whole board.
 PROBES = {
     "unit": "units/red/shield.png",
     "tower": "units/red/bolt_tower.png",
     "tile": "terrain/plain.png",
     "piece": "checkers/red_man.png",
 }
-BOARD_PROMPT = ("a top-down tactics game map, green fields, a river with one wooden bridge, "
-                "pine trees and grey rocks, square grid")
-WALKER = "a foot soldier carrying a large tower shield and a short spear, painted red, side view facing right"
-# A walk cycle in twelve frames, by what the legs are doing: the contact, the
-# step down, the pass and the rise, for each leg, at the speed animators use.
-WALK_PHASES = [
-    "right foot forward touching the ground, left foot back", "weight dropping onto the right foot",
-    "lowest point, right leg bent", "left leg passing the right", "rising on the right leg",
-    "highest point, left leg swinging forward", "left foot forward touching the ground, right foot back",
-    "weight dropping onto the left foot", "lowest point, left leg bent", "right leg passing the left",
-    "rising on the left leg", "highest point, right leg swinging forward",
-]
+BOARD_PROMPT = ("A top-down tactics game map: green fields, a river with one wooden bridge, "
+                "pine trees and grey rocks, on a square grid.")
 
 
 def timed(work) -> tuple[object, dict]:
@@ -244,79 +260,32 @@ def timed(work) -> tuple[object, dict]:
     result = work()
     torch.cuda.synchronize()
     return result, {"seconds": round(time.monotonic() - started, 2),
-                    "peak_allocated_gb": round(torch.cuda.max_memory_allocated() / 1e9, 2),
-                    "peak_reserved_gb": round(torch.cuda.max_memory_reserved() / 1e9, 2)}
+                    "peak_allocated_gb": round(torch.cuda.max_memory_allocated() / 1e9, 2)}
 
 
-def measure(out: pathlib.Path, fp8: bool) -> int:
-    """The bake-off: five pictures and two walk cycles, each timed and weighed."""
+def measure(out: pathlib.Path, model_name: str | None) -> int:
+    """Four of the kit's pictures and a board, each timed and weighed."""
     out.mkdir(parents=True, exist_ok=True)
     manifest = json.loads((HERE / "manifest.json").read_text(encoding="utf-8"))
-    settings, style = manifest["settings"], manifest["styles"][manifest["default_style"]]
+    style = manifest["styles"][manifest["default_style"]]
     entries = {entry["path"]: entry for entry in manifest["assets"]}
-    pipe, loading = timed(lambda: load_pipeline(fp8))
-    report = {"model": model_names(), "fp8": fp8, "gpu": torch.cuda.get_device_name(0),
-              "torch": torch.__version__, "load": loading, "pictures": {}}
-    for name, path in PROBES.items():
+    name, model = model_config(model_name)
+    pipe, loading = timed(lambda: load_pipeline(model))
+    report = {"model": made_by(model), "gpu": torch.cuda.get_device_name(0), "torch": torch.__version__,
+              "load": loading, "pictures": {}}
+    for probe, path in PROBES.items():
         entry = entries[path]
-        raw, cost = timed(lambda: run_model(pipe, styled(entry["prompt"], style, entry["kind"]), entry["seed"], settings))
-        raw.save(out / f"{name}-raw.png")
-        finish(raw, entry).save(out / f"{name}.png")
-        report["pictures"][name] = cost
-    board, cost = timed(lambda: run_model(pipe, styled(BOARD_PROMPT, style, "tile"), 7, settings, (768, 512)))
-    board.save(out / "board.png")
+        raw, cost = timed(lambda: run_model(pipe, styled(entry["prompt"], style, entry["kind"]),
+                                            entry["seed"], model["settings"]))
+        raw.save(out / f"{name}-{probe}-raw.png")
+        finish(raw, entry).save(out / f"{name}-{probe}.png")
+        report["pictures"][probe] = cost
+    board, cost = timed(lambda: run_model(pipe, styled(BOARD_PROMPT, style, "tile"), 7, model["settings"]))
+    board.save(out / f"{name}-board.png")
     report["pictures"]["board"] = cost
-    report["walk_sheet"] = walk_sheet(pipe, settings, style, out)
-    report["walk_frames"] = walk_frames(pipe, settings, style, out)
-    (out / "report.json").write_text(json.dumps(report, indent=2) + "\n")
+    (out / f"{name}-report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
     return 0
-
-
-def walk_sheet(pipe, settings: dict, style: dict, out: pathlib.Path) -> dict:
-    """The walk cycle asked for as one picture: twelve frames in a 6x2 grid.
-
-    Of the layouts tried on 2026-10-14 -- 4x3, one row of 6, one row of 4, 6x2
-    -- this one held the character best. None drew a walk: the frame counts
-    were wrong, the facing flipped and the poses did not follow each other.
-    """
-    prompt = styled(f"animation sprite sheet, 12-frame walk cycle, 6 columns and 2 rows, read left to right, "
-                    f"side view facing right in every frame, identical character, only the legs move, {WALKER}", style)
-    sheet, cost = timed(lambda: run_model(pipe, prompt, 3, settings, (1536, 512)))
-    sheet.save(out / "walk-sheet.png")
-    return cost
-
-
-def walk_frames(pipe, settings: dict, style: dict, out: pathlib.Path) -> dict:
-    """The walk cycle as twelve pictures, each given the one before as reference.
-
-    The reference is what might hold the character the same from frame to
-    frame; a fresh seed per frame without it draws twelve different soldiers.
-    """
-    frames: list[Image.Image] = []
-    started = time.monotonic()
-    peak = 0.0
-    for index, phase in enumerate(WALK_PHASES):
-        prompt = styled(f"{WALKER}, walking, {phase}", style)
-        reference = frames[-1] if frames else None
-        frame, cost = timed(lambda: run_model(pipe, prompt, 31, settings, reference=reference))
-        peak = max(peak, cost["peak_allocated_gb"])
-        frames.append(frame)
-        reduce(trim(clear_background(frame)), 32, 24).save(out / f"walk-{index:02d}.png")
-    save_strip_and_loop(frames, out)
-    return {"seconds": round(time.monotonic() - started, 2), "peak_allocated_gb": peak}
-
-
-def save_strip_and_loop(frames: list[Image.Image], out: pathlib.Path) -> None:
-    """The twelve frames side by side, and as a looping GIF, both at game size
-    and enlarged eight times so a person can judge them."""
-    small = [reduce(clear_background(frame), 32, 24) for frame in frames]
-    strip = Image.new("RGBA", (32 * len(small), 32), (0, 0, 0, 0))
-    for index, frame in enumerate(small):
-        strip.paste(frame, (32 * index, 0))
-    strip.resize((strip.width * 8, strip.height * 8), Image.Resampling.NEAREST).save(out / "walk-strip.png")
-    large = [frame.resize((256, 256), Image.Resampling.NEAREST) for frame in small]
-    large[0].save(out / "walk.gif", save_all=True, append_images=large[1:], duration=90, loop=0, disposal=2)
 
 
 # --- entry -------------------------------------------------------------------------
@@ -325,21 +294,26 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     commands = parser.add_subparsers(dest="command", required=True)
     making = commands.add_parser("make")
+    making.add_argument("--model", default=None)
     making.add_argument("--style", default=None)
     making.add_argument("--only", nargs="*", default=[])
     measuring = commands.add_parser("measure")
     measuring.add_argument("out", type=pathlib.Path)
-    measuring.add_argument("--fp8", action="store_true")
+    measuring.add_argument("--model", default=None)
     try:
         args = parser.parse_args(argv)
+        model_config(args.model)
     except SystemExit as exit_request:
         return 0 if exit_request.code == 0 else 2
+    except KeyError as unknown:
+        print(f"artgen: {unknown.args[0]}", file=sys.stderr)
+        return 2
     if not torch.cuda.is_available():
         print("artgen: no CUDA device; the CC0 art is the way without a GPU", file=sys.stderr)
         return 2
     if args.command == "make":
-        return make(args.style, args.only)
-    return measure(args.out, args.fp8)
+        return make(args.model, args.style, args.only)
+    return measure(args.out, args.model)
 
 
 if __name__ == "__main__":

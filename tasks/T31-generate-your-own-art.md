@@ -192,3 +192,16 @@ checkout, then regenerate the unit sprites in a different style preset:
 - `git status` shows nothing new to commit.
 
 Delete the generated directory, and the game is back on the CC0 art.
+
+## Decided on the way (2026-10-14)
+
+- **The default is Z-Image-Turbo, not klein**, the owner's choice after the
+  same seven prompts on both. The task named klein the default and Z-Image
+  the reserve "if the owner judges them poor"; the owner judged the first
+  klein set "very ugly" and the Z-Image set better. Klein stays in
+  `model.json`. The numbers are in ADR 0013.
+- **Three committed examples**, approved by the owner: a red shield, a blue
+  mortar and a water tile.
+- **Walking became T33.** The walk-cycle probe this task asked for is in
+  ADR 0013: twelve frames from a general model failed; three frames a
+  direction at 32 px with a dedicated LoRA worked.

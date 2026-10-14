@@ -353,8 +353,8 @@ artgen-bootstrap: ## Create the art generator's environment and fetch its model 
 	@$(MAKE) --no-print-directory lint-disk-layout
 
 .PHONY: artgen
-artgen: ## Generate your own art into godot/assets/generated/ (gitignored): STYLE=chibi, ONLY="units/red/ram.png ..."
-	@scripts/artgen make $(if $(STYLE),--style $(STYLE)) $(if $(ONLY),--only $(ONLY))
+artgen: ## Generate your own art into godot/assets/generated/ (gitignored): STYLE=toy, MODEL=klein, ONLY="units/red/ram.png ..."
+	@scripts/artgen make $(if $(MODEL),--model $(MODEL)) $(if $(STYLE),--style $(STYLE)) $(if $(ONLY),--only $(ONLY))
 	@$(MAKE) --no-print-directory import
 	@$(MAKE) --no-print-directory lint-disk-layout
 

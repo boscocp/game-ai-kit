@@ -4,6 +4,20 @@
 # in colour -- the reason T9 exists.
 extends GdUnitTestSuite
 
+# Where generated pictures are looked for, kept to restore after each test.
+var _generated_before: String
+
+
+# Every test here judges the committed CC0 pictures, never a person's own
+# generated ones, so the folder those would come from is pointed nowhere.
+func before_test() -> void:
+	_generated_before = Art.generated
+	Art.generated = Art.ROOT + "no-such-folder/"
+
+
+func after_test() -> void:
+	Art.generated = _generated_before
+
 
 func test_every_path_in_the_art_table_is_a_picture() -> void:
 	for path: String in Art.every_path():
@@ -144,6 +158,9 @@ func _silhouette(path: String) -> PackedByteArray:
 
 
 # T31: with no generated pictures, every path the game draws is the CC0 file.
+# `before_test` points the folder at one that cannot exist rather than trusting
+# it to be empty: it is a person's own, and their art must not turn `make
+# check` red -- which it did, the first time this ran beside generated art.
 func test_with_nothing_generated_every_picture_is_the_cc0_file() -> void:
 	for path: String in Art.every_path():
 		assert_str(Art.resolve(path)).is_equal(path)
@@ -153,19 +170,17 @@ func test_with_nothing_generated_every_picture_is_the_cc0_file() -> void:
 # The folder is pointed at one that exists, since the real one is a person's
 # and may be empty: "crown.png" below the checkers folder is a real file.
 func test_a_generated_picture_is_drawn_instead_of_the_cc0_one() -> void:
-	var before: String = Art.generated
 	Art.generated = Art.ROOT + "checkers/"
 	var chosen: String = Art.resolve(Art.ROOT + "crown.png")
 	var missing: String = Art.resolve(Art.ROOT + "nothing.png")
-	Art.generated = before
 	assert_str(chosen).is_equal(Art.ROOT + "checkers/crown.png")
 	assert_str(missing).is_equal(Art.ROOT + "nothing.png")
 
 
 # T31's manifest and this table must name the same pictures: an entry the game
 # never draws is generated for nothing, and a picture with no entry can never
-# be generated. With nothing generated, each resolves to its CC0 file. The
-# manifest sits outside the Godot project, so it is read through the disk.
+# be generated. The manifest sits outside the Godot project, so it is read
+# through the disk.
 func test_the_generator_s_manifest_names_exactly_the_pictures_the_game_draws() -> void:
 	var manifest_path: String = ProjectSettings.globalize_path("res://").path_join("../tools/artgen/manifest.json")
 	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(manifest_path))
@@ -176,5 +191,3 @@ func test_the_generator_s_manifest_names_exactly_the_pictures_the_game_draws() -
 	var drawn: Array[String] = Art.every_path()
 	drawn.sort()
 	assert_array(named).is_equal(drawn)
-	for path: String in named:
-		assert_str(Art.resolve(path)).is_equal(path)
