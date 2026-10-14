@@ -105,3 +105,14 @@ func test_the_frontier_is_drawn_while_stepping() -> void:
 	demo.step(3)
 	assert_array(demo.decision_overlay()["frontier"]).is_not_empty()
 	assert_that(demo.decision_overlay()["about_to_expand"]).is_equal(demo._result.expanded[3])
+
+
+func test_the_status_compares_all_four_without_switching() -> void:
+	# T8: the comparison was only visible by pressing 1 to 4 and remembering
+	# the numbers. Every algorithm's count is on the screen at once now.
+	var demo: SearchDemo = _mounted_demo()
+	var results: Array[SearchResult] = _all_results(demo)
+
+	for index: int in range(4):
+		var count: String = "%s %d" % [SearchDemo.NAMES[index], results[index].expanded.size()]
+		assert_str(_status_of(demo)).contains(count)

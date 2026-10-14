@@ -27,6 +27,25 @@ func test_a_side_starts_its_turn_with_one_of_its_units_in_hand() -> void:
 	assert_str(_status_of(main)).contains("movement left: %d" % main.POINTS_PER_TURN)
 
 
+func test_the_status_says_what_is_in_hand_what_is_left_and_what_to_do() -> void:
+	# T8: the owner ran the board and could not tell what to do with it. A
+	# first-time player needs the unit, the movement left, and a sentence.
+	var main: BoardGame = _mounted_scene()
+
+	assert_str(_status_of(main)).contains("unit 1 in hand")
+	assert_str(_status_of(main)).contains("movement left: %d" % main.POINTS_PER_TURN)
+	assert_str(_status_of(main)).contains("click one of your units, then a highlighted cell")
+
+
+func test_on_blue_s_turn_the_status_says_which_unit_decides_and_what_space_does() -> void:
+	var main: BoardGame = _mounted_scene()
+
+	main._end_turn()
+
+	assert_str(_status_of(main)).contains("blue's unit %d is deciding" % main._plan.unit_id)
+	assert_str(_status_of(main)).contains("space plays the move")
+
+
 func test_clicking_a_neighbouring_cell_moves_and_spends_a_point() -> void:
 	var main: BoardGame = _mounted_scene()
 
