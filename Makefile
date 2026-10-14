@@ -212,7 +212,7 @@ test-vectors: test-search-vectors test-planning-vectors test-learning-vectors te
 	@# follows the prerequisites.
 
 .PHONY: test-search-vectors
-test-search-vectors: ## The search vectors, against ai_search
+test-search-vectors: import ## The search vectors, against ai_search
 	@# The vectors live outside the Godot project so the Python side can be
 	@# held to the same answers. Godot reads an absolute path in a
 	@# non-exported build, so the directory goes in after `--`.
@@ -220,7 +220,7 @@ test-search-vectors: ## The search vectors, against ai_search
 		-- $(CURDIR)/spec/vectors/search
 
 .PHONY: test-planning-vectors
-test-planning-vectors: ## The planning vectors, against ai_planning
+test-planning-vectors: import ## The planning vectors, against ai_planning
 	@# Only half of each planning vector is checked here: this side plans over
 	@# the domain the JSON spells out. The other half -- that the PDDL files
 	@# beside it describe the same domain -- is `make test-python`, because the
@@ -229,7 +229,7 @@ test-planning-vectors: ## The planning vectors, against ai_planning
 		-- $(CURDIR)/spec/vectors/planning
 
 .PHONY: test-learning-vectors
-test-learning-vectors: ## The learning vectors, against ai_learning
+test-learning-vectors: import ## The learning vectors, against ai_learning
 	@# Half of each learning vector is checked here -- the board produces this
 	@# row, and the model turns it into this number. The other half is the
 	@# same two claims on the Python side, in `make test-python`, because a
@@ -239,7 +239,7 @@ test-learning-vectors: ## The learning vectors, against ai_learning
 		-- $(CURDIR)/spec/vectors/learning
 
 .PHONY: test-fuzzy-vectors
-test-fuzzy-vectors: ## The fuzzy vectors, against ai_fuzzy
+test-fuzzy-vectors: import ## The fuzzy vectors, against ai_fuzzy
 	@# The same file, read twice: here through the addon, and in
 	@# `make test-python` through gameaikit.fuzzy, which also checks that the
 	@# text controller beside a vector describes the same thing as its JSON.
@@ -247,41 +247,60 @@ test-fuzzy-vectors: ## The fuzzy vectors, against ai_fuzzy
 		-- $(CURDIR)/spec/vectors/fuzzy
 
 .PHONY: test-menace-vectors
-test-menace-vectors: ## The MENACE vectors, against the game's bead player
+test-menace-vectors: import ## The MENACE vectors, against the game's bead player
 	@# The other half is `make test-python`. Each case carries the uniform draw
 	@# itself, because Python's generator and Godot's differ.
 	@$(GODOT) --headless --path godot -s res://test/menace_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/menace
 
 .PHONY: test-search-properties
-test-search-properties: ## A* agrees with Dijkstra, over a few hundred boards
+test-search-properties: import ## A* agrees with Dijkstra, over a few hundred boards
 	@$(GODOT) --headless --path godot -s res://test/search_properties.gd
 
 .PHONY: test-planner-properties
-test-planner-properties: ## A plan can be run, and an unsolvable domain says so
+test-planner-properties: import ## A plan can be run, and an unsolvable domain says so
 	@$(GODOT) --headless --path godot -s res://test/planner_properties.gd
 
 .PHONY: test-perception-properties
-test-perception-properties: ## Sight is symmetric, walls block both ways, suspicion holds in sight
+test-perception-properties: import ## Sight is symmetric, walls block both ways, suspicion holds in sight
 	@# T14's acceptance, as a target so CI runs the same command. Four
 	@# properties over three hundred generated maps, from a fixed seed.
 	@$(GODOT) --headless --path godot -s res://test/perception_properties.gd
 
+.PHONY: import
+import: ## Import the art, which a fresh checkout cannot load without
+	@# Measured on 4.7.2: a project with no .godot/ folder answers
+	@# load("res://assets/....png") with "No loader found", because a run imports
+	@# nothing -- only the editor does, and `--import` is the editor doing it
+	@# headless. Cheap when nothing changed. See docs/godot/importing-art.md.
+	@#
+	@# `--import` exits 0 on a picture it could not read, prints an ERROR, and
+	@# rewrites that picture's committed .import to `valid=false` -- which then
+	@# survives fixing the picture. So an ERROR is a failure here, and a
+	@# sidecar marked invalid is too.
+	@out=$$($(GODOT) --headless --path godot --import 2>&1) || \
+		{ echo "$$out" >&2; echo "import: the engine refused to import the project" >&2; exit 2; }; \
+	if echo "$$out" | grep -q "ERROR"; then \
+		echo "$$out" | grep -A2 "ERROR" >&2; echo "import: the engine reported an error" >&2; exit 2; fi; \
+	if grep -rl "^valid=false" godot/assets --include='*.import' >&2; then \
+		echo "import: the sidecars above are marked invalid; restore them with" >&2; \
+		echo "  git checkout -- <sidecar>, fix the picture, and import again" >&2; exit 2; fi
+
 .PHONY: test-demo-overlays
-test-demo-overlays: ## Every example, stepped headless: its overlay holds the AI's reasoning
+test-demo-overlays: import ## Every example, stepped headless: its overlay holds the AI's reasoning
 	@# The engine half of invariant 13; `lint-demos` is the half without it.
 	@# Neither can see the screen, and the seeing is each example's manual check.
 	@$(GODOT) --headless --path godot -s res://test/demo_overlays.gd
 
 .PHONY: test-decisions
-test-decisions: ## The two fights the learned opponent has to get right, and a node
+test-decisions: import ## The two fights the learned opponent has to get right, and a node
 	@# T6's acceptance, as a target so that CI runs the same command. It plays
 	@# against the *published* weights rather than a hand-made model, so a
 	@# retrained opponent that stops taking a fight it should take fails here.
 	@$(GODOT) --headless --path godot -s res://test/decision_scenarios.gd
 
 .PHONY: test-godot
-test-godot: ## Godot tests, headless (gdUnit4)
+test-godot: import ## Godot tests, headless (gdUnit4)
 	@# --ignoreHeadlessMode is required: gdUnit4 refuses headless by default
 	@# because Godot does not deliver InputEvents there. Tests in this repo
 	@# must therefore never depend on simulated input -- they assert logic.
@@ -295,31 +314,31 @@ test-godot: ## Godot tests, headless (gdUnit4)
 # hangs CI. Everything automated here runs --headless.
 
 .PHONY: run
-run: ## Checkers against minimax: click a piece, click a green square; space plays white's move, 1-6 sets its depth
+run: import ## Checkers against minimax: click a piece, click a green square; space plays white's move, 1-6 sets its depth
 	@# T27: the first thing a person opens is a game nobody needs explained.
 	@# The project's main scene is the checkers board, so this names none.
 	@$(GODOT) --path godot
 
 .PHONY: demo-skirmish
-demo-skirmish: ## The learned policy plays blue: click a unit, click a neighbouring cell, space ends the turn
+demo-skirmish: import ## The learned policy plays blue: click a unit, click a neighbouring cell, space ends the turn
 	@# Until T27 this was `make run`. Where the policy finally plays is T30's
 	@# question: blue on the tactical board, one controller among several.
 	@$(GODOT) --path godot res://game/main.tscn
 
 .PHONY: demo-tictactoe
-demo-tictactoe: ## MENACE, the matchbox machine, moves first: space draws its bead, click a square, 1-4 its age, M perfect play
+demo-tictactoe: import ## MENACE, the matchbox machine, moves first: space draws its bead, click a square, 1-4 its age, M perfect play
 	@$(GODOT) --path godot res://game/tictactoe/tictactoe.tscn
 
 .PHONY: demo-search
-demo-search: ## The four searches on a board you can paint: drag to edit, 1-4 choose, space steps, B boards
+demo-search: import ## The four searches on a board you can paint: drag to edit, 1-4 choose, space steps, B boards
 	@$(GODOT) --path godot res://demos/search/search_demo.tscn
 
 .PHONY: demo-stealth
-demo-stealth: ## Cross the hall unseen: arrows walk, shift sprints, space waits, D shows danger
+demo-stealth: import ## Cross the hall unseen: arrows walk, shift sprints, space waits, D shows danger
 	@$(GODOT) --path godot res://game/stealth/stealth.tscn
 
 .PHONY: demo-tactical
-demo-tactical: ## Advance Wars style tactics against a rule-based blue: click to move, W waits, 1-5 build, Z undo, space ends the turn
+demo-tactical: import ## Advance Wars style tactics against a rule-based blue: click to move, W waits, 1-5 build, Z undo, space ends the turn
 	@$(GODOT) --path godot res://game/tactical/tactical.tscn
 
 # --- shipping --------------------------------------------------------------

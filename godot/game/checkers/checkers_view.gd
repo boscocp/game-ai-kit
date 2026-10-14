@@ -2,17 +2,18 @@
 ## computer is thinking about doing.
 ##
 ## Everything is drawn with `_draw` -- an 8x8 board is sixty-four rectangles,
-## and a tile map would add a tile set to explain. The view holds no rules: the
-## scene hands it a position and the marks to put on it.
+## and a tile map would add a tile set to explain. The pieces are pictures from
+## `Art`: a red chip, a white chip, and a crown on a king, so a king is told
+## from a man by shape and not by colour. The view holds no rules: the scene
+## hands it a position and the marks to put on it.
 class_name CheckersView
 extends Node2D
 
 const SQUARE: float = 72.0
 const LIGHT := Color(0.93, 0.87, 0.75)
 const DARK := Color(0.47, 0.32, 0.22)
-const RED_PIECE := Color(0.80, 0.16, 0.16)
-const WHITE_PIECE := Color(0.96, 0.95, 0.90)
-const CROWN := Color(0.85, 0.65, 0.10)
+## Dark, so the crown reads on the white chip and the red one alike.
+const CROWN := Color(0.10, 0.08, 0.06)
 const SELECTED := Color(1.0, 0.95, 0.30)
 const MUST_CAPTURE := Color(1.0, 0.55, 0.10)
 const TARGET := Color(0.30, 0.90, 0.40, 0.55)
@@ -122,10 +123,26 @@ func _draw_pieces() -> void:
 
 func _draw_piece(square: Vector2i, player: int, radius: float) -> void:
 	var centre: Vector2 = centre_of(square)
-	draw_circle(centre, radius + 2.0, Color.BLACK)
-	draw_circle(centre, radius, RED_PIECE if player == CheckersBoard.RED else WHITE_PIECE)
-	if CheckersBoard.is_king(_board.piece_at(square)):
-		draw_circle(centre, radius * 0.45, CROWN)
+	var layers: Array[String] = pictures_of(_board.piece_at(square))
+	draw_texture_rect(Art.texture(layers[0]), _box(centre, radius), false)
+	if layers.size() > 1:
+		draw_texture_rect(Art.texture(layers[1]), _box(centre, radius * 0.6), false, CROWN)
+
+
+## The pictures a piece is drawn with, bottom first: its side's man, and a
+## crown on top when it is a king. The draw uses exactly this, so a test holds
+## that a king wears a crown and a white man is white.
+static func pictures_of(piece: int) -> Array[String]:
+	var man: String = Art.RED_MAN if CheckersBoard.owner_of(piece) == CheckersBoard.RED else Art.WHITE_MAN
+	var layers: Array[String] = [man]
+	if CheckersBoard.is_king(piece):
+		layers.append(Art.CROWN)
+	return layers
+
+
+# The square a picture of this radius fills, round a centre.
+func _box(centre: Vector2, radius: float) -> Rect2:
+	return Rect2(centre - Vector2(radius, radius), Vector2(radius, radius) * 2.0)
 
 
 # Each move the computer considered, as an arrow along its path with its value

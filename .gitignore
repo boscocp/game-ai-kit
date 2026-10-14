@@ -2,6 +2,10 @@
 .godot/
 godot/.godot/
 *.import
+# ...except the art's. An .import file holds a picture's import settings and
+# the uid other files can name it by, and Godot's documentation says to commit
+# it. The imported copy itself lives under .godot/ and stays out.
+!godot/assets/**/*.import
 export_presets.cfg
 
 # Build and release output

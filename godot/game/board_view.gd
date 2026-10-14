@@ -15,14 +15,14 @@
 ## its terrain, so the moment you most wanted to know what the ground cost was
 ## the moment it was hidden.
 ##
-## The tile set is built in code from a generated image rather than loaded from
-## an atlas. A reader can see exactly what a tile is -- a flat colour and a
-## size -- without opening the editor, and this repository stays free of binary
-## art nobody can diff.
+## The tiles are pictures from `Art.TERRAIN`, stitched into one atlas when the
+## view starts: each scaled to a tile, and each with see-through parts laid over
+## open ground. One `TileSet`, built here rather than in the editor, so a reader
+## sees what a tile is without opening anything, and a file swapped in under the
+## same path (T31) changes the picture and nothing else.
 ##
-## When not to use it: a real game. Real tiles come from an artist, in a
-## `.tres` tile set, and the colours below are placeholders for the shape of
-## the thing.
+## When not to use it: a real game, whose tiles come from an artist in a `.tres`
+## tile set with terrains and autotiling. These are one picture per kind.
 class_name BoardView
 extends TileMapLayer
 
@@ -31,29 +31,19 @@ extends TileMapLayer
 ## read at all.
 const TILE_PIXELS: int = 48
 
-## The atlas is one row of flat colours, and these are its columns.
+## The atlas is one row of pictures, and these are its columns, index-matched
+## with `Art.TERRAIN`.
 const PLAIN: Vector2i = Vector2i(0, 0)
 const ROUGH: Vector2i = Vector2i(1, 0)
 const WALL: Vector2i = Vector2i(2, 0)
 const NODE: Vector2i = Vector2i(3, 0)
 const WATER: Vector2i = Vector2i(4, 0)
 const BRIDGE: Vector2i = Vector2i(5, 0)
+## Trees are dear ground that looks like trees. Cost alone draws them as rough
+## ground, so a scene whose dear ground *is* trees says so through `terrain`.
+const TREES: Vector2i = Vector2i(6, 0)
 
 const SOURCE_ID: int = 0
-
-# Index-matched with the atlas columns above: the colour of each tile. Each one
-# differs from the others in brightness as well as in hue -- mid green, light
-# tan, near black, gold -- so they separate at a glance and for a reader who
-# cannot tell green from brown. The old palette was two dark greys and a dark
-# green, which merged into one field.
-const SWATCHES: Array[Color] = [
-	Color(0.36, 0.50, 0.34),
-	Color(0.74, 0.60, 0.38),
-	Color(0.13, 0.13, 0.15),
-	Color(0.95, 0.78, 0.25),
-	Color(0.20, 0.40, 0.72),
-	Color(0.55, 0.38, 0.22),
-]
 
 ## The cells the unit in hand can reach: a tint and a border over the terrain,
 ## never instead of it.
@@ -63,8 +53,10 @@ const REACHABLE_BORDER: Color = Color(0.85, 1.0, 1.0, 0.95)
 ## Lines between cells, so ground of one kind still reads as cells.
 const GRID: Color = Color(0.0, 0.0, 0.0, 0.30)
 
-## The entry cost written on dear ground.
-const COST_TEXT: Color = Color(0.12, 0.08, 0.04)
+## The entry cost written on dear ground: white edged in black, because it
+## sits on pictures -- trees, mud -- that a single colour vanishes into.
+const COST_TEXT: Color = Color.WHITE
+const COST_EDGE: Color = Color.BLACK
 const COST_TEXT_SIZE: int = 22
 
 ## Column numbers above the board and row numbers to its left, because every
@@ -191,7 +183,7 @@ func _draw_marks() -> void:
 	_draw_grid()
 	_draw_axes()
 	for cell: Vector2i in drawn["costs"]:
-		_draw_centred(drawn["costs"][cell], centre_of(cell), COST_TEXT_SIZE, COST_TEXT)
+		_draw_centred(drawn["costs"][cell], centre_of(cell), COST_TEXT_SIZE, COST_TEXT, COST_EDGE)
 
 
 func _draw_reachable(cell: Vector2i) -> void:
@@ -221,10 +213,12 @@ func _draw_axes() -> void:
 
 # `draw_string` takes the left end of the baseline; a label in a cell wants
 # its middle on a point.
-func _draw_centred(words: String, middle: Vector2, text_size: int, colour: Color) -> void:
+func _draw_centred(words: String, middle: Vector2, text_size: int, colour: Color, edge: Color = Color.TRANSPARENT) -> void:
 	var font: Font = ThemeDB.fallback_font
 	var width: float = font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size).x
 	var baseline: Vector2 = middle + Vector2(-width / 2.0, text_size * 0.35)
+	if edge.a > 0.0:
+		_marks.draw_string_outline(font, baseline, words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size, 5, edge)
 	_marks.draw_string(font, baseline, words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size, colour)
 
 
@@ -237,22 +231,49 @@ func _tile_for(cost: int) -> Vector2i:
 	return PLAIN
 
 
-# One row of flat colours, one column per tile, built at run time.
+# One row of pictures, one column per kind of tile, built at run time.
 func _build_tile_set() -> TileSet:
 	var atlas := Image.create_empty(
-		TILE_PIXELS * SWATCHES.size(), TILE_PIXELS, false, Image.FORMAT_RGBA8
+		TILE_PIXELS * Art.TERRAIN.size(), TILE_PIXELS, false, Image.FORMAT_RGBA8
 	)
-	for index: int in range(SWATCHES.size()):
-		var region := Rect2i(index * TILE_PIXELS, 0, TILE_PIXELS, TILE_PIXELS)
-		atlas.fill_rect(region, SWATCHES[index])
+	var whole_tile := Rect2i(0, 0, TILE_PIXELS, TILE_PIXELS)
+	for index: int in range(Art.TERRAIN.size()):
+		atlas.blit_rect(tile_image(Vector2i(index, 0)), whole_tile, Vector2i(index * TILE_PIXELS, 0))
 
 	var source := TileSetAtlasSource.new()
 	source.texture = ImageTexture.create_from_image(atlas)
 	source.texture_region_size = Vector2i(TILE_PIXELS, TILE_PIXELS)
-	for index: int in range(SWATCHES.size()):
+	for index: int in range(Art.TERRAIN.size()):
 		source.create_tile(Vector2i(index, 0))
 
 	var tiles := TileSet.new()
 	tiles.tile_size = Vector2i(TILE_PIXELS, TILE_PIXELS)
 	tiles.add_source(source, SOURCE_ID)
 	return tiles
+
+
+## One tile's picture as the board draws it: scaled to a tile without
+## smoothing, because the pack is pixel art and blurring it is a different
+## picture; and laid over open ground, so trees stand on grass.
+static func tile_image(column: Vector2i) -> Image:
+	var picture: Image = _scaled(Art.TERRAIN[column.x])
+	if column == PLAIN:
+		return picture
+	var ground: Image = _scaled(Art.TERRAIN[PLAIN.x])
+	ground.blend_rect(picture, Rect2i(0, 0, TILE_PIXELS, TILE_PIXELS), Vector2i.ZERO)
+	return ground
+
+
+## The same picture as a texture, for a legend to show beside its words.
+static func tile_texture(column: Vector2i) -> Texture2D:
+	return ImageTexture.create_from_image(tile_image(column))
+
+
+# A copy, scaled to a tile. A copy because, measured on 4.7.2, a texture that
+# stays loaded hands back the same `Image` from every `get_image()`: resizing it
+# in place, or laying trees over it, changed the next tile built from it.
+static func _scaled(path: String) -> Image:
+	var picture: Image = Art.texture(path).get_image().duplicate() as Image
+	picture.convert(Image.FORMAT_RGBA8)
+	picture.resize(TILE_PIXELS, TILE_PIXELS, Image.INTERPOLATE_NEAREST)
+	return picture

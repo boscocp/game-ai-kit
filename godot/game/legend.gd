@@ -3,17 +3,26 @@
 ## A coloured square means nothing to somebody who did not write it, and every
 ## example in the kit draws the AI's reasoning in coloured squares. So each
 ## one carries a legend, and `check_demos.py` refuses an example scene without
-## one. Entries are a colour and a few words; the legend draws a swatch and the
-## words beside it, one per line. A clear colour draws the words alone, for a
-## shape a swatch cannot show -- a dot, a ring, a tick.
+## one. Entries are a colour or a picture, and a few words; the legend draws a
+## swatch and the words beside it, one per line. A picture is the tile or the
+## piece itself, so the legend shows what is on the board rather than a colour
+## standing for it. A clear colour draws the words alone, for a shape a swatch
+## cannot show -- a dot, a ring, a tick.
 class_name Legend
 extends Control
 
-const SWATCH: float = 14.0
+## 16, not the 14 it was with flat colours: the pack's tiles are 16 pixels,
+## and drawn at their own size they stay sharp.
+const SWATCH: float = 16.0
 const LINE: float = 20.0
 const TEXT_SIZE: int = 14
 
-## Each entry is `[Color, String]`: the swatch and what it stands for.
+# Open ground, under every translucent swatch. Made once, when first drawn.
+var _ground: Texture2D
+
+## Each entry is `[Color, String]` or `[Texture2D, String]`: the swatch and
+## what it stands for. A picture may carry a third element, the tint the board
+## draws it with, so the legend shows what the board shows.
 var entries: Array[Array] = []
 
 
@@ -27,7 +36,12 @@ func _draw() -> void:
 	var font: Font = ThemeDB.fallback_font
 	for index: int in range(entries.size()):
 		var top: float = index * LINE
-		_draw_swatch(Rect2(0.0, top + 3.0, SWATCH, SWATCH), entries[index][0])
+		var square := Rect2(0.0, top + 2.0, SWATCH, SWATCH)
+		if entries[index][0] is Texture2D:
+			var tint: Color = entries[index][2] if entries[index].size() > 2 else Color.WHITE
+			draw_texture_rect(entries[index][0], square, false, tint)
+		else:
+			_draw_swatch(square, entries[index][0])
 		var words: String = entries[index][1]
 		draw_string(font, Vector2(SWATCH + 8.0, top + SWATCH + 1.0), words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, TEXT_SIZE)
 
@@ -38,5 +52,7 @@ func _draw() -> void:
 func _draw_swatch(square: Rect2, colour: Color) -> void:
 	if colour.a == 0.0:
 		return
-	draw_rect(square, BoardView.SWATCHES[BoardView.PLAIN.x])
+	if _ground == null:
+		_ground = BoardView.tile_texture(BoardView.PLAIN)
+	draw_texture_rect(_ground, square, false)
 	draw_rect(square, colour)

@@ -21,13 +21,6 @@
 class_name TacticalGame
 extends Node2D
 
-## Two letters per type, drawn on its piece and repeated in the legend.
-const LABELS: Dictionary = {
-	TacticalRules.RUNNER: "Ru", TacticalRules.SHIELD: "Sh", TacticalRules.MORTAR: "Mo",
-	TacticalRules.WADER: "Wa", TacticalRules.RAM: "Ra", TacticalRules.BOLT_TOWER: "Bt",
-	TacticalRules.WATCHTOWER: "Wt", TacticalRules.WORKSHOP: "Ws",
-}
-
 ## What the scene says it is, on screen, before anything else.
 const WHAT_THIS_IS: String = "tactics in the style of Advance Wars: build, cross the river, take the enemy workshop"
 
@@ -65,7 +58,6 @@ var _confirming_end: bool = false
 
 
 func _ready() -> void:
-	_units.labels = LABELS
 	_legend.set_entries(TacticalLegend.entries(_types))
 	_end_button.pressed.connect(end_turn)
 	_undo_button.pressed.connect(undo)
@@ -363,7 +355,7 @@ func _refresh() -> void:
 	if _reds_turn():
 		reach = _steps_in_reach()
 		_units.spent = _turn.spent_ids()
-	_board.draw_board(state.graph, reach, [] as Array[Vector2i], _water())
+	_board.draw_board(state.graph, reach, [] as Array[Vector2i], _terrain())
 	_units.show_state(state, _board, _selected_id)
 	_intent.show_decision(_blue_turn.next if _blue_thinking() else null, state, _board)
 	_header.text = "%s\n%s\nblue is played by %s" % [WHAT_THIS_IS, TacticalVictory.rule(), blue.describe()]
@@ -393,12 +385,15 @@ func _steps_in_reach() -> Array[Vector2i]:
 	return found
 
 
-# Water and the bridge, which the board's costs alone would draw as a wall and
-# as open ground.
-func _water() -> Dictionary:
+# The ground the board's costs alone would draw wrong: trees as rough ground,
+# water as a wall, the bridge as open ground.
+func _terrain() -> Dictionary:
 	var tiles: Dictionary = {}
-	for cell: Vector2i in TacticalRules.cells_of(TacticalScenario.MAP, TacticalRules.WATER):
-		tiles[cell] = BoardView.WATER
-	for cell: Vector2i in TacticalRules.cells_of(TacticalScenario.MAP, TacticalRules.BRIDGE):
-		tiles[cell] = BoardView.BRIDGE
+	var kinds: Dictionary = {
+		TacticalRules.TREES: BoardView.TREES, TacticalRules.WATER: BoardView.WATER,
+		TacticalRules.BRIDGE: BoardView.BRIDGE,
+	}
+	for letter: String in kinds:
+		for cell: Vector2i in TacticalRules.cells_of(TacticalScenario.MAP, letter):
+			tiles[cell] = kinds[letter]
 	return tiles

@@ -360,3 +360,19 @@ func test_the_demo_loads_and_writes_out_every_guard() -> void:
 	demo.toggle_danger()
 	demo.restart()
 	assert_str(demo.status_text()).contains("turn 0")
+
+
+# Trees cost what rough ground costs, so the board would draw them as mud
+# unless the demo says which cells are trees; the legend says "trees".
+func test_the_demo_draws_its_trees_as_trees() -> void:
+	var demo: StealthDemo = auto_free(load("res://game/stealth/stealth.tscn").instantiate())
+	add_child(demo)
+	var board: BoardView = demo.get_node("BoardView")
+	var graph: GridGraph = demo.world.room.graph
+	var trees: int = 0
+	for index: int in range(graph.width * graph.height):
+		var cell := Vector2i(index % graph.width, index / graph.width)
+		if graph.cost_at(cell) == StealthRoom.TREE:
+			trees += 1
+			assert_vector(board.get_cell_atlas_coords(cell)).is_equal(BoardView.TREES)
+	assert_int(trees).is_greater(0)
