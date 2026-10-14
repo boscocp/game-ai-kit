@@ -18,7 +18,8 @@
   "seeds_comment": "A kind's red and blue pictures share a seed, so the two sides get one design in two colours; with a seed each they came out as two different machines.",
   "post": {
     "sprite": "the background, the border's colour where it joins the border, becomes transparent; the picture is cropped to what remains and padded square; then one colour per cell down to `pixels` square, and at most `colours` colours",
-    "tile": "one colour per cell down to `pixels` square, and at most `colours` colours; it stays opaque"
+    "tile": "one colour per cell down to `pixels` square, and at most `colours` colours; it stays opaque",
+    "walk": "the background, the border's colour where it joins the border, becomes transparent, and the sheet is never cropped -- its frames are a grid; then one colour per cell down to `pixels` square (128: a 4 by 4 grid of 32-pixel frames, as the LoRA card says), and at most `colours` colours"
   },
   "assets": [
     {
@@ -261,6 +262,42 @@
       "seed": 121,
       "pixels": 48,
       "colours": 12
+    },
+    {
+      "path": "units/red/shield_walk.png",
+      "kind": "walk",
+      "model": "klein-walk",
+      "prompt": "a short sturdy foot soldier in red armour and a red helmet, carrying a large rectangular red tower shield and a short spear.",
+      "seed": 131,
+      "pixels": 128,
+      "colours": 16
+    },
+    {
+      "path": "units/blue/shield_walk.png",
+      "kind": "walk",
+      "model": "klein-walk",
+      "prompt": "a short sturdy foot soldier in blue armour and a blue helmet, carrying a large rectangular blue tower shield and a short spear.",
+      "seed": 131,
+      "pixels": 128,
+      "colours": 16
+    },
+    {
+      "path": "units/red/soldier_walk.png",
+      "kind": "walk",
+      "model": "klein-walk",
+      "prompt": "a small infantry rifleman in a red uniform and a red helmet, carrying a rifle.",
+      "seed": 132,
+      "pixels": 128,
+      "colours": 16
+    },
+    {
+      "path": "units/blue/soldier_walk.png",
+      "kind": "walk",
+      "model": "klein-walk",
+      "prompt": "a small infantry rifleman in a blue uniform and a blue helmet, carrying a rifle.",
+      "seed": 132,
+      "pixels": 128,
+      "colours": 16
     }
   ],
   "examples": [
@@ -295,5 +332,6 @@
       "generated_on": "2026-10-14"
     }
   ],
-  "background_comment": "A sprite stands on pure green unless its entry names another colour: anything green -- the trees -- would be cleared away with its background, so it asks for magenta."
+  "background_comment": "A sprite stands on pure green unless its entry names another colour: anything green -- the trees -- would be cleared away with its background, so it asks for magenta.",
+  "walk_comment": "A walking sheet (T33) names its own model, klein base with the walk LoRA, and its prompt is the figure alone: the generator wraps it in the LoRA's sentence for its grid, and no style applies. A kind's red and blue sheets share a seed, as its still pictures do."
 }

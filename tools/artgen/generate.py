@@ -15,6 +15,10 @@ Two commands:
             seconds and peak VRAM, in OUT_DIR/report.json beside them: how a
             model was judged against another.
 
+A manifest entry of kind `walk` is a walking sheet (T33): a 4 by 4 grid of
+32-pixel frames, made by the model its entry names -- FLUX.2 klein base with
+a LoRA trained on exactly that grid -- whatever `--model` says for the rest.
+
 Every model is one `model.json` pins, loaded in bfloat16 with model CPU
 offload, which keeps only the part running on the GPU: a text encoder of
 about 8 GB and a transformer of 8 to 12 GB fit a 12 GB card one at a time and
@@ -36,6 +40,7 @@ import time
 
 import diffusers
 import torch
+import transformers
 from huggingface_hub import snapshot_download
 from PIL import Image
 
@@ -67,6 +72,16 @@ SHADE_STEP = 24
 # another: green is far from both teams' colours, and the wrong choice for
 # anything green, which names its own.
 DEFAULT_BACKGROUND = "pure green (#00FF00)"
+# What a model that borrows a text encoder takes from the model it borrows
+# from: the encoder alone, not its transformer (T33).
+ENCODER_FILES = ["text_encoder/*"]
+# The walk LoRA's own sentence for its grid, from its model card, word for
+# word: it was trained on this, and a sheet asked for in other words came out
+# as figures in random poses (T31).
+WALK_PROMPT = ("A pixel art spritesheet of {figure} The spritesheet is a 4 by 4 grid of four rows of frames - "
+               "first row is 3 walking frames facing down and 1 frame both arms raised, second row is 3 walking "
+               "frames facing left and 1 frame jumping left, third row is 3 walking frames facing right and 1 "
+               "frame jumping right, fourth row is 3 walking frames back view facing up and 1 frame lying on floor.")
 
 
 # --- the model ---------------------------------------------------------------
@@ -81,9 +96,20 @@ def model_config(name: str | None) -> tuple[str, dict]:
 
 
 def load_pipeline(model: dict) -> diffusers.DiffusionPipeline:
-    """A pinned model, with its LoRA if it has one, ready to run with offload."""
+    """A pinned model, with its LoRA if it has one, ready to run with offload.
+
+    A model with `text_encoder_from` borrows that model's text encoder, which
+    is the same file: klein base and klein share theirs byte for byte.
+    """
     folder = snapshot_download(model["repo"], revision=model["revision"], allow_patterns=model["fetch"])
-    pipe = getattr(diffusers, model["pipeline"]).from_pretrained(folder, dtype=torch.bfloat16)
+    parts = {}
+    if "text_encoder_from" in model:
+        _, donor = model_config(model["text_encoder_from"])
+        donor_folder = snapshot_download(donor["repo"], revision=donor["revision"],
+                                         allow_patterns=ENCODER_FILES)
+        parts["text_encoder"] = transformers.AutoModelForCausalLM.from_pretrained(
+            f"{donor_folder}/text_encoder", dtype=torch.bfloat16)
+    pipe = getattr(diffusers, model["pipeline"]).from_pretrained(folder, dtype=torch.bfloat16, **parts)
     if "lora" in model:
         lora = model["lora"]
         lora_folder = snapshot_download(lora["repo"], revision=lora["revision"], allow_patterns=lora["fetch"])
@@ -280,9 +306,13 @@ def finish(picture: Image.Image, entry: dict) -> Image.Image:
     """
     if entry["kind"] == "sprite":
         picture = trim(clear_background(picture))
+    elif entry["kind"] == "walk":
+        # Never trimmed: the frames are a grid, and cropping the sheet to what
+        # is opaque would move every frame off it.
+        picture = clear_background(picture)
     result = reduce(picture, entry["pixels"], entry["colours"])
     opaque = sum(1 for alpha in result.getchannel("A").get_flattened_data() if alpha)
-    if entry["kind"] == "sprite" and opaque < MINIMUM_OPAQUE * result.width * result.height:
+    if entry["kind"] != "tile" and opaque < MINIMUM_OPAQUE * result.width * result.height:
         raise EmptyPicture(f"{entry['path']}: {opaque} opaque pixels of {result.width * result.height} "
                            "after its background was removed; try another seed, or another background")
     return result
@@ -298,21 +328,62 @@ def styled(prompt: str, style: dict, kind: str = "sprite", background: str = DEF
 
 def make(model_name: str | None, style_name: str | None, only: list[str]) -> int:
     """Generate every manifest entry, or the ones named, into GENERATED, and
-    write down beside them what made each one."""
+    write down beside them what made each one.
+
+    Entries are made one model at a time, each model loaded once: an entry
+    that names its own model -- a walking sheet -- gets that one, and every
+    other entry the one asked for. An entry with its own model is made only
+    when named in `only`: that model is a fetch of its own, and a plain run
+    must work with what `make artgen-bootstrap` fetched. The record is
+    written after each model, so a later one failing to load keeps what the
+    earlier ones made.
+    """
     manifest = json.loads((HERE / "manifest.json").read_text(encoding="utf-8"))
     style_name = style_name or manifest["default_style"]
-    entries = [entry for entry in manifest["assets"] if not only or entry["path"] in only]
+    entries = [entry for entry in manifest["assets"]
+               if entry["path"] in only or (not only and "model" not in entry)]
     unknown = sorted(set(only) - {entry["path"] for entry in entries})
     if unknown:
         print(f"artgen: not in the manifest: {', '.join(unknown)}", file=sys.stderr)
         return 2
-    name, model = model_config(model_name)
-    pipe = load_pipeline(model)
+    skipped = [entry["path"] for entry in manifest["assets"] if not only and "model" in entry]
+    if skipped:
+        print(f"artgen: {len(skipped)} walking sheet(s) left out; they need their own model -- "
+              "see docs/howto/generate-art.md, 'Walking sheets'")
+    by_model = entries_by_model(entries, model_name)
+    if isinstance(by_model, str):
+        print(f"artgen: {by_model}", file=sys.stderr)
+        return 2
     record = made_record()
+    failed = 0
+    for name, group in by_model.items():
+        failed += make_with(name, group, manifest["styles"][style_name], style_name, record)
+        (GENERATED / MADE_RECORD).write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
+    return 1 if failed else 0
+
+
+def entries_by_model(entries: list[dict], model_name: str | None) -> dict[str, list[dict]] | str:
+    """The entries grouped by the model that makes each, or why one cannot be
+    made: a model that lists the `kinds` it makes refuses every other kind --
+    the walk LoRA turns a still sprite's prompt into a sheet."""
+    by_model: dict[str, list[dict]] = {}
+    for entry in entries:
+        name, model = model_config(entry.get("model", model_name))
+        if entry["kind"] not in model.get("kinds", [entry["kind"]]):
+            return f"{entry['path']} is a {entry['kind']}, and {name} makes only {', '.join(model['kinds'])}"
+        by_model.setdefault(name, []).append(entry)
+    return by_model
+
+
+def make_with(name: str, entries: list[dict], style: dict, style_name: str, record: dict) -> int:
+    """Make `entries` with the model `name`, saving each and noting it in
+    `record`. Returns how many failed."""
+    _, model = model_config(name)
+    pipe = load_pipeline(model)
     failed = 0
     for entry in entries:
         started = time.monotonic()
-        prompt = entry_prompt(entry, manifest["styles"][style_name])
+        prompt = entry_prompt(entry, style)
         try:
             picture = finish(run_model(pipe, prompt, entry["seed"], model["settings"]), entry)
         except EmptyPicture as empty:
@@ -322,14 +393,19 @@ def make(model_name: str | None, style_name: str | None, only: list[str]) -> int
         destination = GENERATED / entry["path"]
         destination.parent.mkdir(parents=True, exist_ok=True)
         picture.save(destination)
-        record[entry["path"]] = {"model": made_by(model), "style": style_name, "seed": entry["seed"], "prompt": prompt}
+        worn = style_name if entry["kind"] != "walk" else None
+        record[entry["path"]] = {"model": made_by(model), "style": worn, "seed": entry["seed"], "prompt": prompt}
         print(f"artgen: {entry['path']} with {name} in {time.monotonic() - started:.1f} s")
-    (GENERATED / MADE_RECORD).write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
-    return 1 if failed else 0
+    del pipe
+    torch.cuda.empty_cache()
+    return failed
 
 
 def entry_prompt(entry: dict, style: dict) -> str:
-    """The whole prompt for one manifest entry in one style."""
+    """The whole prompt for one manifest entry in one style. A walking sheet
+    takes no style: its LoRA answers one sentence, and a style is another."""
+    if entry["kind"] == "walk":
+        return WALK_PROMPT.format(figure=entry["prompt"])
     return styled(entry["prompt"], style, entry["kind"], entry.get("background", DEFAULT_BACKGROUND))
 
 

@@ -78,6 +78,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Start again: red to move, nobody spent, nobody winning.
 func new_game() -> void:
 	state = TacticalScenario.build()
+	_units.reset()
 	winner = TacticalVictory.NOBODY
 	_blue_turn = BlueTurn.new(blue)
 	_start_red_turn()
@@ -202,8 +203,19 @@ func step_decision() -> void:
 	elif _blue_turn.finished():
 		_start_red_turn()
 	else:
-		state = _blue_turn.play(state)
-		_refresh()
+		_play_blue_decision()
+
+
+# Play the decision on screen, and walk the unit along the route it was
+# drawn with, so what the pink line promised is what a person sees happen.
+func _play_blue_decision() -> void:
+	var decision: TacticalDecision = _blue_turn.next
+	var walker: Unit = state.unit_by_id(decision.unit_id)
+	state = _blue_turn.play(state)
+	# A refused decision is not in `played`, and a hold or a build is no walk.
+	if decision.move != null and decision in _blue_turn.played:
+		_units.walk(decision.unit_id, walker.cell, decision.move.path)
+	_refresh()
 
 
 ## Play blue's turn to its end, every decision still drawn and recorded, and
@@ -281,6 +293,7 @@ func _walk_to(cell: Vector2i) -> void:
 		path = walks[cell]
 	var move := Move.new(_selected_id, path)
 	if _act(state.apply(move), _explained(state.why_refused(move), cell)):
+		_units.walk(unit.id, unit.cell, path)
 		_turn.spend(_selected_id)
 		_select_next_unspent()
 

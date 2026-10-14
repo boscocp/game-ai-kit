@@ -34,7 +34,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T30 | The tactical game, against the computer | done | `make demo-tactical`: spent units, undo, a confirmed end of turn; blue is a `BlueController`, rules today; blue walks at the workshop, not the nearest enemy (changed, pending the owner); 40-round draw; manual check still a person's |
 | T9 | Art that is not a coloured square | done | 30 CC0 pictures from four Kenney packs, each listed with its sha256; `art.gd` the one path table; `make import` before any scene; manual check still a person's |
 | T31 | Generate your own art, locally | done | `make artgen`: Z-Image-Turbo (owner's pick after a bake-off against FLUX.2 klein), fp8 + offload in 8.3 GB; gitignored output the game prefers, CC0 the default; 3 committed examples; ADR 0013 |
-| T33 | Units that walk | todo | frames in the game and units that move along their route; packs first, then the svntax walk LoRA on klein-base, which the owner judged good enough in T31 |
+| T33 | Units that walk | done | Puny Characters (CC0) sheets for the shield and the soldier; units walk their route at 0.12 s a cell, march at rest, machines bob; `walk` kind in the generator on klein base + the svntax LoRA, sheets never committed; ADR 0014; manual check still a person's |
 | T32 | Checkers with a learned evaluation | todo | after Samuel (1959 paper): the same search, weights fitted in Python, and a match |
 | T10 | The tactical scenario | done | five types, two towers, a workshop, funds, a forge, a river with one bridge; manual check: terrain yes, type feel waits on T26 |
 | T11 | The planner plays | todo | STRIPS drives a faction; needs T4, and T26 for attacks; `ai_learning` still routes on `state.graph`, wrong for a wader |
@@ -79,6 +79,38 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-14 (wave 32)
+
+**What landed.** T33: the units on the tactical and skirmish boards walk.
+- The shield and the soldier are Puny Characters figures (Shade,
+  OpenGameArt, CC0). They march on the spot, walk their route at 0.12 s a
+  cell facing each step, and stand still, greyed, once spent.
+- The machines keep their pictures and bob as they roll. The buildings stay
+  still.
+- Blue's unit walks the route its pink line showed. Undo and a new game
+  drop the walks.
+- `UnitSheet` is the frame table, `UnitWalk` one trip along a route, and
+  `UnitView` one clock that only `advance` moves. ADR 0014.
+- The generator gained a `walk` kind on FLUX.2 klein base with the svntax
+  LoRA. Its sheets stay in the gitignored folder and are never committed:
+  the LoRA's training data is CC BY 4.0. A plain `make artgen` leaves them
+  out; the how-to says how to make them. Four were made and look right.
+
+**The review's worst findings.**
+- The legends still showed the old silhouettes.
+- A plain `make artgen` broke for anyone without the walk model.
+- A new game kept the old game's facings.
+- 9 of 30 mutations survived.
+
+All are fixed. 12 mutations were re-run and every one is now killed; one,
+a swap of Puny's left and right rows, is checked only by eye. See
+[docs/reviews/32-units-that-walk.md](../docs/reviews/32-units-that-walk.md).
+
+**Not proven.** T33's manual check: the owner plays `make demo-tactical`
+and says whether walking units read better than still ones.
+
+**Next:** `make wave` cuts T32, checkers with a learned evaluation.
 
 ## Resuming after 2026-10-14 (wave 30)
 

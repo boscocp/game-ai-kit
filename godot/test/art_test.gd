@@ -123,7 +123,58 @@ func test_a_side_beyond_the_folders_draws_in_the_last_one() -> void:
 
 func test_a_unit_with_no_type_is_drawn_as_the_soldier() -> void:
 	var unit := Unit.new(1, TacticalScenario.RED, Vector2i.ZERO, 10, 3)
-	assert_object(UnitView.picture_for(unit)).is_same(Art.texture(Art.unit_path(TacticalScenario.RED, Art.NO_TYPE)))
+	assert_object(UnitView.picture_for(unit)).is_same(Art.texture(Art.sheet_path(TacticalScenario.RED, Art.NO_TYPE)))
+
+
+# --- sheets (T33) ------------------------------------------------------------
+
+# A sheet whose size does not divide into its table draws slices of two
+# frames, or of nothing, and headless nobody would see it.
+func test_every_sheet_art_names_is_a_picture_that_divides_into_its_frame_table() -> void:
+	for faction: int in range(Art.SIDES.size()):
+		for type_name: String in Art.SHEET_FILES:
+			var sheet: UnitSheet = Art.sheet_for(faction, type_name)
+			var size := Vector2i(Art.texture(sheet.path).get_size())
+			assert_bool(sheet.fits(size)).override_failure_message("%s is %s" % [sheet.path, size]).is_true()
+
+
+# The check above is only worth something if it can say no.
+func test_a_sheet_that_does_not_divide_into_its_table_does_not_fit() -> void:
+	var pack: UnitSheet = UnitSheet.puny("planted")
+	assert_bool(pack.fits(Vector2i(768, 256))).is_true()
+	assert_bool(pack.fits(Vector2i(760, 256))).is_false()    # not whole frames
+	assert_bool(pack.fits(Vector2i(64, 256))).is_false()     # a walk column missing
+	assert_bool(pack.fits(Vector2i(768, 64))).is_false()     # a facing's row missing
+	assert_bool(UnitSheet.generated("planted").fits(Vector2i(128, 128))).is_true()
+	var overhanging := UnitSheet.new("planted", 32, Rect2i(20, 0, 16, 16), {Vector2i.DOWN: 0}, [0] as Array[int], 0)
+	assert_bool(overhanging.fits(Vector2i(64, 64))).is_false()   # the figure's square leaves its frame
+
+
+# The pack's sheet and a generated one are laid out differently, so each is
+# read through its own table.
+func test_a_generated_sheet_is_read_through_the_generator_s_table() -> void:
+	var path: String = Art.sheet_path(TacticalScenario.RED, TacticalRules.SHIELD)
+	var own: String = "res://assets/generated/units/red/shield_walk.png"
+	assert_int(Art.table_for(path, path).walk.size()).is_equal(UnitSheet.puny(path).walk.size())
+	assert_that(Art.table_for(path, path).rows).is_equal(UnitSheet.puny(path).rows)
+	assert_that(Art.table_for(path, own).rows).is_equal(UnitSheet.generated(path).rows)
+	assert_that(Art.table_for(path, own).figure).is_equal(UnitSheet.generated(path).figure)
+
+
+# Only figures on legs walk: the machines and the buildings keep their still
+# pictures (T33 step 4).
+func test_only_the_kinds_on_legs_have_a_sheet() -> void:
+	for type_name: String in Art.UNIT_FILES:
+		var has_sheet: bool = Art.sheet_for(TacticalScenario.RED, type_name) != null
+		assert_bool(has_sheet).override_failure_message(type_name).is_equal(type_name in [TacticalRules.SHIELD, Art.NO_TYPE])
+
+
+# A side's sheet is its own, as its still pictures are.
+func test_each_side_has_its_own_sheet() -> void:
+	for type_name: String in Art.SHEET_FILES:
+		var red: Image = Art.texture(Art.sheet_path(TacticalScenario.RED, type_name)).get_image()
+		var blue: Image = Art.texture(Art.sheet_path(TacticalScenario.BLUE, type_name)).get_image()
+		assert_bool(red.get_data() == blue.get_data()).override_failure_message(type_name).is_false()
 
 
 func _assert_every_kind_apart(faction: int) -> void:
@@ -206,3 +257,66 @@ func test_the_texture_drawn_is_the_generated_one_when_there_is_one() -> void:
 func test_a_file_that_is_not_an_imported_picture_is_not_used() -> void:
 	Art.generated = "res://"
 	assert_str(Art.resolve(Art.ROOT + "project.godot")).is_equal(Art.ROOT + "project.godot")
+
+
+# --- the wave 32 review ----------------------------------------------------
+
+# T31's promise: a person's own still picture of a kind is drawn. With their
+# shield and no sheet of theirs, the pack's figure must not hide it. The
+# examples folder is a real one holding a red shield and no sheet. Asked first
+# with no folder, so a cache that ignored the folder would answer from that.
+func test_a_person_s_own_still_picture_wins_over_the_pack_s_sheet() -> void:
+	assert_object(Art.sheet_for(TacticalScenario.RED, TacticalRules.SHIELD)).is_not_null()
+	Art.generated = Art.ROOT + "generated-examples/"
+	assert_object(Art.sheet_for(TacticalScenario.RED, TacticalRules.SHIELD)).is_null()
+	assert_object(Art.sheet_for(TacticalScenario.BLUE, TacticalRules.SHIELD)).is_not_null()
+
+
+# A sheet of the wrong size is drawn as its still picture, not as slices.
+func test_a_sheet_that_does_not_fit_is_not_used() -> void:
+	var pack: UnitSheet = UnitSheet.puny("planted")
+	assert_object(Art.sheet_if_it_fits(pack, Vector2i(768, 256))).is_same(pack)
+	assert_object(Art.sheet_if_it_fits(pack, Vector2i(760, 256))).is_null()
+
+
+# The generator's table is the LoRA card's row order: down, left, right, up.
+# Nothing generated is committed to read it against, so the card is pinned.
+func test_the_generated_table_is_the_card_s_row_order() -> void:
+	var rows: Dictionary = UnitSheet.generated("planted").rows
+	assert_int(rows[Vector2i.DOWN]).is_equal(0)
+	assert_int(rows[Vector2i.LEFT]).is_equal(1)
+	assert_int(rows[Vector2i.RIGHT]).is_equal(2)
+	assert_int(rows[Vector2i.UP]).is_equal(3)
+
+
+# The figure's square is chosen to be the smallest that holds every frame
+# drawn: every opaque pixel of those frames is inside it, and the figure
+# fills at least three quarters of it one way, or it is drawn small.
+func test_the_figure_square_holds_the_figure_and_is_not_much_bigger() -> void:
+	for faction: int in range(Art.SIDES.size()):
+		for type_name: String in Art.SHEET_FILES:
+			_assert_figure_fits_its_square(Art.sheet_for(faction, type_name))
+
+
+func _assert_figure_fits_its_square(sheet: UnitSheet) -> void:
+	var image: Image = Art.texture(sheet.path).get_image()
+	var used := Rect2i()
+	for frame: Rect2i in _drawn_frames(sheet):
+		var whole := Rect2i(frame.position - sheet.figure.position, Vector2i(sheet.frame_pixels, sheet.frame_pixels))
+		var inside: Rect2i = image.get_region(whole).get_used_rect()
+		var leaving: String = "%s: %s leaves %s" % [sheet.path, inside, sheet.figure]
+		assert_bool(sheet.figure.encloses(inside)).override_failure_message(leaving).is_true()
+		used = inside if not used.has_area() else used.merge(inside)
+	var filled: float = maxf(float(used.size.x) / sheet.figure.size.x, float(used.size.y) / sheet.figure.size.y)
+	assert_float(filled).override_failure_message(sheet.path).is_greater_equal(0.75)
+
+
+# Every figure square the view can draw from `sheet`: each walking step and
+# the standing frame, facing each way the table names.
+func _drawn_frames(sheet: UnitSheet) -> Array[Rect2i]:
+	var frames: Array[Rect2i] = []
+	for facing: Vector2i in sheet.rows:
+		frames.append(Rect2i(sheet.standing(facing)))
+		for step: int in range(sheet.walk.size()):
+			frames.append(Rect2i(sheet.walking(facing, step)))
+	return frames

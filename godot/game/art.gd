@@ -16,7 +16,7 @@
 ##
 ## When not to use it: a game with hundreds of sprites, which wants Godot's
 ## own resources (`.tres` tile sets, `SpriteFrames`) edited in the editor.
-## Here there are thirty, and a reader can see all of them in one file.
+## Here there are thirty-four, and a reader can see all of them in one file.
 class_name Art
 extends RefCounted
 
@@ -62,6 +62,15 @@ const UNIT_FILES: Dictionary = {
 	NO_TYPE: "soldier.png",
 }
 
+## The kinds that walk on legs, and the sheet each walks with (T33). A kind
+## not here is drawn with its still picture: the machines, which have no legs
+## to walk on, and the buildings, which do not move. A sheet is read through
+## the frame table of where it came from -- see `sheet_for`.
+const SHEET_FILES: Dictionary = {
+	"shield": "shield_walk.png",
+	NO_TYPE: "soldier_walk.png",
+}
+
 ## Checkers: a man of each side, and the crown a king wears on top of it.
 const RED_MAN: String = ROOT + "checkers/red_man.png"
 const WHITE_MAN: String = ROOT + "checkers/white_man.png"
@@ -73,6 +82,8 @@ const NOUGHT: String = ROOT + "tictactoe/nought.png"
 
 # Every picture loaded so far, by folder and path. See `texture`.
 static var _kept: Dictionary = {}
+# Every sheet asked for so far, kept the same way and for the same reason.
+static var _sheets: Dictionary = {}
 
 
 ## Where a side's picture of a kind of piece lives. A side beyond the folders
@@ -84,6 +95,55 @@ static func unit_path(faction: int, type_name: String) -> String:
 	return ROOT + "units/%s/%s" % [side, file]
 
 
+## The sheet a side's kind of piece walks with, or null for a kind drawn
+## with its still picture.
+##
+## The table comes with the file: a person's generated sheet is the walk
+## LoRA's 4 by 4, the committed one is the pack's 24 by 8, and reading either
+## through the other's table draws slices of the wrong frames.
+static func sheet_for(faction: int, type_name: String) -> UnitSheet:
+	if not SHEET_FILES.has(type_name):
+		return null
+	var path: String = sheet_path(faction, type_name)
+	var key: String = generated + "|" + path
+	if not _sheets.has(key):
+		_sheets[key] = _usable_sheet(faction, type_name, path)
+	return _sheets[key]
+
+
+## The frame table for the sheet at `path` when it is drawn from `drawn_from`:
+## the pack's when that is the committed file itself, the generator's when it
+## is a person's own.
+static func table_for(path: String, drawn_from: String) -> UnitSheet:
+	return UnitSheet.puny(path) if drawn_from == path else UnitSheet.generated(path)
+
+
+## `sheet` when a picture `size` pixels across divides into its table, and
+## null otherwise, so the unit is drawn with its still picture rather than
+## with slices of the wrong frames. A person's own sheet is the one that can
+## come out the wrong size; the committed ones are held by a test.
+static func sheet_if_it_fits(sheet: UnitSheet, size: Vector2i) -> UnitSheet:
+	return sheet if sheet.fits(size) else null
+
+
+# The sheet to draw, or null for the still picture. A person who generated
+# their own still picture of a kind, and no sheet, sees their picture: the
+# pack's figure would otherwise hide what they made (T31's promise).
+static func _usable_sheet(faction: int, type_name: String, path: String) -> UnitSheet:
+	var still: String = unit_path(faction, type_name)
+	var own_sheet: bool = resolve(path) != path
+	if resolve(still) != still and not own_sheet:
+		return null
+	var sheet: UnitSheet = table_for(path, resolve(path))
+	return sheet_if_it_fits(sheet, Vector2i(texture(path).get_size()))
+
+
+## Where a side's sheet of a kind of piece lives, beside its still picture.
+static func sheet_path(faction: int, type_name: String) -> String:
+	var side: String = SIDES[clampi(faction, 0, SIDES.size() - 1)]
+	return ROOT + "units/%s/%s" % [side, SHEET_FILES[type_name]]
+
+
 ## Every path in this table, so one test can hold that each one is a file.
 static func every_path() -> Array[String]:
 	var paths: Array[String] = []
@@ -91,6 +151,8 @@ static func every_path() -> Array[String]:
 	for faction: int in range(SIDES.size()):
 		for type_name: String in UNIT_FILES:
 			paths.append(unit_path(faction, type_name))
+		for type_name: String in SHEET_FILES:
+			paths.append(sheet_path(faction, type_name))
 	paths.append_array([RED_MAN, WHITE_MAN, CROWN, CROSS, NOUGHT])
 	return paths
 

@@ -25,6 +25,11 @@ required. It is given anyway, because it is owed.
 - **Boardgame Pack v2**, by Kenney (www.kenney.nl): <https://kenney.nl/assets/boardgame-pack>
 - **Game Icons**, by Kenney (www.kenney.nl): <https://kenney.nl/assets/game-icons>
 - **Tiny Battle 1.0**, by Kenney (www.kenney.nl): <https://kenney.nl/assets/tiny-battle>
+- **Puny Characters**, by Shade, on OpenGameArt: <https://opengameart.org/content/puny-characters>,
+  the archive `puny-characters.zip` (sha256
+  971d7b07eea18fb2cce475cd6554a176ebf783bb064dec5a637ba33c7829320e). Its page
+  gives the licence as CC0 and says "No need to give me credit". T33's walking
+  sheets: 32-pixel frames, 24 across and one row per direction of eight.
 
 Each file is the pack's own, byte for byte, renamed to the role it plays. The
 packs were downloaded on 2026-10-14 from the pages above. Nothing was edited:
@@ -60,6 +65,10 @@ lays it over open ground when it draws, rather than a second file doing it.
 | `units/blue/watchtower.png` | Tiny Battle 1.0 | `Tiles/tile_0049.png` | CC0 1.0 | 827407d8d0fdecf6a292a01d72946d2ea3a16e0084bd7b727efb406b9f147ced |
 | `units/blue/workshop.png` | Tiny Battle 1.0 | `Tiles/tile_0047.png` | CC0 1.0 | f2f919bb5b951c5cc2beeb247052f233024d4a946f4a2ab90405af21672e7875 |
 | `units/blue/soldier.png` | Tiny Battle 1.0 | `Tiles/tile_0142.png` | CC0 1.0 | 32f933bec7c2d0e08fe6718c9bfbf0e2b303403e1870688a45cd1ab11c052748 |
+| `units/red/shield_walk.png` | Puny Characters | `Puny-Characters/Warrior-Red.png` | CC0 1.0 | c60c80dcad811b3ef0e0e8e1fa5f0d62e011b3e604f2bb2a78261f2dcae6c712 |
+| `units/blue/shield_walk.png` | Puny Characters | `Puny-Characters/Warrior-Blue.png` | CC0 1.0 | acc8db08577086f1520d74d0806a614833a1f7356ba8a560437fd4c59538cdbc |
+| `units/red/soldier_walk.png` | Puny Characters | `Puny-Characters/Soldier-Red.png` | CC0 1.0 | b9a89aef6607463d9444b701c8b687e70b2499f9c44257da0d48d68e48f6faf4 |
+| `units/blue/soldier_walk.png` | Puny Characters | `Puny-Characters/Soldier-Blue.png` | CC0 1.0 | ddcb515baaf2b5b7a4c569ba23d7490c3e5221bb5e97d760ce67ce9c261a543d |
 | `checkers/red_man.png` | Boardgame Pack v2 | `PNG/Chips/chipRedWhite.png` | CC0 1.0 | 05cefc21baba589d6381d7b3ffa92b8f60307cfdaa3f2287ea69401f20801db0 |
 | `checkers/white_man.png` | Boardgame Pack v2 | `PNG/Chips/chipWhite.png` | CC0 1.0 | 7669b71d23e44cf9f5b1fcb7f08e78c7fdfd4373e38a8e88ab098df156b58a49 |
 | `checkers/crown.png` | Board Game Icons | `PNG/Default (64px)/crown_a.png` | CC0 1.0 | 471bc3b1948d6a72ef272fa82ecb9e53a6728d57fb48029599f44be5226ac0ba |

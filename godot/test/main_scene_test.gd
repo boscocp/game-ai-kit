@@ -201,6 +201,34 @@ func _play_rounds(main: BoardGame, rounds: int) -> void:
 			main.step_decision()
 
 
+# T33: the skirmish board's soldiers walk too, red's step and blue's move.
+func test_a_red_step_is_walked() -> void:
+	var main: BoardGame = _mounted_scene()
+	var view: UnitView = main.get_node("UnitView")
+	var board: BoardView = main.get_node("BoardView")
+	view.set_process(false)
+	var unit: Unit = main._state.unit_by_id(main._selected_id)
+	var start: Vector2i = unit.cell
+	main._click_cell(Vector2i(2, 4))
+
+	view.advance(UnitWalk.SECONDS_PER_CELL / 2.0)
+
+	var halfway: Vector2 = board.centre_of(start).lerp(board.centre_of(Vector2i(2, 4)), 0.5)
+	assert_vector(view.position_of(main._state.unit_by_id(unit.id))).is_equal_approx(halfway, Vector2(0.01, 0.01))
+
+
+func test_a_blue_move_is_walked() -> void:
+	var main: BoardGame = _mounted_scene()
+	var view: UnitView = main.get_node("UnitView")
+	view.set_process(false)
+	main._end_turn()
+	var deciding: int = main._plan.unit_id
+
+	main.step_decision()
+
+	assert_bool(view.is_walking(deciding)).is_true()
+
+
 func _mounted_scene() -> BoardGame:
 	var scene: PackedScene = load("res://game/main.tscn")
 	var main: BoardGame = scene.instantiate()
