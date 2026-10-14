@@ -9,8 +9,13 @@
 ## The screen has to make the decision visible, not just its result -- a unit
 ## stepping backwards looks the same whether a model gave it a 3% chance or
 ## whether it had nowhere else to go. So every blue unit's reason, with the
-## number in it, goes under the status line. That is invariant 13, and the
-## manual check in T6 is whether a person can read it.
+## number in it, goes in the status beside the board. That is invariant 13, and
+## the manual check in T6 is whether a person can read it.
+##
+## The layout is the board in the middle of the window, the status to its left
+## and the legend to its right, all three level with the board's top edge. T8
+## measured the old one: a 384 px board pinned to a corner of a 1280 px window,
+## and the status line it described 600 px away from it.
 class_name BoardGame
 extends Node2D
 
@@ -30,6 +35,10 @@ const AI_FACTION: int = BLUE
 ## The two cells worth taking. Two, because choosing between them is the
 ## capture model's whole job -- with one node there is nothing to predict.
 const NODES: Array[Vector2i] = [Vector2i(10, 1), Vector2i(2, 6)]
+
+## Space between the board and the panels beside it, and between a panel and
+## the edge of the window.
+const GUTTER: float = 24.0
 
 @onready var _board: BoardView = $BoardView
 @onready var _units: UnitView = $UnitView
@@ -57,15 +66,16 @@ func _ready() -> void:
 	_legend.set_entries([
 		[UnitView.FACTION_COLOURS[RED], "red: yours (numbers are ids)"],
 		[UnitView.FACTION_COLOURS[BLUE], "blue: the learned opponent"],
-		[Color.WHITE, "ring: the unit in hand"],
+		[Color.TRANSPARENT, "white ring round a unit: the one in hand"],
 		[PlanView.ROUTE, "blue's next move, not yet played"],
-		[BoardView.SWATCHES[BoardView.REACHABLE.x], "where the unit in hand can step"],
+		[BoardView.REACHABLE, "where the unit in hand can step"],
 		[BoardView.SWATCHES[BoardView.NODE.x], "a node both sides want"],
 		[BoardView.SWATCHES[BoardView.PLAIN.x], "open ground"],
-		[BoardView.SWATCHES[BoardView.ROUGH.x], "rough ground: dear to cross"],
+		[BoardView.SWATCHES[BoardView.ROUGH.x], "rough ground: costs the number on it"],
 		[BoardView.SWATCHES[BoardView.WALL.x], "wall"],
 	] as Array[Array])
 	_state = _build_scenario()
+	_lay_out()
 	# The search goes in from here rather than from inside the policy: a route
 	# is a search, and no addon may depend on another. The game owns both and
 	# is the right place to introduce them.
@@ -115,8 +125,8 @@ func _try_step(cell: Vector2i) -> void:
 	# that rather than a rule they did not break.
 	if not GridGraph.DIRECTIONS.has(cell - unit.cell):
 		_last_refusal = (
-			"that is more than one step away, and this scene moves one cell "
-			+ "at a time -- routes arrive with ai_search in T3"
+			"%s is more than one step away -- you move one cell at a time, " % cell
+			+ "onto a highlighted cell"
 		)
 		_refresh()
 		return
@@ -200,11 +210,17 @@ func _plan_the_next_unit() -> void:
 		_state = _state.end_turn(FACTIONS, POINTS_PER_TURN)
 
 
-# Whoever is to move starts with one of their units in hand, so the first click
-# of a turn does something rather than teaching you that nothing is selected.
+# Red starts its turn with one of its units in hand, so the first click of a
+# turn does something rather than teaching you that nothing is selected.
+#
+# Blue has nothing in hand. Its turn used to ring its first unit and tint that
+# unit's steps, while the status named the unit actually deciding -- so on the
+# second decision the board and the status pointed at different units, and a
+# player read blue's steps as their own.
 func _select_first_unit_of_the_side_to_move() -> void:
 	var mine: Array[Unit] = _state.units_of(_state.current_faction)
-	_selected_id = mine[0].id if not mine.is_empty() else -1
+	var is_yours: bool = _state.current_faction != AI_FACTION
+	_selected_id = mine[0].id if is_yours and not mine.is_empty() else -1
 
 
 func _refresh() -> void:
@@ -229,21 +245,66 @@ func _affordable_steps() -> Array[Vector2i]:
 	return found
 
 
+## The board's top-left corner, the status and the legend, all derived from
+## the board's size and the window the project asks for.
+##
+## The window the project asks for, not `get_viewport_rect()`: headless, the
+## root viewport is 100x100 (measured on the pinned engine), and a layout that
+## depends on where it is run cannot be tested where the tests run.
+func _lay_out() -> void:
+	var window := Vector2(
+		ProjectSettings.get_setting("display/window/size/viewport_width"),
+		ProjectSettings.get_setting("display/window/size/viewport_height"))
+	position = BoardView.offset_to_centre(_state.graph, window)
+	var board := Rect2(position, BoardView.pixel_size(_state.graph))
+	_status.position = Vector2(GUTTER, board.position.y)
+	_status.size = Vector2(board.position.x - 2.0 * GUTTER, window.y - board.position.y - GUTTER)
+	_legend.position = Vector2(board.end.x + GUTTER, board.position.y)
+
+
+# Whose turn, what is in hand, what to do about it -- in the order a first-time
+# player asks -- then what was refused and what blue is thinking.
 func _status_line() -> String:
-	var side: String = "red" if _state.current_faction == RED else "blue"
-	var unit: Unit = _state.unit_by_id(_selected_id)
-	var points: String = "-" if unit == null else str(unit.movement_points)
-	var space: String = "space plays blue's next move" if _plan != null else "space ends the turn"
-	var line: String = "turn %d  ·  %s to move  ·  movement left: %s  ·  %s" % [
-		_state.turn_number, side, points, space,
-	]
+	var lines: Array[String] = [_whose_turn(), _in_hand(), _what_to_do()]
 	if _last_refusal != BoardState.LEGAL:
-		line += "\nrefused: " + _last_refusal
-	for reason: String in _ai_reasons:
-		line += "\n" + reason
+		lines.append("\nrefused: " + _last_refusal)
+	if not _ai_reasons.is_empty():
+		lines.append("\nblue this turn:")
+		for reason: String in _ai_reasons:
+			lines.append(reason)
 	if _plan != null:
-		line += "\nnext, not yet played: " + _plan.reason
-	return line
+		lines.append("\nnext, not yet played: " + _plan.reason)
+	return "\n".join(lines)
+
+
+func _whose_turn() -> String:
+	if _state.current_faction == AI_FACTION:
+		return "turn %d  ·  blue to move: the learned opponent" % _state.turn_number
+	return "turn %d  ·  red to move: you are red" % _state.turn_number
+
+
+func _in_hand() -> String:
+	if _plan != null:
+		return "blue's unit %d is deciding" % _plan.unit_id
+	var unit: Unit = _state.unit_by_id(_selected_id)
+	if unit == null:
+		return "no unit in hand"
+	return "unit %d in hand  ·  movement left: %d" % [unit.id, unit.movement_points]
+
+
+# The next thing to do, for the state the board is actually in: an
+# instruction to click a highlighted cell is wrong when none is highlighted.
+func _what_to_do() -> String:
+	if _plan != null:
+		return "space plays the move drawn as a blue line and box."
+	if _selected_id == -1:
+		return "click one of your units. Space ends your turn."
+	if _affordable_steps().is_empty():
+		return "this unit cannot step anywhere now -- click another of your units, or press space to end your turn."
+	return (
+		"click one of your units, then a highlighted cell next to it. A step "
+		+ "costs the number on the cell it enters, or 1. Space ends your turn."
+	)
 
 
 # Two units a side, a wall to walk around, rough ground to pay for, and two

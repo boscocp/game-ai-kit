@@ -6,7 +6,7 @@
 [ext_resource type="Script" path="res://game/legend.gd" id="9_legend"]
 
 [node name="StealthDemo" type="Node2D"]
-position = Vector2(64, 48)
+position = Vector2(64, 16)
 script = ExtResource("1_demo")
 
 [node name="BoardView" type="TileMapLayer" parent="."]
@@ -19,9 +19,9 @@ script = ExtResource("3_view")
 
 [node name="Status" type="Label" parent="Interface"]
 offset_left = 24.0
-offset_top = 450.0
+offset_top = 604.0
 offset_right = 1256.0
-offset_bottom = 710.0
+offset_bottom = 716.0
 text = "loading"
 
 [node name="Legend" type="Control" parent="Interface"]

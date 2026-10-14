@@ -21,7 +21,9 @@ extends Node2D
 # exactly when the picture was finished.
 const EARLY: Color = Color(0.16, 0.20, 0.34, 0.50)
 const LATE: Color = Color(0.45, 0.78, 0.95, 0.50)
-const FRONTIER: Color = Color(0.95, 0.80, 0.35, 0.90)
+# Pink, not yellow: T8 made mud tan, and a yellow outline on tan vanished on
+# exactly the band the demo is about.
+const FRONTIER: Color = Color(1.0, 0.40, 0.85, 0.95)
 const PATH: Color = Color(1.0, 0.95, 0.85, 1.0)
 const START: Color = Color(0.45, 0.85, 0.45)
 const GOAL: Color = Color(0.95, 0.45, 0.45)

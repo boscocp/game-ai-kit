@@ -7,7 +7,6 @@
 [ext_resource type="Script" path="res://game/plan_view.gd" id="4_plan"]
 
 [node name="Main" type="Node2D"]
-position = Vector2(80, 80)
 script = ExtResource("1_main")
 
 [node name="BoardView" type="TileMapLayer" parent="."]
@@ -22,15 +21,13 @@ script = ExtResource("4_plan")
 [node name="Interface" type="CanvasLayer" parent="."]
 
 [node name="Status" type="Label" parent="Interface"]
-offset_left = 24.0
-offset_top = 620.0
-offset_right = 1256.0
-offset_bottom = 700.0
+offset_right = 300.0
+offset_bottom = 500.0
+theme_override_font_sizes/font_size = 18
 text = "loading"
+autowrap_mode = 3
 
 [node name="Legend" type="Control" parent="Interface"]
-offset_left = 980.0
-offset_top = 40.0
-offset_right = 1270.0
-offset_bottom = 300.0
+offset_right = 300.0
+offset_bottom = 200.0
 script = ExtResource("9_legend")

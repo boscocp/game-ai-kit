@@ -36,21 +36,26 @@ var _to := Vector2i(COLUMNS - 2, ROWS / 2)
 var _chosen: int = 0
 var _revealed: int = 0
 var _result: SearchResult
+# `expansion_counts()` for the current board, worked out when it is built.
+var _counts: String = ""
 
 
 func _ready() -> void:
 	_legend.set_entries([
-		[ExpansionView.NEXT, "expanded next"],
-		[ExpansionView.EARLY, "expanded early"],
-		[ExpansionView.LATE, "expanded late"],
-		[ExpansionView.FRONTIER, "frontier: what it chooses among"],
-		[ExpansionView.PATH, "the route found"],
-		[ExpansionView.START, "start"],
-		[ExpansionView.GOAL, "goal"],
-		[BoardView.SWATCHES[1], "mud: dear to cross"],
-		[BoardView.SWATCHES[2], "wall"],
+		[ExpansionView.NEXT, "white outline: the cell it takes next"],
+		[ExpansionView.FRONTIER, "pink outline: the frontier,"],
+		[Color.TRANSPARENT, "    what it chooses among"],
+		[ExpansionView.EARLY, "dark square: expanded early"],
+		[ExpansionView.LATE, "bright square: expanded late"],
+		[Color.TRANSPARENT, "    (dark to bright is the order)"],
+		[ExpansionView.PATH, "line: the route found"],
+		[ExpansionView.START, "green dot: start"],
+		[ExpansionView.GOAL, "red dot: goal"],
+		[BoardView.SWATCHES[BoardView.ROUGH.x], "mud: costs the number on it"],
+		[BoardView.SWATCHES[BoardView.WALL.x], "wall"],
 	] as Array[Array])
 	_graph = _build_board()
+	_counts = expansion_counts()
 	_board.draw_board(_graph, [] as Array[Vector2i])
 	_choose(0)
 
@@ -159,8 +164,22 @@ func _status_line() -> String:
 	var cost: String = str(_result.cost) if _result.reached else "no route"
 	return (
 		"%s  ·  expanded %d of %d  ·  steps %d  ·  cost %s"
+		+ "\n%s"
 		+ "\n1-4 choose  ·  space steps  ·  enter finishes  ·  R rebuilds"
-	) % [NAMES[_chosen], _revealed, _result.expanded.size(), _result.path.size(), cost]
+	) % [NAMES[_chosen], _revealed, _result.expanded.size(), _result.path.size(), cost, _counts]
+
+
+## What each of the four paid to answer the same question, and what its
+## answer cost -- the comparison the demo exists for, on screen without
+## pressing 1 to 4 and remembering the numbers. Both numbers, because either
+## alone misleads: depth-first expands few cells and finds a dear route.
+func expansion_counts() -> String:
+	var parts: Array[String] = []
+	var all: Array[Search] = searches()
+	for index: int in range(all.size()):
+		var result: SearchResult = all[index].search(_graph, _from, _to)
+		parts.append("%s %d cells, cost %d" % [NAMES[index], result.expanded.size(), result.cost])
+	return "expanded / route cost:  " + "  ·  ".join(parts)
 
 
 # A band of mud across the middle and a wall with one gap. Enough that the four

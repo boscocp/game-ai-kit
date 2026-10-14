@@ -9,8 +9,11 @@
 class_name UnitView
 extends Node2D
 
-const RADIUS: float = 11.0
-const OUTLINE: float = 2.0
+## A third of a tile, so a unit grows with the board instead of shrinking
+## into it when the tiles get bigger.
+const RADIUS: float = BoardView.TILE_PIXELS / 3.0
+const OUTLINE: float = 3.0
+const ID_TEXT_SIZE: int = 18
 
 ## Faction colours, by faction number. A scenario with more sides than this
 ## draws the extras in the last colour rather than crashing -- a missing colour
@@ -48,8 +51,11 @@ func _draw() -> void:
 
 # The id, because every reason on the screen names units by it.
 func _draw_id(centre: Vector2, unit_id: int) -> void:
-	draw_string(ThemeDB.fallback_font, centre + Vector2(-4.0, 5.0), str(unit_id),
-			HORIZONTAL_ALIGNMENT_LEFT, -1.0, 13, Color.WHITE)
+	var words: String = str(unit_id)
+	var width: float = ThemeDB.fallback_font.get_string_size(
+			words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, ID_TEXT_SIZE).x
+	draw_string(ThemeDB.fallback_font, centre + Vector2(-width / 2.0, ID_TEXT_SIZE * 0.35), words,
+			HORIZONTAL_ALIGNMENT_LEFT, -1.0, ID_TEXT_SIZE, Color.WHITE)
 
 
 # The colour of a faction, clamped to the colours there are.
