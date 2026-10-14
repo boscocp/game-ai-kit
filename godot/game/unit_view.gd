@@ -66,9 +66,7 @@ func _draw() -> void:
 func _draw_unit(unit: Unit, centre: Vector2) -> void:
 	var fixed: bool = unit.type != null and not unit.type.mobile
 	var square := Rect2(centre - Vector2(RADIUS, RADIUS), Vector2(RADIUS, RADIUS) * 2.0)
-	var colour: Color = _colour_of(unit.faction)
-	if unit.id in spent:
-		colour = colour.lerp(SPENT_GREY, SPENT_AMOUNT)
+	var colour: Color = colour_for(unit)
 	if fixed:
 		draw_rect(square, colour)
 	else:
@@ -82,6 +80,15 @@ func _draw_unit(unit: Unit, centre: Vector2) -> void:
 		draw_rect(square.grow(OUTLINE), Color.WHITE, false, OUTLINE)
 	else:
 		draw_arc(centre, RADIUS + OUTLINE, 0.0, TAU, 24, Color.WHITE, OUTLINE)
+
+
+## The colour a unit is drawn in: its side's, pulled towards grey once it is
+## spent.
+func colour_for(unit: Unit) -> Color:
+	var colour: Color = _colour_of(unit.faction)
+	if unit.id in spent:
+		colour = colour.lerp(SPENT_GREY, SPENT_AMOUNT)
+	return colour
 
 
 # The type's label when the scene gave one, the id otherwise -- the id because

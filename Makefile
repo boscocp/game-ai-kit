@@ -319,7 +319,7 @@ demo-stealth: ## Cross the hall unseen: arrows walk, shift sprints, space waits,
 	@$(GODOT) --path godot res://game/stealth/stealth.tscn
 
 .PHONY: demo-tactical
-demo-tactical: ## Advance Wars style tactics against a rule-based blue: click to move, 1-5 build, Z undo, space ends the turn
+demo-tactical: ## Advance Wars style tactics against a rule-based blue: click to move, W waits, 1-5 build, Z undo, space ends the turn
 	@$(GODOT) --path godot res://game/tactical/tactical.tscn
 
 # --- shipping --------------------------------------------------------------

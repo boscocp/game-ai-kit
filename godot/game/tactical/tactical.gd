@@ -4,7 +4,7 @@
 ## Red is a person. Click one of your units and everywhere it can reach lights
 ## up; click a lit cell and it walks there and is spent, greyed out until your
 ## next turn, and the next unit that can still move is picked up for you.
-## Click a unit you hold a second time and it waits where it is. With the
+## W has the unit in hand wait where it is. With the
 ## workshop in hand, 1-5 build -- once a turn -- and U buys the forge. Z, or
 ## the button, takes back the last thing you did, as far back as the start of
 ## the turn. Space, or the button, ends it, and asks first while units are
@@ -12,10 +12,12 @@
 ##
 ## Blue is the computer: whichever `BlueController` the scene was given, the
 ## rule-based one until T11 brings a planner. Each of its decisions is drawn
-## before it is played, and space plays it -- the scene is an example in
+## before it is played, and space plays it, or enter plays the rest of the
+## turn -- the scene is an example in
 ## invariant 13's sense, which is why it is `make demo-tactical`.
 ##
-## The game ends when one side takes the other's workshop (`TacticalVictory`).
+## The game ends when one side takes the other's workshop, or in a draw at the
+## round limit (`TacticalVictory`).
 class_name TacticalGame
 extends Node2D
 
@@ -29,9 +31,8 @@ const LABELS: Dictionary = {
 ## What the scene says it is, on screen, before anything else.
 const WHAT_THIS_IS: String = "tactics in the style of Advance Wars: build, cross the river, take the enemy workshop"
 
-## Who plays blue. Every controller the scene can be given, and the ones still
-## to come, so the screen can name both. Set `blue` before the scene enters
-## the tree to hand blue to another one.
+## The controllers still to come, named on screen beside the one playing, so
+## a person knows blue is a slot and not a fixed opponent.
 const CONTROLLERS_TO_COME: String = "the planner comes with T11, the learned policy after T26"
 
 @onready var _board: BoardView = $BoardView
@@ -43,8 +44,12 @@ const CONTROLLERS_TO_COME: String = "the planner comes with T11, the learned pol
 @onready var _end_button: Button = $Interface/EndTurn
 @onready var _undo_button: Button = $Interface/Undo
 
+## The game as it stands. Public so tests can set a scene up directly.
 var state: BoardState
+## Who plays blue. Set it before the scene enters the tree to hand blue to
+## another controller; T11 and T12 play theirs this way.
 var blue: BlueController = RuleBasedBlue.new()
+## `TacticalVictory.NOBODY` while the game is on; then the winner, or `DRAW`.
 var winner: int = TacticalVictory.NOBODY
 var _turn := TacticalTurn.new()
 var _blue_turn: BlueTurn
@@ -86,8 +91,9 @@ func new_game() -> void:
 	_start_red_turn()
 
 
-## A click picks up one of your units, walks the one in hand to a lit cell,
-## or -- on the unit already in hand -- has it wait where it stands.
+## A click picks up one of your units or walks the one in hand to a lit cell.
+## Clicking the unit already in hand does nothing more: the turn starts with
+## one in hand, and a click meant to pick it up must not spend it.
 func click_cell(cell: Vector2i) -> void:
 	if not _reds_turn():
 		return
@@ -95,7 +101,7 @@ func click_cell(cell: Vector2i) -> void:
 	_last_event = ""
 	_confirming_end = false
 	if occupant != null and occupant.faction == state.current_faction:
-		_pick_up_or_wait(occupant)
+		_pick_up(occupant)
 	elif occupant != null:
 		_last_refusal = "%s is %s's %s -- you can pick up only your own pieces" % [
 			cell, TacticalStatus.side_name(occupant.faction), occupant.type.type_name]
@@ -113,13 +119,30 @@ func build(index: int) -> void:
 	_confirming_end = false
 	var kind: UnitType = _types[TacticalRules.BUILDABLE[index]]
 	var workshop: Unit = state.unit_by_id(_selected_id)
-	if workshop != null and _turn.is_spent(workshop.id):
+	if workshop != null and not workshop.type.produces.is_empty() and _turn.is_spent(workshop.id):
 		_refuse("the workshop has already built this turn; Z takes the build back")
 		return
 	var order := ProductionOrder.new(_selected_id, kind, TacticalRules.free_cell_beside(state, workshop, kind))
 	if _act(state.produce(order), state.why_production_refused(order)):
 		_turn.spend(_selected_id)
 		_last_event = "built a %s at %s; it moves next turn" % [kind.type_name, order.cell]
+	_refresh()
+
+
+## The unit in hand waits where it stands, and is spent. Taken back by undo.
+func wait() -> void:
+	if not _reds_turn():
+		return
+	_confirming_end = false
+	var unit: Unit = state.unit_by_id(_selected_id)
+	if unit == null or not unit.id in _turn.unspent(state):
+		_refuse("nothing in hand that can still move")
+		return
+	_turn.remember(state)
+	_turn.spend(unit.id)
+	_last_event = "the %s waits at %s" % [unit.type.type_name, unit.cell]
+	_last_refusal = ""
+	_select_next_unspent()
 	_refresh()
 
 
@@ -140,6 +163,7 @@ func undo() -> void:
 	if not _reds_turn():
 		return
 	_confirming_end = false
+	var spent_before: Array[int] = _turn.spent_ids()
 	var before: BoardState = _turn.undo()
 	if before == null:
 		_refuse("nothing to take back this turn")
@@ -147,9 +171,19 @@ func undo() -> void:
 	state = before
 	_last_refusal = ""
 	_last_event = "taken back"
+	_hold_what_was_taken_back(spent_before)
+	_refresh()
+
+
+# Put back in hand the unit whose action was just taken back, so the next
+# click acts on it; failing that, keep the hand unless its unit is gone.
+func _hold_what_was_taken_back(spent_before: Array[int]) -> void:
+	for unit_id: int in spent_before:
+		if not _turn.is_spent(unit_id) and state.unit_by_id(unit_id) != null:
+			_selected_id = unit_id
+			return
 	if state.unit_by_id(_selected_id) == null:
 		_select_next_unspent()
-	_refresh()
 
 
 ## End red's turn. With units still unspent the first press only asks; the
@@ -180,16 +214,33 @@ func step_decision() -> void:
 		_refresh()
 
 
+## Play blue's turn to its end, every decision still drawn and recorded, and
+## hand the board back to red -- for the many holds a long game brings.
+func play_rest_of_blue_turn() -> void:
+	while _blue_thinking():
+		step_decision()
+	if winner == TacticalVictory.NOBODY and not _reds_turn():
+		step_decision()
+
+
 ## What blue is reasoning with: who is playing it, the decision about to be
 ## played and why, and what it has done this turn -- for
 ## `test/demo_overlays.gd` to check is there.
 func decision_overlay() -> Dictionary:
 	var overlay: Dictionary = {"controller": blue.controller_name(), "to_move": TacticalStatus.side_name(state.current_faction)}
-	if not _reds_turn() and _blue_turn.next != null:
+	if _blue_thinking():
 		overlay["next"] = _described(_blue_turn.next)
 	if not _blue_turn.played.is_empty():
 		overlay["played"] = _blue_turn.played.map(_described)
 	return overlay
+
+
+## True while blue's turn is on and it still has a decision to play -- and
+## only while the game is on, which is what keeps a game that ended at the
+## hand-off from drawing blue's next move over the result.
+func _blue_thinking() -> bool:
+	return (winner == TacticalVictory.NOBODY and state.current_faction == TacticalScenario.BLUE
+		and _blue_turn.next != null)
 
 
 ## True while it is red's turn and the game is still on.
@@ -210,22 +261,19 @@ func _press(keycode: Key) -> void:
 		buy_forge()
 	elif keycode == KEY_Z:
 		undo()
+	elif keycode == KEY_W:
+		wait()
+	elif keycode == KEY_ENTER or keycode == KEY_KP_ENTER:
+		play_rest_of_blue_turn()
 
 
-func _pick_up_or_wait(unit: Unit) -> void:
+func _pick_up(unit: Unit) -> void:
+	_selected_id = unit.id
 	_last_refusal = ""
 	if _turn.is_spent(unit.id) and unit.type.mobile:
 		# Held, so the status describes it, but with nothing lit: a spent unit
 		# has nowhere to go until next turn.
-		_selected_id = unit.id
 		_last_refusal = "this %s has moved this turn; Z takes the move back" % unit.type.type_name
-	elif unit.id == _selected_id and unit.type.mobile and unit.movement_points > 0:
-		_turn.remember(state)
-		_turn.spend(unit.id)
-		_last_event = "the %s waits at %s" % [unit.type.type_name, unit.cell]
-		_select_next_unspent()
-	else:
-		_selected_id = unit.id
 
 
 # Walk the unit in hand along the cheapest route the highlight offered, or,
@@ -317,8 +365,8 @@ func _refresh() -> void:
 		_units.spent = _turn.spent_ids()
 	_board.draw_board(state.graph, reach, [] as Array[Vector2i], _water())
 	_units.show_state(state, _board, _selected_id)
-	_intent.show_decision(null if _reds_turn() else _blue_turn.next, state, _board)
-	_header.text = "%s\nblue is played by %s  ·  %s" % [WHAT_THIS_IS, blue.describe(), CONTROLLERS_TO_COME]
+	_intent.show_decision(_blue_turn.next if _blue_thinking() else null, state, _board)
+	_header.text = "%s\n%s\nblue is played by %s" % [WHAT_THIS_IS, TacticalVictory.rule(), blue.describe()]
 	_end_button.disabled = not _reds_turn()
 	_undo_button.disabled = not (_reds_turn() and _turn.can_undo())
 	_status.text = _status_text()
@@ -328,7 +376,7 @@ func _status_text() -> String:
 	if winner != TacticalVictory.NOBODY:
 		return TacticalVictory.announcement(winner)
 	if not _reds_turn():
-		return TacticalStatus.blue_text(state, _blue_turn, blue)
+		return TacticalStatus.blue_text(state, _blue_turn, blue) + "\n\n" + CONTROLLERS_TO_COME
 	var unit: Unit = state.unit_by_id(_selected_id)
 	var news: String = _last_event
 	if unit == null and _turn.unspent(state).is_empty():

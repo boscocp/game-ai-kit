@@ -13,20 +13,36 @@ extends RefCounted
 
 ## Nobody has won yet.
 const NOBODY: int = -1
+## Nobody won, and the game is over: the round limit came first.
+const DRAW: int = -2
+## Rounds before a game that nobody has won is called a draw. A rule, not a
+## convenience: without it two players who never reach a workshop -- or a
+## blue that cannot -- play for ever, and "a game ends" is not true.
+const ROUND_LIMIT: int = 40
 
 
-## The side that has just taken the enemy workshop, or `NOBODY`. Asked at the
-## start of a turn, of the side about to move.
+## The side that has just taken the enemy workshop, `DRAW` once the round
+## limit is reached, or `NOBODY`. Asked at the start of a turn, of the side
+## about to move -- so taking the workshop on the last turn still counts.
 static func winner(state: BoardState) -> int:
 	var side: int = state.current_faction
 	for workshop: Unit in _enemy_workshops(state, side):
 		if _walker_beside(state, side, workshop.cell):
 			return side
+	if state.turn_number >= ROUND_LIMIT * TacticalScenario.FACTIONS:
+		return DRAW
 	return NOBODY
+
+
+## The rule, as the screen states it before anybody has won.
+static func rule() -> String:
+	return "to win: start your turn with a unit beside the enemy workshop (provisional, until T26 brings combat), or it is a draw after %d rounds" % ROUND_LIMIT
 
 
 ## The words for the end of a game, provisional rule and all.
 static func announcement(winner_side: int) -> String:
+	if winner_side == DRAW:
+		return "a draw: %d rounds, and nobody took a workshop.  R starts again." % ROUND_LIMIT
 	return "%s wins: a %s unit stood beside the enemy workshop at the start of its turn. (Provisional: until T26 brings combat, that is what taking it means.)  R starts again." % [
 		TacticalStatus.side_name(winner_side), TacticalStatus.side_name(winner_side)]
 

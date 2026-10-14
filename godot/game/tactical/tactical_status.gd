@@ -29,7 +29,7 @@ static func blue_text(state: BoardState, turn: BlueTurn, controller: BlueControl
 	var lines: Array[String] = [_headline(state), "blue is thinking with %s" % controller.controller_name()]
 	if turn.next != null:
 		lines.append("\nnext (drawn in pink): unit %d %s" % [turn.next.unit_id, turn.next.reason])
-		lines.append("\nspace plays it")
+		lines.append("\nspace plays it  ·  enter plays the rest of blue's turn")
 	else:
 		lines.append("\nblue has finished its turn. Space hands it back to red")
 	lines.append("\n%d decision(s) played this turn" % turn.played.size())
@@ -75,7 +75,7 @@ static func _what_to_do(state: BoardState, unit: Unit) -> String:
 		return "a %s cannot move. Click another of your pieces." % unit.type.type_name
 	if unit.movement_points == 0:
 		return "this unit has no movement left. Click another of your pieces."
-	return "click a lit cell to walk there, and the unit is spent until your next turn; click the unit again to wait where it is. A step costs the number on the cell, or 1."
+	return "click a lit cell to walk there, and the unit is spent until your next turn; W has it wait where it is. A step costs the number on the cell, or 1."
 
 
 static func _price_list() -> String:

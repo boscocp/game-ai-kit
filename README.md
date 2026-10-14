@@ -96,10 +96,11 @@ change searches again, and a goal walled off is answered "no route".
 as red against the computer as blue, over a river with one bridge. Click a
 unit and everywhere it can reach lights up; click a lit cell and it walks
 there and greys out until your next turn. Z takes back, space ends the turn.
-Blue plays by two rules -- build what beats the most of your pieces, walk at
-the nearest one -- and each of its decisions is drawn in pink, with why,
-before space plays it. Stand a unit beside the enemy workshop at the start
-of your turn to win (provisional, until combat arrives).
+W has a unit wait. Blue plays by two rules -- build what beats the most of
+your pieces, walk every unit at your workshop -- and each of its decisions
+is drawn in pink, with why, before space plays it (enter plays the rest).
+Start your turn with a unit beside the enemy workshop to win (provisional,
+until combat arrives); after 40 rounds it is a draw.
 
 *Recordings of all five are still to be made.*
 

@@ -22,9 +22,9 @@ script = ExtResource("4_intent")
 
 [node name="Header" type="Label" parent="Interface"]
 offset_left = 24.0
-offset_top = 16.0
+offset_top = 12.0
 offset_right = 1256.0
-offset_bottom = 80.0
+offset_bottom = 84.0
 theme_override_font_sizes/font_size = 16
 text = "loading"
 horizontal_alignment = 1

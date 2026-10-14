@@ -31,6 +31,12 @@ play like it. Name the reference only; borrow no art, names or units.
      and the scene says so;
    - it walks each unit at the nearest enemy, or at the bridge.
 
+     **Changed during the wave, pending the owner.** Measured, "the nearest
+     enemy" never wins: it is a bolt tower, and after sixty rounds thirty blue
+     shields stood round it. Blue walks every unit at red's workshop instead
+     (over the bridge, said on screen). It is still a reflex. A 40-round draw
+     was also added, so that a game always ends.
+
    It is labelled on screen as rules, not a plan.
 3. **Blue is a controller chosen from several, not one fixed AI.** Blue is
    whichever `DecisionPolicy` the scene was given, and a key or a menu line
