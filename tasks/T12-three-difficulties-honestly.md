@@ -19,6 +19,10 @@ more than the first. That axis is T25's. This task builds strength alone, and
 leaves the two kinds of knob separate so that a level can be *weak and
 human-looking*, or *strong and inhuman*, on purpose.
 
+**The floor.** T30's rule-based blue is the weakest opponent on the
+tactical board. Every difficulty level here is measured against it as well
+as against the others, so "easy" still means "better than rules".
+
 ## Steps
 
 1. One knob per axis, named and documented: plan horizon in actions, search

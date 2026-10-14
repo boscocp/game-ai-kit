@@ -30,3 +30,6 @@ godot/addons/gdUnit4/
 # invariant 10 forbids. It lives only on the author's machine now, built by
 # `python3 scripts/check_no_employer_refs.py --add-term`. See docs/adr/0005.
 scripts/forbidden-term-hashes.txt
+
+# Reviewer worktrees made by the coding assistant: never part of the repo.
+.claude/worktrees/

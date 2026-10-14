@@ -1,6 +1,6 @@
 # T9 — Art that is not a coloured square
 
-Size: M · Prereqs: T8, T10 · Files: `godot/assets/`, `docs/adr/`
+Size: M · Prereqs: T8, T10, T27, T28, T30 · Files: `godot/assets/`, `docs/adr/`
 
 ## Goal
 
@@ -21,8 +21,16 @@ What the ADR must say: that art is a **development-time** input and does not
 move any lesson above tier 1 — the reader gets the committed PNGs and never
 needs the GPU, which is the same shape as invariant 6, where Python trains and
 GDScript only infers. And that generated art is deferred, not rejected: the
-pipeline is a later task, and this one buys the visual with hours instead of
-weeks.
+pipeline is T31, and this one buys the visual with hours instead of weeks.
+
+**Which games it draws.** After the owner played the examples, they were
+reworked around games people already know. So the art covers:
+- the checkers board and pieces (T27);
+- tic-tac-toe (T28);
+- the tactical game's five unit types, towers, workshop and terrain (T30).
+
+Pick the packs for those. Lay the art out so that T31 can replace any file
+with a generated one without touching code: stable paths, one `TileSet`.
 
 ## Steps
 
@@ -52,11 +60,25 @@ test -f godot/assets/LICENCES.md
 grep -qi "cc0\|creative commons" godot/assets/LICENCES.md
 ```
 
-`check_license.py` must gain a rule, with its planted case: an asset directory
-with files and no `LICENCES.md` naming their origin is a finding.
+`check_license.py` must gain a rule, with its planted case. It covers
+**tracked** files only (`git ls-files`), so that a user's gitignored
+generated art (T31) never trips it:
+- every committed asset file is listed, by path, in `LICENCES.md` with its
+  pack and licence;
+- an asset file listed nowhere is a finding.
+
+Listing files, not directories, is what lets T31 tell a CC0 file from a
+generated one.
+
+The suite must include a test that every path in the game's `TileSet` and
+sprite table exists. Those paths are the stable contract T31 swaps files
+behind.
 
 ## Manual check
 
-The five unit types are distinguishable at a glance, in a screenshot, by
-somebody who does not know which is which. Colour alone does not count — a
-colour-blind reader is a reader.
+In screenshots, by somebody who does not know which is which:
+- the tactical game's five unit types are distinguishable at a glance;
+- the checkers men and kings of both sides are distinguishable at a glance;
+- tic-tac-toe's marks are distinguishable at a glance.
+
+Colour alone does not count: a colour-blind reader is a reader.
