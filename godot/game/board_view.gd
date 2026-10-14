@@ -63,6 +63,11 @@ const GRID: Color = Color(0.0, 0.0, 0.0, 0.30)
 const COST_TEXT: Color = Color(0.12, 0.08, 0.04)
 const COST_TEXT_SIZE: int = 22
 
+## Column numbers above the board and row numbers to its left, because every
+## refusal and every reason on the screen names a cell as `(column, row)`.
+const AXIS_TEXT: Color = Color(0.85, 0.85, 0.85)
+const AXIS_TEXT_SIZE: int = 13
+
 ## What counts as rough ground when choosing a tile. Terrain here is a cost,
 ## not a type, so the view decides where the pictures change.
 const ROUGH_FROM_COST: int = 2
@@ -70,12 +75,14 @@ const ROUGH_FROM_COST: int = 2
 var _graph: GridGraph
 var _reachable: Array[Vector2i] = []
 # Where the overlay is drawn: above the tiles, below whatever the scene puts
-# after this layer -- units, routes.
-var _marks := Node2D.new()
+# after this layer -- units, routes. Made in `_ready`, so a view that never
+# enters the tree leaves nothing behind.
+var _marks: Node2D
 
 
 func _ready() -> void:
 	tile_set = _build_tile_set()
+	_marks = Node2D.new()
 	_marks.name = "Marks"
 	_marks.draw.connect(_draw_marks)
 	add_child(_marks)
@@ -102,7 +109,28 @@ func draw_board(graph: GridGraph, reachable: Array[Vector2i],
 			set_cell(cell, SOURCE_ID, _tile_for(graph.cost_at(cell)))
 	for cell: Vector2i in nodes:
 		set_cell(cell, SOURCE_ID, NODE)
-	_marks.queue_redraw()
+	if _marks != null:
+		_marks.queue_redraw()
+
+
+## Everything the overlay draws, as data: the reachable cells and the cost
+## written on each dear cell. `_draw_marks` draws exactly this and nothing
+## else, so a test can hold what is drawn without a picture -- headless, no
+## picture exists.
+func marks() -> Dictionary:
+	return {"reachable": _reachable.duplicate(), "costs": _costs_to_write()}
+
+
+# Every cell with a cost worth writing, and the words written on it.
+func _costs_to_write() -> Dictionary:
+	var costs: Dictionary = {}
+	if _graph == null:
+		return costs
+	for index: int in range(_graph.width * _graph.height):
+		var cell := Vector2i(index % _graph.width, index / _graph.width)
+		if not cost_label(cell).is_empty():
+			costs[cell] = cost_label(cell)
+	return costs
 
 
 ## The words drawn on a cell: its entry cost when that is more than an
@@ -124,7 +152,8 @@ static func offset_to_centre(graph: GridGraph, area: Vector2) -> Vector2:
 	return ((area - pixel_size(graph)) / 2.0).floor()
 
 
-## How much of the screen a board covers, in pixels.
+## How much of the screen a board covers, in pixels. The scene lays out its
+## panels around this, so it is the one number they all agree on.
 static func pixel_size(graph: GridGraph) -> Vector2:
 	return Vector2(graph.width, graph.height) * TILE_PIXELS
 
@@ -140,18 +169,19 @@ func centre_of(cell: Vector2i) -> Vector2:
 	return map_to_local(cell)
 
 
-# Everything that goes over the tiles, in the order a reader needs it: the
-# reachable tint under the grid, so the grid still separates reachable cells
-# from each other; the costs last, so nothing covers a number.
+# Everything in `marks()`, in the order a reader needs it: the reachable tint
+# under the grid, so the grid still separates reachable cells from each other;
+# the costs last, so nothing on this layer covers a number.
 func _draw_marks() -> void:
 	if _graph == null:
 		return
-	for cell: Vector2i in _reachable:
+	var drawn: Dictionary = marks()
+	for cell: Vector2i in drawn["reachable"]:
 		_draw_reachable(cell)
 	_draw_grid()
-	for y: int in range(_graph.height):
-		for x: int in range(_graph.width):
-			_draw_cost(Vector2i(x, y))
+	_draw_axes()
+	for cell: Vector2i in drawn["costs"]:
+		_draw_centred(drawn["costs"][cell], centre_of(cell), COST_TEXT_SIZE, COST_TEXT)
 
 
 func _draw_reachable(cell: Vector2i) -> void:
@@ -170,15 +200,22 @@ func _draw_grid() -> void:
 		_marks.draw_line(Vector2(0.0, y), Vector2(board_size.x, y), GRID, 1.0)
 
 
-# The cost, centred in its cell.
-func _draw_cost(cell: Vector2i) -> void:
-	var words: String = cost_label(cell)
-	if words.is_empty():
-		return
+# Just outside the board, where they cover nothing.
+func _draw_axes() -> void:
+	var half: float = TILE_PIXELS / 2.0
+	for column: int in range(_graph.width):
+		_draw_centred(str(column), Vector2(column * TILE_PIXELS + half, -10.0), AXIS_TEXT_SIZE, AXIS_TEXT)
+	for row: int in range(_graph.height):
+		_draw_centred(str(row), Vector2(-12.0, row * TILE_PIXELS + half), AXIS_TEXT_SIZE, AXIS_TEXT)
+
+
+# `draw_string` takes the left end of the baseline; a label in a cell wants
+# its middle on a point.
+func _draw_centred(words: String, middle: Vector2, text_size: int, colour: Color) -> void:
 	var font: Font = ThemeDB.fallback_font
-	var width: float = font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, COST_TEXT_SIZE).x
-	var baseline: Vector2 = centre_of(cell) + Vector2(-width / 2.0, COST_TEXT_SIZE * 0.35)
-	_marks.draw_string(font, baseline, words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, COST_TEXT_SIZE, COST_TEXT)
+	var width: float = font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size).x
+	var baseline: Vector2 = middle + Vector2(-width / 2.0, text_size * 0.35)
+	_marks.draw_string(font, baseline, words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size, colour)
 
 
 # Which atlas column a cost is drawn with.

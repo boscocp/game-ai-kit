@@ -66,7 +66,7 @@ func _ready() -> void:
 	_legend.set_entries([
 		[UnitView.FACTION_COLOURS[RED], "red: yours (numbers are ids)"],
 		[UnitView.FACTION_COLOURS[BLUE], "blue: the learned opponent"],
-		[Color.WHITE, "ring: the unit in hand"],
+		[Color.TRANSPARENT, "white ring round a unit: the one in hand"],
 		[PlanView.ROUTE, "blue's next move, not yet played"],
 		[BoardView.REACHABLE, "where the unit in hand can step"],
 		[BoardView.SWATCHES[BoardView.NODE.x], "a node both sides want"],
@@ -125,8 +125,8 @@ func _try_step(cell: Vector2i) -> void:
 	# that rather than a rule they did not break.
 	if not GridGraph.DIRECTIONS.has(cell - unit.cell):
 		_last_refusal = (
-			"that is more than one step away, and this scene moves one cell "
-			+ "at a time -- routes arrive with ai_search in T3"
+			"%s is more than one step away -- you move one cell at a time, " % cell
+			+ "onto a highlighted cell"
 		)
 		_refresh()
 		return
@@ -210,11 +210,17 @@ func _plan_the_next_unit() -> void:
 		_state = _state.end_turn(FACTIONS, POINTS_PER_TURN)
 
 
-# Whoever is to move starts with one of their units in hand, so the first click
-# of a turn does something rather than teaching you that nothing is selected.
+# Red starts its turn with one of its units in hand, so the first click of a
+# turn does something rather than teaching you that nothing is selected.
+#
+# Blue has nothing in hand. Its turn used to ring its first unit and tint that
+# unit's steps, while the status named the unit actually deciding -- so on the
+# second decision the board and the status pointed at different units, and a
+# player read blue's steps as their own.
 func _select_first_unit_of_the_side_to_move() -> void:
 	var mine: Array[Unit] = _state.units_of(_state.current_faction)
-	_selected_id = mine[0].id if not mine.is_empty() else -1
+	var is_yours: bool = _state.current_faction != AI_FACTION
+	_selected_id = mine[0].id if is_yours and not mine.is_empty() else -1
 
 
 func _refresh() -> void:
@@ -263,7 +269,7 @@ func _status_line() -> String:
 	if _last_refusal != BoardState.LEGAL:
 		lines.append("\nrefused: " + _last_refusal)
 	if not _ai_reasons.is_empty():
-		lines.append("\nblue has played:")
+		lines.append("\nblue this turn:")
 		for reason: String in _ai_reasons:
 			lines.append(reason)
 	if _plan != null:
@@ -286,9 +292,15 @@ func _in_hand() -> String:
 	return "unit %d in hand  ·  movement left: %d" % [unit.id, unit.movement_points]
 
 
+# The next thing to do, for the state the board is actually in: an
+# instruction to click a highlighted cell is wrong when none is highlighted.
 func _what_to_do() -> String:
 	if _plan != null:
-		return "space plays the move drawn in light blue."
+		return "space plays the move drawn as a blue line and box."
+	if _selected_id == -1:
+		return "click one of your units. Space ends your turn."
+	if _affordable_steps().is_empty():
+		return "this unit cannot step anywhere now -- click another of your units, or press space to end your turn."
 	return (
 		"click one of your units, then a highlighted cell next to it. A step "
 		+ "costs the number on the cell it enters, or 1. Space ends your turn."

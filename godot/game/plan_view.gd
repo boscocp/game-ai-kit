@@ -9,7 +9,11 @@ extends Node2D
 
 const ROUTE: Color = Color(0.55, 0.75, 1.0, 0.9)
 const ROUTE_WIDTH: float = 3.0
-const TEXT_SIZE: int = 14
+const TEXT_SIZE: int = 18
+## The number is written white on a dark outline, above the deciding unit's
+## cell: light blue at 14 px on green, beside the unit, could not be read.
+const TEXT_OUTLINE: Color = Color(0.05, 0.07, 0.12)
+const TEXT_OUTLINE_SIZE: int = 6
 
 var _plan: LearnedDecision
 var _state: BoardState
@@ -33,13 +37,27 @@ func _draw() -> void:
 	var points := PackedVector2Array([_board.centre_of(unit.cell)])
 	for cell: Vector2i in _plan.move.path:
 		points.append(_board.centre_of(cell))
+	var start: Vector2 = points[0]
 	if points.size() > 1:
-		draw_polyline(points, ROUTE, ROUTE_WIDTH)
+		# From the unit's rim, not its centre, so the line never crosses its id.
+		var line: PackedVector2Array = points.duplicate()
+		line[0] = start + (points[1] - start).normalized() * UnitView.RADIUS
+		draw_polyline(line, ROUTE, ROUTE_WIDTH)
 	var end: Vector2 = points[points.size() - 1]
 	var half: float = BoardView.TILE_PIXELS / 2.0 - 2.0
-	draw_rect(Rect2(end - Vector2(half, half), Vector2(half, half) * 2.0), ROUTE, false, 2.0)
-	draw_string(ThemeDB.fallback_font, points[0] + Vector2(14.0, -14.0), number_of(_plan),
-			HORIZONTAL_ALIGNMENT_LEFT, -1.0, TEXT_SIZE, ROUTE)
+	draw_rect(Rect2(end - Vector2(half, half), Vector2(half, half) * 2.0), ROUTE, false, 3.0)
+	_draw_number(start + Vector2(0.0, -BoardView.TILE_PIXELS / 2.0 - 4.0))
+
+
+# The number, centred over a point, outlined so it reads on any ground.
+func _draw_number(middle: Vector2) -> void:
+	var font: Font = ThemeDB.fallback_font
+	var words: String = number_of(_plan)
+	var width: float = font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, TEXT_SIZE).x
+	var baseline: Vector2 = middle - Vector2(width / 2.0, 0.0)
+	draw_string_outline(font, baseline, words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, TEXT_SIZE,
+			TEXT_OUTLINE_SIZE, TEXT_OUTLINE)
+	draw_string(font, baseline, words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, TEXT_SIZE, Color.WHITE)
 
 
 ## The number a decision was made on, as a person reads it: the chance of

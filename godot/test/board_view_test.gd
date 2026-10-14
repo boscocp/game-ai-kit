@@ -63,10 +63,32 @@ func test_a_cell_dearer_than_a_step_says_what_it_costs() -> void:
 
 	view.draw_board(graph, [] as Array[Vector2i])
 
-	assert_str(view.cost_label(Vector2i(1, 0))).is_equal("3")
-	assert_str(view.cost_label(Vector2i(0, 0))).is_empty()
-	assert_str(view.cost_label(Vector2i(2, 0))).is_empty()
-	assert_str(view.cost_label(Vector2i(9, 9))).is_empty()
+	# `marks()` is what `_draw_marks` draws, entry for entry.
+	assert_dict(view.marks()["costs"]).is_equal({Vector2i(1, 0): "3"})
+
+
+func test_the_reachable_cells_are_drawn_over_the_terrain() -> void:
+	# The other half of the overlay: where the unit in hand may go. With the
+	# highlight no longer a tile, this is the only place it is held.
+	var view: BoardView = _mounted_view()
+	var reachable: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0)]
+
+	view.draw_board(GridGraph.new(3, 1), reachable)
+
+	assert_array(view.marks()["reachable"]).contains_exactly(reachable)
+
+
+func test_the_overlay_is_drawn_on_a_child_above_the_tiles() -> void:
+	# Measured on 4.7.2: a TileMapLayer paints its tiles over its own `_draw`.
+	# The first version of this overlay was drawn there -- correct, and
+	# invisible. Moving it back would pass every test above, so this one
+	# holds where it is drawn.
+	var view: BoardView = _mounted_view()
+	var marks: Node2D = view.get_node("Marks")
+
+	assert_object(marks).is_not_null()
+	assert_bool(marks.draw.is_connected(view._draw_marks)).is_true()
+	assert_bool(view.has_method("_draw")).is_false()
 
 
 func test_the_board_is_centred_in_the_window() -> void:
@@ -89,7 +111,11 @@ func test_the_board_is_centred_in_the_window() -> void:
 
 
 func test_tiles_are_large_enough_to_read_a_number_on() -> void:
-	assert_int(BoardView.TILE_PIXELS).is_greater_equal(48)
+	# The tile set, not only the constant: a number has to fit on a real tile.
+	var view: BoardView = _mounted_view()
+
+	assert_int(view.tile_set.tile_size.x).is_greater_equal(48)
+	assert_int(view.tile_set.tile_size.y).is_greater_equal(48)
 
 
 func test_redrawing_forgets_the_previous_board() -> void:

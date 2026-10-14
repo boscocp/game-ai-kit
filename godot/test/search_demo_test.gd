@@ -114,5 +114,6 @@ func test_the_status_compares_all_four_without_switching() -> void:
 	var results: Array[SearchResult] = _all_results(demo)
 
 	for index: int in range(4):
-		var count: String = "%s %d" % [SearchDemo.NAMES[index], results[index].expanded.size()]
+		var result: SearchResult = results[index]
+		var count: String = "%s %d cells, cost %d" % [SearchDemo.NAMES[index], result.expanded.size(), result.cost]
 		assert_str(_status_of(demo)).contains(count)

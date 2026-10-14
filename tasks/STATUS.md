@@ -27,7 +27,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 
 | # | Task | State | Notes |
 |---|---|---|---|
-| T8 | A board you can read | todo | T2's manual check failed; five measured defects |
+| T8 | A board you can read | done | 48 px, centred, costs written, the highlight an overlay; manual check still a person's |
 | T9 | Art that is not a coloured square | todo | CC0 now, generated later, and an ADR |
 | T10 | The tactical scenario | todo | five units, two towers, terrain that matters |
 | T11 | The planner plays | todo | STRIPS drives a faction; needs T4 |
@@ -71,6 +71,37 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-13 (wave 24)
+
+**What landed.** T8, the five measured defects on the board:
+- 48 px tiles, and the board centred in the window the project asks for;
+- a palette that separates by brightness as well as hue, and grid lines;
+- the cost written on any dear cell;
+- the reachable highlight drawn *over* the terrain;
+- the status beside the board, saying what is in hand and what to do.
+
+On top of that, column and row numbers, so every `(column, row)` in a
+refusal can be found. The search demo shows cells expanded and route cost
+for all four algorithms at once.
+
+**Measured on the way.** A `TileMapLayer` paints its tiles over its own
+`_draw`, and the headless root viewport is 100x100. Both are in
+[docs/godot/drawing-over-tiles.md](../docs/godot/drawing-over-tiles.md),
+with how to take a screenshot when a display exists.
+
+**The review's worst finding.** On blue's turn the board ringed one unit
+while the status named another. Blue now has nothing in hand. The overlay
+could also be deleted with every test green; it is data now, and held. See
+[docs/reviews/24-a-board-you-can-read.md](../docs/reviews/24-a-board-you-can-read.md).
+
+**Left for later, on purpose.**
+- "attacks" with no combat model belongs to T10.
+- The typed positions of the search and stealth scenes, and stealth's 32 px
+  guard markers, belong to T24.
+
+**Not proven.** T8's manual check: hand `make run` and `make demo-search` to
+somebody who has not read the code. The fixes were not re-reviewed.
 
 ## Resuming after 2026-10-13 (wave 23)
 

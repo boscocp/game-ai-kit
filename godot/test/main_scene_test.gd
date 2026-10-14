@@ -46,6 +46,45 @@ func test_on_blue_s_turn_the_status_says_which_unit_decides_and_what_space_does(
 	assert_str(_status_of(main)).contains("space plays the move")
 
 
+func test_on_blue_s_turn_nothing_of_blue_s_is_marked_as_yours() -> void:
+	# The ring and the reachable tint mean "the unit in hand", and blue's turn
+	# used to show them on its first unit while the status named the second.
+	var main: BoardGame = _mounted_scene()
+	var board: BoardView = main.get_node("BoardView")
+	main._end_turn()
+	main.step_decision()
+
+	assert_int(main._selected_id).is_equal(-1)
+	assert_array(board.marks()["reachable"]).is_empty()
+	assert_str(_status_of(main)).contains("blue's unit %d is deciding" % main._plan.unit_id)
+
+
+func test_a_spent_unit_is_not_told_to_click_a_highlighted_cell() -> void:
+	var main: BoardGame = _mounted_scene()
+	# North up column 1 is open ground all the way: one point a step.
+	for row: int in range(3, 3 - main.POINTS_PER_TURN, -1):
+		main._click_cell(Vector2i(1, row))
+
+	assert_str(_status_of(main)).contains("movement left: 0")
+	assert_str(_status_of(main)).contains("cannot step anywhere")
+	assert_str(_status_of(main)).not_contains("then a highlighted cell")
+
+
+func test_the_status_and_legend_sit_beside_the_board_inside_the_window() -> void:
+	# T8 measured the status 600 px from the board it described.
+	var main: BoardGame = _mounted_scene()
+	var window := Rect2(Vector2.ZERO, Vector2(
+		ProjectSettings.get_setting("display/window/size/viewport_width"),
+		ProjectSettings.get_setting("display/window/size/viewport_height")))
+	var board := Rect2(main.position, BoardView.pixel_size(main._state.graph))
+
+	for name: String in ["Interface/Status", "Interface/Legend"]:
+		var panel: Rect2 = (main.get_node(name) as Control).get_rect()
+		assert_bool(window.encloses(panel)).override_failure_message(name + " leaves the window").is_true()
+		assert_bool(panel.intersects(board)).override_failure_message(name + " covers the board").is_false()
+		assert_float(panel.position.y).is_equal(board.position.y)
+
+
 func test_clicking_a_neighbouring_cell_moves_and_spends_a_point() -> void:
 	var main: BoardGame = _mounted_scene()
 

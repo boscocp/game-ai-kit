@@ -43,7 +43,7 @@ var _counts: String = ""
 func _ready() -> void:
 	_legend.set_entries([
 		[ExpansionView.NEXT, "white outline: the cell it takes next"],
-		[ExpansionView.FRONTIER, "yellow outline: the frontier,"],
+		[ExpansionView.FRONTIER, "pink outline: the frontier,"],
 		[Color.TRANSPARENT, "    what it chooses among"],
 		[ExpansionView.EARLY, "dark square: expanded early"],
 		[ExpansionView.LATE, "bright square: expanded late"],
@@ -169,16 +169,17 @@ func _status_line() -> String:
 	) % [NAMES[_chosen], _revealed, _result.expanded.size(), _result.path.size(), cost, _counts]
 
 
-## How many cells each of the four expanded to answer the same question --
-## the comparison the demo exists for, on screen without pressing 1 to 4 and
-## remembering the numbers. The whole argument for A* is one number here.
+## What each of the four paid to answer the same question, and what its
+## answer cost -- the comparison the demo exists for, on screen without
+## pressing 1 to 4 and remembering the numbers. Both numbers, because either
+## alone misleads: depth-first expands few cells and finds a dear route.
 func expansion_counts() -> String:
 	var parts: Array[String] = []
 	var all: Array[Search] = searches()
 	for index: int in range(all.size()):
-		parts.append("%s %d" % [NAMES[index], all[index].search(_graph, _from, _to).expanded.size()])
-	return "cells expanded to reach the goal:  " + "  ·  ".join(parts)
-
+		var result: SearchResult = all[index].search(_graph, _from, _to)
+		parts.append("%s %d cells, cost %d" % [NAMES[index], result.expanded.size(), result.cost])
+	return "expanded / route cost:  " + "  ·  ".join(parts)
 
 
 # A band of mud across the middle and a wall with one gap. Enough that the four
