@@ -197,6 +197,10 @@ func test_the_start_and_the_goal_only_go_to_open_cells() -> void:
 	assert_bool(demo.move_goal(Vector2i(-1, 3))).is_false()  # off the board
 	assert_bool(demo.move_goal(demo._from)).is_false()       # the start
 	assert_that(demo._to).is_equal(goal)
+	var start: Vector2i = demo._from
+	assert_bool(demo.move_start(demo._to)).is_false()       # the goal
+	assert_bool(demo.move_start(Vector2i(8, 0))).is_false()  # a wall
+	assert_that(demo._from).is_equal(start)
 
 
 func test_the_start_and_the_goal_are_never_painted_over() -> void:
@@ -299,7 +303,9 @@ func test_each_promise_fails_on_a_board_that_does_not_keep_it() -> void:
 		WALL_AND_MUD: OPEN_FIELD,   # nothing to go round: every cost is 13
 		MAZE: WALL_AND_MUD,         # the four routes cost different amounts
 		OPEN_FIELD: MAZE,           # in a corridor A* saves little
-		DEPTH_FIRST_TRAP: MAZE,     # one route, so depth-first pays no more
+		# Depth-first pays more here too (51 against 13), but sweeps no more of
+		# the board than Dijkstra: dear, and no trap.
+		DEPTH_FIRST_TRAP: OPEN_FIELD,
 	}
 	for index: int in wrong_board:
 		var results: Array[SearchResult] = _results_on(boards[wrong_board[index]])
@@ -383,3 +389,156 @@ func test_the_numbers_the_concept_page_quotes() -> void:
 	assert_int(field[ASTAR].expanded.size()).is_equal(14)
 	assert_int(field[DIJKSTRA].expanded.size()).is_equal(130)
 	assert_int(trap[DEPTH_FIRST].cost).is_equal(40)
+	# And the first board's, quoted in the README as well.
+	var first: Array[SearchResult] = _results_on(boards[WALL_AND_MUD])
+	assert_int(first[BREADTH_FIRST].cost).is_equal(98)
+	assert_int(first[DIJKSTRA].cost).is_equal(21)
+	assert_int(first[DIJKSTRA].expanded.size()).is_equal(125)
+	assert_int(first[ASTAR].expanded.size()).is_equal(90)
+
+
+
+# --- the mouse, driven through `pointer` (wave 28 review) -------------------
+
+const EMPTY := Vector2i(3, 2)
+
+
+func _press(button: MouseButton, pressed: bool = true) -> InputEventMouseButton:
+	var click := InputEventMouseButton.new()
+	click.button_index = button
+	click.pressed = pressed
+	return click
+
+
+func test_a_left_press_paints_the_brush() -> void:
+	var demo: SearchDemo = _mounted_demo()
+
+	demo.pointer(_press(MOUSE_BUTTON_LEFT), EMPTY)
+
+	assert_bool(demo._graph.is_blocked(EMPTY)).is_true()
+
+
+func test_a_right_press_erases() -> void:
+	var demo: SearchDemo = _mounted_demo()
+	var mud := Vector2i(3, 5)
+
+	demo.pointer(_press(MOUSE_BUTTON_RIGHT), mud)
+
+	assert_int(demo._graph.cost_at(mud)).is_equal(GridGraph.DEFAULT_COST)
+
+
+func test_dragging_with_the_button_down_keeps_painting() -> void:
+	var demo: SearchDemo = _mounted_demo()
+	demo.pointer(_press(MOUSE_BUTTON_LEFT), Vector2i(2, 1))
+
+	demo.pointer(InputEventMouseMotion.new(), Vector2i(2, 2))
+
+	assert_bool(demo._graph.is_blocked(Vector2i(2, 2))).is_true()
+
+
+func test_a_fast_drag_leaves_no_gap() -> void:
+	# A quick stroke reports cells far apart; the wall between them is what
+	# the person drew.
+	var demo: SearchDemo = _mounted_demo()
+	demo.pointer(_press(MOUSE_BUTTON_LEFT), Vector2i(2, 0))
+
+	demo.pointer(InputEventMouseMotion.new(), Vector2i(2, 4))
+
+	for row: int in range(5):
+		assert_bool(demo._graph.is_blocked(Vector2i(2, row))).is_true()
+
+
+func test_letting_go_stops_painting() -> void:
+	var demo: SearchDemo = _mounted_demo()
+	demo.pointer(_press(MOUSE_BUTTON_LEFT), Vector2i(2, 1))
+	demo.pointer(_press(MOUSE_BUTTON_LEFT, false), Vector2i(2, 1))
+
+	demo.pointer(InputEventMouseMotion.new(), Vector2i(4, 1))
+
+	assert_bool(demo._graph.is_blocked(Vector2i(4, 1))).is_false()
+
+
+func test_a_press_on_the_goal_picks_it_up_and_a_drag_carries_it() -> void:
+	var demo: SearchDemo = _mounted_demo()
+	var goal: Vector2i = demo._to
+
+	demo.pointer(_press(MOUSE_BUTTON_LEFT), goal)
+	demo.pointer(InputEventMouseMotion.new(), Vector2i(12, 2))
+
+	assert_that(demo._to).is_equal(Vector2i(12, 2))
+	assert_bool(demo._graph.is_blocked(goal)).is_false()
+
+
+func test_a_press_on_the_start_picks_it_up() -> void:
+	var demo: SearchDemo = _mounted_demo()
+
+	demo.pointer(_press(MOUSE_BUTTON_LEFT), demo._from)
+	demo.pointer(InputEventMouseMotion.new(), Vector2i(2, 2))
+
+	assert_that(demo._from).is_equal(Vector2i(2, 2))
+
+
+# --- the edits the review found unpinned ------------------------------------
+
+func test_the_open_ground_brush_paints_open_ground() -> void:
+	var demo: SearchDemo = _mounted_demo()
+	var mud := Vector2i(3, 5)
+	demo.choose_brush(SearchDemo.Brush.GROUND)
+
+	demo.paint(mud)
+
+	assert_int(demo._graph.cost_at(mud)).is_equal(GridGraph.DEFAULT_COST)
+
+
+func test_one_press_of_b_goes_to_the_next_board() -> void:
+	var demo: SearchDemo = _mounted_demo()
+
+	demo._handle(KEY_B)
+
+	assert_str(demo.board_name()).is_equal("maze")
+
+
+func test_r_after_clearing_rebuilds_the_board_it_started_from() -> void:
+	var demo: SearchDemo = _mounted_demo()
+	demo.load_board(OPEN_FIELD)
+	demo.clear_board()
+
+	demo._handle(KEY_R)
+
+	assert_str(demo.board_name()).is_equal("open field")
+
+
+func test_a_new_board_starts_at_the_usual_price_of_mud() -> void:
+	var demo: SearchDemo = _mounted_demo()
+	demo.change_mud_cost(-3)
+
+	demo._handle(KEY_B)
+	demo.choose_brush(SearchDemo.Brush.MUD)
+	demo.paint(Vector2i(1, 1))
+
+	assert_int(demo._graph.cost_at(Vector2i(1, 1))).is_equal(SearchDemo.MUD)
+
+
+func test_moving_either_dot_marks_the_board_edited() -> void:
+	var demo: SearchDemo = _mounted_demo()
+	demo.move_start(Vector2i(2, 2))
+	assert_str(demo.board_name()).is_equal("wall and mud, edited")
+
+	demo.load_board(WALL_AND_MUD)
+	demo.move_goal(Vector2i(12, 2))
+	assert_str(demo.board_name()).is_equal("wall and mud, edited")
+
+
+func test_a_price_for_mud_on_a_board_without_mud_edits_nothing() -> void:
+	var demo: SearchDemo = _mounted_demo()
+	demo.load_board(OPEN_FIELD)
+
+	demo.change_mud_cost(-1)
+
+	assert_str(demo.board_name()).is_equal("open field")
+
+
+func test_before_any_step_the_frontier_is_the_start() -> void:
+	var demo: SearchDemo = _mounted_demo()
+
+	assert_array(demo.frontier_after(0)).contains_exactly([demo._from])

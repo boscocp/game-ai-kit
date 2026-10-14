@@ -12,7 +12,7 @@
 ## Keys: 1-4 choose the algorithm, space reveals one more expanded cell, enter
 ## reveals the rest. W, M and G choose wall, mud or open ground to paint; - and
 ## = change what mud costs; B steps through the named boards, C clears the
-## board and R rebuilds the one you started from.
+## board and R rebuilds the named board you started from, even after C.
 ##
 ## Stepping does not re-run anything. The search is run once and
 ## `SearchResult.expanded` is replayed a cell at a time, which is exactly what
@@ -42,8 +42,11 @@ enum Holding { NOTHING, START, GOAL, BRUSH, ERASER }
 @onready var _legend: Legend = $Interface/Legend
 
 var _boards: Array[SearchBoard] = SearchBoard.named()
-# Which named board the current one started from; -1 once it is cleared.
+# Which named board the current one started from. C keeps it, so R after C
+# still rebuilds that board rather than the first.
 var _board_index: int = 0
+# True after C, until a named board is loaded again.
+var _blank: bool = false
 var _edited: bool = false
 var _graph: GridGraph
 var _from: Vector2i
@@ -57,6 +60,9 @@ var _all: Array[SearchResult] = []
 var _brush: Brush = Brush.WALL
 var _mud_cost: int = MUD
 var _holding: Holding = Holding.NOTHING
+# The cell the last drag event landed on, so a fast drag paints every cell it
+# passed over and not only the ones the mouse happened to be reported on.
+var _last_dragged := Vector2i(-1, -1)
 
 
 func _ready() -> void:
@@ -77,19 +83,15 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	var click := event as InputEventMouseButton
-	if click != null:
-		_click(click)
-		return
-	if event is InputEventMouseMotion:
-		_drag_to(_cell_under_mouse())
+	if event is InputEventMouseButton or event is InputEventMouseMotion:
+		pointer(event, _cell_under_mouse())
 		return
 	var key := event as InputEventKey
 	if key != null and key.pressed:
 		_handle(key.keycode)
 
 
-# The four searches, in the order the files are meant to be read.
+## The four searches, in the order the files are meant to be read.
 func searches() -> Array[Search]:
 	return [
 		BreadthFirstSearch.new(),
@@ -168,13 +170,14 @@ func load_board(index: int) -> void:
 	_to = board.goal()
 	_mud_cost = MUD
 	_edited = false
+	_blank = false
 	_board_changed()
 
 
 ## Open ground everywhere, with the start and the goal where they were.
 func clear_board() -> void:
 	_graph = GridGraph.new(_graph.width, _graph.height)
-	_board_index = -1
+	_blank = true
 	_edited = false
 	_board_changed()
 
@@ -206,7 +209,9 @@ func change_mud_cost(change: int) -> void:
 	if _mud_cost == old_cost:
 		_refresh()
 		return
-	_reprice(old_cost, _mud_cost)
+	if _reprice(old_cost, _mud_cost) == 0:
+		_refresh()
+		return
 	_edited = true
 	_board_changed()
 
@@ -234,21 +239,26 @@ func move_goal(cell: Vector2i) -> bool:
 
 ## The name of the board on screen, and whether it has been edited.
 func board_name() -> String:
-	var named: String = _boards[_board_index].name if _board_index >= 0 else "blank"
+	var named: String = "blank" if _blank else _boards[_board_index].name
 	return named + (", edited" if _edited else "")
 
 
 ## True when the board on screen still keeps the promise of the named board it
 ## started from. A blank board promises nothing, and keeps it.
 func promise_holds() -> bool:
-	return _board_index < 0 or _boards[_board_index].promise_holds(_all)
+	return _blank or _boards[_board_index].promise_holds(_all)
 
 
-# Every cell that cost `old_cost` costs `new_cost` now.
-func _reprice(old_cost: int, new_cost: int) -> void:
+# Every cell that cost `old_cost` costs `new_cost` now; how many did. Mud of
+# another price is left alone -- but walk the price onto it and the two become
+# one, which no named board can show because all their mud costs 8.
+func _reprice(old_cost: int, new_cost: int) -> int:
+	var changed: int = 0
 	for cell: Vector2i in _cells():
 		if _graph.cost_at(cell) == old_cost:
 			_graph.set_cost(cell, new_cost)
+			changed += 1
+	return changed
 
 
 func _cells() -> Array[Vector2i]:
@@ -292,27 +302,40 @@ func _board_changed() -> void:
 	_choose(_chosen)
 
 
-func _click(click: InputEventMouseButton) -> void:
-	if not click.pressed:
+## What a mouse event does to `cell`, the cell under the pointer. Public, and
+## handed the cell rather than reading the cursor, because headless tests have
+## no cursor: this is the whole of the mouse layer except where the mouse is.
+##
+## A left press picks up the start or the goal when it lands on one, and
+## otherwise starts painting; a right press starts erasing; moving with a
+## button down carries on; letting go drops whatever was held.
+func pointer(event: InputEvent, cell: Vector2i) -> void:
+	var click := event as InputEventMouseButton
+	if click == null:
+		_drag_to(cell)
+	elif not click.pressed:
 		_holding = Holding.NOTHING
-		return
-	var cell: Vector2i = _cell_under_mouse()
-	if click.button_index == MOUSE_BUTTON_RIGHT:
-		_holding = Holding.ERASER
-	elif click.button_index != MOUSE_BUTTON_LEFT:
-		return
-	elif cell == _from:
-		_holding = Holding.START
-	elif cell == _to:
-		_holding = Holding.GOAL
-	else:
-		_holding = Holding.BRUSH
-	_drag_to(cell)
+	elif click.button_index == MOUSE_BUTTON_LEFT or click.button_index == MOUSE_BUTTON_RIGHT:
+		_holding = _picked_up(click.button_index, cell)
+		_last_dragged = cell
+		_drag_to(cell)
 
 
-# What the held button does to the cell under the mouse. Every one of these
-# ignores a cell where nothing would change, so a drag that sits still does
-# not search again on every motion event.
+func _picked_up(button: MouseButton, cell: Vector2i) -> Holding:
+	if button == MOUSE_BUTTON_RIGHT:
+		return Holding.ERASER
+	if cell == _from:
+		return Holding.START
+	if cell == _to:
+		return Holding.GOAL
+	return Holding.BRUSH
+
+
+# What the held button does on the way to `cell`. The dots jump to where the
+# mouse is; the brush and the eraser touch every cell between the last event
+# and this one, so a quick stroke still draws an unbroken wall. Each of these
+# ignores a cell where nothing would change, so a drag that sits still does not
+# search again on every motion event.
 func _drag_to(cell: Vector2i) -> void:
 	match _holding:
 		Holding.START:
@@ -320,9 +343,26 @@ func _drag_to(cell: Vector2i) -> void:
 		Holding.GOAL:
 			move_goal(cell)
 		Holding.BRUSH:
-			paint(cell)
+			_stroke(_last_dragged, cell, _brush_cost())
 		Holding.ERASER:
-			erase(cell)
+			_stroke(_last_dragged, cell, GridGraph.DEFAULT_COST)
+	_last_dragged = cell
+
+
+func _stroke(from: Vector2i, to: Vector2i, cost: int) -> void:
+	for passed: Vector2i in _cells_between(from, to):
+		_set_terrain(passed, cost)
+
+
+# The cells on a straight line from `from` to `to`, both ends included,
+# sampled once per cell of the longer side.
+func _cells_between(from: Vector2i, to: Vector2i) -> Array[Vector2i]:
+	var steps: int = maxi(absi(to.x - from.x), absi(to.y - from.y))
+	var passed: Array[Vector2i] = []
+	for index: int in range(steps + 1):
+		var point: Vector2 = Vector2(from).lerp(Vector2(to), float(index) / maxf(steps, 1.0))
+		passed.append(Vector2i(point.round()))
+	return passed
 
 
 func _cell_under_mouse() -> Vector2i:
@@ -357,7 +397,7 @@ func _handle_edit(keycode: Key) -> void:
 		KEY_C:
 			clear_board()
 		KEY_R:
-			load_board(maxi(_board_index, 0))
+			load_board(_board_index)
 
 
 func _choose(index: int) -> void:
@@ -398,7 +438,7 @@ func expansion_counts() -> String:
 ## been edited, whether it still shows it, so an edit that breaks the lesson
 ## says so rather than leaving the reader to wonder why A* looks no better.
 func promise_line() -> String:
-	if _board_index < 0:
+	if _blank:
 		return "board: blank  ·  paint something and see what each search makes of it"
 	var verdict: String = "it does" if promise_holds() else "not any more"
 	if not _edited:
@@ -421,5 +461,5 @@ func _help_text() -> String:
 		"- and =: mud costs %d" % _mud_cost,
 		"drag a dot to move start or goal",
 		"B next board  ·  C clear",
-		"R rebuilds the board",
+		"R rebuilds the named board",
 	])

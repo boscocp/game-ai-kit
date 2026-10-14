@@ -188,5 +188,10 @@ static func _astar_expands_under_a_quarter(results: Array[SearchResult]) -> bool
 		and results[ASTAR].expanded.size() * 4 < results[DIJKSTRA].expanded.size())
 
 
+# The trap is the sweep, not only the dear route: on an open field depth-first
+# also pays more, but there it expands about what Dijkstra does. Here Dijkstra
+# looks at a handful of cells and depth-first at most of the board.
 static func _depth_first_pays_more(results: Array[SearchResult]) -> bool:
-	return results[DEPTH_FIRST].reached and results[DEPTH_FIRST].cost > results[DIJKSTRA].cost
+	return (results[DEPTH_FIRST].reached
+		and results[DEPTH_FIRST].cost > results[DIJKSTRA].cost
+		and results[DEPTH_FIRST].expanded.size() > 5 * results[DIJKSTRA].expanded.size())
