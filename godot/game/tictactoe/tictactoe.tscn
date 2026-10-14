@@ -1,0 +1,33 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/tictactoe/tictactoe.gd" id="1_tictactoe"]
+[ext_resource type="Script" path="res://game/legend.gd" id="9_legend"]
+
+[node name="TicTacToe" type="Node2D"]
+position = Vector2(80, 80)
+script = ExtResource("1_tictactoe")
+
+[node name="Interface" type="CanvasLayer" parent="."]
+
+[node name="Status" type="Label" parent="Interface"]
+offset_left = 32.0
+offset_top = 630.0
+offset_right = 1256.0
+offset_bottom = 716.0
+theme_override_font_sizes/font_size = 15
+text = "loading"
+
+[node name="Decision" type="Label" parent="Interface"]
+offset_left = 640.0
+offset_top = 226.0
+offset_right = 1270.0
+offset_bottom = 620.0
+theme_override_font_sizes/font_size = 15
+text = "loading"
+
+[node name="Legend" type="Control" parent="Interface"]
+offset_left = 640.0
+offset_top = 30.0
+offset_right = 1270.0
+offset_bottom = 214.0
+script = ExtResource("9_legend")

@@ -1,0 +1,8 @@
+{
+ "description": "A board that is not its own box. O on the top left and X on the bottom right turns, a quarter clockwise, into the box ..O...X.. -- the smallest of its eight turns as text. That box is its own mirror on the other diagonal, so squares 0 and 8, 1 and 5, 3 and 7 are each one move, and only 0, 1, 3 and 4 hold beads. A bead drawn in the box is played on the square of the real board that the turn put there.",
+ "cases": [
+  {"name": "the fourth bead of seven is on box square 3, which is the real board's square 7", "board": "O.......X", "box": "..O...X..", "beads": [2, 1, 0, 1, 3, 0, 0, 0, 0], "draw": 0.5, "move": 7},
+  {"name": "the first bead is on box square 0, the real board's square 6", "board": "O.......X", "box": "..O...X..", "beads": [2, 1, 0, 1, 3, 0, 0, 0, 0], "draw": 0.1, "move": 6},
+  {"name": "the centre is the centre whichever way the board is turned", "board": "O.......X", "box": "..O...X..", "beads": [2, 1, 0, 1, 3, 0, 0, 0, 0], "draw": 0.9, "move": 4}
+ ]
+}

@@ -1,0 +1,9 @@
+{
+ "description": "The empty board: three colours of bead, for a corner, an edge and the centre. The draw is a point along the beads laid out square by square, lowest first, each square's stretch closed at its start and open at its end.",
+ "cases": [
+  {"name": "a draw of 0 takes the first bead", "board": ".........", "box": ".........", "beads": [4, 4, 0, 0, 4, 0, 0, 0, 0], "draw": 0.0, "move": 0},
+  {"name": "halfway along twelve beads is the edge's", "board": ".........", "box": ".........", "beads": [4, 4, 0, 0, 4, 0, 0, 0, 0], "draw": 0.5, "move": 1},
+  {"name": "the last of the beads is the centre's", "board": ".........", "box": ".........", "beads": [4, 4, 0, 0, 4, 0, 0, 0, 0], "draw": 0.99, "move": 4},
+  {"name": "a point on a boundary belongs to the square after it, and an empty square has no stretch at all", "board": ".........", "box": ".........", "beads": [1, 0, 0, 0, 3, 0, 0, 0, 0], "draw": 0.25, "move": 4}
+ ]
+}

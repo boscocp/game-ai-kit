@@ -24,6 +24,7 @@ it:
 |---|---|---|---|
 | `make run` | checkers, you against white | minimax with alpha-beta (`ai_adversarial`) | every move white considered with its value, the one it will play in pink, the line of play it expects, the positions searched and the replies skipped |
 | `make demo-skirmish` | the 12×8 skirmish board | logistic and linear regression (`ai_learning`), A\* routes (`ai_search`) | each blue unit's decision and the probability it was made on |
+| `make demo-tictactoe` | noughts and crosses, you against MENACE | Michie's matchboxes, reinforcement learning trained in Python; minimax as the yardstick | each empty square's beads and chance before the draw, the bead drawn, and (M) what perfect play makes of each square |
 | `make demo-search` | one board, four searches | BFS, DFS, Dijkstra, A\* (`ai_search`) | the expansion order, the frontier, the route |
 | `make demo-stealth` | cross a hall unseen | sight and hearing (`ai_perception`), fuzzy suspicion (`ai_fuzzy`) | each guard's cone, suspicion and state |
 
