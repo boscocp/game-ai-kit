@@ -2,15 +2,24 @@
 ##
 ## This file is the whole of the join between the rules and the search: four
 ## questions answered by `CheckersRules`, and a fifth, how good a position is,
-## answered by `CheckersEvaluation` -- or by the outcome, when the game is over.
-## Swap the evaluation and the search plays differently without changing a
-## line of `ai_adversarial`, which is what T32 does.
+## answered by `CheckersEvaluation` with `weights` -- or by the outcome, when
+## the game is over. Swap the weights and the search plays differently without
+## changing a line of `ai_adversarial`, which is what T32 does.
 class_name CheckersGame
 extends AdversarialGame
 
 ## What a won game is worth. Far above anything the evaluation can return --
 ## twelve kings come to 18 -- so the search never trades a win for material.
 const WIN: float = 1000.0
+
+## The evaluation's weights, fixed when the game is made: T27's hand-written
+## ones unless a scene hands it the learned ones (`CheckersWeights.learned`).
+## To search with others, make another `CheckersGame`; nothing rewrites these.
+var weights: Array[float]
+
+
+func _init(evaluation_weights: Array[float] = CheckersEvaluation.HAND_WEIGHTS) -> void:
+	weights = evaluation_weights
 
 
 ## Red or white: whoever is to move on the board.
@@ -34,7 +43,7 @@ func is_terminal(state: RefCounted) -> bool:
 
 
 ## A win is `WIN`, a loss `-WIN`, a draw 0, and an unfinished game is the
-## hand-written evaluation.
+## evaluation with `weights`.
 func evaluate(state: RefCounted, player: int) -> float:
 	var board := state as CheckersBoard
 	if CheckersRules.is_draw(board):
@@ -42,4 +51,4 @@ func evaluate(state: RefCounted, player: int) -> float:
 	var winner: int = CheckersRules.winner(board)
 	if winner != -1:
 		return WIN if winner == player else -WIN
-	return CheckersEvaluation.score(board, player)
+	return CheckersEvaluation.weighted(board, player, weights)

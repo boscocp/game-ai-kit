@@ -74,3 +74,23 @@ The suite must include:
 Toggle between the two evaluations on the same position. A person should be
 able to name the feature the learned weights value differently, and say
 whether that makes it play better.
+
+## Decided on the way (2026-10-14)
+
+- **The paper was read** (the reprint of IBM Journal 3(3), July 1959) and
+  both caveats above hold. It also gives kings to men as "three to two",
+  T27's 1.5. The concept page quotes it: `docs/concepts/learned-evaluation.md`.
+- **Self-play searches one ply.** Measured on 60 openings: at one ply 46
+  games were decisive, at two 14, at three 11; the rest were drawn with
+  kings circling, and a drawn game has no label. Draws are left out.
+- **The match is published at two depths**, one and two plies, because the
+  answer differs: even at one, lost 3-19-78 at two.
+- **The result is negative, and published as it is.** The fit counts
+  advancement against a man and a king as a third of a man, because in
+  one-ply games that is what went with winning. The comparison is the task;
+  the concept page explains it, and three other ways of making the data
+  (draws as half, depth 2, both) lost at two plies too.
+- **"No better than chance"** is held as a score of at most 0.6 over 100
+  games: 0.5, plus two standard errors.
+- **The game builds a new `CheckersGame` to switch weights** rather than
+  assigning them: assigning another object's weights is N3's update step.

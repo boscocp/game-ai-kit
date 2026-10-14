@@ -11,6 +11,12 @@
 ## expects, looking that many moves ahead. The pink arrow is what it will play,
 ## and the panel spells out the line it expects to follow. Space plays it.
 ## Keys 1 to 6 set how far it looks, and the panel says what that cost.
+##
+## E switches white between two evaluations (T32): the hand-written weights,
+## and weights Python fitted to self-play results. The panel shows, for the
+## position at the end of the expected line, what each count adds to the
+## score under both -- so a person can see which count the learned weights
+## value differently, and whether that makes white play better.
 class_name CheckersExample
 extends Node2D
 
@@ -33,6 +39,9 @@ var _pending: bool = false
 var _hand := CheckersHand.new()
 var _last: CheckersMove = null
 var _message: String = ""
+var _learned: bool = false
+# The position white decided on, which the expected line starts from.
+var _board_before_decision: CheckersBoard
 
 @onready var _view: CheckersView = $CheckersView
 @onready var _status: Label = $Interface/Status
@@ -121,12 +130,45 @@ func decision_overlay() -> Dictionary:
 	if _decision == null:
 		return {}
 	var overlay: Dictionary = {"depth": _decision.depth, "moves": _root_moves(),
-			"positions": _decision.positions, "pruned": _decision.pruned, "pending": _pending}
+			"positions": _decision.positions, "pruned": _decision.pruned, "pending": _pending,
+			"evaluation": evaluation_name(), "why": why()}
 	if _decision.action != null:
 		overlay["chosen"] = (_decision.action as CheckersMove).notation()
 		overlay["value"] = _decision.value
 		overlay["expects"] = _expected.map(_notation_of)
 	return overlay
+
+
+## Search with the learned weights, or with the hand-written ones. With a
+## move on show, white thinks again, so the two choices can be compared on
+## the same position. Without a usable weights file it stays on the hand.
+func use_learned(learned: bool) -> void:
+	_learned = learned and not CheckersWeights.learned().is_empty()
+	_game = CheckersGame.new(CheckersWeights.learned() if _learned else CheckersEvaluation.HAND_WEIGHTS)
+	if _pending:
+		_think()
+	_refresh()
+
+
+## Which evaluation white is searching with, as the panel names it.
+func evaluation_name() -> String:
+	return "learned" if _learned else "hand-written"
+
+
+## Why the chosen move scores as it does: the position at the end of the line
+## white expects, and what each count there adds to the score under each set
+## of weights, white's way round. Empty before white has thought.
+func why() -> Dictionary:
+	if _decision == null or _expected.is_empty():
+		return {}
+	var board: CheckersBoard = _board_before_decision
+	for move: CheckersMove in _expected:
+		board = CheckersRules.play(board, move)
+	var parts: Dictionary = {"counts": CheckersEvaluation.features(board, COMPUTER),
+			"hand": CheckersEvaluation.contributions(board, COMPUTER, CheckersEvaluation.HAND_WEIGHTS)}
+	if not CheckersWeights.learned().is_empty():
+		parts["learned"] = CheckersEvaluation.contributions(board, COMPUTER, CheckersWeights.learned())
+	return parts
 
 
 ## Set how far the computer looks. When it has a move on show, it thinks again
@@ -157,6 +199,8 @@ func _handle_key(keycode: Key) -> void:
 		_play_the_decision()
 	elif keycode == KEY_R:
 		new_game()
+	elif keycode == KEY_E:
+		use_learned(not _learned)
 
 
 func _move_hand_to(square: Vector2i) -> void:
@@ -181,6 +225,7 @@ func _play_the_decision() -> void:
 
 
 func _think() -> void:
+	_board_before_decision = _board
 	_decision = _search.search(_game, _board, depth)
 	_expected = _expected_line()
 	_pending = true
@@ -210,7 +255,7 @@ func _refresh() -> void:
 		return
 	_view.show_position(_board, _marks())
 	_status.text = CheckersPanel.status(_board, _pending, _hand.is_holding(), depth, _message)
-	_panel.text = CheckersPanel.describe(_decision, _expected, _pending)
+	_panel.text = CheckersPanel.describe(_decision, _expected, _pending, evaluation_name(), why())
 
 
 func _marks() -> Dictionary:

@@ -10,11 +10,9 @@ extends RefCounted
 
 ## More moves than this and the panel would run off the window; the rest are
 ## counted instead. The list is sorted best first, so the cut ones are worse.
-const MOST_MOVES_LISTED: int = 5
+const MOST_MOVES_LISTED: int = 4
 
-const WHAT_A_VALUE_MEANS: String = (
-	"value: white's lead at the end of that line, positive good\n"
-	+ "for white -- a man 1, a king 1.5, +0.05 a row a man advanced")
+const WHAT_A_VALUE_MEANS: String = "value: white's lead at the line's end, by these weights (E):"
 
 
 const BEFORE_WHITE_MOVES: String = (
@@ -34,10 +32,12 @@ static func status(board: CheckersBoard, pending: bool, holding: bool, depth: in
 
 
 ## The panel for `decision`, with the line of play it expects. `pending` is
-## true while the move is on show and not yet played.
-static func describe(decision: AdversarialResult, expected: Array[CheckersMove], pending: bool) -> String:
+## true while the move is on show and not yet played; `evaluation` names the
+## weights white searched with, and `why` is `CheckersExample.why()`.
+static func describe(decision: AdversarialResult, expected: Array[CheckersMove], pending: bool,
+		evaluation: String = "hand-written", why: Dictionary = {}) -> String:
 	if decision == null:
-		return BEFORE_WHITE_MOVES + WHAT_A_VALUE_MEANS
+		return BEFORE_WHITE_MOVES + WHAT_A_VALUE_MEANS + "\nwhite searches with the %s weights" % evaluation
 	var lines: PackedStringArray = PackedStringArray()
 	var plies: String = "1 ply" if decision.depth == 1 else "%d plies" % decision.depth
 	lines.append("%s  ·  alpha-beta, %s ahead" % ["WHITE IS ABOUT TO MOVE" if pending else "WHITE'S LAST MOVE", plies])
@@ -48,8 +48,34 @@ static func describe(decision: AdversarialResult, expected: Array[CheckersMove],
 	lines += _expected_lines(expected)
 	lines.append("")
 	lines.append(WHAT_A_VALUE_MEANS)
+	lines += why_lines(evaluation, why)
 	lines += _footnotes(decision)
 	return "\n".join(lines)
+
+
+## The end of the expected line, count by count: how many of each white is
+## ahead by, and what that adds to the score under each set of weights. The
+## column white is searching with is marked. Where the two columns disagree
+## most is the count the learned weights value differently.
+static func why_lines(evaluation: String, why: Dictionary) -> PackedStringArray:
+	if why.is_empty():
+		return PackedStringArray()
+	var searching_with_hand: bool = evaluation == "hand-written"
+	var hand: String = "▶ hand" if searching_with_hand else "hand"
+	var learned_name: String = "learned" if searching_with_hand else "▶ learned"
+	var lines: PackedStringArray = ["%-12s %6s %10s %10s" % ["white ahead", "count", hand, learned_name]]
+	for index: int in range(CheckersEvaluation.FEATURES.size()):
+		lines.append(_why_row(why, index))
+	return lines
+
+
+# One count's row: its name, white's lead in it, and what that adds to the
+# score under each set of weights -- a dash when there is no learned set.
+static func _why_row(why: Dictionary, index: int) -> String:
+	var learned: Array = why.get("learned", [])
+	var learned_part: String = "%+10.2f" % learned[index] if not learned.is_empty() else "%10s" % "-"
+	var count: int = int(why["counts"][index])
+	return "%-12s %+6d %+10.2f %s" % [CheckersEvaluation.FEATURES[index], count, why["hand"][index], learned_part]
 
 
 static func _situation(board: CheckersBoard, pending: bool, holding: bool) -> String:
