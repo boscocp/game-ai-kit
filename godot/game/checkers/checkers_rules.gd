@@ -110,6 +110,8 @@ static func why_refused(board: CheckersBoard, from: Vector2i, to: Vector2i) -> S
 		return "a capture is compulsory: jump over a piece, and finish every jump that follows"
 	if not CheckersBoard.is_dark(to) or board.piece_at(to) != CheckersBoard.EMPTY:
 		return "pieces move only to an empty dark square"
+	if absi(to.x - from.x) != absi(to.y - from.y):
+		return "pieces move only diagonally"
 	if not CheckersBoard.is_king(piece) and signi(to.y - from.y) != CheckersBoard.forward(board.to_move):
 		return "a man moves only forward; it can move back once it is crowned"
 	return "a piece steps one square diagonally"

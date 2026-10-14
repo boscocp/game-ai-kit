@@ -166,22 +166,26 @@ func test_a_side_with_no_legal_move_has_lost() -> void:
 
 
 func test_forty_moves_each_by_kings_alone_without_a_capture_is_a_draw() -> void:
+	# Red is a king up, so the draw scoring 0 is the rule and not the material.
 	var board: CheckersBoard = _board([
 		". R . . . . . .",
 		". . . . . . . .",
 		". . . . . . . .",
 		". . . . . . . .",
-		". . . . . . . .",
+		". . . . . R . .",
 		". . . . . . . .",
 		". . . . . . . .",
 		". . . . . . W .",
 	], CheckersBoard.RED)
 
+	# Forty moves by each side, written out: the constant cannot quietly drift.
+	assert_int(CheckersBoard.QUIET_PLIES_TO_DRAW).is_equal(80)
 	# Each king steps out and back, so nothing but the count changes.
 	var red_squares: Array[Vector2i] = [Vector2i(0, 1), Vector2i(1, 0)]
 	var white_squares: Array[Vector2i] = [Vector2i(7, 6), Vector2i(6, 7)]
-	for ply: int in range(CheckersBoard.QUIET_PLIES_TO_DRAW):
-		assert_bool(CheckersRules.is_draw(board)).is_false()
+	for ply: int in range(80):
+		assert_bool(CheckersRules.is_draw(board)).override_failure_message(
+			"drawn after only %d plies" % ply).is_false()
 		var targets: Array[Vector2i] = red_squares if board.to_move == CheckersBoard.RED else white_squares
 		board = CheckersRules.play(board, _move_to(board, targets[(ply / 2) % 2]))
 
@@ -207,6 +211,121 @@ func test_a_king_moving_counts_towards_the_draw_and_a_man_moving_starts_it_again
 	assert_int(board.quiet_plies).is_equal(51)
 	board = CheckersRules.play(board, _move_of(board, Vector2i(2, 3)))
 	assert_int(board.quiet_plies).is_equal(0)
+
+
+func test_crowning_is_a_man_moving_so_it_starts_the_count_again() -> void:
+	var board: CheckersBoard = _board([
+		". . . . . . . .",
+		". . r . . . . .",
+		". . . . . . . .",
+		". . . . . . . .",
+		". . . . . . . .",
+		". . . . . . . .",
+		". . . . . . . .",
+		". . . . . . W .",
+	], CheckersBoard.RED)
+	board.quiet_plies = 50
+
+	board = CheckersRules.play(board, _move_of(board, Vector2i(2, 1)))
+
+	assert_int(board.quiet_plies).is_equal(0)
+
+
+func test_a_man_captures_forward_only() -> void:
+	# Red's man on d4 has white men ahead of it on c5 and behind it on e3, each
+	# with an empty square beyond. Only the one ahead may be taken.
+	var board: CheckersBoard = _board([
+		". . . . . . . .",
+		". . . . . . . .",
+		". . . . . . . .",
+		". . w . . . . .",
+		". . . r . . . .",
+		". . . . w . . .",
+		". . . . . . . .",
+		". . . . . . . .",
+	], CheckersBoard.RED)
+
+	assert_array(_names(CheckersRules.legal_moves(board))).contains_exactly(["d4xb6"])
+
+
+func test_a_king_captures_backwards_too() -> void:
+	var board: CheckersBoard = _board([
+		". . . . . . . .",
+		". . . . . . . .",
+		". . . . . . . .",
+		". . . . . . . .",
+		". . . R . . . .",
+		". . . . w . . .",
+		". . . . . . . .",
+		". . . . . . . .",
+	], CheckersBoard.RED)
+
+	assert_array(_names(CheckersRules.legal_moves(board))).contains_exactly(["d4xf2"])
+
+
+func test_a_king_s_capture_may_end_on_the_square_it_started_from() -> void:
+	# Four white men round the red king on b4: the jump goes all the way round
+	# and lands back on b4, both ways round, and takes all four.
+	var board: CheckersBoard = _board([
+		". . . . . . . .",
+		". . . . . . . .",
+		". . . . . . . .",
+		". . w . w . . .",
+		". R . . . . . .",
+		". . w . w . . .",
+		". . . . . . . .",
+		". . . . . . W .",
+	], CheckersBoard.RED)
+
+	var moves: Array = CheckersRules.legal_moves(board)
+	assert_array(_names(moves)).contains_exactly(["b4xd6xf4xd2xb4", "b4xd2xf4xd6xb4"])
+	assert_int((moves[0] as CheckersMove).captured.size()).is_equal(4)
+
+
+func test_no_piece_is_jumped_twice_in_one_move() -> void:
+	# A red king and one white man: jumping it back and forth for ever would
+	# be a capture sequence that never ends. It is jumped once.
+	var board: CheckersBoard = _board([
+		". . . . . . . .",
+		". . . . . . . .",
+		". . . . . . . .",
+		". . . . . . . .",
+		". . . R . . . .",
+		". . . . w . . .",
+		". . . . . . . .",
+		"w . . . . . . .",
+	], CheckersBoard.RED)
+
+	for move: CheckersMove in CheckersRules.legal_moves(board):
+		assert_int(move.captured.size()).is_equal(1)
+
+
+func test_the_evaluation_counts_men_kings_and_advancement() -> void:
+	var men: CheckersBoard = _board([
+		". . . . . . . .", ". . . . . . . .", ". . . . . . . .", ". . . . . . . .",
+		". . . . . . . .", ". . . . . . . .", ". . . . . . . .", "r . . . . . . .",
+	], CheckersBoard.RED)
+	var advanced: CheckersBoard = _board([
+		". . . . . . . .", ". r . . . . . .", ". . . . . . . .", ". . . . . . . .",
+		". . . . . . . .", ". . . . . . . .", ". . . . . . . .", ". . . . . . . .",
+	], CheckersBoard.RED)
+	var king: CheckersBoard = _board([
+		". R . . . . . .", ". . . . . . . .", ". . . . . . . .", ". . . . . . . .",
+		". . . . . . . .", ". . . . . . . .", ". . . . . . . .", ". . . . . . . .",
+	], CheckersBoard.RED)
+
+	assert_float(CheckersEvaluation.score(men, CheckersBoard.RED)).is_equal_approx(1.0, 0.0001)
+	assert_float(CheckersEvaluation.score(men, CheckersBoard.WHITE)).is_equal_approx(-1.0, 0.0001)
+	assert_float(CheckersEvaluation.score(advanced, CheckersBoard.RED)).is_equal_approx(1.3, 0.0001)
+	assert_float(CheckersEvaluation.score(king, CheckersBoard.RED)).is_equal_approx(1.5, 0.0001)
+
+
+func test_a_win_is_worth_more_than_any_position_can_score() -> void:
+	# Twelve kings against nothing is the most the evaluation can say. A win
+	# below that would let the search trade a won game for material.
+	var most: float = 12 * CheckersEvaluation.KING
+
+	assert_float(CheckersGame.WIN).is_greater(most)
 
 
 func test_lookahead_avoids_the_capture_that_is_immediately_recaptured() -> void:

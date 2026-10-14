@@ -58,12 +58,14 @@ this repository can capture one. Recording them is a person's job; see the
 manual check in tasks/T7-close-the-slice.md. -->
 
 **Checkers** (`make run`). You are red and move first, against the computer
-as white. Click a piece and the squares it can reach turn green; when a
+as white. Click a piece and the squares it can reach turn green -- a
+multi-jump one hop per click, the pieces it will take crossed out. When a
 capture is compulsory, the pieces that can take are ringed. On white's turn
-the board shows every move it considered, with its value -- white's lead
-after looking that many moves ahead -- and the gold one is what it will
-play. Space plays it. Keys 1–6 set how far it looks, and the panel says how
-many positions that cost and how many moves alpha-beta never had to look at.
+the board shows every move it considered, with its value -- white's lead at
+the end of the line it expects -- and the pink arrow is what it will play.
+The panel lists them best first and spells out that line. Space plays the
+move. Keys 1–6 set how far it looks, and the panel says how many positions
+that cost and how many replies alpha-beta skipped.
 
 **The skirmish** (`make demo-skirmish`). Until T27 this was `make run`. A 12×8 board, a wall down the middle with rough
 ground on either side, and two nodes worth taking. Red is yours: click a unit,

@@ -73,11 +73,12 @@ lands where a red man jumps straight back, and the other is safe:
 
 - **at depth 1** the search sees only its own capture, and both look the
   same: one red man fewer. It takes the first one listed, and loses its man;
-- **at depth 2** it sees red's recapture, and the first capture now loses a
-  man for a man. It takes the safe one.
+- **at depth 2** it sees red's recapture, and the first capture now gives
+  its man straight back. It takes the safe one.
 
-`test/checkers_rules_test.gd` holds exactly this, and checks that depth 1
-gets it wrong. Without that check, the test would also pass for a search
+`test/checkers_rules_test.gd` holds exactly this -- in its position the
+recapture takes white's last man, so the wrong capture loses the game -- and
+checks that depth 1 gets it wrong. Without that check, the test would also pass for a search
 that never looked ahead at all.
 
 ## Alpha-beta: the same answer for less work
@@ -97,13 +98,20 @@ choosing above it will never let play reach it, so the rest of its moves are
 skipped. The answer is exactly minimax's -- same value, same move -- because
 only positions that could not change the answer were skipped.
 
-Two things to notice on the screen:
+Three things to notice on the screen:
 
 - **"≤ -0.10"**: a move alpha-beta cut short. It proved the move no better
   than one it already had, and stopped. The number is an upper bound, not
-  the move's value, and the board says so;
-- **"searched 545 positions; 114 moves cut"**: the cost. Press 1 to 6 and
-  watch it grow by roughly a factor of the branching for every ply.
+  the move's value, and the board says so. A move it searched to the end
+  shows its value even when it lost -- the bound is only where it stopped;
+- **"searched 123 positions; skipped 78 replies"**: the cost. Each skipped
+  reply is a whole branch below it never searched. Press 1 to 6 and watch
+  the positions grow. After red opens a3-b4, white searches 8, 55, 96,
+  254, 737 and 1702 positions at depths 1 to 6: two to three times more per
+  ply, where minimax would pay about eight;
+- **"the line it expects"**: the chosen move and the replies each side would
+  pick, to the depth searched. The value is the evaluation at the end of
+  that line, which is what turns one number into a reason.
 
 ### How much it saves
 
@@ -111,8 +119,26 @@ Minimax visits every position down to the depth: about b^d, where b is the
 moves per position (around 8 in checkers) and d is the depth. Alpha-beta
 visits the same number in the worst case, when the best moves come last.
 With the best moves first it visits about b^(d/2) -- the same cost buys
-**twice the depth**. Measured on this kit's opening position at depth 4:
-minimax visits 1828 positions and alpha-beta 545.
+**twice the depth**. Measured on this kit's opening position, red to move,
+at depth 4: minimax visits 1828 positions and alpha-beta 545, for the same
+move.
+
+## The horizon
+
+The search sees exactly as far as its depth, and nothing beyond. Two things
+follow, and both can be watched in `make run`:
+
+- **Trouble just past the horizon is invisible.** At depth 1 the computer
+  walks into a recapture that depth 2 sees.
+- **A win too far away is invisible too.** With white several kings up and
+  red down to one king, every move looks the same to a search that cannot
+  see the chase end, so white can shuffle a king back and forth. The
+  evaluation counts material and advancement, and none of that changes
+  while kings wander. The 40-move rule then draws a won game, and the status
+  line counts down to it.
+
+Better evaluations -- or deeper searches -- are the cures. T32 fits one from
+games instead of writing it by hand.
 
 ## When not to use either
 

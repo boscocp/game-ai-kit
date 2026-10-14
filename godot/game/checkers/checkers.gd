@@ -2,32 +2,35 @@
 ## alpha-beta, and shows what it is about to play and why before it plays it.
 ##
 ## You are red and move first. Click one of your pieces and the squares it can
-## reach light up; click one of those and the move is made, a multi-jump all
-## at once. When a capture is compulsory the pieces that can take are ringed.
+## reach light up; click one and the piece goes there -- a multi-jump one hop
+## per click, or straight to its last square. When a capture is compulsory the
+## pieces that can take are ringed.
 ##
 ## Then the computer searches, and the board shows every move it considered
-## with the value it worked out for it -- white's material minus red's, after
-## looking that many moves ahead. The gold one is what it will play. Space
-## plays it. Keys 1 to 6 set how far it looks, and the panel says how many
-## positions that cost and how many moves alpha-beta never had to look at.
+## with the value it worked out for it: white's lead at the end of the line it
+## expects, looking that many moves ahead. The pink arrow is what it will play,
+## and the panel spells out the line it expects to follow. Space plays it.
+## Keys 1 to 6 set how far it looks, and the panel says what that cost.
 class_name CheckersExample
 extends Node2D
 
 const COMPUTER: int = CheckersBoard.WHITE
 const PERSON: int = CheckersBoard.RED
-const NOWHERE := Vector2i(-1, -1)
 const MAX_DEPTH: int = 6
 
-## How many plies the computer looks ahead. 4 answers in well under a second
-## on the opening and already sees an exchange coming.
+## How many plies the computer looks ahead. At 4 it answers in about 50 ms at
+## worst and already sees an exchange coming. At 6 it was measured at 360 ms
+## in a game of men and 730 ms with four kings in the open, and the search
+## runs in the frame, so the window stalls for that long on white's turn.
 var depth: int = 4
 
 var _board: CheckersBoard
 var _game := CheckersGame.new()
 var _search := AlphaBetaSearch.new()
 var _decision: AdversarialResult = null
+var _expected: Array[CheckersMove] = []
 var _pending: bool = false
-var _selected: Vector2i = NOWHERE
+var _hand := CheckersHand.new()
 var _last: CheckersMove = null
 var _message: String = ""
 
@@ -42,12 +45,12 @@ func _ready() -> void:
 		[CheckersView.RED_PIECE, "red: you, moving up the board, first"],
 		[CheckersView.WHITE_PIECE, "white: the computer, moving down"],
 		[CheckersView.CROWN, "gold centre: a king, moves both ways"],
-		[CheckersView.MUST_CAPTURE, "orange ring: must capture, and can"],
+		[CheckersView.SELECTED, "yellow ring: the piece in your hand"],
+		[CheckersView.MUST_CAPTURE, "orange ring: must capture; cross: taken"],
 		[CheckersView.TARGET, "green: where the piece in hand can go"],
-		[CheckersView.CONSIDERED, "blue line: a move white considered"],
-		[CheckersView.CHOSEN, "gold line: the move white will play"],
-		[Color.TRANSPARENT, "number: white's lead after that move,"],
-		[Color.TRANSPARENT, "   looking ahead; ≤ means at most"],
+		[CheckersView.LAST_MOVE, "grey squares: the last move played"],
+		[CheckersView.CONSIDERED, "blue arrow: a move white considered"],
+		[CheckersView.CHOSEN, "pink arrow: the move white will play"],
 	] as Array[Array])
 	new_game()
 
@@ -66,23 +69,36 @@ func _unhandled_input(event: InputEvent) -> void:
 func new_game() -> void:
 	_board = CheckersBoard.starting()
 	_decision = null
+	_expected = []
 	_pending = false
-	_selected = NOWHERE
+	_hand.drop()
 	_last = null
 	_message = ""
 	_refresh()
 
 
 ## What a click on `square` means: pick up one of your pieces, or move the one
-## in hand there. A move that is not allowed is refused with the reason.
+## in hand there. A click that does nothing says why.
 func click_square(square: Vector2i) -> void:
-	if _board.to_move != PERSON or CheckersRules.is_over(_board):
+	if CheckersRules.is_over(_board) or not CheckersBoard.is_inside(square):
 		return
 	_message = ""
-	if CheckersBoard.owner_of(_board.piece_at(square)) == PERSON:
-		_pick_up(square)
-	elif _selected != NOWHERE:
-		_try_move(_selected, square)
+	var owner: int = CheckersBoard.owner_of(_board.piece_at(square))
+	if _board.to_move != PERSON:
+		_message = "it is white's turn: space plays the pink move"
+	elif _hand.is_holding() and _hand.targets(_board).has(square):
+		# Before "pick up your own piece": a king's capture can end on the
+		# square it started from, which holds the king itself.
+		_move_hand_to(square)
+	elif owner == PERSON:
+		_hand.pick_up(_board, square)
+		_message = _hand.refusal
+	elif _hand.is_holding():
+		_move_hand_to(square)
+	elif owner == COMPUTER:
+		_message = "that is one of white's pieces: yours are red"
+	else:
+		_message = "click one of your red pieces first"
 	_refresh()
 
 
@@ -100,7 +116,7 @@ func step_decision() -> void:
 
 ## What the computer is reasoning with: every move it considered, with its
 ## value and whether that value is exact or only a bound, the move it chose,
-## and what the search cost.
+## the line it expects to follow, and what the search cost.
 func decision_overlay() -> Dictionary:
 	if _decision == null:
 		return {}
@@ -109,15 +125,8 @@ func decision_overlay() -> Dictionary:
 	if _decision.action != null:
 		overlay["chosen"] = (_decision.action as CheckersMove).notation()
 		overlay["value"] = _decision.value
+		overlay["expects"] = _expected.map(_notation_of)
 	return overlay
-
-
-func _root_moves() -> Array[Dictionary]:
-	var moves: Array[Dictionary] = []
-	for entry: Dictionary in _decision.considered:
-		var move: CheckersMove = entry["action"]
-		moves.append({"move": move.notation(), "value": entry["value"], "exact": entry["exact"]})
-	return moves
 
 
 ## Set how far the computer looks. When it has a move on show, it thinks again
@@ -129,6 +138,18 @@ func set_depth(plies: int) -> void:
 	_refresh()
 
 
+func _root_moves() -> Array[Dictionary]:
+	var moves: Array[Dictionary] = []
+	for entry: Dictionary in _decision.considered:
+		var move: CheckersMove = entry["action"]
+		moves.append({"move": move.notation(), "value": entry["value"], "exact": entry["exact"]})
+	return moves
+
+
+func _notation_of(move: CheckersMove) -> String:
+	return move.notation()
+
+
 func _handle_key(keycode: Key) -> void:
 	if keycode >= KEY_1 and keycode <= KEY_6:
 		set_depth(keycode - KEY_0)
@@ -138,28 +159,17 @@ func _handle_key(keycode: Key) -> void:
 		new_game()
 
 
-func _pick_up(square: Vector2i) -> void:
-	_selected = square
-	if CheckersRules.moves_of(_board, square).is_empty():
-		_message = CheckersRules.why_refused(_board, square, NOWHERE)
-		if _message.begins_with("pieces move only"):
-			_message = "that piece has no move from here"
-
-
-func _try_move(from: Vector2i, to: Vector2i) -> void:
-	# Two capture sequences can end on the same square by different routes.
-	# A click names only the end, so the first such sequence is played.
-	for move: CheckersMove in CheckersRules.moves_of(_board, from):
-		if move.to() == to:
-			_play(move)
-			return
-	_message = CheckersRules.why_refused(_board, from, to)
+func _move_hand_to(square: Vector2i) -> void:
+	var move: CheckersMove = _hand.click(_board, square)
+	_message = _hand.refusal
+	if move != null:
+		_play(move)
 
 
 func _play(move: CheckersMove) -> void:
 	_board = CheckersRules.play(_board, move)
 	_last = move
-	_selected = NOWHERE
+	_hand.drop()
 	_pending = false
 	if _board.to_move == COMPUTER and not CheckersRules.is_over(_board):
 		_think()
@@ -172,23 +182,46 @@ func _play_the_decision() -> void:
 
 func _think() -> void:
 	_decision = _search.search(_game, _board, depth)
+	_expected = _expected_line()
 	_pending = true
+
+
+# The line of play behind the chosen move's value: the chosen move, then the
+# reply each side would pick at the depth that is left. Searching again costs
+# less than the first search -- each is a ply shallower -- and it turns one
+# number into the moves that produce it.
+func _expected_line() -> Array[CheckersMove]:
+	var line: Array[CheckersMove] = []
+	var board: CheckersBoard = _board
+	var move: CheckersMove = _decision.action
+	for plies_left: int in range(depth, 0, -1):
+		if move == null:
+			break
+		line.append(move)
+		board = CheckersRules.play(board, move)
+		if plies_left == 1 or CheckersRules.is_over(board):
+			break
+		move = _search.search(_game, board, plies_left - 1).action
+	return line
 
 
 func _refresh() -> void:
 	if not is_node_ready():
 		return
 	_view.show_position(_board, _marks())
-	_status.text = _status_line()
-	_panel.text = CheckersPanel.describe(_decision, _pending)
+	_status.text = CheckersPanel.status(_board, _pending, _hand.is_holding(), depth, _message)
+	_panel.text = CheckersPanel.describe(_decision, _expected, _pending)
 
 
 func _marks() -> Dictionary:
-	var marks: Dictionary = {"selected": _selected, "last": _last}
-	if _board.to_move == PERSON and CheckersRules.must_capture(_board):
+	var marks: Dictionary = {"last": _last}
+	if _board.to_move == PERSON and CheckersRules.must_capture(_board) and not _hand.is_holding():
 		marks["must_capture"] = _pieces_that_can_capture()
-	if _selected != NOWHERE:
-		marks["targets"] = CheckersRules.moves_of(_board, _selected).map(_end_of)
+	if _hand.is_holding():
+		marks["selected"] = _hand.route[0]
+		marks["route"] = _hand.route
+		marks["targets"] = _hand.targets(_board)
+		marks["paths"] = _hand.candidates(_board)
 	if _pending:
 		marks["considered"] = _decision.considered.map(_considered_mark)
 	return marks
@@ -202,25 +235,6 @@ func _pieces_that_can_capture() -> Array[Vector2i]:
 	return takers
 
 
-func _end_of(move: CheckersMove) -> Vector2i:
-	return move.to()
-
-
 func _considered_mark(entry: Dictionary) -> Dictionary:
 	var chosen: bool = entry["action"] == _decision.action
 	return {"move": entry["action"], "value": entry["value"], "exact": entry["exact"], "chosen": chosen}
-
-
-func _status_line() -> String:
-	var keys: String = "1-6 how far white looks (now %d)  ·  R new game" % depth
-	if CheckersRules.is_draw(_board):
-		return "drawn: forty moves each with no capture and no man moved  ·  " + keys
-	if CheckersRules.is_over(_board):
-		var won: bool = CheckersRules.winner(_board) == PERSON
-		return ("you win: white cannot move" if won else "white wins: you cannot move") + "  ·  " + keys
-	if _pending:
-		return "white will play the gold move  ·  space plays it  ·  " + keys
-	var line: String = "your move: click a red piece, then a green square  ·  " + keys
-	if CheckersRules.must_capture(_board):
-		line = "you must capture: click a ringed piece  ·  " + keys
-	return line + ("\n" + _message if _message != "" else "")

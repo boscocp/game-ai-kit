@@ -5,8 +5,9 @@
 ## * **pieces**: a man is worth 1;
 ## * **kings**: a king is worth 1.5, because it moves both ways;
 ## * **advancement**: a man is worth 0.05 more for each row it has advanced,
-##   because it is that much nearer to being crowned. Seven rows earn 0.35,
-##   less than a man, so advancing never pays for losing a piece.
+##   because it is that much nearer to being crowned. A man is crowned on
+##   its seventh row, so six rows, 0.30, is the most it earns -- less than a
+##   man, so advancing never pays for losing a piece.
 ##
 ## The score is the player's total minus the opponent's, so 0 is level, +1 is
 ## a man up. It is deliberately short and deliberately naive: T32 replaces it

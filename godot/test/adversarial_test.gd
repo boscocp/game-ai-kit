@@ -2,9 +2,9 @@
 # the shortcut changes the work and nothing else.
 #
 # Two kinds of position. The book's own tree first, whose answer is printed in
-# Russell & Norvig (figure 5.2: the root is worth 3, and alpha-beta never
-# looks at two of the leaves), so the search is held to a number somebody
-# else worked out. Then real checkers positions, from a fixed seed, which is
+# Russell & Norvig (figure 5.2 gives the tree, worth 3 at the root; figure 5.5
+# traces alpha-beta over it, never looking at two of the leaves), so the search
+# is held to a number somebody else worked out. Then real checkers positions, from a fixed seed, which is
 # where a bug that only shows with captures and kings would hide.
 extends GdUnitTestSuite
 
@@ -14,15 +14,16 @@ const DEPTH: int = 4
 
 
 func test_the_book_tree_is_worth_3_to_both_searches() -> void:
-	var game := TreeGame.new()
+	var game := TreeGame.new(TreeGame.BOOK)
 
 	var minimax: AdversarialResult = MinimaxSearch.new().search(game, game.root(), 2)
 	var alpha_beta: AdversarialResult = AlphaBetaSearch.new().search(game, game.root(), 2)
 
 	assert_float(minimax.value).is_equal(3.0)
 	assert_float(alpha_beta.value).is_equal(3.0)
-	assert_str(str(minimax.action)).is_equal("a1")
-	assert_str(str(alpha_beta.action)).is_equal("a1")
+	# a1, the first of MAX's three moves.
+	assert_int(minimax.action).is_equal(0)
+	assert_int(alpha_beta.action).is_equal(0)
 
 
 func test_on_the_book_tree_alpha_beta_skips_the_two_leaves_the_book_skips() -> void:
@@ -31,7 +32,7 @@ func test_on_the_book_tree_alpha_beta_skips_the_two_leaves_the_book_skips() -> v
 	# already makes a2 worse than the 3 in hand. Under a3 it has to look at all
 	# three: 14 and 5 do not settle it, and the cut on the last leaf skips
 	# nothing.
-	var game := TreeGame.new()
+	var game := TreeGame.new(TreeGame.BOOK)
 
 	assert_int(MinimaxSearch.new().search(game, game.root(), 2).positions).is_equal(13)
 	var alpha_beta: AdversarialResult = AlphaBetaSearch.new().search(game, game.root(), 2)
@@ -39,14 +40,41 @@ func test_on_the_book_tree_alpha_beta_skips_the_two_leaves_the_book_skips() -> v
 	assert_int(alpha_beta.pruned).is_equal(2)
 
 
+func test_a_cut_at_a_max_position_is_counted_too() -> void:
+	# The book's tree only cuts at MIN positions. One ply deeper: under MIN's
+	# first reply, MAX's first leaf, 6, already settles it; under the second,
+	# MAX's first leaf, 7, is more than the 6 MIN has in hand, so MIN will
+	# never go there and the 4 and the 5 beside it are skipped.
+	var game := TreeGame.new([[[5.0, 6.0], [7.0, 4.0, 5.0]], [[3.0]]])
+
+	var alpha_beta: AdversarialResult = AlphaBetaSearch.new().search(game, game.root(), 3)
+
+	assert_float(alpha_beta.value).is_equal(6.0)
+	assert_int(alpha_beta.pruned).is_equal(2)
+	assert_int(alpha_beta.positions).is_equal(10)
+	assert_int(MinimaxSearch.new().search(game, game.root(), 3).positions).is_equal(12)
+
+
 func test_a_pruned_root_move_is_marked_as_a_bound_and_not_a_value() -> void:
-	var game := TreeGame.new()
+	var game := TreeGame.new(TreeGame.BOOK)
 
 	var alpha_beta: AdversarialResult = AlphaBetaSearch.new().search(game, game.root(), 2)
 
+	# a2 is cut after its first leaf, so 2 is only "at most 2". a3 is looked
+	# at to its last leaf, so its 2 is exact even though it is no better.
 	var exact: Array = alpha_beta.considered.map(func(entry: Dictionary) -> bool: return entry["exact"])
-	assert_array(exact).is_equal([true, false, false])
+	assert_array(exact).is_equal([true, false, true])
 	assert_float(alpha_beta.considered[1]["value"]).is_equal(2.0)
+
+
+func test_at_depth_one_nothing_is_cut_so_every_root_value_is_exact() -> void:
+	# Every child of the root is a leaf: there is nothing below it to skip,
+	# and a value marked "at most" there would be a lie the board then draws.
+	var found: AdversarialResult = AlphaBetaSearch.new().search(CheckersGame.new(), CheckersBoard.starting(), 1)
+
+	assert_int(found.pruned).is_equal(0)
+	for entry: Dictionary in found.considered:
+		assert_bool(entry["exact"]).is_true()
 
 
 func test_minimax_and_alpha_beta_agree_on_value_and_move_over_many_positions() -> void:
@@ -126,40 +154,50 @@ func _positions() -> Array[CheckersBoard]:
 	return found
 
 
-## Figure 5.2 of Russell & Norvig: MAX chooses among a1, a2, a3; MIN then
-## chooses among three leaves under each. A state is the list of moves made.
+## A game tree written out as nested lists: a list is a position whose moves
+## are its indexes, a number is a finished game worth that much to MAX. MAX
+## moves at the root and the players alternate. A state is the moves made.
 class TreeGame extends AdversarialGame:
-	const LEAVES: Dictionary = {
-		"a1": [3.0, 12.0, 8.0], "a2": [2.0, 4.0, 6.0], "a3": [14.0, 5.0, 2.0],
-	}
+	## Figure 5.2 of Russell & Norvig: MAX chooses among a1, a2, a3, and MIN
+	## among three leaves under each.
+	const BOOK: Array = [[3.0, 12.0, 8.0], [2.0, 4.0, 6.0], [14.0, 5.0, 2.0]]
+
+	var tree: Array = []
+
+	func _init(written: Array) -> void:
+		tree = written
 
 	## The empty history.
 	func root() -> RefCounted:
 		return History.new([])
 
-	## MAX at the root, MIN below it.
+	## MAX at the root, MIN below it, and so on.
 	func to_move(state: RefCounted) -> int:
 		return (state as History).moves.size() % 2
 
-	## Three moves at each of the first two levels.
+	## One move per branch under this position.
 	func actions(state: RefCounted) -> Array:
-		var moves: Array = (state as History).moves
-		if moves.is_empty():
-			return ["a1", "a2", "a3"]
-		return [0, 1, 2] if moves.size() == 1 else []
+		var here: Variant = _node(state)
+		return range((here as Array).size()) if here is Array else []
 
 	## The history with one more move.
 	func result(state: RefCounted, action: Variant) -> RefCounted:
 		return History.new((state as History).moves + [action])
 
-	## Over after two moves.
+	## Over at a number.
 	func is_terminal(state: RefCounted) -> bool:
-		return (state as History).moves.size() == 2
+		return not (_node(state) is Array)
 
 	## The leaf's number, for MAX; never asked for anything but a leaf here.
 	func evaluate(state: RefCounted, _player: int) -> float:
-		var moves: Array = (state as History).moves
-		return LEAVES[moves[0]][moves[1]] if moves.size() == 2 else 0.0
+		var here: Variant = _node(state)
+		return 0.0 if here is Array else float(here)
+
+	func _node(state: RefCounted) -> Variant:
+		var here: Variant = tree
+		for move: int in (state as History).moves:
+			here = here[move]
+		return here
 
 
 ## The moves made so far, which is all a state of the tree is.

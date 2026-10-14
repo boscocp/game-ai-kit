@@ -15,22 +15,23 @@ script = ExtResource("2_view")
 
 [node name="Status" type="Label" parent="Interface"]
 offset_left = 32.0
-offset_top = 660.0
+offset_top = 646.0
 offset_right = 1256.0
 offset_bottom = 716.0
+theme_override_font_sizes/font_size = 14
 text = "loading"
 
 [node name="Decision" type="Label" parent="Interface"]
 offset_left = 680.0
-offset_top = 230.0
+offset_top = 222.0
 offset_right = 1270.0
-offset_bottom = 650.0
-theme_override_font_sizes/font_size = 15
+offset_bottom = 636.0
+theme_override_font_sizes/font_size = 14
 text = "loading"
 
 [node name="Legend" type="Control" parent="Interface"]
 offset_left = 680.0
-offset_top = 36.0
+offset_top = 30.0
 offset_right = 1270.0
-offset_bottom = 220.0
+offset_bottom = 212.0
 script = ExtResource("9_legend")

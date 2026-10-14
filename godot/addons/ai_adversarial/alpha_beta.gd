@@ -28,6 +28,8 @@
 class_name AlphaBetaSearch
 extends RefCounted
 
+# The search's state while it runs, as in `MinimaxSearch`, and one count
+# more: the moves a cut left unlooked-at.
 var _game: AdversarialGame
 var _player: int = 0
 var _depth_limit: int = 0
@@ -40,7 +42,8 @@ var _pruned: int = 0
 ##
 ## The root is MAX-VALUE written out, as in `MinimaxSearch`. Each root move is
 ## searched with the `alpha` the earlier ones earned, so a move that cannot
-## beat them comes back as a bound rather than an exact value, and is marked so.
+## beat them may come back as a bound rather than an exact value, and is
+## marked so.
 func search(game: AdversarialGame, state: RefCounted, depth: int) -> AdversarialResult:
 	_game = game
 	_player = game.to_move(state)
@@ -52,10 +55,15 @@ func search(game: AdversarialGame, state: RefCounted, depth: int) -> Adversarial
 	found.value = -INF
 	var alpha: float = -INF
 	for action: Variant in game.actions(state):
+		var pruned_before: int = _pruned
 		var value: float = _min_value(game.result(state, action), alpha, INF, 1)
-		# A value at or below `alpha` may be a bound: the search below proved
-		# the move no better than one already seen, and stopped.
-		found.considered.append({"action": action, "value": value, "exact": value > alpha})
+		# Above `alpha` the value is exact: the window is (alpha, +inf), and
+		# a value inside it is the minimax value. At or below `alpha` it is a
+		# bound when the search below cut something: it proved the move no
+		# better than one already seen, and stopped. With nothing cut it
+		# looked at everything, and is exact all the same.
+		var exact: bool = value > alpha or _pruned == pruned_before
+		found.considered.append({"action": action, "value": value, "exact": exact})
 		if value > found.value:
 			found.value = value
 			found.action = action
