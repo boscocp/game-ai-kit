@@ -46,8 +46,43 @@ So:
   committed.
 - It is tier 3 in the README's table: optional, like a local LLM.
 
+## Which model: researched, then measured
+
+Researched on 2026-10-13 for the owner's machine: an RTX 5070 with 12 GB of
+VRAM (Blackwell, compute 12.0), 30 GB of RAM, and 131 GB free on the large
+disk. The licences were checked on each model's own page that day. The VRAM
+figures are the pages' claims, and secondary sources disagree with them.
+
+| model | licence (model page) | size | VRAM claim | for this kit |
+|---|---|---|---|---|
+| FLUX.2 [klein] 4B, with the `Limbicnation/pixel-art-lora` LoRA | Apache 2.0, and the LoRA Apache 2.0 | 4B, 4 steps | "~13 GB", over 12, so fp8 or offload | first candidate: 512x512 RGBA sprites with transparent backgrounds, built with Godot in mind; reference images help keep one style across a set |
+| Z-Image-Turbo (Tongyi-MAI) | Apache 2.0 | 6B, 8 steps | "16G consumer devices", so fp8 or quantised | second candidate: strong illustration and prompt adherence; pixel-art LoRAs exist |
+| Qwen-Image-2512 | Apache 2.0 | 20B, ~50 steps | not stated; GGUF Q4 only, and slow | the strongest open model overall by its authors' blind test; its strength (text in images) is not what sprites need |
+| FLUX.2 dev, FLUX.2 [klein] 9B | non-commercial | | | excluded: the examples are published in the repository |
+| SDXL | OpenRAIL++, with use restrictions | | 6-8 GB | fallback: lightest, most LoRAs, an older generation's quality |
+
+Three caveats travel with the table:
+- That the LoRA's training images are CC0 is its author's claim. The card
+  gives two sizes for that dataset (500 and 1,010 images). Record it as a
+  claim, not as checked.
+- The model pages are the source for the licences. Recheck them when this
+  task starts: a licence can change between versions.
+- These models move fast. If this task starts months after 2026-10-13,
+  redo the research before the bake-off.
+
+**The choice is measured, not read.** The first step is a bake-off on the
+owner's machine:
+- the same five prompts the kit needs (a unit, a tower, a terrain tile, a
+  checkers piece, the board);
+- the two candidates, with peak VRAM and seconds per image recorded;
+- the owner picks by eye.
+
+The winner becomes the default, pinned by revision and SHA. The table, the
+measurements and the pick go in the ADR.
+
 ## Steps
 
+0. **The bake-off above**, with its numbers committed to the ADR.
 1. **An ADR, with the trade-off written out**: in the repository and
    fenced, rather than a separate repository or no generator at all.
 2. **`make artgen-bootstrap`** creates an isolated environment under the
