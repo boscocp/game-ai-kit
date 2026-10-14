@@ -11,6 +11,7 @@ it lives in has to agree:
     docs/concepts/   concept   730 days   why A* is optimal with an admissible heuristic
     docs/godot/      practice  182 days   how to wire the addon into a TileMapLayer
     docs/local-llm/  tool       91 days   num_ctx, model names, VRAM
+    docs/howto/      tool       91 days   which image model, its VRAM, how long a run takes
 
 Every page carries a block right under its title:
 
@@ -61,7 +62,7 @@ HALF_LIFE_DAYS = {"concept": 730, "practice": 182, "tool": 91}
 
 # Which layer each folder holds. A page in the wrong folder is a page whose
 # reader cannot tell how much to trust it.
-FOLDER_LAYER = {"concepts": "concept", "godot": "practice", "local-llm": "tool"}
+FOLDER_LAYER = {"concepts": "concept", "godot": "practice", "local-llm": "tool", "howto": "tool"}
 
 # Folders under docs/ that are dated records rather than living pages, and so
 # carry no half-life: an ADR is amended in place, a review and a wave note are
@@ -253,6 +254,12 @@ def self_test() -> int:
         # Planted: a tool-layer page sitting in the practice folder.
         expect("layer/folder mismatch",
                quiet(docs_with(root, "mismatch", "godot", page_text(half_life="tool"))), 1)
+        # Planted: a how-to, whose model names and timings rot quarterly,
+        # claiming to last as long as practice.
+        expect("a how-to declaring practice",
+               quiet(docs_with(root, "howto-practice", "howto", page_text(half_life="practice"))), 1)
+        expect("a how-to declaring tool",
+               quiet(docs_with(root, "howto-tool", "howto", page_text(half_life="tool"))), 0)
 
         # Planted: past its half-life. 2026-04-01 + 182 days = 2026-09-30.
         expect("expired page",

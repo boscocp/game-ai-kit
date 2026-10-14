@@ -84,6 +84,14 @@ whether it fits. The first step, on the owner's machine:
   tile, a checkers piece, the board) with klein 4B and the LoRA;
 - record peak VRAM and seconds per image, in fp8 and with CPU offload,
   since the page's own "~13 GB" is over the card's 12.
+- **a 12-frame walk cycle of one unit** (added by the owner on 2026-10-14,
+  from a designer's advice: frame-to-frame consistency is where general
+  image models fail most, and a low pixel density may hide it). Two ways,
+  both recorded: one image asking for the whole sheet, and twelve images each
+  given the previous frame as a reference. The owner judges the strip and a
+  looping GIF; no command can. Nothing in the kit animates units yet, so this
+  is evidence for the ADR, not a feature. If it is good, animating units is
+  a task of its own.
 
 **Z-Image-Turbo is the reserve**, the owner's choice too. Fall back to it if
 neither setting fits in 12 GB, or if the owner looks at the five sprites and

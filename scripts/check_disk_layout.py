@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail if the Godot toolchain writes anything to the small disk.
+"""Fail if the Godot toolchain, or the art generator's model, writes to the small disk.
 
 The rule
 --------
@@ -17,6 +17,11 @@ directory is not editor data. The second mechanism, XDG_DATA_HOME, covers it.
 
 Two mechanisms means two ways to silently regress, so both are asserted here
 rather than trusted.
+
+The art generator (T31) has the same trap, larger: a 17 GB model that Hugging
+Face, torch and Triton would all cache under ~/.cache by default. scripts/artgen
+points every one of them at the toolchain directory, and the paths below say
+where they would land if it stopped.
 
 Exit codes
 ----------
@@ -50,6 +55,14 @@ LEAK_PATHS = (
     # engine has more than three places to write.
     ".local/state/godot",
     ".godot",
+    # The art generator's model and kernel caches, where they land without
+    # scripts/artgen. ~/.cache/pip and ~/.nv are not listed: on the owner's
+    # machine other software already keeps caches there, so their presence
+    # says nothing about this repository. That pip and the driver honour
+    # PIP_CACHE_DIR and CUDA_CACHE_PATH was measured instead, by mtime.
+    ".cache/huggingface",
+    ".cache/torch",
+    ".triton",
 )
 
 DEFAULT_TOOLCHAIN = "/mnt/games/gamedev/toolchain"
@@ -143,6 +156,12 @@ def self_test() -> int:
         dirty_home = root / "dirty-home"
         (dirty_home / ".local/share/godot/app_userdata/game-ai-kit").mkdir(parents=True)
         expect("leaked user:// dir", quiet(repo_off_home, good_toolchain, dirty_home), 1)
+
+        # Planted: the generator run without its wrapper, fetching a model
+        # into Hugging Face's default cache.
+        model_home = root / "model-home"
+        (model_home / ".cache/huggingface/hub/models--some--model").mkdir(parents=True)
+        expect("a model cache under home", quiet(repo_off_home, good_toolchain, model_home), 1)
 
         # Planted: someone removed the self-contained marker.
         no_marker = root / "no-marker"

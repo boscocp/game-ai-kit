@@ -341,6 +341,28 @@ demo-stealth: import ## Cross the hall unseen: arrows walk, shift sprints, space
 demo-tactical: import ## Advance Wars style tactics against a rule-based blue: click to move, W waits, 1-5 build, Z undo, space ends the turn
 	@$(GODOT) --path godot res://game/tactical/tactical.tscn
 
+# --- your own art (T31: optional, tier 3, needs a GPU) ----------------------
+#
+# Fenced off from everything above: `make check` never reaches it, and nothing
+# in python/ or godot/ names it. Without a GPU, keep the CC0 art -- the game
+# loses nothing. See docs/howto/generate-art.md.
+
+.PHONY: artgen-bootstrap
+artgen-bootstrap: ## Create the art generator's environment and fetch its model (about 24 GB, large disk)
+	@scripts/artgen bootstrap
+	@$(MAKE) --no-print-directory lint-disk-layout
+
+.PHONY: artgen
+artgen: ## Generate your own art into godot/assets/generated/ (gitignored): STYLE=chibi, ONLY="units/red/ram.png ..."
+	@scripts/artgen make $(if $(STYLE),--style $(STYLE)) $(if $(ONLY),--only $(ONLY))
+	@$(MAKE) --no-print-directory import
+	@$(MAKE) --no-print-directory lint-disk-layout
+
+.PHONY: artgen-clean
+artgen-clean: ## Delete your generated art; the game is back on the CC0 set
+	@rm -rf godot/assets/generated
+	@$(MAKE) --no-print-directory import
+
 # --- shipping --------------------------------------------------------------
 
 .PHONY: release

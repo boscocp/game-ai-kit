@@ -1,0 +1,272 @@
+{
+  "comment": "The source of every generated picture: one entry per picture the game draws, at the path Art names below res://assets/. `make artgen` writes each to godot/assets/generated/<path>, which git ignores. The PNGs are this file's output, and `examples` names the few that are committed, under godot/assets/generated-examples/.",
+  "styles": {
+    "pixel": {
+      "prefix": "pixel art, 16-bit, ",
+      "sprite": ", game sprite, isolated on a plain flat white background",
+      "tile": ", seamless game texture filling the whole square, no border, no background"
+    },
+    "chibi": {
+      "prefix": "pixel art, chibi, cute, bright colours, ",
+      "sprite": ", game sprite, isolated on a plain flat white background",
+      "tile": ", seamless game texture filling the whole square, no border, no background"
+    }
+  },
+  "default_style": "pixel",
+  "settings": {
+    "size": 512,
+    "steps": 4,
+    "guidance": 1.0,
+    "negative": "",
+    "negative_comment": "FLUX.2 klein is distilled to run at guidance 1.0, where a negative prompt has no effect; the field is kept so a model that uses one can."
+  },
+  "post": {
+    "sprite": "the background, flood-filled from the corners, becomes transparent; the picture is cropped to what remains and padded square; then reduced to `pixels` square and `colours` colours",
+    "tile": "the picture is reduced to `pixels` square and `colours` colours, and stays opaque"
+  },
+  "assets": [
+    {
+      "path": "units/red/runner.png",
+      "kind": "sprite",
+      "prompt": "a small fast armoured scout truck with big wheels, painted red, side view facing right, single object, centred",
+      "seed": 1001,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/red/shield.png",
+      "kind": "sprite",
+      "prompt": "a foot soldier carrying a large tower shield and a short spear, painted red, side view facing right, single object, centred",
+      "seed": 1002,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/red/mortar.png",
+      "kind": "sprite",
+      "prompt": "a small mortar artillery cannon on two wheels, barrel angled up, painted red, side view facing right, single object, centred",
+      "seed": 1003,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/red/wader.png",
+      "kind": "sprite",
+      "prompt": "a small amphibious landing boat with a flat hull, painted red, side view facing right, single object, centred",
+      "seed": 1004,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/red/ram.png",
+      "kind": "sprite",
+      "prompt": "a heavy battering ram on wheels with an iron head and a wooden roof, painted red, side view facing right, single object, centred",
+      "seed": 1005,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/red/bolt_tower.png",
+      "kind": "sprite",
+      "prompt": "a defensive stone tower with a crossbow on top, painted red, side view facing right, single object, centred",
+      "seed": 1006,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/red/watchtower.png",
+      "kind": "sprite",
+      "prompt": "a tall wooden lookout watchtower on stilts, painted red, side view facing right, single object, centred",
+      "seed": 1007,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/red/workshop.png",
+      "kind": "sprite",
+      "prompt": "a small factory workshop building with a chimney and a gear sign, painted red, side view facing right, single object, centred",
+      "seed": 1008,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/red/soldier.png",
+      "kind": "sprite",
+      "prompt": "a foot soldier with a rifle and a helmet, painted red, side view facing right, single object, centred",
+      "seed": 1009,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/blue/runner.png",
+      "kind": "sprite",
+      "prompt": "a small fast armoured scout truck with big wheels, painted blue, side view facing right, single object, centred",
+      "seed": 1001,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/blue/shield.png",
+      "kind": "sprite",
+      "prompt": "a foot soldier carrying a large tower shield and a short spear, painted blue, side view facing right, single object, centred",
+      "seed": 1002,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/blue/mortar.png",
+      "kind": "sprite",
+      "prompt": "a small mortar artillery cannon on two wheels, barrel angled up, painted blue, side view facing right, single object, centred",
+      "seed": 1003,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/blue/wader.png",
+      "kind": "sprite",
+      "prompt": "a small amphibious landing boat with a flat hull, painted blue, side view facing right, single object, centred",
+      "seed": 1004,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/blue/ram.png",
+      "kind": "sprite",
+      "prompt": "a heavy battering ram on wheels with an iron head and a wooden roof, painted blue, side view facing right, single object, centred",
+      "seed": 1005,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/blue/bolt_tower.png",
+      "kind": "sprite",
+      "prompt": "a defensive stone tower with a crossbow on top, painted blue, side view facing right, single object, centred",
+      "seed": 1006,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/blue/watchtower.png",
+      "kind": "sprite",
+      "prompt": "a tall wooden lookout watchtower on stilts, painted blue, side view facing right, single object, centred",
+      "seed": 1007,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/blue/workshop.png",
+      "kind": "sprite",
+      "prompt": "a small factory workshop building with a chimney and a gear sign, painted blue, side view facing right, single object, centred",
+      "seed": 1008,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "units/blue/soldier.png",
+      "kind": "sprite",
+      "prompt": "a foot soldier with a rifle and a helmet, painted blue, side view facing right, single object, centred",
+      "seed": 1009,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "terrain/plain.png",
+      "kind": "tile",
+      "prompt": "a seamless square tile of short green grass, top-down view, flat, no objects",
+      "seed": 1019,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "terrain/rough.png",
+      "kind": "tile",
+      "prompt": "a seamless square tile of wet brown mud with puddles, top-down view, flat",
+      "seed": 1020,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "terrain/trees.png",
+      "kind": "sprite",
+      "prompt": "two small round pine trees seen from above, single object, centred",
+      "seed": 1021,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "terrain/wall.png",
+      "kind": "sprite",
+      "prompt": "a large grey boulder rock seen from above, single object, centred",
+      "seed": 1022,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "terrain/water.png",
+      "kind": "tile",
+      "prompt": "a seamless square tile of calm blue water with small ripples, top-down view, flat",
+      "seed": 1023,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "terrain/bridge.png",
+      "kind": "tile",
+      "prompt": "a seamless square tile of wooden bridge planks running left to right, top-down view, flat",
+      "seed": 1024,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "terrain/node.png",
+      "kind": "sprite",
+      "prompt": "a small flag on a pole planted in the ground, single object, centred",
+      "seed": 1025,
+      "pixels": 32,
+      "colours": 24
+    },
+    {
+      "path": "checkers/red_man.png",
+      "kind": "sprite",
+      "prompt": "a flat round red draughts checker piece seen from directly above, a thick disc with a raised rim, single object, centred",
+      "seed": 1026,
+      "pixels": 64,
+      "colours": 16
+    },
+    {
+      "path": "checkers/white_man.png",
+      "kind": "sprite",
+      "prompt": "a flat round ivory white draughts checker piece seen from directly above, a thick disc with a raised rim, single object, centred",
+      "seed": 1027,
+      "pixels": 64,
+      "colours": 16
+    },
+    {
+      "path": "checkers/crown.png",
+      "kind": "sprite",
+      "prompt": "a simple golden king's crown icon, single object, centred",
+      "seed": 1028,
+      "pixels": 64,
+      "colours": 16
+    },
+    {
+      "path": "tictactoe/cross.png",
+      "kind": "sprite",
+      "prompt": "a bold white letter X mark, thick strokes, single object, centred",
+      "seed": 1029,
+      "pixels": 64,
+      "colours": 16
+    },
+    {
+      "path": "tictactoe/nought.png",
+      "kind": "sprite",
+      "prompt": "a bold white ring, the letter O, thick stroke, single object, centred",
+      "seed": 1030,
+      "pixels": 64,
+      "colours": 16
+    }
+  ],
+  "examples": [],
+  "styles_comment": "A style is a shared prefix, and a suffix by kind. Not 'transparent background', as the LoRA's card suggests: measured, the model then paints the grey checkerboard that stands for transparency, which no background removal can tell from the picture. A plain white background floods away cleanly.",
+  "seeds_comment": "A kind's red and blue pictures share a seed, so the two sides get the same design in two colours; with a seed each they came out as two different machines."
+}

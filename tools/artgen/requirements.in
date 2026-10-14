@@ -1,0 +1,14 @@
+# What the generator imports, and nothing else. `lock.sh` resolves this into
+# requirements.lock, every package pinned with its sha256, and bootstrap
+# installs only from the lock.
+#
+# torch is the CUDA 12.8 build: it is the first with kernels for Blackwell
+# (compute 12.0), the owner's RTX 5070, and it runs on older cards too.
+torch==2.11.0+cu128
+diffusers==0.41.0
+transformers
+accelerate
+peft
+safetensors
+huggingface_hub
+pillow
