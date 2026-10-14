@@ -123,7 +123,58 @@ func test_a_side_beyond_the_folders_draws_in_the_last_one() -> void:
 
 func test_a_unit_with_no_type_is_drawn_as_the_soldier() -> void:
 	var unit := Unit.new(1, TacticalScenario.RED, Vector2i.ZERO, 10, 3)
-	assert_object(UnitView.picture_for(unit)).is_same(Art.texture(Art.unit_path(TacticalScenario.RED, Art.NO_TYPE)))
+	assert_object(UnitView.picture_for(unit)).is_same(Art.texture(Art.sheet_path(TacticalScenario.RED, Art.NO_TYPE)))
+
+
+# --- sheets (T33) ------------------------------------------------------------
+
+# A sheet whose size does not divide into its table draws slices of two
+# frames, or of nothing, and headless nobody would see it.
+func test_every_sheet_art_names_is_a_picture_that_divides_into_its_frame_table() -> void:
+	for faction: int in range(Art.SIDES.size()):
+		for type_name: String in Art.SHEET_FILES:
+			var sheet: UnitSheet = Art.sheet_for(faction, type_name)
+			var size := Vector2i(Art.texture(sheet.path).get_size())
+			assert_bool(sheet.fits(size)).override_failure_message("%s is %s" % [sheet.path, size]).is_true()
+
+
+# The check above is only worth something if it can say no.
+func test_a_sheet_that_does_not_divide_into_its_table_does_not_fit() -> void:
+	var pack: UnitSheet = UnitSheet.puny("planted")
+	assert_bool(pack.fits(Vector2i(768, 256))).is_true()
+	assert_bool(pack.fits(Vector2i(760, 256))).is_false()    # not whole frames
+	assert_bool(pack.fits(Vector2i(64, 256))).is_false()     # a walk column missing
+	assert_bool(pack.fits(Vector2i(768, 64))).is_false()     # a facing's row missing
+	assert_bool(UnitSheet.generated("planted").fits(Vector2i(128, 128))).is_true()
+	var overhanging := UnitSheet.new("planted", 32, Rect2i(20, 0, 16, 16), {Vector2i.DOWN: 0}, [0] as Array[int], 0)
+	assert_bool(overhanging.fits(Vector2i(64, 64))).is_false()   # the figure's square leaves its frame
+
+
+# The pack's sheet and a generated one are laid out differently, so each is
+# read through its own table.
+func test_a_generated_sheet_is_read_through_the_generator_s_table() -> void:
+	var path: String = Art.sheet_path(TacticalScenario.RED, TacticalRules.SHIELD)
+	var own: String = "res://assets/generated/units/red/shield_walk.png"
+	assert_int(Art.table_for(path, path).walk.size()).is_equal(UnitSheet.puny(path).walk.size())
+	assert_that(Art.table_for(path, path).rows).is_equal(UnitSheet.puny(path).rows)
+	assert_that(Art.table_for(path, own).rows).is_equal(UnitSheet.generated(path).rows)
+	assert_that(Art.table_for(path, own).figure).is_equal(UnitSheet.generated(path).figure)
+
+
+# Only figures on legs walk: the machines and the buildings keep their still
+# pictures (T33 step 4).
+func test_only_the_kinds_on_legs_have_a_sheet() -> void:
+	for type_name: String in Art.UNIT_FILES:
+		var has_sheet: bool = Art.sheet_for(TacticalScenario.RED, type_name) != null
+		assert_bool(has_sheet).override_failure_message(type_name).is_equal(type_name in [TacticalRules.SHIELD, Art.NO_TYPE])
+
+
+# A side's sheet is its own, as its still pictures are.
+func test_each_side_has_its_own_sheet() -> void:
+	for type_name: String in Art.SHEET_FILES:
+		var red: Image = Art.texture(Art.sheet_path(TacticalScenario.RED, type_name)).get_image()
+		var blue: Image = Art.texture(Art.sheet_path(TacticalScenario.BLUE, type_name)).get_image()
+		assert_bool(red.get_data() == blue.get_data()).override_failure_message(type_name).is_false()
 
 
 func _assert_every_kind_apart(faction: int) -> void:

@@ -67,3 +67,21 @@ The suite must include:
 The owner plays `make demo-tactical` with walking units and says whether it
 reads better than still pictures. Animation is exactly what a headless run
 cannot see.
+
+## Decided on the way (2026-10-14)
+
+- **The pack is Puny Characters** (Shade, OpenGameArt, CC0): a red and a
+  blue copy of the same figure, walking in eight directions on 32-pixel
+  frames. `Warrior` is the shield, `Soldier` the skirmish soldier. Ninja
+  Adventure, also CC0, was looked at first: its download page could not be
+  fetched by a script, and its author's repository has no red figure.
+- **Figures march on the spot at rest**, as Advance Wars' do, and stand
+  still once spent. The task asked only for a walk; the march is what makes
+  "a different frame at two different times" true of a unit not moving.
+- **The machines bob in code**, two frames while rolling and none at rest.
+  No art was drawn for them.
+- **Generated sheets are not committed.** The LoRA's training data is CC BY
+  4.0, and the question of attribution is left open (ADR 0014).
+- The skirmish board's soldiers walk too: they are figures with a sheet,
+  and leaving their moves as jumps beside the tactical board's walks would
+  have been two rules for one view.

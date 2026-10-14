@@ -133,6 +133,7 @@ func _try_step(cell: Vector2i) -> void:
 		_last_refusal = refusal
 		_refresh()
 		return
+	_units.walk(unit.id, unit.cell, path)
 	_state = _state.apply(move)
 	_last_refusal = ""
 	_refresh()
@@ -184,6 +185,8 @@ func _play_the_plan() -> void:
 	_played.append(_plan)
 	var next: BoardState = _state.apply(_plan.move)
 	if next != null:
+		var walker: Unit = _state.unit_by_id(_plan.unit_id)
+		_units.walk(walker.id, walker.cell, _plan.move.path)
 		_state = next
 	_plan_the_next_unit()
 

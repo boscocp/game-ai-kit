@@ -4,7 +4,7 @@
 half_life: tool
 verified_on: 2026-10-14
 tier: 3
-source: https://huggingface.co/Tongyi-MAI/Z-Image-Turbo ; https://huggingface.co/black-forest-labs/FLUX.2-klein-4B ; https://huggingface.co/Limbicnation/pixel-art-lora ; https://huggingface.co/docs/diffusers/main/en/api/pipelines/z_image
+source: https://huggingface.co/Tongyi-MAI/Z-Image-Turbo ; https://huggingface.co/black-forest-labs/FLUX.2-klein-4B ; https://huggingface.co/Limbicnation/pixel-art-lora ; https://huggingface.co/black-forest-labs/FLUX.2-klein-base-4B ; https://huggingface.co/svntax-dev/pixel_spritesheet_4walk_small_lora_v1 ; https://huggingface.co/docs/diffusers/main/en/api/pipelines/z_image
 invalidated_if: a model in tools/artgen/model.json is re-published, diffusers renames a pipeline, or a run's time or VRAM on the named GPU moves by more than a third
 teaches: none
 -->
@@ -51,6 +51,29 @@ the model, style, seed and prompt behind each one.
 - **The other model**: `make artgen MODEL=klein` (fetch it first with
   `scripts/artgen bootstrap klein`). Faster, more detailed, less legible at
   32 pixels.
+
+## Walking sheets
+
+The figures on legs -- the shield and the skirmish soldier -- walk from a
+sheet (T33, [ADR 0014](../adr/0014-units-walk-from-a-sheet-and-a-clock.md)).
+The manifest's four `walk` entries make sheets of your own with a model of
+their own: FLUX.2 klein base and a LoRA trained on one 4 by 4 grid, three
+walking frames and a pose for each of four facings.
+
+```bash
+scripts/artgen bootstrap klein-walk    # once: klein base, the walk LoRA, and klein for its text encoder
+make artgen ONLY="units/red/shield_walk.png units/blue/shield_walk.png units/red/soldier_walk.png units/blue/soldier_walk.png"
+make import
+```
+
+Measured on 2026-10-14: 23-42 s a sheet, 8.3 GB of VRAM. A `walk` entry's
+prompt is the figure alone; the generator puts it inside the LoRA's own
+sentence for its grid, and no style applies. The game reads a sheet of yours
+through the LoRA's table, never the pack's.
+
+Your sheets stay yours: the LoRA's training sheets are credited to a CC BY
+4.0 template, and whether a sheet it makes owes that credit is not settled,
+so none is committed. Machines and buildings have no walking sheet.
 
 ## Adding a picture the game does not have yet
 

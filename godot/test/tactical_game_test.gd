@@ -454,7 +454,8 @@ func test_once_the_game_is_over_nothing_moves_until_r() -> void:
 # --- the pictures (T9) ------------------------------------------------------
 
 # Which picture each piece gets is the point of T9: the board draws exactly
-# `pictures()`, and each unit's must be its side's picture of its kind.
+# `pictures()`, and each unit's must be its side's picture of its kind -- its
+# sheet, since T33, for a kind that walks on legs.
 func test_every_piece_is_drawn_as_its_side_s_picture_of_its_kind() -> void:
 	var scene: TacticalGame = _mounted_scene()
 	var drawn: Dictionary = (scene.get_node("UnitView") as UnitView).pictures()
@@ -462,7 +463,7 @@ func test_every_piece_is_drawn_as_its_side_s_picture_of_its_kind() -> void:
 	for unit: Unit in scene.state.units:
 		if unit.is_alive():
 			alive += 1
-			assert_object(drawn[unit.id]).is_same(Art.texture(Art.unit_path(unit.faction, unit.type.type_name)))
+			assert_object(drawn[unit.id]).is_same(Art.texture(_expected_picture(unit)))
 	assert_int(drawn.size()).is_equal(alive)
 
 
@@ -588,6 +589,14 @@ func _mounted_scene() -> TacticalGame:
 	var scene: TacticalGame = auto_free((load("res://game/tactical/tactical.tscn") as PackedScene).instantiate())
 	add_child(scene)
 	return scene
+
+
+# The file a unit should be drawn from: its sheet if its kind walks on legs,
+# its still picture otherwise.
+func _expected_picture(unit: Unit) -> String:
+	if Art.sheet_for(unit.faction, unit.type.type_name) != null:
+		return Art.sheet_path(unit.faction, unit.type.type_name)
+	return Art.unit_path(unit.faction, unit.type.type_name)
 
 
 func _status_of(scene: TacticalGame) -> String:

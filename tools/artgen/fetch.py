@@ -55,6 +55,9 @@ def main(argv: list[str]) -> int:
         return 2
     model = config["models"][name]
     problems = fetch(model) + (fetch(model["lora"]) if "lora" in model else [])
+    # A model that borrows another's text encoder needs that model on disk too.
+    if "text_encoder_from" in model:
+        problems += fetch(config["models"][model["text_encoder_from"]])
     for problem in problems:
         print(f"artgen fetch: {problem}", file=sys.stderr)
     return 1 if problems else 0

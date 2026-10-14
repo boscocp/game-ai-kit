@@ -83,6 +83,56 @@
         "scale_comment": "Measured, not taken from the card. The LoRA is rsLoRA (rank 64, alpha 128), which diffusers scales by alpha/sqrt(rank) = 16; the card's 'strength 0.85-1.4' is ComfyUI's, which scales by alpha/rank = 2. At 1.0 here the output was black noise, at 0.25 a blur, at 0.125 -- 2/16, the card's 1.0 -- a clean sprite.",
         "training_data_comment": "The card says its training images are CC0, and gives two sizes for that dataset (500 and 1,010). A claim, not checked."
       }
+    },
+    "klein-walk": {
+      "pipeline": "Flux2KleinPipeline",
+      "repo": "black-forest-labs/FLUX.2-klein-base-4B",
+      "revision": "a3b4f4849157f664bdbc776fd7453c2783562f4d",
+      "licence": "Apache-2.0",
+      "licence_url": "https://huggingface.co/black-forest-labs/FLUX.2-klein-base-4B/blob/a3b4f4849157f664bdbc776fd7453c2783562f4d/LICENSE.md",
+      "purpose_comment": "Walking sheets only (T33): manifest entries of kind `walk` name it, and nothing else uses it. The base model, not the distilled `klein`: the LoRA card says the distilled one 'ruins the quality of the pixels and the consistency'.",
+      "fetch": [
+        "model_index.json",
+        "LICENSE.md",
+        "scheduler/*",
+        "text_encoder/config.json",
+        "text_encoder/generation_config.json",
+        "text_encoder/model.safetensors.index.json",
+        "tokenizer/*",
+        "transformer/*",
+        "vae/*"
+      ],
+      "sha256": {
+        "transformer/diffusion_pytorch_model.safetensors": "e109674697ffa1a3983126e32512f5428a9442bd8df59f9c95566ee90a473bb6",
+        "vae/diffusion_pytorch_model.safetensors": "ca70d2202afe6415bdbcb8793ba8cd99fd159cfe6192381504d6c4d3036e0f04"
+      },
+      "text_encoder_from": "klein",
+      "text_encoder_comment": "The base model's text encoder is byte for byte the distilled model's -- the same sha256 in both repositories' listings, measured in T31 -- so it is loaded from `klein` rather than fetched a second time, 8 GB saved.",
+      "settings": {
+        "size": 512,
+        "steps": 50,
+        "guidance": 4.0
+      },
+      "settings_comment": "The LoRA card's: 512 pixels, the size of the sheets it was trained on; the base model's 50 steps and guidance 4. Measured in T31: 23-48 s a sheet, 8.3 GB peak, with model offload.",
+      "fp8": false,
+      "lora": {
+        "repo": "svntax-dev/pixel_spritesheet_4walk_small_lora_v1",
+        "revision": "cb8bffe5b9b92e656e31e7f940ec4a38047d6a88",
+        "licence": "Apache-2.0",
+        "licence_url": "https://huggingface.co/svntax-dev/pixel_spritesheet_4walk_small_lora_v1/blob/cb8bffe5b9b92e656e31e7f940ec4a38047d6a88/README.md",
+        "fetch": [
+          "README.md",
+          "pixel_4walk_small_flux2_klein_base_4b_v1.safetensors"
+        ],
+        "weights": "pixel_4walk_small_flux2_klein_base_4b_v1.safetensors",
+        "weights_comment": "The 3000-step file, which the card says is the more consistent with figures; the other is its 2750-step checkpoint.",
+        "sha256": {
+          "pixel_4walk_small_flux2_klein_base_4b_v1.safetensors": "a968c042c2443bf6bfed41ce833a0e06bf5bbb7961ac40b88fb7257a940ae54e"
+        },
+        "scale": 1.0,
+        "scale_comment": "Unscaled, as T31 measured it: the sheet the owner judged good enough was made at the adapter's default.",
+        "training_data_comment": "The card credits its training sheets to a template by George Bailey, CC BY 4.0 (https://opengameart.org/content/16x16-game-assets). Whether a sheet made with it owes that attribution is not settled here, so no sheet it makes is committed: they stay in the gitignored folder, a person's own."
+      }
     }
   }
 }
