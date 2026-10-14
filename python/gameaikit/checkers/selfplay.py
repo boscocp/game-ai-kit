@@ -11,10 +11,10 @@ side to move, labelled 1 if that side went on to win and 0 if it lost. A
 drawn game says nothing about who was ahead, and is left out -- counted, so
 the report can say how many.
 
-Self-play searches one ply. Measured on 2026-10-14, 60 games from the same
-openings: at one ply 46 of 60 ended in a win, at two plies 14, at three 11,
-the rest drawn by the 40-move rule with kings circling. A label is a result,
-so the depth that finishes games is the one that teaches.
+Self-play searches one ply. Measured on 2026-10-14 with `play_game` and
+seed 1959, 60 games: at one ply 41 ended in a win, at two plies 12, at three
+18, the rest drawn by the 40-move rule with kings circling. A label is a
+result, so the depth that finishes games is the one that teaches.
 """
 
 from __future__ import annotations

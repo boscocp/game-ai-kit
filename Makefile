@@ -137,8 +137,8 @@ lint-no-training: ## Invariant 6: Python trains, GDScript only infers
 	@# Exit 3 means the Python pipeline could not be run, so the one claim
 	@# with teeth -- that the committed weights are its own output -- checked
 	@# nothing. make flattens that to 2; call the script directly to tell the
-	@# two apart. It retrains everything it checks, about forty-five seconds,
-	@# nearly all of it checkers self-play (N7).
+	@# two apart. It retrains everything it checks, about two minutes,
+	@# nearly all of it checkers self-play and matches (N7).
 	@$(PYTHON) scripts/check_no_training.py
 
 .PHONY: lint-addon-deps
@@ -202,7 +202,7 @@ train: ## Fit both models and publish weights.json to dist/ and to the addon
 
 .PHONY: train-checkers
 train-checkers: ## Self-play, fit the checkers evaluation, play the match, and publish all three to the game
-	@# About forty seconds. N7 in lint-no-training runs the same pipeline and
+	@# About two minutes. N7 in lint-no-training runs the same pipeline and
 	@# fails if the published file is not what it produces.
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.checkers.report --write $(CURDIR)/godot/game/checkers
 

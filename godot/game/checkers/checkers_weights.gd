@@ -18,13 +18,16 @@ extends RefCounted
 const PATH: String = "res://game/checkers/checkers_weights.json"
 
 static var _published: Dictionary = {}
+static var _read_yet: bool = false
 
 
-## Everything the file says, read once. Empty when the file is missing,
-## unreadable, or names other features.
+## Everything the file says, read once -- once even when it is missing, which
+## the panel would otherwise ask the disk about on every refresh. Empty when
+## the file is missing, unreadable, or names other features.
 static func published() -> Dictionary:
-	if _published.is_empty():
+	if not _read_yet:
 		_published = read(PATH)
+		_read_yet = true
 	return _published
 
 
@@ -40,12 +43,14 @@ static func learned() -> Array[float]:
 ## these features with a number for each.
 static func read(path: String) -> Dictionary:
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-	if not parsed is Dictionary:
+	if not parsed is Dictionary or not parsed.get("learned") is Dictionary:
 		return {}
-	var named: Array = (parsed as Dictionary).get("features", [])
-	var weights: Array = (parsed as Dictionary).get("learned", {}).get("weights", [])
-	if named != Array(CheckersEvaluation.FEATURES) or weights.size() != named.size():
+	var named: Variant = parsed.get("features")
+	var weights: Variant = parsed["learned"].get("weights")
+	if not named is Array or not weights is Array:
 		return {}
-	if not weights.all(func(weight: Variant) -> bool: return weight is float or weight is int):
+	if named != Array(CheckersEvaluation.FEATURES) or (weights as Array).size() != (named as Array).size():
+		return {}
+	if not (weights as Array).all(func(weight: Variant) -> bool: return weight is float or weight is int):
 		return {}
 	return parsed

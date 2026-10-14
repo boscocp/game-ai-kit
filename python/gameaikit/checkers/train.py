@@ -12,10 +12,18 @@ side to move wins. The bias is fitted and published but not used to score:
 the search compares positions for one player, and a constant added to every
 leaf changes no choice.
 
-Beside the fit, a control: the same rows with their labels shuffled. Weights
-fitted to noise must play no better than chance against the hand-written
-ones. If they did, the match would be measuring something other than what
-the weights learned.
+Beside the fit, controls: the same rows with their labels shuffled, from
+several seeds. Weights fitted to noise must play no better than chance
+against the hand-written ones. But read what they are: alpha-beta only ever
+compares two scores, so it ignores how *large* the weights are, only which
+way they point. A fit to noise is tiny, and still points somewhere -- and
+because men and advancement move together in these rows (r = 0.89), it
+tends to point the way the learned weights do, men up and advancement down.
+So a control is a random direction, not a chance player, and the report
+publishes several to show how wide that spread is.
+
+And an ablation: the learned weights with advancement set to zero, which
+says how much of the match comes from that one weight.
 
 Nothing here prints or writes; `report.py` does both.
 """
@@ -36,6 +44,11 @@ from . import evaluation, rules, selfplay
 MATCH_SEED = 1962
 MATCH_OPENINGS = 50
 MATCH_DEPTHS = (1, 2)
+#: How many shuffles of the labels are fitted and played. Each is a seed of
+#: its own, after the self-play seed. Four, because each costs two matches.
+CONTROLS = 4
+#: Where advancement sits in `evaluation.FEATURES`, for the ablation.
+ADVANCEMENT = evaluation.FEATURES.index("advancement")
 
 
 @dataclasses.dataclass(frozen=True)
@@ -59,9 +72,11 @@ class Trained:
 
     played: selfplay.Played
     learned: Model
-    control: Model
     learned_matches: tuple[Record, ...]
-    control_matches: tuple[Record, ...]
+    controls: tuple[Model, ...]
+    control_matches: tuple[tuple[Record, ...], ...]
+    without_advancement: tuple[float, ...]
+    without_advancement_matches: tuple[Record, ...]
 
 
 def fit(rows: list[list[float]], labels: list[float]) -> Model:
@@ -101,10 +116,22 @@ def match(weights: tuple[float, ...], depth: int, openings: int = MATCH_OPENINGS
 
 
 def run(seed: int = selfplay.SEED) -> Trained:
-    """Self-play, fit, fit the control, and play both against the hand."""
+    """Self-play, fit, fit the controls and the ablation, and play them all
+    against the hand."""
     played = selfplay.run(seed)
     learned = fit(played.rows, played.labels)
-    control = fit(played.rows, shuffled(played.labels, seed + 1))
-    return Trained(played, learned, control,
-                   tuple(match(learned.weights, depth) for depth in MATCH_DEPTHS),
-                   tuple(match(control.weights, depth) for depth in MATCH_DEPTHS))
+    controls = tuple(fit(played.rows, shuffled(played.labels, seed + offset)) for offset in range(1, CONTROLS + 1))
+    ablated = without(learned.weights, ADVANCEMENT)
+    return Trained(played, learned, matches(learned.weights), controls,
+                   tuple(matches(control.weights) for control in controls),
+                   ablated, matches(ablated))
+
+
+def matches(weights: tuple[float, ...]) -> tuple[Record, ...]:
+    """`weights` against the hand at every depth the report publishes."""
+    return tuple(match(weights, depth) for depth in MATCH_DEPTHS)
+
+
+def without(weights: tuple[float, ...], index: int) -> tuple[float, ...]:
+    """`weights` with one of them set to zero."""
+    return tuple(0.0 if position == index else weight for position, weight in enumerate(weights))

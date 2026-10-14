@@ -7,8 +7,8 @@ compares (N7), so the file in the repository is this pipeline's output.
     python3 -m gameaikit.checkers.report               print what was learned and how it played
     python3 -m gameaikit.checkers.report --write DIR   write checkers_weights.json
 
-About forty seconds: four hundred games of self-play, two fits, and four
-hundred match games, all in pure Python.
+About eighty seconds: four hundred games of self-play, five fits, and a
+thousand match games, all in pure Python.
 
 Exit codes: 0 done, 2 wrong usage.
 """
@@ -35,7 +35,8 @@ def as_json(trained: Trained) -> dict:
         "features": list(evaluation.FEATURES),
         "hand": {"weights": list(evaluation.HAND_WEIGHTS)},
         "learned": _model(trained.learned),
-        "control": _model(trained.control),
+        "controls": [_model(control) for control in trained.controls],
+        "without_advancement": {"weights": [round(weight, DIGITS) for weight in trained.without_advancement]},
         "self_play": {
             "seed": selfplay.SEED, "games": played.games, "distinct_games": played.distinct_games,
             "opening_plies": selfplay.OPENING_PLIES, "depth": selfplay.DEPTH,
@@ -44,7 +45,8 @@ def as_json(trained: Trained) -> dict:
         },
         "match_seed": MATCH_SEED,
         "learned_against_hand": [_record(record) for record in trained.learned_matches],
-        "control_against_hand": [_record(record) for record in trained.control_matches],
+        "controls_against_hand": [[_record(record) for record in records] for records in trained.control_matches],
+        "without_advancement_against_hand": [_record(record) for record in trained.without_advancement_matches],
     }
 
 
@@ -55,13 +57,16 @@ def text(trained: Trained) -> str:
              f"red won {played.won_by_red}, white {played.won_by_white}, {played.drawn} drawn; "
              f"{len(played.rows)} positions from the decisive ones",
              "",
-             f"{'':12} {'hand':>8} {'learned':>8} {'in sd':>8} {'control':>8}"]
+             f"{'':12} {'hand':>8} {'learned':>8} {'in sd':>8}"]
     for index, name in enumerate(evaluation.FEATURES):
         lines.append(f"{name:12} {evaluation.HAND_WEIGHTS[index]:>8.3f} {trained.learned.weights[index]:>8.3f} "
-                     f"{trained.learned.comparable_weights[index]:>8.3f} {trained.control.weights[index]:>8.4f}")
+                     f"{trained.learned.comparable_weights[index]:>8.3f}")
     lines.append("")
-    for learned, control in zip(trained.learned_matches, trained.control_matches):
-        lines.append(f"depth {learned.depth}: learned {_words(learned)}; control {_words(control)}")
+    for index, learned in enumerate(trained.learned_matches):
+        controls = ", ".join(f"{records[index].score():.3f}" for records in trained.control_matches)
+        lines.append(f"depth {learned.depth}: learned {_words(learned)}; "
+                     f"without advancement {_words(trained.without_advancement_matches[index])}; "
+                     f"controls score {controls}")
     return "\n".join(lines) + "\n"
 
 

@@ -13,7 +13,7 @@
 # this repository is arranged against.
 extends SceneTree
 
-const RULE_FIELDS: Array[String] = ["name", "rows", "to_move", "moves"]
+const RULE_FIELDS: Array[String] = ["name", "rows", "to_move", "moves", "crowns", "taken", "drawn"]
 const SCORE_FIELDS: Array[String] = ["name", "rows", "player", "weights", "features", "score"]
 ## How far two floating-point scores may differ and still agree: the two
 ## languages add the same products in different orders.
@@ -48,13 +48,21 @@ func _run(directory: String) -> int:
 	return 1 if not failures.is_empty() else 0
 
 
-## What is wrong with one rules case: the legal moves, in order, as notation.
+## What is wrong with one rules case: the legal moves in order, which of them
+## crown, what each takes, and whether the position is drawn. Notation alone
+## would pass a jump that forgot to crown.
 static func check_rules(case: Dictionary) -> Array[String]:
 	var board: CheckersBoard = _board_of(case["rows"], SIDES.get(case["to_move"], -1))
-	var moves: Array = CheckersRules.legal_moves(board).map(func(move: CheckersMove) -> String: return move.notation())
-	if moves != case["moves"]:
-		return ["rules.json: %s -- moves %s, the vector says %s" % [case["name"], moves, case["moves"]]]
-	return []
+	board.quiet_plies = int(case.get("quiet_plies", 0))
+	var legal: Array = CheckersRules.legal_moves(board)
+	var crowning: Array = legal.filter(func(move: CheckersMove) -> bool: return move.crowns)
+	var found: Dictionary = {"moves": legal.map(_notation_of), "crowns": crowning.map(_notation_of),
+			"taken": legal.map(_taken_by), "drawn": CheckersRules.is_draw(board)}
+	var failures: Array[String] = []
+	for field: String in found:
+		if found[field] != case[field]:
+			failures.append("rules.json: %s -- %s %s, the vector says %s" % [case["name"], field, found[field], case[field]])
+	return failures
 
 
 ## What is wrong with one evaluation case: the three counts, and the score.
@@ -71,6 +79,14 @@ static func check_score(case: Dictionary) -> Array[String]:
 	if absf(score - float(case["score"])) > TOLERANCE:
 		return ["%s -- scores %f, the vector says %f" % [label, score, case["score"]]]
 	return []
+
+
+static func _notation_of(move: CheckersMove) -> String:
+	return move.notation()
+
+
+static func _taken_by(move: CheckersMove) -> Array:
+	return move.captured.map(CheckersMove.square_name)
 
 
 static func _board_of(rows: Array, side: int) -> CheckersBoard:

@@ -29,23 +29,26 @@ Three things about it matter here, each checked against the paper. The copy
 read was the reprint of the July 1959 article, and the quotations below
 correct its scanning errors and nothing else.
 
-- **One weight was not learned.** Piece advantage was fixed by the
-  programmer: "it must be fixed by the experimenter and, in effect, it is
-  one of the instructions to the machine defining its task." Kings were worth
-  more than men, "the relative weights assigned to them being three to two".
-  That is T27's 1.5, which was chosen before anyone looked it up.
+- **One weight was not learned.** The paper is about the sign of the
+  piece-advantage term when it says "it must be fixed by the experimenter
+  and, in effect, it is one of the instructions to the machine defining its
+  task"; elsewhere it adjusts every coefficient "other than the
+  piece-advantage term". Kings were worth more than men, "the relative
+  weights assigned to them being three to two". That is T27's 1.5, which was
+  chosen before anyone looked it up.
 - **The target was a deeper search, not the game's result.** The program
-  saved the score of each position it played into. One move later it
-  compared that score with "the backed-up score for the current position. The
-  difference between these scores, defined as delta, is used to check the
-  scoring polynomial." Roughly: when delta was positive, the terms that had
-  contributed positively gained weight, and the others lost it -- through a
-  running correlation, with weights set at powers of two. A position's score
-  was pulled towards what looking further ahead said it was worth. That is an ancestor of
-  temporal-difference learning.
+  saved the score of each position it played into. At its next move it
+  compared that saved score with "the backed-up score for the current
+  position. The difference between these scores, defined as delta, is used
+  to check the scoring polynomial." Roughly: when delta was positive, the
+  terms that had contributed positively gained weight, and the others lost
+  it -- through a running correlation, with weights set at powers of two.
+  The score of a position was pulled towards what a search from the
+  position one move later said. That is an ancestor of temporal-difference
+  learning.
 - **It chose its terms too.** The running program had 38 terms besides
   piece advantage, kept 16 in the polynomial at a time, and moved a term to
-  the reserve once it had correlated worst with delta eight times.
+  the reserve once it had correlated worst with delta, usually eight times.
 
 ## What this kit does instead
 
@@ -80,62 +83,96 @@ pipeline again from its seed and fails if the file differs (N7).
 
 ## What it bought: the match
 
-Each of 50 openings is played twice, the learned weights red once and white
-once, against the hand-written ones at the same depth. The score is points
-per game, with a draw worth half, so 0.5 is even.
+Each of 50 openings is played twice, the weights being tried red once and
+white once, against the hand-written ones at the same depth. The score is
+points per game, with a draw worth half. The hand against itself scores
+exactly 0.5 this way (measured in the wave 33 review), so the colours are
+fair.
 
-| depth | learned: won, drawn, lost | score | shuffled-labels control | score |
+| weights | depth 1: won, drawn, lost | score | depth 2: won, drawn, lost | score |
 |---|---|---|---|---|
-| 1 | 39, 26, 35 | 0.520 | 37, 29, 34 | 0.515 |
-| 2 | 3, 19, 78 | **0.125** | 1, 19, 80 | 0.105 |
+| learned | 39, 26, 35 | 0.520 | 3, 19, 78 | **0.125** |
+| learned, advancement set to 0 | 21, 47, 32 | 0.445 | 14, 78, 8 | **0.530** |
+| control 1, labels shuffled | 37, 29, 34 | 0.515 | 1, 19, 80 | 0.105 |
+| control 2 | 39, 26, 35 | 0.520 | 4, 34, 62 | 0.210 |
+| control 3 | 27, 38, 35 | 0.460 | 1, 12, 87 | 0.070 |
+| control 4 | 34, 27, 39 | 0.475 | 1, 24, 75 | 0.130 |
 
-At one ply the two are even. At two plies the learned evaluation loses
-nearly every game, and plays no better than the control: weights fitted to
-labels shuffled into meaninglessness.
+At one ply everything is even with the hand. At two plies the learned
+weights lose nearly every game. Without their advancement weight they are
+even again.
 
-## Why: a weight measures the games that made it
+## Reading the controls: what this match cannot tell apart
 
-Read the learned column against the hand column.
+A control is meant to be chance: weights fitted to labels shuffled into
+meaninglessness. Here it is not, and the reason is the search, not the fit.
 
-- **Advancement is negative.** The fit says a man that has advanced is a
-  liability. In one-ply self-play it was one. A search that looks one move
-  ahead walks a man forward without seeing the reply that takes it. In those
-  games, the side with men further up the board was the side about to lose
-  them.
-- **A king is worth a third of a man.** A likely reason, not measured:
-  kings come late, when the game is usually already decided on men. Once
-  men are counted, a king then adds little to the prediction, and the fit
-  gives kings little weight.
+**Alpha-beta only compares scores.** It never asks how large a score is,
+only which of two is larger. So multiplying every weight by a hundred, or
+dividing by one, plays exactly the same game. A fit to noise comes out
+small -- the controls' weights are a thirtieth to a hundredth of the
+learned ones --
+and plays at full strength in whatever direction it happens to point.
 
-Both statements are true of the games played, and both are bad advice for
-choosing a move. Searching two plies with them, white will not push a man
-it could crown, and will not trade a man for a king. The hand-written
-evaluation, which wants kings, simply gets them.
+**That direction is not random either.** In these rows men and advancement
+move together (correlation 0.89, measured in the wave 33 review: a side
+with more men has more men to advance), and a fit to noise tends to trade one against the other. Three of
+the four controls point men up and advancement down, like the learned
+weights; the fourth points men *down*.
 
-This is the general lesson, and the one Samuel's design avoids. **A weight
-fitted to outcomes measures what went with winning in the games that
-produced the data, under the player that played them.** It does not
-measure what causes winning. A weak player's games teach a weak player's
-values. Samuel's two choices are the fix for exactly this:
+So the match cannot tell weights fitted to results from weights fitted to
+noise: the learned 0.125 sits inside the controls' spread, 0.07 to 0.21.
+What the controls do show is that at two plies, almost any direction other
+than the hand's loses to the hand. The test the task asked for -- no control
+better than chance -- holds (every control scores at most 0.52), but it is a
+weak test here, and this page says so rather than leaning on it.
 
-- he fixed the term he was sure of, so the fit could not argue piece
-  advantage away;
-- he pulled each score towards a deeper search's opinion of the same
-  position, rather than towards a result decided many moves and many
-  mistakes later.
+## Why the learned weights lose
+
+What is measured:
+
+- **The advancement weight is the cause.** Set it to zero, keep the other
+  two, and the learned weights score 0.530 at two plies instead of 0.125.
+- **Under the learned weights, an advanced man is worth less than nothing.**
+  A man is +0.629 and each row it has advanced −0.212, so a man three rows
+  up counts −0.007 and a man six rows up −0.64: worse than losing it. A
+  search with those weights holds its men back and does not walk them to the
+  crowning row. In the review's count over the 100 two-ply games, the
+  learned side crowned 26 times to the hand side's 247.
+
+What is not measured, and is a hypothesis: why the fit came out that way.
+
+- **The weights are not separately interpretable.** Men alone correlate
+  *negatively* with winning in these rows (−0.17, the review's measurement: crowning takes a man off
+  the men count and puts a king on the other). The fit gives men +1.72
+  standard deviations only beside advancement's −2.43. Read either weight on
+  its own and it says something the data does not.
+- **A likely story for advancement:** in one-ply self-play, a search that
+  looks one move ahead walks a man forward without seeing the reply that
+  takes it, so the side with men further up the board was often the side
+  about to lose them. Plausible; not isolated here.
+
+The general lesson is stated as what this experiment suggests, not what it
+proves: **a weight fitted to outcomes measures what went with winning in the
+games that produced the data, under the player that played them, and
+alongside the other weights it was fitted with.** It does not measure what
+causes winning. Samuel's design guarded against both halves of that: he
+fixed the term he was sure of, so the fit could not argue piece advantage
+away, and he pulled each score towards a search from one move later rather
+than towards a result decided many moves and many mistakes after.
 
 ## What to try
 
 - Press E in `make run` on the same position. The panel lists the end of the
   line white expects, count by count, with what each count adds under each
-  set of weights. The count where the two columns differ most is why the two
-  choose different moves.
+  set of weights. The marked column adds up to the chosen move's value. It
+  shows what that value is made of; why one move beat another is in the
+  difference between the ends of their lines, which the panel does not draw.
 - Change `selfplay.DEPTH` to 2 and run `make train-checkers`. Fewer games end
-  in a win (14 of 60 openings were decisive, against 46 at one ply), so there
-  are fewer rows. Measured once, over 30 openings: the evaluation fitted
-  that way scored 0.28 against the hand at two plies, and advancement was
-  still negative.
+  in a win -- with seed 1959, 41 of 60 at one ply, 12 at two, 18 at three --
+  so there are fewer rows.
 - Hold the men weight fixed at 1 and fit only the other two, as Samuel did.
+- Fit with advancement left out altogether, and play it.
 
 ## When not to use it
 

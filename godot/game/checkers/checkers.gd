@@ -15,8 +15,8 @@
 ## E switches white between two evaluations (T32): the hand-written weights,
 ## and weights Python fitted to self-play results. The panel shows, for the
 ## position at the end of the expected line, what each count adds to the
-## score under both -- so a person can see which count the learned weights
-## value differently, and whether that makes white play better.
+## score under both -- what the chosen move's value is made of, and how the
+## learned weights would count the same position.
 class_name CheckersExample
 extends Node2D
 

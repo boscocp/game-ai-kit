@@ -95,6 +95,10 @@ BEAD_TRAINER = "gameaikit.menace.report"
 CHECKERS_GAME = GODOT / "game" / "checkers"
 CHECKERS_WEIGHTS = CHECKERS_GAME / "checkers_weights.json"
 CHECKERS_TRAINER = "gameaikit.checkers.report"
+# A line names the checkers weights by the file, by the class that reads it,
+# or by a path into the game's folder -- `"res://game/checkers/" + name`
+# builds the file without naming it.
+CHECKERS_NAMES_RE = re.compile(r"checkers_weights|CheckersWeights|game/checkers/")
 
 # Writing a bead count. This rule is a net for the common spellings; the
 # guarantee is the engine's. `MenacePlayer` keeps every box in a read-only
@@ -302,7 +306,7 @@ def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
             if inside_addon:
                 findings.append(
                     f"N2 {label} writes a file; the inference addon only reads")
-            elif CHECKERS_WEIGHTS.stem in line or CHECKERS_GAME.name in path.parts:
+            elif CHECKERS_NAMES_RE.search(line) or CHECKERS_GAME.name in path.parts:
                 # Before the rule below: `checkers_weights.json` ends in the
                 # addon's `weights.json`, and would be named as the wrong file.
                 findings.append(f"N8 {label} writes a file where the checkers weights live; "
@@ -894,6 +898,11 @@ def self_test() -> int:
             sound, **{str(GODOT / "game" / "ai.gd"):
                       'var out: FileAccess = FileAccess.open("res://game/checkers/checkers_weights.json", FileAccess.WRITE)\n'}))),
             1, "N8")
+        for spelling in ['var out: FileAccess = FileAccess.open(CheckersWeights.PATH, FileAccess.WRITE)\n',
+                         'var out: FileAccess = FileAccess.open("res://game/checkers/" + name, FileAccess.WRITE)\n']:
+            expect(f"the checkers weights written as {spelling[30:62]}", quiet(build(
+                root, "checkersby" + str(abs(hash(spelling))), dict(sound, **{str(GODOT / "game" / "ai.gd"): spelling}))),
+                1, "N8")
         expect("a file written in the checkers game", quiet(build(root, "checkersgame", dict(
             sound, **{str(CHECKERS_GAME / "checkers.gd"): 'var out: FileAccess = FileAccess.open(path, FileAccess.WRITE)\n'}))),
             1, "N8")
@@ -1008,6 +1017,19 @@ def _self_test_the_checkers_weights(root: pathlib.Path) -> list[str]:
         found, _ran = check_checkers_weights(repo, False)
     if not any(finding.startswith("N7") for finding in found):
         failures.append("a missing checkers weights file beside the game was not reported")
+
+    # A pipeline that could not be run checked nothing, and `run` must say so
+    # with its own exit code rather than pass.
+    (repo / CHECKERS_WEIGHTS).write_text(json.dumps(SOUND_CHECKERS))
+    global fresh_checkers_weights
+    real, fresh_checkers_weights = fresh_checkers_weights, lambda _repo: None
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = run(repo, retrain=True)
+    finally:
+        fresh_checkers_weights = real
+    if code != 3:
+        failures.append(f"run() passed with the checkers pipeline unable to run: exit {code}")
 
     # The wiring, not only the rule: `run` must reach N7 at all.
     (repo / CHECKERS_WEIGHTS).write_text(json.dumps(dict(SOUND_CHECKERS, generated_by="a person")))

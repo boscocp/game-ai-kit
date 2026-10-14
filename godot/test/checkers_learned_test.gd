@@ -103,3 +103,39 @@ func _mounted_after_red_s_first_move() -> CheckersExample:
 
 func _panel(scene: CheckersExample) -> String:
 	return (scene.get_node("Interface/Decision") as Label).text
+
+
+# --- the wave 33 review ----------------------------------------------------
+
+# Once space plays the move, the breakdown is still of the line white chose
+# from the position it chose in -- not of a line replayed from the board after.
+func test_the_why_stays_with_the_decision_after_it_is_played() -> void:
+	# White's line opens with a capture, so replaying it from the board after
+	# the capture -- with the jumped man already gone -- counts differently.
+	var scene: CheckersExample = auto_free(load("res://game/checkers/checkers.tscn").instantiate())
+	add_child(scene)
+	scene.depth = 2
+	scene._board = CheckersBoard.from_rows([
+		". . . . . . . .", ". . . . . . . .", ". . . . . . . .", ". . w . . . . .",
+		". . . r . . . .", ". . . . . . . .", ". . . . . . . .", ". . . . . . r .",
+	] as Array[String], CheckersBoard.WHITE)
+	scene._think()
+	var decided_on: CheckersBoard = scene._board
+	scene.step_decision()
+	var board: CheckersBoard = decided_on
+	for move: CheckersMove in scene._expected:
+		board = CheckersRules.play(board, move)
+	assert_array(scene.why()["counts"]).is_equal(CheckersEvaluation.features(board, CheckersBoard.WHITE))
+
+
+func test_a_file_with_weights_that_are_not_numbers_or_odd_shapes_is_refused() -> void:
+	var path: String = "user://planted_checkers_weights.json"
+	for planted: Variant in [
+		{"features": CheckersEvaluation.FEATURES, "learned": {"weights": ["1", 2.0, 3.0]}},
+		{"features": CheckersEvaluation.FEATURES, "learned": 3},
+		{"features": "men", "learned": {"weights": [1.0, 2.0, 3.0]}},
+		[1, 2, 3],
+	]:
+		FileAccess.open(path, FileAccess.WRITE).store_string(JSON.stringify(planted))
+		assert_dict(CheckersWeights.read(path)).override_failure_message(str(planted)).is_empty()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))

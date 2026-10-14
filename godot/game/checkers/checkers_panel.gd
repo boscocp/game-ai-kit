@@ -24,7 +24,7 @@ const BEFORE_WHITE_MOVES: String = (
 ## The line under the board: what is happening, the keys, and why the last
 ## click did nothing, if it did nothing.
 static func status(board: CheckersBoard, pending: bool, holding: bool, depth: int, message: String) -> String:
-	var keys: String = "1-6: how many plies white looks ahead (now %d)  ·  R: new game" % depth
+	var keys: String = "1-6: how many plies white looks ahead (now %d)  ·  E: hand or learned weights  ·  R: new game" % depth
 	var lines: PackedStringArray = [_situation(board, pending, holding), keys]
 	if message != "":
 		lines.append(message)
@@ -55,8 +55,10 @@ static func describe(decision: AdversarialResult, expected: Array[CheckersMove],
 
 ## The end of the expected line, count by count: how many of each white is
 ## ahead by, and what that adds to the score under each set of weights. The
-## column white is searching with is marked. Where the two columns disagree
-## most is the count the learned weights value differently.
+## column white is searching with is marked, and it adds up to the chosen
+## move's value. It is one position under two sets of weights: it says what
+## the value is made of, not by itself why one move beat another -- that is
+## the difference between the ends of different lines.
 static func why_lines(evaluation: String, why: Dictionary) -> PackedStringArray:
 	if why.is_empty():
 		return PackedStringArray()
