@@ -1,0 +1,256 @@
+{
+ "description": "Positions, and every legal move for the side to move, in the order both sides list them: pieces from the top-left, row by row, and each piece's moves trying up-left, up-right, down-left, down-right. Squares are named as the board's edges name them, columns a-h from the left, rows 1-8 from red's side; a step is `c3-d4`, a jump `c3xe5xg3`. `crowns` lists the moves that crown, `taken` the squares each move captures, in order, and `drawn` whether the 40-move rule has drawn the position; `quiet_plies`, when present, is the count the position starts with.",
+ "cases": [
+  {
+   "name": "the opening: red has seven steps",
+   "rows": [
+    ".w.w.w.w",
+    "w.w.w.w.",
+    ".w.w.w.w",
+    "........",
+    "........",
+    "r.r.r.r.",
+    ".r.r.r.r",
+    "r.r.r.r."
+   ],
+   "to_move": "red",
+   "moves": [
+    "a3-b4",
+    "c3-b4",
+    "c3-d4",
+    "e3-d4",
+    "e3-f4",
+    "g3-f4",
+    "g3-h4"
+   ],
+   "crowns": [],
+   "taken": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+   ],
+   "drawn": false
+  },
+  {
+   "name": "a capture is compulsory: the step is not offered",
+   "rows": [
+    "........",
+    "........",
+    "........",
+    "........",
+    "...w....",
+    "..r.....",
+    "......r.",
+    "........"
+   ],
+   "to_move": "red",
+   "moves": [
+    "c3xe5"
+   ],
+   "crowns": [],
+   "taken": [
+    [
+     "d4"
+    ]
+   ],
+   "drawn": false
+  },
+  {
+   "name": "a double jump is one move, and a branch is two",
+   "rows": [
+    "........",
+    "........",
+    "...w.w..",
+    "........",
+    "...w....",
+    "..r.....",
+    "........",
+    "........"
+   ],
+   "to_move": "red",
+   "moves": [
+    "c3xe5xc7",
+    "c3xe5xg7"
+   ],
+   "crowns": [],
+   "taken": [
+    [
+     "d4",
+     "d6"
+    ],
+    [
+     "d4",
+     "f6"
+    ]
+   ],
+   "drawn": false
+  },
+  {
+   "name": "crowning ends the move, even with a jump still there",
+   "rows": [
+    "........",
+    "..w.w...",
+    ".r......",
+    "........",
+    "........",
+    "........",
+    "........",
+    "........"
+   ],
+   "to_move": "red",
+   "moves": [
+    "b6xd8"
+   ],
+   "crowns": [
+    "b6xd8"
+   ],
+   "taken": [
+    [
+     "c7"
+    ]
+   ],
+   "drawn": false
+  },
+  {
+   "name": "a king steps backwards; a man does not",
+   "rows": [
+    "........",
+    "........",
+    "........",
+    "...R....",
+    "........",
+    "......r.",
+    "........",
+    "........"
+   ],
+   "to_move": "red",
+   "moves": [
+    "d5-c6",
+    "d5-e6",
+    "d5-c4",
+    "d5-e4",
+    "g3-f4",
+    "g3-h4"
+   ],
+   "crowns": [],
+   "taken": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+   ],
+   "drawn": false
+  },
+  {
+   "name": "white moves down the board",
+   "rows": [
+    "........",
+    "..w.....",
+    "........",
+    "........",
+    "........",
+    "........",
+    "......r.",
+    "........"
+   ],
+   "to_move": "white",
+   "moves": [
+    "c7-b6",
+    "c7-d6"
+   ],
+   "crowns": [],
+   "taken": [
+    [],
+    []
+   ],
+   "drawn": false
+  },
+  {
+   "name": "a side that cannot move has no moves",
+   "rows": [
+    "........",
+    "........",
+    "........",
+    "........",
+    "........",
+    "..w.....",
+    ".w......",
+    "r......."
+   ],
+   "to_move": "red",
+   "moves": [],
+   "crowns": [],
+   "taken": [],
+   "drawn": false
+  },
+  {
+   "name": "a king's capture can end on the square it started from",
+   "rows": [
+    "........",
+    "........",
+    "........",
+    "..w.w...",
+    ".R......",
+    "..w.w...",
+    "........",
+    "........"
+   ],
+   "to_move": "red",
+   "moves": [
+    "b4xd6xf4xd2xb4",
+    "b4xd2xf4xd6xb4"
+   ],
+   "crowns": [],
+   "taken": [
+    [
+     "c5",
+     "e5",
+     "e3",
+     "c3"
+    ],
+    [
+     "c3",
+     "e3",
+     "e5",
+     "c5"
+    ]
+   ],
+   "drawn": false
+  },
+  {
+   "name": "eighty quiet plies draw the game, moves or no moves",
+   "rows": [
+    "........",
+    "........",
+    "...W....",
+    "........",
+    "........",
+    "....R...",
+    "........",
+    "........"
+   ],
+   "to_move": "red",
+   "quiet_plies": 80,
+   "moves": [
+    "e3-d4",
+    "e3-f4",
+    "e3-d2",
+    "e3-f2"
+   ],
+   "crowns": [],
+   "taken": [
+    [],
+    [],
+    [],
+    []
+   ],
+   "drawn": true
+  }
+ ]
+}

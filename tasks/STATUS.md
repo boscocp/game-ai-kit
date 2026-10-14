@@ -35,7 +35,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T9 | Art that is not a coloured square | done | 30 CC0 pictures from four Kenney packs, each listed with its sha256; `art.gd` the one path table; `make import` before any scene; manual check still a person's |
 | T31 | Generate your own art, locally | done | `make artgen`: Z-Image-Turbo (owner's pick after a bake-off against FLUX.2 klein), fp8 + offload in 8.3 GB; gitignored output the game prefers, CC0 the default; 3 committed examples; ADR 0013 |
 | T33 | Units that walk | done | Puny Characters (CC0) sheets for the shield and the soldier; units walk their route at 0.12 s a cell, march at rest, machines bob; `walk` kind in the generator on klein base + the svntax LoRA, sheets never committed; ADR 0014; manual check still a person's |
-| T32 | Checkers with a learned evaluation | todo | after Samuel (1959 paper): the same search, weights fitted in Python, and a match |
+| T32 | Checkers with a learned evaluation | done | after Samuel (1959 paper, checked): Python rules and search held to Godot's by two vectors; logistic fit on self-play; learned loses 0.125 at two plies, 0.53 without its advancement weight; controls cannot be told from it (alpha-beta ignores scale); E toggles it in `make run`; manual check still a person's |
 | T10 | The tactical scenario | done | five types, two towers, a workshop, funds, a forge, a river with one bridge; manual check: terrain yes, type feel waits on T26 |
 | T11 | The planner plays | todo | STRIPS drives a faction; needs T4, and T26 for attacks; `ai_learning` still routes on `state.graph`, wrong for a wader |
 | T12 | Three difficulties, honestly | todo | horizon and depth, never cheating; five levels if they stay ordered |
@@ -79,6 +79,36 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-14 (wave 33)
+
+**What landed.** T32: checkers with a learned evaluation, after Samuel.
+- The rules and alpha-beta are in Python too. `spec/vectors/checkers/`
+  holds the two languages to the same legal moves, crowns, captures and
+  draws, and to the same counts and scores. A review cross-checked them on
+  20,259 positions.
+- Self-play: 400 games from seeded random openings, one ply deep, 394 of
+  them distinct. A logistic fit on the decisive games used T5's trainer. The
+  match, four shuffled-label controls and an ablation are all published in
+  `godot/game/checkers/checkers_weights.json`. N7 retrains them all, which
+  takes about two minutes; N8 refuses a write.
+- In `make run`, E switches white's evaluation. The panel breaks the chosen
+  value down by count under both sets of weights.
+
+**The result is negative, and the page says why as far as it is measured.**
+- The learned weights score 0.52 at one ply and 0.125 at two.
+- With their advancement weight set to zero they score 0.53: under the
+  fit, a man three rows up is worth less than nothing.
+- The controls cannot be told apart from the learned weights. Alpha-beta
+  ignores the scale of the weights, so a fit to noise is a random direction.
+  The review found this; the concept page now says it.
+- See [docs/concepts/learned-evaluation.md](../docs/concepts/learned-evaluation.md)
+  and [the review](../docs/reviews/33-checkers-with-a-learned-evaluation.md).
+
+**Not proven.** T32's manual check: toggle E on one position and name the
+count the two evaluations weigh differently.
+
+**Next:** `make wave` cuts T16, the fighting scenario.
 
 ## Resuming after 2026-10-14 (wave 32)
 

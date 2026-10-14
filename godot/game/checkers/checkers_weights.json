@@ -1,0 +1,217 @@
+{
+ "generated_by": "gameaikit.checkers.report",
+ "features": [
+  "men",
+  "kings",
+  "advancement"
+ ],
+ "hand": {
+  "weights": [
+   1.0,
+   1.5,
+   0.05
+  ]
+ },
+ "learned": {
+  "weights": [
+   0.629179,
+   0.217717,
+   -0.211797
+  ],
+  "comparable_weights": [
+   1.720485,
+   0.263224,
+   -2.434441
+  ],
+  "bias": -0.05141,
+  "rows_trained_on": 6347
+ },
+ "controls": [
+  {
+   "weights": [
+    0.007104,
+    0.006129,
+    -0.003652
+   ],
+   "comparable_weights": [
+    0.019425,
+    0.007409,
+    -0.041979
+   ],
+   "bias": 0.001033,
+   "rows_trained_on": 6347
+  },
+  {
+   "weights": [
+    0.018057,
+    0.018722,
+    -0.00498
+   ],
+   "comparable_weights": [
+    0.049375,
+    0.022635,
+    -0.05724
+   ],
+   "bias": 0.001936,
+   "rows_trained_on": 6347
+  },
+  {
+   "weights": [
+    0.012254,
+    -0.019544,
+    -0.003135
+   ],
+   "comparable_weights": [
+    0.033508,
+    -0.023629,
+    -0.036031
+   ],
+   "bias": 0.000163,
+   "rows_trained_on": 6347
+  },
+  {
+   "weights": [
+    -0.010876,
+    0.013575,
+    0.001868
+   ],
+   "comparable_weights": [
+    -0.029741,
+    0.016412,
+    0.021474
+   ],
+   "bias": 0.00325,
+   "rows_trained_on": 6347
+  }
+ ],
+ "without_advancement": {
+  "weights": [
+   0.629179,
+   0.217717,
+   0.0
+  ]
+ },
+ "self_play": {
+  "seed": 1959,
+  "games": 400,
+  "distinct_games": 394,
+  "opening_plies": 8,
+  "depth": 1,
+  "won_by_red": 180,
+  "won_by_white": 97,
+  "drawn": 123,
+  "rows": 6347,
+  "every": 3
+ },
+ "match_seed": 1962,
+ "learned_against_hand": [
+  {
+   "depth": 1,
+   "games": 100,
+   "won": 39,
+   "drawn": 26,
+   "lost": 35,
+   "score": 0.52
+  },
+  {
+   "depth": 2,
+   "games": 100,
+   "won": 3,
+   "drawn": 19,
+   "lost": 78,
+   "score": 0.125
+  }
+ ],
+ "controls_against_hand": [
+  [
+   {
+    "depth": 1,
+    "games": 100,
+    "won": 37,
+    "drawn": 29,
+    "lost": 34,
+    "score": 0.515
+   },
+   {
+    "depth": 2,
+    "games": 100,
+    "won": 1,
+    "drawn": 19,
+    "lost": 80,
+    "score": 0.105
+   }
+  ],
+  [
+   {
+    "depth": 1,
+    "games": 100,
+    "won": 39,
+    "drawn": 26,
+    "lost": 35,
+    "score": 0.52
+   },
+   {
+    "depth": 2,
+    "games": 100,
+    "won": 4,
+    "drawn": 34,
+    "lost": 62,
+    "score": 0.21
+   }
+  ],
+  [
+   {
+    "depth": 1,
+    "games": 100,
+    "won": 27,
+    "drawn": 38,
+    "lost": 35,
+    "score": 0.46
+   },
+   {
+    "depth": 2,
+    "games": 100,
+    "won": 1,
+    "drawn": 12,
+    "lost": 87,
+    "score": 0.07
+   }
+  ],
+  [
+   {
+    "depth": 1,
+    "games": 100,
+    "won": 34,
+    "drawn": 27,
+    "lost": 39,
+    "score": 0.475
+   },
+   {
+    "depth": 2,
+    "games": 100,
+    "won": 1,
+    "drawn": 24,
+    "lost": 75,
+    "score": 0.13
+   }
+  ]
+ ],
+ "without_advancement_against_hand": [
+  {
+   "depth": 1,
+   "games": 100,
+   "won": 21,
+   "drawn": 47,
+   "lost": 32,
+   "score": 0.445
+  },
+  {
+   "depth": 2,
+   "games": 100,
+   "won": 14,
+   "drawn": 78,
+   "lost": 8,
+   "score": 0.53
+  }
+ ]
+}

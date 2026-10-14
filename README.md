@@ -16,6 +16,7 @@ readable one.
 | piece | what it decides | where you see it | read |
 |---|---|---|---|
 | `ai_adversarial` | minimax and alpha-beta — the best move, *given that the opponent replies as well as it can* | plays white in `make run`, and draws every move it considered with its value | [why](docs/concepts/minimax.md) |
+| learned checkers evaluation, in `python/gameaikit/checkers/` | logistic regression on self-play results -- what a position is worth to the search | E in `make run` switches white to it, and the panel shows each count's share of the score | [why](docs/concepts/learned-evaluation.md) |
 | MENACE, in `python/gameaikit/menace/` | reinforcement learning with 304 matchboxes — which move in noughts and crosses | plays crosses in `make demo-tictactoe`, its beads on every square | [why](docs/concepts/menace.md) |
 | `ai_search` | A\*, BFS, DFS, Dijkstra — how a unit gets there | routes blue's units in `make demo-skirmish` | [why](docs/concepts/search.md) · [how](docs/godot/search.md) |
 | `ai_planning` | STRIPS — *to attack I need a unit; to have a unit I need resources* | **not yet** — T11 puts it on the board | [why](docs/concepts/planning.md) · [how](docs/godot/planning.md) |

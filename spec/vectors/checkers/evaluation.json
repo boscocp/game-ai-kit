@@ -1,0 +1,130 @@
+{
+ "description": "Positions, a player, a set of weights, and what the evaluation must make of them: the three counts -- men, kings, rows advanced by men -- each the player's minus the opponent's, and the score, each count times its weight, added. Worked out by hand. A man's advancement is counted from its own back row: row 8 for white, row 1 for red.",
+ "cases": [
+  {
+   "name": "a man up, and the men on their own back rows",
+   "rows": [
+    "........",
+    "........",
+    "........",
+    "........",
+    "........",
+    "........",
+    "........",
+    "r.r....."
+   ],
+   "player": "red",
+   "weights": [
+    1.0,
+    1.5,
+    0.05
+   ],
+   "features": [
+    2.0,
+    0.0,
+    0.0
+   ],
+   "score": 2.0
+  },
+  {
+   "name": "from the other side every count changes sign",
+   "rows": [
+    "........",
+    "........",
+    "........",
+    "........",
+    "........",
+    "........",
+    "........",
+    "r.r....."
+   ],
+   "player": "white",
+   "weights": [
+    1.0,
+    1.5,
+    0.05
+   ],
+   "features": [
+    -2.0,
+    0.0,
+    0.0
+   ],
+   "score": -2.0
+  },
+  {
+   "name": "a man three rows up, against one on its own back row",
+   "rows": [
+    ".w......",
+    "........",
+    "........",
+    "........",
+    "r.......",
+    "........",
+    "........",
+    "........"
+   ],
+   "player": "red",
+   "weights": [
+    1.0,
+    1.5,
+    0.05
+   ],
+   "features": [
+    0.0,
+    0.0,
+    3.0
+   ],
+   "score": 0.15
+  },
+  {
+   "name": "a king is counted as a king, never as an advanced man",
+   "rows": [
+    "...R....",
+    "........",
+    "........",
+    "........",
+    "........",
+    "........",
+    "........",
+    "........"
+   ],
+   "player": "red",
+   "weights": [
+    1.0,
+    1.5,
+    0.05
+   ],
+   "features": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "score": 1.5
+  },
+  {
+   "name": "any weights: the score is the counts times them",
+   "rows": [
+    ".w......",
+    "........",
+    "...W....",
+    "........",
+    "r.......",
+    "........",
+    "..r.....",
+    "........"
+   ],
+   "player": "red",
+   "weights": [
+    0.5,
+    -2.0,
+    0.25
+   ],
+   "features": [
+    1.0,
+    -1.0,
+    4.0
+   ],
+   "score": 3.5
+  }
+ ]
+}

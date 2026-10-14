@@ -137,7 +137,8 @@ lint-no-training: ## Invariant 6: Python trains, GDScript only infers
 	@# Exit 3 means the Python pipeline could not be run, so the one claim
 	@# with teeth -- that the committed weights are its own output -- checked
 	@# nothing. make flattens that to 2; call the script directly to tell the
-	@# two apart. It retrains, which costs about four seconds.
+	@# two apart. It retrains everything it checks, about two minutes,
+	@# nearly all of it checkers self-play and matches (N7).
 	@$(PYTHON) scripts/check_no_training.py
 
 .PHONY: lint-addon-deps
@@ -199,6 +200,12 @@ train: ## Fit both models and publish weights.json to dist/ and to the addon
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.training.report \
 		--write $(CURDIR)/dist --write $(CURDIR)/godot/addons/ai_learning
 
+.PHONY: train-checkers
+train-checkers: ## Self-play, fit the checkers evaluation, play the match, and publish all three to the game
+	@# About two minutes. N7 in lint-no-training runs the same pipeline and
+	@# fails if the published file is not what it produces.
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.checkers.report --write $(CURDIR)/godot/game/checkers
+
 .PHONY: train-menace
 train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac-toe game
 	@# Deterministic: `make lint-no-training` trains again and fails if the
@@ -206,7 +213,7 @@ train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -245,6 +252,13 @@ test-fuzzy-vectors: import ## The fuzzy vectors, against ai_fuzzy
 	@# text controller beside a vector describes the same thing as its JSON.
 	@$(GODOT) --headless --path godot -s res://test/fuzzy_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/fuzzy
+
+.PHONY: test-checkers-vectors
+test-checkers-vectors: import ## The checkers rules and evaluation vectors, against the game
+	@# The other half is `make test-python`: the same two files read through
+	@# gameaikit.checkers, the Python that self-plays and fits (T32).
+	@$(GODOT) --headless --path godot -s res://test/checkers_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/checkers
 
 .PHONY: test-menace-vectors
 test-menace-vectors: import ## The MENACE vectors, against the game's bead player
