@@ -16,11 +16,12 @@ static func entries(types: Dictionary) -> Array[Array]:
 		[UnitView.FACTION_COLOURS[TacticalScenario.RED], "red side"],
 		[UnitView.FACTION_COLOURS[TacticalScenario.BLUE], "blue side"],
 		[Color.TRANSPARENT, "circle walks, square stands still"],
-		[BoardView.REACHABLE, "where the piece in hand can step"],
+		[BoardView.REACHABLE, "where the piece in hand can walk"],
 		[BoardView.SWATCHES[BoardView.PLAIN.x], "open ground"],
-		[BoardView.SWATCHES[BoardView.ROUGH.x], "trees: cost 3, block sight"],
-		[BoardView.SWATCHES[BoardView.WALL.x], "rock"],
+		[BoardView.SWATCHES[BoardView.ROUGH.x], "trees: cost 3 to enter"],
+		[BoardView.SWATCHES[BoardView.WALL.x], "rock: nothing crosses"],
 		[BoardView.SWATCHES[BoardView.WATER.x], "water: only waders cross"],
+		[BoardView.SWATCHES[BoardView.BRIDGE.x], "bridge: the only dry crossing"],
 	]
 	for name: String in TacticalGame.LABELS:
 		lines.append([Color.TRANSPARENT, _describe(TacticalGame.LABELS[name], types[name])])

@@ -51,6 +51,12 @@ var funds: Dictionary = {}
 ## The upgrades each faction owns, by faction number, as `Array[String]`.
 var upgrades: Dictionary = {}
 
+## The id the next produced unit gets. A counter carried from state to state,
+## not worked out from the units: worked out from the living, a dead unit's id
+## came back as soon as the highest one died, and a stored move naming the
+## dead unit commanded the new one.
+var next_id: int
+
 
 func _init(board: GridGraph, board_units: Array[Unit], faction: int = 0,
 		turn: int = 0) -> void:
@@ -58,6 +64,7 @@ func _init(board: GridGraph, board_units: Array[Unit], faction: int = 0,
 	units = _living_copies(board_units)
 	current_faction = faction
 	turn_number = turn
+	next_id = _largest_id(board_units) + 1
 
 
 # Every living unit, copied. Both rules this type depends on live here and
@@ -117,9 +124,13 @@ func unit_at(cell: Vector2i) -> Unit:
 ## The cost map this unit walks on: its type's, when the scenario gave that
 ## mover one, and the board's own otherwise. Untyped units walk on the board.
 func graph_for(unit: Unit) -> GridGraph:
-	if unit.type == null:
-		return graph
-	return movement_graphs.get(unit.type.mover, graph)
+	return graph if unit.type == null else graph_for_type(unit.type)
+
+
+## The cost map a kind of unit walks on -- for a unit that does not exist yet,
+## such as one about to be built.
+func graph_for_type(kind: UnitType) -> GridGraph:
+	return movement_graphs.get(kind.mover, graph)
 
 
 ## What a faction has to spend.
@@ -192,18 +203,20 @@ func apply(move: Move) -> BoardState:
 func why_production_refused(order: ProductionOrder) -> String:
 	var producer: Unit = unit_by_id(order.producer_id)
 	if producer == null or producer.faction != current_faction:
-		return "no building of faction %d has id %d" % [current_faction, order.producer_id]
+		return "the side to move has no building with id %d" % order.producer_id
 	var kind: UnitType = order.unit_type
+	if kind == null:
+		return "the order names no unit type"
 	if producer.type == null or not producer.type.produces.has(kind.type_name):
 		return "unit %d does not produce %s" % [producer.id, kind.type_name]
 	if kind.requires != "" and not owns(current_faction, kind.requires):
 		return "%s needs the %s upgrade first" % [kind.type_name, kind.requires]
-	var room: String = _why_no_room(producer, kind, order.cell)
+	var room: String = why_no_room(producer, kind, order.cell)
 	if room != LEGAL:
 		return room
 	if kind.cost > funds_of(current_faction):
-		return "%s costs %d and faction %d has %d" % [
-			kind.type_name, kind.cost, current_faction, funds_of(current_faction)]
+		return "%s costs %d and the side to move has %d" % [
+			kind.type_name, kind.cost, funds_of(current_faction)]
 	return LEGAL
 
 
@@ -214,17 +227,18 @@ func produce(order: ProductionOrder) -> BoardState:
 		return null
 	var next: BoardState = duplicate_state()
 	next.funds[current_faction] = funds_of(current_faction) - order.unit_type.cost
-	next.units.append(Unit.new(_next_id(), current_faction, order.cell, 10, 0, order.unit_type))
+	next.units.append(Unit.new(next.next_id, current_faction, order.cell, 10, 0, order.unit_type))
+	next.next_id += 1
 	return next
 
 
 ## Why the side to move cannot buy this upgrade, or `LEGAL`.
 func why_upgrade_refused(upgrade: Upgrade) -> String:
 	if owns(current_faction, upgrade.upgrade_name):
-		return "faction %d already owns %s" % [current_faction, upgrade.upgrade_name]
+		return "the side to move already owns %s" % upgrade.upgrade_name
 	if upgrade.cost > funds_of(current_faction):
-		return "%s costs %d and faction %d has %d" % [
-			upgrade.upgrade_name, upgrade.cost, current_faction, funds_of(current_faction)]
+		return "%s costs %d and the side to move has %d" % [
+			upgrade.upgrade_name, upgrade.cost, funds_of(current_faction)]
 	return LEGAL
 
 
@@ -290,6 +304,7 @@ func duplicate_state() -> BoardState:
 	copy.movement_graphs = movement_graphs
 	copy.funds = funds.duplicate()
 	copy.upgrades = upgrades.duplicate(true)
+	copy.next_id = next_id
 	return copy
 
 
@@ -335,12 +350,16 @@ func _why_step_refused(unit: Unit, previous: Vector2i, step: Vector2i) -> String
 	return LEGAL
 
 
-# A new unit appears one step from its producer, on a free cell its own type
-# could stand on -- a boat is built on water, a soldier on land.
-func _why_no_room(producer: Unit, kind: UnitType, cell: Vector2i) -> String:
+## Why a new `kind` cannot appear on `cell` beside `producer`, or `LEGAL`:
+## one step away, free, and ground its own type could stand on -- a boat is
+## built on water, a soldier on land. Public because choosing *where* to build
+## is the caller's job, and a caller that picks a cell by asking the whole of
+## `why_production_refused` hears "you cannot afford it" about every cell and
+## concludes there is no room.
+func why_no_room(producer: Unit, kind: UnitType, cell: Vector2i) -> String:
 	if not GridGraph.DIRECTIONS.has(cell - producer.cell):
 		return "%s is not next to unit %d" % [cell, producer.id]
-	var ground: GridGraph = movement_graphs.get(kind.mover, graph)
+	var ground: GridGraph = graph_for_type(kind)
 	if not ground.contains(cell) or ground.is_blocked(cell):
 		return "a %s cannot stand on %s" % [kind.type_name, cell]
 	if unit_at(cell) != null:
@@ -348,10 +367,10 @@ func _why_no_room(producer: Unit, kind: UnitType, cell: Vector2i) -> String:
 	return LEGAL
 
 
-# One more than the largest id on the board. Ids are never reused while their
-# unit lives, which is the promise `Unit.id` makes.
-func _next_id() -> int:
+# The largest id among the units a state is built from, dead ones included:
+# they are dropped from `units`, and their ids must still never come back.
+static func _largest_id(given: Array[Unit]) -> int:
 	var largest: int = 0
-	for unit: Unit in units:
+	for unit: Unit in given:
 		largest = maxi(largest, unit.id)
-	return largest + 1
+	return largest

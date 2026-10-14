@@ -23,9 +23,12 @@ const PLAIN: String = "."
 const TREES: String = "T"
 const ROCK: String = "#"
 const WATER: String = "~"
+## Dry ground over the river: costs what open ground costs, and is drawn as a
+## bridge because the only crossing should look like one.
+const BRIDGE: String = "="
 
-## Trees cost this much to enter. They also block sight, which is a fact about
-## the ground for the perception lesson, not a number on this board.
+## Trees cost this much to enter. They will also block sight, once there is
+## fog to see through (T20); for now `sight` is a number nothing reads.
 const TREES_COST: int = 3
 
 ## The cost map the wader walks on, by name. See `UnitType.mover`.
@@ -90,8 +93,11 @@ static func cells_of(rows: Array[String], terrain: String) -> Array[Vector2i]:
 	return found
 
 
-# Fast, light, and cheap. Catches the slow things that hit hard from far away.
-# The shield line stops it; the ram cannot run from it.
+# The five a workshop builds, and the cycle between them: the runner is fast
+# and cheap and catches what is slow (mortar, ram); the shield holds the line
+# against runners and waders; the mortar outranges the shield; the wader goes
+# where nobody else can and finds mortars there; the ram, behind the forge,
+# is for buildings.
 static func _mobile_types() -> Array[UnitType]:
 	var runner := UnitType.new(RUNNER, 6, 1, 3, 1)
 	runner.strong_against.assign([MORTAR, RAM])

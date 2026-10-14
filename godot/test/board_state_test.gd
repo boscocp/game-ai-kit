@@ -328,7 +328,8 @@ func test_a_nonsense_faction_count_still_lands_on_a_real_faction() -> void:
 	assert_bool(after.current_faction >= 0).is_true()
 
 
-# A 6x3 board of flat ground, red's unit 1 at (1, 1) and blue's unit 2 at (4, 1).
+
+
 func test_a_unit_walks_on_its_own_type_s_cost_map() -> void:
 	# T10: a cell blocked on the board can be open to one mover. The first
 	# version checked the step against the board's map and the bill against
@@ -405,6 +406,24 @@ func test_an_order_is_refused_off_the_producer_s_side() -> void:
 	assert_str(state.why_production_refused(ProductionOrder.new(1, soldier, Vector2i(3, 3)))).contains("not next to")
 
 
+func test_a_new_unit_never_takes_a_dead_unit_s_id() -> void:
+	# `Unit.id` promises an id is never reused. Counting from the living
+	# broke that whenever the highest id died: a stored move naming the dead
+	# unit would command the new one.
+	var maker := UnitType.new("maker", 0, 0, 1, 0, false)
+	var soldier := UnitType.new("soldier", 3, 1, 1, 0)
+	maker.produces.assign(["soldier"])
+	var units: Array[Unit] = [Unit.new(1, RED, Vector2i(1, 1), 10, 0, maker), Unit.new(5, RED, Vector2i(3, 3), 0)]
+	var state := BoardState.new(GridGraph.new(4, 4), units)
+
+	var built: BoardState = state.produce(ProductionOrder.new(1, soldier, Vector2i(1, 2)))
+	var again: BoardState = built.produce(ProductionOrder.new(1, soldier, Vector2i(1, 0)))
+
+	assert_int(built.unit_at(Vector2i(1, 2)).id).is_equal(6)
+	assert_int(again.unit_at(Vector2i(1, 0)).id).is_equal(7)
+
+
+# A 6x3 board of flat ground, red's unit 1 at (1, 1) and blue's unit 2 at (4, 1).
 func _two_unit_board() -> BoardState:
 	var graph := GridGraph.new(6, 3)
 	var units: Array[Unit] = [

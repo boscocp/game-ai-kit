@@ -20,14 +20,14 @@ const RED: int = 0
 const BLUE: int = 1
 const FACTIONS: int = 2
 
-## The board, row by row: `.` open, `T` trees, `#` rock, `~` water. Row 4,
-## where the river is missing, is the bridge.
+## The board, row by row: `.` open, `T` trees, `#` rock, `~` water, `=` the
+## bridge.
 const MAP: Array[String] = [
 	"..T...~~......",
 	".TT...~~.T....",
 	".....T~~.T....",
 	"..#..T~~......",
-	"..#........#..",
+	"..#...==...#..",
 	"......~~T..#..",
 	"....T.~~T.....",
 	"....T.~~...TT.",
@@ -41,27 +41,32 @@ static func build() -> BoardState:
 	var types: Dictionary = TacticalRules.unit_types()
 	var graphs: Dictionary = TacticalRules.graphs_from(MAP)
 	var units: Array[Unit] = []
-	for placed: Array in _placements():
-		var kind: UnitType = types[placed[2]]
-		units.append(Unit.new(units.size() + 1, placed[0], placed[1], 10, kind.movement, kind))
+	for placed: Dictionary in _placements():
+		var kind: UnitType = types[placed["type"]]
+		units.append(Unit.new(units.size() + 1, placed["side"], placed["cell"], 10, kind.movement, kind))
 	var state := BoardState.new(graphs[UnitType.GROUND], units, RED)
 	state.movement_graphs = {TacticalRules.WATER_MOVER: graphs[TacticalRules.WATER_MOVER]}
 	state.funds = {RED: TacticalRules.STARTING_FUNDS, BLUE: TacticalRules.STARTING_FUNDS}
 	return state
 
 
-# Faction, cell, type -- the two sides mirrored through the board's centre, so
+# Who stands where -- the two sides mirrored through the board's centre, so
 # neither starts nearer the bridge.
-static func _placements() -> Array[Array]:
+static func _placements() -> Array[Dictionary]:
+	var placed: Array[Dictionary] = []
+	for side: Array in [[RED, Vector2i.ZERO], [BLUE, Vector2i(13, 8)]]:
+		for spot: Array in _one_side():
+			var cell: Vector2i = spot[0] if side[0] == RED else side[1] - spot[0]
+			placed.append({"side": side[0], "cell": cell, "type": spot[1]})
+	return placed
+
+
+# Red's pieces, cell and type; blue's are the same turned half round.
+static func _one_side() -> Array[Array]:
 	return [
-		[RED, Vector2i(1, 7), TacticalRules.WORKSHOP],
-		[RED, Vector2i(3, 5), TacticalRules.BOLT_TOWER],
-		[RED, Vector2i(4, 1), TacticalRules.WATCHTOWER],
-		[RED, Vector2i(2, 6), TacticalRules.RUNNER],
-		[RED, Vector2i(3, 7), TacticalRules.SHIELD],
-		[BLUE, Vector2i(12, 1), TacticalRules.WORKSHOP],
-		[BLUE, Vector2i(10, 3), TacticalRules.BOLT_TOWER],
-		[BLUE, Vector2i(9, 7), TacticalRules.WATCHTOWER],
-		[BLUE, Vector2i(11, 2), TacticalRules.RUNNER],
-		[BLUE, Vector2i(10, 1), TacticalRules.SHIELD],
+		[Vector2i(1, 7), TacticalRules.WORKSHOP],
+		[Vector2i(3, 5), TacticalRules.BOLT_TOWER],
+		[Vector2i(4, 1), TacticalRules.WATCHTOWER],
+		[Vector2i(2, 6), TacticalRules.RUNNER],
+		[Vector2i(3, 7), TacticalRules.SHIELD],
 	]

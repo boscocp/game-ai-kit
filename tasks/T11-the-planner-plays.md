@@ -1,6 +1,6 @@
 # T11 — The planner plays
 
-Size: L · Prereqs: T4, T10 · Files: `godot/addons/ai_planning/`, `godot/game/`
+Size: L · Prereqs: T4, T10, T26 · Files: `godot/addons/ai_planning/`, `godot/game/`
 
 ## Goal
 

@@ -14,6 +14,9 @@ extends Node2D
 const RADIUS: float = BoardView.TILE_PIXELS / 3.0
 const OUTLINE: float = 3.0
 const ID_TEXT_SIZE: int = 18
+## The id in a cell's corner, when the piece's own label is a type: messages
+## still name units by id, and a reader has to find "unit 4" on the board.
+const CORNER_TEXT_SIZE: int = 12
 
 ## Faction colours, by faction number. A scenario with more sides than this
 ## draws the extras in the last colour rather than crashing -- a missing colour
@@ -60,6 +63,8 @@ func _draw_unit(unit: Unit, centre: Vector2) -> void:
 	else:
 		draw_circle(centre, RADIUS, _colour_of(unit.faction))
 	_draw_label(centre, _label_of(unit))
+	if _label_of(unit) != str(unit.id):
+		_draw_corner_id(centre, unit.id)
 	if unit.id != _selected_id:
 		return
 	if fixed:
@@ -74,6 +79,16 @@ func _label_of(unit: Unit) -> String:
 	if unit.type != null and labels.has(unit.type.type_name):
 		return labels[unit.type.type_name]
 	return str(unit.id)
+
+
+# The id, small, in the bottom-right corner of the cell, outlined so it reads
+# on any ground.
+func _draw_corner_id(centre: Vector2, unit_id: int) -> void:
+	var half: float = BoardView.TILE_PIXELS / 2.0
+	var corner: Vector2 = centre + Vector2(half - 14.0, half - 3.0)
+	var font: Font = ThemeDB.fallback_font
+	draw_string_outline(font, corner, str(unit_id), HORIZONTAL_ALIGNMENT_LEFT, -1.0, CORNER_TEXT_SIZE, 4, Color.BLACK)
+	draw_string(font, corner, str(unit_id), HORIZONTAL_ALIGNMENT_LEFT, -1.0, CORNER_TEXT_SIZE, Color.WHITE)
 
 
 func _draw_label(centre: Vector2, words: String) -> void:

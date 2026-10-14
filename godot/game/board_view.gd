@@ -37,6 +37,7 @@ const ROUGH: Vector2i = Vector2i(1, 0)
 const WALL: Vector2i = Vector2i(2, 0)
 const NODE: Vector2i = Vector2i(3, 0)
 const WATER: Vector2i = Vector2i(4, 0)
+const BRIDGE: Vector2i = Vector2i(5, 0)
 
 const SOURCE_ID: int = 0
 
@@ -51,6 +52,7 @@ const SWATCHES: Array[Color] = [
 	Color(0.13, 0.13, 0.15),
 	Color(0.95, 0.78, 0.25),
 	Color(0.20, 0.40, 0.72),
+	Color(0.55, 0.38, 0.22),
 ]
 
 ## The cells the unit in hand can reach: a tint and a border over the terrain,
