@@ -27,7 +27,11 @@ teaches people to reach for it when they should not.
 4. Inference must not block a frame. Measure it, in the demo, on the slowest
    machine available, and write the number down.
 5. **The comparison**, which is the task: the same opponent, played by the
-   n-gram and by the cloned model, over the same recorded sessions. Accuracy,
+   n-gram, by a **ghost** -- the recorded situation closest to this one, and
+   what the player did there, as Killer Instinct's Shadows do it (the ghost
+   papers in T36's survey look the situation up exactly, in ranges, which is
+   the same thing at its simplest) -- and by the cloned model,
+   over the same recorded sessions. Accuracy,
    win rate, size, training cost, and whether a person can tell which is which.
 
 ## Acceptance
