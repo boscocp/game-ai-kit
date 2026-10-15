@@ -130,6 +130,16 @@ the rushdown itself, 87-92 against 72: the stand-in fumbles one press in
 ten and its clones fumble none -- imitation copies the choices, and the
 execution is the opponent's own.
 
+## Can a person tell them apart?
+
+Not much. The owner played the clone, both ghosts and T17's learner on
+2026-10-15 and could not tell them apart in any useful way; only the fixed
+opponent at hard felt a little harder, and everything felt very easy. So
+the three ways of copying a player -- and the one way of answering one --
+produced opponents a person could not distinguish, in this fight, with
+this moveset. That is the result, and it agrees with the table: none of
+them guessed the player much better than the others.
+
 ## Inference costs nothing a frame would notice
 
 Measured headless on an AMD Ryzen 5 9600X on 2026-10-15
@@ -162,9 +172,13 @@ is "built in", the seconds the fit took, which is printed and never stored.
 - **Anything about people in general.** One person, four fights. Record
   more (`make record-fights`, then `make train-clone CLONE_PLAYER=person`)
   and the table here is replaced.
-- **Whether a person can tell them apart.** The manual check: play the
-  clone and the ghosts, and the learner. If you cannot tell them apart, that
-  is a result and it goes in the README beside the technique.
+- **Why they could not be told apart.** The manual check, played by the
+  owner on 2026-10-15: *the clone, the two ghosts and the learner could not
+  be told apart much*; only the fixed hard opponent felt a little harder
+  than the rest, and all of them still very easy. The owner's own guess is
+  the game rather than the AI -- the fight has no evade, so there are few
+  choices for any of them to differ in. That was not measured: whether a
+  richer moveset separates them is open.
 - The win rates are measured against one opponent at one level, and only
   re-measured when the published file changes -- a change to the game's
   rules leaves them stale until `make test-clone-fights` runs again.

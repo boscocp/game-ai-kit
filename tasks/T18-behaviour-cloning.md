@@ -74,3 +74,9 @@ page draws.
 
 Play against both. If you cannot tell them apart, that is a result and it goes
 in the README beside the technique, not in a footnote.
+
+**Done by the owner, 2026-10-15:** the clone, the ghosts and the learner
+could not be told apart much; only the fixed hard opponent felt a little
+harder, and all were very easy. The owner suspects the game -- no evade,
+few choices to differ in -- rather than the AI. Recorded in the README and
+in `docs/concepts/behaviour-cloning.md`.
