@@ -22,6 +22,7 @@ readable one.
 | `ai_planning` | STRIPS — *to attack I need a unit; to have a unit I need resources* | **not yet** — T11 puts it on the board | [why](docs/concepts/planning.md) · [how](docs/godot/planning.md) |
 | `ai_learning` | logistic regression — attack or retreat; linear regression — which target is closer to falling | plays blue in `make demo-skirmish`, and says why on screen | [why](docs/concepts/learning.md) · [how](docs/godot/learning.md) |
 | `ai_opponent` | an n-gram over the player's actions -- what you do after what, counted during the fight | the "learner" modes of `make demo-fighting`, its table and its guess on the panel | [ADR 0016](docs/adr/0016-an-opponent-model-counts-during-the-fight.md) |
+| behaviour cloning, in `python/gameaikit/cloning/` and `ai_learning` | a softmax model and two ghosts fitted to a recorded player -- what it would do here | the "ghost" and "clone" modes of `make demo-fighting`; `make record-fights` records you | [why, and what it bought](docs/concepts/behaviour-cloning.md) |
 | `ai_llm` | a local model as an advisor, with everything it says validated before it becomes an action | **not written**, and no task scheduled yet | -- |
 
 `ai_core` sits under all of them: the board, the units, and the two interfaces

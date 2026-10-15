@@ -51,12 +51,23 @@ has not been evaluated on a held-out set. Training accuracy is not a result,
 and a comparison with no held-out split is a sales pitch.
 
 ```bash
-test -f godot/addons/ai_learning/weights.json
+test -f godot/addons/ai_learning/clone_weights.json
+make test-clone-rows
+python3 scripts/check_no_training.py
 ./scripts/godot --headless --path godot -s res://test/inference_budget.gd
 ```
 
-The budget script asserts inference stays under a stated millisecond count per
-decision.
+The weights ship as `clone_weights.json`, not `weights.json`: that file is
+T6's combat model and existed before this task, so `test -f` on it passed on
+an empty change (the owner's decision, 2026-10-15). `make test-clone-rows`
+holds the committed rows to the recordings; N10 in `check_no_training.py`
+holds the published file to a fresh fit of those rows. The budget script
+asserts inference stays under a stated millisecond count per decision, and
+first times a planted decision that must exceed it.
+
+The data is the owner's play, recorded with `make record-fights` before the
+merge (owner's decision, 2026-10-15). Until then the pipeline runs on
+scripted stand-ins, and the report says so on its second line.
 
 ## Manual check
 

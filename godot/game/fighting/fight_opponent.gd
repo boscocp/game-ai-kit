@@ -194,6 +194,8 @@ static func strike_for(data: FightData, character: String, height: String) -> St
 
 
 # The option as one input per frame, aimed from where the two stood in `seen`.
+# A crouch and a jump are here for the opponents that imitate a player
+# (T18); no situation of this one's offers them.
 func _inputs_for(option: String, seen: FightState, me: int) -> Array[int]:
 	var mine: FighterState = seen.fighters[me]
 	var other: FighterState = seen.fighters[1 - me]
@@ -208,6 +210,10 @@ func _inputs_for(option: String, seen: FightState, me: int) -> Array[int]:
 			return _held(toward, STEP_FRAMES)
 		"step out":
 			return _held(away, STEP_FRAMES)
+		"crouch":
+			return _held(FightInput.DOWN, GUARD_FRAMES)
+		"jump":
+			return _held(FightInput.UP | toward, STEP_FRAMES)
 	var move: String = strike_for(_data, mine.character, option)
 	if not _reaches(move, mine, other):
 		choice += ", out of reach: steps in"

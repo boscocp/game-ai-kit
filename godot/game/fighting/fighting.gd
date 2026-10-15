@@ -11,7 +11,9 @@
 ## low kick every second, uppercut you out of the air, or fight back as the
 ## fixed opponent at one of its three levels, or as the learner, the same
 ## levels with a table of your habits behind them -- and M cycles the mode: each
-## guard has a height that gets through it. P pauses, and space then plays
+## guard has a height that gets through it. Three more modes imitate a
+## recorded player (T18): two ghosts, which look up what the player did in
+## the situation, and the clone, a model fitted to it. P pauses, and space then plays
 ## one frame: the step every example offers (T21), here one frame of the
 ## resolution order, which is what a person learning frame data needs to see.
 ##
@@ -20,13 +22,17 @@
 ## opponent model in the same place, and reads the same input log this scene
 ## keeps.
 ##
+## Opened with `-- --record` (`make record-fights`), it keeps every fight
+## you play, as its input log, in `data/fights/`: what T18 learns from.
+## Nothing is kept otherwise.
+##
 ## When not to use it: as a game. It is a frame-data bench.
 class_name FightingExample
 extends Node2D
 
 const MODES: Array[String] = ["stand", "guard standing", "guard crouching", "jab", "throw", "low kick",
 		"anti-air (sees you now)", "opponent: easy", "opponent: medium", "opponent: hard", "learner: easy",
-		"learner: medium", "learner: hard"]
+		"learner: medium", "learner: hard", "ghost: exact", "ghost: nearest", "clone"]
 const OPPONENT_MODE: String = "opponent: "
 ## The same levels with an n-gram behind them, learning you as you fight (T17).
 const LEARNER_MODE: String = "learner: "
@@ -61,6 +67,12 @@ var opponent: FightOpponent
 ## chances, so a restart does not open the same way every time, while the
 ## input log still replays the fight exactly.
 var fights_begun: int = 0
+## The recorded player the ghosts and the clone imitate, loaded once.
+var cloned: ClonedPlayer = ClonedPlayer.load_from()
+## True when the scene was opened to record, and how many fights it has kept.
+var recording: bool = OS.get_cmdline_user_args().has("--record")
+var fights_kept: int = 0
+var _kept: bool = false
 var _characters: Array[String] = ["lancer", "dancer"]
 
 @onready var _view: FightView = $FightView
@@ -106,11 +118,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	_refresh()
 
 
-## The opening frame, the log emptied.
+## The opening frame, the log emptied -- and kept first, when recording.
 func restart() -> void:
 	if data.refusal != "":
 		_refresh()
 		return
+	keep_fight()
+	_kept = false
 	state = FightState.starting(data, _characters[0], _characters[1])
 	input_log.clear()
 	_seat_opponent()
@@ -129,6 +143,9 @@ func _seat_opponent() -> void:
 	elif dummy_mode.begins_with(LEARNER_MODE):
 		fights_begun += 1
 		opponent = FightModelOpponent.new(dummy_mode.trim_prefix(LEARNER_MODE), data, fights_begun)
+	elif dummy_mode in FightCloneOpponent.SOURCES:
+		fights_begun += 1
+		opponent = FightCloneOpponent.new(dummy_mode, cloned, data, fights_begun)
 	if opponent != null:
 		seat = FightDelay.new(opponent, 1)
 
@@ -140,7 +157,26 @@ func step_decision() -> void:
 	var inputs: Array[int] = [_held_keys(), _dummy_input()]
 	input_log.append([inputs[0], inputs[1]])
 	state = FightRules.step(state, inputs, data)
+	if state.winner != FightState.NOBODY:
+		keep_fight()
 	_refresh()
+
+
+## When recording, write this fight's log to `data/fights/`, once: at the
+## knockout, or at a restart or a close before one.
+func keep_fight() -> void:
+	if not recording or _kept or input_log.is_empty():
+		return
+	_kept = true
+	var path: String = FightRecording.save(input_log.duplicate(), _characters, dummy_mode, FightRecording.PERSON,
+			FightRecording.directory())
+	if path != "":
+		fights_kept += 1
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		keep_fight()
 
 
 ## What the frame is resolving with: each fighter's move, the frame of it and
@@ -167,7 +203,19 @@ func opponent_overlay() -> Dictionary:
 	var learner := opponent as FightModelOpponent
 	if learner != null:
 		shown.merge(_model_overlay(learner))
+	var imitator := opponent as FightCloneOpponent
+	if imitator != null:
+		shown.merge(_clone_overlay(imitator))
 	return shown
+
+
+# Whom it imitates, the situation it saw in the recordings' words, where its
+# answers came from and what it drew among.
+func _clone_overlay(imitator: FightCloneOpponent) -> Dictionary:
+	var seen: Dictionary = imitator.seen_situation
+	return {"imitates": cloned.trained_on.get("player", "nobody: " + cloned.error),
+			"situation_words": cloned.cases.key_of(seen) if cloned.is_loaded() and not seen.is_empty() else "nothing seen yet",
+			"found": imitator.found, "considered": str(imitator.considered) if not imitator.considered.is_empty() else "nothing yet"}
 
 
 # What the learner expects, from which context, and its table.
@@ -236,5 +284,6 @@ func _refresh() -> void:
 		return
 	_view.show_fight(state, data)
 	_status.text = ("A/D walk, W jump, S crouch, U/I punch, J/K kick, S+I uppercut, L throw, hold away to guard\n"
-			+ "C swap characters  ·  M dummy: %s  ·  P pause, space one frame  ·  R restart" % dummy_mode)
+			+ "C swap characters  ·  M dummy: %s  ·  P pause, space one frame  ·  R restart" % dummy_mode
+			+ ("\nrecording: %d fight(s) kept in data/fights/" % fights_kept if recording else ""))
 	_panel.text = FightingPanel.describe(state, data, paused, seat)

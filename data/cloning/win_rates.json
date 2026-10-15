@@ -1,0 +1,13 @@
+{
+ "fights": 100,
+ "opponent": "medium",
+ "weights_sha256": "7b9fb7bfd6550fea53c952d4718aef7e7cb3a2d102dcbda47052d212b6428707",
+ "wins": {
+  "clone": 88,
+  "ghost: exact": 87,
+  "ghost: nearest": 92,
+  "learner: medium": 40,
+  "opponent: medium": 35,
+  "stand-in: rushdown": 72
+ }
+}

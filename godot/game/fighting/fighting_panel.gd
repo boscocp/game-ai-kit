@@ -79,6 +79,9 @@ static func _opponent_lines(state: FightState, seat: FightDelay) -> PackedString
 	var learner := opponent as FightModelOpponent
 	if learner != null:
 		lines.append_array(_model_lines(learner))
+	var imitator := opponent as FightCloneOpponent
+	if imitator != null:
+		lines.append_array(_clone_lines(imitator))
 	return lines
 
 
@@ -100,4 +103,28 @@ static func _model_lines(learner: FightModelOpponent) -> PackedStringArray:
 		lines.append("  " + row)
 	if rows.size() > ROWS_SHOWN:
 		lines.append("  ... and %d more" % (rows.size() - ROWS_SHOWN))
+	return lines
+
+
+# Whom it imitates and what it saw in the recordings' words -- the situation
+# its answers were looked up or computed for -- where they came from, and
+# what it drew among, heaviest first.
+static func _clone_lines(imitator: FightCloneOpponent) -> PackedStringArray:
+	var player: ClonedPlayer = imitator.player
+	if not player.is_loaded():
+		return PackedStringArray(["", "it imitates nobody: " + player.error])
+	var recordings: int = player.trained_on.get("recordings", []).size()
+	var lines: PackedStringArray = ["", "it imitates %s, from %d recording(s):" % [player.trained_on["player"], recordings]]
+	if imitator.seen_situation.is_empty():
+		lines.append("  has decided nothing yet")
+		return lines
+	lines.append("  " + player.cases.key_of(imitator.seen_situation))
+	lines.append("  (%s)" % " | ".join(FightSituation.FEATURES))
+	lines.append("  %s; drew among:" % imitator.found)
+	var weighed: Array = imitator.considered.duplicate()
+	weighed.sort_custom(func(one: Array, other: Array) -> bool: return one[1] > other[1])
+	var cells: PackedStringArray = []
+	for option: Array in weighed.slice(0, 5):
+		cells.append("%s %d" % [option[0], option[1]])
+	lines.append("  " + ", ".join(cells))
 	return lines

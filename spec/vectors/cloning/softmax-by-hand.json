@@ -1,0 +1,88 @@
+{
+ "description": "Three answers, four columns. A situation adds its columns' weights to each answer's bias; a word with no column adds nothing; with no word at all only the biases are left.",
+ "model": {
+  "classes": [
+   "high",
+   "low",
+   "throw"
+  ],
+  "columns": [
+   "distance=close",
+   "distance=far",
+   "last=high",
+   "last=low"
+  ],
+  "weights": [
+   [
+    0.0,
+    1.0,
+    -0.5,
+    0.5
+   ],
+   [
+    0.5,
+    0.0,
+    1.0,
+    -1.0
+   ],
+   [
+    2.0,
+    -2.0,
+    0.0,
+    0.0
+   ]
+  ],
+  "bias": [
+   0.25,
+   0.0,
+   -0.25
+  ]
+ },
+ "cases": [
+  {
+   "situation": {
+    "distance": "close",
+    "last": "high"
+   },
+   "probabilities": {
+    "high": 0.07070306318277945,
+    "low": 0.4068680365934249,
+    "throw": 0.5224289002237956
+   },
+   "likeliest": "throw"
+  },
+  {
+   "situation": {
+    "distance": "far",
+    "last": "low"
+   },
+   "probabilities": {
+    "high": 0.9240064735078669,
+    "low": 0.05906975759251023,
+    "throw": 0.016923768899622816
+   },
+   "likeliest": "high"
+  },
+  {
+   "situation": {
+    "distance": "near",
+    "last": "high"
+   },
+   "probabilities": {
+    "high": 0.18213798441150478,
+    "low": 0.6357240311769904,
+    "throw": 0.18213798441150478
+   },
+   "likeliest": "low"
+  },
+  {
+   "situation": {},
+   "probabilities": {
+    "high": 0.4192289516096977,
+    "low": 0.3264958357998367,
+    "throw": 0.25427521259046565
+   },
+   "likeliest": "high"
+  }
+ ]
+}

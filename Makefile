@@ -72,7 +72,8 @@ lint-review: ## This branch has a review record and may be merged
 .PHONY: check
 check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-search-properties test-planner-properties test-perception-properties \
-       test-decisions test-demo-overlays test-replay test-opponent-levels test-opponent-properties ## Run every gate
+       test-decisions test-demo-overlays test-replay test-opponent-levels test-opponent-properties \
+       test-clone-rows test-inference-budget test-clone-report ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability lint-demos \
@@ -213,7 +214,7 @@ train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors test-cloning-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -250,6 +251,12 @@ test-ngram-vectors: import ## The n-gram vectors, against ai_opponent
 	@# The same files are read by `make test-python` through gameaikit.ngram.
 	@$(GODOT) --headless --path godot -s res://test/ngram_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/ngram
+
+.PHONY: test-cloning-vectors
+test-cloning-vectors: import ## The cloning vectors, against ai_learning's softmax model and case table
+	@# The same files are read by `make test-python` through gameaikit.cloning.
+	@$(GODOT) --headless --path godot -s res://test/cloning_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/cloning
 
 .PHONY: test-fuzzy-vectors
 test-fuzzy-vectors: import ## The fuzzy vectors, against ai_fuzzy
@@ -383,6 +390,52 @@ test-opponent-properties: import ## The opponent model learns a habit within 40 
 test-opponent-levels: import ## The fixed opponent's levels are ordered: each beats the one below it 60 times in 100
 	@# T37's acceptance. About 45 seconds: 600 fights of up to 99 seconds.
 	@$(GODOT) --headless --path godot -s res://test/opponent_levels.gd
+
+# --- behaviour cloning (T18) -------------------------------------------------
+#
+# Recordings (data/fights/) -> rows, cut by Godot (data/cloning/rows.json) ->
+# the model and the ghost, fitted in Python (ai_learning/clone_weights.json)
+# -> the win rates, fought by Godot (data/cloning/win_rates.json). Each step
+# is a target; `train-clone` runs the last three in order.
+
+CLONE_PLAYER ?= stand-in: rushdown
+
+.PHONY: record-fights
+record-fights: import ## Play the training mode and keep every fight you play in data/fights/, for T18 to learn from
+	@$(GODOT) --path godot res://game/fighting/fighting.tscn -- --record
+
+.PHONY: record-stand-ins
+record-stand-ins: import ## Record the scripted stand-in players' fights again (deterministic)
+	@$(GODOT) --headless --path godot -s res://test/record_stand_ins.gd -- $(CURDIR)/data/fights
+
+.PHONY: clone-rows
+clone-rows: import ## Replay every recording and cut the rows behaviour cloning learns from
+	@$(GODOT) --headless --path godot -s res://test/export_clone_rows.gd \
+		-- $(CURDIR)/data/fights $(CURDIR)/data/cloning/rows.json
+
+.PHONY: train-clone
+train-clone: clone-rows ## Cut the rows, fit the clone of CLONE_PLAYER, publish it and fight it for the win rates
+	@# CLONE_PLAYER="person" once you have recorded yourself with `make record-fights`.
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.cloning.publish --player "$(CLONE_PLAYER)" \
+		--write $(CURDIR)/godot/addons/ai_learning
+	@$(MAKE) --no-print-directory test-clone-fights
+
+.PHONY: test-clone-fights
+test-clone-fights: import ## Fight the fixed opponent with the ghosts, the clone and the learner; write the win rates (~45 s)
+	@$(GODOT) --headless --path godot -s res://test/clone_fights.gd -- $(CURDIR)/data/cloning/win_rates.json
+
+.PHONY: test-clone-rows
+test-clone-rows: import ## The committed rows are what the recordings cut into, today
+	@$(GODOT) --headless --path godot -s res://test/export_clone_rows.gd \
+		-- $(CURDIR)/data/fights $(CURDIR)/data/cloning/rows.json --check
+
+.PHONY: test-inference-budget
+test-inference-budget: import ## A cloned player's decision stays under its millisecond budget
+	@$(GODOT) --headless --path godot -s res://test/inference_budget.gd
+
+.PHONY: test-clone-report
+test-clone-report: ## T18's comparison: held out, and measured on the published file
+	@$(PYTHON) python/gameaikit/cloning/compare.py --report
 
 # --- the fighters' pictures (T35, ADR 0015) ---------------------------------
 #

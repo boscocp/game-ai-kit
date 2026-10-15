@@ -1,0 +1,62 @@
+{
+ "description": "Three situations met. Exact lookup finds one or nothing; nearest pools every case at the fewest differing features -- 'far | low' is one word from two cases, so their counts add.",
+ "features": [
+  "distance",
+  "last"
+ ],
+ "table": {
+  "close | high": {
+   "throw": 3,
+   "low": 1
+  },
+  "close | low": {
+   "high": 2
+  },
+  "far | high": {
+   "low": 2,
+   "high": 1
+  }
+ },
+ "cases": [
+  {
+   "situation": {
+    "distance": "close",
+    "last": "high"
+   },
+   "exact": {
+    "throw": 3,
+    "low": 1
+   },
+   "distance": 0,
+   "nearest": {
+    "throw": 3,
+    "low": 1
+   }
+  },
+  {
+   "situation": {
+    "distance": "far",
+    "last": "low"
+   },
+   "exact": {},
+   "distance": 1,
+   "nearest": {
+    "high": 3,
+    "low": 2
+   }
+  },
+  {
+   "situation": {
+    "distance": "near",
+    "last": "jump"
+   },
+   "exact": {},
+   "distance": 2,
+   "nearest": {
+    "throw": 3,
+    "low": 3,
+    "high": 3
+   }
+  }
+ ]
+}
