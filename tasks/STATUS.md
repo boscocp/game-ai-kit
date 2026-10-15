@@ -51,6 +51,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T39 | High punches pass over a crouch | done | the owner's finding from playing T34: standing punches and the dancer's roundhouse are high and miss a crouching fighter; the light kicks recut as side kicks to the waist; manual check still a person's |
 | T17 | The opponent model | done | `ai_opponent`: an n-gram with additive smoothing and decay, held to Python by 4 vectors; the learner is T37's opponent leaning towards answers; 20/20 within 40 actions and after a switch; ADR 0016, the owner's exception to invariant 6, held by N9; manual check still a person's |
 | T18 | Behaviour cloning, and what a learned model buys | todo | the comparison is the task: n-gram, a ghost, and the trained model |
+| T40 | An evade, and levels that are hard enough | todo | the owner could not tell T18's opponents apart and found all of them easy; a backdash gives every one more to choose, and hard is retuned and measured |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
 | T26 | Combat on the board | todo | reach and the counter table start to matter; the dataset is rebuilt from the game (ADR 0008) |
 | T21 | Every example can be watched | done | `check_demos.py` and `demo_overlays.gd`; blue's decision now drawn before it is played |
