@@ -1,0 +1,88 @@
+{
+ "description": "Three answers, four columns. A situation adds its columns' weights to each answer's bias; a word with no column adds nothing; with no word at all only the biases are left, and high and low tie -- the first in classes wins.",
+ "model": {
+  "classes": [
+   "high",
+   "low",
+   "throw"
+  ],
+  "columns": [
+   "distance=close",
+   "distance=far",
+   "last=high",
+   "last=low"
+  ],
+  "weights": [
+   [
+    0.0,
+    1.0,
+    -0.5,
+    0.5
+   ],
+   [
+    0.5,
+    0.0,
+    1.0,
+    -1.0
+   ],
+   [
+    2.0,
+    -2.0,
+    0.0,
+    0.0
+   ]
+  ],
+  "bias": [
+   0.0,
+   0.0,
+   -0.25
+  ]
+ },
+ "cases": [
+  {
+   "situation": {
+    "distance": "close",
+    "last": "high"
+   },
+   "probabilities": {
+    "high": 0.055938448219335045,
+    "low": 0.413332331979794,
+    "throw": 0.530729219800871
+   },
+   "likeliest": "throw"
+  },
+  {
+   "situation": {
+    "distance": "far",
+    "last": "low"
+   },
+   "probabilities": {
+    "high": 0.9044840065682136,
+    "low": 0.07424456843449029,
+    "throw": 0.021271424997296118
+   },
+   "likeliest": "high"
+  },
+  {
+   "situation": {
+    "distance": "near",
+    "last": "high"
+   },
+   "probabilities": {
+    "high": 0.14780404965619498,
+    "low": 0.6624117938958737,
+    "throw": 0.1897841564479314
+   },
+   "likeliest": "low"
+  },
+  {
+   "situation": {},
+   "probabilities": {
+    "high": 0.35986746732333263,
+    "low": 0.35986746732333263,
+    "throw": 0.2802650653533347
+   },
+   "likeliest": "high"
+  }
+ ]
+}

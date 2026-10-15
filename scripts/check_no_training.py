@@ -35,8 +35,19 @@ stops. This gate is four claims about that split:
     the opponent model counts during a fight, and is allowed to only because
     its table starts empty, replays from the input log, and is never written
     down -- a table that was saved would be a model fitted at game time;
+  * N10 the published cloned player (T18) is what `gameaikit.cloning`
+    fits from the committed rows, and a fresh run still produces it. The
+    rows themselves are cut by Godot from the recordings, and
+    `make test-clone-rows` holds them to the recordings;
+  * N11 no GDScript writes a file where the cloned player lives -- by its
+    file name or by `ClonedPlayer.DEFAULT_PATH`;
+  * N12 no GDScript outside `ai_learning` writes into a ghost's `cases`.
+    A ghost that counted what it saw during the fight would be a Shadow
+    trained at game time, and since the game loads the player once, it
+    would outlive the fight -- what ADR 0016 allows the n-gram only because
+    its table starts empty and is never kept;
 
-N4, N6 and N7 are the ones with teeth. The others are about the shape of the code and
+N4, N6, N7 and N10 are the ones with teeth. The others are about the shape of the code and
 could all pass over a weights file somebody typed by hand.
 
 What this gate cannot do
@@ -100,6 +111,15 @@ BEAD_TRAINER = "gameaikit.menace.report"
 CHECKERS_GAME = GODOT / "game" / "checkers"
 CHECKERS_WEIGHTS = CHECKERS_GAME / "checkers_weights.json"
 CHECKERS_TRAINER = "gameaikit.checkers.report"
+CLONE_WEIGHTS = pathlib.Path("godot/addons/ai_learning/clone_weights.json")
+CLONE_TRAINER = "gameaikit.cloning.publish"
+CLONE_NAMES_RE = re.compile(r"clone_weights|ClonedPlayer\.DEFAULT_PATH")
+# Writing into a ghost's table: an assignment through `cases`, or a call that
+# changes a dictionary in place. A net for the common spellings, like N5's.
+# Through a member, `.cases`: a local list called `cases` -- every vector
+# runner has one -- is not a ghost.
+CASE_WRITE_RE = re.compile(r"\.cases\b(?:\[[^\]]*\])*\s*(?:[-+*/]?=)(?!=)"
+                           r"|\.cases\b(?:\[[^\]]*\])*\.(?:merge|erase|clear|get_or_add|assign)\(")
 # A line names the checkers weights by the file, by the class that reads it,
 # or by a path into the game's folder -- `"res://game/checkers/" + name`
 # builds the file without naming it.
@@ -324,6 +344,8 @@ def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
             elif holds_a_table or NGRAM_NAMES_RE.search(line):
                 findings.append(f"N9 {label} writes an opponent model down; it counts during "
                                 "one fight and is never saved (ADR 0016)")
+            elif CLONE_NAMES_RE.search(line):
+                findings.append(f"N11 {label} writes where the cloned player lives; the game only reads it")
             elif CHECKERS_NAMES_RE.search(line) or CHECKERS_GAME.name in path.parts:
                 # Before the rule below: `checkers_weights.json` ends in the
                 # addon's `weights.json`, and would be named as the wrong file.
@@ -361,6 +383,20 @@ def check_bead_writes(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
                 findings.append(
                     f"N5 {_label(path, repo)}:{number} changes a bead count; MENACE learns "
                     "in Python, and the game only draws from the published beads")
+    return findings
+
+
+def check_case_writes(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
+    """N12: nothing outside the inference addon writes into a ghost's cases."""
+    findings = []
+    for path in gdscript_files(root):
+        if LEARNING_ADDON.name in path.parts:
+            continue
+        code = code_only(path.read_text(encoding="utf-8")).splitlines()
+        for number, written in enumerate(code, start=1):
+            if _writes_a_bead(written, [CASE_WRITE_RE]):
+                findings.append(f"N12 {_label(path, repo)}:{number} writes into a ghost's cases; "
+                                "the ghost is counted in Python from the recordings, and only read here")
     return findings
 
 
@@ -450,6 +486,45 @@ def fresh_checkers_weights(repo: pathlib.Path) -> dict | None:
         print(f"N0 the checkers pipeline could not be imported: {error}")
         return None
     return report.as_json(train.run())
+
+
+def check_clone_weights(repo: pathlib.Path, retrain: bool,
+                        trained: dict | None = None) -> tuple[list[str], bool]:
+    """N10: the published cloned player is what the cloning pipeline fits from
+    the committed rows. The shape of N7, injectable for the same reason.
+
+    A tree with no inference addon is noted; an addon without its cloned
+    player is a finding, as N7 makes a missing checkers file one."""
+    path = repo / CLONE_WEIGHTS
+    if not path.parent.is_dir():
+        print(f"N0 note: no {CLONE_WEIGHTS.parent} -- N10 inspected nothing")
+        return [], True
+    if not path.exists():
+        return [f"N10 {CLONE_WEIGHTS} is missing; run `make train-clone`"], True
+    committed = json.loads(path.read_text(encoding="utf-8"))
+    if not str(committed.get("generated_by", "")).startswith(CLONE_TRAINER):
+        return [f"N10 {CLONE_WEIGHTS} says it was generated by {committed.get('generated_by')!r}, "
+                f"not by {CLONE_TRAINER}"], True
+    if not retrain:
+        return [], False
+    fresh = trained if trained is not None else fresh_clone_weights(repo, committed)
+    if fresh is None:
+        return [], False
+    findings = differences_between(committed, fresh, CLONE_WEIGHTS.name)
+    return [finding.replace("N4 ", "N10 ", 1).replace("`make train`", "`make train-clone`")
+            for finding in findings], True
+
+
+def fresh_clone_weights(repo: pathlib.Path, committed: dict) -> dict | None:
+    """The cloned player, for the player the committed file names, as the pipeline fits it now."""
+    sys.path.insert(0, str(repo / "python"))
+    try:
+        from gameaikit.cloning import publish, rows  # noqa: PLC0415
+        recorded = rows.read(repo / rows.ROWS_PATH)
+    except (ImportError, OSError, ValueError) as error:
+        print(f"N0 the cloning pipeline could not be run: {error}")
+        return None
+    return json.loads(publish.as_text(publish.published(recorded, committed["trained_on"]["player"])))
 
 
 def _accumulates(line: str) -> bool:
@@ -589,15 +664,17 @@ def run(repo: pathlib.Path, retrain: bool = True) -> int:
     findings = check_vocabulary(repo / GODOT, repo)
     findings += check_writing(repo / GODOT, repo)
     findings += check_bead_writes(repo / GODOT, repo)
+    findings += check_case_writes(repo / GODOT, repo)
     weights_findings, weights_ran = check_weights(repo, retrain)
     bead_findings, beads_ran = check_beads(repo, retrain)
     checkers_findings, checkers_ran = check_checkers_weights(repo, retrain)
-    findings += weights_findings + bead_findings + checkers_findings
+    clone_findings, clone_ran = check_clone_weights(repo, retrain)
+    findings += weights_findings + bead_findings + checkers_findings + clone_findings
     for finding in findings:
         print(finding)
     if findings:
         return 1
-    return 0 if weights_ran and beads_ran and checkers_ran else 3
+    return 0 if weights_ran and beads_ran and checkers_ran and clone_ran else 3
 
 
 # --- self-test -------------------------------------------------------------
@@ -668,6 +745,7 @@ def self_test() -> int:
     sound = {
         str(LEARNING_ADDON / "learned_model.gd"): INFERENCE,
         str(WEIGHTS): json.dumps(SOUND_WEIGHTS),
+        str(CLONE_WEIGHTS): json.dumps(SOUND_CLONE),
     }
 
     with tempfile.TemporaryDirectory() as workspace:
@@ -943,12 +1021,29 @@ def self_test() -> int:
         expect("the table saved through a ConfigFile", quiet(build(root, "habitsconfig", dict(
             sound, **{str(OPPONENT_ADDON / "keep.gd"): '\tvar config := ConfigFile.new()\n\tconfig.save("user://t.cfg")\n'}))),
             1, "N9")
+        expect("the game writing over the cloned player", quiet(build(root, "clonewrite", dict(
+            sound, **{str(GODOT / "game" / "fighting" / "keep.gd"):
+                      'var out: FileAccess = FileAccess.open(ClonedPlayer.DEFAULT_PATH, FileAccess.WRITE)\n'}))),
+            1, "N11")
+        expect("a ghost counting during the fight", quiet(build(root, "ghostcounts", dict(
+            sound, **{str(GODOT / "game" / "fighting" / "ghost.gd"):
+                      '\tplayer.cases.cases[key] = counts\n'}))),
+            1, "N12")
+        expect("a ghost's counts bumped in place", quiet(build(root, "ghostbumps", dict(
+            sound, **{str(GODOT / "game" / "fighting" / "ghost.gd"):
+                      '\tplayer.cases.cases[key]["jump"] += 1\n'}))),
+            1, "N12")
+        expect("reading a ghost's cases is not writing them", quiet(build(root, "ghostreads", dict(
+            sound, **{str(GODOT / "game" / "fighting" / "ghost.gd"):
+                      '\tvar seen: int = player.cases.cases.size()\n\tif player.cases.cases == {}:\n\t\tpass\n'}))),
+            3)
         expect("counting in the opponent addon", quiet(build(root, "opponentcounts", dict(
             sound, **{str(OPPONENT_ADDON / "ngram_predictor.gd"):
                       '\trow[action] = row.get(action, 0.0) + 1.0\n'}))), 3)
 
         failures += _self_test_the_beads(root)
         failures += _self_test_the_checkers_weights(root)
+        failures += _self_test_the_clone_weights(root)
         failures += _self_test_the_dump(root)
         failures += _self_test_the_comparison()
 
@@ -1077,6 +1172,49 @@ def _self_test_the_checkers_weights(root: pathlib.Path) -> list[str]:
         code = run(repo, retrain=False)
     if code != 1 or "N7" not in printed.getvalue():
         failures.append("run() never reached the checkers weights check")
+    return failures
+
+
+SOUND_CLONE = {
+    "generated_by": "gameaikit.cloning.publish",
+    "trained_on": {"player": "person", "recordings": ["one.json"], "held_out": ["two.json"], "rows": 2},
+    "model": {"kind": "softmax", "weights": [[0.25, -0.5], [-0.25, 0.5]], "bias": [0.0, 0.0]},
+    "cases": {"close | nothing": {"throw": 2}},
+}
+
+
+def _self_test_the_clone_weights(root: pathlib.Path) -> list[str]:
+    """N10, handed a fit rather than running one: a matching file passes, a
+    drifted weight, a hand-written file and a pipeline that cannot run do not."""
+    failures = []
+    repo = root / "clone"
+    (repo / CLONE_WEIGHTS).parent.mkdir(parents=True, exist_ok=True)
+    (repo / CLONE_WEIGHTS).write_text(json.dumps(SOUND_CLONE))
+    with contextlib.redirect_stdout(io.StringIO()):
+        found, ran = check_clone_weights(repo, True, trained=json.loads(json.dumps(SOUND_CLONE)))
+    if found or not ran:
+        failures.append(f"a cloned player that matches its fit was reported: {found}")
+    drifted = json.loads(json.dumps(SOUND_CLONE))
+    drifted["model"]["weights"][1][0] = 0.75
+    with contextlib.redirect_stdout(io.StringIO()):
+        found, _ran = check_clone_weights(repo, True, trained=drifted)
+    if not any(finding.startswith("N10") for finding in found):
+        failures.append(f"a cloned weight that does not match its fit was not reported: {found}")
+    (repo / CLONE_WEIGHTS).write_text(json.dumps(dict(SOUND_CLONE, generated_by="a person")))
+    with contextlib.redirect_stdout(io.StringIO()) as printed:
+        code = run(repo, retrain=False)
+    if code != 1 or "N10" not in printed.getvalue():
+        failures.append("run() never reached the cloned player check, or passed a hand-written one")
+    (repo / CLONE_WEIGHTS).unlink()
+    with contextlib.redirect_stdout(io.StringIO()):
+        found, _ran = check_clone_weights(repo, False)
+    if not any(finding.startswith("N10") for finding in found):
+        failures.append("a missing cloned player beside the inference addon was not reported")
+    (repo / CLONE_WEIGHTS).write_text(json.dumps(SOUND_CLONE))
+    with contextlib.redirect_stdout(io.StringIO()):
+        found, ran = check_clone_weights(repo, True)
+    if found or ran:
+        failures.append("a cloned player whose pipeline could not run was not reported as unchecked")
     return failures
 
 

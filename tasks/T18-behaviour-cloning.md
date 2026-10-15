@@ -51,14 +51,32 @@ has not been evaluated on a held-out set. Training accuracy is not a result,
 and a comparison with no held-out split is a sales pitch.
 
 ```bash
-test -f godot/addons/ai_learning/weights.json
+test -f godot/addons/ai_learning/clone_weights.json
+make test-clone-rows
+python3 scripts/check_no_training.py
 ./scripts/godot --headless --path godot -s res://test/inference_budget.gd
 ```
 
-The budget script asserts inference stays under a stated millisecond count per
-decision.
+The weights ship as `clone_weights.json`, not `weights.json`: that file is
+T6's combat model and existed before this task, so `test -f` on it passed on
+an empty change (the owner's decision, 2026-10-15). `make test-clone-rows`
+holds the committed rows to the recordings; N10 in `check_no_training.py`
+holds the published file to a fresh fit of those rows. The budget script
+asserts inference stays under a stated millisecond count per decision, and
+first times a planted decision that must exceed it.
+
+The data is the owner's play, recorded with `make record-fights`: nine
+fights on 2026-10-15 (owner's decision). The pipeline was built first on
+scripted stand-ins, which stay in `data/fights/` as the contrast the concept
+page draws.
 
 ## Manual check
 
 Play against both. If you cannot tell them apart, that is a result and it goes
 in the README beside the technique, not in a footnote.
+
+**Done by the owner, 2026-10-15:** the clone, the ghosts and the learner
+could not be told apart much; only the fixed hard opponent felt a little
+harder, and all were very easy. The owner suspects the game -- no evade,
+few choices to differ in -- rather than the AI. Recorded in the README and
+in `docs/concepts/behaviour-cloning.md`.

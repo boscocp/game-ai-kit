@@ -23,9 +23,8 @@
 class_name FightModelOpponent
 extends FightOpponent
 
-## Every action it can see you do, and predict.
-const ACTIONS: Array[String] = ["step in", "step out", "crouch", "jump", "high", "mid", "low", "overhead", "throw",
-		"guard standing", "guard crouching"]
+## Every action it can see you do, and predict: `FightAction`'s.
+const ACTIONS: Array[String] = FightAction.ACTIONS
 ## What answers each action: the options to lean towards when it is expected.
 ## A high is ducked and punished low; a low is guarded crouching; an
 ## overhead, standing; a throw loses to a strike; a jump to a strike aimed
@@ -102,25 +101,10 @@ func watch(seen: FightState, me: int) -> void:
 	_last_action = action
 
 
-## What fighter `index` is doing in `state`, as one of `ACTIONS`, or "" when
-## it is doing nothing to learn from -- standing, stunned by a hit, landing.
+## What fighter `index` is doing in `state`: `FightAction.of`, kept here
+## under the name T17 gave it.
 static func action_of(state: FightState, index: int, data: FightData) -> String:
-	var fighter: FighterState = state.fighters[index]
-	if fighter.is_airborne() or fighter.stun_kind == "takeoff":
-		return "jump"
-	if fighter.move != "":
-		return data.move(fighter.character, fighter.move)["height"]
-	if fighter.stun_kind == "block":
-		return "guard crouching" if fighter.crouching else "guard standing"
-	if fighter.stun > 0:
-		return ""
-	if fighter.crouching:
-		return "crouch"
-	var walking: int = FightInput.walk_direction(fighter.held_before)
-	if walking == 0:
-		return ""
-	var toward: int = signi(state.fighters[1 - index].x - fighter.x)
-	return "step in" if walking == toward else "step out"
+	return FightAction.of(state, index, data)
 
 
 # As the fixed opponent's, and the choice says what it was expecting.
