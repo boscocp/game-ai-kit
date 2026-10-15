@@ -47,7 +47,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T35 | Fighters you can see | done | Puffolotti's CC0 karate template, two costumes; 30 strips of whole cells committed, the sheets only referenced (ADR 0015); a move's cels by phase, so the picture follows the frame data; manual check still a person's |
 | T36 | How fighting-game AI is made | done | `docs/concepts/fighting-game-ai.md`: 26 sources, each opened, six as abstracts only and said so; most games script their opponents, the ones that copy a player record situations and answers, the arena hands every AI the fight 15 frames late; T37, T17 and T18 rewritten from it |
 | T37 | A fixed opponent, at three honest levels | done | five situations, weighted options; reaction 30/22/15, tactics, execution; `FightDelay` hands it a copy of the past and refuses under 15; each level beats the one below 93-99 in 100 mirror fights; not a `DecisionPolicy` (board-typed); manual check still a person's |
-| T38 | The jump | todo | asked for by the owner while T34 was being built: an arc in whole frames, jump-ins as overheads, an anti-air, boxes that become rectangles |
+| T38 | The jump | done | take-off, an arc in whole frames, landing; boxes are two intervals and the pass-over rule is geometry; four air moves, all overheads, one a jump; an uppercut anti-air; jumps cross over, guarded back from the strike; manual check still a person's |
 | T39 | High punches pass over a crouch | done | the owner's finding from playing T34: standing punches and the dancer's roundhouse are high and miss a crouching fighter; the light kicks recut as side kicks to the waist; manual check still a person's |
 | T17 | The opponent model | todo | n-grams you can print; after T37, so the learner has a fixed opponent to be measured against |
 | T18 | Behaviour cloning, and what a learned model buys | todo | the comparison is the task: n-gram, a ghost, and the trained model |
@@ -86,6 +86,30 @@ because it is driven better, and a command proves every car runs one physics.
 
 ---
 
+## Resuming after 2026-10-15 (wave 40)
+
+**What landed.** T38: the jump. Up takes off over `takeoff` frames on the
+ground, flies an arc of whole units, and lands; in the air a fighter cannot
+guard or be thrown, and has one air move a jump -- an attack on every
+button, all overheads. A box is two intervals now, and a high passes over a
+crouch because it is above it: the special rule went, and the recorded
+fight did not change. An uppercut per character is the anti-air. From the
+owner playing it: air attacks on every button, and jumps that cross over --
+a guard is held back from the way the strike travels, so a cross-up is
+guarded the other way.
+
+**The review's worst findings.** Two passes. Up on the frame a throw
+arrived escaped it, and landing could not be thrown: take-off frames now,
+and landing is throwable. A fighter knocked out of the air could kick again.
+Two fighters on one spot blocked whichever way they held. All fixed; see
+[docs/reviews/40-the-jump.md](../docs/reviews/40-the-jump.md).
+
+**Not proven.** T38's manual check, with T34's, T35's, T37's and T39's.
+
+**Next:** T17, the opponent model -- with ADR 0016, the owner's exception to
+invariant 6: an n-gram may count during a fight, starts empty, is never
+written down, and replays from the input log. Its draft is ready.
+
 ## Resuming after 2026-10-15 (wave 39)
 
 **What landed.** T37: `FightOpponent`, a fixed opponent with five situations
@@ -106,10 +130,7 @@ opponent the present. All fixed, with four untested paths; see
 
 **Not proven.** T37's manual check, with T34's, T35's and T39's.
 
-**Next:** T38, the jump. The cels are found in the template: the lancer's
-uppercut at 37-43, takeoff 564-566, tucks 572-580, the flying kick 677-679;
-the dancer's sheet is the same template and should share the indices --
-check before cutting.
+**Next:** T38, the jump.
 
 ## Resuming after 2026-10-15 (wave 38)
 

@@ -31,8 +31,9 @@ teaches: none
 Per character: `health`, `walk_speed`, `body` (half its width), `tall` and
 `crouching_tall` (how high its hurtbox reaches, standing and crouching), and
 its `jump` (T38): `takeoff` frames still on the ground -- it cannot guard
-and can be thrown -- then `rise` frames up to `height`, `hang` frames there, `fall`
-frames down -- whole units on every frame, by integer division -- `speed`
+and can be thrown -- then `rise` frames up to `height`, `hang` frames
+there, `fall` frames down -- whole units on every frame, by integer
+division -- `speed`
 units a frame along the stage, fixed when up is pressed, and `landing`
 frames when it touches down, when it can be thrown. In the air it cannot
 guard and cannot be thrown, and it has one air move a jump -- none once it

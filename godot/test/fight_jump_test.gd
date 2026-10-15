@@ -162,6 +162,70 @@ func test_taking_off_and_landing_can_be_thrown() -> void:
 	assert_str(", ".join(landing.events)).contains("p2 throws p1")
 
 
+# Taking off is committed: it cannot guard, and holding down does not
+# crouch it. Nor does landing.
+func test_taking_off_and_landing_neither_guard_nor_crouch() -> void:
+	var state: FightState = _fight(300, 345)
+	state.fighters[1].move = "jab"
+	state.fighters[1].move_frame = int(_data.move("dancer", "jab")["startup"])
+	state.fighters[1].facing = -1
+	state = _step(state, UP | LEFT, 0)
+	assert_str(", ".join(state.events)).contains("p2 hits p1 with jab")
+	var landing: FightState = _fight(300, 500)
+	landing.fighters[0].stun = int(_data.character("lancer")["jump"]["landing"])
+	landing.fighters[0].stun_kind = "landing"
+	assert_bool(_step(landing, DOWN, 0).fighters[0].crouching).is_false()
+	var taking_off: FightState = _step(_fight(300, 500), UP, 0)
+	assert_bool(_step(taking_off, DOWN, 0).fighters[0].crouching).is_false()
+
+
+# Hitstun counts down on every frame of a fall, the landing frame too.
+func test_hitstun_runs_down_through_the_landing() -> void:
+	var state: FightState = _airborne(_fight(300, 500))
+	while state.fighters[0].jump_frame < _data.jump_length("lancer") - 1:
+		state = _step(state, 0, 0)
+	state.fighters[0].stun = 10
+	state.fighters[0].stun_kind = "hit"
+	var stun: Array[int] = []
+	for frame: int in range(3):
+		state = _step(state, 0, 0)
+		stun.append(state.fighters[0].stun)
+	assert_bool(state.fighters[0].is_airborne()).is_false()
+	assert_array(stun).is_equal([9, 8, 7])
+
+
+# Two fighters on one spot -- one landed on the other -- are pushed apart by
+# which way they face, the one facing right going left, so swapping the
+# players swaps the result and nothing else.
+func test_two_on_one_spot_part_by_which_way_they_face() -> void:
+	for lancer_faces: int in [1, -1]:
+		var state: FightState = _fight(300, 300)
+		state.fighters[0].facing = lancer_faces
+		state.fighters[1].facing = -lancer_faces
+		state = _step(state, 0, 0)
+		var lancer_left: bool = state.fighters[0].x < state.fighters[1].x
+		assert_bool(lancer_left).is_equal(lancer_faces == 1)
+
+
+# On one spot there is no "away"; the guard is held back from the way the
+# strike travels, so the answer does not hang on which way the defender steps.
+func test_on_one_spot_the_guard_is_held_back_from_the_strike() -> void:
+	for guard: int in [RIGHT, LEFT]:
+		var state: FightState = _fight(300, 300)
+		state.fighters[0].jump_frame = 10
+		state.fighters[0].y = 40
+		state.fighters[0].move = "air_kick"
+		state.fighters[0].move_frame = int(_data.move("lancer", "air_kick")["startup"])
+		state.fighters[0].facing = 1
+		var events: String = ", ".join(_step(state, 0, guard).events)
+		assert_str(events).contains("is blocked by" if guard == RIGHT else "p1 hits p2 with air_kick")
+
+
+func test_taking_off_shows_the_first_cel_of_the_jump() -> void:
+	var state: FightState = _step(_fight(300, 500), UP, 0)
+	assert_array(FighterSprites.read().pose(state.fighters[0], _data, state.frame, false)).is_equal(["jump", 0])
+
+
 func test_a_kick_from_the_air_is_an_overhead() -> void:
 	var crouched: String = _play(_fight(JUMP_IN_FROM[0], JUMP_IN_FROM[1]), _jump_in(), _held(RIGHT | DOWN), 50)
 	assert_str(crouched).contains("p1 hits p2 with flying_kick (an overhead through a crouching guard)")

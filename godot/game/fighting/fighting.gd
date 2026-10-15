@@ -5,8 +5,8 @@
 ## crouches, U and I punch light and heavy, J and K kick light and heavy --
 ## in the air, each is a jump-in attack, one a jump -- S with I is the
 ## anti-air uppercut, L throws; jump forwards from close and you cross over
-## to the dummy's other side; holding away from the dummy guards, standing or -- with S --
-## crouching. C swaps which character you play. The dummy, player two, does
+## to the dummy's other side; holding back from a strike guards, standing or
+## -- with S -- crouching. C swaps which character you play. The dummy, player two, does
 ## what its mode says -- stand, guard standing, guard crouching, jab, throw or
 ## low kick every second, uppercut you out of the air, or fight back as the
 ## fixed opponent at one of its three levels -- and M cycles the mode: each

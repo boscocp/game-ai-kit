@@ -4,8 +4,8 @@
 ## step by step, top to bottom:
 ##
 ## 1. read each player's input into its buffer;
-## 2. both fighters act at once, each from the frame as it began -- one in
-##    the air goes on along its arc, whatever else it does (`FightJump`);
+## 2. both fighters act at once, each from the frame as it began (`FightJump`
+##    for one taking off, in the air or landing);
 ## 3. bodies are pushed apart and kept on the stage;
 ## 4. every hitbox is tested against the other's hurtbox, along the stage and
 ##    up from the floor, both before either result is applied -- which is
@@ -78,8 +78,11 @@ static func _read_input(fighter: FighterState, held: int, frame: int, data: Figh
 # down.
 static func _act(fighter: FighterState, held: int, data: FightData) -> void:
 	if fighter.is_airborne():
+		var stunned: bool = fighter.stun > 0
 		if not FightJump.carry(fighter, data):
 			_act_in_the_air(fighter, held, data)
+		elif stunned:
+			_count_stun_down(fighter)
 		return
 	if fighter.stun > 0:
 		var taking_off: bool = fighter.stun_kind == "takeoff"
@@ -213,8 +216,9 @@ static func _body(fighter: FighterState, data: FightData) -> int:
 # A fighter that is free turns to face the other, and so does one in the air
 # that is not attacking, so a jump that crosses over turns to face its
 # target; one in a move or stunned keeps the way it was facing, as it would
-# in any fighting game. A defender's guard follows the attacker's side, not
-# its facing (`FightInput.holds_away`): crossed over, away is the other way.
+# in any fighting game. A defender's guard follows the way the strike is
+# travelling (`FightInput.holds_back_from`): crossed over, back is the other
+# way.
 static func _face_each_other(state: FightState) -> void:
 	for index: int in range(2):
 		var fighter: FighterState = state.fighters[index]
@@ -243,27 +247,12 @@ static func _connections(state: FightState, data: FightData) -> Array[int]:
 			continue
 		if not FightBoxes.overlap(FightBoxes.hitbox(attacker, data), FightBoxes.hurtbox(defender, data)):
 			continue
-		var missed: String = _misses_vertically(attacker, defender, data)
+		var missed: String = FightBoxes.misses_vertically(attacker, defender, data)
 		if missed != "":
 			state.events.append("p%d's %s %s" % [index + 1, attacker.move, missed % (2 - index)])
 		else:
 			attackers.append(index)
 	return attackers
-
-
-# How a hitbox that meets the hurtbox along the stage misses it up from the
-# floor, in words with a `%d` for the defender, or "" when it does not miss.
-# The words name the move's own height: a mid under a jump is not a low.
-static func _misses_vertically(attacker: FighterState, defender: FighterState, data: FightData) -> String:
-	var hit: Array[int] = FightBoxes.hit_rise(attacker, data)
-	var hurt: Array[int] = FightBoxes.hurt_rise(defender, data)
-	if FightBoxes.overlap(hit, hurt):
-		return ""
-	var height: String = data.move(attacker.character, attacker.move)["height"]
-	var why: String = {"high": " (a high misses a crouch)", "low": " (a low misses a fighter in the air)"}.get(height, "")
-	if hit[0] > hurt[1]:
-		return "passes over p%d" + (why if height == "high" and defender.crouching else "")
-	return "passes under p%d" + (why if height == "low" and defender.is_airborne() else " (it is in the air)")
 
 
 # Step 5. Two throws found on one frame break each other: both moves end and
@@ -333,7 +322,7 @@ static func _judge(state: FightState, attacker: int, defender_held: int, data: F
 		return ["counter-hit", " (caught in the air, starting up)"] if starting else ["hit", " (in the air, which cannot guard)"]
 	var crouched: bool = FightInput.holds_down(defender_held)
 	var guard: String = "crouching" if crouched else "standing"
-	if can_block and FightInput.holds_away(defender_held, defender.x, hitter.x):
+	if can_block and FightInput.holds_back_from(defender_held, hitter.facing):
 		if _guard_stops(height, crouched):
 			return ["block", " (holding away, %s)" % guard]
 		return ["hit", " (%s through a %s guard)" % [_a_height(height), guard]]
@@ -376,6 +365,8 @@ static func _apply(state: FightState, attacker: int, move: String, verdict: Arra
 		defender.move = ""
 		defender.crouching = false
 		defender.air_spent = defender.air_spent or defender.is_airborne()
+		if not defender.is_airborne():
+			defender.jump_direction = 0
 		defender.move_frame = 0
 		defender.connected = false
 	state.events.append("p%d %s p%d with %s%s" % [attacker + 1, _verb(outcome), 2 - attacker, move, verdict[1]])

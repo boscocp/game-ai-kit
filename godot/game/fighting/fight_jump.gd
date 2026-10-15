@@ -61,6 +61,7 @@ static func land(fighter: FighterState, data: FightData) -> void:
 	fighter.y = 0
 	fighter.jump_frame = 0
 	fighter.jump_direction = 0
+	fighter.air_spent = false
 	if fighter.move != "":
 		fighter.move = ""
 		fighter.move_frame = 0

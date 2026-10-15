@@ -68,6 +68,21 @@ static func hurt_rise(fighter: FighterState, data: FightData) -> Array[int]:
 	return [fighter.y, fighter.y + tall]
 
 
+## How a hitbox that meets the hurtbox along the stage misses it up from the
+## floor, in words with a `%d` for the defender, or "" when it does not miss.
+## The words name the move's own height: a mid under a jump is not a low.
+static func misses_vertically(attacker: FighterState, defender: FighterState, data: FightData) -> String:
+	var hit: Array[int] = FightBoxes.hit_rise(attacker, data)
+	var hurt: Array[int] = FightBoxes.hurt_rise(defender, data)
+	if FightBoxes.overlap(hit, hurt):
+		return ""
+	var height: String = data.move(attacker.character, attacker.move)["height"]
+	var why: String = {"high": " (a high misses a crouch)", "low": " (a low misses a fighter in the air)"}.get(height, "")
+	if hit[0] > hurt[1]:
+		return "passes over p%d" + (why if height == "high" and defender.crouching else "")
+	return "passes under p%d" + (why if height == "low" and defender.is_airborne() else " (it is in the air)")
+
+
 ## True when two intervals share at least one unit. An empty box overlaps nothing.
 static func overlap(first: Array[int], second: Array[int]) -> bool:
 	if first.is_empty() or second.is_empty():

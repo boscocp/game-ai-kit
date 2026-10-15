@@ -155,8 +155,8 @@ func _character_problem(name: String, numbers: Dictionary) -> String:
 	var jump: Variant = numbers.get("jump")
 	if not jump is Dictionary or not JUMP_NUMBERS.all(func(key: String) -> bool: return _is_count(jump.get(key))):
 		return "%s's jump needs %s, each a whole number" % [name, JUMP_NUMBERS]
-	if int(jump["rise"]) < 1 or int(jump["fall"]) < 1:
-		return "%s's jump must take at least one frame up and one down" % name
+	if int(jump["rise"]) < 1 or int(jump["fall"]) < 1 or int(jump["height"]) < 1:
+		return "%s's jump must take at least one frame up and one down, and leave the floor" % name
 	if not numbers.get("moves") is Dictionary or numbers["moves"].is_empty():
 		return "%s has no moves" % name
 	for move_name: String in numbers["moves"]:

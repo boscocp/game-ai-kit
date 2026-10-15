@@ -54,8 +54,11 @@ by its anti-air.
   owner played it: **a jump crosses over.** While either fighter is in the
   air the bodies may pass; on landing they are pushed apart from the side
   each came down on, and a fighter in the air that is not attacking turns
-  to face its target. The guard follows the attacker's side, so a kick that
-  lands after the crossing is guarded the other way: the cross-up, tested.
+  to face its target. A guard is held back from the way the strike travels
+  -- face to face, that is holding away -- so a kick that lands after the
+  crossing is guarded the other way: the cross-up, tested. (From the second
+  review: judged off the two positions, two fighters on one spot blocked
+  whichever way the defender stepped.)
 - **Take-off** (from the review): `takeoff` frames, 4 and 3, on the ground
   before the arc, when the jumper cannot guard and can be thrown -- so up on
   the frame a throw arrives is too late, as in the genre's pre-jump. The
@@ -63,8 +66,9 @@ by its anti-air.
   a throw. The arc is off the floor on every one of its frames.
 - **The moves.** Each character gets four air moves, one a button -- after
   the owner found only the heavy kick came out in the air: `air_jab`,
-  `air_punch`, `air_kick` and `flying_kick`, all overheads -- and `uppercut` (heavy punch, crouching, a mid whose box
-  reaches 260 and 220 up) -- the anti-air, on the one button-and-stance both
+  `air_punch`, `air_kick` and `flying_kick`, all overheads -- and
+  `uppercut` (heavy punch, crouching, a mid whose box reaches 260 and 220
+  up) -- the anti-air, on the one button-and-stance both
   characters had free. Any strike that reaches can hit a jumper; the
   uppercut is the one built for it. Early it counter-hits the jump-in
   (frame 12 of the test's jump); late it is counter-hit by it (frame 20).
