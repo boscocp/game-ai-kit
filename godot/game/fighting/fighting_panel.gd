@@ -1,6 +1,7 @@
 ## The words beside the fight: the frame, and for each fighter its move, the
 ## frame of it, its phase and the frame data behind it, its stun and what it
-## has buffered -- and what happened on the frame.
+## has buffered -- and what happened on the frame, and, with an opponent in
+## the dummy's place, what it saw and what it drew.
 ##
 ## The frame data is written out next to the frame number on purpose: "jab,
 ## frame 7 of 20, active (startup 6, active 3, recovery 11)" is the sentence
@@ -12,12 +13,15 @@ extends RefCounted
 
 
 ## The panel for `state`.
-static func describe(state: FightState, data: FightData, paused: bool) -> String:
+## `opponent` is the one in the dummy's place, or null for a scripted dummy.
+static func describe(state: FightState, data: FightData, paused: bool, opponent: FightOpponent = null) -> String:
 	var lines: PackedStringArray = ["frame %d%s" % [state.frame, "  ·  paused" if paused else ""], ""]
 	for index: int in range(2):
 		lines.append_array(_fighter_lines(index, state.fighters[index], data))
 		lines.append("")
 	lines.append("this frame: " + (", ".join(state.events) if not state.events.is_empty() else "nothing connected"))
+	if opponent != null:
+		lines.append_array(_opponent_lines(state, opponent))
 	if state.winner != FightState.NOBODY:
 		lines.append("DRAW" if state.winner == FightState.DRAW else "PLAYER %d WINS" % (state.winner + 1))
 	return "\n".join(lines)
@@ -46,3 +50,16 @@ static func _move_lines(fighter: FighterState, data: FightData) -> PackedStringA
 		"  %s %s, hits %s" % [frames["stance"], frames["button"].replace("_", " "), frames["height"]],
 		"  (startup %d, active %d, recovery %d)" % [frames["startup"], frames["active"], frames["recovery"]],
 	])
+
+
+# The opponent's last decision, with how old the fight it saw was: the
+# number a person checks it against.
+static func _opponent_lines(state: FightState, opponent: FightOpponent) -> PackedStringArray:
+	var lines: PackedStringArray = ["", "the opponent (%s), seeing %d frames late:" % [opponent.level, opponent.reaction]]
+	if opponent.seen_frame < 0:
+		lines.append("  has not seen the fight yet")
+		return lines
+	lines.append("  saw frame %d, %d frames ago: %s" % [opponent.seen_frame, state.frame - opponent.seen_frame,
+			opponent.situation])
+	lines.append("  drew: " + opponent.choice)
+	return lines

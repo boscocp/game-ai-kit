@@ -62,7 +62,9 @@ refused.
 
 The levels are ordered: over 100 seeded fights of each pairing, at both
 characters, each level wins at least 60 against the level below it, and the
-script asserts both numbers.
+script asserts every number -- two pairings in two mirrors -- after a planted
+pairing, a level against itself, that must not reach 60. `make
+test-opponent-levels` runs it, and `make check` with it.
 
 ```bash
 python3 scripts/check_demos.py
@@ -75,3 +77,40 @@ frame it saw it on and the choice it drew.
 
 Play each level. Easy should be beatable by mashing, hard should not, and
 none should guard a low you pressed less than a quarter of a second ago.
+
+## Decided on the way (2026-10-15)
+
+- **Not a `DecisionPolicy`.** That interface takes a `BoardState` and returns
+  a board `Move`; a fight is neither, and checkers and tic-tac-toe do not
+  implement it either. `FightOpponent.choose(seen, me) -> int` has the same
+  shape -- a state in, a decision out -- in the fight's own types. Widening
+  `ai_core` for one game would put the fight's types in every addon's
+  dependency. T17 says the same thing of its model; it meets the same wall.
+- **"Handed the past" is `FightDelay`.** The game gives it the present; it
+  gives the opponent a copy of the frame `reaction` frames back. It reads the
+  reaction once, at seating, and refuses one under 15. Before `reaction`
+  frames have passed, the opponent is handed nothing and holds nothing.
+- **The levels**, in `FightOpponent.LEVELS`:
+
+  | | reaction | tactics | execution |
+  |---|---|---|---|
+  | easy | 30 frames | 2 options a situation | 60% |
+  | medium | 22 frames | 4 | 85% |
+  | hard | 15 frames | all (up to 9) | 100% |
+
+  A fumble is half the time 10 frames late, half the time another option.
+  An option is a guard, a step, or a strike at a height -- the character's
+  quickest move at it; one out of reach in the frame it saw becomes a step in.
+- **Mirror fights.** `opponent_levels.gd` plays each pairing with both
+  fighters the same character, both characters, so it measures the level and
+  not the lancer's reach. A fight still on at 99 seconds goes to the one with
+  more health. Measured on 2026-10-15: medium beats easy 95 and 99, hard
+  beats medium 93 and 99 (lancer, dancer); medium against itself wins 42.
+- **The training mode opens on the medium opponent**, not the jabbing dummy,
+  so the first thing on screen is something deciding. M cycles through the
+  scripted modes and then the three levels.
+- **What the panel shows**: the level and its reaction, the situation, the
+  frame it was seen on and how many frames ago, and the choice drawn -- with
+  the move, "out of reach: steps in", or the fumble. `demo_overlays.gd` now
+  holds the fight to two fields, `phase` and `seen_frame`, and has a planted
+  overlay missing the second.

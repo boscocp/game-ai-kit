@@ -72,7 +72,7 @@ lint-review: ## This branch has a review record and may be merged
 .PHONY: check
 check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-search-properties test-planner-properties test-perception-properties \
-       test-decisions test-demo-overlays test-replay ## Run every gate
+       test-decisions test-demo-overlays test-replay test-opponent-levels ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability lint-demos \
@@ -366,6 +366,11 @@ record-replay: import ## Record the recorded fight's per-frame digests again, af
 .PHONY: test-replay
 test-replay: import ## Replay the recorded fight twice; the two runs must agree on every frame
 	@$(GODOT) --headless --path godot -s res://test/replay_determinism.gd
+
+.PHONY: test-opponent-levels
+test-opponent-levels: import ## The fixed opponent's levels are ordered: each beats the one below it 60 times in 100
+	@# T37's acceptance. About half a minute: 500 fights of up to 99 seconds.
+	@$(GODOT) --headless --path godot -s res://test/opponent_levels.gd
 
 # --- the fighters' pictures (T35, ADR 0015) ---------------------------------
 #
