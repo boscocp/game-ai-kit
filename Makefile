@@ -367,6 +367,25 @@ record-replay: import ## Record the recorded fight's per-frame digests again, af
 test-replay: import ## Replay the recorded fight twice; the two runs must agree on every frame
 	@$(GODOT) --headless --path godot -s res://test/replay_determinism.gd
 
+# --- the fighters' pictures (T35, ADR 0015) ---------------------------------
+#
+# The template's sheets stay out of the repository; only the strips cut from
+# them are committed. These two targets repeat the cut, for anyone who wants
+# to check it or choose other cels.
+
+FIGHTER_SHEETS := build/fighter-sheets
+
+.PHONY: fighter-sheets
+fighter-sheets: ## Download the fighters' CC0 template sheets into build/fighter-sheets/ (gitignored)
+	@mkdir -p $(FIGHTER_SHEETS)
+	@$(PYTHON) -c 'import json; t = json.load(open("godot/game/fighting/sprites.json")); print("\n".join(n + " " + s["url"] for n, s in t["sheets"].items()))' | \
+		while read name url; do curl -sSfL -o "$(FIGHTER_SHEETS)/$$name" "$$url" || exit 1; echo "downloaded $$name"; done
+
+.PHONY: fighter-strips
+fighter-strips: ## Cut the fighters' strips from the downloaded sheets, after checking their sha256
+	@$(GODOT) --headless --path godot -s $(CURDIR)/tools/fighters/crop.gd -- $(CURDIR)/$(FIGHTER_SHEETS)
+	@$(MAKE) --no-print-directory import
+
 # --- your own art (T31: optional, tier 3, needs a GPU) ----------------------
 #
 # Fenced off from everything above: `make check` never reaches it, and nothing

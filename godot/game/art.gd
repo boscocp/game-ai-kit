@@ -16,7 +16,8 @@
 ##
 ## When not to use it: a game with hundreds of sprites, which wants Godot's
 ## own resources (`.tres` tile sets, `SpriteFrames`) edited in the editor.
-## Here there are thirty-four, and a reader can see all of them in one file.
+## Here there are thirty-four, and thirty strips for the fighters, and a
+## reader can see all of them in one file.
 class_name Art
 extends RefCounted
 
@@ -70,6 +71,12 @@ const SHEET_FILES: Dictionary = {
 	"shield": "shield_walk.png",
 	NO_TYPE: "soldier_walk.png",
 }
+
+## The fighting scenario's fighters (T35): one strip per animation, each a
+## row of cels cut from a CC0 template by `tools/fighters/crop.gd`.
+## `FighterSprites` says which cels a strip holds; the template's sheets
+## themselves are not in the repository, only the cuts.
+const FIGHTERS: String = ROOT + "fighters/"
 
 ## Checkers: a man of each side, and the crown a king wears on top of it.
 const RED_MAN: String = ROOT + "checkers/red_man.png"
@@ -142,6 +149,11 @@ static func _usable_sheet(faction: int, type_name: String, path: String) -> Unit
 static func sheet_path(faction: int, type_name: String) -> String:
 	var side: String = SIDES[clampi(faction, 0, SIDES.size() - 1)]
 	return ROOT + "units/%s/%s" % [side, SHEET_FILES[type_name]]
+
+
+## Where a character's strip for an animation or a move lives.
+static func fighter_strip(character: String, animation: String) -> String:
+	return FIGHTERS + "%s/%s.png" % [character, animation]
 
 
 ## Every path in this table, so one test can hold that each one is a file.

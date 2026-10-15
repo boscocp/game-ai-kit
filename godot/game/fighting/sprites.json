@@ -1,0 +1,142 @@
+{
+ "description": "Which cels of which sheet draw each fighter (T35). The game reads it to pick a picture for a fighter on a frame; tools/fighters/crop.gd reads it to cut the committed strips from the downloaded sheets. A strip is one animation's cels side by side, in the order listed -- for a move, startup, then active, then recovery -- so the picture for a frame is found from the frame data, never from a clock.",
+ "pack": {
+  "name": "Fighting character template Mustermann 2 (A001AAAA001) (karate)",
+  "author": "Puffolotti",
+  "page": "https://opengameart.org/node/97941",
+  "licence": "CC0 1.0",
+  "downloaded": "2026-10-15"
+ },
+ "sheets": {
+  "Orangeblack.png": {
+   "url": "https://opengameart.org/sites/default/files/Orangeblack.png",
+   "sha256": "75175c4f2e40b842baf91f58d73eaef460b1a54438f922ab57bfbc45c4a39983",
+   "columns": 35,
+   "rows": 29,
+   "cell": [229, 238]
+  },
+  "Blueehite.png": {
+   "url": "https://opengameart.org/sites/default/files/Blueehite.png",
+   "sha256": "1aae40ed67db9ec0f400d9967f93b2957e44f38fc6815982c90bb31a7b3a2c2d",
+   "columns": 35,
+   "rows": 29,
+   "cell": [236, 237]
+  }
+ },
+ "characters": {
+  "lancer": {
+   "sheet": "Orangeblack.png",
+   "anchor": [96, 222],
+   "scale_percent": 100,
+   "standing_height": 154,
+   "animations": {
+    "idle": [4, 5, 6, 7, 8, 9, 10, 11],
+    "walk": [416, 417, 418, 419, 420, 421, 422, 423, 424, 425, 426, 427],
+    "crouch": [727, 728],
+    "guard": [345, 346, 347, 348],
+    "guard_crouching": [845, 850, 855],
+    "hit": [923, 924, 925, 926, 927],
+    "down": [948]
+   },
+   "moves": {
+    "jab": {
+     "startup": [16, 17],
+     "active": [18],
+     "recovery": [19, 20]
+    },
+    "thrust": {
+     "startup": [63, 64, 65],
+     "active": [66, 67],
+     "recovery": [68, 69, 70]
+    },
+    "shin_kick": {
+     "startup": [148, 149, 150],
+     "active": [151],
+     "recovery": [152, 153, 154]
+    },
+    "axe_kick": {
+     "startup": [229, 230, 231, 232, 233, 234, 235],
+     "active": [236, 237],
+     "recovery": [238, 239]
+    },
+    "low_jab": {
+     "startup": [728, 729],
+     "active": [730],
+     "recovery": [731, 732]
+    },
+    "low_kick": {
+     "startup": [790, 791, 792],
+     "active": [793, 794],
+     "recovery": [795, 796, 797]
+    },
+    "sweep": {
+     "startup": [821, 822],
+     "active": [823, 824],
+     "recovery": [825, 826, 827, 828, 829]
+    },
+    "throw": {
+     "startup": [518, 519],
+     "active": [520, 521],
+     "recovery": [522, 523, 524]
+    }
+   }
+  },
+  "dancer": {
+   "sheet": "Blueehite.png",
+   "anchor": [103, 221],
+   "scale_percent": 80,
+   "standing_height": 148,
+   "animations": {
+    "idle": [4, 5, 6, 7, 8, 9, 10, 11],
+    "walk": [416, 417, 418, 419, 420, 421, 422, 423, 424, 425, 426, 427],
+    "crouch": [727, 728],
+    "guard": [345, 346, 347, 348],
+    "guard_crouching": [845, 850, 855],
+    "hit": [923, 924, 925, 926, 927],
+    "down": [948]
+   },
+   "moves": {
+    "jab": {
+     "startup": [359, 360, 361],
+     "active": [362, 363],
+     "recovery": [364, 365]
+    },
+    "straight": {
+     "startup": [369, 370, 371],
+     "active": [372, 373],
+     "recovery": [374, 375, 376]
+    },
+    "snap_kick": {
+     "startup": [142, 143],
+     "active": [144, 145],
+     "recovery": [146, 147]
+    },
+    "hop_kick": {
+     "startup": [187, 188, 189, 190, 191],
+     "active": [192, 193],
+     "recovery": [194, 195]
+    },
+    "low_jab": {
+     "startup": [735, 736],
+     "active": [737, 738],
+     "recovery": [739, 740]
+    },
+    "low_kick": {
+     "startup": [869],
+     "active": [870, 871],
+     "recovery": [872, 873]
+    },
+    "sweep": {
+     "startup": [810, 811, 812, 813],
+     "active": [814, 815],
+     "recovery": [816]
+    },
+    "throw": {
+     "startup": [528, 532, 533],
+     "active": [534, 535],
+     "recovery": [536, 537]
+    }
+   }
+  }
+ }
+}
