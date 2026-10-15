@@ -28,7 +28,7 @@ static func _fighter_lines(index: int, fighter: FighterState, data: FightData) -
 	if fighter.stun > 0:
 		lines.append("  in %sstun, %d frame(s) left" % [fighter.stun_kind, fighter.stun])
 	elif fighter.move == "":
-		lines.append("  free to act")
+		lines.append("  free to act, crouching" if fighter.crouching else "  free to act")
 	else:
 		lines.append_array(_move_lines(fighter, data))
 	if fighter.buffered != "":
@@ -43,5 +43,6 @@ static func _move_lines(fighter: FighterState, data: FightData) -> PackedStringA
 	var phase: String = FightBoxes.phase(fighter, data)
 	return PackedStringArray([
 		"  %s, frame %d of %d, %s" % [fighter.move, fighter.move_frame, length, phase],
+		"  %s %s, hits %s" % [frames["stance"], frames["button"].replace("_", " "), frames["height"]],
 		"  (startup %d, active %d, recovery %d)" % [frames["startup"], frames["active"], frames["recovery"]],
 	])

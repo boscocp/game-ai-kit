@@ -22,6 +22,9 @@ var health: int = 0
 var move: String = ""
 ## How many frames into `move`, from 1.
 var move_frame: int = 0
+## True while it crouches: holding down when not in a move, or in a
+## crouching move. A crouching fighter guards low and does not walk.
+var crouching: bool = false
 ## True once `move` has hit or been blocked: it connects at most once, and
 ## only a move that connected may be cancelled.
 var connected: bool = false
@@ -52,6 +55,7 @@ func copy() -> FighterState:
 	twin.move = move
 	twin.move_frame = move_frame
 	twin.connected = connected
+	twin.crouching = crouching
 	twin.stun = stun
 	twin.stun_kind = stun_kind
 	twin.buffered = buffered
@@ -68,5 +72,5 @@ func is_free() -> bool:
 ## Every field, as one line of text: two fighters with the same digest are
 ## the same fighter.
 func digest() -> String:
-	return "%s x%d f%d h%d %s:%d c%d s%d%s b%s:%d i%d" % [character, x, facing, health, move, move_frame,
-			int(connected), stun, stun_kind, buffered, buffered_until, held_before]
+	return "%s x%d f%d h%d %s:%d c%d k%d s%d%s b%s:%d i%d" % [character, x, facing, health, move, move_frame,
+			int(connected), int(crouching), stun, stun_kind, buffered, buffered_until, held_before]

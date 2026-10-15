@@ -43,7 +43,12 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T14 | The stealth scenario | done | `ai_perception`, fuzzy suspicion, three guard states; 4 properties over 300 maps |
 | T15 | `ai_behaviour`: the four ways to decide | todo | FSM, tree, GOAP, HTN, beside STRIPS |
 | T16 | The fighting scenario | done | mostly not AI, and says so: frame data in `spec/frames/`, one axis, whole numbers, the resolution order written and tested rule by rule; a recorded log replays to committed per-frame digests; `make demo-fighting` is a training mode; manual check still a person's |
-| T17 | The opponent model | todo | n-grams you can print |
+| T34 | High, low and the throw | done | four attack buttons, light quick and heavy slow; mid, low and overhead against standing and crouching guard; a throw that beats guard and loses to a strike |
+| T38 | The jump | todo | asked for by the owner after playing T34: an arc in whole frames, jump-ins as overheads, an anti-air, boxes that become rectangles |
+| T35 | Fighters you can see | todo | open sprite sheets found online, one animation per move, driven by the frame data; the boxes drawn over them |
+| T36 | How fighting-game AI is made | todo | the academic and the shipped side, every reference checked; rewrites T37, T17 and T18 |
+| T37 | A fixed opponent, at three honest levels | todo | reaction time in frames as a knob, never reading an input before it is on screen |
+| T17 | The opponent model | todo | n-grams you can print; after T37, so the learner has a fixed opponent to be measured against |
 | T18 | Behaviour cloning, and what a learned model buys | todo | the comparison is the task |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
 | T26 | Combat on the board | todo | reach and the counter table start to matter; the dataset is rebuilt from the game (ADR 0008) |

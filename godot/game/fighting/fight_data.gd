@@ -20,6 +20,12 @@ const PATH: String = "res://game/fighting/characters.json"
 
 ## The whole numbers every move must carry.
 const MOVE_NUMBERS: Array[String] = ["startup", "active", "recovery", "damage", "hitstun", "blockstun", "hurtbox_reach"]
+## A move's stance: whether it is done standing, or holding down.
+const STANCES: Array[String] = ["standing", "crouching"]
+## A move's height: which guard stops it. `mid` is stopped by either, `low`
+## only crouching, `overhead` only standing, and a `throw` by neither.
+const HEIGHTS: Array[String] = ["mid", "low", "overhead", "throw"]
+
 ## The whole numbers every character must carry.
 const CHARACTER_NUMBERS: Array[String] = ["health", "walk_speed", "body"]
 
@@ -58,11 +64,26 @@ func move(character_name: String, move_name: String) -> Dictionary:
 	return character(character_name)["moves"][move_name]
 
 
-## The move a character does for `button`, or "" when it has none.
-func move_for_button(character_name: String, button: String) -> String:
+## The move a character does for `button`, or "" when it has none. Holding
+## down picks the crouching move for the button; a button with no crouching
+## move does its standing one, so no button is dead while crouched.
+func move_for_button(character_name: String, button: String, crouching: bool = false) -> String:
+	var standing: String = _move_in_stance(character_name, button, "standing")
+	if not crouching:
+		return standing
+	var low: String = _move_in_stance(character_name, button, "crouching")
+	return low if low != "" else standing
+
+
+## True when the move is a throw: never blocked, never a counter-hit.
+func is_throw(character_name: String, move_name: String) -> bool:
+	return move(character_name, move_name)["height"] == "throw"
+
+
+func _move_in_stance(character_name: String, button: String, stance: String) -> String:
 	var moves: Dictionary = character(character_name)["moves"]
 	for name: String in moves:
-		if moves[name]["button"] == button:
+		if moves[name]["button"] == button and moves[name]["stance"] == stance:
 			return name
 	return ""
 
@@ -117,6 +138,13 @@ func _move_problem(name: String, move_name: String, frames: Dictionary, moves: D
 		return "%s must have at least one startup and one active frame" % label
 	if not FightInput.BUTTONS.has(frames.get("button")):
 		return "%s has no button among %s" % [label, FightInput.BUTTONS.keys()]
+	if not STANCES.has(frames.get("stance")) or not HEIGHTS.has(frames.get("height")):
+		return "%s needs a stance among %s and a height among %s" % [label, STANCES, HEIGHTS]
+	if (frames["height"] == "throw") != (frames["button"] == "throw") or (frames["height"] == "throw" and frames["stance"] != "standing"):
+		return "%s: a throw is done standing, on the throw button, and only a throw is" % label
+	for other: String in moves:
+		if other != move_name and moves[other].get("button") == frames["button"] and moves[other].get("stance") == frames["stance"]:
+			return "%s and %s are both %s %s: a press could not tell them apart" % [label, other, frames["stance"], frames["button"]]
 	if not _is_span(frames.get("hitbox")) or not _is_span(frames.get("cancel_window")):
 		return "%s needs a hitbox and a cancel window, each two whole numbers, near first" % label
 	for target: Variant in frames.get("cancels_into", [null]):
