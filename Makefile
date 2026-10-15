@@ -369,7 +369,7 @@ test-replay: import ## Replay the recorded fight twice; the two runs must agree 
 
 .PHONY: test-opponent-levels
 test-opponent-levels: import ## The fixed opponent's levels are ordered: each beats the one below it 60 times in 100
-	@# T37's acceptance. About half a minute: 500 fights of up to 99 seconds.
+	@# T37's acceptance. About 45 seconds: 600 fights of up to 99 seconds.
 	@$(GODOT) --headless --path godot -s res://test/opponent_levels.gd
 
 # --- the fighters' pictures (T35, ADR 0015) ---------------------------------

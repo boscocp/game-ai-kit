@@ -46,6 +46,10 @@ var input_log: Array = []
 ## null while the dummy is scripted.
 var seat: FightDelay
 var opponent: FightOpponent
+## Fights begun since the scene opened: the seed of each new opponent's
+## chances, so a restart does not open the same way every time, while the
+## input log still replays the fight exactly.
+var fights_begun: int = 0
 var _characters: Array[String] = ["lancer", "dancer"]
 
 @onready var _view: FightView = $FightView
@@ -102,13 +106,14 @@ func restart() -> void:
 	_refresh()
 
 
-# A fresh opponent for an "opponent" mode, none for the others. Its chances
-# are seeded from nothing that changes, so the same play gets the same fight.
+# A fresh opponent for an "opponent" mode, none for the others, its chances
+# seeded by how many fights have begun.
 func _seat_opponent() -> void:
 	opponent = null
 	seat = null
 	if dummy_mode.begins_with(OPPONENT_MODE):
-		opponent = FightOpponent.new(dummy_mode.trim_prefix(OPPONENT_MODE), data)
+		fights_begun += 1
+		opponent = FightOpponent.new(dummy_mode.trim_prefix(OPPONENT_MODE), data, fights_begun)
 		seat = FightDelay.new(opponent, 1)
 
 
@@ -141,7 +146,7 @@ func decision_overlay() -> Dictionary:
 func opponent_overlay() -> Dictionary:
 	if opponent == null:
 		return {"level": "none, the dummy is scripted", "situation": "none", "seen_frame": -1, "choice": "none"}
-	return {"level": opponent.level, "reaction": opponent.reaction, "situation": opponent.situation,
+	return {"level": opponent.level, "reaction": seat.reaction, "situation": opponent.situation,
 			"seen_frame": opponent.seen_frame, "choice": opponent.choice}
 
 
@@ -194,4 +199,4 @@ func _refresh() -> void:
 	_view.show_fight(state, data)
 	_status.text = ("A/D walk, S crouch, U/I punch light/heavy, J/K kick light/heavy, L throw, hold away to guard\n"
 			+ "C swap characters  ·  M dummy: %s  ·  P pause, space one frame  ·  R restart" % dummy_mode)
-	_panel.text = FightingPanel.describe(state, data, paused, opponent)
+	_panel.text = FightingPanel.describe(state, data, paused, seat)

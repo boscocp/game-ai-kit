@@ -13,15 +13,15 @@ extends RefCounted
 
 
 ## The panel for `state`.
-## `opponent` is the one in the dummy's place, or null for a scripted dummy.
-static func describe(state: FightState, data: FightData, paused: bool, opponent: FightOpponent = null) -> String:
+## `seat` holds the opponent in the dummy's place, or is null for a scripted dummy.
+static func describe(state: FightState, data: FightData, paused: bool, seat: FightDelay = null) -> String:
 	var lines: PackedStringArray = ["frame %d%s" % [state.frame, "  ·  paused" if paused else ""], ""]
 	for index: int in range(2):
 		lines.append_array(_fighter_lines(index, state.fighters[index], data))
 		lines.append("")
 	lines.append("this frame: " + (", ".join(state.events) if not state.events.is_empty() else "nothing connected"))
-	if opponent != null:
-		lines.append_array(_opponent_lines(state, opponent))
+	if seat != null:
+		lines.append_array(_opponent_lines(state, seat))
 	if state.winner != FightState.NOBODY:
 		lines.append("DRAW" if state.winner == FightState.DRAW else "PLAYER %d WINS" % (state.winner + 1))
 	return "\n".join(lines)
@@ -53,9 +53,14 @@ static func _move_lines(fighter: FighterState, data: FightData) -> PackedStringA
 
 
 # The opponent's last decision, with how old the fight it saw was: the
-# number a person checks it against.
-static func _opponent_lines(state: FightState, opponent: FightOpponent) -> PackedStringArray:
-	var lines: PackedStringArray = ["", "the opponent (%s), seeing %d frames late:" % [opponent.level, opponent.reaction]]
+# number a person checks it against. The reaction is the seat's, which is
+# the one enforced; a refused opponent says why.
+static func _opponent_lines(state: FightState, seat: FightDelay) -> PackedStringArray:
+	var opponent: FightOpponent = seat.opponent
+	var lines: PackedStringArray = ["", "the opponent (%s), seeing %d frames late:" % [opponent.level, seat.reaction]]
+	if seat.refusal != "":
+		lines.append("  refused: " + seat.refusal)
+		return lines
 	if opponent.seen_frame < 0:
 		lines.append("  has not seen the fight yet")
 		return lines

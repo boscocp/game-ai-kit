@@ -75,8 +75,12 @@ frame it saw it on and the choice it drew.
 
 ## Manual check
 
-Play each level. Easy should be beatable by mashing, hard should not, and
-none should guard a low you pressed less than a quarter of a second ago.
+Play each level. Easy should be beatable by mashing, hard should not. Pause
+on a low of yours that it guards: the panel's "saw frame N" must be earlier
+than the frame you pressed it on -- a guard it held already, a guess, not a
+reaction. (Every low here lands 6 to 15 frames after its press, so any guard
+of a low is of one pressed under a quarter of a second ago; what cannot
+happen is a guard *decided* after the press.)
 
 ## Decided on the way (2026-10-15)
 
@@ -96,16 +100,24 @@ none should guard a low you pressed less than a quarter of a second ago.
   |---|---|---|---|
   | easy | 30 frames | 2 options a situation | 60% |
   | medium | 22 frames | 4 | 85% |
-  | hard | 15 frames | all (up to 9) | 100% |
+  | hard | 15 frames | all (4 to 9, by situation) | 100% |
 
   A fumble is half the time 10 frames late, half the time another option.
   An option is a guard, a step, or a strike at a height -- the character's
   quickest move at it; one out of reach in the frame it saw becomes a step in.
+- **Hard decides better and sees sooner, never sooner than a person.** With
+  every level's reaction set the same, the review measured hard beating
+  medium 87 to 95 times in 100: most of the edge is the deciding. With only
+  reaction differing, 71 and 78. Both are in the opponent's header.
 - **Mirror fights.** `opponent_levels.gd` plays each pairing with both
   fighters the same character, both characters, so it measures the level and
   not the lancer's reach. A fight still on at 99 seconds goes to the one with
   more health. Measured on 2026-10-15: medium beats easy 95 and 99, hard
-  beats medium 93 and 99 (lancer, dancer); medium against itself wins 42.
+  beats medium 93 and 99 (lancer, dancer); medium against itself wins 42 and
+  37, played for both characters. The review moved every seed by 1000, 7777
+  and 31337: the four numbers stayed between 91 and 100.
+- **Each restart seeds a new opponent with how many fights have begun**, so
+  it does not open the same way twice; the input log still replays it.
 - **The training mode opens on the medium opponent**, not the jabbing dummy,
   so the first thing on screen is something deciding. M cycles through the
   scripted modes and then the three levels.

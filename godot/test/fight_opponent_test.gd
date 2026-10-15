@@ -67,20 +67,50 @@ func test_a_level_draws_only_the_options_its_tactics_allow() -> void:
 	assert_int(FightOpponent.SITUATIONS["neutral"].size()).is_greater(tactics)
 
 
-func test_hard_never_fumbles_and_easy_does() -> void:
-	assert_int(_fumbles("hard")).is_equal(0)
-	assert_int(_fumbles("easy")).is_greater(0)
+func test_each_level_fumbles_as_often_as_its_execution_says() -> void:
+	for level: String in FightOpponent.LEVELS:
+		var expected: int = 1000 - 10 * int(FightOpponent.LEVELS[level]["execution"])
+		var found: int = _fumbles(level)
+		var message: String = "%s fumbled %d in 1000, expected about %d" % [level, found, expected]
+		assert_int(found).override_failure_message(message).is_between(maxi(0, expected - 40), expected + 40)
 
 
-# How many of 200 decisions in a neutral fight a level fumbles.
+# How many of 1000 decisions in a neutral fight a level fumbles.
 func _fumbles(level: String) -> int:
 	var neutral: FightState = FightState.starting(_data, "lancer", "dancer")
 	var opponent := FightOpponent.new(level, _data, 3)
 	var fumbled: int = 0
-	for decision: int in range(200):
+	for decision: int in range(1000):
 		opponent._decide(neutral, 1)
 		fumbled += 1 if "fumbled" in opponent.choice else 0
 	return fumbled
+
+
+func test_a_late_fumble_holds_nothing_before_what_was_chosen() -> void:
+	var easy := FightOpponent.new("easy", _data, 5)
+	var neutral: FightState = FightState.starting(_data, "lancer", "dancer")
+	easy._decide(neutral, 1)
+	while not "(fumbled: late)" in easy.choice:
+		easy._decide(neutral, 1)
+	var held: Array[int] = easy._plan.slice(0, FightOpponent.HESITATION_FRAMES)
+	assert_bool(held.all(func(input: int) -> bool: return input == 0)).is_true()
+	assert_int(easy._plan.size()).is_greater(FightOpponent.HESITATION_FRAMES)
+	assert_bool(easy._plan.slice(FightOpponent.HESITATION_FRAMES).any(func(input: int) -> bool: return input != 0)) \
+			.is_true()
+
+
+func test_a_strike_out_of_reach_becomes_a_step_in() -> void:
+	var hard := FightOpponent.new("hard", _data)
+	var state: FightState = FightState.starting(_data, "lancer", "dancer")
+	hard.choice = "mid"
+	var far: Array[int] = hard._inputs_for("mid", state, 0)
+	assert_str(hard.choice).contains("out of reach: steps in")
+	assert_bool(far.all(func(input: int) -> bool: return input == FightInput.RIGHT)).is_true()
+	state.fighters[1].x = state.fighters[0].x + 80
+	hard.choice = "mid"
+	var near: Array[int] = hard._inputs_for("mid", state, 0)
+	assert_str(hard.choice).is_equal("mid -- low_jab")
+	assert_int(near[0]).is_equal(FightInput.LIGHT_PUNCH | FightInput.DOWN)
 
 
 # --- handed only the past ----------------------------------------------------
@@ -111,6 +141,31 @@ func test_an_opponent_asking_for_the_present_is_refused_and_handed_nothing() -> 
 			assert_int(seat.input_for(state)).is_equal(0)
 			state = FightRules.step(state, [0, 0] as Array[int], _data)
 		assert_array(recording.handed).is_empty()
+
+
+func test_a_caller_that_steps_one_state_in_place_still_hands_over_the_past() -> void:
+	var recording := Recording.new(15, _data)
+	var seat := FightDelay.new(recording, 1)
+	var state: FightState = FightState.starting(_data, "lancer", "dancer")
+	for frame: int in range(30):
+		seat.input_for(state)
+		state.frame += 1
+	assert_array(recording.handed).is_equal(range(15) as Array[int])
+
+
+func test_the_training_mode_seats_the_opponent_and_shows_what_it_saw() -> void:
+	var scene: FightingExample = auto_free(load("res://game/fighting/fighting.tscn").instantiate())
+	add_child(scene)
+	scene.paused = true
+	var first: FightOpponent = scene.opponent
+	for frame: int in range(40):
+		scene.step_decision()
+	var seen: Dictionary = scene.decision_overlay()["opponent"]
+	assert_int(seen["seen_frame"]).is_between(0, scene.state.frame - 1 - scene.seat.reaction)
+	assert_str(seen["situation"]).is_not_equal("nothing seen yet")
+	scene.restart()
+	assert_object(scene.opponent).is_not_same(first)
+	assert_int(scene.decision_overlay()["opponent"]["seen_frame"]).is_equal(-1)
 
 
 func test_shortening_the_reaction_after_being_seated_changes_nothing() -> void:

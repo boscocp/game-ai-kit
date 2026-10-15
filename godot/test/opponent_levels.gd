@@ -13,9 +13,9 @@
 # A fight that reaches the time limit, 99 seconds as in an arcade, is won by
 # the one with more health; equal health is a draw, and a draw is no win.
 #
-# Before trusting itself it plays the planted pairing: a level against itself
-# must not win 60, or the measure is leaning on something that is not the
-# level -- the side, or the seed.
+# Before trusting each character it plays the planted pairing: a level
+# against itself must not win 60, or the measure is leaning on something
+# that is not the level -- the side, or the seed.
 #
 # Exit codes: 0 every pairing is ordered, 1 one is not or the planted pairing
 # was, 2 the frame data could not be read.
@@ -39,16 +39,22 @@ func _run() -> int:
 		printerr("opponent_levels: the frame data was refused: %s" % data.refusal)
 		return 2
 	var failures: int = 0
-	var planted: int = wins("medium", "medium", "lancer", data)
-	print("planted: medium against itself, as the lancer, wins %d of %d" % [planted, FIGHTS])
-	if planted >= WINS_NEEDED:
-		print("FAIL: a level beat itself %d times; the measure is not measuring the level" % planted)
-		failures += 1
 	for character: String in data.character_names():
+		failures += 0 if not_ordered_against_itself(character, data) else 1
 		for pairing: Array in PAIRINGS:
 			failures += 0 if ordered(pairing[0], pairing[1], character, data) else 1
 	print("opponent levels: %d failure(s)" % failures)
 	return 1 if failures > 0 else 0
+
+
+## True, and said so, when medium does not beat itself `WINS_NEEDED` times
+## as `character`: the planted pairing, which the measure must not pass.
+func not_ordered_against_itself(character: String, data: FightData) -> bool:
+	var won: int = wins("medium", "medium", character, data)
+	var verdict: String = "ok" if won < WINS_NEEDED else "FAIL"
+	print("%s: planted, medium against itself as the %s, wins %d of %d (must stay under %d)" % [verdict, character,
+			won, FIGHTS, WINS_NEEDED])
+	return won < WINS_NEEDED
 
 
 ## True, and said so, when `higher` beats `lower` at least `WINS_NEEDED`
