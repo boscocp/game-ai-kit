@@ -28,6 +28,11 @@ stops. This gate is four claims about that split:
   * N7 the published checkers weights (T32) are what `gameaikit.checkers`
     fits from its seed -- self-play, both fits and the match -- and a fresh
     run still produces them;
+  * N9 nothing in `ai_opponent` writes a file, and no GDScript writes an
+    n-gram table anywhere. The one exception to this invariant (ADR 0016):
+    the opponent model counts during a fight, and is allowed to only because
+    its table starts empty, replays from the input log, and is never written
+    down -- a table that was saved would be a model fitted at game time;
   * N8 no GDScript writes a file where the checkers weights live: the game
     reads them and only multiplies.
 
@@ -98,6 +103,10 @@ CHECKERS_TRAINER = "gameaikit.checkers.report"
 # A line names the checkers weights by the file, by the class that reads it,
 # or by a path into the game's folder -- `"res://game/checkers/" + name`
 # builds the file without naming it.
+# The opponent model (T17, ADR 0016): the one addon whose numbers change
+# while a game runs, and so the one that must never write them down.
+OPPONENT_ADDON = GODOT / "addons" / "ai_opponent"
+NGRAM_NAMES_RE = re.compile(r"ngram|n_gram|NGram", re.I)
 CHECKERS_NAMES_RE = re.compile(r"checkers_weights|CheckersWeights|game/checkers/")
 
 # Writing a bead count. This rule is a net for the common spellings; the
@@ -306,6 +315,9 @@ def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
             if inside_addon:
                 findings.append(
                     f"N2 {label} writes a file; the inference addon only reads")
+            elif OPPONENT_ADDON.name in path.parts or NGRAM_NAMES_RE.search(line):
+                findings.append(f"N9 {label} writes an opponent model down; it counts during "
+                                "one fight and is never saved (ADR 0016)")
             elif CHECKERS_NAMES_RE.search(line) or CHECKERS_GAME.name in path.parts:
                 # Before the rule below: `checkers_weights.json` ends in the
                 # addon's `weights.json`, and would be named as the wrong file.
@@ -906,6 +918,20 @@ def self_test() -> int:
         expect("a file written in the checkers game", quiet(build(root, "checkersgame", dict(
             sound, **{str(CHECKERS_GAME / "checkers.gd"): 'var out: FileAccess = FileAccess.open(path, FileAccess.WRITE)\n'}))),
             1, "N8")
+
+        # Planted: the opponent model written down, from inside its addon and
+        # by name from anywhere; and counting in the addon, which is allowed.
+        expect("a file written in the opponent addon", quiet(build(root, "opponentaddon", dict(
+            sound, **{str(OPPONENT_ADDON / "ngram_predictor.gd"):
+                      'var out: FileAccess = FileAccess.open("user://table.json", FileAccess.WRITE)\n'}))),
+            1, "N9")
+        expect("an n-gram table saved from the game", quiet(build(root, "ngramsaved", dict(
+            sound, **{str(GODOT / "game" / "ai.gd"):
+                      'var out: FileAccess = FileAccess.open("user://ngram_table.json", FileAccess.WRITE)\n'}))),
+            1, "N9")
+        expect("counting in the opponent addon", quiet(build(root, "opponentcounts", dict(
+            sound, **{str(OPPONENT_ADDON / "ngram_predictor.gd"):
+                      '\trow[action] = row.get(action, 0.0) + 1.0\n'}))), 3)
 
         failures += _self_test_the_beads(root)
         failures += _self_test_the_checkers_weights(root)

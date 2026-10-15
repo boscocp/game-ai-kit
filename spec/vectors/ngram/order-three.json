@@ -1,0 +1,56 @@
+{
+ "description": "Order 3: the context is the last two actions, so 'low > high' and 'high > high' are different rows, and each is seen only once or twice in a short fight.",
+ "order": 3,
+ "actions": [
+  "high",
+  "low",
+  "throw"
+ ],
+ "decay": 1.0,
+ "prior": 1.0,
+ "sequence": [
+  "low",
+  "high",
+  "throw",
+  "high",
+  "high",
+  "low",
+  "low",
+  "high",
+  "throw",
+  "low",
+  "high"
+ ],
+ "cases": [
+  {
+   "seen": 2,
+   "context": "low > high",
+   "probabilities": {
+    "high": 0.3333333333333333,
+    "low": 0.3333333333333333,
+    "throw": 0.3333333333333333
+   },
+   "likeliest": "high"
+  },
+  {
+   "seen": 6,
+   "context": "high > low",
+   "probabilities": {
+    "high": 0.3333333333333333,
+    "low": 0.3333333333333333,
+    "throw": 0.3333333333333333
+   },
+   "likeliest": "high"
+  },
+  {
+   "seen": 11,
+   "context": "low > high",
+   "probabilities": {
+    "high": 0.2,
+    "low": 0.2,
+    "throw": 0.6
+   },
+   "likeliest": "throw"
+  }
+ ]
+}

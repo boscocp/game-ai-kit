@@ -134,11 +134,9 @@ static func situation_of(seen: FightState, me: int, data: FightData) -> String:
 	return "neutral"
 
 
-# One of the first `_tactics` options of the situation that the character
-# has a move for, drawn by weight.
+# One of the options the level knows, drawn by weight.
 func _draw(name: String, character: String) -> String:
-	var known: Array = SITUATIONS[name].slice(0, _tactics).filter(
-			func(option: Array) -> bool: return _has_option(character, option[0]))
+	var known: Array = _weighted_options(name, character)
 	var total: int = 0
 	for option: Array in known:
 		total += int(option[1])
@@ -148,6 +146,14 @@ func _draw(name: String, character: String) -> String:
 		if ticket <= 0:
 			return option[0]
 	return known.back()[0]
+
+
+## The options the level knows in the situation `name`, as `[option, weight]`
+## -- the first `tactics` of its list that `character` has a move for. An
+## opponent that learns (T17) changes the weights here and nothing else.
+func _weighted_options(name: String, character: String) -> Array:
+	return SITUATIONS[name].slice(0, _tactics).filter(
+			func(option: Array) -> bool: return _has_option(character, option[0]))
 
 
 # Any option of the neutral list, the longest: what a slipped hand does.

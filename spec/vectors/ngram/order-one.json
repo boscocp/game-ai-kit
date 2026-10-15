@@ -1,0 +1,55 @@
+{
+ "description": "Order 1 is a plain frequency count with no context; this one, at prior 1/2, sees a run of jumps.",
+ "order": 1,
+ "actions": [
+  "jump",
+  "low",
+  "throw",
+  "guard"
+ ],
+ "decay": 0.9,
+ "prior": 0.5,
+ "sequence": [
+  "jump",
+  "jump",
+  "low",
+  "jump",
+  "guard",
+  "jump"
+ ],
+ "cases": [
+  {
+   "seen": 0,
+   "context": "",
+   "probabilities": {
+    "jump": 0.25,
+    "low": 0.25,
+    "throw": 0.25,
+    "guard": 0.25
+   },
+   "likeliest": "jump"
+  },
+  {
+   "seen": 3,
+   "context": "",
+   "probabilities": {
+    "jump": 0.4692144373673036,
+    "low": 0.3184713375796178,
+    "throw": 0.10615711252653928,
+    "guard": 0.10615711252653928
+   },
+   "likeliest": "jump"
+  },
+  {
+   "seen": 6,
+   "context": "",
+   "probabilities": {
+    "jump": 0.5319784790871113,
+    "low": 0.18382820364395663,
+    "throw": 0.07478771507077162,
+    "guard": 0.2094056021981605
+   },
+   "likeliest": "jump"
+  }
+ ]
+}

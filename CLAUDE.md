@@ -42,7 +42,9 @@ than none.
    investigates a green. Ask of each one: *does this pass on an empty scene?*
 5. **No lesson requires hardware above tier 1.** See the tiers in the README.
 6. **No training at game time.** Python trains and emits weights; GDScript only
-   infers.
+   infers. One exception, decided by the owner: an opponent model may count
+   what it sees during one fight, starting empty and never saved (ADR 0016,
+   rule N9).
 7. **The LLM never blocks a frame, and nothing it returns becomes an action
    without passing a validator.**
 8. **The whole toolchain lives on the large disk.** Nothing in `$HOME`.
