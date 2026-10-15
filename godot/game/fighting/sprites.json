@@ -36,7 +36,8 @@
     "guard": [345, 346, 347, 348],
     "guard_crouching": [845, 850, 855],
     "hit": [923, 924, 925, 926, 927],
-    "down": [948]
+    "down": [948],
+    "jump": [564, 565, 566, 573, 576, 580, 567]
    },
    "moves": {
     "jab": {
@@ -78,6 +79,31 @@
      "startup": [518, 519],
      "active": [520, 521],
      "recovery": [522, 523, 524]
+    },
+    "uppercut": {
+     "startup": [37, 38, 39],
+     "active": [40, 41],
+     "recovery": [42, 43]
+    },
+    "air_jab": {
+     "startup": [593],
+     "active": [594],
+     "recovery": [595]
+    },
+    "air_punch": {
+     "startup": [597, 598],
+     "active": [599],
+     "recovery": [593]
+    },
+    "air_kick": {
+     "startup": [682, 683],
+     "active": [684],
+     "recovery": [685, 686]
+    },
+    "flying_kick": {
+     "startup": [573],
+     "active": [677, 678],
+     "recovery": [679]
     }
    }
   },
@@ -93,7 +119,8 @@
     "guard": [345, 346, 347, 348],
     "guard_crouching": [845, 850, 855],
     "hit": [923, 924, 925, 926, 927],
-    "down": [948]
+    "down": [948],
+    "jump": [564, 565, 566, 573, 576, 580, 567]
    },
    "moves": {
     "jab": {
@@ -135,6 +162,31 @@
      "startup": [528, 532, 533],
      "active": [534, 535],
      "recovery": [536, 537]
+    },
+    "uppercut": {
+     "startup": [37, 38, 39],
+     "active": [40, 41],
+     "recovery": [42, 43]
+    },
+    "air_jab": {
+     "startup": [593],
+     "active": [594],
+     "recovery": [595]
+    },
+    "air_punch": {
+     "startup": [597, 598],
+     "active": [599],
+     "recovery": [593]
+    },
+    "air_kick": {
+     "startup": [682, 683],
+     "active": [684],
+     "recovery": [685, 686]
+    },
+    "flying_kick": {
+     "startup": [573],
+     "active": [677, 678],
+     "recovery": [679]
     }
    }
   }

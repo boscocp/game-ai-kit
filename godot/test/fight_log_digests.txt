@@ -1,655 +1,980 @@
-0 w-1 | lancer x220 f1 h1000 :0 c0 k0 s0 b:-1 i0 | dancer x420 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
-1 w-1 | lancer x222 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x425 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-2 w-1 | lancer x224 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x430 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-3 w-1 | lancer x226 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x435 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-4 w-1 | lancer x228 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x440 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-5 w-1 | lancer x230 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x445 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-6 w-1 | lancer x232 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x450 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-7 w-1 | lancer x234 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x455 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-8 w-1 | lancer x236 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x460 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-9 w-1 | lancer x238 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x465 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-10 w-1 | lancer x240 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x470 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-11 w-1 | lancer x242 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x475 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-12 w-1 | lancer x244 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x480 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-13 w-1 | lancer x246 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x485 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-14 w-1 | lancer x248 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x490 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-15 w-1 | lancer x250 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x495 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-16 w-1 | lancer x252 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x500 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-17 w-1 | lancer x254 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x505 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-18 w-1 | lancer x256 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x510 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-19 w-1 | lancer x258 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x515 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-20 w-1 | lancer x260 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x520 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-21 w-1 | lancer x262 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x525 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-22 w-1 | lancer x264 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x530 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-23 w-1 | lancer x266 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x535 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-24 w-1 | lancer x268 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x540 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-25 w-1 | lancer x270 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x545 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-26 w-1 | lancer x272 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x550 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-27 w-1 | lancer x274 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x555 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-28 w-1 | lancer x276 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x560 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-29 w-1 | lancer x278 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x565 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-30 w-1 | lancer x280 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x570 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-31 w-1 | lancer x282 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x575 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-32 w-1 | lancer x284 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x580 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-33 w-1 | lancer x286 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x585 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-34 w-1 | lancer x288 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x590 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-35 w-1 | lancer x290 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x595 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-36 w-1 | lancer x292 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x600 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-37 w-1 | lancer x294 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x605 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-38 w-1 | lancer x296 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x610 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-39 w-1 | lancer x298 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x615 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-40 w-1 | lancer x300 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-41 w-1 | lancer x302 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-42 w-1 | lancer x304 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-43 w-1 | lancer x306 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-44 w-1 | lancer x308 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-45 w-1 | lancer x310 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-46 w-1 | lancer x312 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-47 w-1 | lancer x314 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-48 w-1 | lancer x316 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-49 w-1 | lancer x318 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-50 w-1 | lancer x320 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-51 w-1 | lancer x322 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-52 w-1 | lancer x324 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-53 w-1 | lancer x326 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-54 w-1 | lancer x328 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-55 w-1 | lancer x330 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-56 w-1 | lancer x332 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-57 w-1 | lancer x334 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-58 w-1 | lancer x336 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-59 w-1 | lancer x338 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-60 w-1 | lancer x340 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-61 w-1 | lancer x342 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-62 w-1 | lancer x344 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-63 w-1 | lancer x346 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-64 w-1 | lancer x348 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-65 w-1 | lancer x350 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-66 w-1 | lancer x352 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-67 w-1 | lancer x354 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-68 w-1 | lancer x356 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-69 w-1 | lancer x358 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-70 w-1 | lancer x360 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-71 w-1 | lancer x362 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-72 w-1 | lancer x364 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-73 w-1 | lancer x366 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-74 w-1 | lancer x368 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-75 w-1 | lancer x370 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-76 w-1 | lancer x372 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-77 w-1 | lancer x374 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-78 w-1 | lancer x376 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-79 w-1 | lancer x378 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-80 w-1 | lancer x380 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-81 w-1 | lancer x382 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-82 w-1 | lancer x384 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-83 w-1 | lancer x386 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-84 w-1 | lancer x388 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-85 w-1 | lancer x390 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-86 w-1 | lancer x392 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-87 w-1 | lancer x394 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-88 w-1 | lancer x396 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-89 w-1 | lancer x398 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-90 w-1 | lancer x400 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-91 w-1 | lancer x402 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-92 w-1 | lancer x404 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-93 w-1 | lancer x406 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-94 w-1 | lancer x408 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-95 w-1 | lancer x410 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-96 w-1 | lancer x412 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-97 w-1 | lancer x414 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-98 w-1 | lancer x416 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-99 w-1 | lancer x418 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-100 w-1 | lancer x420 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-101 w-1 | lancer x422 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-102 w-1 | lancer x424 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-103 w-1 | lancer x426 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-104 w-1 | lancer x428 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-105 w-1 | lancer x430 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-106 w-1 | lancer x432 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-107 w-1 | lancer x434 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-108 w-1 | lancer x436 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-109 w-1 | lancer x438 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-110 w-1 | lancer x440 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-111 w-1 | lancer x442 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-112 w-1 | lancer x444 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-113 w-1 | lancer x446 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-114 w-1 | lancer x448 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-115 w-1 | lancer x450 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-116 w-1 | lancer x452 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-117 w-1 | lancer x454 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-118 w-1 | lancer x456 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-119 w-1 | lancer x458 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-120 w-1 | lancer x460 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-121 w-1 | lancer x462 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-122 w-1 | lancer x464 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-123 w-1 | lancer x466 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-124 w-1 | lancer x468 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-125 w-1 | lancer x470 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-126 w-1 | lancer x472 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-127 w-1 | lancer x474 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-128 w-1 | lancer x476 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-129 w-1 | lancer x478 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-130 w-1 | lancer x480 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-131 w-1 | lancer x480 f1 h1000 thrust:1 c0 k0 s0 b:138 i16 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-132 w-1 | lancer x480 f1 h1000 thrust:2 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-133 w-1 | lancer x480 f1 h1000 thrust:3 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-134 w-1 | lancer x480 f1 h1000 thrust:4 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-135 w-1 | lancer x480 f1 h1000 thrust:5 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-136 w-1 | lancer x480 f1 h1000 thrust:6 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-137 w-1 | lancer x480 f1 h1000 thrust:7 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-138 w-1 | lancer x480 f1 h1000 thrust:8 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-139 w-1 | lancer x480 f1 h1000 thrust:9 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-140 w-1 | lancer x480 f1 h1000 thrust:10 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-141 w-1 | lancer x480 f1 h1000 thrust:11 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-142 w-1 | lancer x480 f1 h1000 thrust:12 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-143 w-1 | lancer x480 f1 h1000 thrust:13 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-144 w-1 | lancer x466 f1 h1000 thrust:14 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s15block b:-1 i2 | p1 is blocked by p2 with thrust (holding away, standing)
-145 w-1 | lancer x466 f1 h1000 thrust:15 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s14block b:-1 i2 | 
-146 w-1 | lancer x466 f1 h1000 thrust:16 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s13block b:-1 i2 | 
-147 w-1 | lancer x466 f1 h1000 thrust:17 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s12block b:-1 i2 | 
-148 w-1 | lancer x466 f1 h1000 thrust:18 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s11block b:-1 i2 | 
-149 w-1 | lancer x466 f1 h1000 thrust:19 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s10block b:-1 i2 | 
-150 w-1 | lancer x466 f1 h1000 thrust:20 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s9block b:-1 i2 | 
-151 w-1 | lancer x466 f1 h1000 thrust:21 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s8block b:-1 i2 | 
-152 w-1 | lancer x466 f1 h1000 thrust:22 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s7block b:-1 i2 | 
-153 w-1 | lancer x466 f1 h1000 thrust:23 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s6block b:-1 i2 | 
-154 w-1 | lancer x466 f1 h1000 thrust:24 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s5block b:-1 i2 | 
-155 w-1 | lancer x466 f1 h1000 thrust:25 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s4block b:-1 i2 | 
-156 w-1 | lancer x466 f1 h1000 thrust:26 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s3block b:-1 i2 | 
-157 w-1 | lancer x466 f1 h1000 thrust:27 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s2block b:-1 i2 | 
-158 w-1 | lancer x466 f1 h1000 thrust:28 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s1block b:-1 i2 | 
-159 w-1 | lancer x466 f1 h1000 thrust:29 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-160 w-1 | lancer x466 f1 h1000 thrust:30 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-161 w-1 | lancer x466 f1 h1000 thrust:31 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-162 w-1 | lancer x466 f1 h1000 thrust:32 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-163 w-1 | lancer x466 f1 h1000 thrust:33 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-164 w-1 | lancer x466 f1 h1000 thrust:34 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-165 w-1 | lancer x466 f1 h1000 thrust:35 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-166 w-1 | lancer x466 f1 h1000 thrust:36 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-167 w-1 | lancer x466 f1 h1000 thrust:37 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-168 w-1 | lancer x466 f1 h1000 thrust:38 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-169 w-1 | lancer x466 f1 h1000 thrust:39 c1 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-170 w-1 | lancer x466 f1 h1000 :0 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-171 w-1 | lancer x466 f1 h1000 :0 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-172 w-1 | lancer x466 f1 h1000 :0 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-173 w-1 | lancer x466 f1 h1000 :0 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-174 w-1 | lancer x466 f1 h1000 :0 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-175 w-1 | lancer x466 f1 h1000 :0 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-176 w-1 | lancer x466 f1 h1000 :0 c0 k0 s0 b:138 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
-177 w-1 | lancer x466 f1 h1000 thrust:1 c0 k0 s0 b:184 i16 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
-178 w-1 | lancer x466 f1 h1000 thrust:2 c0 k0 s0 b:184 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
-179 w-1 | lancer x466 f1 h1000 thrust:3 c0 k0 s0 b:184 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
-180 w-1 | lancer x466 f1 h1000 thrust:4 c0 k0 s0 b:184 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
-181 w-1 | lancer x466 f1 h1000 thrust:5 c0 k0 s0 b:184 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
-182 w-1 | lancer x466 f1 h1000 thrust:6 c0 k0 s0 b:184 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
-183 w-1 | lancer x466 f1 h1000 thrust:7 c0 k0 s0 b:184 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
-184 w-1 | lancer x466 f1 h1000 thrust:8 c0 k0 s0 b:184 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
-185 w-1 | lancer x466 f1 h1000 thrust:9 c0 k0 s0 b:184 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
-186 w-1 | lancer x466 f1 h1000 thrust:10 c0 k0 s0 b:184 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
-187 w-1 | lancer x466 f1 h1000 thrust:11 c0 k0 s0 b:184 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
-188 w-1 | lancer x466 f1 h1000 thrust:12 c0 k0 s0 b:184 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
-189 w-1 | lancer x466 f1 h1000 thrust:13 c0 k0 s0 b:184 i0 | dancer x618 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
-190 w-1 | lancer x452 f1 h1000 thrust:14 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s22hit b:-1 i0 | p1 hits p2 with thrust
-191 w-1 | lancer x452 f1 h1000 thrust:15 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s21hit b:-1 i0 | 
-192 w-1 | lancer x452 f1 h1000 thrust:16 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s20hit b:-1 i0 | 
-193 w-1 | lancer x452 f1 h1000 thrust:17 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s19hit b:-1 i0 | 
-194 w-1 | lancer x452 f1 h1000 thrust:18 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s18hit b:-1 i0 | 
-195 w-1 | lancer x452 f1 h1000 thrust:19 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s17hit b:-1 i0 | 
-196 w-1 | lancer x452 f1 h1000 thrust:20 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s16hit b:-1 i0 | 
-197 w-1 | lancer x452 f1 h1000 thrust:21 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s15hit b:-1 i0 | 
-198 w-1 | lancer x452 f1 h1000 thrust:22 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s14hit b:-1 i0 | 
-199 w-1 | lancer x452 f1 h1000 thrust:23 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s13hit b:-1 i0 | 
-200 w-1 | lancer x452 f1 h1000 thrust:24 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s12hit b:-1 i0 | 
-201 w-1 | lancer x452 f1 h1000 thrust:25 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s11hit b:-1 i0 | 
-202 w-1 | lancer x452 f1 h1000 thrust:26 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s10hit b:-1 i0 | 
-203 w-1 | lancer x452 f1 h1000 thrust:27 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s9hit b:-1 i0 | 
-204 w-1 | lancer x452 f1 h1000 thrust:28 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s8hit b:-1 i0 | 
-205 w-1 | lancer x452 f1 h1000 thrust:29 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s7hit b:-1 i0 | 
-206 w-1 | lancer x452 f1 h1000 thrust:30 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s6hit b:-1 i0 | 
-207 w-1 | lancer x452 f1 h1000 thrust:31 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s5hit b:-1 i0 | 
-208 w-1 | lancer x452 f1 h1000 thrust:32 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s4hit b:-1 i0 | 
-209 w-1 | lancer x452 f1 h1000 thrust:33 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s3hit b:-1 i0 | 
-210 w-1 | lancer x452 f1 h1000 thrust:34 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s2hit b:-1 i0 | 
-211 w-1 | lancer x452 f1 h1000 thrust:35 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s1hit b:-1 i0 | 
-212 w-1 | lancer x452 f1 h1000 thrust:36 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-213 w-1 | lancer x452 f1 h1000 thrust:37 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-214 w-1 | lancer x452 f1 h1000 thrust:38 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-215 w-1 | lancer x452 f1 h1000 thrust:39 c1 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-216 w-1 | lancer x452 f1 h1000 :0 c0 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-217 w-1 | lancer x452 f1 h1000 :0 c0 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-218 w-1 | lancer x452 f1 h1000 :0 c0 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-219 w-1 | lancer x452 f1 h1000 :0 c0 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-220 w-1 | lancer x452 f1 h1000 :0 c0 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-221 w-1 | lancer x452 f1 h1000 :0 c0 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-222 w-1 | lancer x452 f1 h1000 :0 c0 k0 s0 b:184 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-223 w-1 | lancer x454 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-224 w-1 | lancer x456 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-225 w-1 | lancer x458 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-226 w-1 | lancer x460 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-227 w-1 | lancer x462 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-228 w-1 | lancer x464 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-229 w-1 | lancer x466 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-230 w-1 | lancer x468 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-231 w-1 | lancer x470 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-232 w-1 | lancer x472 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-233 w-1 | lancer x474 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-234 w-1 | lancer x476 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-235 w-1 | lancer x478 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-236 w-1 | lancer x480 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-237 w-1 | lancer x482 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-238 w-1 | lancer x484 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-239 w-1 | lancer x486 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-240 w-1 | lancer x488 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-241 w-1 | lancer x490 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-242 w-1 | lancer x492 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-243 w-1 | lancer x494 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-244 w-1 | lancer x496 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-245 w-1 | lancer x498 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-246 w-1 | lancer x500 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-247 w-1 | lancer x502 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-248 w-1 | lancer x504 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-249 w-1 | lancer x506 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-250 w-1 | lancer x508 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-251 w-1 | lancer x510 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-252 w-1 | lancer x512 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-253 w-1 | lancer x514 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-254 w-1 | lancer x516 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-255 w-1 | lancer x518 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-256 w-1 | lancer x520 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-257 w-1 | lancer x522 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-258 w-1 | lancer x524 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-259 w-1 | lancer x526 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-260 w-1 | lancer x528 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-261 w-1 | lancer x530 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-262 w-1 | lancer x532 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-263 w-1 | lancer x534 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-264 w-1 | lancer x536 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-265 w-1 | lancer x538 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-266 w-1 | lancer x540 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-267 w-1 | lancer x542 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-268 w-1 | lancer x544 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-269 w-1 | lancer x546 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-270 w-1 | lancer x546 f1 h1000 jab:1 c0 k0 s0 b:277 i8 | dancer x618 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
-271 w-1 | lancer x546 f1 h1000 jab:2 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 jab:1 c0 k0 s0 b:278 i8 | 
-272 w-1 | lancer x546 f1 h1000 jab:3 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 jab:2 c0 k0 s0 b:278 i0 | 
-273 w-1 | lancer x546 f1 h1000 jab:4 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 jab:3 c0 k0 s0 b:278 i0 | 
-274 w-1 | lancer x532 f1 h963 :0 c0 k0 s17hit b:277 i0 | dancer x618 f-1 h805 jab:4 c1 k0 s0 b:278 i0 | p2 counter-hits p1 with jab (caught starting up)
-275 w-1 | lancer x532 f1 h963 :0 c0 k0 s16hit b:277 i0 | dancer x618 f-1 h805 jab:5 c1 k0 s0 b:278 i0 | 
-276 w-1 | lancer x532 f1 h963 :0 c0 k0 s15hit b:277 i0 | dancer x618 f-1 h805 jab:6 c1 k0 s0 b:278 i0 | 
-277 w-1 | lancer x532 f1 h963 :0 c0 k0 s14hit b:277 i0 | dancer x618 f-1 h805 jab:7 c1 k0 s0 b:278 i0 | 
-278 w-1 | lancer x532 f1 h963 :0 c0 k0 s13hit b:277 i0 | dancer x618 f-1 h805 jab:8 c1 k0 s0 b:278 i0 | 
-279 w-1 | lancer x532 f1 h963 :0 c0 k0 s12hit b:277 i0 | dancer x618 f-1 h805 jab:9 c1 k0 s0 b:278 i0 | 
-280 w-1 | lancer x532 f1 h963 :0 c0 k0 s11hit b:277 i0 | dancer x618 f-1 h805 jab:10 c1 k0 s0 b:278 i0 | 
-281 w-1 | lancer x532 f1 h963 :0 c0 k0 s10hit b:277 i0 | dancer x618 f-1 h805 jab:11 c1 k0 s0 b:278 i0 | 
-282 w-1 | lancer x532 f1 h963 :0 c0 k0 s9hit b:277 i0 | dancer x618 f-1 h805 jab:12 c1 k0 s0 b:278 i0 | 
-283 w-1 | lancer x532 f1 h963 :0 c0 k0 s8hit b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-284 w-1 | lancer x532 f1 h963 :0 c0 k0 s7hit b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-285 w-1 | lancer x532 f1 h963 :0 c0 k0 s6hit b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-286 w-1 | lancer x532 f1 h963 :0 c0 k0 s5hit b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-287 w-1 | lancer x532 f1 h963 :0 c0 k0 s4hit b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-288 w-1 | lancer x532 f1 h963 :0 c0 k0 s3hit b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-289 w-1 | lancer x532 f1 h963 :0 c0 k0 s2hit b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-290 w-1 | lancer x532 f1 h963 :0 c0 k0 s1hit b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-291 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-292 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-293 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-294 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-295 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-296 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-297 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-298 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-299 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-300 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-301 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-302 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-303 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-304 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-305 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-306 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-307 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-308 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-309 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-310 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-311 w-1 | lancer x532 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-312 w-1 | lancer x534 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-313 w-1 | lancer x536 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-314 w-1 | lancer x538 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-315 w-1 | lancer x540 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-316 w-1 | lancer x542 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-317 w-1 | lancer x544 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-318 w-1 | lancer x546 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-319 w-1 | lancer x548 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-320 w-1 | lancer x550 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-321 w-1 | lancer x552 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-322 w-1 | lancer x554 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-323 w-1 | lancer x556 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-324 w-1 | lancer x558 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-325 w-1 | lancer x560 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-326 w-1 | lancer x562 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-327 w-1 | lancer x564 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-328 w-1 | lancer x566 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
-329 w-1 | lancer x566 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 jab:1 c0 k0 s0 b:336 i8 | 
-330 w-1 | lancer x566 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 jab:2 c0 k0 s0 b:336 i0 | 
-331 w-1 | lancer x566 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 jab:3 c0 k0 s0 b:336 i0 | 
-332 w-1 | lancer x552 f1 h933 :0 c0 k0 s13hit b:277 i0 | dancer x618 f-1 h805 jab:4 c1 k0 s0 b:336 i0 | p2 hits p1 with jab
-333 w-1 | lancer x552 f1 h933 :0 c0 k0 s12hit b:277 i0 | dancer x618 f-1 h805 jab:5 c1 k0 s0 b:336 i0 | 
-334 w-1 | lancer x552 f1 h933 :0 c0 k0 s11hit b:277 i0 | dancer x618 f-1 h805 straight:1 c0 k0 s0 b:341 i16 | p2 cancels jab into straight
-335 w-1 | lancer x552 f1 h933 :0 c0 k0 s10hit b:277 i0 | dancer x618 f-1 h805 straight:2 c0 k0 s0 b:341 i0 | 
-336 w-1 | lancer x552 f1 h933 :0 c0 k0 s9hit b:277 i0 | dancer x618 f-1 h805 straight:3 c0 k0 s0 b:341 i0 | 
-337 w-1 | lancer x552 f1 h933 :0 c0 k0 s8hit b:277 i0 | dancer x618 f-1 h805 straight:4 c0 k0 s0 b:341 i0 | 
-338 w-1 | lancer x552 f1 h933 :0 c0 k0 s7hit b:277 i0 | dancer x618 f-1 h805 straight:5 c0 k0 s0 b:341 i0 | 
-339 w-1 | lancer x552 f1 h933 :0 c0 k0 s6hit b:277 i0 | dancer x618 f-1 h805 straight:6 c0 k0 s0 b:341 i0 | 
-340 w-1 | lancer x552 f1 h933 :0 c0 k0 s5hit b:277 i0 | dancer x618 f-1 h805 straight:7 c0 k0 s0 b:341 i0 | 
-341 w-1 | lancer x538 f1 h863 :0 c0 k0 s18hit b:277 i0 | dancer x618 f-1 h805 straight:8 c1 k0 s0 b:341 i0 | p2 hits p1 with straight
-342 w-1 | lancer x538 f1 h863 :0 c0 k0 s17hit b:277 i0 | dancer x618 f-1 h805 straight:9 c1 k0 s0 b:341 i0 | 
-343 w-1 | lancer x538 f1 h863 :0 c0 k0 s16hit b:277 i0 | dancer x618 f-1 h805 straight:10 c1 k0 s0 b:341 i0 | 
-344 w-1 | lancer x538 f1 h863 :0 c0 k0 s15hit b:277 i0 | dancer x618 f-1 h805 straight:11 c1 k0 s0 b:341 i0 | 
-345 w-1 | lancer x538 f1 h863 :0 c0 k0 s14hit b:277 i0 | dancer x618 f-1 h805 straight:12 c1 k0 s0 b:341 i0 | 
-346 w-1 | lancer x538 f1 h863 :0 c0 k0 s13hit b:277 i0 | dancer x618 f-1 h805 straight:13 c1 k0 s0 b:341 i0 | 
-347 w-1 | lancer x538 f1 h863 :0 c0 k0 s12hit b:277 i0 | dancer x618 f-1 h805 straight:14 c1 k0 s0 b:341 i0 | 
-348 w-1 | lancer x538 f1 h863 :0 c0 k0 s11hit b:277 i0 | dancer x618 f-1 h805 straight:15 c1 k0 s0 b:341 i0 | 
-349 w-1 | lancer x538 f1 h863 :0 c0 k0 s10hit b:277 i0 | dancer x618 f-1 h805 straight:16 c1 k0 s0 b:341 i0 | 
-350 w-1 | lancer x538 f1 h863 :0 c0 k0 s9hit b:277 i0 | dancer x618 f-1 h805 straight:17 c1 k0 s0 b:341 i0 | 
-351 w-1 | lancer x538 f1 h863 :0 c0 k0 s8hit b:277 i0 | dancer x618 f-1 h805 straight:18 c1 k0 s0 b:341 i0 | 
-352 w-1 | lancer x538 f1 h863 :0 c0 k0 s7hit b:277 i0 | dancer x618 f-1 h805 straight:19 c1 k0 s0 b:341 i0 | 
-353 w-1 | lancer x538 f1 h863 :0 c0 k0 s6hit b:277 i0 | dancer x618 f-1 h805 straight:20 c1 k0 s0 b:341 i0 | 
-354 w-1 | lancer x538 f1 h863 :0 c0 k0 s5hit b:277 i0 | dancer x618 f-1 h805 straight:21 c1 k0 s0 b:341 i0 | 
-355 w-1 | lancer x538 f1 h863 :0 c0 k0 s4hit b:277 i0 | dancer x618 f-1 h805 straight:22 c1 k0 s0 b:341 i0 | 
-356 w-1 | lancer x538 f1 h863 :0 c0 k0 s3hit b:277 i0 | dancer x618 f-1 h805 straight:23 c1 k0 s0 b:341 i0 | 
-357 w-1 | lancer x538 f1 h863 :0 c0 k0 s2hit b:277 i0 | dancer x618 f-1 h805 straight:24 c1 k0 s0 b:341 i0 | 
-358 w-1 | lancer x538 f1 h863 :0 c0 k0 s1hit b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-359 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-360 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-361 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-362 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-363 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-364 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-365 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-366 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-367 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-368 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-369 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-370 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-371 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-372 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-373 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-374 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-375 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-376 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-377 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-378 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-379 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-380 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-381 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-382 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-383 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-384 w-1 | lancer x538 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-385 w-1 | lancer x540 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-386 w-1 | lancer x542 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-387 w-1 | lancer x544 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-388 w-1 | lancer x546 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-389 w-1 | lancer x548 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-390 w-1 | lancer x550 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-391 w-1 | lancer x552 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-392 w-1 | lancer x554 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-393 w-1 | lancer x556 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-394 w-1 | lancer x558 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-395 w-1 | lancer x560 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-396 w-1 | lancer x562 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-397 w-1 | lancer x564 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-398 w-1 | lancer x566 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-399 w-1 | lancer x568 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-400 w-1 | lancer x570 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-401 w-1 | lancer x570 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-402 w-1 | lancer x570 f1 h863 sweep:1 c0 k1 s0 b:409 i68 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-403 w-1 | lancer x570 f1 h863 sweep:2 c0 k1 s0 b:409 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-404 w-1 | lancer x570 f1 h863 sweep:3 c0 k1 s0 b:409 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-405 w-1 | lancer x570 f1 h863 sweep:4 c0 k1 s0 b:409 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-406 w-1 | lancer x570 f1 h863 sweep:5 c0 k1 s0 b:409 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-407 w-1 | lancer x570 f1 h863 sweep:6 c0 k1 s0 b:409 i0 | dancer x618 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
-408 w-1 | lancer x570 f1 h863 sweep:7 c0 k1 s0 b:409 i0 | dancer x618 f-1 h805 snap_kick:1 c0 k0 s0 b:415 i32 | 
-409 w-1 | lancer x570 f1 h863 sweep:8 c0 k1 s0 b:409 i0 | dancer x618 f-1 h805 snap_kick:2 c0 k0 s0 b:415 i0 | 
-410 w-1 | lancer x570 f1 h863 sweep:9 c0 k1 s0 b:409 i0 | dancer x618 f-1 h805 snap_kick:3 c0 k0 s0 b:415 i0 | 
-411 w-1 | lancer x570 f1 h863 sweep:10 c0 k1 s0 b:409 i0 | dancer x618 f-1 h805 snap_kick:4 c0 k0 s0 b:415 i0 | 
-412 w-1 | lancer x542 f1 h828 :0 c0 k0 s14hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s26hit b:415 i0 | p1 hits p2 with sweep, p2 hits p1 with snap_kick, trade
-413 w-1 | lancer x542 f1 h828 :0 c0 k0 s13hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s25hit b:415 i0 | 
-414 w-1 | lancer x542 f1 h828 :0 c0 k0 s12hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s24hit b:415 i0 | 
-415 w-1 | lancer x542 f1 h828 :0 c0 k0 s11hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s23hit b:415 i0 | 
-416 w-1 | lancer x542 f1 h828 :0 c0 k0 s10hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s22hit b:415 i0 | 
-417 w-1 | lancer x542 f1 h828 :0 c0 k0 s9hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s21hit b:415 i0 | 
-418 w-1 | lancer x542 f1 h828 :0 c0 k0 s8hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s20hit b:415 i0 | 
-419 w-1 | lancer x542 f1 h828 :0 c0 k0 s7hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s19hit b:415 i0 | 
-420 w-1 | lancer x542 f1 h828 :0 c0 k0 s6hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s18hit b:415 i0 | 
-421 w-1 | lancer x542 f1 h828 :0 c0 k0 s5hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s17hit b:415 i0 | 
-422 w-1 | lancer x542 f1 h828 :0 c0 k0 s4hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s16hit b:415 i0 | 
-423 w-1 | lancer x542 f1 h828 :0 c0 k0 s3hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s15hit b:415 i0 | 
-424 w-1 | lancer x542 f1 h828 :0 c0 k0 s2hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s14hit b:415 i0 | 
-425 w-1 | lancer x542 f1 h828 :0 c0 k0 s1hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s13hit b:415 i0 | 
-426 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s12hit b:415 i0 | 
-427 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s11hit b:415 i0 | 
-428 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s10hit b:415 i0 | 
-429 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s9hit b:415 i0 | 
-430 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s8hit b:415 i0 | 
-431 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s7hit b:415 i0 | 
-432 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s6hit b:415 i0 | 
-433 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s5hit b:415 i0 | 
-434 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s4hit b:415 i0 | 
-435 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s3hit b:415 i0 | 
-436 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s2hit b:415 i0 | 
-437 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s1hit b:415 i0 | 
-438 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-439 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-440 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-441 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-442 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-443 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-444 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-445 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-446 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-447 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-448 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-449 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-450 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-451 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-452 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-453 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-454 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-455 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-456 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-457 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-458 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-459 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-460 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-461 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-462 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-463 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-464 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-465 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
-466 w-1 | lancer x542 f1 h828 sweep:1 c0 k1 s0 b:473 i68 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
-467 w-1 | lancer x542 f1 h828 sweep:2 c0 k1 s0 b:473 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
-468 w-1 | lancer x542 f1 h828 sweep:3 c0 k1 s0 b:473 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
-469 w-1 | lancer x542 f1 h828 sweep:4 c0 k1 s0 b:473 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
-470 w-1 | lancer x542 f1 h828 sweep:5 c0 k1 s0 b:473 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
-471 w-1 | lancer x542 f1 h828 sweep:6 c0 k1 s0 b:473 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
-472 w-1 | lancer x542 f1 h828 sweep:7 c0 k1 s0 b:473 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
-473 w-1 | lancer x542 f1 h828 sweep:8 c0 k1 s0 b:473 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
-474 w-1 | lancer x542 f1 h828 sweep:9 c0 k1 s0 b:473 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
-475 w-1 | lancer x542 f1 h828 sweep:10 c0 k1 s0 b:473 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
-476 w-1 | lancer x528 f1 h828 sweep:11 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s26hit b:415 i2 | p1 hits p2 with sweep (a low through a standing guard)
-477 w-1 | lancer x528 f1 h828 sweep:12 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s25hit b:415 i2 | 
-478 w-1 | lancer x528 f1 h828 sweep:13 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s24hit b:415 i2 | 
-479 w-1 | lancer x528 f1 h828 sweep:14 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s23hit b:415 i2 | 
-480 w-1 | lancer x528 f1 h828 sweep:15 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s22hit b:415 i2 | 
-481 w-1 | lancer x528 f1 h828 sweep:16 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s21hit b:415 i2 | 
-482 w-1 | lancer x528 f1 h828 sweep:17 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s20hit b:415 i2 | 
-483 w-1 | lancer x528 f1 h828 sweep:18 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s19hit b:415 i2 | 
-484 w-1 | lancer x528 f1 h828 sweep:19 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s18hit b:415 i2 | 
-485 w-1 | lancer x528 f1 h828 sweep:20 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s17hit b:415 i2 | 
-486 w-1 | lancer x528 f1 h828 sweep:21 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s16hit b:415 i2 | 
-487 w-1 | lancer x528 f1 h828 sweep:22 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s15hit b:415 i2 | 
-488 w-1 | lancer x528 f1 h828 sweep:23 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s14hit b:415 i2 | 
-489 w-1 | lancer x528 f1 h828 sweep:24 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s13hit b:415 i2 | 
-490 w-1 | lancer x528 f1 h828 sweep:25 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s12hit b:415 i2 | 
-491 w-1 | lancer x528 f1 h828 sweep:26 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s11hit b:415 i2 | 
-492 w-1 | lancer x528 f1 h828 sweep:27 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s10hit b:415 i2 | 
-493 w-1 | lancer x528 f1 h828 sweep:28 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s9hit b:415 i2 | 
-494 w-1 | lancer x528 f1 h828 sweep:29 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s8hit b:415 i2 | 
-495 w-1 | lancer x528 f1 h828 sweep:30 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s7hit b:415 i2 | 
-496 w-1 | lancer x528 f1 h828 sweep:31 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s6hit b:415 i2 | 
-497 w-1 | lancer x528 f1 h828 sweep:32 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s5hit b:415 i2 | 
-498 w-1 | lancer x528 f1 h828 sweep:33 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s4hit b:415 i2 | 
-499 w-1 | lancer x528 f1 h828 sweep:34 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s3hit b:415 i2 | 
-500 w-1 | lancer x528 f1 h828 sweep:35 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s2hit b:415 i2 | 
-501 w-1 | lancer x528 f1 h828 sweep:36 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s1hit b:415 i2 | 
-502 w-1 | lancer x528 f1 h828 sweep:37 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s0 b:415 i2 | 
-503 w-1 | lancer x528 f1 h828 sweep:38 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s0 b:415 i2 | 
-504 w-1 | lancer x528 f1 h828 sweep:39 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s0 b:415 i2 | 
-505 w-1 | lancer x528 f1 h828 sweep:40 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s0 b:415 i2 | 
-506 w-1 | lancer x528 f1 h828 sweep:41 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s0 b:415 i2 | 
-507 w-1 | lancer x528 f1 h828 axe_kick:1 c0 k0 s0 b:514 i64 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-508 w-1 | lancer x528 f1 h828 axe_kick:2 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-509 w-1 | lancer x528 f1 h828 axe_kick:3 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-510 w-1 | lancer x528 f1 h828 axe_kick:4 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-511 w-1 | lancer x528 f1 h828 axe_kick:5 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-512 w-1 | lancer x528 f1 h828 axe_kick:6 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-513 w-1 | lancer x528 f1 h828 axe_kick:7 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-514 w-1 | lancer x528 f1 h828 axe_kick:8 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-515 w-1 | lancer x528 f1 h828 axe_kick:9 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-516 w-1 | lancer x528 f1 h828 axe_kick:10 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-517 w-1 | lancer x528 f1 h828 axe_kick:11 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-518 w-1 | lancer x528 f1 h828 axe_kick:12 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-519 w-1 | lancer x528 f1 h828 axe_kick:13 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-520 w-1 | lancer x528 f1 h828 axe_kick:14 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-521 w-1 | lancer x528 f1 h828 axe_kick:15 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-522 w-1 | lancer x528 f1 h828 axe_kick:16 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-523 w-1 | lancer x528 f1 h828 axe_kick:17 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-524 w-1 | lancer x528 f1 h828 axe_kick:18 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-525 w-1 | lancer x528 f1 h828 axe_kick:19 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-526 w-1 | lancer x528 f1 h828 axe_kick:20 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-527 w-1 | lancer x528 f1 h828 axe_kick:21 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-528 w-1 | lancer x528 f1 h828 axe_kick:22 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
-529 w-1 | lancer x514 f1 h828 axe_kick:23 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s24hit b:415 i6 | p1 hits p2 with axe_kick (an overhead through a crouching guard)
-530 w-1 | lancer x514 f1 h828 axe_kick:24 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s23hit b:415 i6 | 
-531 w-1 | lancer x514 f1 h828 axe_kick:25 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s22hit b:415 i6 | 
-532 w-1 | lancer x514 f1 h828 axe_kick:26 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s21hit b:415 i6 | 
-533 w-1 | lancer x514 f1 h828 axe_kick:27 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s20hit b:415 i6 | 
-534 w-1 | lancer x514 f1 h828 axe_kick:28 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s19hit b:415 i6 | 
-535 w-1 | lancer x514 f1 h828 axe_kick:29 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s18hit b:415 i6 | 
-536 w-1 | lancer x514 f1 h828 axe_kick:30 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s17hit b:415 i6 | 
-537 w-1 | lancer x514 f1 h828 axe_kick:31 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s16hit b:415 i6 | 
-538 w-1 | lancer x514 f1 h828 axe_kick:32 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s15hit b:415 i6 | 
-539 w-1 | lancer x514 f1 h828 axe_kick:33 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s14hit b:415 i6 | 
-540 w-1 | lancer x514 f1 h828 axe_kick:34 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s13hit b:415 i6 | 
-541 w-1 | lancer x514 f1 h828 axe_kick:35 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s12hit b:415 i6 | 
-542 w-1 | lancer x514 f1 h828 axe_kick:36 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s11hit b:415 i6 | 
-543 w-1 | lancer x514 f1 h828 axe_kick:37 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s10hit b:415 i6 | 
-544 w-1 | lancer x514 f1 h828 axe_kick:38 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s9hit b:415 i6 | 
-545 w-1 | lancer x514 f1 h828 axe_kick:39 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s8hit b:415 i6 | 
-546 w-1 | lancer x514 f1 h828 axe_kick:40 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s7hit b:415 i6 | 
-547 w-1 | lancer x514 f1 h828 axe_kick:41 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s6hit b:415 i6 | 
-548 w-1 | lancer x514 f1 h828 axe_kick:42 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s5hit b:415 i6 | 
-549 w-1 | lancer x514 f1 h828 axe_kick:43 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s4hit b:415 i6 | 
-550 w-1 | lancer x514 f1 h828 axe_kick:44 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s3hit b:415 i6 | 
-551 w-1 | lancer x514 f1 h828 axe_kick:45 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s2hit b:415 i6 | 
-552 w-1 | lancer x514 f1 h828 :0 c0 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s1hit b:415 i6 | 
-553 w-1 | lancer x516 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-554 w-1 | lancer x518 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-555 w-1 | lancer x520 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-556 w-1 | lancer x522 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-557 w-1 | lancer x524 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-558 w-1 | lancer x526 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-559 w-1 | lancer x528 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-560 w-1 | lancer x530 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-561 w-1 | lancer x532 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-562 w-1 | lancer x534 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-563 w-1 | lancer x536 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-564 w-1 | lancer x538 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-565 w-1 | lancer x540 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-566 w-1 | lancer x542 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-567 w-1 | lancer x544 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-568 w-1 | lancer x546 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-569 w-1 | lancer x548 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-570 w-1 | lancer x550 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-571 w-1 | lancer x552 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-572 w-1 | lancer x554 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-573 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-574 w-1 | lancer x558 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-575 w-1 | lancer x560 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-576 w-1 | lancer x562 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-577 w-1 | lancer x564 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-578 w-1 | lancer x566 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-579 w-1 | lancer x568 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-580 w-1 | lancer x570 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-581 w-1 | lancer x570 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-582 w-1 | lancer x570 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-583 w-1 | lancer x570 f1 h828 throw:1 c0 k0 s0 b:590 i128 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-584 w-1 | lancer x570 f1 h828 throw:2 c0 k0 s0 b:590 i0 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-585 w-1 | lancer x570 f1 h828 throw:3 c0 k0 s0 b:590 i0 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-586 w-1 | lancer x570 f1 h828 throw:4 c0 k0 s0 b:590 i0 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-587 w-1 | lancer x570 f1 h828 throw:5 c0 k0 s0 b:590 i0 | dancer x618 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
-588 w-1 | lancer x556 f1 h828 throw:6 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s30hit b:415 i0 | p1 throws p2 with throw (a throw cannot be blocked)
-589 w-1 | lancer x556 f1 h828 throw:7 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s29hit b:415 i0 | 
-590 w-1 | lancer x556 f1 h828 throw:8 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s28hit b:415 i0 | 
-591 w-1 | lancer x556 f1 h828 throw:9 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s27hit b:415 i0 | 
-592 w-1 | lancer x556 f1 h828 throw:10 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s26hit b:415 i0 | 
-593 w-1 | lancer x556 f1 h828 throw:11 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s25hit b:415 i0 | 
-594 w-1 | lancer x556 f1 h828 throw:12 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s24hit b:415 i0 | 
-595 w-1 | lancer x556 f1 h828 throw:13 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s23hit b:415 i0 | 
-596 w-1 | lancer x556 f1 h828 throw:14 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s22hit b:415 i0 | 
-597 w-1 | lancer x556 f1 h828 throw:15 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s21hit b:415 i0 | 
-598 w-1 | lancer x556 f1 h828 throw:16 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s20hit b:415 i0 | 
-599 w-1 | lancer x556 f1 h828 throw:17 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s19hit b:415 i0 | 
-600 w-1 | lancer x556 f1 h828 throw:18 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s18hit b:415 i0 | 
-601 w-1 | lancer x556 f1 h828 throw:19 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s17hit b:415 i0 | 
-602 w-1 | lancer x556 f1 h828 throw:20 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s16hit b:415 i0 | 
-603 w-1 | lancer x556 f1 h828 throw:21 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s15hit b:415 i0 | 
-604 w-1 | lancer x556 f1 h828 throw:22 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s14hit b:415 i0 | 
-605 w-1 | lancer x556 f1 h828 throw:23 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s13hit b:415 i0 | 
-606 w-1 | lancer x556 f1 h828 throw:24 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s12hit b:415 i0 | 
-607 w-1 | lancer x556 f1 h828 throw:25 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s11hit b:415 i0 | 
-608 w-1 | lancer x556 f1 h828 throw:26 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s10hit b:415 i0 | 
-609 w-1 | lancer x556 f1 h828 throw:27 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s9hit b:415 i0 | 
-610 w-1 | lancer x556 f1 h828 throw:28 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s8hit b:415 i0 | 
-611 w-1 | lancer x556 f1 h828 throw:29 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s7hit b:415 i0 | 
-612 w-1 | lancer x556 f1 h828 throw:30 c1 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s6hit b:415 i0 | 
-613 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s5hit b:415 i0 | 
-614 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s4hit b:415 i0 | 
-615 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s3hit b:415 i0 | 
-616 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s2hit b:415 i0 | 
-617 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s1hit b:415 i0 | 
-618 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
-619 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
-620 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
-621 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
-622 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
-623 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
-624 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
-625 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
-626 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
-627 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
-628 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
-629 w-1 | lancer x556 f1 h828 jab:1 c0 k0 s0 b:636 i8 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-630 w-1 | lancer x556 f1 h828 jab:2 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-631 w-1 | lancer x556 f1 h828 jab:3 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-632 w-1 | lancer x556 f1 h828 jab:4 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-633 w-1 | lancer x556 f1 h828 jab:5 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-634 w-1 | lancer x556 f1 h828 jab:6 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-635 w-1 | lancer x556 f1 h828 jab:7 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | p1's jab passes over p2 (a high misses a crouch)
-636 w-1 | lancer x556 f1 h828 jab:8 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | p1's jab passes over p2 (a high misses a crouch)
-637 w-1 | lancer x556 f1 h828 jab:9 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | p1's jab passes over p2 (a high misses a crouch)
-638 w-1 | lancer x556 f1 h828 jab:10 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-639 w-1 | lancer x556 f1 h828 jab:11 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-640 w-1 | lancer x556 f1 h828 jab:12 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-641 w-1 | lancer x556 f1 h828 jab:13 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-642 w-1 | lancer x556 f1 h828 jab:14 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-643 w-1 | lancer x556 f1 h828 jab:15 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-644 w-1 | lancer x556 f1 h828 jab:16 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-645 w-1 | lancer x556 f1 h828 jab:17 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-646 w-1 | lancer x556 f1 h828 jab:18 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-647 w-1 | lancer x556 f1 h828 jab:19 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-648 w-1 | lancer x556 f1 h828 jab:20 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-649 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-650 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-651 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-652 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-653 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
-654 w-1 | lancer x556 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+0 w-1 | lancer x220 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i0 | dancer x420 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
+1 w-1 | lancer x222 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x425 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+2 w-1 | lancer x224 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x430 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+3 w-1 | lancer x226 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x435 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+4 w-1 | lancer x228 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x440 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+5 w-1 | lancer x230 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x445 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+6 w-1 | lancer x232 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x450 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+7 w-1 | lancer x234 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x455 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+8 w-1 | lancer x236 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x460 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+9 w-1 | lancer x238 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x465 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+10 w-1 | lancer x240 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x470 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+11 w-1 | lancer x242 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x475 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+12 w-1 | lancer x244 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x480 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+13 w-1 | lancer x246 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x485 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+14 w-1 | lancer x248 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x490 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+15 w-1 | lancer x250 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x495 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+16 w-1 | lancer x252 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x500 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+17 w-1 | lancer x254 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x505 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+18 w-1 | lancer x256 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x510 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+19 w-1 | lancer x258 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x515 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+20 w-1 | lancer x260 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x520 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+21 w-1 | lancer x262 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x525 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+22 w-1 | lancer x264 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x530 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+23 w-1 | lancer x266 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x535 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+24 w-1 | lancer x268 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x540 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+25 w-1 | lancer x270 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x545 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+26 w-1 | lancer x272 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x550 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+27 w-1 | lancer x274 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x555 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+28 w-1 | lancer x276 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x560 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+29 w-1 | lancer x278 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x565 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+30 w-1 | lancer x280 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x570 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+31 w-1 | lancer x282 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x575 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+32 w-1 | lancer x284 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x580 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+33 w-1 | lancer x286 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x585 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+34 w-1 | lancer x288 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x590 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+35 w-1 | lancer x290 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x595 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+36 w-1 | lancer x292 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x600 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+37 w-1 | lancer x294 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x605 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+38 w-1 | lancer x296 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x610 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+39 w-1 | lancer x298 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x615 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+40 w-1 | lancer x300 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+41 w-1 | lancer x302 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+42 w-1 | lancer x304 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+43 w-1 | lancer x306 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+44 w-1 | lancer x308 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+45 w-1 | lancer x310 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+46 w-1 | lancer x312 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+47 w-1 | lancer x314 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+48 w-1 | lancer x316 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+49 w-1 | lancer x318 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+50 w-1 | lancer x320 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+51 w-1 | lancer x322 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+52 w-1 | lancer x324 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+53 w-1 | lancer x326 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+54 w-1 | lancer x328 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+55 w-1 | lancer x330 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+56 w-1 | lancer x332 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+57 w-1 | lancer x334 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+58 w-1 | lancer x336 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+59 w-1 | lancer x338 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+60 w-1 | lancer x340 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+61 w-1 | lancer x342 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+62 w-1 | lancer x344 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+63 w-1 | lancer x346 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+64 w-1 | lancer x348 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+65 w-1 | lancer x350 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+66 w-1 | lancer x352 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+67 w-1 | lancer x354 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+68 w-1 | lancer x356 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+69 w-1 | lancer x358 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+70 w-1 | lancer x360 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+71 w-1 | lancer x362 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+72 w-1 | lancer x364 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+73 w-1 | lancer x366 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+74 w-1 | lancer x368 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+75 w-1 | lancer x370 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+76 w-1 | lancer x372 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+77 w-1 | lancer x374 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+78 w-1 | lancer x376 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+79 w-1 | lancer x378 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+80 w-1 | lancer x380 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+81 w-1 | lancer x382 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+82 w-1 | lancer x384 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+83 w-1 | lancer x386 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+84 w-1 | lancer x388 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+85 w-1 | lancer x390 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+86 w-1 | lancer x392 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+87 w-1 | lancer x394 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+88 w-1 | lancer x396 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+89 w-1 | lancer x398 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+90 w-1 | lancer x400 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+91 w-1 | lancer x402 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+92 w-1 | lancer x404 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+93 w-1 | lancer x406 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+94 w-1 | lancer x408 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+95 w-1 | lancer x410 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+96 w-1 | lancer x412 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+97 w-1 | lancer x414 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+98 w-1 | lancer x416 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+99 w-1 | lancer x418 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+100 w-1 | lancer x420 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+101 w-1 | lancer x422 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+102 w-1 | lancer x424 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+103 w-1 | lancer x426 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+104 w-1 | lancer x428 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+105 w-1 | lancer x430 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+106 w-1 | lancer x432 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+107 w-1 | lancer x434 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+108 w-1 | lancer x436 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+109 w-1 | lancer x438 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+110 w-1 | lancer x440 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+111 w-1 | lancer x442 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+112 w-1 | lancer x444 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+113 w-1 | lancer x446 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+114 w-1 | lancer x448 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+115 w-1 | lancer x450 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+116 w-1 | lancer x452 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+117 w-1 | lancer x454 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+118 w-1 | lancer x456 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+119 w-1 | lancer x458 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+120 w-1 | lancer x460 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+121 w-1 | lancer x462 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+122 w-1 | lancer x464 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+123 w-1 | lancer x466 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+124 w-1 | lancer x468 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+125 w-1 | lancer x470 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+126 w-1 | lancer x472 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+127 w-1 | lancer x474 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+128 w-1 | lancer x476 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+129 w-1 | lancer x478 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+130 w-1 | lancer x480 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:-1 i2 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+131 w-1 | lancer x480 y0 j0:0:0 f1 h1000 thrust:1 c0 k0 s0 b:138 i16 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+132 w-1 | lancer x480 y0 j0:0:0 f1 h1000 thrust:2 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+133 w-1 | lancer x480 y0 j0:0:0 f1 h1000 thrust:3 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+134 w-1 | lancer x480 y0 j0:0:0 f1 h1000 thrust:4 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+135 w-1 | lancer x480 y0 j0:0:0 f1 h1000 thrust:5 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+136 w-1 | lancer x480 y0 j0:0:0 f1 h1000 thrust:6 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+137 w-1 | lancer x480 y0 j0:0:0 f1 h1000 thrust:7 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+138 w-1 | lancer x480 y0 j0:0:0 f1 h1000 thrust:8 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+139 w-1 | lancer x480 y0 j0:0:0 f1 h1000 thrust:9 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+140 w-1 | lancer x480 y0 j0:0:0 f1 h1000 thrust:10 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+141 w-1 | lancer x480 y0 j0:0:0 f1 h1000 thrust:11 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+142 w-1 | lancer x480 y0 j0:0:0 f1 h1000 thrust:12 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+143 w-1 | lancer x480 y0 j0:0:0 f1 h1000 thrust:13 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+144 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:14 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s15block b:-1 i2 | p1 is blocked by p2 with thrust (holding away, standing)
+145 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:15 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s14block b:-1 i2 | 
+146 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:16 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s13block b:-1 i2 | 
+147 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:17 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s12block b:-1 i2 | 
+148 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:18 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s11block b:-1 i2 | 
+149 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:19 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s10block b:-1 i2 | 
+150 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:20 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s9block b:-1 i2 | 
+151 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:21 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s8block b:-1 i2 | 
+152 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:22 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s7block b:-1 i2 | 
+153 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:23 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s6block b:-1 i2 | 
+154 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:24 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s5block b:-1 i2 | 
+155 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:25 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s4block b:-1 i2 | 
+156 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:26 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s3block b:-1 i2 | 
+157 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:27 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s2block b:-1 i2 | 
+158 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:28 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s1block b:-1 i2 | 
+159 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:29 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+160 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:30 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+161 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:31 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+162 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:32 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+163 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:33 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+164 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:34 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+165 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:35 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+166 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:36 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+167 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:37 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+168 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:38 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+169 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:39 c1 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+170 w-1 | lancer x466 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+171 w-1 | lancer x466 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+172 w-1 | lancer x466 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+173 w-1 | lancer x466 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+174 w-1 | lancer x466 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+175 w-1 | lancer x466 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+176 w-1 | lancer x466 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:138 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i2 | 
+177 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:1 c0 k0 s0 b:184 i16 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
+178 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:2 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
+179 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:3 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
+180 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:4 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
+181 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:5 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
+182 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:6 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
+183 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:7 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
+184 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:8 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
+185 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:9 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
+186 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:10 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
+187 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:11 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
+188 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:12 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
+189 w-1 | lancer x466 y0 j0:0:0 f1 h1000 thrust:13 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h900 :0 c0 k0 s0 b:-1 i0 | 
+190 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:14 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s22hit b:-1 i0 | p1 hits p2 with thrust
+191 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:15 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s21hit b:-1 i0 | 
+192 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:16 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s20hit b:-1 i0 | 
+193 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:17 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s19hit b:-1 i0 | 
+194 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:18 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s18hit b:-1 i0 | 
+195 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:19 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s17hit b:-1 i0 | 
+196 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:20 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s16hit b:-1 i0 | 
+197 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:21 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s15hit b:-1 i0 | 
+198 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:22 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s14hit b:-1 i0 | 
+199 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:23 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s13hit b:-1 i0 | 
+200 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:24 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s12hit b:-1 i0 | 
+201 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:25 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s11hit b:-1 i0 | 
+202 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:26 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s10hit b:-1 i0 | 
+203 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:27 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s9hit b:-1 i0 | 
+204 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:28 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s8hit b:-1 i0 | 
+205 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:29 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s7hit b:-1 i0 | 
+206 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:30 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s6hit b:-1 i0 | 
+207 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:31 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s5hit b:-1 i0 | 
+208 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:32 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s4hit b:-1 i0 | 
+209 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:33 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s3hit b:-1 i0 | 
+210 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:34 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s2hit b:-1 i0 | 
+211 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:35 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s1hit b:-1 i0 | 
+212 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:36 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+213 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:37 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+214 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:38 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+215 w-1 | lancer x452 y0 j0:0:0 f1 h1000 thrust:39 c1 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+216 w-1 | lancer x452 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+217 w-1 | lancer x452 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+218 w-1 | lancer x452 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+219 w-1 | lancer x452 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+220 w-1 | lancer x452 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+221 w-1 | lancer x452 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+222 w-1 | lancer x452 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+223 w-1 | lancer x454 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+224 w-1 | lancer x456 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+225 w-1 | lancer x458 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+226 w-1 | lancer x460 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+227 w-1 | lancer x462 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+228 w-1 | lancer x464 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+229 w-1 | lancer x466 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+230 w-1 | lancer x468 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+231 w-1 | lancer x470 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+232 w-1 | lancer x472 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+233 w-1 | lancer x474 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+234 w-1 | lancer x476 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+235 w-1 | lancer x478 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+236 w-1 | lancer x480 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+237 w-1 | lancer x482 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+238 w-1 | lancer x484 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+239 w-1 | lancer x486 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+240 w-1 | lancer x488 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+241 w-1 | lancer x490 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+242 w-1 | lancer x492 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+243 w-1 | lancer x494 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+244 w-1 | lancer x496 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+245 w-1 | lancer x498 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+246 w-1 | lancer x500 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+247 w-1 | lancer x502 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+248 w-1 | lancer x504 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+249 w-1 | lancer x506 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+250 w-1 | lancer x508 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+251 w-1 | lancer x510 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+252 w-1 | lancer x512 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+253 w-1 | lancer x514 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+254 w-1 | lancer x516 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+255 w-1 | lancer x518 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+256 w-1 | lancer x520 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+257 w-1 | lancer x522 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+258 w-1 | lancer x524 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+259 w-1 | lancer x526 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+260 w-1 | lancer x528 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+261 w-1 | lancer x530 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+262 w-1 | lancer x532 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+263 w-1 | lancer x534 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+264 w-1 | lancer x536 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+265 w-1 | lancer x538 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+266 w-1 | lancer x540 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+267 w-1 | lancer x542 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+268 w-1 | lancer x544 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+269 w-1 | lancer x546 y0 j0:0:0 f1 h1000 :0 c0 k0 s0 b:184 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+270 w-1 | lancer x546 y0 j0:0:0 f1 h1000 jab:1 c0 k0 s0 b:277 i8 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:-1 i0 | 
+271 w-1 | lancer x546 y0 j0:0:0 f1 h1000 jab:2 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:1 c0 k0 s0 b:278 i8 | 
+272 w-1 | lancer x546 y0 j0:0:0 f1 h1000 jab:3 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:2 c0 k0 s0 b:278 i0 | 
+273 w-1 | lancer x546 y0 j0:0:0 f1 h1000 jab:4 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:3 c0 k0 s0 b:278 i0 | 
+274 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s17hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:4 c1 k0 s0 b:278 i0 | p2 counter-hits p1 with jab (caught starting up)
+275 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s16hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:5 c1 k0 s0 b:278 i0 | 
+276 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s15hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:6 c1 k0 s0 b:278 i0 | 
+277 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s14hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:7 c1 k0 s0 b:278 i0 | 
+278 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s13hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:8 c1 k0 s0 b:278 i0 | 
+279 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s12hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:9 c1 k0 s0 b:278 i0 | 
+280 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s11hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:10 c1 k0 s0 b:278 i0 | 
+281 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s10hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:11 c1 k0 s0 b:278 i0 | 
+282 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s9hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:12 c1 k0 s0 b:278 i0 | 
+283 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s8hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+284 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s7hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+285 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s6hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+286 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s5hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+287 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s4hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+288 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s3hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+289 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s2hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+290 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s1hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+291 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+292 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+293 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+294 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+295 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+296 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+297 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+298 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+299 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+300 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+301 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+302 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+303 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+304 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+305 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+306 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+307 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+308 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+309 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+310 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+311 w-1 | lancer x532 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+312 w-1 | lancer x534 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+313 w-1 | lancer x536 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+314 w-1 | lancer x538 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+315 w-1 | lancer x540 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+316 w-1 | lancer x542 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+317 w-1 | lancer x544 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+318 w-1 | lancer x546 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+319 w-1 | lancer x548 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+320 w-1 | lancer x550 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+321 w-1 | lancer x552 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+322 w-1 | lancer x554 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+323 w-1 | lancer x556 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+324 w-1 | lancer x558 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+325 w-1 | lancer x560 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+326 w-1 | lancer x562 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+327 w-1 | lancer x564 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+328 w-1 | lancer x566 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:278 i0 | 
+329 w-1 | lancer x566 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:1 c0 k0 s0 b:336 i8 | 
+330 w-1 | lancer x566 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:2 c0 k0 s0 b:336 i0 | 
+331 w-1 | lancer x566 y0 j0:0:0 f1 h963 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:3 c0 k0 s0 b:336 i0 | 
+332 w-1 | lancer x552 y0 j0:0:0 f1 h933 :0 c0 k0 s13hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:4 c1 k0 s0 b:336 i0 | p2 hits p1 with jab
+333 w-1 | lancer x552 y0 j0:0:0 f1 h933 :0 c0 k0 s12hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 jab:5 c1 k0 s0 b:336 i0 | 
+334 w-1 | lancer x552 y0 j0:0:0 f1 h933 :0 c0 k0 s11hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:1 c0 k0 s0 b:341 i16 | p2 cancels jab into straight
+335 w-1 | lancer x552 y0 j0:0:0 f1 h933 :0 c0 k0 s10hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:2 c0 k0 s0 b:341 i0 | 
+336 w-1 | lancer x552 y0 j0:0:0 f1 h933 :0 c0 k0 s9hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:3 c0 k0 s0 b:341 i0 | 
+337 w-1 | lancer x552 y0 j0:0:0 f1 h933 :0 c0 k0 s8hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:4 c0 k0 s0 b:341 i0 | 
+338 w-1 | lancer x552 y0 j0:0:0 f1 h933 :0 c0 k0 s7hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:5 c0 k0 s0 b:341 i0 | 
+339 w-1 | lancer x552 y0 j0:0:0 f1 h933 :0 c0 k0 s6hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:6 c0 k0 s0 b:341 i0 | 
+340 w-1 | lancer x552 y0 j0:0:0 f1 h933 :0 c0 k0 s5hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:7 c0 k0 s0 b:341 i0 | 
+341 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s18hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:8 c1 k0 s0 b:341 i0 | p2 hits p1 with straight
+342 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s17hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:9 c1 k0 s0 b:341 i0 | 
+343 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s16hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:10 c1 k0 s0 b:341 i0 | 
+344 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s15hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:11 c1 k0 s0 b:341 i0 | 
+345 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s14hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:12 c1 k0 s0 b:341 i0 | 
+346 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s13hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:13 c1 k0 s0 b:341 i0 | 
+347 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s12hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:14 c1 k0 s0 b:341 i0 | 
+348 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s11hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:15 c1 k0 s0 b:341 i0 | 
+349 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s10hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:16 c1 k0 s0 b:341 i0 | 
+350 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s9hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:17 c1 k0 s0 b:341 i0 | 
+351 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s8hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:18 c1 k0 s0 b:341 i0 | 
+352 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s7hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:19 c1 k0 s0 b:341 i0 | 
+353 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s6hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:20 c1 k0 s0 b:341 i0 | 
+354 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s5hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:21 c1 k0 s0 b:341 i0 | 
+355 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s4hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:22 c1 k0 s0 b:341 i0 | 
+356 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s3hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:23 c1 k0 s0 b:341 i0 | 
+357 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s2hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 straight:24 c1 k0 s0 b:341 i0 | 
+358 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s1hit b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+359 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+360 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+361 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+362 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+363 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+364 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+365 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+366 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+367 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+368 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+369 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+370 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+371 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+372 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+373 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+374 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+375 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+376 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+377 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+378 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+379 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+380 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+381 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+382 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+383 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+384 w-1 | lancer x538 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+385 w-1 | lancer x540 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+386 w-1 | lancer x542 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+387 w-1 | lancer x544 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+388 w-1 | lancer x546 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+389 w-1 | lancer x548 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+390 w-1 | lancer x550 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+391 w-1 | lancer x552 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+392 w-1 | lancer x554 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+393 w-1 | lancer x556 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+394 w-1 | lancer x558 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+395 w-1 | lancer x560 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+396 w-1 | lancer x562 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+397 w-1 | lancer x564 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+398 w-1 | lancer x566 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+399 w-1 | lancer x568 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+400 w-1 | lancer x570 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+401 w-1 | lancer x570 y0 j0:0:0 f1 h863 :0 c0 k0 s0 b:277 i2 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+402 w-1 | lancer x570 y0 j0:0:0 f1 h863 sweep:1 c0 k1 s0 b:409 i68 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+403 w-1 | lancer x570 y0 j0:0:0 f1 h863 sweep:2 c0 k1 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+404 w-1 | lancer x570 y0 j0:0:0 f1 h863 sweep:3 c0 k1 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+405 w-1 | lancer x570 y0 j0:0:0 f1 h863 sweep:4 c0 k1 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+406 w-1 | lancer x570 y0 j0:0:0 f1 h863 sweep:5 c0 k1 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+407 w-1 | lancer x570 y0 j0:0:0 f1 h863 sweep:6 c0 k1 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h805 :0 c0 k0 s0 b:341 i0 | 
+408 w-1 | lancer x570 y0 j0:0:0 f1 h863 sweep:7 c0 k1 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h805 snap_kick:1 c0 k0 s0 b:415 i32 | 
+409 w-1 | lancer x570 y0 j0:0:0 f1 h863 sweep:8 c0 k1 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h805 snap_kick:2 c0 k0 s0 b:415 i0 | 
+410 w-1 | lancer x570 y0 j0:0:0 f1 h863 sweep:9 c0 k1 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h805 snap_kick:3 c0 k0 s0 b:415 i0 | 
+411 w-1 | lancer x570 y0 j0:0:0 f1 h863 sweep:10 c0 k1 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h805 snap_kick:4 c0 k0 s0 b:415 i0 | 
+412 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s14hit b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s26hit b:415 i0 | p1 hits p2 with sweep, p2 hits p1 with snap_kick, trade
+413 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s13hit b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s25hit b:415 i0 | 
+414 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s12hit b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s24hit b:415 i0 | 
+415 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s11hit b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s23hit b:415 i0 | 
+416 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s10hit b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s22hit b:415 i0 | 
+417 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s9hit b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s21hit b:415 i0 | 
+418 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s8hit b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s20hit b:415 i0 | 
+419 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s7hit b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s19hit b:415 i0 | 
+420 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s6hit b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s18hit b:415 i0 | 
+421 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s5hit b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s17hit b:415 i0 | 
+422 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s4hit b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s16hit b:415 i0 | 
+423 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s3hit b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s15hit b:415 i0 | 
+424 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s2hit b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s14hit b:415 i0 | 
+425 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s1hit b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s13hit b:415 i0 | 
+426 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s12hit b:415 i0 | 
+427 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s11hit b:415 i0 | 
+428 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s10hit b:415 i0 | 
+429 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s9hit b:415 i0 | 
+430 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s8hit b:415 i0 | 
+431 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s7hit b:415 i0 | 
+432 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s6hit b:415 i0 | 
+433 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s5hit b:415 i0 | 
+434 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s4hit b:415 i0 | 
+435 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s3hit b:415 i0 | 
+436 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s2hit b:415 i0 | 
+437 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s1hit b:415 i0 | 
+438 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+439 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+440 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+441 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+442 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+443 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+444 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+445 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+446 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+447 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+448 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+449 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+450 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+451 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+452 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+453 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+454 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+455 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+456 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+457 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+458 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+459 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+460 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+461 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+462 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+463 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+464 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+465 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:409 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i0 | 
+466 w-1 | lancer x542 y0 j0:0:0 f1 h828 sweep:1 c0 k1 s0 b:473 i68 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
+467 w-1 | lancer x542 y0 j0:0:0 f1 h828 sweep:2 c0 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
+468 w-1 | lancer x542 y0 j0:0:0 f1 h828 sweep:3 c0 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
+469 w-1 | lancer x542 y0 j0:0:0 f1 h828 sweep:4 c0 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
+470 w-1 | lancer x542 y0 j0:0:0 f1 h828 sweep:5 c0 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
+471 w-1 | lancer x542 y0 j0:0:0 f1 h828 sweep:6 c0 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
+472 w-1 | lancer x542 y0 j0:0:0 f1 h828 sweep:7 c0 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
+473 w-1 | lancer x542 y0 j0:0:0 f1 h828 sweep:8 c0 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
+474 w-1 | lancer x542 y0 j0:0:0 f1 h828 sweep:9 c0 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
+475 w-1 | lancer x542 y0 j0:0:0 f1 h828 sweep:10 c0 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h735 :0 c0 k0 s0 b:415 i2 | 
+476 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:11 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s26hit b:415 i2 | p1 hits p2 with sweep (a low through a standing guard)
+477 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:12 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s25hit b:415 i2 | 
+478 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:13 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s24hit b:415 i2 | 
+479 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:14 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s23hit b:415 i2 | 
+480 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:15 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s22hit b:415 i2 | 
+481 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:16 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s21hit b:415 i2 | 
+482 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:17 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s20hit b:415 i2 | 
+483 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:18 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s19hit b:415 i2 | 
+484 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:19 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s18hit b:415 i2 | 
+485 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:20 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s17hit b:415 i2 | 
+486 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:21 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s16hit b:415 i2 | 
+487 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:22 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s15hit b:415 i2 | 
+488 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:23 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s14hit b:415 i2 | 
+489 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:24 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s13hit b:415 i2 | 
+490 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:25 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s12hit b:415 i2 | 
+491 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:26 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s11hit b:415 i2 | 
+492 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:27 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s10hit b:415 i2 | 
+493 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:28 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s9hit b:415 i2 | 
+494 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:29 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s8hit b:415 i2 | 
+495 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:30 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s7hit b:415 i2 | 
+496 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:31 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s6hit b:415 i2 | 
+497 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:32 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s5hit b:415 i2 | 
+498 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:33 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s4hit b:415 i2 | 
+499 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:34 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s3hit b:415 i2 | 
+500 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:35 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s2hit b:415 i2 | 
+501 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:36 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s1hit b:415 i2 | 
+502 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:37 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s0 b:415 i2 | 
+503 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:38 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s0 b:415 i2 | 
+504 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:39 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s0 b:415 i2 | 
+505 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:40 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s0 b:415 i2 | 
+506 w-1 | lancer x528 y0 j0:0:0 f1 h828 sweep:41 c1 k1 s0 b:473 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k0 s0 b:415 i2 | 
+507 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:1 c0 k0 s0 b:514 i64 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+508 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:2 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+509 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:3 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+510 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:4 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+511 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:5 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+512 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:6 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+513 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:7 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+514 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:8 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+515 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:9 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+516 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:10 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+517 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:11 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+518 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:12 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+519 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:13 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+520 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:14 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+521 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:15 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+522 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:16 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+523 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:17 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+524 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:18 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+525 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:19 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+526 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:20 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+527 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:21 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+528 w-1 | lancer x528 y0 j0:0:0 f1 h828 axe_kick:22 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h665 :0 c0 k1 s0 b:415 i6 | 
+529 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:23 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s24hit b:415 i6 | p1 hits p2 with axe_kick (an overhead through a crouching guard)
+530 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:24 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s23hit b:415 i6 | 
+531 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:25 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s22hit b:415 i6 | 
+532 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:26 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s21hit b:415 i6 | 
+533 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:27 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s20hit b:415 i6 | 
+534 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:28 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s19hit b:415 i6 | 
+535 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:29 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s18hit b:415 i6 | 
+536 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:30 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s17hit b:415 i6 | 
+537 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:31 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s16hit b:415 i6 | 
+538 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:32 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s15hit b:415 i6 | 
+539 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:33 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s14hit b:415 i6 | 
+540 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:34 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s13hit b:415 i6 | 
+541 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:35 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s12hit b:415 i6 | 
+542 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:36 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s11hit b:415 i6 | 
+543 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:37 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s10hit b:415 i6 | 
+544 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:38 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s9hit b:415 i6 | 
+545 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:39 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s8hit b:415 i6 | 
+546 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:40 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s7hit b:415 i6 | 
+547 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:41 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s6hit b:415 i6 | 
+548 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:42 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s5hit b:415 i6 | 
+549 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:43 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s4hit b:415 i6 | 
+550 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:44 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s3hit b:415 i6 | 
+551 w-1 | lancer x514 y0 j0:0:0 f1 h828 axe_kick:45 c1 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s2hit b:415 i6 | 
+552 w-1 | lancer x514 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s1hit b:415 i6 | 
+553 w-1 | lancer x516 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+554 w-1 | lancer x518 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+555 w-1 | lancer x520 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+556 w-1 | lancer x522 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+557 w-1 | lancer x524 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+558 w-1 | lancer x526 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+559 w-1 | lancer x528 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+560 w-1 | lancer x530 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+561 w-1 | lancer x532 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+562 w-1 | lancer x534 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+563 w-1 | lancer x536 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+564 w-1 | lancer x538 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+565 w-1 | lancer x540 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+566 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+567 w-1 | lancer x544 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+568 w-1 | lancer x546 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+569 w-1 | lancer x548 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+570 w-1 | lancer x550 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+571 w-1 | lancer x552 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+572 w-1 | lancer x554 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+573 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+574 w-1 | lancer x558 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+575 w-1 | lancer x560 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+576 w-1 | lancer x562 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+577 w-1 | lancer x564 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+578 w-1 | lancer x566 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+579 w-1 | lancer x568 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+580 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+581 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+582 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:514 i2 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+583 w-1 | lancer x570 y0 j0:0:0 f1 h828 throw:1 c0 k0 s0 b:590 i128 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+584 w-1 | lancer x570 y0 j0:0:0 f1 h828 throw:2 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+585 w-1 | lancer x570 y0 j0:0:0 f1 h828 throw:3 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+586 w-1 | lancer x570 y0 j0:0:0 f1 h828 throw:4 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+587 w-1 | lancer x570 y0 j0:0:0 f1 h828 throw:5 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h575 :0 c0 k0 s0 b:415 i0 | 
+588 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:6 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s30hit b:415 i0 | p1 throws p2 with throw (a throw cannot be blocked)
+589 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:7 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s29hit b:415 i0 | 
+590 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:8 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s28hit b:415 i0 | 
+591 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:9 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s27hit b:415 i0 | 
+592 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:10 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s26hit b:415 i0 | 
+593 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:11 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s25hit b:415 i0 | 
+594 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:12 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s24hit b:415 i0 | 
+595 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:13 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s23hit b:415 i0 | 
+596 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:14 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s22hit b:415 i0 | 
+597 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:15 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s21hit b:415 i0 | 
+598 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:16 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s20hit b:415 i0 | 
+599 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:17 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s19hit b:415 i0 | 
+600 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:18 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s18hit b:415 i0 | 
+601 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:19 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s17hit b:415 i0 | 
+602 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:20 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s16hit b:415 i0 | 
+603 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:21 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s15hit b:415 i0 | 
+604 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:22 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s14hit b:415 i0 | 
+605 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:23 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s13hit b:415 i0 | 
+606 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:24 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s12hit b:415 i0 | 
+607 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:25 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s11hit b:415 i0 | 
+608 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:26 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s10hit b:415 i0 | 
+609 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:27 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s9hit b:415 i0 | 
+610 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:28 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s8hit b:415 i0 | 
+611 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:29 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s7hit b:415 i0 | 
+612 w-1 | lancer x556 y0 j0:0:0 f1 h828 throw:30 c1 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s6hit b:415 i0 | 
+613 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s5hit b:415 i0 | 
+614 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s4hit b:415 i0 | 
+615 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s3hit b:415 i0 | 
+616 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s2hit b:415 i0 | 
+617 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s1hit b:415 i0 | 
+618 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+619 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+620 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+621 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+622 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+623 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+624 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+625 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+626 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+627 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+628 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:590 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+629 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:1 c0 k0 s0 b:636 i8 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+630 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:2 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+631 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:3 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+632 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:4 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+633 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:5 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+634 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:6 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+635 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:7 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | p1's jab passes over p2 (a high misses a crouch)
+636 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:8 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | p1's jab passes over p2 (a high misses a crouch)
+637 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:9 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | p1's jab passes over p2 (a high misses a crouch)
+638 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:10 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+639 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:11 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+640 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:12 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+641 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:13 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+642 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:14 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+643 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:15 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+644 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:16 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+645 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:17 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+646 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:18 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+647 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:19 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+648 w-1 | lancer x556 y0 j0:0:0 f1 h828 jab:20 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+649 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+650 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+651 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+652 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+653 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+654 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i4 | 
+655 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+656 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+657 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+658 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+659 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+660 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+661 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+662 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+663 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+664 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+665 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+666 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+667 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+668 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+669 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+670 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+671 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+672 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+673 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+674 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+675 w-1 | lancer x554 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+676 w-1 | lancer x552 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+677 w-1 | lancer x550 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+678 w-1 | lancer x548 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+679 w-1 | lancer x546 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+680 w-1 | lancer x544 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+681 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+682 w-1 | lancer x540 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+683 w-1 | lancer x538 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+684 w-1 | lancer x536 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+685 w-1 | lancer x534 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+686 w-1 | lancer x532 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+687 w-1 | lancer x530 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+688 w-1 | lancer x528 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+689 w-1 | lancer x526 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+690 w-1 | lancer x524 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+691 w-1 | lancer x522 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+692 w-1 | lancer x520 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+693 w-1 | lancer x518 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+694 w-1 | lancer x516 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+695 w-1 | lancer x514 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+696 w-1 | lancer x512 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+697 w-1 | lancer x510 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+698 w-1 | lancer x508 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+699 w-1 | lancer x506 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+700 w-1 | lancer x504 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+701 w-1 | lancer x502 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+702 w-1 | lancer x500 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+703 w-1 | lancer x498 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+704 w-1 | lancer x496 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+705 w-1 | lancer x494 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+706 w-1 | lancer x492 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+707 w-1 | lancer x490 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+708 w-1 | lancer x488 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:636 i1 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k0 s0 b:415 i0 | 
+709 w-1 | lancer x488 y0 j0:1:0 f1 h828 :0 c0 k0 s4takeoff b:636 i258 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+710 w-1 | lancer x488 y0 j0:1:0 f1 h828 :0 c0 k0 s3takeoff b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+711 w-1 | lancer x488 y0 j0:1:0 f1 h828 :0 c0 k0 s2takeoff b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+712 w-1 | lancer x488 y0 j0:1:0 f1 h828 :0 c0 k0 s1takeoff b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+713 w-1 | lancer x491 y7 j1:1:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+714 w-1 | lancer x494 y15 j2:1:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+715 w-1 | lancer x497 y23 j3:1:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+716 w-1 | lancer x500 y31 j4:1:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+717 w-1 | lancer x503 y39 j5:1:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+718 w-1 | lancer x506 y47 j6:1:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+719 w-1 | lancer x509 y55 j7:1:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+720 w-1 | lancer x512 y62 j8:1:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+721 w-1 | lancer x515 y70 j9:1:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+722 w-1 | lancer x518 y78 j10:1:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+723 w-1 | lancer x521 y86 j11:1:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+724 w-1 | lancer x524 y94 j12:1:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+725 w-1 | lancer x527 y102 j13:1:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+726 w-1 | lancer x530 y110 j14:1:0 f1 h828 :0 c0 k0 s0 b:636 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+727 w-1 | lancer x533 y110 j15:1:1 f1 h828 flying_kick:1 c0 k0 s0 b:734 i64 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+728 w-1 | lancer x536 y110 j16:1:1 f1 h828 flying_kick:2 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+729 w-1 | lancer x539 y110 j17:1:1 f1 h828 flying_kick:3 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+730 w-1 | lancer x542 y110 j18:1:1 f1 h828 flying_kick:4 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+731 w-1 | lancer x545 y110 j19:1:1 f1 h828 flying_kick:5 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h465 :0 c0 k1 s0 b:415 i6 | 
+732 w-1 | lancer x534 y110 j20:1:1 f1 h828 flying_kick:6 c1 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s18hit b:415 i6 | p1 hits p2 with flying_kick (an overhead through a crouching guard)
+733 w-1 | lancer x537 y110 j21:1:1 f1 h828 flying_kick:7 c1 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s17hit b:415 i6 | 
+734 w-1 | lancer x540 y102 j22:1:1 f1 h828 flying_kick:8 c1 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s16hit b:415 i6 | 
+735 w-1 | lancer x543 y94 j23:1:1 f1 h828 flying_kick:9 c1 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s15hit b:415 i6 | 
+736 w-1 | lancer x546 y86 j24:1:1 f1 h828 flying_kick:10 c1 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s14hit b:415 i6 | 
+737 w-1 | lancer x549 y78 j25:1:1 f1 h828 flying_kick:11 c1 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s13hit b:415 i6 | 
+738 w-1 | lancer x552 y70 j26:1:1 f1 h828 flying_kick:12 c1 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s12hit b:415 i6 | 
+739 w-1 | lancer x555 y62 j27:1:1 f1 h828 flying_kick:13 c1 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s11hit b:415 i6 | 
+740 w-1 | lancer x558 y55 j28:1:1 f1 h828 flying_kick:14 c1 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s10hit b:415 i6 | 
+741 w-1 | lancer x561 y47 j29:1:1 f1 h828 flying_kick:15 c1 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s9hit b:415 i6 | 
+742 w-1 | lancer x564 y39 j30:1:1 f1 h828 flying_kick:16 c1 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s8hit b:415 i6 | 
+743 w-1 | lancer x567 y31 j31:1:1 f1 h828 flying_kick:17 c1 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s7hit b:415 i6 | 
+744 w-1 | lancer x570 y23 j32:1:1 f1 h828 flying_kick:18 c1 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s6hit b:415 i6 | 
+745 w-1 | lancer x573 y15 j33:1:1 f1 h828 flying_kick:19 c1 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s5hit b:415 i6 | 
+746 w-1 | lancer x576 y7 j34:1:1 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s4hit b:415 i6 | 
+747 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s4landing b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s3hit b:415 i6 | 
+748 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s3landing b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s2hit b:415 i6 | 
+749 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s2landing b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s1hit b:415 i6 | 
+750 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s1landing b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k1 s0 b:415 i6 | 
+751 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k1 s0 b:415 i6 | 
+752 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k1 s0 b:415 i6 | 
+753 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k1 s0 b:415 i6 | 
+754 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+755 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+756 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+757 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+758 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+759 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+760 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+761 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+762 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+763 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+764 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+765 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+766 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+767 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+768 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+769 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+770 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+771 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+772 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+773 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+774 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+775 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+776 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+777 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+778 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+779 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+780 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+781 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+782 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+783 w-1 | lancer x570 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+784 w-1 | lancer x568 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+785 w-1 | lancer x566 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+786 w-1 | lancer x564 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+787 w-1 | lancer x562 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+788 w-1 | lancer x560 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+789 w-1 | lancer x558 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+790 w-1 | lancer x556 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+791 w-1 | lancer x554 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+792 w-1 | lancer x552 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+793 w-1 | lancer x550 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+794 w-1 | lancer x548 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+795 w-1 | lancer x546 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+796 w-1 | lancer x544 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+797 w-1 | lancer x542 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+798 w-1 | lancer x540 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+799 w-1 | lancer x538 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+800 w-1 | lancer x536 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+801 w-1 | lancer x534 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+802 w-1 | lancer x532 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+803 w-1 | lancer x530 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+804 w-1 | lancer x528 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+805 w-1 | lancer x526 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+806 w-1 | lancer x524 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+807 w-1 | lancer x522 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+808 w-1 | lancer x520 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+809 w-1 | lancer x518 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+810 w-1 | lancer x516 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+811 w-1 | lancer x514 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+812 w-1 | lancer x512 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+813 w-1 | lancer x510 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+814 w-1 | lancer x508 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+815 w-1 | lancer x506 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+816 w-1 | lancer x504 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+817 w-1 | lancer x502 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+818 w-1 | lancer x500 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+819 w-1 | lancer x498 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+820 w-1 | lancer x496 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+821 w-1 | lancer x494 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+822 w-1 | lancer x492 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+823 w-1 | lancer x490 y0 j0:0:0 f1 h828 :0 c0 k0 s0 b:734 i1 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+824 w-1 | lancer x490 y0 j0:1:0 f1 h828 :0 c0 k0 s4takeoff b:734 i258 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+825 w-1 | lancer x490 y0 j0:1:0 f1 h828 :0 c0 k0 s3takeoff b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+826 w-1 | lancer x490 y0 j0:1:0 f1 h828 :0 c0 k0 s2takeoff b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+827 w-1 | lancer x490 y0 j0:1:0 f1 h828 :0 c0 k0 s1takeoff b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+828 w-1 | lancer x493 y7 j1:1:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+829 w-1 | lancer x496 y15 j2:1:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+830 w-1 | lancer x499 y23 j3:1:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+831 w-1 | lancer x502 y31 j4:1:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+832 w-1 | lancer x505 y39 j5:1:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+833 w-1 | lancer x508 y47 j6:1:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+834 w-1 | lancer x511 y55 j7:1:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+835 w-1 | lancer x514 y62 j8:1:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:415 i0 | 
+836 w-1 | lancer x517 y70 j9:1:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:1 c0 k1 s0 b:843 i20 | 
+837 w-1 | lancer x520 y78 j10:1:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:2 c0 k1 s0 b:843 i0 | 
+838 w-1 | lancer x523 y86 j11:1:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:3 c0 k1 s0 b:843 i0 | 
+839 w-1 | lancer x526 y94 j12:1:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:4 c0 k1 s0 b:843 i0 | 
+840 w-1 | lancer x529 y102 j13:1:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:5 c0 k1 s0 b:843 i0 | 
+841 w-1 | lancer x532 y110 j14:1:0 f1 h828 :0 c0 k0 s0 b:734 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:6 c0 k1 s0 b:843 i0 | 
+842 w-1 | lancer x535 y110 j15:1:1 f1 h828 flying_kick:1 c0 k0 s0 b:849 i64 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:7 c0 k1 s0 b:843 i0 | 
+843 w-1 | lancer x524 y110 j16:1:1 f1 h747 :0 c0 k0 s22hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:8 c1 k1 s0 b:843 i0 | p2 counter-hits p1 with uppercut (caught in the air, starting up)
+844 w-1 | lancer x527 y110 j17:1:1 f1 h747 :0 c0 k0 s21hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:9 c1 k1 s0 b:843 i0 | 
+845 w-1 | lancer x530 y110 j18:1:1 f1 h747 :0 c0 k0 s20hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:10 c1 k1 s0 b:843 i0 | 
+846 w-1 | lancer x533 y110 j19:1:1 f1 h747 :0 c0 k0 s19hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:11 c1 k1 s0 b:843 i0 | 
+847 w-1 | lancer x536 y110 j20:1:1 f1 h747 :0 c0 k0 s18hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:12 c1 k1 s0 b:843 i0 | 
+848 w-1 | lancer x539 y110 j21:1:1 f1 h747 :0 c0 k0 s17hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:13 c1 k1 s0 b:843 i0 | 
+849 w-1 | lancer x542 y102 j22:1:1 f1 h747 :0 c0 k0 s16hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:14 c1 k1 s0 b:843 i0 | 
+850 w-1 | lancer x545 y94 j23:1:1 f1 h747 :0 c0 k0 s15hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:15 c1 k1 s0 b:843 i0 | 
+851 w-1 | lancer x548 y86 j24:1:1 f1 h747 :0 c0 k0 s14hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:16 c1 k1 s0 b:843 i0 | 
+852 w-1 | lancer x551 y78 j25:1:1 f1 h747 :0 c0 k0 s13hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:17 c1 k1 s0 b:843 i0 | 
+853 w-1 | lancer x554 y70 j26:1:1 f1 h747 :0 c0 k0 s12hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:18 c1 k1 s0 b:843 i0 | 
+854 w-1 | lancer x557 y62 j27:1:1 f1 h747 :0 c0 k0 s11hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:19 c1 k1 s0 b:843 i0 | 
+855 w-1 | lancer x560 y55 j28:1:1 f1 h747 :0 c0 k0 s10hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:20 c1 k1 s0 b:843 i0 | 
+856 w-1 | lancer x563 y47 j29:1:1 f1 h747 :0 c0 k0 s9hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:21 c1 k1 s0 b:843 i0 | 
+857 w-1 | lancer x566 y39 j30:1:1 f1 h747 :0 c0 k0 s8hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:22 c1 k1 s0 b:843 i0 | 
+858 w-1 | lancer x569 y31 j31:1:1 f1 h747 :0 c0 k0 s7hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:23 c1 k1 s0 b:843 i0 | 
+859 w-1 | lancer x572 y23 j32:1:1 f1 h747 :0 c0 k0 s6hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:24 c1 k1 s0 b:843 i0 | 
+860 w-1 | lancer x575 y15 j33:1:1 f1 h747 :0 c0 k0 s5hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:25 c1 k1 s0 b:843 i0 | 
+861 w-1 | lancer x578 y7 j34:1:1 f1 h747 :0 c0 k0 s4hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:26 c1 k1 s0 b:843 i0 | 
+862 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s3hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:27 c1 k1 s0 b:843 i0 | 
+863 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s2hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:28 c1 k1 s0 b:843 i0 | 
+864 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s1hit b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:29 c1 k1 s0 b:843 i0 | 
+865 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:30 c1 k1 s0 b:843 i0 | 
+866 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 uppercut:31 c1 k1 s0 b:843 i0 | 
+867 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+868 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+869 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+870 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+871 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+872 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+873 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+874 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+875 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+876 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+877 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+878 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+879 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+880 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+881 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+882 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+883 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+884 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+885 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+886 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+887 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+888 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+889 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+890 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+891 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+892 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+893 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+894 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+895 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+896 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+897 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+898 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+899 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+900 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+901 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+902 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+903 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+904 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+905 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+906 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+907 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+908 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+909 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+910 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s4takeoff b:849 i256 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+911 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s3takeoff b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+912 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s2takeoff b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+913 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s1takeoff b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:843 i0 | 
+914 w-1 | lancer x570 y7 j1:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:1 c0 k1 s0 b:921 i36 | 
+915 w-1 | lancer x570 y15 j2:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:2 c0 k1 s0 b:921 i0 | 
+916 w-1 | lancer x570 y23 j3:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:3 c0 k1 s0 b:921 i0 | 
+917 w-1 | lancer x570 y31 j4:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:4 c0 k1 s0 b:921 i0 | 
+918 w-1 | lancer x570 y39 j5:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:5 c0 k1 s0 b:921 i0 | 
+919 w-1 | lancer x570 y47 j6:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:6 c0 k1 s0 b:921 i0 | p2's low_kick passes under p1 (a low misses a fighter in the air)
+920 w-1 | lancer x570 y55 j7:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:7 c0 k1 s0 b:921 i0 | p2's low_kick passes under p1 (a low misses a fighter in the air)
+921 w-1 | lancer x570 y62 j8:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:8 c0 k1 s0 b:921 i0 | p2's low_kick passes under p1 (a low misses a fighter in the air)
+922 w-1 | lancer x570 y70 j9:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:9 c0 k1 s0 b:921 i0 | 
+923 w-1 | lancer x570 y78 j10:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:10 c0 k1 s0 b:921 i0 | 
+924 w-1 | lancer x570 y86 j11:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:11 c0 k1 s0 b:921 i0 | 
+925 w-1 | lancer x570 y94 j12:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:12 c0 k1 s0 b:921 i0 | 
+926 w-1 | lancer x570 y102 j13:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:13 c0 k1 s0 b:921 i0 | 
+927 w-1 | lancer x570 y110 j14:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:14 c0 k1 s0 b:921 i0 | 
+928 w-1 | lancer x570 y110 j15:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:15 c0 k1 s0 b:921 i0 | 
+929 w-1 | lancer x570 y110 j16:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:16 c0 k1 s0 b:921 i0 | 
+930 w-1 | lancer x570 y110 j17:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 low_kick:17 c0 k1 s0 b:921 i0 | 
+931 w-1 | lancer x570 y110 j18:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+932 w-1 | lancer x570 y110 j19:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+933 w-1 | lancer x570 y110 j20:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+934 w-1 | lancer x570 y110 j21:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+935 w-1 | lancer x570 y102 j22:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+936 w-1 | lancer x570 y94 j23:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+937 w-1 | lancer x570 y86 j24:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+938 w-1 | lancer x570 y78 j25:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+939 w-1 | lancer x570 y70 j26:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+940 w-1 | lancer x570 y62 j27:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+941 w-1 | lancer x570 y55 j28:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+942 w-1 | lancer x570 y47 j29:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+943 w-1 | lancer x570 y39 j30:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+944 w-1 | lancer x570 y31 j31:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+945 w-1 | lancer x570 y23 j32:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+946 w-1 | lancer x570 y15 j33:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+947 w-1 | lancer x570 y7 j34:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+948 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s4landing b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+949 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s3landing b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+950 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s2landing b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+951 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s1landing b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+952 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+953 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+954 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+955 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+956 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+957 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+958 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+959 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+960 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+961 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+962 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+963 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+964 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+965 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+966 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+967 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+968 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+969 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+970 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+971 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+972 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+973 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+974 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+975 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+976 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+977 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+978 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 
+979 w-1 | lancer x570 y0 j0:0:0 f1 h747 :0 c0 k0 s0 b:849 i0 | dancer x618 y0 j0:0:0 f-1 h395 :0 c0 k0 s0 b:921 i0 | 

@@ -312,24 +312,39 @@ func test_boxes_that_touch_at_an_edge_overlap() -> void:
 func test_frame_data_that_breaks_a_rule_is_refused() -> void:
 	var path: String = "user://planted_characters.json"
 	var cases: Dictionary = {
-		"startup": func(jab: Dictionary) -> void: jab["startup"] = 0,
-		"damage": func(jab: Dictionary) -> void: jab["damage"] = -40,
-		"cancels into": func(jab: Dictionary) -> void: jab["cancels_into"] = ["uppercut"],
-		"button": func(jab: Dictionary) -> void: jab.erase("button"),
-		"hitbox": func(jab: Dictionary) -> void: jab["hitbox"] = [14, 50.5],
-		"stance": func(jab: Dictionary) -> void: jab["stance"] = "kneeling",
-		"a throw": func(jab: Dictionary) -> void: jab["height"] = "throw",
-		"tell them apart": func(jab: Dictionary) -> void: jab["button"] = "heavy_punch",
-		"a height among": func(jab: Dictionary) -> void: jab["height"] = "Low",
-		"done standing": func(jab: Dictionary) -> void: jab.merge({"height": "throw", "button": "throw", "stance": "crouching"}, true),
-		"standing it does nothing": func(jab: Dictionary) -> void: jab.merge({"button": "heavy_punch", "stance": "crouching"}, true),
+		"startup": func(moves: Dictionary) -> void: moves["jab"]["startup"] = 0,
+		"damage": func(moves: Dictionary) -> void: moves["jab"]["damage"] = -40,
+		"cancels into": func(moves: Dictionary) -> void: moves["jab"]["cancels_into"] = ["haymaker"],
+		"button": func(moves: Dictionary) -> void: moves["jab"].erase("button"),
+		"hitbox": func(moves: Dictionary) -> void: moves["jab"]["hitbox"] = [14, 50.5],
+		"stance": func(moves: Dictionary) -> void: moves["jab"]["stance"] = "kneeling",
+		"a throw": func(moves: Dictionary) -> void: moves["jab"]["height"] = "throw",
+		"tell them apart": func(moves: Dictionary) -> void: moves["jab"]["button"] = "heavy_punch",
+		"a height among": func(moves: Dictionary) -> void: moves["jab"]["height"] = "Low",
+		"done standing": func(moves: Dictionary) -> void: moves["jab"].merge({"height": "throw", "button": "throw", "stance": "crouching"}, true),
+		"standing it does nothing": _jab_only_in_the_air,
+		"hits as an overhead": _jab_in_the_air_still_high,
+		"needs a rise": func(moves: Dictionary) -> void: moves["jab"]["rise"] = [40.5, 90],
 	}
 	for expected: String in cases:
 		var table: Dictionary = _data.table.duplicate(true)
-		(cases[expected] as Callable).call(table["characters"]["dancer"]["moves"]["jab"])
+		(cases[expected] as Callable).call(table["characters"]["dancer"]["moves"])
 		FileAccess.open(path, FileAccess.WRITE).store_string(JSON.stringify(table))
 		assert_str(FightData.read(path).refusal).override_failure_message(expected).contains(expected)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
+# The dancer's light punch made an air move only: pressed standing, it would
+# do nothing.
+func _jab_only_in_the_air(moves: Dictionary) -> void:
+	moves.erase("air_jab")
+	moves["jab"].merge({"stance": "air", "height": "overhead"}, true)
+
+
+# The dancer's light punch made an air move that is still a high.
+func _jab_in_the_air_still_high(moves: Dictionary) -> void:
+	moves.erase("air_jab")
+	moves["jab"]["stance"] = "air"
 
 
 # --- T34: guards that have a height, and the throw -----------------------------
@@ -346,9 +361,10 @@ func test_holding_down_crouches_and_does_not_walk() -> void:
 func test_holding_down_picks_the_crouching_move_and_falls_back_to_standing() -> void:
 	assert_str(_play(_fight(), [[DOWN | FightInput.LIGHT_KICK, 0]]).fighters[0].move).is_equal("low_kick")
 	assert_str(_play(_fight(), [[FightInput.LIGHT_KICK, 0]]).fighters[0].move).is_equal("side_kick")
-	var thrust: FighterState = _play(_fight(), [[DOWN | HEAVY, 0]]).fighters[0]
-	assert_str(thrust.move).is_equal("thrust")
-	assert_bool(thrust.crouching).is_false()
+	var throw: FighterState = _play(_fight(), [[DOWN | THROW, 0]]).fighters[0]
+	assert_str(throw.move).is_equal("throw")
+	assert_bool(throw.crouching).is_false()
+	assert_str(_play(_fight(), [[DOWN | HEAVY, 0]]).fighters[0].move).is_equal("uppercut")
 
 
 func test_a_low_gets_through_a_standing_guard_and_not_a_crouching_one() -> void:

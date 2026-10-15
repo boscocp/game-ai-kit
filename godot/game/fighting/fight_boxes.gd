@@ -1,15 +1,17 @@
 ## Where a fighter can hit, and where it can be hit, on the frame it is on.
 ##
-## The stage is a line, so a box is an interval: `[left, right]` in stage
-## units, both ends included. A **hitbox** exists only on a move's active
+## A box is a rectangle, kept as two intervals so each reads as the frame
+## data writes it: along the stage, `[left, right]`, and up from the floor,
+## `[bottom, top]`, in stage units, both ends included (T38). A hit needs
+## both to meet: a high meets a crouch along the stage and passes over it. A **hitbox** exists only on a move's active
 ## frames, reaches from `hitbox[0]` to `hitbox[1]` in front of the fighter,
 ## and is gone once the move has connected. A **hurtbox** is the body, and
 ## from a move's first active frame to its last recovery frame it also
 ## reaches `hurtbox_reach` in front: a limb that is out can be hit. That is
 ## what makes a long whiffed move punishable, and it is in the data, not here.
 ##
-## When not to use it: two dimensions. Boxes there are rectangles, several to
-## a frame, and drawn rather than written.
+## When not to use it: fighters with limbs that need several boxes a frame,
+## drawn rather than written. Here a fighter has one of each.
 class_name FightBoxes
 extends RefCounted
 
@@ -51,7 +53,37 @@ static func hurtbox(fighter: FighterState, data: FightData) -> Array[int]:
 	return box
 
 
-## True when two boxes share at least one unit. An empty box overlaps nothing.
+## The fighter's hitbox, up from the floor: its move's `rise`, from where its
+## feet are. Only meaningful while `hitbox` is out.
+static func hit_rise(fighter: FighterState, data: FightData) -> Array[int]:
+	var rise: Array = data.move(fighter.character, fighter.move)["rise"]
+	return [fighter.y + int(rise[0]), fighter.y + int(rise[1])]
+
+
+## The fighter's hurtbox, up from the floor: from its feet to the top of its
+## head, lower while it crouches.
+static func hurt_rise(fighter: FighterState, data: FightData) -> Array[int]:
+	var numbers: Dictionary = data.character(fighter.character)
+	var tall: int = int(numbers["crouching_tall"] if fighter.crouching else numbers["tall"])
+	return [fighter.y, fighter.y + tall]
+
+
+## How a hitbox that meets the hurtbox along the stage misses it up from the
+## floor, in words with a `%d` for the defender, or "" when it does not miss.
+## The words name the move's own height: a mid under a jump is not a low.
+static func misses_vertically(attacker: FighterState, defender: FighterState, data: FightData) -> String:
+	var hit: Array[int] = FightBoxes.hit_rise(attacker, data)
+	var hurt: Array[int] = FightBoxes.hurt_rise(defender, data)
+	if FightBoxes.overlap(hit, hurt):
+		return ""
+	var height: String = data.move(attacker.character, attacker.move)["height"]
+	var why: String = {"high": " (a high misses a crouch)", "low": " (a low misses a fighter in the air)"}.get(height, "")
+	if hit[0] > hurt[1]:
+		return "passes over p%d" + (why if height == "high" and defender.crouching else "")
+	return "passes under p%d" + (why if height == "low" and defender.is_airborne() else " (it is in the air)")
+
+
+## True when two intervals share at least one unit. An empty box overlaps nothing.
 static func overlap(first: Array[int], second: Array[int]) -> bool:
 	if first.is_empty() or second.is_empty():
 		return false

@@ -4,10 +4,12 @@
 ## step by step, top to bottom:
 ##
 ## 1. read each player's input into its buffer;
-## 2. both fighters act at once, each from the frame as it began;
+## 2. both fighters act at once, each from the frame as it began (`FightJump`
+##    for one taking off, in the air or landing);
 ## 3. bodies are pushed apart and kept on the stage;
-## 4. every hitbox is tested against the other's hurtbox, both before either
-##    result is applied -- which is what makes a trade a trade;
+## 4. every hitbox is tested against the other's hurtbox, along the stage and
+##    up from the floor, both before either result is applied -- which is
+##    what makes a trade a trade;
 ## 5. two throws break each other, and a strike beats a throw;
 ## 6-9. each connection is a block or a hit -- a block only with the guard
 ##    its height asks for -- a counter-hit if it caught a move starting up,
@@ -17,7 +19,9 @@
 ## Guard, strike and throw are a triangle: guarding stops a strike, a strike
 ## beats a throw, a throw beats guarding. Heights split guarding in two, so
 ## the defender has to guess low or high as well -- and a crouch ducks a
-## high, standing punch altogether.
+## high, standing punch altogether. The jump is a fourth corner (T38): it
+## goes over a low and out of a throw, cannot guard, and loses to a strike
+## aimed up.
 ##
 ## Everything is whole numbers and nothing is random, so the same inputs from
 ## the same frame always give the same next frame (`FightReplay`).
@@ -64,25 +68,58 @@ static func _read_input(fighter: FighterState, held: int, frame: int, data: Figh
 		fighter.buffered = ""
 
 
-# Step 2, for one fighter: count stun down, or carry on with the move, or
-# start the buffered one, or crouch, or walk. Then it is crouching if its
-# move is a crouching one, or, out of a move, if it holds down -- except in
-# hitstun, which it takes standing: a fighter reeling from a hit cannot duck
-# the next one, or a combo would end whenever its victim held down.
+# Step 2, for one fighter: in the air, go along the arc and then act there;
+# on the ground, count stun down -- leaving the ground when a take-off is
+# over -- or carry on with the move, or start the buffered one, or take off,
+# or crouch, or walk. Then, on the ground, it is crouching if its move is a
+# crouching one, or, out of a move, if it holds down -- except in hitstun,
+# taking off and landing, all taken standing: a fighter reeling from a hit
+# cannot duck the next one, or a combo would end whenever its victim held
+# down.
 static func _act(fighter: FighterState, held: int, data: FightData) -> void:
+	if fighter.is_airborne():
+		var stunned: bool = fighter.stun > 0
+		if not FightJump.carry(fighter, data):
+			_act_in_the_air(fighter, held, data)
+		elif stunned:
+			_count_stun_down(fighter)
+		return
 	if fighter.stun > 0:
-		fighter.stun -= 1
-		if fighter.stun == 0:
-			fighter.stun_kind = ""
+		var taking_off: bool = fighter.stun_kind == "takeoff"
+		_count_stun_down(fighter)
+		if taking_off and fighter.stun == 0:
+			FightJump.leave_the_ground(fighter, data)
+			return
 	elif fighter.move != "":
 		_advance_move(fighter, held, data)
-	elif not _start_buffered(fighter, held, data) and not FightInput.holds_down(held):
+	elif _start_buffered(fighter, held, data):
+		pass
+	elif FightInput.holds_up(held):
+		FightJump.take_off(fighter, held, data)
+	elif not FightInput.holds_down(held):
 		var speed: int = int(data.character(fighter.character)["walk_speed"])
 		fighter.x += FightInput.walk_direction(held) * speed
 	if fighter.move != "":
 		fighter.crouching = data.move(fighter.character, fighter.move)["stance"] == "crouching"
+	elif not fighter.is_airborne():
+		fighter.crouching = FightInput.holds_down(held) and not fighter.stun_kind in ["hit", "takeoff", "landing"]
+
+
+# In the air, as on the ground but with no walking: the stun counts down, or
+# the air move goes on, or one starts for a buffered button.
+static func _act_in_the_air(fighter: FighterState, held: int, data: FightData) -> void:
+	if fighter.stun > 0:
+		_count_stun_down(fighter)
+	elif fighter.move != "":
+		_advance_move(fighter, held, data)
 	else:
-		fighter.crouching = FightInput.holds_down(held) and fighter.stun_kind != "hit"
+		_start_buffered(fighter, held, data)
+
+
+static func _count_stun_down(fighter: FighterState) -> void:
+	fighter.stun -= 1
+	if fighter.stun == 0:
+		fighter.stun_kind = ""
 
 
 # One more frame of the move. Inside an open cancel window, a move that has
@@ -108,12 +145,14 @@ static func _cancel_is_open(fighter: FighterState, data: FightData) -> bool:
 
 
 # Start the move for the buffered button, if the character has one -- the
-# crouching one while holding down -- and, as a cancel, only if the current
-# move lists it. True when a move started.
+# crouching one while holding down, the air one in the air, if this jump has
+# not spent it -- and, as a cancel, only if the current move lists it. True
+# when a move started.
 static func _start_buffered(fighter: FighterState, held: int, data: FightData, as_cancel: bool = false) -> bool:
-	if fighter.buffered == "":
+	if fighter.buffered == "" or (fighter.is_airborne() and fighter.air_spent):
 		return false
-	var next_move: String = data.move_for_button(fighter.character, fighter.buffered, FightInput.holds_down(held))
+	var next_move: String = data.move_for_button(fighter.character, fighter.buffered, FightInput.holds_down(held),
+			fighter.is_airborne())
 	if next_move == "":
 		fighter.buffered = ""
 		return false
@@ -123,15 +162,22 @@ static func _start_buffered(fighter: FighterState, held: int, data: FightData, a
 	fighter.move_frame = 1
 	fighter.connected = false
 	fighter.buffered = ""
+	fighter.air_spent = fighter.air_spent or fighter.is_airborne()
 	return true
 
 
-# Step 3. Two bodies may not overlap: each gives way by half, rounded up, so
-# an odd overlap leaves a one-unit gap rather than favouring a side -- the
-# mirror image of any push is the same push. Then both are kept on the stage,
-# and one pinned to a wall leaves the other to give way.
+# Step 3. Two bodies on the ground may not overlap: each gives way by half,
+# rounded up, so an odd overlap leaves a one-unit gap rather than favouring
+# a side -- the mirror image of any push is the same push. While either is in
+# the air they may pass, which is how a jump crosses over to the other side
+# (T38); when it lands, the pushing resumes from the side it came down on.
+# Then both are kept on the stage, and one pinned to a wall leaves the other
+# to give way.
 static func _separate(state: FightState, data: FightData) -> void:
-	var left: FighterState = state.fighters[0] if state.fighters[0].x <= state.fighters[1].x else state.fighters[1]
+	if state.fighters[0].is_airborne() or state.fighters[1].is_airborne():
+		_keep_on_stage(state, data)
+		return
+	var left: FighterState = _left_one(state)
 	var right: FighterState = state.fighters[1] if left == state.fighters[0] else state.fighters[0]
 	var need: int = _body(left, data) + _body(right, data)
 	var overlap: int = need - (right.x - left.x)
@@ -146,6 +192,17 @@ static func _separate(state: FightState, data: FightData) -> void:
 		left.x -= overlap
 
 
+# The fighter further left; of two on the same spot -- one just landed on
+# the other -- the one facing right, which is the mirror of the one facing
+# left, so neither player is favoured.
+static func _left_one(state: FightState) -> FighterState:
+	var first: FighterState = state.fighters[0]
+	var second: FighterState = state.fighters[1]
+	if first.x != second.x:
+		return first if first.x < second.x else second
+	return second if second.facing > first.facing else first
+
+
 static func _keep_on_stage(state: FightState, data: FightData) -> void:
 	var width: int = int(data.table["stage"]["width"])
 	for fighter: FighterState in state.fighters:
@@ -156,21 +213,29 @@ static func _body(fighter: FighterState, data: FightData) -> int:
 	return int(data.character(fighter.character)["body"])
 
 
-# A fighter that is free turns to face the other; one in a move or stunned
-# keeps the way it was facing, as it would in any fighting game.
+# A fighter that is free turns to face the other, and so does one in the air
+# that is not attacking, so a jump that crosses over turns to face its
+# target; one in a move or stunned keeps the way it was facing, as it would
+# in any fighting game. A defender's guard follows the way the strike is
+# travelling (`FightInput.holds_back_from`): crossed over, back is the other
+# way.
 static func _face_each_other(state: FightState) -> void:
 	for index: int in range(2):
 		var fighter: FighterState = state.fighters[index]
 		var other: FighterState = state.fighters[1 - index]
-		if fighter.is_free() and other.x != fighter.x:
+		var turns: bool = fighter.is_free() or (fighter.is_airborne() and fighter.move == "" and fighter.stun == 0)
+		if turns and other.x != fighter.x:
 			fighter.facing = signi(other.x - fighter.x)
 
 
 # Step 4. Every fighter whose hitbox overlaps the other's hurtbox, found for
-# both before anything is applied. A high move does not find a crouching
-# fighter: it passes over, neither blocked nor hit, and the events say so.
-# A throw does not find a fighter in hitstun or blockstun: a hit could
-# otherwise be followed by a throw the victim had no frame to answer.
+# both before anything is applied. Boxes that meet along the stage and not
+# up from the floor do not connect: a high passes over a crouching fighter,
+# a low under one in the air, neither blocked nor hit, and the events say so.
+# A throw does not find a fighter in hitstun or blockstun -- a hit could
+# otherwise be followed by a throw the victim had no frame to answer -- nor
+# one in the air, which is what a jump out of a throw is. Taking off and
+# landing are on the ground, and can be thrown.
 # (Within a blockstring it is frame advantage, in the data, that keeps a
 # throw answerable: every move here is minus on block.)
 static func _connections(state: FightState, data: FightData) -> Array[int]:
@@ -178,12 +243,13 @@ static func _connections(state: FightState, data: FightData) -> Array[int]:
 	for index: int in range(2):
 		var attacker: FighterState = state.fighters[index]
 		var defender: FighterState = state.fighters[1 - index]
-		if _throwing(index, state, data) and defender.stun > 0:
+		if _throwing(index, state, data) and (defender.stun_kind in ["hit", "block"] or defender.is_airborne()):
 			continue
 		if not FightBoxes.overlap(FightBoxes.hitbox(attacker, data), FightBoxes.hurtbox(defender, data)):
 			continue
-		if _passes_over(attacker, defender, data):
-			state.events.append("p%d's %s passes over p%d (a high misses a crouch)" % [index + 1, attacker.move, 2 - index])
+		var missed: String = FightBoxes.misses_vertically(attacker, defender, data)
+		if missed != "":
+			state.events.append("p%d's %s %s" % [index + 1, attacker.move, missed % (2 - index)])
 		else:
 			attackers.append(index)
 	return attackers
@@ -206,12 +272,6 @@ static func _settle_throws(state: FightState, attackers: Array[int], data: Fight
 		state.events.append("p%d's throw is beaten by p%d's %s (strike beats throw)" % [2 - striker, striker + 1, strike])
 		return [striker] as Array[int]
 	return attackers
-
-
-# True when the attacker's move is high and the defender crouches under it:
-# a standing punch aimed at the head finds no head there (T39).
-static func _passes_over(attacker: FighterState, defender: FighterState, data: FightData) -> bool:
-	return attacker.move != "" and defender.crouching and data.move(attacker.character, attacker.move)["height"] == "high"
 
 
 # True when the fighter at `index` is in a throw.
@@ -257,9 +317,12 @@ static func _judge(state: FightState, attacker: int, defender_held: int, data: F
 	if height == "throw":
 		return ["throw", " (a throw cannot be blocked)"]
 	var can_block: bool = defender.is_free() or defender.stun_kind == "block"
+	if defender.is_airborne():
+		var starting: bool = FightBoxes.phase(defender, data) == "startup"
+		return ["counter-hit", " (caught in the air, starting up)"] if starting else ["hit", " (in the air, which cannot guard)"]
 	var crouched: bool = FightInput.holds_down(defender_held)
 	var guard: String = "crouching" if crouched else "standing"
-	if can_block and FightInput.holds_away(defender_held, defender.x, hitter.x):
+	if can_block and FightInput.holds_back_from(defender_held, hitter.facing):
 		if _guard_stops(height, crouched):
 			return ["block", " (holding away, %s)" % guard]
 		return ["hit", " (%s through a %s guard)" % [_a_height(height), guard]]
@@ -274,7 +337,7 @@ static func _guard_stops(height: String, crouched: bool) -> bool:
 
 
 # A height in words. "high" is here for completeness: a high never meets a
-# crouching guard, since it passes over a crouch in step 4.
+# crouching guard, since every high's rise is above every crouch.
 static func _a_height(height: String) -> String:
 	return {"low": "a low", "overhead": "an overhead", "high": "a high"}[height]
 
@@ -301,6 +364,9 @@ static func _apply(state: FightState, attacker: int, move: String, verdict: Arra
 		defender.stun_kind = "hit"
 		defender.move = ""
 		defender.crouching = false
+		defender.air_spent = defender.air_spent or defender.is_airborne()
+		if not defender.is_airborne():
+			defender.jump_direction = 0
 		defender.move_frame = 0
 		defender.connected = false
 	state.events.append("p%d %s p%d with %s%s" % [attacker + 1, _verb(outcome), 2 - attacker, move, verdict[1]])

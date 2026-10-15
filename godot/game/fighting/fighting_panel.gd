@@ -29,12 +29,18 @@ static func describe(state: FightState, data: FightData, paused: bool, seat: Fig
 
 static func _fighter_lines(index: int, fighter: FighterState, data: FightData) -> PackedStringArray:
 	var lines: PackedStringArray = ["player %d, the %s: %d health" % [index + 1, fighter.character, fighter.health]]
-	if fighter.stun > 0:
+	var flight: String = "  in the air, frame %d of %d, %d up"
+	if fighter.is_airborne():
+		lines.append(flight % [fighter.jump_frame, data.jump_length(fighter.character), fighter.y])
+	if fighter.stun > 0 and fighter.stun_kind in ["takeoff", "landing"]:
+		var doing: String = "taking off" if fighter.stun_kind == "takeoff" else "landing"
+		lines.append("  %s, %d frame(s) left" % [doing, fighter.stun])
+	elif fighter.stun > 0:
 		lines.append("  in %sstun, %d frame(s) left" % [fighter.stun_kind, fighter.stun])
-	elif fighter.move == "":
-		lines.append("  free to act, crouching" if fighter.crouching else "  free to act")
-	else:
+	elif fighter.move != "":
 		lines.append_array(_move_lines(fighter, data))
+	elif not fighter.is_airborne():
+		lines.append("  free to act, crouching" if fighter.crouching else "  free to act")
 	if fighter.buffered != "":
 		lines.append("  buffered: %s, until frame %d" % [fighter.buffered, fighter.buffered_until])
 	return lines

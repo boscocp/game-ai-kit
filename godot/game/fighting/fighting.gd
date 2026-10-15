@@ -1,11 +1,14 @@
 ## The fighting scenario in training mode: you against a dummy, with every
 ## box and every frame on show.
 ##
-## You are player one: A and D walk, S crouches, U and I punch light and
-## heavy, J and K kick light and heavy, L throws; holding away from the dummy
-## guards, standing or -- with S -- crouching. C swaps which character you
-## play. The dummy, player two, does what its mode says -- stand, guard
-## standing, guard crouching, jab or throw every second, or fight back as the
+## You are player one: A and D walk, W jumps -- with A or D, that way -- S
+## crouches, U and I punch light and heavy, J and K kick light and heavy --
+## in the air, each is a jump-in attack, one a jump -- S with I is the
+## anti-air uppercut, L throws; jump forwards from close and you cross over
+## to the dummy's other side; holding back from a strike guards, standing or
+## -- with S -- crouching. C swaps which character you play. The dummy, player two, does
+## what its mode says -- stand, guard standing, guard crouching, jab, throw or
+## low kick every second, uppercut you out of the air, or fight back as the
 ## fixed opponent at one of its three levels -- and M cycles the mode: each
 ## guard has a height that gets through it. P pauses, and space then plays
 ## one frame: the step every example offers (T21), here one frame of the
@@ -20,15 +23,19 @@
 class_name FightingExample
 extends Node2D
 
-const MODES: Array[String] = ["stand", "guard standing", "guard crouching", "jab", "throw",
-		"opponent: easy", "opponent: medium", "opponent: hard"]
+const MODES: Array[String] = ["stand", "guard standing", "guard crouching", "jab", "throw", "low kick",
+		"anti-air (sees you now)", "opponent: easy", "opponent: medium", "opponent: hard"]
 const OPPONENT_MODE: String = "opponent: "
 ## Punches on the top row and kicks below them, as an arcade panel has them.
-const KEYS: Dictionary = {KEY_A: FightInput.LEFT, KEY_D: FightInput.RIGHT, KEY_S: FightInput.DOWN,
+const KEYS: Dictionary = {KEY_A: FightInput.LEFT, KEY_D: FightInput.RIGHT, KEY_S: FightInput.DOWN, KEY_W: FightInput.UP,
 		KEY_U: FightInput.LIGHT_PUNCH, KEY_I: FightInput.HEAVY_PUNCH, KEY_J: FightInput.LIGHT_KICK,
 		KEY_K: FightInput.HEAVY_KICK, KEY_L: FightInput.THROW}
-## How often the dummy presses in its "jab" and "throw" modes, in frames.
+## How often the dummy presses in its "jab", "throw" and "low kick" modes,
+## in frames.
 const JAB_EVERY: int = 60
+## How near you must be, in the air, for the anti-air dummy to answer, in
+## stage units: about where its uppercut comes out in time to meet you.
+const ANTI_AIR_RANGE: int = 110
 
 var data: FightData = FightData.read()
 var state: FightState
@@ -63,9 +70,9 @@ func _ready() -> void:
 		[FightView.SIDES[0], "left health bar: you (player one)"],
 		[FightView.SIDES[1], "right health bar: the dummy (player two)"],
 		[FightView.HURTBOX, "outline: hurtbox, where it can be hit"],
-		[FightView.HITBOX, "red bar: hitbox, at the height it hits"],
-		[FightView.THROW, "orange bar: a throw, which no guard stops"],
-		[FightView.STUNNED_SPRITE, "paler: in hitstun or blockstun"],
+		[FightView.HITBOX, "red box: hitbox, where it reaches"],
+		[FightView.THROW, "orange box: a throw, which no guard stops"],
+		[FightView.STUNNED_SPRITE, "paler: stunned, taking off or landing"],
 	] as Array[Array])
 	restart()
 
@@ -170,8 +177,11 @@ func _held_keys() -> int:
 
 
 # The dummy holds away to guard -- holding down as well to guard crouching --
-# or presses light punch or throw once every `JAB_EVERY` frames, or stands;
-# or the opponent decides, from the fight as it was.
+# or presses light punch, throw or a low kick once every `JAB_EVERY` frames,
+# or stands; or the opponent decides, from the fight as it was. The anti-air
+# dummy is the one mode that reads the present: it uppercuts as soon as you
+# are in the air and near -- a drill for being knocked out of the
+# air, not an opponent, and its name says so.
 func _dummy_input() -> int:
 	if seat != null:
 		return seat.input_for(state)
@@ -187,6 +197,12 @@ func _dummy_input() -> int:
 			return FightInput.LIGHT_PUNCH if on_the_beat else 0
 		"throw":
 			return FightInput.THROW if on_the_beat else 0
+		"low kick":
+			return FightInput.DOWN | FightInput.LIGHT_KICK if on_the_beat else 0
+		"anti-air (sees you now)":
+			var you: FighterState = state.fighters[0]
+			var near: bool = absi(you.x - dummy.x) <= ANTI_AIR_RANGE
+			return FightInput.DOWN | FightInput.HEAVY_PUNCH if you.is_airborne() and near else 0
 	return 0
 
 
@@ -197,6 +213,6 @@ func _refresh() -> void:
 		_status.text = "the frame data was refused: " + data.refusal
 		return
 	_view.show_fight(state, data)
-	_status.text = ("A/D walk, S crouch, U/I punch light/heavy, J/K kick light/heavy, L throw, hold away to guard\n"
+	_status.text = ("A/D walk, W jump, S crouch, U/I punch, J/K kick, S+I uppercut, L throw, hold away to guard\n"
 			+ "C swap characters  ·  M dummy: %s  ·  P pause, space one frame  ·  R restart" % dummy_mode)
 	_panel.text = FightingPanel.describe(state, data, paused, seat)

@@ -21,6 +21,8 @@ const HEAVY_PUNCH: int = 16
 const LIGHT_KICK: int = 32
 const HEAVY_KICK: int = 64
 const THROW: int = 128
+## Held to jump, with left or right to jump that way (T38).
+const UP: int = 256
 
 ## The buttons, by the name the frame data's moves use, in the order they are
 ## looked at when two are pressed on one frame: the last one wins.
@@ -44,13 +46,21 @@ static func walk_direction(held: int) -> int:
 	return (1 if held & RIGHT else 0) - (1 if held & LEFT else 0)
 
 
+## True when the input holds up: a jump, once the fighter is free.
+static func holds_up(held: int) -> bool:
+	return held & UP != 0
+
+
 ## True when the input holds down: a crouch, and a crouching guard.
 static func holds_down(held: int) -> bool:
 	return held & DOWN != 0
 
 
-## True when the input holds away from a fighter standing at `x` against one
-## at `opponent_x`: that is how a fighter blocks.
-static func holds_away(held: int, x: int, opponent_x: int) -> bool:
-	var away: int = -signi(opponent_x - x)
-	return away != 0 and walk_direction(held) == away
+## True when the input holds back from a strike travelling `strike_direction`
+## (+1 rightwards, -1 leftwards): that is how a fighter blocks. Read off the
+## strike, not off where the two stand, so it is the same before and after
+## the defender's own step back, and a cross-up -- a strike that arrives
+## from the other side -- is guarded the other way (T38). Facing each other,
+## it is holding away.
+static func holds_back_from(held: int, strike_direction: int) -> bool:
+	return strike_direction != 0 and walk_direction(held) == strike_direction

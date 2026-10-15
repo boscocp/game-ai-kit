@@ -133,13 +133,34 @@ func test_with_no_table_a_fighter_is_a_block() -> void:
 	var view: FightView = auto_free(FightView.new())
 	view.sprites = FighterSprites.read("res://no/such/table.json")
 	view.show_fight(FightState.starting(_data, "lancer", "dancer"), _data)
-	var fighter := FighterState.new("lancer", 300, 1000)
 	assert_bool(view.sprites.complete("lancer", _data)).is_false()
-	assert_float(view.figure_height(fighter)).is_equal(FightView.BODY_HEIGHT)
 	var drawn: FightView = auto_free(FightView.new())
 	drawn.show_fight(FightState.starting(_data, "lancer", "dancer"), _data)
 	assert_bool(drawn.sprites.complete("lancer", _data)).is_true()
-	assert_float(drawn.figure_height(fighter)).is_greater(FightView.BODY_HEIGHT)
+
+
+# The boxes are drawn from the frame data, one unit a pixel, and the figure
+# from its sprite: they sit on each other only if the frame data's standing
+# height is the sprite's, as drawn, to the pixel (T38).
+func test_the_frame_data_s_height_is_the_figure_s_on_screen() -> void:
+	for character: String in _data.character_names():
+		var drawn: Dictionary = _sprites.table["characters"][character]
+		var on_screen: int = roundi(float(drawn["standing_height"]) * float(drawn["scale_percent"]) / 100.0)
+		assert_int(int(_data.character(character)["tall"])).is_equal(on_screen)
+
+
+func test_a_fighter_in_the_air_shows_its_jump_rising_then_falling() -> void:
+	var fighter := FighterState.new("lancer", 300, 1000)
+	var shown: Array[int] = []
+	for frame: int in range(1, _data.jump_length("lancer") + 1):
+		fighter.jump_frame = frame
+		var pose: Array = _sprites.pose(fighter, _data, frame, false)
+		assert_str(pose[0]).is_equal("jump")
+		shown.append(pose[1])
+	assert_int(shown[0]).is_equal(0)
+	assert_int(shown.back()).is_equal(_sprites.cels("lancer", "jump").size() - 1)
+	for index: int in range(1, shown.size()):
+		assert_int(shown[index]).is_greater_equal(shown[index - 1])
 
 
 # A missing strip, or a move the frame data has and the table does not,

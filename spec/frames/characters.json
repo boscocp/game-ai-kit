@@ -1,5 +1,5 @@
 {
- "description": "Frame data for the fighting scenario (T16), as data: every number a fight is resolved by, and none in code. One unit is one pixel; every position, speed and box is a whole number, so two runs cannot round differently. A frame is 1/60 s. A move's frames count from 1: `startup` frames before it can hit, then `active` frames when its hitbox is out, then `recovery` frames before its owner can act again. A move's `height` is what guard stops it: `high` passes over a crouching fighter and is stopped standing, `mid` is stopped standing or crouching, `low` only crouching, `overhead` only standing, and a `throw` by neither.",
+ "description": "Frame data for the fighting scenario (T16), as data: every number a fight is resolved by, and none in code. One unit is one pixel; every position, speed and box is a whole number, so two runs cannot round differently. A frame is 1/60 s. A move's frames count from 1: `startup` frames before it can hit, then `active` frames when its hitbox is out, then `recovery` frames before its owner can act again. A box is two intervals: along the stage, and up from the floor -- a character is `tall` standing and `crouching_tall` crouching, and a move's `rise` is how far above its owner's feet its hitbox reaches, from bottom to top (below the feet, for a kick from the air). A move's `height` is what guard stops it: `high` is aimed above any crouch and is stopped standing, `mid` is stopped standing or crouching, `low` only crouching, `overhead` only standing, and a `throw` by neither. A `jump` is `takeoff` frames gathering on the ground -- when it cannot guard and can be thrown -- then an arc in whole frames and units: `rise` frames up to `height`, `hang` frames there, `fall` frames down, `speed` units a frame forwards or back, fixed at take-off, then `landing` frames before it can act, when it can be thrown. One move from the air a jump, and none once hit in the air. A move done in the air (`stance` `air`) hits as an overhead.",
  "frames_per_second": 60,
  "stage": {
   "width": 640,
@@ -16,11 +16,11 @@
  },
  "resolution": [
   "1. Inputs: each fighter's newly pressed button is buffered for `buffer_frames` frames; the latest press replaces an older one.",
-  "2. Both fighters act at once, each from the state the frame began with: a stunned fighter counts its stun down; a fighter in a move advances one frame, or cancels into a buffered move when the cancel window is open and the move has connected; an idle fighter starts a buffered move -- the crouching one for its button while holding down, if it has one -- or crouches while holding down, or walks. A fighter in hitstun is standing, whatever it holds.",
-  "3. Bodies may not overlap: two that do each give way by half the overlap, rounded up, so neither side is favoured; then both are kept on the stage, and one pinned to a wall leaves the other to give way.",
-  "4. Every hitbox out this frame is tested against the other fighter's hurtbox, both at once, before either result is applied. A throw's hitbox does not find a fighter in hitstun or blockstun, and a `high` hitbox does not find a crouching one: it passes over.",
+  "2. Both fighters act at once, each from the state the frame began with: a stunned fighter counts its stun down; a fighter in a move advances one frame, or cancels into a buffered move when the cancel window is open and the move has connected; an idle fighter on the ground starts a buffered move -- the crouching one for its button while holding down, if it has one -- or takes off while holding up -- `takeoff` frames on the ground, the jump's direction the one it holds -- or crouches while holding down, or walks. A fighter in the air goes one frame further along its arc whatever else it does; it may start its one air move for a buffered button, unless it has been hit in this jump, and lands when the arc is over, its air move ending there. A fighter in hitstun, taking off or landing is standing, whatever it holds.",
+  "3. Bodies on the ground may not overlap -- while either is in the air they may pass, which is how a jump crosses over, and they are pushed apart from the side each lands on: two that do each give way by half the overlap, rounded up, so neither side is favoured; then both are kept on the stage, and one pinned to a wall leaves the other to give way.",
+  "4. Every hitbox out this frame is tested against the other fighter's hurtbox, both at once, before either result is applied. A hitbox finds a hurtbox only where both intervals meet: one that meets it along the stage but not up from the floor passes over it -- a high over a crouch -- or under it -- a low under a fighter in the air. A throw's hitbox does not find a fighter in hitstun or blockstun, or in the air; it does find one taking off or landing.",
   "5. Two throws found on one frame break each other: neither lands, both moves end, both are pushed apart. A throw and a strike found on one frame: the strike lands, the throw does not.",
-  "6. A strike is blocked if the defender is idle or already blocking, holds away from the attacker, and holds the guard its height asks for: down for a `low`, not down for an `overhead` or a `high`, either for a `mid`. Blocked: blockstun, no damage. Otherwise it hits: damage and hitstun, and the defender's move is lost. A throw is never blocked.",
+  "6. A strike is blocked if the defender is on the ground and idle or already blocking, holds away from the attacker, and holds the guard its height asks for: down for a `low`, not down for an `overhead` or a `high`, either for a `mid`. Blocked: blockstun, no damage. Otherwise it hits: damage and hitstun, and the defender's move is lost. A throw is never blocked.",
   "7. A counter-hit is a strike that hits a defender still in the startup of a move: `counter_hit.damage_percent` of the damage, and `extra_hitstun` more frames. A throw is never a counter-hit.",
   "8. A trade is two strikes connecting on the same frame: both are applied, in full, to both.",
   "9. A connection pushes the defender `pushback` units away; what a wall stops it from taking, the attacker takes instead, backwards. A move connects at most once.",
@@ -32,6 +32,17 @@
    "health": 1000,
    "walk_speed": 2,
    "body": 26,
+   "tall": 154,
+   "crouching_tall": 92,
+   "jump": {
+    "takeoff": 4,
+    "rise": 14,
+    "hang": 6,
+    "fall": 14,
+    "height": 110,
+    "speed": 3,
+    "landing": 4
+   },
    "moves": {
     "jab": {
      "button": "light_punch",
@@ -46,6 +57,10 @@
      "hitbox": [
       18,
       92
+     ],
+     "rise": [
+      100,
+      150
      ],
      "hurtbox_reach": 60,
      "cancel_window": [
@@ -71,6 +86,10 @@
       18,
       150
      ],
+     "rise": [
+      100,
+      150
+     ],
      "hurtbox_reach": 110,
      "cancel_window": [
       0,
@@ -91,6 +110,10 @@
      "hitbox": [
       16,
       100
+     ],
+     "rise": [
+      60,
+      110
      ],
      "hurtbox_reach": 70,
      "cancel_window": [
@@ -113,6 +136,10 @@
       12,
       96
      ],
+     "rise": [
+      30,
+      160
+     ],
      "hurtbox_reach": 80,
      "cancel_window": [
       0,
@@ -133,6 +160,10 @@
      "hitbox": [
       16,
       84
+     ],
+     "rise": [
+      50,
+      90
      ],
      "hurtbox_reach": 56,
      "cancel_window": [
@@ -157,6 +188,10 @@
       14,
       104
      ],
+     "rise": [
+      0,
+      40
+     ],
      "hurtbox_reach": 70,
      "cancel_window": [
       10,
@@ -180,6 +215,10 @@
       10,
       120
      ],
+     "rise": [
+      0,
+      30
+     ],
      "hurtbox_reach": 100,
      "cancel_window": [
       0,
@@ -201,7 +240,136 @@
       10,
       48
      ],
+     "rise": [
+      0,
+      154
+     ],
      "hurtbox_reach": 30,
+     "cancel_window": [
+      0,
+      0
+     ],
+     "cancels_into": []
+    },
+    "uppercut": {
+     "button": "heavy_punch",
+     "stance": "crouching",
+     "height": "mid",
+     "startup": 8,
+     "active": 6,
+     "recovery": 24,
+     "damage": 80,
+     "hitstun": 20,
+     "blockstun": 12,
+     "hitbox": [
+      10,
+      70
+     ],
+     "rise": [
+      60,
+      260
+     ],
+     "hurtbox_reach": 40,
+     "cancel_window": [
+      0,
+      0
+     ],
+     "cancels_into": []
+    },
+    "air_jab": {
+     "button": "light_punch",
+     "stance": "air",
+     "height": "overhead",
+     "startup": 4,
+     "active": 6,
+     "recovery": 4,
+     "damage": 35,
+     "hitstun": 14,
+     "blockstun": 10,
+     "hitbox": [
+      10,
+      70
+     ],
+     "rise": [
+      30,
+      110
+     ],
+     "hurtbox_reach": 56,
+     "cancel_window": [
+      0,
+      0
+     ],
+     "cancels_into": []
+    },
+    "air_punch": {
+     "button": "heavy_punch",
+     "stance": "air",
+     "height": "overhead",
+     "startup": 6,
+     "active": 6,
+     "recovery": 6,
+     "damage": 60,
+     "hitstun": 17,
+     "blockstun": 12,
+     "hitbox": [
+      10,
+      96
+     ],
+     "rise": [
+      0,
+      100
+     ],
+     "hurtbox_reach": 80,
+     "cancel_window": [
+      0,
+      0
+     ],
+     "cancels_into": []
+    },
+    "air_kick": {
+     "button": "light_kick",
+     "stance": "air",
+     "height": "overhead",
+     "startup": 4,
+     "active": 8,
+     "recovery": 4,
+     "damage": 45,
+     "hitstun": 15,
+     "blockstun": 10,
+     "hitbox": [
+      10,
+      80
+     ],
+     "rise": [
+      -40,
+      50
+     ],
+     "hurtbox_reach": 64,
+     "cancel_window": [
+      0,
+      0
+     ],
+     "cancels_into": []
+    },
+    "flying_kick": {
+     "button": "heavy_kick",
+     "stance": "air",
+     "height": "overhead",
+     "startup": 5,
+     "active": 10,
+     "recovery": 4,
+     "damage": 70,
+     "hitstun": 18,
+     "blockstun": 12,
+     "hitbox": [
+      10,
+      90
+     ],
+     "rise": [
+      -60,
+      40
+     ],
+     "hurtbox_reach": 70,
      "cancel_window": [
       0,
       0
@@ -215,6 +383,17 @@
    "health": 900,
    "walk_speed": 5,
    "body": 22,
+   "tall": 118,
+   "crouching_tall": 71,
+   "jump": {
+    "takeoff": 3,
+    "rise": 11,
+    "hang": 4,
+    "fall": 11,
+    "height": 100,
+    "speed": 5,
+    "landing": 3
+   },
    "moves": {
     "jab": {
      "button": "light_punch",
@@ -229,6 +408,10 @@
      "hitbox": [
       14,
       50
+     ],
+     "rise": [
+      93,
+      118
      ],
      "hurtbox_reach": 30,
      "cancel_window": [
@@ -254,6 +437,10 @@
       14,
       72
      ],
+     "rise": [
+      93,
+      118
+     ],
      "hurtbox_reach": 52,
      "cancel_window": [
       0,
@@ -274,6 +461,10 @@
      "hitbox": [
       14,
       66
+     ],
+     "rise": [
+      50,
+      90
      ],
      "hurtbox_reach": 44,
      "cancel_window": [
@@ -298,6 +489,10 @@
       10,
       64
      ],
+     "rise": [
+      93,
+      125
+     ],
      "hurtbox_reach": 48,
      "cancel_window": [
       0,
@@ -318,6 +513,10 @@
      "hitbox": [
       12,
       46
+     ],
+     "rise": [
+      40,
+      75
      ],
      "hurtbox_reach": 28,
      "cancel_window": [
@@ -342,6 +541,10 @@
       12,
       62
      ],
+     "rise": [
+      0,
+      30
+     ],
      "hurtbox_reach": 40,
      "cancel_window": [
       6,
@@ -365,6 +568,10 @@
       10,
       70
      ],
+     "rise": [
+      0,
+      25
+     ],
      "hurtbox_reach": 50,
      "cancel_window": [
       0,
@@ -386,7 +593,136 @@
       8,
       40
      ],
+     "rise": [
+      0,
+      118
+     ],
      "hurtbox_reach": 24,
+     "cancel_window": [
+      0,
+      0
+     ],
+     "cancels_into": []
+    },
+    "uppercut": {
+     "button": "heavy_punch",
+     "stance": "crouching",
+     "height": "mid",
+     "startup": 6,
+     "active": 5,
+     "recovery": 20,
+     "damage": 65,
+     "hitstun": 18,
+     "blockstun": 11,
+     "hitbox": [
+      8,
+      56
+     ],
+     "rise": [
+      45,
+      220
+     ],
+     "hurtbox_reach": 32,
+     "cancel_window": [
+      0,
+      0
+     ],
+     "cancels_into": []
+    },
+    "air_jab": {
+     "button": "light_punch",
+     "stance": "air",
+     "height": "overhead",
+     "startup": 3,
+     "active": 5,
+     "recovery": 4,
+     "damage": 28,
+     "hitstun": 13,
+     "blockstun": 9,
+     "hitbox": [
+      8,
+      50
+     ],
+     "rise": [
+      25,
+      90
+     ],
+     "hurtbox_reach": 40,
+     "cancel_window": [
+      0,
+      0
+     ],
+     "cancels_into": []
+    },
+    "air_punch": {
+     "button": "heavy_punch",
+     "stance": "air",
+     "height": "overhead",
+     "startup": 5,
+     "active": 6,
+     "recovery": 5,
+     "damage": 50,
+     "hitstun": 16,
+     "blockstun": 11,
+     "hitbox": [
+      8,
+      68
+     ],
+     "rise": [
+      0,
+      85
+     ],
+     "hurtbox_reach": 56,
+     "cancel_window": [
+      0,
+      0
+     ],
+     "cancels_into": []
+    },
+    "air_kick": {
+     "button": "light_kick",
+     "stance": "air",
+     "height": "overhead",
+     "startup": 3,
+     "active": 7,
+     "recovery": 4,
+     "damage": 38,
+     "hitstun": 14,
+     "blockstun": 9,
+     "hitbox": [
+      8,
+      60
+     ],
+     "rise": [
+      -35,
+      40
+     ],
+     "hurtbox_reach": 48,
+     "cancel_window": [
+      0,
+      0
+     ],
+     "cancels_into": []
+    },
+    "flying_kick": {
+     "button": "heavy_kick",
+     "stance": "air",
+     "height": "overhead",
+     "startup": 4,
+     "active": 8,
+     "recovery": 4,
+     "damage": 55,
+     "hitstun": 16,
+     "blockstun": 11,
+     "hitbox": [
+      8,
+      70
+     ],
+     "rise": [
+      -50,
+      30
+     ],
+     "hurtbox_reach": 56,
      "cancel_window": [
       0,
       0

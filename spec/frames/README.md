@@ -28,12 +28,28 @@ teaches: none
   **lancer** reaches further and starts slower, the **dancer** is quick and
   short.
 
+Per character: `health`, `walk_speed`, `body` (half its width), `tall` and
+`crouching_tall` (how high its hurtbox reaches, standing and crouching), and
+its `jump` (T38): `takeoff` frames still on the ground -- it cannot guard
+and can be thrown -- then `rise` frames up to `height`, `hang` frames
+there, `fall` frames down -- whole units on every frame, by integer
+division -- `speed`
+units a frame along the stage, fixed when up is pressed, and `landing`
+frames when it touches down, when it can be thrown. In the air it cannot
+guard and cannot be thrown, and it has one air move a jump -- none once it
+has been hit in the air. Bodies push each other only on the ground, so a
+jump can cross over to the other side.
+
 Per move: the `button` that does it -- light or heavy punch, light or heavy
-kick, or throw -- and its `stance`, standing or crouching (holding down picks
-the crouching move for a button, and a button with none does its standing
-one); its `height`, which guard stops it: `high` passes over a crouching
-fighter and is stopped standing (T39), `mid` either, `low` only crouching,
-`overhead` only standing, `throw` neither; `startup`, `active` and `recovery` frames, counted from 1;
+kick, or throw -- and its `stance`, standing, crouching or air (holding down
+picks the crouching move for a button, and a button with none does its
+standing one; in the air only an air move comes out, and it hits as an
+overhead); its `height`, which guard stops it: `high` is stopped standing
+and is aimed above every crouch, so it passes over one (T39), `mid` either,
+`low` only crouching, `overhead` only standing, `throw` neither; its `rise`,
+how far above its owner's feet its hitbox reaches, bottom and top -- below
+the feet for a kick from the air -- so that a box is two intervals and a hit
+needs both to meet; `startup`, `active` and `recovery` frames, counted from 1;
 `damage`, `hitstun` and `blockstun`; a `hitbox` as the near and far edge in
 front of the body, out only on active frames; `hurtbox_reach`, how far in
 front the fighter can be hit from its first active frame to its last
