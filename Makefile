@@ -379,7 +379,7 @@ FIGHTER_SHEETS := build/fighter-sheets
 fighter-sheets: ## Download the fighters' CC0 template sheets into build/fighter-sheets/ (gitignored)
 	@mkdir -p $(FIGHTER_SHEETS)
 	@$(PYTHON) -c 'import json; t = json.load(open("godot/game/fighting/sprites.json")); print("\n".join(n + " " + s["url"] for n, s in t["sheets"].items()))' | \
-		while read name url; do curl -sSfL -o "$(FIGHTER_SHEETS)/$$name" "$$url" && echo "downloaded $$name"; done
+		while read name url; do curl -sSfL -o "$(FIGHTER_SHEETS)/$$name" "$$url" || exit 1; echo "downloaded $$name"; done
 
 .PHONY: fighter-strips
 fighter-strips: ## Cut the fighters' strips from the downloaded sheets, after checking their sha256

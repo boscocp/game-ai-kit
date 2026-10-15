@@ -85,6 +85,29 @@ because it is driven better, and a command proves every car runs one physics.
 
 ---
 
+## Resuming after 2026-10-15 (wave 36)
+
+**What landed.** T35: the fighters have faces.
+- Puffolotti's CC0 karate template, two costumes: the lancer orange at full
+  size, the dancer blue at 80%, each move its own cels.
+- Only the cuts are committed -- 30 strips of whole grid cells -- and the
+  sheets are referenced by URL and sha256 (ADR 0015). `make fighter-sheets`
+  and `make fighter-strips` repeat the cut, byte for byte.
+- `FighterSprites.pose` picks a cel from the fight alone: a move's cels by
+  phase, the walk from the fighter's own input, the hit from its stun.
+
+**The review's worst findings.** The ADR quoted the author from the wrong
+page and paraphrased him; it now quotes him exactly, from the page he wrote
+it on. The walk read the view's redraws, not the fight, so the frame step
+showed a walking fighter standing. Both fixed, with the rest; see
+[docs/reviews/36-fighters-you-can-see.md](../docs/reviews/36-fighters-you-can-see.md).
+
+**Not proven.** T34's and T35's manual checks: play it. The walk speed and
+the hit animation want a person's eye.
+
+**Next:** T36, the survey of fighting-game AI. A draft written from 28
+references opened during wave 36 is the starting point.
+
 ## Resuming after 2026-10-15 (wave 35)
 
 **What landed.** T34: high, low and the throw.

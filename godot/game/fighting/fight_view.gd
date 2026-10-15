@@ -3,8 +3,9 @@
 ##
 ## A fighter is its sprite (T35), the cel `FighterSprites` picks from the
 ## frame data, or -- when its strips are not on disk -- a filled block in its
-## side's colour, lower while it crouches. Over either, its hurtbox is outlined in blue -- longer than the body once a move's limb
-## is out -- and a hitbox, while one is out, is a red bar at the height the
+## side's colour, lower while it crouches. Over either, its hurtbox is
+## outlined in blue -- longer than the body once a move's limb is out -- and
+## a hitbox, while one is out, is a red bar at the height the
 ## move hits: at the head for an overhead, the chest for a mid, the shins for
 ## a low; a throw's is orange, since no guard stops it. The boxes are the point:
 ## a person learning frame data has to see the box that won, not only the
@@ -38,17 +39,10 @@ const STUNNED_SPRITE: Color = Color(1.0, 1.0, 1.0, 0.65)
 var sprites: FighterSprites = FighterSprites.read()
 var _state: FightState
 var _data: FightData
-# Whether each fighter walked into the frame shown: it is free, standing, and
-# not where it was one frame before.
-var _walking: Array[bool] = [false, false]
 
 
 ## Hand the view the frame to draw.
 func show_fight(state: FightState, data: FightData) -> void:
-	for index: int in range(2):
-		var now: FighterState = state.fighters[index]
-		var stepped: bool = _state != null and state.frame == _state.frame + 1 and now.x != _state.fighters[index].x
-		_walking[index] = stepped and now.is_free() and not now.crouching
 	_state = state
 	_data = data
 	queue_redraw()
@@ -60,16 +54,16 @@ func _draw() -> void:
 	var width: float = float(_data.table["stage"]["width"])
 	draw_rect(Rect2(0.0, FLOOR_Y, width, 8.0), STAGE)
 	for index: int in range(2):
-		_draw_fighter(index, _state.fighters[index], SIDES[index])
+		_draw_fighter(_state.fighters[index], SIDES[index])
 		_draw_health(index, width)
 
 
-func _draw_fighter(index: int, fighter: FighterState, colour: Color) -> void:
-	var drawn: bool = sprites.complete(fighter.character)
+func _draw_fighter(fighter: FighterState, colour: Color) -> void:
+	var drawn: bool = sprites.complete(fighter.character, _data)
 	var height: float = figure_height(fighter) * (CROUCH_SHARE if fighter.crouching else 1.0)
 	var top: float = FLOOR_Y - height
 	if drawn:
-		_draw_sprite(index, fighter)
+		_draw_sprite(fighter)
 	else:
 		_draw_block(fighter, colour, top, height)
 	var hurt: Array[int] = FightBoxes.hurtbox(fighter, _data)
@@ -85,7 +79,7 @@ func _draw_fighter(index: int, fighter: FighterState, colour: Color) -> void:
 ## scale it is drawn, or the block's height when it has no sprite. The boxes
 ## are drawn to this height, so they sit over the figure.
 func figure_height(fighter: FighterState) -> float:
-	if not sprites.complete(fighter.character):
+	if _data == null or not sprites.complete(fighter.character, _data):
 		return BODY_HEIGHT
 	var drawn: Dictionary = sprites.table["characters"][fighter.character]
 	return float(drawn["standing_height"]) * float(drawn["scale_percent"]) / 100.0
@@ -101,9 +95,9 @@ func _draw_block(fighter: FighterState, colour: Color, top: float, height: float
 
 # The fighter's cel, its anchor -- where the feet are in the cel -- on the
 # fighter's place on the floor, mirrored when it faces left.
-func _draw_sprite(index: int, fighter: FighterState) -> void:
+func _draw_sprite(fighter: FighterState) -> void:
 	var lost: bool = _state.winner != FightState.NOBODY and fighter.health <= 0
-	var pose: Array = sprites.pose(fighter, _data, _walking[index], _state.frame, lost)
+	var pose: Array = sprites.pose(fighter, _data, _state.frame, lost)
 	var drawn: Dictionary = sprites.table["characters"][fighter.character]
 	var cell: Vector2 = Vector2(sprites.cell(fighter.character))
 	var anchor: Vector2 = Vector2(float(drawn["anchor"][0]), float(drawn["anchor"][1]))

@@ -58,10 +58,16 @@ the frame step (P, then space) should advance the animation one frame.
   figure's reach is near the reach its frame data gives it. The boxes still
   do not match the limbs exactly, and are drawn over them to show it.
 - **A move's cels are listed by phase** in `sprites.json`, and spread over
-  that phase's frames: the active cels are on screen exactly while the
-  hitbox is out. A test walks every frame of every move.
-- **The walk is read off where the fighter stands**, so walking backwards
-  plays it backwards and a replay draws the same cels.
+  that phase's frames: the active cels are on screen on the active frames
+  and no others. A test walks every frame of every move, and holds that
+  every listed cel is shown.
+- **The walk is read off the fight**: a fighter walks when its own input
+  moved it this frame -- free, standing, holding a direction -- and its cel
+  off where it stands, at four frames a cel for either speed. Walking
+  backwards plays it backwards, a fighter only pushed does not walk, and
+  the frame step shows the walk advance. Found by the wave 36 review: the
+  first version compared with the last thing drawn, and a key press redrew
+  the same frame as standing still.
 - **Seen, once**: a short scripted fight recorded with Godot's movie maker
   showed both fighters facing each other, the axe kick over a crouching
   guard and the dancer's throw, the boxes over the figures. The manual check

@@ -5,8 +5,8 @@
 ## strip a fighter shows, and it decides that from the fight alone -- the
 ## move and the frame of it, the stun, the crouch -- never from a clock of its
 ## own. So a replay draws the same pictures as the fight it replays, and a
-## move's picture can never disagree with its boxes: the cels listed as a
-## move's `active` are the ones on screen exactly while its hitbox is out.
+## move's picture keeps time with its boxes: the cels listed as a move's
+## `active` are on screen on its active frames and on no others.
 ##
 ## The boxes stay the truth. A sprite is drawn to look like the move; the
 ## frame data decides what it hits, and the view draws the boxes over it.
@@ -21,10 +21,12 @@ extends RefCounted
 const PATH: String = "res://game/fighting/sprites.json"
 ## How many fight frames each cel of a looping animation is held for.
 const FRAMES_PER_CEL: int = 6
-## How many units of the stage each cel of the walk is held for.
-const UNITS_PER_CEL: int = 4
+## How many frames of walking each cel of the walk is held for, at any speed.
+const WALK_FRAMES_PER_CEL: int = 4
 ## How many frames of hitstun each cel of the hit animation is held for.
-const STUN_PER_CEL: int = 4
+const STUN_PER_CEL: int = 3
+## The animations every character needs besides its moves.
+const ANIMATIONS: Array[String] = ["idle", "walk", "crouch", "guard", "guard_crouching", "hit", "down"]
 
 ## Everything the file says.
 var table: Dictionary = {}
@@ -36,8 +38,10 @@ var _strips: Dictionary = {}
 ## fight then draws its blocks, as it did before there were pictures.
 static func read(path: String = PATH) -> FighterSprites:
 	var sprites := FighterSprites.new()
+	if not FileAccess.file_exists(path):
+		return sprites
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-	sprites.table = parsed if parsed is Dictionary else {}
+	sprites.table = parsed if parsed is Dictionary and (parsed as Dictionary).has("characters") else {}
 	return sprites
 
 
@@ -57,22 +61,29 @@ func cels(character: String, animation: String) -> Array[int]:
 	return found
 
 
-## The strip for an animation, or null when it is not on disk.
+## The strip for an animation, or null when it is not on disk. Loaded
+## through `Art`, so a person's own strip at the same path under
+## `Art.generated` is drawn instead (T31).
 func strip(character: String, animation: String) -> Texture2D:
 	var path: String = Art.fighter_strip(character, animation)
 	if not _strips.has(path):
-		_strips[path] = load(path) as Texture2D if ResourceLoader.exists(path) else null
+		_strips[path] = Art.texture(path) if ResourceLoader.exists(Art.resolve(path)) else null
 	return _strips[path]
 
 
-## True when every strip a character needs is on disk: a fighter is drawn
-## from pictures only if all of them are there, never half from blocks.
-func complete(character: String) -> bool:
-	if table.is_empty() or not table["characters"].has(character):
+## True when the table covers everything the character can show -- every
+## animation in `ANIMATIONS` and every move the frame data gives it -- and
+## the strip of each, and of anything else the table lists, is on disk. A fighter is drawn from pictures only then,
+## never half from blocks, and never with a move the table cannot draw.
+func complete(character: String, data: FightData) -> bool:
+	var drawn: Dictionary = table.get("characters", {}).get(character, {})
+	if drawn.is_empty():
 		return false
-	var drawn: Dictionary = table["characters"][character]
-	for animation: String in drawn["animations"].keys() + drawn["moves"].keys():
-		if strip(character, animation) == null:
+	var needed: Array = ANIMATIONS + data.character(character)["moves"].keys() + drawn["animations"].keys() \
+			+ drawn["moves"].keys()
+	for animation: String in needed:
+		var listed: bool = drawn["animations"].has(animation) or drawn["moves"].has(animation)
+		if not listed or strip(character, animation) == null:
 			return false
 	return true
 
@@ -84,10 +95,8 @@ func cell(character: String) -> Vector2i:
 
 
 ## `[animation, index]`: which cel of which strip draws `fighter` now.
-## `walking` is whether it moved since the frame before, `clock` the
-## fight's frame, and `knocked_out` whether it has lost. A walk's cel is read
-## off where the fighter stands, so walking backwards plays it backwards.
-func pose(fighter: FighterState, data: FightData, walking: bool, clock: int, knocked_out: bool) -> Array:
+## `clock` is the fight's frame and `knocked_out` whether it has lost.
+func pose(fighter: FighterState, data: FightData, clock: int, knocked_out: bool) -> Array:
 	if knocked_out:
 		return ["down", 0]
 	if fighter.move != "":
@@ -100,9 +109,18 @@ func pose(fighter: FighterState, data: FightData, walking: bool, clock: int, kno
 		return ["hit", last - mini(last, fighter.stun / STUN_PER_CEL)]
 	if fighter.crouching:
 		return ["crouch", _held("crouch", fighter, clock)]
-	if walking:
-		return ["walk", posmod(fighter.x * fighter.facing / UNITS_PER_CEL, cels(fighter.character, "walk").size())]
+	if walks(fighter):
+		var stride: int = int(data.character(fighter.character)["walk_speed"]) * WALK_FRAMES_PER_CEL
+		return ["walk", posmod(fighter.x * fighter.facing / stride, cels(fighter.character, "walk").size())]
 	return ["idle", _held("idle", fighter, clock)]
+
+
+## True when the fighter's own input walked it this frame: free, standing,
+## holding a direction. Read off the fight, so a fighter only pushed does
+## not walk, and showing the same frame twice shows the same walk. Its cel
+## is read off where it stands, so walking backwards plays it backwards.
+static func walks(fighter: FighterState) -> bool:
+	return fighter.is_free() and not fighter.crouching and FightInput.walk_direction(fighter.held_before) != 0
 
 
 ## The cel of a move for the frame its fighter is on: each phase's cels

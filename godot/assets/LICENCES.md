@@ -32,7 +32,8 @@ required. It is given anyway, because it is owed.
   sheets: 32-pixel frames, 24 across and one row per direction of eight.
 - **Fighting character template Mustermann 2 (A001AAAA001) (karate)**, by
   Puffolotti, on OpenGameArt: <https://opengameart.org/node/97941>. Its page
-  gives the licence as CC0. T35's fighters: two sheets of the same 997 cels
+  gives the licence as CC0, and its notice reads "Sprite created by
+  Puffolotti Accident". T35's fighters: two sheets of the same 997 cels
   in two costumes, `Orangeblack.png` (sha256
   75175c4f2e40b842baf91f58d73eaef460b1a54438f922ab57bfbc45c4a39983) and
   `Blueehite.png` (sha256

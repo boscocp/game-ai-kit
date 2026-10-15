@@ -43,12 +43,12 @@ var _characters: Array[String] = ["lancer", "dancer"]
 
 func _ready() -> void:
 	_legend.set_entries([
-		[FightView.SIDES[0], "you (player one)"],
-		[FightView.SIDES[1], "the dummy (player two)"],
+		[FightView.SIDES[0], "left health bar: you (player one)"],
+		[FightView.SIDES[1], "right health bar: the dummy (player two)"],
 		[FightView.HURTBOX, "outline: hurtbox, where it can be hit"],
 		[FightView.HITBOX, "red bar: hitbox, at the height it hits"],
 		[FightView.THROW, "orange bar: a throw, which no guard stops"],
-		[FightView.STUNNED, "pale: in hitstun or blockstun"],
+		[FightView.STUNNED_SPRITE, "paler: in hitstun or blockstun"],
 	] as Array[Array])
 	restart()
 
