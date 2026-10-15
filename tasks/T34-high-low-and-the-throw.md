@@ -29,8 +29,9 @@ what T17 will learn a player's habits inside.
 1. Input: a down direction, and five buttons -- light and heavy punch, light
    and heavy kick, throw -- in place of light, heavy and special.
 2. Frame data: every move carries a `stance` (standing or crouching) and a
-   `height` (mid, low, overhead, throw). Holding down while pressing picks the
-   crouching move for that button; a button with none does its standing one.
+   `height` (mid, low, overhead, throw). Holding down when the move comes out
+   -- pressed, from the buffer, or as a cancel -- picks the crouching move for
+   that button; a button with none does its standing one.
 3. Crouching: holding down while free crouches, and a crouching fighter does
    not walk.
 4. The resolution order says, and `FightRules` does: a block needs the guard

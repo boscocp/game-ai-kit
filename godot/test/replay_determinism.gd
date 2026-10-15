@@ -29,8 +29,9 @@ extends SceneTree
 const LOG_PATH: String = "res://test/fight_log.json"
 const DIGESTS_PATH: String = "res://test/fight_log_digests.txt"
 ## Events the log must cause, each at least once.
-const EXERCISED: Array[String] = ["hits", "is blocked by", "counter-hits", "trade", "cancels", "(a low, and",
-		"(an overhead, and", "throws p"]
+## " hits p", with its space, so that a counter-hit does not count as a hit.
+const EXERCISED: Array[String] = [" hits p", "is blocked by", "counter-hits", "trade", "cancels",
+		"(a low through a standing guard)", "(an overhead through a crouching guard)", "throws p"]
 ## The frame whose input each planted change alters.
 const PLANTED_FRAME: int = 150
 

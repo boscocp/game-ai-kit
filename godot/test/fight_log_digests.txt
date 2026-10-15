@@ -410,7 +410,7 @@
 409 w-1 | lancer x570 f1 h863 sweep:8 c0 k1 s0 b:409 i0 | dancer x618 f-1 h805 straight:5 c0 k0 s0 b:412 i0 | 
 410 w-1 | lancer x570 f1 h863 sweep:9 c0 k1 s0 b:409 i0 | dancer x618 f-1 h805 straight:6 c0 k0 s0 b:412 i0 | 
 411 w-1 | lancer x570 f1 h863 sweep:10 c0 k1 s0 b:409 i0 | dancer x618 f-1 h805 straight:7 c0 k0 s0 b:412 i0 | 
-412 w-1 | lancer x542 f1 h793 :0 c0 k1 s18hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s26hit b:412 i0 | p1 hits p2 with sweep, p2 hits p1 with straight, trade
+412 w-1 | lancer x542 f1 h793 :0 c0 k0 s18hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s26hit b:412 i0 | p1 hits p2 with sweep, p2 hits p1 with straight, trade
 413 w-1 | lancer x542 f1 h793 :0 c0 k0 s17hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s25hit b:412 i0 | 
 414 w-1 | lancer x542 f1 h793 :0 c0 k0 s16hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s24hit b:412 i0 | 
 415 w-1 | lancer x542 f1 h793 :0 c0 k0 s15hit b:409 i0 | dancer x618 f-1 h735 :0 c0 k0 s23hit b:412 i0 | 
@@ -474,7 +474,7 @@
 473 w-1 | lancer x542 f1 h793 sweep:8 c0 k1 s0 b:473 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:412 i2 | 
 474 w-1 | lancer x542 f1 h793 sweep:9 c0 k1 s0 b:473 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:412 i2 | 
 475 w-1 | lancer x542 f1 h793 sweep:10 c0 k1 s0 b:473 i0 | dancer x618 f-1 h735 :0 c0 k0 s0 b:412 i2 | 
-476 w-1 | lancer x528 f1 h793 sweep:11 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s26hit b:412 i2 | p1 hits p2 with sweep (a low, and p2 guarded standing)
+476 w-1 | lancer x528 f1 h793 sweep:11 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s26hit b:412 i2 | p1 hits p2 with sweep (a low through a standing guard)
 477 w-1 | lancer x528 f1 h793 sweep:12 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s25hit b:412 i2 | 
 478 w-1 | lancer x528 f1 h793 sweep:13 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s24hit b:412 i2 | 
 479 w-1 | lancer x528 f1 h793 sweep:14 c1 k1 s0 b:473 i0 | dancer x618 f-1 h665 :0 c0 k0 s23hit b:412 i2 | 
@@ -527,7 +527,7 @@
 526 w-1 | lancer x528 f1 h793 axe_kick:20 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:412 i6 | 
 527 w-1 | lancer x528 f1 h793 axe_kick:21 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:412 i6 | 
 528 w-1 | lancer x528 f1 h793 axe_kick:22 c0 k0 s0 b:514 i0 | dancer x618 f-1 h665 :0 c0 k1 s0 b:412 i6 | 
-529 w-1 | lancer x514 f1 h793 axe_kick:23 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k1 s24hit b:412 i6 | p1 hits p2 with axe_kick (an overhead, and p2 guarded crouching)
+529 w-1 | lancer x514 f1 h793 axe_kick:23 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k0 s24hit b:412 i6 | p1 hits p2 with axe_kick (an overhead through a crouching guard)
 530 w-1 | lancer x514 f1 h793 axe_kick:24 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k1 s23hit b:412 i6 | 
 531 w-1 | lancer x514 f1 h793 axe_kick:25 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k1 s22hit b:412 i6 | 
 532 w-1 | lancer x514 f1 h793 axe_kick:26 c1 k0 s0 b:514 i0 | dancer x618 f-1 h575 :0 c0 k1 s21hit b:412 i6 | 

@@ -4,7 +4,7 @@ Size: M · Prereqs: T34 · Files: `spec/frames/`, `godot/game/fighting/`, `godot
 
 ## Goal
 
-A second axis, asked for by the owner after playing T34. T16 kept the stage a
+A second axis, asked for by the owner while T34 was being built. T16 kept the stage a
 line on purpose, and a jump is what that left out: a fighter in the air, an
 arc whose height is a whole number on every frame, attacks done in the air,
 and the anti-air that answers them.

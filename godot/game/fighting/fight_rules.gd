@@ -164,8 +164,11 @@ static func _face_each_other(state: FightState) -> void:
 
 
 # Step 4. Every fighter whose hitbox overlaps the other's hurtbox, found for
-# both before anything is applied. A throw does not find a fighter in stun:
-# otherwise a blocked strike would lead into a throw nothing could stop.
+# both before anything is applied. A throw does not find a fighter in
+# hitstun or blockstun: a hit could otherwise be followed by a throw the
+# victim had no frame to answer. (Within a blockstring it is frame
+# advantage, in the data, that keeps a throw answerable: every move here is
+# minus on block.)
 static func _connections(state: FightState, data: FightData) -> Array[int]:
 	var attackers: Array[int] = []
 	for index: int in range(2):
@@ -192,7 +195,7 @@ static func _settle_throws(state: FightState, attackers: Array[int], data: Fight
 	if throwers.size() == 1:
 		var striker: int = 1 - throwers[0]
 		var strike: String = state.fighters[striker].move
-		state.events.append("p%d's throw is beaten by p%d's %s (a strike beats a throw)" % [2 - striker, striker + 1, strike])
+		state.events.append("p%d's throw is beaten by p%d's %s (strike beats throw)" % [2 - striker, striker + 1, strike])
 		return [striker] as Array[int]
 	return attackers
 
@@ -245,7 +248,7 @@ static func _judge(state: FightState, attacker: int, defender_held: int, data: F
 	if can_block and FightInput.holds_away(defender_held, defender.x, hitter.x):
 		if _guard_stops(height, crouched):
 			return ["block", " (holding away, %s)" % guard]
-		return ["hit", " (%s, and p%d guarded %s)" % [_a_height(height), 2 - attacker, guard]]
+		return ["hit", " (%s through a %s guard)" % [_a_height(height), guard]]
 	if FightBoxes.phase(defender, data) == "startup":
 		return ["counter-hit", " (caught starting up)"]
 	return ["hit", ""]
@@ -257,7 +260,7 @@ static func _guard_stops(height: String, crouched: bool) -> bool:
 
 
 static func _a_height(height: String) -> String:
-	return {"low": "a low", "overhead": "an overhead", "mid": "a mid"}[height]
+	return {"low": "a low", "overhead": "an overhead"}[height]
 
 
 # Apply one connection. `move` is the attacker's move as step 4 found it: in a
@@ -281,6 +284,7 @@ static func _apply(state: FightState, attacker: int, move: String, verdict: Arra
 		defender.stun = int(frames["hitstun"]) + (int(bonus["extra_hitstun"]) if counter else 0)
 		defender.stun_kind = "hit"
 		defender.move = ""
+		defender.crouching = false
 		defender.move_frame = 0
 		defender.connected = false
 	state.events.append("p%d %s p%d with %s%s" % [attacker + 1, _verb(outcome), 2 - attacker, move, verdict[1]])

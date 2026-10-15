@@ -126,6 +126,18 @@ func _character_problem(name: String, numbers: Dictionary) -> String:
 		var problem: String = _move_problem(name, move_name, numbers["moves"][move_name], numbers["moves"])
 		if problem != "":
 			return problem
+	return _dead_button(name, numbers["moves"])
+
+
+# A button with a crouching move and no standing one would do nothing when
+# pressed standing: "no button is dead while crouched" needs the other way
+# round to hold as well.
+func _dead_button(name: String, moves: Dictionary) -> String:
+	var standing: Array = moves.values().filter(func(frames: Dictionary) -> bool: return frames["stance"] == "standing")
+	var buttons: Array = standing.map(func(frames: Dictionary) -> String: return frames["button"])
+	for move_name: String in moves:
+		if not buttons.has(moves[move_name]["button"]):
+			return "%s's %s has no standing move on its button, so standing it does nothing" % [name, move_name]
 	return ""
 
 
@@ -140,7 +152,8 @@ func _move_problem(name: String, move_name: String, frames: Dictionary, moves: D
 		return "%s has no button among %s" % [label, FightInput.BUTTONS.keys()]
 	if not STANCES.has(frames.get("stance")) or not HEIGHTS.has(frames.get("height")):
 		return "%s needs a stance among %s and a height among %s" % [label, STANCES, HEIGHTS]
-	if (frames["height"] == "throw") != (frames["button"] == "throw") or (frames["height"] == "throw" and frames["stance"] != "standing"):
+	var is_throw: bool = frames["height"] == "throw"
+	if is_throw != (frames["button"] == "throw") or (is_throw and frames["stance"] != "standing"):
 		return "%s: a throw is done standing, on the throw button, and only a throw is" % label
 	for other: String in moves:
 		if other != move_name and moves[other].get("button") == frames["button"] and moves[other].get("stance") == frames["stance"]:
