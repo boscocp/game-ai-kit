@@ -5,7 +5,7 @@ half_life: concept
 verified_on: 2026-10-15
 tier: 1
 source: https://www.gamedeveloper.com/programming/the-killer-groove-the-shadow-ai-of-killer-instinct
-invalidated_if: the situation's features, the split, or the four methods compared change; or the published player becomes a person and the numbers here are not replaced
+invalidated_if: the situation's features, the split, the four methods compared, or the owner's recordings change and the numbers here are not replaced
 teaches: behaviour-cloning
 -->
 
@@ -14,13 +14,11 @@ teaches: behaviour-cloning
 > learned model buy over T17's frequency table, and over a ghost that only
 > looks things up?
 
-**The numbers below are from a scripted stand-in, not a person.** The
-pipeline has to run before anybody sits down to record, so three scripted
-players with strong habits stand in (`godot/test/stand_in_player.gd`). A
-stand-in's choices depend on the situation and a die, nothing else, so it is
-easier to clone than a person by construction. These numbers say the
-pipeline works. What cloning a person buys is the owner's recordings' to
-say, and this page is replaced when they exist.
+**The published player is the owner**, from four fights recorded on
+2026-10-15 -- about four minutes of play, 237 decisions. That is very little,
+and the numbers below carry it. Before the owner played, the pipeline was
+built on three scripted stand-ins (`godot/test/stand_in_player.gd`); their
+numbers are at the end, because the contrast is the lesson.
 
 ## The pipeline, in four files
 
@@ -67,62 +65,99 @@ each is seated in the game.
 
 ## The comparison
 
-`python3 python/gameaikit/cloning/compare.py --report`, on the rushdown
-stand-in: 6 recordings fitted, 2 held out (94 decisions).
+`python3 python/gameaikit/cloning/compare.py --report`, on the owner: 3
+recordings fitted (151 decisions), 1 held out (86 decisions, the one fight
+against the hard opponent).
 
 | method | held-out accuracy | numbers | built in | beats medium |
 |---|---|---|---|---|
-| always the commonest | 44.7% | 1 | -- | -- |
-| n-gram (T17) | 42.6% | ≤121 | nothing beforehand | 40/100 (as the learner) |
-| ghost, exact | 55.3% | 207 | ~0 s | 87/100 |
-| ghost, nearest | 53.2% | 207 | ~0 s | 92/100 |
-| model, last action only | 50.0% | 110 | 0.35 s | -- |
-| model, the situation | 55.3% | 341 | 0.65 s | 88/100 |
-| the stand-in itself | -- | -- | -- | 72/100 |
+| always the commonest (step in) | 43.0% | 1 | -- | -- |
+| **n-gram (T17)** | **48.8%** | ≤121 | nothing beforehand | 40/100 (as the learner) |
+| ghost, exact | 44.2% | 133 | ~0 s | 66/100 |
+| ghost, nearest | 44.2% | 133 | ~0 s | 75/100 |
+| model, last action only | 47.7% | 143 | 0.17 s | -- |
+| model, the situation | 36.0% | 363 | 0.30 s | 47/100 |
 
-The other two stand-ins, held-out accuracy only:
+What this says:
 
-| | commonest | n-gram | ghost exact | ghost nearest | model, last | model, situation |
-|---|---|---|---|---|---|---|
-| turtle | 37.2% | 46.8% | 44.1% | 45.7% | 54.5% | 53.2% |
-| jumper | 38.6% | 57.4% | 53.9% | 58.8% | 63.8% | 63.5% |
+- **The learned model bought nothing -- it cost.** Over six features it
+  guesses the held-out fight *worse than always saying "step in"*. 151
+  decisions spread over 103 situations met is a few sightings each, and
+  363 numbers fitted to that learn the three training fights, not the
+  player. The penalty keeps the weights small; it cannot invent data.
+- **The table that learns during the fight was the best guesser.** T17's
+  n-gram starts the held-out fight knowing nothing and still leads: what
+  this player did next depended most on what they had just done, and that
+  is learnt within one fight.
+- **The ghosts are no better than the floor at guessing, yet win most.**
+  The nearest ghost beats the fixed opponent 75 times in 100 and the clone
+  47: a ghost replays answers the player actually gave, whole, where the
+  model averages them into a probability that is never quite any of them.
+  Guessing well and playing well are different measurements.
+- **The held-out fight was against the hard opponent**, the training ones
+  against medium. A player fights differently under pressure; a split by
+  recording shows that, and a split by row would have hidden it.
 
-What this says, about stand-ins:
+So the honest answer, for this player and this much data: **the learned
+model bought nothing here.** The frequency table T17 already ships guesses
+better, and a ghost plays better. A model earns its numbers with far more
+play than four fights, or with situations too many to have met -- and this
+kit would reach for one then, not before.
 
-- **The model bought little over the ghost.** On the rushdown they tie; on
-  the turtle and the jumper the model leads by a few points. 341 numbers and
-  a gradient descent against a lookup table counted in a millisecond.
-- **The situation bought little over the last action.** The model that sees
-  only what the n-gram sees is within two points of the one that sees six
-  features, on two stand-ins of three. Most of what is predictable here is
-  in the sequence.
-- **Fitting beforehand beats learning during, but not by much.** The
-  n-gram starts every fight knowing nothing and is still within a few points
-  of the fitted models on two stand-ins of three.
-- **A clone beats its own player.** The rushdown wins 72 of 100 against the
-  fixed medium opponent; its clones win 87 to 92. The stand-in fumbles one
-  press in ten and its clone fumbles none: imitation copies the choices, and
-  the execution is the opponent's own. A Shadow that was better than you is
-  a known complaint, and here is one way it happens.
+### The stand-ins: why a pipeline check is not a result
 
-So the honest answer, so far: **not much, here.** Six words and eleven
-actions are a small space, and a ghost covers most of what a player meets
-in a few fights. A learned model earns its numbers when situations are too
-many to have met -- many features, or numbers rather than words -- and that
-is the point at which this kit would reach for one.
+On the rushdown stand-in (6 recordings fitted, 2 held out, 94 decisions):
+
+| method | held-out | beats medium |
+|---|---|---|
+| always the commonest | 44.7% | -- |
+| n-gram (T17) | 42.6% | 40/100 |
+| ghost, exact | 55.3% | 87/100 |
+| ghost, nearest | 53.2% | 92/100 |
+| model, last action only | 50.0% | -- |
+| model, the situation | 55.3% | 88/100 |
+| the stand-in itself | -- | 72/100 |
+
+Turtle and jumper, held out: the model 53-64%, the n-gram 47-57%, the
+commonest 37-39%. On stand-ins the model ties or beats the rest, because a
+stand-in *is* a table of situations and a die -- the same shape as the
+model. A person is not, and the ranking turned over. The clones also beat
+the rushdown itself, 87-92 against 72: the stand-in fumbles one press in
+ten and its clones fumble none -- imitation copies the choices, and the
+execution is the opponent's own.
 
 ## Inference costs nothing a frame would notice
 
 Measured headless on an AMD Ryzen 5 9600X on 2026-10-15
-(`make test-inference-budget`): the softmax **0.007 ms** a decision, the
-exact ghost **0.002 ms**, the nearest ghost **0.063 ms** -- it compares with
-every one of 140 cases. The budget is 1 ms, a sixteenth of a frame. This is
-the only machine the owner had to hand; the slowest machine available was
-this one.
+(`make test-inference-budget`), on the owner's published player: the
+softmax **0.007 ms** a decision, the exact ghost **0.002 ms**, the nearest
+ghost **0.047 ms** -- it compares with every one of the 103 situations met.
+The budget is 1 ms, a sixteenth of a frame. This is the only machine the
+owner had to hand; the slowest machine available was this one.
+
+## Is the training deterministic?
+
+Yes, end to end, and checked. Each step is a script with no clock and no
+unseeded chance:
+
+1. `make clone-rows` -- Godot replays the logs; the rules are deterministic
+   (T16), so the same recordings cut the same rows. `make test-clone-rows`
+   cuts them again and fails if the committed file differs.
+2. `python3 -m gameaikit.cloning.publish` -- the split is by recording name,
+   the fit is full-batch gradient descent from zero weights for a fixed 300
+   passes, in a fixed order. `--check` fits again and compares; N10 in
+   `check_no_training.py` runs that inside `make check`.
+3. `make test-clone-fights` -- every fight is seeded, so the win rates
+   repeat; the file names the sha256 of the weights it fought.
+
+`make train-clone` runs all three. The only number that varies between runs
+is "built in", the seconds the fit took, which is printed and never stored.
 
 ## What is not proven
 
-- **Anything about a person.** See the top of the page.
+- **Anything about people in general.** One person, four fights. Record
+  more (`make record-fights`, then `make train-clone CLONE_PLAYER=person`)
+  and the table here is replaced.
 - **Whether a person can tell them apart.** The manual check: play the
   clone and the ghosts, and the learner. If you cannot tell them apart, that
   is a result and it goes in the README beside the technique.

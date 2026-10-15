@@ -398,7 +398,7 @@ test-opponent-levels: import ## The fixed opponent's levels are ordered: each be
 # -> the win rates, fought by Godot (data/cloning/win_rates.json). Each step
 # is a target; `train-clone` runs the last three in order.
 
-CLONE_PLAYER ?= stand-in: rushdown
+CLONE_PLAYER ?= person
 
 .PHONY: record-fights
 record-fights: import ## Play the training mode and keep every fight you play in data/fights/, for T18 to learn from
@@ -415,7 +415,7 @@ clone-rows: import ## Replay every recording and cut the rows behaviour cloning 
 
 .PHONY: train-clone
 train-clone: clone-rows ## Cut the rows, fit the clone of CLONE_PLAYER, publish it and fight it for the win rates
-	@# CLONE_PLAYER="person" once you have recorded yourself with `make record-fights`.
+	@# CLONE_PLAYER="stand-in: rushdown" (or turtle, jumper) fits a scripted stand-in instead.
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.cloning.publish --player "$(CLONE_PLAYER)" \
 		--write $(CURDIR)/godot/addons/ai_learning
 	@$(MAKE) --no-print-directory test-clone-fights
