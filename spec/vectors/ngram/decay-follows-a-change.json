@@ -1,5 +1,5 @@
 {
- "description": "Order 2, decay 1/2: the player answered high with low three times, then with throw twice. With decay the table already prefers throw after two; without it, it would still say low.",
+ "description": "Order 2, decay 1/2: the player answered high with low three times, then with throw twice. With decay the table prefers throw after the first throw; without it, it would still say low, three to one.",
  "order": 2,
  "actions": [
   "high",

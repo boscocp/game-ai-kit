@@ -28,13 +28,13 @@ stops. This gate is four claims about that split:
   * N7 the published checkers weights (T32) are what `gameaikit.checkers`
     fits from its seed -- self-play, both fits and the match -- and a fresh
     run still produces them;
+  * N8 no GDScript writes a file where the checkers weights live: the game
+    reads them and only multiplies.
   * N9 nothing in `ai_opponent` writes a file, and no GDScript writes an
     n-gram table anywhere. The one exception to this invariant (ADR 0016):
     the opponent model counts during a fight, and is allowed to only because
     its table starts empty, replays from the input log, and is never written
     down -- a table that was saved would be a model fitted at game time;
-  * N8 no GDScript writes a file where the checkers weights live: the game
-    reads them and only multiplies.
 
 N4, N6 and N7 are the ones with teeth. The others are about the shape of the code and
 could all pass over a weights file somebody typed by hand.
@@ -107,6 +107,10 @@ CHECKERS_TRAINER = "gameaikit.checkers.report"
 # while a game runs, and so the one that must never write them down.
 OPPONENT_ADDON = GODOT / "addons" / "ai_opponent"
 NGRAM_NAMES_RE = re.compile(r"ngram|n_gram|NGram", re.I)
+# A script that holds a table -- names the predictor or the opponent built on
+# it -- writes nothing at all: the table is reachable from anywhere in it, by
+# any name, and the line that saves it need not say "ngram".
+TABLE_HOLDERS_RE = re.compile(r"\b(?:NGramPredictor|FightModelOpponent)\b")
 CHECKERS_NAMES_RE = re.compile(r"checkers_weights|CheckersWeights|game/checkers/")
 
 # Writing a bead count. This rule is a net for the common spellings; the
@@ -182,7 +186,8 @@ WORD_RE = {word: re.compile(rf"\b{re.escape(word)}\b", re.I) for word in FITTING
 # the store_* calls are what a writer then does, and are listed separately so
 # a handle obtained some other way is still caught.
 WRITING_RE = re.compile(
-    r"FileAccess\.(?:WRITE|WRITE_READ)\b"
+    r"FileAccess\.(?:ModeFlags\.)?(?:WRITE|WRITE_READ)\b"
+    r"|ConfigFile\b.*\.save\w*\s*\(|\b\w*config\w*\.save\w*\s*\("
     r"|FileAccess\.open_encrypted\w*\s*\("
     r"|\.store_(?:string|var|line|buffer|8|16|32|64|float|double|real|csv_line)\s*\("
     r"|ResourceSaver\.save\s*\("
@@ -303,6 +308,7 @@ def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
         raw = path.read_text(encoding="utf-8").splitlines()
         code = code_only("\n".join(raw)).splitlines()
         inside_addon = LEARNING_ADDON.name in path.parts
+        holds_a_table = OPPONENT_ADDON.name in path.parts or bool(TABLE_HOLDERS_RE.search("\n".join(code)))
         # Both spellings of the line. The write is read off the stripped one,
         # because `# we never FileAccess.WRITE here` is a sentence; the path
         # is read off the raw one, because a path *is* a string literal and
@@ -315,7 +321,7 @@ def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
             if inside_addon:
                 findings.append(
                     f"N2 {label} writes a file; the inference addon only reads")
-            elif OPPONENT_ADDON.name in path.parts or NGRAM_NAMES_RE.search(line):
+            elif holds_a_table or NGRAM_NAMES_RE.search(line):
                 findings.append(f"N9 {label} writes an opponent model down; it counts during "
                                 "one fight and is never saved (ADR 0016)")
             elif CHECKERS_NAMES_RE.search(line) or CHECKERS_GAME.name in path.parts:
@@ -928,6 +934,14 @@ def self_test() -> int:
         expect("an n-gram table saved from the game", quiet(build(root, "ngramsaved", dict(
             sound, **{str(GODOT / "game" / "ai.gd"):
                       'var out: FileAccess = FileAccess.open("user://ngram_table.json", FileAccess.WRITE)\n'}))),
+            1, "N9")
+        expect("the table saved by a script that holds one, under another name", quiet(build(root, "habits", dict(
+            sound, **{str(GODOT / "game" / "fighting" / "learner.gd"):
+                      'var watcher := FightModelOpponent.new("medium", data)\n'
+                      'var out: FileAccess = FileAccess.open("user://habits.txt", FileAccess.WRITE)\n'}))),
+            1, "N9")
+        expect("the table saved through a ConfigFile", quiet(build(root, "habitsconfig", dict(
+            sound, **{str(OPPONENT_ADDON / "keep.gd"): '\tvar config := ConfigFile.new()\n\tconfig.save("user://t.cfg")\n'}))),
             1, "N9")
         expect("counting in the opponent addon", quiet(build(root, "opponentcounts", dict(
             sound, **{str(OPPONENT_ADDON / "ngram_predictor.gd"):

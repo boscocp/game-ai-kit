@@ -49,7 +49,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T37 | A fixed opponent, at three honest levels | done | five situations, weighted options; reaction 30/22/15, tactics, execution; `FightDelay` hands it a copy of the past and refuses under 15; each level beats the one below 93-99 in 100 mirror fights; not a `DecisionPolicy` (board-typed); manual check still a person's |
 | T38 | The jump | done | take-off, an arc in whole frames, landing; boxes are two intervals and the pass-over rule is geometry; four air moves, all overheads, one a jump; an uppercut anti-air; jumps cross over, guarded back from the strike; manual check still a person's |
 | T39 | High punches pass over a crouch | done | the owner's finding from playing T34: standing punches and the dancer's roundhouse are high and miss a crouching fighter; the light kicks recut as side kicks to the waist; manual check still a person's |
-| T17 | The opponent model | todo | n-grams you can print; after T37, so the learner has a fixed opponent to be measured against |
+| T17 | The opponent model | done | `ai_opponent`: an n-gram with additive smoothing and decay, held to Python by 4 vectors; the learner is T37's opponent leaning towards answers; 20/20 within 40 actions and after a switch; ADR 0016, the owner's exception to invariant 6, held by N9; manual check still a person's |
 | T18 | Behaviour cloning, and what a learned model buys | todo | the comparison is the task: n-gram, a ghost, and the trained model |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
 | T26 | Combat on the board | todo | reach and the counter table start to matter; the dataset is rebuilt from the game (ADR 0008) |
@@ -86,6 +86,31 @@ because it is driven better, and a command proves every car runs one physics.
 
 ---
 
+## Resuming after 2026-10-15 (wave 41)
+
+**What landed.** T17: the opponent model. `ai_opponent`, a new addon,
+holds `NGramPredictor` -- what the player did after the last `order - 1`
+actions, smoothed and decaying -- and `gameaikit.ngram` is its Python copy,
+four vectors from `derive.py` holding both. The learner is T37's opponent
+with the table behind it, watching the late fight `FightDelay` hands it and
+leaning its level's options towards the answer to what it expects. ADR 0016
+is the owner's exception to invariant 6: the table counts during one fight,
+starts empty, and is never written down (N9). The training mode has three
+learner modes, the table on the panel.
+
+**The review's worst findings.** The lean was measured against certainty,
+which a decaying table never reaches, so it never passed 2 of its 8; now
+against the predictor's ceiling. "Starts empty every fight" had no test;
+now `new_fight`, tested. Easy and medium often have no answer to lean
+towards, and say so. All fixed; see
+[docs/reviews/41-the-opponent-model.md](../docs/reviews/41-the-opponent-model.md).
+
+**Not proven.** T17's manual check -- feel it punish a habit, then adapt --
+with T34's, T35's, T37's, T38's and T39's. Whether the rescaled lean makes
+the learner beat the fixed opponent more often was not measured again.
+
+**Next:** T18, behaviour cloning, and what a learned model buys -- the n-gram, a ghost and a trained model, compared.
+
 ## Resuming after 2026-10-15 (wave 40)
 
 **What landed.** T38: the jump. Up takes off over `takeoff` frames on the
@@ -106,9 +131,7 @@ Two fighters on one spot blocked whichever way they held. All fixed; see
 
 **Not proven.** T38's manual check, with T34's, T35's, T37's and T39's.
 
-**Next:** T17, the opponent model -- with ADR 0016, the owner's exception to
-invariant 6: an n-gram may count during a fight, starts empty, is never
-written down, and replays from the input log. Its draft is ready.
+**Next:** T17, the opponent model, with ADR 0016.
 
 ## Resuming after 2026-10-15 (wave 39)
 

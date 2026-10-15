@@ -23,8 +23,8 @@ on the GDScript side, `make test-python` on the Python side.
 
 ## Where the numbers came from
 
-From neither implementation: an exact-fraction script importing nothing
-from this repository wrote them, and `order-two-by-hand` can be checked by
+From neither implementation: `derive.py`, an exact-fraction script
+importing nothing from this repository, wrote them, and `order-two-by-hand` can be checked by
 hand. Order 2, actions high, low, throw, no decay, prior 1, and the
 sequence high, low, high, low, high, throw:
 
@@ -38,8 +38,11 @@ sequence high, low, high, low, high, throw:
 
 `decay-follows-a-change` is the case T17's decay exists for: high answered
 by low three times, then by throw twice. At decay 1/2 the row under "high"
-is low 0.875, throw 1 after the second throw, and throw is the likelier --
-where an undecayed table would still say low, three to two.
+is low 0.875, throw 1 after the first throw, and throw is already the
+likelier -- where an undecayed table would still say low, three to one.
+After the second it is low 0.4375, throw 1.5.
+
+`derive.py` wrote them; run it again to check.
 
 ## What is refused
 

@@ -90,8 +90,11 @@ static func _model_lines(learner: FightModelOpponent) -> PackedStringArray:
 	var context: String = learner.model.context()
 	var lines: PackedStringArray = ["", "its model (order %d, decay %.2f), right %d of its last %d:" % [
 			learner.model.order, learner.model.decay, score[0], score[1]]]
-	lines.append("  after %s it expects %s, %d%%" % [context if context != "" else "nothing", learner.expected,
-			roundi(learner.confidence * 100.0)])
+	var after: String = learner.expected_after if learner.expected_after != "" else "nothing"
+	var answer: String = "" if learner.answered else " -- none of its options answers that"
+	lines.append("  at its last decision, after %s it expected %s, %d%%%s" % [after, learner.expected,
+			roundi(learner.confidence * 100.0), answer])
+	lines.append("  now the context is %s" % (context if context != "" else "nothing yet"))
 	var rows: PackedStringArray = learner.model.rows()
 	for row: String in rows.slice(0, ROWS_SHOWN):
 		lines.append("  " + row)

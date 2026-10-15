@@ -26,8 +26,23 @@ func test_before_any_context_every_action_is_alike() -> void:
 		assert_float(chance).is_equal_approx(1.0 / 3.0, 1e-12)
 
 
+# Heaviest first whatever order they were seen in; equal weights in the
+# order of `actions`, so the panel does not shuffle a tie.
 func test_the_table_prints_each_context_heaviest_first() -> void:
 	var predictor := NGramPredictor.new(2, ACTIONS)
-	for action: String in ["high", "low", "high", "low", "high", "throw"]:
+	for action: String in ["high", "throw", "high", "throw", "high", "low", "high"]:
 		predictor.observe(action)
-	assert_array(Array(predictor.rows())).contains(["high -> low 2.0, throw 1.0", "low -> high 2.0"])
+	assert_array(Array(predictor.rows())).contains(["high -> throw 2.0, low 1.0", "throw -> high 2.0"])
+	var tied := NGramPredictor.new(2, ACTIONS)
+	for action: String in ["high", "throw", "high", "low"]:
+		tied.observe(action)
+	assert_array(Array(tied.rows())).contains(["high -> low 1.0, throw 1.0"])
+
+
+func test_the_ceiling_is_the_surest_a_decaying_row_can_be() -> void:
+	var predictor := NGramPredictor.new(1, ACTIONS, 0.5, 1.0)
+	assert_float(predictor.ceiling()).is_equal_approx(3.0 / 5.0, 1e-12)
+	for count: int in range(60):
+		predictor.observe("high")
+	assert_float(predictor.probabilities()["high"]).is_equal_approx(predictor.ceiling(), 1e-9)
+	assert_float(NGramPredictor.new(1, ACTIONS).ceiling()).is_equal(1.0)

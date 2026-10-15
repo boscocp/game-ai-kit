@@ -24,6 +24,18 @@ func test_a_misspelt_or_short_or_lopsided_case_is_refused() -> void:
 	assert_str(NGramVector.why_not_a_vector(vector)).starts_with("V4")
 	case["probabilities"] = {"high": 0.5, "low": 0.5, "throw": 0.5}
 	assert_str(NGramVector.why_not_a_vector(vector)).starts_with("V5")
+	case["probabilities"] = _vector("order-two-by-hand.json")["cases"][0]["probabilities"]
+	vector["cases"] = [case, case.duplicate()]
+	assert_str(NGramVector.why_not_a_vector(vector)).starts_with("V7")
+	vector["cases"] = [case]
+	case["seen"] = 4.5
+	assert_str(NGramVector.why_not_a_vector(vector)).starts_with("V6")
+	case["seen"] = 0
+	vector["sequence"] = ["high", "cartwheel"]
+	assert_str(NGramVector.why_not_a_vector(vector)).starts_with("V8")
+	vector["sequence"] = ["high"]
+	vector["decay"] = 0.0
+	assert_str(NGramVector.why_not_a_vector(vector)).starts_with("V9")
 	vector.erase("decay")
 	assert_str(NGramVector.why_not_a_vector(vector)).starts_with("V1")
 

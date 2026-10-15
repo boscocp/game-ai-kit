@@ -117,8 +117,9 @@ func restart() -> void:
 	_refresh()
 
 
-# A fresh opponent for an "opponent" mode, none for the others, its chances
-# seeded by how many fights have begun.
+# A fresh opponent for an "opponent" or "learner" mode -- a learner with an
+# empty table -- none for the others, its chances seeded by how many fights
+# have begun.
 func _seat_opponent() -> void:
 	opponent = null
 	seat = null
@@ -172,9 +173,9 @@ func opponent_overlay() -> Dictionary:
 # What the learner expects, from which context, and its table.
 func _model_overlay(learner: FightModelOpponent) -> Dictionary:
 	var table: PackedStringArray = learner.model.rows()
-	var context: String = learner.model.context()
-	return {"expects": learner.expected, "confidence": learner.confidence,
-			"context": context if context != "" else "nothing seen yet",
+	var context: String = learner.expected_after
+	return {"expects": learner.expected, "confidence": learner.confidence, "answered": learner.answered,
+			"expected_after": context if context != "" else "nothing seen yet",
 			"table": table if not table.is_empty() else PackedStringArray(["nothing counted yet"])}
 
 

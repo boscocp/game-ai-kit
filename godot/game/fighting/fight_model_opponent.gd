@@ -37,19 +37,27 @@ const ANSWERS: Dictionary = {
 	"crouch": ["overhead", "throw"], "guard crouching": ["overhead", "throw"], "guard standing": ["low", "throw"],
 	"step in": ["mid", "throw"], "step out": ["step in"],
 }
-## How much weight an answer gains when the model is certain; none when it
-## knows no more than chance, and in between in proportion. The options'
-## own weights are 1 to 4, so a sure prediction makes the answer the likely
-## draw without making it the only one.
+## How much weight an answer gains when the model is as sure as it can be;
+## none when it knows no more than chance, and in between in proportion.
+## "As sure as it can be" is the predictor's `ceiling`, not 1: at decay 0.8
+## a context remembers at most five sightings, and the surest it gets about
+## one of eleven actions is 6 in 16. The options' own weights are 1 to 4, so
+## a sure prediction makes an answer the likely draw without making it the
+## only one -- when the level has an answer at all: easy knows two options a
+## situation, and against many actions none of them is one.
 const LEAN: int = 8
 ## How many of its last guesses the panel shows the score of.
 const SCORED: int = 20
 
 ## The table, read by the panel.
 var model: NGramPredictor
-## What it expects you to do next, and how sure it is, as of its last look.
+## What it expected you to do next at its last decision, how sure it was,
+## the context it was expecting it after, and whether its level had an answer
+## to lean towards. The table moves on every frame it watches; these do not.
 var expected: String = "nothing yet"
 var confidence: float = 0.0
+var expected_after: String = ""
+var answered: bool = false
 ## For each action it has seen: whether it had guessed it. Newest last.
 var guesses: Array[bool] = []
 
@@ -61,6 +69,20 @@ var _last_action: String = ""
 func _init(level_name: String, data: FightData, chance_seed: int = 0, order: int = 2, decay: float = 0.8) -> void:
 	super(level_name, data, chance_seed)
 	model = NGramPredictor.new(order, ACTIONS, decay, 1.0)
+	if model.problem() != "":
+		push_error("FightModelOpponent: " + model.problem())
+
+
+## A new fight: an empty table, as ADR 0016 promises, and no guesses.
+func new_fight() -> void:
+	super()
+	model = NGramPredictor.new(model.order, ACTIONS, model.decay, model.prior)
+	guesses.clear()
+	_last_action = ""
+	expected = "nothing yet"
+	confidence = 0.0
+	expected_after = ""
+	answered = false
 
 
 ## As the fixed opponent's, after watching the frame it was handed: every
@@ -104,7 +126,8 @@ static func action_of(state: FightState, index: int, data: FightData) -> String:
 # As the fixed opponent's, and the choice says what it was expecting.
 func _decide(seen: FightState, me: int) -> void:
 	super(seen, me)
-	choice += " (expecting %s, %d%%)" % [expected, roundi(confidence * 100.0)]
+	var leaning: String = "" if answered else ", no answer among its options"
+	choice += " (expecting %s, %d%%%s)" % [expected, roundi(confidence * 100.0), leaning]
 
 
 ## How many of its last `SCORED` guesses were right, and of how many.
@@ -114,12 +137,20 @@ func score() -> Array[int]:
 
 
 # The level's options, the answers to the expected action weighted up by how
-# much surer than chance the model is: 0 at chance, `LEAN` when certain.
+# much surer than chance the model is: 0 at chance, `LEAN` at its ceiling.
 func _weighted_options(name: String, character: String) -> Array:
 	expected = model.likeliest()
+	expected_after = model.context()
 	confidence = model.probabilities()[expected]
-	var chance: float = 1.0 / ACTIONS.size()
-	var lean: int = roundi(LEAN * maxf(0.0, confidence - chance) / (1.0 - chance))
+	var lean: int = lean_for(confidence)
 	var answers: Array = ANSWERS[expected]
-	return super(name, character).map(func(option: Array) -> Array:
-			return [option[0], int(option[1]) + (lean if option[0] in answers else 0)])
+	var known: Array = super(name, character)
+	answered = known.any(func(option: Array) -> bool: return option[0] in answers)
+	return known.map(func(option: Array) -> Array: return [option[0], int(option[1]) + (lean if option[0] in answers else 0)])
+
+
+## How much an answer gains at `sureness`: in proportion to where it lies
+## between chance (nothing) and the model's ceiling (`LEAN`).
+func lean_for(sureness: float) -> int:
+	var chance: float = 1.0 / ACTIONS.size()
+	return roundi(LEAN * clampf((sureness - chance) / (model.ceiling() - chance), 0.0, 1.0))

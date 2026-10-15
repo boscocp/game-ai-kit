@@ -24,10 +24,19 @@ static func why_not_a_vector(vector: Dictionary) -> String:
 		return "V1 its keys are %s, not %s" % [_sorted_keys(vector), VECTOR_KEYS]
 	if (vector["cases"] as Array).is_empty():
 		return "V2 it claims nothing"
+	if predictor_of(vector).problem() != "":
+		return "V9 its settings cannot work: " + predictor_of(vector).problem()
+	for action: Variant in vector["sequence"]:
+		if not action in vector["actions"]:
+			return "V8 its sequence holds %s, which is not one of its actions" % action
+	var seen: Array = []
 	for case: Dictionary in vector["cases"]:
 		var wrong: String = _why_a_case_is_wrong(case, vector)
+		if wrong == "" and case["seen"] in seen:
+			wrong = "V7 two cases claim the same moment, after %s actions" % case["seen"]
 		if wrong != "":
 			return wrong
+		seen.append(case["seen"])
 	return ""
 
 
@@ -45,7 +54,10 @@ static func _why_a_case_is_wrong(case: Dictionary, vector: Dictionary) -> String
 		total += chance
 	if absf(total - 1.0) > TOLERANCE:
 		return "V5 a case's probabilities do not sum to 1"
-	if int(case["seen"]) < 0 or int(case["seen"]) > (vector["sequence"] as Array).size():
+	var after: Variant = case["seen"]
+	if not (after is float or after is int) or float(after) != floorf(float(after)):
+		return "V6 a case's `seen` is not a whole number of actions"
+	if int(after) < 0 or int(after) > (vector["sequence"] as Array).size():
 		return "V6 a case is after more actions than the sequence has"
 	return ""
 

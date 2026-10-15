@@ -2,7 +2,7 @@
 
 Read `godot/addons/ai_opponent/ngram_predictor.gd` for the why: order, the
 additive smoothing, the decay. This file does the same arithmetic in the
-same order, so the two agree to the last place of a double.
+same order, and `spec/vectors/ngram/` holds both to the same numbers.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ class NGramPredictor:
             return "a predictor needs at least one action to predict"
         if not 0.0 < self.decay <= 1.0:
             return f"decay must be above 0 and at most 1, and is {self.decay}"
-        if self.prior < 0.0 or (self.prior == 0.0 and len(self.actions) > 1):
+        if self.prior <= 0.0:
             return "prior must be above 0, or nothing could be said about a context never seen"
         return ""
 
@@ -58,6 +58,13 @@ class NGramPredictor:
         for seen in row:
             total += row[seen]
         return {action: (row.get(action, 0.0) + self.prior) / total for action in self.actions}
+
+    def ceiling(self) -> float:
+        """The surest any prediction can be, given how much a row can remember."""
+        if self.decay >= 1.0:
+            return 1.0
+        remembered = 1.0 / (1.0 - self.decay)
+        return (remembered + self.prior) / (remembered + self.prior * len(self.actions))
 
     def likeliest(self) -> str:
         """The likeliest next action; of equal ones, the first in `actions`."""

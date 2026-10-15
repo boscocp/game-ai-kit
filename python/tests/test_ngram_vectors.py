@@ -31,6 +31,15 @@ def why_not_a_vector(vector: dict) -> str:
         return f"V1 its keys are {sorted(vector)}, not {sorted(VECTOR_KEYS)}"
     if not vector["cases"]:
         return "V2 it claims nothing"
+    settings = NGramPredictor(vector["order"], vector["actions"], vector["decay"], vector["prior"]).problem()
+    if settings:
+        return f"V9 its settings cannot work: {settings}"
+    for action in vector["sequence"]:
+        if action not in vector["actions"]:
+            return f"V8 its sequence holds {action}, which is not one of its actions"
+    seen = [case.get("seen") for case in vector["cases"]]
+    if len(seen) != len(set(map(str, seen))):
+        return "V7 two cases claim the same moment"
     for case in vector["cases"]:
         if set(case) != CASE_KEYS:
             return f"V3 a case's keys are {sorted(case)}, not {sorted(CASE_KEYS)}"
@@ -38,6 +47,8 @@ def why_not_a_vector(vector: dict) -> str:
             return "V4 a case's probabilities do not name every action"
         if not math.isclose(sum(case["probabilities"].values()), 1.0, abs_tol=TOLERANCE):
             return "V5 a case's probabilities do not sum to 1"
+        if not isinstance(case["seen"], int) or isinstance(case["seen"], bool):
+            return "V6 a case's `seen` is not a whole number of actions"
         if not 0 <= case["seen"] <= len(vector["sequence"]):
             return "V6 a case is after more actions than the sequence has"
     return ""
@@ -101,6 +112,13 @@ class TestNGramVectors(unittest.TestCase):
         lopsided = dict(vector, cases=[dict(vector["cases"][0], probabilities={"high": 0.5, "low": 0.5, "throw": 0.5})])
         self.assertIn("V5", why_not_a_vector(lopsided))
         self.assertIn("V1", why_not_a_vector({key: vector[key] for key in vector if key != "decay"}))
+        twice = dict(vector, cases=[vector["cases"][0], dict(vector["cases"][0], likeliest="throw")])
+        self.assertIn("V7", why_not_a_vector(twice))
+        halfway = dict(vector, cases=[dict(vector["cases"][0], seen=4.5)])
+        self.assertIn("V6", why_not_a_vector(halfway))
+        stranger = dict(vector, sequence=vector["sequence"] + ["cartwheel"])
+        self.assertIn("V8", why_not_a_vector(stranger))
+        self.assertIn("V9", why_not_a_vector(dict(vector, decay=0.0)))
 
 
 if __name__ == "__main__":

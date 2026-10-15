@@ -58,7 +58,7 @@ var _recent: Array[String] = []
 ## (0 or more). `problem` says what is wrong with any of those.
 func _init(n_gram_order: int, known: Array[String], forgetting: float = 1.0, pseudo_count: float = 1.0) -> void:
 	order = n_gram_order
-	actions = known
+	actions = known.duplicate()
 	decay = forgetting
 	prior = pseudo_count
 
@@ -71,7 +71,7 @@ func problem() -> String:
 		return "a predictor needs at least one action to predict"
 	if decay <= 0.0 or decay > 1.0:
 		return "decay must be above 0 and at most 1, and is %s" % decay
-	if prior < 0.0 or (prior == 0.0 and actions.size() > 1):
+	if prior <= 0.0:
 		return "prior must be above 0, or nothing could be said about a context never seen"
 	return ""
 
@@ -112,6 +112,19 @@ func probabilities() -> Dictionary:
 	return chances
 
 
+## The surest any prediction can be: the chance of an action seen in its
+## context every time, for as long as a context can remember. Below decay 1
+## a row's weight can never pass 1 / (1 - decay) -- each sighting is worth a
+## little less than the one after it -- so neither can its chance; at decay
+## 1 a row grows without end and the ceiling is 1. A confidence means most
+## measured against this, not against 1.
+func ceiling() -> float:
+	if decay >= 1.0:
+		return 1.0
+	var remembered: float = 1.0 / (1.0 - decay)
+	return (remembered + prior) / (remembered + prior * actions.size())
+
+
 ## The likeliest next action; of equal ones, the first in `actions`.
 func likeliest() -> String:
 	var chances: Dictionary = probabilities()
@@ -123,15 +136,23 @@ func likeliest() -> String:
 
 
 ## The table as text, one row a context: the context, then each action seen
-## after it with its weight, heaviest first. For a person, not for the code.
+## after it with its weight, heaviest first, and of equal weights the first in
+## `actions`. For a person, not for the code.
 func rows() -> PackedStringArray:
 	var lines: PackedStringArray = []
 	for key: String in _counts:
 		var row: Dictionary = _counts[key]
-		var seen: Array = row.keys()
-		seen.sort_custom(func(first: String, second: String) -> bool: return row[first] > row[second])
+		var seen: Array = actions.filter(func(action: String) -> bool: return row.has(action))
+		seen.sort_custom(_heavier.bind(row))
 		var cells: PackedStringArray = []
 		for action: String in seen:
 			cells.append("%s %.1f" % [action, row[action]])
 		lines.append("%s -> %s" % [key if key != "" else "(anything)", ", ".join(cells)])
 	return lines
+
+
+# Heavier in `row` first; of equal weights, the earlier in `actions`.
+func _heavier(first: String, second: String, row: Dictionary) -> bool:
+	if row[first] != row[second]:
+		return row[first] > row[second]
+	return actions.find(first) < actions.find(second)

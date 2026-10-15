@@ -90,6 +90,16 @@ func _init(level_name: String, data: FightData, chance_seed: int = 0) -> void:
 		_execution = int(LEVELS[level_name]["execution"])
 
 
+## A new fight has begun: whatever it was doing is dropped. `FightDelay`
+## calls this when the fights it is handed stop following on from each other;
+## an opponent that remembers more than its plan forgets it here too.
+func new_fight() -> void:
+	_plan.clear()
+	situation = "nothing seen yet"
+	seen_frame = -1
+	choice = "nothing yet"
+
+
 ## Its input this frame, as player `me`, from `seen` -- the fight as it was
 ## `reaction` frames ago. It carries on with what it last decided, and looks
 ## at `seen` again only once that is played out.

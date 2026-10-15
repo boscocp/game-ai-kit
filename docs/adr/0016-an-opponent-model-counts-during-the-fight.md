@@ -26,13 +26,19 @@ An n-gram table in `godot/addons/ai_opponent/` may count during a fight,
 because what it does is not the thing invariant 6 exists to stop:
 
 - **It is reproducible from the input log.** The table holds counts of what
-  was on screen, nothing else; replaying the log replays the counts, frame
-  for frame. Two machines cannot disagree about it unless they disagree about
-  the fight, and `FightReplay` already holds them to the same fight.
+  was on screen, nothing else: replaying the log through a learner seated
+  on the same frame, at the same reaction, rebuilds the same table -- the
+  log alone does not say when a learner was seated, nor at which level, and
+  the training mode can seat one mid-fight. Two machines cannot disagree
+  about it unless they disagree about the fight, and `FightReplay` already
+  holds them to the same fight. A test plays the recorded fight twice
+  through a learner and compares the tables.
 - **It starts empty every fight and is never written down.** No file, no
-  carried-over table, no published weights for a later fight to load. It
-  forgets the player when the fight ends, so there is no model "of no
-  recorded version of itself" to ship.
+  carried-over table, no published weights for a later fight to load: a
+  restart seats a new learner, and a seat that sees the fight start again
+  tells its opponent to forget (`FightOpponent.new_fight`). It forgets the
+  player when the fight ends, so there is no model "of no recorded version
+  of itself" to ship.
 - **It counts; it does not descend.** There is no loss, no step size and no
   gradient. What it knows can be printed as a table and read, which is the
   lesson.
@@ -41,8 +47,10 @@ The rest of invariant 6 stands unchanged: every fitted number -- weights,
 beads, evaluations -- is still Python's.
 
 `check_no_training.py` gains **N9**: nothing in `ai_opponent` writes a file,
-and nothing in GDScript writes where the opponent model's table would be
-published. Its planted case is an `ai_opponent` script that saves its table.
+no script that holds a table writes one, and no line names an n-gram table
+it writes. Its planted cases save a table from the addon, from a script that
+holds a learner under another name, and through a `ConfigFile`. Like N1 to
+N3 it is a net for the common spellings, not a proof.
 
 ## Alternatives considered
 

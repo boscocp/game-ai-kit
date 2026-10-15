@@ -62,20 +62,94 @@ func test_it_learns_only_from_the_late_fight_it_is_handed() -> void:
 	assert_int(learner.guesses.size()).is_equal(1)
 
 
-func test_a_sure_prediction_leans_towards_its_answers_and_chance_does_not() -> void:
+# At chance it leans nothing; as sure as its decay lets it be, the whole of
+# `LEAN` -- and only towards the answers.
+func test_a_sure_prediction_leans_its_full_weight_towards_its_answers() -> void:
 	var learner := FightModelOpponent.new("hard", _data)
 	var unsure: Array = learner._weighted_options("neutral", "lancer")
 	assert_array(unsure).is_equal(FightOpponent.SITUATIONS["neutral"])
-	for count: int in range(12):
+	for count: int in range(20):
 		learner.model.observe("high")
 	var sure: Array = learner._weighted_options("neutral", "lancer")
 	assert_str(learner.expected).is_equal("high")
+	assert_bool(learner.answered).is_true()
 	for index: int in range(sure.size()):
 		var gained: int = int(sure[index][1]) - int(unsure[index][1])
-		if sure[index][0] in FightModelOpponent.ANSWERS["high"]:
-			assert_int(gained).is_between(1, FightModelOpponent.LEAN)
-		else:
-			assert_int(gained).is_equal(0)
+		var answers: bool = sure[index][0] in FightModelOpponent.ANSWERS["high"]
+		assert_int(gained).is_equal(FightModelOpponent.LEAN if answers else 0)
+	# Enough to make each answer heavier than any option that is not one:
+	# the likely draw, not merely a likelier one.
+	var heaviest_other: int = 0
+	for option: Array in sure:
+		if not option[0] in FightModelOpponent.ANSWERS["high"]:
+			heaviest_other = maxi(heaviest_other, int(option[1]))
+	for option: Array in sure:
+		if option[0] in FightModelOpponent.ANSWERS["high"]:
+			assert_int(int(option[1])).is_greater(heaviest_other)
+
+
+# Easy knows two options a situation; against a high it has no answer, and
+# says so rather than seeming to lean.
+func test_a_level_with_no_answer_says_so() -> void:
+	var easy := FightModelOpponent.new("easy", _data)
+	for count: int in range(20):
+		easy.model.observe("high")
+	assert_array(easy._weighted_options("neutral", "lancer")).is_equal(FightOpponent.SITUATIONS["neutral"].slice(0, 2))
+	assert_bool(easy.answered).is_false()
+
+
+# The answers are the ones the rules make true: a low is stopped crouching,
+# an overhead and a mid standing, a throw by a strike, a guard by what goes
+# round it.
+func test_the_answers_are_what_the_rules_say_beats_each_action() -> void:
+	assert_array(FightModelOpponent.ANSWERS["low"]).contains(["guard crouching"])
+	assert_array(FightModelOpponent.ANSWERS["overhead"]).contains(["guard standing"])
+	assert_array(FightModelOpponent.ANSWERS["throw"]).contains(["high"])
+	assert_array(FightModelOpponent.ANSWERS["guard standing"]).contains(["low", "throw"])
+	assert_array(FightModelOpponent.ANSWERS["guard crouching"]).contains(["overhead", "throw"])
+	assert_array(FightModelOpponent.ANSWERS["low"]).not_contains(["guard standing"])
+	assert_array(FightModelOpponent.ANSWERS["overhead"]).not_contains(["guard crouching"])
+
+
+# ADR 0016's first condition: every fight starts with an empty table --
+# whether the training mode seats a new learner or a seat sees the fight
+# start again.
+func test_every_fight_starts_with_an_empty_table() -> void:
+	var learner := FightModelOpponent.new("medium", _data)
+	var seat := FightDelay.new(learner, 1)
+	var state: FightState = FightState.starting(_data, "lancer", "dancer")
+	for frame: int in range(120):
+		seat.input_for(state)
+		state = FightRules.step(state, [FightInput.LIGHT_PUNCH if frame % 30 == 0 else 0, 0] as Array[int], _data)
+	assert_array(Array(learner.model.rows())).is_not_empty()
+	seat.input_for(FightState.starting(_data, "lancer", "dancer"))
+	assert_array(Array(learner.model.rows())).is_empty()
+	assert_array(learner.guesses).is_empty()
+	var scene: FightingExample = auto_free(load("res://game/fighting/fighting.tscn").instantiate())
+	add_child(scene)
+	scene.dummy_mode = "learner: medium"
+	scene.opponent.model.observe("high")
+	scene.opponent.model.observe("low")
+	scene.restart()
+	assert_array(Array(scene.opponent.model.rows())).is_empty()
+
+
+# ADR 0016's second: the table is what the fight showed, so the recorded
+# log, played twice through a learner seated from its first frame, builds
+# the same table twice.
+func test_the_recorded_fight_builds_the_same_table_twice() -> void:
+	var input_log: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://test/fight_log.json"))
+	var tables: Array[String] = []
+	for run: int in range(2):
+		var learner := FightModelOpponent.new("medium", _data)
+		var seat := FightDelay.new(learner, 1)
+		var state: FightState = FightState.starting(_data, "lancer", "dancer")
+		for pair: Array in input_log["inputs"]:
+			seat.input_for(state)
+			state = FightRules.step(state, [int(pair[0]), int(pair[1])] as Array[int], _data)
+		tables.append("\n".join(learner.model.rows()))
+	assert_str(tables[0]).is_not_empty()
+	assert_str(tables[0]).is_equal(tables[1])
 
 
 func test_every_action_has_answers_the_opponent_knows() -> void:
