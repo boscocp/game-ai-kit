@@ -21,6 +21,7 @@ readable one.
 | `ai_search` | A\*, BFS, DFS, Dijkstra — how a unit gets there | routes blue's units in `make demo-skirmish` | [why](docs/concepts/search.md) · [how](docs/godot/search.md) |
 | `ai_planning` | STRIPS — *to attack I need a unit; to have a unit I need resources* | **not yet** — T11 puts it on the board | [why](docs/concepts/planning.md) · [how](docs/godot/planning.md) |
 | `ai_learning` | logistic regression — attack or retreat; linear regression — which target is closer to falling | plays blue in `make demo-skirmish`, and says why on screen | [why](docs/concepts/learning.md) · [how](docs/godot/learning.md) |
+| `ai_opponent` | an n-gram over the player's actions -- what you do after what, counted during the fight | the "learner" modes of `make demo-fighting`, its table and its guess on the panel | [ADR 0016](docs/adr/0016-an-opponent-model-counts-during-the-fight.md) |
 | `ai_llm` | a local model as an advisor, with everything it says validated before it becomes an action | **not written**, and no task scheduled yet | -- |
 
 `ai_core` sits under all of them: the board, the units, and the two interfaces

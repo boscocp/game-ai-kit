@@ -1,0 +1,71 @@
+{
+ "description": "Order 2, no decay, Laplace smoothing: small enough to check by hand (the README does). A context never seen predicts every action alike.",
+ "order": 2,
+ "actions": [
+  "high",
+  "low",
+  "throw"
+ ],
+ "decay": 1.0,
+ "prior": 1.0,
+ "sequence": [
+  "high",
+  "low",
+  "high",
+  "low",
+  "high",
+  "throw"
+ ],
+ "cases": [
+  {
+   "seen": 0,
+   "context": "",
+   "probabilities": {
+    "high": 0.3333333333333333,
+    "low": 0.3333333333333333,
+    "throw": 0.3333333333333333
+   },
+   "likeliest": "high"
+  },
+  {
+   "seen": 1,
+   "context": "high",
+   "probabilities": {
+    "high": 0.3333333333333333,
+    "low": 0.3333333333333333,
+    "throw": 0.3333333333333333
+   },
+   "likeliest": "high"
+  },
+  {
+   "seen": 4,
+   "context": "low",
+   "probabilities": {
+    "high": 0.5,
+    "low": 0.25,
+    "throw": 0.25
+   },
+   "likeliest": "high"
+  },
+  {
+   "seen": 5,
+   "context": "high",
+   "probabilities": {
+    "high": 0.2,
+    "low": 0.6,
+    "throw": 0.2
+   },
+   "likeliest": "low"
+  },
+  {
+   "seen": 6,
+   "context": "throw",
+   "probabilities": {
+    "high": 0.3333333333333333,
+    "low": 0.3333333333333333,
+    "throw": 0.3333333333333333
+   },
+   "likeliest": "high"
+  }
+ ]
+}

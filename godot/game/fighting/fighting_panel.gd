@@ -11,6 +11,9 @@
 class_name FightingPanel
 extends RefCounted
 
+## How many rows of a learner's table the panel prints.
+const ROWS_SHOWN: int = 8
+
 
 ## The panel for `state`.
 ## `seat` holds the opponent in the dummy's place, or is null for a scripted dummy.
@@ -73,4 +76,28 @@ static func _opponent_lines(state: FightState, seat: FightDelay) -> PackedString
 	lines.append("  saw frame %d, %d frames ago: %s" % [opponent.seen_frame, state.frame - opponent.seen_frame,
 			opponent.situation])
 	lines.append("  drew: " + opponent.choice)
+	var learner := opponent as FightModelOpponent
+	if learner != null:
+		lines.append_array(_model_lines(learner))
+	return lines
+
+
+# The learner's table, as it stands: what it expects, from which context,
+# how often its guesses have been right, and the rows it has counted --
+# the most useful thing on the screen to read while you change your habits.
+static func _model_lines(learner: FightModelOpponent) -> PackedStringArray:
+	var score: Array[int] = learner.score()
+	var context: String = learner.model.context()
+	var lines: PackedStringArray = ["", "its model (order %d, decay %.2f), right %d of its last %d:" % [
+			learner.model.order, learner.model.decay, score[0], score[1]]]
+	var after: String = learner.expected_after if learner.expected_after != "" else "nothing"
+	var answer: String = "" if learner.answered else " -- none of its options answers that"
+	lines.append("  at its last decision, after %s it expected %s, %d%%%s" % [after, learner.expected,
+			roundi(learner.confidence * 100.0), answer])
+	lines.append("  now the context is %s" % (context if context != "" else "nothing yet"))
+	var rows: PackedStringArray = learner.model.rows()
+	for row: String in rows.slice(0, ROWS_SHOWN):
+		lines.append("  " + row)
+	if rows.size() > ROWS_SHOWN:
+		lines.append("  ... and %d more" % (rows.size() - ROWS_SHOWN))
 	return lines

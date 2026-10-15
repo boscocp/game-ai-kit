@@ -9,7 +9,8 @@
 ## -- with S -- crouching. C swaps which character you play. The dummy, player two, does
 ## what its mode says -- stand, guard standing, guard crouching, jab, throw or
 ## low kick every second, uppercut you out of the air, or fight back as the
-## fixed opponent at one of its three levels -- and M cycles the mode: each
+## fixed opponent at one of its three levels, or as the learner, the same
+## levels with a table of your habits behind them -- and M cycles the mode: each
 ## guard has a height that gets through it. P pauses, and space then plays
 ## one frame: the step every example offers (T21), here one frame of the
 ## resolution order, which is what a person learning frame data needs to see.
@@ -24,8 +25,11 @@ class_name FightingExample
 extends Node2D
 
 const MODES: Array[String] = ["stand", "guard standing", "guard crouching", "jab", "throw", "low kick",
-		"anti-air (sees you now)", "opponent: easy", "opponent: medium", "opponent: hard"]
+		"anti-air (sees you now)", "opponent: easy", "opponent: medium", "opponent: hard", "learner: easy",
+		"learner: medium", "learner: hard"]
 const OPPONENT_MODE: String = "opponent: "
+## The same levels with an n-gram behind them, learning you as you fight (T17).
+const LEARNER_MODE: String = "learner: "
 ## Punches on the top row and kicks below them, as an arcade panel has them.
 const KEYS: Dictionary = {KEY_A: FightInput.LEFT, KEY_D: FightInput.RIGHT, KEY_S: FightInput.DOWN, KEY_W: FightInput.UP,
 		KEY_U: FightInput.LIGHT_PUNCH, KEY_I: FightInput.HEAVY_PUNCH, KEY_J: FightInput.LIGHT_KICK,
@@ -113,14 +117,19 @@ func restart() -> void:
 	_refresh()
 
 
-# A fresh opponent for an "opponent" mode, none for the others, its chances
-# seeded by how many fights have begun.
+# A fresh opponent for an "opponent" or "learner" mode -- a learner with an
+# empty table -- none for the others, its chances seeded by how many fights
+# have begun.
 func _seat_opponent() -> void:
 	opponent = null
 	seat = null
 	if dummy_mode.begins_with(OPPONENT_MODE):
 		fights_begun += 1
 		opponent = FightOpponent.new(dummy_mode.trim_prefix(OPPONENT_MODE), data, fights_begun)
+	elif dummy_mode.begins_with(LEARNER_MODE):
+		fights_begun += 1
+		opponent = FightModelOpponent.new(dummy_mode.trim_prefix(LEARNER_MODE), data, fights_begun)
+	if opponent != null:
 		seat = FightDelay.new(opponent, 1)
 
 
@@ -153,8 +162,21 @@ func decision_overlay() -> Dictionary:
 func opponent_overlay() -> Dictionary:
 	if opponent == null:
 		return {"level": "none, the dummy is scripted", "situation": "none", "seen_frame": -1, "choice": "none"}
-	return {"level": opponent.level, "reaction": seat.reaction, "situation": opponent.situation,
+	var shown: Dictionary = {"level": opponent.level, "reaction": seat.reaction, "situation": opponent.situation,
 			"seen_frame": opponent.seen_frame, "choice": opponent.choice}
+	var learner := opponent as FightModelOpponent
+	if learner != null:
+		shown.merge(_model_overlay(learner))
+	return shown
+
+
+# What the learner expects, from which context, and its table.
+func _model_overlay(learner: FightModelOpponent) -> Dictionary:
+	var table: PackedStringArray = learner.model.rows()
+	var context: String = learner.expected_after
+	return {"expects": learner.expected, "confidence": learner.confidence, "answered": learner.answered,
+			"expected_after": context if context != "" else "nothing seen yet",
+			"table": table if not table.is_empty() else PackedStringArray(["nothing counted yet"])}
 
 
 func _fighter_overlay(fighter: FighterState) -> Dictionary:

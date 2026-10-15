@@ -72,7 +72,7 @@ lint-review: ## This branch has a review record and may be merged
 .PHONY: check
 check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-search-properties test-planner-properties test-perception-properties \
-       test-decisions test-demo-overlays test-replay test-opponent-levels ## Run every gate
+       test-decisions test-demo-overlays test-replay test-opponent-levels test-opponent-properties ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability lint-demos \
@@ -213,7 +213,7 @@ train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -244,6 +244,12 @@ test-learning-vectors: import ## The learning vectors, against ai_learning
 	@# between the two halves is worth.
 	@$(GODOT) --headless --path godot -s res://test/learning_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/learning
+
+.PHONY: test-ngram-vectors
+test-ngram-vectors: import ## The n-gram vectors, against ai_opponent
+	@# The same files are read by `make test-python` through gameaikit.ngram.
+	@$(GODOT) --headless --path godot -s res://test/ngram_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/ngram
 
 .PHONY: test-fuzzy-vectors
 test-fuzzy-vectors: import ## The fuzzy vectors, against ai_fuzzy
@@ -366,6 +372,12 @@ record-replay: import ## Record the recorded fight's per-frame digests again, af
 .PHONY: test-replay
 test-replay: import ## Replay the recorded fight twice; the two runs must agree on every frame
 	@$(GODOT) --headless --path godot -s res://test/replay_determinism.gd
+
+.PHONY: test-opponent-properties
+test-opponent-properties: import ## The opponent model learns a habit within 40 actions, and follows a change of it
+	@# T17's acceptance, with two planted models -- one that never forgets,
+	@# one with no context -- that must fail the same claims.
+	@$(GODOT) --headless --path godot -s res://test/opponent_properties.gd
 
 .PHONY: test-opponent-levels
 test-opponent-levels: import ## The fixed opponent's levels are ordered: each beats the one below it 60 times in 100

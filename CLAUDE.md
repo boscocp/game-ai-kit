@@ -20,7 +20,7 @@ than none.
 | 3 acceptance is a command | `check_acceptance.py` |
 | 4 gate rejects a planted case | `make lint-selftests` runs them; that each one *has* a planted case is still read by a person |
 | 5 no lesson above tier 1 | `check_tiers.py`, via each page's `teaches:` field |
-| 6 no training at game time | **none yet** -- `check_no_training.py`, named in T6 |
+| 6 no training at game time | half held -- `check_no_training.py` is a net for the common spellings, and says so; its one exception, ADR 0016, is N9 |
 | 7 LLM output validated | **none yet** -- arrives with the addon |
 | 8 toolchain on the large disk | `check_disk_layout.py` |
 | 9 LICENSE and NOTICE ship | `check_license.py` |
@@ -42,7 +42,9 @@ than none.
    investigates a green. Ask of each one: *does this pass on an empty scene?*
 5. **No lesson requires hardware above tier 1.** See the tiers in the README.
 6. **No training at game time.** Python trains and emits weights; GDScript only
-   infers.
+   infers. One exception, decided by the owner: an opponent model may count
+   what it sees during one fight, starting empty and never saved (ADR 0016,
+   rule N9).
 7. **The LLM never blocks a frame, and nothing it returns becomes an action
    without passing a validator.**
 8. **The whole toolchain lives on the large disk.** Nothing in `$HOME`.

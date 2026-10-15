@@ -1,0 +1,66 @@
+{
+ "description": "Order 2, decay 1/2: the player answered high with low three times, then with throw twice. With decay the table prefers throw after the first throw; without it, it would still say low, three to one.",
+ "order": 2,
+ "actions": [
+  "high",
+  "low",
+  "throw"
+ ],
+ "decay": 0.5,
+ "prior": 1.0,
+ "sequence": [
+  "high",
+  "low",
+  "high",
+  "low",
+  "high",
+  "low",
+  "high",
+  "throw",
+  "high",
+  "throw",
+  "high"
+ ],
+ "cases": [
+  {
+   "seen": 2,
+   "context": "low",
+   "probabilities": {
+    "high": 0.3333333333333333,
+    "low": 0.3333333333333333,
+    "throw": 0.3333333333333333
+   },
+   "likeliest": "high"
+  },
+  {
+   "seen": 7,
+   "context": "high",
+   "probabilities": {
+    "high": 0.21052631578947367,
+    "low": 0.5789473684210527,
+    "throw": 0.21052631578947367
+   },
+   "likeliest": "low"
+  },
+  {
+   "seen": 9,
+   "context": "high",
+   "probabilities": {
+    "high": 0.20512820512820512,
+    "low": 0.38461538461538464,
+    "throw": 0.41025641025641024
+   },
+   "likeliest": "throw"
+  },
+  {
+   "seen": 11,
+   "context": "high",
+   "probabilities": {
+    "high": 0.20253164556962025,
+    "low": 0.2911392405063291,
+    "throw": 0.5063291139240507
+   },
+   "likeliest": "throw"
+  }
+ ]
+}

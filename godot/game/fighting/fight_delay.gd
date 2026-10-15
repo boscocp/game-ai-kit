@@ -58,12 +58,14 @@ func _init(seated: FightOpponent, index: int) -> void:
 ## The opponent's input for the frame after `now`, chosen from the frame
 ## `reaction` frames before it. 0 while it has seen nothing yet, and always
 ## 0 for a refused opponent. A fight that does not follow on from the last
-## frame given -- a restart -- starts its memory again.
+## frame given -- a restart -- starts its memory again, and the opponent's:
+## nothing seen in one fight is carried into the next.
 func input_for(now: FightState) -> int:
 	if refusal != "":
 		return 0
 	if not _frames.is_empty() and now.frame != _frames.back().frame + 1:
 		_frames.clear()
+		opponent.new_fight()
 	_frames.append(now.copy())
 	if _frames.size() > reaction + 1:
 		_frames.pop_front()
