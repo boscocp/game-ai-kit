@@ -32,8 +32,9 @@ static func _fighter_lines(index: int, fighter: FighterState, data: FightData) -
 	var flight: String = "  in the air, frame %d of %d, %d up"
 	if fighter.is_airborne():
 		lines.append(flight % [fighter.jump_frame, data.jump_length(fighter.character), fighter.y])
-	if fighter.stun > 0 and fighter.stun_kind == "landing":
-		lines.append("  landing, %d frame(s) left" % fighter.stun)
+	if fighter.stun > 0 and fighter.stun_kind in ["takeoff", "landing"]:
+		var doing: String = "taking off" if fighter.stun_kind == "takeoff" else "landing"
+		lines.append("  %s, %d frame(s) left" % [doing, fighter.stun])
 	elif fighter.stun > 0:
 		lines.append("  in %sstun, %d frame(s) left" % [fighter.stun_kind, fighter.stun])
 	elif fighter.move != "":

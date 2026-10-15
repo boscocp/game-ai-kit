@@ -30,10 +30,14 @@ teaches: none
 
 Per character: `health`, `walk_speed`, `body` (half its width), `tall` and
 `crouching_tall` (how high its hurtbox reaches, standing and crouching), and
-its `jump` (T38): `rise` frames up to `height`, `hang` frames there, `fall`
+its `jump` (T38): `takeoff` frames still on the ground -- it cannot guard
+and can be thrown -- then `rise` frames up to `height`, `hang` frames there, `fall`
 frames down -- whole units on every frame, by integer division -- `speed`
-units a frame along the stage, fixed at take-off, and `landing` frames when
-it touches down. In the air it cannot guard and cannot be thrown.
+units a frame along the stage, fixed when up is pressed, and `landing`
+frames when it touches down, when it can be thrown. In the air it cannot
+guard and cannot be thrown, and it has one air move a jump -- none once it
+has been hit in the air. Bodies push each other only on the ground, so a
+jump can cross over to the other side.
 
 Per move: the `button` that does it -- light or heavy punch, light or heavy
 kick, or throw -- and its `stance`, standing, crouching or air (holding down

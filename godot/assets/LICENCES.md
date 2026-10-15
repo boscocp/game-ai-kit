@@ -105,6 +105,9 @@ lays it over open ground when it draws, rather than a second file doing it.
 | `fighters/lancer/jump.png` | Mustermann 2 | `Orangeblack.png`, cels 564, 565, 566, 573, 576, 580, 567 | CC0 1.0 | 9c96133a4937529c7b520259c804844f2b28f644d506e8ca3fb48fc3e90c1bc8 |
 | `fighters/lancer/uppercut.png` | Mustermann 2 | `Orangeblack.png`, cels 37, 38, 39, 40, 41, 42, 43 | CC0 1.0 | 5a4b7f8cd7844052c931bdf96ac01a021d6d7fef5c343e5a14e7e0fdde1c66b3 |
 | `fighters/lancer/flying_kick.png` | Mustermann 2 | `Orangeblack.png`, cels 573, 677, 678, 679 | CC0 1.0 | a7f99218172f8a097ba33d2ebeb008f62e7ccf7cf6fcaed4b9373e7ac6834a8f |
+| `fighters/lancer/air_jab.png` | Mustermann 2 | `Orangeblack.png`, cels 593, 594, 595 | CC0 1.0 | 3400b07be50dc7bdc682c9a24174b1a17fc2bbc9ef6f4d3bb2b7d405e288004d |
+| `fighters/lancer/air_punch.png` | Mustermann 2 | `Orangeblack.png`, cels 597, 598, 599, 593 | CC0 1.0 | 4ffcb2c0ce1c621c6dd7fc7ed7e01e4a6cdca56b0081c1984638b2e7f260455e |
+| `fighters/lancer/air_kick.png` | Mustermann 2 | `Orangeblack.png`, cels 682, 683, 684, 685, 686 | CC0 1.0 | 9238694e37e5c77d85a5956417f86b7cd2394ecd01efbca2504eca57f8de1643 |
 | `fighters/dancer/idle.png` | Mustermann 2 | `Blueehite.png`, cels 4, 5, 6, 7, 8, 9, 10, 11 | CC0 1.0 | 9b8c2a3554f56f8329eaac672b9ee8091411c3827c52facf97d24d6e4d64c4dc |
 | `fighters/dancer/walk.png` | Mustermann 2 | `Blueehite.png`, cels 416, 417, 418, 419, 420, 421, 422, 423, 424, 425, 426, 427 | CC0 1.0 | 0be28d709015d8a15a1f742d426f1cf110c5e74411751cd71e6f5797e1ce18d6 |
 | `fighters/dancer/crouch.png` | Mustermann 2 | `Blueehite.png`, cels 727, 728 | CC0 1.0 | 4946cfbf90f18755d7f1ac4e5e0baa2472c0a785db3c076b78d5a95670363eb0 |
@@ -123,3 +126,6 @@ lays it over open ground when it draws, rather than a second file doing it.
 | `fighters/dancer/jump.png` | Mustermann 2 | `Blueehite.png`, cels 564, 565, 566, 573, 576, 580, 567 | CC0 1.0 | 40f668091e73acdbb786ae45f0a3891f040cebee9eaa36ebc02cfbbfbdf981a5 |
 | `fighters/dancer/uppercut.png` | Mustermann 2 | `Blueehite.png`, cels 37, 38, 39, 40, 41, 42, 43 | CC0 1.0 | d566a1fc849d9a5c552aeef45ae368548af67ff625fa25072c1e21effb04b6e9 |
 | `fighters/dancer/flying_kick.png` | Mustermann 2 | `Blueehite.png`, cels 573, 677, 678, 679 | CC0 1.0 | 7bf8d45de6dce0e360c5551c494e9b39745d34848b12d604a6b21a961829b2ef |
+| `fighters/dancer/air_jab.png` | Mustermann 2 | `Blueehite.png`, cels 593, 594, 595 | CC0 1.0 | 6d8204803e70d4f97963a45f20ce9e4d7f630715e7c93e5f03a13e51a5ac2fe6 |
+| `fighters/dancer/air_punch.png` | Mustermann 2 | `Blueehite.png`, cels 597, 598, 599, 593 | CC0 1.0 | ff4e7c3442f88a9447b28605c79514fbc7011bd5dd577afcc1115f586c4074a9 |
+| `fighters/dancer/air_kick.png` | Mustermann 2 | `Blueehite.png`, cels 682, 683, 684, 685, 686 | CC0 1.0 | 45549bbb8c24418ee37d0d9d52cf865ae2b412c1701902fd2b8ecc8556987413 |

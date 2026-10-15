@@ -21,8 +21,11 @@ var y: int = 0
 ## How many frames into its jump, from 1; 0 on the ground (T38).
 var jump_frame: int = 0
 ## Which way the jump carries it along the stage, -1, 0 or +1, fixed at
-## take-off: a jump is committed once it leaves the ground.
+## take-off: a jump is committed from the frame up is pressed.
 var jump_direction: int = 0
+## True once this jump has used its one air move, or been hit: no more
+## attacks until it lands.
+var air_spent: bool = false
 ## +1 when it faces right, -1 when it faces left.
 var facing: int = 1
 var health: int = 0
@@ -38,8 +41,8 @@ var crouching: bool = false
 var connected: bool = false
 ## Frames of hitstun or blockstun left; it cannot act until they are gone.
 var stun: int = 0
-## "hit" or "block" while stunned, "landing" while it lands from a jump, ""
-## otherwise.
+## "hit" or "block" while stunned, "takeoff" while it gathers to jump,
+## "landing" while it lands from one, "" otherwise.
 var stun_kind: String = ""
 ## The button pressed and not yet used, and the last frame it may still be.
 var buffered: String = ""
@@ -64,6 +67,7 @@ func copy() -> FighterState:
 	twin.y = y
 	twin.jump_frame = jump_frame
 	twin.jump_direction = jump_direction
+	twin.air_spent = air_spent
 	twin.move = move
 	twin.move_frame = move_frame
 	twin.connected = connected
@@ -91,6 +95,6 @@ func is_airborne() -> bool:
 ## Every field, as one line of text: two fighters with the same digest are
 ## the same fighter.
 func digest() -> String:
-	return "%s x%d y%d j%d:%d f%d h%d %s:%d c%d k%d s%d%s b%s:%d i%d" % [character, x, y, jump_frame, jump_direction,
-			facing, health, move, move_frame, int(connected), int(crouching), stun, stun_kind, buffered, buffered_until,
-			held_before]
+	return "%s x%d y%d j%d:%d:%d f%d h%d %s:%d c%d k%d s%d%s b%s:%d i%d" % [character, x, y, jump_frame,
+			jump_direction, int(air_spent), facing, health, move, move_frame, int(connected), int(crouching), stun,
+			stun_kind, buffered, buffered_until, held_before]

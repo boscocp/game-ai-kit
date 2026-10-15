@@ -85,6 +85,21 @@
      "active": [40, 41],
      "recovery": [42, 43]
     },
+    "air_jab": {
+     "startup": [593],
+     "active": [594],
+     "recovery": [595]
+    },
+    "air_punch": {
+     "startup": [597, 598],
+     "active": [599],
+     "recovery": [593]
+    },
+    "air_kick": {
+     "startup": [682, 683],
+     "active": [684],
+     "recovery": [685, 686]
+    },
     "flying_kick": {
      "startup": [573],
      "active": [677, 678],
@@ -152,6 +167,21 @@
      "startup": [37, 38, 39],
      "active": [40, 41],
      "recovery": [42, 43]
+    },
+    "air_jab": {
+     "startup": [593],
+     "active": [594],
+     "recovery": [595]
+    },
+    "air_punch": {
+     "startup": [597, 598],
+     "active": [599],
+     "recovery": [593]
+    },
+    "air_kick": {
+     "startup": [682, 683],
+     "active": [684],
+     "recovery": [685, 686]
     },
     "flying_kick": {
      "startup": [573],

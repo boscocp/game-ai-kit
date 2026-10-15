@@ -2,9 +2,10 @@
 ## box and every frame on show.
 ##
 ## You are player one: A and D walk, W jumps -- with A or D, that way -- S
-## crouches, U and I punch light and heavy, J and K kick light and heavy (K
-## in the air is a jump-in kick), S with I is the anti-air uppercut, L
-## throws; holding away from the dummy guards, standing or -- with S --
+## crouches, U and I punch light and heavy, J and K kick light and heavy --
+## in the air, each is a jump-in attack, one a jump -- S with I is the
+## anti-air uppercut, L throws; jump forwards from close and you cross over
+## to the dummy's other side; holding away from the dummy guards, standing or -- with S --
 ## crouching. C swaps which character you play. The dummy, player two, does
 ## what its mode says -- stand, guard standing, guard crouching, jab, throw or
 ## low kick every second, uppercut you out of the air, or fight back as the
@@ -70,8 +71,8 @@ func _ready() -> void:
 		[FightView.SIDES[1], "right health bar: the dummy (player two)"],
 		[FightView.HURTBOX, "outline: hurtbox, where it can be hit"],
 		[FightView.HITBOX, "red box: hitbox, where it reaches"],
-		[FightView.THROW, "orange bar: a throw, which no guard stops"],
-		[FightView.STUNNED_SPRITE, "paler: in hitstun or blockstun"],
+		[FightView.THROW, "orange box: a throw, which no guard stops"],
+		[FightView.STUNNED_SPRITE, "paler: stunned, taking off or landing"],
 	] as Array[Array])
 	restart()
 

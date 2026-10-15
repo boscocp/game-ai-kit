@@ -5,7 +5,7 @@
 ##
 ## 1. read each player's input into its buffer;
 ## 2. both fighters act at once, each from the frame as it began -- one in
-##    the air goes on along its arc, whatever else it does;
+##    the air goes on along its arc, whatever else it does (`FightJump`);
 ## 3. bodies are pushed apart and kept on the stage;
 ## 4. every hitbox is tested against the other's hurtbox, along the stage and
 ##    up from the floor, both before either result is applied -- which is
@@ -68,81 +68,55 @@ static func _read_input(fighter: FighterState, held: int, frame: int, data: Figh
 		fighter.buffered = ""
 
 
-# Step 2, for one fighter: in the air, fly; on the ground, count stun down,
-# or carry on with the move, or start the buffered one, or jump, or crouch,
-# or walk. Then it is crouching if its move is a crouching one, or, out of a
-# move, if it holds down -- except in hitstun, which it takes standing: a
-# fighter reeling from a hit cannot duck the next one, or a combo would end
-# whenever its victim held down.
+# Step 2, for one fighter: in the air, go along the arc and then act there;
+# on the ground, count stun down -- leaving the ground when a take-off is
+# over -- or carry on with the move, or start the buffered one, or take off,
+# or crouch, or walk. Then, on the ground, it is crouching if its move is a
+# crouching one, or, out of a move, if it holds down -- except in hitstun,
+# taking off and landing, all taken standing: a fighter reeling from a hit
+# cannot duck the next one, or a combo would end whenever its victim held
+# down.
 static func _act(fighter: FighterState, held: int, data: FightData) -> void:
 	if fighter.is_airborne():
-		_fly(fighter, held, data)
+		if not FightJump.carry(fighter, data):
+			_act_in_the_air(fighter, held, data)
 		return
 	if fighter.stun > 0:
+		var taking_off: bool = fighter.stun_kind == "takeoff"
 		_count_stun_down(fighter)
+		if taking_off and fighter.stun == 0:
+			FightJump.leave_the_ground(fighter, data)
+			return
 	elif fighter.move != "":
 		_advance_move(fighter, held, data)
 	elif _start_buffered(fighter, held, data):
 		pass
 	elif FightInput.holds_up(held):
-		_take_off(fighter, held)
+		FightJump.take_off(fighter, held, data)
 	elif not FightInput.holds_down(held):
 		var speed: int = int(data.character(fighter.character)["walk_speed"])
 		fighter.x += FightInput.walk_direction(held) * speed
-	if fighter.is_airborne():
-		fighter.crouching = false
-	elif fighter.move != "":
+	if fighter.move != "":
 		fighter.crouching = data.move(fighter.character, fighter.move)["stance"] == "crouching"
-	else:
-		fighter.crouching = FightInput.holds_down(held) and fighter.stun_kind != "hit"
+	elif not fighter.is_airborne():
+		fighter.crouching = FightInput.holds_down(held) and not fighter.stun_kind in ["hit", "takeoff", "landing"]
 
 
-static func _count_stun_down(fighter: FighterState) -> void:
-	fighter.stun -= 1
-	if fighter.stun == 0:
-		fighter.stun_kind = ""
-
-
-# Leaving the ground: the direction held now is the direction of the whole
-# jump. Its first frame of flight is the next one.
-static func _take_off(fighter: FighterState, held: int) -> void:
-	fighter.jump_direction = FightInput.walk_direction(held)
-	fighter.jump_frame = 1
-	fighter.crouching = false
-
-
-# One frame along the arc -- up, along, and down, as the frame data has it --
-# and, at the same time, the stun counting down, or the air move going on,
-# or one starting for a buffered button. The arc goes on whatever happens: a
-# fighter hit in the air still comes down where its jump was taking it.
-static func _fly(fighter: FighterState, held: int, data: FightData) -> void:
-	fighter.y = data.height_at(fighter.character, fighter.jump_frame)
-	fighter.x += fighter.jump_direction * int(data.character(fighter.character)["jump"]["speed"])
+# In the air, as on the ground but with no walking: the stun counts down, or
+# the air move goes on, or one starts for a buffered button.
+static func _act_in_the_air(fighter: FighterState, held: int, data: FightData) -> void:
 	if fighter.stun > 0:
 		_count_stun_down(fighter)
 	elif fighter.move != "":
 		_advance_move(fighter, held, data)
 	else:
 		_start_buffered(fighter, held, data)
-	fighter.jump_frame += 1
-	if fighter.jump_frame > data.jump_length(fighter.character):
-		_land(fighter, data)
 
 
-# Back on the floor: an air move ends with the jump, and a fighter not
-# already stunned takes the jump's landing frames, when it can do nothing.
-static func _land(fighter: FighterState, data: FightData) -> void:
-	fighter.y = 0
-	fighter.jump_frame = 0
-	fighter.jump_direction = 0
-	if fighter.move != "":
-		fighter.move = ""
-		fighter.move_frame = 0
-		fighter.connected = false
-	var landing: int = int(data.character(fighter.character)["jump"]["landing"])
-	if fighter.stun == 0 and landing > 0:
-		fighter.stun = landing
-		fighter.stun_kind = "landing"
+static func _count_stun_down(fighter: FighterState) -> void:
+	fighter.stun -= 1
+	if fighter.stun == 0:
+		fighter.stun_kind = ""
 
 
 # One more frame of the move. Inside an open cancel window, a move that has
@@ -168,10 +142,11 @@ static func _cancel_is_open(fighter: FighterState, data: FightData) -> bool:
 
 
 # Start the move for the buffered button, if the character has one -- the
-# crouching one while holding down -- and, as a cancel, only if the current
-# move lists it. True when a move started.
+# crouching one while holding down, the air one in the air, if this jump has
+# not spent it -- and, as a cancel, only if the current move lists it. True
+# when a move started.
 static func _start_buffered(fighter: FighterState, held: int, data: FightData, as_cancel: bool = false) -> bool:
-	if fighter.buffered == "":
+	if fighter.buffered == "" or (fighter.is_airborne() and fighter.air_spent):
 		return false
 	var next_move: String = data.move_for_button(fighter.character, fighter.buffered, FightInput.holds_down(held),
 			fighter.is_airborne())
@@ -184,15 +159,22 @@ static func _start_buffered(fighter: FighterState, held: int, data: FightData, a
 	fighter.move_frame = 1
 	fighter.connected = false
 	fighter.buffered = ""
+	fighter.air_spent = fighter.air_spent or fighter.is_airborne()
 	return true
 
 
-# Step 3. Two bodies may not overlap: each gives way by half, rounded up, so
-# an odd overlap leaves a one-unit gap rather than favouring a side -- the
-# mirror image of any push is the same push. Then both are kept on the stage,
-# and one pinned to a wall leaves the other to give way.
+# Step 3. Two bodies on the ground may not overlap: each gives way by half,
+# rounded up, so an odd overlap leaves a one-unit gap rather than favouring
+# a side -- the mirror image of any push is the same push. While either is in
+# the air they may pass, which is how a jump crosses over to the other side
+# (T38); when it lands, the pushing resumes from the side it came down on.
+# Then both are kept on the stage, and one pinned to a wall leaves the other
+# to give way.
 static func _separate(state: FightState, data: FightData) -> void:
-	var left: FighterState = state.fighters[0] if state.fighters[0].x <= state.fighters[1].x else state.fighters[1]
+	if state.fighters[0].is_airborne() or state.fighters[1].is_airborne():
+		_keep_on_stage(state, data)
+		return
+	var left: FighterState = _left_one(state)
 	var right: FighterState = state.fighters[1] if left == state.fighters[0] else state.fighters[0]
 	var need: int = _body(left, data) + _body(right, data)
 	var overlap: int = need - (right.x - left.x)
@@ -207,6 +189,17 @@ static func _separate(state: FightState, data: FightData) -> void:
 		left.x -= overlap
 
 
+# The fighter further left; of two on the same spot -- one just landed on
+# the other -- the one facing right, which is the mirror of the one facing
+# left, so neither player is favoured.
+static func _left_one(state: FightState) -> FighterState:
+	var first: FighterState = state.fighters[0]
+	var second: FighterState = state.fighters[1]
+	if first.x != second.x:
+		return first if first.x < second.x else second
+	return second if second.facing > first.facing else first
+
+
 static func _keep_on_stage(state: FightState, data: FightData) -> void:
 	var width: int = int(data.table["stage"]["width"])
 	for fighter: FighterState in state.fighters:
@@ -217,13 +210,17 @@ static func _body(fighter: FighterState, data: FightData) -> int:
 	return int(data.character(fighter.character)["body"])
 
 
-# A fighter that is free turns to face the other; one in a move or stunned
-# keeps the way it was facing, as it would in any fighting game.
+# A fighter that is free turns to face the other, and so does one in the air
+# that is not attacking, so a jump that crosses over turns to face its
+# target; one in a move or stunned keeps the way it was facing, as it would
+# in any fighting game. A defender's guard follows the attacker's side, not
+# its facing (`FightInput.holds_away`): crossed over, away is the other way.
 static func _face_each_other(state: FightState) -> void:
 	for index: int in range(2):
 		var fighter: FighterState = state.fighters[index]
 		var other: FighterState = state.fighters[1 - index]
-		if fighter.is_free() and other.x != fighter.x:
+		var turns: bool = fighter.is_free() or (fighter.is_airborne() and fighter.move == "" and fighter.stun == 0)
+		if turns and other.x != fighter.x:
 			fighter.facing = signi(other.x - fighter.x)
 
 
@@ -233,7 +230,8 @@ static func _face_each_other(state: FightState) -> void:
 # a low under one in the air, neither blocked nor hit, and the events say so.
 # A throw does not find a fighter in hitstun or blockstun -- a hit could
 # otherwise be followed by a throw the victim had no frame to answer -- nor
-# one in the air, which is what a jump out of a throw is.
+# one in the air, which is what a jump out of a throw is. Taking off and
+# landing are on the ground, and can be thrown.
 # (Within a blockstring it is frame advantage, in the data, that keeps a
 # throw answerable: every move here is minus on block.)
 static func _connections(state: FightState, data: FightData) -> Array[int]:
@@ -241,7 +239,7 @@ static func _connections(state: FightState, data: FightData) -> Array[int]:
 	for index: int in range(2):
 		var attacker: FighterState = state.fighters[index]
 		var defender: FighterState = state.fighters[1 - index]
-		if _throwing(index, state, data) and (defender.stun > 0 or defender.is_airborne()):
+		if _throwing(index, state, data) and (defender.stun_kind in ["hit", "block"] or defender.is_airborne()):
 			continue
 		if not FightBoxes.overlap(FightBoxes.hitbox(attacker, data), FightBoxes.hurtbox(defender, data)):
 			continue
@@ -255,14 +253,17 @@ static func _connections(state: FightState, data: FightData) -> Array[int]:
 
 # How a hitbox that meets the hurtbox along the stage misses it up from the
 # floor, in words with a `%d` for the defender, or "" when it does not miss.
+# The words name the move's own height: a mid under a jump is not a low.
 static func _misses_vertically(attacker: FighterState, defender: FighterState, data: FightData) -> String:
 	var hit: Array[int] = FightBoxes.hit_rise(attacker, data)
 	var hurt: Array[int] = FightBoxes.hurt_rise(defender, data)
 	if FightBoxes.overlap(hit, hurt):
 		return ""
+	var height: String = data.move(attacker.character, attacker.move)["height"]
+	var why: String = {"high": " (a high misses a crouch)", "low": " (a low misses a fighter in the air)"}.get(height, "")
 	if hit[0] > hurt[1]:
-		return "passes over p%d (a high misses a crouch)" if defender.crouching else "passes over p%d"
-	return "passes under p%d (a low misses a fighter in the air)"
+		return "passes over p%d" + (why if height == "high" and defender.crouching else "")
+	return "passes under p%d" + (why if height == "low" and defender.is_airborne() else " (it is in the air)")
 
 
 # Step 5. Two throws found on one frame break each other: both moves end and
@@ -374,6 +375,7 @@ static func _apply(state: FightState, attacker: int, move: String, verdict: Arra
 		defender.stun_kind = "hit"
 		defender.move = ""
 		defender.crouching = false
+		defender.air_spent = defender.air_spent or defender.is_airborne()
 		defender.move_frame = 0
 		defender.connected = false
 	state.events.append("p%d %s p%d with %s%s" % [attacker + 1, _verb(outcome), 2 - attacker, move, verdict[1]])

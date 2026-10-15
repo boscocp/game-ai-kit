@@ -109,6 +109,8 @@ func pose(fighter: FighterState, data: FightData, clock: int, knocked_out: bool)
 		return ["hit", last - mini(last, fighter.stun / STUN_PER_CEL)]
 	if fighter.is_airborne():
 		return ["jump", jump_index(fighter, data)]
+	if fighter.stun_kind == "takeoff":
+		return ["jump", 0]
 	if fighter.crouching or fighter.stun_kind == "landing":
 		return ["crouch", _held("crouch", fighter, clock)]
 	if walks(fighter):

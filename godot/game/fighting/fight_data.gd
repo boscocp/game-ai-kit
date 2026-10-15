@@ -31,7 +31,7 @@ const HEIGHTS: Array[String] = ["high", "mid", "low", "overhead", "throw"]
 ## The whole numbers every character must carry.
 const CHARACTER_NUMBERS: Array[String] = ["health", "walk_speed", "body", "tall", "crouching_tall"]
 ## The whole numbers a character's jump must carry.
-const JUMP_NUMBERS: Array[String] = ["rise", "hang", "fall", "height", "speed", "landing"]
+const JUMP_NUMBERS: Array[String] = ["takeoff", "rise", "hang", "fall", "height", "speed", "landing"]
 
 ## Everything the file says.
 var table: Dictionary = {}
@@ -101,16 +101,17 @@ func length_of(character_name: String, move_name: String) -> int:
 	return int(frames["startup"]) + int(frames["active"]) + int(frames["recovery"])
 
 
-## A jump's whole length in frames: up, at the top, and down.
+## A jump's length in the air, in frames: up, at the top, and down. The
+## take-off before it is on the ground, and not counted.
 func jump_length(character_name: String) -> int:
 	var jump: Dictionary = character(character_name)["jump"]
 	return int(jump["rise"]) + int(jump["hang"]) + int(jump["fall"])
 
 
 ## How high above the floor a character's feet are on frame `jump_frame` of
-## its jump, counted from 1: up in equal whole steps, held at the top, down
-## in equal whole steps -- integer division, so every machine agrees. 0
-## before the jump and after it.
+## its flight, counted from 1: up in equal whole steps, held at the top, down
+## in equal whole steps -- integer division, so every machine agrees. Off the
+## floor on every frame of the flight, 0 before it and after it.
 func height_at(character_name: String, jump_frame: int) -> int:
 	var jump: Dictionary = character(character_name)["jump"]
 	var rise: int = int(jump["rise"])
@@ -122,7 +123,7 @@ func height_at(character_name: String, jump_frame: int) -> int:
 		return height * jump_frame / rise
 	if jump_frame <= top:
 		return height
-	return height * (jump_length(character_name) - jump_frame) / int(jump["fall"])
+	return maxi(1, height * (jump_length(character_name) + 1 - jump_frame) / int(jump["fall"]))
 
 
 ## A number from the top of the file, as a whole number.
