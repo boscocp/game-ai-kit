@@ -37,8 +37,8 @@ Every reference opens and says what the page says it says.
 ## Decided on the way (2026-10-15)
 
 - **The page is `docs/concepts/fighting-game-ai.md`.** 26 sources, each
-  opened, bar two papers checked from their bibliographic records only, and
-  said to be so. Ricciardi & Thill, the wording of Millington & Funge's
+  opened; six only as an abstract, a record or an overview, and said to be
+  so. Ricciardi & Thill, the wording of Millington & Funge's
   n-gram section, two competition winners' methods, Virtua Fighter 4's and
   Mortal Kombat 11's opponents from their publishers, and any game reading
   the controller could not be checked, and are listed as such, not used.

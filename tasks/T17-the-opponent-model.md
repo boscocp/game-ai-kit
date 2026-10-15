@@ -13,9 +13,9 @@ because **you can print it**. An n-gram over the player's recent actions --
 "after a low kick, this player guards crouching 60% of the time" -- is twenty
 lines and legible in a way no neural network is. T18 is the contrast.
 
-From the survey, two things this task takes. The research arena's entries
-that beat the field from 2019 on learned their model of the opponent
-**during** the fight, and searched against its predictions. And a perfect
+From the survey, two things this task takes. In the research arena, an
+entry that learned its model of the opponent **during** the fight, and
+searched against its predictions, came second in 2019 and won in 2020. And a perfect
 predictor is no fun -- a course built on the textbook says n-gram opponents
 are often deliberately weakened -- so the prediction does not drive the
 opponent directly: it chooses among T37's options, at T37's levels, under

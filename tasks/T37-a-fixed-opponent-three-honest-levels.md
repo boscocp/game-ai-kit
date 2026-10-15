@@ -8,19 +8,21 @@ An opponent for the fighting scenario that does not learn, at three
 difficulties, none of which cheats. T12's rule on the fighting board: the hard
 opponent is hard because it decides better, not because it sees more.
 
-Shaped by T36's survey (`docs/concepts/fighting-game-ai.md`). Shipped
-fighting games write their opponents by hand: reactions per situation --
-after a hit, a block, a whiff, a knockdown -- with chance in them so they do
-not repeat (Soulcalibur V's director). Street Fighter 6 groups those actions
+Shaped by T36's survey (`docs/concepts/fighting-game-ai.md`). Most fighting
+games script their opponents (the FightingICE platform paper); one director
+describes it: reactions per situation -- after a hit, a block, a whiff, a
+knockdown -- with chance in them so the computer reacts more like a person
+(Soulcalibur V). Street Fighter 6 groups those actions
 into situational decks and sets difficulty on two axes: how many tactics a
 level has, and how well it executes them. The research arena adds the third
 axis and fixes it: every AI sees the fight 15 frames late, a person's
 reaction time (the FightingICE platform paper).
 
-The complaint players make most about fighting-game opponents is reflexes no
-person has -- a low blocked on the frame it was pressed. Whether shipped
-games read the controller was not established by T36, and this task makes no
-claim about any game. It holds its own opponent to the rule either way.
+An opponent with reflexes no person has -- a low guarded on the frame it was
+pressed -- is what an under-tuned AI has, in that director's words ("inhuman
+reflexes"). Whether shipped games read the controller was not established by
+T36, and this task makes no claim about any game. It holds its own opponent
+to the rule either way.
 
 ## Steps
 
@@ -48,6 +50,26 @@ claim about any game. It holds its own opponent to the rule either way.
 ```bash
 make test-godot
 ```
+
+`godot/test/fight_opponent_test.gd` holds the knobs: the opponent is handed
+a `FightState` exactly its reaction time old, every level's reaction is at
+least 15 frames, and a planted opponent that asks for the current frame is
+refused.
+
+```bash
+./scripts/godot --headless --path godot -s res://test/opponent_levels.gd
+```
+
+The levels are ordered: over 100 seeded fights of each pairing, at both
+characters, each level wins at least 60 against the level below it, and the
+script asserts both numbers.
+
+```bash
+python3 scripts/check_demos.py
+```
+
+The training mode's overlay carries the situation the opponent saw, the
+frame it saw it on and the choice it drew.
 
 ## Manual check
 
