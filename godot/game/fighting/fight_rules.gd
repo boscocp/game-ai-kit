@@ -16,7 +16,8 @@
 ##
 ## Guard, strike and throw are a triangle: guarding stops a strike, a strike
 ## beats a throw, a throw beats guarding. Heights split guarding in two, so
-## the defender has to guess low or high as well.
+## the defender has to guess low or high as well -- and a crouch ducks a
+## high, standing punch altogether.
 ##
 ## Everything is whole numbers and nothing is random, so the same inputs from
 ## the same frame always give the same next frame (`FightReplay`).
@@ -164,7 +165,8 @@ static func _face_each_other(state: FightState) -> void:
 
 
 # Step 4. Every fighter whose hitbox overlaps the other's hurtbox, found for
-# both before anything is applied. A throw does not find a fighter in
+# both before anything is applied. A high move does not find a crouching
+# fighter: it passes over, neither blocked nor hit. A throw does not find a fighter in
 # hitstun or blockstun: a hit could otherwise be followed by a throw the
 # victim had no frame to answer. (Within a blockstring it is frame
 # advantage, in the data, that keeps a throw answerable: every move here is
@@ -175,6 +177,8 @@ static func _connections(state: FightState, data: FightData) -> Array[int]:
 		var attacker: FighterState = state.fighters[index]
 		var defender: FighterState = state.fighters[1 - index]
 		if _throwing(index, state, data) and defender.stun > 0:
+			continue
+		if _passes_over(attacker, defender, data):
 			continue
 		if FightBoxes.overlap(FightBoxes.hitbox(attacker, data), FightBoxes.hurtbox(defender, data)):
 			attackers.append(index)
@@ -198,6 +202,12 @@ static func _settle_throws(state: FightState, attackers: Array[int], data: Fight
 		state.events.append("p%d's throw is beaten by p%d's %s (strike beats throw)" % [2 - striker, striker + 1, strike])
 		return [striker] as Array[int]
 	return attackers
+
+
+# True when the attacker's move is high and the defender crouches under it:
+# a standing punch aimed at the head finds no head there (T39).
+static func _passes_over(attacker: FighterState, defender: FighterState, data: FightData) -> bool:
+	return attacker.move != "" and defender.crouching and data.move(attacker.character, attacker.move)["height"] == "high"
 
 
 # True when the fighter at `index` is in a throw.
@@ -256,7 +266,7 @@ static func _judge(state: FightState, attacker: int, defender_held: int, data: F
 
 # True when a guard -- crouching or not -- stops a strike of `height`.
 static func _guard_stops(height: String, crouched: bool) -> bool:
-	return height == "mid" or (height == "low" and crouched) or (height == "overhead" and not crouched)
+	return height == "mid" or (height == "low" and crouched) or (height in ["overhead", "high"] and not crouched)
 
 
 static func _a_height(height: String) -> String:

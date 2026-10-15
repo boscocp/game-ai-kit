@@ -6,7 +6,8 @@
 ## side's colour, lower while it crouches. Over either, its hurtbox is
 ## outlined in blue -- longer than the body once a move's limb is out -- and
 ## a hitbox, while one is out, is a red bar at the height the
-## move hits: at the head for an overhead, the chest for a mid, the shins for
+## move hits: over the head for an overhead, at the head for a high -- above
+## a crouching fighter, which it passes over -- the chest for a mid, the shins for
 ## a low; a throw's is orange, since no guard stops it. The boxes are the point:
 ## a person learning frame data has to see the box that won, not only the
 ## damage it did.
@@ -29,7 +30,7 @@ const THROW: Color = Color(1.0, 0.6, 0.1, 0.9)
 const CROUCH_SHARE: float = 0.6
 ## Where a hitbox is drawn, down from the top of a standing body of
 ## `BODY_HEIGHT`, by height; a taller figure scales it.
-const HIT_DEPTH: Dictionary = {"overhead": 4.0, "mid": 40.0, "throw": 40.0, "low": 96.0}
+const HIT_DEPTH: Dictionary = {"overhead": 0.0, "high": 12.0, "mid": 40.0, "throw": 40.0, "low": 96.0}
 const STUNNED: Color = Color(1.0, 1.0, 1.0, 0.35)
 const STAGE: Color = Color(0.22, 0.22, 0.25)
 const HEALTH_WIDTH: float = 260.0

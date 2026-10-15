@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://buk6o5fg2813m"
-path="res://.godot/imported/hop_kick.png-217ff70f5212435dae6455b21878cf8c.ctex"
+uid="uid://dddlvdjaqbwcq"
+path="res://.godot/imported/side_kick.png-7edc1ded824a6bac57003620f51cfd10.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/fighters/dancer/hop_kick.png"
-dest_files=["res://.godot/imported/hop_kick.png-217ff70f5212435dae6455b21878cf8c.ctex"]
+source_file="res://assets/fighters/lancer/side_kick.png"
+dest_files=["res://.godot/imported/side_kick.png-7edc1ded824a6bac57003620f51cfd10.ctex"]
 
 [params]
 

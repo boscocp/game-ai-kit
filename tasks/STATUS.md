@@ -45,6 +45,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T16 | The fighting scenario | done | mostly not AI, and says so: frame data in `spec/frames/`, one axis, whole numbers, the resolution order written and tested rule by rule; a recorded log replays to committed per-frame digests; `make demo-fighting` is a training mode; manual check still a person's |
 | T34 | High, low and the throw | done | four attack buttons, light quick and heavy slow; mid, low and overhead against standing and crouching guard; a throw that beats guard and loses to a strike; manual check still a person's |
 | T38 | The jump | todo | asked for by the owner while T34 was being built: an arc in whole frames, jump-ins as overheads, an anti-air, boxes that become rectangles |
+| T39 | High punches pass over a crouch | done | the owner's finding from playing T34: standing punches and the dancer's roundhouse are high and miss a crouching fighter; the light kicks recut as side kicks to the waist; manual check still a person's |
 | T35 | Fighters you can see | done | Puffolotti's CC0 karate template, two costumes; 30 strips of whole cells committed, the sheets only referenced (ADR 0015); a move's cels by phase, so the picture follows the frame data; manual check still a person's |
 | T36 | How fighting-game AI is made | todo | the academic and the shipped side, every reference checked; rewrites T37, T17 and T18 |
 | T37 | A fixed opponent, at three honest levels | todo | reaction time in frames as a knob, never reading an input before it is on screen |

@@ -49,10 +49,10 @@
      "active": [66, 67],
      "recovery": [68, 69, 70]
     },
-    "shin_kick": {
-     "startup": [148, 149, 150],
-     "active": [151],
-     "recovery": [152, 153, 154]
+    "side_kick": {
+     "startup": [179, 180],
+     "active": [181, 182],
+     "recovery": [183, 184, 185]
     },
     "axe_kick": {
      "startup": [229, 230, 231, 232, 233, 234, 235],
@@ -107,11 +107,11 @@
      "recovery": [374, 375, 376]
     },
     "snap_kick": {
-     "startup": [142, 143],
-     "active": [144, 145],
-     "recovery": [146, 147]
+     "startup": [210, 211, 212],
+     "active": [213, 214],
+     "recovery": [215, 216, 217]
     },
-    "hop_kick": {
+    "roundhouse": {
      "startup": [187, 188, 189, 190, 191],
      "active": [192, 193],
      "recovery": [194, 195]
