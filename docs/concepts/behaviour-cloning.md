@@ -14,11 +14,13 @@ teaches: behaviour-cloning
 > learned model buy over T17's frequency table, and over a ghost that only
 > looks things up?
 
-**The published player is the owner**, from four fights recorded on
-2026-10-15 -- about four minutes of play, 237 decisions. That is very little,
-and the numbers below carry it. Before the owner played, the pipeline was
-built on three scripted stand-ins (`godot/test/stand_in_player.gd`); their
-numbers are at the end, because the contrast is the lesson.
+**The published player is the owner**, from nine fights recorded on
+2026-10-15 -- three against the fixed opponent at medium, one at hard, five
+against the learner at medium and hard; about eight minutes of play, 450
+decisions. That is still little, and the numbers below carry it. Before the
+owner played, the pipeline was built on three scripted stand-ins
+(`godot/test/stand_in_player.gd`); their numbers are at the end, because the
+contrast is the lesson.
 
 ## The pipeline, in four files
 
@@ -65,44 +67,46 @@ each is seated in the game.
 
 ## The comparison
 
-`python3 python/gameaikit/cloning/compare.py --report`, on the owner: 3
-recordings fitted (151 decisions), 1 held out (86 decisions, the one fight
-against the hard opponent).
+`python3 python/gameaikit/cloning/compare.py --report`, on the owner: 6
+recordings fitted (317 decisions), 3 held out (133 decisions) -- every
+fourth by name, counting back from the last.
 
 | method | held-out accuracy | numbers | built in | beats medium |
 |---|---|---|---|---|
-| always the commonest (step in) | 43.0% | 1 | -- | -- |
-| **n-gram (T17)** | **48.8%** | ≤121 | nothing beforehand | 40/100 (as the learner) |
-| ghost, exact | 44.2% | 133 | ~0 s | 66/100 |
-| ghost, nearest | 44.2% | 133 | ~0 s | 75/100 |
-| model, last action only | 47.7% | 143 | 0.17 s | -- |
-| model, the situation | 36.0% | 363 | 0.30 s | 47/100 |
+| always the commonest (step in) | 21.1% | 1 | -- | -- |
+| **n-gram (T17)** | **40.6%** | ≤121 | nothing beforehand | 40/100 (as the learner) |
+| ghost, exact | 25.6% | 265 | ~0 s | 60/100 |
+| ghost, nearest | 29.3% | 265 | ~0 s | 53/100 |
+| model, last action only | 33.8% | 143 | 0.34 s | -- |
+| model, the situation | 32.3% | 396 | 0.65 s | 47/100 |
 
 What this says:
 
-- **The learned model bought nothing -- it cost.** Over six features it
-  guesses the held-out fight *worse than always saying "step in"*. 151
-  decisions spread over 103 situations met is a few sightings each, and
-  363 numbers fitted to that learn the three training fights, not the
-  player. The penalty keeps the weights small; it cannot invent data.
-- **The table that learns during the fight was the best guesser.** T17's
-  n-gram starts the held-out fight knowing nothing and still leads: what
-  this player did next depended most on what they had just done, and that
-  is learnt within one fight.
-- **The ghosts are no better than the floor at guessing, yet win most.**
-  The nearest ghost beats the fixed opponent 75 times in 100 and the clone
-  47: a ghost replays answers the player actually gave, whole, where the
-  model averages them into a probability that is never quite any of them.
-  Guessing well and playing well are different measurements.
-- **The held-out fight was against the hard opponent**, the training ones
-  against medium. A player fights differently under pressure; a split by
-  recording shows that, and a split by row would have hidden it.
+- **The table that learns during the fight guesses best, by seven points.**
+  T17's n-gram starts every held-out fight knowing nothing and still leads
+  everything fitted beforehand on six other fights. This player changes
+  from fight to fight -- one held-out fight is mostly stepping out, another
+  mostly crouching -- and only a method that learns *this* fight follows
+  that.
+- **The situation bought nothing over the last action.** The model that
+  sees six features guesses no better than the one that sees only what the
+  n-gram sees (32.3% against 33.8%), with almost three times the numbers.
+- **The model beats the ghosts at guessing, and loses to them at
+  fighting.** It averages the player's answers into probabilities and
+  guesses the commonest well; a ghost replays whole answers the player
+  actually gave, and the exact one wins 60 fights in 100 against the
+  clone's 47. Guessing well and playing well are different measurements.
+- **With four fights it was worse.** On the first four fights the
+  six-feature model guessed *under* the floor (36.0% against 43.0%): 151
+  decisions over 103 situations is a few sightings each, and the model
+  learnt the three training fights rather than the player. More play
+  lifted it above the floor; it did not lift it past the n-gram.
 
 So the honest answer, for this player and this much data: **the learned
-model bought nothing here.** The frequency table T17 already ships guesses
-better, and a ghost plays better. A model earns its numbers with far more
-play than four fights, or with situations too many to have met -- and this
-kit would reach for one then, not before.
+model bought little here, and the frequency table T17 already ships is the
+better predictor.** A model earns its numbers with far more play, with a
+player whose habits hold from fight to fight, or with situations too many
+to have met -- and this kit would reach for one then, not before.
 
 ### The stand-ins: why a pipeline check is not a result
 
@@ -131,7 +135,7 @@ execution is the opponent's own.
 Measured headless on an AMD Ryzen 5 9600X on 2026-10-15
 (`make test-inference-budget`), on the owner's published player: the
 softmax **0.007 ms** a decision, the exact ghost **0.002 ms**, the nearest
-ghost **0.047 ms** -- it compares with every one of the 103 situations met.
+ghost **0.094 ms** -- it compares with every one of the 212 situations met, so it grows with the recordings.
 The budget is 1 ms, a sixteenth of a frame. This is the only machine the
 owner had to hand; the slowest machine available was this one.
 

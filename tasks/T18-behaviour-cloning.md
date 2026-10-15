@@ -65,7 +65,7 @@ holds the published file to a fresh fit of those rows. The budget script
 asserts inference stays under a stated millisecond count per decision, and
 first times a planted decision that must exceed it.
 
-The data is the owner's play, recorded with `make record-fights`: four
+The data is the owner's play, recorded with `make record-fights`: nine
 fights on 2026-10-15 (owner's decision). The pipeline was built first on
 scripted stand-ins, which stay in `data/fights/` as the contrast the concept
 page draws.
