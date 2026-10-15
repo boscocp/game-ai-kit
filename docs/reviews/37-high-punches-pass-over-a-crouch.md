@@ -10,6 +10,13 @@ probes of a fighter standing up on a high's active frame, of a high against
 a crouching move, and of a combo into a high; `make fighter-strips` against
 the committed strips; 13 mutations.
 
+## What was reviewed
+
+Commit e304f93: the frame data and its copy, `fight_data.gd`,
+`fight_rules.gd`, `fight_view.gd`, `sprites.json` and the recut strips with
+their `LICENCES.md` rows, `fighting_test.gd`, the log and its digests, T39,
+the spec README and STATUS.
+
 ## Checked and true
 
 - `make check` exited 0. The pass-over is in step 4, read off the
