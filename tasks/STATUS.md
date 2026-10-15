@@ -46,7 +46,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T34 | High, low and the throw | done | four attack buttons, light quick and heavy slow; mid, low and overhead against standing and crouching guard; a throw that beats guard and loses to a strike; manual check still a person's |
 | T35 | Fighters you can see | done | Puffolotti's CC0 karate template, two costumes; 30 strips of whole cells committed, the sheets only referenced (ADR 0015); a move's cels by phase, so the picture follows the frame data; manual check still a person's |
 | T36 | How fighting-game AI is made | done | `docs/concepts/fighting-game-ai.md`: 26 sources, each opened, six as abstracts only and said so; most games script their opponents, the ones that copy a player record situations and answers, the arena hands every AI the fight 15 frames late; T37, T17 and T18 rewritten from it |
-| T37 | A fixed opponent, at three honest levels | todo | hand-written reactions by situation; three knobs -- reaction (at least 15 frames), tactics, execution; handed only the past |
+| T37 | A fixed opponent, at three honest levels | done | five situations, weighted options; reaction 30/22/15, tactics, execution; `FightDelay` hands it a copy of the past and refuses under 15; each level beats the one below 93-99 in 100 mirror fights; not a `DecisionPolicy` (board-typed); manual check still a person's |
 | T38 | The jump | todo | asked for by the owner while T34 was being built: an arc in whole frames, jump-ins as overheads, an anti-air, boxes that become rectangles |
 | T39 | High punches pass over a crouch | done | the owner's finding from playing T34: standing punches and the dancer's roundhouse are high and miss a crouching fighter; the light kicks recut as side kicks to the waist; manual check still a person's |
 | T17 | The opponent model | todo | n-grams you can print; after T37, so the learner has a fixed opponent to be measured against |
@@ -85,6 +85,31 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-15 (wave 39)
+
+**What landed.** T37: `FightOpponent`, a fixed opponent with five situations
+and three levels, written as knobs -- reaction (30, 22, 15 frames), tactics,
+execution. `FightDelay` seats it and hands it a copy of the fight its
+reaction time old, never sooner than 15 frames. `make test-opponent-levels`
+plays 600 mirror fights: each level beats the one below it 93 to 99 times
+in 100, and a level against itself stays under 60. The training mode opens
+on the medium opponent; the panel shows what it saw, on which frame, and
+what it drew.
+
+**The review's worst findings.** The header said hard "sees the same fight";
+it sees it sooner, and now says so, with how much of its edge is the deciding.
+The manual check promised something no level could pass. The seat copied
+only at hand-over, so a caller stepping one state in place could show the
+opponent the present. All fixed, with four untested paths; see
+[docs/reviews/39-a-fixed-opponent-three-honest-levels.md](../docs/reviews/39-a-fixed-opponent-three-honest-levels.md).
+
+**Not proven.** T37's manual check, with T34's, T35's and T39's.
+
+**Next:** T38, the jump. The cels are found in the template: the lancer's
+uppercut at 37-43, takeoff 564-566, tucks 572-580, the flying kick 677-679;
+the dancer's sheet is the same template and should share the indices --
+check before cutting.
 
 ## Resuming after 2026-10-15 (wave 38)
 

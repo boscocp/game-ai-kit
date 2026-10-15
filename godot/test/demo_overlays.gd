@@ -33,7 +33,8 @@ const SCENES: Array[String] = [
 ]
 
 ## The field each example's task says its overlay must carry, and whether it
-## must be a number. Found anywhere in the overlay, at any depth.
+## must be a number. Found anywhere in the overlay, at any depth. An example
+## whose tasks ask for several lists each pair.
 const REQUIRED: Dictionary = {
 	"res://game/checkers/checkers.tscn": ["value", true],
 	"res://game/main.tscn": ["p_win", true],
@@ -41,7 +42,7 @@ const REQUIRED: Dictionary = {
 	"res://game/stealth/stealth.tscn": ["suspicion", true],
 	"res://game/tactical/tactical.tscn": ["why", false],
 	"res://game/tictactoe/tictactoe.tscn": ["probability", true],
-	"res://game/fighting/fighting.tscn": ["phase", false],
+	"res://game/fighting/fighting.tscn": [["phase", false], ["seen_frame", true]],
 }
 
 ## Decisions each example takes before it is asked. More than one, so an
@@ -134,6 +135,11 @@ func _check_example(label: String, example: Node, required: Array) -> Array[Stri
 func _check_required(label: String, overlay: Dictionary, required: Array) -> Array[String]:
 	if required.is_empty():
 		return []
+	if required[0] is Array:
+		var failures: Array[String] = []
+		for pair: Array in required:
+			failures += _check_required(label, overlay, pair)
+		return failures
 	var found: Array = []
 	_collect(overlay, required[0], found)
 	if found.is_empty():
@@ -233,6 +239,12 @@ func _planted_examples() -> Array[String]:
 		var spec: Array = cases[label]
 		var found: Array[String] = await _check_node("planted", _planted_node(spec[0], spec[1]), ["p_win", true])
 		failures += _judge_planted(label, found, spec[2])
+	# Of two required fields, the second missing: a list of pairs that only
+	# looked at its first would pass this.
+	var second_missing: Array[String] = await _check_node("planted", _planted_node(
+			counting + "func decision_overlay():\n\treturn {\"p_win\": 0.5, \"n\": count}", true),
+			[["p_win", true], ["seen_frame", true]])
+	failures += _judge_planted("the second of two required fields missing", second_missing, "carries no seen_frame")
 	return failures
 
 

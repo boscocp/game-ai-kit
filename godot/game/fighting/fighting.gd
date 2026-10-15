@@ -5,19 +5,24 @@
 ## heavy, J and K kick light and heavy, L throws; holding away from the dummy
 ## guards, standing or -- with S -- crouching. C swaps which character you
 ## play. The dummy, player two, does what its mode says -- stand, guard
-## standing, guard crouching, jab or throw every second -- and M cycles the
-## mode: each guard has a height that gets through it. P pauses, and space then plays one frame:
-## the step every example offers (T21), here one frame of the resolution
-## order, which is what a person learning frame data needs to see.
+## standing, guard crouching, jab or throw every second, or fight back as the
+## fixed opponent at one of its three levels -- and M cycles the mode: each
+## guard has a height that gets through it. P pauses, and space then plays
+## one frame: the step every example offers (T21), here one frame of the
+## resolution order, which is what a person learning frame data needs to see.
 ##
-## There is no AI here yet (T16). T17 puts an opponent model in the dummy's
-## place, and reads the same input log this scene keeps.
+## The opponent (T37) sees the fight a quarter of a second late or more, and
+## the panel says what it saw, on which frame, and what it drew. T17 puts an
+## opponent model in the same place, and reads the same input log this scene
+## keeps.
 ##
 ## When not to use it: as a game. It is a frame-data bench.
 class_name FightingExample
 extends Node2D
 
-const MODES: Array[String] = ["stand", "guard standing", "guard crouching", "jab", "throw"]
+const MODES: Array[String] = ["stand", "guard standing", "guard crouching", "jab", "throw",
+		"opponent: easy", "opponent: medium", "opponent: hard"]
+const OPPONENT_MODE: String = "opponent: "
 ## Punches on the top row and kicks below them, as an arcade panel has them.
 const KEYS: Dictionary = {KEY_A: FightInput.LEFT, KEY_D: FightInput.RIGHT, KEY_S: FightInput.DOWN,
 		KEY_U: FightInput.LIGHT_PUNCH, KEY_I: FightInput.HEAVY_PUNCH, KEY_J: FightInput.LIGHT_KICK,
@@ -27,12 +32,24 @@ const JAB_EVERY: int = 60
 
 var data: FightData = FightData.read()
 var state: FightState
-## What the dummy does: an entry of `MODES`. It starts jabbing, so a fight
-## opens with something to look at.
-var dummy_mode: String = "jab"
+## What the dummy does: an entry of `MODES`. It starts as the medium
+## opponent, so a fight opens with something deciding. Setting it seats the
+## opponent its mode names, or none.
+var dummy_mode: String = "opponent: medium":
+	set(mode):
+		dummy_mode = mode
+		_seat_opponent()
 var paused: bool = false
 ## Every frame's inputs since the fight began, as `FightReplay` reads them.
 var input_log: Array = []
+## The opponent in the dummy's place, seated behind its reaction time, or
+## null while the dummy is scripted.
+var seat: FightDelay
+var opponent: FightOpponent
+## Fights begun since the scene opened: the seed of each new opponent's
+## chances, so a restart does not open the same way every time, while the
+## input log still replays the fight exactly.
+var fights_begun: int = 0
 var _characters: Array[String] = ["lancer", "dancer"]
 
 @onready var _view: FightView = $FightView
@@ -85,7 +102,19 @@ func restart() -> void:
 		return
 	state = FightState.starting(data, _characters[0], _characters[1])
 	input_log.clear()
+	_seat_opponent()
 	_refresh()
+
+
+# A fresh opponent for an "opponent" mode, none for the others, its chances
+# seeded by how many fights have begun.
+func _seat_opponent() -> void:
+	opponent = null
+	seat = null
+	if dummy_mode.begins_with(OPPONENT_MODE):
+		fights_begun += 1
+		opponent = FightOpponent.new(dummy_mode.trim_prefix(OPPONENT_MODE), data, fights_begun)
+		seat = FightDelay.new(opponent, 1)
 
 
 ## One frame: read both inputs, resolve, and keep them in the log.
@@ -107,7 +136,18 @@ func decision_overlay() -> Dictionary:
 	for fighter: FighterState in state.fighters:
 		fighters.append(_fighter_overlay(fighter))
 	var happened: String = ", ".join(state.events) if not state.events.is_empty() else "nothing connected"
-	return {"frame": state.frame, "fighters": fighters, "events": happened, "dummy": dummy_mode}
+	return {"frame": state.frame, "fighters": fighters, "events": happened, "dummy": dummy_mode,
+			"opponent": opponent_overlay()}
+
+
+## What the opponent saw and drew: the situation, the frame it saw it on --
+## never this one -- and its choice. -1 and words saying so while the dummy
+## is scripted or the opponent has not seen the fight yet.
+func opponent_overlay() -> Dictionary:
+	if opponent == null:
+		return {"level": "none, the dummy is scripted", "situation": "none", "seen_frame": -1, "choice": "none"}
+	return {"level": opponent.level, "reaction": seat.reaction, "situation": opponent.situation,
+			"seen_frame": opponent.seen_frame, "choice": opponent.choice}
 
 
 func _fighter_overlay(fighter: FighterState) -> Dictionary:
@@ -130,8 +170,11 @@ func _held_keys() -> int:
 
 
 # The dummy holds away to guard -- holding down as well to guard crouching --
-# or presses light punch or throw once every `JAB_EVERY` frames, or stands.
+# or presses light punch or throw once every `JAB_EVERY` frames, or stands;
+# or the opponent decides, from the fight as it was.
 func _dummy_input() -> int:
+	if seat != null:
+		return seat.input_for(state)
 	var dummy: FighterState = state.fighters[1]
 	var away: int = FightInput.RIGHT if state.fighters[0].x < dummy.x else FightInput.LEFT
 	var on_the_beat: bool = state.frame % JAB_EVERY == 0
@@ -156,4 +199,4 @@ func _refresh() -> void:
 	_view.show_fight(state, data)
 	_status.text = ("A/D walk, S crouch, U/I punch light/heavy, J/K kick light/heavy, L throw, hold away to guard\n"
 			+ "C swap characters  ·  M dummy: %s  ·  P pause, space one frame  ·  R restart" % dummy_mode)
-	_panel.text = FightingPanel.describe(state, data, paused)
+	_panel.text = FightingPanel.describe(state, data, paused, seat)
