@@ -163,13 +163,16 @@ func _has_option(character: String, option: String) -> bool:
 	return not option in FightData.HEIGHTS or strike_for(_data, character, option) != ""
 
 
-## The character's quickest move at `height`, or "" when it has none.
-## Quickest, because an answer to a situation seen late is already late.
+## The character's quickest move from the ground at `height`, or "" when it
+## has none. Quickest, because an answer to a situation seen late is already
+## late; from the ground, because this opponent does not jump.
 static func strike_for(data: FightData, character: String, height: String) -> String:
 	var found: String = ""
 	var moves: Dictionary = data.character(character)["moves"]
 	for name: String in moves:
-		if moves[name]["height"] == height and (found == "" or moves[name]["startup"] < moves[found]["startup"]):
+		if moves[name]["stance"] == "air" or moves[name]["height"] != height:
+			continue
+		if found == "" or moves[name]["startup"] < moves[found]["startup"]:
 			found = name
 	return found
 

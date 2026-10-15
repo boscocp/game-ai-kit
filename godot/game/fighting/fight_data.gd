@@ -20,15 +20,18 @@ const PATH: String = "res://game/fighting/characters.json"
 
 ## The whole numbers every move must carry.
 const MOVE_NUMBERS: Array[String] = ["startup", "active", "recovery", "damage", "hitstun", "blockstun", "hurtbox_reach"]
-## A move's stance: whether it is done standing, or holding down.
-const STANCES: Array[String] = ["standing", "crouching"]
-## A move's height: which guard stops it. A `high` passes over a crouching
-## fighter and is stopped standing, `mid` is stopped by either, `low` only
-## crouching, `overhead` only standing, and a `throw` by neither.
+## A move's stance: whether it is done standing, holding down, or in the air.
+const STANCES: Array[String] = ["standing", "crouching", "air"]
+## A move's height: which guard stops it. A `high` is aimed above any crouch
+## and is stopped standing, `mid` is stopped by either, `low` only crouching,
+## `overhead` only standing, and a `throw` by neither. Where it reaches is
+## its `rise`; the height is only which guard stops it.
 const HEIGHTS: Array[String] = ["high", "mid", "low", "overhead", "throw"]
 
 ## The whole numbers every character must carry.
-const CHARACTER_NUMBERS: Array[String] = ["health", "walk_speed", "body"]
+const CHARACTER_NUMBERS: Array[String] = ["health", "walk_speed", "body", "tall", "crouching_tall"]
+## The whole numbers a character's jump must carry.
+const JUMP_NUMBERS: Array[String] = ["rise", "hang", "fall", "height", "speed", "landing"]
 
 ## Everything the file says.
 var table: Dictionary = {}
@@ -67,8 +70,11 @@ func move(character_name: String, move_name: String) -> Dictionary:
 
 ## The move a character does for `button`, or "" when it has none. Holding
 ## down picks the crouching move for the button; a button with no crouching
-## move does its standing one, so no button is dead while crouched.
-func move_for_button(character_name: String, button: String, crouching: bool = false) -> String:
+## move does its standing one, so no button is dead while crouched. In the
+## air only an air move will do: a standing punch has no floor to stand on.
+func move_for_button(character_name: String, button: String, crouching: bool = false, airborne: bool = false) -> String:
+	if airborne:
+		return _move_in_stance(character_name, button, "air")
 	var standing: String = _move_in_stance(character_name, button, "standing")
 	if not crouching:
 		return standing
@@ -93,6 +99,30 @@ func _move_in_stance(character_name: String, button: String, stance: String) -> 
 func length_of(character_name: String, move_name: String) -> int:
 	var frames: Dictionary = move(character_name, move_name)
 	return int(frames["startup"]) + int(frames["active"]) + int(frames["recovery"])
+
+
+## A jump's whole length in frames: up, at the top, and down.
+func jump_length(character_name: String) -> int:
+	var jump: Dictionary = character(character_name)["jump"]
+	return int(jump["rise"]) + int(jump["hang"]) + int(jump["fall"])
+
+
+## How high above the floor a character's feet are on frame `jump_frame` of
+## its jump, counted from 1: up in equal whole steps, held at the top, down
+## in equal whole steps -- integer division, so every machine agrees. 0
+## before the jump and after it.
+func height_at(character_name: String, jump_frame: int) -> int:
+	var jump: Dictionary = character(character_name)["jump"]
+	var rise: int = int(jump["rise"])
+	var top: int = rise + int(jump["hang"])
+	var height: int = int(jump["height"])
+	if jump_frame <= 0 or jump_frame > jump_length(character_name):
+		return 0
+	if jump_frame <= rise:
+		return height * jump_frame / rise
+	if jump_frame <= top:
+		return height
+	return height * (jump_length(character_name) - jump_frame) / int(jump["fall"])
 
 
 ## A number from the top of the file, as a whole number.
@@ -121,6 +151,11 @@ func _character_problem(name: String, numbers: Dictionary) -> String:
 	for key: String in CHARACTER_NUMBERS:
 		if not _is_count(numbers.get(key)):
 			return "%s's %s is not a whole number" % [name, key]
+	var jump: Variant = numbers.get("jump")
+	if not jump is Dictionary or not JUMP_NUMBERS.all(func(key: String) -> bool: return _is_count(jump.get(key))):
+		return "%s's jump needs %s, each a whole number" % [name, JUMP_NUMBERS]
+	if int(jump["rise"]) < 1 or int(jump["fall"]) < 1:
+		return "%s's jump must take at least one frame up and one down" % name
 	if not numbers.get("moves") is Dictionary or numbers["moves"].is_empty():
 		return "%s has no moves" % name
 	for move_name: String in numbers["moves"]:
@@ -153,6 +188,10 @@ func _move_problem(name: String, move_name: String, frames: Dictionary, moves: D
 		return "%s has no button among %s" % [label, FightInput.BUTTONS.keys()]
 	if not STANCES.has(frames.get("stance")) or not HEIGHTS.has(frames.get("height")):
 		return "%s needs a stance among %s and a height among %s" % [label, STANCES, HEIGHTS]
+	if frames["stance"] == "air" and frames["height"] != "overhead":
+		return "%s: a move from the air hits as an overhead, and this one says %s" % [label, frames["height"]]
+	if not _is_rise(frames.get("rise")):
+		return "%s needs a rise: two whole numbers, bottom first, up from its feet" % label
 	var is_throw: bool = frames["height"] == "throw"
 	if is_throw != (frames["button"] == "throw") or (is_throw and frames["stance"] != "standing"):
 		return "%s: a throw is done standing, on the throw button, and only a throw is" % label
@@ -171,6 +210,18 @@ func _move_problem(name: String, move_name: String, frames: Dictionary, moves: D
 # reads every number as a float, so 6 and 6.0 are the same and 6.5 is not.
 static func _is_count(value: Variant) -> bool:
 	return (value is float or value is int) and float(value) == floorf(float(value)) and float(value) >= 0.0
+
+
+# Two whole numbers, the bottom no higher than the top. Unlike every other
+# number here they may be negative: a kick from the air reaches below the
+# feet that kicked it.
+static func _is_rise(value: Variant) -> bool:
+	if not value is Array or (value as Array).size() != 2:
+		return false
+	for edge: Variant in value:
+		if not (edge is float or edge is int) or float(edge) != floorf(float(edge)):
+			return false
+	return float(value[0]) <= float(value[1])
 
 
 # Two counts, the first no larger than the second: a hitbox's near and far

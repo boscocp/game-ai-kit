@@ -21,6 +21,8 @@ const HEAVY_PUNCH: int = 16
 const LIGHT_KICK: int = 32
 const HEAVY_KICK: int = 64
 const THROW: int = 128
+## Held to jump, with left or right to jump that way (T38).
+const UP: int = 256
 
 ## The buttons, by the name the frame data's moves use, in the order they are
 ## looked at when two are pressed on one frame: the last one wins.
@@ -42,6 +44,11 @@ static func pressed(now: int, before: int) -> String:
 ## Which way the input walks: -1 left, +1 right, 0 for neither or both.
 static func walk_direction(held: int) -> int:
 	return (1 if held & RIGHT else 0) - (1 if held & LEFT else 0)
+
+
+## True when the input holds up: a jump, once the fighter is free.
+static func holds_up(held: int) -> bool:
+	return held & UP != 0
 
 
 ## True when the input holds down: a crouch, and a crouching guard.

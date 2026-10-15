@@ -26,7 +26,7 @@ const WALK_FRAMES_PER_CEL: int = 4
 ## How many frames of hitstun each cel of the hit animation is held for.
 const STUN_PER_CEL: int = 3
 ## The animations every character needs besides its moves.
-const ANIMATIONS: Array[String] = ["idle", "walk", "crouch", "guard", "guard_crouching", "hit", "down"]
+const ANIMATIONS: Array[String] = ["idle", "walk", "crouch", "guard", "guard_crouching", "hit", "down", "jump"]
 
 ## Everything the file says.
 var table: Dictionary = {}
@@ -104,10 +104,12 @@ func pose(fighter: FighterState, data: FightData, clock: int, knocked_out: bool)
 	if fighter.stun > 0 and fighter.stun_kind == "block":
 		var guard: String = "guard_crouching" if fighter.crouching else "guard"
 		return [guard, _held(guard, fighter, clock)]
-	if fighter.stun > 0:
+	if fighter.stun > 0 and fighter.stun_kind == "hit":
 		var last: int = cels(fighter.character, "hit").size() - 1
 		return ["hit", last - mini(last, fighter.stun / STUN_PER_CEL)]
-	if fighter.crouching:
+	if fighter.is_airborne():
+		return ["jump", jump_index(fighter, data)]
+	if fighter.crouching or fighter.stun_kind == "landing":
 		return ["crouch", _held("crouch", fighter, clock)]
 	if walks(fighter):
 		var stride: int = int(data.character(fighter.character)["walk_speed"]) * WALK_FRAMES_PER_CEL
@@ -121,6 +123,14 @@ func pose(fighter: FighterState, data: FightData, clock: int, knocked_out: bool)
 ## is read off where it stands, so walking backwards plays it backwards.
 static func walks(fighter: FighterState) -> bool:
 	return fighter.is_free() and not fighter.crouching and FightInput.walk_direction(fighter.held_before) != 0
+
+
+## The cel of the jump for the frame of it the fighter is on: the cels spread
+## evenly over the whole arc, take-off first, so the picture rises and falls
+## with the frame data.
+func jump_index(fighter: FighterState, data: FightData) -> int:
+	var shown: int = cels(fighter.character, "jump").size()
+	return mini(shown - 1, (fighter.jump_frame - 1) * shown / data.jump_length(fighter.character))
 
 
 ## The cel of a move for the frame its fighter is on: each phase's cels

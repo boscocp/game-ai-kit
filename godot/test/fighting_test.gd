@@ -314,7 +314,7 @@ func test_frame_data_that_breaks_a_rule_is_refused() -> void:
 	var cases: Dictionary = {
 		"startup": func(jab: Dictionary) -> void: jab["startup"] = 0,
 		"damage": func(jab: Dictionary) -> void: jab["damage"] = -40,
-		"cancels into": func(jab: Dictionary) -> void: jab["cancels_into"] = ["uppercut"],
+		"cancels into": func(jab: Dictionary) -> void: jab["cancels_into"] = ["haymaker"],
 		"button": func(jab: Dictionary) -> void: jab.erase("button"),
 		"hitbox": func(jab: Dictionary) -> void: jab["hitbox"] = [14, 50.5],
 		"stance": func(jab: Dictionary) -> void: jab["stance"] = "kneeling",
@@ -322,7 +322,9 @@ func test_frame_data_that_breaks_a_rule_is_refused() -> void:
 		"tell them apart": func(jab: Dictionary) -> void: jab["button"] = "heavy_punch",
 		"a height among": func(jab: Dictionary) -> void: jab["height"] = "Low",
 		"done standing": func(jab: Dictionary) -> void: jab.merge({"height": "throw", "button": "throw", "stance": "crouching"}, true),
-		"standing it does nothing": func(jab: Dictionary) -> void: jab.merge({"button": "heavy_punch", "stance": "crouching"}, true),
+		"standing it does nothing": func(jab: Dictionary) -> void: jab.merge({"stance": "air", "height": "overhead"}, true),
+		"hits as an overhead": func(jab: Dictionary) -> void: jab["stance"] = "air",
+		"needs a rise": func(jab: Dictionary) -> void: jab["rise"] = [40.5, 90],
 	}
 	for expected: String in cases:
 		var table: Dictionary = _data.table.duplicate(true)
@@ -346,9 +348,10 @@ func test_holding_down_crouches_and_does_not_walk() -> void:
 func test_holding_down_picks_the_crouching_move_and_falls_back_to_standing() -> void:
 	assert_str(_play(_fight(), [[DOWN | FightInput.LIGHT_KICK, 0]]).fighters[0].move).is_equal("low_kick")
 	assert_str(_play(_fight(), [[FightInput.LIGHT_KICK, 0]]).fighters[0].move).is_equal("side_kick")
-	var thrust: FighterState = _play(_fight(), [[DOWN | HEAVY, 0]]).fighters[0]
-	assert_str(thrust.move).is_equal("thrust")
-	assert_bool(thrust.crouching).is_false()
+	var throw: FighterState = _play(_fight(), [[DOWN | THROW, 0]]).fighters[0]
+	assert_str(throw.move).is_equal("throw")
+	assert_bool(throw.crouching).is_false()
+	assert_str(_play(_fight(), [[DOWN | HEAVY, 0]]).fighters[0].move).is_equal("uppercut")
 
 
 func test_a_low_gets_through_a_standing_guard_and_not_a_crouching_one() -> void:
