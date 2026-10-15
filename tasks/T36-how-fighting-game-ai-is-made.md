@@ -33,3 +33,23 @@ python3 scripts/check_doc_freshness.py
 ## Manual check
 
 Every reference opens and says what the page says it says.
+
+## Decided on the way (2026-10-15)
+
+- **The page is `docs/concepts/fighting-game-ai.md`.** 26 sources, each
+  opened, bar two papers checked from their bibliographic records only, and
+  said to be so. Ricciardi & Thill, the wording of Millington & Funge's
+  n-gram section, two competition winners' methods, Virtua Fighter 4's and
+  Mortal Kombat 11's opponents from their publishers, and any game reading
+  the controller could not be checked, and are listed as such, not used.
+- **What it changed**: T37 gets three knobs from the sources -- reaction
+  (at least the competition's 15 frames), tactics and execution (Street
+  Fighter 6) -- and is handed only the past; T17 says plainly that shipped
+  games mostly write opponents by hand, and feeds its prediction through
+  T37's levels; T18 compares a nearest-neighbour ghost as well.
+- **The throw escape window T34 left here**: not needed. Nothing found makes
+  it necessary for the opponent model.
+- **Not taken**: deep reinforcement learning (tier 1 cannot train it, and
+  the sources show it exploiting its training opponent and reacting faster
+  than a person) and MCTS on the fighting scenario (worth its own task after
+  T18; `FightRules.step` is the simulator it would need).

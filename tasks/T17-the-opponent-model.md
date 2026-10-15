@@ -6,11 +6,20 @@ Size: M · Prereqs: T37 · Files: `godot/addons/ai_opponent/`, `python/gameaikit
 
 An AI that learns the player, during the match, from a frequency table.
 
-This is what fighting-game AI actually does, and it is taught first because it
-works and because **you can print it**. An n-gram over the player's recent
-inputs — "after a low kick, this player throws a fireball 60% of the time" —
-is twenty lines, beats a lot of hand-written AI, and is legible in a way no
-neural network is. T18 is the contrast.
+Shipped fighting games mostly write their opponents by hand (T36's survey,
+`docs/concepts/fighting-game-ai.md`); the n-gram predictor is the textbook's
+answer to learning a player, and it is taught here because it works and
+because **you can print it**. An n-gram over the player's recent actions --
+"after a low kick, this player guards crouching 60% of the time" -- is twenty
+lines and legible in a way no neural network is. T18 is the contrast.
+
+From the survey, two things this task takes. The research arena's entries
+that beat the field from 2019 on learned their model of the opponent
+**during** the fight, and searched against its predictions. And a perfect
+predictor is no fun -- a course built on the textbook says n-gram opponents
+are often deliberately weakened -- so the prediction does not drive the
+opponent directly: it chooses among T37's options, at T37's levels, under
+T37's reaction time.
 
 ## Steps
 
@@ -26,6 +35,10 @@ neural network is. T18 is the contrast.
    prediction, and that drawing is most of this task's teaching value.
 5. It implements `DecisionPolicy`. The game must not know whether it is playing
    a script, a table or a network.
+6. The prediction feeds T37's opponent: the likeliest next action of the
+   player picks which of the level's options to weight, and the level's
+   reaction time still holds -- the model learns from what was on screen,
+   never from a press it could not yet have seen.
 
 ## Acceptance
 
