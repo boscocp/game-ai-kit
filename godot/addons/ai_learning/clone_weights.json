@@ -79,511 +79,459 @@
   ],
   "weights": [
    [
-    -0.4610736102832624,
-    -0.10961633449293362,
-    -0.38855990064489115,
-    1.257912433832528,
-    -0.13706634476049048,
-    -0.3510558179086217,
-    0.5885824223983835,
-    0.044126224208446946,
-    0.7349342473615085,
-    -0.9862475706522961,
-    -0.8525990469638447,
-    0.893368124532269,
-    -0.11611038095678596,
-    0.0377402171146422,
-    0.3449759776916637,
-    0.23548875236644393,
-    0.6483136232176251,
-    -0.19099395799346408,
-    -0.3904013633023421,
-    -0.39031053780739633,
-    0.26045664742999103,
-    -0.20645415113358156,
-    -0.18121038553968802,
-    -0.23615899229818452,
-    0.45677385435552903,
-    -0.16677766892432455,
-    0.36007801903346437,
-    0.05556402426815107,
-    0.30700890453908314,
-    -0.12986810218043818,
-    0.420366804386214,
-    -0.4978087914943252,
-    0.31014681373490716,
-    0.19225250636930044,
-    0.04045232025749513
+    -0.336258,
+    -0.089218,
+    -0.144125,
+    0.37142,
+    -0.405089,
+    -0.591191,
+    0.076505,
+    0.198956,
+    0.440179,
+    0.310255,
+    -0.058244,
+    0.401084,
+    -0.119228,
+    0.011455,
+    0.289772,
+    0.184641,
+    0.486769,
+    -0.110314,
+    -0.422923,
+    -0.301822,
+    0.311599,
+    -0.155674,
+    -0.080469,
+    -0.233343,
+    0.071564,
+    -0.248643,
+    0.665167,
+    0.03555,
+    0.233742,
+    -0.095016,
+    0.378218,
+    -0.483501,
+    0.279558,
+    0.187024,
+    -0.012749
    ],
    [
-    -0.5805357155206056,
-    -0.17192258099193897,
-    0.8789192763382959,
-    0.21566724761964287,
-    0.7303465942434297,
-    -0.2170323424331746,
-    0.5281354924920802,
-    0.4200553934710157,
-    -0.21170431877183055,
-    -0.8905425468928251,
-    -0.9823347955790087,
-    0.5053443819824848,
-    0.07009646697264343,
-    0.06426985861277526,
-    0.08416129243771008,
-    -0.26024089289289787,
-    0.011502735410324844,
-    0.03574058532279944,
-    0.17146045039655877,
-    0.06163955031627869,
-    -0.08186732690486011,
-    0.06763336628623447,
-    0.5259478145821282,
-    0.007506586624786886,
-    0.2628549687292531,
-    -0.27978674697054673,
-    -0.2921265370080546,
-    0.0298063682971428,
-    0.22665550298403753,
-    -0.03206578532361355,
-    -0.7045980380336552,
-    0.6597353036432229,
-    0.2692588203479989,
-    0.10197848791843064,
-    0.12241759803913616
+    0.129001,
+    -0.057461,
+    0.131556,
+    -0.094738,
+    0.5396,
+    -0.121681,
+    0.131292,
+    0.508357,
+    -0.407566,
+    -0.455908,
+    -0.218259,
+    0.093051,
+    0.066347,
+    0.055269,
+    0.087978,
+    -0.273554,
+    -0.039799,
+    -0.030709,
+    0.164634,
+    0.086023,
+    -0.08787,
+    0.148926,
+    0.40495,
+    0.074095,
+    0.178613,
+    -0.267755,
+    -0.212659,
+    0.072308,
+    0.125239,
+    -0.020304,
+    -0.733127,
+    0.685437,
+    0.224934,
+    0.050251,
+    0.126993
    ],
    [
-    -0.5368955892877574,
-    0.235330260935934,
-    0.07969955340884896,
-    -0.23583563365463656,
-    -0.24824598447165655,
-    0.8349941755714468,
-    0.6311639812314854,
-    -0.12720583387272802,
-    0.10672215970307192,
-    -0.9852696017453441,
-    0.2608469702221667,
-    0.10213861256075098,
-    0.2790299805900762,
-    -0.18516095874602023,
-    -0.30668091400860115,
-    0.09620127077291922,
-    0.10775024279991893,
-    0.4784740700758093,
-    -0.4706260753595467,
-    -0.21128881973886665,
-    0.2729781895086152,
-    0.056766084707277384,
-    -0.4555411706126139,
-    0.14327709988749926,
-    -0.03393526759256072,
-    0.1077917025928036,
-    0.3558507063264534,
-    0.03816173146109919,
-    0.18147337064773497,
-    -0.10219203150725259,
-    0.1874940207057386,
-    -0.5463220141990053,
-    0.476271064094849,
-    0.007999193761666907,
-    0.10944387683991462
+    -0.033581,
+    -0.045803,
+    0.152846,
+    -0.190558,
+    -0.417296,
+    0.57095,
+    0.29423,
+    -0.119965,
+    -0.037249,
+    -0.573874,
+    0.541471,
+    -0.059701,
+    0.368635,
+    -0.189675,
+    -0.305608,
+    0.060105,
+    0.102895,
+    0.497486,
+    -0.483532,
+    -0.259421,
+    0.225141,
+    0.065443,
+    -0.333407,
+    0.107042,
+    -0.124758,
+    0.03849,
+    0.394102,
+    0.029982,
+    0.136706,
+    -0.085217,
+    0.113193,
+    -0.456556,
+    0.424833,
+    0.00641,
+    0.07506
    ],
    [
-    -0.2228269671803008,
-    -0.013994989336680532,
-    -0.03391982481944531,
-    -0.132539422559655,
-    -0.0831390296494491,
-    -0.11287660805766209,
-    -0.30340144682950687,
-    -0.02807135961280833,
-    -0.04587675043673337,
-    1.125269316186647,
-    -0.04030814611673506,
-    -0.18519819431364717,
-    0.26043818011724773,
-    0.20178095528801798,
-    0.1310821513347091,
-    0.005116926261291037,
-    -0.1763094829806678,
-    -0.3326785628623217,
-    0.2200448589984766,
-    -0.22764367214282202,
-    -0.14839466747501948,
-    -0.010320109264889075,
-    0.09914461543769691,
-    -0.02751766471153664,
-    -0.09445228501240656,
-    -0.3067729967360695,
-    0.25271490829633847,
-    -0.40795138968248007,
-    0.1484089567074044,
-    0.1826590102490981,
-    0.08260471901820486,
-    0.1648686524839302,
-    -0.3243567942281122,
-    -0.15187946145411185,
-    0.07499603872813454
+    -0.108206,
+    -0.004939,
+    -0.043021,
+    0.358611,
+    0.021322,
+    -0.010386,
+    0.021317,
+    -0.05104,
+    -0.135503,
+    0.023746,
+    0.130671,
+    -0.224653,
+    0.230347,
+    0.190303,
+    0.122032,
+    0.064847,
+    -0.123197,
+    -0.339056,
+    0.211021,
+    -0.233393,
+    -0.12573,
+    -0.019256,
+    0.066519,
+    -0.04796,
+    0.005709,
+    -0.258744,
+    0.212394,
+    -0.390319,
+    0.194086,
+    0.174152,
+    0.182211,
+    0.127245,
+    -0.331538,
+    -0.131584,
+    0.109503
    ],
    [
-    -0.41830935684754345,
-    -0.024583076577158053,
-    -0.05537890775740625,
-    -0.07064282961421478,
-    0.07093148948546742,
-    0.029632011105134855,
-    -0.3564478683306955,
-    -0.08559786003162771,
-    -0.08922784297555941,
-    1.0970830685949684,
-    0.19853767526603067,
-    -0.2896143821759867,
-    -0.09830470721269308,
-    0.11929365479529927,
-    0.009352643489543075,
-    0.11026390493117985,
-    -0.38499630896187365,
-    -0.13273955521748382,
-    0.5073889828852486,
-    -0.18440172694669346,
-    0.11269138777511614,
-    -0.05216615539623339,
-    0.32824121700551573,
-    -0.03661059534220005,
-    -0.4212655519462214,
-    -0.15609422013181845,
-    0.2921112705561337,
-    -0.14561658081407589,
-    -0.017321041096737884,
-    0.16931974205222314,
-    -0.32533973793975735,
-    0.013005564503623408,
-    0.31871629357754333,
-    0.21810030139223857,
-    -0.21171818125082928
+    0.097331,
+    -0.016876,
+    -0.04799,
+    1.204775,
+    0.204478,
+    -0.175099,
+    -0.193763,
+    -0.140661,
+    -0.201353,
+    0.101575,
+    -0.240002,
+    -0.558168,
+    -0.150158,
+    0.168484,
+    0.033787,
+    0.120472,
+    -0.32308,
+    -0.149971,
+    0.530995,
+    -0.21672,
+    0.080046,
+    -0.059608,
+    0.289898,
+    -0.064865,
+    -0.159167,
+    -0.169888,
+    0.138271,
+    -0.103093,
+    0.01046,
+    0.126881,
+    -0.186366,
+    0.007556,
+    0.213059,
+    0.156589,
+    -0.122341
    ],
    [
-    0.8793560068489592,
-    -0.06026235348706067,
-    -0.1207898106365758,
-    -0.44298338103403695,
-    -0.1515808689938161,
-    -0.31957352351366947,
-    -0.7647414438010626,
-    -0.10589741827864277,
-    -0.13969138013125376,
-    0.6927806981386316,
-    0.7727863545220639,
-    -0.19582272236202516,
-    -0.2033569523409108,
-    -0.018993365463553288,
-    0.06773394180366939,
-    -0.12078243173024679,
-    -0.3618158938237765,
-    -0.034513490760600146,
-    0.2475068940356591,
-    0.3486720428610798,
-    0.17310418908854683,
-    -0.05397477639835569,
-    0.1612331858860654,
-    0.123003441345095,
-    -0.09072174028047915,
-    -0.17937829245723122,
-    0.02944356277806183,
-    -0.07244044545573207,
-    -0.3413252278848634,
-    0.4573458306121074,
-    0.2005190907060629,
-    -0.37647127106992095,
-    0.21953233763536972,
-    0.2678752565525456,
-    -0.22429509928103372
+    0.104999,
+    -0.037191,
+    0.187401,
+    -0.603897,
+    0.374692,
+    -0.313406,
+    0.568432,
+    -0.225701,
+    -0.07032,
+    0.366014,
+    -0.506165,
+    0.240895,
+    -0.214818,
+    -0.073862,
+    0.02302,
+    -0.052292,
+    -0.281012,
+    -0.091676,
+    0.260587,
+    0.439565,
+    0.210579,
+    -0.134338,
+    0.062606,
+    0.15021,
+    0.076012,
+    -0.097806,
+    -0.105269,
+    -0.076053,
+    -0.238524,
+    0.400331,
+    0.093646,
+    -0.347036,
+    0.339144,
+    0.252517,
+    -0.166763
    ],
    [
-    1.0117344329420923,
-    -0.0097966541379735,
-    -0.04094773494350218,
-    -0.1401274180206253,
-    -0.09391180530507444,
-    -0.14284841368126378,
-    0.3343967381982651,
-    -0.03196434422484404,
-    -0.05782993655708878,
-    -0.5788766284261789,
-    -0.24132035522447806,
-    -0.1666346011916576,
-    -0.03472520274951778,
-    -0.05705718161609963,
-    -0.08659501092192004,
-    0.04263837952381725,
-    -0.08812054657362246,
-    -0.22287412117704059,
-    0.4309603879083226,
-    0.09088051916014585,
-    -0.22127202369907584,
-    -0.011961920427338589,
-    -0.1446981866035616,
-    -0.040979105591053895,
-    0.09645268125350857,
-    -0.29126127507364413,
-    0.22235916544242174,
-    -0.08779948472521966,
-    0.027198432901981963,
-    -0.0975256687490918,
-    0.4300875944787457,
-    -0.17920472370785098,
-    -0.4090095913432242,
-    0.1166981396347357,
-    -0.27482486020706504
+    0.436285,
+    -0.004703,
+    -0.022959,
+    -0.323818,
+    -0.188202,
+    0.684679,
+    0.021921,
+    -0.038722,
+    -0.104804,
+    -0.202953,
+    -0.109647,
+    -0.302552,
+    -0.034303,
+    -0.04962,
+    -0.076581,
+    0.033115,
+    -0.095292,
+    -0.213168,
+    0.37427,
+    0.122489,
+    -0.194455,
+    -0.021927,
+    -0.149983,
+    -0.027662,
+    0.08201,
+    -0.286976,
+    0.227137,
+    -0.085904,
+    0.000409,
+    -0.069979,
+    0.401743,
+    -0.177382,
+    -0.379835,
+    0.081247,
+    -0.23672
    ],
    [
-    -0.17369429434670994,
-    -0.016925281452811445,
-    -0.042864513926108974,
-    -0.0744417651127787,
-    0.21226546928637127,
-    -0.03631708635948785,
-    -0.1638263101095821,
-    -0.013653764933676989,
-    -0.06983516294960584,
-    0.557987633678699,
-    -0.21066237593986226,
-    -0.10050190074067578,
-    -0.02174276697157024,
-    -0.019122867840905364,
-    -0.03270687495038061,
-    0.08555835048225172,
-    0.4676157669351478,
-    0.11718976632689429,
-    -0.30062522956391813,
-    -0.2494456663158925,
-    -0.15656309870877164,
-    -0.022626732299084826,
-    -0.14294577880700293,
-    -0.03272543318604171,
-    -0.1455003367401469,
-    0.7011212433541834,
-    -0.5124190475272212,
-    0.07481201311132299,
-    -0.13480995273806054,
-    -0.07247141327949172,
-    0.06856601036414524,
-    -0.01149040949033315,
-    -0.18954495378004146,
-    -0.1158686379689986,
-    -0.016600714937230733
+    -0.067545,
+    -0.010533,
+    -0.033117,
+    -0.276113,
+    0.099533,
+    -0.094506,
+    -0.129328,
+    -0.019405,
+    0.291544,
+    0.4699,
+    -0.091258,
+    -0.258113,
+    -0.02812,
+    -0.020199,
+    -0.032068,
+    0.122443,
+    0.479364,
+    0.092307,
+    -0.289183,
+    -0.26383,
+    -0.147941,
+    -0.031713,
+    -0.165779,
+    -0.043649,
+    -0.159197,
+    0.728169,
+    -0.478484,
+    0.055035,
+    -0.132196,
+    -0.041779,
+    0.090613,
+    -0.046317,
+    -0.163237,
+    -0.085946,
+    -0.032993
    ],
    [
-    0.2670012549114315,
-    -0.07071533820199348,
-    -0.1470424434937553,
-    -0.2643223515030231,
-    -0.17396871892661558,
-    0.0821848150831823,
-    -0.2758098783892675,
-    -0.03285207328514634,
-    -0.15764948354678085,
-    0.6741273109305007,
-    0.531558056840263,
-    -0.3963856727529395,
-    -0.08059140904338137,
-    -0.10823162468697932,
-    -0.1703882042779879,
-    -0.23119440073718514,
-    0.005645010093337718,
-    0.2793746460582467,
-    0.06423234483076706,
-    0.3073686598005041,
-    -0.003674773092230615,
-    -0.02641477127923489,
-    -0.19502289125504338,
-    0.16360466363277507,
-    -0.18996319338455597,
-    0.13521166670792395,
-    0.12229523196475663,
-    0.14729465285397975,
-    -0.05950653107632361,
-    -0.05166264411179984,
-    0.1732947017997207,
-    0.3651823121652937,
-    -0.5023515362991577,
-    -0.23936146004126646,
-    0.275486937707123
+    -0.033012,
+    0.278111,
+    -0.118103,
+    -0.398734,
+    -0.214491,
+    -0.104707,
+    -0.370402,
+    -0.065976,
+    -0.139203,
+    0.288302,
+    -0.087803,
+    1.023462,
+    -0.073264,
+    -0.065956,
+    -0.104715,
+    -0.298938,
+    0.047661,
+    0.306825,
+    0.112707,
+    0.224225,
+    -0.051675,
+    -0.039424,
+    -0.140303,
+    0.160008,
+    -0.051898,
+    0.146232,
+    -0.056595,
+    0.115335,
+    0.01688,
+    -0.074773,
+    0.242715,
+    0.249648,
+    -0.43492,
+    -0.110099,
+    0.167542
    ],
    [
-    -0.20898385506027928,
-    0.256040819414116,
-    -0.1067686151441611,
-    -0.07310615399036352,
-    -0.09625485568637483,
-    0.25185565660938614,
-    -0.1366019631930878,
-    -0.026488406649720162,
-    -0.04627017732149443,
-    -0.47924976632614297,
-    0.6922973632420578,
-    -0.10992324511987539,
-    -0.044055560196999834,
-    -0.021209802097833772,
-    -0.024226760382603605,
-    0.15678415381746666,
-    -0.16652718443611234,
-    -0.12405754485869967,
-    -0.32030212133936314,
-    0.3189407233029383,
-    -0.12962130624249696,
-    0.27082220320776446,
-    0.05662931528228322,
-    -0.04404751070540305,
-    0.3476216336136903,
-    0.10679111151589335,
-    -0.5504477489324039,
-    0.4212573804481505,
-    -0.24759168354467767,
-    -0.25711889612941263,
-    -0.14829534712580975,
-    0.27920900025574824,
-    -0.2143668523558788,
-    -0.16097771366537417,
-    0.07752451443943388
+    -0.15012,
+    -0.007726,
+    -0.048817,
+    -0.201838,
+    0.047273,
+    0.196097,
+    -0.26515,
+    -0.030429,
+    0.143601,
+    -0.243493,
+    0.701682,
+    -0.232866,
+    -0.03402,
+    -0.015283,
+    -0.020953,
+    0.168128,
+    -0.181513,
+    -0.091756,
+    -0.299718,
+    0.268721,
+    -0.146348,
+    0.260956,
+    0.099899,
+    -0.056543,
+    0.26671,
+    0.09941,
+    -0.501261,
+    0.409672,
+    -0.255014,
+    -0.246444,
+    -0.187614,
+    0.319913,
+    -0.224084,
+    -0.162416,
+    0.07063
    ],
    [
-    0.44422769382397637,
-    -0.013554471671499667,
-    -0.022347078381298673,
-    -0.03958072596283748,
-    -0.02937594522179154,
-    -0.01896286641527029,
-    -0.08144972366701214,
-    -0.012450556790268174,
-    -0.023571354374233702,
-    -0.22706191348665927,
-    -0.12880170026865373,
-    -0.056770400418697346,
-    -0.010677648208108723,
-    -0.013308885359343187,
-    -0.016708242215801885,
-    -0.11983401279503983,
-    -0.06305796168030184,
-    0.1270781650858603,
-    -0.15963912948986256,
-    0.13558892751072457,
-    -0.07783721767981426,
-    -0.011303038002558292,
-    -0.05177773537577941,
-    -0.019352489655736122,
-    -0.18786476299561022,
-    0.32915547612283036,
-    -0.27985953092995036,
-    -0.05308826976233882,
-    -0.09019073143957901,
-    -0.06642004163232797,
-    -0.3846998183596097,
-    0.12929637690961723,
-    0.04570439861574672,
-    -0.23681661249916744,
-    0.02711756966492155
+    -0.038894,
+    -0.003662,
+    -0.013671,
+    0.15489,
+    -0.061821,
+    -0.04075,
+    -0.155054,
+    -0.015414,
+    0.220673,
+    -0.083563,
+    -0.062447,
+    -0.122439,
+    -0.011418,
+    -0.010917,
+    -0.016664,
+    -0.128966,
+    -0.072796,
+    0.130031,
+    -0.158857,
+    0.134163,
+    -0.073345,
+    -0.013384,
+    -0.053932,
+    -0.017333,
+    -0.185597,
+    0.317512,
+    -0.282803,
+    -0.062513,
+    -0.091789,
+    -0.067852,
+    -0.395231,
+    0.120992,
+    0.052086,
+    -0.243992,
+    0.021839
    ]
   ],
   "bias": [
-   1.3565155517183947,
-   1.2194267659751645,
-   0.6266914705221237,
-   -0.45875505798902305,
-   0.012493074931421402,
-   0.3036795131426412,
-   -0.8181036911221398,
-   -0.7423142583060711,
-   0.20877228924443875,
-   -0.5252919925292711,
-   -1.1831136655876864
+   1.064389,
+   0.990459,
+   0.466219,
+   -0.216626,
+   0.163277,
+   0.516681,
+   -0.821495,
+   -0.676188,
+   0.304245,
+   -0.558746,
+   -1.232216
   ]
  },
  "cases": {
-  "crouch | guard crouching | moving | near | even | no": {
-   "mid": 1
-  },
-  "crouch | guard standing | moving | near | ahead | no": {
-   "step in": 1
-  },
   "crouch | high | free | close | ahead | no": {
    "low": 1
   },
-  "crouch | high | hit | near | ahead | no": {
-   "mid": 1
-  },
-  "crouch | low | block | close | even | no": {
-   "throw": 1
-  },
-  "crouch | mid | block | near | ahead | yes": {
-   "mid": 1
-  },
   "crouch | mid | free | close | ahead | no": {
    "crouch": 1
-  },
-  "crouch | mid | hit | close | even | no": {
-   "mid": 1
-  },
-  "crouch | mid | hit | near | behind | yes": {
-   "guard crouching": 1
-  },
-  "crouch | mid | hit | near | even | no": {
-   "throw": 1
-  },
-  "crouch | nothing | moving | close | ahead | no": {
-   "low": 2
-  },
-  "crouch | nothing | moving | close | ahead | yes": {
-   "mid": 1,
-   "step in": 2
-  },
-  "crouch | nothing | moving | near | ahead | no": {
-   "low": 2,
-   "mid": 1
-  },
-  "crouch | nothing | moving | near | even | no": {
-   "mid": 1
   },
   "crouch | step in | free | close | ahead | yes": {
    "mid": 1,
    "throw": 1
   },
+  "crouch | step in | free | close | behind | yes": {
+   "step out": 1
+  },
   "crouch | step in | free | far | ahead | no": {
    "low": 1
   },
   "crouch | step in | free | far | even | no": {
-   "step in": 1
+   "step in": 1,
+   "step out": 1
+  },
+  "crouch | step in | free | near | ahead | no": {
+   "high": 1
   },
   "crouch | step in | free | near | even | no": {
    "mid": 2
   },
-  "crouch | step in | hit | close | even | no": {
-   "guard crouching": 1
-  },
-  "crouch | step in | moving | near | ahead | no": {
-   "mid": 2
-  },
-  "crouch | step out | free | far | even | no": {
-   "step in": 1
-  },
   "crouch | step out | free | far | even | yes": {
    "step out": 1
   },
-  "crouch | step out | hit | near | ahead | yes": {
+  "guard crouching | low | block | close | even | no": {
    "throw": 1
-  },
-  "crouch | step out | hit | near | even | no": {
-   "step in": 1
-  },
-  "crouch | step out | moving | near | ahead | no": {
-   "mid": 1
-  },
-  "guard crouching | step in | free | close | even | no": {
-   "crouch": 1
-  },
-  "guard crouching | step in | hit | near | behind | yes": {
-   "guard standing": 1
   },
   "guard standing | high | block | close | ahead | yes": {
    "crouch": 1
@@ -591,38 +539,48 @@
   "guard standing | high | block | close | behind | yes": {
    "step out": 1
   },
-  "guard standing | step in | free | close | ahead | no": {
-   "step out": 1
+  "guard standing | mid | block | near | ahead | yes": {
+   "mid": 1
   },
-  "guard standing | step in | free | close | behind | yes": {
-   "step out": 2
-  },
-  "guard standing | step out | free | close | ahead | no": {
-   "step out": 1
-  },
-  "guard standing | throw | hit | close | even | no": {
-   "step out": 1
+  "high | crouch | moving | near | even | no": {
+   "crouch": 1
   },
   "high | guard standing | moving | near | even | no": {
+   "high": 1,
    "step in": 1
   },
   "high | high | hit | close | even | no": {
+   "high": 1,
    "step in": 1
   },
   "high | high | hit | near | ahead | no": {
+   "high": 1,
    "step in": 1
   },
   "high | high | hit | near | ahead | yes": {
+   "high": 1,
    "step in": 1
+  },
+  "high | high | hit | near | even | no": {
+   "mid": 1
+  },
+  "high | high | moving | close | ahead | no": {
+   "crouch": 1
   },
   "high | high | moving | near | even | no": {
    "step in": 1
+  },
+  "high | low | hit | close | even | no": {
+   "crouch": 1,
+   "step out": 1
   },
   "high | low | moving | close | even | no": {
    "step in": 1
   },
   "high | mid | hit | near | ahead | no": {
-   "step in": 1
+   "high": 1,
+   "step in": 1,
+   "throw": 1
   },
   "high | mid | moving | near | ahead | no": {
    "step in": 1
@@ -631,20 +589,37 @@
    "high": 1
   },
   "high | nothing | moving | close | ahead | yes": {
+   "high": 1,
+   "jump": 1,
    "step in": 1
   },
   "high | nothing | moving | close | behind | no": {
+   "high": 1,
    "step out": 1
   },
+  "high | nothing | moving | close | even | no": {
+   "high": 1
+  },
   "high | nothing | moving | far | ahead | no": {
+   "jump": 1,
    "step in": 1
   },
   "high | nothing | moving | near | ahead | no": {
    "crouch": 1,
+   "high": 1,
+   "jump": 1,
+   "mid": 1,
    "step in": 1
   },
+  "high | nothing | moving | near | ahead | yes": {
+   "high": 1
+  },
   "high | nothing | moving | near | even | no": {
+   "high": 2,
    "step out": 1
+  },
+  "high | step in | hit | close | even | no": {
+   "guard crouching": 1
   },
   "high | step in | moving | close | ahead | no": {
    "step in": 1
@@ -658,58 +633,89 @@
   "high | step in | moving | far | ahead | no": {
    "step in": 1
   },
+  "high | step in | moving | far | even | no": {
+   "high": 1
+  },
   "high | step in | moving | near | ahead | no": {
    "step in": 1
   },
   "high | step in | moving | near | even | no": {
    "step in": 1
   },
+  "high | step out | moving | far | ahead | no": {
+   "high": 1
+  },
   "high | step out | moving | far | even | no": {
    "step in": 1
   },
   "high | step out | moving | near | ahead | no": {
+   "high": 1,
    "step in": 2
   },
   "high | step out | moving | near | behind | no": {
+   "jump": 1,
    "step in": 1
   },
   "high | step out | moving | near | even | no": {
+   "high": 1,
    "step in": 1,
    "step out": 1
   },
   "jump | crouch | airborne | close | ahead | no": {
+   "jump": 1,
    "step out": 1
   },
   "jump | high | free | close | ahead | no": {
+   "mid": 1,
    "overhead": 1
   },
   "jump | low | airborne | close | ahead | no": {
+   "mid": 1,
    "step out": 1
   },
   "jump | mid | airborne | close | ahead | no": {
+   "high": 1,
    "step out": 2
   },
   "jump | mid | airborne | close | behind | no": {
+   "mid": 1,
    "step out": 1
+  },
+  "jump | mid | airborne | near | ahead | no": {
+   "throw": 1
   },
   "jump | nothing | airborne | close | ahead | no": {
-   "high": 1
+   "high": 1,
+   "mid": 1
   },
   "jump | step in | airborne | close | ahead | no": {
+   "guard standing": 1,
    "step out": 1
   },
+  "jump | step in | airborne | near | ahead | no": {
+   "mid": 1
+  },
   "jump | step out | airborne | near | ahead | no": {
+   "mid": 1,
    "step in": 2,
    "step out": 1
   },
   "jump | step out | airborne | near | behind | no": {
+   "high": 1,
    "step in": 1
+  },
+  "jump | step out | free | close | ahead | no": {
+   "step out": 1
   },
   "jump | step out | free | near | ahead | no": {
    "mid": 1
   },
+  "low | mid | hit | close | even | no": {
+   "mid": 1
+  },
   "low | nothing | moving | close | ahead | no": {
    "crouch": 2,
+   "low": 2,
    "throw": 1
   },
   "low | nothing | moving | far | ahead | no": {
@@ -717,13 +723,16 @@
   },
   "low | nothing | moving | near | ahead | no": {
    "crouch": 2,
-   "high": 1
+   "high": 1,
+   "low": 2
   },
   "low | nothing | moving | near | ahead | yes": {
+   "jump": 1,
    "step in": 1
   },
   "low | throw | hit | close | even | no": {
-   "guard standing": 1
+   "guard standing": 1,
+   "step out": 1
   },
   "mid | crouch | moving | close | ahead | yes": {
    "step in": 1
@@ -732,15 +741,23 @@
    "crouch": 1
   },
   "mid | guard crouching | moving | near | ahead | no": {
+   "jump": 1,
    "step in": 2
   },
   "mid | guard crouching | moving | near | behind | no": {
+   "high": 1,
    "step out": 1
   },
+  "mid | guard crouching | moving | near | even | no": {
+   "mid": 1
+  },
   "mid | guard standing | moving | near | ahead | no": {
-   "step in": 2
+   "jump": 1,
+   "mid": 1,
+   "step in": 3
   },
   "mid | guard standing | moving | near | ahead | yes": {
+   "mid": 1,
    "step in": 1,
    "step out": 1
   },
@@ -748,21 +765,27 @@
    "step in": 1
   },
   "mid | high | hit | close | ahead | no": {
+   "mid": 1,
    "step in": 1
   },
   "mid | high | hit | near | ahead | yes": {
    "crouch": 1
   },
   "mid | high | moving | close | ahead | yes": {
-   "crouch": 1
+   "crouch": 1,
+   "step in": 1
   },
   "mid | mid | hit | close | ahead | yes": {
    "crouch": 1
   },
   "mid | mid | hit | close | even | no": {
-   "crouch": 1
+   "crouch": 1,
+   "mid": 1
   },
   "mid | mid | hit | near | ahead | no": {
+   "crouch": 1,
+   "mid": 1,
+   "overhead": 1,
    "step in": 2,
    "step out": 1
   },
@@ -770,16 +793,32 @@
    "step out": 1
   },
   "mid | nothing | moving | close | ahead | no": {
+   "high": 1,
    "low": 1,
-   "step in": 5
+   "mid": 3,
+   "step in": 5,
+   "throw": 1
+  },
+  "mid | nothing | moving | close | ahead | yes": {
+   "high": 1,
+   "mid": 1,
+   "step in": 1
   },
   "mid | nothing | moving | close | behind | no": {
+   "mid": 1,
    "step out": 1
   },
   "mid | nothing | moving | close | even | no": {
+   "mid": 1,
    "step in": 1
   },
+  "mid | nothing | moving | far | ahead | no": {
+   "mid": 1
+  },
   "mid | nothing | moving | near | ahead | no": {
+   "high": 1,
+   "jump": 2,
+   "mid": 2,
    "step in": 5,
    "step out": 1,
    "throw": 1
@@ -789,6 +828,7 @@
   },
   "mid | nothing | moving | near | even | no": {
    "high": 1,
+   "mid": 3,
    "step out": 2
   },
   "mid | step in | moving | close | ahead | yes": {
@@ -799,7 +839,14 @@
   },
   "mid | step in | moving | near | ahead | no": {
    "crouch": 1,
-   "low": 1
+   "low": 1,
+   "mid": 2
+  },
+  "mid | step in | moving | near | even | no": {
+   "mid": 1
+  },
+  "mid | step out | hit | near | ahead | yes": {
+   "throw": 1
   },
   "mid | step out | moving | close | ahead | no": {
    "crouch": 1
@@ -808,7 +855,8 @@
    "step in": 2
   },
   "mid | step out | moving | near | ahead | no": {
-   "crouch": 2
+   "crouch": 2,
+   "mid": 1
   },
   "mid | throw | moving | near | even | no": {
    "crouch": 1
@@ -822,29 +870,27 @@
    "step out": 1
   },
   "overhead | low | hit | close | ahead | no": {
-   "step in": 2
+   "overhead": 1,
+   "step in": 2,
+   "throw": 1
   },
   "overhead | low | hit | close | behind | yes": {
+   "overhead": 1,
    "step in": 1
   },
   "overhead | mid | hit | near | behind | yes": {
-   "crouch": 1
+   "crouch": 1,
+   "guard crouching": 1
   },
   "overhead | nothing | moving | close | ahead | no": {
    "step in": 2
   },
   "overhead | nothing | moving | near | ahead | no": {
+   "mid": 1,
    "step in": 1
   },
-  "step in | guard crouching | moving | near | ahead | no": {
-   "jump": 1
-  },
-  "step in | guard standing | moving | near | ahead | no": {
-   "jump": 1,
-   "mid": 1
-  },
-  "step in | guard standing | moving | near | even | no": {
-   "high": 1
+  "overhead | step in | hit | near | behind | yes": {
+   "guard standing": 1
   },
   "step in | high | free | close | ahead | no": {
    "step in": 1
@@ -862,34 +908,11 @@
    "step in": 1
   },
   "step in | high | hit | close | ahead | no": {
-   "mid": 1,
    "step in": 1
-  },
-  "step in | high | hit | close | even | no": {
-   "high": 1
   },
   "step in | high | hit | near | ahead | no": {
-   "high": 1,
+   "mid": 1,
    "overhead": 1
-  },
-  "step in | high | hit | near | ahead | yes": {
-   "high": 1,
-   "mid": 1
-  },
-  "step in | high | hit | near | behind | yes": {
-   "jump": 1
-  },
-  "step in | high | hit | near | even | no": {
-   "mid": 1
-  },
-  "step in | high | moving | close | ahead | no": {
-   "crouch": 1
-  },
-  "step in | high | moving | close | ahead | yes": {
-   "step in": 1
-  },
-  "step in | high | moving | near | ahead | no": {
-   "throw": 1
   },
   "step in | low | free | close | ahead | no": {
    "step in": 1
@@ -901,20 +924,7 @@
    "step in": 1
   },
   "step in | low | hit | close | ahead | no": {
-   "overhead": 2,
-   "throw": 1
-  },
-  "step in | low | hit | close | behind | yes": {
    "overhead": 1
-  },
-  "step in | low | hit | close | even | no": {
-   "step out": 1
-  },
-  "step in | low | hit | near | ahead | no": {
-   "crouch": 1
-  },
-  "step in | mid | airborne | near | ahead | no": {
-   "throw": 1
   },
   "step in | mid | free | close | ahead | no": {
    "step in": 2
@@ -928,46 +938,8 @@
   "step in | mid | hit | close | ahead | no": {
    "throw": 1
   },
-  "step in | mid | hit | near | ahead | no": {
-   "high": 1,
-   "mid": 1,
-   "overhead": 1,
-   "throw": 1
-  },
   "step in | mid | hit | near | even | yes": {
    "overhead": 1
-  },
-  "step in | nothing | moving | close | ahead | no": {
-   "high": 1,
-   "mid": 3,
-   "throw": 3
-  },
-  "step in | nothing | moving | close | ahead | yes": {
-   "high": 2,
-   "jump": 1,
-   "mid": 1,
-   "throw": 1
-  },
-  "step in | nothing | moving | close | even | no": {
-   "high": 1,
-   "mid": 1
-  },
-  "step in | nothing | moving | far | ahead | no": {
-   "jump": 1,
-   "mid": 1
-  },
-  "step in | nothing | moving | near | ahead | no": {
-   "high": 2,
-   "jump": 3,
-   "mid": 2
-  },
-  "step in | nothing | moving | near | ahead | yes": {
-   "high": 1,
-   "jump": 1,
-   "throw": 1
-  },
-  "step in | nothing | moving | near | even | no": {
-   "high": 1
   },
   "step in | step in | free | close | ahead | no": {
    "throw": 1
@@ -981,92 +953,23 @@
   },
   "step in | step in | free | far | even | no": {
    "high": 1,
-   "jump": 1,
-   "mid": 1,
-   "step out": 1
+   "mid": 1
   },
   "step in | step in | free | near | ahead | no": {
-   "high": 1,
    "step out": 1,
    "throw": 1
   },
   "step in | step in | free | near | even | no": {
    "mid": 1
   },
-  "step in | step in | moving | close | ahead | no": {
-   "mid": 1,
-   "throw": 1
-  },
-  "step in | step in | moving | far | even | no": {
-   "high": 1
-  },
-  "step in | step in | moving | near | even | no": {
-   "mid": 1
-  },
-  "step in | step out | airborne | near | ahead | no": {
-   "mid": 1
-  },
-  "step in | step out | airborne | near | behind | no": {
-   "high": 1
-  },
   "step in | step out | free | near | ahead | no": {
    "mid": 1
   },
-  "step in | step out | hit | near | even | no": {
-   "mid": 1
-  },
-  "step in | step out | moving | far | ahead | no": {
-   "high": 1
-  },
-  "step in | step out | moving | far | ahead | yes": {
-   "throw": 1
-  },
-  "step in | step out | moving | near | ahead | no": {
-   "high": 1,
-   "mid": 2
-  },
-  "step in | step out | moving | near | behind | no": {
-   "jump": 1
-  },
-  "step in | step out | moving | near | even | no": {
-   "high": 1
-  },
-  "step out | crouch | airborne | close | ahead | no": {
-   "jump": 1
-  },
-  "step out | crouch | moving | near | even | no": {
-   "crouch": 1
-  },
-  "step out | guard crouching | moving | near | behind | no": {
-   "high": 1
-  },
-  "step out | guard standing | moving | near | ahead | yes": {
-   "mid": 1
-  },
   "step out | high | free | close | ahead | no": {
-   "guard standing": 1,
-   "mid": 1
+   "guard standing": 1
   },
   "step out | high | free | close | behind | yes": {
    "guard standing": 1
-  },
-  "step out | high | hit | near | behind | yes": {
-   "throw": 1
-  },
-  "step out | high | moving | near | behind | yes": {
-   "throw": 1
-  },
-  "step out | low | airborne | close | ahead | no": {
-   "mid": 1
-  },
-  "step out | low | hit | close | even | no": {
-   "crouch": 1
-  },
-  "step out | mid | airborne | close | ahead | no": {
-   "high": 1
-  },
-  "step out | mid | airborne | close | behind | no": {
-   "mid": 1
   },
   "step out | mid | free | close | behind | yes": {
    "guard standing": 1,
@@ -1075,77 +978,59 @@
   "step out | mid | free | far | even | yes": {
    "crouch": 1
   },
-  "step out | mid | hit | close | behind | yes": {
-   "throw": 1
-  },
-  "step out | mid | hit | close | even | no": {
-   "mid": 1
-  },
-  "step out | mid | hit | near | ahead | no": {
-   "crouch": 1
-  },
-  "step out | nothing | airborne | close | ahead | no": {
-   "mid": 1
-  },
-  "step out | nothing | moving | close | behind | no": {
-   "high": 1,
-   "mid": 1
-  },
-  "step out | nothing | moving | close | behind | yes": {
-   "throw": 1
-  },
-  "step out | nothing | moving | near | ahead | no": {
-   "mid": 1
-  },
-  "step out | nothing | moving | near | behind | yes": {
-   "throw": 1
-  },
-  "step out | nothing | moving | near | even | no": {
-   "high": 1,
-   "mid": 2
-  },
-  "step out | step in | airborne | close | ahead | no": {
-   "guard standing": 1
-  },
-  "step out | step in | airborne | near | ahead | no": {
-   "mid": 1
-  },
   "step out | step in | free | close | ahead | no": {
-   "guard standing": 1
+   "guard standing": 1,
+   "step out": 1
+  },
+  "step out | step in | free | close | behind | yes": {
+   "step out": 1
+  },
+  "step out | step in | free | close | even | no": {
+   "crouch": 1
   },
   "step out | step in | free | far | even | no": {
    "crouch": 1,
+   "jump": 1,
    "step in": 1,
    "step out": 1
   },
   "step out | step in | free | far | even | yes": {
    "step in": 1
   },
-  "step out | step in | moving | close | behind | yes": {
-   "throw": 1
-  },
   "step out | step out | free | far | even | no": {
    "crouch": 2,
-   "step in": 1
+   "step in": 2
+  },
+  "throw | high | hit | near | ahead | yes": {
+   "mid": 1
   },
   "throw | high | hit | near | behind | yes": {
+   "jump": 1,
    "step in": 1,
-   "step out": 1
+   "step out": 1,
+   "throw": 1
   },
   "throw | high | moving | near | ahead | no": {
-   "step in": 2
+   "step in": 2,
+   "throw": 1
   },
   "throw | high | moving | near | ahead | yes": {
    "step in": 1
   },
   "throw | high | moving | near | behind | yes": {
-   "step out": 1
+   "step out": 1,
+   "throw": 1
   },
   "throw | low | hit | near | ahead | no": {
+   "crouch": 1,
    "step in": 1
   },
+  "throw | mid | hit | close | behind | yes": {
+   "throw": 1
+  },
   "throw | mid | hit | near | even | no": {
-   "crouch": 1
+   "crouch": 1,
+   "throw": 1
   },
   "throw | mid | moving | close | ahead | no": {
    "step in": 1
@@ -1157,34 +1042,51 @@
    "crouch": 1
   },
   "throw | nothing | moving | close | ahead | no": {
-   "step in": 3
+   "step in": 3,
+   "throw": 2
   },
   "throw | nothing | moving | close | ahead | yes": {
    "crouch": 1,
-   "step in": 1
+   "mid": 1,
+   "step in": 2,
+   "throw": 1
   },
   "throw | nothing | moving | close | behind | yes": {
-   "step out": 1
+   "step out": 1,
+   "throw": 1
   },
   "throw | nothing | moving | near | ahead | no": {
    "mid": 1
   },
   "throw | nothing | moving | near | ahead | yes": {
-   "step in": 1
+   "step in": 1,
+   "throw": 1
   },
   "throw | nothing | moving | near | behind | yes": {
-   "step out": 1
+   "step out": 1,
+   "throw": 1
   },
   "throw | step in | moving | close | ahead | no": {
-   "step in": 2
+   "mid": 1,
+   "step in": 2,
+   "throw": 1
   },
   "throw | step in | moving | close | behind | yes": {
-   "step out": 1
+   "step out": 1,
+   "throw": 1
+  },
+  "throw | step out | hit | near | even | no": {
+   "mid": 1,
+   "step in": 1
   },
   "throw | step out | moving | close | ahead | no": {
    "step in": 1
   },
+  "throw | step out | moving | far | ahead | yes": {
+   "throw": 1
+  },
   "throw | step out | moving | near | ahead | no": {
+   "mid": 2,
    "step in": 2
   },
   "throw | step out | moving | near | ahead | yes": {

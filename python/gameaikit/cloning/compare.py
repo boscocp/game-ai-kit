@@ -30,9 +30,11 @@ if __package__ in (None, ""):
 
 from gameaikit.cloning import measure  # noqa: E402
 from gameaikit.cloning.publish import REPOSITORY, digest  # noqa: E402
-from gameaikit.cloning.rows import ROWS_PATH, read  # noqa: E402
+from gameaikit.cloning.rows import ROWS_PATH, Recorded, Session, read  # noqa: E402
 
 PUBLISHED = REPOSITORY / "godot/addons/ai_learning/clone_weights.json"
+#: The frame data the win rates were fought under.
+RULES = REPOSITORY / "godot/game/fighting/characters.json"
 WIN_RATES = REPOSITORY / "data/cloning/win_rates.json"
 #: Which game opponent each method is played by in the win-rate fights.
 IN_THE_GAME = {"n-gram (T17)": "learner: medium", "ghost, exact": "ghost: exact",
@@ -58,6 +60,8 @@ def win_rates(published: pathlib.Path, measured: pathlib.Path) -> tuple[dict[str
     rates = json.loads(measured.read_text(encoding="utf-8"))
     if rates.get("weights_sha256") != digest(published):
         return {}, f"{measured} measured another clone_weights.json -- run `make test-clone-fights` again"
+    if rates.get("rules_sha256") != digest(RULES):
+        return {}, f"{measured} was fought under other frame data -- run `make test-clone-fights` again"
     fights = rates["fights"]
     wins = {method: f"{rates['wins'][mode]}/{fights}" for method, mode in IN_THE_GAME.items() if mode in rates["wins"]}
     for mode in rates["wins"]:
@@ -66,11 +70,37 @@ def win_rates(published: pathlib.Path, measured: pathlib.Path) -> tuple[dict[str
     return wins, ""
 
 
+def split_matches(published: pathlib.Path, training: list[Session], held: list[Session]) -> str:
+    """What is wrong with the published file's split against this one, or "".
+
+    The report scores the published model on the held-out fights; if the
+    file was fitted on other fights -- the held-out ones among them -- those
+    scores are training accuracy, and the report must not print them as
+    anything else.
+    """
+    trained_on = json.loads(published.read_text(encoding="utf-8"))["trained_on"]
+    split = ([session.recording for session in training], [session.recording for session in held])
+    if (trained_on.get("recordings"), trained_on.get("held_out")) != split:
+        return "the published file was fitted on another split than the one scored -- run `make train-clone`"
+    return ""
+
+
+def per_fight(training: list[Session], held: list[Session], recorded: Recorded) -> list[str]:
+    """Each held-out fight on its own: a pooled number can be one fight's."""
+    lines = []
+    for session in held:
+        scores, _, _ = measure.every_score(training, [session], recorded.features, recorded.actions, recorded.reaction)
+        cells = ", ".join(f"{score.method} {score.accuracy():.0%}" for score in scores)
+        lines.append(f"  {session.recording} ({len(session.rows)}): {cells}")
+    return lines
+
+
 def report(published: pathlib.Path, rows: pathlib.Path, measured: pathlib.Path) -> int:
     """Print the comparison; see the module's header for the exit code."""
     recorded = read(rows)
     player = json.loads(published.read_text(encoding="utf-8"))["trained_on"]["player"]
-    training, held = measure.split(recorded.of_player(player))
+    sessions = recorded.of_player(player)
+    training, held = measure.split(sessions)
     print(f"player: {player}; fitted on {len(training)} recording(s), "
           f"{len(measure.rows_of(training))} decisions; held out {len(held)}, {len(measure.rows_of(held))} decisions")
     if player != "person":
@@ -78,17 +108,22 @@ def report(published: pathlib.Path, rows: pathlib.Path, measured: pathlib.Path) 
     if not measure.rows_of(held):
         print("FAIL: no held-out recordings to score on -- training accuracy is not a result. Record more fights.")
         return 1
-    scores, _, _ = measure.every_score(training, held, recorded.features, recorded.actions)
+    scores, _, _ = measure.every_score(training, held, recorded.features, recorded.actions, recorded.reaction)
     wins, stale = win_rates(published, measured)
     print("\n".join(table(scores, wins)))
     if player in wins:
         print(f"{'the player itself':<26}{'':>10}{'':>9}{'':>10}{wins[player]:>10}  the stand-in, seated in the game")
     print("wins: of fights against the fixed opponent at medium; 'n-gram' is T17's learner at medium.")
-    print("told apart by a person: not yet asked -- T18's manual check.")
-    if stale:
-        print(f"FAIL: {stale}")
-        return 1
-    return 0
+    print("each held-out fight alone:")
+    print("\n".join(per_fight(training, held, recorded)))
+    print(f"every recording held out once, fitted on the other {len(sessions) - 1}:")
+    for score in measure.leave_one_out(sessions, recorded.features, recorded.actions, recorded.reaction):
+        print(f"  {score.method:<26}{score.accuracy():>8.1%}  of {score.rows}")
+    print("told apart by a person: T18's manual check, in tasks/T18-behaviour-cloning.md.")
+    problems = [problem for problem in (split_matches(published, training, held), stale) if problem]
+    for problem in problems:
+        print(f"FAIL: {problem}")
+    return 1 if problems else 0
 
 
 def main(arguments: list[str]) -> int:

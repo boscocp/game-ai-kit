@@ -31,8 +31,8 @@ class CaseTable:
         return JOINER.join(situation.get(feature, "") for feature in self.features)
 
     def exact(self, situation: Situation) -> Counter[str]:
-        """What was done in exactly `situation`; empty if it was never met."""
-        return self.cases.get(self.key_of(situation), Counter())
+        """What was done in exactly `situation`; empty if never met. A copy, so the table cannot be edited through it."""
+        return Counter(self.cases.get(self.key_of(situation), Counter()))
 
     def nearest(self, situation: Situation) -> tuple[int, Counter[str]]:
         """How many features apart the nearest cases are, and their actions pooled."""

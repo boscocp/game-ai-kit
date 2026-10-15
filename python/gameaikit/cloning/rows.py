@@ -28,6 +28,8 @@ class Session:
     player: str
     characters: list[str]
     rows: list[tuple[Situation, str]] = field(default_factory=list)
+    #: The frame each row's action began on, in the order of `rows`.
+    frames: list[int] = field(default_factory=list)
 
     def actions(self) -> list[str]:
         """What the player did, in order: what the n-gram is shown."""
@@ -41,6 +43,8 @@ class Recorded:
     features: list[str]
     actions: list[str]
     sessions: list[Session]
+    #: How many frames late the situations were read, and an opponent sees.
+    reaction: int = 15
 
     def of_player(self, player: str) -> list[Session]:
         """The sessions recorded of `player`, by recording name."""
@@ -61,8 +65,9 @@ def read(path: pathlib.Path) -> Recorded:
         about = entry["about"]
         session = Session(about["recording"], about["player"], list(about["characters"]))
         for row in entry["rows"]:
-            if len(row) != len(features) + 1 or row[-1] not in actions:
-                raise ValueError(f"{about['recording']}: a row is not {len(features)} words and an action: {row}")
-            session.rows.append((dict(zip(features, row[:-1])), row[-1]))
+            if len(row) != len(features) + 2 or row[-2] not in actions or not isinstance(row[-1], int):
+                raise ValueError(f"{about['recording']}: a row is not {len(features)} words, an action and a frame: {row}")
+            session.rows.append((dict(zip(features, row[:-2])), row[-2]))
+            session.frames.append(row[-1])
         sessions.append(session)
-    return Recorded(features, actions, sessions)
+    return Recorded(features, actions, sessions, int(header["reaction"]))

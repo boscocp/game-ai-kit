@@ -37,6 +37,10 @@ PASSES = 300
 RATE = 1.0
 #: How hard large weights are pulled back towards 0 (L2).
 PENALTY = 0.01
+#: The places the fitted numbers are rounded to, as every published weight
+#: in this kit is: the last bits of a float can differ between machines, and
+#: a published file must be the same file wherever it is fitted again.
+DECIMALS = 6
 
 
 def column(feature: str, word: str) -> str:
@@ -101,6 +105,8 @@ def fit(rows: list[tuple[Situation, str]], features: list[str], classes: list[st
                for situation, action in rows]
     for _ in range(PASSES):
         _one_pass(model, encoded)
+    model.weights = [[round(weight, DECIMALS) for weight in row] for row in model.weights]
+    model.bias = [round(weight, DECIMALS) for weight in model.bias]
     return model
 
 

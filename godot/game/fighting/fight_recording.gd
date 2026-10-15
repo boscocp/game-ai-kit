@@ -57,26 +57,83 @@ static func save(input_log: Array, characters: Array[String], facing: String, pl
 
 
 ## The rows of player 0's decisions in `recording`, oldest first: each
-## `{"situation": ..., "action": ...}`, the situation as `FightSituation.of`
-## writes it, seen `REACTION` frames before the action began.
+## `{"situation": ..., "action": ..., "frame": the frame it began on}`, the situation as `FightSituation.of`
+## writes it, seen `REACTION` frames before the action began -- its `last`
+## included, which is `last_seen` on that same frame.
 static func rows_of(recording: Dictionary, data: FightData) -> Array[Dictionary]:
-	var characters: Array = recording["characters"]
-	var state: FightState = FightState.starting(data, characters[0], characters[1])
-	var past: Array[FightState] = [state]
+	var states: Array[FightState] = states_of(recording, data)
+	var seen_last: PackedStringArray = last_seen(states, 0, data)
 	var rows: Array[Dictionary] = []
-	var last: String = ""
 	var previous: String = ""
-	for pair: Array in recording["inputs"]:
-		state = FightRules.step(state, [int(pair[0]), int(pair[1])] as Array[int], data)
-		past.append(state)
-		if past.size() > REACTION + 1:
-			past.pop_front()
-		var action: String = FightAction.of(state, 0, data)
+	for frame: int in range(1, states.size()):
+		var action: String = FightAction.of(states[frame], 0, data)
 		if action != "" and action != previous:
-			rows.append({"situation": FightSituation.of(past[0], 0, last, data), "action": action})
-			last = action
+			var seen: int = maxi(0, frame - REACTION)
+			var situation: Dictionary = FightSituation.of(states[seen], 0, seen_last[seen], data)
+			rows.append({"situation": situation, "action": action, "frame": frame})
 		previous = action
 	return rows
+
+
+## Every frame of `recording`, the opening one first, replayed.
+static func states_of(recording: Dictionary, data: FightData) -> Array[FightState]:
+	var characters: Array = recording["characters"]
+	var states: Array[FightState] = [FightState.starting(data, characters[0], characters[1])]
+	for pair: Array in recording["inputs"]:
+		states.append(FightRules.step(states.back(), [int(pair[0]), int(pair[1])] as Array[int], data))
+	return states
+
+
+## For every frame of `states`, the last action fighter `index` was seen
+## doing on that frame or before it -- "" before its first. This is what a
+## decision's `last` is, in the rows and in the game alike: a cloned
+## opponent reads its own fighter off the late frames it is handed, so it
+## can only know what it was doing as of the frame it decides from, and the
+## rows are held to the same.
+static func last_seen(states: Array[FightState], index: int, data: FightData) -> PackedStringArray:
+	var seen: PackedStringArray = []
+	var last: String = ""
+	for state: FightState in states:
+		var reading: String = FightAction.of(state, index, data)
+		if reading != "":
+			last = reading
+		seen.append(last)
+	return seen
+
+
+## The rows file: a header, then each recording's rows, one row a line --
+## its situation's words in `FightSituation.FEATURES` order, the action, and
+## the frame it began on -- so a diff of the file reads as a diff of
+## decisions, and Python can tell what an opponent `REACTION` frames late
+## had seen by then.
+static func rows_text(recordings: Dictionary, data: FightData) -> String:
+	var header: Dictionary = {"generated_by": "godot/test/export_clone_rows.gd", "reaction": REACTION,
+			"features": FightSituation.FEATURES, "actions": FightAction.ACTIONS}
+	var lines: PackedStringArray = ["{", ' "header": %s,' % JSON.stringify(header), ' "sessions": [']
+	var names: Array = recordings.keys()
+	for index: int in range(names.size()):
+		var recording: Dictionary = recordings[names[index]]
+		var about: Dictionary = {"recording": names[index], "player": recording["player"]}
+		about["characters"] = recording["characters"]
+		lines.append('  {"about": %s, "rows": [' % JSON.stringify(about))
+		var rows: PackedStringArray = []
+		for row: Dictionary in rows_of(recording, data):
+			rows.append("   " + JSON.stringify(_words(row)))
+		lines.append(",\n".join(rows))
+		lines.append("  ]}" + ("," if index < names.size() - 1 else ""))
+	lines.append(" ]")
+	lines.append("}")
+	return "\n".join(lines) + "\n"
+
+
+# A row as its situation's words, then its action.
+static func _words(row: Dictionary) -> Array:
+	var words: Array = []
+	for feature: String in FightSituation.FEATURES:
+		words.append(row["situation"][feature])
+	words.append(row["action"])
+	words.append(row["frame"])
+	return words
 
 
 ## Every recording in `folder`, by file name, read; a file that is not one

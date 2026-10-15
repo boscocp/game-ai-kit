@@ -247,7 +247,59 @@ last, in GDScript and in Python.
 
 ## What was done about them
 
-Not yet written.
+All fourteen, by the author, on the branch, before the merge.
+
+1. **Fixed, and it changed the answer.** The clone reads its own fighter
+   off every frame it is handed and keeps the last action seen; the rows
+   write `last` the same way, as of the frame the situation is read from
+   (`FightRecording.last_seen`), so both are as late as the game. A test
+   plays the clone through a fight and checks every decision's `last`
+   against the rows'; with the old code reinstated it fails 59 times. The
+   cadence is left and written in the clone's header: the rows have no
+   durations to match it with. The n-gram is now scored as late too -- each
+   row carries the frame it began on, and the n-gram guesses from actions
+   begun at least 15 frames before -- since the old scoring gave it the
+   present while the models saw the past. Re-measured: nothing fitted beats
+   the floor over all nine fights, the n-gram beats it by four points, the
+   ghosts beat medium 78 and 86 times in 100 and the clone 64. The page
+   says the earlier reading was wrong, and why.
+2. A stale rows file and a fresh one, in `cloning_test.gd`; a planted wrong
+   likeliest and a wrong distance the vector runner must catch before it
+   trusts itself; N10 a finding when `ai_learning/` exists without its
+   player, with a self-test. `clone_fights.gd` keeps its reference row as
+   its planted case.
+3. N11 refuses a GDScript write where the cloned player lives, by name or
+   by `ClonedPlayer.DEFAULT_PATH`; N12 refuses a write into a ghost's
+   `.cases` outside the addon; both with planted cases, and one that a read
+   is not a write. `CaseTable` copies what it is given and `exact` hands
+   back a copy, in both languages. `WinRateFile.write` takes a `String` and
+   typed `int`s only.
+4. The report prints each held-out fight alone, and every recording held
+   out once (nine folds). The page reads the latter.
+5. Each corrected: four medium, one hard, four learner hard; 10,685 frames,
+   about three minutes; nine fights; what N10 and `--check` each compare.
+   Weights are rounded to six places. The report names the manual check's
+   record instead of a stale line.
+6. C4 for words, C5 for sizes (with a planted row of the wrong length), C6
+   for a bias, C7 for a case's key and counts; the clone refuses, on
+   screen, a player cut with other features.
+7. A Python test holds the report's order, decay and prior to the
+   learner's own defaults; `compare.py` fails when the published file was
+   fitted on another split than the one it scores.
+8. A change of mode while recording keeps the fight so far under the mode
+   it was fought against and begins another; a fight against a scripted
+   dummy is not kept. The nine recordings already made are as they are.
+9. A tie in the softmax vector: high and low at 0, the first wins.
+10. The test asserts `last` before and after the reaction delay.
+11. The budget times the whole decision through `FightCloneOpponent` on
+    every frame of a recorded fight: 0.038 ms the clone, 0.12 ms a ghost.
+    Still headless, and the header says why.
+12. The win rates name the frame data's sha256 and the report checks it.
+    The mirrors and the opponents' scripts are written down as not covered.
+13. Done with 3.
+14. STATUS, the CLAUDE.md row (N10-N12) and `docs/godot/cloning.md` are
+    written. `derive.py` keeps its short names, as the n-gram's does: it is
+    a script that writes numbers, outside the gate, and says so.
 
 ## Not checked
 

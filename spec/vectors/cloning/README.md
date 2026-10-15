@@ -29,6 +29,7 @@ GDScript side, `make test-python` on the Python side.
 
 From neither implementation: `derive.py`, which imports nothing from this
 repository, wrote them. `softmax-by-hand` can be checked by hand: for
-`{"distance": "close", "last": "high"}` the scores are high 0.25 + 0 - 0.5
-= -0.25, low 0 + 0.5 + 1 = 1.5, throw -0.25 + 2 + 0 = 1.75, so throw is
-likeliest. The empty situation leaves the biases alone, and high wins.
+`{"distance": "close", "last": "high"}` the scores are high 0 + 0 - 0.5
+= -0.5, low 0 + 0.5 + 1 = 1.5, throw -0.25 + 2 + 0 = 1.75, so throw is
+likeliest. The empty situation leaves the biases alone: high and low tie at
+0, and a tie goes to the first in `classes`, high.

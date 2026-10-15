@@ -22,6 +22,13 @@
 ## fixed opponent never chooses. Its execution is clean: a player's fumbles are already
 ## in what the player did.
 ##
+## One difference from the player is left, and said here rather than hidden:
+## the rows hold one decision per *change* of action, and this opponent
+## decides whenever its plan runs out -- every 10 to 12 frames of a walk or a
+## guard. So after a step in it is asked "what next?" sooner than the player
+## was, and tends to stop walking sooner. Matching the player's timing would
+## need how long each action was held, which the rows do not keep.
+##
 ## When not to use it: an opponent that should be good. A clone is as good as
 ## the player recorded, and only in situations the player met.
 class_name FightCloneOpponent
@@ -64,11 +71,16 @@ func _decide(seen: FightState, me: int) -> void:
 	super(seen, me)
 
 
-# The option drawn becomes the last thing it did, as the recorded player's
-# last action was.
-func _draw(name: String, character: String) -> String:
-	_last = super(name, character)
-	return _last
+## As the fixed opponent's, after reading its own fighter off the frame it
+## was handed: the last action it was seen doing is its `last`, exactly as
+## `FightRecording.last_seen` writes it into the rows -- not the option it
+## drew, which a strike out of reach or a guard with nothing to block turns
+## into something else on screen.
+func choose(seen: FightState, me: int) -> int:
+	var reading: String = FightAction.of(seen, me, _data)
+	if reading != "":
+		_last = reading
+	return super(seen, me)
 
 
 ## What the recorded player did in the situation last seen, as `[action,
@@ -90,6 +102,10 @@ func _weighted_options(_name: String, character: String) -> Array:
 func _answers() -> Dictionary:
 	if not player.is_loaded():
 		found = "no recorded player: " + player.error
+		return {}
+	if Array(player.cases.features) != FightSituation.FEATURES:
+		found = "the recorded player was cut with other features (%s) -- run `make train-clone`" % ", ".join(
+			player.cases.features)
 		return {}
 	match level:
 		"ghost: exact":

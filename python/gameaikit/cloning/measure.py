@@ -7,10 +7,13 @@ are held out -- every fourth, counting back from the last -- and every
 number in the comparison is measured on those, which nothing was fitted on.
 
 The n-gram is the exception, and on purpose: T17's table starts empty every
-fight and learns *during* it. Scored on a held-out recording it is shown
-that recording's actions one at a time, guessing each before counting it --
-exactly what it does in the game. The others were fitted on other fights and
-learn nothing during this one. That is the difference being measured.
+fight and learns *during* it. Scored on a held-out recording it guesses each
+action from what it had seen by then -- every action that began at least
+`reaction` frames before -- as the learner, seated behind the same delay,
+does in the game. So it is asked the same question as the others, as late:
+what the player will do next, from the fight a quarter of a second ago. The
+others were fitted on other fights and learn nothing during this one. That
+is the difference being measured.
 """
 
 from __future__ import annotations
@@ -75,17 +78,20 @@ def scored(method: str, guess: Callable[[Situation], str], held: list[Session], 
     return Score(method, right, len(rows), size, seconds, how)
 
 
-def ngram_score(held: list[Session], actions: list[str]) -> Score:
-    """T17's n-gram, empty at the start of every held-out fight, learning as it goes."""
+def ngram_score(held: list[Session], actions: list[str], reaction: int) -> Score:
+    """T17's n-gram, empty at the start of every held-out fight, learning as it sees."""
     right, rows = 0, 0
     for session in held:
         predictor = NGramPredictor(NGRAM_ORDER, actions, NGRAM_DECAY, NGRAM_PRIOR)
-        for action in session.actions():
+        seen = 0
+        for action, frame in zip(session.actions(), session.frames):
+            while seen < len(session.frames) and session.frames[seen] <= frame - reaction:
+                predictor.observe(session.actions()[seen])
+                seen += 1
             right += predictor.likeliest() == action
             rows += 1
-            predictor.observe(action)
     size = len(actions) * len(actions)
-    how = f"order {NGRAM_ORDER}, decay {NGRAM_DECAY}; learns during the fight, nothing beforehand"
+    how = f"order {NGRAM_ORDER}, decay {NGRAM_DECAY}; learns during the fight, {reaction} frames late"
     return Score("n-gram (T17)", right, rows, size, 0.0, how)
 
 
@@ -97,7 +103,7 @@ def timed(build: Callable[[], object]) -> tuple[object, float]:
 
 
 def every_score(training: list[Session], held: list[Session], features: list[str],
-                actions: list[str]) -> tuple[list[Score], softmax.Softmax, CaseTable]:
+                actions: list[str], reaction: int = 15) -> tuple[list[Score], softmax.Softmax, CaseTable]:
     """Every method, fitted on `training` and scored on `held`; and the model and table to publish."""
     rows = rows_of(training)
     commonest = likeliest(Counter(action for _, action in rows), actions)
@@ -106,7 +112,7 @@ def every_score(training: list[Session], held: list[Session], features: list[str
     model, fitting = timed(lambda: softmax.fit(rows, features, actions))
     scores = [
         scored("always the commonest", lambda _: commonest, held, 1, 0.0, f"always {commonest}: the floor"),
-        ngram_score(held, actions),
+        ngram_score(held, actions, reaction),
         scored("ghost, exact", lambda situation: likeliest(table.exact(situation) or table.everything(), actions),
                held, table.size(), counting, f"{len(table.cases)} situations met; all its play when unmet"),
         scored("ghost, nearest", lambda situation: likeliest(table.nearest(situation)[1], actions), held,
@@ -117,3 +123,23 @@ def every_score(training: list[Session], held: list[Session], features: list[str
                f"softmax over {len(features)} features"),
     ]
     return scores, model, table
+
+
+def leave_one_out(sessions: list[Session], features: list[str], actions: list[str],
+                  reaction: int = 15) -> list[Score]:
+    """Every method scored on every recording in turn, fitted on all the others, pooled.
+
+    A held-out set of three fights can be decided by one of them. Holding
+    each recording out once uses every fight for scoring and none for
+    scoring itself; the n-gram, which fits nothing beforehand, scores the
+    same either way.
+    """
+    pooled: dict[str, Score] = {}
+    for index, held in enumerate(sessions):
+        others = sessions[:index] + sessions[index + 1:]
+        scores, _, _ = every_score(others, [held], features, actions, reaction)
+        for score in scores:
+            total = pooled.setdefault(score.method, Score(score.method, 0, 0, 0, 0.0, "left out one at a time"))
+            total.right += score.right
+            total.rows += score.rows
+    return list(pooled.values())

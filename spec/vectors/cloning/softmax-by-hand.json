@@ -1,5 +1,5 @@
 {
- "description": "Three answers, four columns. A situation adds its columns' weights to each answer's bias; a word with no column adds nothing; with no word at all only the biases are left.",
+ "description": "Three answers, four columns. A situation adds its columns' weights to each answer's bias; a word with no column adds nothing; with no word at all only the biases are left, and high and low tie -- the first in classes wins.",
  "model": {
   "classes": [
    "high",
@@ -33,7 +33,7 @@
    ]
   ],
   "bias": [
-   0.25,
+   0.0,
    0.0,
    -0.25
   ]
@@ -45,9 +45,9 @@
     "last": "high"
    },
    "probabilities": {
-    "high": 0.07070306318277945,
-    "low": 0.4068680365934249,
-    "throw": 0.5224289002237956
+    "high": 0.055938448219335045,
+    "low": 0.413332331979794,
+    "throw": 0.530729219800871
    },
    "likeliest": "throw"
   },
@@ -57,9 +57,9 @@
     "last": "low"
    },
    "probabilities": {
-    "high": 0.9240064735078669,
-    "low": 0.05906975759251023,
-    "throw": 0.016923768899622816
+    "high": 0.9044840065682136,
+    "low": 0.07424456843449029,
+    "throw": 0.021271424997296118
    },
    "likeliest": "high"
   },
@@ -69,18 +69,18 @@
     "last": "high"
    },
    "probabilities": {
-    "high": 0.18213798441150478,
-    "low": 0.6357240311769904,
-    "throw": 0.18213798441150478
+    "high": 0.14780404965619498,
+    "low": 0.6624117938958737,
+    "throw": 0.1897841564479314
    },
    "likeliest": "low"
   },
   {
    "situation": {},
    "probabilities": {
-    "high": 0.4192289516096977,
-    "low": 0.3264958357998367,
-    "throw": 0.25427521259046565
+    "high": 0.35986746732333263,
+    "low": 0.35986746732333263,
+    "throw": 0.2802650653533347
    },
    "likeliest": "high"
   }

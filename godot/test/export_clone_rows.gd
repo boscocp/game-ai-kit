@@ -38,10 +38,9 @@ func _run(folder: String, rows_path: String, checking: bool) -> int:
 	if not refused.is_empty() or recordings.is_empty():
 		printerr("export_clone_rows: %d recording(s) under %s, %d refused" % [recordings.size(), folder, refused.size()])
 		return 2
-	var text: String = rows_text(recordings, data)
+	var text: String = FightRecording.rows_text(recordings, data)
 	if checking:
-		var current: String = FileAccess.get_file_as_string(rows_path)
-		var fresh: bool = current == text
+		var fresh: bool = FileAccess.get_file_as_string(rows_path) == text
 		var verdict: String = "matches" if fresh else "does not match what is cut from"
 		print("%s: %s %s the %d recording(s)" % ["ok" if fresh else "STALE", rows_path, verdict, recordings.size()])
 		return 0 if fresh else 1
@@ -52,35 +51,3 @@ func _run(folder: String, rows_path: String, checking: bool) -> int:
 	file.store_string(text)
 	print("export_clone_rows: %d recording(s) -> %s" % [recordings.size(), rows_path])
 	return 0
-
-
-## The rows file: a header, then each recording's rows, one row a line --
-## its situation's words in `FightSituation.FEATURES` order, then the action
-## -- so a diff of the file reads as a diff of decisions.
-func rows_text(recordings: Dictionary, data: FightData) -> String:
-	var header: Dictionary = {"generated_by": "godot/test/export_clone_rows.gd", "reaction": FightRecording.REACTION,
-			"features": FightSituation.FEATURES, "actions": FightAction.ACTIONS}
-	var lines: PackedStringArray = ["{", ' "header": %s,' % JSON.stringify(header), ' "sessions": [']
-	var names: Array = recordings.keys()
-	for index: int in range(names.size()):
-		var recording: Dictionary = recordings[names[index]]
-		var about: Dictionary = {"recording": names[index], "player": recording["player"]}
-		about["characters"] = recording["characters"]
-		lines.append('  {"about": %s, "rows": [' % JSON.stringify(about))
-		var rows: PackedStringArray = []
-		for row: Dictionary in FightRecording.rows_of(recording, data):
-			rows.append("   " + JSON.stringify(_words(row)))
-		lines.append(",\n".join(rows))
-		lines.append("  ]}" + ("," if index < names.size() - 1 else ""))
-	lines.append(" ]")
-	lines.append("}")
-	return "\n".join(lines) + "\n"
-
-
-# A row as its situation's words, then its action.
-func _words(row: Dictionary) -> Array:
-	var words: Array = []
-	for feature: String in FightSituation.FEATURES:
-		words.append(row["situation"][feature])
-	words.append(row["action"])
-	return words

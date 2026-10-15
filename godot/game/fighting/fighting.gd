@@ -109,13 +109,23 @@ func _unhandled_input(event: InputEvent) -> void:
 			paused = true
 			step_decision()
 		KEY_M:
-			dummy_mode = MODES[(MODES.find(dummy_mode) + 1) % MODES.size()]
+			_next_mode()
 		KEY_C:
 			_characters.reverse()
 			restart()
 		KEY_R:
 			restart()
 	_refresh()
+
+
+# The next dummy mode. When recording, the fight so far is kept under the
+# mode it was fought against and a new one begins, so a recording never
+# names an opponent it did not face.
+func _next_mode() -> void:
+	keep_fight()
+	dummy_mode = MODES[(MODES.find(dummy_mode) + 1) % MODES.size()]
+	if recording:
+		restart()
 
 
 ## The opening frame, the log emptied -- and kept first, when recording.
@@ -163,9 +173,11 @@ func step_decision() -> void:
 
 
 ## When recording, write this fight's log to `data/fights/`, once: at the
-## knockout, or at a restart or a close before one.
+## knockout, or at a restart, a change of mode or a close before one. Only a
+## fight against an opponent that decides is kept: what a person does
+## against a dummy that stands or jabs on a beat is not how they fight.
 func keep_fight() -> void:
-	if not recording or _kept or input_log.is_empty():
+	if not recording or _kept or input_log.is_empty() or seat == null:
 		return
 	_kept = true
 	var path: String = FightRecording.save(input_log.duplicate(), _characters, dummy_mode, FightRecording.PERSON,

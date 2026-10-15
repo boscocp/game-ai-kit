@@ -26,11 +26,27 @@ func _run(directory: String) -> int:
 	if not softmax is Dictionary or not ghost is Dictionary or softmax["cases"].is_empty() or ghost["cases"].is_empty():
 		printerr("cloning_vectors_runner: the two vectors under %s could not be read" % directory)
 		return 2
+	if not planted_vectors_fail(softmax, ghost):
+		return 1
 	var failures: Array[String] = softmax_failures(softmax) + ghost_failures(ghost)
 	for failure: String in failures:
 		print(failure)
 	print("cloning vectors: 2 vector(s), %d failure(s)" % failures.size())
 	return 1 if not failures.is_empty() else 0
+
+
+## True, and said so, when a wrong claim planted in each vector is caught:
+## a likeliest answer changed, and a nearest distance changed. A runner that
+## passed those would pass anything.
+func planted_vectors_fail(softmax: Dictionary, ghost: Dictionary) -> bool:
+	var wrong_softmax: Dictionary = softmax.duplicate(true)
+	wrong_softmax["cases"][0]["likeliest"] = "nobody's answer"
+	var wrong_ghost: Dictionary = ghost.duplicate(true)
+	wrong_ghost["cases"][0]["distance"] = int(wrong_ghost["cases"][0]["distance"]) + 1
+	var caught: bool = not softmax_failures(wrong_softmax).is_empty() and not ghost_failures(wrong_ghost).is_empty()
+	print("%s: planted, a wrong likeliest and a wrong distance %s" % ["ok" if caught else "FAIL",
+		"are caught" if caught else "pass unnoticed"])
+	return caught
 
 
 ## Every claim of the softmax vector `SoftmaxModel` does not meet.

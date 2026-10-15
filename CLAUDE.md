@@ -20,7 +20,7 @@ than none.
 | 3 acceptance is a command | `check_acceptance.py` |
 | 4 gate rejects a planted case | `make lint-selftests` runs them; that each one *has* a planted case is still read by a person |
 | 5 no lesson above tier 1 | `check_tiers.py`, via each page's `teaches:` field |
-| 6 no training at game time | half held -- `check_no_training.py` is a net for the common spellings, and says so; its one exception, ADR 0016, is N9 |
+| 6 no training at game time | half held -- `check_no_training.py` is a net for the common spellings, and says so; its one exception, ADR 0016, is N9; T18's cloned player is N10-N12 |
 | 7 LLM output validated | **none yet** -- arrives with the addon |
 | 8 toolchain on the large disk | `check_disk_layout.py` |
 | 9 LICENSE and NOTICE ship | `check_license.py` |

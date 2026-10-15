@@ -50,7 +50,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T38 | The jump | done | take-off, an arc in whole frames, landing; boxes are two intervals and the pass-over rule is geometry; four air moves, all overheads, one a jump; an uppercut anti-air; jumps cross over, guarded back from the strike; manual check still a person's |
 | T39 | High punches pass over a crouch | done | the owner's finding from playing T34: standing punches and the dancer's roundhouse are high and miss a crouching fighter; the light kicks recut as side kicks to the waist; manual check still a person's |
 | T17 | The opponent model | done | `ai_opponent`: an n-gram with additive smoothing and decay, held to Python by 4 vectors; the learner is T37's opponent leaning towards answers; 20/20 within 40 actions and after a switch; ADR 0016, the owner's exception to invariant 6, held by N9; manual check still a person's |
-| T18 | Behaviour cloning, and what a learned model buys | todo | the comparison is the task: n-gram, a ghost, and the trained model |
+| T18 | Behaviour cloning, and what a learned model buys | done | the owner's nine fights, cut 15 frames late; every recording held out once: nothing fitted beats "always step in" (28.0%), the n-gram does by four points; ghosts beat medium 78-86 in 100, the clone 64; 0.04-0.12 ms a decision; a person could not tell them apart (ADR 0017, N10-N12) |
 | T40 | An evade, and levels that are hard enough | todo | the owner could not tell T18's opponents apart and found all of them easy; a backdash gives every one more to choose, and hard is retuned and measured |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
 | T26 | Combat on the board | todo | reach and the counter table start to matter; the dataset is rebuilt from the game (ADR 0008) |
@@ -86,6 +86,40 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-15 (wave 42)
+
+**What landed.** T18: behaviour cloning. `make record-fights` keeps each
+fight as its input log in `data/fights/` (ADR 0017); Godot replays them
+and cuts one row per decision, the situation as six words as of 15 frames
+before (`FightSituation`, `FightRecording`); `gameaikit.cloning` splits by
+recording, fits a softmax and counts a ghost, and publishes
+`ai_learning/clone_weights.json`, read by `ClonedPlayer`, `SoftmaxModel`
+and `CaseTable`. The fighting demo has *ghost: exact*, *ghost: nearest* and
+*clone* modes. `compare.py --report` is the comparison. Trained on the
+owner's nine fights; the stand-ins stay as the contrast.
+
+**The answer.** Over every recording held out once, nothing fitted
+beforehand guesses the owner better than "always step in"; T17's n-gram
+does, by four points. The ghosts make the better opponents. The owner could
+not tell any of them apart, and suspects the moveset -- T40.
+
+**The review's worst finding.** The clone was asked with the option it drew
+as its `last`, where the rows hold what its fighter was seen doing: 28% of
+its decisions. Fixed, tested over a whole fight, and the n-gram is now
+scored as late as the models; the numbers changed and the page says the
+first reading was wrong. See
+[docs/reviews/42-behaviour-cloning.md](../docs/reviews/42-behaviour-cloning.md).
+
+**Not proven.** Anything about people beyond one owner and nine fights. The
+clone still decides more often than the player did.
+
+**Next:** the owner asked for, after T18: `make check-changed` (only the
+gates a change can reach); T40, an evade; then survey-first tasks for
+racing (2D, and 3D with richer physics) and two shooters with bots -- a
+bot-only match and a single-player one with optional stealth; 3D needs an
+ADR against ADR 0001's no-3D rule first, and 3D assets are
+referenced, never committed.
 
 ## Resuming after 2026-10-15 (wave 41)
 

@@ -37,10 +37,12 @@ const JOINER: String = " | "
 var _words_of: Dictionary = {}
 
 
-## A table over `feature_names` holding `counted` -- key to answer counts.
+## A table over `feature_names` holding a copy of `counted` -- key to answer
+## counts. A copy, so the file it was read from and the table cannot change
+## each other.
 func _init(feature_names: PackedStringArray, counted: Dictionary) -> void:
 	features = feature_names
-	cases = counted
+	cases = counted.duplicate(true)
 	for key: String in cases:
 		_words_of[key] = key.split(JOINER)
 
@@ -54,9 +56,9 @@ func key_of(situation: Dictionary) -> String:
 
 
 ## What the player did in exactly `situation`, as `{answer: count}`; empty
-## when it never met it.
+## when it never met it. A copy: changing the answer does not change the table.
 func exact(situation: Dictionary) -> Dictionary:
-	return cases.get(key_of(situation), {})
+	return cases.get(key_of(situation), {}).duplicate()
 
 
 ## The cases nearest `situation`: `{"distance": how many features differ,

@@ -69,26 +69,52 @@ static func _why_wrong(data: Variant) -> String:
 	for field: String in FIELDS:
 		if not data.has(field):
 			return "C3 no \"%s\" in the file" % field
-	if not data["classes"] is Array or data["classes"].is_empty():
-		return "C4 \"classes\" is not a list of answers"
-	if not data["cases"] is Dictionary:
-		return "C4 \"cases\" is not a table"
-	return _why_model_is_wrong(data["model"], data["classes"].size())
+	for field: String in ["features", "classes"]:
+		if not _all_words(data[field]) or data[field].is_empty():
+			return "C4 \"%s\" is not a list of words" % field
+	var wrong: String = _why_model_is_wrong(data["model"], data["classes"].size())
+	return wrong if wrong != "" else _why_cases_are_wrong(data["cases"], data["features"].size())
 
 
 # What is wrong with the model block, for `answers` answers, or "".
 static func _why_model_is_wrong(model: Variant, answers: int) -> String:
 	if not model is Dictionary or not model.has_all(["columns", "weights", "bias"]):
 		return "C3 \"model\" needs \"columns\", \"weights\" and \"bias\""
+	if not _all_words(model["columns"]):
+		return "C4 \"columns\" is not a list of words"
+	if not model["weights"] is Array or not model["bias"] is Array:
+		return "C5 the weights and the bias are not lists"
 	var sizes: Array[int] = [model["weights"].size(), model["bias"].size(), answers]
 	if sizes[0] != answers or sizes[1] != answers:
 		return "C5 the model has %d weight rows and %d biases for %d answers" % sizes
+	if not _all_numbers(model["bias"]):
+		return "C6 a bias is not a number"
 	for row: Variant in model["weights"]:
 		if not row is Array or row.size() != model["columns"].size():
 			return "C5 a weight row is not one number per column (%d columns)" % model["columns"].size()
-		if not row.all(func(weight: Variant) -> bool: return weight is float or weight is int):
+		if not _all_numbers(row):
 			return "C6 a weight is not a number"
 	return ""
+
+
+# What is wrong with the cases, each keyed by `words` words, or "".
+static func _why_cases_are_wrong(cases: Variant, words: int) -> String:
+	if not cases is Dictionary:
+		return "C4 \"cases\" is not a table"
+	for key: Variant in cases:
+		if not key is String or key.split(CaseTable.JOINER).size() != words:
+			return "C7 the case \"%s\" is not %d words" % [key, words]
+		if not cases[key] is Dictionary or not _all_numbers(cases[key].values()):
+			return "C7 the case \"%s\" does not count its answers in numbers" % key
+	return ""
+
+
+static func _all_words(list: Variant) -> bool:
+	return list is Array and list.all(func(item: Variant) -> bool: return item is String)
+
+
+static func _all_numbers(list: Variant) -> bool:
+	return list is Array and list.all(func(item: Variant) -> bool: return item is float or item is int)
 
 
 static func _refused(reason: String) -> ClonedPlayer:

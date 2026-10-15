@@ -14,8 +14,10 @@
 # copy is measured against what it copies, and only a person cannot be
 # seated here.
 #
-# The file it writes names the sha256 of the clone weights it fought with,
-# so `compare.py` can refuse numbers measured on another file.
+# The file it writes names the sha256 of the clone weights it fought with
+# and of the frame data it fought under, so `compare.py` can refuse numbers
+# measured on another file or under other rules. A change to an opponent's
+# script is not hashed: rerun this after one.
 #
 # Exit codes: 0 written; 1 the reference row was not near half; 2 the frame
 # data or the cloned player could not be read, or no path was given.
@@ -46,14 +48,15 @@ func _run(path: String) -> int:
 	if data.refusal != "" or not cloned.is_loaded():
 		printerr("clone_fights: cannot fight -- %s%s" % [data.refusal, cloned.error])
 		return 2
-	var wins: Dictionary = {}
+	var wins: Dictionary[String, int] = {}
 	var modes: Array[String] = MODES.duplicate()
 	if str(cloned.trained_on["player"]).begins_with(STAND_IN):
 		modes.append(cloned.trained_on["player"])
 	for mode: String in modes:
 		wins[mode] = wins_of(mode, cloned, data)
 		print("%s beats the fixed opponent at medium %d of %d" % [mode, wins[mode], FIGHTS])
-	if not WinRateFile.write(path, FileAccess.get_sha256(ClonedPlayer.DEFAULT_PATH), FIGHTS, wins):
+	var weights: String = FileAccess.get_sha256(ClonedPlayer.DEFAULT_PATH)
+	if not WinRateFile.write(path, weights, FileAccess.get_sha256(FightData.PATH), FIGHTS, wins):
 		printerr("clone_fights: cannot write %s" % path)
 		return 2
 	var reference: int = wins["opponent: medium"]

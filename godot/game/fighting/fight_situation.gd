@@ -4,8 +4,9 @@
 ## everything it can learn is limited by how the situation is written down.
 ## Six features, each a word from a short list, so a row can be read aloud:
 ##
-## * `last` -- what this player did last, the context an order-2 n-gram
-##   sees, so the comparison with T17 is fair;
+## * `last` -- the last action this player was seen doing, as of the frame
+##   the situation is read from (`FightRecording.last_seen`): the context an
+##   order-2 n-gram sees, so the comparison with T17 is fair;
 ## * `other` -- what the other fighter is doing, as T17 reads an action;
 ## * `me` -- free, in a move, in the air, or stunned by a hit or a block;
 ## * `distance` -- the gap between the two: close (a throw reaches), near (a

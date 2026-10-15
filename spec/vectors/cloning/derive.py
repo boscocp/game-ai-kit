@@ -28,10 +28,10 @@ def lookup(features, cases, situation):
         for a, n in cases[k].items(): pooled[a] = pooled.get(a, 0) + n
     return {"situation": situation, "exact": cases.get(key, {}), "distance": closest, "nearest": pooled}
 model = dict(classes=["high", "low", "throw"], columns=["distance=close", "distance=far", "last=high", "last=low"],
-             weights=[[0.0, 1.0, -0.5, 0.5], [0.5, 0.0, 1.0, -1.0], [2.0, -2.0, 0.0, 0.0]], bias=[0.25, 0.0, -0.25])
+             weights=[[0.0, 1.0, -0.5, 0.5], [0.5, 0.0, 1.0, -1.0], [2.0, -2.0, 0.0, 0.0]], bias=[0.0, 0.0, -0.25])
 cases = {"close | high": {"throw": 3, "low": 1}, "close | low": {"high": 2}, "far | high": {"low": 2, "high": 1}}
 vectors = {
- "softmax-by-hand": dict(description="Three answers, four columns. A situation adds its columns' weights to each answer's bias; a word with no column adds nothing; with no word at all only the biases are left.",
+ "softmax-by-hand": dict(description="Three answers, four columns. A situation adds its columns' weights to each answer's bias; a word with no column adds nothing; with no word at all only the biases are left, and high and low tie -- the first in classes wins.",
    model=model, cases=[softmax(**model, situation=s) for s in [
      {"distance": "close", "last": "high"}, {"distance": "far", "last": "low"},
      {"distance": "near", "last": "high"}, {}]]),

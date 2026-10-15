@@ -2,12 +2,17 @@
 #
 #     ./scripts/godot --headless --path godot -s res://test/inference_budget.gd
 #
-# A decision is timed the way the game makes one: a situation in words
-# handed to the softmax model, or to the ghost's table, exactly or by the
-# nearest case. Each is asked about every situation the recordings met,
-# `ROUNDS` times over, and the mean per decision must stay under
+# Two things are timed. The lookup alone: a situation in words handed to
+# the softmax model, or to the ghost's table, exactly or by the nearest case,
+# about every situation the recordings met, `ROUNDS` times over. And the
+# whole decision the game makes, through `FightCloneOpponent` -- the fight
+# read into six words, the lookup, the draw, the inputs -- on every frame of
+# a recorded fight, for each of its three sources. Each mean must stay under
 # `BUDGET_MS`: a sixteenth of a 60 Hz frame, so that even an opponent
 # deciding every frame leaves the frame to the game.
+#
+# Headless, not in the demo: the demo draws, and drawing is not what is
+# being asked about. The number is the opponent's, measured alone.
 #
 # The numbers are written into T18's record, measured on the slowest machine
 # available. Before trusting the clock, it times a planted decision that
@@ -51,7 +56,34 @@ func _run() -> int:
 		print("%s: %s, %.4f ms a decision over %d situations (budget %.1f ms)" % [verdict, way, spent,
 			situations.size(), BUDGET_MS])
 		failures += 0 if inside else 1
+	failures += whole_decisions_over_budget(cloned)
 	return 1 if failures > 0 else 0
+
+
+## How many sources take longer than the budget for a whole decision, each
+## timed on every frame of a recorded fight, and said so.
+func whole_decisions_over_budget(cloned: ClonedPlayer) -> int:
+	var data := FightData.read()
+	var states: Array[FightState] = recorded_states(data)
+	var over: int = 0
+	for source: String in FightCloneOpponent.SOURCES:
+		var opponent := FightCloneOpponent.new(source, cloned, data)
+		var started: int = Time.get_ticks_usec()
+		for state: FightState in states:
+			opponent._decide(state, 1)
+		var spent: float = (Time.get_ticks_usec() - started) / 1000.0 / states.size()
+		var inside: bool = spent < BUDGET_MS
+		print("%s: a whole decision, %s, %.4f ms over %d frames (budget %.1f ms)" % ["ok" if inside else "FAIL",
+			source, spent, states.size(), BUDGET_MS])
+		over += 0 if inside else 1
+	return over
+
+
+## The frames of the first recording, to decide on.
+func recorded_states(data: FightData) -> Array[FightState]:
+	var refused: Array[String] = []
+	var recordings: Dictionary = FightRecording.read_all(FightRecording.directory(), refused)
+	return FightRecording.states_of(recordings.values()[0], data)
 
 
 ## Every situation the recorded player met, rebuilt from the table's keys.
