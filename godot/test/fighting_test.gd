@@ -366,7 +366,7 @@ func test_an_overhead_gets_through_a_crouching_guard_and_not_a_standing_one() ->
 	assert_str(_all_events(_fight_at(530, 618), inputs)).contains("p1 is blocked by p2 with axe_kick (holding away, standing)")
 
 
-# A mid is stopped by either guard: the lancer's shin kick.
+# A mid is stopped by either guard: the lancer's side kick.
 func test_a_mid_is_stopped_by_both_guards() -> void:
 	for guard: int in [RIGHT, RIGHT | DOWN]:
 		var inputs: Array = [[FightInput.LIGHT_KICK, guard]] + _hold(20, [0, guard])
@@ -380,7 +380,10 @@ func test_a_high_punch_passes_over_a_crouch_and_a_kick_does_not() -> void:
 	var full: int = int(_data.character("dancer")["health"])
 	for crouch: int in [DOWN, DOWN | RIGHT]:
 		var inputs: Array = [[HEAVY, crouch]] + _hold(20, [0, crouch])
-		assert_str(_all_events(_fight_at(480, 618), inputs)).is_empty()
+		var events: String = _all_events(_fight_at(480, 618), inputs)
+		assert_str(events).contains("p1's thrust passes over p2 (a high misses a crouch)")
+		assert_str(events).not_contains("p1 hits")
+		assert_str(events).not_contains("blocked")
 		assert_int(_play(_fight_at(480, 618), inputs).fighters[1].health).is_equal(full)
 	assert_str(_all_events(_fight_at(480, 618), [[HEAVY, 0]] + _hold(20, [0, 0]))).contains("p1 hits p2 with thrust")
 	assert_str(_all_events(_fight_at(480, 618), [[HEAVY, RIGHT]] + _hold(20, [0, RIGHT]))).contains(
@@ -393,9 +396,30 @@ func test_a_high_punch_passes_over_a_crouch_and_a_kick_does_not() -> void:
 # a crouching lancer and lands on a standing one.
 func test_a_high_kick_passes_over_a_crouch() -> void:
 	var crouched: Array = [[DOWN, FightInput.HEAVY_KICK]] + _hold(30, [DOWN, 0])
-	assert_str(_all_events(_fight_at(560, 618), crouched)).is_empty()
+	var events: String = _all_events(_fight_at(560, 618), crouched)
+	assert_str(events).contains("p2's roundhouse passes over p1")
+	assert_str(events).not_contains("hits")
 	var standing: Array = [[0, FightInput.HEAVY_KICK]] + _hold(30, [0, 0])
 	assert_str(_all_events(_fight_at(560, 618), standing)).contains("p2 hits p1 with roundhouse")
+
+
+# A high passes over a fighter crouching in a move too: the dancer's straight
+# over the lancer's sweep, which lands alone -- no trade.
+func test_a_high_passes_over_a_crouching_move() -> void:
+	var inputs: Array = [[SWEEP, 0]] + _hold(2, [0, 0]) + [[0, HEAVY]] + _hold(20, [0, 0])
+	var events: String = _all_events(_fight_at(530, 618), inputs)
+	assert_str(events).contains("p2's straight passes over p1 (a high misses a crouch)")
+	assert_str(events).contains("p1 hits p2 with sweep")
+	assert_str(events).not_contains("trade")
+
+
+# Hitstun is taken standing: the dancer's jab, landing on frame 4, cancelled
+# into its straight, lands both, though the lancer holds down from frame 5.
+func test_a_fighter_in_hitstun_cannot_duck_the_next_hit() -> void:
+	var inputs: Array = [[0, LIGHT]] + _hold(3, [0, 0]) + [[DOWN, HEAVY]] + _hold(20, [DOWN, 0])
+	var events: String = _all_events(_fight_at(520, 580), inputs)
+	assert_str(events).contains("p2 hits p1 with jab")
+	assert_str(events).contains("p2 hits p1 with straight")
 
 
 func test_every_standing_punch_is_high() -> void:

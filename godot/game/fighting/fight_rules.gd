@@ -66,7 +66,9 @@ static func _read_input(fighter: FighterState, held: int, frame: int, data: Figh
 
 # Step 2, for one fighter: count stun down, or carry on with the move, or
 # start the buffered one, or crouch, or walk. Then it is crouching if its
-# move is a crouching one, or, out of a move, if it holds down.
+# move is a crouching one, or, out of a move, if it holds down -- except in
+# hitstun, which it takes standing: a fighter reeling from a hit cannot duck
+# the next one, or a combo would end whenever its victim held down.
 static func _act(fighter: FighterState, held: int, data: FightData) -> void:
 	if fighter.stun > 0:
 		fighter.stun -= 1
@@ -80,7 +82,7 @@ static func _act(fighter: FighterState, held: int, data: FightData) -> void:
 	if fighter.move != "":
 		fighter.crouching = data.move(fighter.character, fighter.move)["stance"] == "crouching"
 	else:
-		fighter.crouching = FightInput.holds_down(held)
+		fighter.crouching = FightInput.holds_down(held) and fighter.stun_kind != "hit"
 
 
 # One more frame of the move. Inside an open cancel window, a move that has
@@ -166,11 +168,11 @@ static func _face_each_other(state: FightState) -> void:
 
 # Step 4. Every fighter whose hitbox overlaps the other's hurtbox, found for
 # both before anything is applied. A high move does not find a crouching
-# fighter: it passes over, neither blocked nor hit. A throw does not find a fighter in
-# hitstun or blockstun: a hit could otherwise be followed by a throw the
-# victim had no frame to answer. (Within a blockstring it is frame
-# advantage, in the data, that keeps a throw answerable: every move here is
-# minus on block.)
+# fighter: it passes over, neither blocked nor hit, and the events say so.
+# A throw does not find a fighter in hitstun or blockstun: a hit could
+# otherwise be followed by a throw the victim had no frame to answer.
+# (Within a blockstring it is frame advantage, in the data, that keeps a
+# throw answerable: every move here is minus on block.)
 static func _connections(state: FightState, data: FightData) -> Array[int]:
 	var attackers: Array[int] = []
 	for index: int in range(2):
@@ -178,9 +180,11 @@ static func _connections(state: FightState, data: FightData) -> Array[int]:
 		var defender: FighterState = state.fighters[1 - index]
 		if _throwing(index, state, data) and defender.stun > 0:
 			continue
-		if _passes_over(attacker, defender, data):
+		if not FightBoxes.overlap(FightBoxes.hitbox(attacker, data), FightBoxes.hurtbox(defender, data)):
 			continue
-		if FightBoxes.overlap(FightBoxes.hitbox(attacker, data), FightBoxes.hurtbox(defender, data)):
+		if _passes_over(attacker, defender, data):
+			state.events.append("p%d's %s passes over p%d (a high misses a crouch)" % [index + 1, attacker.move, 2 - index])
+		else:
 			attackers.append(index)
 	return attackers
 
@@ -269,8 +273,10 @@ static func _guard_stops(height: String, crouched: bool) -> bool:
 	return height == "mid" or (height == "low" and crouched) or (height in ["overhead", "high"] and not crouched)
 
 
+# A height in words. "high" is here for completeness: a high never meets a
+# crouching guard, since it passes over a crouch in step 4.
 static func _a_height(height: String) -> String:
-	return {"low": "a low", "overhead": "an overhead"}[height]
+	return {"low": "a low", "overhead": "an overhead", "high": "a high"}[height]
 
 
 # Apply one connection. `move` is the attacker's move as step 4 found it: in a

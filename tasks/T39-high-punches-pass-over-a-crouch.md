@@ -42,3 +42,16 @@ make test-godot
 
 Crouch against the dummy's jab and the dancer's roundhouse: both should
 pass over you. The side kicks and the axe kick should still land.
+
+## Decided on the way (2026-10-15)
+
+- **Hitstun is taken standing.** A fighter reeling from a hit cannot crouch
+  until the stun is over, so a combo cannot be ducked halfway -- the dancer's
+  jab into its straight lands both. Blockstun keeps the guard held, crouching
+  or not. Found by the wave 37 review; it is in step 2 of the resolution.
+- **A pass-over is an event**: "p1's jab passes over p2 (a high misses a
+  crouch)", on each frame the boxes meet, so the panel shows why nothing
+  connected. The recorded log must cause one.
+- **A hitbox is drawn at the height it hits on its target**, not on the
+  fighter swinging: the lancer stands taller than the dancer, and its high
+  was drawn above her head.

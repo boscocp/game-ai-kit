@@ -16,7 +16,7 @@
  },
  "resolution": [
   "1. Inputs: each fighter's newly pressed button is buffered for `buffer_frames` frames; the latest press replaces an older one.",
-  "2. Both fighters act at once, each from the state the frame began with: a stunned fighter counts its stun down; a fighter in a move advances one frame, or cancels into a buffered move when the cancel window is open and the move has connected; an idle fighter starts a buffered move -- the crouching one for its button while holding down, if it has one -- or crouches while holding down, or walks.",
+  "2. Both fighters act at once, each from the state the frame began with: a stunned fighter counts its stun down; a fighter in a move advances one frame, or cancels into a buffered move when the cancel window is open and the move has connected; an idle fighter starts a buffered move -- the crouching one for its button while holding down, if it has one -- or crouches while holding down, or walks. A fighter in hitstun is standing, whatever it holds.",
   "3. Bodies may not overlap: two that do each give way by half the overlap, rounded up, so neither side is favoured; then both are kept on the stage, and one pinned to a wall leaves the other to give way.",
   "4. Every hitbox out this frame is tested against the other fighter's hurtbox, both at once, before either result is applied. A throw's hitbox does not find a fighter in hitstun or blockstun, and a `high` hitbox does not find a crouching one: it passes over.",
   "5. Two throws found on one frame break each other: neither lands, both moves end, both are pushed apart. A throw and a strike found on one frame: the strike lands, the throw does not.",
