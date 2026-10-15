@@ -8,9 +8,15 @@
 ## 3. bodies are pushed apart and kept on the stage;
 ## 4. every hitbox is tested against the other's hurtbox, both before either
 ##    result is applied -- which is what makes a trade a trade;
-## 5-8. each connection is a block or a hit, a counter-hit if it caught a
-##    move starting up, and pushes the defender back;
-## 9. a fighter at 0 health has lost.
+## 5. two throws break each other, and a strike beats a throw;
+## 6-9. each connection is a block or a hit -- a block only with the guard
+##    its height asks for -- a counter-hit if it caught a move starting up,
+##    and pushes the defender back;
+## 10. a fighter at 0 health has lost.
+##
+## Guard, strike and throw are a triangle: guarding stops a strike, a strike
+## beats a throw, a throw beats guarding. Heights split guarding in two, so
+## the defender has to guess low or high as well.
 ##
 ## Everything is whole numbers and nothing is random, so the same inputs from
 ## the same frame always give the same next frame (`FightReplay`).
@@ -39,7 +45,7 @@ static func step(state: FightState, inputs: Array[int], data: FightData) -> Figh
 			next.fighters[index].cancelled_from = ""
 	_separate(next, data)
 	_face_each_other(next)
-	var attackers: Array[int] = _connections(next, data)
+	var attackers: Array[int] = _settle_throws(next, _connections(next, data), data)
 	_resolve(next, attackers, inputs, data)
 	next.winner = _winner(next)
 	return next
@@ -58,33 +64,38 @@ static func _read_input(fighter: FighterState, held: int, frame: int, data: Figh
 
 
 # Step 2, for one fighter: count stun down, or carry on with the move, or
-# start the buffered one, or walk.
+# start the buffered one, or crouch, or walk. Then it is crouching if its
+# move is a crouching one, or, out of a move, if it holds down.
 static func _act(fighter: FighterState, held: int, data: FightData) -> void:
 	if fighter.stun > 0:
 		fighter.stun -= 1
 		if fighter.stun == 0:
 			fighter.stun_kind = ""
 	elif fighter.move != "":
-		_advance_move(fighter, data)
-	elif not _start_buffered(fighter, data):
+		_advance_move(fighter, held, data)
+	elif not _start_buffered(fighter, held, data) and not FightInput.holds_down(held):
 		var speed: int = int(data.character(fighter.character)["walk_speed"])
 		fighter.x += FightInput.walk_direction(held) * speed
+	if fighter.move != "":
+		fighter.crouching = data.move(fighter.character, fighter.move)["stance"] == "crouching"
+	else:
+		fighter.crouching = FightInput.holds_down(held)
 
 
 # One more frame of the move. Inside an open cancel window, a move that has
 # connected may become the buffered one; a move that is over leaves the
 # fighter free, and a buffered move starts on that same frame.
-static func _advance_move(fighter: FighterState, data: FightData) -> void:
+static func _advance_move(fighter: FighterState, held: int, data: FightData) -> void:
 	fighter.move_frame += 1
 	var cancelled_from: String = fighter.move
-	if _cancel_is_open(fighter, data) and _start_buffered(fighter, data, true):
+	if _cancel_is_open(fighter, data) and _start_buffered(fighter, held, data, true):
 		fighter.cancelled_from = cancelled_from
 		return
 	if fighter.move_frame > data.length_of(fighter.character, fighter.move):
 		fighter.move = ""
 		fighter.move_frame = 0
 		fighter.connected = false
-		_start_buffered(fighter, data)
+		_start_buffered(fighter, held, data)
 
 
 static func _cancel_is_open(fighter: FighterState, data: FightData) -> bool:
@@ -93,12 +104,13 @@ static func _cancel_is_open(fighter: FighterState, data: FightData) -> bool:
 			and int(window[1]) > 0
 
 
-# Start the move for the buffered button, if the character has one -- and, as
-# a cancel, only if the current move lists it. True when a move started.
-static func _start_buffered(fighter: FighterState, data: FightData, as_cancel: bool = false) -> bool:
+# Start the move for the buffered button, if the character has one -- the
+# crouching one while holding down -- and, as a cancel, only if the current
+# move lists it. True when a move started.
+static func _start_buffered(fighter: FighterState, held: int, data: FightData, as_cancel: bool = false) -> bool:
 	if fighter.buffered == "":
 		return false
-	var next_move: String = data.move_for_button(fighter.character, fighter.buffered)
+	var next_move: String = data.move_for_button(fighter.character, fighter.buffered, FightInput.holds_down(held))
 	if next_move == "":
 		fighter.buffered = ""
 		return false
@@ -152,48 +164,110 @@ static func _face_each_other(state: FightState) -> void:
 
 
 # Step 4. Every fighter whose hitbox overlaps the other's hurtbox, found for
-# both before anything is applied.
+# both before anything is applied. A throw does not find a fighter in
+# hitstun or blockstun: a hit could otherwise be followed by a throw the
+# victim had no frame to answer. (Within a blockstring it is frame
+# advantage, in the data, that keeps a throw answerable: every move here is
+# minus on block.)
 static func _connections(state: FightState, data: FightData) -> Array[int]:
 	var attackers: Array[int] = []
 	for index: int in range(2):
-		var hitbox: Array[int] = FightBoxes.hitbox(state.fighters[index], data)
-		if FightBoxes.overlap(hitbox, FightBoxes.hurtbox(state.fighters[1 - index], data)):
+		var attacker: FighterState = state.fighters[index]
+		var defender: FighterState = state.fighters[1 - index]
+		if _throwing(index, state, data) and defender.stun > 0:
+			continue
+		if FightBoxes.overlap(FightBoxes.hitbox(attacker, data), FightBoxes.hurtbox(defender, data)):
 			attackers.append(index)
 	return attackers
 
 
-# Steps 5 to 8. Every connection is judged on the fighters as step 4 found
+# Step 5. Two throws found on one frame break each other: both moves end and
+# the two are pushed apart, and neither lands. A throw found with a strike
+# loses to it. The attackers left are the ones whose connection is judged.
+static func _settle_throws(state: FightState, attackers: Array[int], data: FightData) -> Array[int]:
+	if attackers.size() < 2:
+		return attackers
+	var throwers: Array[int] = []
+	throwers.assign(attackers.filter(_throwing.bind(state, data)))
+	if throwers.size() == 2:
+		_break_both_throws(state, data)
+		return []
+	if throwers.size() == 1:
+		var striker: int = 1 - throwers[0]
+		var strike: String = state.fighters[striker].move
+		state.events.append("p%d's throw is beaten by p%d's %s (strike beats throw)" % [2 - striker, striker + 1, strike])
+		return [striker] as Array[int]
+	return attackers
+
+
+# True when the fighter at `index` is in a throw.
+static func _throwing(index: int, state: FightState, data: FightData) -> bool:
+	var fighter: FighterState = state.fighters[index]
+	return fighter.move != "" and data.is_throw(fighter.character, fighter.move)
+
+
+# Two throws meeting: each pushes the other away, and both end with nothing landed.
+static func _break_both_throws(state: FightState, data: FightData) -> void:
+	for index: int in range(2):
+		_push_back(state, state.fighters[index], state.fighters[1 - index], data)
+		state.fighters[index].move = ""
+		state.fighters[index].move_frame = 0
+	state.events.append("the throws clash and both break")
+
+
+# Steps 6 to 9. Every connection is judged on the fighters as step 4 found
 # them, and only then applied: so in a trade, each defender's move is still
 # the one it was hit out of.
 static func _resolve(state: FightState, attackers: Array[int], inputs: Array[int], data: FightData) -> void:
-	var outcomes: Array[String] = []
+	var verdicts: Array[Array] = []
 	var moves: Array[String] = []
 	for attacker: int in attackers:
-		outcomes.append(_judge(state, attacker, inputs[1 - attacker], data))
+		verdicts.append(_judge(state, attacker, inputs[1 - attacker], data))
 		moves.append(state.fighters[attacker].move)
 	for index: int in range(attackers.size()):
-		_apply(state, attackers[index], moves[index], outcomes[index], data)
+		_apply(state, attackers[index], moves[index], verdicts[index], data)
 	if attackers.size() == 2:
 		state.events.append("trade")
 	_keep_on_stage(state, data)
 
 
-# "block", "counter-hit" or "hit", for the attacker's connection.
-static func _judge(state: FightState, attacker: int, defender_held: int, data: FightData) -> String:
+# The attacker's connection judged: `[outcome, why]`, the outcome "throw",
+# "block", "counter-hit" or "hit", and why in words for the events. A
+# defender who could block and holds away still takes a strike when its
+# guard is the wrong height: a low through a standing guard, an overhead
+# through a crouching one.
+static func _judge(state: FightState, attacker: int, defender_held: int, data: FightData) -> Array[String]:
 	var hitter: FighterState = state.fighters[attacker]
 	var defender: FighterState = state.fighters[1 - attacker]
+	var height: String = data.move(hitter.character, hitter.move)["height"]
+	if height == "throw":
+		return ["throw", " (a throw cannot be blocked)"]
 	var can_block: bool = defender.is_free() or defender.stun_kind == "block"
+	var crouched: bool = FightInput.holds_down(defender_held)
+	var guard: String = "crouching" if crouched else "standing"
 	if can_block and FightInput.holds_away(defender_held, defender.x, hitter.x):
-		return "block"
+		if _guard_stops(height, crouched):
+			return ["block", " (holding away, %s)" % guard]
+		return ["hit", " (%s through a %s guard)" % [_a_height(height), guard]]
 	if FightBoxes.phase(defender, data) == "startup":
-		return "counter-hit"
-	return "hit"
+		return ["counter-hit", " (caught starting up)"]
+	return ["hit", ""]
+
+
+# True when a guard -- crouching or not -- stops a strike of `height`.
+static func _guard_stops(height: String, crouched: bool) -> bool:
+	return height == "mid" or (height == "low" and crouched) or (height == "overhead" and not crouched)
+
+
+static func _a_height(height: String) -> String:
+	return {"low": "a low", "overhead": "an overhead"}[height]
 
 
 # Apply one connection. `move` is the attacker's move as step 4 found it: in a
 # trade the first hit applied has already knocked the other attacker out of
 # its move, and its own hit still lands with the move it was made with.
-static func _apply(state: FightState, attacker: int, move: String, outcome: String, data: FightData) -> void:
+static func _apply(state: FightState, attacker: int, move: String, verdict: Array, data: FightData) -> void:
+	var outcome: String = verdict[0]
 	var hitter: FighterState = state.fighters[attacker]
 	var defender: FighterState = state.fighters[1 - attacker]
 	var frames: Dictionary = data.move(hitter.character, move)
@@ -210,21 +284,17 @@ static func _apply(state: FightState, attacker: int, move: String, outcome: Stri
 		defender.stun = int(frames["hitstun"]) + (int(bonus["extra_hitstun"]) if counter else 0)
 		defender.stun_kind = "hit"
 		defender.move = ""
+		defender.crouching = false
 		defender.move_frame = 0
 		defender.connected = false
-	state.events.append("p%d %s p%d with %s%s" % [attacker + 1, _verb(outcome), 2 - attacker, move, _reason(outcome)])
+	state.events.append("p%d %s p%d with %s%s" % [attacker + 1, _verb(outcome), 2 - attacker, move, verdict[1]])
 
 
 static func _verb(outcome: String) -> String:
-	return {"block": "is blocked by", "counter-hit": "counter-hits", "hit": "hits"}[outcome]
+	return {"block": "is blocked by", "counter-hit": "counter-hits", "hit": "hits", "throw": "throws"}[outcome]
 
 
-# Why the table resolved it so, in words, so the overlay teaches the table.
-static func _reason(outcome: String) -> String:
-	return {"block": " (holding away)", "counter-hit": " (caught starting up)", "hit": ""}[outcome]
-
-
-# Step 8's pushback. The defender is pushed away; what a wall stops it from
+# Step 9's pushback. The defender is pushed away; what a wall stops it from
 # taking, the attacker takes instead, backwards -- so a fighter in the corner
 # is not a free place to keep hitting from, as in most fighting games.
 static func _push_back(state: FightState, hitter: FighterState, defender: FighterState, data: FightData) -> void:
@@ -236,7 +306,7 @@ static func _push_back(state: FightState, hitter: FighterState, defender: Fighte
 	hitter.x -= hitter.facing * absi(wanted - allowed)
 
 
-# Step 9.
+# Step 10.
 static func _winner(state: FightState) -> int:
 	var down: Array[bool] = [state.fighters[0].health <= 0, state.fighters[1].health <= 0]
 	if down[0] and down[1]:

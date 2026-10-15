@@ -1,9 +1,11 @@
 ## Draws a fight as a training mode would: the bodies, every box, and the
 ## health.
 ##
-## A body is a filled block in its side's colour. Its hurtbox is outlined in
-## blue -- longer than the body once a move's limb is out -- and a hitbox,
-## while one is out, is a red bar at arm's height. The boxes are the point:
+## A body is a filled block in its side's colour, lower while it crouches.
+## Its hurtbox is outlined in blue -- longer than the body once a move's limb
+## is out -- and a hitbox, while one is out, is a red bar at the height the
+## move hits: at the head for an overhead, the chest for a mid, the shins for
+## a low; a throw's is orange, since no guard stops it. The boxes are the point:
 ## a person learning frame data has to see the box that won, not only the
 ## damage it did.
 ##
@@ -17,6 +19,11 @@ const BODY_HEIGHT: float = 120.0
 const SIDES: Array[Color] = [Color(0.85, 0.30, 0.25), Color(0.25, 0.45, 0.85)]
 const HURTBOX: Color = Color(0.35, 0.65, 1.0)
 const HITBOX: Color = Color(1.0, 0.2, 0.2, 0.85)
+const THROW: Color = Color(1.0, 0.6, 0.1, 0.9)
+## A crouching body's height, as a share of a standing one.
+const CROUCH_SHARE: float = 0.6
+## Where a hitbox is drawn, down from the top of a standing body, by height.
+const HIT_DEPTH: Dictionary = {"overhead": 4.0, "mid": 40.0, "throw": 40.0, "low": 96.0}
 const STUNNED: Color = Color(1.0, 1.0, 1.0, 0.35)
 const STAGE: Color = Color(0.22, 0.22, 0.25)
 const HEALTH_WIDTH: float = 260.0
@@ -44,15 +51,18 @@ func _draw() -> void:
 
 func _draw_fighter(fighter: FighterState, colour: Color) -> void:
 	var body: float = float(_data.character(fighter.character)["body"])
-	var top: float = FLOOR_Y - BODY_HEIGHT
-	draw_rect(Rect2(fighter.x - body, top, body * 2.0, BODY_HEIGHT), colour)
+	var height: float = BODY_HEIGHT * (CROUCH_SHARE if fighter.crouching else 1.0)
+	var top: float = FLOOR_Y - height
+	draw_rect(Rect2(fighter.x - body, top, body * 2.0, height), colour)
 	if fighter.stun > 0:
-		draw_rect(Rect2(fighter.x - body, top, body * 2.0, BODY_HEIGHT), STUNNED)
+		draw_rect(Rect2(fighter.x - body, top, body * 2.0, height), STUNNED)
 	var hurt: Array[int] = FightBoxes.hurtbox(fighter, _data)
-	draw_rect(Rect2(hurt[0], top - 4.0, hurt[1] - hurt[0], BODY_HEIGHT + 4.0), HURTBOX, false, 2.0)
+	draw_rect(Rect2(hurt[0], top - 4.0, hurt[1] - hurt[0], height + 4.0), HURTBOX, false, 2.0)
 	var hit: Array[int] = FightBoxes.hitbox(fighter, _data)
 	if not hit.is_empty():
-		draw_rect(Rect2(hit[0], top + 30.0, hit[1] - hit[0], 14.0), HITBOX)
+		var hits: String = _data.move(fighter.character, fighter.move)["height"]
+		var depth: float = minf(HIT_DEPTH[hits], height - 14.0)
+		draw_rect(Rect2(hit[0], top + depth, hit[1] - hit[0], 14.0), THROW if hits == "throw" else HITBOX)
 	var eye: Vector2 = Vector2(fighter.x + fighter.facing * body * 0.5, top + 18.0)
 	draw_circle(eye, 5.0, Color.WHITE)
 

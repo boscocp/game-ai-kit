@@ -43,7 +43,12 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T14 | The stealth scenario | done | `ai_perception`, fuzzy suspicion, three guard states; 4 properties over 300 maps |
 | T15 | `ai_behaviour`: the four ways to decide | todo | FSM, tree, GOAP, HTN, beside STRIPS |
 | T16 | The fighting scenario | done | mostly not AI, and says so: frame data in `spec/frames/`, one axis, whole numbers, the resolution order written and tested rule by rule; a recorded log replays to committed per-frame digests; `make demo-fighting` is a training mode; manual check still a person's |
-| T17 | The opponent model | todo | n-grams you can print |
+| T34 | High, low and the throw | done | four attack buttons, light quick and heavy slow; mid, low and overhead against standing and crouching guard; a throw that beats guard and loses to a strike; manual check still a person's |
+| T38 | The jump | todo | asked for by the owner while T34 was being built: an arc in whole frames, jump-ins as overheads, an anti-air, boxes that become rectangles |
+| T35 | Fighters you can see | todo | open sprite sheets found online, one animation per move, driven by the frame data; the boxes drawn over them |
+| T36 | How fighting-game AI is made | todo | the academic and the shipped side, every reference checked; rewrites T37, T17 and T18 |
+| T37 | A fixed opponent, at three honest levels | todo | reaction time in frames as a knob, never reading an input before it is on screen |
+| T17 | The opponent model | todo | n-grams you can print; after T37, so the learner has a fixed opponent to be measured against |
 | T18 | Behaviour cloning, and what a learned model buys | todo | the comparison is the task |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
 | T26 | Combat on the board | todo | reach and the counter table start to matter; the dataset is rebuilt from the game (ADR 0008) |
@@ -79,6 +84,33 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-15 (wave 35)
+
+**What landed.** T34: high, low and the throw.
+- Four attack buttons -- U/I punch, J/K kick, light quick and heavy slow --
+  a throw on L, and S to crouch.
+- Every move has a stance and a height. Standing guard stops mid and
+  overhead, crouching guard mid and low, and nothing stops a throw. A
+  strike beats a throw on the same frame, two throws break each other, and
+  a throw never catches a fighter in stun.
+- The recorded log must now cause a low and an overhead through the wrong
+  guard, and a throw.
+- Tasks written: T35 sprites, T36 the fighting-AI survey, T37 a fixed
+  opponent at three honest levels, T38 the jump. T17 now waits on T37.
+
+**The review's worst findings.** Six of the new rules had no test that
+would notice them breaking (throws into stun, the clash, a cancel into a
+crouching move, validation, the dummy), and the strike-beats-throw event
+ran off the panel. All fixed; the ten surviving mutations are killed. See
+[docs/reviews/35-high-low-and-the-throw.md](../docs/reviews/35-high-low-and-the-throw.md).
+
+**Not proven.** T34's manual check: each guard against the dummy, by hand.
+
+**Next:** T35, fighters you can see. The owner's rule: commit only the
+cropped frames, never the downloaded sheets; the ADR keeps the URLs and
+sha256s. The candidate found is Puffolotti's CC0 karate template
+(OpenGameArt node 97941), two palettes of the same 997 cels.
 
 ## Resuming after 2026-10-14 (wave 34)
 

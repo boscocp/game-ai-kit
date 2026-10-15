@@ -28,6 +28,7 @@ offset_right = 1270.0
 offset_bottom = 620.0
 theme_override_font_sizes/font_size = 15
 text = "loading"
+autowrap_mode = 3
 
 [node name="Legend" type="Control" parent="Interface"]
 offset_left = 690.0

@@ -1,6 +1,6 @@
 # T17 — The opponent model
 
-Size: M · Prereqs: T16 · Files: `godot/addons/ai_opponent/`, `python/gameaikit/ngram/`
+Size: M · Prereqs: T37 · Files: `godot/addons/ai_opponent/`, `python/gameaikit/ngram/`
 
 ## Goal
 

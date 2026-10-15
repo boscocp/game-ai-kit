@@ -1,13 +1,20 @@
-# T16: the fighting scenario's rules. Frame data from a file, moves that come
-# out on the frame the data says, an input buffer and cancel windows, the
-# resolution order as written -- blocks, hits, counter-hits, trades -- and
-# two characters that differ in a way an opponent can exploit.
+# T16 and T34: the fighting scenario's rules. Frame data from a file, moves
+# that come out on the frame the data says, an input buffer and cancel
+# windows, the resolution order as written -- blocks, hits, counter-hits,
+# trades, guards that have a height, throws -- and two characters that differ
+# in a way an opponent can exploit.
 extends GdUnitTestSuite
 
 const LEFT: int = FightInput.LEFT
 const RIGHT: int = FightInput.RIGHT
-const LIGHT: int = FightInput.LIGHT
-const HEAVY: int = FightInput.HEAVY
+const DOWN: int = FightInput.DOWN
+const LIGHT: int = FightInput.LIGHT_PUNCH
+const HEAVY: int = FightInput.HEAVY_PUNCH
+const THROW: int = FightInput.THROW
+## The lancer's sweep, a low: heavy kick while holding down.
+const SWEEP: int = FightInput.DOWN | FightInput.HEAVY_KICK
+## The lancer's axe kick, an overhead: heavy kick standing.
+const AXE_KICK: int = FightInput.HEAVY_KICK
 
 var _data: FightData
 
@@ -84,10 +91,10 @@ func test_a_press_older_than_the_buffer_is_forgotten() -> void:
 	assert_str(state.fighters[0].move).is_empty()
 
 
-func test_a_jab_that_connects_cancels_into_a_kick_and_one_that_whiffs_does_not() -> void:
+func test_a_jab_that_connects_cancels_into_a_straight_and_one_that_whiffs_does_not() -> void:
 	var close: FightState = _fight_at(520, 580)
 	var hit: FightState = _play(close, [[0, LIGHT], [0, 0], [0, 0], [0, 0], [0, HEAVY]])
-	assert_str(hit.fighters[1].move).is_equal("kick")
+	assert_str(hit.fighters[1].move).is_equal("straight")
 	assert_int(hit.fighters[1].move_frame).is_equal(1)
 	var far: FightState = _play(_fight(), [[0, LIGHT], [0, 0], [0, 0], [0, 0], [0, HEAVY]])
 	assert_str(far.fighters[1].move).is_equal("jab")
@@ -111,7 +118,8 @@ func test_a_hit_in_the_defender_s_startup_is_a_counter_hit_for_more() -> void:
 
 
 func test_two_hits_on_one_frame_are_a_trade_and_both_land() -> void:
-	var inputs: Array = [[FightInput.SPECIAL, 0]] + _hold(4, [0, 0]) + [[0, FightInput.SPECIAL]] + _hold(20, [0, 0])
+	# The sweep pressed on frame 1 and the straight on frame 4 are both active from frame 11.
+	var inputs: Array = [[SWEEP, 0]] + _hold(2, [0, 0]) + [[0, HEAVY]] + _hold(20, [0, 0])
 	assert_str(_all_events(_fight_at(530, 618), inputs)).contains("trade")
 	var state: FightState = _play(_fight_at(530, 618), inputs)
 	assert_int(state.fighters[0].health).is_less(int(_data.character("lancer")["health"]))
@@ -167,7 +175,7 @@ func test_the_blocking_dummy_takes_no_damage_from_a_thrust() -> void:
 	var scene: FightingExample = auto_free(load("res://game/fighting/fighting.tscn").instantiate())
 	add_child(scene)
 	scene.paused = true
-	scene.dummy_mode = "block"
+	scene.dummy_mode = "guard standing"
 	scene.state.fighters[1].x = 618
 	scene.state.fighters[0].x = 480
 	scene.state = FightRules.step(scene.state, [HEAVY, scene._dummy_input()] as Array[int], _data)
@@ -204,18 +212,18 @@ func test_a_cancel_happens_on_the_window_s_last_frame_and_not_after() -> void:
 	var window: Array = _data.move("dancer", "jab")["cancel_window"]
 	var last: int = int(window[1])
 	var on_time: FightState = _play(_fight_at(520, 580), [[0, LIGHT]] + _hold(last - 2, [0, 0]) + [[0, HEAVY]])
-	assert_str(on_time.fighters[1].move).is_equal("kick")
+	assert_str(on_time.fighters[1].move).is_equal("straight")
 	var late: FightState = _play(_fight_at(520, 580), [[0, LIGHT]] + _hold(last - 1, [0, 0]) + [[0, HEAVY]])
 	assert_str(late.fighters[1].move).is_equal("jab")
 	assert_str(_all_events(_fight_at(520, 580), [[0, LIGHT]] + _hold(last - 2, [0, 0]) + [[0, HEAVY]])).contains(
-			"p2 cancels jab into kick")
+			"p2 cancels jab into straight")
 
 
 func test_a_move_cancels_only_into_the_moves_it_lists() -> void:
 	var opens: int = int(_data.move("lancer", "jab")["cancel_window"][0])
 	var listed: FightState = _play(_fight_at(520, 580), [[LIGHT, 0]] + _hold(opens, [0, 0]) + [[HEAVY, 0]])
 	assert_str(listed.fighters[0].move).is_equal("thrust")
-	var unlisted: FightState = _play(_fight_at(520, 580), [[LIGHT, 0]] + _hold(opens, [0, 0]) + [[FightInput.SPECIAL, 0]])
+	var unlisted: FightState = _play(_fight_at(520, 580), [[LIGHT, 0]] + _hold(opens, [0, 0]) + [[AXE_KICK, 0]])
 	assert_str(unlisted.fighters[0].move).is_equal("jab")
 
 
@@ -240,7 +248,7 @@ func test_two_knockouts_on_one_frame_are_a_draw() -> void:
 	var start: FightState = _fight_at(530, 618)
 	start.fighters[0].health = 1
 	start.fighters[1].health = 1
-	var inputs: Array = [[FightInput.SPECIAL, 0]] + _hold(4, [0, 0]) + [[0, FightInput.SPECIAL]] + _hold(10, [0, 0])
+	var inputs: Array = [[SWEEP, 0]] + _hold(2, [0, 0]) + [[0, HEAVY]] + _hold(10, [0, 0])
 	assert_int(_play(start, inputs).winner).is_equal(FightState.DRAW)
 
 
@@ -308,6 +316,12 @@ func test_frame_data_that_breaks_a_rule_is_refused() -> void:
 		"cancels into": func(jab: Dictionary) -> void: jab["cancels_into"] = ["uppercut"],
 		"button": func(jab: Dictionary) -> void: jab.erase("button"),
 		"hitbox": func(jab: Dictionary) -> void: jab["hitbox"] = [14, 50.5],
+		"stance": func(jab: Dictionary) -> void: jab["stance"] = "kneeling",
+		"a throw": func(jab: Dictionary) -> void: jab["height"] = "throw",
+		"tell them apart": func(jab: Dictionary) -> void: jab["button"] = "heavy_punch",
+		"a height among": func(jab: Dictionary) -> void: jab["height"] = "Low",
+		"done standing": func(jab: Dictionary) -> void: jab.merge({"height": "throw", "button": "throw", "stance": "crouching"}, true),
+		"standing it does nothing": func(jab: Dictionary) -> void: jab.merge({"button": "heavy_punch", "stance": "crouching"}, true),
 	}
 	for expected: String in cases:
 		var table: Dictionary = _data.table.duplicate(true)
@@ -315,6 +329,145 @@ func test_frame_data_that_breaks_a_rule_is_refused() -> void:
 		FileAccess.open(path, FileAccess.WRITE).store_string(JSON.stringify(table))
 		assert_str(FightData.read(path).refusal).override_failure_message(expected).contains(expected)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
+# --- T34: guards that have a height, and the throw -----------------------------
+
+func test_holding_down_crouches_and_does_not_walk() -> void:
+	var state: FightState = _play(_fight(), _hold(20, [DOWN | RIGHT, 0]))
+	assert_int(state.fighters[0].x).is_equal(int(_data.table["stage"]["starts"][0]))
+	assert_bool(state.fighters[0].crouching).is_true()
+	assert_bool(_play(state, [[RIGHT, 0]]).fighters[0].crouching).is_false()
+
+
+# Holding down picks a button's crouching move; a button with none does its
+# standing one, so no button is dead while crouched.
+func test_holding_down_picks_the_crouching_move_and_falls_back_to_standing() -> void:
+	assert_str(_play(_fight(), [[DOWN | FightInput.LIGHT_KICK, 0]]).fighters[0].move).is_equal("low_kick")
+	assert_str(_play(_fight(), [[FightInput.LIGHT_KICK, 0]]).fighters[0].move).is_equal("shin_kick")
+	var thrust: FighterState = _play(_fight(), [[DOWN | HEAVY, 0]]).fighters[0]
+	assert_str(thrust.move).is_equal("thrust")
+	assert_bool(thrust.crouching).is_false()
+
+
+func test_a_low_gets_through_a_standing_guard_and_not_a_crouching_one() -> void:
+	var inputs: Array = [[SWEEP, RIGHT]] + _hold(20, [0, RIGHT])
+	assert_str(_all_events(_fight_at(530, 618), inputs)).contains("p1 hits p2 with sweep (a low through a standing guard)")
+	inputs = [[SWEEP, RIGHT | DOWN]] + _hold(20, [0, RIGHT | DOWN])
+	assert_str(_all_events(_fight_at(530, 618), inputs)).contains("p1 is blocked by p2 with sweep (holding away, crouching)")
+	assert_int(_play(_fight_at(530, 618), inputs).fighters[1].health).is_equal(int(_data.character("dancer")["health"]))
+
+
+func test_an_overhead_gets_through_a_crouching_guard_and_not_a_standing_one() -> void:
+	var inputs: Array = [[AXE_KICK, RIGHT | DOWN]] + _hold(30, [0, RIGHT | DOWN])
+	assert_str(_all_events(_fight_at(530, 618), inputs)).contains("p1 hits p2 with axe_kick (an overhead through a crouching guard)")
+	inputs = [[AXE_KICK, RIGHT]] + _hold(30, [0, RIGHT])
+	assert_str(_all_events(_fight_at(530, 618), inputs)).contains("p1 is blocked by p2 with axe_kick (holding away, standing)")
+
+
+# A mid is stopped by either guard.
+func test_a_mid_is_stopped_by_both_guards() -> void:
+	for guard: int in [RIGHT, RIGHT | DOWN]:
+		var inputs: Array = [[HEAVY, guard]] + _hold(20, [0, guard])
+		assert_str(_all_events(_fight_at(480, 618), inputs)).contains("p1 is blocked by p2 with thrust")
+
+
+func test_a_throw_gets_through_either_guard() -> void:
+	var damage: int = int(_data.move("lancer", "throw")["damage"])
+	for guard: int in [RIGHT, RIGHT | DOWN]:
+		var inputs: Array = [[THROW, guard]] + _hold(10, [0, guard])
+		assert_str(_all_events(_fight_at(560, 618), inputs)).contains("p1 throws p2 with throw (a throw cannot be blocked)")
+		assert_int(_play(_fight_at(560, 618), inputs).fighters[1].health).is_equal(int(_data.character("dancer")["health"]) - damage)
+
+
+# A throw does not find a fighter in stun -- and does find the same fighter
+# out of it, so the test can tell "no throw" from "no reach".
+# Stun is counted down in step 2, before step 4 looks: a fighter starting the
+# frame with 2 left still has 1, and one starting with 1 has none.
+func test_a_throw_cannot_catch_a_fighter_in_stun() -> void:
+	for kind: String in ["block", "hit"]:
+		for stun: int in [2, 1]:
+			var state: FightState = _fight_at(560, 618)
+			state.fighters[0].move = "throw"
+			state.fighters[0].move_frame = int(_data.move("lancer", "throw")["startup"])
+			state.fighters[1].stun = stun
+			state.fighters[1].stun_kind = kind
+			var thrown: bool = ", ".join(FightRules.step(state, [0, 0] as Array[int], _data).events).contains("throws")
+			assert_bool(thrown).override_failure_message("%sstun %d" % [kind, stun]).is_equal(stun == 1)
+
+
+func test_a_throw_is_never_a_counter_hit() -> void:
+	var state: FightState = _fight_at(560, 618)
+	state.fighters[0].move = "throw"
+	state.fighters[0].move_frame = int(_data.move("lancer", "throw")["startup"])
+	state.fighters[1].move = "hop_kick"
+	state.fighters[1].move_frame = 1
+	var after: FightState = FightRules.step(state, [0, 0] as Array[int], _data)
+	assert_str(", ".join(after.events)).contains("p1 throws p2")
+	assert_int(after.fighters[1].stun).is_equal(int(_data.move("lancer", "throw")["hitstun"]))
+
+
+# The lancer's throw pressed on frame 1 and the dancer's on frame 2 are both
+# active from frame 6.
+func test_two_throws_on_one_frame_break_each_other() -> void:
+	var inputs: Array = [[THROW, 0], [0, THROW]] + _hold(10, [0, 0])
+	assert_str(_all_events(_fight_at(560, 618), inputs)).contains("the throws clash and both break")
+	var after: FightState = _play(_fight_at(560, 618), inputs)
+	assert_int(after.fighters[0].health).is_equal(int(_data.character("lancer")["health"]))
+	assert_int(after.fighters[1].health).is_equal(int(_data.character("dancer")["health"]))
+	# On the clash frame itself: both moves over, and both pushed -- the
+	# dancer is at its wall, so the lancer takes both pushes.
+	var clash: FightState = _play(_fight_at(560, 618), [[THROW, 0], [0, THROW]] + _hold(4, [0, 0]))
+	assert_str(clash.fighters[0].move + clash.fighters[1].move).is_empty()
+	assert_int(clash.fighters[1].x).is_equal(618)
+	assert_int(clash.fighters[0].x).is_equal(560 - 2 * _data.number("pushback"))
+	var open: FightState = _play(_fight_at(300, 358), [[THROW, 0], [0, THROW]] + _hold(4, [0, 0]))
+	assert_int(open.fighters[0].x).is_equal(300 - _data.number("pushback"))
+	assert_int(open.fighters[1].x).is_equal(358 + _data.number("pushback"))
+
+
+# The lancer's throw pressed on frame 1 and the dancer's jab on frame 3 are
+# both active on frame 6: the strike lands and the throw does not.
+func test_a_strike_beats_a_throw_on_the_same_frame() -> void:
+	var inputs: Array = [[THROW, 0], [0, 0], [0, LIGHT]] + _hold(6, [0, 0])
+	assert_str(_all_events(_fight_at(560, 618), inputs)).contains("p1's throw is beaten by p2's jab")
+	var after: FightState = _play(_fight_at(560, 618), inputs)
+	assert_int(after.fighters[1].health).is_equal(int(_data.character("dancer")["health"]))
+	assert_int(after.fighters[0].health).is_equal(int(_data.character("lancer")["health"]) - int(_data.move("dancer", "jab")["damage"]))
+
+
+# Light is quick and does little, heavy is slow and does a lot: for both
+# characters, punch and kick alike.
+func test_light_buttons_are_quicker_and_heavy_ones_hurt_more() -> void:
+	for name: String in _data.character_names():
+		for pair: Array in [["light_punch", "heavy_punch"], ["light_kick", "heavy_kick"]]:
+			var light: Dictionary = _data.move(name, _data.move_for_button(name, pair[0]))
+			var heavy: Dictionary = _data.move(name, _data.move_for_button(name, pair[1]))
+			assert_int(int(light["startup"])).override_failure_message("%s %s" % [name, pair]).is_less(int(heavy["startup"]))
+			assert_int(int(light["damage"])).override_failure_message("%s %s" % [name, pair]).is_less(int(heavy["damage"]))
+
+
+# A cancel takes the crouching move when down is held as it comes out: the
+# lancer's jab that hit cancels into its low kick, and without down into
+# nothing it lists, since its standing light kick is not in `cancels_into`.
+func test_a_cancel_with_down_held_takes_the_crouching_move() -> void:
+	var opens: int = int(_data.move("lancer", "jab")["cancel_window"][0])
+	var low: FightState = _play(_fight_at(520, 580), [[LIGHT, 0]] + _hold(opens, [0, 0]) + [[DOWN | FightInput.LIGHT_KICK, 0]])
+	assert_str(low.fighters[0].move).is_equal("low_kick")
+	var standing: FightState = _play(_fight_at(520, 580), [[LIGHT, 0]] + _hold(opens, [0, 0]) + [[FightInput.LIGHT_KICK, 0]])
+	assert_str(standing.fighters[0].move).is_equal("jab")
+
+
+func test_the_dummy_guards_crouching_and_throws_as_its_modes_say() -> void:
+	var scene: FightingExample = auto_free(load("res://game/fighting/fighting.tscn").instantiate())
+	add_child(scene)
+	scene.dummy_mode = "guard crouching"
+	assert_int(scene._dummy_input()).is_equal(FightInput.RIGHT | DOWN)
+	scene.dummy_mode = "throw"
+	scene.state.frame = 0
+	assert_int(scene._dummy_input()).is_equal(THROW)
+	scene.state.frame = 1
+	assert_int(scene._dummy_input()).is_equal(0)
 
 
 # --- helpers -------------------------------------------------------------------

@@ -18,7 +18,9 @@
 # for each player must be reported on exactly the frame after, and the digest
 # must change when any fighter's position does -- a digest that left a player
 # out would agree about everything that player did. And it checks the log
-# exercises something: a hit, a block, a counter-hit, a trade and a cancel.
+# exercises something: a hit, a block, a counter-hit, a trade, a cancel, a
+# low through a standing guard, an overhead through a crouching one, and a
+# throw.
 #
 # Exit codes: 0 the runs agree, 1 they differ or a planted change went unseen,
 # 2 the log, the recorded digests or the frame data could not be read.
@@ -27,7 +29,9 @@ extends SceneTree
 const LOG_PATH: String = "res://test/fight_log.json"
 const DIGESTS_PATH: String = "res://test/fight_log_digests.txt"
 ## Events the log must cause, each at least once.
-const EXERCISED: Array[String] = ["hits", "is blocked by", "counter-hits", "trade", "cancels"]
+## " hits p", with its space, so that a counter-hit does not count as a hit.
+const EXERCISED: Array[String] = [" hits p", "is blocked by", "counter-hits", "trade", "cancels",
+		"(a low through a standing guard)", "(an overhead through a crouching guard)", "throws p"]
 ## The frame whose input each planted change alters.
 const PLANTED_FRAME: int = 150
 
@@ -88,7 +92,7 @@ static func _planted_changes_are_seen(input_log: Dictionary, data: FightData) ->
 	var original: Array[String] = FightReplay.digests(input_log, data)
 	for player: int in range(2):
 		var changed: Dictionary = input_log.duplicate(true)
-		changed["inputs"][PLANTED_FRAME][player] = int(changed["inputs"][PLANTED_FRAME][player]) ^ FightInput.LIGHT
+		changed["inputs"][PLANTED_FRAME][player] = int(changed["inputs"][PLANTED_FRAME][player]) ^ FightInput.LIGHT_PUNCH
 		var at: int = FightReplay.first_difference(original, FightReplay.digests(changed, data))
 		if at != PLANTED_FRAME + 1:
 			problems.append("player %d's planted change at frame %d was seen at %d" % [player + 1, PLANTED_FRAME, at])

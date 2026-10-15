@@ -14,13 +14,18 @@ extends RefCounted
 
 const LEFT: int = 1
 const RIGHT: int = 2
-const LIGHT: int = 4
-const HEAVY: int = 8
-const SPECIAL: int = 16
+## Held to crouch, and with a button to pick its crouching move.
+const DOWN: int = 4
+const LIGHT_PUNCH: int = 8
+const HEAVY_PUNCH: int = 16
+const LIGHT_KICK: int = 32
+const HEAVY_KICK: int = 64
+const THROW: int = 128
 
 ## The buttons, by the name the frame data's moves use, in the order they are
 ## looked at when two are pressed on one frame: the last one wins.
-const BUTTONS: Dictionary = {"light": LIGHT, "heavy": HEAVY, "special": SPECIAL}
+const BUTTONS: Dictionary = {"light_punch": LIGHT_PUNCH, "heavy_punch": HEAVY_PUNCH, "light_kick": LIGHT_KICK,
+		"heavy_kick": HEAVY_KICK, "throw": THROW}
 
 
 ## The button newly pressed this frame -- down now and not on the frame before
@@ -37,6 +42,11 @@ static func pressed(now: int, before: int) -> String:
 ## Which way the input walks: -1 left, +1 right, 0 for neither or both.
 static func walk_direction(held: int) -> int:
 	return (1 if held & RIGHT else 0) - (1 if held & LEFT else 0)
+
+
+## True when the input holds down: a crouch, and a crouching guard.
+static func holds_down(held: int) -> bool:
+	return held & DOWN != 0
 
 
 ## True when the input holds away from a fighter standing at `x` against one

@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: structure
-verified_on: 2026-10-14
+verified_on: 2026-10-15
 tier: 1
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: a field in characters.json is renamed, or the resolution order in it changes
@@ -20,13 +20,19 @@ teaches: none
 - `resolution`: the order a frame is resolved in, step by step, which
   `godot/game/fighting/fight_rules.gd` follows line for line -- who wins a
   trade (both: both hits land), what a counter-hit is (a hit on a move still
-  in its startup), and what blocks (holding away while free or already
-  blocking);
+  in its startup), what blocks (holding away while free or already
+  blocking, with the guard the move's height asks for), and what a throw
+  does (beats any guard, loses to a strike, breaks against another throw,
+  never catches a fighter in stun) (T34);
 - two characters that differ in a way an opponent can exploit: the
   **lancer** reaches further and starts slower, the **dancer** is quick and
   short.
 
-Per move: `startup`, `active` and `recovery` frames, counted from 1;
+Per move: the `button` that does it -- light or heavy punch, light or heavy
+kick, or throw -- and its `stance`, standing or crouching (holding down picks
+the crouching move for a button, and a button with none does its standing
+one); its `height`, which guard stops it: `mid` either, `low` only crouching,
+`overhead` only standing, `throw` neither; `startup`, `active` and `recovery` frames, counted from 1;
 `damage`, `hitstun` and `blockstun`; a `hitbox` as the near and far edge in
 front of the body, out only on active frames; `hurtbox_reach`, how far in
 front the fighter can be hit from its first active frame to its last
