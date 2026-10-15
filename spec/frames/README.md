@@ -31,7 +31,8 @@ teaches: none
 Per move: the `button` that does it -- light or heavy punch, light or heavy
 kick, or throw -- and its `stance`, standing or crouching (holding down picks
 the crouching move for a button, and a button with none does its standing
-one); its `height`, which guard stops it: `mid` either, `low` only crouching,
+one); its `height`, which guard stops it: `high` passes over a crouching
+fighter and is stopped standing (T39), `mid` either, `low` only crouching,
 `overhead` only standing, `throw` neither; `startup`, `active` and `recovery` frames, counted from 1;
 `damage`, `hitstun` and `blockstun`; a `hitbox` as the near and far edge in
 front of the body, out only on active frames; `hurtbox_reach`, how far in

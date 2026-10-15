@@ -22,9 +22,10 @@ const PATH: String = "res://game/fighting/characters.json"
 const MOVE_NUMBERS: Array[String] = ["startup", "active", "recovery", "damage", "hitstun", "blockstun", "hurtbox_reach"]
 ## A move's stance: whether it is done standing, or holding down.
 const STANCES: Array[String] = ["standing", "crouching"]
-## A move's height: which guard stops it. `mid` is stopped by either, `low`
-## only crouching, `overhead` only standing, and a `throw` by neither.
-const HEIGHTS: Array[String] = ["mid", "low", "overhead", "throw"]
+## A move's height: which guard stops it. A `high` passes over a crouching
+## fighter and is stopped standing, `mid` is stopped by either, `low` only
+## crouching, `overhead` only standing, and a `throw` by neither.
+const HEIGHTS: Array[String] = ["high", "mid", "low", "overhead", "throw"]
 
 ## The whole numbers every character must carry.
 const CHARACTER_NUMBERS: Array[String] = ["health", "walk_speed", "body"]

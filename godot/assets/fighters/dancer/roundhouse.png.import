@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://drjl38e1whpyy"
-path="res://.godot/imported/shin_kick.png-1ec2db231bbc99858f88292ca2fd90d9.ctex"
+uid="uid://c2gvltx0h5pge"
+path="res://.godot/imported/roundhouse.png-bdf1339ae6ea63abae393dc8ccc9c5dd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/fighters/lancer/shin_kick.png"
-dest_files=["res://.godot/imported/shin_kick.png-1ec2db231bbc99858f88292ca2fd90d9.ctex"]
+source_file="res://assets/fighters/dancer/roundhouse.png"
+dest_files=["res://.godot/imported/roundhouse.png-bdf1339ae6ea63abae393dc8ccc9c5dd.ctex"]
 
 [params]
 

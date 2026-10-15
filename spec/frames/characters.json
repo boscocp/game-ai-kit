@@ -1,5 +1,5 @@
 {
- "description": "Frame data for the fighting scenario (T16), as data: every number a fight is resolved by, and none in code. One unit is one pixel; every position, speed and box is a whole number, so two runs cannot round differently. A frame is 1/60 s. A move's frames count from 1: `startup` frames before it can hit, then `active` frames when its hitbox is out, then `recovery` frames before its owner can act again. A move's `height` is what guard stops it: `mid` is stopped standing or crouching, `low` only crouching, `overhead` only standing, and a `throw` by neither.",
+ "description": "Frame data for the fighting scenario (T16), as data: every number a fight is resolved by, and none in code. One unit is one pixel; every position, speed and box is a whole number, so two runs cannot round differently. A frame is 1/60 s. A move's frames count from 1: `startup` frames before it can hit, then `active` frames when its hitbox is out, then `recovery` frames before its owner can act again. A move's `height` is what guard stops it: `high` passes over a crouching fighter and is stopped standing, `mid` is stopped standing or crouching, `low` only crouching, `overhead` only standing, and a `throw` by neither.",
  "frames_per_second": 60,
  "stage": {
   "width": 640,
@@ -16,11 +16,11 @@
  },
  "resolution": [
   "1. Inputs: each fighter's newly pressed button is buffered for `buffer_frames` frames; the latest press replaces an older one.",
-  "2. Both fighters act at once, each from the state the frame began with: a stunned fighter counts its stun down; a fighter in a move advances one frame, or cancels into a buffered move when the cancel window is open and the move has connected; an idle fighter starts a buffered move -- the crouching one for its button while holding down, if it has one -- or crouches while holding down, or walks.",
+  "2. Both fighters act at once, each from the state the frame began with: a stunned fighter counts its stun down; a fighter in a move advances one frame, or cancels into a buffered move when the cancel window is open and the move has connected; an idle fighter starts a buffered move -- the crouching one for its button while holding down, if it has one -- or crouches while holding down, or walks. A fighter in hitstun is standing, whatever it holds.",
   "3. Bodies may not overlap: two that do each give way by half the overlap, rounded up, so neither side is favoured; then both are kept on the stage, and one pinned to a wall leaves the other to give way.",
-  "4. Every hitbox out this frame is tested against the other fighter's hurtbox, both at once, before either result is applied. A throw's hitbox does not find a fighter in hitstun or blockstun.",
+  "4. Every hitbox out this frame is tested against the other fighter's hurtbox, both at once, before either result is applied. A throw's hitbox does not find a fighter in hitstun or blockstun, and a `high` hitbox does not find a crouching one: it passes over.",
   "5. Two throws found on one frame break each other: neither lands, both moves end, both are pushed apart. A throw and a strike found on one frame: the strike lands, the throw does not.",
-  "6. A strike is blocked if the defender is idle or already blocking, holds away from the attacker, and holds the guard its height asks for: down for a `low`, not down for an `overhead`, either for a `mid`. Blocked: blockstun, no damage. Otherwise it hits: damage and hitstun, and the defender's move is lost. A throw is never blocked.",
+  "6. A strike is blocked if the defender is idle or already blocking, holds away from the attacker, and holds the guard its height asks for: down for a `low`, not down for an `overhead` or a `high`, either for a `mid`. Blocked: blockstun, no damage. Otherwise it hits: damage and hitstun, and the defender's move is lost. A throw is never blocked.",
   "7. A counter-hit is a strike that hits a defender still in the startup of a move: `counter_hit.damage_percent` of the damage, and `extra_hitstun` more frames. A throw is never a counter-hit.",
   "8. A trade is two strikes connecting on the same frame: both are applied, in full, to both.",
   "9. A connection pushes the defender `pushback` units away; what a wall stops it from taking, the attacker takes instead, backwards. A move connects at most once.",
@@ -36,7 +36,7 @@
     "jab": {
      "button": "light_punch",
      "stance": "standing",
-     "height": "mid",
+     "height": "high",
      "startup": 6,
      "active": 3,
      "recovery": 11,
@@ -60,7 +60,7 @@
     "thrust": {
      "button": "heavy_punch",
      "stance": "standing",
-     "height": "mid",
+     "height": "high",
      "startup": 13,
      "active": 4,
      "recovery": 22,
@@ -78,7 +78,7 @@
      ],
      "cancels_into": []
     },
-    "shin_kick": {
+    "side_kick": {
      "button": "light_kick",
      "stance": "standing",
      "height": "mid",
@@ -219,7 +219,7 @@
     "jab": {
      "button": "light_punch",
      "stance": "standing",
-     "height": "mid",
+     "height": "high",
      "startup": 3,
      "active": 2,
      "recovery": 7,
@@ -243,7 +243,7 @@
     "straight": {
      "button": "heavy_punch",
      "stance": "standing",
-     "height": "mid",
+     "height": "high",
      "startup": 7,
      "active": 3,
      "recovery": 14,
@@ -284,10 +284,10 @@
       "straight"
      ]
     },
-    "hop_kick": {
+    "roundhouse": {
      "button": "heavy_kick",
      "stance": "standing",
-     "height": "overhead",
+     "height": "high",
      "startup": 16,
      "active": 3,
      "recovery": 15,

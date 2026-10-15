@@ -19,8 +19,8 @@
 # must change when any fighter's position does -- a digest that left a player
 # out would agree about everything that player did. And it checks the log
 # exercises something: a hit, a block, a counter-hit, a trade, a cancel, a
-# low through a standing guard, an overhead through a crouching one, and a
-# throw.
+# low through a standing guard, an overhead through a crouching one, a
+# throw, and a high passing over a crouch.
 #
 # Exit codes: 0 the runs agree, 1 they differ or a planted change went unseen,
 # 2 the log, the recorded digests or the frame data could not be read.
@@ -31,7 +31,7 @@ const DIGESTS_PATH: String = "res://test/fight_log_digests.txt"
 ## Events the log must cause, each at least once.
 ## " hits p", with its space, so that a counter-hit does not count as a hit.
 const EXERCISED: Array[String] = [" hits p", "is blocked by", "counter-hits", "trade", "cancels",
-		"(a low through a standing guard)", "(an overhead through a crouching guard)", "throws p"]
+		"(a low through a standing guard)", "(an overhead through a crouching guard)", "throws p", "passes over"]
 ## The frame whose input each planted change alters.
 const PLANTED_FRAME: int = 150
 
