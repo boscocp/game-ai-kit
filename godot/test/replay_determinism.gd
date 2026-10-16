@@ -21,7 +21,9 @@
 # exercises something: a hit, a block, a counter-hit, a trade, a cancel, a
 # low through a standing guard, an overhead through a crouching one, a
 # throw, a high passing over a crouch -- and, since T38, a jump-in hitting,
-# an anti-air knocking a jump out of the air, and a low passing under one.
+# an anti-air knocking a jump out of the air, and a low passing under one;
+# since T40, a strike and a throw passing through a backdash, and a strike
+# catching one that can no longer guard.
 #
 # Exit codes: 0 the runs agree, 1 they differ or a planted change went unseen,
 # 2 the log, the recorded digests or the frame data could not be read.
@@ -33,7 +35,9 @@ const DIGESTS_PATH: String = "res://test/fight_log_digests.txt"
 ## " hits p", with its space, so that a counter-hit does not count as a hit.
 const EXERCISED: Array[String] = [" hits p", "is blocked by", "counter-hits", "trade", "cancels",
 		"(a low through a standing guard)", "(an overhead through a crouching guard)", "throws p", "passes over",
-		"p1 hits p2 with flying_kick", "counter-hits p1 with uppercut", "passes under p1"]
+		"p1 hits p2 with flying_kick", "counter-hits p1 with uppercut", "passes under p1",
+		"p1's sweep passes through p2 (evading)", "p2's throw passes through p1 (evading)",
+		"(caught evading, which cannot guard)"]
 ## The frame whose input each planted change alters.
 const PLANTED_FRAME: int = 150
 

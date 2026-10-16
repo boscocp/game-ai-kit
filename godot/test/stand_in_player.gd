@@ -54,6 +54,9 @@ func _init(habit: String, data: FightData, chance_seed: int = 0) -> void:
 	_execution = EXECUTION
 
 
-## Its own options in the situation `name`, the ones `character` can do.
+## Its own options in the situation `name`, the ones `character` can do. The
+## habits were written for T37's five situations; in the two T40 added, "it
+## blocked" and "it evaded", a stand-in does what it does in neutral.
 func _weighted_options(name: String, character: String) -> Array:
-	return _habits[name].filter(func(option: Array) -> bool: return _has_option(character, option[0]))
+	var options: Array = _habits.get(name, _habits["neutral"])
+	return options.filter(func(option: Array) -> bool: return _has_option(character, option[0]))

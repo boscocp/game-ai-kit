@@ -51,7 +51,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T39 | High punches pass over a crouch | done | the owner's finding from playing T34: standing punches and the dancer's roundhouse are high and miss a crouching fighter; the light kicks recut as side kicks to the waist; manual check still a person's |
 | T17 | The opponent model | done | `ai_opponent`: an n-gram with additive smoothing and decay, held to Python by 4 vectors; the learner is T37's opponent leaning towards answers; 20/20 within 40 actions and after a switch; ADR 0016, the owner's exception to invariant 6, held by N9; manual check still a person's |
 | T18 | Behaviour cloning, and what a learned model buys | done | the owner's nine fights, cut 15 frames late; every recording held out once: nothing fitted beats "always step in" (28.0%), the n-gram does by four points; ghosts beat medium 78-86 in 100, the clone 64; 0.04-0.12 ms a decision; a person could not tell them apart (ADR 0017, N10-N12) |
-| T40 | An evade, and levels that are hard enough | todo | the owner could not tell T18's opponents apart and found all of them easy; a backdash gives every one more to choose, and hard is retuned and measured |
+| T40 | An evade, and levels that are hard enough | wip | in review; a backdash on its own button (O), 20-24 frames, invulnerable for the first quarter, after Strive; old logs replay unchanged; hard retuned by what each option won against the owner's ghost: 56 to 80 in 100; the turtle stand-in it was not tuned on 87 to 84; step 5 and the manual check wait for the owner's new fights |
 | T41 | What the owner found playing the boards | todo | A\* through mud costing 8; the green start dot on grass; blue stuck at the bridge in `demo-tactical`; the skirmish AI idle while the owner holds the white flag -- each reproduced before it is called a bug |
 | T42 | Examples that are fun to play | todo | the owner: the examples need to be more playful; a design pass ending in tasks the owner picks; needs T41 |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
@@ -88,6 +88,30 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-16 (wave 43, built, not yet reviewed)
+
+**What is on the branch.** T40, on `wave/43-an-evade-and-harder-levels`:
+the backdash (`FightBackdash`, the O key, bit 512, `backdash` in the frame
+data). It is invulnerable for the first quarter, then it cannot guard and
+can be thrown. The fixed opponent backdashes, and answers a backdash with
+its longest strike ("it blocked", "it evaded", "long"). Hard was retuned
+and is now held to beating the owner's ghost 75 times in 100 in `make
+test-opponent-levels`. The rows, clone and win rates were redone. `make
+check` is green.
+
+**Next:** the review, by a context that did not write it, into
+`docs/reviews/43-an-evade-and-harder-levels.md`, then `make wave-merge`.
+Then the owner: play hard (`make demo-fighting`, M to "opponent: hard"),
+record new fights with the evade in them (`make record-fights`, `make
+train-clone`), and say whether the clone, the ghosts and the learner can
+now be told apart: T40's step 5 and its manual check.
+
+**For the reviewer to push on.** The hard number is measured against what
+it was tuned on, and the decisions say so; the turtle stand-in got worse.
+Also: the backdash staying on the ground and throwable after its
+invulnerable frames, and a hit on its recovery being a plain hit, not a
+counter-hit.
 
 ## Resuming after 2026-10-15 (wave 42)
 

@@ -57,3 +57,85 @@ python3 python/gameaikit/cloning/compare.py --report
 Play hard: it should win more often than not against you, without ever
 reacting faster than a person could. Then play the clone, the ghosts and
 the learner again, and say whether they can now be told apart.
+
+## Decided on the way (2026-10-16)
+
+- **How shipped games build a backdash, read first.** Dustloop's frame
+  data for Guilty Gear -Strive-: Sol Badguy's backdash lasts 20 frames,
+  invulnerable on 1-5 and airborne on 1-15; Potemkin's lasts 24,
+  invulnerable on 1-6 and airborne on 1-17
+  (<https://www.dustloop.com/w/GGST/Sol_Badguy/Frame_Data>,
+  <https://www.dustloop.com/w/GGST/Potemkin/Frame_Data>, read 2026-10-16).
+  Its controls page: "a brief period of invincibility starting from the
+  very first frame" (<https://dustloop.com/w/GGST/Controls>). Invulnerable
+  for about the first quarter, then committed. The Street Fighter pages
+  (SuperCombo's wiki, Capcom's own frame data) refused the request and
+  were not read, so nothing here rests on them.
+- **The numbers.** The lancer is the slow one, as Potemkin is: 24 frames,
+  invulnerable on 1-6, 14 frames of travel at 6 a frame (84 units). The
+  dancer is the quick one: 20 frames, invulnerable on 1-5, 12 frames at 8
+  (96 units). It stays on the ground: Strive's is airborne most of its
+  length, which also makes it throw-proof there; here only the
+  invulnerable frames protect from a throw, so there is one rule and not
+  two. After them it cannot guard and can be thrown, and a strike that
+  finds it is a plain hit ("caught evading"), not a counter-hit.
+- **A button of its own (O, bit 512), not back pressed twice.** A
+  double tap would need a timing window and a field to remember the first
+  tap; and a log recorded before the evade, in which a person walked back
+  in taps, would replay differently. With its own bit, none of those logs
+  can hold one -- a test goes through every older input -- and they replay
+  as they did. Measured: the recorded fight's 980 frames gave the same
+  digests without re-recording; 98 frames were appended for the backdash,
+  and only those are new in `fight_log_digests.txt`.
+- **Kept as a stun, `stun_kind` "evade"**, as a take-off is: no new field
+  on a fighter, so the digests' text did not change. It costs exactly its
+  `frames`, as a move does: the fighter acts on the frame after the last.
+  Buffered like a button: pressed during a move's recovery it comes out
+  when the move ends -- never as a cancel; pressed in the air, not there.
+- **The rows were cut again; only their header changed**, which now lists
+  "evade". Every row of the 33 recordings is the same, none holds an evade,
+  and `compare.py --report` says so in a line of its own: "evades: 0 of 450
+  decisions, in 9 recording(s) -- none: they were recorded before the
+  backdash". The clone was published again with twelve classes and the win
+  rates fought again under the new rules.
+- **The fixed opponent's evade, and the answer to it.** "evade" is an
+  option after being hit, after blocking and in neutral, at the smallest
+  weight. Two situations: "it blocked" -- where a player under pressure
+  reaches for the backdash -- and "it evaded". The answer is a new option,
+  "long", the character's furthest-reaching strike (the lancer's thrust,
+  the dancer's straight), which a backdash is still recovering from when it
+  arrives. The learner (T17) leans to it when it expects an evade, and to
+  an evade when it expects a throw.
+- **Hard, measured against the owner and not a script.** A scripted
+  stand-in was written first, its table the owner's own 450 decisions
+  counted by situation. It could not tell the old hard from the new: both
+  beat it 96 to 98 times in 100. The owner's ghost (T18's "ghost:
+  nearest") could. The old hard beat it 56 times in 100, about even, which
+  is what the owner felt; that ghost also beat the old medium 86 times. So
+  `make test-opponent-levels` holds hard to beating the ghost 75 times in
+  100 as each character, and medium must not reach 75 (the planted case).
+  The stand-in was deleted.
+- **What was retuned: the weights, by what each option won.** Over 100
+  fights of hard against the ghost, every decision was tallied by the health
+  it gained before the next one. "Step in" in neutral was the largest loss
+  (-8 a time, 1773 times). An overhead at a crouch lost 13.7: the axe kick
+  is too slow. A backdash straight after a hit lost 11.6. Lows, mids and
+  throws won. The lists keep their order, a beginner's reach first, so easy
+  and medium still know the obvious answers; the weights now follow what
+  works, and hard knows all ten neutral options. Measured afterwards: hard
+  beats the ghost 80 of 100 as each character, the exact ghost 83, the clone
+  94. Since the ghost is what it was tuned against, those flatter it, so
+  the check is T18's stand-ins, which were not used for tuning. Against the
+  rushdown it went from 61 to 92, the jumper stayed at 100, and the turtle
+  went from 87 to 84. The ordering still holds: medium beats easy 100 of
+  100, hard beats medium 90 and 99. With equal reaction times, hard beats
+  medium 80 and 92.
+- **Found on the way:** T18's stand-ins had habits for T37's five
+  situations only, and stopped dead in "it evaded". They now fall back to
+  neutral, and a test holds that every stand-in has options in every
+  situation.
+- **Step 5 waits for the owner.** The T18 comparison was run again, and
+  passes, on the recordings there are: nine fights, none with an evade.
+  Whether the opponents became easier to tell apart needs new recordings
+  with the evade in them (`make record-fights`, then `make train-clone`),
+  and a person to play them. That is the manual check above.

@@ -23,6 +23,12 @@ const HEAVY_KICK: int = 64
 const THROW: int = 128
 ## Held to jump, with left or right to jump that way (T38).
 const UP: int = 256
+## Pressed to evade: a backdash, away from the way the fighter faces (T40).
+## A button of its own, not back pressed twice: a log recorded before it
+## existed never holds this bit, and so replays exactly as it did.
+const EVADE: int = 512
+## The name a pressed evade is buffered under, beside the buttons' names.
+const EVADE_NAME: String = "evade"
 
 ## The buttons, by the name the frame data's moves use, in the order they are
 ## looked at when two are pressed on one frame: the last one wins.
@@ -31,8 +37,11 @@ const BUTTONS: Dictionary = {"light_punch": LIGHT_PUNCH, "heavy_punch": HEAVY_PU
 
 
 ## The button newly pressed this frame -- down now and not on the frame before
-## -- or "" when none is. Of two pressed together, the later in `BUTTONS`.
+## -- or "" when none is. Of two pressed together, the later in `BUTTONS`,
+## and an evade over any of them: a fighter that asks to get out gets out.
 static func pressed(now: int, before: int) -> String:
+	if now & EVADE and not before & EVADE:
+		return EVADE_NAME
 	var found: String = ""
 	for name: String in BUTTONS:
 		var bit: int = BUTTONS[name]

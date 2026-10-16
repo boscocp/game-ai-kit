@@ -5,7 +5,8 @@
 ## frame data, or -- when its strips are not on disk -- a filled block in its
 ## side's colour, lower while it crouches, drawn where its feet are: off the
 ## floor in a jump. Over either, its hurtbox is outlined in blue -- longer
-## than the body once a move's limb is out, lower in a crouch -- and a
+## than the body once a move's limb is out, lower in a crouch, and grey on
+## the frames of a backdash that nothing can find (T40) -- and a
 ## hitbox, while one is out, is a red box exactly where the frame data says
 ## it reaches, along the stage and up from the floor (T38); a throw's is
 ## orange, since no guard stops it. A high is drawn above a crouch because
@@ -24,6 +25,8 @@ extends Node2D
 const FLOOR_Y: float = 360.0
 const SIDES: Array[Color] = [Color(0.85, 0.30, 0.25), Color(0.25, 0.45, 0.85)]
 const HURTBOX: Color = Color(0.35, 0.65, 1.0)
+## The hurtbox on a backdash's invulnerable frames: there, and found by nothing.
+const INVULNERABLE: Color = Color(0.6, 0.6, 0.6, 0.6)
 const HITBOX: Color = Color(1.0, 0.2, 0.2, 0.5)
 const THROW: Color = Color(1.0, 0.6, 0.1, 0.55)
 const STUNNED: Color = Color(1.0, 1.0, 1.0, 0.35)
@@ -62,7 +65,8 @@ func _draw_fighter(fighter: FighterState, colour: Color) -> void:
 	else:
 		_draw_block(fighter, colour)
 	var hurt: Rect2 = on_screen(FightBoxes.hurtbox(fighter, _data), FightBoxes.hurt_rise(fighter, _data))
-	draw_rect(hurt.grow(2.0), HURTBOX, false, 2.0)
+	var outline: Color = INVULNERABLE if FightBackdash.invulnerable(fighter, _data) else HURTBOX
+	draw_rect(hurt.grow(2.0), outline, false, 2.0)
 	var hit: Array[int] = FightBoxes.hitbox(fighter, _data)
 	if not hit.is_empty():
 		var throwing: bool = _data.is_throw(fighter.character, fighter.move)

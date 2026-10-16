@@ -55,13 +55,15 @@ static func of(state: FightState, me: int, last: String, data: FightData) -> Dic
 	}
 
 
-## Free, moving, airborne, hit or blocking: what the fighter can do now.
+## Free, moving, airborne, hit or blocking: what the fighter can do now. A
+## backdash is "moving": committed, as a move is, and the action it is read
+## as -- `last`, `other` -- already says which.
 static func condition_of(fighter: FighterState) -> String:
 	if fighter.is_airborne() or fighter.stun_kind == "takeoff":
 		return "airborne"
 	if fighter.stun_kind == "hit" or fighter.stun_kind == "block":
 		return fighter.stun_kind
-	if fighter.move != "":
+	if fighter.move != "" or fighter.stun_kind == FightBackdash.KIND:
 		return "moving"
 	return "free"
 

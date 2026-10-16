@@ -152,8 +152,13 @@ func test_the_recorded_fight_builds_the_same_table_twice() -> void:
 	assert_str(tables[0]).is_equal(tables[1])
 
 
+# An answer it knows in some situation: the long strike that answers a
+# backdash is an option where backdashes happen -- "it blocked", "it evaded"
+# -- and not in neutral (T40).
 func test_every_action_has_answers_the_opponent_knows() -> void:
-	var options: Array = FightOpponent.SITUATIONS["neutral"].map(func(option: Array) -> String: return option[0])
+	var options: Array = []
+	for situation: String in FightOpponent.SITUATIONS:
+		options.append_array(FightOpponent.SITUATIONS[situation].map(func(option: Array) -> String: return option[0]))
 	for action: String in FightModelOpponent.ACTIONS:
 		assert_array(FightModelOpponent.ANSWERS[action]).is_not_empty()
 		for answer: String in FightModelOpponent.ANSWERS[action]:

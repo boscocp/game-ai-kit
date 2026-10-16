@@ -5,11 +5,13 @@
 ##
 ## 1. read each player's input into its buffer;
 ## 2. both fighters act at once, each from the frame as it began (`FightJump`
-##    for one taking off, in the air or landing);
+##    for one taking off, in the air or landing, `FightBackdash` for one
+##    evading);
 ## 3. bodies are pushed apart and kept on the stage;
 ## 4. every hitbox is tested against the other's hurtbox, along the stage and
 ##    up from the floor, both before either result is applied -- which is
-##    what makes a trade a trade;
+##    what makes a trade a trade -- and none finds a fighter on the first
+##    frames of its backdash;
 ## 5. two throws break each other, and a strike beats a throw;
 ## 6-9. each connection is a block or a hit -- a block only with the guard
 ##    its height asks for -- a counter-hit if it caught a move starting up,
@@ -21,7 +23,9 @@
 ## the defender has to guess low or high as well -- and a crouch ducks a
 ## high, standing punch altogether. The jump is a fourth corner (T38): it
 ## goes over a low and out of a throw, cannot guard, and loses to a strike
-## aimed up.
+## aimed up. The backdash is the way out that does not guard (T40): early,
+## everything passes through it; late, it cannot guard, and a strike that
+## reads it lands.
 ##
 ## Everything is whole numbers and nothing is random, so the same inputs from
 ## the same frame always give the same next frame (`FightReplay`).
@@ -32,6 +36,10 @@
 ## another thing with boxes, and the pairwise tests in step 4 grow with them.
 class_name FightRules
 extends RefCounted
+
+## The stuns a fighter is standing in, whatever it holds: reeling from a hit,
+## taking off, landing, and backdashing.
+const STANDING_STUNS: Array[String] = ["hit", "takeoff", "landing", FightBackdash.KIND]
 
 
 ## The frame after `state`, given each player's input bits for it (player one
@@ -69,11 +77,12 @@ static func _read_input(fighter: FighterState, held: int, frame: int, data: Figh
 
 
 # Step 2, for one fighter: in the air, go along the arc and then act there;
-# on the ground, count stun down -- leaving the ground when a take-off is
+# evading, go on with the backdash -- acting on the frame it ends; on the
+# ground, count stun down -- leaving the ground when a take-off is
 # over -- or carry on with the move, or start the buffered one, or take off,
 # or crouch, or walk. Then, on the ground, it is crouching if its move is a
-# crouching one, or, out of a move, if it holds down -- except in hitstun,
-# taking off and landing, all taken standing: a fighter reeling from a hit
+# crouching one, or, out of a move, if it holds down -- except in
+# `STANDING_STUNS`, all taken standing: a fighter reeling from a hit
 # cannot duck the next one, or a combo would end whenever its victim held
 # down.
 static func _act(fighter: FighterState, held: int, data: FightData) -> void:
@@ -83,6 +92,8 @@ static func _act(fighter: FighterState, held: int, data: FightData) -> void:
 			_act_in_the_air(fighter, held, data)
 		elif stunned:
 			_count_stun_down(fighter)
+		return
+	if fighter.stun_kind == FightBackdash.KIND and FightBackdash.carry(fighter, data):
 		return
 	if fighter.stun > 0:
 		var taking_off: bool = fighter.stun_kind == "takeoff"
@@ -102,7 +113,7 @@ static func _act(fighter: FighterState, held: int, data: FightData) -> void:
 	if fighter.move != "":
 		fighter.crouching = data.move(fighter.character, fighter.move)["stance"] == "crouching"
 	elif not fighter.is_airborne():
-		fighter.crouching = FightInput.holds_down(held) and not fighter.stun_kind in ["hit", "takeoff", "landing"]
+		fighter.crouching = FightInput.holds_down(held) and not fighter.stun_kind in STANDING_STUNS
 
 
 # In the air, as on the ground but with no walking: the stun counts down, or
@@ -146,11 +157,18 @@ static func _cancel_is_open(fighter: FighterState, data: FightData) -> bool:
 
 # Start the move for the buffered button, if the character has one -- the
 # crouching one while holding down, the air one in the air, if this jump has
-# not spent it -- and, as a cancel, only if the current move lists it. True
-# when a move started.
+# not spent it -- and, as a cancel, only if the current move lists it. A
+# buffered evade starts a backdash, from the ground and never as a cancel; in
+# the air it waits in the buffer. True when a move or a backdash started.
 static func _start_buffered(fighter: FighterState, held: int, data: FightData, as_cancel: bool = false) -> bool:
 	if fighter.buffered == "" or (fighter.is_airborne() and fighter.air_spent):
 		return false
+	if fighter.buffered == FightInput.EVADE_NAME:
+		if as_cancel or fighter.is_airborne():
+			return false
+		fighter.buffered = ""
+		FightBackdash.start(fighter, data)
+		return true
 	var next_move: String = data.move_for_button(fighter.character, fighter.buffered, FightInput.holds_down(held),
 			fighter.is_airborne())
 	if next_move == "":
@@ -235,7 +253,8 @@ static func _face_each_other(state: FightState) -> void:
 # A throw does not find a fighter in hitstun or blockstun -- a hit could
 # otherwise be followed by a throw the victim had no frame to answer -- nor
 # one in the air, which is what a jump out of a throw is. Taking off and
-# landing are on the ground, and can be thrown.
+# landing are on the ground, and can be thrown. Nothing finds a fighter on
+# the invulnerable frames of its backdash, and the events say that too.
 # (Within a blockstring it is frame advantage, in the data, that keeps a
 # throw answerable: every move here is minus on block.)
 static func _connections(state: FightState, data: FightData) -> Array[int]:
@@ -246,6 +265,9 @@ static func _connections(state: FightState, data: FightData) -> Array[int]:
 		if _throwing(index, state, data) and (defender.stun_kind in ["hit", "block"] or defender.is_airborne()):
 			continue
 		if not FightBoxes.overlap(FightBoxes.hitbox(attacker, data), FightBoxes.hurtbox(defender, data)):
+			continue
+		if FightBackdash.invulnerable(defender, data):
+			state.events.append("p%d's %s passes through p%d (evading)" % [index + 1, attacker.move, 2 - index])
 			continue
 		var missed: String = FightBoxes.misses_vertically(attacker, defender, data)
 		if missed != "":
@@ -317,6 +339,8 @@ static func _judge(state: FightState, attacker: int, defender_held: int, data: F
 	if height == "throw":
 		return ["throw", " (a throw cannot be blocked)"]
 	var can_block: bool = defender.is_free() or defender.stun_kind == "block"
+	if defender.stun_kind == FightBackdash.KIND:
+		return ["hit", " (caught evading, which cannot guard)"]
 	if defender.is_airborne():
 		var starting: bool = FightBoxes.phase(defender, data) == "startup"
 		return ["counter-hit", " (caught in the air, starting up)"] if starting else ["hit", " (in the air, which cannot guard)"]

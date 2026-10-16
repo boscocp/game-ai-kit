@@ -2,8 +2,8 @@
 ## the opponent model (T17) and behaviour cloning (T18) both read a fight in.
 ##
 ## Read off the fighter as it is drawn: the height of the move it started, a
-## jump, a guard it was seen holding (blockstun shows it), a crouch, a step in
-## or out. Nothing here counts or remembers: it is a reading of one frame,
+## jump, a backdash (T40), a guard it was seen holding (blockstun shows it), a
+## crouch, a step in or out. Nothing here counts or remembers: it is a reading of one frame,
 ## which is why it lives apart from the opponents that learn from it.
 ##
 ## When not to use it: telling two moves of one height apart. A jab and a
@@ -13,7 +13,7 @@ extends RefCounted
 
 ## Every action a fighter can be read as doing.
 const ACTIONS: Array[String] = ["step in", "step out", "crouch", "jump", "high", "mid", "low", "overhead", "throw",
-		"guard standing", "guard crouching"]
+		"guard standing", "guard crouching", "evade"]
 
 
 ## What fighter `index` is doing in `state`, as one of `ACTIONS`, or "" when
@@ -24,6 +24,8 @@ static func of(state: FightState, index: int, data: FightData) -> String:
 		return "jump"
 	if fighter.move != "":
 		return data.move(fighter.character, fighter.move)["height"]
+	if fighter.stun_kind == FightBackdash.KIND:
+		return "evade"
 	if fighter.stun_kind == "block":
 		return "guard crouching" if fighter.crouching else "guard standing"
 	if fighter.stun > 0:
