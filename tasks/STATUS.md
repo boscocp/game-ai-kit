@@ -52,6 +52,8 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T17 | The opponent model | done | `ai_opponent`: an n-gram with additive smoothing and decay, held to Python by 4 vectors; the learner is T37's opponent leaning towards answers; 20/20 within 40 actions and after a switch; ADR 0016, the owner's exception to invariant 6, held by N9; manual check still a person's |
 | T18 | Behaviour cloning, and what a learned model buys | done | the owner's nine fights, cut 15 frames late; every recording held out once: nothing fitted beats "always step in" (28.0%), the n-gram does by four points; ghosts beat medium 78-86 in 100, the clone 64; 0.04-0.12 ms a decision; a person could not tell them apart (ADR 0017, N10-N12) |
 | T40 | An evade, and levels that are hard enough | todo | the owner could not tell T18's opponents apart and found all of them easy; a backdash gives every one more to choose, and hard is retuned and measured |
+| T41 | What the owner found playing the boards | todo | A\* through mud costing 8; the green start dot on grass; blue stuck at the bridge in `demo-tactical`; the skirmish AI idle while the owner holds the white flag -- each reproduced before it is called a bug |
+| T42 | Examples that are fun to play | todo | the owner: the examples need to be more playful; a design pass ending in tasks the owner picks; needs T41 |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
 | T26 | Combat on the board | todo | reach and the counter table start to matter; the dataset is rebuilt from the game (ADR 0008) |
 | T21 | Every example can be watched | done | `check_demos.py` and `demo_overlays.gd`; blue's decision now drawn before it is played |
@@ -120,6 +122,10 @@ racing (2D, and 3D with richer physics) and two shooters with bots -- a
 bot-only match and a single-player one with optional stealth; 3D needs an
 ADR against ADR 0001's no-3D rule first, and 3D assets are
 referenced, never committed.
+
+**Also noted, 2026-10-15:** the owner played the board demos and found
+four problems (T41) and asked for more playful examples (T42). Not
+scheduled yet; the owner said "for later".
 
 ## Resuming after 2026-10-15 (wave 41)
 
