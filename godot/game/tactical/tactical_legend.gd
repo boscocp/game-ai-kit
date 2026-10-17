@@ -24,6 +24,7 @@ static func entries(types: Dictionary) -> Array[Array]:
 		[BoardView.tile_texture(BoardView.WALL), "rock: nothing crosses"],
 		[BoardView.tile_texture(BoardView.WATER), "water: only waders cross"],
 		[BoardView.tile_texture(BoardView.BRIDGE), "bridge: the only dry crossing"],
+		[BoardView.tile_texture(BoardView.NODE), "flag: a point, +%d a turn to its holder" % TacticalRules.POINT_INCOME],
 	]
 	for name: String in types:
 		lines.append([_picture(TacticalScenario.RED, name), describe(types[name], types)])

@@ -37,21 +37,22 @@ class Fitted:
 
     #: What a lookup table of the training rows scores on the same holdout.
     #:
-    #: The four features are small integers, so the feature space is small:
-    #: since T26, 3807 combat rows cover 1083 distinct vectors, and 84% of
-    #: holdout rows have an *exact* twin in the training set.
+    #: The five features are small integers, so the feature space is small:
+    #: since T44, 3868 combat rows cover 1757 distinct vectors, and 62% of
+    #: holdout rows have an *exact* twin in the training set (84% over 1083
+    #: before the counter was a feature).
     #:
     #: Two numbers get confused here, so both are written out. Over the
     #: **twinned rows alone**, answering with the twin's label scored 0.848
     #: before T26 (not measured since). Over the **whole holdout** -- twinned
     #: rows from the table, the rest from the commoner answer -- it scores
-    #: 0.7878, and that is what this field carries and what the report
-    #: prints. Against the model's 0.8585 and the majority class's 0.5681, the
-    #: table is the yardstick that matters: 7.1 points, not the 29.0 the
-    #: majority baseline would suggest.
+    #: 0.7051 since T44, and that is what this field carries and what the
+    #: report prints. Against the model's 0.8604 and the majority class's
+    #: 0.5771, the table is the yardstick that matters: 15.5 points, not the
+    #: 28.3 the majority baseline would suggest.
     #:
-    #: It is published rather than asserted on. A four-weight model cannot
-    #: memorise 1083 answers, so beating the table is not required of it; a
+    #: It is published rather than asserted on. A five-weight model cannot
+    #: memorise 1757 answers, so beating the table is not required of it; a
     #: model with capacity, as in T18, would have to be read against this
     #: column rather than against the majority class.
     memoriser: float

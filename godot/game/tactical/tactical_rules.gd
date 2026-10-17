@@ -37,6 +37,12 @@ const WATER_MOVER: String = "water"
 ## What each side earns at the start of its turn, and starts with.
 const INCOME: int = 3
 
+## What each control point a side holds pays it, at the start of its turn,
+## on top of `INCOME` (T44, `ControlPoints`). Two: two thirds of the ordinary
+## income, so holding both points is more than doubling it -- worth a walker
+## standing on each, and not worth leaving the workshop open for.
+const POINT_INCOME: int = 2
+
 ## What a building starts with. Twice a walker's, because a building is not
 ## fought to the death: each attack on it is one blow (`TacticalCombat`), and
 ## a workshop that fell to the first runner to reach it ended every game in

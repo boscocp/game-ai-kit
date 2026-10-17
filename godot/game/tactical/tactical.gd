@@ -389,13 +389,12 @@ func _start_red_turn() -> void:
 	_refresh()
 
 
-# The next side's turn: income, fresh movement, then its towers fire, and
-# what they hit is the first thing that side reads.
+# The next side's turn: income and the points it holds, fresh movement, then
+# its towers fire, and what happened is the first thing that side reads.
 func _open_turn() -> void:
-	state = state.end_turn(TacticalScenario.FACTIONS, 0, TacticalRules.INCOME)
-	var fired: Array = TacticalCombat.towers_fire(state)
-	state = fired[0]
-	_last_event = "\n".join(fired[1])
+	var opened: Array = TurnStart.open(state)
+	state = opened[0]
+	_last_event = "\n".join(opened[1])
 	winner = TacticalVictory.winner(state)
 
 
@@ -429,7 +428,7 @@ func _refresh() -> void:
 	if _reds_turn():
 		reach = _steps_in_reach()
 		_units.spent = _turn.spent_ids()
-	_board.draw_board(state.graph, reach, [] as Array[Vector2i], _terrain())
+	_board.draw_board(state.graph, reach, TacticalScenario.POINTS, _terrain())
 	_units.show_state(state, _board, _selected_id)
 	_intent.show_decision(_blue_turn.next if _blue_thinking() else null, state, _board)
 	_header.text = "%s\n%s\nblue is played by %s" % [WHAT_THIS_IS, TacticalVictory.rule(), blue.describe()]

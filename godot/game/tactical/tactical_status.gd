@@ -16,11 +16,11 @@ extends RefCounted
 ## `can_attack` is false for a piece that has attacked this turn: the status
 ## must not offer it targets it can no longer strike.
 static func text(state: BoardState, in_hand: Unit, refusal: String, news: String = "", can_attack: bool = true) -> String:
-	var lines: Array[String] = [_headline(state), _piece(in_hand), _what_to_do(state, in_hand)]
+	var lines: Array[String] = [_headline(state), ControlPoints.describe(state), _piece(in_hand), _what_to_do(state, in_hand)]
 	var targets: String = _targets(state, in_hand) if can_attack else ""
 	if targets != "":
 		lines.append(targets)
-	lines.append("Z takes back the last thing you did  ·  space ends your turn, and blue is paid %d" % TacticalRules.INCOME)
+	lines.append("Z takes back the last thing you did  ·  space ends your turn, and blue is paid %d and its points" % TacticalRules.INCOME)
 	if news != "":
 		lines.append("\n" + news)
 	if refusal != BoardState.LEGAL:
@@ -31,7 +31,7 @@ static func text(state: BoardState, in_hand: Unit, refusal: String, news: String
 ## What the status says on blue's turn: who is playing it, what it is about
 ## to do and why, and what to press.
 static func blue_text(state: BoardState, turn: BlueTurn, controller: BlueController, news: String = "") -> String:
-	var lines: Array[String] = [_headline(state), "blue is thinking with %s" % controller.controller_name()]
+	var lines: Array[String] = [_headline(state), ControlPoints.describe(state), "blue is thinking with %s" % controller.controller_name()]
 	if news != "":
 		lines.append("\n" + news)
 	if turn.next != null:

@@ -278,7 +278,7 @@ func _row_case(changed: Dictionary = {}) -> Dictionary:
 		"kind": "row", "model": "combat", "why": "a row handed straight over",
 		"features": {
 			"health_difference": 0, "numeric_advantage": 0,
-			"defender_terrain": 1, "reinforcement_distance": 15,
+			"defender_terrain": 1, "reinforcement_distance": 15, "counter": 0,
 		},
 		"prediction": 0.5,
 	}
@@ -291,7 +291,7 @@ func _combat_case(changed: Dictionary = {}) -> Dictionary:
 		"kind": "combat", "attacker": 1, "defender": 2, "why": "the only fight there is",
 		"features": {
 			"health_difference": 0, "numeric_advantage": 0,
-			"defender_terrain": 1, "reinforcement_distance": 15,
+			"defender_terrain": 1, "reinforcement_distance": 15, "counter": 0,
 		},
 		"prediction": 0.5,
 	}

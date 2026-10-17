@@ -105,8 +105,10 @@ is drawn in pink, with why, before space plays it (enter plays the rest).
 Click an enemy in reach to attack it, once a turn: a fight is dice, the
 counter table and cover tilt it -- attacking at even health, a piece the
 table favours wins about 19 fights in 20 -- and the loser is removed. Bolt towers fire
-by themselves at the start of their side's turn. Destroy the enemy workshop
--- a siege, one blow an attack -- to win; after 40 rounds it is a draw.
+by themselves at the start of their side's turn. Two flags are control
+points: a side with a walker on one and no enemy beside it is paid 2 more at
+the start of its turn. Destroy the enemy workshop -- a siege, one blow an
+attack -- to win; after 40 rounds it is a draw.
 
 *Recordings of all five are still to be made.*
 

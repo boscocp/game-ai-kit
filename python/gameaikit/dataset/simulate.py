@@ -111,6 +111,7 @@ def _fight(board: Board, attacker: Unit, defender: Unit, game: int,
         attacker.health, defender.health, seen["numeric_advantage"],
         seen["defender_terrain"], seen["reinforcement_distance"],
         lambda: rng.randint(combat.WEAKEST_BLOW, combat.HARDEST_BLOW),
+        counter=seen["counter"],
     )
     won = outcome.attacker_won
     # Written out field by field rather than splatted in. `Combat(**seen)` was
@@ -121,6 +122,7 @@ def _fight(board: Board, attacker: Unit, defender: Unit, game: int,
         numeric_advantage=seen["numeric_advantage"],
         defender_terrain=seen["defender_terrain"],
         reinforcement_distance=seen["reinforcement_distance"],
+        counter=seen["counter"],
         attacker_won=won,
         game=game,
     ))
@@ -132,7 +134,7 @@ def _fight(board: Board, attacker: Unit, defender: Unit, game: int,
 
 
 def fight_features(board: Board, attacker: Unit, defender: Unit) -> dict[str, int]:
-    """The four numbers a model gets to see about a fight, before it happens.
+    """The five numbers a model gets to see about a fight, before it happens.
 
     Public, and named, because this is where the dataset is actually made. It
     was private and no test built a board and looked at a row, so a review
@@ -148,6 +150,7 @@ def fight_features(board: Board, attacker: Unit, defender: Unit) -> dict[str, in
         ),
         "defender_terrain": board.cost_at(defender.cell()),
         "reinforcement_distance": _nearest_friend(board, attacker),
+        "counter": combat.counter(attacker.kind, defender.kind),
     }
 
 
@@ -252,6 +255,7 @@ def _random_board(rng: random.Random) -> Board:
             units.append(Unit(
                 unit_id=len(units), faction=faction, x=cell[0], y=cell[1],
                 health=rng.randint(WEAKEST_UNIT, STRONGEST_UNIT),
+                kind=rng.choice(combat.WALKERS),
             ))
     return Board(WIDTH, HEIGHT, costs, units, node)
 

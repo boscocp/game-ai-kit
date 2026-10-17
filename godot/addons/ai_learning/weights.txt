@@ -18,33 +18,34 @@ feature measured in small units.
 
 will this attack work?
 ----------------------
-  2874 rows trained on, 933 held back
-  right about 85.9% of held-back fights, against
-  56.8% for always saying 'the attacker loses'
-  and 78.8% for looking the fight up in a table
+  2915 rows trained on, 953 held back
+  right about 86.0% of held-back fights, against
+  57.7% for always saying 'the attacker loses'
+  and 70.5% for looking the fight up in a table
   of the fights it was trained on
 
   feature                     per unit      per sd
-  health_difference            +0.5773     +3.7208
-  defender_terrain             -1.5448     -1.2435
-  numeric_advantage            +1.5058     +1.0852
-  reinforcement_distance       -0.0611     -0.3263
-  (bias)                       +3.1824
+  health_difference            +0.5558     +3.5824
+  defender_terrain             -1.3166     -1.0812
+  numeric_advantage            +1.4201     +1.0511
+  counter                      +1.4159     +0.9642
+  reinforcement_distance       -0.0456     -0.2452
+  (bias)                       +2.7538
 
 how long will this node take?
 -----------------------------
-  661 rows trained on, 220 held back
-  wrong by 0.66 turns on average, against
-  1.05 for always guessing the training mean
-  and 0.77 for looking the situation up in a table
+  636 rows trained on, 211 held back
+  wrong by 0.62 turns on average, against
+  1.09 for always guessing the training mean
+  and 0.79 for looking the situation up in a table
   of the games it was trained on
 
   feature                     per unit      per sd
-  distance_to_node             +0.6584     +1.0360
-  terrain_on_the_way           +0.3712     +0.1947
-  own_units                    +0.1697     +0.1311
-  enemy_units                  +0.1192     +0.0960
-  (bias)                       +1.0218
+  distance_to_node             +0.6712     +0.9682
+  terrain_on_the_way           +0.3847     +0.2021
+  enemy_units                  +0.0959     +0.0746
+  own_units                    +0.0171     +0.0132
+  (bias)                       +1.4874
 
 What the game needs to know that is not a weight
 ------------------------------------------------
@@ -62,10 +63,10 @@ Two things the numbers above do not say
 ---------------------------------------
   The lookup table is the honest yardstick, not the majority class.
   These features are small integers, so most held-back rows have an
-  exact twin among the rows that were trained on -- 84%
-  of them, over 1083 distinct situations. A table that
+  exact twin among the rows that were trained on -- 62%
+  of them, over 1757 distinct situations. A table that
   answers with the twin's outcome already scores most of what the
-  model scores, and the majority class flatters both. Four weights
+  model scores, and the majority class flatters both. Five weights
   cannot memorise that many answers, so this model's score is honest;
   one with capacity would have to be read against the table rather
   than against the majority.

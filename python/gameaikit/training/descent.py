@@ -21,7 +21,7 @@ game needs no scaler. See `unstandardise`.
 
 When not to use it: anything with more features than rows, anything needing
 regularisation, anything where the data does not fit in memory. This is a few
-thousand rows and four features, and at that size the readable version is also
+thousand rows and five features, and at that size the readable version is also
 the fast enough one.
 """
 

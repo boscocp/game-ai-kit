@@ -155,6 +155,12 @@ Findings that survive both steps go in `docs/godot/`, with the source URL and a
   failing test in that file, and the ones it never ran are not counted as
   skipped. So the case count in a *red* run is not the number of tests in the
   file. Measured on v6.2.2; see `docs/godot/addon-anatomy.md`.
+- **A planted mutation can outlive its undo in Python's bytecode cache.** A
+  `.pyc` is trusted while the source's mtime (in whole seconds) and size match.
+  Swap two arguments -- same size -- run the tests, and restore within the
+  same second, and Python keeps running the mutant: in wave 47 it moved the
+  whole dataset, and `lint-no-training` blamed the committed weights. After
+  a mutation round, `find python -name __pycache__ -prune -exec rm -rf {} +`.
 - **The forbidden-term list is untracked and a checkout can delete it.**
   `scripts/forbidden-term-hashes.txt` is gitignored (ADR 0005), but it was
   *tracked* until wave 6 — so checking out anything older and coming back

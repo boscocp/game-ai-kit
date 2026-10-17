@@ -35,6 +35,17 @@ const MAP: Array[String] = [
 ]
 
 
+## The two control points (T44), one on each bank, each beside the river's
+## top or bottom end: far from its own side's workshop, five cells from the
+## bridge, and one step from water, so a wader reaches the other side's point
+## without the bridge. Two, not three: the map is the same turned half round,
+## and on a board fourteen wide no cell is its own mirror, so the points come
+## in pairs. Not on the bridge: a flag there hides the only dry crossing, and
+## the bridge is already where the fight is -- a point elsewhere gives a
+## second place worth going.
+const POINTS: Array[Vector2i] = [Vector2i(5, 0), Vector2i(8, 8)]
+
+
 ## The river runs down columns 6 and 7; a cell left of column 7 is on red's
 ## bank, and the bridge's two cells sit one on each.
 const RIVER_MIDDLE: int = 7

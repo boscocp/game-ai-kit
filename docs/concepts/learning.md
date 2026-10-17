@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-13
+verified_on: 2026-10-17
 tier: 1
 source: https://en.wikipedia.org/wiki/Logistic_regression
 invalidated_if: the models stop being linear in their features, or training moves out of Python's standard library
@@ -31,8 +31,10 @@ up, add a bias.
   standing on one, which neither model was ever told about: then a written
   rule sends the unit there instead, and says so.
 
-Four features each. For a fight: the health difference, the numeric advantage,
-the defender's terrain, and how far away the nearest friend is.
+Five features for a fight: the health difference, the numeric advantage, the
+defender's terrain, how far away the nearest friend is, and -- since T44 --
+which way the counter table leans (+1, 0 or -1), because the dataset's units
+now have a type as the tactical board's do. Four for a node.
 
 ## One update rule for both
 
@@ -70,12 +72,12 @@ prints the weights, beside how well the model does on games it never saw. The
 combat model is right about 86% of held-back fights. Two yardsticks sit next to
 that number, and the second is the honest one:
 
-* always saying "the attacker loses" scores 57%;
-* **looking the fight up in a table** of training fights scores 79%. The
+* always saying "the attacker loses" scores 58%;
+* **looking the fight up in a table** of training fights scores 71%. The
   features are small integers, so most held-back fights have an exact twin
   among the ones trained on.
 
-A model with four weights cannot memorise hundreds of situations, so its 86%
+A model with five weights cannot memorise hundreds of situations, so its 86%
 is earned. A model with more capacity would have to beat the table, not the
 majority, before its score meant anything.
 

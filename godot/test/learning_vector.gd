@@ -63,10 +63,14 @@ static func board_of(data: Dictionary) -> BoardState:
 		for x: int in range(int(described["width"])):
 			graph.set_cost(Vector2i(x, y), int(described["costs"][y][x]))
 	var units: Array[Unit] = []
+	# A unit may name its type (T44), one of the tactical board's walkers, so
+	# the counter table can be read off it; an untyped unit has none.
+	var types: Dictionary = TacticalRules.unit_types()
 	for entry: Dictionary in described["units"]:
+		var kind: UnitType = types[entry["type"]] if entry.has("type") else null
 		units.append(Unit.new(
 			int(entry["id"]), int(entry["faction"]),
-			Vector2i(int(entry["x"]), int(entry["y"])), int(entry["health"]),
+			Vector2i(int(entry["x"]), int(entry["y"])), int(entry["health"]), 3, kind,
 		))
 	return BoardState.new(graph, units, 0)
 

@@ -1,0 +1,205 @@
+# T44: the learned policy plays the tactical board. The control points, the
+# combat model's fifth feature, and `LearnedBlue` deciding by the two models
+# -- each model replaced here by one that answers a known number, so a test
+# about the decision rule is about the rule and not about the weights.
+extends GdUnitTestSuite
+
+const RED: int = TacticalScenario.RED
+const BLUE: int = TacticalScenario.BLUE
+const COMBAT_FEATURES: Array[String] = ["health_difference", "numeric_advantage",
+	"defender_terrain", "reinforcement_distance", "counter"]
+const CAPTURE_FEATURES: Array[String] = ["distance_to_node", "own_units", "enemy_units", "terrain_on_the_way"]
+const CONVENTIONS: Dictionary = {"nearby_radius": 2, "reinforcement_distance_when_alone": 15,
+	"cheapest_ground": 1, "dearest_ground": 3}
+
+
+# --- the counter, shared and seen ------------------------------------------
+
+func test_the_rules_file_s_counter_table_is_the_game_s() -> void:
+	var table: Dictionary = TacticalCombat.rules()["strong_against"]
+	var types: Dictionary = TacticalRules.unit_types()
+	for name: String in TacticalRules.BUILDABLE:
+		assert_array(Array(types[name].strong_against)).override_failure_message(name).is_equal(table[name])
+	assert_int(table.size()).is_equal(TacticalRules.BUILDABLE.size())
+
+
+func test_the_combat_row_carries_the_counter_from_the_attacker_s_side() -> void:
+	var state: BoardState = _board([[BLUE, TacticalRules.RUNNER, Vector2i(3, 3)], [RED, TacticalRules.MORTAR, Vector2i(4, 3)]])
+	var published: ModelFile = _file(_always(0.5))
+
+	assert_int(BoardFeatures.combat_row(state, state.unit_by_id(1), state.unit_by_id(2), published)["counter"]).is_equal(1)
+	assert_int(BoardFeatures.combat_row(state, state.unit_by_id(2), state.unit_by_id(1), published)["counter"]).is_equal(-1)
+
+
+func test_a_tower_beside_a_fight_is_not_a_friend_in_it() -> void:
+	# The dataset has no buildings, and the board's own fight does not count
+	# a tower either (`TacticalCombat._near`).
+	var state: BoardState = _board([[BLUE, TacticalRules.SHIELD, Vector2i(3, 3)], [RED, TacticalRules.SHIELD, Vector2i(4, 3)],
+		[BLUE, TacticalRules.BOLT_TOWER, Vector2i(3, 4)]])
+
+	assert_int(BoardFeatures.combat_row(state, state.unit_by_id(1), state.unit_by_id(2), _file(_always(0.5)))["numeric_advantage"]).is_equal(0)
+
+
+func test_a_wader_in_the_river_is_asked_about_its_own_ground() -> void:
+	# On the board's cost map the river is a wall, which the row clamps to the
+	# dearest ground; the wader stands on open water.
+	var state: BoardState = TacticalScenario.build()
+	var wader := Unit.new(50, RED, Vector2i(6, 2), 10, 4, TacticalRules.unit_types()[TacticalRules.WADER])
+	var shield := Unit.new(51, BLUE, Vector2i(5, 2), 10, 3, TacticalRules.unit_types()[TacticalRules.SHIELD])
+	var units: Array[Unit] = state.units.duplicate()
+	units.append_array([wader, shield] as Array[Unit])
+	var both := BoardState.new(state.graph, units, BLUE)
+	both.movement_graphs = state.movement_graphs
+
+	assert_int(BoardFeatures.combat_row(both, both.unit_by_id(51), both.unit_by_id(50), _file(_always(0.5)))["defender_terrain"]).is_equal(1)
+
+
+# --- the points --------------------------------------------------------------
+
+func test_a_point_pays_its_holder_and_not_a_contested_one() -> void:
+	var point: Vector2i = TacticalScenario.POINTS[0]
+	var held: BoardState = _board([[BLUE, TacticalRules.RUNNER, point]])
+	var contested: BoardState = _board([[BLUE, TacticalRules.RUNNER, point], [RED, TacticalRules.RUNNER, point + Vector2i(0, 1)]])
+
+	assert_int(ControlPoints.holder(held, point)).is_equal(BLUE)
+	assert_int(ControlPoints.holder(contested, point)).is_equal(ControlPoints.NOBODY)
+	assert_int(ControlPoints.pay(held)[0].funds_of(BLUE)).is_equal(TacticalRules.POINT_INCOME)
+	assert_int(ControlPoints.pay(contested)[0].funds_of(BLUE)).is_equal(0)
+
+
+func test_the_points_are_paid_at_the_start_of_the_holder_s_turn() -> void:
+	var state: BoardState = _board([[BLUE, TacticalRules.RUNNER, TacticalScenario.POINTS[0]]], RED)
+
+	var opened: Array = TurnStart.open(state)
+
+	assert_int(opened[0].funds_of(BLUE)).is_equal(TacticalRules.INCOME + TacticalRules.POINT_INCOME)
+	assert_str(" ".join(opened[1])).contains("holding the point")
+
+
+func test_the_scene_pays_a_point_when_it_opens_the_holder_s_turn() -> void:
+	# The scene must open turns through `TurnStart`: put back the old opening,
+	# with no points, and only this test notices (wave 47's review).
+	var scene: TacticalGame = auto_free((load("res://game/tactical/tactical.tscn") as PackedScene).instantiate())
+	add_child(scene)
+	var runner: Unit = _first_of(scene.state, BLUE, TacticalRules.RUNNER)
+	runner.cell = TacticalScenario.POINTS[1]
+	var before: int = scene.state.funds_of(BLUE)
+
+	scene.end_turn()
+	scene.end_turn()   # the second press, past "units have not moved"
+
+	assert_int(scene.state.current_faction).is_equal(BLUE)
+	assert_int(scene.state.funds_of(BLUE)).is_equal(before + TacticalRules.INCOME + TacticalRules.POINT_INCOME)
+
+
+func test_the_points_are_the_same_turned_half_round() -> void:
+	var far_corner := Vector2i(TacticalScenario.MAP[0].length() - 1, TacticalScenario.MAP.size() - 1)
+	for point: Vector2i in TacticalScenario.POINTS:
+		assert_bool(TacticalScenario.POINTS.has(far_corner - point)).override_failure_message(str(point)).is_true()
+		assert_str(TacticalScenario.MAP[point.y][point.x]).is_equal(TacticalRules.PLAIN)
+
+
+# --- the learned blue ----------------------------------------------------------
+
+func test_the_learned_blue_attacks_when_the_combat_model_clears_the_threshold() -> void:
+	var state: BoardState = _board([[BLUE, TacticalRules.SHIELD, Vector2i(3, 3)], [RED, TacticalRules.RUNNER, Vector2i(5, 3)]])
+	var blue := LearnedBlue.new(_file(_always(0.9)))
+
+	var walk: TacticalDecision = blue.decide_move(state, 1)
+	var after: BoardState = walk.played_on(state)
+	var strike: TacticalDecision = blue.decide_attack(after, 1)
+
+	assert_int(TacticalCombat.distance(after.unit_by_id(1).cell, Vector2i(5, 3))).is_equal(1)
+	assert_str(walk.reason).contains("p(win) 0.90")
+	assert_object(strike).is_not_null()
+	assert_int(strike.attack.target_id).is_equal(2)
+
+
+func test_the_learned_blue_retreats_when_it_does_not() -> void:
+	var state: BoardState = _board([[BLUE, TacticalRules.SHIELD, Vector2i(3, 3)], [RED, TacticalRules.RUNNER, Vector2i(5, 3)]])
+	var blue := LearnedBlue.new(_file(_always(0.1)))
+
+	var walk: TacticalDecision = blue.decide_move(state, 1)
+	var after: BoardState = walk.played_on(state)
+
+	assert_str(walk.reason).contains("retreats")
+	assert_int(TacticalCombat.distance(after.unit_by_id(1).cell, Vector2i(5, 3))).is_greater(2)
+	assert_object(blue.decide_attack(after, 1)).is_null()
+
+
+func test_the_learned_blue_does_not_attack_a_fight_below_the_threshold() -> void:
+	var state: BoardState = _board([[BLUE, TacticalRules.SHIELD, Vector2i(3, 3)], [RED, TacticalRules.RUNNER, Vector2i(4, 3)]])
+
+	assert_object(LearnedBlue.new(_file(_always(0.1))).decide_attack(state, 1)).is_null()
+	assert_object(LearnedBlue.new(_file(_always(0.9))).decide_attack(state, 1)).is_not_null()
+
+
+func test_a_retreat_stops_at_the_edge_of_the_threat_s_reach() -> void:
+	# A mortar reaches 2 + 3 = 5. Running as far as it could, a shield ended 7
+	# away and walked back the next turn; it should stop at 6, the nearest
+	# cell out of reach on its way to red's workshop.
+	var state: BoardState = _board([[BLUE, TacticalRules.SHIELD, Vector2i(6, 4)], [RED, TacticalRules.MORTAR, Vector2i(2, 4)],
+		[RED, TacticalRules.WORKSHOP, Vector2i(0, 4)]])
+
+	var walk: TacticalDecision = LearnedBlue.new(_file(_always(0.1))).decide_move(state, 1)
+
+	assert_str(walk.reason).contains("retreats")
+	assert_int(TacticalCombat.distance(walk.target, Vector2i(2, 4))).is_equal(6)
+
+
+func test_the_learned_blue_walks_at_the_point_the_capture_model_ranks_first() -> void:
+	# One model that says nearer is quicker, one that says the opposite: the
+	# walk follows the model, not the distance.
+	var state: BoardState = _board([[BLUE, TacticalRules.RUNNER, Vector2i(6, 4)], [RED, TacticalRules.RUNNER, Vector2i(0, 8)]])
+	var nearer: Vector2i = TacticalScenario.POINTS[0]
+	var further: Vector2i = TacticalScenario.POINTS[1]
+	state.unit_by_id(1).cell = Vector2i(6, 2)
+
+	var to_nearer: TacticalDecision = LearnedBlue.new(_file(_always(0.5), _by_distance(1.0))).decide_move(state, 1)
+	var to_further: TacticalDecision = LearnedBlue.new(_file(_always(0.5), _by_distance(-1.0))).decide_move(state, 1)
+
+	assert_str(to_nearer.reason).contains(str(nearer))
+	assert_str(to_further.reason).contains(str(further))
+
+
+func test_learned_against_rules_games_all_end_and_nothing_is_refused() -> void:
+	for dice: int in range(3):
+		var result: Dictionary = TacticalMatch.play(RuleBasedBlue.new(), LearnedBlue.new(), dice)
+		assert_int(result["winner"]).is_not_equal(TacticalVictory.NOBODY)
+		assert_array(result["refused"]).is_empty()
+
+
+# --- helpers -------------------------------------------------------------------
+
+func _first_of(state: BoardState, faction: int, type_name: String) -> Unit:
+	for unit: Unit in state.units_of(faction):
+		if unit.type.type_name == type_name:
+			return unit
+	return null
+
+
+# A plain 14x9 board -- the scenario's size, so its points are on it -- with
+# these `[side, type, cell]` pieces, ids from 1, `to_move` to move.
+func _board(pieces: Array, to_move: int = BLUE) -> BoardState:
+	var types: Dictionary = TacticalRules.unit_types()
+	var units: Array[Unit] = []
+	for piece: Array in pieces:
+		var kind: UnitType = types[piece[1]]
+		units.append(Unit.new(units.size() + 1, piece[0], piece[2], 10, kind.movement, kind))
+	return BoardState.new(GridGraph.new(14, 9), units, to_move)
+
+
+func _file(combat: Dictionary, capture: Dictionary = _by_distance(1.0)) -> ModelFile:
+	return ModelFile.from_dictionary({"feature_conventions": CONVENTIONS,
+		"models": {"combat": combat, "capture": capture}}, "the test")
+
+
+# A combat model that answers `chance` whatever it is shown.
+func _always(chance: float) -> Dictionary:
+	return {"kind": "logistic", "features": COMBAT_FEATURES, "weights": [0.0, 0.0, 0.0, 0.0, 0.0],
+		"bias": log(chance / (1.0 - chance))}
+
+
+# A capture model that answers `per_cell` turns per cell to the point.
+func _by_distance(per_cell: float) -> Dictionary:
+	return {"kind": "linear", "features": CAPTURE_FEATURES, "weights": [per_cell, 0.0, 0.0, 0.0], "bias": 20.0}
