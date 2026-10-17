@@ -212,3 +212,48 @@ evidence that hard is hard enough: today that evidence is one
 deterministic run that sits 5 above the bar, with a planted case 40
 below it, and the check meant to be independent has the lancer at 66.
 4 to 6 are small and should go in the same pass.
+
+## What was done about them
+
+All ten were answered by the author, on the branch, before the merge.
+Seven were fixed and three were left on purpose. The numbers are in T40's
+"After the review".
+
+1. **Fixed, by removing the claim.** "long" is gone, and so are
+   `longest_strike` and the learner's lean towards it. The pre-emptive
+   read in "it blocked", which the decisions relied on, was measured too:
+   it caught nothing in 8 tries, because the dancer's backdash carries it
+   past the straight's reach. "It evaded" now follows (step in, or a
+   high). T40 says its answer to a player who evades too often is **not
+   done**. An opponent with medium's knobs that backdashes out of every
+   block loses to hard 95 and 98 times in 100, and is about even with
+   medium. The habit is neither punished nor rewarded.
+2. **Fixed.** The turtle is now a bar of its own: 130 of 200, as the lancer.
+   As the dancer every level beats it 195 to 200 times, so a bar there
+   would measure nothing. Its numbers come from `make
+   test-opponent-levels`, at 150 and 147 of 200 over two sets of seeds.
+   The task now gives every measured pair, not one number per stand-in.
+3. **Fixed.** The gate plays 200 fights per character and reads a frozen
+   copy of the ghost (`godot/test/owner_ghost.json`), so retraining the
+   clone does not move it. Over two sets of seeds, T40's hard won 158 to
+   178 of 200 against a bar of 150. T37's hard won 109 to 133 and fails by
+   17 or more. Medium won 39 to 64.
+4. **Fixed.** A test presses the backdash with down held and checks that
+   it stands on every frame. With `FightBackdash.KIND` taken out of
+   `STANDING_STUNS` it fails.
+5. **Fixed.** "evade" is now second in "after blocking", inside even easy's
+   tactics. A test holds that every level knows it, and it fails with the
+   evade put back at the end. The medium learner can now answer a throw
+   with it.
+6. **Fixed.** The cloning page has the current win rates, with T37's beside
+   them, and is dated 2026-10-16. `opponent_levels.gd` says "T37's medium";
+   the model's comment says 6 in 17; the legend names evading among the
+   paler states.
+7. **Left.** `fight_rules.gd` is game code, not an addon. Splitting step 3
+   or step 4 out to get it under 400 is a change of its own.
+8. **Fixed.** The `fight_action.gd` header is reflowed.
+9. **Left.** The evade-count test is about `compare.report`'s output, and
+   sits beside the other report tests.
+10. **Left.** `FightBackdash.start` is only reached with no move, from
+    `_start_buffered`. A test would only be guarding a path that does not
+    exist.
