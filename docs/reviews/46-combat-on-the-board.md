@@ -312,3 +312,10 @@ the game, `has_attacked` always false, no seal after an attack, a tower
 fighting to the death, blue's attacks not kept, and both languages'
 missing-numbers and `>=` mutations -- every one now fails.
 
+
+One slip on the way, caught before the merge: replacing the test of undo
+also deleted the four siege tests that sat in the same block, and `make
+check` stayed green with 17 combat cases instead of 21. The count not
+moving after five tests were added is what showed it; they were put back,
+and the ram's test now reads `counter_worth` from the rules file instead of
+assuming 2.
