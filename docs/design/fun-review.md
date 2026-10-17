@@ -63,3 +63,18 @@ screen (13).
 By what already exists: 7 (all opponents exist), 1 (all ages trained), 3
 (the checks exist), 2 (depth is a key already; puzzles need a loader), 4
 (rooms need a loader), 6, then 5 (T26 is a task of its own, size L).
+
+## What the owner picked (2026-10-17)
+
+The board games -- MENACE, checkers, the search demo, stealth -- already
+feel like games, and stay as they are. The two that do not are the skirmish
+and the tactical board. Picked:
+
+- **Tactical, combat first** -- T26, as it stands.
+- **The skirmish folded into the tactical board** -- T44. Asked what would
+  make the skirmish a game, the owner chose this over a capture-the-flag of
+  its own and over the hold warning alone; the warning (6 above) goes with
+  it.
+- **Fighting, an arcade ladder** -- T43.
+
+Not picked: 1 to 4.
