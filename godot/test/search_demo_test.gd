@@ -21,6 +21,15 @@ func test_the_demo_comes_up_on_breadth_first_with_nothing_revealed() -> void:
 	assert_str(_status_of(demo)).contains("expanded 0 of")
 
 
+func test_the_status_says_breadth_first_never_looks_at_cost() -> void:
+	# T41: the owner read breadth-first's route through the mud as Dijkstra's.
+	var demo: SearchDemo = _mounted_demo()
+
+	assert_str(_status_of(demo)).contains("breadth-first (fewest steps, blind to what a cell costs)")
+	demo.choose_search(DIJKSTRA)
+	assert_str(_status_of(demo)).contains("dijkstra (the cheapest route)")
+
+
 func test_stepping_reveals_one_cell_at_a_time_and_stops_at_the_end() -> void:
 	var demo: SearchDemo = _mounted_demo()
 

@@ -27,6 +27,17 @@ const CHEAPEST_MUD: int = 2
 const DEAREST_MUD: int = 9
 
 const NAMES: Array[String] = ["breadth-first", "depth-first", "dijkstra", "a*"]
+## What each one's route is the least of, beside its name. T41: the demo
+## opens on breadth-first, whose route wades straight through the mud, and the
+## owner read it as Dijkstra's -- the board's own line says "Dijkstra goes
+## round the mud" right under it, and nothing said whose route was on screen
+## or that this one never looks at cost.
+const FINDS: Array[String] = [
+	"fewest steps, blind to what a cell costs",
+	"the first route it stumbles on",
+	"the cheapest route",
+	"the cheapest route, aimed at the goal",
+]
 
 ## What a left-drag paints, in the order W, M and G choose them.
 enum Brush { WALL, MUD, GROUND }
@@ -73,8 +84,8 @@ func _ready() -> void:
 		[ExpansionView.EARLY, "dark square: expanded early"],
 		[ExpansionView.LATE, "bright square: expanded late"],
 		[Color.TRANSPARENT, "    (dark to bright is the order)"],
-		[ExpansionView.PATH, "line: the route found"],
-		[ExpansionView.START, "green dot: start"],
+		[ExpansionView.PATH, "line: the route the chosen search found"],
+		[ExpansionView.START, "yellow dot: start"],
 		[ExpansionView.GOAL, "red dot: goal"],
 		[BoardView.tile_texture(BoardView.ROUGH), "mud: costs the number on it"],
 		[BoardView.tile_texture(BoardView.WALL), "wall"],
@@ -415,11 +426,11 @@ func _refresh() -> void:
 
 func _status_line() -> String:
 	return (
-		"%s  ·  expanded %d of %d  ·  steps %d  ·  %s"
+		"%s (%s)  ·  expanded %d of %d  ·  steps %d  ·  %s"
 		+ "\n%s"
 		+ "\n%s"
 		+ "\n1-4 choose  ·  space steps  ·  enter finishes"
-	) % [NAMES[_chosen], _revealed, _result.expanded.size(), _result.path.size(),
+	) % [NAMES[_chosen], FINDS[_chosen], _revealed, _result.expanded.size(), _result.path.size(),
 		_route_cost(_result), expansion_counts(), promise_line()]
 
 

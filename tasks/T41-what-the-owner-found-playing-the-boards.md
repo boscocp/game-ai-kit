@@ -46,8 +46,10 @@ make test-godot
 make test-demo-overlays
 ```
 
-plus one new headless check per reproduced bug (the A\* board, the bridge
-game, the flag), named here when written.
+plus one new headless check per reproduced bug, named under "What each one
+was": `tactical_bridge_test.gd` (the bridge game), `skirmish_flag_test.gd`
+(the flag), and, for the two that were pictures, `search_demo_test.gd`'s
+status case and `marker_contrast_test.gd`. All run in `make test-godot`.
 
 ## Manual check
 
@@ -55,3 +57,96 @@ Play `demo-search` with mud on the straight line: the route goes round it
 whenever round is cheaper, and the start and goal can be seen at a glance.
 Play `demo-tactical` three times: blue crosses the bridge. Stand on the
 white flag in `demo-skirmish`: something happens.
+
+## What each one was (2026-10-17)
+
+1. **A confusing picture, not a bug.** The owner's screenshot settled it:
+   the status read `breadth-first · cost 98`. The demo opens on
+   breadth-first, which counts steps and never looks at cost, and the
+   board's own line -- "Dijkstra goes round the mud breadth-first wades
+   through" -- sat right under its route. Measured before deciding: 400
+   boards painted at random through the demo's own API (mud, walls, ground,
+   `-`/`=`, start and goal dragged) gave A\* the same cost as Dijkstra every
+   time the goal was reachable, and on the named board A\* goes round for 21
+   against breadth-first's 98. The fix is the picture: the status names
+   what each search's route is the least of -- "breadth-first (fewest steps,
+   blind to what a cell costs)" -- and the legend says the line is the
+   chosen search's route. The owner agreed: depth- and breadth-first have no
+   weights. Check: `search_demo_test.gd`,
+   `test_the_status_says_breadth_first_never_looks_at_cost`.
+2. **Readability, and the stealth exit had it too.** Grass averages
+   (0.43, 0.72, 0.21) and the start dot was (0.45, 0.85, 0.45). The start is
+   now yellow and the goal a strong red, both ringed in near-black; the
+   stealth exit, a green square on the same grass, is cyan with a dark edge.
+   No other example draws a start or a goal. Check:
+   `marker_contrast_test.gd` measures each marker against the average of
+   every tile it can sit on, and first rejects the old green (0.28 apart;
+   the bar is 0.5).
+3. **A bug.** Reproduced: red parks one runner on the bridge, or in front
+   of it, and does nothing else. Nothing moves a piece until T26, so the
+   bridge is shut; blue's route ignored who stood on it, so it built a
+   shield a turn, piled 24 behind the river saying "no walk this turn brings
+   it nearer", and drew at round 40. The water was open to the wader it
+   never built. Now both of blue's rules count red's pieces as walls: a
+   walker with no way through says "red's pieces stand on every way", and
+   the workshop builds only types that can still reach red's workshop -- and
+   one that beats nothing when no walker of blue's can. Against a random red
+   it still wins 40 of 40. Check: `tactical_bridge_test.gd`, two whole games
+   (`test_blue_wins_when_red_parks_a_runner_on_the_bridge`,
+   `..._in_front_of_the_bridge`) that ended in a draw before the change.
+4. **A missing rule, decided with the owner: holding a node ends the
+   game.** The policy sees, per node, four numbers -- its nearest unit's
+   distance, the two unit counts, the terrain on the way -- and never who
+   stands on it; and no rule gave a node a meaning. `SkirmishVictory`: a side
+   that starts `HOLD_TURNS` (3) of its turns in a row with a unit on a node
+   and no enemy beside it wins, and the screen states the rule and the count.
+   The policy walks first at a node an enemy stands on -- `LearnedDecision`
+   `contest`, said as "a rule, not the model", so nothing was retrained.
+   R starts again. Check: `skirmish_flag_test.gd`; with the contest rule
+   switched off, two of its four cases fail.
+
+**Seen, not only measured.** On this machine a windowed run *can* read the
+viewport back (`get_texture().get_image()` returns the frame), unlike
+`--headless`. The screenshots taken that way showed the new markers and
+status, and blue walking at the held flag. They are not a gate: CI has no
+display.
+
+## After the review
+
+[docs/reviews/44-what-the-owner-found-playing-the-boards.md](../docs/reviews/44-what-the-owner-found-playing-the-boards.md)
+said "not as is". What was done, finding by finding:
+
+1. **A holder walked off its node to contest another** -- so a player who
+   touched either node stopped blue ever winning a hold. A unit standing on
+   a node no longer contests (`learned_policy_test`,
+   `test_a_unit_on_a_node_does_not_leave_it_to_contest_another`).
+2. **The contest came before the combat model**, so the opening lost its
+   attack and retreat. The contest now replaces only the advance: a fight in
+   reach is weighed first. The owner's own game -- red on the flag, red's
+   other unit beside blue -- therefore ends with red winning, and the
+   contest shows when blue has nothing to fight. The three stale texts
+   (`docs/godot/learning.md`, `docs/concepts/learning.md`, `main.gd`'s
+   header) say so now.
+3. **Nothing tested the win in the scene.** `skirmish_flag_test` now plays
+   it to a red win with "red wins" on screen, and checks that a click and a
+   press change nothing afterwards. R restarting is **not** tested: it is
+   `reload_current_scene`, which a suite running inside gdUnit4's own scene
+   cannot call. It stays under the manual check.
+4. **Stale holds on screen.** `progress` takes the board and shows a hold
+   only while it still stands.
+5. **False text in `rule_based_blue.gd`.** "Until T26 nothing moves them"
+   is now "this turn"; a workshop turned away only by the reach rule says
+   that, not "nothing beats any red piece"; the `_nearest_workshop` comment
+   and the doc comment are fixed. The slowdown was partly a copy of the
+   graph per candidate cell in `_remaining`, which now reads the plain one;
+   a blue turn averages 4.9 ms over the 40 games (3.6 before T41, by the
+   review; 5.5 as first committed).
+6. **The skirmish could stall for good.** A draw after
+   `SkirmishVictory.ROUND_LIMIT` (30) rounds, on screen in the rule.
+7. **The contest had one test, through the scene.** Five in
+   `learned_policy_test.gd`: contests, nearer of two, not a friend's node,
+   not off its own node, a fight first. The review's mutations -- farthest
+   node, no faction check, holder leaves, no `turn_started`, stale progress,
+   no draw -- each fail a test now.
+8. **Which half of the bridge fix wins.** The build rule wins the games;
+   the walking half only makes a shut-out walker say why. The header says it.

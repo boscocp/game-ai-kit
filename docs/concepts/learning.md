@@ -27,7 +27,9 @@ up, add a bias.
   the probability clears a threshold, and retreats when it does not.
 * **How long will this node take to fall?** The answer is a number of turns,
   so the sum is used as it stands. That is *linear* regression. The game walks
-  at whichever node the model says will fall first.
+  at whichever node the model says will fall first -- unless an enemy is
+  standing on one, which neither model was ever told about: then a written
+  rule sends the unit there instead, and says so.
 
 Four features each. For a fight: the health difference, the numeric advantage,
 the defender's terrain, and how far away the nearest friend is.

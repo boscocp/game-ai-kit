@@ -52,7 +52,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T17 | The opponent model | done | `ai_opponent`: an n-gram with additive smoothing and decay, held to Python by 4 vectors; the learner is T37's opponent leaning towards answers; 20/20 within 40 actions and after a switch; ADR 0016, the owner's exception to invariant 6, held by N9; manual check still a person's |
 | T18 | Behaviour cloning, and what a learned model buys | done | the owner's nine fights, cut 15 frames late; every recording held out once: nothing fitted beats "always step in" (28.0%), the n-gram does by four points; ghosts beat medium 78-86 in 100, the clone 64; 0.04-0.12 ms a decision; a person could not tell them apart (ADR 0017, N10-N12) |
 | T40 | An evade, and levels that are hard enough | wip | merged in wave 43: a backdash on its own button (O), 20-24 frames, invulnerable for the first quarter, after Strive; old logs replay unchanged; every level evades; hard holds 150/200 against a frozen copy of the owner's ghost (T37's hard: 109-133) and 130/200 against the turtle; not done: an answer that punishes over-evading (none reaches at a 15-frame reaction), step 5 and the manual check, which wait for the owner's new fights |
-| T41 | What the owner found playing the boards | todo | A\* through mud costing 8; the green start dot on grass; blue stuck at the bridge in `demo-tactical`; the skirmish AI idle while the owner holds the white flag -- each reproduced before it is called a bug |
+| T41 | What the owner found playing the boards | done | the mud route was breadth-first's, read as Dijkstra's: the status now says what each search minimises; markers measured against their terrain; blue builds a wader when red shuts the bridge; holding a skirmish node 3 turns wins, and the policy contests a held one |
 | T42 | Examples that are fun to play | todo | the owner: the examples need to be more playful; a design pass ending in tasks the owner picks; needs T41 |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
 | T26 | Combat on the board | todo | reach and the counter table start to matter; the dataset is rebuilt from the game (ADR 0008) |
@@ -88,6 +88,25 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-17 (wave 44)
+
+**What landed.** T41, the owner's four reports, each reproduced first. The
+"A\* through the mud" was breadth-first's route (the owner's screenshot
+said so), and the screen now names what each search's route is the least
+of. The start dot is yellow, the goal red, both ringed; the stealth exit is
+cyan; `marker_contrast_test.gd` holds them to their tiles. Blue on the
+tactical board stopped piling shields behind a bridge red has shut: it
+counts red's pieces as walls and builds a wader. The skirmish has a win:
+hold a node for 3 of your turns (a draw after 30 rounds), and a blue unit
+with no fight to weigh walks at a node red stands on -- a rule beside the
+models, said as one. The review's eight findings were all acted on; see
+T41's "After the review".
+
+**Not proven.** That the skirmish is now worth playing: the owner's three
+games under T41's manual check.
+
+**Next:** the owner plays T41's manual check, then T42.
 
 ## Resuming after 2026-10-16 (wave 43)
 
