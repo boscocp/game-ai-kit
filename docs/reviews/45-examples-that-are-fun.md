@@ -243,3 +243,43 @@ owner picked T26 to give the tactical board stakes, but T26 as written lets
 only the player attack, so it needs a step or a sibling task before it is
 started. 3 to 7 are about the two new tasks being startable and checkable
 as written. 8 to 10 correct the record.
+
+## What was done about them
+
+All eleven were answered by the author, on the branch, before the merge.
+One (9) went to the owner, who decided it.
+
+1. **Fixed.** `design` joins `EXEMPT_FOLDERS` in `check_doc_freshness.py`,
+   with the reason beside it: a design pass records what the owner picked on
+   a date, like a review. `make check` exits 0.
+2. **Fixed in T26.** Step 6: `BlueController` gains an attack decision,
+   drawn before it is played, and `RuleBasedBlue` attacks what it beats in
+   reach. Step 7: the stand-in win is replaced, or kept with a reason. Step
+   8: the features of the rebuilt dataset are written there for T44. The
+   acceptance list gains both. Step 2 now says how "the same fight" crosses
+   two random generators: a fight is a pure function of a list of rolls.
+3. **Fixed.** Each acceptance section starts with `test -f` on the named
+   suite and then runs it, and says what the suite must hold.
+4. **Fixed.** T43's prerequisites are T37 and T18, which are what it uses;
+   in STATUS its row now sits below T26 and T44, so `make wave-next` still
+   picks T26.
+5. **Fixed.** The ladder is easy, medium, the clone, "ghost: nearest", hard
+   -- the order of the measured win rates; "ghost: exact" is left out.
+6. **Fixed.** T43 adds a 99-second clock and replays a draw, and its suite
+   must show the clock ending a round against an opponent that only guards.
+7. **Fixed.** Step 4's reason now says the files are tracked and that the
+   real danger is a clone that only guards, which the clock answers.
+8. **Fixed.** The status already counts a hold, and the page says only the
+   mark on the board is missing; combat is T26, here and in the stale
+   comments in `skirmish_victory.gd`, `learned_policy.gd` and
+   `skirmish_flag_test.gd`.
+9. **Decided by the owner.** Control points on the tactical map, paying
+   income, with the capture model choosing which to take; T41's hold and
+   contest rules move with them. T44 is rewritten around it.
+10. **Fixed.** T44 step 3 uses T26's rebuilt combat dataset and retrains
+    only if the features change, and names the wader routing note.
+11. **Fixed**, each: the A\* puzzle is named as the one that cannot be
+    solved; "the owner's ghost"; "a node", not "its own flag"; 6 is said not
+    done; the Files lines name the Makefile and what removing the skirmish
+    touches; the resume section has a "Not proven". The screenshots are
+    said not to be kept.

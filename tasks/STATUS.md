@@ -54,10 +54,10 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T40 | An evade, and levels that are hard enough | wip | merged in wave 43: a backdash on its own button (O), 20-24 frames, invulnerable for the first quarter, after Strive; old logs replay unchanged; every level evades; hard holds 150/200 against a frozen copy of the owner's ghost (T37's hard: 109-133) and 130/200 against the turtle; not done: an answer that punishes over-evading (none reaches at a 15-frame reaction), step 5 and the manual check, which wait for the owner's new fights |
 | T41 | What the owner found playing the boards | done | the mud route was breadth-first's, read as Dijkstra's: the status now says what each search minimises; markers measured against their terrain; blue builds a wader when red shuts the bridge; holding a skirmish node 3 turns wins, and the policy contests a held one |
 | T42 | Examples that are fun to play | done | `docs/design/fun-review.md`; the owner: the board games already feel like games, the skirmish and the tactical board do not; picked T26 first, the skirmish folded into the tactical board (T44), and a fighting ladder (T43) |
-| T43 | A fighting ladder | todo | easy, medium, hard, the owner's ghost, the clone, best of three each, with an ending; every opponent exists; picked in T42 |
-| T44 | The learned policy plays the tactical board | todo | the skirmish folded into the tactical game: a learned blue controller, the dataset rebuilt from T26's rules; needs T26; picked in T42 |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
-| T26 | Combat on the board | todo | reach and the counter table start to matter; the dataset is rebuilt from the game (ADR 0008) |
+| T26 | Combat on the board | todo | reach and the counter table start to matter, and blue attacks too; the dataset is rebuilt from the game (ADR 0008) |
+| T44 | The learned policy plays the tactical board | todo | the skirmish folded into the tactical game: control points paying income, the combat model's attack or retreat and the capture model's choice of point as a blue controller; needs T26; picked in T42 |
+| T43 | A fighting ladder | todo | easy, medium, the clone, "ghost: nearest", hard, best of three each, with a clock and an ending; every opponent exists; picked in T42 |
 | T21 | Every example can be watched | done | `check_demos.py` and `demo_overlays.gd`; blue's decision now drawn before it is played |
 | T24 | One window for every example | todo | a menu, a card per example naming its techniques, and an executable; needs T21 |
 
@@ -99,8 +99,12 @@ games; the skirmish and the tactical board do not. Picked: T26 (combat)
 first, then T44 -- the skirmish folded into the tactical board, the learned
 policy as one of blue's controllers -- and T43, a fighting ladder.
 
-**Next:** T26, then T44 (which needs it); T43 can go in between, it needs
-nothing new.
+**Not proven.** That any of the three makes an example one a person wants
+to play twice: that is each task's manual check.
+
+**Next:** T26, then T44 (which needs it), then T43. Wave 45's review
+reshaped all three -- blue attacks in T26, control points in T44 (the
+owner's call), the ladder's order and clock in T43; see its record.
 
 ## Resuming after 2026-10-17 (wave 44)
 

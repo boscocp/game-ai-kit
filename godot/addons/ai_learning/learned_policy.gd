@@ -219,7 +219,7 @@ func _fight_within_reach(state: BoardState, unit: Unit) -> Unit:
 # belt that reads like the mechanism.
 #
 # So walking at a node enters it, and walking at an enemy stops in contact,
-# out of the same call. Until T10 there is no attack to follow that with:
+# out of the same call. Until T26 there is no attack to follow that with:
 # an attack here is a unit arriving beside the enemy and waiting.
 func _move_at(state: BoardState, unit: Unit, target: Vector2i) -> Move:
 	return _affordable(state, unit, _route_to(state, unit, target))
