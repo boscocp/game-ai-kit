@@ -20,10 +20,13 @@ const RETREAT: String = "retreat"
 ## Nobody worth fighting is in reach; walk at the node that looks quickest.
 const ADVANCE: String = "advance"
 
+## An enemy stands on a node; walk at it. A rule, not a model's answer.
+const CONTEST: String = "contest"
+
 ## Stand still. Also what a decision that could not be made comes back as.
 const HOLD: String = "hold"
 
-## One of the four above.
+## One of the five above.
 var action: String
 
 var unit_id: int
@@ -87,6 +90,19 @@ static func advance(unit_id: int, chosen: Move, node: Vector2i, turns: float,
 	decision.predicted_turns = turns
 	decision.reason = "unit %d advances on %s: %.1f turns%s" % [
 		unit_id, node, turns, against,
+	]
+	return decision
+
+
+## Walk at a node an enemy is standing on, because a node left to the enemy
+## is a node lost -- said as the rule it is, with no number, because no model
+## was asked.
+static func contest(unit_id: int, chosen: Move, node: Vector2i, holder: Unit) -> LearnedDecision:
+	var decision := LearnedDecision.new(CONTEST, unit_id, chosen)
+	decision.target = node
+	decision.opponent_id = holder.id
+	decision.reason = "unit %d contests %s: unit %d stands on it, and a node left to the enemy is lost (a rule, not the model)" % [
+		unit_id, node, holder.id,
 	]
 	return decision
 

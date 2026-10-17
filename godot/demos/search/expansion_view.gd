@@ -25,12 +25,19 @@ const LATE: Color = Color(0.45, 0.78, 0.95, 0.50)
 # exactly the band the demo is about.
 const FRONTIER: Color = Color(1.0, 0.40, 0.85, 0.95)
 const PATH: Color = Color(1.0, 0.95, 0.85, 1.0)
-const START: Color = Color(0.45, 0.85, 0.45)
-const GOAL: Color = Color(0.95, 0.45, 0.45)
+# Yellow and a strong red, each ringed in near-black. The start was a light
+# green and vanished on grass (T41) -- the pink frontier's lesson again: a
+# marker's colour is chosen against the tiles it sits on. The ring is what
+# keeps either one visible on mud and on the expansion squares too, and
+# `marker_contrast_test.gd` measures both against every tile they can stand on.
+const START: Color = Color(1.0, 0.85, 0.1)
+const GOAL: Color = Color(0.9, 0.1, 0.1)
+const MARKER_RING: Color = Color(0.05, 0.05, 0.05)
 const NEXT: Color = Color(1.0, 1.0, 1.0, 0.95)
 
 const PATH_WIDTH: float = 3.0
-const MARKER_RADIUS: float = 7.0
+const MARKER_RADIUS: float = 9.0
+const MARKER_RING_WIDTH: float = 3.0
 const FRONTIER_INSET: float = 6.0
 const EXPANSION_INSET: float = 8.0
 
@@ -96,6 +103,7 @@ func _draw_path() -> void:
 
 
 func _draw_marker(cell: Vector2i, colour: Color) -> void:
+	draw_circle(_board.centre_of(cell), MARKER_RADIUS + MARKER_RING_WIDTH, MARKER_RING)
 	draw_circle(_board.centre_of(cell), MARKER_RADIUS, colour)
 
 

@@ -15,7 +15,10 @@ const BAR_HEIGHT: float = 4.0
 const DARKNESS: Color = Color(0.0, 0.0, 0.05, 0.6)
 const SIGHT: Color = Color(1.0, 0.95, 0.5, 0.22)
 const DANGER: Color = Color(0.9, 0.1, 0.1, 0.55)
-const EXIT: Color = Color(0.35, 0.85, 0.45, 0.8)
+# Cyan, not green: a green square on grass is the start dot T41 found in the
+# search demo, and `marker_contrast_test.gd` holds this one to the same bar.
+const EXIT: Color = Color(0.2, 0.9, 1.0, 0.85)
+const EXIT_EDGE: Color = Color(0.05, 0.05, 0.05)
 const PLAYER: Color = Color(0.95, 0.95, 0.95)
 const STATE_COLOURS: Dictionary = {
 	StealthGuard.PATROL: Color(0.35, 0.55, 0.9),
@@ -43,6 +46,7 @@ func _draw() -> void:
 	for guard: StealthGuard in _world.guards:
 		_draw_sight(guard)
 	draw_rect(_cell_rect(_world.room.exit, 4.0), EXIT)
+	draw_rect(_cell_rect(_world.room.exit, 4.0), EXIT_EDGE, false, 2.0)
 	for guard: StealthGuard in _world.guards:
 		_draw_guard(guard)
 	draw_circle(_board.centre_of(_world.player.cell), 9.0, PLAYER)

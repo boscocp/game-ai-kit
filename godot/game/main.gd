@@ -29,6 +29,8 @@ const FACTIONS: int = 2
 const RED: int = 0
 const BLUE: int = 1
 
+const SIDE_NAMES: Array[String] = ["red", "blue"]
+
 ## The side the learned policy plays. Red is the player's.
 const AI_FACTION: int = BLUE
 
@@ -47,6 +49,7 @@ var _selected_id: int = -1
 var _last_refusal: String = ""
 
 var _policy: LearnedPolicy
+var _victory: SkirmishVictory = SkirmishVictory.new(NODES)
 
 # What blue has played this turn, in its own words, and the decision it is
 # about to play -- decided and drawn, not yet played.
@@ -65,7 +68,7 @@ func _ready() -> void:
 		[Color.TRANSPARENT, "white frame round a unit: the one in hand"],
 		[PlanView.ROUTE, "blue's next move, not yet played"],
 		[BoardView.REACHABLE, "where the unit in hand can step"],
-		[BoardView.tile_texture(BoardView.NODE), "a node both sides want"],
+		[BoardView.tile_texture(BoardView.NODE), "a node: hold it %d turns to win" % SkirmishVictory.HOLD_TURNS],
 		[BoardView.tile_texture(BoardView.PLAIN), "open ground"],
 		[BoardView.tile_texture(BoardView.ROUGH), "rough ground: costs the number on it"],
 		[BoardView.tile_texture(BoardView.WALL), "wall"],
@@ -83,6 +86,10 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key != null and key.pressed and key.keycode == KEY_R:
+		get_tree().reload_current_scene()
+		return
 	if event.is_action_pressed("ui_accept"):
 		_end_turn()
 		return
@@ -94,6 +101,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 # A click either picks up one of your units or tries to step onto a cell.
 func _click_cell(cell: Vector2i) -> void:
+	if _victory.winner != SkirmishVictory.NOBODY:
+		return
 	if _state.current_faction == AI_FACTION:
 		_last_refusal = "blue is deciding -- space plays the move it has drawn"
 		_refresh()
@@ -150,14 +159,17 @@ func _end_turn() -> void:
 ## and lets the next unit decide, and the press after blue's last move hands
 ## the board back. So every blue decision is on the screen before it happens.
 func step_decision() -> void:
+	if _victory.winner != SkirmishVictory.NOBODY:
+		return
 	if _state.current_faction == AI_FACTION:
 		_play_the_plan()
 	else:
-		_state = _state.end_turn(FACTIONS, POINTS_PER_TURN)
+		_hand_over()
 		_ai_reasons = PackedStringArray()
 		_played.clear()
-		_blue_to_decide.assign(_state.units_of(AI_FACTION).map(func(unit: Unit) -> int: return unit.id))
-		_plan_the_next_unit()
+		if _victory.winner == SkirmishVictory.NOBODY:
+			_blue_to_decide.assign(_state.units_of(AI_FACTION).map(func(unit: Unit) -> int: return unit.id))
+			_plan_the_next_unit()
 	_last_refusal = ""
 	_select_first_unit_of_the_side_to_move()
 	_refresh()
@@ -206,7 +218,15 @@ func _plan_the_next_unit() -> void:
 		if _state.unit_by_id(unit_id) != null:
 			_plan = _policy.decide(_state, unit_id)
 	if _plan == null:
-		_state = _state.end_turn(FACTIONS, POINTS_PER_TURN)
+		_hand_over()
+
+
+# End the turn, and count the holds of the side whose turn it now is: holding
+# is judged at the start of the holder's own turn, so the other side has had
+# its whole turn to break it.
+func _hand_over() -> void:
+	_state = _state.end_turn(FACTIONS, POINTS_PER_TURN)
+	_victory.turn_started(_state)
 
 
 # Red starts its turn with one of its units in hand, so the first click of a
@@ -247,7 +267,13 @@ func _affordable_steps() -> Array[Vector2i]:
 # Whose turn, what is in hand, what to do about it -- in the order a first-time
 # player asks -- then what was refused and what blue is thinking.
 func _status_line() -> String:
-	var lines: Array[String] = [_whose_turn(), _in_hand(), _what_to_do()]
+	if _victory.winner != SkirmishVictory.NOBODY:
+		return "%s wins: it held a node for %d of its turns in a row.  R starts again." % [
+			SIDE_NAMES[_victory.winner], SkirmishVictory.HOLD_TURNS]
+	var lines: Array[String] = [_whose_turn(), _in_hand(), _what_to_do(), SkirmishVictory.rule()]
+	var holds: String = _victory.progress(SIDE_NAMES)
+	if holds != "":
+		lines.append(holds)
 	if _last_refusal != BoardState.LEGAL:
 		lines.append("\nrefused: " + _last_refusal)
 	if not _ai_reasons.is_empty():

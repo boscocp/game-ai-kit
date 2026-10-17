@@ -3,7 +3,10 @@
 ## *Will this attack work* comes back as a probability, compared against one
 ## threshold -- the whole of the attack-or-retreat decision, and a number a
 ## designer can turn. *How long will this node take* comes back as turns, and
-## the lower of two is where the unit walks. Nothing here trains: that is
+## the lower of two is where the unit walks. Ahead of both sits one rule that
+## is not learned, and says so: a node an enemy stands on is walked at first
+## (T41 -- the owner stood on one and the models, which were never told who
+## stands where, looked straight past it). Nothing here trains: that is
 ## invariant 6, and `make lint-no-training` is the gate on it.
 ##
 ## When not to use it: a decision these weights were not fitted for. They
@@ -80,10 +83,30 @@ func decide(state: BoardState, unit_id: int) -> LearnedDecision:
 		return LearnedDecision.hold(unit_id, "no unit with that id is on the board")
 	if unit.faction != state.current_faction:
 		return LearnedDecision.hold(unit_id, "it is not this unit's side to move")
+	var contested: Dictionary = _node_an_enemy_stands_on(state, unit)
+	if not contested.is_empty():
+		return LearnedDecision.contest(unit.id, _move_at(state, unit, contested["cell"]),
+			contested["cell"], contested["holder"])
 	var opponent: Unit = _fight_within_reach(state, unit)
 	if opponent == null:
 		return _advance_on_a_node(state, unit)
 	return _fight_or_break_off(state, unit, opponent)
+
+
+# The node an enemy stands on that is nearest this unit, with the enemy, or
+# an empty dictionary when no enemy stands on any. Nearest so that two held
+# nodes split blue's attention by distance rather than send everyone to the
+# first in the list; ties go to the earlier node.
+func _node_an_enemy_stands_on(state: BoardState, unit: Unit) -> Dictionary:
+	var found: Dictionary = {}
+	for node: Vector2i in _nodes:
+		var holder: Unit = state.unit_at(node)
+		if holder == null or holder.faction == unit.faction:
+			continue
+		var apart: int = BoardFeatures.distance_between(unit.cell, node)
+		if found.is_empty() or apart < found["apart"]:
+			found = {"cell": node, "holder": holder, "apart": apart}
+	return found
 
 
 # Ask the combat model about this fight, and act on the answer.
