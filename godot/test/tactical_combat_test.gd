@@ -239,6 +239,54 @@ func _scene() -> TacticalGame:
 	return scene
 
 
+func test_a_building_starts_with_more_health_than_a_walker() -> void:
+	var state: BoardState = TacticalScenario.build()
+
+	assert_int(_first_of(state, RED, TacticalRules.WORKSHOP).health).is_equal(TacticalRules.BUILDING_HEALTH)
+	assert_int(_first_of(state, RED, TacticalRules.RUNNER).health).is_less(TacticalRules.BUILDING_HEALTH)
+
+
+func test_an_attack_on_a_building_is_one_blow_not_a_fight_to_the_death() -> void:
+	# The measurement behind it: with a workshop that fell to the first attack,
+	# rules against rules ended every game in round 3.
+	var state: BoardState = _duel(TacticalRules.RUNNER, TacticalRules.WORKSHOP, Vector2i(1, 0))
+	state.unit_by_id(2).health = TacticalRules.BUILDING_HEALTH
+
+	var after: BoardState = TacticalCombat.apply(state, Attack.new(1, 2))
+
+	var left: int = after.unit_by_id(2).health
+	assert_int(left).is_between(TacticalRules.BUILDING_HEALTH - 4, TacticalRules.BUILDING_HEALTH - 1)
+	assert_int(after.unit_by_id(1).health).is_equal(10)
+
+
+func test_a_ram_breaks_a_building_faster_than_a_runner() -> void:
+	var by_ram: int = _siege_damage(TacticalRules.RAM)
+	var by_runner: int = _siege_damage(TacticalRules.RUNNER)
+
+	# The same dice, plus the counter's worth on every blow.
+	assert_int(by_ram - by_runner).is_equal(SEEDS * int(TacticalCombat.rules()["counter_worth"]))
+
+
+func test_a_siege_is_told_as_a_strike_not_a_kill() -> void:
+	var state: BoardState = _duel(TacticalRules.RUNNER, TacticalRules.WORKSHOP, Vector2i(1, 0))
+	state.unit_by_id(2).health = TacticalRules.BUILDING_HEALTH
+
+	var told: String = TacticalCombat.told(state, Attack.new(1, 2), TacticalCombat.apply(state, Attack.new(1, 2)))
+
+	assert_str(told).contains("struck")
+
+
+# Damage dealt to a building over `SEEDS` single attacks by `attacker`.
+func _siege_damage(attacker: String) -> int:
+	var total: int = 0
+	for dice: int in range(SEEDS):
+		var state: BoardState = _duel(attacker, TacticalRules.WORKSHOP, Vector2i(1, 0))
+		state.unit_by_id(2).health = 100
+		state.dice_seed = dice
+		total += 100 - TacticalCombat.apply(state, Attack.new(1, 2)).unit_by_id(2).health
+	return total
+
+
 # How many of `SEEDS` fights the attacker won, side by side on open ground.
 func _attacker_wins(attacker: String, defender: String) -> int:
 	var won: int = 0
