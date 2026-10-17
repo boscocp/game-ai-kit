@@ -241,3 +241,31 @@ one step down in `decide` and keeping holders out of it. Finding 3 is the
 missing end-to-end test of the win. Findings 4 and 5 are screens that say
 things that are false, which this repository treats as bugs. 6 to 8 are
 small.
+
+## What was done about them
+
+All eight were answered by the author, on the branch, before the merge, in
+d75278a. All eight were fixed; one part of the third is left on purpose.
+The details are in T41's "After the review".
+
+1. **Fixed.** A unit standing on a node never contests another. A test
+   holds it, and fails with the guard removed.
+2. **Fixed, as suggested.** The contest replaces only the advance; a fight
+   in reach is weighed first, so the opening keeps its attack and retreat.
+   The owner's own game now ends with red winning the hold, because both
+   blue units have red's other unit to weigh. The three stale texts are
+   updated.
+3. **Fixed, except R.** The scene is played to a red win, with the status
+   and the frozen board after it checked; `turn_started` replaced by `pass`
+   now fails. R restarting is `reload_current_scene` and stays under the
+   manual check. The redundant first assert is gone with the test it was in.
+4. **Fixed.** `progress` takes the board and shows only holds that still
+   stand.
+5. **Fixed.** Each false text is corrected. Part of the slowdown was a graph
+   copy per candidate cell in `_remaining`, now removed: 4.9 ms a blue turn
+   over the 40 games, against 5.5 as first committed.
+6. **Fixed.** A draw after 30 rounds, stated in the on-screen rule.
+7. **Fixed.** Five contest cases in `learned_policy_test.gd`; the farthest-
+   node and no-faction-check mutations each fail one.
+8. **Fixed.** The tactical header says the build rule wins those games and
+   the walking half only explains.
