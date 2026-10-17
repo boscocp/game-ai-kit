@@ -1,7 +1,7 @@
 """Measure the two models, and refuse to be impressed by an accuracy.
 
-An accuracy on its own proves very little. 87.8% sounds good until you notice
-that always answering "the attacker loses" scores 69.0% on the same rows, and
+An accuracy on its own proves very little. 85.9% sounds good until you notice
+that always answering "the attacker loses" scores 56.8% on the same rows, and
 a *leak* in the features would produce a high number just as happily as
 learning would. So there are four assertions here and each is a command with
 an exit code:
@@ -76,7 +76,7 @@ TOO_GOOD = 0.99
 
 #: The same rule for a model that answers with a number rather than a
 #: yes-or-no: an average error this small is not a good fit either. Measured,
-#: the honest capture model is wrong by 0.56 turns; planting `turns_taken` into
+#: the honest capture model is wrong by 0.66 turns; planting `turns_taken` into
 #: its own features gets the error to 0.0000.
 #:
 #: This half was missing, and the check was gated on the model being logistic

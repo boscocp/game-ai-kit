@@ -13,27 +13,52 @@ class_name TacticalTurn
 extends RefCounted
 
 var _spent: Array[int] = []
-# Each entry is [BoardState, Array[int]]: the state before an action, and
-# who was spent then.
+# Who has attacked this turn. Apart from `_spent` because a unit that has
+# walked may still attack once from where it stopped, as in Advance Wars.
+var _attacked: Array[int] = []
+# Each entry is [BoardState, Array[int], Array[int]]: the state before an
+# action, and who was spent and who had attacked then.
 var _history: Array[Array] = []
 
 
 ## Start a new turn: nobody is spent and there is nothing to undo.
 func begin() -> void:
 	_spent.clear()
+	_attacked.clear()
 	_history.clear()
 
 
 ## Remember `before`, the state an action is about to replace, so that it can
 ## be taken back.
 func remember(before: BoardState) -> void:
-	_history.append([before, _spent.duplicate()])
+	_history.append([before, _spent.duplicate(), _attacked.duplicate()])
 
 
 ## Mark a unit as having acted this turn.
 func spend(unit_id: int) -> void:
 	if not unit_id in _spent:
 		_spent.append(unit_id)
+
+
+## Mark a unit as having attacked this turn, which also spends it.
+func attacked(unit_id: int) -> void:
+	spend(unit_id)
+	if not unit_id in _attacked:
+		_attacked.append(unit_id)
+
+
+## Forget everything that could be taken back. Called after an attack: a fight
+## once seen cannot be unseen, and undoing it would let a player read the dice
+## and try again -- or try the attacks in another order, since each fight hands
+## its dice on to the next (wave 46's review: 258 wins in 400 straight, 348
+## picking the better of two orders).
+func seal() -> void:
+	_history.clear()
+
+
+## True when the unit has attacked this turn: once a turn is all it gets.
+func has_attacked(unit_id: int) -> bool:
+	return unit_id in _attacked
 
 
 ## True when the unit has acted this turn.
@@ -58,6 +83,7 @@ func undo() -> BoardState:
 		return null
 	var last: Array = _history.pop_back()
 	_spent.assign(last[1])
+	_attacked.assign(last[2])
 	return last[0]
 
 

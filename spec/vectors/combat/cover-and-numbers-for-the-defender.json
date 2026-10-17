@@ -1,0 +1,32 @@
+{
+  "about": "The defender in trees (cost 3) with one more friend near: three more on every blow it returns -- one for the friend, two for the cover.",
+  "fight": {
+    "attacker_health": 10,
+    "defender_health": 8,
+    "numeric_advantage": -1,
+    "defender_terrain": 3,
+    "reinforcement_distance": 15,
+    "counter": 0,
+    "defender_hits_back": true
+  },
+  "rolls": [
+    3,
+    1,
+    4,
+    2,
+    2,
+    3,
+    1,
+    1,
+    4,
+    4,
+    3,
+    2
+  ],
+  "expect": {
+    "attacker_won": true,
+    "attacker_left": 1,
+    "defender_left": 0,
+    "rolls_used": 5
+  }
+}

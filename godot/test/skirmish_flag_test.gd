@@ -2,7 +2,7 @@
 # happens." Reproduced headless before the change: red's unit on the node at
 # (2, 6), red ending every turn, and for as long as anyone cared to press
 # space blue's two units stood where they were -- one beside red's other unit
-# "attacking" (there is no attack until T26), one "retreating". No rule gave a
+# "attacking" (the skirmish has no attack that does anything), one "retreating". No rule gave a
 # node any meaning, and the policy's models were never told who stands where.
 #
 # Decided with the owner: holding a node ends the game (`SkirmishVictory`),

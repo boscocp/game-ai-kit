@@ -71,14 +71,15 @@ class Combat:
     #:
     #: **It does not make the holdout unseen, and this comment used to imply
     #: that it did.** The four features are small integers, so the whole
-    #: feature space is small: 2937 rows cover only 976 distinct vectors, and
-    #: 83% of holdout rows have an *exact* feature twin in the training set.
-    #: Voting that twin's label scores 0.848 over the twinned rows alone, and
-    #: 0.8177 over the whole holdout once the rest are answered with the
-    #: commoner outcome -- against 0.8780 for the model and 0.6900 for the
-    #: majority class. The second of those is what `report.py` publishes,
-    #: because it is the one measured on the same rows as the model. A four-weight model has no room to memorise 976 answers, so
-    #: the score here is honest; a model with capacity, as in T18, would be
+    #: feature space is small: since T26, 3807 rows cover only 1083 distinct
+    #: vectors, and 84% of holdout rows have an *exact* feature twin in the
+    #: training set. Voting that twin's label scores 0.7878 over the whole
+    #: holdout once the rest are answered with the commoner outcome -- against
+    #: 0.8585 for the model and 0.5681 for the majority class. (Over the
+    #: twinned rows alone it scored 0.848 before T26; not measured since.) The
+    #: whole-holdout figure is what `report.py` publishes, because it is the
+    #: one measured on the same rows as the model. A four-weight model has no
+    #: room to memorise 1083 answers, so the score here is honest; a model with capacity, as in T18, would be
     #: measured by this holdout as cleverer than it is.
     game: int
 

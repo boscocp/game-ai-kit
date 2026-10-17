@@ -1,0 +1,30 @@
+{
+  "about": "A friend two cells away swings from round three (round > distance), not round two: 2, 2, then 3 and 3. Counted from round two, the fight would end two rolls sooner.",
+  "fight": {
+    "numeric_advantage": 0,
+    "defender_terrain": 1,
+    "reinforcement_distance": 2,
+    "counter": 0,
+    "defender_hits_back": true,
+    "attacker_health": 10,
+    "defender_health": 8
+  },
+  "rolls": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+  ],
+  "expect": {
+    "attacker_won": true,
+    "attacker_left": 4,
+    "defender_left": 0,
+    "rolls_used": 7
+  }
+}

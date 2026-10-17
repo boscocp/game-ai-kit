@@ -1,8 +1,9 @@
 ## Draws what blue is about to do, before it does it.
 ##
-## A walk is a pink line along the route with a ring where it ends; a build is
-## a pink square where the new unit will stand; a hold is a ring round the
-## piece that is staying put. Pink because the checkers board already taught
+## A walk is a pink line along the route with a ring where it ends; an attack
+## (T26) is a dashed line from the attacker to its target, with a cross on the
+## target; a build is a pink square where the new unit will stand; a hold is a
+## ring round the piece that is staying put. Pink because the checkers board already taught
 ## that pink is "the move the computer will play".
 ##
 ## When not to use it: red's turn. A person's own intentions need no drawing.
@@ -32,12 +33,26 @@ func _draw() -> void:
 	match _decision.kind():
 		"move":
 			_draw_walk()
+		"attack":
+			_draw_attack()
 		"build":
 			var side: float = BoardView.TILE_PIXELS - 8.0
 			var corner: Vector2 = _board.centre_of(_decision.target) - Vector2(side, side) / 2.0
 			draw_rect(Rect2(corner, Vector2(side, side)), INTENT, false, WIDTH)
 		_:
 			draw_arc(_board.centre_of(_decision.target), RING, 0.0, TAU, 32, INTENT, WIDTH)
+
+
+# Who strikes whom: dashed, so it is never read as a walk, from the attacker
+# to a cross on the target -- a ring alone looked exactly like a hold.
+func _draw_attack() -> void:
+	var unit: Unit = _state.unit_by_id(_decision.unit_id)
+	var target: Vector2 = _board.centre_of(_decision.target)
+	if unit != null:
+		draw_dashed_line(_board.centre_of(unit.cell), target, INTENT, WIDTH, 8.0)
+	var arm: Vector2 = Vector2(RING, RING) * 0.6
+	draw_line(target - arm, target + arm, INTENT, WIDTH)
+	draw_line(target + Vector2(arm.x, -arm.y), target + Vector2(-arm.x, arm.y), INTENT, WIDTH)
 
 
 func _draw_walk() -> void:

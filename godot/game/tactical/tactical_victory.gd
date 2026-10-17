@@ -1,13 +1,17 @@
 ## When a game of the tactical scenario is over.
 ##
-## The goal is the enemy workshop. Destroying it needs combat, which T26
-## brings; until then a side **takes** it by having one of its walking units
-## beside it -- one step away, in one of the four directions -- at the start of
-## its own turn. The other side had its whole turn to do something about it.
-## That rule is provisional and the screen says so.
+## The goal is the enemy workshop: destroy it and you have won. Until T26 a
+## side "took" it by standing beside it at the start of its turn, a stand-in
+## that said it would last only until there was combat; now there is, and an
+## attack that brings the workshop to nothing ends the game at once.
 ##
-## When not to use it: once T26 lands. Taking by standing next to it is a
-## stand-in for a fight, and it goes when there is one.
+## A workshop cannot hit back, but it is besieged, not fought: it starts with
+## `TacticalRules.BUILDING_HEALTH` and each attack is one blow (see
+## `TacticalCombat`), so taking it takes turns -- turns in which the bolt
+## tower and the pieces a player keeps at home can answer.
+##
+## When not to use it: a scenario won by anything but a building, such as
+## holding ground or a count of kills. That is another rule, and another file.
 class_name TacticalVictory
 extends RefCounted
 
@@ -21,14 +25,13 @@ const DRAW: int = -2
 const ROUND_LIMIT: int = 40
 
 
-## The side that has just taken the enemy workshop, `DRAW` once the round
-## limit is reached, or `NOBODY`. Asked at the start of a turn, of the side
-## about to move -- so taking the workshop on the last turn still counts.
+## The side whose enemy has no workshop left, `DRAW` once the round limit is
+## reached, or `NOBODY`. Asked after every action, so a workshop destroyed on
+## the last turn still counts.
 static func winner(state: BoardState) -> int:
-	var side: int = state.current_faction
-	for workshop: Unit in _enemy_workshops(state, side):
-		if _walker_beside(state, side, workshop.cell):
-			return side
+	for side: int in range(TacticalScenario.FACTIONS):
+		if not _has_workshop(state, side):
+			return TacticalScenario.FACTIONS - 1 - side
 	if state.turn_number >= ROUND_LIMIT * TacticalScenario.FACTIONS:
 		return DRAW
 	return NOBODY
@@ -36,28 +39,19 @@ static func winner(state: BoardState) -> int:
 
 ## The rule, as the screen states it before anybody has won.
 static func rule() -> String:
-	return "to win: start your turn with a unit beside the enemy workshop (provisional, until T26 brings combat), or it is a draw after %d rounds" % ROUND_LIMIT
+	return "to win: destroy the enemy workshop -- attack it with a unit in reach -- or it is a draw after %d rounds" % ROUND_LIMIT
 
 
-## The words for the end of a game, provisional rule and all.
+## The words for the end of a game.
 static func announcement(winner_side: int) -> String:
 	if winner_side == DRAW:
-		return "a draw: %d rounds, and nobody took a workshop.  R starts again." % ROUND_LIMIT
-	return "%s wins: a %s unit stood beside the enemy workshop at the start of its turn. (Provisional: until T26 brings combat, that is what taking it means.)  R starts again." % [
-		TacticalStatus.side_name(winner_side), TacticalStatus.side_name(winner_side)]
+		return "a draw: %d rounds, and nobody destroyed a workshop.  R starts again." % ROUND_LIMIT
+	return "%s wins: the %s workshop is destroyed.  R starts again." % [
+		TacticalStatus.side_name(winner_side), TacticalStatus.side_name(TacticalScenario.FACTIONS - 1 - winner_side)]
 
 
-static func _enemy_workshops(state: BoardState, side: int) -> Array[Unit]:
-	var found: Array[Unit] = []
-	for unit: Unit in state.units:
-		if unit.faction != side and unit.type.type_name == TacticalRules.WORKSHOP:
-			found.append(unit)
-	return found
-
-
-static func _walker_beside(state: BoardState, side: int, cell: Vector2i) -> bool:
-	for step: Vector2i in GridGraph.DIRECTIONS:
-		var neighbour: Unit = state.unit_at(cell + step)
-		if neighbour != null and neighbour.faction == side and neighbour.type.mobile:
+static func _has_workshop(state: BoardState, side: int) -> bool:
+	for unit: Unit in state.units_of(side):
+		if unit.type.type_name == TacticalRules.WORKSHOP:
 			return true
 	return false

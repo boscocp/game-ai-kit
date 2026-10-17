@@ -33,6 +33,14 @@ extends DecisionPolicy
 @abstract func decide_move(state: BoardState, unit_id: int) -> TacticalDecision
 
 
+## Whom unit `unit_id` should attack now that it has walked, or null for
+## nobody -- asked once a turn, after its move is played (T26). Null rather
+## than a hold, so a turn with nothing in reach does not fill the screen
+## with "attacks nobody". A controller that never attacks need not say so.
+func decide_attack(_state: BoardState, _unit_id: int) -> TacticalDecision:
+	return null
+
+
 ## The walk `decide_move` chose, as `DecisionPolicy` asks for it: an empty
 ## path means hold.
 func choose(state: BoardState, unit_id: int) -> Move:

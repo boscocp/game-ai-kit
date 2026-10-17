@@ -214,7 +214,7 @@ train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors test-cloning-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -257,6 +257,12 @@ test-cloning-vectors: import ## The cloning vectors, against ai_learning's softm
 	@# The same files are read by `make test-python` through gameaikit.cloning.
 	@$(GODOT) --headless --path godot -s res://test/cloning_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/cloning
+
+.PHONY: test-combat-vectors
+test-combat-vectors: import ## The combat vectors, against the tactical board's fight
+	@# The same files are read by `make test-python` through gameaikit.dataset.combat.
+	@$(GODOT) --headless --path godot -s res://test/combat_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/combat
 
 .PHONY: test-fuzzy-vectors
 test-fuzzy-vectors: import ## The fuzzy vectors, against ai_fuzzy

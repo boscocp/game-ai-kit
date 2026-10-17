@@ -67,15 +67,15 @@ PYTHONPATH=python python3 -m gameaikit.training.report
 ```
 
 prints the weights, beside how well the model does on games it never saw. The
-combat model is right about 88% of held-back fights. Two yardsticks sit next to
+combat model is right about 86% of held-back fights. Two yardsticks sit next to
 that number, and the second is the honest one:
 
-* always saying "the attacker loses" scores 69%;
-* **looking the fight up in a table** of training fights scores 82%. The
+* always saying "the attacker loses" scores 57%;
+* **looking the fight up in a table** of training fights scores 79%. The
   features are small integers, so most held-back fights have an exact twin
   among the ones trained on.
 
-A model with four weights cannot memorise hundreds of situations, so its 88%
+A model with four weights cannot memorise hundreds of situations, so its 86%
 is earned. A model with more capacity would have to beat the table, not the
 majority, before its score meant anything.
 

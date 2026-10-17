@@ -330,10 +330,14 @@ class TheScoringItself(unittest.TestCase):
 
     def test_the_twinned_share_is_measured_on_the_run_that_reports_it(self) -> None:
         # It was a constant in the report's prose, so a sixty-game run printed
-        # the thousand-game figure. Sixty games produce no exact twins at all.
+        # the thousand-game figure. Two runs of different sizes must report
+        # two different shares. (It used to say sixty games produce no twins
+        # at all; since T26 the winner of a fight keeps what health it has
+        # left, the rows changed, and sixty games produce a few.)
         few = train.run(games=60)
+        more = train.run(games=240)
 
-        self.assertEqual(few.combat.twinned_share, 0.0)
+        self.assertNotEqual(few.combat.twinned_share, more.combat.twinned_share)
         self.assertGreater(few.combat.distinct_rows, 0)
 
     def test_twins_appear_as_the_feature_space_fills_up(self) -> None:

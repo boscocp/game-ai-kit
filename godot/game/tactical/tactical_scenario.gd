@@ -53,7 +53,8 @@ static func build() -> BoardState:
 	var units: Array[Unit] = []
 	for placed: Dictionary in _placements():
 		var kind: UnitType = types[placed["type"]]
-		units.append(Unit.new(units.size() + 1, placed["side"], placed["cell"], 10, kind.movement, kind))
+		var health: int = 10 if kind.mobile else TacticalRules.BUILDING_HEALTH
+		units.append(Unit.new(units.size() + 1, placed["side"], placed["cell"], health, kind.movement, kind))
 	var state := BoardState.new(graphs[UnitType.GROUND], units, RED)
 	state.movement_graphs = {TacticalRules.WATER_MOVER: graphs[TacticalRules.WATER_MOVER]}
 	state.funds = {RED: TacticalRules.STARTING_FUNDS, BLUE: TacticalRules.STARTING_FUNDS}

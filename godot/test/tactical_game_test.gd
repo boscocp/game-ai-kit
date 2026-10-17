@@ -255,7 +255,7 @@ func test_blue_builds_what_beats_the_most_red_pieces() -> void:
 
 	assert_str(decision.kind()).is_equal("build")
 	assert_str(decision.order.unit_type.type_name).is_equal(TacticalRules.SHIELD)
-	assert_str(decision.reason).contains("no combat until T26")
+	assert_str(decision.reason).contains("it beats 1 red piece(s), runner")
 
 
 func test_blue_builds_the_counter_to_whatever_red_has_most_of() -> void:
@@ -362,7 +362,10 @@ func test_blue_s_turn_is_legal_on_every_decision_over_many_seeded_games() -> voi
 	var decisions: int = 0
 	for seed_number: int in range(25):
 		decisions += _play_seeded_game(seed_number, 12)
-	assert_int(decisions).is_greater(25 * 12 * 2)
+	# At least one decision a round on average. It was two, until T26 let blue
+	# destroy red's workshop and end some of these games early: measured, 520
+	# decisions over the 25 seeds.
+	assert_int(decisions).is_greater(25 * 12)
 
 
 func test_blue_is_whichever_controller_the_scene_was_given() -> void:
@@ -382,7 +385,7 @@ func test_the_screen_says_what_game_this_is_and_who_plays_blue() -> void:
 	var header: String = (scene.get_node("Interface/Header") as Label).text
 
 	assert_str(header).contains("in the style of Advance Wars")
-	assert_str(header).contains("take the enemy workshop")
+	assert_str(header).contains("destroy the enemy workshop")
 	assert_str(header).contains("rules, not a plan")
 
 
@@ -395,51 +398,50 @@ func test_no_side_has_won_at_the_start() -> void:
 	assert_int(TacticalVictory.winner(_blue_to_move(state))).is_equal(TacticalVictory.NOBODY)
 
 
-func test_red_wins_by_standing_beside_blue_s_workshop_at_the_start_of_its_turn() -> void:
+func test_red_wins_by_destroying_blue_s_workshop() -> void:
+	# One blow left in it: a siege takes turns, and this is the last one.
 	var scene: TacticalGame = _mounted_scene()
 	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
 	scene.state.unit_by_id(runner.id).cell = BLUE_WORKSHOP + Vector2i(-1, 0)
+	scene.state.unit_at(BLUE_WORKSHOP).health = 1
+	scene.click_cell(BLUE_WORKSHOP + Vector2i(-1, 0))
 
-	_play_until_red_or_over(scene)
+	scene.click_cell(BLUE_WORKSHOP)
 
 	assert_int(scene.winner).is_equal(RED)
 	assert_str(_status_of(scene)).contains("red wins")
-	assert_str(_status_of(scene)).contains("Provisional")
+	assert_str(_status_of(scene)).contains("destroyed")
 
 
-func test_standing_there_is_not_enough_until_the_turn_comes_round() -> void:
-	var scene: TacticalGame = _mounted_scene()
-	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
-	scene.state.unit_by_id(runner.id).cell = BLUE_WORKSHOP + Vector2i(-1, 0)
+func test_standing_beside_the_workshop_is_no_longer_a_win() -> void:
+	# T26 retired the stand-in: a workshop is taken by attacking it.
+	var state: BoardState = TacticalScenario.build()
+	state.unit_by_id(_first_of(state, RED, TacticalRules.RUNNER).id).cell = BLUE_WORKSHOP + Vector2i(-1, 0)
 
-	scene.step_decision()   # blue's turn begins: blue has not lost yet
-
-	assert_int(scene.winner).is_equal(TacticalVictory.NOBODY)
+	assert_int(TacticalVictory.winner(state)).is_equal(TacticalVictory.NOBODY)
+	assert_int(TacticalVictory.winner(_blue_to_move(state))).is_equal(TacticalVictory.NOBODY)
 
 
 func test_blue_wins_the_same_way() -> void:
-	var scene: TacticalGame = _mounted_scene()
-	var runner: Unit = _first_of(scene.state, BLUE, TacticalRules.RUNNER)
-	scene.state.unit_by_id(runner.id).cell = RED_WORKSHOP + Vector2i(0, -1)
+	var scene: TacticalGame = _blue_beside_red_s_workshop()
 
-	scene.step_decision()
+	scene.play_rest_of_blue_turn()
 
 	assert_int(scene.winner).is_equal(BLUE)
 
 
-func test_a_tower_beside_the_workshop_takes_nothing() -> void:
+func test_a_tower_does_not_fire_when_a_player_tells_it_to() -> void:
 	var state: BoardState = TacticalScenario.build()
 	var tower: Unit = _first_of(state, RED, TacticalRules.BOLT_TOWER)
-	state.unit_by_id(tower.id).cell = BLUE_WORKSHOP + Vector2i(-1, 0)
+	state.unit_by_id(_first_of(state, BLUE, TacticalRules.RUNNER).id).cell = tower.cell + Vector2i(1, 0)
+	var shot := Attack.new(tower.id, _first_of(state, BLUE, TacticalRules.RUNNER).id)
 
-	assert_int(TacticalVictory.winner(state)).is_equal(TacticalVictory.NOBODY)
+	assert_str(TacticalCombat.why_refused(state, shot)).contains("fires by itself")
 
 
 func test_once_the_game_is_over_nothing_moves_until_r() -> void:
-	var scene: TacticalGame = _mounted_scene()
-	var runner: Unit = _first_of(scene.state, BLUE, TacticalRules.RUNNER)
-	scene.state.unit_by_id(runner.id).cell = RED_WORKSHOP + Vector2i(0, -1)
-	scene.step_decision()
+	var scene: TacticalGame = _blue_beside_red_s_workshop()
+	scene.play_rest_of_blue_turn()
 	var finished: BoardState = scene.state
 
 	scene.step_decision()
@@ -534,12 +536,18 @@ func _play_seeded_game(seed_number: int, rounds: int) -> int:
 	var checked: int = 0
 	for round_number: int in range(rounds):
 		state = _random_red_turn(state, random)
+		# Since T26 blue can destroy red's workshop, and a game that is over
+		# has no red turn left to play.
+		if TacticalVictory.winner(state) != TacticalVictory.NOBODY:
+			break
 		turn.begin(state)
 		var label: String = "seed %d, round %d" % [seed_number, round_number]
 		while not turn.finished():
 			state = _checked_play(state, turn, label)
 			checked += 1
 		assert_array(turn.refused).is_empty()
+		if TacticalVictory.winner(state) != TacticalVictory.NOBODY:
+			break
 		state = state.end_turn(TacticalScenario.FACTIONS, 0, TacticalRules.INCOME)
 	return checked
 
@@ -587,6 +595,16 @@ func _play_until_red_or_over(scene: TacticalGame) -> void:
 
 func _blue_to_move(state: BoardState) -> BoardState:
 	return state.end_turn(TacticalScenario.FACTIONS, 0, TacticalRules.INCOME)
+
+
+# A game with blue's runner beside red's workshop, one blow from falling, and
+# red's turn ended: blue is about to decide.
+func _blue_beside_red_s_workshop() -> TacticalGame:
+	var scene: TacticalGame = _mounted_scene()
+	scene.state.unit_by_id(_first_of(scene.state, BLUE, TacticalRules.RUNNER).id).cell = RED_WORKSHOP + Vector2i(0, -1)
+	scene.state.unit_at(RED_WORKSHOP).health = 1
+	scene.step_decision()
+	return scene
 
 
 func _mounted_scene() -> TacticalGame:
@@ -666,20 +684,18 @@ func test_the_round_limit_is_a_draw() -> void:
 	assert_str(TacticalVictory.announcement(TacticalVictory.DRAW)).contains("a draw")
 
 
-func test_taking_the_workshop_on_the_last_turn_still_wins() -> void:
+func test_destroying_the_workshop_on_the_last_turn_still_wins() -> void:
 	var state: BoardState = TacticalScenario.build()
 	state.turn_number = TacticalVictory.ROUND_LIMIT * TacticalScenario.FACTIONS
-	state.unit_by_id(_first_of(state, RED, TacticalRules.RUNNER).id).cell = BLUE_WORKSHOP + Vector2i(-1, 0)
+	state.units.erase(state.unit_at(BLUE_WORKSHOP))
 
 	assert_int(TacticalVictory.winner(state)).is_equal(RED)
 
 
 func test_a_game_that_is_over_shows_no_next_move() -> void:
-	var scene: TacticalGame = _mounted_scene()
-	var runner: Unit = _first_of(scene.state, BLUE, TacticalRules.RUNNER)
-	scene.state.unit_by_id(runner.id).cell = RED_WORKSHOP + Vector2i(0, -1)
+	var scene: TacticalGame = _blue_beside_red_s_workshop()
 
-	scene.step_decision()
+	scene.play_rest_of_blue_turn()
 
 	var intent: IntentView = scene.get_node("IntentView")
 	assert_object(intent._decision).is_null()
@@ -690,8 +706,8 @@ func test_the_win_rule_is_on_screen_before_anyone_has_won() -> void:
 	var scene: TacticalGame = _mounted_scene()
 	var header: String = (scene.get_node("Interface/Header") as Label).text
 
-	assert_str(header).contains("beside the enemy workshop")
-	assert_str(header).contains("provisional")
+	assert_str(header).contains("destroy the enemy workshop")
+	assert_str(header).contains("draw after")
 
 
 func test_building_with_a_walker_in_hand_does_not_blame_the_workshop() -> void:

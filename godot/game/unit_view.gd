@@ -32,6 +32,8 @@ const OUTLINE: float = 3.0
 const CORNER_TEXT_SIZE: int = 12
 ## What a spent unit's picture is multiplied by: the Advance Wars grey.
 const SPENT_TINT: Color = Color(0.45, 0.45, 0.45)
+## Health, in the top-left corner: yellow, so it is not read as the white id.
+const HEALTH_TEXT: Color = Color(1.0, 0.85, 0.2)
 ## Frames a second of a figure marching on the spot, and of one walking. Slow
 ## at rest, so a board of them is not a flicker; faster on the move.
 const MARCH_RATE: float = 4.0
@@ -172,6 +174,7 @@ func _draw_unit(unit: Unit, picture: Texture2D, centre: Vector2) -> void:
 	else:
 		draw_texture_rect(picture, square, false, colour_for(unit))
 	_draw_corner_id(centre, unit.id)
+	_draw_health(centre, unit.health)
 	if unit.id == _selected_id:
 		draw_rect(square.grow(OUTLINE), Color.WHITE, false, OUTLINE)
 
@@ -216,6 +219,17 @@ static func _type_name_of(unit: Unit) -> String:
 # board to the right, everyone else to the left.
 static func _facing_before_walking(faction: int) -> Vector2i:
 	return Vector2i.RIGHT if faction == 0 else Vector2i.LEFT
+
+
+# The health, small and yellow, in the top-left corner of the cell: since T26
+# a fight leaves its winner wounded, and a wounded piece that looks whole is
+# the one a player sends into the next fight by mistake.
+func _draw_health(centre: Vector2, health: int) -> void:
+	var half: float = BoardView.TILE_PIXELS / 2.0
+	var corner: Vector2 = centre + Vector2(-half + 2.0, -half + 12.0)
+	var font: Font = ThemeDB.fallback_font
+	draw_string_outline(font, corner, str(health), HORIZONTAL_ALIGNMENT_LEFT, -1.0, CORNER_TEXT_SIZE, 4, Color.BLACK)
+	draw_string(font, corner, str(health), HORIZONTAL_ALIGNMENT_LEFT, -1.0, CORNER_TEXT_SIZE, HEALTH_TEXT)
 
 
 # The id, small, in the bottom-right corner of the cell, outlined so it reads

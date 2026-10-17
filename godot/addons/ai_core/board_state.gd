@@ -57,6 +57,12 @@ var upgrades: Dictionary = {}
 ## dead unit commanded the new one.
 var next_id: int
 
+## Where the next fight's dice start. Kept in the state, and replaced by each
+## fight, so playing an attack stays a function of the state: the same state
+## and the same attack give the same fight, which is what lets a search or an
+## undo replay one rather than roll it again.
+var dice_seed: int = 0
+
 
 func _init(board: GridGraph, board_units: Array[Unit], faction: int = 0,
 		turn: int = 0) -> void:
@@ -305,6 +311,7 @@ func duplicate_state() -> BoardState:
 	copy.funds = funds.duplicate()
 	copy.upgrades = upgrades.duplicate(true)
 	copy.next_id = next_id
+	copy.dice_seed = dice_seed
 	return copy
 
 

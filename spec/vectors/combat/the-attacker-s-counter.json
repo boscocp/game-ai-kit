@@ -1,0 +1,30 @@
+{
+  "about": "The attacker is strong against the defender (counter +1): counter_worth, 1, on every blow it lands. 2+1 a round against 2 back.",
+  "fight": {
+    "numeric_advantage": 0,
+    "defender_terrain": 1,
+    "reinforcement_distance": 15,
+    "counter": 1,
+    "defender_hits_back": true,
+    "attacker_health": 10,
+    "defender_health": 10
+  },
+  "rolls": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+  ],
+  "expect": {
+    "attacker_won": true,
+    "attacker_left": 4,
+    "defender_left": 0,
+    "rolls_used": 7
+  }
+}

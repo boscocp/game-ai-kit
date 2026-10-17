@@ -5,7 +5,8 @@
 ## turn, and `HOLD_TURNS` such starts in a row win -- so the other side always
 ## has whole turns to walk up and break it, and breaking it is as simple as
 ## arriving next to the node. That is what makes the flag worth fighting over
-## before T26 brings an attack that does anything.
+## on a board with no attack that does anything -- T26 brought combat to the
+## tactical board, and T44 brings the skirmish there.
 ##
 ## T41: the owner stood on the white flag and nothing happened, because no rule
 ## gave a node any meaning at all. The decision, taken with the owner, was
