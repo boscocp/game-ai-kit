@@ -66,9 +66,10 @@ FOLDER_LAYER = {"concepts": "concept", "godot": "practice", "local-llm": "tool",
 
 # Folders under docs/ that are dated records rather than living pages, and so
 # carry no half-life: an ADR is amended in place, a review and a wave note are
-# snapshots of a day. Anything else under docs/ is a page whose layer nobody
+# snapshots of a day, and a design pass (T42's fun review) records what the
+# owner picked on a date. Anything else under docs/ is a page whose layer nobody
 # declared, which is the state this gate exists to prevent.
-EXEMPT_FOLDERS = {"adr", "reviews", "harness-notes", "images"}
+EXEMPT_FOLDERS = {"adr", "reviews", "harness-notes", "images", "design"}
 
 REQUIRED_FIELDS = ("half_life", "verified_on", "tier", "source", "invalidated_if")
 
