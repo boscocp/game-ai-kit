@@ -1,0 +1,30 @@
+{
+  "about": "The defender is strong against the attacker (counter -1): two more on every blow it returns.",
+  "fight": {
+    "attacker_health": 10,
+    "defender_health": 10,
+    "numeric_advantage": 0,
+    "defender_terrain": 1,
+    "reinforcement_distance": 15,
+    "counter": -1,
+    "defender_hits_back": true
+  },
+  "rolls": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+  ],
+  "expect": {
+    "attacker_won": false,
+    "attacker_left": 0,
+    "defender_left": 4,
+    "rolls_used": 6
+  }
+}

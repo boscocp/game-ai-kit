@@ -102,8 +102,10 @@ there and greys out until your next turn. Z takes back, space ends the turn.
 W has a unit wait. Blue plays by two rules -- build what beats the most of
 your pieces, walk every unit at your workshop -- and each of its decisions
 is drawn in pink, with why, before space plays it (enter plays the rest).
-Start your turn with a unit beside the enemy workshop to win (provisional,
-until combat arrives); after 40 rounds it is a draw.
+Click an enemy in reach to attack it, once a turn: a fight is dice, the
+counter table and cover tilt it, and the loser is removed. Bolt towers fire
+by themselves at the start of their side's turn. Destroy the enemy workshop
+-- a siege, one blow an attack -- to win; after 40 rounds it is a draw.
 
 *Recordings of all five are still to be made.*
 

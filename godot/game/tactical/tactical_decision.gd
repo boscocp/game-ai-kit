@@ -1,7 +1,7 @@
 ## One thing blue decided to do this turn, and why, in words for the screen.
 ##
-## A decision is one of three: walk a unit along a route, build a unit at the
-## workshop, or hold. It is made *before* it is played, so the scene can draw
+## A decision is one of four: walk a unit along a route, attack, build a unit
+## at the workshop, or hold. It is made *before* it is played, so the scene can draw
 ## it and a person can read it first -- invariant 13 -- and then played as it
 ## was drawn, never re-decided in between.
 ##
@@ -16,6 +16,8 @@ var unit_id: int
 var move: Move
 ## The build, or null when this decision is not one.
 var order: ProductionOrder
+## The attack, or null when this decision is not one.
+var attack: Attack
 ## Why, in one sentence a player can check against the board.
 var reason: String
 ## The cell the decision is about -- where the unit is heading, or where the
@@ -43,6 +45,13 @@ static func build(deciding_id: int, built: ProductionOrder, why: String) -> Tact
 	return decision
 
 
+## An attack on `target`, by the unit `deciding_id`.
+static func strike(deciding_id: int, target: Unit, why: String) -> TacticalDecision:
+	var decision := TacticalDecision.new(deciding_id, why, target.cell)
+	decision.attack = Attack.new(deciding_id, target.id)
+	return decision
+
+
 ## Nothing done, and the reason nothing was.
 static func hold(deciding_id: int, why: String, at: Vector2i) -> TacticalDecision:
 	return TacticalDecision.new(deciding_id, why, at)
@@ -54,6 +63,8 @@ func kind() -> String:
 		return "move"
 	if order != null:
 		return "build"
+	if attack != null:
+		return "attack"
 	return "hold"
 
 
@@ -64,4 +75,6 @@ func played_on(state: BoardState) -> BoardState:
 		return state.apply(move)
 	if order != null:
 		return state.produce(order)
+	if attack != null:
+		return TacticalCombat.apply(state, attack)
 	return state

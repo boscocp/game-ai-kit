@@ -45,7 +45,8 @@ HOLD_NEEDED = 3
 TURN_LIMIT = 40
 
 #: How far "nearby" is, when counting who is close enough to matter to a fight.
-NEARBY = 2
+#: A rule of the fight, so it is read from the rules file the game reads.
+NEARBY = combat.RULES["nearby_radius"]
 
 
 def collect(games: int, seed: int) -> tuple[list[Combat], list[Capture]]:
@@ -106,10 +107,12 @@ def _fight(board: Board, attacker: Unit, defender: Unit, game: int,
     split cannot tell a near-copy from an unseen situation.
     """
     seen = fight_features(board, attacker, defender)
-    won = combat.resolve(
+    outcome = combat.fight(
         attacker.health, defender.health, seen["numeric_advantage"],
-        seen["defender_terrain"], seen["reinforcement_distance"], rng,
+        seen["defender_terrain"], seen["reinforcement_distance"],
+        lambda: rng.randint(combat.WEAKEST_BLOW, combat.HARDEST_BLOW),
     )
+    won = outcome.attacker_won
     # Written out field by field rather than splatted in. `Combat(**seen)` was
     # the one place where renaming a feature would have been accepted in
     # silence, in a file whose whole output is those names.
@@ -121,8 +124,11 @@ def _fight(board: Board, attacker: Unit, defender: Unit, game: int,
         attacker_won=won,
         game=game,
     ))
-    loser = defender if won else attacker
-    loser.health = 0
+    # The winner keeps what it has left, as it does on the tactical board
+    # (T26): ADR 0008 says the dataset is the game's fights, not a kinder
+    # version where the winner walks away untouched.
+    attacker.health = outcome.attacker_left
+    defender.health = outcome.defender_left
 
 
 def fight_features(board: Board, attacker: Unit, defender: Unit) -> dict[str, int]:

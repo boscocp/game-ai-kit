@@ -1,0 +1,24 @@
+{
+  "about": "A building cannot attack, so it returns nothing and only the attacker rolls.",
+  "fight": {
+    "attacker_health": 1,
+    "defender_health": 10,
+    "numeric_advantage": 0,
+    "defender_terrain": 1,
+    "reinforcement_distance": 15,
+    "counter": 0,
+    "defender_hits_back": false
+  },
+  "rolls": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "expect": {
+    "attacker_won": true,
+    "attacker_left": 1,
+    "defender_left": 0,
+    "rolls_used": 4
+  }
+}

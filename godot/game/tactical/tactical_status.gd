@@ -15,6 +15,9 @@ extends RefCounted
 ## hand (or null), the last refusal (or "") and what just happened (or "").
 static func text(state: BoardState, in_hand: Unit, refusal: String, news: String = "") -> String:
 	var lines: Array[String] = [_headline(state), _piece(in_hand), _what_to_do(state, in_hand)]
+	var targets: String = _targets(state, in_hand)
+	if targets != "":
+		lines.append(targets)
 	lines.append("Z takes back the last thing you did  ·  space ends your turn, and blue is paid %d" % TacticalRules.INCOME)
 	if news != "":
 		lines.append("\n" + news)
@@ -25,8 +28,10 @@ static func text(state: BoardState, in_hand: Unit, refusal: String, news: String
 
 ## What the status says on blue's turn: who is playing it, what it is about
 ## to do and why, and what to press.
-static func blue_text(state: BoardState, turn: BlueTurn, controller: BlueController) -> String:
+static func blue_text(state: BoardState, turn: BlueTurn, controller: BlueController, news: String = "") -> String:
 	var lines: Array[String] = [_headline(state), "blue is thinking with %s" % controller.controller_name()]
+	if news != "":
+		lines.append("\n" + news)
 	if turn.next != null:
 		lines.append("\nnext (drawn in pink): unit %d %s" % [turn.next.unit_id, turn.next.reason])
 		lines.append("\nspace plays it  ·  enter plays the rest of blue's turn")
@@ -60,8 +65,8 @@ static func _piece(unit: Unit) -> String:
 	var motion: String = "movement left %d" % unit.movement_points if kind.mobile else "does not move"
 	# Sight is in the table and not on the screen: nothing uses it until there
 	# is fog to see through (T20), and a number with no effect misleads.
-	return "in hand: %s (unit %d)  ·  %s  ·  reach %d  ·  beats %s" % [
-		kind.type_name, unit.id, motion, kind.attack_range, beats]
+	return "in hand: %s (unit %d)  ·  health %d  ·  %s  ·  reach %d  ·  beats %s" % [
+		kind.type_name, unit.id, unit.health, motion, kind.attack_range, beats]
 
 
 static func _what_to_do(state: BoardState, unit: Unit) -> String:
@@ -76,6 +81,23 @@ static func _what_to_do(state: BoardState, unit: Unit) -> String:
 	if unit.movement_points == 0:
 		return "this unit has no movement left. Click another of your pieces."
 	return "click a lit cell to walk there, and the unit is spent until your next turn; W has it wait where it is. A step costs the number on the cell, or 1."
+
+
+# The enemies the piece in hand could attack from where it stands, with how
+# the counter table leans on each fight -- or "" when none is in reach.
+static func _targets(state: BoardState, unit: Unit) -> String:
+	if unit == null or unit.type.attack_range <= 0:
+		return ""
+	var parts: Array[String] = []
+	for enemy: Unit in state.units:
+		if TacticalCombat.why_refused(state, Attack.new(unit.id, enemy.id)) != BoardState.LEGAL:
+			continue
+		var lean: int = TacticalCombat.counter(unit.type, enemy.type)
+		var said: String = " (you beat it)" if lean > 0 else (" (it beats you)" if lean < 0 else "")
+		parts.append("the %s at %s, health %d%s" % [enemy.type.type_name, enemy.cell, enemy.health, said])
+	if parts.is_empty():
+		return ""
+	return "click an enemy to attack it, once a turn: " + "; ".join(parts)
 
 
 static func _price_list() -> String:

@@ -1,0 +1,34 @@
+{
+  "about": "Ten against ten on open ground, nobody near: the dice alone.",
+  "fight": {
+    "attacker_health": 10,
+    "defender_health": 10,
+    "numeric_advantage": 0,
+    "defender_terrain": 1,
+    "reinforcement_distance": 15,
+    "counter": 0,
+    "defender_hits_back": true
+  },
+  "rolls": [
+    4,
+    2,
+    3,
+    4,
+    1,
+    1,
+    4,
+    3,
+    2,
+    2,
+    4,
+    4,
+    1,
+    3
+  ],
+  "expect": {
+    "attacker_won": true,
+    "attacker_left": 3,
+    "defender_left": 0,
+    "rolls_used": 7
+  }
+}

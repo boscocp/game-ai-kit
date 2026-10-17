@@ -1,8 +1,8 @@
 # T41: the owner's report that blue "got stuck at the bridge".
 #
 # Reproduced headless before anything was changed: red walks one runner onto
-# the bridge, or the cell in front of it, and leaves it there. Nothing can move
-# a piece until T26 brings combat, so the bridge is shut -- and blue, whose
+# the bridge, or the cell in front of it, and leaves it there. There was no
+# combat then (T26 came later), so the bridge was shut -- and blue, whose
 # route ignored who stood on it, built a shield every turn and piled 24 of them
 # behind the river, each one saying "no walk this turn brings it nearer".
 # Round 40 came and it was a draw. The water was open the whole time, to the

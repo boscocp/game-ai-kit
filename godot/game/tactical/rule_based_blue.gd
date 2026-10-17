@@ -6,6 +6,9 @@
 ##   among the types it can build and pay for now **and that can still reach
 ##   red's workshop** -- and, when no piece of blue's can, one that can even
 ##   if it beats nothing.
+## - **Attack**, once a unit has walked, red's workshop if it is in reach --
+##   that wins -- and otherwise the red piece in reach it beats by the counter
+##   table, weakest first. Nothing it does not beat (T26).
 ## - **Walk** every unit at red's workshop, which is what wins the game, by
 ##   the route it would really walk -- for anything that is not a wader, over
 ##   the bridge.
@@ -15,9 +18,10 @@
 ## shields stood round it while the workshop two cells away stood untaken.
 ## Aiming at the goal is still a reflex, and now it is one that can win.
 ##
-## Both rules count red's pieces as walls, and that is T41. Until T26 brings
-## combat nothing can *push* a piece aside, so a red runner parked on the
-## bridge shuts it for as long as red leaves it there. Blue's route used to
+## Both rules count red's pieces as walls, and that is T41. Nothing can walk
+## through a piece, so a red runner parked on the bridge shuts it for as long
+## as red leaves it there -- or, since T26, until a blue piece that beats it
+## comes to attack it. Blue's route used to
 ## ignore who stood on it: it built a shield a turn, piled two dozen behind
 ## the river, and drew at round 40 -- with the water open all along to the
 ## wader it never built. Of the two halves it is the build rule that wins
@@ -35,8 +39,8 @@
 ## averages 4.9 ms against 3.6 before it (the second figure the review's).
 ##
 ## When not to use it: as a strong opponent. It never buys the forge, so it
-## never builds a ram; it walks into anything; and until T26 brings combat
-## nothing punishes it for either.
+## never builds a ram; and it walks into anything -- past a bolt tower, up to a
+## piece that beats it -- which since T26 costs it units.
 class_name RuleBasedBlue
 extends BlueController
 
@@ -80,7 +84,7 @@ func decide_build(state: BoardState, workshop_id: int) -> TacticalDecision:
 			"builds a %s at %s: red's pieces shut every way blue's walkers have, and a %s still gets there"
 		) % [best.unit_type.type_name, best.cell, best.unit_type.type_name])
 	return TacticalDecision.build(workshop_id, best, (
-		"builds a %s at %s: it beats %d red piece(s), %s. There is no combat until T26, so for now the choice changes nothing"
+		"builds a %s at %s: it beats %d red piece(s), %s"
 	) % [best.unit_type.type_name, best.cell, best_count, ", ".join(beaten)])
 
 
@@ -132,6 +136,25 @@ func _nobody_reaches(state: BoardState) -> bool:
 		if unit.type.mobile and _reaches(state, unit.type, unit.cell):
 			return false
 	return true
+
+
+## Whom the unit `unit_id` attacks from where it stands, or null for nobody:
+## red's workshop if it reaches it, else the weakest red piece in reach that
+## it beats by the counter table, ties to the lower id.
+func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
+	var unit: Unit = state.unit_by_id(unit_id)
+	var best: Unit = null
+	for enemy: Unit in _enemies(state):
+		if TacticalCombat.why_refused(state, Attack.new(unit_id, enemy.id)) != BoardState.LEGAL:
+			continue
+		if enemy.type.type_name == TacticalRules.WORKSHOP:
+			return TacticalDecision.strike(unit_id, enemy, "attacks red's workshop at %s: destroying it wins" % enemy.cell)
+		if enemy.type.type_name in unit.type.strong_against and (best == null or enemy.health < best.health):
+			best = enemy
+	if best == null:
+		return null
+	return TacticalDecision.strike(unit_id, best, "attacks the %s at %s: a %s beats a %s, by the counter table" % [
+		best.type.type_name, best.cell, unit.type.type_name, best.type.type_name])
 
 
 # Why the workshop builds nothing: no room, no money, nothing worth it, or

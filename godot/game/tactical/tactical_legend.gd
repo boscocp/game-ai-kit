@@ -17,6 +17,7 @@ static func entries(types: Dictionary) -> Array[Array]:
 		[_picture(TacticalScenario.BLUE, TacticalRules.RUNNER), "blue side: the computer"],
 		[BoardView.REACHABLE, "where the piece in hand can walk"],
 		[UnitView.SPENT_TINT, "greyed: moved this turn"],
+		[UnitView.HEALTH_TEXT, "yellow number: health"],
 		[IntentView.INTENT, "pink: what blue will do next"],
 		[BoardView.tile_texture(BoardView.PLAIN), "open ground"],
 		[BoardView.tile_texture(BoardView.TREES), "trees: cost 3 to enter"],

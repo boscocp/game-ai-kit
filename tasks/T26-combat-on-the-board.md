@@ -66,3 +66,67 @@ The suite must include:
 
 Play three turns of `make demo-tactical`. A runner sent at a mortar should
 usually win, and the same runner sent at a shield should usually lose.
+
+## What was done (2026-10-17, wave 46)
+
+- **The rules are one file**, `spec/combat/rules.json`: the die (1-4), what
+  cover, numbers and the counter table are worth, and how near is near.
+  Python's `gameaikit.dataset.combat` reads it; the tactical board reads a
+  byte-for-byte copy, `godot/game/tactical/combat_rules.json`, and a test
+  holds the two equal.
+- **A fight is a pure function of its rolls** (`combat.fight`,
+  `TacticalCombat.fight`), so the two generators never have to agree.
+  `spec/vectors/combat/` holds five fights, each checked by hand blow by
+  blow; `make test-combat-vectors` and `make test-python` run them, and a
+  planted wrong vector must be caught first. The dice live in the state
+  (`BoardState.dice_seed`), so the same state and attack give the same
+  fight, and undo cannot re-roll one.
+- **The fight** is the dataset's, rule for rule: rounds to the death, the
+  attacker first, cover and numbers and a friend arriving. Two things are
+  new and both are in Python too: the counter table adds `counter_worth` (2)
+  to every blow of the side strong against the other, and the winner keeps
+  what it has left. A side hits back only from within its own reach, so a
+  mortar at three cells takes nothing from a shield.
+- **`Attack`** sits in `ai_core` beside `Move`, data only; `TacticalCombat`
+  judges and plays it. Red attacks by clicking an enemy with a unit in hand,
+  once a turn, before or after its walk; the status lists who is in reach
+  and which way the table leans.
+- **Step 5, the bolt tower**: it fires by itself at the start of its own
+  side's turn, at the weakest enemy walker in reach. At the start of the
+  turn, not when something walks into reach, because then the other side
+  walked past it knowing it would fire, and the shot is the first line the
+  tower's side reads -- a rule a person can predict. A player cannot fire it
+  by hand.
+- **Step 6, blue attacks**: `BlueController.decide_attack`, asked once a
+  turn for each walker after its walk is played, drawn in pink before it is
+  played. `RuleBasedBlue` attacks red's workshop when it reaches it, and
+  otherwise the weakest red piece in reach it beats by the counter table --
+  nothing it does not beat.
+- **Step 7, the win**: destroying the enemy workshop. The stand-in is gone.
+  A workshop that fell to the first attack made every game a race: rules
+  against rules, both sides, ended in round 3 in 60 games of 60. So an
+  attack on a **building is a siege** -- one blow, one back if it can reach
+  -- and buildings start with 20 health (`TacticalRules.BUILDING_HEALTH`).
+  The same games now end in rounds 13 to 19. The siege is the game's alone:
+  the dataset has no buildings.
+- **Step 8, the features for T44**: the combat model still sees the same
+  four -- `health_difference`, `numeric_advantage`, `defender_terrain`,
+  `reinforcement_distance`. The dataset's units have no type, so it never
+  sees the counter table; T44, which puts the model on typed pieces, needs a
+  fifth feature for it (+1, 0, -1, as `TacticalCombat.counter`) and a typed
+  dataset.
+- **Retrained.** The winner keeping its leftover health changed the rows:
+  3807 of them now, the model right about 85.9% of held-back fights against
+  56.8% for the majority answer and 78.8% for the lookup table (87.8%, 69.0%
+  and 81.8% before). Every weight kept its sign. ADR 0008 is amended.
+
+**Measured, not proven good.** Over 400 seeds, a runner attacking a mortar
+wins more than three times in four and attacking a shield less than one in
+four (`tactical_combat_test.gd`). Rules against rules, red -- which moves
+first -- wins all 60 games: a mirror of two reflexes, where moving first is
+everything. Whether the game is now worth playing against blue is the manual
+check, and the owner's.
+
+Checks: `tactical_combat_test.gd` (each acceptance line above, the siege,
+the tower, the counter), `combat_vectors_runner.gd` and
+`test_combat_vectors.py`; the tactical suites were updated for the new win.

@@ -1,0 +1,8 @@
+{
+  "about": "How a fight on the tactical board is decided. Read by Python (gameaikit.dataset.combat) and, as a byte-for-byte copy, by Godot (godot/game/tactical/combat_rules.json). ADR 0007: a number two languages share lives in one file. ADR 0008: a fight is dice, not a formula.",
+  "die": {"lowest": 1, "highest": 4},
+  "terrain_worth": 1,
+  "numbers_worth": 1,
+  "counter_worth": 2,
+  "nearby_radius": 2
+}

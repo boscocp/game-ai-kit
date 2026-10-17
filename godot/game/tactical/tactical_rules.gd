@@ -36,6 +36,12 @@ const WATER_MOVER: String = "water"
 
 ## What each side earns at the start of its turn, and starts with.
 const INCOME: int = 3
+
+## What a building starts with. Twice a walker's, because a building is not
+## fought to the death: each attack on it is one blow (`TacticalCombat`), and
+## a workshop that fell to the first runner to reach it ended every game in
+## its third round -- measured, rules against rules, 60 games of 60.
+const BUILDING_HEALTH: int = 20
 const STARTING_FUNDS: int = 4
 
 const RUNNER: String = "runner"

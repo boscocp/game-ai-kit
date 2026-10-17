@@ -121,7 +121,7 @@ def _section(name: str, fitted: Fitted, features: tuple[str, ...]) -> list[str]:
 def _score_sentence(name: str, fitted: Fitted) -> list[str]:
     """The score beside the thing it has to beat, in that model's own units.
 
-    Always beside it. An accuracy on its own is unreadable -- 87.8% sounds
+    Always beside it. An accuracy on its own is unreadable -- 85.9% sounds
     good and would be poor on a set where 95% of fights go one way -- so the
     baseline is never printed on a different line from the score.
     """
