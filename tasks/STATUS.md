@@ -56,7 +56,11 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T42 | Examples that are fun to play | done | `docs/design/fun-review.md`; the owner: the board games already feel like games, the skirmish and the tactical board do not; picked T26 first, the skirmish folded into the tactical board (T44), and a fighting ladder (T43) |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
 | T26 | Combat on the board | done | one rules file for Python and Godot, fights held by 5 hand-checked vectors; 7 hand-checked vectors; red and blue attack, towers fire at their turn start (one exchange), an attack cannot be undone; a workshop is besieged (20 health, a blow an attack) and destroying it wins; the counter tilts an even fight to ~94/28%; retrained: 85.9% against 56.8% and 78.8%; manual check still the owner's |
-| T44 | The learned policy plays the tactical board | todo | the skirmish folded into the tactical game: control points paying income, the combat model's attack or retreat and the capture model's choice of point as a blue controller; needs T26; picked in T42 |
+| T44 | The learned policy plays the tactical board | wip | wave 47: two control points paying 2 a turn, every turn opened by `TurnStart`; `LearnedBlue` (attack or retreat by the combat model, the point by the capture model); the combat model sees the counter, fitted on a typed dataset, 86.0% against 57.7%; measured: rules mirror red 20/20, learned against rules 17-18 draws in 20 -- stopped there for a study of similar games (`docs/design/tactical-references.md`), which became T45-T48; not done: the capture rows from the tactical map, the controller key, the skirmish's removal |
+| T45 | The AI spends its money and keeps its pieces moving | todo | Wesnoth's order: build before moving, a fallback goal, one piece per target; the workshop's silent refusals |
+| T46 | The learned blue commits to a fight | todo | two thresholds (commit 0.55, give up 0.35), join a fight a friend started, retreat on the side's strength |
+| T47 | The side moving second, and a last round that decides | todo | a swept counter for blue, red's mirror win rate into 40-60%; the round limit decided by score |
+| T48 | The board itself: a second crossing, a threat map, shorter fights | todo | only if T45-T47 leave it a queue; the owner chooses which |
 | T43 | A fighting ladder | todo | easy, medium, the clone, "ghost: nearest", hard, best of three each, with a clock and an ending; every opponent exists; picked in T42 |
 | T21 | Every example can be watched | done | `check_demos.py` and `demo_overlays.gd`; blue's decision now drawn before it is played |
 | T24 | One window for every example | todo | a menu, a card per example naming its techniques, and an executable; needs T21 |
@@ -90,6 +94,29 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-17 (wave 47)
+
+**What landed.** T44 in part, then stopped on purpose. The tactical board
+has two control points paying their holder, every turn opens in one place
+(`TurnStart`), the combat model sees the counter table and was retrained on
+a typed dataset, and `LearnedBlue` exists and is tested -- but is not yet a
+key in the scene. `make tactical-win-rates` measures the controllers
+against each other, with `--at-most` limits a task can use as acceptance.
+
+**What the measurements said.** The rules' mirror: the side moving first
+wins 20 of 20. The learned blue: 17-18 draws in 20 against the rules, 160+
+funds banked, a third of its walkers stuck in a queue at the bridge. The
+owner asked for a study of similar games before any more tuning:
+[docs/design/tactical-references.md](../docs/design/tactical-references.md)
+(Advance Wars, Wargroove, Wesnoth's AI read in its source, influence maps,
+Into the Breach), and its ranked adjustments are T45-T48, each with a
+measured acceptance.
+
+**Next:** the owner asked for **T11**, the planner, to move the RTS line
+forward. Know before starting it: T11's baseline is the rules blue, and in
+the rules' mirror the side moving first wins every game -- measure the
+planner from both seats. T44's rest and T45-T48 wait behind it.
 
 ## Resuming after 2026-10-17 (wave 46)
 
