@@ -13,31 +13,28 @@
 ## two languages are held to one fight: their generators differ, so the
 ## vectors in `spec/vectors/combat/` hand both the same rolls.
 ##
-## The loser is removed and the winner keeps what it has left -- except that a
-## building is not fought to the death. An attack on one is a **siege**: one
-## blow from the attacker and, if the building can reach back, one in return,
-## and both stay standing unless that blow finished one of them. A workshop
+## The loser is removed and the winner keeps what it has left. A side hits
+## back only from within its own reach, so a mortar firing from three cells
+## takes nothing back from a shield that reaches one -- the cycle
+## `TacticalRules` describes, where the mortar outranges the shield.
+##
+## A building is never in a fight to the death. An attack on one is a
+## **siege**: one blow, and one back if the building can reach; a bolt
+## tower's shot is the same single exchange the other way round. A workshop
 ## that fell to the first attack made every game a three-round race. The
 ## dataset has no buildings, so the siege is the game's alone and has no
-## vector; the fight between walkers is the one both languages share. A side hits
-## back only from within its own reach, so a mortar firing from three cells
-## takes nothing back from a shield that reaches one -- the cycle `TacticalRules`
-## describes, where the mortar outranges the shield.
+## vector; the fight between walkers is the one both languages share.
 ##
 ## Complexity: a fight is O(rounds), at most the two healths added up.
 ##
-## When not to use it: a game where a fight should wound both sides and leave
-## them standing. Here every attack kills somebody, which is quick to read and
-## keeps the dataset free of near-copies; it is also why a building, which
-## cannot hit back, falls to any attack that reaches it.
+## When not to use it: a game where a fight between walkers should wound both
+## and leave them standing. Here every such fight kills somebody, which is
+## quick to read and keeps the dataset free of near-copies.
 class_name TacticalCombat
 extends RefCounted
 
 const RULES_PATH: String = "res://game/tactical/combat_rules.json"
 
-## The reinforcement distance of a unit with no friend that can come: further
-## than any fight lasts, so nobody arrives.
-const NOBODY_COMING: int = 1 << 20
 
 static var _rules: Dictionary = {}
 
@@ -71,8 +68,9 @@ static func fight(inputs: Dictionary, roll: Callable) -> Dictionary:
 	return {}
 
 
-## One exchange against a building, with the dice `roll` hands over: the
-## attacker's blow, then the building's, if it hits back and still stands.
+## One exchange where a building is involved -- attacked, or firing -- with
+## the dice `roll` hands over: the attacker's blow, then one back if the other
+## side can reach and still stands.
 ## Same inputs and same blows as `fight`, one round of them.
 static func siege(inputs: Dictionary, roll: Callable) -> Dictionary:
 	var defender_left: int = inputs["defender_health"] - _attacker_blow(inputs, 1, roll)
@@ -124,7 +122,10 @@ static func _resolve(state: BoardState, attack: Attack) -> BoardState:
 	dice.seed = state.dice_seed
 	var before: Dictionary = inputs(state, state.unit_by_id(attack.attacker_id), state.unit_by_id(attack.target_id))
 	var roll: Callable = _roller(dice)
-	var at_a_building: bool = not state.unit_by_id(attack.target_id).type.mobile
+	# A building never fights to the death, attacked or firing: a tower's shot
+	# at an adjacent ram used to be a whole fight, and killed the tower 81
+	# times in 400, where the ram attacking it gets one blow.
+	var at_a_building: bool = not state.unit_by_id(attack.target_id).type.mobile or not state.unit_by_id(attack.attacker_id).type.mobile
 	var outcome: Dictionary = siege(before, roll) if at_a_building else fight(before, roll)
 	var next: BoardState = state.duplicate_state()
 	var attacker: Unit = next.unit_by_id(attack.attacker_id)
@@ -171,7 +172,8 @@ static func told(before: BoardState, attack: Attack, after: BoardState) -> Strin
 			who, whom, struck.health, survivor.health]
 	if survivor != null:
 		return "the %s destroyed the %s, and has %d health left" % [who, whom, survivor.health]
-	return "the %s attacked the %s and was destroyed; it has %d health left" % [who, whom, struck.health]
+	return "the %s attacked the %s and was destroyed; the %s has %d health left" % [
+		who, whom, target.type.type_name, struck.health]
 
 
 static func _weakest_walker_in_reach(state: BoardState, tower: Unit) -> Unit:
@@ -251,9 +253,11 @@ static func _near(state: BoardState, unit: Unit, cell: Vector2i, radius: int) ->
 	return count
 
 
-# How far `unit`'s nearest other walking unit is, or `NOBODY_COMING`.
+# How far `unit`'s nearest other walking unit is, or the rules' `nobody_coming`
+# -- the dataset's own number for "no friend left", so a lone attacker's fight
+# here is the one the model was shown.
 static func _nearest_friend(state: BoardState, unit: Unit) -> int:
-	var nearest: int = NOBODY_COMING
+	var nearest: int = rules()["nobody_coming"]
 	for other: Unit in state.units_of(unit.faction):
 		if other.id != unit.id and other.type.mobile:
 			nearest = mini(nearest, distance(other.cell, unit.cell))

@@ -1,13 +1,13 @@
 {
-  "about": "A building cannot attack, so it returns nothing and only the attacker rolls.",
+  "about": "A defender the attacker reaches from beyond its own reach -- a shield under a mortar's fire -- returns nothing, so only the attacker rolls: 10 less 1, 2, 3, 4.",
   "fight": {
-    "attacker_health": 1,
-    "defender_health": 10,
     "numeric_advantage": 0,
     "defender_terrain": 1,
     "reinforcement_distance": 15,
     "counter": 0,
-    "defender_hits_back": false
+    "defender_hits_back": false,
+    "attacker_health": 1,
+    "defender_health": 10
   },
   "rolls": [
     1,

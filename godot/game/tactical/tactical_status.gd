@@ -13,9 +13,11 @@ extends RefCounted
 
 ## Everything the status says, line by line, for this state, this piece in
 ## hand (or null), the last refusal (or "") and what just happened (or "").
-static func text(state: BoardState, in_hand: Unit, refusal: String, news: String = "") -> String:
+## `can_attack` is false for a piece that has attacked this turn: the status
+## must not offer it targets it can no longer strike.
+static func text(state: BoardState, in_hand: Unit, refusal: String, news: String = "", can_attack: bool = true) -> String:
 	var lines: Array[String] = [_headline(state), _piece(in_hand), _what_to_do(state, in_hand)]
-	var targets: String = _targets(state, in_hand)
+	var targets: String = _targets(state, in_hand) if can_attack else ""
 	if targets != "":
 		lines.append(targets)
 	lines.append("Z takes back the last thing you did  ·  space ends your turn, and blue is paid %d" % TacticalRules.INCOME)

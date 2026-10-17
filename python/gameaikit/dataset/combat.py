@@ -32,8 +32,11 @@ import random
 from collections.abc import Callable
 from dataclasses import dataclass
 
-#: The shared rules, one file for both languages.
-RULES_PATH = pathlib.Path(__file__).resolve().parents[3] / "spec" / "combat" / "rules.json"
+#: The shared rules: a byte-for-byte copy of `spec/combat/rules.json`, kept
+#: beside this file because the wheel ships the package and not `spec/` --
+#: reading the spec from the source tree broke every install (wave 46's
+#: review). `test_combat_vectors.py` holds the copy equal to the spec.
+RULES_PATH = pathlib.Path(__file__).resolve().with_name("combat_rules.json")
 RULES = json.loads(RULES_PATH.read_text())
 
 #: The damage die both sides roll, before any bonus.
@@ -50,7 +53,9 @@ TERRAIN_WORTH = RULES["terrain_worth"]
 NUMBERS_WORTH = RULES["numbers_worth"]
 
 #: What being strong against the other side's type is worth, added to every
-#: blow -- the counter table moving the dice rather than deciding the fight.
+#: blow. One, not two: at two the side the table favoured won 99.8% of even
+#: fights, and the table decided them rather than tilting them; at one it wins
+#: 94.4%, and the side it disfavours 27.7%, against 65.3% with no counter.
 COUNTER_WORTH = RULES["counter_worth"]
 
 

@@ -12,7 +12,7 @@
 extends SceneTree
 
 ## Fewer than this and the directory is wrong, not the vectors.
-const FEWEST_VECTORS: int = 5
+const FEWEST_VECTORS: int = 7
 
 
 func _init() -> void:

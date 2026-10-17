@@ -51,7 +51,7 @@ class Fitted:
     #: majority baseline would suggest.
     #:
     #: It is published rather than asserted on. A four-weight model cannot
-    #: memorise 976 answers, so beating the table is not required of it; a
+    #: memorise 1083 answers, so beating the table is not required of it; a
     #: model with capacity, as in T18, would have to be read against this
     #: column rather than against the majority class.
     memoriser: float

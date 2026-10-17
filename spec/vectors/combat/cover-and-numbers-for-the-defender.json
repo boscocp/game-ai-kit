@@ -1,5 +1,5 @@
 {
-  "about": "The defender in trees (cost 3) with one more friend near: two more on every blow it returns.",
+  "about": "The defender in trees (cost 3) with one more friend near: three more on every blow it returns -- one for the friend, two for the cover.",
   "fight": {
     "attacker_health": 10,
     "defender_health": 8,

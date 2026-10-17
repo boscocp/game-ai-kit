@@ -110,7 +110,7 @@ func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 
 
 # The board as `kind` walks it, with every red piece but its workshops made a
-# wall. A workshop stays open because it is the target: winning is standing
+# wall. A workshop stays open because it is the target: it is attacked from
 # beside it, and a flood out of a wall would reach nothing.
 func _past_red(state: BoardState, kind: UnitType) -> GridGraph:
 	var graph: GridGraph = state.graph_for_type(kind).duplicate_graph()

@@ -83,8 +83,9 @@ usually win, and the same runner sent at a shield should usually lose.
   fight, and undo cannot re-roll one.
 - **The fight** is the dataset's, rule for rule: rounds to the death, the
   attacker first, cover and numbers and a friend arriving. Two things are
-  new and both are in Python too: the counter table adds `counter_worth` (2)
-  to every blow of the side strong against the other, and the winner keeps
+  new and both are in Python too: the counter table adds `counter_worth` (1
+  since the review; 2 decided every even fight) to every blow of the side
+  strong against the other, and the winner keeps
   what it has left. A side hits back only from within its own reach, so a
   mortar at three cells takes nothing from a shield.
 - **`Attack`** sits in `ai_core` beside `Move`, data only; `TacticalCombat`
@@ -107,7 +108,7 @@ usually win, and the same runner sent at a shield should usually lose.
   against rules, both sides, ended in round 3 in 60 games of 60. So an
   attack on a **building is a siege** -- one blow, one back if it can reach
   -- and buildings start with 20 health (`TacticalRules.BUILDING_HEALTH`).
-  The same games now end in rounds 13 to 19. The siege is the game's alone:
+  The same games now end in rounds 11 to 20. The siege is the game's alone:
   the dataset has no buildings.
 - **Step 8, the features for T44**: the combat model still sees the same
   four -- `health_difference`, `numeric_advantage`, `defender_terrain`,
@@ -120,13 +121,51 @@ usually win, and the same runner sent at a shield should usually lose.
   56.8% for the majority answer and 78.8% for the lookup table (87.8%, 69.0%
   and 81.8% before). Every weight kept its sign. ADR 0008 is amended.
 
-**Measured, not proven good.** Over 400 seeds, a runner attacking a mortar
-wins more than three times in four and attacking a shield less than one in
-four (`tactical_combat_test.gd`). Rules against rules, red -- which moves
-first -- wins all 60 games: a mirror of two reflexes, where moving first is
-everything. Whether the game is now worth playing against blue is the manual
-check, and the owner's.
+**Measured, not proven good.** At even health a piece the counter table
+favours wins about 94% of the fights it starts, one it disfavours about 28%,
+and an even pairing 65% (4000 fights in Python; `tactical_combat_test.gd`
+holds the tactical board to the same shape over 400 seeds). Rules against
+rules, red wins 58 of 60 games and blue 2. Why red is favoured is not
+known: the review rebuilt the pre-siege rule and found blue, which moves
+second, winning all 60 there, so "moving first" does not explain it.
+Whether the game is now worth playing against blue is the manual check,
+and the owner's.
 
 Checks: `tactical_combat_test.gd` (each acceptance line above, the siege,
 the tower, the counter), `combat_vectors_runner.gd` and
 `test_combat_vectors.py`; the tactical suites were updated for the new win.
+
+## After the review
+
+[docs/reviews/46-combat-on-the-board.md](../docs/reviews/46-combat-on-the-board.md)
+said "not as is". Each finding, and what was done:
+
+1. **The wheel could not import `gameaikit.dataset`**: it read the rules from
+   `spec/`, which the wheel does not carry. The package now holds its own
+   byte-for-byte copy, `python/gameaikit/dataset/combat_rules.json`, and
+   `test_combat_vectors.py` holds it equal to the spec.
+2. **The vectors missed two modifiers.** Seven vectors now, one per thing
+   that tilts a fight; the five new ones were worked out by hand before
+   either side ran them. Switching off the attacker's numbers, or arriving a
+   round early (`>=`), now fails both languages.
+3. **Undo let a player read the dice.** An attack seals the turn: nothing
+   before it can be taken back (`TacticalTurn.seal`).
+4. **A tower's shot was a fight to the death** and killed the tower 81 times
+   in 400. Any exchange with a building in it is one blow each way.
+5. **Texts the numbers contradicted.** `counter_worth` is 1 (at 2 the table
+   decided 400 of 400); the workshop is besieged, not destroyed by any
+   attack; the vector `about`s, `_past_red`, `rows.py` and `train.py`,
+   `intent_view.gd` and the README say what is true.
+6. **An attack looked like a hold.** It is drawn as a dashed line from the
+   attacker to a cross on the target.
+7. **Two rules had no failing test.** Towers are tested through the scene,
+   and attacking twice against a target that survives the first.
+8. **Blue's attacks vanished.** They are kept and are the first thing red
+   reads when its turn starts.
+9. The Python vector run first catches a planted wrong vector.
+10. The skirmish legend says which number is the id and which the health.
+11. A walked unit picked up again is told it can still attack, and the
+    status offers no targets to a unit that has attacked.
+12. "Nobody coming" is one number, 15, in the rules file, read by the game
+    and held equal to the dataset board's width.
+

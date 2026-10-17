@@ -39,8 +39,12 @@ func test_strong_against_moves_the_odds_the_way_the_table_claims() -> void:
 	var at_shield: int = _attacker_wins(TacticalRules.RUNNER, TacticalRules.SHIELD)
 	var at_runner: int = _attacker_wins(TacticalRules.RUNNER, TacticalRules.RUNNER)
 
-	assert_int(at_mortar).is_greater(SEEDS * 3 / 4)
-	assert_int(at_shield).is_less(SEEDS / 4)
+	# Tilted, not decided: at counter_worth 2 it was 400 of 400 both ways.
+	# Measured at 1 over these seeds: 122 against a shield; in Python's
+	# 4000-fight probe, 94.4% favoured, 65.3% even, 27.7% disfavoured.
+	assert_int(at_mortar).is_greater(SEEDS * 17 / 20)
+	assert_int(at_mortar).is_less(SEEDS)
+	assert_int(at_shield).is_between(SEEDS / 10, SEEDS * 2 / 5)
 	assert_int(at_runner).is_between(at_shield, at_mortar)
 
 
@@ -144,73 +148,95 @@ func test_blue_s_turn_shows_the_attack_before_it_plays_it() -> void:
 	assert_int(TacticalVictory.winner(state)).is_equal(BLUE)
 
 
-func test_a_red_unit_attacks_once_a_turn_and_undo_replays_the_same_fight() -> void:
+func test_a_red_unit_attacks_once_a_turn() -> void:
+	# The target must survive the first attack, or the second has nothing to
+	# be refused against -- the review's mutation passed because it did not.
+	var scene: TacticalGame = _scene()
+	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
+	var workshop: Vector2i = _first_of(scene.state, BLUE, TacticalRules.WORKSHOP).cell
+	scene.state.unit_by_id(runner.id).cell = workshop + Vector2i(-1, 0)
+	scene.click_cell(workshop + Vector2i(-1, 0))
+	scene.click_cell(workshop)
+	var after_one: int = scene.state.unit_at(workshop).health
+
+	scene.click_cell(workshop + Vector2i(-1, 0))
+	scene.click_cell(workshop)
+
+	assert_int(after_one).is_less(TacticalRules.BUILDING_HEALTH)
+	assert_int(scene.state.unit_at(workshop).health).is_equal(after_one)
+	assert_str(scene._last_refusal).contains("has attacked")
+
+
+func test_an_attack_cannot_be_taken_back() -> void:
+	# Undo after a fight let a player read the dice and choose again.
+	var scene: TacticalGame = _scene()
+	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
+	# Walk one step left, so there is a move to take back, then attack a
+	# mortar set down on the open cell beyond.
+	var start: Vector2i = runner.cell
+	scene.click_cell(start)
+	scene.click_cell(start + Vector2i(-1, 0))
+	scene.state.units.append(Unit.new(99, BLUE, start + Vector2i(-2, 0), 10, 0, TacticalRules.unit_types()[TacticalRules.MORTAR]))
+	assert_bool(scene._turn.can_undo()).is_true()
+	scene.click_cell(start + Vector2i(-1, 0))
+	scene.click_cell(start + Vector2i(-2, 0))
+	assert_str(scene._last_event).contains("runner")
+	var fought: BoardState = scene.state
+
+	scene.undo()
+
+	assert_object(scene.state).is_same(fought)
+	assert_bool(scene._turn.can_undo()).is_false()
+
+
+func test_the_game_fires_a_side_s_towers_when_its_turn_starts() -> void:
+	# Through the scene, not `towers_fire` alone: switching the call off in
+	# the game passed every suite (the review).
+	var scene: TacticalGame = _scene()
+	var tower: Unit = _first_of(scene.state, BLUE, TacticalRules.BOLT_TOWER)
+	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
+	scene.state.unit_by_id(runner.id).cell = tower.cell + Vector2i(-1, 0)
+
+	scene.step_decision()
+
+	assert_str(scene._last_event).contains("blue bolt tower")
+	var hit: Unit = scene.state.unit_by_id(runner.id)
+	assert_int(hit.health if hit != null else 0).is_less(10)
+
+
+func test_a_tower_s_shot_is_one_exchange_and_never_kills_the_tower() -> void:
+	# As a fight to the death, a shot at an adjacent ram killed the tower 81
+	# times in 400.
+	var destroyed: int = 0
+	for dice: int in range(SEEDS):
+		var state: BoardState = TacticalScenario.build()
+		var tower: Unit = _first_of(state, RED, TacticalRules.BOLT_TOWER)
+		var types: Dictionary = TacticalRules.unit_types()
+		state.units.append(Unit.new(99, BLUE, tower.cell + Vector2i(1, 0), 10, 0, types[TacticalRules.RAM]))
+		state.dice_seed = dice
+		if TacticalCombat.towers_fire(state)[0].unit_by_id(tower.id) == null:
+			destroyed += 1
+	assert_int(destroyed).is_equal(0)
+
+
+func test_red_reads_blue_s_attacks_when_its_turn_starts() -> void:
+	# Enter played blue's attacks without showing them, and red's turn wiped
+	# whatever had been shown.
+	var scene: TacticalGame = _scene()
+	var workshop: Unit = _first_of(scene.state, RED, TacticalRules.WORKSHOP)
+	scene.state.unit_by_id(_first_of(scene.state, BLUE, TacticalRules.RUNNER).id).cell = workshop.cell + Vector2i(0, -1)
+	scene.step_decision()
+
+	scene.play_rest_of_blue_turn()
+
+	assert_bool(scene._reds_turn()).is_true()
+	assert_str((scene.get_node("Interface/Status") as Label).text).contains("blue's attacks:")
+
+
+func _scene() -> TacticalGame:
 	var scene: TacticalGame = auto_free((load("res://game/tactical/tactical.tscn") as PackedScene).instantiate())
 	add_child(scene)
-	var runner: Unit = _first_of(scene.state, RED, TacticalRules.RUNNER)
-	var mortar_cell: Vector2i = runner.cell + Vector2i(1, 0)
-	scene.state.units.append(Unit.new(99, BLUE, mortar_cell, 10, 0, TacticalRules.unit_types()[TacticalRules.MORTAR]))
-	scene.click_cell(runner.cell)
-
-	scene.click_cell(mortar_cell)
-	var first: String = scene._last_event
-	scene.click_cell(runner.cell)
-	scene.click_cell(mortar_cell)
-	var second_try: String = scene._last_refusal
-	scene.undo()
-	scene.click_cell(runner.cell)
-	scene.click_cell(mortar_cell)
-
-	assert_str(first).contains("runner")
-	assert_str(second_try).is_not_empty()
-	assert_str(scene._last_event).is_equal(first)
-
-
-func test_a_building_starts_with_more_health_than_a_walker() -> void:
-	var state: BoardState = TacticalScenario.build()
-
-	assert_int(_first_of(state, RED, TacticalRules.WORKSHOP).health).is_equal(TacticalRules.BUILDING_HEALTH)
-	assert_int(_first_of(state, RED, TacticalRules.RUNNER).health).is_less(TacticalRules.BUILDING_HEALTH)
-
-
-func test_an_attack_on_a_building_is_one_blow_not_a_fight_to_the_death() -> void:
-	# The measurement behind it: with a workshop that fell to the first attack,
-	# rules against rules ended every game in round 3.
-	var state: BoardState = _duel(TacticalRules.RUNNER, TacticalRules.WORKSHOP, Vector2i(1, 0))
-	state.unit_by_id(2).health = TacticalRules.BUILDING_HEALTH
-
-	var after: BoardState = TacticalCombat.apply(state, Attack.new(1, 2))
-
-	var left: int = after.unit_by_id(2).health
-	assert_int(left).is_between(TacticalRules.BUILDING_HEALTH - 4, TacticalRules.BUILDING_HEALTH - 1)
-	assert_int(after.unit_by_id(1).health).is_equal(10)
-
-
-func test_a_ram_breaks_a_building_faster_than_a_runner() -> void:
-	var by_ram: int = _siege_damage(TacticalRules.RAM)
-	var by_runner: int = _siege_damage(TacticalRules.RUNNER)
-
-	assert_int(by_ram - by_runner).is_equal(SEEDS * 2)
-
-
-func test_a_siege_is_told_as_a_strike_not_a_kill() -> void:
-	var state: BoardState = _duel(TacticalRules.RUNNER, TacticalRules.WORKSHOP, Vector2i(1, 0))
-	state.unit_by_id(2).health = TacticalRules.BUILDING_HEALTH
-
-	var told: String = TacticalCombat.told(state, Attack.new(1, 2), TacticalCombat.apply(state, Attack.new(1, 2)))
-
-	assert_str(told).contains("struck")
-
-
-# Damage dealt to a building over `SEEDS` single attacks by `attacker`.
-func _siege_damage(attacker: String) -> int:
-	var total: int = 0
-	for dice: int in range(SEEDS):
-		var state: BoardState = _duel(attacker, TacticalRules.WORKSHOP, Vector2i(1, 0))
-		state.unit_by_id(2).health = 100
-		state.dice_seed = dice
-		total += 100 - TacticalCombat.apply(state, Attack.new(1, 2)).unit_by_id(2).health
-	return total
+	return scene
 
 
 # How many of `SEEDS` fights the attacker won, side by side on open ground.

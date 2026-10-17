@@ -55,7 +55,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T41 | What the owner found playing the boards | done | the mud route was breadth-first's, read as Dijkstra's: the status now says what each search minimises; markers measured against their terrain; blue builds a wader when red shuts the bridge; holding a skirmish node 3 turns wins, and the policy contests a held one |
 | T42 | Examples that are fun to play | done | `docs/design/fun-review.md`; the owner: the board games already feel like games, the skirmish and the tactical board do not; picked T26 first, the skirmish folded into the tactical board (T44), and a fighting ladder (T43) |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
-| T26 | Combat on the board | done | one rules file for Python and Godot, fights held by 5 hand-checked vectors; red and blue attack, towers fire at their turn start; a workshop is besieged (20 health, a blow an attack) and destroying it wins; retrained: 85.9% against 56.8% and 78.8%; manual check still the owner's |
+| T26 | Combat on the board | done | one rules file for Python and Godot, fights held by 5 hand-checked vectors; 7 hand-checked vectors; red and blue attack, towers fire at their turn start (one exchange), an attack cannot be undone; a workshop is besieged (20 health, a blow an attack) and destroying it wins; the counter tilts an even fight to ~94/28%; retrained: 85.9% against 56.8% and 78.8%; manual check still the owner's |
 | T44 | The learned policy plays the tactical board | todo | the skirmish folded into the tactical game: control points paying income, the combat model's attack or retreat and the capture model's choice of point as a blue controller; needs T26; picked in T42 |
 | T43 | A fighting ladder | todo | easy, medium, the clone, "ghost: nearest", hard, best of three each, with a clock and an ending; every opponent exists; picked in T42 |
 | T21 | Every example can be watched | done | `check_demos.py` and `demo_overlays.gd`; blue's decision now drawn before it is played |
@@ -95,14 +95,14 @@ because it is driven better, and a command proves every car runs one physics.
 
 **What landed.** T26: combat on the tactical board. A fight is dice, the
 same rule in Python's dataset and on the board (`spec/combat/rules.json`,
-five hand-checked vectors). Red attacks with a click, blue's rules attack
+seven hand-checked vectors). Red attacks with a click, blue's rules attack
 what they beat, bolt towers fire at their turn's start, and destroying the
 enemy workshop wins -- a siege, because a workshop that fell to one attack
 ended every game in round 3. The combat model was retrained on the new
 rows.
 
 **Not proven.** That the game is now worth playing: T26's manual check.
-Rules against rules, the side that moves first wins all 60 games.
+Rules against rules, red wins 58 of 60, for a reason not yet known.
 
 **Next:** the owner plays three turns of `make demo-tactical` (T26's manual
 check), then T44 -- which needs a fifth feature, the counter, and a typed

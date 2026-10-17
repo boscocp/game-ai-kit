@@ -1,8 +1,12 @@
 {
-  "about": "How a fight on the tactical board is decided. Read by Python (gameaikit.dataset.combat) and, as a byte-for-byte copy, by Godot (godot/game/tactical/combat_rules.json). ADR 0007: a number two languages share lives in one file. ADR 0008: a fight is dice, not a formula.",
-  "die": {"lowest": 1, "highest": 4},
+  "about": "How a fight on the tactical board is decided. Read by Python from a byte-for-byte copy in the package (python/gameaikit/dataset/combat_rules.json, so the wheel carries it) and by Godot from another (godot/game/tactical/combat_rules.json); tests hold both to this file. ADR 0007: a number two languages share lives in one file. ADR 0008: a fight is dice, not a formula. nobody_coming is the reinforcement distance of a unit with no friend left: the dataset board's width, further than a fight lasts.",
+  "die": {
+    "lowest": 1,
+    "highest": 4
+  },
   "terrain_worth": 1,
   "numbers_worth": 1,
-  "counter_worth": 2,
-  "nearby_radius": 2
+  "counter_worth": 1,
+  "nearby_radius": 2,
+  "nobody_coming": 15
 }

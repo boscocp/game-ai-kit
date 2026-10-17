@@ -297,3 +297,18 @@ itself with a shot nobody chose (4). Several texts describe a game this
 wave did not build: a workshop that falls to one attack, a counter that
 only tilts a fight (5). Findings 6 to 8 are about the picture and two
 rules with no test. 9 to 12 are small.
+
+## What was done about them
+
+All twelve were answered by the author, on the branch, before the merge.
+All twelve were fixed; each is listed with how in T26's "After the review".
+Two numbers moved with the fixes and were measured again: rules against
+rules is now red 58 and blue 2, in rounds 11 to 20; and with
+`counter_worth` at 1 the favoured side of an even fight wins about 94%,
+the disfavoured about 28%. The "moving first" explanation the review
+disproved is withdrawn; T26 says the cause is not known. The new tests were
+each run against the mutation that motivated them: towers switched off in
+the game, `has_attacked` always false, no seal after an attack, a tower
+fighting to the death, blue's attacks not kept, and both languages'
+missing-numbers and `>=` mutations -- every one now fails.
+

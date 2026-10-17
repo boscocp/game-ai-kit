@@ -47,6 +47,15 @@ func attacked(unit_id: int) -> void:
 		_attacked.append(unit_id)
 
 
+## Forget everything that could be taken back. Called after an attack: a fight
+## once seen cannot be unseen, and undoing it would let a player read the dice
+## and try again -- or try the attacks in another order, since each fight hands
+## its dice on to the next (wave 46's review: 258 wins in 400 straight, 348
+## picking the better of two orders).
+func seal() -> void:
+	_history.clear()
+
+
 ## True when the unit has attacked this turn: once a turn is all it gets.
 func has_attacked(unit_id: int) -> bool:
 	return unit_id in _attacked

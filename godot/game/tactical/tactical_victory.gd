@@ -5,9 +5,10 @@
 ## that said it would last only until there was combat; now there is, and an
 ## attack that brings the workshop to nothing ends the game at once.
 ##
-## A workshop cannot hit back, so any attack that reaches it destroys it (see
-## `TacticalCombat`). What protects it is what stands around it -- the bolt
-## tower, and the pieces a player keeps at home.
+## A workshop cannot hit back, but it is besieged, not fought: it starts with
+## `TacticalRules.BUILDING_HEALTH` and each attack is one blow (see
+## `TacticalCombat`), so taking it takes turns -- turns in which the bolt
+## tower and the pieces a player keeps at home can answer.
 ##
 ## When not to use it: a scenario won by anything but a building, such as
 ## holding ground or a count of kills. That is another rule, and another file.

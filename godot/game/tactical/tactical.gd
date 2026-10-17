@@ -52,6 +52,10 @@ var _last_refusal: String = ""
 # What the last action did, in words, so a build is confirmed and not only
 # visible as a smaller number.
 var _last_event: String = ""
+# What blue's attacks did this turn, kept for red to read when its turn
+# starts: shown only while they were played, they were gone by the time red
+# looked -- and enter played them without showing them at all.
+var _blue_news: Array[String] = []
 # True after one press of end turn with units still unspent: the next press
 # ends it. Any other action puts it back.
 var _confirming_end: bool = false
@@ -110,8 +114,9 @@ func click_cell(cell: Vector2i) -> void:
 	_refresh()
 
 
-## The unit in hand attacks `target`: once a turn, before or after its walk,
-## and the dice are the state's, so undo and attack again gives the same fight.
+## The unit in hand attacks `target`: once a turn, before or after its walk.
+## An attack cannot be taken back, and nothing before it can either: Z after a
+## fight would let a player read the dice and choose again.
 func attack(target: Unit) -> void:
 	if not _reds_turn():
 		return
@@ -123,6 +128,7 @@ func attack(target: Unit) -> void:
 	if _act(TacticalCombat.apply(state, strike), TacticalCombat.why_refused(state, strike)):
 		_last_event = TacticalCombat.told(before, strike, state)
 		_turn.attacked(strike.attacker_id)
+		_turn.seal()
 		winner = TacticalVictory.winner(state)
 		_select_next_unspent()
 	_refresh()
@@ -240,6 +246,7 @@ func _play_blue_decision() -> void:
 	state = _blue_turn.play(state)
 	if decision.attack != null and decision in _blue_turn.played:
 		_last_event = TacticalCombat.told(before, decision.attack, state)
+		_blue_news.append(_last_event)
 	winner = TacticalVictory.winner(state)
 	# A refused decision is not in `played`, and a hold or a build is no walk.
 	if decision.move != null and decision in _blue_turn.played:
@@ -305,8 +312,11 @@ func _pick_up(unit: Unit) -> void:
 	_last_refusal = ""
 	if _turn.is_spent(unit.id) and unit.type.mobile:
 		# Held, so the status describes it, but with nothing lit: a spent unit
-		# has nowhere to go until next turn.
-		_last_refusal = "this %s has moved this turn; Z takes the move back" % unit.type.type_name
+		# has nowhere to go until next turn -- though one that has walked may
+		# still attack from where it stopped.
+		var still: String = "" if _turn.has_attacked(unit.id) else "; it can still attack an enemy in reach"
+		var back: String = "; Z takes the move back" if _turn.can_undo() else ""
+		_last_refusal = "this %s has moved this turn%s%s" % [unit.type.type_name, still, back]
 
 
 # Walk the unit in hand along the cheapest route the highlight offered, or,
@@ -357,6 +367,7 @@ func _explained(refusal: String, cell: Vector2i) -> String:
 
 
 func _hand_to_blue() -> void:
+	_blue_news.clear()
 	_open_turn()
 	_confirming_end = false
 	_last_refusal = ""
@@ -370,6 +381,7 @@ func _start_red_turn() -> void:
 	_last_event = ""
 	if state.current_faction != TacticalScenario.RED:
 		_open_turn()
+		_last_event = _with_blue_news(_last_event)
 	_turn.begin()
 	_last_refusal = ""
 	_confirming_end = false
@@ -385,6 +397,18 @@ func _open_turn() -> void:
 	state = fired[0]
 	_last_event = "\n".join(fired[1])
 	winner = TacticalVictory.winner(state)
+
+
+# What red reads first: blue's attacks of the turn just played, then what
+# red's own towers did.
+func _with_blue_news(towers: String) -> String:
+	if _blue_news.is_empty():
+		return towers
+	var lines: Array[String] = ["blue's attacks:"]
+	lines.append_array(_blue_news)
+	if towers != "":
+		lines.append(towers)
+	return "\n".join(lines)
 
 
 # The next of red's units that can still walk, or nothing when none can.
@@ -423,7 +447,7 @@ func _status_text() -> String:
 	var news: String = _last_event
 	if unit == null and _turn.unspent(state).is_empty():
 		news = (news + "\n" if news != "" else "") + "every unit has moved: space ends the turn"
-	return TacticalStatus.text(state, unit, _last_refusal, news)
+	return TacticalStatus.text(state, unit, _last_refusal, news, unit != null and not _turn.has_attacked(unit.id))
 
 
 # Every cell the unit in hand can walk to this turn; nothing for a spent one.

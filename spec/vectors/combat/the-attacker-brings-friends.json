@@ -1,0 +1,30 @@
+{
+  "about": "The attacker has two more friends near: +2 on every blow it lands. 1+2 a round takes 10 to 7, 4, 1, then below nothing; it takes 1 back each round.",
+  "fight": {
+    "numeric_advantage": 2,
+    "defender_terrain": 1,
+    "reinforcement_distance": 15,
+    "counter": 0,
+    "defender_hits_back": true,
+    "attacker_health": 10,
+    "defender_health": 10
+  },
+  "rolls": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "expect": {
+    "attacker_won": true,
+    "attacker_left": 7,
+    "defender_left": 0,
+    "rolls_used": 7
+  }
+}

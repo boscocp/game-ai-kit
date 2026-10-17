@@ -103,7 +103,8 @@ W has a unit wait. Blue plays by two rules -- build what beats the most of
 your pieces, walk every unit at your workshop -- and each of its decisions
 is drawn in pink, with why, before space plays it (enter plays the rest).
 Click an enemy in reach to attack it, once a turn: a fight is dice, the
-counter table and cover tilt it, and the loser is removed. Bolt towers fire
+counter table and cover tilt it -- attacking at even health, a piece the
+table favours wins about 19 fights in 20 -- and the loser is removed. Bolt towers fire
 by themselves at the start of their side's turn. Destroy the enemy workshop
 -- a siege, one blow an attack -- to win; after 40 rounds it is a draw.
 
