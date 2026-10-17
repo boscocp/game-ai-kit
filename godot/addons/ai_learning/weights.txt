@@ -66,7 +66,7 @@ Two things the numbers above do not say
   exact twin among the rows that were trained on -- 62%
   of them, over 1757 distinct situations. A table that
   answers with the twin's outcome already scores most of what the
-  model scores, and the majority class flatters both. Four weights
+  model scores, and the majority class flatters both. Five weights
   cannot memorise that many answers, so this model's score is honest;
   one with capacity would have to be read against the table rather
   than against the majority.

@@ -96,9 +96,10 @@ source code https://github.com/wesnoth/wesnoth/blob/master/src/ai/default/attack
   ("Prefer to attack already damaged targets"), then multiplied by `support/(vulnerability*terrain_quality)`.
   It is divided by resources used, and multiplied by 5 if the target threatens the leader.
   The sanity check returns -1 if `vulnerability > 50 && vulnerability > support*2 && chance_to_kill < 0.02 && aggression < 0.75 && !attack_close(target)`,
-  where `attack_close` is true when the target is within 4 hexes of an attack already made this turn.
+  where `attack_close` is true when the target is closer than 4 hexes (`< 4`, so within 3) to an attack already made this turn.
+  *Corrected after wave 47's review:* it lifts only this check, which refuses near-hopeless attacks; it has nothing to do with retreat.
   - Attack options are **multi-attacker combinations** (`movements`), and `chance_to_kill` is the result after the whole sequence. **Focus fire is evaluated as one option**, not as N independent unit decisions.
-  - `attack_close` is the "join the fight" rule: once someone has committed nearby, the caution check is waived. [I] This is the mechanism that stops one unit at a time from retreating out of a fight its friends started.
+  - `attack_close` lets a unit join a fight already started nearby with an attack the sanity check would otherwise refuse. [I] A "do not retreat from a fight a friend started" rule is an extension of that idea to retreat, and is this board's own, not Wesnoth's.
   - `target_value` = unit cost, raised by experience.
 - **Aggression/caution:** aggression default 0.4, and values above 1 are discouraged. Caution default 0.25. Old retreat rule: "A retreat takes place, if caution × their_power > our_power", and "never retreats if caution is set to 0". 1.15.11+ uses `retreat_factor` (default 0.25) for injured units only.
   - [I] Retreat compares *side power* in an area, not one fight's odds. A per-fight p(win) < 0.5 → retreat makes every unit retreat whenever its own fight is marginal, even when the side is ahead.
@@ -149,11 +150,11 @@ together with its seed count.
 
 1. **Spend-first build step and a fallback goal for idle units** (Wesnoth: recruitment 180k > combat > move; move-to-any-enemy 1k; spend is the default, saving opt-in).
    Both AIs run "build" before "move" every turn. A unit with no reachable goal falls back to "advance toward the nearest enemy building / threat-map front" instead of a no-op.
-   *Acceptance:* over 20 learned-vs-rule matches, (a) unspent funds after the build step are below the cheapest unit's price (1) in ≥ 90% of turns, or below the ram's price (4) when the plan is explicitly "save for ram"; (b) "no move gets closer" decisions per match ≤ 5% of unit-turns (at T44: 37% of the learned side's walker decisions).
+   *Acceptance:* over 20 learned-vs-rule matches, (a) unspent funds after the build step are below the cheapest unit's price (1) in ≥ 90% of turns, or below the ram's price (4) when the plan is explicitly "save for ram"; (b) "no move gets closer" decisions per match ≤ 5% of unit-turns (at T44: 52.5% of the learned blue's walker decisions, 43.9% as red).
 2. **Make the round limit decide the game** (AWBW day limit: most properties wins; Polytopia Perfection score).
    At round 40, the winner is the side with the higher score: workshop health, then control-point rounds held, then unit value. A true draw happens only on equal scores.
    *Acceptance:* the draw rate in 60 rule-vs-rule and 20 learned-vs-rule matches is ≤ 5%. It also needs a planted test: a scripted equal position must still report a draw (invariant 4). *Caveat [I]:* this alone turns the learned AI's stalemate into wins, so ship it together with #1 and #3, and also report "decided before round 40" separately.
-3. **Hysteresis and commitment in the learned policy's attack/retreat** (momentum 1.1-1.25; thermostat thresholds; Wesnoth `attack_close` waiving caution near a fight already joined).
+3. **Hysteresis and commitment in the learned policy's attack/retreat** (momentum 1.1-1.25; thermostat thresholds; Wesnoth's `attack_close`, which lets an attack near one already made pass a check that would refuse it -- extended here, as this board's own rule, to retreat).
    Commit at p ≥ 0.55. Once committed, keep attacking until p < 0.35. Waive the retreat for a unit within 4 cells of a friendly attack made this turn.
    *Acceptance:* an "oscillation" counter (a unit alternating advance/retreat on consecutive turns) drops by ≥ 75% against today over the same 20 seeds, and the learned AI's decisive-win count vs rule rises above 0/20.
 4. **First-turn-advantage counter for blue** (Wargroove: half-turn advantage, P2 starting gold, pre-recruited unit, +10% building health; AWBW predeployed infantry).

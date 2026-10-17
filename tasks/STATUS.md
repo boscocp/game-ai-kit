@@ -106,7 +106,7 @@ against each other, with `--at-most` limits a task can use as acceptance.
 
 **What the measurements said.** The rules' mirror: the side moving first
 wins 20 of 20. The learned blue: 17-18 draws in 20 against the rules, 160+
-funds banked, a third of its walkers stuck in a queue at the bridge. The
+funds banked, half its walkers' decisions stuck in a queue at the bridge. The
 owner asked for a study of similar games before any more tuning:
 [docs/design/tactical-references.md](../docs/design/tactical-references.md)
 (Advance Wars, Wargroove, Wesnoth's AI read in its source, influence maps,

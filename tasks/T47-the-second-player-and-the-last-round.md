@@ -37,7 +37,7 @@ reason to end sooner.
 
 ```bash
 make test-godot
-make tactical-win-rates GAMES=100 LIMITS="--at-most rr:red:60 --at-most rr:blue:60 --at-most rr:draw:5"
+make tactical-win-rates GAMES=100 LIMITS="--at-least rr:red:40 --at-most rr:red:60 --at-most rr:draw:5"
 ```
 
 ## Manual check

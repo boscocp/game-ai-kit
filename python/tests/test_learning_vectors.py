@@ -52,7 +52,8 @@ def board_of(described: dict, node: tuple[int, int]) -> Board:
     """
     units = [
         Unit(unit_id=entry["id"], faction=entry["faction"],
-             x=entry["x"], y=entry["y"], health=entry["health"])
+             x=entry["x"], y=entry["y"], health=entry["health"],
+             kind=entry.get("type"))
         for entry in described["units"]
     ]
     return Board(described["width"], described["height"],

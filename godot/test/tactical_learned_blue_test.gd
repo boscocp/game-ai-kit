@@ -76,6 +76,22 @@ func test_the_points_are_paid_at_the_start_of_the_holder_s_turn() -> void:
 	assert_str(" ".join(opened[1])).contains("holding the point")
 
 
+func test_the_scene_pays_a_point_when_it_opens_the_holder_s_turn() -> void:
+	# The scene must open turns through `TurnStart`: put back the old opening,
+	# with no points, and only this test notices (wave 47's review).
+	var scene: TacticalGame = auto_free((load("res://game/tactical/tactical.tscn") as PackedScene).instantiate())
+	add_child(scene)
+	var runner: Unit = _first_of(scene.state, BLUE, TacticalRules.RUNNER)
+	runner.cell = TacticalScenario.POINTS[1]
+	var before: int = scene.state.funds_of(BLUE)
+
+	scene.end_turn()
+	scene.end_turn()   # the second press, past "units have not moved"
+
+	assert_int(scene.state.current_faction).is_equal(BLUE)
+	assert_int(scene.state.funds_of(BLUE)).is_equal(before + TacticalRules.INCOME + TacticalRules.POINT_INCOME)
+
+
 func test_the_points_are_the_same_turned_half_round() -> void:
 	var far_corner := Vector2i(TacticalScenario.MAP[0].length() - 1, TacticalScenario.MAP.size() - 1)
 	for point: Vector2i in TacticalScenario.POINTS:
@@ -111,6 +127,26 @@ func test_the_learned_blue_retreats_when_it_does_not() -> void:
 	assert_object(blue.decide_attack(after, 1)).is_null()
 
 
+func test_the_learned_blue_does_not_attack_a_fight_below_the_threshold() -> void:
+	var state: BoardState = _board([[BLUE, TacticalRules.SHIELD, Vector2i(3, 3)], [RED, TacticalRules.RUNNER, Vector2i(4, 3)]])
+
+	assert_object(LearnedBlue.new(_file(_always(0.1))).decide_attack(state, 1)).is_null()
+	assert_object(LearnedBlue.new(_file(_always(0.9))).decide_attack(state, 1)).is_not_null()
+
+
+func test_a_retreat_stops_at_the_edge_of_the_threat_s_reach() -> void:
+	# A mortar reaches 2 + 3 = 5. Running as far as it could, a shield ended 7
+	# away and walked back the next turn; it should stop at 6, the nearest
+	# cell out of reach on its way to red's workshop.
+	var state: BoardState = _board([[BLUE, TacticalRules.SHIELD, Vector2i(6, 4)], [RED, TacticalRules.MORTAR, Vector2i(2, 4)],
+		[RED, TacticalRules.WORKSHOP, Vector2i(0, 4)]])
+
+	var walk: TacticalDecision = LearnedBlue.new(_file(_always(0.1))).decide_move(state, 1)
+
+	assert_str(walk.reason).contains("retreats")
+	assert_int(TacticalCombat.distance(walk.target, Vector2i(2, 4))).is_equal(6)
+
+
 func test_the_learned_blue_walks_at_the_point_the_capture_model_ranks_first() -> void:
 	# One model that says nearer is quicker, one that says the opposite: the
 	# walk follows the model, not the distance.
@@ -134,6 +170,13 @@ func test_learned_against_rules_games_all_end_and_nothing_is_refused() -> void:
 
 
 # --- helpers -------------------------------------------------------------------
+
+func _first_of(state: BoardState, faction: int, type_name: String) -> Unit:
+	for unit: Unit in state.units_of(faction):
+		if unit.type.type_name == type_name:
+			return unit
+	return null
+
 
 # A plain 14x9 board -- the scenario's size, so its points are on it -- with
 # these `[side, type, cell]` pieces, ids from 1, `to_move` to move.

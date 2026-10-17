@@ -108,19 +108,23 @@ and the adjustments it led to are their own tasks (T45-T48).
 - **Not started:** step 4 (the key), step 5 (the skirmish leaves), step 6's
   written win rates beyond the first measurement below.
 
-**Measured** (`make tactical-win-rates`, 20 seeded games each):
+**Measured** (`make tactical-win-rates`, 20 seeded games each, each side
+counted on its own -- the first version of this table added both sides
+together, and wave 47's review caught it):
 
-| pairing | red | blue | draws | rounds | stuck walker decisions |
-|---|---|---|---|---|---|
-| rules v rules | 20 | 0 | 0 | 15.7 | 727 of 3800 |
-| rules v learned | 0 | 3 | 17 | 40.2 | 6035 of 16195 |
-| learned v rules | 2 | 0 | 18 | 40.5 | 5185 of 16307 |
+| pairing | red | blue | draws | rounds | stuck: red's walkers | stuck: blue's walkers |
+|---|---|---|---|---|---|---|
+| rules v rules | 20 | 0 | 0 | 15.7 | 290 of 1931 | 437 of 1869 |
+| rules v learned | 0 | 3 | 17 | 39.4 | 495 of 5636 | 5540 of 10559 (52.5%) |
+| learned v rules | 2 | 0 | 18 | 39.6 | 4653 of 10599 (43.9%) | 532 of 5708 |
 
-The learned side holds both points and ends with 160-170 funds unspent; its
-workshop built nothing on 881 of 1574 turns, 503 because the rules' build
-refuses a type that cannot get past red's pieces and 377 because its own
-pieces boxed the workshop in -- which the board reports as "(12, 1) is not
-next to unit 6", a misleading sentence. Retreating as far as it could made a
+"Stuck" is a walker that stayed because no walk brought it nearer its goal.
+The learned side holds both points and ends with 161-172 funds unspent. As
+blue its workshop built on 409 of 787 turns, and 377 of the misses were its
+own pieces boxing the workshop in -- which the board reports as "(12, 1) is
+not next to unit 6", a misleading sentence; as red, 132 of 159. The other
+large refusal, "what would beat red's pieces cannot get past them" (503 and
+303 times), is the **rules** controller's, playing against the learned one. Retreating as far as it could made a
 unit go back and forth every turn; it now stops at the edge of the threat's
 reach, which did not change the draws. The side moving first wins every rules
 mirror, as T26 found (58 of 60 then).

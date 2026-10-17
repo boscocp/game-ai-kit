@@ -3,12 +3,13 @@
 # was left unspent, and how often a piece did nothing.
 #
 #     ./scripts/godot --headless --path godot -s res://test/tactical_win_rates.gd \
-#         [-- GAMES] [--at-most PAIRING:OUTCOME:COUNT ...]
+#         [-- GAMES] [--at-most|--at-least PAIRING:OUTCOME:COUNT ...]
 #
 # PAIRING is `rr` (rules red, rules blue), `rl` (rules red, learned blue) or
-# `lr`; OUTCOME is `red`, `blue` or `draw`. Each `--at-most` is a limit a
-# tuning task states as its acceptance -- `--at-most rr:red:28` with 40
-# games says the side moving first wins at most 70% of the rules' mirror.
+# `lr`; OUTCOME is `red`, `blue` or `draw`. Each `--at-most` or `--at-least`
+# is a limit a tuning task states as its acceptance -- `--at-most rr:red:28`
+# with 40 games says the side moving first wins at most 70% of the rules'
+# mirror, and a band takes one of each.
 #
 # It exists so that a change to the game's rules or to a controller is
 # judged by numbers rather than by one game watched (T44, which found 20
@@ -37,33 +38,44 @@ func _init() -> void:
 	}
 	var broken: int = 0
 	for limit: Array in limits:
-		if tallies[limit[0]][limit[1]] > limit[2]:
-			printerr("tactical_win_rates: %s %s %d, and the limit is %d" % [limit[0], limit[1], tallies[limit[0]][limit[1]], limit[2]])
-			broken += 1
+		broken += 0 if _holds(limit, tallies[limit[0]][limit[1]]) else 1
 	quit(1 if broken > 0 else 0)
 
 
-# Every `--at-most` as [pairing, outcome, count]; an unreadable one as [].
+# True when `counted` keeps within `limit`; said on stderr when it does not.
+static func _holds(limit: Array, counted: int) -> bool:
+	if (limit[3] and counted <= limit[2]) or (not limit[3] and counted >= limit[2]):
+		return true
+	printerr("tactical_win_rates: %s %s %d, and the limit is %s %d" % [
+		limit[0], limit[1], counted, "at most" if limit[3] else "at least", limit[2]])
+	return false
+
+
+# Every limit as [pairing, outcome, count, true for at most]; an unreadable
+# one as [].
 static func _limits(arguments: PackedStringArray) -> Array[Array]:
 	var found: Array[Array] = []
 	for index: int in range(arguments.size() - 1):
-		if arguments[index] != "--at-most":
+		if not arguments[index] in ["--at-most", "--at-least"]:
 			continue
 		var parts: PackedStringArray = arguments[index + 1].split(":")
 		var readable: bool = parts.size() == 3 and parts[0] in PAIRINGS and parts[1] in ["red", "blue", "draw"] and parts[2].is_valid_int()
-		found.append([parts[0], parts[1], int(parts[2])] if readable else [])
+		found.append([parts[0], parts[1], int(parts[2]), arguments[index] == "--at-most"] if readable else [])
 	return found
 
 
-# Play `games` seeded games and print what happened; return the tally.
+# Play `games` seeded games and print what happened, each side counted on
+# its own -- the two controllers share nothing, and a figure added up over
+# both credits one side with the other's habits (wave 47's review).
+# Returns the tally.
 func _measure(label: String, red: BlueController, blue: BlueController, games: int) -> Dictionary:
 	var tally: Dictionary = {"red": 0, "blue": 0, "draw": 0}
 	var rounds: int = 0
 	var unspent: Dictionary = {0: 0, 1: 0}
-	var counted: Dictionary = {"decisions": 0, "stuck": 0, "built": 0, "build turns": 0, "why not built": {}}
+	var counted: Array[Dictionary] = [_empty_count(), _empty_count()]
 	for dice: int in range(games):
 		var last: Array = [null]
-		var result: Dictionary = TacticalMatch.play(_counting(red, counted), _counting(blue, counted), dice,
+		var result: Dictionary = TacticalMatch.play(_Counting.new(red, counted[0]), _Counting.new(blue, counted[1]), dice,
 			func(state: BoardState) -> void: last[0] = state)
 		tally[_side_word(result["winner"])] += 1
 		rounds += result["rounds"]
@@ -71,23 +83,26 @@ func _measure(label: String, red: BlueController, blue: BlueController, games: i
 			unspent[side] += (last[0] as BoardState).funds_of(side)
 	print("%s, %d games: red %d, blue %d, draws %d; %.1f rounds on average" % [
 		label, games, tally["red"], tally["blue"], tally["draw"], float(rounds) / games])
-	print("    funds left at the end, on average: red %.0f, blue %.0f" % [
-		float(unspent[0]) / games, float(unspent[1]) / games])
-	print("    walker decisions that stayed for want of a nearer walk: %d of %d; builds: %d of %d workshop turns" % [
-		counted["stuck"], counted["decisions"], counted["built"], counted["build turns"]])
-	for why: String in counted["why not built"]:
-		print("    built nothing %d times: %s" % [counted["why not built"][why], why])
+	for side: int in range(2):
+		_print_side(TacticalStatus.side_name(side), counted[side], float(unspent[side]) / games)
 	return tally
+
+
+static func _empty_count() -> Dictionary:
+	return {"decisions": 0, "stuck": 0, "built": 0, "build turns": 0, "why not built": {}}
+
+
+static func _print_side(side: String, counted: Dictionary, funds_left: float) -> void:
+	print("    %s: %.0f funds left at the end on average; %d of %d walker decisions stayed for want of a nearer walk; built on %d of %d workshop turns" % [
+		side, funds_left, counted["stuck"], counted["decisions"], counted["built"], counted["build turns"]])
+	for why: String in counted["why not built"]:
+		print("        built nothing %d times: %s" % [counted["why not built"][why], why])
 
 
 static func _side_word(winner: int) -> String:
 	if winner == TacticalVictory.DRAW:
 		return "draw"
 	return TacticalStatus.side_name(winner)
-
-
-static func _counting(inner: BlueController, counted: Dictionary) -> BlueController:
-	return _Counting.new(inner, counted)
 
 
 # A controller that asks another and counts what it answered.

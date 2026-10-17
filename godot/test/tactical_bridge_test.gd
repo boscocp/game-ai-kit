@@ -62,7 +62,7 @@ func _play_against_a_parked_runner(park: Vector2i) -> int:
 		while not turn.finished():
 			state = turn.play(state)
 		assert_array(turn.refused).is_empty()
-		state = state.end_turn(TacticalScenario.FACTIONS, 0, TacticalRules.INCOME)
+		state = TurnStart.open(state)[0]
 		winner = TacticalVictory.winner(state)
 	return winner
 
@@ -72,7 +72,7 @@ func _parked_on(park: Vector2i) -> BoardState:
 	var state: BoardState = TacticalScenario.build()
 	var runner: Unit = _first_of(state, RED, TacticalRules.RUNNER)
 	runner.cell = park
-	return state.end_turn(TacticalScenario.FACTIONS, 0, TacticalRules.INCOME)
+	return TurnStart.open(state)[0]
 
 
 # Red's turn: its runner walks as far towards `park` as it can, and nothing
@@ -89,7 +89,7 @@ func _red_walks_towards(state: BoardState, park: Vector2i) -> BoardState:
 		var path: Array[Vector2i] = []
 		path.assign(walks[best])
 		state = state.apply(Move.new(runner.id, path))
-	return state.end_turn(TacticalScenario.FACTIONS, 0, TacticalRules.INCOME)
+	return TurnStart.open(state)[0]
 
 
 func _first_of(state: BoardState, faction: int, type_name: String) -> Unit:

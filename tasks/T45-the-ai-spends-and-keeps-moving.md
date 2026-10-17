@@ -4,10 +4,13 @@ Size: M · Prereqs: T44 · Files: `godot/game/tactical/`, `godot/test/`
 
 ## Goal
 
-T44 measured the learned blue ending games with 160-170 funds unspent, its
-workshop building nothing on 881 of 1574 turns, and 37% of its walkers'
-decisions "stays: no walk this turn brings it nearer" -- pieces queued
-behind each other at the bridge. Both are the controllers' faults, not the
+T44 measured the learned blue ending games with 172 funds unspent, its
+workshop building nothing on 378 of 787 turns -- 377 of them boxed in by its
+own pieces -- and 52.5% of its walkers' decisions "stays: no walk this turn
+brings it nearer": pieces queued behind each other at the bridge. The rules
+controller has its own silent refusal: against the learned side it built
+nothing 503 times because "what would beat red's pieces cannot get past
+them". Both are the controllers' faults, not the
 game's, and both have a standard answer in
 [docs/design/tactical-references.md](../docs/design/tactical-references.md)
 (§2.1, Wesnoth's RCA AI): **spend first** -- recruitment outranks every move
@@ -17,9 +20,10 @@ that no two units go for the same one.
 
 ## Steps
 
-1. The workshop's two silent refusals, measured in T44: the reach rule that
-   refuses every type when red's pieces wall the routes (503 times), and a
-   workshop boxed in by its own pieces (377), which the board reports as
+1. The workshop's two silent refusals, measured in T44: the rules' reach
+   rule that refuses every type when the enemy's pieces wall the routes (503
+   times, the rules controller's), and a workshop boxed in by its own pieces
+   (377, the learned blue's), which the board reports as
    "(12, 1) is not next to unit 6". The second says "no room beside the
    workshop", and the first no longer stops a build when a walker of blue's
    already reaches -- decide what it builds instead, and write down why.

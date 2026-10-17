@@ -12,9 +12,11 @@ the running and not the draws. The references
 §2.1 and §2.3) agree on three things: two thresholds, one to commit and a
 lower one to give up (hysteresis, a thermostat's two set points); a
 remembered commitment, so a fight once started is not re-decided from
-nothing; and Wesnoth's `attack_close` -- the caution check is waived within
-four cells of an attack a friend has already made this turn, so pieces join
-a fight instead of leaving one at a time. Wesnoth also retreats on the
+nothing; and joining a fight already started, after Wesnoth's
+`attack_close` -- which, read in its source, only lets an attack within three
+hexes of one already made this turn pass a check that refuses near-hopeless
+attacks. Carrying that over to retreat, so pieces join a fight instead of
+leaving one at a time, is this board's own rule, and is said as one. Wesnoth also retreats on the
 power of the two sides near a unit, not on one fight's odds.
 
 This stays the lesson T44 kept from the skirmish: a probability against a
@@ -26,8 +28,9 @@ threshold, on screen. Now two thresholds, both drawn.
    points, measured and then written down with why. A unit's commitment is
    held for the game in the controller, never saved (it is not training:
    invariant 6).
-2. Join the fight: no retreat for a walker within four cells of an attack
-   its side made this turn.
+2. Join the fight: no retreat for a walker within three cells of an attack
+   its side made this turn -- a rule of this board's, after Wesnoth's
+   `attack_close`, measured with and without.
 3. Retreat on the side's strength near the unit rather than on its own best
    fight, or say with a measurement why not.
 4. `tactical_win_rates.gd` counts flips: a unit that advanced and retreated

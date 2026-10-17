@@ -5,7 +5,7 @@ for the game: raw weights, a bias, and the feature order they go with.
 `weights.txt` is for a person, and it is the one that matters here -- a model
 whose weights nobody can read is a model nobody can argue with, and the whole
 reason this kit fits a logistic regression rather than a small network is that
-four numbers can be argued with.
+five numbers can be argued with.
 
     python3 -m gameaikit.training.report                 print the dump
     python3 -m gameaikit.training.report --check         assert it is sound
@@ -182,7 +182,7 @@ def _capture_caveat(training: Training) -> list[str]:
         f"  exact twin among the rows that were trained on -- {combat.twinned_share:.0%}",
         f"  of them, over {combat.distinct_rows} distinct situations. A table that",
         "  answers with the twin's outcome already scores most of what the",
-        "  model scores, and the majority class flatters both. Four weights",
+        "  model scores, and the majority class flatters both. Five weights",
         "  cannot memorise that many answers, so this model's score is honest;",
         "  one with capacity would have to be read against the table rather",
         "  than against the majority.",

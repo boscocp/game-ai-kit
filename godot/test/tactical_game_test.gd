@@ -548,7 +548,7 @@ func _play_seeded_game(seed_number: int, rounds: int) -> int:
 		assert_array(turn.refused).is_empty()
 		if TacticalVictory.winner(state) != TacticalVictory.NOBODY:
 			break
-		state = state.end_turn(TacticalScenario.FACTIONS, 0, TacticalRules.INCOME)
+		state = TurnStart.open(state)[0]
 	return checked
 
 
@@ -582,7 +582,7 @@ func _random_red_turn(state: BoardState, random: RandomNumberGenerator) -> Board
 			var path: Array[Vector2i] = []
 			path.assign(walks[random.randi_range(0, walks.size() - 1)])
 			state = state.apply(Move.new(unit.id, path))
-	return state.end_turn(TacticalScenario.FACTIONS, 0, TacticalRules.INCOME)
+	return TurnStart.open(state)[0]
 
 
 func _play_until_red_or_over(scene: TacticalGame) -> void:
@@ -594,7 +594,7 @@ func _play_until_red_or_over(scene: TacticalGame) -> void:
 
 
 func _blue_to_move(state: BoardState) -> BoardState:
-	return state.end_turn(TacticalScenario.FACTIONS, 0, TacticalRules.INCOME)
+	return TurnStart.open(state)[0]
 
 
 # A game with blue's runner beside red's workshop, one blow from falling, and

@@ -186,9 +186,9 @@ static func _weakest_walker_in_reach(state: BoardState, tower: Unit) -> Unit:
 	return weakest
 
 
-## The fight's inputs, read off the board: the same four numbers the learned
-## model sees, plus what the game adds -- the counter table and who can hit
-## back. Only units that can move count as near or as coming: a tower beside
+## The fight's inputs, read off the board: the five numbers the learned
+## model sees -- the counter among them since T44 -- plus who can hit back,
+## which it does not. Only units that can move count as near or as coming: a tower beside
 ## a fight does not join it.
 static func inputs(state: BoardState, attacker: Unit, defender: Unit) -> Dictionary:
 	var radius: int = rules()["nearby_radius"]

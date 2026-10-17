@@ -1,0 +1,113 @@
+{
+  "name": "the counter, read off typed units",
+  "why": "T44 gave the dataset's units a type and the combat model a fifth feature, counter. A runner beats a mortar by the table, so the same pair reads +1 from the runner's side and -1 from the mortar's; a side that read the table backwards, or from the defender, passes every untyped vector and fails here. Typed units also count as friends only when they walk.",
+  "feature_conventions": {
+    "nearby_radius": 2,
+    "reinforcement_distance_when_alone": 15,
+    "cheapest_ground": 1,
+    "dearest_ground": 3
+  },
+  "models": {
+    "combat": {
+      "kind": "logistic",
+      "features": [
+        "health_difference",
+        "numeric_advantage",
+        "defender_terrain",
+        "reinforcement_distance",
+        "counter"
+      ],
+      "weights": [
+        0.555765,
+        1.420078,
+        -1.316644,
+        -0.045594,
+        1.415889
+      ],
+      "bias": 2.753767
+    }
+  },
+  "board": {
+    "width": 5,
+    "height": 3,
+    "costs": [
+      [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        2,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    ],
+    "units": [
+      {
+        "id": 1,
+        "faction": 0,
+        "x": 1,
+        "y": 1,
+        "health": 12,
+        "type": "runner"
+      },
+      {
+        "id": 2,
+        "faction": 1,
+        "x": 2,
+        "y": 1,
+        "health": 10,
+        "type": "mortar"
+      },
+      {
+        "id": 3,
+        "faction": 0,
+        "x": 1,
+        "y": 0,
+        "health": 10,
+        "type": "shield"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "kind": "combat",
+      "attacker": 1,
+      "defender": 2,
+      "why": "a runner at a mortar in light cover, a shield two cells from the mortar: the table leans the attacker's way",
+      "features": {
+        "health_difference": 2,
+        "numeric_advantage": 1,
+        "defender_terrain": 2,
+        "reinforcement_distance": 1,
+        "counter": 1
+      },
+      "prediction": 0.982404881142
+    },
+    {
+      "kind": "combat",
+      "attacker": 2,
+      "defender": 1,
+      "why": "the same pair the other way round: the mortar alone, outnumbered, and the table against it",
+      "features": {
+        "health_difference": -2,
+        "numeric_advantage": -1,
+        "defender_terrain": 1,
+        "reinforcement_distance": 15,
+        "counter": -1
+      },
+      "prediction": 0.039381393505
+    }
+  ]
+}
