@@ -1,5 +1,5 @@
 {
-  "about": "How a fight on the tactical board is decided. Read by Python from a byte-for-byte copy in the package (python/gameaikit/dataset/combat_rules.json, so the wheel carries it) and by Godot from another (godot/game/tactical/combat_rules.json); tests hold both to this file. ADR 0007: a number two languages share lives in one file. ADR 0008: a fight is dice, not a formula. nobody_coming is the reinforcement distance of a unit with no friend left: the dataset board's width, further than a fight lasts.",
+  "about": "How a fight on the tactical board is decided. Read by Python from a byte-for-byte copy in the package (python/gameaikit/dataset/combat_rules.json, so the wheel carries it) and by Godot from another (godot/game/tactical/combat_rules.json); tests hold both to this file. ADR 0007: a number two languages share lives in one file. ADR 0008: a fight is dice, not a formula. nobody_coming is the reinforcement distance of a unit with no friend left: the dataset board's width, further than a fight lasts. strong_against is the counter table for the five walkers, as TacticalRules writes it (a test holds the two equal): the dataset's units carry one of these types (T44), so the combat model can see the counter.",
   "die": {
     "lowest": 1,
     "highest": 4
@@ -8,5 +8,26 @@
   "numbers_worth": 1,
   "counter_worth": 1,
   "nearby_radius": 2,
-  "nobody_coming": 15
+  "nobody_coming": 15,
+  "strong_against": {
+    "runner": [
+      "mortar",
+      "ram"
+    ],
+    "shield": [
+      "runner",
+      "wader"
+    ],
+    "mortar": [
+      "shield"
+    ],
+    "wader": [
+      "mortar"
+    ],
+    "ram": [
+      "bolt tower",
+      "watchtower",
+      "workshop"
+    ]
+  }
 }

@@ -40,6 +40,11 @@ class Unit:
     y: int
     health: int
 
+    #: Which of `combat.WALKERS` it is, or None for an untyped unit. Since
+    #: T44, so a fight can be tilted by the counter table as the tactical
+    #: board's fights are.
+    kind: str | None = None
+
     def is_alive(self) -> bool:
         """True while this unit is still on the board."""
         return self.health > 0

@@ -374,6 +374,11 @@ demo-stealth: import ## Cross the hall unseen: arrows walk, shift sprints, space
 demo-tactical: import ## Advance Wars style tactics against a rule-based blue: click to move, W waits, 1-5 build, Z undo, space ends the turn
 	@$(GODOT) --path godot res://game/tactical/tactical.tscn
 
+.PHONY: tactical-win-rates
+tactical-win-rates: import ## Seeded games between the tactical board's controllers: wins, rounds, stuck pieces (~1 min)
+	@# A measurement: the tuning tasks' acceptance passes it --at-most limits.
+	@$(GODOT) --headless --path godot -s res://test/tactical_win_rates.gd -- $(or $(GAMES),20) $(LIMITS)
+
 .PHONY: demo-fighting
 demo-fighting: import ## Training mode, you against a dummy: A/D walk, W jump, S crouch, U/I punch, J/K kick, L throw, O evade, hold away to guard, M dummy mode, P pause, space one frame
 	@$(GODOT) --path godot res://game/fighting/fighting.tscn

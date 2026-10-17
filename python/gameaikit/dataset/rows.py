@@ -21,6 +21,7 @@ COMBAT_FEATURES = (
     "numeric_advantage",
     "defender_terrain",
     "reinforcement_distance",
+    "counter",
 )
 
 #: The capture features, in weight order.
@@ -62,6 +63,12 @@ class Combat:
     numeric_advantage: int
     defender_terrain: int
     reinforcement_distance: int
+
+    #: +1 when the attacker's type is strong against the defender's by the
+    #: counter table, -1 the other way round, 0 otherwise (`combat.counter`).
+    #: The fifth feature, since T44: the board's fights are tilted by it and
+    #: the four before it could not say so.
+    counter: int
     attacker_won: bool
 
     #: Which game this fight happened in. Not a feature -- it is what lets the

@@ -130,7 +130,8 @@
         "health_difference": 3,
         "numeric_advantage": 0,
         "defender_terrain": 1,
-        "reinforcement_distance": 20
+        "reinforcement_distance": 20,
+        "counter": 0
       },
       "prediction": 0.692389652018
     },
@@ -143,7 +144,8 @@
         "health_difference": -3,
         "numeric_advantage": 0,
         "defender_terrain": 1,
-        "reinforcement_distance": 15
+        "reinforcement_distance": 15,
+        "counter": 0
       },
       "prediction": 0.165419573411
     }

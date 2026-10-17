@@ -54,3 +54,16 @@ untyped units never trigger, so its rows cannot see it. The model was
 retrained on that data: 85.9% of held-back fights, against 56.8% for the
 majority answer and 78.8% for the lookup table.
 
+
+## Amended in T44 (2026-10-17)
+
+The untyped units are gone from the data. Each dataset unit is one of the
+five walkers, the counter table is in the rules file (`strong_against`, held
+equal to `TacticalRules` by a test), and the combat model has a fifth
+feature, `counter`: +1, 0 or -1, the attacker's side of the table. Retrained:
+86.0% of held-back fights, against 57.7% for the majority answer and 70.5%
+for the lookup table -- the table fell because five features spread the
+same rows over more distinct situations. The counter's weight is +1.42 per
+unit, the sign the table claims. The fights still have no buildings and no
+range: every dataset fight is between neighbours who both hit back, so a
+mortar firing from three cells is asked about as if the shield could answer.

@@ -58,6 +58,16 @@ NUMBERS_WORTH = RULES["numbers_worth"]
 #: 94.4%, and the side it disfavours 27.7%, against 65.3% with no counter.
 COUNTER_WORTH = RULES["counter_worth"]
 
+#: The counter table: what each of the five walker types is strong against,
+#: as the tactical board's `TacticalRules` writes it (a Godot test holds the
+#: two equal). The dataset's units carry one of these types since T44, so a
+#: fight between them is tilted the way the board's is, and the combat model
+#: can be shown which way.
+STRONG_AGAINST: dict[str, list[str]] = RULES["strong_against"]
+
+#: The types a dataset unit can be, in the file's order.
+WALKERS: tuple[str, ...] = tuple(STRONG_AGAINST)
+
 
 @dataclass(frozen=True)
 class Outcome:
@@ -108,6 +118,19 @@ def resolve(attacker_health: int, defender_health: int, numeric_advantage: int,
     return fight(attacker_health, defender_health, numeric_advantage,
                  defender_terrain, reinforcement_distance,
                  lambda: rng.randint(WEAKEST_BLOW, HARDEST_BLOW), counter).attacker_won
+
+
+def counter(attacker_kind: str | None, defender_kind: str | None) -> int:
+    """+1 when the attacker's type is strong against the defender's, -1 the
+    other way round, 0 for neither, both, or a unit with no type.
+
+    The same function as `TacticalCombat.counter`. An untyped unit -- every
+    unit in the learning vectors before T44 -- is strong against nothing, so
+    its fights are the ones the dataset held before types existed.
+    """
+    for_attacker = 1 if defender_kind in STRONG_AGAINST.get(attacker_kind or "", []) else 0
+    for_defender = 1 if attacker_kind in STRONG_AGAINST.get(defender_kind or "", []) else 0
+    return for_attacker - for_defender
 
 
 def _attacker_blow(numeric_advantage: int, reinforcement_distance: int,

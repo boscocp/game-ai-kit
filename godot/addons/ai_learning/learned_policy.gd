@@ -116,11 +116,43 @@ func _node_an_enemy_stands_on(state: BoardState, unit: Unit) -> Dictionary:
 	return found
 
 
+## What the combat model says of `attacker` winning a fight it starts
+## against `defender` on `state`, or NAN when it cannot say -- an unusable
+## weights file, or a row it cannot read. Public so a game that walks its own
+## way, such as the tactical board's learned blue (T44), can ask the same
+## question this policy asks.
+func chance_to_win(state: BoardState, attacker: Unit, defender: Unit) -> float:
+	if why_unusable() != "":
+		return NAN
+	return _combat.predict_named(BoardFeatures.combat_row(state, attacker, defender, _published))
+
+
+## The threshold this policy attacks at.
+func threshold() -> float:
+	return _threshold
+
+
+## `nodes`, each with what the capture model says `faction` needs to take it,
+## quickest first, as `{"cell", "turns"}`; a node the model cannot read is
+## left out. Public for the same reason as `chance_to_win`: a game may ask
+## about some of the nodes, such as those it does not hold yet.
+func rank_nodes(state: BoardState, faction: int, nodes: Array[Vector2i]) -> Array[Dictionary]:
+	var ranked: Array[Dictionary] = []
+	if why_unusable() != "":
+		return ranked
+	for node: Vector2i in nodes:
+		var row: Dictionary = BoardFeatures.capture_row(state, faction, node, _published)
+		var turns: float = _capture.predict_named(row) if not row.is_empty() else NAN
+		if is_finite(turns):
+			ranked.append({"cell": node, "turns": turns})
+	ranked.sort_custom(_quicker_node)
+	return ranked
+
+
 # Ask the combat model about this fight, and act on the answer.
 func _fight_or_break_off(state: BoardState, unit: Unit,
 		opponent: Unit) -> LearnedDecision:
-	var row: Dictionary = BoardFeatures.combat_row(state, unit, opponent, _published)
-	var chance: float = _combat.predict_named(row)
+	var chance: float = chance_to_win(state, unit, opponent)
 	# NAN, which is what the model answers for a row it cannot read. It is not
 	# a low probability and must not be acted on as one: a feature renamed on
 	# one side of the two languages would otherwise show up as an opponent
@@ -149,7 +181,7 @@ func _fight_or_break_off(state: BoardState, unit: Unit,
 func _advance_on_a_node(state: BoardState, unit: Unit) -> LearnedDecision:
 	if _nodes.is_empty():
 		return LearnedDecision.hold(unit.id, "no node was given to walk at")
-	var ranked: Array[Dictionary] = _nodes_by_predicted_turns(state, unit.faction)
+	var ranked: Array[Dictionary] = rank_nodes(state, unit.faction, _nodes)
 	if ranked.is_empty():
 		return LearnedDecision.hold(
 			unit.id, "the capture model was handed a row it cannot read")
@@ -159,23 +191,11 @@ func _advance_on_a_node(state: BoardState, unit: Unit) -> LearnedDecision:
 		best["cell"], best["turns"], _runner_up(ranked))
 
 
-# Every node with what the capture model says it costs, quickest first.
+# True when the first node is the one to walk at.
 #
 # Ties are broken by coordinate rather than left to the sort, because two
 # nodes the model cannot separate are exactly the case where an arbitrary
 # order would make the same board play differently on two machines.
-func _nodes_by_predicted_turns(state: BoardState, faction: int) -> Array[Dictionary]:
-	var ranked: Array[Dictionary] = []
-	for node: Vector2i in _nodes:
-		var row: Dictionary = BoardFeatures.capture_row(state, faction, node, _published)
-		var turns: float = _capture.predict_named(row) if not row.is_empty() else NAN
-		if is_finite(turns):
-			ranked.append({"cell": node, "turns": turns})
-	ranked.sort_custom(_quicker_node)
-	return ranked
-
-
-# True when the first node is the one to walk at.
 static func _quicker_node(one: Dictionary, other: Dictionary) -> bool:
 	if one["turns"] != other["turns"]:
 		return one["turns"] < other["turns"]
@@ -233,7 +253,7 @@ func _move_away_from(state: BoardState, unit: Unit, pivot: Vector2i) -> Move:
 # The route to a cell: the pathfinder's, when the game supplied one.
 func _route_to(state: BoardState, unit: Unit, target: Vector2i) -> Array[Vector2i]:
 	if _router != null:
-		return _router.find_path(state.graph, unit.cell, target)
+		return _router.find_path(state.graph_for(unit), unit.cell, target)
 	return _walk(state, unit, target, true)
 
 
@@ -264,7 +284,8 @@ static func _best_step(state: BoardState, unit: Unit, standing: Vector2i,
 		pivot: Vector2i, closer: bool) -> Vector2i:
 	var best: Vector2i = standing
 	var best_distance: int = BoardFeatures.distance_between(standing, pivot)
-	for step: Vector2i in state.graph.neighbours(standing):
+	# The unit's own cost map: on the board's, a wader's river is a wall.
+	for step: Vector2i in state.graph_for(unit).neighbours(standing):
 		var occupant: Unit = state.unit_at(step)
 		if occupant != null and occupant != unit:
 			continue

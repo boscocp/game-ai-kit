@@ -16,22 +16,25 @@
         "health_difference",
         "numeric_advantage",
         "defender_terrain",
-        "reinforcement_distance"
+        "reinforcement_distance",
+        "counter"
       ],
       "weights": [
-        0.577326,
-        1.505848,
-        -1.544773,
-        -0.061068
+        0.555765,
+        1.420078,
+        -1.316644,
+        -0.045594,
+        1.415889
       ],
-      "bias": 3.182401,
+      "bias": 2.753767,
       "comparable_weights": [
-        3.720806,
-        1.085171,
-        -1.24348,
-        -0.326327
+        3.582413,
+        1.051058,
+        -1.081233,
+        -0.245179,
+        0.96421
       ],
-      "rows_trained_on": 2874
+      "rows_trained_on": 2915
     },
     "capture": {
       "kind": "linear",
@@ -42,19 +45,19 @@
         "terrain_on_the_way"
       ],
       "weights": [
-        0.65837,
-        0.169719,
-        0.119192,
-        0.371235
+        0.671157,
+        0.01708,
+        0.095923,
+        0.384699
       ],
-      "bias": 1.021847,
+      "bias": 1.487415,
       "comparable_weights": [
-        1.035952,
-        0.131143,
-        0.096007,
-        0.194678
+        0.96823,
+        0.013151,
+        0.074604,
+        0.202113
       ],
-      "rows_trained_on": 661
+      "rows_trained_on": 636
     }
   }
 }

@@ -28,8 +28,8 @@ def sound_report() -> dict:
         "models": {
             "combat": {
                 "features": list(COMBAT_FEATURES),
-                "weights": [1.0, 2.0, -3.0, -0.5],
-                "comparable_weights": [2.0, 1.4, -1.3, -0.6],
+                "weights": [1.0, 2.0, -3.0, -0.5, 1.5],
+                "comparable_weights": [2.0, 1.4, -1.3, -0.6, 0.9],
                 "bias": 0.5,
             },
             "capture": {
@@ -50,8 +50,9 @@ def fitted(score: float, baseline: float, kind: str = "logistic") -> Fitted:
     an empty pair made E4 pass without looking at anything.
     """
     features = COMBAT_FEATURES if kind == "logistic" else CAPTURE_FEATURES
-    model = Model(kind=kind, features=features, weights=(1.0, 1.0, 1.0, 1.0),
-                  bias=0.0, comparable_weights=(1.0, 1.0, 1.0, 1.0), rows_trained_on=10)
+    ones = tuple(1.0 for _ in features)
+    model = Model(kind=kind, features=features, weights=ones,
+                  bias=0.0, comparable_weights=ones, rows_trained_on=10)
     return Fitted(model=model, score=score, baseline=baseline, memoriser=baseline,
                   twinned_share=0.0, distinct_rows=10, holdout_rows=10,
                   training_games=frozenset({1, 2}), holdout_games=frozenset({3}))

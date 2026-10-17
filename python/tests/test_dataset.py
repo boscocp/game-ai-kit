@@ -47,6 +47,14 @@ class TheFight(unittest.TestCase):
         self.assertGreater(fights(500, 7, numeric_advantage=2),
                            fights(500, 7, numeric_advantage=-2))
 
+    def test_the_counter_helps_whoever_it_favours(self) -> None:
+        favoured = fights(2000, 13, counter=1)
+        even = fights(2000, 13)
+        disfavoured = fights(2000, 13, counter=-1)
+
+        self.assertGreater(favoured, even)
+        self.assertGreater(even, disfavoured)
+
     def test_a_reinforcement_only_helps_if_it_arrives_in_time(self) -> None:
         # The one feature whose usefulness comes from a rule somebody chose,
         # rather than from arithmetic everybody would expect.
@@ -245,6 +253,25 @@ class TheFeaturesReadOffABoard(unittest.TestCase):
 
         self.assertEqual(seen["reinforcement_distance"], simulate.WIDTH)
 
+    def test_the_counter_is_the_attackers_side_of_the_table(self) -> None:
+        # T44's fifth feature. A runner beats a mortar by the table, so the
+        # same pair reads +1 one way round and -1 the other.
+        runner = Unit(0, 0, 1, 1, 10, kind="runner")
+        mortar = Unit(1, 1, 2, 1, 10, kind="mortar")
+        board = self.board_with([runner, mortar])
+
+        self.assertEqual(simulate.fight_features(board, runner, mortar)["counter"], 1)
+        self.assertEqual(simulate.fight_features(board, mortar, runner)["counter"], -1)
+
+    def test_an_untyped_unit_has_no_counter_either_way(self) -> None:
+        # Every unit in the learning vectors written before T44 is untyped.
+        runner = Unit(0, 0, 1, 1, 10, kind="runner")
+        plain = Unit(1, 1, 2, 1, 10)
+        board = self.board_with([runner, plain])
+
+        self.assertEqual(simulate.fight_features(board, runner, plain)["counter"], 0)
+        self.assertEqual(simulate.fight_features(board, plain, runner)["counter"], 0)
+
     def test_a_captured_node_is_described_from_the_capturing_side(self) -> None:
         # Through a whole game rather than through one function: three units of
         # faction 0 on top of the node and one of faction 1 in the far corner,
@@ -322,6 +349,12 @@ class TheRowsThatComeOut(unittest.TestCase):
         for name in CAPTURE_FEATURES:
             with self.subTest(feature=name):
                 self.assertGreater(len({getattr(row, name) for row in self.captures}), 2)
+
+    def test_the_counter_leans_both_ways_in_the_rows(self) -> None:
+        # A typed dataset (T44): without fights the table tilts each way, the
+        # model has nothing to learn the fifth feature's sign from.
+        leans = {row.counter for row in self.combats}
+        self.assertEqual(leans, {-1, 0, 1})
 
     def test_a_capture_takes_at_least_as_long_as_the_hold_it_needs(self) -> None:
         self.assertTrue(all(row.turns_taken >= simulate.HOLD_NEEDED

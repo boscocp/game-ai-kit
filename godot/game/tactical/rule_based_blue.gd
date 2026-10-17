@@ -97,11 +97,7 @@ func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 		return TacticalDecision.hold(unit_id,
 			"stays: red's pieces stand on every way to red's workshop this turn", unit.cell)
 	var walks: Dictionary = TacticalReach.walks_for(state, unit)
-	var to_target: Dictionary = TacticalReach.route_costs(_past_red(state, unit.type), target.cell)
-	var best: Vector2i = unit.cell
-	for cell: Vector2i in walks:
-		if _remaining(state, unit, cell, to_target, target) < _remaining(state, unit, best, to_target, target):
-			best = cell
+	var best: Vector2i = _nearest_walk_to(state, unit, walks, target.cell)
 	var aim: String = "the %s at %s" % [target.type.type_name, target.cell]
 	if best == unit.cell:
 		return TacticalDecision.hold(unit_id, "stays: no walk this turn brings it nearer %s" % aim, unit.cell)
@@ -109,13 +105,27 @@ func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 		best, aim, _crossing(unit, target)], best)
 
 
+## The cell of `walks` -- `TacticalReach.walks_for` the unit -- that leaves
+## the least to walk to `target` by the route the unit would really take,
+## round red's pieces; the unit's own cell when none is nearer. Shared with
+## `LearnedBlue`, which walks at points by the same route.
+func _nearest_walk_to(state: BoardState, unit: Unit, walks: Dictionary, target: Vector2i) -> Vector2i:
+	var to_target: Dictionary = TacticalReach.route_costs(_past_red(state, unit.type, target), target)
+	var best: Vector2i = unit.cell
+	for cell: Vector2i in walks:
+		if _remaining(state, unit, cell, to_target, target) < _remaining(state, unit, best, to_target, target):
+			best = cell
+	return best
+
+
 # The board as `kind` walks it, with every red piece but its workshops made a
-# wall. A workshop stays open because it is the target: it is attacked from
-# beside it, and a flood out of a wall would reach nothing.
-func _past_red(state: BoardState, kind: UnitType) -> GridGraph:
+# wall -- and but the piece on `target`, when one is given. A workshop stays
+# open because it is the target: it is attacked from beside it, and a flood
+# out of a wall would reach nothing.
+func _past_red(state: BoardState, kind: UnitType, target: Vector2i = Vector2i(-1, -1)) -> GridGraph:
 	var graph: GridGraph = state.graph_for_type(kind).duplicate_graph()
 	for enemy: Unit in _enemies(state):
-		if enemy.type.type_name != TacticalRules.WORKSHOP:
+		if enemy.type.type_name != TacticalRules.WORKSHOP and enemy.cell != target:
 			graph.block(enemy.cell)
 	return graph
 
@@ -220,11 +230,11 @@ func _nearest_workshop(state: BoardState, unit: Unit) -> Unit:
 # the target; walking the other way charges the opposite. The difference is
 # the same on every route, so it is corrected exactly by those two cells.
 func _remaining(state: BoardState, unit: Unit, cell: Vector2i, to_target: Dictionary,
-		target: Unit) -> int:
+		target: Vector2i) -> int:
 	if not to_target.has(cell):
 		return UNREACHABLE
 	var graph: GridGraph = state.graph_for(unit)
-	return to_target[cell] - graph.cost_at(cell) + graph.cost_at(target.cell)
+	return to_target[cell] - graph.cost_at(cell) + graph.cost_at(target)
 
 
 # Said when the walk is on its way over the river, and only then.

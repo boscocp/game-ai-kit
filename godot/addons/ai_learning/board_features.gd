@@ -7,7 +7,12 @@
 ## number: every convention comes out of the weights file, and the vectors in
 ## `spec/vectors/learning/` hold both languages to the same rows.
 ##
-## When not to use it: any board but this kit's. Four features, one grid.
+## Only walkers count -- a unit that moves, or an untyped one. The dataset's
+## boards have no buildings, so a tower beside a fight counted as a friend
+## would hand the model a number it was never shown, and the tactical board's
+## own fight does not count it either (`TacticalCombat`).
+##
+## When not to use it: any board but this kit's. Five features, one grid.
 class_name BoardFeatures
 extends RefCounted
 
@@ -17,6 +22,8 @@ const HEALTH_DIFFERENCE: String = "health_difference"
 const NUMERIC_ADVANTAGE: String = "numeric_advantage"
 const DEFENDER_TERRAIN: String = "defender_terrain"
 const REINFORCEMENT_DISTANCE: String = "reinforcement_distance"
+## +1, 0 or -1: which way the counter table leans on this fight (T44).
+const COUNTER: String = "counter"
 
 ## The capture features.
 const DISTANCE_TO_NODE: String = "distance_to_node"
@@ -43,9 +50,26 @@ static func combat_row(state: BoardState, attacker: Unit, defender: Unit,
 			_friends_near(state, attacker, defender.cell, radius)
 			- _friends_near(state, defender, attacker.cell, radius)
 		),
-		DEFENDER_TERRAIN: terrain_at(state.graph, defender.cell, published),
+		# The defender's own ground: a wader in the river stands on open
+		# water, which is a wall on the board's own cost map.
+		DEFENDER_TERRAIN: terrain_at(state.graph_for(defender), defender.cell, published),
 		REINFORCEMENT_DISTANCE: _nearest_friend(state, attacker, published),
+		COUNTER: counter(attacker.type, defender.type),
 	}
+
+
+## +1 when `attacker` is strong against `defender` by the counter table, -1
+## the other way round, 0 for neither, both, or an untyped unit -- the
+## dataset's `combat.counter`, read off `UnitType.strong_against`.
+static func counter(attacker: UnitType, defender: UnitType) -> int:
+	if attacker == null or defender == null:
+		return 0
+	return (1 if attacker.beats(defender) else 0) - (1 if defender.beats(attacker) else 0)
+
+
+## True for a unit that can join a fight: one that moves, or an untyped one.
+static func is_walker(unit: Unit) -> bool:
+	return unit.type == null or unit.type.mobile
 
 
 ## What a model gets to see about a side's run at a node.
@@ -63,14 +87,14 @@ static func combat_row(state: BoardState, attacker: Unit, defender: Unit,
 ## limit of what the model was fitted on rather than of the board.
 static func capture_row(state: BoardState, faction: int, node: Vector2i,
 		published: ModelFile) -> Dictionary:
-	var own: Array[Unit] = state.units_of(faction)
+	var own: Array[Unit] = _walkers(state.units_of(faction))
 	if own.is_empty():
 		return {}
 	var nearest: Unit = _nearest_to(own, node)
 	return {
 		DISTANCE_TO_NODE: distance_between(nearest.cell, node),
 		OWN_UNITS: own.size(),
-		ENEMY_UNITS: state.units.size() - own.size(),
+		ENEMY_UNITS: _walkers(state.units).size() - own.size(),
 		TERRAIN_ON_THE_WAY: _terrain_between(state.graph, nearest.cell, node, published),
 	}
 
@@ -99,9 +123,18 @@ static func terrain_at(graph: GridGraph, cell: Vector2i, published: ModelFile) -
 static func _friends_near(state: BoardState, unit: Unit, cell: Vector2i,
 		radius: int) -> int:
 	var found: int = 0
-	for other: Unit in state.units_of(unit.faction):
+	for other: Unit in _walkers(state.units_of(unit.faction)):
 		if other != unit and distance_between(other.cell, cell) <= radius:
 			found += 1
+	return found
+
+
+# Those of `units` that can join a fight.
+static func _walkers(units: Array[Unit]) -> Array[Unit]:
+	var found: Array[Unit] = []
+	for unit: Unit in units:
+		if is_walker(unit):
+			found.append(unit)
 	return found
 
 
@@ -122,7 +155,7 @@ static func _friends_near(state: BoardState, unit: Unit, cell: Vector2i,
 static func _nearest_friend(state: BoardState, unit: Unit,
 		published: ModelFile) -> int:
 	var closest: int = -1
-	for other: Unit in state.units_of(unit.faction):
+	for other: Unit in _walkers(state.units_of(unit.faction)):
 		var apart: int = distance_between(other.cell, unit.cell)
 		if other != unit and (closest < 0 or apart < closest):
 			closest = apart
