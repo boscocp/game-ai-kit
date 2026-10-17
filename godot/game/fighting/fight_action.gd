@@ -2,9 +2,10 @@
 ## the opponent model (T17) and behaviour cloning (T18) both read a fight in.
 ##
 ## Read off the fighter as it is drawn: the height of the move it started, a
-## jump, a backdash (T40), a guard it was seen holding (blockstun shows it), a
-## crouch, a step in or out. Nothing here counts or remembers: it is a reading of one frame,
-## which is why it lives apart from the opponents that learn from it.
+## jump, a backdash (T40), a guard it was seen holding (blockstun shows it),
+## a crouch, a step in or out. Nothing here counts or remembers: it is a
+## reading of one frame, which is why it lives apart from the opponents that
+## learn from it.
 ##
 ## When not to use it: telling two moves of one height apart. A jab and a
 ## straight are both "high" here, on purpose -- the answer to them is the same.

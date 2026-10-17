@@ -42,7 +42,7 @@ const ANSWERS: Dictionary = {
 ## none when it knows no more than chance, and in between in proportion.
 ## "As sure as it can be" is the predictor's `ceiling`, not 1: at decay 0.8
 ## a context remembers at most five sightings, and the surest it gets about
-## one of eleven actions is 6 in 16. The options' own weights are 1 to 4, so
+## one of twelve actions is 6 in 17. The options' own weights are 1 to 4, so
 ## a sure prediction makes an answer the likely draw without making it the
 ## only one -- when the level has an answer at all: easy knows two options a
 ## situation, and against many actions none of them is one.

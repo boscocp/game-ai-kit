@@ -89,7 +89,7 @@ because it is driven better, and a command proves every car runs one physics.
 
 ---
 
-## Resuming after 2026-10-16 (wave 43, built, not yet reviewed)
+## Resuming after 2026-10-16 (wave 43, reviewed, not mergeable yet)
 
 **What is on the branch.** T40, on `wave/43-an-evade-and-harder-levels`:
 the backdash (`FightBackdash`, the O key, bit 512, `backdash` in the frame
@@ -100,8 +100,14 @@ and is now held to beating the owner's ghost 75 times in 100 in `make
 test-opponent-levels`. The rows, clone and win rates were redone. `make
 check` is green.
 
-**Next:** the review, by a context that did not write it, into
-`docs/reviews/43-an-evade-and-harder-levels.md`, then `make wave-merge`.
+**The review** ([docs/reviews/43-an-evade-and-harder-levels.md](../docs/reviews/43-an-evade-and-harder-levels.md))
+says the backdash rules hold and the wave cannot merge yet. Its findings
+4, 6 and part of 7 are fixed. Still open, waiting on the owner's decision:
+(1) "long" in "it evaded" cannot reach a backdash at a 15-frame reaction,
+so the answer to over-evading is not there yet; (2)-(3) the hard gate's
+margins are thin (the turtle stand-in 66, T37's hard 74 against a bar of
+75) and the gate moves when the clone is retrained; (5) only hard ever
+evades. Then `make wave-merge`.
 Then the owner: play hard (`make demo-fighting`, M to "opponent: hard"),
 record new fights with the evade in them (`make record-fights`, `make
 train-clone`), and say whether the clone, the ghosts and the learner can

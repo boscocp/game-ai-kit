@@ -91,7 +91,7 @@ func _ready() -> void:
 		[FightView.INVULNERABLE, "grey outline: evading, nothing can hit it"],
 		[FightView.HITBOX, "red box: hitbox, where it reaches"],
 		[FightView.THROW, "orange box: a throw, which no guard stops"],
-		[FightView.STUNNED_SPRITE, "paler: stunned, taking off or landing"],
+		[FightView.STUNNED_SPRITE, "paler: stunned, taking off, landing or evading"],
 	] as Array[Array])
 	restart()
 

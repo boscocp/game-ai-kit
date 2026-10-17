@@ -40,6 +40,15 @@ func test_a_backdash_is_committed_for_its_frames_and_no_more() -> void:
 		assert_int(state.fighters[0].x).override_failure_message(character).is_equal(300 - travelled + walked)
 
 
+# Pressed with down held, it starts standing and stays standing: a backdash
+# that crouched would duck the highs its vulnerable frames are there for.
+func test_a_backdash_pressed_holding_down_is_taken_standing() -> void:
+	var state: FightState = _step(_alone("lancer", 300, 500), EVADE | DOWN, 0)
+	while state.fighters[0].stun_kind == FightBackdash.KIND:
+		assert_bool(state.fighters[0].crouching).is_false()
+		state = _step(state, DOWN, 0)
+
+
 # Away is away from the way it faces: the mirror image of a backdash is the
 # same backdash.
 func test_a_backdash_goes_away_from_the_other_fighter_on_either_side() -> void:

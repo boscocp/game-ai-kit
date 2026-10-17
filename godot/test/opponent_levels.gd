@@ -4,7 +4,7 @@
 # `HARD_BEATS_THE_OWNER` times in 100. The ghost is T18's "ghost: nearest",
 # built from the nine fights the owner recorded: of everything in the
 # repository it is the nearest to a person who is learning, and it is the
-# strongest of T18's imitations -- it beat medium 86 times in 100. A scripted
+# strongest of T18's imitations -- it beat T37's medium 86 times in 100. A scripted
 # stand-in was tried first, its table the owner's own choices counted by
 # situation, and it could not tell T37's hard from T40's: both beat it 96 to
 # 98 times. The ghost could: 56 before the retune, over 80 after.
