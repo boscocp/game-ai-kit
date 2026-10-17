@@ -4,7 +4,9 @@
 ## You are player one: A and D walk, W jumps -- with A or D, that way -- S
 ## crouches, U and I punch light and heavy, J and K kick light and heavy --
 ## in the air, each is a jump-in attack, one a jump -- S with I is the
-## anti-air uppercut, L throws; jump forwards from close and you cross over
+## anti-air uppercut, L throws, O evades -- a backdash, which strikes and
+## throws pass through at first and which cannot guard at the end (T40);
+## jump forwards from close and you cross over
 ## to the dummy's other side; holding back from a strike guards, standing or
 ## -- with S -- crouching. C swaps which character you play. The dummy, player two, does
 ## what its mode says -- stand, guard standing, guard crouching, jab, throw or
@@ -39,7 +41,7 @@ const LEARNER_MODE: String = "learner: "
 ## Punches on the top row and kicks below them, as an arcade panel has them.
 const KEYS: Dictionary = {KEY_A: FightInput.LEFT, KEY_D: FightInput.RIGHT, KEY_S: FightInput.DOWN, KEY_W: FightInput.UP,
 		KEY_U: FightInput.LIGHT_PUNCH, KEY_I: FightInput.HEAVY_PUNCH, KEY_J: FightInput.LIGHT_KICK,
-		KEY_K: FightInput.HEAVY_KICK, KEY_L: FightInput.THROW}
+		KEY_K: FightInput.HEAVY_KICK, KEY_L: FightInput.THROW, KEY_O: FightInput.EVADE}
 ## How often the dummy presses in its "jab", "throw" and "low kick" modes,
 ## in frames.
 const JAB_EVERY: int = 60
@@ -86,9 +88,10 @@ func _ready() -> void:
 		[FightView.SIDES[0], "left health bar: you (player one)"],
 		[FightView.SIDES[1], "right health bar: the dummy (player two)"],
 		[FightView.HURTBOX, "outline: hurtbox, where it can be hit"],
+		[FightView.INVULNERABLE, "grey outline: evading, nothing can hit it"],
 		[FightView.HITBOX, "red box: hitbox, where it reaches"],
 		[FightView.THROW, "orange box: a throw, which no guard stops"],
-		[FightView.STUNNED_SPRITE, "paler: stunned, taking off or landing"],
+		[FightView.STUNNED_SPRITE, "paler: stunned, taking off, landing or evading"],
 	] as Array[Array])
 	restart()
 
@@ -245,9 +248,17 @@ func _fighter_overlay(fighter: FighterState) -> Dictionary:
 			"move_frame": fighter.move_frame, "phase": FightBoxes.phase(fighter, data) if fighter.move != "" else "free",
 			"hitbox": str(hitbox) if not hitbox.is_empty() else "none", "hurtbox": str(FightBoxes.hurtbox(fighter, data)),
 			"height": data.move(fighter.character, fighter.move)["height"] if fighter.move != "" else "none",
-			"crouching": fighter.crouching,
+			"crouching": fighter.crouching, "evading": _evading(fighter),
 			"stun": fighter.stun, "buffered": fighter.buffered if fighter.buffered != "" else "nothing",
 			"health": fighter.health}
+
+
+# The backdash's frame and part, in words, or "not evading".
+func _evading(fighter: FighterState) -> String:
+	var frame: int = FightBackdash.frame_of(fighter, data)
+	if frame == 0:
+		return "not evading"
+	return "frame %d, %s" % [frame, "invulnerable" if FightBackdash.invulnerable(fighter, data) else "cannot guard"]
 
 
 func _held_keys() -> int:
@@ -295,7 +306,7 @@ func _refresh() -> void:
 		_status.text = "the frame data was refused: " + data.refusal
 		return
 	_view.show_fight(state, data)
-	_status.text = ("A/D walk, W jump, S crouch, U/I punch, J/K kick, S+I uppercut, L throw, hold away to guard\n"
+	_status.text = ("A/D walk, W jump, S crouch, U/I punch, J/K kick, S+I uppercut, L throw, O evade, hold away to guard\n"
 			+ "C swap characters  ·  M dummy: %s  ·  P pause, space one frame  ·  R restart" % dummy_mode
 			+ ("\nrecording: %d fight(s) kept in data/fights/" % fights_kept if recording else ""))
 	_panel.text = FightingPanel.describe(state, data, paused, seat)

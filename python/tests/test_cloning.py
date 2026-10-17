@@ -97,6 +97,12 @@ class TestReportNeedsAHeldOutSet(unittest.TestCase):
 
 
 class TestTheNGramIsTheGames(unittest.TestCase):
+    def test_the_report_says_how_many_decisions_were_a_backdash(self) -> None:
+        before = Session("old.json", "person", ["lancer", "dancer"], [({}, "step in"), ({}, "mid")])
+        after = Session("new.json", "person", ["lancer", "dancer"], [({}, "evade"), ({}, "mid")])
+        self.assertIn("0 of 2 decisions, in 1 recording(s) -- none", compare.evades([before]))
+        self.assertEqual(compare.evades([before, after]), "evades: 1 of 4 decisions, in 2 recording(s)")
+
     def test_the_report_scores_the_ngram_with_the_learners_own_settings(self) -> None:
         """`measure` copies the learner's order and decay; this holds the copy to the game's defaults."""
         import re

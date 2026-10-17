@@ -107,6 +107,8 @@ func pose(fighter: FighterState, data: FightData, clock: int, knocked_out: bool)
 	if fighter.stun > 0 and fighter.stun_kind == "hit":
 		var last: int = cels(fighter.character, "hit").size() - 1
 		return ["hit", last - mini(last, fighter.stun / STUN_PER_CEL)]
+	if fighter.stun_kind == FightBackdash.KIND:
+		return ["jump", backdash_index(fighter, data)]
 	if fighter.is_airborne():
 		return ["jump", jump_index(fighter, data)]
 	if fighter.stun_kind == "takeoff":
@@ -133,6 +135,15 @@ static func walks(fighter: FighterState) -> bool:
 func jump_index(fighter: FighterState, data: FightData) -> int:
 	var shown: int = cels(fighter.character, "jump").size()
 	return mini(shown - 1, (fighter.jump_frame - 1) * shown / data.jump_length(fighter.character))
+
+
+## The cel of the jump a backdash shows, for the frame of it the fighter is
+## on: the template has no backdash, and a backdash is a hop backwards, so
+## the jump's cels are spread over its frames as they are over a jump's.
+func backdash_index(fighter: FighterState, data: FightData) -> int:
+	var shown: int = cels(fighter.character, "jump").size()
+	var frames: int = int(data.character(fighter.character)["backdash"]["frames"])
+	return mini(shown - 1, (FightBackdash.frame_of(fighter, data) - 1) * shown / frames)
 
 
 ## The cel of a move for the frame its fighter is on: each phase's cels

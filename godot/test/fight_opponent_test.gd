@@ -249,3 +249,16 @@ func test_the_same_seed_plays_the_same_fight() -> void:
 			state = FightRules.step(state, [easy.input_for(state), hard.input_for(state)] as Array[int], _data)
 		runs.append(state.digest())
 	assert_str(runs[0]).is_equal(runs[1])
+
+
+# Every situation the fixed opponent can name, every stand-in has something
+# to do in: T40 added two, and a stand-in without them stopped dead on the
+# first evade it saw.
+func test_every_stand_in_has_options_in_every_situation() -> void:
+	for habit: String in StandInPlayer.HABITS:
+		var stand_in := StandInPlayer.new(habit, _data)
+		for situation: String in FightOpponent.SITUATIONS:
+			var lancer: Array = stand_in._weighted_options(situation, "lancer")
+			var dancer: Array = stand_in._weighted_options(situation, "dancer")
+			assert_array(lancer).override_failure_message("%s in %s as the lancer" % [habit, situation]).is_not_empty()
+			assert_array(dancer).override_failure_message("%s in %s as the dancer" % [habit, situation]).is_not_empty()

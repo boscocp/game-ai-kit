@@ -51,7 +51,9 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T39 | High punches pass over a crouch | done | the owner's finding from playing T34: standing punches and the dancer's roundhouse are high and miss a crouching fighter; the light kicks recut as side kicks to the waist; manual check still a person's |
 | T17 | The opponent model | done | `ai_opponent`: an n-gram with additive smoothing and decay, held to Python by 4 vectors; the learner is T37's opponent leaning towards answers; 20/20 within 40 actions and after a switch; ADR 0016, the owner's exception to invariant 6, held by N9; manual check still a person's |
 | T18 | Behaviour cloning, and what a learned model buys | done | the owner's nine fights, cut 15 frames late; every recording held out once: nothing fitted beats "always step in" (28.0%), the n-gram does by four points; ghosts beat medium 78-86 in 100, the clone 64; 0.04-0.12 ms a decision; a person could not tell them apart (ADR 0017, N10-N12) |
-| T40 | An evade, and levels that are hard enough | todo | the owner could not tell T18's opponents apart and found all of them easy; a backdash gives every one more to choose, and hard is retuned and measured |
+| T40 | An evade, and levels that are hard enough | wip | merged in wave 43: a backdash on its own button (O), 20-24 frames, invulnerable for the first quarter, after Strive; old logs replay unchanged; every level evades; hard holds 150/200 against a frozen copy of the owner's ghost (T37's hard: 109-133) and 130/200 against the turtle; not done: an answer that punishes over-evading (none reaches at a 15-frame reaction), step 5 and the manual check, which wait for the owner's new fights |
+| T41 | What the owner found playing the boards | todo | A\* through mud costing 8; the green start dot on grass; blue stuck at the bridge in `demo-tactical`; the skirmish AI idle while the owner holds the white flag -- each reproduced before it is called a bug |
+| T42 | Examples that are fun to play | todo | the owner: the examples need to be more playful; a design pass ending in tasks the owner picks; needs T41 |
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
 | T26 | Combat on the board | todo | reach and the counter table start to matter; the dataset is rebuilt from the game (ADR 0008) |
 | T21 | Every example can be watched | done | `check_demos.py` and `demo_overlays.gd`; blue's decision now drawn before it is played |
@@ -87,6 +89,34 @@ because it is driven better, and a command proves every car runs one physics.
 
 ---
 
+## Resuming after 2026-10-16 (wave 43)
+
+**What landed.** T40: the backdash -- `FightBackdash`, the O key, bit 512,
+`backdash` in the frame data. It is invulnerable for its first quarter,
+then cannot guard and can be thrown. Every level of the fixed opponent
+backdashes. Hard was retuned by what each option won against the owner's
+ghost. `make test-opponent-levels` holds it to 150 of 200 against a frozen
+copy of that ghost, and to 130 of 200 against the turtle stand-in it was
+not tuned on (as the lancer). The rows, the clone and the win rates were
+redone, and no recording has an evade.
+
+**The review's worst finding.** The opponent's answer to a backdash,
+"long", could not reach one: seen 15 frames late, the backdash is over
+first. It was removed, and step 3's "answer to a player who evades too
+often" is **not done** -- T40 says so. See
+[docs/reviews/43-an-evade-and-harder-levels.md](../docs/reviews/43-an-evade-and-harder-levels.md)
+and T40's "After the review".
+
+**Not proven.** That hard is hard for a person: its bar is a ghost it was
+tuned against. That the opponents are now easier to tell apart: it needs
+the owner's new fights.
+
+**Next:** the owner plays hard (`make demo-fighting`, M to "opponent:
+hard"), records fights with the evade in them (`make record-fights`, `make
+train-clone`), and says whether the clone, the ghosts and the learner can
+now be told apart (T40's step 5 and its manual check). Then what wave 42
+listed: `make check-changed`, the racing and shooter surveys, T41, T42.
+
 ## Resuming after 2026-10-15 (wave 42)
 
 **What landed.** T18: behaviour cloning. `make record-fights` keeps each
@@ -120,6 +150,10 @@ racing (2D, and 3D with richer physics) and two shooters with bots -- a
 bot-only match and a single-player one with optional stealth; 3D needs an
 ADR against ADR 0001's no-3D rule first, and 3D assets are
 referenced, never committed.
+
+**Also noted, 2026-10-15:** the owner played the board demos and found
+four problems (T41) and asked for more playful examples (T42). Not
+scheduled yet; the owner said "for later".
 
 ## Resuming after 2026-10-15 (wave 41)
 

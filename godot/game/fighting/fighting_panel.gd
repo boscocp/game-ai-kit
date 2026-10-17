@@ -35,7 +35,9 @@ static func _fighter_lines(index: int, fighter: FighterState, data: FightData) -
 	var flight: String = "  in the air, frame %d of %d, %d up"
 	if fighter.is_airborne():
 		lines.append(flight % [fighter.jump_frame, data.jump_length(fighter.character), fighter.y])
-	if fighter.stun > 0 and fighter.stun_kind in ["takeoff", "landing"]:
+	if fighter.stun_kind == FightBackdash.KIND:
+		lines.append(_backdash_line(fighter, data))
+	elif fighter.stun > 0 and fighter.stun_kind in ["takeoff", "landing"]:
 		var doing: String = "taking off" if fighter.stun_kind == "takeoff" else "landing"
 		lines.append("  %s, %d frame(s) left" % [doing, fighter.stun])
 	elif fighter.stun > 0:
@@ -47,6 +49,16 @@ static func _fighter_lines(index: int, fighter: FighterState, data: FightData) -
 	if fighter.buffered != "":
 		lines.append("  buffered: %s, until frame %d" % [fighter.buffered, fighter.buffered_until])
 	return lines
+
+
+# The backdash, the frame of it, and which part: the frames nothing finds it,
+# or the ones it cannot guard -- with the frame data, as a move's is shown.
+static func _backdash_line(fighter: FighterState, data: FightData) -> String:
+	var backdash: Dictionary = data.character(fighter.character)["backdash"]
+	var part: String = "strikes and throws pass through" if FightBackdash.invulnerable(fighter, data) \
+			else "cannot guard, can be thrown"
+	return "  evading, frame %d of %d: %s (invulnerable %d, travel %d)" % [FightBackdash.frame_of(fighter, data),
+			backdash["frames"], part, backdash["invulnerable"], backdash["travel"]]
 
 
 # The move, the frame of it, its phase, and the frame data it is read against.

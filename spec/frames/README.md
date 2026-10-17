@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: structure
-verified_on: 2026-10-15
+verified_on: 2026-10-16
 tier: 1
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: a field in characters.json is renamed, or the resolution order in it changes
@@ -39,6 +39,16 @@ frames when it touches down, when it can be thrown. In the air it cannot
 guard and cannot be thrown, and it has one air move a jump -- none once it
 has been hit in the air. Bodies push each other only on the ground, so a
 jump can cross over to the other side.
+
+And its `backdash` (T40), the evade, on a button of its own: `frames` long
+from the press -- it can act again on the next one -- `travel` frames of it
+going `speed` units a frame away from the way it faces, and on its first
+`invulnerable` frames nothing finds it, strike or throw. After those, until
+it is over, it cannot guard and can be thrown, and a strike that catches it
+is a hit. It stays on the ground; into a wall it goes nowhere, protected all
+the same. The numbers follow two shipped backdashes, cited in
+`tasks/T40-an-evade-and-harder-levels.md`: invulnerable for about the first
+quarter, 20 to 24 frames in all.
 
 Per move: the `button` that does it -- light or heavy punch, light or heavy
 kick, or throw -- and its `stance`, standing, crouching or air (holding down

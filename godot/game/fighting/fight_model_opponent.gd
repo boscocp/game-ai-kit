@@ -29,18 +29,19 @@ const ACTIONS: Array[String] = FightAction.ACTIONS
 ## A high is ducked and punished low; a low is guarded crouching; an
 ## overhead, standing; a throw loses to a strike; a jump to a strike aimed
 ## up; a guard to what goes round it -- a low or a throw for a standing one,
-## an overhead or a throw for a crouching one.
+## an overhead or a throw for a crouching one; a backdash to following it,
+## and a throw to a backdash, which it passes through.
 const ANSWERS: Dictionary = {
 	"high": ["guard crouching", "low"], "mid": ["guard standing", "guard crouching"], "low": ["guard crouching"],
-	"overhead": ["guard standing", "high"], "throw": ["high", "mid"], "jump": ["high"],
+	"overhead": ["guard standing", "high"], "throw": ["high", "mid", "evade"], "jump": ["high"],
 	"crouch": ["overhead", "throw"], "guard crouching": ["overhead", "throw"], "guard standing": ["low", "throw"],
-	"step in": ["mid", "throw"], "step out": ["step in"],
+	"step in": ["mid", "throw"], "step out": ["step in"], "evade": ["step in"],
 }
 ## How much weight an answer gains when the model is as sure as it can be;
 ## none when it knows no more than chance, and in between in proportion.
 ## "As sure as it can be" is the predictor's `ceiling`, not 1: at decay 0.8
 ## a context remembers at most five sightings, and the surest it gets about
-## one of eleven actions is 6 in 16. The options' own weights are 1 to 4, so
+## one of twelve actions is 6 in 17. The options' own weights are 1 to 4, so
 ## a sure prediction makes an answer the likely draw without making it the
 ## only one -- when the level has an answer at all: easy knows two options a
 ## situation, and against many actions none of them is one.

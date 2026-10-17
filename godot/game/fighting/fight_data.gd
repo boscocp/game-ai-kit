@@ -32,6 +32,8 @@ const HEIGHTS: Array[String] = ["high", "mid", "low", "overhead", "throw"]
 const CHARACTER_NUMBERS: Array[String] = ["health", "walk_speed", "body", "tall", "crouching_tall"]
 ## The whole numbers a character's jump must carry.
 const JUMP_NUMBERS: Array[String] = ["takeoff", "rise", "hang", "fall", "height", "speed", "landing"]
+## The whole numbers a character's backdash must carry (T40).
+const BACKDASH_NUMBERS: Array[String] = ["frames", "invulnerable", "travel", "speed"]
 
 ## Everything the file says.
 var table: Dictionary = {}
@@ -157,13 +159,28 @@ func _character_problem(name: String, numbers: Dictionary) -> String:
 		return "%s's jump needs %s, each a whole number" % [name, JUMP_NUMBERS]
 	if int(jump["rise"]) < 1 or int(jump["fall"]) < 1 or int(jump["height"]) < 1:
 		return "%s's jump must take at least one frame up and one down, and leave the floor" % name
+	var problem: String = _backdash_problem(name, numbers.get("backdash"))
+	if problem != "":
+		return problem
 	if not numbers.get("moves") is Dictionary or numbers["moves"].is_empty():
 		return "%s has no moves" % name
 	for move_name: String in numbers["moves"]:
-		var problem: String = _move_problem(name, move_name, numbers["moves"][move_name], numbers["moves"])
+		problem = _move_problem(name, move_name, numbers["moves"][move_name], numbers["moves"])
 		if problem != "":
 			return problem
 	return _dead_button(name, numbers["moves"])
+
+
+# A backdash is at least one frame long, and its invulnerable frames and its
+# travel both fit inside it: a backdash invulnerable for longer than it lasts
+# would carry its protection into whatever the fighter did next.
+func _backdash_problem(name: String, backdash: Variant) -> String:
+	if not backdash is Dictionary or not BACKDASH_NUMBERS.all(func(key: String) -> bool: return _is_count(backdash.get(key))):
+		return "%s's backdash needs %s, each a whole number" % [name, BACKDASH_NUMBERS]
+	var frames: int = int(backdash["frames"])
+	if frames < 1 or int(backdash["invulnerable"]) > frames or int(backdash["travel"]) > frames:
+		return "%s's backdash must last a frame or more, its invulnerable frames and its travel inside it" % name
+	return ""
 
 
 # A button with a crouching move and no standing one would do nothing when

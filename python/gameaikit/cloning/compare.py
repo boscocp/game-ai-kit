@@ -95,6 +95,21 @@ def per_fight(training: list[Session], held: list[Session], recorded: Recorded) 
     return lines
 
 
+def evades(sessions: list[Session]) -> str:
+    """How many of the player's decisions were a backdash, in a line.
+
+    The evade arrived with T40, after the owner's first recordings: none of
+    those holds one, so no method here could have learnt it. The report says
+    so rather than leave a reader to wonder why the clone never backdashes.
+    """
+    decisions = [action for session in sessions for action in session.actions()]
+    count = decisions.count("evade")
+    line = f"evades: {count} of {len(decisions)} decisions, in {len(sessions)} recording(s)"
+    if count == 0:
+        line += " -- none: they were recorded before the backdash (T40), so nothing here can learn one"
+    return line
+
+
 def report(published: pathlib.Path, rows: pathlib.Path, measured: pathlib.Path) -> int:
     """Print the comparison; see the module's header for the exit code."""
     recorded = read(rows)
@@ -105,6 +120,7 @@ def report(published: pathlib.Path, rows: pathlib.Path, measured: pathlib.Path) 
           f"{len(measure.rows_of(training))} decisions; held out {len(held)}, {len(measure.rows_of(held))} decisions")
     if player != "person":
         print("  a stand-in, not a person: these numbers say the pipeline works, not what cloning a person buys")
+    print(evades(sessions))
     if not measure.rows_of(held):
         print("FAIL: no held-out recordings to score on -- training accuracy is not a result. Record more fights.")
         return 1
