@@ -98,8 +98,10 @@ of. The start dot is yellow, the goal red, both ringed; the stealth exit is
 cyan; `marker_contrast_test.gd` holds them to their tiles. Blue on the
 tactical board stopped piling shields behind a bridge red has shut: it
 counts red's pieces as walls and builds a wader. The skirmish has a win:
-hold a node for 3 of your turns, and the policy walks at a node an enemy
-stands on -- a rule beside the models, said as one.
+hold a node for 3 of your turns (a draw after 30 rounds), and a blue unit
+with no fight to weigh walks at a node red stands on -- a rule beside the
+models, said as one. The review's eight findings were all acted on; see
+T41's "After the review".
 
 **Not proven.** That the skirmish is now worth playing: the owner's three
 games under T41's manual check.

@@ -110,3 +110,43 @@ viewport back (`get_texture().get_image()` returns the frame), unlike
 `--headless`. The screenshots taken that way showed the new markers and
 status, and blue walking at the held flag. They are not a gate: CI has no
 display.
+
+## After the review
+
+[docs/reviews/44-what-the-owner-found-playing-the-boards.md](../docs/reviews/44-what-the-owner-found-playing-the-boards.md)
+said "not as is". What was done, finding by finding:
+
+1. **A holder walked off its node to contest another** -- so a player who
+   touched either node stopped blue ever winning a hold. A unit standing on
+   a node no longer contests (`learned_policy_test`,
+   `test_a_unit_on_a_node_does_not_leave_it_to_contest_another`).
+2. **The contest came before the combat model**, so the opening lost its
+   attack and retreat. The contest now replaces only the advance: a fight in
+   reach is weighed first. The owner's own game -- red on the flag, red's
+   other unit beside blue -- therefore ends with red winning, and the
+   contest shows when blue has nothing to fight. The three stale texts
+   (`docs/godot/learning.md`, `docs/concepts/learning.md`, `main.gd`'s
+   header) say so now.
+3. **Nothing tested the win in the scene.** `skirmish_flag_test` now plays
+   it to a red win with "red wins" on screen, and checks that a click and a
+   press change nothing afterwards. R restarting is **not** tested: it is
+   `reload_current_scene`, which a suite running inside gdUnit4's own scene
+   cannot call. It stays under the manual check.
+4. **Stale holds on screen.** `progress` takes the board and shows a hold
+   only while it still stands.
+5. **False text in `rule_based_blue.gd`.** "Until T26 nothing moves them"
+   is now "this turn"; a workshop turned away only by the reach rule says
+   that, not "nothing beats any red piece"; the `_nearest_workshop` comment
+   and the doc comment are fixed. The slowdown was partly a copy of the
+   graph per candidate cell in `_remaining`, which now reads the plain one;
+   a blue turn averages 4.9 ms over the 40 games (3.6 before T41, by the
+   review; 5.5 as first committed).
+6. **The skirmish could stall for good.** A draw after
+   `SkirmishVictory.ROUND_LIMIT` (30) rounds, on screen in the rule.
+7. **The contest had one test, through the scene.** Five in
+   `learned_policy_test.gd`: contests, nearer of two, not a friend's node,
+   not off its own node, a fight first. The review's mutations -- farthest
+   node, no faction check, holder leaves, no `turn_started`, stale progress,
+   no draw -- each fail a test now.
+8. **Which half of the bridge fix wins.** The build rule wins the games;
+   the walking half only makes a shut-out walker say why. The header says it.

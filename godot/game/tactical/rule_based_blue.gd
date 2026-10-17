@@ -16,10 +16,12 @@
 ## Aiming at the goal is still a reflex, and now it is one that can win.
 ##
 ## Both rules count red's pieces as walls, and that is T41. Until T26 brings
-## combat nothing can move a piece, so a red runner parked on the bridge shuts
-## it for good. Blue's route used to ignore who stood on it: it built a shield
-## a turn, piled two dozen behind the river, and drew at round 40 -- with the
-## water open all along to the wader it never built.
+## combat nothing can *push* a piece aside, so a red runner parked on the
+## bridge shuts it for as long as red leaves it there. Blue's route used to
+## ignore who stood on it: it built a shield a turn, piled two dozen behind
+## the river, and drew at round 40 -- with the water open all along to the
+## wader it never built. Of the two halves it is the build rule that wins
+## those games; the walking half is what makes a shut-out walker say why.
 ##
 ## Rules are a reflex: they answer what is on the board now and never what is
 ## coming. That is the weakness T11's plan exists to beat, and why the screen
@@ -27,7 +29,10 @@
 ##
 ## Complexity: per walking unit per turn, three floods of the board -- to
 ## find the nearest workshop, for its reach, and back from the target -- each
-## O(cells^2) with the plain-array frontier `TacticalReach` uses.
+## O(cells^2) with the plain-array frontier `TacticalReach` uses. The
+## workshop adds one flood per buildable type and one per walker of blue's,
+## for the reach rule. Over 40 games against a random red, a blue turn
+## averages 4.9 ms against 3.6 before it (the second figure the review's).
 ##
 ## When not to use it: as a strong opponent. It never buys the forge, so it
 ## never builds a ram; it walks into anything; and until T26 brings combat
@@ -50,8 +55,9 @@ func describe() -> String:
 
 
 ## The type that beats the most enemy pieces, among those it can build, pay
-## for, and walk to red's workshop from where it would stand. Ties go to the earlier type in `TacticalRules.BUILDABLE`, so
-## the same board always gets the same answer.
+## for, and walk to red's workshop from where it would stand. Ties go to the
+## earlier type in `TacticalRules.BUILDABLE`, so the same board always gets
+## the same answer.
 func decide_build(state: BoardState, workshop_id: int) -> TacticalDecision:
 	var workshop: Unit = state.unit_by_id(workshop_id)
 	var enemies: Array[Unit] = _enemies(state)
@@ -85,7 +91,7 @@ func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 	var target: Unit = _nearest_workshop(state, unit)
 	if target == null:
 		return TacticalDecision.hold(unit_id,
-			"stays: red's pieces stand on every way to red's workshop, and until T26 nothing moves them", unit.cell)
+			"stays: red's pieces stand on every way to red's workshop this turn", unit.cell)
 	var walks: Dictionary = TacticalReach.walks_for(state, unit)
 	var to_target: Dictionary = TacticalReach.route_costs(_past_red(state, unit.type), target.cell)
 	var best: Vector2i = unit.cell
@@ -128,7 +134,8 @@ func _nobody_reaches(state: BoardState) -> bool:
 	return true
 
 
-# Why the workshop builds nothing: no room, no money, or nothing worth it.
+# Why the workshop builds nothing: no room, no money, nothing worth it, or
+# nothing worth it that could get there.
 # Asked of the cheapest type, because if that cannot be built, none can.
 func _why_nothing(state: BoardState, workshop: Unit) -> String:
 	var cheapest: UnitType = TacticalRules.unit_types()[TacticalRules.RUNNER]
@@ -136,6 +143,9 @@ func _why_nothing(state: BoardState, workshop: Unit) -> String:
 	var refusal: String = state.why_production_refused(order)
 	if refusal != BoardState.LEGAL:
 		return refusal
+	for kind: UnitType in _buildable(state, workshop):
+		if not _beaten_by(kind, _enemies(state)).is_empty():
+			return "what would beat red's pieces cannot get past them to red's workshop, and a walker of blue's already can"
 	return "nothing it can build and pay for beats any red piece"
 
 
@@ -168,8 +178,9 @@ func _enemies(state: BoardState) -> Array[Unit]:
 	return found
 
 
-# The enemy workshop the cheapest walk reaches, counting terrain and ignoring
-# who stands in the way. Ties go to the lower id.
+# The enemy workshop the cheapest walk reaches, counting terrain and red's
+# pieces as walls, and ignoring blue's own, which move. Ties go to the lower
+# id.
 func _nearest_workshop(state: BoardState, unit: Unit) -> Unit:
 	var costs: Dictionary = TacticalReach.route_costs(_past_red(state, unit.type), unit.cell)
 	var nearest: Unit = null
@@ -189,7 +200,7 @@ func _remaining(state: BoardState, unit: Unit, cell: Vector2i, to_target: Dictio
 		target: Unit) -> int:
 	if not to_target.has(cell):
 		return UNREACHABLE
-	var graph: GridGraph = _past_red(state, unit.type)
+	var graph: GridGraph = state.graph_for(unit)
 	return to_target[cell] - graph.cost_at(cell) + graph.cost_at(target.cell)
 
 

@@ -55,9 +55,12 @@ print(decision.action, " ", decision.reason)
 # attack unit 1 attacks unit 2: p(win) 0.95 at or above 0.50
 ```
 
-`decide` returns the whole decision: `action` (attack, retreat, advance or
-hold), the `move`, the `win_probability` or `predicted_turns` it rests on, and
-`reason`, a sentence carrying the number. Show the reason on screen. A unit
+`decide` returns the whole decision: `action` (attack, retreat, contest,
+advance or hold), the `move`, the `win_probability` or `predicted_turns` it
+rests on, and `reason`, a sentence carrying the number. `contest` is the one
+that carries none: a unit with no fight in reach walks at a node an enemy
+stands on before the capture model is asked, and its reason says it is a
+rule, not the model (T41). Show the reason on screen. A unit
 stepping backwards looks the same whether a model gave it a 3% chance or it
 had nowhere to go, and only the number tells them apart. `make run` prints
 every blue unit's reason under the status line for that reason.

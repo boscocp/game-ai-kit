@@ -3,8 +3,10 @@
 ##
 ## Red is yours and moves a cell at a time. Blue is played by `ai_learning`:
 ## when your turn ends, each of its units asks the combat model whether a
-## fight in reach is worth taking, and walks at whichever node the capture
-## model says it can hold soonest.
+## fight in reach is worth taking, and otherwise walks at a node red is
+## standing on -- a written rule, not a model -- or at whichever node the
+## capture model says it can hold soonest. Holding a node for
+## `SkirmishVictory.HOLD_TURNS` of your turns wins.
 ##
 ## The screen has to make the decision visible, not just its result -- a unit
 ## stepping backwards looks the same whether a model gave it a 3% chance or
@@ -49,7 +51,7 @@ var _selected_id: int = -1
 var _last_refusal: String = ""
 
 var _policy: LearnedPolicy
-var _victory: SkirmishVictory = SkirmishVictory.new(NODES)
+var _victory: SkirmishVictory = SkirmishVictory.new(NODES, FACTIONS)
 
 # What blue has played this turn, in its own words, and the decision it is
 # about to play -- decided and drawn, not yet played.
@@ -268,10 +270,9 @@ func _affordable_steps() -> Array[Vector2i]:
 # player asks -- then what was refused and what blue is thinking.
 func _status_line() -> String:
 	if _victory.winner != SkirmishVictory.NOBODY:
-		return "%s wins: it held a node for %d of its turns in a row.  R starts again." % [
-			SIDE_NAMES[_victory.winner], SkirmishVictory.HOLD_TURNS]
+		return SkirmishVictory.announcement(_victory.winner, SIDE_NAMES)
 	var lines: Array[String] = [_whose_turn(), _in_hand(), _what_to_do(), SkirmishVictory.rule()]
-	var holds: String = _victory.progress(SIDE_NAMES)
+	var holds: String = _victory.progress(_state, SIDE_NAMES)
 	if holds != "":
 		lines.append(holds)
 	if _last_refusal != BoardState.LEGAL:

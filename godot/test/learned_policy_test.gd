@@ -336,3 +336,57 @@ func _distance_model() -> Dictionary:
 		"weights": [0.25, 0.0, 0.0, 0.0],
 		"bias": 0.0,
 	}
+
+
+# --- the contest rule (T41) -------------------------------------------------
+#
+# Not learned: a unit with no fight in reach walks at a node an enemy stands
+# on before it asks the capture model. The review found it first tested only
+# through the game scene, where reversing "nearest" or dropping the faction
+# check passed everything.
+
+func test_a_unit_with_no_fight_in_reach_contests_a_node_an_enemy_stands_on() -> void:
+	var state: BoardState = _held_nodes([Vector2i(9, 6)], Vector2i(0, 3))
+
+	var decision: LearnedDecision = _policy(0.9).decide(state, 2)
+
+	assert_str(decision.action).is_equal(LearnedDecision.CONTEST)
+	assert_vector(decision.target).is_equal(Vector2i(9, 6))
+	assert_str(decision.reason).contains("a rule, not the model")
+
+
+func test_of_two_held_nodes_the_nearer_is_contested() -> void:
+	# Six cells from (0, 0) and nine from (9, 6): both just out of reach.
+	var state: BoardState = _held_nodes([Vector2i(0, 0), Vector2i(9, 6)], Vector2i(6, 0))
+
+	assert_vector(_policy(0.9).decide(state, 2).target).is_equal(Vector2i(0, 0))
+
+
+func test_a_node_a_friend_stands_on_is_not_contested() -> void:
+	var state := BoardState.new(GridGraph.new(14, 7), [
+		Unit.new(2, 1, Vector2i(0, 3), 10, 4),
+		Unit.new(3, 1, Vector2i(9, 6), 10, 4),
+	] as Array[Unit], 1)
+
+	assert_str(_policy(0.9).decide(state, 2).action).is_equal(LearnedDecision.ADVANCE)
+
+
+func test_a_unit_on_a_node_does_not_leave_it_to_contest_another() -> void:
+	var state: BoardState = _held_nodes([Vector2i(9, 6)], Vector2i(0, 0))
+
+	assert_str(_policy(0.9).decide(state, 2).action).is_not_equal(LearnedDecision.CONTEST)
+
+
+func test_a_fight_in_reach_is_weighed_before_any_contest() -> void:
+	var state: BoardState = _held_nodes([Vector2i(9, 6)], Vector2i(0, 3))
+	state.units.append(Unit.new(7, 0, Vector2i(1, 3), 10, 4))
+
+	assert_str(_policy(0.1).decide(state, 2).action).is_equal(LearnedDecision.RETREAT)
+
+
+# Blue's unit 2 at `blue_at`, and a red unit standing on each of `held`.
+func _held_nodes(held: Array[Vector2i], blue_at: Vector2i) -> BoardState:
+	var units: Array[Unit] = [Unit.new(2, 1, blue_at, 10, 4)]
+	for cell: Vector2i in held:
+		units.append(Unit.new(10 + units.size(), 0, cell, 10, 4))
+	return BoardState.new(GridGraph.new(14, 7), units, 1)

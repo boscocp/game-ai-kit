@@ -19,19 +19,26 @@ extends RefCounted
 
 ## Nobody has won yet.
 const NOBODY: int = -1
+## Nobody won, and the game is over: the round limit came first.
+const DRAW: int = -2
+## Rounds before a game nobody has won is a draw. The review found one that
+## could not end: red on both nodes, blue beside each, nothing to fight.
+const ROUND_LIMIT: int = 30
 ## How many of its own turns in a row a side must start holding a node.
 const HOLD_TURNS: int = 3
 
-## The side that has won, or `NOBODY`.
+## The side that has won, `DRAW`, or `NOBODY`.
 var winner: int = NOBODY
 
 var _nodes: Array[Vector2i]
+var _factions: int
 # Node -> [side holding it, turns it has been held at that side's turn start].
 var _held: Dictionary = {}
 
 
-func _init(nodes: Array[Vector2i]) -> void:
+func _init(nodes: Array[Vector2i], factions: int = 2) -> void:
 	_nodes = nodes.duplicate()
+	_factions = factions
 
 
 ## Count the holds of the side about to move on `state`, and decide whether
@@ -43,6 +50,8 @@ func turn_started(state: BoardState) -> void:
 	for node: Vector2i in _nodes:
 		if _count(node, side, holder_of(state, node) == side) >= HOLD_TURNS:
 			winner = side
+	if winner == NOBODY and state.turn_number >= ROUND_LIMIT * _factions:
+		winner = DRAW
 
 
 ## The side holding `node` on `state` right now, or `NOBODY`.
@@ -58,9 +67,13 @@ static func holder_of(state: BoardState, node: Vector2i) -> int:
 
 
 ## How far each hold has got, for the screen: "" when nobody holds anything.
-func progress(side_names: Array[String]) -> String:
+## A hold is counted on its own side's turn, so between counts `state` says
+## whether it still stands -- one the other side has walked up to and broken
+## is not shown as two turns from winning.
+func progress(state: BoardState, side_names: Array[String]) -> String:
 	var lines: Array[String] = []
-	for node: Vector2i in _nodes.filter(func(node: Vector2i) -> bool: return _held.has(node)):
+	for node: Vector2i in _nodes.filter(func(node: Vector2i) -> bool:
+			return _held.has(node) and holder_of(state, node) == _held[node][0]):
 		var held: Array = _held[node]
 		lines.append("%s holds the node at %s: %d of %d turns" % [side_names[held[0]], node, held[1], HOLD_TURNS])
 	return "\n".join(lines)
@@ -82,4 +95,13 @@ func _count(node: Vector2i, side: int, holding: bool) -> int:
 
 ## The rule, as the screen states it before anybody has won.
 static func rule() -> String:
-	return "to win: start %d of your turns in a row with a unit on a node and no enemy beside it" % HOLD_TURNS
+	return "to win: start %d of your turns in a row with a unit on a node and no enemy beside it -- or it is a draw after %d rounds" % [
+		HOLD_TURNS, ROUND_LIMIT]
+
+
+## The words for the end of a game.
+static func announcement(winner_side: int, side_names: Array[String]) -> String:
+	if winner_side == DRAW:
+		return "a draw: %d rounds, and nobody held a node.  R starts again." % ROUND_LIMIT
+	return "%s wins: it held a node for %d of its turns in a row.  R starts again." % [
+		side_names[winner_side], HOLD_TURNS]
