@@ -1,0 +1,1135 @@
+{
+ "generated_by": "gameaikit.cloning.publish",
+ "trained_on": {
+  "player": "person",
+  "recordings": [
+   "2026-10-15T17-33-56-20518.json",
+   "2026-10-15T17-34-20-44746.json",
+   "2026-10-15T17-34-53-77250.json",
+   "2026-10-15T17-56-14-45674.json",
+   "2026-10-15T17-56-31-62541.json",
+   "2026-10-15T17-56-48-79525.json"
+  ],
+  "held_out": [
+   "2026-10-15T17-32-38-25455.json",
+   "2026-10-15T17-55-48-19637.json",
+   "2026-10-15T17-57-06-97503.json"
+  ],
+  "rows": 317
+ },
+ "features": [
+  "last",
+  "other",
+  "me",
+  "distance",
+  "health",
+  "corner"
+ ],
+ "classes": [
+  "step in",
+  "step out",
+  "crouch",
+  "jump",
+  "high",
+  "mid",
+  "low",
+  "overhead",
+  "throw",
+  "guard standing",
+  "guard crouching",
+  "evade"
+ ],
+ "model": {
+  "kind": "softmax",
+  "columns": [
+   "last=crouch",
+   "last=guard crouching",
+   "last=guard standing",
+   "last=high",
+   "last=jump",
+   "last=low",
+   "last=mid",
+   "last=nothing",
+   "last=overhead",
+   "last=step in",
+   "last=step out",
+   "last=throw",
+   "other=crouch",
+   "other=guard crouching",
+   "other=guard standing",
+   "other=high",
+   "other=low",
+   "other=mid",
+   "other=nothing",
+   "other=step in",
+   "other=step out",
+   "other=throw",
+   "me=airborne",
+   "me=block",
+   "me=free",
+   "me=hit",
+   "me=moving",
+   "distance=close",
+   "distance=far",
+   "distance=near",
+   "health=ahead",
+   "health=behind",
+   "health=even",
+   "corner=no",
+   "corner=yes"
+  ],
+  "weights": [
+   [
+    -0.334826,
+    -0.089022,
+    -0.143589,
+    0.376702,
+    -0.402248,
+    -0.589858,
+    0.084132,
+    0.199828,
+    0.442012,
+    0.314104,
+    -0.05567,
+    0.406508,
+    -0.118634,
+    0.012085,
+    0.290927,
+    0.189568,
+    0.489591,
+    -0.105541,
+    -0.414478,
+    -0.295725,
+    0.315649,
+    -0.155369,
+    -0.078041,
+    -0.232611,
+    0.080026,
+    -0.241701,
+    0.680398,
+    0.049986,
+    0.238683,
+    -0.080598,
+    0.397414,
+    -0.478582,
+    0.289239,
+    0.210807,
+    -0.002735
+   ],
+   [
+    0.130896,
+    -0.057282,
+    0.132284,
+    -0.090093,
+    0.543433,
+    -0.120072,
+    0.138885,
+    0.509522,
+    -0.406046,
+    -0.453024,
+    -0.215672,
+    0.098313,
+    0.067054,
+    0.055917,
+    0.088927,
+    -0.269027,
+    -0.03753,
+    -0.025692,
+    0.173597,
+    0.092619,
+    -0.084102,
+    0.149379,
+    0.40828,
+    0.075002,
+    0.187215,
+    -0.261129,
+    -0.198226,
+    0.08698,
+    0.130106,
+    -0.005942,
+    -0.7156,
+    0.691895,
+    0.234847,
+    0.073958,
+    0.137185
+   ],
+   [
+    -0.032007,
+    -0.0456,
+    0.153612,
+    -0.185668,
+    -0.414933,
+    0.573299,
+    0.302417,
+    -0.119345,
+    -0.035631,
+    -0.571068,
+    0.544907,
+    -0.054645,
+    0.369366,
+    -0.189108,
+    -0.3047,
+    0.064877,
+    0.105178,
+    0.503179,
+    -0.475305,
+    -0.253477,
+    0.229312,
+    0.066017,
+    -0.331433,
+    0.108012,
+    -0.11654,
+    0.045851,
+    0.409449,
+    0.044548,
+    0.141654,
+    -0.070863,
+    0.132383,
+    -0.451986,
+    0.434941,
+    0.030196,
+    0.085142
+   ],
+   [
+    -0.106766,
+    -0.004854,
+    -0.042476,
+    0.364616,
+    0.024343,
+    -0.008595,
+    0.029275,
+    -0.050306,
+    -0.134058,
+    0.027098,
+    0.133217,
+    -0.219869,
+    0.231042,
+    0.191035,
+    0.123152,
+    0.070143,
+    -0.121431,
+    -0.334946,
+    0.220873,
+    -0.227349,
+    -0.121899,
+    -0.018995,
+    0.06906,
+    -0.04733,
+    0.01364,
+    -0.252486,
+    0.22874,
+    -0.376981,
+    0.198717,
+    0.189889,
+    0.202622,
+    0.13258,
+    -0.323577,
+    -0.107942,
+    0.119567
+   ],
+   [
+    0.098916,
+    -0.016749,
+    -0.047493,
+    1.21191,
+    0.208012,
+    -0.173376,
+    -0.186427,
+    -0.139784,
+    -0.200045,
+    0.105056,
+    -0.237888,
+    -0.554083,
+    -0.149607,
+    0.169105,
+    0.034702,
+    0.125567,
+    -0.321121,
+    -0.145402,
+    0.540694,
+    -0.210697,
+    0.084071,
+    -0.059263,
+    0.292967,
+    -0.064242,
+    -0.151326,
+    -0.163046,
+    0.153696,
+    -0.088746,
+    0.015004,
+    0.141791,
+    -0.167394,
+    0.012573,
+    0.22287,
+    0.181184,
+    -0.113135
+   ],
+   [
+    0.106876,
+    -0.037023,
+    0.18804,
+    -0.599687,
+    0.378109,
+    -0.311884,
+    0.576689,
+    -0.224917,
+    -0.068873,
+    0.370043,
+    -0.504098,
+    0.246311,
+    -0.214277,
+    -0.073265,
+    0.024029,
+    -0.047564,
+    -0.27895,
+    -0.086798,
+    0.269471,
+    0.446338,
+    0.214585,
+    -0.133985,
+    0.065523,
+    0.151017,
+    0.084506,
+    -0.090878,
+    -0.090583,
+    -0.061732,
+    -0.234057,
+    0.415374,
+    0.112907,
+    -0.342267,
+    0.348946,
+    0.276734,
+    -0.157149
+   ],
+   [
+    0.438682,
+    -0.004605,
+    -0.022507,
+    -0.319517,
+    -0.185553,
+    0.687882,
+    0.030237,
+    -0.038014,
+    -0.103466,
+    -0.199751,
+    -0.107582,
+    -0.298363,
+    -0.033817,
+    -0.049041,
+    -0.075692,
+    0.037415,
+    -0.093601,
+    -0.209446,
+    0.38533,
+    0.129317,
+    -0.1915,
+    -0.021523,
+    -0.14785,
+    -0.027112,
+    0.090323,
+    -0.281696,
+    0.243777,
+    -0.071433,
+    0.004672,
+    -0.055797,
+    0.423976,
+    -0.173812,
+    -0.372722,
+    0.105962,
+    -0.22852
+   ],
+   [
+    -0.066262,
+    -0.010359,
+    -0.032576,
+    -0.271744,
+    0.102631,
+    -0.092827,
+    -0.122244,
+    -0.018923,
+    0.294521,
+    0.475064,
+    -0.089376,
+    -0.253691,
+    -0.027627,
+    -0.019752,
+    -0.031353,
+    0.128411,
+    0.483494,
+    0.098556,
+    -0.282605,
+    -0.258657,
+    -0.144989,
+    -0.031264,
+    -0.163202,
+    -0.042935,
+    -0.151304,
+    0.739278,
+    -0.467624,
+    0.07065,
+    -0.129121,
+    -0.027316,
+    0.110527,
+    -0.041145,
+    -0.155169,
+    -0.062431,
+    -0.023356
+   ],
+   [
+    -0.031355,
+    0.278293,
+    -0.117498,
+    -0.394593,
+    -0.211709,
+    -0.102911,
+    -0.363594,
+    -0.065336,
+    -0.137423,
+    0.292359,
+    -0.085382,
+    1.030406,
+    -0.072822,
+    -0.065513,
+    -0.104022,
+    -0.294338,
+    0.050108,
+    0.312495,
+    0.121565,
+    0.231012,
+    -0.04811,
+    -0.03912,
+    -0.137903,
+    0.160795,
+    -0.04352,
+    0.153795,
+    -0.041912,
+    0.130356,
+    0.021179,
+    -0.060279,
+    0.262502,
+    0.255699,
+    -0.426946,
+    -0.086813,
+    0.178068
+   ],
+   [
+    -0.148325,
+    -0.0076,
+    -0.048168,
+    -0.19775,
+    0.050934,
+    0.198033,
+    -0.25928,
+    -0.029854,
+    0.145795,
+    -0.24003,
+    0.706212,
+    -0.228393,
+    -0.033465,
+    -0.014882,
+    -0.020378,
+    0.173941,
+    -0.179073,
+    -0.086407,
+    -0.292962,
+    0.276605,
+    -0.143337,
+    0.261532,
+    0.102925,
+    -0.055768,
+    0.277045,
+    0.107354,
+    -0.48998,
+    0.427091,
+    -0.250881,
+    -0.234636,
+    -0.169472,
+    0.326681,
+    -0.215635,
+    -0.13973,
+    0.081304
+   ],
+   [
+    -0.037399,
+    -0.003527,
+    -0.013174,
+    0.160379,
+    -0.059361,
+    -0.039156,
+    -0.148736,
+    -0.0148,
+    0.223213,
+    -0.080391,
+    -0.060096,
+    -0.117839,
+    -0.010958,
+    -0.010468,
+    -0.015968,
+    -0.124303,
+    -0.070247,
+    0.135941,
+    -0.152081,
+    0.140503,
+    -0.070389,
+    -0.012917,
+    -0.051798,
+    -0.016701,
+    -0.178429,
+    0.326998,
+    -0.270956,
+    -0.048749,
+    -0.088144,
+    -0.053994,
+    -0.379292,
+    0.127085,
+    0.06132,
+    -0.222595,
+    0.031708
+   ],
+   [
+    -0.018429,
+    -0.001671,
+    -0.006455,
+    -0.054553,
+    -0.033661,
+    -0.020534,
+    -0.081353,
+    -0.008071,
+    -0.019999,
+    -0.03946,
+    -0.028571,
+    -0.054655,
+    -0.006255,
+    -0.006114,
+    -0.009624,
+    -0.054691,
+    -0.026418,
+    -0.055939,
+    -0.094098,
+    -0.07049,
+    -0.03929,
+    -0.004492,
+    -0.028528,
+    -0.008126,
+    -0.091637,
+    -0.082341,
+    -0.156778,
+    -0.16197,
+    -0.047812,
+    -0.157628,
+    -0.210574,
+    -0.058722,
+    -0.098115,
+    -0.25933,
+    -0.10808
+   ]
+  ],
+  "bias": [
+   1.233227,
+   1.158629,
+   0.633062,
+   -0.055527,
+   0.328149,
+   0.684023,
+   -0.665433,
+   -0.51995,
+   0.470095,
+   -0.401702,
+   -1.090724,
+   -1.77385
+  ]
+ },
+ "cases": {
+  "crouch | high | free | close | ahead | no": {
+   "low": 1
+  },
+  "crouch | mid | free | close | ahead | no": {
+   "crouch": 1
+  },
+  "crouch | step in | free | close | ahead | yes": {
+   "mid": 1,
+   "throw": 1
+  },
+  "crouch | step in | free | close | behind | yes": {
+   "step out": 1
+  },
+  "crouch | step in | free | far | ahead | no": {
+   "low": 1
+  },
+  "crouch | step in | free | far | even | no": {
+   "step in": 1,
+   "step out": 1
+  },
+  "crouch | step in | free | near | ahead | no": {
+   "high": 1
+  },
+  "crouch | step in | free | near | even | no": {
+   "mid": 2
+  },
+  "crouch | step out | free | far | even | yes": {
+   "step out": 1
+  },
+  "guard crouching | low | block | close | even | no": {
+   "throw": 1
+  },
+  "guard standing | high | block | close | ahead | yes": {
+   "crouch": 1
+  },
+  "guard standing | high | block | close | behind | yes": {
+   "step out": 1
+  },
+  "guard standing | mid | block | near | ahead | yes": {
+   "mid": 1
+  },
+  "high | crouch | moving | near | even | no": {
+   "crouch": 1
+  },
+  "high | guard standing | moving | near | even | no": {
+   "high": 1,
+   "step in": 1
+  },
+  "high | high | hit | close | even | no": {
+   "high": 1,
+   "step in": 1
+  },
+  "high | high | hit | near | ahead | no": {
+   "high": 1,
+   "step in": 1
+  },
+  "high | high | hit | near | ahead | yes": {
+   "high": 1,
+   "step in": 1
+  },
+  "high | high | hit | near | even | no": {
+   "mid": 1
+  },
+  "high | high | moving | close | ahead | no": {
+   "crouch": 1
+  },
+  "high | high | moving | near | even | no": {
+   "step in": 1
+  },
+  "high | low | hit | close | even | no": {
+   "crouch": 1,
+   "step out": 1
+  },
+  "high | low | moving | close | even | no": {
+   "step in": 1
+  },
+  "high | mid | hit | near | ahead | no": {
+   "high": 1,
+   "step in": 1,
+   "throw": 1
+  },
+  "high | mid | moving | near | ahead | no": {
+   "step in": 1
+  },
+  "high | nothing | moving | close | ahead | no": {
+   "high": 1
+  },
+  "high | nothing | moving | close | ahead | yes": {
+   "high": 1,
+   "jump": 1,
+   "step in": 1
+  },
+  "high | nothing | moving | close | behind | no": {
+   "high": 1,
+   "step out": 1
+  },
+  "high | nothing | moving | close | even | no": {
+   "high": 1
+  },
+  "high | nothing | moving | far | ahead | no": {
+   "jump": 1,
+   "step in": 1
+  },
+  "high | nothing | moving | near | ahead | no": {
+   "crouch": 1,
+   "high": 1,
+   "jump": 1,
+   "mid": 1,
+   "step in": 1
+  },
+  "high | nothing | moving | near | ahead | yes": {
+   "high": 1
+  },
+  "high | nothing | moving | near | even | no": {
+   "high": 2,
+   "step out": 1
+  },
+  "high | step in | hit | close | even | no": {
+   "guard crouching": 1
+  },
+  "high | step in | moving | close | ahead | no": {
+   "step in": 1
+  },
+  "high | step in | moving | close | ahead | yes": {
+   "step in": 2
+  },
+  "high | step in | moving | close | even | no": {
+   "step in": 1
+  },
+  "high | step in | moving | far | ahead | no": {
+   "step in": 1
+  },
+  "high | step in | moving | far | even | no": {
+   "high": 1
+  },
+  "high | step in | moving | near | ahead | no": {
+   "step in": 1
+  },
+  "high | step in | moving | near | even | no": {
+   "step in": 1
+  },
+  "high | step out | moving | far | ahead | no": {
+   "high": 1
+  },
+  "high | step out | moving | far | even | no": {
+   "step in": 1
+  },
+  "high | step out | moving | near | ahead | no": {
+   "high": 1,
+   "step in": 2
+  },
+  "high | step out | moving | near | behind | no": {
+   "jump": 1,
+   "step in": 1
+  },
+  "high | step out | moving | near | even | no": {
+   "high": 1,
+   "step in": 1,
+   "step out": 1
+  },
+  "jump | crouch | airborne | close | ahead | no": {
+   "jump": 1,
+   "step out": 1
+  },
+  "jump | high | free | close | ahead | no": {
+   "mid": 1,
+   "overhead": 1
+  },
+  "jump | low | airborne | close | ahead | no": {
+   "mid": 1,
+   "step out": 1
+  },
+  "jump | mid | airborne | close | ahead | no": {
+   "high": 1,
+   "step out": 2
+  },
+  "jump | mid | airborne | close | behind | no": {
+   "mid": 1,
+   "step out": 1
+  },
+  "jump | mid | airborne | near | ahead | no": {
+   "throw": 1
+  },
+  "jump | nothing | airborne | close | ahead | no": {
+   "high": 1,
+   "mid": 1
+  },
+  "jump | step in | airborne | close | ahead | no": {
+   "guard standing": 1,
+   "step out": 1
+  },
+  "jump | step in | airborne | near | ahead | no": {
+   "mid": 1
+  },
+  "jump | step out | airborne | near | ahead | no": {
+   "mid": 1,
+   "step in": 2,
+   "step out": 1
+  },
+  "jump | step out | airborne | near | behind | no": {
+   "high": 1,
+   "step in": 1
+  },
+  "jump | step out | free | close | ahead | no": {
+   "step out": 1
+  },
+  "jump | step out | free | near | ahead | no": {
+   "mid": 1
+  },
+  "low | mid | hit | close | even | no": {
+   "mid": 1
+  },
+  "low | nothing | moving | close | ahead | no": {
+   "crouch": 2,
+   "low": 2,
+   "throw": 1
+  },
+  "low | nothing | moving | far | ahead | no": {
+   "crouch": 1
+  },
+  "low | nothing | moving | near | ahead | no": {
+   "crouch": 2,
+   "high": 1,
+   "low": 2
+  },
+  "low | nothing | moving | near | ahead | yes": {
+   "jump": 1,
+   "step in": 1
+  },
+  "low | throw | hit | close | even | no": {
+   "guard standing": 1,
+   "step out": 1
+  },
+  "mid | crouch | moving | close | ahead | yes": {
+   "step in": 1
+  },
+  "mid | crouch | moving | near | even | no": {
+   "crouch": 1
+  },
+  "mid | guard crouching | moving | near | ahead | no": {
+   "jump": 1,
+   "step in": 2
+  },
+  "mid | guard crouching | moving | near | behind | no": {
+   "high": 1,
+   "step out": 1
+  },
+  "mid | guard crouching | moving | near | even | no": {
+   "mid": 1
+  },
+  "mid | guard standing | moving | near | ahead | no": {
+   "jump": 1,
+   "mid": 1,
+   "step in": 3
+  },
+  "mid | guard standing | moving | near | ahead | yes": {
+   "mid": 1,
+   "step in": 1,
+   "step out": 1
+  },
+  "mid | guard standing | moving | near | even | no": {
+   "step in": 1
+  },
+  "mid | high | hit | close | ahead | no": {
+   "mid": 1,
+   "step in": 1
+  },
+  "mid | high | hit | near | ahead | yes": {
+   "crouch": 1
+  },
+  "mid | high | moving | close | ahead | yes": {
+   "crouch": 1,
+   "step in": 1
+  },
+  "mid | mid | hit | close | ahead | yes": {
+   "crouch": 1
+  },
+  "mid | mid | hit | close | even | no": {
+   "crouch": 1,
+   "mid": 1
+  },
+  "mid | mid | hit | near | ahead | no": {
+   "crouch": 1,
+   "mid": 1,
+   "overhead": 1,
+   "step in": 2,
+   "step out": 1
+  },
+  "mid | mid | hit | near | even | no": {
+   "step out": 1
+  },
+  "mid | nothing | moving | close | ahead | no": {
+   "high": 1,
+   "low": 1,
+   "mid": 3,
+   "step in": 5,
+   "throw": 1
+  },
+  "mid | nothing | moving | close | ahead | yes": {
+   "high": 1,
+   "mid": 1,
+   "step in": 1
+  },
+  "mid | nothing | moving | close | behind | no": {
+   "mid": 1,
+   "step out": 1
+  },
+  "mid | nothing | moving | close | even | no": {
+   "mid": 1,
+   "step in": 1
+  },
+  "mid | nothing | moving | far | ahead | no": {
+   "mid": 1
+  },
+  "mid | nothing | moving | near | ahead | no": {
+   "high": 1,
+   "jump": 2,
+   "mid": 2,
+   "step in": 5,
+   "step out": 1,
+   "throw": 1
+  },
+  "mid | nothing | moving | near | ahead | yes": {
+   "low": 1
+  },
+  "mid | nothing | moving | near | even | no": {
+   "high": 1,
+   "mid": 3,
+   "step out": 2
+  },
+  "mid | step in | moving | close | ahead | yes": {
+   "crouch": 1
+  },
+  "mid | step in | moving | far | even | no": {
+   "step in": 1
+  },
+  "mid | step in | moving | near | ahead | no": {
+   "crouch": 1,
+   "low": 1,
+   "mid": 2
+  },
+  "mid | step in | moving | near | even | no": {
+   "mid": 1
+  },
+  "mid | step out | hit | near | ahead | yes": {
+   "throw": 1
+  },
+  "mid | step out | moving | close | ahead | no": {
+   "crouch": 1
+  },
+  "mid | step out | moving | far | ahead | no": {
+   "step in": 2
+  },
+  "mid | step out | moving | near | ahead | no": {
+   "crouch": 2,
+   "mid": 1
+  },
+  "mid | throw | moving | near | even | no": {
+   "crouch": 1
+  },
+  "nothing | nothing | free | far | even | no": {
+   "step in": 1,
+   "step out": 3
+  },
+  "nothing | step in | free | far | even | no": {
+   "step in": 1,
+   "step out": 1
+  },
+  "overhead | low | hit | close | ahead | no": {
+   "overhead": 1,
+   "step in": 2,
+   "throw": 1
+  },
+  "overhead | low | hit | close | behind | yes": {
+   "overhead": 1,
+   "step in": 1
+  },
+  "overhead | mid | hit | near | behind | yes": {
+   "crouch": 1,
+   "guard crouching": 1
+  },
+  "overhead | nothing | moving | close | ahead | no": {
+   "step in": 2
+  },
+  "overhead | nothing | moving | near | ahead | no": {
+   "mid": 1,
+   "step in": 1
+  },
+  "overhead | step in | hit | near | behind | yes": {
+   "guard standing": 1
+  },
+  "step in | high | free | close | ahead | no": {
+   "step in": 1
+  },
+  "step in | high | free | close | ahead | yes": {
+   "jump": 1
+  },
+  "step in | high | free | close | even | no": {
+   "high": 1
+  },
+  "step in | high | free | near | ahead | no": {
+   "step in": 1
+  },
+  "step in | high | free | near | even | no": {
+   "step in": 1
+  },
+  "step in | high | hit | close | ahead | no": {
+   "step in": 1
+  },
+  "step in | high | hit | near | ahead | no": {
+   "mid": 1,
+   "overhead": 1
+  },
+  "step in | low | free | close | ahead | no": {
+   "step in": 1
+  },
+  "step in | low | free | close | even | no": {
+   "step in": 3
+  },
+  "step in | low | free | close | even | yes": {
+   "step in": 1
+  },
+  "step in | low | hit | close | ahead | no": {
+   "overhead": 1
+  },
+  "step in | mid | free | close | ahead | no": {
+   "step in": 2
+  },
+  "step in | mid | free | close | even | yes": {
+   "step in": 1
+  },
+  "step in | mid | free | near | ahead | yes": {
+   "mid": 1
+  },
+  "step in | mid | hit | close | ahead | no": {
+   "throw": 1
+  },
+  "step in | mid | hit | near | even | yes": {
+   "overhead": 1
+  },
+  "step in | step in | free | close | ahead | no": {
+   "throw": 1
+  },
+  "step in | step in | free | close | even | no": {
+   "mid": 1
+  },
+  "step in | step in | free | far | ahead | no": {
+   "mid": 2,
+   "throw": 1
+  },
+  "step in | step in | free | far | even | no": {
+   "high": 1,
+   "mid": 1
+  },
+  "step in | step in | free | near | ahead | no": {
+   "step out": 1,
+   "throw": 1
+  },
+  "step in | step in | free | near | even | no": {
+   "mid": 1
+  },
+  "step in | step out | free | near | ahead | no": {
+   "mid": 1
+  },
+  "step out | high | free | close | ahead | no": {
+   "guard standing": 1
+  },
+  "step out | high | free | close | behind | yes": {
+   "guard standing": 1
+  },
+  "step out | mid | free | close | behind | yes": {
+   "guard standing": 1,
+   "throw": 1
+  },
+  "step out | mid | free | far | even | yes": {
+   "crouch": 1
+  },
+  "step out | step in | free | close | ahead | no": {
+   "guard standing": 1,
+   "step out": 1
+  },
+  "step out | step in | free | close | behind | yes": {
+   "step out": 1
+  },
+  "step out | step in | free | close | even | no": {
+   "crouch": 1
+  },
+  "step out | step in | free | far | even | no": {
+   "crouch": 1,
+   "jump": 1,
+   "step in": 1,
+   "step out": 1
+  },
+  "step out | step in | free | far | even | yes": {
+   "step in": 1
+  },
+  "step out | step out | free | far | even | no": {
+   "crouch": 2,
+   "step in": 2
+  },
+  "throw | high | hit | near | ahead | yes": {
+   "mid": 1
+  },
+  "throw | high | hit | near | behind | yes": {
+   "jump": 1,
+   "step in": 1,
+   "step out": 1,
+   "throw": 1
+  },
+  "throw | high | moving | near | ahead | no": {
+   "step in": 2,
+   "throw": 1
+  },
+  "throw | high | moving | near | ahead | yes": {
+   "step in": 1
+  },
+  "throw | high | moving | near | behind | yes": {
+   "step out": 1,
+   "throw": 1
+  },
+  "throw | low | hit | near | ahead | no": {
+   "crouch": 1,
+   "step in": 1
+  },
+  "throw | mid | hit | close | behind | yes": {
+   "throw": 1
+  },
+  "throw | mid | hit | near | even | no": {
+   "crouch": 1,
+   "throw": 1
+  },
+  "throw | mid | moving | close | ahead | no": {
+   "step in": 1
+  },
+  "throw | mid | moving | close | behind | yes": {
+   "step out": 1
+  },
+  "throw | mid | moving | close | even | no": {
+   "crouch": 1
+  },
+  "throw | nothing | moving | close | ahead | no": {
+   "step in": 3,
+   "throw": 2
+  },
+  "throw | nothing | moving | close | ahead | yes": {
+   "crouch": 1,
+   "mid": 1,
+   "step in": 2,
+   "throw": 1
+  },
+  "throw | nothing | moving | close | behind | yes": {
+   "step out": 1,
+   "throw": 1
+  },
+  "throw | nothing | moving | near | ahead | no": {
+   "mid": 1
+  },
+  "throw | nothing | moving | near | ahead | yes": {
+   "step in": 1,
+   "throw": 1
+  },
+  "throw | nothing | moving | near | behind | yes": {
+   "step out": 1,
+   "throw": 1
+  },
+  "throw | step in | moving | close | ahead | no": {
+   "mid": 1,
+   "step in": 2,
+   "throw": 1
+  },
+  "throw | step in | moving | close | behind | yes": {
+   "step out": 1,
+   "throw": 1
+  },
+  "throw | step out | hit | near | even | no": {
+   "mid": 1,
+   "step in": 1
+  },
+  "throw | step out | moving | close | ahead | no": {
+   "step in": 1
+  },
+  "throw | step out | moving | far | ahead | yes": {
+   "throw": 1
+  },
+  "throw | step out | moving | near | ahead | no": {
+   "mid": 2,
+   "step in": 2
+  },
+  "throw | step out | moving | near | ahead | yes": {
+   "step in": 1
+  }
+ }
+}

@@ -29,14 +29,13 @@ const ACTIONS: Array[String] = FightAction.ACTIONS
 ## A high is ducked and punished low; a low is guarded crouching; an
 ## overhead, standing; a throw loses to a strike; a jump to a strike aimed
 ## up; a guard to what goes round it -- a low or a throw for a standing one,
-## an overhead or a throw for a crouching one; a backdash to its longest
-## strike, which arrives as the backdash stops, and a throw to a backdash,
-## which it passes through.
+## an overhead or a throw for a crouching one; a backdash to following it,
+## and a throw to a backdash, which it passes through.
 const ANSWERS: Dictionary = {
 	"high": ["guard crouching", "low"], "mid": ["guard standing", "guard crouching"], "low": ["guard crouching"],
 	"overhead": ["guard standing", "high"], "throw": ["high", "mid", "evade"], "jump": ["high"],
 	"crouch": ["overhead", "throw"], "guard crouching": ["overhead", "throw"], "guard standing": ["low", "throw"],
-	"step in": ["mid", "throw"], "step out": ["step in"], "evade": ["long", "step in"],
+	"step in": ["mid", "throw"], "step out": ["step in"], "evade": ["step in"],
 }
 ## How much weight an answer gains when the model is as sure as it can be;
 ## none when it knows no more than chance, and in between in proportion.

@@ -172,18 +172,29 @@ func test_a_backdash_is_read_as_the_evade() -> void:
 
 
 # The fixed opponent's evade is the evade button, once, then nothing for as
-# long as the backdash lasts; its long strike is the one that reaches furthest.
-func test_the_fixed_opponent_evades_with_the_button_and_knows_its_longest_strike() -> void:
+# long as the backdash lasts.
+func test_the_fixed_opponent_evades_with_the_button() -> void:
 	var opponent := FightOpponent.new("hard", _data)
 	var inputs: Array[int] = opponent._inputs_for("evade", _alone("dancer", 300, 500), 0)
 	assert_int(inputs.size()).is_equal(int(_data.character("dancer")["backdash"]["frames"]))
 	assert_int(inputs[0]).is_equal(EVADE)
 	assert_bool(inputs.slice(1).all(func(input: int) -> bool: return input == 0)).is_true()
-	assert_str(FightOpponent.longest_strike(_data, "lancer")).is_equal("thrust")
-	assert_str(FightOpponent.longest_strike(_data, "dancer")).is_equal("straight")
+
+
+# Every level can backdash: a beginner reaches for the way out, so the evade
+# is among the first options of "after blocking", inside even easy's tactics.
+func test_every_level_knows_the_evade() -> void:
+	for level: String in FightOpponent.LEVELS:
+		var tactics: int = int(FightOpponent.LEVELS[level]["tactics"])
+		var known: Array = FightOpponent.SITUATIONS["after blocking"].slice(0, tactics).map(_name_of)
+		assert_array(known).override_failure_message(level).contains(["evade"])
 
 
 # --- helpers ---------------------------------------------------------------------
+
+func _name_of(option: Array) -> String:
+	return option[0]
+
 
 # `character` as player one at `x`, the lancer or the dancer as player two at
 # `other_x`, facing each other.

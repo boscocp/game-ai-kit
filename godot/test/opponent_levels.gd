@@ -1,13 +1,20 @@
 # T37: the fixed opponent's three levels are ordered. Over 100 seeded fights
 # of each pairing, each level beats the one below it at least 60 times.
-# T40: and hard is hard enough -- it beats the owner's ghost at least
-# `HARD_BEATS_THE_OWNER` times in 100. The ghost is T18's "ghost: nearest",
-# built from the nine fights the owner recorded: of everything in the
-# repository it is the nearest to a person who is learning, and it is the
-# strongest of T18's imitations -- it beat T37's medium 86 times in 100. A scripted
-# stand-in was tried first, its table the owner's own choices counted by
-# situation, and it could not tell T37's hard from T40's: both beat it 96 to
-# 98 times. The ghost could: 56 before the retune, over 80 after.
+#
+# T40: and hard is hard enough. It must beat the owner's ghost
+# `HARD_BEATS_THE_OWNER` times in `HARD_FIGHTS`, and T18's turtle stand-in
+# `HARD_BEATS_THE_TURTLE` times. The ghost is T18's "ghost: nearest", built
+# from the nine fights the owner recorded: of everything in the repository
+# it is the nearest to a person who is learning, and the strongest of
+# T18's imitations -- it beat T37's medium 86 times in 100. It is read from
+# a frozen copy, `owner_ghost.json`, so retraining the clone on new
+# recordings does not move this bar. Hard's weights were tuned against
+# that ghost, so its number flatters hard. The turtle was not used for
+# tuning, and it is the stand-in hard did worst against, so it is the
+# check -- as the lancer only: as the dancer every level beats it 195 to 200
+# times in 200, and a bar everyone clears measures nothing. Over 200 fights at two sets of seeds, T40's hard won 79 to 89 per
+# cent against the ghost and T37's hard 55 to 67; against the turtle, 74
+# to 75 and 68.
 #
 #     ./scripts/godot --headless --path godot -s res://test/opponent_levels.gd
 #
@@ -24,9 +31,10 @@
 # Before trusting each character it plays the planted pairings: a level
 # against itself must not win 60, or the measure is leaning on something
 # that is not the level -- the side, or the seed; and medium must not beat
-# the ghost `HARD_BEATS_THE_OWNER` times, or the bar is one any level clears.
+# the ghost `HARD_BEATS_THE_OWNER` times nor the turtle
+# `HARD_BEATS_THE_TURTLE`, or the bar is one any level clears.
 #
-# Exit codes: 0 every pairing is ordered and hard beats the ghost, 1 one is
+# Exit codes: 0 every pairing is ordered and hard beats both, 1 one is
 # not or a planted pairing passed, 2 the frame data or the cloned player
 # could not be read.
 extends SceneTree
@@ -37,10 +45,20 @@ const WINS_NEEDED: int = 60
 const TIME_LIMIT: int = 5940
 ## Each pair is `[lower, higher]`.
 const PAIRINGS: Array[Array] = [["easy", "medium"], ["medium", "hard"]]
-## How many of `FIGHTS` hard must win against the owner's ghost, as each character.
-const HARD_BEATS_THE_OWNER: int = 75
-## The imitation of the owner that hard is measured against.
+## How many fights hard plays against the ghost and the turtle, as each
+## character: twice `FIGHTS`, because these bars sit nearer the numbers.
+const HARD_FIGHTS: int = 200
+## How many of `HARD_FIGHTS` hard must win against each, as each character.
+const HARD_BEATS_THE_OWNER: int = 150
+const HARD_BEATS_THE_TURTLE: int = 130
+## The imitation of the owner that hard is measured against, and the frozen
+## copy of the published clone it is read from.
 const GHOST: String = "ghost: nearest"
+const GHOST_PATH: String = "res://test/owner_ghost.json"
+## T18's stand-in that hard was not tuned against, and the character it is
+## a check as.
+const TURTLE: String = "stand-in: turtle"
+const TURTLE_CHARACTER: String = "lancer"
 
 var _cloned: ClonedPlayer
 
@@ -51,7 +69,7 @@ func _init() -> void:
 
 func _run() -> int:
 	var data := FightData.read()
-	_cloned = ClonedPlayer.load_from()
+	_cloned = ClonedPlayer.load_from(GHOST_PATH)
 	if data.refusal != "" or not _cloned.is_loaded():
 		printerr("opponent_levels: cannot fight -- %s%s" % [data.refusal, _cloned.error])
 		return 2
@@ -75,17 +93,27 @@ func not_ordered_against_itself(character: String, data: FightData) -> bool:
 	return won < WINS_NEEDED
 
 
-## True, and said so, when hard beats the owner's ghost `HARD_BEATS_THE_OWNER`
-## times as `character`, and medium does not -- the planted pairing.
+## True, and said so, when hard beats the owner's ghost as `character` as
+## often as its bar asks -- and the turtle, as `TURTLE_CHARACTER` -- and
+## medium beats neither that often: the planted pairings.
 func hard_enough(character: String, data: FightData) -> bool:
-	var medium: int = wins("medium", GHOST, character, data)
-	var planted: bool = medium < HARD_BEATS_THE_OWNER
-	print("%s: planted, medium beats the owner's ghost as the %s %d of %d (must stay under %d)" % [
-			"ok" if planted else "FAIL", character, medium, FIGHTS, HARD_BEATS_THE_OWNER])
-	var won: int = wins("hard", GHOST, character, data)
-	print("%s: hard beats the owner's ghost as the %s %d of %d (needs %d)" % [
-			"ok" if won >= HARD_BEATS_THE_OWNER else "FAIL", character, won, FIGHTS, HARD_BEATS_THE_OWNER])
-	return planted and won >= HARD_BEATS_THE_OWNER
+	var held: bool = beats(GHOST, HARD_BEATS_THE_OWNER, character, data)
+	if character == TURTLE_CHARACTER:
+		held = beats(TURTLE, HARD_BEATS_THE_TURTLE, character, data) and held
+	return held
+
+
+## True, and said so, when hard beats `opponent` `needed` of `HARD_FIGHTS`
+## times as `character`, and medium does not.
+func beats(opponent: String, needed: int, character: String, data: FightData) -> bool:
+	var medium: int = wins("medium", opponent, character, data, HARD_FIGHTS)
+	var planted: bool = medium < needed
+	print("%s: planted, medium beats %s as the %s %d of %d (must stay under %d)" % ["ok" if planted else "FAIL",
+			opponent, character, medium, HARD_FIGHTS, needed])
+	var won: int = wins("hard", opponent, character, data, HARD_FIGHTS)
+	print("%s: hard beats %s as the %s %d of %d (needs %d)" % ["ok" if won >= needed else "FAIL", opponent,
+			character, won, HARD_FIGHTS, needed])
+	return planted and won >= needed
 
 
 ## True, and said so, when `higher` beats `lower` at least `WINS_NEEDED`
@@ -99,9 +127,9 @@ func ordered(lower: String, higher: String, character: String, data: FightData) 
 
 
 ## How many of `FIGHTS` seeded mirror fights `higher` wins against `lower`.
-func wins(higher: String, lower: String, character: String, data: FightData) -> int:
+func wins(higher: String, lower: String, character: String, data: FightData, fights: int = FIGHTS) -> int:
 	var won: int = 0
-	for fight: int in range(FIGHTS):
+	for fight: int in range(fights):
 		var higher_side: int = fight % 2
 		var levels: Array[String] = [higher, lower]
 		if higher_side == 1:
@@ -111,11 +139,13 @@ func wins(higher: String, lower: String, character: String, data: FightData) -> 
 	return won
 
 
-## The player a name seats: the owner's ghost for `GHOST`, else the fixed
-## opponent at that level.
+## The player a name seats: the owner's ghost for `GHOST`, a stand-in for
+## one of T18's, else the fixed opponent at that level.
 func _player(name: String, data: FightData, chance_seed: int) -> FightOpponent:
 	if name == GHOST:
 		return FightCloneOpponent.new(GHOST, _cloned, data, chance_seed)
+	if name.begins_with("stand-in: "):
+		return StandInPlayer.new(name.trim_prefix("stand-in: "), data, chance_seed)
 	return FightOpponent.new(name, data, chance_seed)
 
 

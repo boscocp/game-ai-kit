@@ -104,13 +104,13 @@ decisions):
 | method | held-out | numbers | built in | beats medium |
 |---|---|---|---|---|
 | always the commonest | 21.1% | 1 | -- | -- |
-| n-gram (T17) | 32.3% | ≤144 | nothing beforehand | 37/100 (as the learner) |
-| ghost, exact | 20.3% | 267 | ~0 s | 70/100 |
-| ghost, nearest | 21.1% | 267 | ~0 s | 71/100 |
-| model, last action only | 21.8% | 156 | 0.38 s | -- |
-| model, the situation | 21.1% | 432 | 0.67 s | 48/100 |
+| n-gram (T17) | 32.3% | ≤144 | nothing beforehand | 39/100 (as the learner) |
+| ghost, exact | 20.3% | 267 | ~0 s | 60/100 |
+| ghost, nearest | 21.1% | 267 | ~0 s | 66/100 |
+| model, last action only | 21.8% | 156 | 0.36 s | -- |
+| model, the situation | 21.1% | 432 | 0.69 s | 49/100 |
 
-The fixed opponent at medium beats itself 33 times in 100 (a draw is no
+The fixed opponent at medium beats itself 47 times in 100 (a draw is no
 win): that is the reference for the last column. These are against T40's
 medium, retuned, with twelve actions counted. Against T37's medium they
 were 40, 78, 86 and 64, and the reference 35.
@@ -127,8 +127,8 @@ What this says:
   the only gain on the table. Each held-out fight alone (the report prints
   them) shows how much one fight moves it.
 - **Guessing and fighting are different measurements.** The ghosts guess at
-  the floor and beat medium 70 and 71 times in 100 (78 and 86 before T40
-retuned it); the clone 48. A ghost
+  the floor and beat medium 60 and 66 times in 100 (78 and 86 before T40
+retuned it); the clone 49. A ghost
   replays whole answers the player actually gave; the model averages them
   into probabilities that are never quite any of them.
 - **The first reading of these numbers was wrong.** Before the review's

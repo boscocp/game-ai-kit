@@ -21,16 +21,17 @@
 ##
 ## So the hard opponent is hard because it decides better and sees sooner --
 ## and never sooner than a person would. Measured with every level's
-## reaction the same, hard still beats medium 80 to 92 times in 100: most of
+## reaction the same, hard still beats medium 92 to 95 times in 100: most of
 ## its edge is the deciding. It sees nothing the others do not: the same
 ## fight, only less old.
 ##
 ## The weights were retuned in T40, when the owner found hard easy, by what
 ## each option won or lost against the owner's ghost: walking in loses to a
 ## player who kicks mid, an overhead is too slow for a crouch, and lows,
-## mids and throws win. `test/opponent_levels.gd` holds hard to beating that
-## ghost; since the ghost is what it was tuned against, that number flatters
-## it, and T18's stand-ins, which it was not tuned against, are the check.
+## mids and throws win. `test/opponent_levels.gd` holds hard to beating a
+## frozen copy of that ghost; since the ghost is what it was tuned against,
+## that number flatters it, and T18's turtle, which it was not tuned against
+## and does worst against, is held as the check.
 ##
 ## Complexity: constant per frame. A decision is a lookup and a weighted draw.
 ##
@@ -53,26 +54,25 @@ const LEVELS: Dictionary = {
 ## punch at a crouching fighter, which passes over it -- and the later ones
 ## are the answers that work.
 ##
-## Two situations and two options came with the backdash (T40). "evade" is
-## the backdash itself, out of pressure. "long" is the answer to a player who
-## backdashes too often: its longest strike, which a backdash is still
-## recovering from when it arrives -- in "it blocked", where a player under
-## pressure reaches for the backdash, and in "it evaded", once one is seen.
+## The backdash came with T40, as "evade" -- out of pressure, early in
+## "after blocking", because getting out is the first thing a beginner
+## reaches for -- and with two situations, "it blocked" and "it evaded".
+## There is no strike in "it evaded" that punishes the backdash it saw:
+## seen 15 frames late, it is over before any strike here arrives (measured:
+## a long strike caught it 5 times in about 800). What it does is follow:
+## a backdash gives up ground, and one more into the corner goes nowhere.
 const SITUATIONS: Dictionary = {
 	"after being hit": [["high", 3], ["step out", 2], ["guard standing", 3], ["guard crouching", 2], ["low", 3],
 			["evade", 1]],
-	"after blocking": [["high", 2], ["guard standing", 2], ["throw", 3], ["low", 3], ["guard crouching", 1],
-			["evade", 1]],
-	"it blocked": [["high", 3], ["throw", 3], ["step in", 1], ["long", 3], ["low", 3]],
-	"it evaded": [["step in", 3], ["high", 1], ["long", 4]],
+	"after blocking": [["high", 2], ["evade", 1], ["guard standing", 2], ["throw", 3], ["low", 3],
+			["guard crouching", 1]],
+	"it blocked": [["high", 3], ["throw", 3], ["step in", 1], ["low", 3]],
+	"it evaded": [["step in", 3], ["high", 1]],
 	"it whiffed": [["step in", 2], ["high", 2], ["mid", 4], ["low", 4]],
 	"it crouches": [["high", 3], ["step in", 1], ["throw", 4], ["mid", 3], ["overhead", 2]],
 	"neutral": [["step in", 3], ["high", 2], ["guard standing", 2], ["mid", 4], ["low", 4],
 			["throw", 3], ["guard crouching", 1], ["overhead", 1], ["step out", 1], ["evade", 1]],
 }
-## The option that is a character's longest strike from the ground, not a
-## height: what reaches a backdash as it stops.
-const LONG: String = "long"
 
 ## How long a guard or a step is held, in frames, before it looks again.
 const GUARD_FRAMES: int = 12
@@ -199,23 +199,10 @@ func _slip(character: String) -> String:
 
 
 # True when the character can do the option: every guard, step and evade,
-# its longest strike, and a strike only at a height it has a move for -- the
-# dancer has no overhead.
+# and a strike only at a height it has a move for -- the dancer has no
+# overhead.
 func _has_option(character: String, option: String) -> bool:
 	return not option in FightData.HEIGHTS or strike_for(_data, character, option) != ""
-
-
-## The character's furthest-reaching move from the ground that is not a
-## throw: the poke that catches a backdash at the end of its travel.
-static func longest_strike(data: FightData, character: String) -> String:
-	var found: String = ""
-	var moves: Dictionary = data.character(character)["moves"]
-	for name: String in moves:
-		if moves[name]["stance"] == "air" or data.is_throw(character, name):
-			continue
-		if found == "" or moves[name]["hitbox"][1] > moves[found]["hitbox"][1]:
-			found = name
-	return found
 
 
 ## The character's quickest move from the ground at `height`, or "" when it
@@ -255,8 +242,7 @@ func _inputs_for(option: String, seen: FightState, me: int) -> Array[int]:
 			return _held(FightInput.UP | toward, STEP_FRAMES)
 		"evade":
 			return _evade(mine.character)
-	var move: String = longest_strike(_data, mine.character) if option == LONG \
-			else strike_for(_data, mine.character, option)
+	var move: String = strike_for(_data, mine.character, option)
 	if not _reaches(move, mine, other):
 		choice += ", out of reach: steps in"
 		return _held(toward, STEP_FRAMES)

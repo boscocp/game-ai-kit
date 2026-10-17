@@ -4,10 +4,10 @@
  "rules_sha256": "af5baa74dc1bd612d23c1f14edc30d5f3b0c810148b94e79fb77701d69e25b79",
  "weights_sha256": "53681056e89fb57e99d7a569beb277dbc70470beac1223777a3b46a9d8703c45",
  "wins": {
-  "clone": 48,
-  "ghost: exact": 70,
-  "ghost: nearest": 71,
-  "learner: medium": 37,
-  "opponent: medium": 33
+  "clone": 49,
+  "ghost: exact": 60,
+  "ghost: nearest": 66,
+  "learner: medium": 39,
+  "opponent: medium": 47
  }
 }

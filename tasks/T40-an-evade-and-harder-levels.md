@@ -113,7 +113,8 @@ the learner again, and say whether they can now be told apart.
   nearest") could. The old hard beat it 56 times in 100, about even, which
   is what the owner felt; that ghost also beat the old medium 86 times. So
   `make test-opponent-levels` holds hard to beating the ghost 75 times in
-  100 as each character, and medium must not reach 75 (the planted case).
+  100 as each character, and medium must not reach 75 (the planted case);
+  firmer since the review, below.
   The stand-in was deleted.
 - **What was retuned: the weights, by what each option won.** Over 100
   fights of hard against the ghost, every decision was tallied by the health
@@ -139,3 +140,54 @@ the learner again, and say whether they can now be told apart.
   Whether the opponents became easier to tell apart needs new recordings
   with the evade in them (`make record-fights`, then `make train-clone`),
   and a person to play them. That is the manual check above.
+
+## After the review (2026-10-16)
+
+The review ([docs/reviews/43-an-evade-and-harder-levels.md](../docs/reviews/43-an-evade-and-harder-levels.md))
+found the backdash's rules sound and the rest not ready. What changed,
+measured again after each change:
+
+- **"long" is gone: there is no answer that punishes a backdash it sees.**
+  In "it evaded" the long strike caught a backdash 5 times in about 800
+  (lancer) and never in about 760 (dancer). Seen 15 frames late, the
+  backdash is over before any strike arrives, and this is the reaction
+  a person has too. In "it blocked", the pre-emptive read the decisions
+  above relied on caught nothing in 8 tries: the dancer's backdash carries
+  it past the straight's reach. So the option, `longest_strike` and the
+  claim are removed. "It evaded" now follows (step in, or a high), and the
+  learner's answer to an expected evade is to follow. What a backdash costs
+  is the ground it gives up, and that is not much. Measured: an opponent
+  with medium's knobs that backdashes out of every block and every hit
+  loses to hard 95 and 98 times in 100, and is about even with medium, which
+  beats it 43 and 44 times. The habit is neither punished nor rewarded.
+  So step 3's "answer to a player who evades too often" is **not done**,
+  and this says so. A real read would need knowing the player's habit (T17) and a
+  strike that reaches, which neither character has against the dancer.
+- **Every level evades.** "evade" is now second in "after blocking", which
+  is a beginner's reflex, so easy and medium choose it. A test holds that
+  every level knows it, and the medium learner can now answer a throw with
+  it.
+- **The hard gate is firmer.** It reads a frozen copy of the owner's ghost
+  (`godot/test/owner_ghost.json`), so retraining the clone does not move
+  the bar. It plays 200 fights per character and holds hard to 150 of them.
+  It also holds hard to 130 of 200 against T18's turtle stand-in, which
+  hard was not tuned against and does worst against, as the lancer only:
+  as the dancer every level beats the turtle 195 to 200 times in 200. Over
+  200 fights at two sets of seeds:
+
+  | against | T40's hard | T37's hard | medium |
+  |---|---|---|---|
+  | the ghost, as the lancer | 172, 178 | 123, 133 | 60, 64 |
+  | the ghost, as the dancer | 162, 158 | 109, 113 | 39, 44 |
+  | the turtle, as the lancer | 150, 147 | 136, 135 | 37, 25 |
+
+  T37's hard now fails the ghost bar by 17 fights or more, and the new hard
+  clears it by 8 or more. Against the turtle the margin is thinner (17 over
+  the bar, T37's hard 6 under), which is why the turtle bar is lower.
+- With equal reaction times, hard now beats medium 95 and 92 times in 100.
+  The ghosts beat the retuned medium 60 and 66 times in 100, and the clone
+  49 (`compare.py --report`).
+- Smaller fixes: a backdash pressed with down held now stands (it used to
+  stay crouched for all its frames, and nothing tested it); stale numbers
+  on the cloning page and in two comments; the legend names evading among
+  the paler states.
