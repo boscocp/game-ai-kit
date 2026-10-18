@@ -24,8 +24,14 @@ const TREES: String = "T"
 const ROCK: String = "#"
 const WATER: String = "~"
 ## Dry ground over the river: costs what open ground costs, and is drawn as a
-## bridge because the only crossing should look like one.
+## bridge because the main crossing should look like one.
 const BRIDGE: String = "="
+## Shallow water anyone can wade (T48): a second way over the river, one at
+## each end of it, slow -- it costs what trees cost -- so the bridge is still
+## the quick way and the fords are a choice about where, not only when.
+const FORD: String = "f"
+## What a ford costs to enter.
+const FORD_COST: int = 3
 
 ## Trees cost this much to enter. They will also block sight, once there is
 ## fog to see through (T20); for now `sight` is a number nothing reads.
@@ -168,6 +174,8 @@ static func _ground_cost(terrain: String) -> int:
 	match terrain:
 		TREES:
 			return TREES_COST
+		FORD:
+			return FORD_COST
 		ROCK, WATER:
 			return GridGraph.BLOCKED
 	return GridGraph.DEFAULT_COST

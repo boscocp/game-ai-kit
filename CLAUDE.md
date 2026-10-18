@@ -161,6 +161,13 @@ Findings that survive both steps go in `docs/godot/`, with the source URL and a
   same second, and Python keeps running the mutant: in wave 47 it moved the
   whole dataset, and `lint-no-training` blamed the committed weights. After
   a mutation round, `find python -name __pycache__ -prune -exec rm -rf {} +`.
+- **A script error in a `-s` script does not fail the run.** A `SCRIPT
+  ERROR` (a typed-array mismatch is the usual one) aborts the function it
+  happens in, and `_init` carries on: the script prints its summary and
+  `quit(0)`s with that whole check skipped. Twice in waves 48 and 52 a
+  property or benchmark check printed "0 failure(s)" this way. After adding
+  or changing a check in `godot/test/*.gd`, read its output for
+  `SCRIPT ERROR`, not only its exit code.
 - **The forbidden-term list is untracked and a checkout can delete it.**
   `scripts/forbidden-term-hashes.txt` is gitignored (ADR 0005), but it was
   *tracked* until wave 6 — so checking out anything older and coming back

@@ -36,11 +36,16 @@ func test_blue_s_first_turn_reads_as_the_spec_s_opening_problem() -> void:
 	assert_str(TacticalPlanBridge.world_of(state).key()).is_equal(WorldState.new(PackedStringArray(data["init"])).key())
 
 
-func test_a_piece_of_theirs_on_the_bridge_shuts_it() -> void:
+func test_a_crossing_stays_open_while_one_of_the_three_is_clear() -> void:
+	# The bridge and the two fords (T48): one of theirs on the bridge leaves
+	# the fords, and only all three shut close the river to a walker.
 	var state: BoardState = _blues_first_turn()
-	var bridge: Vector2i = TacticalRules.cells_of(TacticalScenario.MAP, TacticalRules.BRIDGE)[0]
+	var crossings: Array[Array] = TacticalPlanBridge.crossings()
+	var on_the_bridge: BoardState = _moved(state, 4, TacticalRules.cells_of(TacticalScenario.MAP, TacticalRules.BRIDGE)[0])
 
-	assert_bool(TacticalPlanBridge.world_of(_moved(state, 4, bridge)).holds("bridge_open")).is_false()
+	assert_int(crossings.size()).is_equal(3)
+	assert_bool(TacticalPlanBridge.world_of(on_the_bridge).holds("crossing_open")).is_true()
+	assert_bool(TacticalPlanBridge.world_of(_on_every_crossing(state)).holds("crossing_open")).is_false()
 
 
 func test_a_walker_is_home_across_or_at_their_workshop_by_where_it_stands() -> void:
@@ -85,17 +90,17 @@ func test_a_walker_no_step_names_is_the_rules_and_says_so() -> void:
 	assert_str(planner.decide_move(state, 9).reason).contains("the rules decide")
 
 
-func test_a_shut_bridge_breaks_a_plan_that_crosses_it_and_the_reason_names_the_fact() -> void:
+func test_shut_crossings_break_a_plan_that_crosses_and_the_reason_names_the_fact() -> void:
 	var planner := PlannedBlue.new()
 	var state: BoardState = _blues_first_turn()
 	planner.decide_build(state, _workshop(state).id)
-	var bridge: Vector2i = TacticalRules.cells_of(TacticalScenario.MAP, TacticalRules.BRIDGE)[1]
-	var later: BoardState = _moved(state, 4, bridge)
+	var later: BoardState = _on_every_crossing(state)
 	later.turn_number += TacticalScenario.FACTIONS
 
 	planner.decide_build(later, _workshop(later).id)
 
 	assert_str(planner.why_planned).contains("stopped running")
+	assert_str(planner.why_planned).contains("crossing_open")
 
 
 func test_it_replans_on_its_cadence_when_nothing_broke() -> void:
@@ -159,7 +164,7 @@ func test_once_the_ram_is_bought_the_plan_is_at_the_crossing_and_buys_no_more() 
 
 	var decision: TacticalDecision = planner.decide_build(state, _workshop(state).id)
 
-	assert_str(planner.plan.steps[planner.next_step].name).is_equal("cross_the_bridge_ram")
+	assert_str(planner.plan.steps[planner.next_step].name).is_equal("cross_the_river_ram")
 	assert_str(decision.reason).contains("the plan buys nothing more")
 
 
@@ -208,7 +213,7 @@ func test_a_walker_s_walk_is_the_rules_walk_and_only_its_reason_differs() -> voi
 
 	assert_str(planned.kind()).is_equal(ruled.kind())
 	assert_that(planned.target).is_equal(ruled.target)
-	assert_str(planned.reason).contains("cross_the_bridge_ram")
+	assert_str(planned.reason).contains("cross_the_river_ram")
 
 
 func test_a_partial_plan_is_played_without_a_refusal_and_replaced_when_done() -> void:
@@ -263,6 +268,18 @@ func _with_a_ram_and_the_forge(state: BoardState) -> BoardState:
 	next = next.produce(ProductionOrder.new(_workshop(next).id, ram, TacticalRules.free_cell_beside(next, _workshop(next), ram)))
 	next.funds[next.current_faction] = 0
 	return next
+
+
+# `state` with a red runner on one cell of every crossing.
+func _on_every_crossing(state: BoardState) -> BoardState:
+	var units: Array[Unit] = state.units.duplicate()
+	var runner: UnitType = TacticalRules.unit_types()[TacticalRules.RUNNER]
+	for crossing: Array in TacticalPlanBridge.crossings():
+		units.append(Unit.new(200 + units.size(), TacticalScenario.RED, crossing[0], 10, runner.movement, runner))
+	var shut := BoardState.new(state.graph, units, state.current_faction, state.turn_number)
+	shut.movement_graphs = state.movement_graphs
+	shut.funds = state.funds.duplicate()
+	return shut
 
 
 # `state` with unit `unit_id` set down on `cell` -- a board

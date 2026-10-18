@@ -2,5 +2,5 @@
 ; been paid, and red's shield stands two cells from red's workshop.
 (define (problem blue-s-first-turn)
   (:domain tactics)
-  (:init (funds_banked) (runner_home) (shield_home) (bridge_open))
+  (:init (funds_banked) (runner_home) (shield_home) (crossing_open))
   (:goal (and (their_workshop_falls))))

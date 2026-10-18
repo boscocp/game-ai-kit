@@ -45,10 +45,11 @@ func test_it_builds_even_when_nothing_that_reaches_beats_a_red_piece() -> void:
 
 
 func test_a_walker_with_no_way_to_its_goal_takes_the_fallback() -> void:
-	# Red's runners on both bridge cells: a blue shield has no way to red's
-	# workshop, and walks at the nearest red piece instead of staying.
+	# Red's runners on the bridge and on both fords: a blue shield has no way
+	# to red's workshop, and walks at the nearest red piece instead of staying.
 	var state: BoardState = _scenario_with([[RED, TacticalRules.RUNNER, Vector2i(6, 4)],
-		[RED, TacticalRules.RUNNER, Vector2i(7, 4)], [BLUE, TacticalRules.SHIELD, Vector2i(9, 3)]])
+		[RED, TacticalRules.RUNNER, Vector2i(6, 0)], [RED, TacticalRules.RUNNER, Vector2i(6, 8)],
+		[BLUE, TacticalRules.SHIELD, Vector2i(9, 3)]])
 	var shield: Unit = state.unit_at(Vector2i(9, 3))
 
 	var decision: TacticalDecision = RuleBasedBlue.new().decide_move(state, shield.id)

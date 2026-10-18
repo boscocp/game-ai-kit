@@ -59,8 +59,8 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T44 | The learned policy plays the tactical board | wip | wave 47: two control points paying 2 a turn, every turn opened by `TurnStart`; `LearnedBlue` (attack or retreat by the combat model, the point by the capture model); the combat model sees the counter, fitted on a typed dataset, 86.0% against 57.7%; measured: rules mirror red 20/20, learned against rules 17-18 draws in 20 -- stopped there for a study of similar games (`docs/design/tactical-references.md`), which became T45-T48; not done: the capture rows from the tactical map, the controller key, the skirmish's removal |
 | T45 | The AI spends its money and keeps its pieces moving | wip | wave 49: spend first (build what beats most even when it cannot get there; a boxed workshop says so and is asked again), never idle (a fallback at the nearest red piece), one walker per point and per fallback target; win-rate limits for stuck walkers and funds left; acceptance fails -- learned stuck 44%/42%, 99 funds left: half the stuck walkers could move (staging waits for T48's threat map), the rest are boxed in behind one bridge, and income beats one build a turn; rules mirror 12-7-1 (was 20-0), planner 13-3 as blue, 0-20 as red |
 | T46 | The learned blue commits to a fight | wip | wave 50: sets out at p(win) 0.5, gives the same fight up at 0.3 or below (no measurable effect: the way to a fight is one walk), joins another's fight within 3 cells, retreats only when red's strength near it outweighs blue's by Wesnoth's caution -- that one rule is the gain: learned as red 11-0-9 (was 4-0-16), as blue 0-5-15 (was 0-1-19); flips counted by distance 26%, as the rules; C cycles rules, planner, learned |
-| T47 | The side moving second, and a last round that decides | done | wave 51: blue starts with one more shield (swept: funds +2/+3 changed nothing, +2 workshop health 65%, the shield 59%); at round 40 the higher score wins -- workshop health, point-turns held, what is left -- and only equal scores draw; rules mirror 59-41-0 over 100; learned beats rules 100-0 from both seats, 61 of them on score; manual check still the owner's |
-| T48 | The board itself: a second crossing, a threat map, shorter fights | todo | only if T45-T47 leave it a queue; the owner chooses which |
+| T47 | The side moving second, and a last round that decides | wip | wave 51 met it (shield, 59-41 over 100); wave 52's fords broke it (17-83, every variant swept outside 40-60, T48's record); the last round still decides, no draws |
+| T48 | The board itself: a second crossing, a threat map, shorter fights | wip | wave 52: two fords (rows 0 and 8, cost 3), the planner's crossing_open, a threat map by path drawn on the board (T); learned stuck 44% -> 15%, 80% of the rules' mirror decided before round 40; but the fords open a rush lane: the mirror is 17-83 with blue's shield, 100-0 without, and no ford cost or place swept lands 40-60 -- the owner's call; one blow and one back not started |
 | T43 | A fighting ladder | todo | easy, medium, the clone, "ghost: nearest", hard, best of three each, with a clock and an ending; every opponent exists; picked in T42 |
 | T21 | Every example can be watched | done | `check_demos.py` and `demo_overlays.gd`; blue's decision now drawn before it is played |
 | T24 | One window for every example | todo | a menu, a card per example naming its techniques, and an executable; needs T21 |
@@ -94,6 +94,34 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-18 (wave 52)
+
+**Where it stopped -- read first.** The owner paused here. Branch
+`wave/52-the-board-itself` is committed, `make check` green, and **not yet
+reviewed or merged**. To finish it: have the branch reviewed by a fresh
+context (`docs/reviews/52-the-board-itself.md`, the same brief as waves
+48-51's reviews), answer each finding on the branch, then `make wave-merge`.
+After that, wait for the owner: the three decisions under "Next" below are
+theirs, and the owner said to stop after this wave.
+
+**What landed.** T48 in part: two fords, one at each end of the river; the
+planner's domain says `crossing_open`; a threat map by path, drawn on the
+board and toggled with T. The win-rate script counts games in which a side
+crossed by a ford. CLAUDE.md gains a trap: a script error in a `-s` check
+skips that check and still exits 0.
+
+**What the measurements said.** The fords did what staging was meant to: the
+learned side's stuck walkers fell from 44% to 15%, and 80% of the rules'
+mirror is decided before round 40. But each ford opens a rush lane beside a
+workshop: the mirror is 17-83 with blue's shield, 100-0 without, and no ford
+cost or place swept lands 40-60 (T48's record). T47 is back to wip on that.
+
+**Next, for the owner:** how to balance the lane (a ford placed between the
+two tried, a zone of control, another counter); whether to do T48's third
+change (one blow and one back, retraining the combat model); and the shooter
+and 3D racing examples asked for on 2026-10-15, which were never written as
+tasks -- they need an ADR on 3D first (ADR 0001 forbids 3D nodes).
 
 ## Resuming after 2026-10-18 (wave 51)
 

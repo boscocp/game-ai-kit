@@ -1,9 +1,13 @@
 ## The tactical map, and the state a game of it starts from.
 ##
-## A river runs down the middle with one bridge, so where you cross is a
-## decision before anything else is: the bridge is narrow and everyone can see
-## it, the water is open only to waders, and the trees on either bank are slow
-## to cross and good to hide in. The map is the same turned half round, so
+## A river runs down the middle with one bridge and a ford at each end, so
+## where you cross is a decision before anything else is: the bridge is narrow
+## and quick and everyone can see it, the fords (T48) are slow and far apart,
+## the deep water is open only to waders, and the trees on either bank are
+## slow to cross and good to hide in. The fords came in a pair because the
+## map is the same turned half round, and the bridge already holds the only
+## crossing that is its own mirror. Before them one bridge one cell wide was
+## the only dry way over, and wave 49 measured the pieces queued behind it. The map is the same turned half round, so
 ## neither side starts nearer the bridge. Each side has a workshop in its own
 ## corner, a bolt tower covering its bank, and a watchtower looking across.
 ##
@@ -21,9 +25,9 @@ const BLUE: int = 1
 const FACTIONS: int = 2
 
 ## The board, row by row: `.` open, `T` trees, `#` rock, `~` water, `=` the
-## bridge.
+## bridge, `f` a ford.
 const MAP: Array[String] = [
-	"..T...~~......",
+	"..T...ff......",
 	".TT...~~.T....",
 	".....T~~.T....",
 	"..#..T~~......",
@@ -31,14 +35,14 @@ const MAP: Array[String] = [
 	"......~~T..#..",
 	"....T.~~T.....",
 	"....T.~~...TT.",
-	"......~~...T..",
+	"......ff...T..",
 ]
 
 
 ## The two control points (T44), one on each bank, each beside the river's
 ## top or bottom end: far from its own side's workshop, five cells from the
-## bridge, and one step from water, so a wader reaches the other side's point
-## without the bridge. Two, not three: the map is the same turned half round,
+## bridge, and one step from a ford, so the far side's point is the first
+## thing a piece coming over the ford reaches. Two, not three: the map is the same turned half round,
 ## and on a board fourteen wide no cell is its own mirror, so the points come
 ## in pairs. Not on the bridge: a flag there hides the only dry crossing, and
 ## the bridge is already where the fight is -- a point elsewhere gives a

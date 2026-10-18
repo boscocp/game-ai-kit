@@ -19,11 +19,13 @@ static func entries(types: Dictionary) -> Array[Array]:
 		[UnitView.SPENT_TINT, "greyed: moved this turn"],
 		[UnitView.HEALTH_TEXT, "yellow number: health"],
 		[IntentView.INTENT, "pink: what blue will do next"],
+		[IntentView.THREAT, "red: enemy reach (T)"],
 		[BoardView.tile_texture(BoardView.PLAIN), "open ground"],
 		[BoardView.tile_texture(BoardView.TREES), "trees: cost 3 to enter"],
 		[BoardView.tile_texture(BoardView.WALL), "rock: nothing crosses"],
-		[BoardView.tile_texture(BoardView.WATER), "water: only waders cross"],
-		[BoardView.tile_texture(BoardView.BRIDGE), "bridge: the only dry crossing"],
+		[BoardView.tile_texture(BoardView.WATER), "deep water: only waders cross"],
+		[BoardView.tile_texture(BoardView.BRIDGE), "bridge: the quick crossing"],
+		[BoardView.tile_texture(BoardView.ROUGH), "ford: anyone crosses, cost %d" % TacticalRules.TREES_COST],
 		[BoardView.tile_texture(BoardView.NODE), "flag: a point, +%d a turn to its holder" % TacticalRules.POINT_INCOME],
 	]
 	for name: String in types:

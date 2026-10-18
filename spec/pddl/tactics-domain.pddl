@@ -16,10 +16,11 @@
 ; * nothing here can tell how many blows a workshop takes. `siege_with_*` is
 ;   a step that lasts until the workshop falls, carried out turn after turn.
 ;
-; What it cannot do: clear the bridge, or draw a guard off their workshop.
-; No action adds `bridge_open` or `their_workshop_unguarded`, so with the
-; bridge shut and the workshop guarded there is no plan (4 of the benchmark's
-; boards) and the rules play that turn, saying so. Those two would be the
+; What it cannot do: clear a crossing, or draw a guard off their workshop.
+; No action adds `crossing_open` or `their_workshop_unguarded`, so with every
+; dry crossing shut and the workshop guarded there is no plan (6 of the
+; benchmark's boards before T48 added the fords) and the rules play that
+; turn, saying so. Those two would be the
 ; next actions to add, and each is a tactical question the rules answer now.
 ;
 ; STRIPS has no negative preconditions, so "their workshop has no guard" is a
@@ -37,7 +38,7 @@
     (mortar_home)
     (wader_home)
     (ram_home)
-    (bridge_open)
+    (crossing_open)
     (runner_across)
     (shield_across)
     (mortar_across)
@@ -89,21 +90,21 @@
     :precondition (and (funds_banked) (forge_owned))
     :effect (and (ram_home) (not (funds_banked))))
 
-  ; Everything but the wader crosses by the one bridge, and only while
-  ; no piece of theirs stands on it.
-  (:action cross_the_bridge_runner
+  ; Everything but the wader crosses dry -- by the bridge or, since T48, a
+  ; ford -- and only while one of those crossings has none of theirs on it.
+  (:action cross_the_river_runner
     :parameters ()
-    :precondition (and (runner_home) (bridge_open))
+    :precondition (and (runner_home) (crossing_open))
     :effect (and (runner_across) (not (runner_home))))
 
-  (:action cross_the_bridge_shield
+  (:action cross_the_river_shield
     :parameters ()
-    :precondition (and (shield_home) (bridge_open))
+    :precondition (and (shield_home) (crossing_open))
     :effect (and (shield_across) (not (shield_home))))
 
-  (:action cross_the_bridge_mortar
+  (:action cross_the_river_mortar
     :parameters ()
-    :precondition (and (mortar_home) (bridge_open))
+    :precondition (and (mortar_home) (crossing_open))
     :effect (and (mortar_across) (not (mortar_home))))
 
   ; The wader crosses anywhere, which is the whole of what makes it a wader.
@@ -112,9 +113,9 @@
     :precondition (and (wader_home))
     :effect (and (wader_across) (not (wader_home))))
 
-  (:action cross_the_bridge_ram
+  (:action cross_the_river_ram
     :parameters ()
-    :precondition (and (ram_home) (bridge_open))
+    :precondition (and (ram_home) (crossing_open))
     :effect (and (ram_across) (not (ram_home))))
 
   ; From their bank to within reach of their workshop.

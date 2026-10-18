@@ -27,7 +27,7 @@
 ##   what the board offers meanwhile: a guard walking away from red's workshop
 ##   makes a runner's siege legal, and only a new plan will see it;
 ## * whenever the plan no longer runs from the board as it is -- a
-##   precondition it relied on stopped holding, such as `bridge_open` -- which
+##   precondition it relied on stopped holding, such as `crossing_open` -- which
 ##   is Killzone 3's invalidation, and the sentence on screen names the step
 ##   and the fact;
 ## * when it has no plan, or the last call ran out of budget and its partial
@@ -247,14 +247,26 @@ func _runs_from(world: WorldState, start: int) -> bool:
 
 # The sentence for a plan that stopped running: the step it was at, and the
 # first of that step's preconditions the board no longer gives it.
+#
+# The rest of the plan is replayed from that step on the board as it is, and
+# the first step that cannot run names the fact: a crossing shut three steps
+# ahead is the reason, not the step the plan happened to be at.
 func _what_broke(state: BoardState) -> String:
 	var world: WorldState = TacticalPlanBridge.world_of(state)
-	var index: int = clampi(next_step, 0, plan.steps.size() - 1)
-	var step: StripsAction = plan.steps[index]
+	var start: int = clampi(next_step, 0, plan.steps.size() - 1)
+	for index: int in range(start, plan.steps.size()):
+		var missing: String = _first_missing(plan.steps[index], world)
+		if missing != "":
+			return "step %d, %s, needs %s, which no longer holds" % [index + 1, plan.steps[index].name, missing]
+		world = plan.steps[index].apply(world)
+	return "from step %d, %s, the rest no longer reaches %s" % [start + 1, plan.steps[start].name, ", ".join(_aim)]
+
+
+static func _first_missing(step: StripsAction, world: WorldState) -> String:
 	for predicate: String in step.preconditions:
 		if not world.holds(predicate):
-			return "step %d, %s, needs %s, which no longer holds" % [index + 1, step.name, predicate]
-	return "from step %d, %s, the rest no longer reaches %s" % [index + 1, step.name, ", ".join(_aim)]
+			return predicate
+	return ""
 
 
 # The first purchase -- banking, the forge, a unit -- at or after `from`, or

@@ -14,19 +14,20 @@ const BLUE: int = TacticalScenario.BLUE
 
 
 func test_a_runner_cannot_step_into_water() -> void:
-	var state: BoardState = _state_with(TacticalRules.RUNNER, Vector2i(5, 0))
+	# Row 1: deep water. Row 0's is a ford since T48, and anyone wades that.
+	var state: BoardState = _state_with(TacticalRules.RUNNER, Vector2i(5, 1))
 
-	var refusal: String = state.why_refused(_step(state, Vector2i(6, 0)))
+	var refusal: String = state.why_refused(_step(state, Vector2i(6, 1)))
 
 	assert_str(refusal).contains("blocked")
 
 
 func test_a_wader_can_step_into_water() -> void:
-	var state: BoardState = _state_with(TacticalRules.WADER, Vector2i(5, 0))
+	var state: BoardState = _state_with(TacticalRules.WADER, Vector2i(5, 1))
 
-	assert_str(state.why_refused(_step(state, Vector2i(6, 0)))).is_equal(BoardState.LEGAL)
-	var waded: Unit = state.apply(_step(state, Vector2i(6, 0))).unit_by_id(99)
-	assert_vector(waded.cell).is_equal(Vector2i(6, 0))
+	assert_str(state.why_refused(_step(state, Vector2i(6, 1)))).is_equal(BoardState.LEGAL)
+	var waded: Unit = state.apply(_step(state, Vector2i(6, 1))).unit_by_id(99)
+	assert_vector(waded.cell).is_equal(Vector2i(6, 1))
 	# Billed on its own map: one point. Billed on the board's, water is
 	# BLOCKED (-1), and a wader would *gain* a point for every step it waded.
 	assert_int(waded.movement_points).is_equal(state.unit_by_id(99).movement_points - 1)
@@ -114,20 +115,28 @@ func test_every_name_the_counter_table_uses_is_a_type() -> void:
 			assert_bool(types.has(name)).override_failure_message(kind.type_name + " names " + name).is_true()
 
 
-func test_a_runner_can_cross_the_river_only_by_the_bridge() -> void:
-	# Two halves. With the bridge the far bank is reachable -- the first draft
-	# of the map put the bridge where it touched only one bank. Without it the
-	# far bank is not, which is what "only" means; one shortest route over the
-	# bridge would not have shown that.
+func test_a_runner_can_cross_the_river_only_by_the_bridge_or_a_ford() -> void:
+	# With any one of the three crossings the far bank is reachable -- the
+	# first draft of the map put the bridge where it touched only one bank.
+	# With all three shut it is not, which is what "only" means; one shortest
+	# route over the bridge would not have shown that (T48 added the fords).
 	var state: BoardState = TacticalScenario.build()
 	var start: Vector2i = _first_of(state, RED, TacticalRules.WORKSHOP).cell + Vector2i.RIGHT
 	var goal: Vector2i = _first_of(state, BLUE, TacticalRules.WORKSHOP).cell + Vector2i.LEFT
-	var no_bridge: GridGraph = state.graph.duplicate_graph()
-	for cell: Vector2i in TacticalRules.cells_of(TacticalScenario.MAP, TacticalRules.BRIDGE):
-		no_bridge.block(cell)
+	var bridge: Array[Vector2i] = TacticalRules.cells_of(TacticalScenario.MAP, TacticalRules.BRIDGE)
+	var fords: Array[Vector2i] = TacticalRules.cells_of(TacticalScenario.MAP, TacticalRules.FORD)
 
-	assert_bool(AStarSearch.new().search(state.graph, start, goal).reached).is_true()
-	assert_bool(AStarSearch.new().search(no_bridge, start, goal).reached).is_false()
+	assert_int(fords.size()).is_equal(4)
+	assert_bool(AStarSearch.new().search(_without(state.graph, bridge), start, goal).reached).is_true()
+	assert_bool(AStarSearch.new().search(_without(state.graph, fords), start, goal).reached).is_true()
+	assert_bool(AStarSearch.new().search(_without(state.graph, bridge + fords), start, goal).reached).is_false()
+
+
+func _without(graph: GridGraph, cells: Array[Vector2i]) -> GridGraph:
+	var shut: GridGraph = graph.duplicate_graph()
+	for cell: Vector2i in cells:
+		shut.block(cell)
+	return shut
 
 
 func test_the_map_is_the_same_turned_half_round() -> void:

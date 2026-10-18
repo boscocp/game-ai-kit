@@ -96,7 +96,8 @@ and B steps through a maze, an open field and a trap for depth-first. Every
 change searches again, and a goal walled off is answered "no route".
 
 **Tactics** (`make demo-tactical`). Turns in the style of Advance Wars, you
-as red against the computer as blue, over a river with one bridge. Click a
+as red against the computer as blue, over a river with one bridge and a
+slow ford at each end. Click a
 unit and everywhere it can reach lights up; click a lit cell and it walks
 there and greys out until your next turn. Z takes back, space ends the turn.
 W has a unit wait. Blue moves second, and starts with one more shield for
@@ -109,7 +110,9 @@ counter table and cover tilt it -- attacking at even health, a piece the
 table favours wins about 19 fights in 20 -- and the loser is removed. Bolt towers fire
 by themselves at the start of their side's turn. Two flags are control
 points: a side with a walker on one and no enemy beside it is paid 2 more at
-the start of its turn. Destroy the enemy workshop -- a siege, one blow an
+the start of its turn. The other side's threat map -- every cell it could
+strike next turn, by path, so the river blocks it -- is tinted red; T hides
+it. Destroy the enemy workshop -- a siege, one blow an
 attack -- to win; after 40 rounds the higher score wins (workshop health,
 then point-turns held, then what is left standing), and only an equal
 score is a draw.
