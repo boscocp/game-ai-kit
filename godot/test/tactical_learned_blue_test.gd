@@ -118,6 +118,8 @@ func test_the_learned_blue_attacks_when_the_combat_model_clears_the_threshold() 
 func test_the_learned_blue_retreats_when_it_does_not() -> void:
 	var state: BoardState = _board([[BLUE, TacticalRules.SHIELD, Vector2i(3, 3)], [RED, TacticalRules.RUNNER, Vector2i(5, 3)]])
 	var blue := LearnedBlue.new(_file(_always(0.1)))
+	# The bar alone; retreating on strength is held below (T46).
+	blue.retreat_on_strength = false
 
 	var walk: TacticalDecision = blue.decide_move(state, 1)
 	var after: BoardState = walk.played_on(state)
@@ -141,10 +143,85 @@ func test_a_retreat_stops_at_the_edge_of_the_threat_s_reach() -> void:
 	var state: BoardState = _board([[BLUE, TacticalRules.SHIELD, Vector2i(6, 4)], [RED, TacticalRules.MORTAR, Vector2i(2, 4)],
 		[RED, TacticalRules.WORKSHOP, Vector2i(0, 4)]])
 
-	var walk: TacticalDecision = LearnedBlue.new(_file(_always(0.1))).decide_move(state, 1)
+	var blue := LearnedBlue.new(_file(_always(0.1)))
+	blue.retreat_on_strength = false
+	var walk: TacticalDecision = blue.decide_move(state, 1)
 
 	assert_str(walk.reason).contains("retreats")
 	assert_int(TacticalCombat.distance(walk.target, Vector2i(2, 4))).is_equal(6)
+
+
+# --- T46: two bars, a commitment, a fight joined, strength -------------------
+
+func test_a_walker_that_committed_keeps_attacking_above_the_give_up_bar() -> void:
+	# Committed at 0.6; the model now says 0.45, under the commit bar and over
+	# the give-up bar, so it attacks again.
+	var state: BoardState = _board([[BLUE, TacticalRules.SHIELD, Vector2i(3, 3)], [RED, TacticalRules.RUNNER, Vector2i(4, 3)]])
+	var blue := LearnedBlue.new(_file(_always(0.6)))
+	blue.begin_turn(state)
+	blue.decide_attack(state, 1)
+	blue.policy = LearnedBlue.new(_file(_always(0.45))).policy
+
+	var strike: TacticalDecision = blue.decide_attack(state, 1)
+
+	assert_object(strike).is_not_null()
+	assert_str(strike.reason).contains("give-up bar")
+
+
+func test_a_walker_that_did_not_commit_does_not_attack_under_the_commit_bar() -> void:
+	var state: BoardState = _board([[BLUE, TacticalRules.SHIELD, Vector2i(3, 3)], [RED, TacticalRules.RUNNER, Vector2i(4, 3)]])
+
+	assert_object(LearnedBlue.new(_file(_always(0.45))).decide_attack(state, 1)).is_null()
+
+
+func test_a_committed_walker_gives_up_under_the_give_up_bar() -> void:
+	var state: BoardState = _board([[BLUE, TacticalRules.SHIELD, Vector2i(3, 3)], [RED, TacticalRules.RUNNER, Vector2i(4, 3)]])
+	var blue := LearnedBlue.new(_file(_always(0.6)))
+	blue.begin_turn(state)
+	blue.decide_attack(state, 1)
+	blue.policy = LearnedBlue.new(_file(_always(0.25))).policy
+
+	assert_object(blue.decide_attack(state, 1)).is_null()
+
+
+func test_a_walker_beside_a_fight_its_side_started_joins_it_instead_of_retreating() -> void:
+	var state: BoardState = _board([[BLUE, TacticalRules.SHIELD, Vector2i(3, 3)], [RED, TacticalRules.RUNNER, Vector2i(5, 3)],
+		[BLUE, TacticalRules.SHIELD, Vector2i(3, 5)], [RED, TacticalRules.RUNNER, Vector2i(4, 5)]])
+	var blue := LearnedBlue.new(_file(_always(0.9)))
+	blue.retreat_on_strength = false
+	blue.begin_turn(state)
+	blue.decide_attack(state, 3)
+	blue.policy = LearnedBlue.new(_file(_always(0.1))).policy
+
+	var walk: TacticalDecision = blue.decide_move(state, 1)
+
+	assert_str(walk.reason).contains("joins in")
+
+
+func test_a_walker_retreats_on_strength_only_when_red_s_far_outweighs_blue_s() -> void:
+	# One shield against one runner: 0.25 x 10 is not more than 10, so it
+	# does not run. Against five runners, 0.25 x 50 is, and it does.
+	var even: BoardState = _board([[BLUE, TacticalRules.SHIELD, Vector2i(3, 3)], [RED, TacticalRules.RUNNER, Vector2i(5, 3)]])
+	var outweighed: BoardState = _board([[BLUE, TacticalRules.SHIELD, Vector2i(3, 3)], [RED, TacticalRules.RUNNER, Vector2i(5, 3)],
+		[RED, TacticalRules.RUNNER, Vector2i(5, 4)], [RED, TacticalRules.RUNNER, Vector2i(5, 2)],
+		[RED, TacticalRules.RUNNER, Vector2i(6, 3)], [RED, TacticalRules.RUNNER, Vector2i(6, 4)]])
+
+	assert_str(LearnedBlue.new(_file(_always(0.1))).decide_move(even, 1).reason).not_contains("retreats")
+	assert_str(LearnedBlue.new(_file(_always(0.1))).decide_move(outweighed, 1).reason).contains("retreats")
+
+
+func test_a_new_game_forgets_who_was_committed() -> void:
+	var state: BoardState = _board([[BLUE, TacticalRules.SHIELD, Vector2i(3, 3)], [RED, TacticalRules.RUNNER, Vector2i(4, 3)]])
+	state.turn_number = 5
+	var blue := LearnedBlue.new(_file(_always(0.6)))
+	blue.begin_turn(state)
+	blue.decide_attack(state, 1)
+	var again: BoardState = state.duplicate_state()
+	again.turn_number = 1
+	blue.begin_turn(again)
+	blue.policy = LearnedBlue.new(_file(_always(0.45))).policy
+
+	assert_object(blue.decide_attack(again, 1)).is_null()
 
 
 func test_the_learned_blue_walks_at_the_point_the_capture_model_ranks_first() -> void:
