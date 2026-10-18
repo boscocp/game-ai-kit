@@ -133,6 +133,10 @@ func test_the_scene_swaps_blue_to_the_planner_and_shows_its_plan() -> void:
 
 	assert_str(scene.blue.controller_name()).is_equal("planner")
 	assert_array(scene.decision_overlay().get("plan", [])).is_not_empty()
+	scene.swap_controller()
+	assert_str(scene.blue.controller_name()).is_equal("learned")
+	scene.swap_controller()
+	assert_str(scene.blue.controller_name()).is_equal("rules")
 
 
 func test_funds_banked_means_enough_for_the_forge_and_not_one_less() -> void:

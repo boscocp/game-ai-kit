@@ -11,8 +11,8 @@
 ## still unspent.
 ##
 ## Blue is the computer: whichever `BlueController` the scene was given --
-## the rules by default, and C swaps to the planner (T11) and back, starting
-## a new game. Each of its decisions is drawn
+## the rules by default, and C hands it to the planner (T11), then the
+## learned policy (T44, T46), then back to the rules, starting a new game. Each of its decisions is drawn
 ## before it is played, and space plays it, or enter plays the rest of the
 ## turn -- the scene is an example in
 ## invariant 13's sense, which is why it is `make demo-tactical`.
@@ -27,7 +27,7 @@ const WHAT_THIS_IS: String = "tactics in the style of Advance Wars: build, cross
 
 ## The controllers still to come, named on screen beside the one playing, so
 ## a person knows blue is a slot and not a fixed opponent.
-const CONTROLLERS_TO_COME: String = "C swaps blue between the rules and the planner (a new game); the learned policy comes to this screen with the rest of T44"
+const CONTROLLERS_TO_COME: String = "C hands blue to the next controller -- rules, planner, learned -- and starts a new game"
 
 @onready var _board: BoardView = $BoardView
 @onready var _units: UnitView = $UnitView
@@ -312,10 +312,13 @@ func _press(keycode: Key) -> void:
 		swap_controller()
 
 
-## Hand blue to the other controller, rules or planner, and start again: a
-## controller swapped mid-game would inherit a board it did not play.
+## Hand blue to the next controller -- rules, planner, learned, and round
+## again -- and start again: a controller swapped mid-game would inherit a
+## board it did not play.
 func swap_controller() -> void:
 	if blue is PlannedBlue:
+		blue = LearnedBlue.new()
+	elif blue is LearnedBlue:
 		blue = RuleBasedBlue.new()
 	else:
 		var planner := PlannedBlue.new()
