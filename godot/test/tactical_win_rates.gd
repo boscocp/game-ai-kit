@@ -3,7 +3,10 @@
 # was left unspent, and how often a piece did nothing.
 #
 #     ./scripts/godot --headless --path godot -s res://test/tactical_win_rates.gd \
-#         [-- GAMES] [--at-most|--at-least PAIRING:OUTCOME:COUNT ...]
+#         [-- GAMES] [--pairings rr,rl,...] [--at-most|--at-least PAIRING:OUTCOME:COUNT ...]
+#
+# `--pairings` plays only those (T47's sweep plays the rules' mirror alone,
+# at 100 games); a limit on a pairing not played cannot be read.
 #
 # PAIRING is `rr` (rules red, rules blue), `rl` (rules red, learned blue),
 # `lr`, `rp` (rules red, planned blue, T11) or `pr`. OUTCOME is a count of
@@ -11,7 +14,10 @@
 # `red-stuck-percent` and `blue-stuck-percent` (the share of its walker
 # decisions that stayed for want of a nearer walk), `stuck-percent` (the
 # larger of the two: both sides must keep moving), and `red-funds-left` and
-# `blue-funds-left` (funds unspent at the end, averaged over the games), and
+# `blue-funds-left` (funds unspent at the end, averaged over the games),
+# `at-the-limit` (games settled by score or drawn at the round limit rather
+# than at a workshop -- T47's rule turns stalemates into wins, and this is
+# how many it did), and
 # since T46 `red-flips-percent`, `blue-flips-percent` and `flips-percent` (the
 # larger): of a side's walks that ended nearer the nearest enemy walker or
 # further from it, the share that went the other way from the same walker's
@@ -32,7 +38,7 @@ extends SceneTree
 
 const DEFAULT_GAMES: int = 20
 const PAIRINGS: Array[String] = ["rr", "rl", "lr", "rp", "pr"]
-const OUTCOMES: Array[String] = ["red", "blue", "draw", "red-stuck-percent", "blue-stuck-percent",
+const OUTCOMES: Array[String] = ["red", "blue", "draw", "at-the-limit", "red-stuck-percent", "blue-stuck-percent",
 	"stuck-percent", "red-funds-left", "blue-funds-left", "red-flips-percent", "blue-flips-percent",
 	"flips-percent"]
 
@@ -45,17 +51,48 @@ func _init() -> void:
 		printerr("tactical_win_rates: a limit reads PAIRING:OUTCOME:COUNT, PAIRING one of %s, OUTCOME one of %s" % [", ".join(PAIRINGS), ", ".join(OUTCOMES)])
 		quit(2)
 		return
-	var tallies: Dictionary = {
-		"rr": _measure("rules (red) v rules (blue)", RuleBasedBlue.new(), RuleBasedBlue.new(), games),
-		"rl": _measure("rules (red) v learned (blue)", RuleBasedBlue.new(), LearnedBlue.new(), games),
-		"lr": _measure("learned (red) v rules (blue)", LearnedBlue.new(), RuleBasedBlue.new(), games),
-		"rp": _measure("rules (red) v planner (blue)", RuleBasedBlue.new(), PlannedBlue.new(), games),
-		"pr": _measure("planner (red) v rules (blue)", PlannedBlue.new(), RuleBasedBlue.new(), games),
-	}
+	var played: Array[String] = _pairings_asked(arguments)
+	if played.is_empty() or limits.any(func(limit: Array) -> bool: return not limit[0] in played):
+		printerr("tactical_win_rates: --pairings names pairings from %s, and every limit's pairing must be played" % ", ".join(PAIRINGS))
+		quit(2)
+		return
+	var tallies: Dictionary = {}
+	for pairing: String in played:
+		tallies[pairing] = _measure_pairing(pairing, games)
 	var broken: int = 0
 	for limit: Array in limits:
 		broken += 0 if _holds(limit, tallies[limit[0]][limit[1]]) else 1
 	quit(1 if broken > 0 else 0)
+
+
+# The pairings `--pairings` names, all of them when it is not given, or []
+# when it names one that does not exist.
+static func _pairings_asked(arguments: PackedStringArray) -> Array[String]:
+	var at: int = arguments.find("--pairings")
+	if at == -1:
+		return PAIRINGS.duplicate()
+	var asked: Array[String] = []
+	for name: String in (arguments[at + 1] if at + 1 < arguments.size() else "").split(","):
+		if not name in PAIRINGS:
+			return []
+		asked.append(name)
+	return asked
+
+
+# One pairing, measured: its first letter is red's controller, its second
+# blue's -- r rules, l learned, p planner.
+func _measure_pairing(pairing: String, games: int) -> Dictionary:
+	var names: Dictionary = {"r": "rules", "l": "learned", "p": "planner"}
+	return _measure("%s (red) v %s (blue)" % [names[pairing[0]], names[pairing[1]]],
+		_controller(pairing[0]), _controller(pairing[1]), games)
+
+
+static func _controller(letter: String) -> BlueController:
+	if letter == "l":
+		return LearnedBlue.new()
+	if letter == "p":
+		return PlannedBlue.new()
+	return RuleBasedBlue.new()
 
 
 # True when `counted` keeps within `limit`; said on stderr when it does not.
@@ -88,7 +125,7 @@ static func _limits(arguments: PackedStringArray) -> Array[Array]:
 # both credits one side with the other's habits (wave 47's review).
 # Returns the tally.
 func _measure(label: String, red: BlueController, blue: BlueController, games: int) -> Dictionary:
-	var tally: Dictionary = {"red": 0, "blue": 0, "draw": 0}
+	var tally: Dictionary = {"red": 0, "blue": 0, "draw": 0, "at-the-limit": 0}
 	var rounds: int = 0
 	var unspent: Dictionary = {0: 0, 1: 0}
 	var counted: Array[Dictionary] = [_empty_count(), _empty_count()]
@@ -97,11 +134,12 @@ func _measure(label: String, red: BlueController, blue: BlueController, games: i
 		var result: Dictionary = TacticalMatch.play(_Counting.new(red, counted[0]), _Counting.new(blue, counted[1]), dice,
 			func(state: BoardState) -> void: last[0] = state)
 		tally[_side_word(result["winner"])] += 1
+		tally["at-the-limit"] += 1 if result["at_the_limit"] else 0
 		rounds += result["rounds"]
 		for side: int in unspent:
 			unspent[side] += (last[0] as BoardState).funds_of(side)
-	print("%s, %d games: red %d, blue %d, draws %d; %.1f rounds on average" % [
-		label, games, tally["red"], tally["blue"], tally["draw"], float(rounds) / games])
+	print("%s, %d games: red %d, blue %d, draws %d; %.1f rounds on average; %d settled at the round limit" % [
+		label, games, tally["red"], tally["blue"], tally["draw"], float(rounds) / games, tally["at-the-limit"]])
 	for side: int in range(2):
 		var name: String = TacticalStatus.side_name(side)
 		_print_side(name, counted[side], float(unspent[side]) / games)

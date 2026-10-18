@@ -676,11 +676,13 @@ func test_rule_based_blue_wins_against_a_red_that_only_waits() -> void:
 	assert_int(scene.state.turn_number).is_less(10 * TacticalScenario.FACTIONS)
 
 
-func test_the_round_limit_is_a_draw() -> void:
+func test_the_round_limit_goes_to_the_higher_score() -> void:
+	# Since T47. Untouched, the opening favours blue only by the shield it is
+	# given for moving second, which is worth its cost in what is standing.
 	var state: BoardState = TacticalScenario.build()
 	state.turn_number = TacticalVictory.ROUND_LIMIT * TacticalScenario.FACTIONS
 
-	assert_int(TacticalVictory.winner(state)).is_equal(TacticalVictory.DRAW)
+	assert_int(TacticalVictory.winner(state)).is_equal(BLUE)
 	assert_str(TacticalVictory.announcement(TacticalVictory.DRAW)).contains("a draw")
 
 
@@ -707,7 +709,7 @@ func test_the_win_rule_is_on_screen_before_anyone_has_won() -> void:
 	var header: String = (scene.get_node("Interface/Header") as Label).text
 
 	assert_str(header).contains("destroy the enemy workshop")
-	assert_str(header).contains("draw after")
+	assert_str(header).contains("the higher score wins")
 
 
 func test_building_with_a_walker_in_hand_does_not_blame_the_workshop() -> void:
