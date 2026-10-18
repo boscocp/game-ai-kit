@@ -54,10 +54,12 @@ Every reference opens and says what the page says it says.
   grip, computed backwards from the tightest corners; and a braking point
   where full braking no longer makes the next corner.
 - **T54 takes**: PID control of speed and line, the heat line for
-  overtaking, and grip measured in a lap.
+  overtaking, and grip measured rather than given (the kit's own choice;
+  T54 says when, and how it sits with invariant 6).
 - **Rubber-banding**: refused, with the arguments for and against on the
-  page. What shipped games mostly hide is skill that moves with the
-  player's position, and T23 now refuses that too, with a check that no
-  knob changes during a race.
+  page. Besides adjusting the cars, some shipped games use skill that moves
+  with the player's position (Pure; Melder recommends it), and a slow
+  biorhythm in skill (Game AI Pro). T23 refuses both, with a check on the
+  knob values the controller actually used.
 - **Left**: learned drivers, cloning a player, and optimising the racing
   line.
