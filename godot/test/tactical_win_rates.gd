@@ -6,8 +6,13 @@
 #         [-- GAMES] [--at-most|--at-least PAIRING:OUTCOME:COUNT ...]
 #
 # PAIRING is `rr` (rules red, rules blue), `rl` (rules red, learned blue),
-# `lr`, `rp` (rules red, planned blue, T11) or `pr`; OUTCOME is `red`, `blue` or `draw`. Each `--at-most` or `--at-least`
-# is a limit a tuning task states as its acceptance -- `--at-most rr:red:28`
+# `lr`, `rp` (rules red, planned blue, T11) or `pr`. OUTCOME is a count of
+# games -- `red`, `blue` or `draw` -- or, since T45, what a side did:
+# `red-stuck-percent` and `blue-stuck-percent` (the share of its walker
+# decisions that stayed for want of a nearer walk, rounded down),
+# `stuck-percent` (the larger of the two: both sides must keep moving), and
+# `red-funds-left` and `blue-funds-left` (funds unspent at the end, averaged
+# over the games, rounded down). Each `--at-most` or `--at-least` is a limit a tuning task states as its acceptance -- `--at-most rr:red:28`
 # with 40 games says the side moving first wins at most 70% of the rules'
 # mirror, and a band takes one of each.
 #
@@ -21,6 +26,8 @@ extends SceneTree
 
 const DEFAULT_GAMES: int = 20
 const PAIRINGS: Array[String] = ["rr", "rl", "lr", "rp", "pr"]
+const OUTCOMES: Array[String] = ["red", "blue", "draw", "red-stuck-percent", "blue-stuck-percent",
+	"stuck-percent", "red-funds-left", "blue-funds-left"]
 
 
 func _init() -> void:
@@ -61,7 +68,7 @@ static func _limits(arguments: PackedStringArray) -> Array[Array]:
 		if not arguments[index] in ["--at-most", "--at-least"]:
 			continue
 		var parts: PackedStringArray = arguments[index + 1].split(":")
-		var readable: bool = parts.size() == 3 and parts[0] in PAIRINGS and parts[1] in ["red", "blue", "draw"] and parts[2].is_valid_int()
+		var readable: bool = parts.size() == 3 and parts[0] in PAIRINGS and parts[1] in OUTCOMES and parts[2].is_valid_int()
 		found.append([parts[0], parts[1], int(parts[2]), arguments[index] == "--at-most"] if readable else [])
 	return found
 
@@ -86,7 +93,11 @@ func _measure(label: String, red: BlueController, blue: BlueController, games: i
 	print("%s, %d games: red %d, blue %d, draws %d; %.1f rounds on average" % [
 		label, games, tally["red"], tally["blue"], tally["draw"], float(rounds) / games])
 	for side: int in range(2):
-		_print_side(TacticalStatus.side_name(side), counted[side], float(unspent[side]) / games)
+		var name: String = TacticalStatus.side_name(side)
+		_print_side(name, counted[side], float(unspent[side]) / games)
+		tally[name + "-stuck-percent"] = 100 * counted[side]["stuck"] / maxi(counted[side]["decisions"], 1)
+		tally[name + "-funds-left"] = unspent[side] / games
+	tally["stuck-percent"] = maxi(tally["red-stuck-percent"], tally["blue-stuck-percent"])
 	return tally
 
 

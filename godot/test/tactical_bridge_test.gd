@@ -37,14 +37,18 @@ func test_with_the_bridge_shut_blue_builds_a_piece_that_can_wade() -> void:
 	assert_str(decision.reason).contains("still gets there")
 
 
-func test_a_walker_the_bridge_is_shut_to_says_so_and_stays() -> void:
+func test_a_walker_the_bridge_is_shut_to_says_so_and_takes_the_fallback() -> void:
+	# It used to stay. Since T45 a walker whose goal is out of reach walks at
+	# the nearest red piece it can -- here, the runner shutting the bridge --
+	# and still says why its goal was out of reach.
 	var state: BoardState = _parked_on(BRIDGE_WEST)
 	var shield: Unit = _first_of(state, BLUE, TacticalRules.SHIELD)
 
 	var decision: TacticalDecision = RuleBasedBlue.new().decide_move(state, shield.id)
 
-	assert_object(decision.move).is_null()
-	assert_str(decision.reason).contains("red's pieces")
+	assert_object(decision.move).is_not_null()
+	assert_str(decision.reason).contains("red's pieces stand on every way")
+	assert_str(decision.reason).contains("fallback")
 
 
 # The winner of a whole game in which red's only act is to walk its runner to

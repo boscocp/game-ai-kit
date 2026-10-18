@@ -17,6 +17,10 @@
 ##    falls first.
 ## 5. Otherwise **red's workshop**, by the route the rules walk.
 ##
+## Steps 3 and 4 give a point to one walker a turn, and a walker no walk
+## brings nearer its point takes the rules' fallback (T45): two walkers
+## heading for one point were half of what queued at the bridge.
+##
 ## The workshop builds by the rules (`RuleBasedBlue`), and red's workshop in
 ## reach is attacked by the rules: the dataset has no buildings, so the model
 ## has nothing to say about a siege, and is not asked.
@@ -67,14 +71,16 @@ func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 	if not fight.is_empty():
 		return _attack_or_retreat(state, unit, walks, fight)
 	if unit.cell in TacticalScenario.POINTS:
+		_claim(state, unit.cell)
 		return TacticalDecision.hold(unit_id, "stays on the point at %s: a point left is a point not paid for (a rule, not the model)" % unit.cell, unit.cell)
 	var contested: Vector2i = _point_red_holds(state)
-	if contested != Vector2i(-1, -1):
+	if contested != Vector2i(-1, -1) and _claim(state, contested):
 		return _walk_at(state, unit, walks, contested,
 			"red holds it, and standing beside it breaks the hold (a rule, not the model)")
 	var ranked: Array[Dictionary] = policy.rank_nodes(state, unit.faction, _points_nobody_of_ours_is_on(state))
-	if not ranked.is_empty():
-		return _walk_at(state, unit, walks, ranked[0]["cell"], _ranking(ranked))
+	for index: int in range(ranked.size()):
+		if _claim(state, ranked[index]["cell"]):
+			return _walk_at(state, unit, walks, ranked[index]["cell"], _ranking(ranked.slice(index)))
 	return super.decide_move(state, unit_id)
 
 
@@ -202,11 +208,13 @@ func _out_of_reach(state: BoardState, unit: Unit, walks: Dictionary, threat: Uni
 	return best
 
 
-# A walk at `point` by the rules' route, or a hold when no walk gets nearer.
+# A walk at `point` by the rules' route, or the rules' fallback when no walk
+# gets nearer -- giving the point back for another walker to take.
 func _walk_at(state: BoardState, unit: Unit, walks: Dictionary, point: Vector2i, why: String) -> TacticalDecision:
 	var best: Vector2i = _nearest_walk_to(state, unit, walks, point)
 	if best == unit.cell:
-		return TacticalDecision.hold(unit.id, "stays: no walk this turn brings it nearer the point at %s, which it wants because %s" % [point, why], unit.cell)
+		_claims[point] -= 1
+		return _fallback(state, unit, walks, "no walk this turn brings it nearer the point at %s, which it wants because %s" % [point, why])
 	return TacticalDecision.walk(unit.id, walks[best], "walks to %s, towards the point at %s: %s" % [best, point, why], best)
 
 
