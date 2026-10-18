@@ -19,7 +19,7 @@ needed four gaps closed before the owner can decide it:
 
 All of it is answered in the second commit. The table at the end says how.
 
-## What was read
+## What was reviewed
 
 - `CLAUDE.md`.
 - `tasks/STATUS.md`: the wave 53 and wave 52 resuming sections, and the new
@@ -95,7 +95,9 @@ All of it is answered in the second commit. The table at the end says how.
 - **The tasks**: T49-T54 each have commands and a `## Manual check`. The
   wave 52 request is covered.
 
-## Findings, and what was done
+## Findings
+
+Each row is the finding, then what was done about it.
 
 | # | finding | done |
 |---|---|---|
@@ -113,6 +115,22 @@ All of it is answered in the second commit. The table at the end says how.
 | S9 | T53 waited for T23, which runs against survey-first. | T53 now needs nothing and rewrites T23 as well as T54. T54 needs T23. |
 | S10 | "The position score is in every shipped source" was overstated. | Now limited to the sources on where a bot stands in a fight. |
 | notes | Wording fixes, and the Isla 2005 label. | Done: "combat cycle"; Xu & Verbrugge's grid environment; Dishonored 1's breadcrumbs against Dishonored 2's dead-reckoning prototype; Walsh's "for certain events"; "40 if partial cover"; the Isla 2005 entry labelled; https throughout; the ProjectSettings URL added; Direct3D 11 and the shadow passes mentioned. |
+
+## What was done about them
+
+Every finding is answered in the wave's second commit. No finding was
+declined. All are text edits; nothing in this wave is code.
+
+- The survey, T49 and T52 now say what The Last of Us does: at least one
+  shooter, and a single chosen flanker. T52's property can now be held.
+- ADR 0018 no longer claims a gate it does not have. It names:
+  - where the assets are read from;
+  - a gate that compares sha256s, not extensions;
+  - the open question about the 2D art.
+- The four 3D tasks that wait on the ADR are `blocked`, so `make wave`
+  cannot pick one.
+- `make check` was run again after the fixes: exit 0. So was
+  `check_links.py`.
 
 Left as they were:
 - Laird's venue. The page already says it is not printed on the paper.
