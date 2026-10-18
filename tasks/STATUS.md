@@ -57,7 +57,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T25 | One team per technique: a league, scored twice | todo | strength and human-likeness, measured apart; needs T11, T12, T15 |
 | T26 | Combat on the board | done | one rules file for Python and Godot, fights held by 5 hand-checked vectors; 7 hand-checked vectors; red and blue attack, towers fire at their turn start (one exchange), an attack cannot be undone; a workshop is besieged (20 health, a blow an attack) and destroying it wins; the counter tilts an even fight to ~94/28%; retrained: 85.9% against 56.8% and 78.8%; manual check still the owner's |
 | T44 | The learned policy plays the tactical board | wip | wave 47: two control points paying 2 a turn, every turn opened by `TurnStart`; `LearnedBlue` (attack or retreat by the combat model, the point by the capture model); the combat model sees the counter, fitted on a typed dataset, 86.0% against 57.7%; measured: rules mirror red 20/20, learned against rules 17-18 draws in 20 -- stopped there for a study of similar games (`docs/design/tactical-references.md`), which became T45-T48; not done: the capture rows from the tactical map, the controller key, the skirmish's removal |
-| T45 | The AI spends its money and keeps its pieces moving | todo | Wesnoth's order: build before moving, a fallback goal, one piece per target; the workshop's silent refusals |
+| T45 | The AI spends its money and keeps its pieces moving | wip | wave 49: spend first (build what beats most even when it cannot get there; a boxed workshop says so and is asked again), never idle (a fallback at the nearest red piece), one walker per point and per fallback target; win-rate limits for stuck walkers and funds left; acceptance fails -- learned stuck 44%/42%, 99 funds left: half the stuck walkers could move (staging waits for T48's threat map), the rest are boxed in behind one bridge, and income beats one build a turn; rules mirror 12-7-1 (was 20-0), planner 13-3 as blue, 0-20 as red |
 | T46 | The learned blue commits to a fight | todo | two thresholds (commit 0.55, give up 0.35), join a fight a friend started, retreat on the side's strength |
 | T47 | The side moving second, and a last round that decides | todo | a swept counter for blue, red's mirror win rate into 40-60%; the round limit decided by score |
 | T48 | The board itself: a second crossing, a threat map, shorter fights | todo | only if T45-T47 leave it a queue; the owner chooses which |
@@ -94,6 +94,30 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-18 (wave 49)
+
+**What landed.** T45, in part, taken out of table order on the owner's
+choice (it is what the planner's idle workshop needed). The rules and the
+learned blue spend first, never idle (a fallback at the nearest red piece),
+and give each point to one walker a turn; a boxed-in workshop says so and is
+asked again after its walkers move. `make tactical-win-rates` takes limits
+on stuck walkers and funds left.
+
+**What the measurements said.** The rules' mirror is no longer a first-mover
+sweep (12-7-1), and the planner wins 13 of 20 as blue (wave 48: 7); as red
+it still loses all 20. T45's own acceptance fails: the learned side's walkers
+are stuck 44% and 42% of the time and blue ends with 99 funds. The review
+showed half the stuck walkers could move -- a staging rule is the
+controller's answer, and the reference wants it built on T48's threat map --
+and the rest are boxed in behind the one bridge, while income beats one build
+a turn. The numbers and the options are in T45's record.
+
+**Next:** the owner asked to carry on with the design study's proposals
+(`docs/design/tactical-references.md` §4) in its order: T46 (the learned
+blue commits), T47 (the second player and the last round), then T48 -- a
+ford and a threat map, with staging on it, which is where T45's acceptance
+can be met.
 
 ## Resuming after 2026-10-18 (wave 48)
 

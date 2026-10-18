@@ -20,7 +20,8 @@ extends DecisionPolicy
 ## Called once at the start of each of its turns, before any decision --
 ## the place for a controller that keeps something between turns, such as a
 ## plan (T11), to bring it up to date. A turn number no later than the last
-## one it was handed means a new game. The rules keep nothing, and do nothing.
+## one it was handed means a new game. The rules keep only the goals their
+## walkers took this turn (T45), and forget them here.
 func begin_turn(_state: BoardState) -> void:
 	pass
 

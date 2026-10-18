@@ -6,8 +6,13 @@
 #         [-- GAMES] [--at-most|--at-least PAIRING:OUTCOME:COUNT ...]
 #
 # PAIRING is `rr` (rules red, rules blue), `rl` (rules red, learned blue),
-# `lr`, `rp` (rules red, planned blue, T11) or `pr`; OUTCOME is `red`, `blue` or `draw`. Each `--at-most` or `--at-least`
-# is a limit a tuning task states as its acceptance -- `--at-most rr:red:28`
+# `lr`, `rp` (rules red, planned blue, T11) or `pr`. OUTCOME is a count of
+# games -- `red`, `blue` or `draw` -- or, since T45, what a side did:
+# `red-stuck-percent` and `blue-stuck-percent` (the share of its walker
+# decisions that stayed for want of a nearer walk), `stuck-percent` (the
+# larger of the two: both sides must keep moving), and `red-funds-left` and
+# `blue-funds-left` (funds unspent at the end, averaged over the games).
+# Compared unrounded: 5.4% is over a limit of 5. Each `--at-most` or `--at-least` is a limit a tuning task states as its acceptance -- `--at-most rr:red:28`
 # with 40 games says the side moving first wins at most 70% of the rules'
 # mirror, and a band takes one of each.
 #
@@ -21,6 +26,8 @@ extends SceneTree
 
 const DEFAULT_GAMES: int = 20
 const PAIRINGS: Array[String] = ["rr", "rl", "lr", "rp", "pr"]
+const OUTCOMES: Array[String] = ["red", "blue", "draw", "red-stuck-percent", "blue-stuck-percent",
+	"stuck-percent", "red-funds-left", "blue-funds-left"]
 
 
 func _init() -> void:
@@ -28,7 +35,7 @@ func _init() -> void:
 	var games: int = int(arguments[0]) if not arguments.is_empty() and arguments[0].is_valid_int() else DEFAULT_GAMES
 	var limits: Array[Array] = _limits(arguments)
 	if limits.has([]):
-		printerr("tactical_win_rates: a limit reads PAIRING:OUTCOME:COUNT, PAIRING one of %s" % ", ".join(PAIRINGS))
+		printerr("tactical_win_rates: a limit reads PAIRING:OUTCOME:COUNT, PAIRING one of %s, OUTCOME one of %s" % [", ".join(PAIRINGS), ", ".join(OUTCOMES)])
 		quit(2)
 		return
 	var tallies: Dictionary = {
@@ -45,10 +52,10 @@ func _init() -> void:
 
 
 # True when `counted` keeps within `limit`; said on stderr when it does not.
-static func _holds(limit: Array, counted: int) -> bool:
+static func _holds(limit: Array, counted: float) -> bool:
 	if (limit[3] and counted <= limit[2]) or (not limit[3] and counted >= limit[2]):
 		return true
-	printerr("tactical_win_rates: %s %s %d, and the limit is %s %d" % [
+	printerr("tactical_win_rates: %s %s %.1f, and the limit is %s %d" % [
 		limit[0], limit[1], counted, "at most" if limit[3] else "at least", limit[2]])
 	return false
 
@@ -57,11 +64,14 @@ static func _holds(limit: Array, counted: int) -> bool:
 # one as [].
 static func _limits(arguments: PackedStringArray) -> Array[Array]:
 	var found: Array[Array] = []
-	for index: int in range(arguments.size() - 1):
+	for index: int in range(arguments.size()):
 		if not arguments[index] in ["--at-most", "--at-least"]:
 			continue
-		var parts: PackedStringArray = arguments[index + 1].split(":")
-		var readable: bool = parts.size() == 3 and parts[0] in PAIRINGS and parts[1] in ["red", "blue", "draw"] and parts[2].is_valid_int()
+		# A limit with nothing after it is unreadable, not absent: dropping
+		# it would pass a run the caller meant to hold to something.
+		var given: String = arguments[index + 1] if index + 1 < arguments.size() else ""
+		var parts: PackedStringArray = given.split(":")
+		var readable: bool = parts.size() == 3 and parts[0] in PAIRINGS and parts[1] in OUTCOMES and parts[2].is_valid_int()
 		found.append([parts[0], parts[1], int(parts[2]), arguments[index] == "--at-most"] if readable else [])
 	return found
 
@@ -86,7 +96,11 @@ func _measure(label: String, red: BlueController, blue: BlueController, games: i
 	print("%s, %d games: red %d, blue %d, draws %d; %.1f rounds on average" % [
 		label, games, tally["red"], tally["blue"], tally["draw"], float(rounds) / games])
 	for side: int in range(2):
-		_print_side(TacticalStatus.side_name(side), counted[side], float(unspent[side]) / games)
+		var name: String = TacticalStatus.side_name(side)
+		_print_side(name, counted[side], float(unspent[side]) / games)
+		tally[name + "-stuck-percent"] = 100.0 * counted[side]["stuck"] / maxi(counted[side]["decisions"], 1)
+		tally[name + "-funds-left"] = float(unspent[side]) / games
+	tally["stuck-percent"] = maxf(tally["red-stuck-percent"], tally["blue-stuck-percent"])
 	return tally
 
 
@@ -98,6 +112,8 @@ static func _print_side(side: String, counted: Dictionary, funds_left: float) ->
 	print("    %s: %.0f funds left at the end on average; %d of %d walker decisions stayed for want of a nearer walk; built or bought on %d of %d workshop turns" % [
 		side, funds_left, counted["stuck"], counted["decisions"], counted["built"], counted["build turns"]])
 	for why: String in counted["why not built"]:
+		if counted["why not built"][why] == 0:
+			continue
 		print("        built nothing %d times: %s" % [counted["why not built"][why], why])
 
 
@@ -111,6 +127,11 @@ static func _side_word(winner: int) -> String:
 class _Counting extends BlueController:
 	var _inner: BlueController
 	var _counted: Dictionary
+	# The turn the workshop was last asked in, and why it built nothing then
+	# ("" when it built): `BlueTurn` asks a boxed-in workshop twice in one
+	# turn (T45), and that is still one workshop turn.
+	var _asked_on: int = -1
+	var _missed_because: String = ""
 
 	func _init(inner: BlueController, counted: Dictionary) -> void:
 		_inner = inner
@@ -135,13 +156,27 @@ class _Counting extends BlueController:
 	## The inner build, counted, with why when it is none.
 	func decide_build(state: BoardState, workshop_id: int) -> TacticalDecision:
 		var decision: TacticalDecision = _inner.decide_build(state, workshop_id)
+		var built: bool = decision.order != null or decision.upgrade != null
+		if state.turn_number == _asked_on:
+			_count_second_asking(built)
+			return decision
+		_asked_on = state.turn_number
 		_counted["build turns"] += 1
-		if decision.order != null or decision.upgrade != null:
+		_missed_because = "" if built else decision.reason.trim_prefix("builds nothing: ")
+		if built:
 			_counted["built"] += 1
 		else:
-			var why: String = decision.reason.trim_prefix("builds nothing: ")
-			_counted["why not built"][why] = _counted["why not built"].get(why, 0) + 1
+			_counted["why not built"][_missed_because] = _counted["why not built"].get(_missed_because, 0) + 1
 		return decision
+
+	# The same turn asked again: a build now takes back the miss counted
+	# the first time.
+	func _count_second_asking(built: bool) -> void:
+		if not built or _missed_because == "":
+			return
+		_counted["built"] += 1
+		_counted["why not built"][_missed_because] -= 1
+		_missed_because = ""
 
 	## The inner walk, counted, and whether it was stuck.
 	func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:

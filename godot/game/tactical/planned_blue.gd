@@ -167,6 +167,7 @@ static func guide_name(guide: HeuristicPlanner.Guide) -> String:
 ## plan the board is. A turn no later than the last one seen is a new game,
 ## and the old plan is forgotten with it.
 func begin_turn(state: BoardState) -> void:
+	super.begin_turn(state)
 	if state.turn_number <= _seen_turn:
 		plan = null
 	_seen_turn = state.turn_number
