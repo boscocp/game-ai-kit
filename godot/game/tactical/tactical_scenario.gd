@@ -1,10 +1,17 @@
 ## The tactical map, and the state a game of it starts from.
 ##
-## A river runs down the middle with one bridge, so where you cross is a
-## decision before anything else is: the bridge is narrow and everyone can see
-## it, the water is open only to waders, and the trees on either bank are slow
-## to cross and good to hide in. The map is the same turned half round, so
-## neither side starts nearer the bridge. Each side has a workshop in its own
+## A river runs down the middle with one bridge and two fords, so where you
+## cross is a decision before anything else is: the bridge is narrow and
+## quick and everyone can see it, the fords (T48) are slow and one row in from
+## each end, the deep water is open only to waders, and the trees on either
+## bank are slow to cross and good to hide in. The fords came in a pair
+## because the map is the same turned half round, and the bridge already
+## holds the only crossing that is its own mirror -- and turned half round,
+## neither side starts nearer the bridge or a ford. Before the fords one
+## bridge one cell wide was the only dry way over, and wave 49 measured the
+## pieces queued behind it. Where they sit decides who wins: T48's record
+## has the sweep (at the river's ends the side moving first won every rules
+## game, at rows 2 and 6 the side moving second; rows 1 and 7 are even). Each side has a workshop in its own
 ## corner, a bolt tower covering its bank, and a watchtower looking across.
 ##
 ## The map is written as text, one row per line, in the characters
@@ -21,26 +28,27 @@ const BLUE: int = 1
 const FACTIONS: int = 2
 
 ## The board, row by row: `.` open, `T` trees, `#` rock, `~` water, `=` the
-## bridge.
+## bridge, `f` a ford.
 const MAP: Array[String] = [
 	"..T...~~......",
-	".TT...~~.T....",
+	".TT...ff.T....",
 	".....T~~.T....",
 	"..#..T~~......",
 	"..#...==...#..",
 	"......~~T..#..",
 	"....T.~~T.....",
-	"....T.~~...TT.",
+	"....T.ff...TT.",
 	"......~~...T..",
 ]
 
 
 ## The two control points (T44), one on each bank, each beside the river's
 ## top or bottom end: far from its own side's workshop, five cells from the
-## bridge, and one step from water, so a wader reaches the other side's point
-## without the bridge. Two, not three: the map is the same turned half round,
-## and on a board fourteen wide no cell is its own mirror, so the points come
-## in pairs. Not on the bridge: a flag there hides the only dry crossing, and
+## bridge, and diagonal to a ford's near end, so a piece coming over the
+## ford is two steps from the far side's point. Two, not three: the map is
+## the same turned half round, and on a board fourteen wide no cell is its
+## own mirror, so the points come
+## in pairs. Not on the bridge: a flag there hides the quickest crossing, and
 ## the bridge is already where the fight is -- a point elsewhere gives a
 ## second place worth going.
 const POINTS: Array[Vector2i] = [Vector2i(5, 0), Vector2i(8, 8)]

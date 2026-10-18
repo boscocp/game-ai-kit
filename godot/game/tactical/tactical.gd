@@ -10,6 +10,9 @@
 ## the turn. Space, or the button, ends it, and asks first while units are
 ## still unspent.
 ##
+## The other side's threat map -- every cell it could strike next turn, and by
+## how many pieces (T48) -- is tinted red on the board; T hides and shows it.
+##
 ## Blue is the computer: whichever `BlueController` the scene was given --
 ## the rules by default, and C hands it to the planner (T11), then the
 ## learned policy (T44, T46), then back to the rules, starting a new game. Each of its decisions is drawn
@@ -57,6 +60,8 @@ var _last_event: String = ""
 # starts: shown only while they were played, they were gone by the time red
 # looked -- and enter played them without showing them at all.
 var _blue_news: Array[String] = []
+# Whether the threat map is drawn (T toggles it).
+var _showing_threat: bool = true
 # True after one press of end turn with units still unspent: the next press
 # ends it. Any other action puts it back.
 var _confirming_end: bool = false
@@ -275,7 +280,16 @@ func decision_overlay() -> Dictionary:
 		overlay["played"] = _blue_turn.played.map(_described)
 	if not blue.plan_lines().is_empty():
 		overlay["plan"] = blue.plan_lines()
+	overlay["threatened cells"] = threat().size()
 	return overlay
+
+
+## Where the side not to move could strike on its next turn: `ThreatMap`,
+## as the board draws it. Empty once the game is over.
+func threat() -> Dictionary[Vector2i, int]:
+	if winner != TacticalVictory.NOBODY:
+		return {}
+	return ThreatMap.of(state, TacticalScenario.FACTIONS - 1 - state.current_faction)
 
 
 ## True while blue's turn is on and it still has a decision to play -- and
@@ -310,6 +324,9 @@ func _press(keycode: Key) -> void:
 		play_rest_of_blue_turn()
 	elif keycode == KEY_C:
 		swap_controller()
+	elif keycode == KEY_T:
+		_showing_threat = not _showing_threat
+		_refresh()
 
 
 ## Hand blue to the next controller -- rules, planner, learned, and round
@@ -455,6 +472,7 @@ func _refresh() -> void:
 	if _blue_thinking():
 		marks = blue.plan_marks(state)
 	_intent.show_plan(marks)
+	_intent.show_threat(threat() if _showing_threat else {} as Dictionary[Vector2i, int])
 	_header.text = "%s\n%s\nblue is played by %s" % [WHAT_THIS_IS, TacticalVictory.rule(), blue.describe()]
 	_end_button.disabled = not _reds_turn()
 	_undo_button.disabled = not (_reds_turn() and _turn.can_undo())
@@ -488,7 +506,7 @@ func _terrain() -> Dictionary:
 	var tiles: Dictionary = {}
 	var kinds: Dictionary = {
 		TacticalRules.TREES: BoardView.TREES, TacticalRules.WATER: BoardView.WATER,
-		TacticalRules.BRIDGE: BoardView.BRIDGE,
+		TacticalRules.BRIDGE: BoardView.BRIDGE, TacticalRules.FORD: BoardView.ROUGH,
 	}
 	for letter: String in kinds:
 		for cell: Vector2i in TacticalRules.cells_of(TacticalScenario.MAP, letter):

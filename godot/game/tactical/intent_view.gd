@@ -12,6 +12,10 @@
 ## a step of the plan counts on gets a small numbered tag, the step's number,
 ## so the board shows who the plan is waiting for and in what order.
 ##
+## Under everything, the threat map (T48): a red tint on each cell the side
+## not moving could strike next turn, and the number of its pieces that
+## could, so the danger a decision weighs is on the board. T hides it.
+##
 ## When not to use it: red's turn. A person's own intentions need no drawing.
 class_name IntentView
 extends Node2D
@@ -21,11 +25,14 @@ const WIDTH: float = 4.0
 const RING: float = 20.0
 
 const TAG: float = 16.0
+## The tint on a threatened cell: red, light enough to read the ground under it.
+const THREAT: Color = Color(0.95, 0.15, 0.10, 0.22)
 
 var _decision: TacticalDecision
 var _state: BoardState
 var _board: BoardView
 var _plan_marks: Dictionary[Vector2i, String] = {}
+var _threat: Dictionary[Vector2i, int] = {}
 
 
 ## Draw `decision`, or nothing when it is null.
@@ -36,6 +43,13 @@ func show_decision(decision: TacticalDecision, state: BoardState, board: BoardVi
 	queue_redraw()
 
 
+## Tint each cell of `threat` -- `ThreatMap.of` -- and write its count;
+## empty draws none.
+func show_threat(threat: Dictionary[Vector2i, int]) -> void:
+	_threat = threat
+	queue_redraw()
+
+
 ## Tag each cell of `marks` with its plan step number; empty draws none.
 func show_plan(marks: Dictionary[Vector2i, String]) -> void:
 	_plan_marks = marks
@@ -43,6 +57,7 @@ func show_plan(marks: Dictionary[Vector2i, String]) -> void:
 
 
 func _draw() -> void:
+	_draw_threat()
 	_draw_plan()
 	if _decision == null or _board == null:
 		return
@@ -59,6 +74,18 @@ func _draw() -> void:
 			draw_rect(Rect2(corner, Vector2(side, side)), INTENT, false, WIDTH)
 		_:
 			draw_arc(_board.centre_of(_decision.target), RING, 0.0, TAU, 32, INTENT, WIDTH)
+
+
+# A red tint over every threatened cell, and the count in its bottom-right.
+func _draw_threat() -> void:
+	if _board == null:
+		return
+	var font: Font = ThemeDB.fallback_font
+	var side: float = BoardView.TILE_PIXELS
+	for cell: Vector2i in _threat:
+		var corner: Vector2 = _board.centre_of(cell) - Vector2(side, side) / 2.0
+		draw_rect(Rect2(corner, Vector2(side, side)), THREAT)
+		draw_string(font, corner + Vector2(side - 12.0, side - 4.0), str(_threat[cell]), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(1.0, 0.85, 0.85))
 
 
 # A filled square in the tile's top-left corner, with the step's number in it.

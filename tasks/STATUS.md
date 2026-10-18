@@ -59,8 +59,8 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T44 | The learned policy plays the tactical board | wip | wave 47: two control points paying 2 a turn, every turn opened by `TurnStart`; `LearnedBlue` (attack or retreat by the combat model, the point by the capture model); the combat model sees the counter, fitted on a typed dataset, 86.0% against 57.7%; measured: rules mirror red 20/20, learned against rules 17-18 draws in 20 -- stopped there for a study of similar games (`docs/design/tactical-references.md`), which became T45-T48; not done: the capture rows from the tactical map, the controller key, the skirmish's removal |
 | T45 | The AI spends its money and keeps its pieces moving | wip | wave 49: spend first (build what beats most even when it cannot get there; a boxed workshop says so and is asked again), never idle (a fallback at the nearest red piece), one walker per point and per fallback target; win-rate limits for stuck walkers and funds left; acceptance fails -- learned stuck 44%/42%, 99 funds left: half the stuck walkers could move (staging waits for T48's threat map), the rest are boxed in behind one bridge, and income beats one build a turn; rules mirror 12-7-1 (was 20-0), planner 13-3 as blue, 0-20 as red |
 | T46 | The learned blue commits to a fight | wip | wave 50: sets out at p(win) 0.5, gives the same fight up at 0.3 or below (no measurable effect: the way to a fight is one walk), joins another's fight within 3 cells, retreats only when red's strength near it outweighs blue's by Wesnoth's caution -- that one rule is the gain: learned as red 11-0-9 (was 4-0-16), as blue 0-5-15 (was 0-1-19); flips counted by distance 26%, as the rules; C cycles rules, planner, learned |
-| T47 | The side moving second, and a last round that decides | done | wave 51: blue starts with one more shield (swept: funds +2/+3 changed nothing, +2 workshop health 65%, the shield 59%); at round 40 the higher score wins -- workshop health, point-turns held, what is left -- and only equal scores draw; rules mirror 59-41-0 over 100; learned beats rules 100-0 from both seats, 61 of them on score; manual check still the owner's |
-| T48 | The board itself: a second crossing, a threat map, shorter fights | todo | only if T45-T47 leave it a queue; the owner chooses which |
+| T47 | The side moving second, and a last round that decides | done | blue starts with one more shield; at round 40 the higher score wins (workshop health, point-turns, what is left) and only equal scores draw; rules mirror 51-49-0 over 100 on wave 52's board; manual check still the owner's |
+| T48 | The board itself: a second crossing, a threat map, shorter fights | wip | wave 52: two fords at rows 1 and 7 (cost 3; at the ends the first mover won every game, mid-board the second), the planner's crossing_open, a threat map by path drawn on the board (T) that nothing decides by yet; learned stuck about 29% -> 17-20%, 35 of 40 rules games decided before round 40; one blow and one back not started |
 | T43 | A fighting ladder | todo | easy, medium, the clone, "ghost: nearest", hard, best of three each, with a clock and an ending; every opponent exists; picked in T42 |
 | T21 | Every example can be watched | done | `check_demos.py` and `demo_overlays.gd`; blue's decision now drawn before it is played |
 | T24 | One window for every example | todo | a menu, a card per example naming its techniques, and an executable; needs T21 |
@@ -94,6 +94,44 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-18 (wave 52)
+
+**Where it stopped -- read first.** Wave 52 is reviewed and merged. The
+owner asked for the next wave to start from a cleared context, and for it to
+be **wave 53, documents only**, for the owner to review before any code:
+
+1. `make wave-start BRANCH=wave/53-shooters-and-3d` (cut by hand).
+2. **An ADR on 3D**, numbered 0018, status *proposed*: ADR 0001 says "no 3D
+   lessons; if the kit ever grows them, they are a separate tier with their
+   own ADR", and `scripts/check_renderer.py` fails on any 3D node under
+   `game/` or `demos/`. Propose how 3D enters -- a separate folder outside
+   those two (so the gate still holds for the 2D kit), a hardware tier of
+   its own in the README's table, the renderer it needs, and that 3D assets
+   are downloaded open packs referenced by URL and sha256, never committed
+   (as ADR 0015 does for sprites). The owner decides; write the options.
+3. **Tasks**, in `tasks/` and as rows in this file, following T36's pattern
+   (survey first, then the example, the player toggling 1-3 techniques the
+   survey found worth it):
+   - a survey of shooter AI, FPS and third-person, market and academic
+     (every source opened before it is cited, as T36 did);
+   - a bot-only "multiplayer" shooter: bots autonomous and cooperating, using
+     cover, no networking;
+   - a single-player shooter with optional stealth for the player, bots
+     cooperating against the player;
+   - racing in 3D with more complex physics, beside the 2D T22/T23.
+   Each task with a command for acceptance and a `## Manual check`.
+4. Reviewed and merged like any wave. The owner's memory note
+   `next-examples-racing-shooters` has the original request (2026-10-15).
+
+**What wave 52 landed.** T48 in part: two fords at rows 1 and 7; the
+planner's domain says `crossing_open`; a threat map by path, drawn and
+toggled with T (nothing decides by it yet). T47 holds again: rules' mirror
+51-49. The learned side's stuck walkers fell from about 29% to 17-20%.
+
+**Still the owner's:** T48's third change (one blow and one back, retraining
+the combat model); and whether T45's 5% stuck limit and T46's limits are
+still the right bars.
 
 ## Resuming after 2026-10-18 (wave 51)
 

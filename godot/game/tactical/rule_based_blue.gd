@@ -375,8 +375,11 @@ func _remaining(state: BoardState, unit: Unit, cell: Vector2i, to_target: Dictio
 func _crossing(unit: Unit, target: Unit) -> String:
 	if not TacticalScenario.across_the_river(unit.cell, target.cell):
 		return ""
-	if TacticalScenario.MAP[unit.cell.y][unit.cell.x] == TacticalRules.BRIDGE:
+	var here: String = TacticalScenario.MAP[unit.cell.y][unit.cell.x]
+	if here == TacticalRules.BRIDGE:
 		return ", crossing the bridge"
+	if here == TacticalRules.FORD:
+		return ", crossing by the ford"
 	if unit.type.mover == TacticalRules.WATER_MOVER:
 		return ", wading across the river"
-	return ", making for the bridge"
+	return ", making for a crossing"

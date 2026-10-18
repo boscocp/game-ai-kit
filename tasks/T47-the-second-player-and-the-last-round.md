@@ -100,3 +100,7 @@ Read the learned side's 100 of 100 with that last column: 39 workshops
 destroyed and 61 games won on score -- it holds the points and keeps its
 pieces, and the score rewards both. That is the caveat the reference gave,
 and why it asked for this rule to come after T45 and T46 rather than alone.
+
+**Since wave 52.** T48's fords at the river's ends broke the band (17-83);
+moved to rows 1 and 7 they restore it: rules' mirror 51-49 over 100, no
+draws -- the acceptance command exits 0 again. The sweep is in T48's record.

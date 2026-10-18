@@ -24,8 +24,14 @@ const TREES: String = "T"
 const ROCK: String = "#"
 const WATER: String = "~"
 ## Dry ground over the river: costs what open ground costs, and is drawn as a
-## bridge because the only crossing should look like one.
+## bridge because the main crossing should look like one.
 const BRIDGE: String = "="
+## Shallow water anyone can wade (T48): a second way over the river, one at
+## each end of it, slow -- it costs what trees cost -- so the bridge is still
+## the quick way and the fords are a choice about where, not only when.
+const FORD: String = "f"
+## What a ford costs to enter.
+const FORD_COST: int = 3
 
 ## Trees cost this much to enter. They will also block sight, once there is
 ## fog to see through (T20); for now `sight` is a number nothing reads.
@@ -96,7 +102,9 @@ static func forge() -> Upgrade:
 
 ## The board's own cost map, and the wader's: one terrain map read twice.
 ## Water is a wall to everything but the wader, which is the whole of what
-## makes it a wader -- and `ai_core` never learns what water is.
+## makes it a wader -- and `ai_core` never learns what water is. A ford is
+## water to the wader too: it pays 1 there as in deep water, where everyone
+## else pays `FORD_COST`.
 static func graphs_from(rows: Array[String]) -> Dictionary:
 	var ground := GridGraph.new(rows[0].length(), rows.size())
 	var water := GridGraph.new(rows[0].length(), rows.size())
@@ -104,7 +112,7 @@ static func graphs_from(rows: Array[String]) -> Dictionary:
 		for x: int in range(rows[y].length()):
 			var cell := Vector2i(x, y)
 			ground.set_cost(cell, _ground_cost(rows[y][x]))
-			water.set_cost(cell, GridGraph.DEFAULT_COST if rows[y][x] == WATER else _ground_cost(rows[y][x]))
+			water.set_cost(cell, GridGraph.DEFAULT_COST if rows[y][x] in [WATER, FORD] else _ground_cost(rows[y][x]))
 	return {UnitType.GROUND: ground, WATER_MOVER: water}
 
 
@@ -168,6 +176,8 @@ static func _ground_cost(terrain: String) -> int:
 	match terrain:
 		TREES:
 			return TREES_COST
+		FORD:
+			return FORD_COST
 		ROCK, WATER:
 			return GridGraph.BLOCKED
 	return GridGraph.DEFAULT_COST

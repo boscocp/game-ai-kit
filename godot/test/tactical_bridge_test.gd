@@ -26,8 +26,10 @@ func test_blue_wins_when_red_parks_a_runner_in_front_of_the_bridge() -> void:
 	assert_int(_play_against_a_parked_runner(IN_FRONT_OF_THE_BRIDGE)).is_equal(BLUE)
 
 
-func test_with_the_bridge_shut_blue_builds_a_piece_that_can_wade() -> void:
-	var state: BoardState = _parked_on(BRIDGE_WEST)
+func test_with_every_dry_crossing_shut_blue_builds_a_piece_that_can_wade() -> void:
+	# Since T48 the bridge is not the only dry crossing: the fords are shut
+	# too, by two more red runners.
+	var state: BoardState = _every_crossing_shut()
 	var workshop: Unit = state.unit_at(Vector2i(12, 1))
 
 	var decision: TacticalDecision = RuleBasedBlue.new().decide_build(state, workshop.id)
@@ -37,11 +39,11 @@ func test_with_the_bridge_shut_blue_builds_a_piece_that_can_wade() -> void:
 	assert_str(decision.reason).contains("still gets there")
 
 
-func test_a_walker_the_bridge_is_shut_to_says_so_and_takes_the_fallback() -> void:
+func test_a_walker_every_crossing_is_shut_to_says_so_and_takes_the_fallback() -> void:
 	# It used to stay. Since T45 a walker whose goal is out of reach walks at
-	# the nearest red piece it can -- here, the runner shutting the bridge --
-	# and still says why its goal was out of reach.
-	var state: BoardState = _parked_on(BRIDGE_WEST)
+	# the nearest red piece it can -- here, one of the runners shutting the
+	# crossings -- and still says why its goal was out of reach.
+	var state: BoardState = _every_crossing_shut()
 	var shield: Unit = _first_of(state, BLUE, TacticalRules.SHIELD)
 
 	var decision: TacticalDecision = RuleBasedBlue.new().decide_move(state, shield.id)
@@ -72,11 +74,19 @@ func _play_against_a_parked_runner(park: Vector2i) -> int:
 
 
 # The start of blue's turn with red's runner standing on `park`.
-func _parked_on(park: Vector2i) -> BoardState:
+# Red's runner parked on the bridge, and two more red runners on the fords'
+# west cells: no dry way over the river is open to blue.
+func _every_crossing_shut() -> BoardState:
 	var state: BoardState = TacticalScenario.build()
-	var runner: Unit = _first_of(state, RED, TacticalRules.RUNNER)
-	runner.cell = park
-	return TurnStart.open(state)[0]
+	_first_of(state, RED, TacticalRules.RUNNER).cell = BRIDGE_WEST
+	var units: Array[Unit] = state.units.duplicate()
+	var runner: UnitType = TacticalRules.unit_types()[TacticalRules.RUNNER]
+	units.append(Unit.new(80, RED, Vector2i(6, 1), 10, runner.movement, runner))
+	units.append(Unit.new(81, RED, Vector2i(6, 7), 10, runner.movement, runner))
+	var shut := BoardState.new(state.graph, units, RED)
+	shut.movement_graphs = state.movement_graphs
+	shut.funds = state.funds.duplicate()
+	return TurnStart.open(shut)[0]
 
 
 # Red's turn: its runner walks as far towards `park` as it can, and nothing

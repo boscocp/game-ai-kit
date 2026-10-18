@@ -209,6 +209,13 @@ func _check_tactical_boards() -> Array[String]:
 		var collect: Callable = func(state: BoardState) -> void: worlds.append(TacticalPlanBridge.world_of(state))
 		TacticalMatch.play(PlannedBlue.new(), RuleBasedBlue.new(), dice, collect)
 		TacticalMatch.play(RuleBasedBlue.new(), PlannedBlue.new(), dice, collect)
+	# Since the fords (T48) no sampled board has every crossing shut, so
+	# almost none is without a plan, and half the property would barely run.
+	# Each board is also planned from as it would be with every crossing shut
+	# and their workshop guarded -- which most plans cannot get past, though a
+	# ram already across can still siege a guarded workshop.
+	for index: int in range(worlds.size()):
+		worlds.append(_shut_and_guarded(worlds[index]))
 	var failures: Array[String] = []
 	var solved: int = 0
 	for index: int in range(worlds.size() * SEARCHES.size()):
@@ -222,6 +229,15 @@ func _check_tactical_boards() -> Array[String]:
 	if solved == 0 or solved == worlds.size() * SEARCHES.size():
 		failures.append("tactical: %d of %d calls had a plan, so only one of the two claims ran" % [solved, worlds.size() * SEARCHES.size()])
 	return failures
+
+
+# `world` with every crossing shut and their workshop guarded.
+static func _shut_and_guarded(world: WorldState) -> WorldState:
+	var kept := PackedStringArray()
+	for predicate: String in world.predicates():
+		if not predicate in ["crossing_open", "their_workshop_unguarded"]:
+			kept.append(predicate)
+	return WorldState.new(kept)
 
 
 # The sentence for a step that cannot run, kept out of the loop above so the

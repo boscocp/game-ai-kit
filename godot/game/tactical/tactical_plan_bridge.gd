@@ -61,8 +61,8 @@ static func world_of(state: BoardState) -> WorldState:
 		facts.append("funds_banked")
 	if state.owns(side, TacticalRules.FORGE):
 		facts.append("forge_owned")
-	if _bridge_open(state):
-		facts.append("bridge_open")
+	if _crossing_open(state):
+		facts.append("crossing_open")
 	if theirs != null and not _guarded(state, theirs):
 		facts.append("their_workshop_unguarded")
 	for unit: Unit in state.units_of(side):
@@ -87,9 +87,9 @@ static func zone_of(unit: Unit, theirs: Unit) -> String:
 ## ("bank_income", "buy_the_forge"). `["", ""]` for a name this file does not
 ## know, which the planned blue reports rather than guesses at.
 static func asks(step_name: String) -> Array[String]:
-	for prefix: String in ["build_", "cross_the_bridge_", "close_in_", "siege_with_"]:
+	for prefix: String in ["build_", "cross_the_river_", "close_in_", "siege_with_"]:
 		if step_name.begins_with(prefix):
-			var kind: String = {"build_": BUILD, "cross_the_bridge_": CROSS, "close_in_": CLOSE_IN, "siege_with_": SIEGE}[prefix]
+			var kind: String = {"build_": BUILD, "cross_the_river_": CROSS, "close_in_": CLOSE_IN, "siege_with_": SIEGE}[prefix]
 			return [kind, step_name.trim_prefix(prefix)]
 	match step_name:
 		"bank_income":
@@ -126,12 +126,30 @@ static func dearest_purchase() -> int:
 	return dearest
 
 
-static func _bridge_open(state: BoardState) -> bool:
-	for cell: Vector2i in TacticalRules.cells_of(TacticalScenario.MAP, TacticalRules.BRIDGE):
-		var standing: Unit = state.unit_at(cell)
-		if standing != null and standing.faction != state.current_faction:
-			return false
-	return true
+## The river's dry crossings, each as its cells: the bridge, and since T48
+## a ford at each end -- one crossing per row the river is crossed on.
+static func crossings() -> Array[Array]:
+	var by_row: Dictionary = {}
+	for cell: Vector2i in TacticalRules.cells_of(TacticalScenario.MAP, TacticalRules.BRIDGE) \
+			+ TacticalRules.cells_of(TacticalScenario.MAP, TacticalRules.FORD):
+		by_row[cell.y] = by_row.get(cell.y, []) + [cell]
+	var found: Array[Array] = []
+	for row: int in by_row:
+		found.append(by_row[row])
+	return found
+
+
+# True when at least one dry crossing has no piece of theirs on any cell.
+static func _crossing_open(state: BoardState) -> bool:
+	for crossing: Array in crossings():
+		if crossing.all(func(cell: Vector2i) -> bool: return not _theirs_on(state, cell)):
+			return true
+	return false
+
+
+static func _theirs_on(state: BoardState, cell: Vector2i) -> bool:
+	var standing: Unit = state.unit_at(cell)
+	return standing != null and standing.faction != state.current_faction
 
 
 static func _guarded(state: BoardState, theirs: Unit) -> bool:

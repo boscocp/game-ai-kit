@@ -17,7 +17,9 @@
 # `blue-funds-left` (funds unspent at the end, averaged over the games),
 # `at-the-limit` (games settled by score or drawn at the round limit rather
 # than at a workshop -- T47's rule turns stalemates into wins, and this is
-# how many it did), and
+# how many it did), `red-ford-games` and `blue-ford-games` (games in which
+# that side walked over a ford, T48 -- the reference asks both crossings to
+# be used -- this counts stepping onto one, not a whole crossing), and
 # since T46 `red-flips-percent`, `blue-flips-percent` and `flips-percent` (the
 # larger): of a side's walks that ended nearer the nearest enemy walker or
 # further from it, the share that went the other way from the same walker's
@@ -40,7 +42,7 @@ const DEFAULT_GAMES: int = 20
 const PAIRINGS: Array[String] = ["rr", "rl", "lr", "rp", "pr"]
 const OUTCOMES: Array[String] = ["red", "blue", "draw", "at-the-limit", "red-stuck-percent", "blue-stuck-percent",
 	"stuck-percent", "red-funds-left", "blue-funds-left", "red-flips-percent", "blue-flips-percent",
-	"flips-percent"]
+	"flips-percent", "red-ford-games", "blue-ford-games"]
 
 
 func _init() -> void:
@@ -146,6 +148,7 @@ func _measure(label: String, red: BlueController, blue: BlueController, games: i
 		tally[name + "-stuck-percent"] = 100.0 * counted[side]["stuck"] / maxi(counted[side]["decisions"], 1)
 		tally[name + "-funds-left"] = float(unspent[side]) / games
 		tally[name + "-flips-percent"] = 100.0 * counted[side]["flips"] / maxi(counted[side]["walks in or out"], 1)
+		tally[name + "-ford-games"] = counted[side]["ford games"]
 	tally["stuck-percent"] = maxf(tally["red-stuck-percent"], tally["blue-stuck-percent"])
 	tally["flips-percent"] = maxf(tally["red-flips-percent"], tally["blue-flips-percent"])
 	return tally
@@ -153,13 +156,13 @@ func _measure(label: String, red: BlueController, blue: BlueController, games: i
 
 static func _empty_count() -> Dictionary:
 	return {"decisions": 0, "stuck": 0, "built": 0, "build turns": 0, "why not built": {},
-		"walks in or out": 0, "flips": 0}
+		"walks in or out": 0, "flips": 0, "ford games": 0}
 
 
 static func _print_side(side: String, counted: Dictionary, funds_left: float) -> void:
-	print("    %s: %.0f funds left at the end on average; %d of %d walker decisions stayed for want of a nearer walk; built or bought on %d of %d workshop turns; %d flips in %d walks nearer or further from the nearest enemy walker" % [
+	print("    %s: %.0f funds left at the end on average; %d of %d walker decisions stayed for want of a nearer walk; built or bought on %d of %d workshop turns; %d flips in %d walks nearer or further from the nearest enemy walker; onto a ford in %d games" % [
 		side, funds_left, counted["stuck"], counted["decisions"], counted["built"], counted["build turns"],
-		counted["flips"], counted["walks in or out"]])
+		counted["flips"], counted["walks in or out"], counted["ford games"]])
 	for why: String in counted["why not built"]:
 		if counted["why not built"][why] == 0:
 			continue
@@ -181,6 +184,9 @@ class _Counting extends BlueController:
 	# turn (T45), and that is still one workshop turn.
 	var _asked_on: int = -1
 	var _missed_because: String = ""
+	# True once this side has walked over a ford in this game; a `_Counting`
+	# is made for each side of each game.
+	var _forded: bool = false
 	# Each walker's last walk that went nearer or further, as [turn, "in" or
 	# "out"].
 	var _last_fight: Dictionary = {}
@@ -220,6 +226,16 @@ class _Counting extends BlueController:
 		else:
 			_counted["why not built"][_missed_because] = _counted["why not built"].get(_missed_because, 0) + 1
 		return decision
+
+	# The first walk this game that enters a ford.
+	func _count_ford(decision: TacticalDecision) -> void:
+		if _forded or decision.move == null:
+			return
+		for cell: Vector2i in decision.move.path:
+			if TacticalScenario.MAP[cell.y][cell.x] == TacticalRules.FORD:
+				_forded = true
+				_counted["ford games"] += 1
+				return
 
 	# A walk nearer the nearest enemy walker or further from it, and whether
 	# it reverses the same walker's walk on its side's previous turn.
@@ -261,6 +277,7 @@ class _Counting extends BlueController:
 	func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 		var decision: TacticalDecision = _inner.decide_move(state, unit_id)
 		_count_flip(state, unit_id, decision)
+		_count_ford(decision)
 		_counted["decisions"] += 1
 		if decision.reason.begins_with("stays: no walk this turn"):
 			_counted["stuck"] += 1
