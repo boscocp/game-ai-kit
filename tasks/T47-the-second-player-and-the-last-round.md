@@ -44,3 +44,59 @@ make tactical-win-rates GAMES=100 LIMITS="--at-least rr:red:40 --at-most rr:red:
 
 Play red three times against the rules: the owner says whether blue's
 counter is visible and whether a game that runs long still feels decided.
+
+## What was done (2026-10-18, wave 51) -- done, manual check still the owner's
+
+Taken out of table order on the owner's word: carry on with the design
+study's proposals in their order.
+
+- **Step 1, the counter, swept as data.** In `TacticalRules`, not in
+  `spec/combat/rules.json` as the file list suggested: that file is the
+  combat rules the Python dataset shares byte for byte (ADR 0007), and the
+  dataset has no second player. Rules against rules, 100 games each, the
+  same seeds, with T45's and T46's controllers:
+
+  | counter for blue | red | blue | draws |
+  |---|---|---|---|
+  | none | 70 | 30 | 0 |
+  | +2 starting funds (+1.5 rounded) | 70 | 30 | 0 |
+  | +3 starting funds | 70 | 30 | 0 |
+  | **a shield diagonal to its workshop** | **59** | **41** | **0** |
+  | +2 workshop health (Wargroove's 10%) | 65 | 35 | 0 |
+
+  The funds changed nothing, game for game: since T45 the rules build every
+  turn and every piece but the forge is affordable from blue's first turn,
+  so money does not bind them. The shield -- Advance Wars By Web's
+  "predeployed infantry for the second player" -- is the only one in
+  40-60%, so it is the rule (`SECOND_PLAYER_SHIELD`, at (11, 0)). T26 and
+  T44 measured the first mover at 58 of 60 and 20 of 20; T45's spending had
+  already brought it to 70 of 100 before any counter.
+- **Step 2, the last round decides.** At the round limit the higher score
+  wins: workshop health, then point-turns held -- each point, each turn it
+  was held; the task said rounds, and point-turns keep a second point worth
+  holding (`ControlPoints` counts
+  them in a new `BoardState.tally`, which `ai_core` carries and never
+  reads), then the cost of what is left standing. A draw only on an equal
+  score; `tactical_last_round_test.gd` plants the opening mirrored and must
+  get one, and holds each step of the comparison.
+- **Step 3.** The header states both rules before the first move, the end
+  of a game says which score decided it, and the README follows.
+
+**Acceptance** (`make tactical-win-rates GAMES=100 LIMITS="--at-least rr:red:40
+--at-most rr:red:60 --at-most rr:draw:5"`): rules' mirror red 59, blue 41,
+draws 0 -- exit 0. The script now also counts the games settled at the round
+limit, as the reference's caveat asked (§4, item 2: "report decided before
+round 40 separately"):
+
+| pairing, 100 games | red | blue | draws | settled at the round limit |
+|---|---|---|---|---|
+| rules v rules | 59 | 41 | 0 | 23 |
+| rules v learned | 0 | 100 | 0 | 61 |
+| learned v rules | 100 | 0 | 0 | 61 |
+| rules v planner | 33 | 67 | 0 | 13 |
+| planner v rules | 28 | 72 | 0 | 58 |
+
+Read the learned side's 100 of 100 with that last column: 39 workshops
+destroyed and 61 games won on score -- it holds the points and keeps its
+pieces, and the score rewards both. That is the caveat the reference gave,
+and why it asked for this rule to come after T45 and T46 rather than alone.

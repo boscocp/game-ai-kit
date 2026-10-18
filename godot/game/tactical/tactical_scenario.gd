@@ -46,6 +46,11 @@ const MAP: Array[String] = [
 const POINTS: Array[Vector2i] = [Vector2i(5, 0), Vector2i(8, 8)]
 
 
+## Where blue's extra shield stands when `TacticalRules.SECOND_PLAYER_SHIELD`
+## gives it one: diagonal to its workshop, on open ground, not on a point.
+const SECOND_PLAYER_SHIELD_CELL: Vector2i = Vector2i(11, 0)
+
+
 ## The river runs down columns 6 and 7; a cell left of column 7 is on red's
 ## bank, and the bridge's two cells sit one on each.
 const RIVER_MIDDLE: int = 7
@@ -66,10 +71,22 @@ static func build() -> BoardState:
 		var kind: UnitType = types[placed["type"]]
 		var health: int = 10 if kind.mobile else TacticalRules.BUILDING_HEALTH
 		units.append(Unit.new(units.size() + 1, placed["side"], placed["cell"], health, kind.movement, kind))
+	_counter_for_the_second_player(units, types)
 	var state := BoardState.new(graphs[UnitType.GROUND], units, RED)
 	state.movement_graphs = {TacticalRules.WATER_MOVER: graphs[TacticalRules.WATER_MOVER]}
-	state.funds = {RED: TacticalRules.STARTING_FUNDS, BLUE: TacticalRules.STARTING_FUNDS}
+	state.funds = {RED: TacticalRules.STARTING_FUNDS, BLUE: TacticalRules.STARTING_FUNDS + TacticalRules.SECOND_PLAYER_FUNDS}
 	return state
+
+
+# Blue moves second, and is given what `TacticalRules` says the side moving
+# second gets (T47): more health on its workshop, and a shield.
+static func _counter_for_the_second_player(units: Array[Unit], types: Dictionary) -> void:
+	for unit: Unit in units:
+		if unit.faction == BLUE and unit.type.type_name == TacticalRules.WORKSHOP:
+			unit.health += TacticalRules.SECOND_PLAYER_WORKSHOP_HEALTH
+	if TacticalRules.SECOND_PLAYER_SHIELD:
+		var shield: UnitType = types[TacticalRules.SHIELD]
+		units.append(Unit.new(units.size() + 1, BLUE, SECOND_PLAYER_SHIELD_CELL, 10, shield.movement, shield))
 
 
 # Who stands where -- the two sides mirrored through the board's centre, so

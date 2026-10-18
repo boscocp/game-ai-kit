@@ -463,7 +463,7 @@ func _refresh() -> void:
 
 func _status_text() -> String:
 	if winner != TacticalVictory.NOBODY:
-		return TacticalVictory.announcement(winner)
+		return TacticalVictory.announcement(winner, state)
 	if not _reds_turn():
 		return TacticalStatus.blue_text(state, _blue_turn, blue, _last_event) + "\n\n" + CONTROLLERS_TO_COME
 	var unit: Unit = state.unit_by_id(_selected_id)

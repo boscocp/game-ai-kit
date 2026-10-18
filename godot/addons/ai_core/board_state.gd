@@ -51,6 +51,12 @@ var funds: Dictionary = {}
 ## The upgrades each faction owns, by faction number, as `Array[String]`.
 var upgrades: Dictionary = {}
 
+## Numbers a scenario keeps across turns, by name and then by faction -- the
+## tactical board's rounds spent holding its points, which decide a game that
+## reaches the round limit (T47). The board carries them from state to state
+## and never reads them: what they mean is the scenario's.
+var tally: Dictionary = {}
+
 ## The id the next produced unit gets. A counter carried from state to state,
 ## not worked out from the units: worked out from the living, a dead unit's id
 ## came back as soon as the highest one died, and a stored move naming the
@@ -303,13 +309,14 @@ func end_turn(factions: int = 2, points_per_turn: int = 3, income: int = 0) -> B
 ## play, copy it first with `graph.duplicate_graph()` and build a state on the
 ## copy.
 ##
-## The funds and upgrades are copied, since buying changes them; the cost maps
+## The funds, upgrades and tallies are copied, since play changes them; the cost maps
 ## in `movement_graphs` are shared, like `graph`, and for the same reason.
 func duplicate_state() -> BoardState:
 	var copy := BoardState.new(graph, units, current_faction, turn_number)
 	copy.movement_graphs = movement_graphs
 	copy.funds = funds.duplicate()
 	copy.upgrades = upgrades.duplicate(true)
+	copy.tally = tally.duplicate(true)
 	copy.next_id = next_id
 	copy.dice_seed = dice_seed
 	return copy

@@ -50,6 +50,19 @@ const POINT_INCOME: int = 2
 const BUILDING_HEALTH: int = 20
 const STARTING_FUNDS: int = 4
 
+## The counter for the side moving second (T47): blue, which moves second,
+## starts with these on top of red's. Every game in the genre meets the
+## first-mover advantage and answers it with a small, stated counter --
+## Wargroove's extra gold and a pre-recruited unit, Advance Wars By Web's
+## predeployed infantry (`docs/design/tactical-references.md`, §1.5). Swept in
+## T47's record; the smallest that landed the rules' mirror in 40-60% is the
+## one set here.
+const SECOND_PLAYER_FUNDS: int = 0
+## True to start blue with one more shield, diagonal to its workshop.
+const SECOND_PLAYER_SHIELD: bool = true
+## Health added to blue's workshop.
+const SECOND_PLAYER_WORKSHOP_HEALTH: int = 0
+
 const RUNNER: String = "runner"
 const SHIELD: String = "shield"
 const MORTAR: String = "mortar"

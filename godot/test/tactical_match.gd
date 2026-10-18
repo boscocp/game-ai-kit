@@ -17,7 +17,9 @@ extends RefCounted
 ## whoever called it.
 ## `watch`, when given, is called with the state at the start of every turn,
 ## after the turn has opened -- which is when points are paid and a hold is
-## counted. Returns {"winner", "rounds", "decisions", "refused"}.
+## counted. Returns {"winner", "rounds", "decisions", "refused",
+## "at_the_limit"} -- the last true when the game was settled by score or a
+## draw at the round limit rather than at a workshop (T47).
 static func play(red: BlueController, blue: BlueController, dice_seed: int,
 		watch: Callable = Callable()) -> Dictionary:
 	var state: BoardState = TacticalScenario.build()
@@ -41,6 +43,7 @@ static func play(red: BlueController, blue: BlueController, dice_seed: int,
 		"winner": TacticalVictory.winner(state),
 		# A draw is called when round 41 would open; it lasted 40.
 		"rounds": mini(state.turn_number / TacticalScenario.FACTIONS + 1, TacticalVictory.ROUND_LIMIT),
+		"at_the_limit": TacticalVictory.at_the_limit(state),
 		"decisions": decisions,
 		"refused": refused,
 	}
