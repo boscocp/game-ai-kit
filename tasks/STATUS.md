@@ -58,7 +58,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T26 | Combat on the board | done | one rules file for Python and Godot, fights held by 5 hand-checked vectors; 7 hand-checked vectors; red and blue attack, towers fire at their turn start (one exchange), an attack cannot be undone; a workshop is besieged (20 health, a blow an attack) and destroying it wins; the counter tilts an even fight to ~94/28%; retrained: 85.9% against 56.8% and 78.8%; manual check still the owner's |
 | T44 | The learned policy plays the tactical board | wip | wave 47: two control points paying 2 a turn, every turn opened by `TurnStart`; `LearnedBlue` (attack or retreat by the combat model, the point by the capture model); the combat model sees the counter, fitted on a typed dataset, 86.0% against 57.7%; measured: rules mirror red 20/20, learned against rules 17-18 draws in 20 -- stopped there for a study of similar games (`docs/design/tactical-references.md`), which became T45-T48; not done: the capture rows from the tactical map, the controller key, the skirmish's removal |
 | T45 | The AI spends its money and keeps its pieces moving | wip | wave 49: spend first (build what beats most even when it cannot get there; a boxed workshop says so and is asked again), never idle (a fallback at the nearest red piece), one walker per point and per fallback target; win-rate limits for stuck walkers and funds left; acceptance fails -- learned stuck 44%/42%, 99 funds left: half the stuck walkers could move (staging waits for T48's threat map), the rest are boxed in behind one bridge, and income beats one build a turn; rules mirror 12-7-1 (was 20-0), planner 13-3 as blue, 0-20 as red |
-| T46 | The learned blue commits to a fight | wip | wave 50: commits at p(win) 0.5, gives up below 0.3 (the reference's 0.55/0.35 measured worse), joins a fight within 3 cells, retreats only when Wesnoth's caution x red's strength outweighs blue's; flips 19% -> 4.2%; learned as red 15-0-5, as blue 0-8-12 -- one limit short (rl draws 12, at most 10), the bridge queue's |
+| T46 | The learned blue commits to a fight | wip | wave 50: sets out at p(win) 0.5, gives the same fight up at 0.3 or below (no measurable effect: the way to a fight is one walk), joins another's fight within 3 cells, retreats only when red's strength near it outweighs blue's by Wesnoth's caution -- that one rule is the gain: learned as red 11-0-9 (was 4-0-16), as blue 0-5-15 (was 0-1-19); flips counted by distance 26%, as the rules; C cycles rules, planner, learned |
 | T47 | The side moving second, and a last round that decides | todo | a swept counter for blue, red's mirror win rate into 40-60%; the round limit decided by score |
 | T48 | The board itself: a second crossing, a threat map, shorter fights | todo | only if T45-T47 leave it a queue; the owner chooses which |
 | T43 | A fighting ladder | todo | easy, medium, the clone, "ghost: nearest", hard, best of three each, with a clock and an ending; every opponent exists; picked in T42 |
@@ -97,14 +97,19 @@ because it is driven better, and a command proves every car runs one physics.
 
 ## Resuming after 2026-10-18 (wave 50)
 
-**What landed.** T46, one limit short. The learned blue has two bars (commit
-0.5, give up 0.3), joins a fight another walker of its side started within
-three cells, and retreats on the two sides' strength near it, Wesnoth's rule,
-instead of on one fight's odds. The win-rate script counts flips.
+**What landed.** T46, two limits short. The learned blue sets out for a fight
+at p(win) 0.5 and gives that same fight up only at 0.3 or below, joins a
+fight another walker of its side started within three cells, and retreats
+only when red's strength near it outweighs blue's (Wesnoth's caution, this
+board's version). C in `make demo-tactical` now cycles blue through the
+rules, the planner and the learned policy.
 
-**What the measurements said.** Flips fell from 19% to 4.2%; the learned side
-wins 15 of 20 as red (was 4) and 8 as blue (was 1). As blue it still draws
-12 of 20, against a limit of 10: its walkers queue behind the bridge (T45).
+**What the measurements said.** The strength rule is the gain: the learned
+side wins 11 of 20 as red (was 4) and 5 as blue (was 1). The commitment makes
+no difference on this board, where the way to a fight is one walk. Counted
+by distance -- wave 50's review showed reading reasons missed most of them
+-- the learned blue reverses direction on 26% of its walks, about as often as
+the rules. As blue it still draws 15 of 20, behind the bridge (T45).
 
 **Next:** T47 (the side moving second, and a last round that decides), then
 T48 (the ford and the threat map, with staging), as the owner asked.

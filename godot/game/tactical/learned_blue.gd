@@ -7,11 +7,14 @@
 ## 1. **A fight.** Every red walker it could attack this turn -- from a cell
 ##    it can walk to, within its reach -- is put to the combat model, from
 ##    the cell the model likes best. If the best fight clears the walker's
-##    bar (below), or a fight its side started is beside it, it walks there, and attacks once it has: asked again after the walk, on
-##    the board as it then stands. If none does, it walks away from the
-##    nearest of them. That is the skirmish's lesson, a probability against a
-##    threshold -- two, since T46 -- now on a board where an attack does
-##    something.
+##    bar (below), or a fight its side started is beside it, it walks there,
+##    and attacks once it has: asked again after the walk, on the board as it
+##    then stands. If none does, it walks away from the nearest of them --
+##    when red's strength near it outweighs blue's (below); otherwise it
+##    stands its ground and goes on down this list, and its reason says it
+##    did not retreat and why. That is the skirmish's lesson, a probability
+##    against a threshold -- two, since T46 -- now on a board where an attack
+##    does something.
 ## 2. **A point it stands on**: it stays, because a point left is not paid.
 ## 3. **A point red holds**: it walks at it -- T41's rule, not the model.
 ## 4. **A point no blue piece stands on**: the one the capture model says
@@ -26,18 +29,35 @@
 ## reach is attacked by the rules: the dataset has no buildings, so the model
 ## has nothing to say about a siege, and is not asked.
 ##
-## **Two thresholds, and a fight once started** (T46). One threshold flickers:
-## a unit at p(win) 0.5 attacked one turn and ran the next. So a walker
-## commits at `COMMIT_AT` (0.5) and, once committed, gives up only below
-## `GIVE_UP_BELOW` (0.3) -- a thermostat's two set points. And it does not
-## retreat within `JOIN_RADIUS` cells of an attack its side made this turn:
-## it joins that fight instead. Wesnoth's `attack_close` lets an attack near
-## one already made pass a check that would refuse it; carrying that over to
-## retreat is this board's own rule, and the reason on screen says so. Which
-## bar decided is always in the reason.
+## **Two thresholds, a target kept, a fight joined** (T46). One threshold
+## flickers: a walker at p(win) 0.5 set out for a red walker one turn and ran
+## from it the next. So a walker sets out for a fight at `COMMIT_AT` (0.5),
+## and, while it is on its way to *that same red walker*, gives up only at or
+## below `GIVE_UP_AT` (0.3) -- a thermostat's two set points. Only the way
+## there: every fight between walkers kills somebody, so once the blow is
+## struck there is no fight left to be committed to, and the commitment ends
+## with the attack. On this board that way is one walk long -- a walker only
+## sets out for a fight it can reach this turn -- so what the second bar
+## decides is the blow after the walk, when the board as it stands once the
+## walker has arrived gives worse odds than the cell promised. Measured, it
+## changes nothing here (T46's record); it is kept because it is right, and
+## a board with longer approaches is where it can. And a walker within
+## `JOIN_RADIUS` cells of an attack another walker of its side made this
+## turn joins that fight at any odds rather than retreat: Wesnoth's
+## `attack_close` lets an attack near one already made pass the check that
+## refuses near-hopeless ones; using it to stop a retreat is this board's own
+## rule, and the reason says so. Which bar decided is in every reason.
 ##
-## Nothing trains here, and nothing outlives a game (invariant 6): which
-## walkers are committed is kept by the controller for one game and forgotten
+## **Retreat on strength, this board's version of Wesnoth's.** A walker that
+## will not fight retreats only when `CAUTION` times red's strength near it
+## outweighs blue's. Wesnoth's `should_retreat` (`ca.cpp`) weighs the power
+## each side can bring onto the hex and how exposed its terrain is; here
+## strength is simply the health of the walkers within `STRENGTH_RADIUS`
+## cells as the crow flies -- so a red walker across the river counts in
+## full. The caution is Wesnoth's default.
+##
+## Nothing trains here, and nothing outlives a game (invariant 6): which red
+## walker each walker is on its way to is kept for one game and forgotten
 ## when the next begins, never saved. The
 ## numbers come from `LearnedPolicy`, the `ai_learning` addon's, which is
 ## asked two questions; the walking is the board's own (`TacticalReach`), so
@@ -52,15 +72,14 @@
 class_name LearnedBlue
 extends RuleBasedBlue
 
-## p(win) at or above which a walker not yet in a fight commits to one.
+## p(win) at or above which a walker sets out for a fight.
 ##
-## The reference's starting points were 0.55 and 0.35. Measured over 20
-## games a seat (T46's record), 0.5 and 0.3 did better from both: 8 wins and
-## 12 draws as blue against 7 and 13, 15 and 5 as red against 12 and 8. At
-## 0.5 the bar is the model's own line, "more likely to win than not".
+## The reference's starting points were 0.55 and 0.35; what was measured
+## against them is in T46's record. At 0.5 the bar is the model's own line,
+## "more likely to win than not".
 const COMMIT_AT: float = 0.5
-## p(win) below which a committed walker gives its fight up.
-const GIVE_UP_BELOW: float = 0.3
+## p(win) at or below which a walker on its way to a fight gives it up.
+const GIVE_UP_AT: float = 0.3
 ## Cells within which an attack its side made this turn keeps a walker from
 ## retreating -- Wesnoth's `attack_close` distance (closer than 4 hexes).
 const JOIN_RADIUS: int = 3
@@ -79,17 +98,18 @@ var policy: LearnedPolicy
 ## false to retreat whenever its own best fight is under its bar.
 var retreat_on_strength: bool = true
 
-# Walkers committed to a fight this game, by id.
-var _committed: Dictionary[int, bool] = {}
+# Walker id -> the id of the red walker it set out for and has not reached.
+var _committed: Dictionary[int, int] = {}
 # Where its side attacked this turn: attacker id -> the cell it attacked from.
 var _attacked_from: Dictionary[int, Vector2i] = {}
 var _seen_turn: int = -1
 
 
 ## `published` defaults to the weights the game ships; a test hands its own.
-func _init(published: ModelFile = null, threshold: float = LearnedPolicy.DEFAULT_THRESHOLD) -> void:
+## The policy's own threshold is not used: the bars above decide.
+func _init(published: ModelFile = null) -> void:
 	var weights: ModelFile = published if published != null else ModelFile.load_from(ModelFile.DEFAULT_PATH)
-	policy = LearnedPolicy.new(weights, TacticalScenario.POINTS, threshold)
+	policy = LearnedPolicy.new(weights, TacticalScenario.POINTS)
 
 
 ## A new turn: no attacks made yet. A turn no later than the last one seen is
@@ -102,6 +122,18 @@ func begin_turn(state: BoardState) -> void:
 	_attacked_from.clear()
 
 
+## One walk asked for outside a turn, as `DecisionPolicy` asks it: whatever
+## it would remember -- a walker setting out, an attack beside it -- is put
+## back afterwards, so asking changes nothing.
+func choose(state: BoardState, unit_id: int) -> Move:
+	var committed: Dictionary[int, int] = _committed.duplicate()
+	var attacked: Dictionary[int, Vector2i] = _attacked_from.duplicate()
+	var move: Move = super.choose(state, unit_id)
+	_committed = committed
+	_attacked_from = attacked
+	return move
+
+
 ## "learned": the name the header and the overlay use.
 func controller_name() -> String:
 	return "learned"
@@ -109,7 +141,8 @@ func controller_name() -> String:
 
 ## What decides, in one line for the screen.
 func describe() -> String:
-	return "the learned policy: the combat model's p(win) commits a walker at %.2f and lets it give up below %.2f, a walker beside its side's attack joins it; the capture model picks the point; builds and sieges by the rules" % [COMMIT_AT, GIVE_UP_BELOW]
+	return "the learned policy: the combat model's p(win) sets a walker out for a fight at %.2f, and it gives that fight up at %.2f or below; a walker beside its side's attack joins it; it retreats only when red is far stronger near it; the capture model picks the point; builds and sieges by the rules" % [
+		COMMIT_AT, GIVE_UP_AT]
 
 
 ## A walk decided by the order the header gives: a fight, a point held, a
@@ -124,6 +157,16 @@ func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 	var fought: TacticalDecision = null if fight.is_empty() else _attack_or_retreat(state, unit, walks, fight)
 	if fought != null:
 		return fought
+	var decision: TacticalDecision = _walk_at_a_goal(state, unit, walks)
+	if not fight.is_empty():
+		decision.reason += " -- " + _stood_its_ground(unit, fight)
+	return decision
+
+
+# Steps 2 to 5 of the header: a point held, a point contested, the point the
+# capture model ranks first, red's workshop.
+func _walk_at_a_goal(state: BoardState, unit: Unit, walks: Dictionary) -> TacticalDecision:
+	var unit_id: int = unit.id
 	if unit.cell in TacticalScenario.POINTS:
 		_claim(state, unit.cell)
 		return TacticalDecision.hold(unit_id, "stays on the point at %s: a point left is a point not paid for (a rule, not the model)" % unit.cell, unit.cell)
@@ -157,25 +200,41 @@ func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
 			best_chance = chance
 	if best == null:
 		return null
-	var why: String = _why_fight(unit, best_chance)
+	var why: String = _why_fight(unit, best, best_chance)
 	if why == "":
 		return null
-	_committed[unit_id] = true
+	# The blow ends the fight one way or the other, and the way there with it.
+	_committed.erase(unit_id)
 	_attacked_from[unit_id] = unit.cell
 	return TacticalDecision.strike(unit_id, best, "attacks the %s at %s: %s" % [best.type.type_name, best.cell, why])
 
 
-# Why `unit` fights at `chance`, or "" when it should not: above its bar --
-# the commit bar, or the give-up bar once committed -- or beside a fight its
-# side started this turn.
-func _why_fight(unit: Unit, chance: float) -> String:
-	if _committed.get(unit.id, false) and chance >= GIVE_UP_BELOW:
-		return "p(win) %.2f, still above the give-up bar %.2f: it committed to this fight" % [chance, GIVE_UP_BELOW]
+# Why `unit` fights `enemy` at `chance`, or "" when it should not: above the
+# give-up bar while on its way to that same enemy, at or above the commit
+# bar, or beside a fight another walker of its side started this turn.
+func _why_fight(unit: Unit, enemy: Unit, chance: float) -> String:
+	if _committed.get(unit.id, -1) == enemy.id and chance > GIVE_UP_AT:
+		return "p(win) %.2f, above the give-up bar %.2f: it set out for this %s and keeps on" % [chance, GIVE_UP_AT, enemy.type.type_name]
 	if chance >= COMMIT_AT:
 		return "p(win) %.2f, at or above the commit bar %.2f" % [chance, COMMIT_AT]
 	if _beside_a_fight(unit):
-		return "p(win) %.2f, under its bar, but its side attacked within %d cells this turn and it joins in rather than leave (this board's rule, after Wesnoth's attack_close)" % [chance, JOIN_RADIUS]
+		return "p(win) %.2f, under its bar, but another walker of its side attacked within %d cells this turn and it joins in rather than leave (this board's rule, after Wesnoth's attack_close)" % [
+			chance, JOIN_RADIUS]
 	return ""
+
+
+# The bar `unit` holds its fight with `enemy` to: the give-up bar while on
+# its way to that enemy, the commit bar otherwise.
+func _bar_for(unit: Unit, enemy: Unit) -> float:
+	return GIVE_UP_AT if _committed.get(unit.id, -1) == enemy.id else COMMIT_AT
+
+
+# Why a walker whose best fight is under its bar did not retreat, for the
+# end of the reason of whatever it did instead.
+func _stood_its_ground(unit: Unit, fight: Dictionary) -> String:
+	var enemy: Unit = fight["enemy"]
+	return "it did not retreat from the %s at %s, though p(win) %.2f is under its bar %.2f: red's strength near it does not outweigh blue's by Wesnoth's caution %.2f" % [
+		enemy.type.type_name, enemy.cell, fight["chance"], _bar_for(unit, enemy), CAUTION]
 
 
 # True when `CAUTION` times red's strength near `unit` is more than blue's:
@@ -257,20 +316,23 @@ func _attack_cells(unit: Unit, walks: Dictionary, enemy: Unit) -> Array[Vector2i
 func _attack_or_retreat(state: BoardState, unit: Unit, walks: Dictionary, fight: Dictionary) -> TacticalDecision:
 	var enemy: Unit = fight["enemy"]
 	var odds: String = "p(win) %.2f" % fight["chance"]
-	var why_fight: String = _why_fight(unit, fight["chance"])
+	var why_fight: String = _why_fight(unit, enemy, fight["chance"])
 	if why_fight != "":
 		var why: String = "to attack the %s at %s: %s" % [enemy.type.type_name, enemy.cell, why_fight]
+		# Setting out on its own odds is a commitment; joining is not.
+		if fight["chance"] >= COMMIT_AT or _committed.get(unit.id, -1) == enemy.id:
+			_committed[unit.id] = enemy.id
 		if fight["cell"] == unit.cell:
 			return TacticalDecision.hold(unit.id, "stays " + why, unit.cell)
 		return TacticalDecision.walk(unit.id, walks[fight["cell"]], "walks to %s %s" % [fight["cell"], why], fight["cell"])
-	var bar: float = GIVE_UP_BELOW if _committed.get(unit.id, false) else COMMIT_AT
+	var bar: float = _bar_for(unit, enemy)
 	_committed.erase(unit.id)
 	if retreat_on_strength and not _outweighed(state, unit):
 		return null
 	var threat: Unit = fight["nearest"]
 	var away: Vector2i = _out_of_reach(state, unit, walks, threat)
 	var why_not: String = "the best fight in reach, the %s at %s, is %s, below %s %.2f" % [
-		enemy.type.type_name, enemy.cell, odds, "the give-up bar" if bar == GIVE_UP_BELOW else "the commit bar", bar]
+		enemy.type.type_name, enemy.cell, odds, "the give-up bar" if bar == GIVE_UP_AT else "the commit bar", bar]
 	if away == unit.cell:
 		return TacticalDecision.hold(unit.id, "stays, out of the reach of the %s at %s or as far from it as it can be: %s" % [threat.type.type_name, threat.cell, why_not], unit.cell)
 	return TacticalDecision.walk(unit.id, walks[away], "retreats to %s, out of the reach of the %s at %s or as far as it can: %s" % [
