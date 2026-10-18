@@ -17,10 +17,10 @@ own reference says it "isn't designed to provide realistic 3D vehicle
 physics" (ADR 0018) -- and because a reader should be able to see the four
 forces each wheel adds.
 
-T53's survey decides the techniques; this task is rewritten from it. Until
-then, the plan below is T23's controller grown up, and T23's rule holds:
+T53's survey (`docs/concepts/racing-ai.md`) chose the techniques: T23's
+driver, plus what a car it does not fully know demands. T23's rule holds:
 the hard car is faster because it is driven better, never because it was
-given anything.
+given anything, and no knob moves with the player's position.
 
 ## Steps
 
@@ -31,14 +31,20 @@ given anything.
 2. **The track.** Built from an open pack (Kenney's Racing Kit is the
    candidate) referenced in `assets.json`, with a box-and-plane fallback
    (ADR 0018). A racing line through it, drawn.
-3. **The driver**, on a snapshot (ADR 0018's invariant 5 rule): look ahead
-   along the line, steer with `ai_steering`, choose a target speed from the
-   curvature ahead and the grip the car has, and correct with feedback when
-   the car does not do what was asked. Its Python twin and vectors pin the
-   decision from a stated snapshot.
-4. **What the player toggles**: 1-3 techniques chosen from T53, each
-   visible -- for example the lookahead point, the braking point computed
-   from the grip, and the slip each tyre is at.
+3. **The driver**, on a snapshot (ADR 0018's invariant 5 rule): T23's pure
+   pursuit and speed profile, with the grip the profile uses **measured in
+   a lap** rather than read off a constant, since the car's grip now comes
+   from its tyres. Its Python twin and vectors pin the decision from a
+   stated snapshot.
+4. **What the player toggles** (T53's three):
+   - **PID control** of speed and of the distance from the line (Melder &
+     Tomlinson). Toggle: proportional only, and the car settles off the
+     line -- the steady-state offset, drawn as a trace of the error.
+   - **The heat line for overtaking** (Melder's heat vision): an array
+     across the track's width under each car, and the ball rolling to the
+     coolest place. Toggle: off, and cars react to one rival at a time.
+   - **The measured grip**: toggle to the constant, and the driver brakes
+     for a car it is not driving.
 5. **Three levels** over the knobs T23 already names (lookahead, braking
    margin, steering wander) and nothing else unless written down here.
 6. **The overlay** (invariant 13): the line, the lookahead point, the target

@@ -91,8 +91,8 @@ because it is driven better, and a command proves every car runs one physics.
 | # | Task | State | Notes |
 |---|---|---|---|
 | T22 | `ai_steering`: not on a grid | todo | seek, arrive, pursue, avoid; needs T21 |
-| T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
-| T53 | How racing AI is made | todo | T36's pattern for racing: research and shipped games, rubber-banding with sources; comes first and rewrites T23 and T54 |
+| T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so; T53 gave each knob a source (lookahead, grip margin, wander) and the gate now also refuses a knob that moves during the race |
+| T53 | How racing AI is made | done | `docs/concepts/racing-ai.md`: 30 references, each opened, those read in part said so; rubber-banding for and against; T23 and T54 rewritten from it |
 | T54 | Racing in 3D, with physics the driver does not own | blocked | the owner's 3D racer: suspension, tyre slip, weight transfer on `RigidBody3D`; T23's three knobs and its no-cheat gate; needs ADR 0018 accepted, T50, T53 |
 
 ## Milestone 5 — shooters, in 3D
@@ -112,6 +112,24 @@ sha256 and never committed.
 | T52 | Bots against the player, with an optional stealth | blocked | third person; a role arbiter, awareness that accumulates with three alert levels, a shared belief map for the search -- each drawn and switchable |
 
 ---
+
+## Resuming after 2026-10-18 (wave 54)
+
+**Where it stopped -- read first.** Wave 54 was T53, documents only, taken
+on the owner's "one more wave" after wave 53 (`make wave` would have picked
+T12; T53 was chosen because it is the racing work asked for that day, needs
+nothing, and unblocks T23 and T54). Reviewed and merged.
+
+**What landed.** `docs/concepts/racing-ai.md`: how AI drivers are made,
+research and shipped games, and rubber-banding for and against with
+sources. T23 now names its three knobs from it (lookahead, grip margin,
+wander) and its cheat check also refuses a knob that moves during a race
+-- the skill-based rubber band shipped games hide. T54 takes PID control,
+the heat line for overtaking, and grip measured in a lap.
+
+**Next:** unchanged from wave 53 -- the owner decides ADR 0018; until then
+T50-T52 and T54 stay `blocked`. T23 is now ready to build (it needs T21 and
+T22; T22 is todo). `make wave` still picks T12 first by table order.
 
 ## Resuming after 2026-10-18 (wave 53)
 

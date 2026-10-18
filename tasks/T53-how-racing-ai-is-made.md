@@ -42,3 +42,22 @@ python3 scripts/check_tiers.py
 ## Manual check
 
 Every reference opens and says what the page says it says.
+
+## Decided on the way (2026-10-18, wave 54)
+
+- **The page is `docs/concepts/racing-ai.md`.** 30 references, each
+  opened. Those read only in part -- an abstract, the first part of a
+  chapter, or a web page read through a summarising fetch -- say so, and
+  the web pages are paraphrased, not quoted.
+- **T23 takes**: pure pursuit's lookahead, the grip margin, and the
+  steering wander as its three knobs; a speed profile from curvature and
+  grip, computed backwards from the tightest corners; and a braking point
+  where full braking no longer makes the next corner.
+- **T54 takes**: PID control of speed and line, the heat line for
+  overtaking, and grip measured in a lap.
+- **Rubber-banding**: refused, with the arguments for and against on the
+  page. What shipped games mostly hide is skill that moves with the
+  player's position, and T23 now refuses that too, with a check that no
+  knob changes during a race.
+- **Left**: learned drivers, cloning a player, and optimising the racing
+  line.
