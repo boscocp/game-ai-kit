@@ -40,6 +40,9 @@ static func blue_text(state: BoardState, turn: BlueTurn, controller: BlueControl
 	else:
 		lines.append("\nblue has finished its turn. Space hands it back to red")
 	lines.append("\n%d decision(s) played this turn" % turn.played.size())
+	var plan: Array[String] = controller.plan_lines()
+	if not plan.is_empty():
+		lines.append("\n" + "\n".join(plan) + "\n(the numbers on the board are the pieces each step counts on)")
 	return "\n".join(lines)
 
 

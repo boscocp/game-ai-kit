@@ -37,7 +37,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T33 | Units that walk | done | Puny Characters (CC0) sheets for the shield and the soldier; units walk their route at 0.12 s a cell, march at rest, machines bob; `walk` kind in the generator on klein base + the svntax LoRA, sheets never committed; ADR 0014; manual check still a person's |
 | T32 | Checkers with a learned evaluation | done | after Samuel (1959 paper, checked): Python rules and search held to Godot's by two vectors; logistic fit on self-play; learned loses 0.125 at two plies, 0.53 without its advancement weight; controls cannot be told from it (alpha-beta ignores scale); E toggles it in `make run`; manual check still a person's |
 | T10 | The tactical scenario | done | five types, two towers, a workshop, funds, a forge, a river with one bridge; manual check: terrain yes, type feel waits on T26 |
-| T11 | The planner plays | todo | STRIPS drives a faction; needs T4, and T26 for attacks; `ai_learning` still routes on `state.graph`, wrong for a wader |
+| T11 | The planner plays | done | `PlannedBlue`, C in `make demo-tactical`: STRIPS over `spec/pddl/tactics-domain.pddl`, A\* with h_max over bits (169 worlds against breadth-first's 6094 on 28 boards); replans every 3 turns or when the plan stops running; plan listed and numbered on the board; against the rules 7-13 as blue, 0-20 as red; manual check still a person's |
 | T12 | Three difficulties, honestly | todo | horizon and depth, never cheating; five levels if they stay ordered |
 | T13 | `ai_fuzzy`, from a library that already exists | done | rewritten, not ported: the library was C# and its core was missing (ADR 0011); 3 vectors read from both languages |
 | T14 | The stealth scenario | done | `ai_perception`, fuzzy suspicion, three guard states; 4 properties over 300 maps |
@@ -94,6 +94,27 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
 
 ---
+
+## Resuming after 2026-10-18 (wave 48)
+
+**What landed.** T11: the planner plays the tactical board. `ai_planning`
+gained bits (`PackedDomain`), h_max and h_add (`RelaxedCost`) and A\* with a
+budget and partial plans (`HeuristicPlanner`); the tactical domain is PDDL in
+`spec/pddl/`, with a JSON twin held equal by `make test-python`;
+`TacticalPlanBridge` turns the board into facts and steps into decisions;
+`PlannedBlue` buys the forge, builds the ram and sends it, and the rules do
+the rest. C swaps to it in `make demo-tactical`. ADR 0010 amended with the
+numbers.
+
+**What the measurements said.** The guesses cut worlds 36-fold and tie each
+other, so the game uses h_max. Against the rules, the planner wins 7 of 20 as
+blue (rules: 0) and 0 of 20 as red (rules: 20). Its mistakes are legible: it
+saves its first turn while the rules build, and after the ram its workshop
+idles on a rules refusal (T45's).
+
+**Next:** T44's rest and T45-T48 are still waiting, and T45 is also what the
+planner's idle workshop needs. `make wave` picks the first unblocked `todo` in
+table order, which is now T12 -- check with the owner before taking it.
 
 ## Resuming after 2026-10-17 (wave 47)
 

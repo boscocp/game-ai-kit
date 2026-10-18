@@ -1,7 +1,8 @@
 ## One thing blue decided to do this turn, and why, in words for the screen.
 ##
-## A decision is one of four: walk a unit along a route, attack, build a unit
-## at the workshop, or hold. It is made *before* it is played, so the scene can draw
+## A decision is one of five: walk a unit along a route, attack, build a unit
+## at the workshop, buy an upgrade there (T11's planner buys the forge), or
+## hold. It is made *before* it is played, so the scene can draw
 ## it and a person can read it first -- invariant 13 -- and then played as it
 ## was drawn, never re-decided in between.
 ##
@@ -18,6 +19,8 @@ var move: Move
 var order: ProductionOrder
 ## The attack, or null when this decision is not one.
 var attack: Attack
+## The upgrade bought, or null when this decision is not a purchase.
+var upgrade: Upgrade
 ## Why, in one sentence a player can check against the board.
 var reason: String
 ## The cell the decision is about -- where the unit is heading, or where the
@@ -52,6 +55,13 @@ static func strike(deciding_id: int, target: Unit, why: String) -> TacticalDecis
 	return decision
 
 
+## `bought` paid for at the workshop `deciding_id`, which stands at `at`.
+static func buy(deciding_id: int, bought: Upgrade, why: String, at: Vector2i) -> TacticalDecision:
+	var decision := TacticalDecision.new(deciding_id, why, at)
+	decision.upgrade = bought
+	return decision
+
+
 ## Nothing done, and the reason nothing was.
 static func hold(deciding_id: int, why: String, at: Vector2i) -> TacticalDecision:
 	return TacticalDecision.new(deciding_id, why, at)
@@ -65,6 +75,8 @@ func kind() -> String:
 		return "build"
 	if attack != null:
 		return "attack"
+	if upgrade != null:
+		return "buy"
 	return "hold"
 
 
@@ -77,4 +89,6 @@ func played_on(state: BoardState) -> BoardState:
 		return state.produce(order)
 	if attack != null:
 		return TacticalCombat.apply(state, attack)
+	if upgrade != null:
+		return state.buy(upgrade)
 	return state

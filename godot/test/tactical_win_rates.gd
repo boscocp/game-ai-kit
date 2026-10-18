@@ -5,8 +5,8 @@
 #     ./scripts/godot --headless --path godot -s res://test/tactical_win_rates.gd \
 #         [-- GAMES] [--at-most|--at-least PAIRING:OUTCOME:COUNT ...]
 #
-# PAIRING is `rr` (rules red, rules blue), `rl` (rules red, learned blue) or
-# `lr`; OUTCOME is `red`, `blue` or `draw`. Each `--at-most` or `--at-least`
+# PAIRING is `rr` (rules red, rules blue), `rl` (rules red, learned blue),
+# `lr`, `rp` (rules red, planned blue, T11) or `pr`; OUTCOME is `red`, `blue` or `draw`. Each `--at-most` or `--at-least`
 # is a limit a tuning task states as its acceptance -- `--at-most rr:red:28`
 # with 40 games says the side moving first wins at most 70% of the rules'
 # mirror, and a band takes one of each.
@@ -20,7 +20,7 @@
 extends SceneTree
 
 const DEFAULT_GAMES: int = 20
-const PAIRINGS: Array[String] = ["rr", "rl", "lr"]
+const PAIRINGS: Array[String] = ["rr", "rl", "lr", "rp", "pr"]
 
 
 func _init() -> void:
@@ -35,6 +35,8 @@ func _init() -> void:
 		"rr": _measure("rules (red) v rules (blue)", RuleBasedBlue.new(), RuleBasedBlue.new(), games),
 		"rl": _measure("rules (red) v learned (blue)", RuleBasedBlue.new(), LearnedBlue.new(), games),
 		"lr": _measure("learned (red) v rules (blue)", LearnedBlue.new(), RuleBasedBlue.new(), games),
+		"rp": _measure("rules (red) v planner (blue)", RuleBasedBlue.new(), PlannedBlue.new(), games),
+		"pr": _measure("planner (red) v rules (blue)", PlannedBlue.new(), RuleBasedBlue.new(), games),
 	}
 	var broken: int = 0
 	for limit: Array in limits:
@@ -113,6 +115,14 @@ class _Counting extends BlueController:
 	func _init(inner: BlueController, counted: Dictionary) -> void:
 		_inner = inner
 		_counted = counted
+
+	## The inner controller's start of turn.
+	func begin_turn(state: BoardState) -> void:
+		_inner.begin_turn(state)
+
+	## The inner controller's plan.
+	func plan_lines() -> Array[String]:
+		return _inner.plan_lines()
 
 	## The inner controller's name.
 	func controller_name() -> String:

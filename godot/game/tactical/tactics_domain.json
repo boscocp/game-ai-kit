@@ -1,0 +1,36 @@
+{
+  "name": "the tactical board, blue's first turn",
+  "why": "The domain the planner plays the tactical board with, from the opening as blue sees it: funds for one purchase, a runner and a shield at home, the bridge open, and red's workshop guarded by the shield beside it. Only a ram may siege a guarded workshop, and a ram needs the forge -- a chain the rules never build.",
+  "domain": "tactics-domain.pddl",
+  "problem": "tactics-opening-problem.pddl",
+  "actions": [
+    {"name": "bank_income", "preconditions": [], "deletes": [], "adds": ["funds_banked"]},
+    {"name": "buy_the_forge", "preconditions": ["funds_banked"], "deletes": ["funds_banked"], "adds": ["forge_owned"]},
+    {"name": "build_runner", "preconditions": ["funds_banked"], "deletes": ["funds_banked"], "adds": ["runner_home"]},
+    {"name": "build_shield", "preconditions": ["funds_banked"], "deletes": ["funds_banked"], "adds": ["shield_home"]},
+    {"name": "build_mortar", "preconditions": ["funds_banked"], "deletes": ["funds_banked"], "adds": ["mortar_home"]},
+    {"name": "build_wader", "preconditions": ["funds_banked"], "deletes": ["funds_banked"], "adds": ["wader_home"]},
+    {"name": "build_ram", "preconditions": ["funds_banked", "forge_owned"], "deletes": ["funds_banked"], "adds": ["ram_home"]},
+    {"name": "cross_the_bridge_runner", "preconditions": ["runner_home", "bridge_open"], "deletes": ["runner_home"], "adds": ["runner_across"]},
+    {"name": "cross_the_bridge_shield", "preconditions": ["shield_home", "bridge_open"], "deletes": ["shield_home"], "adds": ["shield_across"]},
+    {"name": "cross_the_bridge_mortar", "preconditions": ["mortar_home", "bridge_open"], "deletes": ["mortar_home"], "adds": ["mortar_across"]},
+    {"name": "wade_across", "preconditions": ["wader_home"], "deletes": ["wader_home"], "adds": ["wader_across"]},
+    {"name": "cross_the_bridge_ram", "preconditions": ["ram_home", "bridge_open"], "deletes": ["ram_home"], "adds": ["ram_across"]},
+    {"name": "close_in_runner", "preconditions": ["runner_across"], "deletes": ["runner_across"], "adds": ["runner_at_their_workshop"]},
+    {"name": "close_in_shield", "preconditions": ["shield_across"], "deletes": ["shield_across"], "adds": ["shield_at_their_workshop"]},
+    {"name": "close_in_mortar", "preconditions": ["mortar_across"], "deletes": ["mortar_across"], "adds": ["mortar_at_their_workshop"]},
+    {"name": "close_in_wader", "preconditions": ["wader_across"], "deletes": ["wader_across"], "adds": ["wader_at_their_workshop"]},
+    {"name": "close_in_ram", "preconditions": ["ram_across"], "deletes": ["ram_across"], "adds": ["ram_at_their_workshop"]},
+    {"name": "siege_with_runner", "preconditions": ["runner_at_their_workshop", "their_workshop_unguarded"], "deletes": [], "adds": ["their_workshop_falls"]},
+    {"name": "siege_with_shield", "preconditions": ["shield_at_their_workshop", "their_workshop_unguarded"], "deletes": [], "adds": ["their_workshop_falls"]},
+    {"name": "siege_with_mortar", "preconditions": ["mortar_at_their_workshop", "their_workshop_unguarded"], "deletes": [], "adds": ["their_workshop_falls"]},
+    {"name": "siege_with_wader", "preconditions": ["wader_at_their_workshop", "their_workshop_unguarded"], "deletes": [], "adds": ["their_workshop_falls"]},
+    {"name": "siege_with_ram", "preconditions": ["ram_at_their_workshop"], "deletes": [], "adds": ["their_workshop_falls"]}
+  ],
+  "init": ["funds_banked", "runner_home", "shield_home", "bridge_open"],
+  "goal": ["their_workshop_falls"],
+  "expect": {
+    "solved": true,
+    "steps": 6
+  }
+}

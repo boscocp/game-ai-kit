@@ -10,8 +10,9 @@
 ## the turn. Space, or the button, ends it, and asks first while units are
 ## still unspent.
 ##
-## Blue is the computer: whichever `BlueController` the scene was given, the
-## rule-based one until T11 brings a planner. Each of its decisions is drawn
+## Blue is the computer: whichever `BlueController` the scene was given --
+## the rules by default, and C swaps to the planner (T11) and back, starting
+## a new game. Each of its decisions is drawn
 ## before it is played, and space plays it, or enter plays the rest of the
 ## turn -- the scene is an example in
 ## invariant 13's sense, which is why it is `make demo-tactical`.
@@ -26,7 +27,7 @@ const WHAT_THIS_IS: String = "tactics in the style of Advance Wars: build, cross
 
 ## The controllers still to come, named on screen beside the one playing, so
 ## a person knows blue is a slot and not a fixed opponent.
-const CONTROLLERS_TO_COME: String = "the planner comes with T11, the learned policy with T44"
+const CONTROLLERS_TO_COME: String = "C swaps blue between the rules and the planner (a new game); the learned policy comes to this screen with the rest of T44"
 
 @onready var _board: BoardView = $BoardView
 @onready var _units: UnitView = $UnitView
@@ -272,6 +273,8 @@ func decision_overlay() -> Dictionary:
 		overlay["next"] = _described(_blue_turn.next)
 	if not _blue_turn.played.is_empty():
 		overlay["played"] = _blue_turn.played.map(_described)
+	if not blue.plan_lines().is_empty():
+		overlay["plan"] = blue.plan_lines()
 	return overlay
 
 
@@ -305,6 +308,20 @@ func _press(keycode: Key) -> void:
 		wait()
 	elif keycode == KEY_ENTER or keycode == KEY_KP_ENTER:
 		play_rest_of_blue_turn()
+	elif keycode == KEY_C:
+		swap_controller()
+
+
+## Hand blue to the other controller, rules or planner, and start again: a
+## controller swapped mid-game would inherit a board it did not play.
+func swap_controller() -> void:
+	if blue is PlannedBlue:
+		blue = RuleBasedBlue.new()
+	else:
+		var planner := PlannedBlue.new()
+		planner.verbose = true
+		blue = planner
+	new_game()
 
 
 func _pick_up(unit: Unit) -> void:
@@ -431,6 +448,10 @@ func _refresh() -> void:
 	_board.draw_board(state.graph, reach, TacticalScenario.POINTS, _terrain())
 	_units.show_state(state, _board, _selected_id)
 	_intent.show_decision(_blue_turn.next if _blue_thinking() else null, state, _board)
+	var marks: Dictionary[Vector2i, String] = {}
+	if _blue_thinking():
+		marks = blue.plan_marks(state)
+	_intent.show_plan(marks)
 	_header.text = "%s\n%s\nblue is played by %s" % [WHAT_THIS_IS, TacticalVictory.rule(), blue.describe()]
 	_end_button.disabled = not _reds_turn()
 	_undo_button.disabled = not (_reds_turn() and _turn.can_undo())

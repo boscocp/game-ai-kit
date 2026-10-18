@@ -1,9 +1,10 @@
 ## What anything that decides a unit's turn must provide: a state in, a move out.
 ##
-## `ai_learning` implements it with a trained model, and that is the one
-## implementation so far. `ai_planning` is meant to be the second, once T11 puts
-## the planner on the board -- today the planner plans over its own worlds
-## and nothing in the game calls it. The point of one interface is that the
+## `ai_learning` implements it with a trained model. The tactical board's
+## controllers implement it too (`BlueController`): the rules, the learned
+## policy, and since T11 a plan from `ai_planning` -- which itself knows
+## nothing of boards, so the game's bridge turns the board into facts and the
+## plan back into moves. The point of one interface is that the
 ## game calls every policy the same way, which is what makes the lessons
 ## comparable: swap the policy, keep the board, watch what changes.
 ##
