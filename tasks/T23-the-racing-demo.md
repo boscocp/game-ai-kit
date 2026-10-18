@@ -29,13 +29,26 @@ it does not have is how a backlog stops being read.
 2. A car crude on purpose: position, heading, speed, a turn rate and a grip
    limit. **Not a driving simulator, and the file says so** — the lesson here
    is the controller, and tyre models are a different hobby.
-3. The controller: look ahead along the line, steer towards the point with
-   `ai_steering`, and choose a speed from how sharp the line is between here
-   and there. Braking is the interesting half — a car that only steers will
-   understeer off every corner at full throttle.
-4. Three presets over exactly three knobs — lookahead distance, braking margin,
-   steering wander — and nothing else. A fourth knob is written down and
-   justified where it is added, as in T12.
+3. The controller: find the point a lookahead distance down the line,
+   steer towards it with `ai_steering`'s seek -- T22 has no pure pursuit,
+   and this task builds the lookahead point itself (pure pursuit's idea,
+   T22's behaviour) -- and choose a speed from how sharp the line is between
+   here and there. The lookahead distance is the knob, a constant per level,
+   not a gain times speed, so the cheat check below can tell it from what
+   it produces. Braking is the interesting half — a car that
+   only steers will understeer off every corner at full throttle. The speed
+   limit along the line is computed once per track and level from curvature
+   and grip,
+   backwards from the tightest corners; the car brakes where full braking
+   would no longer make the next corner's limit (T53's survey: Tomlinson &
+   Melder; Xue et al.).
+4. Three presets over exactly three knobs — lookahead distance, grip margin
+   (the fraction of the grip limit the driver dares to use, which is what
+   moves its braking point), steering wander — and nothing else. A fourth
+   knob is written down and justified where it is added, as in T12. Each
+   knob has its source in `docs/concepts/racing-ai.md` (T53): pure
+   pursuit's one parameter, Game AI Pro's skill as a grip fraction, and the
+   error offset from the line.
 5. The overlay: the lookahead point, the chosen speed, the braking point and
    the level that is driving. A person watching should see the hard car brake
    later and turn earlier, and be able to say so without being told.
@@ -67,9 +80,14 @@ And the part that makes the rest mean anything:
 ```
 
 That script asserts the three presets share one physics resource, field for
-field, and that no car exceeds its stated grip limit or top speed on any frame
-of a recorded race. If a level is faster, it is faster because of the three
-knobs or the script fails.
+field, that no car exceeds its stated grip limit or top speed on any frame
+of a recorded race, and that the three knob values the controller
+**actually used** on every frame -- recorded from inside the controller,
+not read back from the preset -- are the same on every frame of the race. A
+rubber band applied where a knob is used (`margin * f(gap)`) is what that
+catches. Born with a planted case it must reject (invariant 4): a driver
+whose grip margin scales with its distance to the leader. If a level is
+faster, it is faster because of the three knobs or the script fails.
 
 ## Manual check
 
@@ -78,3 +96,19 @@ on. **Can you see why it is faster?** The braking point should move later and
 the line through the corner should be visibly different. If the hard car simply
 pulls away on the straight, something is giving it speed and the cheat check
 has a hole in it.
+
+## Changed by T53 (2026-10-18, wave 54)
+
+The survey (`docs/concepts/racing-ai.md`) gave each knob a source and named
+the braking knob for what it moves: a grip margin. It also sharpened the
+refusal of rubber-banding. Besides speed and the car's physics, some
+shipped games use **skill that moves with the player's position** -- Pure
+did, under another name, and Game AI Pro's rubber-banding chapter
+recommends it -- and Game AI Pro's architecture adds a slow "biorhythm" in
+skill. This task refuses both: a level's three knobs are fixed for the
+whole race, and `racing_does_not_cheat.gd` holds it on the values the
+controller used. The cost is the close finish those systems exist for.
+
+The same chapter warns that a narrow skill range makes drivers hard to tell
+apart. The three presets are spread far enough that the manual check below
+can see the difference, and the ladder script's margin says how far.
