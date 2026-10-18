@@ -92,8 +92,57 @@ because it is driven better, and a command proves every car runs one physics.
 |---|---|---|---|
 | T22 | `ai_steering`: not on a grid | todo | seek, arrive, pursue, avoid; needs T21 |
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so |
+| T53 | How racing AI is made | todo | T36's pattern for racing: research and shipped games, rubber-banding with sources; comes first and rewrites T23 and T54 |
+| T54 | Racing in 3D, with physics the driver does not own | blocked | the owner's 3D racer: suspension, tyre slip, weight transfer on `RigidBody3D`; T23's three knobs and its no-cheat gate; needs ADR 0018 accepted, T50, T53 |
+
+## Milestone 5 — shooters, in 3D
+
+The owner's request of 2026-10-15, asked again 2026-10-18: shooters, first
+and third person, with bots that act alone and cooperate, and a stealth
+version of them. 3D enters only through ADR 0018, **proposed** in wave 53
+and waiting for the owner: a `godot/game3d/` folder, a tier of its own, every
+decision on a snapshot with a Python twin, and assets referenced by URL and
+sha256 and never committed.
+
+| # | Task | State | Notes |
+|---|---|---|---|
+| T49 | How shooter AI is made | done | `docs/concepts/shooter-ai.md`: 48 references, each opened, a third only in part and said so; one bot, bots that cooperate, the stealth version; T51 and T52 written from it |
+| T50 | The 3D tier, measured before anything is built | blocked | headless physics, rays and navigation, replay, frame rate, one pack's real formats; `assets.json` and `make assets-3d`; `check_renderer` for `game3d/`, `check_no_assets.py`; blocked on ADR 0018 |
+| T51 | A bot match: two teams of bots, cover, and a commander | blocked | capture and hold, bots only, no network; scored positions with claims, a commander over an influence map, squad confidence and retreat in waves -- each drawn and switchable |
+| T52 | Bots against the player, with an optional stealth | blocked | third person; a role arbiter, awareness that accumulates with three alert levels, a shared belief map for the search -- each drawn and switchable |
 
 ---
+
+## Resuming after 2026-10-18 (wave 53)
+
+**Where it stopped -- read first.** Wave 53 was documents only, as the owner
+asked, and is reviewed and merged. Nothing in it is code. **The owner's
+next decision is ADR 0018** (`docs/adr/0018-3d-enters-as-its-own-tier.md`,
+*proposed*): where 3D lives (proposed: `godot/game3d/` in the one project),
+which tier, how invariant 5 holds, and the assets rule the owner set
+(referenced by URL and sha256, never committed, primitives when absent).
+Until it is accepted, T50-T52 and T54 are marked `blocked` in the tables
+(`next_wave.py` reads only task prerequisites, not an ADR's status, so the
+state is what keeps them from being picked); set them back to `todo` when
+the owner decides.
+
+**What wave 53 landed.**
+- **T49, done**: `docs/concepts/shooter-ai.md`, the survey of shooter AI --
+  one bot, bots that cooperate, and the stealth version of the same bots,
+  research and shipped games, every reference opened.
+- **ADR 0018**, proposed.
+- **Tasks**: T50 (the 3D tier, measured first), T51 (a bot-only match),
+  T52 (bots against the player, optional stealth) in a new milestone 5;
+  T53 (racing survey) and T54 (racing in 3D with physics) in milestone 4.
+
+**Next, once the owner decides ADR 0018:** T50, then T51 or T52 in the
+owner's order; T53 (needs nothing) before T23 and T54. If the owner wants
+the assets rule applied to the committed 2D art too, that is its own task
+(ADR 0018 lists it as a question). If the owner picks another option in the
+ADR, T50 is rewritten first.
+
+**Still the owner's, from wave 52:** T48's third change (one blow and one
+back); whether T45's and T46's limits are still the right bars.
 
 ## Resuming after 2026-10-18 (wave 52)
 
