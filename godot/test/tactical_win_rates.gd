@@ -95,7 +95,7 @@ static func _empty_count() -> Dictionary:
 
 
 static func _print_side(side: String, counted: Dictionary, funds_left: float) -> void:
-	print("    %s: %.0f funds left at the end on average; %d of %d walker decisions stayed for want of a nearer walk; built on %d of %d workshop turns" % [
+	print("    %s: %.0f funds left at the end on average; %d of %d walker decisions stayed for want of a nearer walk; built or bought on %d of %d workshop turns" % [
 		side, funds_left, counted["stuck"], counted["decisions"], counted["built"], counted["build turns"]])
 	for why: String in counted["why not built"]:
 		print("        built nothing %d times: %s" % [counted["why not built"][why], why])
@@ -136,7 +136,7 @@ class _Counting extends BlueController:
 	func decide_build(state: BoardState, workshop_id: int) -> TacticalDecision:
 		var decision: TacticalDecision = _inner.decide_build(state, workshop_id)
 		_counted["build turns"] += 1
-		if decision.order != null:
+		if decision.order != null or decision.upgrade != null:
 			_counted["built"] += 1
 		else:
 			var why: String = decision.reason.trim_prefix("builds nothing: ")

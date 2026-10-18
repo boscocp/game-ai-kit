@@ -1,13 +1,16 @@
 ## Blue played by a plan: STRIPS over the tactical domain, asked "how does
 ## their workshop fall?", and the answer carried out a step at a time.
 ##
-## The plan is the strategy layer of ADR 0010 and nothing below it. It
-## decides what the workshop buys -- including the forge, which the rules
-## never buy, and the turns spent saving for it -- and which walker type goes
-## where. *How* a walker gets there is the rules' route, and whom it strikes
-## once there is the rules' attack: units use A* and reflexes, as the layers
+## The plan is the strategy layer of ADR 0010 and nothing below it. What it
+## decides is what the workshop buys -- including the forge, which the rules
+## never buy, and the turns spent saving for it. It moves no walker the rules
+## would not: every walking step in this domain ends where the rules' walk
+## ends (across the river, at their workshop), so a walker a step names
+## takes the rules' route and its reason names the step it is carrying out --
+## the plan says *whom* it counts on, not *how* they go. Whom a walker
+## strikes is the rules' attack too: units use A* and reflexes, as the layers
 ## in `docs/concepts/planning-in-strategy-games.md` have it. A walker no step
-## of the plan names is the rules' too, and its reason says so.
+## of the plan names is the rules', and its reason says so.
 ##
 ## **Where the plan is** is read off the board, not remembered. Each call
 ## finds the latest step from which the rest of the plan still runs, from the
@@ -28,7 +31,10 @@
 ##   is Killzone 3's invalidation, and the sentence on screen names the step
 ##   and the fact;
 ## * when it has no plan, or the last call ran out of budget and its partial
-##   plan's steps are done.
+##   plan's steps are done. A partial plan is followed step by step like a
+##   whole one, not only its first step: the cadence above re-plans it anyway,
+##   and in practice the game never sees one -- the largest tactical plan
+##   needs a handful of worlds under h_max, and `BUDGET` is 2000.
 ##
 ## It plans only in `begin_turn`, never in the middle of a turn: the turn's
 ## decisions are made against the plan the turn started with, so what is
@@ -53,6 +59,10 @@ const GUIDE: HeuristicPlanner.Guide = HeuristicPlanner.Guide.H_MAX
 ## fewer under the chosen guide; the budget is what bounds a board nobody
 ## measured.
 const BUDGET: int = 2000
+
+## The budget this controller plans with: `BUDGET`, unless a test hands a
+## smaller one to see what a partial plan does on the board.
+var budget: int = BUDGET
 
 ## The plan being carried out, or null before the first turn.
 var plan: PlanResult = null
@@ -91,8 +101,9 @@ func decide_build(state: BoardState, workshop_id: int) -> TacticalDecision:
 	return _purchase(state, state.unit_by_id(workshop_id), index)
 
 
-## A walker the plan names walks the rules' route towards their workshop, and
-## says which step it is carrying out; any other walker is the rules'.
+## Every walker walks the rules' route towards their workshop (see the
+## header for why the plan changes no walk); one a step names says which
+## step it is carrying out, any other says the rules decide.
 func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 	_find_the_place(state)
 	var unit: Unit = state.unit_by_id(unit_id)
@@ -114,8 +125,16 @@ func plan_lines() -> Array[String]:
 	if not plan.solved and not plan.partial:
 		lines.append("  no plan found: everything is the rules'")
 	for index: int in range(plan.steps.size()):
-		var mark: String = "done" if next_step == -1 or index < next_step else ("next" if index == next_step else "    ")
+		var mark: String = "    "
+		if next_step == -1:
+			mark = "off "
+		elif index < next_step:
+			mark = "done"
+		elif index == next_step:
+			mark = "next"
 		lines.append("  %s  %d. %s" % [mark, index + 1, plan.steps[index].name])
+	if next_step == -1 and (plan.solved or plan.partial):
+		lines.append("  (off: no remaining part of the plan runs from this board; it plans again next turn)")
 	if plan.partial:
 		lines.append("  (partial: the budget ran out; these steps head for the goal, and it plans again when they are done)")
 	return lines
@@ -173,7 +192,7 @@ func _why_plan_again(state: BoardState) -> String:
 	if state.turn_number - _planned_on_turn >= REPLAN_EVERY * TacticalScenario.FACTIONS:
 		return "because %d of its turns had passed" % REPLAN_EVERY
 	if not plan.solved and not plan.partial:
-		return "again, because the last call found none"
+		return "again, because the last call %s" % ("ran out of budget with nothing to follow" if plan.gave_up else "proved there is none")
 	var at: int = _where_the_board_is(state)
 	if at == -1:
 		return "because the plan stopped running: %s" % _what_broke(state)
@@ -184,7 +203,7 @@ func _why_plan_again(state: BoardState) -> String:
 
 func _make_plan(state: BoardState, why: String) -> void:
 	var world: WorldState = TacticalPlanBridge.world_of(state)
-	plan = _planner.plan(TacticalPlanBridge.actions(), world, TacticalPlanBridge.goal(), GUIDE, BUDGET)
+	plan = _planner.plan(TacticalPlanBridge.actions(), world, TacticalPlanBridge.goal(), GUIDE, budget)
 	_planned_on_turn = state.turn_number
 	why_planned = "on round %d, %s" % [state.turn_number / TacticalScenario.FACTIONS + 1, why]
 	_aim = TacticalPlanBridge.goal() if not plan.partial else _what_it_adds(world)
@@ -275,7 +294,8 @@ func _purchase(state: BoardState, workshop: Unit, index: int) -> TacticalDecisio
 			_step_label(index), state.funds_of(state.current_faction), _what(then)], workshop.cell)
 	var refusal: String = _why_not_now(state, workshop, index)
 	if refusal != BoardState.LEGAL:
-		return TacticalDecision.hold(workshop.id, "%s: saves -- %s" % [_step_label(index), refusal], workshop.cell)
+		var waits: String = "saves" if _plan_cost(asked) > state.funds_of(state.current_faction) else "cannot"
+		return TacticalDecision.hold(workshop.id, "%s: %s -- %s" % [_step_label(index), waits, refusal], workshop.cell)
 	if asked[0] == TacticalPlanBridge.BUY:
 		return TacticalDecision.buy(workshop.id, TacticalRules.forge(), "%s: buys the forge, which a ram needs" % _step_label(index), workshop.cell)
 	var order: ProductionOrder = _order(state, workshop, asked[1])
@@ -290,6 +310,13 @@ func _why_not_now(state: BoardState, workshop: Unit, index: int) -> String:
 	if asked[0] == TacticalPlanBridge.BUILD:
 		return state.why_production_refused(_order(state, workshop, asked[1]))
 	return "step %d, %s, is not a purchase" % [index + 1, plan.steps[index].name]
+
+
+# What purchase `asked` costs: the forge's price, or the unit type's.
+static func _plan_cost(asked: Array[String]) -> int:
+	if asked[0] == TacticalPlanBridge.BUY:
+		return TacticalRules.FORGE_COST
+	return (TacticalRules.unit_types()[asked[1]] as UnitType).cost
 
 
 func _order(state: BoardState, workshop: Unit, type_name: String) -> ProductionOrder:

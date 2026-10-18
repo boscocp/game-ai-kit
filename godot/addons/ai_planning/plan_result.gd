@@ -40,9 +40,11 @@ var gave_up: bool
 ## looked nearest the goal. `solved` is false and `gave_up` true.
 ##
 ## Only a search with a guess about distance can say which world looked
-## nearest, so only `HeuristicPlanner`'s A* returns one. The game acts on its
-## first step and asks again (ADR 0010), because a partial plan is a direction,
-## not a promise -- the world it ends at may be a dead end the budget hid.
+## nearest, so only `HeuristicPlanner`'s A* returns one. A caller should treat
+## it as a direction, not a promise -- the world it ends at may be a dead end
+## the budget hid -- and plan again soon: the tactical board's `PlannedBlue`
+## follows its steps and plans again when they are done or on its cadence,
+## whichever comes first.
 var partial: bool = false
 
 

@@ -3,7 +3,9 @@
 ## A walk is a pink line along the route with a ring where it ends; an attack
 ## (T26) is a dashed line from the attacker to its target, with a cross on the
 ## target; a build is a pink square where the new unit will stand; a hold is a
-## ring round the piece that is staying put. Pink because the checkers board already taught
+## ring round the piece that is staying put; a purchase at the workshop (the
+## planner's forge, T11) is a diamond round the workshop, so it never reads as
+## a hold. Pink because the checkers board already taught
 ## that pink is "the move the computer will play".
 ##
 ## A planning controller's plan (T11) is drawn under the decision: each piece
@@ -49,6 +51,8 @@ func _draw() -> void:
 			_draw_walk()
 		"attack":
 			_draw_attack()
+		"buy":
+			_draw_purchase()
 		"build":
 			var side: float = BoardView.TILE_PIXELS - 8.0
 			var corner: Vector2 = _board.centre_of(_decision.target) - Vector2(side, side) / 2.0
@@ -66,6 +70,17 @@ func _draw_plan() -> void:
 		var corner: Vector2 = _board.centre_of(cell) - Vector2(BoardView.TILE_PIXELS, BoardView.TILE_PIXELS) / 2.0 + Vector2(2.0, 2.0)
 		draw_rect(Rect2(corner, Vector2(TAG, TAG)), INTENT)
 		draw_string(font, corner + Vector2(3.0, TAG - 3.0), _plan_marks[cell], HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color.BLACK)
+
+
+# A diamond round the workshop: something bought there, not a unit placed.
+func _draw_purchase() -> void:
+	var centre: Vector2 = _board.centre_of(_decision.target)
+	var reach: float = RING + 4.0
+	var corners: Array[Vector2] = [Vector2(0, -reach), Vector2(reach, 0), Vector2(0, reach), Vector2(-reach, 0), Vector2(0, -reach)]
+	var points := PackedVector2Array()
+	for corner: Vector2 in corners:
+		points.append(centre + corner)
+	draw_polyline(points, INTENT, WIDTH)
 
 
 # Who strikes whom: dashed, so it is never read as a walk, from the attacker

@@ -135,6 +135,91 @@ func test_the_scene_swaps_blue_to_the_planner_and_shows_its_plan() -> void:
 	assert_array(scene.decision_overlay().get("plan", [])).is_not_empty()
 
 
+func test_funds_banked_means_enough_for_the_forge_and_not_one_less() -> void:
+	var state: BoardState = _blues_first_turn()
+	state.funds[state.current_faction] = TacticalRules.FORGE_COST - 1
+	assert_bool(TacticalPlanBridge.world_of(state).holds("funds_banked")).is_false()
+
+	state.funds[state.current_faction] = TacticalRules.FORGE_COST
+	assert_bool(TacticalPlanBridge.world_of(state).holds("funds_banked")).is_true()
+
+
+func test_once_the_ram_is_bought_the_plan_is_at_the_crossing_and_buys_no_more() -> void:
+	# The plan's place is the *latest* step the rest runs from. Taken as the
+	# earliest, the forge and the ram are bought over and over -- a review
+	# measured that mutation turn 13-7 into 0-20, and nothing else noticed.
+	var planner := PlannedBlue.new()
+	var state: BoardState = _blues_first_turn()
+	planner.begin_turn(state)
+	state = _with_a_ram_and_the_forge(state)
+
+	var decision: TacticalDecision = planner.decide_build(state, _workshop(state).id)
+
+	assert_str(planner.plan.steps[planner.next_step].name).is_equal("cross_the_bridge_ram")
+	assert_str(decision.reason).contains("the plan buys nothing more")
+
+
+func test_a_banking_step_is_skipped_when_the_next_purchase_can_be_paid_now() -> void:
+	var planner := PlannedBlue.new()
+	var state: BoardState = _blues_first_turn()
+	state = planner.decide_build(state, _workshop(state).id).played_on(state)
+	state.funds[state.current_faction] = 4
+
+	var decision: TacticalDecision = planner.decide_build(state, _workshop(state).id)
+
+	assert_str(decision.kind()).is_equal("build")
+	assert_str(decision.order.unit_type.type_name).is_equal(TacticalRules.RAM)
+
+
+func test_the_cadence_is_the_forge_and_ram_chain_in_turns_of_income() -> void:
+	# The header's reason for the number, as arithmetic: change the prices or
+	# the income and the interval has to be argued again.
+	var ram: UnitType = TacticalRules.unit_types()[TacticalRules.RAM]
+	var turns: int = ceili(float(TacticalRules.FORGE_COST + ram.cost) / TacticalRules.INCOME)
+
+	assert_int(PlannedBlue.REPLAN_EVERY).is_equal(turns)
+
+
+func test_it_keeps_its_plan_until_the_cadence_comes_round() -> void:
+	var planner := PlannedBlue.new()
+	var state: BoardState = _blues_first_turn()
+	planner.begin_turn(state)
+	var first: String = planner.why_planned
+
+	for own_turns: int in range(1, PlannedBlue.REPLAN_EVERY):
+		var later: BoardState = state.duplicate_state()
+		later.turn_number += own_turns * TacticalScenario.FACTIONS
+		planner.begin_turn(later)
+		assert_str(planner.why_planned).override_failure_message("after %d turns" % own_turns).is_equal(first)
+
+
+func test_a_walker_s_walk_is_the_rules_walk_and_only_its_reason_differs() -> void:
+	# The header says the plan moves no walker the rules would not; this holds
+	# it to that, so a claim that it does would have to change a test.
+	var state: BoardState = _with_a_ram_and_the_forge(_blues_first_turn())
+	var ram: Unit = state.units_of(state.current_faction).filter(func(unit: Unit) -> bool: return unit.type.type_name == TacticalRules.RAM)[0]
+
+	var planned: TacticalDecision = PlannedBlue.new().decide_move(state, ram.id)
+	var ruled: TacticalDecision = RuleBasedBlue.new().decide_move(state, ram.id)
+
+	assert_str(planned.kind()).is_equal(ruled.kind())
+	assert_that(planned.target).is_equal(ruled.target)
+	assert_str(planned.reason).contains("cross_the_bridge_ram")
+
+
+func test_a_partial_plan_is_played_without_a_refusal_and_replaced_when_done() -> void:
+	# The game's budget never runs out on this domain, so this one is made to.
+	var planner := PlannedBlue.new()
+	planner.budget = 2
+	var made: Array[String] = []
+	var collect: Callable = func(_state: BoardState) -> void: made.append(planner.why_planned)
+
+	var game: Dictionary = TacticalMatch.play(RuleBasedBlue.new(), planner, 0, collect)
+
+	assert_array(game["refused"]).is_empty()
+	assert_bool(made.any(func(why: String) -> bool: return why.contains("partial plan's steps were done"))).is_true()
+
+
 func test_not_one_of_its_decisions_is_refused_from_either_seat() -> void:
 	for dice: int in range(SEEDS):
 		var as_blue: Dictionary = TacticalMatch.play(RuleBasedBlue.new(), PlannedBlue.new(), dice)
@@ -163,6 +248,17 @@ func _workshop(state: BoardState) -> Unit:
 		if unit.type.type_name == TacticalRules.WORKSHOP:
 			return unit
 	return null
+
+
+# `state` with the forge owned, a ram of the side to move's at home beside
+# its workshop, and no funds to buy anything more.
+func _with_a_ram_and_the_forge(state: BoardState) -> BoardState:
+	var next: BoardState = state.buy(TacticalRules.forge())
+	next.funds[next.current_faction] = 10
+	var ram: UnitType = TacticalRules.unit_types()[TacticalRules.RAM]
+	next = next.produce(ProductionOrder.new(_workshop(next).id, ram, TacticalRules.free_cell_beside(next, _workshop(next), ram)))
+	next.funds[next.current_faction] = 0
+	return next
 
 
 # `state` with unit `unit_id` set down on `cell` -- a board

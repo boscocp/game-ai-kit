@@ -109,8 +109,15 @@ which precondition it was wrong about.
   `world_of` (predicates out) and `asks` (a step's kind and unit type in).
 - **Step 3.** `PlannedBlue` is a `BlueController`, so a `DecisionPolicy`.
   The plan decides purchases (including the forge, a new `buy` kind of
-  `TacticalDecision`) and which walker type goes where; routes and attacks
-  are the rules', and a walker no step names says "the rules decide".
+  `TacticalDecision`), and a production order is the one kind of action that
+  comes back from it. It moves no walker the rules would not: every walking
+  step in this domain ends where the rules' walk ends, so a walker a step
+  names takes the rules' route and its reason names the step; one no step
+  names says "the rules decide". Step 2's "a planned action becomes a Move"
+  is therefore only half done, on purpose, and a test pins it. The domain
+  has no action that clears the bridge or draws a guard off, so with both
+  against it there is no plan (6 of the benchmark's 66 boards) and the rules
+  play the turn.
 - **Steps 4 and 8, replanning.** Every 3 of its turns (the forge-and-ram
   chain's length), and at once when no remaining part of the plan runs from
   the board; where it is on the plan is read off the board each decision.
@@ -122,10 +129,17 @@ which precondition it was wrong about.
 - **Steps 6-7.** `PackedDomain` (bits), `RelaxedCost` (h_max, h_add),
   `HeuristicPlanner` (breadth-first over bits, A\* with either guess, a
   budget, partial plans), in `ai_planning`. The table, from
-  `test/planner_benchmark.gd` on 28 boards from real games: breadth-first
-  6094 worlds, 5.71 ms over strings and 0.76 over bits; h_max 169, h_add
-  169, about 0.55 ms. The game uses h_max. Strings against bits is measured
-  on breadth-first only.
+  `test/planner_benchmark.gd` on the 60 boards with a plan from 18 real
+  games: breadth-first 11102 worlds, 5.07 ms over strings and 0.70 over bits;
+  h_max 383, h_add 383, about 0.59 ms. The game uses h_max. Strings against
+  bits is measured on breadth-first only -- a narrowing of step 7 the owner
+  should accept or refuse. The game never runs out of budget (2000 worlds,
+  plans need under ten), so partial plans are exercised by a test that
+  hands `PlannedBlue` a budget of 2; that test found an empty partial plan
+  under h_max's flat stretches, fixed by breaking ties towards the deeper
+  world. Unlike step 6's "acts on its first step only", the game follows a
+  partial plan's steps and plans again when they are done or on its
+  cadence; written in `PlanResult` and `PlannedBlue`.
 
 **Measured against the baseline** (`make tactical-win-rates`, 20 games a
 pairing): rules red v planner blue, 13-7 (the rules' mirror: 20-0);
@@ -138,5 +152,8 @@ builds nothing -- T45's silent refusals. Tuning waits behind T45-T48.
 **Planted cases.** h_max computed as h_add, and an inflated guess, each
 turned `heuristic_planner_test.gd` red; delete lists ignored in the bits
 turned `planner_properties.gd` and the benchmark red. The random domains
-`planner_properties.gd` generates never separate h_max from h_add (28 in
-20000 do), so the separating domain is pinned as a test.
+`planner_properties.gd` generates never separate h_max from h_add, and h_max
+is exact on the tactical domain, so neither it nor the benchmark can; the
+separating domain, found by a throwaway search over random domains (28 of
+20000 separated them; that search is not committed), is pinned in
+`heuristic_planner_test.gd`.

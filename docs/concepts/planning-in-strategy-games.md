@@ -193,17 +193,18 @@ moving at once, which is a tactical problem, not a build-order one.
    shortest) or h_add (faster, not shortest), a state held as bits, a budget
    per call, and the best plan so far when the budget runs out. Which heuristic
    wins on this kit's domain is measured in T11, not assumed -- and T11
-   measured it, on the tactical domain over 28 boards from real games:
+   measured it, on the tactical domain over the 60 boards with a plan from 18
+   real games:
 
    | search | worlds visited | ms a plan |
    |---|---:|---:|
-   | breadth-first, strings | 6094 | 5.71 |
-   | breadth-first, bits | 6094 | 0.76 |
-   | A\* with h_max, bits | 169 | 0.55 |
-   | A\* with h_add, bits | 169 | 0.54 |
+   | breadth-first, strings | 11102 | 5.07 |
+   | breadth-first, bits | 11102 | 0.70 |
+   | A\* with h_max, bits | 383 | 0.59 |
+   | A\* with h_add, bits | 383 | 0.58 |
 
-   The two guesses tie: the domain's plans are short and nearly unique, so
-   h_add has nothing to wander into. The game uses h_max, which costs the same
+   The two guesses tie: h_max is exact on this domain, so h_add has nothing
+   to improve on. The game uses h_max, which costs the same
    and keeps the plan shortest. The table is printed by
    `test/planner_benchmark.gd`.
 4. **Resources are abstracted, not given to a numeric planner.** Income as a

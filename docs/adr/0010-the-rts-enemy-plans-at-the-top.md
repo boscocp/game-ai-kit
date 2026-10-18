@@ -89,13 +89,14 @@ and not yet the RTS (ADR 0006), so what it settles is the planner and not
 the commander.
 
 - **Point 3, measured.** On the tactical domain (20 facts, 22 actions,
-  `spec/pddl/tactics-domain.pddl`), over 28 boards from seeded games:
-  breadth-first visits 6094 worlds, 5.71 ms a plan over strings and 0.76 over
-  bits; A\* visits 169 with h_max and 169 with h_add, about 0.55 ms. The
-  guesses tie because the domain's plans are short and nearly unique, so the
-  game uses **h_max**, which costs the same and keeps plans shortest. A call
-  out of budget returns a partial plan, marked so; the game acts on it and
-  plans again when its steps are done. Strings against bits was measured on
+  `spec/pddl/tactics-domain.pddl`), over the 60 boards with a plan from 18
+  seeded games: breadth-first visits 11102 worlds, 5.07 ms a plan over
+  strings and 0.70 over bits; A\* visits 383 with h_max and 383 with h_add,
+  about 0.59 ms. The guesses tie because h_max is exact on this domain, so
+  the game uses **h_max**, which costs the same and keeps plans shortest. A
+  call out of budget returns a partial plan, marked so; the game follows it
+  and plans again when its steps are done -- though at a budget of 2000 it
+  never runs out here. Strings against bits was measured on
   breadth-first only. `test/planner_benchmark.gd` prints the table.
 - **Point 4, done as written.** Money is one fact (`funds_banked`, enough
   for the dearest purchase) and waiting for income is an action
@@ -105,7 +106,11 @@ the commander.
   -- the time the dearest purchase chain (forge and ram, nine funds) takes --
   and at once when no remaining part of the plan runs from the board, which
   is how a broken precondition shows; where it is on the plan is read off the
-  board each decision, not remembered. Never mid-turn. It costs at most one
+  board each decision, not remembered. The plan decides purchases only: every
+  walking step ends where the rules' walk ends, so walkers take the rules'
+  routes and their reasons name the step. The domain cannot clear the bridge
+  or draw off a guard, so with both against it there is no plan and the
+  rules play the turn. Never mid-turn. It costs at most one
   call a turn, under 1 ms; spreading work across frames is not needed at
   that size, and is left to T20's real-time clock.
 - **Not settled: whether planning beats the reflex.** Over 20 games from

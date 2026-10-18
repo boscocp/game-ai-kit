@@ -5,11 +5,20 @@
 #
 #     ./scripts/godot --headless --path godot -s res://test/planner_benchmark.gd
 #
-# The problems are real: boards from seeded games of the rules against the
-# rules, every turn of them, each turned into predicates for the side to move
-# by `TacticalPlanBridge` -- plus the empty world, where nothing is owned and
-# the plan is longest. Duplicates are dropped, so a common opening is not
-# counted forty times.
+# The problems are real: boards from seeded games -- the rules against the
+# rules, and the planner against the rules from both seats, so the boards a
+# planner sees after buying the forge and the ram are among them -- every
+# turn of them, each turned into predicates for the side to move by
+# `TacticalPlanBridge`. Duplicates are dropped, so a common opening is not
+# counted forty times. A board with no plan (bridge shut, workshop guarded:
+# the domain cannot clear either) is counted apart, because breadth-first
+# spends its whole search proving that and the table would charge it to the
+# boards that have plans.
+#
+# What it cannot do: tell h_max from h_add. On this domain h_max is exact --
+# A* visits one world per step and one more -- so the two tie and a broken
+# h_max that still guesses no more than the truth passes here. The domain
+# that separates them is pinned in `heuristic_planner_test.gd`.
 #
 # It asserts three things and prints the table step 7 publishes:
 #
@@ -33,27 +42,34 @@ const ROWS: Array[String] = ["breadth-first, strings", "breadth-first, bits", "h
 func _init() -> void:
 	var problems: Array[WorldState] = _problems()
 	var totals: Array[Dictionary] = []
+	var without_a_plan: Array[Dictionary] = []
 	for row: String in ROWS:
-		totals.append({"visited": 0, "usec": 0, "steps": 0, "unsolved": 0})
+		totals.append({"visited": 0, "usec": 0, "steps": 0, "boards": 0})
+		without_a_plan.append({"visited": 0, "usec": 0, "steps": 0, "boards": 0})
 	var failures: Array[String] = []
 	for world: WorldState in problems:
-		failures += _measure_one(world, totals)
+		failures += _measure_one(world, totals if _plan(3, world).solved else without_a_plan)
 	failures += _check_totals(totals)
 	failures += _check_the_budget(problems)
-	_print_table(problems.size(), totals)
+	print("boards with a plan:")
+	_print_table(totals)
+	print("boards with none (worlds spent proving it):")
+	_print_table(without_a_plan)
 	for failure: String in failures:
 		print(failure)
 	print("planner benchmark: %d problems, %d failure(s)" % [problems.size(), failures.size()])
 	quit(1 if not failures.is_empty() else 0)
 
 
-# Every distinct world the side to move saw in `GAMES` seeded games, and the
-# empty one.
+# Every distinct world the side to move saw in `GAMES` seeded games of each
+# pairing.
 func _problems() -> Array[WorldState]:
-	var found: Dictionary[String, WorldState] = {"": WorldState.new()}
+	var found: Dictionary[String, WorldState] = {}
 	var keep: Callable = func(state: BoardState) -> void: found[TacticalPlanBridge.world_of(state).key()] = TacticalPlanBridge.world_of(state)
 	for dice: int in range(GAMES):
 		TacticalMatch.play(RuleBasedBlue.new(), RuleBasedBlue.new(), dice, keep)
+		TacticalMatch.play(PlannedBlue.new(), RuleBasedBlue.new(), dice, keep)
+		TacticalMatch.play(RuleBasedBlue.new(), PlannedBlue.new(), dice, keep)
 	var keys: Array[String] = found.keys()
 	keys.sort()
 	var worlds: Array[WorldState] = []
@@ -72,7 +88,7 @@ func _measure_one(world: WorldState, totals: Array[Dictionary]) -> Array[String]
 		totals[row]["usec"] += Time.get_ticks_usec() - started
 		totals[row]["visited"] += result.visited
 		totals[row]["steps"] += result.steps.size()
-		totals[row]["unsolved"] += 0 if result.solved else 1
+		totals[row]["boards"] += 1
 		results.append(result)
 	var problems: Array[String] = []
 	for row: int in range(ROWS.size()):
@@ -145,9 +161,10 @@ func _budget_problems(result: PlanResult) -> Array[String]:
 	return problems
 
 
-func _print_table(count: int, totals: Array[Dictionary]) -> void:
-	print("| search | worlds visited | ms per plan | steps on average | unsolved |")
+func _print_table(totals: Array[Dictionary]) -> void:
+	var count: int = maxi(totals[0]["boards"], 1)
+	print("| search | boards | worlds visited | ms per plan | steps on average |")
 	print("|---|---:|---:|---:|---:|")
 	for row: int in range(ROWS.size()):
-		print("| %s | %d | %.3f | %.2f | %d |" % [ROWS[row], totals[row]["visited"],
-			totals[row]["usec"] / 1000.0 / count, float(totals[row]["steps"]) / count, totals[row]["unsolved"]])
+		print("| %s | %d | %d | %.3f | %.2f |" % [ROWS[row], totals[row]["boards"], totals[row]["visited"],
+			totals[row]["usec"] / 1000.0 / count, float(totals[row]["steps"]) / count])

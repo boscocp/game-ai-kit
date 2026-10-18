@@ -16,6 +16,12 @@
 ; * nothing here can tell how many blows a workshop takes. `siege_with_*` is
 ;   a step that lasts until the workshop falls, carried out turn after turn.
 ;
+; What it cannot do: clear the bridge, or draw a guard off their workshop.
+; No action adds `bridge_open` or `their_workshop_unguarded`, so with the
+; bridge shut and the workshop guarded there is no plan (4 of the benchmark's
+; boards) and the rules play that turn, saying so. Those two would be the
+; next actions to add, and each is a tactical question the rules answer now.
+;
 ; STRIPS has no negative preconditions, so "their workshop has no guard" is a
 ; fact of its own, `their_workshop_unguarded`, and not `(not (guarded))`.
 ;

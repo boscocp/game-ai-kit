@@ -17,19 +17,22 @@
 ## and so no world it could call nearest when the budget runs out.
 ##
 ## Measured by `test/planner_benchmark.gd` on the tactical domain
-## (`spec/pddl/tactics-domain.pddl`): 28 distinct boards from six seeded
-## games, budget 50000, on 2026-10-18 (milliseconds are one machine's):
+## (`spec/pddl/tactics-domain.pddl`): the 60 distinct boards with a plan
+## from eighteen seeded games, budget 50000, on 2026-10-18 (milliseconds are
+## one machine's):
 ##
 ## | search                 | worlds | ms a plan | steps |
 ## |------------------------|-------:|----------:|------:|
-## | breadth-first, strings |   6094 |      5.71 |  5.18 |
-## | breadth-first, bits    |   6094 |      0.76 |  5.18 |
-## | A* with h_max, bits    |    169 |      0.55 |  5.18 |
-## | A* with h_add, bits    |    169 |      0.54 |  5.18 |
+## | breadth-first, strings |  11102 |      5.07 |  5.38 |
+## | breadth-first, bits    |  11102 |      0.70 |  5.38 |
+## | A* with h_max, bits    |    383 |      0.59 |  5.38 |
+## | A* with h_add, bits    |    383 |      0.58 |  5.38 |
 ##
-## Bits alone are worth seven times; a guess, thirty-six times fewer worlds.
-## The two guesses tie here -- the domain's plans are short and nearly
-## unique -- so the game uses h_max, which costs the same and keeps the plan
+## Bits alone are worth seven times; a guess, twenty-nine times fewer worlds.
+## On the 6 boards with no plan, breadth-first spends 436 worlds proving it
+## and the guesses none. The two guesses tie: h_max is exact on this domain
+## -- A* visits one world per step and one more -- so h_add has nothing to
+## improve on. The game uses h_max, which costs the same and keeps the plan
 ## shortest (`PlannedBlue.GUIDE`). Strings against bits was measured on
 ## breadth-first only, where the representation is the one thing that
 ## changes; the guesses were built over bits alone.
@@ -173,7 +176,7 @@ func _a_star(domain: PackedDomain, from: int, goal: PackedInt32Array,
 		if reached.taken[node] > cheapest_way[reached.states[node]]:
 			continue
 		visited += 1
-		if reached.guess[node] < reached.guess[nearest]:
+		if _looks_nearer(reached, node, nearest):
 			nearest = node
 		if _holds(reached.states[node], goal):
 			return PlanResult.new(reached.steps_to(node, domain), true, visited, false)
@@ -200,6 +203,18 @@ func _expand(domain: PackedDomain, node: int, reached: _Reached, goal: PackedInt
 			continue
 		cheapest_way[after] = steps
 		frontier.append(reached.add(after, node, action, steps, guess))
+
+
+# True when world `node` looks nearer the goal than world `nearest`: a smaller
+# guess, or the same guess further from the start. The second half is not a
+# detail. h_max is often flat for several steps -- banking money brings no
+# goal predicate nearer -- and with strict "smaller" alone a budget that ran
+# out on that plateau handed back the start, an empty partial plan, which the
+# game read as "no plan". A wave 48 test caught it.
+static func _looks_nearer(reached: _Reached, node: int, nearest: int) -> bool:
+	if reached.guess[node] != reached.guess[nearest]:
+		return reached.guess[node] < reached.guess[nearest]
+	return reached.taken[node] > reached.taken[nearest]
 
 
 # The index in `frontier` of the world with the smallest `f`. Ties go to the

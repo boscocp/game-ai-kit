@@ -54,8 +54,8 @@ func test_the_guesses_visit_fewer_worlds_than_breadth_first_on_the_game_domain()
 
 
 func test_h_max_keeps_the_plan_shortest_where_h_add_does_not() -> void:
-	# Found by searching 20000 random domains: 28 had a longer h_add plan, and
-	# this is the first. The generator `planner_properties.gd` uses never makes
+	# Found by a throwaway search over 20000 random domains (not committed):
+	# 28 had a longer h_add plan, and this is the first. The generator `planner_properties.gd` uses never makes
 	# one, so without this case h_max could be h_add and every gate stayed
 	# green -- which a planted mutation showed.
 	var actions: Array[StripsAction] = _where_h_add_wanders()
