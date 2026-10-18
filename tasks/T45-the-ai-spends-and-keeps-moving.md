@@ -87,37 +87,54 @@ for the owner rather than for more tuning by trial and error.
 two rules beside them; removing the point claim, the second asking, spend
 first or the fallback each turns a case red (planted and undone).
 
-**Measured** (`make tactical-win-rates GAMES=20`, the acceptance's limits):
+**Measured** after wave 49's review (`make tactical-win-rates GAMES=20`, the
+acceptance's limits; a fallback walk now claims its red piece too, which
+moved several pairings):
 
 | pairing | red | blue | draws | rounds | stuck: red | stuck: blue | funds left: red / blue |
 |---|---|---|---|---|---|---|---|
-| rules v rules | 10 | 5 | 5 | 27.3 | 960 of 4237 | 742 of 3963 | 28 / 32 |
-| rules v learned | 0 | 3 | 17 | 40.0 | 1010 of 4071 | 4942 of 11275 (43%) | 46 / 97 |
-| learned v rules | 5 | 0 | 15 | 38.5 | 3745 of 9414 (39%) | 816 of 3782 | 116 / 51 |
-| rules v planner | 0 | 16 | 4 | 26.4 | 1179 of 3755 | 1694 of 4830 | 28 / 27 |
-| planner v rules | 4 | 12 | 4 | 27.6 | 798 of 3763 | 856 of 4374 | 21 / 40 |
+| rules v rules | 12 | 7 | 1 | 23.6 | 849 of 3516 | 841 of 3320 | 26 / 26 |
+| rules v learned | 0 | 1 | 19 | 40.0 | 1248 of 4000 | 4913 of 11054 (44.4%) | 42 / 99 |
+| learned v rules | 4 | 0 | 16 | 38.6 | 3902 of 9397 (41.5%) | 902 of 3777 | 121 / 50 |
+| rules v planner | 3 | 13 | 4 | 30.9 | 1000 of 4556 | 989 of 4886 | 32 / 30 |
+| planner v rules | 0 | 20 | 0 | 11.0 | 237 of 962 | 437 of 1372 | 9 / 18 |
 
-The limits: `rl` stuck 43% and `lr` 39% (at most 5), `rl` blue funds left
-97 (at most 10). Exit 1.
+The limits: `rl` stuck 44.4% and `lr` 41.5% (at most 5), `rl` blue funds
+left 99.3 (at most 10). Exit 1. Before the claim on fallback targets the same
+command gave 43%, 39% and 97, rules mirror 10-5-5, and the planner 16-0-4 as
+blue and 4-12-4 as red -- claiming spreads walkers over more targets, and
+the planner as red, which already loses its first turns saving for the
+forge, loses all twenty again.
 
-What changed for the better: the rules' mirror is no longer won by whoever
-moves first (was 20-0, now 10-5 with 5 draws), and T11's planner, whose
-workshop used to idle on the rules' refusal, now wins 16 of 20 as blue
-(was 7) and 4 as red (was 0).
+**Not like for like with T44.** A walker already in reach of red's workshop
+used to be counted stuck and now "stays in reach, to attack it", so part of
+the fall from T44's 52.5% is the definition, not new behaviour.
 
-**Why the acceptance cannot be met by the controller alone** -- for the
-owner to decide:
+What changed for the better: the rules' mirror is no longer a first-mover
+sweep (was 20-0), and T11's planner, whose workshop used to idle on the
+rules' refusal, wins as blue 13 of 20 (was 7).
 
-- **Funds.** A workshop builds once a turn, and a side holding both points
-  is paid 7 a turn -- more than any walker costs. Spending every turn still
-  banks money; "at most 10 left" needs a second purchase a turn, or cheaper
-  income, which are rules of the game (T48's territory), not of the AI.
-- **Stuck walkers.** Measured on the learned blue: most of what is still
-  stuck has **no walk at all** -- pieces boxed in by their own side round
-  their workshop (cells (10, 1)-(13, 3)), because a side that spends every
-  turn fills its corner faster than one bridge two cells wide lets it out
-  while red holds that bridge. Own pieces block a walk (`TacticalReach`), a
-  board rule. A staging rule ("step aside off the route") was considered and
-  not built: it cannot help a piece with no walk. The owner's options are
-  T48's -- a second crossing, or letting a piece pass through its own side
-  as Advance Wars does -- or a lower acceptance for this task.
+**Why the acceptance is not met** -- for the owner to decide, on numbers
+wave 49's review corrected:
+
+- **Stuck walkers.** The first version of this record said most stuck
+  walkers had no walk at all. The review counted, and it is false: over
+  half have one (2548 of 4942 in `rl`, 2053 of 3745 in `lr`). So part of the
+  gap is the controller's, and a staging rule -- step aside off the route
+  when nothing gets nearer -- is the controller's answer. The review tried a
+  crude ten-line one: stuck fell to 14% (`rl`) and 22% (`lr`) and those games
+  became decisive, but the other pairings swung wildly (rules mirror 2-18,
+  planner 1-19 as red). Not shipped. The reference's version of the rule
+  (§4, item 5) picks the staging cell from a threat map, which is T48's, and
+  that is where it belongs. The rest -- pieces with no walk at all, boxed in
+  by their own side round the workshop behind a bridge one cell wide and two
+  long while red holds it -- is the board's (a second crossing, or passing
+  through one's own pieces: T48).
+- **Funds.** One build a turn is the floor, and the learned blue's income
+  averages 4.35 a turn while it spends 2.06 (the review's measurement; the
+  first version of this record said 7, which is what holding both points
+  pays, not what the side earns on average). With one build a turn and no
+  forge the floor is about 58 left; with the forge and rams about 17. Even
+  building the dearest piece every turn ended at 99, because the corner
+  filled (80% stuck). So "at most 10" needs a second purchase a turn or
+  cheaper income -- a rule of the game -- or a different limit.

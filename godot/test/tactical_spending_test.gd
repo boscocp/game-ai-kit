@@ -66,6 +66,105 @@ func test_two_walkers_of_one_side_never_head_for_the_same_point_in_one_turn() ->
 			assert_int(points.size()).override_failure_message("seed %d, turn %d: %s" % [dice, turn, points]).is_equal(_distinct(points).size())
 
 
+func test_the_planner_forgets_last_turn_s_claims_like_the_rules_do() -> void:
+	# `PlannedBlue.begin_turn` must call the rules' own. Without it no goal is
+	# ever given back, and the wave 49 review measured what that costs: the
+	# planner's 16-0 as blue fell to 2-0 with 18 draws.
+	var planner := PlannedBlue.new()
+	var state: BoardState = TurnStart.open(TacticalScenario.build())[0]
+	var point: Vector2i = TacticalScenario.POINTS[0]
+	planner.begin_turn(state)
+	planner._claim(state, point)
+	var later: BoardState = state.duplicate_state()
+	later.turn_number += TacticalScenario.FACTIONS
+
+	planner.begin_turn(later)
+
+	assert_bool(planner._claim(later, point)).is_true()
+
+
+func test_red_s_workshop_takes_as_many_walkers_as_it_has_open_cells_beside_it() -> void:
+	var rules := RuleBasedBlue.new()
+	var state: BoardState = TurnStart.open(TacticalScenario.build())[0]
+	var theirs: Vector2i = TacticalPlanBridge.their_workshop(state).cell
+
+	for walker: int in range(4):
+		assert_bool(rules._claim(state, theirs)).override_failure_message("walker %d" % walker).is_true()
+	assert_bool(rules._claim(state, theirs)).is_false()
+
+
+func test_a_fifth_walker_at_a_full_workshop_takes_the_fallback() -> void:
+	var rules := RuleBasedBlue.new()
+	var state: BoardState = _scenario_with([[BLUE, TacticalRules.SHIELD, Vector2i(9, 3)]])
+	for walker: int in range(4):
+		rules._claim(state, TacticalPlanBridge.their_workshop(state).cell)
+
+	var decision: TacticalDecision = rules.decide_move(state, state.unit_at(Vector2i(9, 3)).id)
+
+	assert_str(decision.reason).contains("already has a walker of blue's for each cell beside it")
+
+
+func test_a_point_is_given_back_when_its_walker_cannot_get_nearer() -> void:
+	var learned := LearnedBlue.new()
+	var state: BoardState = _scenario_with([[BLUE, TacticalRules.SHIELD, Vector2i(9, 3)]])
+	var point: Vector2i = TacticalScenario.POINTS[1]
+	learned._claim(state, point)
+
+	learned._walk_at(state, state.unit_at(Vector2i(9, 3)), {}, point, "the test")
+
+	assert_int(learned._claims[point]).is_equal(0)
+
+
+func test_a_learned_walker_standing_on_a_point_keeps_it_from_the_others() -> void:
+	var learned := LearnedBlue.new()
+	var point: Vector2i = TacticalScenario.POINTS[1]
+	var state: BoardState = _scenario_with([[BLUE, TacticalRules.SHIELD, point]])
+
+	learned.decide_move(state, state.unit_at(point).id)
+
+	assert_bool(learned._claim(state, point)).is_false()
+
+
+func test_spending_first_builds_what_beats_most_and_the_cheaper_of_a_tie() -> void:
+	var rules := RuleBasedBlue.new()
+	var state: BoardState = _scenario_with([])
+	state.funds[BLUE] = 10
+	var shield: Unit = Unit.new(500, RED, Vector2i(0, 0), 10, 3, TacticalRules.unit_types()[TacticalRules.SHIELD])
+	var mortar: Unit = Unit.new(501, RED, Vector2i(0, 1), 10, 2, TacticalRules.unit_types()[TacticalRules.MORTAR])
+
+	assert_str(rules._spend_anyway(state, _workshop(state), [] as Array[Unit]).order.unit_type.type_name).is_equal(TacticalRules.RUNNER)
+	assert_str(rules._spend_anyway(state, _workshop(state), [shield] as Array[Unit]).order.unit_type.type_name).is_equal(TacticalRules.MORTAR)
+	# The runner and the wader each beat a mortar; the runner costs less.
+	assert_str(rules._spend_anyway(state, _workshop(state), [mortar] as Array[Unit]).order.unit_type.type_name).is_equal(TacticalRules.RUNNER)
+
+
+func test_a_workshop_with_room_and_no_money_is_asked_once() -> void:
+	var state: BoardState = _scenario_with([])
+	state.funds[BLUE] = 0
+	var turn := BlueTurn.new(RuleBasedBlue.new())
+
+	turn.begin(state)
+	while not turn.finished():
+		state = turn.play(state)
+
+	assert_int(turn.played.filter(func(done: TacticalDecision) -> bool: return done.unit_id == _workshop(state).id).size()).is_equal(1)
+
+
+func test_the_same_walk_asked_twice_outside_a_turn_gets_the_same_answer() -> void:
+	# `choose` is `DecisionPolicy`'s question, asked of one board; the
+	# claims a turn keeps must not leak into it.
+	var rules := RuleBasedBlue.new()
+	var state: BoardState = _scenario_with([[BLUE, TacticalRules.SHIELD, Vector2i(9, 3)]])
+	var shield: int = state.unit_at(Vector2i(9, 3)).id
+	var first: Move = rules.choose(state, shield)
+
+	for again: int in range(6):
+		assert_array(rules.choose(state, shield).path).is_equal(first.path)
+	# Checked as well as the answer: from this cell the fallback's walk and
+	# the workshop's can coincide, and then only the claims show the leak.
+	assert_int(rules._claims.get(TacticalPlanBridge.their_workshop(state).cell, 0)).is_less_equal(1)
+
+
 # --- helpers -------------------------------------------------------------------
 
 func _scenario_with(extra: Array) -> BoardState:

@@ -50,10 +50,14 @@
 ##
 ## Complexity: per walking unit per turn, three floods of the board -- to
 ## find the nearest workshop, for its reach, and back from the target -- each
-## O(cells^2) with the plain-array frontier `TacticalReach` uses. The
+## O(cells^2) with the plain-array frontier `TacticalReach` uses, and up to
+## `FALLBACK_CANDIDATES` more for a walker that takes the fallback. The
 ## workshop adds one flood per buildable type and one per walker of blue's,
 ## for the reach rule. Over 40 games against a random red, a blue turn
-## averages 4.9 ms against 3.6 before it (the second figure the review's).
+## averaged 4.9 ms before T45. With T45's rules the learned side's turn
+## roughly doubled in wave 49's review (mean 9.6 to 18.5 ms, the longest 22
+## to 42), mostly because it now has more pieces to move; no one decision
+## took more than 3.1 ms.
 ##
 ## When not to use it: as a strong opponent. It never buys the forge, so it
 ## never builds a ram; and it walks into anything -- past a bolt tower, up to a
@@ -90,6 +94,15 @@ func describe() -> String:
 ## A new turn: nobody has claimed a goal yet.
 func begin_turn(_state: BoardState) -> void:
 	_claims.clear()
+
+
+## One walk asked for outside a turn, as `DecisionPolicy` asks it: the goals
+## other walkers took are forgotten first, so the same question on the same
+## board always gets the same answer. Inside a turn `BlueTurn` asks
+## `decide_move` directly and the claims carry from walker to walker.
+func choose(state: BoardState, unit_id: int) -> Move:
+	_claims.clear()
+	return super.choose(state, unit_id)
 
 
 ## The type that beats the most enemy pieces, among those it can build, pay
@@ -168,14 +181,19 @@ func _room_at(state: BoardState, goal: Vector2i) -> int:
 
 ## Never idle (T45): a walker whose goal is out of reach walks at the nearest
 ## red piece -- of the `FALLBACK_CANDIDATES` nearest as the crow flies -- that
-## some walk brings it nearer, and holds only when none does. `why` is why
+## some walk brings it nearer and that has not already as many of blue's
+## walkers heading for it as it has open cells beside it; it holds only when
+## none does. `why` is why
 ## its goal was out of reach, for the reason.
 func _fallback(state: BoardState, unit: Unit, walks: Dictionary, why: String) -> TacticalDecision:
 	for enemy: Unit in _nearest_enemies(state, unit):
+		if _claims.get(enemy.cell, 0) >= _room_at(state, enemy.cell):
+			continue
 		var best: Vector2i = _nearest_walk_to(state, unit, walks, enemy.cell)
 		var said: String = "walks to %s, towards the %s at %s: %s, so it goes for the nearest red piece it can (a fallback rule)" % [
 			best, enemy.type.type_name, enemy.cell, why]
 		if best != unit.cell:
+			_claim(state, enemy.cell)
 			return TacticalDecision.walk(unit.id, walks[best], said, best)
 	return TacticalDecision.hold(unit.id, "stays: no walk this turn brings it nearer its goal or any red piece -- %s" % why, unit.cell)
 
@@ -200,7 +218,8 @@ func _spend_anyway(state: BoardState, workshop: Unit, enemies: Array[Unit]) -> T
 		return TacticalDecision.hold(workshop.id, "builds nothing: " + _why_nothing(state, workshop), workshop.cell)
 	var best: UnitType = buildable[0]
 	for kind: UnitType in buildable:
-		if _beaten_by(kind, enemies).size() > _beaten_by(best, enemies).size():
+		var more: int = _beaten_by(kind, enemies).size() - _beaten_by(best, enemies).size()
+		if more > 0 or (more == 0 and kind.cost < best.cost):
 			best = kind
 	var order := ProductionOrder.new(workshop.id, best, TacticalRules.free_cell_beside(state, workshop, best))
 	var beaten: Array[String] = _beaten_by(best, enemies)
@@ -292,10 +311,9 @@ func _why_nothing(state: BoardState, workshop: Unit) -> String:
 	var refusal: String = state.why_production_refused(order)
 	if refusal != BoardState.LEGAL:
 		return refusal
-	for kind: UnitType in _buildable(state, workshop):
-		if not _beaten_by(kind, _enemies(state)).is_empty():
-			return "what would beat red's pieces cannot get past them to red's workshop, and a walker of blue's already can"
-	return "nothing it can build and pay for beats any red piece"
+	# Since T45 a workshop with room and money always builds (`_spend_anyway`),
+	# so this is only reached by a caller asking about a board where it could.
+	return "nothing stops it: it can build"
 
 
 # Every buildable type the workshop could build and pay for this turn.
