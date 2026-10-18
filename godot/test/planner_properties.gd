@@ -49,19 +49,31 @@ const BUDGET: int = 1000
 # of the depth, so this is where the property stops being free.
 const DEEPEST_EXHAUSTIVE_CHECK: int = 5
 
+# Every search, by name (T11). All of them must return plans that run; the
+# shortest-plan claim is checked for the three that make it, and not for
+# h_add, which gives it up on purpose (`RelaxedCost`).
+const SEARCHES: Array[String] = ["strings", "breadth-first", "h_max", "h_add"]
+const SHORTEST: Array[String] = ["strings", "breadth-first", "h_max"]
+
+# Tactical boards for the second half: seeded games of the planner against
+# the rules, from both seats, every turn's board planned from.
+const TACTICAL_GAMES: int = 4
+
 
 func _init() -> void:
-	var failures: Array[String] = _run_trials()
+	var failures: Array[String] = []
+	for search: String in SEARCHES:
+		failures += _run_trials(search)
+	failures += _check_tactical_boards()
 	for failure: String in failures:
 		print(failure)
 	print("planner properties: %d trials, %d failure(s)" % [TRIALS, failures.size()])
 	quit(1 if not failures.is_empty() else 0)
 
 
-func _run_trials() -> Array[String]:
+func _run_trials(search: String) -> Array[String]:
 	var random := RandomNumberGenerator.new()
 	random.seed = SEED
-	var planner := StripsPlanner.new()
 	var failures: Array[String] = []
 	var solved: int = 0
 	var checked_for_shorter: int = 0
@@ -70,32 +82,34 @@ func _run_trials() -> Array[String]:
 		var actions: Array[StripsAction] = _random_domain(random)
 		var start: WorldState = WorldState.new(_random_predicates(random, 2))
 		var goal: PackedStringArray = _random_predicates(random, 2)
-		var result: PlanResult = planner.plan(actions, start, goal, BUDGET)
+		var result: PlanResult = _plan(search, actions, start, goal)
 		solved += 1 if result.solved else 0
-		checked_for_shorter += 1 if _is_measurable(result) else 0
-		failures += _check(trial, result, actions, start, goal)
+		var measurable: bool = _is_measurable(result) and search in SHORTEST
+		checked_for_shorter += 1 if measurable else 0
+		for failure: String in _check(trial, result, actions, start, goal, measurable):
+			failures.append("%s, %s" % [search, failure])
 
 	# A run where every trial fell the same way proves half of what it claims,
 	# and this used to be a sentence beside a `print` -- so `TRIALS = 0`
 	# reported "0 trials, 0 failures" and passed, and so did a generator whose
 	# every goal was unreachable, with the plan-replay half never running once.
 	# The two claims are only both exercised when both numbers are non-zero.
-	print("planner properties: %d of %d domains had a plan" % [solved, TRIALS])
+	print("planner properties, %s: %d of %d domains had a plan" % [search, solved, TRIALS])
 	if solved == 0 or solved == TRIALS:
 		failures.append(
 			"%d of %d domains had a plan, so only one of the two claims ran"
 			% [solved, TRIALS]
 		)
-	print("planner properties: %d plans measured against an exhaustive search"
-		% checked_for_shorter)
-	if checked_for_shorter == 0:
+	print("planner properties, %s: %d plans measured against an exhaustive search"
+		% [search, checked_for_shorter])
+	if checked_for_shorter == 0 and search in SHORTEST:
 		failures.append("no plan was checked for a shorter one")
 	return failures
 
 
 # What this trial's answer has to satisfy, whichever way it came out.
 func _check(trial: int, result: PlanResult, actions: Array[StripsAction],
-		start: WorldState, goal: PackedStringArray) -> Array[String]:
+		start: WorldState, goal: PackedStringArray, measurable: bool) -> Array[String]:
 	# There was a `result.visited > BUDGET` guard here. It cannot fire --
 	# `plan` returns the moment `visited` reaches the budget -- so it was a
 	# check that could only ever go green, which is the thing this repository
@@ -103,7 +117,7 @@ func _check(trial: int, result: PlanResult, actions: Array[StripsAction],
 	# `planning_test.gd`, where a run stopped at 3 states reports exactly 3.
 	if not result.solved:
 		return _check_no_plan(trial, result, actions, start, goal)
-	return _check_the_plan_runs(trial, result, actions, start, goal)
+	return _check_the_plan_runs(trial, result, actions, start, goal, measurable)
 
 
 # No plan: an empty one, and an honest reason for it.
@@ -125,7 +139,7 @@ func _check_no_plan(trial: int, result: PlanResult, actions: Array[StripsAction]
 # A plan: every step runs where the plan puts it, the goal holds at the end,
 # and no shorter plan exists.
 func _check_the_plan_runs(trial: int, result: PlanResult, actions: Array[StripsAction],
-		start: WorldState, goal: PackedStringArray) -> Array[String]:
+		start: WorldState, goal: PackedStringArray, measurable: bool) -> Array[String]:
 	var world: WorldState = start
 	for index: int in range(result.steps.size()):
 		var action: StripsAction = result.steps[index]
@@ -135,7 +149,7 @@ func _check_the_plan_runs(trial: int, result: PlanResult, actions: Array[StripsA
 
 	if not world.holds_all(goal):
 		return ["trial %d: the plan ran to the end and the goal does not hold" % trial]
-	if _is_measurable(result) and _a_shorter_plan_exists(actions, start, goal,
+	if measurable and _a_shorter_plan_exists(actions, start, goal,
 			result.steps.size() - 1):
 		return ["trial %d: %d steps, and a shorter plan exists"
 			% [trial, result.steps.size()]]
@@ -172,6 +186,42 @@ func _a_shorter_plan_exists(actions: Array[StripsAction], world: WorldState,
 		if _a_shorter_plan_exists(actions, next, goal, depth - 1):
 			return true
 	return false
+
+
+# `search`'s plan for one problem.
+func _plan(search: String, actions: Array[StripsAction], start: WorldState,
+		goal: PackedStringArray) -> PlanResult:
+	if search == "strings":
+		return StripsPlanner.new().plan(actions, start, goal, BUDGET)
+	var guide: HeuristicPlanner.Guide = {"breadth-first": HeuristicPlanner.Guide.BREADTH_FIRST,
+		"h_max": HeuristicPlanner.Guide.H_MAX, "h_add": HeuristicPlanner.Guide.H_ADD}[search]
+	return HeuristicPlanner.new().plan(actions, start, goal, guide, BUDGET)
+
+
+# T11's property, over generated tactical boards rather than one example:
+# every board the side to move saw in seeded games of the planner against the
+# rules, turned into predicates, planned from with every search -- and each
+# plan replayed, every step's preconditions holding where it runs and the
+# goal holding at the end. Both answers must turn up, or half of it never ran.
+func _check_tactical_boards() -> Array[String]:
+	var worlds: Array[WorldState] = []
+	for dice: int in range(TACTICAL_GAMES):
+		var collect: Callable = func(state: BoardState) -> void: worlds.append(TacticalPlanBridge.world_of(state))
+		TacticalMatch.play(PlannedBlue.new(), RuleBasedBlue.new(), dice, collect)
+		TacticalMatch.play(RuleBasedBlue.new(), PlannedBlue.new(), dice, collect)
+	var failures: Array[String] = []
+	var solved: int = 0
+	for index: int in range(worlds.size() * SEARCHES.size()):
+		var world: WorldState = worlds[index / SEARCHES.size()]
+		var search: String = SEARCHES[index % SEARCHES.size()]
+		var result: PlanResult = _plan(search, TacticalPlanBridge.actions(), world, TacticalPlanBridge.goal())
+		solved += 1 if result.solved else 0
+		for failure: String in _check(index / SEARCHES.size(), result, TacticalPlanBridge.actions(), world, TacticalPlanBridge.goal(), false):
+			failures.append("tactical board %s, %s" % [search, failure])
+	print("planner properties, tactical: %d boards, %d of %d plans found" % [worlds.size(), solved, worlds.size() * SEARCHES.size()])
+	if solved == 0 or solved == worlds.size() * SEARCHES.size():
+		failures.append("tactical: %d of %d calls had a plan, so only one of the two claims ran" % [solved, worlds.size() * SEARCHES.size()])
+	return failures
 
 
 # The sentence for a step that cannot run, kept out of the loop above so the

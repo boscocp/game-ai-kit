@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-13
+verified_on: 2026-10-18
 tier: 1
 source: https://en.wikipedia.org/wiki/Stanford_Research_Institute_Problem_Solver ; https://en.wikipedia.org/wiki/Planning_Domain_Definition_Language
-invalidated_if: the planner stops being breadth-first over whole worlds, or the PDDL reader accepts parameters or conditional effects
+invalidated_if: StripsPlanner stops being breadth-first over whole worlds, HeuristicPlanner's heuristics stop being h_max and h_add, or the PDDL reader accepts parameters or conditional effects
 teaches: planning
 -->
 
@@ -96,3 +96,21 @@ two to the power of the number of facts, and a breadth-first planner looks at
 them one by one -- `PlanResult.visited` reports how many. Real planners use a
 heuristic (relaxed plans, landmarks) for exactly that reason, and the number
 this one reports is the argument for them.
+
+That argument is made in the kit too, since T11. `HeuristicPlanner` holds a
+world as the bits of one integer and orders its frontier by actions taken plus
+a guess (`RelaxedCost`, after Bonet and Geffner, 2001): drop every delete list,
+and ask how many actions each fact is from being true. h_max takes the
+dearest precondition and never overestimates, so the plan stays shortest;
+h_add sums them, guides harder, and gives that up. On the tactical domain,
+over the 60 boards with a plan from 18 real games:
+
+| search | worlds visited | ms a plan |
+|---|---:|---:|
+| breadth-first, strings | 11102 | 5.07 |
+| breadth-first, bits | 11102 | 0.70 |
+| A\* with h_max, bits | 383 | 0.59 |
+| A\* with h_add, bits | 383 | 0.58 |
+
+`./scripts/godot --headless --path godot -s res://test/planner_benchmark.gd`
+prints it, and asserts what the table's claims rest on.

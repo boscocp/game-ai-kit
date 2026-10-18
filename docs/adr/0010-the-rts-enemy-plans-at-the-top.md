@@ -1,7 +1,8 @@
 # 0010 — The RTS enemy plans at the top, with a heuristic, on a cadence
 
 Status: proposed · 2026-10-13 (written before T11; T11 and T20 measure it, and
-it is accepted or amended on what they find)
+it is accepted or amended on what they find). Points 3, 4 and 5 measured in
+T11 -- see the amendment at the end; the rest waits for T20.
 
 ## Context
 
@@ -79,3 +80,45 @@ and how often. The sources are in
   priority queues, and the match test asserts the budget per planning call.
 - If T11 or T20 measures this design and it does not hold, this ADR is amended
   with the number, not quietly worked around.
+
+
+## Amended in T11 (2026-10-18)
+
+T11 built points 3 to 5 on the tactical board, which is a turn-based game
+and not yet the RTS (ADR 0006), so what it settles is the planner and not
+the commander.
+
+- **Point 3, measured.** On the tactical domain (20 facts, 22 actions,
+  `spec/pddl/tactics-domain.pddl`), over the 60 boards with a plan from 18
+  seeded games: breadth-first visits 11102 worlds, 5.07 ms a plan over
+  strings and 0.70 over bits; A\* visits 383 with h_max and 383 with h_add,
+  about 0.59 ms. The guesses tie because h_max is exact on this domain, so
+  the game uses **h_max**, which costs the same and keeps plans shortest. A
+  call out of budget returns a partial plan, marked so; the game follows it
+  and plans again when its steps are done -- though at a budget of 2000 it
+  never runs out here. Strings against bits was measured on
+  breadth-first only. `test/planner_benchmark.gd` prints the table.
+- **Point 4, done as written.** Money is one fact (`funds_banked`, enough
+  for the dearest purchase) and waiting for income is an action
+  (`bank_income`) the executor skips when the board can already pay. Walkers
+  are facts by type and by zone, never by cell.
+- **Point 5, written down.** `PlannedBlue` replans every three of its turns
+  -- the time the dearest purchase chain (forge and ram, nine funds) takes --
+  and at once when no remaining part of the plan runs from the board, which
+  is how a broken precondition shows; where it is on the plan is read off the
+  board each decision, not remembered. The plan decides purchases only: every
+  walking step ends where the rules' walk ends, so walkers take the rules'
+  routes and their reasons name the step. The domain cannot clear the bridge
+  or draw off a guard, so with both against it there is no plan and the
+  rules play the turn. Never mid-turn. It costs at most one
+  call a turn, under 1 ms; spreading work across frames is not needed at
+  that size, and is left to T20's real-time clock.
+- **Not settled: whether planning beats the reflex.** Over 20 games from
+  each seat against the rules: as blue it won 7 (the rules' mirror: 0); as
+  red it won 0 (the rules' mirror: 20). Its mistakes are legible on the
+  screen -- it saves its first turn for the forge while the rules build a
+  runner, and once the ram is bought the plan has no purchase left and the
+  workshop falls back on a rule that often builds nothing (T45's silent
+  refusals). Point 2's "the baseline a planner has to beat" is therefore
+  half beaten, and the tuning waits behind T45-T48, after the study of
+  similar games the owner asked for.

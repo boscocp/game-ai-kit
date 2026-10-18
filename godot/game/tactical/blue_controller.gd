@@ -17,6 +17,14 @@ class_name BlueController
 extends DecisionPolicy
 
 
+## Called once at the start of each of its turns, before any decision --
+## the place for a controller that keeps something between turns, such as a
+## plan (T11), to bring it up to date. A turn number no later than the last
+## one it was handed means a new game. The rules keep nothing, and do nothing.
+func begin_turn(_state: BoardState) -> void:
+	pass
+
+
 ## The name the screen gives this controller, such as "rules".
 @abstract func controller_name() -> String
 
@@ -39,6 +47,19 @@ extends DecisionPolicy
 ## with "attacks nobody". A controller that never attacks need not say so.
 func decide_attack(_state: BoardState, _unit_id: int) -> TacticalDecision:
 	return null
+
+
+## The controller's plan as lines for the screen, or none: only a controller
+## that plans has one (T11). The rules and the learned policy decide each
+## piece afresh, and say so in their reasons instead.
+func plan_lines() -> Array[String]:
+	return []
+
+
+## Cells to mark on the board with the number of the plan step the piece
+## there is to carry out; none for a controller without a plan.
+func plan_marks(_state: BoardState) -> Dictionary[Vector2i, String]:
+	return {}
 
 
 ## The walk `decide_move` chose, as `DecisionPolicy` asks for it: an empty

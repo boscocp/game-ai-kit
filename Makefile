@@ -71,7 +71,7 @@ lint-review: ## This branch has a review record and may be merged
 
 .PHONY: check
 check: check-no-engine lint-disk-layout test-godot test-vectors \
-       test-search-properties test-planner-properties test-perception-properties \
+       test-search-properties test-planner-properties test-planner-benchmark test-perception-properties \
        test-decisions test-demo-overlays test-replay test-opponent-levels test-opponent-properties \
        test-clone-rows test-inference-budget test-clone-report ## Run every gate
 
@@ -235,6 +235,9 @@ test-planning-vectors: import ## The planning vectors, against ai_planning
 	@# reader is Python and a game does not parse a domain file in a frame.
 	@$(GODOT) --headless --path godot -s res://test/planning_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/planning
+	@# The tactical board's own domain (T11) is a vector too, beside its PDDL.
+	@$(GODOT) --headless --path godot -s res://test/planning_vectors_runner.gd \
+		-- $(CURDIR)/spec/pddl
 
 .PHONY: test-learning-vectors
 test-learning-vectors: import ## The learning vectors, against ai_learning
@@ -293,6 +296,10 @@ test-search-properties: import ## A* agrees with Dijkstra, over a few hundred bo
 .PHONY: test-planner-properties
 test-planner-properties: import ## A plan can be run, and an unsolvable domain says so
 	@$(GODOT) --headless --path godot -s res://test/planner_properties.gd
+
+.PHONY: test-planner-benchmark
+test-planner-benchmark: import ## Every search over the tactical domain: h_max stays shortest, the guesses visit fewer worlds, a budget holds (T11)
+	@$(GODOT) --headless --path godot -s res://test/planner_benchmark.gd
 
 .PHONY: test-perception-properties
 test-perception-properties: import ## Sight is symmetric, walls block both ways, suspicion holds in sight

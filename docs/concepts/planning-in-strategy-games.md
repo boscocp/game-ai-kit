@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-13
+verified_on: 2026-10-18
 tier: 0
 source: https://web.archive.org/web/2020/https://www.cs.mun.ca/~dchurchill/publications/pdf/starcraft_survey.pdf ; https://ojs.aaai.org/index.php/AIIDE/article/view/12435/12294 ; https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter12_Exploring_HTN_Planners_through_Example.pdf ; https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter29_Hierarchical_AI_for_Multiplayer_Bots_in_Killzone_3.pdf ; https://pages.cs.wisc.edu/~dyer/cs540/handouts/gdc2006_orkin_jeff_fear.pdf
 invalidated_if: a survey or shipped title shows a single state-space planner running a whole RTS opponent within a frame budget, which would undo the split this page recommends
@@ -192,7 +192,21 @@ moving at once, which is a tactical problem, not a build-order one.
    readable first version in `ai_planning`. The RTS version adds h_max (still
    shortest) or h_add (faster, not shortest), a state held as bits, a budget
    per call, and the best plan so far when the budget runs out. Which heuristic
-   wins on this kit's domain is measured in T11, not assumed.
+   wins on this kit's domain is measured in T11, not assumed -- and T11
+   measured it, on the tactical domain over the 60 boards with a plan from 18
+   real games:
+
+   | search | worlds visited | ms a plan |
+   |---|---:|---:|
+   | breadth-first, strings | 11102 | 5.07 |
+   | breadth-first, bits | 11102 | 0.70 |
+   | A\* with h_max, bits | 383 | 0.59 |
+   | A\* with h_add, bits | 383 | 0.58 |
+
+   The two guesses tie: h_max is exact on this domain, so h_add has nothing
+   to improve on. The game uses h_max, which costs the same
+   and keeps the plan shortest. The table is printed by
+   `test/planner_benchmark.gd`.
 4. **Resources are abstracted, not given to a numeric planner.** Income as a
    rate and time jumping to the next legal action, after Churchill and Buro.
    The PDDL stays at level 1, and a level 2 or 3 version is documentation,

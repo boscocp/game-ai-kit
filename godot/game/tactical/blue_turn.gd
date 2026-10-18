@@ -40,6 +40,7 @@ func begin(state: BoardState) -> void:
 	refused.clear()
 	_waiting.clear()
 	_to_ask_about_attacking = -1
+	controller.begin_turn(state)
 	for unit: Unit in state.units_of(state.current_faction):
 		if not unit.type.produces.is_empty():
 			_waiting.push_front(unit.id)

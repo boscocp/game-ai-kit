@@ -5,8 +5,8 @@
 #     ./scripts/godot --headless --path godot -s res://test/tactical_win_rates.gd \
 #         [-- GAMES] [--at-most|--at-least PAIRING:OUTCOME:COUNT ...]
 #
-# PAIRING is `rr` (rules red, rules blue), `rl` (rules red, learned blue) or
-# `lr`; OUTCOME is `red`, `blue` or `draw`. Each `--at-most` or `--at-least`
+# PAIRING is `rr` (rules red, rules blue), `rl` (rules red, learned blue),
+# `lr`, `rp` (rules red, planned blue, T11) or `pr`; OUTCOME is `red`, `blue` or `draw`. Each `--at-most` or `--at-least`
 # is a limit a tuning task states as its acceptance -- `--at-most rr:red:28`
 # with 40 games says the side moving first wins at most 70% of the rules'
 # mirror, and a band takes one of each.
@@ -20,7 +20,7 @@
 extends SceneTree
 
 const DEFAULT_GAMES: int = 20
-const PAIRINGS: Array[String] = ["rr", "rl", "lr"]
+const PAIRINGS: Array[String] = ["rr", "rl", "lr", "rp", "pr"]
 
 
 func _init() -> void:
@@ -35,6 +35,8 @@ func _init() -> void:
 		"rr": _measure("rules (red) v rules (blue)", RuleBasedBlue.new(), RuleBasedBlue.new(), games),
 		"rl": _measure("rules (red) v learned (blue)", RuleBasedBlue.new(), LearnedBlue.new(), games),
 		"lr": _measure("learned (red) v rules (blue)", LearnedBlue.new(), RuleBasedBlue.new(), games),
+		"rp": _measure("rules (red) v planner (blue)", RuleBasedBlue.new(), PlannedBlue.new(), games),
+		"pr": _measure("planner (red) v rules (blue)", PlannedBlue.new(), RuleBasedBlue.new(), games),
 	}
 	var broken: int = 0
 	for limit: Array in limits:
@@ -93,7 +95,7 @@ static func _empty_count() -> Dictionary:
 
 
 static func _print_side(side: String, counted: Dictionary, funds_left: float) -> void:
-	print("    %s: %.0f funds left at the end on average; %d of %d walker decisions stayed for want of a nearer walk; built on %d of %d workshop turns" % [
+	print("    %s: %.0f funds left at the end on average; %d of %d walker decisions stayed for want of a nearer walk; built or bought on %d of %d workshop turns" % [
 		side, funds_left, counted["stuck"], counted["decisions"], counted["built"], counted["build turns"]])
 	for why: String in counted["why not built"]:
 		print("        built nothing %d times: %s" % [counted["why not built"][why], why])
@@ -114,6 +116,14 @@ class _Counting extends BlueController:
 		_inner = inner
 		_counted = counted
 
+	## The inner controller's start of turn.
+	func begin_turn(state: BoardState) -> void:
+		_inner.begin_turn(state)
+
+	## The inner controller's plan.
+	func plan_lines() -> Array[String]:
+		return _inner.plan_lines()
+
 	## The inner controller's name.
 	func controller_name() -> String:
 		return _inner.controller_name()
@@ -126,7 +136,7 @@ class _Counting extends BlueController:
 	func decide_build(state: BoardState, workshop_id: int) -> TacticalDecision:
 		var decision: TacticalDecision = _inner.decide_build(state, workshop_id)
 		_counted["build turns"] += 1
-		if decision.order != null:
+		if decision.order != null or decision.upgrade != null:
 			_counted["built"] += 1
 		else:
 			var why: String = decision.reason.trim_prefix("builds nothing: ")

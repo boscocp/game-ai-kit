@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-13
+verified_on: 2026-10-18
 tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html
 invalidated_if: Godot changes how class_name registers a class, or the StripsPlanner or PlanResult signatures change
@@ -11,12 +11,14 @@ teaches: planning
 
 > How to describe a domain in GDScript, ask for a plan and tell the two kinds
 > of failure apart. Every snippet was run on the pinned Godot 4.7.2 on
-> 2026-10-13, and the outputs shown are what it printed. Why it works is
+> 2026-10-13 (the heuristic planner's on 2026-10-18), and the outputs shown are what it printed. Why it works is
 > [the concept page](../concepts/planning.md).
 
-**Not yet in the game.** The planner is complete and tested, and nothing in
-`make run` calls it yet; T11 is the task that puts it on the board. What
-follows is how to call it from your own code.
+**In the game since T11.** `make demo-tactical`, then C: blue is played by a
+plan over the tactical domain (`spec/pddl/tactics-domain.pddl`), drawn on the
+board and printed to the console. The game plans with `HeuristicPlanner`;
+`StripsPlanner` is the version to read first. What follows is how to call
+either from your own code.
 
 ## What to copy
 
@@ -75,9 +77,35 @@ The budget counts worlds taken off the frontier, and defaults to
 game, so set the budget from the time you can afford, and treat `gave_up` as
 "decide something simpler this turn" rather than as "impossible".
 
+## Faster: bits, a guess, and a budget that still answers
+
+`HeuristicPlanner` takes the same actions, start and goal, and a search:
+
+```gdscript
+var planner := HeuristicPlanner.new()
+var plan: PlanResult = planner.plan(GameDomain.actions(), GameDomain.opening_world(),
+	GameDomain.goal(), HeuristicPlanner.Guide.H_MAX)
+print(plan.solved, " ", plan.visited, " ", plan.steps.size())
+# true 12 8
+var hurried: PlanResult = planner.plan(GameDomain.actions(), GameDomain.opening_world(),
+	GameDomain.goal(), HeuristicPlanner.Guide.H_ADD, 3)
+print(hurried.partial, " ", hurried.gave_up, " ", " -> ".join(hurried.action_names()))
+# true true march_to_node -> take_the_node
+```
+
+`H_MAX` keeps the plan shortest; `H_ADD` guides harder and may not;
+`BREADTH_FIRST` is `StripsPlanner`'s search over bits, with no partial plan to
+give. A partial plan is the way to the world that looked nearest the goal when
+the budget ran out: act on its first step and plan again. The measured table
+is in `heuristic_planner.gd`'s header. A domain with more than 63 facts does
+not fit in an `int`; the call says so with `push_error` and returns
+`gave_up`, never "impossible".
+
 ## From a PDDL file
 
 The game does not read PDDL -- parsing a domain file is a tool's job, done
 once, offline. `python/gameaikit/pddl/` reads one; the domain the game plans
 over is written out in PDDL in `spec/vectors/planning/`, and the conformance
-vectors hold the two descriptions to the same plans.
+vectors hold the two descriptions to the same plans. The tactical domain is
+the same arrangement in `spec/pddl/`: the PDDL, a JSON twin `make test-python`
+holds equal to it, and a byte-for-byte copy of the JSON the game reads.

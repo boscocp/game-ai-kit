@@ -35,6 +35,18 @@ var visited: int
 ## a claim it never made.
 var gave_up: bool
 
+## True when the planner stopped at its budget and `steps` are the start of a
+## plan rather than a whole one: the way to the world it had searched that
+## looked nearest the goal. `solved` is false and `gave_up` true.
+##
+## Only a search with a guess about distance can say which world looked
+## nearest, so only `HeuristicPlanner`'s A* returns one. A caller should treat
+## it as a direction, not a promise -- the world it ends at may be a dead end
+## the budget hid -- and plan again soon: the tactical board's `PlannedBlue`
+## follows its steps and plans again when they are done or on its cadence,
+## whichever comes first.
+var partial: bool = false
+
 
 func _init(found: Array[StripsAction], goal_reached: bool, states_visited: int,
 		stopped_early: bool) -> void:
@@ -62,3 +74,12 @@ static func impossible(states_visited: int) -> PlanResult:
 ## deliberately a different one.
 static func ran_out(states_visited: int) -> PlanResult:
 	return PlanResult.new([] as Array[StripsAction], false, states_visited, true)
+
+
+## The planner stopped at its budget, and `so_far` is the way to the world
+## that looked nearest the goal. An empty `so_far` -- nothing looked nearer
+## than the start -- is a plain `ran_out`, not a partial plan of no steps.
+static func partial_plan(so_far: Array[StripsAction], states_visited: int) -> PlanResult:
+	var result := PlanResult.new(so_far, false, states_visited, true)
+	result.partial = not so_far.is_empty()
+	return result
