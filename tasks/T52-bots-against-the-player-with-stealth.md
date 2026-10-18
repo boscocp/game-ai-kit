@@ -13,10 +13,12 @@ searching and calling each other.
 T49's survey picked what this teaches, one technique per question the
 player asks of an enemy, each drawn and each switchable:
 
-1. **A role arbiter** (The Last of Us's combat coordinator). One enemy
-   shoots at a time, one is chosen to flank by the best flank route, the
-   rest move up; requests granted and refused are shown. **Toggle: off**,
-   and every enemy shoots and nobody flanks.
+1. **A role arbiter** (The Last of Us's combat coordinator). At least one
+   enemy is always shooting, a single one is chosen to flank by the best
+   flank route, the rest take cover and move up; requests granted and
+   refused are shown. **Toggle: off**, and every enemy that can shoot does,
+   and nobody flanks. (A cap on how many may shoot is tokens, step 5 -- not
+   the arbiter.)
 2. **Awareness that accumulates, and three alert levels** (The Last of Us,
    Splinter Cell: Blacklist, Crysis). Each guard's awareness rises while it
    sees the player -- faster near, in light, when the player moves -- and
@@ -82,7 +84,8 @@ and must hold:
   position, not to where the player now is;
 - with the belief map on, guards reach the player's hiding place in fewer
   steps on average than with it off, by a margin stated in the header;
-- with the arbiter on, at most one enemy fires per frame at the player;
+- with the arbiter on, at most one enemy holds the flanker role, and on
+  every frame where any enemy can see the player at least one is shooting;
 - a player who stays in shadow, crouched and out of the shapes, finishes
   the level on a seeded route without any guard reaching alert.
 

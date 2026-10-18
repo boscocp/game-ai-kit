@@ -53,7 +53,8 @@ Every reference opens and says what the page says it says.
   Hitman's crowds, Metal Gear after MGS1 -- is listed and not used.
 - **What T51 takes**: positions scored on screen with claims; a commander
   over a shared influence map; squad confidence and retreat in waves.
-- **What T52 takes**: a role arbiter (one shooter, one flanker); awareness
+- **What T52 takes**: a role arbiter (at least one shooter, a single
+  flanker); awareness
   that accumulates, with three alert levels; a shared belief map for the
   search, with a coordinator.
 - **Left**: learned bots (tier 1 cannot train them; no shipped source uses

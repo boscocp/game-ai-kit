@@ -23,7 +23,10 @@ task is then rewritten to match).
 1. **Measure, in a scratch scene under `godot/game3d/`**, headless through
    `./scripts/godot`: a `RigidBody3D` dropped on a floor comes to rest; a ray
    cast from `_physics_process` hits a box and misses past it; a navmesh
-   baked from collision shapes gives a path round a wall. Each answer goes
+   baked from collision shapes gives a path round a wall; and a `game3d/`
+   scene with a `Legend`, `step_decision()` and `decision_overlay()` loads
+   in `demo_overlays.gd` headless -- if it does not, invariant 13's gated
+   half fails for every 3D example. Each answer goes
    in `docs/godot/3d-headless.md` with the docs URL and `verified_on`.
 2. **Replay.** Run the same drop and a car-like body twice and compare
    positions frame by frame. Write down whether it is identical, and if not,
@@ -32,15 +35,22 @@ task is then rewritten to match).
    blocky arena, one light with shadows) timed on the integrated-graphics
    machine available. The README's new tier row states what was measured.
 4. **The assets' manifest and download.** `godot/game3d/assets.json` (ADR
-   0018's fields), `make assets-3d` into `build/assets3d/`, sha256 checked,
-   a mismatch refused with exit 1. One pack first; list the archive and
-   confirm its formats and rig before writing the row.
+   0018's fields), `make assets-3d` into the gitignored folder the ADR
+   settles on, sha256 checked, a mismatch refused with exit 1. One pack
+   first: confirm a stable archive URL exists (itch.io's do not) or record
+   a manual download; list the archive and confirm its formats and rig
+   before writing the row; measure that Godot imports it from that folder.
 5. **The fallback.** A loader that hands back a primitive when the file is
    not on disk, and a test that plants a missing asset.
-6. **The gates.** `check_renderer.py` allows 3D nodes under `game3d/` only,
-   and refuses anything under `game/` or `demos/` that loads from it.
-   `check_no_assets.py` refuses a tracked 3D-asset file and a manifest row
-   with no sha256. Both born with a planted case each.
+6. **The gates.** `check_renderer.py` keeps forbidding 3D nodes under
+   `game/` and `demos/` (with `VehicleBody3D`, `RayCast3D`,
+   `NavigationRegion3D` and the rest added to its list), and refuses a
+   `load`, `preload` or `ext_resource` there that points into `game3d/`.
+   `check_no_assets.py` refuses a tracked 3D-asset file, a tracked file
+   whose sha256 is in the manifest, and a manifest row with no sha256. Both
+   born with a planted case each. If the owner wants ADR 0018's tier-1 rule
+   held, a check that every `game3d/` example names a `teaches:` topic
+   taught at tier 1 or below.
 7. Jolt set explicitly in `project.godot`; the 2D suite still green.
 
 ## Acceptance

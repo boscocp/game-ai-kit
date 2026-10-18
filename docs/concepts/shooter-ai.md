@@ -27,13 +27,13 @@ teaches: shooter-ai
   in Halo 2 [Isla 2005], a planner in F.E.A.R. [Orkin 2006] and Killzone
   [Straatman et al. 2013]); a **score over candidate positions** that
   chooses where to stand; and a perception and aim model with deliberate,
-  named limits. The position score is the one technique every shipped
-  source has.
+  named limits. The position score is in every shipped source on where
+  a bot stands in a fight.
 - **Bots cooperate in four ways**, cheapest first: emerging from good
   individuals reading the same world (much of F.E.A.R.'s "flanking" is a
   soldier moving to the only cover he knows [Orkin 2006]); an **arbiter**
-  that hands out roles and claims (The Last of Us lets one enemy shoot at a
-  time and picks one flanker [McIntosh 2015]); an explicit squad
+  that hands out roles and claims (The Last of Us makes sure at least one
+  enemy is shooting and picks a single flanker [McIntosh 2015]); an explicit squad
   [Karlsson 2021]; and a **commander** above the squads [Straatman et al.
   2013; Isla, Halo 3 slides]. In every shipped case an order is a
   suggestion the bot may refuse to stay alive.
@@ -116,7 +116,8 @@ and reactive rules" [Kadlec et al. -- the venue is not printed].
 **Where to stand is the decision.** "Picking a good position is half the
 battle in 'fire & maneuver' combat" [Beij & Straatman 2005, slides]. Killzone
 scores waypoints by a weighted sum -- the slides' worked example: proximity
-20, line of fire to the main threat 40 with partial cover, cover from other
+20, line of fire to the main threat 40 if partial cover and 20 otherwise,
+cover from other
 threats 20, preferred range 10 -- and adds to the path's A\* costs for
 crossing a friend's line of fire. CryEngine's tactical position system
 writes it as a query: generate candidates, drop those failing conditions,
@@ -174,10 +175,14 @@ and planning for squads".
 **An arbiter.** The Last of Us's Combat Coordinator is "simply a global
 object that managed each NPC's role": flanker, approacher, investigator,
 the one who stays up and aims, the opportunistic shooter, each requested and
-acknowledged [McIntosh 2015]. Only one enemy shoots at a time -- "it was only
-necessary for one NPC to be shooting the player". Every enemy computes a
-flank route; the coordinator picks the best one and rejects the others'
-requests. CryEngine's version of the arbiter is a claim: Far Cry and Crysis
+acknowledged [McIntosh 2015]. An enemy that can shoot the player does, but
+"it was only necessary for one NPC to be shooting the player at any given
+time", so the opportunistic-shooter role exists to make sure there is at
+least one, and the others are free to take cover and flank. Every enemy
+computes a flank route; the coordinator picks the best one and rejects the
+others' requests. A cap on how many may shoot is a different tool -- tokens
+[Ocio Barriales 2017] -- and that chapter itself calls a hard cap of one
+"potentially unbelievable". CryEngine's version of the arbiter is a claim: Far Cry and Crysis
 were "never picking a hidespot that another agent had already claimed", and
 a penalty for distance from the squad's centre gives "a loose leapfrogging
 behavior" with no leapfrog code [Jack 2013].
@@ -309,8 +314,10 @@ does the same: cells "bleed into their neighbors over time", and cells any
 enemy can see are cleared each frame [McIntosh 2015]. Dishonored 2 floods
 heat from the last known cell with a barrier behind the player's last
 direction, and chases the heat-weighted centre; its step limit was its
-difficulty setting [Couvidou 2021]. It replaced breadcrumbs, which made
-guards near-omniscient and "can feel unfair".
+difficulty setting [Couvidou 2021]. The first Dishonored had used
+breadcrumbs, which made guards near-omniscient and "can feel unfair"; the
+flood replaced a dead-reckoning prototype that hit walls and gave up too
+early.
 
 ### How guards search together
 
@@ -340,16 +347,16 @@ Two papers are guard AI. Al Enezi & Verbrugge give each region a
 "staleness" that grows until a guard sees it, and patrol to reduce it
 [2020, a poster]. Xu & Verbrugge combine three fields -- information since
 the last sighting, coverage that decays, and the level's connectivity --
-and move each guard downhill, with no state machine; their guards capture
-in 80% of trials against 56% for staleness and 12% for a plain state
-machine [2025]. Both leave explicit coordination between guards as future
+and move each guard downhill, with no state machine; in their grid
+environment their guards capture in 80% of trials against 56% for
+staleness and 12% for a plain state machine [2025]. Both leave explicit coordination between guards as future
 work: the guards coordinate only through the shared field.
 
 ### Fair, and readable
 
 Every shipped stealth source says the same thing in its own way: the player
-must be able to tell why they were seen. Blacklist halves the hearing of
-guards off screen and far away, because "it's what the player thinks the
+must be able to tell why they were seen. Blacklist halves, for certain
+events, the hearing of guards off screen and far away, because "it's what the player thinks the
 NPC can see and hear", and keeps reaction timings consistent while varying
 the lines [Walsh 2015]. Mark of the Ninja draws the cones and the sound
 rings [Kumar 2012]. F.E.A.R.: "If the AI didn't say it, it didn't happen"
@@ -362,8 +369,10 @@ itself" [Thompson 2017, an article on the developers' talk].
 **Reaction.** "Somewhere between 0.2 and 0.4 seconds, possibly longer
 depending on context" -- simple reaction 0.19-0.22 s, friend-or-foe 0.38 s,
 more for a far target and for aiming after noticing [Rabin, reaction time
-2015]. The learned capture-the-flag agents at 258 ms were faster than any
-of those [Jaderberg et al. 2018].
+2015]. The learned capture-the-flag agents, at 258 ms, were slower than a
+laboratory's simple reaction, faster than its friend-or-foe one, and far
+faster than the humans in the same matches, at 559 ms [Jaderberg et al.
+2018].
 
 **Aim.** Error that grows with distance and with how fast both move [Schrum
 et al. 2011]; per-weapon accuracy and skill [van Waveren 2001].
@@ -381,7 +390,7 @@ should call it that.
 ("Remove cheat (ammo)", on the future-work slide) [Straatman et al. 2009].
 The Last of Us sends an enemy straight at a player more than 5 m from where
 it believes them to be -- "Our solution to this problem was to cheat" --
-which cut a fight's search cycle from about two minutes to thirty seconds
+which cut a fight's combat cycle from about two minutes to thirty seconds
 [McIntosh 2015].
 
 **And a player can rarely tell.** In a turn-based study, players were "bad
@@ -416,9 +425,10 @@ in an Unreal Tournament or Killzone bot match, on a capture-and-hold map):
 **T52, bots against the player, with an optional stealth** (a level in the
 manner of Splinter Cell or The Last of Us, third person):
 
-1. **A role arbiter**: one shooter at a time, one chosen flanker, requests
-   granted and refused on screen [McIntosh 2015]. The toggle: arbiter off,
-   and every enemy shoots and nobody flanks.
+1. **A role arbiter**: always at least one shooter, a single chosen
+   flanker, requests granted and refused on screen [McIntosh 2015]. The
+   toggle: arbiter off, and every enemy that can shoot does, and nobody
+   flanks.
 2. **Awareness that accumulates, and three alert levels**, drawn per guard
    as a bar with its thresholds [McIntosh 2015; Walsh 2015; Welsh, Target
    Tracks 2013] -- the kit's fuzzy suspicion, grown from a grid to rays at
@@ -489,9 +499,9 @@ Shipped games -- talks, chapters and papers by their developers:
   printed. <https://www.jmeiners.com/shamans/papers/ai/the_illusion_of_intelligence.pdf>
 - Couvidou, L. "Flooding the Influence Map for Chase in Dishonored 2." Game
   AI Pro Online Edition 2021, ch. 6.
-  <http://www.gameaipro.com/GameAIProOnlineEdition2021/GameAIProOnlineEdition2021_Chapter06_Flooding_the_Influence_Map_for_Chase_in_Dishonored_2.pdf>
+  <https://www.gameaipro.com/GameAIProOnlineEdition2021/GameAIProOnlineEdition2021_Chapter06_Flooding_the_Influence_Map_for_Chase_in_Dishonored_2.pdf>
 - Isla, D. "Handling Complexity in the Halo 2 AI." GDC 2005; the
-  proceedings article.
+  proceedings article, read through an extraction and paraphrased.
   <https://www.gamedeveloper.com/programming/gdc-2005-proceeding-handling-complexity-in-the-i-halo-2-i-ai>
 - Isla, D. "Building a Better Battle: The Halo 3 AI Objectives System."
   Bungie, slides; a course copy, venue not printed.
@@ -501,49 +511,49 @@ Shipped games -- talks, chapters and papers by their developers:
   <https://ojs.aaai.org/index.php/AIIDE/article/view/12663>
 - Jack, M. "Tactical Position Selection: An Architecture and Query
   Language." Game AI Pro, 2013, ch. 26.
-  <http://www.gameaipro.com/GameAIPro/GameAIPro_Chapter26_Tactical_Position_Selection.pdf>
+  <https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter26_Tactical_Position_Selection.pdf>
 - Jakatdar, S. "From Behavior to Animation: A Reactive AI Architecture for
   Networked First-Person Shooter Games." Game AI Pro 3, 2017, ch. 10.
-  <http://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter10_A_Reactive_AI_Architecture_for_Networked_First-Person_Shooter_Games.pdf>
+  <https://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter10_A_Reactive_AI_Architecture_for_Networked_First-Person_Shooter_Games.pdf>
 - Karlsson, T. "Squad Coordination in Days Gone." Game AI Pro Online
   Edition 2021, ch. 12.
-  <http://www.gameaipro.com/GameAIProOnlineEdition2021/GameAIProOnlineEdition2021_Chapter12_Squad_Coordination_in_Days_Gone.pdf>
+  <https://www.gameaipro.com/GameAIProOnlineEdition2021/GameAIProOnlineEdition2021_Chapter12_Squad_Coordination_in_Days_Gone.pdf>
 - Leonard, T. "Building an AI Sensory System: Examining the Design of
   Thief: The Dark Project." GDC 2003; the reprint.
   <https://www.gamedeveloper.com/programming/building-an-ai-sensory-system-examining-the-design-of-i-thief-the-dark-project-i->
 - Mark, D. "Modular Tactical Influence Maps." Game AI Pro 2, 2015, ch. 30.
-  <http://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter30_Modular_Tactical_Influence_Maps.pdf>
+  <https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter30_Modular_Tactical_Influence_Maps.pdf>
 - McIntosh, T. "Human Enemy AI in The Last of Us." Game AI Pro 2, 2015,
   ch. 34.
-  <http://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter34_Human_Enemy_AI_in_The_Last_of_Us.pdf>
+  <https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter34_Human_Enemy_AI_in_The_Last_of_Us.pdf>
 - Miles, B. "How to Catch a Ninja: NPC Awareness in a 2D Stealth
   Platformer." Game AI Pro, 2013, ch. 32.
-  <http://www.gameaipro.com/GameAIPro/GameAIPro_Chapter32_How_to_Catch_a_Ninja_NPC_Awareness_in_a_2D_Stealth_Platformer.pdf>
+  <https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter32_How_to_Catch_a_Ninja_NPC_Awareness_in_a_2D_Stealth_Platformer.pdf>
 - Ocio Barriales, S. "Using Your Combat AI Accuracy to Balance Difficulty."
   Game AI Pro 3, 2017, ch. 33.
-  <http://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter33_Using_Your_Combat_AI_Accuracy_to_Balance_Difficulty.pdf>
+  <https://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter33_Using_Your_Combat_AI_Accuracy_to_Balance_Difficulty.pdf>
 - Orkin, J. "Three States and a Plan: The A.I. of F.E.A.R." GDC 2006.
   <https://www.gamedevs.org/uploads/three-states-plan-ai-of-fear.pdf>
 - Orkin, J. "Combat Dialogue in FEAR: The Illusion of Communication." Game
   AI Pro 2, 2015, ch. 2.
-  <http://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter02_Combat_Dialogue_in_FEAR_The_Illusion_of_Communication.pdf>
+  <https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter02_Combat_Dialogue_in_FEAR_The_Illusion_of_Communication.pdf>
 - Rabin, S. "Agent Reaction Time: How Fast Should an AI React?" Game AI Pro
   2, 2015, ch. 5.
-  <http://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter05_Agent_Reaction_Time_How_Fast_Should_An_AI_React.pdf>
+  <https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter05_Agent_Reaction_Time_How_Fast_Should_An_AI_React.pdf>
 - Rabin, S. "Vision Zones and Object Identification Certainty." Game AI Pro
   2, 2015, ch. 4.
-  <http://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter04_Vision_Zones_and_Object_Identification_Certainty.pdf>
+  <https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter04_Vision_Zones_and_Object_Identification_Certainty.pdf>
 - Straatman, R., Verweij, T., Champandard, A. "Killzone 2 Multiplayer
   Bots." Paris Game AI Conference, 2009. Slides, mostly images; partial text.
   <https://www.guerrilla-games.com/read/killzone-2-multiplayer-bots>
 - Straatman, R., Verweij, T., Champandard, A., Morcus, R., Kleve, H.
   "Hierarchical AI for Multiplayer Bots in Killzone 3." Game AI Pro, 2013,
   ch. 29.
-  <http://www.gameaipro.com/GameAIPro/GameAIPro_Chapter29_Hierarchical_AI_for_Multiplayer_Bots_in_Killzone_3.pdf>
+  <https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter29_Hierarchical_AI_for_Multiplayer_Bots_in_Killzone_3.pdf>
 - van der Sterren, W. "Hierarchical Plan-Space Planning for Multi-unit
   Combat Maneuvers." Game AI Pro, 2013, ch. 13; introduction and conclusion
   read.
-  <http://www.gameaipro.com/GameAIPro/GameAIPro_Chapter13_Hierarchical_Plan-Space_Planning_for_Multi-unit_Combat_Maneuvers.pdf>
+  <https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter13_Hierarchical_Plan-Space_Planning_for_Multi-unit_Combat_Maneuvers.pdf>
 - van Waveren, J.M.P. "The Quake III Arena Bot." MSc thesis, TU Delft,
   2001. <https://fabiensanglard.net/fd_proxy/quake3/The-Quake-III-Arena-Bot.pdf>
 - Verweij, T. "A Hierarchically-Layered Multiplayer Bot System for a
@@ -552,16 +562,16 @@ Shipped games -- talks, chapters and papers by their developers:
   <https://www.guerrilla-games.com/media/News/Files/VUA07_Verweij_Hierarchically-Layered-MP-Bot_System.pdf>
 - Walsh, M. "Modeling Perception and Awareness in Tom Clancy's Splinter
   Cell Blacklist." Game AI Pro 2, 2015, ch. 28.
-  <http://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter28_Modeling_Perception_and_Awareness_in_Tom_Clancy's_Splinter_Cell_Blacklist.pdf>
+  <https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter28_Modeling_Perception_and_Awareness_in_Tom_Clancy's_Splinter_Cell_Blacklist.pdf>
 - Welsh, R. "Crytek's Target Tracks Perception System." Game AI Pro, 2013,
   ch. 31.
-  <http://www.gameaipro.com/GameAIPro/GameAIPro_Chapter31_Crytek's_Target_Tracks_Perception_System.pdf>
+  <https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter31_Crytek's_Target_Tracks_Perception_System.pdf>
 - Welsh, R. "Looking for Trouble: Making NPCs Search Realistically." Game AI
   Pro 2, 2015, ch. 27.
-  <http://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter27_Looking_for_Trouble_Making_NPCs_Search_Realistically.pdf>
+  <https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter27_Looking_for_Trouble_Making_NPCs_Search_Realistically.pdf>
 - Zieliński, M. "Being Where It Counts: Telling Paragon Bots Where to Go."
   Game AI Pro 3, 2017, ch. 24.
-  <http://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter24_Being_Where_It_Counts_Telling_Paragon_Bots_Where_to_Go.pdf>
+  <https://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter24_Being_Where_It_Counts_Telling_Paragon_Bots_Where_to_Go.pdf>
 
 About games, not by their developers:
 
@@ -575,7 +585,7 @@ About games, not by their developers:
   <https://www.gamedeveloper.com/design/the-perfect-organism-the-ai-of-alien-isolation>
 - Wetzel, B., Anderson, K. "What You See Is Not What You Get: Player
   Perception of AI Opponents." Game AI Pro 3, 2017, ch. 4; a turn-based
-  study. <http://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter04_Player_Perception_of_AI_Opponents.pdf>
+  study. <https://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter04_Player_Perception_of_AI_Opponents.pdf>
 - "Metal Gear Solid (1998 video game)." Wikipedia; the gameplay section.
   <https://en.wikipedia.org/wiki/Metal_Gear_Solid_(1998_video_game)>
 

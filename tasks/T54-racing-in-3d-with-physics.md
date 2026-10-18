@@ -1,6 +1,6 @@
 # T54 — Racing in 3D, with physics the driver does not own
 
-Size: L · Prereqs: T50, T53, T22 · Files: `godot/game3d/racing/`, `godot/addons/ai_steering/`, `python/gameaikit/`, `godot/test/`
+Size: L · Prereqs: T50, T53, T23 · Files: `godot/game3d/racing/`, `godot/addons/ai_steering/`, `python/gameaikit/`, `godot/test/`
 
 ## Goal
 
