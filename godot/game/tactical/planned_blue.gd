@@ -245,8 +245,8 @@ func _runs_from(world: WorldState, start: int) -> bool:
 	return world.holds_all(_aim)
 
 
-# The sentence for a plan that stopped running: the step it was at, and the
-# first of that step's preconditions the board no longer gives it.
+# The sentence for a plan that stopped running: the first step from where
+# the plan was that cannot run on this board, and the fact it is missing.
 #
 # The rest of the plan is replayed from that step on the board as it is, and
 # the first step that cannot run names the fact: a crossing shut three steps

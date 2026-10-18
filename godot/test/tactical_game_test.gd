@@ -280,7 +280,7 @@ func test_blue_builds_nothing_it_cannot_pay_for() -> void:
 	assert_str(decision.reason).contains("has 0")
 
 
-func test_blue_walks_at_red_s_workshop_over_the_bridge() -> void:
+func test_blue_walks_at_red_s_workshop_and_makes_for_a_crossing() -> void:
 	var state: BoardState = _blue_to_move(TacticalScenario.build())
 	var runner: Unit = _first_of(state, BLUE, TacticalRules.RUNNER)
 	var routes: Dictionary = TacticalReach.route_costs(state.graph_for(runner), RED_WORKSHOP)
@@ -289,7 +289,7 @@ func test_blue_walks_at_red_s_workshop_over_the_bridge() -> void:
 
 	assert_int(routes[decision.target]).is_less(routes[runner.cell])
 	assert_str(decision.reason).contains("the workshop at %s" % RED_WORKSHOP)
-	assert_str(decision.reason).contains("making for the bridge")
+	assert_str(decision.reason).contains("making for a crossing")
 
 
 func test_a_unit_already_over_the_river_says_nothing_of_the_bridge() -> void:

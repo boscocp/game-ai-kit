@@ -14,20 +14,20 @@ const BLUE: int = TacticalScenario.BLUE
 
 
 func test_a_runner_cannot_step_into_water() -> void:
-	# Row 1: deep water. Row 0's is a ford since T48, and anyone wades that.
-	var state: BoardState = _state_with(TacticalRules.RUNNER, Vector2i(5, 1))
+	# Row 0: deep water. Row 1's is a ford since T48, and anyone wades that.
+	var state: BoardState = _state_with(TacticalRules.RUNNER, Vector2i(5, 0))
 
-	var refusal: String = state.why_refused(_step(state, Vector2i(6, 1)))
+	var refusal: String = state.why_refused(_step(state, Vector2i(6, 0)))
 
 	assert_str(refusal).contains("blocked")
 
 
 func test_a_wader_can_step_into_water() -> void:
-	var state: BoardState = _state_with(TacticalRules.WADER, Vector2i(5, 1))
+	var state: BoardState = _state_with(TacticalRules.WADER, Vector2i(5, 0))
 
-	assert_str(state.why_refused(_step(state, Vector2i(6, 1)))).is_equal(BoardState.LEGAL)
-	var waded: Unit = state.apply(_step(state, Vector2i(6, 1))).unit_by_id(99)
-	assert_vector(waded.cell).is_equal(Vector2i(6, 1))
+	assert_str(state.why_refused(_step(state, Vector2i(6, 0)))).is_equal(BoardState.LEGAL)
+	var waded: Unit = state.apply(_step(state, Vector2i(6, 0))).unit_by_id(99)
+	assert_vector(waded.cell).is_equal(Vector2i(6, 0))
 	# Billed on its own map: one point. Billed on the board's, water is
 	# BLOCKED (-1), and a wader would *gain* a point for every step it waded.
 	assert_int(waded.movement_points).is_equal(state.unit_by_id(99).movement_points - 1)
@@ -130,6 +130,16 @@ func test_a_runner_can_cross_the_river_only_by_the_bridge_or_a_ford() -> void:
 	assert_bool(AStarSearch.new().search(_without(state.graph, bridge), start, goal).reached).is_true()
 	assert_bool(AStarSearch.new().search(_without(state.graph, fords), start, goal).reached).is_true()
 	assert_bool(AStarSearch.new().search(_without(state.graph, bridge + fords), start, goal).reached).is_false()
+
+
+func test_a_ford_costs_its_own_price_to_walk_and_one_to_wade() -> void:
+	# T48. A ford priced as trees by accident, or as water, would change every
+	# route over it and no other test would say so.
+	var graphs: Dictionary = TacticalRules.graphs_from(TacticalScenario.MAP)
+	var ford: Vector2i = TacticalRules.cells_of(TacticalScenario.MAP, TacticalRules.FORD)[0]
+
+	assert_int((graphs[UnitType.GROUND] as GridGraph).cost_at(ford)).is_equal(TacticalRules.FORD_COST)
+	assert_int((graphs[TacticalRules.WATER_MOVER] as GridGraph).cost_at(ford)).is_equal(GridGraph.DEFAULT_COST)
 
 
 func _without(graph: GridGraph, cells: Array[Vector2i]) -> GridGraph:

@@ -209,10 +209,11 @@ func _check_tactical_boards() -> Array[String]:
 		var collect: Callable = func(state: BoardState) -> void: worlds.append(TacticalPlanBridge.world_of(state))
 		TacticalMatch.play(PlannedBlue.new(), RuleBasedBlue.new(), dice, collect)
 		TacticalMatch.play(RuleBasedBlue.new(), PlannedBlue.new(), dice, collect)
-	# Since the fords (T48) no sampled board has every crossing shut, so none
-	# is without a plan, and half the property would never run. Each board is
-	# also planned from as it would be with every crossing shut and their
-	# workshop guarded -- which no plan in this domain gets past.
+	# Since the fords (T48) no sampled board has every crossing shut, so
+	# almost none is without a plan, and half the property would barely run.
+	# Each board is also planned from as it would be with every crossing shut
+	# and their workshop guarded -- which most plans cannot get past, though a
+	# ram already across can still siege a guarded workshop.
 	for index: int in range(worlds.size()):
 		worlds.append(_shut_and_guarded(worlds[index]))
 	var failures: Array[String] = []

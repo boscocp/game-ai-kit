@@ -18,9 +18,9 @@
 ;
 ; What it cannot do: clear a crossing, or draw a guard off their workshop.
 ; No action adds `crossing_open` or `their_workshop_unguarded`, so with every
-; dry crossing shut and the workshop guarded there is no plan (6 of the
-; benchmark's boards before T48 added the fords) and the rules play that
-; turn, saying so. Those two would be the
+; dry crossing shut and the workshop guarded there is no plan (a handful of
+; the benchmark's boards: 6 before T48 added the fords, fewer since) and the
+; rules play that turn, saying so. Those two would be the
 ; next actions to add, and each is a tactical question the rules answer now.
 ;
 ; STRIPS has no negative preconditions, so "their workshop has no guard" is a

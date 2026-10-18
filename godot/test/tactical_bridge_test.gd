@@ -81,8 +81,8 @@ func _every_crossing_shut() -> BoardState:
 	_first_of(state, RED, TacticalRules.RUNNER).cell = BRIDGE_WEST
 	var units: Array[Unit] = state.units.duplicate()
 	var runner: UnitType = TacticalRules.unit_types()[TacticalRules.RUNNER]
-	units.append(Unit.new(80, RED, Vector2i(6, 0), 10, runner.movement, runner))
-	units.append(Unit.new(81, RED, Vector2i(6, 8), 10, runner.movement, runner))
+	units.append(Unit.new(80, RED, Vector2i(6, 1), 10, runner.movement, runner))
+	units.append(Unit.new(81, RED, Vector2i(6, 7), 10, runner.movement, runner))
 	var shut := BoardState.new(state.graph, units, RED)
 	shut.movement_graphs = state.movement_graphs
 	shut.funds = state.funds.duplicate()

@@ -36,6 +36,30 @@ func test_a_bolt_tower_threatens_the_ring_of_its_reach_and_no_further() -> void:
 	assert_bool(ThreatMap.strikes(state, tower).has(tower.cell + Vector2i(3, 0))).is_false()
 
 
+func test_the_side_s_map_counts_its_bolt_tower() -> void:
+	# Through `ThreatMap.of`, not only `strikes`: a map that skipped buildings
+	# would leave the ground round a tower looking safe.
+	# Alone on the board, so no walker of its side covers the same cells.
+	var state: BoardState = _with(RED, TacticalRules.BOLT_TOWER, Vector2i(3, 5))
+
+	assert_int(ThreatMap.of(state, RED).get(Vector2i(3, 3), 0)).is_equal(1)
+
+
+func test_a_walker_s_whole_movement_counts() -> void:
+	# A cell of open ground one step past the runner's full movement is only
+	# in its reach if it may stand on a cell its whole movement reaches; a map
+	# that stopped one short would leave it out.
+	var state: BoardState = _with(RED, TacticalRules.RUNNER, Vector2i(9, 0))
+	var runner: Unit = state.unit_at(Vector2i(9, 0))
+	var graph: GridGraph = state.graph_for(runner)
+	var costs: Dictionary = TacticalReach.route_costs(graph, runner.cell)
+	var past: Array = costs.keys().filter(func(cell: Vector2i) -> bool:
+		return costs[cell] == runner.type.movement + 1 and graph.cost_at(cell) == GridGraph.DEFAULT_COST)
+
+	assert_array(past).is_not_empty()
+	assert_bool(ThreatMap.strikes(state, runner).has(past[0])).is_true()
+
+
 func test_two_pieces_that_reach_one_cell_count_two() -> void:
 	var state: BoardState = _with(RED, TacticalRules.SHIELD, Vector2i(2, 2))
 	var units: Array[Unit] = state.units.duplicate()

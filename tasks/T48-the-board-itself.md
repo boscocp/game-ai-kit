@@ -55,61 +55,64 @@ change -- one blow and one back -- retrains the combat model and waits for
 the owner to ask for it.
 
 - **A second crossing.** Two fords (`f`, `TacticalRules.FORD_COST` 3, the
-  cost of trees), at the river's top and bottom rows. A pair, because the map
-  is the same turned half round and the bridge already holds the only
-  crossing that is its own mirror. Drawn with the board's rough-ground tile,
-  so the cost written on it is true, and named in the legend.
+  cost of trees; a wader pays 1 there, as in deep water), at rows 1 and 7 --
+  one row in from each end of the river. A pair, because the map is the same
+  turned half round and the bridge already holds the only crossing that is
+  its own mirror. Drawn with the board's rough-ground tile, so the cost
+  written on it is true, and named in the legend with its own cost.
 - **The planner's domain follows.** `bridge_open` is now `crossing_open`
   and `cross_the_bridge_*` is `cross_the_river_*`: a crossing is open while
   one of the three has none of theirs on it (`TacticalPlanBridge.crossings`).
-  A plan that stops running now names the first step ahead that cannot run.
-  With the fords no sampled board shuts every crossing, so
+  A plan that stops running names the first step ahead that cannot run. With
+  the fords almost no sampled board shuts every crossing, so
   `planner_properties.gd` also plans from each board with every crossing
-  shut and the workshop guarded, so its "no plan" half still runs -- found by
-  that check printing one half only, after a script error in it had first
-  skipped the whole check with exit 0 (now a trap in CLAUDE.md).
+  shut and the workshop guarded, and both its halves run -- found after a
+  script error in it had first skipped the whole check with exit 0 (now a
+  trap in CLAUDE.md).
 - **A threat map** (`ThreatMap`): for each cell, how many of a side's pieces
   could attack it next turn, by path on each piece's own cost map, so the
   river blocks it; a bolt tower's ring. Drawn as a red tint with the count
   for the side not to move; T hides it. `threat_map_test.gd` holds the
   task's test -- across deep water a walker that cannot wade threatens
-  nothing -- against the straight-line map the header warns about, which
-  counts the cell; a river-blind flood turns it red (planted and undone).
-- **Staging on the threat map: not built.** The fords did what it was for
-  (below).
+  nothing -- against the straight-line map the header warns about, and the
+  tower and the walker's full movement each have a case. **Nothing decides by
+  it yet:** the learned blue still retreats by its straight-line reach
+  (`LearnedBlue._out_of_reach`), and staging was not built.
+- **The rules say where they cross**: "crossing the bridge", "crossing by
+  the ford", or "making for a crossing" -- not "the bridge" on the way to a
+  ford, which a review saw on screen.
 
-**Acceptance** (`make tactical-win-rates GAMES=40 LIMITS="--at-most rr:draw:8"`):
-exit 0.
-
-| pairing, 40 games | red | blue | draws | settled at the limit | stuck: red | stuck: blue | over a ford, games: red / blue |
-|---|---|---|---|---|---|---|---|
-| rules v rules | 7 | 33 | 0 | 8 | 14.8% | 18.2% | 31 / 40 |
-| rules v learned | 4 | 36 | 0 | 19 | 12.0% | 15.2% | 31 / 40 |
-| learned v rules | 40 | 0 | 0 | 17 | 15.9% | 19.6% | 40 / 36 |
-| rules v planner | 1 | 39 | 0 | 0 | 9.1% | 10.0% | 40 / 4 |
-| planner v rules | 11 | 29 | 0 | 13 | 13.9% | 14.2% | 40 / 40 |
-
-The study's measures: rules' mirror decided before round 40 in 32 of 40
-(at least 80% asked); both crossings used in most games (at least 30%
-asked). The learned side's stuck walkers fell from 44% and 42% (T45) to
-15.2% and 15.9% -- T45's own limit is 5%.
-
-**What the fords broke: T47's balance.** The rules' mirror went from 59-41
-to 7-33. Swept over 100 games each, nothing tried lands red in 40-60%:
+**Where the fords go decides the game.** Rules against rules, 100 games:
 
 | fords at | ford cost | blue's counter | red wins of 100 |
 |---|---|---|---|
 | rows 0 and 8 | 3, 4, 5 or 6 | none | 100 |
 | rows 0 and 8 | 3 | +2 or +6 workshop health | 100 |
 | rows 0 and 8 | 3 / 4 / 5 / 6 | the shield | 17 / 14 / 20 / 23 |
-| rows 2 and 6 | 3 | none | 4 |
-| rows 2 and 6 | 3 | the shield | 14 |
+| rows 2 and 6 | 3 | none / the shield | 4 / 14 |
+| **rows 1 and 7** | **3** | **the shield** | **51** (53 with a wader paying 3 there, the review's run) |
 
-Each ford at rows 0 and 8 opens beside a workshop's corner, and the side
-moving first sends a runner over it: without a piece in the way it wins
-every game in about 12 rounds, with blue's shield in the way it loses most.
-Moved to mid-board, the fords give the side moving second the edge instead.
-The game is decided by one lane, which is a design question for the owner
--- a ford placed between those two, a zone of control (the study's other
-answer, §4 item 6), or a different counter -- not something to tune blind.
-Shipped as measured: fords at rows 0 and 8, cost 3, with the shield.
+At the river's ends each ford opens beside a workshop's corner and the side
+moving first rushes it; in mid-board the side moving second gets the edge.
+Rows 1 and 7, the place between, were the one the first sweep missed and
+wave 52's review found. They are shipped, with T47's shield, and T47's
+band holds again (51-49, exit 0).
+
+**Acceptance** (`make tactical-win-rates GAMES=40 LIMITS="--at-most rr:draw:8"`):
+exit 0. Compared with `main` before the fords, on the same 40 seeds (main's
+figures are wave 52's review's):
+
+| pairing, 40 games | red | blue | draws | at the limit | stuck: red | stuck: blue | stepped onto a ford, games: red / blue |
+|---|---|---|---|---|---|---|---|
+| rules v rules | 21 | 19 | 0 | 5 | 9.7% | 18.0% | 40 / 40 |
+| rules v learned | 2 | 38 | 0 | 24 | 11.0% | 16.9% (main 28.9%) | 39 / 40 |
+| learned v rules | 40 | 0 | 0 | 12 | 19.5% (main 29.2%) | 19.7% | 40 / 38 |
+| rules v planner | 0 | 40 | 0 | 0 | 10.5% | 5.0% | 40 / 0 |
+| planner v rules | 4 | 36 | 0 | 6 | 10.0% | 15.4% | 39 / 40 |
+
+The rules' mirror is decided before round 40 in 35 of 40 (main: 36). The
+learned side's stuck walkers fell from about 29% to 17% and 20% -- a real
+gain, though smaller than the first version of this record claimed (it
+compared with T45's 44%, from older controllers). T45's own limit, 5%, is
+still not met. The ford counter counts stepping onto a ford, not a whole
+crossing.

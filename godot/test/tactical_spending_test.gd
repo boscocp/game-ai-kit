@@ -48,7 +48,7 @@ func test_a_walker_with_no_way_to_its_goal_takes_the_fallback() -> void:
 	# Red's runners on the bridge and on both fords: a blue shield has no way
 	# to red's workshop, and walks at the nearest red piece instead of staying.
 	var state: BoardState = _scenario_with([[RED, TacticalRules.RUNNER, Vector2i(6, 4)],
-		[RED, TacticalRules.RUNNER, Vector2i(6, 0)], [RED, TacticalRules.RUNNER, Vector2i(6, 8)],
+		[RED, TacticalRules.RUNNER, Vector2i(6, 1)], [RED, TacticalRules.RUNNER, Vector2i(6, 7)],
 		[BLUE, TacticalRules.SHIELD, Vector2i(9, 3)]])
 	var shield: Unit = state.unit_at(Vector2i(9, 3))
 

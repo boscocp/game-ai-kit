@@ -19,7 +19,7 @@
 # than at a workshop -- T47's rule turns stalemates into wins, and this is
 # how many it did), `red-ford-games` and `blue-ford-games` (games in which
 # that side walked over a ford, T48 -- the reference asks both crossings to
-# be used), and
+# be used -- this counts stepping onto one, not a whole crossing), and
 # since T46 `red-flips-percent`, `blue-flips-percent` and `flips-percent` (the
 # larger): of a side's walks that ended nearer the nearest enemy walker or
 # further from it, the share that went the other way from the same walker's
@@ -160,7 +160,7 @@ static func _empty_count() -> Dictionary:
 
 
 static func _print_side(side: String, counted: Dictionary, funds_left: float) -> void:
-	print("    %s: %.0f funds left at the end on average; %d of %d walker decisions stayed for want of a nearer walk; built or bought on %d of %d workshop turns; %d flips in %d walks nearer or further from the nearest enemy walker; over a ford in %d games" % [
+	print("    %s: %.0f funds left at the end on average; %d of %d walker decisions stayed for want of a nearer walk; built or bought on %d of %d workshop turns; %d flips in %d walks nearer or further from the nearest enemy walker; onto a ford in %d games" % [
 		side, funds_left, counted["stuck"], counted["decisions"], counted["built"], counted["build turns"],
 		counted["flips"], counted["walks in or out"], counted["ford games"]])
 	for why: String in counted["why not built"]:

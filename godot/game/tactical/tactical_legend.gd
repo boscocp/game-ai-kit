@@ -25,7 +25,7 @@ static func entries(types: Dictionary) -> Array[Array]:
 		[BoardView.tile_texture(BoardView.WALL), "rock: nothing crosses"],
 		[BoardView.tile_texture(BoardView.WATER), "deep water: only waders cross"],
 		[BoardView.tile_texture(BoardView.BRIDGE), "bridge: the quick crossing"],
-		[BoardView.tile_texture(BoardView.ROUGH), "ford: anyone crosses, cost %d" % TacticalRules.TREES_COST],
+		[BoardView.tile_texture(BoardView.ROUGH), "ford: anyone crosses, cost %d" % TacticalRules.FORD_COST],
 		[BoardView.tile_texture(BoardView.NODE), "flag: a point, +%d a turn to its holder" % TacticalRules.POINT_INCOME],
 	]
 	for name: String in types:

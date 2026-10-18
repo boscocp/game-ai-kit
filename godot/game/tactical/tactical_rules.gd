@@ -102,7 +102,9 @@ static func forge() -> Upgrade:
 
 ## The board's own cost map, and the wader's: one terrain map read twice.
 ## Water is a wall to everything but the wader, which is the whole of what
-## makes it a wader -- and `ai_core` never learns what water is.
+## makes it a wader -- and `ai_core` never learns what water is. A ford is
+## water to the wader too: it pays 1 there as in deep water, where everyone
+## else pays `FORD_COST`.
 static func graphs_from(rows: Array[String]) -> Dictionary:
 	var ground := GridGraph.new(rows[0].length(), rows.size())
 	var water := GridGraph.new(rows[0].length(), rows.size())
@@ -110,7 +112,7 @@ static func graphs_from(rows: Array[String]) -> Dictionary:
 		for x: int in range(rows[y].length()):
 			var cell := Vector2i(x, y)
 			ground.set_cost(cell, _ground_cost(rows[y][x]))
-			water.set_cost(cell, GridGraph.DEFAULT_COST if rows[y][x] == WATER else _ground_cost(rows[y][x]))
+			water.set_cost(cell, GridGraph.DEFAULT_COST if rows[y][x] in [WATER, FORD] else _ground_cost(rows[y][x]))
 	return {UnitType.GROUND: ground, WATER_MOVER: water}
 
 
