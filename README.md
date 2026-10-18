@@ -111,7 +111,7 @@ by themselves at the start of their side's turn. Two flags are control
 points: a side with a walker on one and no enemy beside it is paid 2 more at
 the start of its turn. Destroy the enemy workshop -- a siege, one blow an
 attack -- to win; after 40 rounds the higher score wins (workshop health,
-then turns holding points, then what is left standing), and only an equal
+then point-turns held, then what is left standing), and only an equal
 score is a draw.
 
 *Recordings of all five are still to be made.*

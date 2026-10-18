@@ -58,7 +58,7 @@ const STARTING_FUNDS: int = 4
 ## T47's record; the smallest that landed the rules' mirror in 40-60% is the
 ## one set here.
 const SECOND_PLAYER_FUNDS: int = 0
-## True to start blue with one more shield, beside its workshop.
+## True to start blue with one more shield, diagonal to its workshop.
 const SECOND_PLAYER_SHIELD: bool = true
 ## Health added to blue's workshop.
 const SECOND_PLAYER_WORKSHOP_HEALTH: int = 0

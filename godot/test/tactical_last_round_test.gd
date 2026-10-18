@@ -30,6 +30,56 @@ func test_turns_holding_points_decide_between_equal_workshops() -> void:
 	assert_int(TacticalVictory.winner(state)).is_equal(RED)
 
 
+func test_workshop_health_outranks_point_turns() -> void:
+	# The order is the rule: red holds more point-turns, blue has the
+	# healthier workshop, and the workshop decides.
+	var state: BoardState = _at_the_limit(_mirrored())
+	_workshop(state, RED).health -= 1
+	state.tally[ControlPoints.POINT_TURNS] = {RED: 9, BLUE: 0}
+
+	assert_int(TacticalVictory.winner(state)).is_equal(BLUE)
+
+
+func test_point_turns_outrank_what_is_left_standing() -> void:
+	var state: BoardState = _mirrored()
+	var units: Array[Unit] = state.units.duplicate()
+	units.append(Unit.new(99, BLUE, Vector2i(9, 0), 10, 3, TacticalRules.unit_types()[TacticalRules.SHIELD]))
+	var more := BoardState.new(state.graph, units, RED)
+	more.movement_graphs = state.movement_graphs
+	var later: BoardState = _at_the_limit(more)
+	later.tally[ControlPoints.POINT_TURNS] = {RED: 1, BLUE: 0}
+
+	assert_int(TacticalVictory.winner(later)).is_equal(RED)
+
+
+func test_point_turns_are_counted_across_real_turns() -> void:
+	# Through `TurnStart`, as a game opens every turn: a red runner on a point
+	# for two of red's turns is two, and blue's turns between them take
+	# nothing away. Two points held for one turn would count two.
+	var state: BoardState = _mirrored()
+	var units: Array[Unit] = state.units.duplicate()
+	units.append(Unit.new(99, RED, TacticalScenario.POINTS[0], 10, 6, TacticalRules.unit_types()[TacticalRules.RUNNER]))
+	var holding := BoardState.new(state.graph, units, RED)
+	holding.movement_graphs = state.movement_graphs
+	holding.funds = state.funds.duplicate()
+
+	for turn: int in range(4):
+		holding = TurnStart.open(holding)[0]
+
+	assert_int(holding.tally[ControlPoints.POINT_TURNS][RED]).is_equal(2)
+
+
+func test_two_points_held_for_one_turn_are_two_point_turns() -> void:
+	var state: BoardState = _mirrored()
+	var units: Array[Unit] = state.units.duplicate()
+	var runner: UnitType = TacticalRules.unit_types()[TacticalRules.RUNNER]
+	units.append(Unit.new(98, RED, TacticalScenario.POINTS[0], 10, 6, runner))
+	units.append(Unit.new(99, RED, TacticalScenario.POINTS[1], 10, 6, runner))
+	var holding := BoardState.new(state.graph, units, RED)
+
+	assert_int(ControlPoints.pay(holding)[0].tally[ControlPoints.POINT_TURNS][RED]).is_equal(2)
+
+
 func test_what_is_left_standing_decides_last() -> void:
 	var state: BoardState = _mirrored()
 	var units: Array[Unit] = state.units.duplicate()

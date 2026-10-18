@@ -12,9 +12,14 @@
 ##
 ## **The last round decides** (T47). A game still going at the round limit is
 ## not a draw by default: the side with the higher score wins, the score
-## being, in order, its workshop's health, the turns it held points
-## (`ControlPoints.POINT_TURNS`, a point held for a turn is one), and the cost
-## of what it has left standing. A draw only when all three are equal --
+## being, in order, its workshop's health, its point-turns
+## (`ControlPoints.POINT_TURNS`: each point, each turn it was held -- two
+## points for one turn are two; the task said rounds, and point-turns keep
+## the second point worth holding), and the cost of what it has left
+## standing. Blue's shield for moving second counts there like any piece:
+## the counter is meant to be worth something. The score is read when round
+## 41 would open, after red has been paid and its towers have fired once
+## more than blue's -- measured in wave 51's review, it changed no outcome. A draw only when all three are equal --
 ## Advance Wars By Web gives a day-limit game to the side with the most
 ## properties, Polytopia's Perfection mode to the higher score
 ## (`docs/design/tactical-references.md`, §1.4).
@@ -80,7 +85,7 @@ static func _higher_score(state: BoardState) -> int:
 ## T47, the second player's counter, which is part of what is fair about it.
 static func rule() -> String:
 	var counter: String = "; blue moves second and starts with one more shield" if TacticalRules.SECOND_PLAYER_SHIELD else ""
-	return "to win: destroy the enemy workshop -- attack it with a unit in reach. After %d rounds the higher score wins: workshop health, then turns holding points, then what is left standing%s" % [
+	return "to win: destroy the enemy workshop -- attack it with a unit in reach. After %d rounds the higher score wins: workshop health, then point-turns held (each point, each turn it was held), then what is left standing%s" % [
 		ROUND_LIMIT, counter]
 
 
@@ -95,7 +100,7 @@ static func announcement(winner_side: int, state: BoardState = null) -> String:
 
 
 static func _at_the_limit_said(winner_side: int, state: BoardState) -> String:
-	var scores: String = "red %s, blue %s (workshop health, turns holding points, left standing)" % [
+	var scores: String = "red %s, blue %s (workshop health, point-turns held, left standing)" % [
 		score(state, TacticalScenario.RED), score(state, TacticalScenario.BLUE)]
 	if winner_side == DRAW:
 		return "a draw: %d rounds, and the scores are equal -- %s.  R starts again." % [ROUND_LIMIT, scores]

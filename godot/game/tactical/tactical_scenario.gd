@@ -47,7 +47,7 @@ const POINTS: Array[Vector2i] = [Vector2i(5, 0), Vector2i(8, 8)]
 
 
 ## Where blue's extra shield stands when `TacticalRules.SECOND_PLAYER_SHIELD`
-## gives it one: beside its workshop, on open ground, not on a point.
+## gives it one: diagonal to its workshop, on open ground, not on a point.
 const SECOND_PLAYER_SHIELD_CELL: Vector2i = Vector2i(11, 0)
 
 

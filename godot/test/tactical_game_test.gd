@@ -683,7 +683,7 @@ func test_the_round_limit_goes_to_the_higher_score() -> void:
 	state.turn_number = TacticalVictory.ROUND_LIMIT * TacticalScenario.FACTIONS
 
 	assert_int(TacticalVictory.winner(state)).is_equal(BLUE)
-	assert_str(TacticalVictory.announcement(TacticalVictory.DRAW)).contains("a draw")
+	assert_str(TacticalVictory.announcement(BLUE, state)).contains("wins on score")
 
 
 func test_destroying_the_workshop_on_the_last_turn_still_wins() -> void:

@@ -61,7 +61,7 @@ study's proposals in their order.
   | none | 70 | 30 | 0 |
   | +2 starting funds (+1.5 rounded) | 70 | 30 | 0 |
   | +3 starting funds | 70 | 30 | 0 |
-  | **a shield beside its workshop** | **59** | **41** | **0** |
+  | **a shield diagonal to its workshop** | **59** | **41** | **0** |
   | +2 workshop health (Wargroove's 10%) | 65 | 35 | 0 |
 
   The funds changed nothing, game for game: since T45 the rules build every
@@ -72,7 +72,9 @@ study's proposals in their order.
   T44 measured the first mover at 58 of 60 and 20 of 20; T45's spending had
   already brought it to 70 of 100 before any counter.
 - **Step 2, the last round decides.** At the round limit the higher score
-  wins: workshop health, then turns holding points (`ControlPoints` counts
+  wins: workshop health, then point-turns held -- each point, each turn it
+  was held; the task said rounds, and point-turns keep a second point worth
+  holding (`ControlPoints` counts
   them in a new `BoardState.tally`, which `ai_core` carries and never
   reads), then the cost of what is left standing. A draw only on an equal
   score; `tactical_last_round_test.gd` plants the opening mirrored and must
