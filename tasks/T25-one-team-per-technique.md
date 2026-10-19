@@ -203,7 +203,8 @@ for the owner's recordings, as the task says they must.
 - **Step 1, the runner** (`test/league_runner.gd`, `make league`): every
   pairing from both seats, the seats on dice of their own; Bradley-Terry by
   Hunter's MM with one imaginary draw a pairing, 95% bootstrap intervals
-  (`LeagueRating`). It asserts every game ends, no decision is refused, the
+  (`LeagueRating`). It asserts every scheduled game was played and there were
+  some, every game ends, no decision is refused, the
   whole league played twice gives the same table, each team has as many
   games from each seat, and the budget -- each against a planted case it
   must catch first (a slow team, an unseeded one, a team always red).
@@ -211,10 +212,11 @@ for the owner's recordings, as the task says they must.
   work a controller counts (`BlueController.work_done`, `work_unit`,
   `replans`, new); the turn's planning is charged to its first decision.
   **The budget is two numbers**: T11's 2000 worlds a decision, held at every
-  decision, and one 60 Hz frame, 16.7 ms, held at the 95th percentile. The
+  decision of the teams that count worlds (the planner, GOAP), and one 60 Hz
+  frame, 16.7 ms, held at the 95th percentile for every team. The
   task asked for "T11's per-call budget", which is in worlds; the clock was
   added, and held at the 95th because one decision in tens of thousands
-  lands on the machine's own pauses -- three teams' slowest brushed past it.
+  lands on the machine's own pauses -- in the first run three teams' slowest passed it.
 - **Step 3, the recorder**: `make record-tactical` keeps each game played
   to its end in `data/tactical/` -- not `spec/recordings/` as written above,
   but beside `data/fights/`, ADR 0017's place for a person's recordings.
@@ -224,12 +226,14 @@ for the owner's recordings, as the task says they must.
 - **The demo**: C in `make demo-tactical` now also cycles through the four.
 - **Step 7, in part**: `docs/concepts/the-league.md`, strength and cost.
 
-**Measured** (`make league`, 5 seeds a seat, 280 games, 311 s a pass):
-learned +248 (+152 to +362), lookahead +204 (+90 to +311), HTN +26, tree +9,
-rules 0, state machine 0, GOAP -27 (the middle five each about +-100), and
-the planner -163 (-294 to -71). Three groups and only three: the four T15
-techniques and the rules cannot be told apart on this board. Every team's
-mean decision is under 1.3 ms.
+**Measured** (`make league`, 5 seeds a seat, 280 games, about 300 s a
+pass, after the review's fixes): learned +311 (+219 to +417), lookahead +263
+(+162 to +397), HTN +92 (-4 to +199), GOAP +46, tree +28, rules 0, state
+machine -28, planner -177 (-312 to -69). Three teams are told apart from the
+rules -- the learned policy and the lookahead above, the planner below --
+and none of the four T15 teams is, the HTN only just. Every team's mean
+decision is under 1.3 ms. An interval is a difference from the rules and is
+read only that way (the review's fifth finding).
 
 **Not done**:
 

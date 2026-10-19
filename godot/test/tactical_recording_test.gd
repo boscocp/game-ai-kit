@@ -81,6 +81,45 @@ func test_the_scene_keeps_a_game_once_it_is_over_and_only_once() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(folder))
 
 
+func test_a_game_the_scene_kept_replays_to_its_winner() -> void:
+	# Red never moves; blue's rules attack and win, and every attack moves the
+	# board's seed on -- so the file must hold the seed the game began with.
+	var scene: TacticalGame = _mounted_scene(true)
+	var folder: String = "user://recordings-under-test-%d" % Time.get_ticks_usec()
+	scene.recordings_folder = ProjectSettings.globalize_path(folder)
+	scene.state.dice_seed = 11
+	scene._starting_seed = 11
+	while scene.winner == TacticalVictory.NOBODY:
+		scene.end_turn()
+		scene.end_turn()
+		scene.play_rest_of_computer_turn()
+	var files: PackedStringArray = DirAccess.get_files_at(folder)
+	assert_int(files.size()).is_equal(1)
+	var kept: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(folder.path_join(files[0])))
+	var again: Dictionary = TacticalRecording.replay(kept)
+
+	assert_int(int(kept["dice_seed"])).is_equal(11)
+	assert_int(again["refused"]).is_equal(-1)
+	assert_int(TacticalVictory.winner(again["end"])).is_equal(scene.winner)
+	assert_bool(kept["decisions"].any(func(row: Dictionary) -> bool: return row["kind"] == "attack")).is_true()
+	assert_bool(kept["decisions"].all(func(row: Dictionary) -> bool: return int(row["side"]) == TacticalScenario.BLUE)).is_true()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(folder.path_join(files[0])))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(folder))
+
+
+func test_a_wait_is_a_row_and_so_is_each_of_the_computer_s_decisions() -> void:
+	var scene: TacticalGame = _mounted_scene(true)
+	scene.wait()
+	assert_str(scene._recorded.back()["kind"]).is_equal("hold")
+	var person_rows: int = scene._recorded.size()
+	scene.end_turn()
+	scene.end_turn()
+	scene.play_rest_of_computer_turn()
+
+	assert_int(scene._recorded.size()).is_greater(person_rows)
+	assert_int(int(scene._recorded.back()["side"])).is_equal(TacticalScenario.BLUE)
+
+
 # A game of the rules against themselves on `dice_seed`, recorded decision by
 # decision as the scene records it, with blue as "the person": {"recording",
 # "end"}.

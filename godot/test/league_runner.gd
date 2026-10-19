@@ -7,12 +7,17 @@
 # SEEDS defaults to `SEEDS`. What it asserts, each against a planted case
 # that must fail it first (invariant 4):
 #
-# - every game ends -- a winner, or a draw at the round limit;
+# - the league played every game it scheduled, and there were some: a run
+#   of no games proves nothing, and must not go green;
+# - every game ends -- a winner, or a draw at the round limit -- and the
+#   board refused none of its decisions;
 # - the same seeds give the same table twice: the whole league is played
 #   again and every game's result and decision count must match;
-# - every team is credited the same number of games from each seat;
-# - no team exceeds the budget: no decision does more work than T11's
-#   per-call budget, `PlannedBlue.BUDGET` worlds, and the 95th percentile of
+# - every team is credited the same number of games from each seat, as the
+#   runner actually seated them;
+# - no team exceeds the budget: no decision of a team that counts worlds --
+#   the planner, GOAP -- does more than T11's per-call budget,
+#   `PlannedBlue.BUDGET`, and the 95th percentile of
 #   its decisions is inside `BUDGET_MS` on the clock -- the slowest is
 #   printed, not held, since one spike measures the machine. A planted team
 #   that spends twice the clock's budget must be caught.
@@ -44,10 +49,11 @@ func _run(seeds: int) -> int:
 	var schedule: Array[Array] = League.schedule(roster.size(), seeds)
 	var started: int = Time.get_ticks_msec()
 	var first: Dictionary = _play_league(roster, schedule)
+	failures += _said(_all_played(first, schedule))
 	print("league: %d teams, %d games, %d seeds a seat, %.0f s" % [roster.size(), schedule.size(), seeds,
 		(Time.get_ticks_msec() - started) / 1000.0])
 	var second: Dictionary = _play_league(roster, schedule)
-	failures += _every_game_ended(first)
+	failures += _said(_every_game_ended(first))
 	failures += _said(_same_twice(first, second))
 	failures += _said(_even_seats(first, roster.size()))
 	failures += _within_budget(first, roster)
@@ -72,13 +78,23 @@ static func _play_league(roster: Array[Array], schedule: Array[Array]) -> Dictio
 		var red := MeteredTeam.new((roster[game[0]][3] as Callable).call(game[2]))
 		var blue := MeteredTeam.new((roster[game[1]][3] as Callable).call(game[2]))
 		var result: Dictionary = TacticalMatch.play(red, blue, game[2])
-		results.append({"red": game[0], "blue": game[1], "seed": game[2], "winner": result["winner"],
+		# Who sat where is read back off the seats, not the schedule, so a
+		# runner that seated them the wrong way round is seen doing it.
+		results.append({"red": _index_of(roster, red), "blue": _index_of(roster, blue), "seed": game[2], "winner": result["winner"],
 			"rounds": result["rounds"], "decisions": result["decisions"], "refused": result["refused"].size()})
 		costs[game[0]].append_array(red.decisions)
 		costs[game[1]].append_array(blue.decisions)
 		_count_deeds(deeds[game[0]], red.inner())
 		_count_deeds(deeds[game[1]], blue.inner())
 	return {"results": results, "costs": costs, "deeds": deeds}
+
+
+# The roster index of the team in `seat`, by the name it gives itself.
+static func _index_of(roster: Array[Array], seat: MeteredTeam) -> int:
+	for index: int in range(roster.size()):
+		if (roster[index][3] as Callable).call(0).controller_name() == seat.controller_name():
+			return index
+	return -1
 
 
 # Add what a T15 team chose its walkers' deeds as to `into`; nothing for a
@@ -98,16 +114,25 @@ static func _said(complaints: Array[String]) -> int:
 	return complaints.size()
 
 
-static func _every_game_ended(league: Dictionary) -> int:
-	var failures: int = 0
+# A run that played fewer games than it scheduled, or none, in words.
+static func _all_played(league: Dictionary, schedule: Array[Array]) -> Array[String]:
+	var played: int = league["results"].size()
+	if played == 0:
+		return ["no games were played, and a league of none says nothing"]
+	if played != schedule.size():
+		return ["%d games played of %d scheduled" % [played, schedule.size()]]
+	return []
+
+
+# Each game that did not end, or that had a decision refused, in words.
+static func _every_game_ended(league: Dictionary) -> Array[String]:
+	var found: Array[String] = []
 	for result: Dictionary in league["results"]:
 		if result["winner"] == TacticalVictory.NOBODY:
-			printerr("league_runner: game %s did not end" % [result])
-			failures += 1
+			found.append("game %s did not end" % [result])
 		if result["refused"] > 0:
-			printerr("league_runner: %d decision(s) refused by the board in %s" % [result["refused"], result])
-			failures += 1
-	return failures
+			found.append("%d decision(s) refused by the board in %s" % [result["refused"], result])
+	return found
 
 
 # Each game the two runs played differently, in words.
@@ -139,7 +164,8 @@ static func _even_seats(league: Dictionary, teams: int) -> Array[String]:
 static func _within_budget(league: Dictionary, roster: Array[Array]) -> int:
 	var failures: int = 0
 	for team: int in range(roster.size()):
-		var over: Array[String] = _over_budget(league["costs"][team])
+		var unit: String = (roster[team][3] as Callable).call(0).work_unit()
+		var over: Array[String] = _over_budget(league["costs"][team], unit)
 		for said: String in over:
 			printerr("league_runner: %s: %s" % [roster[team][0], said])
 		failures += over.size()
@@ -151,7 +177,7 @@ static func _within_budget(league: Dictionary, roster: Array[Array]) -> int:
 # in thousands lands on a collection or another process, and a bar a single
 # spike can break measures the machine. Work is held at every decision --
 # it is counted, not timed, and the same on every machine.
-static func _over_budget(decisions: Array) -> Array[String]:
+static func _over_budget(decisions: Array, unit: String) -> Array[String]:
 	var times: Array = decisions.map(func(decision: Dictionary) -> float: return decision["usec"] / 1000.0)
 	times.sort()
 	var most_work: int = 0
@@ -161,7 +187,7 @@ static func _over_budget(decisions: Array) -> Array[String]:
 	var typical: float = _percentile(times, 0.95)
 	if typical > BUDGET_MS:
 		over.append("its decisions took %.1f ms at the 95th percentile, over the budget of %.1f" % [typical, BUDGET_MS])
-	if most_work > PlannedBlue.BUDGET:
+	if unit == "worlds" and most_work > PlannedBlue.BUDGET:
 		over.append("one decision did %d work, over T11's budget of %d" % [most_work, PlannedBlue.BUDGET])
 	return over
 
@@ -177,22 +203,34 @@ static func _planted_cases() -> int:
 	var failures: int = 0
 	var slow := MeteredTeam.new(_Slow.new())
 	TacticalMatch.play(slow, RuleBasedBlue.new(), 0)
-	if _over_budget(slow.decisions).is_empty():
+	if _over_budget(slow.decisions, "").is_empty():
 		printerr("league_runner: the planted slow team was not caught over budget")
 		failures += 1
-	var unseeded: Array[Dictionary] = []
+	var greedy: Array = [{"usec": 0, "work": PlannedBlue.BUDGET + 1}]
+	if _over_budget(greedy, "worlds").is_empty():
+		printerr("league_runner: a decision of %d worlds was not caught over T11's budget" % (PlannedBlue.BUDGET + 1))
+		failures += 1
+	var unrepeatable: Array[Dictionary] = []
 	for _time: int in range(2):
-		var result: Dictionary = TacticalMatch.play(_Unseeded.new(), RuleBasedBlue.new(), 0)
-		unseeded.append({"winner": result["winner"], "decisions": result["decisions"], "rounds": result["rounds"]})
-	if _same_twice({"results": [unseeded[0]]}, {"results": [unseeded[1]]}).is_empty():
-		printerr("league_runner: the planted unseeded team played the same game twice, so the check cannot see one")
+		var result: Dictionary = TacticalMatch.play(_Unrepeatable.new(), RuleBasedBlue.new(), 0)
+		unrepeatable.append({"winner": result["winner"], "decisions": result["decisions"], "rounds": result["rounds"]})
+	if _same_twice({"results": [unrepeatable[0]]}, {"results": [unrepeatable[1]]}).is_empty():
+		printerr("league_runner: the planted unrepeatable team played the same game twice, so the check cannot see one")
+		failures += 1
+	var refused: Dictionary = TacticalMatch.play(_Refusing.new(), RuleBasedBlue.new(), 0)
+	var with_refusal: Dictionary = {"results": [{"winner": refused["winner"], "refused": refused["refused"].size()}]}
+	if _every_game_ended(with_refusal).is_empty() or _every_game_ended({"results": [{"winner": TacticalVictory.NOBODY, "refused": 0}]}).is_empty():
+		printerr("league_runner: a refused decision or an unended game was not caught")
+		failures += 1
+	if _all_played({"results": []}, []).is_empty():
+		printerr("league_runner: a league of no games was not caught")
 		failures += 1
 	var lopsided: Dictionary = {"results": [{"red": 0, "blue": 1}, {"red": 0, "blue": 1}]}
 	if _even_seats(lopsided, 2).is_empty():
 		printerr("league_runner: a team always red was not caught")
 		failures += 1
 	if failures == 0:
-		print("planted cases: the slow team, the unseeded team and the team always red were each caught")
+		print("planted cases: the slow team, a decision over T11's worlds, the unrepeatable team, a refused walk, an unended game, a league of none and a team always red were each caught")
 	return failures
 
 
@@ -247,8 +285,8 @@ static func _print_costs(league: Dictionary, roster: Array[Array]) -> void:
 			counted = "%.1f %s a decision" % [float(work) / decisions.size(), unit]
 		if replanned > 0:
 			counted += "; a plan made before %d of its %d decisions" % [replanned, decisions.size()]
-		print("  %-18s %6.2f %6.2f %6.2f ms; %s" % [roster[team][0], _mean(times), _percentile(times, 0.95),
-			times.back(), counted])
+		print("  %-18s %d decisions; %6.2f %6.2f %6.2f ms; %s" % [roster[team][0], decisions.size(), _mean(times),
+			_percentile(times, 0.95), times.back() if not times.is_empty() else 0.0, counted])
 		print("  %-18s delegates %s" % ["", roster[team][2]])
 		if not league["deeds"][team].is_empty():
 			print("  %-18s deeds: %s" % ["", _shares(league["deeds"][team])])
@@ -282,11 +320,26 @@ class _Slow extends RuleBasedBlue:
 		return super.decide_move(state, unit_id)
 
 
-# Holds or walks by the engine's own unseeded dice: the team a determinism
-# check must catch, since its two games on one seed differ.
-class _Unseeded extends RuleBasedBlue:
-	## A hold one time in two, at random.
+# Remembers across games: every second one made holds every walker, so its
+# two games on one seed differ -- certainly, not by luck -- which is what a
+# determinism check must catch.
+class _Unrepeatable extends RuleBasedBlue:
+	static var _made: int = 0
+	var _holds: bool
+
+	func _init() -> void:
+		_made += 1
+		_holds = _made % 2 == 0
+
+	## The rules' walk in its first game, a hold in its second.
 	func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
-		if randf() < 0.5:
-			return TacticalDecision.hold(unit_id, "stays, by a coin nobody seeded", state.unit_by_id(unit_id).cell)
+		if _holds:
+			return TacticalDecision.hold(unit_id, "stays, because a game before this one said so", state.unit_by_id(unit_id).cell)
 		return super.decide_move(state, unit_id)
+
+
+# Walks every walker into the rock at (2, 3): a decision the board refuses.
+class _Refusing extends RuleBasedBlue:
+	## A walk nothing can take.
+	func decide_move(_state: BoardState, unit_id: int) -> TacticalDecision:
+		return TacticalDecision.walk(unit_id, [Vector2i(2, 3)] as Array[Vector2i], "walks into rock", Vector2i(2, 3))

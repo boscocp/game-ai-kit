@@ -77,9 +77,10 @@ func work_unit() -> String:
 	return ""
 
 
-## How many times it has made a plan since it was made; 0 for a controller
-## that does not plan, or one that plans every decision and so has no
-## "again" to count (T25's meter counts replanning, not planning).
+## How many plans it has made since it was made, the first included; 0 for
+## a controller that does not plan, or one that plans every decision and so
+## has nothing to tell apart (T25's meter counts the decisions a plan was
+## made before).
 func replans() -> int:
 	return 0
 

@@ -25,8 +25,12 @@
 ## with the first team at 0, so a rating reads "this much better than the
 ## rules". **The uncertainty** is a bootstrap: the games are drawn again with
 ## replacement, `RESAMPLES` times from a fixed seed, each draw fitted, and the
-## middle 95% of each team's ratings is its interval. Two teams whose
-## intervals overlap have not been told apart.
+## middle 95% of each team's ratings is its interval. Each interval is a
+## difference *from the first team*, so it says one thing: an interval clear
+## of 0 is a team told apart from the first. Whether two other teams differ
+## is not read off whether their intervals overlap -- that mixes in the
+## first team's own uncertainty, and overlapping intervals are not a test --
+## and this league does not claim it.
 ##
 ## Complexity: one fit is O(iterations x teams^2); the bootstrap repeats it
 ## `RESAMPLES` times over a resampled table, O(games) to build.

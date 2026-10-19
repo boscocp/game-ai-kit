@@ -84,6 +84,7 @@ var recordings_folder: String = TacticalRecording.directory()
 # This game's decisions so far, as rows, and whether it has been kept.
 var _recorded: Array[Dictionary] = []
 var _kept: bool = false
+var _starting_seed: int = 0
 
 
 func _ready() -> void:
@@ -113,6 +114,9 @@ func new_game() -> void:
 	# a test's game is the same game every run.
 	if is_inside_tree() and get_tree().current_scene == self:
 		state.dice_seed = randi()
+	# Every attack moves the board's seed on, so the one a recording needs is
+	# the one the game began with (wave 58's review).
+	_starting_seed = state.dice_seed
 	_units.reset()
 	winner = TacticalVictory.NOBODY
 	_computer_turn = BlueTurn.new(computer)
@@ -575,7 +579,7 @@ func _keep_if_over() -> void:
 		return
 	_kept = true
 	var rounds: int = mini(state.turn_number / TacticalScenario.FACTIONS + 1, TacticalVictory.ROUND_LIMIT)
-	var kept: Dictionary = TacticalRecording.made(_recorded.duplicate(), state.dice_seed, TacticalRecording.PERSON,
+	var kept: Dictionary = TacticalRecording.made(_recorded.duplicate(), _starting_seed, TacticalRecording.PERSON,
 		person_side, computer.controller_name(), winner, rounds)
 	if TacticalRecording.save(kept, recordings_folder) != "":
 		games_kept += 1

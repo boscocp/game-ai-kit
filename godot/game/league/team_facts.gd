@@ -20,9 +20,9 @@
 ##   stands next turn, and it has `WOUNDED_AT` health or less;
 ## - `prey_is_intruder`: the prey is that same enemy walker nearest home --
 ##   striking it answers the threat as well as walking back would;
-## - `point_free`: a control point no other walker of its side stands on or
-##   has claimed this turn -- true for a walker standing on one, so a holder
-##   sees its own point as free to keep.
+## - `point_free`: a control point nobody else stands on and no walker of its
+##   side has claimed this turn -- true for a walker standing on one, so a
+##   holder sees its own point as free to keep.
 ##
 ## The cells behind the facts -- the prey, the point, the intruder -- are kept
 ## too, so a deed carries out what the fact said and not a second guess.
@@ -106,7 +106,8 @@ func _read_home(state: BoardState, unit: Unit) -> void:
 
 
 # Prey: the weakest piece it beats that a walk this turn -- or standing --
-# brings into reach, and the cell nearest home it can be struck from.
+# brings into reach, and the first cell found it can be struck from: where it
+# stands, when it can.
 func _read_prey(state: BoardState, unit: Unit) -> void:
 	var places: Array = [unit.cell] + walks.keys()
 	for enemy: Unit in state.units:
@@ -134,7 +135,9 @@ static func _striking_place(places: Array, enemy: Unit, reach: int) -> Vector2i:
 func _read_point(state: BoardState, unit: Unit, claimed: Dictionary) -> void:
 	for candidate: Vector2i in TacticalScenario.POINTS:
 		var standing: Unit = state.unit_at(candidate)
-		var someone_else: bool = standing != null and standing.id != unit.id and standing.faction == unit.faction
+		# A point anyone else stands on is not free: one of ours holds it, and
+		# an enemy on it cannot be walked onto -- only struck, which is a hunt.
+		var someone_else: bool = standing != null and standing.id != unit.id
 		if someone_else or claimed.get(candidate, 0) > 0:
 			continue
 		if point.x < 0 or TacticalCombat.distance(unit.cell, candidate) < TacticalCombat.distance(unit.cell, point):

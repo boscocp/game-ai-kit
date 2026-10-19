@@ -44,34 +44,41 @@ scale, the rules at 0, with 95% bootstrap intervals (`LeagueRating`):
 
 | team | won | lost | rating | 95% interval |
 |---|---|---|---|---|
-| learned | 57 | 13 | +248 | +152 to +362 |
-| lookahead (hard) | 53 | 17 | +204 | +90 to +311 |
-| HTN | 34 | 36 | +26 | -90 to +125 |
-| behaviour tree | 32 | 38 | +9 | -97 to +116 |
-| rules | 31 | 39 | 0 | -- |
-| state machine | 31 | 39 | 0 | -114 to +95 |
-| GOAP | 28 | 42 | -27 | -129 to +71 |
-| planner | 14 | 56 | -163 | -294 to -71 |
+| learned | 59 | 11 | +311 | +219 to +417 |
+| lookahead (hard) | 55 | 15 | +263 | +162 to +397 |
+| HTN | 38 | 32 | +92 | -4 to +199 |
+| GOAP | 33 | 37 | +46 | -61 to +154 |
+| behaviour tree | 31 | 39 | +28 | -75 to +121 |
+| rules | 28 | 42 | 0 | -- |
+| state machine | 25 | 45 | -28 | -134 to +76 |
+| planner | 11 | 59 | -177 | -312 to -69 |
 
 No game was drawn: T47's last round settles them all.
 
-**What the table can say.** Three groups, and only three. The learned
-policy and the lookahead beat the rules, and their intervals sit clear of
-0. The planner loses to them, and its interval sits clear of 0 the other
-way -- as T12 found, T11's plan to save for the forge and a ram is a worse
-use of the money than buying what beats most. The four T15 teams and the
-rules are **not told apart**: every interval in the middle covers every
-other. HTN on top of them by 26 points is noise at 70 games a team.
+**What the table can say.** Each interval is a difference from the rules,
+so the table answers one question per team: is it told apart from the
+rules? Three are. The learned policy and the lookahead beat them, their
+intervals clear of 0. The planner loses to them, clear of 0 the other way --
+as T12 found, T11's plan to save for the forge and a ram is a worse use of
+the money than buying what beats most. The four T15 teams are **not told
+apart from the rules**: each interval covers 0 -- the HTN's only just, at
+-4, so it is the one a longer league might separate. Whether, say, the lookahead
+is told apart from the HTN is a question these intervals do not answer, and
+the page does not claim it.
 
 **What it cannot say.** That the four T15 techniques are equally good. They
-are equally good *here*, with five deeds and the rules' production under
-them. The deeds are where the walking is decided, and over 44,000 decisions
-the four spent them alike -- about 43% siege, 35% points, 10-15% defending,
-the rest hunting and falling back. The state machine defends most (15%), as
-its arrow home waits for home to be clear, not merely unthreatened; GOAP
-sieges most (49%) and takes fewest points (29%), as its prices send a walker
-to whichever of the two is nearer. Those are the documented differences,
-and on this board they move the result less than the noise does.
+are not told apart *here*, with five deeds and the rules' production under
+them. The deeds are where the walking is decided, and over the 41,000 to
+47,000 decisions each made (the runner prints each count) the four spent
+them alike -- about half siege, a quarter points, a tenth defending, the
+rest hunting and falling back. The state machine defends most (16%), as
+its arrow home waits for home to be clear, not merely unthreatened. On this
+board that documented difference moves the result less than the noise does.
+
+The table moved between two runs in this wave, after a fix to how a point
+is read (an enemy standing on it no longer counts as free -- wave 58's
+review): the four T15 teams gained, the state machine least. Their
+intervals covered 0 both times.
 
 ## What a decision costs
 
@@ -79,24 +86,27 @@ Milliseconds on the machine that ran it (mean, 95th percentile, slowest)
 against a budget of one 60 Hz frame, 16.7 ms, and the work where the
 technique counts any:
 
-| team | mean | 95th | slowest | work |
-|---|---|---|---|---|
-| rules | 0.63 | 1.73 | 5.76 | -- |
-| state machine | 0.86 | 3.88 | 17.28 | 0.5 states updated |
-| behaviour tree | 0.84 | 3.49 | 16.84 | 5.3 nodes ticked |
-| GOAP | 1.20 | 3.94 | 16.93 | 1.3 worlds |
-| HTN | 0.85 | 3.87 | 14.56 | 0.4 tasks; planned before 17% of decisions |
-| planner | 0.71 | 2.23 | 6.25 | 0.1 worlds; planned before 3% |
-| learned | 0.62 | 1.82 | 7.54 | -- |
-| lookahead (hard) | 1.21 | 3.80 | 16.66 | -- |
+| team | decisions | mean | 95th | slowest | work |
+|---|---|---|---|---|---|
+| rules | 23,363 | 0.63 | 1.72 | 6.33 | -- |
+| state machine | 46,174 | 0.93 | 4.28 | 14.92 | 0.5 states updated |
+| behaviour tree | 41,723 | 0.93 | 4.19 | 12.82 | 5.2 nodes ticked |
+| GOAP | 42,232 | 1.23 | 4.02 | 10.98 | 1.3 worlds |
+| HTN | 42,910 | 0.94 | 4.17 | 15.30 | 0.4 tasks; planned before 17% of decisions |
+| planner | 25,371 | 0.70 | 2.21 | 5.96 | 0.1 worlds; planned before 3% |
+| learned | 44,684 | 0.61 | 1.81 | 5.46 | -- |
+| lookahead (hard) | 44,024 | 1.20 | 3.97 | 16.60 | -- |
 
-The league holds every team to T11's 2000 worlds per decision and to the
-budget at the 95th percentile. The slowest decision is printed, not held:
-three teams brushed past 16.7 ms once in tens of thousands of decisions,
-which is the machine, not the technique.
+The league holds the teams that count worlds -- the planner and GOAP -- to
+T11's 2000 a decision, and every team to the clock's budget at the 95th
+percentile. The others count no worlds (the rules, the learned policy, the
+lookahead) or count in other units (nodes, tasks, states), and T11's budget
+says nothing about them. The slowest decision is printed, not held: in this
+run none passed 16.7 ms, in the run before three did, once each in tens of
+thousands of decisions -- the machine, not the technique.
 
 **The search is not the cost.** GOAP looks at 1.3 worlds a decision and the
-HTN at 0.4 tasks; the tree ticks five nodes. The four cost 0.2 to 0.6 ms
+HTN at 0.4 tasks; the tree ticks five nodes. The four cost 0.3 to 0.6 ms
 a decision more than the rules, whose routes they walk, and what they add
 is mostly the facts -- a flood for the walks, one for the way to their
 workshop, where each enemy could strike -- read alike by all four. That

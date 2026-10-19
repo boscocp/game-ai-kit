@@ -48,19 +48,30 @@ func begin_turn(state: BoardState) -> void:
 	_pending_plans += _inner.replans() - plans
 
 
-## The inner name.
+## The team's own name: a meter changes no name in the table.
 func controller_name() -> String:
 	return _inner.controller_name()
 
 
-## The inner line.
+## The team's own line for the screen.
 func describe() -> String:
 	return _inner.describe()
 
 
-## The inner unit of work.
+## What the team counts its work in, passed through so a reader of the
+## wrapper reads the team.
 func work_unit() -> String:
 	return _inner.work_unit()
+
+
+## The team's running total of work, passed through likewise.
+func work_done() -> int:
+	return _inner.work_done()
+
+
+## The team's plans made, passed through likewise.
+func replans() -> int:
+	return _inner.replans()
 
 
 ## The inner build, metered.

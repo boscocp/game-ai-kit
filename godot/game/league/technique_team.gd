@@ -20,6 +20,11 @@
 ## walker goes and why, which is where they differ; production is one rule
 ## for all four, so a difference in the league is a difference in the walking.
 ##
+## **Not the rules' "same question, same answer".** `RuleBasedBlue.choose`
+## promises it; the state machine and the HTN keep memory, so asking them
+## twice on one board moves the machine or the plan on. That is the lesson
+## of those two, not a defect, and `DecisionPolicy` does not ask for it.
+##
 ## When not to use it: a team that decides production for itself. Then the
 ## four are not comparable, which is the only reason to write them alike.
 @abstract
@@ -130,7 +135,10 @@ func _take_point(state: BoardState, unit: Unit, known: TeamFacts) -> TacticalDec
 		return TacticalDecision.hold(unit.id, "stays on the point at %s, which pays while it holds it" % known.point, unit.cell)
 	var best: Vector2i = _nearest_walk_to(state, unit, known.walks, known.point)
 	if best == unit.cell:
-		return TacticalDecision.hold(unit.id, "stays: no walk this turn brings it nearer the point at %s" % known.point, unit.cell)
+		# Never idle (T45): no walk nearer the point, so the rules' walk.
+		var instead: TacticalDecision = super.decide_move(state, unit.id)
+		instead.reason = "no walk this turn brings it nearer the point at %s, so by the rules: %s" % [known.point, instead.reason]
+		return instead
 	_claims[known.point] = 1
 	return TacticalDecision.walk(unit.id, known.walks[best], "walks to %s, towards the point at %s" % [best, known.point], best)
 

@@ -17,9 +17,16 @@
 ## - **take point**: the turns to walk there, plus `POINT_COST` -- it pays
 ##   only while it is held, and holding it is the work;
 ## - **siege**: the turns to walk to their workshop, plus `SIEGE_COST` -- the
-##   same as a point's, so the nearer of the two is the one taken;
+##   same as a point's, so the nearer of the two is the one taken, and at a
+##   tie the point (it is listed first, and the search keeps the first);
 ## - **defend**: the turns to walk to the intruder;
 ## - **fall back**: `HUNT_COST`.
+##
+## One difference the prices make that the tree's ranking does not: beside
+## their workshop with a fight in reach only by walking, GOAP takes the fight
+## (1 against at least 3) and walks off the siege, where the tree and the HTN
+## rank "at their workshop" above every hunt. Neither is wrong; it is what a
+## price says and a ranking does not.
 ##
 ## Choosing the goal is not planning, as T15 says of its guard: "safe" when in
 ## danger and wounded, "home safe" when home is threatened, and "pressure"
