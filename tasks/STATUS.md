@@ -133,10 +133,10 @@ and `make test-rts-simulation` (both): determinism by digest with a
 planted second seed, replay with a planted meddling, three cheats refused,
 ~70x real time, fog planted in and out, counters equal to their log.
 
-**For the owner.** The RTS demo needs art: `data/tactical/` (your 2 T25
-recordings) is still untracked and untouched. A search for open sci-fi /
-medieval RTS sprite packs was asked for in this session; its result is in
-the conversation, not yet in a task.
+**For the owner.** T20's art is decided and written into its task: Bos
+Wars' sheets, referenced by URL and sha256 and downloaded on demand, never
+committed. `data/tactical/` (your 2 T25 recordings) is still untracked and
+untouched.
 
 **Next:** T20, the RTS demo, on this core.
 
