@@ -42,6 +42,38 @@ func test_a_horizon_of_no_actions_makes_no_plan_and_buys_by_the_rules() -> void:
 	assert_str(decision.reason).is_equal(RuleBasedBlue.new().decide_build(state, workshop.id).reason + " (the plan buys nothing more: the rules decide)")
 
 
+func test_a_search_that_chose_no_attack_is_not_overruled_after_the_walk() -> void:
+	var state: BoardState = TacticalScenario.build()
+	var shield: Unit = _red(state, TacticalRules.SHIELD)
+	var runner: Unit = _blue(state, TacticalRules.RUNNER)
+	runner.cell = shield.cell + Vector2i.RIGHT
+	var level := LeveledBlue.new(Difficulty.named("hard"), 1)
+	level.begin_turn(state)
+
+	# Asked with nothing chosen, it takes the fight a shield wins against a runner...
+	assert_object(level.decide_attack(state, shield.id)).is_not_null()
+	# ...and asked after a search that chose none, it keeps to that.
+	level._strike[shield.id] = LeveledBlue.CHOSE_NOT_TO
+	assert_object(level.decide_attack(state, shield.id)).is_null()
+
+
+func test_a_walker_that_leaves_the_rules_walk_leaves_their_goals_unclaimed() -> void:
+	var state: BoardState = _the_middle_of_a_game()
+	var left_the_rules: int = 0
+	for unit: Unit in state.units_of(state.current_faction):
+		if not unit.type.mobile:
+			continue
+		var level := LeveledBlue.new(Difficulty.named("hard"), 1)
+		level.begin_turn(state)
+		var rules := RuleBasedBlue.new()
+		var by_the_rules: TacticalDecision = rules.decide_move(state, unit.id)
+		var chosen: TacticalDecision = level.decide_move(state, unit.id)
+		if chosen.target != by_the_rules.target:
+			left_the_rules += 1
+			assert_dict(level._claims).is_empty()
+	assert_int(left_the_rules).is_greater(0)
+
+
 func test_the_person_can_take_blue_and_the_computer_plays_red_first() -> void:
 	var scene: TacticalGame = auto_free((load("res://game/tactical/tactical.tscn") as PackedScene).instantiate())
 	scene.computer = LeveledBlue.new(Difficulty.named("hard"), 1)
@@ -135,3 +167,11 @@ static func _decisions(controller: LeveledBlue, state: BoardState, dice_seed: in
 			var decision: TacticalDecision = controller.decide_move(board, unit.id)
 			said.append("%s %s %s" % [decision.kind(), decision.target, decision.reason])
 	return said
+
+
+static func _red(state: BoardState, type_name: String) -> Unit:
+	return state.units_of(TacticalScenario.RED).filter(func(unit: Unit) -> bool: return unit.type.type_name == type_name)[0]
+
+
+static func _blue(state: BoardState, type_name: String) -> Unit:
+	return state.units_of(TacticalScenario.BLUE).filter(func(unit: Unit) -> bool: return unit.type.type_name == type_name)[0]

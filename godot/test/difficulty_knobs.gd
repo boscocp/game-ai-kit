@@ -11,8 +11,11 @@
 #    here, not read from the file it audits: a cheat added to
 #    `Difficulty.KNOBS` beside its field would otherwise allow itself. The
 #    ladder is the three levels `LEVELS` names, and an empty one fails. And
-#    `LeveledBlue` reads a level's name only to say it: a level that played
-#    differently because it is called "hard" would be a fourth knob.
+#    `LeveledBlue` should read a level's name only to say it: a level that
+#    played differently because it is called "hard" would be a fourth knob.
+#    That last part is a tripwire, not an allowlist -- it counts the text
+#    `level.name` in `leveled_blue.gd`, and a branch on `controller_name()`
+#    would pass it. The name stays readable for review.
 # 2. **The same resources.** The level is handed the board and answers it;
 #    it never changes it. Every question it is asked in a game is asked on a
 #    board whose pieces, health, funds, upgrades, point-turns and dice are
