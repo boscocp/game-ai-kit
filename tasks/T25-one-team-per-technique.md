@@ -182,3 +182,61 @@ whether its extra cost bought anything in that fight.
 
 Then play against the team the league ranks most human, at a strength you can
 beat. It should lose in ways you can recognise from your own mistakes.
+
+## What was done so far (2026-10-19, wave 58) -- wip
+
+The owner chose the scope at the start: the strength half, with T15's four
+techniques written as tactical teams. Steps 1, 2, 3 (the recorder, not the
+recordings) and 7 (for strength and cost only) are built; 4, 5 and 6 wait
+for the owner's recordings, as the task says they must.
+
+- **The teams** (`godot/game/league/`). `TechniqueTeam` gives T15's four a
+  shared set of facts (`TeamFacts`) and five deeds -- siege, hunt, defend,
+  take point, fall back -- so they differ only in how a deed is chosen, as
+  T15's guard did: `MachineTeam`, `TreeTeam`, `GoapTeam`, `HtnTeam`.
+  Production and attacks are the rules', and each team says so. GOAP gets
+  what the owner's wave 57 note asked for: two or three ways to each goal,
+  priced in turns by route on the board, so it takes the nearer of a point
+  and a siege where the tree always takes the point -- `league_test.gd`
+  holds the difference. The league's roster (`League`) is those four, the
+  rules, the planner, the learned policy and T12's hard level.
+- **Step 1, the runner** (`test/league_runner.gd`, `make league`): every
+  pairing from both seats, the seats on dice of their own; Bradley-Terry by
+  Hunter's MM with one imaginary draw a pairing, 95% bootstrap intervals
+  (`LeagueRating`). It asserts every game ends, no decision is refused, the
+  whole league played twice gives the same table, each team has as many
+  games from each seat, and the budget -- each against a planted case it
+  must catch first (a slow team, an unseeded one, a team always red).
+- **Step 2, the cost**: `MeteredTeam` times every decision and reads the
+  work a controller counts (`BlueController.work_done`, `work_unit`,
+  `replans`, new); the turn's planning is charged to its first decision.
+  **The budget is two numbers**: T11's 2000 worlds a decision, held at every
+  decision, and one 60 Hz frame, 16.7 ms, held at the 95th percentile. The
+  task asked for "T11's per-call budget", which is in worlds; the clock was
+  added, and held at the 95th because one decision in tens of thousands
+  lands on the machine's own pauses -- three teams' slowest brushed past it.
+- **Step 3, the recorder**: `make record-tactical` keeps each game played
+  to its end in `data/tactical/` -- not `spec/recordings/` as written above,
+  but beside `data/fights/`, ADR 0017's place for a person's recordings.
+  A recording is the decision log and the dice seed; `TacticalRecording`
+  replays it to the same board and cuts the person's rows, each the board
+  they saw and what they did. Z takes its row back with the move.
+- **The demo**: C in `make demo-tactical` now also cycles through the four.
+- **Step 7, in part**: `docs/concepts/the-league.md`, strength and cost.
+
+**Measured** (`make league`, 5 seeds a seat, 280 games, 311 s a pass):
+learned +248 (+152 to +362), lookahead +204 (+90 to +311), HTN +26, tree +9,
+rules 0, state machine 0, GOAP -27 (the middle five each about +-100), and
+the planner -163 (-294 to -71). Three groups and only three: the four T15
+techniques and the rules cannot be told apart on this board. Every team's
+mean decision is under 1.3 ms.
+
+**Not done**:
+
+- step 4 and its command, `gameaikit.league.likeness --check`, step 5's
+  human-likeness knobs, and the acceptance's "T12's ordering holds with the
+  knobs on" -- the runner prints that it does not assert it;
+- step 6, the meter on screen, and `league_meter.gd`; the counters it will
+  read are `MeteredTeam`'s;
+- the Cloned team, and the owner's twenty recordings it and step 4 need;
+- `league_runner.gd` is not in `make check`: two passes take ten minutes.

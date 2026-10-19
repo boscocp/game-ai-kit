@@ -388,13 +388,23 @@ demo-behaviour: import ## One guard, four ways to decide: 1-4 swap state machine
 	@$(GODOT) --path godot res://demos/behaviour/behaviour_demo.tscn
 
 .PHONY: demo-tactical
-demo-tactical: import ## Advance Wars style tactics against the computer: click to move, W waits, 1-5 build, Z undo, space ends the turn, C changes the computer (rules, planner, learned, easy, normal, hard), S swaps sides
+demo-tactical: import ## Advance Wars style tactics against the computer: click to move, W waits, 1-5 build, Z undo, space ends the turn, C changes the computer (rules, planner, learned, easy, normal, hard, state machine, behaviour tree, GOAP, HTN), S swaps sides
 	@$(GODOT) --path godot res://game/tactical/tactical.tscn
 
 .PHONY: tactical-win-rates
 tactical-win-rates: import ## Seeded games between the tactical board's controllers: wins, rounds, stuck pieces (~1 min)
 	@# A measurement: the tuning tasks' acceptance passes it --at-most limits.
 	@$(GODOT) --headless --path godot -s res://test/tactical_win_rates.gd -- $(or $(GAMES),20) $(LIMITS)
+
+.PHONY: league
+league: import ## T25's league: every team against every other from both seats, rated with intervals, each decision's cost (~10 min)
+	@# T25's acceptance. Not in `check`: 280 games, played twice to hold the
+	@# table to its seeds, take about ten minutes. SEEDS sets seeds a seat.
+	@$(GODOT) --headless --path godot -s res://test/league_runner.gd -- $(or $(SEEDS),5)
+
+.PHONY: record-tactical
+record-tactical: import ## Play the tactical board and keep every game you finish in data/tactical/, T25's human reference
+	@$(GODOT) --path godot res://game/tactical/tactical.tscn -- --record
 
 .PHONY: demo-fighting
 demo-fighting: import ## Training mode, you against a dummy: A/D walk, W jump, S crouch, U/I punch, J/K kick, L throw, O evade, hold away to guard, M dummy mode, P pause, space one frame

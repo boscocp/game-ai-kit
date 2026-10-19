@@ -16,14 +16,20 @@
 ##
 ## The computer is whichever `BlueController` the scene was given -- the
 ## rules by default, and C hands it to the planner (T11), the learned policy
-## (T44, T46), then the three difficulty levels (T12), then back to the
-## rules, starting a new game. Each of its decisions is drawn before it is
-## played, and space plays it, or enter plays the rest of the turn -- the
+## (T44, T46), the three difficulty levels (T12), the four teams T25 wrote
+## from T15's techniques -- the state machine, the behaviour tree, GOAP and
+## the HTN -- and back to the rules, each time starting a new game. Each of
+## its decisions is drawn before it is played, and space plays it, or enter plays the rest of the turn -- the
 ## scene is an example in invariant 13's sense, which is why it is
 ## `make demo-tactical`.
 ##
 ## The game ends when one side takes the other's workshop, or in a draw at the
 ## round limit (`TacticalVictory`).
+##
+## Opened with `-- --record` (`make record-tactical`), every game played to
+## its end is kept in `data/tactical/` -- the decisions both sides played,
+## the person's taken back with Z dropped with them (`TacticalRecording`) --
+## and the status says how many. Nothing is kept otherwise (ADR 0017).
 class_name TacticalGame
 extends Node2D
 
@@ -32,7 +38,7 @@ const WHAT_THIS_IS: String = "tactics in the style of Advance Wars: build, cross
 
 ## The controllers still to come, named on screen beside the one playing, so
 ## a person knows the computer is a slot and not a fixed opponent.
-const CONTROLLERS_TO_COME: String = "C hands the computer to the next controller -- rules, planner, learned, easy, normal, hard -- and S swaps sides; either starts a new game"
+const CONTROLLERS_TO_COME: String = "C hands the computer to the next controller -- rules, planner, learned, easy, normal, hard, state machine, behaviour tree, GOAP, HTN -- and S swaps sides; either starts a new game"
 
 @onready var _board: BoardView = $BoardView
 @onready var _units: UnitView = $UnitView
@@ -70,6 +76,14 @@ var _showing_threat: bool = true
 # True after one press of end turn with units still unspent: the next press
 # ends it. Any other action puts it back.
 var _confirming_end: bool = false
+## True when the scene was opened to record, and how many games it has kept.
+var recording: bool = OS.get_cmdline_user_args().has("--record")
+var games_kept: int = 0
+## Where a recording is written; a test points it elsewhere.
+var recordings_folder: String = TacticalRecording.directory()
+# This game's decisions so far, as rows, and whether it has been kept.
+var _recorded: Array[Dictionary] = []
+var _kept: bool = false
 
 
 func _ready() -> void:
@@ -103,6 +117,8 @@ func new_game() -> void:
 	winner = TacticalVictory.NOBODY
 	_computer_turn = BlueTurn.new(computer)
 	_computer_news.clear()
+	_recorded.clear()
+	_kept = false
 	# The last game's last event is not news in this one -- and when the
 	# computer moves first, nothing below would clear it.
 	_last_event = ""
@@ -145,6 +161,7 @@ func attack(target: Unit) -> void:
 	var strike := Attack.new(_selected_id, target.id)
 	var before: BoardState = state
 	if _act(TacticalCombat.apply(state, strike), TacticalCombat.why_refused(state, strike)):
+		_note(TacticalDecision.strike(strike.attacker_id, target, ""), before)
 		_last_event = TacticalCombat.told(before, strike, state)
 		_turn.attacked(strike.attacker_id)
 		_turn.seal()
@@ -166,7 +183,9 @@ func build(index: int) -> void:
 		_refuse("the workshop has already built this turn; Z takes the build back")
 		return
 	var order := ProductionOrder.new(_selected_id, kind, TacticalRules.free_cell_beside(state, workshop, kind))
+	var before: BoardState = state
 	if _act(state.produce(order), state.why_production_refused(order)):
+		_note(TacticalDecision.build(order.producer_id, order, ""), before)
 		_turn.spend(_selected_id)
 		_last_event = "built a %s at %s; it moves next turn" % [kind.type_name, order.cell]
 	_refresh()
@@ -182,6 +201,7 @@ func wait() -> void:
 		_refuse("nothing in hand that can still move")
 		return
 	_turn.remember(state)
+	_note(TacticalDecision.hold(unit.id, "", unit.cell), state)
 	_turn.spend(unit.id)
 	_last_event = "the %s waits at %s" % [unit.type.type_name, unit.cell]
 	_last_refusal = ""
@@ -195,7 +215,9 @@ func buy_forge() -> void:
 		return
 	_confirming_end = false
 	var forge: Upgrade = TacticalRules.forge()
+	var before: BoardState = state
 	if _act(state.buy(forge), state.why_upgrade_refused(forge)):
+		_note(TacticalDecision.buy(_selected_id, forge, "", Vector2i.ZERO), before)
 		_last_event = "bought the forge: rams can be built"
 	_refresh()
 
@@ -212,6 +234,9 @@ func undo() -> void:
 		_refuse("nothing to take back this turn")
 		return
 	state = before
+	# Every action undo can take back remembered one state and wrote one row.
+	if not _recorded.is_empty():
+		_recorded.pop_back()
 	_last_refusal = ""
 	_last_event = "taken back"
 	_hold_what_was_taken_back(spent_before)
@@ -264,6 +289,8 @@ func _play_computer_decision() -> void:
 	var walker: Unit = state.unit_by_id(decision.unit_id)
 	var before: BoardState = state
 	state = _computer_turn.play(state)
+	if decision in _computer_turn.played:
+		_note(decision, before)
 	if decision.attack != null and decision in _computer_turn.played:
 		_last_event = TacticalCombat.told(before, decision.attack, state)
 		_computer_news.append(_last_event)
@@ -347,7 +374,8 @@ func _press(keycode: Key) -> void:
 
 
 ## Hand the computer's side to the next controller -- rules, planner,
-## learned, then each difficulty level, and round again -- and start again: a
+## learned, each difficulty level, then the four T15 techniques (T25), and
+## round again -- and start again: a
 ## controller swapped mid-game would inherit a board it did not play.
 func swap_controller() -> void:
 	computer = next_controller(computer)
@@ -361,11 +389,19 @@ static func next_controller(playing: BlueController) -> BlueController:
 	var levels: Array[Difficulty] = Difficulty.presets()
 	if playing is LeveledBlue:
 		var at: int = levels.map(func(level: Difficulty) -> String: return level.name).find(playing.controller_name())
-		return LeveledBlue.new(levels[at + 1], randi()) if at + 1 < levels.size() else RuleBasedBlue.new()
+		return LeveledBlue.new(levels[at + 1], randi()) if at + 1 < levels.size() else MachineTeam.new()
 	if playing is PlannedBlue:
 		return LearnedBlue.new()
 	if playing is LearnedBlue:
 		return LeveledBlue.new(levels[0], randi())
+	if playing is MachineTeam:
+		return TreeTeam.new()
+	if playing is TreeTeam:
+		return GoapTeam.new()
+	if playing is GoapTeam:
+		return HtnTeam.new()
+	if playing is HtnTeam:
+		return RuleBasedBlue.new()
 	var planner := PlannedBlue.new()
 	planner.verbose = true
 	return planner
@@ -402,7 +438,9 @@ func _walk_to(cell: Vector2i) -> void:
 	if walks.has(cell):
 		path = walks[cell]
 	var move := Move.new(_selected_id, path)
+	var before: BoardState = state
 	if _act(state.apply(move), _explained(state.why_refused(move), cell)):
+		_note(TacticalDecision.walk(move.unit_id, path, "", cell), before)
 		_units.walk(unit.id, unit.cell, path)
 		_turn.spend(_selected_id)
 		_select_next_unspent()
@@ -515,9 +553,32 @@ func _refresh() -> void:
 	_intent.show_threat(threat() if _showing_threat else {} as Dictionary[Vector2i, int])
 	_header.text = "%s\n%s\nyou play %s; %s is played by %s" % [WHAT_THIS_IS, TacticalVictory.rule(),
 		TacticalStatus.side_name(person_side), TacticalStatus.side_name(TacticalScenario.FACTIONS - 1 - person_side), computer.describe()]
+	_keep_if_over()
 	_end_button.disabled = not _persons_turn()
 	_undo_button.disabled = not (_persons_turn() and _turn.can_undo())
 	_status.text = _status_text()
+	if recording:
+		_status.text += "\nrecording: %d game(s) kept in data/tactical/" % games_kept
+
+
+# Write `decision`, played on `before`, into this game's rows -- when
+# recording, and only then.
+func _note(decision: TacticalDecision, before: BoardState) -> void:
+	if recording:
+		_recorded.append(TacticalRecording.row_of(decision, before))
+
+
+# When recording, write this game to `data/tactical/` once it is over: only a
+# game played to its end is kept, so a restart is not a game.
+func _keep_if_over() -> void:
+	if not recording or _kept or winner == TacticalVictory.NOBODY:
+		return
+	_kept = true
+	var rounds: int = mini(state.turn_number / TacticalScenario.FACTIONS + 1, TacticalVictory.ROUND_LIMIT)
+	var kept: Dictionary = TacticalRecording.made(_recorded.duplicate(), state.dice_seed, TacticalRecording.PERSON,
+		person_side, computer.controller_name(), winner, rounds)
+	if TacticalRecording.save(kept, recordings_folder) != "":
+		games_kept += 1
 
 
 func _status_text() -> String:

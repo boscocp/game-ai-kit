@@ -63,6 +63,27 @@ func plan_marks(_state: BoardState) -> Dictionary[Vector2i, String]:
 	return {}
 
 
+## How much searching or deciding this controller has done since it was
+## made, counted in `work_unit` -- worlds, nodes, tasks -- or 0 for one with
+## nothing to count, such as the rules. A running total, so whoever measures
+## one decision reads it before and after: the controller is never asked
+## to know which decision a meter is looking at (T25).
+func work_done() -> int:
+	return 0
+
+
+## What `work_done` counts, such as "worlds"; "" when it counts nothing.
+func work_unit() -> String:
+	return ""
+
+
+## How many times it has made a plan since it was made; 0 for a controller
+## that does not plan, or one that plans every decision and so has no
+## "again" to count (T25's meter counts replanning, not planning).
+func replans() -> int:
+	return 0
+
+
 ## The walk `decide_move` chose, as `DecisionPolicy` asks for it: an empty
 ## path means hold.
 func choose(state: BoardState, unit_id: int) -> Move:
