@@ -92,7 +92,7 @@ string; C8 by `call("quit")`; the export missing the weights; the menu
 visible while playing; focus not restored; Escape in `_unhandled_input`;
 and the two defects of findings 1 and 2, found by probe.
 
-## What was done about it
+## What was done about them
 
 - 1: whether an example is playing is read off the tree (`is_playing()`:
   the current scene is not the menu), never a kept reference. The walk
