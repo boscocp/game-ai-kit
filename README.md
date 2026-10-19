@@ -102,9 +102,12 @@ unit and everywhere it can reach lights up; click a lit cell and it walks
 there and greys out until your next turn. Z takes back, space ends the turn.
 W has a unit wait. Blue moves second, and starts with one more shield for
 it. Blue plays by rules -- build what beats the most of your pieces, walk
-every unit at your workshop -- and C hands it to the planner or the learned
-policy instead; each of its decisions is drawn in pink, with why, before
-space plays it (enter plays the rest).
+every unit at your workshop -- and C hands it to the planner, the learned
+policy, or one of three difficulty levels (easy, normal, hard) that differ
+only in how much they think -- never in what they are given; S swaps sides,
+so you can play blue against the computer as red. Each of the computer's
+decisions is drawn in pink, with why, before space plays it (enter plays
+the rest).
 Click an enemy in reach to attack it, once a turn: a fight is dice, the
 counter table and cover tilt it -- attacking at even health, a piece the
 table favours wins about 19 fights in 20 -- and the loser is removed. Bolt towers fire
@@ -136,7 +139,7 @@ make run           # checkers against minimax and alpha-beta
 make demo-skirmish # the learned policy plays blue on the skirmish board
 make demo-tictactoe # MENACE, the matchbox machine, at four ages of training
 make demo-search   # the four searches on a board you can paint
-make demo-tactical # Advance Wars style turns against a rule-based blue
+make demo-tactical # Advance Wars style turns against the computer, at three levels
 make check         # every gate
 ```
 

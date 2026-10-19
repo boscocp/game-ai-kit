@@ -73,7 +73,7 @@ lint-review: ## This branch has a review record and may be merged
 check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-search-properties test-planner-properties test-planner-benchmark test-perception-properties \
        test-decisions test-demo-overlays test-replay test-opponent-levels test-opponent-properties \
-       test-clone-rows test-inference-budget test-clone-report ## Run every gate
+       test-clone-rows test-inference-budget test-clone-report test-difficulty-knobs ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability lint-demos \
@@ -378,7 +378,7 @@ demo-stealth: import ## Cross the hall unseen: arrows walk, shift sprints, space
 	@$(GODOT) --path godot res://game/stealth/stealth.tscn
 
 .PHONY: demo-tactical
-demo-tactical: import ## Advance Wars style tactics against a rule-based blue: click to move, W waits, 1-5 build, Z undo, space ends the turn
+demo-tactical: import ## Advance Wars style tactics against the computer: click to move, W waits, 1-5 build, Z undo, space ends the turn, C changes the computer (rules, planner, learned, easy, normal, hard), S swaps sides
 	@$(GODOT) --path godot res://game/tactical/tactical.tscn
 
 .PHONY: tactical-win-rates
@@ -403,6 +403,18 @@ test-opponent-properties: import ## The opponent model learns a habit within 40 
 	@# T17's acceptance, with two planted models -- one that never forgets,
 	@# one with no context -- that must fail the same claims.
 	@$(GODOT) --headless --path godot -s res://test/opponent_properties.gd
+
+.PHONY: test-difficulty-knobs
+test-difficulty-knobs: import ## The tactical levels never cheat: only the documented knobs, the same board, dice and orders
+	@# T12's allowlist, with three planted cheats it must catch. A few seconds.
+	@$(GODOT) --headless --path godot -s res://test/difficulty_knobs.gd
+
+.PHONY: test-difficulty-matches
+test-difficulty-matches: import ## The tactical levels are a ladder, and each beats the rules from both seats (~10 min)
+	@# T12's acceptance. Not in `check`: 750 games of up to 40 rounds take
+	@# about ten minutes, so CI does not hold the ladder -- run it after any
+	@# change to a level, `LeveledBlue`, `FightOdds` or the tactical rules.
+	@$(GODOT) --headless --path godot -s res://test/difficulty_matches.gd
 
 .PHONY: test-opponent-levels
 test-opponent-levels: import ## The fixed opponent's levels are ordered: each beats the one below it 60 times in 100

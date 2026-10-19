@@ -10,6 +10,12 @@
 ## 3. **a budget that still answers** -- a call that runs out returns the way
 ##    to the world that looked nearest, marked `partial`, rather than nothing.
 ##
+## And a **horizon** (T12): how many actions ahead it may look. A world that
+## many actions from the start is weighed but not expanded, so a goal further
+## off is not found -- the search ends with the way to the world that looked
+## nearest, `partial`, as a budget does. The budget bounds the work; the
+## horizon bounds how far ahead the plan sees, which is the difficulty knob.
+##
 ## Breadth-first over bits is here too, as `Guide.BREADTH_FIRST`: the same
 ## search as `StripsPlanner` with only the representation changed, so the
 ## benchmark can tell what the bits are worth apart from what the guess is.
@@ -56,6 +62,9 @@ enum Guide { BREADTH_FIRST, H_MAX, H_ADD }
 ## `StripsPlanner.DEFAULT_BUDGET`, so the two can be compared.
 const DEFAULT_BUDGET: int = 50000
 
+## No horizon: look as many actions ahead as the budget allows.
+const NO_HORIZON: int = -1
+
 
 # Every world the search has reached, as parallel arrays indexed by the order
 # it reached them in. A world is stored once with the action and the world it
@@ -94,9 +103,11 @@ class _Reached:
 ##
 ## With `Guide.H_MAX` the plan is the shortest; with `Guide.H_ADD` it may not
 ## be; with `Guide.BREADTH_FIRST` it is, and the budget is the only thing
-## standing between the call and 2^predicates worlds.
+## standing between the call and 2^predicates worlds. `horizon` is how many
+## actions ahead to look (see the header); breadth-first, which has no world
+## it could call nearest, gives up at it as it does at its budget.
 func plan(actions: Array[StripsAction], start: WorldState, goal: PackedStringArray,
-		guide: Guide = Guide.H_ADD, budget: int = DEFAULT_BUDGET) -> PlanResult:
+		guide: Guide = Guide.H_ADD, budget: int = DEFAULT_BUDGET, horizon: int = NO_HORIZON) -> PlanResult:
 	var domain := PackedDomain.new(actions, start, goal)
 	if domain.why_unpackable() != "":
 		# Not `impossible`: nothing was searched, so nothing was proved.
@@ -107,21 +118,21 @@ func plan(actions: Array[StripsAction], start: WorldState, goal: PackedStringArr
 	if from & wanted == wanted:
 		return PlanResult.new([] as Array[StripsAction], true, 0, false)
 	if guide == Guide.BREADTH_FIRST:
-		return _breadth_first(domain, from, wanted, budget)
+		return _breadth_first(domain, from, wanted, budget, horizon)
 	var combine: RelaxedCost.Combine = RelaxedCost.Combine.MAX if guide == Guide.H_MAX else RelaxedCost.Combine.ADD
-	return _a_star(domain, from, domain.bits_of(goal), combine, budget)
+	return _a_star(domain, from, domain.bits_of(goal), combine, budget, horizon)
 
 
 # `StripsPlanner`'s search, over bits. The worlds are reached in the order
 # they are taken off, so the list of reached worlds is the queue itself and
 # `next` is its front.
-func _breadth_first(domain: PackedDomain, from: int, wanted: int, budget: int) -> PlanResult:
+func _breadth_first(domain: PackedDomain, from: int, wanted: int, budget: int, horizon: int) -> PlanResult:
 	var reached := _Reached.new()
 	reached.add(from, -1, -1, 0, 0)
 	var seen: Dictionary[int, bool] = {from: true}
 	var next: int = 0
 	while next < reached.states.size():
-		if next >= budget:
+		if next >= budget or (horizon != NO_HORIZON and reached.taken[next] >= horizon):
 			return PlanResult.ran_out(next)
 		var finished: int = _generate(domain, next, reached, wanted, seen)
 		if finished != -1:
@@ -158,7 +169,7 @@ func _generate(domain: PackedDomain, node: int, reached: _Reached, wanted: int,
 # with the smallest `f` is known to be the end of a shortest plan -- under
 # h_max. Under h_add nothing is known, which is the bargain it makes.
 func _a_star(domain: PackedDomain, from: int, goal: PackedInt32Array,
-		combine: RelaxedCost.Combine, budget: int) -> PlanResult:
+		combine: RelaxedCost.Combine, budget: int, horizon: int) -> PlanResult:
 	var reached := _Reached.new()
 	var first_guess: int = RelaxedCost.estimate(domain, from, goal, combine)
 	if first_guess >= RelaxedCost.UNREACHABLE:
@@ -167,6 +178,7 @@ func _a_star(domain: PackedDomain, from: int, goal: PackedInt32Array,
 	var cheapest_way: Dictionary[int, int] = {from: 0}
 	var nearest: int = 0
 	var visited: int = 0
+	var beyond_the_horizon: bool = false
 	while not frontier.is_empty():
 		if visited >= budget:
 			return PlanResult.partial_plan(reached.steps_to(nearest, domain), visited)
@@ -180,7 +192,13 @@ func _a_star(domain: PackedDomain, from: int, goal: PackedInt32Array,
 			nearest = node
 		if _holds(reached.states[node], goal):
 			return PlanResult.new(reached.steps_to(node, domain), true, visited, false)
+		if horizon != NO_HORIZON and reached.taken[node] >= horizon:
+			beyond_the_horizon = true
+			continue
 		_expand(domain, node, reached, goal, combine, cheapest_way, frontier)
+	# Nothing left to try proves there is no plan only if nothing was cut off.
+	if beyond_the_horizon:
+		return PlanResult.partial_plan(reached.steps_to(nearest, domain), visited)
 	return PlanResult.impossible(visited)
 
 

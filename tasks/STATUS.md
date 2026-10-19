@@ -38,7 +38,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T32 | Checkers with a learned evaluation | done | after Samuel (1959 paper, checked): Python rules and search held to Godot's by two vectors; logistic fit on self-play; learned loses 0.125 at two plies, 0.53 without its advancement weight; controls cannot be told from it (alpha-beta ignores scale); E toggles it in `make run`; manual check still a person's |
 | T10 | The tactical scenario | done | five types, two towers, a workshop, funds, a forge, a river with one bridge; manual check: terrain yes, type feel waits on T26 |
 | T11 | The planner plays | done | `PlannedBlue`, C in `make demo-tactical`: STRIPS over `spec/pddl/tactics-domain.pddl`, A\* with h_max over bits (383 worlds against breadth-first's 11102 on 60 boards); replans every 3 turns or when the plan stops running; plan listed and numbered on the board; against the rules 7-13 as blue, 0-20 as red; manual check still a person's |
-| T12 | Three difficulties, honestly | todo | horizon and depth, never cheating; five levels if they stay ordered |
+| T12 | Three difficulties, honestly | done | `LeveledBlue`: the rules' walk, staying, or an attack cell, weighed at 1 or 2 plies with exact odds (`FightOdds`, never the board's dice) and Wesnoth's aggression; easy 1 ply noise 2.0, normal 2 plies noise 1.0, hard 2 plies; normal beat easy 64-35, hard normal 65-33, each level the rules 22-25 of 25 per seat; plan horizon 0 at every level -- a plan measured weaker (9-31); three, not five; S swaps sides; manual check still a person's |
 | T13 | `ai_fuzzy`, from a library that already exists | done | rewritten, not ported: the library was C# and its core was missing (ADR 0011); 3 vectors read from both languages |
 | T14 | The stealth scenario | done | `ai_perception`, fuzzy suspicion, three guard states; 4 properties over 300 maps |
 | T15 | `ai_behaviour`: the four ways to decide | todo | FSM, tree, GOAP, HTN, beside STRIPS |
@@ -112,6 +112,35 @@ sha256 and never committed.
 | T52 | Bots against the player, with an optional stealth | blocked | third person; a role arbiter, awareness that accumulates with three alert levels, a shared belief map for the search -- each drawn and switchable |
 
 ---
+
+## Resuming after 2026-10-19 (wave 55)
+
+**Where it stopped -- read first.** Wave 55 was T12, taken as written on
+the owner's word, though STATUS had said to ask first: the planner then
+lost to the rules 2-18 as red, so "every level beats the rules" could not
+hold with the planner as the base. It holds now. Reviewed and merged.
+
+**What landed.** `Difficulty` in `ai_planning` -- three knobs, an allowlist,
+the presets; a horizon on `HeuristicPlanner`; `FightOdds`, a fight's odds
+worked out from the rules and the die; `LeveledBlue`, which weighs the
+rules' walk, staying and every attack cell at 1 or 2 plies. The scene's
+computer is any controller on either side: C cycles rules, planner, learned,
+easy, normal, hard; S swaps sides. `make test-difficulty-knobs` is in
+`check`; `make test-difficulty-matches` (~10 min) is not, and says so.
+
+**What the measurements said** (T12's record has them all). Three things
+were wrong before the levels were ordered, each found by looking at a game
+rather than by tuning: a route to the goal round enemy pieces, which two
+sides ringing their workshops left nobody with (everything froze); a value
+of standing still that beat the rules' fallback walk, so noise *helped*,
+65-35; and an answer counted in full, so 2 plies stayed home. Wesnoth's
+aggression (0.4) is from the reference, not fitted. **The plan horizon is a
+knob that weakens**: no plan beat T11's plan 31-9 at every horizon tried, so
+every level plans 0 actions ahead -- for the owner to see: T11's plan is a
+worse strategy than buying by the rules on today's board.
+
+**Next:** `make wave` picks by table order. The owner's still open:
+ADR 0018 (T50-T52, T54 blocked); T48's third change; T45's and T46's bars.
 
 ## Resuming after 2026-10-18 (wave 54)
 

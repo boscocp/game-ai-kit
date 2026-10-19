@@ -20,7 +20,8 @@ static func text(state: BoardState, in_hand: Unit, refusal: String, news: String
 	var targets: String = _targets(state, in_hand) if can_attack else ""
 	if targets != "":
 		lines.append(targets)
-	lines.append("Z takes back the last thing you did  ·  space ends your turn, and blue is paid %d and its points" % TacticalRules.INCOME)
+	lines.append("Z takes back the last thing you did  ·  space ends your turn, and %s is paid %d and its points" % [
+		side_name(TacticalScenario.FACTIONS - 1 - state.current_faction), TacticalRules.INCOME])
 	if news != "":
 		lines.append("\n" + news)
 	if refusal != BoardState.LEGAL:
@@ -28,17 +29,18 @@ static func text(state: BoardState, in_hand: Unit, refusal: String, news: String
 	return "\n".join(lines)
 
 
-## What the status says on blue's turn: who is playing it, what it is about
-## to do and why, and what to press.
-static func blue_text(state: BoardState, turn: BlueTurn, controller: BlueController, news: String = "") -> String:
-	var lines: Array[String] = [_headline(state), ControlPoints.describe(state), "blue is thinking with %s" % controller.controller_name()]
+## What the status says on the computer's turn, whichever side it plays: who
+## is playing it, what it is about to do and why, and what to press.
+static func computer_text(state: BoardState, turn: BlueTurn, controller: BlueController, news: String = "") -> String:
+	var side: String = side_name(state.current_faction)
+	var lines: Array[String] = [_headline(state), ControlPoints.describe(state), "%s is thinking with %s" % [side, controller.controller_name()]]
 	if news != "":
 		lines.append("\n" + news)
 	if turn.next != null:
 		lines.append("\nnext (drawn in pink): unit %d %s" % [turn.next.unit_id, turn.next.reason])
-		lines.append("\nspace plays it  ·  enter plays the rest of blue's turn")
+		lines.append("\nspace plays it  ·  enter plays the rest of %s's turn" % side)
 	else:
-		lines.append("\nblue has finished its turn. Space hands it back to red")
+		lines.append("\n%s has finished its turn. Space hands it back to %s" % [side, side_name(TacticalScenario.FACTIONS - 1 - state.current_faction)])
 	lines.append("\n%d decision(s) played this turn" % turn.played.size())
 	var plan: Array[String] = controller.plan_lines()
 	if not plan.is_empty():

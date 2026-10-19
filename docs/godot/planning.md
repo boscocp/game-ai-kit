@@ -101,6 +101,30 @@ is in `heuristic_planner.gd`'s header. A domain with more than 63 facts does
 not fit in an `int`; the call says so with `push_error` and returns
 `gave_up`, never "impossible".
 
+A sixth argument, the **horizon**, is how many actions ahead the search may
+look (T12). A world that far from the start is weighed and not expanded, so a
+goal further off comes back as a partial plan of at most that many steps --
+never as "impossible", because what was cut off was not searched. The budget
+bounds the work; the horizon bounds how far the plan sees, which is a
+difficulty knob, not a performance one:
+
+```gdscript
+var short: PlanResult = planner.plan(GameDomain.actions(), GameDomain.opening_world(),
+	GameDomain.goal(), HeuristicPlanner.Guide.H_MAX, HeuristicPlanner.DEFAULT_BUDGET, 3)
+# short.partial is true, and short.steps holds at most 3 actions
+```
+
+## How much it may think: `Difficulty`
+
+`Difficulty` is a level as three numbers and nothing else: `plan_horizon` (the
+argument above), `search_depth` in plies and `evaluation_noise`. It holds no
+logic; a controller reads it. `Difficulty.presets()` is the ladder the tactical
+board plays (`LeveledBlue`), and `Difficulty.KNOBS` is the allowlist
+`test/difficulty_knobs.gd` holds every preset to -- a level with a field more,
+such as more vision, is refused. On that board every preset plans 0 actions
+ahead: measured, T11's plan made a side weaker, and a knob that weakens what it
+is meant to strengthen is not a difficulty knob there.
+
 ## From a PDDL file
 
 The game does not read PDDL -- parsing a domain file is a tool's job, done

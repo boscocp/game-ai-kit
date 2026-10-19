@@ -110,6 +110,47 @@ func test_breadth_first_has_no_partial_plan_to_give() -> void:
 	assert_array(result.steps).is_empty()
 
 
+func test_a_horizon_shorter_than_the_plan_returns_its_first_steps_and_never_more() -> void:
+	var whole: PlanResult = _plan_game(H_MAX)
+	var horizon: int = whole.steps.size() - 2
+	var result: PlanResult = HeuristicPlanner.new().plan(GameDomain.actions(), GameDomain.opening_world(),
+		GameDomain.goal(), H_MAX, HeuristicPlanner.DEFAULT_BUDGET, horizon)
+	var world: WorldState = GameDomain.opening_world()
+
+	assert_bool(result.solved).is_false()
+	assert_bool(result.partial).is_true()
+	assert_int(result.steps.size()).is_between(1, horizon)
+	for step: StripsAction in result.steps:
+		assert_bool(step.is_applicable(world)).is_true()
+		world = step.apply(world)
+
+
+func test_a_horizon_as_long_as_the_plan_finds_the_whole_plan() -> void:
+	var whole: PlanResult = _plan_game(H_MAX)
+	var result: PlanResult = HeuristicPlanner.new().plan(GameDomain.actions(), GameDomain.opening_world(),
+		GameDomain.goal(), H_MAX, HeuristicPlanner.DEFAULT_BUDGET, whole.steps.size())
+
+	assert_bool(result.solved).is_true()
+	assert_array(result.action_names()).is_equal(whole.action_names())
+
+
+func test_a_goal_beyond_the_horizon_is_not_called_impossible() -> void:
+	var result: PlanResult = HeuristicPlanner.new().plan(GameDomain.actions(), GameDomain.opening_world(),
+		GameDomain.goal(), H_MAX, HeuristicPlanner.DEFAULT_BUDGET, 0)
+
+	assert_bool(result.solved).is_false()
+	assert_bool(result.gave_up).is_true()
+	assert_array(result.steps).is_empty()
+
+
+func test_breadth_first_gives_up_at_the_horizon_as_at_its_budget() -> void:
+	var result: PlanResult = HeuristicPlanner.new().plan(GameDomain.actions(), GameDomain.opening_world(),
+		GameDomain.goal(), BFS, HeuristicPlanner.DEFAULT_BUDGET, 1)
+
+	assert_bool(result.gave_up).is_true()
+	assert_bool(result.solved).is_false()
+
+
 func _plan_game(guide: HeuristicPlanner.Guide) -> PlanResult:
 	return HeuristicPlanner.new().plan(GameDomain.actions(), GameDomain.opening_world(), GameDomain.goal(), guide)
 

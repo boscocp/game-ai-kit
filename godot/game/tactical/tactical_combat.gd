@@ -216,26 +216,40 @@ static func distance(one: Vector2i, other: Vector2i) -> int:
 	return absi(one.x - other.x) + absi(one.y - other.y)
 
 
-static func _attacker_blow(inputs: Dictionary, round_number: int, roll: Callable) -> int:
+## What the attacker adds to its die in round `round_number`: its numbers
+## near the fight, its friend once it has arrived, and the counter table.
+## Public so that `FightOdds` works out the same blows the dice are rolled
+## for, rather than a copy of them.
+static func attacker_bonus(inputs: Dictionary, round_number: int) -> int:
 	var worth: Dictionary = rules()
-	var blow: int = roll.call()
+	var bonus: int = 0
 	if inputs["numeric_advantage"] > 0:
-		blow += inputs["numeric_advantage"] * int(worth["numbers_worth"])
+		bonus += inputs["numeric_advantage"] * int(worth["numbers_worth"])
 	if round_number > inputs["reinforcement_distance"]:
-		blow += int(worth["numbers_worth"])
+		bonus += int(worth["numbers_worth"])
 	if inputs["counter"] > 0:
-		blow += int(worth["counter_worth"])
-	return blow
+		bonus += int(worth["counter_worth"])
+	return bonus
+
+
+## What the defender adds to its die: its numbers, the counter table, and
+## its cover. The same every round.
+static func defender_bonus(inputs: Dictionary) -> int:
+	var worth: Dictionary = rules()
+	var bonus: int = 0
+	if inputs["numeric_advantage"] < 0:
+		bonus += -inputs["numeric_advantage"] * int(worth["numbers_worth"])
+	if inputs["counter"] < 0:
+		bonus += int(worth["counter_worth"])
+	return bonus + (inputs["defender_terrain"] - 1) * int(worth["terrain_worth"])
+
+
+static func _attacker_blow(inputs: Dictionary, round_number: int, roll: Callable) -> int:
+	return roll.call() + attacker_bonus(inputs, round_number)
 
 
 static func _defender_blow(inputs: Dictionary, roll: Callable) -> int:
-	var worth: Dictionary = rules()
-	var blow: int = roll.call()
-	if inputs["numeric_advantage"] < 0:
-		blow += -inputs["numeric_advantage"] * int(worth["numbers_worth"])
-	if inputs["counter"] < 0:
-		blow += int(worth["counter_worth"])
-	return blow + (inputs["defender_terrain"] - 1) * int(worth["terrain_worth"])
+	return roll.call() + defender_bonus(inputs)
 
 
 static func _roller(dice: RandomNumberGenerator) -> Callable:
