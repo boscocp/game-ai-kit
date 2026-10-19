@@ -4,7 +4,8 @@
 ## - the state machine: its four states, the one it is in lit, and the arrow
 ##   it last took;
 ## - the behaviour tree: the nodes the last tick asked, in order, with "go
-##   and look" marked wherever it appears -- one subtree, under two branches;
+##   and look" in blue wherever it appears -- one subtree, under two
+##   branches, which the legend says;
 ## - GOAP: the goal, and the plan it made this turn, first step lit;
 ## - the HTN: the method it chose, and its plan, the step it is on lit.
 ##
@@ -13,7 +14,8 @@
 class_name BrainPanel
 extends Control
 
-const LINE: float = 18.0
+const LINE: float = 22.0
+const FONT_SIZE: int = 16
 const LIT: Color = Color(1.0, 0.85, 0.3, 0.9)
 const SHARED: Color = Color(0.5, 0.8, 1.0, 0.9)
 const TEXT: Color = Color(0.95, 0.95, 0.95)
@@ -59,7 +61,7 @@ static func _tree_rows(thinking: Dictionary) -> Array[Array]:
 	var rows: Array[Array] = []
 	for asked: String in thinking["trail"]:
 		var shared: bool = asked.begins_with(SHARED_SUBTREE)
-		rows.append(["  " + asked + ("  (one subtree, two branches)" if shared else ""), SHARED if shared else TEXT, false])
+		rows.append(["  " + asked, SHARED if shared else TEXT, false])
 	return rows
 
 
@@ -79,5 +81,5 @@ func _draw_row(index: int, words: String, colour: Color, lit: bool) -> void:
 	var top: float = index * LINE
 	if lit:
 		draw_rect(Rect2(0.0, top + 2.0, size.x, LINE), LIT)
-	draw_string(ThemeDB.fallback_font, Vector2(4.0, top + LINE - 2.0), words, HORIZONTAL_ALIGNMENT_LEFT, size.x - 8.0, 13,
+	draw_string(ThemeDB.fallback_font, Vector2(4.0, top + LINE - 5.0), words, HORIZONTAL_ALIGNMENT_LEFT, size.x - 8.0, FONT_SIZE,
 		Color.BLACK if lit else colour)

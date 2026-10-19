@@ -19,6 +19,7 @@ script = ExtResource("3_view")
 [node name="Interface" type="CanvasLayer" parent="."]
 
 [node name="Status" type="Label" parent="Interface"]
+autowrap_mode = 3
 offset_left = 24.0
 offset_top = 604.0
 offset_right = 1256.0

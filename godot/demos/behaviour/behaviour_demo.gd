@@ -12,8 +12,22 @@
 ## the HTN carries on down the method it chose. The status says, beside the
 ## brain playing, when that way of deciding is the right answer
 ## (`WaysToDecide`).
+##
+## Its own layout, not `BoardLayout`'s: that one centres the board and gives
+## the status the strip to its left, which at eighteen columns is too narrow
+## for these lines, and they ran over the board in white on green -- the
+## owner could not read them. Here the board sits left, the status under it,
+## and the legend and the brain's panel share a column on the right: no word
+## is drawn on the board.
 class_name BehaviourDemo
 extends Node2D
+
+## Space round the board and between the panels, as `BoardLayout`'s.
+const GUTTER: float = BoardLayout.GUTTER
+## Where the board's top-left corner sits: room for the axis numbers.
+const BOARD_CORNER := Vector2(48.0, 48.0)
+## How tall the legend is, above the brain's panel in the right column.
+const LEGEND_HEIGHT: float = 210.0
 
 @onready var _board: BoardView = $BoardView
 @onready var _view: BehaviourView = $BehaviourView
@@ -31,11 +45,13 @@ func _ready() -> void:
 		[BehaviourView.LAST_KNOWN, "ring: last seen or heard"],
 		[BehaviourView.STEP, "dots: its move this turn"],
 		[BehaviourView.INTRUDER, "the intruder's loop"],
+		[BrainPanel.LIT, "panel: the state or step now"],
+		[BrainPanel.SHARED, "panel: one subtree, two branches"],
 		[BoardView.tile_texture(BoardView.TREES), "trees: slow, block sight"],
 		[BoardView.tile_texture(BoardView.WALL), "wall"],
 	] as Array[Array])
 	restart()
-	BoardLayout.lay_out(self, world.room.graph, _status, _legend)
+	_lay_out()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -80,17 +96,32 @@ func decision_overlay() -> Dictionary:
 		"thinking": world.brain.thinking(), "suspicion": world.senses.suspicion.level}
 
 
-## The status line's words.
+## The status line's words. What the brain is thinking is the panel's.
 func status_text() -> String:
 	var brain: GuardBrain = world.brain
 	var lines: Array[String] = [
-		"turn %d  ·  the guard thinks with: %s  ·  1 state machine  2 behaviour tree  3 GOAP  4 HTN" % [world.turn, brain.brain_name()],
-		"when it is right: %s" % _when_right(brain.brain_name()),
-		"suspicion %.0f  ·  deed: %s" % [world.senses.suspicion.level, brain.deed if brain.deed != "" else "(decides on the next turn)"],
-		"thinking: %s" % _thinking_said(brain.thinking()),
-		"space: a turn  ·  enter: ten  ·  R: again  ·  caught %d time(s)%s" % [world.catches, "  ·  CAUGHT -- it starts its loop again" if world.caught else ""],
+		"turn %d  ·  the guard thinks with: %s -- right when: %s" % [world.turn, brain.brain_name(), _when_right(brain.brain_name())],
+		"suspicion %.0f  ·  deed: %s  ·  caught %d time(s)%s" % [world.senses.suspicion.level,
+			brain.deed if brain.deed != "" else "(decides on the next turn)", world.catches,
+			"  ·  CAUGHT -- it starts its loop again" if world.caught else ""],
+		"1 state machine  ·  2 behaviour tree  ·  3 GOAP  ·  4 HTN  ·  space: a turn  ·  enter: ten  ·  R: again",
 	]
 	return "\n".join(lines)
+
+
+# The board left, the status under it, the legend and the brain's panel in
+# the column to its right.
+func _lay_out() -> void:
+	var window: Vector2 = BoardLayout.window_size()
+	position = BOARD_CORNER
+	var board := Rect2(BOARD_CORNER, BoardView.pixel_size(world.room.graph))
+	_status.position = Vector2(board.position.x, board.end.y + GUTTER / 2.0)
+	_status.size = Vector2(board.size.x, window.y - _status.position.y)
+	var column: float = board.end.x + GUTTER
+	_legend.position = Vector2(column, board.position.y)
+	_legend.size = Vector2(window.x - column - GUTTER, LEGEND_HEIGHT)
+	_panel.position = Vector2(column, board.position.y + LEGEND_HEIGHT + GUTTER)
+	_panel.size = Vector2(window.x - column - GUTTER, window.y - _panel.position.y - GUTTER)
 
 
 func _refresh() -> void:
@@ -118,9 +149,3 @@ static func _when_right(brain: String) -> String:
 			return row[1]
 	return ""
 
-
-static func _thinking_said(thinking: Dictionary) -> String:
-	var parts: Array[String] = []
-	for field: String in thinking:
-		parts.append("%s: %s" % [field, thinking[field]])
-	return "  ·  ".join(parts)
