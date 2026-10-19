@@ -8,7 +8,7 @@ extends Node2D
 
 const TILE: float = float(BoardView.TILE_PIXELS)
 const GUARD: Color = Color(0.95, 0.55, 0.15)
-const SIGHT: Color = Color(1.0, 0.95, 0.5, 0.22)
+const SIGHT: Color = Color(1.0, 0.9, 0.2, 0.45)
 const LAST_KNOWN: Color = Color(1.0, 0.3, 0.3, 0.9)
 const INTRUDER: Color = Color(0.95, 0.95, 0.95)
 const STEP: Color = Color(1.0, 0.4, 0.8, 0.9)

@@ -113,6 +113,24 @@ sha256 and never committed.
 
 ---
 
+## Resuming after 2026-10-19 (wave 57)
+
+**Where it stopped -- read first.** Wave 57 was a fix the owner asked for
+by looking: in `make demo-behaviour` the status and the brain's panel were
+drawn over the board, white on green, and could not be read. The demo now
+lays itself out -- board left, status under it, legend and panel in a
+column -- and the owner read it and said it is fine. The review is
+`docs/reviews/57-a-readable-behaviour-demo.md`.
+
+**What the owner saw** in T15's manual check: the four brains looked
+"slightly different", one smarter and one less -- which is what was
+measured: the state machine and the HTN commit and chase, the tree and GOAP
+turn back, and GOAP chooses the tree's deed every turn on this guard. For
+the owner: a guard with two ways to a goal, at two costs, is what would let
+GOAP stand apart from the tree; that would be a change to T15.
+
+**Next:** unchanged from wave 56.
+
 ## Resuming after 2026-10-19 (wave 56)
 
 **Where it stopped -- read first.** Wave 56 was T15, taken right after wave
