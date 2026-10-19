@@ -205,3 +205,50 @@ func test_a_straight_walk_does_not_cut_a_corner_the_board_cannot() -> void:
 	for _tick: int in range(120):
 		world.step()
 	assert_vector(soldier.cell()).is_equal(Vector2i(4, 4))
+
+
+func test_a_move_into_a_building_in_the_fog_is_taken_and_ends_at_it() -> void:
+	var world := RtsWorld.new(GridGraph.new(40, 10), 1)
+	var soldier: RtsUnit = world.add_unit(RtsKinds.SOLDIER, 0, Vector2i(1, 5))
+	world.add_unit(RtsKinds.BARRACKS, 1, Vector2i(35, 5))
+	assert_str(world.command(0, RtsCommand.move([soldier.id] as Array[int], Vector2i(35, 5)))).is_empty()
+	world.step()
+	assert_str(soldier.order).is_equal(RtsUnit.IDLE)
+	assert_vector(soldier.cell()).is_equal(Vector2i(1, 5))
+
+
+func test_a_move_whose_goal_is_built_over_ends_instead_of_walking_in() -> void:
+	var world := RtsWorld.new(GridGraph.new(20, 10), 1)
+	var soldier: RtsUnit = world.add_unit(RtsKinds.SOLDIER, 0, Vector2i(1, 5))
+	world.command(0, RtsCommand.move([soldier.id] as Array[int], Vector2i(15, 5)))
+	world.step()
+	# Its own side's, so the soldier, idle again, has no enemy to turn on.
+	world.add_unit(RtsKinds.BARRACKS, 0, Vector2i(15, 5))
+	for _tick: int in range(600):
+		world.step()
+	assert_str(soldier.order).is_equal(RtsUnit.IDLE)
+	assert_bool(world.graph.is_blocked(soldier.cell())).is_false()
+
+
+func test_a_site_struck_down_while_going_up_stays_down() -> void:
+	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
+	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(4, 5))
+	world.resources[0] = 500
+	world.command(0, RtsCommand.build(worker.id, RtsKinds.BARRACKS, Vector2i(5, 5)))
+	var site: RtsUnit = world.unit(worker.target_id)
+	world.step()
+	# Killed between ticks, at exactly 0. The worker acts first next tick,
+	# and that tick's share of health is 1: it must not be added.
+	site.health = 0
+	world.step()
+	assert_object(world.unit(site.id)).is_null()
+
+
+func test_an_enemy_in_sight_shows_what_a_player_sees_and_no_more() -> void:
+	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
+	world.add_unit(RtsKinds.SOLDIER, 0, Vector2i(1, 1))
+	var enemy: RtsUnit = world.add_unit(RtsKinds.WORKER, 1, Vector2i(3, 1))
+	var shown: Dictionary = RtsSnapshot.of(world, 0).enemies()[0]
+	assert_int(shown["id"]).is_equal(enemy.id)
+	assert_bool(shown.has("order") or shown.has("carrying") or shown.has("queued")).is_false()
+	assert_bool(RtsSnapshot.of(world, 0).mine()[0].has("order")).is_true()

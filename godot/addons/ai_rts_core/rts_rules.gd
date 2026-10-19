@@ -31,8 +31,7 @@ static func why_refused(world: RtsWorld, side: int, order: RtsCommand) -> String
 			return unfit
 	match order.kind:
 		RtsCommand.MOVE:
-			# Off the board counts as blocked, so this one test covers both.
-			return "" if not world.graph.is_blocked(order.cell) else "nobody can stand on %s" % order.cell
+			return _why_move_refused(world, side, order.cell)
 		RtsCommand.ATTACK, RtsCommand.GATHER:
 			return _why_target_refused(world, side, order)
 		RtsCommand.BUILD:
@@ -68,6 +67,17 @@ static func _why_unfit(given: RtsUnit, order: RtsCommand) -> String:
 		return "unit %d is a %s and cannot %s" % [given.id, given.kind, order.kind]
 	if order.kind in [RtsCommand.GATHER, RtsCommand.BUILD] and given.kind != RtsKinds.WORKER:
 		return "only a worker can %s, and unit %d is a %s" % [order.kind, given.id, given.kind]
+	return ""
+
+
+# A blocked cell is refused only when the side can see what blocks it: a
+# refusal about a cell in the fog would say the enemy built there. A move to
+# one is taken, and ends where the building stops it, as a player's would.
+static func _why_move_refused(world: RtsWorld, side: int, cell: Vector2i) -> String:
+	if not world.graph.contains(cell):
+		return "%s is off the board" % cell
+	if world.graph.is_blocked(cell) and world.visible_to(side, Vector2(cell) + Vector2(0.5, 0.5)):
+		return "nobody can stand on %s" % cell
 	return ""
 
 
