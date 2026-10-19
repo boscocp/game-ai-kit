@@ -162,7 +162,27 @@ func test_no_brain_chases_an_intruder_it_does_not_see() -> void:
 		assert_str(brain.deed).is_equal(GuardBrain.GO_TO_LAST_KNOWN)
 
 
-func test_left_to_run_the_brains_that_commit_chase_and_catch_and_the_ones_that_reconsider_never_get_there() -> void:
+func test_the_tree_goes_and_looks_through_one_subtree_from_both_of_its_branches() -> void:
+	var lost_sight := GuardTree.new()
+	var world := _alerted(lost_sight, Vector2i(5, 7), Vector2i(2, 7))
+	world.senses.sees_player = false
+	world.senses.player_cell = GuardSenses.NOWHERE
+	lost_sight.choose(world.board(), BehaviourWorld.GUARD_ID)
+	var investigating := GuardTree.new()
+	var calmer := BehaviourWorld.new(investigating)
+	calmer.senses.last_known = Vector2i(5, 7)
+	calmer.senses.suspicion.level = 50.0
+	investigating.choose(calmer.board(), BehaviourWorld.GUARD_ID)
+
+	assert_array(lost_sight.tree.trail).contains(["go and look: running", "chase: running"])
+	assert_array(investigating.tree.trail).contains(["go and look: running", "investigate: running"])
+
+
+func test_on_this_loop_the_brains_that_commit_chase_and_catch_and_the_ones_that_reconsider_never_get_there() -> void:
+	# A property of this room, this loop and T14's suspicion, not of trees or
+	# GOAP: the chase board above shows the tree chasing once alerted. What
+	# carries is the mechanism -- the state machine's gap and the HTN's kept
+	# plan hold a search the others drop.
 	var deeds: Dictionary = {}
 	for brain: GuardBrain in _brains():
 		var world := BehaviourWorld.new(brain)

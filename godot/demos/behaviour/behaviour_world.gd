@@ -142,13 +142,13 @@ func _face(cell: Vector2i) -> void:
 	facing = Vector2i(signi(towards.x), 0) if absi(towards.x) >= absi(towards.y) else Vector2i(0, signi(towards.y))
 
 
-# Back to the first corner of its loop -- or as near as nobody stands.
+# Back to a corner of its loop the guard is not standing on -- the first,
+# unless the guard is there, and then the next.
 func _start_the_loop_again() -> void:
 	caught = false
-	_loop_index = 0
 	_paused = 0
-	if guard.cell != INTRUDER_LOOP[0]:
-		intruder.cell = INTRUDER_LOOP[0]
+	_loop_index = 0 if guard.cell != INTRUDER_LOOP[0] else 1
+	intruder.cell = INTRUDER_LOOP[_loop_index]
 
 
 static func _beside(one: Vector2i, other: Vector2i) -> bool:

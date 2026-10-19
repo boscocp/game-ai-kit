@@ -56,6 +56,10 @@ board where they agree, and a board where they are documented to differ.
 
 ## Manual check
 
+(Added in wave 56: swap to 2, the tree, while the state machine is chasing,
+to see "go and look" lit under the chase branch as well as under the
+investigation.)
+
 Swap between the four while a guard is mid-patrol. The seams should be
 visible: the FSM snaps, the tree reconsiders, GOAP replans, the HTN carries on
 down the method it chose. If they all look identical, the demo is not showing
@@ -75,7 +79,10 @@ the difference it was built for.
   the current one lit, the tree's path with "go and look" marked under each
   branch that reached it, the plan with its step lit. An intruder sprints a
   loop and stands silent at its corners -- one of them the lit doorway -- so
-  the guard notices, loses, looks, chases and catches with nobody at the keys.
+  with nobody at the keys the guard notices, loses and looks, and with the
+  state machine or the HTN chases and catches too; the tree and GOAP turn
+  back before that on this loop, so their "go and look" under the chase is
+  seen by swapping to them while another brain is chasing.
 - `test/behaviour_test.gd`, 17 cases: the engines; then the guard. All four
   agree on a calm round, on setting out to look, on a chase and on a catch;
   none chases what it does not see; as suspicion fades mid-search the state

@@ -10,7 +10,7 @@
 ## | way | the right answer when | what it costs | the guard showed |
 ## |---|---|---|---|
 ## | state machine | a few states, each with a clear way out | every state names its own exits; shared behaviour is written twice (searching, and alerted having lost sight) | it snaps: nothing changes until an arrow fires; its gap between going up and coming down kept it searching as suspicion faded, so it reached the intruder in the light, chased and caught |
-## | behaviour tree | behaviour built of reusable parts, re-judged every tick | it cannot commit: every tick starts at the root | "go and look" hangs in two branches as one value; it turned back the moment suspicion dipped, and in 300 turns never got far enough to chase |
+## | behaviour tree | behaviour built of reusable parts, re-judged every tick | it cannot commit: every tick starts at the root | "go and look" hangs in two branches as one value; it turned back the moment suspicion dipped -- on the demo's loop, in 300 turns, it never got far enough to chase, though alerted it chases like the rest |
 ## | GOAP | many ways to a goal, and the agent should find the cheap one | a search every time it replans; backwards, so no partial plan | this guard has one way to each goal, so its search found what the tree was told: the same deed on every one of 300 turns |
 ## | HTN | the designer knows how tasks break down, and wants that order kept | every order is one somebody wrote -- it walked to where it stood until "look here" was written | it carried on down "go and look" as suspicion faded, looked, chased and caught |
 ## | STRIPS (`ai_planning`) | a goal reached through a chain nobody wrote down, searched forwards for the fewest actions -- where GOAP searches backwards for the cheapest | a search over the whole world, bounded by a budget | not written as a guard: it plans the tactical board's purchases (T11) |
@@ -21,7 +21,7 @@
 ## and 3 tasks: the nearest counts the two have, not one unit, since the HTN
 ## counts its compound task too. In time (`test/behaviour_benchmark.gd`,
 ## 2000 plans each, one machine) the HTN took about 6 to 8 microseconds a
-## plan and GOAP about 6 to 15 -- nearly twice as long in the chase. That is
+## plan and GOAP about 6 to 16 -- nearly twice as long in the chase. That is
 ## these two implementations, and much of GOAP's extra is how this one keeps
 ## its frontier (a guess recomputed at every comparison, a text key for every
 ## world), not which way it searches. So Humphreys' "considerably faster"

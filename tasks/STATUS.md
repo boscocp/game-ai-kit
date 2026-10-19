@@ -130,8 +130,9 @@ the state machine and the HTN -- look, chase and catch; the two that
 reconsider -- tree and GOAP -- turn back each time suspicion dips and never
 chase, and GOAP chooses the tree's deed every turn, since this guard has one
 way to each goal. The HTN plans faster than GOAP (6-8 against 6-16 us, `make
-test-behaviour-benchmark`) over the same 2-3 worlds -- true of these two
-implementations, not proven of the two directions of search. The manual
+test-behaviour-benchmark`) over 2-3 worlds or tasks -- true of these two
+implementations, not proven of the two directions of search; the counts
+are worlds for GOAP and tasks for the HTN, the nearest each has. The manual
 check -- do the four look different while you swap them -- is the owner's.
 
 **Next:** `make wave` picks by table order. Still the owner's: ADR 0018
