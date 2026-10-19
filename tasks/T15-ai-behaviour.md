@@ -60,3 +60,31 @@ Swap between the four while a guard is mid-patrol. The seams should be
 visible: the FSM snaps, the tree reconsiders, GOAP replans, the HTN carries on
 down the method it chose. If they all look identical, the demo is not showing
 the difference it was built for.
+
+## What was done (2026-10-19, wave 56) -- done, manual check still a person's
+
+- `ai_behaviour`: `StateMachine`, `BehaviourTree`, `GoapPlanner` (A\* backwards
+  from the goal, a cost per action) and `HtnPlanner` (forwards, methods in
+  order, backtracking), with `BehaviourPlan` counting worlds as T11 does;
+  `WaysToDecide` is the table, with STRIPS as the fifth row.
+- `demos/behaviour/`: T14's room and perception, one guard -- patrol,
+  suspicious, searching, alerted -- written four times, each a
+  `DecisionPolicy`; `make demo-behaviour` swaps them mid-round (1-4). An
+  intruder walks a fixed loop, so the guard has something to notice with
+  nobody at the keys.
+- `test/behaviour_test.gd`: the engines, then the guard. All four take the
+  same step for a calm guard on its round; as suspicion fades below
+  going-to-look mid-search, the state machine and the HTN carry on to the
+  place and the tree and GOAP turn back -- the difference the table
+  documents.
+
+**GOAP against HTN, measured** (`make test-behaviour-benchmark`): in four
+moments, the two look at the same number of worlds -- 2, 3, 2, 3 -- and the
+HTN is faster per plan, about 6 to 8 microseconds against GOAP's 6 to 15.
+So Humphreys' claim holds here in time, and the guard is too small to show
+it in search.
+
+**Found on the way.** A test caught the GOAP planner dropping a goal fact the
+world already had, which let an action that undoes it into a plan; nodes now
+keep the whole goal. And the HTN walked to where it already stood until a
+"look here" method was written: it knows only the orders its methods give.

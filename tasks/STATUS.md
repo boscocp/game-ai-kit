@@ -41,7 +41,7 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T12 | Three difficulties, honestly | done | `LeveledBlue`: the rules' walk, staying, or an attack cell, weighed at 1 or 2 plies with exact odds (`FightOdds`, never the board's dice) and Wesnoth's aggression; easy 1 ply noise 0.5, normal 1 ply, hard 2 plies; normal beat easy 70-29, hard normal 59-40, each level the rules 25 of 25 per seat; plan horizon 0 at every level -- a plan measured weaker (23-77); three, not five; S swaps sides; manual check still a person's |
 | T13 | `ai_fuzzy`, from a library that already exists | done | rewritten, not ported: the library was C# and its core was missing (ADR 0011); 3 vectors read from both languages |
 | T14 | The stealth scenario | done | `ai_perception`, fuzzy suspicion, three guard states; 4 properties over 300 maps |
-| T15 | `ai_behaviour`: the four ways to decide | todo | FSM, tree, GOAP, HTN, beside STRIPS |
+| T15 | `ai_behaviour`: the four ways to decide | done | state machine, tree, GOAP (backwards), HTN (forwards), and `WaysToDecide`, the table with STRIPS; one guard four ways in `make demo-behaviour`, 1-4 swap mid-round; agree on a calm round, differ as suspicion fades mid-search (machine and HTN carry on, tree and GOAP turn back); GOAP and HTN 2-3 worlds each, HTN faster per plan (6-8 against 6-15 us); manual check still a person's |
 | T16 | The fighting scenario | done | mostly not AI, and says so: frame data in `spec/frames/`, one axis, whole numbers, the resolution order written and tested rule by rule; a recorded log replays to committed per-frame digests; `make demo-fighting` is a training mode; manual check still a person's |
 | T34 | High, low and the throw | done | four attack buttons, light quick and heavy slow; mid, low and overhead against standing and crouching guard; a throw that beats guard and loses to a strike; manual check still a person's |
 | T35 | Fighters you can see | done | Puffolotti's CC0 karate template, two costumes; 30 strips of whole cells committed, the sheets only referenced (ADR 0015); a move's cels by phase, so the picture follows the frame data; manual check still a person's |
@@ -112,6 +112,28 @@ sha256 and never committed.
 | T52 | Bots against the player, with an optional stealth | blocked | third person; a role arbiter, awareness that accumulates with three alert levels, a shared belief map for the search -- each drawn and switchable |
 
 ---
+
+## Resuming after 2026-10-19 (wave 56)
+
+**Where it stopped -- read first.** Wave 56 was T15, taken right after wave
+55 on the owner's "do the next wave too". The review is
+`docs/reviews/56-ai-behaviour.md`.
+
+**What landed.** `ai_behaviour`: a state machine, a behaviour tree, GOAP
+(A\* backwards from the goal) and an HTN (forwards by methods), and
+`WaysToDecide`, the table of when each -- and STRIPS -- is right. The guard
+is T14's room and perception written four ways in `demos/behaviour/`, each
+a `DecisionPolicy`; `make demo-behaviour`, 1-4 swap mid-round.
+
+**What the measurements said.** On the guard, GOAP and the HTN look at the
+same worlds (2-3); the HTN is faster per plan, up to about twice in the
+chase (`make test-behaviour-benchmark`). Humphreys' claim holds here in
+time; the guard is too small to show it in search. The manual check -- do
+the four look different while you swap them -- is the owner's.
+
+**Next:** `make wave` picks by table order. Still the owner's: ADR 0018
+(T50-T52, T54 blocked); T48's third change; T45's and T46's bars; whether
+T11's plan should be made worth its horizon (wave 55).
 
 ## Resuming after 2026-10-19 (wave 55)
 

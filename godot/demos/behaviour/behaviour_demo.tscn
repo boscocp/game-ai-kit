@@ -1,0 +1,32 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://demos/behaviour/behaviour_demo.gd" id="1_demo"]
+[ext_resource type="Script" path="res://game/board_view.gd" id="2_board"]
+[ext_resource type="Script" path="res://demos/behaviour/behaviour_view.gd" id="3_view"]
+[ext_resource type="Script" path="res://game/legend.gd" id="9_legend"]
+
+[node name="BehaviourDemo" type="Node2D"]
+position = Vector2(64, 16)
+script = ExtResource("1_demo")
+
+[node name="BoardView" type="TileMapLayer" parent="."]
+script = ExtResource("2_board")
+
+[node name="BehaviourView" type="Node2D" parent="."]
+script = ExtResource("3_view")
+
+[node name="Interface" type="CanvasLayer" parent="."]
+
+[node name="Status" type="Label" parent="Interface"]
+offset_left = 24.0
+offset_top = 604.0
+offset_right = 1256.0
+offset_bottom = 716.0
+text = "loading"
+
+[node name="Legend" type="Control" parent="Interface"]
+offset_left = 980.0
+offset_top = 40.0
+offset_right = 1270.0
+offset_bottom = 300.0
+script = ExtResource("9_legend")
