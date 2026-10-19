@@ -255,7 +255,7 @@ func test_blue_builds_what_beats_the_most_red_pieces() -> void:
 
 	assert_str(decision.kind()).is_equal("build")
 	assert_str(decision.order.unit_type.type_name).is_equal(TacticalRules.SHIELD)
-	assert_str(decision.reason).contains("it beats 1 red piece(s), runner")
+	assert_str(decision.reason).contains("it beats 1 enemy piece(s), runner")
 
 
 func test_blue_builds_the_counter_to_whatever_red_has_most_of() -> void:

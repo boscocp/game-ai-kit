@@ -4,7 +4,7 @@
 #
 # A controller decides for whichever side is to move -- `RuleBasedBlue`
 # reads `state.current_faction`, not "blue" -- so the same rules can play
-# red. Its sentences still say "red's workshop", which nobody reads here.
+# red, and its sentences say "the enemy", which is right from either side.
 #
 # Used by the learned blue's tests and by `tactical_win_rates.gd`.
 class_name TacticalMatch

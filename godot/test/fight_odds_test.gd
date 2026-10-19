@@ -23,6 +23,7 @@ func test_a_siege_goes_as_rolled_dice_go() -> void:
 		var worked_out: Array[float] = FightOdds.of(inputs, true)
 		var rolled: Array[float] = _rolled(inputs, true)
 		assert_float(worked_out[0]).is_equal_approx(rolled[0], TOLERANCE)
+		assert_float(worked_out[1]).is_equal_approx(rolled[1], 10 * TOLERANCE)
 		assert_float(worked_out[2]).is_equal_approx(rolled[2], 10 * TOLERANCE)
 
 
@@ -45,8 +46,9 @@ func test_the_odds_of_an_attack_do_not_depend_on_the_boards_next_roll() -> void:
 	assert_array(FightOdds.of_attack(state, attacker, defender)).is_equal(one)
 
 
-# Three fights the board can produce: even, the attacker outnumbered in
-# cover with a friend coming, and the defender strong against it.
+# Four fights the board can produce: even, the attacker outnumbered in
+# cover with a friend coming, the defender strong against it, and a mortar
+# firing from out of the defender's reach, which takes rounds to win.
 static func _fights() -> Array[Dictionary]:
 	return [
 		{"attacker_health": 10, "defender_health": 10, "numeric_advantage": 0, "defender_terrain": 1,
@@ -55,6 +57,8 @@ static func _fights() -> Array[Dictionary]:
 			"reinforcement_distance": 2, "counter": 1, "defender_hits_back": true},
 		{"attacker_health": 10, "defender_health": 7, "numeric_advantage": 2, "defender_terrain": 1,
 			"reinforcement_distance": 15, "counter": -1, "defender_hits_back": true},
+		{"attacker_health": 4, "defender_health": 10, "numeric_advantage": 0, "defender_terrain": 2,
+			"reinforcement_distance": 3, "counter": 0, "defender_hits_back": false},
 	]
 
 

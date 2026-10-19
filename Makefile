@@ -410,9 +410,9 @@ test-difficulty-knobs: import ## The tactical levels never cheat: only the docum
 	@$(GODOT) --headless --path godot -s res://test/difficulty_knobs.gd
 
 .PHONY: test-difficulty-matches
-test-difficulty-matches: import ## The tactical levels are a ladder, and each beats the rules from both seats (~10 min)
-	@# T12's acceptance. Not in `check`: 750 games of up to 40 rounds take
-	@# about ten minutes, so CI does not hold the ladder -- run it after any
+test-difficulty-matches: import ## The tactical levels are a ladder, and each beats the rules from both seats (~15 min)
+	@# T12's acceptance. Not in `check`: 575 games of up to 40 rounds take
+	@# about fifteen minutes, so CI does not hold the ladder -- run it after any
 	@# change to a level, `LeveledBlue`, `FightOdds` or the tactical rules.
 	@$(GODOT) --headless --path godot -s res://test/difficulty_matches.gd
 

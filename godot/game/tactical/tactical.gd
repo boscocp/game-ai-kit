@@ -103,6 +103,9 @@ func new_game() -> void:
 	winner = TacticalVictory.NOBODY
 	_computer_turn = BlueTurn.new(computer)
 	_computer_news.clear()
+	# The last game's last event is not news in this one -- and when the
+	# computer moves first, nothing below would clear it.
+	_last_event = ""
 	if person_side == TacticalScenario.RED:
 		_start_persons_turn()
 	else:

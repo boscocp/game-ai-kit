@@ -5,8 +5,9 @@
 ## - **The workshop** buys by the plan (`PlannedBlue`), looking
 ##   `plan_horizon` actions ahead -- and at 0, with no plan, by the rules.
 ##   Every preset is at 0, because on this board a plan is a handicap:
-##   measured over 40 games, no plan beat T11's plan (save for the forge,
-##   then a ram) 31 to 9, and a horizon of 2 or 4 lost the same 31 to 9.
+##   measured over 100 games at 2 plies, no plan beat T11's plan (save for
+##   the forge, then a ram) 77 to 23, and a horizon of 2 or of 4 lost by the
+##   same 77 to 23 (T12's record).
 ## - **Each walker** weighs three kinds of cell -- where the rules would walk
 ##   it, where it stands, and every cell it could attack a piece from -- with
 ##   every attack it could make there, and takes the one worth most. The
@@ -64,11 +65,16 @@ const NOISE_SCALE: float = 2.0
 ## into reach of anything: measured, it stayed home, and lost on score.
 const AGGRESSION: float = 0.4
 
+# What `_strike` holds for a walker whose search weighed attacking and chose
+# not to: a deliberate "nobody", which the attack question must not overrule.
+const CHOSE_NOT_TO: int = -2
+
 ## The level it plays at.
 var level: Difficulty
 
 var _blur := RandomNumberGenerator.new()
-# Walker id -> the enemy piece it walked to attack, asked after the walk.
+# Walker id -> the enemy piece it walked to attack, asked after the walk; or
+# `CHOSE_NOT_TO`, which is a decision too, and not a question left open.
 var _strike: Dictionary[int, int] = {}
 # Enemy walker id -> the cells it could strike next turn (ply 2).
 var _reach_of_theirs: Dictionary[int, Dictionary] = {}
@@ -117,19 +123,24 @@ func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 	var best: Array = _best_option(state, unit)
 	var cell: Vector2i = best[0]
 	var target: Unit = best[1]
-	_strike[unit_id] = target.id if target != null else -1
+	_strike[unit_id] = target.id if target != null else CHOSE_NOT_TO
 	var why: String = "%s (worth %.2f, %d ply)" % [_said(unit, cell, target), best[2], level.search_depth]
 	if cell == unit.cell:
 		return TacticalDecision.hold(unit_id, why, cell)
 	return TacticalDecision.walk(unit_id, TacticalReach.walks_for(state, unit)[cell], why, cell)
 
 
-## The attack this walker walked to make, if it can still make it; otherwise
-## the best it can make from where it stands, if any is worth making.
+## The attack this walker walked to make, if it can still make it; none, when
+## its search chose none; otherwise -- the target gone, or never asked where
+## to walk -- the best it can make from where it stands, if any is worth
+## making by ply 1.
 func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
 	var unit: Unit = state.unit_by_id(unit_id)
-	var planned: Unit = state.unit_by_id(_strike.get(unit_id, -1))
+	var chosen: int = _strike.get(unit_id, -1)
 	_strike.erase(unit_id)
+	if chosen == CHOSE_NOT_TO:
+		return null
+	var planned: Unit = state.unit_by_id(chosen)
 	if planned != null and TacticalCombat.why_refused(state, Attack.new(unit_id, planned.id)) == BoardState.LEGAL:
 		return TacticalDecision.strike(unit_id, planned, "attacks the %s at %s, as it walked here to" % [planned.type.type_name, planned.cell])
 	var best: Unit = null
@@ -148,6 +159,7 @@ func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
 
 # [cell, target or null, worth] of the best option, ties to the first found.
 func _best_option(state: BoardState, unit: Unit) -> Array:
+	var claimed_before: Dictionary[Vector2i, int] = _claims.duplicate()
 	var by_the_rules: Vector2i = _where_the_rules_walk(state, unit)
 	var cells: Array[Vector2i] = _cells_worth_weighing(state, unit, by_the_rules)
 	var to_goal: Dictionary = TacticalReach.route_costs(state.graph_for_type(unit.type), by_the_rules)
@@ -159,6 +171,8 @@ func _best_option(state: BoardState, unit: Unit) -> Array:
 		var here: Array = _best_from_here(there, moved, _standing_worth(cell, to_goal))
 		if here[1] > best[2]:
 			best = [cell, state.unit_by_id(here[0].id) if here[0] != null else null, here[1]]
+	if best[0] != by_the_rules:
+		_claims = claimed_before
 	return best
 
 
@@ -178,6 +192,9 @@ func _best_from_here(there: BoardState, moved: Unit, standing: float) -> Array:
 # option against: the way round a queue, the one walker per goal and the
 # never idle of T45 are the rules', and the search adds which fights to take
 # and, at ply 2, when to stay out of reach.
+#
+# Asking the rules takes a goal for this walker (T45's one walker per goal);
+# `_best_option` gives it back when the walker goes elsewhere.
 func _where_the_rules_walk(state: BoardState, unit: Unit) -> Vector2i:
 	var by_the_rules: TacticalDecision = super.decide_move(state, unit.id)
 	if by_the_rules.move == null or by_the_rules.move.path.is_empty():
@@ -255,7 +272,9 @@ func _attack_worth(state: BoardState, unit: Unit, target: Unit, odds: Array[floa
 # Ply 2: the most the other side's best single answer would win against
 # `moved` -- left with `health_after` -- standing where it is, plus what
 # their towers in reach take. The piece it attacks is not counted: a fight
-# between walkers kills somebody, and if it is not that piece it is this one.
+# between walkers kills somebody, and if it is not that piece it is this one;
+# a tower it attacks is not counted either, which is generous -- a siege
+# leaves a tower standing, and it fires next turn.
 func _their_answer(there: BoardState, moved: Unit, target: Unit, health_after: float) -> float:
 	var worst: float = 0.0
 	var risked: float = health_after / 10.0 * moved.type.cost
@@ -270,7 +289,9 @@ func _their_answer(there: BoardState, moved: Unit, target: Unit, health_after: f
 
 
 # What `enemy` attacking `moved` -- with `health_after` left -- would win for
-# the other side: the piece it takes against the piece it risks.
+# the other side: the piece it takes against the piece it risks. Simplified,
+# and on purpose: the enemy is taken to strike from its full reach, with the
+# numbers near the fight as they stand now, not as they will after its walk.
 func _answer_worth(there: BoardState, enemy: Unit, moved: Unit, health_after: float, risked: float) -> float:
 	var inputs: Dictionary = TacticalCombat.inputs(there, enemy, moved)
 	inputs["defender_health"] = maxi(roundi(health_after), 1)

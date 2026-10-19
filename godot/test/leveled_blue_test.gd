@@ -57,6 +57,49 @@ func test_the_person_can_take_blue_and_the_computer_plays_red_first() -> void:
 	assert_bool(scene._persons_turn()).is_true()
 
 
+func test_the_computer_playing_red_never_calls_the_persons_side_red() -> void:
+	var scene: TacticalGame = auto_free((load("res://game/tactical/tactical.tscn") as PackedScene).instantiate())
+	add_child(scene)
+	scene.swap_sides()
+
+	assert_str(scene._header.text).contains("you play blue; red is played by")
+	while scene._computer_thinking():
+		var said: String = scene._computer_turn.next.reason
+		assert_str(said).not_contains("red piece")
+		assert_str(said).not_contains("red's workshop")
+		scene.step_decision()
+
+
+func test_the_person_on_blue_can_take_back_a_build_and_end_the_turn() -> void:
+	var scene: TacticalGame = auto_free((load("res://game/tactical/tactical.tscn") as PackedScene).instantiate())
+	add_child(scene)
+	scene.swap_sides()
+	scene.play_rest_of_computer_turn()
+	var workshop: Unit = scene.state.units_of(TacticalScenario.BLUE).filter(func(unit: Unit) -> bool: return not unit.type.produces.is_empty())[0]
+	var funds: int = scene.state.funds_of(TacticalScenario.BLUE)
+
+	scene.click_cell(workshop.cell)
+	scene.build(0)
+	assert_int(scene.state.funds_of(TacticalScenario.BLUE)).is_less(funds)
+	scene.undo()
+	assert_int(scene.state.funds_of(TacticalScenario.BLUE)).is_equal(funds)
+	scene.end_turn()
+	scene.end_turn()
+	assert_int(scene.state.current_faction).is_equal(TacticalScenario.RED)
+	assert_bool(scene._computer_thinking()).is_true()
+
+
+func test_a_new_game_the_computer_opens_does_not_show_the_last_games_news() -> void:
+	var scene: TacticalGame = auto_free((load("res://game/tactical/tactical.tscn") as PackedScene).instantiate())
+	add_child(scene)
+	scene.swap_sides()
+	scene._last_event = "the red runner destroyed the blue workshop"
+
+	scene.new_game()
+
+	assert_str(scene._status.text).not_contains("destroyed the blue workshop")
+
+
 func test_swapping_sides_keeps_the_level_the_computer_plays_at() -> void:
 	var scene: TacticalGame = auto_free((load("res://game/tactical/tactical.tscn") as PackedScene).instantiate())
 	scene.computer = LeveledBlue.new(Difficulty.named("normal"), 1)

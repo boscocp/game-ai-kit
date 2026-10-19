@@ -49,7 +49,7 @@ func test_a_walker_every_crossing_is_shut_to_says_so_and_takes_the_fallback() ->
 	var decision: TacticalDecision = RuleBasedBlue.new().decide_move(state, shield.id)
 
 	assert_object(decision.move).is_not_null()
-	assert_str(decision.reason).contains("red's pieces stand on every way")
+	assert_str(decision.reason).contains("the enemy's pieces stand on every way")
 	assert_str(decision.reason).contains("fallback")
 
 

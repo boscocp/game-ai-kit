@@ -36,7 +36,8 @@ const KNOBS: Array[String] = ["plan_horizon", "search_depth", "evaluation_noise"
 var name: String
 ## Actions the plan may look ahead; 0 for no plan.
 var plan_horizon: int
-## Plies the search weighs: 1 its own move, 2 also the answer to it.
+## Plies the search weighs: 1 its own move, 2 also the answer to it. The
+## tactical board's search has no third; a deeper level weighs as 2 does.
 var search_depth: int
 ## How much each option's value is blurred, in shields' worth either way.
 var evaluation_noise: float
@@ -54,19 +55,21 @@ func _init(level_name: String, horizon: int, depth: int, noise: float) -> void:
 ## (`test/difficulty_matches.gd`); a level that cannot be told from its
 ## neighbour is cut, not kept for the menu.
 ##
-## Chosen from what the knobs were measured to do on the tactical board, 100
-## games a pairing, wave 55: at 2 plies, a noise of 0.25 or 0.5 lost only
-## 44 and 43 games to none -- a level that could not be told apart -- while
-## 1.0 lost 65 to 33 and 2.0 lost 72 to 27; 2 plies beat 1 by 63 to 37.
-## Every horizon is 0: there, a plan was measured to make a side weaker
-## (`LeveledBlue`), and more of it would make "hard" the easier level.
+## Chosen from what the knobs were measured to do on the tactical board
+## (T12's record has every pairing and the command that plays it): at 1 ply,
+## no noise beat a noise of 0.5 by 70 games to 29 in 100, and 1.0 by 86 to
+## 12; 2 plies beat 1 by 59 to 40. Noise above 0.5 was too much: at 1.0 a
+## level beat the rules only 39 and 41 times in 50 from each seat, under the
+## floor. Every horizon is 0: there, a plan was measured to make a side
+## weaker (`LeveledBlue`), and more of it would make "hard" the easier level.
 ##
-## Three, not five: five would need a step past hard, and nothing here
-## thinks further than 2 plies.
+## Three, not five: nothing measured fits between normal and hard -- 2 plies
+## with a noise of 0.5 lost to normal 42 to 58 -- nor below easy above the
+## floor, and nothing here thinks further than 2 plies.
 static func presets() -> Array[Difficulty]:
 	return [
-		Difficulty.new("easy", 0, 1, 2.0),
-		Difficulty.new("normal", 0, 2, 1.0),
+		Difficulty.new("easy", 0, 1, 0.5),
+		Difficulty.new("normal", 0, 1, 0.0),
 		Difficulty.new("hard", 0, 2, 0.0),
 	]
 

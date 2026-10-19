@@ -15,8 +15,9 @@
 ## one case. A siege is one swing and one back.
 ##
 ## Complexity: per fight, at most healths x healths x a few rounds of cases,
-## each a sum over the die's faces; remembered by its inputs, so each
-## distinct fight is worked out once a game.
+## each a sum over the die's faces; remembered by its inputs, for as long as
+## the program runs -- the rules do not change while it does -- so each
+## distinct fight is worked out once.
 ##
 ## When not to use it: dice with many faces or fights with long memories --
 ## the cases multiply, and a few hundred rolled samples are the cheaper
