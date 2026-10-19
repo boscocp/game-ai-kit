@@ -102,7 +102,7 @@ func test_a_fifth_walker_at_a_full_workshop_takes_the_fallback() -> void:
 
 	var decision: TacticalDecision = rules.decide_move(state, state.unit_at(Vector2i(9, 3)).id)
 
-	assert_str(decision.reason).contains("already has a walker of blue's for each cell beside it")
+	assert_str(decision.reason).contains("already has one of its side's walkers for each cell beside it")
 
 
 func test_a_point_is_given_back_when_its_walker_cannot_get_nearer() -> void:

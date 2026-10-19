@@ -1,7 +1,8 @@
-## The tactical scenario, red against the computer, with turns as Advance Wars
-## plays them.
+## The tactical scenario, a person against the computer, with turns as
+## Advance Wars plays them.
 ##
-## Red is a person. Click one of your units and everywhere it can reach lights
+## The person plays red, and S swaps sides (T12): the computer then plays red
+## and moves first. Click one of your units and everywhere it can reach lights
 ## up; click a lit cell and it walks there and is spent, greyed out until your
 ## next turn, and the next unit that can still move is picked up for you.
 ## W has the unit in hand wait where it is. With the
@@ -13,12 +14,13 @@
 ## The other side's threat map -- every cell it could strike next turn, and by
 ## how many pieces (T48) -- is tinted red on the board; T hides and shows it.
 ##
-## Blue is the computer: whichever `BlueController` the scene was given --
-## the rules by default, and C hands it to the planner (T11), then the
-## learned policy (T44, T46), then back to the rules, starting a new game. Each of its decisions is drawn
-## before it is played, and space plays it, or enter plays the rest of the
-## turn -- the scene is an example in
-## invariant 13's sense, which is why it is `make demo-tactical`.
+## The computer is whichever `BlueController` the scene was given -- the
+## rules by default, and C hands it to the planner (T11), the learned policy
+## (T44, T46), then the three difficulty levels (T12), then back to the
+## rules, starting a new game. Each of its decisions is drawn before it is
+## played, and space plays it, or enter plays the rest of the turn -- the
+## scene is an example in invariant 13's sense, which is why it is
+## `make demo-tactical`.
 ##
 ## The game ends when one side takes the other's workshop, or in a draw at the
 ## round limit (`TacticalVictory`).
@@ -29,8 +31,8 @@ extends Node2D
 const WHAT_THIS_IS: String = "tactics in the style of Advance Wars: build, cross the river, destroy the enemy workshop"
 
 ## The controllers still to come, named on screen beside the one playing, so
-## a person knows blue is a slot and not a fixed opponent.
-const CONTROLLERS_TO_COME: String = "C hands blue to the next controller -- rules, planner, learned -- and starts a new game"
+## a person knows the computer is a slot and not a fixed opponent.
+const CONTROLLERS_TO_COME: String = "C hands the computer to the next controller -- rules, planner, learned, easy, normal, hard -- and S swaps sides; either starts a new game"
 
 @onready var _board: BoardView = $BoardView
 @onready var _units: UnitView = $UnitView
@@ -43,23 +45,26 @@ const CONTROLLERS_TO_COME: String = "C hands blue to the next controller -- rule
 
 ## The game as it stands. Public so tests can set a scene up directly.
 var state: BoardState
-## Who plays blue. Set it before the scene enters the tree to hand blue to
-## another controller; T11 and T12 play theirs this way.
-var blue: BlueController = RuleBasedBlue.new()
+## Who the computer is. Set it before the scene enters the tree to hand the
+## computer's side to another controller; T11 and T12 play theirs this way.
+var computer: BlueController = RuleBasedBlue.new()
+## The side the person plays: red, moving first, unless S has swapped it.
+var person_side: int = TacticalScenario.RED
 ## `TacticalVictory.NOBODY` while the game is on; then the winner, or `DRAW`.
 var winner: int = TacticalVictory.NOBODY
 var _turn := TacticalTurn.new()
-var _blue_turn: BlueTurn
+var _computer_turn: BlueTurn
 var _types: Dictionary = TacticalRules.unit_types()
 var _selected_id: int = -1
 var _last_refusal: String = ""
 # What the last action did, in words, so a build is confirmed and not only
 # visible as a smaller number.
 var _last_event: String = ""
-# What blue's attacks did this turn, kept for red to read when its turn
-# starts: shown only while they were played, they were gone by the time red
-# looked -- and enter played them without showing them at all.
-var _blue_news: Array[String] = []
+# What the computer's attacks did this turn, kept for the person to read
+# when their turn starts: shown only while they were played, they were gone
+# by the time the person looked -- and enter played them without showing them
+# at all.
+var _computer_news: Array[String] = []
 # Whether the threat map is drawn (T toggles it).
 var _showing_threat: bool = true
 # True after one press of end turn with units still unspent: the next press
@@ -85,7 +90,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		click_cell(_board.cell_at(_board.to_local(click.global_position)))
 
 
-## Start again: red to move, nobody spent, nobody winning.
+## Start again: red to move, nobody spent, nobody winning -- and when the
+## computer is red, its first decision drawn.
 func new_game() -> void:
 	state = TacticalScenario.build()
 	# Played as the window's own scene, each game rolls different dice; under a
@@ -95,15 +101,22 @@ func new_game() -> void:
 		state.dice_seed = randi()
 	_units.reset()
 	winner = TacticalVictory.NOBODY
-	_blue_turn = BlueTurn.new(blue)
-	_start_red_turn()
+	_computer_turn = BlueTurn.new(computer)
+	_computer_news.clear()
+	# The last game's last event is not news in this one -- and when the
+	# computer moves first, nothing below would clear it.
+	_last_event = ""
+	if person_side == TacticalScenario.RED:
+		_start_persons_turn()
+	else:
+		_begin_computer_turn()
 
 
 ## A click picks up one of your units or walks the one in hand to a lit cell.
 ## Clicking the unit already in hand does nothing more: the turn starts with
 ## one in hand, and a click meant to pick it up must not spend it.
 func click_cell(cell: Vector2i) -> void:
-	if not _reds_turn():
+	if not _persons_turn():
 		return
 	var occupant: Unit = state.unit_at(cell)
 	_last_event = ""
@@ -124,7 +137,7 @@ func click_cell(cell: Vector2i) -> void:
 ## An attack cannot be taken back, and nothing before it can either: Z after a
 ## fight would let a player read the dice and choose again.
 func attack(target: Unit) -> void:
-	if not _reds_turn():
+	if not _persons_turn():
 		return
 	if _turn.has_attacked(_selected_id):
 		_refuse("this unit has attacked this turn; Z takes the attack back")
@@ -144,7 +157,7 @@ func attack(target: Unit) -> void:
 ## free cell beside it the new unit could stand on. A workshop builds once a
 ## turn, and the build can be taken back like a move.
 func build(index: int) -> void:
-	if not _reds_turn():
+	if not _persons_turn():
 		return
 	_confirming_end = false
 	var kind: UnitType = _types[TacticalRules.BUILDABLE[index]]
@@ -161,7 +174,7 @@ func build(index: int) -> void:
 
 ## The unit in hand waits where it stands, and is spent. Taken back by undo.
 func wait() -> void:
-	if not _reds_turn():
+	if not _persons_turn():
 		return
 	_confirming_end = false
 	var unit: Unit = state.unit_by_id(_selected_id)
@@ -176,9 +189,9 @@ func wait() -> void:
 	_refresh()
 
 
-## Buy the forge for red. Taken back by undo like anything else.
+## Buy the forge for the person's side. Taken back by undo like anything else.
 func buy_forge() -> void:
-	if not _reds_turn():
+	if not _persons_turn():
 		return
 	_confirming_end = false
 	var forge: Upgrade = TacticalRules.forge()
@@ -187,10 +200,10 @@ func buy_forge() -> void:
 	_refresh()
 
 
-## Take back the last thing red did this turn: the unit goes back to its cell
+## Take back the last thing the person did this turn: the unit goes back to its cell
 ## and is no longer spent, a build is unbuilt and paid back.
 func undo() -> void:
-	if not _reds_turn():
+	if not _persons_turn():
 		return
 	_confirming_end = false
 	var spent_before: Array[int] = _turn.spent_ids()
@@ -216,70 +229,72 @@ func _hold_what_was_taken_back(spent_before: Array[int]) -> void:
 		_select_next_unspent()
 
 
-## End red's turn. With units still unspent the first press only asks; the
-## second ends it.
+## End the person's turn. With units still unspent the first press only
+## asks; the second ends it.
 func end_turn() -> void:
-	if not _reds_turn():
+	if not _persons_turn():
 		return
 	var waiting: int = _turn.unspent(state).size()
 	if waiting > 0 and not _confirming_end:
 		_confirming_end = true
 		_refuse("%d unit(s) have not moved. End the turn anyway? Press space or the button again" % waiting)
 		return
-	_hand_to_blue()
+	_hand_to_computer()
 
 
-## One decision by the computer: on red's turn, red's turn ends -- the decision
-## being waited on is blue's -- and on blue's turn, blue plays the decision on
-## screen and shows the next. The step every example offers (T21).
+## One decision by the computer: on the person's turn, that turn ends -- the
+## decision being waited on is the computer's -- and on the computer's turn,
+## it plays the decision on screen and shows the next. The step every example
+## offers (T21).
 func step_decision() -> void:
 	if winner != TacticalVictory.NOBODY:
 		return
-	if _reds_turn():
-		_hand_to_blue()
-	elif _blue_turn.finished():
-		_start_red_turn()
+	if _persons_turn():
+		_hand_to_computer()
+	elif _computer_turn.finished():
+		_start_persons_turn()
 	else:
-		_play_blue_decision()
+		_play_computer_decision()
 
 
 # Play the decision on screen, and walk the unit along the route it was
 # drawn with, so what the pink line promised is what a person sees happen.
-func _play_blue_decision() -> void:
-	var decision: TacticalDecision = _blue_turn.next
+func _play_computer_decision() -> void:
+	var decision: TacticalDecision = _computer_turn.next
 	var walker: Unit = state.unit_by_id(decision.unit_id)
 	var before: BoardState = state
-	state = _blue_turn.play(state)
-	if decision.attack != null and decision in _blue_turn.played:
+	state = _computer_turn.play(state)
+	if decision.attack != null and decision in _computer_turn.played:
 		_last_event = TacticalCombat.told(before, decision.attack, state)
-		_blue_news.append(_last_event)
+		_computer_news.append(_last_event)
 	winner = TacticalVictory.winner(state)
 	# A refused decision is not in `played`, and a hold or a build is no walk.
-	if decision.move != null and decision in _blue_turn.played:
+	if decision.move != null and decision in _computer_turn.played:
 		_units.walk(decision.unit_id, walker.cell, decision.move.path)
 	_refresh()
 
 
-## Play blue's turn to its end, every decision still drawn and recorded, and
-## hand the board back to red -- for the many holds a long game brings.
-func play_rest_of_blue_turn() -> void:
-	while _blue_thinking():
+## Play the computer's turn to its end, every decision still drawn and
+## recorded, and hand the board back to the person -- for the many holds a
+## long game brings.
+func play_rest_of_computer_turn() -> void:
+	while _computer_thinking():
 		step_decision()
-	if winner == TacticalVictory.NOBODY and not _reds_turn():
+	if winner == TacticalVictory.NOBODY and not _persons_turn():
 		step_decision()
 
 
-## What blue is reasoning with: who is playing it, the decision about to be
-## played and why, and what it has done this turn -- for
+## What the computer is reasoning with: who is playing it, the decision about
+## to be played and why, and what it has done this turn -- for
 ## `test/demo_overlays.gd` to check is there.
 func decision_overlay() -> Dictionary:
-	var overlay: Dictionary = {"controller": blue.controller_name(), "to_move": TacticalStatus.side_name(state.current_faction)}
-	if _blue_thinking():
-		overlay["next"] = _described(_blue_turn.next)
-	if not _blue_turn.played.is_empty():
-		overlay["played"] = _blue_turn.played.map(_described)
-	if not blue.plan_lines().is_empty():
-		overlay["plan"] = blue.plan_lines()
+	var overlay: Dictionary = {"controller": computer.controller_name(), "to_move": TacticalStatus.side_name(state.current_faction)}
+	if _computer_thinking():
+		overlay["next"] = _described(_computer_turn.next)
+	if not _computer_turn.played.is_empty():
+		overlay["played"] = _computer_turn.played.map(_described)
+	if not computer.plan_lines().is_empty():
+		overlay["plan"] = computer.plan_lines()
 	overlay["threatened cells"] = threat().size()
 	return overlay
 
@@ -292,23 +307,23 @@ func threat() -> Dictionary[Vector2i, int]:
 	return ThreatMap.of(state, TacticalScenario.FACTIONS - 1 - state.current_faction)
 
 
-## True while blue's turn is on and it still has a decision to play -- and
-## only while the game is on, which is what keeps a game that ended at the
-## hand-off from drawing blue's next move over the result.
-func _blue_thinking() -> bool:
-	return (winner == TacticalVictory.NOBODY and state.current_faction == TacticalScenario.BLUE
-		and _blue_turn.next != null)
+## True while the computer's turn is on and it still has a decision to play
+## -- and only while the game is on, which is what keeps a game that ended at
+## the hand-off from drawing its next move over the result.
+func _computer_thinking() -> bool:
+	return (winner == TacticalVictory.NOBODY and state.current_faction != person_side
+		and _computer_turn.next != null)
 
 
-## True while it is red's turn and the game is still on.
-func _reds_turn() -> bool:
-	return winner == TacticalVictory.NOBODY and state.current_faction == TacticalScenario.RED
+## True while it is the person's turn and the game is still on.
+func _persons_turn() -> bool:
+	return winner == TacticalVictory.NOBODY and state.current_faction == person_side
 
 
 func _press(keycode: Key) -> void:
 	if keycode == KEY_R:
 		new_game()
-	elif keycode == KEY_SPACE and _reds_turn():
+	elif keycode == KEY_SPACE and _persons_turn():
 		end_turn()
 	elif keycode == KEY_SPACE:
 		step_decision()
@@ -321,26 +336,45 @@ func _press(keycode: Key) -> void:
 	elif keycode == KEY_W:
 		wait()
 	elif keycode == KEY_ENTER or keycode == KEY_KP_ENTER:
-		play_rest_of_blue_turn()
+		play_rest_of_computer_turn()
 	elif keycode == KEY_C:
 		swap_controller()
+	elif keycode == KEY_S:
+		swap_sides()
 	elif keycode == KEY_T:
 		_showing_threat = not _showing_threat
 		_refresh()
 
 
-## Hand blue to the next controller -- rules, planner, learned, and round
-## again -- and start again: a controller swapped mid-game would inherit a
-## board it did not play.
+## Hand the computer's side to the next controller -- rules, planner,
+## learned, then each difficulty level, and round again -- and start again: a
+## controller swapped mid-game would inherit a board it did not play.
 func swap_controller() -> void:
-	if blue is PlannedBlue:
-		blue = LearnedBlue.new()
-	elif blue is LearnedBlue:
-		blue = RuleBasedBlue.new()
-	else:
-		var planner := PlannedBlue.new()
-		planner.verbose = true
-		blue = planner
+	computer = next_controller(computer)
+	new_game()
+
+
+## The controller after `playing` in the order C cycles through. A level is
+## seeded afresh each time, from the engine's own random numbers -- its
+## noise is its own, never the board's dice.
+static func next_controller(playing: BlueController) -> BlueController:
+	var levels: Array[Difficulty] = Difficulty.presets()
+	if playing is LeveledBlue:
+		var at: int = levels.map(func(level: Difficulty) -> String: return level.name).find(playing.controller_name())
+		return LeveledBlue.new(levels[at + 1], randi()) if at + 1 < levels.size() else RuleBasedBlue.new()
+	if playing is PlannedBlue:
+		return LearnedBlue.new()
+	if playing is LearnedBlue:
+		return LeveledBlue.new(levels[0], randi())
+	var planner := PlannedBlue.new()
+	planner.verbose = true
+	return planner
+
+
+## The person takes the other side, and a new game starts: the same board,
+## the same controller on the computer's side, at the same level.
+func swap_sides() -> void:
+	person_side = TacticalScenario.FACTIONS - 1 - person_side
 	new_game()
 
 
@@ -403,22 +437,28 @@ func _explained(refusal: String, cell: Vector2i) -> String:
 	return refusal
 
 
-func _hand_to_blue() -> void:
-	_blue_news.clear()
+func _hand_to_computer() -> void:
 	_open_turn()
+	_begin_computer_turn()
+
+
+# The computer's turn on a board whose turn has already opened: the first
+# turn of a game the computer moves first in, or after `_open_turn`.
+func _begin_computer_turn() -> void:
+	_computer_news.clear()
 	_confirming_end = false
 	_last_refusal = ""
 	_selected_id = -1
 	if winner == TacticalVictory.NOBODY:
-		_blue_turn.begin(state)
+		_computer_turn.begin(state)
 	_refresh()
 
 
-func _start_red_turn() -> void:
+func _start_persons_turn() -> void:
 	_last_event = ""
-	if state.current_faction != TacticalScenario.RED:
+	if state.current_faction != person_side:
 		_open_turn()
-		_last_event = _with_blue_news(_last_event)
+		_last_event = _with_computer_news(_last_event)
 	_turn.begin()
 	_last_refusal = ""
 	_confirming_end = false
@@ -435,19 +475,19 @@ func _open_turn() -> void:
 	winner = TacticalVictory.winner(state)
 
 
-# What red reads first: blue's attacks of the turn just played, then what
-# red's own towers did.
-func _with_blue_news(towers: String) -> String:
-	if _blue_news.is_empty():
+# What the person reads first: the computer's attacks of the turn just
+# played, then what the person's own towers did.
+func _with_computer_news(towers: String) -> String:
+	if _computer_news.is_empty():
 		return towers
-	var lines: Array[String] = ["blue's attacks:"]
-	lines.append_array(_blue_news)
+	var lines: Array[String] = ["%s's attacks:" % TacticalStatus.side_name(TacticalScenario.FACTIONS - 1 - person_side)]
+	lines.append_array(_computer_news)
 	if towers != "":
 		lines.append(towers)
 	return "\n".join(lines)
 
 
-# The next of red's units that can still walk, or nothing when none can.
+# The next of the person's units that can still walk, or nothing when none can.
 func _select_next_unspent() -> void:
 	var waiting: Array[int] = _turn.unspent(state)
 	_selected_id = waiting[0] if not waiting.is_empty() else -1
@@ -458,32 +498,33 @@ func _described(decision: TacticalDecision) -> Dictionary:
 
 
 func _refresh() -> void:
-	# Blue's turn draws neither red's reach nor red's spent units: what is on
-	# screen then is blue's decision.
+	# The computer's turn draws neither the person's reach nor their spent
+	# units: what is on screen then is the computer's decision.
 	var reach: Array[Vector2i] = []
 	_units.spent.clear()
-	if _reds_turn():
+	if _persons_turn():
 		reach = _steps_in_reach()
 		_units.spent = _turn.spent_ids()
 	_board.draw_board(state.graph, reach, TacticalScenario.POINTS, _terrain())
 	_units.show_state(state, _board, _selected_id)
-	_intent.show_decision(_blue_turn.next if _blue_thinking() else null, state, _board)
+	_intent.show_decision(_computer_turn.next if _computer_thinking() else null, state, _board)
 	var marks: Dictionary[Vector2i, String] = {}
-	if _blue_thinking():
-		marks = blue.plan_marks(state)
+	if _computer_thinking():
+		marks = computer.plan_marks(state)
 	_intent.show_plan(marks)
 	_intent.show_threat(threat() if _showing_threat else {} as Dictionary[Vector2i, int])
-	_header.text = "%s\n%s\nblue is played by %s" % [WHAT_THIS_IS, TacticalVictory.rule(), blue.describe()]
-	_end_button.disabled = not _reds_turn()
-	_undo_button.disabled = not (_reds_turn() and _turn.can_undo())
+	_header.text = "%s\n%s\nyou play %s; %s is played by %s" % [WHAT_THIS_IS, TacticalVictory.rule(),
+		TacticalStatus.side_name(person_side), TacticalStatus.side_name(TacticalScenario.FACTIONS - 1 - person_side), computer.describe()]
+	_end_button.disabled = not _persons_turn()
+	_undo_button.disabled = not (_persons_turn() and _turn.can_undo())
 	_status.text = _status_text()
 
 
 func _status_text() -> String:
 	if winner != TacticalVictory.NOBODY:
 		return TacticalVictory.announcement(winner, state)
-	if not _reds_turn():
-		return TacticalStatus.blue_text(state, _blue_turn, blue, _last_event) + "\n\n" + CONTROLLERS_TO_COME
+	if not _persons_turn():
+		return TacticalStatus.computer_text(state, _computer_turn, computer, _last_event) + "\n\n" + CONTROLLERS_TO_COME
 	var unit: Unit = state.unit_by_id(_selected_id)
 	var news: String = _last_event
 	if unit == null and _turn.unspent(state).is_empty():

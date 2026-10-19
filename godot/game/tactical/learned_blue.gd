@@ -141,7 +141,7 @@ func controller_name() -> String:
 
 ## What decides, in one line for the screen.
 func describe() -> String:
-	return "the learned policy: the combat model's p(win) sets a walker out for a fight at %.2f, and it gives that fight up at %.2f or below; a walker beside its side's attack joins it; it retreats only when red is far stronger near it; the capture model picks the point; builds and sieges by the rules" % [
+	return "the learned policy: the combat model's p(win) sets a walker out for a fight at %.2f, and it gives that fight up at %.2f or below; a walker beside its side's attack joins it; it retreats only when the enemy is far stronger near it; the capture model picks the point; builds and sieges by the rules" % [
 		COMMIT_AT, GIVE_UP_AT]
 
 
@@ -151,7 +151,7 @@ func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 	var unit: Unit = state.unit_by_id(unit_id)
 	var unusable: String = policy.why_unusable()
 	if unusable != "":
-		return TacticalDecision.hold(unit_id, "stays: the learned blue cannot decide -- " + unusable, unit.cell)
+		return TacticalDecision.hold(unit_id, "stays: the learned policy cannot decide -- " + unusable, unit.cell)
 	var walks: Dictionary = TacticalReach.walks_for(state, unit)
 	var fight: Dictionary = _best_fight(state, unit, walks)
 	var fought: TacticalDecision = null if fight.is_empty() else _attack_or_retreat(state, unit, walks, fight)
@@ -173,7 +173,7 @@ func _walk_at_a_goal(state: BoardState, unit: Unit, walks: Dictionary) -> Tactic
 	var contested: Vector2i = _point_red_holds(state)
 	if contested != Vector2i(-1, -1) and _claim(state, contested):
 		return _walk_at(state, unit, walks, contested,
-			"red holds it, and standing beside it breaks the hold (a rule, not the model)")
+			"the enemy holds it, and standing beside it breaks the hold (a rule, not the model)")
 	var ranked: Array[Dictionary] = policy.rank_nodes(state, unit.faction, _points_nobody_of_ours_is_on(state))
 	for index: int in range(ranked.size()):
 		if _claim(state, ranked[index]["cell"]):
@@ -193,7 +193,7 @@ func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
 		if TacticalCombat.why_refused(state, Attack.new(unit_id, enemy.id)) != BoardState.LEGAL:
 			continue
 		if enemy.type.type_name == TacticalRules.WORKSHOP:
-			return TacticalDecision.strike(unit_id, enemy, "attacks red's workshop at %s: destroying it wins (a rule, not the model)" % enemy.cell)
+			return TacticalDecision.strike(unit_id, enemy, "attacks the enemy workshop at %s: destroying it wins (a rule, not the model)" % enemy.cell)
 		var chance: float = policy.chance_to_win(state, unit, enemy) if enemy.type.mobile else NAN
 		if is_finite(chance) and chance > best_chance:
 			best = enemy
@@ -233,7 +233,7 @@ func _bar_for(unit: Unit, enemy: Unit) -> float:
 # end of the reason of whatever it did instead.
 func _stood_its_ground(unit: Unit, fight: Dictionary) -> String:
 	var enemy: Unit = fight["enemy"]
-	return "it did not retreat from the %s at %s, though p(win) %.2f is under its bar %.2f: red's strength near it does not outweigh blue's by Wesnoth's caution %.2f" % [
+	return "it did not retreat from the %s at %s, though p(win) %.2f is under its bar %.2f: the enemy's strength near it does not outweigh its side's by Wesnoth's caution %.2f" % [
 		enemy.type.type_name, enemy.cell, fight["chance"], _bar_for(unit, enemy), CAUTION]
 
 

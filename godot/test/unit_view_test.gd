@@ -163,9 +163,9 @@ func test_blue_walks_the_route_its_decision_was_drawn_with() -> void:
 	var view: UnitView = _view_of(scene)
 	var board: BoardView = scene.get_node("BoardView")
 	scene.step_decision()   # red's turn ends
-	while scene._blue_turn.next != null and scene._blue_turn.next.kind() != "move":
+	while scene._computer_turn.next != null and scene._computer_turn.next.kind() != "move":
 		scene.step_decision()
-	var decision: TacticalDecision = scene._blue_turn.next
+	var decision: TacticalDecision = scene._computer_turn.next
 	assert_object(decision).is_not_null()
 	var start: Vector2i = scene.state.unit_by_id(decision.unit_id).cell
 

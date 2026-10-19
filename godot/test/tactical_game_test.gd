@@ -224,7 +224,7 @@ func test_spent_units_are_drawn_greyed() -> void:
 func test_blue_shows_its_decision_before_playing_it() -> void:
 	var scene: TacticalGame = _mounted_scene()
 	scene.step_decision()   # red's turn ends
-	var shown: TacticalDecision = scene._blue_turn.next
+	var shown: TacticalDecision = scene._computer_turn.next
 	var before: BoardState = scene.state
 	assert_object(shown).is_not_null()
 	assert_str(scene.decision_overlay()["next"]["why"]).is_equal(shown.reason)
@@ -232,7 +232,7 @@ func test_blue_shows_its_decision_before_playing_it() -> void:
 
 	scene.step_decision()
 
-	assert_object(scene._blue_turn.played.back()).is_same(shown)
+	assert_object(scene._computer_turn.played.back()).is_same(shown)
 
 
 func test_blue_s_next_walk_is_drawn() -> void:
@@ -241,8 +241,8 @@ func test_blue_s_next_walk_is_drawn() -> void:
 	scene.step_decision()   # the workshop's decision is played; a walk is next
 	var intent: IntentView = scene.get_node("IntentView")
 
-	assert_str(scene._blue_turn.next.kind()).is_equal("move")
-	assert_object(intent._decision).is_same(scene._blue_turn.next)
+	assert_str(scene._computer_turn.next.kind()).is_equal("move")
+	assert_object(intent._decision).is_same(scene._computer_turn.next)
 
 
 func test_blue_builds_what_beats_the_most_red_pieces() -> void:
@@ -255,7 +255,7 @@ func test_blue_builds_what_beats_the_most_red_pieces() -> void:
 
 	assert_str(decision.kind()).is_equal("build")
 	assert_str(decision.order.unit_type.type_name).is_equal(TacticalRules.SHIELD)
-	assert_str(decision.reason).contains("it beats 1 red piece(s), runner")
+	assert_str(decision.reason).contains("it beats 1 enemy piece(s), runner")
 
 
 func test_blue_builds_the_counter_to_whatever_red_has_most_of() -> void:
@@ -370,7 +370,7 @@ func test_blue_s_turn_is_legal_on_every_decision_over_many_seeded_games() -> voi
 
 func test_blue_is_whichever_controller_the_scene_was_given() -> void:
 	var scene: TacticalGame = (load("res://game/tactical/tactical.tscn") as PackedScene).instantiate()
-	scene.blue = _HoldingBlue.new()
+	scene.computer = _HoldingBlue.new()
 	add_child(scene)
 	auto_free(scene)
 
@@ -425,7 +425,7 @@ func test_standing_beside_the_workshop_is_no_longer_a_win() -> void:
 func test_blue_wins_the_same_way() -> void:
 	var scene: TacticalGame = _blue_beside_red_s_workshop()
 
-	scene.play_rest_of_blue_turn()
+	scene.play_rest_of_computer_turn()
 
 	assert_int(scene.winner).is_equal(BLUE)
 
@@ -441,7 +441,7 @@ func test_a_tower_does_not_fire_when_a_player_tells_it_to() -> void:
 
 func test_once_the_game_is_over_nothing_moves_until_r() -> void:
 	var scene: TacticalGame = _blue_beside_red_s_workshop()
-	scene.play_rest_of_blue_turn()
+	scene.play_rest_of_computer_turn()
 	var finished: BoardState = scene.state
 
 	scene.step_decision()
@@ -588,7 +588,7 @@ func _random_red_turn(state: BoardState, random: RandomNumberGenerator) -> Board
 func _play_until_red_or_over(scene: TacticalGame) -> void:
 	scene.step_decision()
 	for guard: int in range(50):
-		if scene.winner != TacticalVictory.NOBODY or scene._reds_turn():
+		if scene.winner != TacticalVictory.NOBODY or scene._persons_turn():
 			return
 		scene.step_decision()
 
@@ -652,9 +652,9 @@ func test_red_s_units_are_fresh_again_at_red_s_next_turn() -> void:
 	scene.wait()
 	scene.end_turn()
 
-	scene.play_rest_of_blue_turn()
+	scene.play_rest_of_computer_turn()
 
-	assert_bool(scene._reds_turn()).is_true()
+	assert_bool(scene._persons_turn()).is_true()
 	assert_bool(scene._turn.is_spent(runner.id)).is_false()
 	assert_int(scene._selected_id).is_equal(runner.id)
 
@@ -670,7 +670,7 @@ func test_rule_based_blue_wins_against_a_red_that_only_waits() -> void:
 			break
 		scene.end_turn()
 		scene.end_turn()
-		scene.play_rest_of_blue_turn()
+		scene.play_rest_of_computer_turn()
 
 	assert_int(scene.winner).is_equal(BLUE)
 	assert_int(scene.state.turn_number).is_less(10 * TacticalScenario.FACTIONS)
@@ -697,7 +697,7 @@ func test_destroying_the_workshop_on_the_last_turn_still_wins() -> void:
 func test_a_game_that_is_over_shows_no_next_move() -> void:
 	var scene: TacticalGame = _blue_beside_red_s_workshop()
 
-	scene.play_rest_of_blue_turn()
+	scene.play_rest_of_computer_turn()
 
 	var intent: IntentView = scene.get_node("IntentView")
 	assert_object(intent._decision).is_null()
@@ -730,8 +730,8 @@ func test_enter_plays_the_rest_of_blue_s_turn_and_hands_back() -> void:
 
 	scene._press(KEY_ENTER)
 
-	assert_bool(scene._reds_turn()).is_true()
-	assert_int(scene._blue_turn.played.size()).is_greater(1)
+	assert_bool(scene._persons_turn()).is_true()
+	assert_int(scene._computer_turn.played.size()).is_greater(1)
 
 
 func test_build_undo_and_the_forge_each_cancel_the_end_turn_question() -> void:
@@ -766,7 +766,7 @@ func test_undo_picks_up_a_unit_again_when_the_one_in_hand_is_gone() -> void:
 func test_the_overlay_and_the_status_carry_what_blue_did_and_why() -> void:
 	var scene: TacticalGame = _mounted_scene()
 	scene.step_decision()
-	var shown: TacticalDecision = scene._blue_turn.next
+	var shown: TacticalDecision = scene._computer_turn.next
 	assert_str(_status_of(scene)).contains(shown.reason)
 
 	scene.step_decision()

@@ -227,9 +227,9 @@ func test_red_reads_blue_s_attacks_when_its_turn_starts() -> void:
 	scene.state.unit_by_id(_first_of(scene.state, BLUE, TacticalRules.RUNNER).id).cell = workshop.cell + Vector2i(0, -1)
 	scene.step_decision()
 
-	scene.play_rest_of_blue_turn()
+	scene.play_rest_of_computer_turn()
 
-	assert_bool(scene._reds_turn()).is_true()
+	assert_bool(scene._persons_turn()).is_true()
 	assert_str((scene.get_node("Interface/Status") as Label).text).contains("blue's attacks:")
 
 

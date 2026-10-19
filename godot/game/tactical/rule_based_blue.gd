@@ -88,7 +88,7 @@ func controller_name() -> String:
 
 ## Says on screen that this is a reflex and not a plan, and what the reflex is.
 func describe() -> String:
-	return "rules, not a plan: build what beats the most red pieces, walk every unit at red's workshop"
+	return "rules, not a plan: build what beats the most enemy pieces, walk every unit at the enemy workshop"
 
 
 ## A new turn: nobody has claimed a goal yet.
@@ -129,10 +129,10 @@ func decide_build(state: BoardState, workshop_id: int) -> TacticalDecision:
 	var beaten: Array[String] = _beaten_by(best.unit_type, enemies)
 	if beaten.is_empty():
 		return TacticalDecision.build(workshop_id, best, (
-			"builds a %s at %s: red's pieces shut every way blue's walkers have, and a %s still gets there"
+			"builds a %s at %s: the enemy's pieces shut every way its walkers have, and a %s still gets there"
 		) % [best.unit_type.type_name, best.cell, best.unit_type.type_name])
 	return TacticalDecision.build(workshop_id, best, (
-		"builds a %s at %s: it beats %d red piece(s), %s"
+		"builds a %s at %s: it beats %d enemy piece(s), %s"
 	) % [best.unit_type.type_name, best.cell, best_count, ", ".join(beaten)])
 
 
@@ -144,13 +144,13 @@ func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 	var walks: Dictionary = TacticalReach.walks_for(state, unit)
 	var target: Unit = _nearest_workshop(state, unit)
 	if target == null:
-		return _fallback(state, unit, walks, "red's pieces stand on every way to red's workshop this turn")
+		return _fallback(state, unit, walks, "the enemy's pieces stand on every way to the enemy workshop this turn")
 	var aim: String = "the %s at %s" % [target.type.type_name, target.cell]
 	if TacticalCombat.distance(unit.cell, target.cell) <= unit.type.attack_range:
 		_claim(state, target.cell)
 		return TacticalDecision.hold(unit_id, "stays in reach of %s, to attack it" % aim, unit.cell)
 	if not _claim(state, target.cell):
-		return _fallback(state, unit, walks, "%s already has a walker of blue's for each cell beside it" % aim)
+		return _fallback(state, unit, walks, "%s already has one of its side's walkers for each cell beside it" % aim)
 	var best: Vector2i = _nearest_walk_to(state, unit, walks, target.cell)
 	if best == unit.cell:
 		_claims[target.cell] -= 1
@@ -190,12 +190,12 @@ func _fallback(state: BoardState, unit: Unit, walks: Dictionary, why: String) ->
 		if _claims.get(enemy.cell, 0) >= _room_at(state, enemy.cell):
 			continue
 		var best: Vector2i = _nearest_walk_to(state, unit, walks, enemy.cell)
-		var said: String = "walks to %s, towards the %s at %s: %s, so it goes for the nearest red piece it can (a fallback rule)" % [
+		var said: String = "walks to %s, towards the %s at %s: %s, so it goes for the nearest enemy piece it can (a fallback rule)" % [
 			best, enemy.type.type_name, enemy.cell, why]
 		if best != unit.cell:
 			_claim(state, enemy.cell)
 			return TacticalDecision.walk(unit.id, walks[best], said, best)
-	return TacticalDecision.hold(unit.id, "stays: no walk this turn brings it nearer its goal or any red piece -- %s" % why, unit.cell)
+	return TacticalDecision.hold(unit.id, "stays: no walk this turn brings it nearer its goal or any enemy piece -- %s" % why, unit.cell)
 
 
 # Red's pieces nearest `unit` as the crow flies, at most
@@ -224,8 +224,8 @@ func _spend_anyway(state: BoardState, workshop: Unit, enemies: Array[Unit]) -> T
 	var order := ProductionOrder.new(workshop.id, best, TacticalRules.free_cell_beside(state, workshop, best))
 	var beaten: Array[String] = _beaten_by(best, enemies)
 	if beaten.is_empty():
-		return TacticalDecision.build(workshop.id, order, "builds a %s at %s: nothing it can build beats a red piece, and money banked is a piece not on the board (spend first)" % [best.type_name, order.cell])
-	return TacticalDecision.build(workshop.id, order, "builds a %s at %s: it beats %d red piece(s), %s -- none of what beats them can get to red's workshop now, so it holds blue's bank until the way opens (spend first)" % [
+		return TacticalDecision.build(workshop.id, order, "builds a %s at %s: nothing it can build beats an enemy piece, and money banked is a piece not on the board (spend first)" % [best.type_name, order.cell])
+	return TacticalDecision.build(workshop.id, order, "builds a %s at %s: it beats %d enemy piece(s), %s -- none of what beats them can get to the enemy workshop now, so it holds the bank until the way opens (spend first)" % [
 		best.type_name, order.cell, beaten.size(), ", ".join(beaten)])
 
 
@@ -291,7 +291,7 @@ func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
 		if TacticalCombat.why_refused(state, Attack.new(unit_id, enemy.id)) != BoardState.LEGAL:
 			continue
 		if enemy.type.type_name == TacticalRules.WORKSHOP:
-			return TacticalDecision.strike(unit_id, enemy, "attacks red's workshop at %s: destroying it wins" % enemy.cell)
+			return TacticalDecision.strike(unit_id, enemy, "attacks the enemy workshop at %s: destroying it wins" % enemy.cell)
 		if enemy.type.type_name in unit.type.strong_against and (best == null or enemy.health < best.health):
 			best = enemy
 	if best == null:

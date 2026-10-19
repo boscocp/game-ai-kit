@@ -63,6 +63,9 @@ const BUDGET: int = 2000
 ## The budget this controller plans with: `BUDGET`, unless a test hands a
 ## smaller one to see what a partial plan does on the board.
 var budget: int = BUDGET
+## How many actions ahead it plans: as far as the budget allows, unless a
+## difficulty level (T12, `LeveledBlue`) says fewer.
+var horizon: int = HeuristicPlanner.NO_HORIZON
 
 ## The plan being carried out, or null before the first turn.
 var plan: PlanResult = null
@@ -186,8 +189,11 @@ func _find_the_place(state: BoardState) -> void:
 	next_step = _where_the_board_is(state)
 
 
-# Why to plan again at the start of this turn, or "" to keep the plan.
+# Why to plan again at the start of this turn, or "" to keep the plan. A
+# horizon of no actions is no plan at all, and the rules buy (T12).
 func _why_plan_again(state: BoardState) -> String:
+	if horizon == 0:
+		return ""
 	if plan == null:
 		return "at the start of the game"
 	if state.turn_number - _planned_on_turn >= REPLAN_EVERY * TacticalScenario.FACTIONS:
@@ -204,7 +210,7 @@ func _why_plan_again(state: BoardState) -> String:
 
 func _make_plan(state: BoardState, why: String) -> void:
 	var world: WorldState = TacticalPlanBridge.world_of(state)
-	plan = _planner.plan(TacticalPlanBridge.actions(), world, TacticalPlanBridge.goal(), GUIDE, budget)
+	plan = _planner.plan(TacticalPlanBridge.actions(), world, TacticalPlanBridge.goal(), GUIDE, budget, horizon)
 	_planned_on_turn = state.turn_number
 	why_planned = "on round %d, %s" % [state.turn_number / TacticalScenario.FACTIONS + 1, why]
 	_aim = TacticalPlanBridge.goal() if not plan.partial else _what_it_adds(world)
