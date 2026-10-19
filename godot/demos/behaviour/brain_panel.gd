@@ -6,8 +6,11 @@
 ## - the behaviour tree: the nodes the last tick asked, in order, with "go
 ##   and look" in blue wherever it appears -- one subtree, under two
 ##   branches, which the legend says;
-## - GOAP: the goal, and the plan it made this turn, first step lit;
-## - the HTN: the method it chose, and its plan, the step it is on lit.
+## - GOAP: the goal, and the plan it made this turn, first step lit, and the
+##   worlds it looked at to make it;
+## - the HTN: the method it chose, its plan, the step it is on lit, and why it
+##   last planned -- the evidence that it carries on down a method rather
+##   than plan every turn as GOAP does.
 ##
 ## When not to use it: as the decision. It reads `GuardBrain.thinking`; it
 ## never asks the brain anything that could change it.
@@ -74,6 +77,11 @@ static func _plan_rows(thinking: Dictionary) -> Array[Array]:
 	var steps: Array = thinking["plan"]
 	for index: int in range(steps.size()):
 		rows.append(["  %d. %s" % [index + 1, steps[index]], TEXT, index == at])
+	rows.append(["worlds looked at: %d" % thinking.get("visited", 0), DIM, false])
+	if thinking.get("planned", "") != "":
+		# On a row of its own: the longest reason fills the column by itself.
+		rows.append(["planned because:", DIM, false])
+		rows.append([" " + thinking["planned"], DIM, false])
 	return rows
 
 

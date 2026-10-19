@@ -96,7 +96,10 @@ func decision_overlay() -> Dictionary:
 		"thinking": world.brain.thinking(), "suspicion": world.senses.suspicion.level}
 
 
-## The status line's words. What the brain is thinking is the panel's.
+## The status line's words. What the brain is thinking is the panel's. Three
+## lines, each under the board's width (864 px): the window has room under
+## the board for three and no more, and a line that wrapped would push the
+## last one off the bottom.
 func status_text() -> String:
 	var brain: GuardBrain = world.brain
 	var lines: Array[String] = [

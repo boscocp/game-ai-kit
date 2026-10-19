@@ -7,7 +7,7 @@
 [ext_resource type="Script" path="res://demos/behaviour/brain_panel.gd" id="4_panel"]
 
 [node name="BehaviourDemo" type="Node2D"]
-position = Vector2(64, 16)
+position = Vector2(48, 48)
 script = ExtResource("1_demo")
 
 [node name="BoardView" type="TileMapLayer" parent="."]
@@ -20,22 +20,22 @@ script = ExtResource("3_view")
 
 [node name="Status" type="Label" parent="Interface"]
 autowrap_mode = 3
-offset_left = 24.0
-offset_top = 604.0
-offset_right = 1256.0
-offset_bottom = 716.0
+offset_left = 48.0
+offset_top = 636.0
+offset_right = 912.0
+offset_bottom = 720.0
 text = "loading"
 
 [node name="Legend" type="Control" parent="Interface"]
-offset_left = 980.0
-offset_top = 40.0
-offset_right = 1270.0
-offset_bottom = 300.0
+offset_left = 936.0
+offset_top = 48.0
+offset_right = 1256.0
+offset_bottom = 258.0
 script = ExtResource("9_legend")
 
 [node name="BrainPanel" type="Control" parent="Interface"]
-offset_left = 980.0
-offset_top = 320.0
-offset_right = 1270.0
-offset_bottom = 596.0
+offset_left = 936.0
+offset_top = 282.0
+offset_right = 1256.0
+offset_bottom = 696.0
 script = ExtResource("4_panel")
