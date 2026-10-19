@@ -64,27 +64,36 @@ the difference it was built for.
 ## What was done (2026-10-19, wave 56) -- done, manual check still a person's
 
 - `ai_behaviour`: `StateMachine`, `BehaviourTree`, `GoapPlanner` (A\* backwards
-  from the goal, a cost per action) and `HtnPlanner` (forwards, methods in
-  order, backtracking), with `BehaviourPlan` counting worlds as T11 does;
-  `WaysToDecide` is the table, with STRIPS as the fifth row.
+  from the goal, a cost per action, the cheapest plan) and `HtnPlanner`
+  (forwards, methods in order, backtracking), with `BehaviourPlan`;
+  `WaysToDecide` is the table, with STRIPS -- forwards, the fewest actions --
+  as the fifth row.
 - `demos/behaviour/`: T14's room and perception, one guard -- patrol,
   suspicious, searching, alerted -- written four times, each a
-  `DecisionPolicy`; `make demo-behaviour` swaps them mid-round (1-4). An
-  intruder walks a fixed loop, so the guard has something to notice with
-  nobody at the keys.
-- `test/behaviour_test.gd`: the engines, then the guard. All four take the
-  same step for a calm guard on its round; as suspicion fades below
-  going-to-look mid-search, the state machine and the HTN carry on to the
-  place and the tree and GOAP turn back -- the difference the table
-  documents.
+  `DecisionPolicy`; `make demo-behaviour` swaps them mid-round (1-4), and a
+  panel draws what the playing brain thinks: the state machine's states with
+  the current one lit, the tree's path with "go and look" marked under each
+  branch that reached it, the plan with its step lit. An intruder sprints a
+  loop and stands silent at its corners -- one of them the lit doorway -- so
+  the guard notices, loses, looks, chases and catches with nobody at the keys.
+- `test/behaviour_test.gd`, 17 cases: the engines; then the guard. All four
+  agree on a calm round, on setting out to look, on a chase and on a catch;
+  none chases what it does not see; as suspicion fades mid-search the state
+  machine and the HTN carry on and the tree and GOAP turn back; and over 300
+  turns the two that commit look, chase and catch while the two that
+  reconsider never chase -- GOAP choosing the tree's deed every turn.
 
 **GOAP against HTN, measured** (`make test-behaviour-benchmark`): in four
-moments, the two look at the same number of worlds -- 2, 3, 2, 3 -- and the
-HTN is faster per plan, about 6 to 8 microseconds against GOAP's 6 to 15.
-So Humphreys' claim holds here in time, and the guard is too small to show
-it in search.
+moments GOAP took 2, 3, 2, 3 worlds off its frontier and the HTN took up 2,
+3, 2, 3 tasks -- the nearest counts, not one unit -- and the HTN was faster
+per plan, about 6-8 microseconds against 6-16. That holds for these two
+implementations; much of GOAP's extra is how this one keeps its frontier, so
+the guard cannot say it holds for the two directions of search.
 
 **Found on the way.** A test caught the GOAP planner dropping a goal fact the
 world already had, which let an action that undoes it into a plan; nodes now
-keep the whole goal. And the HTN walked to where it already stood until a
-"look here" method was written: it knows only the orders its methods give.
+keep the whole goal. The HTN walked to where it already stood until a "look
+here" method was written. The review found the unattended demo settling into
+one behaviour every brain shared, the state machine chasing an intruder it
+could not see, and tests a brain answering "walk the round" every turn would
+have passed; all fixed, each fix held by a test that fails without it.

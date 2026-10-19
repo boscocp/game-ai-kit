@@ -20,7 +20,7 @@ var _planner := GoapPlanner.new()
 var _actions: Array[GoapAction] = GuardActions.goap()
 
 
-## "GOAP".
+## The name the screen gives this way of deciding.
 func brain_name() -> String:
 	return "GOAP"
 

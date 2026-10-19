@@ -18,8 +18,9 @@
 ## reconsiders everything, every time; a running action is simply asked again.
 ## That is the classic tree, and the cost of it is that it cannot commit.
 ##
-## Each tick leaves a `trail`, every node it visited and what it answered,
-## which is what the demo lights.
+## Each tick leaves a `trail`: every node it visited and what it answered, a
+## composite after its children -- so "go and look" shows up by name under
+## whichever branch reached it -- which is what the demo lights.
 ##
 ## Complexity: a tick visits at most every node once, O(nodes).
 ##
@@ -87,11 +88,13 @@ class Sequence extends TreeNode:
 
 	## Success only when every child succeeded; otherwise what stopped it.
 	func tick(facts: Dictionary, trail: Array[String]) -> Status:
+		var answer: Status = Status.SUCCESS
 		for child: TreeNode in children:
-			var answer: Status = child.tick(facts, trail)
+			answer = child.tick(facts, trail)
 			if answer != Status.SUCCESS:
-				return answer
-		return Status.SUCCESS
+				break
+		trail.append("%s: %s" % [name, BehaviourTree.said(answer)])
+		return answer
 
 
 ## Its children in order, until one does not fail.
@@ -104,11 +107,13 @@ class Selector extends TreeNode:
 
 	## Failure only when every child failed; otherwise what answered.
 	func tick(facts: Dictionary, trail: Array[String]) -> Status:
+		var answer: Status = Status.FAILURE
 		for child: TreeNode in children:
-			var answer: Status = child.tick(facts, trail)
+			answer = child.tick(facts, trail)
 			if answer != Status.FAILURE:
-				return answer
-		return Status.FAILURE
+				break
+		trail.append("%s: %s" % [name, BehaviourTree.said(answer)])
+		return answer
 
 
 ## A tree with `top` at its root.

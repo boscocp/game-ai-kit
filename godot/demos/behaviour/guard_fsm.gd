@@ -1,14 +1,19 @@
 ## The guard as a state machine: four states, and the arrows between them.
 ##
-##     patrol --suspicious--> suspicious --knows where--> searching
-##        \\                       \\                        |   ^
-##         `------alerted-------> alerted <--alerted-------'   |
-##                                   `------cooling-------------'
-##     suspicious, searching --calm, or the place checked--> patrol
+##     patrol     --suspicious-->           suspicious
+##     patrol     --alerted-->              alerted
+##     suspicious --alerted-->              alerted
+##     suspicious --knows where-->          searching
+##     suspicious --calm-->                 patrol
+##     searching  --alerted-->              alerted
+##     searching  --calm, or checked-->     patrol
+##     alerted    --cooling-->              searching
 ##
 ## Each state does one thing: patrol walks the round, suspicious stops and
 ## turns towards what it heard, searching goes to where the intruder was and
-## looks round, alerted gives chase. The arrows down wait for less suspicion
+## looks round, alerted gives chase -- and, having lost sight of whom it
+## chased, goes and looks too: the searching state's behaviour, written a
+## second time, which is the state machine's cost. The arrows down wait for less suspicion
 ## than the arrows up needed -- T14's gap -- so it does not flicker; that
 ## memory is the state itself, and it is why this brain snaps: nothing
 ## changes until an arrow fires, and then everything does.
@@ -38,7 +43,7 @@ func _init() -> void:
 	machine.add_arrow(ALERTED, SEARCHING, func(facts: Dictionary) -> bool: return facts["cooling"], "lost the trail")
 
 
-## "state machine".
+## The name the screen gives this way of deciding.
 func brain_name() -> String:
 	return "state machine"
 
@@ -51,8 +56,18 @@ func decide(facts: Dictionary) -> String:
 		SEARCHING:
 			return LOOK_AROUND if facts["at_last_known"] else GO_TO_LAST_KNOWN
 		ALERTED:
-			return CATCH if facts["next_to_player"] else CHASE
+			return _alerted(facts)
 	return WALK_ROUND
+
+
+# Alerted: seize it when beside it, run at it while it is in sight, and
+# having lost sight of it, go and look -- the searching state's deeds again.
+static func _alerted(facts: Dictionary) -> String:
+	if facts["next_to_player"]:
+		return CATCH
+	if facts["sees_player"]:
+		return CHASE
+	return LOOK_AROUND if facts["at_last_known"] else GO_TO_LAST_KNOWN
 
 
 ## The state it is in, every state, and the arrow it last took.

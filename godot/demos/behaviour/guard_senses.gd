@@ -30,7 +30,9 @@ var suspicion := Suspicion.new()
 var last_known: Vector2i = NOWHERE
 ## Whether the guard saw the intruder this turn.
 var sees_player: bool = false
-## Where the intruder stands -- what a chase walks at, once it is seen.
+## Where the intruder stands while the guard sees it -- what a chase walks
+## at -- and `NOWHERE` while it does not: a guard that tracked an unseen
+## intruder would know more than it perceives.
 var player_cell: Vector2i = NOWHERE
 ## Turns spent looking round at `last_known`.
 var looked_around: int = 0
@@ -55,7 +57,9 @@ func facts(guard_cell: Vector2i) -> Dictionary:
 		"calm": suspicion.level < CALM_BELOW,
 		"sees_player": sees_player,
 		"knows_where": last_known != NOWHERE,
-		"at_last_known": guard_cell == last_known,
+		# On it, or beside it: an intruder standing still is on the very cell,
+		# and a guard cannot walk onto somebody -- it walked up and stopped.
+		"at_last_known": last_known != NOWHERE and absi(guard_cell.x - last_known.x) + absi(guard_cell.y - last_known.y) <= 1,
 		"area_checked": looked_around >= LOOK_TURNS,
 		"next_to_player": sees_player and gap.x + gap.y == 1,
 		# Goals no state of the world ever already meets: a round is never
@@ -69,8 +73,8 @@ func facts(guard_cell: Vector2i) -> Dictionary:
 ## `intruder` having made a noise that carries `noise_radius` cells.
 func perceive(room: StealthRoom, cone: VisionCone, guard_cell: Vector2i, facing: Vector2i,
 		intruder: Vector2i, noise_radius: float) -> void:
-	player_cell = intruder
 	sees_player = cone.sees(room.graph, guard_cell, facing, intruder)
+	player_cell = intruder if sees_player else NOWHERE
 	var noise: float = Hearing.loudness_at(guard_cell, intruder, noise_radius)
 	var distance: float = Vector2(intruder - guard_cell).length()
 	suspicion.observe(sees_player, distance, room.light_at(intruder), noise)
@@ -82,9 +86,10 @@ func perceive(room: StealthRoom, cone: VisionCone, guard_cell: Vector2i, facing:
 		looked_around = 0
 
 
-## Count a turn spent looking round at the place it last knew of.
+## Count a turn spent looking round at the place it last knew of -- on it or
+## beside it, as `facts` counts arriving.
 func looked(guard_cell: Vector2i) -> void:
-	if guard_cell == last_known:
+	if facts(guard_cell)["at_last_known"]:
 		looked_around += 1
 
 

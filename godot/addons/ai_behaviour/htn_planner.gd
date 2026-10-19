@@ -18,8 +18,9 @@
 ## names over GOAP. The price is the methods: every order the agent can
 ## follow is one somebody wrote.
 ##
-## `visited` counts tasks taken up, so it reads beside GOAP's worlds off the
-## frontier: each is one world the planner had to look at.
+## `visited` counts tasks taken up -- the compound ones included, which are
+## not worlds -- so beside GOAP's worlds off the frontier it is the nearest
+## count, not the same unit.
 ##
 ## Complexity: depth-first over methods; without backtracking, linear in the
 ## tasks of the plan, and at worst every combination of methods.
@@ -35,6 +36,8 @@ const DEFAULT_BUDGET: int = 5000
 var _domain: HtnDomain
 var _visited: int = 0
 var _budget: int = DEFAULT_BUDGET
+# True once a branch was abandoned for the budget rather than for its methods.
+var _cut_off: bool = false
 
 
 ## The primitive steps `top` breaks down into from `world`, with the method
@@ -44,11 +47,12 @@ func plan(domain: HtnDomain, world: Dictionary, top: String, budget: int = DEFAU
 	_domain = domain
 	_visited = 0
 	_budget = budget
+	_cut_off = false
 	var found: BehaviourPlan = BehaviourPlan.new()
 	var solved: bool = _decompose([top] as Array[String], world.duplicate(), found)
 	found.solved = solved
 	found.visited = _visited
-	found.gave_up = not solved and _visited >= _budget
+	found.gave_up = not solved and _cut_off
 	if not solved:
 		found.steps.clear()
 		found.methods.clear()
@@ -56,11 +60,13 @@ func plan(domain: HtnDomain, world: Dictionary, top: String, budget: int = DEFAU
 
 
 # Carry out `tasks` in order from `world`, writing steps and methods into
-# `found`; true when they all could be. On false, `found` is as it was given.
+# `found`; true when they all could be. On false, a method tried here has
+# been taken back with every step under it; `plan` clears the rest.
 func _decompose(tasks: Array[String], world: Dictionary, found: BehaviourPlan) -> bool:
 	if tasks.is_empty():
 		return true
 	if _visited >= _budget:
+		_cut_off = true
 		return false
 	_visited += 1
 	var task: String = tasks[0]
@@ -82,6 +88,8 @@ func _decompose(tasks: Array[String], world: Dictionary, found: BehaviourPlan) -
 
 
 # A primitive task: done to a copy of the world if it can be, then the rest.
+# A step it appends and that leads nowhere is taken back by the method that
+# chose it (`_decompose`), which is the one place a branch is undone.
 func _do(task: String, rest: Array[String], world: Dictionary, found: BehaviourPlan) -> bool:
 	var needs: Dictionary = _domain.primitives[task][0]
 	if not HtnDomain.holds(needs, world):
@@ -89,7 +97,4 @@ func _do(task: String, rest: Array[String], world: Dictionary, found: BehaviourP
 	var after: Dictionary = world.duplicate()
 	after.merge(_domain.primitives[task][1], true)
 	found.steps.append(task)
-	if _decompose(rest, after, found):
-		return true
-	found.steps.pop_back()
-	return false
+	return _decompose(rest, after, found)

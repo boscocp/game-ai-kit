@@ -12,16 +12,19 @@
 ## exactly that.
 ##
 ## Backwards is the comparison T15 is about. `ai_planning`'s STRIPS planner
-## searches forwards, from the world; Humphreys (Game AI Pro, ch. 12) notes
+## searches forwards, from the world, and claims the *shortest* plan -- the
+## fewest actions; this one claims the *cheapest*, by the actions' costs.
+## Humphreys (Game AI Pro, ch. 12) notes
 ## that "GOAP and STRIPS planner variants" "use a backward search", and
 ## that his studio's forward HTN was "considerably faster" than its GOAP.
 ## Searching backwards only ever considers actions that touch the goal, which
 ## is its strength; it cannot hand back a partial plan, because until it
 ## reaches the world it does not know where the plan starts.
 ##
-## The guess is the number of facts a node asks for that the world lacks. Admissible when no
-## action makes two of them at once for less than two -- true of the guard
-## here, not of every domain -- and then the plan found is the cheapest.
+## The guess is the number of facts a node asks for that the world lacks.
+## Admissible when no action costs less than the number of facts it makes --
+## true of the guard here, where every action makes one and costs 1, not of
+## every domain -- and then the plan found is the cheapest.
 ##
 ## Complexity: A\* over sets of facts to make true, at most 2^facts of
 ## them; each expansion tries every action once.

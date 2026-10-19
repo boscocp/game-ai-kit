@@ -3,10 +3,14 @@
 ##
 ## The room is T14's (`StealthRoom.default_room`), and the guard walks the
 ## round of its first guard. The intruder is not the person: it walks a fixed
-## loop through the guard's half of the room, making the noise of a walk, so
-## the guard has something to notice, lose and look for with nobody at the
-## keys -- the demo is about the guard, and a person steering would make
-## every run a different lesson.
+## loop through the guard's half of the room, sprinting -- loud -- and stops
+## for `PAUSE` turns at each corner of it, silent, so the guard loses it, goes
+## to look, and sometimes walks up on it standing there. Caught, it
+## starts its loop again. So the guard notices, loses, looks, chases and
+## catches with nobody at the keys -- the demo is about the guard, and a
+## person steering would make every run a different lesson. Without the
+## pauses the guard followed one cell behind for ever, and every brain did
+## the same thing every turn (wave 56's review).
 ##
 ## A turn: the intruder steps, then the guard's brain decides on a `BoardState`
 ## of the room (`DecisionPolicy.choose`), the move is played, the guard turns
@@ -25,7 +29,13 @@ const INTRUDERS: int = 0
 ## cells by the brain, not by a budget.
 const GUARD_MOVEMENT: int = 6
 ## The intruder's loop through the guard's half of the room.
-const INTRUDER_LOOP: Array[Vector2i] = [Vector2i(1, 6), Vector2i(6, 7), Vector2i(3, 10), Vector2i(1, 3)]
+const INTRUDER_LOOP: Array[Vector2i] = [Vector2i(1, 6), Vector2i(8, 2), Vector2i(6, 7), Vector2i(3, 10)]
+## Cells the intruder covers a turn: it sprints between corners, as a player
+## does to get across -- two cells, and the noise of a sprint, which is what
+## alarms a guard in T14's suspicion ("loud" alone is "alarmed").
+const INTRUDER_PACE: int = 2
+## Turns the intruder stands still at each corner of its loop.
+const PAUSE: int = 6
 
 var room: StealthRoom = StealthRoom.default_room()
 var cone := VisionCone.new(Suspicion.SIGHT, 50.0)
@@ -35,14 +45,17 @@ var intruder: Unit
 var senses: GuardSenses
 var brain: GuardBrain
 var turn: int = 0
-## True once the guard has seized the intruder.
+## True on the turn the guard seized the intruder.
 var caught: bool = false
+## How many times it has.
+var catches: int = 0
 ## The last move the guard's brain chose, and the board it chose it on.
 var last_move: Move
 var last_board: BoardState
 
 var _search := AStarSearch.new()
 var _loop_index: int = 0
+var _paused: int = 0
 
 
 ## A fresh room with the guard at the start of its round, thinking with
@@ -71,10 +84,11 @@ func board() -> BoardState:
 
 
 ## One turn: the intruder steps, the guard decides and moves, then looks.
+## An intruder caught last turn starts its loop again first.
 func step() -> void:
 	if caught:
-		return
-	var noise: float = StealthWorld.WALK_NOISE if _intruder_steps() else 0.0
+		_start_the_loop_again()
+	var noise: float = StealthWorld.SPRINT_NOISE if _intruder_steps() else 0.0
 	last_board = board()
 	last_move = brain.choose(last_board, GUARD_ID)
 	if not last_move.path.is_empty():
@@ -83,20 +97,26 @@ func step() -> void:
 	else:
 		_turn_for(brain.deed)
 	caught = brain.deed == GuardBrain.CATCH and _beside(guard.cell, intruder.cell)
+	catches += 1 if caught else 0
 	senses.perceive(room, cone, guard.cell, facing, intruder.cell, noise)
 	turn += 1
 
 
-# The intruder's step along its loop; false when it could not move.
+# The intruder's step along its loop -- or a turn of its pause at a corner;
+# false when it did not move.
 func _intruder_steps() -> bool:
 	if intruder.cell == INTRUDER_LOOP[_loop_index]:
+		if _paused < PAUSE:
+			_paused += 1
+			return false
+		_paused = 0
 		_loop_index = (_loop_index + 1) % INTRUDER_LOOP.size()
 	var around: GridGraph = room.graph.duplicate_graph()
 	around.block(guard.cell)
 	var route: Array[Vector2i] = _search.find_path(around, intruder.cell, INTRUDER_LOOP[_loop_index])
 	if route.is_empty():
 		return false
-	intruder.cell = route[0]
+	intruder.cell = route[mini(INTRUDER_PACE, route.size()) - 1]
 	return true
 
 
@@ -120,6 +140,15 @@ func _face(cell: Vector2i) -> void:
 	if cell == GuardSenses.NOWHERE or towards == Vector2i.ZERO:
 		return
 	facing = Vector2i(signi(towards.x), 0) if absi(towards.x) >= absi(towards.y) else Vector2i(0, signi(towards.y))
+
+
+# Back to the first corner of its loop -- or as near as nobody stands.
+func _start_the_loop_again() -> void:
+	caught = false
+	_loop_index = 0
+	_paused = 0
+	if guard.cell != INTRUDER_LOOP[0]:
+		intruder.cell = INTRUDER_LOOP[0]
 
 
 static func _beside(one: Vector2i, other: Vector2i) -> bool:

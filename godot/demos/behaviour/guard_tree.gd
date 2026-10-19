@@ -46,7 +46,7 @@ func _init() -> void:
 	] as Array[BehaviourTree.TreeNode]))
 
 
-## "behaviour tree".
+## The name the screen gives this way of deciding.
 func brain_name() -> String:
 	return "behaviour tree"
 

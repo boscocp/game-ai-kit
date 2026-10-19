@@ -30,8 +30,9 @@ const CATCH: String = "catch"
 
 ## What it knows; set by the world before each turn.
 var senses: GuardSenses
-## The deed decided on the last turn.
-var deed: String = WALK_ROUND
+## The deed decided on the last turn; "" before the first, so a brain just
+## handed the guard does not seem to have decided anything yet.
+var deed: String = ""
 
 var _search := AStarSearch.new()
 

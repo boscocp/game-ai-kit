@@ -23,7 +23,7 @@ var _domain: HtnDomain = GuardActions.htn()
 var _next: int = 0
 
 
-## "HTN".
+## The name the screen gives this way of deciding.
 func brain_name() -> String:
 	return "HTN"
 

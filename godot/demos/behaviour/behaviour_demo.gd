@@ -19,6 +19,7 @@ extends Node2D
 @onready var _view: BehaviourView = $BehaviourView
 @onready var _status: Label = $Interface/Status
 @onready var _legend: Legend = $Interface/Legend
+@onready var _panel: BrainPanel = $Interface/BrainPanel
 
 var world: BehaviourWorld
 
@@ -85,9 +86,9 @@ func status_text() -> String:
 	var lines: Array[String] = [
 		"turn %d  ·  the guard thinks with: %s  ·  1 state machine  2 behaviour tree  3 GOAP  4 HTN" % [world.turn, brain.brain_name()],
 		"when it is right: %s" % _when_right(brain.brain_name()),
-		"suspicion %.0f  ·  deed: %s" % [world.senses.suspicion.level, brain.deed],
+		"suspicion %.0f  ·  deed: %s" % [world.senses.suspicion.level, brain.deed if brain.deed != "" else "(decides on the next turn)"],
 		"thinking: %s" % _thinking_said(brain.thinking()),
-		"space: a turn  ·  enter: ten  ·  R: again" + ("  ·  CAUGHT" if world.caught else ""),
+		"space: a turn  ·  enter: ten  ·  R: again  ·  caught %d time(s)%s" % [world.catches, "  ·  CAUGHT -- it starts its loop again" if world.caught else ""],
 	]
 	return "\n".join(lines)
 
@@ -95,6 +96,7 @@ func status_text() -> String:
 func _refresh() -> void:
 	_board.draw_board(world.room.graph, [] as Array[Vector2i], [] as Array[Vector2i], _trees())
 	_view.show_world(world, _board)
+	_panel.show_brain(world.brain)
 	_status.text = status_text()
 
 
