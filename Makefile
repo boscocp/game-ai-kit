@@ -297,6 +297,12 @@ test-search-properties: import ## A* agrees with Dijkstra, over a few hundred bo
 test-planner-properties: import ## A plan can be run, and an unsolvable domain says so
 	@$(GODOT) --headless --path godot -s res://test/planner_properties.gd
 
+.PHONY: test-behaviour-benchmark
+test-behaviour-benchmark: import ## GOAP against the HTN on the guard: worlds and microseconds a plan (T15), printed
+	@# A measurement, not a gate: the worlds are held by behaviour_test.gd,
+	@# and the microseconds are one machine's.
+	@$(GODOT) --headless --path godot -s res://test/behaviour_benchmark.gd
+
 .PHONY: test-planner-benchmark
 test-planner-benchmark: import ## Every search over the tactical domain: h_max stays shortest, the guesses visit fewer worlds, a budget holds (T11)
 	@$(GODOT) --headless --path godot -s res://test/planner_benchmark.gd
@@ -376,6 +382,10 @@ demo-search: import ## The four searches on a board you can paint: drag to edit,
 .PHONY: demo-stealth
 demo-stealth: import ## Cross the hall unseen: arrows walk, shift sprints, space waits, D shows danger
 	@$(GODOT) --path godot res://game/stealth/stealth.tscn
+
+.PHONY: demo-behaviour
+demo-behaviour: import ## One guard, four ways to decide: 1-4 swap state machine, tree, GOAP, HTN mid-round; space a turn, enter ten
+	@$(GODOT) --path godot res://demos/behaviour/behaviour_demo.tscn
 
 .PHONY: demo-tactical
 demo-tactical: import ## Advance Wars style tactics against the computer: click to move, W waits, 1-5 build, Z undo, space ends the turn, C changes the computer (rules, planner, learned, easy, normal, hard), S swaps sides
