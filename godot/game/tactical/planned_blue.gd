@@ -81,6 +81,9 @@ var _planner := HeuristicPlanner.new()
 var _aim: PackedStringArray = PackedStringArray()
 var _planned_on_turn: int = -1
 var _seen_turn: int = -1
+# Worlds visited and plans made since it was made: `work_done`, `replans`.
+var _worlds: int = 0
+var _plans_made: int = 0
 
 
 ## "planner": the name the header and the overlay use.
@@ -92,6 +95,21 @@ func controller_name() -> String:
 func describe() -> String:
 	return "a plan: STRIPS over the tactical domain with %s, made every %d turns or when it stops running; its walkers take the rules' routes" % [
 		guide_name(GUIDE), REPLAN_EVERY]
+
+
+## Worlds every planning call has visited, added up.
+func work_done() -> int:
+	return _worlds
+
+
+## "worlds", which is what `HeuristicPlanner` counts.
+func work_unit() -> String:
+	return "worlds"
+
+
+## Plans made, the first included: every one past the first is a replan.
+func replans() -> int:
+	return _plans_made
 
 
 ## The workshop carries out the next purchase the plan has, or saves for it;
@@ -211,6 +229,8 @@ func _why_plan_again(state: BoardState) -> String:
 func _make_plan(state: BoardState, why: String) -> void:
 	var world: WorldState = TacticalPlanBridge.world_of(state)
 	plan = _planner.plan(TacticalPlanBridge.actions(), world, TacticalPlanBridge.goal(), GUIDE, budget, horizon)
+	_worlds += plan.visited
+	_plans_made += 1
 	_planned_on_turn = state.turn_number
 	why_planned = "on round %d, %s" % [state.turn_number / TacticalScenario.FACTIONS + 1, why]
 	_aim = TacticalPlanBridge.goal() if not plan.partial else _what_it_adds(world)

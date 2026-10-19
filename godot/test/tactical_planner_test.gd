@@ -138,8 +138,9 @@ func test_the_scene_swaps_blue_to_the_planner_and_shows_its_plan() -> void:
 
 	assert_str(scene.computer.controller_name()).is_equal("planner")
 	assert_array(scene.decision_overlay().get("plan", [])).is_not_empty()
-	# After the learned policy, each difficulty level (T12), then the rules.
-	for expected: String in ["learned", "easy", "normal", "hard", "rules"]:
+	# After the learned policy, each difficulty level (T12), T25's four T15
+	# teams, then the rules.
+	for expected: String in ["learned", "easy", "normal", "hard", "state machine", "behaviour tree", "GOAP", "HTN", "rules"]:
 		scene.swap_controller()
 		assert_str(scene.computer.controller_name()).is_equal(expected)
 
