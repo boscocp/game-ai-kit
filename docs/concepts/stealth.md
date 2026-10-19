@@ -33,8 +33,9 @@ turned away before the expensive one runs:
 3. **nothing in the way**: `LineOfSight` walks the cells between eye and
    target, and walls and trees stop it.
 
-The room adds light: a cell in shade counts as further off than it is.
-Hearing is cruder, and says so: `Hearing.loudness_at` falls off in a straight
+Light does not change what is seen: a guard sees you in the shade exactly
+as it does in the light. It changes how much that worries it, as one of the
+fuzzy controller's inputs below. Hearing is cruder, and says so: `Hearing.loudness_at` falls off in a straight
 line from the source and **walls do not stop it**. A walk carries three
 cells, a sprint seven, and waiting is silent. A heard noise tells the guard
 your exact cell, through walls -- a simplification named in the code.

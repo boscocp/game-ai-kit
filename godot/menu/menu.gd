@@ -6,12 +6,17 @@
 ## plays, and Escape, from inside any example, frees it and comes back here.
 ## Mouse and keyboard both work throughout.
 ##
-## An example is mounted beside the menu and made the tree's current scene,
-## so it runs exactly as it does opened on its own with `make demo-<name>`:
-## the tactical board rolls fresh dice only when it is the current scene, and
-## the skirmish's R reloads the current scene, which is then the example and
-## not this menu. Coming back reads the current scene rather than a kept
-## reference, for that reason: after a reload the example is a new node.
+## An example is mounted beside the menu, as a child of the root, and made
+## the tree's current scene, so it runs as it does opened on its own with
+## `make demo-<name>`: the skirmish's R reloads the current scene, which is
+## then the example and not this menu. Whether an example is playing is read
+## off the tree -- the current scene is not the menu -- never off a kept
+## reference, because after a reload the example is a new node and the old
+## one is freed (wave 59's review: Escape stopped working after R).
+##
+## The menu keeps itself the root's last child while an example plays.
+## `_input` runs in reverse tree order, last child first, so that is what
+## puts the menu's Escape ahead of any example's own `_input`.
 ##
 ## A catalogue, not a game, and laid out like one: light text on a dark
 ## ground, nothing under 17 px, nothing pinned small in a corner (T8).
@@ -30,8 +35,6 @@ const CARD_SIZE: int = 17
 
 ## The cards, in the order they are listed.
 var catalogue: ExampleCatalogue
-## The example playing now, or null while the menu is showing.
-var playing: Node = null
 
 var _list: ItemList
 var _heading: Label
@@ -47,7 +50,15 @@ func _ready() -> void:
 		_list.add_item(card.get("title", "?"))
 	if not catalogue.cards.is_empty():
 		select(0)
+	else:
+		_heading.text = "No examples to show"
+		_card.text = ExampleCatalogue.plain(catalogue.problem)
 	_list.grab_focus()
+
+
+## True while an example, not the menu, is the current scene.
+func is_playing() -> bool:
+	return get_tree().current_scene != self
 
 
 ## Show card `index` and select it in the list.
@@ -76,7 +87,7 @@ func open(example: Node) -> void:
 	visible = false
 	get_tree().root.add_child(example)
 	get_tree().current_scene = example
-	playing = example
+	get_tree().root.move_child(self, -1)
 
 
 ## Free whatever example is playing and show the menu again.
@@ -84,24 +95,31 @@ func back() -> void:
 	var current: Node = get_tree().current_scene
 	if current != null and current != self:
 		current.queue_free()
-	playing = null
 	get_tree().current_scene = self
 	visible = true
 	_list.grab_focus()
 
 
-# Escape is read here, in `_input`, before any example's own handlers and
-# before the GUI, so no example has to know the menu exists. On the menu,
+# A reload adds the new example after the menu again; take back the last
+# place, so the next Escape still reaches the menu first.
+func _process(_delta: float) -> void:
+	if is_playing() and get_index() != get_parent().get_child_count() - 1:
+		get_parent().move_child(self, -1)
+
+
+# Escape is read here, in `_input`, before the GUI and -- because the menu
+# is the root's last child -- before any example's own `_input`, so no
+# example has to know the menu exists. On the menu,
 # page up and down scroll a card too long for the window -- the tactical
 # board's lists nine techniques -- since the list keeps the arrow keys.
 func _input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if key == null or not key.pressed:
 		return
-	if playing != null and key.keycode == KEY_ESCAPE and not key.echo:
+	if is_playing() and key.keycode == KEY_ESCAPE and not key.echo:
 		get_viewport().set_input_as_handled()
 		back()
-	elif playing == null and key.keycode in [KEY_PAGEUP, KEY_PAGEDOWN]:
+	elif not is_playing() and key.keycode in [KEY_PAGEUP, KEY_PAGEDOWN]:
 		var bar: VScrollBar = _card.get_v_scroll_bar()
 		bar.value += bar.page * (1.0 if key.keycode == KEY_PAGEDOWN else -1.0)
 		get_viewport().set_input_as_handled()
@@ -114,7 +132,9 @@ func _build() -> void:
 	add_child(ground)
 	var size_now: Vector2 = get_viewport_rect().size
 	add_child(_label("game-ai-kit: every example", Vector2(MARGIN, MARGIN), TITLE_SIZE, TEXT))
-	add_child(_label("Up and down choose, Enter plays, Page Up and Down scroll the card, Esc inside an example comes back here",
+	var help: String = "Up and down choose, Enter plays, Page Up and Down scroll the card, " \
+			+ "Esc inside an example comes back here"
+	add_child(_label(help,
 			Vector2(MARGIN, size_now.y - MARGIN - 24.0), CARD_SIZE, QUIET))
 	_list = ItemList.new()
 	_list.position = Vector2(MARGIN, MARGIN * 3.0)

@@ -32,11 +32,15 @@ the menu and this gate share:
   * every card says what the AI decides, what to watch and where to read
     more, names at least one technique with a line on its part (C4), and its
     page exists (C5);
-  * every technique is one the catalogue defines (C6), and the scene actually
-    runs it: one of the classes the catalogue names as its evidence is
-    reachable from the scene -- its scripts, the scenes it instances, and
-    every class those name in code, strings and comments not counting (C7);
-  * no example calls quit(), which would take the menu down with it (C8).
+  * every technique is one the catalogue defines (C6), and one of the
+    classes the catalogue names as its evidence is reachable from the scene
+    -- its scripts, the scenes it instances, and every class those use in
+    code: constructed, called or extended, while comments, strings, type
+    annotations and constant reads do not count (C7). That is "reachable by
+    use", the most a reading can hold; whether the scene takes that path at
+    run time is the card's manual check;
+  * no script an example reaches calls quit(), which would take the menu
+    down with it (C8).
 
 Exit codes
 ----------
@@ -77,7 +81,7 @@ MAIN_SCENE = re.compile(r'^run/main_scene\s*=\s*"res://([^"]+)"', re.MULTILINE)
 SECTION = re.compile(r"^\[(ext_resource|node)\b([^\n]*)\]$((?:\n(?!\[)[^\n]*)*)", re.MULTILINE)
 ATTRIBUTE = re.compile(r'(\w+)=("[^"]*"|\S+)')
 SCRIPT_LINE = re.compile(r'^script = ExtResource\("([^"]+)"\)', re.MULTILINE)
-TRIPLE_QUOTED = re.compile(r'"""(?:.|\n)*?"""')
+TRIPLE_QUOTED = re.compile(r'"""(?:.|\n)*?"""' + r"|'''(?:.|\n)*?'''")
 SCENES_BLOCK = re.compile(r"^const SCENES\b[^=]*=\s*\[(.*?)\]", re.MULTILINE | re.DOTALL)
 
 LEGEND_SCRIPT = "game/legend.gd"
@@ -223,7 +227,15 @@ CLASS_NAME = re.compile(r"^class_name\s+(\w+)", re.MULTILINE)
 RESOURCE_PATH = re.compile(r'"res://([^"]+\.(?:gd|tscn))"')
 STRING = re.compile(r"'(?:\\.|[^'\\\n])*'|\"(?:\\.|[^\"\\\n])*\"")
 #: An example takes the window down with it: the menu could not come back.
-QUITS = re.compile(r"\bquit\s*\(")
+#: `quit(` called, or "quit" named as a string -- `call("quit")` -- which is
+#: why it is read with strings kept (wave 59's review).
+QUITS = re.compile(r"""\bquit\s*\(|["']quit["']""")
+#: A class named only as a type -- `: X`, `-> X`, `as X`, `is X`, `[X]` --
+#: or only to read one of its constants, `X.SOME_NUMBER`, is not a class the
+#: scene runs. Wave 59's review: the behaviour demo read one constant of
+#: `StealthWorld`, and so "reached" the influence map it never builds.
+TYPE_ONLY = re.compile(r"(?::|->|\bas\b|\bis\b|\[|,)\s*[A-Z]\w*(?=\s*[\],=)\n:]|\s*$)", re.MULTILINE)
+CONSTANT_READ = re.compile(r"\b[A-Z]\w*\.[A-Z][A-Z0-9_]*\b(?!\s*\()")
 
 
 def code_of(source: str, keep_strings: bool = False) -> str:
@@ -269,7 +281,9 @@ def project_classes(root: pathlib.Path) -> dict[str, str]:
 
 
 def references_of(root: pathlib.Path, path: str, classes: dict[str, str]) -> set[str]:
-    """The scripts and scenes one file names: by path, or by a class it uses."""
+    """The scripts and scenes one file names: by path, or by a class it uses --
+    constructs, calls, extends -- rather than only types a value as, or reads
+    a constant of."""
     file = root / "godot" / path
     if not file.exists():
         return set()
@@ -277,26 +291,38 @@ def references_of(root: pathlib.Path, path: str, classes: dict[str, str]) -> set
     if not path.endswith(".gd"):
         return set(RESOURCE_PATH.findall(text))
     named = set(RESOURCE_PATH.findall(code_of(text, keep_strings=True)))
-    words = set(re.findall(r"\b[A-Z]\w*\b", code_of(text)))
+    used = TYPE_ONLY.sub(" ", CONSTANT_READ.sub(" ", code_of(text)))
+    words = set(re.findall(r"\b[A-Z]\w*\b", used))
     return named | {classes[word] for word in words if word in classes}
 
 
-def scripts_a_scene_runs(root: pathlib.Path, scene: str) -> set[str]:
-    """Every script reachable from a scene: its own, the scenes it instances,
-    and whatever those scripts name, followed until nothing new turns up.
+class Reach:
+    """What each scene reaches, worked out once per run of the gate.
 
-    A card's technique is held against this set, so a class named only in a
-    comment or a string does not count as run.
+    Every card's techniques and every example's `quit()` are held against
+    the same closure, and the first version walked it again for each.
     """
-    classes = project_classes(root)
-    reached, waiting = set(), [scene]
-    while waiting:
-        path = waiting.pop()
-        if path in reached:
-            continue
-        reached.add(path)
-        waiting += sorted(references_of(root, path, classes) - reached)
-    return {path for path in reached if path.endswith(".gd")}
+
+    def __init__(self, root: pathlib.Path) -> None:
+        self.root = root
+        self.classes = project_classes(root)
+        self._scripts: dict[str, set[str]] = {}
+
+    def scripts(self, scene: str) -> set[str]:
+        """Every script reachable from `scene`: its own, the scenes it
+        instances, and whatever those scripts use, followed until nothing new
+        turns up. Reachable by name in code -- comments, strings, types and
+        constant reads not counting -- which is the most reading can say about
+        what runs."""
+        if scene not in self._scripts:
+            reached, waiting = set(), [scene]
+            while waiting:
+                path = waiting.pop()
+                if path not in reached:
+                    reached.add(path)
+                    waiting += sorted(references_of(self.root, path, self.classes) - reached)
+            self._scripts[scene] = {path for path in reached if path.endswith(".gd")}
+        return self._scripts[scene]
 
 
 def read_catalogue(root: pathlib.Path) -> tuple[dict | None, str]:
@@ -313,7 +339,7 @@ def read_catalogue(root: pathlib.Path) -> tuple[dict | None, str]:
     return catalogue, ""
 
 
-def card_findings(root: pathlib.Path, card: dict, techniques: dict, opened: str | None) -> list[str]:
+def card_findings(reach: Reach, card: dict, techniques: dict, opened: str | None) -> list[str]:
     """What is wrong with one card: its words, its page, its techniques."""
     target = card.get("target", "?")
     findings = [f"C4 {target}: the card has no {field}" for field in CARD_TEXT
@@ -322,36 +348,42 @@ def card_findings(root: pathlib.Path, card: dict, techniques: dict, opened: str 
     if opened is not None and scene != opened:
         findings.append(f"C3 {target}: the card opens res://{scene}, the make target res://{opened}")
     docs = str(card.get("docs", ""))
-    if docs and not (root / docs).is_file():
+    if docs and not (reach.root / docs).is_file():
         findings.append(f"C5 {target}: its page {docs} does not exist")
     named = card.get("techniques") or []
     if not named:
         findings.append(f"C4 {target}: the card names no technique")
-    run = scripts_a_scene_runs(root, scene) if scene and (root / "godot" / scene).exists() else set()
+    exists = scene and (reach.root / "godot" / scene).exists()
+    run = reach.scripts(scene) if exists else set()
     for entry in named:
-        findings += technique_findings(root, target, entry, techniques, run)
+        findings += technique_findings(reach, target, entry, techniques, run)
     return findings
 
 
-def technique_findings(root: pathlib.Path, target: str, entry: dict, techniques: dict,
+def technique_findings(reach: Reach, target: str, entry: dict, techniques: dict,
                        run: set[str]) -> list[str]:
-    """One technique on a card: known, explained, and actually run by the scene."""
+    """One technique on a card: known, explained, and reached by the scene."""
     key = entry.get("technique", "")
     if key not in techniques:
         return [f"C6 {target}: {key!r} is not in the catalogue's techniques table"]
     findings = [] if str(entry.get("part", "")).strip() else [f"C4 {target}: {key} has no line on its part"]
-    classes = project_classes(root)
     evidence = techniques[key].get("evidence", [])
-    if not any(classes.get(name) in run for name in evidence):
-        findings.append(f"C7 {target}: the card says {key}, and the scene runs none of {', '.join(evidence) or 'nothing'}")
+    if not any(reach.classes.get(name) in run for name in evidence):
+        listed = ", ".join(evidence) or "nothing"
+        findings.append(f"C7 {target}: the card says {key}, and the scene runs none of {listed}")
     return findings
 
 
-def quit_findings(root: pathlib.Path, target: str, scene: str) -> list[str]:
-    """An example that ends the program cannot hand the window back."""
-    return [f"C8 {target}: res://{script} calls quit(), so the menu cannot come back"
-            for script in sorted(scripts_a_scene_runs(root, scene))
-            if not script.startswith("addons/") and QUITS.search(code_of((root / "godot" / script).read_text(encoding="utf-8")))]
+def quit_findings(reach: Reach, target: str, scene: str) -> list[str]:
+    """An example that ends the program cannot hand the window back. Every
+    script it reaches is read, the addons' too: a library that quit would take
+    the menu down as surely as the example."""
+    findings = []
+    for script in sorted(reach.scripts(scene)):
+        source = (reach.root / "godot" / script).read_text(encoding="utf-8")
+        if QUITS.search(code_of(source, keep_strings=True)):
+            findings.append(f"C8 {target}: res://{script} calls quit(), so the menu cannot come back")
+    return findings
 
 
 def catalogue_findings(root: pathlib.Path, scenes: dict[str, str | None]) -> list[str]:
@@ -359,7 +391,7 @@ def catalogue_findings(root: pathlib.Path, scenes: dict[str, str | None]) -> lis
     catalogue, why = read_catalogue(root)
     if catalogue is None:
         return [why]
-    findings, seen = [], set()
+    reach, findings, seen = Reach(root), [], set()
     for card in catalogue["examples"]:
         target = card.get("target", "?")
         if target in seen:
@@ -367,12 +399,12 @@ def catalogue_findings(root: pathlib.Path, scenes: dict[str, str | None]) -> lis
         seen.add(target)
         if target not in scenes:
             findings.append(f"C2 {target}: a card with no make target")
-        findings += card_findings(root, card, catalogue["techniques"], scenes.get(target))
+        findings += card_findings(reach, card, catalogue["techniques"], scenes.get(target))
     for target in sorted(set(scenes) - seen):
         findings.append(f"C2 {target}: an example with no card in {CATALOGUE}")
     for target, scene in sorted(scenes.items()):
         if scene is not None:
-            findings += quit_findings(root, target, scene)
+            findings += quit_findings(reach, target, scene)
     return findings
 
 
@@ -535,6 +567,13 @@ def catalogue_cases() -> dict[str, tuple[dict, str | None]]:
         "a technique only in a comment": ({"search_script": without_astar + "# AStarSearch.new()\n"}, "C7"),
         "a technique only in a string": ({"search_script": without_astar + 'const NOTE = "AStarSearch.new()"\n'}, "C7"),
         "an example that quits": ({"search_script": SOUND_SCRIPT + "\nfunc _done() -> void:\n\tget_tree().quit()\n"}, "C8"),
+        "an example that quits by name": (
+            {"search_script": SOUND_SCRIPT + '\nfunc _done() -> void:\n\tget_tree().call("quit")\n'}, "C8"),
+        "a technique only in a single-quoted block": (
+            {"search_script": without_astar + "const NOTE = '''\nAStarSearch.new()\n'''\n"}, "C7"),
+        "a technique only as a type": ({"search_script": without_astar + "var never: AStarSearch = null\n"}, "C7"),
+        "a technique only for a constant": (
+            {"search_script": without_astar + "var cost: int = AStarSearch.MAX_COST\n"}, "C7"),
     }
 
 

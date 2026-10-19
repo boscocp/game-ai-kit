@@ -9,13 +9,22 @@ What it does
      into `dist/game-ai-kit-linux/`: the engine binary and its `.pck`;
   3. reads the `.pck`'s own file directory and refuses a pack holding the
      tests, the test framework or a person's generated art, or missing the
-     catalogue -- the export filters are text, and text drifts;
+     catalogue, any scene a card opens, or any JSON the repository keeps
+     under godot/ -- the weights and tables the examples load at run time.
+     The export filters are text, and text drifts;
   4. runs the exported binary `--headless` for a few frames and refuses a
-     build that does not exit 0 or prints an engine error on the way, so a
-     build that does not even start never reaches dist/;
-  5. writes `BUILD` beside it: the commit it was exported from, and whether
-     `godot/` had changes nobody committed. `release.py` ships only a build
-     of HEAD from a clean tree, because what ships is what was reviewed.
+     build that does not exit 0 or prints an engine error (`ERROR:`) on the
+     way. A refused build is deleted, binary and pack, so nothing that failed
+     is left in dist/ to be mistaken for one that passed;
+  5. writes `BUILD` beside it: the commit it was exported from, whether
+     `godot/` had changes nobody committed, and the SHA-256 of the binary and
+     the pack. `release.py` ships only a build of HEAD from a clean tree whose
+     files still match those hashes, because what ships is what was reviewed.
+
+What it cannot do: open each example inside the build. The release template
+refuses a scene on the command line ("compiled without support for path
+overrides"), so the build proves the menu starts, and the pack check proves
+everything each example loads is in it.
 
 Why the pack is read, not the export log
 ----------------------------------------
@@ -61,8 +70,10 @@ BINARY = "game-ai-kit.x86_64"
 #: the file that becomes the executable.
 TEMPLATE_SHA512 = ("08be8a6ab54c9dbadad046ab526f22e351bed43a92b3ad19436f53a9dd44267a"
                    "8a96338252ebc28f31047dd23d3e27a89a9dd0a7aefede0b3a61fb2ac66fb08c")
-#: What the pack must hold, and what must never be in it.
+#: What the pack must always hold; `required_files` adds what the examples
+#: load. And what must never be in it.
 REQUIRED = ("menu/catalogue.json", "project.binary")
+CATALOGUE = REPO / "godot" / "menu" / "catalogue.json"
 FORBIDDEN = ("test/", "addons/gdUnit4/", "assets/generated/", "reports/")
 #: Frames the exported binary runs before it is asked to quit.
 FRAMES = 120
@@ -104,9 +115,23 @@ def pack_files(data: bytes) -> list[str]:
     return names
 
 
-def pack_problems(names: list[str]) -> list[str]:
+def required_files() -> list[str]:
+    """What the pack must hold: the fixed few, every scene a card opens (as
+    the `.remap` the exporter writes for it), and every JSON committed under
+    godot/ outside the tests -- the weights, beads and tables the examples
+    read with FileAccess, which nothing else would miss until a card failed.
+    Wave 59's review: excluding the beads and the weights still exported ok."""
+    cards = json.loads(CATALOGUE.read_text(encoding="utf-8"))["examples"]
+    scenes = [card["scene"].removeprefix("res://") + ".remap" for card in cards]
+    listed = subprocess.run(["git", "ls-files", "--", "godot/*.json"], cwd=REPO, capture_output=True,
+                            text=True, check=True).stdout.split()
+    tables = [path.removeprefix("godot/") for path in listed if not path.startswith(("godot/test/",))]
+    return sorted(set(REQUIRED) | set(scenes) | set(tables))
+
+
+def pack_problems(names: list[str], required: list[str] | tuple[str, ...] = REQUIRED) -> list[str]:
     """What is wrong with a pack's contents: files missing, or files leaking."""
-    problems = [f"the pack has no {required}" for required in REQUIRED if required not in names]
+    problems = [f"the pack has no {needed}" for needed in required if needed not in names]
     problems += [f"the pack holds {name}, which must not ship" for name in names
                  if name.startswith(FORBIDDEN)]
     return problems
@@ -128,17 +153,20 @@ def start_problem(binary: pathlib.Path) -> str:
     printed = ran.stdout + ran.stderr
     if ran.returncode != 0:
         return f"{binary.name} exited {ran.returncode}:\n{printed}"
-    errors = [line for line in printed.splitlines() if "SCRIPT ERROR" in line]
+    errors = [line for line in printed.splitlines() if "ERROR" in line]
     return f"{binary.name} printed engine errors:\n" + "\n".join(errors) if errors else ""
 
 
-def stamp() -> dict:
-    """The commit this build came from, and whether godot/ matched it."""
+def stamp(binary: pathlib.Path, pack: pathlib.Path) -> dict:
+    """The commit this build came from, whether godot/ matched it, and the
+    hashes of the two files it vouches for."""
     commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO, capture_output=True,
                             text=True, check=True).stdout.strip()
     changes = subprocess.run(["git", "status", "--porcelain", "--", "godot"], cwd=REPO,
                              capture_output=True, text=True, check=True).stdout.strip()
-    return {"commit": commit, "clean": changes == ""}
+    return {"commit": commit, "clean": changes == "",
+            binary.name: hashlib.sha256(binary.read_bytes()).hexdigest(),
+            pack.name: hashlib.sha256(pack.read_bytes()).hexdigest()}
 
 
 def export() -> pathlib.Path:
@@ -152,11 +180,12 @@ def export() -> pathlib.Path:
     binary, pack = OUTPUT / BINARY, (OUTPUT / BINARY).with_suffix(".pck")
     if exported.returncode != 0 or not binary.is_file() or not pack.is_file():
         raise Refused(f"the export did not write {BINARY} and its .pck:\n{exported.stdout}{exported.stderr}")
-    problems = pack_problems(pack_files(pack.read_bytes()))
+    problems = pack_problems(pack_files(pack.read_bytes()), required_files())
     problem = start_problem(binary)
     if problems or problem:
+        shutil.rmtree(OUTPUT, ignore_errors=True)
         raise Refused("\n".join(problems + ([problem] if problem else [])))
-    (OUTPUT / "BUILD").write_text(json.dumps(stamp()) + "\n", encoding="utf-8")
+    (OUTPUT / "BUILD").write_text(json.dumps(stamp(binary, pack)) + "\n", encoding="utf-8")
     return OUTPUT
 
 
@@ -186,6 +215,10 @@ def self_test() -> int:
                          "no catalogue": sound[:1] + sound[2:]}.items():
         if not pack_problems(pack_files(planted_pack(names))):
             failures.append(f"a pack holding {label} was not refused")
+    for label, missing in {"the beads": "game/tictactoe/menace_beads.json",
+                           "a card's scene": "game/checkers/checkers.tscn.remap"}.items():
+        if missing not in required_files():
+            failures.append(f"{label} ({missing}) is not among the files a pack must hold")
     try:
         pack_files(planted_pack(sound, magic=b"ZIPS"))
         failures.append("a file that is not a pack was read as one")
@@ -194,7 +227,7 @@ def self_test() -> int:
     failures += template_cases()
     for failure in failures:
         print(f"FAIL {failure}")
-    print(f"export self-test: 9 cases, {len(failures)} failure(s)")
+    print(f"export self-test: 11 cases, {len(failures)} failure(s)")
     return 1 if failures else 0
 
 

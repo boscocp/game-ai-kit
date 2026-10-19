@@ -14,7 +14,8 @@ Into `OUTPUT/dist/`, from the commit at HEAD and nothing else:
     the menu exported by `make export` (T24), the binary and its `.pck` under
     one top folder `game-ai-kit/` beside LICENSE, NOTICE and VERSION. Only a
     build whose `BUILD` stamp names HEAD, exported from a `godot/` with
-    nothing uncommitted, ships -- the one artifact not built from git's own
+    nothing uncommitted, and whose binary and pack still match the hashes
+    the stamp records, ships -- the one artifact not built from git's own
     bytes is held to the same commit by its stamp.
 
 `OUTPUT` is laid out like the repository -- LICENSE and NOTICE at its root,
@@ -251,6 +252,11 @@ def exported_from_head(repo: pathlib.Path, folder: pathlib.Path) -> None:
         raise Refused(f"{folder} was exported from {str(stamp.get('commit'))[:12]}, not HEAD: run `make export`")
     if stamp.get("clean") is not True:
         raise Refused(f"{folder} was exported with uncommitted changes under godot/")
+    # The stamp vouches for bytes, not only for a commit: a pack rewritten
+    # after `make export` would otherwise ship under it (wave 59's review).
+    for shipped in sorted(folder.glob("*.x86_64")) + sorted(folder.glob("*.pck")):
+        if stamp.get(shipped.name) != hashlib.sha256(shipped.read_bytes()).hexdigest():
+            raise Refused(f"{shipped.name} is not the file `make export` stamped: run `make export`")
 
 
 def build_executable(repo: pathlib.Path, folder: pathlib.Path, version: str,
@@ -593,8 +599,12 @@ def check_the_executable(root: pathlib.Path) -> list[str]:
     folder.mkdir()
     (folder / "game-ai-kit.x86_64").write_bytes(b"an engine")
     (folder / "game-ai-kit.pck").write_bytes(b"GDPC")
-    stamps = {"no stamp": None, "another commit": {"commit": "0" * 40, "clean": True},
-              "uncommitted changes": {"commit": head_commit(REPO), "clean": False}}
+    hashes = {name: hashlib.sha256(data).hexdigest()
+              for name, data in (("game-ai-kit.x86_64", b"an engine"), ("game-ai-kit.pck", b"GDPC"))}
+    stamps = {"no stamp": None, "another commit": {"commit": "0" * 40, "clean": True, **hashes},
+              "uncommitted changes": {"commit": head_commit(REPO), "clean": False, **hashes},
+              "a pack changed after it": {"commit": head_commit(REPO), "clean": True, **hashes,
+                                          "game-ai-kit.pck": "0" * 64}}
     for label, stamp in stamps.items():
         (folder / "BUILD").unlink(missing_ok=True)
         if stamp is not None:
@@ -604,7 +614,8 @@ def check_the_executable(root: pathlib.Path) -> list[str]:
             failures.append(f"an export with {label} was shipped")
         except Refused:
             pass
-    (folder / "BUILD").write_text(json.dumps({"commit": head_commit(REPO), "clean": True}), encoding="utf-8")
+    (folder / "BUILD").write_text(json.dumps({"commit": head_commit(REPO), "clean": True, **hashes}),
+                                  encoding="utf-8")
     built = quiet_build(REPO, root / "sound", executable=folder)[-1]
     with zipfile.ZipFile(built) as bundle:
         modes = {info.filename: info.external_attr >> 16 for info in bundle.infolist()}

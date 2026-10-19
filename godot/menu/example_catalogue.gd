@@ -50,14 +50,16 @@ static func _card_of(entry: Dictionary, techniques: Dictionary) -> Dictionary:
 static func text_of(card: Dictionary, accent: Color) -> String:
 	var techniques: PackedStringArray = []
 	for technique: Array in card.get("techniques", []):
-		techniques.append("[b]%s[/b] -- %s" % [_plain(technique[0]), _plain(technique[1])])
-	var more: String = "%s, or [b]make %s[/b] to open it on its own" % [
-		_plain(card.get("docs", "")), _plain(card.get("target", ""))]
+		techniques.append("[b]%s[/b] -- %s" % [plain(technique[0]), plain(technique[1])])
+	# In the repository, not in the executable: someone holding only the zip
+	# has neither the page nor `make` (wave 59's review), and is told so.
+	var more: String = "in the kit's repository: %s; [b]make %s[/b] opens it on its own" % [
+		plain(card.get("docs", "")), plain(card.get("target", ""))]
 	var sections: Array[Array] = [
-		["What the AI decides", _plain(card.get("decides", ""))],
+		["What the AI decides", plain(card.get("decides", ""))],
 		["How it decides", "\n".join(techniques)],
-		["What to watch", _plain(card.get("watch", ""))],
-		["Keys", _plain(card.get("controls", "")) + "; Esc comes back here"],
+		["What to watch", plain(card.get("watch", ""))],
+		["Keys", plain(card.get("controls", "")) + "; Esc comes back here"],
 		["Read more", more],
 	]
 	var text: PackedStringArray = []
@@ -66,6 +68,6 @@ static func text_of(card: Dictionary, accent: Color) -> String:
 	return "\n\n".join(text)
 
 
-# The catalogue's words, with any bracket shown rather than read as a tag.
-static func _plain(words: Variant) -> String:
+## Words for a BBCode label, with any bracket shown rather than read as a tag.
+static func plain(words: Variant) -> String:
 	return str(words).replace("[", "[lb]")
