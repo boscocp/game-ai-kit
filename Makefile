@@ -73,7 +73,8 @@ lint-review: ## This branch has a review record and may be merged
 check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-search-properties test-planner-properties test-planner-benchmark test-perception-properties \
        test-decisions test-demo-overlays test-menu-walk test-replay test-opponent-levels test-opponent-properties \
-       test-clone-rows test-inference-budget test-clone-report test-difficulty-knobs ## Run every gate
+       test-clone-rows test-inference-budget test-clone-report test-difficulty-knobs \
+       test-rts-budget test-rts-simulation ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability lint-demos \
@@ -306,6 +307,16 @@ test-behaviour-benchmark: import ## GOAP against the HTN on the guard: worlds an
 .PHONY: test-planner-benchmark
 test-planner-benchmark: import ## Every search over the tactical domain: h_max stays shortest, the guesses visit fewer worlds, a budget holds (T11)
 	@$(GODOT) --headless --path godot -s res://test/planner_benchmark.gd
+
+.PHONY: test-rts-budget
+test-rts-budget: import ## The real-time core holds its frame share at 200 units, and ai_core does not (T19)
+	@# A measurement with a pass mark, like test-inference-budget: the old
+	@# core's ~50 ms a step is printed beside the new core's layers.
+	@$(GODOT) --headless --path godot -s res://test/rts_core_budget.gd
+
+.PHONY: test-rts-simulation
+test-rts-simulation: import ## The RTS match replays from its seed, only commands change it, fog holds, counters add up (T19)
+	@$(GODOT) --headless --path godot -s res://test/rts_simulation.gd
 
 .PHONY: test-perception-properties
 test-perception-properties: import ## Sight is symmetric, walls block both ways, suspicion holds in sight

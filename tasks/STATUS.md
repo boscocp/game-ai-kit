@@ -74,7 +74,7 @@ lesson in it.
 
 | # | Task | State | Notes |
 |---|---|---|---|
-| T19 | The real-time core | todo | starts by trying to prove itself unnecessary |
+| T19 | The real-time core | done | `BoardState` at 200 units: ~50 ms a step, three frames, so `ai_rts_core` exists (ADR 0019); its simulation 0.7 ms, flow fields 0.34 ms (p95 1.29 of a 1.5 share); a scripted match at ~70x real time, replayed to its digest |
 | T20 | The RTS demo | todo | build orders against the clock, fog of war |
 
 ## Milestone 4 — driving, which is the first thing not on a grid
@@ -112,6 +112,33 @@ sha256 and never committed.
 | T52 | Bots against the player, with an optional stealth | blocked | third person; a role arbiter, awareness that accumulates with three alert levels, a shared belief map for the search -- each drawn and switchable |
 
 ---
+
+## Resuming after 2026-10-19 (wave 60)
+
+**Where it stopped -- read first.** Wave 60 was T19, the real-time core,
+the first of the RTS line the owner asked for. The review is
+`docs/reviews/60-the-real-time-core.md`.
+
+**What landed.** The task tried to prove itself unnecessary and could not:
+`BoardState` moving 200 units one cell costs ~50 ms a step, against a
+4 ms share. So `godot/addons/ai_rts_core/`: `RtsWorld` (mutates, a fixed
+tick, a seeded dice, `digest()`), `SpatialHash`, `FlowField` (Dial's
+Dijkstra, settled in slices), `RtsCommand` and `RtsRules` (the one door,
+refusing before doing), `RtsSnapshot` (one side's fogged, read-only view,
+all a controller ever sees), `RtsController`, `RtsMatch` (decisions,
+counters, recording, replay) and `FrameBudget` (shares in ms; work, not the
+clock, inside them). ADR 0019 says why there are two cores.
+`make test-rts-budget` (in `check`, not CI: a timing on a shared runner)
+and `make test-rts-simulation` (both): determinism by digest with a
+planted second seed, replay with a planted meddling, three cheats refused,
+~70x real time, fog planted in and out, counters equal to their log.
+
+**For the owner.** The RTS demo needs art: `data/tactical/` (your 2 T25
+recordings) is still untracked and untouched. A search for open sci-fi /
+medieval RTS sprite packs was asked for in this session; its result is in
+the conversation, not yet in a task.
+
+**Next:** T20, the RTS demo, on this core.
 
 ## Resuming after 2026-10-19 (wave 59)
 
