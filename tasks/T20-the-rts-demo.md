@@ -57,6 +57,39 @@ abilities, formations, a tech tree deeper than one building, and diplomacy.
 Each is work that gives none of the AIs above a new decision. One of them
 comes back only with a task that names the AI it is for.
 
+## Art: referenced, never committed
+
+Decided by the owner on 2026-10-19: the RTS's pictures are **referenced and
+kept out of the repository**, with a link for whoever wants them -- not even
+crops are committed, unlike the fighters (ADR 0015). The set is **Bos Wars
+2.8** (GPL-2.0-or-later, sci-fi, three-quarter view), chosen for being the
+one free set found with a worker, infantry, base, barracks and resources,
+animated in five mirrored directions (move, attack or build, die), with
+the player's colour in palette indexes 208-211. Because nothing of it is
+redistributed, its GPL never enters this Apache-2.0 tree.
+
+Its roster lands on the minimum game almost one for one: `engineer` the
+worker; `assault`, `bazoo` and `grenadier` (or `tank`) the three counters;
+`vault` the base; `camp` the barracks; `vehiclefactory` the technology
+building; `powerplant` the supply; `radar` the tower that sees. Sheets
+checked on 2026-10-19 from
+`https://sources.debian.org/data/main/b/boswars/2.8-2/units/` (sha256):
+
+| file | size | sha256 |
+|---|---|---|
+| `engineer/unit_engineer.png` | 280 x 728, 56 px cells | `52adfb9bdb0bf7abc31c87e006dd28020bc783eb9b326356400e2c9f48c7defc` |
+| `assault/unit_assault.png` | 320 x 640 | `a387274229fb3d5c8657032e31c6094cb2b447e8372e259d1a27ee0f771b61da` |
+| `vault/vault.png` | 1180 x 832, building stages | `e14bc0f501edc579a4466520a1b61be6753f8336e116f19500aa87c30c5d7b71` |
+| `radar/radar.png` | 64 x 768 | `9cf66e77a5a237e2d38a233e5fe49166fb4f9692ba386e9436c376663e1d43f7` |
+
+What this task owes it: an ADR (the rule, the source, every file's URL and
+sha256); a make target that downloads into a gitignored folder and refuses
+a file whose hash differs; and a game that draws plain shapes when the
+folder is empty, so CI and a fresh checkout run without it. Rejected:
+Wyrmsun's CC0 collection (its units are 46 x 38 icons, not sprites),
+Kenney's two RTS packs (no animation), Tiny Swords (no redistribution, and
+not needed now, but its terms would bar even a mirror).
+
 ## Steps
 
 1. The minimum game above, on the real-time core, built from T10's content.
