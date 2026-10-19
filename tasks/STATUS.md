@@ -61,9 +61,9 @@ because hitboxes and frame timing are a great deal of work that is not AI.
 | T46 | The learned blue commits to a fight | wip | wave 50: sets out at p(win) 0.5, gives the same fight up at 0.3 or below (no measurable effect: the way to a fight is one walk), joins another's fight within 3 cells, retreats only when red's strength near it outweighs blue's by Wesnoth's caution -- that one rule is the gain: learned as red 11-0-9 (was 4-0-16), as blue 0-5-15 (was 0-1-19); flips counted by distance 26%, as the rules; C cycles rules, planner, learned |
 | T47 | The side moving second, and a last round that decides | done | blue starts with one more shield; at round 40 the higher score wins (workshop health, point-turns, what is left) and only equal scores draw; rules mirror 51-49-0 over 100 on wave 52's board; manual check still the owner's |
 | T48 | The board itself: a second crossing, a threat map, shorter fights | wip | wave 52: two fords at rows 1 and 7 (cost 3; at the ends the first mover won every game, mid-board the second), the planner's crossing_open, a threat map by path drawn on the board (T) that nothing decides by yet; learned stuck about 29% -> 17-20%, 35 of 40 rules games decided before round 40; one blow and one back not started |
-| T43 | A fighting ladder | todo | easy, medium, the clone, "ghost: nearest", hard, best of three each, with a clock and an ending; every opponent exists; picked in T42 |
+| T43 | A fighting ladder | blocked | set aside by the owner on 2026-10-19: the fighting game has had enough; next are T24 and the RTS (T19, T20). easy, medium, the clone, "ghost: nearest", hard, best of three each, with a clock and an ending; every opponent exists; picked in T42 |
 | T21 | Every example can be watched | done | `check_demos.py` and `demo_overlays.gd`; blue's decision now drawn before it is played |
-| T24 | One window for every example | todo | a menu, a card per example naming its techniques, and an executable; needs T21 |
+| T24 | One window for every example | done | wave 59: `make menu` is the main scene, eight cards from `godot/menu/catalogue.json`, Esc frees the example and comes back; `check_demos.py` C1-C8 hold every card to its target, its page and the classes its scene runs; `menu_walk.gd` plays and leaves every card; `make export` (templates pinned in bootstrap, the pack's directory read, the binary started headless) and the executable zipped by `make release` from a clean HEAD only; manual check still the owner's |
 
 ## Milestone 3 — real time, last
 
@@ -112,6 +112,38 @@ sha256 and never committed.
 | T52 | Bots against the player, with an optional stealth | blocked | third person; a role arbiter, awareness that accumulates with three alert levels, a shared belief map for the search -- each drawn and switchable |
 
 ---
+
+## Resuming after 2026-10-19 (wave 59)
+
+**Where it stopped -- read first.** The owner set T43, the fighting ladder,
+aside ("the fighting game has had enough"), asked for T24 and then the RTS
+milestone. T43 is `blocked` with that note. Wave 59 was T24. The review is
+`docs/reviews/59-one-window-for-every-example.md`.
+
+**What landed.** `make menu`, now the project's main scene: every example
+on one list, a card each -- what the AI decides, the techniques with the
+part each plays, what to watch, the keys, the page -- read from
+`godot/menu/catalogue.json`, which `check_demos.py` also reads (C1-C8: one
+card per target, the page exists, every technique backed by a class the
+scene really reaches, no example calls `quit()`). An example opens as the
+current scene, so it runs as it does alone; Esc frees it. `make run` names
+the checkers scene now. `make bootstrap` installs the Linux export
+templates (archive SHA-512 pinned; CI skips them with
+`GAK_SKIP_TEMPLATES=1`); `make export` refuses a template that does not
+match, reads the `.pck`'s directory for what must and must not ship, and
+starts the binary headless; `make release` zips it with LICENSE and NOTICE,
+only from a `BUILD` stamp of a clean HEAD. Two new concept pages, so every
+card has one: `docs/concepts/stealth.md` and `ways-to-decide.md`.
+
+**For the owner.** T24's manual check: hand the executable to someone new,
+three examples, can they say what decides from the card alone. Seen while
+checking the menu by movie frames: the tactical board's three header lines
+run off the right edge -- the same with `make demo-tactical` alone, so it
+predates the menu. The 20 tactical recordings for T25 are still 2.
+
+**Next:** T19, the real-time core -- the owner asked for the RTS line next.
+It starts by trying to prove itself unnecessary: benchmark `BoardState` at
+200 units x 60 steps first.
 
 ## Resuming after 2026-10-19 (wave 58)
 

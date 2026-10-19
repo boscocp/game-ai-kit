@@ -21,11 +21,11 @@ func test_project_uses_the_compatibility_renderer() -> void:
 	assert_str(method).is_equal("gl_compatibility")
 
 
-func test_the_main_scene_is_checkers_and_it_exists() -> void:
+func test_the_main_scene_is_the_menu_and_it_exists() -> void:
 	# A main scene that points at nothing is how `make test-godot` popped a
 	# desktop dialog under --headless in wave 2. It is set now, and this is the
 	# assertion that keeps it set. T27 moved it from the skirmish board to
-	# checkers, a game nobody needs explained.
+	# checkers; T24 to the menu of every example, which the executable opens on.
 	var scene: String = ProjectSettings.get_setting("application/run/main_scene")
-	assert_str(scene).is_equal("res://game/checkers/checkers.tscn")
+	assert_str(scene).is_equal("res://menu/menu.tscn")
 	assert_bool(ResourceLoader.exists(scene)).is_true()

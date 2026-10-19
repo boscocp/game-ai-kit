@@ -65,6 +65,34 @@ mkdir -p "$toolchain/xdg"
 # without waiting for someone to open the editor.
 env XDG_DATA_HOME="$toolchain/xdg" "$binary" --headless --version >/dev/null
 
+# Export templates (T24), for `make export`. The archive is 1.28 GB and holds
+# every platform; only the Linux x86_64 pair is unpacked, because that is the
+# one platform this project exports to. Pinned here by SHA-512 rather than read
+# from the release's SHA512-SUMS.txt, so a release replaced upstream is refused
+# instead of trusted. Self-contained mode looks for them under editor_data/.
+templates_sha="ca4d71c4d7b81dfc15d1a98baa07534aa95b03fdda78a0075b06672e1648d2e5f40980c9adc28d23e1b92e732ee7bf3461997aa804af74ec2fcd7a93ccb84079"
+templates_archive="Godot_v${version}_export_templates.tpz"
+templates_dest="$toolchain/godot/editor_data/export_templates/${version/-/.}"
+
+# CI sets GAK_SKIP_TEMPLATES=1: it runs the tests, never `make export`, and
+# 1.28 GB in its cache would buy nothing.
+if [[ "${GAK_SKIP_TEMPLATES:-}" == "1" ]]; then
+  echo "bootstrap: export templates skipped (GAK_SKIP_TEMPLATES=1)"
+elif [[ -f "$templates_dest/linux_release.x86_64" && -f "$templates_dest/.pinned-sha512" ]] \
+    && grep -q "$templates_sha" "$templates_dest/.pinned-sha512"; then
+  echo "bootstrap: export templates $version already installed"
+else
+  mkdir -p "$toolchain/dl" "$templates_dest"
+  if [[ ! -f "$toolchain/dl/$templates_archive" ]]; then
+    echo "bootstrap: downloading export templates $version (1.28 GB)"
+    curl -fsSL -o "$toolchain/dl/$templates_archive" "$base/$templates_archive"
+  fi
+  echo "$templates_sha  $toolchain/dl/$templates_archive" | sha512sum -c -
+  unzip -q -o -j "$toolchain/dl/$templates_archive" \
+    templates/linux_release.x86_64 templates/linux_debug.x86_64 templates/version.txt -d "$templates_dest"
+  echo "$templates_sha" > "$templates_dest/.pinned-sha512"
+fi
+
 # gdUnit4: the test framework, installed rather than vendored. Pinned by tag
 # and verified by SHA-256 -- the project publishes no release assets, so the
 # source archive is what there is to pin.

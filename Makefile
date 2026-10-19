@@ -72,7 +72,7 @@ lint-review: ## This branch has a review record and may be merged
 .PHONY: check
 check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-search-properties test-planner-properties test-planner-benchmark test-perception-properties \
-       test-decisions test-demo-overlays test-replay test-opponent-levels test-opponent-properties \
+       test-decisions test-demo-overlays test-menu-walk test-replay test-opponent-levels test-opponent-properties \
        test-clone-rows test-inference-budget test-clone-report test-difficulty-knobs ## Run every gate
 
 .PHONY: check-no-engine
@@ -332,6 +332,12 @@ import: ## Import the art, which a fresh checkout cannot load without
 		echo "import: the sidecars above are marked invalid; restore them with" >&2; \
 		echo "  git checkout -- <sidecar>, fix the picture, and import again" >&2; exit 2; fi
 
+.PHONY: test-menu-walk
+test-menu-walk: import ## The menu, walked: every card plays its example, Escape frees it and comes back
+	@# T24. `lint-demos` holds the catalogue to the Makefile; this holds the
+	@# menu to the catalogue, in the engine.
+	@$(GODOT) --headless --path godot -s res://test/menu_walk.gd
+
 .PHONY: test-demo-overlays
 test-demo-overlays: import ## Every example, stepped headless: its overlay holds the AI's reasoning
 	@# The engine half of invariant 13; `lint-demos` is the half without it.
@@ -362,7 +368,12 @@ test-godot: import ## Godot tests, headless (gdUnit4)
 .PHONY: run
 run: import ## Checkers against minimax: click a piece, click a green square; space plays white's move, 1-6 sets its depth
 	@# T27: the first thing a person opens is a game nobody needs explained.
-	@# The project's main scene is the checkers board, so this names none.
+	@# T24 made the menu the project's main scene, so this names the board.
+	@$(GODOT) --path godot res://game/checkers/checkers.tscn
+
+.PHONY: menu
+menu: import ## Every example on one menu: up and down choose, enter plays, Esc comes back (T24)
+	@# The project's main scene, and what the exported executable opens on.
 	@$(GODOT) --path godot
 
 .PHONY: demo-skirmish
@@ -530,12 +541,20 @@ artgen-clean: ## Delete your generated art; the game is back on the CC0 set
 
 # --- shipping --------------------------------------------------------------
 
+.PHONY: export
+export: import ## The menu as a Linux x86_64 executable in dist/game-ai-kit-linux/, started headless before it counts (T24)
+	@# Needs the export templates `make bootstrap` installs and pins. The
+	@# script refuses a template that does not match, a pack holding the tests
+	@# or a person's generated art, and a binary that does not start.
+	@$(PYTHON) scripts/export.py
+
 .PHONY: release
-release: ## One zip per addon and the Python wheel into dist/, attribution checked
+release: export ## One zip per addon, the Python wheel and the executable into dist/, attribution checked
 	@# The build does not get to say it attributed anything: the same gate
 	@# that reads the repository opens every archive it wrote and looks.
-	@# `release.py --skip-notice` builds a release that must fail it.
-	@$(PYTHON) scripts/release.py --build
+	@# `release.py --skip-notice` builds a release that must fail it. The
+	@# executable ships only when `export` stamped it from a clean HEAD (T24).
+	@$(PYTHON) scripts/release.py --build --executable dist/game-ai-kit-linux
 	@$(PYTHON) scripts/check_license.py
 
 # --- housekeeping ----------------------------------------------------------

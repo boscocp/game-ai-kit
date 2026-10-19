@@ -10,6 +10,13 @@ Into `OUTPUT/dist/`, from the commit at HEAD and nothing else:
     NOTICE and VERSION beside the code -- unzip it into `res://addons/`;
   * `gameaikit-<version>-py3-none-any.whl`, the Python half, with LICENSE and
     NOTICE in `.dist-info/licenses/`, where PEP 639 says a wheel keeps them.
+  * with `--executable FOLDER`, `game-ai-kit-linux-x86_64-<version>.zip`:
+    the menu exported by `make export` (T24), the binary and its `.pck` under
+    one top folder `game-ai-kit/` beside LICENSE, NOTICE and VERSION. Only a
+    build whose `BUILD` stamp names HEAD, exported from a `godot/` with
+    nothing uncommitted, and whose binary and pack still match the hashes
+    the stamp records, ships -- the one artifact not built from git's own
+    bytes is held to the same commit by its stamp.
 
 `OUTPUT` is laid out like the repository -- LICENSE and NOTICE at its root,
 archives in `dist/` -- so `check_license.py --repo OUTPUT` reads a release
@@ -64,6 +71,7 @@ import base64
 import contextlib
 import hashlib
 import io
+import json
 import pathlib
 import re
 import subprocess
@@ -124,11 +132,11 @@ def read_version(repo: pathlib.Path) -> str:
     return checked_version(committed_bytes(repo, "VERSION").decode("utf-8"))
 
 
-def add_entry(bundle: zipfile.ZipFile, name: str, data: bytes) -> None:
+def add_entry(bundle: zipfile.ZipFile, name: str, data: bytes, mode: int = 0o644) -> None:
     """Write one file with a fixed date and mode, so the build is reproducible."""
     entry = zipfile.ZipInfo(name, date_time=EPOCH)
     entry.compress_type = zipfile.ZIP_DEFLATED
-    entry.external_attr = 0o644 << 16
+    entry.external_attr = mode << 16
     # Unix, whatever machine builds it. Left to the default, a build on
     # Windows writes 0 here and the two releases of one commit differ.
     entry.create_system = 3
@@ -228,6 +236,47 @@ def build_wheel(repo: pathlib.Path, version: str,
     return archive
 
 
+def head_commit(repo: pathlib.Path) -> str:
+    """The commit at HEAD, in full."""
+    return subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                          capture_output=True, check=True, text=True).stdout.strip()
+
+
+def exported_from_head(repo: pathlib.Path, folder: pathlib.Path) -> None:
+    """Refuse an exported build that is not HEAD's, exactly."""
+    stamp_file = folder / "BUILD"
+    if not stamp_file.is_file():
+        raise Refused(f"{folder} has no BUILD stamp: run `make export`")
+    stamp = json.loads(stamp_file.read_text(encoding="utf-8"))
+    if stamp.get("commit") != head_commit(repo):
+        raise Refused(f"{folder} was exported from {str(stamp.get('commit'))[:12]}, not HEAD: run `make export`")
+    if stamp.get("clean") is not True:
+        raise Refused(f"{folder} was exported with uncommitted changes under godot/")
+    # The stamp vouches for bytes, not only for a commit: a pack rewritten
+    # after `make export` would otherwise ship under it (wave 59's review).
+    for shipped in sorted(folder.glob("*.x86_64")) + sorted(folder.glob("*.pck")):
+        if stamp.get(shipped.name) != hashlib.sha256(shipped.read_bytes()).hexdigest():
+            raise Refused(f"{shipped.name} is not the file `make export` stamped: run `make export`")
+
+
+def build_executable(repo: pathlib.Path, folder: pathlib.Path, version: str,
+                     dist: pathlib.Path, skip_notice: bool) -> pathlib.Path:
+    """Zip the exported menu under one top folder, beside its attribution."""
+    exported_from_head(repo, folder)
+    binaries = sorted(folder.glob("*.x86_64"))
+    if len(binaries) != 1 or not binaries[0].with_suffix(".pck").is_file():
+        raise Refused(f"{folder} should hold one .x86_64 and its .pck")
+    files = {name: (data, 0o644) for name, data in attribution(repo, skip_notice).items()}
+    files["VERSION"] = (f"{version}\n".encode(), 0o644)
+    files[binaries[0].name] = (binaries[0].read_bytes(), 0o755)
+    files[binaries[0].with_suffix(".pck").name] = (binaries[0].with_suffix(".pck").read_bytes(), 0o644)
+    archive = dist / f"game-ai-kit-linux-x86_64-{version}.zip"
+    with zipfile.ZipFile(archive, "w") as bundle:
+        for name in sorted(files):
+            add_entry(bundle, f"game-ai-kit/{name}", files[name][0], files[name][1])
+    return archive
+
+
 def shipped_addons(repo: pathlib.Path) -> list[str]:
     """Addons with committed files. gdUnit4 is installed, not committed, so it is not one."""
     names = {
@@ -244,12 +293,13 @@ def clear_previous(dist: pathlib.Path) -> None:
     shipped along with it. The patterns are this script's own names, so
     `weights.json` -- which `make train` stages in the same folder -- stays.
     """
-    for pattern in ("ai_*-*.zip", f"{PACKAGE}-*.whl"):
+    for pattern in ("ai_*-*.zip", f"{PACKAGE}-*.whl", "game-ai-kit-*.zip"):
         for stale in dist.glob(pattern):
             stale.unlink()
 
 
-def build(repo: pathlib.Path, output: pathlib.Path, skip_notice: bool) -> list[pathlib.Path]:
+def build(repo: pathlib.Path, output: pathlib.Path, skip_notice: bool,
+          executable: pathlib.Path | None = None) -> list[pathlib.Path]:
     """Every artifact, into `output/dist/`, with the attribution at `output/`."""
     version = read_version(repo)
     # The repository's own dist/ is where the gate looks for archives, and
@@ -273,6 +323,8 @@ def build(repo: pathlib.Path, output: pathlib.Path, skip_notice: bool) -> list[p
         for addon in shipped_addons(repo)
     ]
     artifacts.append(build_wheel(repo, version, dist, skip_notice))
+    if executable is not None:
+        artifacts.append(build_executable(repo, executable, version, dist, skip_notice))
     return artifacts
 
 
@@ -292,11 +344,11 @@ def license_gate(release: pathlib.Path) -> tuple[int, list[str]]:
     return result.returncode, result.stdout.splitlines()
 
 
-def quiet_build(repo: pathlib.Path, output: pathlib.Path,
-                skip_notice: bool = False) -> list[pathlib.Path]:
+def quiet_build(repo: pathlib.Path, output: pathlib.Path, skip_notice: bool = False,
+                executable: pathlib.Path | None = None) -> list[pathlib.Path]:
     """A build whose list of artifacts is not printed."""
     with contextlib.redirect_stdout(io.StringIO()):
-        return build(repo, output, skip_notice)
+        return build(repo, output, skip_notice, executable)
 
 
 def check_the_gate_agrees(root: pathlib.Path) -> list[str]:
@@ -519,7 +571,7 @@ def check_stale_artifacts(root: pathlib.Path) -> list[str]:
 def self_test() -> int:
     checks = (check_the_gate_agrees, check_reproducible_and_stamped, check_the_wheel,
               check_only_the_commit_ships, check_contents, check_refusals,
-              check_stale_artifacts)
+              check_stale_artifacts, check_the_executable)
     failures = []
     with tempfile.TemporaryDirectory() as workspace:
         for check in checks:
@@ -538,6 +590,41 @@ def self_test() -> int:
         print(f"self-test FAIL: {failure}")
     print(f"self-test: {'ok' if not failures else str(len(failures)) + ' failure(s)'}")
     return 1 if failures else 0
+
+
+def check_the_executable(root: pathlib.Path) -> list[str]:
+    """The exported menu ships from HEAD's stamp only, runnable and attributed."""
+    failures = []
+    folder = root / "exported"
+    folder.mkdir()
+    (folder / "game-ai-kit.x86_64").write_bytes(b"an engine")
+    (folder / "game-ai-kit.pck").write_bytes(b"GDPC")
+    hashes = {name: hashlib.sha256(data).hexdigest()
+              for name, data in (("game-ai-kit.x86_64", b"an engine"), ("game-ai-kit.pck", b"GDPC"))}
+    stamps = {"no stamp": None, "another commit": {"commit": "0" * 40, "clean": True, **hashes},
+              "uncommitted changes": {"commit": head_commit(REPO), "clean": False, **hashes},
+              "a pack changed after it": {"commit": head_commit(REPO), "clean": True, **hashes,
+                                          "game-ai-kit.pck": "0" * 64}}
+    for label, stamp in stamps.items():
+        (folder / "BUILD").unlink(missing_ok=True)
+        if stamp is not None:
+            (folder / "BUILD").write_text(json.dumps(stamp), encoding="utf-8")
+        try:
+            quiet_build(REPO, root / label.replace(" ", "-"), executable=folder)
+            failures.append(f"an export with {label} was shipped")
+        except Refused:
+            pass
+    (folder / "BUILD").write_text(json.dumps({"commit": head_commit(REPO), "clean": True, **hashes}),
+                                  encoding="utf-8")
+    built = quiet_build(REPO, root / "sound", executable=folder)[-1]
+    with zipfile.ZipFile(built) as bundle:
+        modes = {info.filename: info.external_attr >> 16 for info in bundle.infolist()}
+    if modes.get("game-ai-kit/game-ai-kit.x86_64") != 0o755:
+        failures.append(f"the executable does not ship executable: {modes}")
+    code, lines = license_gate(root / "sound")
+    if code != 0:
+        failures.append(f"the licence gate refused the executable's zip: {lines}")
+    return failures
 
 
 def entries_are_fixed(archive: pathlib.Path) -> bool:
@@ -693,6 +780,8 @@ def main(argv: list[str]) -> int:
                         help="release root, relative to the current directory; "
                              "archives go to OUTPUT/dist, and earlier ai_*-*.zip and "
                              "gameaikit-*.whl there are removed (default: the repo)")
+    parser.add_argument("--executable", default=None,
+                        help="also ship the menu `make export` wrote into this folder")
     parser.add_argument("--skip-notice", action="store_true",
                         help="plant a fault: build every artifact without NOTICE")
     parser.add_argument("--self-test", action="store_true")
@@ -711,7 +800,8 @@ def main(argv: list[str]) -> int:
 
     output = pathlib.Path(args.output) if args.output else REPO
     try:
-        artifacts = build(REPO, output, args.skip_notice)
+        executable = pathlib.Path(args.executable).resolve() if args.executable else None
+        artifacts = build(REPO, output, args.skip_notice, executable)
     except Refused as refusal:
         print(f"release: refused: {refusal}", file=sys.stderr)
         return 1

@@ -109,10 +109,13 @@ func _unhandled_input(event: InputEvent) -> void:
 ## computer is red, its first decision drawn.
 func new_game() -> void:
 	state = TacticalScenario.build()
-	# Played as the window's own scene, each game rolls different dice; under a
-	# test, which mounts the scene as a child, the dice stay the scenario's, so
-	# a test's game is the same game every run.
-	if is_inside_tree() and get_tree().current_scene == self:
+	# Played at the top of the tree -- the window's own scene, or opened from
+	# the menu -- each game rolls different dice; under a test, which mounts
+	# the scene inside its own node, the dice stay the scenario's, so a
+	# test's game is the same game every run. Asked of the parent, not of
+	# `current_scene`: the menu can only make a scene current once it is in
+	# the tree, after this has run (wave 59's review: seed 0 every time).
+	if is_inside_tree() and get_parent() == get_tree().root:
 		state.dice_seed = randi()
 	# Every attack moves the board's seed on, so the one a recording needs is
 	# the one the game began with (wave 58's review).

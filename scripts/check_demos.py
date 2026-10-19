@@ -23,6 +23,25 @@ needs the engine:
 Finding no example at all is a finding: a gate that passes on an empty
 Makefile is the defect invariant 4 is about.
 
+And the half of T24 a command can hold -- every example is *reachable*, from
+the menu the executable opens on. `godot/menu/catalogue.json` is the one list
+the menu and this gate share:
+
+  * every example target has exactly one card, and every card a target (C2),
+    opening the scene its target opens (C3);
+  * every card says what the AI decides, what to watch and where to read
+    more, names at least one technique with a line on its part (C4), and its
+    page exists (C5);
+  * every technique is one the catalogue defines (C6), and one of the
+    classes the catalogue names as its evidence is reachable from the scene
+    -- its scripts, the scenes it instances, and every class those use in
+    code: constructed, called or extended, while comments, strings, type
+    annotations and constant reads do not count (C7). That is "reachable by
+    use", the most a reading can hold; whether the scene takes that path at
+    run time is the card's manual check;
+  * no script an example reaches calls quit(), which would take the menu
+    down with it (C8).
+
 Exit codes
 ----------
 0   every example has its window, its legend and its decision
@@ -40,6 +59,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import io
+import json
 import pathlib
 import re
 import sys
@@ -61,7 +81,7 @@ MAIN_SCENE = re.compile(r'^run/main_scene\s*=\s*"res://([^"]+)"', re.MULTILINE)
 SECTION = re.compile(r"^\[(ext_resource|node)\b([^\n]*)\]$((?:\n(?!\[)[^\n]*)*)", re.MULTILINE)
 ATTRIBUTE = re.compile(r'(\w+)=("[^"]*"|\S+)')
 SCRIPT_LINE = re.compile(r'^script = ExtResource\("([^"]+)"\)', re.MULTILINE)
-TRIPLE_QUOTED = re.compile(r'"""(?:.|\n)*?"""')
+TRIPLE_QUOTED = re.compile(r'"""(?:.|\n)*?"""' + r"|'''(?:.|\n)*?'''")
 SCENES_BLOCK = re.compile(r"^const SCENES\b[^=]*=\s*\[(.*?)\]", re.MULTILINE | re.DOTALL)
 
 LEGEND_SCRIPT = "game/legend.gd"
@@ -191,13 +211,210 @@ def example_scenes_on_disk(root: pathlib.Path) -> set[str]:
     return found
 
 
+# --- the catalogue (T24) -----------------------------------------------------
+#
+# T21 made every example watchable; the catalogue makes every example
+# reachable, from the menu the executable opens on. It is one file, read by
+# the menu and by this gate, because a list kept in two places is a list that
+# will one day differ.
+
+CATALOGUE = "godot/menu/catalogue.json"
+CARD_TEXT = ("title", "decides", "watch", "docs")
+#: Folders whose scripts are not part of any example: the test framework and
+#: the tests themselves, which reference everything.
+NOT_EXAMPLE_CODE = ("addons/gdUnit4/", "test/")
+CLASS_NAME = re.compile(r"^class_name\s+(\w+)", re.MULTILINE)
+RESOURCE_PATH = re.compile(r'"res://([^"]+\.(?:gd|tscn))"')
+STRING = re.compile(r"'(?:\\.|[^'\\\n])*'|\"(?:\\.|[^\"\\\n])*\"")
+#: An example takes the window down with it: the menu could not come back.
+#: `quit(` called, or "quit" named as a string -- `call("quit")` -- which is
+#: why it is read with strings kept (wave 59's review).
+QUITS = re.compile(r"""\bquit\s*\(|["']quit["']""")
+#: A class named only as a type -- `: X`, `-> X`, `as X`, `is X`, `[X]` --
+#: or only to read one of its constants, `X.SOME_NUMBER`, is not a class the
+#: scene runs. Wave 59's review: the behaviour demo read one constant of
+#: `StealthWorld`, and so "reached" the influence map it never builds.
+TYPE_ONLY = re.compile(r"(?::|->|\bas\b|\bis\b|\[|,)\s*[A-Z]\w*(?=\s*[\],=)\n:]|\s*$)", re.MULTILINE)
+CONSTANT_READ = re.compile(r"\b[A-Z]\w*\.[A-Z][A-Z0-9_]*\b(?!\s*\()")
+
+
+def code_of(source: str, keep_strings: bool = False) -> str:
+    """GDScript with its strings and comments removed: only what runs.
+
+    A line at a time, left to right, because the two hide each other: the
+    first version took strings out of the whole file first, and the
+    apostrophe in a comment's "don't" opened a string that swallowed every
+    line down to the next one -- and with them a class the scene does use.
+    """
+    return "\n".join(line_code(line, keep_strings) for line in strip_strings(source).splitlines())
+
+
+def line_code(line: str, keep_strings: bool = False) -> str:
+    """One line with its comment cut off, and its strings emptied unless kept."""
+    kept, position = [], 0
+    while position < len(line):
+        character = line[position]
+        if character == "#":
+            break
+        found = STRING.match(line, position) if character in "\"'" else None
+        if found:
+            kept.append(found.group(0) if keep_strings else '""')
+            position = found.end()
+            continue
+        kept.append(character)
+        position += 1
+    return "".join(kept)
+
+
+def project_classes(root: pathlib.Path) -> dict[str, str]:
+    """Every `class_name` in the project, to the script declaring it."""
+    godot = root / "godot"
+    classes = {}
+    for script in sorted(godot.rglob("*.gd")):
+        relative = script.relative_to(godot).as_posix()
+        if relative.startswith(NOT_EXAMPLE_CODE):
+            continue
+        found = CLASS_NAME.search(script.read_text(encoding="utf-8"))
+        if found:
+            classes[found.group(1)] = relative
+    return classes
+
+
+def references_of(root: pathlib.Path, path: str, classes: dict[str, str]) -> set[str]:
+    """The scripts and scenes one file names: by path, or by a class it uses --
+    constructs, calls, extends -- rather than only types a value as, or reads
+    a constant of."""
+    file = root / "godot" / path
+    if not file.exists():
+        return set()
+    text = file.read_text(encoding="utf-8")
+    if not path.endswith(".gd"):
+        return set(RESOURCE_PATH.findall(text))
+    named = set(RESOURCE_PATH.findall(code_of(text, keep_strings=True)))
+    used = TYPE_ONLY.sub(" ", CONSTANT_READ.sub(" ", code_of(text)))
+    words = set(re.findall(r"\b[A-Z]\w*\b", used))
+    return named | {classes[word] for word in words if word in classes}
+
+
+class Reach:
+    """What each scene reaches, worked out once per run of the gate.
+
+    Every card's techniques and every example's `quit()` are held against
+    the same closure, and the first version walked it again for each.
+    """
+
+    def __init__(self, root: pathlib.Path) -> None:
+        self.root = root
+        self.classes = project_classes(root)
+        self._scripts: dict[str, set[str]] = {}
+
+    def scripts(self, scene: str) -> set[str]:
+        """Every script reachable from `scene`: its own, the scenes it
+        instances, and whatever those scripts use, followed until nothing new
+        turns up. Reachable by name in code -- comments, strings, types and
+        constant reads not counting -- which is the most reading can say about
+        what runs."""
+        if scene not in self._scripts:
+            reached, waiting = set(), [scene]
+            while waiting:
+                path = waiting.pop()
+                if path not in reached:
+                    reached.add(path)
+                    waiting += sorted(references_of(self.root, path, self.classes) - reached)
+            self._scripts[scene] = {path for path in reached if path.endswith(".gd")}
+        return self._scripts[scene]
+
+
+def read_catalogue(root: pathlib.Path) -> tuple[dict | None, str]:
+    """The catalogue, or None and why it cannot be used."""
+    path = root / CATALOGUE
+    if not path.exists():
+        return None, f"C1 {CATALOGUE} does not exist: no example can be reached from the menu"
+    try:
+        catalogue = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as problem:
+        return None, f"C1 {CATALOGUE} is not JSON: {problem}"
+    if not isinstance(catalogue.get("examples"), list) or not isinstance(catalogue.get("techniques"), dict):
+        return None, f"C1 {CATALOGUE} needs an `examples` list and a `techniques` table"
+    return catalogue, ""
+
+
+def card_findings(reach: Reach, card: dict, techniques: dict, opened: str | None) -> list[str]:
+    """What is wrong with one card: its words, its page, its techniques."""
+    target = card.get("target", "?")
+    findings = [f"C4 {target}: the card has no {field}" for field in CARD_TEXT
+                if not str(card.get(field, "")).strip()]
+    scene = str(card.get("scene", "")).removeprefix("res://")
+    if opened is not None and scene != opened:
+        findings.append(f"C3 {target}: the card opens res://{scene}, the make target res://{opened}")
+    docs = str(card.get("docs", ""))
+    if docs and not (reach.root / docs).is_file():
+        findings.append(f"C5 {target}: its page {docs} does not exist")
+    named = card.get("techniques") or []
+    if not named:
+        findings.append(f"C4 {target}: the card names no technique")
+    exists = scene and (reach.root / "godot" / scene).exists()
+    run = reach.scripts(scene) if exists else set()
+    for entry in named:
+        findings += technique_findings(reach, target, entry, techniques, run)
+    return findings
+
+
+def technique_findings(reach: Reach, target: str, entry: dict, techniques: dict,
+                       run: set[str]) -> list[str]:
+    """One technique on a card: known, explained, and reached by the scene."""
+    key = entry.get("technique", "")
+    if key not in techniques:
+        return [f"C6 {target}: {key!r} is not in the catalogue's techniques table"]
+    findings = [] if str(entry.get("part", "")).strip() else [f"C4 {target}: {key} has no line on its part"]
+    evidence = techniques[key].get("evidence", [])
+    if not any(reach.classes.get(name) in run for name in evidence):
+        listed = ", ".join(evidence) or "nothing"
+        findings.append(f"C7 {target}: the card says {key}, and the scene runs none of {listed}")
+    return findings
+
+
+def quit_findings(reach: Reach, target: str, scene: str) -> list[str]:
+    """An example that ends the program cannot hand the window back. Every
+    script it reaches is read, the addons' too: a library that quit would take
+    the menu down as surely as the example."""
+    findings = []
+    for script in sorted(reach.scripts(scene)):
+        source = (reach.root / "godot" / script).read_text(encoding="utf-8")
+        if QUITS.search(code_of(source, keep_strings=True)):
+            findings.append(f"C8 {target}: res://{script} calls quit(), so the menu cannot come back")
+    return findings
+
+
+def catalogue_findings(root: pathlib.Path, scenes: dict[str, str | None]) -> list[str]:
+    """Every example has exactly one card, every card an example, each honest."""
+    catalogue, why = read_catalogue(root)
+    if catalogue is None:
+        return [why]
+    reach, findings, seen = Reach(root), [], set()
+    for card in catalogue["examples"]:
+        target = card.get("target", "?")
+        if target in seen:
+            findings.append(f"C2 {target}: two cards")
+        seen.add(target)
+        if target not in scenes:
+            findings.append(f"C2 {target}: a card with no make target")
+        findings += card_findings(reach, card, catalogue["techniques"], scenes.get(target))
+    for target in sorted(set(scenes) - seen):
+        findings.append(f"C2 {target}: an example with no card in {CATALOGUE}")
+    for target, scene in sorted(scenes.items()):
+        if scene is not None:
+            findings += quit_findings(reach, target, scene)
+    return findings
+
+
 def check(root: pathlib.Path) -> list[str]:
     """Every finding about every example."""
     makefile = (root / "Makefile").read_text(encoding="utf-8")
     declared = LOOKS_LIKE_AN_EXAMPLE.findall(makefile)
     if not declared:
         return ["D1 no example targets (run, demo-*) in the Makefile: nothing can be watched"]
-    listed, opened, findings = listed_scenes(root), set(), []
+    listed, opened, findings = listed_scenes(root), {}, []
     for names, rest in declared:
         if not GOOD_NAME.match(names):
             findings.append(f"D8 {names!r}: an example is one target named run or demo-<name>")
@@ -205,16 +422,16 @@ def check(root: pathlib.Path) -> list[str]:
         if "##" not in rest:
             findings.append(f"D2 {names}: no `##` line, so `make help` does not list it")
         scene, why = scene_of(root, makefile, names)
+        opened[names] = scene
         if scene is None:
             findings.append(f"D3 {names}: {why}")
             continue
-        opened.add(scene)
         findings += check_scene(root, names, scene)
         if scene not in listed:
             findings.append(f"D7 {names}: res://{scene} is not in SCENES in {OVERLAYS}")
-    for scene in sorted(example_scenes_on_disk(root) - opened):
+    for scene in sorted(example_scenes_on_disk(root) - set(opened.values())):
         findings.append(f"D9 res://{scene} is an example no make target opens")
-    return findings
+    return findings + catalogue_findings(root, opened)
 
 
 def run(root: pathlib.Path) -> int:
@@ -247,12 +464,32 @@ demo-search: ## Search
 SOUND_SCRIPT = """\
 extends Node2D
 
+# Do not quit() here: the menu needs the window back.
+var search := AStarSearch.new()
+
 func step_decision() -> void:
 \tpass
 
 func decision_overlay() -> Dictionary:
 \treturn {"x": 1}
 """
+
+
+def card(target: str, scene: str, **changes: object) -> dict:
+    """One sound card, changed where a test says."""
+    sound = {"target": target, "title": "An example", "scene": f"res://{scene}",
+             "decides": "Where to go.", "watch": "The frontier.", "docs": "docs/concepts/search.md",
+             "techniques": [{"technique": "a-star", "part": "the route"}]}
+    return {**sound, **changes}
+
+
+SOUND_CARDS = (card("run", "game/main.tscn"), card("demo-search", "demos/search.tscn"))
+
+
+def catalogue_text(cards: tuple[dict, ...] = SOUND_CARDS) -> str:
+    """A catalogue holding `cards`, with A* as its one technique."""
+    return json.dumps({"techniques": {"a-star": {"name": "A*", "evidence": ["AStarSearch"]}},
+                       "examples": list(cards)})
 
 
 def scene_text(script: str, legend: bool = True) -> str:
@@ -271,12 +508,17 @@ def scene_text(script: str, legend: bool = True) -> str:
 def build(folder: pathlib.Path, makefile: str = SOUND_MAKEFILE, search_script: str = SOUND_SCRIPT,
           legend: bool = True, listed: tuple[str, ...] = ("game/main.tscn", "demos/search.tscn"),
           scenes: tuple[str, ...] = ("game/main.tscn", "demos/search.tscn"), commented: str = "",
-          detached_legend: bool = False, stray: bool = False, editor_form: bool = False) -> pathlib.Path:
+          detached_legend: bool = False, stray: bool = False, editor_form: bool = False,
+          catalogue: str | None = catalogue_text()) -> pathlib.Path:
     """A small repository with two examples, broken where a test says."""
     godot = folder / "godot"
-    (godot / "game").mkdir(parents=True)
-    (godot / "demos").mkdir()
-    (godot / "test").mkdir()
+    for made in ("game", "demos", "test", "menu", "addons/ai_search"):
+        (godot / made).mkdir(parents=True)
+    (godot / "addons/ai_search/astar.gd").write_text("class_name AStarSearch\nextends RefCounted\n", encoding="utf-8")
+    (folder / "docs/concepts").mkdir(parents=True)
+    (folder / "docs/concepts/search.md").write_text("# Search\n", encoding="utf-8")
+    if catalogue is not None:
+        (folder / CATALOGUE).write_text(catalogue, encoding="utf-8")
     (folder / "Makefile").write_text(makefile, encoding="utf-8")
     (godot / "project.godot").write_text('[application]\nrun/main_scene="res://game/main.tscn"\n',
                                          encoding="utf-8")
@@ -301,6 +543,38 @@ def build(folder: pathlib.Path, makefile: str = SOUND_MAKEFILE, search_script: s
     if stray:
         (godot / "demos" / "racing.tscn").write_text(scene_text("demos/search.gd"), encoding="utf-8")
     return folder
+
+
+def catalogue_cases() -> dict[str, tuple[dict, str | None]]:
+    """The catalogue's planted cases, each with the code its rule writes."""
+    search = "demos/search.tscn"
+    without_astar = SOUND_SCRIPT.replace("var search := AStarSearch.new()", "var search := 1")
+    return {
+        "no catalogue": ({"catalogue": None}, "C1"),
+        "a catalogue that is not JSON": ({"catalogue": "{"}, "C1"),
+        "an example with no card": ({"catalogue": catalogue_text(SOUND_CARDS[:1])}, "C2"),
+        "a card with no example": ({"catalogue": catalogue_text(SOUND_CARDS + (card("demo-racing", search),))}, "C2"),
+        "two cards for one example": ({"catalogue": catalogue_text(SOUND_CARDS + (SOUND_CARDS[1],))}, "C2"),
+        "a card opening another scene": (
+            {"catalogue": catalogue_text((SOUND_CARDS[0], card("demo-search", "game/main.tscn")))}, "C3"),
+        "a card that says nothing": ({"catalogue": catalogue_text((SOUND_CARDS[0], card("demo-search", search, decides=" ")))}, "C4"),
+        "a card naming no technique": ({"catalogue": catalogue_text((SOUND_CARDS[0], card("demo-search", search, techniques=[])))}, "C4"),
+        "a page that does not exist": (
+            {"catalogue": catalogue_text((SOUND_CARDS[0], card("demo-search", search, docs="docs/concepts/racing.md")))}, "C5"),
+        "a technique nobody defined": ({"catalogue": catalogue_text((SOUND_CARDS[0], card(
+            "demo-search", search, techniques=[{"technique": "neural-network", "part": "magic"}])))}, "C6"),
+        "a technique the scene never runs": ({"search_script": without_astar}, "C7"),
+        "a technique only in a comment": ({"search_script": without_astar + "# AStarSearch.new()\n"}, "C7"),
+        "a technique only in a string": ({"search_script": without_astar + 'const NOTE = "AStarSearch.new()"\n'}, "C7"),
+        "an example that quits": ({"search_script": SOUND_SCRIPT + "\nfunc _done() -> void:\n\tget_tree().quit()\n"}, "C8"),
+        "an example that quits by name": (
+            {"search_script": SOUND_SCRIPT + '\nfunc _done() -> void:\n\tget_tree().call("quit")\n'}, "C8"),
+        "a technique only in a single-quoted block": (
+            {"search_script": without_astar + "const NOTE = '''\nAStarSearch.new()\n'''\n"}, "C7"),
+        "a technique only as a type": ({"search_script": without_astar + "var never: AStarSearch = null\n"}, "C7"),
+        "a technique only for a constant": (
+            {"search_script": without_astar + "var cost: int = AStarSearch.MAX_COST\n"}, "C7"),
+    }
 
 
 def self_test() -> int:
@@ -345,6 +619,7 @@ def self_test() -> int:
         "an example on disk with no target": ({"stray": True}, "D9"),
         "the editor's own attribute order": ({"editor_form": True}, None),
     }
+    cases.update(catalogue_cases())
     for label, (changes, want) in cases.items():
         with tempfile.TemporaryDirectory() as temporary:
             expect(label, build(pathlib.Path(temporary), **changes), want)
