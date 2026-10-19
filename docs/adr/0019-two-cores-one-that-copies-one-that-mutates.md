@@ -32,8 +32,12 @@ of it:
   spatial hash for "who is near", flow fields shared by everyone going to
   one place, settled `FIELD_CELLS_PER_TICK` cells a tick.
 - **`RtsSnapshot` is the frozen copy**, and the only thing a controller is
-  ever shown: one side's view, through its fog, as read-only plain values.
-  The game mutates; the planner reads a snapshot.
+  ever shown: one side's view, through its fog, as read-only plain values
+  -- its own units whole, an enemy's only as a player would see it, and a
+  board with only the buildings in sight on it, since a blocked cell in fog
+  would say where the enemy built. The rules hold the same line: an unseen
+  unit and a dead one get one refusal, and nobody builds where they cannot
+  see. The game mutates; the planner reads a snapshot.
 - **`RtsCommand` is the one way in**, for a person and an AI alike, and
   `RtsRules` refuses what a side may not do before any of it is done.
 - **`RtsMatch` records** the seed and every accepted command; a replay on a

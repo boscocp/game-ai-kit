@@ -87,14 +87,34 @@ static func _walk(world: RtsWorld, unit: RtsUnit, goal: Vector2i, point: Vector2
 # building or a mine there is what the unit is walking up to.
 static func _line_is_clear(world: RtsWorld, from: Vector2, to: Vector2, goal: Vector2i) -> bool:
 	var samples: int = ceili(from.distance_to(to) * 4.0)
+	var previous := Vector2i(from.floor())
 	for sample: int in range(1, samples + 1):
 		var cell := Vector2i(from.lerp(to, float(sample) / samples).floor())
-		if cell != goal and world.graph.is_blocked(cell):
+		if not _step_is_clear(world, previous, cell, goal):
 			return false
+		previous = cell
 	return true
 
 
+# True when a unit may pass from `from` into the cell `to` beside it. `to`
+# may be blocked when it is `goal`, the building being walked up to. The
+# board is four-connected, so a diagonal step must have both cells it slips
+# between open, goal or not: otherwise the line cuts a corner the flow field
+# cannot.
+static func _step_is_clear(world: RtsWorld, from: Vector2i, to: Vector2i, goal: Vector2i) -> bool:
+	if to != goal and world.graph.is_blocked(to):
+		return false
+	if from.x == to.x or from.y == to.y:
+		return true
+	return not world.graph.is_blocked(Vector2i(to.x, from.y)) and not world.graph.is_blocked(Vector2i(from.x, to.y))
+
+
+# A goal a building has since been raised on can no longer be stood on, so
+# the order is over rather than walked into the wall.
 static func _move(world: RtsWorld, unit: RtsUnit) -> void:
+	if world.graph.is_blocked(unit.goal):
+		unit.order = RtsUnit.IDLE
+		return
 	if _walk(world, unit, unit.goal, Vector2(unit.goal) + Vector2(0.5, 0.5), ARRIVED):
 		unit.order = RtsUnit.IDLE
 
@@ -147,25 +167,29 @@ static func _deliver(world: RtsWorld, unit: RtsUnit, mine_left: bool) -> void:
 		return
 	if _walk(world, unit, base.cell(), base.position, RtsKinds.USE_REACH):
 		world.resources[unit.side] = world.resources.get(unit.side, 0) + unit.carrying
+		world.delivered[unit.side] = world.delivered.get(unit.side, 0) + unit.carrying
 		unit.carrying = 0
 
 
 static func _build(world: RtsWorld, unit: RtsUnit) -> void:
 	var site: RtsUnit = world.unit(unit.target_id)
-	if site == null or site.complete:
+	if site == null or site.complete or site.health <= 0:
 		unit.order = RtsUnit.IDLE
 		return
 	if not _walk(world, unit, site.cell(), site.position, RtsKinds.USE_REACH):
 		return
 	var needed: int = RtsKinds.of(site.kind, "ticks")
 	var full: int = RtsKinds.of(site.kind, "health")
+	# Each tick adds its share of the full health, so a blow struck while it
+	# is going up stays struck.
+	var raised: int = full * (site.progress + 1) / needed - full * site.progress / needed
 	site.progress += 1
-	site.health = maxi(1, full * site.progress / needed)
+	site.health = mini(site.health + raised, full)
 	if site.progress >= needed:
 		site.complete = true
-		site.health = full
 		site.progress = 0
 		unit.order = RtsUnit.IDLE
+		world.raised[site.side] = world.raised.get(site.side, 0) + 1
 
 
 # A building works through its queue: the first in it trains, and when it is

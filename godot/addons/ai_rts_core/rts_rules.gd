@@ -72,11 +72,11 @@ static func _why_unfit(given: RtsUnit, order: RtsCommand) -> String:
 
 
 static func _why_target_refused(world: RtsWorld, side: int, order: RtsCommand) -> String:
+	# Gone and unseen get one answer: two would tell a side which of the ids
+	# it cannot see are still alive.
 	var target: RtsUnit = world.unit(order.target_id)
-	if target == null:
-		return "there is no unit %d" % order.target_id
-	if not world.visible_to(side, target.position):
-		return "unit %d is not in sight" % target.id
+	if target == null or not world.visible_to(side, target.position):
+		return "unit %d is not in sight" % order.target_id
 	if order.kind == RtsCommand.GATHER:
 		return "" if target.kind == RtsKinds.MINE else "unit %d is not a mine" % target.id
 	if target.side == side or target.side == RtsWorld.NEUTRAL:
@@ -90,15 +90,18 @@ static func _why_build_refused(world: RtsWorld, side: int, order: RtsCommand) ->
 	if not RtsKinds.TABLE.has(order.what) or not RtsKinds.is_building(order.what) \
 			or order.what == RtsKinds.MINE:
 		return "%s is not something a worker builds" % order.what
+	# Sight first: "not free" about a cell nobody can see would say who stands there.
+	if not world.visible_to(side, Vector2(order.cell) + Vector2(0.5, 0.5)):
+		return "%s is not in sight" % order.cell
 	if not world.is_free(order.cell):
 		return "%s is not free to build on" % order.cell
 	return _why_unaffordable(world, side, order.what)
 
 
 static func _why_train_refused(world: RtsWorld, side: int, order: RtsCommand) -> String:
-	var producer: RtsUnit = world.unit(order.unit_ids[0])
 	if order.unit_ids.size() != 1:
 		return "one building trains at a time"
+	var producer: RtsUnit = world.unit(order.unit_ids[0])
 	if not producer.complete:
 		return "unit %d is still being built" % producer.id
 	if not order.what in RtsKinds.of(producer.kind, "trains"):

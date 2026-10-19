@@ -74,7 +74,7 @@ lesson in it.
 
 | # | Task | State | Notes |
 |---|---|---|---|
-| T19 | The real-time core | done | `BoardState` at 200 units: ~50 ms a step, three frames, so `ai_rts_core` exists (ADR 0019); its simulation 0.7 ms, flow fields 0.34 ms (p95 1.29 of a 1.5 share); a scripted match at ~70x real time, replayed to its digest |
+| T19 | The real-time core | done | `BoardState` at 200 units: ~50 ms a step, three frames, so `ai_rts_core` exists (ADR 0019); its simulation 0.7 ms, flow fields 0.34 ms (p95 1.29 of a 1.5 share); a scripted match at ~65x real time, replayed to its digest |
 | T20 | The RTS demo | todo | build orders against the clock, fog of war |
 
 ## Milestone 4 — driving, which is the first thing not on a grid
@@ -130,8 +130,13 @@ counters, recording, replay) and `FrameBudget` (shares in ms; work, not the
 clock, inside them). ADR 0019 says why there are two cores.
 `make test-rts-budget` (in `check`, not CI: a timing on a shared runner)
 and `make test-rts-simulation` (both): determinism by digest with a
-planted second seed, replay with a planted meddling, three cheats refused,
-~70x real time, fog planted in and out, counters equal to their log.
+planted second seed and a nudged unit, an economy that must carry income
+home and raise a building, replay with a planted meddling, three cheats
+refused, ~65x real time, fog planted in and out, counters equal to their
+log and a clock that varies. The review found the snapshot's board leaking
+the enemy's buildings through the fog, units walled in by a building, a
+straight walk cutting corners, a site healing its damage and refusals
+that leaked fog; all fixed on the branch.
 
 **For the owner.** T20's art is decided and written into its task: Bos
 Wars' sheets, referenced by URL and sha256 and downloaded on demand, never

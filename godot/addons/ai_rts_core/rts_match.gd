@@ -36,7 +36,8 @@ var budget := FrameBudget.new()
 var accepted: Array[Dictionary] = []
 ## Every command it refused, with the reason.
 var refused: Array[Dictionary] = []
-## Every decision: tick, side, microseconds, work and how many commands.
+## Every decision: tick, side, microseconds, the microseconds its view took
+## to build, work and how many commands.
 var decisions: Array[Dictionary] = []
 ## Side -> {decisions, microseconds, work}: the totals of `decisions`.
 var counters: Dictionary = {}
@@ -124,13 +125,16 @@ func _decide_all() -> void:
 
 func _decide(side: int) -> void:
 	var controller: RtsController = controllers[side]
+	# The view is the match's cost, the same for every controller, so it is
+	# logged beside the decision and not charged to it.
+	var viewing: int = Time.get_ticks_usec()
 	var view: RtsSnapshot = RtsSnapshot.of(world, side)
 	controller.work = 0
 	var started: int = Time.get_ticks_usec()
 	var commands: Array[RtsCommand] = controller.decide(view)
 	var spent: int = Time.get_ticks_usec() - started
 	decisions.append({"tick": world.tick, "side": side, "microseconds": spent,
-		"work": controller.work, "commands": commands.size()})
+		"view_microseconds": started - viewing, "work": controller.work, "commands": commands.size()})
 	counters[side]["decisions"] += 1
 	counters[side]["microseconds"] += spent
 	counters[side]["work"] += controller.work

@@ -4,7 +4,9 @@
 # economies, for two minutes of match. Then five claims:
 #
 #   1. determinism: one seed played twice ends in one digest, and a second
-#      seed in another, so a digest that never changes cannot pass;
+#      seed in another, so a digest that never changes cannot pass; one
+#      unit nudged changes it, so a digest blind to the units cannot either;
+#      and the economy ran -- workers carried income home, a barracks rose;
 #   2. nothing outside the interface: the recording, replayed with no
 #      controller, reaches the match's digest -- and a match with one change
 #      made behind the world's back does not. A snapshot holds nothing of
@@ -28,9 +30,10 @@ const TICKS: int = RtsWorld.TICKS_PER_SECOND * 120
 const FASTER_THAN_REAL_TIME: float = 10.0
 
 
-## A side played by a script: gather with every idle worker, train while there
-## is money, and send soldiers at whatever enemy they can see, or towards the
-## enemy's home once there are enough of them. Its own dice, from the seed, so
+## A side played by a script: gather with every idle worker, raise a second
+## barracks once it can pay for one, train while there is money, and send
+## soldiers at whatever enemy they can see, or towards the enemy's home once
+## there are enough of them. Its own dice, from the seed, so
 ## the stream of commands is the same every time.
 class ScriptedSide extends RtsController:
 	var _dice := RandomNumberGenerator.new()
@@ -45,8 +48,20 @@ class ScriptedSide extends RtsController:
 		var commands: Array[RtsCommand] = []
 		commands.append_array(_put_workers_to_work(view))
 		commands.append_array(_train(view))
+		commands.append_array(_build_barracks(view))
 		commands.append_array(_send_soldiers(view))
 		return commands
+
+	func _build_barracks(view: RtsSnapshot) -> Array[RtsCommand]:
+		var workers: Array[Dictionary] = view.mine(RtsKinds.WORKER)
+		var bases: Array[Dictionary] = view.mine(RtsKinds.BASE)
+		if view.mine(RtsKinds.BARRACKS).size() >= 2 or view.resources < 150 or workers.is_empty() or bases.is_empty():
+			return []
+		work += 1
+		var home := Vector2i((bases[0]["position"] as Vector2).floor())
+		var away: int = 1 if home.x < RtsTestWorld.SIZE / 2 else -1
+		var site: Vector2i = home + Vector2i(away * _dice.randi_range(1, 4), _dice.randi_range(5, 6))
+		return [RtsCommand.build(workers[0]["id"], RtsKinds.BARRACKS, site)]
 
 	func _put_workers_to_work(view: RtsSnapshot) -> Array[RtsCommand]:
 		var commands: Array[RtsCommand] = []
@@ -131,6 +146,32 @@ func _deterministic(played: RtsMatch) -> Array[String]:
 		played.accepted.size(), played.refused.size(), trained, played.world.digest().left(16)])
 	if played.accepted.size() < 20 or trained <= 0:
 		failures.append("the match barely happened: %d commands, %d units trained" % [played.accepted.size(), trained])
+	failures.append_array(_digest_reads_the_units())
+	failures.append_array(_economy_ran(played.world))
+	return failures
+
+
+# A digest that agreed with itself because it never read the units would pass
+# everything above through the dice and the funds alone. One unit moved a
+# hundredth of a cell, behind the world's back, must change it.
+func _digest_reads_the_units() -> Array[String]:
+	var world: RtsWorld = RtsTestWorld.economies(SEED)
+	var before: String = world.digest()
+	world.units()[0].position.x += 0.01
+	return [] if world.digest() != before else ["a unit moved and the digest did not change"]
+
+
+# The parts of the match the five claims would not see stall: every side
+# carried something home, and every side raised a building.
+func _economy_ran(world: RtsWorld) -> Array[String]:
+	var failures: Array[String] = []
+	for side: int in [RtsTestWorld.LEFT, RtsTestWorld.RIGHT]:
+		print("economy: side %d carried %d home and raised %d building(s)" % [
+			side, world.delivered.get(side, 0), world.raised.get(side, 0)])
+		if world.delivered.get(side, 0) <= 0:
+			failures.append("side %d's workers carried nothing home" % side)
+		if world.raised.get(side, 0) <= 0:
+			failures.append("side %d never finished a building" % side)
 	return failures
 
 
@@ -148,7 +189,8 @@ func _only_through_the_door(played: RtsMatch) -> Array[String]:
 		failures.append("money given behind the world's back was not seen by the replay")
 	failures.append_array(_snapshot_holds_no_world(played.world))
 	failures.append_array(_cheats_refused())
-	print("interface: the replay agrees, the meddled match does not, the cheats are refused")
+	print("interface: %s" % ("the replay agrees, the meddled match does not, the cheats are refused"
+		if failures.is_empty() else "%d failure(s)" % failures.size()))
 	return failures
 
 
@@ -228,6 +270,13 @@ func _fogged() -> Array[String]:
 # Claim 5: every side's totals are non-zero and are the sums of its log.
 func _counted(played: RtsMatch) -> Array[String]:
 	var failures: Array[String] = []
+	# Totals that add up prove the adding, not the clock: a clock that read
+	# the same over every decision of the match is not measuring them.
+	var times: Dictionary = {}
+	for decision: Dictionary in played.decisions:
+		times[decision["microseconds"]] = true
+	if times.size() < 2:
+		failures.append("every decision took the same %s us: the clock is not being read" % times.keys())
 	for side: int in played.counters:
 		failures.append_array(_miscounted(played, side))
 		print("counters: side %d made %d decisions, %d us, %d work" % [side,

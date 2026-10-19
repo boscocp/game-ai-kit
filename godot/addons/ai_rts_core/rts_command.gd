@@ -3,7 +3,7 @@
 ##
 ## Five kinds, the ones every RTS since Dune II has: move, attack, gather,
 ## build, train. A person's click and an AI's decision both become one of
-## these and pass through `RtsWorld.why_refused`, so the never-cheat rule is
+## these and pass through `RtsRules.why_refused`, so the never-cheat rule is
 ## one function, and actions per minute are counted the same way for both.
 ## A command is plain data -- ids and a cell, never a unit -- so it can be
 ## written to a recording and read back, and so an AI holding one holds

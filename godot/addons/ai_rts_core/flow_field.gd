@@ -25,8 +25,12 @@ const UNREACHABLE: int = -1
 var goal: Vector2i
 ## True once every reachable cell has its distance.
 var complete: bool = false
-## Cells settled so far: the work this field has cost.
+## Cells settled so far.
 var settled: int = 0
+## Steps the flood has taken: every cell taken off the queue, stale copies
+## and empty buckets included. What a slice of `settle` is counted in, so a
+## budget of 512 is 512 steps, however many of them settle a cell.
+var work: int = 0
 
 var _graph: GridGraph
 var _distance: PackedInt32Array
@@ -51,8 +55,9 @@ func _init(graph: GridGraph, goal_cell: Vector2i) -> void:
 		complete = true
 
 
-## Settle up to `budget` more cells. True when the field is complete -- which
-## is how a frame budget hands it a slice and comes back next tick.
+## Take up to `budget` more steps of the flood. True when the field is
+## complete -- which is how a frame budget hands it a slice and comes back
+## next tick.
 func settle(budget: int) -> bool:
 	var spent: int = 0
 	while spent < budget and not complete:
@@ -62,7 +67,8 @@ func settle(budget: int) -> bool:
 			_current += 1
 		else:
 			_settle_one(_buckets[_current].pop_back())
-			spent += 1
+		spent += 1
+		work += 1
 	return complete
 
 

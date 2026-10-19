@@ -42,7 +42,10 @@ func test_a_flow_field_leads_round_a_wall_to_its_goal() -> void:
 func test_a_flow_field_settles_in_slices_and_says_when_it_is_done() -> void:
 	var field := FlowField.new(GridGraph.new(10, 10), Vector2i(0, 0))
 	assert_bool(field.settle(10)).is_false()
-	assert_int(field.settled).is_equal(10)
+	# A slice is counted in steps, and a step that skips an empty bucket
+	# settles nothing, so ten steps settle ten cells at most.
+	assert_int(field.work).is_equal(10)
+	assert_int(field.settled).is_less_equal(10)
 	assert_bool(field.settle(1000)).is_true()
 	assert_int(field.settled).is_equal(100)
 
@@ -139,3 +142,66 @@ func test_the_frame_budget_reads_the_mean_and_the_slow_frames() -> void:
 	assert_float(budget.percentile_ms(FrameBudget.SIMULATION, 0.95)).is_equal_approx(9.0, 0.001)
 	assert_str(budget.why_over(FrameBudget.SIMULATION)).contains("95th percentile")
 	assert_str(budget.why_over(FrameBudget.TACTICS)).contains("never measured")
+
+
+func test_the_longest_sight_is_the_tables_longest() -> void:
+	# `visible_to` only asks this far; a kind that saw further would be
+	# silently half blind.
+	var longest: float = 0.0
+	for kind: String in RtsKinds.TABLE:
+		longest = maxf(longest, RtsKinds.of(kind, "sight"))
+	assert_float(RtsKinds.LONGEST_SIGHT).is_equal(longest)
+
+
+func test_nobody_can_build_over_a_unit_standing_near_the_cells_edge() -> void:
+	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
+	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(2, 2))
+	var standing: RtsUnit = world.add_unit(RtsKinds.SOLDIER, 0, Vector2i(5, 5))
+	world.place(standing, Vector2(5.05, 5.05))
+	world.resources[0] = 500
+	assert_str(world.command(0, RtsCommand.build(worker.id, RtsKinds.BARRACKS, Vector2i(5, 5)))).contains("not free")
+
+
+func test_building_in_the_fog_is_refused_without_saying_who_stands_there() -> void:
+	var world := RtsWorld.new(GridGraph.new(40, 10), 1)
+	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(1, 1))
+	world.add_unit(RtsKinds.WORKER, 1, Vector2i(35, 5))
+	world.resources[0] = 500
+	assert_str(world.command(0, RtsCommand.build(worker.id, RtsKinds.BARRACKS, Vector2i(35, 5)))).contains("not in sight")
+	assert_str(world.command(0, RtsCommand.attack([worker.id] as Array[int], 9999))).is_equal("unit 9999 is not in sight")
+
+
+func test_a_blow_struck_at_a_building_going_up_stays_struck() -> void:
+	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
+	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(4, 5))
+	world.resources[0] = 500
+	world.command(0, RtsCommand.build(worker.id, RtsKinds.BARRACKS, Vector2i(5, 5)))
+	var site: RtsUnit = world.unit(worker.target_id)
+	for _tick: int in range(100):
+		world.step()
+	var before: int = site.health
+	site.health -= 40
+	world.step()
+	assert_int(site.health).is_less(before)
+
+
+func test_a_snapshot_board_leaves_out_the_buildings_in_the_fog() -> void:
+	var world := RtsWorld.new(GridGraph.new(40, 10), 1)
+	world.add_unit(RtsKinds.SOLDIER, 0, Vector2i(1, 1))
+	world.add_unit(RtsKinds.BARRACKS, 1, Vector2i(35, 5))
+	var view: RtsSnapshot = RtsSnapshot.of(world, 0)
+	assert_bool(world.graph.is_blocked(Vector2i(35, 5))).is_true()
+	assert_bool(view.graph.is_blocked(Vector2i(35, 5))).is_false()
+
+
+func test_a_straight_walk_does_not_cut_a_corner_the_board_cannot() -> void:
+	# A wall on the diagonal: (5, 5) is on the far side of it.
+	var graph := GridGraph.new(10, 10)
+	for step: int in range(10):
+		graph.block(Vector2i(step, 9 - step))
+	var world := RtsWorld.new(graph, 1)
+	var soldier: RtsUnit = world.add_unit(RtsKinds.SOLDIER, 0, Vector2i(4, 4))
+	world.command(0, RtsCommand.move([soldier.id] as Array[int], Vector2i(5, 5)))
+	for _tick: int in range(120):
+		world.step()
+	assert_vector(soldier.cell()).is_equal(Vector2i(4, 4))

@@ -43,6 +43,12 @@ var rng := RandomNumberGenerator.new()
 ## Flow fields started since the world was made: the price of the questions
 ## "how do I get there", paid once per goal rather than once per unit.
 var fields_started: int = 0
+## What each side's workers have carried home, by side: income, kept apart
+## from `resources` so spending cannot hide it.
+var delivered: Dictionary = {}
+## Buildings each side has finished raising, by side: kept because a
+## building raised and then lost leaves no other trace.
+var raised: Dictionary = {}
 
 var _units: Dictionary = {}
 var _next_id: int = 1
@@ -185,10 +191,23 @@ func free_cell_near(centre: Vector2i) -> Vector2i:
 	return centre
 
 
-## True when a unit may stand in `cell`: on the board, not blocked, empty.
+## True when a unit may stand in `cell`: on the board, not blocked, and
+## nobody's position falls inside it -- corners included, so a building is
+## never raised over a unit standing near its edge.
 func is_free(cell: Vector2i) -> bool:
-	return graph.contains(cell) and not graph.is_blocked(cell) \
-		and spatial.near(Vector2(cell) + Vector2(0.5, 0.5), 0.5).is_empty()
+	if not graph.contains(cell) or graph.is_blocked(cell):
+		return false
+	# 0.71 reaches the cell's corners from its centre.
+	for id: int in spatial.near(Vector2(cell) + Vector2(0.5, 0.5), 0.71):
+		if _units[id].cell() == cell:
+			return false
+	return true
+
+
+## What `cell` costs to cross with every building taken away: the board as
+## a side that has seen none of them would draw it.
+func bare_cost(cell: Vector2i) -> int:
+	return _covered.get(cell, graph.cost_at(cell))
 
 
 # The cells exactly `ring` steps from `centre`, a row at a time, top first.
@@ -209,9 +228,9 @@ func _settle_fields() -> void:
 			return
 		if field.complete:
 			continue
-		var before: int = field.settled
+		var before: int = field.work
 		field.settle(left)
-		left -= maxi(field.settled - before, 1)
+		left -= field.work - before
 
 
 func _forget_old_fields() -> void:

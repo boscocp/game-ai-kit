@@ -2,7 +2,10 @@
 ## ever shown, and what anything that searches reads.
 ##
 ## Its own units, whole; anybody else's only while one of its units can see
-## them; its own funds and nobody else's. Every value is copied into plain
+## them, and then only what a player would see -- kind, place, health, not
+## its orders or its queue; its own funds and nobody else's; and the board
+## with only the buildings it can see on it, since a blocked cell in fog
+## would say where the enemy built. Every value is copied into plain
 ## dictionaries and arrays and then made read-only, so a snapshot holds no
 ## reference to the world: an AI that writes to one gets an engine error, and
 ## an AI that keeps one sees the past, never the present.
@@ -21,8 +24,8 @@ var tick: int
 ## This side's funds.
 var resources: int
 ## What this side can see, each unit as a read-only dictionary: id, side,
-## kind, position, health, order, complete, carrying and queued (how many
-## its queue holds). Sorted by id.
+## kind, position, health and complete; and for its own units also order,
+## carrying and queued (how many its queue holds). Sorted by id.
 var units: Array[Dictionary] = []
 ## The board as it is, buildings blocking their cells: a copy.
 var graph: GridGraph
@@ -36,8 +39,11 @@ static func of(world: RtsWorld, viewer: int) -> RtsSnapshot:
 	view.resources = world.resources.get(viewer, 0)
 	view.graph = world.graph.duplicate_graph()
 	for unit: RtsUnit in world.units():
-		if unit.side == viewer or world.visible_to(viewer, unit.position):
-			view.units.append(_frozen(unit))
+		var seen: bool = unit.side == viewer or world.visible_to(viewer, unit.position)
+		if seen:
+			view.units.append(_frozen(unit, unit.side == viewer))
+		elif RtsKinds.is_building(unit.kind):
+			view.graph.set_cost(unit.cell(), world.bare_cost(unit.cell()))
 	view.units.make_read_only()
 	return view
 
@@ -67,9 +73,10 @@ func _where(test: Callable) -> Array[Dictionary]:
 	return found
 
 
-static func _frozen(unit: RtsUnit) -> Dictionary:
+static func _frozen(unit: RtsUnit, own: bool) -> Dictionary:
 	var values: Dictionary = {"id": unit.id, "side": unit.side, "kind": unit.kind,
-		"position": unit.position, "health": unit.health, "order": unit.order,
-		"complete": unit.complete, "carrying": unit.carrying, "queued": unit.queue.size()}
+		"position": unit.position, "health": unit.health, "complete": unit.complete}
+	if own:
+		values.merge({"order": unit.order, "carrying": unit.carrying, "queued": unit.queue.size()})
 	values.make_read_only()
 	return values
