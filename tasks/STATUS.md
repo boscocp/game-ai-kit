@@ -90,7 +90,7 @@ because it is driven better, and a command proves every car runs one physics.
 
 | # | Task | State | Notes |
 |---|---|---|---|
-| T22 | `ai_steering`: not on a grid | todo | seek, arrive, pursue, avoid; needs T21 |
+| T22 | `ai_steering`: not on a grid | done | seek, arrive, pursue, avoid, in GDScript and Python; 6 trajectories held to 1e-3 (8e-5 measured; Vector2 is 32-bit); over 100 starts arrive rests every time and seek never; `make demo-steering` draws each force |
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so; T53 gave each knob a source (lookahead, grip margin, wander) and the gate now also refuses a knob that moves during the race |
 | T53 | How racing AI is made | done | `docs/concepts/racing-ai.md`: 30 references, each opened, those read in part said so; rubber-banding for and against; T23 and T54 rewritten from it |
 | T54 | Racing in 3D, with physics the driver does not own | blocked | the owner's 3D racer: suspension, tyre slip, weight transfer on `RigidBody3D`; T23's three knobs and its no-cheat gate; needs ADR 0018 accepted, T50, T53 |
@@ -112,6 +112,34 @@ sha256 and never committed.
 | T52 | Bots against the player, with an optional stealth | blocked | third person; a role arbiter, awareness that accumulates with three alert levels, a shared belief map for the search -- each drawn and switchable |
 
 ---
+
+## Resuming after 2026-10-19 (wave 61)
+
+**Where it stopped -- read first.** Wave 61 was T22, `ai_steering`, which
+`make wave` picked after T19: T20 waits on T25, and T25 on the owner's
+recordings. The review is `docs/reviews/61-ai-steering.md`.
+
+**What landed.** `godot/addons/ai_steering/`: `SteeringVehicle` (Reynolds'
+point with two limits, explicit Euler), `Steering` (clamping, a direction
+to infinity that survives -- Godot's `normalized()` answers it with zero --
+and the weighted sum), and seek, arrive (Millington's time-to-target),
+pursue and avoid, a file each. `gameaikit.steering`, the same in Python.
+`spec/vectors/steering/`: six trajectories from an independent
+`derive.py`, at 1e-3 because `Vector2` is 32-bit
+(`docs/godot/vector2-is-single-precision.md`), one of them the weighted
+sum's tie in front of an obstacle on the line. `make
+test-steering-properties` (check and CI): over 100 seeded starts arrive
+rests inside its radius and stays, seek never rests, no force breaks its
+limit -- each first shown a case it must refuse. `make demo-steering`,
+with a card in the menu, and `docs/concepts/steering.md`.
+
+**For the owner.** T22's manual check: `make demo-steering`, watch each
+vehicle with its force drawn, and say what it is about to do before it
+does. `data/tactical/` (your 2 T25 recordings) is still untracked and
+untouched.
+
+**Next:** T23, the racing demo, on these behaviours -- or whatever `make
+wave` picks; T20 still waits on T25's recordings.
 
 ## Resuming after 2026-10-19 (wave 60)
 

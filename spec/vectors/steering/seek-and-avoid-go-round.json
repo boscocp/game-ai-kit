@@ -1,0 +1,133 @@
+{
+ "name": "seek-and-avoid-go-round",
+ "why": "Seek and avoid added with weights 1 and 2 and clamped once (Steering.combined): an obstacle sits a little off the straight line to the target, and the two together go round it.",
+ "steps_per_second": 60,
+ "vehicle": {
+  "position": [
+   0.0,
+   0.0
+  ],
+  "velocity": [
+   10.0,
+   0.0
+  ],
+  "max_speed": 10.0,
+  "max_force": 20.0
+ },
+ "behaviours": [
+  {
+   "kind": "seek",
+   "target": [
+    24.0,
+    0.0
+   ],
+   "weight": 1.0
+  },
+  {
+   "kind": "avoid",
+   "centres": [
+    [
+     10.0,
+     0.6
+    ]
+   ],
+   "radii": [
+    2.5
+   ],
+   "look_ahead": 6.0,
+   "weight": 2.0
+  }
+ ],
+ "samples": [
+  {
+   "step": 0,
+   "position": [
+    0.0,
+    0.0
+   ],
+   "velocity": [
+    10.0,
+    0.0
+   ],
+   "force": [
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "step": 1,
+   "position": [
+    0.16666666666666666,
+    0.0
+   ],
+   "velocity": [
+    10.0,
+    0.0
+   ],
+   "force": [
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "step": 20,
+   "position": [
+    3.1149103057496257,
+    -0.06902316820631783
+   ],
+   "velocity": [
+    7.871668833750238,
+    -0.736640169342029
+   ],
+   "force": [
+    -17.71857152724635,
+    -9.276433745457089
+   ]
+  },
+  {
+   "step": 60,
+   "position": [
+    7.742433430885728,
+    -1.3570560718030427
+   ],
+   "velocity": [
+    7.290691859228159,
+    -2.354301031659469
+   ],
+   "force": [
+    2.6746510404371877,
+    3.1861308772946617
+   ]
+  },
+  {
+   "step": 120,
+   "position": [
+    15.933676423806645,
+    -2.4795110062049317
+   ],
+   "velocity": [
+    8.82699048010732,
+    0.2473182487949878
+   ],
+   "force": [
+    0.731610200023626,
+    2.690904519784722
+   ]
+  },
+  {
+   "step": 180,
+   "position": [
+    24.680103286863798,
+    -0.6334764456924913
+   ],
+   "velocity": [
+    7.16714177265517,
+    3.9936774235195207
+   ],
+   "force": [
+    -14.48459586468838,
+    2.8221032075590955
+   ]
+  }
+ ]
+}

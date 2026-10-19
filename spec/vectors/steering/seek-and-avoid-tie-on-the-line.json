@@ -1,0 +1,133 @@
+{
+ "name": "seek-and-avoid-tie-on-the-line",
+ "why": "The weighted sum's failure, pinned so it is a measurement: the obstacle exactly on the line. Avoid pushes straight back from the end of its look-ahead, seek pulls straight on, and the vehicle stalls in front of the obstacle, inching to and fro about x = 7.4, and never gets past -- a tie a weighted sum cannot break (see Steering's header).",
+ "steps_per_second": 60,
+ "vehicle": {
+  "position": [
+   0.0,
+   0.0
+  ],
+  "velocity": [
+   10.0,
+   0.0
+  ],
+  "max_speed": 10.0,
+  "max_force": 20.0
+ },
+ "behaviours": [
+  {
+   "kind": "seek",
+   "target": [
+    24.0,
+    0.0
+   ],
+   "weight": 1.0
+  },
+  {
+   "kind": "avoid",
+   "centres": [
+    [
+     10.0,
+     0.0
+    ]
+   ],
+   "radii": [
+    2.5
+   ],
+   "look_ahead": 6.0,
+   "weight": 2.0
+  }
+ ],
+ "samples": [
+  {
+   "step": 0,
+   "position": [
+    0.0,
+    0.0
+   ],
+   "velocity": [
+    10.0,
+    0.0
+   ],
+   "force": [
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "step": 1,
+   "position": [
+    0.16666666666666666,
+    0.0
+   ],
+   "velocity": [
+    10.0,
+    0.0
+   ],
+   "force": [
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "step": 60,
+   "position": [
+    6.015700004270221,
+    0.0
+   ],
+   "velocity": [
+    2.2028978314719168,
+    0.0
+   ],
+   "force": [
+    7.797102168528083,
+    0.0
+   ]
+  },
+  {
+   "step": 180,
+   "position": [
+    7.390308199122415,
+    0.0
+   ],
+   "velocity": [
+    -0.08018339012155479,
+    0.0
+   ],
+   "force": [
+    10.080183390121555,
+    0.0
+   ]
+  },
+  {
+   "step": 300,
+   "position": [
+    7.415849081276309,
+    0.0
+   ],
+   "velocity": [
+    0.014904148686192054,
+    0.0
+   ],
+   "force": [
+    9.985095851313808,
+    0.0
+   ]
+  },
+  {
+   "step": 600,
+   "position": [
+    7.434159623652208,
+    0.0
+   ],
+   "velocity": [
+    -0.2218803052012819,
+    0.0
+   ],
+   "force": [
+    10.221880305201282,
+    0.0
+   ]
+  }
+ ]
+}

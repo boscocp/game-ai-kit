@@ -17,6 +17,10 @@
     "behaviour-tree": {"name": "a behaviour tree", "evidence": ["BehaviourTree"]},
     "goap": {"name": "GOAP, goal-oriented action planning", "evidence": ["GoapPlanner"]},
     "htn": {"name": "an HTN, a hierarchical task network", "evidence": ["HtnPlanner"]},
+    "seek": {"name": "seek", "evidence": ["SeekBehaviour"]},
+    "arrive": {"name": "arrive", "evidence": ["ArriveBehaviour"]},
+    "pursue": {"name": "pursue", "evidence": ["PursueBehaviour"]},
+    "avoid": {"name": "obstacle avoidance", "evidence": ["AvoidBehaviour"]},
     "strips": {"name": "STRIPS planning, over a domain written in PDDL", "evidence": ["HeuristicPlanner", "StripsPlanner"]},
     "lookahead": {"name": "lookahead with exact odds", "evidence": ["LeveledBlue", "FightOdds"]},
     "rules": {"name": "hand-written rules", "evidence": ["RuleBasedBlue", "FightOpponent"]},
@@ -109,6 +113,21 @@
       "controls": "space plays a turn, enter ten; 1-4 swap the brain; R starts again",
       "watch": "The brain's panel: the state, the tree's path or the plan, with the step being run lit.",
       "docs": "docs/concepts/ways-to-decide.md"
+    },
+    {
+      "target": "demo-steering",
+      "title": "Steering: seek, arrive, pursue, avoid",
+      "scene": "res://demos/steering/steering_demo.tscn",
+      "decides": "How hard each vehicle turns and brakes, right now -- not which cell to go to, but which way to push and how much.",
+      "techniques": [
+        {"technique": "seek", "part": "full speed at the cross, so it overshoots and swings back through it forever"},
+        {"technique": "arrive", "part": "seek that brakes inside a circle round the cross, so it stops on it"},
+        {"technique": "pursue", "part": "seek aimed at where the running dot will be, never more than a second ahead"},
+        {"technique": "avoid", "part": "swerves from the first obstacle on the stretch ahead, added to seek with twice its weight"}
+      ],
+      "controls": "click in an arena to move its cross; space pauses, . steps one sixtieth of a second, R starts again",
+      "watch": "The orange arrow -- the force the behaviour asks for -- against the blue one, where the vehicle is going: seek's never shrinks at the cross, arrive's turns to brake as it enters its circle.",
+      "docs": "docs/concepts/steering.md"
     },
     {
       "target": "demo-tactical",
