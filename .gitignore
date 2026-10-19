@@ -6,7 +6,9 @@ godot/.godot/
 # the uid other files can name it by, and Godot's documentation says to commit
 # it. The imported copy itself lives under .godot/ and stays out.
 !godot/assets/**/*.import
-export_presets.cfg
+# export_presets.cfg is committed (T24): `make export` needs the preset, and
+# since Godot 4.1 the secrets an export may carry live in
+# .godot/export_credentials.cfg, which the line above already keeps out.
 
 # Build and release output
 dist/

@@ -73,6 +73,9 @@ jobs:
           path: ${{ runner.temp }}/toolchain
           key: godot-${{ hashFiles('.godot-version', 'scripts/bootstrap.sh') }}
       - run: make bootstrap TOOLCHAIN=${{ runner.temp }}/toolchain
+        env:
+          # The export templates are 1.28 GB and only `make export` uses them.
+          GAK_SKIP_TEMPLATES: "1"
       - run: make test-godot
         env:
           GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
@@ -97,6 +100,9 @@ jobs:
         env:
           GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
       - run: make test-demo-overlays
+        env:
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
+      - run: make test-menu-walk
         env:
           GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
 

@@ -58,6 +58,10 @@ becomes an action**.
 
 ## What you will see
 
+`make menu` opens on all of them, each with a card saying what its AI
+decides, which techniques decide it and what to watch; the cards live in
+[`godot/menu/catalogue.json`](godot/menu/catalogue.json).
+
 <!-- Recordings pending: headless Godot rasterises nothing, so no command in
 this repository can capture one. Recording them is a person's job; see the
 manual check in tasks/T7-close-the-slice.md. -->
@@ -135,7 +139,8 @@ PYTHONPATH=python python3 -m gameaikit.training.report   # what the models learn
 Tier 2, with the engine:
 
 ```bash
-make bootstrap     # downloads the pinned Godot to the large disk, SHA-512 verified
+make bootstrap     # downloads the pinned Godot and its Linux export templates to the large disk, SHA-512 verified
+make menu          # every example on one menu: a card says what its AI decides and how; Esc comes back
 make run           # checkers against minimax and alpha-beta
 make demo-skirmish # the learned policy plays blue on the skirmish board
 make demo-tictactoe # MENACE, the matchbox machine, at four ages of training
@@ -147,8 +152,13 @@ make check         # every gate
 ## Using one addon in your own project
 
 ```bash
-make release       # dist/: one zip per addon, and the Python wheel
+make release       # dist/: one zip per addon, the Python wheel, and the menu as a Linux executable
 ```
+
+`make export` alone builds the executable into `dist/game-ai-kit-linux/`
+and starts it headless before it counts; `make release` zips it with
+`LICENSE` and `NOTICE` beside the binary, and only when it was exported from
+the commit at HEAD with nothing uncommitted.
 
 Unzip `ai_core-<version>.zip` and the addon you want into your project's
 `res://addons/`. There is no plugin to enable: every class registers itself

@@ -1,0 +1,150 @@
+{
+  "about": "Every example in the kit, as the menu shows it (T24). One file, read by the menu and by scripts/check_demos.py, which holds each card to its make target, its page and the scene it opens: a technique is named here once, with the classes that are evidence of it, and a card naming a technique its scene never runs fails the gate. A card says what the AI decides, which techniques decide it and what part each plays, and what to watch on screen.",
+  "techniques": {
+    "minimax": {"name": "minimax with alpha-beta", "evidence": ["AlphaBetaSearch", "MinimaxSearch"]},
+    "learned-evaluation": {"name": "a learned evaluation", "evidence": ["CheckersWeights"]},
+    "learned-model": {"name": "a model trained in Python", "evidence": ["LearnedPolicy", "LearnedModel"]},
+    "a-star": {"name": "A*", "evidence": ["AStarSearch"]},
+    "breadth-first": {"name": "breadth-first search", "evidence": ["BreadthFirstSearch"]},
+    "depth-first": {"name": "depth-first search", "evidence": ["DepthFirstSearch"]},
+    "dijkstra": {"name": "Dijkstra", "evidence": ["DijkstraSearch"]},
+    "menace": {"name": "MENACE, reinforcement learning in matchboxes", "evidence": ["MenacePlayer"]},
+    "perfect-play": {"name": "perfect play, solved by minimax", "evidence": ["TicTacToeSolver"]},
+    "perception": {"name": "a vision cone, line of sight and hearing", "evidence": ["VisionCone", "LineOfSight", "Hearing"]},
+    "fuzzy-logic": {"name": "fuzzy logic", "evidence": ["FuzzyRuleBase"]},
+    "influence-map": {"name": "an influence map", "evidence": ["InfluenceMap", "ThreatMap"]},
+    "state-machine": {"name": "a finite state machine", "evidence": ["StateMachine"]},
+    "behaviour-tree": {"name": "a behaviour tree", "evidence": ["BehaviourTree"]},
+    "goap": {"name": "GOAP, goal-oriented action planning", "evidence": ["GoapPlanner"]},
+    "htn": {"name": "an HTN, a hierarchical task network", "evidence": ["HtnPlanner"]},
+    "strips": {"name": "STRIPS planning, over a domain written in PDDL", "evidence": ["HeuristicPlanner", "StripsPlanner"]},
+    "lookahead": {"name": "lookahead with exact odds", "evidence": ["LeveledBlue", "FightOdds"]},
+    "rules": {"name": "hand-written rules", "evidence": ["RuleBasedBlue", "FightOpponent"]},
+    "reaction-delay": {"name": "a reaction delay", "evidence": ["FightDelay"]},
+    "n-gram": {"name": "an n-gram opponent model", "evidence": ["NGramPredictor"]},
+    "case-lookup": {"name": "a lookup of recorded situations (a ghost)", "evidence": ["CaseTable"]},
+    "behaviour-cloning": {"name": "behaviour cloning", "evidence": ["ClonedPlayer"]}
+  },
+  "examples": [
+    {
+      "target": "run",
+      "title": "Checkers",
+      "scene": "res://game/checkers/checkers.tscn",
+      "decides": "Which move white plays: it looks a few moves ahead for both sides and picks the line that leaves it best off.",
+      "techniques": [
+        {"technique": "minimax", "part": "searches every line of play to a fixed depth, assuming you answer as well as you can, and skips lines that cannot matter"},
+        {"technique": "learned-evaluation", "part": "E swaps the hand-written way of scoring a position for weights Python fitted to self-play"}
+      ],
+      "controls": "click a piece, then a lit square; space plays white's move; 1-6 sets how far it looks; E swaps its evaluation",
+      "watch": "Every move white considered, with the value it worked out; the pink arrow is the one it will play, and the panel spells out the line it expects.",
+      "docs": "docs/concepts/minimax.md"
+    },
+    {
+      "target": "demo-tictactoe",
+      "title": "Noughts and crosses",
+      "scene": "res://game/tictactoe/tictactoe.tscn",
+      "decides": "Which square crosses takes: it draws a bead from the matchbox for this position, and squares with more beads are likelier.",
+      "techniques": [
+        {"technique": "menace", "part": "the beads in each box were added and taken away by thousands of games played beforehand, in Python"},
+        {"technique": "perfect-play", "part": "M shows what a perfect player makes of each square, to compare with what the machine learnt"}
+      ],
+      "controls": "space draws MENACE's bead; click a square; 1-4 sets its age; M shows perfect play",
+      "watch": "The beads on each empty square, as a number, a bar and a chance, before the bead is drawn.",
+      "docs": "docs/concepts/menace.md"
+    },
+    {
+      "target": "demo-search",
+      "title": "Four searches",
+      "scene": "res://demos/search/search_demo.tscn",
+      "decides": "Which route to take from the start to the goal, and which cells are worth looking at on the way.",
+      "techniques": [
+        {"technique": "breadth-first", "part": "spreads in rings: the fewest steps, blind to what a cell costs"},
+        {"technique": "depth-first", "part": "bolts down one corridor and takes the first route it stumbles on"},
+        {"technique": "dijkstra", "part": "spreads in rings weighted by cost: the cheapest route"},
+        {"technique": "a-star", "part": "the cheapest route too, but leans towards the goal and stops early"}
+      ],
+      "controls": "1-4 choose the search; space reveals one more cell, enter the rest; drag to paint walls and mud; B steps through boards",
+      "watch": "The frontier spreading cell by cell, in the order the search looked at them.",
+      "docs": "docs/concepts/search.md"
+    },
+    {
+      "target": "demo-skirmish",
+      "title": "The skirmish",
+      "scene": "res://game/main.tscn",
+      "decides": "Whether each blue unit takes the fight in reach or backs off, and which node it walks to.",
+      "techniques": [
+        {"technique": "learned-model", "part": "a combat model gives the chance of winning a fight, and a capture model which node blue can hold soonest"},
+        {"technique": "a-star", "part": "the route a unit walks once it knows where it is going"}
+      ],
+      "controls": "click a unit, then a neighbouring cell; space ends the turn; R starts again",
+      "watch": "Every blue unit's reason in the status beside the board, with the probability the model computed.",
+      "docs": "docs/concepts/learning.md"
+    },
+    {
+      "target": "demo-stealth",
+      "title": "Stealth",
+      "scene": "res://game/stealth/stealth.tscn",
+      "decides": "How suspicious each guard is, and so whether it keeps to its round, goes to look, or gives chase.",
+      "techniques": [
+        {"technique": "perception", "part": "what each guard can see and hear: its cone, the walls and trees in the way, the light, your footsteps"},
+        {"technique": "fuzzy-logic", "part": "turns what it saw and heard into a suspicion that rises and falls, rather than a yes or a no"},
+        {"technique": "influence-map", "part": "D shows the danger map: how watched each cell is"},
+        {"technique": "a-star", "part": "the route a guard walks to where it thinks you are"}
+      ],
+      "controls": "arrows walk; shift sprints; space waits; D shows the danger map; R starts again",
+      "watch": "Each guard's suspicion bar and its state colour, and the terms of its controller written out under the room.",
+      "docs": "docs/concepts/stealth.md"
+    },
+    {
+      "target": "demo-behaviour",
+      "title": "One guard, four ways to decide",
+      "scene": "res://demos/behaviour/behaviour_demo.tscn",
+      "decides": "What the guard does next -- patrol, look, chase or catch -- written four ways you can swap while it walks.",
+      "techniques": [
+        {"technique": "state-machine", "part": "snaps from state to state when a condition says so"},
+        {"technique": "behaviour-tree", "part": "asks the whole tree again every turn, so it reconsiders"},
+        {"technique": "goap", "part": "plans backwards from a goal to the cheapest chain of actions, every turn"},
+        {"technique": "htn", "part": "breaks a task into steps and carries on down the method it chose"}
+      ],
+      "controls": "space plays a turn, enter ten; 1-4 swap the brain; R starts again",
+      "watch": "The brain's panel: the state, the tree's path or the plan, with the step being run lit.",
+      "docs": "docs/concepts/ways-to-decide.md"
+    },
+    {
+      "target": "demo-tactical",
+      "title": "Tactics against the computer",
+      "scene": "res://game/tactical/tactical.tscn",
+      "decides": "For every computer piece, where it walks, what it attacks, and what its workshop builds -- by whichever controller C picks.",
+      "techniques": [
+        {"technique": "rules", "part": "the default: a written priority list, the baseline everything else is measured against"},
+        {"technique": "strips", "part": "the planner: a plan of steps searched with A* over facts about the board, replanned every few turns"},
+        {"technique": "learned-model", "part": "the learned controller asks a trained model whether to take each fight"},
+        {"technique": "lookahead", "part": "the easy, normal and hard levels weigh each move one or two plies ahead with the fight's exact odds"},
+        {"technique": "state-machine", "part": "one of four teams written from the guard's four ways to decide"},
+        {"technique": "behaviour-tree", "part": "another of the four"},
+        {"technique": "goap", "part": "another, its actions priced in turns"},
+        {"technique": "htn", "part": "the fourth"},
+        {"technique": "influence-map", "part": "the threat map tinted on the board: how many enemy pieces could strike each cell"}
+      ],
+      "controls": "click a unit, then a lit cell; W waits; 1-5 build; Z undoes; space ends the turn; C changes the computer; S swaps sides; T the threat map",
+      "watch": "Each computer decision drawn on the board before it is played, with the reason in the status.",
+      "docs": "docs/concepts/planning-in-strategy-games.md"
+    },
+    {
+      "target": "demo-fighting",
+      "title": "Fighting, training mode",
+      "scene": "res://game/fighting/fighting.tscn",
+      "decides": "What the dummy does on each frame it is allowed to decide: guard, strike, throw, jump or evade.",
+      "techniques": [
+        {"technique": "rules", "part": "the fixed opponent's hand-written answers to the situations it recognises, at three levels"},
+        {"technique": "reaction-delay", "part": "it sees the fight a quarter of a second late, as a person would"},
+        {"technique": "n-gram", "part": "the learner counts your habits during the fight and leans towards the answer to them"},
+        {"technique": "case-lookup", "part": "the ghosts look up what a recorded player did in the same situation"},
+        {"technique": "behaviour-cloning", "part": "the clone is a model fitted to that player's fights"}
+      ],
+      "controls": "A/D walk, W jumps, S crouches; U/I punch, J/K kick, L throws, O evades; M cycles the dummy; P pauses, space one frame",
+      "watch": "The panel: what the opponent saw, on which frame, and what it chose.",
+      "docs": "docs/concepts/fighting-game-ai.md"
+    }
+  ]
+}
