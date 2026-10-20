@@ -136,7 +136,7 @@ Tier 1, with nothing but Python:
 
 ```bash
 python3 -m unittest discover -s python/tests -t python
-PYTHONPATH=python python3 -m gameaikit.training.report   # what the models learned
+PYTHONPATH=python python3 -m gameaikit.tactical.report   # what the models learned
 ```
 
 Tier 2, with the engine:

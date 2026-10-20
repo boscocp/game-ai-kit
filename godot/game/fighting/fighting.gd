@@ -70,7 +70,7 @@ var opponent: FightOpponent
 ## input log still replays the fight exactly.
 var fights_begun: int = 0
 ## The recorded player the ghosts and the clone imitate, loaded once.
-var cloned: ClonedPlayer = ClonedPlayer.load_from()
+var cloned: ClonedPlayer = ClonedPlayer.load_from(FightCloneOpponent.PUBLISHED_PATH)
 ## True when the scene was opened to record, and how many fights it has kept.
 var recording: bool = OS.get_cmdline_user_args().has("--record")
 var fights_kept: int = 0

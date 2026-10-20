@@ -35,7 +35,7 @@ const NODES: Array[Vector2i] = [Vector2i(0, 0), Vector2i(8, 6)]
 
 
 func _init() -> void:
-	var published: ModelFile = ModelFile.load_from(ModelFile.DEFAULT_PATH)
+	var published: ModelFile = ModelFile.load_from(LearnedPolicy.WEIGHTS_PATH)
 	if not published.is_loaded():
 		printerr("decision_scenarios: %s" % published.error)
 		quit(2)

@@ -19,7 +19,7 @@ __pycache__/
 *.pyc
 
 # Generated model weights live in dist/, never committed from a local run.
-# The checked-in weights.json under godot/addons/ai_learning/ is produced by
+# The checked-in weights.json under godot/game/tactical/ is produced by
 # `make train` and committed deliberately, so it is NOT ignored here.
 
 # gdUnit4 writes HTML/XML reports next to the project on every run.

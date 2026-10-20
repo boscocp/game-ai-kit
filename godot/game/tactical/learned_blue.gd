@@ -108,7 +108,7 @@ var _seen_turn: int = -1
 ## `published` defaults to the weights the game ships; a test hands its own.
 ## The policy's own threshold is not used: the bars above decide.
 func _init(published: ModelFile = null) -> void:
-	var weights: ModelFile = published if published != null else ModelFile.load_from(ModelFile.DEFAULT_PATH)
+	var weights: ModelFile = published if published != null else ModelFile.load_from(LearnedPolicy.WEIGHTS_PATH)
 	policy = LearnedPolicy.new(weights, TacticalScenario.POINTS)
 
 

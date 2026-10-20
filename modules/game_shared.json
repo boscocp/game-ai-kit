@@ -12,7 +12,8 @@
   "depends_on": [
     "ai_core",
     "ai_learning",
-    "ai_search"
+    "ai_search",
+    "tactical"
   ],
   "gates": []
 }

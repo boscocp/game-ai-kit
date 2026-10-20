@@ -92,15 +92,18 @@ import tempfile
 # Where each half of the split lives.
 GODOT = pathlib.Path("godot")
 LEARNING_ADDON = pathlib.Path("godot") / "addons" / "ai_learning"
-WEIGHTS = LEARNING_ADDON / "weights.json"
+# The tactical board's published weights, beside the policy that reads them
+# (T60 moved them out of the technique: they are a game's data).
+TACTICAL_GAME = GODOT / "game" / "tactical"
+WEIGHTS = TACTICAL_GAME / "weights.json"
 
 # The readable half of the same fit, shipped in the same folder. `report.py`
 # calls it "the one that matters here", and until a review rewrote it to claim
 # 999999 games and watched this gate pass, nothing in the repository had ever
 # read it: no target, no CI step, no test. It costs one string comparison
 # against a training run N4 is performing anyway.
-READABLE = LEARNING_ADDON / "weights.txt"
-TRAINER = "gameaikit.training.report"
+READABLE = TACTICAL_GAME / "weights.txt"
+TRAINER = "gameaikit.tactical.report"
 
 # MENACE's published beads, and the pipeline that must reproduce them.
 BEADS = GODOT / "game" / "tictactoe" / "menace_beads.json"
@@ -111,7 +114,7 @@ BEAD_TRAINER = "gameaikit.menace.report"
 CHECKERS_GAME = GODOT / "game" / "checkers"
 CHECKERS_WEIGHTS = CHECKERS_GAME / "checkers_weights.json"
 CHECKERS_TRAINER = "gameaikit.checkers.report"
-CLONE_WEIGHTS = pathlib.Path("godot/addons/ai_learning/clone_weights.json")
+CLONE_WEIGHTS = GODOT / "game" / "fighting" / "clone_weights.json"
 CLONE_TRAINER = "gameaikit.cloning.publish"
 CLONE_NAMES_RE = re.compile(r"clone_weights|ClonedPlayer\.DEFAULT_PATH")
 # Writing into a ghost's table: an assignment through `cases`, or a call that
@@ -563,8 +566,8 @@ def check_weights(repo: pathlib.Path, retrain: bool,
     something it did not look at, so the caller turns a skip into its own
     exit code.
     """
-    if not (repo / LEARNING_ADDON).is_dir():
-        print(f"N0 note: no {LEARNING_ADDON} yet -- N4 inspected nothing")
+    if not (repo / WEIGHTS.parent).is_dir():
+        print(f"N0 note: no {WEIGHTS.parent} yet -- N4 inspected nothing")
         return [], True
 
     path = repo / WEIGHTS
@@ -610,7 +613,7 @@ def fresh_training(repo: pathlib.Path) -> tuple[dict, str] | None:
     """
     sys.path.insert(0, str(repo / "python"))
     try:
-        from gameaikit.training import report, train  # noqa: PLC0415
+        from gameaikit.tactical import report, train  # noqa: PLC0415
     except ImportError as error:
         print(f"N0 the training pipeline could not be imported: {error}")
         return None
@@ -728,7 +731,7 @@ func _init(given: PackedFloat64Array, given_bias: float) -> void:
 """
 
 SOUND_WEIGHTS = {
-    "generated_by": "gameaikit.training.report",
+    "generated_by": "gameaikit.tactical.report",
     "games": 1500,
     "feature_conventions": {"nearby_radius": 2},
     "models": {"combat": {"weights": [0.5081, 1.8326], "bias": 3.3937}},
@@ -848,9 +851,9 @@ def self_test() -> int:
         # Setting one's own fields in a constructor is how a model is built.
         expect("a constructor", quiet(build(root, "ctor", dict(sound))), 3)
 
-        # Planted: no weights file where the addon is.
+        # Planted: the tactical game is there, and the weights it reads are not.
         expect("no weights file", quiet(build(root, "noweights", {
-            str(LEARNING_ADDON / "learned_model.gd"): INFERENCE})), 1, "N4")
+            str(TACTICAL_GAME / "learned_policy.gd"): INFERENCE})), 1, "N4")
 
         # Planted: weights nobody generated. The numbers may be perfect; what
         # is missing is any claim that a pipeline produced them.

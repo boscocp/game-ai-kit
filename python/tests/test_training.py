@@ -14,11 +14,11 @@ import unittest
 from gameaikit.dataset.rows import CAPTURE_FEATURES, COMBAT_FEATURES
 from gameaikit.dataset import board, simulate
 from gameaikit.dataset.simulate import collect
-from gameaikit.training import evaluate, report
+from gameaikit.tactical import evaluate, report
 from gameaikit.training.models import Model
 from gameaikit.training.split import split_by_game
-from gameaikit.training import train
-from gameaikit.training.train import Fitted, Training, run
+from gameaikit.tactical import train
+from gameaikit.tactical.train import Fitted, Training, run
 
 
 def sound_report() -> dict:

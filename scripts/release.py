@@ -395,8 +395,8 @@ def check_the_wheel(root: pathlib.Path) -> list[str]:
     wheel = quiet_build(REPO, root / "wheel")[-1]
     failures = [f"the wheel is well formed: {problem}" for problem in wheel_problems(wheel)]
     # Unpacked the way an installer unpacks a pure wheel. Importing from the
-    # zip directly is wrong for this package: `dataset/` and `training/` are
-    # namespace packages, which zipimport does not find.
+    # zip directly is wrong for this package: `dataset/`, `training/` and
+    # `tactical/` are namespace packages, which zipimport does not find.
     site = root / "site-packages"
     with zipfile.ZipFile(wheel) as bundle:
         bundle.extractall(site)
@@ -404,7 +404,7 @@ def check_the_wheel(root: pathlib.Path) -> list[str]:
         [sys.executable, "-I", "-c",
          f"import sys; sys.path.insert(0, {str(site)!r}); "
          "import gameaikit.pddl.reader, gameaikit.dataset.simulate, "
-         "gameaikit.training.report"],
+         "gameaikit.tactical.report"],
         capture_output=True, text=True, cwd=root,
     )
     if probe.returncode != 0:

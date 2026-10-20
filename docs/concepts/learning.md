@@ -13,7 +13,8 @@ teaches: learning
 > decides *which node falls first*, and why both are trained in Python and only
 > evaluated in the game. Needs Python 3 and nothing else. The code is
 > [`python/gameaikit/`](../../python/gameaikit/) and
-> [`godot/addons/ai_learning/`](../../godot/addons/ai_learning/), and
+> [`godot/addons/ai_learning/`](../../godot/addons/ai_learning/) with the
+> tactical board's adapter in [`godot/game/tactical/`](../../godot/game/tactical/), and
 > [the Godot page](../godot/learning.md) is how to call it.
 
 ## Two questions, two models, one shape
@@ -65,7 +66,7 @@ printing.
 ## Reading what it learned
 
 ```bash
-PYTHONPATH=python python3 -m gameaikit.training.report
+PYTHONPATH=python python3 -m gameaikit.tactical.report
 ```
 
 prints the weights, beside how well the model does on games it never saw. The

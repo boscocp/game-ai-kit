@@ -16,14 +16,21 @@ teaches: learning
 
 ## What to copy
 
-`addons/ai_core/` and `addons/ai_learning/`, which carries its `weights.json`.
-From a release, unzip both zips into `res://addons/`. The addon only reads the
-file; it has no training code, and `make lint-no-training` keeps it that way.
+`addons/ai_core/` and `addons/ai_learning/`: the model, its file and a case
+table, and nothing about any board. From a release, unzip both zips into
+`res://addons/`. The addon only reads a weights file; it has no training code,
+and `make lint-no-training` keeps it that way.
+
+The rest of this page is the tactical board's **adapter**, which lives with
+the game in `godot/game/tactical/` since T60: `BoardFeatures` turns a board
+into a feature row, `LearnedPolicy` and `LearnedDecision` turn a probability
+into a move, and `weights.json` is that board's fit. Your game writes its own
+adapter the same way; it copies these only as an example.
 
 ## Load the weights, and refuse a bad file
 
 ```gdscript
-var weights: ModelFile = ModelFile.load_from(ModelFile.DEFAULT_PATH)
+var weights: ModelFile = ModelFile.load_from(LearnedPolicy.WEIGHTS_PATH)
 if not weights.is_loaded():
 	push_error(weights.error)
 ```

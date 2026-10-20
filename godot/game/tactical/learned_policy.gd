@@ -16,6 +16,10 @@
 class_name LearnedPolicy
 extends DecisionPolicy
 
+## Where this board's weights live, beside the policy that reads them.
+## Published by `make train`.
+const WEIGHTS_PATH: String = "res://game/tactical/weights.json"
+
 ## The two models this policy expects a weights file to publish.
 const COMBAT_MODEL: String = "combat"
 const CAPTURE_MODEL: String = "capture"

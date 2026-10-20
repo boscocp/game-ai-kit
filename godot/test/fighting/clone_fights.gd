@@ -44,7 +44,7 @@ func _init() -> void:
 
 func _run(path: String) -> int:
 	var data := FightData.read()
-	var cloned: ClonedPlayer = ClonedPlayer.load_from()
+	var cloned: ClonedPlayer = ClonedPlayer.load_from(FightCloneOpponent.PUBLISHED_PATH)
 	if data.refusal != "" or not cloned.is_loaded():
 		printerr("clone_fights: cannot fight -- %s%s" % [data.refusal, cloned.error])
 		return 2
@@ -55,7 +55,7 @@ func _run(path: String) -> int:
 	for mode: String in modes:
 		wins[mode] = wins_of(mode, cloned, data)
 		print("%s beats the fixed opponent at medium %d of %d" % [mode, wins[mode], FIGHTS])
-	var weights: String = FileAccess.get_sha256(ClonedPlayer.DEFAULT_PATH)
+	var weights: String = FileAccess.get_sha256(FightCloneOpponent.PUBLISHED_PATH)
 	if not WinRateFile.write(path, weights, FileAccess.get_sha256(FightData.PATH), FIGHTS, wins):
 		printerr("clone_fights: cannot write %s" % path)
 		return 2

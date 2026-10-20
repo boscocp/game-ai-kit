@@ -208,26 +208,26 @@ test-models: ## The properties T5 asks of the two fitted models
 	@# failure should name which. They cost about twenty seconds between them:
 	@# the pipeline is simulated, fitted and scored from scratch every time,
 	@# which is the price of never having a stale number in a gate.
-	@PYTHONPATH=python $(PYTHON) -m gameaikit.training.report --check
-	@PYTHONPATH=python $(PYTHON) -m gameaikit.training.evaluate \
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.tactical.report --check
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.tactical.evaluate \
 		--assert-beats-majority-baseline
-	@PYTHONPATH=python $(PYTHON) -m gameaikit.training.evaluate \
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.tactical.evaluate \
 		--shuffled-labels --assert-no-better-than-baseline
-	@PYTHONPATH=python $(PYTHON) -m gameaikit.training.evaluate --assert-no-leak
-	@PYTHONPATH=python $(PYTHON) -m gameaikit.training.evaluate \
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.tactical.evaluate --assert-no-leak
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.tactical.evaluate \
 		--assert-runs-under-seconds 30
 
 .PHONY: train
-train: ## Fit both models and publish weights.json to dist/ and to the addon
+train: ## Fit both models and publish weights.json to dist/ and to the tactical game
 	@# Two destinations out of one fit. dist/ is the gitignored staging copy;
-	@# godot/addons/ai_learning/ is the one the game loads and the one that is
+	@# godot/game/tactical/ is the one the game loads and the one that is
 	@# committed, which is why .gitignore exempts it by name.
 	@#
 	@# Running this does not usually change the committed file: the pipeline is
 	@# deterministic, and `make lint-no-training` fails if the two have come
 	@# apart. A diff here after a run is therefore news rather than noise.
-	@PYTHONPATH=python $(PYTHON) -m gameaikit.training.report \
-		--write $(CURDIR)/dist --write $(CURDIR)/godot/addons/ai_learning
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.tactical.report \
+		--write $(CURDIR)/dist --write $(CURDIR)/godot/game/tactical
 
 .PHONY: train-checkers
 train-checkers: ## Self-play, fit the checkers evaluation, play the match, and publish all three to the game
@@ -414,7 +414,7 @@ test-decisions: import ## The two fights the learned opponent has to get right, 
 	@# T6's acceptance, as a target so that CI runs the same command. It plays
 	@# against the *published* weights rather than a hand-made model, so a
 	@# retrained opponent that stops taking a fight it should take fails here.
-	@$(GODOT) --headless --path godot -s res://test/ai_learning/decision_scenarios.gd
+	@$(GODOT) --headless --path godot -s res://test/tactical/decision_scenarios.gd
 
 .PHONY: test-godot
 test-godot: import ## Godot tests, headless (gdUnit4)
@@ -576,7 +576,7 @@ test-opponent-levels: import ## The fixed opponent's levels are ordered: each be
 # --- behaviour cloning (T18) -------------------------------------------------
 #
 # Recordings (data/fights/) -> rows, cut by Godot (data/cloning/rows.json) ->
-# the model and the ghost, fitted in Python (ai_learning/clone_weights.json)
+# the model and the ghost, fitted in Python (game/fighting/clone_weights.json)
 # -> the win rates, fought by Godot (data/cloning/win_rates.json). Each step
 # is a target; `train-clone` runs the last three in order.
 
@@ -599,7 +599,7 @@ clone-rows: import ## Replay every recording and cut the rows behaviour cloning 
 train-clone: clone-rows ## Cut the rows, fit the clone of CLONE_PLAYER, publish it and fight it for the win rates
 	@# CLONE_PLAYER="stand-in: rushdown" (or turtle, jumper) fits a scripted stand-in instead.
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.cloning.publish --player "$(CLONE_PLAYER)" \
-		--write $(CURDIR)/godot/addons/ai_learning
+		--write $(CURDIR)/godot/game/fighting
 	@$(MAKE) --no-print-directory test-clone-fights
 
 .PHONY: test-clone-fights

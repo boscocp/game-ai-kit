@@ -40,7 +40,7 @@ func test_a_recording_is_cut_at_each_new_action_from_what_was_seen_a_reaction_be
 # drew as its `last`, where the rows hold what its fighter was seen doing.
 # Over a whole fight, every decision's `last` must be the rows' own.
 func test_the_clone_is_asked_with_the_last_the_rows_would_have_written() -> void:
-	var clone := FightCloneOpponent.new("clone", ClonedPlayer.load_from(), _data, 7)
+	var clone := FightCloneOpponent.new("clone", ClonedPlayer.load_from(FightCloneOpponent.PUBLISHED_PATH), _data, 7)
 	var seats: Array[FightDelay] = [FightDelay.new(clone, 0), FightDelay.new(FightOpponent.new("medium", _data, 8), 1)]
 	var state: FightState = FightState.starting(_data, "lancer", "dancer")
 	var inputs: Array = []
@@ -116,7 +116,7 @@ func test_each_refusal_of_a_cloned_player_has_its_code() -> void:
 
 
 func test_the_published_player_loads() -> void:
-	var published: ClonedPlayer = ClonedPlayer.load_from()
+	var published: ClonedPlayer = ClonedPlayer.load_from(FightCloneOpponent.PUBLISHED_PATH)
 	assert_str(published.error).is_empty()
 	assert_int(published.cases.cases.size()).is_greater(0)
 

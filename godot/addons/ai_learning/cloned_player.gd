@@ -14,8 +14,6 @@
 class_name ClonedPlayer
 extends RefCounted
 
-## Where the game's cloned player lives. Published by `make train-clone`.
-const DEFAULT_PATH: String = "res://addons/ai_learning/clone_weights.json"
 ## The fields the file must have.
 const FIELDS: Array[String] = ["generated_by", "trained_on", "features", "classes", "model", "cases"]
 
@@ -30,7 +28,7 @@ var cases: CaseTable
 
 
 ## The cloned player at `path`, loaded and checked; never half built.
-static func load_from(path: String = DEFAULT_PATH) -> ClonedPlayer:
+static func load_from(path: String) -> ClonedPlayer:
 	if not FileAccess.file_exists(path):
 		return _refused("C1 no cloned player at %s -- run `make train-clone`" % path)
 	var parser := JSON.new()
