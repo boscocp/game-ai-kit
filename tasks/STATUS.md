@@ -94,7 +94,7 @@ because it is driven better, and a command proves every car runs one physics.
 | # | Task | State | Notes |
 |---|---|---|---|
 | T22 | `ai_steering`: not on a grid | done | seek, arrive, pursue, avoid, in GDScript and Python; 6 trajectories held to 1e-3 (9.4e-6 measured; Vector2 is 32-bit); over 100 starts arrive rests every time and seek never; `make demo-steering` draws each force |
-| T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so; T53 gave each knob a source (lookahead, grip margin, wander) and the gate now also refuses a knob that moves during the race |
+| T23 | The racing demo, three honest difficulties | done | `make demo-racing`: pure pursuit on seek, a speed limit carried back from the corners; laps 39.6 / 36.6 / 35.1 s; `racing_does_not_cheat.gd` steps an honest twin race alongside and every car, decision and lap record must match it; seventeen planted cheats refused |
 | T53 | How racing AI is made | done | `docs/concepts/racing-ai.md`: 30 references, each opened, those read in part said so; rubber-banding for and against; T23 and T54 rewritten from it |
 | T54 | Racing in 3D, with physics the driver does not own | blocked | the owner's 3D racer: suspension, tyre slip, weight transfer on `RigidBody3D`; T23's three knobs and its no-cheat gate; needs ADR 0018 accepted, T50, T53 |
 
@@ -125,6 +125,36 @@ touches, and later a library others can install.
 | T58 | Modules, and gates that run for what a wave touches | done | wave 63: 23 manifests in `modules/`, held to the code by `lint-modules` (M0-M10); tests filed in `godot/test/<module>/`; `make check-affected` runs the lints and the modules a change reaches (code uses followed on, test-only uses not): 25-64 s for a change that evolves one module, against 550 s; a wave lands by pull request, as desk-panel's do; CI ran for the first time and found four defects in bootstrap and the runner rules; mk fragments dropped (measured, no gain); ports, kernel, registry and the library are later tasks; manual check the owner's |
 
 ---
+
+## Resuming after 2026-10-20 (wave 64)
+
+**Where it stopped -- read first.** Wave 64 was T23, the racing demo, the
+owner's pick when `make wave` offered T56 (the owner chose it over writing
+the ports, registry and library tasks first, which are still unwritten).
+The review record is `docs/reviews/64-the-racing-demo.md`.
+
+**What landed.** `godot/demos/racing/` (module `demo_racing`): a track as
+nodes and a racing line as an offset at each, a car crude on purpose
+(`RacingCar`, one shared `RacingPhysics`), and `RacingDriver` -- a point
+`lookahead` metres down the line, drifted by `wander`, steered at with
+`ai_steering`'s seek and pure pursuit's formula; a speed from the track's
+limit, carried back from the slowest corner, times sqrt(grip margin). Two
+gates: `make test-racing-ladder` (easy 39.6 s, normal 36.6 s, hard 35.1 s
+a lap; at least a second apart) and `make test-racing-does-not-cheat` (one
+physics field for field, no frame past grip or top speed, the knobs used
+as reported, and the whole race equal, frame by frame, to an honest twin
+the script builds itself -- after two reviews found eight cheats that got
+through versions that trusted something a driver can reach).
+The task file's last section says where the build differs from its steps.
+
+**For the owner.** T23's manual check: `make demo-racing`, follow easy
+(1) then hard (3), and say whether you can see why hard is faster -- the
+cyan bar closer to each corner, the line greener through the bend. Still
+yours from before: T58's and T20's manual checks, and `data/tactical/`.
+
+**Next.** The same as after wave 63: write the ports and kernel, registry
+and library tasks before starting one; then T56 or T57 as the owner
+prefers.
 
 ## Resuming after 2026-10-20 (wave 63)
 

@@ -9,6 +9,7 @@
   "depends_on": [
     "checkers",
     "demo_behaviour",
+    "demo_racing",
     "demo_search",
     "demo_steering",
     "fighting",

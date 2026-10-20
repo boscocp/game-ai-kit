@@ -1,6 +1,6 @@
 # T23 — The racing demo, and three difficulties that do not cheat
 
-Size: L · Prereqs: T21, T22 · Files: `godot/demos/racing/`
+Size: L · Prereqs: T21, T22 · Files: `godot/demos/racing/`, `godot/test/demo_racing/`
 
 ## Goal
 
@@ -64,7 +64,7 @@ python3 scripts/check_readability.py
 The ladder, measured rather than felt:
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/racing_ladder.gd
+./scripts/godot --headless --path godot -s res://test/demo_racing/racing_ladder.gd
 ```
 
 That script runs every level over a fixed seed set and asserts three things: a
@@ -76,7 +76,7 @@ since a ladder with a rung out of order is not a ladder.
 And the part that makes the rest mean anything:
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/racing_does_not_cheat.gd
+./scripts/godot --headless --path godot -s res://test/demo_racing/racing_does_not_cheat.gd
 ```
 
 That script asserts the three presets share one physics resource, field for
@@ -112,3 +112,46 @@ controller used. The cost is the close finish those systems exist for.
 The same chapter warns that a narrow skill range makes drivers hard to tell
 apart. The three presets are spread far enough that the manual check below
 can see the difference, and the ladder script's margin says how far.
+
+## Done in wave 64 (2026-10-20)
+
+What was built differs from the steps above in four places, each on purpose:
+
+- **The speed limit is computed once per track, not once per track and
+  level.** A driver who dares a fraction m of both grip and brakes goes
+  exactly sqrt(m) times the full-grip limit, top speed applied after --
+  every speed in the formula is the square root of an acceleration, and
+  capping before or after the backward pass gives the same profile. So the
+  grip margin is applied every frame, where the driver uses it, which is
+  also what lets the cheat check see it.
+- **The cheat check races an honest twin.** Two reviews found eight
+  cheats the earlier versions let through -- a stronger engine, a nudge
+  forward, a physics swapped mid-race, a speed planned from further down
+  the line, a turn at a point other than the one reported, a faster limit
+  written into the track, distance credited on the race's books, a level
+  changed mid-race with its report forged. Each version had trusted
+  something a driver can reach. So the script builds its own race from
+  what it entered (each level's numbers and seed, the physics as it began)
+  with plain drivers, steps it alongside, and every car, decision and lap
+  record must equal the twin's on every frame. A driver indistinguishable
+  from the honest one is the honest one; it also makes wander bind exactly,
+  where "at most" had let a driver drop it. The knobs' own report, one
+  physics for all, the limits measured over each step, and finishing are
+  held besides. Seventeen planted races, each refused by a finding naming
+  its rule.
+- **Lookahead buys almost no lap time on this track.** Measured: from 8 to
+  16 metres the hard driver's lap moved by under a tenth of a second, and at
+  20 it cut corners onto the grass. The grip margin is what orders the
+  ladder; lookahead is there for what a person sees -- turning in earlier.
+  The presets are easy 8 m / 0.75 / 2.0 m, normal 12 / 0.87 / 1.0, hard
+  16 / 0.97 / 0.3.
+- **The cars are ghosts.** They drive through each other; overtaking is
+  T54's heat line.
+
+Measured: easy 39.6 s, normal 36.6 s, hard 35.1 s a lap, over five seeds
+and two laps from a standing start; the ladder's stated margin is 1.0 s.
+Both scripts are `make test-racing-ladder` and `make test-racing-does-not-cheat`,
+gates of the `demo_racing` module. Every rule in both was mutated off once
+and its planted case went red (the ladder's rung-out-of-order case first
+passed by the wrong rule, and now must be named for what it is).
+

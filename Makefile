@@ -94,7 +94,8 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-search-properties test-planner-properties test-planner-benchmark test-perception-properties \
        test-decisions test-demo-overlays test-menu-walk test-replay test-opponent-levels test-opponent-properties \
        test-clone-rows test-inference-budget test-clone-report test-difficulty-knobs \
-       test-rts-budget test-rts-simulation test-rts-match test-steering-properties ## Run every gate
+       test-rts-budget test-rts-simulation test-rts-match test-steering-properties \
+       test-racing-ladder test-racing-does-not-cheat ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability lint-demos \
@@ -327,6 +328,14 @@ test-steering-vectors: import ## The steering trajectories, against ai_steering
 test-steering-properties: import ## Arrive comes to rest, seek never does, no force breaks its limit (T22)
 	@$(GODOT) --headless --path godot -s res://test/ai_steering/steering_properties.gd
 
+.PHONY: test-racing-ladder
+test-racing-ladder: import ## Every racing level finishes, in order, a second a lap apart (T23)
+	@$(GODOT) --headless --path godot -s res://test/demo_racing/racing_ladder.gd
+
+.PHONY: test-racing-does-not-cheat
+test-racing-does-not-cheat: import ## One physics for every car, no limit broken, no knob moved mid-race (T23)
+	@$(GODOT) --headless --path godot -s res://test/demo_racing/racing_does_not_cheat.gd
+
 .PHONY: test-search-properties
 test-search-properties: import ## A* agrees with Dijkstra, over a few hundred boards
 	@$(GODOT) --headless --path godot -s res://test/ai_search/search_properties.gd
@@ -497,6 +506,10 @@ demo-stealth: import ## Cross the hall unseen: arrows walk, shift sprints, space
 .PHONY: demo-steering
 demo-steering: import ## Four vehicles: seek, arrive, pursue, seek with avoid, each force drawn; click moves a target, space pauses, . one step, R again
 	@$(GODOT) --path godot res://demos/steering/steering_demo.tscn
+
+.PHONY: demo-racing
+demo-racing: import ## Three drivers, one car, no rubber band: 1-3 follow a level, A alone, space pauses, . one step, R again
+	@$(GODOT) --path godot res://demos/racing/racing_demo.tscn
 
 .PHONY: demo-behaviour
 demo-behaviour: import ## One guard, four ways to decide: 1-4 swap state machine, tree, GOAP, HTN mid-round; space a turn, enter ten
