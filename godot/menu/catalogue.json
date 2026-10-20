@@ -142,10 +142,10 @@
       "techniques": [
         {"technique": "pure-pursuit", "part": "the white dot: a point a lookahead distance down the racing line, which the car steers at; hard looks further, so it turns in earlier"},
         {"technique": "seek", "part": "says which way to go for the dot; pure pursuit's formula turns that angle into how hard to turn"},
-        {"technique": "speed-profile", "part": "the line's colour: the fastest each point allows at the grip this driver dares, carried back from every corner at its braking; the red bar is where it must already be braking"}
+        {"technique": "speed-profile", "part": "the line's colour: the fastest each point allows at the grip this driver dares, carried back from every corner at its braking; the cyan bar is where it must already be braking"}
       ],
       "controls": "1-3 follow easy, normal or hard; A shows the followed car alone; space pauses, . steps one sixtieth of a second, R starts the race again",
-      "watch": "Follow easy, then hard: the red bar sits closer to each corner for hard, and its line stays greener through the bend. Down a straight they are equally fast -- same car, same top speed.",
+      "watch": "Follow easy, then hard: the cyan bar sits closer to each corner for hard, and its line stays greener through the bend. Down a straight they are equally fast -- same car, same top speed.",
       "docs": "docs/concepts/racing-ai.md"
     },
     {

@@ -42,7 +42,10 @@ func _init(name_shown: String, aim_distance: float, margin: float, drift: float)
 ## buys lap time. Lookahead from 8 to 16 metres moved the hard driver's lap
 ## by under a tenth of a second, and at 20 it cut the inside of corners onto
 ## the grass -- so lookahead is chosen for what it shows, turning in earlier,
-## and stops short of that. Wander past 1.5 metres puts the car on the grass.
+## and stops short of that. Wander puts a car on the grass from about a metre:
+## easy's 2 metres leave it there on about one frame in seventeen, costing it
+## some 0.8 s a lap. That is meant -- running wide is the mistake a person
+## can watch the easy driver make -- and hard's 0.3 metres never do.
 static func ladder() -> Array[RacingLevel]:
 	return [
 		RacingLevel.new("easy", 8.0, 0.75, 2.0),

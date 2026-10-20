@@ -57,7 +57,7 @@ func decide(car: RacingCar, track: RacingTrack, index: int, time: float) -> void
 	decided_at = index
 	used = {"lookahead": lookahead_now(), "grip_margin": grip_margin_now(), "wander": wander_now()}
 	aim = track.point_ahead(index, used["lookahead"], used["wander"] * _drift(time))
-	wanted_turn = _turn_towards(car, aim)
+	wanted_turn = pursuit_turn(car, aim)
 	target_speed = speed_limit(track, index, car.physics, used["grip_margin"])
 	braking_point = _braking_point(car, track, index, used["grip_margin"])
 
@@ -83,11 +83,14 @@ static func speed_limit(track: RacingTrack, index: int, physics: RacingPhysics, 
 	return minf(physics.top_speed, track.full_grip_limit[index] * sqrt(margin))
 
 
-# Seek says which way to go for the point; pure pursuit says how hard to
-# turn for it: curvature 2 sin(angle) / distance, times speed for a turn rate.
-# The mirror vehicle's force limit is twice its top speed, so seek's clamp
-# never bites and its force is exactly desired velocity minus velocity.
-func _turn_towards(car: RacingCar, point: Vector2) -> float:
+## The turn rate that takes `car` towards `point`. Seek is asked one thing
+## here, the velocity it wants -- full speed straight at the point -- and
+## its force is how far that is from the car's velocity, so velocity plus
+## force is that wish. (Its force limit is set to twice the top speed so the
+## clamp never shortens it.) The car cannot simply take that velocity, it can
+## only turn; pure pursuit says how hard: curvature 2 sin(angle) / distance,
+## times speed for a turn rate. Static, so the cheat check can ask it too.
+static func pursuit_turn(car: RacingCar, point: Vector2) -> float:
 	var mirror := SteeringVehicle.new(car.position, car.velocity(), car.physics.top_speed,
 		2.0 * car.physics.top_speed)
 	var desired: Vector2 = mirror.velocity + SeekBehaviour.new(point).force(mirror)

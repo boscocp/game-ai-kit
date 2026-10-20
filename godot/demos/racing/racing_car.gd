@@ -40,7 +40,6 @@ func step(wanted_speed: float, wanted_turn: float, on_track: bool, dt: float) ->
 		speed = minf(goal, speed + physics.acceleration * dt)
 	else:
 		speed = maxf(goal, speed - physics.braking * dt)
-	speed = minf(speed, physics.top_speed)
 	var most: float = turn_limit()
 	turn = clampf(wanted_turn, -most, most)
 	heading += turn * dt

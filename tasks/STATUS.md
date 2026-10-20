@@ -94,7 +94,7 @@ because it is driven better, and a command proves every car runs one physics.
 | # | Task | State | Notes |
 |---|---|---|---|
 | T22 | `ai_steering`: not on a grid | done | seek, arrive, pursue, avoid, in GDScript and Python; 6 trajectories held to 1e-3 (9.4e-6 measured; Vector2 is 32-bit); over 100 starts arrive rests every time and seek never; `make demo-steering` draws each force |
-| T23 | The racing demo, three honest difficulties | done | `make demo-racing`: pure pursuit on seek, a speed limit carried back from the corners; laps 39.6 / 36.6 / 35.1 s; `racing_does_not_cheat.gd` refuses a stronger car, a gripless one and a rubber band in the knob or at its use |
+| T23 | The racing demo, three honest difficulties | done | `make demo-racing`: pure pursuit on seek, a speed limit carried back from the corners; laps 39.6 / 36.6 / 35.1 s; `racing_does_not_cheat.gd` replays every frame on an honest car and recomputes every decision; ten planted cheats refused |
 | T53 | How racing AI is made | done | `docs/concepts/racing-ai.md`: 30 references, each opened, those read in part said so; rubber-banding for and against; T23 and T54 rewritten from it |
 | T54 | Racing in 3D, with physics the driver does not own | blocked | the owner's 3D racer: suspension, tyre slip, weight transfer on `RigidBody3D`; T23's three knobs and its no-cheat gate; needs ADR 0018 accepted, T50, T53 |
 
@@ -142,7 +142,8 @@ limit, carried back from the slowest corner, times sqrt(grip margin). Two
 gates: `make test-racing-ladder` (easy 39.6 s, normal 36.6 s, hard 35.1 s
 a lap; at least a second apart) and `make test-racing-does-not-cheat` (one
 physics field for field, no frame past grip or top speed, the knobs used
-constant, and each frame's decision recomputed from the level's knobs).
+constant, every frame replayed on an honest car, and each decision
+recomputed from the level's knobs at the sample the race handed over).
 The task file's last section says where the build differs from its steps.
 
 **For the owner.** T23's manual check: `make demo-racing`, follow easy

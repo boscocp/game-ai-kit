@@ -36,9 +36,10 @@ const NODES: Array[Vector2] = [
 ]
 ## The racing line at each node, as a fraction of the half width: 1 is the
 ## left edge, -1 the right, 0 the centre. Outside, inside at the apex, outside
-## again. Placed by a small search over lap time made before this file was
-## written, as Game AI Pro improves a designer's line offline; the search is
-## not part of the kit, and the line is a node's offset you can edit.
+## again. Placed by a small search over lap time made once while this file
+## was written, as Game AI Pro improves a designer's line offline. The search
+## is not part of the kit and cannot be rerun from it; the line is these
+## numbers, and you can edit them.
 const OFFSETS: Array[float] = [
 	-0.1, -0.8, -0.7, 0.8, 0.8, 0.8, 0.8, 0.8, -0.5, -0.8,
 	-0.8, -0.8, 0.8, 0.8, 0.5, 0.1, 0.1, 0.0, -0.8,

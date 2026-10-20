@@ -6,8 +6,10 @@
 ## a ghost. Collisions and overtaking are a different lesson (T54's heat line).
 ##
 ## A step asks every driver to decide, then moves every car. Laps are counted
-## by distance covered along the line, so a car that cuts across the grass
-## gains nothing it did not drive. Linear in the number of cars.
+## by distance covered along the line: a car that cuts a corner across the
+## grass is credited the line's metres, not the shorter ones it drove, and
+## what keeps that from paying is the grass, which holds it to
+## `off_track_speed`. Linear in the number of cars.
 ##
 ## When not to use it: a race where cars must react to each other.
 class_name RacingRace

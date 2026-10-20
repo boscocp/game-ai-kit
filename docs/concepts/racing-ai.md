@@ -292,7 +292,7 @@ on the car it helps.
 **T23, the 2D racer**, keeps its three knobs and gives each a source:
 
 1. **Lookahead distance** -- pure pursuit's one parameter [Coulter 1992;
-   Tomlinson & Melder 2013b]. Drawn: the point and the arc to it. Short
+   Tomlinson & Melder 2013b]. Drawn: the point, and a line from the car to it. Short
    weaves, long cuts corners, and a person can see both.
 2. **Grip margin** -- the fraction of the grip limit the driver dares to use
    [Tomlinson & Melder 2013a's 98-99%]. The speed profile is computed once
@@ -331,8 +331,11 @@ it does not fully know demands:
   of the player, such as progress, variance and how often the controls
   change -- which is closer to what Drivatar does on top of a fixed
   controller. Either is a later task if wanted.
-- **Racing-line optimisation.** The line is drawn by hand, as a designer's
-  spline; optimising it is a lesson of its own.
+- **Racing-line optimisation.** The line is stored as a designer's would
+  be, an offset at each track node that a person can edit. T23's offsets
+  came from a one-off search on lap time made while it was written, which
+  is not in the kit and cannot be rerun from it; an optimiser worth
+  reading is a lesson of its own.
 - **Rubber-banding**, for the reasons above.
 
 ## Could not be checked

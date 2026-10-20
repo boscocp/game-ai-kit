@@ -124,12 +124,17 @@ What was built differs from the steps above in four places, each on purpose:
   capping before or after the backward pass gives the same profile. So the
   grip margin is applied every frame, where the driver uses it, which is
   also what lets the cheat check see it.
-- **The cheat check has a fourth rule.** Recording the knobs from inside the
-  controller does not catch a band applied after the knob was read. The
-  script also recomputes each frame's chosen speed from the level's own
-  margin, and holds the aimed-at point within the level's wander of its
-  lookahead point; a fourth planted driver -- honest knobs, banded speed --
-  is refused by it.
+- **The cheat check trusts nothing the car or driver says about itself.**
+  The review found five cheats the first version let through (a stronger
+  engine, a car nudged forward, a physics swapped mid-race, planning from
+  further down the line, steering at a point other than the one reported).
+  So every frame is replayed: a fresh `RacingCar` on the physics as the
+  race began, put where the car was and given what the driver asked, must
+  end where the car ended; and the decision is recomputed from the line
+  sample the race handed the driver -- speed from the level's margin, aim
+  within its wander of the lookahead point, turn as pure pursuit of that
+  aim. A race in which a car does not finish fails too. Ten planted races,
+  each refused by the rule it breaks.
 - **Lookahead buys almost no lap time on this track.** Measured: from 8 to
   16 metres the hard driver's lap moved by under a tenth of a second, and at
   20 it cut corners onto the grass. The grip margin is what orders the
