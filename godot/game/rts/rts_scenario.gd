@@ -107,6 +107,8 @@ static func start(match_seed: int) -> RtsWorld:
 	var world := RtsWorld.new(board(), match_seed)
 	for cell: Vector2i in _cells():
 		_stand(world, MAP[cell.y][cell.x], cell)
+		if MAP[cell.y][cell.x] == "#":
+			world.add_wall(cell)
 	for side: int in [WEST, EAST]:
 		world.set_funds(side, START_ORE, START_MAGMA)
 	return world

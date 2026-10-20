@@ -17,7 +17,8 @@
 class_name RtsCommandCard
 extends Control
 
-## A button was pressed: `action` is "build" or "train", `what` the kind.
+## A button was pressed: `action` is "build", "train" or "repair", `what`
+## the kind -- for "repair", the kind of the building to mend.
 signal chosen(action: String, what: String)
 
 const ROLES: Dictionary = {
@@ -56,11 +57,14 @@ var _built_for: String = "-"
 ## Show what `selected` (ids) can do, for the side that `view` belongs to.
 func show_selection(view: RtsSnapshot, selected: Dictionary) -> void:
 	var units: Array[Dictionary] = []
-	for unit: Dictionary in view.mine():
+	for unit: Dictionary in view.units:
 		if selected.has(unit["id"]):
 			units.append(unit)
 	_info.text = HOW_TO_PLAY if units.is_empty() else _describe(units)
-	var offers: Array[Array] = _offers(units)
+	var yours: bool = units.all(func(unit: Dictionary) -> bool: return unit["side"] == view.side)
+	var offers: Array[Array] = []
+	if yours:
+		offers = _offers(units)
 	var reasons: Array[String] = []
 	for offer: Array in offers:
 		reasons.append(_why_not(view, offer[0], offer[1], units))
@@ -84,14 +88,19 @@ func _rebuild(offers: Array[Array], reasons: Array[String]) -> void:
 
 # What the selection is: one unit in full, or a count of each kind.
 func _describe(units: Array[Dictionary]) -> String:
+	if units.size() == 1 and RtsKinds.is_deposit(units[0]["kind"]):
+		var deposit: Dictionary = units[0]
+		return "%s: %d %s left of %d\n%s" % [deposit["kind"].capitalize(), deposit["health"],
+			RtsKinds.of(deposit["kind"], "yields"), RtsKinds.of(deposit["kind"], "health"), ROLES[deposit["kind"]]]
 	if units.size() == 1:
 		var unit: Dictionary = units[0]
-		var lines: Array[String] = ["%s  %d/%d" % [unit["kind"].capitalize(), unit["health"],
+		var whose: String = "" if unit.has("order") else "the computer's "
+		var lines: Array[String] = ["%s%s  %d/%d" % [whose, unit["kind"].capitalize(), unit["health"],
 			RtsKinds.of(unit["kind"], "health")], ROLES[unit["kind"]]]
 		if not unit["complete"]:
 			lines.append("being built")
-		elif not (unit["queue"] as Array).is_empty():
-			lines.append("training: " + ", ".join(unit["queue"]))
+		elif not (unit.get("queue", []) as Array).is_empty():
+			lines.append(training_line(unit))
 		return "\n".join(lines)
 	var counts: Dictionary = {}
 	for unit: Dictionary in units:
@@ -103,11 +112,26 @@ func _describe(units: Array[Dictionary]) -> String:
 
 
 # [action, kind] for every order the selection can be given from here.
+## What a building's queue is doing, as a bar: "training runner
+## [######----] 3 s, then 2 more". The first in the queue is the one
+## being trained; the bar is its share of its build time done.
+static func training_line(unit: Dictionary) -> String:
+	var first: String = unit["queue"][0]
+	var needed: int = RtsKinds.of(first, "ticks")
+	var share: float = clampf(float(unit["progress"]) / needed, 0.0, 1.0)
+	var filled: int = roundi(share * 10.0)
+	var left: float = float(needed - int(unit["progress"])) / RtsWorld.TICKS_PER_SECOND
+	var more: String = "" if unit["queue"].size() == 1 else ", then %d more" % (unit["queue"].size() - 1)
+	return "training %s [%s%s] %d s%s" % [first, "#".repeat(filled), "-".repeat(10 - filled), ceili(left), more]
+
+
 static func _offers(units: Array[Dictionary]) -> Array[Array]:
 	var offers: Array[Array] = []
 	var kinds: Dictionary = {}
 	for unit: Dictionary in units:
 		kinds[unit["kind"]] = true
+	if units.size() == 1 and RtsKinds.is_building(units[0]["kind"]) and units[0]["complete"]:
+		offers.append(["repair", units[0]["kind"]])
 	if kinds.has(RtsKinds.WORKER):
 		for building: String in [RtsKinds.BARRACKS, RtsKinds.DEPOT, RtsKinds.LAB, RtsKinds.TOWER, RtsKinds.BASE]:
 			offers.append(["build", building])
@@ -119,6 +143,10 @@ static func _offers(units: Array[Dictionary]) -> Array[Array]:
 
 # Why `what` cannot be had now, in a few words; "" when it can.
 static func _why_not(view: RtsSnapshot, action: String, what: String, units: Array[Dictionary]) -> String:
+	if action == "repair":
+		if units[0]["health"] >= int(RtsKinds.of(what, "health")):
+			return "not damaged"
+		return "" if not view.mine(RtsKinds.WORKER).is_empty() else "no worker to send"
 	var needed: String = RtsKinds.of(what, "needs")
 	if needed != "" and not _has_complete(view, needed):
 		return "needs a %s first" % needed
@@ -144,9 +172,13 @@ func _add_button(action: String, what: String, reason: String) -> void:
 		if RtsKinds.cost(what)[resource] > 0:
 			price.append("%d %s" % [RtsKinds.cost(what)[resource], resource])
 	button.text = "%s (%s)\n%s" % [what.capitalize(), KEYS.get(what, ""), " ".join(price)]
+	if action == "repair":
+		button.text = "Repair\nfree, a worker"
+		price.clear()
 	button.add_theme_font_size_override("font_size", 11)
 	button.disabled = reason != ""
-	button.tooltip_text = ROLES[what] + ("" if reason == "" else "\ncannot yet: " + reason)
+	var role: String = "send the nearest worker to mend it" if action == "repair" else ROLES[what]
+	button.tooltip_text = role + ("" if reason == "" else "\ncannot yet: " + reason)
 	button.focus_mode = Control.FOCUS_NONE
 	button.pressed.connect(func() -> void: chosen.emit(action, what))
 	_buttons.add_child(button)

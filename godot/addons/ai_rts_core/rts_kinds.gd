@@ -12,6 +12,8 @@
 ## would replace it; this is that table.
 ##
 ## Speeds are cells a second; times are ticks, at `RtsWorld.TICKS_PER_SECOND`.
+## Damage was raised half again after the owner played it: two shields took
+## thirteen seconds to settle a fight, and a fight that long reads as stuck.
 ## Costs are by resource. The numbers are tuned by the matches in
 ## `test/rts_match.gd`, not derived; change one and run it.
 ##
@@ -50,13 +52,13 @@ const FIGHTERS: Array[String] = [RUNNER, SHIELD, MORTAR]
 ## being what is left in it.
 const TABLE: Dictionary = {
 	WORKER: {"mobile": true, "health": 40, "speed": 2.0, "sight": 5.0, "cost": {ORE: 50}, "ticks": 300,
-		"damage": 2, "reach": 1.1, "cooldown": 60, "supply": 1},
+		"damage": 3, "reach": 1.1, "cooldown": 60, "supply": 1},
 	RUNNER: {"mobile": true, "health": 60, "speed": 3.2, "sight": 6.0, "cost": {ORE: 75}, "ticks": 360,
-		"damage": 5, "reach": 1.3, "cooldown": 30, "supply": 1, "beats": [MORTAR]},
+		"damage": 8, "reach": 1.3, "cooldown": 30, "supply": 1, "beats": [MORTAR]},
 	SHIELD: {"mobile": true, "health": 140, "speed": 1.8, "sight": 5.0, "cost": {ORE: 100, MAGMA: 25}, "ticks": 480,
-		"damage": 7, "reach": 1.3, "cooldown": 45, "supply": 2, "beats": [RUNNER]},
+		"damage": 11, "reach": 1.3, "cooldown": 45, "supply": 2, "beats": [RUNNER]},
 	MORTAR: {"mobile": true, "health": 50, "speed": 1.8, "sight": 7.0, "cost": {ORE: 100, MAGMA: 75}, "ticks": 540,
-		"damage": 12, "reach": 5.0, "cooldown": 90, "supply": 2, "beats": [SHIELD], "needs": LAB, "siege": true},
+		"damage": 18, "reach": 5.0, "cooldown": 90, "supply": 2, "beats": [SHIELD], "needs": LAB, "siege": true},
 	BASE: {"mobile": false, "health": 1200, "sight": 8.0, "cost": {ORE: 400}, "ticks": 1800,
 		"trains": [WORKER], "provides": 10},
 	BARRACKS: {"mobile": false, "health": 600, "sight": 5.0, "cost": {ORE: 150}, "ticks": 900,

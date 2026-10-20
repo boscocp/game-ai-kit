@@ -1,8 +1,9 @@
 ## One order, as a person or an AI gives it: the only way anything changes the
 ## world.
 ##
-## Five kinds, the ones every RTS since Dune II has: move, attack, gather,
-## build, train. A person's click and an AI's decision both become one of
+## Six kinds: the five every RTS since Dune II has -- move, attack, gather,
+## build, train -- and repair, which the owner asked for when a person
+## playing T20 had no way to mend a building. A person's click and an AI's decision both become one of
 ## these and pass through `RtsRules.why_refused`, so the never-cheat rule is
 ## one function, and actions per minute are counted the same way for both.
 ## A command is plain data -- ids and a cell, never a unit -- so it can be
@@ -19,7 +20,8 @@ const ATTACK: String = "attack"
 const GATHER: String = "gather"
 const BUILD: String = "build"
 const TRAIN: String = "train"
-const KINDS: Array[String] = [MOVE, ATTACK, GATHER, BUILD, TRAIN]
+const REPAIR: String = "repair"
+const KINDS: Array[String] = [MOVE, ATTACK, GATHER, BUILD, TRAIN, REPAIR]
 
 ## Which of the five.
 var kind: String
@@ -58,6 +60,13 @@ static func attack(ids: Array[int], target: int) -> RtsCommand:
 static func gather(ids: Array[int], deposit: int) -> RtsCommand:
 	var command := RtsCommand.new(GATHER, ids)
 	command.target_id = deposit
+	return command
+
+
+## Send workers `ids` to mend the side's own `building`, free, until whole.
+static func repair(ids: Array[int], building: int) -> RtsCommand:
+	var command := RtsCommand.new(REPAIR, ids)
+	command.target_id = building
 	return command
 
 

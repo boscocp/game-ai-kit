@@ -36,6 +36,8 @@ static func why_refused(world: RtsWorld, side: int, order: RtsCommand) -> String
 			return _why_target_refused(world, side, order)
 		RtsCommand.BUILD:
 			return _why_build_refused(world, side, order)
+		RtsCommand.REPAIR:
+			return _why_repair_refused(world, side, order.target_id)
 	return _why_train_refused(world, side, order)
 
 
@@ -65,7 +67,7 @@ static func _why_unfit(given: RtsUnit, order: RtsCommand) -> String:
 		return "" if building else "unit %d is a %s, which trains nothing" % [given.id, given.kind]
 	if building:
 		return "unit %d is a %s and cannot %s" % [given.id, given.kind, order.kind]
-	if order.kind in [RtsCommand.GATHER, RtsCommand.BUILD] and given.kind != RtsKinds.WORKER:
+	if order.kind in [RtsCommand.GATHER, RtsCommand.BUILD, RtsCommand.REPAIR] and given.kind != RtsKinds.WORKER:
 		return "only a worker can %s, and unit %d is a %s" % [order.kind, given.id, given.kind]
 	return ""
 
@@ -91,6 +93,19 @@ static func _why_target_refused(world: RtsWorld, side: int, order: RtsCommand) -
 		return "" if RtsKinds.is_deposit(target.kind) else "unit %d is nothing to gather" % target.id
 	if target.side == side or target.side == RtsWorld.NEUTRAL:
 		return "unit %d is not an enemy" % target.id
+	return ""
+
+
+# Only one's own finished building, and only when it is hurt: a site going
+# up is raised, not repaired.
+static func _why_repair_refused(world: RtsWorld, side: int, target_id: int) -> String:
+	var target: RtsUnit = world.unit(target_id)
+	if target == null or target.side != side or not RtsKinds.is_building(target.kind):
+		return "unit %d is not a building of yours" % target_id
+	if not target.complete:
+		return "unit %d is still going up -- build it, do not repair it" % target_id
+	if target.health >= int(RtsKinds.of(target.kind, "health")):
+		return "unit %d is not damaged" % target_id
 	return ""
 
 

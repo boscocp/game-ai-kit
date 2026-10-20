@@ -243,6 +243,8 @@ func _on_key(code: Key) -> void:
 func _on_card(action: String, what: String) -> void:
 	if action == "train":
 		_train(what)
+	elif action == "repair":
+		_send_a_repairer()
 	elif _selected_worker() >= 0:
 		_view.placing = what
 		_say("click open ground to put the %s -- green is a place it can go; right click cancels" % what, false)
@@ -252,17 +254,24 @@ func _on_card(action: String, what: String) -> void:
 
 
 # Your units inside `box` (map window points), or the one under a click:
-# fighters and workers by box, anything of yours by click.
+# fighters and workers by box, anything of yours by click -- and, when a
+# click finds nothing of yours, whatever you can see there, to read about:
+# how much a rock has left, how hurt an enemy is. It takes no orders.
 func _select(box: Rect2) -> void:
 	_view.selected.clear()
 	var clicked: bool = box.size.length() < 4.0
-	for unit: Dictionary in RtsSnapshot.of(world, RtsScenario.WEST).mine():
+	var view: RtsSnapshot = RtsSnapshot.of(world, RtsScenario.WEST)
+	for unit: Dictionary in view.mine():
 		var at: Vector2 = RtsView.to_screen(unit["position"])
 		if clicked and at.distance_to(box.position) <= RtsView.CELL * CLICK_REACH:
 			_view.selected[unit["id"]] = true
 			return
 		if not clicked and box.has_point(at) and not RtsKinds.is_building(unit["kind"]):
 			_view.selected[unit["id"]] = true
+	for unit: Dictionary in view.units:
+		if clicked and RtsView.to_screen(unit["position"]).distance_to(box.position) <= RtsView.CELL * CLICK_REACH:
+			_view.selected[unit["id"]] = true
+			return
 
 
 # A right click at `point` (a map window point): attack what is there,
@@ -281,7 +290,31 @@ func _order_at(cell: Vector2i, point: Vector2) -> void:
 		if unit["side"] != RtsScenario.WEST:
 			_give(RtsCommand.attack(ids, unit["id"]))
 			return
+		if RtsKinds.is_building(unit["kind"]) and _selected_worker() >= 0:
+			_give(RtsCommand.repair(ids, unit["id"]))
+			return
 	_give(RtsCommand.move(ids, cell))
+
+
+# The command card's Repair: the worker nearest the selected building sent
+# to mend it, through the same door as a right click.
+func _send_a_repairer() -> void:
+	var building: RtsUnit = null
+	for id: int in _view.selected:
+		if world.unit(id) != null and world.unit(id).side == RtsScenario.WEST and RtsKinds.is_building(world.unit(id).kind):
+			building = world.unit(id)
+	var nearest: RtsUnit = null
+	for unit: RtsUnit in world.units():
+		if unit.side != RtsScenario.WEST or unit.kind != RtsKinds.WORKER or building == null:
+			continue
+		if nearest == null or unit.position.distance_to(building.position) < nearest.position.distance_to(building.position):
+			nearest = unit
+	if nearest == null:
+		_say("no worker to send", true)
+		return
+	_give(RtsCommand.repair([nearest.id] as Array[int], building.id))
+	if last_refusal == "":
+		_say("a worker is on its way to mend the %s" % building.kind, false)
 
 
 func _place(cell: Vector2i) -> void:
@@ -310,7 +343,7 @@ func _selected_worker() -> int:
 func _train(kind: String) -> void:
 	for id: int in _view.selected:
 		var unit: RtsUnit = world.unit(id)
-		if unit != null and kind in RtsKinds.of(unit.kind, "trains"):
+		if unit != null and unit.side == RtsScenario.WEST and kind in RtsKinds.of(unit.kind, "trains"):
 			_give(RtsCommand.train(id, kind))
 			return
 	_say("select a building that trains a %s" % kind, true)
@@ -334,7 +367,7 @@ func _selected_movers() -> Array[int]:
 	var ids: Array[int] = []
 	for id: int in _view.selected:
 		var unit: RtsUnit = world.unit(id)
-		if unit != null and not RtsKinds.is_building(unit.kind):
+		if unit != null and unit.side == RtsScenario.WEST and not RtsKinds.is_building(unit.kind):
 			ids.append(id)
 	return ids
 

@@ -25,7 +25,7 @@ const SOURCES_PATH: String = "res://game/rts/art_sources.json"
 ## Where `make rts-art` puts the sheets, from the project's own folder.
 const FOLDER: String = "../build/rts-art"
 ## How many cells wide a building's picture is drawn; a unit's is one and a half.
-const BUILDING_CELLS: float = 2.2
+const BUILDING_CELLS: float = 1.6
 const UNIT_CELLS: float = 1.6
 ## Ticks a walking frame is shown.
 const WALK_FRAME_TICKS: int = 8

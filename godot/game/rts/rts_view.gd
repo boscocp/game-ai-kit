@@ -128,8 +128,10 @@ func _draw() -> void:
 	if view == null:
 		return
 	_draw_ground()
-	for unit: Dictionary in _painters_order(shown_units()):
+	var shown: Array[Dictionary] = _painters_order(shown_units())
+	for unit: Dictionary in shown:
 		_draw_unit(unit)
+	_draw_strikes(shown)
 	if not everything:
 		_draw_fog()
 	if placing != "" and placing_at != Vector2i(-1, -1):
@@ -191,6 +193,53 @@ func _draw_unit(unit: Dictionary) -> void:
 	draw_rect(Rect2(bar.position, Vector2(bar.size.x * clampf(unit["health"] / full, 0.0, 1.0), bar.size.y)), Color(0.3, 0.95, 0.3))
 	if not unit["complete"]:
 		_draw_construction(unit, centre)
+	elif not (unit.get("queue", []) as Array).is_empty():
+		var first: String = unit["queue"][0]
+		var share: float = clampf(float(unit["progress"]) / float(RtsKinds.of(first, "ticks")), 0.0, 1.0)
+		var under := Rect2(centre + Vector2(-CELL * 0.4, CELL * 0.62), Vector2(CELL * 0.8, 4.0))
+		draw_rect(under, Color(0.05, 0.1, 0.2))
+		draw_rect(Rect2(under.position, Vector2(under.size.x * share, under.size.y)), Color(0.4, 0.75, 1.0))
+
+
+## Ticks a blow shows for: a flash at the target, and for the mortar the
+## shell's flight and its burst. Only drawn: the blow itself was struck,
+## whole, on the tick the cooldown began, so a replay never waits for it.
+const FLASH_TICKS: int = 8
+const SHELL_TICKS: int = 24
+const BURST_TICKS: int = 10
+
+
+# Every blow struck lately by a unit on the screen at a unit on the screen.
+# Read from the world -- a cooldown the snapshot does not carry -- and only
+# for what this side already sees, so the screen shows no more than a
+# player would: who is hitting whom.
+func _draw_strikes(shown: Array[Dictionary]) -> void:
+	var seen: Dictionary = {}
+	for unit: Dictionary in shown:
+		seen[unit["id"]] = true
+	for unit: Dictionary in shown:
+		var striker: RtsUnit = world.unit(unit["id"])
+		if striker == null or striker.order != RtsCommand.ATTACK or not seen.has(striker.target_id):
+			continue
+		var since: int = int(RtsKinds.of(striker.kind, "cooldown")) - striker.cooldown
+		var from: Vector2 = to_screen(striker.position)
+		var to: Vector2 = to_screen(world.unit(striker.target_id).position)
+		if RtsKinds.of(striker.kind, "siege"):
+			_draw_shell(from, to, since)
+		elif since < FLASH_TICKS:
+			draw_line(from, to, Color(1.0, 1.0, 0.8, 0.6), 1.5)
+			draw_circle(to, CELL * 0.3 * (1.0 - float(since) / FLASH_TICKS), Color(1.0, 0.85, 0.3, 0.8))
+
+
+# The mortar's shell, flying a low arc to its target, then bursting.
+func _draw_shell(from: Vector2, to: Vector2, since: int) -> void:
+	if since < SHELL_TICKS:
+		var along: float = float(since) / SHELL_TICKS
+		var lift := Vector2(0.0, -sin(along * PI) * CELL * 1.5)
+		draw_circle(from.lerp(to, along) + lift, 3.5, Color(1.0, 0.6, 0.2))
+	elif since < SHELL_TICKS + BURST_TICKS:
+		var spread: float = float(since - SHELL_TICKS) / BURST_TICKS
+		draw_circle(to, CELL * (0.2 + 0.5 * spread), Color(1.0, 0.45, 0.1, 0.8 * (1.0 - spread)))
 
 
 # A site going up: its cell outlined, and how far along it is -- from the
