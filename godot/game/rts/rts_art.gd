@@ -33,12 +33,20 @@ const WALK_FRAME_TICKS: int = 8
 ## True when every sheet was found and loaded.
 var found: bool = false
 
-# kind -> side -> Texture2D, and kind -> its row in the manifest.
-var _textures: Dictionary = {}
+# kind -> the whole sheet, as loaded; kind -> its row in the manifest.
+var _images: Dictionary = {}
 var _sheets: Dictionary = {}
+# [kind, side] -> {team colour, as RGBA32 -> the side's shade}: each
+# sheet's own palette, since nothing promises they share one.
+var _shades: Dictionary = {}
+# [kind, side, column, row] -> one frame, recoloured: made the first time
+# it is drawn. A frame is a few thousand pixels; a whole sheet recoloured
+# at start was over a million for the lab alone, and held the window
+# blank for seconds.
+var _frames: Dictionary = {}
 
 
-## Load what `make rts-art` downloaded, recoloured for `side_colours`.
+## Load what `make rts-art` downloaded, to be recoloured for `side_colours`.
 func _init(side_colours: Array[Color]) -> void:
 	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SOURCES_PATH))
 	_sheets = manifest["sheets"]
@@ -47,39 +55,66 @@ func _init(side_colours: Array[Color]) -> void:
 		var path: String = folder.path_join(kind + ".png")
 		if not FileAccess.file_exists(path):
 			return
-		var by_side: Dictionary = {}
+		var image: Image = Image.load_from_file(path)
+		image.convert(Image.FORMAT_RGBA8)
+		_images[kind] = image
+		var palette: Array[Color] = _palette_of(path)
 		for side: int in range(side_colours.size()):
-			by_side[side] = _recoloured(path, _sheets[kind], manifest["team_colour"], side_colours[side])
-		_textures[kind] = by_side
+			_shades[[kind, side]] = _shades_for(palette, manifest["team_colour"], side_colours[side])
 	found = true
 
 
-## Draw `kind` of `side` centred on `centre` on `canvas`, facing `facing`
-## (a direction, zero for none), walking or standing. False when there is no
-## picture to draw, so the caller draws a shape instead.
-func draw_unit(canvas: CanvasItem, kind: String, side: int, centre: Vector2, cell: float,
+## Draw `unit` (a snapshot's dictionary) centred on `centre` on `canvas`,
+## facing `facing` (a direction, zero for none), walking or standing. A
+## building is drawn at its stage of construction, read off its health,
+## which rises as it goes up. False when there is no picture to draw, so
+## the caller draws a shape instead.
+func draw_unit(canvas: CanvasItem, unit: Dictionary, centre: Vector2, cell: float,
 		facing: Vector2, walking: bool, tick: int) -> bool:
-	if not found or not _textures.has(kind):
+	var kind: String = unit["kind"]
+	if not found or not _images.has(kind):
 		return false
 	var sheet: Dictionary = _sheets[kind]
 	var frame := Vector2(sheet["frame"][0], sheet["frame"][1])
-	var texture: Texture2D = _textures[kind].get(maxi(side, 0), _textures[kind][0])
-	var column: int = 0
+	var at: Vector2i = _building_frame(kind, unit) if int(sheet["directions"]) == 1 else Vector2i.ZERO
 	var mirrored: bool = false
-	var row: int = 0
 	if int(sheet["directions"]) > 1:
 		var octant: int = _octant(facing)
-		column = octant if octant <= 4 else 8 - octant
+		at = Vector2i(octant if octant <= 4 else 8 - octant, 1 + (tick / WALK_FRAME_TICKS) % 4 if walking else 0)
 		mirrored = octant > 4
-		row = 1 + (tick / WALK_FRAME_TICKS) % 4 if walking else 0
-	var source := Rect2(Vector2(column, row) * frame, frame)
 	var cells: float = UNIT_CELLS if int(sheet["directions"]) > 1 else BUILDING_CELLS
 	var size: Vector2 = frame * (cell * cells / maxf(frame.x, frame.y))
-	var target := Rect2(centre - size / 2.0, size)
-	if mirrored:
-		target = Rect2(target.position + Vector2(size.x, 0.0), Vector2(-size.x, size.y))
-	canvas.draw_texture_rect_region(texture, target, source)
+	canvas.draw_texture_rect(_frame_of(kind, maxi(unit["side"], 0), at, mirrored), Rect2(centre - size / 2.0, size), false)
 	return true
+
+
+# Which frame of a building's sheet: its stages of construction run along
+# the sheet, the finished building last; one going up shows the stage its
+# health has reached.
+func _building_frame(kind: String, unit: Dictionary) -> Vector2i:
+	var frame := Vector2i(_sheets[kind]["frame"][0], _sheets[kind]["frame"][1])
+	var columns: int = maxi(_images[kind].get_width() / frame.x, 1)
+	var frames: int = columns * maxi(_images[kind].get_height() / frame.y, 1)
+	var index: int = frames - 1
+	if not unit["complete"]:
+		var share: float = clampf(float(unit["health"]) / float(RtsKinds.of(kind, "health")), 0.0, 1.0)
+		index = mini(floori(share * (frames - 1)), frames - 2)
+	return Vector2i(index % columns, index / columns)
+
+
+# The frame at `at` of `kind`'s sheet in `side`'s colours, turned to face
+# west when `mirrored`, made once. Mirrored here and not by drawing into a
+# rectangle of negative width: that draws nothing, and every unit walking
+# west vanished.
+func _frame_of(kind: String, side: int, at: Vector2i, mirrored: bool = false) -> Texture2D:
+	var key: Array = [kind, side, at.x, at.y, mirrored]
+	if not _frames.has(key):
+		var frame := Vector2i(_sheets[kind]["frame"][0], _sheets[kind]["frame"][1])
+		var image: Image = (_images[kind] as Image).get_region(Rect2i(at * frame, frame))
+		if mirrored:
+			image.flip_x()
+		_frames[key] = ImageTexture.create_from_image(_recoloured(image, _shades.get([kind, side], {})))
+	return _frames[key]
 
 
 # 0 north, then clockwise to 7 north-west; facing nowhere is south.
@@ -90,28 +125,25 @@ static func _octant(facing: Vector2) -> int:
 	return int(round(angle / (TAU / 8.0))) % 8
 
 
-# The sheet at `path` with its team-colour pixels painted in `colour`. A
-# building's sheet is cut to its first frame first, the only one drawn: the
-# lab's sheet is a million pixels, and recolouring it whole took seconds.
-func _recoloured(path: String, sheet: Dictionary, indexes: Array, colour: Color) -> Texture2D:
-	var image: Image = Image.load_from_file(path)
-	image.convert(Image.FORMAT_RGBA8)
-	if int(sheet["directions"]) == 1:
-		image = image.get_region(Rect2i(0, 0, sheet["frame"][0], sheet["frame"][1]))
-	var palette: Array[Color] = _palette_of(path)
+# Bos Wars' team colours, entries `indexes` of `palette`, each mapped to a
+# shade of `colour`: brightest first in the palette, and kept in that order.
+static func _shades_for(palette: Array[Color], indexes: Array, colour: Color) -> Dictionary:
 	var shades: Dictionary = {}
 	for position: int in range(indexes.size()):
-		var index: int = indexes[position]
-		if index < palette.size():
-			# Brightest first in Bos Wars' palette; keep that order in the new shades.
-			shades[palette[index].to_rgba32()] = colour.darkened(0.18 * position)
+		if int(indexes[position]) < palette.size():
+			shades[palette[int(indexes[position])].to_rgba32()] = colour.darkened(0.18 * position)
+	return shades
+
+
+# `image` with every pixel of a team colour painted in the side's shade.
+static func _recoloured(image: Image, shades: Dictionary) -> Image:
 	for index: int in range(image.get_width() * image.get_height() if not shades.is_empty() else 0):
 		var at := Vector2i(index % image.get_width(), index / image.get_width())
 		var pixel: Color = image.get_pixelv(at)
 		var opaque: int = Color(pixel.r, pixel.g, pixel.b, 1.0).to_rgba32()
 		if pixel.a > 0.0 and shades.has(opaque):
 			image.set_pixelv(at, shades[opaque])
-	return ImageTexture.create_from_image(image)
+	return image
 
 
 # The colours of the PNG's palette, in index order; empty for a PNG with none.

@@ -7,29 +7,41 @@
 ## right and on the board: its goal, its plan with the time each step
 ## waits, its squads' choices and, with I, what it believes about the map.
 ##
+## The screen is laid out as StarCraft's and Age of Empires' are: a bar of
+## resources on top, the map in a window the camera moves over, and along
+## the bottom a minimap and a command card whose buttons say what each
+## thing costs and why it cannot be had yet. It starts paused, at half
+## speed: the whole clock is slowed, both sides alike, so a person has
+## time to read -- the rules and the AIs are the ones `test/rts_match.gd`
+## measures, only shown slower.
+##
 ## Your orders and the computer's pass through the same door
 ## (`RtsMatch.give`, `RtsRules`): you may not order what it may not, and it
-## sees only what its units see. Controls are in `HELP`.
+## sees only what its units see.
 ##
 ## When not to use it: as the match to measure. `test/rts_match.gd` plays
 ## the same match headless, faster and with no person in it.
 class_name RtsGame
 extends Node2D
 
-const HELP: String = "drag: select · right click: move, attack, gather · B D L T E: build (a worker) · " \
-	+ "W 1 2 3: train · space: pause · + -: speed · V: watch · C: level · H: planner · I: influence · F: fog · R: again"
-const SPEEDS: Array[int] = [1, 2, 4, 8]
+## Ticks of match a frame, at each speed: a frame is a tick at 1x.
+const SPEEDS: Array[float] = [0.25, 0.5, 1.0, 2.0, 4.0]
+const FIRST_SPEED: int = 1
 const BUILD_KEYS: Dictionary = {KEY_B: RtsKinds.BARRACKS, KEY_D: RtsKinds.DEPOT, KEY_L: RtsKinds.LAB,
 	KEY_T: RtsKinds.TOWER, KEY_E: RtsKinds.BASE}
 const TRAIN_KEYS: Dictionary = {KEY_W: RtsKinds.WORKER, KEY_1: RtsKinds.RUNNER, KEY_2: RtsKinds.SHIELD,
 	KEY_3: RtsKinds.MORTAR}
+## How near a click must be to a unit to mean it, in cells.
+const CLICK_REACH: float = 0.75
 const SEED: int = 20
 
-@onready var _view: RtsView = $RtsView
-@onready var _thinking: RtsThinking = $RtsThinking
+@onready var _view: RtsView = $Map/RtsView
+@onready var _thinking: RtsThinking = $Map/RtsThinking
 @onready var _header: Label = $Interface/Header
 @onready var _panel: Label = $Interface/Thinking
 @onready var _legend: Legend = $Interface/Legend
+@onready var _minimap: RtsMinimap = $Interface/Minimap
+@onready var _card: RtsCommandCard = $Interface/Card
 
 var world: RtsWorld
 var played: RtsMatch
@@ -37,8 +49,8 @@ var played: RtsMatch
 var computer: RtsSide
 var stand_in: RtsSide
 var watching: bool = false
-var paused: bool = false
-var speed_index: int = 0
+var paused: bool = true
+var speed_index: int = FIRST_SPEED
 var level_index: int = 1
 var planner: BuildOrder.Planner = BuildOrder.Planner.STRIPS
 ## The last thing the rules said to one of your orders.
@@ -47,24 +59,28 @@ var last_refusal: String = ""
 var reveal: bool = false
 
 var _drag_from: Vector2 = Vector2.ZERO
+var _dragging: bool = false
+# Fractions of a tick owed at the slower speeds.
+var _owed: float = 0.0
 
 
 func _ready() -> void:
 	_view.art = RtsArt.new(RtsView.SIDE_COLOURS)
+	_minimap.board = _view
+	_card.chosen.connect(_on_card)
 	_legend.set_entries([
 		[RtsView.SIDE_COLOURS[RtsScenario.WEST], "you: west"],
 		[RtsView.SIDE_COLOURS[RtsScenario.EAST], "the computer: east"],
-		[RtsThinking.STATE_COLOURS[Squad.ADVANCE], "a squad advancing, to its region"],
-		[RtsThinking.STATE_COLOURS[Squad.FIGHT], "a squad fighting"],
-		[RtsThinking.STATE_COLOURS[Squad.RETREAT], "a squad falling back"],
+		[RtsThinking.STATE_COLOURS[Squad.ADVANCE], "its squad advancing, to its region"],
+		[RtsThinking.STATE_COLOURS[Squad.FIGHT], "its squad fighting"],
+		[RtsThinking.STATE_COLOURS[Squad.RETREAT], "its squad falling back"],
 		[RtsThinking.PLAN_COLOUR, "where its plan will build"],
-		[RtsView.DEPOSIT_COLOURS[RtsKinds.ROCKS], "rocks: ore"],
-		[RtsView.DEPOSIT_COLOURS[RtsKinds.VENT], "a vent: magma"],
 	] as Array[Array])
 	restart()
 
 
-## A new match from the same seed, with the level, planner and mode chosen.
+## A new match from the same seed, with the level, planner and mode chosen,
+## paused, the camera on your base.
 func restart() -> void:
 	world = RtsScenario.start(SEED)
 	var level: Difficulty = RtsLevels.presets()[level_index]
@@ -79,14 +95,29 @@ func restart() -> void:
 	_view.placing = ""
 	_thinking.side = computer
 	last_refusal = ""
+	paused = true
+	_owed = 0.0
+	RtsView.frame_at(Vector2(RtsScenario.home(RtsScenario.WEST)) - RtsView.shown_cells().size / 2.0)
 	_refresh()
+
+
+func _process(delta: float) -> void:
+	var direction := Vector2(Input.get_axis("ui_left", "ui_right"), Input.get_axis("ui_up", "ui_down"))
+	direction += _edge_push(get_viewport().get_mouse_position())
+	if direction != Vector2.ZERO:
+		RtsView.pan(direction.limit_length(1.0) * RtsView.PAN_SPEED * delta)
+		_redraw()
 
 
 func _physics_process(_delta: float) -> void:
 	if paused or RtsVictory.winner(world) != RtsVictory.UNDECIDED:
 		return
-	played.play(SPEEDS[speed_index])
-	_refresh()
+	_owed += SPEEDS[speed_index]
+	var ticks: int = floori(_owed)
+	_owed -= ticks
+	if ticks > 0:
+		played.play(ticks)
+		_refresh()
 
 
 ## One decision of the computer's: the match played up to and through its
@@ -127,34 +158,49 @@ func _unhandled_input(event: InputEvent) -> void:
 		_refresh()
 
 
+# The mouse in the map window's edge pans that way, as in every RTS.
+static func _edge_push(mouse: Vector2) -> Vector2:
+	var rect: Rect2 = RtsView.MAP_RECT
+	if not rect.has_point(mouse):
+		return Vector2.ZERO
+	var inside: Vector2 = mouse - rect.position
+	var push := Vector2.ZERO
+	push.x = -1.0 if inside.x < RtsView.EDGE else (1.0 if inside.x > rect.size.x - RtsView.EDGE else 0.0)
+	push.y = -1.0 if inside.y < RtsView.EDGE else (1.0 if inside.y > rect.size.y - RtsView.EDGE else 0.0)
+	return push
+
+
 func _on_mouse_button(button: InputEventMouseButton) -> void:
-	if button.button_index == MOUSE_BUTTON_RIGHT and button.pressed:
+	var on_map: bool = RtsView.MAP_RECT.has_point(button.position)
+	var local: Vector2 = button.position - RtsView.MAP_RECT.position
+	if button.button_index == MOUSE_BUTTON_RIGHT and button.pressed and on_map:
 		if _view.placing != "":
 			_view.placing = ""
 		else:
-			_order_at(RtsView.to_cell(button.position), button.position)
-	elif button.button_index == MOUSE_BUTTON_LEFT and button.pressed:
+			_order_at(RtsView.to_cell(button.position), local)
+	elif button.button_index == MOUSE_BUTTON_LEFT and button.pressed and on_map:
 		if _view.placing != "":
 			_place(RtsView.to_cell(button.position))
 		else:
-			_drag_from = button.position
-			_view.dragging = Rect2(button.position, Vector2.ZERO)
-	elif button.button_index == MOUSE_BUTTON_LEFT and _view.dragging.position != Vector2.ZERO:
-		_select(Rect2(_drag_from, button.position - _drag_from).abs())
+			_drag_from = local
+			_dragging = true
+	elif button.button_index == MOUSE_BUTTON_LEFT and not button.pressed and _dragging:
+		_dragging = false
+		_select(Rect2(_drag_from, local - _drag_from).abs())
 		_view.dragging = Rect2()
 	_refresh()
 
 
 func _on_mouse_motion(motion: InputEventMouseMotion) -> void:
-	if _view.dragging.position != Vector2.ZERO:
-		_view.dragging = Rect2(_drag_from, motion.position - _drag_from)
+	if _dragging:
+		_view.dragging = Rect2(_drag_from, motion.position - RtsView.MAP_RECT.position - _drag_from)
 	_view.placing_at = RtsView.to_cell(motion.position)
 	_view.queue_redraw()
 
 
 func _on_key(code: Key) -> void:
 	if BUILD_KEYS.has(code) and not watching:
-		_view.placing = BUILD_KEYS[code]
+		_on_card("build", BUILD_KEYS[code])
 	elif TRAIN_KEYS.has(code) and not watching:
 		_train(TRAIN_KEYS[code])
 	match code:
@@ -181,28 +227,42 @@ func _on_key(code: Key) -> void:
 			restart()
 
 
-# Your units inside `box`, or the one under a click: fighters and workers
-# by box, anything of yours by click.
+# A button on the command card, or its key: a building waits for a click
+# on the map; a unit is trained at once.
+func _on_card(action: String, what: String) -> void:
+	if action == "train":
+		_train(what)
+	elif _selected_movers().any(func(id: int) -> bool: return world.unit(id).kind == RtsKinds.WORKER):
+		_view.placing = what
+		last_refusal = "click open ground to put the %s -- right click cancels" % what
+	else:
+		last_refusal = "select a worker to build with"
+	_refresh()
+
+
+# Your units inside `box` (map window points), or the one under a click:
+# fighters and workers by box, anything of yours by click.
 func _select(box: Rect2) -> void:
 	_view.selected.clear()
 	var clicked: bool = box.size.length() < 4.0
 	for unit: Dictionary in RtsSnapshot.of(world, RtsScenario.WEST).mine():
 		var at: Vector2 = RtsView.to_screen(unit["position"])
-		if clicked and at.distance_to(box.position) <= RtsView.CELL * 0.6:
+		if clicked and at.distance_to(box.position) <= RtsView.CELL * CLICK_REACH:
 			_view.selected[unit["id"]] = true
 			return
 		if not clicked and box.has_point(at) and not RtsKinds.is_building(unit["kind"]):
 			_view.selected[unit["id"]] = true
 
 
-# A right click: attack what is there, gather from it, or walk to it.
+# A right click at `point` (a map window point): attack what is there,
+# gather from it, or walk to it.
 func _order_at(cell: Vector2i, point: Vector2) -> void:
 	var ids: Array[int] = _selected_movers()
 	if ids.is_empty() or watching:
 		return
 	var view: RtsSnapshot = RtsSnapshot.of(world, RtsScenario.WEST)
 	for unit: Dictionary in view.units:
-		if RtsView.to_screen(unit["position"]).distance_to(point) > RtsView.CELL * 0.6:
+		if RtsView.to_screen(unit["position"]).distance_to(point) > RtsView.CELL * CLICK_REACH:
 			continue
 		if RtsKinds.is_deposit(unit["kind"]):
 			_give(RtsCommand.gather(ids, unit["id"]))
@@ -253,21 +313,27 @@ func _refresh() -> void:
 	_view.everything = reveal or watching
 	_thinking.view = RtsSnapshot.of(world, computer.side)
 	_header.text = _header_text(yours)
-	_panel.text = "\n".join(_thinking.lines())
+	_panel.text = "What the computer is thinking\n" + "\n".join(_thinking.lines())
+	_card.show_selection(yours, _view.selected)
+	_redraw()
+
+
+func _redraw() -> void:
 	_view.queue_redraw()
 	_thinking.queue_redraw()
+	_minimap.queue_redraw()
 
 
 func _header_text(yours: RtsSnapshot) -> String:
 	var seconds: int = world.tick / RtsWorld.TICKS_PER_SECOND
 	var who: String = "the queues (watching)" if watching else "you"
-	var line: String = "%s, west  vs  the commander, east: %s, %s  ·  %d:%02d  ·  x%d%s" % [who,
-		computer.level.name, "STRIPS" if planner == BuildOrder.Planner.STRIPS else "HTN",
-		seconds / 60, seconds % 60, SPEEDS[speed_index], "  (paused)" if paused else ""]
-	line += "\nore %d  magma %d  supply %d/%d" % [yours.resources[RtsKinds.ORE], yours.resources[RtsKinds.MAGMA],
-		yours.supply_used, yours.supply_cap]
+	var state: String = "PAUSED -- space to play" if paused else "speed x%s (+ -)" % SPEEDS[speed_index]
+	var line: String = "ore %d   magma %d   supply %d/%d   |   %d:%02d  %s   |   %s (west, blue)  vs  the commander (east, red): %s, %s" % [
+		yours.resources[RtsKinds.ORE], yours.resources[RtsKinds.MAGMA], yours.supply_used, yours.supply_cap,
+		seconds / 60, seconds % 60, state, who, computer.level.name,
+		"STRIPS" if planner == BuildOrder.Planner.STRIPS else "HTN"]
 	if RtsVictory.winner(world) != RtsVictory.UNDECIDED:
-		line += "  ·  over: " + RtsVictory.why(world)
-	elif last_refusal != "":
-		line += "  ·  " + last_refusal
-	return line + "\n" + HELP
+		return line + "\nover: " + RtsVictory.why(world) + " -- R plays again"
+	if last_refusal != "":
+		return line + "\n" + last_refusal
+	return line + "\nV watch two computers · C level · H planner · I influence · F fog · R again · arrows or the edge: look round"

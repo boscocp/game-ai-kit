@@ -37,6 +37,8 @@ func lines() -> Array[String]:
 		return []
 	var said: Array[String] = []
 	var thinking: Dictionary = side.overlay(view)
+	if thinking.has("goal") and (thinking["goal"] as PackedStringArray).is_empty():
+		return ["not thought yet: it decides twice a second once the match runs"]
 	if thinking.has("plan"):
 		said.append("goal: %s  (%s)" % [", ".join(thinking["goal"]), thinking["planner"]])
 		var number: int = 1
@@ -99,7 +101,7 @@ func _draw_influence() -> void:
 		var colour: Color = own_colour if lead > 0.0 else enemy_colour
 		colour.a = clampf(absf(lead) / 600.0, 0.08, 0.55)
 		var square_at := Vector2(index % belief.width, index / belief.width)
-		draw_rect(Rect2(RtsView.ORIGIN + square_at * square, square), colour)
+		draw_rect(Rect2(RtsView.to_screen(square_at * RtsInfluence.CELL), square), colour)
 
 
 static func _timed(step: Dictionary) -> String:

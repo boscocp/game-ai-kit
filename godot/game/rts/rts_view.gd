@@ -12,13 +12,23 @@
 ## and a plain shape when it did not -- a fresh checkout and CI have none --
 ## so the game never depends on the art.
 ##
-## When not to use it: a board larger than the window. This one draws all
-## of it at `CELL` pixels a cell and never scrolls.
+## The board is larger than its window: `camera` is the cell at the
+## window's top left, moved by the arrow keys, the mouse at an edge, or a
+## click on the minimap. Everything here draws in the map window's own
+## coordinates; `MAP_RECT` is where that window sits on the screen.
+##
+## When not to use it: a board that fits the window whole. Then drop the
+## camera, as T10's tactical board does.
 class_name RtsView
 extends Node2D
 
-const CELL: float = 20.0
-const ORIGIN := Vector2(16.0, 56.0)
+const CELL: float = 32.0
+## Where the map window sits on the screen, under the top bar.
+const MAP_RECT := Rect2(0.0, 32.0, 960.0, 528.0)
+## How fast the camera moves, in cells a second.
+const PAN_SPEED: float = 18.0
+## How near an edge of the map window the mouse pans it, in pixels.
+const EDGE: float = 12.0
 const SIDE_COLOURS: Array[Color] = [Color(0.25, 0.55, 1.0), Color(0.95, 0.3, 0.25)]
 const GROUND: Dictionary = {
 	".": Color(0.36, 0.42, 0.27), "T": Color(0.18, 0.32, 0.16), "#": Color(0.35, 0.33, 0.31),
@@ -27,8 +37,10 @@ const GROUND: Dictionary = {
 	"B": Color(0.36, 0.42, 0.27),
 }
 const DEPOSIT_COLOURS: Dictionary = {RtsKinds.ROCKS: Color(0.75, 0.72, 0.68), RtsKinds.VENT: Color(1.0, 0.55, 0.1)}
-const FOG := Color(0.0, 0.0, 0.0, 0.72)
-const EXPLORED := Color(0.0, 0.0, 0.0, 0.38)
+## Never seen: the ground is known, as in StarCraft -- the map is the same
+## for both sides and the computer knows it -- but nothing on it is shown.
+const FOG := Color(0.0, 0.0, 0.0, 0.6)
+const EXPLORED := Color(0.0, 0.0, 0.0, 0.35)
 const SELECTED := Color(1.0, 1.0, 0.6)
 
 ## What to draw: the snapshot of the side the screen belongs to; when
@@ -48,8 +60,8 @@ var art: RtsArt
 ## The match's tick, which paces the walking frames.
 var tick: int = 0
 
-# Cells this side has ever seen.
-var _explored := PackedByteArray()
+## Cells this side has ever seen: 1 seen, 0 never. The minimap reads it.
+var explored := PackedByteArray()
 # Each unit's position when last drawn, and the way it last moved: which
 # way a sprite faces, and whether it walks.
 var _last_position: Dictionary = {}
@@ -57,18 +69,39 @@ var _facing: Dictionary = {}
 
 
 func _ready() -> void:
-	_explored.resize(RtsScenario.MAP[0].length() * RtsScenario.MAP.size())
+	explored.resize(RtsScenario.MAP[0].length() * RtsScenario.MAP.size())
 
 
-## The screen point at the middle of `position`, a point in cells.
+## The cell at the map window's top left: what the person is looking at.
+static var camera: Vector2 = Vector2.ZERO
+
+
+## The point in the map window over `position`, a point in cells.
 static func to_screen(position: Vector2) -> Vector2:
-	return ORIGIN + position * CELL
+	return (position - camera) * CELL
 
 
-## The cell under a screen point.
+## The cell under `point`, a point on the screen.
 static func to_cell(point: Vector2) -> Vector2i:
-	var inside: Vector2 = (point - ORIGIN) / CELL
+	var inside: Vector2 = (point - MAP_RECT.position) / CELL + camera
 	return Vector2i(floori(inside.x), floori(inside.y))
+
+
+## The camera moved by `cells`, kept on the board.
+static func pan(cells: Vector2) -> void:
+	frame_at(camera + cells)
+
+
+## The camera put with `top_left` at the window's corner, kept on the board.
+static func frame_at(top_left: Vector2) -> void:
+	var board := Vector2(RtsScenario.MAP[0].length(), RtsScenario.MAP.size())
+	var biggest: Vector2 = (board - MAP_RECT.size / CELL).max(Vector2.ZERO)
+	camera = top_left.clamp(Vector2.ZERO, biggest)
+
+
+## The cells the window shows, as a rectangle in cells: what the minimap frames.
+static func shown_cells() -> Rect2:
+	return Rect2(camera, MAP_RECT.size / CELL)
 
 
 ## The units to draw: the whole world's when everything is shown, else the
@@ -87,7 +120,7 @@ func _draw() -> void:
 	if view == null:
 		return
 	_draw_ground()
-	for unit: Dictionary in shown_units():
+	for unit: Dictionary in _painters_order(shown_units()):
 		_draw_unit(unit)
 	if not everything:
 		_draw_fog()
@@ -95,6 +128,25 @@ func _draw() -> void:
 		draw_rect(Rect2(to_screen(Vector2(placing_at)), Vector2(CELL, CELL)), Color(1, 1, 1, 0.35))
 	if dragging.size != Vector2.ZERO:
 		draw_rect(dragging.abs(), SELECTED, false, 1.0)
+
+
+# Deposits, then buildings, then units, each layer from the top of the
+# screen down: a three-quarter view hides what stands behind, so what is
+# nearer the bottom is drawn last. In id order a rock raised after a worker
+# was painted over the worker gathering beside it.
+static func _painters_order(units: Array[Dictionary]) -> Array[Dictionary]:
+	var ordered: Array[Dictionary] = units.duplicate()
+	ordered.sort_custom(func(one: Dictionary, other: Dictionary) -> bool:
+		if _layer(one["kind"]) != _layer(other["kind"]):
+			return _layer(one["kind"]) < _layer(other["kind"])
+		return (one["position"] as Vector2).y < (other["position"] as Vector2).y)
+	return ordered
+
+
+static func _layer(kind: String) -> int:
+	if RtsKinds.is_deposit(kind):
+		return 0
+	return 1 if RtsKinds.is_building(kind) else 2
 
 
 func _draw_ground() -> void:
@@ -108,7 +160,7 @@ func _draw_unit(unit: Dictionary) -> void:
 	var centre: Vector2 = to_screen(unit["position"])
 	var kind: String = unit["kind"]
 	if RtsKinds.is_deposit(kind):
-		if art == null or not art.draw_unit(self, kind, 0, centre, CELL, Vector2.ZERO, false, tick):
+		if art == null or not art.draw_unit(self, unit, centre, CELL, Vector2.ZERO, false, tick):
 			draw_circle(centre, CELL * 0.42, DEPOSIT_COLOURS[kind])
 		return
 	var colour: Color = SIDE_COLOURS[unit["side"]]
@@ -119,12 +171,12 @@ func _draw_unit(unit: Dictionary) -> void:
 	if moved.length() > 0.001:
 		_facing[unit["id"]] = moved
 	var facing: Vector2 = _facing.get(unit["id"], Vector2.ZERO)
-	if art == null or not art.draw_unit(self, kind, unit["side"], centre, CELL, facing, moved.length() > 0.001, tick):
+	if art == null or not art.draw_unit(self, unit, centre, CELL, facing, moved.length() > 0.001, tick):
 		_draw_shape(kind, centre, colour)
 	if selected.has(unit["id"]):
 		draw_arc(centre, CELL * 0.62, 0.0, TAU, 20, SELECTED, 1.5)
 	var full: float = float(RtsKinds.of(kind, "health"))
-	var bar := Rect2(centre + Vector2(-CELL * 0.4, -CELL * 0.62), Vector2(CELL * 0.8, 2.5))
+	var bar := Rect2(centre + Vector2(-CELL * 0.4, -CELL * 0.7), Vector2(CELL * 0.8, 4.0))
 	draw_rect(bar, Color(0.2, 0.0, 0.0))
 	draw_rect(Rect2(bar.position, Vector2(bar.size.x * clampf(unit["health"] / full, 0.0, 1.0), bar.size.y)), Color(0.3, 0.95, 0.3))
 
@@ -159,15 +211,15 @@ func _draw_building(kind: String, centre: Vector2, colour: Color) -> void:
 func _draw_fog() -> void:
 	var width: int = RtsScenario.MAP[0].length()
 	var seen := PackedByteArray()
-	seen.resize(_explored.size())
+	seen.resize(explored.size())
 	for unit: Dictionary in view.mine():
 		_mark_seen(seen, unit["position"], RtsKinds.of(unit["kind"], "sight"))
 	for index: int in range(seen.size()):
 		if seen[index] == 1:
-			_explored[index] = 1
+			explored[index] = 1
 			continue
 		var cell := Vector2(index % width, index / width)
-		draw_rect(Rect2(to_screen(cell), Vector2(CELL, CELL)), EXPLORED if _explored[index] == 1 else FOG)
+		draw_rect(Rect2(to_screen(cell), Vector2(CELL, CELL)), EXPLORED if explored[index] == 1 else FOG)
 
 
 # Every cell whose middle is within `sight` of `middle`, marked in `seen`.

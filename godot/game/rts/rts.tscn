@@ -1,41 +1,88 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://game/rts/rts.gd" id="1_rts"]
 [ext_resource type="Script" path="res://game/rts/rts_view.gd" id="2_view"]
 [ext_resource type="Script" path="res://game/rts/rts_thinking.gd" id="3_thinking"]
 [ext_resource type="Script" path="res://game/legend.gd" id="4_legend"]
+[ext_resource type="Script" path="res://game/rts/rts_minimap.gd" id="5_minimap"]
+[ext_resource type="Script" path="res://game/rts/rts_command_card.gd" id="6_card"]
 
 [node name="Rts" type="Node2D"]
 script = ExtResource("1_rts")
 
-[node name="RtsView" type="Node2D" parent="."]
+[node name="Map" type="Control" parent="."]
+clip_contents = true
+layout_mode = 3
+offset_top = 32.0
+offset_right = 960.0
+offset_bottom = 560.0
+mouse_filter = 2
+
+[node name="RtsView" type="Node2D" parent="Map"]
 script = ExtResource("2_view")
 
-[node name="RtsThinking" type="Node2D" parent="."]
+[node name="RtsThinking" type="Node2D" parent="Map"]
 script = ExtResource("3_thinking")
 
 [node name="Interface" type="CanvasLayer" parent="."]
 
 [node name="Header" type="Label" parent="Interface"]
-offset_left = 16.0
-offset_top = 2.0
+offset_left = 8.0
+offset_top = 1.0
 offset_right = 1272.0
-offset_bottom = 54.0
+offset_bottom = 32.0
 theme_override_font_sizes/font_size = 12
 text = "loading"
 
 [node name="Legend" type="Control" parent="Interface"]
-offset_left = 990.0
-offset_top = 56.0
+offset_left = 970.0
+offset_top = 38.0
 offset_right = 1272.0
-offset_bottom = 220.0
+offset_bottom = 160.0
+mouse_filter = 2
 script = ExtResource("4_legend")
 
 [node name="Thinking" type="Label" parent="Interface"]
-offset_left = 990.0
-offset_top = 226.0
+offset_left = 970.0
+offset_top = 166.0
 offset_right = 1272.0
-offset_bottom = 712.0
+offset_bottom = 714.0
 theme_override_font_sizes/font_size = 12
 autowrap_mode = 3
 text = "loading"
+
+[node name="Minimap" type="Control" parent="Interface"]
+offset_left = 8.0
+offset_top = 568.0
+offset_right = 200.0
+offset_bottom = 696.0
+script = ExtResource("5_minimap")
+
+[node name="Card" type="Control" parent="Interface"]
+offset_left = 212.0
+offset_top = 564.0
+offset_right = 960.0
+offset_bottom = 716.0
+mouse_filter = 2
+script = ExtResource("6_card")
+
+[node name="Info" type="Label" parent="Interface/Card"]
+offset_right = 330.0
+offset_bottom = 152.0
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+text = "loading"
+
+[node name="Buttons" type="GridContainer" parent="Interface/Card"]
+offset_left = 338.0
+offset_right = 748.0
+offset_bottom = 110.0
+columns = 5
+
+[node name="Why" type="Label" parent="Interface/Card"]
+offset_left = 338.0
+offset_top = 58.0
+offset_right = 748.0
+offset_bottom = 152.0
+theme_override_font_sizes/font_size = 11
+autowrap_mode = 3

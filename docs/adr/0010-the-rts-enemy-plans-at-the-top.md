@@ -1,8 +1,8 @@
 # 0010 — The RTS enemy plans at the top, with a heuristic, on a cadence
 
-Status: proposed · 2026-10-13 (written before T11; T11 and T20 measure it, and
-it is accepted or amended on what they find). Points 3, 4 and 5 measured in
-T11 -- see the amendment at the end; the rest waits for T20.
+Status: accepted, amended · 2026-10-13 (written before T11; T11 and T20
+measured it). Points 3, 4 and 5 measured in T11, points 1, 2 and 6 in T20
+-- see the two amendments at the end.
 
 ## Context
 
@@ -122,3 +122,35 @@ the commander.
   refusals). Point 2's "the baseline a planner has to beat" is therefore
   half beaten, and the tuning waits behind T45-T48, after the study of
   similar games the owner asked for.
+
+
+## Amended in T20 (2026-10-20)
+
+T20 built the RTS the ADR was written for (`godot/game/rts/`,
+`docs/concepts/rts-ai.md`), and measured what T11 could not.
+
+- **Points 1 and 2, built as written.** Only `RtsCommander` plans; squads
+  score regions by utility over an influence map (`SquadTactics`,
+  `RtsInfluence`); units follow T19's flow fields. The economy under the
+  plan is a priority queue (`EconomyQueue`), and `QueueSide` -- the same
+  queue filled by fixed rules -- is the baseline. **The commander beats it**:
+  15 - 5 over ten seeds from both seats (`make rts-measure`), and
+  `make test-rts-match` holds the lead on four seeds. T11's "half beaten"
+  is beaten in real time.
+- **Point 4, as written, now with a clock.** The domain is level 1
+  (`spec/pddl/rts-build-order-domain.pddl`, ten actions, ten facts); income
+  is a rate and `BuildSchedule` jumps from one affordable moment to the
+  next to time the plan, as Churchill and Buro do. A step whose resource
+  nobody mines is shown as never coming, not waited on.
+- **Point 5, on the clock.** The commander replans every ten seconds, and
+  at once when its next step cannot run or its goal changed. Every call
+  is under the strategy share without slicing: median 72 to 124 us, worst
+  678 us, against 1.5 ms. Spreading a plan across frames is still not
+  needed at this size, and is left for a domain that needs it.
+- **Point 6, measured and not settled.** Over the same domain the HTN's
+  methods (`BuildOrder.RECIPES`, written by hand) and STRIPS find plans of
+  the same length; as commanders they went 12 - 8 to the HTN over twenty
+  matches, which does not tell them apart. The commander keeps **STRIPS**
+  by default, because its order is found rather than written and that is
+  this kit's lesson, and `H` in the demo swaps to the HTN so a person can
+  compare.
