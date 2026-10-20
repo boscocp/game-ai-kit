@@ -23,6 +23,12 @@
 #      *is* the honest driver, whatever its code says;
 #   5. every car finished its laps, so a stalled race checks no fewer frames.
 #
+# What the twin cannot see is the race's own rules -- the grid, the bump,
+# following and passing -- because it runs them too: a rule in
+# `RacingRace` that favoured a level would be in both races. So that rule is
+# held elsewhere: `racing_test.gd` refuses a `racing_race.gd` whose code
+# names a level or a knob, and the grid is measured, not assumed.
+#
 # Each rule first refuses planted races, each by a finding that names the
 # rule it breaks: more grip, a car that turns past its grip, a stronger
 # engine, a physics swapped mid-race, a car launched past its top speed, a

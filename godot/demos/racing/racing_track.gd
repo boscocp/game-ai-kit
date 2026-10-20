@@ -66,6 +66,10 @@ var curvature := PackedFloat64Array()
 var full_grip_limit := PackedFloat64Array()
 ## The line's length, in metres.
 var length: float = 0.0
+## How far each line sample is to the left of the track's centre, in metres
+## (negative: to the right). A driver passing another goes to the side with
+## more tarmac left.
+var line_sideways := PackedFloat64Array()
 
 
 func _init(physics: RacingPhysics) -> void:
@@ -74,6 +78,11 @@ func _init(physics: RacingPhysics) -> void:
 	length = line.size() * SPACING
 	curvature = _curvatures(line)
 	full_grip_limit = _braking_limits(_corner_limits(physics.grip), physics.braking)
+	var hint: int = 0
+	for index: int in range(line.size()):
+		hint = nearest_centre(line[index], hint)
+		var left: Vector2 = centre[hint].direction_to(centre[(hint + 1) % centre.size()]).rotated(-PI / 2.0)
+		line_sideways.append((line[index] - centre[hint]).dot(left))
 
 
 ## The sample of the line nearest `position`, looked for near `hint`.

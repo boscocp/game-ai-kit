@@ -14,23 +14,34 @@
 ##      braking on time: the car brakes where, braking that hard, it would
 ##      otherwise no longer make the next corner.
 ##
-## One rule more, the same at every level and no knob: never faster than the
-## car close ahead on its path (`traffic_speed`, which the race fills in), so
-## it follows instead of running into it. It does not plan a way past;
-## overtaking is T54's heat line.
+## One rule more, the same at every level and no knob: a car close ahead on
+## its path (`traffic_speed`, which the race fills in) is followed, never
+## run into -- and passed. The driver moves the point it steers at
+## `PASS_OFFSET` metres to the side of the line with more tarmac, so it
+## draws alongside and, once the other car is no longer ahead of it, goes
+## by at its own pace. A sidestep, not a plan: T54's heat line is how
+## shipped games choose where to pass.
 ##
 ## The knobs are read once a step, through the three `*_now` functions, and
 ## what was read is kept in `used` -- recorded from inside the controller, so
 ## a knob changed where it is used cannot hide. Constant time a step, but
 ## for the braking point drawn on screen, which looks `BRAKING_REACH` ahead.
 ##
-## When not to use it: racing wheel to wheel. This driver follows; it does
-## not overtake.
+## When not to use it: racing wheel to wheel. This driver passes the car
+## ahead of it; it does not defend, block, or pick a moment.
 class_name RacingDriver
 extends RefCounted
 
 ## How far ahead, in samples, the braking point is looked for (400 metres).
 const BRAKING_REACH: int = 200
+## Metres to the side of the line a driver aims while passing: more than a
+## car's width, so it clears the one it passes.
+const PASS_OFFSET: float = 6.0
+## Metres from the edge of the tarmac a passing driver keeps.
+const PASS_MARGIN: float = 3.0
+## Metres a second a passing driver keeps even behind a car that has
+## stopped: following it to a standstill, it could never draw alongside.
+const PASSING_SPEED: float = 8.0
 
 var level: RacingLevel
 ## The phases of the two slow waves the wander follows, drawn from the seed
@@ -65,9 +76,13 @@ func _init(driving_level: RacingLevel, seed_value: int) -> void:
 func decide(car: RacingCar, track: RacingTrack, index: int, time: float) -> void:
 	decided_at = index
 	used = {"lookahead": lookahead_now(), "grip_margin": grip_margin_now(), "wander": wander_now()}
-	aim = track.point_ahead(index, used["lookahead"], used["wander"] * _drift(time))
+	var wish: float = speed_limit(track, index, car.physics, used["grip_margin"])
+	var ahead_index: int = track.wrapped(index + roundi(used["lookahead"] / RacingTrack.SPACING))
+	var passing: float = _passing_offset(wish, track, ahead_index)
+	aim = track.point_ahead(index, used["lookahead"], used["wander"] * _drift(time) + passing)
 	wanted_turn = pursuit_turn(car, aim)
-	target_speed = minf(speed_limit(track, index, car.physics, used["grip_margin"]), traffic_speed)
+	var behind: float = traffic_speed if passing == 0.0 else maxf(traffic_speed, PASSING_SPEED)
+	target_speed = minf(wish, behind)
 	braking_point = _braking_point(car, track, index, used["grip_margin"])
 
 
@@ -107,6 +122,20 @@ static func pursuit_turn(car: RacingCar, point: Vector2) -> float:
 	var angle: float = Vector2.from_angle(car.heading).angle_to(desired)
 	var distance: float = maxf(car.position.distance_to(point), 1.0)
 	return car.speed * 2.0 * sin(angle) / distance
+
+
+# Metres to the side of the line to aim while a car ahead holds this one
+# below `wish`, the speed it would like: towards the side of the track with
+# more tarmac, short of its edge. None when the way is clear.
+func _passing_offset(wish: float, track: RacingTrack, ahead_index: int) -> float:
+	if traffic_speed >= wish:
+		return 0.0
+	var from_centre: float = track.line_sideways[ahead_index]
+	var room_left: float = RacingTrack.HALF_WIDTH - from_centre - PASS_MARGIN
+	var room_right: float = RacingTrack.HALF_WIDTH + from_centre - PASS_MARGIN
+	if room_left >= room_right:
+		return minf(PASS_OFFSET, room_left)
+	return -minf(PASS_OFFSET, room_right)
 
 
 # Where along the line, from `index`, this driver's limit first falls below

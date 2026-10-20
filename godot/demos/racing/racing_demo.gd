@@ -21,13 +21,13 @@ const COUNTDOWN: float = 3.0
 ## Pixels a metre while racing, and while watching the whole track.
 const RACE_ZOOM: float = 7.0
 const WATCH_ZOOM: float = 1.95
-## The track's middle, in metres, and the middle of the screen left of the
-## panel, in pixels: where the camera puts what it looks at.
-const TRACK_MIDDLE := Vector2(232, 162)
+## The middle of the screen left of the panel, in pixels: where the camera
+## puts what it looks at.
 const VIEW_MIDDLE: float = 472.0
 const SCREEN_MIDDLE: float = 640.0
-## Each car's picture and its dot on the minimap: you, then easy, normal, hard.
-const YOU: int = 0
+## Each car's picture and its dot on the minimap, in this order: yours, then
+## easy, normal and hard.
+const YOURS: int = 0
 const DOTS: Array[Color] = [Color(0.95, 0.3, 0.1), Color(0.2, 0.55, 1.0), Color(1.0, 0.85, 0.1), Color(0.1, 0.1, 0.1)]
 ## Each car's wander follows the same seed, so a restart races the same race.
 const SEED: int = 23
@@ -40,6 +40,9 @@ const SEED: int = 23
 var levels: Array[RacingLevel] = RacingLevel.ladder()
 var race: RacingRace
 var human: RacingHumanDriver
+## Your car's number in the race, and the AI's when you race it; -1 watching.
+var you: int = -1
+var ai: int = -1
 var track_view: RacingTrackView
 var race_view: RacingRaceView
 var camera := Camera2D.new()
@@ -124,28 +127,35 @@ func decision_overlay() -> Dictionary:
 			shown.append(_ai_overlay(number))
 	var overlay: Dictionary = {"step": race.steps, "mode": mode, "cars": shown}
 	if human != null:
-		overlay["you"] = {"speed": race.cars[YOU].speed, "lap": race.laps(YOU)}
+		overlay["you"] = {"speed": race.cars[you].speed, "lap": race.laps(you)}
 	return overlay
 
 
 ## The race from its start: the cars at rest on the grid, the count running
-## when you race.
+## when you race. Racing, the AI takes the left of the front row, the inside
+## of the first corner, and you the right: starting there costs a car about
+## a second over three laps, measured, and that second is yours to win back.
+## Watching, easy starts in front, so the harder levels must pass it.
 func restart() -> void:
 	race = RacingRace.new(RacingPhysics.new())
 	var pictures: Array[String] = []
 	var dots: Array[Color] = []
 	human = null
+	you = -1
+	ai = -1
+	alone = false
 	if mode == "race":
 		human = RacingHumanDriver.new()
-		race.enter(human)
-		race.enter(RacingDriver.new(levels[chosen], SEED))
-		pictures.assign([Art.RACING_CARS[YOU], Art.RACING_CARS[chosen + 1]])
-		dots.assign([DOTS[YOU], DOTS[chosen + 1]])
+		ai = race.enter(RacingDriver.new(levels[chosen], SEED))
+		you = race.enter(human)
+		pictures.assign([Art.RACING_CARS[chosen + 1], Art.RACING_CARS[YOURS]])
+		dots.assign([DOTS[chosen + 1], DOTS[YOURS]])
 	else:
 		for number: int in range(levels.size()):
 			race.enter(RacingDriver.new(levels[number], SEED))
 			pictures.append(Art.RACING_CARS[number + 1])
 			dots.append(DOTS[number + 1])
+	race.plan()
 	_build_views(pictures)
 	_minimap.show_race(race, dots)
 	countdown = COUNTDOWN if mode == "race" else 0.0
@@ -154,10 +164,14 @@ func restart() -> void:
 	_refresh()
 
 
-# One sixtieth of a second, but only while paused: running, the frames do it.
+# One sixtieth of a second, but only while paused -- running, the frames do
+# it -- and not before the count is out. Your keys are read as on any step.
 func _step_while_paused() -> void:
-	if paused:
-		step_decision()
+	if not paused or countdown > 0.0:
+		return
+	if human != null:
+		_read_keys()
+	step_decision()
 
 
 # Racing, 1-3 choose the AI and start again; watching, they choose whom to
@@ -185,7 +199,7 @@ func _build_views(pictures: Array[String]) -> void:
 		race_view.queue_free()
 	track_view = RacingTrackView.new(race, levels[chosen])
 	race_view = RacingRaceView.new(race, pictures)
-	race_view.followed = 1 if mode == "race" else chosen
+	race_view.followed = ai if mode == "race" else chosen
 	add_child(track_view)
 	add_child(race_view)
 	_show_alone()
@@ -202,7 +216,7 @@ func _show_alone() -> void:
 # the panel.
 func _follow_with_camera() -> void:
 	var zoom: float = RACE_ZOOM if mode == "race" else WATCH_ZOOM
-	var looked_at: Vector2 = race.cars[YOU].position if mode == "race" else TRACK_MIDDLE
+	var looked_at: Vector2 = race.cars[you].position if mode == "race" else _track_middle()
 	camera.zoom = Vector2(zoom, zoom)
 	camera.position = looked_at + Vector2((SCREEN_MIDDLE - VIEW_MIDDLE) / zoom, 0.0)
 
@@ -227,9 +241,18 @@ func _braking_distance(number: int) -> float:
 
 func _refresh() -> void:
 	if mode == "race":
-		_status.text = RacingDemoText.racing(race, levels[chosen], LAPS, paused)
-		var result: String = RacingDemoText.result(race, levels[chosen].title, LAPS)
+		_status.text = RacingDemoText.racing(race, you, ai, LAPS, paused)
+		var result: String = RacingDemoText.result(race, you, ai, LAPS)
 		if result != "":
 			_banner.text = result
 	else:
 		_status.text = RacingDemoText.watching(race, chosen, paused)
+
+
+# The middle of the track's centre line, in metres: what the camera looks at
+# when watching the whole of it.
+func _track_middle() -> Vector2:
+	var bounds := Rect2(race.track.centre[0], Vector2.ZERO)
+	for point: Vector2 in race.track.centre:
+		bounds = bounds.expand(point)
+	return bounds.get_center()

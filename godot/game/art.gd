@@ -172,7 +172,10 @@ static func fighter_strip(character: String, animation: String) -> String:
 	return FIGHTERS + "%s/%s.png" % [character, animation]
 
 
-## Every path in this table, so one test can hold that each one is a file.
+## Every path in this table that the generator (T31) can draw, so one test
+## can hold that each is a file and the generator's manifest names exactly
+## these. The racing pictures are left out: nothing generates them, and
+## `racing_paths` lists them for the racing suite to hold instead.
 static func every_path() -> Array[String]:
 	var paths: Array[String] = []
 	paths.append_array(TERRAIN)
@@ -182,6 +185,12 @@ static func every_path() -> Array[String]:
 		for type_name: String in SHEET_FILES:
 			paths.append(sheet_path(faction, type_name))
 	paths.append_array([RED_MAN, WHITE_MAN, CROWN, CROSS, NOUGHT])
+	return paths
+
+
+## The racing demo's pictures, Kenney's and never generated.
+static func racing_paths() -> Array[String]:
+	var paths: Array[String] = []
 	paths.append_array(RACING_CARS)
 	paths.append_array(RACING_SCENERY)
 	paths.append(RACING_GRASS)

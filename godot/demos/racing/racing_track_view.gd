@@ -69,8 +69,7 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO)
 	_draw_tarmac(race.track)
 	_draw_line_by_speed(race.track)
-	var across: Vector2 = race.track.direction_at(0).rotated(PI / 2.0) * RacingTrack.HALF_WIDTH
-	draw_line(race.track.centre[0] - across, race.track.centre[0] + across, KERB_WHITE, 1.5)
+	_draw_start_line(race.track)
 	for piece: Array in scenery:
 		_draw_picture(piece[0], piece[1], piece[2], piece[3])
 
@@ -105,6 +104,22 @@ func _draw_kerbs(here: Vector2, after: Vector2, left: Vector2, next_left: Vector
 # -- the engine refuses it. Two triangles are drawn whatever their shape.
 func _draw_piece(corners: PackedVector2Array, colour: Color) -> void:
 	draw_primitive(corners, PackedColorArray([colour, colour, colour, colour]), PackedVector2Array())
+
+
+# The start and finish: a chequered band across the tarmac, so it is not
+# taken for the AI's white braking bar.
+func _draw_start_line(track: RacingTrack) -> void:
+	var along: Vector2 = track.direction_at(0)
+	var across: Vector2 = along.rotated(PI / 2.0)
+	var square: float = 1.5
+	var count: int = int(2.0 * RacingTrack.HALF_WIDTH / square)
+	for cell: int in range(count * 2):
+		var column: int = cell / 2
+		var row: int = cell % 2
+		var corner: Vector2 = track.centre[0] + across * (column * square - RacingTrack.HALF_WIDTH) + along * row * square
+		var colour: Color = KERB_WHITE if (column + row) % 2 == 0 else Color.BLACK
+		_draw_piece(PackedVector2Array([corner, corner + across * square, corner + (across + along) * square,
+			corner + along * square]), colour)
 
 
 # The racing line, each piece coloured by this level's limit there.

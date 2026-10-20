@@ -95,7 +95,7 @@ because it is driven better, and a command proves every car runs one physics.
 |---|---|---|---|
 | T22 | `ai_steering`: not on a grid | done | seek, arrive, pursue, avoid, in GDScript and Python; 6 trajectories held to 1e-3 (9.4e-6 measured; Vector2 is 32-bit); over 100 starts arrive rests every time and seek never; `make demo-steering` draws each force |
 | T23 | The racing demo, three honest difficulties | done | `make demo-racing`: pure pursuit on seek, a speed limit carried back from the corners; laps 39.6 / 36.6 / 35.1 s; `racing_does_not_cheat.gd` steps an honest twin race alongside and every car, decision and lap record must match it; seventeen planted cheats refused |
-| T59 | Race the AI: a car you drive | todo | the owner opened T23 and asked whether they were meant to drive; your car on the same physics against one AI level, three laps, its decisions on screen |
+| T59 | Race the AI: a car you drive | done | wave 65: you against one AI level in the same car; a 24 m track, a grid, bumps, and AIs that follow and pass; Kenney Racing Pack (CC0); laps 38.0 / 35.9 / 34.4 s; manual check the owner's |
 | T53 | How racing AI is made | done | `docs/concepts/racing-ai.md`: 30 references, each opened, those read in part said so; rubber-banding for and against; T23 and T54 rewritten from it |
 | T54 | Racing in 3D, with physics the driver does not own | blocked | the owner's 3D racer: suspension, tyre slip, weight transfer on `RigidBody3D`; T23's three knobs and its no-cheat gate; needs ADR 0018 accepted, T50, T53 |
 
@@ -126,6 +126,32 @@ touches, and later a library others can install.
 | T58 | Modules, and gates that run for what a wave touches | done | wave 63: 23 manifests in `modules/`, held to the code by `lint-modules` (M0-M10); tests filed in `godot/test/<module>/`; `make check-affected` runs the lints and the modules a change reaches (code uses followed on, test-only uses not): 25-64 s for a change that evolves one module, against 550 s; a wave lands by pull request, as desk-panel's do; CI ran for the first time and found four defects in bootstrap and the runner rules; mk fragments dropped (measured, no gain); ports, kernel, registry and the library are later tasks; manual check the owner's |
 
 ---
+
+## Resuming after 2026-10-20 (wave 65)
+
+**Where it stopped -- read first.** Wave 65 was T59, opened the same day
+after the owner played T23's demo and asked whether they were meant to
+drive. Mid-wave they asked for a wider track, collision, contrast and open
+art. The review record is `docs/reviews/65-race-the-ai.md`.
+
+**What landed.** You drive (`RacingHumanDriver`, a plain `RacingCar` on the
+race's physics) against one AI level; Tab keeps T23's three-AI view. The
+track is 24 m wide; cars start on a grid, bump instead of overlapping, and
+every AI follows and sidesteps to pass a slower car -- a rule in
+`RacingRace`, which a test holds never names a level. Art is Kenney's
+Racing Pack (CC0), in `godot/assets/racing/`; a follow camera and a
+minimap. The review found that following without passing let the leader
+win every race and turned the ladder upside down in watch mode -- which
+the honest twin could not see, since it runs the same race rules. Fixed
+and measured: watch mode finishes hard, normal, easy on three seeds.
+
+**For the owner.** T59's manual check: `make demo-racing`, race easy, then
+hard. The AI starts on the inside of the front row, worth about a second
+over three laps (measured with two identical drivers).
+
+**Next.** The same as after wave 63: write the ports and kernel, registry
+and library tasks before starting one; then T56 or T57 as the owner
+prefers.
 
 ## Resuming after 2026-10-20 (wave 64)
 

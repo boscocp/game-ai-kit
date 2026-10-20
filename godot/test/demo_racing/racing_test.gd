@@ -132,16 +132,62 @@ func test_two_cars_never_end_a_step_on_top_of_each_other() -> void:
 
 
 func test_the_car_that_runs_into_another_drops_to_its_speed() -> void:
+	# Both ways round: the runner as the first car and as the second, so a
+	# rule that always slows one of them, or always the faster, fails one.
+	for runner: int in [0, 1]:
+		var race := RacingRace.new(RacingPhysics.new())
+		race.enter(RacingHumanDriver.new())
+		race.enter(RacingHumanDriver.new())
+		var front: int = 1 - runner
+		var ahead: Vector2 = Vector2.from_angle(race.cars[runner].heading)
+		race.cars[front].position = race.cars[runner].position + ahead * 3.0
+		race.cars[front].heading = race.cars[runner].heading
+		race.cars[runner].speed = 30.0
+		race.cars[front].speed = 10.0
+		race.step()
+		assert_float(race.cars[runner].speed).is_less_equal(race.cars[front].speed + 1e-4)
+		assert_float(race.cars[front].speed).is_greater(9.0)
+
+
+func test_a_glancing_touch_costs_little_speed() -> void:
 	var race := RacingRace.new(RacingPhysics.new())
 	race.enter(RacingHumanDriver.new())
 	race.enter(RacingHumanDriver.new())
-	var ahead: Vector2 = Vector2.from_angle(race.cars[0].heading)
-	race.cars[1].position = race.cars[0].position + ahead * 3.0
-	race.cars[1].heading = race.cars[0].heading
+	var across: Vector2 = Vector2.from_angle(race.cars[0].heading).rotated(PI / 2.0)
+	race.cars[1].position = race.cars[0].position + across * 4.5
+	race.cars[1].heading = race.cars[0].heading + 0.1
 	race.cars[0].speed = 30.0
-	race.cars[1].speed = 10.0
+	race.cars[1].speed = 30.0
 	race.step()
-	assert_float(race.cars[0].speed).is_less_equal(race.cars[1].speed + 1e-6)
+	assert_float(race.cars[0].speed).is_greater(25.0)
+	assert_float(race.cars[1].speed).is_greater(25.0)
+
+
+func test_three_cars_in_contact_end_the_step_apart() -> void:
+	var race := RacingRace.new(RacingPhysics.new())
+	for _car: int in range(3):
+		race.enter(RacingHumanDriver.new())
+	var ahead: Vector2 = Vector2.from_angle(race.cars[0].heading)
+	for number: int in range(3):
+		race.cars[number].position = race.track.line[0] + ahead * 3.0 * number
+	race.step()
+	var closest: float = INF
+	for pair: Vector2i in [Vector2i(0, 1), Vector2i(0, 2), Vector2i(1, 2)]:
+		closest = minf(closest, race.cars[pair.x].position.distance_to(race.cars[pair.y].position))
+	assert_float(closest).is_greater_equal(2.0 * RacingRace.CAR_RADIUS - 0.05)
+
+
+func test_an_ai_driver_steps_aside_to_pass_a_slower_car() -> void:
+	var race := RacingRace.new(RacingPhysics.new())
+	race.enter(RacingDriver.new(RacingLevel.new("plain", 12.0, 0.9, 0.0), 1))
+	race.enter(RacingHumanDriver.new())
+	race.cars[0].speed = 30.0
+	var ahead: Vector2 = Vector2.from_angle(race.cars[0].heading)
+	race.cars[1].position = race.cars[0].position + ahead * 10.0
+	race.cars[1].heading = race.cars[0].heading
+	race.plan()
+	var on_line: Vector2 = race.track.point_ahead(race.line_index[0], 12.0, 0.0)
+	assert_float(race.drivers[0].aim.distance_to(on_line)).is_greater(RacingDriver.PASS_OFFSET - 0.5)
 
 
 func test_an_ai_driver_does_not_ask_to_go_faster_than_the_car_close_ahead() -> void:
@@ -151,7 +197,24 @@ func test_an_ai_driver_does_not_ask_to_go_faster_than_the_car_close_ahead() -> v
 	var ahead: Vector2 = Vector2.from_angle(race.cars[0].heading)
 	race.cars[1].position = race.cars[0].position + ahead * 10.0
 	race.cars[1].heading = race.cars[0].heading
-	race.cars[1].speed = 5.0
+	race.cars[1].speed = 20.0
 	race.step()
-	assert_float(race.drivers[0].target_speed).is_less_equal(5.0 + 1e-6)
+	assert_float(race.drivers[0].target_speed).is_less_equal(20.0 + 1e-6)
+
+
+func test_every_racing_picture_is_a_picture_the_game_can_load() -> void:
+	for path: String in Art.racing_paths():
+		assert_object(Art.texture(path)).is_not_null()
+
+
+func test_the_race_s_rules_never_read_a_driver_s_level() -> void:
+	# The honest twin in racing_does_not_cheat.gd runs these same rules, so it
+	# cannot see a rule that treats one level better. This holds it instead:
+	# the race's code never names a level or a knob.
+	# Comments may say so; only the code is read.
+	var code: String = ""
+	for line: String in FileAccess.get_file_as_string("res://demos/racing/racing_race.gd").split("\n"):
+		code += line.get_slice("#", 0) + "\n"
+	for word: String in ["level", "grip_margin", "lookahead", "wander"]:
+		assert_bool(word in code).override_failure_message("racing_race.gd's code names %s" % word).is_false()
 

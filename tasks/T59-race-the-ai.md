@@ -37,8 +37,8 @@ levels side by side.
 5. **Asked while it was being built** -- the owner, on T23's demo: the
    track was too narrow, one car drew over another, and there had to be
    collision. So the track is 24 metres wide (the racing line re-placed for
-   it), cars on a grid behind the line, and two cars that touch are pushed
-   apart, the one running into the other dropping to its speed -- the same
+   it), cars on a grid from the line back, and two cars that touch are
+   pushed apart, each losing what it was closing on the other with -- the same
    for everybody. An AI that does not see you would run into you, so every
    AI driver also follows: never faster than the car close ahead on its
    path. No knob, the same at every level, so T23's three-knob rule holds.

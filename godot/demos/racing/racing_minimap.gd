@@ -38,8 +38,12 @@ func _draw() -> void:
 		draw_circle(_on_map(race.cars[number].position), 4.0, colours[number])
 
 
-# Where a point of the track, in metres, falls on the map.
+# Where a point of the track, in metres, falls on the map: the track's own
+# extent, and its width, scaled to fit.
 func _on_map(point: Vector2) -> Vector2:
-	var area := Rect2(Vector2(10, 0), Vector2(450, 320)).grow(RacingTrack.HALF_WIDTH)
+	var area := Rect2(race.track.centre[0], Vector2.ZERO)
+	for corner: Vector2 in race.track.centre:
+		area = area.expand(corner)
+	area = area.grow(RacingTrack.HALF_WIDTH)
 	var fit: float = minf(size.x / area.size.x, size.y / area.size.y)
 	return (point - area.position) * fit + (size - area.size * fit) / 2.0
