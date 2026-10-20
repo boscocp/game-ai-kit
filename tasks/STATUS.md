@@ -9,12 +9,15 @@ and the T56 branch was dropped unused. Wave 66 writes T60-T64 from T58's
 plan, each with its diagnosis measured on `5129bfc`; no code moved. The
 review record is `docs/reviews/66-the-modules-tasks.md`.
 
-**For the owner.** Read T60-T64. Two decisions are yours: T64's names
-(prefix everything, nothing, or only the ports and the kernel), and whether
-T61's board kernel goes to `game/board/` or an `ai_board` addon.
+**The owner decided** (2026-10-20), both as recommended: T64 prefixes only
+the ports and the kernel; T61's board kernel goes to `game/board/`. And the
+order: **the next milestone first, the improvements at the end.** T60-T64,
+and the RTS improvements T55-T57, wait until the milestones are done.
 
-**Next.** T60, then T61 (it needs T60); T62 and T63 are independent of
-both; T64 last. T56 or T57 may be taken in between as the owner prefers.
+**Next.** Milestone 5, shooters in 3D. Every task in it is blocked on ADR
+0018 (*proposed*, wave 53): the owner accepts, amends or rejects it first,
+then T50 (the 3D tier, measured), T51, T52, and T54 (racing in 3D). When
+the modules come back: T60, then T61; T62 and T63 independent; T64 last.
 
 ## Resuming after` section is the next session's prompt.
 

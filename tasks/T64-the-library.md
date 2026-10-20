@@ -10,7 +10,7 @@ T58's "The library, later" is the plan this task carries out; the ports of
 T60-T62 come first because a published name is a promise, and these names
 were about to change.
 
-## The decision first -- the owner's, before any code
+## The decision first -- taken by the owner
 
 **Names.** `class_name` registers a class project-wide, and GDScript 4.7 has
 no namespaces (godot-proposals #1566, open since 2020; its opening post is
@@ -25,8 +25,10 @@ someone's game. The choice trades against invariant 1:
   `AdversarialGame`, ...), and keep the algorithms' names readable
   (`AStarSearch`, `StripsPlanner`).
 
-The prefix itself, if any, is the owner's too. Written as an ADR before
-step 1.
+**Decided by the owner, 2026-10-20: the recommendation** -- prefix only the
+ports and the kernel, the algorithms keep their readable names. The prefix
+itself is chosen in the ADR that opens this task (before step 1), by what
+the Asset Library and PyPI already hold under it.
 
 ## Steps
 

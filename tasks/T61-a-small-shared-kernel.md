@@ -34,7 +34,8 @@ game's -- the tactical board, which the league and the behaviour demo play.
    `godot/game/board/` (it is the examples' kernel, not a technique's), or an
    addon `ai_board`. Recommended: `game/board/` -- an addon is something a
    reader copies into their own game, and nobody wants this board without
-   these examples. `check_addon_deps.py` and M5 decide which one the gates
+   these examples. **Decided by the owner, 2026-10-20: `game/board/`**; the
+   ADR records why. `check_addon_deps.py` and M5 decide which one the gates
    accept without a new rule.
 3. **Move**, `git mv` with the `.uid` files and no content change, then the
    import: the six board types, `DecisionPolicy`, `Move`. The `res://`
