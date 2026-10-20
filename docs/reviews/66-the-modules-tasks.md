@@ -78,3 +78,12 @@ The classes each `ai_learning` file uses in code. Both `DEFAULT_PATH`s.
 The Python imports. `DecisionPolicy.choose`'s signature. The chain at
 `tactical.gd:395`. `Search extends Pathfinder`. Every make target and
 script flag named. No byline, and the employer terms are clean.
+
+## What was done about them
+
+All thirteen were fixed in the commit after the review, except the
+weakness in `lint-status` that finding 9 exposed, which is recorded and
+left for the gate's own task. Then `check_acceptance.py`, `lint-status`
+and `make check-affected BASE=origin/main` were rerun and passed. The wave
+touches only `tasks/` and `docs/`, so no module was selected and the
+lints ran.
