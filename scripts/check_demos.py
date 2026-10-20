@@ -531,6 +531,7 @@ def build(folder: pathlib.Path, makefile: str = SOUND_MAKEFILE, search_script: s
                                    encoding="utf-8")
     listing = ", ".join(f'"res://{scene}"' for scene in listed)
     note = f'\n\t# not yet: "res://{commented}"\n' if commented else ""
+    (folder / OVERLAYS).parent.mkdir(parents=True, exist_ok=True)
     (folder / OVERLAYS).write_text(f"const SCENES: Array[String] = [{listing}{note}]\n", encoding="utf-8")
     search = godot / "demos" / "search.tscn"
     if detached_legend and search.exists():
