@@ -77,6 +77,7 @@ lesson in it.
 | T19 | The real-time core | done | `BoardState` at 200 units: ~50 ms a step, three frames, so `ai_rts_core` exists (ADR 0019); its simulation 0.7 ms, flow fields 0.34 ms (p95 1.29 of a 1.5 share); a scripted match at ~65x real time, replayed to its digest |
 | T20 | The RTS demo | wip | build orders against the clock, fog of war; split on 2026-10-20, the human side moved to T55 |
 | T55 | The RTS's human side: a clock's knobs, the league in real time | todo | split from T20: a reaction delay drawn from recordings, an actions-per-minute cap, T25's league and meter on the RTS; needs T25's recordings |
+| T56 | The armed tower: an upgrade the commander must choose to pay for | todo | the owner's request of 2026-10-20, playing T20: the tower that sees, upgraded to shoot, with line of fire; a new step in the build-order domain the commander must weigh against fighters |
 
 ## Milestone 4 — driving, which is the first thing not on a grid
 
