@@ -14,12 +14,18 @@
 ##      braking on time: the car brakes where, braking that hard, it would
 ##      otherwise no longer make the next corner.
 ##
+## One rule more, the same at every level and no knob: never faster than the
+## car close ahead on its path (`traffic_speed`, which the race fills in), so
+## it follows instead of running into it. It does not plan a way past;
+## overtaking is T54's heat line.
+##
 ## The knobs are read once a step, through the three `*_now` functions, and
 ## what was read is kept in `used` -- recorded from inside the controller, so
 ## a knob changed where it is used cannot hide. Constant time a step, but
 ## for the braking point drawn on screen, which looks `BRAKING_REACH` ahead.
 ##
-## When not to use it: racing in traffic. This driver sees no other car.
+## When not to use it: racing wheel to wheel. This driver follows; it does
+## not overtake.
 class_name RacingDriver
 extends RefCounted
 
@@ -38,6 +44,9 @@ var wanted_turn: float = 0.0
 ## The first sample ahead that is slower than the car is now: where it must
 ## already be braking. -1 when none is within reach.
 var braking_point: int = -1
+## The speed of the car close ahead on this driver's path, set by the race
+## before each decision; infinity when the way is clear.
+var traffic_speed: float = INF
 ## The three knobs as this step used them.
 var used: Dictionary = {}
 ## The line sample this step decided at.
@@ -58,7 +67,7 @@ func decide(car: RacingCar, track: RacingTrack, index: int, time: float) -> void
 	used = {"lookahead": lookahead_now(), "grip_margin": grip_margin_now(), "wander": wander_now()}
 	aim = track.point_ahead(index, used["lookahead"], used["wander"] * _drift(time))
 	wanted_turn = pursuit_turn(car, aim)
-	target_speed = speed_limit(track, index, car.physics, used["grip_margin"])
+	target_speed = minf(speed_limit(track, index, car.physics, used["grip_margin"]), traffic_speed)
 	braking_point = _braking_point(car, track, index, used["grip_margin"])
 
 

@@ -38,14 +38,13 @@ func _init(name_shown: String, aim_distance: float, margin: float, drift: float)
 ## watching can tell them apart, which Game AI Pro warns a narrow range
 ## does not allow; `racing_ladder.gd` says by how much in lap time.
 ##
-## Measured before they were chosen, on this track: the grip margin is what
-## buys lap time. Lookahead from 8 to 16 metres moved the hard driver's lap
-## by under a tenth of a second, and at 20 it cut the inside of corners onto
-## the grass -- so lookahead is chosen for what it shows, turning in earlier,
-## and stops short of that. Wander puts a car on the grass from about a metre:
-## easy's 2 metres leave it there on about one frame in seventeen, costing it
-## some 0.8 s a lap. That is meant -- running wide is the mistake a person
-## can watch the easy driver make -- and hard's 0.3 metres never do.
+## Measured, on this track at 24 metres wide (T59, 2026-10-20), five seeds
+## and two laps each: the grip margin is what buys lap time -- easy 38.0 s,
+## normal 35.9 s, hard 34.4 s a lap. Lookahead from 8 to 24 metres moved the
+## hard driver's lap by under two tenths of a second, so it is chosen for what
+## it shows, turning in earlier. And wander is now only seen: no level leaves
+## the tarmac, and easy with none laps as fast as with two metres. (On T23's
+## 16-metre track easy's wander put it on the grass one frame in seventeen.)
 static func ladder() -> Array[RacingLevel]:
 	return [
 		RacingLevel.new("easy", 8.0, 0.75, 2.0),

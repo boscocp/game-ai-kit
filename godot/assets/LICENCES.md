@@ -25,6 +25,12 @@ required. It is given anyway, because it is owed.
 - **Boardgame Pack v2**, by Kenney (www.kenney.nl): <https://kenney.nl/assets/boardgame-pack>
 - **Game Icons**, by Kenney (www.kenney.nl): <https://kenney.nl/assets/game-icons>
 - **Tiny Battle 1.0**, by Kenney (www.kenney.nl): <https://kenney.nl/assets/tiny-battle>
+- **Racing Pack**, by Kenney (www.kenney.nl): <https://kenney.nl/assets/racing-pack>,
+  the archive `kenney_racing-pack.zip` (sha256
+  a5e5252082e2bcbac177402d3bde3aa161fd81aeb246a36a1ec39255d1f30480). Its own
+  `License.txt` says CC0. Each file below is the pack's own, byte for byte;
+  the track's asphalt and kerb colours are sampled from its
+  `road_asphalt22.png` and `road_asphalt01.png`, not committed.
 - **Puny Characters**, by Shade, on OpenGameArt: <https://opengameart.org/content/puny-characters>,
   the archive `puny-characters.zip` (sha256
   971d7b07eea18fb2cce475cd6554a176ebf783bb064dec5a637ba33c7829320e). Its page
@@ -129,3 +135,12 @@ lays it over open ground when it draws, rather than a second file doing it.
 | `fighters/dancer/air_jab.png` | Mustermann 2 | `Blueehite.png`, cels 593, 594, 595 | CC0 1.0 | 6d8204803e70d4f97963a45f20ce9e4d7f630715e7c93e5f03a13e51a5ac2fe6 |
 | `fighters/dancer/air_punch.png` | Mustermann 2 | `Blueehite.png`, cels 597, 598, 599, 593 | CC0 1.0 | ff4e7c3442f88a9447b28605c79514fbc7011bd5dd577afcc1115f586c4074a9 |
 | `fighters/dancer/air_kick.png` | Mustermann 2 | `Blueehite.png`, cels 682, 683, 684, 685, 686 | CC0 1.0 | 45549bbb8c24418ee37d0d9d52cf865ae2b412c1701902fd2b8ecc8556987413 |
+| `racing/car_red.png` | Racing Pack | `PNG/Cars/car_red_1.png` | CC0 1.0 | 18b02b61145659e5045404175778cd49d71a8f29fb12b4de3dcd8661c55141be |
+| `racing/car_blue.png` | Racing Pack | `PNG/Cars/car_blue_1.png` | CC0 1.0 | aae03c3369f00db344182e426876bd9dc59875dc51583379fded2e469e8883cb |
+| `racing/car_yellow.png` | Racing Pack | `PNG/Cars/car_yellow_1.png` | CC0 1.0 | 5f67d40f787646f30befa03fa51e307d562e803ebb7450a160412bbb0ad7e937 |
+| `racing/car_black.png` | Racing Pack | `PNG/Cars/car_black_1.png` | CC0 1.0 | 89ca99ba9d360a2f421a733b176112370a3f4c1571d8a51ef35f2894741c81f6 |
+| `racing/grass.png` | Racing Pack | `PNG/Tiles/Grass/land_grass04.png` | CC0 1.0 | 1ef168d83df9af2935d78bbe060d4bbb7967e3bd740e5be40156595efae7aded |
+| `racing/tree_large.png` | Racing Pack | `PNG/Objects/tree_large.png` | CC0 1.0 | 6b5fa943f0d0524ab63799e5bc799b09b6f409c5ffd1e25616fe758d3776ca4f |
+| `racing/tree_small.png` | Racing Pack | `PNG/Objects/tree_small.png` | CC0 1.0 | 89fcd1676384fa704f5580925e88e715c2f61f10fdba25381f0d3b32ce1e4fc9 |
+| `racing/tribune.png` | Racing Pack | `PNG/Objects/tribune_full.png` | CC0 1.0 | f3cc92d3eb0808f1ba7a254ee15781ea3cd726a6a476654913c4c8ee90a1dd44 |
+| `racing/tyres.png` | Racing Pack | `PNG/Objects/tires_white.png` | CC0 1.0 | 70f09f26dd2730c45e29b662a1ecb485281e6254d81556ee559116b15885f0b9 |

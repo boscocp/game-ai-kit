@@ -13,7 +13,8 @@
 # Measured before the gap was set (2026-10-20): easy 39.6 s, normal 36.6 s,
 # hard 35.1 s a lap over these seeds, the standing start's lap included --
 # 3.0 and 1.5 seconds apart. One second leaves the smaller gap room without
-# letting two drivers a person could not tell apart through.
+# letting two drivers a person could not tell apart through. T59 widened the
+# track to 24 metres: 38.0, 35.9 and 34.4 s, 2.1 and 1.5 apart.
 #
 # Each rule is first shown a ladder it must refuse, built from made-up lap
 # times, so a check that only goes green cannot pass.

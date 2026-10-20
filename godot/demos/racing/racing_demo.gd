@@ -1,59 +1,83 @@
-## Three drivers, one car: the racing demo, and three difficulties that do
-## not cheat.
+## Race the AI: your car against one AI driver, in the same car.
 ##
-## T23's demo. Easy, normal and hard race the same car on the same track,
-## through each other as ghosts. One of them is followed, and what it is
-## deciding is drawn: the point it steers at down the line, the line
-## coloured by the speed it allows itself, and a bar across the track where
-## it must already be braking. 1-3 follow another level, A shows the
-## followed car alone, space pauses, the full stop steps one sixtieth of a
-## second, R starts the race again.
+## T23's demo, made a game by T59. You drive the red car with the arrows or
+## WASD; the AI drives the other, at the level 1-3 chose, for `LAPS` laps
+## from a three-second count. Your car is a plain `RacingCar` on the race's
+## one `RacingPhysics` -- the same engine, brakes and grip -- so who is faster
+## is who drives better. The camera follows you; the minimap shows the rest.
 ##
-## What to watch is where the hard car brakes and how early it turns in: its
-## bar sits closer to each corner than easy's, and its line is greener
-## through it. It is never faster down a straight -- the same top speed is
-## the same for everybody -- and if it ever is, the cheat check has a hole.
+## What the AI is deciding stays on screen while you race it: the white dot
+## it steers at, down the line; the line coloured by the speed it allows
+## itself, red where it must be slow; the white bar where it must already be
+## braking. Follow it into a corner and you see where to brake. Tab switches
+## to T23's view, the three levels racing each other on the whole track, 1-3
+## following one and A showing it alone. P pauses, the full stop steps one
+## sixtieth of a second while paused, R starts again.
 class_name RacingDemo
 extends Node2D
 
-## Pixels a metre, and where the track's corner sits on the screen.
-const SCALE: float = 2.0
-const ORIGIN := Vector2(24.0, 56.0)
-const COLOURS: Array[Color] = [Color(0.6, 0.5, 1.0), Color(1.0, 0.85, 0.2), Color(1.0, 0.45, 0.8)]
-const AIM_COLOUR := Color(1.0, 1.0, 1.0)
-const BRAKING_COLOUR := Color(0.3, 0.95, 1.0)
-## Cars are drawn larger than a car, in metres, so they can be seen at all.
-const CAR_LENGTH: float = 6.0
-const CAR_WIDTH: float = 3.6
+const LAPS: int = 3
+const COUNTDOWN: float = 3.0
+## Pixels a metre while racing, and while watching the whole track.
+const RACE_ZOOM: float = 7.0
+const WATCH_ZOOM: float = 1.95
+## The track's middle, in metres, and the middle of the screen left of the
+## panel, in pixels: where the camera puts what it looks at.
+const TRACK_MIDDLE := Vector2(232, 162)
+const VIEW_MIDDLE: float = 472.0
+const SCREEN_MIDDLE: float = 640.0
+## Each car's picture and its dot on the minimap: you, then easy, normal, hard.
+const YOU: int = 0
+const DOTS: Array[Color] = [Color(0.95, 0.3, 0.1), Color(0.2, 0.55, 1.0), Color(1.0, 0.85, 0.1), Color(0.1, 0.1, 0.1)]
 ## Each car's wander follows the same seed, so a restart races the same race.
 const SEED: int = 23
 
 @onready var _status: Label = $Interface/Status
 @onready var _legend: Legend = $Interface/Legend
+@onready var _banner: Label = $Interface/Banner
+@onready var _minimap: RacingMinimap = $Interface/Minimap
 
 var levels: Array[RacingLevel] = RacingLevel.ladder()
 var race: RacingRace
+var human: RacingHumanDriver
 var track_view: RacingTrackView
-## The car whose decisions are drawn, and whether it is drawn alone.
-var followed: int = 2
+var race_view: RacingRaceView
+var camera := Camera2D.new()
+## "race", you against one AI; or "watch", T23's three levels.
+var mode: String = "race"
+## The AI's level when racing, and the level followed when watching.
+var chosen: int = 1
 var alone: bool = false
 var paused: bool = false
+## Seconds left before the start; the race does not move until it is 0.
+var countdown: float = 0.0
 
 
 func _ready() -> void:
+	add_child(camera)
 	restart()
 	_legend.set_entries([
-		[COLOURS[0], "easy"], [COLOURS[1], "normal"], [COLOURS[2], "hard"],
-		[AIM_COLOUR, "the point it steers at"],
-		[BRAKING_COLOUR, "bar: where it must be braking"],
-		[RacingTrackView.SLOW, "line: slow here, for this driver"],
-		[RacingTrackView.FAST, "line: top speed is the only limit"],
+		[Art.texture(Art.RACING_CARS[0]), "you"],
+		[Art.texture(Art.RACING_CARS[1]), "easy AI"],
+		[Art.texture(Art.RACING_CARS[2]), "normal AI"],
+		[Art.texture(Art.RACING_CARS[3]), "hard AI"],
+		[RacingRaceView.MARK, "dot: where the AI steers"],
+		[RacingRaceView.MARK, "bar: where it must be braking"],
+		[RacingTrackView.SLOW, "line: it must be slow here"],
+		[RacingTrackView.FAST, "line: only top speed limits it"],
 	] as Array[Array])
 
 
-func _physics_process(_delta: float) -> void:
-	if not paused:
-		step_decision()
+func _physics_process(delta: float) -> void:
+	if paused:
+		return
+	if countdown > 0.0:
+		countdown = maxf(countdown - delta, 0.0)
+		_banner.text = "%d" % ceili(countdown) if countdown > 0.0 else ""
+		return
+	if human != null:
+		_read_keys()
+	step_decision()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -62,88 +86,133 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	match key.keycode:
 		KEY_1, KEY_2, KEY_3:
-			followed = key.keycode - KEY_1
-			track_view.show_level(levels[followed])
+			_choose(key.keycode - KEY_1)
+		KEY_TAB:
+			mode = "watch" if mode == "race" else "race"
+			restart()
 		KEY_A:
-			alone = not alone
-		KEY_SPACE:
+			alone = mode == "watch" and not alone
+		KEY_P:
 			paused = not paused
 		KEY_PERIOD:
-			paused = true
-			step_decision()
+			_step_while_paused()
 		KEY_R:
 			restart()
+	_show_alone()
 	_refresh()
 
 
-## Every driver decides once, and every car moves one sixtieth of a second.
+## Every driver decides once -- yours from the keys -- and every car moves
+## one sixtieth of a second.
 func step_decision() -> void:
 	race.step()
-	queue_redraw()
+	_follow_with_camera()
+	race_view.queue_redraw()
+	_minimap.queue_redraw()
 	if race.steps % 10 == 0:
 		_refresh()
 
 
-## What each driver is deciding with, for `test/menu/demo_overlays.gd`: the
-## point it steers at, the speed it chose and the one it is doing, how far
-## ahead it must be braking, and the knobs it used.
+## What each AI driver is deciding with, for `test/menu/demo_overlays.gd`:
+## the point it steers at, the speed it chose and the one it is doing, how
+## far ahead it must be braking, and the knobs it used. And, when you race,
+## your speed and lap.
 func decision_overlay() -> Dictionary:
 	var shown: Array[Dictionary] = []
 	for number: int in range(race.cars.size()):
-		var driver: RacingDriver = race.drivers[number]
-		shown.append({"level": driver.level.title, "aim": [driver.aim.x, driver.aim.y],
-			"target_speed": driver.target_speed, "speed": race.cars[number].speed,
-			"braking_in": _braking_distance(number), "lap": race.laps(number), "used": driver.used})
-	return {"step": race.steps, "followed": levels[followed].title, "cars": shown}
+		if race.drivers[number] != human:
+			shown.append(_ai_overlay(number))
+	var overlay: Dictionary = {"step": race.steps, "mode": mode, "cars": shown}
+	if human != null:
+		overlay["you"] = {"speed": race.cars[YOU].speed, "lap": race.laps(YOU)}
+	return overlay
 
 
-## The race from its start: the three cars at rest on the line.
+## The race from its start: the cars at rest on the grid, the count running
+## when you race.
 func restart() -> void:
 	race = RacingRace.new(RacingPhysics.new())
-	for level: RacingLevel in levels:
-		race.enter(RacingDriver.new(level, SEED))
+	var pictures: Array[String] = []
+	var dots: Array[Color] = []
+	human = null
+	if mode == "race":
+		human = RacingHumanDriver.new()
+		race.enter(human)
+		race.enter(RacingDriver.new(levels[chosen], SEED))
+		pictures.assign([Art.RACING_CARS[YOU], Art.RACING_CARS[chosen + 1]])
+		dots.assign([DOTS[YOU], DOTS[chosen + 1]])
+	else:
+		for number: int in range(levels.size()):
+			race.enter(RacingDriver.new(levels[number], SEED))
+			pictures.append(Art.RACING_CARS[number + 1])
+			dots.append(DOTS[number + 1])
+	_build_views(pictures)
+	_minimap.show_race(race, dots)
+	countdown = COUNTDOWN if mode == "race" else 0.0
+	_banner.text = "%d" % ceili(countdown) if countdown > 0.0 else ""
+	_follow_with_camera()
+	_refresh()
+
+
+# One sixtieth of a second, but only while paused: running, the frames do it.
+func _step_while_paused() -> void:
+	if paused:
+		step_decision()
+
+
+# Racing, 1-3 choose the AI and start again; watching, they choose whom to
+# follow, and the race goes on.
+func _choose(level: int) -> void:
+	chosen = level
+	if mode == "race":
+		restart()
+		return
+	track_view.show_level(levels[chosen])
+	race_view.followed = chosen
+
+
+# One AI driver's decision, as the overlay carries it.
+func _ai_overlay(number: int) -> Dictionary:
+	var driver: RacingDriver = race.drivers[number]
+	return {"level": driver.level.title, "aim": [driver.aim.x, driver.aim.y],
+		"target_speed": driver.target_speed, "speed": race.cars[number].speed,
+		"braking_in": _braking_distance(number), "lap": race.laps(number), "used": driver.used}
+
+
+func _build_views(pictures: Array[String]) -> void:
 	if track_view != null:
 		track_view.queue_free()
-	track_view = RacingTrackView.new(race, levels[followed])
-	track_view.position = ORIGIN
-	track_view.scale = Vector2(SCALE, SCALE)
-	track_view.show_behind_parent = true
+		race_view.queue_free()
+	track_view = RacingTrackView.new(race, levels[chosen])
+	race_view = RacingRaceView.new(race, pictures)
+	race_view.followed = 1 if mode == "race" else chosen
 	add_child(track_view)
-	queue_redraw()
-	if is_node_ready():
-		_refresh()
+	add_child(race_view)
+	_show_alone()
 
 
-func _draw() -> void:
-	draw_set_transform(ORIGIN, 0.0, Vector2(SCALE, SCALE))
-	_draw_decision(followed)
+func _show_alone() -> void:
 	for number: int in range(race.cars.size()):
-		if number == followed or not alone:
-			_draw_car(number)
-	draw_arc(race.cars[followed].position, CAR_LENGTH, 0.0, TAU, 24, COLOURS[followed], 0.6)
+		race_view.shown[number] = not alone or number == race_view.followed
+	race_view.queue_redraw()
 
 
-# What the followed driver reasons with: a bar across the track where it must
-# be braking, and a line from the car to the point it steers at.
-func _draw_decision(number: int) -> void:
-	var driver: RacingDriver = race.drivers[number]
-	var car: RacingCar = race.cars[number]
-	if driver.braking_point >= 0:
-		var across: Vector2 = race.track.direction_at(driver.braking_point).rotated(PI / 2.0) * 5.0
-		var at: Vector2 = race.track.line[driver.braking_point]
-		draw_line(at - across, at + across, BRAKING_COLOUR, 2.0)
-	draw_line(car.position, driver.aim, AIM_COLOUR, 0.6)
-	draw_circle(driver.aim, 1.5, AIM_COLOUR)
+# Racing, the camera sits on your car, close; watching, on the whole track.
+# Either way what it looks at is put in the middle of the screen left of
+# the panel.
+func _follow_with_camera() -> void:
+	var zoom: float = RACE_ZOOM if mode == "race" else WATCH_ZOOM
+	var looked_at: Vector2 = race.cars[YOU].position if mode == "race" else TRACK_MIDDLE
+	camera.zoom = Vector2(zoom, zoom)
+	camera.position = looked_at + Vector2((SCREEN_MIDDLE - VIEW_MIDDLE) / zoom, 0.0)
 
 
-func _draw_car(number: int) -> void:
-	var car: RacingCar = race.cars[number]
-	var ahead: Vector2 = Vector2.from_angle(car.heading)
-	var side := Vector2(-ahead.y, ahead.x)
-	var nose: Vector2 = car.position + ahead * CAR_LENGTH * 0.6
-	var tail: Vector2 = car.position - ahead * CAR_LENGTH * 0.4
-	draw_colored_polygon(PackedVector2Array([nose, tail + side * CAR_WIDTH / 2.0, tail - side * CAR_WIDTH / 2.0]),
-		COLOURS[number])
+func _read_keys() -> void:
+	human.throttle = Input.is_physical_key_pressed(KEY_UP) or Input.is_physical_key_pressed(KEY_W)
+	human.brake = Input.is_physical_key_pressed(KEY_DOWN) or Input.is_physical_key_pressed(KEY_S)
+	var left: bool = Input.is_physical_key_pressed(KEY_LEFT) or Input.is_physical_key_pressed(KEY_A)
+	var right: bool = Input.is_physical_key_pressed(KEY_RIGHT) or Input.is_physical_key_pressed(KEY_D)
+	human.steer = (1.0 if right else 0.0) - (1.0 if left else 0.0)
 
 
 # Metres along the line to where car `number` must already be braking; the
@@ -157,19 +226,10 @@ func _braking_distance(number: int) -> float:
 
 
 func _refresh() -> void:
-	var lines: Array[String] = ["%.1f s%s  ·  1-3 follow  ·  A alone  ·  space pause  ·  . one step  ·  R again" % [
-		race.time, "  (paused)" if paused else ""]]
-	for number: int in range(race.cars.size()):
-		lines.append(_car_line(number))
-	lines.append("\nThe cars drive through each other: one physics, three drivers.")
-	_status.text = "\n".join(lines)
-
-
-func _car_line(number: int) -> String:
-	var driver: RacingDriver = race.drivers[number]
-	var car: RacingCar = race.cars[number]
-	var last: String = "%.2f s" % race.lap_time(number, race.laps(number) - 1) if race.laps(number) > 0 else "--"
-	var braking: float = _braking_distance(number)
-	return "%s%s: lap %d, last %s\n  %.0f m/s, wants %.0f, %s" % [
-		"> " if number == followed else "", driver.level.title, race.laps(number) + 1, last, car.speed,
-		driver.target_speed, "braking" if braking == 0.0 else "brakes in %.0f m" % braking]
+	if mode == "race":
+		_status.text = RacingDemoText.racing(race, levels[chosen], LAPS, paused)
+		var result: String = RacingDemoText.result(race, levels[chosen].title, LAPS)
+		if result != "":
+			_banner.text = result
+	else:
+		_status.text = RacingDemoText.watching(race, chosen, paused)
