@@ -14,6 +14,10 @@
 ## It only swerves. It does not know where the vehicle wants to go; added to
 ## seek or arrive with `Steering.combined`, the two together go round.
 ##
+## It never brakes, so `look_ahead` has to be long enough to swerve in at
+## top speed: measured with a radius-5 obstacle, a look-ahead of 2 cut 1.3
+## into it, and one of 4 or more did not touch it.
+##
 ## When not to use it: walls, corridors, anything not round, or many
 ## obstacles close together. A circle is a poor wall, and two obstacles
 ## pushing opposite ways leave the vehicle between them. A flow field or a

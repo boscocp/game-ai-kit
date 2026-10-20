@@ -132,7 +132,8 @@ class Avoid:
     """Swerve sideways at full force from the first round obstacle within
     `look_ahead` (less as the vehicle slows; the first listed on a tie), to
     the side of the line its centre is not on; head-on, to the left; nothing
-    when still. Only sideways: a push back would stall it in front."""
+    when still. Only sideways: a push back would stall it in front -- so it
+    never brakes, and `look_ahead` must be long enough to swerve in."""
 
     centres: list[Vec]
     radii: list[float]
