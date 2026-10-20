@@ -1,25 +1,7 @@
 # Status
 
 The index. One row per task; the task file holds everything needed to do it.
-The topmost `## Resuming after 2026-10-20 (wave 66)
-
-**Where it stopped -- read first.** `make wave` picked T56; the standing
-next step was to write the modularity tasks first, so the owner chose that
-and the T56 branch was dropped unused. Wave 66 writes T60-T64 from T58's
-plan, each with its diagnosis measured on `5129bfc`; no code moved. The
-review record is `docs/reviews/66-the-modules-tasks.md`.
-
-**The owner decided** (2026-10-20), both as recommended: T64 prefixes only
-the ports and the kernel; T61's board kernel goes to `game/board/`. And the
-order: **the next milestone first, the improvements at the end.** T60-T64,
-and the RTS improvements T55-T57, wait until the milestones are done.
-
-**Next.** Milestone 5, shooters in 3D. Every task in it is blocked on ADR
-0018 (*proposed*, wave 53): the owner accepts, amends or rejects it first,
-then T50 (the 3D tier, measured), T51, T52, and T54 (racing in 3D). When
-the modules come back: T60, then T61; T62 and T63 independent; T64 last.
-
-## Resuming after` section is the next session's prompt.
+The topmost `## Resuming after` section is the next session's prompt.
 
 ## Milestone 1 — the vertical slice
 
@@ -143,12 +125,31 @@ touches, and later a library others can install.
 |---|---|---|---|
 | T58 | Modules, and gates that run for what a wave touches | done | wave 63: 23 manifests in `modules/`, held to the code by `lint-modules` (M0-M10); tests filed in `godot/test/<module>/`; `make check-affected` runs the lints and the modules a change reaches (code uses followed on, test-only uses not): 25-64 s for a change that evolves one module, against 550 s; a wave lands by pull request, as desk-panel's do; CI ran for the first time and found four defects in bootstrap and the runner rules; mk fragments dropped (measured, no gain); ports, kernel, registry and the library are later tasks; manual check the owner's |
 | T60 | `ai_learning` without the board | todo | the technique keeps `LearnedModel`, `SoftmaxModel`, `ModelFile`, `CaseTable`, `ClonedPlayer`; `BoardFeatures`, `LearnedPolicy`, `LearnedDecision` and the weights go to their games; `gameaikit.training` keeps descent, models, split, so checkers stops depending on the tactical dataset |
-| T61 | A small shared kernel: the board leaves `ai_core` | todo | after T60: `ai_core` keeps `GridGraph` and `Pathfinder`; the six board types, `DecisionPolicy` (typed on `BoardState`) and `Move` become the board's own kernel, recommended `game/board/`, by ADR |
+| T61 | A small shared kernel: the board leaves `ai_core` | todo | after T60: `ai_core` keeps `GridGraph` and `Pathfinder`; the six board types, `DecisionPolicy` (typed on `BoardState`) and `Move` become the board's own kernel at `game/board/` (owner, 2026-10-20), by ADR |
 | T62 | Search over a port, not over a grid | todo | `SearchGraph` in `ai_search` with a `GridSearchGraph` adapter, nodes still `Vector2i` (both recommended, decided in the task); vectors replay unchanged; a waypoint graph test where cost and hops disagree |
 | T63 | The controller registry | todo | `next_controller`'s eight-branch `if playing is` chain and `League.roster()` become one table; `catalogue.json` lists each example's controllers, held by `check_demos.py`; `tactical` stops depending on `league` |
-| T64 | The library | todo | after T60-T63; the owner decides the names first (recommended: prefix only ports and kernel); addon zips filtered by manifest; `pyproject.toml`, flat layout, no dependencies; an entry-point group for a user's technique; installed and run outside the repo; publishing stays the owner's act |
+| T64 | The library | todo | after T60-T63; names: only ports and kernel prefixed (owner, 2026-10-20), the prefix by ADR; addon zips filtered by manifest; `pyproject.toml`, flat layout, no dependencies; an entry-point group for a user's technique; installed and run outside the repo; publishing stays the owner's act |
 
 ---
+
+## Resuming after 2026-10-20 (wave 66)
+
+**Where it stopped -- read first.** `make wave` picked T56; the standing
+next step was to write the modularity tasks first, so the owner chose that
+and the T56 branch was dropped unused. Wave 66 writes T60-T64 from T58's
+plan, each with its diagnosis measured on `5129bfc`; no code moved. The
+review record is `docs/reviews/66-the-modules-tasks.md`.
+
+**The owner decided** (2026-10-20), both as recommended: T64 prefixes only
+the ports and the kernel; T61's board kernel goes to `game/board/`. And the
+order, said twice the same day: first these five, **T60-T64, before the next
+milestone**; then milestone 5; the RTS improvements T55-T57 at the end.
+
+**Next.** T60 (T61 needs it), T61, then T62 and T63 in either order, T64
+last. Then milestone 5, shooters in 3D: every task in it waits on ADR 0018
+(*proposed*, wave 53), which the owner accepts, amends or rejects first.
+`make wave` picks by table order and would offer T56; open T60 by hand:
+`make wave-start BRANCH=wave/67-ai-learning-without-the-board`.
 
 ## Resuming after 2026-10-20 (wave 65)
 
