@@ -12,6 +12,10 @@
     "python/tests/test_planning_vectors.py"
   ],
   "depends_on": [],
+  "tests_depend_on": [
+    "rts",
+    "tactical"
+  ],
   "gates": [
     "test-planning-vectors"
   ]

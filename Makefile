@@ -67,12 +67,15 @@ wave-merge: ## Squash-merge the wave's pull request once it is reviewed and CI i
 	@# local run of all of `make check`, and the full check runs on main
 	@# after the merge. The review record is still refused if missing. The
 	@# wait is for GitHub to register the checks of the commit just pushed;
-	@# without it `gh pr checks` can report none, and that is a refusal.
+	@# without it `gh pr checks` can report none, and that is a refusal. And
+	@# the merge names the commit that was reviewed and checked: a push from
+	@# somewhere else in between makes GitHub refuse it.
 	@$(PYTHON) scripts/check_branch_base.py --check-review
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	head=$$(git rev-parse HEAD); \
 	git push --quiet origin "$$branch" && sleep 15 && \
 	gh pr checks "$$branch" --watch --fail-fast && \
-	gh pr merge "$$branch" --squash --delete-branch && \
+	gh pr merge "$$branch" --squash --delete-branch --match-head-commit "$$head" && \
 	git switch main && git pull --ff-only --quiet && \
 	echo "merged $$branch into main"
 

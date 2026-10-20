@@ -418,6 +418,21 @@ the release filtered by manifest).
    selects and what it costs against the full check. Their paths are
    replayed through the new test layout (`--paths`), since the old flat
    `godot/test/` paths are owned by nobody now and would select everything.
+   *Measured in wave 63*, `affected.py --paths ... --run`, same machine,
+   nothing else running, against 550 s for `make check`:
+
+   | change | selects | seconds |
+   |---|---|---:|
+   | wave 57, the behaviour demo (4 files) | `demo_behaviour`, `menu` | 26 |
+   | a steering force (`seek_behaviour.gd`) | `ai_steering`, `demo_steering`, `menu` | 25 |
+   | an RTS squad (`squad.gd`) | `rts`, `menu`, and `ai_planning`'s tests | 64 |
+   | waves 61 and 62 as they were | everything: each added a module, so a manifest | 550 |
+
+   The floor, about 20 s, is the lints, every one on every wave. The RTS
+   row was 287 s before the manifests split `depends_on` from
+   `tests_depend_on`: ai_planning's vectors read the RTS's domain, and the
+   walk went on from ai_planning to everything that uses ai_planning's code
+   -- the tactical game, the league, checkers -- whose code had not changed.
 8. `CLAUDE.md`: the invariants table gains `lint-modules` and the selector;
    "Commands" gains `make check-affected`; the trap that `make check` is no
    longer what a wave runs. *Done in wave 63.*

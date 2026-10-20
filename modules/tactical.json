@@ -1,7 +1,7 @@
 {
   "module": "tactical",
   "kind": "example",
-  "about": "The Advance Wars style board, its controllers, combat and the learned policy's training.",
+  "about": "The Advance Wars style board, its controllers, combat, and the Python that fits its learned policy (gameaikit.training, which checkers' fit borrows -- T58, D4).",
   "owns": [
     "godot/game/tactical/",
     "godot/test/tactical/",
@@ -15,15 +15,20 @@
     "python/tests/test_learning_vectors.py",
     "spec/pddl/tactics-domain.pddl",
     "spec/pddl/tactics-opening-problem.pddl",
-    "spec/pddl/tactics.json"
+    "spec/pddl/tactics.json",
+    "python/gameaikit/training/",
+    "python/tests/test_descent.py",
+    "python/tests/test_training.py"
   ],
   "depends_on": [
     "ai_core",
     "ai_learning",
     "ai_planning",
-    "ai_search",
     "game_shared",
     "league"
+  ],
+  "tests_depend_on": [
+    "ai_search"
   ],
   "gates": [
     "test-combat-vectors",

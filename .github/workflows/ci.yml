@@ -17,9 +17,12 @@ on:
 permissions:
   contents: read
 
+# A newer push to a pull request cancels the older run. Never on main: the
+# full check runs only there, and a merge landing during it would otherwise
+# leave the previous merge never fully checked.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   # Tier 1: everything someone with nothing but Python installed can run.
@@ -93,11 +96,17 @@ jobs:
       # what `make check` holds, and every wave that added a gate had to edit
       # this file -- which made it global, and every such wave select
       # everything. make names the target that failed.
-      - run: make check-affected BASE=HEAD^1
+      #
+      # The base is what main was before this push, not HEAD^1: a push that
+      # carries several commits is checked for all of them. And the full
+      # check runs whether or not the selector's did -- the comparison is the
+      # point.
+      - run: make check-affected BASE=$BEFORE
         if: github.event_name == 'push'
         env:
+          BEFORE: ${{ github.event.before }}
           GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
       - run: make check
-        if: github.event_name == 'push'
+        if: ${{ !cancelled() && github.event_name == 'push' }}
         env:
           GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain

@@ -33,9 +33,25 @@ import tempfile
 
 CHECKER = pathlib.Path(__file__).resolve().parent / "check_commit_msg.py"
 
+# What a squash merge appends to the title before it becomes the subject on
+# main: " (#NN)". Room for four digits. A title that fit the limit exactly
+# used to pass here and then fail `lint-commits` on main, for good -- a
+# subject on main cannot be changed.
+SQUASH_SUFFIX = len(" (#9999)")
+MAX_TITLE = 80 - SQUASH_SUFFIX
+
 
 def check(title: str, body: str, quiet: bool = False) -> int:
-    """Run the commit-message rules over a title and body joined as a message."""
+    """Run the commit-message rules over a title and body joined as a message.
+
+    And one rule of its own: the title leaves room for the " (#NN)" a squash
+    merge adds, since that title is the subject `main` will carry.
+    """
+    if len(title.strip()) > MAX_TITLE:
+        if not quiet:
+            print(f"check_pr_message: the title is {len(title.strip())} characters; "
+                  f"{MAX_TITLE} leaves room for the squash merge's \" (#NN)\"")
+        return 1
     with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as handle:
         handle.write(f"{title.strip()}\n\n{body}\n")
         path = handle.name
@@ -48,6 +64,7 @@ def check(title: str, body: str, quiet: bool = False) -> int:
 
 
 def self_test() -> int:
+    """Each rule against a title or body that breaks it, and one clean message."""
     failures = []
     cases = [
         ("clean", "feat: a thing", "What changed and why.\n", 0),
@@ -58,6 +75,9 @@ def self_test() -> int:
         ("robot emoji", "feat: a thing", "What changed.\n\n\U0001F916 by a tool\n", 1),
         ("title in Title Case", "Feat: A Thing That Was Done", "Why.\n", 1),
         ("title with no type", "just did some stuff", "Why.\n", 1),
+        # Planted: fits the subject limit, and would not once GitHub adds " (#12)".
+        ("a title the squash would push over", "feat: " + "x" * (80 - 6), "Why.\n", 1),
+        ("a title with room for the number", "feat: " + "x" * (MAX_TITLE - 6), "Why.\n", 0),
     ]
     for label, title, body, want in cases:
         got = check(title, body, quiet=True)  # a planted finding is not a failure

@@ -113,7 +113,8 @@ def check_repo_location(repo: pathlib.Path, home: pathlib.Path,
     under /home/runner whatever the workflow says. The first CI run of this
     repository (wave 63) failed here and nowhere else. The leaks above are
     still looked for on the runner: a Godot that writes to ~/.local is wrong
-    on any machine.
+    on any machine. The runner is known by GitHub's own `GITHUB_ACTIONS=true`;
+    set by hand on a desk, it turns this one rule into a note, and says so.
     """
     try:
         repo.resolve().relative_to(home.resolve())

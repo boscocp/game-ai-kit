@@ -18,12 +18,22 @@ owns, and which other modules it reaches for. Both are declared in
     the one that skips a test: change the module depended on, and the module
     that silently uses it is never selected;
   * M4 a dependency the manifest declares and the code does not have. Less
-    dangerous, still wrong: a module that cannot be lifted out alone;
+    dangerous, still wrong: a module that cannot be lifted out alone.
+    Both are asked twice, because a manifest has two lists: `depends_on`,
+    what the module's own code uses, and `tests_depend_on`, what only its
+    tests use (ai_planning's vectors read the RTS's domain; ai_planning
+    does not). The selector follows the first list on, and stops at the
+    second: a change to the RTS runs ai_planning's tests, not everything
+    that uses ai_planning;
   * M5 a technique depending on something other than a kernel. Invariant 2,
     said in modules: someone who wants only A* copies two folders;
   * M6 a gate the manifest names that the Makefile has not got;
   * M7 a gate in `make check` that no module owns and that is not in the set
-    every wave runs, or that two modules both own.
+    every wave runs, or that two modules both own;
+  * M8 a test the selector cannot reach: a gdUnit4 suite not directly inside a
+    test folder its module lists, or a Python test its module does not name.
+    `affected.py` runs a module's tests by those entries, so a suite one
+    folder deeper would never run on a wave.
 
 What "depends on" means here, measured
 --------------------------------------
@@ -105,7 +115,14 @@ CLASS_NAME_RE = re.compile(r"^\s*class_name\s+([A-Za-z_]\w*)", re.M)
 WORD_RE = re.compile(r"\b[A-Z][A-Za-z0-9_]*\b")
 RES_PATH_RE = re.compile(r"res://([\w./-]+)")
 REPO_PATH_RE = re.compile(r"\b((?:godot|spec|data|python)/[\w./-]*\w)")
+# The same path built by pathlib: `ROOT / "spec" / "vectors" / "menace"`.
+JOINED_PATH_RE = re.compile(r"""["'](godot|spec|data|python)["']((?:\s*/\s*["'][\w.-]+["'])+)""")
+JOINED_PART_RE = re.compile(r"""["']([\w.-]+)["']""")
 IMPORT_RE = re.compile(r"\bgameaikit\.(\w+)")
+# `from ..ngram import ...` inside a subpackage: a sibling package.
+RELATIVE_IMPORT_RE = re.compile(r"^\s*from\s+\.\.(\w+)", re.M)
+# What a gate's recipe hands the engine or a script: the vectors' folders.
+RECIPE_PATH_RE = re.compile(r"\$\(CURDIR\)/([\w./-]*\w)")
 READ_SUFFIXES = {".gd", ".tscn", ".json", ".py"}
 
 
@@ -117,6 +134,7 @@ class Module:
     kind: str
     owns: tuple[str, ...]
     depends_on: frozenset[str]
+    tests_depend_on: frozenset[str]
     gates: tuple[str, ...]
     retrain: tuple[str, ...]
 
@@ -134,6 +152,7 @@ def load_modules(repo: pathlib.Path) -> dict[str, Module]:
             module = Module(
                 name=raw["module"], kind=raw["kind"], owns=tuple(raw["owns"]),
                 depends_on=frozenset(raw.get("depends_on", [])),
+                tests_depend_on=frozenset(raw.get("tests_depend_on", [])),
                 gates=tuple(raw.get("gates", [])), retrain=tuple(raw.get("retrain", [])),
             )
         except (ValueError, KeyError, TypeError) as error:
@@ -188,6 +207,28 @@ def tracked_files(repo: pathlib.Path) -> list[str]:
     return done.stdout.splitlines()
 
 
+def comment_start(line: str) -> int:
+    """Where the `#` comment of one line begins, or its length if it has none.
+
+    Quotes are respected, and a backslash inside a quote escapes the next
+    character: without that, `"a \\"#"` ended the string early and cut off
+    everything after it, a path included.
+    """
+    quote, escaped = "", False
+    for index, character in enumerate(line):
+        if escaped:
+            escaped = False
+        elif quote and character == "\\":
+            escaped = True
+        elif quote:
+            quote = "" if character == quote else quote
+        elif character in "\"'":
+            quote = character
+        elif character == "#":
+            return index
+    return len(line)
+
+
 def without_comments(text: str, suffix: str) -> str:
     """The text with every `#` comment removed, quotes respected.
 
@@ -197,19 +238,7 @@ def without_comments(text: str, suffix: str) -> str:
     """
     if suffix not in (".gd", ".py"):
         return text
-    kept_lines = []
-    for line in text.splitlines():
-        quote = ""
-        for index, character in enumerate(line):
-            if quote:
-                quote = "" if character == quote else quote
-            elif character in "\"'":
-                quote = character
-            elif character == "#":
-                line = line[:index]
-                break
-        kept_lines.append(line)
-    return "\n".join(kept_lines)
+    return "\n".join(line[:comment_start(line)] for line in text.splitlines())
 
 
 def class_owners(repo: pathlib.Path, files: list[str],
@@ -227,23 +256,75 @@ def class_owners(repo: pathlib.Path, files: list[str],
 
 
 def reached_paths(code: str, suffix: str) -> list[str]:
-    """Repository paths this file's code names, by `res://` or by spelling."""
+    """Repository paths this file's code names: `res://`, spelled, or joined.
+
+    Python reaches the Godot side three ways, all of them here: a path
+    spelled out, a path joined with pathlib's `/`, and an import -- absolute
+    (`gameaikit.ngram`) or relative from a sibling package (`from ..ngram`).
+    """
     paths = [f"godot/{path}" for path in RES_PATH_RE.findall(code)]
     paths += REPO_PATH_RE.findall(code)
     if suffix == ".py":
-        paths += [f"python/gameaikit/{package}/" for package in IMPORT_RE.findall(code)]
+        for root, rest in JOINED_PATH_RE.findall(code):
+            paths.append("/".join([root, *JOINED_PART_RE.findall(rest)]))
+        packages = IMPORT_RE.findall(code) + RELATIVE_IMPORT_RE.findall(code)
+        paths += [f"python/gameaikit/{package}/" for package in packages]
     return paths
 
 
-def owner_of_reach(path: str, modules: dict[str, Module]) -> str | None:
+def owners_of_reach(path: str, modules: dict[str, Module], files: list[str]) -> set[str]:
     """Who owns a path named in code, which may be a folder without its slash.
 
     Both spellings are tried and the longer claim wins: `godot/game/checkers`
-    is the checkers folder, not a file inside `godot/game/` that happens to
-    have no extension.
+    is the checkers folder, not a file inside `godot/game/`. A folder nobody
+    claims whole -- `spec/pddl`, whose files belong to the tactical game and
+    the RTS one by one -- is reached through every module owning a file in
+    it. It used to be dropped, and a change to the tactics domain then
+    selected neither of the two gates that read it.
     """
     found = claims(path, modules) + claims(path.rstrip("/") + "/", modules)
-    return max(found)[1] if found else None
+    if found:
+        return {max(found)[1]}
+    folder = path.rstrip("/") + "/"
+    if folder in TESTS or not folder.startswith(SCOPE):
+        # The whole of godot/test/ named at once is a test's planted bad
+        # folder (`"res://test"`), not a reach into every module's tests.
+        return set()
+    return {owner_of(file, modules) for file in files if file.startswith(folder)} - {None}
+
+
+def recipe(makefile_text: str, target: str) -> str:
+    """The command lines of one Makefile target, its comments left out."""
+    lines = makefile_text.splitlines()
+    for number, line in enumerate(lines):
+        if re.match(rf"^{re.escape(target)}:", line):
+            body = []
+            for command in lines[number + 1:]:
+                if not command.startswith("\t"):
+                    break
+                if not command.lstrip().startswith("@#"):
+                    body.append(command)
+            return "\n".join(body)
+    return ""
+
+
+def recipe_reach(repo: pathlib.Path, modules: dict[str, Module],
+                 files: list[str]) -> dict[str, set[str]]:
+    """What each module's gates hand their scripts, read from the Makefile.
+
+    `make test-planning-vectors` passes `$(CURDIR)/spec/pddl` to the engine:
+    a reach no file of ai_planning spells, measured where it is written.
+    """
+    text = (repo / "Makefile").read_text(encoding="utf-8")
+    reach: dict[str, set[str]] = {name: set() for name in modules}
+    for name, module in modules.items():
+        for gate in module.gates:
+            commands = recipe(text, gate)
+            named = RECIPE_PATH_RE.findall(commands)
+            named += [f"godot/{path}" for path in RES_PATH_RE.findall(commands)]
+            for path in named:
+                reach[name] |= owners_of_reach(path, modules, files)
+    return reach
 
 
 def is_test(path: str) -> bool:
@@ -257,7 +338,8 @@ def measured_dependencies(repo: pathlib.Path, modules: dict[str, Module],
 
     With `tests` false only the module's own code counts -- what invariant 2
     is about. A technique's test may well use another technique (the learned
-    policy's scenarios walk by A*); that reach still selects the test.
+    policy's scenarios walk by A*); that reach still selects the test, and so
+    does what its gates' recipes hand the engine.
     """
     files = [path for path in tracked_files(repo) if (repo / path).is_file()]
     owners = class_owners(repo, files, modules)
@@ -271,7 +353,10 @@ def measured_dependencies(repo: pathlib.Path, modules: dict[str, Module],
         if suffix == ".gd":
             reach[mine] |= {owners[word] for word in WORD_RE.findall(code) if word in owners}
         for named in reached_paths(code, suffix):
-            reach[mine].add(owner_of_reach(named, modules))
+            reach[mine] |= owners_of_reach(named, modules, files)
+    if tests:
+        for name, more in recipe_reach(repo, modules, files).items():
+            reach[name] |= more
     for name in reach:
         reach[name] -= {name, None}
     return reach
@@ -296,13 +381,17 @@ def check_ownership(files: list[str], modules: dict[str, Module]) -> list[str]:
 
 def check_dependencies(measured: dict[str, set[str]], code_only: dict[str, set[str]],
                        modules: dict[str, Module]) -> list[str]:
-    """M3, M4 and M5: declared dependencies are the measured ones, and legal."""
+    """M3, M4 and M5: both declared lists are the measured ones, and legal."""
     findings = []
     for name, module in sorted(modules.items()):
-        for missing in sorted(measured[name] - module.depends_on):
-            findings.append(f"M3 {name} uses {missing}, and its manifest does not say so")
-        for unused in sorted(module.depends_on - measured[name]):
-            findings.append(f"M4 {name} declares {unused}, and nothing in it uses it")
+        tests_only = measured[name] - code_only[name]
+        for kind, declared, found in (("code", module.depends_on, code_only[name]),
+                                      ("tests", module.tests_depend_on, tests_only)):
+            field = "depends_on" if kind == "code" else "tests_depend_on"
+            for missing in sorted(found - declared):
+                findings.append(f"M3 {name}'s {kind} use {missing}, and {field} does not say so")
+            for unused in sorted(declared - found):
+                findings.append(f"M4 {name}'s {field} names {unused}, and its {kind} do not use it")
         if module.kind == "technique":
             for other in sorted(code_only[name]):
                 if other in modules and modules[other].kind != "kernel":
@@ -348,6 +437,23 @@ def check_gates(repo: pathlib.Path, modules: dict[str, Module]) -> list[str]:
     return findings
 
 
+def check_selectable(files: list[str], modules: dict[str, Module]) -> list[str]:
+    """M8: every test sits where `affected.py` looks for its module's tests."""
+    findings = []
+    for path in files:
+        owner = owner_of(path, modules)
+        if owner is None or is_global(path, modules):
+            continue
+        listed = modules[owner].owns
+        name = pathlib.PurePath(path).name
+        if path.startswith("godot/test/") and name.endswith("_test.gd"):
+            if path.rsplit("/", 1)[0] + "/" not in listed:
+                findings.append(f"M8 {path}: {owner} lists no test folder holding it directly")
+        elif path.startswith("python/tests/") and name.startswith("test_") and path not in listed:
+            findings.append(f"M8 {path}: {owner} does not name this Python test")
+    return findings
+
+
 def check(repo: pathlib.Path) -> list[str]:
     """Every finding for this tree, in rule order."""
     modules = load_modules(repo)
@@ -356,6 +462,7 @@ def check(repo: pathlib.Path) -> list[str]:
     findings = [f"M0 {name}: kind {module.kind!r} is not one of {sorted(KINDS)}"
                 for name, module in sorted(modules.items()) if module.kind not in KINDS]
     findings += check_ownership(tracked_files(repo), modules)
+    findings += check_selectable(tracked_files(repo), modules)
     findings += check_dependencies(measured_dependencies(repo, modules),
                                    measured_dependencies(repo, modules, tests=False), modules)
     findings += check_gates(repo, modules)
@@ -366,8 +473,11 @@ def run(repo: pathlib.Path, measure: bool = False) -> int:
     """Print the findings, or with `measure` the graph as the code has it."""
     if measure:
         modules = load_modules(repo)
+        code = measured_dependencies(repo, modules, tests=False)
         for name, uses in sorted(measured_dependencies(repo, modules).items()):
-            print(f"{name}: {', '.join(sorted(uses)) or '-'}")
+            tests_only = sorted(uses - code[name])
+            print(f"{name}: code {', '.join(sorted(code[name])) or '-'}; "
+                  f"tests only {', '.join(tests_only) or '-'}")
         return 0
     findings = check(repo)
     for finding in findings:
@@ -415,10 +525,10 @@ MANIFESTS_TEXT = {
 
 
 def build(root: pathlib.Path, name: str, files: dict[str, str],
-          manifests: dict[str, dict]) -> pathlib.Path:
+          manifests: dict[str, dict], makefile: str = MAKEFILE_TEXT) -> pathlib.Path:
     """A throwaway git repository holding `files` and these manifests."""
     repo = root / name
-    for path, text in {**files, "Makefile": MAKEFILE_TEXT}.items():
+    for path, text in {**files, "Makefile": makefile}.items():
         (repo / path).parent.mkdir(parents=True, exist_ok=True)
         (repo / path).write_text(text)
     (repo / MANIFESTS).mkdir()
@@ -436,8 +546,81 @@ def changed(manifests: dict[str, dict], module: str, **fields) -> dict[str, dict
     return copy
 
 
-def self_test() -> int:
+def manifest_cases(root: pathlib.Path, expect) -> None:
+    """The rules about what a manifest says: kinds, ownership, gates, tests."""
+    expect("manifests that match the code", build(root, "good", FILES, MANIFESTS_TEXT))
+    expect("no manifests at all", build(root, "none", FILES, {}), "M0")
+    expect("a kind nobody defined", build(root, "kind", FILES,
+           changed(MANIFESTS_TEXT, "twin", kind="library")), "M0")
+    expect("an unowned file", build(root, "unowned",
+           {**FILES, "godot/game/orphan.gd": "var x := 1\n"}, MANIFESTS_TEXT), "M1")
+    expect("a path claimed twice", build(root, "twice", FILES, changed(
+        MANIFESTS_TEXT, "twin", owns=["python/gameaikit/twin/", "godot/game/play/"])), "M2")
+    expect("a gate the Makefile has not got", build(root, "ghost", FILES,
+           changed(MANIFESTS_TEXT, "a", gates=["test-a-properties", "test-nothing"])), "M6")
+    expect("a gate of check nobody owns", build(root, "orphan-gate", FILES,
+           changed(MANIFESTS_TEXT, "play", gates=[])), "M7")
+    expect("a gate two modules own", build(root, "two-gate", FILES,
+           changed(MANIFESTS_TEXT, "twin", gates=["test-game-match"])), "M7")
+    deep = {**FILES, "godot/test/play/deep/x_test.gd": "extends GdUnitTestSuite\n"}
+    expect("a suite one folder below its module's", build(root, "deep", deep, changed(
+        MANIFESTS_TEXT, "play", owns=["godot/game/play/", "godot/test/play/"])), "M8")
+    python_test = {**FILES, "python/tests/test_twin.py": "import unittest\n"}
+    expect("a Python test owned by a folder", build(root, "pyfolder", python_test, changed(
+        MANIFESTS_TEXT, "twin", owns=["python/gameaikit/twin/", "python/tests/"])), "M8")
+
+
+def measurement_cases(root: pathlib.Path, expect) -> None:
+    """The rules about what the code reaches: each way of reaching, planted."""
+    expect("an undeclared class use", build(root, "class", FILES,
+           changed(MANIFESTS_TEXT, "play", depends_on=[])), "M3")
+    expect("an undeclared path read", build(root, "path", FILES,
+           changed(MANIFESTS_TEXT, "twin", depends_on=[])), "M3")
+    joined = {**FILES, "python/gameaikit/twin/read.py": 'A = ROOT / "godot" / "addons" / "a"\n'}
+    expect("a path joined by pathlib", build(root, "joined", joined,
+           changed(MANIFESTS_TEXT, "twin", depends_on=[])), "M3")
+    relative = {**FILES, "python/gameaikit/twin/read.py": "from ..other import thing\n"}
+    other = {**MANIFESTS_TEXT, "other": {"module": "other", "kind": "example",
+                                          "owns": ["python/gameaikit/other/"]}}
+    expect("a relative import of a sibling package", build(
+        root, "relative", {**relative, "python/gameaikit/other/x.py": "X = 1\n"}, other), "M3")
+    # Planted: the gap the wave's review found. A folder owned file by file,
+    # reached only through a gate's recipe, as spec/pddl was.
+    by_file = changed(MANIFESTS_TEXT, "play", owns=["godot/game/play/", "spec/pddl/one.json"])
+    recipe_reach_text = MAKEFILE_TEXT.replace(
+        "test-a-properties:\n\t@true\n", "test-a-properties:\n\t@run -- $(CURDIR)/spec/pddl\n")
+    expect("a folder reached by a gate's recipe", build(
+        root, "recipe", {**FILES, "spec/pddl/one.json": "{}\n"}, by_file, recipe_reach_text), "M3")
+    expect("a declared dependency nothing uses", build(root, "unused", FILES,
+           changed(MANIFESTS_TEXT, "play", depends_on=["a", "core"])), "M4")
+    # Planted: a test's reach declared as the code's, and the reverse.
+    tested = {**FILES, "godot/test/play/play_test.gd": "var grid := Grid.new()\n"}
+    test_folder = ["godot/game/play/", "godot/test/play/"]
+    expect("a test's reach declared as the code's", build(root, "as-code", tested, changed(
+        MANIFESTS_TEXT, "play", owns=test_folder, depends_on=["a", "core"])), "M4")
+    expect("a test's reach declared nowhere", build(root, "test-reach", tested, changed(
+        MANIFESTS_TEXT, "play", owns=test_folder)), "M3")
+    expect("a test's reach declared as such", build(root, "test-ok", tested, changed(
+        MANIFESTS_TEXT, "play", owns=test_folder, tests_depend_on=["core"])))
+    expect("a technique leaning on an example", build(root, "technique",
+           {**FILES, "godot/addons/a/a_star.gd": FILES["godot/addons/a/a_star.gd"]
+            + "var play := preload('res://game/play/play.gd')\n"},
+           changed(MANIFESTS_TEXT, "a", depends_on=["core", "play"])), "M5")
+
+
+def comment_cases() -> list[str]:
+    """`#` inside a string is not a comment, escaped quote or not."""
     failures = []
+    for line, kept in (("var colour := '#fff'  # Grid", "var colour := '#fff'  "),
+                       ('s = "a \\"#" + "godot/x"  # c', 's = "a \\"#" + "godot/x"  ')):
+        if without_comments(line, ".gd") != kept:
+            failures.append(f"comment stripping: {line!r} became {without_comments(line, '.gd')!r}")
+    return failures
+
+
+def self_test() -> int:
+    """Every rule against a planted case it must reject, and one good tree."""
+    failures = comment_cases()
 
     def expect(label: str, repo: pathlib.Path, code: str = "") -> None:
         findings = check(repo)
@@ -447,36 +630,8 @@ def self_test() -> int:
             failures.append(f"{label}: expected no finding, got {findings}")
 
     with tempfile.TemporaryDirectory() as workspace:
-        root = pathlib.Path(workspace)
-        expect("manifests that match the code", build(root, "good", FILES, MANIFESTS_TEXT))
-        expect("no manifests at all", build(root, "none", FILES, {}), "M0")
-        # Planted: a file nobody owns.
-        expect("an unowned file", build(root, "unowned",
-               {**FILES, "godot/game/orphan.gd": "var x := 1\n"}, MANIFESTS_TEXT), "M1")
-        # Planted: two modules claiming the same folder.
-        expect("a path claimed twice", build(root, "twice", FILES,
-               changed(MANIFESTS_TEXT, "twin", owns=["python/gameaikit/twin/",
-                                                     "godot/game/play/"])), "M2")
-        # Planted: a class used and not declared -- the dependency that skips a test.
-        expect("an undeclared class use", build(root, "class", FILES,
-               changed(MANIFESTS_TEXT, "play", depends_on=[])), "M3")
-        # Planted: a path the Python twin reads and does not declare.
-        expect("an undeclared path read", build(root, "path", FILES,
-               changed(MANIFESTS_TEXT, "twin", depends_on=[])), "M3")
-        expect("a declared dependency nothing uses", build(root, "unused", FILES,
-               changed(MANIFESTS_TEXT, "play", depends_on=["a", "core"])), "M4")
-        expect("a technique leaning on an example", build(root, "technique",
-               {**FILES, "godot/addons/a/a_star.gd": FILES["godot/addons/a/a_star.gd"]
-                + "var play := preload('res://game/play/play.gd')\n"},
-               changed(MANIFESTS_TEXT, "a", depends_on=["core", "play"])), "M5")
-        expect("a gate the Makefile has not got", build(root, "ghost", FILES,
-               changed(MANIFESTS_TEXT, "a", gates=["test-a-properties", "test-nothing"])), "M6")
-        expect("a gate of check nobody owns", build(root, "orphan-gate", FILES,
-               changed(MANIFESTS_TEXT, "play", gates=[])), "M7")
-
-    if without_comments("var colour := '#fff'  # Grid", ".gd") != "var colour := '#fff'  ":
-        failures.append("a # inside a string was taken for a comment")
-
+        manifest_cases(pathlib.Path(workspace), expect)
+        measurement_cases(pathlib.Path(workspace), expect)
     for failure in failures:
         print(f"self-test FAIL: {failure}")
     print(f"self-test: {'ok' if not failures else str(len(failures)) + ' failure(s)'}")
@@ -484,6 +639,7 @@ def self_test() -> int:
 
 
 def main(argv: list[str]) -> int:
+    """Parse the command line; exit 2 for a usage error or a broken manifest."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--repo", type=pathlib.Path,
                         default=pathlib.Path(__file__).resolve().parent.parent)

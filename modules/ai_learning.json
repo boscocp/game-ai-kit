@@ -1,19 +1,17 @@
 {
   "module": "ai_learning",
   "kind": "technique",
-  "about": "Python fits, Godot only infers: the training pipeline, logistic and softmax models, a case table, the published weights.",
+  "about": "Inference only: logistic and softmax models, a case table, the published weights.",
   "owns": [
     "godot/addons/ai_learning/",
     "godot/test/ai_learning/",
-    "spec/vectors/cloning/",
-    "python/gameaikit/training/",
-    "python/tests/test_descent.py",
-    "python/tests/test_training.py"
+    "spec/vectors/cloning/"
   ],
   "depends_on": [
-    "ai_core",
-    "ai_search",
-    "tactical"
+    "ai_core"
+  ],
+  "tests_depend_on": [
+    "ai_search"
   ],
   "gates": [
     "test-cloning-vectors",

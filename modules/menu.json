@@ -7,7 +7,6 @@
     "godot/test/menu/"
   ],
   "depends_on": [
-    "ai_core",
     "checkers",
     "demo_behaviour",
     "demo_search",
@@ -18,6 +17,9 @@
     "stealth",
     "tactical",
     "tictactoe"
+  ],
+  "tests_depend_on": [
+    "ai_core"
   ],
   "gates": [
     "test-demo-overlays",
