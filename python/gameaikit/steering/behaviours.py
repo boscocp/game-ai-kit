@@ -25,14 +25,18 @@ from .vehicle import Vehicle
 def direction_to(start: Vec, end: Vec) -> Vec:
     """The unit direction from `start` to `end`; zero when they coincide.
 
-    An infinite offset keeps its direction: each infinite part becomes one step
-    that way and the finite parts drop out, as they would at infinity. Plain
-    normalising would answer zero, and a vehicle seeking the horizon would stop.
+    A finite offset is first divided by its larger part, as the GDScript side
+    must to keep a 32-bit length from overflowing; the two then agree. An
+    infinite offset keeps its direction: each infinite part becomes one step
+    that way and the finite parts drop out, as they would at infinity.
     """
     offset = end - start
-    if offset.is_finite():
-        return offset.normalized()
-    return Vec(_towards_infinity(offset.x), _towards_infinity(offset.y)).normalized()
+    if not offset.is_finite():
+        return Vec(_towards_infinity(offset.x), _towards_infinity(offset.y)).normalized()
+    larger = max(abs(offset.x), abs(offset.y))
+    if larger == 0.0:
+        return ZERO
+    return (offset / larger).normalized()
 
 
 def _towards_infinity(part: float) -> float:
@@ -42,9 +46,17 @@ def _towards_infinity(part: float) -> float:
     return 0.0
 
 
+def clamped(force: Vec, limit: float) -> Vec:
+    """`force`, shortened to `limit` if longer; an infinite one is as long as
+    it can be, in its own direction."""
+    if not force.is_finite():
+        return direction_to(ZERO, force) * limit
+    return force.limit_length(limit)
+
+
 def towards_velocity(vehicle: Vehicle, desired: Vec) -> Vec:
     """Reynolds' steering: desired velocity minus velocity, clamped."""
-    return (desired - vehicle.velocity).limit_length(vehicle.max_force)
+    return clamped(desired - vehicle.velocity, vehicle.max_force)
 
 
 def combined(vehicle: Vehicle, forces: list[Vec], weights: list[float]) -> Vec:
@@ -52,7 +64,7 @@ def combined(vehicle: Vehicle, forces: list[Vec], weights: list[float]) -> Vec:
     total = ZERO
     for force, weight in zip(forces, weights):
         total = total + force * weight
-    return total.limit_length(vehicle.max_force)
+    return clamped(total, vehicle.max_force)
 
 
 @dataclasses.dataclass
@@ -71,12 +83,17 @@ class Arrive:
     """Seek, with the desired speed falling to zero inside `braking_radius`.
 
     The velocity is asked to change within `time_to_target` seconds
-    (Millington's form), which damps the approach so it comes to rest.
+    (Millington's form), which damps the approach so it comes to rest -- and
+    asks harder than seek outside the radius too. Never under a thousandth of
+    a second, which would divide by zero.
     """
 
     target: Vec
     braking_radius: float
     time_to_target: float = 0.1
+
+    def __post_init__(self) -> None:
+        self.time_to_target = max(self.time_to_target, 0.001)
 
     def force(self, vehicle: Vehicle) -> Vec:
         """Towards the target at a speed that falls as the distance does."""
@@ -85,7 +102,7 @@ class Arrive:
         if distance < self.braking_radius:
             speed *= distance / self.braking_radius
         desired = direction_to(vehicle.position, self.target) * speed
-        return ((desired - vehicle.velocity) / self.time_to_target).limit_length(vehicle.max_force)
+        return clamped((desired - vehicle.velocity) / self.time_to_target, vehicle.max_force)
 
 
 @dataclasses.dataclass
@@ -112,8 +129,10 @@ class Pursue:
 
 @dataclasses.dataclass
 class Avoid:
-    """Swerve at full force from the first round obstacle within `look_ahead`
-    (less as the vehicle slows); head-on, to the left; nothing when still."""
+    """Swerve sideways at full force from the first round obstacle within
+    `look_ahead` (less as the vehicle slows; the first listed on a tie), to
+    the side of the line its centre is not on; head-on, to the left; nothing
+    when still. Only sideways: a push back would stall it in front."""
 
     centres: list[Vec]
     radii: list[float]
@@ -128,11 +147,11 @@ class Avoid:
         threat = self._first_threat(vehicle.position, heading, reach)
         if threat < 0:
             return ZERO
-        closest = _closest_on_stretch(vehicle.position, heading, reach, self.centres[threat])
-        away = (closest - self.centres[threat]).normalized()
-        if away == ZERO:
-            away = Vec(heading.y, -heading.x)
-        return away * vehicle.max_force
+        from_centre = vehicle.position - self.centres[threat]
+        across = from_centre - heading * from_centre.dot(heading)
+        if across.length() < 1e-6:
+            across = Vec(heading.y, -heading.x)
+        return across.normalized() * vehicle.max_force
 
     def _first_threat(self, start: Vec, heading: Vec, reach: float) -> int:
         """The index of the obstacle the stretch ahead meets first, or -1."""

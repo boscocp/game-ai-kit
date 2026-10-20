@@ -7,34 +7,44 @@
 ##   * a force is never larger than the vehicle can apply (`clamped`). A
 ##     behaviour that returns more is a behaviour that lies about what will
 ##     happen next;
-##   * a direction towards a point at infinity is still a direction
+##   * a direction towards a point very far away is still a direction
 ##     (`direction_to`). Godot's `normalized()` answers an infinite vector
-##     with zero, silently, and a vehicle told to seek the horizon would stop.
+##     with zero (and a warning), and a merely huge one -- 1e20, whose length
+##     overflows a 32-bit float -- with zero and no warning at all; a vehicle
+##     told to seek the horizon would stop.
 ##
 ## `combined` is Reynolds' weighted sum: each behaviour's force times its
 ## weight, added, then clamped once. Constant time per behaviour.
 ##
-## When not to use it: when two behaviours fight to a standstill -- avoid
-## pushing left exactly as hard as seek pulls right. A weighted sum cannot
+## When not to use it: when two behaviours fight to a standstill -- two
+## avoids pushing opposite ways as hard as each other. A weighted sum cannot
 ## break that tie; a priority order (the first behaviour with something to
 ## say wins) can.
 class_name Steering
 extends RefCounted
 
 
-## `force`, shortened to `limit` if it is longer.
+## `force`, shortened to `limit` if it is longer. An infinite force is as
+## long as it can be, in its own direction.
 static func clamped(force: Vector2, limit: float) -> Vector2:
+	if not force.is_finite():
+		return direction_to(Vector2.ZERO, force) * limit
 	return force.limit_length(limit)
 
 
 ## The unit direction from `from` to `to`; zero when they are the same point.
-## An infinite offset keeps its direction: each infinite part becomes one
-## step that way and the finite parts drop out, as they would at infinity.
+## A finite offset is first divided by its larger part, so its length cannot
+## overflow on the way to being normalised. An infinite offset keeps its
+## direction: each infinite part becomes one step that way and the finite
+## parts drop out, as they would at infinity.
 static func direction_to(from: Vector2, to: Vector2) -> Vector2:
 	var offset: Vector2 = to - from
-	if offset.is_finite():
-		return offset.normalized()
-	return Vector2(_towards_infinity(offset.x), _towards_infinity(offset.y)).normalized()
+	if not offset.is_finite():
+		return Vector2(_towards_infinity(offset.x), _towards_infinity(offset.y)).normalized()
+	var larger: float = maxf(absf(offset.x), absf(offset.y))
+	if larger == 0.0:
+		return Vector2.ZERO
+	return (offset / larger).normalized()
 
 
 ## The force that turns `vehicle`'s velocity into `desired`, as fast as it
@@ -44,6 +54,7 @@ static func towards_velocity(vehicle: SteeringVehicle, desired: Vector2) -> Vect
 
 
 ## Each force times its weight, added, and clamped once to `vehicle`'s limit.
+## Weights are finite; an infinite one makes a force with no direction.
 static func combined(vehicle: SteeringVehicle, forces: Array[Vector2], weights: PackedFloat64Array) -> Vector2:
 	var total := Vector2.ZERO
 	for index: int in range(forces.size()):

@@ -3,9 +3,12 @@
 ## The vehicle looks ahead along its velocity -- `look_ahead` units at top
 ## speed, less as it slows -- and asks of each obstacle whether that stretch
 ## passes within its radius. Of those that do, the nearest along the stretch
-## is the threat, and the force pushes sideways away from its centre at full
-## strength: from the point of the stretch closest to the centre, outwards.
-## Head-on, with no side to push to, it turns left. A vehicle going nowhere
+## is the threat (the first listed, on a tie), and the force pushes sideways,
+## at full strength, to the side of the stretch the centre is not on. Only
+## sideways: a push straight back would brake the vehicle in front of the
+## obstacle, and added to seek, which pulls straight on, the two would stall
+## there -- the first version did exactly that. Head-on, with the centre on
+## the line and no side to choose, it turns left. A vehicle going nowhere
 ## sees nothing ahead and asks for nothing. O(obstacles).
 ##
 ## It only swerves. It does not know where the vehicle wants to go; added to
@@ -40,11 +43,13 @@ func force(vehicle: SteeringVehicle) -> Vector2:
 	var threat: int = _first_threat(vehicle.position, heading, reach)
 	if threat < 0:
 		return Vector2.ZERO
-	var closest: Vector2 = _closest_on_stretch(vehicle.position, heading, reach, centres[threat])
-	var away: Vector2 = (closest - centres[threat]).normalized()
-	if away == Vector2.ZERO:
-		away = Vector2(heading.y, -heading.x)
-	return away * vehicle.max_force
+	# The part of "from the centre to the vehicle" across the heading: which
+	# side of the line the vehicle should pass on.
+	var from_centre: Vector2 = vehicle.position - centres[threat]
+	var across: Vector2 = from_centre - heading * from_centre.dot(heading)
+	if across.length() < 1e-6:
+		across = Vector2(heading.y, -heading.x)
+	return across.normalized() * vehicle.max_force
 
 
 # The index of the obstacle the stretch ahead meets first, or -1.

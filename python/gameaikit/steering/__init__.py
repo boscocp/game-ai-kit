@@ -13,8 +13,8 @@ Read `vector.py`, then `vehicle.py`, then `behaviours.py`: the arithmetic,
 the thing that moves, and what tells it where.
 """
 
-from .behaviours import Arrive, Avoid, Pursue, Seek, combined, direction_to
+from .behaviours import Arrive, Avoid, Pursue, Seek, clamped, combined, direction_to
 from .vector import Vec
 from .vehicle import Vehicle, run
 
-__all__ = ["Arrive", "Avoid", "Pursue", "Seek", "Vec", "Vehicle", "combined", "direction_to", "run"]
+__all__ = ["Arrive", "Avoid", "Pursue", "Seek", "Vec", "Vehicle", "clamped", "combined", "direction_to", "run"]

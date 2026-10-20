@@ -9,7 +9,7 @@ import math
 import random
 import unittest
 
-from gameaikit.steering import Arrive, Avoid, Pursue, Seek, Vec, Vehicle, direction_to
+from gameaikit.steering import Arrive, Avoid, Pursue, Seek, Vec, Vehicle, clamped, direction_to
 
 DT = 1.0 / 60.0
 #: At rest: under a thousandth of top speed, for a whole second.
@@ -54,7 +54,9 @@ class SteeringTests(unittest.TestCase):
                 self.assertLess(longest_rest(car, Seek(target), 1800), REST_STEPS)
 
     def test_no_behaviour_asks_for_more_than_the_vehicle_can_give(self) -> None:
-        car = Vehicle(Vec(1.0, 2.0), Vec(10.0, 0.0), 10.0, 20.0)
+        # A force under twice the top speed, so seek's own clamp has work to
+        # do: at 20 against 10, desired minus velocity never exceeds it.
+        car = Vehicle(Vec(1.0, 2.0), Vec(10.0, 0.0), 10.0, 6.0)
         places = [car.position, Vec(math.inf, 0.0), Vec(-math.inf, math.inf), Vec(1e300, -1e300), Vec(0.0, 0.0)]
         for place in places:
             behaviours = [Seek(place), Arrive(place, 8.0), Pursue(place, Vec(3.0, -4.0)),
@@ -68,6 +70,28 @@ class SteeringTests(unittest.TestCase):
     def test_a_direction_to_infinity_is_still_a_direction(self) -> None:
         self.assertEqual(direction_to(Vec(5.0, 5.0), Vec(math.inf, 7.0)), Vec(1.0, 0.0))
         self.assertEqual(direction_to(Vec(5.0, 5.0), Vec(5.0, 5.0)), Vec(0.0, 0.0))
+        self.assertAlmostEqual(direction_to(Vec(0.0, 0.0), Vec(1e30, -1e30)).x, math.sqrt(0.5))
+
+    def test_seek_on_a_weak_vehicle_asks_for_no_more_than_it_has(self) -> None:
+        car = Vehicle(Vec(0.0, 0.0), Vec(0.0, -5.0), 10.0, 8.0)
+        self.assertAlmostEqual(Seek(Vec(20.0, 15.0)).force(car).length(), 8.0)
+
+    def test_an_infinite_force_is_clamped_in_its_own_direction(self) -> None:
+        self.assertEqual(clamped(Vec(math.inf, 0.0), 3.0), Vec(3.0, 0.0))
+
+    def test_avoid_turns_left_head_on_and_takes_the_first_of_two_equal_threats(self) -> None:
+        car = Vehicle(Vec(0.0, 0.0), Vec(10.0, 0.0), 10.0, 20.0)
+        self.assertEqual(Avoid([Vec(3.0, 0.0)], [1.0], 5.0).force(car), Vec(0.0, -20.0))
+        # Two obstacles equally far along, either side of the line: the first
+        # listed is the threat, and the push is away from its side.
+        both = Avoid([Vec(3.0, 0.5), Vec(3.0, -0.5)], [1.0, 1.0], 5.0)
+        self.assertEqual(both.force(car), Vec(0.0, -20.0))
+        swapped = Avoid([Vec(3.0, -0.5), Vec(3.0, 0.5)], [1.0, 1.0], 5.0)
+        self.assertEqual(swapped.force(car), Vec(0.0, 20.0))
+
+    def test_arrive_waits_a_tenth_of_a_second_unless_told_otherwise(self) -> None:
+        self.assertEqual(Arrive(Vec(0.0, 0.0), 5.0).time_to_target, 0.1)
+        self.assertEqual(Arrive(Vec(0.0, 0.0), 5.0, 0.0).time_to_target, 0.001)
 
     def test_avoid_sees_nothing_when_standing_still(self) -> None:
         car = Vehicle(Vec(0.0, 0.0), Vec(0.0, 0.0), 10.0, 20.0)

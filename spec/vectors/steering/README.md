@@ -24,7 +24,9 @@ test-python` on the Python side.
 
 From neither implementation: `derive.py`, beside the vectors, is a third
 copy of the maths in plain tuples that imports nothing from this
-repository.
+repository. Independent of the code, not of its author: it makes the same
+design choices (which side head-on is, the first threat on a tie), so it
+catches a slip in transcribing them, not a choice that is wrong.
 
     python3 spec/vectors/steering/derive.py spec/vectors/steering
 
@@ -33,20 +35,26 @@ repository.
 1e-3 in the vector's own units, on every coordinate. Godot's `Vector2` holds
 32-bit floats and the file 64-bit answers
 ([`docs/godot/vector2-is-single-precision.md`](../../../docs/godot/vector2-is-single-precision.md)).
-Measured on 4.7.2, the largest difference on the GDScript side was 8.1e-5,
-in `seek-and-avoid-go-round`; Python lands far closer. A sample moved by ten
-times the tolerance fails both sides' tests.
+Measured on 4.7.2, the largest difference on the GDScript side was 9.4e-6
+on one coordinate, in `arrive-slows-and-stops`;
+Python lands far closer. A sample moved by ten times the tolerance fails
+both sides' tests, and a real change is far bigger than the tolerance:
+arrive given 0.11 s instead of 0.1 moves its vector by 4e-2.
+
+A field a vector leaves out -- `time_to_target`, `max_prediction` -- is left
+to the library's own default on both sides, so the vectors pin the defaults
+too.
 
 ## The six
 
 | file | what it pins |
 |---|---|
-| `seek-turns-and-overshoots` | seek reaches the target at speed near step 225 and is past it by 260 |
+| `seek-turns-and-overshoots` | on a vehicle whose force is under twice its speed, so the clamp shapes the turn: seek reaches the target at speed near step 240 and is past it by 300 |
 | `arrive-slows-and-stops` | arrive brakes inside its radius and is still on the target by step 300 |
 | `pursue-a-crossing-quarry` | pursue aims ahead of a quarry crossing in front, which moves on after every step |
-| `avoid-swerves-alone` | avoid slows and turns while the obstacle is ahead, then asks for nothing |
+| `avoid-swerves-alone` | avoid pushes sideways while the obstacle is ahead, then asks for nothing and the vehicle coasts past |
 | `seek-and-avoid-go-round` | the two, weighted 1 and 2, go round an obstacle a little off the line |
-| `seek-and-avoid-tie-on-the-line` | the obstacle on the line: the weighted sum stalls in front of it, for good |
+| `seek-and-avoid-head-on` | the obstacle on the line: avoid turns left and the two go round (its first version stalled in front, for good) |
 
 ## The shape
 

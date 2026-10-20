@@ -7,7 +7,11 @@
 #      arrive exists to fix, measured rather than claimed;
 #   3. no behaviour returns a force above the vehicle's maximum, or one that
 #      is not a number, on any input -- a target on top of the vehicle and
-#      targets at infinity included.
+#      targets at infinity included -- on vehicles whose limits are drawn
+#      too, most with a force under twice their top speed, where seek's own
+#      clamp is what holds it (at 20 against 10 it never has to). And from
+#      a vehicle at rest, seek, arrive and pursue push towards a target
+#      however far, 1e30 and infinity included.
 #
 # At rest: under a thousandth of top speed for a whole second. Measured
 # before it was written: over 300 starts seek's longest such run was one
@@ -94,10 +98,28 @@ func _forces_bounded(dice: RandomNumberGenerator) -> Array[String]:
 	var failures: Array[String] = []
 	for trial: int in range(STARTS):
 		var car: SteeringVehicle = _random_vehicle(dice)
+		car.max_speed = dice.randf_range(2.0, 20.0)
+		car.max_force = dice.randf_range(1.0, 40.0)
 		var places: Array[Vector2] = [car.position, Vector2(INF, 0), Vector2(-INF, INF), Vector2(1e30, -1e30),
 			Vector2(dice.randf_range(-50, 50), dice.randf_range(-50, 50))]
 		for place: Vector2 in places:
 			failures.append_array(_unbounded(car, _every_behaviour(place), "trial %d at %s" % [trial, place]))
+		var still := SteeringVehicle.new(car.position, Vector2.ZERO, car.max_speed, car.max_force)
+		for place: Vector2 in places.slice(1):
+			# Seek, arrive and pursue head somewhere; avoid does not.
+			failures.append_array(_pushes_towards(still, place, _every_behaviour(place).slice(0, 3), "trial %d" % trial))
+	return failures
+
+
+# From rest, each of `behaviours` pushes towards `place`: its force has a
+# positive part along the direction there, however far it is.
+func _pushes_towards(car: SteeringVehicle, place: Vector2, behaviours: Array, where: String) -> Array[String]:
+	var failures: Array[String] = []
+	var towards: Vector2 = Steering.direction_to(car.position, place)
+	for behaviour: SteeringBehaviour in behaviours:
+		var name: String = behaviour.get_script().get_global_name()
+		if behaviour.force(car).dot(towards) <= 0.0:
+			failures.append("%s: %s pushed away from %s" % [where, name, place])
 	return failures
 
 
@@ -128,6 +150,10 @@ func _planted() -> Array[String]:
 		failures.append("planted: arrive passed as seek")
 	if _unbounded(car, [Unclamped.new()] as Array[SteeringBehaviour], "planted").is_empty():
 		failures.append("planted: a force twice the limit was let through")
+	var still := SteeringVehicle.new(Vector2.ZERO, Vector2.ZERO, 10.0, 20.0)
+	var backwards: Array = [SeekBehaviour.new(Vector2(-1e30, 0))]
+	if _pushes_towards(still, Vector2(1e30, 0), backwards, "planted").is_empty():
+		failures.append("planted: a push away from the target was let through")
 	return failures
 
 

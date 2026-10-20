@@ -38,6 +38,6 @@ func step(force: Vector2, dt: float) -> void:
 	position += velocity * dt
 
 
-## How fast it is going.
+## Its speed: what `max_speed` caps and arrive brings to zero.
 func speed() -> float:
 	return velocity.length()

@@ -99,14 +99,28 @@ static func _behaviour(spec: Dictionary) -> SteeringBehaviour:
 		"seek":
 			return SeekBehaviour.new(_vector(spec["target"]))
 		"arrive":
-			return ArriveBehaviour.new(_vector(spec["target"]), spec["braking_radius"], spec.get("time_to_target", 0.1))
+			return _arrive(spec)
 		"pursue":
-			var quarry: Dictionary = spec["quarry"]
-			return PursueBehaviour.new(_vector(quarry["position"]), _vector(quarry["velocity"]), spec.get("max_prediction", 1.0))
+			return _pursue(spec)
 	var centres: Array[Vector2] = []
 	for centre: Array in spec["centres"]:
 		centres.append(_vector(centre))
 	return AvoidBehaviour.new(centres, PackedFloat64Array(spec["radii"]), spec["look_ahead"])
+
+
+# A field the file leaves out is left to the library's own default, so the
+# vectors pin the defaults too.
+static func _arrive(spec: Dictionary) -> ArriveBehaviour:
+	if spec.has("time_to_target"):
+		return ArriveBehaviour.new(_vector(spec["target"]), spec["braking_radius"], spec["time_to_target"])
+	return ArriveBehaviour.new(_vector(spec["target"]), spec["braking_radius"])
+
+
+static func _pursue(spec: Dictionary) -> PursueBehaviour:
+	var quarry: Dictionary = spec["quarry"]
+	if spec.has("max_prediction"):
+		return PursueBehaviour.new(_vector(quarry["position"]), _vector(quarry["velocity"]), spec["max_prediction"])
+	return PursueBehaviour.new(_vector(quarry["position"]), _vector(quarry["velocity"]))
 
 
 # A quarry moves on at its own velocity after every step, as the file's does.

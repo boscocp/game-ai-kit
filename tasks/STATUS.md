@@ -90,7 +90,7 @@ because it is driven better, and a command proves every car runs one physics.
 
 | # | Task | State | Notes |
 |---|---|---|---|
-| T22 | `ai_steering`: not on a grid | done | seek, arrive, pursue, avoid, in GDScript and Python; 6 trajectories held to 1e-3 (8e-5 measured; Vector2 is 32-bit); over 100 starts arrive rests every time and seek never; `make demo-steering` draws each force |
+| T22 | `ai_steering`: not on a grid | done | seek, arrive, pursue, avoid, in GDScript and Python; 6 trajectories held to 1e-3 (9.4e-6 measured; Vector2 is 32-bit); over 100 starts arrive rests every time and seek never; `make demo-steering` draws each force |
 | T23 | The racing demo, three honest difficulties | todo | no rubber-banding, and a gate that says so; T53 gave each knob a source (lookahead, grip margin, wander) and the gate now also refuses a knob that moves during the race |
 | T53 | How racing AI is made | done | `docs/concepts/racing-ai.md`: 30 references, each opened, those read in part said so; rubber-banding for and against; T23 and T54 rewritten from it |
 | T54 | Racing in 3D, with physics the driver does not own | blocked | the owner's 3D racer: suspension, tyre slip, weight transfer on `RigidBody3D`; T23's three knobs and its no-cheat gate; needs ADR 0018 accepted, T50, T53 |
@@ -126,8 +126,9 @@ and the weighted sum), and seek, arrive (Millington's time-to-target),
 pursue and avoid, a file each. `gameaikit.steering`, the same in Python.
 `spec/vectors/steering/`: six trajectories from an independent
 `derive.py`, at 1e-3 because `Vector2` is 32-bit
-(`docs/godot/vector2-is-single-precision.md`), one of them the weighted
-sum's tie in front of an obstacle on the line. `make
+(`docs/godot/vector2-is-single-precision.md`). The review found avoid
+pushing straight back and stalling in front of an obstacle on the line;
+it now pushes only sideways, and `seek-and-avoid-head-on` pins it. `make
 test-steering-properties` (check and CI): over 100 seeded starts arrive
 rests inside its radius and stays, seek never rests, no force breaks its
 limit -- each first shown a case it must refuse. `make demo-steering`,
@@ -138,8 +139,14 @@ vehicle with its force drawn, and say what it is about to do before it
 does. `data/tactical/` (your 2 T25 recordings) is still untracked and
 untouched.
 
-**Next:** T23, the racing demo, on these behaviours -- or whatever `make
-wave` picks; T20 still waits on T25's recordings.
+**Next: T20, the RTS demo -- the owner's choice, on 2026-10-19, for a
+later day.** Not through `make wave`, which skips T20 while T25 waits on
+the recordings: open its branch by hand (`make wave-start
+BRANCH=wave/62-the-rts-demo`) and split T20 first -- the game, the map,
+the economy, the units, fog, the Bos Wars art and the commander now; the
+human-likeness half and the league, which need T25's twenty recordings,
+later. The owner asked why wave 61 was T22 and not T20: `make wave`
+picked it, and that should have been asked, not announced.
 
 ## Resuming after 2026-10-19 (wave 60)
 

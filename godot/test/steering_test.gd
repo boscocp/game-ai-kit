@@ -55,12 +55,13 @@ func test_avoid_turns_left_from_an_obstacle_dead_ahead_and_ignores_one_behind() 
 	assert_vector(behind.force(car)).is_equal(Vector2.ZERO)
 
 
-func test_avoid_pushes_back_from_an_obstacle_just_past_the_end_of_its_look() -> void:
-	# The stretch ends at (5, 0); the obstacle's edge reaches it. The nearest
-	# point is the stretch's end, and away from the centre from there is back.
+func test_avoid_only_pushes_sideways_even_from_an_obstacle_past_the_end_of_its_look() -> void:
+	# The stretch ends at (5, 0); the obstacle's edge reaches it, a little
+	# below the line. Pushing back from the stretch's end would brake the
+	# vehicle in front of it -- the first version did, and stalled there.
 	var car := SteeringVehicle.new(Vector2.ZERO, Vector2(10, 0), 10.0, 20.0)
-	var past := AvoidBehaviour.new([Vector2(6, 0)] as Array[Vector2], PackedFloat64Array([1.5]), 5.0)
-	assert_vector(past.force(car)).is_equal_approx(Vector2(-20, 0), Vector2(1e-4, 1e-4))
+	var past := AvoidBehaviour.new([Vector2(6, 0.5)] as Array[Vector2], PackedFloat64Array([1.5]), 5.0)
+	assert_vector(past.force(car)).is_equal_approx(Vector2(0, -20), Vector2(1e-4, 1e-4))
 
 
 func test_the_weighted_sum_is_clamped_once_after_adding() -> void:
@@ -90,3 +91,35 @@ func test_a_sample_moved_past_the_tolerance_fails_the_check() -> void:
 	assert_array(SteeringVector.check("x", vector)).is_empty()
 	vector["samples"][0]["position"] = [SteeringVector.TOLERANCE * 10.0, 0]
 	assert_array(SteeringVector.check("x", vector)).has_size(1)
+
+
+func test_seek_on_a_weak_vehicle_asks_for_no_more_than_it_has() -> void:
+	# Force 8 against top speed 10: desired minus velocity is 13.6 long here,
+	# and seek's own clamp is what holds it.
+	var car := SteeringVehicle.new(Vector2.ZERO, Vector2(0, -5), 10.0, 8.0)
+	assert_float(SeekBehaviour.new(Vector2(20, 15)).force(car).length()).is_equal_approx(8.0, 1e-4)
+
+
+func test_a_target_too_far_for_a_32_bit_length_still_has_a_direction() -> void:
+	# (1e20, 0) is finite, and its length overflows a 32-bit float:
+	# normalized() answers it with zero and no warning.
+	assert_vector(Steering.direction_to(Vector2.ZERO, Vector2(1e20, 0))).is_equal(Vector2(1, 0))
+	assert_vector(Steering.direction_to(Vector2.ZERO, Vector2(1e30, -1e30))).is_equal_approx(
+		Vector2(0.70710677, -0.70710677), Vector2(1e-6, 1e-6))
+
+
+func test_an_infinite_force_is_clamped_in_its_own_direction() -> void:
+	assert_vector(Steering.clamped(Vector2(INF, 0), 3.0)).is_equal(Vector2(3, 0))
+
+
+func test_avoid_takes_the_first_of_two_equal_threats_and_pushes_off_its_side() -> void:
+	var car := SteeringVehicle.new(Vector2.ZERO, Vector2(10, 0), 10.0, 20.0)
+	var both := AvoidBehaviour.new([Vector2(3, 0.5), Vector2(3, -0.5)] as Array[Vector2], PackedFloat64Array([1.0, 1.0]), 5.0)
+	assert_vector(both.force(car)).is_equal_approx(Vector2(0, -20), Vector2(1e-4, 1e-4))
+	var swapped := AvoidBehaviour.new([Vector2(3, -0.5), Vector2(3, 0.5)] as Array[Vector2], PackedFloat64Array([1.0, 1.0]), 5.0)
+	assert_vector(swapped.force(car)).is_equal_approx(Vector2(0, 20), Vector2(1e-4, 1e-4))
+
+
+func test_arrive_waits_a_tenth_of_a_second_unless_told_otherwise_and_never_zero() -> void:
+	assert_float(ArriveBehaviour.new(Vector2.ZERO, 5.0).time_to_target).is_equal_approx(0.1, 1e-9)
+	assert_float(ArriveBehaviour.new(Vector2.ZERO, 5.0, 0.0).time_to_target).is_equal(ArriveBehaviour.SHORTEST_TIME)

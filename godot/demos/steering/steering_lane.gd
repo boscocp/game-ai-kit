@@ -82,10 +82,20 @@ func quarry_velocity() -> Vector2:
 	return Vector2(-sin(quarry_angle), cos(quarry_angle)) * 6.0
 
 
-## What this arena is deciding with, for the demo's overlay.
+## What this arena is deciding with, for the demo's overlay: the force it
+## asked for (how hard, and which way), the point it is steering at -- for
+## pursue, its guess, not the quarry -- and how far that is.
 func overlay() -> Dictionary:
-	return {"behaviour": title, "force": force.length(), "speed": vehicle.speed(),
-		"distance": vehicle.position.distance_to(quarry() if title == "pursue" else target)}
+	var aim: Vector2 = aim_point()
+	return {"behaviour": title, "force": force.length(), "push": [force.x, force.y],
+		"aim": [aim.x, aim.y], "speed": vehicle.speed(), "distance": vehicle.position.distance_to(aim)}
+
+
+## The point the behaviour steers at: the target, or pursue's guess.
+func aim_point() -> Vector2:
+	if title == "pursue":
+		return PursueBehaviour.new(quarry(), quarry_velocity(), 1.0).predicted(vehicle)
+	return target
 
 
 func _draw() -> void:
@@ -105,8 +115,7 @@ func _draw_reasoning() -> void:
 			draw_arc(target * SCALE, BRAKING_RADIUS * SCALE, 0.0, TAU, 48, REASONING_COLOUR, 1.0)
 		"pursue":
 			draw_circle(quarry() * SCALE, 5.0, TARGET_COLOUR)
-			var guess: Vector2 = PursueBehaviour.new(quarry(), quarry_velocity(), 1.0).predicted(vehicle)
-			draw_arc(guess * SCALE, 6.0, 0.0, TAU, 16, REASONING_COLOUR, 2.0)
+			draw_arc(aim_point() * SCALE, 6.0, 0.0, TAU, 16, REASONING_COLOUR, 2.0)
 			return
 		"seek + avoid":
 			_draw_what_avoid_sees()

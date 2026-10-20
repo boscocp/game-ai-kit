@@ -35,19 +35,23 @@ between that velocity and the one the vehicle has -- Reynolds'
 *steering = desired velocity - velocity* -- shortened to what the vehicle
 can apply. Nothing in it ever asks for less than full speed, so a vehicle
 seeking a point drives through it, turns, comes back through it, and keeps
-doing that. Over 300 random starts, seek's longest stretch spent under a
-thousandth of its top speed was **one step**.
+doing that. Over 300 random starts, in both languages, seek's longest
+stretch spent under a thousandth of its top speed was **one step**.
 
 ## Arrive: the few lines that look competent
 
-Arrive is seek with a braking radius. Outside it, it is seek; inside it, the
-speed it wants falls with the distance left -- half way in, half speed --
-so it asks to be stopped exactly as it reaches the target. Millington's
-form also asks the velocity to change within a tenth of a second rather
-than at once, which damps the approach: without it, the slow-down rocks the
-vehicle past the target before it settles. Over the same starts, every
-arrive came to rest inside its radius and stayed there, its last speed
-around 1e-11.
+Arrive is seek with a braking radius. Outside it, it wants what seek wants,
+full speed at the target; inside it, the speed it wants falls with the
+distance left -- half way in, half speed -- so it asks to be stopped exactly
+as it reaches the target. Millington's form also asks the velocity to change
+within a tenth of a second rather than at once, which damps the approach:
+without it, the slow-down rocks the vehicle past the target before it
+settles. It also means arrive asks ten times as hard as seek for the same
+change, outside the radius too -- so the two are not the same there, only
+headed the same way. Over the same starts, every arrive came to rest inside
+its radius and stayed there: its last speed was around 1e-11 in Python, and
+at most 1.2e-4 in GDScript's 32-bit floats -- both far under the thousandth
+of top speed (0.01) that counts as rest.
 
 `test/steering_properties.gd` holds both as measurements, over a hundred
 seeded starts, and is first shown seek passed off as arrive, and arrive as
@@ -62,21 +66,25 @@ the far future is about a quarry that will have turned. Then it seeks the
 guess. In the demo, the ring is the guess, and the vehicle cuts across the
 quarry's circle towards it.
 
-## Avoid, and the tie a weighted sum cannot break
+## Avoid, and why it only pushes sideways
 
 Avoid looks along its velocity, a stretch shorter as it slows, and pushes
-at full strength away from the first round obstacle that stretch passes
-inside. Alone it only swerves; it does not know where the vehicle wants to
+at full strength, sideways, away from the side of the line the first round
+obstacle on that stretch is on; dead ahead, with no side to choose, it turns
+left. Alone it only swerves; it does not know where the vehicle wants to
 go. Added to seek -- `Steering.combined`, each force times a weight, summed,
 clamped once -- the two go round.
 
-Unless the obstacle sits exactly on the line. Then avoid pushes straight
-back and seek pulls straight on, and the vehicle stalls in front of the
-obstacle, inching to and fro, for good. That is not a bug in either
-behaviour; it is what a weighted sum is. The vector
-`seek-and-avoid-tie-on-the-line` pins it as a measurement. A priority order
--- the first behaviour with something to say wins -- or a small sideways
-bias breaks the tie.
+Only sideways, and that is a lesson this kit learned by getting it wrong.
+The first version pushed away from the obstacle's centre from the end of
+the stretch, which near an obstacle on the line points straight back. Avoid
+then braked, seek pulled straight on, and the vehicle stalled in front of
+the obstacle for good. It looked like the weighted sum's fault, and the
+first draft of this page said so; the review measured otherwise -- the
+same weights with a sideways push go round. A weighted sum can still tie
+(two avoids pushing opposite ways, say), and a priority order -- the first
+behaviour with something to say wins -- is the cure for that; but this tie
+was the behaviour's. `seek-and-avoid-head-on` pins the fix.
 
 ## Two languages, one answer
 
@@ -85,7 +93,9 @@ so the two can be held to one answer. `spec/vectors/steering/` pins six
 trajectories, written by a third copy of the maths that imports nothing
 from either. Godot's `Vector2` holds 32-bit floats and Python's 64
 ([why it matters](../godot/vector2-is-single-precision.md)), so the vectors
-allow 1e-3; the largest difference measured was 8e-5.
+allow 1e-3; the largest difference measured was 9.4e-6. That is still tight
+enough to see a real change: asking arrive for 0.11 s instead of 0.1 moves
+its vector by 4e-2.
 
 ## When not to use them
 

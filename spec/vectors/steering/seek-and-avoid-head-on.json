@@ -1,6 +1,6 @@
 {
- "name": "seek-and-avoid-tie-on-the-line",
- "why": "The weighted sum's failure, pinned so it is a measurement: the obstacle exactly on the line. Avoid pushes straight back from the end of its look-ahead, seek pulls straight on, and the vehicle stalls in front of the obstacle, inching to and fro about x = 7.4, and never gets past -- a tie a weighted sum cannot break (see Steering's header).",
+ "name": "seek-and-avoid-head-on",
+ "why": "The obstacle exactly on the line to the target: no side to choose, so avoid turns left, and the two together go round. Its first version pushed straight back from the end of the look-ahead instead, and the vehicle stalled in front of the obstacle for good.",
  "steps_per_second": 60,
  "vehicle": {
   "position": [
@@ -70,63 +70,63 @@
    ]
   },
   {
-   "step": 60,
+   "step": 30,
    "position": [
-    6.015700004270221,
-    0.0
+    4.85053796319302,
+    -0.9114929825921783
    ],
    "velocity": [
-    2.2028978314719168,
-    0.0
+    9.320636865112286,
+    -3.354118775100383
    ],
    "force": [
-    7.797102168528083,
-    0.0
+    0.6680540802566259,
+    3.8295692960855625
+   ]
+  },
+  {
+   "step": 60,
+   "position": [
+    9.47444976384932,
+    -2.4694189129486053
+   ],
+   "velocity": [
+    9.195619675111896,
+    -2.8081085836162796
+   ],
+   "force": [
+    0.6629303392393666,
+    4.484113241883891
+   ]
+  },
+  {
+   "step": 120,
+   "position": [
+    18.81156026917403,
+    -3.1847962360439666
+   ],
+   "velocity": [
+    9.258975722938237,
+    1.2189937324278195
+   ],
+   "force": [
+    -0.7364667993767338,
+    4.012338951297673
    ]
   },
   {
    "step": 180,
    "position": [
-    7.390308199122415,
-    0.0
+    26.131372595469777,
+    0.23525318924620242
    ],
    "velocity": [
-    -0.08018339012155479,
-    0.0
+    2.605886335395464,
+    4.252108660728479
    ],
    "force": [
-    10.080183390121555,
-    0.0
-   ]
-  },
-  {
-   "step": 300,
-   "position": [
-    7.415849081276309,
-    0.0
-   ],
-   "velocity": [
-    0.014904148686192054,
-    0.0
-   ],
-   "force": [
-    9.985095851313808,
-    0.0
-   ]
-  },
-  {
-   "step": 600,
-   "position": [
-    7.434159623652208,
-    0.0
-   ],
-   "velocity": [
-    -0.2218803052012819,
-    0.0
-   ],
-   "force": [
-    10.221880305201282,
-    0.0
+    -12.545522609647898,
+    -5.349209720597241
    ]
   }
  ]
