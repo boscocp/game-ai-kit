@@ -34,7 +34,8 @@ extends RefCounted
 ## normal, and was cut -- the plans here are a step or two long, so a
 ## longer horizon changes nothing, and depth 2 moved no squad that mattered.
 ## Normal's noise is 0.2: at 0.5 it misjudged the enemy enough to go 11 - 9
-## with easy, which plans nothing at all.
+## with easy, which plans nothing at all. At 0.2, on the code merged,
+## normal beat easy 17 - 3.
 static func presets() -> Array[Difficulty]:
 	return [
 		Difficulty.new("easy", 0, 1, 0.6),

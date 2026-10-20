@@ -91,3 +91,13 @@ tick it was given, because `RtsOrders._move` read the world's board: a
 unit that stops at once tells its side something stands there. The walk
 now ends beside the building, as a player's unit would, and
 `rts_core_test.gd` asserts the unit is still walking after a tick.
+
+Later in T20, from the owner's play, the core gained four rules: units are
+nudged apart after every tick (Reynolds' separation, a third of a stride
+at most), a shot from afar needs a line clear of walls and buildings, an
+idle fighter strikes back at a striker its side can see, and a sixth
+order, repair. `make test-rts-budget` measured the simulation at **1.07 ms** mean and
+1.78 ms p95 with all four in, under the 4.0 ms share. One cost nearly broke
+it: asking every tick whether each attacker could still see its target
+took the p95 to 3.8 ms, so that question is asked on a unit's look, every
+`LOOK_EVERY` ticks, as the search for a target already was.

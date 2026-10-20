@@ -134,8 +134,8 @@ T20 built the RTS the ADR was written for (`godot/game/rts/`,
   `RtsInfluence`); units follow T19's flow fields. The economy under the
   plan is a priority queue (`EconomyQueue`), and `QueueSide` -- the same
   queue filled by fixed rules -- is the baseline. **The commander beats it**:
-  15 - 5 over ten seeds from both seats (`make rts-measure`), and
-  `make test-rts-match` holds the lead on four seeds. T11's "half beaten"
+  19 - 1 over ten seeds from both seats (`make rts-measure`, on the code
+  merged), and `make test-rts-match` holds the lead on four seeds. T11's "half beaten"
   is beaten in real time.
 - **Point 4, as written, now with a clock.** The domain is level 1
   (`spec/pddl/rts-build-order-domain.pddl`, ten actions, ten facts); income
@@ -144,13 +144,14 @@ T20 built the RTS the ADR was written for (`godot/game/rts/`,
   nobody mines is shown as never coming, not waited on.
 - **Point 5, on the clock.** The commander replans every ten seconds, and
   at once when its next step cannot run or its goal changed. Every call
-  is under the strategy share without slicing: median 72 to 124 us, worst
-  678 us, against 1.5 ms. Spreading a plan across frames is still not
+  is under the strategy share without slicing: medians of 60 to 95 us,
+  the worst 465 us, against 1.5 ms. Spreading a plan across frames is still not
   needed at this size, and is left for a domain that needs it.
 - **Point 6, measured and not settled.** Over the same domain the HTN's
-  methods (`BuildOrder.RECIPES`, written by hand) and STRIPS find plans of
-  the same length; as commanders they went 12 - 8 to the HTN over twenty
-  matches, which does not tell them apart. The commander keeps **STRIPS**
+  methods (`BuildOrder.RECIPES`, written by hand) and STRIPS find the same
+  plans -- on 13 questions, 1.4 steps, STRIPS in 84 us visiting 2.1 worlds,
+  the HTN in 45 us taking up 6.8 tasks; as commanders they went 12 - 8 to
+  STRIPS over twenty matches, which does not tell them apart. The commander keeps **STRIPS**
   by default, because its order is found rather than written and that is
   this kit's lesson, and `H` in the demo swaps to the HTN so a person can
   compare.

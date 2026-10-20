@@ -65,35 +65,65 @@ over the map, and the enemy's as last seen, fading over 45 seconds. A
 region looked at and found empty is cleared, so a squad that razed a home
 goes looking for the expansion. **Units** follow T19's flow fields.
 
+## Whom to strike
+
+Once a squad is in a fight, `FocusFire` scores every enemy it can see --
+the damage a second it deals the squad, over the seconds the squad needs
+to kill it, over its distance -- and every member strikes the best. The
+counter table counts both ways: a squad kills what it beats faster, and
+what beats it threatens more. A worker or a building is struck only when
+nothing armed is near. A member that struck the nearest by reflex is turned
+to the focus, and the focus moves only to an enemy scoring a quarter
+better, so a squad does not swap targets with every blow. The board rings
+the focus and its two rivals with their scores; the panel says why.
+
+The rules under it are the same for both sides, a person's units included:
+units keep apart, an idle fighter takes on the nearest enemy its side can
+see within two cells past its own sight, and strikes back at a striker it
+can see; a shot from afar needs a line clear of walls and buildings.
+Only the choices -- the plan, the queue, the region, the focus -- are the
+computer's.
+
 ## What was measured
 
 `make rts-measure`, ten seeds from both seats (20 matches a pairing), on
-2026-10-20:
+2026-10-20, on the code merged:
 
 | pairing | record |
 |---|---|
-| commander (normal, STRIPS) against the queues alone | 15 - 5 |
-| commander with STRIPS against with the HTN | 8 - 12 |
+| commander (normal, STRIPS) against the queues alone | 19 - 1 |
+| commander with STRIPS against with the HTN | 12 - 8 |
+| normal against easy | 17 - 3 |
+| the queues against themselves, by seat | 9 - 11 |
 
 The commander beats the queues it sits on, which is what ADR 0010 asked
 of it before it earned its cost; `make test-rts-match` keeps holding that
-on four seeds. STRIPS and the HTN are **not told apart** by 20 matches:
-both find the same six-step chain from the opening, and their plans differ
-only in order. Each planning call took a median of 72 to 124 us and at
-worst 678 us, inside the 1.5 ms strategy share.
+on four seeds. Its matches are short -- a median of 160 seconds of game --
+because it builds runners at once, which the queues' fixed rotation does
+not answer. STRIPS and the HTN are **not told apart** by 20 matches: on
+the 13 distinct questions one match asked, both found the same plans, 1.4
+steps long; STRIPS visited 2.1 worlds in 84 us a plan, the HTN 6.8 tasks
+in 45 us. Every planning call was under 0.5 ms, inside the 1.5 ms strategy
+share.
+
+Before the review's fixes the queues' mirror went 15 - 5 to the west seat;
+after them, 9 - 11. T57 makes that a gate, since a person always plays
+west.
 
 ## Difficulty, without cheating
 
-The levels are T12's three knobs (`RtsLevels`), and nothing else -- no
-level sees, earns or may order more. `plan_horizon` is how far the build
-order looks (2, 4, 8 steps), `search_depth` whether a squad also weighs
-the enemy round a region (1 or 2), `evaluation_noise` how much each
-region's score is blurred (0.6, 0.2, 0).
+The levels are T12's knobs (`RtsLevels`), and nothing else -- no level
+sees, earns or may order more. Two, not three. **Easy** plans nothing
+(horizon 0): its economy is the queues' rules, and its noise of 0.6 blurs
+each region's score and misjudges the enemy army it has seen. **Normal**
+plans four steps ahead with a noise of 0.2. A hard of horizon 8, depth 2
+and no noise went 11 - 9 and 10 - 10 against normal and was cut: plans
+here are a step or two long, so a longer horizon changes nothing.
 
 ## What it does not do
 
-No formations, no unit micro beyond "strike the nearest", no air or water,
-no abilities. Squads do not split to flank. The commander does not plan
+No formations, no air or water, no abilities, no upgrades -- the armed
+tower is T56. Squads do not split to flank. The commander does not plan
 the army's moves: a plan per squad, F.E.A.R.'s way, is the alternative
 ADR 0010 left to T25's league. The reaction delay and the cap on actions
 per minute that make a side look human are T55's.

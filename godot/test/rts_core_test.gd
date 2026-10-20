@@ -451,7 +451,9 @@ func test_a_chase_ends_where_the_side_stops_seeing_its_quarry() -> void:
 	var runner: RtsUnit = world.add_unit(RtsKinds.RUNNER, 1, Vector2i(5, 2))
 	world.command(0, RtsCommand.attack([shield.id] as Array[int], runner.id))
 	world.place(runner, Vector2(30.5, 2.5))
-	world.step()
+	# Within one cycle of looks, whichever tick of it is the shield's.
+	for _tick: int in range(RtsOrders.LOOK_EVERY):
+		world.step()
 	assert_str(shield.order).is_equal(RtsUnit.IDLE)
 
 

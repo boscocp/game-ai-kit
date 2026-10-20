@@ -136,19 +136,31 @@ static func _move(world: RtsWorld, unit: RtsUnit) -> void:
 static func _idle(world: RtsWorld, unit: RtsUnit) -> void:
 	if RtsKinds.is_building(unit.kind):
 		_train(world, unit)
-	elif RtsKinds.fights(unit.kind) and (world.tick + unit.id) % LOOK_EVERY == 0:
+	elif RtsKinds.fights(unit.kind) and _looking(world, unit):
 		var enemy: RtsUnit = nearest_enemy(world, unit)
 		if enemy != null:
 			unit.order = RtsCommand.ATTACK
 			unit.target_id = enemy.id
 
 
+# True on the tick of the cycle `unit` looks round on: each unit its own, so
+# the questions spread evenly over the ticks.
+static func _looking(world: RtsWorld, unit: RtsUnit) -> bool:
+	return (world.tick + unit.id) % LOOK_EVERY == 0
+
+
 static func _attack(world: RtsWorld, unit: RtsUnit) -> void:
 	var target: RtsUnit = world.unit(unit.target_id)
-	# Gone and out of sight end the order alike, so the order's end says no
-	# more than the side can see: a chase into the fog stops at its edge, as
-	# no order could start one there (T20's review).
-	if target == null or target.health <= 0 or not world.visible_to(unit.side, target.position):
+	# Gone and out of sight end the order alike, and on the same tick -- a
+	# look, every LOOK_EVERY -- so the order's end says no more than the
+	# side can see: a chase into the fog stops at its edge, as no order could
+	# start one there (T20's review). Asked every tick, the sight question
+	# took the simulation's p95 from 1.7 ms to 3.8 of its 4.0 ms share.
+	if target == null or target.health <= 0:
+		if _looking(world, unit):
+			unit.order = RtsUnit.IDLE
+		return
+	if _looking(world, unit) and not world.visible_to(unit.side, target.position):
 		unit.order = RtsUnit.IDLE
 		return
 	# A building fills its cell, so reach is counted from the cell's edge:
