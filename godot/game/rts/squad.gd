@@ -109,6 +109,8 @@ func update(view: RtsSnapshot) -> String:
 func commands(view: RtsSnapshot) -> Array[RtsCommand]:
 	if machine.current == FIGHT:
 		return _engage(view)
+	if machine.current == RETREAT:
+		return _walk_to(view, rally_point(), true)
 	if machine.current != ADVANCE:
 		return _walk_to(view, rally_point())
 	if target == "":
@@ -123,14 +125,18 @@ func rally_point() -> Vector2i:
 	return _home + inward
 
 
-func _walk_to(view: RtsSnapshot, wanted: Vector2i) -> Array[RtsCommand]:
+# Every member not there and not on its way is sent. A member fighting is
+# left to finish, unless `breaking_off`: a squad falling back that left its
+# fighters at it was a squad that said "falling back" and kept fighting
+# (T20's review).
+func _walk_to(view: RtsSnapshot, wanted: Vector2i, breaking_off: bool = false) -> Array[RtsCommand]:
 	var cell: Vector2i = open_cell_near(view, wanted)
 	var lagging: Array[int] = []
 	for member: int in members:
 		var unit: Dictionary = _own(view, member)
 		var arrived: bool = (unit["position"] as Vector2).distance_to(Vector2(cell)) < 3.0
 		var on_the_way: bool = unit["order"] == RtsCommand.MOVE and unit["goal"] == cell
-		if not arrived and not on_the_way and unit["order"] != RtsCommand.ATTACK:
+		if not arrived and not on_the_way and (breaking_off or unit["order"] != RtsCommand.ATTACK):
 			lagging.append(member)
 	if lagging.is_empty() or view.graph.is_blocked(cell):
 		return []

@@ -41,7 +41,7 @@ static func of(steps: PackedStringArray, view: RtsSnapshot) -> Array[Dictionary]
 			rates = _with_magma(rates, view)
 			timed.append({"step": step, "starts": now, "ready": now, "waits": ""})
 			continue
-		var entry: Dictionary = _when(what, now, held, rates, standing)
+		var entry: Dictionary = _when(what, batch(step), now, held, rates, standing)
 		entry["step"] = step
 		timed.append(entry)
 		if entry["starts"] == NEVER:
@@ -69,14 +69,16 @@ static func income(view: RtsSnapshot) -> Dictionary:
 
 # One step bought at the first moment from `now` that its price is met and
 # the building it needs stands; advances `held` to that moment and pays.
-static func _when(what: String, now: float, held: Dictionary, rates: Dictionary, standing: Dictionary) -> Dictionary:
+static func _when(what: String, count: int, now: float, held: Dictionary, rates: Dictionary, standing: Dictionary) -> Dictionary:
 	var start: float = now
 	var waits: String = ""
-	var needed: String = RtsKinds.of(what, "needs")
-	if needed != "" and standing.get(needed, NEVER) > start:
-		start = standing.get(needed, NEVER)
-		waits = needed
+	for needed: String in [RtsKinds.of(what, "needs"), producer_of(what)]:
+		if needed != "" and standing.get(needed, NEVER) > start:
+			start = standing.get(needed, NEVER)
+			waits = needed
 	var price: Dictionary = RtsKinds.cost(what)
+	for resource: String in RtsKinds.RESOURCES:
+		price[resource] *= count
 	# Each resource in turn: a wait for ore moves the moment magma is asked at.
 	for resource: String in RtsKinds.RESOURCES:
 		if start == NEVER:
@@ -89,8 +91,26 @@ static func _when(what: String, now: float, held: Dictionary, rates: Dictionary,
 		return {"starts": NEVER, "ready": NEVER, "waits": waits}
 	for resource: String in RtsKinds.RESOURCES:
 		held[resource] += rates[resource] * (start - now) - price[resource]
-	var build_seconds: float = float(RtsKinds.of(what, "ticks")) / RtsWorld.TICKS_PER_SECOND
+	var build_seconds: float = float(RtsKinds.of(what, "ticks")) * count / RtsWorld.TICKS_PER_SECOND
 	return {"starts": start, "ready": start + build_seconds, "waits": waits}
+
+
+## How many a step buys: a squad of fighters, a home's worth of workers,
+## one building. The whole batch is priced at once and trained one after
+## another at one producer -- a pessimist's clock, and a simple one.
+static func batch(step: String) -> int:
+	if step == "train_workers":
+		return EconomyQueue.WORKERS_PER_BASE - RtsScenario.START_WORKERS
+	return BuildOrder.SQUAD if step.begins_with("train_") else 1
+
+
+## The building that trains `kind`, or "" for a building, which a worker
+## raises: a trained unit waits for one to stand, as it waits for `needs`.
+static func producer_of(kind: String) -> String:
+	for producer: String in RtsKinds.TABLE:
+		if kind in RtsKinds.of(producer, "trains"):
+			return producer
+	return ""
 
 
 # When each kind the side has will be standing complete, in seconds from now:

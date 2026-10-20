@@ -291,7 +291,7 @@ func _order_at(cell: Vector2i, point: Vector2) -> void:
 			_give(RtsCommand.attack(ids, unit["id"]))
 			return
 		if RtsKinds.is_building(unit["kind"]) and _selected_worker() >= 0:
-			_give(RtsCommand.repair(ids, unit["id"]))
+			_give(RtsCommand.repair(_selected_workers(), unit["id"]))
 			return
 	_give(RtsCommand.move(ids, cell))
 
@@ -303,9 +303,12 @@ func _send_a_repairer() -> void:
 	for id: int in _view.selected:
 		if world.unit(id) != null and world.unit(id).side == RtsScenario.WEST and RtsKinds.is_building(world.unit(id).kind):
 			building = world.unit(id)
+	if building == null:
+		_say("select a building of yours to repair", true)
+		return
 	var nearest: RtsUnit = null
 	for unit: RtsUnit in world.units():
-		if unit.side != RtsScenario.WEST or unit.kind != RtsKinds.WORKER or building == null:
+		if unit.side != RtsScenario.WEST or unit.kind != RtsKinds.WORKER:
 			continue
 		if nearest == null or unit.position.distance_to(building.position) < nearest.position.distance_to(building.position):
 			nearest = unit
@@ -330,6 +333,16 @@ func _place(cell: Vector2i) -> void:
 	_view.placing = ""
 	var seconds: float = float(RtsKinds.of(what, "ticks")) / RtsWorld.TICKS_PER_SECOND
 	_say("%s placed -- the worker walks there and builds it (%d s of game)" % [what, roundi(seconds)], false)
+
+
+# Only the workers of the selection: repair is a worker's order, and a mixed
+# selection sent whole was refused whole.
+func _selected_workers() -> Array[int]:
+	var ids: Array[int] = []
+	for id: int in _selected_movers():
+		if world.unit(id).kind == RtsKinds.WORKER:
+			ids.append(id)
+	return ids
 
 
 # The first worker selected, or -1 when none is.
@@ -378,6 +391,8 @@ func _refresh() -> void:
 	_view.tick = world.tick
 	_view.everything = reveal or watching
 	_thinking.view = RtsSnapshot.of(world, computer.side)
+	_thinking.world = world
+	_thinking.watcher = -1 if (reveal or watching) else RtsScenario.WEST
 	_header.text = _header_text(yours)
 	_panel.text = "What the computer is thinking\n" + "\n".join(_thinking.lines())
 	_card.show_selection(yours, _view.selected)

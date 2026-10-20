@@ -85,9 +85,12 @@ func _ends_the_same_way(played: RtsMatch) -> Array[String]:
 		played.world.tick / RtsWorld.TICKS_PER_SECOND, played.accepted.size(), played.world.digest().left(16)])
 	if RtsVictory.winner(again.world) != won or again.world.digest() != played.world.digest():
 		failures.append("claim 2: the same seed ended differently the second time")
-	var replayed: String = RtsMatch.replay(RtsScenario.start(SEED), played.recording())
+	var fresh: RtsWorld = RtsScenario.start(SEED)
+	var replayed: String = RtsMatch.replay(fresh, played.recording())
 	if replayed != "":
 		failures.append("claim 2: the recording did not replay: " + replayed)
+	elif fresh.digest() != played.world.digest():
+		failures.append("claim 2: the recording replayed to another digest")
 	if played.accepted.size() < 100:
 		failures.append("claim 2: only %d commands were given; the match barely happened" % played.accepted.size())
 	return failures

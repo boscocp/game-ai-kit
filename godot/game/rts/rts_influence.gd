@@ -116,8 +116,10 @@ func _look_at_regions(view: RtsSnapshot) -> void:
 			cleared[region] = true
 
 
-## The enemy fighters seen, by kind, counting each one once, ever: what the
-## commander reads to choose its counter.
+## The enemy fighters this side still remembers, by kind, each counted once:
+## what the commander reads to choose its counter. Remembered for
+## `MEMORY_SECONDS` after it was last seen, so a counter chosen against an
+## army long gone is chosen again from what is seen now.
 func seen_fighters() -> Dictionary:
 	var counts: Dictionary = {}
 	for id: int in _seen:

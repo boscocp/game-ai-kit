@@ -25,6 +25,12 @@ const PLAN_COLOUR := Color(1.0, 0.5, 0.9)
 
 ## The side whose thinking is drawn, or null for none.
 var side: RtsSide
+## While a person plays, the world and their side: the computer's squads
+## and sites are drawn on the board only where that side can see -- the
+## panel still says what it thinks, but the board does not draw its army
+## through the person's fog (T20's review). -1 draws everything.
+var world: RtsWorld
+var watcher: int = -1
 ## Whether the influence map is drawn.
 var show_influence: bool = false
 ## What the side's snapshot showed when last asked.
@@ -64,11 +70,17 @@ func _draw() -> void:
 	if show_influence:
 		_draw_influence()
 	for squad: Squad in side.squads:
-		_draw_squad(squad)
+		if _shown(squad.centre):
+			_draw_squad(squad)
 	var top: String = side.queue.wishes[0]["what"] if not side.queue.wishes.is_empty() else ""
 	var site: Vector2i = side.queue.planned_site
-	if top != "" and RtsKinds.is_building(top) and site != Vector2i(-1, -1):
+	if top != "" and RtsKinds.is_building(top) and site != Vector2i(-1, -1) and _shown(Vector2(site)):
 		draw_rect(Rect2(RtsView.to_screen(Vector2(site)), Vector2(RtsView.CELL, RtsView.CELL)), PLAN_COLOUR, false, 2.0)
+
+
+# Whether the person's side may be shown what stands at `point`.
+func _shown(point: Vector2) -> bool:
+	return watcher < 0 or world == null or world.visible_to(watcher, point)
 
 
 func _draw_squad(squad: Squad) -> void:

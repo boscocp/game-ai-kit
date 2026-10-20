@@ -21,8 +21,8 @@
 ## fraction either way before the best is taken. Neither changes what the
 ## squad may see or do.
 ##
-## When not to use it: a fight that depends on order more than place -- who
-## to focus first. That is the squad's state machine, not a map.
+## When not to use it: whom to strike once a fight has begun. That is a
+## question about units, not regions, and `FocusFire` answers it.
 class_name SquadTactics
 extends RefCounted
 

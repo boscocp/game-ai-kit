@@ -69,9 +69,10 @@ const MEND_BELOW: float = 0.7
 const MEND_SAFE: float = 8.0
 
 
-# One worker to each hurt building of the side with no enemy in sight near
-# it and nobody already mending it: the reflex a person has, by the order a
-# person gives. A worker this decision already gave a job is left alone.
+# One worker to each hurt building of the side, and each site left
+# half-built, with no enemy in sight near it and nobody already at it: the
+# reflex a person has, by the order a person gives. A worker this decision
+# already gave a job is left alone.
 func _mend(view: RtsSnapshot, already: Array[RtsCommand]) -> Array[RtsCommand]:
 	var given: Array[RtsCommand] = []
 	var busy: Dictionary = {}
@@ -87,14 +88,17 @@ func _mend(view: RtsSnapshot, already: Array[RtsCommand]) -> Array[RtsCommand]:
 	return given
 
 
-# Hurt, finished, nobody mending it already, and no enemy in sight near it.
+# Hurt and finished, or a site its builder left; nobody at work on it
+# already; and no enemy in sight near it. A site left standing half-built
+# held the plan's top wish for ever before (T20's review).
 static func _wants_mending(view: RtsSnapshot, building: Dictionary) -> bool:
-	if not RtsKinds.is_building(building["kind"]) or not building["complete"]:
+	if not RtsKinds.is_building(building["kind"]):
 		return false
-	if building["health"] >= int(RtsKinds.of(building["kind"], "health")) * MEND_BELOW:
+	var hurt: bool = building["health"] < int(RtsKinds.of(building["kind"], "health")) * MEND_BELOW
+	if building["complete"] and not hurt:
 		return false
 	for unit: Dictionary in view.mine(RtsKinds.WORKER):
-		if unit["order"] == RtsCommand.REPAIR and unit["target"] == building["id"]:
+		if unit["order"] in [RtsCommand.REPAIR, RtsCommand.BUILD] and unit["target"] == building["id"]:
 			return false
 	for enemy: Dictionary in view.enemies():
 		if (enemy["position"] as Vector2).distance_to(building["position"]) <= MEND_SAFE:
