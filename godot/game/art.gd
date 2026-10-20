@@ -16,7 +16,7 @@
 ##
 ## When not to use it: a game with hundreds of sprites, which wants Godot's
 ## own resources (`.tres` tile sets, `SpriteFrames`) edited in the editor.
-## Here there are thirty-four, and thirty strips for the fighters, and a
+## Here there are a few dozen, and thirty strips for the fighters, and a
 ## reader can see all of them in one file.
 class_name Art
 extends RefCounted
@@ -87,6 +87,22 @@ const CROWN: String = ROOT + "checkers/crown.png"
 const CROSS: String = ROOT + "tictactoe/cross.png"
 const NOUGHT: String = ROOT + "tictactoe/nought.png"
 
+## The racing demo: a car in each colour, seen from above, nose up; the
+## grass it is drawn on; and what stands beside the track.
+const RACING_CARS: Array[String] = [
+	ROOT + "racing/car_red.png",
+	ROOT + "racing/car_blue.png",
+	ROOT + "racing/car_yellow.png",
+	ROOT + "racing/car_black.png",
+]
+const RACING_GRASS: String = ROOT + "racing/grass.png"
+const RACING_SCENERY: Array[String] = [
+	ROOT + "racing/tree_large.png",
+	ROOT + "racing/tree_small.png",
+	ROOT + "racing/tyres.png",
+	ROOT + "racing/tribune.png",
+]
+
 # Every picture loaded so far, by folder and path. See `texture`.
 static var _kept: Dictionary = {}
 # Every sheet asked for so far, kept the same way and for the same reason.
@@ -156,7 +172,10 @@ static func fighter_strip(character: String, animation: String) -> String:
 	return FIGHTERS + "%s/%s.png" % [character, animation]
 
 
-## Every path in this table, so one test can hold that each one is a file.
+## Every path in this table that the generator (T31) can draw, so one test
+## can hold that each is a file and the generator's manifest names exactly
+## these. The racing pictures are left out: nothing generates them, and
+## `racing_paths` lists them for the racing suite to hold instead.
 static func every_path() -> Array[String]:
 	var paths: Array[String] = []
 	paths.append_array(TERRAIN)
@@ -166,6 +185,15 @@ static func every_path() -> Array[String]:
 		for type_name: String in SHEET_FILES:
 			paths.append(sheet_path(faction, type_name))
 	paths.append_array([RED_MAN, WHITE_MAN, CROWN, CROSS, NOUGHT])
+	return paths
+
+
+## The racing demo's pictures, Kenney's and never generated.
+static func racing_paths() -> Array[String]:
+	var paths: Array[String] = []
+	paths.append_array(RACING_CARS)
+	paths.append_array(RACING_SCENERY)
+	paths.append(RACING_GRASS)
 	return paths
 
 

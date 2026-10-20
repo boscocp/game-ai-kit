@@ -20,8 +20,12 @@ var position: Vector2
 var heading: float
 ## Metres a second, never below zero and never above the top speed.
 var speed: float = 0.0
-## The turn rate the car actually took on its last step, radians a second.
+## The turn rate the car actually took on its last step, radians a second,
+## and the sideways acceleration that asked of its tyres: speed times turn,
+## at the speed it was going then. A collision afterwards changes the speed,
+## not what the tyres held.
 var turn: float = 0.0
+var sideways: float = 0.0
 
 
 func _init(car_physics: RacingPhysics, at: Vector2, facing: float) -> void:
@@ -42,6 +46,7 @@ func step(wanted_speed: float, wanted_turn: float, on_track: bool, dt: float) ->
 		speed = maxf(goal, speed - physics.braking * dt)
 	var most: float = turn_limit()
 	turn = clampf(wanted_turn, -most, most)
+	sideways = speed * absf(turn)
 	heading += turn * dt
 	position += velocity() * dt
 
@@ -61,4 +66,4 @@ func velocity() -> Vector2:
 
 ## The sideways acceleration it took on its last step: what the grip caps.
 func sideways_acceleration() -> float:
-	return speed * absf(turn)
+	return sideways

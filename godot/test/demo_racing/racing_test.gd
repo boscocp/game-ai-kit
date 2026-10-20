@@ -58,7 +58,7 @@ func test_a_car_right_of_the_line_turns_left_towards_it() -> void:
 	var race := RacingRace.new(RacingPhysics.new())
 	var number: int = race.enter(RacingDriver.new(RacingLevel.new("plain", 12.0, 0.9, 0.0), 1))
 	var right: Vector2 = race.track.direction_at(0).rotated(PI / 2.0)
-	race.cars[number].position += right * 3.0
+	race.cars[number].position = race.track.line[0] + right * 3.0
 	race.cars[number].speed = 20.0
 	race.drivers[number].decide(race.cars[number], race.track, 0, 0.0)
 	# A heading that grows turns towards +y, which is to the car's right.
@@ -83,3 +83,175 @@ func test_the_braking_point_is_the_first_place_ahead_slower_than_the_car() -> vo
 	assert_int(found).is_greater(straight)
 	assert_float(RacingDriver.speed_limit(race.track, found, race.physics, 0.9)).is_less(race.physics.top_speed)
 	assert_float(RacingDriver.speed_limit(race.track, found - 1, race.physics, 0.9)).is_equal(race.physics.top_speed)
+
+
+func test_your_car_is_a_plain_car_on_the_race_s_physics() -> void:
+	var race := RacingRace.new(RacingPhysics.new())
+	var you := RacingHumanDriver.new()
+	var number: int = race.enter(you)
+	assert_object(race.cars[number].get_script()).is_same(RacingCar)
+	assert_object(race.cars[number].physics).is_same(race.physics)
+
+
+func test_held_throttle_reaches_the_top_speed_and_no_more() -> void:
+	# A car on its own, always on tarmac: the race's track would bend away
+	# under a car driving straight, onto the grass.
+	var physics := RacingPhysics.new()
+	var track := RacingTrack.new(physics)
+	var car := RacingCar.new(physics, Vector2.ZERO, 0.0)
+	var you := RacingHumanDriver.new()
+	you.throttle = true
+	var fastest: float = 0.0
+	for _step: int in range(60 * 12):
+		you.decide(car, track, 0, 0.0)
+		car.step(you.target_speed, you.wanted_turn, true, RacingRace.DT)
+		fastest = maxf(fastest, car.speed)
+	assert_float(fastest).is_equal_approx(physics.top_speed, 1e-6)
+
+
+func test_a_full_turn_at_speed_is_held_to_the_grip_for_you_too() -> void:
+	var race := RacingRace.new(RacingPhysics.new())
+	var you := RacingHumanDriver.new()
+	race.enter(you)
+	race.cars[0].speed = 40.0
+	you.throttle = true
+	you.steer = 1.0
+	race.step()
+	assert_float(race.cars[0].sideways_acceleration()).is_less_equal(race.physics.grip + 1e-6)
+	assert_float(race.cars[0].turn).is_less(race.physics.turn_rate)
+
+
+func test_two_cars_never_end_a_step_on_top_of_each_other() -> void:
+	var race := RacingRace.new(RacingPhysics.new())
+	race.enter(RacingHumanDriver.new())
+	race.enter(RacingHumanDriver.new())
+	race.cars[1].position = race.cars[0].position + Vector2(1.0, 0.5)
+	race.step()
+	assert_float(race.cars[0].position.distance_to(race.cars[1].position)).is_greater_equal(
+		2.0 * RacingRace.CAR_RADIUS - 1e-4)
+
+
+func test_the_car_that_runs_into_another_drops_to_its_speed() -> void:
+	# Both ways round: the runner as the first car and as the second, so a
+	# rule that always slows one of them, or always the faster, fails one.
+	for runner: int in [0, 1]:
+		var race := RacingRace.new(RacingPhysics.new())
+		race.enter(RacingHumanDriver.new())
+		race.enter(RacingHumanDriver.new())
+		var front: int = 1 - runner
+		var ahead: Vector2 = Vector2.from_angle(race.cars[runner].heading)
+		race.cars[front].position = race.cars[runner].position + ahead * 3.0
+		race.cars[front].heading = race.cars[runner].heading
+		race.cars[runner].speed = 30.0
+		race.cars[front].speed = 10.0
+		race.step()
+		assert_float(race.cars[runner].speed).is_less_equal(race.cars[front].speed + 1e-4)
+		assert_float(race.cars[front].speed).is_greater(9.0)
+
+
+func test_a_glancing_touch_costs_little_speed() -> void:
+	var race := RacingRace.new(RacingPhysics.new())
+	race.enter(RacingHumanDriver.new())
+	race.enter(RacingHumanDriver.new())
+	var across: Vector2 = Vector2.from_angle(race.cars[0].heading).rotated(PI / 2.0)
+	race.cars[1].position = race.cars[0].position + across * 4.5
+	race.cars[1].heading = race.cars[0].heading + 0.1
+	race.cars[0].speed = 30.0
+	race.cars[1].speed = 30.0
+	race.step()
+	assert_float(race.cars[0].speed).is_greater(25.0)
+	assert_float(race.cars[1].speed).is_greater(25.0)
+
+
+func test_three_cars_in_contact_end_the_step_apart() -> void:
+	var race := RacingRace.new(RacingPhysics.new())
+	for _car: int in range(3):
+		race.enter(RacingHumanDriver.new())
+	var ahead: Vector2 = Vector2.from_angle(race.cars[0].heading)
+	for number: int in range(3):
+		race.cars[number].position = race.track.line[0] + ahead * 3.0 * number
+	race.step()
+	var closest: float = INF
+	for pair: Vector2i in [Vector2i(0, 1), Vector2i(0, 2), Vector2i(1, 2)]:
+		closest = minf(closest, race.cars[pair.x].position.distance_to(race.cars[pair.y].position))
+	assert_float(closest).is_greater_equal(2.0 * RacingRace.CAR_RADIUS - 0.05)
+
+
+func test_an_ai_driver_steps_aside_to_pass_a_slower_car() -> void:
+	var race := RacingRace.new(RacingPhysics.new())
+	race.enter(RacingDriver.new(RacingLevel.new("plain", 12.0, 0.9, 0.0), 1))
+	race.enter(RacingHumanDriver.new())
+	race.cars[0].speed = 30.0
+	var ahead: Vector2 = Vector2.from_angle(race.cars[0].heading)
+	race.cars[1].position = race.cars[0].position + ahead * 10.0
+	race.cars[1].heading = race.cars[0].heading
+	race.plan()
+	var on_line: Vector2 = race.track.point_ahead(race.line_index[0], 12.0, 0.0)
+	assert_float(race.drivers[0].aim.distance_to(on_line)).is_greater(RacingDriver.PASS_OFFSET - 0.5)
+
+
+func test_an_ai_driver_does_not_ask_to_go_faster_than_the_car_close_ahead() -> void:
+	var race := RacingRace.new(RacingPhysics.new())
+	race.enter(RacingDriver.new(RacingLevel.ladder()[2], 1))
+	race.enter(RacingHumanDriver.new())
+	var ahead: Vector2 = Vector2.from_angle(race.cars[0].heading)
+	race.cars[1].position = race.cars[0].position + ahead * 10.0
+	race.cars[1].heading = race.cars[0].heading
+	race.cars[1].speed = 20.0
+	race.step()
+	# Passing, it may go a little faster than the car it passes, to draw level.
+	assert_float(race.drivers[0].target_speed).is_less_equal(20.0 + RacingDriver.PASS_GAIN + 1e-6)
+
+
+func test_every_racing_picture_is_a_picture_the_game_can_load() -> void:
+	for path: String in Art.racing_paths():
+		assert_object(Art.texture(path)).is_not_null()
+
+
+func test_the_race_s_rules_never_read_a_driver_s_level() -> void:
+	# The honest twin in racing_does_not_cheat.gd runs these same rules, so it
+	# cannot see a rule that treats one level, or you, better. This catches
+	# the honest slip -- the race's code naming a level, a knob or the human
+	# driver -- and no more: code that wanted to cheat could spell it another
+	# way.
+	# Comments may say so; only the code is read.
+	var code: String = ""
+	for line: String in FileAccess.get_file_as_string("res://demos/racing/racing_race.gd").split("\n"):
+		code += line.get_slice("#", 0) + "\n"
+	for word: String in ["level", "grip_margin", "lookahead", "wander", "RacingHumanDriver"]:
+		assert_bool(word in code).override_failure_message("racing_race.gd's code names %s" % word).is_false()
+
+
+func test_a_pass_keeps_its_side_until_the_way_has_been_clear_a_while() -> void:
+	var race := RacingRace.new(RacingPhysics.new())
+	race.enter(RacingDriver.new(RacingLevel.new("plain", 12.0, 0.9, 0.0), 1))
+	var driver: RacingDriver = race.drivers[0]
+	race.cars[0].speed = 30.0
+	driver.traffic_speed = 10.0
+	driver.traffic_left = 1.0
+	driver.decide(race.cars[0], race.track, 0, 0.0)
+	assert_int(driver.passing_side).is_equal(-1)
+	driver.traffic_speed = INF
+	for _step: int in range(RacingDriver.CLEAR_STEPS - 1):
+		driver.decide(race.cars[0], race.track, 0, 0.0)
+	assert_int(driver.passing_side).is_equal(-1)
+	driver.decide(race.cars[0], race.track, 0, 0.0)
+	assert_int(driver.passing_side).is_equal(0)
+
+
+func test_a_car_run_into_from_behind_is_pushed_faster() -> void:
+	var race := RacingRace.new(RacingPhysics.new())
+	race.enter(RacingHumanDriver.new())
+	race.enter(RacingHumanDriver.new())
+	var ahead: Vector2 = Vector2.from_angle(race.cars[0].heading)
+	race.cars[1].position = race.cars[0].position + ahead * 4.0
+	race.cars[1].heading = race.cars[0].heading
+	race.cars[0].speed = 30.0
+	race.cars[1].speed = 10.0
+	race.drivers[0].throttle = true
+	race.drivers[1].throttle = true
+	race.step()
+	assert_float(race.cars[1].speed).is_greater(15.0)
+	assert_float(race.cars[0].speed).is_less(25.0)
+	assert_int(race.bumps.size()).is_equal(1)
+

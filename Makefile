@@ -508,7 +508,7 @@ demo-steering: import ## Four vehicles: seek, arrive, pursue, seek with avoid, e
 	@$(GODOT) --path godot res://demos/steering/steering_demo.tscn
 
 .PHONY: demo-racing
-demo-racing: import ## Three drivers, one car, no rubber band: 1-3 follow a level, A alone, space pauses, . one step, R again
+demo-racing: import ## Race an AI in the same car: arrows/WASD drive, 1-3 the AI, R again, P pause, Tab watch the three AIs
 	@$(GODOT) --path godot res://demos/racing/racing_demo.tscn
 
 .PHONY: demo-behaviour

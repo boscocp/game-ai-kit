@@ -41,11 +41,12 @@ const NODES: Array[Vector2] = [
 ## is not part of the kit and cannot be rerun from it; the line is these
 ## numbers, and you can edit them.
 const OFFSETS: Array[float] = [
-	-0.1, -0.8, -0.7, 0.8, 0.8, 0.8, 0.8, 0.8, -0.5, -0.8,
-	-0.8, -0.8, 0.8, 0.8, 0.5, 0.1, 0.1, 0.0, -0.8,
+	-0.1, -0.75, -0.4, 0.6, 0.75, 0.75, 0.7, 0.75, -0.3, -0.75,
+	-0.75, -0.75, 0.75, 0.75, 0.2, -0.1, -0.1, -0.2, -0.75,
 ]
 ## Half the track's width, in metres: the grass starts this far from centre.
-const HALF_WIDTH: float = 8.0
+## 24 metres across, room for two cars side by side and one passing.
+const HALF_WIDTH: float = 12.0
 ## Points of the smooth curve between two nodes, before it is resampled.
 const CURVE_STEPS: int = 40
 ## Samples each side used to measure the bend at a sample: a few, so the
@@ -65,6 +66,10 @@ var curvature := PackedFloat64Array()
 var full_grip_limit := PackedFloat64Array()
 ## The line's length, in metres.
 var length: float = 0.0
+## How far each line sample is to the left of the track's centre, in metres
+## (negative: to the right). A driver passing another goes to the side with
+## more tarmac left.
+var line_sideways := PackedFloat64Array()
 
 
 func _init(physics: RacingPhysics) -> void:
@@ -73,6 +78,11 @@ func _init(physics: RacingPhysics) -> void:
 	length = line.size() * SPACING
 	curvature = _curvatures(line)
 	full_grip_limit = _braking_limits(_corner_limits(physics.grip), physics.braking)
+	var hint: int = 0
+	for index: int in range(line.size()):
+		hint = nearest_centre(line[index], hint)
+		var left: Vector2 = centre[hint].direction_to(centre[(hint + 1) % centre.size()]).rotated(-PI / 2.0)
+		line_sideways.append((line[index] - centre[hint]).dot(left))
 
 
 ## The sample of the line nearest `position`, looked for near `hint`.
