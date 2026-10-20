@@ -63,7 +63,7 @@ make test-vectors
 ```
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/planner_properties.gd
+./scripts/godot --headless --path godot -s res://test/tactical/planner_properties.gd
 ```
 
 The property to assert, over generated boards rather than one example: every
@@ -76,7 +76,7 @@ grep -q "domain" spec/pddl/tactics-domain.pddl
 ```
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/planner_benchmark.gd
+./scripts/godot --headless --path godot -s res://test/tactical/planner_benchmark.gd
 ```
 
 That script runs every search the task builds over the same seeded problems
@@ -129,7 +129,7 @@ which precondition it was wrong about.
 - **Steps 6-7.** `PackedDomain` (bits), `RelaxedCost` (h_max, h_add),
   `HeuristicPlanner` (breadth-first over bits, A\* with either guess, a
   budget, partial plans), in `ai_planning`. The table, from
-  `test/planner_benchmark.gd` on the 60 boards with a plan from 18 real
+  `test/tactical/planner_benchmark.gd` on the 60 boards with a plan from 18 real
   games: breadth-first 11102 worlds, 5.07 ms over strings and 0.70 over bits;
   h_max 383, h_add 383, about 0.59 ms. The game uses h_max. Strings against
   bits is measured on breadth-first only -- a narrowing of step 7 the owner

@@ -90,7 +90,7 @@ func step_decision() -> void:
 
 ## What the guard is deciding with: the brain, its deed and its thinking --
 ## the state, the trail, the plan, the method -- and the suspicion it rests
-## on, for `test/demo_overlays.gd`.
+## on, for `test/menu/demo_overlays.gd`.
 func decision_overlay() -> Dictionary:
 	return {"brain": world.brain.brain_name(), "deed": world.brain.deed,
 		"thinking": world.brain.thinking(), "suspicion": world.senses.suspicion.level}

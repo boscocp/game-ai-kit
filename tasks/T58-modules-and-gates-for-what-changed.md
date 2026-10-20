@@ -1,6 +1,6 @@
 # T58 — Modules, and gates that run for what a wave touches
 
-Size: L · Prereqs: T20 · Files: `scripts/`, `Makefile`, `mk/`, `.github/workflows/ci.yml`, `godot/test/`, `modules/`
+Size: L · Prereqs: T20 · Files: `scripts/`, `Makefile`, `.github/workflows/ci.yml`, `godot/test/`, `modules/`
 
 ## Goal
 
@@ -198,13 +198,14 @@ hundred readable lines and the standard library:
 
 - **A path no module owns selects everything** and says which path did it.
   "I do not know who this belongs to" is never "nobody needs testing".
-- **The global paths select everything**: `scripts/`, `mk/common.mk`,
-  `.github/`, `.githooks/`, `godot/project.godot`, `.godot-version`,
-  `godot/addons/gdUnit4/`, and any `kernel` module. These are the things every
-  gate stands on.
-- **Paths that only gates read select only those gates**: `tasks/` selects
-  `lint-tasks` and `lint-status`; `docs/` and `README.md` select `lint-links`,
-  `lint-docs-freshness`, `lint-tiers`. These are D7's hotspots, defused.
+- **The global paths select everything**: `scripts/`, the `Makefile`,
+  `modules/` itself, `.github/`, `.githooks/`, `godot/project.godot`,
+  `.godot-version`, `godot/addons/gdUnit4/`. These are the things every gate
+  stands on. A `kernel` module needs no rule of its own: everything that uses
+  it is selected as a dependent.
+- **Prose selects no module**: `docs/`, `tasks/`, `README.md`,
+  `CLAUDE.md`. The lints that read it run on every wave anyway. These are
+  D7's hotspots, defused.
 - **An empty diff runs the always-on set, not nothing** -- invariant 4's
   question asked of the selector itself.
 
@@ -229,7 +230,7 @@ and they belong to one module each. So:
 | when | runs | why |
 |---|---|---|
 | on the branch, while working | `make check-affected` | the author's loop |
-| `make wave-merge` | `make check-affected BASE=main` | the merge pays for what it changes |
+| `make wave-merge` | waits for the pull request's CI, then squash-merges it | the merge pays for what it changes, once, on CI (changed in wave 63 at the owner's request: waves land by pull request, as in desk-panel) |
 | CI on a pull request | `make check-affected BASE=origin/main` | same command, same answer |
 | CI on a push to `main` | `make check` | the whole repository, once per merge, on a machine nobody is waiting for |
 | `make release` | `make check` | nothing ships that the full check has not seen |
@@ -248,13 +249,18 @@ it makes today, kept honestly.
 check finds and the affected one did not names a missing dependency, and is a
 finding against the manifests.
 
-### The Makefile stops being a hotspot
+### The Makefile stops being a hotspot -- dropped in wave 63, measured
 
-`Makefile` keeps the commands people type; each module's targets move to
-`mk/<module>.mk`, included by glob, and each fragment appends to the lists
-`check` is built from (`MODULE_GATES += test-steering-vectors ...`). A new
-module adds a fragment and a manifest and edits neither the Makefile nor
-`ci.yml`. `check_workflow.py` and `check_demos.py` read the fragments.
+The plan was `mk/<module>.mk` fragments, so a module's targets would not edit
+the global `Makefile`. Measured while building the selector, it buys
+nothing yet: the waves that edit the Makefile are the ones that **add** a
+module (61, 62), and adding a module adds a manifest under `modules/`, which
+is global by design -- they select everything either way. A wave that
+**evolves** a module (T56's armed tower) rarely touches the Makefile. The
+fragments would have cost two gates (`check_workflow.py`, `check_demos.py`)
+a second file format for no change in what is selected. Revisit when a
+wave that only evolves a module is seen selecting everything because of the
+Makefile.
 
 ## The shape the modules grow into (later tasks, not this wave)
 
@@ -371,24 +377,50 @@ the release filtered by manifest).
    dependencies equal to measured ones; a technique depending only on
    kernels. Planted: an unowned file, a path owned twice, a `class_name` use
    the manifest does not declare, a path read the manifest does not declare.
+   *Done in wave 63*: 23 manifests, every dependency written from the
+   measurement. Two things the measuring taught: `gameaikit.training` is the
+   generic Python half of `ai_learning` (the checkers fit uses it too), not
+   the tactical game's; and a technique's *test* may use another technique
+   (the learned policy's scenarios walk by A*) -- that reach selects the
+   test, and M5 holds only the addon's own code.
 3. **File the tests by module**: `godot/test/<module>/`, one `git mv` commit
-   with no content change, then `make import` and the `.uid` files. The
-   runners shared by several modules (`vectors_runner.gd`) go to
-   `godot/test/shared/`, owned by the global set.
+   with no content change, then `make import` and the `.uid` files.
+   *Done in wave 63*: 101 test scripts and data files moved with their
+   `.uid` files (199 renames), 114 files' paths
+   rewritten (`docs/reviews/` left as the record it is). It broke one gate,
+   which is the point of running them: `check_no_training.py` decided
+   "inside the checkers game" by the folder's *name*, so
+   `godot/test/checkers/` became the game. Fixed by the whole folder, with a
+   planted case that fails against the old rule.
 4. **`scripts/affected.py`** with its four fail-safe rules as planted cases,
    and `make affected` (prints) and `make check-affected` (runs).
-   `check_no_training.py --only <rule>` for the reproduce-from-seed rules.
-5. **`mk/<module>.mk` fragments**; `check_workflow.py` and `check_demos.py`
-   read them.
-6. **`make wave-merge` runs `check-affected BASE=main`**; CI as in the table
-   above; the push-to-`main` job runs both and compares.
+   `check_no_training.py --retrain <rules>` for the reproduce-from-seed rules.
+   *Done in wave 63*, plus `test-godot-some` and `test-python-some`; the
+   Godot one refuses a folder with no suite, because gdUnit4 v6.2.2 exits 0
+   on "No test cases found" (measured).
+5. ~~**`mk/<module>.mk` fragments**~~ -- dropped, see "The Makefile stops
+   being a hotspot".
+6. **`make wave-merge` lands the pull request**; CI as in the table
+   above; the push-to-`main` job runs `check-affected` before the full check.
+   *Done in wave 63.* The first CI run this repository ever had (pull
+   request #1) found the `godot` job had never worked: `make bootstrap`
+   checked the default toolchain path instead of the one it installed, and
+   D5 refused the repository for being under `/home/runner`, where every
+   runner puts it. Both fixed, D5 with a printed note on a runner.
+   And main's job became one `make check` instead of a step per gate:
+   replaying waves 61 and 62 showed both selecting everything because they
+   edited `ci.yml` -- W5 made every new gate a new CI step, so the file was
+   global and in every wave that added a gate. (Step 1's nine new steps went
+   with it; W5 still holds, through `make check`.)
 7. **Measure again** on three replayed waves, the same machine as D1:
    wave 61 (`e349c7e`, a technique), wave 62 (`f0fbf9b`, a game on a new
    core), wave 57 (`cb947ef`, a small example change). Publish what each
-   selects and what it costs against the full check.
+   selects and what it costs against the full check. Their paths are
+   replayed through the new test layout (`--paths`), since the old flat
+   `godot/test/` paths are owned by nobody now and would select everything.
 8. `CLAUDE.md`: the invariants table gains `lint-modules` and the selector;
    "Commands" gains `make check-affected`; the trap that `make check` is no
-   longer what a wave runs.
+   longer what a wave runs. *Done in wave 63.*
 
 ## Acceptance
 
@@ -408,24 +440,30 @@ python3 scripts/check_modules.py --self-test && python3 scripts/check_modules.py
 python3 scripts/affected.py --self-test
 ```
 
-The steering wave selects its module and not the RTS:
+A change to steering selects its module, and not the RTS:
 
 ```bash
-python3 scripts/affected.py --base e349c7e^1 --head e349c7e --targets | grep -qx test-steering-properties
+printf 'godot/addons/ai_steering/seek_behaviour.gd\n' | python3 scripts/affected.py --paths - --targets | grep -qx test-steering-properties
 ```
 
 ```bash
-! python3 scripts/affected.py --base e349c7e^1 --head e349c7e --targets | grep -qx test-rts-match
+! printf 'godot/addons/ai_steering/seek_behaviour.gd\n' | python3 scripts/affected.py --paths - --targets | grep -qx test-rts-match
 ```
 
-An empty diff still runs the always-on set:
+An empty change still runs the lints:
 
 ```bash
-python3 scripts/affected.py --base HEAD --head HEAD --targets | grep -qx lint-employer-refs
+printf '' | python3 scripts/affected.py --paths - --targets | grep -qx lint-employer-refs
+```
+
+A path nobody owns selects everything:
+
+```bash
+printf 'godot/nowhere.gd\n' | python3 scripts/affected.py --paths - --targets | grep -qx check
 ```
 
 ```bash
-make check-affected BASE=main
+make check-affected BASE=origin/main
 ```
 
 ## Manual check

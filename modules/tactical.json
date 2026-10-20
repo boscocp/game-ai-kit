@@ -1,0 +1,39 @@
+{
+  "module": "tactical",
+  "kind": "example",
+  "about": "The Advance Wars style board, its controllers, combat and the learned policy's training.",
+  "owns": [
+    "godot/game/tactical/",
+    "godot/test/tactical/",
+    "spec/combat/",
+    "spec/vectors/combat/",
+    "spec/vectors/learning/",
+    "python/gameaikit/dataset/",
+    "data/tactical/",
+    "python/tests/test_combat_vectors.py",
+    "python/tests/test_dataset.py",
+    "python/tests/test_learning_vectors.py",
+    "spec/pddl/tactics-domain.pddl",
+    "spec/pddl/tactics-opening-problem.pddl",
+    "spec/pddl/tactics.json"
+  ],
+  "depends_on": [
+    "ai_core",
+    "ai_learning",
+    "ai_planning",
+    "ai_search",
+    "game_shared",
+    "league"
+  ],
+  "gates": [
+    "test-combat-vectors",
+    "test-learning-vectors",
+    "test-planner-properties",
+    "test-planner-benchmark",
+    "test-difficulty-knobs",
+    "test-models"
+  ],
+  "retrain": [
+    "N4"
+  ]
+}

@@ -21,7 +21,7 @@
 ## knobs live elsewhere so that a level can be weak and human-looking, or
 ## strong and inhuman, on purpose.
 ##
-## `KNOBS` is the allowlist: `test/difficulty_knobs.gd` holds every preset to
+## `KNOBS` is the allowlist: `test/tactical/difficulty_knobs.gd` holds every preset to
 ## exactly these fields. A knob added here is written down here, with why.
 ##
 ## When not to use it: as a handicap on the rules of the game. A level that
@@ -52,7 +52,7 @@ func _init(level_name: String, horizon: int, depth: int, noise: float) -> void:
 
 ## The levels, weakest first. Each is a point on the three knobs, chosen so
 ## that every neighbouring pair is measurably ordered
-## (`test/difficulty_matches.gd`); a level that cannot be told from its
+## (`test/tactical/difficulty_matches.gd`); a level that cannot be told from its
 ## neighbour is cut, not kept for the menu.
 ##
 ## Chosen from what the knobs were measured to do on the tactical board

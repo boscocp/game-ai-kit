@@ -1,0 +1,33 @@
+{
+  "module": "fighting",
+  "kind": "example",
+  "about": "The fighting game: frame data, the fixed opponent, the n-gram learner and the clone.",
+  "owns": [
+    "godot/game/fighting/",
+    "godot/test/fighting/",
+    "godot/assets/fighters/",
+    "spec/frames/",
+    "data/fights/",
+    "data/cloning/",
+    "tools/fighters/",
+    "python/gameaikit/cloning/",
+    "python/tests/test_cloning.py",
+    "python/tests/test_cloning_vectors.py"
+  ],
+  "depends_on": [
+    "ai_learning",
+    "ai_opponent",
+    "game_shared"
+  ],
+  "gates": [
+    "test-replay",
+    "test-opponent-levels",
+    "test-opponent-properties",
+    "test-clone-rows",
+    "test-inference-budget",
+    "test-clone-report"
+  ],
+  "retrain": [
+    "N10"
+  ]
+}

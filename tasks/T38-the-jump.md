@@ -30,7 +30,7 @@ That is one more habit T17 can learn a player has.
 
 ```bash
 make test-godot
-./scripts/godot --headless --path godot -s res://test/replay_determinism.gd
+./scripts/godot --headless --path godot -s res://test/fighting/replay_determinism.gd
 ```
 
 ## Manual check

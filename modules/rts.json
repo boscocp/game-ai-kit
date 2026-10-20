@@ -1,0 +1,24 @@
+{
+  "module": "rts",
+  "kind": "example",
+  "about": "The RTS demo: a commander that plans, squads, an economy queue.",
+  "owns": [
+    "godot/game/rts/",
+    "godot/test/rts/",
+    "scripts/fetch_rts_art.py",
+    "python/tests/test_fetch_rts_art.py",
+    "spec/pddl/rts-build-order-domain.pddl",
+    "spec/pddl/rts-build-order-problem.pddl",
+    "spec/pddl/rts-build-order.json"
+  ],
+  "depends_on": [
+    "ai_behaviour",
+    "ai_core",
+    "ai_planning",
+    "ai_rts_core",
+    "game_shared"
+  ],
+  "gates": [
+    "test-rts-match"
+  ]
+}

@@ -47,7 +47,7 @@ moves. MIN then has three replies to each, and the leaves are worth:
 | a3 | 14, 5, 2 | 2 | 2 |
 
 MAX plays a1. The 14 under a3 is a trap: MIN would never let MAX have it.
-`test/adversarial_test.gd` holds both searches to this tree.
+`test/checkers/adversarial_test.gd` holds both searches to this tree.
 
 ## Stopping early, and the evaluation
 
@@ -76,7 +76,7 @@ lands where a red man jumps straight back, and the other is safe:
 - **at depth 2** it sees red's recapture, and the first capture now gives
   its man straight back. It takes the safe one.
 
-`test/checkers_rules_test.gd` holds exactly this -- in its position the
+`test/checkers/checkers_rules_test.gd` holds exactly this -- in its position the
 recapture takes white's last man, so the wrong capture loses the game -- and
 checks that depth 1 gets it wrong. Without that check, the test would also pass for a search
 that never looked ahead at all.

@@ -46,7 +46,7 @@ python3 scripts/check_readability.py
 ```
 
 ```bash
-grep -c "func test_" godot/test/behaviour_test.gd | grep -qvx 0
+grep -c "func test_" godot/test/demo_behaviour/behaviour_test.gd | grep -qvx 0
 ```
 
 The suite must assert that all four produce the same decision on a board built
@@ -83,7 +83,7 @@ the difference it was built for.
   state machine or the HTN chases and catches too; the tree and GOAP turn
   back before that on this loop, so their "go and look" under the chase is
   seen by swapping to them while another brain is chasing.
-- `test/behaviour_test.gd`, 17 cases: the engines; then the guard. All four
+- `test/demo_behaviour/behaviour_test.gd`, 17 cases: the engines; then the guard. All four
   agree on a calm round, on setting out to look, on a chase and on a catch;
   none chases what it does not see; as suspicion fades mid-search the state
   machine and the HTN carry on and the tree and GOAP turn back; and over 300

@@ -97,7 +97,7 @@ the commander.
   call out of budget returns a partial plan, marked so; the game follows it
   and plans again when its steps are done -- though at a budget of 2000 it
   never runs out here. Strings against bits was measured on
-  breadth-first only. `test/planner_benchmark.gd` prints the table.
+  breadth-first only. `test/tactical/planner_benchmark.gd` prints the table.
 - **Point 4, done as written.** Money is one fact (`funds_banked`, enough
   for the dearest purchase) and waiting for income is an action
   (`bank_income`) the executor skips when the board can already pay. Walkers

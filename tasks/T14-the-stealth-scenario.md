@@ -36,7 +36,7 @@ python3 scripts/check_addon_deps.py
 ```
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/perception_properties.gd
+./scripts/godot --headless --path godot -s res://test/stealth/perception_properties.gd
 ```
 
 Properties worth asserting over generated maps rather than one example: sight

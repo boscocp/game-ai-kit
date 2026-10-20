@@ -63,7 +63,7 @@ python3 scripts/check_addon_deps.py
 ```
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/rts_core_budget.gd
+./scripts/godot --headless --path godot -s res://test/ai_rts_core/rts_core_budget.gd
 ```
 
 That script holds the whole task honest: it runs both cores at the stated scale
@@ -71,7 +71,7 @@ and asserts the frame budget. If `ai_core` passes it, this addon should not
 exist and the script says so by passing without it.
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/rts_simulation.gd
+./scripts/godot --headless --path godot -s res://test/ai_rts_core/rts_simulation.gd
 ```
 
 That script holds step 6, before any of T20's AIs exist: the match is driven

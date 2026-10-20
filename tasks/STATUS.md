@@ -858,7 +858,7 @@ sha256s. The candidate found is Puffolotti's CC0 karate template
   every box tested at once, block or hit, counter-hit, trade, pushback,
   knockout.
 - The engine uses whole numbers and an immutable state per frame. A
-  recorded log (`godot/test/fight_log.json`) must replay to the per-frame
+  recorded log (`godot/test/fighting/fight_log.json`) must replay to the per-frame
   digests committed beside it, and to the same digests twice. `make
   record-replay` rewrites them after a deliberate change.
 - `make demo-fighting` is a training mode: you against a dummy that stands,
@@ -1852,7 +1852,7 @@ another, so `check_addon_deps.py` gets its first real question, and the click
 that moves one cell becomes a click that moves along a route. Three things it
 needs that do not exist yet: a `make test-vectors` target (and therefore a CI
 step, or `check_workflow.py` refuses it), `godot/demos/search/`, and
-`godot/test/search_properties.gd`, which T3's acceptance runs directly with
+`godot/test/ai_search/search_properties.gd`, which T3's acceptance runs directly with
 `-s` rather than through gdUnit4.
 
 **Start T3 by reviewing T2.** Not as a formality: the review that should have

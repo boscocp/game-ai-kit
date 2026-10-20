@@ -16,7 +16,7 @@ than none.
 | | gate |
 |---|---|
 | 1 readable | `check_readability.py` |
-| 2 addon independence | `check_addon_deps.py` — fully held since wave 7, when there was a second addon for it to inspect |
+| 2 addon independence | `check_addon_deps.py` — fully held since wave 7, when there was a second addon for it to inspect; `check_modules.py` (M5) holds it per module since wave 63 |
 | 3 acceptance is a command | `check_acceptance.py` |
 | 4 gate rejects a planted case | `make lint-selftests` runs them; that each one *has* a planted case is still read by a person |
 | 5 no lesson above tier 1 | `check_tiers.py`, via each page's `teaches:` field |
@@ -26,7 +26,7 @@ than none.
 | 9 LICENSE and NOTICE ship | `check_license.py` |
 | 10 nothing from the employer | `check_no_employer_refs.py` |
 | 11 no tooling byline | `check_commit_msg.py`, `check_pr_message.py` |
-| 12 branch per wave, review first | `.githooks/pre-commit`, `check_branch_base.py` |
+| 12 branch per wave, review first | `.githooks/pre-commit`, `check_branch_base.py`; the merge is a pull request's, after CI (wave 63) |
 | 13 every example can be watched | **none yet** -- `check_demos.py`, named in T21 |
 
 1. **The code is teaching material before it is a library.** When this conflicts
@@ -59,7 +59,9 @@ than none.
     The reviewer is a context that did not write the code — the same head
     writing the code, the test and the check is the symmetry everything else
     here exists to break. `.githooks/pre-commit` refuses a commit on `main`,
-    and `make wave-merge` refuses a branch with no review record.
+    and `make wave-merge` refuses a branch with no review record. Since wave
+    63 a wave lands as desk-panel's do: push, pull request, review, apply
+    what it found on the branch, CI green, squash merge (`make wave-merge`).
 
 13. **Every example can be watched, and shows the decision rather than only the
     outcome.** A person opens it and sees what the AI is about to do and why --
@@ -79,9 +81,11 @@ than none.
 
 ```bash
 make wave-start BRANCH=wave/NN-slug   # cut a branch from a current main
-make wave-merge                       # merge it, once reviewed
+make check-affected BASE=origin/main  # what a wave runs: the lints, and its modules' gates
+make affected BASE=origin/main        # which modules a change selects, and why
+make wave-merge                       # squash-merge the PR, once reviewed and green
 make bootstrap     # install the pinned Godot on the large disk, SHA-verified
-make check         # every gate; this is what CI runs
+make check         # every gate; CI runs it on main, and `make release` needs it
 make test-python   # stdlib unittest, no install step
 make test-godot    # headless
 make godot-version # what is pinned vs what is installed
@@ -176,6 +180,17 @@ Findings that survive both steps go in `docs/godot/`, with the source URL and a
   you get. Restore it with
   `git show d11fc91:scripts/forbidden-term-hashes.txt > scripts/forbidden-term-hashes.txt`,
   or rebuild it with `--add-term`.
+
+- **A wave does not run `make check`, and a new file must have a module.**
+  Since wave 63 a wave runs `make check-affected`: `scripts/affected.py`
+  maps each changed path to the module that owns it (`modules/<name>.json`)
+  and adds every module that uses it. A path no module owns, or a global
+  one (scripts, Makefile, CI, the manifests), selects all of `make check`.
+  So a new test goes in `godot/test/<module>/`, and `make lint-modules`
+  refuses a file nobody owns or a dependency the manifest does not declare
+  -- that is the selector being kept honest, not bureaucracy. And
+  `make test-godot-some` refuses a folder with no suite: gdUnit4 v6.2.2
+  prints "No test cases found" and exits 0.
 
 ## How to resume work
 

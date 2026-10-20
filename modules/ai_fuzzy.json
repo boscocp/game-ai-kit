@@ -1,0 +1,19 @@
+{
+  "module": "ai_fuzzy",
+  "kind": "technique",
+  "about": "Fuzzy sets, rules and centroid defuzzification, and the FCL reader.",
+  "owns": [
+    "godot/addons/ai_fuzzy/",
+    "godot/test/ai_fuzzy/",
+    "spec/vectors/fuzzy/",
+    "python/gameaikit/fuzzy/",
+    "python/tests/test_fcl_reader.py",
+    "python/tests/test_fuzzy.py",
+    "python/tests/test_fuzzy_loading.py",
+    "python/tests/test_fuzzy_vectors.py"
+  ],
+  "depends_on": [],
+  "gates": [
+    "test-fuzzy-vectors"
+  ]
+}

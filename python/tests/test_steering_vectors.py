@@ -25,7 +25,7 @@ VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "st
 FEWEST_VECTORS = 5
 
 #: How far a number may stray, in the vector's own units. Shared with
-#: `godot/test/steering_vector.gd`.
+#: `godot/test/ai_steering/steering_vector.gd`.
 TOLERANCE = 1e-3
 
 #: Every key a behaviour of each kind may carry; a misspelt one is refused

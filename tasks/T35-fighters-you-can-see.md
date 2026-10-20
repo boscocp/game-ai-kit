@@ -36,7 +36,7 @@ python3 scripts/check_license.py
 ```
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/demo_overlays.gd
+./scripts/godot --headless --path godot -s res://test/menu/demo_overlays.gd
 ```
 
 ## Manual check

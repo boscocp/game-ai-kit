@@ -58,7 +58,7 @@ one of them exposes the decision overlay this task requires. It fails on an
 example that has no window, and on a window with nothing of the AI on it.
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/demo_overlays.gd
+./scripts/godot --headless --path godot -s res://test/menu/demo_overlays.gd
 ```
 
 That script steps each demo through its first decisions headless and asserts

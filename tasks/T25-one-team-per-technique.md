@@ -132,7 +132,7 @@ lesson, so this task does not wait for all eight.
 ```bash
 make test-godot
 make test-python
-./scripts/godot --headless --path godot -s res://test/league_runner.gd
+./scripts/godot --headless --path godot -s res://test/league/league_runner.gd
 ```
 
 `league_runner.gd` plays the league over its fixed seeds and asserts what can
@@ -200,7 +200,7 @@ for the owner's recordings, as the task says they must.
   and a siege where the tree always takes the point -- `league_test.gd`
   holds the difference. The league's roster (`League`) is those four, the
   rules, the planner, the learned policy and T12's hard level.
-- **Step 1, the runner** (`test/league_runner.gd`, `make league`): every
+- **Step 1, the runner** (`test/league/league_runner.gd`, `make league`): every
   pairing from both seats, the seats on dice of their own; Bradley-Terry by
   Hunter's MM with one imaginary draw a pairing, 95% bootstrap intervals
   (`LeagueRating`). It asserts every scheduled game was played and there were

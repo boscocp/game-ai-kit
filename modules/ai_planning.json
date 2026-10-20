@@ -1,0 +1,18 @@
+{
+  "module": "ai_planning",
+  "kind": "technique",
+  "about": "STRIPS over PDDL, its heuristics, and the Python PDDL reader.",
+  "owns": [
+    "godot/addons/ai_planning/",
+    "godot/test/ai_planning/",
+    "spec/vectors/planning/",
+    "python/gameaikit/pddl/",
+    "python/tests/test_pddl_reader.py",
+    "python/tests/test_pddl_sexpr.py",
+    "python/tests/test_planning_vectors.py"
+  ],
+  "depends_on": [],
+  "gates": [
+    "test-planning-vectors"
+  ]
+}

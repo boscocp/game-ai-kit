@@ -108,7 +108,7 @@ their JSON.
   empty `fuzzify` and NaN outputs. Each side also refuses an output set no
   sample point reaches, because concluding it would add nothing and the
   answer would be a NaN that claims no rule fired. Unit tests hold the
-  refusals on each side, in `godot/test/fuzzy_test.gd`,
+  refusals on each side, in `godot/test/ai_fuzzy/fuzzy_test.gd`,
   `python/tests/test_fuzzy.py` and `python/tests/test_fuzzy_loading.py`.
 - **The text reader.** It exists only in Python, so there is nothing to
   disagree with. Its refusals are in `python/tests/test_fcl_reader.py`.

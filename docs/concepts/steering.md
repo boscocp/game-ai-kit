@@ -5,7 +5,7 @@ half_life: concept
 verified_on: 2026-10-19
 tier: 1
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
-invalidated_if: ai_steering's behaviours change their formula, or test/steering_properties.gd's thresholds change
+invalidated_if: ai_steering's behaviours change their formula, or test/ai_steering/steering_properties.gd's thresholds change
 teaches: steering
 -->
 
@@ -53,7 +53,7 @@ its radius and stayed there: its last speed was around 1e-11 in Python, and
 at most 1.2e-4 in GDScript's 32-bit floats -- both far under the thousandth
 of top speed (0.01) that counts as rest.
 
-`test/steering_properties.gd` holds both as measurements, over a hundred
+`test/ai_steering/steering_properties.gd` holds both as measurements, over a hundred
 seeded starts, and is first shown seek passed off as arrive, and arrive as
 seek, so a check that only goes green cannot pass.
 

@@ -1,0 +1,15 @@
+{
+  "module": "demo_search",
+  "kind": "example",
+  "about": "The four searches on a board you can paint.",
+  "owns": [
+    "godot/demos/search/",
+    "godot/test/demo_search/"
+  ],
+  "depends_on": [
+    "ai_core",
+    "ai_search",
+    "game_shared"
+  ],
+  "gates": []
+}

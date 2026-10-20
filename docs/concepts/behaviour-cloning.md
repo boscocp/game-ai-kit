@@ -19,7 +19,7 @@ teaches: behaviour-cloning
 against the learner at hard; 10,685 frames, about three minutes of play,
 450 decisions. That is still little, and the numbers below carry it. Before the
 owner played, the pipeline was built on three scripted stand-ins
-(`godot/test/stand_in_player.gd`); their numbers are at the end, because the
+(`godot/test/fighting/stand_in_player.gd`); their numbers are at the end, because the
 contrast is the lesson.
 
 ## The pipeline, in four files

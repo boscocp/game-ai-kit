@@ -39,7 +39,7 @@ costs. Proving the suite can fail on this task's own code:
 
 ```bash
 grep -q "func apply" godot/addons/ai_core/board_state.gd
-grep -c "func test_" godot/test/board_state_test.gd | grep -qvx 0
+grep -c "func test_" godot/test/ai_core/board_state_test.gd | grep -qvx 0
 ```
 
 ## Manual check

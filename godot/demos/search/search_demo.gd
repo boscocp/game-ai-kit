@@ -126,7 +126,7 @@ func step_decision() -> void:
 
 
 ## What the search is reasoning with right now -- the same cells the overlay
-## draws -- for `test/demo_overlays.gd` to check is there.
+## draws -- for `test/menu/demo_overlays.gd` to check is there.
 func decision_overlay() -> Dictionary:
 	var about_to: Variant = _result.expanded[_revealed] if _revealed < _result.expanded.size() else null
 	var overlay: Dictionary = {

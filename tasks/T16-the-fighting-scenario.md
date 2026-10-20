@@ -36,7 +36,7 @@ python3 scripts/check_readability.py
 ```
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/replay_determinism.gd
+./scripts/godot --headless --path godot -s res://test/fighting/replay_determinism.gd
 ```
 
 That script replays a recorded input log twice and asserts the two runs agree
@@ -74,14 +74,14 @@ them, and a trade should resolve the way the table says it does.
   move, frame, phase, boxes, stun and buffer. The dummy stands, blocks or
   jabs. Invariant 13 is read as: show the resolution, since that is the
   decision being made.
-- **The recorded log** (`godot/test/fight_log.json`) was scripted, not
+- **The recorded log** (`godot/test/fighting/fight_log.json`) was scripted, not
   played by hand, so that a hit, a block, a counter-hit, a cancel and a
   trade each happen at least once; the determinism script refuses a log
   missing any of those five. It does not reach a knockout; the rules suite
   holds the knockout and the double-knockout draw.
 - **The determinism check compares against a record**, not only against a
   second run in the same process, which would agree about anything fixed for
-  the life of a process. `godot/test/fight_log_digests.txt` holds every
+  the life of a process. `godot/test/fighting/fight_log_digests.txt` holds every
   frame's digest; `make record-replay` rewrites it after a deliberate rules
   change. It plants a changed input for each player, and a moved fighter the
   digest must show. Found by the wave 34 review.

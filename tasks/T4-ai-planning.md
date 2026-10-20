@@ -37,7 +37,7 @@ an empty plan rather than hang, and a solvable one must return a plan whose
 every step's preconditions hold when it runs:
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/planner_properties.gd
+./scripts/godot --headless --path godot -s res://test/tactical/planner_properties.gd
 ```
 
 ## Manual check

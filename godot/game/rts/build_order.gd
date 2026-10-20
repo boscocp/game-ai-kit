@@ -13,7 +13,7 @@
 ## the designer's order for getting each fact, written by hand, and the
 ## planner only chooses among the orders written there (Humphreys, Game AI
 ## Pro ch. 12). ADR 0010 asked which the RTS commander should use; T20
-## measures both in `test/rts_match.gd` and the ADR records the answer.
+## measures both in `test/rts/rts_match.gd` and the ADR records the answer.
 ##
 ## When not to use it: a side whose economy has no chain -- one producer,
 ## one resource. A priority queue alone does that, and costs nothing.

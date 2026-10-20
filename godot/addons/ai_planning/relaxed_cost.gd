@@ -19,7 +19,7 @@
 ##   shortest -- but it tells the search much more about which way to go.
 ##
 ## Which of the two the game uses is not decided here. It is measured, in
-## `test/planner_benchmark.gd`, and the table is in this addon's
+## `test/tactical/planner_benchmark.gd`, and the table is in this addon's
 ## `heuristic_planner.gd`.
 ##
 ## Complexity: O(sweeps x actions x predicates per action), and a sweep can

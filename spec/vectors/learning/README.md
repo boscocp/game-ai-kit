@@ -75,7 +75,7 @@ vector cannot confirm a mistake that the two sides happen to share.
   covered and reads a wall as the dearest ground, because the simulator never
   generated either. That rule exists only on the GDScript side -- there is no
   Python half to disagree with -- so it is held by unit tests in
-  `godot/test/learning_test.gd`, not here. Every board in these vectors stays
+  `godot/test/ai_learning/learning_test.gd`, not here. Every board in these vectors stays
   inside the trained range, which is what makes the two sides comparable at
   all.
 - **`enemy_units` on a board with three sides** — and `a-fight-in-cover.json`
@@ -98,7 +98,7 @@ vector cannot confirm a mistake that the two sides happen to share.
   for something that is not about correctness.
 - **Anything about the decision.** Which probability means attack, and what a
   unit then does, is the policy's business and is asserted by
-  `test/decision_scenarios.gd`. A vector here is about numbers, not about
+  `test/ai_learning/decision_scenarios.gd`. A vector here is about numbers, not about
   nerve.
 
 ## Tolerance

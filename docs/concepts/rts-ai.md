@@ -5,7 +5,7 @@ half_life: concept
 verified_on: 2026-10-20
 tier: 1
 source: https://ojs.aaai.org/index.php/AIIDE/article/view/12435/12294 ; https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter31_Spatial_Reasoning_for_Strategic_Decision_Making.pdf ; https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter12_Exploring_HTN_Planners_through_Example.pdf ; https://docs.wildfiregames.com/javascript/petra/PETRA.QueueManager.html
-invalidated_if: test/rts_measure.gd or test/rts_match.gd print records that differ from the ones below, or the build-order domain changes
+invalidated_if: test/rts/rts_measure.gd or test/rts/rts_match.gd print records that differ from the ones below, or the build-order domain changes
 teaches: strategy-ai
 -->
 

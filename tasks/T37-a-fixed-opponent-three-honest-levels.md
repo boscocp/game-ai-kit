@@ -51,13 +51,13 @@ to the rule either way.
 make test-godot
 ```
 
-`godot/test/fight_opponent_test.gd` holds the knobs: the opponent is handed
+`godot/test/fighting/fight_opponent_test.gd` holds the knobs: the opponent is handed
 a `FightState` exactly its reaction time old, every level's reaction is at
 least 15 frames, and a planted opponent that asks for the current frame is
 refused.
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/opponent_levels.gd
+./scripts/godot --headless --path godot -s res://test/fighting/opponent_levels.gd
 ```
 
 The levels are ordered: over 100 seeded fights of each pairing, at both

@@ -35,7 +35,7 @@ ducks highs, and a person who reads a jab coming can duck it and punish.
 
 ```bash
 make test-godot
-./scripts/godot --headless --path godot -s res://test/replay_determinism.gd
+./scripts/godot --headless --path godot -s res://test/fighting/replay_determinism.gd
 ```
 
 ## Manual check

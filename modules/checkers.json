@@ -1,0 +1,24 @@
+{
+  "module": "checkers",
+  "kind": "example",
+  "about": "Checkers against minimax, and Samuel's learned evaluation.",
+  "owns": [
+    "godot/game/checkers/",
+    "godot/test/checkers/",
+    "godot/assets/checkers/",
+    "spec/vectors/checkers/",
+    "python/gameaikit/checkers/",
+    "python/tests/test_checkers.py"
+  ],
+  "depends_on": [
+    "ai_adversarial",
+    "ai_learning",
+    "game_shared"
+  ],
+  "gates": [
+    "test-checkers-vectors"
+  ],
+  "retrain": [
+    "N7"
+  ]
+}

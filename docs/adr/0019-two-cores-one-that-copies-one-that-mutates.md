@@ -12,7 +12,7 @@ shares cannot be spoiled by a search that forgot to undo.
 An RTS asks something else of its state: two hundred units, each moving a
 little, sixty times a second. T19 was told to try to prove itself
 unnecessary first, so it measured that before writing anything
-(`test/rts_core_budget.gd`, this machine, Godot 4.7.2):
+(`test/ai_rts_core/rts_core_budget.gd`, this machine, Godot 4.7.2):
 
 | | per step / tick | share of a 16.7 ms frame |
 |---|---|---|

@@ -59,7 +59,7 @@ data the overlay draws, handed to a test rather than to the screen.
   and no command here can look at a picture.
 - A scene added to the tree from a `SceneTree` script's `_initialize` is not
   ready until the main loop has turned once. `is_node_ready()` is false
-  straight after `add_child`, which is why `test/demo_overlays.gd` awaits a
+  straight after `add_child`, which is why `test/menu/demo_overlays.gd` awaits a
   frame before asking.
 
 **Each half has its own check:**
@@ -69,7 +69,7 @@ data the overlay draws, handed to a test rather than to the screen.
     is refused);
   - a scene that exists, with a node running the legend;
   - a root script with both functions;
-  - a place in `SCENES` in `test/demo_overlays.gd` (a comment does not
+  - a place in `SCENES` in `test/menu/demo_overlays.gd` (a comment does not
     count).
   
   A scene on disk that offers `step_decision` with no target is a finding,
@@ -96,5 +96,5 @@ you tell what the AI is about to do, and why, before it does it?**
 2. Implement `step_decision()` and `decision_overlay()` on the scene's root
    script.
 3. Put a `Legend` in the scene, and add the scene to `SCENES` in
-   `test/demo_overlays.gd`.
+   `test/menu/demo_overlays.gd`.
 4. Run `make lint-demos`. It names every part that is missing.

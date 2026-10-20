@@ -10,7 +10,7 @@
 ## mortars whether or not the enemy has a shield to beat.
 ##
 ## ADR 0010 makes it the bar: "a commander that does not beat the queues
-## alone has not earned its cost", and `test/rts_match.gd` measures it.
+## alone has not earned its cost", and `test/rts/rts_match.gd` measures it.
 ##
 ## When not to use it: as the strong side. It is the floor every other side
 ## is measured from.

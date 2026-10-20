@@ -206,7 +206,7 @@ moving at once, which is a tactical problem, not a build-order one.
    The two guesses tie: h_max is exact on this domain, so h_add has nothing
    to improve on. The game uses h_max, which costs the same
    and keeps the plan shortest. The table is printed by
-   `test/planner_benchmark.gd`.
+   `test/tactical/planner_benchmark.gd`.
 4. **Resources are abstracted, not given to a numeric planner.** Income as a
    rate and time jumping to the next legal action, after Churchill and Buro.
    The PDDL stays at level 1, and a level 2 or 3 version is documentation,

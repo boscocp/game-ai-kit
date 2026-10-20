@@ -51,7 +51,7 @@ extends RuleBasedBlue
 ## Of its own turns, how many a plan is kept before it is made again.
 const REPLAN_EVERY: int = 3
 
-## The search the game plays with: picked by `test/planner_benchmark.gd`'s
+## The search the game plays with: picked by `test/tactical/planner_benchmark.gd`'s
 ## table, published in `heuristic_planner.gd`.
 const GUIDE: HeuristicPlanner.Guide = HeuristicPlanner.Guide.H_MAX
 

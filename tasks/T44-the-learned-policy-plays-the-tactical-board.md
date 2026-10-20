@@ -51,7 +51,7 @@ question there: which point falls first. Kept, not dropped.
 ## Acceptance
 
 ```bash
-test -f godot/test/tactical_learned_blue_test.gd
+test -f godot/test/tactical/tactical_learned_blue_test.gd
 make test-godot
 make test-demo-overlays
 make test-python

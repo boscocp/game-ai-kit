@@ -69,5 +69,5 @@ negative: a fraction of a frame would round differently somewhere, and a
 replay would drift. `FightData` refuses a file that breaks any of this, or
 names a button or a cancel target that does not exist.
 
-A change here changes how the recorded fight in `godot/test/fight_log.json`
+A change here changes how the recorded fight in `godot/test/fighting/fight_log.json`
 plays out, and so its digests: run `make record-replay`, and read the diff.

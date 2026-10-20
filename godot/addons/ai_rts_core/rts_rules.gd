@@ -2,7 +2,7 @@
 ##
 ## The never-cheat rule, in one place. Every refusal is a sentence a person
 ## could act on, and the order is checked whole before any of it is carried
-## out, so a refused command changes nothing -- `test/rts_simulation.gd`
+## out, so a refused command changes nothing -- `test/ai_rts_core/rts_simulation.gd`
 ## checks the world's digest is untouched by each. Three of the refusals are
 ## the ones a cheating AI would trip: ordering the other side's units,
 ## spending what it does not have, and aiming at something it cannot see.

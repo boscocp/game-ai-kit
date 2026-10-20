@@ -48,7 +48,7 @@ python3 scripts/check_readability.py
 ```
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/steering_properties.gd
+./scripts/godot --headless --path godot -s res://test/ai_steering/steering_properties.gd
 ```
 
 Three properties over seeded starts, because one trajectory that happens to

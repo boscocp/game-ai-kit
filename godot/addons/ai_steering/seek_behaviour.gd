@@ -5,7 +5,7 @@
 ## is the defect worth seeing: nothing in it ever asks for less than full
 ## speed, so a vehicle seeking a point that does not move drives through it,
 ## turns, drives through it again, and never stops.
-## `test/steering_properties.gd` measures exactly that. Constant time.
+## `test/ai_steering/steering_properties.gd` measures exactly that. Constant time.
 ##
 ## When not to use it: a target to stop at. That is `ArriveBehaviour`, which
 ## differs by the few lines that slow down.

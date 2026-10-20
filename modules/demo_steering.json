@@ -1,0 +1,13 @@
+{
+  "module": "demo_steering",
+  "kind": "example",
+  "about": "Four vehicles, each force drawn.",
+  "owns": [
+    "godot/demos/steering/"
+  ],
+  "depends_on": [
+    "ai_steering",
+    "game_shared"
+  ],
+  "gates": []
+}

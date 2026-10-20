@@ -15,7 +15,7 @@
 ## Damage was raised half again after the owner played it: two shields took
 ## thirteen seconds to settle a fight, and a fight that long reads as stuck.
 ## Costs are by resource. The numbers are tuned by the matches in
-## `test/rts_match.gd`, not derived; change one and run it.
+## `test/rts/rts_match.gd`, not derived; change one and run it.
 ##
 ## When not to use it: a game whose kinds differ in more than numbers --
 ## abilities, upgrades, armour types. Those are code, not a row.
@@ -92,7 +92,7 @@ const COUNTER_FACTOR: int = 2
 ## How much a building divides a blow from anything but a siege unit: T10's
 ## ram, which alone broke a workshop, is the mortar here. Without it a
 ## handful of runners razed a base in two minutes and no match reached the
-## lab -- measured on the first matches of `test/rts_match.gd`.
+## lab -- measured on the first matches of `test/rts/rts_match.gd`.
 const FORTIFIED: int = 3
 ## What a building still going up sees: its own cell and the worker raising
 ## it, never the tower's eleven cells the moment it is paid for.

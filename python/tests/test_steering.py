@@ -1,7 +1,7 @@
 """Steering's claims, held on the Python side.
 
 The GDScript side holds the same three as properties over seeded starts
-(`godot/test/steering_properties.gd`); these are the same questions asked
+(`godot/test/ai_steering/steering_properties.gd`); these are the same questions asked
 of `gameaikit.steering`, so a reader at tier 1 can run them.
 """
 

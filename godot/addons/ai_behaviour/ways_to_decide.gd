@@ -15,11 +15,11 @@
 ## | HTN | the designer knows how tasks break down, and wants that order kept | every order is one somebody wrote -- it walked to where it stood until "look here" was written | it carried on down "go and look" as suspicion faded, looked, chased and caught |
 ## | STRIPS (`ai_planning`) | a goal reached through a chain nobody wrote down, searched forwards for the fewest actions -- where GOAP searches backwards for the cheapest | a search over the whole world, bounded by a budget | not written as a guard: it plans the tactical board's purchases (T11) |
 ##
-## **Measured on the guard** (`test/behaviour_test.gd`, wave 56): in four
+## **Measured on the guard** (`test/demo_behaviour/behaviour_test.gd`, wave 56): in four
 ## moments -- on the round, setting out to look, looking, the chase -- GOAP
 ## took 2, 3, 2 and 3 worlds off its frontier, and the HTN took up 2, 3, 2
 ## and 3 tasks: the nearest counts the two have, not one unit, since the HTN
-## counts its compound task too. In time (`test/behaviour_benchmark.gd`,
+## counts its compound task too. In time (`test/demo_behaviour/behaviour_benchmark.gd`,
 ## 2000 plans each, one machine) the HTN took about 6 to 8 microseconds a
 ## plan and GOAP about 6 to 16 -- nearly twice as long in the chase. That is
 ## these two implementations, and much of GOAP's extra is how this one keeps

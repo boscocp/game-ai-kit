@@ -2,7 +2,7 @@
 ## reads them, and nothing else.
 ##
 ## A level is a `Difficulty` -- the same class, the same three fields,
-## held to them by `test/difficulty_knobs.gd` -- so the never-cheat rule is
+## held to them by `test/tactical/difficulty_knobs.gd` -- so the never-cheat rule is
 ## the one T12 wrote: no level sees, earns or may order anything another
 ## does not. What each knob means here:
 ##

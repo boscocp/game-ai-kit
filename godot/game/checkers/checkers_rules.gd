@@ -3,7 +3,7 @@
 ## Sources: the World Checkers Draughts Federation's rules,
 ## https://www.wcdf.net/rules.htm, as summarised in
 ## https://en.wikipedia.org/wiki/English_draughts (read 2026-10-14). The rules
-## played here, and the tests in `test/checkers_rules_test.gd` that hold them:
+## played here, and the tests in `test/checkers/checkers_rules_test.gd` that hold them:
 ##
 ## * 8x8, dark squares only. The darker pieces, red here, move first;
 ## * a man steps one square diagonally forward; a king steps either way;

@@ -52,7 +52,7 @@ python3 scripts/check_readability.py
 ```
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/replay_determinism.gd
+./scripts/godot --headless --path godot -s res://test/fighting/replay_determinism.gd
 ```
 
 The replay check refuses a log that never causes a throw, a low hitting a
@@ -60,7 +60,7 @@ standing guard, or an overhead hitting a crouching one, as it already refuses
 one with no hit, block, counter-hit, trade or cancel.
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/demo_overlays.gd
+./scripts/godot --headless --path godot -s res://test/menu/demo_overlays.gd
 ```
 
 ## Manual check

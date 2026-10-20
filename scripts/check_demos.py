@@ -6,7 +6,7 @@ The rule
 Every example in the kit can be watched, and shows the AI deciding rather than
 only what it decided. A command cannot look at a screen -- `--headless`
 rasterises nothing on the pinned engine -- so this gate holds the structure
-that makes watching possible, and `test/demo_overlays.gd` holds the half that
+that makes watching possible, and `test/menu/demo_overlays.gd` holds the half that
 needs the engine:
 
   * an example is a Makefile target: `run`, or `demo-<name>`, with a `##` line
@@ -17,7 +17,7 @@ needs the engine:
     square means nothing to somebody who did not write it;
   * its root script offers `step_decision()` and `decision_overlay()` -- one
     decision at a time, and what the AI is reasoning with;
-  * the scene is listed in `test/demo_overlays.gd`, so the engine half cannot
+  * the scene is listed in `test/menu/demo_overlays.gd`, so the engine half cannot
     be skipped by an example nobody added there.
 
 Finding no example at all is a finding: a gate that passes on an empty
@@ -86,7 +86,7 @@ SCENES_BLOCK = re.compile(r"^const SCENES\b[^=]*=\s*\[(.*?)\]", re.MULTILINE | r
 
 LEGEND_SCRIPT = "game/legend.gd"
 CONTRACT = ("step_decision", "decision_overlay")
-OVERLAYS = "godot/test/demo_overlays.gd"
+OVERLAYS = "godot/test/menu/demo_overlays.gd"
 EXAMPLE_FOLDERS = ("game", "demos")
 
 
