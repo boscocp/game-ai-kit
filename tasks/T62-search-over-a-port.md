@@ -1,6 +1,6 @@
 # T62 — Search over a port, not over a grid
 
-Size: M · Prereqs: T58 · Files: `godot/addons/ai_search/`, `godot/test/ai_search/`, `spec/vectors/search/`, `docs/concepts/`
+Size: M · Prereqs: T61 · Files: `godot/addons/ai_search/`, `godot/test/ai_search/`, `spec/vectors/search/`, `docs/concepts/`
 
 ## Goal
 
@@ -14,9 +14,13 @@ grid first.
 
 ## Diagnosis (measured 2026-10-20 on `5129bfc`)
 
-`search.gd` and its four algorithms ask a graph three things: its
-neighbours (`neighbours(cell)`), the cost of entering one (`cost_at`), and
--- for A\* -- a distance to the goal. Every signature takes
+`search.gd` and its four algorithms ask a graph three things: whether a
+node is in it (`contains`, `search.gd:38`), its neighbours
+(`neighbours(cell)`) and the cost of entering one (`cost_at`). A\*'s
+estimate does not come from the graph: `AStarSearch.heuristic`
+(`astar.gd:99`) is Manhattan distance, right for a 4-connected grid whose
+cheapest cell costs 1 and **wrong** for waypoints with arbitrary costs, where
+it can overestimate and A\* stops being optimal. Every signature takes
 `graph: GridGraph, from: Vector2i, to: Vector2i`. `Pathfinder` in `ai_core`
 has the same signature, and only `ai_search` implements it.
 
@@ -32,6 +36,11 @@ has the same signature, and only `ai_search` implements it.
      who wants only A\* copies two folders" stays true. Putting the port in
      `ai_core` would grow the kernel T61 just shrank for a port one technique
      uses.
+   - *Where A\*'s estimate comes from.* Recommended: the port has an
+     `estimate(from, to)` the graph owns, with the promise written on it --
+     never more than the true cheapest cost (admissible). The grid adapter
+     returns today's Manhattan; the waypoint graph straight-line distance
+     times its cheapest cost per unit length.
    - *What a node is.* Recommended: keep `Vector2i`. A waypoint graph names
      its nodes by position, and the algorithms' text -- which reads like the
      book's -- does not change. An opaque `int` id is the general answer and
@@ -41,12 +50,13 @@ has the same signature, and only `ai_search` implements it.
    refactor changed nothing.
 4. **A graph that is not a grid**, in a test: a handful of waypoints with
    costs, where the shortest path by cost differs from the fewest hops, run
-   through all four algorithms with what each one promises.
+   through all four algorithms with what each one promises -- A\*'s cost
+   equal to Dijkstra's on it, which is what an inadmissible estimate breaks.
 5. **The concept page** shows the port and the two adapters side by side.
 6. Whether `Pathfinder` still earns its place in `ai_core` after this, or
    is `SearchGraph`'s caller's interface and moves -- measured by who uses
-   it, decided in this task, written in T61's record if it changes the
-   kernel.
+   it, decided in this task; if it moves, `modules/ai_core.json` and the
+   README's addon table follow.
 
 ## Acceptance
 
@@ -64,9 +74,13 @@ The algorithms name no grid:
 ! grep -vE '^\s*#' godot/addons/ai_search/astar.gd godot/addons/ai_search/dijkstra.gd godot/addons/ai_search/breadth_first.gd godot/addons/ai_search/depth_first.gd godot/addons/ai_search/search.gd | grep -w GridGraph
 ```
 
-The waypoint test lives in `godot/test/ai_search/` and runs in
-`make test-godot-some`; it is the planted case for the port: a search that
-silently counted hops instead of cost fails it.
+The waypoint test lives in `godot/test/ai_search/`; it is the planted case
+for the port: a search that silently counted hops instead of cost, or an A\*
+with an estimate that overshoots, fails it.
+
+```bash
+make test-godot-some SUITES=test/ai_search
+```
 
 ## Manual check
 

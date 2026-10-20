@@ -6,8 +6,9 @@ Size: M · Prereqs: T60 · Files: `godot/addons/ai_core/`, a new board module, `
 
 T58's D4: `ai_core` is described as "types and interfaces, no logic" and
 holds the tactical board's whole domain. Because it is the kernel, a change to
-`BoardState` selects every module, `ai_steering` included, which never uses
-it. This task leaves in `ai_core` only what more than one technique truly
+`BoardState` selects every module that uses anything in `ai_core` -- 19 of
+them, measured, among them `ai_rts_core`, `rts`, `ai_search` and
+`demo_racing`, none of which uses the board. This task leaves in `ai_core` only what more than one technique truly
 shares, and gives the board a kernel of its own -- DDD's shared kernel kept
 small, which is what makes the selector cheap.
 
@@ -17,13 +18,15 @@ What each `ai_core` class is used by, in code (comments excluded), after T60:
 
 | class | used by |
 |---|---|
-| `BoardState`, `Unit`, `UnitType`, `Attack`, `Upgrade`, `ProductionOrder` | `game/tactical`, `game/league`, the shared `game/*.gd`, `demos/behaviour` |
-| `DecisionPolicy` | the same -- its one method is `choose(state: BoardState, unit_id: int) -> Move`, so it is the board's port, not a shared one |
-| `Move` | the board and its views (`unit_walk.gd`, `unit_view.gd`); in `ai_search`, `ai_steering`, `ai_rts_core` only in comments |
+| `BoardState`, `Unit`, `UnitType`, `Attack`, `Upgrade`, `ProductionOrder` | `game/tactical`, `game/league`, the shared `game/*.gd`, `demos/behaviour`; `game/stealth` uses `Unit` |
+| `DecisionPolicy` | `game/tactical`, `demos/behaviour` (the league only in comments) -- its one method is `choose(state: BoardState, unit_id: int) -> Move`, so it is the board's port, not a shared one |
+| `Move` | the board's callers (`main.gd:141`, `game/tactical`); in the views and in `ai_search`, `ai_steering`, `ai_rts_core` only in comments |
 | `GridGraph` | `ai_search`, `ai_perception`, `ai_rts_core`, every grid game |
 | `Pathfinder` | `ai_search` (and `learned_policy.gd`, the tactical adapter after T60) |
 
-So the shared kernel is `GridGraph` and `Pathfinder`. Everything else is one
+So the shared kernel is `GridGraph` and `Pathfinder`. This overrides T58's
+sketch, which kept `Move` and `DecisionPolicy` in `ai_core`: measured, both
+are typed on the board and used only by its games. Everything else is one
 game's -- the tactical board, which the league and the behaviour demo play.
 
 ## Steps
@@ -45,7 +48,10 @@ game's -- the tactical board, which the league and the behaviour demo play.
    `ai_planning` names `BoardState`, `PlannedBlue`, `LeveledBlue`;
    `ai_rts_core` compares itself with `BoardState`). An addon's header may
    say what it is *not* for, without naming a class the reader does not
-   have.
+   have. T58's other line for `ai_planning` -- "plans over its own
+   `WorldState`, and the bridges in `game/` are its adapters" -- is already
+   true in code (D4: it reaches nothing in `ai_core`); these comments are
+   all that is left of it.
 5. **Measure again.** The README's addon table and `CLAUDE.md`'s invariant 2
    ("only on `ai_core` (types and interfaces, no logic)") are re-read
    against what `ai_core` now holds.
@@ -63,7 +69,7 @@ ls godot/addons/ai_core/*.gd | xargs -n1 basename | sort | tr '\n' ' ' | grep -q
 A change to the board no longer reaches steering or the RTS:
 
 ```bash
-! printf 'godot/game/board/board_state.gd\n' | python3 scripts/affected.py --paths - | grep -qxE 'ai_steering|ai_rts_core|rts'
+! printf 'godot/game/board/board_state.gd\n' | python3 scripts/affected.py --paths - | grep -qE '^selected:.*\b(ai_rts_core|rts|ai_search|demo_racing)\b'
 ```
 
 ```bash

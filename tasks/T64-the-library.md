@@ -53,11 +53,18 @@ the Asset Library and PyPI already hold under it.
    (*Fluent Python*, 2nd ed., ch. 10's `promotion` decorator). Not namespace
    packages: they need every distribution to omit `__init__.py`, which fights
    `python/tests`' own trap.
-5. **An example outside the repository**: a throwaway project, in the
-   scratchpad, that installs the wheel and imports one technique, and a
-   blank Godot project that unzips one addon and runs one test of it. Both
-   as commands with exit codes.
-6. **ADR 0009 revisited**: what is published where, by whom, and what stays
+5. **An example outside the repository**, as `make library-check`: a
+   throwaway directory outside the tree, a fresh virtual environment that
+   installs the wheel and imports one technique, and a blank Godot project
+   that unzips one addon and runs one test of it. Either failing exits
+   non-zero; a planted case (an addon zip missing a file its scripts
+   `preload`) must fail it.
+6. **The Python ports, by *Fluent Python***, where the package's public
+   surface needs them and no further: a port a user implements is a
+   `typing.Protocol` (ch. 13), a heuristic or utility a plain `Callable`
+   (ch. 10), a value handed back to the user a frozen dataclass (ch. 5).
+   Today's internals are not rewritten to match.
+7. **ADR 0009 revisited**: what is published where, by whom, and what stays
    out (publishing itself to PyPI or the Asset Store is the owner's act, not
    this task's).
 
@@ -71,9 +78,11 @@ make check
 make release
 ```
 
-The wheel installs into a fresh virtual environment and a technique imports
-from it, outside the repository (step 5's command, written here when it
-exists).
+The wheel and one addon, installed and run outside the repository (step 5):
+
+```bash
+make library-check
+```
 
 ## Manual check
 
