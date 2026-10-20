@@ -62,8 +62,12 @@ touch "$toolchain/godot/._sc_"
 mkdir -p "$toolchain/xdg"
 
 # Create editor_data/ now so check_disk_layout.py can assert ._sc_ is honoured
-# without waiting for someone to open the editor.
-env XDG_DATA_HOME="$toolchain/xdg" "$binary" --headless --version >/dev/null
+# without waiting for someone to open the editor. `--quit`, not `--version`:
+# measured on 4.7.2 in an empty toolchain, `--version` prints and exits before
+# the editor's paths exist, and creates nothing. This line used `--version`
+# from the start, and only CI's first run on a fresh runner (wave 63) showed
+# it -- the author's toolchain had had its editor_data/ for months.
+env XDG_DATA_HOME="$toolchain/xdg" "$binary" --headless --quit >/dev/null 2>&1
 
 # Export templates (T24), for `make export`. The archive is 1.28 GB and holds
 # every platform; only the Linux x86_64 pair is unpacked, because that is the
