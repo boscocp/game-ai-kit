@@ -357,6 +357,14 @@ the release filtered by manifest).
    whose fourth line holds a gate CI never runs. Then put the nine missing
    gates of D3 in CI, or move them out of `make check` with a reason each.
    Measured before and after, the same command.
+   *Done in wave 63, approved by the owner 2026-10-20.* The planted case
+   failed against the old pattern before the fix; after it,
+   `python3 scripts/check_workflow.py` named the same nine gates (exit 1),
+   and with all nine put in CI -- `test-clone-report` in the Python job,
+   which needs nothing else, the eight engine ones in the Godot job -- it
+   exits 0. None of them was taken out of `make check`. Whether the two
+   timing budgets hold on a shared runner is known only after the first CI
+   run of this branch.
 2. **Manifests** for the eleven addons, the examples and `game-shared`, and
    `check_modules.py` (`make lint-modules`): every tracked path under
    `godot/`, `python/`, `spec/` owned by exactly one module; declared

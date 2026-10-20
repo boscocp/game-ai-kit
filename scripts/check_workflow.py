@@ -64,9 +64,15 @@ def make_targets(makefile: pathlib.Path) -> set[str]:
 
 
 def target_prerequisites(makefile: pathlib.Path, target: str) -> set[str]:
-    """The targets `target` depends on, following one level of continuation."""
+    """The targets `target` depends on directly, over every continuation line.
+
+    The lines ending in a backslash are matched first and the last line after
+    them. The pattern used to be the other way round -- one line, then any
+    continuations -- and the first line swallowed its own backslash, so the
+    continuations matched zero times and only the first line was read.
+    """
     text = makefile.read_text(encoding="utf-8")
-    found = re.search(rf"^{re.escape(target)}:([^\n]*(?:\\\n[^\n]*)*)", text, re.M)
+    found = re.search(rf"^{re.escape(target)}:((?:[^\n]*\\\n)*[^\n]*)", text, re.M)
     if found is None:
         return set()
     body = found.group(1).replace("\\\n", " ")
@@ -222,6 +228,19 @@ def self_test() -> int:
         expect("a gate CI never runs", quiet(build(root, "missed", MAKEFILE_TEXT,
             WORKFLOW_TEXT.replace("      - run: make lint-one lint-two\n",
                                   "      - run: make lint-one\n"))), 1, "W5")
+
+        # Planted: the gate CI misses sits on a continuation line of `check:`.
+        # The prerequisites used to be read from the first line only, so the
+        # nine gates after it went unrun in CI while this check stayed green.
+        multi_line = MAKEFILE_TEXT.replace(
+            "check: lint-one lint-two test-python\n",
+            "check: lint-one lint-two \\\n       test-python \\\n       lint-late ## Every gate\n",
+        ) + ".PHONY: lint-late\nlint-late:\n\t@true\n"
+        expect("a missed gate on a continuation line", quiet(build(
+            root, "continued", multi_line, WORKFLOW_TEXT)), 1, "W5")
+        expect("every continuation line reached", quiet(build(
+            root, "continued-ok", multi_line,
+            WORKFLOW_TEXT + "      - run: make lint-late\n")), 0)
 
         # A variable override is not a target.
         expect("a variable override", quiet(build(root, "override", MAKEFILE_TEXT,

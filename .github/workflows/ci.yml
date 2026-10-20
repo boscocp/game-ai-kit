@@ -30,6 +30,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: make test-python
+      # T18's held-out comparison reads only committed files and the standard
+      # library, so it is tier 1 and runs here, not beside the engine.
+      - run: make test-clone-report
 
   # The gates. These need no engine, so they run on their own and fail fast.
   gates:
@@ -119,5 +122,35 @@ jobs:
       # rather than in the gates job for the same reason as the two above:
       # it needs the engine.
       - run: make test-decisions
+        env:
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
+
+      # These eight were in `make check` and in no job here until wave 63:
+      # check_workflow.py read only the first line of `check:` and passed.
+      # The two budgets (inference, rts) are timings measured on the author's
+      # desk; a shared runner is slower, and if one fails here that is a
+      # finding about the budget, not a step to make optional.
+      - run: make test-planner-benchmark
+        env:
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
+      - run: make test-difficulty-knobs
+        env:
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
+      - run: make test-replay
+        env:
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
+      - run: make test-opponent-levels
+        env:
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
+      - run: make test-opponent-properties
+        env:
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
+      - run: make test-clone-rows
+        env:
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
+      - run: make test-inference-budget
+        env:
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
+      - run: make test-rts-budget
         env:
           GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
