@@ -89,7 +89,8 @@ static func speed_limit(track: RacingTrack, index: int, physics: RacingPhysics, 
 ## force is that wish. (Its force limit is set to twice the top speed so the
 ## clamp never shortens it.) The car cannot simply take that velocity, it can
 ## only turn; pure pursuit says how hard: curvature 2 sin(angle) / distance,
-## times speed for a turn rate. Static, so the cheat check can ask it too.
+## times speed for a turn rate. Static, so a driver written to cheat in
+## the cheat check can steer with it as an honest one does.
 static func pursuit_turn(car: RacingCar, point: Vector2) -> float:
 	var mirror := SteeringVehicle.new(car.position, car.velocity(), car.physics.top_speed,
 		2.0 * car.physics.top_speed)

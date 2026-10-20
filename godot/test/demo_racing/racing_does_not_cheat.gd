@@ -4,35 +4,34 @@
 #
 #   1. every car is a plain `RacingCar` driving the race's one physics
 #      resource, whose fields are still what they were when the race began;
-#   2. every car moved exactly as an honest car would: a fresh `RacingCar`
-#      on the physics the race began with, put where the car was before the
-#      step and given what its driver asked for, ends where the car ended.
-#      Nothing the car or the driver reports about itself is trusted here --
-#      a stronger engine, a nudge forward, a physics swapped mid-race all
-#      land somewhere an honest car does not. And measured from where it
-#      was to where it is, no car goes past the top speed or turns harder
-#      than its grip holds (speed times turn rate);
-#   3. the three knob values the driver *actually used* -- recorded from
-#      inside the controller, in `RacingDriver.used`, not read back from the
-#      level -- are the same on every frame, and are the level's. Game AI
-#      Pro's slow "biorhythm" in skill, which T23 also refuses, fails here;
-#   4. what the driver decided is what its level's knobs give, recomputed
-#      from the line sample the race handed it and the car as it was: the
-#      speed is the track's limit at the level's margin, the point it steers
-#      at is within the level's wander of its lookahead point, and the turn
-#      is pure pursuit of that point. A rubber band applied where a knob is
-#      used, after the knob was read, slips past rule 3 and is caught here;
-#   5. and every car finished its laps, so a race that stalled cannot go
-#      green by checking fewer frames.
+#   2. measured from where each car was to where it is, none goes past the
+#      top speed or turns harder than its grip holds (speed times turn rate);
+#   3. the three knob values each driver says it used -- recorded from
+#      inside the controller, in `RacingDriver.used` -- are its level's on
+#      every frame. That is the driver's own report: it makes a knob that
+#      moves visible by name, and Game AI Pro's slow "biorhythm" in skill,
+#      which T23 refuses, fails here;
+#   4. and the race is indistinguishable from an honest twin. This script
+#      builds its own race from what it entered -- each level's three
+#      numbers and seed, the physics as the race began -- with a plain
+#      `RacingDriver` for each, and steps it alongside. Every car's place,
+#      heading and speed, every decision (aim, speed, turn) and the race's
+#      record of it (line sample, distance covered, laps) must be the
+#      twin's. Nothing the race under test holds is trusted -- not its cars,
+#      its drivers, their levels, its track or its books -- because a driver
+#      can reach all of them. A driver that matches the twin on every frame
+#      *is* the honest driver, whatever its code says;
+#   5. every car finished its laps, so a stalled race checks no fewer frames.
 #
-# Each rule first refuses planted races, each by the rule it breaks: a car
-# given more grip, a car that turns past its grip, a car with a stronger
-# engine, a driver that swaps its physics mid-race, one that nudges its car
-# forward, one that launches it past its top speed, two rubber bands (in the
-# knob, and where it is used), a driver that takes its speed from further
-# down the line and says it is there, one that aims wider than its wander,
-# one that steers at another point than the one it reports, and one that
-# stalls.
+# Each rule first refuses planted races, each by a finding that names the
+# rule it breaks: more grip, a car that turns past its grip, a stronger
+# engine, a physics swapped mid-race, a car launched past its top speed, a
+# rubber band in the knob and one where the knob is used, a nudge forward,
+# a speed taken from further down the line, an aim wider than the wander
+# and one that never wanders, a turn at another point than the one
+# reported, a faster limit written into the track, distance credited that
+# was not driven, a level changed mid-race -- reported, and forged -- and a
+# stall.
 #
 #     ./scripts/godot --headless --path godot -s res://test/demo_racing/racing_does_not_cheat.gd
 #
@@ -43,7 +42,8 @@ const LAPS: int = 2
 const SEED: int = 23
 ## Seconds the recorded race may last; easy's two laps take about 78.
 const TIME_LIMIT: float = 120.0
-## Room for float rounding in a limit compared after it was applied.
+## Room for float rounding in a limit measured after it was applied. The
+## twin needs none: the same steps in the same order give the same floats.
 const TOLERANCE: float = 1e-4
 ## A broken rule fails on every frame after; this many findings are printed.
 const SHOWN: int = 20
@@ -51,8 +51,8 @@ const SHOWN: int = 20
 
 ## A driver that goes faster the further it is behind the leader: the
 ## rubber band, in the two places it can hide. Read into the knob
-## (`in_knob`), it changes the margin the driver records; applied at the
-## point of use, it leaves the record honest and changes the decision.
+## (`in_knob`), it changes the margin the driver reports; applied at the
+## point of use, it leaves the report honest and changes the decision.
 class RubberBandDriver extends RacingDriver:
 	# Weak, because the race holds this driver: a strong reference both ways
 	# is a cycle that is never freed.
@@ -79,36 +79,45 @@ class RubberBandDriver extends RacingDriver:
 		return 1.0 + clampf((race.covered[0] - race.covered[1]) / 2000.0, 0.0, 0.05)
 
 
-## A driver that cheats in one of these ways: "swap" its car's physics for a
-## stronger copy, "nudge" the car forward, "launch" it past the top speed,
-## take its speed from further down the line and say it is there ("ahead"),
-## aim "wide" of what its wander allows, or steer at a point it does not
-## report ("elsewhere"). And "stall", which only stops, for rule 5.
+## A driver that cheats through what it was handed, as `how` says: "swap"
+## its car's physics for a stronger copy, "nudge" the car forward, "launch"
+## it past the top speed, take its speed from further down the line
+## ("ahead"), aim "wide" of its wander or never wander ("narrow"), steer at
+## a point it does not report ("elsewhere"), raise the track's speed limit
+## ("track"), or change its own level mid-race -- saying so ("knob"), or
+## forging its report ("level"). And "stall", which only stops, for rule 5.
 class CrookedDriver extends RacingDriver:
 	var how: String
+	var honest_margin: float
 
 	func _init(driving_level: RacingLevel, seed_value: int, cheat: String) -> void:
 		super(driving_level, seed_value)
 		how = cheat
+		honest_margin = driving_level.grip_margin
 
-	## Decides honestly or not, as `how` says.
+	## Decides honestly, then cheats as `how` says.
 	func decide(car: RacingCar, track: RacingTrack, index: int, time: float) -> void:
+		if how in ["knob", "level"] and time > 5.0:
+			level.grip_margin = 1.0
 		super(car, track, index, time)
 		match how:
 			"swap":
 				_swap(car, time)
 			"nudge":
 				car.position += Vector2.from_angle(car.heading) * 0.05
+			"launch":
+				car.speed = maxf(car.speed, car.physics.top_speed + 5.0)
 			"ahead":
-				decided_at = track.wrapped(index + 3)
-				target_speed = RacingDriver.speed_limit(track, decided_at, car.physics, level.grip_margin)
-			"wide":
-				aim = track.point_ahead(index, level.lookahead, 3.0 * level.wander + 1.0)
+				target_speed = RacingDriver.speed_limit(track, track.wrapped(index + 3), car.physics, level.grip_margin)
+			"wide", "narrow":
+				aim = track.point_ahead(index, level.lookahead, 3.0 * level.wander + 1.0 if how == "wide" else 0.0)
 				wanted_turn = RacingDriver.pursuit_turn(car, aim)
 			"elsewhere":
 				wanted_turn = RacingDriver.pursuit_turn(car, track.point_ahead(index, 2.0 * level.lookahead, 0.0))
-			"launch":
-				car.speed = maxf(car.speed, car.physics.top_speed + 5.0)
+			"track":
+				track.full_grip_limit[index] = track.full_grip_limit[index] * 1.1
+			"level":
+				used["grip_margin"] = honest_margin
 			"stall":
 				target_speed = 0.0
 
@@ -117,6 +126,24 @@ class CrookedDriver extends RacingDriver:
 		if time > 1.0 and car.physics.acceleration < 10.0:
 			car.physics = car.physics.duplicate()
 			car.physics.acceleration *= 1.5
+
+
+## A driver that credits its car with distance it did not drive, through
+## the race it holds.
+class BookkeeperDriver extends RacingDriver:
+	var held_race: WeakRef
+	var number: int
+
+	func _init(driving_level: RacingLevel, seed_value: int, race: RacingRace, car_number: int) -> void:
+		super(driving_level, seed_value)
+		held_race = weakref(race)
+		number = car_number
+
+	## An honest decision, and thirty centimetres more on the race's books.
+	func decide(car: RacingCar, track: RacingTrack, index: int, time: float) -> void:
+		super(car, track, index, time)
+		var race: RacingRace = held_race.get_ref()
+		race.covered[number] += 0.3
 
 
 ## A car that forgets the grip: it turns as tight as its turn rate allows,
@@ -139,10 +166,11 @@ class StrongerEngineCar extends RacingCar:
 
 func _init() -> void:
 	var failures: Array[String] = _planted()
-	var race := RacingRace.new(RacingPhysics.new())
+	var entries: Array = []
 	for level: RacingLevel in RacingLevel.ladder():
-		race.enter(RacingDriver.new(level, SEED))
-	failures.append_array(cheat_findings(race))
+		entries.append([level, SEED])
+	var race: RacingRace = _race_of(entries)
+	failures.append_array(cheat_findings(race, entries))
 	for failure: String in failures.slice(0, SHOWN):
 		print(failure)
 	if failures.size() > SHOWN:
@@ -151,53 +179,43 @@ func _init() -> void:
 	quit(1 if not failures.is_empty() else 0)
 
 
-## Run `race` until every car has finished `LAPS` laps, and say every way
-## it was not a fair one. Empty when nobody was given anything.
-func cheat_findings(race: RacingRace) -> Array[String]:
+## Run `race` until every car has finished `LAPS` laps, and say every way it
+## was not a fair one. `entries` is what the caller entered, in order: each
+## car's `[RacingLevel, seed]`, copied before the race starts so a driver
+## cannot change the record of what it was meant to be. Empty when fair.
+func cheat_findings(race: RacingRace, entries: Array) -> Array[String]:
 	var began: RacingPhysics = race.physics.duplicate()
+	var levels: Array[RacingLevel] = []
+	var twin := RacingRace.new(began.duplicate())
+	for entry: Array in entries:
+		levels.append(_copy(entry[0]))
+		twin.enter(RacingDriver.new(_copy(entry[0]), entry[1]))
 	var findings: Array[String] = []
-	var first_used: Array[Dictionary] = []
 	while not _all_finished(race) and race.time < TIME_LIMIT:
-		var before: Array[Dictionary] = _before(race)
+		var headings := PackedFloat64Array()
+		for car: RacingCar in race.cars:
+			headings.append(car.heading)
 		race.step()
-		if first_used.is_empty():
-			first_used = _used(race)
+		twin.step()
 		for number: int in range(race.cars.size()):
-			findings.append_array(_frame_findings(race, number, before[number], began, first_used[number]))
+			findings.append_array(_frame_findings(race, twin, number, headings[number], began, levels[number]))
 	for number: int in range(race.cars.size()):
-		findings.append_array(_level_findings(race.drivers[number], first_used[number]))
 		if race.laps(number) < LAPS:
 			findings.append("car %d did not finish %d laps in %.0f s" % [number, LAPS, TIME_LIMIT])
 	return findings
 
 
-# The knobs each driver used on the step just taken.
-func _used(race: RacingRace) -> Array[Dictionary]:
-	var used: Array[Dictionary] = []
-	for driver: RacingDriver in race.drivers:
-		used.append(driver.used.duplicate())
-	return used
-
-
-# Each car as it is now, before the step: where the replay starts from.
-func _before(race: RacingRace) -> Array[Dictionary]:
-	var cars: Array[Dictionary] = []
-	for number: int in range(race.cars.size()):
-		var car: RacingCar = race.cars[number]
-		cars.append({"position": car.position, "heading": car.heading, "speed": car.speed,
-			"line": race.line_index[number], "centre": race.centre_index[number]})
-	return cars
-
-
 # Every rule on one car, on the frame just stepped.
-func _frame_findings(race: RacingRace, number: int, before: Dictionary, began: RacingPhysics,
-		first_used: Dictionary) -> Array[String]:
+func _frame_findings(race: RacingRace, twin: RacingRace, number: int, heading_before: float,
+		began: RacingPhysics, level: RacingLevel) -> Array[String]:
 	var where: String = "car %d, frame %d" % [number, race.steps]
 	var findings: Array[String] = _car_findings(race, number, began, where)
-	findings.append_array(_movement_findings(race, number, before, began, where))
-	if race.drivers[number].used != first_used:
-		findings.append("%s: used %s, but %s on its first frame" % [where, race.drivers[number].used, first_used])
-	findings.append_array(_decision_findings(race, number, before, began, where))
+	findings.append_array(_limit_findings(race.cars[number], heading_before, began, where))
+	var said: Dictionary = race.drivers[number].used
+	var knobs: Dictionary = {"lookahead": level.lookahead, "grip_margin": level.grip_margin, "wander": level.wander}
+	if said != knobs:
+		findings.append("%s: says it used %s, its level is %s" % [where, said, knobs])
+	findings.append_array(_twin_findings(race, twin, number, where))
 	return findings
 
 
@@ -216,21 +234,10 @@ func _car_findings(race: RacingRace, number: int, began: RacingPhysics, where: S
 	return findings
 
 
-# Rule 2: the step replayed on an honest car, and the limits measured from
-# where the car was to where it is.
-func _movement_findings(race: RacingRace, number: int, before: Dictionary, began: RacingPhysics,
-		where: String) -> Array[String]:
+# Rule 2: the top speed and the grip, measured over the step just taken.
+func _limit_findings(car: RacingCar, heading_before: float, began: RacingPhysics, where: String) -> Array[String]:
 	var findings: Array[String] = []
-	var car: RacingCar = race.cars[number]
-	var driver: RacingDriver = race.drivers[number]
-	var honest: RacingCar = _car_as_it_was(before, began)
-	honest.step(driver.target_speed, driver.wanted_turn, race.track.on_track(before["position"], before["centre"]),
-		RacingRace.DT)
-	var apart: float = maxf(car.position.distance_to(honest.position), absf(car.speed - honest.speed))
-	if apart > TOLERANCE or absf(car.heading - honest.heading) > TOLERANCE:
-		findings.append("%s: ended at %s going %.3f, an honest car at %s going %.3f" % [
-			where, car.position, car.speed, honest.position, honest.speed])
-	var sideways: float = car.speed * absf(car.heading - before["heading"]) / RacingRace.DT
+	var sideways: float = car.speed * absf(car.heading - heading_before) / RacingRace.DT
 	if car.speed > began.top_speed + TOLERANCE:
 		findings.append("%s: speed %.3f over the top speed" % [where, car.speed])
 	if sideways > began.grip + TOLERANCE:
@@ -238,40 +245,31 @@ func _movement_findings(race: RacingRace, number: int, before: Dictionary, began
 	return findings
 
 
-# Rule 4: the decision, recomputed from the level's own knobs, at the line
-# sample the race handed the driver, for the car as it was.
-func _decision_findings(race: RacingRace, number: int, before: Dictionary, began: RacingPhysics,
-		where: String) -> Array[String]:
-	var findings: Array[String] = []
-	var driver: RacingDriver = race.drivers[number]
-	var honest: float = RacingDriver.speed_limit(race.track, before["line"], began, driver.level.grip_margin)
-	if absf(driver.target_speed - honest) > TOLERANCE:
-		findings.append("%s: chose %.3f m/s, its level's margin gives %.3f" % [where, driver.target_speed, honest])
-	var off: float = driver.aim.distance_to(race.track.point_ahead(before["line"], driver.level.lookahead, 0.0))
-	if off > driver.level.wander + TOLERANCE:
-		findings.append("%s: aimed %.2f m from its level's lookahead point, wander allows %.2f" % [
-			where, off, driver.level.wander])
-	var pursuit: float = RacingDriver.pursuit_turn(_car_as_it_was(before, began), driver.aim)
-	if absf(driver.wanted_turn - pursuit) > TOLERANCE:
-		findings.append("%s: steered at %.4f, pursuit of the point it reports gives %.4f" % [
-			where, driver.wanted_turn, pursuit])
-	return findings
-
-
-# A fresh, plain car where `before` says one was, on the physics `began`.
-func _car_as_it_was(before: Dictionary, began: RacingPhysics) -> RacingCar:
-	var car := RacingCar.new(began, before["position"], before["heading"])
-	car.speed = before["speed"]
-	return car
-
-
-# Rule 3's other half: what the driver used is what its level says.
-func _level_findings(driver: RacingDriver, used: Dictionary) -> Array[String]:
-	var level: Dictionary = {"lookahead": driver.level.lookahead, "grip_margin": driver.level.grip_margin,
-		"wander": driver.level.wander}
-	if used != level:
-		return ["%s used %s, not its level's %s" % [driver.level.title, used, level]]
+# Rule 4: car `number` and its twin, field by field. The first that differs
+# is named; one is enough, and every later frame would repeat it.
+func _twin_findings(race: RacingRace, twin: RacingRace, number: int, where: String) -> Array[String]:
+	var ours: Dictionary = _seen(race, number)
+	var honest: Dictionary = _seen(twin, number)
+	for field: String in ours:
+		if ours[field] != honest[field]:
+			return ["%s: its %s is %s, its honest twin's is %s" % [where, field, ours[field], honest[field]]]
 	return []
+
+
+# Everything about car `number` in `race` that its twin must share, in the
+# order one causes the next -- the decision, then the car that followed it,
+# then the race's books -- so the first that differs names what was done.
+func _seen(race: RacingRace, number: int) -> Dictionary:
+	var car: RacingCar = race.cars[number]
+	var driver: RacingDriver = race.drivers[number]
+	return {"aim": driver.aim, "target speed": driver.target_speed, "turn": driver.wanted_turn,
+		"speed": car.speed, "heading": car.heading, "position": car.position,
+		"line sample": race.line_index[number], "centre sample": race.centre_index[number],
+		"distance covered": race.covered[number], "laps": race.laps(number)}
+
+
+func _copy(level: RacingLevel) -> RacingLevel:
+	return RacingLevel.new(level.title, level.lookahead, level.grip_margin, level.wander)
 
 
 func _all_finished(race: RacingRace) -> bool:
@@ -281,61 +279,77 @@ func _all_finished(race: RacingRace) -> bool:
 	return true
 
 
-# The planted races. Each must be refused, and by the rule it breaks: the
-# finding has to name that rule, not merely exist. The gripless car is driven
-# by a level that dares half as much again as its grip, so that it asks for
-# turns no honest car could take.
+# The planted races. Each must be refused by a finding naming the rule it
+# breaks, not merely by some finding. The gripless car is driven by a level
+# that dares half as much again as its grip, so it asks for turns no honest
+# car could take.
 func _planted() -> Array[String]:
-	var failures: Array[String] = []
 	var hard: RacingLevel = RacingLevel.ladder()[2]
-	var stronger: RacingRace = _race_of([RacingDriver.new(hard, SEED), RacingDriver.new(hard, SEED)])
+	var failures: Array[String] = []
+	var two_hard: Array = [[hard, SEED], [hard, SEED]]
+	var stronger: RacingRace = _race_of(two_hard)
 	stronger.cars[1].physics = stronger.physics.duplicate()
 	stronger.cars[1].physics.grip *= 1.2
-	failures.append_array(_refused("a car given more grip", stronger, "its grip is"))
-	var gripless: RacingRace = _race_of([RacingDriver.new(RacingLevel.new("reckless", 8.0, 1.5, 0.0), SEED)])
+	failures.append_array(_refused("more grip", stronger, two_hard, "its grip is"))
+	var reckless: Array = [[RacingLevel.new("reckless", 8.0, 1.5, 0.0), SEED]]
+	var gripless: RacingRace = _race_of(reckless)
 	gripless.cars[0] = GriplessCar.new(gripless.physics, gripless.cars[0].position, gripless.cars[0].heading)
-	failures.append_array(_refused("a car that turns past its grip", gripless, "over the grip"))
-	var engine: RacingRace = _race_of([RacingDriver.new(hard, SEED)])
+	failures.append_array(_refused("past its grip", gripless, reckless, "over the grip"))
+	var engine: RacingRace = _race_of([[hard, SEED]])
 	engine.cars[0] = StrongerEngineCar.new(engine.physics, engine.cars[0].position, engine.cars[0].heading)
-	failures.append_array(_refused("a stronger engine", engine, "not a plain RacingCar"))
-	failures.append_array(_refused("a physics swapped mid-race", _crooked(hard, "swap"), "the race's physics"))
-	failures.append_array(_refused("a car nudged forward", _crooked(hard, "nudge"), "an honest car"))
-	failures.append_array(_refused("speed from further down the line", _crooked(hard, "ahead"), "margin gives"))
-	failures.append_array(_refused("aiming wider than its wander", _crooked(hard, "wide"), "aimed"))
-	failures.append_array(_refused("steering at another point", _crooked(hard, "elsewhere"), "steered at"))
-	failures.append_array(_refused("a car launched past its top speed", _crooked(hard, "launch"), "over the top speed"))
-	failures.append_array(_refused("a car that stalls", _crooked(hard, "stall"), "did not finish"))
-	failures.append_array(_rubber_bands())
+	failures.append_array(_refused("a stronger engine", engine, [[hard, SEED]], "not a plain RacingCar"))
+	failures.append_array(_planted_crooks())
+	failures.append_array(_planted_through_the_race())
 	return failures
 
 
-# The two rubber bands, each behind an honest leader.
-func _rubber_bands() -> Array[String]:
+# One easy driver for each of `CrookedDriver`'s cheats, alone, each with the
+# finding that must name it. Entered with the very level it drives with, so
+# a driver that changes its level changes the entry too -- which the check
+# must have copied before the start.
+func _planted_crooks() -> Array[String]:
+	var expected: Dictionary = {"swap": "the race's physics", "launch": "over the top speed",
+		"nudge": "its position", "ahead": "its target speed", "wide": "its aim", "narrow": "its aim",
+		"elsewhere": "its turn", "track": "its target speed", "knob": "says it used",
+		"level": "its target speed", "stall": "did not finish"}
+	var failures: Array[String] = []
+	for how: String in expected:
+		var easy := RacingLevel.new("easy", 8.0, 0.75, 2.0)
+		var race: RacingRace = _race_of([])
+		race.enter(CrookedDriver.new(easy, SEED, how))
+		failures.append_array(_refused("a driver that cheats by %s" % how, race, [[easy, SEED]], expected[how]))
+	return failures
+
+
+# The cheats that need the race itself: two rubber bands behind an honest
+# leader, and distance credited that was not driven.
+func _planted_through_the_race() -> Array[String]:
 	var levels: Array[RacingLevel] = RacingLevel.ladder()
+	var entered: Array = [[levels[2], SEED], [levels[0], SEED]]
 	var failures: Array[String] = []
 	for in_knob: bool in [true, false]:
-		var race: RacingRace = _race_of([RacingDriver.new(levels[2], SEED)])
+		var race: RacingRace = _race_of([[levels[2], SEED]])
 		race.enter(RubberBandDriver.new(levels[0], SEED, race, in_knob))
-		var because: String = "on its first frame" if in_knob else "level's margin gives"
+		var because: String = "says it used" if in_knob else "its target speed"
 		failures.append_array(_refused("a rubber band %s" % ("in the knob" if in_knob else "where it is used"),
-			race, because))
+			race, entered, because))
+	var books: RacingRace = _race_of([[levels[2], SEED]])
+	books.enter(BookkeeperDriver.new(levels[0], SEED, books, 1))
+	failures.append_array(_refused("distance not driven", books, entered, "its distance covered"))
 	return failures
 
 
-func _race_of(drivers: Array[RacingDriver]) -> RacingRace:
+# A race with a plain driver for each `[RacingLevel, seed]` entry.
+func _race_of(entries: Array) -> RacingRace:
 	var race := RacingRace.new(RacingPhysics.new())
-	for driver: RacingDriver in drivers:
-		race.enter(driver)
+	for entry: Array in entries:
+		race.enter(RacingDriver.new(entry[0], entry[1]))
 	return race
 
 
-func _crooked(level: RacingLevel, how: String) -> RacingRace:
-	return _race_of([CrookedDriver.new(level, SEED, how)])
-
-
 # Empty when `race` is refused with a finding containing `because`.
-func _refused(what: String, race: RacingRace, because: String) -> Array[String]:
-	for finding: String in cheat_findings(race):
+func _refused(what: String, race: RacingRace, entries: Array, because: String) -> Array[String]:
+	for finding: String in cheat_findings(race, entries):
 		if because in finding:
 			return []
 	return ["planted, %s: not refused" % what]

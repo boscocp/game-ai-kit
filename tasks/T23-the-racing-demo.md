@@ -124,17 +124,21 @@ What was built differs from the steps above in four places, each on purpose:
   capping before or after the backward pass gives the same profile. So the
   grip margin is applied every frame, where the driver uses it, which is
   also what lets the cheat check see it.
-- **The cheat check trusts nothing the car or driver says about itself.**
-  The review found five cheats the first version let through (a stronger
-  engine, a car nudged forward, a physics swapped mid-race, planning from
-  further down the line, steering at a point other than the one reported).
-  So every frame is replayed: a fresh `RacingCar` on the physics as the
-  race began, put where the car was and given what the driver asked, must
-  end where the car ended; and the decision is recomputed from the line
-  sample the race handed the driver -- speed from the level's margin, aim
-  within its wander of the lookahead point, turn as pure pursuit of that
-  aim. A race in which a car does not finish fails too. Ten planted races,
-  each refused by the rule it breaks.
+- **The cheat check races an honest twin.** Two reviews found eight
+  cheats the earlier versions let through -- a stronger engine, a nudge
+  forward, a physics swapped mid-race, a speed planned from further down
+  the line, a turn at a point other than the one reported, a faster limit
+  written into the track, distance credited on the race's books, a level
+  changed mid-race with its report forged. Each version had trusted
+  something a driver can reach. So the script builds its own race from
+  what it entered (each level's numbers and seed, the physics as it began)
+  with plain drivers, steps it alongside, and every car, decision and lap
+  record must equal the twin's on every frame. A driver indistinguishable
+  from the honest one is the honest one; it also makes wander bind exactly,
+  where "at most" had let a driver drop it. The knobs' own report, one
+  physics for all, the limits measured over each step, and finishing are
+  held besides. Seventeen planted races, each refused by a finding naming
+  its rule.
 - **Lookahead buys almost no lap time on this track.** Measured: from 8 to
   16 metres the hard driver's lap moved by under a tenth of a second, and at
   20 it cut corners onto the grass. The grip margin is what orders the
