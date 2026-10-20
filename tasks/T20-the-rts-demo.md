@@ -1,6 +1,18 @@
 # T20 — The RTS demo
 
-Size: L · Prereqs: T19, T12, T15, T25 · Files: `godot/game/rts/`
+Size: L · Prereqs: T19, T12, T15 · Files: `godot/game/rts/`
+
+## Split (2026-10-20)
+
+Split by the owner's decision of 2026-10-19, at the line T25's recordings
+draw. **This task** is everything a match needs before a person's play is a
+reference: the game, the map, the economy, the units, fog, the Bos Wars art,
+the three layers with the commander on top, and the difficulty levels on
+T12's strength axis -- steps 1 to 6, and the first half of step 7. **T55**
+is the rest of step 7: the human-likeness axis in real time (a reaction
+delay drawn from recorded play, a cap on actions per minute), T25's league
+on this board, and its cost meter on screen. Those need T25's twenty
+recordings and nothing here does, so T25 is no longer this task's prereq.
 
 ## Goal
 
@@ -114,12 +126,14 @@ not needed now, but its terms would bar even a mirror).
 5. Fog of war, which makes planning under uncertainty real rather than
    theoretical, and which the influence maps from T14 already know how to draw.
 6. Group movement with the flow fields from T19.
-7. The difficulty levels and the human-likeness axis from T12 and T25, still
-   not cheating, plus the knobs only a clock makes possible: a reaction delay
-   drawn from recorded human play, and a cap on actions per minute in the
-   spirit of AlphaStar's. T25's league runs here too, adding actions per minute
-   and reaction time to its human-likeness measures, and its meter shows each
-   team's share of T19's frame budget.
+7. The difficulty levels from T12, still not cheating: a level changes how
+   the commander and the squads think, never what a side sees, earns or may
+   order. *Moved to T55 by the split:* the human-likeness axis from T25 and
+   the knobs only a clock makes possible -- a reaction delay drawn from
+   recorded human play, and a cap on actions per minute in the spirit of
+   AlphaStar's -- with T25's league on this board, adding actions per
+   minute and reaction time to its human-likeness measures, and its meter
+   showing each team's share of T19's frame budget.
 
 ## Acceptance
 
