@@ -1,8 +1,9 @@
 ## One order, as a person or an AI gives it: the only way anything changes the
 ## world.
 ##
-## Five kinds, the ones every RTS since Dune II has: move, attack, gather,
-## build, train. A person's click and an AI's decision both become one of
+## Six kinds: the five every RTS since Dune II has -- move, attack, gather,
+## build, train -- and repair, which the owner asked for when a person
+## playing T20 had no way to mend a building. A person's click and an AI's decision both become one of
 ## these and pass through `RtsRules.why_refused`, so the never-cheat rule is
 ## one function, and actions per minute are counted the same way for both.
 ## A command is plain data -- ids and a cell, never a unit -- so it can be
@@ -19,15 +20,16 @@ const ATTACK: String = "attack"
 const GATHER: String = "gather"
 const BUILD: String = "build"
 const TRAIN: String = "train"
-const KINDS: Array[String] = [MOVE, ATTACK, GATHER, BUILD, TRAIN]
+const REPAIR: String = "repair"
+const KINDS: Array[String] = [MOVE, ATTACK, GATHER, BUILD, TRAIN, REPAIR]
 
-## Which of the five.
+## Which of the six.
 var kind: String
 ## The units given the order: one producer for TRAIN, one worker for BUILD.
 var unit_ids: Array[int] = []
 ## Where to go, or where to build.
 var cell: Vector2i = Vector2i.ZERO
-## Whom to attack, or which mine to gather from.
+## Whom to attack, or which deposit to gather from.
 var target_id: int = 0
 ## What to build, or what to train.
 var what: String = ""
@@ -54,10 +56,17 @@ static func attack(ids: Array[int], target: int) -> RtsCommand:
 	return command
 
 
-## Set workers `ids` carrying from `mine` to the nearest base, over and over.
-static func gather(ids: Array[int], mine: int) -> RtsCommand:
+## Set workers `ids` carrying from `deposit` to the nearest base, over and over.
+static func gather(ids: Array[int], deposit: int) -> RtsCommand:
 	var command := RtsCommand.new(GATHER, ids)
-	command.target_id = mine
+	command.target_id = deposit
+	return command
+
+
+## Send workers `ids` to mend the side's own `building`, free, until whole.
+static func repair(ids: Array[int], building: int) -> RtsCommand:
+	var command := RtsCommand.new(REPAIR, ids)
+	command.target_id = building
 	return command
 
 

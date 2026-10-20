@@ -12,7 +12,7 @@
     "perfect-play": {"name": "perfect play, solved by minimax", "evidence": ["TicTacToeSolver"]},
     "perception": {"name": "a vision cone, line of sight and hearing", "evidence": ["VisionCone", "LineOfSight", "Hearing"]},
     "fuzzy-logic": {"name": "fuzzy logic", "evidence": ["FuzzyRuleBase"]},
-    "influence-map": {"name": "an influence map", "evidence": ["InfluenceMap", "ThreatMap"]},
+    "influence-map": {"name": "an influence map", "evidence": ["InfluenceMap", "ThreatMap", "RtsInfluence"]},
     "state-machine": {"name": "a finite state machine", "evidence": ["StateMachine"]},
     "behaviour-tree": {"name": "a behaviour tree", "evidence": ["BehaviourTree"]},
     "goap": {"name": "GOAP, goal-oriented action planning", "evidence": ["GoapPlanner"]},
@@ -27,7 +27,10 @@
     "reaction-delay": {"name": "a reaction delay", "evidence": ["FightDelay"]},
     "n-gram": {"name": "an n-gram opponent model", "evidence": ["NGramPredictor"]},
     "case-lookup": {"name": "a lookup of recorded situations (a ghost)", "evidence": ["CaseTable"]},
-    "behaviour-cloning": {"name": "behaviour cloning", "evidence": ["ClonedPlayer"]}
+    "behaviour-cloning": {"name": "behaviour cloning", "evidence": ["ClonedPlayer"]},
+    "priority-queue": {"name": "a priority queue of wishes, the shipped RTS economy", "evidence": ["EconomyQueue"]},
+    "utility": {"name": "utility scores over regions", "evidence": ["SquadTactics"]},
+    "flow-field": {"name": "flow fields", "evidence": ["FlowField"]}
   },
   "examples": [
     {
@@ -128,6 +131,24 @@
       "controls": "click in an arena to move its cross; space pauses, . steps one sixtieth of a second, R starts again",
       "watch": "The orange arrow -- the force the behaviour asks for -- against the blue one, where the vehicle is going: seek's never shrinks at the cross, arrive's turns to brake as it enters its circle.",
       "docs": "docs/concepts/steering.md"
+    },
+    {
+      "target": "demo-rts",
+      "title": "Real-time strategy against a commander that plans",
+      "scene": "res://game/rts/rts.tscn",
+      "decides": "What to build next and when, and where each squad of fighters goes -- against a clock that does not wait while it thinks.",
+      "techniques": [
+        {"technique": "strips", "part": "the commander plans the build order to its goal -- workers, magma, room, barracks, lab, mortars -- and each step's wait is worked out by jumping to the moment it is affordable"},
+        {"technique": "htn", "part": "H swaps the commander's planner for an HTN, whose orders are the designer's, over the same domain"},
+        {"technique": "priority-queue", "part": "the economy under the plan: the top wish waits for its price and nothing below it is bought meanwhile; V hands your side to the queues alone"},
+        {"technique": "utility", "part": "each squad scores every region by worth, odds and distance, and goes to the best"},
+        {"technique": "influence-map", "part": "the computer's belief about who holds the map, the enemy half remembered through the fog and fading; I draws it"},
+        {"technique": "state-machine", "part": "each squad gathers, advances, fights or falls back, and the arrow it took is written beside it"},
+        {"technique": "flow-field", "part": "a squad's members follow one field to their region, shared by everyone going there"}
+      ],
+      "controls": "drag to select, right click to move, attack or gather; B D L T E build with a worker, W 1 2 3 train; space pauses, + and - change the speed, V watches two computers, C the level, H the planner, I the influence map, F lifts the fog from the screen, R again",
+      "watch": "The panel's plan: each step's wait counts down, and when the commander sees what you build, its goal changes to the counter and the plan is redrawn. On the board, a squad's dashed line is where it chose to go and the numbers are every region's score -- press I and see how much it believes is where it last saw it.",
+      "docs": "docs/concepts/rts-ai.md"
     },
     {
       "target": "demo-tactical",

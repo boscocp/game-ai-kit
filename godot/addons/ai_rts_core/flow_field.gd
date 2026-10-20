@@ -40,7 +40,7 @@ var _current: int = 0
 
 
 ## A field towards `goal` on `graph`, with nothing settled yet. The goal may
-## be a blocked cell -- a building, a mine -- and then the field leads to the
+## be a blocked cell -- a building, a deposit -- and then the field leads to the
 ## cells beside it, which is where a worker stands to use one.
 func _init(graph: GridGraph, goal_cell: Vector2i) -> void:
 	_graph = graph

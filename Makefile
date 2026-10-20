@@ -74,7 +74,7 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-search-properties test-planner-properties test-planner-benchmark test-perception-properties \
        test-decisions test-demo-overlays test-menu-walk test-replay test-opponent-levels test-opponent-properties \
        test-clone-rows test-inference-budget test-clone-report test-difficulty-knobs \
-       test-rts-budget test-rts-simulation test-steering-properties ## Run every gate
+       test-rts-budget test-rts-simulation test-rts-match test-steering-properties ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability lint-demos \
@@ -325,6 +325,14 @@ test-rts-budget: import ## The real-time core holds its frame share at 200 units
 	@# core's ~50 ms a step is printed beside the new core's layers.
 	@$(GODOT) --headless --path godot -s res://test/rts_core_budget.gd
 
+.PHONY: test-rts-match
+test-rts-match: import ## A whole RTS match ends the same way twice, inside its frame budget, and the commander beats the queues alone (T20)
+	@$(GODOT) --headless --path godot -s res://test/rts_match.gd
+
+.PHONY: rts-measure
+rts-measure: import ## Slow (minutes): the commander vs the queues, STRIPS vs HTN, each level vs the next, the seat's bias (T20)
+	@$(GODOT) --headless --path godot -s res://test/rts_measure.gd
+
 .PHONY: test-rts-simulation
 test-rts-simulation: import ## The RTS match replays from its seed, only commands change it, fog holds, counters add up (T19)
 	@$(GODOT) --headless --path godot -s res://test/rts_simulation.gd
@@ -423,6 +431,10 @@ demo-steering: import ## Four vehicles: seek, arrive, pursue, seek with avoid, e
 .PHONY: demo-behaviour
 demo-behaviour: import ## One guard, four ways to decide: 1-4 swap state machine, tree, GOAP, HTN mid-round; space a turn, enter ten
 	@$(GODOT) --path godot res://demos/behaviour/behaviour_demo.tscn
+
+.PHONY: demo-rts
+demo-rts: import ## Real-time strategy against a commander that plans: drag selects, right click orders, B D L T E build, W 1 2 3 train, V watches, C level, H planner, I influence, F fog
+	@$(GODOT) --path godot res://game/rts/rts.tscn
 
 .PHONY: demo-tactical
 demo-tactical: import ## Advance Wars style tactics against the computer: click to move, W waits, 1-5 build, Z undo, space ends the turn, C changes the computer (rules, planner, learned, easy, normal, hard, state machine, behaviour tree, GOAP, HTN), S swaps sides
@@ -542,6 +554,15 @@ fighter-sheets: ## Download the fighters' CC0 template sheets into build/fighter
 fighter-strips: ## Cut the fighters' strips from the downloaded sheets, after checking their sha256
 	@$(GODOT) --headless --path godot -s $(CURDIR)/tools/fighters/crop.gd -- $(CURDIR)/$(FIGHTER_SHEETS)
 	@$(MAKE) --no-print-directory import
+
+# --- the RTS's pictures (T20, ADR 0020) ------------------------------------
+#
+# Referenced, never committed, not even crops: Bos Wars is GPL, and nothing of
+# it is redistributed here. The game draws plain shapes without them.
+
+.PHONY: rts-art
+rts-art: ## Download the RTS's Bos Wars sheets into build/rts-art/ (gitignored), refusing any whose sha256 differs
+	@$(PYTHON) scripts/fetch_rts_art.py
 
 # --- your own art (T31: optional, tier 3, needs a GPU) ----------------------
 #

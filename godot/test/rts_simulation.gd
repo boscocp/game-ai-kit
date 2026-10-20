@@ -32,7 +32,7 @@ const FASTER_THAN_REAL_TIME: float = 10.0
 
 ## A side played by a script: gather with every idle worker, raise a second
 ## barracks once it can pay for one, train while there is money, and send
-## soldiers at whatever enemy they can see, or towards the enemy's home once
+## runners at whatever enemy they can see, or towards the enemy's home once
 ## there are enough of them. Its own dice, from the seed, so
 ## the stream of commands is the same every time.
 class ScriptedSide extends RtsController:
@@ -43,19 +43,19 @@ class ScriptedSide extends RtsController:
 		_dice.seed = match_seed * 10 + side
 		_enemy_home = Vector2i(55, 32) if side == RtsTestWorld.LEFT else Vector2i(8, 32)
 
-	## Workers to the mines, buildings to training, soldiers at the enemy.
+	## Workers to the rocks, buildings to training, runners at the enemy.
 	func decide(view: RtsSnapshot) -> Array[RtsCommand]:
 		var commands: Array[RtsCommand] = []
 		commands.append_array(_put_workers_to_work(view))
 		commands.append_array(_train(view))
 		commands.append_array(_build_barracks(view))
-		commands.append_array(_send_soldiers(view))
+		commands.append_array(_send_runners(view))
 		return commands
 
 	func _build_barracks(view: RtsSnapshot) -> Array[RtsCommand]:
 		var workers: Array[Dictionary] = view.mine(RtsKinds.WORKER)
 		var bases: Array[Dictionary] = view.mine(RtsKinds.BASE)
-		if view.mine(RtsKinds.BARRACKS).size() >= 2 or view.resources < 150 or workers.is_empty() or bases.is_empty():
+		if view.mine(RtsKinds.BARRACKS).size() >= 2 or view.resources[RtsKinds.ORE] < 150 or workers.is_empty() or bases.is_empty():
 			return []
 		work += 1
 		var home := Vector2i((bases[0]["position"] as Vector2).floor())
@@ -65,12 +65,12 @@ class ScriptedSide extends RtsController:
 
 	func _put_workers_to_work(view: RtsSnapshot) -> Array[RtsCommand]:
 		var commands: Array[RtsCommand] = []
-		var mines: Array[Dictionary] = view.mines()
+		var deposits: Array[Dictionary] = view.deposits()
 		for worker: Dictionary in view.mine(RtsKinds.WORKER):
 			work += 1
-			if worker["order"] == RtsUnit.IDLE and not mines.is_empty():
-				var mine: Dictionary = mines[_dice.randi_range(0, mines.size() - 1)]
-				commands.append(RtsCommand.gather([worker["id"]] as Array[int], mine["id"]))
+			if worker["order"] == RtsUnit.IDLE and not deposits.is_empty():
+				var deposit: Dictionary = deposits[_dice.randi_range(0, deposits.size() - 1)]
+				commands.append(RtsCommand.gather([worker["id"]] as Array[int], deposit["id"]))
 		return commands
 
 	func _train(view: RtsSnapshot) -> Array[RtsCommand]:
@@ -83,15 +83,15 @@ class ScriptedSide extends RtsController:
 			if building["kind"] == RtsKinds.BASE and workers < 8:
 				commands.append(RtsCommand.train(building["id"], RtsKinds.WORKER))
 			elif building["kind"] == RtsKinds.BARRACKS and _dice.randf() < 0.8:
-				commands.append(RtsCommand.train(building["id"], RtsKinds.SOLDIER))
+				commands.append(RtsCommand.train(building["id"], RtsKinds.RUNNER))
 		return commands
 
-	func _send_soldiers(view: RtsSnapshot) -> Array[RtsCommand]:
+	func _send_runners(view: RtsSnapshot) -> Array[RtsCommand]:
 		var idle: Array[int] = []
-		for soldier: Dictionary in view.mine(RtsKinds.SOLDIER):
+		for runner: Dictionary in view.mine(RtsKinds.RUNNER):
 			work += 1
-			if soldier["order"] == RtsUnit.IDLE:
-				idle.append(soldier["id"])
+			if runner["order"] == RtsUnit.IDLE:
+				idle.append(runner["id"])
 		var enemies: Array[Dictionary] = view.enemies()
 		if not idle.is_empty() and not enemies.is_empty():
 			return [RtsCommand.attack(idle, enemies[0]["id"])]
@@ -127,7 +127,7 @@ func _play(match_seed: int, meddle: bool = false) -> RtsMatch:
 		played.play(TICKS)
 		return played
 	played.play(TICKS / 2)
-	played.world.resources[RtsTestWorld.LEFT] += 1000
+	played.world.funds(RtsTestWorld.LEFT)[RtsKinds.ORE] += 1000
 	played.play(TICKS - TICKS / 2)
 	return played
 
@@ -218,7 +218,7 @@ func _cheats_refused() -> Array[String]:
 	var theirs: RtsUnit = _first(world, RtsTestWorld.RIGHT, RtsKinds.WORKER)
 	var my_worker: RtsUnit = _first(world, RtsTestWorld.LEFT, RtsKinds.WORKER)
 	var my_base: RtsUnit = _first(world, RtsTestWorld.LEFT, RtsKinds.BASE)
-	world.resources[RtsTestWorld.LEFT] = 10
+	world.set_funds(RtsTestWorld.LEFT, 10)
 	var cheats: Dictionary = {
 		"moving an enemy unit": RtsCommand.move([theirs.id] as Array[int], Vector2i(20, 20)),
 		"training without the money": RtsCommand.train(my_base.id, RtsKinds.WORKER),
@@ -248,13 +248,13 @@ func _fast_enough() -> Array[String]:
 	return []
 
 
-# Claim 4: one enemy soldier far from every unit the left side has, one
+# Claim 4: one enemy runner far from every unit the left side has, one
 # beside its base. The first must be missing from its view, the second there.
 func _fogged() -> Array[String]:
 	var failures: Array[String] = []
 	var world: RtsWorld = RtsTestWorld.economies(SEED)
-	var hidden: RtsUnit = world.add_unit(RtsKinds.SOLDIER, RtsTestWorld.RIGHT, Vector2i(40, 8))
-	var seen: RtsUnit = world.add_unit(RtsKinds.SOLDIER, RtsTestWorld.RIGHT, Vector2i(12, 34))
+	var hidden: RtsUnit = world.add_unit(RtsKinds.RUNNER, RtsTestWorld.RIGHT, Vector2i(40, 8))
+	var seen: RtsUnit = world.add_unit(RtsKinds.RUNNER, RtsTestWorld.RIGHT, Vector2i(12, 34))
 	var shown: Array[int] = []
 	for unit: Dictionary in RtsSnapshot.of(world, RtsTestWorld.LEFT).units:
 		shown.append(unit["id"])

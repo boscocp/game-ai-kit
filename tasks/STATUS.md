@@ -75,7 +75,10 @@ lesson in it.
 | # | Task | State | Notes |
 |---|---|---|---|
 | T19 | The real-time core | done | `BoardState` at 200 units: ~50 ms a step, three frames, so `ai_rts_core` exists (ADR 0019); its simulation 0.7 ms, flow fields 0.34 ms (p95 1.29 of a 1.5 share); a scripted match at ~65x real time, replayed to its digest |
-| T20 | The RTS demo | todo | build orders against the clock, fog of war |
+| T20 | The RTS demo | done | wave 62: the minimum game on T19's core (two resources, supply, a lab, a tower that sees, T10's counter circle, half-turn map); the commander plans the build order over a level 1 PDDL domain by STRIPS or HTN, timed by Churchill and Buro's jump, over a priority-queue economy; squads by a state machine, utility over an influence map with fog and memory, and FocusFire on whom to strike; commander 19 - 1 against the queues alone, normal 17 - 3 against easy, hard cut; Bos Wars sheets by sha256 (ADR 0020); split on 2026-10-20, the human side moved to T55; manual check still the owner's |
+| T55 | The RTS's human side: a clock's knobs, the league in real time | todo | split from T20: a reaction delay drawn from recordings, an actions-per-minute cap, T25's league and meter on the RTS; needs T25's recordings |
+| T56 | The armed tower: an upgrade the commander must choose to pay for | todo | the owner's request of 2026-10-20, playing T20: the tower that sees, upgraded to shoot, with line of fire; a new step in the build-order domain the commander must weigh against fighters |
+| T57 | The RTS seat bias: a gate on the mirror match | todo | the queues against themselves went 15 - 5 to the west seat during T20's review and 9 - 11 after its fixes; nothing holds it, and a person always plays west |
 
 ## Milestone 4 — driving, which is the first thing not on a grid
 
@@ -113,6 +116,46 @@ sha256 and never committed.
 
 ---
 
+## Resuming after 2026-10-20 (wave 62)
+
+**Where it stopped -- read first.** Wave 62 was T20, the RTS demo, opened
+by hand as the owner chose (not `make wave`, which picks T23) and split
+first: the human-likeness half and the RTS league became T55, which waits
+on T25's recordings. The review is `docs/reviews/62-the-rts-demo.md`.
+
+**What landed.** `godot/game/rts/` on `ai_rts_core`, whose table became
+the minimum game and whose rules grew from the owner's play: separation,
+a line of fire, strike-back at what a side sees, repair (a sixth order,
+which also takes up a site left half-built), and three fog leaks closed.
+The commander (`RtsCommander`) plans over
+`spec/pddl/rts-build-order-domain.pddl` with STRIPS or the HTN (`H`),
+`BuildSchedule` times the plan, `EconomyQueue` is the economy under it and
+`QueueSide` the baseline; squads (`Squad`, `SquadTactics`, `FocusFire`,
+`RtsInfluence`). The screen is StarCraft's: a camera, a minimap, a command
+card with prices and reasons, a placing preview, half speed, paused at the
+start. `make demo-rts`, `make rts-art` (Bos Wars, ADR 0020), `make
+test-rts-match` (check and CI), `make rts-measure` (slow, by hand),
+`docs/concepts/rts-ai.md`, ADR 0010 and 0019 amended.
+
+**What the measurements said** (`make rts-measure`, ten seeds from both
+seats): commander 19 - 1 against the queues alone; STRIPS and the HTN not
+told apart (12 - 8); normal 17 - 3 against easy, and hard cut after 11 - 9
+and 10 - 10 against normal; the queues' mirror 9 - 11 after the review's
+fixes, 15 - 5 to west before them (T57 makes it a gate).
+
+**For the owner.** T20's manual check: `make demo-rts` against normal --
+it should lose to a good player and beat a careless one, and when it
+loses you should be able to say what it got wrong. `make rts-art` once
+for the sprites. New tasks from your play: T56 (the armed tower) and T57
+(the seat bias gate). `data/tactical/` (your 2 T25 recordings) is still
+untracked and untouched.
+
+**Next: the modularity review you asked for on 2026-10-20**, after this
+merge and before any new example: every AI a module configurable in any
+game, gates that run only for what a wave touches, the design pattern that
+fits, and a plan for a Python and Godot library -- written as a plan for
+wave 63, for you to approve before it starts.
+
 ## Resuming after 2026-10-19 (wave 61)
 
 **Where it stopped -- read first.** Wave 61 was T22, `ai_steering`, which
@@ -139,8 +182,8 @@ vehicle with its force drawn, and say what it is about to do before it
 does. `data/tactical/` (your 2 T25 recordings) is still untracked and
 untouched.
 
-**Next: T20, the RTS demo -- the owner's choice, on 2026-10-19, for a
-later day.** Not through `make wave`, which skips T20 while T25 waits on
+**Next (done in wave 62): T20, the RTS demo -- the owner's choice, on
+2026-10-19, for a later day.** Not through `make wave`, which skips T20 while T25 waits on
 the recordings: open its branch by hand (`make wave-start
 BRANCH=wave/62-the-rts-demo`) and split T20 first -- the game, the map,
 the economy, the units, fog, the Bos Wars art and the commander now; the

@@ -1,0 +1,115 @@
+{
+  "about": "The RTS's pictures, referenced and never committed (ADR 0020). Bos Wars 2.8, GPL-2.0-or-later, from Debian's source archive. `make rts-art` downloads each sheet into build/rts-art/ (gitignored) and refuses one whose sha256 differs; the game draws plain shapes when the folder is empty. frame: one cell of the sheet in pixels, from the unit's own .lua; directions: 5 for a unit (N, NE, E, SE, S, the west half mirrored), 1 for a building or a deposit, whose frame 0 is drawn. team_colour: the palette indexes Bos Wars recolours per player.",
+  "license": "GPL-2.0-or-later",
+  "project": "Bos Wars 2.8",
+  "home": "https://www.boswars.org/",
+  "base_url": "https://sources.debian.org/data/main/b/boswars/2.8-2/units/",
+  "team_colour": [
+    208,
+    209,
+    210,
+    211
+  ],
+  "checked": "2026-10-20",
+  "sheets": {
+    "worker": {
+      "path": "engineer/unit_engineer.png",
+      "sha256": "52adfb9bdb0bf7abc31c87e006dd28020bc783eb9b326356400e2c9f48c7defc",
+      "frame": [
+        56,
+        56
+      ],
+      "directions": 5
+    },
+    "runner": {
+      "path": "assault/unit_assault.png",
+      "sha256": "a387274229fb3d5c8657032e31c6094cb2b447e8372e259d1a27ee0f771b61da",
+      "frame": [
+        64,
+        64
+      ],
+      "directions": 5
+    },
+    "shield": {
+      "path": "grenadier/unit_grenadier.png",
+      "sha256": "1c862a1aed48d8d4e5b59f273f14718dfc4c87d9bbd3c511c9c2bb1435bf9466",
+      "frame": [
+        64,
+        64
+      ],
+      "directions": 5
+    },
+    "mortar": {
+      "path": "bazoo/unit_bazoo.png",
+      "sha256": "93ffd8b419a8ec727fdee76d7768f56747cf8d07b322744d459f13804f749eac",
+      "frame": [
+        64,
+        64
+      ],
+      "directions": 5
+    },
+    "base": {
+      "path": "vault/vault.png",
+      "sha256": "e14bc0f501edc579a4466520a1b61be6753f8336e116f19500aa87c30c5d7b71",
+      "frame": [
+        236,
+        208
+      ],
+      "directions": 1
+    },
+    "barracks": {
+      "path": "camp/training_camp.png",
+      "sha256": "dd04dcc7f90dbcf6a032fa3863c35b0313b94f3c50dc8d0ac6f21c5f916364dc",
+      "frame": [
+        224,
+        224
+      ],
+      "directions": 1
+    },
+    "lab": {
+      "path": "vehiclefactory/vehicle_factory.png",
+      "sha256": "981db3aa5bc7178130165022541803ab00d2bd8deccbbaa9bc23e79a7797e706",
+      "frame": [
+        256,
+        254
+      ],
+      "directions": 1
+    },
+    "depot": {
+      "path": "powerplant/powerplant.png",
+      "sha256": "8de4b68364f185c9f85148987f7bd23e5f8629e81e83419bbea263a4a7050284",
+      "frame": [
+        128,
+        128
+      ],
+      "directions": 1
+    },
+    "tower": {
+      "path": "radar/radar.png",
+      "sha256": "9cf66e77a5a237e2d38a233e5fe49166fb4f9692ba386e9436c376663e1d43f7",
+      "frame": [
+        64,
+        64
+      ],
+      "directions": 1
+    },
+    "rocks": {
+      "path": "rocks/rock_1.png",
+      "sha256": "066a31f37b75c128c825736d2f6e060ba91a5b31a72b8c920f87e0855fa4cbff",
+      "frame": [
+        96,
+        96
+      ],
+      "directions": 1
+    },
+    "vent": {
+      "path": "hotspot/hotspot.png",
+      "sha256": "1c11486bda0c923de808add06e5aa7a465ea5bfb3289e8ff0f837ea37e167ea4",
+      "frame": [
+        64,
+        64
+      ],
+      "directions": 1
+    }
+  }
+}

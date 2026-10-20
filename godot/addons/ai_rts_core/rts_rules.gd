@@ -5,7 +5,7 @@
 ## out, so a refused command changes nothing -- `test/rts_simulation.gd`
 ## checks the world's digest is untouched by each. Three of the refusals are
 ## the ones a cheating AI would trip: ordering the other side's units,
-## spending money it does not have, and aiming at something it cannot see.
+## spending what it does not have, and aiming at something it cannot see.
 ##
 ## When not to use it: rules that depend on more than the order and the
 ## world as it stands -- a cooldown on giving orders, say. Those belong to
@@ -22,10 +22,10 @@ static func why_refused(world: RtsWorld, side: int, order: RtsCommand) -> String
 		return "an order needs at least one unit"
 	for id: int in order.unit_ids:
 		var given: RtsUnit = world.unit(id)
-		if given == null:
-			return "there is no unit %d" % id
-		if given.side != side:
-			return "unit %d is not yours" % id
+		# Gone and someone else's get one answer: two would tell a side which
+		# of the ids it cannot see are still alive (T20's review).
+		if given == null or given.side != side:
+			return "unit %d is not one of yours" % id
 		var unfit: String = _why_unfit(given, order)
 		if unfit != "":
 			return unfit
@@ -36,6 +36,8 @@ static func why_refused(world: RtsWorld, side: int, order: RtsCommand) -> String
 			return _why_target_refused(world, side, order)
 		RtsCommand.BUILD:
 			return _why_build_refused(world, side, order)
+		RtsCommand.REPAIR:
+			return _why_repair_refused(world, side, order.target_id)
 	return _why_train_refused(world, side, order)
 
 
@@ -65,7 +67,7 @@ static func _why_unfit(given: RtsUnit, order: RtsCommand) -> String:
 		return "" if building else "unit %d is a %s, which trains nothing" % [given.id, given.kind]
 	if building:
 		return "unit %d is a %s and cannot %s" % [given.id, given.kind, order.kind]
-	if order.kind in [RtsCommand.GATHER, RtsCommand.BUILD] and given.kind != RtsKinds.WORKER:
+	if order.kind in [RtsCommand.GATHER, RtsCommand.BUILD, RtsCommand.REPAIR] and given.kind != RtsKinds.WORKER:
 		return "only a worker can %s, and unit %d is a %s" % [order.kind, given.id, given.kind]
 	return ""
 
@@ -88,9 +90,21 @@ static func _why_target_refused(world: RtsWorld, side: int, order: RtsCommand) -
 	if target == null or not world.visible_to(side, target.position):
 		return "unit %d is not in sight" % order.target_id
 	if order.kind == RtsCommand.GATHER:
-		return "" if target.kind == RtsKinds.MINE else "unit %d is not a mine" % target.id
+		return "" if RtsKinds.is_deposit(target.kind) else "unit %d is nothing to gather" % target.id
 	if target.side == side or target.side == RtsWorld.NEUTRAL:
 		return "unit %d is not an enemy" % target.id
+	return ""
+
+
+# Only one's own building: a hurt one is mended, and a site its builder left
+# is taken up again -- without that, a site whose worker was killed could
+# never be finished, and a plan waiting on it waited for ever (T20's review).
+static func _why_repair_refused(world: RtsWorld, side: int, target_id: int) -> String:
+	var target: RtsUnit = world.unit(target_id)
+	if target == null or target.side != side or not RtsKinds.is_building(target.kind):
+		return "unit %d is not a building of yours" % target_id
+	if target.complete and target.health >= int(RtsKinds.of(target.kind, "health")):
+		return "unit %d is not damaged" % target_id
 	return ""
 
 
@@ -98,8 +112,11 @@ static func _why_build_refused(world: RtsWorld, side: int, order: RtsCommand) ->
 	if order.unit_ids.size() != 1:
 		return "one worker builds a building"
 	if not RtsKinds.TABLE.has(order.what) or not RtsKinds.is_building(order.what) \
-			or order.what == RtsKinds.MINE:
+			or RtsKinds.is_deposit(order.what):
 		return "%s is not something a worker builds" % order.what
+	var missing: String = _why_needs_missing(world, side, order.what)
+	if missing != "":
+		return missing
 	# Sight first: "not free" about a cell nobody can see would say who stands there.
 	if not world.visible_to(side, Vector2(order.cell) + Vector2(0.5, 0.5)):
 		return "%s is not in sight" % order.cell
@@ -118,14 +135,37 @@ static func _why_train_refused(world: RtsWorld, side: int, order: RtsCommand) ->
 		return "a %s does not train a %s" % [producer.kind, order.what]
 	if producer.queue.size() >= RtsKinds.QUEUE_LIMIT:
 		return "unit %d already has %d in its queue" % [producer.id, RtsKinds.QUEUE_LIMIT]
+	var missing: String = _why_needs_missing(world, side, order.what)
+	if missing != "":
+		return missing
+	var room: int = world.supply_cap(side) - world.supply_used(side)
+	if room < int(RtsKinds.of(order.what, "supply")):
+		return "a %s needs %d supply and you have %d free of %d" % [
+			order.what, RtsKinds.of(order.what, "supply"), room, world.supply_cap(side)]
 	return _why_unaffordable(world, side, order.what)
 
 
+# A kind that needs a building cannot be had until one of that side's stands
+# complete: the lab before the mortar, the barracks before the lab.
+static func _why_needs_missing(world: RtsWorld, side: int, kind: String) -> String:
+	var needed: String = RtsKinds.of(kind, "needs")
+	if needed == "" or world.has_complete(side, needed):
+		return ""
+	return "a %s needs a %s first" % [kind, needed]
+
+
+# The first resource short is named, with what is held, so the refusal says
+# what to go and gather.
 static func _why_unaffordable(world: RtsWorld, side: int, kind: String) -> String:
-	var cost: int = RtsKinds.of(kind, "cost")
-	var held: int = world.resources.get(side, 0)
-	return "" if held >= cost else "a %s costs %d and you have %d" % [kind, cost, held]
+	var price: Dictionary = RtsKinds.cost(kind)
+	var held: Dictionary = world.funds(side)
+	for resource: String in RtsKinds.RESOURCES:
+		if held[resource] < price[resource]:
+			return "a %s costs %d %s and you have %d" % [kind, price[resource], resource, held[resource]]
+	return ""
 
 
 static func _pay(world: RtsWorld, side: int, kind: String) -> void:
-	world.resources[side] = world.resources.get(side, 0) - RtsKinds.of(kind, "cost")
+	var price: Dictionary = RtsKinds.cost(kind)
+	for resource: String in RtsKinds.RESOURCES:
+		world.funds(side)[resource] -= price[resource]

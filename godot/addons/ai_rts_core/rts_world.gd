@@ -21,7 +21,7 @@ class_name RtsWorld
 extends RefCounted
 
 const TICKS_PER_SECOND: int = 60
-## The side of whatever belongs to nobody: the mines.
+## The side of whatever belongs to nobody: the deposits.
 const NEUTRAL: int = -1
 ## Cells of flow field settled per tick, across every field being built: the
 ## flow-field layer's share of the frame, in work rather than milliseconds, so
@@ -29,12 +29,21 @@ const NEUTRAL: int = -1
 ## the milliseconds this costs to its share: measured in T19 at about 2.4 us a
 ## cell, so 512 is some 1.2 ms, and a 64 x 64 field takes eight ticks.
 const FIELD_CELLS_PER_TICK: int = 512
+## How close two walking units may stand, centre to centre, in cells: closer,
+## and each is nudged apart. Without it a squad stood in one point and a
+## fight looked like a single frozen unit (the owner, playing T20).
+const PERSONAL_SPACE: float = 0.45
+## The most a nudge moves a unit in one tick, in cells: a third of a
+## shield's stride. At a whole stride a crowd at a gap was pushed back as
+## far as it walked, and stood still.
+const NUDGE: float = 0.01
 ## A field nobody has asked for in this many ticks is dropped: one second.
 const FIELD_KEPT_FOR: int = TICKS_PER_SECOND
 
 var graph: GridGraph
 var tick: int = 0
-## What each side has to spend, by side.
+## What each side has to spend: side -> {resource -> amount}, every
+## resource of `RtsKinds.RESOURCES` named. Read it through `funds`.
 var resources: Dictionary = {}
 ## Who stands where, for every question about who is near.
 var spatial := SpatialHash.new()
@@ -43,12 +52,17 @@ var rng := RandomNumberGenerator.new()
 ## Flow fields started since the world was made: the price of the questions
 ## "how do I get there", paid once per goal rather than once per unit.
 var fields_started: int = 0
-## What each side's workers have carried home, by side: income, kept apart
-## from `resources` so spending cannot hide it.
+## What each side's workers have carried home, by side, both resources
+## together: income, kept apart from `resources` so spending cannot hide it.
 var delivered: Dictionary = {}
 ## Buildings each side has finished raising, by side: kept because a
 ## building raised and then lost leaves no other trace.
 var raised: Dictionary = {}
+
+## Cells a shot cannot pass: walls the map put there. Buildings stop a shot
+## too, and are known from what they cover. Water is blocked to walking but
+## not to shooting, which is why the board's blocked cells are not enough.
+var walls: Dictionary = {}
 
 var _units: Dictionary = {}
 var _next_id: int = 1
@@ -81,6 +95,74 @@ func add_unit(kind: String, side: int, cell: Vector2i, complete: bool = true) ->
 		_fields.clear()
 		_asked.clear()
 	return unit
+
+
+## What `side` holds, by resource. Never null: a side that has had nothing
+## holds nothing of each.
+func funds(side: int) -> Dictionary:
+	if not resources.has(side):
+		var nothing: Dictionary = {}
+		for resource: String in RtsKinds.RESOURCES:
+			nothing[resource] = 0
+		resources[side] = nothing
+	return resources[side]
+
+
+## Give `side` exactly `ore` and `magma`: how a match starts, and how a test
+## sets a side up.
+func set_funds(side: int, ore: int, magma: int = 0) -> void:
+	funds(side)[RtsKinds.ORE] = ore
+	funds(side)[RtsKinds.MAGMA] = magma
+
+
+## The room `side`'s units take: those standing and those queued, since a
+## place in a queue is paid for and so is the room it will need.
+func supply_used(side: int) -> int:
+	var used: int = 0
+	for listed: RtsUnit in _units.values():
+		if listed.side != side:
+			continue
+		used += RtsKinds.of(listed.kind, "supply")
+		for queued: String in listed.queue:
+			used += RtsKinds.of(queued, "supply")
+	return used
+
+
+## The room `side`'s complete buildings give, up to `RtsKinds.SUPPLY_LIMIT`.
+func supply_cap(side: int) -> int:
+	var given: int = 0
+	for listed: RtsUnit in _units.values():
+		if listed.side == side and listed.complete:
+			given += RtsKinds.of(listed.kind, "provides")
+	return mini(given, RtsKinds.SUPPLY_LIMIT)
+
+
+## True when `side` has a complete `kind` standing: what `needs` asks.
+func has_complete(side: int, kind: String) -> bool:
+	for listed: RtsUnit in _units.values():
+		if listed.side == side and listed.kind == kind and listed.complete:
+			return true
+	return false
+
+
+## A wall at `cell`: nobody walks through it and no shot passes it.
+func add_wall(cell: Vector2i) -> void:
+	graph.block(cell)
+	walls[cell] = true
+
+
+## True when a shot from `from` to `to` crosses no wall and no building, the
+## cells it starts and ends in excepted -- the shooter's and the target's
+## own. Sampled every quarter cell, as a straight walk is.
+func line_of_fire(from: Vector2, to: Vector2) -> bool:
+	var first := Vector2i(from.floor())
+	var last := Vector2i(to.floor())
+	var samples: int = ceili(from.distance_to(to) * 4.0)
+	for sample: int in range(1, samples):
+		var cell := Vector2i(from.lerp(to, float(sample) / samples).floor())
+		if cell != first and cell != last and (walls.has(cell) or _covered.has(cell)):
+			return false
+	return true
 
 
 ## The unit with this id, or null when there is none -- or it has died.
@@ -116,7 +198,7 @@ func field_to(goal: Vector2i) -> FlowField:
 func visible_to(side: int, position: Vector2) -> bool:
 	for id: int in spatial.near(position, RtsKinds.LONGEST_SIGHT):
 		var watcher: RtsUnit = _units[id]
-		if watcher.side == side and watcher.position.distance_to(position) <= RtsKinds.of(watcher.kind, "sight"):
+		if watcher.side == side and watcher.position.distance_to(position) <= RtsKinds.sight(watcher.kind, watcher.complete):
 			return true
 	return false
 
@@ -141,6 +223,7 @@ func step(budget: FrameBudget = null) -> void:
 	started = Time.get_ticks_usec()
 	for acting: RtsUnit in units():
 		RtsOrders.act(self, acting)
+	_keep_apart()
 	_bury_the_dead()
 	_forget_old_fields()
 	tick += 1
@@ -156,7 +239,7 @@ func digest() -> String:
 	sides.sort()
 	var values: Array = [tick, rng.state]
 	for side: Variant in sides:
-		values.append([side, resources[side]])
+		values.append([side, funds(side)[RtsKinds.ORE], funds(side)[RtsKinds.MAGMA]])
 	for listed: RtsUnit in units():
 		values.append(listed.state())
 	var context := HashingContext.new()
@@ -219,6 +302,42 @@ static func _ring(centre: Vector2i, ring: int) -> Array[Vector2i]:
 		if maxi(absi(offset.x), absi(offset.y)) == ring:
 			cells.append(centre + offset)
 	return cells
+
+
+# Reynolds' separation, the one steering rule the core keeps: every walking
+# unit not on a move order -- standing, gathering, fighting -- too near
+# another is nudged away from it. Not on a move: a column following one
+# flow field converges on each cell's middle, and nudging it there jammed
+# T19's two armies in the wall's gaps for the whole of the budget's
+# twenty seconds. In id order so two runs
+# agree. Two on the very same point part by their ids, the lower to the
+# west. A nudge into a blocked cell is not taken. `ai_steering` teaches the
+# full set; an addon may not depend on another, so this is written here.
+func _keep_apart() -> void:
+	for moving: RtsUnit in units():
+		if RtsKinds.is_building(moving.kind) or moving.health <= 0 or moving.order == RtsCommand.MOVE:
+			continue
+		var push := Vector2.ZERO
+		for id: int in spatial.near(moving.position, PERSONAL_SPACE):
+			push += _push_from(moving, _units[id])
+		if push == Vector2.ZERO:
+			continue
+		var to: Vector2 = moving.position + push.limit_length(NUDGE)
+		if not graph.is_blocked(Vector2i(floori(to.x), floori(to.y))):
+			place(moving, to)
+
+
+# How far `other` pushes `moving`: nothing from itself, a building or a
+# deposit; else away, by how far inside the personal space it stands.
+func _push_from(moving: RtsUnit, other: RtsUnit) -> Vector2:
+	if other.id == moving.id or RtsKinds.is_building(other.kind):
+		return Vector2.ZERO
+	var apart: Vector2 = moving.position - other.position
+	# The distance first: a direction made up for two on one point has a
+	# length of 1, and measured from it the push came out backwards.
+	var distance: float = apart.length()
+	var away: Vector2 = apart / distance if distance > 0.0 else (Vector2.LEFT if moving.id < other.id else Vector2.RIGHT)
+	return away * (PERSONAL_SPACE - distance)
 
 
 func _settle_fields() -> void:

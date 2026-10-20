@@ -70,21 +70,21 @@ func test_a_command_survives_its_recording_and_a_damaged_one_is_refused() -> voi
 
 func test_a_refused_command_says_why_and_changes_nothing() -> void:
 	var world := RtsWorld.new(GridGraph.new(8, 8), 1)
-	var soldier: RtsUnit = world.add_unit(RtsKinds.SOLDIER, 0, Vector2i(1, 1))
-	var mine: RtsUnit = world.add_unit(RtsKinds.MINE, RtsWorld.NEUTRAL, Vector2i(2, 1))
+	var fighter: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(1, 1))
+	var rocks: RtsUnit = world.add_unit(RtsKinds.ROCKS, RtsWorld.NEUTRAL, Vector2i(2, 1))
 	var before: String = world.digest()
-	assert_str(world.command(1, RtsCommand.move([soldier.id] as Array[int], Vector2i(5, 5)))).contains("not yours")
-	assert_str(world.command(0, RtsCommand.gather([soldier.id] as Array[int], mine.id))).contains("only a worker")
-	assert_str(world.command(0, RtsCommand.move([soldier.id] as Array[int], Vector2i(2, 1)))).contains("nobody can stand")
+	assert_str(world.command(1, RtsCommand.move([fighter.id] as Array[int], Vector2i(5, 5)))).contains("not one of yours")
+	assert_str(world.command(0, RtsCommand.gather([fighter.id] as Array[int], rocks.id))).contains("only a worker")
+	assert_str(world.command(0, RtsCommand.move([fighter.id] as Array[int], Vector2i(2, 1)))).contains("nobody can stand")
 	assert_str(world.digest()).is_equal(before)
 
 
 func test_training_is_paid_for_when_ordered_and_refused_without_the_money() -> void:
 	var world := RtsWorld.new(GridGraph.new(8, 8), 1)
 	var base: RtsUnit = world.add_unit(RtsKinds.BASE, 0, Vector2i(3, 3))
-	world.resources[0] = 60
+	world.set_funds(0, 60)
 	assert_str(world.command(0, RtsCommand.train(base.id, RtsKinds.WORKER))).is_empty()
-	assert_int(world.resources[0]).is_equal(10)
+	assert_int(world.funds(0)[RtsKinds.ORE]).is_equal(10)
 	assert_str(world.command(0, RtsCommand.train(base.id, RtsKinds.WORKER))).contains("costs")
 	assert_int(base.queue.size()).is_equal(1)
 
@@ -92,7 +92,7 @@ func test_training_is_paid_for_when_ordered_and_refused_without_the_money() -> v
 func test_a_trained_unit_steps_out_once_its_ticks_are_done() -> void:
 	var world := RtsWorld.new(GridGraph.new(8, 8), 1)
 	var base: RtsUnit = world.add_unit(RtsKinds.BASE, 0, Vector2i(3, 3))
-	world.resources[0] = 50
+	world.set_funds(0, 50)
 	world.command(0, RtsCommand.train(base.id, RtsKinds.WORKER))
 	for _tick: int in range(RtsKinds.of(RtsKinds.WORKER, "ticks")):
 		world.step()
@@ -112,9 +112,9 @@ func test_a_building_blocks_its_cell_and_frees_it_when_it_falls() -> void:
 
 func test_a_snapshot_is_a_read_only_copy_that_obeys_the_fog() -> void:
 	var world := RtsWorld.new(GridGraph.new(30, 30), 1)
-	world.add_unit(RtsKinds.SOLDIER, 0, Vector2i(1, 1))
-	var near: RtsUnit = world.add_unit(RtsKinds.SOLDIER, 1, Vector2i(3, 1))
-	var far: RtsUnit = world.add_unit(RtsKinds.SOLDIER, 1, Vector2i(28, 28))
+	world.add_unit(RtsKinds.SHIELD, 0, Vector2i(1, 1))
+	var near: RtsUnit = world.add_unit(RtsKinds.SHIELD, 1, Vector2i(3, 1))
+	var far: RtsUnit = world.add_unit(RtsKinds.SHIELD, 1, Vector2i(28, 28))
 	var view: RtsSnapshot = RtsSnapshot.of(world, 0)
 	var ids: Array = view.units.map(func(unit: Dictionary) -> int: return unit["id"])
 	assert_bool(near.id in ids).is_true()
@@ -124,14 +124,14 @@ func test_a_snapshot_is_a_read_only_copy_that_obeys_the_fog() -> void:
 	assert_bool(is_same(view.graph, world.graph)).is_false()
 
 
-func test_an_idle_soldier_goes_for_an_enemy_it_can_see() -> void:
+func test_an_idle_fighter_goes_for_an_enemy_it_can_see() -> void:
 	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
-	var soldier: RtsUnit = world.add_unit(RtsKinds.SOLDIER, 0, Vector2i(1, 1))
+	var fighter: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(1, 1))
 	var enemy: RtsUnit = world.add_unit(RtsKinds.WORKER, 1, Vector2i(4, 1))
 	for _tick: int in range(RtsOrders.LOOK_EVERY):
 		world.step()
-	assert_str(soldier.order).is_equal(RtsCommand.ATTACK)
-	assert_int(soldier.target_id).is_equal(enemy.id)
+	assert_str(fighter.order).is_equal(RtsCommand.ATTACK)
+	assert_int(fighter.target_id).is_equal(enemy.id)
 
 
 func test_the_frame_budget_reads_the_mean_and_the_slow_frames() -> void:
@@ -156,9 +156,9 @@ func test_the_longest_sight_is_the_tables_longest() -> void:
 func test_nobody_can_build_over_a_unit_standing_near_the_cells_edge() -> void:
 	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
 	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(2, 2))
-	var standing: RtsUnit = world.add_unit(RtsKinds.SOLDIER, 0, Vector2i(5, 5))
+	var standing: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(5, 5))
 	world.place(standing, Vector2(5.05, 5.05))
-	world.resources[0] = 500
+	world.set_funds(0, 500)
 	assert_str(world.command(0, RtsCommand.build(worker.id, RtsKinds.BARRACKS, Vector2i(5, 5)))).contains("not free")
 
 
@@ -166,7 +166,7 @@ func test_building_in_the_fog_is_refused_without_saying_who_stands_there() -> vo
 	var world := RtsWorld.new(GridGraph.new(40, 10), 1)
 	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(1, 1))
 	world.add_unit(RtsKinds.WORKER, 1, Vector2i(35, 5))
-	world.resources[0] = 500
+	world.set_funds(0, 500)
 	assert_str(world.command(0, RtsCommand.build(worker.id, RtsKinds.BARRACKS, Vector2i(35, 5)))).contains("not in sight")
 	assert_str(world.command(0, RtsCommand.attack([worker.id] as Array[int], 9999))).is_equal("unit 9999 is not in sight")
 
@@ -174,7 +174,7 @@ func test_building_in_the_fog_is_refused_without_saying_who_stands_there() -> vo
 func test_a_blow_struck_at_a_building_going_up_stays_struck() -> void:
 	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
 	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(4, 5))
-	world.resources[0] = 500
+	world.set_funds(0, 500)
 	world.command(0, RtsCommand.build(worker.id, RtsKinds.BARRACKS, Vector2i(5, 5)))
 	var site: RtsUnit = world.unit(worker.target_id)
 	for _tick: int in range(100):
@@ -187,7 +187,7 @@ func test_a_blow_struck_at_a_building_going_up_stays_struck() -> void:
 
 func test_a_snapshot_board_leaves_out_the_buildings_in_the_fog() -> void:
 	var world := RtsWorld.new(GridGraph.new(40, 10), 1)
-	world.add_unit(RtsKinds.SOLDIER, 0, Vector2i(1, 1))
+	world.add_unit(RtsKinds.SHIELD, 0, Vector2i(1, 1))
 	world.add_unit(RtsKinds.BARRACKS, 1, Vector2i(35, 5))
 	var view: RtsSnapshot = RtsSnapshot.of(world, 0)
 	assert_bool(world.graph.is_blocked(Vector2i(35, 5))).is_true()
@@ -200,40 +200,45 @@ func test_a_straight_walk_does_not_cut_a_corner_the_board_cannot() -> void:
 	for step: int in range(10):
 		graph.block(Vector2i(step, 9 - step))
 	var world := RtsWorld.new(graph, 1)
-	var soldier: RtsUnit = world.add_unit(RtsKinds.SOLDIER, 0, Vector2i(4, 4))
-	world.command(0, RtsCommand.move([soldier.id] as Array[int], Vector2i(5, 5)))
+	var fighter: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(4, 4))
+	world.command(0, RtsCommand.move([fighter.id] as Array[int], Vector2i(5, 5)))
 	for _tick: int in range(120):
 		world.step()
-	assert_vector(soldier.cell()).is_equal(Vector2i(4, 4))
+	assert_vector(fighter.cell()).is_equal(Vector2i(4, 4))
 
 
 func test_a_move_into_a_building_in_the_fog_is_taken_and_ends_at_it() -> void:
 	var world := RtsWorld.new(GridGraph.new(40, 10), 1)
-	var soldier: RtsUnit = world.add_unit(RtsKinds.SOLDIER, 0, Vector2i(1, 5))
+	var fighter: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(1, 5))
 	world.add_unit(RtsKinds.BARRACKS, 1, Vector2i(35, 5))
-	assert_str(world.command(0, RtsCommand.move([soldier.id] as Array[int], Vector2i(35, 5)))).is_empty()
+	assert_str(world.command(0, RtsCommand.move([fighter.id] as Array[int], Vector2i(35, 5)))).is_empty()
+	# Still walking after a tick: stopping at once would say what the fog hides.
 	world.step()
-	assert_str(soldier.order).is_equal(RtsUnit.IDLE)
-	assert_vector(soldier.cell()).is_equal(Vector2i(1, 5))
+	assert_str(fighter.order).is_equal(RtsCommand.MOVE)
+	for _tick: int in range(60 * 30):
+		world.step()
+	# Beside it, the walk over -- and, an enemy in sight, fighting it.
+	assert_str(fighter.order).is_not_equal(RtsCommand.MOVE)
+	assert_float(fighter.position.distance_to(Vector2(35.5, 5.5))).is_less_equal(RtsKinds.of(RtsKinds.SHIELD, "reach") + 0.01)
 
 
 func test_a_move_whose_goal_is_built_over_ends_instead_of_walking_in() -> void:
 	var world := RtsWorld.new(GridGraph.new(20, 10), 1)
-	var soldier: RtsUnit = world.add_unit(RtsKinds.SOLDIER, 0, Vector2i(1, 5))
-	world.command(0, RtsCommand.move([soldier.id] as Array[int], Vector2i(15, 5)))
+	var fighter: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(1, 5))
+	world.command(0, RtsCommand.move([fighter.id] as Array[int], Vector2i(15, 5)))
 	world.step()
-	# Its own side's, so the soldier, idle again, has no enemy to turn on.
+	# Its own side's, so the fighter, idle again, has no enemy to turn on.
 	world.add_unit(RtsKinds.BARRACKS, 0, Vector2i(15, 5))
 	for _tick: int in range(600):
 		world.step()
-	assert_str(soldier.order).is_equal(RtsUnit.IDLE)
-	assert_bool(world.graph.is_blocked(soldier.cell())).is_false()
+	assert_str(fighter.order).is_equal(RtsUnit.IDLE)
+	assert_bool(world.graph.is_blocked(fighter.cell())).is_false()
 
 
 func test_a_site_struck_down_while_going_up_stays_down() -> void:
 	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
 	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(4, 5))
-	world.resources[0] = 500
+	world.set_funds(0, 500)
 	world.command(0, RtsCommand.build(worker.id, RtsKinds.BARRACKS, Vector2i(5, 5)))
 	var site: RtsUnit = world.unit(worker.target_id)
 	world.step()
@@ -246,9 +251,229 @@ func test_a_site_struck_down_while_going_up_stays_down() -> void:
 
 func test_an_enemy_in_sight_shows_what_a_player_sees_and_no_more() -> void:
 	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
-	world.add_unit(RtsKinds.SOLDIER, 0, Vector2i(1, 1))
+	world.add_unit(RtsKinds.SHIELD, 0, Vector2i(1, 1))
 	var enemy: RtsUnit = world.add_unit(RtsKinds.WORKER, 1, Vector2i(3, 1))
 	var shown: Dictionary = RtsSnapshot.of(world, 0).enemies()[0]
 	assert_int(shown["id"]).is_equal(enemy.id)
 	assert_bool(shown.has("order") or shown.has("carrying") or shown.has("queued")).is_false()
 	assert_bool(RtsSnapshot.of(world, 0).mine()[0].has("order")).is_true()
+
+
+func test_a_kind_that_needs_a_building_is_refused_until_one_stands_complete() -> void:
+	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var barracks: RtsUnit = world.add_unit(RtsKinds.BARRACKS, 0, Vector2i(3, 3))
+	world.add_unit(RtsKinds.BASE, 0, Vector2i(6, 6))
+	world.set_funds(0, 1000, 1000)
+	assert_str(world.command(0, RtsCommand.train(barracks.id, RtsKinds.MORTAR))).contains("needs a lab")
+	var lab: RtsUnit = world.add_unit(RtsKinds.LAB, 0, Vector2i(9, 9), false)
+	assert_str(world.command(0, RtsCommand.train(barracks.id, RtsKinds.MORTAR))).contains("needs a lab")
+	lab.complete = true
+	assert_str(world.command(0, RtsCommand.train(barracks.id, RtsKinds.MORTAR))).is_empty()
+
+
+func test_training_past_the_supply_is_refused_and_names_the_room() -> void:
+	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var base: RtsUnit = world.add_unit(RtsKinds.BASE, 0, Vector2i(3, 3))
+	world.set_funds(0, 5000)
+	for index: int in range(9):
+		world.add_unit(RtsKinds.WORKER, 0, Vector2i(index, 8))
+	# A base gives ten: nine standing and one queued fill it.
+	assert_str(world.command(0, RtsCommand.train(base.id, RtsKinds.WORKER))).is_empty()
+	assert_int(world.supply_used(0)).is_equal(10)
+	assert_str(world.command(0, RtsCommand.train(base.id, RtsKinds.WORKER))).contains("0 free of 10")
+	world.add_unit(RtsKinds.DEPOT, 0, Vector2i(10, 10))
+	assert_str(world.command(0, RtsCommand.train(base.id, RtsKinds.WORKER))).is_empty()
+
+
+func test_a_price_in_two_resources_is_paid_in_both_and_refused_on_the_short_one() -> void:
+	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var barracks: RtsUnit = world.add_unit(RtsKinds.BARRACKS, 0, Vector2i(3, 3))
+	world.add_unit(RtsKinds.BASE, 0, Vector2i(6, 6))
+	world.set_funds(0, 500, 10)
+	assert_str(world.command(0, RtsCommand.train(barracks.id, RtsKinds.SHIELD))).contains("25 magma and you have 10")
+	world.set_funds(0, 500, 30)
+	assert_str(world.command(0, RtsCommand.train(barracks.id, RtsKinds.SHIELD))).is_empty()
+	assert_int(world.funds(0)[RtsKinds.ORE]).is_equal(400)
+	assert_int(world.funds(0)[RtsKinds.MAGMA]).is_equal(5)
+
+
+func test_a_worker_carries_home_the_resource_its_deposit_yields() -> void:
+	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	world.add_unit(RtsKinds.BASE, 0, Vector2i(2, 2))
+	var vent: RtsUnit = world.add_unit(RtsKinds.VENT, RtsWorld.NEUTRAL, Vector2i(5, 2))
+	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(4, 3))
+	world.command(0, RtsCommand.gather([worker.id] as Array[int], vent.id))
+	for _tick: int in range(RtsKinds.GATHER_TICKS + 120):
+		world.step()
+	assert_int(world.funds(0)[RtsKinds.MAGMA]).is_equal(RtsKinds.LOAD)
+	assert_int(world.funds(0)[RtsKinds.ORE]).is_equal(0)
+
+
+func test_each_fighter_strikes_the_one_it_beats_twice_as_hard() -> void:
+	for attacker: String in RtsKinds.FIGHTERS:
+		var beaten: Array = RtsKinds.of(attacker, "beats")
+		assert_int(beaten.size()).is_equal(1)
+		assert_int(RtsKinds.blow(attacker, beaten[0])).is_equal(RtsKinds.of(attacker, "damage") * RtsKinds.COUNTER_FACTOR)
+		assert_int(RtsKinds.blow(attacker, RtsKinds.WORKER)).is_equal(RtsKinds.of(attacker, "damage"))
+	# The three close a circle: every fighter is beaten by exactly one other.
+	var beaten_by: Dictionary = {}
+	for attacker: String in RtsKinds.FIGHTERS:
+		beaten_by[RtsKinds.of(attacker, "beats")[0]] = attacker
+	assert_array(beaten_by.keys()).contains_exactly_in_any_order(RtsKinds.FIGHTERS)
+
+
+func test_a_building_takes_a_third_except_from_the_mortar() -> void:
+	assert_int(RtsKinds.blow(RtsKinds.RUNNER, RtsKinds.BASE)).is_equal(RtsKinds.of(RtsKinds.RUNNER, "damage") / RtsKinds.FORTIFIED)
+	assert_int(RtsKinds.blow(RtsKinds.MORTAR, RtsKinds.BASE)).is_equal(RtsKinds.of(RtsKinds.MORTAR, "damage"))
+	assert_int(RtsKinds.blow(RtsKinds.WORKER, RtsKinds.DEPOT)).is_equal(1)
+
+
+func test_a_tower_going_up_sees_its_site_and_not_its_eleven_cells() -> void:
+	var world := RtsWorld.new(GridGraph.new(30, 10), 1)
+	var tower: RtsUnit = world.add_unit(RtsKinds.TOWER, 0, Vector2i(5, 5), false)
+	world.add_unit(RtsKinds.WORKER, 1, Vector2i(14, 5))
+	assert_bool(world.visible_to(0, Vector2(14.5, 5.5))).is_false()
+	assert_bool(world.visible_to(0, Vector2(6.5, 5.5))).is_true()
+	tower.complete = true
+	assert_bool(world.visible_to(0, Vector2(14.5, 5.5))).is_true()
+
+
+func test_a_worker_repairs_a_hurt_building_of_its_own_and_only_that() -> void:
+	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var barracks: RtsUnit = world.add_unit(RtsKinds.BARRACKS, 0, Vector2i(5, 5))
+	var theirs: RtsUnit = world.add_unit(RtsKinds.BARRACKS, 1, Vector2i(8, 8))
+	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(4, 5))
+	var fighter: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(6, 6))
+	assert_str(world.command(0, RtsCommand.repair([worker.id] as Array[int], barracks.id))).contains("not damaged")
+	barracks.health = 100
+	assert_str(world.command(0, RtsCommand.repair([fighter.id] as Array[int], barracks.id))).contains("only a worker")
+	assert_str(world.command(0, RtsCommand.repair([worker.id] as Array[int], theirs.id))).contains("not a building of yours")
+	assert_str(world.command(0, RtsCommand.repair([worker.id] as Array[int], barracks.id))).is_empty()
+	for _tick: int in range(RtsKinds.of(RtsKinds.BARRACKS, "ticks")):
+		world.step()
+	assert_int(barracks.health).is_equal(RtsKinds.of(RtsKinds.BARRACKS, "health"))
+	assert_str(worker.order).is_equal(RtsUnit.IDLE)
+
+
+func test_two_units_on_one_point_drift_apart_and_never_into_a_wall() -> void:
+	# Both at the very west edge of cell (5, 5), a wall in (4, 5): the lower
+	# id is pushed west, which would put it in the wall, and must stay out.
+	var graph := GridGraph.new(10, 10)
+	var world := RtsWorld.new(graph, 1)
+	world.add_wall(Vector2i(4, 5))
+	var one: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(5, 5))
+	var other: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(5, 5))
+	world.place(one, Vector2(5.02, 5.5))
+	world.place(other, Vector2(5.02, 5.5))
+	for _tick: int in range(120):
+		world.step()
+		assert_bool(graph.is_blocked(one.cell())).is_false()
+	assert_float(one.position.distance_to(other.position)).is_greater_equal(RtsWorld.PERSONAL_SPACE - 0.01)
+	assert_float(other.position.x).is_greater(5.3)
+
+
+func test_a_shot_needs_a_line_clear_of_walls_and_buildings_but_not_water() -> void:
+	var world := RtsWorld.new(GridGraph.new(12, 5), 1)
+	world.add_wall(Vector2i(5, 1))
+	world.graph.block(Vector2i(5, 3))
+	world.add_unit(RtsKinds.BARRACKS, 1, Vector2i(5, 2))
+	assert_bool(world.line_of_fire(Vector2(2.5, 1.5), Vector2(8.5, 1.5))).is_false()
+	assert_bool(world.line_of_fire(Vector2(2.5, 2.5), Vector2(8.5, 2.5))).is_false()
+	assert_bool(world.line_of_fire(Vector2(2.5, 3.5), Vector2(8.5, 3.5))).is_true()
+	assert_bool(world.line_of_fire(Vector2(2.5, 2.5), Vector2(5.5, 2.5))).is_true()
+
+
+func test_an_idle_fighter_struck_turns_on_its_striker_and_a_moving_one_does_not() -> void:
+	# The mortar fires from five cells, the edge of the shields' sight.
+	var world := RtsWorld.new(GridGraph.new(30, 8), 1)
+	var idle: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(2, 2))
+	var walking: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(2, 5))
+	var mortar: RtsUnit = world.add_unit(RtsKinds.MORTAR, 1, Vector2i(7, 3))
+	world.place(idle, Vector2(2.5, 3.5))
+	world.place(walking, Vector2(2.5, 4.0))
+	world.command(0, RtsCommand.move([walking.id] as Array[int], Vector2i(28, 7)))
+	world.command(1, RtsCommand.attack([mortar.id] as Array[int], idle.id))
+	for _tick: int in range(5):
+		world.step()
+	assert_int(idle.health).is_less(RtsKinds.of(RtsKinds.SHIELD, "health"))
+	assert_str(idle.order).is_equal(RtsCommand.ATTACK)
+	assert_int(idle.target_id).is_equal(mortar.id)
+	var before: int = walking.health
+	world.command(1, RtsCommand.attack([mortar.id] as Array[int], walking.id))
+	mortar.cooldown = 0
+	world.step()
+	assert_int(walking.health).is_less(before)
+	assert_str(walking.order).is_equal(RtsCommand.MOVE)
+
+
+func test_a_dead_id_and_an_enemy_id_get_one_refusal() -> void:
+	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
+	world.add_unit(RtsKinds.WORKER, 0, Vector2i(1, 1))
+	var theirs: RtsUnit = world.add_unit(RtsKinds.WORKER, 1, Vector2i(8, 8))
+	var alive: String = world.command(0, RtsCommand.move([theirs.id] as Array[int], Vector2i(2, 2)))
+	var gone: String = world.command(0, RtsCommand.move([99] as Array[int], Vector2i(2, 2)))
+	assert_str(alive.replace(str(theirs.id), "#")).is_equal(gone.replace("99", "#"))
+
+
+func test_an_idle_fighter_takes_on_only_what_its_side_can_see() -> void:
+	# Seven cells off: past the shield's sight of five, inside its reach of
+	# sight + 2. Seen by nobody, it is left alone; seen by a tower, attacked.
+	var world := RtsWorld.new(GridGraph.new(20, 10), 1)
+	var shield: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(2, 5))
+	var runner: RtsUnit = world.add_unit(RtsKinds.RUNNER, 1, Vector2i(9, 5))
+	assert_object(RtsOrders.nearest_enemy(world, shield)).is_null()
+	world.add_unit(RtsKinds.TOWER, 0, Vector2i(9, 8))
+	assert_object(RtsOrders.nearest_enemy(world, shield)).is_same(runner)
+
+
+func test_repair_mends_a_little_a_tick_and_takes_up_a_site_left_half_built() -> void:
+	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var barracks: RtsUnit = world.add_unit(RtsKinds.BARRACKS, 0, Vector2i(5, 5))
+	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(4, 5))
+	barracks.health = 100
+	world.command(0, RtsCommand.repair([worker.id] as Array[int], barracks.id))
+	world.step()
+	world.step()
+	assert_int(barracks.health).is_greater(100)
+	assert_int(barracks.health).is_less(110)
+	var site: RtsUnit = world.add_unit(RtsKinds.DEPOT, 0, Vector2i(5, 7), false)
+	site.progress = 300
+	assert_str(world.command(0, RtsCommand.repair([worker.id] as Array[int], site.id))).is_empty()
+	# A walk of a couple of cells, then the 300 ticks the site still owed.
+	for _tick: int in range(420):
+		world.step()
+	assert_bool(site.complete).is_true()
+
+
+func test_a_chase_ends_where_the_side_stops_seeing_its_quarry() -> void:
+	var world := RtsWorld.new(GridGraph.new(40, 5), 1)
+	var shield: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(2, 2))
+	var runner: RtsUnit = world.add_unit(RtsKinds.RUNNER, 1, Vector2i(5, 2))
+	world.command(0, RtsCommand.attack([shield.id] as Array[int], runner.id))
+	world.place(runner, Vector2(30.5, 2.5))
+	# Within one cycle of looks, whichever tick of it is the shield's.
+	for _tick: int in range(RtsOrders.LOOK_EVERY):
+		world.step()
+	assert_str(shield.order).is_equal(RtsUnit.IDLE)
+
+
+func test_an_enemy_in_a_snapshot_carries_no_orders_queue_or_goal() -> void:
+	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
+	world.add_unit(RtsKinds.SHIELD, 0, Vector2i(2, 2))
+	world.add_unit(RtsKinds.BARRACKS, 1, Vector2i(4, 2))
+	for unit: Dictionary in RtsSnapshot.of(world, 0).enemies():
+		for private: String in ["order", "target", "goal", "queue", "queued", "progress", "carrying", "carried"]:
+			assert_bool(unit.has(private)).is_false()
+
+
+func test_a_mortar_does_not_fire_through_a_wall_in_reach() -> void:
+	# A wall between them, three cells apart: in reach, no line of fire.
+	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	for row: int in range(3, 9):
+		world.add_wall(Vector2i(5, row))
+	var mortar: RtsUnit = world.add_unit(RtsKinds.MORTAR, 0, Vector2i(3, 5))
+	var shield: RtsUnit = world.add_unit(RtsKinds.SHIELD, 1, Vector2i(7, 5))
+	world.command(0, RtsCommand.attack([mortar.id] as Array[int], shield.id))
+	for _tick: int in range(30):
+		world.step()
+	assert_int(shield.health).is_equal(RtsKinds.of(RtsKinds.SHIELD, "health"))

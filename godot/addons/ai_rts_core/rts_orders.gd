@@ -4,11 +4,12 @@
 ## walk until in reach, then work until done -- run once a tick by
 ## `RtsWorld.step` for every unit in id order. Walking reads the flow field
 ## to the goal: the arrow under the unit's feet, followed from cell centre to
-## cell centre at the unit's speed. Units pass through each other: steering
-## round one another is T22's lesson (`ai_steering`), not this core's.
+## cell centre at the unit's speed. Units do not steer round one another --
+## that is T22's lesson (`ai_steering`) -- but `RtsWorld` nudges them apart
+## after every tick, so they never stand on one point.
 ##
-## A soldier with no order looks for the nearest enemy it can see and goes
-## for it -- not every tick, but every `LOOK_EVERY` ticks, each soldier on its
+## A fighter with no order looks for the nearest enemy it can see and goes
+## for it -- not every tick, but every `LOOK_EVERY` ticks, each fighter on its
 ## own tick of the cycle, so the questions are spread evenly. Measured in T19:
 ## 200 idle soldiers asking every tick cost about 7 ms, more than the whole
 ## simulation's share. Six looks a second is still quicker than a person.
@@ -24,7 +25,11 @@ const ARRIVED: float = 0.05
 ## walks straight at its goal rather than asking for a field. A chase would
 ## otherwise start a new field every time the quarry stepped into a new cell.
 const STRAIGHT: float = 4.0
-## Ticks between two looks round by an idle soldier.
+## How far past its own sight an idle fighter looks, at what its side sees.
+const ACQUIRE_BEYOND: float = 2.0
+## A reach beyond this is a shot, not a blow, and needs a line of fire.
+const RANGED: float = 2.0
+## Ticks between two looks round by an idle fighter.
 const LOOK_EVERY: int = 10
 
 
@@ -42,17 +47,26 @@ static func act(world: RtsWorld, unit: RtsUnit) -> void:
 			_gather(world, unit)
 		RtsCommand.BUILD:
 			_build(world, unit)
+		RtsCommand.REPAIR:
+			_repair(world, unit)
 		_:
 			_idle(world, unit)
 
 
 ## The nearest enemy `unit` can see, ties to the lowest id; null for none.
+##
+## It looks a little past its own sight, `ACQUIRE_BEYOND` further, at what its
+## side can see: a shield sees five cells and a mortar shoots from five, and
+## a shield that only looked with its own eyes stood under the shells
+## watching (the owner, playing T20). Only what the side sees: never the fog.
 static func nearest_enemy(world: RtsWorld, unit: RtsUnit) -> RtsUnit:
 	var best: RtsUnit = null
 	var sight: float = RtsKinds.of(unit.kind, "sight")
-	for id: int in world.spatial.near(unit.position, sight):
+	for id: int in world.spatial.near(unit.position, sight + ACQUIRE_BEYOND):
 		var other: RtsUnit = world.unit(id)
 		if other.side == unit.side or other.side == RtsWorld.NEUTRAL or other.health <= 0:
+			continue
+		if other.position.distance_to(unit.position) > sight and not world.visible_to(unit.side, other.position):
 			continue
 		if best == null or other.position.distance_to(unit.position) < best.position.distance_to(unit.position):
 			best = other
@@ -84,7 +98,7 @@ static func _walk(world: RtsWorld, unit: RtsUnit, goal: Vector2i, point: Vector2
 
 # True when every cell the straight line from `from` to `to` crosses, sampled
 # every quarter cell, may be walked -- the goal's own cell excepted, since a
-# building or a mine there is what the unit is walking up to.
+# building or a deposit there is what the unit is walking up to.
 static func _line_is_clear(world: RtsWorld, from: Vector2, to: Vector2, goal: Vector2i) -> bool:
 	var samples: int = ceili(from.distance_to(to) * 4.0)
 	var previous := Vector2i(from.floor())
@@ -109,64 +123,98 @@ static func _step_is_clear(world: RtsWorld, from: Vector2i, to: Vector2i, goal: 
 	return not world.graph.is_blocked(Vector2i(to.x, from.y)) and not world.graph.is_blocked(Vector2i(from.x, to.y))
 
 
-# A goal a building has since been raised on can no longer be stood on, so
-# the order is over rather than walked into the wall.
+# A goal a building stands on cannot be stood on, so the walk ends beside
+# it. Ended there, not at once: a unit that stopped the tick it was sent
+# would tell its side a building stands in the fog (T20's review found
+# exactly that), where a player's unit walks up and finds out.
 static func _move(world: RtsWorld, unit: RtsUnit) -> void:
-	if world.graph.is_blocked(unit.goal):
-		unit.order = RtsUnit.IDLE
-		return
-	if _walk(world, unit, unit.goal, Vector2(unit.goal) + Vector2(0.5, 0.5), ARRIVED):
+	var reach: float = RtsKinds.USE_REACH if world.graph.is_blocked(unit.goal) else ARRIVED
+	if _walk(world, unit, unit.goal, Vector2(unit.goal) + Vector2(0.5, 0.5), reach):
 		unit.order = RtsUnit.IDLE
 
 
 static func _idle(world: RtsWorld, unit: RtsUnit) -> void:
 	if RtsKinds.is_building(unit.kind):
 		_train(world, unit)
-	elif unit.kind == RtsKinds.SOLDIER and (world.tick + unit.id) % LOOK_EVERY == 0:
+	elif RtsKinds.fights(unit.kind) and _looking(world, unit):
 		var enemy: RtsUnit = nearest_enemy(world, unit)
 		if enemy != null:
 			unit.order = RtsCommand.ATTACK
 			unit.target_id = enemy.id
 
 
+# True on the tick of the cycle `unit` looks round on: each unit its own, so
+# the questions spread evenly over the ticks.
+static func _looking(world: RtsWorld, unit: RtsUnit) -> bool:
+	return (world.tick + unit.id) % LOOK_EVERY == 0
+
+
 static func _attack(world: RtsWorld, unit: RtsUnit) -> void:
 	var target: RtsUnit = world.unit(unit.target_id)
+	# Gone and out of sight end the order alike, and on the same tick -- a
+	# look, every LOOK_EVERY -- so the order's end says no more than the
+	# side can see: a chase into the fog stops at its edge, as no order could
+	# start one there (T20's review). Asked every tick, the sight question
+	# took the simulation's p95 from 1.7 ms to 3.8 of its 4.0 ms share.
 	if target == null or target.health <= 0:
+		if _looking(world, unit):
+			unit.order = RtsUnit.IDLE
+		return
+	if _looking(world, unit) and not world.visible_to(unit.side, target.position):
 		unit.order = RtsUnit.IDLE
 		return
-	var reach: float = RtsKinds.of(unit.kind, "reach")
+	# A building fills its cell, so reach is counted from the cell's edge:
+	# measured to its middle, attackers walked half way into the walls.
+	var reach: float = RtsKinds.of(unit.kind, "reach") + (0.5 if RtsKinds.is_building(target.kind) else 0.0)
+	# A shot from afar needs a clear line (the owner, playing T20: a shell
+	# went through a base). With none, it closes in until it has one.
+	if reach > RANGED and not world.line_of_fire(unit.position, target.position):
+		reach = RtsKinds.USE_REACH
 	if not _walk(world, unit, target.cell(), target.position, reach):
 		return
 	if unit.cooldown == 0:
 		# The one random number in a fight: a little spread on every blow, drawn
 		# from the match's own dice so a replay strikes the same.
-		target.health -= int(RtsKinds.of(unit.kind, "damage")) + world.rng.randi_range(0, 2)
+		target.health -= RtsKinds.blow(unit.kind, target.kind, world.rng.randi_range(0, 2))
 		unit.cooldown = RtsKinds.of(unit.kind, "cooldown")
+		if world.visible_to(target.side, unit.position):
+			_strike_back(target, unit)
+
+
+# A fighter struck while it stands idle turns on whoever struck it -- when
+# its side can see the striker: an order aimed into the fog would hand the
+# side an id it was never shown. One walking, gathering or
+# already fighting keeps its order -- the order is the player's.
+static func _strike_back(struck: RtsUnit, striker: RtsUnit) -> void:
+	if RtsKinds.fights(struck.kind) and struck.order == RtsUnit.IDLE and struck.health > 0:
+		struck.order = RtsCommand.ATTACK
+		struck.target_id = striker.id
 
 
 static func _gather(world: RtsWorld, unit: RtsUnit) -> void:
-	var mine: RtsUnit = world.unit(unit.target_id)
-	if unit.carrying > 0 or mine == null or mine.health <= 0:
-		_deliver(world, unit, mine != null and mine.health > 0)
+	var deposit: RtsUnit = world.unit(unit.target_id)
+	if unit.carrying > 0 or deposit == null or deposit.health <= 0:
+		_deliver(world, unit, deposit != null and deposit.health > 0)
 		return
-	if not _walk(world, unit, mine.cell(), mine.position, RtsKinds.USE_REACH):
+	if not _walk(world, unit, deposit.cell(), deposit.position, RtsKinds.USE_REACH):
 		return
 	unit.progress += 1
 	if unit.progress >= RtsKinds.GATHER_TICKS:
-		unit.carrying = mini(RtsKinds.LOAD, mine.health)
-		mine.health -= unit.carrying
+		unit.carrying = mini(RtsKinds.LOAD, deposit.health)
+		unit.carried = RtsKinds.of(deposit.kind, "yields")
+		deposit.health -= unit.carrying
 		unit.progress = 0
 
 
-# Carry the load to the nearest base. With the mine gone and nothing to
+# Carry the load to the nearest base. With the deposit gone and nothing to
 # carry, or no base to carry to, the order is over.
-static func _deliver(world: RtsWorld, unit: RtsUnit, mine_left: bool) -> void:
+static func _deliver(world: RtsWorld, unit: RtsUnit, deposit_left: bool) -> void:
 	var base: RtsUnit = world.nearest(unit.position, unit.side, RtsKinds.BASE)
-	if base == null or (unit.carrying == 0 and not mine_left):
+	if base == null or (unit.carrying == 0 and not deposit_left):
 		unit.order = RtsUnit.IDLE
 		return
 	if _walk(world, unit, base.cell(), base.position, RtsKinds.USE_REACH):
-		world.resources[unit.side] = world.resources.get(unit.side, 0) + unit.carrying
+		world.funds(unit.side)[unit.carried] += unit.carrying
 		world.delivered[unit.side] = world.delivered.get(unit.side, 0) + unit.carrying
 		unit.carrying = 0
 
@@ -190,6 +238,29 @@ static func _build(world: RtsWorld, unit: RtsUnit) -> void:
 		site.progress = 0
 		unit.order = RtsUnit.IDLE
 		world.raised[site.side] = world.raised.get(site.side, 0) + 1
+
+
+# Mend at the rate a building goes up -- its full health over its build
+# time -- until it is whole, or gone, then stop. A site left half-built is
+# taken up as a build: the work it already had stays done. Free, as in Age of
+# Empires' early versions; StarCraft charges for it, and a price is a
+# second rule this game does not need.
+static func _repair(world: RtsWorld, unit: RtsUnit) -> void:
+	var site: RtsUnit = world.unit(unit.target_id)
+	if site != null and not site.complete:
+		unit.order = RtsCommand.BUILD
+		_build(world, unit)
+		return
+	var full: int = RtsKinds.of(site.kind, "health") if site != null else 0
+	if site == null or site.health <= 0 or site.health >= full:
+		unit.order = RtsUnit.IDLE
+		return
+	if not _walk(world, unit, site.cell(), site.position, RtsKinds.USE_REACH):
+		return
+	unit.progress += 1
+	var needed: int = RtsKinds.of(site.kind, "ticks")
+	var mended: int = full * unit.progress / needed - full * (unit.progress - 1) / needed
+	site.health = mini(site.health + mended, full)
 
 
 # A building works through its queue: the first in it trains, and when it is
