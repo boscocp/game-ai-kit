@@ -33,7 +33,15 @@ owns, and which other modules it reaches for. Both are declared in
   * M8 a test the selector cannot reach: a gdUnit4 suite not directly inside a
     test folder its module lists, or a Python test its module does not name.
     `affected.py` runs a module's tests by those entries, so a suite one
-    folder deeper would never run on a wave.
+    folder deeper would never run on a wave;
+  * M9 a test that uses another module's test helper without depending on
+    that module's code. The selector follows a test-only use one step: if
+    the league's tests borrow the tactical game's `TacticalMatch`, a change
+    to whatever `TacticalMatch` uses reaches the tactical tests and stops --
+    unless the league depends on the tactical code, which carries it on;
+  * M10 a refit rule of `check_no_training.py` that no manifest, or two,
+    names in `retrain`. A wave runs only the refits its modules name, so an
+    unnamed one would run on main and never on a pull request.
 
 What "depends on" means here, measured
 --------------------------------------
@@ -76,6 +84,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import check_no_training  # noqa: E402 -- for the names of its refit rules
 import check_workflow  # noqa: E402 -- the Makefile reader, fixed in wave 63
 
 MANIFESTS = "modules"
@@ -119,8 +128,12 @@ REPO_PATH_RE = re.compile(r"\b((?:godot|spec|data|python)/[\w./-]*\w)")
 JOINED_PATH_RE = re.compile(r"""["'](godot|spec|data|python)["']((?:\s*/\s*["'][\w.-]+["'])+)""")
 JOINED_PART_RE = re.compile(r"""["']([\w.-]+)["']""")
 IMPORT_RE = re.compile(r"\bgameaikit\.(\w+)")
+# `from gameaikit import ngram` and `from .. import ngram`: the same reach.
+FROM_PACKAGE_IMPORT_RE = re.compile(r"^\s*from\s+(?:gameaikit|\.\.)\s+import\s+(\w+)", re.M)
 # `from ..ngram import ...` inside a subpackage: a sibling package.
 RELATIVE_IMPORT_RE = re.compile(r"^\s*from\s+\.\.(\w+)", re.M)
+# `ROOT.joinpath("spec", "pddl")`, pathlib's other spelling of a join.
+JOINPATH_RE = re.compile(r"""joinpath\(\s*((?:["'][\w.-]+["']\s*,?\s*)+)\)""")
 # What a gate's recipe hands the engine or a script: the vectors' folders.
 RECIPE_PATH_RE = re.compile(r"\$\(CURDIR\)/([\w./-]*\w)")
 READ_SUFFIXES = {".gd", ".tscn", ".json", ".py"}
@@ -267,7 +280,10 @@ def reached_paths(code: str, suffix: str) -> list[str]:
     if suffix == ".py":
         for root, rest in JOINED_PATH_RE.findall(code):
             paths.append("/".join([root, *JOINED_PART_RE.findall(rest)]))
-        packages = IMPORT_RE.findall(code) + RELATIVE_IMPORT_RE.findall(code)
+        for arguments in JOINPATH_RE.findall(code):
+            paths.append("/".join(JOINED_PART_RE.findall(arguments)))
+        packages = (IMPORT_RE.findall(code) + RELATIVE_IMPORT_RE.findall(code)
+                    + FROM_PACKAGE_IMPORT_RE.findall(code))
         paths += [f"python/gameaikit/{package}/" for package in packages]
     return paths
 
@@ -322,6 +338,7 @@ def recipe_reach(repo: pathlib.Path, modules: dict[str, Module],
             commands = recipe(text, gate)
             named = RECIPE_PATH_RE.findall(commands)
             named += [f"godot/{path}" for path in RES_PATH_RE.findall(commands)]
+            named += [f"python/gameaikit/{package}/" for package in IMPORT_RE.findall(commands)]
             for path in named:
                 reach[name] |= owners_of_reach(path, modules, files)
     return reach
@@ -437,6 +454,49 @@ def check_gates(repo: pathlib.Path, modules: dict[str, Module]) -> list[str]:
     return findings
 
 
+def helper_uses(repo: pathlib.Path, files: list[str],
+                modules: dict[str, Module]) -> set[tuple[str, str]]:
+    """(user, owner) for each test that uses another module's test helper.
+
+    A helper is a class declared in a test file, or a test file named by
+    path; the user is the module owning the test that uses it.
+    """
+    helpers = {}
+    for path in files:
+        if path.endswith(".gd") and is_test(path):
+            for name in CLASS_NAME_RE.findall((repo / path).read_text(encoding="utf-8")):
+                helpers[name] = owner_of(path, modules)
+    uses = set()
+    for path in files:
+        mine = owner_of(path, modules)
+        if not is_test(path) or mine is None or not path.endswith((".gd", ".py")):
+            continue
+        code = without_comments((repo / path).read_text(encoding="utf-8"), pathlib.PurePath(path).suffix)
+        found = {helpers[word] for word in WORD_RE.findall(code) if word in helpers}
+        found |= {owner_of(named, modules) for named in reached_paths(code, ".gd") if is_test(named)}
+        uses |= {(mine, owner) for owner in found if owner not in (mine, None)}
+    return uses
+
+
+def check_helpers(repo: pathlib.Path, files: list[str], modules: dict[str, Module]) -> list[str]:
+    """M9: a borrowed test helper comes with a code dependency on its module."""
+    return [f"M9 {user}'s tests use {owner}'s test helpers, and {user} does not depend "
+            f"on {owner}'s code -- a change behind the helper would stop at {owner}"
+            for user, owner in sorted(helper_uses(repo, files, modules))
+            if owner not in modules[user].depends_on]
+
+
+def check_refits(modules: dict[str, Module]) -> list[str]:
+    """M10: each refit rule is named by exactly one module."""
+    findings = []
+    for rule in check_no_training.RETRAINING:
+        named = sorted(name for name, module in modules.items() if rule in module.retrain)
+        if len(named) != 1:
+            findings.append(f"M10 refit {rule} is named by {', '.join(named) or 'no module'}; "
+                            "exactly one must name it, or a wave never runs it")
+    return findings
+
+
 def check_selectable(files: list[str], modules: dict[str, Module]) -> list[str]:
     """M8: every test sits where `affected.py` looks for its module's tests."""
     findings = []
@@ -463,6 +523,9 @@ def check(repo: pathlib.Path) -> list[str]:
                 for name, module in sorted(modules.items()) if module.kind not in KINDS]
     findings += check_ownership(tracked_files(repo), modules)
     findings += check_selectable(tracked_files(repo), modules)
+    findings += check_helpers(repo, [path for path in tracked_files(repo) if (repo / path).is_file()],
+                              modules)
+    findings += check_refits(modules)
     findings += check_dependencies(measured_dependencies(repo, modules),
                                    measured_dependencies(repo, modules, tests=False), modules)
     findings += check_gates(repo, modules)
@@ -518,7 +581,8 @@ MANIFESTS_TEXT = {
     "a": {"module": "a", "kind": "technique", "owns": ["godot/addons/a/"],
           "depends_on": ["core"], "gates": ["test-a-properties"]},
     "play": {"module": "play", "kind": "example", "owns": ["godot/game/play/"],
-             "depends_on": ["a"], "gates": ["test-game-match"]},
+             "depends_on": ["a"], "gates": ["test-game-match"],
+             "retrain": list(check_no_training.RETRAINING)},
     "twin": {"module": "twin", "kind": "example", "owns": ["python/gameaikit/twin/"],
              "depends_on": ["a"]},
 }
@@ -565,6 +629,10 @@ def manifest_cases(root: pathlib.Path, expect) -> None:
     deep = {**FILES, "godot/test/play/deep/x_test.gd": "extends GdUnitTestSuite\n"}
     expect("a suite one folder below its module's", build(root, "deep", deep, changed(
         MANIFESTS_TEXT, "play", owns=["godot/game/play/", "godot/test/play/"])), "M8")
+    expect("a refit nobody names", build(root, "refit-none", FILES,
+           changed(MANIFESTS_TEXT, "play", retrain=[])), "M10")
+    expect("a refit named twice", build(root, "refit-twice", FILES,
+           changed(MANIFESTS_TEXT, "twin", retrain=["N7"])), "M10")
     python_test = {**FILES, "python/tests/test_twin.py": "import unittest\n"}
     expect("a Python test owned by a folder", build(root, "pyfolder", python_test, changed(
         MANIFESTS_TEXT, "twin", owns=["python/gameaikit/twin/", "python/tests/"])), "M8")
@@ -593,6 +661,30 @@ def measurement_cases(root: pathlib.Path, expect) -> None:
         root, "recipe", {**FILES, "spec/pddl/one.json": "{}\n"}, by_file, recipe_reach_text), "M3")
     expect("a declared dependency nothing uses", build(root, "unused", FILES,
            changed(MANIFESTS_TEXT, "play", depends_on=["a", "core"])), "M4")
+    for label, line in (("an import from the package", "from gameaikit import other\n"),
+                        ("an import from the parent", "from .. import other\n"),
+                        ("a joinpath", 'X = ROOT.joinpath("python", "gameaikit", "other")\n')):
+        expect(label, build(root, label.replace(" ", "-"), {
+            **FILES, "python/gameaikit/twin/read.py": line, "python/gameaikit/other/x.py": "X = 1\n"},
+            {**MANIFESTS_TEXT, "other": {"module": "other", "kind": "example",
+                                         "owns": ["python/gameaikit/other/"]}}), "M3")
+    # The whole test root named at once is a planted bad folder in a test,
+    # not a reach into every module's tests.
+    # A module with no dependency at all, so any reach it gains is a finding.
+    expect("res://test named as a whole", build(root, "test-root", {
+        **FILES, "godot/test/lone/lone_test.gd": 'var bad := "res://test"\n',
+        "godot/test/a/a_test.gd": "var x := 1\n"}, {
+            **changed(MANIFESTS_TEXT, "a", owns=["godot/addons/a/", "godot/test/a/"]),
+            "lone": {"module": "lone", "kind": "example", "owns": ["godot/test/lone/"]}}))
+    # Planted: a test borrowing another module's helper, with no code dependency.
+    helper = {**FILES, "godot/test/a/a_match.gd": "class_name AMatch\n",
+              "godot/test/twin/twin_test.gd": "var match := AMatch.new()\n"}
+    borrowed = changed(changed(MANIFESTS_TEXT, "a", owns=["godot/addons/a/", "godot/test/a/"]),
+                       "twin", owns=["python/gameaikit/twin/", "godot/test/twin/"],
+                       depends_on=["a"])
+    expect("a borrowed helper with a code dependency", build(root, "helper-ok", helper, borrowed))
+    expect("a borrowed helper with none", build(root, "helper", helper, changed(
+        borrowed, "twin", depends_on=[], tests_depend_on=["a"])), "M9")
     # Planted: a test's reach declared as the code's, and the reverse.
     tested = {**FILES, "godot/test/play/play_test.gd": "var grid := Grid.new()\n"}
     test_folder = ["godot/game/play/", "godot/test/play/"]

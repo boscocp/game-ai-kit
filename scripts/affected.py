@@ -69,6 +69,10 @@ class Selection:
     reasons: tuple[str, ...]
 
 
+class ChangeUnknown(Exception):
+    """git could not say what changed: the base is not a commit it has."""
+
+
 def changed_paths(repo: pathlib.Path, base: str, head: str | None) -> list[str]:
     """The paths a change touches, from git; with no head, the working tree too.
 
@@ -78,8 +82,10 @@ def changed_paths(repo: pathlib.Path, base: str, head: str | None) -> list[str]:
     preloads the old path went untested. Both ends of a move are changes.
     """
     def git(*args: str) -> list[str]:
-        done = subprocess.run(["git", "-C", str(repo), *args],
-                              capture_output=True, text=True, check=True)
+        done = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True)
+        if done.returncode != 0:
+            raise ChangeUnknown(f"git {' '.join(args)}: {done.stderr.strip()} -- is {base!r} a "
+                                "commit this clone has? (on CI: a first push, or a force push)")
         return [line for line in done.stdout.splitlines() if line]
 
     if head is not None:
@@ -333,7 +339,7 @@ def main(argv: list[str]) -> int:
             paths = [line.strip() for line in stream if line.strip()]
         else:
             paths = changed_paths(args.repo, args.base, args.head)
-    except (check_modules.BadManifest, OSError, subprocess.CalledProcessError) as error:
+    except (check_modules.BadManifest, ChangeUnknown, OSError) as error:
         print(f"affected: {error}", file=sys.stderr)
         return 2
     selection = select(paths, modules)

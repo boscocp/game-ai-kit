@@ -122,25 +122,41 @@ touches, and later a library others can install.
 
 | # | Task | State | Notes |
 |---|---|---|---|
-| T58 | Modules, and gates that run for what a wave touches | todo | wave 63, a plan waiting for the owner's approval: a manifest per module, tests filed by module, `affected.py` over `git diff` and the dependency graph, `make check-affected` for a wave and the full check on `main`; fixes `check_workflow.py`'s W5, which read one line of `check:` and let nine gates go unrun in CI; ports, the small kernel, the registry and the library planned as later tasks |
+| T58 | Modules, and gates that run for what a wave touches | done | wave 63: 23 manifests in `modules/`, held to the code by `lint-modules` (M0-M10); tests filed in `godot/test/<module>/`; `make check-affected` runs the lints and the modules a change reaches (code uses followed on, test-only uses not): 25-64 s for a change that evolves one module, against 550 s; a wave lands by pull request, as desk-panel's do; CI ran for the first time and found four defects in bootstrap and the runner rules; mk fragments dropped (measured, no gain); ports, kernel, registry and the library are later tasks; manual check the owner's |
 
 ---
 
-## Resuming after 2026-10-20 (wave 63, the plan)
+## Resuming after 2026-10-20 (wave 63)
 
-**Where it stopped -- read first.** Branch `wave/63-modules-and-selective-gates`
-holds only the plan: `tasks/T58-modules-and-gates-for-what-changed.md`, the
-owner's modularity review of 2026-10-20. **Nothing in code or gates has
-changed. Do not start T58's steps until the owner approves the plan**, and
-apply any change the owner asks for to the task file first.
+**Where it stopped -- read first.** Wave 63 was T58, the owner's
+modularity request: done, merged by pull request #1. The review record is
+`docs/reviews/63-modules-and-selective-gates.md` (two fresh reviews and
+what CI's first ever runs found).
 
-**What the review measured.** `make check` takes 550 s, all green, and a wave
-pays for it twice (the author, then `wave-merge`). `check_workflow.py`'s W5
-reads one line of `check:`, so nine gates in `make check` have never run in
-CI. `ai_core` holds the tactical board's domain, and `ai_learning` its
-adapter; the Python subpackages import nothing of each other.
+**How a wave runs now.** `make wave-start BRANCH=wave/NN-slug`, work,
+`make check-affected BASE=origin/main` (not `make check`), push, `gh pr
+create`, a review by a fresh context, apply what it found on the branch,
+write the record, `make wave-merge` -- which waits for CI and squash-merges.
+The owner authorised merging a reviewed, green pull request without asking
+(2026-10-20). A new file needs a module: `make lint-modules` says which
+rule it breaks. `make affected BASE=origin/main` says what a change selects
+and why.
 
-**Next, once approved:** T58's steps in order, W5's fix first.
+**What it measured.** `make check` 550 s; `check-affected` 25 s for a
+steering force, 26 s for wave 57's demo change, 64 s for an RTS squad.
+A wave that adds a module still runs everything (its manifest is global).
+
+**For the owner.** T58's manual check: read `scripts/affected.py` top to
+bottom, and the step 7 table in T58, and say whether the saving is worth
+the selector. Still yours from before: T20's manual check, and
+`data/tactical/`.
+
+**Next.** The plan's later tasks, not yet numbered or written: the ports
+and the small kernel (one addon a wave, `ai_learning` first; T58's D4 --
+the measuring found `gameaikit.training` imports the tactical dataset, so
+checkers' fit depends on the tactical game today), the controller registry
+(D5), and the library (the naming decision first). Write them as tasks
+before starting one; then T56, T57 or T23 as the owner prefers.
 
 ## Resuming after 2026-10-20 (wave 62)
 

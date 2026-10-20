@@ -38,9 +38,18 @@ export PYTHONNOUSERSITE=1
 # What would let a cache land on the small disk, or a run fetch unpinned
 # files: the toolchain under $HOME, a cache outside the toolchain, or Hugging
 # Face allowed online. Empty when the environment is sound.
+#
+# A second argument, "runner", forgives the toolchain under $HOME: a GitHub
+# runner has one disk, puts its temp directory under /home/runner, and the
+# first CI run (wave 63) failed here on that alone -- as D5 did in
+# check_disk_layout.py. Only the self-test's look at the real toolchain
+# passes it; the planted case below does not.
 problems() {
-  local root=$1
-  case "$(realpath -m "$root")/" in "$(realpath -m "$HOME")"/*) echo "the toolchain $root is under \$HOME";; esac
+  local root=$1 where=${2:-desk}
+  case "$(realpath -m "$root")/" in "$(realpath -m "$HOME")"/*)
+    if [[ "$where" == runner ]]; then echo "note: the toolchain $root is under \$HOME on a CI runner" >&2
+    else echo "the toolchain $root is under \$HOME"; fi;;
+  esac
   for variable in PIP_CACHE_DIR HF_HOME TORCH_HOME XDG_CACHE_HOME TRITON_CACHE_DIR CUDA_CACHE_PATH; do
     [[ "${!variable:-}" == "$root"/* ]] || echo "$variable is outside the toolchain"
   done
@@ -48,7 +57,8 @@ problems() {
 }
 
 if [[ "${1:-}" == "--self-test" ]]; then
-  found=$(problems "$toolchain")
+  where=desk; [[ "${GITHUB_ACTIONS:-}" == true ]] && where=runner
+  found=$(problems "$toolchain" "$where")
   [[ -z "$found" ]] || { echo "self-test FAIL: $found"; exit 1; }
   # Planted: a toolchain on the small disk must be refused. Comparing each
   # cache against the toolchain alone said yes to it, since the toolchain is

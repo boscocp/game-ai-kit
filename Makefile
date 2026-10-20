@@ -69,13 +69,17 @@ wave-merge: ## Squash-merge the wave's pull request once it is reviewed and CI i
 	@# wait is for GitHub to register the checks of the commit just pushed;
 	@# without it `gh pr checks` can report none, and that is a refusal. And
 	@# the merge names the commit that was reviewed and checked: a push from
-	@# somewhere else in between makes GitHub refuse it.
+	@# somewhere else in between makes GitHub refuse it. The subject is said
+	@# outright, the title `lint-pr-message` held to 72 plus " (#NN)": for a
+	@# one-commit pull request GitHub would otherwise use the commit's own
+	@# subject, which the hook allows up to 80, and add the number past it.
 	@$(PYTHON) scripts/check_branch_base.py --check-review
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	head=$$(git rev-parse HEAD); \
 	git push --quiet origin "$$branch" && sleep 15 && \
 	gh pr checks "$$branch" --watch --fail-fast && \
-	gh pr merge "$$branch" --squash --delete-branch --match-head-commit "$$head" && \
+	subject=$$(gh pr view "$$branch" --json title,number --jq '.title + " (#" + (.number|tostring) + ")"') && \
+	gh pr merge "$$branch" --squash --delete-branch --match-head-commit "$$head" --subject "$$subject" && \
 	git switch main && git pull --ff-only --quiet && \
 	echo "merged $$branch into main"
 

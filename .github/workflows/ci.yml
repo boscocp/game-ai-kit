@@ -18,10 +18,11 @@ permissions:
   contents: read
 
 # A newer push to a pull request cancels the older run. Never on main: the
-# full check runs only there, and a merge landing during it would otherwise
-# leave the previous merge never fully checked.
+# full check runs only there. A group of its own per commit on main, because
+# a run merely *pending* in a shared group is cancelled by the next one queued
+# whatever cancel-in-progress says -- three quick merges lost the middle one.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:

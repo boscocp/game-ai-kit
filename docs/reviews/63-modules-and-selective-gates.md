@@ -63,7 +63,45 @@ had not changed: an RTS change ran the tactical game's whole suite, 287 s.
 Manifests now carry `tests_depend_on` beside `depends_on`, both measured
 and held by M3/M4; the selector stops at the first. The same change: 64 s.
 
+## The second review, of the fixes
+
+A second fresh context read `62c09a4..49687c1`, under the same limits, and
+ran 18 mutants of the fixes on copies outside the tree: 17 were caught by
+the self-tests. **Verdict: the eight findings are fixed, nothing
+under-selects on today's tree**; seven gaps that could later:
+
+1. *Plausible*: a test-only use was followed one step, so a test borrowing
+   another module's helper could miss a change behind the helper. *Fixed*
+   by a rule rather than a longer walk: M9 requires a code dependency on a
+   module whose test helper is borrowed (the league already has one on the
+   tactical game, whose `TacticalMatch` it uses).
+2. *Plausible*: `from gameaikit import x`, `from .. import x`,
+   `joinpath(...)` and a recipe's `-m gameaikit.x` were not measured.
+   *Fixed*, each planted.
+3. *Confirmed*: the `res://test` exclusion had no planted case (the 18th
+   mutant). *Planted*; the first fixture for it could not fail either,
+   because its module already depended on what the mutant added -- caught
+   by running the mutant, and rebuilt on a module with no dependency.
+4. *Plausible*: a run pending on main could still be cancelled by the next.
+   *Fixed*: main's runs have a concurrency group per commit.
+5. *Plausible*: no gate tied the refit rules to the manifests. *Fixed*: M10.
+6. *Plausible*: a one-commit pull request squashes under the commit's
+   subject, not the title. *Fixed*: `wave-merge` passes `--subject`.
+7. *Low*: an unreachable `github.event.before` failed without saying why.
+   *Fixed*: the message names the base and the likely cause.
+
+## What CI found, which no review could
+
+This repository's CI had never run before this pull request. Its first
+three runs found, in order: `make bootstrap` checked the author's default
+toolchain path, not the one it had installed; D5 refused the repository
+for being under `/home/runner`; `bootstrap.sh` created `editor_data/` with
+`godot --version`, which on 4.7.2 creates nothing (`--quit` does); and
+`scripts/artgen`'s self-test refused a toolchain under `$HOME`, where every
+runner keeps its temp directory. All fixed on this branch; the last two
+runner exceptions print a note rather than pass silently.
+
 ## Before the merge
 
-The fixes were reviewed again by a second fresh context (below), and the
-merge waits for CI on the pull request.
+`make check` passed locally on the fixed head (507 s), and the merge waits
+for CI on the pull request.
