@@ -74,7 +74,7 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-search-properties test-planner-properties test-planner-benchmark test-perception-properties \
        test-decisions test-demo-overlays test-menu-walk test-replay test-opponent-levels test-opponent-properties \
        test-clone-rows test-inference-budget test-clone-report test-difficulty-knobs \
-       test-rts-budget test-rts-simulation ## Run every gate
+       test-rts-budget test-rts-simulation test-steering-properties ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability lint-demos \
@@ -215,7 +215,7 @@ train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -289,6 +289,17 @@ test-menace-vectors: import ## The MENACE vectors, against the game's bead playe
 	@# itself, because Python's generator and Godot's differ.
 	@$(GODOT) --headless --path godot -s res://test/menace_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/menace
+
+.PHONY: test-steering-vectors
+test-steering-vectors: import ## The steering trajectories, against ai_steering
+	@# The other half is `make test-python`. The tolerance is sized for
+	@# Vector2's 32-bit floats: docs/godot/vector2-is-single-precision.md.
+	@$(GODOT) --headless --path godot -s res://test/steering_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/steering
+
+.PHONY: test-steering-properties
+test-steering-properties: import ## Arrive comes to rest, seek never does, no force breaks its limit (T22)
+	@$(GODOT) --headless --path godot -s res://test/steering_properties.gd
 
 .PHONY: test-search-properties
 test-search-properties: import ## A* agrees with Dijkstra, over a few hundred boards
@@ -404,6 +415,10 @@ demo-search: import ## The four searches on a board you can paint: drag to edit,
 .PHONY: demo-stealth
 demo-stealth: import ## Cross the hall unseen: arrows walk, shift sprints, space waits, D shows danger
 	@$(GODOT) --path godot res://game/stealth/stealth.tscn
+
+.PHONY: demo-steering
+demo-steering: import ## Four vehicles: seek, arrive, pursue, seek with avoid, each force drawn; click moves a target, space pauses, . one step, R again
+	@$(GODOT) --path godot res://demos/steering/steering_demo.tscn
 
 .PHONY: demo-behaviour
 demo-behaviour: import ## One guard, four ways to decide: 1-4 swap state machine, tree, GOAP, HTN mid-round; space a turn, enter ten

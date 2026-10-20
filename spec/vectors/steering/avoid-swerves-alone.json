@@ -1,0 +1,109 @@
+{
+ "name": "avoid-swerves-alone",
+ "why": "Nothing to go to, only something to miss: an obstacle just off the line ahead. While it is in the look-ahead, avoid pushes sideways at full force, to the side the centre is not on; once the way is clear it asks for nothing and the vehicle coasts past.",
+ "steps_per_second": 60,
+ "vehicle": {
+  "position": [
+   0.0,
+   0.0
+  ],
+  "velocity": [
+   8.0,
+   0.0
+  ],
+  "max_speed": 10.0,
+  "max_force": 20.0
+ },
+ "behaviours": [
+  {
+   "kind": "avoid",
+   "centres": [
+    [
+     6.0,
+     -0.5
+    ]
+   ],
+   "radii": [
+    2.0
+   ],
+   "look_ahead": 5.0
+  }
+ ],
+ "samples": [
+  {
+   "step": 0,
+   "position": [
+    0.0,
+    0.0
+   ],
+   "velocity": [
+    8.0,
+    0.0
+   ],
+   "force": [
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "step": 1,
+   "position": [
+    0.13333333333333333,
+    0.0
+   ],
+   "velocity": [
+    8.0,
+    0.0
+   ],
+   "force": [
+    0.0,
+    20.0
+   ]
+  },
+  {
+   "step": 15,
+   "position": [
+    1.9533581176733654,
+    0.42379155005980157
+   ],
+   "velocity": [
+    7.71067705124089,
+    2.307214161980822
+   ],
+   "force": [
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "step": 30,
+   "position": [
+    3.881027380483591,
+    1.0005950905550072
+   ],
+   "velocity": [
+    7.71067705124089,
+    2.307214161980822
+   ],
+   "force": [
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "step": 60,
+   "position": [
+    7.736365906104028,
+    2.154202171545418
+   ],
+   "velocity": [
+    7.71067705124089,
+    2.307214161980822
+   ],
+   "force": [
+    0.0,
+    0.0
+   ]
+  }
+ ]
+}

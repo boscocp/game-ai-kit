@@ -1,0 +1,133 @@
+{
+ "name": "seek-and-avoid-head-on",
+ "why": "The obstacle exactly on the line to the target: no side to choose, so avoid turns left, and the two together go round. Its first version pushed straight back from the end of the look-ahead instead, and the vehicle stalled in front of the obstacle for good.",
+ "steps_per_second": 60,
+ "vehicle": {
+  "position": [
+   0.0,
+   0.0
+  ],
+  "velocity": [
+   10.0,
+   0.0
+  ],
+  "max_speed": 10.0,
+  "max_force": 20.0
+ },
+ "behaviours": [
+  {
+   "kind": "seek",
+   "target": [
+    24.0,
+    0.0
+   ],
+   "weight": 1.0
+  },
+  {
+   "kind": "avoid",
+   "centres": [
+    [
+     10.0,
+     0.0
+    ]
+   ],
+   "radii": [
+    2.5
+   ],
+   "look_ahead": 6.0,
+   "weight": 2.0
+  }
+ ],
+ "samples": [
+  {
+   "step": 0,
+   "position": [
+    0.0,
+    0.0
+   ],
+   "velocity": [
+    10.0,
+    0.0
+   ],
+   "force": [
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "step": 1,
+   "position": [
+    0.16666666666666666,
+    0.0
+   ],
+   "velocity": [
+    10.0,
+    0.0
+   ],
+   "force": [
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "step": 30,
+   "position": [
+    4.85053796319302,
+    -0.9114929825921783
+   ],
+   "velocity": [
+    9.320636865112286,
+    -3.354118775100383
+   ],
+   "force": [
+    0.6680540802566259,
+    3.8295692960855625
+   ]
+  },
+  {
+   "step": 60,
+   "position": [
+    9.47444976384932,
+    -2.4694189129486053
+   ],
+   "velocity": [
+    9.195619675111896,
+    -2.8081085836162796
+   ],
+   "force": [
+    0.6629303392393666,
+    4.484113241883891
+   ]
+  },
+  {
+   "step": 120,
+   "position": [
+    18.81156026917403,
+    -3.1847962360439666
+   ],
+   "velocity": [
+    9.258975722938237,
+    1.2189937324278195
+   ],
+   "force": [
+    -0.7364667993767338,
+    4.012338951297673
+   ]
+  },
+  {
+   "step": 180,
+   "position": [
+    26.131372595469777,
+    0.23525318924620242
+   ],
+   "velocity": [
+    2.605886335395464,
+    4.252108660728479
+   ],
+   "force": [
+    -12.545522609647898,
+    -5.349209720597241
+   ]
+  }
+ ]
+}
