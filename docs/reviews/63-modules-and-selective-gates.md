@@ -22,7 +22,9 @@ what it should have run.
   and every Python test can be selected, a search for stale test paths and
   orphan `.uid` files (none).
 
-## Findings, and what was done about them
+## Findings
+
+Each is followed by what was done about it.
 
 1. **Confirmed: `spec/pddl/*` selected neither planning-vector gate.**
    Three holes in the measuring: a folder owned file by file was dropped;
@@ -116,6 +118,17 @@ held on the runner: `test-inference-budget` with a 60x margin, the planner
 benchmark, the RTS simulation, the gdUnit suites. **For the owner**: if you would rather a timing gate failed on
 CI, the alternative is a share scaled by a calibration loop on the same
 machine -- a change to what T19's gate claims, so not made here.
+
+## What was done about them
+
+Every finding of both reviews was fixed on this branch, each fix with a
+planted case that fails when the fix is reverted -- checked by running the
+mutant, which caught one planted case that could not fail (the `res://test`
+fixture) and had it rebuilt. Nothing was deferred. The one choice left open
+for the owner is the timing gates on a CI runner, above. CI's own findings
+-- bootstrap, D5, `editor_data/`, `artgen`, the RTS frame shares -- were
+fixed the same way, and the last run (`012bda9`) was green on all three
+jobs, with the whole of `make check` run by `check-affected`.
 
 ## Before the merge
 
