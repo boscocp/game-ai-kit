@@ -101,6 +101,18 @@ for being under `/home/runner`; `bootstrap.sh` created `editor_data/` with
 runner keeps its temp directory. All fixed on this branch; the last two
 runner exceptions print a note rather than pass silently.
 
+The fourth run found the one step 1 predicted: `test-rts-budget`, which had
+never run in CI, measured the core's simulation at 2.33 ms a step on the
+runner against 0.7 ms on the desk, and its 95th percentile 0.1 ms over its
+share. The shares are a frame on the machine a person plays on, so on a
+GitHub runner the timing verdict is now printed as a note; the checks that
+hold on any machine (planted budgets refused, armies that move and fight,
+flow fields that pay back) still fail there. Locally it is judged as before.
+`test-inference-budget` held on the runner with a 60x margin and is judged
+everywhere. **For the owner**: if you would rather a timing gate failed on
+CI, the alternative is a share scaled by a calibration loop on the same
+machine -- a change to what T19's gate claims, so not made here.
+
 ## Before the merge
 
 `make check` passed locally on the fixed head (507 s), and the merge waits
