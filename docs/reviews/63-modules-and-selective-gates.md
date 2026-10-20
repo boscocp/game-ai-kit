@@ -108,8 +108,12 @@ share. The shares are a frame on the machine a person plays on, so on a
 GitHub runner the timing verdict is now printed as a note; the checks that
 hold on any machine (planted budgets refused, armies that move and fight,
 flow fields that pay back) still fail there. Locally it is judged as before.
-`test-inference-budget` held on the runner with a 60x margin and is judged
-everywhere. **For the owner**: if you would rather a timing gate failed on
+The fifth run found the same in `test-rts-match`: its claims 3 and 4 are
+frame shares too (side 1's tactics at a 95th percentile of 1.27 ms against
+1.00), and are reported on a runner the same way; claims 1, 2 and 5 and the
+planted cases are judged everywhere. Every other timing gate in `make check`
+held on the runner: `test-inference-budget` with a 60x margin, the planner
+benchmark, the RTS simulation, the gdUnit suites. **For the owner**: if you would rather a timing gate failed on
 CI, the alternative is a share scaled by a calibration loop on the same
 machine -- a change to what T19's gate claims, so not made here.
 
