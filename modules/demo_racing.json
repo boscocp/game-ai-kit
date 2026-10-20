@@ -1,0 +1,17 @@
+{
+  "module": "demo_racing",
+  "kind": "example",
+  "about": "Three drivers in one car: a lookahead point, a speed profile, and difficulty without a rubber band.",
+  "owns": [
+    "godot/demos/racing/",
+    "godot/test/demo_racing/"
+  ],
+  "depends_on": [
+    "ai_steering",
+    "game_shared"
+  ],
+  "gates": [
+    "test-racing-ladder",
+    "test-racing-does-not-cheat"
+  ]
+}
