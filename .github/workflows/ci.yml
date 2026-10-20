@@ -102,6 +102,9 @@ jobs:
       - run: make test-rts-simulation
         env:
           GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
+      - run: make test-rts-match
+        env:
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
       - run: make test-steering-properties
         env:
           GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain

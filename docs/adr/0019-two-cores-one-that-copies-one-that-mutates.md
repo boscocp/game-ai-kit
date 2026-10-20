@@ -73,3 +73,21 @@ It depends on `ai_core` (the `GridGraph`) and on nothing else, as invariant
 - The numbers are one machine's. `make test-rts-budget` re-measures; the
   flow-field p95 is the closest to its share and is the first to watch on a
   slower machine.
+
+
+## Amended in T20 (2026-10-20)
+
+T20 replaced `RtsKinds`' starter table with the minimum game's, as T19
+said it would: two resources, a population cap, a building a kind needs,
+the counter circle, buildings a third as hurt by anything but the mortar,
+and the tower whose sight of 11 cells is now `LONGEST_SIGHT`. Every fog
+question looks that far, so `make test-rts-budget` re-measured the
+simulation at **0.85 ms** mean, 0.94 ms p95 (from 0.68 and 0.80), still
+under its 4.0 ms share; the flow fields were unchanged (0.23 mean, 1.26
+p95 of 1.5).
+
+It also found that a move ordered onto a building in the fog ended on the
+tick it was given, because `RtsOrders._move` read the world's board: a
+unit that stops at once tells its side something stands there. The walk
+now ends beside the building, as a player's unit would, and
+`rts_core_test.gd` asserts the unit is still walking after a tick.

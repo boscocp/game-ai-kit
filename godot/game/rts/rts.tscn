@@ -1,0 +1,41 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://game/rts/rts.gd" id="1_rts"]
+[ext_resource type="Script" path="res://game/rts/rts_view.gd" id="2_view"]
+[ext_resource type="Script" path="res://game/rts/rts_thinking.gd" id="3_thinking"]
+[ext_resource type="Script" path="res://game/legend.gd" id="4_legend"]
+
+[node name="Rts" type="Node2D"]
+script = ExtResource("1_rts")
+
+[node name="RtsView" type="Node2D" parent="."]
+script = ExtResource("2_view")
+
+[node name="RtsThinking" type="Node2D" parent="."]
+script = ExtResource("3_thinking")
+
+[node name="Interface" type="CanvasLayer" parent="."]
+
+[node name="Header" type="Label" parent="Interface"]
+offset_left = 16.0
+offset_top = 2.0
+offset_right = 1272.0
+offset_bottom = 54.0
+theme_override_font_sizes/font_size = 12
+text = "loading"
+
+[node name="Legend" type="Control" parent="Interface"]
+offset_left = 990.0
+offset_top = 56.0
+offset_right = 1272.0
+offset_bottom = 220.0
+script = ExtResource("4_legend")
+
+[node name="Thinking" type="Label" parent="Interface"]
+offset_left = 990.0
+offset_top = 226.0
+offset_right = 1272.0
+offset_bottom = 712.0
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+text = "loading"

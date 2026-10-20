@@ -1,0 +1,128 @@
+{
+  "name": "the RTS build order, mortars from the opening",
+  "why": "The domain the RTS commander plans its build order with (T20), from the opening: room to spare and nothing built. Mortars beat shields and sit at the end of the longest chain -- workers, magma, room, barracks, lab -- so this is the plan that shows the chain whole.",
+  "domain": "rts-build-order-domain.pddl",
+  "problem": "rts-build-order-problem.pddl",
+  "actions": [
+    {
+      "name": "train_workers",
+      "preconditions": [
+        "supply_room"
+      ],
+      "deletes": [
+        "supply_room"
+      ],
+      "adds": [
+        "workers_saturated"
+      ]
+    },
+    {
+      "name": "build_depot",
+      "preconditions": [],
+      "deletes": [],
+      "adds": [
+        "supply_room"
+      ]
+    },
+    {
+      "name": "mine_magma",
+      "preconditions": [
+        "workers_saturated"
+      ],
+      "deletes": [],
+      "adds": [
+        "magma_flowing"
+      ]
+    },
+    {
+      "name": "build_barracks",
+      "preconditions": [],
+      "deletes": [],
+      "adds": [
+        "barracks_up"
+      ]
+    },
+    {
+      "name": "build_lab",
+      "preconditions": [
+        "barracks_up",
+        "magma_flowing"
+      ],
+      "deletes": [],
+      "adds": [
+        "lab_up"
+      ]
+    },
+    {
+      "name": "build_tower",
+      "preconditions": [
+        "magma_flowing"
+      ],
+      "deletes": [],
+      "adds": [
+        "tower_up"
+      ]
+    },
+    {
+      "name": "expand",
+      "preconditions": [
+        "workers_saturated"
+      ],
+      "deletes": [],
+      "adds": [
+        "expansion_up"
+      ]
+    },
+    {
+      "name": "train_runners",
+      "preconditions": [
+        "barracks_up",
+        "supply_room"
+      ],
+      "deletes": [
+        "supply_room"
+      ],
+      "adds": [
+        "runners_ready"
+      ]
+    },
+    {
+      "name": "train_shields",
+      "preconditions": [
+        "barracks_up",
+        "supply_room",
+        "magma_flowing"
+      ],
+      "deletes": [
+        "supply_room"
+      ],
+      "adds": [
+        "shields_ready"
+      ]
+    },
+    {
+      "name": "train_mortars",
+      "preconditions": [
+        "lab_up",
+        "supply_room",
+        "magma_flowing"
+      ],
+      "deletes": [
+        "supply_room"
+      ],
+      "adds": [
+        "mortars_ready"
+      ]
+    }
+  ],
+  "init": [
+    "supply_room"
+  ],
+  "goal": [
+    "mortars_ready"
+  ],
+  "expect": {
+    "solved": true,
+    "steps": 6
+  }
+}

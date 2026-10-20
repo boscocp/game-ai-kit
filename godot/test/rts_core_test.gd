@@ -212,9 +212,14 @@ func test_a_move_into_a_building_in_the_fog_is_taken_and_ends_at_it() -> void:
 	var fighter: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(1, 5))
 	world.add_unit(RtsKinds.BARRACKS, 1, Vector2i(35, 5))
 	assert_str(world.command(0, RtsCommand.move([fighter.id] as Array[int], Vector2i(35, 5)))).is_empty()
+	# Still walking after a tick: stopping at once would say what the fog hides.
 	world.step()
-	assert_str(fighter.order).is_equal(RtsUnit.IDLE)
-	assert_vector(fighter.cell()).is_equal(Vector2i(1, 5))
+	assert_str(fighter.order).is_equal(RtsCommand.MOVE)
+	for _tick: int in range(60 * 30):
+		world.step()
+	# Beside it, the walk over -- and, an enemy in sight, fighting it.
+	assert_str(fighter.order).is_not_equal(RtsCommand.MOVE)
+	assert_float(fighter.position.distance_to(Vector2(35.5, 5.5))).is_less_equal(RtsKinds.of(RtsKinds.SHIELD, "reach") + 0.01)
 
 
 func test_a_move_whose_goal_is_built_over_ends_instead_of_walking_in() -> void:
@@ -315,3 +320,9 @@ func test_each_fighter_strikes_the_one_it_beats_twice_as_hard() -> void:
 	for attacker: String in RtsKinds.FIGHTERS:
 		beaten_by[RtsKinds.of(attacker, "beats")[0]] = attacker
 	assert_array(beaten_by.keys()).contains_exactly_in_any_order(RtsKinds.FIGHTERS)
+
+
+func test_a_building_takes_a_third_except_from_the_mortar() -> void:
+	assert_int(RtsKinds.blow(RtsKinds.RUNNER, RtsKinds.BASE)).is_equal(RtsKinds.of(RtsKinds.RUNNER, "damage") / RtsKinds.FORTIFIED)
+	assert_int(RtsKinds.blow(RtsKinds.MORTAR, RtsKinds.BASE)).is_equal(RtsKinds.of(RtsKinds.MORTAR, "damage"))
+	assert_int(RtsKinds.blow(RtsKinds.WORKER, RtsKinds.DEPOT)).is_equal(1)

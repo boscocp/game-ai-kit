@@ -109,13 +109,13 @@ static func _step_is_clear(world: RtsWorld, from: Vector2i, to: Vector2i, goal: 
 	return not world.graph.is_blocked(Vector2i(to.x, from.y)) and not world.graph.is_blocked(Vector2i(from.x, to.y))
 
 
-# A goal a building has since been raised on can no longer be stood on, so
-# the order is over rather than walked into the wall.
+# A goal a building stands on cannot be stood on, so the walk ends beside
+# it. Ended there, not at once: a unit that stopped the tick it was sent
+# would tell its side a building stands in the fog (T20's review found
+# exactly that), where a player's unit walks up and finds out.
 static func _move(world: RtsWorld, unit: RtsUnit) -> void:
-	if world.graph.is_blocked(unit.goal):
-		unit.order = RtsUnit.IDLE
-		return
-	if _walk(world, unit, unit.goal, Vector2(unit.goal) + Vector2(0.5, 0.5), ARRIVED):
+	var reach: float = RtsKinds.USE_REACH if world.graph.is_blocked(unit.goal) else ARRIVED
+	if _walk(world, unit, unit.goal, Vector2(unit.goal) + Vector2(0.5, 0.5), reach):
 		unit.order = RtsUnit.IDLE
 
 

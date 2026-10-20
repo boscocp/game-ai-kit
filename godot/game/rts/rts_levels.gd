@@ -1,0 +1,41 @@
+## The RTS's difficulty levels: T12's three knobs, read the way real time
+## reads them, and nothing else.
+##
+## A level is a `Difficulty` -- the same class, the same three fields,
+## held to them by `test/difficulty_knobs.gd` -- so the never-cheat rule is
+## the one T12 wrote: no level sees, earns or may order anything another
+## does not. What each knob means here:
+##
+## - `plan_horizon`: how many steps of the build order the commander looks
+##   ahead. Short, and it walks towards the lab without seeing the mortars
+##   at the end of the chain -- a partial plan, followed and replanned.
+## - `search_depth`: 1, a squad weighs the enemy at the region it scores; 2,
+##   also the enemy round it, who could arrive while it fights.
+## - `evaluation_noise`: how much each region's score is blurred, as a
+##   fraction either way, before a squad takes the best.
+##
+## Chosen by measurement, not taste: `test/rts_match.gd` plays each level
+## against the one below and prints the record, and a level that cannot be
+## told from its neighbour is cut, as T12 cut its five to three.
+##
+## When not to use it: to make a side weaker by handicapping its economy.
+## That is a different game, not a level.
+class_name RtsLevels
+extends RefCounted
+
+
+## The levels, weakest first.
+static func presets() -> Array[Difficulty]:
+	return [
+		Difficulty.new("easy", 2, 1, 0.6),
+		Difficulty.new("normal", 4, 1, 0.2),
+		Difficulty.new("hard", 8, 2, 0.0),
+	]
+
+
+## The preset called `level_name`, or null.
+static func named(level_name: String) -> Difficulty:
+	for level: Difficulty in presets():
+		if level.name == level_name:
+			return level
+	return null
