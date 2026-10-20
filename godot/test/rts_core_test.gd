@@ -326,3 +326,13 @@ func test_a_building_takes_a_third_except_from_the_mortar() -> void:
 	assert_int(RtsKinds.blow(RtsKinds.RUNNER, RtsKinds.BASE)).is_equal(RtsKinds.of(RtsKinds.RUNNER, "damage") / RtsKinds.FORTIFIED)
 	assert_int(RtsKinds.blow(RtsKinds.MORTAR, RtsKinds.BASE)).is_equal(RtsKinds.of(RtsKinds.MORTAR, "damage"))
 	assert_int(RtsKinds.blow(RtsKinds.WORKER, RtsKinds.DEPOT)).is_equal(1)
+
+
+func test_a_tower_going_up_sees_its_site_and_not_its_eleven_cells() -> void:
+	var world := RtsWorld.new(GridGraph.new(30, 10), 1)
+	var tower: RtsUnit = world.add_unit(RtsKinds.TOWER, 0, Vector2i(5, 5), false)
+	world.add_unit(RtsKinds.WORKER, 1, Vector2i(14, 5))
+	assert_bool(world.visible_to(0, Vector2(14.5, 5.5))).is_false()
+	assert_bool(world.visible_to(0, Vector2(6.5, 5.5))).is_true()
+	tower.complete = true
+	assert_bool(world.visible_to(0, Vector2(14.5, 5.5))).is_true()

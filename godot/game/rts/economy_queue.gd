@@ -181,7 +181,7 @@ func _walking_to(view: RtsSnapshot, site: Vector2i) -> Dictionary:
 static func _in_sight(view: RtsSnapshot, cell: Vector2i) -> bool:
 	var middle: Vector2 = Vector2(cell) + Vector2(0.5, 0.5)
 	for unit: Dictionary in view.mine():
-		if (unit["position"] as Vector2).distance_to(middle) <= float(RtsKinds.of(unit["kind"], "sight")):
+		if (unit["position"] as Vector2).distance_to(middle) <= RtsKinds.sight(unit["kind"], unit["complete"]):
 			return true
 	return false
 

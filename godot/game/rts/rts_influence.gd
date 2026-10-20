@@ -154,7 +154,7 @@ func _trust(memory: Dictionary, now: int) -> float:
 
 static func _in_sight(view: RtsSnapshot, position: Vector2) -> bool:
 	for unit: Dictionary in view.mine():
-		if (unit["position"] as Vector2).distance_to(position) <= float(RtsKinds.of(unit["kind"], "sight")):
+		if (unit["position"] as Vector2).distance_to(position) <= RtsKinds.sight(unit["kind"], unit["complete"]):
 			return true
 	return false
 

@@ -165,7 +165,7 @@ func field_to(goal: Vector2i) -> FlowField:
 func visible_to(side: int, position: Vector2) -> bool:
 	for id: int in spatial.near(position, RtsKinds.LONGEST_SIGHT):
 		var watcher: RtsUnit = _units[id]
-		if watcher.side == side and watcher.position.distance_to(position) <= RtsKinds.of(watcher.kind, "sight"):
+		if watcher.side == side and watcher.position.distance_to(position) <= RtsKinds.sight(watcher.kind, watcher.complete):
 			return true
 	return false
 

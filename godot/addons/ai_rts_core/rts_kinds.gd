@@ -92,6 +92,9 @@ const COUNTER_FACTOR: int = 2
 ## handful of runners razed a base in two minutes and no match reached the
 ## lab -- measured on the first matches of `test/rts_match.gd`.
 const FORTIFIED: int = 3
+## What a building still going up sees: its own cell and the worker raising
+## it, never the tower's eleven cells the moment it is paid for.
+const SITE_SIGHT: float = 1.5
 ## The widest sight in the table: how far a fog question has to look.
 const LONGEST_SIGHT: float = 11.0
 
@@ -110,6 +113,13 @@ static func cost(kind: String) -> Dictionary:
 	for resource: String in RESOURCES:
 		whole[resource] = priced.get(resource, 0)
 	return whole
+
+
+## How far a `kind` sees: its row's sight once `complete`, `SITE_SIGHT`
+## while it goes up. Every fog question asks this, never the row.
+static func sight(kind: String, complete: bool) -> float:
+	var full: float = of(kind, "sight")
+	return full if complete else minf(full, SITE_SIGHT)
 
 
 ## True for the kinds that stand still and block their cell.

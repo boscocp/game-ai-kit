@@ -259,7 +259,7 @@ func _draw_fog() -> void:
 	var seen := PackedByteArray()
 	seen.resize(explored.size())
 	for unit: Dictionary in view.mine():
-		_mark_seen(seen, unit["position"], RtsKinds.of(unit["kind"], "sight"))
+		_mark_seen(seen, unit["position"], RtsKinds.sight(unit["kind"], unit["complete"]))
 	for index: int in range(seen.size()):
 		if seen[index] == 1:
 			explored[index] = 1

@@ -14,6 +14,10 @@ const SEEDS: int = 10
 
 
 func _init() -> void:
+	if "levels" in OS.get_cmdline_user_args():
+		_levels()
+		quit(0)
+		return
 	var normal: Difficulty = RtsLevels.named("normal")
 	_pairing("commander (normal, STRIPS) vs the queues alone",
 		func(side: int, seed_value: int) -> RtsSide: return RtsCommander.new(side, normal, seed_value),
@@ -21,6 +25,16 @@ func _init() -> void:
 	_pairing("commander STRIPS vs commander HTN (normal)",
 		func(side: int, seed_value: int) -> RtsSide: return RtsCommander.new(side, normal, seed_value),
 		func(side: int, seed_value: int) -> RtsSide: return RtsCommander.new(side, normal, seed_value, BuildOrder.Planner.HTN))
+	_levels()
+	_pairing("the queues vs the queues: the seat's bias, west first",
+		func(side: int, seed_value: int) -> RtsSide: return QueueSide.new(side, normal, seed_value),
+		func(side: int, seed_value: int) -> RtsSide: return QueueSide.new(side, normal, seed_value), true)
+	_planners_on_the_same_questions()
+	quit(0)
+
+
+# Each level against the one below it. `-- levels` runs only this.
+func _levels() -> void:
 	var levels: Array[Difficulty] = RtsLevels.presets()
 	for index: int in range(1, levels.size()):
 		var upper: Difficulty = levels[index]
@@ -28,11 +42,6 @@ func _init() -> void:
 		_pairing("%s vs %s" % [upper.name, lower.name],
 			func(side: int, seed_value: int) -> RtsSide: return RtsCommander.new(side, upper, seed_value),
 			func(side: int, seed_value: int) -> RtsSide: return RtsCommander.new(side, lower, seed_value))
-	_pairing("the queues vs the queues: the seat's bias, west first",
-		func(side: int, seed_value: int) -> RtsSide: return QueueSide.new(side, normal, seed_value),
-		func(side: int, seed_value: int) -> RtsSide: return QueueSide.new(side, normal, seed_value), true)
-	_planners_on_the_same_questions()
-	quit(0)
 
 
 # Every (facts, goal) the commander asked in one match, planned again by

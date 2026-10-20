@@ -28,11 +28,17 @@ extends RefCounted
 
 
 ## The levels, weakest first.
+##
+## Two, not T12's three: on 2026-10-20, ten seeds from both seats, a "hard"
+## of horizon 8, depth 2 and no noise went 11 - 9 and then 10 - 10 against
+## normal, and was cut -- the plans here are a step or two long, so a
+## longer horizon changes nothing, and depth 2 moved no squad that mattered.
+## Normal's noise is 0.2: at 0.5 it misjudged the enemy enough to go 11 - 9
+## with easy, which plans nothing at all.
 static func presets() -> Array[Difficulty]:
 	return [
 		Difficulty.new("easy", 0, 1, 0.6),
-		Difficulty.new("normal", 4, 1, 0.5),
-		Difficulty.new("hard", 8, 2, 0.0),
+		Difficulty.new("normal", 4, 1, 0.2),
 	]
 
 

@@ -109,7 +109,7 @@ func test_the_rts_levels_are_t12s_class_and_its_three_knobs() -> void:
 	var names: Array[String] = []
 	for level: Difficulty in RtsLevels.presets():
 		names.append(level.name)
-	assert_array(names).contains_exactly(["easy", "normal", "hard"])
+	assert_array(names).contains_exactly(["easy", "normal"])
 	assert_array(Difficulty.KNOBS).contains_exactly(["plan_horizon", "search_depth", "evaluation_noise"])
 
 

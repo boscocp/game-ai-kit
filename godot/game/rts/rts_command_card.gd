@@ -29,7 +29,7 @@ const ROLES: Dictionary = {
 	RtsKinds.BARRACKS: "trains runners, shields and mortars",
 	RtsKinds.LAB: "lets the barracks train mortars",
 	RtsKinds.DEPOT: "8 more supply, so more units",
-	RtsKinds.TOWER: "sees 11 cells round it",
+	RtsKinds.TOWER: "sees 11 cells round it once built -- it does not shoot; it buys sight without a unit",
 	RtsKinds.ROCKS: "ore, for workers to gather",
 	RtsKinds.VENT: "magma, for workers to gather",
 }
