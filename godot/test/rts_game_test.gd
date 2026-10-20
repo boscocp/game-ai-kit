@@ -140,3 +140,35 @@ func _with_workers_on_ore(world: RtsWorld) -> RtsSnapshot:
 			workers.append(unit.id)
 	world.command(RtsScenario.WEST, RtsCommand.gather(workers, rocks[0].id))
 	return RtsSnapshot.of(world, RtsScenario.WEST)
+
+
+func test_runners_focus_the_mortar_they_beat_before_a_shield_and_a_worker() -> void:
+	var world := RtsWorld.new(GridGraph.new(20, 10), 1)
+	for index: int in range(3):
+		world.add_unit(RtsKinds.RUNNER, 0, Vector2i(5, 3 + index))
+	var shield: RtsUnit = world.add_unit(RtsKinds.SHIELD, 1, Vector2i(8, 4))
+	var mortar: RtsUnit = world.add_unit(RtsKinds.MORTAR, 1, Vector2i(9, 5))
+	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 1, Vector2i(7, 3))
+	var view: RtsSnapshot = RtsSnapshot.of(world, 0)
+	var scored: Array[Dictionary] = FocusFire.scores(view, view.mine(), Vector2(5.5, 4.5), Squad.NEAR)
+	assert_int(scored[0]["id"]).is_equal(mortar.id)
+	assert_str(scored[0]["why"]).contains("we beat it")
+	assert_int(scored[-1]["id"]).is_equal(worker.id)
+	assert_bool(scored.any(func(entry: Dictionary) -> bool: return entry["id"] == shield.id)).is_true()
+
+
+func test_a_member_that_struck_the_nearest_is_turned_to_the_squads_focus() -> void:
+	var world := RtsWorld.new(GridGraph.new(20, 10), 1)
+	var squad := Squad.new(1, 0)
+	for index: int in range(3):
+		squad.members.append(world.add_unit(RtsKinds.RUNNER, 0, Vector2i(5, 3 + index)).id)
+	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 1, Vector2i(6, 3))
+	var mortar: RtsUnit = world.add_unit(RtsKinds.MORTAR, 1, Vector2i(9, 5))
+	world.command(0, RtsCommand.attack([squad.members[0]] as Array[int], worker.id))
+	var view: RtsSnapshot = RtsSnapshot.of(world, 0)
+	squad.update(view)
+	assert_str(squad.machine.current).is_equal(Squad.FIGHT)
+	var given: Array[RtsCommand] = squad.commands(view)
+	assert_int(given.size()).is_equal(1)
+	assert_int(given[0].target_id).is_equal(mortar.id)
+	assert_bool(squad.members[0] in given[0].unit_ids).is_true()

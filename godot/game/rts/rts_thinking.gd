@@ -53,6 +53,8 @@ func lines() -> Array[String]:
 			" -> " + squad["target"] if squad["state"] == Squad.ADVANCE else ""])
 		if squad["news"] != "":
 			said.append("  " + squad["news"])
+		if squad["state"] == Squad.FIGHT and not (squad["focus"] as Dictionary).is_empty():
+			said.append("  focus: %s %d -- %s" % [squad["focus"]["kind"], squad["focus"]["id"], squad["focus"]["why"]])
 	return said
 
 
@@ -77,6 +79,8 @@ func _draw_squad(squad: Squad) -> void:
 	draw_circle(from, 4.0, colour)
 	draw_string(ThemeDB.fallback_font, from + Vector2(6.0, -6.0), "%d %s" % [squad.id, squad.machine.current],
 		HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12, colour)
+	if squad.machine.current == Squad.FIGHT:
+		_draw_focus(squad, from, colour)
 	if squad.machine.current != Squad.ADVANCE or squad.target == "":
 		return
 	var to: Vector2 = RtsView.to_screen(Vector2(RtsScenario.REGIONS[squad.target]["cell"]) + Vector2(0.5, 0.5))
@@ -86,6 +90,32 @@ func _draw_squad(squad: Squad) -> void:
 		var at: Vector2 = RtsView.to_screen(Vector2(RtsScenario.REGIONS[region]["cell"]))
 		draw_string(ThemeDB.fallback_font, at + Vector2(-8.0, -4.0), "%.2f" % scores[region],
 			HORIZONTAL_ALIGNMENT_LEFT, -1.0, 11, SCORE_COLOUR)
+
+
+# The enemy a fighting squad chose to strike, ringed, with its score; the
+# next best, faintly, so a person can see what it was weighed against.
+func _draw_focus(squad: Squad, from: Vector2, colour: Color) -> void:
+	for rank: int in range(mini(squad.focus_scores.size(), 3)):
+		var scored: Dictionary = squad.focus_scores[rank]
+		var at: Vector2 = _seen_at(scored["id"])
+		if at == Vector2.INF:
+			continue
+		var chosen: bool = not squad.focus.is_empty() and scored["id"] == squad.focus["id"]
+		var ring := Color(1.0, 0.25, 0.2) if chosen else Color(1.0, 1.0, 1.0, 0.35)
+		draw_arc(at, RtsView.CELL * 0.55, 0.0, TAU, 20, ring, 2.5 if chosen else 1.0)
+		draw_string(ThemeDB.fallback_font, at + Vector2(-12.0, -RtsView.CELL * 0.75), "%.2f" % scored["score"],
+			HORIZONTAL_ALIGNMENT_LEFT, -1.0, 11, ring)
+		if chosen:
+			draw_line(from, at, colour, 1.5)
+
+
+# Where the unit `id` stands in the side's view, on the screen; INF when
+# the side cannot see it.
+func _seen_at(id: int) -> Vector2:
+	for unit: Dictionary in view.units:
+		if unit["id"] == id:
+			return RtsView.to_screen(unit["position"])
+	return Vector2.INF
 
 
 # Each square of the coarse grid tinted by who the side believes holds it.

@@ -23,6 +23,8 @@ const ADVANCE: String = "advance"
 const FIGHT: String = "fight"
 const RETREAT: String = "retreat"
 
+## How much better another target must score before a squad turns to it.
+const STICK: float = 1.25
 ## Fighters a squad waits for before it sets out.
 const SIZE: int = 6
 ## How near an enemy is, from the squad's middle, to be "near".
@@ -42,6 +44,10 @@ var centre: Vector2 = Vector2.ZERO
 var strength: float = 0.0
 ## Own strength over all strength near it: 1 alone, 0.5 an even fight.
 var ratio: float = 1.0
+## The enemy the squad is striking now, and every enemy's score when it
+## chose: {id, kind, score, why}, best first. What the screen marks.
+var focus: Dictionary = {}
+var focus_scores: Array[Dictionary] = []
 ## Every region's score when the squad last chose, by name: what the screen
 ## writes. Kept, never recomputed for the screen -- the scores carry noise
 ## from the side's dice, and a screen that drew again would change the game.
@@ -152,21 +158,31 @@ static func _nearest_first(centre: Vector2i, rings: int) -> Array[Vector2i]:
 	return cells
 
 
-# Every member not already fighting is sent at the nearest enemy to the
-# squad's middle -- one target, so the squad focuses its blows.
+# The enemy `FocusFire` scores best, struck by every member at once. The
+# one already focused is kept unless another beats it by `STICK`, so a
+# squad does not swap targets every time a blow changes the numbers; a
+# member already on the focus is left alone, so a steady fight gives no
+# orders at all.
 func _engage(view: RtsSnapshot) -> Array[RtsCommand]:
-	var nearest: Dictionary = {}
-	for enemy: Dictionary in view.enemies():
-		var distance: float = (enemy["position"] as Vector2).distance_to(centre)
-		if distance <= NEAR and (nearest.is_empty() or distance < (nearest["position"] as Vector2).distance_to(centre)):
-			nearest = enemy
-	if nearest.is_empty():
-		return []
-	var idle: Array[int] = []
+	var mine: Array[Dictionary] = []
 	for member: int in members:
-		if _own(view, member)["order"] != RtsCommand.ATTACK:
-			idle.append(member)
-	return [] if idle.is_empty() else [RtsCommand.attack(idle, nearest["id"])]
+		mine.append(_own(view, member))
+	focus_scores = FocusFire.scores(view, mine, centre, NEAR)
+	if focus_scores.is_empty():
+		focus = {}
+		return []
+	var best: Dictionary = focus_scores[0]
+	for scored: Dictionary in focus_scores:
+		if not focus.is_empty() and scored["id"] == focus["id"] and scored["score"] * STICK >= best["score"]:
+			best = scored
+	focus = best
+	var turning: Array[int] = []
+	for unit: Dictionary in mine:
+		if unit["order"] != RtsCommand.ATTACK or unit["target"] != focus["id"]:
+			turning.append(unit["id"])
+	if turning.is_empty():
+		return []
+	return [RtsCommand.attack(turning, focus["id"])]
 
 
 static func _own(view: RtsSnapshot, member: int) -> Dictionary:

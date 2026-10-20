@@ -143,7 +143,7 @@ func overlay(view: RtsSnapshot) -> Dictionary:
 	var listed: Array[Dictionary] = []
 	for squad: Squad in squads:
 		listed.append({"id": squad.id, "state": squad.machine.current, "size": squad.members.size(),
-			"target": squad.target, "ratio": squad.ratio, "news": squad_news.get(squad.id, ""),
+			"target": squad.target, "ratio": squad.ratio, "news": squad_news.get(squad.id, ""), "focus": squad.focus,
 			"scores": squad.scores if squad.machine.current == Squad.ADVANCE else {}})
 	return {"wishes": queue.wishes.duplicate(true), "waiting": queue.waiting_for(view), "squads": listed}
 
