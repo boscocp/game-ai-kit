@@ -1,0 +1,17 @@
+{
+  "module": "ai_search",
+  "kind": "technique",
+  "about": "A*, breadth-first, depth-first and Dijkstra.",
+  "owns": [
+    "godot/addons/ai_search/",
+    "godot/test/ai_search/",
+    "spec/vectors/search/"
+  ],
+  "depends_on": [
+    "ai_core"
+  ],
+  "gates": [
+    "test-search-vectors",
+    "test-search-properties"
+  ]
+}

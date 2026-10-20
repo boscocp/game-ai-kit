@@ -17,9 +17,13 @@ on:
 permissions:
   contents: read
 
+# A newer push to a pull request cancels the older run. Never on main: the
+# full check runs only there. A group of its own per commit on main, because
+# a run merely *pending* in a shared group is cancelled by the next one queued
+# whatever cancel-in-progress says -- three quick merges lost the middle one.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   # Tier 1: everything someone with nothing but Python installed can run.
@@ -30,21 +34,18 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: make test-python
+      # T18's held-out comparison reads only committed files and the standard
+      # library, so it is tier 1 and runs here, not beside the engine.
+      - run: make test-clone-report
 
-  # The gates. These need no engine, so they run on their own and fail fast.
+  # What needs the network or the pull request itself, and no engine.
   gates:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          # check_no_employer_refs.py walks every blob ever committed. With a
-          # shallow clone it would walk almost nothing and pass -- a gate
-          # reporting green because it was not given the history to look at.
-          fetch-depth: 0
-      # One target, not a hand-written list. The list here used to be a second
-      # definition of what `make check` runs minus the engine-dependent part,
-      # and two lists drift the first time one of them gains a target.
-      - run: make check-no-engine
+      # The lints themselves run in the godot job: inside `make check-affected`
+      # on a pull request, inside `make check` on main. Here only what needs
+      # the network or the pull request.
       - run: make lint-links-remote
 
       # A hook cannot see a pull request. The commit messages on the branch go
@@ -68,6 +69,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # check-affected diffs against main, and lint-employer-refs walks the
+          # history; a shallow clone has neither.
+          fetch-depth: 0
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/toolchain
@@ -76,48 +81,33 @@ jobs:
         env:
           # The export templates are 1.28 GB and only `make export` uses them.
           GAK_SKIP_TEMPLATES: "1"
-      - run: make test-godot
-        env:
-          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
-      - run: make lint-disk-layout
-        env:
-          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
-
-      # The conformance vectors and the A* property run here rather than in the
-      # gates job: both need the engine. They are separate steps so a failure
-      # names which one, and they are in `make check` too -- check_workflow.py
-      # refuses a gate in `check` that CI never reaches.
-      - run: make test-vectors
-        env:
-          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
-      - run: make test-search-properties
-        env:
-          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
-      - run: make test-planner-properties
-        env:
-          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
-      - run: make test-perception-properties
-        env:
-          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
-      - run: make test-rts-simulation
-        env:
-          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
-      - run: make test-rts-match
-        env:
-          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
-      - run: make test-steering-properties
-        env:
-          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
-      - run: make test-demo-overlays
-        env:
-          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
-      - run: make test-menu-walk
+      # T58. A pull request runs what its change selects: every lint, and the
+      # gates of the modules it touches plus every module that uses them.
+      - run: make check-affected BASE=origin/main
+        if: github.event_name == 'pull_request'
         env:
           GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
 
-      # The learned opponent, against the weights that are committed. Here
-      # rather than in the gates job for the same reason as the two above:
-      # it needs the engine.
-      - run: make test-decisions
+      # A push to main runs the whole check. First the selector is asked
+      # about the same commit: if it passes and the full check fails, a
+      # manifest is missing a dependency -- a finding against modules/, not a
+      # flaky test.
+      #
+      # One `make check`, not a step per gate. The steps were a second list of
+      # what `make check` holds, and every wave that added a gate had to edit
+      # this file -- which made it global, and every such wave select
+      # everything. make names the target that failed.
+      #
+      # The base is what main was before this push, not HEAD^1: a push that
+      # carries several commits is checked for all of them. And the full
+      # check runs whether or not the selector's did -- the comparison is the
+      # point.
+      - run: make check-affected BASE=$BEFORE
+        if: github.event_name == 'push'
+        env:
+          BEFORE: ${{ github.event.before }}
+          GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain
+      - run: make check
+        if: ${{ !cancelled() && github.event_name == 'push' }}
         env:
           GAK_TOOLCHAIN: ${{ runner.temp }}/toolchain

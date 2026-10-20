@@ -72,7 +72,7 @@ not suggest the game reads a `.pddl` file at runtime unless, by then, it does.
 ```bash
 make check
 python3 scripts/check_demos.py
-./scripts/godot --headless --path godot -s res://test/menu_walk.gd
+./scripts/godot --headless --path godot -s res://test/menu/menu_walk.gd
 make export
 make release
 python3 scripts/check_license.py

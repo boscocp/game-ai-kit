@@ -114,7 +114,49 @@ sha256 and never committed.
 | T51 | A bot match: two teams of bots, cover, and a commander | blocked | capture and hold, bots only, no network; scored positions with claims, a commander over an influence map, squad confidence and retreat in waves -- each drawn and switchable |
 | T52 | Bots against the player, with an optional stealth | blocked | third person; a role arbiter, awareness that accumulates with three alert levels, a shared belief map for the search -- each drawn and switchable |
 
+## The kit as modules
+
+The owner's request of 2026-10-20, after wave 62: every AI a module that can
+be configured into any game, a wave that tests and gates only what it
+touches, and later a library others can install.
+
+| # | Task | State | Notes |
+|---|---|---|---|
+| T58 | Modules, and gates that run for what a wave touches | done | wave 63: 23 manifests in `modules/`, held to the code by `lint-modules` (M0-M10); tests filed in `godot/test/<module>/`; `make check-affected` runs the lints and the modules a change reaches (code uses followed on, test-only uses not): 25-64 s for a change that evolves one module, against 550 s; a wave lands by pull request, as desk-panel's do; CI ran for the first time and found four defects in bootstrap and the runner rules; mk fragments dropped (measured, no gain); ports, kernel, registry and the library are later tasks; manual check the owner's |
+
 ---
+
+## Resuming after 2026-10-20 (wave 63)
+
+**Where it stopped -- read first.** Wave 63 was T58, the owner's
+modularity request: done, merged by pull request #1. The review record is
+`docs/reviews/63-modules-and-selective-gates.md` (two fresh reviews and
+what CI's first ever runs found).
+
+**How a wave runs now.** `make wave-start BRANCH=wave/NN-slug`, work,
+`make check-affected BASE=origin/main` (not `make check`), push, `gh pr
+create`, a review by a fresh context, apply what it found on the branch,
+write the record, `make wave-merge` -- which waits for CI and squash-merges.
+The owner authorised merging a reviewed, green pull request without asking
+(2026-10-20). A new file needs a module: `make lint-modules` says which
+rule it breaks. `make affected BASE=origin/main` says what a change selects
+and why.
+
+**What it measured.** `make check` 550 s; `check-affected` 25 s for a
+steering force, 26 s for wave 57's demo change, 64 s for an RTS squad.
+A wave that adds a module still runs everything (its manifest is global).
+
+**For the owner.** T58's manual check: read `scripts/affected.py` top to
+bottom, and the step 7 table in T58, and say whether the saving is worth
+the selector. Still yours from before: T20's manual check, and
+`data/tactical/`.
+
+**Next.** The plan's later tasks, not yet numbered or written: the ports
+and the small kernel (one addon a wave, `ai_learning` first; T58's D4 --
+the measuring found `gameaikit.training` imports the tactical dataset, so
+checkers' fit depends on the tactical game today), the controller registry
+(D5), and the library (the naming decision first). Write them as tasks
+before starting one; then T56, T57 or T23 as the owner prefers.
 
 ## Resuming after 2026-10-20 (wave 62)
 
@@ -832,7 +874,7 @@ sha256s. The candidate found is Puffolotti's CC0 karate template
   every box tested at once, block or hit, counter-hit, trade, pushback,
   knockout.
 - The engine uses whole numbers and an immutable state per frame. A
-  recorded log (`godot/test/fight_log.json`) must replay to the per-frame
+  recorded log (`godot/test/fighting/fight_log.json`) must replay to the per-frame
   digests committed beside it, and to the same digests twice. `make
   record-replay` rewrites them after a deliberate change.
 - `make demo-fighting` is a training mode: you against a dummy that stands,
@@ -1826,7 +1868,7 @@ another, so `check_addon_deps.py` gets its first real question, and the click
 that moves one cell becomes a click that moves along a route. Three things it
 needs that do not exist yet: a `make test-vectors` target (and therefore a CI
 step, or `check_workflow.py` refuses it), `godot/demos/search/`, and
-`godot/test/search_properties.gd`, which T3's acceptance runs directly with
+`godot/test/ai_search/search_properties.gd`, which T3's acceptance runs directly with
 `-s` rather than through gdUnit4.
 
 **Start T3 by reviewing T2.** Not as a formality: the review that should have

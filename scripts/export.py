@@ -209,7 +209,7 @@ def self_test() -> int:
         failures.append("a planted pack's directory was not read back")
     if pack_problems(sound):
         failures.append(f"a sound pack was refused: {pack_problems(sound)}")
-    for label, names in {"the tests": sound + ["test/menu_walk.gd"],
+    for label, names in {"the tests": sound + ["test/menu/menu_walk.gd"],
                          "the framework": sound + ["addons/gdUnit4/plugin.cfg"],
                          "generated art": sound + ["assets/generated/tile.png"],
                          "no catalogue": sound[:1] + sound[2:]}.items():

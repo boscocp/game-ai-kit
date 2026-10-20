@@ -104,17 +104,33 @@ def check_toolchain(toolchain: pathlib.Path) -> list[str]:
     return findings
 
 
-def check_repo_location(repo: pathlib.Path, home: pathlib.Path) -> list[str]:
-    """Report a repository that sits on the small disk."""
+def check_repo_location(repo: pathlib.Path, home: pathlib.Path,
+                        on_runner: bool = False) -> list[str]:
+    """Report a repository that sits on the small disk.
+
+    Not asked on a CI runner, and the run says so. The two disks are the
+    author's machine; a GitHub runner has one, and checks the repository out
+    under /home/runner whatever the workflow says. The first CI run of this
+    repository (wave 63) failed here and nowhere else. The leaks above are
+    still looked for on the runner: a Godot that writes to ~/.local is wrong
+    on any machine. The runner is known by GitHub's own `GITHUB_ACTIONS=true`;
+    set by hand on a desk, it turns this one rule into a note, and says so.
+    """
     try:
         repo.resolve().relative_to(home.resolve())
     except ValueError:
         return []
+    if on_runner:
+        print(f"D5 note: the repository is under {home}, and this is a CI runner "
+              "with one disk; not a finding there")
+        return []
     return [f"D5 the repository itself is under {home} -- it belongs on the large disk"]
 
 
-def run(repo: pathlib.Path, toolchain: pathlib.Path, home: pathlib.Path) -> int:
-    findings = find_leaks(home) + check_toolchain(toolchain) + check_repo_location(repo, home)
+def run(repo: pathlib.Path, toolchain: pathlib.Path, home: pathlib.Path,
+        on_runner: bool = False) -> int:
+    findings = (find_leaks(home) + check_toolchain(toolchain)
+                + check_repo_location(repo, home, on_runner))
     for finding in findings:
         print(finding)
     return 1 if findings else 0
@@ -202,6 +218,10 @@ def self_test() -> int:
         repo_on_home = clean_home / "projects" / "game-ai-kit"
         repo_on_home.mkdir(parents=True)
         expect("repo under home", quiet(repo_on_home, good_toolchain, clean_home), 1)
+        # On a CI runner the repository is always under home, and that alone
+        # is not a finding -- but a leak there still is.
+        expect("repo under home on a runner", quiet(repo_on_home, good_toolchain, clean_home, True), 0)
+        expect("a leak on a runner", quiet(repo_on_home, good_toolchain, dirty_home, True), 1)
 
         # Usage errors must be exit 2, never confused with a finding.
         script = pathlib.Path(__file__).resolve()
@@ -242,7 +262,7 @@ def main(argv: list[str]) -> int:
     home = pathlib.Path(args.home or pathlib.Path.home())
 
     try:
-        return run(repo, toolchain, home)
+        return run(repo, toolchain, home, on_runner=os.environ.get("GITHUB_ACTIONS") == "true")
     except OSError as error:
         print(f"check_disk_layout: cannot read a path: {error}", file=sys.stderr)
         return 2

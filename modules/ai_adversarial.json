@@ -1,0 +1,10 @@
+{
+  "module": "ai_adversarial",
+  "kind": "technique",
+  "about": "Minimax and alpha-beta over any two-player game.",
+  "owns": [
+    "godot/addons/ai_adversarial/"
+  ],
+  "depends_on": [],
+  "gates": []
+}

@@ -5,7 +5,7 @@ half_life: concept
 verified_on: 2026-10-19
 tier: 0
 source: book:Steve Rabin (ed.), "Game AI Pro", CRC Press, 2013 -- ch. 12 (Humphreys, HTN planners)
-invalidated_if: WaysToDecide's table, a guard in godot/demos/behaviour/, or the measurements in test/behaviour_test.gd change
+invalidated_if: WaysToDecide's table, a guard in godot/demos/behaviour/, or the measurements in test/demo_behaviour/behaviour_test.gd change
 teaches: ways-to-decide
 -->
 

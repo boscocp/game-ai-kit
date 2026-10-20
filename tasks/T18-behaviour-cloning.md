@@ -54,7 +54,7 @@ and a comparison with no held-out split is a sales pitch.
 test -f godot/addons/ai_learning/clone_weights.json
 make test-clone-rows
 python3 scripts/check_no_training.py
-./scripts/godot --headless --path godot -s res://test/inference_budget.gd
+./scripts/godot --headless --path godot -s res://test/fighting/inference_budget.gd
 ```
 
 The weights ship as `clone_weights.json`, not `weights.json`: that file is

@@ -42,7 +42,7 @@ python3 scripts/check_readability.py
 
 ```bash
 grep -q "class_name UnitType" godot/addons/ai_core/unit_type.gd
-grep -c "func test_" godot/test/tactical_scenario_test.gd | grep -qvx 0
+grep -c "func test_" godot/test/tactical/tactical_scenario_test.gd | grep -qvx 0
 ```
 
 The suite must include: a unit that cannot enter water and one that can; a

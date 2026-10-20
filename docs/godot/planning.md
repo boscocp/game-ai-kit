@@ -120,7 +120,7 @@ var short: PlanResult = planner.plan(GameDomain.actions(), GameDomain.opening_wo
 argument above), `search_depth` in plies and `evaluation_noise`. It holds no
 logic; a controller reads it. `Difficulty.presets()` is the ladder the tactical
 board plays (`LeveledBlue`), and `Difficulty.KNOBS` is the allowlist
-`test/difficulty_knobs.gd` holds every preset to -- a level with a field more,
+`test/tactical/difficulty_knobs.gd` holds every preset to -- a level with a field more,
 such as more vision, is refused. On that board every preset plans 0 actions
 ahead: measured, T11's plan made a side weaker, and a knob that weakens what it
 is meant to strengthen is not a difficulty knob there.

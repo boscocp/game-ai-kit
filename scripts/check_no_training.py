@@ -72,7 +72,7 @@ Exit codes
 
 Usage
 -----
-    check_no_training.py [--repo PATH] [--skip-retrain]
+    check_no_training.py [--repo PATH] [--skip-retrain | --retrain N4,N7]
     check_no_training.py --self-test
 """
 
@@ -321,14 +321,30 @@ def check_vocabulary(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
     return findings
 
 
+def is_under(path: pathlib.Path, root: pathlib.Path, folder: pathlib.Path) -> bool:
+    """True when `path` lies in `folder`, a repository path under godot/.
+
+    By the whole folder, not by its last name. The rules used to ask
+    `"checkers" in path.parts`, and wave 63 filed the tests by module: then
+    `godot/test/checkers/` counted as the checkers game, and a test writing a
+    planted file to `user://` was reported as overwriting the weights.
+    """
+    try:
+        relative = path.relative_to(root)
+    except ValueError:
+        return False
+    inside = folder.relative_to(GODOT).parts
+    return relative.parts[:len(inside)] == inside
+
+
 def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
     """N2 and N3: the addon writes nothing, and nobody rewrites the weights."""
     findings = []
     for path in gdscript_files(root):
         raw = path.read_text(encoding="utf-8").splitlines()
         code = code_only("\n".join(raw)).splitlines()
-        inside_addon = LEARNING_ADDON.name in path.parts
-        holds_a_table = OPPONENT_ADDON.name in path.parts or bool(TABLE_HOLDERS_RE.search("\n".join(code)))
+        inside_addon = is_under(path, root, LEARNING_ADDON)
+        holds_a_table = is_under(path, root, OPPONENT_ADDON) or bool(TABLE_HOLDERS_RE.search("\n".join(code)))
         # Both spellings of the line. The write is read off the stripped one,
         # because `# we never FileAccess.WRITE here` is a sentence; the path
         # is read off the raw one, because a path *is* a string literal and
@@ -346,14 +362,14 @@ def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
                                 "one fight and is never saved (ADR 0016)")
             elif CLONE_NAMES_RE.search(line):
                 findings.append(f"N11 {label} writes where the cloned player lives; the game only reads it")
-            elif CHECKERS_NAMES_RE.search(line) or CHECKERS_GAME.name in path.parts:
+            elif CHECKERS_NAMES_RE.search(line) or is_under(path, root, CHECKERS_GAME):
                 # Before the rule below: `checkers_weights.json` ends in the
                 # addon's `weights.json`, and would be named as the wrong file.
                 findings.append(f"N8 {label} writes a file where the checkers weights live; "
                                 "the game only reads them")
             elif WEIGHTS.name in line:
                 findings.append(f"N2 {label} writes over the weights file")
-            elif BEADS.stem in line or BEAD_GAME.name in path.parts:
+            elif BEADS.stem in line or is_under(path, root, BEAD_GAME):
                 findings.append(f"N2 {label} writes a file where MENACE's beads live; "
                                 "the game only reads them")
         for number, written in enumerate(code, start=1):
@@ -376,7 +392,7 @@ def check_bead_writes(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
     for path in gdscript_files(root):
         raw = path.read_text(encoding="utf-8").splitlines()
         code = code_only("\n".join(raw)).splitlines()
-        in_game = BEAD_GAME.name in path.parts
+        in_game = is_under(path, root, BEAD_GAME)
         patterns = BEAD_GAME_PATTERNS if in_game else BEAD_PATTERNS
         for number, (line, written) in enumerate(zip(raw, code), start=1):
             if _writes_a_bead(written, patterns) or (in_game and BEAD_SET_BY_NAME_RE.search(line)):
@@ -390,7 +406,7 @@ def check_case_writes(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
     """N12: nothing outside the inference addon writes into a ghost's cases."""
     findings = []
     for path in gdscript_files(root):
-        if LEARNING_ADDON.name in path.parts:
+        if is_under(path, root, LEARNING_ADDON):
             continue
         code = code_only(path.read_text(encoding="utf-8")).splitlines()
         for number, written in enumerate(code, start=1):
@@ -660,21 +676,36 @@ def _label(path: pathlib.Path, repo: pathlib.Path) -> str:
         return str(path)
 
 
-def run(repo: pathlib.Path, retrain: bool = True) -> int:
+# The four rules that refit a model from its seed, and the module each one's
+# model belongs to (`modules/<name>.json`, its `retrain` field). They are
+# nearly all of this gate's two minutes, so a wave refits only its own.
+RETRAINING = ("N4", "N6", "N7", "N10")
+
+
+def run(repo: pathlib.Path, retrain: bool | set[str] = True) -> int:
+    """Every rule; the refits are all of them, none, or the named subset.
+
+    Exit 3 means a refit that was asked for could not run. A refit nobody
+    asked for -- `--retrain N7` skips N4, N6 and N10 -- is not a failure to
+    see; it is a choice made by whoever selected the subset.
+    """
+    wanted = set(RETRAINING) if retrain is True else (retrain or set())
     findings = check_vocabulary(repo / GODOT, repo)
     findings += check_writing(repo / GODOT, repo)
     findings += check_bead_writes(repo / GODOT, repo)
     findings += check_case_writes(repo / GODOT, repo)
-    weights_findings, weights_ran = check_weights(repo, retrain)
-    bead_findings, beads_ran = check_beads(repo, retrain)
-    checkers_findings, checkers_ran = check_checkers_weights(repo, retrain)
-    clone_findings, clone_ran = check_clone_weights(repo, retrain)
-    findings += weights_findings + bead_findings + checkers_findings + clone_findings
+    ran = {}
+    for rule, refit in (("N4", check_weights), ("N6", check_beads),
+                        ("N7", check_checkers_weights), ("N10", check_clone_weights)):
+        rule_findings, ran[rule] = refit(repo, rule in wanted)
+        findings += rule_findings
     for finding in findings:
         print(finding)
     if findings:
         return 1
-    return 0 if weights_ran and beads_ran and checkers_ran and clone_ran else 3
+    if retrain is True or retrain is False:
+        return 0 if all(ran.values()) else 3
+    return 0 if all(ran[rule] for rule in wanted) else 3
 
 
 # --- self-test -------------------------------------------------------------
@@ -728,6 +759,10 @@ def self_test() -> int:
         with contextlib.redirect_stdout(io.StringIO()), \
                 contextlib.redirect_stderr(io.StringIO()):
             return main(argv)
+
+    def run_quietly(repo: pathlib.Path, retrain: set[str]) -> int:
+        with contextlib.redirect_stdout(io.StringIO()):
+            return run(repo, retrain=retrain)
 
     def quiet(repo: pathlib.Path) -> tuple[int, str]:
         stream = io.StringIO()
@@ -920,6 +955,17 @@ def self_test() -> int:
         expect("a path that is not a repository",
                (quietly(["--repo", str(root / "nowhere")]), ""), 2)
 
+        # The refits a wave asks for (T58). None asked: the shape rules alone,
+        # and a pass is a pass. One asked that cannot run here: exit 3, as
+        # the whole gate does. A rule it does not know is a usage error.
+        subset = build(root, "subset", dict(sound))
+        expect("no refit asked for", (run_quietly(subset, set()), ""), 0)
+        expect("a refit asked for that cannot run", (run_quietly(subset, {"N4"}), ""), 3)
+        expect("an unknown refit", (quietly(["--repo", str(subset), "--retrain", "N99"]), ""), 2)
+        expect("a planted finding still found with no refit", (run_quietly(build(
+            root, "subset-rate", dict(sound, **{str(LEARNING_ADDON / "x.gd"): "var learning_rate := 0.1\n"})),
+            set()), ""), 1)
+
         # Planted: the call site of the dump rule, not only the rule. Deleting
         # the call left the self-test green, because the three cases below
         # reach the helper directly.
@@ -1002,6 +1048,11 @@ def self_test() -> int:
         expect("a file written in the checkers game", quiet(build(root, "checkersgame", dict(
             sound, **{str(CHECKERS_GAME / "checkers.gd"): 'var out: FileAccess = FileAccess.open(path, FileAccess.WRITE)\n'}))),
             1, "N8")
+        # A test filed beside the game it tests is not the game: wave 63 put
+        # the tests in godot/test/<module>/, and this one is checkers'.
+        expect("a test in test/checkers/ writing a planted file", quiet(build(root, "checkerstest", dict(
+            sound, **{str(GODOT / "test" / "checkers" / "weights_test.gd"):
+                      'var out: FileAccess = FileAccess.open("user://planted.json", FileAccess.WRITE)\n'}))), 3)
 
         # Planted: the opponent model written down, from inside its addon and
         # by name from anywhere; and counting in the addon, which is allowed.
@@ -1283,6 +1334,8 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(add_help=True, description=__doc__)
     parser.add_argument("--repo", default=None)
     parser.add_argument("--skip-retrain", action="store_true")
+    parser.add_argument("--retrain", default=None,
+                        help="refit only these, comma-separated: " + ",".join(RETRAINING))
     parser.add_argument("--self-test", action="store_true")
     try:
         args = parser.parse_args(argv)
@@ -1302,6 +1355,12 @@ def main(argv: list[str]) -> int:
         print(f"check_no_training: no such directory: {repo}", file=sys.stderr)
         return 2
     try:
+        if args.retrain is not None:
+            wanted = {rule for rule in args.retrain.split(",") if rule}
+            if wanted - set(RETRAINING):
+                print(f"check_no_training: --retrain knows {', '.join(RETRAINING)}", file=sys.stderr)
+                return 2
+            return run(repo, retrain=wanted)
         return run(repo, retrain=not args.skip_retrain)
     except (OSError, ValueError) as error:
         # ValueError as well as OSError, and the docstring promised it before

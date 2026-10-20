@@ -33,7 +33,7 @@ python3 scripts/check_no_training.py
 The decision itself, asserted on two scripted games rather than watched:
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/decision_scenarios.gd
+./scripts/godot --headless --path godot -s res://test/ai_learning/decision_scenarios.gd
 ```
 
 That script plays a game the AI should attack and a game it should retreat

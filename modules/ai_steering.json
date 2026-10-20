@@ -1,0 +1,18 @@
+{
+  "module": "ai_steering",
+  "kind": "technique",
+  "about": "Seek, arrive, pursue and avoid, in GDScript and Python.",
+  "owns": [
+    "godot/addons/ai_steering/",
+    "godot/test/ai_steering/",
+    "spec/vectors/steering/",
+    "python/gameaikit/steering/",
+    "python/tests/test_steering.py",
+    "python/tests/test_steering_vectors.py"
+  ],
+  "depends_on": [],
+  "gates": [
+    "test-steering-vectors",
+    "test-steering-properties"
+  ]
+}

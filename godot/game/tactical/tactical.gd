@@ -320,7 +320,7 @@ func play_rest_of_computer_turn() -> void:
 
 ## What the computer is reasoning with: who is playing it, the decision about
 ## to be played and why, and what it has done this turn -- for
-## `test/demo_overlays.gd` to check is there.
+## `test/menu/demo_overlays.gd` to check is there.
 func decision_overlay() -> Dictionary:
 	var overlay: Dictionary = {"controller": computer.controller_name(), "to_move": TacticalStatus.side_name(state.current_faction)}
 	if _computer_thinking():

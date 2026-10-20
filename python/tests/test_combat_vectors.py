@@ -1,7 +1,7 @@
 """The Python half of the combat conformance run.
 
 Each vector in `spec/vectors/combat/` hands `combat.fight` a list of rolls and
-says what must come out. The GDScript half, `godot/test/combat_vectors_runner.gd`,
+says what must come out. The GDScript half, `godot/test/tactical/combat_vectors_runner.gd`,
 reads the same files and hands them to the tactical board's combat.
 """
 

@@ -22,7 +22,7 @@
 ## It is the baseline and is never what the game runs, because it has no `h`
 ## and so no world it could call nearest when the budget runs out.
 ##
-## Measured by `test/planner_benchmark.gd` on the tactical domain
+## Measured by `test/tactical/planner_benchmark.gd` on the tactical domain
 ## (`spec/pddl/tactics-domain.pddl`): the 60 distinct boards with a plan
 ## from eighteen seeded games, budget 50000, on 2026-10-18 (milliseconds are
 ## one machine's):

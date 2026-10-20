@@ -44,7 +44,7 @@ make test-godot
 ```
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/difficulty_matches.gd
+./scripts/godot --headless --path godot -s res://test/tactical/difficulty_matches.gd
 ```
 
 That script plays each level against each other level over a fixed seed set and
@@ -55,7 +55,7 @@ here, because they cost strength too; T25 re-asserts this ordering with them
 on.
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/difficulty_knobs.gd
+./scripts/godot --headless --path godot -s res://test/tactical/difficulty_knobs.gd
 ```
 
 That script is the real never-cheat check, and it is an allowlist. It asserts
@@ -103,7 +103,7 @@ to the rules 2-18 as red, so a level built on it could not clear the floor.
 **Every number below was played by one command**, 50 seeded games from each
 seat, each game its own dice:
 
-    ./scripts/godot --headless --path godot -s res://test/difficulty_matches.gd \
+    ./scripts/godot --headless --path godot -s res://test/tactical/difficulty_matches.gd \
         -- --measure HORIZON,DEPTH,NOISE HORIZON,DEPTH,NOISE|rules
 
 | first | second | first wins, of 100 |

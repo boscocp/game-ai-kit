@@ -49,7 +49,7 @@ make test-vectors
 ```
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/opponent_properties.gd
+./scripts/godot --headless --path godot -s res://test/fighting/opponent_properties.gd
 make test-ngram-vectors
 python3 scripts/check_no_training.py
 ```

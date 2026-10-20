@@ -25,7 +25,7 @@ const EAST: int = 1
 
 ## `.` open, `T` trees (cost 2), `#` rock, `~` water, `=` the bridge, `f` a
 ## ford (cost 3), `o` rocks to mine for ore, `v` a vent for magma, `A` and
-## `B` the two bases. Generated half-turn symmetric; `test/rts_match.gd`
+## `B` the two bases. Generated half-turn symmetric; `test/rts/rts_match.gd`
 ## checks it still is.
 const MAP: Array[String] = [
 	".......................~~.......................",

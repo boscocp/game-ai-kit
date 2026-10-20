@@ -12,14 +12,14 @@
 ## the bottom a minimap and a command card whose buttons say what each
 ## thing costs and why it cannot be had yet. It starts paused, at half
 ## speed: the whole clock is slowed, both sides alike, so a person has
-## time to read -- the rules and the AIs are the ones `test/rts_match.gd`
+## time to read -- the rules and the AIs are the ones `test/rts/rts_match.gd`
 ## measures, only shown slower.
 ##
 ## Your orders and the computer's pass through the same door
 ## (`RtsMatch.give`, `RtsRules`): you may not order what it may not, and it
 ## sees only what its units see.
 ##
-## When not to use it: as the match to measure. `test/rts_match.gd` plays
+## When not to use it: as the match to measure. `test/rts/rts_match.gd` plays
 ## the same match headless, faster and with no person in it.
 class_name RtsGame
 extends Node2D
@@ -121,13 +121,13 @@ func _physics_process(_delta: float) -> void:
 
 
 ## One decision of the computer's: the match played up to and through its
-## next decision, which is what `test/demo_overlays.gd` steps by.
+## next decision, which is what `test/menu/demo_overlays.gd` steps by.
 func step_decision() -> void:
 	played.play(played.decide_every)
 	_refresh()
 
 
-## What the computer is reasoning with, for `test/demo_overlays.gd`: its
+## What the computer is reasoning with, for `test/menu/demo_overlays.gd`: its
 ## goal, its plan with each step's wait, and its squads' states and odds.
 func decision_overlay() -> Dictionary:
 	var thinking: Dictionary = computer.overlay(RtsSnapshot.of(world, computer.side))

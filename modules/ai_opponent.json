@@ -1,0 +1,17 @@
+{
+  "module": "ai_opponent",
+  "kind": "technique",
+  "about": "The n-gram opponent model, counted during one fight only (ADR 0016).",
+  "owns": [
+    "godot/addons/ai_opponent/",
+    "godot/test/ai_opponent/",
+    "spec/vectors/ngram/",
+    "python/gameaikit/ngram/",
+    "python/tests/test_ngram.py",
+    "python/tests/test_ngram_vectors.py"
+  ],
+  "depends_on": [],
+  "gates": [
+    "test-ngram-vectors"
+  ]
+}

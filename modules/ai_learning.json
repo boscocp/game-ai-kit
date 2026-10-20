@@ -1,0 +1,20 @@
+{
+  "module": "ai_learning",
+  "kind": "technique",
+  "about": "Inference only: logistic and softmax models, a case table, the published weights.",
+  "owns": [
+    "godot/addons/ai_learning/",
+    "godot/test/ai_learning/",
+    "spec/vectors/cloning/"
+  ],
+  "depends_on": [
+    "ai_core"
+  ],
+  "tests_depend_on": [
+    "ai_search"
+  ],
+  "gates": [
+    "test-cloning-vectors",
+    "test-decisions"
+  ]
+}

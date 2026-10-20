@@ -1,0 +1,22 @@
+{
+  "module": "tictactoe",
+  "kind": "example",
+  "about": "Tic-tac-toe against MENACE, the matchbox machine.",
+  "owns": [
+    "godot/game/tictactoe/",
+    "godot/test/tictactoe/",
+    "godot/assets/tictactoe/",
+    "spec/vectors/menace/",
+    "python/gameaikit/menace/",
+    "python/tests/test_menace.py"
+  ],
+  "depends_on": [
+    "game_shared"
+  ],
+  "gates": [
+    "test-menace-vectors"
+  ],
+  "retrain": [
+    "N6"
+  ]
+}

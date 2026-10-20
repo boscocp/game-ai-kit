@@ -1,0 +1,18 @@
+{
+  "module": "demo_behaviour",
+  "kind": "example",
+  "about": "One guard, four ways to decide.",
+  "owns": [
+    "godot/demos/behaviour/",
+    "godot/test/demo_behaviour/"
+  ],
+  "depends_on": [
+    "ai_behaviour",
+    "ai_core",
+    "ai_perception",
+    "ai_search",
+    "game_shared",
+    "stealth"
+  ],
+  "gates": []
+}

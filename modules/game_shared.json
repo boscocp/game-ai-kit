@@ -1,0 +1,18 @@
+{
+  "module": "game_shared",
+  "kind": "example",
+  "about": "What every board game shares -- art, the board view, the legend -- and the skirmish.",
+  "owns": [
+    "godot/game/",
+    "godot/test/game_shared/",
+    "godot/assets/",
+    "tools/artgen/",
+    "scripts/artgen"
+  ],
+  "depends_on": [
+    "ai_core",
+    "ai_learning",
+    "ai_search"
+  ],
+  "gates": []
+}

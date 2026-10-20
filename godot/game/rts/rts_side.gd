@@ -10,7 +10,7 @@
 ## shipped RTS economies do; `RtsCommander` from a plan. Everything below is
 ## the same for both, so a match between them measures the top layer alone.
 ##
-## Every layer is timed into `timings`, so `test/rts_match.gd` can hold
+## Every layer is timed into `timings`, so `test/rts/rts_match.gd` can hold
 ## each to its share of `FrameBudget` and the screen can show what each
 ## cost. The clock is read to measure, never to cut a decision short.
 ##
@@ -142,7 +142,7 @@ func _reflexes(view: RtsSnapshot) -> void:
 		queue.wish(RtsKinds.BARRACKS, 35, "reflex: ore piling up, another barracks")
 
 
-## What the side is thinking, for the screen and `test/demo_overlays.gd`.
+## What the side is thinking, for the screen and `test/menu/demo_overlays.gd`.
 func overlay(view: RtsSnapshot) -> Dictionary:
 	var listed: Array[Dictionary] = []
 	for squad: Squad in squads:

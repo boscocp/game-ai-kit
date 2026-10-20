@@ -1,0 +1,10 @@
+{
+  "module": "ai_behaviour",
+  "kind": "technique",
+  "about": "State machine, behaviour tree, GOAP and HTN.",
+  "owns": [
+    "godot/addons/ai_behaviour/"
+  ],
+  "depends_on": [],
+  "gates": []
+}

@@ -1,5 +1,5 @@
 {
- "header": {"actions":["step in","step out","crouch","jump","high","mid","low","overhead","throw","guard standing","guard crouching","evade"],"features":["last","other","me","distance","health","corner"],"generated_by":"godot/test/export_clone_rows.gd","reaction":15},
+ "header": {"actions":["step in","step out","crouch","jump","high","mid","low","overhead","throw","guard standing","guard crouching","evade"],"features":["last","other","me","distance","health","corner"],"generated_by":"godot/test/fighting/export_clone_rows.gd","reaction":15},
  "sessions": [
   {"about": {"characters":["lancer","dancer"],"player":"person","recording":"2026-10-15T17-32-38-25455.json"}, "rows": [
    ["nothing","step in","free","near","even","no","step out",95],

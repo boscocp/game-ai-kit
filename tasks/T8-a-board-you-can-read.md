@@ -63,7 +63,7 @@ each must fail if its rule is removed:
 
 ```bash
 grep -q "48" godot/game/board_view.gd
-grep -c "func test_" godot/test/board_view_test.gd | grep -qvx 0
+grep -c "func test_" godot/test/game_shared/board_view_test.gd | grep -qvx 0
 ```
 
 The tests to write, named here so they are not forgotten: the board's drawn

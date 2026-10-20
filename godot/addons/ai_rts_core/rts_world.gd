@@ -7,7 +7,7 @@
 ## instead is a frozen copy, `RtsSnapshot`, which is also the only thing an AI
 ## is ever shown. The game mutates; the planner reads a snapshot.
 ##
-## Three promises, each held by `test/rts_simulation.gd`:
+## Three promises, each held by `test/ai_rts_core/rts_simulation.gd`:
 ##   * deterministic: a fixed tick, every random number from the seed, nothing
 ##     read from the clock or the screen -- one seed and one list of commands
 ##     always end in the same `digest()`;

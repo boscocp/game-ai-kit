@@ -28,7 +28,7 @@
 ## The weights were retuned in T40, when the owner found hard easy, by what
 ## each option won or lost against the owner's ghost: walking in loses to a
 ## player who kicks mid, an overhead is too slow for a crouch, and lows,
-## mids and throws win. `test/opponent_levels.gd` holds hard to beating a
+## mids and throws win. `test/fighting/opponent_levels.gd` holds hard to beating a
 ## frozen copy of that ghost; since the ghost is what it was tuned against,
 ## that number flatters it, and T18's turtle, which it was not tuned against
 ## and does worst against, is held as the check.

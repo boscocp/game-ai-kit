@@ -77,7 +77,7 @@ func step_decision() -> void:
 
 ## What each behaviour is deciding with -- its force and which way it
 ## pushes, the point it steers at and how far that is -- for
-## `test/demo_overlays.gd`.
+## `test/menu/demo_overlays.gd`.
 func decision_overlay() -> Dictionary:
 	var shown: Array[Dictionary] = []
 	for lane: SteeringLane in lanes:

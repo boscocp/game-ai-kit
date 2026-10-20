@@ -112,5 +112,5 @@ over the 60 boards with a plan from 18 real games:
 | A\* with h_max, bits | 383 | 0.59 |
 | A\* with h_add, bits | 383 | 0.58 |
 
-`./scripts/godot --headless --path godot -s res://test/planner_benchmark.gd`
+`./scripts/godot --headless --path godot -s res://test/tactical/planner_benchmark.gd`
 prints it, and asserts what the table's claims rest on.

@@ -25,7 +25,10 @@ help: ## Show this list
 .PHONY: bootstrap
 bootstrap: ## Install the pinned Godot on the large disk (SHA-verified)
 	@bash scripts/bootstrap.sh "$(TOOLCHAIN)" "$(GODOT_VERSION)"
-	@$(MAKE) --no-print-directory lint-disk-layout
+	@# The toolchain just installed, not the default path: CI installs under
+	@# its temp directory, and the first CI run failed here looking at the
+	@# author's /mnt/games instead.
+	@GAK_TOOLCHAIN="$(TOOLCHAIN)" $(MAKE) --no-print-directory lint-disk-layout
 
 # --- the wave ---------------------------------------------------------------
 #
@@ -39,10 +42,12 @@ wave-start: ## Cut a wave branch from a current main: make wave-start BRANCH=wav
 	@git switch -c "$(BRANCH)"
 	@echo
 	@echo "On $(BRANCH). When the work is done:"
-	@echo "  1. make check"
-	@echo "  2. have the diff reviewed by something that did not write it"
-	@echo "  3. write docs/reviews/$(notdir $(BRANCH)).md"
-	@echo "  4. make wave-merge"
+	@echo "  1. make check-affected BASE=origin/main"
+	@echo "  2. push, and open the pull request (gh pr create)"
+	@echo "  3. have the diff reviewed by something that did not write it,"
+	@echo "     and apply what it found on this branch"
+	@echo "  4. write docs/reviews/$(notdir $(BRANCH)).md"
+	@echo "  5. make wave-merge, which waits for CI to go green"
 
 .PHONY: wave
 wave: ## Cut the branch for the next unblocked task and print its prompt
@@ -56,11 +61,26 @@ wave-next: ## Which task and branch come next, without cutting anything
 	@$(PYTHON) scripts/next_wave.py --dry-run
 
 .PHONY: wave-merge
-wave-merge: ## Merge the current wave into main, once it has been reviewed
+wave-merge: ## Squash-merge the wave's pull request once it is reviewed and CI is green
+	@# Since wave 63 a wave lands by pull request, as desk-panel does: the
+	@# check is CI's on the pull request (`make check-affected`), not a second
+	@# local run of all of `make check`, and the full check runs on main
+	@# after the merge. The review record is still refused if missing. The
+	@# wait is for GitHub to register the checks of the commit just pushed;
+	@# without it `gh pr checks` can report none, and that is a refusal. And
+	@# the merge names the commit that was reviewed and checked: a push from
+	@# somewhere else in between makes GitHub refuse it. The subject is said
+	@# outright, the title `lint-pr-message` held to 72 plus " (#NN)": for a
+	@# one-commit pull request GitHub would otherwise use the commit's own
+	@# subject, which the hook allows up to 80, and add the number past it.
 	@$(PYTHON) scripts/check_branch_base.py --check-review
-	@$(MAKE) --no-print-directory check
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
-	git switch main && git merge --no-ff --no-edit "$$branch" && \
+	head=$$(git rev-parse HEAD); \
+	git push --quiet origin "$$branch" && sleep 15 && \
+	gh pr checks "$$branch" --watch --fail-fast && \
+	subject=$$(gh pr view "$$branch" --json title,number --jq '.title + " (#" + (.number|tostring) + ")"') && \
+	gh pr merge "$$branch" --squash --delete-branch --match-head-commit "$$head" --subject "$$subject" && \
+	git switch main && git pull --ff-only --quiet && \
 	echo "merged $$branch into main"
 
 .PHONY: lint-review
@@ -78,7 +98,7 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability lint-demos \
-       lint-addon-deps lint-tiers lint-links lint-workflow lint-license \
+       lint-addon-deps lint-modules lint-tiers lint-links lint-workflow lint-license \
        lint-employer-refs lint-docs-freshness lint-no-training lint-selftests \
        test-python test-models ## Every gate that does not need the engine installed
 	@# CI's gate job runs exactly this. It used to hand-list the targets,
@@ -146,6 +166,12 @@ lint-no-training: ## Invariant 6: Python trains, GDScript only infers
 .PHONY: lint-addon-deps
 lint-addon-deps: ## Invariant 2: no addon reaches into another
 	@$(PYTHON) scripts/check_addon_deps.py
+
+.PHONY: lint-modules
+lint-modules: ## Every file owned by one module, every dependency declared (T58)
+	@# What a wave tests is chosen from these manifests, so a dependency the
+	@# code has and the manifest lacks is a test that silently stops running.
+	@$(PYTHON) scripts/check_modules.py
 
 .PHONY: lint-tiers
 lint-tiers: ## Invariant 5: no lesson lives only above tier 1
@@ -225,7 +251,7 @@ test-search-vectors: import ## The search vectors, against ai_search
 	@# The vectors live outside the Godot project so the Python side can be
 	@# held to the same answers. Godot reads an absolute path in a
 	@# non-exported build, so the directory goes in after `--`.
-	@$(GODOT) --headless --path godot -s res://test/vectors_runner.gd \
+	@$(GODOT) --headless --path godot -s res://test/ai_search/vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/search
 
 .PHONY: test-planning-vectors
@@ -234,10 +260,10 @@ test-planning-vectors: import ## The planning vectors, against ai_planning
 	@# the domain the JSON spells out. The other half -- that the PDDL files
 	@# beside it describe the same domain -- is `make test-python`, because the
 	@# reader is Python and a game does not parse a domain file in a frame.
-	@$(GODOT) --headless --path godot -s res://test/planning_vectors_runner.gd \
+	@$(GODOT) --headless --path godot -s res://test/ai_planning/planning_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/planning
 	@# The tactical board's own domain (T11) is a vector too, beside its PDDL.
-	@$(GODOT) --headless --path godot -s res://test/planning_vectors_runner.gd \
+	@$(GODOT) --headless --path godot -s res://test/ai_planning/planning_vectors_runner.gd \
 		-- $(CURDIR)/spec/pddl
 
 .PHONY: test-learning-vectors
@@ -247,25 +273,25 @@ test-learning-vectors: import ## The learning vectors, against ai_learning
 	@# same two claims on the Python side, in `make test-python`, because a
 	@# split between training and inference is worth what the agreement
 	@# between the two halves is worth.
-	@$(GODOT) --headless --path godot -s res://test/learning_vectors_runner.gd \
+	@$(GODOT) --headless --path godot -s res://test/tactical/learning_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/learning
 
 .PHONY: test-ngram-vectors
 test-ngram-vectors: import ## The n-gram vectors, against ai_opponent
 	@# The same files are read by `make test-python` through gameaikit.ngram.
-	@$(GODOT) --headless --path godot -s res://test/ngram_vectors_runner.gd \
+	@$(GODOT) --headless --path godot -s res://test/ai_opponent/ngram_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/ngram
 
 .PHONY: test-cloning-vectors
 test-cloning-vectors: import ## The cloning vectors, against ai_learning's softmax model and case table
 	@# The same files are read by `make test-python` through gameaikit.cloning.
-	@$(GODOT) --headless --path godot -s res://test/cloning_vectors_runner.gd \
+	@$(GODOT) --headless --path godot -s res://test/ai_learning/cloning_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/cloning
 
 .PHONY: test-combat-vectors
 test-combat-vectors: import ## The combat vectors, against the tactical board's fight
 	@# The same files are read by `make test-python` through gameaikit.dataset.combat.
-	@$(GODOT) --headless --path godot -s res://test/combat_vectors_runner.gd \
+	@$(GODOT) --headless --path godot -s res://test/tactical/combat_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/combat
 
 .PHONY: test-fuzzy-vectors
@@ -273,75 +299,75 @@ test-fuzzy-vectors: import ## The fuzzy vectors, against ai_fuzzy
 	@# The same file, read twice: here through the addon, and in
 	@# `make test-python` through gameaikit.fuzzy, which also checks that the
 	@# text controller beside a vector describes the same thing as its JSON.
-	@$(GODOT) --headless --path godot -s res://test/fuzzy_vectors_runner.gd \
+	@$(GODOT) --headless --path godot -s res://test/ai_fuzzy/fuzzy_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/fuzzy
 
 .PHONY: test-checkers-vectors
 test-checkers-vectors: import ## The checkers rules and evaluation vectors, against the game
 	@# The other half is `make test-python`: the same two files read through
 	@# gameaikit.checkers, the Python that self-plays and fits (T32).
-	@$(GODOT) --headless --path godot -s res://test/checkers_vectors_runner.gd \
+	@$(GODOT) --headless --path godot -s res://test/checkers/checkers_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/checkers
 
 .PHONY: test-menace-vectors
 test-menace-vectors: import ## The MENACE vectors, against the game's bead player
 	@# The other half is `make test-python`. Each case carries the uniform draw
 	@# itself, because Python's generator and Godot's differ.
-	@$(GODOT) --headless --path godot -s res://test/menace_vectors_runner.gd \
+	@$(GODOT) --headless --path godot -s res://test/tictactoe/menace_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/menace
 
 .PHONY: test-steering-vectors
 test-steering-vectors: import ## The steering trajectories, against ai_steering
 	@# The other half is `make test-python`. The tolerance is sized for
 	@# Vector2's 32-bit floats: docs/godot/vector2-is-single-precision.md.
-	@$(GODOT) --headless --path godot -s res://test/steering_vectors_runner.gd \
+	@$(GODOT) --headless --path godot -s res://test/ai_steering/steering_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/steering
 
 .PHONY: test-steering-properties
 test-steering-properties: import ## Arrive comes to rest, seek never does, no force breaks its limit (T22)
-	@$(GODOT) --headless --path godot -s res://test/steering_properties.gd
+	@$(GODOT) --headless --path godot -s res://test/ai_steering/steering_properties.gd
 
 .PHONY: test-search-properties
 test-search-properties: import ## A* agrees with Dijkstra, over a few hundred boards
-	@$(GODOT) --headless --path godot -s res://test/search_properties.gd
+	@$(GODOT) --headless --path godot -s res://test/ai_search/search_properties.gd
 
 .PHONY: test-planner-properties
 test-planner-properties: import ## A plan can be run, and an unsolvable domain says so
-	@$(GODOT) --headless --path godot -s res://test/planner_properties.gd
+	@$(GODOT) --headless --path godot -s res://test/tactical/planner_properties.gd
 
 .PHONY: test-behaviour-benchmark
 test-behaviour-benchmark: import ## GOAP against the HTN on the guard: worlds and microseconds a plan (T15), printed
 	@# A measurement, not a gate: the worlds are held by behaviour_test.gd,
 	@# and the microseconds are one machine's.
-	@$(GODOT) --headless --path godot -s res://test/behaviour_benchmark.gd
+	@$(GODOT) --headless --path godot -s res://test/demo_behaviour/behaviour_benchmark.gd
 
 .PHONY: test-planner-benchmark
 test-planner-benchmark: import ## Every search over the tactical domain: h_max stays shortest, the guesses visit fewer worlds, a budget holds (T11)
-	@$(GODOT) --headless --path godot -s res://test/planner_benchmark.gd
+	@$(GODOT) --headless --path godot -s res://test/tactical/planner_benchmark.gd
 
 .PHONY: test-rts-budget
 test-rts-budget: import ## The real-time core holds its frame share at 200 units, and ai_core does not (T19)
 	@# A measurement with a pass mark, like test-inference-budget: the old
 	@# core's ~50 ms a step is printed beside the new core's layers.
-	@$(GODOT) --headless --path godot -s res://test/rts_core_budget.gd
+	@$(GODOT) --headless --path godot -s res://test/ai_rts_core/rts_core_budget.gd
 
 .PHONY: test-rts-match
 test-rts-match: import ## A whole RTS match ends the same way twice, inside its frame budget, and the commander beats the queues alone (T20)
-	@$(GODOT) --headless --path godot -s res://test/rts_match.gd
+	@$(GODOT) --headless --path godot -s res://test/rts/rts_match.gd
 
 .PHONY: rts-measure
 rts-measure: import ## Slow (minutes): the commander vs the queues, STRIPS vs HTN, each level vs the next, the seat's bias (T20)
-	@$(GODOT) --headless --path godot -s res://test/rts_measure.gd
+	@$(GODOT) --headless --path godot -s res://test/rts/rts_measure.gd
 
 .PHONY: test-rts-simulation
 test-rts-simulation: import ## The RTS match replays from its seed, only commands change it, fog holds, counters add up (T19)
-	@$(GODOT) --headless --path godot -s res://test/rts_simulation.gd
+	@$(GODOT) --headless --path godot -s res://test/ai_rts_core/rts_simulation.gd
 
 .PHONY: test-perception-properties
 test-perception-properties: import ## Sight is symmetric, walls block both ways, suspicion holds in sight
 	@# T14's acceptance, as a target so CI runs the same command. Four
 	@# properties over three hundred generated maps, from a fixed seed.
-	@$(GODOT) --headless --path godot -s res://test/perception_properties.gd
+	@$(GODOT) --headless --path godot -s res://test/stealth/perception_properties.gd
 
 .PHONY: import
 import: ## Import the art, which a fresh checkout cannot load without
@@ -366,20 +392,20 @@ import: ## Import the art, which a fresh checkout cannot load without
 test-menu-walk: import ## The menu, walked: every card plays its example, Escape frees it and comes back
 	@# T24. `lint-demos` holds the catalogue to the Makefile; this holds the
 	@# menu to the catalogue, in the engine.
-	@$(GODOT) --headless --path godot -s res://test/menu_walk.gd
+	@$(GODOT) --headless --path godot -s res://test/menu/menu_walk.gd
 
 .PHONY: test-demo-overlays
 test-demo-overlays: import ## Every example, stepped headless: its overlay holds the AI's reasoning
 	@# The engine half of invariant 13; `lint-demos` is the half without it.
 	@# Neither can see the screen, and the seeing is each example's manual check.
-	@$(GODOT) --headless --path godot -s res://test/demo_overlays.gd
+	@$(GODOT) --headless --path godot -s res://test/menu/demo_overlays.gd
 
 .PHONY: test-decisions
 test-decisions: import ## The two fights the learned opponent has to get right, and a node
 	@# T6's acceptance, as a target so that CI runs the same command. It plays
 	@# against the *published* weights rather than a hand-made model, so a
 	@# retrained opponent that stops taking a fight it should take fails here.
-	@$(GODOT) --headless --path godot -s res://test/decision_scenarios.gd
+	@$(GODOT) --headless --path godot -s res://test/ai_learning/decision_scenarios.gd
 
 .PHONY: test-godot
 test-godot: import ## Godot tests, headless (gdUnit4)
@@ -388,6 +414,50 @@ test-godot: import ## Godot tests, headless (gdUnit4)
 	@# must therefore never depend on simulated input -- they assert logic.
 	@$(GODOT) --headless --path godot \
 		-s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -a test
+
+# --- only what a change touches (T58) --------------------------------------
+#
+# `make check` runs every gate; a wave runs `make check-affected`, which asks
+# scripts/affected.py which modules the change touches and which modules use
+# them, and runs the lints plus those modules' gates. The three `-some`
+# targets are the pieces it calls, each the whole-repository target narrowed
+# to a list.
+
+.PHONY: affected
+affected: ## Print what a change selects and why: make affected BASE=origin/main
+	@test -n "$(BASE)" || { echo "usage: make affected BASE=<ref>" >&2; exit 2; }
+	@$(PYTHON) scripts/affected.py --base "$(BASE)" --explain
+	@$(PYTHON) scripts/affected.py --base "$(BASE)" --targets
+
+.PHONY: check-affected
+check-affected: ## Every lint, and the gates of the modules a change touches: make check-affected BASE=origin/main
+	@test -n "$(BASE)" || { echo "usage: make check-affected BASE=<ref>" >&2; exit 2; }
+	@$(PYTHON) scripts/affected.py --base "$(BASE)" --run
+
+.PHONY: lint-no-training-some
+lint-no-training-some: ## Invariant 6's shape rules, and only the refits named: RETRAIN=N4,N7
+	@$(PYTHON) scripts/check_no_training.py --retrain "$(RETRAIN)"
+
+.PHONY: test-python-some
+test-python-some: ## Only these Python test modules: PYTESTS="test_steering test_fuzzy"
+	@test -n "$(PYTESTS)" || { echo "usage: make test-python-some PYTESTS=..." >&2; exit 2; }
+	@cd python && $(PYTHON) -m unittest -q $(addprefix tests.,$(PYTESTS))
+
+.PHONY: test-godot-some
+test-godot-some: import ## Only these gdUnit4 suites or folders: SUITES="test/ai_search test/menu"
+	@# Measured on gdUnit4 v6.2.2: a folder that does not exist, or holds no
+	@# suite, prints "No test cases found, abort test run!" and exits 0. So
+	@# both are refused here, or a typo in SUITES would be a green that ran
+	@# nothing.
+	@test -n "$(SUITES)" || { echo "usage: make test-godot-some SUITES=..." >&2; exit 2; }
+	@for suite in $(SUITES); do test -e "godot/$$suite" || \
+		{ echo "test-godot-some: there is no godot/$$suite" >&2; exit 2; }; done
+	@out=$$($(GODOT) --headless --path godot \
+		-s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode $(addprefix -a ,$(SUITES)) 2>&1); \
+	status=$$?; echo "$$out"; \
+	if echo "$$out" | grep -q "No test cases found"; then \
+		echo "test-godot-some: gdUnit4 found no test in $(SUITES)" >&2; exit 1; fi; \
+	exit $$status
 
 # --- looking at it ---------------------------------------------------------
 #
@@ -443,13 +513,13 @@ demo-tactical: import ## Advance Wars style tactics against the computer: click 
 .PHONY: tactical-win-rates
 tactical-win-rates: import ## Seeded games between the tactical board's controllers: wins, rounds, stuck pieces (~1 min)
 	@# A measurement: the tuning tasks' acceptance passes it --at-most limits.
-	@$(GODOT) --headless --path godot -s res://test/tactical_win_rates.gd -- $(or $(GAMES),20) $(LIMITS)
+	@$(GODOT) --headless --path godot -s res://test/tactical/tactical_win_rates.gd -- $(or $(GAMES),20) $(LIMITS)
 
 .PHONY: league
 league: import ## T25's league: every team against every other from both seats, rated with intervals, each decision's cost (~10 min)
 	@# T25's acceptance. Not in `check`: 280 games, played twice to hold the
 	@# table to its seeds, take about ten minutes. SEEDS sets seeds a seat.
-	@$(GODOT) --headless --path godot -s res://test/league_runner.gd -- $(or $(SEEDS),5)
+	@$(GODOT) --headless --path godot -s res://test/league/league_runner.gd -- $(or $(SEEDS),5)
 
 .PHONY: record-tactical
 record-tactical: import ## Play the tactical board and keep every game you finish in data/tactical/, T25's human reference
@@ -461,34 +531,34 @@ demo-fighting: import ## Training mode, you against a dummy: A/D walk, W jump, S
 
 .PHONY: record-replay
 record-replay: import ## Record the recorded fight's per-frame digests again, after a deliberate change to the rules
-	@$(GODOT) --headless --path godot -s res://test/replay_determinism.gd -- --record
+	@$(GODOT) --headless --path godot -s res://test/fighting/replay_determinism.gd -- --record
 
 .PHONY: test-replay
 test-replay: import ## Replay the recorded fight twice; the two runs must agree on every frame
-	@$(GODOT) --headless --path godot -s res://test/replay_determinism.gd
+	@$(GODOT) --headless --path godot -s res://test/fighting/replay_determinism.gd
 
 .PHONY: test-opponent-properties
 test-opponent-properties: import ## The opponent model learns a habit within 40 actions, and follows a change of it
 	@# T17's acceptance, with two planted models -- one that never forgets,
 	@# one with no context -- that must fail the same claims.
-	@$(GODOT) --headless --path godot -s res://test/opponent_properties.gd
+	@$(GODOT) --headless --path godot -s res://test/fighting/opponent_properties.gd
 
 .PHONY: test-difficulty-knobs
 test-difficulty-knobs: import ## The tactical levels never cheat: only the documented knobs, the same board, dice and orders
 	@# T12's allowlist, with three planted cheats it must catch. A few seconds.
-	@$(GODOT) --headless --path godot -s res://test/difficulty_knobs.gd
+	@$(GODOT) --headless --path godot -s res://test/tactical/difficulty_knobs.gd
 
 .PHONY: test-difficulty-matches
 test-difficulty-matches: import ## The tactical levels are a ladder, and each beats the rules from both seats (~15 min)
 	@# T12's acceptance. Not in `check`: 575 games of up to 40 rounds take
 	@# about fifteen minutes, so CI does not hold the ladder -- run it after any
 	@# change to a level, `LeveledBlue`, `FightOdds` or the tactical rules.
-	@$(GODOT) --headless --path godot -s res://test/difficulty_matches.gd
+	@$(GODOT) --headless --path godot -s res://test/tactical/difficulty_matches.gd
 
 .PHONY: test-opponent-levels
 test-opponent-levels: import ## The fixed opponent's levels are ordered: each beats the one below it 60 times in 100
 	@# T37's acceptance. About 45 seconds: 600 fights of up to 99 seconds.
-	@$(GODOT) --headless --path godot -s res://test/opponent_levels.gd
+	@$(GODOT) --headless --path godot -s res://test/fighting/opponent_levels.gd
 
 # --- behaviour cloning (T18) -------------------------------------------------
 #
@@ -505,11 +575,11 @@ record-fights: import ## Play the training mode and keep every fight you play in
 
 .PHONY: record-stand-ins
 record-stand-ins: import ## Record the scripted stand-in players' fights again (deterministic)
-	@$(GODOT) --headless --path godot -s res://test/record_stand_ins.gd -- $(CURDIR)/data/fights
+	@$(GODOT) --headless --path godot -s res://test/fighting/record_stand_ins.gd -- $(CURDIR)/data/fights
 
 .PHONY: clone-rows
 clone-rows: import ## Replay every recording and cut the rows behaviour cloning learns from
-	@$(GODOT) --headless --path godot -s res://test/export_clone_rows.gd \
+	@$(GODOT) --headless --path godot -s res://test/fighting/export_clone_rows.gd \
 		-- $(CURDIR)/data/fights $(CURDIR)/data/cloning/rows.json
 
 .PHONY: train-clone
@@ -521,16 +591,16 @@ train-clone: clone-rows ## Cut the rows, fit the clone of CLONE_PLAYER, publish 
 
 .PHONY: test-clone-fights
 test-clone-fights: import ## Fight the fixed opponent with the ghosts, the clone and the learner; write the win rates (~45 s)
-	@$(GODOT) --headless --path godot -s res://test/clone_fights.gd -- $(CURDIR)/data/cloning/win_rates.json
+	@$(GODOT) --headless --path godot -s res://test/fighting/clone_fights.gd -- $(CURDIR)/data/cloning/win_rates.json
 
 .PHONY: test-clone-rows
 test-clone-rows: import ## The committed rows are what the recordings cut into, today
-	@$(GODOT) --headless --path godot -s res://test/export_clone_rows.gd \
+	@$(GODOT) --headless --path godot -s res://test/fighting/export_clone_rows.gd \
 		-- $(CURDIR)/data/fights $(CURDIR)/data/cloning/rows.json --check
 
 .PHONY: test-inference-budget
 test-inference-budget: import ## A cloned player's decision stays under its millisecond budget
-	@$(GODOT) --headless --path godot -s res://test/inference_budget.gd
+	@$(GODOT) --headless --path godot -s res://test/fighting/inference_budget.gd
 
 .PHONY: test-clone-report
 test-clone-report: ## T18's comparison: held out, and measured on the published file

@@ -39,7 +39,7 @@ python3 scripts/check_addon_deps.py
 ```
 
 ```bash
-grep -c "func test_" godot/test/fuzzy_test.gd | grep -qvx 0
+grep -c "func test_" godot/test/ai_fuzzy/fuzzy_test.gd | grep -qvx 0
 test -d spec/vectors/fuzzy
 ```
 

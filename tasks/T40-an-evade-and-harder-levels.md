@@ -168,7 +168,7 @@ measured again after each change:
   every level knows it, and the medium learner can now answer a throw with
   it.
 - **The hard gate is firmer.** It reads a frozen copy of the owner's ghost
-  (`godot/test/owner_ghost.json`), so retraining the clone does not move
+  (`godot/test/fighting/owner_ghost.json`), so retraining the clone does not move
   the bar. It plays 200 fights per character and holds hard to 150 of them.
   It also holds hard to 130 of 200 against T18's turtle stand-in, which
   hard was not tuned against and does worst against, as the lancer only:

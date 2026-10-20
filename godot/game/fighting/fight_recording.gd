@@ -107,7 +107,7 @@ static func last_seen(states: Array[FightState], index: int, data: FightData) ->
 ## decisions, and Python can tell what an opponent `REACTION` frames late
 ## had seen by then.
 static func rows_text(recordings: Dictionary, data: FightData) -> String:
-	var header: Dictionary = {"generated_by": "godot/test/export_clone_rows.gd", "reaction": REACTION,
+	var header: Dictionary = {"generated_by": "godot/test/fighting/export_clone_rows.gd", "reaction": REACTION,
 			"features": FightSituation.FEATURES, "actions": FightAction.ACTIONS}
 	var lines: PackedStringArray = ["{", ' "header": %s,' % JSON.stringify(header), ' "sessions": [']
 	var names: Array = recordings.keys()

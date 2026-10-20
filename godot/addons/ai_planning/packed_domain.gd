@@ -7,7 +7,7 @@
 ## I seen this world -- and each answer is a dictionary walk, and the third
 ## builds a sorted, joined string. Here each predicate is one bit of an `int`,
 ## so the three answers are `&`, `& ~ |` and the integer itself as the key.
-## What that is worth is measured in `test/planner_benchmark.gd`, not claimed.
+## What that is worth is measured in `test/tactical/planner_benchmark.gd`, not claimed.
 ##
 ## The translation runs one way, once per plan: strings in, bits for the
 ## search, strings back out for the plan the game reads.

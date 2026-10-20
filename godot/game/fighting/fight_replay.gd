@@ -5,7 +5,7 @@
 ## gives one digest per frame. Two runs of the same log must give the same
 ## digests, frame for frame: T17 and T18 learn from a person's logged
 ## inputs, and an engine that played a log differently twice would teach
-## them nothing. `test/replay_determinism.gd` holds that.
+## them nothing. `test/fighting/replay_determinism.gd` holds that.
 ##
 ## When not to use it: a log recorded against other frame data. The log is
 ## inputs, not outcomes, so it replays under whatever rules are current --

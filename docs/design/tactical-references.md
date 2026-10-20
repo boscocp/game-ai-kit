@@ -144,7 +144,7 @@ https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter30_Modular_Tactical_Influ
 ## 4. Ranked candidate adjustments
 
 Each item names its sources and an acceptance that can be measured. "Match" means the
-headless `godot/test/tactical_match.gd` harness over fixed seeds, as
+headless `godot/test/tactical/tactical_match.gd` harness over fixed seeds, as
 `make tactical-win-rates` plays it. Every win rate is reported
 together with its seed count.
 

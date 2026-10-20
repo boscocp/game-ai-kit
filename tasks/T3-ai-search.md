@@ -32,7 +32,7 @@ admissible heuristic it expands no more nodes than Dijkstra and returns a path
 of the same cost.
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/search_properties.gd
+./scripts/godot --headless --path godot -s res://test/ai_search/search_properties.gd
 ```
 
 ## Manual check

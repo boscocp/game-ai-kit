@@ -9,7 +9,7 @@ invalidated_if: a team, the tactical rules, the scenario or LeagueRating changes
 teaches: comparing-techniques
 -->
 
-> Measured with `godot/test/league_runner.gd`, five seeds a seat, in wave 58.
+> Measured with `godot/test/league/league_runner.gd`, five seeds a seat, in wave 58.
 > Every way this kit has of deciding the tactical board plays every other,
 > from both seats, and the league says who wins, by how much it can tell,
 > and what each decision cost. This is the **strength** half of T25. The

@@ -1,0 +1,28 @@
+{
+  "module": "menu",
+  "kind": "example",
+  "about": "One window for every example, and the walks that hold every card to its scene.",
+  "owns": [
+    "godot/menu/",
+    "godot/test/menu/"
+  ],
+  "depends_on": [
+    "checkers",
+    "demo_behaviour",
+    "demo_search",
+    "demo_steering",
+    "fighting",
+    "game_shared",
+    "rts",
+    "stealth",
+    "tactical",
+    "tictactoe"
+  ],
+  "tests_depend_on": [
+    "ai_core"
+  ],
+  "gates": [
+    "test-demo-overlays",
+    "test-menu-walk"
+  ]
+}

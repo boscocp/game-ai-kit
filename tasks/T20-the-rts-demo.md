@@ -142,7 +142,7 @@ make check
 ```
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/rts_match.gd
+./scripts/godot --headless --path godot -s res://test/rts/rts_match.gd
 ```
 
 That script plays a full AI-against-AI match headless with a fixed seed and

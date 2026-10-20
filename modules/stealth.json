@@ -1,0 +1,19 @@
+{
+  "module": "stealth",
+  "kind": "example",
+  "about": "Cross the hall unseen: guards that see, hear and suspect.",
+  "owns": [
+    "godot/game/stealth/",
+    "godot/test/stealth/"
+  ],
+  "depends_on": [
+    "ai_core",
+    "ai_fuzzy",
+    "ai_perception",
+    "ai_search",
+    "game_shared"
+  ],
+  "gates": [
+    "test-perception-properties"
+  ]
+}
