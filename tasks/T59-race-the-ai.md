@@ -49,6 +49,20 @@ levels side by side.
    and grass; a dark panel behind the text. The camera follows you close
    enough to see the cars, and a minimap shows the rest.
 
+7. **After the owner raced it.** "When I get close to the other car I lose
+   speed and it does not -- a collision would be better; the brake seems
+   not to work, it needs feedback; the hard part is controlling the car;
+   the corners are too hard, I go onto the grass." So: a collision trades
+   the cars' velocities along the line between them (equal masses, some
+   bounce), pushing the car that was hit and turning both a little, with a
+   flash; letting go of the throttle now coasts down instead of holding the
+   speed; brake lights, tyre marks under hard braking or at the grip's
+   limit, and a speedometer that says which pedal is down and when you are
+   on the grass; a wheel that goes over in 0.15 s; your own braking point,
+   a yellow bar, worked out as the AI's is; and a kinder car for everyone
+   -- 2.4 g of grip instead of 1.6, brakes of 18 m/s^2 instead of 14, grass
+   that holds you to 25 m/s instead of 18.
+
 ## Acceptance
 
 ```bash
@@ -80,10 +94,12 @@ learn where to brake -- which the white bar is showing you.
 
 ## Measured
 
-On the 24-metre track, five seeds, two laps each from a standing start:
-easy 38.0 s, normal 35.9 s, hard 34.4 s a lap (on T23's 16 metres: 39.6,
-36.6, 35.1). No level leaves the tarmac now, so wander is only seen, not
-paid for; lookahead from 8 to 24 metres moves hard's lap by under two
-tenths. Mutating the collision step or the following rule off fails the
-suite.
-
+Alone, five seeds, two laps each from a standing start, on the 24-metre
+track with the kinder car: easy 33.0 s, normal 31.7 s, hard 30.2 s a lap
+(normal's margin moved from 0.87 to 0.84 to keep it 1.3 s off hard). In
+traffic, watch mode with easy in front finishes hard, normal, easy on six
+seeds; a car parked on the line is passed wherever it is; a car held at
+20 m/s is passed by easy and hard from either slot. A car passing near the
+edge of a corner can put its wheels on the grass, up to two seconds over
+three laps. Mutating off the collision step, the following rule, the
+pass's memory or the push onto the car ahead fails the suite.

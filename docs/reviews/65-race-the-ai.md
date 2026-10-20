@@ -80,9 +80,46 @@ tarmac, the lookahead claim, every sha256 against the pack, lap counting
 through bumps, no tunnelling, and the human's car being a plain
 `RacingCar` on the race's physics.
 
+## The second review, of the fixes
+
+A second fresh context reviewed the fix commit under the same limits,
+probes by absolute path, nothing under `godot/`. **Verdict: do not merge
+yet** -- passing held only where it had been measured.
+
+1. **Confirmed: a car stopped on the line still stopped easy and hard for
+   good** -- pure pursuit asked a car at rest for no turn, and the follow
+   distance (20 m) was far short of the braking distance (112 m).
+2. **Confirmed: the pass had no memory** -- it flipped on and off at the
+   edge of the follow cone, and hard trailed a 20 m/s car for a whole race.
+3. **Confirmed: the pass side flipped mid-pass** as a corner approached,
+   sending a car across and onto the grass.
+4. **Confirmed: watch mode still inverted on one seed of six.**
+5. **Confirmed: a bump took speed on every one of the four passes.**
+6. **Confirmed: with three or four cars the outcome depended on numbering.**
+7. **Confirmed: "the right slot costs a second" was wrong** -- alone it
+   costs nothing; being behind into the corner does.
+8. **Confirmed: the "names no level" test guards less than it said**, and
+   passing lives in the driver, which it does not read.
+
+And the owner raced it, with the four asks in T59's step 7.
+
+*Done about them*: passing is a manoeuvre with state -- a side chosen once,
+away from the other car unless that side has no room, held until the way
+has been clear a second, a few metres a second over the car it passes, the
+aim held on the tarmac; the follow distance is the braking distance plus
+20 m; at a crawl a car still turns. Collisions became the owner's: equal
+masses trade velocity along the line between them, on the first pass only
+-- which also closes 5. Measured after (T59's record): six seeds in order,
+parked and slow cars passed from either slot. 6 is said rather than
+removed: a chain of three is settled pair by pair. 7 and 8 are reworded to
+what holds; the level test also refuses the human driver's name. The grip
+rule in the cheat check reads what the car's tyres held on its own step,
+since a collision now changes speed after it.
+
 ## What was done about them
 
-All fourteen, as above, in the commit after the review. The racing suite
+All fourteen of the first review, as above, in the commit after it; the
+second review's and the owner's in the commit after that. The racing suite
 (18 cases), both racing gates, the overlay and menu walks, the menu suite
 (30 cases, the art manifest test among them) and the lints were rerun
 green, and screenshots taken in a window of the start and of a race in

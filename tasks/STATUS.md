@@ -95,7 +95,7 @@ because it is driven better, and a command proves every car runs one physics.
 |---|---|---|---|
 | T22 | `ai_steering`: not on a grid | done | seek, arrive, pursue, avoid, in GDScript and Python; 6 trajectories held to 1e-3 (9.4e-6 measured; Vector2 is 32-bit); over 100 starts arrive rests every time and seek never; `make demo-steering` draws each force |
 | T23 | The racing demo, three honest difficulties | done | `make demo-racing`: pure pursuit on seek, a speed limit carried back from the corners; laps 39.6 / 36.6 / 35.1 s; `racing_does_not_cheat.gd` steps an honest twin race alongside and every car, decision and lap record must match it; seventeen planted cheats refused |
-| T59 | Race the AI: a car you drive | done | wave 65: you against one AI level in the same car; a 24 m track, a grid, bumps, and AIs that follow and pass; Kenney Racing Pack (CC0); laps 38.0 / 35.9 / 34.4 s; manual check the owner's |
+| T59 | Race the AI: a car you drive | done | wave 65: you against one AI level in the same car; a 24 m track, collisions that push, AIs that follow and pass; brake lights, tyre marks, a speedometer, your own braking bar; Kenney Racing Pack (CC0); laps 33.0 / 31.7 / 30.2 s; manual check the owner's |
 | T53 | How racing AI is made | done | `docs/concepts/racing-ai.md`: 30 references, each opened, those read in part said so; rubber-banding for and against; T23 and T54 rewritten from it |
 | T54 | Racing in 3D, with physics the driver does not own | blocked | the owner's 3D racer: suspension, tyre slip, weight transfer on `RigidBody3D`; T23's three knobs and its no-cheat gate; needs ADR 0018 accepted, T50, T53 |
 
@@ -143,11 +143,14 @@ Racing Pack (CC0), in `godot/assets/racing/`; a follow camera and a
 minimap. The review found that following without passing let the leader
 win every race and turned the ladder upside down in watch mode -- which
 the honest twin could not see, since it runs the same race rules. Fixed
-and measured: watch mode finishes hard, normal, easy on three seeds.
+and measured: watch mode finishes hard, normal, easy on six seeds. The
+owner then raced it and asked for real collisions, brake feedback and
+easier corners: done in the same wave, the car made kinder for everyone.
 
 **For the owner.** T59's manual check: `make demo-racing`, race easy, then
-hard. The AI starts on the inside of the front row, worth about a second
-over three laps (measured with two identical drivers).
+hard. The AI starts on the inside of the front row; alone that slot is
+worth nothing, measured, but whoever is behind into the first corner has
+to pass.
 
 **Next.** The same as after wave 63: write the ports and kernel, registry
 and library tasks before starting one; then T56 or T57 as the owner

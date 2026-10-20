@@ -5,8 +5,10 @@
 ## in one place, and the race hands the same instance to every car.
 ## `test/demo_racing/racing_does_not_cheat.gd` holds that field for field.
 ##
-## The numbers are a quick road car's, roughly, in metres and seconds. They
-## are not measured from anything: the lesson is the driver, not the car.
+## The numbers are a racing car's, roughly, in metres and seconds, made a
+## little kinder for a keyboard (T59: the owner found 1.6 g of grip and
+## 14 m/s^2 of brakes put every corner beyond them). They are not measured
+## from anything: the lesson is the driver, not the car.
 class_name RacingPhysics
 extends Resource
 
@@ -15,11 +17,11 @@ extends Resource
 ## How fast the engine adds speed, in metres a second, every second.
 @export var acceleration: float = 8.0
 ## The hardest the brakes take speed away, in metres a second, every second.
-@export var braking: float = 14.0
+@export var braking: float = 18.0
 ## The most sideways acceleration the tyres hold before the car will not turn
-## any tighter: speed times turn rate never goes past it. 16 is about 1.6 g.
-@export var grip: float = 16.0
+## any tighter: speed times turn rate never goes past it. 24 is about 2.4 g.
+@export var grip: float = 24.0
 ## The fastest the car turns, in radians a second, however slow it is going.
 @export var turn_rate: float = 2.0
 ## Off the track the grass holds the car to this speed, in metres a second.
-@export var off_track_speed: float = 18.0
+@export var off_track_speed: float = 25.0

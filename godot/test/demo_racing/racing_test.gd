@@ -199,7 +199,8 @@ func test_an_ai_driver_does_not_ask_to_go_faster_than_the_car_close_ahead() -> v
 	race.cars[1].heading = race.cars[0].heading
 	race.cars[1].speed = 20.0
 	race.step()
-	assert_float(race.drivers[0].target_speed).is_less_equal(20.0 + 1e-6)
+	# Passing, it may go a little faster than the car it passes, to draw level.
+	assert_float(race.drivers[0].target_speed).is_less_equal(20.0 + RacingDriver.PASS_GAIN + 1e-6)
 
 
 func test_every_racing_picture_is_a_picture_the_game_can_load() -> void:
@@ -209,12 +210,48 @@ func test_every_racing_picture_is_a_picture_the_game_can_load() -> void:
 
 func test_the_race_s_rules_never_read_a_driver_s_level() -> void:
 	# The honest twin in racing_does_not_cheat.gd runs these same rules, so it
-	# cannot see a rule that treats one level better. This holds it instead:
-	# the race's code never names a level or a knob.
+	# cannot see a rule that treats one level, or you, better. This catches
+	# the honest slip -- the race's code naming a level, a knob or the human
+	# driver -- and no more: code that wanted to cheat could spell it another
+	# way.
 	# Comments may say so; only the code is read.
 	var code: String = ""
 	for line: String in FileAccess.get_file_as_string("res://demos/racing/racing_race.gd").split("\n"):
 		code += line.get_slice("#", 0) + "\n"
-	for word: String in ["level", "grip_margin", "lookahead", "wander"]:
+	for word: String in ["level", "grip_margin", "lookahead", "wander", "RacingHumanDriver"]:
 		assert_bool(word in code).override_failure_message("racing_race.gd's code names %s" % word).is_false()
+
+
+func test_a_pass_keeps_its_side_until_the_way_has_been_clear_a_while() -> void:
+	var race := RacingRace.new(RacingPhysics.new())
+	race.enter(RacingDriver.new(RacingLevel.new("plain", 12.0, 0.9, 0.0), 1))
+	var driver: RacingDriver = race.drivers[0]
+	race.cars[0].speed = 30.0
+	driver.traffic_speed = 10.0
+	driver.traffic_left = 1.0
+	driver.decide(race.cars[0], race.track, 0, 0.0)
+	assert_int(driver.passing_side).is_equal(-1)
+	driver.traffic_speed = INF
+	for _step: int in range(RacingDriver.CLEAR_STEPS - 1):
+		driver.decide(race.cars[0], race.track, 0, 0.0)
+	assert_int(driver.passing_side).is_equal(-1)
+	driver.decide(race.cars[0], race.track, 0, 0.0)
+	assert_int(driver.passing_side).is_equal(0)
+
+
+func test_a_car_run_into_from_behind_is_pushed_faster() -> void:
+	var race := RacingRace.new(RacingPhysics.new())
+	race.enter(RacingHumanDriver.new())
+	race.enter(RacingHumanDriver.new())
+	var ahead: Vector2 = Vector2.from_angle(race.cars[0].heading)
+	race.cars[1].position = race.cars[0].position + ahead * 4.0
+	race.cars[1].heading = race.cars[0].heading
+	race.cars[0].speed = 30.0
+	race.cars[1].speed = 10.0
+	race.drivers[0].throttle = true
+	race.drivers[1].throttle = true
+	race.step()
+	assert_float(race.cars[1].speed).is_greater(15.0)
+	assert_float(race.cars[0].speed).is_less(25.0)
+	assert_int(race.bumps.size()).is_equal(1)
 

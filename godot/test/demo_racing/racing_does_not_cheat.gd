@@ -4,8 +4,11 @@
 #
 #   1. every car is a plain `RacingCar` driving the race's one physics
 #      resource, whose fields are still what they were when the race began;
-#   2. measured from where each car was to where it is, none goes past the
-#      top speed or turns harder than its grip holds (speed times turn rate);
+#   2. no car goes past the top speed, or turns harder than its grip holds:
+#      speed times turn rate, as the car took it on its own step. A
+#      collision turns and speeds a car too, and that is a blow, not grip;
+#      the twin holds the blow. What the car reports is trusted here only
+#      because the twin's plain car must report the same;
 #   3. the three knob values each driver says it used -- recorded from
 #      inside the controller, in `RacingDriver.used` -- are its level's on
 #      every frame. That is the driver's own report: it makes a knob that
@@ -23,11 +26,13 @@
 #      *is* the honest driver, whatever its code says;
 #   5. every car finished its laps, so a stalled race checks no fewer frames.
 #
-# What the twin cannot see is the race's own rules -- the grid, the bump,
-# following and passing -- because it runs them too: a rule in
-# `RacingRace` that favoured a level would be in both races. So that rule is
-# held elsewhere: `racing_test.gd` refuses a `racing_race.gd` whose code
-# names a level or a knob, and the grid is measured, not assumed.
+# What the twin cannot see is a rule both races run: the grid and the
+# collision in `RacingRace`, and following and passing in `RacingDriver`.
+# A rule there that favoured a level would be in the twin too. What holds
+# those is weaker, and said so: `racing_test.gd` refuses a
+# `racing_race.gd` whose code names a level, a knob, or the human's driver
+# -- an honest slip, not a determined cheat -- and the passing rule is
+# measured in traffic (T59's record), not proven.
 #
 # Each rule first refuses planted races, each by a finding that names the
 # rule it breaks: more grip, a car that turns past its grip, a stronger
@@ -198,13 +203,10 @@ func cheat_findings(race: RacingRace, entries: Array) -> Array[String]:
 		twin.enter(RacingDriver.new(_copy(entry[0]), entry[1]))
 	var findings: Array[String] = []
 	while not _all_finished(race) and race.time < TIME_LIMIT:
-		var headings := PackedFloat64Array()
-		for car: RacingCar in race.cars:
-			headings.append(car.heading)
 		race.step()
 		twin.step()
 		for number: int in range(race.cars.size()):
-			findings.append_array(_frame_findings(race, twin, number, headings[number], began, levels[number]))
+			findings.append_array(_frame_findings(race, twin, number, began, levels[number]))
 	for number: int in range(race.cars.size()):
 		if race.laps(number) < LAPS:
 			findings.append("car %d did not finish %d laps in %.0f s" % [number, LAPS, TIME_LIMIT])
@@ -212,11 +214,11 @@ func cheat_findings(race: RacingRace, entries: Array) -> Array[String]:
 
 
 # Every rule on one car, on the frame just stepped.
-func _frame_findings(race: RacingRace, twin: RacingRace, number: int, heading_before: float,
-		began: RacingPhysics, level: RacingLevel) -> Array[String]:
+func _frame_findings(race: RacingRace, twin: RacingRace, number: int, began: RacingPhysics,
+		level: RacingLevel) -> Array[String]:
 	var where: String = "car %d, frame %d" % [number, race.steps]
 	var findings: Array[String] = _car_findings(race, number, began, where)
-	findings.append_array(_limit_findings(race.cars[number], heading_before, began, where))
+	findings.append_array(_limit_findings(race.cars[number], began, where))
 	var said: Dictionary = race.drivers[number].used
 	var knobs: Dictionary = {"lookahead": level.lookahead, "grip_margin": level.grip_margin, "wander": level.wander}
 	if said != knobs:
@@ -240,10 +242,10 @@ func _car_findings(race: RacingRace, number: int, began: RacingPhysics, where: S
 	return findings
 
 
-# Rule 2: the top speed and the grip, measured over the step just taken.
-func _limit_findings(car: RacingCar, heading_before: float, began: RacingPhysics, where: String) -> Array[String]:
+# Rule 2: the top speed, and the grip the car's own turn took.
+func _limit_findings(car: RacingCar, began: RacingPhysics, where: String) -> Array[String]:
 	var findings: Array[String] = []
-	var sideways: float = car.speed * absf(car.heading - heading_before) / RacingRace.DT
+	var sideways: float = car.sideways_acceleration()
 	if car.speed > began.top_speed + TOLERANCE:
 		findings.append("%s: speed %.3f over the top speed" % [where, car.speed])
 	if sideways > began.grip + TOLERANCE:

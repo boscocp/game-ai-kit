@@ -6,14 +6,16 @@
 ## so the one thing that can differ between two of them is who drives.
 ##
 ## A step asks every driver to decide, then moves every car, then keeps them
-## apart: two cars closer than `CAR_RADIUS` twice over are pushed apart
-## along the line between them, half each, and the one closing on the other
-## loses the speed it was closing with -- a glancing touch costs little, a
-## car run into from behind is slowed to the speed of the one it hit.
-## Crude on purpose, like the car: a bump, not a crash, and the same for
-## everybody -- nothing here reads a driver's level. Before deciding, each
-## driver is told how fast the nearest car ahead of it on its path is going,
-## so it can follow it, and pass.
+## apart. Two cars closer than `CAR_RADIUS` twice over have collided: they
+## are pushed apart along the line between their centres, and -- equal
+## masses -- trade the part of their velocity along that line, less a share
+## `RESTITUTION` leaves out. So a car run into from behind is pushed faster
+## and the one that hit it slowed, a glancing touch costs both a little, and
+## each is turned a little towards where the blow sent it. Crude on purpose,
+## like the car, and the same for everybody: nothing here reads a driver's
+## level. Every collision is kept in `bumps` for a moment, to be drawn.
+## Before deciding, each driver is told how fast the nearest car ahead of
+## it on its path is going and where it is, so it can follow it, and pass.
 ##
 ## Laps are counted by distance covered along the line: a car that cuts a
 ## corner across the grass is credited the line's metres, not the shorter
@@ -33,13 +35,23 @@ const DT: float = 1.0 / 60.0
 ## drawn five metres long is about this wide.
 const CAR_RADIUS: float = 2.4
 ## Pushing one pair apart can push a car into a third; this many passes
-## over the pairs settle three or four cars.
+## over the pairs settle three or four cars. Speed is traded on the first
+## pass only: after it, a pair is left touching by rounding, not by moving.
 const SEPARATIONS: int = 4
+## How bouncy a collision is: 0 the two cars leave it at one speed along
+## the line between them, 1 they swap their speeds along it whole.
+const RESTITUTION: float = 0.4
+## The share of the turn towards its new velocity a car takes in a
+## collision: a nudge, not a spin.
+const KNOCK: float = 0.3
+## Seconds a collision stays in `bumps`, to be drawn.
+const BUMP_SECONDS: float = 0.4
 ## Metres between two rows of the grid, and either side of the line.
 const GRID_GAP: float = 10.0
 const GRID_SIDE: float = 5.0
 ## How far ahead, and how far to either side of its path, a driver looks
-## for a car to follow: as wide as two cars touch, so a car it would hit is
+## for a car to follow: at least as far as it needs to brake to the other's
+## speed, plus this; as wide as two cars touch, so a car it would hit is
 ## always one it saw.
 const FOLLOW_DISTANCE: float = 20.0
 const FOLLOW_WIDTH: float = 2.0 * CAR_RADIUS + 0.5
@@ -58,6 +70,8 @@ var covered := PackedFloat64Array()
 var lap_ends: Array[PackedFloat64Array] = []
 var time: float = 0.0
 var steps: int = 0
+## Each recent collision: [where, when]. Older than `BUMP_SECONDS` are let go.
+var bumps: Array[Array] = []
 
 
 func _init(race_physics: RacingPhysics) -> void:
@@ -98,21 +112,25 @@ func step() -> void:
 ## not yet started can call it so its first decisions can be drawn.
 func plan() -> void:
 	for number: int in range(cars.size()):
-		drivers[number].traffic_speed = speed_ahead(number)
+		var ahead: int = car_ahead(number)
+		drivers[number].traffic_speed = cars[ahead].speed if ahead >= 0 else INF
+		drivers[number].traffic_left = _left_of(number, ahead) if ahead >= 0 else 0.0
 		drivers[number].decide(cars[number], track, line_index[number], time)
 
 
-## The speed of the slowest car close ahead of car `number` on its path, or
-## infinity when the way is clear.
-func speed_ahead(number: int) -> float:
+## The slowest car close ahead of car `number` on its path -- near enough
+## that, braking, it must start now -- or -1 when the way is clear.
+func car_ahead(number: int) -> int:
 	var car: RacingCar = cars[number]
 	var forward: Vector2 = Vector2.from_angle(car.heading)
-	var slowest: float = INF
+	var slowest: int = -1
 	for other: int in range(cars.size()):
 		var offset: Vector2 = cars[other].position - car.position
 		var along: float = offset.dot(forward)
-		if other != number and along > 0.0 and along < FOLLOW_DISTANCE and absf(offset.cross(forward)) < FOLLOW_WIDTH:
-			slowest = minf(slowest, cars[other].speed)
+		var reach: float = _braking_distance(car.speed, cars[other].speed) + FOLLOW_DISTANCE
+		var in_path: bool = along > 0.0 and along < reach and absf(offset.cross(forward)) < FOLLOW_WIDTH
+		if other != number and in_path and (slowest < 0 or cars[other].speed < cars[slowest].speed):
+			slowest = other
 	return slowest
 
 
@@ -148,19 +166,20 @@ func _locate(number: int) -> void:
 
 # Every pair of cars that overlaps, pushed apart, a few times over.
 func _keep_apart() -> void:
-	for _pass: int in range(SEPARATIONS):
+	bumps = bumps.filter(func(bump: Array) -> bool: return time - bump[1] < BUMP_SECONDS)
+	for separation: int in range(SEPARATIONS):
 		for first: int in range(cars.size()):
-			_bump_those_after(first)
+			_bump_those_after(first, separation == 0)
 
 
-func _bump_those_after(first: int) -> void:
+func _bump_those_after(first: int, collide: bool) -> void:
 	for second: int in range(first + 1, cars.size()):
-		_bump(first, second)
+		_bump(first, second, collide)
 
 
-# Two cars that overlap: half the overlap each, along the line between their
-# centres, and each loses what it was closing on the other with.
-func _bump(first: int, second: int) -> void:
+# Two cars that overlap, pushed apart: half the overlap each, along the line
+# between their centres. On the first pass they also collide.
+func _bump(first: int, second: int, collide: bool) -> void:
 	var offset: Vector2 = cars[second].position - cars[first].position
 	var overlap: float = 2.0 * CAR_RADIUS - offset.length()
 	if overlap <= 0.0:
@@ -168,19 +187,41 @@ func _bump(first: int, second: int) -> void:
 	var apart: Vector2 = offset.normalized() if offset != Vector2.ZERO else Vector2.from_angle(cars[first].heading + PI / 2.0)
 	cars[first].position -= apart * overlap / 2.0
 	cars[second].position += apart * overlap / 2.0
-	var closing: float = cars[first].velocity().dot(apart) - cars[second].velocity().dot(apart)
-	if closing > 0.0:
-		_lose_closing_speed(cars[first], apart, closing)
-		_lose_closing_speed(cars[second], -apart, closing)
+	if collide:
+		_collide(cars[first], cars[second], apart)
 	_locate(first)
 	_locate(second)
 
 
-# A car heading into the contact (`towards`, a unit vector) loses the part of
-# its speed that closes on the other car -- shared out by how squarely it
-# points that way, so a car running straight into another takes it all and
-# one brushing past takes almost none.
-func _lose_closing_speed(car: RacingCar, towards: Vector2, closing: float) -> void:
-	var squarely: float = Vector2.from_angle(car.heading).dot(towards)
-	if squarely > 0.0:
-		car.speed = maxf(car.speed - closing * squarely, 0.0)
+# Equal masses: the velocity each has along `apart` (from `first` to
+# `second`) is traded, less what restitution keeps out, when they are
+# closing. Each car then goes the way its new velocity points, as far as a
+# car can: its speed becomes the new velocity along its heading, and its
+# heading turns `KNOCK` of the way towards it.
+func _collide(first: RacingCar, second: RacingCar, apart: Vector2) -> void:
+	var closing: float = first.velocity().dot(apart) - second.velocity().dot(apart)
+	if closing <= 0.0:
+		return
+	var blow: Vector2 = apart * closing * (1.0 + RESTITUTION) / 2.0
+	_knock(first, first.velocity() - blow)
+	_knock(second, second.velocity() + blow)
+	bumps.append([(first.position + second.position) / 2.0, time])
+
+
+func _knock(car: RacingCar, velocity: Vector2) -> void:
+	if velocity.length() > 0.01:
+		car.heading += Vector2.from_angle(car.heading).angle_to(velocity) * KNOCK
+	car.speed = clampf(velocity.dot(Vector2.from_angle(car.heading)), 0.0, car.physics.top_speed)
+
+
+# How far a car at `speed` needs to brake down to `other_speed`.
+func _braking_distance(speed: float, other_speed: float) -> float:
+	if speed <= other_speed:
+		return 0.0
+	return (speed * speed - other_speed * other_speed) / (2.0 * physics.braking)
+
+
+# How far to the left of car `number`'s path car `other` is, in metres.
+func _left_of(number: int, other: int) -> float:
+	var forward: Vector2 = Vector2.from_angle(cars[number].heading)
+	return (cars[other].position - cars[number].position).dot(forward.rotated(-PI / 2.0))

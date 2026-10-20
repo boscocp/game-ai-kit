@@ -36,6 +36,7 @@ const SEED: int = 23
 @onready var _legend: Legend = $Interface/Legend
 @onready var _banner: Label = $Interface/Banner
 @onready var _minimap: RacingMinimap = $Interface/Minimap
+@onready var _speedo: Label = $Interface/Speedo
 
 var levels: Array[RacingLevel] = RacingLevel.ladder()
 var race: RacingRace
@@ -66,6 +67,7 @@ func _ready() -> void:
 		[Art.texture(Art.RACING_CARS[3]), "hard AI"],
 		[RacingRaceView.MARK, "dot: where the AI steers"],
 		[RacingRaceView.MARK, "bar: where it must be braking"],
+		[RacingRaceView.YOURS, "yellow bar: brake here, you"],
 		[RacingTrackView.SLOW, "line: it must be slow here"],
 		[RacingTrackView.FAST, "line: only top speed limits it"],
 	] as Array[Array])
@@ -109,8 +111,10 @@ func _unhandled_input(event: InputEvent) -> void:
 ## one sixtieth of a second.
 func step_decision() -> void:
 	race.step()
+	race_view.remember_marks()
 	_follow_with_camera()
 	race_view.queue_redraw()
+	_speedo.text = RacingDemoText.speedo(race, you) if you >= 0 else ""
 	_minimap.queue_redraw()
 	if race.steps % 10 == 0:
 		_refresh()
@@ -133,9 +137,10 @@ func decision_overlay() -> Dictionary:
 
 ## The race from its start: the cars at rest on the grid, the count running
 ## when you race. Racing, the AI takes the left of the front row, the inside
-## of the first corner, and you the right: starting there costs a car about
-## a second over three laps, measured, and that second is yours to win back.
-## Watching, easy starts in front, so the harder levels must pass it.
+## of the first corner, and you the right. Alone, the right slot costs
+## nothing, measured; what costs is being the one behind into the corner,
+## which you then have to pass. Watching, easy starts in front, so the
+## harder levels must pass it.
 func restart() -> void:
 	race = RacingRace.new(RacingPhysics.new())
 	var pictures: Array[String] = []
@@ -200,6 +205,7 @@ func _build_views(pictures: Array[String]) -> void:
 	track_view = RacingTrackView.new(race, levels[chosen])
 	race_view = RacingRaceView.new(race, pictures)
 	race_view.followed = ai if mode == "race" else chosen
+	race_view.you = you
 	add_child(track_view)
 	add_child(race_view)
 	_show_alone()

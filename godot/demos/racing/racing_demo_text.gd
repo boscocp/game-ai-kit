@@ -23,7 +23,7 @@ static func racing(race: RacingRace, you: int, ai: int, laps: int, paused: bool)
 		"What the AI does, every frame:",
 		"· steers at the white dot, %.0f m down the line" % level.lookahead,
 		"· keeps to the speed the line allows: red, slow",
-		"· must be braking by the white bar",
+		"· must be braking by the white bar (yours: yellow)",
 		"· dares %.0f%% of the tyres' grip" % (level.grip_margin * 100.0),
 		"· steps aside to pass a slower car",
 		"",
@@ -45,6 +45,15 @@ static func watching(race: RacingRace, followed: int, paused: bool) -> String:
 	lines.append("")
 	lines.append("Same car, three drivers, easy starting in front: the harder ones pass it. Their bar sits closer to each corner, their line greener.")
 	return "\n".join(lines)
+
+
+## Under your car: how fast you are going, which pedal is down, and whether
+## you are on the grass -- the feedback the keys alone do not give.
+static func speedo(race: RacingRace, you: int) -> String:
+	var driver: RacingHumanDriver = race.drivers[you]
+	var pedal: String = "BRAKE" if driver.brake else ("throttle" if driver.throttle else "coasting")
+	var grass: String = "   ON THE GRASS" if not race.on_track(you) else ""
+	return "%d km/h   %s%s" % [roundi(race.cars[you].speed * 3.6), pedal, grass]
 
 
 ## Who won and by how much, once someone has finished `laps`; "" before.
