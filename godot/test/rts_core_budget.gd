@@ -6,7 +6,7 @@
 #      against the simulation's share of a frame (`FrameBudget.SHARES`). If it
 #      fits, `ai_rts_core` should not exist, and this script says so and
 #      passes without looking at it.
-#   2. Otherwise `ai_rts_core` at the same scale: 200 soldiers in two armies
+#   2. Otherwise `ai_rts_core` at the same scale: 200 shields in two armies
 #      sent at each other in groups through the wall's gaps and left to
 #      fight, 1200 ticks -- twenty seconds of match. The
 #      simulation and flow-field layers must each fit their share, by mean and
@@ -17,7 +17,7 @@
 #      looked at against a scan of every unit for every question.
 #
 # An empty or idle world would fit any budget, so the run must also show
-# work: 200 units at the start, units that moved, and soldiers that fell.
+# work: 200 units at the start, units that moved, and shields that fell.
 # The budget check itself is first shown three frame budgets it must refuse.
 #
 #     ./scripts/godot --headless --path godot -s res://test/rts_core_budget.gd
@@ -115,7 +115,7 @@ func _send(world: RtsWorld, side: int, group: Array, goal: Vector2i) -> void:
 		print("  a move was refused: %s" % refusal)
 
 
-# `side`'s soldiers dealt into one group per goal, by place in the side's own
+# `side`'s shields dealt into one group per goal, by place in the side's own
 # list, not by id: the two sides' ids alternate, so `id % 4` would leave half
 # of each side's groups empty.
 func _groups_of(world: RtsWorld, side: int) -> Array[Array]:

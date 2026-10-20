@@ -7,8 +7,8 @@
 ## cell centre at the unit's speed. Units pass through each other: steering
 ## round one another is T22's lesson (`ai_steering`), not this core's.
 ##
-## A soldier with no order looks for the nearest enemy it can see and goes
-## for it -- not every tick, but every `LOOK_EVERY` ticks, each soldier on its
+## A fighter with no order looks for the nearest enemy it can see and goes
+## for it -- not every tick, but every `LOOK_EVERY` ticks, each fighter on its
 ## own tick of the cycle, so the questions are spread evenly. Measured in T19:
 ## 200 idle soldiers asking every tick cost about 7 ms, more than the whole
 ## simulation's share. Six looks a second is still quicker than a person.
@@ -24,7 +24,7 @@ const ARRIVED: float = 0.05
 ## walks straight at its goal rather than asking for a field. A chase would
 ## otherwise start a new field every time the quarry stepped into a new cell.
 const STRAIGHT: float = 4.0
-## Ticks between two looks round by an idle soldier.
+## Ticks between two looks round by an idle fighter.
 const LOOK_EVERY: int = 10
 
 
@@ -84,7 +84,7 @@ static func _walk(world: RtsWorld, unit: RtsUnit, goal: Vector2i, point: Vector2
 
 # True when every cell the straight line from `from` to `to` crosses, sampled
 # every quarter cell, may be walked -- the goal's own cell excepted, since a
-# building or a mine there is what the unit is walking up to.
+# building or a deposit there is what the unit is walking up to.
 static func _line_is_clear(world: RtsWorld, from: Vector2, to: Vector2, goal: Vector2i) -> bool:
 	var samples: int = ceili(from.distance_to(to) * 4.0)
 	var previous := Vector2i(from.floor())
@@ -122,7 +122,7 @@ static func _move(world: RtsWorld, unit: RtsUnit) -> void:
 static func _idle(world: RtsWorld, unit: RtsUnit) -> void:
 	if RtsKinds.is_building(unit.kind):
 		_train(world, unit)
-	elif unit.kind == RtsKinds.SOLDIER and (world.tick + unit.id) % LOOK_EVERY == 0:
+	elif RtsKinds.fights(unit.kind) and (world.tick + unit.id) % LOOK_EVERY == 0:
 		var enemy: RtsUnit = nearest_enemy(world, unit)
 		if enemy != null:
 			unit.order = RtsCommand.ATTACK
@@ -140,33 +140,34 @@ static func _attack(world: RtsWorld, unit: RtsUnit) -> void:
 	if unit.cooldown == 0:
 		# The one random number in a fight: a little spread on every blow, drawn
 		# from the match's own dice so a replay strikes the same.
-		target.health -= int(RtsKinds.of(unit.kind, "damage")) + world.rng.randi_range(0, 2)
+		target.health -= RtsKinds.blow(unit.kind, target.kind) + world.rng.randi_range(0, 2)
 		unit.cooldown = RtsKinds.of(unit.kind, "cooldown")
 
 
 static func _gather(world: RtsWorld, unit: RtsUnit) -> void:
-	var mine: RtsUnit = world.unit(unit.target_id)
-	if unit.carrying > 0 or mine == null or mine.health <= 0:
-		_deliver(world, unit, mine != null and mine.health > 0)
+	var deposit: RtsUnit = world.unit(unit.target_id)
+	if unit.carrying > 0 or deposit == null or deposit.health <= 0:
+		_deliver(world, unit, deposit != null and deposit.health > 0)
 		return
-	if not _walk(world, unit, mine.cell(), mine.position, RtsKinds.USE_REACH):
+	if not _walk(world, unit, deposit.cell(), deposit.position, RtsKinds.USE_REACH):
 		return
 	unit.progress += 1
 	if unit.progress >= RtsKinds.GATHER_TICKS:
-		unit.carrying = mini(RtsKinds.LOAD, mine.health)
-		mine.health -= unit.carrying
+		unit.carrying = mini(RtsKinds.LOAD, deposit.health)
+		unit.carried = RtsKinds.of(deposit.kind, "yields")
+		deposit.health -= unit.carrying
 		unit.progress = 0
 
 
-# Carry the load to the nearest base. With the mine gone and nothing to
+# Carry the load to the nearest base. With the deposit gone and nothing to
 # carry, or no base to carry to, the order is over.
-static func _deliver(world: RtsWorld, unit: RtsUnit, mine_left: bool) -> void:
+static func _deliver(world: RtsWorld, unit: RtsUnit, deposit_left: bool) -> void:
 	var base: RtsUnit = world.nearest(unit.position, unit.side, RtsKinds.BASE)
-	if base == null or (unit.carrying == 0 and not mine_left):
+	if base == null or (unit.carrying == 0 and not deposit_left):
 		unit.order = RtsUnit.IDLE
 		return
 	if _walk(world, unit, base.cell(), base.position, RtsKinds.USE_REACH):
-		world.resources[unit.side] = world.resources.get(unit.side, 0) + unit.carrying
+		world.funds(unit.side)[unit.carried] += unit.carrying
 		world.delivered[unit.side] = world.delivered.get(unit.side, 0) + unit.carrying
 		unit.carrying = 0
 

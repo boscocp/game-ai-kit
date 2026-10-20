@@ -5,7 +5,7 @@
 ## out, so a refused command changes nothing -- `test/rts_simulation.gd`
 ## checks the world's digest is untouched by each. Three of the refusals are
 ## the ones a cheating AI would trip: ordering the other side's units,
-## spending money it does not have, and aiming at something it cannot see.
+## spending what it does not have, and aiming at something it cannot see.
 ##
 ## When not to use it: rules that depend on more than the order and the
 ## world as it stands -- a cooldown on giving orders, say. Those belong to
@@ -88,7 +88,7 @@ static func _why_target_refused(world: RtsWorld, side: int, order: RtsCommand) -
 	if target == null or not world.visible_to(side, target.position):
 		return "unit %d is not in sight" % order.target_id
 	if order.kind == RtsCommand.GATHER:
-		return "" if target.kind == RtsKinds.MINE else "unit %d is not a mine" % target.id
+		return "" if RtsKinds.is_deposit(target.kind) else "unit %d is nothing to gather" % target.id
 	if target.side == side or target.side == RtsWorld.NEUTRAL:
 		return "unit %d is not an enemy" % target.id
 	return ""
@@ -98,8 +98,11 @@ static func _why_build_refused(world: RtsWorld, side: int, order: RtsCommand) ->
 	if order.unit_ids.size() != 1:
 		return "one worker builds a building"
 	if not RtsKinds.TABLE.has(order.what) or not RtsKinds.is_building(order.what) \
-			or order.what == RtsKinds.MINE:
+			or RtsKinds.is_deposit(order.what):
 		return "%s is not something a worker builds" % order.what
+	var missing: String = _why_needs_missing(world, side, order.what)
+	if missing != "":
+		return missing
 	# Sight first: "not free" about a cell nobody can see would say who stands there.
 	if not world.visible_to(side, Vector2(order.cell) + Vector2(0.5, 0.5)):
 		return "%s is not in sight" % order.cell
@@ -118,14 +121,37 @@ static func _why_train_refused(world: RtsWorld, side: int, order: RtsCommand) ->
 		return "a %s does not train a %s" % [producer.kind, order.what]
 	if producer.queue.size() >= RtsKinds.QUEUE_LIMIT:
 		return "unit %d already has %d in its queue" % [producer.id, RtsKinds.QUEUE_LIMIT]
+	var missing: String = _why_needs_missing(world, side, order.what)
+	if missing != "":
+		return missing
+	var room: int = world.supply_cap(side) - world.supply_used(side)
+	if room < int(RtsKinds.of(order.what, "supply")):
+		return "a %s needs %d supply and you have %d free of %d" % [
+			order.what, RtsKinds.of(order.what, "supply"), room, world.supply_cap(side)]
 	return _why_unaffordable(world, side, order.what)
 
 
+# A kind that needs a building cannot be had until one of that side's stands
+# complete: the lab before the mortar, the barracks before the lab.
+static func _why_needs_missing(world: RtsWorld, side: int, kind: String) -> String:
+	var needed: String = RtsKinds.of(kind, "needs")
+	if needed == "" or world.has_complete(side, needed):
+		return ""
+	return "a %s needs a %s first" % [kind, needed]
+
+
+# The first resource short is named, with what is held, so the refusal says
+# what to go and gather.
 static func _why_unaffordable(world: RtsWorld, side: int, kind: String) -> String:
-	var cost: int = RtsKinds.of(kind, "cost")
-	var held: int = world.resources.get(side, 0)
-	return "" if held >= cost else "a %s costs %d and you have %d" % [kind, cost, held]
+	var price: Dictionary = RtsKinds.cost(kind)
+	var held: Dictionary = world.funds(side)
+	for resource: String in RtsKinds.RESOURCES:
+		if held[resource] < price[resource]:
+			return "a %s costs %d %s and you have %d" % [kind, price[resource], resource, held[resource]]
+	return ""
 
 
 static func _pay(world: RtsWorld, side: int, kind: String) -> void:
-	world.resources[side] = world.resources.get(side, 0) - RtsKinds.of(kind, "cost")
+	var price: Dictionary = RtsKinds.cost(kind)
+	for resource: String in RtsKinds.RESOURCES:
+		world.funds(side)[resource] -= price[resource]

@@ -27,7 +27,7 @@ var kind: String
 var unit_ids: Array[int] = []
 ## Where to go, or where to build.
 var cell: Vector2i = Vector2i.ZERO
-## Whom to attack, or which mine to gather from.
+## Whom to attack, or which deposit to gather from.
 var target_id: int = 0
 ## What to build, or what to train.
 var what: String = ""
@@ -54,10 +54,10 @@ static func attack(ids: Array[int], target: int) -> RtsCommand:
 	return command
 
 
-## Set workers `ids` carrying from `mine` to the nearest base, over and over.
-static func gather(ids: Array[int], mine: int) -> RtsCommand:
+## Set workers `ids` carrying from `deposit` to the nearest base, over and over.
+static func gather(ids: Array[int], deposit: int) -> RtsCommand:
 	var command := RtsCommand.new(GATHER, ids)
-	command.target_id = mine
+	command.target_id = deposit
 	return command
 
 

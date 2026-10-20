@@ -21,7 +21,7 @@ class_name RtsWorld
 extends RefCounted
 
 const TICKS_PER_SECOND: int = 60
-## The side of whatever belongs to nobody: the mines.
+## The side of whatever belongs to nobody: the deposits.
 const NEUTRAL: int = -1
 ## Cells of flow field settled per tick, across every field being built: the
 ## flow-field layer's share of the frame, in work rather than milliseconds, so
@@ -34,7 +34,8 @@ const FIELD_KEPT_FOR: int = TICKS_PER_SECOND
 
 var graph: GridGraph
 var tick: int = 0
-## What each side has to spend, by side.
+## What each side has to spend: side -> {resource -> amount}, every
+## resource of `RtsKinds.RESOURCES` named. Read it through `funds`.
 var resources: Dictionary = {}
 ## Who stands where, for every question about who is near.
 var spatial := SpatialHash.new()
@@ -43,8 +44,8 @@ var rng := RandomNumberGenerator.new()
 ## Flow fields started since the world was made: the price of the questions
 ## "how do I get there", paid once per goal rather than once per unit.
 var fields_started: int = 0
-## What each side's workers have carried home, by side: income, kept apart
-## from `resources` so spending cannot hide it.
+## What each side's workers have carried home, by side, both resources
+## together: income, kept apart from `resources` so spending cannot hide it.
 var delivered: Dictionary = {}
 ## Buildings each side has finished raising, by side: kept because a
 ## building raised and then lost leaves no other trace.
@@ -81,6 +82,54 @@ func add_unit(kind: String, side: int, cell: Vector2i, complete: bool = true) ->
 		_fields.clear()
 		_asked.clear()
 	return unit
+
+
+## What `side` holds, by resource. Never null: a side that has had nothing
+## holds nothing of each.
+func funds(side: int) -> Dictionary:
+	if not resources.has(side):
+		var nothing: Dictionary = {}
+		for resource: String in RtsKinds.RESOURCES:
+			nothing[resource] = 0
+		resources[side] = nothing
+	return resources[side]
+
+
+## Give `side` exactly `ore` and `magma`: how a match starts, and how a test
+## sets a side up.
+func set_funds(side: int, ore: int, magma: int = 0) -> void:
+	funds(side)[RtsKinds.ORE] = ore
+	funds(side)[RtsKinds.MAGMA] = magma
+
+
+## The room `side`'s units take: those standing and those queued, since a
+## place in a queue is paid for and so is the room it will need.
+func supply_used(side: int) -> int:
+	var used: int = 0
+	for listed: RtsUnit in _units.values():
+		if listed.side != side:
+			continue
+		used += RtsKinds.of(listed.kind, "supply")
+		for queued: String in listed.queue:
+			used += RtsKinds.of(queued, "supply")
+	return used
+
+
+## The room `side`'s complete buildings give, up to `RtsKinds.SUPPLY_LIMIT`.
+func supply_cap(side: int) -> int:
+	var given: int = 0
+	for listed: RtsUnit in _units.values():
+		if listed.side == side and listed.complete:
+			given += RtsKinds.of(listed.kind, "provides")
+	return mini(given, RtsKinds.SUPPLY_LIMIT)
+
+
+## True when `side` has a complete `kind` standing: what `needs` asks.
+func has_complete(side: int, kind: String) -> bool:
+	for listed: RtsUnit in _units.values():
+		if listed.side == side and listed.kind == kind and listed.complete:
+			return true
+	return false
 
 
 ## The unit with this id, or null when there is none -- or it has died.
@@ -156,7 +205,7 @@ func digest() -> String:
 	sides.sort()
 	var values: Array = [tick, rng.state]
 	for side: Variant in sides:
-		values.append([side, resources[side]])
+		values.append([side, funds(side)[RtsKinds.ORE], funds(side)[RtsKinds.MAGMA]])
 	for listed: RtsUnit in units():
 		values.append(listed.state())
 	var context := HashingContext.new()

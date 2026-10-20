@@ -14,12 +14,12 @@
 class_name RtsUnit
 extends RefCounted
 
-## What a unit with no order does: nothing, or -- a soldier -- whatever enemy
+## What a unit with no order does: nothing, or -- a fighter -- whatever enemy
 ## comes into sight.
 const IDLE: String = "idle"
 
 var id: int
-## Which side owns it; `RtsWorld.NEUTRAL` for a mine.
+## Which side owns it; `RtsWorld.NEUTRAL` for a deposit.
 var side: int
 ## A name in `RtsKinds.TABLE`: what it is, how fast, how strong.
 var kind: String
@@ -31,8 +31,9 @@ var order: String = IDLE
 var goal: Vector2i = Vector2i.ZERO
 ## The unit an attack or gather order is aimed at.
 var target_id: int = 0
-## What a worker holds on its way back to a base.
+## What a worker holds on its way back to a base, and which resource it is.
 var carrying: int = 0
+var carried: String = ""
 ## Ticks spent on the current piece of work: gathering, raising a building,
 ## training the first unit in the queue.
 var progress: int = 0
@@ -61,4 +62,4 @@ func cell() -> Vector2i:
 ## the world is taken over, and what a snapshot copies.
 func state() -> Array:
 	return [id, side, kind, position.x, position.y, health, order, goal.x, goal.y, target_id,
-		carrying, progress, cooldown, complete, queue.duplicate()]
+		carrying, carried, progress, cooldown, complete, queue.duplicate()]
