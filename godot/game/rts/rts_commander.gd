@@ -48,6 +48,11 @@ var schedule: Array[Dictionary] = []
 var plans: Array[Dictionary] = []
 
 var _planned_at: int = -1
+# How much it over- or under-counts each kind of enemy fighter it has seen:
+# `evaluation_noise` read as a misjudgement of the enemy's army, drawn once
+# so it misreads the same way all match rather than dithering between
+# counters. 1 for each at a noise of 0.
+var _misjudged: Dictionary = {}
 # What the plan put in the queue last decision.
 var _wished: Array[String] = []
 
@@ -58,10 +63,20 @@ func _init(side_played: int, side_level: Difficulty, seed_value: int,
 		use_planner: BuildOrder.Planner = BuildOrder.Planner.STRIPS) -> void:
 	super(side_played, side_level, seed_value)
 	planner = use_planner
+	var dice := RandomNumberGenerator.new()
+	dice.seed = seed_value + 2
+	for kind: String in RtsKinds.FIGHTERS:
+		_misjudged[kind] = 1.0 + dice.randf_range(-level.evaluation_noise, level.evaluation_noise)
 
 
 func _fill_queue(view: RtsSnapshot) -> void:
 	_reflexes(view)
+	if level.plan_horizon == 0:
+		goal_facts = goal(view)
+		steps.clear()
+		schedule.clear()
+		QueueSide.wish_by_rules(queue, view)
+		return
 	var held: PackedStringArray = BuildOrder.facts(view)
 	var wanted: PackedStringArray = goal(view)
 	steps = _still_to_do(steps, held)
@@ -78,7 +93,7 @@ func goal(view: RtsSnapshot) -> PackedStringArray:
 	var seen: Dictionary = belief.seen_fighters()
 	var most: String = ""
 	for kind: String in seen:
-		if most == "" or seen[kind] > seen[most]:
+		if most == "" or seen[kind] * _misjudged[kind] > seen[most] * _misjudged[most]:
 			most = kind
 	var seconds: float = float(view.tick) / RtsWorld.TICKS_PER_SECOND
 	if most == "":
@@ -97,7 +112,8 @@ func overlay(view: RtsSnapshot) -> Dictionary:
 	var shown: Dictionary = super(view)
 	shown["goal"] = goal_facts
 	shown["plan"] = schedule.duplicate(true)
-	shown["planner"] = "STRIPS" if planner == BuildOrder.Planner.STRIPS else "HTN"
+	shown["planner"] = "no plan: the queues' rules" if level.plan_horizon == 0 \
+		else ("STRIPS" if planner == BuildOrder.Planner.STRIPS else "HTN")
 	return shown
 
 

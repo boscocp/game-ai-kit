@@ -37,11 +37,11 @@ const KEYS: Dictionary = {
 	RtsKinds.BARRACKS: "B", RtsKinds.DEPOT: "D", RtsKinds.LAB: "L", RtsKinds.TOWER: "T", RtsKinds.BASE: "E",
 	RtsKinds.WORKER: "W", RtsKinds.RUNNER: "1", RtsKinds.SHIELD: "2", RtsKinds.MORTAR: "3",
 }
-const HOW_TO_PLAY: String = "How to play\n" \
-	+ "1. Drag a box over your workers -- the blue dots by your base.\n" \
-	+ "2. Click Barracks (or press B), then click open ground near the base.\n" \
-	+ "3. When it is up, click the barracks and train Runners.\n" \
-	+ "4. Select fighters and right-click an enemy to attack. Build a Depot when supply is full."
+const HOW_TO_PLAY: String = "How to play -- space starts the clock\n" \
+	+ "1. Drag a box over your workers by the base; right-click a rock to mine ore.\n" \
+	+ "2. Click one worker, click Barracks (B), then a green spot near the base.\n" \
+	+ "3. When it is up, click the barracks and train Runners (1).\n" \
+	+ "4. Select fighters, right-click an enemy. A Depot (D) when supply is full."
 const BUTTON_SIZE := Vector2(74.0, 50.0)
 
 @onready var _info: Label = $Info

@@ -55,6 +55,14 @@ var dragging: Rect2 = Rect2()
 ## A building being placed: its kind, or "" for none, and the cell under the mouse.
 var placing: String = ""
 var placing_at: Vector2i = Vector2i(-1, -1)
+## Why the rules would refuse the building under the cursor; "" when they
+## would take it. Asked of `RtsRules` itself, so the preview cannot disagree
+## with the click.
+var placing_refusal: String = ""
+## A message across the top of the map, and until when it shows (msec).
+var toast: String = ""
+var toast_bad: bool = false
+var toast_until: int = 0
 var art: RtsArt
 
 ## The match's tick, which paces the walking frames.
@@ -125,7 +133,9 @@ func _draw() -> void:
 	if not everything:
 		_draw_fog()
 	if placing != "" and placing_at != Vector2i(-1, -1):
-		draw_rect(Rect2(to_screen(Vector2(placing_at)), Vector2(CELL, CELL)), Color(1, 1, 1, 0.35))
+		_draw_placing()
+	if toast != "" and Time.get_ticks_msec() < toast_until:
+		_draw_toast()
 	if dragging.size != Vector2.ZERO:
 		draw_rect(dragging.abs(), SELECTED, false, 1.0)
 
@@ -179,6 +189,42 @@ func _draw_unit(unit: Dictionary) -> void:
 	var bar := Rect2(centre + Vector2(-CELL * 0.4, -CELL * 0.7), Vector2(CELL * 0.8, 4.0))
 	draw_rect(bar, Color(0.2, 0.0, 0.0))
 	draw_rect(Rect2(bar.position, Vector2(bar.size.x * clampf(unit["health"] / full, 0.0, 1.0), bar.size.y)), Color(0.3, 0.95, 0.3))
+	if not unit["complete"]:
+		_draw_construction(unit, centre)
+
+
+# A site going up: its cell outlined, and how far along it is -- from the
+# work done for one's own, from its health for anybody else's.
+func _draw_construction(unit: Dictionary, centre: Vector2) -> void:
+	var share: float = float(unit["health"]) / float(RtsKinds.of(unit["kind"], "health"))
+	if unit.has("progress"):
+		share = float(unit["progress"]) / float(RtsKinds.of(unit["kind"], "ticks"))
+	draw_rect(Rect2(centre - Vector2(CELL, CELL) * 0.5, Vector2(CELL, CELL)), Color(1.0, 0.9, 0.3), false, 2.0)
+	draw_string(ThemeDB.fallback_font, centre + Vector2(-CELL, CELL * 0.95), "building %d%%" % roundi(share * 100.0),
+		HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12, Color(1.0, 0.9, 0.3))
+
+
+# The building under the cursor, as it would stand: green where the rules
+# take it, red where they would not, with why.
+func _draw_placing() -> void:
+	var good: bool = placing_refusal == ""
+	var tint := Color(0.5, 1.0, 0.5, 0.7) if good else Color(1.0, 0.4, 0.4, 0.7)
+	var centre: Vector2 = to_screen(Vector2(placing_at) + Vector2(0.5, 0.5))
+	var ghost: Dictionary = {"kind": placing, "side": 0, "health": RtsKinds.of(placing, "health"), "complete": true}
+	if art == null or not art.draw_unit(self, ghost, centre, CELL, Vector2.ZERO, false, tick, tint):
+		draw_rect(Rect2(centre - Vector2(CELL, CELL) * 0.5, Vector2(CELL, CELL)), tint)
+	draw_rect(Rect2(centre - Vector2(CELL, CELL) * 0.5, Vector2(CELL, CELL)), tint, false, 2.0)
+	var words: String = "click to build the %s" % placing if good else placing_refusal
+	draw_string(ThemeDB.fallback_font, centre + Vector2(CELL, -CELL * 0.6), words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 13, tint)
+
+
+func _draw_toast() -> void:
+	var font: Font = ThemeDB.fallback_font
+	var width: float = font.get_string_size(toast, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 16).x
+	var box := Rect2(Vector2((MAP_RECT.size.x - width) / 2.0 - 12.0, 10.0), Vector2(width + 24.0, 30.0))
+	draw_rect(box, Color(0.0, 0.0, 0.0, 0.75))
+	var colour := Color(1.0, 0.45, 0.4) if toast_bad else Color(0.6, 1.0, 0.6)
+	draw_string(font, box.position + Vector2(12.0, 21.0), toast, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 16, colour)
 
 
 ## A plain shape per kind, so the board reads with no art at all: a dot for

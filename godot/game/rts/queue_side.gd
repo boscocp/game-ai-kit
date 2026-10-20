@@ -24,6 +24,13 @@ const EXPAND_AFTER_SECONDS: int = 300
 
 func _fill_queue(view: RtsSnapshot) -> void:
 	_reflexes(view)
+	wish_by_rules(queue, view)
+
+
+## The rules, wished into `queue` for the side `view` belongs to. Static, so
+## a commander told to plan nothing (horizon 0, `RtsLevels`' easy) plays its
+## economy by exactly these.
+static func wish_by_rules(queue: EconomyQueue, view: RtsSnapshot) -> void:
 	var have: Dictionary = _have(view)
 	var seconds: float = float(view.tick) / RtsWorld.TICKS_PER_SECOND
 	if have.get(RtsKinds.BARRACKS, 0) == 0:
@@ -44,7 +51,7 @@ func _fill_queue(view: RtsSnapshot) -> void:
 
 # The fighter it has fewest of, among those it can train now -- runners
 # first on a tie, since they cost no magma.
-func _fewest_fighter(view: RtsSnapshot, have: Dictionary) -> String:
+static func _fewest_fighter(view: RtsSnapshot, have: Dictionary) -> String:
 	var fewest: String = RtsKinds.RUNNER
 	for kind: String in RtsKinds.FIGHTERS:
 		if _can_have(view, have, kind) and have.get(kind, 0) < have.get(fewest, 0):

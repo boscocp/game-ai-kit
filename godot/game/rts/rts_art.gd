@@ -70,7 +70,7 @@ func _init(side_colours: Array[Color]) -> void:
 ## which rises as it goes up. False when there is no picture to draw, so
 ## the caller draws a shape instead.
 func draw_unit(canvas: CanvasItem, unit: Dictionary, centre: Vector2, cell: float,
-		facing: Vector2, walking: bool, tick: int) -> bool:
+		facing: Vector2, walking: bool, tick: int, tint: Color = Color.WHITE) -> bool:
 	var kind: String = unit["kind"]
 	if not found or not _images.has(kind):
 		return false
@@ -84,7 +84,7 @@ func draw_unit(canvas: CanvasItem, unit: Dictionary, centre: Vector2, cell: floa
 		mirrored = octant > 4
 	var cells: float = UNIT_CELLS if int(sheet["directions"]) > 1 else BUILDING_CELLS
 	var size: Vector2 = frame * (cell * cells / maxf(frame.x, frame.y))
-	canvas.draw_texture_rect(_frame_of(kind, maxi(unit["side"], 0), at, mirrored), Rect2(centre - size / 2.0, size), false)
+	canvas.draw_texture_rect(_frame_of(kind, maxi(unit["side"], 0), at, mirrored), Rect2(centre - size / 2.0, size), false, tint)
 	return true
 
 

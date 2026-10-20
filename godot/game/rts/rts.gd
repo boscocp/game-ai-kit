@@ -195,7 +195,18 @@ func _on_mouse_motion(motion: InputEventMouseMotion) -> void:
 	if _dragging:
 		_view.dragging = Rect2(_drag_from, motion.position - RtsView.MAP_RECT.position - _drag_from)
 	_view.placing_at = RtsView.to_cell(motion.position)
+	if _view.placing != "":
+		_view.placing_refusal = _why_not_here(_view.placing, _view.placing_at)
 	_view.queue_redraw()
+
+
+# What the rules would say to building `what` at `cell` with a selected
+# worker: asked, never given -- `why_refused` changes nothing.
+func _why_not_here(what: String, cell: Vector2i) -> String:
+	var builder: int = _selected_worker()
+	if builder < 0:
+		return "select a worker to build with"
+	return RtsRules.why_refused(world, RtsScenario.WEST, RtsCommand.build(builder, what, cell))
 
 
 func _on_key(code: Key) -> void:
@@ -232,11 +243,11 @@ func _on_key(code: Key) -> void:
 func _on_card(action: String, what: String) -> void:
 	if action == "train":
 		_train(what)
-	elif _selected_movers().any(func(id: int) -> bool: return world.unit(id).kind == RtsKinds.WORKER):
+	elif _selected_worker() >= 0:
 		_view.placing = what
-		last_refusal = "click open ground to put the %s -- right click cancels" % what
+		_say("click open ground to put the %s -- green is a place it can go; right click cancels" % what, false)
 	else:
-		last_refusal = "select a worker to build with"
+		_say("select a worker to build with", true)
 	_refresh()
 
 
@@ -274,14 +285,26 @@ func _order_at(cell: Vector2i, point: Vector2) -> void:
 
 
 func _place(cell: Vector2i) -> void:
-	for id: int in _selected_movers():
-		var unit: RtsUnit = world.unit(id)
-		if unit != null and unit.kind == RtsKinds.WORKER:
-			_give(RtsCommand.build(id, _view.placing, cell))
-			_view.placing = ""
-			return
-	last_refusal = "select a worker to build with"
+	var builder: int = _selected_worker()
+	var what: String = _view.placing
+	if builder < 0:
+		_say("select a worker to build with", true)
+		_view.placing = ""
+		return
+	_give(RtsCommand.build(builder, what, cell))
+	if last_refusal != "":
+		return
 	_view.placing = ""
+	var seconds: float = float(RtsKinds.of(what, "ticks")) / RtsWorld.TICKS_PER_SECOND
+	_say("%s placed -- the worker walks there and builds it (%d s of game)" % [what, roundi(seconds)], false)
+
+
+# The first worker selected, or -1 when none is.
+func _selected_worker() -> int:
+	for id: int in _selected_movers():
+		if world.unit(id).kind == RtsKinds.WORKER:
+			return id
+	return -1
 
 
 func _train(kind: String) -> void:
@@ -290,11 +313,21 @@ func _train(kind: String) -> void:
 		if unit != null and kind in RtsKinds.of(unit.kind, "trains"):
 			_give(RtsCommand.train(id, kind))
 			return
-	last_refusal = "select a building that trains a %s" % kind
+	_say("select a building that trains a %s" % kind, true)
 
 
 func _give(command: RtsCommand) -> void:
 	last_refusal = played.give(RtsScenario.WEST, command)
+	if last_refusal != "":
+		_say(last_refusal, true)
+
+
+# A message across the top of the map for a few seconds: what happened to
+# the order just given. A refusal is red.
+func _say(words: String, bad: bool) -> void:
+	_view.toast = words
+	_view.toast_bad = bad
+	_view.toast_until = Time.get_ticks_msec() + 3500
 
 
 func _selected_movers() -> Array[int]:
