@@ -140,10 +140,12 @@ static func fights(kind: String) -> bool:
 	return kind in FIGHTERS
 
 
-## The damage a blow by `attacker` deals `target`, before the dice: twice
-## against the kind it beats, a third against a building unless it besieges.
-static func blow(attacker: String, target: String) -> int:
-	var damage: int = of(attacker, "damage")
+## The damage a blow by `attacker` deals `target`, its `dice` added first:
+## twice against the kind it beats, a third against a building unless it
+## besieges. The dice before the division, so a building takes a third of
+## the whole blow and not a third plus the dice.
+static func blow(attacker: String, target: String, dice: int = 0) -> int:
+	var damage: int = int(of(attacker, "damage")) + dice
 	if target in of(attacker, "beats"):
 		return damage * COUNTER_FACTOR
 	if is_building(target) and not of(attacker, "siege"):

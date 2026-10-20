@@ -4,8 +4,9 @@
 ## walk until in reach, then work until done -- run once a tick by
 ## `RtsWorld.step` for every unit in id order. Walking reads the flow field
 ## to the goal: the arrow under the unit's feet, followed from cell centre to
-## cell centre at the unit's speed. Units pass through each other: steering
-## round one another is T22's lesson (`ai_steering`), not this core's.
+## cell centre at the unit's speed. Units do not steer round one another --
+## that is T22's lesson (`ai_steering`) -- but `RtsWorld` nudges them apart
+## after every tick, so they never stand on one point.
 ##
 ## A fighter with no order looks for the nearest enemy it can see and goes
 ## for it -- not every tick, but every `LOOK_EVERY` ticks, each fighter on its
@@ -144,7 +145,10 @@ static func _idle(world: RtsWorld, unit: RtsUnit) -> void:
 
 static func _attack(world: RtsWorld, unit: RtsUnit) -> void:
 	var target: RtsUnit = world.unit(unit.target_id)
-	if target == null or target.health <= 0:
+	# Gone and out of sight end the order alike, so the order's end says no
+	# more than the side can see: a chase into the fog stops at its edge, as
+	# no order could start one there (T20's review).
+	if target == null or target.health <= 0 or not world.visible_to(unit.side, target.position):
 		unit.order = RtsUnit.IDLE
 		return
 	# A building fills its cell, so reach is counted from the cell's edge:
@@ -159,13 +163,15 @@ static func _attack(world: RtsWorld, unit: RtsUnit) -> void:
 	if unit.cooldown == 0:
 		# The one random number in a fight: a little spread on every blow, drawn
 		# from the match's own dice so a replay strikes the same.
-		target.health -= RtsKinds.blow(unit.kind, target.kind) + world.rng.randi_range(0, 2)
+		target.health -= RtsKinds.blow(unit.kind, target.kind, world.rng.randi_range(0, 2))
 		unit.cooldown = RtsKinds.of(unit.kind, "cooldown")
-		_strike_back(target, unit)
+		if world.visible_to(target.side, unit.position):
+			_strike_back(target, unit)
 
 
-# A fighter struck while it stands idle turns on whoever struck it, seen or
-# not: it was hit, and it knows from where. One walking, gathering or
+# A fighter struck while it stands idle turns on whoever struck it -- when
+# its side can see the striker: an order aimed into the fog would hand the
+# side an id it was never shown. One walking, gathering or
 # already fighting keeps its order -- the order is the player's.
 static func _strike_back(struck: RtsUnit, striker: RtsUnit) -> void:
 	if RtsKinds.fights(struck.kind) and struck.order == RtsUnit.IDLE and struck.health > 0:
@@ -223,11 +229,16 @@ static func _build(world: RtsWorld, unit: RtsUnit) -> void:
 
 
 # Mend at the rate a building goes up -- its full health over its build
-# time -- until it is whole, or gone, then stop. Free, as in Age of
+# time -- until it is whole, or gone, then stop. A site left half-built is
+# taken up as a build: the work it already had stays done. Free, as in Age of
 # Empires' early versions; StarCraft charges for it, and a price is a
 # second rule this game does not need.
 static func _repair(world: RtsWorld, unit: RtsUnit) -> void:
 	var site: RtsUnit = world.unit(unit.target_id)
+	if site != null and not site.complete:
+		unit.order = RtsCommand.BUILD
+		_build(world, unit)
+		return
 	var full: int = RtsKinds.of(site.kind, "health") if site != null else 0
 	if site == null or site.health <= 0 or site.health >= full:
 		unit.order = RtsUnit.IDLE

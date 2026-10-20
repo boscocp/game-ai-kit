@@ -23,7 +23,7 @@ const TRAIN: String = "train"
 const REPAIR: String = "repair"
 const KINDS: Array[String] = [MOVE, ATTACK, GATHER, BUILD, TRAIN, REPAIR]
 
-## Which of the five.
+## Which of the six.
 var kind: String
 ## The units given the order: one producer for TRAIN, one worker for BUILD.
 var unit_ids: Array[int] = []

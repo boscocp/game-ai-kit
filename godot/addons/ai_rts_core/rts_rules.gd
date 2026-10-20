@@ -22,10 +22,10 @@ static func why_refused(world: RtsWorld, side: int, order: RtsCommand) -> String
 		return "an order needs at least one unit"
 	for id: int in order.unit_ids:
 		var given: RtsUnit = world.unit(id)
-		if given == null:
-			return "there is no unit %d" % id
-		if given.side != side:
-			return "unit %d is not yours" % id
+		# Gone and someone else's get one answer: two would tell a side which
+		# of the ids it cannot see are still alive (T20's review).
+		if given == null or given.side != side:
+			return "unit %d is not one of yours" % id
 		var unfit: String = _why_unfit(given, order)
 		if unfit != "":
 			return unfit
@@ -96,15 +96,14 @@ static func _why_target_refused(world: RtsWorld, side: int, order: RtsCommand) -
 	return ""
 
 
-# Only one's own finished building, and only when it is hurt: a site going
-# up is raised, not repaired.
+# Only one's own building: a hurt one is mended, and a site its builder left
+# is taken up again -- without that, a site whose worker was killed could
+# never be finished, and a plan waiting on it waited for ever (T20's review).
 static func _why_repair_refused(world: RtsWorld, side: int, target_id: int) -> String:
 	var target: RtsUnit = world.unit(target_id)
 	if target == null or target.side != side or not RtsKinds.is_building(target.kind):
 		return "unit %d is not a building of yours" % target_id
-	if not target.complete:
-		return "unit %d is still going up -- build it, do not repair it" % target_id
-	if target.health >= int(RtsKinds.of(target.kind, "health")):
+	if target.complete and target.health >= int(RtsKinds.of(target.kind, "health")):
 		return "unit %d is not damaged" % target_id
 	return ""
 

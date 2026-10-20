@@ -333,9 +333,11 @@ func _push_from(moving: RtsUnit, other: RtsUnit) -> Vector2:
 	if other.id == moving.id or RtsKinds.is_building(other.kind):
 		return Vector2.ZERO
 	var apart: Vector2 = moving.position - other.position
-	if apart == Vector2.ZERO:
-		apart = Vector2.LEFT if moving.id < other.id else Vector2.RIGHT
-	return apart.normalized() * (PERSONAL_SPACE - apart.length())
+	# The distance first: a direction made up for two on one point has a
+	# length of 1, and measured from it the push came out backwards.
+	var distance: float = apart.length()
+	var away: Vector2 = apart / distance if distance > 0.0 else (Vector2.LEFT if moving.id < other.id else Vector2.RIGHT)
+	return away * (PERSONAL_SPACE - distance)
 
 
 func _settle_fields() -> void:

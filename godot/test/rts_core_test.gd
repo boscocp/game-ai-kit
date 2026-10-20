@@ -73,7 +73,7 @@ func test_a_refused_command_says_why_and_changes_nothing() -> void:
 	var fighter: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(1, 1))
 	var rocks: RtsUnit = world.add_unit(RtsKinds.ROCKS, RtsWorld.NEUTRAL, Vector2i(2, 1))
 	var before: String = world.digest()
-	assert_str(world.command(1, RtsCommand.move([fighter.id] as Array[int], Vector2i(5, 5)))).contains("not yours")
+	assert_str(world.command(1, RtsCommand.move([fighter.id] as Array[int], Vector2i(5, 5)))).contains("not one of yours")
 	assert_str(world.command(0, RtsCommand.gather([fighter.id] as Array[int], rocks.id))).contains("only a worker")
 	assert_str(world.command(0, RtsCommand.move([fighter.id] as Array[int], Vector2i(2, 1)))).contains("nobody can stand")
 	assert_str(world.digest()).is_equal(before)
@@ -356,16 +356,20 @@ func test_a_worker_repairs_a_hurt_building_of_its_own_and_only_that() -> void:
 
 
 func test_two_units_on_one_point_drift_apart_and_never_into_a_wall() -> void:
+	# Both at the very west edge of cell (5, 5), a wall in (4, 5): the lower
+	# id is pushed west, which would put it in the wall, and must stay out.
 	var graph := GridGraph.new(10, 10)
-	graph.block(Vector2i(4, 5))
 	var world := RtsWorld.new(graph, 1)
+	world.add_wall(Vector2i(4, 5))
 	var one: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(5, 5))
 	var other: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(5, 5))
+	world.place(one, Vector2(5.02, 5.5))
+	world.place(other, Vector2(5.02, 5.5))
 	for _tick: int in range(120):
 		world.step()
+		assert_bool(graph.is_blocked(one.cell())).is_false()
 	assert_float(one.position.distance_to(other.position)).is_greater_equal(RtsWorld.PERSONAL_SPACE - 0.01)
-	assert_bool(graph.is_blocked(one.cell())).is_false()
-	assert_bool(graph.is_blocked(other.cell())).is_false()
+	assert_float(other.position.x).is_greater(5.3)
 
 
 func test_a_shot_needs_a_line_clear_of_walls_and_buildings_but_not_water() -> void:
@@ -379,13 +383,95 @@ func test_a_shot_needs_a_line_clear_of_walls_and_buildings_but_not_water() -> vo
 	assert_bool(world.line_of_fire(Vector2(2.5, 2.5), Vector2(5.5, 2.5))).is_true()
 
 
-func test_an_idle_fighter_struck_from_beyond_its_sight_turns_on_the_striker() -> void:
-	var world := RtsWorld.new(GridGraph.new(20, 5), 1)
-	var shield: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(2, 2))
-	var mortar: RtsUnit = world.add_unit(RtsKinds.MORTAR, 1, Vector2i(9, 2))
-	world.command(1, RtsCommand.attack([mortar.id] as Array[int], shield.id))
-	for _tick: int in range(RtsWorld.TICKS_PER_SECOND * 2):
+func test_an_idle_fighter_struck_turns_on_its_striker_and_a_moving_one_does_not() -> void:
+	# The mortar fires from five cells, the edge of the shields' sight.
+	var world := RtsWorld.new(GridGraph.new(30, 8), 1)
+	var idle: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(2, 2))
+	var walking: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(2, 5))
+	var mortar: RtsUnit = world.add_unit(RtsKinds.MORTAR, 1, Vector2i(7, 3))
+	world.place(idle, Vector2(2.5, 3.5))
+	world.place(walking, Vector2(2.5, 4.0))
+	world.command(0, RtsCommand.move([walking.id] as Array[int], Vector2i(28, 7)))
+	world.command(1, RtsCommand.attack([mortar.id] as Array[int], idle.id))
+	for _tick: int in range(5):
 		world.step()
-	assert_int(shield.health).is_less(RtsKinds.of(RtsKinds.SHIELD, "health"))
-	assert_str(shield.order).is_equal(RtsCommand.ATTACK)
-	assert_int(shield.target_id).is_equal(mortar.id)
+	assert_int(idle.health).is_less(RtsKinds.of(RtsKinds.SHIELD, "health"))
+	assert_str(idle.order).is_equal(RtsCommand.ATTACK)
+	assert_int(idle.target_id).is_equal(mortar.id)
+	var before: int = walking.health
+	world.command(1, RtsCommand.attack([mortar.id] as Array[int], walking.id))
+	mortar.cooldown = 0
+	world.step()
+	assert_int(walking.health).is_less(before)
+	assert_str(walking.order).is_equal(RtsCommand.MOVE)
+
+
+func test_a_dead_id_and_an_enemy_id_get_one_refusal() -> void:
+	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
+	world.add_unit(RtsKinds.WORKER, 0, Vector2i(1, 1))
+	var theirs: RtsUnit = world.add_unit(RtsKinds.WORKER, 1, Vector2i(8, 8))
+	var alive: String = world.command(0, RtsCommand.move([theirs.id] as Array[int], Vector2i(2, 2)))
+	var gone: String = world.command(0, RtsCommand.move([99] as Array[int], Vector2i(2, 2)))
+	assert_str(alive.replace(str(theirs.id), "#")).is_equal(gone.replace("99", "#"))
+
+
+func test_an_idle_fighter_takes_on_only_what_its_side_can_see() -> void:
+	# Seven cells off: past the shield's sight of five, inside its reach of
+	# sight + 2. Seen by nobody, it is left alone; seen by a tower, attacked.
+	var world := RtsWorld.new(GridGraph.new(20, 10), 1)
+	var shield: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(2, 5))
+	var runner: RtsUnit = world.add_unit(RtsKinds.RUNNER, 1, Vector2i(9, 5))
+	assert_object(RtsOrders.nearest_enemy(world, shield)).is_null()
+	world.add_unit(RtsKinds.TOWER, 0, Vector2i(9, 8))
+	assert_object(RtsOrders.nearest_enemy(world, shield)).is_same(runner)
+
+
+func test_repair_mends_a_little_a_tick_and_takes_up_a_site_left_half_built() -> void:
+	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var barracks: RtsUnit = world.add_unit(RtsKinds.BARRACKS, 0, Vector2i(5, 5))
+	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(4, 5))
+	barracks.health = 100
+	world.command(0, RtsCommand.repair([worker.id] as Array[int], barracks.id))
+	world.step()
+	world.step()
+	assert_int(barracks.health).is_greater(100)
+	assert_int(barracks.health).is_less(110)
+	var site: RtsUnit = world.add_unit(RtsKinds.DEPOT, 0, Vector2i(5, 7), false)
+	site.progress = 300
+	assert_str(world.command(0, RtsCommand.repair([worker.id] as Array[int], site.id))).is_empty()
+	# A walk of a couple of cells, then the 300 ticks the site still owed.
+	for _tick: int in range(420):
+		world.step()
+	assert_bool(site.complete).is_true()
+
+
+func test_a_chase_ends_where_the_side_stops_seeing_its_quarry() -> void:
+	var world := RtsWorld.new(GridGraph.new(40, 5), 1)
+	var shield: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(2, 2))
+	var runner: RtsUnit = world.add_unit(RtsKinds.RUNNER, 1, Vector2i(5, 2))
+	world.command(0, RtsCommand.attack([shield.id] as Array[int], runner.id))
+	world.place(runner, Vector2(30.5, 2.5))
+	world.step()
+	assert_str(shield.order).is_equal(RtsUnit.IDLE)
+
+
+func test_an_enemy_in_a_snapshot_carries_no_orders_queue_or_goal() -> void:
+	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
+	world.add_unit(RtsKinds.SHIELD, 0, Vector2i(2, 2))
+	world.add_unit(RtsKinds.BARRACKS, 1, Vector2i(4, 2))
+	for unit: Dictionary in RtsSnapshot.of(world, 0).enemies():
+		for private: String in ["order", "target", "goal", "queue", "queued", "progress", "carrying", "carried"]:
+			assert_bool(unit.has(private)).is_false()
+
+
+func test_a_mortar_does_not_fire_through_a_wall_in_reach() -> void:
+	# A wall between them, three cells apart: in reach, no line of fire.
+	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	for row: int in range(3, 9):
+		world.add_wall(Vector2i(5, row))
+	var mortar: RtsUnit = world.add_unit(RtsKinds.MORTAR, 0, Vector2i(3, 5))
+	var shield: RtsUnit = world.add_unit(RtsKinds.SHIELD, 1, Vector2i(7, 5))
+	world.command(0, RtsCommand.attack([mortar.id] as Array[int], shield.id))
+	for _tick: int in range(30):
+		world.step()
+	assert_int(shield.health).is_equal(RtsKinds.of(RtsKinds.SHIELD, "health"))
