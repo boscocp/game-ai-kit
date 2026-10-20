@@ -39,8 +39,8 @@ func _init(name_shown: String, aim_distance: float, margin: float, drift: float)
 ## does not allow; `racing_ladder.gd` says by how much in lap time.
 ##
 ## Measured alone on this track (T59, 2026-10-20: 24 metres wide, 2.4 g of
-## grip), five seeds and two laps each: easy 33.0 s, normal 31.7 s, hard
-## 30.2 s a lap. The grip margin is what buys it -- normal's was lowered from
+## grip, 26 m/s^2 of brakes), five seeds and two laps each: easy 32.5 s,
+## normal 31.3 s, hard 29.9 s a lap. The grip margin is what buys it -- normal's was lowered from
 ## T23's 0.87 to 0.84 when the kinder car brought it within 1.1 s of hard.
 ## Lookahead moves a lap by a few tenths at most, so it is chosen for what
 ## it shows, turning in earlier. Alone, no level leaves the tarmac and wander

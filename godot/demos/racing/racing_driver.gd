@@ -47,9 +47,9 @@ const PASS_OFFSET: float = 6.0
 const PASS_MARGIN: float = 2.5
 ## Metres a second faster than the car it passes a passing driver may go:
 ## matched to it, it would sit beside it for ever.
-const PASS_GAIN: float = 3.0
-## Steps the way must be clear before a pass is over (one second).
-const CLEAR_STEPS: int = 60
+const PASS_GAIN: float = 5.0
+## Steps the way must be clear before a pass is over (a second and a half).
+const CLEAR_STEPS: int = 90
 ## The slowest a car is taken to be when working out its turn: at a crawl
 ## its wheels still turn, and a car stopped nose to tail must be able to
 ## steer out.

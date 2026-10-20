@@ -15,7 +15,7 @@
 # 3.0 and 1.5 seconds apart. One second leaves the smaller gap room without
 # letting two drivers a person could not tell apart through. T59 widened the
 # track to 24 metres and gave every car more grip and brakes, and moved
-# normal's margin to 0.84: 33.0, 31.7 and 30.2 s, 1.3 and 1.5 apart.
+# normal's margin to 0.84: 32.5, 31.3 and 29.9 s, 1.2 and 1.4 apart.
 #
 # Each rule is first shown a ladder it must refuse, built from made-up lap
 # times, so a check that only goes green cannot pass.

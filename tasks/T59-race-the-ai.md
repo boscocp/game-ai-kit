@@ -60,8 +60,9 @@ levels side by side.
    limit, and a speedometer that says which pedal is down and when you are
    on the grass; a wheel that goes over in 0.15 s; your own braking point,
    a yellow bar, worked out as the AI's is; and a kinder car for everyone
-   -- 2.4 g of grip instead of 1.6, brakes of 18 m/s^2 instead of 14, grass
-   that holds you to 25 m/s instead of 18.
+   -- 2.4 g of grip instead of 1.6, brakes of 26 m/s^2 instead of 14 (18
+   first, and the owner asked for more), grass that holds you to 25 m/s
+   instead of 18.
 
 ## Acceptance
 
@@ -95,11 +96,14 @@ learn where to brake -- which the white bar is showing you.
 ## Measured
 
 Alone, five seeds, two laps each from a standing start, on the 24-metre
-track with the kinder car: easy 33.0 s, normal 31.7 s, hard 30.2 s a lap
-(normal's margin moved from 0.87 to 0.84 to keep it 1.3 s off hard). In
-traffic, watch mode with easy in front finishes hard, normal, easy on six
-seeds; a car parked on the line is passed wherever it is; a car held at
-20 m/s is passed by easy and hard from either slot. A car passing near the
+track with the kinder car: easy 32.5 s, normal 31.3 s, hard 29.9 s a lap
+(normal's margin moved from 0.87 to 0.84 to keep it over a second off
+hard). In traffic, watch mode with easy in front finishes hard, normal,
+easy on five seeds of six -- 23 (the demo's), 5, 7, 99, 11; on seed 42 hard
+finishes a second behind normal after a pass that went across the grass.
+Traffic is where a ladder is not guaranteed; the ladder gate measures each
+level alone. A car parked on the line is passed wherever it is; a car held
+at 20 m/s is passed by easy and hard from either slot. A car passing near the
 edge of a corner can put its wheels on the grass, up to two seconds over
 three laps. Mutating off the collision step, the following rule, the
 pass's memory or the push onto the car ahead fails the suite.

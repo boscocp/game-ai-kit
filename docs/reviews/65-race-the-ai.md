@@ -116,6 +116,17 @@ what holds; the level test also refuses the human driver's name. The grip
 rule in the cheat check reads what the car's tyres held on its own step,
 since a collision now changes speed after it.
 
+## After the owner's second race
+
+"Much better, still hard to control; the brake could be more effective;
+the collision is good." The brakes went from 18 to 26 m/s^2 for every car,
+and the pass was made firmer (5 m/s over the car it passes, held 1.5 s)
+when the stronger brakes left normal stuck behind easy on two seeds. Re-
+measured: alone 32.5 / 31.3 / 29.9 s; in traffic five seeds of six in
+order, the sixth with hard a second behind normal -- written down in T59,
+not hidden. The suite, both racing gates and the walks were rerun green.
+No third review: a physics constant and two passing constants, measured.
+
 ## What was done about them
 
 All fourteen of the first review, as above, in the commit after it; the

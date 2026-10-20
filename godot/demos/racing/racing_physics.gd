@@ -7,7 +7,8 @@
 ##
 ## The numbers are a racing car's, roughly, in metres and seconds, made a
 ## little kinder for a keyboard (T59: the owner found 1.6 g of grip and
-## 14 m/s^2 of brakes put every corner beyond them). They are not measured
+## 14 m/s^2 of brakes put every corner beyond them, and then 18 m/s^2 still
+## not enough brake). They are not measured
 ## from anything: the lesson is the driver, not the car.
 class_name RacingPhysics
 extends Resource
@@ -17,7 +18,7 @@ extends Resource
 ## How fast the engine adds speed, in metres a second, every second.
 @export var acceleration: float = 8.0
 ## The hardest the brakes take speed away, in metres a second, every second.
-@export var braking: float = 18.0
+@export var braking: float = 26.0
 ## The most sideways acceleration the tyres hold before the car will not turn
 ## any tighter: speed times turn rate never goes past it. 24 is about 2.4 g.
 @export var grip: float = 24.0
