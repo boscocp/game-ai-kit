@@ -81,8 +81,12 @@ Each one is followed by what was done about it.
 17. **The README's number did not say the chip is newer than the floor**
     (low). *Fixed*.
 
-## After the fixes
+## What was done about them
 
-`make check-affected BASE=origin/main` selects all of `make check`
-(scripts, the Makefile and `project.godot` changed). The run is in the
-pull request's CI, and the merge waits for it.
+All of it went into `3ff7a59`, with T50 itself; the branch was not pushed
+before the review. After it, the three gates' self-tests, the fetcher's,
+`game3d_floor.gd` (0 failures, no engine error) and `check_readability`
+pass. `make check-affected BASE=origin/main` selected all of `make check`,
+since scripts, the Makefile and `project.godot` changed, and passed. Its
+log holds only the planted `SCRIPT ERROR`s of `demo_overlays.gd`'s crashing
+step.
