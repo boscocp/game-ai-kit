@@ -5,6 +5,7 @@
   "fire_interval": 0.1,
   "magazine": 30,
   "reload_time": 2.0,
+  "reload_below": 10,
   "respawn_time": 4.0,
   "speed": 4.5,
   "sprint_speed": 6.5,

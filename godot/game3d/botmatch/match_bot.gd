@@ -6,9 +6,12 @@
 ##   1. dead: wait to respawn;
 ##   2. out of ammunition, or reloading: reload, crouched;
 ##   3. in the moving wave of a retreat: fall back to its spot;
-##   4. an enemy in its own sight row, seen for at least its reaction time:
+##   4. fewer than `reload_below` rounds, no enemy in sight, and standing
+##      where it was going -- its cover spot, usually: reload early, so the
+##      magazine is not empty in the next fight;
+##   5. an enemy in its own sight row, seen for at least its reaction time:
 ##      turn to it, and shoot once facing it;
-##   5. otherwise go to the spot its team's tactics chose, and hold it.
+##   6. otherwise go to the spot its team's tactics chose, and hold it.
 ##
 ## Then, apart from the list, its pace: it sprints while it moves with no
 ## enemy in sight and far to go, and never while it shoots (`choose_pace`).
@@ -46,6 +49,8 @@ var facing: float = 0.0
 var pitch: float = 0.0
 var health: int = 100
 var ammo: int = 20
+## The rules' early reload threshold, given it by the match.
+var reload_below: int = 0
 var fire_cooldown: float = 0.0
 var reload_left: float = 0.0
 var respawn_left: float = 0.0
@@ -110,6 +115,8 @@ func decide(now: float, visible: Array[int], positions: Dictionary, reaction: fl
 		action = RELOAD
 	elif moving_in_retreat:
 		action = FALL_BACK
+	elif ammo < reload_below and visible.is_empty() and arrived():
+		action = RELOAD
 	else:
 		target = _reacted_target(now, visible, positions, reaction)
 		action = SHOOT if target != -1 else (HOLD if arrived() else MOVE)

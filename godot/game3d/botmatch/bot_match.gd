@@ -252,6 +252,7 @@ func respawn(bot: MatchBot) -> void:
 	bot.facing = 0.0 if bot.team == BLUE else PI
 	bot.health = rules.health
 	bot.ammo = rules.magazine
+	bot.reload_below = rules.reload_below
 	bot.reload_left = 0.0
 	bot.respawn_left = 0.0
 	bot.spot = -1

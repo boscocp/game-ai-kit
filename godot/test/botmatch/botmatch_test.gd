@@ -409,6 +409,30 @@ func test_nobody_fires_while_sprinting() -> void:
 	assert_int(world.stats[0].shots_sprinting).is_equal(1)
 
 
+func test_a_bot_reloads_early_only_with_nobody_in_sight_and_where_it_was_going() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var bot: MatchBot = world.bots[0]
+	var places: Dictionary = {6: Vector2(30.0, 3.0)}
+	bot.position = Vector2(15.0, 3.0)
+	bot.goal = bot.position
+	bot.ammo = rules.reload_below - 1
+	bot.decide(1.0, [] as Array[int], places, 0.0, false)
+	assert_str(bot.action).is_equal(MatchBot.RELOAD)
+	# An enemy in sight, even one not reacted to yet: it does not.
+	bot.decide(1.0, [6] as Array[int], places, 5.0, false)
+	assert_str(bot.action).is_not_equal(MatchBot.RELOAD)
+	# On its way somewhere: not yet.
+	bot.goal = Vector2(25.0, 3.0)
+	bot.decide(1.0, [] as Array[int], places, 0.0, false)
+	assert_str(bot.action).is_equal(MatchBot.MOVE)
+	# Enough rounds left: it holds.
+	bot.goal = bot.position
+	bot.ammo = rules.reload_below
+	bot.decide(1.0, [] as Array[int], places, 0.0, false)
+	assert_str(bot.action).is_equal(MatchBot.HOLD)
+
+
 func test_teammates_leave_a_persons_spot_to_them_and_the_list_takes_back_over() -> void:
 	var rules := MatchRules.new()
 	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)

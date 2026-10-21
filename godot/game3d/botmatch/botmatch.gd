@@ -14,7 +14,9 @@
 ## after playing it in third) -- WASD walks, the mouse aims up, down and
 ## round, a click fires, R reloads, Ctrl crouches, Shift sprints (and
 ## while it does, the rifle does not fire). Every shot leaves a
-## tracer; a hit on someone shows a marker, and being hit reddens the edge. Its teammates leave the spot it stands on to it,
+## tracer; a hit on someone shows a marker, and being hit reddens the edge.
+## A reload is heard from wherever it happens, and a person's own lowers the
+## rifle and shows its progress. Its teammates leave the spot it stands on to it,
 ## and its squad's commander counts it like any other bot.
 extends Node3D
 
@@ -45,6 +47,9 @@ var _thinking_shown: bool = false
 var _speakers: Array[AudioStreamPlayer3D] = []
 var _next_speaker: int = 0
 var _heard: int = 0
+## Who was reloading at the last frame, by bot id, to hear each reload start.
+var _was_reloading: Dictionary = {}
+var _reload_speakers: Array[AudioStreamPlayer3D] = []
 ## The rifle in the person's hands, on the camera while they play.
 var _viewmodel := Viewmodel.new()
 
@@ -76,6 +81,13 @@ func _ready() -> void:
 		speaker.unit_size = 6.0
 		add_child(speaker)
 		_speakers.append(speaker)
+	var reload: AudioStreamWAV = ReloadSound.make(MatchRules.new().reload_time)
+	for index: int in range(BotMatch.BOTS_A_SIDE * 2):
+		var speaker := AudioStreamPlayer3D.new()
+		speaker.stream = reload
+		speaker.unit_size = 4.0
+		add_child(speaker)
+		_reload_speakers.append(speaker)
 	_new_match()
 
 
@@ -277,8 +289,25 @@ func _hear_new_shots() -> void:
 			_viewmodel.fire()
 
 
+# Each reload that began since the last frame, heard from where the bot is:
+# one speaker a bot, so a reload is never cut off by another's.
+func _hear_reloads() -> void:
+	for bot: MatchBot in world.bots:
+		var reloading: bool = bot.alive() and bot.reload_left > 0.0
+		if reloading and not _was_reloading.get(bot.id, false):
+			var speaker: AudioStreamPlayer3D = _reload_speakers[bot.id]
+			speaker.position = MatchActions.eyes_of(world, bot)
+			speaker.volume_db = 0.0 if bot.id == _played else -4.0
+			speaker.play()
+		_was_reloading[bot.id] = reloading
+	if _played != -1:
+		var mine: MatchBot = world.bots[_played]
+		_viewmodel.lowered = mine.reload_left > 0.0 or mine.sprinting
+
+
 func _show() -> void:
 	_hear_new_shots()
+	_hear_reloads()
 	_drawing.refresh(world, _watched, _played, _played == -1 or _thinking_shown)
 	_map.queue_redraw()
 	_hud.queue_redraw()

@@ -17,6 +17,9 @@ var damage: int = 12
 var fire_interval: float = 0.1
 var magazine: int = 30
 var reload_time: float = 2.0
+## A bot reloads early, with rounds still in the magazine, when it has
+## fewer than this, no enemy in sight, and it stands where it was going.
+var reload_below: int = 10
 var respawn_time: float = 4.0
 var speed: float = 4.5
 ## Sprinting (Shift, the owner's ask): faster, and no shot while it lasts.
