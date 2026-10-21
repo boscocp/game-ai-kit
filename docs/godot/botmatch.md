@@ -30,8 +30,7 @@ so neither side starts with better ground:
   stair from each side, A and C in walled yards, houses along the streets.
 
 Height is in the simulation: each walk cell has a floor, a bot stands on
-it with its eyes 1.5 m up, and A\* walks a step only within half a metre
-of rise -- up a stair, never a wall (`ArenaWalk`, a `SearchGraph`).
+it with its eyes 1.5 m up, and A\* walks a step only within 0.6 m of rise -- up a stair, never a wall (`ArenaWalk`, a `SearchGraph`).
 
 The rules (`rules.json`), the owner's asks after playing T51: Shift
 sprints at 6.5 m/s and no shot is fired while sprinting; a rifle has 120
@@ -105,51 +104,60 @@ first cut in third person.
 
 ## What T66 measured, on the lanes and the yards
 
-`make test-botmatch-effects`, the third full run after every fix below:
-20 seeded matches per pairing, red always with everything on.
+`make test-botmatch-effects` on the commit the review's fixes landed in:
+20 seeded matches per pairing, red always with everything on, the same
+seeds in every pairing.
 
 | claim | measured | needs |
 |---|---|---|
-| the mirror, lanes | -13.1 +- 28.9 s, 10-10 | within 2.5 errors |
-| the mirror, yards | +40.0 +- 31.0 s, 12-8 | within 2.5 errors |
-| claims | 1.3 s bunched with them, 485.5 s without | <= 10 and >= 40 |
-| the commander | orders over 2.76 points with it, 1.35 without | 1.2 times |
-| retreat | 13296 retreating decisions, none uncovered | some, none |
-| honesty | 0 of 33350 shots at an unseen enemy | none |
-| sprint | 0 shots while sprinting, 7763 s sprinted | none, some |
-| aim | 4.70 damage a shot by worth, 3.73 always the head | 1.1 times |
-| ammunition | always going back: -234.6 +- 17.0 s, 0-10 | below weighing by 2.5 errors |
+| the mirror, lanes | -3.2 +- 32.0 s, 11-9 | within 2.5 errors |
+| the mirror, yards | +26.2 +- 35.5 s, 12-8 | within 2.5 errors |
+| claims | 2.0 s bunched with them, 312.8 s without | <= 10 and >= 40 |
+| the commander | orders over 2.74 points with it, 1.33 without | 1.5 times |
+| retreat | 13849 retreating decisions, none uncovered | some, none |
+| honesty | 0 of 34433 shots at an unseen enemy | none |
+| sprint | 0 shots while sprinting, 8053 s sprinted | none, some |
+| aim | 4.71 damage a shot by worth, 3.39 always the head | 1.1 times |
+| ammunition | always going back: -268.5 +- 18.5 s, 0-10 | below weighing by 2.5 errors |
 
-Each claim's planted case was caught: a sharper blue (+123 +- 42, 7-3), a
-commander on one point, a retreat in one wave (3793 of 3793 uncovered), a
-wallhack (1279 shots) and a bot firing on stale sight (41), always the
-head, and the weighing blue against itself.
+Each claim's planted case is caught, each put in the good pairing's place:
+a sharper blue (+294 +- 3, 10-0), a commander on one point (1.71 points,
+1.29 times -- under 1.5), a retreat in one wave (4617 of 4618 uncovered), a
+wallhack (1158 shots) and a bot firing on stale sight (27), always the head
+(3.39 a shot), the weighing blue in always going back's place, and the
+matches without claims in the claims' place. The yards' mirror is claim
+0's check on another arena; claim 0's planted case is its planted case.
+
+The commander's bar was 1.2 times in T51, when it made 1.29; the planted
+commander on one point made 1.19, 1.24 and 1.29 times in three runs here,
+so the bar is 1.5 -- more asked of the commander, and the plant rejected.
 
 **Never going back for rounds is printed, not claimed.** A bot dies, and
-comes back full, before it runs dry: three runs measured 1.2, 4.6 and 8.6
-s dry a match never going back, against 1.1, 0.1 and 0.2 weighing, and
-the score with it (-1.2 +- 73.6) says nothing. The decision is held in
-`botmatch_test.gd` instead: near its base with ten rounds it goes back,
-full it does not.
+comes back full, before it runs dry: four runs measured 5.8, 1.2, 4.6 and
+8.6 s dry a match never going back, against 3.4, 1.1, 0.1 and 0.2
+weighing, and its margin (-53.7 +- 63.5) says nothing. The decision is held
+in `botmatch_test.gd` instead: near its base with ten rounds it goes back,
+full it does not, and a part-used power weapon is worth no walk.
 
 **T65's question** -- does a team with every technique on hold points
 longer than the same team with any one off? Measured as blue's margin a
-match, against red with everything on:
+match against red with everything on, and each pairing against blue with
+everything on by the two-margin method the test uses:
 
-| blue plays | margin a match | wins |
-|---|---|---|
-| everything | -13.1 +- 28.9 s | 10-10 |
-| no claims | -24.9 +- 26.3 s | 9-11 |
-| no commander | -50.6 +- 15.9 s | 6-14 |
-| no retreat | +220.9 +- 19.3 s | 19-1 |
+| blue plays | margin a match | wins | against everything |
+|---|---|---|---|
+| everything | -3.2 +- 32.0 s | 11-9 | |
+| no claims | -48.4 +- 24.3 s | 7-13 | 1.1 errors worse |
+| no commander | -39.0 +- 14.9 s | 6-14 | 1.0 errors worse |
+| no retreat | +270.5 +- 5.3 s | 20-0 | far better |
 
-- **The commander helps, and now it is shown**: without it blue loses by
-  3.2 errors, where on T51's open arena it was 1.8.
-- **Claims** still change nothing the score can tell (0.4 errors).
-- **Retreat still costs the match**, by far: a team that never falls back
-  won 19 of 20, on lanes made to reward holding. So T65's claim does not
-  hold for retreat, and is not made. On these maps falling back gives up
-  a point that the lane's one door then makes hard to retake.
+- **Claims and the commander both look like they help**, and neither is
+  shown: about one standard error each. The commander's decision -- its
+  spread of orders -- is shown; what the fighting makes of it is not.
+- **Retreat costs the match**, by far: a team that never falls back won
+  20 of 20, on lanes made to reward holding. So T65's claim does not hold,
+  and is not made. On these maps falling back gives up a point that the
+  lane's one door then makes hard to retake.
 
 ## What T51 measured, on the open arena
 

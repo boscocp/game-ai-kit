@@ -7,14 +7,15 @@ The topmost `## Resuming after 2026-10-21 (wave 71, T66 written, review next)
 `wave/71-the-lanes-map`, one commit a step: height, the lanes, sprint,
 the reload, the body, the zones, the aim, ammunition and the power
 weapon, solid bodies, `PassageChoice` (a request the teammate weighs),
-the yards and its mirror. `make check-affected` was run at the end; read
-its result in the last commit's message or run it again. The numbers are
+the yards and its mirror, and the review's fixes. The numbers are
 in `docs/godot/botmatch.md`.
 
-**Next: the review, then the PR** (wave 63's flow): a context that did not
-write the code reviews the branch into `docs/reviews/71-the-lanes-map.md`,
-what it finds is applied on the branch, push, PR, CI green, `make
-wave-merge`. The owner's manual check (`make demo-botmatch`, T to play,
+**Next: the PR.** The review is in `docs/reviews/71-the-lanes-map.md`,
+its findings applied on the branch; push, PR, CI green, `make wave-merge`.
+Then rebase `wave/72-the-bot-as-an-agent` (T67, being written in its own
+worktree from this branch) onto main. `wave/73-racing-in-3d` (T54) and
+`wave/74-the-stealth-research` (T52's research, with four questions for the
+owner) are in worktrees of their own. The owner's manual check (`make demo-botmatch`, T to play,
 L for the yards) is in T66.
 
 **Then T67** (`tasks/T67-the-bot-as-an-agent.md`), the owner's choice:
@@ -136,8 +137,8 @@ sha256 and never committed.
 | T50 | The 3D tier, measured before anything is built | done | wave 69, ADR 0018 accepted (option A): physics, rays and a navmesh from collision shapes run headless; a run replays bit-identically on one binary; a navmesh set on a region's second frame never reaches the map (set it before the tree); about 1,000 fps for the 16-bot arena on a Radeon 610M; a body moved through its node is in the physics space a frame late; Kenney Mini Characters by URL and sha256, `make assets-3d`, primitives when missing; `check_no_assets.py`, R6 in `check_renderer.py`; Jolt explicit; `docs/godot/3d-headless.md`; manual check still the owner's |
 | T51 | A bot match: two teams of bots, cover, and a commander | done | wave 70: `ai_teamwork` (tactical positions with claims, team influence, a commander, squad confidence and waves), Python twins, 17 vectors; a 6-a-side match as a physics-free simulation held to Godot's rays, mirrored; first-person takeover of any bot (owner's choice), tracers, hit markers, a rifle; measured on a fair mirror (9-11; A*'s tie order had bent it 18-2): claims cut bunching 0 s against 79, the commander spreads orders over 2.34 points against 1.81, retreat always leaves someone covering, no shot at an unseen enemy; in the score, retreat costs the match (20-0 without it), the commander suggests help (1.8 errors), claims nothing -- said as measured, as the owner chose (`docs/godot/botmatch.md`), T65 split off; manual check still the owner's |
 | T52 | Bots against the player, with an optional stealth | todo | T50 done; reuse T51's first-person shot, tracers and HUD; third person; a role arbiter, awareness that accumulates with three alert levels, a shared belief map for the search -- each drawn and switchable |
-| T65 | A coordinated team that wins | todo | split from T51 by the owner. T66 answered it on the lanes: the commander helps (6-14 without it, 3.2 errors), claims show nothing, retreat costs the match (19-1 without it); the owner decides whether to change retreat or close it as measured |
-| T66 | The bot match on a map made for tactics, with a body to aim at | wip | wave 71, written, review and merge next: height in the simulation (`ArenaWalk`), the three-lane map and a second unlike it (`yards.json`), sprint, a seen and heard reload, 120 rounds and a base resupply, a power weapon and the five-kill reward, a humanoid body (Kenney Survivors, CC0), head/torso/limb zones, solid bodies; `AimChoice` and `PassageChoice` in `ai_teamwork` with twins and 13 vectors; both mirrors fair, every claim with its planted case; the commander now shown to help (3.2 errors), retreat still costs the match (19-1), never going back for rounds not measurable -- said as measured (`docs/godot/botmatch.md`); manual check the owner's |
+| T65 | A coordinated team that wins | todo | split from T51 by the owner. T66 measured it on the lanes: claims and the commander each about one standard error better (not shown), retreat costs the match (20-0 without it); the owner decides whether to change retreat or close it as measured |
+| T66 | The bot match on a map made for tactics, with a body to aim at | wip | wave 71, written and reviewed (`docs/reviews/71-the-lanes-map.md`), merge next: height in the simulation (`ArenaWalk`), the three-lane map and a second unlike it (`yards.json`), sprint, a seen and heard reload, 120 rounds and a base resupply, a power weapon and the five-kill reward, a humanoid body (Kenney Survivors, CC0), head/torso/limb zones, solid bodies; `AimChoice` and `PassageChoice` in `ai_teamwork` with twins and 15 vectors; both mirrors fair, every claim with a planted case that truly rejects; in the score claims and the commander about one error each, retreat costs the match (20-0) -- said as measured (`docs/godot/botmatch.md`); manual check the owner's |
 | T67 | The bot as an agent: it perceives, weighs and decides, on any map | todo | the owner, during T66: autonomy over fixed if/else in every example, the bot as AIMA's agent that copes on another map; the priority list becomes a weighed selector, perception from `ai_perception`, the errands a technique; after wave 71, the owner's choice |
 
 ## The kit as modules

@@ -697,5 +697,5 @@ Research:
 - Wydmuch, M., Kempka, M., Jaśkowski, W. "ViZDoom Competitions: Playing
   Doom from Pixels." arXiv:1809.03470, 2018.
   <https://arxiv.org/abs/1809.03470>
-- Xu, Z., Verbrugge, C. "Generic Guard AI in Stealth Game with Composite
+- Xu, K., Verbrugge, C. "Generic Guard AI in Stealth Game with Composite
   Potential Fields." AIIDE 2025. <https://arxiv.org/abs/2508.18527>
