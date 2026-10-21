@@ -3,10 +3,15 @@
 # of the floors under them breaks.
 extends GdUnitTestSuite
 
-const RAYS: int = 400
+## Rays drawn; those with an end inside a box are not compared, and on the
+## lanes map, half of it walls, that is most of them.
+const RAYS: int = 1600
 ## A ray this close to a box's surface may be answered either way: the slab
 ## test counts touching as a hit, and a physics engine keeps a margin.
 const GRAZE: float = 0.02
+## How far apart, in seconds, the mean walks from a team's spawns to its
+## points may be: under one second's walk is under five metres.
+const WALK_TOLERANCE: float = 1.0
 ## Platforms, a stair and boxes on both levels, for the height checks.
 const HEIGHT_ARENA: String = "res://test/botmatch/height_arena.json"
 
@@ -79,12 +84,35 @@ func _assert_agrees_with_physics(arena: BotArena, highest: float) -> void:
 		if physics_clear != arena.clear_line(from, to) and not _grazes(arena, from, to):
 			disagreements.append("%s -> %s: physics %s" % [from, to, physics_clear])
 	world.queue_free()
-	assert_int(compared).is_greater(RAYS * 3 / 4)
+	assert_int(compared).is_greater(RAYS / 5)
 	# Both answers occur, or agreeing would prove nothing: an arena with no
 	# boxes agrees on every ray.
 	assert_int(blocked).is_greater(compared / 10)
 	assert_int(compared - blocked).is_greater(compared / 10)
 	assert_array(disagreements).is_empty()
+
+
+func test_every_point_is_as_far_from_each_spawn_and_within_three_to_nine_seconds() -> void:
+	# Walked by the match itself: a bot sent from each spawn to each point,
+	# timed until it arrives. Per team, each point's mean over the spawns is
+	# within WALK_TOLERANCE of the others', and red's are blue's, mirrored.
+	var blue: PackedFloat64Array = _mean_walks(BotMatch.BLUE)
+	var red: PackedFloat64Array = _mean_walks(BotMatch.RED)
+	for point: int in range(blue.size()):
+		var apart: float = absf(blue[point] - blue[0])
+		assert_float(apart).override_failure_message("blue: %s" % blue).is_less_equal(WALK_TOLERANCE)
+		assert_float(red[point]).is_equal_approx(blue[point], 0.05)
+
+
+func test_no_point_sees_into_a_spawn() -> void:
+	# A body standing on a spawn, from eyes standing on a point.
+	var rules := MatchRules.new()
+	var arena := BotArena.new(rules.body_radius)
+	var starts: Array = arena.spawns["blue"] + arena.spawns["red"]
+	for point: Vector2 in arena.point_places:
+		for start: Vector2 in starts:
+			var seen: bool = arena.clear_line(arena.above(point, rules.eye_height), arena.above(start, rules.chest_height))
+			assert_bool(seen).override_failure_message("%s sees %s" % [point, start]).is_false()
 
 
 func test_a_stair_is_cut_into_steps_and_the_floor_rises_with_it() -> void:
@@ -186,6 +214,38 @@ func test_a_shot_level_across_the_platform_hits_a_body_standing_on_it() -> void:
 	assert_int(enemy.health).is_equal(rules.health - rules.damage)
 
 
+# Each point's mean walk, in seconds, from every spawn of `side`; each walk
+# is asserted within three to nine seconds on the way.
+func _mean_walks(side: int) -> PackedFloat64Array:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var bot: MatchBot = world.bots[side * BotMatch.BOTS_A_SIDE]
+	var starts: Array = world.arena.spawns[BotMatch.TEAM_NAMES[side]]
+	var means := PackedFloat64Array()
+	for point: Vector2 in world.arena.point_places:
+		var total: float = 0.0
+		for start: Vector2 in starts:
+			var seconds: float = _walk_time(world, bot, start, point)
+			assert_float(seconds).override_failure_message("%s to %s: %.2f s" % [start, point, seconds]).is_between(3.0, 9.0)
+			total += seconds
+		means.append(total / starts.size())
+	return means
+
+
+# Seconds for `bot` to walk from `start` to `goal` in `world`, by its path.
+func _walk_time(world: BotMatch, bot: MatchBot, start: Vector2, goal: Vector2) -> float:
+	bot.position = start
+	bot.path.clear()
+	bot.goal = start
+	world.send(bot, goal, -1)
+	bot.action = MatchBot.MOVE
+	var seconds: float = 0.0
+	while not bot.arrived() and seconds < 30.0:
+		MatchActions.act(world, bot, world.rules.step)
+		seconds += world.rules.step
+	return seconds
+
+
 func _height_match(rules: MatchRules) -> BotMatch:
 	var arena := BotArena.new(rules.body_radius, HEIGHT_ARENA)
 	return BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules, arena)
@@ -219,15 +279,15 @@ func test_a_bot_is_never_told_of_an_enemy_behind_a_high_box() -> void:
 	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
 	var looker: MatchBot = world.bots[0]
 	var target: MatchBot = world.bots[6]
-	# Either side of the high block at (12, 10): 11 .. 13 east-west.
-	looker.position = Vector2(9.0, 10.0)
+	# Either side of the pillar north of B: 23.5 .. 24.5 east-west.
+	looker.position = Vector2(21.0, 13.5)
 	looker.facing = 0.0
-	target.position = Vector2(15.0, 10.0)
+	target.position = Vector2(27.0, 13.5)
 	assert_bool(world.sees(looker, target)).is_false()
-	target.position = Vector2(15.0, 14.0)
+	target.position = Vector2(27.0, 16.0)
 	assert_bool(world.sees(looker, target)).is_true()
 	# Behind it, outside the view cone and farther than NEAR: unseen.
-	target.position = Vector2(4.0, 14.0)
+	target.position = Vector2(15.0, 16.0)
 	assert_bool(world.sees(looker, target)).is_false()
 
 
@@ -245,18 +305,18 @@ func test_a_person_drives_the_same_body_by_the_same_rules() -> void:
 	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
 	var mine: MatchBot = world.bots[0]
 	mine.controlled = true
-	mine.position = Vector2(6.0, 4.0)
+	mine.position = Vector2(15.0, 13.0)
 	mine.facing = 0.0
 	mine.wants_to_walk = Vector2.RIGHT
 	for _step: int in range(20):
 		world.step()
 	# One second east at the rules' speed, no faster.
-	assert_float(mine.position.x).is_equal_approx(6.0 + rules.speed, 0.06)
+	assert_float(mine.position.x).is_equal_approx(15.0 + rules.speed, 0.06)
 	assert_str(mine.action).is_equal(MatchBot.PLAYED)
-	# Walking into the high block at (15, 4) stops at its face.
+	# Walking into the pillar north of B, from 23.5, stops at its face.
 	for _step: int in range(60):
 		world.step()
-	assert_float(mine.position.x).is_less(14.0 - rules.body_radius + 0.01)
+	assert_float(mine.position.x).is_less(23.5 - rules.body_radius + 0.01)
 
 
 func test_a_person_hits_what_they_aim_at_and_not_through_a_wall() -> void:
@@ -264,19 +324,19 @@ func test_a_person_hits_what_they_aim_at_and_not_through_a_wall() -> void:
 	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
 	var mine: MatchBot = world.bots[0]
 	var enemy: MatchBot = world.bots[6]
-	mine.position = Vector2(9.0, 14.0)
+	mine.position = Vector2(15.0, 13.0)
 	mine.facing = 0.0
-	enemy.position = Vector2(15.0, 14.0)
+	enemy.position = Vector2(21.0, 13.0)
 	MatchActions.fire_aimed(world, mine)
 	assert_int(enemy.health).is_equal(rules.health - rules.damage)
-	# Behind the high block at (12, 10), straight along the aim: no hit.
-	mine.position = Vector2(9.0, 10.0)
-	enemy.position = Vector2(15.0, 10.0)
+	# Behind the pillar north of B, straight along the aim: no hit.
+	mine.position = Vector2(21.0, 13.5)
+	enemy.position = Vector2(27.0, 13.5)
 	MatchActions.fire_aimed(world, mine)
 	assert_int(enemy.health).is_equal(rules.health - rules.damage)
 	# Aimed at the floor in front of them: the floor stops it, short of the enemy.
-	mine.position = Vector2(9.0, 14.0)
-	enemy.position = Vector2(15.0, 14.0)
+	mine.position = Vector2(15.0, 13.0)
+	enemy.position = Vector2(21.0, 13.0)
 	mine.pitch = deg_to_rad(-30.0)
 	MatchActions.fire_aimed(world, mine)
 	assert_int(enemy.health).is_equal(rules.health - rules.damage)
@@ -288,8 +348,8 @@ func test_a_person_hits_what_they_aim_at_and_not_through_a_wall() -> void:
 	assert_int(enemy.health).is_equal(rules.health - rules.damage)
 	mine.pitch = 0.0
 	# Off the aim by more than a body's half-width: no hit either.
-	mine.position = Vector2(9.0, 14.0)
-	enemy.position = Vector2(15.0, 14.5)
+	mine.position = Vector2(15.0, 13.0)
+	enemy.position = Vector2(21.0, 13.5)
 	MatchActions.fire_aimed(world, mine)
 	assert_int(enemy.health).is_equal(rules.health - rules.damage)
 

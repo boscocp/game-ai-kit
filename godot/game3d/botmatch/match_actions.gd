@@ -212,8 +212,12 @@ static func _step_towards(world: BotMatch, bot: MatchBot, delta: float) -> Vecto
 		bot.position = towards
 	else:
 		bot.position += offset.normalized() * stride
-	while not bot.path.is_empty() and BotArena.cell_of(bot.position) == bot.path[0]:
-		bot.path.remove_at(0)
+	# Everything up to the cell it stands in is behind it, wherever in the path
+	# that cell is: a bot cutting a corner skips cells, and one that only
+	# dropped the first never moved past it, looking at the same few ahead.
+	var here: int = bot.path.find(BotArena.cell_of(bot.position))
+	if here != -1:
+		bot.path = bot.path.slice(here + 1)
 	return towards
 
 
