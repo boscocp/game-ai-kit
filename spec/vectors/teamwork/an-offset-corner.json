@@ -1,0 +1,59 @@
+{
+ "name": "an-offset-corner",
+ "why": "A map whose corner is not the origin, a source near its edge clipped to the map.",
+ "kind": "influence",
+ "map": {
+  "width": 6,
+  "height": 4,
+  "cell_size": 1.5,
+  "origin": [
+   -4.0,
+   -3.0
+  ],
+  "radius": 3.0
+ },
+ "query": {
+  "sources": [
+   {
+    "place": [
+     -3.9,
+     -2.9
+    ],
+    "strength": 2.0
+   },
+   {
+    "place": [
+     4.0,
+     2.0
+    ],
+    "strength": -0.5
+   }
+  ],
+  "asked": [
+   [
+    -3.0,
+    -2.0
+   ],
+   [
+    0.0,
+    0.0
+   ],
+   [
+    4.4,
+    2.9
+   ],
+   [
+    5.0,
+    3.0
+   ]
+  ]
+ },
+ "expect": {
+  "values": [
+   1.387174122971659,
+   0.0,
+   -0.441074434901121,
+   0.0
+  ]
+ }
+}

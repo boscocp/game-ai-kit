@@ -1,0 +1,87 @@
+{
+ "name": "more-squads-than-room",
+ "why": "Four squads, room for four bots in all: the last two go where the priority is highest, nearest first, not nowhere.",
+ "kind": "commander",
+ "weights": {
+  "take": 3.0,
+  "hold": 1.0,
+  "defend": 2.0,
+  "nearest_metres": 1.0
+ },
+ "query": {
+  "squads": [
+   {
+    "id": "s1",
+    "position": [
+     0,
+     0
+    ],
+    "size": 2
+   },
+   {
+    "id": "s2",
+    "position": [
+     1,
+     0
+    ],
+    "size": 2
+   },
+   {
+    "id": "s3",
+    "position": [
+     2,
+     0
+    ],
+    "size": 2
+   },
+   {
+    "id": "s4",
+    "position": [
+     40,
+     0
+    ],
+    "size": 2
+   }
+  ],
+  "objectives": [
+   {
+    "id": "A",
+    "position": [
+     0,
+     10
+    ],
+    "held_by": 0,
+    "ideal": 2,
+    "influence": 0.0
+   },
+   {
+    "id": "B",
+    "position": [
+     40,
+     10
+    ],
+    "held_by": 1,
+    "ideal": 2,
+    "influence": 0.0
+   }
+  ]
+ },
+ "expect": {
+  "priorities": [
+   3.0,
+   1.0
+  ],
+  "assigned": {
+   "s1": "A",
+   "s4": "B",
+   "s2": "A",
+   "s3": "A"
+  },
+  "nearest": {
+   "s1": "A",
+   "s2": "A",
+   "s3": "A",
+   "s4": "A"
+  }
+ }
+}

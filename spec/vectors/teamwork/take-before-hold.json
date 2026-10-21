@@ -1,0 +1,88 @@
+{
+ "name": "take-before-hold",
+ "why": "Three points, one ours: the two to take are worth 3, ours 1; each squad of two fills a point's room of two, cheapest first.",
+ "kind": "commander",
+ "weights": {
+  "take": 3.0,
+  "hold": 1.0,
+  "defend": 2.0,
+  "nearest_metres": 1.0
+ },
+ "query": {
+  "squads": [
+   {
+    "id": "s1",
+    "position": [
+     0,
+     0
+    ],
+    "size": 2
+   },
+   {
+    "id": "s2",
+    "position": [
+     30,
+     0
+    ],
+    "size": 2
+   },
+   {
+    "id": "s3",
+    "position": [
+     15,
+     20
+    ],
+    "size": 2
+   }
+  ],
+  "objectives": [
+   {
+    "id": "A",
+    "position": [
+     2,
+     2
+    ],
+    "held_by": 0,
+    "ideal": 2,
+    "influence": 0.0
+   },
+   {
+    "id": "B",
+    "position": [
+     28,
+     2
+    ],
+    "held_by": 0,
+    "ideal": 2,
+    "influence": 0.0
+   },
+   {
+    "id": "C",
+    "position": [
+     15,
+     18
+    ],
+    "held_by": 1,
+    "ideal": 2,
+    "influence": 0.0
+   }
+  ]
+ },
+ "expect": {
+  "priorities": [
+   3.0,
+   3.0,
+   1.0
+  ],
+  "assigned": {
+   "s1": "A",
+   "s2": "B",
+   "s3": "C"
+  },
+  "nearest": {
+   "s1": "A",
+   "s2": "B",
+   "s3": "A"
+  }
+ }
+}

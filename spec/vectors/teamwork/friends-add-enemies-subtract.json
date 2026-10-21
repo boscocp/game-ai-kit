@@ -1,0 +1,71 @@
+{
+ "name": "friends-add-enemies-subtract",
+ "why": "Two friends of 1 at the same place make it 2 there; an enemy of 1 two cells away takes its share off; off the map is zero.",
+ "kind": "influence",
+ "map": {
+  "width": 10,
+  "height": 10,
+  "cell_size": 2.0,
+  "origin": [
+   0.0,
+   0.0
+  ],
+  "radius": 6.0
+ },
+ "query": {
+  "sources": [
+   {
+    "place": [
+     5.0,
+     5.0
+    ],
+    "strength": 1.0
+   },
+   {
+    "place": [
+     5.0,
+     5.0
+    ],
+    "strength": 1.0
+   },
+   {
+    "place": [
+     9.0,
+     5.0
+    ],
+    "strength": -1.0
+   }
+  ],
+  "asked": [
+   [
+    5.0,
+    5.0
+   ],
+   [
+    9.0,
+    5.0
+   ],
+   [
+    7.0,
+    5.0
+   ],
+   [
+    15.0,
+    15.0
+   ],
+   [
+    -1.0,
+    3.0
+   ]
+  ]
+ },
+ "expect": {
+  "values": [
+   1.6666666666666665,
+   -0.33333333333333326,
+   0.6666666666666667,
+   0.0,
+   0.0
+  ]
+ }
+}

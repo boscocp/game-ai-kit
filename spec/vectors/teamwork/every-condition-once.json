@@ -1,0 +1,89 @@
+{
+ "name": "every-condition-once",
+ "why": "One candidate per condition, in the order they are asked: too far, outside the area, claimed by another, exposed (no cover and no line of fire); and a bot's own claim is no obstacle to it.",
+ "kind": "positions",
+ "weights": {
+  "partial_cover": 40.0,
+  "line_of_fire": 20.0,
+  "other_cover": 20.0,
+  "nearness": 20.0,
+  "preferred_range": 10.0,
+  "preferred_metres": 15.0,
+  "range_band": 10.0,
+  "max_travel": 20.0
+ },
+ "query": {
+  "bot": 3,
+  "has_threat": true,
+  "use_claims": true,
+  "candidates": [
+   {
+    "id": "far",
+    "travel": 25.0,
+    "threat_distance": 10.0,
+    "covered_from_main": true,
+    "fires_on_main": true,
+    "covered_from_others": 0.0,
+    "in_area": true,
+    "claimed_by": -1
+   },
+   {
+    "id": "out",
+    "travel": 5.0,
+    "threat_distance": 10.0,
+    "covered_from_main": true,
+    "fires_on_main": true,
+    "covered_from_others": 0.0,
+    "in_area": false,
+    "claimed_by": -1
+   },
+   {
+    "id": "theirs",
+    "travel": 5.0,
+    "threat_distance": 10.0,
+    "covered_from_main": true,
+    "fires_on_main": true,
+    "covered_from_others": 0.0,
+    "in_area": true,
+    "claimed_by": 4
+   },
+   {
+    "id": "bare",
+    "travel": 2.0,
+    "threat_distance": 10.0,
+    "covered_from_main": false,
+    "fires_on_main": false,
+    "covered_from_others": 0.0,
+    "in_area": true,
+    "claimed_by": -1
+   },
+   {
+    "id": "mine",
+    "travel": 9.0,
+    "threat_distance": 30.0,
+    "covered_from_main": true,
+    "fires_on_main": false,
+    "covered_from_others": 0.0,
+    "in_area": true,
+    "claimed_by": 3
+   }
+  ]
+ },
+ "expect": {
+  "statuses": [
+   "too_far",
+   "outside_area",
+   "claimed",
+   "exposed",
+   "kept"
+  ],
+  "scores": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   11.0
+  ],
+  "chosen": 4
+ }
+}

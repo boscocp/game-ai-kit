@@ -1,0 +1,57 @@
+{
+ "name": "equal-costs-go-to-the-first",
+ "why": "One squad halfway between two points worth the same: the first listed wins, on both sides, with and without the commander.",
+ "kind": "commander",
+ "weights": {
+  "take": 3.0,
+  "hold": 1.0,
+  "defend": 2.0,
+  "nearest_metres": 1.0
+ },
+ "query": {
+  "squads": [
+   {
+    "id": "s1",
+    "position": [
+     0,
+     0
+    ],
+    "size": 2
+   }
+  ],
+  "objectives": [
+   {
+    "id": "east",
+    "position": [
+     10,
+     0
+    ],
+    "held_by": 0,
+    "ideal": 2,
+    "influence": 0.0
+   },
+   {
+    "id": "west",
+    "position": [
+     -10,
+     0
+    ],
+    "held_by": 0,
+    "ideal": 2,
+    "influence": 0.0
+   }
+  ]
+ },
+ "expect": {
+  "priorities": [
+   3.0,
+   3.0
+  ],
+  "assigned": {
+   "s1": "east"
+  },
+  "nearest": {
+   "s1": "east"
+  }
+ }
+}
