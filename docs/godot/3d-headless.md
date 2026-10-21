@@ -68,6 +68,12 @@ across machines or engine versions may not match, and no gate here does that.
   must either wait a physics frame or tell the server itself. The test arena
   tells the server; before it did, its sight lines were a step stale, and
   ten decisions in a row found none.
+- **`--fixed-fps` makes Jolt warn once a run** (measured by T54,
+  2026-10-21): "Jolt Physics job system exceeded the maximum number of jobs
+  ... Waiting for jobs to become available". The floor test, run that way,
+  counts it as an engine error and fails; the racing checks forgive that
+  one warning by its text (`docs/godot/racing3d.md`). And `Engine.time_scale`
+  is no way to run physics faster: it scales the physics step itself.
 - **`agent_radius` is rounded up to whole cells.** 0.4 with the default
   0.25 m cell warns "ceiled to cell_size voxel units"; 0.5 does not.
 - **Choosing the integrated GPU took X11.** With an NVIDIA card driving the

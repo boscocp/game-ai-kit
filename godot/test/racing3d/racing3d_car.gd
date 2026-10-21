@@ -124,6 +124,8 @@ func _check_braking(car: RaceCar3D, label: String) -> Array[String]:
 		var rear: float = car.wheel_load[2] + car.wheel_load[3]
 		most = maxf(most, (car.wheel_load[0] + car.wheel_load[1]) / maxf(rear, 1.0))
 	car.brake = 0.0
+	if label == "the car":
+		print("braking from %.0f m/s, the front carried up to %.2f times the rear" % [BRAKE_FROM, most])
 	if most < FRONT_SHARE:
 		return ["%s: braking, the front carried at most %.2f times the rear, under %.1f" % [label, most, FRONT_SHARE]]
 	return []

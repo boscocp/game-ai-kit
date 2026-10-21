@@ -42,7 +42,9 @@ static func grass(drawn: bool) -> StaticBody3D:
 static func pad(size: float, centre: Vector2, drawn: bool) -> StaticBody3D:
 	var body: StaticBody3D = _surface("TestPad", TARMAC_GRIP, TARMAC_ROLLING)
 	var box := Vector3(size, 1.0, size)
-	_add_box(body, box, Vector3(centre.x, -0.5, centre.y), ROAD_COLOUR if drawn else Color.TRANSPARENT)
+	# Drawn fifteen centimetres up, the collider where it is: from a camera
+	# a hundred metres away, a few centimetres over the grass flicker into it.
+	_add_box(body, box, Vector3(centre.x, -0.5, centre.y), ROAD_COLOUR if drawn else Color.TRANSPARENT, 0.15)
 	return body
 
 
@@ -77,7 +79,7 @@ static func _surface(title: String, grip: float, rolling: float) -> StaticBody3D
 	return body
 
 
-static func _add_box(body: StaticBody3D, size: Vector3, at: Vector3, colour: Color) -> void:
+static func _add_box(body: StaticBody3D, size: Vector3, at: Vector3, colour: Color, lift: float = 0.0) -> void:
 	var holder := CollisionShape3D.new()
 	var box := BoxShape3D.new()
 	box.size = size
@@ -89,7 +91,7 @@ static func _add_box(body: StaticBody3D, size: Vector3, at: Vector3, colour: Col
 		var mesh := BoxMesh.new()
 		mesh.size = size
 		drawn.mesh = mesh
-		drawn.position = at
+		drawn.position = at + Vector3(0.0, lift, 0.0)
 		drawn.material_override = _material(colour)
 		body.add_child(drawn)
 

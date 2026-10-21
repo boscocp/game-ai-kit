@@ -130,12 +130,29 @@ func _physics_process(delta: float) -> void:
 		return
 	for number: int in range(cars.size()):
 		_locate(number)
+	decide_now(delta)
 	for number: int in range(cars.size()):
-		views[number] = RaceSenses3D.view_of(track, cars, samples, number, time, delta, not ghosts)
-		drivers[number].decide(views[number])
 		_drive(cars[number], drivers[number])
 	time += delta
 	frames += 1
+
+
+## Every driver is shown what it sees now and decides, for a decision
+## `step` seconds long; nothing moves. A frame of the race begins with this,
+## and a scene can call it to show a decision while the race is paused or
+## still measuring.
+func decide_now(step: float = 1.0 / 60.0) -> void:
+	for number: int in range(cars.size()):
+		views[number] = RaceSenses3D.view_of(track, cars, samples, number, time, step, not ghosts)
+		drivers[number].decide(views[number])
+
+
+## Every driver takes the grip and braking again: what its car measured,
+## or its sheet's when `measured_grip` is off. The toggle a player presses.
+func keep_measurements() -> void:
+	for number: int in range(cars.size()):
+		if tests[number].done():
+			_keep_measurement(number)
 
 
 # One frame of every car's test; once all are done, the drivers keep what

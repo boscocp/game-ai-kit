@@ -11,7 +11,8 @@
   ],
   "depends_on": [
     "ai_steering",
-    "game3d"
+    "game3d",
+    "game_shared"
   ],
   "gates": [
     "test-racing3d-car",

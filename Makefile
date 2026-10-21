@@ -532,6 +532,10 @@ demo-steering: import ## Four vehicles: seek, arrive, pursue, seek with avoid, e
 demo-racing: import ## Race an AI in the same car: arrows/WASD drive, 1-3 the AI, R again, P pause, Tab watch the three AIs
 	@$(GODOT) --path godot res://demos/racing/racing_demo.tscn
 
+.PHONY: demo-racing3d
+demo-racing3d: import ## A 3D race, you and three AI levels: arrows/WASD drive, 1 PID, 2 heat line, 3 measured grip, Tab watch, C camera, T track, R again, Space pause
+	@$(GODOT) --path godot res://game3d/racing/racing3d.tscn
+
 .PHONY: demo-botmatch
 demo-botmatch: import ## A 3D bot match, six against six: 1-3 blue's claims/commander/retreat (Shift: red's), Tab a bot, T take it over, M map, C camera, P pause, N new, L the other arena
 	@$(GODOT) --path godot res://game3d/botmatch/botmatch.tscn

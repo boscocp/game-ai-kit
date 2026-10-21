@@ -72,8 +72,10 @@ python3 scripts/check_demos.py
 ```
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/racing3d_ladder.gd
-./scripts/godot --headless --path godot -s res://test/racing3d_does_not_cheat.gd
+./scripts/godot --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_ladder.gd
+./scripts/godot --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_does_not_cheat.gd
+./scripts/godot --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_car.gd
+./scripts/godot --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_effects.gd
 ```
 
 `racing3d_ladder.gd`: every level finishes three laps on a fixed seed set;
@@ -93,3 +95,51 @@ term only, watch whether the car settles off the line or weaves: the
 chapter says a small gain leaves an offset and a large one oscillates.
 Can you see why the hard car is faster -- a later braking point, a wider entry, less wander -- and does
 the car feel like a car, sliding when pushed rather than turning on rails?
+
+## Done in wave 73 (2026-10-21)
+
+What was built differs from the steps above in these places, each on
+purpose and each measured; `docs/godot/racing3d.md` has the numbers.
+
+- **The scripts live in `test/racing3d/`** (a new file must have a module,
+  CLAUDE.md), and run with `--fixed-fps 60`: the physics step is the same,
+  but without it Godot paces the frames in real time. Under it Jolt warns
+  once a run that its job system ran out of jobs; T50's floor test prints
+  the same warning that way, and `Racing3DErrors` forgives that one text.
+- **The track is the kit's own geometry, the pack its scenery.** Kenney's
+  Racing Kit (referenced in `assets.json`, fetched by `make assets-3d`) is
+  modular tiles on a grid; a track built from tiles would have to be a grid
+  too, and the portability check needs a second track of any shape. So the
+  road is a triangle strip from the track's centre and width, and the pack
+  gives the four cars, trees and a grandstand; with nothing downloaded each
+  is a primitive.
+- **The racing line is found, not written down** -- an elastic band that
+  makes the sum of squared bends least, the same on every track -- so the
+  driver can be put on the kidney untuned.
+- **The lookahead knob is in seconds of travel**, not T23's metres: a
+  16-metre aim weaved this car off the road at 35 m/s.
+- **"One calibration lap" became a test pad of the same tarmac**: braking
+  from 25 m/s, and a slow steering ramp at 13 m/s. It also measures how far
+  past the arc the wheels are worth turning, without which the driver
+  turned further as the front slid. Not training: nothing is fitted, and
+  `check_no_training.py`'s net did not catch it.
+- **The car needed wider rear tyres, a front brake bias, an engine held to
+  its power, and no default damping** before any driver could keep it on
+  the road; with the same tyres all round every car spun.
+- **The heat line's claim did not hold** and is printed, not gated: the
+  cars changed passing side more often with it (74 against 40), though they
+  touched less (1088 car-frames against 1370). The owner's rule from T51
+  applies: say what was measured.
+- **P only swings rather than settling off the line.** The manual check's
+  two outcomes are the chapter's; this car at this gain shows the second.
+- **Two gates beyond the task's**: `racing3d_car.gd` (the car's three
+  physics claims and its reproducible measurement) and
+  `racing3d_effects.gd` (what each switch does), plus
+  `racing3d_portable_test.gd`, which reads the decision's code for anything
+  of a track.
+
+Measured: laps easy 50.61, normal 48.43, hard 47.20 s on the loop; 43.90,
+41.85 and 40.41 on the kidney; the ladder's gap 1.0 s. The does-not-cheat
+race is 6197 frames and matches its honest twin bit for bit; nine planted
+cheats are each refused by their rule. Fourteen vectors at 1e-9. The
+manual check is still the owner's.

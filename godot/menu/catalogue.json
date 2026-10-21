@@ -21,8 +21,11 @@
     "arrive": {"name": "arrive", "evidence": ["ArriveBehaviour"]},
     "pursue": {"name": "pursue", "evidence": ["PursueBehaviour"]},
     "avoid": {"name": "obstacle avoidance", "evidence": ["AvoidBehaviour"]},
-    "pure-pursuit": {"name": "pure pursuit: steer at a point down the line", "evidence": ["RacingDriver"]},
-    "speed-profile": {"name": "a speed profile, braked for backwards from the corners", "evidence": ["RacingTrack"]},
+    "pure-pursuit": {"name": "pure pursuit: steer at a point down the line", "evidence": ["RacingDriver", "RaceDriver3D"]},
+    "speed-profile": {"name": "a speed profile, braked for backwards from the corners", "evidence": ["RacingTrack", "RaceDriver3D"]},
+    "pid-control": {"name": "a PID controller: push from the error now, summed, and changing", "evidence": ["PidController"]},
+    "heat-line": {"name": "Melder's heat line: where across the road to be among other cars", "evidence": ["HeatLine"]},
+    "measured-grip": {"name": "a car measured before the race: the grip and braking it really has", "evidence": ["GripTest3D"]},
     "strips": {"name": "STRIPS planning, over a domain written in PDDL", "evidence": ["HeuristicPlanner", "StripsPlanner"]},
     "lookahead": {"name": "lookahead with exact odds", "evidence": ["LeveledBlue", "FightOdds"]},
     "rules": {"name": "hand-written rules", "evidence": ["RuleBasedBlue", "FightOpponent"]},
@@ -150,6 +153,22 @@
       "controls": "arrows or WASD drive; 1-3 choose the AI and start again; R again, P pause, . one step while paused; Tab watches the three AIs race (1-3 follow one, A alone)",
       "watch": "Race the easy AI, then the hard one, and follow it into a corner: its white bar shows where it starts braking, and the hard one brakes later. Down a straight you are as fast as it is -- same car, same top speed.",
       "docs": "docs/concepts/racing-ai.md"
+    },
+    {
+      "target": "demo-racing3d",
+      "title": "Racing in 3D: tyres that slip, and drivers that measure their car (3D)",
+      "scene": "res://game3d/racing/racing3d.tscn",
+      "decides": "How fast the road ahead allows, where to steer, and where across the road to be among other cars -- on a car whose tyres slip, so the driver measures it first and corrects as it goes.",
+      "techniques": [
+        {"technique": "measured-grip", "part": "before the start, on the test pad: each car cornered to the limit and braked hard; the driver races on what its own car did, not on its sheet (3 switches to the sheet)"},
+        {"technique": "speed-profile", "part": "the white bar on the road: where the car must already be braking, from the bends it sees ahead and the grip it measured; the hard car's bar comes later"},
+        {"technique": "pure-pursuit", "part": "the white post: the point a lookahead of seconds down the line, which the car steers at"},
+        {"technique": "pid-control", "part": "the trace under the panel: how far the watched car is from where it wants to be; 1 drops the integral and derivative, and the car swings off"},
+        {"technique": "heat-line", "part": "the coloured posts across the road ahead of the watched car, and the yellow ball rolling to the coolest place; 2 switches to reacting to one rival at a time"}
+      ],
+      "controls": "arrows or WASD drive; 1 PID full or proportional only, 2 heat line or one rival at a time, 3 grip measured or off the sheet; Tab watches the next car, C the camera, T the other track, R again, Space pause",
+      "watch": "Watch the measuring first: the sheet promises more grip and braking than the car has. Then follow the hard car into a corner and watch its tyres go yellow, not red. Press 3 and it brakes for a car it is not driving, and slides off. Press T: the drivers find their line on a track nobody tuned them on.",
+      "docs": "docs/godot/racing3d.md"
     },
     {
       "target": "demo-rts",
