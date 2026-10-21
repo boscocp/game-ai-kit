@@ -9,11 +9,11 @@ invalidated_if: a technique's rule changes -- a condition's order, a weight's me
 teaches: none
 -->
 
-> Seven techniques, two languages, and the files that say they gave the
+> Eight techniques, two languages, and the files that say they gave the
 > same answers.
 
 `ai_teamwork` (GDScript) and `gameaikit.teamwork` (Python) implement the
-same seven things T51's, T66's and T67's bot match decides with. Each vector is one `.json`
+same eight things T51's, T66's and T67's bot match decides with. Each vector is one `.json`
 file: a query and the answer it must get. Both sides answer it and check
 every value against the file, never against each other: `make test-vectors`
 on the GDScript side, `make test-python` on the Python side.
@@ -33,7 +33,9 @@ either way, so no vector can tell the two apart. `ActionChoice` (T67)
 was asked the same: its step's `>=`, the choice's strict `>` and its floor
 of zero, both ends of the line's clamp and the 0 an absent percept counts
 as -- each changed once in GDScript and once in Python, and each change
-failed a vector.
+failed a vector. So was `ErrandChoice`: the fetcher's strict `>`, the
+three comparisons of the choice, and each of the weighing's branches --
+the earned weapon, the empty bot, attacking, a weapon not there.
 
     python3 spec/vectors/teamwork/derive.py spec/vectors/teamwork
 
@@ -61,9 +63,10 @@ that must agree bit for bit would need rounded costs.
 | `confidence` | facts over time, a squad's members, phases | each confidence, the states with and without retreat, the waves |
 | `passage` | a blocked bot's facts, and requests to a teammate with its prices | each way's cost in seconds (null: impossible) and the way taken; each request's cost to the teammate and whether it is granted |
 | `aim` | a spread, a target's zones (multiplier, aim point, rectangles, exposure), rolls | each zone's own chance and worth aimed at, the zone aimed at, the chances from it, where each roll lands |
+| `errands` | the weights; facts for going back and for fetching; each team's fetching scores; pairs of scores | each weighing as [gain, walk, cost, score]; whom each team sends (-1: nobody); each pair's errand ("": none) |
 | `action` | actions as plain data (weight, considerations with their curves), records of percepts | for each record, every action's score, every consideration's answer, and the action taken (-1: none) |
 
-## The forty
+## The forty-six
 
 | file | what it pins |
 |---|---|
@@ -107,6 +110,12 @@ that must agree bit for bit would need rounded costs.
 | `nothing-above-zero-chooses-nothing` | every action vetoed: -1, not the first of zeros |
 | `an-absent-percept-is-nothing` | a percept not given counts as 0 |
 | `the-bot-match-weighs-its-actions` | the match's own six actions (a copy of `actions.json`) on five moments of a fight |
+| `back-for-rounds-when-spent-and-near` | spent and near its base it goes back; full, the same walk is not worth it |
+| `an-empty-bot-has-no-post-to-leave` | with no round left, leaving its post costs nothing |
+| `the-streak-earns-the-power-weapon-at-home` | a full bot whose kills earned the power weapon goes back for it |
+| `fetch-unless-far-guarded-or-gone` | the walk and each enemy near the weapon cost; a weapon not there is worth nothing |
+| `the-team-sends-the-one-it-is-worth-most-to` | the first of the highest, and nobody when none is above zero |
+| `going-back-wins-a-tie-and-zero-is-no-errand` | back on a tie; a score of exactly 0 is no errand |
 
 JSON has no infinity: in the passage vectors an impossible way, a detour
 or a spot that does not exist, and a saving with no bound are `null`, and

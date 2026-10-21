@@ -1,0 +1,71 @@
+{
+ "name": "fetch-unless-far-guarded-or-gone",
+ "why": "Five seconds from it: 1 - 0.4 = 0.6. Two enemies near it: 0. Three: -0.3. Not there, or held: nothing at all.",
+ "kind": "errands",
+ "weights": {
+  "resupply_walk": 0.05,
+  "leave_holding": 0.3,
+  "leave_attacking": 0.5,
+  "power_worth": 1.0,
+  "power_walk": 0.08,
+  "power_danger": 0.3
+ },
+ "query": {
+  "resupply": [],
+  "fetch": [
+   {
+    "available": true,
+    "walk_seconds": 5.0,
+    "enemies_near": 0
+   },
+   {
+    "available": true,
+    "walk_seconds": 5.0,
+    "enemies_near": 2
+   },
+   {
+    "available": true,
+    "walk_seconds": 5.0,
+    "enemies_near": 3
+   },
+   {
+    "available": false,
+    "walk_seconds": 5.0,
+    "enemies_near": 0
+   }
+  ],
+  "teams": [],
+  "pairs": []
+ },
+ "expect": {
+  "resupply": [],
+  "fetch": [
+   [
+    1.0,
+    5.0,
+    0.0,
+    0.6
+   ],
+   [
+    1.0,
+    5.0,
+    0.6,
+    0.0
+   ],
+   [
+    1.0,
+    5.0,
+    0.8999999999999999,
+    -0.29999999999999993
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  ],
+  "fetcher": [],
+  "chosen": []
+ }
+}

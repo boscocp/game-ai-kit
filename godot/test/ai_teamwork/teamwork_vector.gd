@@ -10,7 +10,7 @@ extends RefCounted
 ## Shared with `python/tests/test_teamwork_vectors.py`; sized for `Vector2`'s
 ## 32-bit floats.
 const TOLERANCE: float = 1e-4
-const KINDS: Array[String] = ["positions", "influence", "commander", "confidence", "aim", "passage", "action"]
+const KINDS: Array[String] = ["positions", "influence", "commander", "confidence", "aim", "passage", "action", "errands"]
 
 
 ## Why `vector` is not a teamwork vector, or "" when it is one.
@@ -48,6 +48,8 @@ static func answer_to(vector: Dictionary) -> Dictionary:
 			return _passage(vector)
 		"action":
 			return _action(vector)
+		"errands":
+			return _errands(vector)
 	return _confidence(vector)
 
 
@@ -228,6 +230,30 @@ static func _action(vector: Dictionary) -> Dictionary:
 		answers.append(choice.answers.map(func(found: PackedFloat64Array) -> Array: return Array(found)))
 		chosen.append(choice.chosen)
 	return {"scores": scores, "answers": answers, "chosen": chosen}
+
+
+static func _errands(vector: Dictionary) -> Dictionary:
+	var weights := ErrandChoice.Weights.new()
+	for key: String in vector["weights"]:
+		weights.set(key, float(vector["weights"][key]))
+	var query: Dictionary = vector["query"]
+	var back: Array = []
+	for fields: Dictionary in query["resupply"]:
+		var facts := ErrandChoice.Resupply.new()
+		for key: String in fields:
+			facts.set(key, fields[key])
+		back.append(Array(ErrandChoice.weigh_resupply(facts, weights)))
+	var out: Array = []
+	for fields: Dictionary in query["fetch"]:
+		var facts := ErrandChoice.Fetch.new()
+		for key: String in fields:
+			facts.set(key, int(fields[key]) if key == "enemies_near" else fields[key])
+		out.append(Array(ErrandChoice.weigh_fetch(facts, weights)))
+	var sent: Array = (query["teams"] as Array).map(func(scores: Array) -> int:
+		return ErrandChoice.fetcher(PackedFloat64Array(scores)))
+	var chosen: Array = (query["pairs"] as Array).map(func(pair: Array) -> String:
+		return ErrandChoice.choose(float(pair[0]), float(pair[1])))
+	return {"resupply": back, "fetch": out, "fetcher": sent, "chosen": chosen}
 
 
 static func _states(values: Array, thresholds: SquadConfidence.Thresholds, may_retreat: bool) -> Array:

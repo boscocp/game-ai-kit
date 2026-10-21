@@ -1,0 +1,52 @@
+{
+ "name": "going-back-wins-a-tie-and-zero-is-no-errand",
+ "why": "Equal scores, 0.5 each: back. Back 0.25, fetch 0.5: fetch. Back exactly 0: fetch 0.25. Both 0, or both below: no errand.",
+ "kind": "errands",
+ "weights": {
+  "resupply_walk": 0.05,
+  "leave_holding": 0.3,
+  "leave_attacking": 0.5,
+  "power_worth": 1.0,
+  "power_walk": 0.08,
+  "power_danger": 0.3
+ },
+ "query": {
+  "resupply": [],
+  "fetch": [],
+  "teams": [],
+  "pairs": [
+   [
+    0.5,
+    0.5
+   ],
+   [
+    0.25,
+    0.5
+   ],
+   [
+    0.0,
+    0.25
+   ],
+   [
+    0.0,
+    0.0
+   ],
+   [
+    -1.0,
+    -1.0
+   ]
+  ]
+ },
+ "expect": {
+  "resupply": [],
+  "fetch": [],
+  "fetcher": [],
+  "chosen": [
+   "resupply",
+   "fetch power",
+   "fetch power",
+   "",
+   ""
+  ]
+ }
+}

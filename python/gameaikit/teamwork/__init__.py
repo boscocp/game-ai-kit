@@ -14,8 +14,9 @@ answers.
     aim.py          where on a body to aim, by the damage a shot is worth
     passage.py      how to get past a body: wait, go round, ask, or another spot
     action.py       what to do now: every action scored by its considerations
+    errands.py      back for rounds or out for a power weapon, each a gain less its costs
 """
 
-from . import action, aim, commander, confidence, influence, passage, positions
+from . import action, aim, commander, confidence, errands, influence, passage, positions
 
-__all__ = ["action", "aim", "commander", "confidence", "influence", "passage", "positions"]
+__all__ = ["action", "aim", "commander", "confidence", "errands", "influence", "passage", "positions"]

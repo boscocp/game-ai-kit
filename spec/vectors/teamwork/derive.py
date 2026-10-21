@@ -493,9 +493,77 @@ def action_vectors():
                   {"ready_to_fire": 1.0, "shot_worth": 0.0625, "rounds_left": 1.0, "has_reserve": 1.0, "could_fire": 1.0,
                    "to_go": 8.0, "enemy_in_sight": 1.0, "in_retreat_wave": 1.0}])
 
+
+# --- errands -----------------------------------------------------------------
+
+# The bot match's own numbers, from its rules.json, copied here by hand.
+ERRAND_WEIGHTS = {"resupply_walk": 0.05, "leave_holding": 0.3, "leave_attacking": 0.5,
+                  "power_worth": 1.0, "power_walk": 0.08, "power_danger": 0.3}
+
+def going_back(spent=0.0, earned=False, walk=0.0, attacking=False, empty=False):
+    return {"spent": spent, "earned_power": earned, "walk_seconds": walk, "attacking": attacking, "empty": empty}
+
+def fetching(available=True, walk=0.0, near=0):
+    return {"available": available, "walk_seconds": walk, "enemies_near": near}
+
+def weigh_back(f, w):
+    gain = f["spent"] + (w["power_worth"] if f["earned_power"] else 0.0)
+    leaving = 0.0 if f["empty"] else (w["leave_attacking"] if f["attacking"] else w["leave_holding"])
+    return [gain, f["walk_seconds"], leaving, gain - f["walk_seconds"] * w["resupply_walk"] - leaving]
+
+def weigh_out(f, w):
+    if not f["available"]:
+        return [0.0, 0.0, 0.0, 0.0]
+    danger = f["enemies_near"] * w["power_danger"]
+    return [w["power_worth"], f["walk_seconds"], danger, w["power_worth"] - f["walk_seconds"] * w["power_walk"] - danger]
+
+def sent(scores):
+    best, top = -1, 0.0
+    for index, score in enumerate(scores):
+        if score > top:
+            best, top = index, score
+    return best
+
+def errand_of(back, out):
+    if back > 0.0 and back >= out:
+        return "resupply"
+    return "fetch power" if out > 0.0 else ""
+
+def errands(name, why, back=(), out=(), teams=(), pairs=()):
+    w = ERRAND_WEIGHTS
+    return {"name": name, "why": why, "kind": "errands", "weights": w,
+            "query": {"resupply": list(back), "fetch": list(out), "teams": list(teams), "pairs": list(pairs)},
+            "expect": {"resupply": [weigh_back(f, w) for f in back], "fetch": [weigh_out(f, w) for f in out],
+                       "fetcher": [sent(scores) for scores in teams], "chosen": [errand_of(b, o) for b, o in pairs]}}
+
+def errand_vectors():
+    yield errands("back-for-rounds-when-spent-and-near",
+                  "Three quarters spent, two seconds from its base, holding: 0.75 - 0.1 - 0.3 = 0.35, worth going. "
+                  "Full, the same walk: -0.4, and it stays.",
+                  back=[going_back(0.75, walk=2.0), going_back(0.0, walk=2.0)])
+    yield errands("an-empty-bot-has-no-post-to-leave",
+                  "No round left, attacking, ten seconds away: leaving costs it nothing, 1 - 0.5 = 0.5. With a "
+                  "tenth left it has a post: 0.9 - 0.5 - 0.5 = -0.1.",
+                  back=[going_back(1.0, walk=10.0, attacking=True, empty=True), going_back(0.9, walk=10.0, attacking=True)])
+    yield errands("the-streak-earns-the-power-weapon-at-home",
+                  "Full of rounds, but five kills earned the power weapon at its base: 0 + 1 - 0.2 - 0.3 = 0.5.",
+                  back=[going_back(0.0, earned=True, walk=4.0)])
+    yield errands("fetch-unless-far-guarded-or-gone",
+                  "Five seconds from it: 1 - 0.4 = 0.6. Two enemies near it: 0. Three: -0.3. Not there, or held: "
+                  "nothing at all.",
+                  out=[fetching(walk=5.0), fetching(walk=5.0, near=2), fetching(walk=5.0, near=3), fetching(False, 5.0)])
+    yield errands("the-team-sends-the-one-it-is-worth-most-to",
+                  "Of 0.25, 0.5, 0.5 and -0.125 the first 0.5 is sent; when none is above zero, nobody is. Powers "
+                  "of two, so the tie is exact on both sides.",
+                  teams=[[0.25, 0.5, 0.5, -0.125], [-0.125, 0.0], []])
+    yield errands("going-back-wins-a-tie-and-zero-is-no-errand",
+                  "Equal scores, 0.5 each: back. Back 0.25, fetch 0.5: fetch. Back exactly 0: fetch 0.25. Both "
+                  "0, or both below: no errand.",
+                  pairs=[[0.5, 0.5], [0.25, 0.5], [0.0, 0.25], [0.0, 0.0], [-1.0, -1.0]])
+
 def main(directory):
     folder = pathlib.Path(directory)
-    for vector in list(vectors()) + list(aim_vectors()) + list(passage_vectors()) + list(action_vectors()):
+    for vector in list(vectors()) + list(aim_vectors()) + list(passage_vectors()) + list(action_vectors()) + list(errand_vectors()):
         (folder / f"{vector['name']}.json").write_text(json.dumps(vector, indent=1) + "\n", encoding="utf-8")
 
 if __name__ == "__main__":
