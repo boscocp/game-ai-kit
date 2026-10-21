@@ -44,6 +44,17 @@ arrays are `PackedFloat64Array`, and the decision never touches a
 A gain moved from 0.04 to 0.041 fails the GDScript side; the braking
 carried back at 1.9 instead of 2 fails three vectors on the Python side.
 
+## What the vectors catch
+
+Thirty-five vectors. A review of wave 73 made fifty one-line mutations of
+the Python twin -- each comparison flipped, each constant moved, each clamp
+or reset dropped -- and twenty-five got past the fourteen vectors there
+were then. Twenty-one were added for them, each `why` naming the rule it
+pins (a rival alongside, the heat line's edge, one rival leaving and coming
+back, a rival where the car is but not where it means to be, an integral
+held at its limit, the first points behind the car, and others). Measured
+again (2026-10-21): all fifty are caught.
+
 ## The shape
 
 ```json

@@ -18,9 +18,11 @@ extends Resource
 @export var wheelbase: float = 2.6
 ## Metres between the left and the right wheel of an axle.
 @export var track_width: float = 1.6
-## How far below the centre of mass the springs are mounted, in metres. The
-## centre of mass sits above the road, so a force at the tyres pitches and
-## rolls the body: that is where weight transfer comes from.
+## How far below the centre of mass the springs are mounted, in metres;
+## negative is above it, and -0.15 puts the mounts 15 cm above, which sets
+## the centre of mass 0.38 m over the road. It sits above the road, so a
+## force at the tyres pitches and rolls the body: that is where weight
+## transfer comes from.
 @export var mount_drop: float = -0.15
 ## The spring's length with no load on it, in metres.
 @export var rest_length: float = 0.3

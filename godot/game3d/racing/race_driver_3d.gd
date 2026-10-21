@@ -181,8 +181,10 @@ func speed_limits(view: RaceView3D, margin: float) -> PackedFloat64Array:
 ## How sharply the line bends at point `index` of the view, in 1 / metres,
 ## positive to the left: one over the radius of the circle through it and
 ## the points `BEND_REACH` either side (nearer the ends, the nearest point
-## that has both).
+## that has both). A view too short to measure over has no bend.
 static func bend_at(view: RaceView3D, index: int) -> float:
+	if view.line_forward.size() < 2 * BEND_REACH + 1:
+		return 0.0
 	var middle: int = clampi(index, BEND_REACH, view.line_forward.size() - 1 - BEND_REACH)
 	var before: int = middle - BEND_REACH
 	var after: int = middle + BEND_REACH

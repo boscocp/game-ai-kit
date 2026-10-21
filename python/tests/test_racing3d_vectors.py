@@ -20,7 +20,7 @@ from gameaikit.racing import Driver, Level, View
 VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "racing3d"
 
 #: Fewer than this and something is wrong with the directory, not the vectors.
-FEWEST_VECTORS = 14
+FEWEST_VECTORS = 35
 
 #: How far a number may stray. Shared with `godot/test/racing3d/racing3d_vector.gd`.
 TOLERANCE = 1e-9

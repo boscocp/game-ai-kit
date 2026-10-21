@@ -64,15 +64,21 @@ class View:
     def from_dict(values: dict) -> "View":
         """A view from the shape `RaceView3D.to_dictionary` writes."""
         return View(float(values["time"]), float(values["step"]), float(values["speed"]),
-                    float(values["cross_track"]), [float(v) for v in values["line_forward"]],
-                    [float(v) for v in values["line_left"]], [float(v) for v in values["room_left"]],
-                    [float(v) for v in values["room_right"]],
-                    [[float(v) for v in rival] for rival in values["rivals"]])
+                    float(values["cross_track"]), [float(point) for point in values["line_forward"]],
+                    [float(point) for point in values["line_left"]], [float(room) for room in values["room_left"]],
+                    [float(room) for room in values["room_right"]],
+                    [[float(number) for number in rival] for rival in values["rivals"]])
 
 
 def clamp(value: float, low: float, high: float) -> float:
-    """`value` held between `low` and `high`, as GDScript's clampf."""
-    return max(low, min(high, value))
+    """`value` held between `low` and `high`, exactly as GDScript's clampf:
+    below `low` is `low`, else above `high` is `high`. The order matters
+    only when `low` is above `high`, and then both sides answer `low`."""
+    if value < low:
+        return low
+    if value > high:
+        return high
+    return value
 
 
 def lerp(start: float, end: float, share: float) -> float:
@@ -88,11 +94,16 @@ def distance(view: View, first: int, second: int) -> float:
 
 
 def bend_at(view: View, index: int) -> float:
-    """The line's curvature at point `index`, positive to the left."""
+    """The line's curvature at point `index`, positive to the left. A view
+    too short to measure a bend over (under 2 * BEND_REACH + 1 points) has
+    none, rather than one read through negative indices."""
+    if len(view.line_forward) < 2 * BEND_REACH + 1:
+        return 0.0
     middle = min(max(index, BEND_REACH), len(view.line_forward) - 1 - BEND_REACH)
     before, after = middle - BEND_REACH, middle + BEND_REACH
-    f, l = view.line_forward, view.line_left
-    turned = (f[middle] - f[before]) * (l[after] - l[middle]) - (l[middle] - l[before]) * (f[after] - f[middle])
+    forward, left = view.line_forward, view.line_left
+    turned = (forward[middle] - forward[before]) * (left[after] - left[middle]) \
+        - (left[middle] - left[before]) * (forward[after] - forward[middle])
     sides = distance(view, before, middle) * distance(view, middle, after) * distance(view, before, after)
     return 2.0 * turned / sides if sides > 0.0 else 0.0
 

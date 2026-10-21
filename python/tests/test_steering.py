@@ -127,6 +127,38 @@ class PidAndHeatTests(unittest.TestCase):
             line.heat_up(0.5, 3.0, 2.2)
             line.roll(DT)
         self.assertLess(line.ball, -1.5)
+        for _ in range(600):
+            line.build(6.0, 6.0)
+            line.roll(DT)
+        self.assertLess(abs(line.ball), 0.05)
+
+    def test_the_integral_is_held_to_its_limit(self) -> None:
+        controller = PidController(0.0, 1.0, 0.0, 0.3)
+        for _ in range(600):
+            controller.update(1.0, DT)
+        self.assertAlmostEqual(controller.integral_term, 0.3, places=9)
+
+    def test_the_first_update_has_no_derivative_and_a_reset_forgets(self) -> None:
+        controller = PidController(0.0, 0.0, 1.0, 1.0)
+        self.assertEqual(controller.update(5.0, DT), 0.0)
+        self.assertAlmostEqual(controller.update(6.0, DT), 60.0, places=9)
+        controller.reset()
+        self.assertEqual(controller.update(6.0, DT), 0.0)
+
+    def test_the_ball_rests_on_the_line_when_the_road_is_empty(self) -> None:
+        line = HeatLine()
+        for _ in range(300):
+            line.build(6.0, 6.0)
+            line.roll(DT)
+        self.assertLess(abs(line.ball), 1e-9)
+
+    def test_the_ball_never_leaves_the_road(self) -> None:
+        line = HeatLine()
+        line.ball_speed = 100.0
+        line.build(3.0, 3.0)
+        line.roll(0.1)
+        self.assertEqual(line.ball, 3.0)
+        self.assertEqual(line.ball_speed, 0.0)
 
 
 if __name__ == "__main__":
