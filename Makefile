@@ -95,7 +95,8 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-decisions test-demo-overlays test-menu-walk test-replay test-opponent-levels test-opponent-properties \
        test-clone-rows test-inference-budget test-clone-report test-difficulty-knobs \
        test-rts-budget test-rts-simulation test-rts-match test-steering-properties \
-       test-racing-ladder test-racing-does-not-cheat test-game3d-floor test-botmatch-effects ## Run every gate
+       test-racing-ladder test-racing-does-not-cheat test-game3d-floor test-botmatch-effects \
+       test-racing3d-car test-racing3d-effects test-racing3d-ladder test-racing3d-does-not-cheat ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-no-assets lint-readability lint-demos \
@@ -246,7 +247,7 @@ train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-racing3d-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -326,6 +327,12 @@ test-teamwork-vectors: import ## Positions, influence, commander and confidence,
 	@# The other half is `make test-python`.
 	@$(GODOT) --headless --path godot -s res://test/ai_teamwork/teamwork_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/teamwork
+
+.PHONY: test-racing3d-vectors
+test-racing3d-vectors: import ## The 3D driver's decisions from stated snapshots, against RaceDriver3D (T54)
+	@# The other half is `make test-python`.
+	@$(GODOT) --headless --path godot -s res://test/racing3d/racing3d_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/racing3d
 
 .PHONY: test-steering-vectors
 test-steering-vectors: import ## The steering trajectories, against ai_steering
@@ -525,6 +532,10 @@ demo-steering: import ## Four vehicles: seek, arrive, pursue, seek with avoid, e
 demo-racing: import ## Race an AI in the same car: arrows/WASD drive, 1-3 the AI, R again, P pause, Tab watch the three AIs
 	@$(GODOT) --path godot res://demos/racing/racing_demo.tscn
 
+.PHONY: demo-racing3d
+demo-racing3d: import ## A 3D race, you and three AI levels: arrows/WASD drive, 1 PID, 2 heat line, 3 measured grip, Tab watch, C camera, T track, R again, Space pause
+	@$(GODOT) --path godot res://game3d/racing/racing3d.tscn
+
 .PHONY: demo-botmatch
 demo-botmatch: import ## A 3D bot match, six against six: 1-3 blue's claims/commander/retreat (Shift: red's), Tab a bot, T take it over, M map, C camera, P pause, N new, L the other arena
 	@$(GODOT) --path godot res://game3d/botmatch/botmatch.tscn
@@ -668,6 +679,24 @@ assets-3d: ## Download the 3D packs into build/assets-3d/ and the files used int
 .PHONY: test-game3d-floor
 test-game3d-floor: import ## Headless 3D physics, rays, a baked path, a replay, and the arena with its models missing (T50)
 	@$(GODOT) --headless --path godot -s res://test/game3d/game3d_floor.gd
+
+.PHONY: test-racing3d-car
+test-racing3d-car: import ## The 3D car on a test pad: it rests on its springs, braking moves its weight forward, its tyres slide past their peak (T54)
+	@# --fixed-fps 60: the physics step is the same 1/60 s either way, but
+	@# without it Godot paces the frames in real time and this takes minutes.
+	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_car.gd
+
+.PHONY: test-racing3d-ladder
+test-racing3d-ladder: import ## The 3D racer's three levels finish, in order, a second a lap apart, on two tracks (T54)
+	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_ladder.gd
+
+.PHONY: test-racing3d-does-not-cheat
+test-racing3d-does-not-cheat: import ## One physics for every 3D car, no limit broken, no knob moved, and an honest twin race matched bit for bit (T54)
+	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_does_not_cheat.gd
+
+.PHONY: test-racing3d-effects
+test-racing3d-effects: import ## Slow (~75 s): what the PID, the measured grip and the heat line each do to a 3D race, measured (T54)
+	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_effects.gd
 
 .PHONY: measure-3d
 measure-3d: import ## Windowed: the 3D test arena's frame rate, with models and without (T50); not a gate

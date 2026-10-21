@@ -1,0 +1,24 @@
+{
+  "module": "racing3d",
+  "kind": "example",
+  "about": "The 3D racer (T54): a car on ray-cast wheels whose tyres slip, and a driver that measures its car, follows a line it finds itself, and passes by a heat line.",
+  "owns": [
+    "godot/game3d/racing/",
+    "godot/test/racing3d/",
+    "python/gameaikit/racing/",
+    "python/tests/test_racing3d_vectors.py",
+    "spec/vectors/racing3d/"
+  ],
+  "depends_on": [
+    "ai_steering",
+    "game3d",
+    "game_shared"
+  ],
+  "gates": [
+    "test-racing3d-car",
+    "test-racing3d-vectors",
+    "test-racing3d-effects",
+    "test-racing3d-ladder",
+    "test-racing3d-does-not-cheat"
+  ]
+}

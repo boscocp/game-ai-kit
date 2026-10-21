@@ -1,0 +1,10 @@
+{
+  "title": "The kidney",
+  "about": "A second track nobody tuned the driver on: narrower, run the other way round, with a hairpin and a chicane the loop does not have. Portability is held on it (racing3d_portable.gd).",
+  "half_width": 7.0,
+  "nodes": [
+    [0, 0], [-120, 0], [-200, -10], [-250, -60], [-245, -130], [-200, -165],
+    [-150, -155], [-110, -128], [-70, -132], [-35, -150],
+    [10, -190], [70, -200], [110, -160], [100, -100], [60, -60], [50, -25]
+  ]
+}
