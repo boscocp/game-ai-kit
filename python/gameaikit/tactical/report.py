@@ -7,9 +7,9 @@ whose weights nobody can read is a model nobody can argue with, and the whole
 reason this kit fits a logistic regression rather than a small network is that
 five numbers can be argued with.
 
-    python3 -m gameaikit.training.report                 print the dump
-    python3 -m gameaikit.training.report --check         assert it is sound
-    python3 -m gameaikit.training.report --write DIR     write both artifacts
+    python3 -m gameaikit.tactical.report                 print the dump
+    python3 -m gameaikit.tactical.report --check         assert it is sound
+    python3 -m gameaikit.tactical.report --write DIR     write both artifacts
 
 Exit codes: 0 sound, 1 a finding (each one printed), 2 wrong usage.
 """
@@ -199,7 +199,7 @@ def _capture_caveat(training: Training) -> list[str]:
 def as_json(training: Training) -> dict:
     """Both models in the shape `ai_learning` will read back in T6."""
     return {
-        "generated_by": "gameaikit.training.report",
+        "generated_by": "gameaikit.tactical.report",
         "games": training.games,
         "data_seed": DATA_SEED,
         "split_seed": SPLIT_SEED,

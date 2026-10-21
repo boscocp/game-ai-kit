@@ -1,20 +1,16 @@
 {
   "module": "ai_learning",
   "kind": "technique",
-  "about": "Inference only: logistic and softmax models, a case table, the published weights.",
+  "about": "Inference only: logistic and softmax models, their file, a case table -- and the Python that fits them (gameaikit.training). No board.",
   "owns": [
     "godot/addons/ai_learning/",
     "godot/test/ai_learning/",
-    "spec/vectors/cloning/"
+    "spec/vectors/cloning/",
+    "python/gameaikit/training/",
+    "python/tests/test_descent.py"
   ],
-  "depends_on": [
-    "ai_core"
-  ],
-  "tests_depend_on": [
-    "ai_search"
-  ],
+  "depends_on": [],
   "gates": [
-    "test-cloning-vectors",
-    "test-decisions"
+    "test-cloning-vectors"
   ]
 }

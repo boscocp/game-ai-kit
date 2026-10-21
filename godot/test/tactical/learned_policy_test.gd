@@ -4,7 +4,7 @@
 # The models here are hand-made and mostly absurd -- a model that always
 # answers 0.9, a model that cannot read the row it is given -- because every
 # claim below is about the decision rule and not about the fit. The published
-# weights get their own say in test/ai_learning/decision_scenarios.gd, where the question
+# weights get their own say in test/tactical/decision_scenarios.gd, where the question
 # is whether a trained model plays sensibly.
 extends GdUnitTestSuite
 
@@ -31,7 +31,7 @@ func test_a_policy_over_a_missing_file_says_so_and_holds() -> void:
 	# The opponent that stands still and looks thoughtful is the failure this
 	# avoids: a file that did not load has to arrive as a sentence.
 	var policy := LearnedPolicy.new(
-		ModelFile.load_from("res://addons/ai_learning/nothing.json"), NODES)
+		ModelFile.load_from("res://game/tactical/nothing.json"), NODES)
 
 	assert_str(policy.why_unusable()).contains("M1")
 	var decision: LearnedDecision = policy.decide(_two_sides(), 2)

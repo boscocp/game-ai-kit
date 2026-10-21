@@ -2,7 +2,7 @@
 ##
 ## It sits beside `Move` and `ProductionOrder` and is as thin as they are. What
 ## an attack is allowed to do, and how the fight goes, are a scenario's rules
-## -- dice, a counter table, cover -- and `ai_core` holds types, not rules, so
+## -- dice, a counter table, cover -- and the board holds types, not rules, so
 ## the tactical board judges and plays it (`TacticalCombat`).
 ##
 ## When not to use it: an area attack, or anything that hits more than one

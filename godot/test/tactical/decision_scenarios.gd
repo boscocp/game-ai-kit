@@ -18,7 +18,7 @@
 # decision survives a mangled row. That coverage is the conformance vectors'
 # job, and the two should not be read as one.
 #
-#     ./scripts/godot --headless --path godot -s res://test/ai_learning/decision_scenarios.gd
+#     ./scripts/godot --headless --path godot -s res://test/tactical/decision_scenarios.gd
 #
 # Exit codes: 0 every scenario went the way it had to, 1 one did not, 2 the
 # published weights could not be read -- which is a different failure and must
@@ -35,7 +35,7 @@ const NODES: Array[Vector2i] = [Vector2i(0, 0), Vector2i(8, 6)]
 
 
 func _init() -> void:
-	var published: ModelFile = ModelFile.load_from(ModelFile.DEFAULT_PATH)
+	var published: ModelFile = ModelFile.load_from(LearnedPolicy.WEIGHTS_PATH)
 	if not published.is_loaded():
 		printerr("decision_scenarios: %s" % published.error)
 		quit(2)

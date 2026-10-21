@@ -1,6 +1,6 @@
 ## The whole game, as one value: the board, the units, and whose turn it is.
 ##
-## Everything in this kit decides *on* a `BoardState` and returns a `Move`. The
+## Every turn-based example decides *on* a `BoardState` and returns a `Move`. The
 ## state is what the search searches, what the planner plans over, and what the
 ## learned policy is shown. One type, so an experiment and the running game
 ## cannot drift apart.
@@ -41,7 +41,7 @@ var turn_number: int
 
 ## A cost map per `UnitType.mover` name, for the types that do not walk on
 ## `graph`. Shared between states exactly as `graph` is (see `duplicate_state`).
-## This is how a boat crosses water a soldier cannot, with `ai_core` knowing
+## This is how a boat crosses water a soldier cannot, with the board knowing
 ## nothing about water: the scenario builds a second map where water is cheap.
 var movement_graphs: Dictionary = {}
 

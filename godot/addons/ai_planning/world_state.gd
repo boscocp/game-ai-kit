@@ -7,7 +7,8 @@
 ##
 ## Every state is immutable: `after` hands back a new one. That is what lets a
 ## planner hold a few thousand of them at once without any of them changing
-## under it, and it is the same bargain `BoardState` makes for the board.
+## under it, and it is the same bargain a turn-based board makes when every
+## move hands back a new board.
 ##
 ## When not to use it: a world with numbers in it -- ammunition, health,
 ## distance. STRIPS has no arithmetic, and faking it with `has_3_ore`,

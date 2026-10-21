@@ -61,7 +61,8 @@ func _init(level_name: String, horizon: int, depth: int, noise: float) -> void:
 ## 12; 2 plies beat 1 by 59 to 40. Noise above 0.5 was too much: at 1.0 a
 ## level beat the rules only 39 and 41 times in 50 from each seat, under the
 ## floor. Every horizon is 0: there, a plan was measured to make a side
-## weaker (`LeveledBlue`), and more of it would make "hard" the easier level.
+## weaker (on the tactical board, T12), and more of it would make "hard" the
+## easier level.
 ##
 ## Three, not five: nothing measured fits between normal and hard -- 2 plies
 ## with a noise of 0.5 lost to normal 42 to 58 -- nor below easy above the

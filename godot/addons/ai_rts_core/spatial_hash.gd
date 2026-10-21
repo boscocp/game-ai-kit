@@ -1,6 +1,6 @@
 ## Who is near a point, without asking everybody.
 ##
-## `BoardState.unit_at` walks the whole unit list for every question, which is
+## Looking a unit up by walking the whole unit list for every question is
 ## O(n) a lookup; an RTS asks thousands a frame -- every soldier looking for
 ## the nearest enemy, every command checking a cell is free. Here the plane is
 ## cut into square buckets and each id is filed under the bucket its position

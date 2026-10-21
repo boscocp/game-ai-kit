@@ -54,8 +54,8 @@ func find_path(graph: GridGraph, from: Vector2i, to: Vector2i) -> Array[Vector2i
 # Walk the chain of parents back from the goal, then turn it round.
 #
 # The result excludes `from` and includes `to`, which is what `Pathfinder`
-# promises and what `Move` expects: cost is paid on entering a cell, and you
-# never pay to stand where you already are.
+# promises: cost is paid on entering a cell, and you never pay to stand where
+# you already are.
 #
 # A broken chain crashes here with "invalid key", and that is left deliberate.
 # It can only happen if an algorithm reports reaching a cell it never recorded

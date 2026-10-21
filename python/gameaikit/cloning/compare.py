@@ -32,7 +32,7 @@ from gameaikit.cloning import measure  # noqa: E402
 from gameaikit.cloning.publish import REPOSITORY, digest  # noqa: E402
 from gameaikit.cloning.rows import ROWS_PATH, Recorded, Session, read  # noqa: E402
 
-PUBLISHED = REPOSITORY / "godot/addons/ai_learning/clone_weights.json"
+PUBLISHED = REPOSITORY / "godot/game/fighting/clone_weights.json"
 #: The frame data the win rates were fought under.
 RULES = REPOSITORY / "godot/game/fighting/characters.json"
 WIN_RATES = REPOSITORY / "data/cloning/win_rates.json"

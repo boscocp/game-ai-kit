@@ -15,8 +15,8 @@ teaches: behaviour-cloning
 
 ## What to copy
 
-`addons/ai_core/` and `addons/ai_learning/`, with its `clone_weights.json`.
-Three classes read it, and none of them knows what game it is in:
+`addons/ai_learning/`, and a published player: this kit's is the fighting
+game's, `godot/game/fighting/clone_weights.json`. Three classes read it, and none of them knows what game it is in:
 
 - `ClonedPlayer` -- the file, loaded and checked, or refused with a code;
 - `SoftmaxModel` -- the model: a probability for each answer;
@@ -29,7 +29,7 @@ game's is `FightSituation`; the file names the features it was cut with.
 ## Load it, and refuse a bad file
 
 ```gdscript
-var player: ClonedPlayer = ClonedPlayer.load_from()
+var player: ClonedPlayer = ClonedPlayer.load_from("res://game/fighting/clone_weights.json")
 if not player.is_loaded():
 	push_error(player.error)  # "C1 no cloned player at ...", C2 to C7
 ```

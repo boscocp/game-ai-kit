@@ -12,8 +12,8 @@
   ],
   "depends_on": [
     "ai_adversarial",
-    "game_shared",
-    "tactical"
+    "ai_learning",
+    "game_shared"
   ],
   "gates": [
     "test-checkers-vectors"

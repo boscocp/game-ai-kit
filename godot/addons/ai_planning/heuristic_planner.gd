@@ -39,7 +39,7 @@
 ## and the guesses none. The two guesses tie: h_max is exact on this domain
 ## -- A* visits one world per step and one more -- so h_add has nothing to
 ## improve on. The game uses h_max, which costs the same and keeps the plan
-## shortest (`PlannedBlue.GUIDE`). Strings against bits was measured on
+## shortest (the tactical board's planner, T11). Strings against bits was measured on
 ## breadth-first only, where the representation is the one thing that
 ## changes; the guesses were built over bits alone.
 ##

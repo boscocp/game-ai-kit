@@ -1,4 +1,5 @@
-# The interfaces in ai_core are only worth having if the engine enforces them.
+# The interface in ai_core is only worth having if the engine enforces it.
+# DecisionPolicy, the board's, has the same cases in test/board/.
 #
 # These tests exist because the first version of those files did not enforce
 # anything: they called push_error and returned a default, and the default each
@@ -23,17 +24,6 @@ func find_path(graph: GridGraph, from: Vector2i, to: Vector2i) -> Array[Vector2i
 	return [to] if graph.contains(to) and from != to else []
 """
 
-const FORGETFUL_POLICY: String = "extends DecisionPolicy\n"
-
-const DUTIFUL_POLICY: String = """
-extends DecisionPolicy
-
-
-func choose(state: BoardState, unit_id: int) -> Move:
-	var unit: Unit = state.unit_by_id(unit_id)
-	return Move.new(unit_id, [] as Array[Vector2i]) if unit != null else Move.new(unit_id, [])
-"""
-
 const INSTANTIATES_THE_INTERFACE: String = """
 extends RefCounted
 
@@ -52,19 +42,6 @@ func test_a_pathfinder_that_implements_find_path_loads() -> void:
 	dutiful.source_code = DUTIFUL_PATHFINDER
 
 	assert_int(dutiful.reload()).is_equal(OK)
-
-
-func test_a_policy_that_implements_choose_loads() -> void:
-	# The pathfinder had a dutiful twin and the policy did not, so nothing
-	# proved an implementable DecisionPolicy exists.
-	var dutiful := GDScript.new()
-	dutiful.source_code = DUTIFUL_POLICY
-
-	assert_int(dutiful.reload()).is_equal(OK)
-
-
-func test_a_policy_that_forgets_choose_does_not_load() -> void:
-	assert_int(await _refused_status(FORGETFUL_POLICY)).is_not_equal(OK)
 
 
 func test_an_interface_cannot_be_instantiated_on_its_own() -> void:

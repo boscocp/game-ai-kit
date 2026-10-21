@@ -36,7 +36,7 @@ contrast is the lesson.
 3. **Fit.** `gameaikit.cloning` (Python, standard library) splits the rows
    **by recording**, fits a softmax model and counts a ghost's table on the
    training part, and publishes both in
-   `godot/addons/ai_learning/clone_weights.json`.
+   `godot/game/fighting/clone_weights.json`.
 4. **Play.** Three dummy modes in `make demo-fighting` -- *ghost: exact*,
    *ghost: nearest*, *clone* -- do what the recorded player would have done.
 

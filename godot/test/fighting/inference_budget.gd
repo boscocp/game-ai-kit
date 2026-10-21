@@ -32,7 +32,7 @@ func _init() -> void:
 
 
 func _run() -> int:
-	var cloned: ClonedPlayer = ClonedPlayer.load_from()
+	var cloned: ClonedPlayer = ClonedPlayer.load_from(FightCloneOpponent.PUBLISHED_PATH)
 	if not cloned.is_loaded():
 		printerr("inference_budget: " + cloned.error)
 		return 2

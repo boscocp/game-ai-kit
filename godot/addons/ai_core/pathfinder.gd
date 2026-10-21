@@ -15,9 +15,9 @@
 ##
 ## An implementation must guarantee:
 ##
-## * the returned path **excludes** `from` and **includes** `to`, which is the
-##   shape `Move` expects and the reason it is written down here rather than
-##   rediscovered in each addon;
+## * the returned path **excludes** `from` and **includes** `to` -- cost is
+##   paid on entering a cell, never for standing where you are -- and it is
+##   written down here rather than rediscovered in each addon;
 ## * every cell in it is passable on `graph` at the time of the call;
 ## * consecutive cells are cardinal neighbours;
 ## * an empty array means the search produced no steps. Two things produce
@@ -28,8 +28,9 @@
 ##   nothing here depends on a type another addon owns;
 ## * the call does not change `graph`.
 ##
-## When not to use it: anything that needs the cost of the route as well. Ask
-## the returned path with `Move.cost_on`, which is the one definition of cost.
+## When not to use it: anything that needs the cost of the route as well. Sum
+## `graph.cost_at` over the returned cells: that is the one definition of
+## cost, and the examples' board does exactly that when it prices a move.
 @abstract
 class_name Pathfinder
 extends RefCounted

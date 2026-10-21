@@ -1,7 +1,7 @@
 {
   "module": "ai_core",
   "kind": "kernel",
-  "about": "The shared kernel: the grid, moves, the decision interface -- and today the tactical board's state (T58, D4).",
+  "about": "The shared kernel: the grid and the pathfinder interface, and nothing else (T61).",
   "owns": [
     "godot/addons/ai_core/",
     "godot/test/ai_core/"

@@ -10,7 +10,8 @@
     "ai_core"
   ],
   "tests_depend_on": [
-    "ai_search"
+    "ai_search",
+    "board"
   ],
   "gates": [
     "test-rts-budget",

@@ -16,7 +16,7 @@ teaches: search
 
 ## What to copy
 
-Two folders: `addons/ai_core/` (the board, the `Pathfinder` interface) and
+Two folders: `addons/ai_core/` (the grid, the `Pathfinder` interface) and
 `addons/ai_search/`. No editor plugin to enable -- every class here is
 registered by `class_name`, and named classes are globally registered, usable
 from any script without `load` or `preload`. Run the project once (or

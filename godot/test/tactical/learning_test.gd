@@ -9,7 +9,7 @@
 extends GdUnitTestSuite
 
 const SOUND: Dictionary = {
-	"generated_by": "gameaikit.training.report",
+	"generated_by": "gameaikit.tactical.report",
 	"feature_conventions": {
 		"nearby_radius": 2,
 		"reinforcement_distance_when_alone": 15,
@@ -113,14 +113,14 @@ func test_a_sound_file_publishes_both_models_and_its_conventions() -> void:
 func test_the_published_weights_load() -> void:
 	# Not a duplicate of the above: this is the file `make train` wrote and
 	# the game loads, read through the same rules as everything else.
-	var published: ModelFile = ModelFile.load_from(ModelFile.DEFAULT_PATH)
+	var published: ModelFile = ModelFile.load_from(LearnedPolicy.WEIGHTS_PATH)
 
 	assert_str(published.error).is_empty()
-	assert_str(published.generated_by).contains("gameaikit.training")
+	assert_str(published.generated_by).contains("gameaikit.tactical")
 
 
 func test_a_missing_file_is_refused_by_name() -> void:
-	var published: ModelFile = ModelFile.load_from("res://addons/ai_learning/nothing.json")
+	var published: ModelFile = ModelFile.load_from("res://game/tactical/nothing.json")
 
 	assert_str(published.error).contains("M1")
 	assert_bool(published.is_loaded()).is_false()

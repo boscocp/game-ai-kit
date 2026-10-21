@@ -34,6 +34,9 @@
 class_name FightCloneOpponent
 extends FightOpponent
 
+## Where the published cloned player lives. Published by `make train-clone`.
+const PUBLISHED_PATH: String = "res://game/fighting/clone_weights.json"
+
 const SOURCES: Array[String] = ["ghost: exact", "ghost: nearest", "clone"]
 ## How a probability becomes a whole-number weight to draw by: per thousand.
 const PER: int = 1000

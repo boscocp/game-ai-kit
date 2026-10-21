@@ -1,8 +1,9 @@
 ## A real-time match's whole state, changed in place, one fixed tick at a time.
 ##
-## `ai_core`'s `BoardState` answers every move with a new board. That is what
-## lets a search try a thousand moves, and it cost 50 ms to move 200 units one
-## cell each, measured in T19 -- three whole frames. So this core mutates:
+## A turn-based board can answer every move with a new board. That is what
+## lets a search try a thousand moves, and the kit's tactical board does it;
+## but it cost 50 ms to move 200 units one cell each, measured in T19 --
+## three whole frames. So this core mutates:
 ## a tick moves every unit a little, and nothing is copied. What searches get
 ## instead is a frozen copy, `RtsSnapshot`, which is also the only thing an AI
 ## is ever shown. The game mutates; the planner reads a snapshot.
@@ -16,7 +17,8 @@
 ##   * fog: `visible_to()` is what a side can see, and snapshots obey it.
 ##
 ## When not to use it: anything turn-based, or anything that searches over
-## moves. Use `ai_core`, which is built for exactly that (ADR 0019).
+## moves. Use a board that hands back a new state per move, as the examples'
+## board in `godot/game/board/` does (ADR 0019, ADR 0021).
 class_name RtsWorld
 extends RefCounted
 

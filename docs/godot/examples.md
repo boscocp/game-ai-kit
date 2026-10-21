@@ -26,7 +26,7 @@ it:
 | `make demo-skirmish` | the 12×8 skirmish board | logistic and linear regression (`ai_learning`), A\* routes (`ai_search`) | each blue unit's decision and the probability it was made on |
 | `make demo-tictactoe` | noughts and crosses, you against MENACE | Michie's matchboxes, reinforcement learning trained in Python; minimax as the yardstick | each empty square's beads and chance before the draw, the bead drawn, and (M) what perfect play makes of each square |
 | `make demo-search` | four searches on a board you can paint, and four named boards | BFS, DFS, Dijkstra, A\* (`ai_search`) | the expansion order, the frontier, the route |
-| `make demo-tactical` | Advance Wars style tactics, you against blue | rule-based blue, chosen as a `BlueController` (`ai_core`'s `DecisionPolicy`); `ai_search`-style reach | blue's next decision in pink before it is played, with why; your spent units greyed |
+| `make demo-tactical` | Advance Wars style tactics, you against blue | rule-based blue, chosen as a `BlueController` (the board's `DecisionPolicy`); `ai_search`-style reach | blue's next decision in pink before it is played, with why; your spent units greyed |
 | `make demo-stealth` | cross a hall unseen | sight and hearing (`ai_perception`), fuzzy suspicion (`ai_fuzzy`) | each guard's cone, suspicion and state |
 
 `make run` is the project's main scene, so it names no scene in its recipe.

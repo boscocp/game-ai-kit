@@ -6,13 +6,10 @@
 ## on screen. The rules are in `_why_wrong`, each with a code, and
 ## `from_dictionary` is public so a test can plant each one.
 ##
-## When not to use it: any format but the one `gameaikit.training.report`
+## When not to use it: any format but the one `gameaikit.tactical.report`
 ## writes, which that module's header describes.
 class_name ModelFile
 extends RefCounted
-
-## Where the game's own weights live. Published by `make train`.
-const DEFAULT_PATH: String = "res://addons/ai_learning/weights.json"
 
 ## The fields every published model carries.
 const MODEL_FIELDS: Array[String] = ["kind", "features", "weights", "bias"]
@@ -189,9 +186,9 @@ static func _why_conventions_are_wrong(data: Dictionary) -> String:
 		if not _is_a_number(value) or float(value) <= 0.0:
 			return _not_a_convention(name, value)
 	# Each number is sound on its own and the pair can still be nonsense.
-	# Reversed, `BoardFeatures.terrain_at` clamps with a minimum above its
-	# maximum -- which `clampi` answers rather than refuses, so every cell on
-	# the board would come back as the same wrong number.
+	# Reversed, a feature that clamps terrain between them clamps with a
+	# minimum above its maximum -- which `clampi` answers rather than refuses,
+	# so every cell on the board would come back as the same wrong number.
 	if int(published["cheapest_ground"]) > int(published["dearest_ground"]):
 		return "M9 feature_conventions says the cheapest ground (%s) costs more than the dearest (%s)" % [
 			published["cheapest_ground"], published["dearest_ground"],

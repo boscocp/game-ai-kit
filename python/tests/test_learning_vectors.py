@@ -20,7 +20,7 @@ import unittest
 
 from gameaikit.dataset.board import Board, Unit
 from gameaikit.dataset.simulate import fight_features, opening_features
-from gameaikit.training import report
+from gameaikit.tactical import report
 from gameaikit.training.descent import linear_prediction, logistic_prediction
 
 VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "learning"

@@ -13,9 +13,9 @@ import random
 
 from ..dataset.rows import CAPTURE_FEATURES, COMBAT_FEATURES, Capture, Combat
 from ..dataset.simulate import collect
-from . import descent
-from .models import PREDICTORS, Model
-from .split import split_by_game
+from ..training import descent
+from ..training.models import PREDICTORS, Model
+from ..training.split import split_by_game
 
 #: How many games to play. Enough rows that a quarter held back is still a few
 #: hundred, and fast enough that the whole pipeline runs in about a second.

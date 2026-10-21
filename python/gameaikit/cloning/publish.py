@@ -1,7 +1,7 @@
 """Publish one recorded player: the model and the ghost's table, in one file.
 
-    python3 -m gameaikit.cloning.publish --player "person" --write godot/addons/ai_learning
-    python3 -m gameaikit.cloning.publish --check godot/addons/ai_learning/clone_weights.json
+    python3 -m gameaikit.cloning.publish --player "person" --write godot/game/fighting
+    python3 -m gameaikit.cloning.publish --check godot/game/fighting/clone_weights.json
 
 Both are fitted on the player's training recordings only -- the held-out ones
 stay out of what the game ships, so the numbers `compare.py` prints are the

@@ -1,9 +1,10 @@
 ## One unit's proposed walk, step by step.
 ##
-## The path is carried by the move rather than worked out by the board, and that
-## split is the reason `ai_core` can hold no algorithms: whoever wants to move
-## supplies the route, and the board only rules on whether it is legal. A*, a
-## planner and a human clicking a tile all produce the same type.
+## The path is carried by the move rather than worked out by the board, and
+## that split is the reason the board's kernel holds no algorithms: whoever
+## wants to move supplies the route, and the board only rules on whether it
+## is legal. A*, a planner and a human clicking a tile all produce the same
+## type.
 ##
 ## The path excludes the starting cell and lists every cell entered, in order.
 ## Listing the start was the first design and it made every cost calculation
