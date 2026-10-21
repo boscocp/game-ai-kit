@@ -825,7 +825,7 @@ func test_a_teammate_in_a_fight_refuses_and_the_asker_remembers_it() -> void:
 	var rules := MatchRules.new()
 	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
 	var holder: MatchBot = world.bots[5]
-	var request: PassageChoice.Request = MatchPassage.request_to(world, holder)
+	var request: PassageChoice.Request = MatchPassage.request_to(world, holder, world.bots[4])
 	request.saves = 2.0
 	assert_bool(PassageChoice.answer(request, MatchPassage.prices_of(rules)).granted).is_true()
 	# Two enemies in sight, shooting: 0.5 + 2 x 2.0 + 1.5 = 6 s, more than 2.

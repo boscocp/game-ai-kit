@@ -7,10 +7,10 @@ extends RefCounted
 
 
 ## The watched bot's last aim: each zone's own chance and expected damage,
-## and the zone it aimed at; empty before its first shot.
+## and the zone it aimed at; before its first shot, that there was none.
 static func aim_overlay(bot: MatchBot) -> Dictionary:
 	if bot.last_aim.is_empty():
-		return {}
+		return {"aimed": "no shot yet"}
 	var zones: Array = []
 	for index: int in range((bot.last_aim[1] as Array).size()):
 		zones.append({"zone": bot.last_aim[1][index], "chance": bot.last_aim[2][index], "expected": bot.last_aim[3][index]})
@@ -19,9 +19,9 @@ static func aim_overlay(bot: MatchBot) -> Dictionary:
 
 ## One line for the panel: "aims at torso: head 5% 0.10 | torso ...".
 static func aim_line(bot: MatchBot) -> String:
-	var aim: Dictionary = aim_overlay(bot)
-	if aim.is_empty():
+	if bot.last_aim.is_empty():
 		return "no shot aimed yet"
+	var aim: Dictionary = aim_overlay(bot)
 	var parts: Array[String] = []
 	for zone: Dictionary in aim["zones"]:
 		parts.append("%s %.0f%% %.2f" % [zone["zone"], float(zone["chance"]) * 100.0, zone["expected"]])
@@ -38,6 +38,21 @@ static func errand_line(bot: MatchBot) -> String:
 		parts.append("%s%s %.2f - %.1f s - %.2f = %.2f" % [mark, errand, weighed[0], weighed[1], weighed[2], weighed[3]])
 	var rounds: String = "%s %d/%d, streak %d" % [bot.weapon, bot.ammo, bot.reserve, bot.streak]
 	return "%s; errands: %s" % [rounds, " | ".join(parts) if not parts.is_empty() else "none weighed yet"]
+
+
+## The watched bot's last weighing of the ways past a body: each way and
+## its cost in seconds, or "impossible", the one taken, and the teammate's
+## answer; before it was ever blocked, that it was not.
+static func passage_overlay(bot: MatchBot) -> Dictionary:
+	if bot.last_passage.is_empty():
+		return {"blocked": "never yet"}
+	var costs: Dictionary = {}
+	for index: int in range(PassageChoice.WAYS.size()):
+		var cost: float = bot.last_passage["costs"][index]
+		costs[PassageChoice.WAYS[index]] = "impossible" if is_inf(cost) else cost
+	var answer: String = str(bot.last_passage.get("answer", ""))
+	return {"blocker": bot.last_passage["blocker"], "costs": costs, "chosen": bot.last_passage["chosen"],
+			"answer": answer if answer != "" else "none asked"}
 
 
 ## One line for the panel: the ways past the last body in its way, each

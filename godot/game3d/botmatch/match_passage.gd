@@ -127,7 +127,7 @@ static func _take_the_next_spot(world: BotMatch, bot: MatchBot) -> void:
 # The request: what being let by saves the asker -- its next cheapest way
 # less asking -- sent to the teammate, which weighs it against its own cost.
 static func _ask(world: BotMatch, bot: MatchBot, blocker: MatchBot, choice: PassageChoice.Choice) -> void:
-	var request: PassageChoice.Request = request_to(world, blocker)
+	var request: PassageChoice.Request = request_to(world, blocker, bot)
 	var others: PackedFloat64Array = choice.costs.duplicate()
 	var asked: int = PassageChoice.WAYS.find(PassageChoice.ASK)
 	others.remove_at(asked)
@@ -142,19 +142,22 @@ static func _ask(world: BotMatch, bot: MatchBot, blocker: MatchBot, choice: Pass
 	if not reply.granted:
 		bot.refused_by[blocker.id] = world.time
 		return
-	world.send(blocker, _aside(world, bot, blocker), blocker.spot)
+	var aside: Vector2 = _aside(world, bot, blocker)
+	if aside != Vector2.INF:
+		world.send(blocker, aside, blocker.spot)
 	blocker.chose_at = world.time
 
 
-## What the teammate `asked` knows of itself, as a request's facts.
-static func request_to(world: BotMatch, asked: MatchBot) -> PassageChoice.Request:
+## What the teammate `asked` knows of itself, as a request's facts, with
+## `asker` the bot it would step aside for.
+static func request_to(world: BotMatch, asked: MatchBot, asker: MatchBot) -> PassageChoice.Request:
 	var request := PassageChoice.Request.new()
 	request.enemies_in_sight = (world.sight.get(asked.id, []) as Array).size()
 	request.shooting = asked.action == MatchBot.SHOOT
 	request.reloading = asked.reload_left > 0.0
 	request.covering_a_retreat = TeamTactics.covering_a_retreat(world, world.teams[asked.team], asked)
 	request.driven_by_a_person = asked.controlled
-	request.room_to_step = _aside(world, null, asked) != Vector2.INF
+	request.room_to_step = _aside(world, asker, asked) != Vector2.INF
 	return request
 
 
@@ -169,16 +172,19 @@ static func prices_of(rules: MatchRules) -> PassageChoice.Prices:
 	return prices
 
 
-# Where `asked` steps aside to: away from the asker, else to either side of
-# that, a step long, where it can stand and touches nobody; INF when none.
-# With no asker, any of the four ways round.
+# Where `asked` steps aside to: of a step away from the asker and a step to
+# either side of that, the free one furthest from the asker -- chosen by
+# where it leaves them, not by an order of turns, which would favour one
+# side of the mirror; INF when none is free.
 static func _aside(world: BotMatch, asker: MatchBot, asked: MatchBot) -> Vector2:
-	var away: Vector2 = Vector2.RIGHT if asker == null else (asked.position - asker.position).normalized()
-	for turn: float in [0.0, PI / 2.0, -PI / 2.0, PI]:
+	var away: Vector2 = (asked.position - asker.position).normalized()
+	var best: Vector2 = Vector2.INF
+	for turn: float in [0.0, PI / 2.0, -PI / 2.0]:
 		var to: Vector2 = asked.position + away.rotated(turn) * world.rules.passage_step_aside
-		if _free_for(world, asked, to):
-			return to
-	return Vector2.INF
+		var further: bool = best == Vector2.INF or to.distance_to(asker.position) > best.distance_to(asker.position) + 1e-6
+		if _free_for(world, asked, to) and further:
+			best = to
+	return best
 
 
 static func _free_for(world: BotMatch, bot: MatchBot, to: Vector2) -> bool:

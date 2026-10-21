@@ -126,9 +126,14 @@ func decision_overlay() -> Dictionary:
 			var spot: String = world.place_id(places[index])
 			candidates.append({"spot": spot, "status": choice.statuses[index], "score": choice.scores[index]})
 		chosen = world.place_id(places[choice.chosen]) if choice.chosen != -1 else "none"
+	if candidates.is_empty():
+		# On an errand, or not yet asked: say which, rather than show nothing.
+		var why: String = "on an errand: %s" % bot.errand if bot.errand != "" else "not chosen yet"
+		candidates.append({"spot": "none", "status": why, "score": 0.0})
 	var watched: Dictionary = {"bot": bot.id, "action": bot.action, "chosen": chosen, "candidates": candidates,
-			"aim": BotMatchLines.aim_overlay(bot), "errand": bot.errand, "errands": bot.errand_weighing,
-			"passage": bot.last_passage}
+			"aim": BotMatchLines.aim_overlay(bot), "errand": bot.errand if bot.errand != "" else "none",
+			"errands": bot.errand_weighing if not bot.errand_weighing.is_empty() else {"weighed": "not yet"},
+			"passage": BotMatchLines.passage_overlay(bot)}
 	return {"time": world.time, "watched": watched, "squads": _squads_overlay()}
 
 

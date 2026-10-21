@@ -243,9 +243,37 @@ static func _walk(world: BotMatch, bot: MatchBot, delta: float) -> void:
 		bot.turn_to(towards, world.teams[bot.team].turn_rate, delta)
 
 
-# The step a bot wants, then the same step turned 45 and then 90 degrees to
-# either side: a body in the way is walked round, not waited behind. The
-# straight step is tried first, so nothing changes on an open floor.
+# Of the step a bot wants and the same step turned 45 and 90 degrees either
+# way, the free one that leaves it nearest `towards`, and of equals the one
+# furthest from any body; INF when none is free. Chosen by where each step
+# leaves it, not by an order of turns: a fixed "left first" turned blue
+# south and red north round the same body, and blue won the yards' mirror
+# 9 to 1. On an open floor the straight step is nearest, so nothing changes.
+static func _best_step(world: BotMatch, bot: MatchBot, step: Vector2, towards: Vector2) -> Vector2:
+	var best: Vector2 = Vector2.INF
+	var best_score := Vector2(INF, INF)
+	for tried: Vector2 in _around(step):
+		var at: Vector2 = bot.position + tried
+		if not world.arena.walkable(bot.position, at) or not clear_of_bodies(world, bot, at):
+			continue
+		var score := Vector2(snappedf(at.distance_to(towards), 1e-6), -_clearance(world, bot, at))
+		if score < best_score:
+			best_score = score
+			best = tried
+	return best
+
+
+# How far `at` is from the nearest living body but `bot`'s own.
+static func _clearance(world: BotMatch, bot: MatchBot, at: Vector2) -> float:
+	var nearest: float = INF
+	for other: MatchBot in world.bots:
+		if other != bot and other.alive():
+			nearest = minf(nearest, at.distance_to(other.position))
+	return nearest
+
+
+# The step a bot wants, and the same step turned 45 and 90 degrees either
+# way: a body in the way is walked round, not waited behind.
 static func _around(step: Vector2) -> Array[Vector2]:
 	var tried: Array[Vector2] = [step]
 	for turn: float in [PI / 4.0, -PI / 4.0, PI / 2.0, -PI / 2.0]:
@@ -276,12 +304,10 @@ static func _step_towards(world: BotMatch, bot: MatchBot, delta: float) -> Vecto
 	var offset: Vector2 = towards - bot.position
 	var stride: float = speed_of(world, bot) * delta
 	var step: Vector2 = offset if offset.length() <= stride else offset.normalized() * stride
-	var moved: bool = false
-	for tried: Vector2 in _around(step):
-		var walkable: bool = world.arena.walkable(bot.position, bot.position + tried)
-		if not moved and walkable and clear_of_bodies(world, bot, bot.position + tried):
-			bot.position += tried
-			moved = true
+	var chosen: Vector2 = _best_step(world, bot, step, towards)
+	var moved: bool = chosen != Vector2.INF
+	if moved:
+		bot.position += chosen
 	# Blocked for its patience, it weighs the ways past (`MatchPassage`), and
 	# is patient again after; moving, it never was.
 	bot.blocked_for = 0.0 if moved else bot.blocked_for + delta

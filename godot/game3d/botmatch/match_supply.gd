@@ -79,11 +79,23 @@ func touch(world: BotMatch, bot: MatchBot) -> void:
 	if base != Vector2.INF and bot.position.distance_to(base) <= rules.resupply_radius:
 		_resupply(rules, bot)
 	var at_power: bool = bot.position.distance_to(world.arena.power_place) <= rules.power_pickup_radius
-	if at_power and power_there(world.time) and bot.weapon == RIFLE:
+	if at_power and power_there(world.time) and bot.weapon == RIFLE and _nearest_to_power(world, bot):
 		arm_power(bot, rules)
 		power_back_at = world.time + rules.power_respawn
 		world.stats[bot.team].power_taken += 1
 		fetcher[bot.team] = -1
+
+
+# Whether no other bot that could take the power weapon stands nearer it:
+# two arriving in one step, the nearer takes it, not the first in id order
+# -- which was always blue.
+func _nearest_to_power(world: BotMatch, bot: MatchBot) -> bool:
+	var mine: float = bot.position.distance_to(world.arena.power_place)
+	for other: MatchBot in world.bots:
+		var could: bool = other != bot and other.alive() and other.weapon == RIFLE
+		if could and other.position.distance_to(world.arena.power_place) < mine:
+			return false
+	return true
 
 
 func _resupply(rules: MatchRules, bot: MatchBot) -> void:

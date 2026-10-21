@@ -44,8 +44,15 @@ static func zones_of(world: BotMatch, shooter: MatchBot, target: MatchBot) -> Ar
 	var eyes: Vector3 = MatchActions.eyes_of(world, shooter)
 	var zones: Array[AimChoice.Zone] = _body(world.rules, target.crouched)
 	for zone: AimChoice.Zone in zones:
-		var seen: bool = world.arena.clear_line(eyes, point_of(world, shooter, target, zone.aim))
-		zone.exposure = 1.0 if seen else 0.0
+		# Each side of the body asked, and the one seen better aimed at: a
+		# zone off the middle -- the arms -- has two, and asking only the one
+		# on the shooter's right asked the north arm for blue and the south
+		# arm for red, which is no mirror.
+		var sides: Array[Vector2] = [zone.aim, Vector2(-zone.aim.x, zone.aim.y)]
+		var seen: Array = sides.map(func(at: Vector2) -> bool:
+			return world.arena.clear_line(eyes, point_of(world, shooter, target, at)))
+		zone.exposure = 1.0 if seen.has(true) else 0.0
+		zone.aim = sides[1] if seen[1] and not seen[0] else sides[0]
 	return zones
 
 

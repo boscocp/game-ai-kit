@@ -21,14 +21,25 @@
 #      more always leaves someone covering -- it falls back in two waves,
 #      never all at once;
 #   4. honesty: no bot of either side, in any match, fires at an enemy it
-#      cannot see along the line at the moment of the shot.
+#      cannot see along the line at the moment of the shot, and none fires
+#      while it sprints, with some sprinting done (T66);
+#   5. aim (T66): blue aiming where a shot is worth the most damage does at
+#      least AIM_BETTER times the damage a shot of a blue that always aims
+#      at the head;
+#   6. ammunition (T66): a blue that always goes back to its base for
+#      rounds holds less than one that weighs it, by MIRROR_ERRORS standard
+#      errors of the two margins;
+#   7. the mirror on the other arena (T66): the same agents, on the yards,
+#      are as fair as on the lanes -- the map is in the data, not the code.
 #
 # Each is also asked of a planted case and must reject it: a blue team with
 # a faster reaction and a steadier aim, for the mirror; the claims check
 # of the matches without claims; a commander that wants every bot on one
 # point; a retreat that moves the whole squad at once; a bot that shoots the
-# nearest enemy through walls, and one that fires at whom it saw at its last
-# decision without looking again.
+# nearest enemy through walls, and one that keeps firing at whom it saw for
+# a second after without looking again; a blue that always aims at the
+# head; and the weighing blue against itself, for the margin of one that
+# always goes back.
 #
 # What the fighting makes of the decisions -- points held by each side,
 # wins, the mean margin and its standard error over the seeds -- is printed
@@ -48,6 +59,17 @@ extends SceneTree
 const MATCHES: int = 20
 ## The planted pairings are only asked to fail, so fewer matches do.
 const PLANTED_MATCHES: int = 5
+## The planted sharper blue, against the mirror: with the lanes' fewer
+## fights, five matches left its margin inside the errors (+80 +- 76 s);
+## and always going back, five of which held less at only 2.2 errors.
+const SHARPER_MATCHES: int = 10
+## The yards' mirror: as many matches as the lanes' claims. Its matches
+## swing more (+-250 s), and ten measured blue 7-3 at 1.5 errors after two
+## mirror faults were fixed, and 9-1 before: a fault would show, noise less.
+const YARDS_MATCHES: int = 20
+## Measured on the lanes: 4.93 damage a shot by worth, 3.80 always the head.
+const AIM_BETTER: float = 1.1
+
 ## Measured with the fair mirror: 0.0 s bunched with claims, 79 s without.
 const CLAIMS_BUNCHED_ON: float = 10.0
 const CLAIMS_BUNCHED_OFF: float = 40.0
@@ -79,6 +101,28 @@ class WallhackBot extends MatchBot:
 		action = SHOOT if nearest != -1 else action
 
 
+## A bot that keeps firing at whom it saw for up to STALE_FOR seconds after
+## the enemy left its sight, without looking again: the second cheat the
+## honesty count must catch. One decision's staleness, 0.2 s, was too little
+## on the lanes: an enemy seldom stepped behind cover in so short a time,
+## and the planted bot fired no unseen shot at all.
+class StaleSightBot extends MatchBot:
+	const STALE_FOR: float = 1.0
+	var _last_target: int = -1
+	var _last_seen: float = -INF
+
+	## The honest list; then, with nobody in sight, the last enemy it saw.
+	func decide(now: float, visible: Array[int], positions: Dictionary, reaction: float,
+			moving_in_retreat: bool) -> void:
+		super(now, visible, positions, reaction, moving_in_retreat)
+		if target != -1:
+			_last_target = target
+			_last_seen = now
+		elif alive() and ammo > 0 and action != RELOAD and now - _last_seen <= STALE_FOR:
+			target = _last_target
+			action = SHOOT
+
+
 ## `-- --matches N` plays N instead, to explore.
 var _matches: int = MATCHES
 
@@ -93,10 +137,12 @@ func _initialize() -> void:
 		totals[pairing] = _play(pairing, _matches)
 		_report(pairing, totals[pairing])
 	for pairing: String in PLANTED:
-		totals[pairing] = _play(pairing, PLANTED_MATCHES)
+		totals[pairing] = _play(pairing, SHARPER_MATCHES if pairing in ["sharper blue", "always resupply"] else PLANTED_MATCHES)
 		_report(pairing, totals[pairing])
+	totals["the yards"] = _play("the yards", YARDS_MATCHES)
+	_report("the yards", totals["the yards"])
 	var failures: Array[String] = _mirror(totals) + _claims(totals) + _commander(totals) + _retreat(totals)
-	failures += _honesty(totals)
+	failures += _honesty(totals) + _aim(totals) + _ammunition(totals)
 	for failure: String in failures:
 		print(failure)
 	print("botmatch effects: %d pairings of %d matches, %.0f s, %d failure(s)" % [
@@ -111,7 +157,7 @@ func _initialize() -> void:
 # and each match's margin of points held, blue's minus red's.
 func _play(pairing: String, matches: int) -> Dictionary:
 	var rules := MatchRules.new()
-	var arena := BotArena.new(rules.body_radius)
+	var arena := BotArena.new(rules.body_radius, BotArena.YARDS if pairing == "the yards" else BotArena.ARENA)
 	var sums: Dictionary = {"held": 0.0, "red held": 0.0, "bunched": 0.0, "deaths": 0, "lost": 0,
 			"unseen": 0, "shots": 0, "sprinting shots": 0, "sprinted": 0.0,
 			"blue shots": 0, "blue damage": 0, "dry": 0.0, "power": 0, "matches": 0, "ordered": 0.0, "seconds": 0.0, "retreats": 0, "uncovered": 0,
@@ -140,6 +186,7 @@ func _blue_for(pairing: String, rules: MatchRules) -> MatchTeam:
 	if pairing == "sharper blue":
 		blue.reaction = 0.0
 		blue.aim_error = deg_to_rad(1.0)
+		blue.turn_rate *= 2.0
 	return blue
 
 
@@ -222,6 +269,9 @@ func _mirror(totals: Dictionary) -> Array[String]:
 		failures.append("mirror: blue's margin %+.1f +- %.1f s a match, more than %.1f errors from zero" % numbers)
 	if _fair(totals["sharper blue"]):
 		failures.append("mirror: planted, a faster, steadier blue passed as an even match")
+	var yards: Vector2 = _mean_and_error(totals["the yards"]["margins"])
+	if not _fair(totals["the yards"]):
+		failures.append("mirror: on the yards blue's margin %+.1f +- %.1f s a match, more than %.1f errors" % [yards.x, yards.y, MIRROR_ERRORS])
 	return failures
 
 
@@ -281,6 +331,43 @@ static func _retreat_holds(with_it: Dictionary) -> bool:
 	return int(with_it["retreats"]) > 0 and int(with_it["uncovered"]) == 0
 
 
+# --- aim and ammunition (T66) ----------------------------------------------------
+
+
+func _aim(totals: Dictionary) -> Array[String]:
+	var failures: Array[String] = []
+	var numbers: Array = [_per_shot(totals["everything"]), _per_shot(totals["always the head"]), AIM_BETTER]
+	if not _aim_holds(totals["everything"], totals["always the head"]):
+		failures.append("aim: %.2f damage a shot by worth, %.2f always the head; needs %.2f times" % numbers)
+	if _aim_holds(totals["always the head"], totals["always the head"]):
+		failures.append("aim: planted, always aiming at the head passed as aiming by worth")
+	return failures
+
+
+static func _aim_holds(by_worth: Dictionary, head: Dictionary) -> bool:
+	return _per_shot(by_worth) >= AIM_BETTER * _per_shot(head)
+
+
+func _ammunition(totals: Dictionary) -> Array[String]:
+	# Never going back is printed and not claimed: a bot dies, and comes
+	# back full, before it runs dry -- three runs measured it 1.2, 4.6 and
+	# 8.6 s dry a match, against 1.1, 0.1 and 0.2 weighing.
+	var failures: Array[String] = []
+	if not _holds_less(totals["always resupply"], totals["everything"]):
+		failures.append("ammunition: always going back held no less than weighing it")
+	if _holds_less(totals["everything"], totals["everything"]):
+		failures.append("ammunition: planted, the weighing blue held less than itself")
+	return failures
+
+
+# Whether `fewer`'s mean margin is below `more`'s by MIRROR_ERRORS of the
+# two standard errors combined.
+static func _holds_less(fewer: Dictionary, more: Dictionary) -> bool:
+	var low: Vector2 = _mean_and_error(fewer["margins"])
+	var high: Vector2 = _mean_and_error(more["margins"])
+	return high.x - low.x > MIRROR_ERRORS * sqrt(low.y * low.y + high.y * high.y)
+
+
 # --- honesty -------------------------------------------------------------------
 
 
@@ -292,11 +379,11 @@ func _honesty(totals: Dictionary) -> Array[String]:
 	failures.append_array(_sprint(totals))
 	var wallhack: int = _planted_cheat(true)
 	var stale: int = _planted_cheat(false)
-	print("honesty: planted, a wallhack bot fired %d shots at enemies it could not see; one that did not look again, %d" % [wallhack, stale])
+	print("honesty: planted, a wallhack bot fired %d shots at enemies it could not see; one that kept firing a second after, %d" % [wallhack, stale])
 	if wallhack == 0:
 		failures.append("honesty: planted, a bot shooting through walls fired no unseen shot")
 	if stale == 0:
-		failures.append("honesty: planted, a bot firing on its last decision's sight fired no unseen shot")
+		failures.append("honesty: planted, a bot firing on stale sight fired no unseen shot")
 	return failures
 
 
@@ -321,7 +408,7 @@ func _planted_cheat(wallhack: bool) -> int:
 	var rules := MatchRules.new()
 	var world := BotMatch.new(1, MatchTeam.new("blue", BotMatch.BLUE, rules),
 			MatchTeam.new("red", BotMatch.RED, rules), rules)
-	var cheat: MatchBot = WallhackBot.new() if wallhack else MatchBot.new()
+	var cheat: MatchBot = WallhackBot.new() if wallhack else StaleSightBot.new()
 	if wallhack:
 		(cheat as WallhackBot).world_ref = weakref(world)
 	cheat.checks_its_line = false
