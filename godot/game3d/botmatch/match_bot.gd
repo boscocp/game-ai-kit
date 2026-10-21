@@ -17,8 +17,12 @@
 ## its speed and, behind low cover, hides its shot as well as itself, and is
 ## worth more the more danger it perceives and while it reloads.
 ##
-## What is not weighed is what is not a choice: a dead bot waits, a person
-## drives the one they took over; and its pace (`choose_pace`).
+## Its pace is weighed the same way (`paces`): sprinting is worth more the
+## further it has to go, and less the more danger it perceives -- for a
+## sprinting bot may not fire, so an enemy in sight vetoes it.
+##
+## What is not weighed is what is not a choice: a dead bot waits, and a
+## person drives the one they took over (`choose_played_pace`).
 ##
 ## A bot has no sense the player would not have: it shoots only at what its
 ## own eyes say it sees, after a reaction, and it turns at a limited rate
@@ -47,6 +51,9 @@ const ACTIONS: String = "res://game3d/botmatch/actions.json"
 ## Postures: stand or crouch.
 const STAND: String = "stand"
 const CROUCH: String = "crouch"
+## Paces: walk or sprint.
+const WALK: String = "walk"
+const SPRINT: String = "sprint"
 ## Enemies remembered further than this are no danger to its posture.
 const DANGER_METRES: float = 20.0
 
@@ -81,6 +88,9 @@ var last_choice: ActionChoice.Choice = null
 ## The postures it weighs, and its last weighing of them.
 var postures: Array[ActionChoice.Action] = MatchBot.default_choices("postures")
 var last_posture: ActionChoice.Choice = null
+## The paces it weighs, and its last weighing of them.
+var paces: Array[ActionChoice.Action] = MatchBot.default_choices("paces")
+var last_pace: ActionChoice.Choice = null
 ## Where the shot it last heard came from, which LOOK turns it to.
 var look_at: Vector2 = Vector2.INF
 var fire_cooldown: float = 0.0
@@ -162,6 +172,7 @@ func decide(percepts: MatchPercepts, reaction: float) -> void:
 	if not percepts.alive:
 		action = DEAD
 		crouched = false
+		sprinting = false
 		return
 	if controlled:
 		# PLAYED while it reloads too: the person walks on as the magazine
@@ -179,6 +190,8 @@ func decide(percepts: MatchPercepts, reaction: float) -> void:
 	numbers.merge(chosen_numbers(action))
 	last_posture = ActionChoice.choose(postures, numbers)
 	crouched = last_posture.chosen != -1 and postures[last_posture.chosen].name == CROUCH
+	last_pace = ActionChoice.choose(paces, numbers)
+	sprinting = last_pace.chosen != -1 and paces[last_pace.chosen].name == SPRINT
 
 
 ## What the action it chose tells its posture: whether it will move,
@@ -224,19 +237,13 @@ static func danger_of(percepts: MatchPercepts) -> float:
 	return clampf(danger, 0.0, 1.0)
 
 
-## Whether to sprint, after `decide`: a person sprints while they hold the
-## key and walk, not crouched, not firing and not reloading; a bot while it moves with no
-## enemy in its sight row and at least `sprint_from` metres to go. Sprinting
-## is what lets it reach a far point sooner, and seeing an enemy is when a
-## shot may be needed, so the one rule serves both.
-func choose_pace(visible: Array[int], sprint_from: float) -> void:
-	if controlled:
-		var walking: bool = wants_to_walk.length() > 0.1
-		var free_hands: bool = not wants_to_fire and reload_left <= 0.0
-		sprinting = alive() and wants_to_sprint and walking and not crouched and free_hands
-		return
-	var moving: bool = action == MOVE or action == FALL_BACK
-	sprinting = moving and visible.is_empty() and position.distance_to(goal) >= sprint_from
+## Whether a person's bot sprints: while they hold the key and walk, not
+## crouched, not firing and not reloading. A bot's pace is its own weighing,
+## in `decide`.
+func choose_played_pace() -> void:
+	var walking: bool = wants_to_walk.length() > 0.1
+	var free_hands: bool = not wants_to_fire and reload_left <= 0.0
+	sprinting = alive() and wants_to_sprint and walking and not crouched and free_hands
 
 
 ## Remember when each enemy came into sight, and forget those gone from it:

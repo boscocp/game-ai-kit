@@ -446,6 +446,12 @@ BOT_POSTURES = [
                                                          when("reloading", 0.5, 0.85, 1.0)]},
 ]
 
+BOT_PACES = [
+    {"name": "walk", "weight": 0.5, "considerations": []},
+    {"name": "sprint", "weight": 1.0, "considerations": [when("moving"), line_of("to_go", 0.0625),
+                                                         when("enemy_in_sight", 0.5, 1.0, 0.0), line_of("danger", -0.8, 1.0)]},
+]
+
 def action_vectors():
     simple = [{"name": "shoot", "weight": 1.0, "considerations": [when("ready_to_fire"), line_of("shot_worth", 8.0)]},
               {"name": "reload", "weight": 1.0, "considerations": [line_of("rounds_left", -1.5, 1.0), when("has_reserve")]},
@@ -577,6 +583,14 @@ def posture_vectors():
                  BOT_POSTURES,
                  [{}, {"cover": 1.0}, {"reloading": 1.0}, {"shooting": 1.0, "cover": 1.0, "danger": 1.0},
                   {"moving": 1.0, "cover": 1.0, "danger": 1.0}])
+    yield action("the-bot-match-weighs-its-pace",
+                 "The bot match's paces (a copy of `actions.json`). Moving, 16 m to go, nothing perceived: sprint, 1. "
+                 "Eight metres: 0.5, a tie, and walking is listed first. Twelve metres with a shot heard at 0.5: "
+                 "0.45, walk. An enemy in sight: sprinting is vetoed, for a sprinting bot may not fire. Holding, "
+                 "not moving: 0.",
+                 BOT_PACES,
+                 [{"moving": 1.0, "to_go": 16.0}, {"moving": 1.0, "to_go": 8.0}, {"moving": 1.0, "to_go": 12.0, "danger": 0.5},
+                  {"moving": 1.0, "to_go": 16.0, "enemy_in_sight": 1.0, "danger": 1.0}, {"to_go": 16.0}])
 
 def main(directory):
     folder = pathlib.Path(directory)

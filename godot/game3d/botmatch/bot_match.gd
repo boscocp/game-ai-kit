@@ -134,7 +134,6 @@ func _decide() -> void:
 		var retreating: bool = TeamTactics.moving_in_retreat(self, team, bot)
 		var percepts: MatchPercepts = MatchSenses.perceive(self, bot, retreating)
 		bot.decide(percepts, team.reaction)
-		bot.choose_pace(percepts.in_sight, rules.sprint_from)
 	noises.clear()
 	for team: MatchTeam in teams:
 		_count_retreats(team)

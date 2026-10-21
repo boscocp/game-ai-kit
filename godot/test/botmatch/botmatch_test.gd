@@ -616,24 +616,31 @@ func test_a_person_hits_what_they_aim_at_and_not_through_a_wall() -> void:
 	assert_int(enemy.health).is_equal(rules.health - rules.damage)
 
 
-func test_a_bot_sprints_to_a_far_goal_and_walks_once_an_enemy_is_seen() -> void:
+func test_a_bot_weighs_sprinting_by_the_way_left_and_the_danger_it_perceives() -> void:
 	var rules := MatchRules.new()
 	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
 	var bot: MatchBot = world.bots[0]
-	# Along lane A's north side, clear of every box.
+	# Along lane A's north side, clear of every box, 12 m to go: sprint
+	# (0.75 against walking's 0.5).
 	bot.position = Vector2(15.0, 3.0)
-	world.send(bot, Vector2(15.0 + rules.sprint_from + 4.0, 3.0), -1)
-	bot.action = MatchBot.MOVE
-	bot.choose_pace([] as Array[int], rules.sprint_from)
+	world.send(bot, Vector2(27.0, 3.0), -1)
+	bot.decide(_percepts(bot, 1.0), 0.3)
+	assert_str(bot.action).is_equal(MatchBot.MOVE)
 	assert_bool(bot.sprinting).is_true()
 	MatchActions.act(world, bot, 1.0)
 	assert_float(bot.position.x).is_equal_approx(15.0 + rules.sprint_speed, 1e-3)
-	# An enemy in its row: it walks, the same far goal or not.
-	bot.choose_pace([6] as Array[int], rules.sprint_from)
+	# Back at 12 m, a shot heard close by (0.5): 0.45, it walks.
+	bot.position = Vector2(15.0, 3.0)
+	var heard: MatchPercepts = _percepts(bot, 2.0)
+	heard.heard = 0.5
+	bot.decide(heard, 0.3)
 	assert_bool(bot.sprinting).is_false()
-	# Near its goal it walks too.
-	bot.position = Vector2(15.0 + rules.sprint_from, 3.0)
-	bot.choose_pace([] as Array[int], rules.sprint_from)
+	# An enemy in sight vetoes it: a sprinting bot may not fire.
+	bot.decide(_percepts(bot, 3.0, [6] as Array[int], {6: Vector2(40.0, 3.0)}), 5.0)
+	assert_bool(bot.sprinting).is_false()
+	# Six metres from its goal it walks too (0.375).
+	bot.position = Vector2(21.0, 3.0)
+	bot.decide(_percepts(bot, 4.0), 0.3)
 	assert_bool(bot.sprinting).is_false()
 
 

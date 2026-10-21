@@ -18,6 +18,8 @@ static func action_overlay(bot: MatchBot) -> Dictionary:
 	var found: Dictionary = {"chosen": bot.actions[chosen].name if chosen != -1 else "none", "scores": scores}
 	if bot.last_posture != null:
 		found["posture"] = _scores(bot.postures, bot.last_posture)
+	if bot.last_pace != null:
+		found["pace"] = _scores(bot.paces, bot.last_pace)
 	return found
 
 
@@ -36,6 +38,8 @@ static func action_line(bot: MatchBot) -> String:
 	var line: String = "weighs: %s" % _weighing(bot.actions, bot.last_choice)
 	if bot.last_posture != null:
 		line += "   body: %s" % _weighing(bot.postures, bot.last_posture)
+	if bot.last_pace != null:
+		line += "   pace: %s" % _weighing(bot.paces, bot.last_pace)
 	return line
 
 

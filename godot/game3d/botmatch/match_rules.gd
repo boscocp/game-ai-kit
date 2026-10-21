@@ -65,11 +65,10 @@ var make_way_reloading: float = 0.5
 var make_way_covering: float = 3.0
 var respawn_time: float = 4.0
 var speed: float = 4.5
-## Sprinting (Shift, the owner's ask): faster, and no shot while it lasts.
-## A bot sprints only with no enemy in sight and its goal sprint_from
-## metres away or more.
+## Sprinting (Shift, the owner's ask): faster, and no shot while it lasts
+## -- the game's rule. When a bot sprints is its own weighing (`paces` in
+## `actions.json`).
 var sprint_speed: float = 6.5
-var sprint_from: float = 8.0
 var eye_height: float = 1.5
 var chest_height: float = 1.2
 var crouched_height: float = 0.7

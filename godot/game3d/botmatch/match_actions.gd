@@ -209,7 +209,7 @@ static func speed_of(world: BotMatch, bot: MatchBot) -> float:
 # sprinting.
 static func _played(world: BotMatch, bot: MatchBot, delta: float) -> void:
 	# Every step, not every decision: a key answers at once.
-	bot.choose_pace([] as Array[int], world.rules.sprint_from)
+	bot.choose_played_pace()
 	var stride: Vector2 = bot.wants_to_walk.limit_length(1.0) * speed_of(world, bot) * delta
 	for step: Vector2 in [stride, Vector2(stride.x, 0.0), Vector2(0.0, stride.y)]:
 		var next: Vector2 = bot.position + step
