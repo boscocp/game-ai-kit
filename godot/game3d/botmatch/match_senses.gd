@@ -16,6 +16,8 @@ extends RefCounted
 ## A bot sees ahead within this half-angle, and all round within NEAR.
 const VIEW_HALF_ANGLE_DEGREES: float = 60.0
 const NEAR: float = 3.0
+## A cover spot this near is the one a bot stands at.
+const COVER_REACH: float = 1.0
 
 
 ## The eyes every bot of the match has, by the rules' range.
@@ -46,7 +48,21 @@ static func perceive(world: BotMatch, bot: MatchBot, moving_in_retreat: bool) ->
 		percepts.enemy_places[enemy] = world.bots[enemy].position
 		percepts.shot_worth[enemy] = shot_worth(world, bot, world.bots[enemy])
 	_hear(world, bot, percepts)
+	percepts.cover = cover_at(world, bot.position)
+	percepts.remembered = world.teams[bot.team].known_enemies()
 	return percepts
+
+
+## What the nearest cover spot within COVER_REACH of `place` hides: 1 for a
+## low box, 0.5 for a high one, 0 for none.
+static func cover_at(world: BotMatch, place: Vector2) -> float:
+	var nearest: BotArena.Spot = null
+	for spot: BotArena.Spot in world.arena.spots_near(place, COVER_REACH):
+		if nearest == null or spot.position.distance_to(place) < nearest.position.distance_to(place):
+			nearest = spot
+	if nearest == null:
+		return 0.0
+	return 1.0 if nearest.low else 0.5
 
 
 ## What a shot by `shooter` at `target` is worth now, 0 to 1: the damage

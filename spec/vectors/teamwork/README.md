@@ -66,7 +66,7 @@ that must agree bit for bit would need rounded costs.
 | `errands` | the weights; facts for going back and for fetching; each team's fetching scores; pairs of scores | each weighing as [gain, walk, cost, score]; whom each team sends (-1: nobody); each pair's errand ("": none) |
 | `action` | actions as plain data (weight, considerations with their curves), records of percepts | for each record, every action's score, every consideration's answer, and the action taken (-1: none) |
 
-## The forty-six
+## The forty-seven
 
 | file | what it pins |
 |---|---|
@@ -110,6 +110,7 @@ that must agree bit for bit would need rounded costs.
 | `nothing-above-zero-chooses-nothing` | every action vetoed: -1, not the first of zeros |
 | `an-absent-percept-is-nothing` | a percept not given counts as 0 |
 | `the-bot-match-weighs-its-actions` | the match's own six actions (a copy of `actions.json`) on five moments of a fight |
+| `the-bot-match-weighs-its-posture` | the match's stand-or-crouch, the same technique: idle, at low cover, reloading, shooting over cover, walking |
 | `back-for-rounds-when-spent-and-near` | spent and near its base it goes back; full, the same walk is not worth it |
 | `an-empty-bot-has-no-post-to-leave` | with no round left, leaving its post costs nothing |
 | `the-streak-earns-the-power-weapon-at-home` | a full bot whose kills earned the power weapon goes back for it |

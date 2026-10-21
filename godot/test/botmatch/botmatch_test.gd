@@ -1213,3 +1213,85 @@ func test_an_enemy_shot_is_heard_louder_nearer_and_a_friends_is_not_news() -> vo
 	# Out of hearing, nothing.
 	listener.position = Vector2(0.5, 3.5)
 	assert_float(MatchSenses.perceive(world, listener, false).heard).is_equal(0.0)
+
+
+# A bot with a full rifle at its goal, perceiving `cover` and nothing else.
+static func _still_bot(cover: float) -> Array:
+	var bot := MatchBot.new()
+	bot.ammo = 30
+	bot.reserve = 90
+	var percepts: MatchPercepts = _percepts(bot, 5.0)
+	percepts.cover = cover
+	return [bot, percepts]
+
+
+func test_a_bot_weighs_crouching_by_its_cover_its_danger_and_what_it_does() -> void:
+	# Idle in the open, nothing perceived: it stands (crouch 0.31, stand 0.33).
+	var idle: Array = _still_bot(0.0)
+	idle[0].decide(idle[1], 0.3)
+	assert_bool(idle[0].crouched).is_false()
+	# The same at low cover: crouched, nothing shows (0.51).
+	var covered: Array = _still_bot(1.0)
+	covered[0].decide(covered[1], 0.3)
+	assert_bool(covered[0].crouched).is_true()
+	# Reloading in the open: crouching is worth it (0.36).
+	var reloading: Array = _still_bot(0.0)
+	reloading[0].ammo = 0
+	reloading[1].rounds = 0
+	reloading[0].decide(reloading[1], 0.3)
+	assert_str(reloading[0].action).is_equal(MatchBot.RELOAD)
+	assert_bool(reloading[0].crouched).is_true()
+	# A shot remembered near, in the open and idle: danger tips it to crouch.
+	var wary: Array = _still_bot(0.0)
+	wary[1].heard = 0.6
+	wary[0].decide(wary[1], 0.3)
+	assert_bool(wary[0].crouched).is_true()
+
+
+func test_a_bot_stands_to_shoot_over_low_cover_and_to_walk() -> void:
+	var shooter: Array = _still_bot(1.0)
+	var percepts: MatchPercepts = shooter[1]
+	percepts.in_sight = [9] as Array[int]
+	percepts.enemy_places = {9: Vector2(10.0, 0.0)}
+	percepts.shot_worth = {9: 0.25}
+	shooter[0].decide(percepts, 0.3)
+	percepts.now += 1.0
+	shooter[0].decide(percepts, 0.3)
+	assert_str(shooter[0].action).is_equal(MatchBot.SHOOT)
+	assert_bool(shooter[0].crouched).is_false()
+	var walker: Array = _still_bot(1.0)
+	walker[1].goal = Vector2(10.0, 0.0)
+	walker[0].decide(walker[1], 0.3)
+	assert_str(walker[0].action).is_equal(MatchBot.MOVE)
+	assert_bool(walker[0].crouched).is_false()
+
+
+func test_danger_is_what_it_sees_hears_or_its_team_remembers_near() -> void:
+	var bot := MatchBot.new()
+	var percepts: MatchPercepts = _percepts(bot, 1.0)
+	assert_float(MatchBot.danger_of(percepts)).is_equal(0.0)
+	percepts.heard = 0.25
+	percepts.remembered = [Vector2(10.0, 0.0), Vector2(30.0, 0.0)] as Array[Vector2]
+	assert_float(MatchBot.danger_of(percepts)).is_equal_approx(0.5, 1e-6)
+	percepts.in_sight = [9] as Array[int]
+	assert_float(MatchBot.danger_of(percepts)).is_equal(1.0)
+
+
+func test_the_cover_a_bot_stands_at_is_low_high_or_none() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var low: BotArena.Spot = null
+	var high: BotArena.Spot = null
+	for spot: BotArena.Spot in world.arena.spots:
+		if spot.low and low == null:
+			low = spot
+		elif not spot.low and high == null:
+			high = spot
+	assert_float(MatchSenses.cover_at(world, low.position)).is_equal(1.0)
+	assert_float(MatchSenses.cover_at(world, high.position)).is_equal(0.5)
+	var open_floor: Vector2 = Vector2.INF
+	for spot: BotArena.Spot in world.arena.spots:
+		var aside: Vector2 = spot.position + Vector2(0.0, 2.0)
+		if world.arena.spots_near(aside, MatchSenses.COVER_REACH).is_empty() and open_floor == Vector2.INF:
+			open_floor = aside
+	assert_float(MatchSenses.cover_at(world, open_floor)).is_equal(0.0)

@@ -37,6 +37,12 @@ var reloading: bool = false
 var goal: Vector2 = Vector2.ZERO
 var holds_a_spot: bool = false
 var moving_in_retreat: bool = false
+## What the nearest cover beside it hides: 1 at a low box -- crouched,
+## nothing shows; standing, it shoots over -- 0.5 at a high one, which
+## hides it either way, and 0 in the open.
+var cover: float = 0.0
+## Where its team remembers enemies, seen by any of them lately.
+var remembered: Array[Vector2] = []
 
 
 ## What `bot` knows of itself and its orders at `now`, with nothing in

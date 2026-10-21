@@ -15,18 +15,36 @@ static func action_overlay(bot: MatchBot) -> Dictionary:
 	for index: int in range(bot.actions.size()):
 		scores[bot.actions[index].name] = bot.last_choice.scores[index]
 	var chosen: int = bot.last_choice.chosen
-	return {"chosen": bot.actions[chosen].name if chosen != -1 else "none", "scores": scores}
+	var found: Dictionary = {"chosen": bot.actions[chosen].name if chosen != -1 else "none", "scores": scores}
+	if bot.last_posture != null:
+		found["posture"] = _scores(bot.postures, bot.last_posture)
+	return found
 
 
-## One line for the panel: "weighs: > shoot 0.92 | reload 0.00 | ...".
+static func _scores(options: Array[ActionChoice.Action], choice: ActionChoice.Choice) -> Dictionary:
+	var scores: Dictionary = {}
+	for index: int in range(options.size()):
+		scores[options[index].name] = choice.scores[index]
+	return scores
+
+
+## One line for the panel: "weighs: > shoot 0.92 | reload 0.00 | ...",
+## then its posture's weighing: "body: stand 0.33 | > crouch 0.51".
 static func action_line(bot: MatchBot) -> String:
 	if bot.last_choice == null:
 		return "nothing weighed yet"
+	var line: String = "weighs: %s" % _weighing(bot.actions, bot.last_choice)
+	if bot.last_posture != null:
+		line += "   body: %s" % _weighing(bot.postures, bot.last_posture)
+	return line
+
+
+static func _weighing(options: Array[ActionChoice.Action], choice: ActionChoice.Choice) -> String:
 	var parts: Array[String] = []
-	for index: int in range(bot.actions.size()):
-		var mark: String = "> " if index == bot.last_choice.chosen else ""
-		parts.append("%s%s %.2f" % [mark, bot.actions[index].name, bot.last_choice.scores[index]])
-	return "weighs: %s" % " | ".join(parts)
+	for index: int in range(options.size()):
+		var mark: String = "> " if index == choice.chosen else ""
+		parts.append("%s%s %.2f" % [mark, options[index].name, choice.scores[index]])
+	return " | ".join(parts)
 
 
 ## The watched bot's last aim: each zone's own chance and expected damage,

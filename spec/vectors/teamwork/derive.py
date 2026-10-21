@@ -439,6 +439,13 @@ BOT_ACTIONS = [
     {"name": "hold", "weight": 0.3, "considerations": []},
 ]
 
+BOT_POSTURES = [
+    {"name": "stand", "weight": 0.33, "considerations": []},
+    {"name": "crouch", "weight": 1.0, "considerations": [when("moving", 0.5, 1.0, 0.1), when("shooting", 0.5, 1.0, 0.2),
+                                                         line_of("cover", 0.4, 0.6), line_of("danger", 0.5, 0.6),
+                                                         when("reloading", 0.5, 0.85, 1.0)]},
+]
+
 def action_vectors():
     simple = [{"name": "shoot", "weight": 1.0, "considerations": [when("ready_to_fire"), line_of("shot_worth", 8.0)]},
               {"name": "reload", "weight": 1.0, "considerations": [line_of("rounds_left", -1.5, 1.0), when("has_reserve")]},
@@ -561,9 +568,19 @@ def errand_vectors():
                   "0, or both below: no errand.",
                   pairs=[[0.5, 0.5], [0.25, 0.5], [0.0, 0.25], [0.0, 0.0], [-1.0, -1.0]])
 
+def posture_vectors():
+    yield action("the-bot-match-weighs-its-posture",
+                 "The bot match's postures (a copy of `actions.json`). Idle in the open, nothing perceived: crouching "
+                 "is 0.306 against standing's 0.33. Idle at low cover: 0.51, crouch. Reloading in the open: 0.36, "
+                 "crouch. Shooting at low cover with an enemy in sight: 0.17, stand -- crouched it would shoot into "
+                 "the box. Walking: 0.085, stand, for a crouch halves its speed.",
+                 BOT_POSTURES,
+                 [{}, {"cover": 1.0}, {"reloading": 1.0}, {"shooting": 1.0, "cover": 1.0, "danger": 1.0},
+                  {"moving": 1.0, "cover": 1.0, "danger": 1.0}])
+
 def main(directory):
     folder = pathlib.Path(directory)
-    for vector in list(vectors()) + list(aim_vectors()) + list(passage_vectors()) + list(action_vectors()) + list(errand_vectors()):
+    for vector in list(vectors()) + list(aim_vectors()) + list(passage_vectors()) + list(action_vectors()) + list(errand_vectors()) + list(posture_vectors()):
         (folder / f"{vector['name']}.json").write_text(json.dumps(vector, indent=1) + "\n", encoding="utf-8")
 
 if __name__ == "__main__":

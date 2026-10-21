@@ -12,11 +12,13 @@
 ## that a shot is worth the most damage at (`AimChoice`, through the
 ## percepts).
 ##
+## Then, from the same numbers and what it chose, it weighs how to hold its
+## body -- stand, or crouch (`postures` in `actions.json`): crouching halves
+## its speed and, behind low cover, hides its shot as well as itself, and is
+## worth more the more danger it perceives and while it reloads.
+##
 ## What is not weighed is what is not a choice: a dead bot waits, a person
-## drives the one they took over, and its posture and pace follow from what
-## it chose -- crouched to reload or to hold a spot; sprinting while it
-## moves with no enemy in sight and far to go, never while it shoots
-## (`choose_pace`).
+## drives the one they took over; and its pace (`choose_pace`).
 ##
 ## A bot has no sense the player would not have: it shoots only at what its
 ## own eyes say it sees, after a reaction, and it turns at a limited rate
@@ -42,8 +44,14 @@ const ARRIVED: float = 0.3
 ## What a bot can do and why it would, as `ActionChoice` reads it.
 const ACTIONS: String = "res://game3d/botmatch/actions.json"
 
-## The actions every bot has unless a test gives it others, read once.
-static var _default_actions: Array[ActionChoice.Action] = []
+## Postures: stand or crouch.
+const STAND: String = "stand"
+const CROUCH: String = "crouch"
+## Enemies remembered further than this are no danger to its posture.
+const DANGER_METRES: float = 20.0
+
+## Each list of `actions.json` -- actions, postures -- read once, by key.
+static var _defaults: Dictionary = {}
 
 var id: int = 0
 var team: int = 0
@@ -68,8 +76,11 @@ var streak: int = 0
 var errand: String = ""
 var errand_weighing: Dictionary = {}
 ## The actions it weighs, and its last weighing of them, for the view.
-var actions: Array[ActionChoice.Action] = MatchBot.default_actions()
+var actions: Array[ActionChoice.Action] = MatchBot.default_choices("actions")
 var last_choice: ActionChoice.Choice = null
+## The postures it weighs, and its last weighing of them.
+var postures: Array[ActionChoice.Action] = MatchBot.default_choices("postures")
+var last_posture: ActionChoice.Choice = null
 ## Where the shot it last heard came from, which LOOK turns it to.
 var look_at: Vector2 = Vector2.INF
 var fire_cooldown: float = 0.0
@@ -132,12 +143,14 @@ func arrived() -> bool:
 	return position.distance_to(goal) <= ARRIVED
 
 
-## The actions every bot has, from `actions.json`.
-static func default_actions() -> Array[ActionChoice.Action]:
-	if _default_actions.is_empty():
+## One list every bot weighs from, by its key in `actions.json`.
+static func default_choices(key: String) -> Array[ActionChoice.Action]:
+	if not _defaults.has(key):
 		var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(ACTIONS))
-		_default_actions = ActionChoice.actions_from(data["actions"])
-	return _default_actions
+		_defaults[key] = ActionChoice.actions_from(data[key])
+	var found: Array[ActionChoice.Action] = []
+	found.assign(_defaults[key])
+	return found
 
 
 ## Decide, from what it perceives (`percepts`, the one record it reads) and
@@ -158,12 +171,24 @@ func decide(percepts: MatchPercepts, reaction: float) -> void:
 		return
 	var best: int = _best_target(percepts, reaction)
 	var worth: float = float(percepts.shot_worth.get(best, 0.0))
-	last_choice = ActionChoice.choose(actions, numbers_of(percepts, worth))
+	var numbers: Dictionary = numbers_of(percepts, worth)
+	last_choice = ActionChoice.choose(actions, numbers)
 	action = actions[last_choice.chosen].name if last_choice.chosen != -1 else HOLD
 	target = best if action == SHOOT else -1
 	look_at = percepts.heard_from
-	var still: bool = action == HOLD or action == LOOK
-	crouched = action == RELOAD or (still and percepts.holds_a_spot)
+	numbers.merge(chosen_numbers(action))
+	last_posture = ActionChoice.choose(postures, numbers)
+	crouched = last_posture.chosen != -1 and postures[last_posture.chosen].name == CROUCH
+
+
+## What the action it chose tells its posture: whether it will move,
+## shoot or reload, as numbers.
+static func chosen_numbers(chosen: String) -> Dictionary:
+	return {
+		"moving": float(chosen == MOVE or chosen == FALL_BACK),
+		"shooting": float(chosen == SHOOT),
+		"reloading": float(chosen == RELOAD),
+	}
 
 
 ## The percepts as the numbers its actions' considerations read, by name
@@ -182,7 +207,21 @@ func numbers_of(percepts: MatchPercepts, shot_worth: float) -> Dictionary:
 		"in_retreat_wave": float(percepts.moving_in_retreat),
 		"to_go": percepts.to_go(),
 		"heard": percepts.heard,
+		"cover": percepts.cover,
+		"danger": danger_of(percepts),
 	}
+
+
+## How much danger it perceives, 0 to 1: 1 with an enemy in sight; else the
+## louder of the shot it heard and the nearest enemy its team remembers,
+## by closeness within DANGER_METRES.
+static func danger_of(percepts: MatchPercepts) -> float:
+	if not percepts.in_sight.is_empty():
+		return 1.0
+	var danger: float = percepts.heard
+	for place: Vector2 in percepts.remembered:
+		danger = maxf(danger, 1.0 - percepts.position.distance_to(place) / DANGER_METRES)
+	return clampf(danger, 0.0, 1.0)
 
 
 ## Whether to sprint, after `decide`: a person sprints while they hold the
