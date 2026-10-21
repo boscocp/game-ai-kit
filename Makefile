@@ -95,7 +95,7 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-decisions test-demo-overlays test-menu-walk test-replay test-opponent-levels test-opponent-properties \
        test-clone-rows test-inference-budget test-clone-report test-difficulty-knobs \
        test-rts-budget test-rts-simulation test-rts-match test-steering-properties \
-       test-racing-ladder test-racing-does-not-cheat test-game3d-floor ## Run every gate
+       test-racing-ladder test-racing-does-not-cheat test-game3d-floor test-botmatch-effects ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-no-assets lint-readability lint-demos \
@@ -246,7 +246,7 @@ train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -321,6 +321,12 @@ test-menace-vectors: import ## The MENACE vectors, against the game's bead playe
 	@$(GODOT) --headless --path godot -s res://test/tictactoe/menace_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/menace
 
+.PHONY: test-teamwork-vectors
+test-teamwork-vectors: import ## Positions, influence, commander and confidence, against ai_teamwork (T51)
+	@# The other half is `make test-python`.
+	@$(GODOT) --headless --path godot -s res://test/ai_teamwork/teamwork_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/teamwork
+
 .PHONY: test-steering-vectors
 test-steering-vectors: import ## The steering trajectories, against ai_steering
 	@# The other half is `make test-python`. The tolerance is sized for
@@ -339,6 +345,10 @@ test-racing-ladder: import ## Every racing level finishes, in order, a second a 
 .PHONY: test-racing-does-not-cheat
 test-racing-does-not-cheat: import ## One physics for every car, no limit broken, no knob moved mid-race (T23)
 	@$(GODOT) --headless --path godot -s res://test/demo_racing/racing_does_not_cheat.gd
+
+.PHONY: test-botmatch-effects
+test-botmatch-effects: import ## Slow (~4 min): what claims, the commander and retreat each do, over 80 bot matches; no bot fires at what it does not see (T51)
+	@$(GODOT) --headless --path godot -s res://test/botmatch/botmatch_effects.gd
 
 .PHONY: test-search-properties
 test-search-properties: import ## A* agrees with Dijkstra, over a few hundred boards
@@ -514,6 +524,10 @@ demo-steering: import ## Four vehicles: seek, arrive, pursue, seek with avoid, e
 .PHONY: demo-racing
 demo-racing: import ## Race an AI in the same car: arrows/WASD drive, 1-3 the AI, R again, P pause, Tab watch the three AIs
 	@$(GODOT) --path godot res://demos/racing/racing_demo.tscn
+
+.PHONY: demo-botmatch
+demo-botmatch: import ## A 3D bot match, six against six: 1-3 blue's claims/commander/retreat (Shift: red's), Tab a bot, T take it over, M map, C camera, P pause, N new
+	@$(GODOT) --path godot res://game3d/botmatch/botmatch.tscn
 
 .PHONY: demo-behaviour
 demo-behaviour: import ## One guard, four ways to decide: 1-4 swap state machine, tree, GOAP, HTN mid-round; space a turn, enter ten

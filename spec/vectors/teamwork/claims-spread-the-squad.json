@@ -1,0 +1,65 @@
+{
+ "name": "claims-spread-the-squad",
+ "why": "A is the best spot (partial cover, half the others' cover) and bot 1 holds it; bot 2 must take B, the next best, not stand beside bot 1.",
+ "kind": "positions",
+ "weights": {
+  "partial_cover": 40.0,
+  "line_of_fire": 20.0,
+  "other_cover": 20.0,
+  "nearness": 20.0,
+  "preferred_range": 10.0,
+  "preferred_metres": 15.0,
+  "range_band": 10.0,
+  "max_travel": 20.0
+ },
+ "query": {
+  "bot": 2,
+  "has_threat": true,
+  "use_claims": true,
+  "candidates": [
+   {
+    "id": "A",
+    "travel": 6.0,
+    "threat_distance": 14.0,
+    "covered_from_main": true,
+    "fires_on_main": true,
+    "covered_from_others": 0.5,
+    "in_area": true,
+    "claimed_by": 1
+   },
+   {
+    "id": "B",
+    "travel": 4.0,
+    "threat_distance": 12.0,
+    "covered_from_main": true,
+    "fires_on_main": true,
+    "covered_from_others": 0.0,
+    "in_area": true,
+    "claimed_by": -1
+   },
+   {
+    "id": "C",
+    "travel": 3.0,
+    "threat_distance": 16.0,
+    "covered_from_main": false,
+    "fires_on_main": true,
+    "covered_from_others": 0.0,
+    "in_area": true,
+    "claimed_by": -1
+   }
+  ]
+ },
+ "expect": {
+  "statuses": [
+   "claimed",
+   "kept",
+   "kept"
+  ],
+  "scores": [
+   0.0,
+   63.0,
+   46.0
+  ],
+  "chosen": 1
+ }
+}

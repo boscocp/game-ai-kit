@@ -1,0 +1,53 @@
+{
+ "name": "equal-scores-go-to-the-first",
+ "why": "Two candidates with the same facts score the same; the first listed wins.",
+ "kind": "positions",
+ "weights": {
+  "partial_cover": 40.0,
+  "line_of_fire": 20.0,
+  "other_cover": 20.0,
+  "nearness": 20.0,
+  "preferred_range": 10.0,
+  "preferred_metres": 15.0,
+  "range_band": 10.0,
+  "max_travel": 20.0
+ },
+ "query": {
+  "bot": 1,
+  "has_threat": true,
+  "use_claims": true,
+  "candidates": [
+   {
+    "id": "left",
+    "travel": 5.0,
+    "threat_distance": 15.0,
+    "covered_from_main": true,
+    "fires_on_main": true,
+    "covered_from_others": 0.0,
+    "in_area": true,
+    "claimed_by": -1
+   },
+   {
+    "id": "right",
+    "travel": 5.0,
+    "threat_distance": 15.0,
+    "covered_from_main": true,
+    "fires_on_main": true,
+    "covered_from_others": 0.0,
+    "in_area": true,
+    "claimed_by": -1
+   }
+  ]
+ },
+ "expect": {
+  "statuses": [
+   "kept",
+   "kept"
+  ],
+  "scores": [
+   65.0,
+   65.0
+  ],
+  "chosen": 0
+ }
+}

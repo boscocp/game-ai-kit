@@ -1,0 +1,69 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://game3d/botmatch/botmatch.gd" id="1_match"]
+[ext_resource type="Script" path="res://game3d/botmatch/botmatch_drawing.gd" id="2_drawing"]
+[ext_resource type="Script" path="res://game3d/botmatch/botmatch_map.gd" id="3_map"]
+[ext_resource type="Script" path="res://game/legend.gd" id="4_legend"]
+[ext_resource type="Script" path="res://game3d/botmatch/botmatch_hud.gd" id="5_hud"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_material"]
+sky_top_color = Color(0.32, 0.5, 0.78, 1)
+sky_horizon_color = Color(0.72, 0.78, 0.84, 1)
+ground_horizon_color = Color(0.72, 0.78, 0.84, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_material")
+
+[sub_resource type="Environment" id="environment"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 2
+ambient_light_color = Color(0.75, 0.75, 0.78, 1)
+ambient_light_energy = 0.45
+tonemap_mode = 0
+
+[node name="BotMatch" type="Node3D"]
+script = ExtResource("1_match")
+
+[node name="Drawing" type="Node3D" parent="."]
+script = ExtResource("2_drawing")
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("environment")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8, -0.36, 0.48, 0, 0.8, 0.6, -0.6, -0.48, 0.64, 0, 20, 0)
+shadow_enabled = true
+
+[node name="Camera" type="Camera3D" parent="."]
+fov = 75.0
+near = 0.05
+
+[node name="Interface" type="CanvasLayer" parent="."]
+
+[node name="Hud" type="Control" parent="Interface"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("5_hud")
+
+[node name="Panel" type="Label" parent="Interface"]
+offset_left = 16.0
+offset_top = 12.0
+offset_right = 760.0
+offset_bottom = 110.0
+
+[node name="Map" type="Control" parent="Interface"]
+offset_left = 924.0
+offset_top = 12.0
+offset_right = 1260.0
+offset_bottom = 236.0
+script = ExtResource("3_map")
+
+[node name="Legend" type="Control" parent="Interface"]
+offset_left = 16.0
+offset_top = 540.0
+offset_right = 560.0
+offset_bottom = 708.0
+script = ExtResource("4_legend")

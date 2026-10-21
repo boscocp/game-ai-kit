@@ -1,0 +1,135 @@
+{
+ "name": "retreat-recover-attack",
+ "why": "Strong, then losing members to a stronger enemy, then reinforced: attack, keep attacking down to 1.1, hold, retreat at 0.7, stay retreating below 1.0, recover at 1.0, attack; and an attacking squad that sees nobody, 0.5 over the floor of 0.5, drops to hold. Without retreat the same squad holds where it would have fallen back.",
+ "kind": "confidence",
+ "thresholds": {
+  "attack_at": 1.3,
+  "keep_attacking_at": 1.1,
+  "retreat_at": 0.7,
+  "recover_at": 1.0,
+  "per_kill": 0.25,
+  "per_loss": 0.25,
+  "least_enemy": 0.5
+ },
+ "query": {
+  "facts": [
+   {
+    "friendly_strength": 4.0,
+    "enemy_strength": 2.0,
+    "kills": 0,
+    "losses": 0
+   },
+   {
+    "friendly_strength": 3.6,
+    "enemy_strength": 3.0,
+    "kills": 0,
+    "losses": 0
+   },
+   {
+    "friendly_strength": 3.0,
+    "enemy_strength": 3.0,
+    "kills": 0,
+    "losses": 0
+   },
+   {
+    "friendly_strength": 2.0,
+    "enemy_strength": 3.0,
+    "kills": 0,
+    "losses": 1
+   },
+   {
+    "friendly_strength": 2.5,
+    "enemy_strength": 3.0,
+    "kills": 0,
+    "losses": 0
+   },
+   {
+    "friendly_strength": 3.0,
+    "enemy_strength": 3.0,
+    "kills": 0,
+    "losses": 0
+   },
+   {
+    "friendly_strength": 4.0,
+    "enemy_strength": 2.0,
+    "kills": 1,
+    "losses": 0
+   },
+   {
+    "friendly_strength": 0.5,
+    "enemy_strength": 0.0,
+    "kills": 0,
+    "losses": 0
+   }
+  ],
+  "members": [
+   7,
+   3,
+   9,
+   4,
+   1
+  ],
+  "phases": [
+   0,
+   1
+  ]
+ },
+ "expect": {
+  "values": [
+   2.0,
+   1.2,
+   1.0,
+   0.41666666666666663,
+   0.8333333333333334,
+   1.0,
+   2.25,
+   1.0
+  ],
+  "states_with_retreat": [
+   "attack",
+   "attack",
+   "hold",
+   "retreat",
+   "retreat",
+   "hold",
+   "attack",
+   "hold"
+  ],
+  "states_without_retreat": [
+   "attack",
+   "attack",
+   "hold",
+   "hold",
+   "hold",
+   "hold",
+   "attack",
+   "hold"
+  ],
+  "waves": [
+   {
+    "phase": 0,
+    "moving": [
+     7,
+     9,
+     1
+    ],
+    "covering": [
+     3,
+     4
+    ]
+   },
+   {
+    "phase": 1,
+    "moving": [
+     3,
+     4
+    ],
+    "covering": [
+     7,
+     9,
+     1
+    ]
+   }
+  ]
+ }
+}

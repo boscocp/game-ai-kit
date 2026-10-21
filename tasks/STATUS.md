@@ -112,8 +112,9 @@ sha256 and never committed.
 |---|---|---|---|
 | T49 | How shooter AI is made | done | `docs/concepts/shooter-ai.md`: 48 references, each opened, a third only in part and said so; one bot, bots that cooperate, the stealth version; T51 and T52 written from it |
 | T50 | The 3D tier, measured before anything is built | done | wave 69, ADR 0018 accepted (option A): physics, rays and a navmesh from collision shapes run headless; a run replays bit-identically on one binary; a navmesh set on a region's second frame never reaches the map (set it before the tree); about 1,000 fps for the 16-bot arena on a Radeon 610M; a body moved through its node is in the physics space a frame late; Kenney Mini Characters by URL and sha256, `make assets-3d`, primitives when missing; `check_no_assets.py`, R6 in `check_renderer.py`; Jolt explicit; `docs/godot/3d-headless.md`; manual check still the owner's |
-| T51 | A bot match: two teams of bots, cover, and a commander | blocked | capture and hold, bots only, no network; scored positions with claims, a commander over an influence map, squad confidence and retreat in waves -- each drawn and switchable |
-| T52 | Bots against the player, with an optional stealth | blocked | third person; a role arbiter, awareness that accumulates with three alert levels, a shared belief map for the search -- each drawn and switchable |
+| T51 | A bot match: two teams of bots, cover, and a commander | done | wave 70: `ai_teamwork` (tactical positions with claims, team influence, a commander, squad confidence and waves), Python twins, 17 vectors; a 6-a-side match as a physics-free simulation held to Godot's rays, mirrored; first-person takeover of any bot (owner's choice), tracers, hit markers, a rifle; measured on a fair mirror (9-11; A*'s tie order had bent it 18-2): claims cut bunching 0 s against 79, the commander spreads orders over 2.34 points against 1.81, retreat always leaves someone covering, no shot at an unseen enemy; in the score, retreat costs the match (20-0 without it), the commander suggests help (1.8 errors), claims nothing -- said as measured, as the owner chose (`docs/godot/botmatch.md`), T65 split off; manual check still the owner's |
+| T52 | Bots against the player, with an optional stealth | todo | T50 done; reuse T51's first-person shot, tracers and HUD; third person; a role arbiter, awareness that accumulates with three alert levels, a shared belief map for the search -- each drawn and switchable |
+| T65 | A coordinated team that wins | todo | split from T51 by the owner: on a fair mirror retreat costs the match and the commander's help is not shown; with the owner's map (lanes, flanks, protected spawns, high ground); read how CS and UT maps reward holding before changing a number |
 
 ## The kit as modules
 
@@ -131,6 +132,47 @@ touches, and later a library others can install.
 | T64 | The library | todo | after T60-T63; names: only ports and kernel prefixed (owner, 2026-10-20), the prefix by ADR; addon zips filtered by manifest; `pyproject.toml`, flat layout, no dependencies; an entry-point group for a user's technique; installed and run outside the repo; publishing stays the owner's act |
 
 ---
+
+## Resuming after 2026-10-21 (wave 70)
+
+**Where it stopped -- read first.** Wave 70 did T51, the bot match, as the
+owner asked after wave 69 merged ("a proxima onda do fps"). The review
+record is `docs/reviews/70-the-bot-match.md`.
+
+**What landed.** `ai_teamwork` holds four techniques: tactical positions
+with claims, a team's additive influence, a commander over weighed
+objectives, and squad confidence with the retreat in waves. Each has a
+Python twin and vectors from a third copy of the rules. The match runs as
+a simulation with no physics engine, held to Godot's own rays. The 3D
+scene draws the decisions, and `make demo-botmatch` opens it.
+
+**The owner decided, mid-wave, three times.**
+1. Both modes: watch, and T to take over any bot of either team.
+2. First person, like Counter-Strike or Unreal, after playing the
+   third-person cut. So the shot is a 3D ray, every shot leaves a tracer,
+   there are hit markers and a rifle in view, and the rifle's rules are ten
+   shots a second.
+3. "Dizer a verdade": the score does not show the techniques winning.
+   On a fair mirror, retreat costs the match and the commander's help is
+   1.8 standard errors. T51 closes on the claims about what each technique
+   decides; the page has the rest (`docs/godot/botmatch.md`), and T65 is
+   "a coordinated team that wins".
+4. After playing it: a better map -- covered points, flank routes, spawns
+   behind corridors, high ground you can climb, like Counter-Strike's or
+   Unreal's. That is the next wave, with T65.
+
+**Measured, worth knowing.** Four things bent the mirror or the match:
+
+- shots resolved in id order gave blue the first shot of every step;
+- spawns on cell edges cost red a metre on the walk grid;
+- a point inside a box left its bots without a path;
+- and A*'s fixed order of neighbours made a path east unlike a path west,
+  so blue won 18 to 2. Red's paths are now searched in the mirror.
+
+The mirror's fairness is a claim of the effects test now.
+
+**Next.** The owner's map, with T65 (`botmatch-map-like-cs` in memory):
+read CS and UT layouts first. Then T52 or T64, as the owner says.
 
 ## Resuming after 2026-10-21 (wave 69)
 

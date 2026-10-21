@@ -1,0 +1,80 @@
+{
+ "name": "on-every-threshold",
+ "why": "Each value exactly on a threshold: 1.3 enters attack, 1.1 keeps it, 0.7 enters retreat, 1.0 leaves it. Each comparison's side is pinned, so >= and > cannot be swapped unseen.",
+ "kind": "confidence",
+ "thresholds": {
+  "attack_at": 1.3,
+  "keep_attacking_at": 1.1,
+  "retreat_at": 0.7,
+  "recover_at": 1.0,
+  "per_kill": 0.25,
+  "per_loss": 0.25,
+  "least_enemy": 0.5
+ },
+ "query": {
+  "facts": [
+   {
+    "friendly_strength": 2.6,
+    "enemy_strength": 2.0,
+    "kills": 0,
+    "losses": 0
+   },
+   {
+    "friendly_strength": 2.2,
+    "enemy_strength": 2.0,
+    "kills": 0,
+    "losses": 0
+   },
+   {
+    "friendly_strength": 1.4,
+    "enemy_strength": 2.0,
+    "kills": 0,
+    "losses": 0
+   },
+   {
+    "friendly_strength": 2.0,
+    "enemy_strength": 2.0,
+    "kills": 0,
+    "losses": 0
+   }
+  ],
+  "members": [
+   1,
+   2
+  ],
+  "phases": [
+   0
+  ]
+ },
+ "expect": {
+  "values": [
+   1.3,
+   1.1,
+   0.7,
+   1.0
+  ],
+  "states_with_retreat": [
+   "attack",
+   "attack",
+   "retreat",
+   "hold"
+  ],
+  "states_without_retreat": [
+   "attack",
+   "attack",
+   "hold",
+   "hold"
+  ],
+  "waves": [
+   {
+    "phase": 0,
+    "moving": [
+     1
+    ],
+    "covering": [
+     2
+    ]
+   }
+  ]
+ }
+}

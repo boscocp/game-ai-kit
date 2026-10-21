@@ -1,0 +1,53 @@
+{
+ "name": "open-fire-loses-to-partial-cover",
+ "why": "Line of fire from the open is 20, from partial cover 40: the nearer open spot loses to the farther one behind a low wall, at the same range.",
+ "kind": "positions",
+ "weights": {
+  "partial_cover": 40.0,
+  "line_of_fire": 20.0,
+  "other_cover": 20.0,
+  "nearness": 20.0,
+  "preferred_range": 10.0,
+  "preferred_metres": 15.0,
+  "range_band": 10.0,
+  "max_travel": 20.0
+ },
+ "query": {
+  "bot": 1,
+  "has_threat": true,
+  "use_claims": true,
+  "candidates": [
+   {
+    "id": "open",
+    "travel": 2.0,
+    "threat_distance": 15.0,
+    "covered_from_main": false,
+    "fires_on_main": true,
+    "covered_from_others": 0.0,
+    "in_area": true,
+    "claimed_by": -1
+   },
+   {
+    "id": "wall",
+    "travel": 10.0,
+    "threat_distance": 15.0,
+    "covered_from_main": true,
+    "fires_on_main": true,
+    "covered_from_others": 0.0,
+    "in_area": true,
+    "claimed_by": -1
+   }
+  ]
+ },
+ "expect": {
+  "statuses": [
+   "kept",
+   "kept"
+  ],
+  "scores": [
+   48.0,
+   60.0
+  ],
+  "chosen": 1
+ }
+}

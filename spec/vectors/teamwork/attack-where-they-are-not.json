@@ -1,0 +1,57 @@
+{
+ "name": "attack-where-they-are-not",
+ "why": "Two points to take, the enemy strong on the nearer (influence -2): 3 / (1 + 2) = 1 against 3, so the one squad goes to the farther, weaker point.",
+ "kind": "commander",
+ "weights": {
+  "take": 3.0,
+  "hold": 1.0,
+  "defend": 2.0,
+  "nearest_metres": 1.0
+ },
+ "query": {
+  "squads": [
+   {
+    "id": "s1",
+    "position": [
+     0,
+     0
+    ],
+    "size": 2
+   }
+  ],
+  "objectives": [
+   {
+    "id": "strong",
+    "position": [
+     10,
+     0
+    ],
+    "held_by": -1,
+    "ideal": 2,
+    "influence": -2.0
+   },
+   {
+    "id": "weak",
+    "position": [
+     25,
+     0
+    ],
+    "held_by": 0,
+    "ideal": 2,
+    "influence": 0.0
+   }
+  ]
+ },
+ "expect": {
+  "priorities": [
+   1.0,
+   3.0
+  ],
+  "assigned": {
+   "s1": "weak"
+  },
+  "nearest": {
+   "s1": "strong"
+  }
+ }
+}

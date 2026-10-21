@@ -35,6 +35,13 @@ list (take cover, shoot, reload, move to the squad's area), interrupted
 when the world changes. T15 is where the other ways to decide are
 compared; this task does not wait for it.
 
+**Decided by the owner, 2026-10-21 (wave 70):** both ways to see it --
+watch, as above, and one key to take the place of any bot of either team
+at any moment, played in third person with the same body and rules as a
+bot (WASD, the mouse aims, a click fires). The player's teammates respect
+its claim, and its squad's commander counts it. The measurements below
+stay bots-only.
+
 ## Steps
 
 1. **The snapshot** (ADR 0018): positions, health, ammunition, the cover
@@ -56,7 +63,9 @@ compared; this task does not wait for it.
 6. **The views**: a free camera, a camera on any bot, and a 2D map of the
    whole match with positions, claims, the influence map, squads and their
    objectives.
-7. **A match runner** headless: N matches on fixed seeds, each technique on
+7. **Take over a bot**: a key puts the player in the watched bot's body,
+   either team, and gives it back to its priority list on the same key.
+8. **A match runner** headless: N matches on fixed seeds, each technique on
    or off per team, printing the score and the counts that show what each
    technique does.
 
@@ -73,7 +82,9 @@ python3 scripts/check_demos.py
 ```
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/botmatch_effects.gd
+./scripts/godot --headless --path godot -s res://test/botmatch/botmatch_effects.gd
+make test-botmatch-effects
+make test-teamwork-vectors
 ```
 
 `botmatch_effects.gd` runs 20 seeded matches per pairing and must hold, with
@@ -81,15 +92,52 @@ each margin stated as a number in its header:
 
 - with claims on, two bots of one team stand within one metre of each other
   in cover less often than with claims off;
-- a team with the commander on holds points longer than the same team with
-  it off;
+- a team with the commander on orders its bots over more points at once
+  than the same team with it off. **Changed by the owner, 2026-10-21:** the
+  task said "holds points longer", and measured on a fair mirror it is
+  suggested, not shown (1.8 standard errors). The owner chose to state what
+  was measured (`docs/godot/botmatch.md`) rather than tune until it passed;
+  making the coordinated team win clearly is T65;
 - a team whose squads retreat in waves loses fewer bots per point lost than
-  the same team that never retreats;
+  the same team that never retreats. **Changed, the same decision:** the
+  ratio rewards giving points up, and the review said so. Measured, retreat
+  costs the match (a team that never retreats won 20 to 0). The test holds
+  what retreat decides: a retreating squad always leaves someone covering;
+- the mirror is fair: with the same techniques on both sides, blue's mean
+  margin is within 2.5 standard errors of zero (added in review);
 - every bot fires only at an enemy in its own sight table -- no bot shoots
   through a wall or at what it has not seen.
 
-If T50 measured that 3D physics does not run headless, these run on the
-snapshot-level simulation and the task says so here.
+T50 measured that 3D physics runs headless. These run on the snapshot-level
+simulation anyway, which is faster: about four minutes for 80 matches.
+`botmatch_test.gd` holds the simulation's sight lines to Godot's own rays.
+
+## Done (wave 70)
+
+- `ai_teamwork`: tactical positions with claims, a team's additive
+  influence, the commander, squad confidence and the waves. Each has a
+  Python twin, and 17 vectors are derived from a third copy of the rules.
+- The match in `godot/game3d/botmatch/`, a simulation with no physics
+  engine, six a side in three squads of two, mirrored. Rules and arena are
+  data (`rules.json`, `arena.json`). Step 5's arena is primitives plus
+  Kenney's Mini Characters from T50's manifest. KayKit's itch.io page was
+  not used.
+- The views: free camera, follow camera, and the 2D map with influence,
+  orders, confidence and the frontline. The owner's takeover of any bot.
+- The claims, measured with the rifle's rules on a fair mirror:
+  - the mirror itself, 9 to 11 at -4.5 +- 49 s a match;
+  - bunched 0.0 s with claims, against 79 s without;
+  - orders spanning 2.34 points with the commander, against 1.81 without;
+  - in 2835 retreating decisions, none uncovered;
+  - no shot at an unseen enemy, checked along the line at the moment of
+    the shot, and both planted cheats caught.
+- First person, after the owner played the third-person cut and found it
+  "mt esquisito". The shot is a 3D ray with tracers, a muzzle flash, hit
+  markers, a hurt flash, a rifle in view and a generated sound. The rifle's
+  rules are ten shots a second, a magazine of thirty, and a damage of 12.
+- Steps 2 and 3's "read by both languages": the techniques are, through
+  their vectors. The match's rules are read only by GDScript, because no
+  Python side plays the match.
 
 ## Manual check
 
