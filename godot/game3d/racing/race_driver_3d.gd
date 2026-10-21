@@ -3,8 +3,9 @@
 ## An agent in AIMA's sense, and nothing about it is a track: it perceives
 ## a `RaceView3D` -- the road ahead in its own frame, its speed, the cars
 ## it can see -- and acts on the car it drives. Put on another track it sees
-## another road and drives it the same way; `racing3d_portable.gd` holds
-## that on a track it was never tried on. Each decision, in order:
+## another road and drives it the same way; `racing3d_ladder.gd` holds that
+## on a track it was never tuned on, and `racing3d_portable_test.gd` that
+## its code names no track. Each decision, in order:
 ##
 ##   1. **How fast the road ahead allows** (T23's speed profile, made from
 ##      what it sees): at each point, the speed at which the bend there asks
@@ -26,8 +27,8 @@
 ##      speed it wants. A car ahead where it means to be caps that speed.
 ##
 ## Three techniques can be switched off, which is what the player does:
-## `full_pid` (off: proportional only, and the car settles off the line in
-## a long bend), the traffic's `heat_vision` (off: one rival at a time),
+## `full_pid` (off: proportional only -- measured, this car swings wider
+## each time until it leaves the road), the traffic's `heat_vision` (off: one rival at a time),
 ## and the measured grip, which the race decides (`Race3D.measured_grip`).
 ##
 ## The knobs are read once a decision, through the three `*_now`
