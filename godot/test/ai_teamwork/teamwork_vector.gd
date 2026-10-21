@@ -10,7 +10,7 @@ extends RefCounted
 ## Shared with `python/tests/test_teamwork_vectors.py`; sized for `Vector2`'s
 ## 32-bit floats.
 const TOLERANCE: float = 1e-4
-const KINDS: Array[String] = ["positions", "influence", "commander", "confidence"]
+const KINDS: Array[String] = ["positions", "influence", "commander", "confidence", "aim", "passage"]
 
 
 ## Why `vector` is not a teamwork vector, or "" when it is one.
@@ -42,6 +42,10 @@ static func answer_to(vector: Dictionary) -> Dictionary:
 			return _influence(vector)
 		"commander":
 			return _commander(vector)
+		"aim":
+			return _aim(vector)
+		"passage":
+			return _passage(vector)
 	return _confidence(vector)
 
 
@@ -62,6 +66,11 @@ static func differences(expected: Variant, answer: Variant, where: String, found
 			return
 		for index: int in range((expected as Array).size()):
 			differences(expected[index], answer[index], "%s[%d]" % [where, index], found)
+	elif expected == null:
+		# A null in the file is "no bound" (a passage vector's INF): the
+		# answer must be null too, not merely missing.
+		if answer != null:
+			found.append("%s: %s, the file says null" % [where, answer])
 	elif _is_number(expected) and _is_number(answer):
 		if absf(float(answer) - float(expected)) > TOLERANCE:
 			found.append("%s: %s, the file says %s" % [where, answer, expected])
@@ -152,6 +161,58 @@ static func _confidence(vector: Dictionary) -> Dictionary:
 			"states_without_retreat": _states(values, thresholds, false)}
 	answer["waves"] = _waves(vector["query"]["members"], vector["query"]["phases"])
 	return answer
+
+
+static func _aim(vector: Dictionary) -> Dictionary:
+	var zones: Array[AimChoice.Zone] = []
+	for fields: Dictionary in vector["query"]["zones"]:
+		var zone := AimChoice.Zone.new()
+		zone.name = str(fields["name"])
+		zone.multiplier = float(fields["multiplier"])
+		zone.aim = _vector2(fields["aim"])
+		zone.exposure = float(fields["exposure"])
+		for corners: Array in fields["rects"]:
+			var low := Vector2(float(corners[0]), float(corners[1]))
+			zone.rects.append(Rect2(low, Vector2(float(corners[2]), float(corners[3])) - low))
+		zones.append(zone)
+	var choice: AimChoice.Choice = AimChoice.choose(zones, float(vector["query"]["spread"]))
+	var landed: Array = []
+	for roll: Variant in vector["query"]["rolls"]:
+		landed.append(AimChoice.land(choice.chances, float(roll)))
+	return {"own_chances": Array(choice.own_chances), "expected": Array(choice.expected), "aimed": choice.aimed,
+			"chances": Array(choice.chances), "landed": landed}
+
+
+# JSON's null, for no bound, as INF; and INF back as null.
+static func _bounded(value: Variant) -> float:
+	return INF if value == null else float(value)
+
+
+static func _nulled(value: float) -> Variant:
+	return null if is_inf(value) else value
+
+
+static func _passage(vector: Dictionary) -> Dictionary:
+	var costs: Array = []
+	var chosen: Array = []
+	for fields: Dictionary in vector["query"]["facts"]:
+		var facts := PassageChoice.Facts.new()
+		for key: String in fields:
+			facts.set(key, _bounded(fields[key]) if key in ["detour_metres", "spot_loss"] else fields[key])
+		var choice: PassageChoice.Choice = PassageChoice.choose(facts)
+		costs.append(Array(choice.costs).map(_nulled))
+		chosen.append(choice.chosen)
+	var prices := PassageChoice.Prices.new()
+	for key: String in vector["prices"]:
+		prices.set(key, float(vector["prices"][key]))
+	var answers: Array = []
+	for fields: Dictionary in vector["query"]["requests"]:
+		var request := PassageChoice.Request.new()
+		for key: String in fields:
+			request.set(key, _bounded(fields[key]) if key == "saves" else fields[key])
+		var reply: PassageChoice.Answer = PassageChoice.answer(request, prices)
+		answers.append({"cost": _nulled(reply.cost), "granted": reply.granted})
+	return {"costs": costs, "chosen": chosen, "answers": answers}
 
 
 static func _states(values: Array, thresholds: SquadConfidence.Thresholds, may_retreat: bool) -> Array:

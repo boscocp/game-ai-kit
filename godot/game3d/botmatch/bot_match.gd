@@ -54,7 +54,8 @@ var squad_confidence: Array[Dictionary] = [{}, {}]
 ## What the effects test reads, by team.
 var stats: Array[MatchStats] = [MatchStats.new(), MatchStats.new()]
 ## The last shots, newest last: [time, shooter, target (-1: none), hit,
-## from, to] -- the two ends in 3D, for the view's tracers.
+## from, to, zone] -- the two ends in 3D, for the view's tracers, and the
+## zone hit (NONE for a miss), for the headshot marker.
 var recent_shots: Array[Array] = []
 ## Every shot fired since the match began, for the view to hear the new ones.
 var shots_fired: int = 0
@@ -63,7 +64,9 @@ var _places: Array[Vector2] = []
 var _place_ids: Array[String] = []
 var _cover_count: int = 0
 var _next_decision: float = 0.0
-var _finder := GridPathfinder.new(AStarSearch.new())
+var _search := AStarSearch.new()
+## The ammunition, the weapons and the errands they make.
+var supply: MatchSupply
 
 
 ## A new match. `blue` and `red` are the two teams, made by the caller with
@@ -74,6 +77,7 @@ func _init(seed_value: int, blue: MatchTeam, red: MatchTeam, match_rules: MatchR
 	rules = match_rules if match_rules != null else MatchRules.new()
 	arena = match_arena if match_arena != null else BotArena.new(rules.body_radius)
 	teams = [blue, red]
+	supply = MatchSupply.new(arena)
 	_build_places()
 	for point: Vector2 in arena.point_places:
 		point_owner.append(-1)
@@ -95,9 +99,17 @@ func step() -> void:
 	if time >= _next_decision:
 		_decide()
 		_next_decision += rules.decision_interval
+	var before: Array[Vector2] = []
 	for bot: MatchBot in bots:
+		before.append(bot.position)
+	for bot: MatchBot in acting_order():
 		MatchActions.act(self, bot, rules.step)
 	_keep_bodies_apart()
+	for bot: MatchBot in bots:
+		bot.velocity = (bot.position - before[bot.id]) / rules.step
+	for bot: MatchBot in bots:
+		if bot.alive():
+			supply.touch(self, bot)
 	for bot: MatchBot in bots:
 		if bot.alive() and bot.health <= 0:
 			killed(bot, bot.last_hit_by)
@@ -115,7 +127,9 @@ func _decide() -> void:
 	for bot: MatchBot in bots:
 		var team: MatchTeam = teams[bot.team]
 		var retreating: bool = TeamTactics.moving_in_retreat(self, team, bot)
-		bot.decide(time, sight.get(bot.id, [] as Array[int]), places, team.reaction, retreating)
+		var row: Array[int] = sight.get(bot.id, [] as Array[int])
+		bot.decide(time, row, places, team.reaction, retreating)
+		bot.choose_pace(row, rules.sprint_from)
 	for team: MatchTeam in teams:
 		_count_retreats(team)
 
@@ -132,6 +146,16 @@ func _count_retreats(team: MatchTeam) -> void:
 		stats[team.side].retreats_uncovered += 0 if covering else 1
 
 
+## The order the bots act in this step. Bodies are solid, so who moves first
+## takes a contested door: in id order that was always blue. The order
+## turns round every step, so each side goes first as often as the other.
+func acting_order() -> Array[MatchBot]:
+	var order: Array[MatchBot] = bots.duplicate()
+	if roundi(time / rules.step) % 2 == 1:
+		order.reverse()
+	return order
+
+
 ## Step until the match is over.
 func play_out() -> void:
 	while not over():
@@ -139,29 +163,50 @@ func play_out() -> void:
 
 
 ## Send `bot` towards `goal`, holding place `place` (-1: none), by A* over
-## the walk grid. The path is only searched again when the goal moves.
+## the walk grid and its heights (`ArenaWalk`). The path is only searched again when the goal moves.
 func send(bot: MatchBot, goal: Vector2, place: int) -> void:
 	bot.spot = place
 	if goal.distance_to(bot.goal) < 0.01 and not bot.path.is_empty():
 		return
 	bot.goal = goal
-	bot.path = _path_for(bot.team, BotArena.cell_of(bot.position), BotArena.cell_of(goal))
+	bot.path = _path_for(bot.team, bot.position, goal)
 
 
 # A* breaks ties by a fixed order of neighbours -- north, east, south, west
 # -- so a path east is not the mirror of a path west, and on a mirrored
 # arena one side walked different, longer-looking routes: measured, blue
-# won a mirror match 10-0 while the order held. The arena is its own mirror
-# across x = 24, so red's path is searched in the mirror and mirrored back,
-# and both sides walk each other's mirror image exactly.
-func _path_for(side: int, from: Vector2i, to: Vector2i) -> Array[Vector2i]:
-	if side == BLUE:
-		return _finder.find_path(arena.walk, from, to)
-	var path: Array[Vector2i] = _finder.find_path(arena.walk, _mirrored(from), _mirrored(to))
+# won a mirror match 18-2 while the order held. On an arena that says it is
+# its own mirror (`BotArena.mirrored`), red's path is searched in the mirror
+# and mirrored back, so both sides walk each other's mirror image exactly.
+# The places are mirrored before they are made cells: a goal on the mirror
+# line sits on a cell edge, and mirroring its cell sent red one cell short.
+func _path_for(side: int, from: Vector2, to: Vector2, closed: Array[Vector2i] = []) -> Array[Vector2i]:
+	if side == BLUE or not arena.mirrored:
+		return _search.search(_graph_with(closed), BotArena.cell_of(from), BotArena.cell_of(to)).path
+	var mirrored_closed: Array[Vector2i] = []
+	for cell: Vector2i in closed:
+		mirrored_closed.append(_mirrored(cell))
+	var path: Array[Vector2i] = _search.search(_graph_with(mirrored_closed), BotArena.cell_of(_mirrored_place(from)),
+			BotArena.cell_of(_mirrored_place(to))).path
 	var back: Array[Vector2i] = []
 	for cell: Vector2i in path:
 		back.append(_mirrored(cell))
 	return back
+
+
+# The walk, or the walk with `closed` cells shut by bodies (`CrowdedWalk`).
+func _graph_with(closed: Array[Vector2i]) -> SearchGraph:
+	return arena.walk_graph if closed.is_empty() else CrowdedWalk.new(arena.walk_graph, closed)
+
+
+## A route for `bot` to `to` round the cells `closed` by bodies -- in the
+## mirror for red, as every path is -- or an empty one when there is none.
+func detour(bot: MatchBot, to: Vector2i, closed: Array[Vector2i]) -> Array[Vector2i]:
+	return _path_for(bot.team, bot.position, BotArena.centre_of(to), closed)
+
+
+func _mirrored_place(place: Vector2) -> Vector2:
+	return Vector2(arena.width - place.x, place.y)
 
 
 func _mirrored(cell: Vector2i) -> Vector2i:
@@ -194,7 +239,8 @@ func places_near(centre: Vector2, radius: float) -> Array[int]:
 
 
 ## Whether `looker` sees `target` now: in range, ahead of it or near, and a
-## clear line from its eyes to the target's body, crouched or standing.
+## clear line from its eyes to the target's body, crouched or standing --
+## each above the floor it stands on.
 func sees(looker: MatchBot, target: MatchBot) -> bool:
 	var offset: Vector2 = target.position - looker.position
 	var distance: float = offset.length()
@@ -203,13 +249,13 @@ func sees(looker: MatchBot, target: MatchBot) -> bool:
 	if distance > NEAR and absf(wrapf(offset.angle() - looker.facing, -PI, PI)) > VIEW_HALF_ANGLE:
 		return false
 	var height: float = rules.crouched_height if target.crouched else rules.chest_height
-	var eyes := Vector3(looker.position.x, rules.eye_height, looker.position.y)
-	return arena.clear_line(eyes, Vector3(target.position.x, height, target.position.y))
+	var eyes: Vector3 = arena.above(looker.position, rules.eye_height)
+	return arena.clear_line(eyes, arena.above(target.position, height))
 
 
 ## Note a shot for the view: who, at whom, whether it hit, and where it went.
-func record_shot(shooter: MatchBot, target: int, hit: bool, to: Vector3) -> void:
-	recent_shots.append([time, shooter.id, target, hit, MatchActions.muzzle_of(self, shooter, to), to])
+func record_shot(shooter: MatchBot, target: int, hit: bool, to: Vector3, zone: String = MatchRules.NONE) -> void:
+	recent_shots.append([time, shooter.id, target, hit, MatchActions.muzzle_of(self, shooter, to), to, zone])
 	shots_fired += 1
 	if recent_shots.size() > SHOTS_KEPT:
 		recent_shots.pop_front()
@@ -226,6 +272,7 @@ func killed(victim: MatchBot, killer: int) -> void:
 	stats[victim.team].deaths += 1
 	teams[victim.team].losses[teams[victim.team].squad_of(victim.id)].append(time)
 	if killer != -1:
+		bots[killer].streak += 1
 		var shooter_team: MatchTeam = teams[bots[killer].team]
 		shooter_team.kills[shooter_team.squad_of(killer)].append(time)
 		stats[bots[killer].team].kills += 1
@@ -242,13 +289,17 @@ func replace_bot(bot_id: int, replacement: MatchBot) -> void:
 	respawn(replacement)
 
 
-## Put a bot back at its spawn, whole.
+## Put a bot back at its spawn, whole: a full rifle, its streak gone.
 func respawn(bot: MatchBot) -> void:
 	var spawns: Array = arena.spawns[TEAM_NAMES[bot.team]]
 	bot.position = spawns[bot.place_in_team % spawns.size()]
-	bot.facing = 0.0 if bot.team == BLUE else PI
+	# Facing the points, wherever the arena puts the spawn.
+	bot.facing = (_centre_of_points() - bot.position).angle()
 	bot.health = rules.health
-	bot.ammo = rules.magazine
+	MatchSupply.arm_rifle(bot, rules)
+	bot.streak = 0
+	bot.errand = MatchSupply.NO_ERRAND
+	bot.reload_below = rules.reload_below
 	bot.reload_left = 0.0
 	bot.respawn_left = 0.0
 	bot.spot = -1
@@ -257,6 +308,19 @@ func respawn(bot: MatchBot) -> void:
 	bot.chose_at = -INF
 	bot.seen_since.clear()
 	bot.last_hit_by = -1
+	# What its last life left: the jump back to the spawn is no speed, and a
+	# blocker, a refusal or a passage weighed then is not this life's.
+	bot.velocity = Vector2.ZERO
+	bot.blocked_for = 0.0
+	bot.refused_by.clear()
+	bot.last_passage = {}
+
+
+func _centre_of_points() -> Vector2:
+	var total := Vector2.ZERO
+	for place: Vector2 in arena.point_places:
+		total += place
+	return total / maxi(arena.point_places.size(), 1)
 
 
 func _add_bot(side: int, place_in_team: int) -> int:
@@ -359,8 +423,10 @@ func _points_covered(side: int) -> int:
 
 
 # Two bodies closer than two radii are pushed apart, half each, where each
-# can stand. Without it every bot of a team could share the one best spot,
-# and bunching would cost nothing -- the reason claims exist would be gone.
+# can stand. A step into a body is refused (`MatchActions.clear_of_bodies`),
+# so this only parts bodies that began inside each other -- a respawn on a
+# spot someone stands on. Without either, every bot of a team could share
+# the one best spot, and bunching would cost nothing.
 func _keep_bodies_apart() -> void:
 	var touching: float = rules.body_radius * 2.0
 	for first: int in range(bots.size()):
@@ -378,9 +444,9 @@ func _push_apart(one: MatchBot, other: MatchBot, touching: float) -> void:
 	# Exactly on top of each other: apart along the lower id's facing.
 	var away: Vector2 = offset / distance if distance > 1e-6 else Vector2.RIGHT.rotated(one.facing)
 	var shove: Vector2 = away * (touching - distance) / 2.0
-	if arena.can_stand(other.position + shove, rules.body_radius):
+	if arena.can_step(other.position, other.position + shove, rules.body_radius):
 		other.position += shove
-	if arena.can_stand(one.position - shove, rules.body_radius):
+	if arena.can_step(one.position, one.position - shove, rules.body_radius):
 		one.position -= shove
 
 
@@ -401,6 +467,9 @@ func _count(delta: float) -> void:
 		stats[side].bunched_seconds += delta * _bunched_pairs(side)
 		stats[side].point_coverage += delta * _points_covered(side)
 		stats[side].order_spread += delta * _points_ordered(side)
+	for bot: MatchBot in bots:
+		stats[bot.team].sprint_seconds += delta if bot.alive() and bot.sprinting else 0.0
+		stats[bot.team].dry_seconds += delta if bot.alive() and bot.ammo + bot.reserve <= 0 else 0.0
 
 
 # Pairs of one team's bots in cover within BUNCHED metres of each other: each

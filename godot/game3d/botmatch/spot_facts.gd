@@ -34,17 +34,17 @@ static func build(world: BotMatch, team: MatchTeam, bot: MatchBot, place: int, a
 	var main: Vector2 = threats[0]
 	candidate.threat_distance = at.distance_to(main)
 	candidate.covered_from_main = not _sees(world, main, at, rules.crouched_height)
-	var standing := Vector3(at.x, rules.eye_height, at.y)
-	var chest := Vector3(main.x, rules.chest_height, main.y)
+	var standing: Vector3 = world.arena.above(at, rules.eye_height)
+	var chest: Vector3 = world.arena.above(main, rules.chest_height)
 	candidate.fires_on_main = candidate.threat_distance <= rules.max_range and world.arena.clear_line(standing, chest)
 	candidate.covered_from_others = _share_covered(world, threats.slice(1), at)
 	return candidate
 
 
-# Whether an enemy's eyes at `from` see a body at `at`, `height` up.
+# Whether an enemy's eyes at `from` see a body at `at`, `height` up, each
+# above the floor there.
 static func _sees(world: BotMatch, from: Vector2, at: Vector2, height: float) -> bool:
-	var eyes := Vector3(from.x, world.rules.eye_height, from.y)
-	return world.arena.clear_line(eyes, Vector3(at.x, height, at.y))
+	return world.arena.clear_line(world.arena.above(from, world.rules.eye_height), world.arena.above(at, height))
 
 
 static func _share_covered(world: BotMatch, others: Array[Vector2], at: Vector2) -> float:

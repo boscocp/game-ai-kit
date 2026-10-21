@@ -145,6 +145,134 @@ def confidence(name, why, facts, members, phases):
 def facts(friendly, enemy, kills=0, losses=0):
     return {"friendly_strength": friendly, "enemy_strength": enemy, "kills": kills, "losses": losses}
 
+# --- aim -------------------------------------------------------------------
+
+# The bot match's body, standing: rectangles (low x, low y, high x, high y),
+# across and up from the feet, metres.
+def body(head=1.0, torso=1.0, arms=1.0, legs=1.0):
+    return [{"name": "head", "multiplier": 2.0, "aim": [0.0, 1.65], "rects": [[-0.12, 1.5, 0.12, 1.8]], "exposure": head},
+            {"name": "torso", "multiplier": 1.0, "aim": [0.0, 1.175], "rects": [[-0.2, 0.85, 0.2, 1.5]], "exposure": torso},
+            {"name": "arms", "multiplier": 0.5, "aim": [0.25, 1.175],
+             "rects": [[-0.3, 0.85, -0.2, 1.5], [0.2, 0.85, 0.3, 1.5]], "exposure": arms},
+            {"name": "legs", "multiplier": 0.5, "aim": [0.0, 0.425], "rects": [[-0.3, 0.0, 0.3, 0.85]], "exposure": legs}]
+
+def shares(aim, spread, zones):
+    r = max(spread, 0.001)
+    lo_x, lo_y, hi_x, hi_y = aim[0] - r, aim[1] - r, aim[0] + r, aim[1] + r
+    out = []
+    for z in zones:
+        covered = 0.0
+        for x0, y0, x1, y1 in z["rects"]:
+            covered += max(min(hi_x, x1) - max(lo_x, x0), 0.0) * max(min(hi_y, y1) - max(lo_y, y0), 0.0)
+        out.append(covered / (4 * r * r) * z["exposure"])
+    return out
+
+def aim(name, why, spread, zones, rolls):
+    own, worth, aimed, best, chosen = [], [], -1, 0.0, []
+    for i, z in enumerate(zones):
+        c = shares(z["aim"], spread, zones)
+        own.append(c[i])
+        worth.append(sum(c[j] * zones[j]["multiplier"] for j in range(len(zones))))
+        if worth[i] > best:
+            best, aimed, chosen = worth[i], i, c
+    landed = []
+    for roll in rolls:
+        total, where = 0.0, -1
+        for i, c in enumerate(chosen):
+            total += c
+            if roll < total:
+                where = i
+                break
+        landed.append(where)
+    return {"name": name, "why": why, "kind": "aim", "query": {"spread": spread, "zones": zones, "rolls": rolls},
+            "expect": {"own_chances": own, "expected": worth, "aimed": aimed, "chances": chosen, "landed": landed}}
+
+# --- passage ---------------------------------------------------------------
+
+# JSON has no infinity: an impossible way, or a fact with no bound, is null.
+WAYS = ["wait", "go round", "ask to pass", "another spot"]
+PRICES = {"step_seconds": 0.5, "per_enemy_seen": 2.0, "shooting": 1.5, "reloading": 0.5, "covering_a_retreat": 3.0}
+
+def way_costs(f):
+    inf = float("inf")
+    detour = inf if f["detour_metres"] is None else f["detour_metres"]
+    loss = inf if f["spot_loss"] is None else f["spot_loss"]
+    return [f["gap"] / f["leaving_speed"] if f["leaving_speed"] > 0 else inf,
+            detour / max(f["speed"], 1e-6),
+            f["ask_seconds"] if f["teammate"] and not f["refused"] else inf,
+            loss / max(f["points_a_second"], 1e-6)]
+
+def nulled(values):
+    return [None if v == float("inf") else v for v in values]
+
+def passage_facts(gap=0.0, leaving=0.0, detour=None, speed=4.5, teammate=False, refused=False, ask=1.0,
+                  loss=None, points=10.0):
+    return {"gap": gap, "leaving_speed": leaving, "detour_metres": detour, "speed": speed, "teammate": teammate,
+            "refused": refused, "ask_seconds": ask, "spot_loss": loss, "points_a_second": points}
+
+def request(saves, enemies=0, shooting=False, reloading=False, covering=False, person=False, room=True):
+    return {"saves": saves, "enemies_in_sight": enemies, "shooting": shooting, "reloading": reloading,
+            "covering_a_retreat": covering, "driven_by_a_person": person, "room_to_step": room}
+
+def step_aside_cost(r, p):
+    if r["driven_by_a_person"] or not r["room_to_step"]:
+        return None
+    return (p["step_seconds"] + p["per_enemy_seen"] * r["enemies_in_sight"] + p["shooting"] * r["shooting"]
+            + p["reloading"] * r["reloading"] + p["covering_a_retreat"] * r["covering_a_retreat"])
+
+def passage(name, why, facts, requests):
+    costs, chosen = [], []
+    for f in facts:
+        c = way_costs(f)
+        best, way = float("inf"), "wait"
+        for w, cost in zip(WAYS, c):
+            if cost < best:
+                best, way = cost, w
+        costs.append(nulled(c))
+        chosen.append(way)
+    answers = []
+    for r in requests:
+        cost = step_aside_cost(r, PRICES)
+        saves = float("inf") if r["saves"] is None else r["saves"]
+        answers.append({"cost": cost, "granted": cost is not None and saves > cost})
+    return {"name": name, "why": why, "kind": "passage", "prices": PRICES,
+            "query": {"facts": facts, "requests": requests}, "expect": {"costs": costs, "chosen": chosen, "answers": answers}}
+
+def passage_vectors():
+    yield passage("wait-for-one-walking-off",
+                  "A body 0.4 m from clearing, leaving at 2 m/s: 0.2 s of waiting beats a 3 m way round (0.67 s).",
+                  [passage_facts(gap=0.4, leaving=2.0, detour=3.0)], [])
+    yield passage("round-one-who-holds",
+                  "A body holding (not leaving): waiting is never done, and 3 m round at 4.5 m/s is 0.67 s.",
+                  [passage_facts(gap=0.4, detour=3.0)], [])
+    yield passage("ask-a-teammate-when-round-is-long",
+                  "A teammate holding, the way round 9 m (2 s): asking, 1 s, is cheaper. An enemy in the same "
+                  "place may not be asked, and the bot goes round. A teammate that refused lately may not be "
+                  "asked either.",
+                  [passage_facts(gap=0.4, detour=9.0, teammate=True), passage_facts(gap=0.4, detour=9.0),
+                   passage_facts(gap=0.4, detour=9.0, teammate=True, refused=True)], [])
+    yield passage("another-spot-when-nothing-else",
+                  "No way round, an enemy in the way: the next spot, 5 points less at 10 a second, is 0.5 s.",
+                  [passage_facts(gap=0.4, loss=5.0)], [])
+    yield passage("nobody-leaving-and-no-gap-is-no-wait",
+                  "A body touching and not moving off: gap 0, leaving 0. Waiting is impossible, not free -- "
+                  "a >= in place of the > would divide 0 by 0 -- and the way round is taken.",
+                  [passage_facts(gap=0.0, leaving=0.0, detour=3.0)], [])
+    yield passage("nothing-possible-waits",
+                  "No way round, an enemy, no other spot: every way impossible, and the bot waits.",
+                  [passage_facts(gap=0.4)], [])
+    yield passage("equal-ways-go-to-the-first",
+                  "Waiting and going round both 1 s: the first in the order, waiting, is taken. Numbers in "
+                  "powers of two, so neither side rounds.",
+                  [passage_facts(gap=0.5, leaving=0.5, detour=4.0, speed=4.0)], [])
+    yield passage("a-teammate-weighs-the-request",
+                  "Idle, its cost is the step, 0.5 s: a saving of 2 s is granted. Two enemies in sight and "
+                  "shooting, 0.5 + 4 + 1.5 = 6 s: refused. Covering a retreat and reloading, 4 s, against a "
+                  "saving of exactly 4: refused, the saving must be larger. With no other way the saving has "
+                  "no end and even a fight gives way; a person at the controls, or no room to step, never.",
+                  [], [request(2.0), request(2.0, enemies=2, shooting=True), request(4.0, reloading=True, covering=True),
+                       request(None, enemies=2, shooting=True), request(None, person=True), request(None, room=False)])
+
 # --- the vectors -----------------------------------------------------------
 
 def vectors():
@@ -226,9 +354,48 @@ def vectors():
                      "One member left: it moves in both phases, nobody is left to cover it.",
                      [facts(0.4, 2.0, losses=3)], [5], [0, 1])
 
+def aim_vectors():
+    close = 3.0 * math.tan(math.radians(3.0))
+    yield aim("close-and-steady-aims-at-the-head",
+              "Three metres at three degrees, a spread of 0.157 m: aimed at the head, most shots land in it, and "
+              "at twice the torso's worth it wins.",
+              close, body(), [0.0, 0.5, 0.99])
+    yield aim("far-aims-at-the-torso",
+              "A spread of 0.5 m, about ten metres at three degrees: a shot aimed at the head mostly misses "
+              "the body, and the torso (0.46), with its spill onto arms and legs, beats the head (0.32) and "
+              "the arms (0.44). Below 0.55 m, so aiming at an arm is not the torso's exact tie.",
+              0.5, body(), [0.0, 0.05, 0.3])
+    yield aim("behind-low-cover-the-legs-are-gone",
+              "A spread of 0.3 m, where in the open the torso is worth most (0.83). Behind low cover the legs "
+              "are hidden and the torso half shown: the head (0.525) now beats the torso (0.5), and the choice "
+              "moves up the body.",
+              0.3, body(torso=0.5, legs=0.0), [0.1, 0.4])
+    yield aim("equal-worth-goes-to-the-first",
+              "Two zones alike in all but their names: the first listed is aimed at. Every number is a power "
+              "of two, so the tie is exact in GDScript's 32-bit Rect2 as in Python's floats -- with 0.1 and "
+              "1.1 it was not, and GDScript aimed at the second.",
+              0.125, [{"name": "left", "multiplier": 1.0, "aim": [-1.0, 1.0], "rects": [[-1.125, 0.875, -0.875, 1.125]], "exposure": 1.0},
+                      {"name": "right", "multiplier": 1.0, "aim": [1.0, 1.0], "rects": [[0.875, 0.875, 1.125, 1.125]], "exposure": 1.0}],
+              [0.0, 0.5, 1.0])
+    yield aim("a-steady-hand-has-no-spread",
+              "A spread of 0: the technique takes a millimetre, so a shot aimed at a zone lands in it -- not "
+              "a division by zero, and not a chance over 1, which a micrometre gave in GDScript's 32-bit "
+              "Rect2 -- and the head, worth most, is aimed at.",
+              0.0, body(), [0.0, 0.5])
+    yield aim("nothing-exposed-aims-at-nothing",
+              "Every zone behind cover: nothing is worth a shot, nothing is aimed at, and every roll misses.",
+              0.3, body(0.0, 0.0, 0.0, 0.0), [0.0])
+    yield aim("a-roll-on-a-boundary-misses",
+              "A zone that is the spread's own square, half exposed: chance 0.5 exactly, every number a power "
+              "of two so neither side rounds. A roll below 0.5 lands, a roll of 0.5 misses -- the zones are "
+              "laid end to end with a strict <.",
+              0.25, [{"name": "near", "multiplier": 1.0, "aim": [0.0, 0.0], "rects": [[-0.25, -0.25, 0.25, 0.25]], "exposure": 0.5},
+                     {"name": "far", "multiplier": 0.5, "aim": [4.0, 4.0], "rects": [[3.75, 3.75, 4.25, 4.25]], "exposure": 0.5}],
+              [0.0, 0.4990234375, 0.5])
+
 def main(directory):
     folder = pathlib.Path(directory)
-    for vector in vectors():
+    for vector in list(vectors()) + list(aim_vectors()) + list(passage_vectors()):
         (folder / f"{vector['name']}.json").write_text(json.dumps(vector, indent=1) + "\n", encoding="utf-8")
 
 if __name__ == "__main__":

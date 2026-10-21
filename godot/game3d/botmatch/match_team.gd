@@ -29,6 +29,13 @@ var bots_per_point: int = BotMatch.PER_SQUAD
 ## True only in a planted test: the whole squad falls back at once, with
 ## nobody left to cover it. The effects test must catch it.
 var retreat_in_one_wave: bool = false
+## Whether its bots aim where a shot is worth the most damage (`AimChoice`);
+## off, they always aim at the head -- the planted case the effects test
+## must tell apart, at range.
+var aims_by_worth: bool = true
+## How its bots decide on going back to the base for rounds: by weighing it
+## (`MatchSupply.WEIGH`), or -- planted -- NEVER, or ALWAYS once one is spent.
+var resupply_rule: String = MatchSupply.WEIGH
 ## The honest knobs, the same body driven faster or better.
 var reaction: float = 0.3
 var turn_rate: float = deg_to_rad(270.0)

@@ -1,7 +1,9 @@
 ## What a person playing a bot sees on top of the 3D view, as in any
 ## first-person shooter: a crosshair where the shot goes, a hit marker when
-## it struck someone, the screen's edge flashing red when they are hit, and
-## their health and ammunition in a corner.
+## it struck someone -- larger, with HEADSHOT, when it struck a head -- the
+## screen's edge flashing red when they are hit,
+## their health, weapon, rounds and kill streak in a corner, and a reload's
+## progress under the crosshair while it lasts.
 ##
 ## Drawn only while a bot is played; watching, the panel and map say more.
 class_name BotMatchHud
@@ -9,6 +11,7 @@ extends Control
 
 const CROSSHAIR: Color = Color(1, 1, 1, 0.9)
 const HIT_MARKER: Color = Color(1, 0.3, 0.25)
+const HEADSHOT: Color = Color(1, 0.85, 0.2)
 const HURT: Color = Color(0.9, 0.05, 0.05)
 ## How long, in match seconds, a hit marker and a hurt flash last.
 const MARKER_SECONDS: float = 0.15
@@ -33,14 +36,32 @@ func _draw() -> void:
 		return
 	for direction: Vector2 in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
 		draw_line(middle + direction * GAP, middle + direction * (GAP + ARM), CROSSHAIR, 2.0)
-	if _hit_lately(bot):
+	var struck: String = _hit_lately(bot)
+	if struck != "":
+		var head: bool = struck == MatchRules.HEAD
+		var reach: float = 22.0 if head else 14.0
 		for corner: Vector2 in [Vector2(1, 1), Vector2(-1, 1), Vector2(1, -1), Vector2(-1, -1)]:
-			draw_line(middle + corner * 6.0, middle + corner * 14.0, HIT_MARKER, 2.5)
-	var reloading: String = "  reloading" if bot.reload_left > 0.0 else ""
-	var status: String = "%d health    %d / %d%s" % [bot.health, bot.ammo, world.rules.magazine, reloading]
+			draw_line(middle + corner * 6.0, middle + corner * reach, HEADSHOT if head else HIT_MARKER, 3.0 if head else 2.5)
+		if head:
+			draw_string(ThemeDB.fallback_font, middle + Vector2(-48, -34), "HEADSHOT", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 20, HEADSHOT)
+	if bot.reload_left > 0.0:
+		_draw_reload(middle, 1.0 - bot.reload_left / world.rules.reload_time)
+	var reloading: String = "  reloading" if bot.reload_left > 0.0 else ("  sprinting" if bot.sprinting else "")
+	var weapon: String = "POWER" if bot.weapon == MatchSupply.POWER else "rifle"
+	var streak: String = "    streak %d/%d" % [bot.streak, world.rules.streak_for_power]
+	var dry: String = "  -- back to your base for rounds" if bot.ammo + bot.reserve <= 0 else ""
+	var status: String = "%d health    %s %d / %d%s%s%s" % [bot.health, weapon, bot.ammo, bot.reserve, reloading, streak, dry]
 	# Bottom left: the bottom right is where the rifle is.
 	var at := Vector2(30.0, size.y - 30.0)
 	draw_string(ThemeDB.fallback_font, at, status, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 26, CROSSHAIR)
+
+
+# "RELOADING" and a bar filling as it goes, under the crosshair.
+func _draw_reload(middle: Vector2, done: float) -> void:
+	var at: Vector2 = middle + Vector2(-60.0, 40.0)
+	draw_string(ThemeDB.fallback_font, at, "RELOADING", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 20, CROSSHAIR)
+	draw_rect(Rect2(at + Vector2(0, 8), Vector2(120, 6)), Color(0, 0, 0, 0.6))
+	draw_rect(Rect2(at + Vector2(0, 8), Vector2(120 * clampf(done, 0.0, 1.0), 6)), CROSSHAIR)
 
 
 # A red frame round the screen, fading, after the played bot was hit.
@@ -56,9 +77,10 @@ func _draw_hurt(bot: MatchBot) -> void:
 	draw_rect(Rect2(size.x - edge, 0, edge, size.y), fade)
 
 
-# Whether one of the played bot's own shots hit within MARKER_SECONDS.
-func _hit_lately(bot: MatchBot) -> bool:
+# The zone the played bot's latest hit within MARKER_SECONDS struck, or "".
+func _hit_lately(bot: MatchBot) -> String:
+	var struck: String = ""
 	for shot: Array in world.recent_shots:
 		if int(shot[1]) == bot.id and bool(shot[3]) and world.time - float(shot[0]) <= MARKER_SECONDS:
-			return true
-	return false
+			struck = str(shot[6])
+	return struck

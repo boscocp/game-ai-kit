@@ -1,0 +1,42 @@
+{
+ "name": "wait-for-one-walking-off",
+ "why": "A body 0.4 m from clearing, leaving at 2 m/s: 0.2 s of waiting beats a 3 m way round (0.67 s).",
+ "kind": "passage",
+ "prices": {
+  "step_seconds": 0.5,
+  "per_enemy_seen": 2.0,
+  "shooting": 1.5,
+  "reloading": 0.5,
+  "covering_a_retreat": 3.0
+ },
+ "query": {
+  "facts": [
+   {
+    "gap": 0.4,
+    "leaving_speed": 2.0,
+    "detour_metres": 3.0,
+    "speed": 4.5,
+    "teammate": false,
+    "refused": false,
+    "ask_seconds": 1.0,
+    "spot_loss": null,
+    "points_a_second": 10.0
+   }
+  ],
+  "requests": []
+ },
+ "expect": {
+  "costs": [
+   [
+    0.2,
+    0.6666666666666666,
+    null,
+    null
+   ]
+  ],
+  "chosen": [
+   "wait"
+  ],
+  "answers": []
+ }
+}

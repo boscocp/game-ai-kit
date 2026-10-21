@@ -27,12 +27,23 @@ static func think(world: BotMatch, team: MatchTeam, now: float) -> void:
 	_give_orders(world, team)
 	for index: int in range(team.squads.size()):
 		_update_confidence(world, team, index, now)
+	world.supply.think(world, team)
 	for bot_id: int in team.members:
 		var bot: MatchBot = world.bots[bot_id]
 		if bot.controlled:
 			_claim_where_standing(world, team, bot)
+		elif bot.errand != MatchSupply.NO_ERRAND:
+			_run_errand(world, team, bot)
 		elif _due_a_choice(world, team, bot, now):
 			choose_spot(world, team, bot, now)
+
+
+# A bot on an errand gives up its spot and heads for the errand's place;
+# back from it, it chooses a spot at once.
+static func _run_errand(world: BotMatch, team: MatchTeam, bot: MatchBot) -> void:
+	team.claim(bot.id, -1)
+	bot.chose_at = -INF
+	world.send(bot, MatchSupply.errand_place(world, bot), -1)
 
 
 # A person's bot claims the place it stands on, if it stands on one, so its
@@ -47,7 +58,7 @@ static func _claim_where_standing(world: BotMatch, team: MatchTeam, bot: MatchBo
 # retreat -- a covering bot stays where it is and shoots.
 static func _due_a_choice(world: BotMatch, team: MatchTeam, bot: MatchBot, now: float) -> bool:
 	var due: bool = bot.alive() and now - bot.chose_at >= world.rules.position_interval
-	return due and not _covering_a_retreat(world, team, bot)
+	return due and not covering_a_retreat(world, team, bot)
 
 
 ## Whether `bot` is in the moving wave of its squad's retreat.
@@ -195,7 +206,9 @@ static func _waves(world: BotMatch, team: MatchTeam, index: int) -> SquadConfide
 	return SquadConfidence.waves(living, team.squad_phases[index])
 
 
-static func _covering_a_retreat(world: BotMatch, team: MatchTeam, bot: MatchBot) -> bool:
+## Whether `bot` is in the covering wave of its squad's retreat: it stays
+## where it is and shoots while the others fall back.
+static func covering_a_retreat(world: BotMatch, team: MatchTeam, bot: MatchBot) -> bool:
 	var index: int = team.squad_of(bot.id)
 	return team.squad_states[index] == SquadConfidence.RETREAT and not moving_in_retreat(world, team, bot)
 

@@ -3,8 +3,8 @@
 ## ADR 0018 keeps every 3D pack out of git. `assets.json` names each file the
 ## examples use, `make assets-3d` downloads them into `game3d/downloaded/`,
 ## and this shelf hands back the model when it is there and imported, and a
-## plain shape when it is not -- a capsule for a bot, a box for cover, a box
-## on four wheels for a car. So every example runs on a fresh checkout, in CI
+## plain shape when it is not -- a capsule or a humanoid of boxes for a bot,
+## a box for cover, a box on four wheels for a car. So every example runs on a fresh checkout, in CI
 ## and in `make check`, and the AI it shows is the same either way.
 ##
 ## When not to use it: for anything a decision reads. A model is what a person
@@ -15,7 +15,20 @@ extends RefCounted
 const MANIFEST: String = "res://game3d/assets.json"
 ## The primitives a manifest row may fall back to. "none" is a file that is
 ## not a model on its own, such as the texture a model points at.
-const FALLBACKS: Array[String] = ["capsule", "box", "car", "none"]
+const FALLBACKS: Array[String] = ["capsule", "humanoid", "box", "car", "none"]
+## The humanoid's parts, as shares of its height: each part's size and the
+## middle of it, feet on the origin, facing -z. They are the bot match's hit
+## zones drawn (head from 0.83, torso 0.47 to 0.83 and 0.22 across, arms
+## and legs the rest, 0.33 across in all), so a person sees where a head is;
+## `botmatch_test.gd` holds the two together.
+const HUMANOID: Dictionary = {
+	"Head": [Vector3(0.1333, 0.1667, 0.13), Vector3(0, 0.9167, 0)],
+	"Torso": [Vector3(0.2222, 0.3611, 0.12), Vector3(0, 0.6528, 0)],
+	"ArmLeft": [Vector3(0.0556, 0.3333, 0.07), Vector3(-0.1389, 0.6667, 0)],
+	"ArmRight": [Vector3(0.0556, 0.3333, 0.07), Vector3(0.1389, 0.6667, 0)],
+	"LegLeft": [Vector3(0.08, 0.4722, 0.09), Vector3(-0.055, 0.2361, 0)],
+	"LegRight": [Vector3(0.08, 0.4722, 0.09), Vector3(0.055, 0.2361, 0)],
+}
 
 ## The folder the files are read from, `res://` and ending in a slash.
 var into: String = ""
@@ -41,6 +54,14 @@ func _init(manifest_path: String = MANIFEST, folder: String = "") -> void:
 ## (`make import`) is not there yet, as far as the engine is concerned.
 func has_model(model_name: String) -> bool:
 	return _rows.has(model_name) and ResourceLoader.exists(_path_of(model_name))
+
+
+## The named file loaded, whatever it is -- a texture, an animation's scene
+## -- or null when it is not downloaded. For the rows that are not models.
+func resource(file_name: String) -> Resource:
+	if not has_model(file_name):
+		return null
+	return load(_path_of(file_name))
 
 
 ## The named model, `height` metres tall, standing on its origin. Tinted
@@ -71,6 +92,8 @@ static func primitive(kind: String, height: float, colour: Color) -> Node3D:
 		capsule.height = height
 		capsule.radius = height * 0.25
 		_add_mesh(holder, capsule, material, Vector3(0, height * 0.5, 0))
+	elif kind == "humanoid":
+		_add_humanoid(holder, height, colour)
 	elif kind == "car":
 		var body := BoxMesh.new()
 		body.size = Vector3(height * 1.6, height * 0.5, height * 3.4)
@@ -87,6 +110,19 @@ static func primitive(kind: String, height: float, colour: Color) -> Node3D:
 		box.size = Vector3(height, height, height)
 		_add_mesh(holder, box, material, Vector3(0, height * 0.5, 0))
 	return holder
+
+
+# The humanoid's boxes, each zone its own shade of `colour` so a person sees
+# them apart: the head light, the torso the colour, the arms and legs dark.
+static func _add_humanoid(holder: Node3D, height: float, colour: Color) -> void:
+	for part: String in HUMANOID:
+		var material := StandardMaterial3D.new()
+		material.albedo_color = colour.darkened(0.4)
+		if part == "Head" or part == "Torso":
+			material.albedo_color = colour.lightened(0.55) if part == "Head" else colour
+		var box := BoxMesh.new()
+		box.size = (HUMANOID[part][0] as Vector3) * height
+		_add_mesh(holder, box, material, (HUMANOID[part][1] as Vector3) * height).name = part
 
 
 func _path_of(model_name: String) -> String:

@@ -1,7 +1,30 @@
 # Status
 
 The index. One row per task; the task file holds everything needed to do it.
-The topmost `## Resuming after` section is the next session's prompt.
+The topmost `## Resuming after 2026-10-21 (wave 71, T66 written, review next)
+
+**Where it stopped -- read first.** T66 is written on
+`wave/71-the-lanes-map`, one commit a step: height, the lanes, sprint,
+the reload, the body, the zones, the aim, ammunition and the power
+weapon, solid bodies, `PassageChoice` (a request the teammate weighs),
+the yards and its mirror, and the review's fixes. The numbers are
+in `docs/godot/botmatch.md`.
+
+**Next: the PR.** The review is in `docs/reviews/71-the-lanes-map.md`,
+its findings applied on the branch; push, PR, CI green, `make wave-merge`.
+Then rebase `wave/72-the-bot-as-an-agent` (T67, being written in its own
+worktree from this branch) onto main. `wave/73-racing-in-3d` (T54) and
+`wave/74-the-stealth-research` (T52's research, with four questions for the
+owner) are in worktrees of their own. The owner's manual check (`make demo-botmatch`, T to play,
+L for the yards) is in T66.
+
+**Then T67** (`tasks/T67-the-bot-as-an-agent.md`), the owner's choice:
+the bot as AIMA's agent -- the priority list a weighed selector,
+perception from `ai_perception`, the errands a technique. The owner's rule
+behind it is now standing for every example: autonomy, as few fixed
+if/else in a demo as can be.
+
+## Resuming after` section is the next session's prompt.
 
 ## Milestone 1 — the vertical slice
 
@@ -114,7 +137,9 @@ sha256 and never committed.
 | T50 | The 3D tier, measured before anything is built | done | wave 69, ADR 0018 accepted (option A): physics, rays and a navmesh from collision shapes run headless; a run replays bit-identically on one binary; a navmesh set on a region's second frame never reaches the map (set it before the tree); about 1,000 fps for the 16-bot arena on a Radeon 610M; a body moved through its node is in the physics space a frame late; Kenney Mini Characters by URL and sha256, `make assets-3d`, primitives when missing; `check_no_assets.py`, R6 in `check_renderer.py`; Jolt explicit; `docs/godot/3d-headless.md`; manual check still the owner's |
 | T51 | A bot match: two teams of bots, cover, and a commander | done | wave 70: `ai_teamwork` (tactical positions with claims, team influence, a commander, squad confidence and waves), Python twins, 17 vectors; a 6-a-side match as a physics-free simulation held to Godot's rays, mirrored; first-person takeover of any bot (owner's choice), tracers, hit markers, a rifle; measured on a fair mirror (9-11; A*'s tie order had bent it 18-2): claims cut bunching 0 s against 79, the commander spreads orders over 2.34 points against 1.81, retreat always leaves someone covering, no shot at an unseen enemy; in the score, retreat costs the match (20-0 without it), the commander suggests help (1.8 errors), claims nothing -- said as measured, as the owner chose (`docs/godot/botmatch.md`), T65 split off; manual check still the owner's |
 | T52 | Bots against the player, with an optional stealth | todo | T50 done; reuse T51's first-person shot, tracers and HUD; third person; a role arbiter, awareness that accumulates with three alert levels, a shared belief map for the search -- each drawn and switchable |
-| T65 | A coordinated team that wins | todo | split from T51 by the owner: on a fair mirror retreat costs the match and the commander's help is not shown; with the owner's map (lanes, flanks, protected spawns, high ground); read how CS and UT maps reward holding before changing a number |
+| T65 | A coordinated team that wins | todo | split from T51 by the owner. T66 measured it on the lanes: claims and the commander each about one standard error better (not shown), retreat costs the match (20-0 without it); the owner decides whether to change retreat or close it as measured |
+| T66 | The bot match on a map made for tactics, with a body to aim at | wip | wave 71, written and reviewed (`docs/reviews/71-the-lanes-map.md`), merge next: height in the simulation (`ArenaWalk`), the three-lane map and a second unlike it (`yards.json`), sprint, a seen and heard reload, 120 rounds and a base resupply, a power weapon and the five-kill reward, a humanoid body (Kenney Survivors, CC0), head/torso/limb zones, solid bodies; `AimChoice` and `PassageChoice` in `ai_teamwork` with twins and 15 vectors; both mirrors fair, every claim with a planted case that truly rejects; in the score claims and the commander about one error each, retreat costs the match (20-0) -- said as measured (`docs/godot/botmatch.md`); manual check the owner's |
+| T67 | The bot as an agent: it perceives, weighs and decides, on any map | todo | the owner, during T66: autonomy over fixed if/else in every example, the bot as AIMA's agent that copes on another map; the priority list becomes a weighed selector, perception from `ai_perception`, the errands a technique; after wave 71, the owner's choice |
 
 ## The kit as modules
 
@@ -132,6 +157,33 @@ touches, and later a library others can install.
 | T64 | The library | todo | after T60-T63; names: only ports and kernel prefixed (owner, 2026-10-20), the prefix by ADR; addon zips filtered by manifest; `pyproject.toml`, flat layout, no dependencies; an entry-point group for a user's technique; installed and run outside the repo; publishing stays the owner's act |
 
 ---
+
+## Resuming after 2026-10-21 (wave 70 merged, wave 71 opened)
+
+**Where it stopped -- read first.** Wave 70 (T51, the bot match) merged as
+PR #8 (`d98060a`). The owner asked for it to be merged before the CI had
+finished: the full `make check-affected` was green locally on the merged
+commit, and the gates job had failed only on the PR title's length. Read
+`docs/godot/botmatch.md` for what T51 measured.
+
+**Now: wave 71, T66** (`tasks/T66-the-lanes-map.md`), on branch
+`wave/71-the-lanes-map`. It holds the owner's six asks after playing the
+match, all written in the task:
+1. a three-lane map with protected spawns, flanks and high ground (option
+   1 chosen, research done);
+2. sprint with Shift, no firing while sprinting;
+3. a reload you can see and hear;
+4. a humanoid body;
+5. hit zones: head 2x, torso 1x, limbs 0.5x;
+6. bots that aim where the expected damage is highest.
+
+It also carries T65's question: does the coordinated team win on this map?
+
+**Start at T66 step 1**, height in the simulation: a floor height per walk
+cell, and a height-aware `SearchGraph` for A*. Two things T51 learned
+must hold throughout. Red's paths stay searched in the mirror. The built
+map must be mirrored exactly; the sketch is not quite. The fair mirror is
+claim 0 of `botmatch_effects.gd`.
 
 ## Resuming after 2026-10-21 (wave 70)
 

@@ -1,0 +1,42 @@
+{
+ "name": "nothing-possible-waits",
+ "why": "No way round, an enemy, no other spot: every way impossible, and the bot waits.",
+ "kind": "passage",
+ "prices": {
+  "step_seconds": 0.5,
+  "per_enemy_seen": 2.0,
+  "shooting": 1.5,
+  "reloading": 0.5,
+  "covering_a_retreat": 3.0
+ },
+ "query": {
+  "facts": [
+   {
+    "gap": 0.4,
+    "leaving_speed": 0.0,
+    "detour_metres": null,
+    "speed": 4.5,
+    "teammate": false,
+    "refused": false,
+    "ask_seconds": 1.0,
+    "spot_loss": null,
+    "points_a_second": 10.0
+   }
+  ],
+  "requests": []
+ },
+ "expect": {
+  "costs": [
+   [
+    null,
+    null,
+    null,
+    null
+   ]
+  ],
+  "chosen": [
+   "wait"
+  ],
+  "answers": []
+ }
+}

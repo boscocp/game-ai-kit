@@ -4,11 +4,20 @@
 ## The list, highest first [Jakatdar 2017; T49]:
 ##
 ##   1. dead: wait to respawn;
-##   2. out of ammunition, or reloading: reload, crouched;
+##   2. its magazine empty with rounds in reserve, or reloading: reload,
+##      crouched;
 ##   3. in the moving wave of a retreat: fall back to its spot;
-##   4. an enemy in its own sight row, seen for at least its reaction time:
+##   4. fewer than `reload_below` rounds, no enemy in sight, and standing
+##      where it was going -- its cover spot, usually: reload early, so the
+##      magazine is not empty in the next fight;
+##   5. an enemy in its own sight row, seen for at least its reaction time,
+##      and a round to fire:
 ##      turn to it, and shoot once facing it;
-##   5. otherwise go to the spot its team's tactics chose, and hold it.
+##   6. otherwise go where its team's tactics sent it -- the spot chosen,
+##      or an errand to its base or to the power weapon -- and hold it.
+##
+## Then, apart from the list, its pace: it sprints while it moves with no
+## enemy in sight and far to go, and never while it shoots (`choose_pace`).
 ##
 ## A bot has no sense the player would not have: it shoots only at what its
 ## own row of the sight table says it sees, after a reaction, and it turns at
@@ -43,10 +52,36 @@ var facing: float = 0.0
 var pitch: float = 0.0
 var health: int = 100
 var ammo: int = 20
+## Which weapon it holds (`MatchSupply.RIFLE` or `POWER`), the rounds it
+## has beyond the magazine, and its kills since it last died.
+var weapon: String = "rifle"
+var reserve: int = 0
+var streak: int = 0
+## An errand its team's supply sent it on (`MatchSupply.RESUPPLY`, `FETCH`,
+## or "": none), and what it weighed: name -> [gain, walk, cost, score].
+var errand: String = ""
+var errand_weighing: Dictionary = {}
+## The rules' early reload threshold, given it by the match.
+var reload_below: int = 0
 var fire_cooldown: float = 0.0
 var reload_left: float = 0.0
 var respawn_left: float = 0.0
 var crouched: bool = false
+## The zone its shots are aimed at: its own choice (`AimChoice`), or the
+## torso, where a rifle is pointed by default.
+var aim_zone: String = MatchRules.TORSO
+## Its last shot's aim, for the overlay: [target id, zone names, each zone's
+## own chance aimed at, each zone's expected damage, the index aimed at].
+var last_aim: Array = []
+## How long it has wanted to move and could not, its velocity last step,
+## who refused it passage and when (bot id -> time), and its last weighing
+## of the ways past a body, for the view.
+var blocked_for: float = 0.0
+var velocity: Vector2 = Vector2.ZERO
+var refused_by: Dictionary = {}
+var last_passage: Dictionary = {}
+## Running at the rules' sprint speed; it may not fire while it is.
+var sprinting: bool = false
 ## What the list chose last, and at whom it is aimed (-1: nobody).
 var action: String = HOLD
 var target: int = -1
@@ -73,6 +108,7 @@ var controlled: bool = false
 var wants_to_walk: Vector2 = Vector2.ZERO
 var wants_to_fire: bool = false
 var wants_to_crouch: bool = false
+var wants_to_sprint: bool = false
 
 
 ## Whether it is alive. A bot brought to zero health in this step still is,
@@ -95,19 +131,39 @@ func decide(now: float, visible: Array[int], positions: Dictionary, reaction: fl
 		moving_in_retreat: bool) -> void:
 	target = -1
 	if controlled:
-		action = DEAD if not alive() else (RELOAD if reload_left > 0.0 else PLAYED)
+		# PLAYED while it reloads too: the person walks on as the magazine
+		# goes in, and `_played` carries the reload.
+		action = DEAD if not alive() else PLAYED
 		crouched = wants_to_crouch and alive()
 		return
 	if not alive():
 		action = DEAD
-	elif reload_left > 0.0 or ammo <= 0:
+	elif reload_left > 0.0 or (ammo <= 0 and reserve > 0):
 		action = RELOAD
 	elif moving_in_retreat:
 		action = FALL_BACK
+	elif ammo < reload_below and reserve > 0 and visible.is_empty() and arrived():
+		action = RELOAD
 	else:
-		target = _reacted_target(now, visible, positions, reaction)
+		# An empty weapon shoots at nobody: it goes where its errand sends it.
+		target = _reacted_target(now, visible, positions, reaction) if ammo > 0 else -1
 		action = SHOOT if target != -1 else (HOLD if arrived() else MOVE)
 	crouched = action == RELOAD or (action == HOLD and spot != -1)
+
+
+## Whether to sprint, after `decide`: a person sprints while they hold the
+## key and walk, not crouched, not firing and not reloading; a bot while it moves with no
+## enemy in its sight row and at least `sprint_from` metres to go. Sprinting
+## is what lets it reach a far point sooner, and seeing an enemy is when a
+## shot may be needed, so the one rule serves both.
+func choose_pace(visible: Array[int], sprint_from: float) -> void:
+	if controlled:
+		var walking: bool = wants_to_walk.length() > 0.1
+		var free_hands: bool = not wants_to_fire and reload_left <= 0.0
+		sprinting = alive() and wants_to_sprint and walking and not crouched and free_hands
+		return
+	var moving: bool = action == MOVE or action == FALL_BACK
+	sprinting = moving and visible.is_empty() and position.distance_to(goal) >= sprint_from
 
 
 ## Remember when each enemy came into sight, and forget those gone from it:

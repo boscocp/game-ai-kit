@@ -2,6 +2,15 @@
   "about": "Every 3D file the examples use, referenced and never committed (ADR 0018). `make assets-3d` downloads each pack's archive, checks it, and copies out the files below into godot/game3d/downloaded/, which git ignores. A missing file is drawn as its fallback primitive. Each pack's `members` lists the sha256 of every file in its archive (`fetch_assets_3d.py --list-members`), so check_no_assets.py knows a pack's file nobody uses.",
   "into": "godot/game3d/downloaded",
   "packs": {
+    "kenney-animated-characters-survivors": {
+      "title": "Animated Characters Survivors 1.1, by Kenney",
+      "page": "https://kenney.nl/assets/animated-characters-survivors",
+      "archive": "https://kenney.nl/media/pages/assets/animated-characters-survivors/27b16052a7-1774772958/kenney_animated-characters-survivors.zip",
+      "archive_sha256": "fdadced07a0454c9b7f0b46507be6144a072b4d03b4ffa37f225893c76c62845",
+      "licence": "Creative Commons Zero, CC0 (the page, and License.txt in the archive)",
+      "members": "godot/game3d/packs/kenney-animated-characters-survivors.sha256",
+      "checked": "2026-10-21"
+    },
     "kenney-mini-characters": {
       "title": "Mini Characters 1.0, by Kenney",
       "page": "https://kenney.nl/assets/mini-characters",
@@ -13,6 +22,38 @@
     }
   },
   "files": [
+    {
+      "name": "soldier",
+      "pack": "kenney-animated-characters-survivors",
+      "path": "Model/characterMedium.fbx",
+      "saved_as": "kenney-animated-characters-survivors/characterMedium.fbx",
+      "sha256": "18835fef534eede635b081ee7fe647d01a885550a591d2e6bf071010906167d8",
+      "fallback": "humanoid"
+    },
+    {
+      "name": "soldier_idle",
+      "pack": "kenney-animated-characters-survivors",
+      "path": "Animations/idle.fbx",
+      "saved_as": "kenney-animated-characters-survivors/idle.fbx",
+      "sha256": "c8a24e0294376ee5a195c56752a13310e1c0b5f8588a4db50e094120e3e4cc74",
+      "fallback": "none"
+    },
+    {
+      "name": "soldier_run",
+      "pack": "kenney-animated-characters-survivors",
+      "path": "Animations/run.fbx",
+      "saved_as": "kenney-animated-characters-survivors/run.fbx",
+      "sha256": "e635461fc8dace85ec67a7f7941e949a7c3f108b51ae4d2da1557e6e01749df8",
+      "fallback": "none"
+    },
+    {
+      "name": "soldier_skin",
+      "pack": "kenney-animated-characters-survivors",
+      "path": "Skins/survivorMaleB.png",
+      "saved_as": "kenney-animated-characters-survivors/survivorMaleB.png",
+      "sha256": "fe64a677e96dee1e63a6df554fb5ebad4abddf3348cb2f40f32e2ba09660a762",
+      "fallback": "none"
+    },
     {
       "name": "bot_blue",
       "pack": "kenney-mini-characters",

@@ -14,7 +14,7 @@ import math
 import pathlib
 import unittest
 
-from gameaikit.teamwork import commander, confidence, influence, positions
+from gameaikit.teamwork import aim, commander, confidence, influence, passage, positions
 
 VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "teamwork"
 
@@ -25,7 +25,7 @@ FEWEST_VECTORS = 10
 #: GDScript side's 32-bit `Vector2`.
 TOLERANCE = 1e-4
 
-KINDS = ("positions", "influence", "commander", "confidence")
+KINDS = ("positions", "influence", "commander", "confidence", "aim", "passage")
 
 
 def answer_positions(vector: dict) -> dict:
@@ -73,8 +73,37 @@ def answer_confidence(vector: dict) -> dict:
     return answer
 
 
-ANSWER = {"positions": answer_positions, "influence": answer_influence,
-          "commander": answer_commander, "confidence": answer_confidence}
+def answer_aim(vector: dict) -> dict:
+    query = vector["query"]
+    zones = [aim.Zone(each["name"], each["multiplier"], tuple(each["aim"]), [tuple(rect) for rect in each["rects"]],
+                      each["exposure"]) for each in query["zones"]]
+    choice = aim.choose(zones, query["spread"])
+    return {"own_chances": choice.own_chances, "expected": choice.expected, "aimed": choice.aimed,
+            "chances": choice.chances, "landed": [aim.land(choice.chances, roll) for roll in query["rolls"]]}
+
+
+def _bounded(value):
+    """JSON's null, for no bound, as infinity; and back."""
+    return math.inf if value is None else value
+
+
+def answer_passage(vector: dict) -> dict:
+    costs, chosen = [], []
+    for each in vector["query"]["facts"]:
+        fields = dict(each, detour_metres=_bounded(each["detour_metres"]), spot_loss=_bounded(each["spot_loss"]))
+        found, way = passage.choose(passage.Facts(**fields))
+        costs.append([None if cost == math.inf else cost for cost in found])
+        chosen.append(way)
+    prices = passage.Prices(**vector["prices"])
+    answers = []
+    for each in vector["query"]["requests"]:
+        cost, granted = passage.answer(passage.Request(**dict(each, saves=_bounded(each["saves"]))), prices)
+        answers.append({"cost": None if cost == math.inf else cost, "granted": granted})
+    return {"costs": costs, "chosen": chosen, "answers": answers}
+
+
+ANSWER = {"passage": answer_passage, "positions": answer_positions, "influence": answer_influence,
+          "commander": answer_commander, "confidence": answer_confidence, "aim": answer_aim}
 
 
 def misses(expected, found, where: str = "") -> list[str]:

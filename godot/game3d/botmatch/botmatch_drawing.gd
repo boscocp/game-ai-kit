@@ -19,13 +19,16 @@ const RED: Color = Color(0.9, 0.25, 0.2)
 const NOBODY: Color = Color(0.75, 0.75, 0.7)
 const LOW_BOX: Color = Color(0.62, 0.6, 0.66)
 const HIGH_BOX: Color = Color(0.45, 0.44, 0.5)
+## Ground to stand on: platforms and the steps of the stairs.
+const RAISED_FLOOR: Color = Color(0.5, 0.52, 0.44)
+## The power weapon, in a colour no team has.
+const POWER: Color = Color(0.95, 0.6, 0.1)
 const KEPT: Color = Color(0.35, 0.85, 0.35)
 const CHOSEN: Color = Color(1, 1, 1)
 const CLAIMED: Color = Color(0.7, 0.35, 0.85)
 const EXPOSED: Color = Color(0.9, 0.3, 0.25)
 const DROPPED: Color = Color(0.5, 0.5, 0.5)
 const SIGHT: Color = Color(1.0, 0.9, 0.2)
-const BOT_HEIGHT: float = 1.8
 const TRACER: Color = Color(1.0, 0.92, 0.55)
 const FLASH: Color = Color(1.0, 0.75, 0.3)
 const BLOOD: Color = Color(0.95, 0.1, 0.1)
@@ -37,33 +40,44 @@ const FLASH_SECONDS: float = 0.05
 const MIN_TRACER: float = 0.05
 
 var shelf: AssetShelf = AssetShelf.new()
-var _bots: Array[Node3D] = []
+var _bots: Array[BotBody] = []
+## The match's time at the last refresh, so a body knows how fast it moved.
+var _drawn_at: float = 0.0
 var _points: Array[MeshInstance3D] = []
 var _lines := ImmediateMesh.new()
 var _markers: Node3D
+## The power weapon where it lies, and the time to its return above it.
+var _power: Node3D
+var _power_label: Label3D
 # Tracers, flashes and sparks, reused frame to frame: a shooter fires too
 # often to make and free a node for each shot.
 var _effects: Array[MeshInstance3D] = []
 
 
-## Build the arena and the bots once, for `world`.
+## Build the arena and the bots once, for `world`. Called again for a new
+## match, after the caller freed the children: what pointed at them goes too,
+## or every refresh after N wrote to freed bodies.
 func build(world: BotMatch) -> void:
+	_bots.clear()
+	_points.clear()
+	_effects.clear()
 	var floor_look: Node3D = AssetShelf.primitive("box", 1.0, Color(0.55, 0.58, 0.5))
 	floor_look.scale = Vector3(world.arena.width, 0.1, world.arena.depth)
 	floor_look.position = Vector3(world.arena.width / 2.0, -0.1, world.arena.depth / 2.0)
 	add_child(floor_look)
 	for box: AABB in world.arena.boxes:
-		var look: Node3D = AssetShelf.primitive("box", 1.0, LOW_BOX if box.size.y < BotArena.HIGH else HIGH_BOX)
+		var look: Node3D = AssetShelf.primitive("box", 1.0, _box_colour(world.arena, box))
 		look.scale = box.size
 		look.position = Vector3(box.get_center().x, 0.0, box.get_center().z)
 		add_child(look)
 	for place: Vector2 in world.arena.point_places:
-		_points.append(_point_disc(place, world.rules.capture_radius))
+		_points.append(_point_disc(world.arena.above(place, 0.02), world.rules.capture_radius))
+	_build_supply(world)
 	for bot: MatchBot in world.bots:
 		var blue: bool = bot.team == BotMatch.BLUE
-		var model: Node3D = shelf.model("bot_blue" if blue else "bot_red", BOT_HEIGHT, BLUE if blue else RED)
-		add_child(model)
-		_bots.append(model)
+		var body := BotBody.new(shelf, BLUE if blue else RED)
+		add_child(body)
+		_bots.append(body)
 	var drawn := MeshInstance3D.new()
 	drawn.mesh = _lines
 	add_child(drawn)
@@ -77,21 +91,45 @@ func build(world: BotMatch) -> void:
 ## shots -- and none of the AI's reasoning.
 func refresh(world: BotMatch, watched: int, hidden: int = -1, thinking: bool = true) -> void:
 	for bot: MatchBot in world.bots:
-		var model: Node3D = _bots[bot.id]
-		model.visible = bot.alive() and bot.id != hidden
-		model.position = Vector3(bot.position.x, 0.0, bot.position.y)
-		model.rotation = Vector3(0, -bot.facing + PI / 2.0, 0)
-		model.scale = Vector3(1, 0.6 if bot.crouched else 1.0, 1)
+		var body: BotBody = _bots[bot.id]
+		body.visible = bot.alive() and bot.id != hidden
+		body.stand(world.arena.above(bot.position, 0.0), bot.facing, bot.crouched, world.time - _drawn_at)
+	_power.visible = world.supply.power_there(world.time)
+	var back_in: float = world.supply.power_back_at - world.time
+	_power_label.text = "POWER" if back_in <= 0.0 else "power back in %.0f s" % back_in
 	for index: int in range(_points.size()):
 		var owner: int = world.point_owner[index]
 		var colour: Color = NOBODY if owner == -1 else (BLUE if owner == BotMatch.BLUE else RED)
 		(_points[index].material_override as StandardMaterial3D).albedo_color = colour
+	_drawn_at = world.time
 	_draw_lines(world, watched if thinking else -1, thinking)
 	_draw_candidates(world, watched if thinking else -1)
+	_draw_aim(world, watched if thinking else -1)
 	_draw_shots(world)
 
 
-func _point_disc(place: Vector2, radius: float) -> MeshInstance3D:
+# Each team's resupply as a disc of its colour, and the power weapon as a
+# long box on a stand where it lies, with a label above it.
+func _build_supply(world: BotMatch) -> void:
+	for side: int in [BotMatch.BLUE, BotMatch.RED]:
+		var base: Vector2 = world.arena.resupply.get(BotMatch.TEAM_NAMES[side], Vector2.INF)
+		if base == Vector2.INF:
+			continue
+		var disc: MeshInstance3D = _point_disc(world.arena.above(base, 0.03), world.rules.resupply_radius)
+		(disc.material_override as StandardMaterial3D).albedo_color = Color(BLUE if side == BotMatch.BLUE else RED, 0.8)
+	_power = AssetShelf.primitive("box", 1.0, POWER)
+	_power.scale = Vector3(0.9, 0.15, 0.2)
+	_power.position = world.arena.above(world.arena.power_place, 0.8)
+	add_child(_power)
+	_power_label = Label3D.new()
+	_power_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_power_label.modulate = POWER
+	_power_label.font_size = 64
+	_power_label.position = world.arena.above(world.arena.power_place, 1.6)
+	add_child(_power_label)
+
+
+func _point_disc(place: Vector3, radius: float) -> MeshInstance3D:
 	var disc := MeshInstance3D.new()
 	var mesh := CylinderMesh.new()
 	mesh.top_radius = radius
@@ -101,7 +139,7 @@ func _point_disc(place: Vector2, radius: float) -> MeshInstance3D:
 	var material := StandardMaterial3D.new()
 	material.albedo_color = NOBODY
 	disc.material_override = material
-	disc.position = Vector3(place.x, 0.02, place.y)
+	disc.position = place
 	add_child(disc)
 	return disc
 
@@ -114,21 +152,23 @@ func _draw_lines(world: BotMatch, watched: int, claims: bool) -> void:
 	material.vertex_color_use_as_albedo = true
 	_lines.surface_begin(Mesh.PRIMITIVE_LINES, material)
 	# Two points that are always there, so a surface is never empty.
-	_line(Vector2.ZERO, Vector2.ZERO, 0.0, NOBODY)
+	_line(Vector3.ZERO, Vector3.ZERO, NOBODY)
 	for bot: MatchBot in world.bots:
 		if claims and bot.alive() and bot.spot != -1:
-			_line(bot.position, world.place_position(bot.spot), 0.1, BLUE if bot.team == BotMatch.BLUE else RED)
+			var team_colour: Color = BLUE if bot.team == BotMatch.BLUE else RED
+			_line(world.arena.above(bot.position, 0.1), world.arena.above(world.place_position(bot.spot), 0.1), team_colour)
 	if watched >= 0:
+		var eyes: Vector3 = MatchActions.eyes_of(world, world.bots[watched])
 		for enemy: int in world.sight.get(watched, []):
-			_line(world.bots[watched].position, world.bots[enemy].position, world.rules.eye_height, SIGHT)
+			_line(eyes, world.arena.above(world.bots[enemy].position, world.rules.chest_height), SIGHT)
 	_lines.surface_end()
 
 
-func _line(from: Vector2, to: Vector2, height: float, colour: Color) -> void:
+func _line(from: Vector3, to: Vector3, colour: Color) -> void:
 	_lines.surface_set_color(colour)
-	_lines.surface_add_vertex(Vector3(from.x, height, from.y))
+	_lines.surface_add_vertex(from)
 	_lines.surface_set_color(colour)
-	_lines.surface_add_vertex(Vector3(to.x, height, to.y))
+	_lines.surface_add_vertex(to)
 
 
 # The watched bot's last position query, one disc and one number a candidate.
@@ -144,12 +184,34 @@ func _draw_candidates(world: BotMatch, watched: int) -> void:
 	var places: Array = team.last_choice[watched][1]
 	for index: int in range(places.size()):
 		var at: Vector2 = world.place_position(places[index])
-		_markers.add_child(_marker(at, choice.statuses[index], choice.scores[index], index == choice.chosen))
+		_markers.add_child(_marker(world.arena.above(at, 0.0), choice.statuses[index], choice.scores[index], index == choice.chosen))
 
 
-func _marker(place: Vector2, status: String, score: float, chosen: bool) -> Node3D:
+# Over the watched bot's last target, the aim it weighed: each zone's chance
+# and damage a shot, the zone it took marked.
+func _draw_aim(world: BotMatch, watched: int) -> void:
+	if watched < 0 or world.bots[watched].last_aim.is_empty():
+		return
+	var aim: Array = world.bots[watched].last_aim
+	var target: MatchBot = world.bots[int(aim[0])]
+	if not target.alive():
+		return
+	var lines: Array[String] = []
+	for index: int in range((aim[1] as Array).size()):
+		var mark: String = "> " if index == int(aim[4]) else "  "
+		lines.append("%s%s %.0f%%  %.2f" % [mark, aim[1][index], float(aim[2][index]) * 100.0, aim[3][index]])
+	var label := Label3D.new()
+	label.text = "\n".join(lines)
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.modulate = SIGHT
+	label.font_size = 24
+	label.position = world.arena.above(target.position, 2.6)
+	_markers.add_child(label)
+
+
+func _marker(place: Vector3, status: String, score: float, chosen: bool) -> Node3D:
 	var holder := Node3D.new()
-	holder.position = Vector3(place.x, 0.0, place.y)
+	holder.position = place
 	var height: float = 0.05 + (score / 100.0 if status == TacticalPositions.KEPT else 0.0)
 	var disc: Node3D = AssetShelf.primitive("box", 1.0, CHOSEN if chosen else _status_colour(status))
 	disc.scale = Vector3(0.4, height, 0.4)
@@ -210,6 +272,13 @@ static func _tracer_transform(from: Vector3, to: Vector3) -> Transform3D:
 	var up: Vector3 = Vector3.UP if absf(direction.normalized().y) < 0.99 else Vector3.RIGHT
 	var turned: Basis = Basis.looking_at(direction, up) * Basis.from_scale(Vector3(0.03, 0.03, length))
 	return Transform3D(turned, (from + to) / 2.0)
+
+
+# Ground to stand on in its own colour; cover lighter when it is low.
+static func _box_colour(arena: BotArena, box: AABB) -> Color:
+	if arena.floors.has(box):
+		return RAISED_FLOOR
+	return LOW_BOX if box.size.y < BotArena.HIGH else HIGH_BOX
 
 
 static func _status_colour(status: String) -> Color:

@@ -6,20 +6,22 @@
 ## Keys: 1, 2, 3 switch blue's claims, commander and retreat; with Shift,
 ## red's. Tab watches the next bot, M shows the other team's map, C follows
 ## the watched bot or frees the camera (arrows turn and zoom it), F runs at
-## four times speed, P pauses, Space one decision while paused, N a new match.
+## four times speed, P pauses, Space one decision while paused, N a new match,
+## L the next arena -- the same agents on another map.
 ##
 ## T takes the watched bot over, either team, and T again gives it back to
 ## its priority list (the owner's choice, 2026-10-21): the same body by the
 ## same rules, in first person as in Counter-Strike or Unreal (the owner,
 ## after playing it in third) -- WASD walks, the mouse aims up, down and
-## round, a click fires, R reloads, Ctrl crouches. Every shot leaves a
-## tracer; a hit on someone shows a marker, and being hit reddens the edge. Its teammates leave the spot it stands on to it,
+## round, a click fires, R reloads, Ctrl crouches, Shift sprints (and
+## while it does, the rifle does not fire). Every shot leaves a
+## tracer; a hit on someone shows a marker, and being hit reddens the edge.
+## A reload is heard from wherever it happens, and a person's own lowers the
+## rifle and shows its progress. Its teammates leave the spot it stands on to it,
 ## and its squad's commander counts it like any other bot.
 extends Node3D
 
 const SEEDS_FROM: int = 1
-## Where the free camera turns about: the arena's middle.
-const CENTRE: Vector3 = Vector3(24, 0, 16)
 ## Radians the view turns per pixel of mouse movement.
 const MOUSE_TURN: float = 0.0025
 ## How far up or down a person can look.
@@ -29,6 +31,8 @@ const SPEAKERS: int = 8
 
 var world: BotMatch
 var _seed: int = SEEDS_FROM
+## Which of `BotArena.ARENAS` the match is played on (L cycles them).
+var _arena_index: int = 0
 var _watched: int = 0
 var _paused: bool = false
 var _fast: bool = false
@@ -44,6 +48,9 @@ var _thinking_shown: bool = false
 var _speakers: Array[AudioStreamPlayer3D] = []
 var _next_speaker: int = 0
 var _heard: int = 0
+## Who was reloading at the last frame, by bot id, to hear each reload start.
+var _was_reloading: Dictionary = {}
+var _reload_speakers: Array[AudioStreamPlayer3D] = []
 ## The rifle in the person's hands, on the camera while they play.
 var _viewmodel := Viewmodel.new()
 
@@ -75,6 +82,13 @@ func _ready() -> void:
 		speaker.unit_size = 6.0
 		add_child(speaker)
 		_speakers.append(speaker)
+	var reload: AudioStreamWAV = ReloadSound.make(MatchRules.new().reload_time)
+	for index: int in range(BotMatch.BOTS_A_SIDE * 2):
+		var speaker := AudioStreamPlayer3D.new()
+		speaker.stream = reload
+		speaker.unit_size = 4.0
+		add_child(speaker)
+		_reload_speakers.append(speaker)
 	_new_match()
 
 
@@ -98,8 +112,8 @@ func step_decision() -> void:
 
 
 ## What the AI is reasoning with now: the watched bot's choice of spot, with
-## every candidate's status and score, and every squad's confidence, state
-## and order.
+## every candidate's status and score, where its last shot was aimed and
+## what each zone was worth, and every squad's confidence, state and order.
 func decision_overlay() -> Dictionary:
 	var bot: MatchBot = world.bots[_watched]
 	var team: MatchTeam = world.teams[bot.team]
@@ -112,7 +126,14 @@ func decision_overlay() -> Dictionary:
 			var spot: String = world.place_id(places[index])
 			candidates.append({"spot": spot, "status": choice.statuses[index], "score": choice.scores[index]})
 		chosen = world.place_id(places[choice.chosen]) if choice.chosen != -1 else "none"
-	var watched: Dictionary = {"bot": bot.id, "action": bot.action, "chosen": chosen, "candidates": candidates}
+	if candidates.is_empty():
+		# On an errand, or not yet asked: say which, rather than show nothing.
+		var why: String = "on an errand: %s" % bot.errand if bot.errand != "" else "not chosen yet"
+		candidates.append({"spot": "none", "status": why, "score": 0.0})
+	var watched: Dictionary = {"bot": bot.id, "action": bot.action, "chosen": chosen, "candidates": candidates,
+			"aim": BotMatchLines.aim_overlay(bot), "errand": bot.errand if bot.errand != "" else "none",
+			"errands": bot.errand_weighing if not bot.errand_weighing.is_empty() else {"weighed": "not yet"},
+			"passage": BotMatchLines.passage_overlay(bot)}
 	return {"time": world.time, "watched": watched, "squads": _squads_overlay()}
 
 
@@ -167,6 +188,9 @@ func _view_key(keycode: Key) -> void:
 			_paused = not _paused
 		KEY_SPACE:
 			step_decision()
+		KEY_L:
+			_arena_index = (_arena_index + 1) % BotArena.ARENAS.size()
+			_new_match()
 		KEY_N:
 			_seed += 1
 			_new_match()
@@ -214,7 +238,7 @@ func _reload_by_hand() -> void:
 	if _played == -1:
 		return
 	var bot: MatchBot = world.bots[_played]
-	if bot.alive() and bot.ammo < world.rules.magazine and bot.reload_left <= 0.0:
+	if bot.alive() and bot.ammo < world.rules.magazine and bot.reserve > 0 and bot.reload_left <= 0.0:
 		bot.reload_left = world.rules.reload_time
 
 
@@ -232,6 +256,7 @@ func _read_the_person() -> void:
 	bot.wants_to_walk = (forward * push.y + right * push.x).limit_length(1.0)
 	bot.wants_to_fire = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 	bot.wants_to_crouch = Input.is_key_pressed(KEY_CTRL)
+	bot.wants_to_sprint = Input.is_key_pressed(KEY_SHIFT)
 
 
 # A match from the current seed, keeping each team's switches.
@@ -245,7 +270,7 @@ func _new_match() -> void:
 			fresh.use_claims = world.teams[side].use_claims
 			fresh.use_commander = world.teams[side].use_commander
 			fresh.may_retreat = world.teams[side].may_retreat
-	world = BotMatch.new(_seed, blue, red, rules)
+	world = BotMatch.new(_seed, blue, red, rules, BotArena.new(rules.body_radius, BotArena.ARENAS[_arena_index]))
 	_heard = 0
 	_played = -1
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -275,8 +300,25 @@ func _hear_new_shots() -> void:
 			_viewmodel.fire()
 
 
+# Each reload that began since the last frame, heard from where the bot is:
+# one speaker a bot, so a reload is never cut off by another's.
+func _hear_reloads() -> void:
+	for bot: MatchBot in world.bots:
+		var reloading: bool = bot.alive() and bot.reload_left > 0.0
+		if reloading and not _was_reloading.get(bot.id, false):
+			var speaker: AudioStreamPlayer3D = _reload_speakers[bot.id]
+			speaker.position = MatchActions.eyes_of(world, bot)
+			speaker.volume_db = 0.0 if bot.id == _played else -4.0
+			speaker.play()
+		_was_reloading[bot.id] = reloading
+	if _played != -1:
+		var mine: MatchBot = world.bots[_played]
+		_viewmodel.lowered = mine.reload_left > 0.0 or mine.sprinting
+
+
 func _show() -> void:
 	_hear_new_shots()
+	_hear_reloads()
 	_drawing.refresh(world, _watched, _played, _played == -1 or _thinking_shown)
 	_map.queue_redraw()
 	_hud.queue_redraw()
@@ -294,12 +336,14 @@ func _place_camera() -> void:
 		return
 	if _follow and bot.alive():
 		var behind := Vector2.RIGHT.rotated(bot.facing) * -5.0
-		_camera.position = Vector3(bot.position.x + behind.x, 3.5, bot.position.y + behind.y)
-		_camera.look_at(Vector3(bot.position.x, 1.2, bot.position.y))
+		_camera.position = world.arena.above(bot.position, 3.5) + Vector3(behind.x, 0.0, behind.y)
+		_camera.look_at(world.arena.above(bot.position, 1.2))
 		return
 	var offset := Vector3(sin(_orbit_angle), 0.0, cos(_orbit_angle)) * _orbit_distance * 0.6
-	_camera.position = CENTRE + offset + Vector3(0, _orbit_distance * 0.8, 0)
-	_camera.look_at(CENTRE)
+	# The free camera turns about the arena's middle, whichever arena it is.
+	var centre := Vector3(world.arena.width / 2.0, 0.0, world.arena.depth / 2.0)
+	_camera.position = centre + offset + Vector3(0, _orbit_distance * 0.8, 0)
+	_camera.look_at(centre)
 
 
 func _panel_text() -> String:
@@ -315,9 +359,12 @@ func _panel_text() -> String:
 	var target: String = " at bot %d" % bot.target if bot.target != -1 else ""
 	var you: String = "  -- YOU: %d/%d ammo, %d health" % [bot.ammo, world.rules.magazine, bot.health] if _played == bot.id else ""
 	lines.append("watching bot %d (%s): %s%s%s" % [bot.id, world.teams[bot.team].name, bot.action, target, you])
-	lines.append("1/2/3 blue's switches, Shift red's; Tab bot, T take it over, M map, C camera, F fast, P pause, N new")
+	lines.append(BotMatchLines.aim_line(bot))
+	lines.append(BotMatchLines.errand_line(bot))
+	lines.append(BotMatchLines.passage_line(bot))
+	lines.append("1/2/3 blue's switches, Shift red's; Tab bot, T take it over, M map, C camera, F fast, P pause, N new, L arena")
 	if _played != -1:
-		lines.append("playing: WASD walk, mouse turns, click fires, R reloads, Ctrl crouches, T gives it back")
+		lines.append("playing: WASD walk, Shift sprint, mouse turns, click fires, R reloads, Ctrl crouches, T gives it back")
 	return "\n".join(lines)
 
 
