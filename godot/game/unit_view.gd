@@ -4,6 +4,11 @@
 ## terrain is repainted when the map changes, units every time anybody moves.
 ## Keeping them apart also keeps each `_draw` short enough to read in one go.
 ##
+## It sits beside the shared views but draws the board's units, so it belongs
+## to the `tactical` module (`modules/tactical.json` names this file): a
+## change here tests the tactical board and the skirmish, which draw with it,
+## and not every example that shares the folder (T61).
+##
 ## Each unit is its side's picture of its kind, from `Art`: a walking figure
 ## for the kinds on legs, a still silhouette for the machines, and a building
 ## for the three that stand. Its id sits in the cell's corner, because every

@@ -4,7 +4,7 @@
 # The models here are hand-made and mostly absurd -- a model that always
 # answers 0.9, a model that cannot read the row it is given -- because every
 # claim below is about the decision rule and not about the fit. The published
-# weights get their own say in test/ai_learning/decision_scenarios.gd, where the question
+# weights get their own say in test/tactical/decision_scenarios.gd, where the question
 # is whether a trained model plays sensibly.
 extends GdUnitTestSuite
 

@@ -17,7 +17,8 @@
 ##   * fog: `visible_to()` is what a side can see, and snapshots obey it.
 ##
 ## When not to use it: anything turn-based, or anything that searches over
-## moves. Use `ai_core`, which is built for exactly that (ADR 0019).
+## moves. Use a board that hands back a new state per move, as the examples'
+## board in `godot/game/board/` does (ADR 0019, ADR 0021).
 class_name RtsWorld
 extends RefCounted
 

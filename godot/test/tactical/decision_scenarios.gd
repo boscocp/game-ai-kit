@@ -18,7 +18,7 @@
 # decision survives a mangled row. That coverage is the conformance vectors'
 # job, and the two should not be read as one.
 #
-#     ./scripts/godot --headless --path godot -s res://test/ai_learning/decision_scenarios.gd
+#     ./scripts/godot --headless --path godot -s res://test/tactical/decision_scenarios.gd
 #
 # Exit codes: 0 every scenario went the way it had to, 1 one did not, 2 the
 # published weights could not be read -- which is a different failure and must

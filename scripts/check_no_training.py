@@ -40,7 +40,8 @@ stops. This gate is four claims about that split:
     rows themselves are cut by Godot from the recordings, and
     `make test-clone-rows` holds them to the recordings;
   * N11 no GDScript writes a file where the cloned player lives -- by its
-    file name or by `ClonedPlayer.DEFAULT_PATH`;
+    file name or by `FightCloneOpponent.PUBLISHED_PATH`, the constant the
+    fighting game names it by;
   * N12 no GDScript outside `ai_learning` writes into a ghost's `cases`.
     A ghost that counted what it saw during the fight would be a Shadow
     trained at game time, and since the game loads the player once, it
@@ -105,6 +106,15 @@ WEIGHTS = TACTICAL_GAME / "weights.json"
 READABLE = TACTICAL_GAME / "weights.txt"
 TRAINER = "gameaikit.tactical.report"
 
+# Where inference runs, held to the addon's strict rules (N2's "writes no
+# file", N3's "reads an indexed value back into itself"): the addon, and the
+# tactical board's adapter that runs its model every decision. T60 moved the
+# adapter out of the addon, and the rules would have stopped at the folder.
+# Named file by file, because the rest of `game/tactical/` keeps running
+# totals and records games, which the strict rules would call training.
+INFERENCE_FILES = [TACTICAL_GAME / name for name in
+                   ("learned_policy.gd", "learned_decision.gd", "board_features.gd")]
+
 # MENACE's published beads, and the pipeline that must reproduce them.
 BEADS = GODOT / "game" / "tictactoe" / "menace_beads.json"
 BEAD_TRAINER = "gameaikit.menace.report"
@@ -116,7 +126,7 @@ CHECKERS_WEIGHTS = CHECKERS_GAME / "checkers_weights.json"
 CHECKERS_TRAINER = "gameaikit.checkers.report"
 CLONE_WEIGHTS = GODOT / "game" / "fighting" / "clone_weights.json"
 CLONE_TRAINER = "gameaikit.cloning.publish"
-CLONE_NAMES_RE = re.compile(r"clone_weights|ClonedPlayer\.DEFAULT_PATH")
+CLONE_NAMES_RE = re.compile(r"clone_weights|FightCloneOpponent\.PUBLISHED_PATH")
 # Writing into a ghost's table: an assignment through `cases`, or a call that
 # changes a dictionary in place. A net for the common spellings, like N5's.
 # Through a member, `.cases`: a local list called `cases` -- every vector
@@ -324,6 +334,11 @@ def check_vocabulary(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
     return findings
 
 
+def runs_inference(path: pathlib.Path, root: pathlib.Path) -> bool:
+    """True for the inference addon and the adapter files that run its model."""
+    return any(is_under(path, root, place) for place in [LEARNING_ADDON, *INFERENCE_FILES])
+
+
 def is_under(path: pathlib.Path, root: pathlib.Path, folder: pathlib.Path) -> bool:
     """True when `path` lies in `folder`, a repository path under godot/.
 
@@ -346,7 +361,7 @@ def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
     for path in gdscript_files(root):
         raw = path.read_text(encoding="utf-8").splitlines()
         code = code_only("\n".join(raw)).splitlines()
-        inside_addon = is_under(path, root, LEARNING_ADDON)
+        inside_addon = runs_inference(path, root)
         holds_a_table = is_under(path, root, OPPONENT_ADDON) or bool(TABLE_HOLDERS_RE.search("\n".join(code)))
         # Both spellings of the line. The write is read off the stripped one,
         # because `# we never FileAccess.WRITE here` is a sentence; the path
@@ -938,6 +953,17 @@ def self_test() -> int:
                 root, "evasion" + str(abs(hash(spelling))), dict(
                     sound, **{str(LEARNING_ADDON / "fitter.gd"): spelling}))), 1, "N3")
 
+        # ...and in the tactical adapter, which runs the model every decision
+        # and left the addon in T60: the rules follow the inference, not the
+        # folder. Planted after a review moved both lines into
+        # `learned_policy.gd` and the gate said nothing.
+        expect("an update in the tactical adapter", quiet(build(root, "adapterupdate", dict(
+            sound, **{str(TACTICAL_GAME / "learned_policy.gd"):
+                      "\t_numbers[index] = _numbers[index] - step\n"}))), 1, "N3")
+        expect("the tactical adapter writing a file", quiet(build(root, "adapterwrite", dict(
+            sound, **{str(TACTICAL_GAME / "learned_policy.gd"):
+                      'var out: FileAccess = FileAccess.open("user://policy.json", FileAccess.WRITE)\n'}))), 1, "N2")
+
         # ...and the same lines outside the addon, which are ordinary code: a
         # running total, a score, a cost table in a search.
         for ordinary in ["\t_points[index] -= cost\n",
@@ -1077,7 +1103,7 @@ def self_test() -> int:
             1, "N9")
         expect("the game writing over the cloned player", quiet(build(root, "clonewrite", dict(
             sound, **{str(GODOT / "game" / "fighting" / "keep.gd"):
-                      'var out: FileAccess = FileAccess.open(ClonedPlayer.DEFAULT_PATH, FileAccess.WRITE)\n'}))),
+                      'var out: FileAccess = FileAccess.open(FightCloneOpponent.PUBLISHED_PATH, FileAccess.WRITE)\n'}))),
             1, "N11")
         expect("a ghost counting during the fight", quiet(build(root, "ghostcounts", dict(
             sound, **{str(GODOT / "game" / "fighting" / "ghost.gd"):
