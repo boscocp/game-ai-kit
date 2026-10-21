@@ -65,6 +65,8 @@ var _place_ids: Array[String] = []
 var _cover_count: int = 0
 var _next_decision: float = 0.0
 var _search := AStarSearch.new()
+## The ammunition, the weapons and the errands they make.
+var supply: MatchSupply
 
 
 ## A new match. `blue` and `red` are the two teams, made by the caller with
@@ -75,6 +77,7 @@ func _init(seed_value: int, blue: MatchTeam, red: MatchTeam, match_rules: MatchR
 	rules = match_rules if match_rules != null else MatchRules.new()
 	arena = match_arena if match_arena != null else BotArena.new(rules.body_radius)
 	teams = [blue, red]
+	supply = MatchSupply.new(arena)
 	_build_places()
 	for point: Vector2 in arena.point_places:
 		point_owner.append(-1)
@@ -99,6 +102,9 @@ func step() -> void:
 	for bot: MatchBot in bots:
 		MatchActions.act(self, bot, rules.step)
 	_keep_bodies_apart()
+	for bot: MatchBot in bots:
+		if bot.alive():
+			supply.touch(self, bot)
 	for bot: MatchBot in bots:
 		if bot.alive() and bot.health <= 0:
 			killed(bot, bot.last_hit_by)
@@ -230,6 +236,7 @@ func killed(victim: MatchBot, killer: int) -> void:
 	stats[victim.team].deaths += 1
 	teams[victim.team].losses[teams[victim.team].squad_of(victim.id)].append(time)
 	if killer != -1:
+		bots[killer].streak += 1
 		var shooter_team: MatchTeam = teams[bots[killer].team]
 		shooter_team.kills[shooter_team.squad_of(killer)].append(time)
 		stats[bots[killer].team].kills += 1
@@ -246,13 +253,15 @@ func replace_bot(bot_id: int, replacement: MatchBot) -> void:
 	respawn(replacement)
 
 
-## Put a bot back at its spawn, whole.
+## Put a bot back at its spawn, whole: a full rifle, its streak gone.
 func respawn(bot: MatchBot) -> void:
 	var spawns: Array = arena.spawns[TEAM_NAMES[bot.team]]
 	bot.position = spawns[bot.place_in_team % spawns.size()]
 	bot.facing = 0.0 if bot.team == BLUE else PI
 	bot.health = rules.health
-	bot.ammo = rules.magazine
+	MatchSupply.arm_rifle(bot, rules)
+	bot.streak = 0
+	bot.errand = MatchSupply.NO_ERRAND
 	bot.reload_below = rules.reload_below
 	bot.reload_left = 0.0
 	bot.respawn_left = 0.0
@@ -408,6 +417,7 @@ func _count(delta: float) -> void:
 		stats[side].order_spread += delta * _points_ordered(side)
 	for bot: MatchBot in bots:
 		stats[bot.team].sprint_seconds += delta if bot.alive() and bot.sprinting else 0.0
+		stats[bot.team].dry_seconds += delta if bot.alive() and bot.ammo + bot.reserve <= 0 else 0.0
 
 
 # Pairs of one team's bots in cover within BUNCHED metres of each other: each

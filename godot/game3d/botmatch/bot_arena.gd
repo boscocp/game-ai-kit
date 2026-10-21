@@ -62,6 +62,10 @@ var point_ids: Array[String] = []
 var point_places: Array[Vector2] = []
 ## Each team's spawn places, by team name.
 var spawns: Dictionary = {}
+## Each team's resupply, in its spawn room, by team name; and where the
+## power weapon lies.
+var resupply: Dictionary = {}
+var power_place: Vector2 = Vector2.INF
 var spots: Array[Spot] = []
 ## Where a bot can walk: one metre cells, those too near a box blocked.
 var walk: GridGraph
@@ -92,6 +96,10 @@ func _init(body_radius: float, path: String = ARENA) -> void:
 		for pair: Array in data["spawns"][team]:
 			places.append(Vector2(float(pair[0]), float(pair[1])))
 		spawns[team] = places
+	for team: String in data.get("resupply", {}):
+		resupply[team] = Vector2(float(data["resupply"][team][0]), float(data["resupply"][team][1]))
+	if data.has("power"):
+		power_place = Vector2(float(data["power"][0]), float(data["power"][1]))
 	heights = _floor_heights()
 	walk = _walk_grid(body_radius)
 	walk_graph = ArenaWalk.new(walk, heights, MAX_RISE)
@@ -197,6 +205,50 @@ func floor_at(place: Vector2) -> float:
 ## or chest are when it stands there.
 func above(place: Vector2, height: float) -> Vector3:
 	return Vector3(place.x, floor_at(place) + height, place.y)
+
+
+## Walk steps from the nearest of `starts` to every walk cell, row-major like
+## the grid, or -1 where none reaches: a breadth-first flood over the walk
+## graph, once, so how far a bot is from its base or the power weapon is a
+## lookup, not a search a decision.
+func steps_from(starts: Array[Vector2i]) -> PackedInt32Array:
+	var steps := PackedInt32Array()
+	steps.resize(int(width) * int(depth))
+	steps.fill(-1)
+	var frontier: Array[Vector2i] = []
+	for start: Vector2i in starts:
+		if walk.contains(start) and not walk.is_blocked(start):
+			steps[start.y * int(width) + start.x] = 0
+			frontier.append(start)
+	var next: int = 0
+	while next < frontier.size():
+		var cell: Vector2i = frontier[next]
+		next += 1
+		for neighbour: Vector2i in _unreached(cell, steps):
+			steps[neighbour.y * int(width) + neighbour.x] = steps[cell.y * int(width) + cell.x] + 1
+			frontier.append(neighbour)
+	return steps
+
+
+# The neighbours of `cell` the flood has not reached yet. It only reads
+# `steps`: a packed array is a value, and one written in here would not be
+# the caller's.
+func _unreached(cell: Vector2i, steps: PackedInt32Array) -> Array[Vector2i]:
+	var found: Array[Vector2i] = []
+	for neighbour: Vector2i in walk_graph.neighbours(cell):
+		if steps[neighbour.y * int(width) + neighbour.x] == -1:
+			found.append(neighbour)
+	return found
+
+
+## The cells round `place` it can be reached from: its own, and its
+## neighbour across a cell edge it sits on -- the power weapon, on the
+## mirror line, is as near to either side's cell.
+static func cells_at(place: Vector2) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = [cell_of(place)]
+	if is_equal_approx(place.x, roundf(place.x)):
+		cells.append(cell_of(place - Vector2(0.5, 0.0)))
+	return cells
 
 
 ## Whether a bot can walk straight from `from` to `to`: every walk cell the

@@ -33,6 +33,9 @@ var retreat_in_one_wave: bool = false
 ## off, they always aim at the head -- the planted case the effects test
 ## must tell apart, at range.
 var aims_by_worth: bool = true
+## How its bots decide on going back to the base for rounds: by weighing it
+## (`MatchSupply.WEIGH`), or -- planted -- NEVER, or ALWAYS once one is spent.
+var resupply_rule: String = MatchSupply.WEIGH
 ## The honest knobs, the same body driven faster or better.
 var reaction: float = 0.3
 var turn_rate: float = deg_to_rad(270.0)

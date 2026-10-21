@@ -126,7 +126,7 @@ func decision_overlay() -> Dictionary:
 			candidates.append({"spot": spot, "status": choice.statuses[index], "score": choice.scores[index]})
 		chosen = world.place_id(places[choice.chosen]) if choice.chosen != -1 else "none"
 	var watched: Dictionary = {"bot": bot.id, "action": bot.action, "chosen": chosen, "candidates": candidates,
-			"aim": aim_overlay(bot)}
+			"aim": aim_overlay(bot), "errand": bot.errand, "errands": bot.errand_weighing}
 	return {"time": world.time, "watched": watched, "squads": _squads_overlay()}
 
 
@@ -150,6 +150,18 @@ static func aim_line(bot: MatchBot) -> String:
 	for zone: Dictionary in aim["zones"]:
 		parts.append("%s %.0f%% %.2f" % [zone["zone"], float(zone["chance"]) * 100.0, zone["expected"]])
 	return "aims at %s (chance, damage a shot): %s" % [aim["aimed"], " | ".join(parts)]
+
+
+## One line for the panel: its weapon and rounds, and each errand's score
+## as gain - walk - cost, the one it took marked.
+static func errand_line(bot: MatchBot) -> String:
+	var parts: Array[String] = []
+	for errand: String in bot.errand_weighing:
+		var weighed: Array = bot.errand_weighing[errand]
+		var mark: String = "> " if errand == bot.errand else ""
+		parts.append("%s%s %.2f - %.1f s - %.2f = %.2f" % [mark, errand, weighed[0], weighed[1], weighed[2], weighed[3]])
+	var rounds: String = "%s %d/%d, streak %d" % [bot.weapon, bot.ammo, bot.reserve, bot.streak]
+	return "%s; errands: %s" % [rounds, " | ".join(parts) if not parts.is_empty() else "none weighed yet"]
 
 
 func _squads_overlay() -> Array:
@@ -250,7 +262,7 @@ func _reload_by_hand() -> void:
 	if _played == -1:
 		return
 	var bot: MatchBot = world.bots[_played]
-	if bot.alive() and bot.ammo < world.rules.magazine and bot.reload_left <= 0.0:
+	if bot.alive() and bot.ammo < world.rules.magazine and bot.reserve > 0 and bot.reload_left <= 0.0:
 		bot.reload_left = world.rules.reload_time
 
 
@@ -370,6 +382,7 @@ func _panel_text() -> String:
 	var you: String = "  -- YOU: %d/%d ammo, %d health" % [bot.ammo, world.rules.magazine, bot.health] if _played == bot.id else ""
 	lines.append("watching bot %d (%s): %s%s%s" % [bot.id, world.teams[bot.team].name, bot.action, target, you])
 	lines.append(aim_line(bot))
+	lines.append(errand_line(bot))
 	lines.append("1/2/3 blue's switches, Shift red's; Tab bot, T take it over, M map, C camera, F fast, P pause, N new")
 	if _played != -1:
 		lines.append("playing: WASD walk, Shift sprint, mouse turns, click fires, R reloads, Ctrl crouches, T gives it back")

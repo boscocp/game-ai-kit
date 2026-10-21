@@ -540,6 +540,122 @@ func test_aiming_by_worth_does_more_damage_a_shot_at_range_than_always_the_head(
 	assert_int(damage[0]).override_failure_message("by worth %d, always the head %d" % damage).is_greater(damage[1])
 
 
+func test_a_rifle_has_120_rounds_and_a_reload_takes_only_what_is_left() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var bot: MatchBot = world.bots[0]
+	assert_int(bot.ammo + bot.reserve).is_equal(120)
+	bot.ammo = 5
+	bot.reserve = 10
+	bot.action = MatchBot.RELOAD
+	for _step: int in range(int(rules.reload_time / rules.step) + 2):
+		MatchActions.act(world, bot, rules.step)
+	assert_int(bot.ammo).is_equal(15)
+	assert_int(bot.reserve).is_equal(0)
+	# Nothing left: no reload, and its list does not ask for one.
+	bot.ammo = 0
+	bot.decide(1.0, [] as Array[int], {}, 0.0, false)
+	assert_str(bot.action).is_not_equal(MatchBot.RELOAD)
+
+
+func test_the_base_fills_a_rifle_and_the_power_weapon_comes_back_a_minute_later() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var bot: MatchBot = world.bots[0]
+	bot.ammo = 3
+	bot.reserve = 0
+	bot.position = world.arena.resupply["blue"]
+	world.supply.touch(world, bot)
+	assert_int(bot.ammo + bot.reserve).is_equal(120)
+	bot.position = world.arena.power_place
+	world.supply.touch(world, bot)
+	assert_str(bot.weapon).is_equal(MatchSupply.POWER)
+	assert_int(bot.ammo).is_equal(rules.power_rounds)
+	assert_bool(world.supply.power_there(world.time + rules.power_respawn - 0.1)).is_false()
+	assert_bool(world.supply.power_there(world.time + rules.power_respawn)).is_true()
+	# Three times the rifle's damage, a torso hit.
+	var enemy: MatchBot = world.bots[6]
+	MatchActions.land(world, bot, enemy, MatchRules.TORSO)
+	assert_int(rules.health - enemy.health).is_equal(rules.damage * 3)
+	# At the base with rounds left it keeps it; empty, it takes a rifle back.
+	bot.position = world.arena.resupply["blue"]
+	world.supply.touch(world, bot)
+	assert_str(bot.weapon).is_equal(MatchSupply.POWER)
+	bot.ammo = 0
+	world.supply.touch(world, bot)
+	assert_str(bot.weapon).is_equal(MatchSupply.RIFLE)
+	assert_int(bot.ammo + bot.reserve).is_equal(120)
+
+
+func test_a_death_brings_back_the_rifle_and_a_streak_of_five_earns_the_power_weapon() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var bot: MatchBot = world.bots[0]
+	MatchSupply.arm_power(bot, rules)
+	bot.streak = 4
+	world.killed(bot, 6)
+	world.respawn(bot)
+	assert_str(bot.weapon).is_equal(MatchSupply.RIFLE)
+	assert_int(bot.ammo + bot.reserve).is_equal(120)
+	assert_int(bot.streak).is_equal(0)
+	for victim: int in range(6, 6 + rules.streak_for_power):
+		world.killed(world.bots[victim], bot.id)
+	assert_int(bot.streak).is_equal(rules.streak_for_power)
+	bot.position = world.arena.resupply["blue"]
+	world.supply.touch(world, bot)
+	assert_str(bot.weapon).is_equal(MatchSupply.POWER)
+	assert_int(bot.streak).is_equal(0)
+
+
+func test_going_back_is_weighed_and_the_planted_rules_never_and_always_differ() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var team: MatchTeam = world.teams[0]
+	var bot: MatchBot = world.bots[0]
+	world.supply.power_back_at = INF
+	team.bot_modes[bot.id] = MatchTeam.HOLD
+	bot.position = Vector2(10.5, 16.5)
+	# Full: nothing to go back for.
+	world.supply.think(world, team)
+	assert_str(bot.errand).is_equal(MatchSupply.NO_ERRAND)
+	# Ten rounds left, near the base: worth the walk.
+	bot.ammo = 10
+	bot.reserve = 0
+	world.supply.think(world, team)
+	assert_str(bot.errand).is_equal(MatchSupply.RESUPPLY)
+	assert_float(float(bot.errand_weighing[MatchSupply.RESUPPLY][3])).is_greater(0.0)
+	# Planted: a team that never goes back, and one that always does.
+	team.resupply_rule = MatchSupply.NEVER
+	world.supply.think(world, team)
+	assert_str(bot.errand).is_equal(MatchSupply.NO_ERRAND)
+	team.resupply_rule = MatchSupply.ALWAYS
+	bot.ammo = rules.magazine - 1
+	bot.reserve = rules.reserve
+	world.supply.think(world, team)
+	assert_str(bot.errand).is_equal(MatchSupply.RESUPPLY)
+	team.resupply_rule = MatchSupply.WEIGH
+	world.supply.think(world, team)
+	assert_str(bot.errand).is_equal(MatchSupply.NO_ERRAND)
+
+
+func test_a_team_sends_one_bot_for_the_power_weapon_and_not_into_enemies() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var team: MatchTeam = world.teams[0]
+	for index: int in range(BotMatch.BOTS_A_SIDE):
+		world.bots[index].position = Vector2(17.5, 14.5 + index * 0.5)
+		team.bot_modes[index] = MatchTeam.HOLD
+	world.supply.think(world, team)
+	var sent: Array = team.members.filter(func(bot_id: int) -> bool:
+		return world.bots[bot_id].errand == MatchSupply.FETCH)
+	assert_int(sent.size()).is_equal(1)
+	# Three enemies remembered beside it: not worth the danger.
+	for enemy: int in [6, 7, 8]:
+		team.remember(enemy, world.arena.power_place + Vector2(2.0, 0.0), world.time)
+	world.supply.think(world, team)
+	assert_int(world.supply.fetcher[0]).is_equal(-1)
+
+
 func test_teammates_leave_a_persons_spot_to_them_and_the_list_takes_back_over() -> void:
 	var rules := MatchRules.new()
 	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)

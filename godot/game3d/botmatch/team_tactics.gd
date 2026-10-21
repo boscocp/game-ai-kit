@@ -27,12 +27,23 @@ static func think(world: BotMatch, team: MatchTeam, now: float) -> void:
 	_give_orders(world, team)
 	for index: int in range(team.squads.size()):
 		_update_confidence(world, team, index, now)
+	world.supply.think(world, team)
 	for bot_id: int in team.members:
 		var bot: MatchBot = world.bots[bot_id]
 		if bot.controlled:
 			_claim_where_standing(world, team, bot)
+		elif bot.errand != MatchSupply.NO_ERRAND:
+			_run_errand(world, team, bot)
 		elif _due_a_choice(world, team, bot, now):
 			choose_spot(world, team, bot, now)
+
+
+# A bot on an errand gives up its spot and heads for the errand's place;
+# back from it, it chooses a spot at once.
+static func _run_errand(world: BotMatch, team: MatchTeam, bot: MatchBot) -> void:
+	team.claim(bot.id, -1)
+	bot.chose_at = -INF
+	world.send(bot, MatchSupply.errand_place(world, bot), -1)
 
 
 # A person's bot claims the place it stands on, if it stands on one, so its

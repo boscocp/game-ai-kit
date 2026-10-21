@@ -2,8 +2,8 @@
 ## first-person shooter: a crosshair where the shot goes, a hit marker when
 ## it struck someone -- larger, with HEADSHOT, when it struck a head -- the
 ## screen's edge flashing red when they are hit,
-## their health and ammunition in a corner, and a reload's progress under
-## the crosshair while it lasts.
+## their health, weapon, rounds and kill streak in a corner, and a reload's
+## progress under the crosshair while it lasts.
 ##
 ## Drawn only while a bot is played; watching, the panel and map say more.
 class_name BotMatchHud
@@ -47,7 +47,10 @@ func _draw() -> void:
 	if bot.reload_left > 0.0:
 		_draw_reload(middle, 1.0 - bot.reload_left / world.rules.reload_time)
 	var reloading: String = "  reloading" if bot.reload_left > 0.0 else ("  sprinting" if bot.sprinting else "")
-	var status: String = "%d health    %d / %d%s" % [bot.health, bot.ammo, world.rules.magazine, reloading]
+	var weapon: String = "POWER" if bot.weapon == MatchSupply.POWER else "rifle"
+	var streak: String = "    streak %d/%d" % [bot.streak, world.rules.streak_for_power]
+	var dry: String = "  -- back to your base for rounds" if bot.ammo + bot.reserve <= 0 else ""
+	var status: String = "%d health    %s %d / %d%s%s%s" % [bot.health, weapon, bot.ammo, bot.reserve, reloading, streak, dry]
 	# Bottom left: the bottom right is where the rifle is.
 	var at := Vector2(30.0, size.y - 30.0)
 	draw_string(ThemeDB.fallback_font, at, status, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 26, CROSSHAIR)

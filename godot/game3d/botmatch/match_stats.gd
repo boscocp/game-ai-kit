@@ -37,3 +37,7 @@ var shots_sprinting: int = 0
 ## Seconds its living bots spent sprinting, summed: what makes "no shot
 ## while sprinting" more than a count of nothing.
 var sprint_seconds: float = 0.0
+## Seconds its living bots spent with no round at all, summed; times the
+## power weapon was taken from its place, and won by a streak at the base.
+var dry_seconds: float = 0.0
+var power_taken: int = 0

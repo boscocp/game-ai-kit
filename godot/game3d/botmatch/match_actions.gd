@@ -68,6 +68,8 @@ static func fire(world: BotMatch, shooter: MatchBot, target: MatchBot) -> void:
 static func land(world: BotMatch, shooter: MatchBot, target: MatchBot, zone: String) -> void:
 	var stats: MatchStats = world.stats[shooter.team]
 	var damage: int = world.rules.damage_in(zone)
+	if shooter.weapon == MatchSupply.POWER:
+		damage = roundi(damage * world.rules.power_damage_multiplier)
 	stats.hits += 1
 	stats.damage += damage
 	stats.zone_hits[zone] = int(stats.zone_hits.get(zone, 0)) + 1
@@ -191,19 +193,26 @@ static func _played(world: BotMatch, bot: MatchBot, delta: float) -> void:
 			break
 	if bot.reload_left > 0.0:
 		_reload(world, bot, delta)
-	elif bot.wants_to_fire and bot.ammo <= 0:
+	elif bot.wants_to_fire and bot.ammo <= 0 and bot.reserve > 0:
 		bot.reload_left = world.rules.reload_time
 	elif bot.wants_to_fire and bot.fire_cooldown <= 0.0 and not bot.sprinting:
 		fire_aimed(world, bot)
 
 
+# A reload takes from the reserve what the magazine lacks, and no more than
+# there is; with nothing in reserve there is nothing to reload.
 static func _reload(world: BotMatch, bot: MatchBot, delta: float) -> void:
+	if bot.reserve <= 0:
+		bot.reload_left = 0.0
+		return
 	if bot.reload_left <= 0.0:
 		bot.reload_left = world.rules.reload_time
 	bot.reload_left -= delta
 	if bot.reload_left <= 0.0:
 		bot.reload_left = 0.0
-		bot.ammo = world.rules.magazine
+		var taken: int = mini(world.rules.magazine - bot.ammo, bot.reserve)
+		bot.ammo += taken
+		bot.reserve -= taken
 
 
 # A bot shooting still closes on its goal, at half speed, facing its target:

@@ -30,6 +30,12 @@ func _draw() -> void:
 		var owner: int = world.point_owner[index]
 		var colour: Color = BotMatchDrawing.NOBODY if owner == -1 else _team_colour(owner)
 		draw_arc(world.arena.point_places[index] * SCALE, world.rules.capture_radius * SCALE, 0, TAU, 24, colour, 2.0)
+	for side: int in [BotMatch.BLUE, BotMatch.RED]:
+		var base: Vector2 = world.arena.resupply.get(BotMatch.TEAM_NAMES[side], Vector2.INF)
+		if base != Vector2.INF:
+			draw_arc(base * SCALE, world.rules.resupply_radius * SCALE, 0, TAU, 16, _team_colour(side), 2.0)
+	if world.supply.power_there(world.time):
+		draw_rect(Rect2(world.arena.power_place * SCALE - Vector2(4, 2), Vector2(8, 4)), BotMatchDrawing.POWER)
 	for bot: MatchBot in world.bots:
 		if bot.alive():
 			draw_circle(bot.position * SCALE, 3.5, _team_colour(bot.team))

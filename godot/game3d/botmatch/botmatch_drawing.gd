@@ -21,6 +21,8 @@ const LOW_BOX: Color = Color(0.62, 0.6, 0.66)
 const HIGH_BOX: Color = Color(0.45, 0.44, 0.5)
 ## Ground to stand on: platforms and the steps of the stairs.
 const RAISED_FLOOR: Color = Color(0.5, 0.52, 0.44)
+## The power weapon, in a colour no team has.
+const POWER: Color = Color(0.95, 0.6, 0.1)
 const KEPT: Color = Color(0.35, 0.85, 0.35)
 const CHOSEN: Color = Color(1, 1, 1)
 const CLAIMED: Color = Color(0.7, 0.35, 0.85)
@@ -44,6 +46,9 @@ var _drawn_at: float = 0.0
 var _points: Array[MeshInstance3D] = []
 var _lines := ImmediateMesh.new()
 var _markers: Node3D
+## The power weapon where it lies, and the time to its return above it.
+var _power: Node3D
+var _power_label: Label3D
 # Tracers, flashes and sparks, reused frame to frame: a shooter fires too
 # often to make and free a node for each shot.
 var _effects: Array[MeshInstance3D] = []
@@ -67,6 +72,7 @@ func build(world: BotMatch) -> void:
 		add_child(look)
 	for place: Vector2 in world.arena.point_places:
 		_points.append(_point_disc(world.arena.above(place, 0.02), world.rules.capture_radius))
+	_build_supply(world)
 	for bot: MatchBot in world.bots:
 		var blue: bool = bot.team == BotMatch.BLUE
 		var body := BotBody.new(shelf, BLUE if blue else RED)
@@ -88,6 +94,9 @@ func refresh(world: BotMatch, watched: int, hidden: int = -1, thinking: bool = t
 		var body: BotBody = _bots[bot.id]
 		body.visible = bot.alive() and bot.id != hidden
 		body.stand(world.arena.above(bot.position, 0.0), bot.facing, bot.crouched, world.time - _drawn_at)
+	_power.visible = world.supply.power_there(world.time)
+	var back_in: float = world.supply.power_back_at - world.time
+	_power_label.text = "POWER" if back_in <= 0.0 else "power back in %.0f s" % back_in
 	for index: int in range(_points.size()):
 		var owner: int = world.point_owner[index]
 		var colour: Color = NOBODY if owner == -1 else (BLUE if owner == BotMatch.BLUE else RED)
@@ -97,6 +106,27 @@ func refresh(world: BotMatch, watched: int, hidden: int = -1, thinking: bool = t
 	_draw_candidates(world, watched if thinking else -1)
 	_draw_aim(world, watched if thinking else -1)
 	_draw_shots(world)
+
+
+# Each team's resupply as a disc of its colour, and the power weapon as a
+# long box on a stand where it lies, with a label above it.
+func _build_supply(world: BotMatch) -> void:
+	for side: int in [BotMatch.BLUE, BotMatch.RED]:
+		var base: Vector2 = world.arena.resupply.get(BotMatch.TEAM_NAMES[side], Vector2.INF)
+		if base == Vector2.INF:
+			continue
+		var disc: MeshInstance3D = _point_disc(world.arena.above(base, 0.03), world.rules.resupply_radius)
+		(disc.material_override as StandardMaterial3D).albedo_color = Color(BLUE if side == BotMatch.BLUE else RED, 0.8)
+	_power = AssetShelf.primitive("box", 1.0, POWER)
+	_power.scale = Vector3(0.9, 0.15, 0.2)
+	_power.position = world.arena.above(world.arena.power_place, 0.8)
+	add_child(_power)
+	_power_label = Label3D.new()
+	_power_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_power_label.modulate = POWER
+	_power_label.font_size = 64
+	_power_label.position = world.arena.above(world.arena.power_place, 1.6)
+	add_child(_power_label)
 
 
 func _point_disc(place: Vector3, radius: float) -> MeshInstance3D:

@@ -25,6 +25,31 @@ var reload_time: float = 2.0
 ## A bot reloads early, with rounds still in the magazine, when it has
 ## fewer than this, no enemy in sight, and it stands where it was going.
 var reload_below: int = 10
+## Ammunition (the owner's asks): a rifle starts with a magazine of 30 and
+## three reloads of 30 more, 120 in all, and only the base gives more.
+var reserve: int = 90
+## Standing this near its team's resupply, a bot is filled back up.
+var resupply_radius: float = 1.5
+## What going back is weighed by (`MatchSupply`): the share of its rounds
+## spent, less each second of the walk, less what leaving its post costs --
+## more when it is attacking a point than holding one.
+var resupply_walk_weight: float = 0.05
+var resupply_hold_weight: float = 0.3
+var resupply_attack_weight: float = 0.5
+## The power weapon: three times the rifle's damage, 20 rounds and no
+## more, back 60 s after it is taken, picked up within a metre.
+var power_damage_multiplier: float = 3.0
+var power_rounds: int = 20
+var power_respawn: float = 60.0
+var power_pickup_radius: float = 1.0
+## What fetching it is weighed by: what it is worth, less each second of
+## the walk, less each enemy the team remembers near it.
+var power_worth: float = 1.0
+var power_walk_weight: float = 0.08
+var power_danger_weight: float = 0.3
+var power_danger_radius: float = 12.0
+## Kills since its last death that earn a bot the power weapon at its base.
+var streak_for_power: int = 5
 var respawn_time: float = 4.0
 var speed: float = 4.5
 ## Sprinting (Shift, the owner's ask): faster, and no shot while it lasts.

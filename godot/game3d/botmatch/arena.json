@@ -1,5 +1,5 @@
 {
-  "about": "The bot match's arena, three lanes (T66, the owner's option 1): a 48 by 32 metre floor, x east and z south, its corner at the origin. Each point has its own lane -- A north, B in the middle, C south -- entered by one door from a rotation corridor behind it. Each spawn room opens into that corridor through two doors offset from the lanes, so no lane sees into a spawn. Two bridges, 2.5 m up, run over the walls between the lanes and flank B; a stair climbs onto each from either end, four steps of half a metre. Every box, platform and stair has its mirror across x = 24, so neither side starts with better ground, and the map is its own mirror across z = 16 too, so A and C are alike. Walls are 5 m, low cover 1.1 m (it hides a crouching bot and lets a standing one shoot over), pillars 2.5 m. A spawn sits in the middle of a one-metre cell, never on its edge, so the walk grid is a mirror as well.",
+  "about": "The bot match's arena, three lanes (T66, the owner's option 1): a 48 by 32 metre floor, x east and z south, its corner at the origin. Each point has its own lane -- A north, B in the middle, C south -- entered by one door from a rotation corridor behind it. Each spawn room opens into that corridor through two doors offset from the lanes, so no lane sees into a spawn. Two bridges, 2.5 m up, run over the walls between the lanes and flank B; a stair climbs onto each from either end, four steps of half a metre. Every box, platform and stair has its mirror across x = 24, so neither side starts with better ground, and the map is its own mirror across z = 16 too, so A and C are alike. Walls are 5 m, low cover 1.1 m (it hides a crouching bot and lets a standing one shoot over), pillars 2.5 m. A spawn sits in the middle of a one-metre cell, never on its edge, so the walk grid is a mirror as well. Each spawn room has its resupply in its middle, and the power weapon lies on the north bridge, exactly on the mirror line, x = 24: it is picked up within a radius, so neither side's cell is nearer to it.",
   "width": 48,
   "depth": 32,
   "points": [
@@ -11,6 +11,8 @@
     "blue": [[3.5, 12.5], [3.5, 14.5], [3.5, 17.5], [3.5, 19.5], [4.5, 15.5], [4.5, 16.5]],
     "red": [[44.5, 12.5], [44.5, 14.5], [44.5, 17.5], [44.5, 19.5], [43.5, 15.5], [43.5, 16.5]]
   },
+  "resupply": {"blue": [4.5, 16.5], "red": [43.5, 16.5]},
+  "power": [24.0, 10.5],
   "boxes": [
     {"x": 12.0, "z": 1.0, "width": 24, "depth": 2, "height": 5.0},
     {"x": 36.0, "z": 1.0, "width": 24, "depth": 2, "height": 5.0},
