@@ -43,6 +43,8 @@ var random := RandomNumberGenerator.new()
 ## Each point's owner (-1 nobody), and its progress, -1 red to +1 blue.
 var point_owner: PackedInt32Array = PackedInt32Array()
 var point_progress: PackedFloat64Array = PackedFloat64Array()
+## How many times each point was taken, by either side.
+var times_taken: PackedInt32Array = PackedInt32Array()
 var score: PackedFloat64Array = PackedFloat64Array([0.0, 0.0])
 ## The sight table: bot id -> the enemy ids it sees now.
 var sight: Dictionary = {}
@@ -85,6 +87,7 @@ func _init(seed_value: int, blue: MatchTeam, red: MatchTeam, match_rules: MatchR
 	for point: Vector2 in arena.point_places:
 		point_owner.append(-1)
 		point_progress.append(0.0)
+		times_taken.append(0)
 	for side: int in [BLUE, RED]:
 		var ids: Array[int] = []
 		for place_in_team: int in range(BOTS_A_SIDE):
@@ -386,8 +389,9 @@ func _change_owner(index: int) -> void:
 	if neutralised:
 		stats[owner].points_lost += 1
 		point_owner[index] = -1
-	if absf(now) >= 1.0:
+	if absf(now) >= 1.0 and point_owner[index] == -1:
 		point_owner[index] = BLUE if now > 0.0 else RED
+		times_taken[index] += 1
 
 
 # How many distinct points the living bots of `side` are ordered to.

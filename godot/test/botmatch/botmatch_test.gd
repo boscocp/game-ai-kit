@@ -48,6 +48,26 @@ func _assert_mirrored(arena: BotArena) -> void:
 		assert_int(BotArena.cell_of(red).x).is_equal(int(arena.width) - 1 - BotArena.cell_of(blue).x)
 
 
+func test_an_arena_made_at_random_is_a_mirror_and_playable() -> void:
+	# T67's third arena, which the effects test plays: a few seeds' worth.
+	for seed_value: int in range(1, 6):
+		var data: Dictionary = RandomArena.make(seed_value)
+		assert_bool(data.is_empty()).override_failure_message("seed %d made no arena" % seed_value).is_false()
+		var arena := BotArena.new(0.4, data)
+		_assert_mirrored(arena)
+		_assert_spots_mirrored(arena)
+		assert_bool(RandomArena.playable(arena, 0.4)).is_true()
+		assert_int(arena.spots.size()).is_greater(10)
+
+
+func test_an_arena_with_a_point_walled_in_is_not_playable() -> void:
+	# The generator's own check, shown a point inside a box: it must refuse.
+	var data: Dictionary = RandomArena.make(1)
+	var point: Dictionary = data["points"][2]
+	(data["boxes"] as Array).append({"x": point["x"], "z": point["z"], "width": 7, "depth": 7, "height": 5.0})
+	assert_bool(RandomArena.playable(BotArena.new(0.4, data), 0.4)).is_false()
+
+
 func test_the_cover_spots_are_a_mirror_and_never_crowd_each_other() -> void:
 	for path: String in BotArena.ARENAS:
 		_assert_spots_mirrored(BotArena.new(0.4, path))
