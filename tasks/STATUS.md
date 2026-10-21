@@ -1,7 +1,9 @@
 # Status
 
 The index. One row per task; the task file holds everything needed to do it.
-The topmost `## Resuming after 2026-10-21 (wave 73)
+The topmost `## Resuming after` section is the next session's prompt.
+
+## Resuming after 2026-10-21 (wave 73)
 
 **Where it stopped -- read first.** Wave 73 did T54, the 3D racer, in
 parallel with waves 71 and 72; nothing of the bot match was touched, and
@@ -41,7 +43,6 @@ perception from `ai_perception`, the errands a technique. The owner's rule
 behind it is now standing for every example: autonomy, as few fixed
 if/else in a demo as can be.
 
-## Resuming after` section is the next session's prompt.
 
 ## Milestone 1 — the vertical slice
 
