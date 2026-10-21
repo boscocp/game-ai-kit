@@ -1,0 +1,131 @@
+{
+ "name": "the-best-reason-wins",
+ "why": "Loaded with a shot worth 0.25: shoot, 1. Empty with rounds in reserve: shooting is vetoed and reload is 1. Full, nobody to shoot: only holding is worth anything.",
+ "kind": "action",
+ "query": {
+  "actions": [
+   {
+    "name": "shoot",
+    "weight": 1.0,
+    "considerations": [
+     {
+      "percept": "ready_to_fire",
+      "curve": "step",
+      "at": 0.5,
+      "below": 0.0,
+      "above": 1.0
+     },
+     {
+      "percept": "shot_worth",
+      "curve": "linear",
+      "slope": 8.0,
+      "intercept": 0.0
+     }
+    ]
+   },
+   {
+    "name": "reload",
+    "weight": 1.0,
+    "considerations": [
+     {
+      "percept": "rounds_left",
+      "curve": "linear",
+      "slope": -1.5,
+      "intercept": 1.0
+     },
+     {
+      "percept": "has_reserve",
+      "curve": "step",
+      "at": 0.5,
+      "below": 0.0,
+      "above": 1.0
+     }
+    ]
+   },
+   {
+    "name": "hold",
+    "weight": 0.25,
+    "considerations": []
+   }
+  ],
+  "percepts": [
+   {
+    "ready_to_fire": 1.0,
+    "shot_worth": 0.25,
+    "rounds_left": 0.5,
+    "has_reserve": 1.0
+   },
+   {
+    "ready_to_fire": 0.0,
+    "shot_worth": 0.25,
+    "rounds_left": 0.0,
+    "has_reserve": 1.0
+   },
+   {
+    "ready_to_fire": 1.0,
+    "shot_worth": 0.0,
+    "rounds_left": 1.0,
+    "has_reserve": 1.0
+   }
+  ]
+ },
+ "expect": {
+  "scores": [
+   [
+    1.0,
+    0.25,
+    0.25
+   ],
+   [
+    0.0,
+    1.0,
+    0.25
+   ],
+   [
+    0.0,
+    0.0,
+    0.25
+   ]
+  ],
+  "answers": [
+   [
+    [
+     1.0,
+     1.0
+    ],
+    [
+     0.25,
+     1.0
+    ],
+    []
+   ],
+   [
+    [
+     0.0,
+     1.0
+    ],
+    [
+     1.0,
+     1.0
+    ],
+    []
+   ],
+   [
+    [
+     1.0,
+     0.0
+    ],
+    [
+     0.0,
+     1.0
+    ],
+    []
+   ]
+  ],
+  "chosen": [
+   0,
+   1,
+   2
+  ]
+ }
+}

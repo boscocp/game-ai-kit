@@ -1,29 +1,27 @@
-## One bot of the match: its body, what it knows, and the plainest selector
-## that holds -- a priority list, asked again whenever the world is looked at.
+## One bot of the match: its body, what it knows, and how it decides --
+## AIMA's agent, percepts in and an action out [Russell and Norvig, ch. 2].
 ##
-## The list, highest first [Jakatdar 2017; T49]:
+## Each decision it reads one record, `MatchPercepts` -- what its cone and
+## its ears gave it, its body and its orders -- turns it into a handful of
+## numbers (`numbers_of`), and weighs every action it has at once by
+## `ActionChoice`: reload, fall back, shoot, move, look towards a shot it
+## heard, hold. Each action's weight and considerations are data
+## (`actions.json`), not an order of `if`s: a nearer enemy, an emptier
+## magazine, a louder shot each move the choice by degrees, and the view
+## shows every score. Whom it would shoot is the enemy in sight, reacted to,
+## that a shot is worth the most damage at (`AimChoice`, through the
+## percepts).
 ##
-##   1. dead: wait to respawn;
-##   2. its magazine empty with rounds in reserve, or reloading: reload,
-##      crouched;
-##   3. in the moving wave of a retreat: fall back to its spot;
-##   4. fewer than `reload_below` rounds, no enemy in sight, and standing
-##      where it was going -- its cover spot, usually: reload early, so the
-##      magazine is not empty in the next fight;
-##   5. an enemy in its own sight row, seen for at least its reaction time,
-##      and a round to fire:
-##      turn to it, and shoot once facing it;
-##   6. otherwise go where its team's tactics sent it -- the spot chosen,
-##      or an errand to its base or to the power weapon -- and hold it.
-##
-## Then, apart from the list, its pace: it sprints while it moves with no
-## enemy in sight and far to go, and never while it shoots (`choose_pace`).
+## What is not weighed is what is not a choice: a dead bot waits, a person
+## drives the one they took over, and its posture and pace follow from what
+## it chose -- crouched to reload or to hold a spot; sprinting while it
+## moves with no enemy in sight and far to go, never while it shoots
+## (`choose_pace`).
 ##
 ## A bot has no sense the player would not have: it shoots only at what its
 ## own eyes say it sees, after a reaction, and it turns at a limited rate
-## (the honest knobs). Its decision reads one record, `MatchPercepts` --
-## what its cone and its ears gave it, its body and its orders -- and
-## nothing else: never another bot's mind, never the match.
+## (the honest knobs). Its decision reads the record and nothing else:
+## never another bot's mind, never the match.
 class_name MatchBot
 extends RefCounted
 
@@ -33,12 +31,19 @@ const FALL_BACK: String = "fall back"
 const SHOOT: String = "shoot"
 const MOVE: String = "move"
 const HOLD: String = "hold"
+## Turn towards a shot it heard.
+const LOOK: String = "look"
 ## A person is driving it.
 const PLAYED: String = "played"
 ## Facing within this of the target, a shot may be taken.
 const AIM_CONE: float = deg_to_rad(5.0)
 ## Within this of its goal, a bot has arrived.
 const ARRIVED: float = 0.3
+## What a bot can do and why it would, as `ActionChoice` reads it.
+const ACTIONS: String = "res://game3d/botmatch/actions.json"
+
+## The actions every bot has unless a test gives it others, read once.
+static var _default_actions: Array[ActionChoice.Action] = []
 
 var id: int = 0
 var team: int = 0
@@ -62,8 +67,11 @@ var streak: int = 0
 ## or "": none), and what it weighed: name -> [gain, walk, cost, score].
 var errand: String = ""
 var errand_weighing: Dictionary = {}
-## The rules' early reload threshold, given it by the match.
-var reload_below: int = 0
+## The actions it weighs, and its last weighing of them, for the view.
+var actions: Array[ActionChoice.Action] = MatchBot.default_actions()
+var last_choice: ActionChoice.Choice = null
+## Where the shot it last heard came from, which LOOK turns it to.
+var look_at: Vector2 = Vector2.INF
 var fire_cooldown: float = 0.0
 var reload_left: float = 0.0
 var respawn_left: float = 0.0
@@ -124,32 +132,57 @@ func arrived() -> bool:
 	return position.distance_to(goal) <= ARRIVED
 
 
-## The priority list, over what it perceives (`percepts`, the one record it
-## reads) and its team's `reaction`. Sets `action` and `target`; moving and
-## shooting are `BotMatch`'s, by the rules.
+## The actions every bot has, from `actions.json`.
+static func default_actions() -> Array[ActionChoice.Action]:
+	if _default_actions.is_empty():
+		var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(ACTIONS))
+		_default_actions = ActionChoice.actions_from(data["actions"])
+	return _default_actions
+
+
+## Decide, from what it perceives (`percepts`, the one record it reads) and
+## its team's `reaction`: every action weighed, the best taken. Sets
+## `action` and `target`; moving and shooting are `BotMatch`'s, by the rules.
 func decide(percepts: MatchPercepts, reaction: float) -> void:
 	target = -1
 	see(percepts.now, percepts.in_sight)
+	if not percepts.alive:
+		action = DEAD
+		crouched = false
+		return
 	if controlled:
 		# PLAYED while it reloads too: the person walks on as the magazine
 		# goes in, and `_played` carries the reload.
-		action = DEAD if not alive() else PLAYED
-		crouched = wants_to_crouch and alive()
+		action = PLAYED
+		crouched = wants_to_crouch
 		return
-	var there: bool = percepts.to_go() <= ARRIVED
-	if not percepts.alive:
-		action = DEAD
-	elif percepts.reloading or (percepts.rounds <= 0 and percepts.reserve > 0):
-		action = RELOAD
-	elif percepts.moving_in_retreat:
-		action = FALL_BACK
-	elif percepts.rounds < reload_below and percepts.reserve > 0 and percepts.in_sight.is_empty() and there:
-		action = RELOAD
-	else:
-		# An empty weapon shoots at nobody: it goes where its errand sends it.
-		target = _reacted_target(percepts, reaction) if percepts.rounds > 0 else -1
-		action = SHOOT if target != -1 else (HOLD if there else MOVE)
-	crouched = action == RELOAD or (action == HOLD and percepts.holds_a_spot)
+	var best: int = _best_target(percepts, reaction)
+	var worth: float = float(percepts.shot_worth.get(best, 0.0))
+	last_choice = ActionChoice.choose(actions, numbers_of(percepts, worth))
+	action = actions[last_choice.chosen].name if last_choice.chosen != -1 else HOLD
+	target = best if action == SHOOT else -1
+	look_at = percepts.heard_from
+	var still: bool = action == HOLD or action == LOOK
+	crouched = action == RELOAD or (still and percepts.holds_a_spot)
+
+
+## The percepts as the numbers its actions' considerations read, by name
+## (`actions.json` says which reads which). `shot_worth` is what a shot at
+## the target it would take is worth, 0 when there is none.
+func numbers_of(percepts: MatchPercepts, shot_worth: float) -> Dictionary:
+	var ready: bool = percepts.rounds > 0 and not percepts.reloading
+	var someone: bool = not percepts.in_sight.is_empty()
+	return {
+		"ready_to_fire": float(ready),
+		"shot_worth": shot_worth,
+		"rounds_left": float(percepts.rounds) / percepts.capacity,
+		"has_reserve": float(percepts.reserve > 0),
+		"could_fire": float(ready and someone),
+		"enemy_in_sight": float(someone),
+		"in_retreat_wave": float(percepts.moving_in_retreat),
+		"to_go": percepts.to_go(),
+		"heard": percepts.heard,
+	}
 
 
 ## Whether to sprint, after `decide`: a person sprints while they hold the
@@ -185,14 +218,17 @@ func turn_to(towards: Vector2, turn_rate: float, delta: float) -> bool:
 	return absf(wrapf(wanted - facing, -PI, PI)) <= AIM_CONE
 
 
-# The nearest enemy in sight that has been in sight for the reaction time.
-func _reacted_target(percepts: MatchPercepts, reaction: float) -> int:
+# Of the enemies in sight for at least the reaction time, the one a shot is
+# worth the most damage at (`MatchPercepts.shot_worth`) -- the nearest,
+# mostly, but not one behind cover when another stands in the open; the
+# first in sight of equal worth, and -1 when none is worth a shot.
+func _best_target(percepts: MatchPercepts, reaction: float) -> int:
 	var best: int = -1
-	var best_distance: float = INF
+	var best_worth: float = 0.0
 	for enemy: int in percepts.in_sight:
 		var ready: bool = percepts.now - float(seen_since.get(enemy, percepts.now)) >= reaction
-		var distance: float = percepts.position.distance_to(percepts.enemy_places[enemy])
-		if ready and distance < best_distance:
-			best_distance = distance
+		var worth: float = float(percepts.shot_worth.get(enemy, 0.0))
+		if ready and worth > best_worth:
+			best_worth = worth
 			best = enemy
 	return best

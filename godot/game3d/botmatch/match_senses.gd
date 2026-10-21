@@ -44,8 +44,21 @@ static func perceive(world: BotMatch, bot: MatchBot, moving_in_retreat: bool) ->
 	percepts.in_sight = world.sight.get(bot.id, [] as Array[int])
 	for enemy: int in percepts.in_sight:
 		percepts.enemy_places[enemy] = world.bots[enemy].position
+		percepts.shot_worth[enemy] = shot_worth(world, bot, world.bots[enemy])
 	_hear(world, bot, percepts)
 	return percepts
+
+
+## What a shot by `shooter` at `target` is worth now, 0 to 1: the damage
+## its aim expects, over the most a shot can do -- the zone worth most, hit
+## for sure.
+static func shot_worth(world: BotMatch, shooter: MatchBot, target: MatchBot) -> float:
+	var aimed: Array = MatchAim.aim(world, shooter, target)
+	var most: float = 0.0
+	for zone: AimChoice.Zone in aimed[0]:
+		most = maxf(most, zone.multiplier)
+	var choice: AimChoice.Choice = aimed[1]
+	return choice.expected[aimed[2]] / most if most > 0.0 else 0.0
 
 
 # The loudest of the enemy shots fired since the last decision, by

@@ -1,9 +1,32 @@
 ## The panel's lines of what the watched bot is reasoning with, one per
-## decision: where it aimed and what each zone was worth, its errands, and
-## its last weighing of the ways past a body. Read off the bot, built here
-## so the scene keeps to drawing and keys.
+## decision: every action's score, where it aimed and what each zone was
+## worth, its errands, and its last weighing of the ways past a body. Read
+## off the bot, built here so the scene keeps to drawing and keys.
 class_name BotMatchLines
 extends RefCounted
+
+
+## The watched bot's last weighing of what to do: each action's score, and
+## the one it took; before its first decision, that there was none.
+static func action_overlay(bot: MatchBot) -> Dictionary:
+	if bot.last_choice == null:
+		return {"weighed": "not yet"}
+	var scores: Dictionary = {}
+	for index: int in range(bot.actions.size()):
+		scores[bot.actions[index].name] = bot.last_choice.scores[index]
+	var chosen: int = bot.last_choice.chosen
+	return {"chosen": bot.actions[chosen].name if chosen != -1 else "none", "scores": scores}
+
+
+## One line for the panel: "weighs: > shoot 0.92 | reload 0.00 | ...".
+static func action_line(bot: MatchBot) -> String:
+	if bot.last_choice == null:
+		return "nothing weighed yet"
+	var parts: Array[String] = []
+	for index: int in range(bot.actions.size()):
+		var mark: String = "> " if index == bot.last_choice.chosen else ""
+		parts.append("%s%s %.2f" % [mark, bot.actions[index].name, bot.last_choice.scores[index]])
+	return "weighs: %s" % " | ".join(parts)
 
 
 ## The watched bot's last aim: each zone's own chance and expected damage,

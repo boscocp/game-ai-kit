@@ -14,7 +14,7 @@ import math
 import pathlib
 import unittest
 
-from gameaikit.teamwork import aim, commander, confidence, influence, passage, positions
+from gameaikit.teamwork import action, aim, commander, confidence, influence, passage, positions
 
 VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "teamwork"
 
@@ -25,7 +25,7 @@ FEWEST_VECTORS = 10
 #: GDScript side's 32-bit `Vector2`.
 TOLERANCE = 1e-4
 
-KINDS = ("positions", "influence", "commander", "confidence", "aim", "passage")
+KINDS = ("positions", "influence", "commander", "confidence", "aim", "passage", "action")
 
 
 def answer_positions(vector: dict) -> dict:
@@ -102,7 +102,18 @@ def answer_passage(vector: dict) -> dict:
     return {"costs": costs, "chosen": chosen, "answers": answers}
 
 
-ANSWER = {"passage": answer_passage, "positions": answer_positions, "influence": answer_influence,
+def answer_action(vector: dict) -> dict:
+    actions = action.actions_from(vector["query"]["actions"])
+    scores, answers, chosen = [], [], []
+    for percepts in vector["query"]["percepts"]:
+        found, why, taken = action.choose(actions, percepts)
+        scores.append(found)
+        answers.append(why)
+        chosen.append(taken)
+    return {"scores": scores, "answers": answers, "chosen": chosen}
+
+
+ANSWER = {"action": answer_action, "passage": answer_passage, "positions": answer_positions, "influence": answer_influence,
           "commander": answer_commander, "confidence": answer_confidence, "aim": answer_aim}
 
 

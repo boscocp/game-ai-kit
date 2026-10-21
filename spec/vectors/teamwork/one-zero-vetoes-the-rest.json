@@ -1,0 +1,87 @@
+{
+ "name": "one-zero-vetoes-the-rest",
+ "why": "Two answers of 1 and one of 0: the product, and the score, is 0, and holding wins.",
+ "kind": "action",
+ "query": {
+  "actions": [
+   {
+    "name": "charge",
+    "weight": 1.0,
+    "considerations": [
+     {
+      "percept": "brave",
+      "curve": "step",
+      "at": 0.5,
+      "below": 0.0,
+      "above": 1.0
+     },
+     {
+      "percept": "loaded",
+      "curve": "step",
+      "at": 0.5,
+      "below": 0.0,
+      "above": 1.0
+     },
+     {
+      "percept": "path_open",
+      "curve": "step",
+      "at": 0.5,
+      "below": 0.0,
+      "above": 1.0
+     }
+    ]
+   },
+   {
+    "name": "hold",
+    "weight": 0.25,
+    "considerations": []
+   }
+  ],
+  "percepts": [
+   {
+    "brave": 1.0,
+    "loaded": 1.0,
+    "path_open": 0.0
+   },
+   {
+    "brave": 1.0,
+    "loaded": 1.0,
+    "path_open": 1.0
+   }
+  ]
+ },
+ "expect": {
+  "scores": [
+   [
+    0.0,
+    0.25
+   ],
+   [
+    1.0,
+    0.25
+   ]
+  ],
+  "answers": [
+   [
+    [
+     1.0,
+     1.0,
+     0.0
+    ],
+    []
+   ],
+   [
+    [
+     1.0,
+     1.0,
+     1.0
+    ],
+    []
+   ]
+  ],
+  "chosen": [
+   1,
+   0
+  ]
+ }
+}

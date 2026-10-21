@@ -10,7 +10,7 @@ extends RefCounted
 ## Shared with `python/tests/test_teamwork_vectors.py`; sized for `Vector2`'s
 ## 32-bit floats.
 const TOLERANCE: float = 1e-4
-const KINDS: Array[String] = ["positions", "influence", "commander", "confidence", "aim", "passage"]
+const KINDS: Array[String] = ["positions", "influence", "commander", "confidence", "aim", "passage", "action"]
 
 
 ## Why `vector` is not a teamwork vector, or "" when it is one.
@@ -46,6 +46,8 @@ static func answer_to(vector: Dictionary) -> Dictionary:
 			return _aim(vector)
 		"passage":
 			return _passage(vector)
+		"action":
+			return _action(vector)
 	return _confidence(vector)
 
 
@@ -213,6 +215,19 @@ static func _passage(vector: Dictionary) -> Dictionary:
 		var reply: PassageChoice.Answer = PassageChoice.answer(request, prices)
 		answers.append({"cost": _nulled(reply.cost), "granted": reply.granted})
 	return {"costs": costs, "chosen": chosen, "answers": answers}
+
+
+static func _action(vector: Dictionary) -> Dictionary:
+	var actions: Array[ActionChoice.Action] = ActionChoice.actions_from(vector["query"]["actions"])
+	var scores: Array = []
+	var answers: Array = []
+	var chosen: Array = []
+	for percepts: Dictionary in vector["query"]["percepts"]:
+		var choice: ActionChoice.Choice = ActionChoice.choose(actions, percepts)
+		scores.append(Array(choice.scores))
+		answers.append(choice.answers.map(func(found: PackedFloat64Array) -> Array: return Array(found)))
+		chosen.append(choice.chosen)
+	return {"scores": scores, "answers": answers, "chosen": chosen}
 
 
 static func _states(values: Array, thresholds: SquadConfidence.Thresholds, may_retreat: bool) -> Array:

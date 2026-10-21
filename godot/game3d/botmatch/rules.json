@@ -5,7 +5,6 @@
   "fire_interval": 0.1,
   "magazine": 30,
   "reload_time": 2.0,
-  "reload_below": 10,
   "reserve": 90,
   "resupply_radius": 1.5,
   "resupply_walk_weight": 0.05,

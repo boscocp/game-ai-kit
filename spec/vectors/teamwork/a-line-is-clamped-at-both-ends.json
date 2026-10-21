@@ -1,0 +1,67 @@
+{
+ "name": "a-line-is-clamped-at-both-ends",
+ "why": "Twice the percept less a half: at 0 it would be -0.5 and answers 0, at 1 it would be 1.5 and answers 1, at 0.5 it is 0.5.",
+ "kind": "action",
+ "query": {
+  "actions": [
+   {
+    "name": "go",
+    "weight": 1.0,
+    "considerations": [
+     {
+      "percept": "x",
+      "curve": "linear",
+      "slope": 2.0,
+      "intercept": -0.5
+     }
+    ]
+   }
+  ],
+  "percepts": [
+   {
+    "x": 0.0
+   },
+   {
+    "x": 1.0
+   },
+   {
+    "x": 0.5
+   }
+  ]
+ },
+ "expect": {
+  "scores": [
+   [
+    0.0
+   ],
+   [
+    1.0
+   ],
+   [
+    0.5
+   ]
+  ],
+  "answers": [
+   [
+    [
+     0.0
+    ]
+   ],
+   [
+    [
+     1.0
+    ]
+   ],
+   [
+    [
+     0.5
+    ]
+   ]
+  ],
+  "chosen": [
+   -1,
+   0,
+   0
+  ]
+ }
+}

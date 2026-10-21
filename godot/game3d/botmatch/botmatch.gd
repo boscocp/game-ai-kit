@@ -133,7 +133,7 @@ func decision_overlay() -> Dictionary:
 	var watched: Dictionary = {"bot": bot.id, "action": bot.action, "chosen": chosen, "candidates": candidates,
 			"aim": BotMatchLines.aim_overlay(bot), "errand": bot.errand if bot.errand != "" else "none",
 			"errands": bot.errand_weighing if not bot.errand_weighing.is_empty() else {"weighed": "not yet"},
-			"passage": BotMatchLines.passage_overlay(bot)}
+			"passage": BotMatchLines.passage_overlay(bot), "actions": BotMatchLines.action_overlay(bot)}
 	return {"time": world.time, "watched": watched, "squads": _squads_overlay()}
 
 
@@ -359,6 +359,7 @@ func _panel_text() -> String:
 	var target: String = " at bot %d" % bot.target if bot.target != -1 else ""
 	var you: String = "  -- YOU: %d/%d ammo, %d health" % [bot.ammo, world.rules.magazine, bot.health] if _played == bot.id else ""
 	lines.append("watching bot %d (%s): %s%s%s" % [bot.id, world.teams[bot.team].name, bot.action, target, you])
+	lines.append(BotMatchLines.action_line(bot))
 	lines.append(BotMatchLines.aim_line(bot))
 	lines.append(BotMatchLines.errand_line(bot))
 	lines.append(BotMatchLines.passage_line(bot))

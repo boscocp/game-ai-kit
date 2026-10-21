@@ -1,0 +1,49 @@
+{
+ "name": "an-absent-percept-is-nothing",
+ "why": "A percept not given counts as 0: a line through it answers its intercept, 0.25, and a step its `below`, 0.5.",
+ "kind": "action",
+ "query": {
+  "actions": [
+   {
+    "name": "go",
+    "weight": 1.0,
+    "considerations": [
+     {
+      "percept": "unseen",
+      "curve": "linear",
+      "slope": 1.0,
+      "intercept": 0.25
+     },
+     {
+      "percept": "unheard",
+      "curve": "step",
+      "at": 0.5,
+      "below": 0.5,
+      "above": 1.0
+     }
+    ]
+   }
+  ],
+  "percepts": [
+   {}
+  ]
+ },
+ "expect": {
+  "scores": [
+   [
+    0.125
+   ]
+  ],
+  "answers": [
+   [
+    [
+     0.25,
+     0.5
+    ]
+   ]
+  ],
+  "chosen": [
+   0
+  ]
+ }
+}

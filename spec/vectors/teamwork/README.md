@@ -9,11 +9,11 @@ invalidated_if: a technique's rule changes -- a condition's order, a weight's me
 teaches: none
 -->
 
-> Six techniques, two languages, and the files that say they gave the
+> Seven techniques, two languages, and the files that say they gave the
 > same answers.
 
 `ai_teamwork` (GDScript) and `gameaikit.teamwork` (Python) implement the
-same six things T51's and T66's bot match decides with. Each vector is one `.json`
+same seven things T51's, T66's and T67's bot match decides with. Each vector is one `.json`
 file: a query and the answer it must get. Both sides answer it and check
 every value against the file, never against each other: `make test-vectors`
 on the GDScript side, `make test-python` on the Python side.
@@ -29,7 +29,11 @@ so it catches a slip in transcribing them, not a choice that is wrong.
 Every comparison in the four techniques was flipped once (`<` for `<=`
 and back), in both languages, and each flip fails a vector -- but one: the
 influence radius, where a cell exactly at `radius` takes `strength x 0`
-either way, so no vector can tell the two apart.
+either way, so no vector can tell the two apart. `ActionChoice` (T67)
+was asked the same: its step's `>=`, the choice's strict `>` and its floor
+of zero, both ends of the line's clamp and the 0 an absent percept counts
+as -- each changed once in GDScript and once in Python, and each change
+failed a vector.
 
     python3 spec/vectors/teamwork/derive.py spec/vectors/teamwork
 
@@ -57,8 +61,9 @@ that must agree bit for bit would need rounded costs.
 | `confidence` | facts over time, a squad's members, phases | each confidence, the states with and without retreat, the waves |
 | `passage` | a blocked bot's facts, and requests to a teammate with its prices | each way's cost in seconds (null: impossible) and the way taken; each request's cost to the teammate and whether it is granted |
 | `aim` | a spread, a target's zones (multiplier, aim point, rectangles, exposure), rolls | each zone's own chance and worth aimed at, the zone aimed at, the chances from it, where each roll lands |
+| `action` | actions as plain data (weight, considerations with their curves), records of percepts | for each record, every action's score, every consideration's answer, and the action taken (-1: none) |
 
-## The thirty-two
+## The forty
 
 | file | what it pins |
 |---|---|
@@ -94,6 +99,14 @@ that must agree bit for bit would need rounded costs.
 | `nothing-possible-waits` | every way impossible: the bot waits |
 | `equal-ways-go-to-the-first` | of two ways tied, the first in the order |
 | `a-teammate-weighs-the-request` | the teammate's cost, a fight's high price, a saving that must be larger, and the two limits |
+| `the-best-reason-wins` | loaded, shoot; empty, a veto on shooting and reload; nothing to do, hold |
+| `one-zero-vetoes-the-rest` | one answer of 0 makes the product 0 whatever the others say |
+| `a-step-on-its-threshold-is-above` | a percept exactly on a step's `at` answers `above`: the comparison is `>=` |
+| `a-line-is-clamped-at-both-ends` | a line below 0 answers 0, above 1 answers 1 |
+| `equal-scores-take-the-first` | of two actions tied, the first listed is taken |
+| `nothing-above-zero-chooses-nothing` | every action vetoed: -1, not the first of zeros |
+| `an-absent-percept-is-nothing` | a percept not given counts as 0 |
+| `the-bot-match-weighs-its-actions` | the match's own six actions (a copy of `actions.json`) on five moments of a fight |
 
 JSON has no infinity: in the passage vectors an impossible way, a detour
 or a spot that does not exist, and a saving with no bound are `null`, and

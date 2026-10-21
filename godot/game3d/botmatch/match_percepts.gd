@@ -17,6 +17,10 @@ var alive: bool = true
 ## The enemies in sight now, by id in id order, and where each stands.
 var in_sight: Array[int] = []
 var enemy_places: Dictionary = {}
+## What a shot at each of them is worth now, by id: the damage its aim
+## expects (`AimChoice`, as its team aims), over a sure shot at the zone
+## worth most -- 1 a sure headshot, 0 nothing of it exposed.
+var shot_worth: Dictionary = {}
 ## The loudest enemy shot heard since its last decision, from 1 beside it
 ## to 0 out of hearing (`Hearing`), and where it was fired from; INF, none.
 var heard: float = 0.0

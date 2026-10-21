@@ -295,7 +295,6 @@ func respawn(bot: MatchBot) -> void:
 	MatchSupply.arm_rifle(bot, rules)
 	bot.streak = 0
 	bot.errand = MatchSupply.NO_ERRAND
-	bot.reload_below = rules.reload_below
 	bot.reload_left = 0.0
 	bot.respawn_left = 0.0
 	bot.spot = -1

@@ -393,9 +393,109 @@ def aim_vectors():
                      {"name": "far", "multiplier": 0.5, "aim": [4.0, 4.0], "rects": [[3.75, 3.75, 4.25, 4.25]], "exposure": 0.5}],
               [0.0, 0.4990234375, 0.5])
 
+
+# --- what to do now: utility -------------------------------------------------
+
+def curve_answer(c, percepts):
+    value = float(percepts.get(c["percept"], 0.0))
+    if c.get("curve", "linear") == "step":
+        return c.get("above", 1.0) if value >= c.get("at", 0.5) else c.get("below", 0.0)
+    return min(max(c.get("slope", 1.0) * value + c.get("intercept", 0.0), 0.0), 1.0)
+
+def action(name, why, actions, records):
+    scores, answers, chosen = [], [], []
+    for percepts in records:
+        row, why_row, best, taken = [], [], 0.0, -1
+        for index, a in enumerate(actions):
+            found = [curve_answer(c, percepts) for c in a.get("considerations", [])]
+            score = a.get("weight", 1.0)
+            for value in found:
+                score *= value
+            row.append(score)
+            why_row.append(found)
+            if score > best:
+                best, taken = score, index
+        scores.append(row)
+        answers.append(why_row)
+        chosen.append(taken)
+    return {"name": name, "why": why, "kind": "action", "query": {"actions": actions, "percepts": records},
+            "expect": {"scores": scores, "answers": answers, "chosen": chosen}}
+
+def line_of(percept, slope=1.0, intercept=0.0):
+    return {"percept": percept, "curve": "linear", "slope": slope, "intercept": intercept}
+
+def when(percept, at=0.5, below=0.0, above=1.0):
+    return {"percept": percept, "curve": "step", "at": at, "below": below, "above": above}
+
+# The bot match's own actions (godot/game3d/botmatch/actions.json), copied
+# here by hand: this file reads nothing from the repository.
+BOT_ACTIONS = [
+    {"name": "reload", "weight": 1.0, "considerations": [line_of("rounds_left", -1.5, 1.0), when("has_reserve"),
+                                                         when("could_fire", 0.5, 1.0, 0.4), when("to_go", 0.3, 1.0, 0.6)]},
+    {"name": "fall back", "weight": 0.8, "considerations": [when("in_retreat_wave")]},
+    {"name": "shoot", "weight": 1.0, "considerations": [when("ready_to_fire"), line_of("shot_worth", 8.0)]},
+    {"name": "move", "weight": 0.5, "considerations": [when("to_go", 0.3)]},
+    {"name": "look", "weight": 0.45, "considerations": [line_of("heard", 2.0), when("enemy_in_sight", 0.5, 1.0, 0.0)]},
+    {"name": "hold", "weight": 0.3, "considerations": []},
+]
+
+def action_vectors():
+    simple = [{"name": "shoot", "weight": 1.0, "considerations": [when("ready_to_fire"), line_of("shot_worth", 8.0)]},
+              {"name": "reload", "weight": 1.0, "considerations": [line_of("rounds_left", -1.5, 1.0), when("has_reserve")]},
+              {"name": "hold", "weight": 0.25, "considerations": []}]
+    yield action("the-best-reason-wins",
+                 "Loaded with a shot worth 0.25: shoot, 1. Empty with rounds in reserve: shooting is vetoed and "
+                 "reload is 1. Full, nobody to shoot: only holding is worth anything.",
+                 simple, [{"ready_to_fire": 1.0, "shot_worth": 0.25, "rounds_left": 0.5, "has_reserve": 1.0},
+                          {"ready_to_fire": 0.0, "shot_worth": 0.25, "rounds_left": 0.0, "has_reserve": 1.0},
+                          {"ready_to_fire": 1.0, "shot_worth": 0.0, "rounds_left": 1.0, "has_reserve": 1.0}])
+    yield action("one-zero-vetoes-the-rest",
+                 "Two answers of 1 and one of 0: the product, and the score, is 0, and holding wins.",
+                 [{"name": "charge", "weight": 1.0, "considerations": [when("brave"), when("loaded"), when("path_open")]},
+                  {"name": "hold", "weight": 0.25, "considerations": []}],
+                 [{"brave": 1.0, "loaded": 1.0, "path_open": 0.0}, {"brave": 1.0, "loaded": 1.0, "path_open": 1.0}])
+    yield action("a-step-on-its-threshold-is-above",
+                 "A step at 0.5: exactly 0.5 answers `above`, 0.25 answers `below` -- the comparison is >=.",
+                 [{"name": "go", "weight": 1.0, "considerations": [when("far", 0.5, 0.25, 0.75)]}],
+                 [{"far": 0.5}, {"far": 0.25}])
+    yield action("a-line-is-clamped-at-both-ends",
+                 "Twice the percept less a half: at 0 it would be -0.5 and answers 0, at 1 it would be 1.5 and "
+                 "answers 1, at 0.5 it is 0.5.",
+                 [{"name": "go", "weight": 1.0, "considerations": [line_of("x", 2.0, -0.5)]}], [{"x": 0.0}, {"x": 1.0}, {"x": 0.5}])
+    yield action("equal-scores-take-the-first",
+                 "Two actions scoring 0.5 each: the first listed is taken, on both sides.",
+                 [{"name": "left", "weight": 0.5, "considerations": []}, {"name": "right", "weight": 0.5, "considerations": []}],
+                 [{}])
+    yield action("nothing-above-zero-chooses-nothing",
+                 "Every action vetoed: nothing is chosen, -1, rather than the first of zeros.",
+                 [{"name": "shoot", "weight": 1.0, "considerations": [when("loaded")]},
+                  {"name": "reload", "weight": 1.0, "considerations": [when("has_reserve")]}],
+                 [{"loaded": 0.0, "has_reserve": 0.0}])
+    yield action("an-absent-percept-is-nothing",
+                 "A percept not given counts as 0: a line through it answers its intercept, 0.25, and a step its "
+                 "`below`, 0.5.",
+                 [{"name": "go", "weight": 1.0, "considerations": [line_of("unseen", 1.0, 0.25), when("unheard", 0.5, 0.5, 1.0)]}],
+                 [{}])
+    yield action("the-bot-match-weighs-its-actions",
+                 "The bot match's own six actions. Loaded at its spot, a shot worth 0.25: shoot. Empty, away from "
+                 "its goal with an enemy near: reload, 0.6, beats moving on, 0.5. Ten rounds left at its spot, "
+                 "nobody in sight: reload early, 0.5. A loud shot heard (0.75) at its spot with nobody in sight: "
+                 "look, 0.45, beats holding. In the moving wave of a retreat with a poor shot (0.0625): fall "
+                 "back, 0.8, beats the shot, 0.5.",
+                 BOT_ACTIONS,
+                 [{"ready_to_fire": 1.0, "shot_worth": 0.25, "rounds_left": 1.0, "has_reserve": 1.0, "could_fire": 1.0,
+                   "to_go": 0.0, "enemy_in_sight": 1.0},
+                  {"ready_to_fire": 0.0, "shot_worth": 0.0, "rounds_left": 0.0, "has_reserve": 1.0, "could_fire": 0.0,
+                   "to_go": 6.0, "enemy_in_sight": 1.0},
+                  {"ready_to_fire": 1.0, "shot_worth": 0.0, "rounds_left": 0.3333333333333333, "has_reserve": 1.0,
+                   "could_fire": 0.0, "to_go": 0.0, "enemy_in_sight": 0.0},
+                  {"ready_to_fire": 1.0, "rounds_left": 1.0, "has_reserve": 1.0, "heard": 0.75, "to_go": 0.0},
+                  {"ready_to_fire": 1.0, "shot_worth": 0.0625, "rounds_left": 1.0, "has_reserve": 1.0, "could_fire": 1.0,
+                   "to_go": 8.0, "enemy_in_sight": 1.0, "in_retreat_wave": 1.0}])
+
 def main(directory):
     folder = pathlib.Path(directory)
-    for vector in list(vectors()) + list(aim_vectors()) + list(passage_vectors()):
+    for vector in list(vectors()) + list(aim_vectors()) + list(passage_vectors()) + list(action_vectors()):
         (folder / f"{vector['name']}.json").write_text(json.dumps(vector, indent=1) + "\n", encoding="utf-8")
 
 if __name__ == "__main__":

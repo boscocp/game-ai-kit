@@ -651,14 +651,15 @@ func test_nobody_fires_while_sprinting() -> void:
 	assert_int(world.stats[0].shots_sprinting).is_equal(1)
 
 
-func test_a_bot_reloads_early_only_with_nobody_in_sight_and_where_it_was_going() -> void:
+func test_a_bot_reloads_early_when_it_weighs_quiet_and_where_it_was_going() -> void:
 	var rules := MatchRules.new()
 	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
 	var bot: MatchBot = world.bots[0]
 	var places: Dictionary = {6: Vector2(30.0, 3.0)}
 	bot.position = Vector2(15.0, 3.0)
 	bot.goal = bot.position
-	bot.ammo = rules.reload_below - 1
+	# Nine rounds of thirty: reloading is worth 0.55, holding 0.3.
+	bot.ammo = 9
 	bot.decide(_percepts(bot, 1.0, [] as Array[int], places), 0.0)
 	assert_str(bot.action).is_equal(MatchBot.RELOAD)
 	# An enemy in sight, even one not reacted to yet: it does not.
@@ -668,9 +669,9 @@ func test_a_bot_reloads_early_only_with_nobody_in_sight_and_where_it_was_going()
 	bot.goal = Vector2(25.0, 3.0)
 	bot.decide(_percepts(bot, 1.0, [] as Array[int], places), 0.0)
 	assert_str(bot.action).is_equal(MatchBot.MOVE)
-	# Enough rounds left: it holds.
+	# Enough rounds left -- sixteen, worth 0.2 to reload: it holds.
 	bot.goal = bot.position
-	bot.ammo = rules.reload_below
+	bot.ammo = 16
 	bot.decide(_percepts(bot, 1.0, [] as Array[int], places), 0.0)
 	assert_str(bot.action).is_equal(MatchBot.HOLD)
 
@@ -1150,6 +1151,7 @@ func test_a_bot_decides_from_its_percepts_alone_with_no_match_at_all() -> void:
 	bot.ammo = 30
 	bot.reserve = 90
 	var percepts: MatchPercepts = _percepts(bot, 5.0, [9] as Array[int], {9: Vector2(10.0, 0.0)})
+	percepts.shot_worth = {9: 0.25}
 	bot.decide(percepts, 0.3)
 	# Seen for the first time now: not reacted to yet, so it holds.
 	assert_str(bot.action).is_equal(MatchBot.HOLD)
@@ -1157,6 +1159,10 @@ func test_a_bot_decides_from_its_percepts_alone_with_no_match_at_all() -> void:
 	bot.decide(percepts, 0.3)
 	assert_str(bot.action).is_equal(MatchBot.SHOOT)
 	assert_int(bot.target).is_equal(9)
+	# Every action was weighed, and the shot scored highest.
+	var shoot: int = bot.actions.map(func(each: ActionChoice.Action) -> String: return each.name).find(MatchBot.SHOOT)
+	assert_int(bot.last_choice.chosen).is_equal(shoot)
+	assert_int(bot.last_choice.scores.size()).is_equal(bot.actions.size())
 
 
 func test_an_enemy_shot_is_heard_louder_nearer_and_a_friends_is_not_news() -> void:
