@@ -10,6 +10,18 @@
 ## steadier hand, is hit more often; and a target behind low cover shows no
 ## legs -- partial cover is the Killzone weight's reason, and here it is
 ## the rule that makes it worth 40.
+##
+## A bot walks its path cell by cell, and a body in the way is stepped
+## round by `_best_step` or, blocked, weighed by `PassageChoice`. Not by
+## `ai_steering`, asked for T67 and measured against this map: its avoid
+## swerves from round obstacles only -- "not walls, corridors", its own
+## header says, and the passages here are doors and corridors between
+## boxes; and head-on it turns to the vehicle's left, a fixed side: north
+## for a bot going east, south for one going west, which is the very fault
+## that bent the yards' mirror 9 to 1 in T66. Its arrive slows a vehicle
+## into its target, and a bot here already stops on its goal at its walking
+## pace, with no overshoot to damp. Its vehicles have inertia, and a bot's
+## turn rate is a knob of the honest bot, not a force.
 class_name MatchActions
 extends RefCounted
 
