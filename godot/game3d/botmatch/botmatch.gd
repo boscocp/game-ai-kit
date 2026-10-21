@@ -111,8 +111,8 @@ func step_decision() -> void:
 
 
 ## What the AI is reasoning with now: the watched bot's choice of spot, with
-## every candidate's status and score, and every squad's confidence, state
-## and order.
+## every candidate's status and score, where its last shot was aimed and
+## what each zone was worth, and every squad's confidence, state and order.
 func decision_overlay() -> Dictionary:
 	var bot: MatchBot = world.bots[_watched]
 	var team: MatchTeam = world.teams[bot.team]
@@ -125,8 +125,31 @@ func decision_overlay() -> Dictionary:
 			var spot: String = world.place_id(places[index])
 			candidates.append({"spot": spot, "status": choice.statuses[index], "score": choice.scores[index]})
 		chosen = world.place_id(places[choice.chosen]) if choice.chosen != -1 else "none"
-	var watched: Dictionary = {"bot": bot.id, "action": bot.action, "chosen": chosen, "candidates": candidates}
+	var watched: Dictionary = {"bot": bot.id, "action": bot.action, "chosen": chosen, "candidates": candidates,
+			"aim": aim_overlay(bot)}
 	return {"time": world.time, "watched": watched, "squads": _squads_overlay()}
+
+
+## The watched bot's last aim: each zone's own chance and expected damage,
+## and the zone it aimed at; empty before its first shot.
+static func aim_overlay(bot: MatchBot) -> Dictionary:
+	if bot.last_aim.is_empty():
+		return {}
+	var zones: Array = []
+	for index: int in range((bot.last_aim[1] as Array).size()):
+		zones.append({"zone": bot.last_aim[1][index], "chance": bot.last_aim[2][index], "expected": bot.last_aim[3][index]})
+	return {"target": bot.last_aim[0], "aimed": bot.last_aim[1][bot.last_aim[4]], "zones": zones}
+
+
+## One line for the panel: "aims at torso: head 5% 0.10 | torso ...".
+static func aim_line(bot: MatchBot) -> String:
+	var aim: Dictionary = aim_overlay(bot)
+	if aim.is_empty():
+		return "no shot aimed yet"
+	var parts: Array[String] = []
+	for zone: Dictionary in aim["zones"]:
+		parts.append("%s %.0f%% %.2f" % [zone["zone"], float(zone["chance"]) * 100.0, zone["expected"]])
+	return "aims at %s (chance, damage a shot): %s" % [aim["aimed"], " | ".join(parts)]
 
 
 func _squads_overlay() -> Array:
@@ -346,6 +369,7 @@ func _panel_text() -> String:
 	var target: String = " at bot %d" % bot.target if bot.target != -1 else ""
 	var you: String = "  -- YOU: %d/%d ammo, %d health" % [bot.ammo, world.rules.magazine, bot.health] if _played == bot.id else ""
 	lines.append("watching bot %d (%s): %s%s%s" % [bot.id, world.teams[bot.team].name, bot.action, target, you])
+	lines.append(aim_line(bot))
 	lines.append("1/2/3 blue's switches, Shift red's; Tab bot, T take it over, M map, C camera, F fast, P pause, N new")
 	if _played != -1:
 		lines.append("playing: WASD walk, Shift sprint, mouse turns, click fires, R reloads, Ctrl crouches, T gives it back")

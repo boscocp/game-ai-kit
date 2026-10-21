@@ -1,0 +1,115 @@
+{
+ "name": "close-and-steady-aims-at-the-head",
+ "why": "Three metres at three degrees, a spread of 0.157 m: aimed at the head, most shots land in it, and at twice the torso's worth it wins.",
+ "kind": "aim",
+ "query": {
+  "spread": 0.15722333784912362,
+  "zones": [
+   {
+    "name": "head",
+    "multiplier": 2.0,
+    "aim": [
+     0.0,
+     1.65
+    ],
+    "rects": [
+     [
+      -0.12,
+      1.5,
+      0.12,
+      1.8
+     ]
+    ],
+    "exposure": 1.0
+   },
+   {
+    "name": "torso",
+    "multiplier": 1.0,
+    "aim": [
+     0.0,
+     1.175
+    ],
+    "rects": [
+     [
+      -0.2,
+      0.85,
+      0.2,
+      1.5
+     ]
+    ],
+    "exposure": 1.0
+   },
+   {
+    "name": "arms",
+    "multiplier": 0.5,
+    "aim": [
+     0.25,
+     1.175
+    ],
+    "rects": [
+     [
+      -0.3,
+      0.85,
+      -0.2,
+      1.5
+     ],
+     [
+      0.2,
+      0.85,
+      0.3,
+      1.5
+     ]
+    ],
+    "exposure": 1.0
+   },
+   {
+    "name": "legs",
+    "multiplier": 0.5,
+    "aim": [
+     0.0,
+     0.425
+    ],
+    "rects": [
+     [
+      -0.3,
+      0.0,
+      0.3,
+      0.85
+     ]
+    ],
+    "exposure": 1.0
+   }
+  ],
+  "rolls": [
+   0.0,
+   0.5,
+   0.99
+  ]
+ },
+ "expect": {
+  "own_chances": [
+   0.728179554591535,
+   1.0000000000000004,
+   0.31801894479547027,
+   1.0
+  ],
+  "expected": [
+   1.4793306919898652,
+   1.0000000000000004,
+   0.5000000000000002,
+   0.5
+  ],
+  "aimed": 0,
+  "chances": [
+   0.728179554591535,
+   0.022971582806795218,
+   0.0,
+   0.0
+  ],
+  "landed": [
+   0,
+   0,
+   -1
+  ]
+ }
+}

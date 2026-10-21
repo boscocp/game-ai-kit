@@ -489,6 +489,57 @@ func test_the_humanoid_drawn_is_the_zones_of_the_rules() -> void:
 	assert_float(((arm[1] as Vector3).x + (arm[0] as Vector3).x / 2.0) * height).is_equal_approx(rules.body_half_width, 0.01)
 
 
+func test_a_bot_aims_at_the_head_close_and_the_torso_far() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var shooter: MatchBot = world.bots[0]
+	var target: MatchBot = world.bots[6]
+	# Along lane A's north side, nothing between them.
+	shooter.position = Vector2(15.0, 3.0)
+	target.position = Vector2(18.0, 3.0)
+	assert_str(MatchAim.ZONES[MatchAim.aim(world, shooter, target)[2]]).is_equal("head")
+	target.position = Vector2(33.0, 3.0)
+	assert_str(MatchAim.ZONES[MatchAim.aim(world, shooter, target)[2]]).is_equal("torso")
+	# Planted: a team that always aims at the head, at the same range.
+	world.teams[0].aims_by_worth = false
+	assert_str(MatchAim.ZONES[MatchAim.aim(world, shooter, target)[2]]).is_equal("head")
+
+
+func test_low_cover_hides_the_legs_from_the_aim() -> void:
+	# The low box in lane A runs 18.5 .. 19.5; the target stands just east of it.
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var shooter: MatchBot = world.bots[0]
+	var target: MatchBot = world.bots[6]
+	shooter.position = Vector2(15.0, 5.0)
+	target.position = Vector2(20.3, 5.0)
+	var exposure: Dictionary = {}
+	for zone: AimChoice.Zone in MatchAim.zones_of(world, shooter, target):
+		exposure[zone.name] = zone.exposure
+	assert_dict(exposure).is_equal({"head": 1.0, "torso": 1.0, "arms": 1.0, "legs": 0.0})
+
+
+func test_aiming_by_worth_does_more_damage_a_shot_at_range_than_always_the_head() -> void:
+	# Two thousand shots at fifteen metres, the same rolls for both: what the
+	# technique is for, shown on its own before the effects test shows it in
+	# whole matches.
+	var rules := MatchRules.new()
+	var damage: Array[int] = []
+	for by_worth: bool in [true, false]:
+		var world := BotMatch.new(7, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+		world.teams[0].aims_by_worth = by_worth
+		var shooter: MatchBot = world.bots[0]
+		var target: MatchBot = world.bots[6]
+		shooter.position = Vector2(15.0, 3.0)
+		target.position = Vector2(30.0, 3.0)
+		for _shot: int in range(2000):
+			target.health = rules.health
+			shooter.ammo = rules.magazine
+			MatchActions.fire(world, shooter, target)
+		damage.append(world.stats[0].damage)
+	assert_int(damage[0]).override_failure_message("by worth %d, always the head %d" % damage).is_greater(damage[1])
+
+
 func test_teammates_leave_a_persons_spot_to_them_and_the_list_takes_back_over() -> void:
 	var rules := MatchRules.new()
 	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)

@@ -95,6 +95,7 @@ func refresh(world: BotMatch, watched: int, hidden: int = -1, thinking: bool = t
 	_drawn_at = world.time
 	_draw_lines(world, watched if thinking else -1, thinking)
 	_draw_candidates(world, watched if thinking else -1)
+	_draw_aim(world, watched if thinking else -1)
 	_draw_shots(world)
 
 
@@ -154,6 +155,28 @@ func _draw_candidates(world: BotMatch, watched: int) -> void:
 	for index: int in range(places.size()):
 		var at: Vector2 = world.place_position(places[index])
 		_markers.add_child(_marker(world.arena.above(at, 0.0), choice.statuses[index], choice.scores[index], index == choice.chosen))
+
+
+# Over the watched bot's last target, the aim it weighed: each zone's chance
+# and damage a shot, the zone it took marked.
+func _draw_aim(world: BotMatch, watched: int) -> void:
+	if watched < 0 or world.bots[watched].last_aim.is_empty():
+		return
+	var aim: Array = world.bots[watched].last_aim
+	var target: MatchBot = world.bots[int(aim[0])]
+	if not target.alive():
+		return
+	var lines: Array[String] = []
+	for index: int in range((aim[1] as Array).size()):
+		var mark: String = "> " if index == int(aim[4]) else "  "
+		lines.append("%s%s %.0f%%  %.2f" % [mark, aim[1][index], float(aim[2][index]) * 100.0, aim[3][index]])
+	var label := Label3D.new()
+	label.text = "\n".join(lines)
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.modulate = SIGHT
+	label.font_size = 24
+	label.position = world.arena.above(target.position, 2.6)
+	_markers.add_child(label)
 
 
 func _marker(place: Vector3, status: String, score: float, chosen: bool) -> Node3D:

@@ -145,6 +145,48 @@ def confidence(name, why, facts, members, phases):
 def facts(friendly, enemy, kills=0, losses=0):
     return {"friendly_strength": friendly, "enemy_strength": enemy, "kills": kills, "losses": losses}
 
+# --- aim -------------------------------------------------------------------
+
+# The bot match's body, standing: rectangles (low x, low y, high x, high y),
+# across and up from the feet, metres.
+def body(head=1.0, torso=1.0, arms=1.0, legs=1.0):
+    return [{"name": "head", "multiplier": 2.0, "aim": [0.0, 1.65], "rects": [[-0.12, 1.5, 0.12, 1.8]], "exposure": head},
+            {"name": "torso", "multiplier": 1.0, "aim": [0.0, 1.175], "rects": [[-0.2, 0.85, 0.2, 1.5]], "exposure": torso},
+            {"name": "arms", "multiplier": 0.5, "aim": [0.25, 1.175],
+             "rects": [[-0.3, 0.85, -0.2, 1.5], [0.2, 0.85, 0.3, 1.5]], "exposure": arms},
+            {"name": "legs", "multiplier": 0.5, "aim": [0.0, 0.425], "rects": [[-0.3, 0.0, 0.3, 0.85]], "exposure": legs}]
+
+def shares(aim, spread, zones):
+    r = max(spread, 1e-6)
+    lo_x, lo_y, hi_x, hi_y = aim[0] - r, aim[1] - r, aim[0] + r, aim[1] + r
+    out = []
+    for z in zones:
+        covered = 0.0
+        for x0, y0, x1, y1 in z["rects"]:
+            covered += max(min(hi_x, x1) - max(lo_x, x0), 0.0) * max(min(hi_y, y1) - max(lo_y, y0), 0.0)
+        out.append(covered / (4 * r * r) * z["exposure"])
+    return out
+
+def aim(name, why, spread, zones, rolls):
+    own, worth, aimed, best, chosen = [], [], -1, 0.0, []
+    for i, z in enumerate(zones):
+        c = shares(z["aim"], spread, zones)
+        own.append(c[i])
+        worth.append(sum(c[j] * zones[j]["multiplier"] for j in range(len(zones))))
+        if worth[i] > best:
+            best, aimed, chosen = worth[i], i, c
+    landed = []
+    for roll in rolls:
+        total, where = 0.0, -1
+        for i, c in enumerate(chosen):
+            total += c
+            if roll < total:
+                where = i
+                break
+        landed.append(where)
+    return {"name": name, "why": why, "kind": "aim", "query": {"spread": spread, "zones": zones, "rolls": rolls},
+            "expect": {"own_chances": own, "expected": worth, "aimed": aimed, "chances": chosen, "landed": landed}}
+
 # --- the vectors -----------------------------------------------------------
 
 def vectors():
@@ -226,9 +268,43 @@ def vectors():
                      "One member left: it moves in both phases, nobody is left to cover it.",
                      [facts(0.4, 2.0, losses=3)], [5], [0, 1])
 
+def aim_vectors():
+    close = 3.0 * math.tan(math.radians(3.0))
+    yield aim("close-and-steady-aims-at-the-head",
+              "Three metres at three degrees, a spread of 0.157 m: aimed at the head, most shots land in it, and "
+              "at twice the torso's worth it wins.",
+              close, body(), [0.0, 0.5, 0.99])
+    yield aim("far-aims-at-the-torso",
+              "A spread of 0.5 m, about ten metres at three degrees: a shot aimed at the head mostly misses "
+              "the body, and the torso (0.46), with its spill onto arms and legs, beats the head (0.32) and "
+              "the arms (0.44). Below 0.55 m, so aiming at an arm is not the torso's exact tie.",
+              0.5, body(), [0.0, 0.05, 0.3])
+    yield aim("behind-low-cover-the-legs-are-gone",
+              "A spread of 0.3 m, where in the open the torso is worth most (0.83). Behind low cover the legs "
+              "are hidden and the torso half shown: the head (0.525) now beats the torso (0.5), and the choice "
+              "moves up the body.",
+              0.3, body(torso=0.5, legs=0.0), [0.1, 0.4])
+    yield aim("equal-worth-goes-to-the-first",
+              "Two zones alike in all but their names: the first listed is aimed at. Every number is a power "
+              "of two, so the tie is exact in GDScript's 32-bit Rect2 as in Python's floats -- with 0.1 and "
+              "1.1 it was not, and GDScript aimed at the second.",
+              0.125, [{"name": "left", "multiplier": 1.0, "aim": [-1.0, 1.0], "rects": [[-1.125, 0.875, -0.875, 1.125]], "exposure": 1.0},
+                      {"name": "right", "multiplier": 1.0, "aim": [1.0, 1.0], "rects": [[0.875, 0.875, 1.125, 1.125]], "exposure": 1.0}],
+              [0.0, 0.5, 1.0])
+    yield aim("nothing-exposed-aims-at-nothing",
+              "Every zone behind cover: nothing is worth a shot, nothing is aimed at, and every roll misses.",
+              0.3, body(0.0, 0.0, 0.0, 0.0), [0.0])
+    yield aim("a-roll-on-a-boundary-misses",
+              "A zone that is the spread's own square, half exposed: chance 0.5 exactly, every number a power "
+              "of two so neither side rounds. A roll below 0.5 lands, a roll of 0.5 misses -- the zones are "
+              "laid end to end with a strict <.",
+              0.25, [{"name": "near", "multiplier": 1.0, "aim": [0.0, 0.0], "rects": [[-0.25, -0.25, 0.25, 0.25]], "exposure": 0.5},
+                     {"name": "far", "multiplier": 0.5, "aim": [4.0, 4.0], "rects": [[3.75, 3.75, 4.25, 4.25]], "exposure": 0.5}],
+              [0.0, 0.4990234375, 0.5])
+
 def main(directory):
     folder = pathlib.Path(directory)
-    for vector in vectors():
+    for vector in list(vectors()) + list(aim_vectors()):
         (folder / f"{vector['name']}.json").write_text(json.dumps(vector, indent=1) + "\n", encoding="utf-8")
 
 if __name__ == "__main__":

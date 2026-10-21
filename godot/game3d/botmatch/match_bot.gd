@@ -58,6 +58,9 @@ var crouched: bool = false
 ## The zone its shots are aimed at: its own choice (`AimChoice`), or the
 ## torso, where a rifle is pointed by default.
 var aim_zone: String = MatchRules.TORSO
+## Its last shot's aim, for the overlay: [target id, zone names, each zone's
+## own chance aimed at, each zone's expected damage, the index aimed at].
+var last_aim: Array = []
 ## Running at the rules' sprint speed; it may not fire while it is.
 var sprinting: bool = false
 ## What the list chose last, and at whom it is aimed (-1: nobody).

@@ -3,13 +3,13 @@
 ## interval, a magazine, a reload, and a shot that lands by the team's aim
 ## error. The same body for every bot.
 ##
-## A shot is hitscan: it hits with the chance that a bullet `aim_error` off
-## the line still meets a body `body_half_width` across at that distance --
-## half-width over distance times the tangent of the error. So a nearer
-## target, or a steadier hand, is hit more often. And a target whose waist
-## the shooter cannot see -- standing behind low cover, shooting over it --
-## shows only its upper half, and is hit half as often: partial cover is the
-## Killzone weight's reason, and here it is the rule that makes it worth 40.
+## A bot's shot is hitscan, aimed by `MatchAim`: at the zone of the target
+## worth the most damage, given the spread its aim error makes at that
+## distance and what of each zone it can see. It lands by those chances on
+## the zone aimed at, or a neighbour, or nothing. So a nearer target, or a
+## steadier hand, is hit more often; and a target behind low cover shows no
+## legs -- partial cover is the Killzone weight's reason, and here it is
+## the rule that makes it worth 40.
 class_name MatchActions
 extends RefCounted
 
@@ -17,9 +17,6 @@ extends RefCounted
 const LOOK_AHEAD: int = 6
 ## A bot shooting walks at this share of its speed.
 const SHOOTING_PACE: float = 0.5
-## How high a waist is, and how much of a body partial cover leaves to hit.
-const WAIST: float = 0.9
-const PARTIAL_COVER: float = 0.5
 ## How far beside its target a bot's missed shot is drawn.
 const MISS_DRAWN: float = 0.7
 
@@ -45,7 +42,7 @@ static func act(world: BotMatch, bot: MatchBot, delta: float) -> void:
 
 ## Fire one shot from `shooter` at `target`, by the rules: counted, checked
 ## against the line as it is at this moment -- not the sight table, which
-## is up to a decision old -- and landing by the aim error.
+## is up to a decision old -- and landing where its aim and spread put it.
 static func fire(world: BotMatch, shooter: MatchBot, target: MatchBot) -> void:
 	var stats: MatchStats = world.stats[shooter.team]
 	stats.shots += 1
@@ -54,13 +51,15 @@ static func fire(world: BotMatch, shooter: MatchBot, target: MatchBot) -> void:
 		stats.shots_unseen += 1
 	shooter.ammo -= 1
 	shooter.fire_cooldown = world.rules.fire_interval
-	var distance: float = maxf(shooter.position.distance_to(target.position), 0.01)
-	var aim_error: float = world.teams[shooter.team].aim_error
-	var shown: float = world.rules.body_half_width * (PARTIAL_COVER if _waist_hidden(world, shooter, target) else 1.0)
-	var chance: float = clampf(shown / (distance * tan(maxf(aim_error, 1e-4))), 0.0, 1.0)
-	var hit: bool = world.random.randf() < chance
-	var zone: String = shooter.aim_zone if hit else MatchRules.NONE
-	world.record_shot(shooter, target.id, hit, _bot_shot_end(world, shooter, target, hit), zone)
+	var aimed: Array = MatchAim.aim(world, shooter, target)
+	var zones: Array[AimChoice.Zone] = aimed[0]
+	var choice: AimChoice.Choice = aimed[1]
+	shooter.aim_zone = MatchAim.DAMAGE_ZONE[zones[aimed[2]].name]
+	shooter.last_aim = [target.id, MatchAim.ZONES, choice.own_chances, choice.expected, aimed[2]]
+	var landed: int = AimChoice.land(choice.chances, world.random.randf())
+	var hit: bool = landed != -1
+	var zone: String = MatchAim.DAMAGE_ZONE[zones[landed].name] if hit else MatchRules.NONE
+	world.record_shot(shooter, target.id, hit, _bot_shot_end(world, shooter, target, zone), zone)
 	if hit and target.alive():
 		land(world, shooter, target, zone)
 
@@ -76,12 +75,13 @@ static func land(world: BotMatch, shooter: MatchBot, target: MatchBot, zone: Str
 	target.last_hit_by = shooter.id
 
 
-# Where a bot's shot is drawn ending: the middle of the zone it aimed at,
-# when it hit; when it missed, past that to one side, alternating with each
+# Where a bot's shot is drawn ending: the middle of the zone it struck; when
+# it missed, past the zone it aimed at to one side, alternating with each
 # shot -- drawn only, so it uses no random number and changes no match.
-static func _bot_shot_end(world: BotMatch, shooter: MatchBot, target: MatchBot, hit: bool) -> Vector3:
-	var chest: Vector3 = world.arena.above(target.position, zone_middle(world.rules, shooter.aim_zone, target.crouched))
-	if hit:
+static func _bot_shot_end(world: BotMatch, shooter: MatchBot, target: MatchBot, struck: String) -> Vector3:
+	var zone: String = struck if struck != MatchRules.NONE else shooter.aim_zone
+	var chest: Vector3 = world.arena.above(target.position, zone_middle(world.rules, zone, target.crouched))
+	if struck != MatchRules.NONE:
 		return chest
 	var across: Vector2 = (target.position - shooter.position).normalized().orthogonal()
 	var side: float = MISS_DRAWN * (1.0 if world.stats[shooter.team].shots % 2 == 0 else -1.0)
@@ -97,12 +97,6 @@ static func zone_middle(rules: MatchRules, zone: String, crouched: bool) -> floa
 		MatchRules.LIMB: rules.torso_from / 2.0,
 	}
 	return float(middles.get(zone, rules.chest_height)) * shrink
-
-
-# Whether the line from the shooter's eyes to the target's waist is blocked.
-static func _waist_hidden(world: BotMatch, shooter: MatchBot, target: MatchBot) -> bool:
-	var eyes: Vector3 = world.arena.above(shooter.position, world.rules.eye_height)
-	return not world.arena.clear_line(eyes, world.arena.above(target.position, WAIST))
 
 
 ## The person's shot, as in a first-person shooter: a ray from their eyes
