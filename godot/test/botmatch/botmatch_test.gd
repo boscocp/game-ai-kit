@@ -486,6 +486,38 @@ func test_shots_of_every_length_are_drawn_without_an_engine_error() -> void:
 	assert_int(counter.errors).is_equal(0)
 
 
+func test_with_nothing_downloaded_a_bot_is_a_humanoid_of_six_parts() -> void:
+	var shelf := AssetShelf.new(AssetShelf.MANIFEST, "res://test/botmatch/nothing_downloaded/")
+	var body := BotBody.new(shelf, BotMatchDrawing.BLUE)
+	var parts: Array[String] = []
+	for mesh: MeshInstance3D in body.find_children("*", "MeshInstance3D", true, false):
+		parts.append(str(mesh.name))
+	parts.sort()
+	assert_array(parts).is_equal(["ArmLeft", "ArmRight", "Head", "LegLeft", "LegRight", "Torso"])
+	assert_float(AssetShelf.bounds_of(body).size.y).is_equal_approx(BotBody.HEIGHT, 1e-3)
+	body.free()
+
+
+func test_a_new_match_draws_without_writing_to_the_last_ones_bodies() -> void:
+	# N frees the drawing's children and builds again; what still pointed at
+	# the old bodies made every refresh after it a script error.
+	var counter := ErrorCounter.new()
+	OS.add_logger(counter)
+	var rules := MatchRules.new()
+	var drawing := BotMatchDrawing.new()
+	drawing.shelf = AssetShelf.new(AssetShelf.MANIFEST, "res://test/botmatch/nothing_downloaded/")
+	(Engine.get_main_loop() as SceneTree).root.add_child(drawing)
+	for seed_value: int in [1, 2]:
+		for child: Node in drawing.get_children():
+			child.free()
+		var world := BotMatch.new(seed_value, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+		drawing.build(world)
+		drawing.refresh(world, 0)
+	OS.remove_logger(counter)
+	drawing.queue_free()
+	assert_int(counter.errors).is_equal(0)
+
+
 ## Counts what the engine reports as an error.
 class ErrorCounter extends Logger:
 	var errors: int = 0

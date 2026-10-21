@@ -27,7 +27,6 @@ const CLAIMED: Color = Color(0.7, 0.35, 0.85)
 const EXPOSED: Color = Color(0.9, 0.3, 0.25)
 const DROPPED: Color = Color(0.5, 0.5, 0.5)
 const SIGHT: Color = Color(1.0, 0.9, 0.2)
-const BOT_HEIGHT: float = 1.8
 const TRACER: Color = Color(1.0, 0.92, 0.55)
 const FLASH: Color = Color(1.0, 0.75, 0.3)
 const BLOOD: Color = Color(0.95, 0.1, 0.1)
@@ -39,7 +38,9 @@ const FLASH_SECONDS: float = 0.05
 const MIN_TRACER: float = 0.05
 
 var shelf: AssetShelf = AssetShelf.new()
-var _bots: Array[Node3D] = []
+var _bots: Array[BotBody] = []
+## The match's time at the last refresh, so a body knows how fast it moved.
+var _drawn_at: float = 0.0
 var _points: Array[MeshInstance3D] = []
 var _lines := ImmediateMesh.new()
 var _markers: Node3D
@@ -48,8 +49,13 @@ var _markers: Node3D
 var _effects: Array[MeshInstance3D] = []
 
 
-## Build the arena and the bots once, for `world`.
+## Build the arena and the bots once, for `world`. Called again for a new
+## match, after the caller freed the children: what pointed at them goes too,
+## or every refresh after N wrote to freed bodies.
 func build(world: BotMatch) -> void:
+	_bots.clear()
+	_points.clear()
+	_effects.clear()
 	var floor_look: Node3D = AssetShelf.primitive("box", 1.0, Color(0.55, 0.58, 0.5))
 	floor_look.scale = Vector3(world.arena.width, 0.1, world.arena.depth)
 	floor_look.position = Vector3(world.arena.width / 2.0, -0.1, world.arena.depth / 2.0)
@@ -63,9 +69,9 @@ func build(world: BotMatch) -> void:
 		_points.append(_point_disc(world.arena.above(place, 0.02), world.rules.capture_radius))
 	for bot: MatchBot in world.bots:
 		var blue: bool = bot.team == BotMatch.BLUE
-		var model: Node3D = shelf.model("bot_blue" if blue else "bot_red", BOT_HEIGHT, BLUE if blue else RED)
-		add_child(model)
-		_bots.append(model)
+		var body := BotBody.new(shelf, BLUE if blue else RED)
+		add_child(body)
+		_bots.append(body)
 	var drawn := MeshInstance3D.new()
 	drawn.mesh = _lines
 	add_child(drawn)
@@ -79,15 +85,14 @@ func build(world: BotMatch) -> void:
 ## shots -- and none of the AI's reasoning.
 func refresh(world: BotMatch, watched: int, hidden: int = -1, thinking: bool = true) -> void:
 	for bot: MatchBot in world.bots:
-		var model: Node3D = _bots[bot.id]
-		model.visible = bot.alive() and bot.id != hidden
-		model.position = world.arena.above(bot.position, 0.0)
-		model.rotation = Vector3(0, -bot.facing + PI / 2.0, 0)
-		model.scale = Vector3(1, 0.6 if bot.crouched else 1.0, 1)
+		var body: BotBody = _bots[bot.id]
+		body.visible = bot.alive() and bot.id != hidden
+		body.stand(world.arena.above(bot.position, 0.0), bot.facing, bot.crouched, world.time - _drawn_at)
 	for index: int in range(_points.size()):
 		var owner: int = world.point_owner[index]
 		var colour: Color = NOBODY if owner == -1 else (BLUE if owner == BotMatch.BLUE else RED)
 		(_points[index].material_override as StandardMaterial3D).albedo_color = colour
+	_drawn_at = world.time
 	_draw_lines(world, watched if thinking else -1, thinking)
 	_draw_candidates(world, watched if thinking else -1)
 	_draw_shots(world)
