@@ -10,8 +10,10 @@
 ## left. A heuristic that never overestimates is called admissible, and with
 ## one A* returns a route of exactly the cost Dijkstra returns. With one that
 ## overestimates, A* is faster and quietly wrong, which is the worst of the
-## three possible outcomes and the reason `heuristic` below documents its own
-## condition.
+## three possible outcomes. So the guess is not written here: it is
+## `graph.estimate`, and the graph owns it, because only the graph knows what a
+## step can cost. `SearchGraph.estimate` carries the promise; the grid's is
+## Manhattan distance, in `grid_search_graph.gd`, with the reason it is safe.
 ##
 ## Complexity: the same as Dijkstra in the worst case -- with `h` returning
 ## zero it *is* Dijkstra -- and far better in practice.
@@ -26,14 +28,14 @@ extends Search
 
 # The cheapest route, expanding towards the goal rather than in all
 # directions.
-func _explore(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
+func _explore(graph: SearchGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 	var frontier: Array[Vector2i] = [from]
 	var came_from: Dictionary = {from: NO_PARENT}
 	# `g` is the cost of reaching a cell, `f` is that plus the guess about what
 	# remains. The names are the literature's, and the frontier is ordered by
 	# `f` -- that single substitution is the whole difference from Dijkstra.
 	var g: Dictionary = {from: 0}
-	var f: Dictionary = {from: heuristic(from, to)}
+	var f: Dictionary = {from: graph.estimate(from, to)}
 	var expanded: Array[Vector2i] = []
 
 	while not frontier.is_empty():
@@ -72,29 +74,13 @@ func _explore(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 # frontier stays ordered by the current best estimate, which is what A* is
 # *defined* to do -- and the honest reason to keep the line is that the
 # implementation should not quietly depend on an accident of these boards.
-func _relax(graph: GridGraph, current: Vector2i, goal: Vector2i,
+func _relax(graph: SearchGraph, current: Vector2i, goal: Vector2i,
 		came_from: Dictionary, g: Dictionary, f: Dictionary,
 		frontier: Array[Vector2i]) -> void:
 	for step: Vector2i in graph.neighbours(current):
 		var through_here: int = g[current] + graph.cost_at(step)
 		if not g.has(step) or through_here < g[step]:
 			g[step] = through_here
-			f[step] = through_here + heuristic(step, goal)
+			f[step] = through_here + graph.estimate(step, goal)
 			came_from[step] = current
 			frontier.append(step)
-
-
-## The guess: how much is left, at best, from `cell` to `goal`.
-##
-## Manhattan distance, which is the number of cardinal steps between two cells
-## when nothing is in the way. It is admissible **as long as no cell costs less
-## than one to enter**: a route cannot be shorter than the number of steps, and
-## each step costs at least one, so the guess cannot exceed the truth.
-##
-## That condition used to be a warning in this comment, with nothing behind it.
-## It is now a rule in `GridGraph.set_cost`, which clamps any cost below one to
-## one and keeps `BLOCKED` as the only value outside the range. A board that
-## would break this heuristic can no longer be built, which is a better place
-## for the condition than a paragraph nobody reads at the moment they need it.
-func heuristic(cell: Vector2i, goal: Vector2i) -> int:
-	return absi(cell.x - goal.x) + absi(cell.y - goal.y)

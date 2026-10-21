@@ -309,7 +309,7 @@ func _board_changed() -> void:
 	_board.draw_board(_graph, [] as Array[Vector2i])
 	_all = []
 	for search: Search in searches():
-		_all.append(search.search(_graph, _from, _to))
+		_all.append(search.search(GridSearchGraph.new(_graph), _from, _to))
 	_choose(_chosen)
 
 

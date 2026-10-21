@@ -292,7 +292,7 @@ func _two_sides() -> BoardState:
 # A policy whose combat model always answers the same thing.
 func _policy(chance: float) -> LearnedPolicy:
 	return LearnedPolicy.new(_file(_always(chance)), NODES,
-		LearnedPolicy.DEFAULT_THRESHOLD, AStarSearch.new())
+		LearnedPolicy.DEFAULT_THRESHOLD, GridPathfinder.new(AStarSearch.new()))
 
 
 # A published file holding these two models.

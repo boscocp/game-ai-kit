@@ -17,7 +17,7 @@ extends Search
 
 
 # The route with the fewest steps, ignoring what a step costs.
-func _explore(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
+func _explore(graph: SearchGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 	var frontier: Array[Vector2i] = [from]
 	var came_from: Dictionary = {from: NO_PARENT}
 	var expanded: Array[Vector2i] = []

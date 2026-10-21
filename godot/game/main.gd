@@ -82,7 +82,7 @@ func _ready() -> void:
 	# is the right place to introduce them.
 	_policy = LearnedPolicy.new(
 		ModelFile.load_from(LearnedPolicy.WEIGHTS_PATH), NODES,
-		LearnedPolicy.DEFAULT_THRESHOLD, AStarSearch.new())
+		LearnedPolicy.DEFAULT_THRESHOLD, GridPathfinder.new(AStarSearch.new()))
 	_select_first_unit_of_the_side_to_move()
 	_refresh()
 

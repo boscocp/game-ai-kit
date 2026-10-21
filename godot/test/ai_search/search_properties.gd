@@ -57,8 +57,8 @@ func _run_trials() -> Array[String]:
 # Both searches on one board, and what they disagreed about.
 func _compare(trial: int, graph: GridGraph, from: Vector2i, to: Vector2i,
 		dijkstra: DijkstraSearch, astar: AStarSearch) -> Array[String]:
-	var slow: SearchResult = dijkstra.search(graph, from, to)
-	var quick: SearchResult = astar.search(graph, from, to)
+	var slow: SearchResult = dijkstra.search(GridSearchGraph.new(graph), from, to)
+	var quick: SearchResult = astar.search(GridSearchGraph.new(graph), from, to)
 	var problems: Array[String] = []
 
 	if slow.reached != quick.reached:

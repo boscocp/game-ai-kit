@@ -19,7 +19,7 @@ extends Search
 
 
 # Some route to the goal, with no claim about it beyond existing.
-func _explore(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
+func _explore(graph: SearchGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 	var frontier: Array[Vector2i] = [from]
 	var came_from: Dictionary = {from: NO_PARENT}
 	var expanded: Array[Vector2i] = []

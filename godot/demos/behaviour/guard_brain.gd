@@ -34,7 +34,7 @@ var senses: GuardSenses
 ## handed the guard does not seem to have decided anything yet.
 var deed: String = ""
 
-var _search := AStarSearch.new()
+var _router := GridPathfinder.new(AStarSearch.new())
 
 
 ## Its name on screen: "state machine", "behaviour tree", "GOAP", "HTN".
@@ -80,7 +80,7 @@ func _walk(state: BoardState, guard: Unit, goal: Vector2i) -> Array[Vector2i]:
 	for other: Unit in state.units:
 		if other.id != guard.id and other.cell != goal:
 			around.block(other.cell)
-	var route: Array[Vector2i] = _search.find_path(around, guard.cell, goal)
+	var route: Array[Vector2i] = _router.find_path(around, guard.cell, goal)
 	var steps: Array[Vector2i] = []
 	for cell: Vector2i in route.slice(0, 2 if deed == CHASE else 1):
 		var longer: Array[Vector2i] = steps.duplicate()

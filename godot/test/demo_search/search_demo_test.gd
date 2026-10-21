@@ -380,7 +380,7 @@ func _results_on(board: SearchBoard) -> Array[SearchResult]:
 	var graph: GridGraph = board.graph()
 	for search: Search in [BreadthFirstSearch.new(), DepthFirstSearch.new(),
 			DijkstraSearch.new(), AStarSearch.new()]:
-		found.append(search.search(graph, board.start(), board.goal()))
+		found.append(search.search(GridSearchGraph.new(graph), board.start(), board.goal()))
 	return found
 
 

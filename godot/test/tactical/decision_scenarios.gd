@@ -110,7 +110,7 @@ func _the_node_it_should_prefer(published: ModelFile) -> Array[String]:
 	var nodes: Array[Vector2i] = [Vector2i(1, 1), Vector2i(8, 5)]
 
 	var policy := LearnedPolicy.new(
-		published, nodes, LearnedPolicy.DEFAULT_THRESHOLD, AStarSearch.new())
+		published, nodes, LearnedPolicy.DEFAULT_THRESHOLD, GridPathfinder.new(AStarSearch.new()))
 	var decision: LearnedDecision = policy.decide(state, 2)
 	var failures: Array[String] = _expect("the node it should prefer", decision,
 		LearnedDecision.ADVANCE, state)
@@ -157,4 +157,4 @@ func _expect_the_move_goes(state: BoardState, decision: LearnedDecision,
 # A policy over the published weights, with a real search behind it.
 func _policy(published: ModelFile) -> LearnedPolicy:
 	return LearnedPolicy.new(
-		published, NODES, LearnedPolicy.DEFAULT_THRESHOLD, AStarSearch.new())
+		published, NODES, LearnedPolicy.DEFAULT_THRESHOLD, GridPathfinder.new(AStarSearch.new()))
