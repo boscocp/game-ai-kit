@@ -24,7 +24,8 @@
 #
 # Each is first asked of a planted car it must refuse: springs too soft to
 # hold the car up, a centre of mass on the road (no lever, so no transfer),
-# and tyres that keep all their grip however far past the peak they slip.
+# tyres that keep all their grip however far past the peak they slip, and
+# tyres with no friction circle, which give more than their grip.
 #
 # Run it with `--fixed-fps 60`, as `make test-racing3d-car` does: without
 # it Godot paces the physics in real time and the same run takes minutes.
@@ -72,11 +73,21 @@ func _run() -> void:
 	quit(1 if not failures.is_empty() else 0)
 
 
-# Every check on one car; `mass_on_road` puts its centre of mass on the road.
-func _check(physics: CarPhysics3D, mass_on_road: bool, label: String) -> Array[String]:
+## A planted car whose tyres skip the friction circle: braking or driving
+## and turning at once, a tyre gives more than its grip, which `_past_grip`
+## must name.
+class NoCircleCar extends RaceCar3D:
+	## The force as asked, never shortened.
+	func friction_circle(asked: Vector2, _limit: float) -> Vector2:
+		return asked
+
+
+# Every check on one car; `mass_on_road` puts its centre of mass on the
+# road, and `no_circle` builds the planted car with no friction circle.
+func _check(physics: CarPhysics3D, mass_on_road: bool, label: String, no_circle: bool = false) -> Array[String]:
 	var findings: Array[String] = []
 	var world: Node3D = _world()
-	var car := RaceCar3D.new(physics, true)
+	var car: RaceCar3D = NoCircleCar.new(physics, true) if no_circle else RaceCar3D.new(physics, true)
 	# Dropped from where its springs just touch, whatever their stiffness.
 	car.position = Vector3(0, physics.mount_drop + physics.rest_length + physics.wheel_radius, 150)
 	world.add_child(car)
@@ -124,6 +135,8 @@ func _check_braking(car: RaceCar3D, label: String) -> Array[String]:
 		var rear: float = car.wheel_load[2] + car.wheel_load[3]
 		most = maxf(most, (car.wheel_load[0] + car.wheel_load[1]) / maxf(rear, 1.0))
 	car.brake = 0.0
+	if frames >= 2 * GIVE_UP or most == 0.0:
+		return ["%s: never reached %.0f m/s and stopped again inside %d frames" % [label, BRAKE_FROM, 2 * GIVE_UP]]
 	if label == "the car":
 		print("braking from %.0f m/s, the front carried up to %.2f times the rear" % [BRAKE_FROM, most])
 	if most < FRONT_SHARE:
@@ -232,4 +245,7 @@ func _planted() -> Array[String]:
 		var said: String = "\n".join(await _check(planted[1], planted[2], "planted"))
 		if not (planted[3] in said):
 			failures.append("planted, %s: %s" % [planted[0], said if said != "" else "passed"])
+	var unheld: String = "\n".join(await _check(CarPhysics3D.new(), false, "planted", true))
+	if not ("past its grip" in unheld):
+		failures.append("planted, tyres with no friction circle: %s" % (unheld if unheld != "" else "passed"))
 	return failures

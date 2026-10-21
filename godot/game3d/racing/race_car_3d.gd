@@ -171,12 +171,21 @@ func _tyre(state: PhysicsDirectBodyState3D, wheel: int, hit: Dictionary, load: f
 	var sideways: float = -limit * tyre_curve(slip / peak, physics.slide_grip)
 	var rolling: float = float(surface.get_meta("rolling", 0.0)) * load
 	var pushing: float = _drive(wheel, along) - rolling * clampf(along / CRAWL, -1.0, 1.0)
-	var total: float = Vector2(pushing, sideways).length()
+	var held: Vector2 = friction_circle(Vector2(pushing, sideways), limit)
+	state.apply_force(forward * held.x + left * held.y, at)
+	_measured(wheel, load, slip, held.length(), limit, grip)
+
+
+## The tyre's force, forwards and sideways, held inside its friction
+## circle: a force longer than `limit` is shortened to it, in the same
+## direction. What is reported as the tyre's force is what comes out of
+## here, so a check that it never passes the grip measures the force
+## applied, not a number clamped to agree.
+func friction_circle(asked: Vector2, limit: float) -> Vector2:
+	var total: float = asked.length()
 	if total > limit and total > 0.0:
-		pushing *= limit / total
-		sideways *= limit / total
-	state.apply_force(forward * pushing + left * sideways, at)
-	_measured(wheel, load, slip, minf(total, limit), limit, grip)
+		return asked * (limit / total)
+	return asked
 
 
 ## How much of its grip a tyre gives at `ratio` -- its slip angle over the
