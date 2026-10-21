@@ -138,11 +138,14 @@ class CrookedDriver extends RaceDriver3D:
 
 
 var _errors := Racing3DErrors.new()
+## The counter's own planted case, run first: "" when it counted it.
+var _counter_works: String = ""
 var _track: RaceTrack3D
 
 
 func _initialize() -> void:
 	OS.add_logger(_errors)
+	_counter_works = _errors.self_check()
 	_track = RaceTrack3D.from_file(TRACK)
 	_run()
 
@@ -153,6 +156,8 @@ func _run() -> void:
 	for finding: String in honest:
 		print(finding)
 	failures.append_array(honest)
+	if _counter_works != "":
+		failures.append(_counter_works)
 	var engine: String = _errors.finding("the races")
 	if engine != "":
 		failures.append(engine)
@@ -276,7 +281,7 @@ func _frame_findings(race: Race3D, entered: Array[Array], start: Dictionary) -> 
 		if car.get_script() != RaceCar3D or car.physics != race.physics or race.physics.fields() != start:
 			found.append("rule 1, one physics: %s at %.2f s does not drive the race's physics as it began" % [title, race.time])
 		var speed: float = (car.linear_velocity * Vector3(1, 0, 1)).length()
-		if speed > race.physics.top_speed + SPEED_TOLERANCE:
+		if not (speed <= race.physics.top_speed + SPEED_TOLERANCE):
 			found.append("rule 2, top speed: %s at %.2f m/s at %.2f s" % [title, speed, race.time])
 		found.append_array(_past_grip(car, title))
 		var used: Dictionary = race.drivers[number].used
@@ -289,12 +294,13 @@ func _frame_findings(race: Race3D, entered: Array[Array], start: Dictionary) -> 
 func _past_grip(car: RaceCar3D, title: String) -> Array[String]:
 	var found: Array[String] = []
 	for wheel: int in range(4):
-		if car.wheel_force[wheel] > car.wheel_limit[wheel] + GRIP_TOLERANCE:
+		if not (car.wheel_force[wheel] <= car.wheel_limit[wheel] + GRIP_TOLERANCE):
 			found.append("rule 2, grip: %s's %s tyre at %.0f N past %.0f" % [title, RaceCar3D.WHEEL_NAMES[wheel], car.wheel_force[wheel], car.wheel_limit[wheel]])
 	return found
 
 
-# Rule 4: the race and its honest twin, frame by frame.
+# Rule 4: the race and its honest twin, frame by frame. Every comparison
+# in this script is written `not (x <= limit)`, so a NaN breaks the rule.
 func _twin_findings(tested: Array[PackedFloat64Array], twin: Array[PackedFloat64Array]) -> Array[String]:
 	if tested.size() != twin.size():
 		return ["rule 4, twin: %d frames raced, the twin %d" % [tested.size(), twin.size()]]
@@ -309,7 +315,7 @@ func _twin_findings(tested: Array[PackedFloat64Array], twin: Array[PackedFloat64
 # The first value two frames' records differ in by more than the tolerance.
 func _first_apart(tested: PackedFloat64Array, twin: PackedFloat64Array) -> int:
 	for value: int in range(tested.size()):
-		if absf(tested[value] - twin[value]) > TWIN_TOLERANCE:
+		if not (absf(tested[value] - twin[value]) <= TWIN_TOLERANCE):
 			return value
 	return -1
 

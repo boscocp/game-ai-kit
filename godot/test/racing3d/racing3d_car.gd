@@ -52,10 +52,13 @@ const GRAVITY: float = 9.8
 const GIVE_UP: int = 1200
 
 var _errors := Racing3DErrors.new()
+## The counter's own planted case, run first: "" when it counted it.
+var _counter_works: String = ""
 
 
 func _initialize() -> void:
 	OS.add_logger(_errors)
+	_counter_works = _errors.self_check()
 	_run()
 
 
@@ -64,6 +67,8 @@ func _run() -> void:
 	failures += await _planted()
 	failures += await _check(CarPhysics3D.new(), false, "the car")
 	failures += await _check_measurement()
+	if _counter_works != "":
+		failures.append(_counter_works)
 	var engine: String = _errors.finding("the checks")
 	if engine != "":
 		failures.append(engine)
@@ -210,7 +215,8 @@ func _measure(physics: CarPhysics3D) -> PackedFloat64Array:
 # A tyre that gave more than its grip on the last frame, said; or "".
 func _past_grip(car: RaceCar3D, label: String) -> String:
 	for wheel: int in range(4):
-		if car.wheel_force[wheel] > car.wheel_limit[wheel] + GRIP_TOLERANCE:
+		# Not <=, so a NaN force is a finding too.
+		if not (car.wheel_force[wheel] <= car.wheel_limit[wheel] + GRIP_TOLERANCE):
 			return "%s: a tyre gave %.0f N past its grip of %.0f N" % [label, car.wheel_force[wheel], car.wheel_limit[wheel]]
 	return ""
 

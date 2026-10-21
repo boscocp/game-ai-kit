@@ -50,10 +50,13 @@ const TIME_LIMIT: float = 300.0
 const GAP_SECONDS: float = 1.0
 
 var _errors := Racing3DErrors.new()
+## The counter's own planted case, run first: "" when it counted it.
+var _counter_works: String = ""
 
 
 func _initialize() -> void:
 	OS.add_logger(_errors)
+	_counter_works = _errors.self_check()
 	_run()
 
 
@@ -61,6 +64,8 @@ func _run() -> void:
 	var failures: Array[String] = _planted()
 	for path: String in TRACKS:
 		failures.append_array(await _ladder_on(RaceTrack3D.from_file(path)))
+	if _counter_works != "":
+		failures.append(_counter_works)
 	var engine: String = _errors.finding("the races")
 	if engine != "":
 		failures.append(engine)

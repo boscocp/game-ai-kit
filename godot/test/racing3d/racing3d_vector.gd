@@ -17,6 +17,17 @@ const DECIDED: Array[String] = [
 ]
 
 
+## Every field a frame's view must carry, and the ones that are lists of
+## points, all as long as each other.
+const VIEW_FIELDS: Array[String] = [
+	"time", "step", "speed", "cross_track", "line_forward", "line_left", "room_left", "room_right", "rivals",
+]
+const POINT_FIELDS: Array[String] = ["line_forward", "line_left", "room_left", "room_right"]
+## The fewest points a view may show: the bend at a point is measured over
+## RaceDriver3D.BEND_REACH points either side.
+const FEWEST_POINTS: int = 2 * RaceDriver3D.BEND_REACH + 1
+
+
 ## Why `vector` is not a racing vector, or "" when it is one.
 static func why_not_a_vector(vector: Dictionary) -> String:
 	for key: String in ["name", "why", "driver", "frames"]:
@@ -25,8 +36,31 @@ static func why_not_a_vector(vector: Dictionary) -> String:
 	if not (vector["frames"] is Array) or (vector["frames"] as Array).is_empty():
 		return "it shows the driver nothing"
 	for frame: Variant in vector["frames"]:
-		if not (frame is Dictionary) or not frame.has("view") or not frame.has("expect"):
-			return "a frame has no view or no expect"
+		var wrong: String = why_not_a_frame(frame)
+		if wrong != "":
+			return wrong
+	return ""
+
+
+## Why `frame` is not a frame of a vector -- a view missing a field, lists of
+## points of different lengths or too short, an expect missing a decision --
+## or "" when it is one. Checked before anything is decided, so a missing
+## key is a refusal and not a SCRIPT ERROR the run walks past.
+static func why_not_a_frame(frame: Variant) -> String:
+	if not (frame is Dictionary) or not frame.has("view") or not frame.has("expect"):
+		return "a frame has no view or no expect"
+	for key: String in VIEW_FIELDS:
+		if not frame["view"].has(key):
+			return "a view has no %s" % key
+	for key: String in DECIDED:
+		if not frame["expect"].has(key):
+			return "an expect has no %s" % key
+	var points: int = (frame["view"]["line_forward"] as Array).size()
+	for key: String in POINT_FIELDS:
+		if (frame["view"][key] as Array).size() != points:
+			return "a view's %s is not as long as its line_forward" % key
+	if points < FEWEST_POINTS:
+		return "a view shows %d points, under %d" % [points, FEWEST_POINTS]
 	return ""
 
 
@@ -42,7 +76,8 @@ static func check(label: String, vector: Dictionary) -> Array[String]:
 static func _misses(label: String, decided: Dictionary, expected: Dictionary) -> Array[String]:
 	var found: Array[String] = []
 	for key: String in DECIDED:
-		if absf(float(decided[key]) - float(expected[key])) > TOLERANCE:
+		# Written so that a NaN on either side is a miss: NaN <= x is false.
+		if not (absf(float(decided[key]) - float(expected[key])) <= TOLERANCE):
 			found.append("%s %s: %.12f, the file says %.12f" % [label, key, decided[key], expected[key]])
 	return found
 

@@ -33,6 +33,22 @@ func _log_message(_message: String, _error: bool) -> void:
 	pass
 
 
+## The planted case every script runs first (invariant 4): an error pushed
+## with a marker must be counted exactly once, or the counter is blind. The
+## count is cleared after, so the marker's printed ERROR line is the only
+## trace it leaves. Returns the finding, or "" when the counter saw it.
+func self_check() -> String:
+	errors = 0
+	seen.clear()
+	push_error("Racing3DErrors self-check: this error is planted, and must be counted")
+	var counted: int = errors
+	errors = 0
+	seen.clear()
+	if counted != 1:
+		return "planted, an engine error: the counter saw %d of 1" % counted
+	return ""
+
+
 ## The finding to report, or "" when nothing was counted.
 func finding(during: String) -> String:
 	if errors == 0:

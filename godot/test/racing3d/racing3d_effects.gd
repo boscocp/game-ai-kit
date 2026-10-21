@@ -42,10 +42,13 @@ const HARD: Array = ["hard", 0.9, 0.97, 0.3]
 const FIELD: Array[Array] = [["easy", 0.5, 0.75, 2.0], ["easy", 0.5, 0.75, 2.0], ["normal", 0.7, 0.86, 1.0], HARD]
 
 var _errors := Racing3DErrors.new()
+## The counter's own planted case, run first: "" when it counted it.
+var _counter_works: String = ""
 
 
 func _initialize() -> void:
 	OS.add_logger(_errors)
+	_counter_works = _errors.self_check()
 	_run()
 
 
@@ -63,6 +66,8 @@ func _run() -> void:
 	_print_field("heat line", heat)
 	_print_field("one rival at a time", one)
 	failures.append_array(claims(pid, proportional, sheet))
+	if _counter_works != "":
+		failures.append(_counter_works)
 	var engine: String = _errors.finding("the races")
 	if engine != "":
 		failures.append(engine)

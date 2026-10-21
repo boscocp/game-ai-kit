@@ -7,12 +7,24 @@
 #     ./scripts/godot --headless --path godot -s res://test/racing3d/racing3d_vectors_runner.gd \
 #         -- /absolute/path/to/spec/vectors/racing3d
 #
-# Exit codes: 0 every vector passes, 1 a vector failed, 2 the vectors could
-# not be read -- which includes finding none at all.
+# Any engine error while it runs is a failure (`Racing3DErrors`): a key a
+# vector lacks used to print a SCRIPT ERROR and end "0 failure(s)".
+#
+# Exit codes: 0 every vector passes, 1 a vector failed or an engine error
+# was logged, 2 the vectors could not be read -- which includes finding none
+# at all.
 extends SceneTree
+
+var _errors := Racing3DErrors.new()
 
 
 func _init() -> void:
+	OS.add_logger(_errors)
+	var planted: String = _errors.self_check()
+	if planted != "":
+		printerr(planted)
+		quit(1)
+		return
 	var arguments: PackedStringArray = OS.get_cmdline_user_args()
 	if arguments.is_empty():
 		printerr("racing3d_vectors_runner: give me the vectors directory after `--`")
@@ -33,6 +45,9 @@ func _run(directory: String) -> int:
 			printerr("racing3d_vectors_runner: %s is not a racing vector" % name)
 			return 2
 		failures.append_array(Racing3DVector.check(name, vector))
+	var engine: String = _errors.finding("the vectors")
+	if engine != "":
+		failures.append(engine)
 	for failure: String in failures:
 		print(failure)
 	print("racing3d vectors: %d file(s), %d failure(s)" % [files.size(), failures.size()])
