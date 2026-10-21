@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-18
+verified_on: 2026-10-21
 tier: 1
 source: https://www.gameaipro.com/
-invalidated_if: T51 or T52 stop doing what the last section says they take from here
+invalidated_if: T51, T52 or T66 stop doing what the sections on what the kit takes say they take from here
 teaches: shooter-ai
 -->
 
@@ -459,6 +459,54 @@ about which shots may land.
 - **Hitman's disguises and crowds**, the **Metal Gear** caution phase after
   MGS1, and **Far Cry's** outposts: no developer source could be opened.
 
+## A map made for the bots: what the level design sources say (T66)
+
+T51's arena was an open floor with boxes on it, and the owner found the
+capture points "mt exposta", with no way to flank. T66 rebuilt it as three
+lanes, and these are the rules it was built to, each from a page opened
+twice -- once in wave 70 to choose the layout, and again in wave 71 to cite
+it. Two pages tried in wave 70 could not be opened and are not used.
+
+- **Two or three main paths, a choke point on each, no more than three.**
+  "Develop 2 or 3 main paths leading from spawn point to bombsite ...
+  Don't do any more then 3", and "if you have 3 main paths, you should have
+  3 choke points; one for each main path" [World of Level Design, CS
+  layouts]. The same page keeps connecting paths out of the chokes.
+- **One choke per lane, and none that covers the rest.** "distribute 3-4
+  chokepoints across the map, one chokepoint per lane", and "It should be
+  impossible to cover all chokepoints from a single point" [Level Design
+  Book, balance].
+- **Spawns as far from every point, and no point as a choke.** "PlayerStarts
+  should be of an equal distance to DomPoints"; "Entrances to DomPoint areas
+  should not be choke points"; "Some obvious cover ... of the DomPoints
+  should be present" [Unreal Wiki, Mapping For DDOM].
+- **Three to nine seconds from a start to a point, and no point in sight of
+  a start.** "a minimum of 3 seconds to reach a control point from a player
+  start, and a maximum of 9 seconds"; "avoid placing a start point within
+  direct sight of a Control Point" [Unreal Wiki, Placing PlayerStart].
+- **Two or three heights.** "A good Domination map should at least have
+  two, but preferably three, different height levels", linked by ramps or
+  stairs [Unreal Wiki, Z-Axis].
+- **Low cover at the waist, high cover over the head.** "Standing waist
+  height object, 1.0-1.25 meters" and "Standing head height object, 1.75 or
+  more meters", the page citing Naughty Dog's Uncharted 4 [Level Design
+  Book, cover].
+- **A perch that changes hands.** Halo 5's Plaza sniper nest can be
+  approached "from the ramp and bridge side, or from the gravity lift and
+  bottom level side", and "Players under heavy fire are forced to abandon
+  the spot or die, which allows for the area to change control frequently"
+  [Bean, Halo 5 Plaza]. A blogger's analysis, not the studio's; that the
+  high ground should be contestable from several sides is this page's
+  reading of it.
+
+No source gave a sightline's length in metres, so the lanes' lengths are
+the arena's own. What T66 built from these: a lane and one door for each
+point, spawn rooms opening into a rear corridor through doors offset from
+the lanes, two bridges over B with a stair at each end, low cover of 1.1 m
+and pillars of 2.5 m. `botmatch_test.gd` holds two of the rules as
+commands: every walk from a spawn to a point takes 4.8 to 6.7 s, the means
+per point within one second; and no point sees into a spawn.
+
 ## Could not be checked
 
 Not used above:
@@ -485,6 +533,23 @@ Not used above:
   Battlefield and Half-Life's squads: no readable primary source looked at.
 
 ## References
+
+Level design, for T66's map:
+
+- Bean, A. "Level Design in Halo 5 Multiplayer: Plaza." Game Developer, a
+  blogger's analysis.
+  <https://gamedeveloper.com/design/level-design-in-halo-5-multiplayer-plaza>
+- The Level Design Book. "Balance" and "Cover", Book 1, Combat.
+  <https://book.leveldesignbook.com/process/combat/balance>,
+  <https://book.leveldesignbook.com/process/combat/cover>
+- Unreal Wiki (legacy, archived). "Mapping For DDOM", "Placing
+  PlayerStart", "Z-Axis".
+  <https://unrealarchive.org/wikis/unreal-wiki/Legacy:Mapping_For_DDOM.html>,
+  <https://unrealarchive.org/wikis/unreal-wiki/Legacy:Placing_PlayerStart.html>,
+  <https://unrealarchive.org/wikis/unreal-wiki/Legacy:Z-Axis.html>
+- World of Level Design. "How to create competitive Counter-Strike gameplay
+  map layouts?"
+  <https://worldofleveldesign.com/categories/csgo-tutorials/csgo-how-to-design-gameplay-map-layouts.php>
 
 Shipped games -- talks, chapters and papers by their developers:
 
