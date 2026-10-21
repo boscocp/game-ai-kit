@@ -35,6 +35,13 @@ list (take cover, shoot, reload, move to the squad's area), interrupted
 when the world changes. T15 is where the other ways to decide are
 compared; this task does not wait for it.
 
+**Decided by the owner, 2026-10-21 (wave 70):** both ways to see it --
+watch, as above, and one key to take the place of any bot of either team
+at any moment, played in third person with the same body and rules as a
+bot (WASD, the mouse aims, a click fires). The player's teammates respect
+its claim, and its squad's commander counts it. The measurements below
+stay bots-only.
+
 ## Steps
 
 1. **The snapshot** (ADR 0018): positions, health, ammunition, the cover
@@ -56,7 +63,9 @@ compared; this task does not wait for it.
 6. **The views**: a free camera, a camera on any bot, and a 2D map of the
    whole match with positions, claims, the influence map, squads and their
    objectives.
-7. **A match runner** headless: N matches on fixed seeds, each technique on
+7. **Take over a bot**: a key puts the player in the watched bot's body,
+   either team, and gives it back to its priority list on the same key.
+8. **A match runner** headless: N matches on fixed seeds, each technique on
    or off per team, printing the score and the counts that show what each
    technique does.
 

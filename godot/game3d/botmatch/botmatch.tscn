@@ -1,0 +1,41 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://game3d/botmatch/botmatch.gd" id="1_match"]
+[ext_resource type="Script" path="res://game3d/botmatch/botmatch_drawing.gd" id="2_drawing"]
+[ext_resource type="Script" path="res://game3d/botmatch/botmatch_map.gd" id="3_map"]
+[ext_resource type="Script" path="res://game/legend.gd" id="4_legend"]
+
+[node name="BotMatch" type="Node3D"]
+script = ExtResource("1_match")
+
+[node name="Drawing" type="Node3D" parent="."]
+script = ExtResource("2_drawing")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8, -0.36, 0.48, 0, 0.8, 0.6, -0.6, -0.48, 0.64, 0, 20, 0)
+shadow_enabled = true
+
+[node name="Camera" type="Camera3D" parent="."]
+fov = 60.0
+
+[node name="Interface" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="Label" parent="Interface"]
+offset_left = 16.0
+offset_top = 12.0
+offset_right = 760.0
+offset_bottom = 110.0
+
+[node name="Map" type="Control" parent="Interface"]
+offset_left = 924.0
+offset_top = 12.0
+offset_right = 1260.0
+offset_bottom = 236.0
+script = ExtResource("3_map")
+
+[node name="Legend" type="Control" parent="Interface"]
+offset_left = 16.0
+offset_top = 540.0
+offset_right = 560.0
+offset_bottom = 708.0
+script = ExtResource("4_legend")

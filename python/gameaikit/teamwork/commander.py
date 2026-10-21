@@ -42,7 +42,7 @@ class Weights:
 def priority_of(objective: Objective, weights: Weights) -> float:
     """What `objective` is worth now."""
     if objective.held_by != US:
-        return weights.take
+        return weights.take / (1.0 + max(0.0, -objective.influence))
     return weights.hold + weights.defend * max(0.0, -objective.influence)
 
 

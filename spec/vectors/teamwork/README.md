@@ -49,7 +49,7 @@ id or a state must be equal.
 | `commander` | squads and objectives | each objective's priority, the commander's assignment, and nearest-first without it |
 | `confidence` | facts over time, a squad's members, phases | each confidence, the states with and without retreat, the waves |
 
-## The sixteen
+## The seventeen
 
 | file | what it pins |
 |---|---|
@@ -61,6 +61,7 @@ id or a state must be equal.
 | `friends-add-enemies-subtract` | sources add, an enemy subtracts, off the map is zero |
 | `an-offset-corner` | a map whose corner is not the origin, a source clipped by the edge |
 | `take-before-hold` | points to take are worth more than ours; rooms fill cheapest first |
+| `attack-where-they-are-not` | a point to take is worth less where the enemy is strong |
 | `defend-a-point-under-pressure` | our point with the enemy on it outweighs one to take |
 | `more-squads-than-room` | squads beyond every room go where the priority is highest |
 | `two-squads-tie-for-one-room` | of two squads tied for the one room, the first listed gets it |

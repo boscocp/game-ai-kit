@@ -5,8 +5,9 @@
 ## bots, and assigns squads to them [Straatman et al. 2013]; Halo 3 writes the
 ## same as "pour squads in at the top, allow them to filter down", greedily by
 ## a cost [Isla, Halo 3 objectives]. Here an objective's priority is what it
-## is worth -- taking one is worth more than holding one, and a held one with
-## enemies on it is worth defending -- and a squad's cost for it is its
+## is worth -- taking one is worth more than holding one, less where the enemy
+## is strong (Killzone's influence map, read as "attack where they are not"),
+## and a held one with enemies on it is worth defending -- and a squad's cost for it is its
 ## distance over that priority. The cheapest pair is assigned, the objective's
 ## room shrinks by the squad's size, and again, until every squad has one.
 ## Squads times objectives per assignment, so cubic in the worst case and
@@ -70,7 +71,7 @@ static func priorities(objectives: Array[Objective], weights: Weights) -> Packed
 ## What `objective` is worth now.
 static func priority_of(objective: Objective, weights: Weights) -> float:
 	if objective.held_by != US:
-		return weights.take
+		return weights.take / (1.0 + maxf(0.0, -objective.influence))
 	return weights.hold + weights.defend * maxf(0.0, -objective.influence)
 
 

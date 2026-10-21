@@ -1,0 +1,67 @@
+## The bot match's rules, read from `rules.json` (ADR 0007): what a bot can
+## do and how fast, and how a match is won. Nothing here is a decision.
+##
+## A team's knobs -- reaction, turn rate, aim error -- start from the file's
+## and are the team's to change (T49's honest difficulty): the same body for
+## every bot, and only how quickly and how well it is driven differs.
+class_name MatchRules
+extends RefCounted
+
+const RULES: String = "res://game3d/botmatch/rules.json"
+
+var health: int = 100
+var damage: int = 20
+var fire_interval: float = 0.25
+var magazine: int = 20
+var reload_time: float = 2.0
+var respawn_time: float = 4.0
+var speed: float = 4.5
+var eye_height: float = 1.5
+var chest_height: float = 1.2
+var crouched_height: float = 0.7
+var body_half_width: float = 0.3
+var body_radius: float = 0.4
+var max_range: float = 40.0
+var capture_radius: float = 3.0
+var capture_time: float = 4.0
+var score_limit: int = 300
+var time_limit: float = 240.0
+## The simulation's step, and how often bots look and decide.
+var step: float = 0.05
+var decision_interval: float = 0.2
+## How often a bot reconsiders where to stand, and by how much a new spot
+## must beat its own to make it move.
+var position_interval: float = 1.0
+var stay_margin: float = 10.0
+## A squad sent to hold a point stands within area_radius of it; one sent to
+## attack, within attack_radius, which is on the point.
+var area_radius: float = 4.5
+var attack_radius: float = 2.5
+## How long a team remembers an enemy it saw, and a kill or loss counts.
+var remembered_for: float = 10.0
+## Enemies this near a squad's centre, seen within confidence_memory
+## seconds, count against its confidence: a squad is afraid of what it is
+## seeing, not of everything it remembers.
+var squad_sight_radius: float = 20.0
+var confidence_memory: float = 2.0
+## A squad's confidence thresholds, by SquadConfidence's names; the rest
+## are its defaults. Later than the technique's defaults: measured, a squad
+## that fell back at 0.7 gave up every point to a side that never did.
+var retreat_at: float = 0.5
+var recover_at: float = 0.9
+## How far back a retreating squad falls, and how long a wave may take.
+var fallback_metres: float = 8.0
+var wave_timeout: float = 3.0
+## The default knobs, per team.
+var reaction: float = 0.3
+var turn_rate_degrees: float = 270.0
+var aim_error_degrees: float = 3.0
+
+
+func _init(path: String = RULES) -> void:
+	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	for key: String in data:
+		if key != "about" and key != "knobs":
+			set(key, data[key])
+	for key: String in data["knobs"]:
+		set(key, data["knobs"][key])

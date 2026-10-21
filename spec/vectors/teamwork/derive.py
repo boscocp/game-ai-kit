@@ -66,7 +66,8 @@ def influence(name, why, width, height, cell, origin, radius, sources, asked):
 COMMAND = {"take": 3.0, "hold": 1.0, "defend": 2.0, "nearest_metres": 1.0}
 
 def priority(o, w):
-    return w["take"] if o["held_by"] != 1 else w["hold"] + w["defend"] * max(0.0, -o["influence"])
+    if o["held_by"] != 1: return w["take"] / (1 + max(0.0, -o["influence"]))
+    return w["hold"] + w["defend"] * max(0.0, -o["influence"])
 
 def assign(squads, objectives, w):
     worth = [priority(o, w) for o in objectives]
@@ -198,6 +199,10 @@ def vectors():
                     "One squad halfway between two points worth the same: the first listed wins, on both "
                     "sides, with and without the commander.",
                     [squad("s1", 0, 0)], [objective("east", 10, 0), objective("west", -10, 0)])
+    yield commander("attack-where-they-are-not",
+                    "Two points to take, the enemy strong on the nearer (influence -2): 3 / (1 + 2) = 1 against "
+                    "3, so the one squad goes to the farther, weaker point.",
+                    [squad("s1", 0, 0)], [objective("strong", 10, 0, held=-1, influence=-2.0), objective("weak", 25, 0)])
     yield commander("two-squads-tie-for-one-room",
                     "Two squads equally far from the one point with room for one of them: the first listed "
                     "gets it, the second is sent on to the far point.",
