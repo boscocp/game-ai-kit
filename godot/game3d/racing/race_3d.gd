@@ -25,11 +25,14 @@
 class_name Race3D
 extends Node3D
 
-## The test pad: where on the map, how big, and how far apart the cars
-## measure on it.
+## The test pad: where on the map and how big; the cars measure on it in
+## rows of `PAD_ROW`, `PAD_LANES` metres apart across and `PAD_ROWS` metres
+## apart along -- room for sixteen, each run taking about 150 metres.
 const PAD_CENTRE: Vector2 = Vector2(-2500.0, 0.0)
-const PAD_SIZE: float = 900.0
-const PAD_LANES: float = 110.0
+const PAD_SIZE: float = 1000.0
+const PAD_ROW: int = 4
+const PAD_LANES: float = 200.0
+const PAD_ROWS: float = 240.0
 ## Metres between two rows of the grid, and either side of the line.
 const GRID_GAP: float = 10.0
 const GRID_SIDE: float = 2.5
@@ -95,8 +98,9 @@ func enter(driver: RaceDriver3D) -> int:
 	var number: int = cars.size()
 	var car := RaceCar3D.new(physics, true)
 	car.name = "Car%d" % number
-	var lane: float = (number - 2.5) * PAD_LANES
-	car.position = Vector3(PAD_CENTRE.x + lane, car.ride_height(), PAD_CENTRE.y + PAD_SIZE * 0.3)
+	var across: float = (number % PAD_ROW - (PAD_ROW - 1) / 2.0) * PAD_LANES
+	var along: float = PAD_SIZE * 0.4 - (number / PAD_ROW) * PAD_ROWS
+	car.position = Vector3(PAD_CENTRE.x + across, car.ride_height(), PAD_CENTRE.y + along)
 	add_child(car)
 	cars.append(car)
 	drivers.append(driver)

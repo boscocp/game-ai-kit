@@ -96,7 +96,7 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-clone-rows test-inference-budget test-clone-report test-difficulty-knobs \
        test-rts-budget test-rts-simulation test-rts-match test-steering-properties \
        test-racing-ladder test-racing-does-not-cheat test-game3d-floor test-botmatch-effects \
-       test-racing3d-car test-racing3d-effects ## Run every gate
+       test-racing3d-car test-racing3d-effects test-racing3d-ladder test-racing3d-does-not-cheat ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-no-assets lint-readability lint-demos \
@@ -681,6 +681,14 @@ test-racing3d-car: import ## The 3D car on a test pad: it rests on its springs, 
 	@# --fixed-fps 60: the physics step is the same 1/60 s either way, but
 	@# without it Godot paces the frames in real time and this takes minutes.
 	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_car.gd
+
+.PHONY: test-racing3d-ladder
+test-racing3d-ladder: import ## The 3D racer's three levels finish, in order, a second a lap apart, on two tracks (T54)
+	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_ladder.gd
+
+.PHONY: test-racing3d-does-not-cheat
+test-racing3d-does-not-cheat: import ## One physics for every 3D car, no limit broken, no knob moved, and an honest twin race matched bit for bit (T54)
+	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_does_not_cheat.gd
 
 .PHONY: test-racing3d-effects
 test-racing3d-effects: import ## Slow (~75 s): what the PID, the measured grip and the heat line each do to a 3D race, measured (T54)
