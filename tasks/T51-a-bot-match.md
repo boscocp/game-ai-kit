@@ -82,7 +82,9 @@ python3 scripts/check_demos.py
 ```
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/botmatch_effects.gd
+./scripts/godot --headless --path godot -s res://test/botmatch/botmatch_effects.gd
+make test-botmatch-effects
+make test-teamwork-vectors
 ```
 
 `botmatch_effects.gd` runs 20 seeded matches per pairing and must hold, with
@@ -90,15 +92,43 @@ each margin stated as a number in its header:
 
 - with claims on, two bots of one team stand within one metre of each other
   in cover less often than with claims off;
-- a team with the commander on holds points longer than the same team with
-  it off;
+- a team with the commander on orders its bots over more points at once
+  than the same team with it off. **Changed by the owner, 2026-10-21:** the task said
+  "holds points longer", and measured, it does not -- a team with every
+  technique on loses to the same team with any one of them off. The owner
+  chose to state that (`docs/godot/botmatch.md`) rather than tune until it
+  passed; making the coordinated team win is T65;
 - a team whose squads retreat in waves loses fewer bots per point lost than
   the same team that never retreats;
 - every bot fires only at an enemy in its own sight table -- no bot shoots
   through a wall or at what it has not seen.
 
-If T50 measured that 3D physics does not run headless, these run on the
-snapshot-level simulation and the task says so here.
+T50 measured that 3D physics runs headless. These run on the snapshot-level
+simulation anyway, which is faster: about four minutes for 80 matches.
+`botmatch_test.gd` holds the simulation's sight lines to Godot's own rays.
+
+## Done (wave 70)
+
+- `ai_teamwork`: tactical positions with claims, a team's additive
+  influence, the commander, squad confidence and the waves. Each has a
+  Python twin, and 17 vectors are derived from a third copy of the rules.
+- The match in `godot/game3d/botmatch/`, a simulation with no physics
+  engine, six a side in three squads of two, mirrored. Rules and arena are
+  data (`rules.json`, `arena.json`). Step 5's arena is primitives plus
+  Kenney's Mini Characters from T50's manifest. KayKit's itch.io page was
+  not used.
+- The views: free camera, follow camera, and the 2D map with influence,
+  orders, confidence and the frontline. The owner's takeover of any bot.
+- The four claims, measured with the rifle's rules: bunched 0.1 s against
+  500; orders over 2.44 points against 1.94; 34 bots lost a point lost
+  against 700; 0 unseen shots, and 455 from the planted cheat.
+- First person, after the owner played the third-person cut and found it
+  "mt esquisito". The shot is a 3D ray with tracers, a muzzle flash, hit
+  markers, a hurt flash, a rifle in view and a generated sound. The rifle's
+  rules are ten shots a second, a magazine of thirty, and a damage of 12.
+- Steps 2 and 3's "read by both languages": the techniques are, through
+  their vectors. The match's rules are read only by GDScript, because no
+  Python side plays the match.
 
 ## Manual check
 

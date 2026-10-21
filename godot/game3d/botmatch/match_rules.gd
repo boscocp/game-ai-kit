@@ -10,15 +10,22 @@ extends RefCounted
 const RULES: String = "res://game3d/botmatch/rules.json"
 
 var health: int = 100
-var damage: int = 20
-var fire_interval: float = 0.25
-var magazine: int = 20
+## A rifle's: ten shots a second, a magazine of thirty, nine hits to kill --
+## what a person expects of a shooter (the owner, playing the first cut at
+## four a second).
+var damage: int = 12
+var fire_interval: float = 0.1
+var magazine: int = 30
 var reload_time: float = 2.0
 var respawn_time: float = 4.0
 var speed: float = 4.5
 var eye_height: float = 1.5
 var chest_height: float = 1.2
 var crouched_height: float = 0.7
+## How tall a body is, standing and crouched: what a person's aim must
+## cross, in height as well as across.
+var body_height: float = 1.8
+var crouched_body_height: float = 1.1
 var body_half_width: float = 0.3
 var body_radius: float = 0.4
 var max_range: float = 40.0

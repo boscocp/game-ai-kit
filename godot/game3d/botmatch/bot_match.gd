@@ -34,6 +34,8 @@ const NEAR: float = 3.0
 const BUNCHED: float = 1.0
 ## The places around a point a bot attacking it may stand on.
 const ON_POINT: float = 1.5
+## How many shots the view is kept for.
+const SHOTS_KEPT: int = 48
 
 var rules: MatchRules
 var arena: BotArena
@@ -51,8 +53,11 @@ var sight: Dictionary = {}
 var squad_confidence: Array[Dictionary] = [{}, {}]
 ## What the effects test reads, by team.
 var stats: Array[MatchStats] = [MatchStats.new(), MatchStats.new()]
-## The last shots, newest last: [time, shooter, target, hit].
+## The last shots, newest last: [time, shooter, target (-1: none), hit,
+## from, to] -- the two ends in 3D, for the view's tracers.
 var recent_shots: Array[Array] = []
+## Every shot fired since the match began, for the view to hear the new ones.
+var shots_fired: int = 0
 ## Cover spots, then the places on each point.
 var _places: Array[Vector2] = []
 var _place_ids: Array[String] = []
@@ -165,6 +170,16 @@ func sees(looker: MatchBot, target: MatchBot) -> bool:
 	var height: float = rules.crouched_height if target.crouched else rules.chest_height
 	var eyes := Vector3(looker.position.x, rules.eye_height, looker.position.y)
 	return arena.clear_line(eyes, Vector3(target.position.x, height, target.position.y))
+
+
+## Note a shot for the view: who, at whom, whether it hit, and where it went.
+func record_shot(shooter: MatchBot, target: int, hit: bool, to: Vector3) -> void:
+	recent_shots.append([time, shooter.id, target, hit, MatchActions.muzzle_of(self, shooter, to), to])
+	shots_fired += 1
+	if recent_shots.size() > SHOTS_KEPT:
+		recent_shots.pop_front()
+	if hit:
+		bots[target].hurt_at = time
 
 
 ## A bot was killed by `killer` (-1: nobody); count it on both sides.
@@ -289,6 +304,25 @@ func _change_owner(index: int) -> void:
 		point_owner[index] = BLUE if now > 0.0 else RED
 
 
+# How many distinct points the living bots of `side` are ordered to.
+func _points_ordered(side: int) -> int:
+	var ordered: Dictionary = {}
+	for bot: MatchBot in bots:
+		if bot.team == side and bot.alive() and teams[side].bot_points.has(bot.id):
+			ordered[teams[side].bot_points[bot.id]] = true
+	return ordered.size()
+
+
+# How many points have a living bot of `side` within the area radius.
+func _points_covered(side: int) -> int:
+	var covered: int = 0
+	for place: Vector2 in arena.point_places:
+		var near: bool = bots.any(func(bot: MatchBot) -> bool:
+			return bot.team == side and bot.alive() and bot.position.distance_to(place) <= rules.area_radius)
+		covered += 1 if near else 0
+	return covered
+
+
 # Two bodies closer than two radii are pushed apart, half each, where each
 # can stand. Without it every bot of a team could share the one best spot,
 # and bunching would cost nothing -- the reason claims exist would be gone.
@@ -330,6 +364,8 @@ func _count(delta: float) -> void:
 			stats[owner].point_seconds += delta
 	for side: int in [BLUE, RED]:
 		stats[side].bunched_seconds += delta * _bunched_pairs(side)
+		stats[side].point_coverage += delta * _points_covered(side)
+		stats[side].order_spread += delta * _points_ordered(side)
 
 
 # Pairs of one team's bots in cover within BUNCHED metres of each other: each

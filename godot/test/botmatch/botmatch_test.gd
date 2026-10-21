@@ -137,6 +137,19 @@ func test_a_person_hits_what_they_aim_at_and_not_through_a_wall() -> void:
 	enemy.position = Vector2(15.0, 10.0)
 	MatchActions.fire_aimed(world, mine)
 	assert_int(enemy.health).is_equal(rules.health - rules.damage)
+	# Aimed at the floor in front of them: the floor stops it, short of the enemy.
+	mine.position = Vector2(9.0, 14.0)
+	enemy.position = Vector2(15.0, 14.0)
+	mine.pitch = deg_to_rad(-30.0)
+	MatchActions.fire_aimed(world, mine)
+	assert_int(enemy.health).is_equal(rules.health - rules.damage)
+	var shot: Array = world.recent_shots[-1]
+	assert_float((shot[5] as Vector3).y).is_equal_approx(0.0, 1e-4)
+	# Aimed over their head: a miss, though the line across is true.
+	mine.pitch = deg_to_rad(20.0)
+	MatchActions.fire_aimed(world, mine)
+	assert_int(enemy.health).is_equal(rules.health - rules.damage)
+	mine.pitch = 0.0
 	# Off the aim by more than a body's half-width: no hit either.
 	mine.position = Vector2(9.0, 14.0)
 	enemy.position = Vector2(15.0, 14.5)

@@ -19,6 +19,8 @@ const SHOOTING_PACE: float = 0.5
 ## How high a waist is, and how much of a body partial cover leaves to hit.
 const WAIST: float = 0.9
 const PARTIAL_COVER: float = 0.5
+## How far beside its target a bot's missed shot is drawn.
+const MISS_DRAWN: float = 0.7
 
 
 ## Carry out `bot.action` for `delta` seconds.
@@ -54,13 +56,23 @@ static func fire(world: BotMatch, shooter: MatchBot, target: MatchBot) -> void:
 	var shown: float = world.rules.body_half_width * (PARTIAL_COVER if _waist_hidden(world, shooter, target) else 1.0)
 	var chance: float = clampf(shown / (distance * tan(maxf(aim_error, 1e-4))), 0.0, 1.0)
 	var hit: bool = world.random.randf() < chance
-	world.recent_shots.append([world.time, shooter.id, target.id, hit])
-	if world.recent_shots.size() > 32:
-		world.recent_shots.pop_front()
+	world.record_shot(shooter, target.id, hit, _bot_shot_end(world, shooter, target, hit))
 	if hit and target.alive():
 		stats.hits += 1
 		target.health -= world.rules.damage
 		target.last_hit_by = shooter.id
+
+
+# Where a bot's shot is drawn ending: the target's chest when it hit; when it
+# missed, past the target to one side, alternating with each shot -- drawn
+# only, so it uses no random number and changes no match.
+static func _bot_shot_end(world: BotMatch, shooter: MatchBot, target: MatchBot, hit: bool) -> Vector3:
+	var chest := Vector3(target.position.x, world.rules.chest_height, target.position.y)
+	if hit:
+		return chest
+	var across: Vector2 = (target.position - shooter.position).normalized().orthogonal()
+	var side: float = MISS_DRAWN * (1.0 if world.stats[shooter.team].shots % 2 == 0 else -1.0)
+	return chest + Vector3(across.x * side, 0.3, across.y * side)
 
 
 # Whether the line from the shooter's eyes to the target's waist is blocked.
@@ -69,29 +81,73 @@ static func _waist_hidden(world: BotMatch, shooter: MatchBot, target: MatchBot) 
 	return not world.arena.clear_line(eyes, Vector3(target.position.x, WAIST, target.position.y))
 
 
-## The person's shot: along the way the bot faces, at the first enemy whose
-## body the line passes within `body_half_width` of and that a clear line
-## reaches. The person's own aim is the aim error, so it hits if it points.
+## The person's shot, as in a first-person shooter: a ray from their eyes
+## along where they look, yaw and pitch. It strikes the first enemy whose
+## body it passes through -- within `body_half_width` across, and between
+## the floor and the top of the body, standing or crouched -- unless a box,
+## or the floor, comes first. The person's own aim is the aim error.
 static func fire_aimed(world: BotMatch, shooter: MatchBot) -> void:
 	shooter.ammo -= 1
 	shooter.fire_cooldown = world.rules.fire_interval
 	world.stats[shooter.team].shots += 1
-	var aim: Vector2 = Vector2.RIGHT.rotated(shooter.facing)
+	var eyes: Vector3 = eyes_of(world, shooter)
+	var look: Vector3 = look_of(shooter)
+	var far: Vector3 = eyes + look * world.rules.max_range
+	var reach: float = world.arena.first_block(eyes, far) * world.rules.max_range
+	# Aimed down, the floor stops it too.
+	if look.y < 0.0:
+		reach = minf(reach, eyes.y / -look.y)
 	var struck: MatchBot = null
-	var nearest: float = world.rules.max_range
 	for other: MatchBot in world.bots:
-		var offset: Vector2 = other.position - shooter.position
-		var along: float = offset.dot(aim)
-		var across: float = absf(offset.cross(aim))
-		var open: bool = other.team != shooter.team and other.alive() and along > 0.0 and along < nearest
-		if open and across <= world.rules.body_half_width and world.sees(shooter, other):
-			nearest = along
+		var along: float = _crossing(world, eyes, look, other)
+		if other.team != shooter.team and other.alive() and along < reach:
+			reach = along
 			struck = other
-	world.recent_shots.append([world.time, shooter.id, struck.id if struck != null else -1, struck != null])
+	world.record_shot(shooter, struck.id if struck != null else -1, struck != null, eyes + look * reach)
 	if struck != null:
 		world.stats[shooter.team].hits += 1
 		struck.health -= world.rules.damage
 		struck.last_hit_by = shooter.id
+
+
+## Where a bot's eyes are: lower when it crouches.
+static func eyes_of(world: BotMatch, bot: MatchBot) -> Vector3:
+	var height: float = world.rules.eye_height - (world.rules.body_height - world.rules.crouched_body_height) * float(bot.crouched)
+	return Vector3(bot.position.x, height, bot.position.y)
+
+
+## Where a shot towards `to` leaves the gun: in front of the eyes, a little
+## right and below, as a rifle held at the shoulder. Drawn only; the shot
+## itself is the eyes' ray.
+static func muzzle_of(world: BotMatch, bot: MatchBot, to: Vector3) -> Vector3:
+	var eyes: Vector3 = eyes_of(world, bot)
+	var ahead: Vector3 = (to - eyes).normalized()
+	var right: Vector3 = ahead.cross(Vector3.UP).normalized() if absf(ahead.y) < 0.99 else Vector3.RIGHT
+	# The end of the viewmodel's barrel (`Viewmodel.REST` and its barrel).
+	return eyes + ahead * 0.9 + right * 0.22 - Vector3.UP * 0.185
+
+
+## The unit direction a bot looks along, from its facing and pitch.
+static func look_of(bot: MatchBot) -> Vector3:
+	return Vector3(cos(bot.pitch) * cos(bot.facing), sin(bot.pitch), cos(bot.pitch) * sin(bot.facing))
+
+
+# How far along the look the ray passes through `other`'s body, or INF: its
+# nearest approach across must be within the half-width, and at that point
+# the ray must be between the floor and the top of the body.
+static func _crossing(world: BotMatch, eyes: Vector3, look: Vector3, other: MatchBot) -> float:
+	var flat := Vector2(look.x, look.z)
+	if flat.length() < 1e-6:
+		return INF
+	var offset: Vector2 = other.position - Vector2(eyes.x, eyes.z)
+	var along_flat: float = offset.dot(flat.normalized())
+	var across: float = absf(offset.cross(flat.normalized()))
+	if along_flat <= 0.0 or across > world.rules.body_half_width:
+		return INF
+	var along: float = along_flat / flat.length()
+	var height: float = eyes.y + look.y * along
+	var top: float = world.rules.crouched_body_height if other.crouched else world.rules.body_height
+	return along if height >= 0.0 and height <= top else INF
 
 
 # The person's bot: walk where they push, blocked by the boxes as a bot is,

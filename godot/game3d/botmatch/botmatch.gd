@@ -10,8 +10,10 @@
 ##
 ## T takes the watched bot over, either team, and T again gives it back to
 ## its priority list (the owner's choice, 2026-10-21): the same body by the
-## same rules, in third person -- WASD walks, the mouse turns, a click fires,
-## R reloads, Ctrl crouches. Its teammates leave the spot it stands on to it,
+## same rules, in first person as in Counter-Strike or Unreal (the owner,
+## after playing it in third) -- WASD walks, the mouse aims up, down and
+## round, a click fires, R reloads, Ctrl crouches. Every shot leaves a
+## tracer; a hit on someone shows a marker, and being hit reddens the edge. Its teammates leave the spot it stands on to it,
 ## and its squad's commander counts it like any other bot.
 extends Node3D
 
@@ -19,7 +21,11 @@ const SEEDS_FROM: int = 1
 ## Where the free camera turns about: the arena's middle.
 const CENTRE: Vector3 = Vector3(24, 0, 16)
 ## Radians the view turns per pixel of mouse movement.
-const MOUSE_TURN: float = 0.004
+const MOUSE_TURN: float = 0.0025
+## How far up or down a person can look.
+const LOOK_LIMIT: float = deg_to_rad(80.0)
+## How many shots can sound at once.
+const SPEAKERS: int = 8
 
 var world: BotMatch
 var _seed: int = SEEDS_FROM
@@ -32,11 +38,21 @@ var _orbit_distance: float = 38.0
 var _carried: float = 0.0
 ## The bot a person drives, or -1.
 var _played: int = -1
+## While playing, whether the AI's reasoning is drawn over the world (V).
+var _thinking_shown: bool = false
+## Players for the shots heard, reused in turn, and how many shots were heard.
+var _speakers: Array[AudioStreamPlayer3D] = []
+var _next_speaker: int = 0
+var _heard: int = 0
+## The rifle in the person's hands, on the camera while they play.
+var _viewmodel := Viewmodel.new()
 
 @onready var _drawing: BotMatchDrawing = $Drawing
 @onready var _map: BotMatchMap = $Interface/Map
 @onready var _panel: Label = $Interface/Panel
 @onready var _camera: Camera3D = $Camera
+@onready var _hud: BotMatchHud = $Interface/Hud
+@onready var _legend: Legend = $Interface/Legend
 
 
 func _ready() -> void:
@@ -50,6 +66,15 @@ func _ready() -> void:
 		[BotMatchDrawing.DROPPED, "dropped: too far, or outside its squad's area"],
 		[BotMatchDrawing.SIGHT, "the watched bot's sight lines"],
 	])
+	_viewmodel.visible = false
+	_camera.add_child(_viewmodel)
+	var sound: AudioStreamWAV = GunshotSound.make()
+	for index: int in range(SPEAKERS):
+		var speaker := AudioStreamPlayer3D.new()
+		speaker.stream = sound
+		speaker.unit_size = 6.0
+		add_child(speaker)
+		_speakers.append(speaker)
 	_new_match()
 
 
@@ -109,7 +134,9 @@ func _squad_overlay(team: MatchTeam, index: int) -> Dictionary:
 func _unhandled_input(event: InputEvent) -> void:
 	var motion := event as InputEventMouseMotion
 	if motion != null and _played != -1:
-		world.bots[_played].facing += motion.relative.x * MOUSE_TURN
+		var bot: MatchBot = world.bots[_played]
+		bot.facing += motion.relative.x * MOUSE_TURN
+		bot.pitch = clampf(bot.pitch - motion.relative.y * MOUSE_TURN, -LOOK_LIMIT, LOOK_LIMIT)
 		return
 	var key := event as InputEventKey
 	if key == null or not key.pressed or key.echo:
@@ -145,6 +172,8 @@ func _view_key(keycode: Key) -> void:
 			_new_match()
 		KEY_T:
 			_take_over_or_give_back()
+		KEY_V:
+			_thinking_shown = not _thinking_shown
 		KEY_R:
 			_reload_by_hand()
 		KEY_LEFT, KEY_RIGHT:
@@ -162,13 +191,17 @@ func _watch_next() -> void:
 func _take_over_or_give_back() -> void:
 	if _played != -1:
 		world.bots[_played].controlled = false
+		world.bots[_played].pitch = 0.0
 		_played = -1
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-		return
-	_played = _watched
-	world.bots[_played].controlled = true
-	_follow = true
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	else:
+		_played = _watched
+		world.bots[_played].controlled = true
+		_follow = true
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	_hud.played = _played
+	_legend.visible = _played == -1
+	_viewmodel.visible = _played != -1
 
 
 func _reload_by_hand() -> void:
@@ -207,8 +240,13 @@ func _new_match() -> void:
 			fresh.use_commander = world.teams[side].use_commander
 			fresh.may_retreat = world.teams[side].may_retreat
 	world = BotMatch.new(_seed, blue, red, rules)
+	_heard = 0
 	_played = -1
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_hud.world = world
+	_hud.played = -1
+	_legend.visible = true
+	_viewmodel.visible = false
 	for child: Node in _drawing.get_children():
 		child.free()
 	_drawing.build(world)
@@ -216,21 +254,42 @@ func _new_match() -> void:
 	_show()
 
 
+# Every shot fired since the last frame, from where it was fired; the newest
+# SPEAKERS of them, when more came at once.
+func _hear_new_shots() -> void:
+	var new_shots: int = mini(world.shots_fired - _heard, world.recent_shots.size())
+	_heard = world.shots_fired
+	for shot: Array in world.recent_shots.slice(world.recent_shots.size() - new_shots):
+		var speaker: AudioStreamPlayer3D = _speakers[_next_speaker]
+		_next_speaker = (_next_speaker + 1) % _speakers.size()
+		speaker.position = shot[4]
+		speaker.volume_db = 0.0 if int(shot[1]) == _played else -6.0
+		speaker.play()
+		if int(shot[1]) == _played:
+			_viewmodel.fire()
+
+
 func _show() -> void:
-	_drawing.refresh(world, _watched)
+	_hear_new_shots()
+	_drawing.refresh(world, _watched, _played, _played == -1 or _thinking_shown)
 	_map.queue_redraw()
+	_hud.queue_redraw()
 	_place_camera()
 	_panel.text = _panel_text()
 
 
 func _place_camera() -> void:
 	var bot: MatchBot = world.bots[_watched]
+	if _played == bot.id:
+		# First person: the eyes the shot comes from, looking where it goes.
+		var eyes: Vector3 = MatchActions.eyes_of(world, bot)
+		_camera.position = eyes
+		_camera.look_at(eyes + MatchActions.look_of(bot), Vector3.UP)
+		return
 	if _follow and bot.alive():
-		var close: bool = _played == bot.id
-		var behind := Vector2.RIGHT.rotated(bot.facing) * (-3.5 if close else -5.0)
-		var ahead := Vector2.RIGHT.rotated(bot.facing) * (6.0 if close else 0.0)
-		_camera.position = Vector3(bot.position.x + behind.x, 2.6 if close else 3.5, bot.position.y + behind.y)
-		_camera.look_at(Vector3(bot.position.x + ahead.x, 1.3, bot.position.y + ahead.y))
+		var behind := Vector2.RIGHT.rotated(bot.facing) * -5.0
+		_camera.position = Vector3(bot.position.x + behind.x, 3.5, bot.position.y + behind.y)
+		_camera.look_at(Vector3(bot.position.x, 1.2, bot.position.y))
 		return
 	var offset := Vector3(sin(_orbit_angle), 0.0, cos(_orbit_angle)) * _orbit_distance * 0.6
 	_camera.position = CENTRE + offset + Vector3(0, _orbit_distance * 0.8, 0)
@@ -239,6 +298,9 @@ func _place_camera() -> void:
 
 func _panel_text() -> String:
 	var bot: MatchBot = world.bots[_watched]
+	if _played != -1:
+		var shown: Array = [world.time, world.score[0], world.score[1], "hide" if _thinking_shown else "show"]
+		return "%.0f s   blue %.0f - %.0f red     T give it back, V %s the AI's thinking" % shown
 	var over: String = "   (over)" if world.over() else ""
 	var lines: Array[String] = ["%.0f s   blue %.0f - %.0f red%s" % [world.time, world.score[0], world.score[1], over]]
 	for team: MatchTeam in world.teams:

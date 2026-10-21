@@ -112,8 +112,9 @@ sha256 and never committed.
 |---|---|---|---|
 | T49 | How shooter AI is made | done | `docs/concepts/shooter-ai.md`: 48 references, each opened, a third only in part and said so; one bot, bots that cooperate, the stealth version; T51 and T52 written from it |
 | T50 | The 3D tier, measured before anything is built | done | wave 69, ADR 0018 accepted (option A): physics, rays and a navmesh from collision shapes run headless; a run replays bit-identically on one binary; a navmesh set on a region's second frame never reaches the map (set it before the tree); about 1,000 fps for the 16-bot arena on a Radeon 610M; a body moved through its node is in the physics space a frame late; Kenney Mini Characters by URL and sha256, `make assets-3d`, primitives when missing; `check_no_assets.py`, R6 in `check_renderer.py`; Jolt explicit; `docs/godot/3d-headless.md`; manual check still the owner's |
-| T51 | A bot match: two teams of bots, cover, and a commander | blocked | capture and hold, bots only, no network; scored positions with claims, a commander over an influence map, squad confidence and retreat in waves -- each drawn and switchable |
-| T52 | Bots against the player, with an optional stealth | blocked | third person; a role arbiter, awareness that accumulates with three alert levels, a shared belief map for the search -- each drawn and switchable |
+| T51 | A bot match: two teams of bots, cover, and a commander | done | wave 70: `ai_teamwork` (tactical positions with claims, team influence, a commander, squad confidence and waves), Python twins, 17 vectors; a 6-a-side match as a physics-free simulation held to Godot's rays, mirrored; first-person takeover of any bot (owner's choice), tracers, hit markers, a rifle; measured: claims cut bunching 0.1 s against 500, the commander spreads orders over 2.44 points against 1.94, retreat loses 34 bots a point lost against 700, no unseen shot in 460,000; and the cautious team loses -- the owner chose to say so (`docs/godot/botmatch.md`), T65 split off; manual check still the owner's |
+| T52 | Bots against the player, with an optional stealth | todo | T50 done; reuse T51's first-person shot, tracers and HUD; third person; a role arbiter, awareness that accumulates with three alert levels, a shared belief map for the search -- each drawn and switchable |
+| T65 | A coordinated team that wins | todo | split from T51 by the owner: measured, every technique on loses to any one off; read how UT and Killzone bot matches reward holding before changing a number |
 
 ## The kit as modules
 
@@ -131,6 +132,38 @@ touches, and later a library others can install.
 | T64 | The library | todo | after T60-T63; names: only ports and kernel prefixed (owner, 2026-10-20), the prefix by ADR; addon zips filtered by manifest; `pyproject.toml`, flat layout, no dependencies; an entry-point group for a user's technique; installed and run outside the repo; publishing stays the owner's act |
 
 ---
+
+## Resuming after 2026-10-21 (wave 70)
+
+**Where it stopped -- read first.** Wave 70 did T51, the bot match, as the
+owner asked after wave 69 merged ("a proxima onda do fps"). The review
+record is `docs/reviews/70-the-bot-match.md`.
+
+**What landed.** `ai_teamwork` holds four techniques: tactical positions
+with claims, a team's additive influence, a commander over weighed
+objectives, and squad confidence with the retreat in waves. Each has a
+Python twin and vectors from a third copy of the rules. The match runs as
+a simulation with no physics engine, held to Godot's own rays. The 3D
+scene draws the decisions, and `make demo-botmatch` opens it.
+
+**The owner decided, mid-wave, three times.**
+1. Both modes: watch, and T to take over any bot of either team.
+2. First person, like Counter-Strike or Unreal, after playing the
+   third-person cut. So the shot is a 3D ray, every shot leaves a tracer,
+   there are hit markers and a rifle in view, and the rifle's rules are ten
+   shots a second.
+3. "Dizer a verdade": measured, a team with every technique on loses to
+   the same team with any one of them off. T51 closes on the claims that
+   hold. The page says the rest (`docs/godot/botmatch.md`), and T65 is
+   "a coordinated team that wins".
+
+**Measured, worth knowing.** Shots resolved in id order gave blue the first
+shot of every step. Spawns on cell edges cost red a metre on the walk grid.
+A point inside a box left its bots without a path. Each was found by a
+mirror match, which went 14-6, then 9-11.
+
+**Next.** T65 or T52 (bots against the player); ask which. T64, the
+library, is still waiting where the owner left it.
 
 ## Resuming after 2026-10-21 (wave 69)
 

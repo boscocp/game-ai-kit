@@ -76,8 +76,24 @@ func clear_line(from: Vector3, to: Vector3) -> bool:
 	return true
 
 
+## How far along the segment from `from` to `to` the first box is met, as a
+## share of its length; 1.0 when no box is. Where a shot that missed stops.
+func first_block(from: Vector3, to: Vector3) -> float:
+	var nearest: float = 1.0
+	for box: AABB in boxes:
+		nearest = minf(nearest, entry_into(from, to, box))
+	return nearest
+
+
 ## The slab test for one box. Touching a face counts as a hit.
 static func segment_hits_box(from: Vector3, to: Vector3, box: AABB) -> bool:
+	return entry_into(from, to, box) <= 1.0
+
+
+## Where the segment enters the box, as a share of its length, or INF when it
+## does not. The slab test: the segment is inside the box where it is
+## between every pair of faces at once.
+static func entry_into(from: Vector3, to: Vector3, box: AABB) -> float:
 	var entering: float = 0.0
 	var leaving: float = 1.0
 	var direction: Vector3 = to - from
@@ -87,14 +103,14 @@ static func segment_hits_box(from: Vector3, to: Vector3, box: AABB) -> bool:
 		# Parallel to this pair of faces: inside them all along, or never.
 		var parallel: bool = absf(direction[axis]) < 1e-9
 		if parallel and (from[axis] < low or from[axis] > high):
-			return false
+			return INF
 		if parallel:
 			continue
 		var first: float = (low - from[axis]) / direction[axis]
 		var second: float = (high - from[axis]) / direction[axis]
 		entering = maxf(entering, minf(first, second))
 		leaving = minf(leaving, maxf(first, second))
-	return entering <= leaving
+	return entering if entering <= leaving else INF
 
 
 ## The walk cell a floor point is in.

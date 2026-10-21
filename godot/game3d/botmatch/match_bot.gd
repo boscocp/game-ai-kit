@@ -38,6 +38,9 @@ var place_in_team: int = 0
 var position: Vector2 = Vector2.ZERO
 ## Radians, 0 facing east (+x), turning towards +z.
 var facing: float = 0.0
+## Radians up (positive) or down from level: a person's aim. A bot's list
+## aims level at the chest and leaves it at zero.
+var pitch: float = 0.0
 var health: int = 100
 var ammo: int = 20
 var fire_cooldown: float = 0.0
@@ -55,8 +58,9 @@ var spot: int = -1
 var seen_since: Dictionary = {}
 ## When it last chose a spot.
 var chose_at: float = -INF
-## Who hit it last, for the kill when it falls (-1: nobody).
+## Who hit it last, for the kill when it falls (-1: nobody), and when.
 var last_hit_by: int = -1
+var hurt_at: float = -INF
 ## Driven by a person instead of the list (the owner's takeover). Then the
 ## person's intent below is what it does, in the same body by the same rules.
 var controlled: bool = false
