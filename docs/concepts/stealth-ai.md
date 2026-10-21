@@ -5,7 +5,7 @@ half_life: concept
 verified_on: 2026-10-21
 tier: 1
 source: https://www.gameaipro.com/
-invalidated_if: T52 stops doing what the last section says it takes from here, or T67's selector stops being how a bot chooses
+invalidated_if: T52.1 or T52.2 stops doing what the last section says it takes from here, or T67's selector stops being how a bot chooses
 teaches: stealth-ai
 -->
 
@@ -33,7 +33,7 @@ teaches: stealth-ai
   machine. Crysis stores them as fractions of a stimulus's peak -- a
   quarter "interesting", five-eighths "threatening", the peak "aggressive"
   -- in a configuration file [Welsh 2013]. Metal Gear made the phases the
-  game's rhythm: alert, then an evasion phase "that creates a cautious
+  game's rhythm, as design -- nothing about its AI's code could be read: alert, then an evasion phase "that creates a cautious
   behavior for the enemies after Snake evades the alert" [Alexander 2009,
   an article on Kojima's GDC talk].
 - **A guard knows only what it perceived or was told.** The Last of Us's
@@ -301,14 +301,42 @@ His four requirements are fairness, consistency ("similar distances and
 timing for reactions every time"), good feedback and plausibility; and his
 fix for being heard by guards the player cannot see was to halve, for
 certain events, the hearing of guards off screen and far enough away
-[Walsh 2015]. Crysis keeps its numbers in data so that designers can tune
-without a programmer [Welsh 2013]. Kojima added the radar "to allow players
+[Walsh 2015]. He rejected the blunt fix, shorter hearing for everyone,
+because a guard a sprinting player can see would then seem deaf; and he
+kept the halving off for a guard just round a corner, where not hearing
+would be "ridiculous" -- plausibility limits it [Walsh 2015]. Assassin's
+Creed Mirage's team says the same of sight: "as fair as possible with
+detection", so players "feel as though they're in perfect control"
+[Reparaz 2024]. Crysis keeps its numbers in data so that designers can
+tune without a programmer [Welsh 2013]. Kojima added the radar "to allow players
 the opportunity to know where enemies off-screen were" [Alexander 2009].
 And a user study found contextual dialogue let a simple guard match a
 complex one in players' enjoyment [Al Enezi & Verbrugge 2023, abstract
 only] -- the same lesson as Blacklist's tiered barks, which move from "I
 think I heard footsteps" to "I think someone's over there" so the specific
 line teaches once and does not repeat [Walsh 2015].
+
+## Metal Gear: the design, not the AI
+
+No developer source on how Metal Gear's guards are computed could be
+found, so this page takes from Metal Gear only what a player can see of its
+design, and makes no claim about its AI's internals:
+
+- **The phases as pacing**: infiltration, alert, evasion -- "the three
+  alert modes created varying tension levels" -- and, in the overview's
+  account, a counter that returns the game to infiltration [Alexander 2009;
+  Wikipedia, MGS 1998].
+- **Radio and reinforcements**: guards who radio for a strike team, take
+  cover to call for backup, a radio the player can shoot out, and a team
+  that sweeps in to check where the player hid [Wikipedia, MGS2].
+- **The radar**: where enemies off screen are, and their fields of vision,
+  switched off in alert and evasion [Alexander 2009; Wikipedia, MGS 1998].
+- **The level**: boxes to hide under and in, walls to duck behind, and 3D
+  that "created additional hiding spaces when the player is pursued"
+  [Wikipedia, MGS 1998; Alexander 2009].
+
+How a guard reaches an alert, or how a strike team searches, the kit takes
+from the sources above that describe their code.
 
 ## What this kit takes for T52, and what it leaves
 
@@ -320,7 +348,9 @@ agent: it perceives through
 [`ai_perception`](../../godot/addons/ai_perception/), and a weighed
 selector -- utility over actions, with a Python twin and vectors -- replaces
 its priority list. T52's guards are the same agent with other percepts and
-other actions. Nothing below is a state machine the demo writes.
+other actions. Nothing below is a state machine the demo writes. T52 is
+split in two: T52.1 builds items 1-3 as techniques with twins and vectors,
+T52.2 the level, items 4-8 and the player on top of them.
 
 **Taken**, mapped onto the kit's techniques:
 
@@ -369,6 +399,15 @@ other actions. Nothing below is a state machine the demo writes.
    [Martin 2009], a radar map with every guard's shape [Wikipedia, MGS
    1998], the belief as a heat map [Isla 2013], claimed and searched spots,
    and every action's score.
+8. **Off-screen hearing halved, on by default** [Walsh 2015]: for footsteps
+   and other minor events, a guard off screen and beyond a stated distance
+   hears at half the radius; a guard near enough to be just round a corner
+   hears in full. A rule about the camera, not the guard, so it is a named
+   difficulty knob, shown on the overlay whenever it is on, and it only
+   ever lowers what a guard hears. The default follows Walsh's finding that
+   being detected by a guard the player cannot see feels unfair whatever the
+   simulation says, and the Mirage team's aim of detection the player
+   trusts [Reparaz 2024].
 
 **Left:**
 
@@ -383,8 +422,7 @@ other actions. Nothing below is a state machine the demo writes.
 - **Hand-marked areas and chokes** [Walsh 2015]: designer markup, which is
   exactly what a level made by a test does not have. Ways out of the
   belief's region are computed from the walk graph instead, or left.
-- **Offscreen hearing halved** [Walsh 2015]: a rule about the camera, not
-  about the guard. Kept as a named knob, off by default, and said as such.
+- **Metal Gear's AI internals**: no source; only its design is taken, above.
 - **Learned guards and learned patrols**: invariant 6, and no source above
   uses one. Xu & Verbrugge's fields are training-free and would fit a
   later patrol task [Xu & Verbrugge 2025].
