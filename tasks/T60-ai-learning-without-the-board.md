@@ -89,6 +89,35 @@ tactical dataset selects checkers today (measured: `checkers` is in the
    holds the rest.
 6. **Measure again**, the three paths of step 1.
 
+## What was done (wave 67)
+
+Measured with `affected.py --paths`, before (`e0f5589`) and after:
+
+| a change to | selected before | selected after |
+|---|---|---|
+| `board_features.gd` | 15 modules (as part of `ai_learning`) | 6: `tactical`, `skirmish`, `league`, `ai_planning`'s tests, `game_shared`'s tests, `menu` |
+| `learned_model.gd` | 15 | 9: no longer `demo_racing`, `demo_search`, `demo_steering`, `demo_behaviour`, `rts`, `stealth`, `tictactoe` |
+| `python/gameaikit/dataset/rows.py` | 5, `checkers` among them | 6, without `checkers` |
+
+- Steps 2-5 as written. `gameaikit.tactical` (a new name, beside
+  `dataset`) holds `train`, `report`, `evaluate`; retrained, the weights
+  are the same numbers and only `generated_by` names the new module.
+  The callers keep their games' paths: `LearnedPolicy.WEIGHTS_PATH`,
+  `FightCloneOpponent.PUBLISHED_PATH`.
+- **Found while measuring, not in the plan:** `game_shared` owned the
+  skirmish (`main.gd`, `main.tscn`, `plan_view.gd`,
+  `skirmish_victory.gd`), and the skirmish reads the tactical adapter. So
+  after the move `game_shared` depended on `tactical`, and every example
+  depends on `game_shared`: a dataset change selected 14 modules. The
+  skirmish is now its own module, `skirmish`, owning those four files by
+  path and its two suites in `godot/test/skirmish/`.
+- `checkers` depends on `ai_learning` and not on `tactical`, as
+  `lint-modules` measured.
+- Left as it is: `ModelFile` still checks the board's
+  `feature_conventions` (M8, M9: the cheapest and dearest ground). It is
+  the format `gameaikit.tactical.report` writes. A model file that holds no
+  conventions is a later change, and a reader will notice it.
+
 ## Acceptance
 
 ```bash

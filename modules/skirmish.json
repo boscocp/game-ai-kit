@@ -1,0 +1,20 @@
+{
+  "module": "skirmish",
+  "kind": "example",
+  "about": "The skirmish: the learned policy plays blue on the 12x8 board (T6, T44). Shares the tactical board's adapter and weights.",
+  "owns": [
+    "godot/game/main.gd",
+    "godot/game/main.tscn",
+    "godot/game/plan_view.gd",
+    "godot/game/skirmish_victory.gd",
+    "godot/test/skirmish/"
+  ],
+  "depends_on": [
+    "ai_core",
+    "ai_learning",
+    "ai_search",
+    "game_shared",
+    "tactical"
+  ],
+  "gates": []
+}

@@ -13,14 +13,15 @@
     "demo_search",
     "demo_steering",
     "fighting",
-    "game_shared",
     "rts",
+    "skirmish",
     "stealth",
     "tactical",
     "tictactoe"
   ],
   "tests_depend_on": [
-    "ai_core"
+    "ai_core",
+    "game_shared"
   ],
   "gates": [
     "test-demo-overlays",
