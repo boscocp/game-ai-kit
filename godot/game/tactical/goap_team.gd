@@ -1,6 +1,7 @@
-## The league's GOAP: for each walker, choose the most pressing goal, plan the
-## cheapest way to it backwards from the goal, and do the first step -- then
-## plan again for the next walker, and next turn, from scratch.
+## The GOAP team (T25), one of the board's controllers: for each walker, choose
+## the most pressing goal, plan the cheapest way to it backwards from the goal,
+## and do the first step -- then plan again for the next walker, and next turn,
+## from scratch.
 ##
 ## What lets GOAP stand apart from the tree here is what T15's guard lacked
 ## (the owner's note on wave 57): **two ways to a goal, at two costs, and the

@@ -42,6 +42,41 @@ controllers, kept in step by hand, in two modules that depend on each other.
 6. `tactical` stops depending on `league` (`modules/tactical.json`); `make
    lint-modules` holds it.
 
+## Done (wave 68): what was measured and decided
+
+- **Step 1, measured:** of `game/league/`'s nine files, six are the four
+  teams and what they stand on -- `MachineTeam`, `TreeTeam`, `GoapTeam`,
+  `HtnTeam`, `TechniqueTeam`, `TeamFacts`. They moved to `game/tactical/`,
+  and their tests with them (`test/tactical/technique_teams_test.gd`). The
+  league keeps `League` (the schedule), `LeagueRating` and `MeteredTeam`,
+  which only the league's runner uses.
+- **The list lived three times, not two.** Beside the chain and the league's
+  roster, `tactical.gd` had `CONTROLLERS_TO_COME`, the sentence on screen
+  naming all ten. It is built from the table now.
+- **The table: `TacticalRoster.rows()`**, ten rows in C's old order (rules,
+  planner, learned, easy, normal, hard, the four T15 teams). A row is the
+  league's old shape plus one field, whether it plays in the league: only
+  `hard` of the levels does, as before. The game finds the row it is on by
+  `controller_name()`, which a test holds every row to; a controller from
+  outside the table is followed by the first row.
+- **Two things changed on purpose.** The league's lookahead team is named
+  `hard`, its row's name, where it printed `lookahead (hard)`; and the league
+  lists teams in table order. The planner the C key builds no longer prints
+  each plan to the console (`verbose`): the row builds the league's planner,
+  and the plan is on the panel and in the overlay already.
+- **Step 4, scoped to the one example with a table:** the tactical card
+  gains `controllers` and `roster`, and `check_demos.py` rule C9 holds them
+  to each other both ways, with six planted cases.
+- **Step 5, measured, no other chain:** the RTS cycles `RtsLevels.presets()`
+  by index (C) and toggles two planners (H); racing indexes its `levels`;
+  fighting steps through `MODES`; the behaviour demo indexes a list of four
+  brains. Each is already one table read by index, so none gets a roster
+  here, and their cards gain no `controllers` -- C9 would need a reader per
+  table shape for lists that cannot drift from a chain they do not have.
+- **Step 6:** `tactical` no longer depends on `league`, and gains
+  `ai_behaviour` (the teams' trees and planners); `league` drops
+  `ai_behaviour`, `ai_core` and `ai_planning`, which only the teams used.
+
 ## Acceptance
 
 ```bash

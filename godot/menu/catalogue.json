@@ -1,5 +1,5 @@
 {
-  "about": "Every example in the kit, as the menu shows it (T24). One file, read by the menu and by scripts/check_demos.py, which holds each card to its make target, its page and the scene it opens: a technique is named here once, with the classes that are evidence of it, and a card naming a technique its scene never reaches by use -- constructed, called or extended, not merely typed or read a constant of -- fails the gate. A card says what the AI decides, which techniques decide it and what part each plays, and what to watch on screen.",
+  "about": "Every example in the kit, as the menu shows it (T24). One file, read by the menu and by scripts/check_demos.py, which holds each card to its make target, its page and the scene it opens: a technique is named here once, with the classes that are evidence of it, and a card naming a technique its scene never reaches by use -- constructed, called or extended, not merely typed or read a constant of -- fails the gate. A card whose example offers a choice of controllers lists them, and names the roster table they are cycled from; the gate holds the two to each other (T63). A card says what the AI decides, which techniques decide it and what part each plays, and what to watch on screen.",
   "techniques": {
     "minimax": {"name": "minimax with alpha-beta", "evidence": ["AlphaBetaSearch", "MinimaxSearch"]},
     "learned-evaluation": {"name": "a learned evaluation", "evidence": ["CheckersWeights"]},
@@ -183,6 +183,8 @@
         {"technique": "influence-map", "part": "the threat map tinted on the board: how many enemy pieces could strike each cell"}
       ],
       "controls": "click a unit, then a lit cell; W waits; 1-5 build; Z undoes; space ends the turn; C changes the computer; S swaps sides; T the threat map",
+      "controllers": ["rules", "planner", "learned", "easy", "normal", "hard", "state machine", "behaviour tree", "GOAP", "HTN"],
+      "roster": "res://game/tactical/tactical_roster.gd",
       "watch": "Each computer decision drawn on the board before it is played, with the reason in the status.",
       "docs": "docs/concepts/planning-in-strategy-games.md"
     },

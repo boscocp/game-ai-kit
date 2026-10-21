@@ -1,5 +1,6 @@
-## The league's HTN: for each walker, break "walker" down by the first method
-## whose conditions hold, and carry the plan out step by step over its turns.
+## The HTN team (T25), one of the board's controllers: for each walker, break
+## "walker" down by the first method whose conditions hold, and carry the plan
+## out step by step over its turns.
 ##
 ##     walker
 ##       save itself         in danger, wounded       -> fall back

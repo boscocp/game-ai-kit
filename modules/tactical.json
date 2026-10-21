@@ -21,12 +21,12 @@
     "godot/game/unit_view.gd"
   ],
   "depends_on": [
+    "ai_behaviour",
     "ai_core",
     "ai_learning",
     "ai_planning",
     "board",
-    "game_shared",
-    "league"
+    "game_shared"
   ],
   "tests_depend_on": [
     "ai_search"
