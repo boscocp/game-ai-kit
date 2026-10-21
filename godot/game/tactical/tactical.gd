@@ -376,17 +376,16 @@ func _press(keycode: Key) -> void:
 		_refresh()
 
 
-## The controllers still to come, named on screen beside the one playing, so
-## a person knows the computer is a slot and not a fixed opponent.
-## The names come from `TacticalRoster`, so the sentence cannot fall behind it.
+## Every controller C cycles through, named on screen beside the one playing,
+## so a person knows the computer is a slot and not a fixed opponent. The
+## names come from `TacticalRoster`, so the sentence cannot fall behind it.
 static func controllers_to_come() -> String:
 	return "C hands the computer to the next controller -- %s -- and S swaps sides; either starts a new game" % ", ".join(TacticalRoster.names())
 
 
-## Hand the computer's side to the next controller in `TacticalRoster` --
-## rules, planner, learned, each difficulty level, then the four T15
-## techniques (T25), and round again -- and start again: a controller swapped
-## mid-game would inherit a board it did not play.
+## Hand the computer's side to the next row of `TacticalRoster`, round to
+## the first after the last, and start again: a controller swapped mid-game
+## would inherit a board it did not play.
 func swap_controller() -> void:
 	computer = next_controller(computer)
 	new_game()

@@ -6,14 +6,18 @@
 ## the same answer comes out after looking at a fraction of the map. The demo
 ## draws both expansions on one board, which is the fastest way to see it.
 ##
-## The guarantee comes with a condition: `h` must never *overestimate* what is
-## left. A heuristic that never overestimates is called admissible, and with
-## one A* returns a route of exactly the cost Dijkstra returns. With one that
-## overestimates, A* is faster and quietly wrong, which is the worst of the
-## three possible outcomes. So the guess is not written here: it is
-## `graph.estimate`, and the graph owns it, because only the graph knows what a
-## step can cost. `SearchGraph.estimate` carries the promise; the grid's is
-## Manhattan distance, in `grid_search_graph.gd`, with the reason it is safe.
+## The guarantee comes with a condition. The textbook's is that `h` never
+## *overestimates* what is left -- admissible -- and that is enough for an A*
+## that re-expands a cell when a cheaper way in turns up. This one never
+## expands a cell twice, so it needs more: `h` must be **consistent**, never
+## dropping by more than a step costs. With that, it returns a route of
+## exactly the cost Dijkstra returns. Without it, A* is faster and quietly
+## wrong, which is the worst of the three possible outcomes --
+## `waypoint_test.gd` shows a guess that is admissible and still costs a
+## dearer route. So the guess is not written here: it is `graph.estimate`,
+## and the graph owns it, because only the graph knows what a step can cost.
+## `SearchGraph.estimate` carries the promise; the grid's is Manhattan
+## distance, in `grid_search_graph.gd`, with the reason it is safe.
 ##
 ## Complexity: the same as Dijkstra in the worst case -- with `h` returning
 ## zero it *is* Dijkstra -- and far better in practice.

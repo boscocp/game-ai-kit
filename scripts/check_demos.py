@@ -42,8 +42,9 @@ the menu and this gate share:
   * no script an example reaches calls quit(), which would take the menu
     down with it (C8);
   * a card that lists the `controllers` its example offers names the
-    `roster` its game cycles them from, and the two agree both ways: every
-    name listed is a row of that table, and every row is listed (C9). A row
+    `roster` its game cycles them from, and the two agree: every name listed
+    is a row of that table, every row is listed, in the table's order and
+    once each (C9). A row
     is a line opening a list with its name as a string literal, which is how
     `TacticalRoster` writes them (T63); one in a comment is not a row.
 
@@ -384,8 +385,11 @@ def controller_findings(root: pathlib.Path, card: dict) -> list[str]:
         return [f"C9 {target}: {roster} has no rows"]
     findings = [f"C9 {target}: {name!r} is on the card and is not a row of {roster}"
                 for name in listed if name not in rows]
-    return findings + [f"C9 {target}: {name!r} is a row of {roster} and is not on the card"
-                       for name in rows if name not in listed]
+    findings += [f"C9 {target}: {name!r} is a row of {roster} and is not on the card"
+                 for name in rows if name not in listed]
+    if not findings and list(listed) != rows:
+        findings.append(f"C9 {target}: the card lists the rows of {roster} out of order, or one twice")
+    return findings
 
 
 def technique_findings(reach: Reach, target: str, entry: dict, techniques: dict,
@@ -623,6 +627,12 @@ def catalogue_cases() -> dict[str, tuple[dict, str | None]]:
         "a row only in a comment": (
             {"catalogue": catalogue_text((offering, SOUND_CARDS[1])),
              "roster": SOUND_ROSTER.replace('\t\t["planner"', '\t\t# ["planner"')}, "C9"),
+        "the rows out of order": (
+            {"catalogue": catalogue_text((card("run", "game/main.tscn", controllers=["planner", "rules"],
+                                               roster="res://game/roster.gd"), SOUND_CARDS[1]))}, "C9"),
+        "a row listed twice": (
+            {"catalogue": catalogue_text((card("run", "game/main.tscn", controllers=["rules", "planner", "rules"],
+                                               roster="res://game/roster.gd"), SOUND_CARDS[1]))}, "C9"),
         "controllers with no roster": (
             {"catalogue": catalogue_text((card("run", "game/main.tscn", controllers=["rules"]), SOUND_CARDS[1]))}, "C9"),
         "a roster that does not exist": (

@@ -11,9 +11,10 @@
 ##
 ## What each decides, and what it hands the rules, is in its own header and in
 ## `TacticalRoster`, the one table of the board's controllers, which the
-## league reads rather than keeping a list of its own (T63). Behaviour cloning on this board (T25's eighth
-## team) joins once there are recordings of a person to clone; until then the
-## league says so rather than fielding a clone of nothing.
+## league reads rather than keeping a list of its own (T63). Behaviour
+## cloning on this board (T25's eighth team) joins once there are recordings
+## of a person to clone; until then the league says so rather than fielding a
+## clone of nothing.
 ##
 ## When not to use it: as a menu of opponents. A team is chosen here for being
 ## a technique, not for being good to play against; the demo's C key is the

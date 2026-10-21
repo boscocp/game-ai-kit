@@ -85,6 +85,9 @@ With no argument, `GridPathfinder.new()` answers with A\*.
 Waypoints, rooms, a navigation mesh's polygons: write a `SearchGraph` with
 four methods and every search here works on it unchanged.
 
+A sketch, with the bodies left out; `waypoint_test.gd` is the whole one,
+and it runs:
+
 ```gdscript
 class_name Waypoints
 extends SearchGraph

@@ -76,6 +76,23 @@ func test_a_guess_that_overshoots_makes_astar_quietly_dearer() -> void:
 	assert_int(misled.cost).is_greater(honest.cost)
 
 
+func test_a_guess_that_never_overshoots_can_still_mislead_this_astar() -> void:
+	# Admissible is not enough here. On `_Admissible` the guess at the
+	# shortcut is exactly what is left from it, never more -- and A*, which
+	# never expands a node twice, still pays 8 where Dijkstra pays 7. The
+	# guess drops by 6 across a step that costs 1, so it is not consistent:
+	# the junction is reached first the dear way, by the detour, and is never
+	# looked at again. That is why the promise
+	# on `SearchGraph.estimate` says consistent.
+	var graph := _Admissible.new()
+
+	var honest: SearchResult = DijkstraSearch.new().search(graph, _Admissible.SOURCE, _Admissible.TARGET)
+	var misled: SearchResult = AStarSearch.new().search(graph, _Admissible.SOURCE, _Admissible.TARGET)
+
+	assert_int(honest.cost).is_equal(7)
+	assert_int(misled.cost).is_equal(8)
+
+
 func _all_searches() -> Array[Search]:
 	return [
 		BreadthFirstSearch.new(),
@@ -148,3 +165,40 @@ class _Waypoints extends SearchGraph:
 class _Overshoots extends _Waypoints:
 	func estimate(node: Vector2i, goal: Vector2i) -> int:
 		return 100 if ROUND_THE_TOP.has(node) and node != goal else super.estimate(node, goal)
+
+
+# Three ways from the source to the target, priced by what each waypoint
+# costs to enter: detour 3, shortcut 1, junction 1, side road 3, target 5.
+# By the shortcut and the junction is cheapest, 7; the side road costs 8; the
+# detour and the junction 9. The guess at the shortcut is 6, exactly what is
+# left from it (the junction, then the target), and zero everywhere else.
+class _Admissible extends SearchGraph:
+	const SOURCE: Vector2i = Vector2i(0, 0)
+	const DETOUR: Vector2i = Vector2i(1, -1)
+	const SHORTCUT: Vector2i = Vector2i(1, 1)
+	const JUNCTION: Vector2i = Vector2i(2, 0)
+	const SIDE_ROAD: Vector2i = Vector2i(2, 2)
+	const TARGET: Vector2i = Vector2i(3, 0)
+	const ROADS: Dictionary = {
+		SOURCE: [DETOUR, SHORTCUT, SIDE_ROAD],
+		DETOUR: [SOURCE, JUNCTION],
+		SHORTCUT: [SOURCE, JUNCTION],
+		JUNCTION: [DETOUR, SHORTCUT, TARGET],
+		SIDE_ROAD: [SOURCE, TARGET],
+		TARGET: [JUNCTION, SIDE_ROAD],
+	}
+	const COSTS: Dictionary = {SOURCE: 1, DETOUR: 3, SHORTCUT: 1, JUNCTION: 1, SIDE_ROAD: 3, TARGET: 5}
+
+	func contains(node: Vector2i) -> bool:
+		return ROADS.has(node)
+
+	func neighbours(node: Vector2i) -> Array[Vector2i]:
+		var found: Array[Vector2i] = []
+		found.assign(ROADS.get(node, []))
+		return found
+
+	func cost_at(node: Vector2i) -> int:
+		return COSTS[node]
+
+	func estimate(node: Vector2i, _goal: Vector2i) -> int:
+		return 6 if node == SHORTCUT else 0

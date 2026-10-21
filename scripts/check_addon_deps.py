@@ -13,7 +13,7 @@ Catching `preload("res://addons/other/x.gd")` is the easy half -- and it is not
 even all of that half: a relative `preload("../other/x.gd")` resolves on the
 pinned engine, measured rather than assumed, so it is caught too. The half that
 matters is `class_name`: a class declared in one addon is registered across the
-whole project, so a file in `ai_planning` can write `AStarSearch.find_path(...)`
+whole project, so a file in `ai_planning` can write `AStarSearch.new().search(...)`
 with no import, no path, and nothing to grep for except the name itself. It
 works perfectly in this repository and breaks the moment someone installs one
 addon without the other -- which is the thing this invariant promises.

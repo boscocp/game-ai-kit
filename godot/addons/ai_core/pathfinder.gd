@@ -1,4 +1,5 @@
-## What `ai_search` must provide: a route between two cells, or nothing.
+## What a pathfinder must provide: a route between two cells, or nothing. In
+## this kit `ai_search` provides one, without `ai_core` knowing its name.
 ##
 ## This is an interface, and GDScript has one: `@abstract`, on the class and on
 ## each method. The engine then refuses to load a subclass that has not replaced

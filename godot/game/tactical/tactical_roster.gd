@@ -4,9 +4,9 @@
 ## Before this, the list lived three times -- an `if playing is X` chain in
 ## `tactical.gd`, the league's own roster, and a sentence on screen -- kept in
 ## step by hand, in two modules that depended on each other for it. A
-## controller added is now a row added, and the game, the league and the menu's
-## card (`godot/menu/catalogue.json`, held to these rows by
-## `scripts/check_demos.py`) all read it.
+## controller added is now a row added. The game and the league read it, and
+## `scripts/check_demos.py` holds the menu's card (`godot/menu/catalogue.json`)
+## to it, rows and order.
 ##
 ## A row is `[name, what it is, what it delegates, plays in the league,
 ## Callable(seed) -> a new BlueController]`. The name is the one the
@@ -21,7 +21,10 @@
 ##
 ## When not to use it: as a ranking. The order is the order a person meets
 ## them in -- the baseline, then the techniques with a lesson each, the levels
-## weakest first -- not how well they play; the league measures that.
+## weakest first -- not how well they play; the league measures that. And
+## know that the order is not free: `League.schedule` seats teams by their
+## place in it, so a row inserted or moved re-rolls the league's dice and its
+## table moves inside its intervals (`docs/concepts/the-league.md`).
 class_name TacticalRoster
 extends RefCounted
 
