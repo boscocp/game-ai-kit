@@ -1,0 +1,13 @@
+{
+  "module": "racing3d",
+  "kind": "example",
+  "about": "The 3D racer (T54): a car on ray-cast wheels whose tyres slip, and a driver that measures its car, follows a line it finds itself, and passes by a heat line.",
+  "owns": [
+    "godot/game3d/racing/",
+    "godot/test/racing3d/"
+  ],
+  "depends_on": [],
+  "gates": [
+    "test-racing3d-car"
+  ]
+}

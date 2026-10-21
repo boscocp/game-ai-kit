@@ -95,7 +95,8 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-decisions test-demo-overlays test-menu-walk test-replay test-opponent-levels test-opponent-properties \
        test-clone-rows test-inference-budget test-clone-report test-difficulty-knobs \
        test-rts-budget test-rts-simulation test-rts-match test-steering-properties \
-       test-racing-ladder test-racing-does-not-cheat test-game3d-floor test-botmatch-effects ## Run every gate
+       test-racing-ladder test-racing-does-not-cheat test-game3d-floor test-botmatch-effects \
+       test-racing3d-car ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-no-assets lint-readability lint-demos \
@@ -668,6 +669,12 @@ assets-3d: ## Download the 3D packs into build/assets-3d/ and the files used int
 .PHONY: test-game3d-floor
 test-game3d-floor: import ## Headless 3D physics, rays, a baked path, a replay, and the arena with its models missing (T50)
 	@$(GODOT) --headless --path godot -s res://test/game3d/game3d_floor.gd
+
+.PHONY: test-racing3d-car
+test-racing3d-car: import ## The 3D car on a test pad: it rests on its springs, braking moves its weight forward, its tyres slide past their peak (T54)
+	@# --fixed-fps 60: the physics step is the same 1/60 s either way, but
+	@# without it Godot paces the frames in real time and this takes minutes.
+	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_car.gd
 
 .PHONY: measure-3d
 measure-3d: import ## Windowed: the 3D test arena's frame rate, with models and without (T50); not a gate
