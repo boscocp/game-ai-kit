@@ -15,8 +15,8 @@ the floor the three 3D examples (T51, T52, T54) stand on.
 Nothing here is AI. It is the gates and the plumbing, kept small so that the
 examples after it are about their bots.
 
-**Blocked until the owner accepts ADR 0018** (or picks another option; this
-task is then rewritten to match).
+ADR 0018 was accepted by the owner on 2026-10-21: option A (`godot/game3d/`
+in the one project), the assets out of git and referenced by their links.
 
 ## Steps
 

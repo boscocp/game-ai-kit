@@ -1,7 +1,21 @@
 # 0018 — 3D enters as its own tier, and its assets stay out of git
 
-Status: proposed · 2026-10-18 (wave 53, for the owner to decide before any 3D
-code; T50 is the first task that depends on it)
+Status: accepted · 2026-10-21 (proposed in wave 53; the owner's decision of
+2026-10-21, opening wave 69 and T50)
+
+## Decision
+
+The owner, 2026-10-21: **option A, and the assets out of git, referenced by
+their links.** So the 3D lives in `godot/game3d/` inside the one project; the
+renderer stays `gl_compatibility` and Jolt is set explicitly; nothing from a
+3D pack is committed, whole or cut, and `godot/game3d/assets.json` records
+each file's page, archive URL and sha256 for `make assets-3d` to fetch and
+check. The parts below that were proposed and not ruled on are taken as
+proposed until T50's measurements say otherwise: the download folder inside
+the project, a primitive for every missing model, `check_no_assets.py`. Still
+the owner's, and not decided here: the tier's name (T50 measures its target
+first), whether the tier-1 rule for a 3D example gets a gate, and whether the
+assets rule reaches back to the 2D art.
 
 ## Context
 
