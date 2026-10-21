@@ -21,7 +21,7 @@ extends Resource
 ## How far below the centre of mass the springs are mounted, in metres. The
 ## centre of mass sits above the road, so a force at the tyres pitches and
 ## rolls the body: that is where weight transfer comes from.
-@export var mount_drop: float = 0.0
+@export var mount_drop: float = -0.15
 ## The spring's length with no load on it, in metres.
 @export var rest_length: float = 0.3
 @export var wheel_radius: float = 0.33
@@ -39,15 +39,27 @@ extends Resource
 @export var peak_slip: float = 0.12
 ## What a sliding tyre keeps of its peak, once it is twice past the peak.
 @export var slide_grip: float = 0.8
-## The engine's push at the rear wheels, in newtons, at full throttle.
+## The rear tyres are wider, as a racing car's are: this much more grip, and
+## their peak this much sooner. With the same tyres all round, the rear lets
+## go first whenever braking or the engine takes some of its grip, and the
+## car spins; with these the front lets go first, and the car runs wide --
+## understeer, which a driver can catch.
+@export var rear_grip: float = 1.15
+@export var rear_peak: float = 0.75
+## The engine's push at the rear wheels, in newtons, at full throttle --
+## until its power runs out: above power / engine_force metres a second
+## (about 17) it pushes with `engine_power` watts over the speed instead.
+## Full push at speed would leave the rear tyres no grip to turn with.
 @export var engine_force: float = 6000.0
+@export var engine_power: float = 100000.0
 ## The fastest any car goes, in metres a second (180 km/h): above it the
 ## engine gives nothing.
 @export var top_speed: float = 50.0
 ## Newtons of brake at full pedal, all four wheels together, and the share
-## of it the front wheels take.
-@export var brake_force: float = 14000.0
-@export var brake_front: float = 0.6
+## of it the front wheels take: about the share of the load they carry
+## while braking hard, so the rear tyres keep some grip to steer with.
+@export var brake_force: float = 11500.0
+@export var brake_front: float = 0.8
 ## Air resistance: newtons per (metre a second) squared.
 @export var drag: float = 0.4
 ## The front wheels' widest angle, in radians, and how fast they turn to it.

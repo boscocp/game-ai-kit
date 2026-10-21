@@ -4,12 +4,16 @@
   "about": "The 3D racer (T54): a car on ray-cast wheels whose tyres slip, and a driver that measures its car, follows a line it finds itself, and passes by a heat line.",
   "owns": [
     "godot/game3d/racing/",
-    "godot/test/racing3d/"
+    "godot/test/racing3d/",
+    "python/gameaikit/racing/",
+    "python/tests/test_racing3d_vectors.py",
+    "spec/vectors/racing3d/"
   ],
   "depends_on": [
     "game3d"
   ],
   "gates": [
-    "test-racing3d-car"
+    "test-racing3d-car",
+    "test-racing3d-vectors"
   ]
 }

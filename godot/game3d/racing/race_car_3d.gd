@@ -165,8 +165,10 @@ func _tyre(state: PhysicsDirectBodyState3D, wheel: int, hit: Dictionary, load: f
 	var slip: float = atan2(velocity.dot(left), maxf(absf(along), CRAWL))
 	var surface: Node = hit["collider"] as Node
 	var grip: float = float(surface.get_meta("grip", 1.0))
-	var limit: float = physics.tyre_grip * grip * load
-	var sideways: float = -limit * tyre_curve(slip / physics.peak_slip, physics.slide_grip)
+	var rear: bool = wheel >= 2
+	var limit: float = physics.tyre_grip * (physics.rear_grip if rear else 1.0) * grip * load
+	var peak: float = physics.peak_slip * (physics.rear_peak if rear else 1.0)
+	var sideways: float = -limit * tyre_curve(slip / peak, physics.slide_grip)
 	var rolling: float = float(surface.get_meta("rolling", 0.0)) * load
 	var pushing: float = _drive(wheel, along) - rolling * clampf(along / CRAWL, -1.0, 1.0)
 	var total: float = Vector2(pushing, sideways).length()
@@ -188,13 +190,15 @@ static func tyre_curve(ratio: float, sliding: float) -> float:
 	return signf(ratio) * maxf(sliding, 1.0 - (1.0 - sliding) * (size - 1.0))
 
 
-# The engine at the two rear wheels, cut at the top speed, and the brake at
+# The engine at the two rear wheels, its push held to its power and cut at
+# the top speed, and the brake at
 # all four, shared front and rear, faded out as the wheel stops so it holds
 # the car still rather than pushing it backwards.
 func _drive(wheel: int, along: float) -> float:
 	var engine: float = 0.0
 	if wheel >= 2 and _speed < physics.top_speed:
-		engine = throttle * physics.engine_force / 2.0
+		var most: float = minf(physics.engine_force, physics.engine_power / maxf(_speed, 1.0))
+		engine = throttle * most / 2.0
 	var share: float = physics.brake_front if wheel < 2 else 1.0 - physics.brake_front
 	var braking: float = brake * physics.brake_force * share / 2.0
 	return engine - braking * clampf(along / CRAWL * 4.0, -1.0, 1.0)

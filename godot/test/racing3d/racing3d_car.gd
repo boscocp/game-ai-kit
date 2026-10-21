@@ -13,6 +13,13 @@
 #      SLIDE_DROP, because past their peak slip the front tyres slide;
 #      on no physics frame does a tyre give more than its grip.
 #
+#   4. **what a driver measures of it** (`GripTest3D`): the cornering grip
+#      and the braking a driver measures before a race are under what the
+#      car's sheet promises -- the tyres' grip times gravity, the brakes'
+#      force over the mass -- and the same car measures the same numbers,
+#      bit for bit, every time. A planted car with other tyres must measure
+#      something else, or the comparison could not see a difference.
+#
 # And no engine error while any of it runs (`Racing3DErrors`).
 #
 # Each is first asked of a planted car it must refuse: springs too soft to
@@ -55,6 +62,7 @@ func _run() -> void:
 	var failures: Array[String] = []
 	failures += await _planted()
 	failures += await _check(CarPhysics3D.new(), false, "the car")
+	failures += await _check_measurement()
 	var engine: String = _errors.finding("the checks")
 	if engine != "":
 		failures.append(engine)
@@ -145,6 +153,43 @@ func _check_slide(car: RaceCar3D, label: String) -> Array[String]:
 	if smoothed > peak * (1.0 - SLIDE_DROP):
 		findings.append("%s never slid: %.2f m/s^2 at full lock against a peak of %.2f" % [label, smoothed, peak])
 	return findings
+
+
+# The grip test twice on the car and once on a planted car with other tyres.
+func _check_measurement() -> Array[String]:
+	var findings: Array[String] = []
+	var first: PackedFloat64Array = await _measure(CarPhysics3D.new())
+	var again: PackedFloat64Array = await _measure(CarPhysics3D.new())
+	var other := CarPhysics3D.new()
+	other.tyre_grip = 0.9
+	var planted: PackedFloat64Array = await _measure(other)
+	var sheet: Dictionary = Race3D.sheet_of(CarPhysics3D.new())
+	print("measured: grip %.3f m/s^2 (sheet %.3f), braking %.3f m/s^2 (sheet %.3f), slip steer %.4f rad"
+		% [first[0], sheet["grip"], first[1], sheet["braking"], first[2]])
+	if first != again:
+		findings.append("the same car measured %s, then %s" % [first, again])
+	if planted == first:
+		findings.append("planted, a car with other tyres measured the same: %s" % planted)
+	if first[0] <= 0.0 or first[0] >= float(sheet["grip"]) or first[1] <= 0.0 or first[1] >= float(sheet["braking"]):
+		findings.append("measured grip %.3f and braking %.3f are not under the sheet's" % [first[0], first[1]])
+	return findings
+
+
+# What `GripTest3D` measures of a car of `physics`: [grip, braking, slip steer].
+func _measure(physics: CarPhysics3D) -> PackedFloat64Array:
+	var world: Node3D = _world()
+	var car := RaceCar3D.new(physics, true)
+	car.position = Vector3(0, car.ride_height(), 150)
+	world.add_child(car)
+	var test := GripTest3D.new()
+	var frames: int = 0
+	while not test.done() and frames < 4 * GIVE_UP:
+		await physics_frame
+		test.step(car, 1.0 / 60.0)
+		frames += 1
+	world.queue_free()
+	await process_frame
+	return PackedFloat64Array([test.grip, test.braking, test.slip_steer])
 
 
 # A tyre that gave more than its grip on the last frame, said; or "".
