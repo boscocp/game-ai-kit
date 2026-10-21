@@ -38,6 +38,19 @@ func test_the_arena_is_its_own_mirror_across_the_middle() -> void:
 		assert_int(BotArena.cell_of(red).x).is_equal(int(arena.width) - 1 - BotArena.cell_of(blue).x)
 
 
+func test_the_cover_spots_are_a_mirror_and_never_crowd_each_other() -> void:
+	var arena := BotArena.new(0.4)
+	var places: Dictionary = {}
+	for spot: BotArena.Spot in arena.spots:
+		places["%.3f %.3f %s" % [spot.position.x, spot.position.y, spot.low]] = true
+	for spot: BotArena.Spot in arena.spots:
+		var mirror: String = "%.3f %.3f %s" % [arena.width - spot.position.x, spot.position.y, spot.low]
+		assert_bool(places.has(mirror)).override_failure_message("no mirror for %s" % spot.position).is_true()
+		for other: BotArena.Spot in arena.spots:
+			var crowding: bool = other != spot and other.position.distance_to(spot.position) < BotArena.SPOT_SPACING - 1e-3
+			assert_bool(crowding).override_failure_message("%s and %s" % [spot.position, other.position]).is_false()
+
+
 func test_every_spot_and_spawn_is_somewhere_a_bot_can_stand() -> void:
 	var arena := BotArena.new(0.4)
 	assert_int(arena.spots.size()).is_greater(40)
@@ -556,6 +569,49 @@ func test_a_rifle_has_120_rounds_and_a_reload_takes_only_what_is_left() -> void:
 	bot.ammo = 0
 	bot.decide(1.0, [] as Array[int], {}, 0.0, false)
 	assert_str(bot.action).is_not_equal(MatchBot.RELOAD)
+
+
+func test_a_reload_that_finished_does_not_begin_again_before_the_next_decision() -> void:
+	# The action stays RELOAD until the bot decides again; a finished reload
+	# used to start another in that gap, so every reload took two.
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var bot: MatchBot = world.bots[0]
+	bot.ammo = 5
+	bot.action = MatchBot.RELOAD
+	for _step: int in range(int(rules.reload_time * 1.5 / rules.step)):
+		MatchActions.act(world, bot, rules.step)
+	assert_int(bot.ammo).is_equal(rules.magazine)
+	assert_int(bot.reserve).is_equal(rules.reserve - 25)
+	assert_float(bot.reload_left).is_equal(0.0)
+
+
+func test_a_person_walks_while_reloading_but_does_not_sprint_and_reloads_only_by_hand() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var mine: MatchBot = world.bots[0]
+	mine.controlled = true
+	mine.position = Vector2(15.0, 3.0)
+	mine.wants_to_walk = Vector2.RIGHT
+	mine.wants_to_sprint = true
+	mine.reload_left = rules.reload_time
+	mine.ammo = 0
+	world.step()
+	assert_str(mine.action).is_equal(MatchBot.PLAYED)
+	for _step: int in range(19):
+		world.step()
+	# A second at the walking speed, not the sprint, and the reload went on.
+	assert_float(mine.position.x).is_equal_approx(15.0 + rules.speed, 0.06)
+	assert_bool(mine.sprinting).is_false()
+	assert_float(mine.reload_left).is_less(rules.reload_time - 0.9)
+	# Empty, the trigger alone reloads nothing.
+	mine.reload_left = 0.0
+	mine.ammo = 0
+	mine.wants_to_fire = true
+	mine.wants_to_sprint = false
+	world.step()
+	assert_float(mine.reload_left).is_equal(0.0)
+	assert_int(mine.ammo).is_equal(0)
 
 
 func test_the_base_fills_a_rifle_and_the_power_weapon_comes_back_a_minute_later() -> void:

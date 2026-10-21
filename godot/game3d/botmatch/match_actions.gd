@@ -180,8 +180,9 @@ static func speed_of(world: BotMatch, bot: MatchBot) -> float:
 
 
 # The person's bot: walk where they push, blocked by the boxes and by any
-# rise higher than a step, as a bot is; slower crouched, faster sprinting,
-# and fire while the trigger is held and they are not sprinting.
+# rise higher than a step, as a bot is -- reloading too; slower crouched,
+# faster sprinting, and fire while the trigger is held and they are not
+# sprinting.
 static func _played(world: BotMatch, bot: MatchBot, delta: float) -> void:
 	# Every step, not every decision: a key answers at once.
 	bot.choose_pace([] as Array[int], world.rules.sprint_from)
@@ -191,18 +192,22 @@ static func _played(world: BotMatch, bot: MatchBot, delta: float) -> void:
 		if world.arena.can_step(bot.position, next, world.rules.body_radius):
 			bot.position = next
 			break
+	# A reload is the person's to start, with R (the owner's ask): an empty
+	# magazine clicks, it does not reload by itself.
 	if bot.reload_left > 0.0:
 		_reload(world, bot, delta)
-	elif bot.wants_to_fire and bot.ammo <= 0 and bot.reserve > 0:
-		bot.reload_left = world.rules.reload_time
-	elif bot.wants_to_fire and bot.fire_cooldown <= 0.0 and not bot.sprinting:
+	elif bot.wants_to_fire and bot.ammo > 0 and bot.fire_cooldown <= 0.0 and not bot.sprinting:
 		fire_aimed(world, bot)
 
 
 # A reload takes from the reserve what the magazine lacks, and no more than
-# there is; with nothing in reserve there is nothing to reload.
+# there is; with nothing in reserve, or a full magazine, there is nothing to
+# reload. That last is not tidiness: a bot's action stays RELOAD until its
+# next decision, and a reload that had just finished began again in that
+# gap, so every reload took two.
 static func _reload(world: BotMatch, bot: MatchBot, delta: float) -> void:
-	if bot.reserve <= 0:
+	var nothing_to_do: bool = bot.reserve <= 0 or bot.ammo >= world.rules.magazine
+	if bot.reload_left <= 0.0 and nothing_to_do:
 		bot.reload_left = 0.0
 		return
 	if bot.reload_left <= 0.0:

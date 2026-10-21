@@ -54,7 +54,8 @@ const CLAIMS_BUNCHED_OFF: float = 40.0
 const COMMANDER_SPREAD: float = 1.2
 const MIRROR_ERRORS: float = 2.5
 const PAIRINGS: Array[String] = ["everything", "no claims", "no commander", "no retreat"]
-const PLANTED: Array[String] = ["commander on one point", "retreat in one wave", "sharper blue"]
+const PLANTED: Array[String] = ["commander on one point", "retreat in one wave", "sharper blue",
+		"always the head", "never resupply", "always resupply"]
 
 
 ## A bot that shoots the nearest living enemy, seen or not: the cheat the
@@ -112,7 +113,8 @@ func _play(pairing: String, matches: int) -> Dictionary:
 	var rules := MatchRules.new()
 	var arena := BotArena.new(rules.body_radius)
 	var sums: Dictionary = {"held": 0.0, "red held": 0.0, "bunched": 0.0, "deaths": 0, "lost": 0,
-			"unseen": 0, "shots": 0, "sprinting shots": 0, "sprinted": 0.0, "ordered": 0.0, "seconds": 0.0, "retreats": 0, "uncovered": 0,
+			"unseen": 0, "shots": 0, "sprinting shots": 0, "sprinted": 0.0,
+			"blue shots": 0, "blue damage": 0, "dry": 0.0, "power": 0, "matches": 0, "ordered": 0.0, "seconds": 0.0, "retreats": 0, "uncovered": 0,
 			"blue wins": 0, "red wins": 0, "margins": PackedFloat64Array()}
 	for seed_value: int in range(1, matches + 1):
 		var red := MatchTeam.new("red", BotMatch.RED, rules)
@@ -130,6 +132,11 @@ func _blue_for(pairing: String, rules: MatchRules) -> MatchTeam:
 	if pairing == "commander on one point":
 		blue.bots_per_point = BotMatch.BOTS_A_SIDE * 10
 	blue.retreat_in_one_wave = pairing == "retreat in one wave"
+	blue.aims_by_worth = pairing != "always the head"
+	if pairing == "never resupply":
+		blue.resupply_rule = MatchSupply.NEVER
+	if pairing == "always resupply":
+		blue.resupply_rule = MatchSupply.ALWAYS
 	if pairing == "sharper blue":
 		blue.reaction = 0.0
 		blue.aim_error = deg_to_rad(1.0)
@@ -147,6 +154,11 @@ func _add(sums: Dictionary, world: BotMatch) -> void:
 	sums["unseen"] += blue.shots_unseen + red.shots_unseen
 	sums["sprinting shots"] += blue.shots_sprinting + red.shots_sprinting
 	sums["sprinted"] += blue.sprint_seconds + red.sprint_seconds
+	sums["blue shots"] += blue.shots
+	sums["blue damage"] += blue.damage
+	sums["dry"] += blue.dry_seconds
+	sums["power"] += blue.power_taken
+	sums["matches"] += 1
 	sums["shots"] += blue.shots + red.shots
 	sums["ordered"] += blue.order_spread
 	sums["seconds"] += world.time
@@ -168,6 +180,8 @@ func _report(pairing: String, sums: Dictionary) -> void:
 			sums["lost"], sums["unseen"], sums["shots"]]
 	print("%22s orders over %.2f points, bunched %.1f s, %d retreating decisions (%d uncovered), %d deaths, %d points lost; %d of %d shots unseen" % decided)
 	print("%22s %.0f s sprinted, %d shots while sprinting" % ["", sums["sprinted"], sums["sprinting shots"]])
+	var supplied: Array = ["", _per_shot(sums), _per_match(sums, "dry"), _per_match(sums, "power")]
+	print("%22s blue: %.2f damage a shot, %.1f s dry a match, power weapon taken %.1f a match" % supplied)
 
 
 # The mean of `values` and its standard error, the spread of that mean over
@@ -183,6 +197,14 @@ static func _mean_and_error(values: PackedFloat64Array) -> Vector2:
 	for value: float in values:
 		squares += (value - mean) * (value - mean)
 	return Vector2(mean, sqrt(squares / (count - 1)) / sqrt(count))
+
+
+static func _per_shot(sums: Dictionary) -> float:
+	return float(sums["blue damage"]) / maxf(float(sums["blue shots"]), 1.0)
+
+
+static func _per_match(sums: Dictionary, key: String) -> float:
+	return float(sums[key]) / maxf(float(sums["matches"]), 1.0)
 
 
 static func _spread(sums: Dictionary) -> float:

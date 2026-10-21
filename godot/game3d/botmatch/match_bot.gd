@@ -124,7 +124,9 @@ func decide(now: float, visible: Array[int], positions: Dictionary, reaction: fl
 		moving_in_retreat: bool) -> void:
 	target = -1
 	if controlled:
-		action = DEAD if not alive() else (RELOAD if reload_left > 0.0 else PLAYED)
+		# PLAYED while it reloads too: the person walks on as the magazine
+		# goes in, and `_played` carries the reload.
+		action = DEAD if not alive() else PLAYED
 		crouched = wants_to_crouch and alive()
 		return
 	if not alive():
@@ -143,14 +145,15 @@ func decide(now: float, visible: Array[int], positions: Dictionary, reaction: fl
 
 
 ## Whether to sprint, after `decide`: a person sprints while they hold the
-## key and walk, not crouched and not firing; a bot while it moves with no
+## key and walk, not crouched, not firing and not reloading; a bot while it moves with no
 ## enemy in its sight row and at least `sprint_from` metres to go. Sprinting
 ## is what lets it reach a far point sooner, and seeing an enemy is when a
 ## shot may be needed, so the one rule serves both.
 func choose_pace(visible: Array[int], sprint_from: float) -> void:
 	if controlled:
 		var walking: bool = wants_to_walk.length() > 0.1
-		sprinting = alive() and wants_to_sprint and walking and not crouched and not wants_to_fire
+		var free_hands: bool = not wants_to_fire and reload_left <= 0.0
+		sprinting = alive() and wants_to_sprint and walking and not crouched and free_hands
 		return
 	var moving: bool = action == MOVE or action == FALL_BACK
 	sprinting = moving and visible.is_empty() and position.distance_to(goal) >= sprint_from

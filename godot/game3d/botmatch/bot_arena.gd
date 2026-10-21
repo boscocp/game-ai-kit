@@ -16,7 +16,8 @@
 ## stair and never the side of a box: `ArenaWalk` is that graph, for A*.
 ##
 ## Cover spots are generated once: along every face of every box, a bot's
-## width out from it, no two closer than SPOT_SPACING. They are the
+## width out from it, no two closer than SPOT_SPACING -- on one face or on
+## two, since walls here stand end to end. They are the
 ## candidates `TacticalPositions` chooses among.
 class_name BotArena
 extends RefCounted
@@ -323,15 +324,33 @@ static func _over(box: AABB, place: Vector2, margin: float) -> bool:
 # a bot can stand: on the floor, in an open walk cell, clear of every box.
 # A step is no box to hide behind, so it has none.
 func _cover_spots(body_radius: float) -> Array[Spot]:
-	var found: Array[Spot] = []
+	var candidates: Array[Spot] = []
 	var out: float = body_radius + SPOT_CLEARANCE
 	for index: int in range(boxes.size()):
 		if steps.has(boxes[index]):
 			continue
 		var places: Array[Vector2] = _face_places(boxes[index], out)
 		for place: Vector2 in places.filter(func(at: Vector2) -> bool: return can_stand(at, body_radius)):
-			found.append(_spot(found.size(), place, index))
+			candidates.append(_spot(0, place, index))
+	var found: Array[Spot] = []
+	for spot: Spot in candidates.filter(func(spot: Spot) -> bool: return not _crowded(candidates, spot)):
+		spot.id = "s%d" % found.size()
+		found.append(spot)
 	return found
+
+
+# Whether another box's spot stands nearer `spot` than SPOT_SPACING and
+# comes first: two walls end to end, or a box against a wall, put spots of
+# two faces side by side, and two bots on them were bunched however the
+# claims kept them off each other's spot. "First" is by distance from the
+# mirror line, then by z -- the same on both sides, so the spots dropped on
+# one side are the mirror of those dropped on the other.
+func _crowded(candidates: Array[Spot], spot: Spot) -> bool:
+	var key := Vector2(absf(spot.position.x - width / 2.0), spot.position.y)
+	return candidates.any(func(other: Spot) -> bool:
+		var other_key := Vector2(absf(other.position.x - width / 2.0), other.position.y)
+		var near: bool = other.position.distance_to(spot.position) < SPOT_SPACING - 1e-4
+		return other.box != spot.box and near and other_key < key)
 
 
 func _spot(number: int, place: Vector2, box: int) -> Spot:
