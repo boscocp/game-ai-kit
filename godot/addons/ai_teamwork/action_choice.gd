@@ -9,15 +9,16 @@
 ## action's score is its weight times every answer, so one answer of 0
 ## vetoes it -- an empty magazine vetoes a shot, whatever else favours it --
 ## and the others grade it: a nearer enemy, a fuller magazine, a louder shot
-## heard each move the choice by degrees. That is the form of the utility
-## systems Mark and Dill describe [Mark and Dill 2010], the "infinite axis"
-## one among them [Lewis and Mark 2015]. This keeps two curves, and leaves
-## out the compensation some systems add for an action with many
-## considerations, whose product of answers is smaller for having more of
-## them: an action here has a few. The highest score wins, the first listed of
+## heard each move the choice by degrees. That is the form Guild Wars 2:
+## Heart of Thorns decided with, after the Infinite Axis Utility System:
+## each consideration "normalized to the interval [0, 1]", "processed
+## through a response curve", the answers "multiplied together", so that
+## "any consideration can disqualify an entire decision from being selected
+## simply by scoring zero" [Lewis 2017]. This keeps two curves, and is data
+## driven as that one is. The highest score wins, the first listed of
 ## equal scores, and when nothing scores above zero nothing is chosen.
 ##
-## Why not the other ways in `ai_behaviour` (`WaysToDecide`): a behaviour
+## Why not the other ways `ai_behaviour` compares in its table: a behaviour
 ## tree's selector is a priority list -- "or else", in an order a designer
 ## wrote -- which is what this replaces; GOAP searches for a chain of
 ## actions to a goal, and a bot choosing one action each decision, each a

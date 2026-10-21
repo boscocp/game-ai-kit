@@ -9,8 +9,8 @@ invalidated_if: the match's rules, arenas or techniques change, and botmatch_eff
 teaches: none
 -->
 
-> T51's example, rebuilt by T66 on maps made for tactics, played and
-> measured. The techniques and where they come from are in [the shooter AI
+> T51's example, rebuilt by T66 on maps made for tactics, its bots made
+> agents by T67, played and measured. The techniques and where they come from are in [the shooter AI
 > page](../concepts/shooter-ai.md); the level design the maps follow is its
 > T66 section. This page covers what they did here, including the results
 > that did not go the way the tasks expected.
@@ -64,11 +64,109 @@ And each bot weighs, rather than follows a rule:
   teammate, or take another spot, each priced in seconds; a teammate
   asked weighs what moving costs it against what it saves the asker (the
   owner's design);
-- **its errands** (`MatchSupply`): go back for rounds, or fetch the power
-  weapon, each a gain less its costs.
+- **its errands** (`ErrandChoice`, T67): go back for rounds, or fetch the
+  power weapon, each a gain less its costs;
+- **what to do now** (`ActionChoice`, T67): reload, fall back, shoot, move,
+  look towards a shot it heard, or hold -- every one scored at once from
+  what it perceives, the highest done (below).
 
-What is still a fixed rule -- the bot's priority list, and its perception
-written for this match rather than taken from `ai_perception` -- is T67's.
+The match runs as a simulation with no physics engine in it: a sight line
+is a segment against the boxes, answered exactly, and
+`botmatch_test.gd` holds that answer to Godot's own ray casts on the same
+boxes, platforms and stairs. So 149 matches run headless in about 21
+minutes. The 3D scene draws one match; the techniques never read anything
+the scene computes.
+
+## The bot as an agent (T67)
+
+The owner's ask, during T66: as few fixed `if`s in a demo as can be, and
+the bot as AIMA's agent, which perceives the world and itself and decides
+what to do towards its goal, so that on another map it copes.
+
+- **It perceives through `ai_perception`, into one record.** Its eyes are
+  a `VisionCone` asked in the open -- 40 m, 60 degrees either side, all
+  round within 3 m -- with the line answered by the arena's boxes. Its
+  ears are `Hearing`: every enemy shot within 30 m, louder nearer, through
+  walls. That, its body and its orders are `MatchPercepts`, and
+  `MatchBot.decide` reads nothing else; a test decides a bot with no match
+  at all.
+- **It weighs, it does not follow a list.** T51's priority list -- dead,
+  reload, fall back, reload early, shoot, go -- is `ActionChoice` over six
+  actions in `actions.json`: each consideration one percept through a
+  line or a step, multiplied, times the action's weight. An empty
+  magazine vetoes a shot; a reload is worth more the emptier the magazine,
+  less with an enemy it could fire at, less away from its spot; a shot is
+  worth what `AimChoice` expects of it, so a far one loses to walking on.
+  Whom it shoots is the enemy reacted to that a shot is worth most at. A
+  reload not carried on is lost, so it is a choice and not a lock. The
+  panel shows every score (`weighs: > shoot 0.92 | reload 0.00 | ...`).
+- **The errands are a technique**, `ErrandChoice`, with its twin and
+  vectors; the weights are still `rules.json`'s.
+- **Steering was not taken.** `ai_steering`'s avoid is for round
+  obstacles, not walls or corridors, and head-on it turns to the vehicle's
+  left: north going east, south going west -- the fixed side that bent the
+  yards' mirror in T66. The step round a body and `PassageChoice` stay.
+- **Portability is held by a test.** `RandomArena` makes an arena from a
+  seed, random within the mirror -- size, points, cover, pillars, walls, a
+  platform and its stair -- keeping only one where every point and spawn
+  can be reached. The effects test plays six, one match each.
+
+What is still fixed, said so: a dead bot waits and a person drives the
+one they took; posture follows the action (crouched to reload or to hold a
+spot); pace is a rule (it sprints moving with nobody in sight and far to
+go). The orders -- where to stand, which point -- are still the team's
+techniques, read by the bot as its orders.
+
+### What T67 measured
+
+`make test-botmatch-effects`, the run after the fix below: every claim
+held, 0 failures, 1270 s.
+
+| claim | measured | needs |
+|---|---|---|
+| the mirror, lanes | +25.3 +- 18.2 s, 13-7 | within 2.5 errors |
+| the mirror, yards | -10.8 +- 35.1 s, 9-11 | within 2.5 errors |
+| claims | 1.0 s bunched with them, 465.3 s without | <= 10 and >= 40 |
+| the commander | orders over 2.67 points with it, 1.39 without | 1.2 times |
+| retreat, lanes and yards | 13171 and 13970 retreating decisions, none uncovered | some, none |
+| honesty, every arena | 0 of about 255,000 shots at an unseen enemy | none |
+| sprint, every arena | 0 shots while sprinting | none, some sprinting |
+| aim | 4.67 damage a shot by worth, 3.66 always the head | 1.1 times |
+| ammunition | always going back: -254.9 +- 20.2 s, 0-10 | below weighing by 2.5 errors |
+| portability | 6 random arenas, every point taken, every match ended | all |
+
+Each planted case was caught: a sharper blue (+300 +- 0, 10-0), a
+commander on one point, a retreat in one wave (3044 of 3407 uncovered), a
+wallhack (917 shots) and a bot firing on stale sight (20), always the
+head, the weighing blue against itself, and a random arena with point C
+walled in.
+
+T65's question, again, blue's margin a match against red with everything:
+
+| blue plays | margin a match | wins |
+|---|---|---|
+| everything | +25.3 +- 18.2 s | 13-7 |
+| no claims | -29.6 +- 23.2 s | 8-12 |
+| no commander | -45.6 +- 19.1 s | 7-13 |
+| no retreat | +237.1 +- 7.0 s | 20-0 |
+
+- **The commander helps**: without it blue is 70.9 s worse a match, 2.7
+  combined errors.
+- **Claims** now look like they help, 54.9 s, 1.9 errors: suggested, not
+  shown.
+- **Retreat still costs the match**, 20-0 for the team that never falls
+  back. Weighing actions did not change that; it is the squad's choice,
+  and the moving wave falls back unless a good shot outweighs it.
+
+**The fault the first run found.** The first full run with the weighing
+bots failed one planted case: the sharper blue passed the mirror as even,
+at ten matches (+64 +- 44) and at twenty (+17 +- 28, 6-14). Watched, its
+bots killed sixty for two and then stood at their base all match: their
+streaks earned power weapons, and going back counted the share of a power
+weapon's rounds spent as a gain, though the base gives a power weapon
+nothing until it is empty. That fault was T66's; weighing bots that kill
+faster met it more. The facts now count only what the base gives back,
+and `botmatch_test.gd` holds it.
 
 The match runs as a simulation with no physics engine in it: a sight line
 is a segment against the boxes, answered exactly, and
