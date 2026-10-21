@@ -156,14 +156,19 @@ static func weights_of(rules: MatchRules) -> ErrandChoice.Weights:
 	return weights
 
 
-## What going back is weighed on, for `bot`: the share of its rounds
-## spent, whether its streak earned the power weapon, the walk to its base,
-## whether it is attacking, and whether it has no round left.
+## What going back is weighed on, for `bot`: the share of its rounds the
+## base would give back, whether its streak earned the power weapon, the
+## walk to its base, whether it is attacking, and whether it has no round
+## left. A power weapon with rounds in it is given nothing at the base --
+## it changes for a rifle only once empty -- so its spent share is no gain:
+## counted as one, a sharp team's power holders went back half full and
+## stood at their base for the rest of the match (T67, measured).
 func resupply_facts(world: BotMatch, team: MatchTeam, bot: MatchBot) -> ErrandChoice.Resupply:
 	var rules: MatchRules = world.rules
 	var full: int = rules.power_rounds if bot.weapon == POWER else rules.magazine + rules.reserve
 	var facts := ErrandChoice.Resupply.new()
-	facts.spent = 1.0 - float(bot.ammo + bot.reserve) / full
+	var refilled: bool = bot.weapon == RIFLE or bot.ammo <= 0
+	facts.spent = 1.0 - float(bot.ammo + bot.reserve) / full if refilled else 0.0
 	facts.earned_power = bot.weapon == RIFLE and bot.streak >= rules.streak_for_power
 	facts.walk_seconds = _walk_seconds(world, _base_steps[bot.team], bot)
 	facts.attacking = team.bot_modes.get(bot.id, MatchTeam.HOLD) == MatchTeam.ATTACK

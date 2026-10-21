@@ -925,6 +925,18 @@ func test_going_back_is_weighed_and_the_planted_rules_never_and_always_differ() 
 	world.supply.think(world, team)
 	assert_str(bot.errand).is_equal(MatchSupply.RESUPPLY)
 	assert_float(float(bot.errand_weighing[MatchSupply.RESUPPLY][3])).is_greater(0.0)
+	# A power weapon half spent: the base gives it nothing, so it stays;
+	# empty, the base gives a rifle, and it goes.
+	MatchSupply.arm_power(bot, rules)
+	bot.ammo = rules.power_rounds / 2
+	world.supply.think(world, team)
+	assert_str(bot.errand).is_equal(MatchSupply.NO_ERRAND)
+	bot.ammo = 0
+	world.supply.think(world, team)
+	assert_str(bot.errand).is_equal(MatchSupply.RESUPPLY)
+	MatchSupply.arm_rifle(bot, rules)
+	bot.ammo = 10
+	bot.reserve = 0
 	# Planted: a team that never goes back, and one that always does.
 	team.resupply_rule = MatchSupply.NEVER
 	world.supply.think(world, team)

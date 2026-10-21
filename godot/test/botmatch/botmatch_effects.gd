@@ -71,7 +71,11 @@ const PLANTED_MATCHES: int = 5
 ## The planted sharper blue, against the mirror: with the lanes' fewer
 ## fights, five matches left its margin inside the errors (+80 +- 76 s);
 ## and always going back, five of which held less at only 2.2 errors.
+## In T67 ten, and then twenty, passed it as even (+64 +- 44, +17 +- 28)
+## -- not for want of matches: its power holders went back half full and
+## stood at the base all match, a fault in the errand's facts, now fixed.
 const SHARPER_MATCHES: int = 10
+const ALWAYS_BACK_MATCHES: int = 10
 ## The yards' mirror: as many matches as the lanes' claims. Its matches
 ## swing more (+-250 s), and ten measured blue 7-3 at 1.5 errors after two
 ## mirror faults were fixed, and 9-1 before: a fault would show, noise less.
@@ -153,7 +157,7 @@ func _initialize() -> void:
 		totals[pairing] = _play(pairing, _matches)
 		_report(pairing, totals[pairing])
 	for pairing: String in PLANTED:
-		totals[pairing] = _play(pairing, SHARPER_MATCHES if pairing in ["sharper blue", "always resupply"] else PLANTED_MATCHES)
+		totals[pairing] = _play(pairing, _planted_matches(pairing))
 		_report(pairing, totals[pairing])
 	totals["the yards"] = _play("the yards", YARDS_MATCHES)
 	_report("the yards", totals["the yards"])
@@ -170,6 +174,13 @@ func _initialize() -> void:
 	if explored:
 		print("explored at %d matches: the claims hold only at %d, so this run exits 2" % [_matches, MATCHES])
 	quit(2 if explored else (1 if not failures.is_empty() else 0))
+
+
+# How many matches a planted pairing plays: enough for its effect to show.
+static func _planted_matches(pairing: String) -> int:
+	if pairing == "sharper blue":
+		return SHARPER_MATCHES
+	return ALWAYS_BACK_MATCHES if pairing == "always resupply" else PLANTED_MATCHES
 
 
 # Blue's counts summed over the pairing's matches, both sides' unseen shots,
