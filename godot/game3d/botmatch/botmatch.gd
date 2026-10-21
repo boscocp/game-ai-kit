@@ -12,7 +12,8 @@
 ## its priority list (the owner's choice, 2026-10-21): the same body by the
 ## same rules, in first person as in Counter-Strike or Unreal (the owner,
 ## after playing it in third) -- WASD walks, the mouse aims up, down and
-## round, a click fires, R reloads, Ctrl crouches. Every shot leaves a
+## round, a click fires, R reloads, Ctrl crouches, Shift sprints (and
+## while it does, the rifle does not fire). Every shot leaves a
 ## tracer; a hit on someone shows a marker, and being hit reddens the edge. Its teammates leave the spot it stands on to it,
 ## and its squad's commander counts it like any other bot.
 extends Node3D
@@ -232,6 +233,7 @@ func _read_the_person() -> void:
 	bot.wants_to_walk = (forward * push.y + right * push.x).limit_length(1.0)
 	bot.wants_to_fire = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 	bot.wants_to_crouch = Input.is_key_pressed(KEY_CTRL)
+	bot.wants_to_sprint = Input.is_key_pressed(KEY_SHIFT)
 
 
 # A match from the current seed, keeping each team's switches.
@@ -317,7 +319,7 @@ func _panel_text() -> String:
 	lines.append("watching bot %d (%s): %s%s%s" % [bot.id, world.teams[bot.team].name, bot.action, target, you])
 	lines.append("1/2/3 blue's switches, Shift red's; Tab bot, T take it over, M map, C camera, F fast, P pause, N new")
 	if _played != -1:
-		lines.append("playing: WASD walk, mouse turns, click fires, R reloads, Ctrl crouches, T gives it back")
+		lines.append("playing: WASD walk, Shift sprint, mouse turns, click fires, R reloads, Ctrl crouches, T gives it back")
 	return "\n".join(lines)
 
 

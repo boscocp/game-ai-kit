@@ -354,6 +354,61 @@ func test_a_person_hits_what_they_aim_at_and_not_through_a_wall() -> void:
 	assert_int(enemy.health).is_equal(rules.health - rules.damage)
 
 
+func test_a_bot_sprints_to_a_far_goal_and_walks_once_an_enemy_is_seen() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var bot: MatchBot = world.bots[0]
+	# Along lane A's north side, clear of every box.
+	bot.position = Vector2(15.0, 3.0)
+	world.send(bot, Vector2(15.0 + rules.sprint_from + 4.0, 3.0), -1)
+	bot.action = MatchBot.MOVE
+	bot.choose_pace([] as Array[int], rules.sprint_from)
+	assert_bool(bot.sprinting).is_true()
+	MatchActions.act(world, bot, 1.0)
+	assert_float(bot.position.x).is_equal_approx(15.0 + rules.sprint_speed, 1e-3)
+	# An enemy in its row: it walks, the same far goal or not.
+	bot.choose_pace([6] as Array[int], rules.sprint_from)
+	assert_bool(bot.sprinting).is_false()
+	# Near its goal it walks too.
+	bot.position = Vector2(15.0 + rules.sprint_from, 3.0)
+	bot.choose_pace([] as Array[int], rules.sprint_from)
+	assert_bool(bot.sprinting).is_false()
+
+
+func test_nobody_fires_while_sprinting() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var mine: MatchBot = world.bots[0]
+	var enemy: MatchBot = world.bots[6]
+	mine.controlled = true
+	mine.action = MatchBot.PLAYED
+	mine.position = Vector2(15.0, 13.0)
+	enemy.position = Vector2(21.0, 13.0)
+	mine.wants_to_walk = Vector2.RIGHT
+	mine.wants_to_sprint = true
+	mine.wants_to_fire = true
+	# The trigger held cancels the sprint; the key alone sprints and holds fire.
+	MatchActions.act(world, mine, rules.step)
+	assert_bool(mine.sprinting).is_false()
+	assert_int(world.stats[0].shots).is_equal(1)
+	mine.wants_to_fire = false
+	MatchActions.act(world, mine, rules.step)
+	assert_bool(mine.sprinting).is_true()
+	# A bot set to shoot while sprinting -- planted, its list never does --
+	# does not fire, and a shot forced through is counted.
+	var bot: MatchBot = world.bots[1]
+	bot.position = Vector2(15.0, 14.0)
+	bot.facing = 0.0
+	bot.goal = bot.position
+	bot.action = MatchBot.SHOOT
+	bot.target = enemy.id
+	bot.sprinting = true
+	MatchActions.act(world, bot, rules.step)
+	assert_int(world.stats[0].shots).is_equal(1)
+	MatchActions.fire(world, bot, enemy)
+	assert_int(world.stats[0].shots_sprinting).is_equal(1)
+
+
 func test_teammates_leave_a_persons_spot_to_them_and_the_list_takes_back_over() -> void:
 	var rules := MatchRules.new()
 	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)

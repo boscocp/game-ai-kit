@@ -1,6 +1,7 @@
 ## How a bot carries out what its priority list chose, within the rules: a
-## limited speed and turn rate, a fire interval, a magazine, a reload, and a
-## shot that lands by the team's aim error. The same body for every bot.
+## limited speed and turn rate, a sprint that forbids a shot, a fire
+## interval, a magazine, a reload, and a shot that lands by the team's aim
+## error. The same body for every bot.
 ##
 ## A shot is hitscan: it hits with the chance that a bullet `aim_error` off
 ## the line still meets a body `body_half_width` across at that distance --
@@ -48,6 +49,7 @@ static func act(world: BotMatch, bot: MatchBot, delta: float) -> void:
 static func fire(world: BotMatch, shooter: MatchBot, target: MatchBot) -> void:
 	var stats: MatchStats = world.stats[shooter.team]
 	stats.shots += 1
+	stats.shots_sprinting += 1 if shooter.sprinting else 0
 	if not world.sees(shooter, target):
 		stats.shots_unseen += 1
 	shooter.ammo -= 1
@@ -91,6 +93,7 @@ static func fire_aimed(world: BotMatch, shooter: MatchBot) -> void:
 	shooter.ammo -= 1
 	shooter.fire_cooldown = world.rules.fire_interval
 	world.stats[shooter.team].shots += 1
+	world.stats[shooter.team].shots_sprinting += 1 if shooter.sprinting else 0
 	var eyes: Vector3 = eyes_of(world, shooter)
 	var look: Vector3 = look_of(shooter)
 	var far: Vector3 = eyes + look * world.rules.max_range
@@ -153,12 +156,20 @@ static func _crossing(world: BotMatch, eyes: Vector3, look: Vector3, other: Matc
 	return along if height >= feet and height <= top else INF
 
 
+## How fast a bot walks now: its sprint, its walk, or half that crouched.
+static func speed_of(world: BotMatch, bot: MatchBot) -> float:
+	if bot.sprinting:
+		return world.rules.sprint_speed
+	return world.rules.speed * (0.5 if bot.crouched else 1.0)
+
+
 # The person's bot: walk where they push, blocked by the boxes and by any
-# rise higher than a step, as a bot is; slower crouched, and fire while the
-# trigger is held.
+# rise higher than a step, as a bot is; slower crouched, faster sprinting,
+# and fire while the trigger is held and they are not sprinting.
 static func _played(world: BotMatch, bot: MatchBot, delta: float) -> void:
-	var pace: float = 0.5 if bot.crouched else 1.0
-	var stride: Vector2 = bot.wants_to_walk.limit_length(1.0) * world.rules.speed * pace * delta
+	# Every step, not every decision: a key answers at once.
+	bot.choose_pace([] as Array[int], world.rules.sprint_from)
+	var stride: Vector2 = bot.wants_to_walk.limit_length(1.0) * speed_of(world, bot) * delta
 	for step: Vector2 in [stride, Vector2(stride.x, 0.0), Vector2(0.0, stride.y)]:
 		var next: Vector2 = bot.position + step
 		if world.arena.can_step(bot.position, next, world.rules.body_radius):
@@ -168,7 +179,7 @@ static func _played(world: BotMatch, bot: MatchBot, delta: float) -> void:
 		_reload(world, bot, delta)
 	elif bot.wants_to_fire and bot.ammo <= 0:
 		bot.reload_left = world.rules.reload_time
-	elif bot.wants_to_fire and bot.fire_cooldown <= 0.0:
+	elif bot.wants_to_fire and bot.fire_cooldown <= 0.0 and not bot.sprinting:
 		fire_aimed(world, bot)
 
 
@@ -191,7 +202,8 @@ static func _shoot(world: BotMatch, bot: MatchBot, delta: float) -> void:
 	# The table said it could see the target when it decided; a target that
 	# has stepped behind a box since is not shot through it.
 	var still_seen: bool = world.sees(bot, target) or not bot.checks_its_line
-	if facing and still_seen and bot.fire_cooldown <= 0.0 and bot.ammo > 0 and target.alive():
+	var ready: bool = bot.fire_cooldown <= 0.0 and bot.ammo > 0 and not bot.sprinting
+	if facing and still_seen and ready and target.alive():
 		fire(world, bot, target)
 
 
@@ -207,7 +219,7 @@ static func _walk(world: BotMatch, bot: MatchBot, delta: float) -> void:
 static func _step_towards(world: BotMatch, bot: MatchBot, delta: float) -> Vector2:
 	var towards: Vector2 = _next_waypoint(world, bot)
 	var offset: Vector2 = towards - bot.position
-	var stride: float = world.rules.speed * delta
+	var stride: float = speed_of(world, bot) * delta
 	if offset.length() <= stride:
 		bot.position = towards
 	else:

@@ -36,7 +36,7 @@ func _draw() -> void:
 	if _hit_lately(bot):
 		for corner: Vector2 in [Vector2(1, 1), Vector2(-1, 1), Vector2(1, -1), Vector2(-1, -1)]:
 			draw_line(middle + corner * 6.0, middle + corner * 14.0, HIT_MARKER, 2.5)
-	var reloading: String = "  reloading" if bot.reload_left > 0.0 else ""
+	var reloading: String = "  reloading" if bot.reload_left > 0.0 else ("  sprinting" if bot.sprinting else "")
 	var status: String = "%d health    %d / %d%s" % [bot.health, bot.ammo, world.rules.magazine, reloading]
 	# Bottom left: the bottom right is where the rifle is.
 	var at := Vector2(30.0, size.y - 30.0)

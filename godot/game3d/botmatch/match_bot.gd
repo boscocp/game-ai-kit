@@ -10,6 +10,9 @@
 ##      turn to it, and shoot once facing it;
 ##   5. otherwise go to the spot its team's tactics chose, and hold it.
 ##
+## Then, apart from the list, its pace: it sprints while it moves with no
+## enemy in sight and far to go, and never while it shoots (`choose_pace`).
+##
 ## A bot has no sense the player would not have: it shoots only at what its
 ## own row of the sight table says it sees, after a reaction, and it turns at
 ## a limited rate (the honest knobs). `MatchBot` never reads another bot's
@@ -47,6 +50,8 @@ var fire_cooldown: float = 0.0
 var reload_left: float = 0.0
 var respawn_left: float = 0.0
 var crouched: bool = false
+## Running at the rules' sprint speed; it may not fire while it is.
+var sprinting: bool = false
 ## What the list chose last, and at whom it is aimed (-1: nobody).
 var action: String = HOLD
 var target: int = -1
@@ -73,6 +78,7 @@ var controlled: bool = false
 var wants_to_walk: Vector2 = Vector2.ZERO
 var wants_to_fire: bool = false
 var wants_to_crouch: bool = false
+var wants_to_sprint: bool = false
 
 
 ## Whether it is alive. A bot brought to zero health in this step still is,
@@ -108,6 +114,20 @@ func decide(now: float, visible: Array[int], positions: Dictionary, reaction: fl
 		target = _reacted_target(now, visible, positions, reaction)
 		action = SHOOT if target != -1 else (HOLD if arrived() else MOVE)
 	crouched = action == RELOAD or (action == HOLD and spot != -1)
+
+
+## Whether to sprint, after `decide`: a person sprints while they hold the
+## key and walk, not crouched and not firing; a bot while it moves with no
+## enemy in its sight row and at least `sprint_from` metres to go. Sprinting
+## is what lets it reach a far point sooner, and seeing an enemy is when a
+## shot may be needed, so the one rule serves both.
+func choose_pace(visible: Array[int], sprint_from: float) -> void:
+	if controlled:
+		var walking: bool = wants_to_walk.length() > 0.1
+		sprinting = alive() and wants_to_sprint and walking and not crouched and not wants_to_fire
+		return
+	var moving: bool = action == MOVE or action == FALL_BACK
+	sprinting = moving and visible.is_empty() and position.distance_to(goal) >= sprint_from
 
 
 ## Remember when each enemy came into sight, and forget those gone from it:

@@ -7,6 +7,8 @@
   "reload_time": 2.0,
   "respawn_time": 4.0,
   "speed": 4.5,
+  "sprint_speed": 6.5,
+  "sprint_from": 8.0,
   "eye_height": 1.5,
   "chest_height": 1.2,
   "crouched_height": 0.7,

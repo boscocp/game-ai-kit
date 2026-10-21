@@ -115,7 +115,9 @@ func _decide() -> void:
 	for bot: MatchBot in bots:
 		var team: MatchTeam = teams[bot.team]
 		var retreating: bool = TeamTactics.moving_in_retreat(self, team, bot)
-		bot.decide(time, sight.get(bot.id, [] as Array[int]), places, team.reaction, retreating)
+		var row: Array[int] = sight.get(bot.id, [] as Array[int])
+		bot.decide(time, row, places, team.reaction, retreating)
+		bot.choose_pace(row, rules.sprint_from)
 	for team: MatchTeam in teams:
 		_count_retreats(team)
 
@@ -402,6 +404,8 @@ func _count(delta: float) -> void:
 		stats[side].bunched_seconds += delta * _bunched_pairs(side)
 		stats[side].point_coverage += delta * _points_covered(side)
 		stats[side].order_spread += delta * _points_ordered(side)
+	for bot: MatchBot in bots:
+		stats[bot.team].sprint_seconds += delta if bot.alive() and bot.sprinting else 0.0
 
 
 # Pairs of one team's bots in cover within BUNCHED metres of each other: each

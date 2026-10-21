@@ -112,7 +112,7 @@ func _play(pairing: String, matches: int) -> Dictionary:
 	var rules := MatchRules.new()
 	var arena := BotArena.new(rules.body_radius)
 	var sums: Dictionary = {"held": 0.0, "red held": 0.0, "bunched": 0.0, "deaths": 0, "lost": 0,
-			"unseen": 0, "shots": 0, "ordered": 0.0, "seconds": 0.0, "retreats": 0, "uncovered": 0,
+			"unseen": 0, "shots": 0, "sprinting shots": 0, "sprinted": 0.0, "ordered": 0.0, "seconds": 0.0, "retreats": 0, "uncovered": 0,
 			"blue wins": 0, "red wins": 0, "margins": PackedFloat64Array()}
 	for seed_value: int in range(1, matches + 1):
 		var red := MatchTeam.new("red", BotMatch.RED, rules)
@@ -145,6 +145,8 @@ func _add(sums: Dictionary, world: BotMatch) -> void:
 	sums["deaths"] += blue.deaths
 	sums["lost"] += blue.points_lost
 	sums["unseen"] += blue.shots_unseen + red.shots_unseen
+	sums["sprinting shots"] += blue.shots_sprinting + red.shots_sprinting
+	sums["sprinted"] += blue.sprint_seconds + red.sprint_seconds
 	sums["shots"] += blue.shots + red.shots
 	sums["ordered"] += blue.order_spread
 	sums["seconds"] += world.time
@@ -165,6 +167,7 @@ func _report(pairing: String, sums: Dictionary) -> void:
 	var decided: Array = ["", _spread(sums), sums["bunched"], sums["retreats"], sums["uncovered"], sums["deaths"],
 			sums["lost"], sums["unseen"], sums["shots"]]
 	print("%22s orders over %.2f points, bunched %.1f s, %d retreating decisions (%d uncovered), %d deaths, %d points lost; %d of %d shots unseen" % decided)
+	print("%22s %.0f s sprinted, %d shots while sprinting" % ["", sums["sprinted"], sums["sprinting shots"]])
 
 
 # The mean of `values` and its standard error, the spread of that mean over
@@ -264,6 +267,7 @@ func _honesty(totals: Dictionary) -> Array[String]:
 	for pairing: String in PAIRINGS:
 		if totals[pairing]["unseen"] > 0:
 			failures.append("honesty: %d shots at unseen enemies in '%s'" % [totals[pairing]["unseen"], pairing])
+	failures.append_array(_sprint(totals))
 	var wallhack: int = _planted_cheat(true)
 	var stale: int = _planted_cheat(false)
 	print("honesty: planted, a wallhack bot fired %d shots at enemies it could not see; one that did not look again, %d" % [wallhack, stale])
@@ -271,6 +275,19 @@ func _honesty(totals: Dictionary) -> Array[String]:
 		failures.append("honesty: planted, a bot shooting through walls fired no unseen shot")
 	if stale == 0:
 		failures.append("honesty: planted, a bot firing on its last decision's sight fired no unseen shot")
+	return failures
+
+
+# No shot while sprinting, in any pairing -- and some sprinting, or that
+# would hold of a match nobody ran in. The planted shot forced through a
+# sprint is botmatch_test.gd's.
+func _sprint(totals: Dictionary) -> Array[String]:
+	var failures: Array[String] = []
+	for pairing: String in PAIRINGS:
+		var sums: Dictionary = totals[pairing]
+		var counted: Array = [sums["sprinting shots"], sums["sprinted"], pairing]
+		if sums["sprinting shots"] > 0 or sums["sprinted"] <= 0.0:
+			failures.append("sprint: %d shots while sprinting, %.0f s sprinted, in '%s'" % counted)
 	return failures
 
 

@@ -28,3 +28,9 @@ var hits: int = 0
 ## Shots at a target that was not in the shooter's own sight row. The
 ## honest bots never make one; a planted cheat must.
 var shots_unseen: int = 0
+## Shots fired while sprinting, which the rules forbid. Never one, from a
+## bot or a person: the rule is held where a shot is fired, and counted.
+var shots_sprinting: int = 0
+## Seconds its living bots spent sprinting, summed: what makes "no shot
+## while sprinting" more than a count of nothing.
+var sprint_seconds: float = 0.0
