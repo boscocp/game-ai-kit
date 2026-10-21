@@ -9,7 +9,9 @@
 #      engine is cut at the top speed, and one frame of its push past it is
 #      under three hundredths of a metre a second -- and no tyre gives more
 #      than its grip, by its own car's report;
-#   3. the three knob values each driver says it used -- recorded from
+#   3. what each driver knows of its car -- grip, braking, slip steer -- is
+#      what its own car measured on the pad, every frame; and the three
+#      knob values each driver says it used -- recorded from
 #      inside the controller, in `RaceDriver3D.used` -- are the numbers its
 #      level was entered with, on every frame;
 #   4. and the race is indistinguishable from an honest twin. This script
@@ -35,7 +37,7 @@
 # given a stronger copy of it, a car launched past its top speed, a rubber
 # band in the knob and one on the pedal, a nudge forward, a level changed
 # mid-race and reported, a margin used whole and reported as the level's,
-# and a stall. Planted races are
+# a stall, and a driver racing on more grip than its car measured. Planted races are
 # PLANTED_SECONDS long and must cover PLANTED_DISTANCE.
 #
 #     ./scripts/godot --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_does_not_cheat.gd
@@ -92,7 +94,8 @@ class RubberBandDriver extends RaceDriver3D:
 ## strengthens the shared physics, "swap" gives its car a stronger copy,
 ## "launch" throws its car past the top speed, "nudge" pushes it forward,
 ## "level" changes its level mid-race and says so, "forged" brakes for the
-## whole grip while reporting its level's margin, "stall" stops.
+## whole grip while reporting its level's margin, "stall" stops, "grip"
+## races on more grip than its car measured.
 class CrookedDriver extends RaceDriver3D:
 	var race_held: WeakRef
 	var number: int
@@ -127,6 +130,8 @@ class CrookedDriver extends RaceDriver3D:
 			"stall":
 				throttle = 0.0
 				brake = 1.0
+			"grip":
+				grip = 11.0
 		if launching:
 			car.linear_velocity = forward * (car.physics.top_speed + 5.0)
 
@@ -284,11 +289,28 @@ func _frame_findings(race: Race3D, entered: Array[Array], start: Dictionary) -> 
 		if not (speed <= race.physics.top_speed + SPEED_TOLERANCE):
 			found.append("rule 2, top speed: %s at %.2f m/s at %.2f s" % [title, speed, race.time])
 		found.append_array(_past_grip(car, title))
+		found.append_array(_known_findings(race, number, title))
 		var used: Dictionary = race.drivers[number].used
 		var knobs: Array = [used.get("lookahead"), used.get("grip_margin"), used.get("wander")]
 		if knobs != entered[number].slice(1, 4):
 			found.append("rule 3, knobs: %s used %s at %.2f s, entered %s" % [title, knobs, race.time, entered[number].slice(1, 4)])
 	return found
+
+
+# Rule 3, what a driver knows of its car: its grip, braking and slip steer
+# are what its own car measured -- or the sheet's, with measuring off --
+# on every frame. The twin cannot see this: it runs Race3D too.
+func _known_findings(race: Race3D, number: int, title: String) -> Array[String]:
+	var driver: RaceDriver3D = race.drivers[number]
+	var test: GripTest3D = race.tests[number]
+	var sheet: Dictionary = Race3D.sheet_of(race.physics)
+	var owed: Array = [test.grip, test.braking, test.slip_steer]
+	if not race.measured_grip:
+		owed = [sheet["grip"], sheet["braking"], sheet["slip_steer"]]
+	var held: Array = [driver.grip, driver.braking, driver.slip_steer]
+	if held != owed:
+		return ["rule 3, its car: %s at %.2f s races on %s, its car measured %s" % [title, race.time, held, owed]]
+	return []
 
 
 func _past_grip(car: RaceCar3D, title: String) -> Array[String]:
@@ -326,7 +348,7 @@ func _planted() -> Array[String]:
 	var cases: Array[Array] = [
 		["engine", "rule 1"], ["swap", "rule 1"], ["launch", "rule 2, top speed"],
 		["band in knob", "rule 3"], ["band on pedal", "rule 4"], ["nudge", "rule 4"],
-		["level", "rule 3"], ["forged", "rule 4"], ["stall", "rule 5"],
+		["level", "rule 3"], ["forged", "rule 4"], ["stall", "rule 5"], ["grip", "rule 3, its car"],
 	]
 	for planted: Array in cases:
 		var said: String = "\n".join(await findings_for(planted[0], PLANTED_SECONDS, PLANTED_DISTANCE))

@@ -16,7 +16,7 @@ Python twins, fourteen vectors, five gates (`make test-racing3d-car`,
 `--fixed-fps 60`), and `make demo-racing3d`.
 
 **For the owner.** The manual check. The heat line's claim did not hold
-(74 changes of side against 40), and P only swings rather than settling;
+(75 changes of side against 22), and P only swings rather than settling;
 both are said as measured. Kenney's Racing Kit gives the scenery, not the
 road: tiles on a grid could not make a second track of any shape.
 
@@ -138,7 +138,7 @@ because it is driven better, and a command proves every car runs one physics.
 | T23 | The racing demo, three honest difficulties | done | `make demo-racing`: pure pursuit on seek, a speed limit carried back from the corners; laps 39.6 / 36.6 / 35.1 s; `racing_does_not_cheat.gd` steps an honest twin race alongside and every car, decision and lap record must match it; seventeen planted cheats refused |
 | T59 | Race the AI: a car you drive | done | wave 65: you against one AI level in the same car; a 24 m track, collisions that push, AIs that follow and pass; brake lights, tyre marks, a speedometer, your own braking bar; Kenney Racing Pack (CC0); laps 32.5 / 31.3 / 29.9 s alone; in traffic 5 seeds of 6 in order; owner raced it: "melhorou bastante" |
 | T53 | How racing AI is made | done | `docs/concepts/racing-ai.md`: 30 references, each opened, those read in part said so; rubber-banding for and against; T23 and T54 rewritten from it |
-| T54 | Racing in 3D, with physics the driver does not own | done | wave 73: a `RigidBody3D` on four ray-cast wheels (springs, tyres that slide past a peak, weight transfer nobody wrote); a driver that sees only its own view, finds its line by an elastic band, and measures its car on a test pad (grip 9.44 against the sheet's 10.29); PID and Melder's heat line in `ai_steering`; ladder 50.6 / 48.4 / 47.2 s on the loop and 43.9 / 41.9 / 40.4 on the untuned kidney; the no-cheat race matches an honest twin bit for bit, nine planted cheats refused; the heat line's claim (fewer changes of side) did not hold, printed not gated; `make demo-racing3d`; manual check still the owner's |
+| T54 | Racing in 3D, with physics the driver does not own | done | wave 73: a `RigidBody3D` on four ray-cast wheels (springs, tyres that slide past a peak, weight transfer nobody wrote); a driver that sees only its own view, finds its line by an elastic band, and measures its car on a test pad (grip 9.44 against the sheet's 10.29); PID and Melder's heat line in `ai_steering`; ladder 50.6 / 48.4 / 47.2 s on the loop and 43.9 / 41.9 / 40.4 on the untuned kidney; the no-cheat race matches an honest twin bit for bit, ten planted cheats refused; the heat line's claim (fewer changes of side) did not hold, printed not gated; `make demo-racing3d`; manual check still the owner's |
 
 ## Milestone 5 — shooters, in 3D
 

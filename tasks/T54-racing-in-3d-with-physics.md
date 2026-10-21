@@ -127,8 +127,9 @@ purpose and each measured; `docs/godot/racing3d.md` has the numbers.
   its power, and no default damping** before any driver could keep it on
   the road; with the same tyres all round every car spun.
 - **The heat line's claim did not hold** and is printed, not gated: the
-  cars changed passing side more often with it (74 against 40), though they
-  touched less (1088 car-frames against 1370). The owner's rule from T51
+  cars changed passing side more often with it (74 against 40; 75 against
+  22 after the review's one-spot pad), though they touched less (1092
+  car-frames against 1452). The owner's rule from T51
   applies: say what was measured.
 - **P only swings rather than settling off the line.** The manual check's
   two outcomes are the chapter's; this car at this gain shows the second.
@@ -141,7 +142,7 @@ purpose and each measured; `docs/godot/racing3d.md` has the numbers.
   untuned kidney in the ladder is the real defence (review of wave 73).
 
 Measured: laps easy 50.61, normal 48.43, hard 47.20 s on the loop; 43.90,
-41.85 and 40.41 on the kidney; the ladder's gap 1.0 s. The does-not-cheat
-race is 6197 frames and matches its honest twin bit for bit; nine planted
+41.86 and 40.41 on the kidney; the ladder's gap 1.0 s. The does-not-cheat
+race is 6198 frames and matches its honest twin bit for bit; ten planted
 cheats are each refused by their rule. Fourteen vectors at 1e-9. The
 manual check is still the owner's.

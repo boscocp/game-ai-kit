@@ -27,7 +27,7 @@
 #
 # Measured before the gap was set (2026-10-21), the standing start's lap
 # included: on the loop easy 50.61 s, normal 48.43 s, hard 47.20 s (2.18
-# and 1.23 apart); on the kidney easy 43.90 s, normal 41.85 s, hard 40.41 s
+# and 1.23 apart); on the kidney easy 43.90 s, normal 41.86 s, hard 40.41 s
 # (2.05 and 1.44). A second leaves the smaller gaps room without letting
 # two drivers a person could not tell apart through.
 #

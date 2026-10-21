@@ -16,7 +16,8 @@
 # **The heat line is printed, not claimed.** The claim first written for it
 # -- that in a race of four the cars change the side they pass on less
 # often with it than reacting to one rival at a time -- did not hold when
-# measured (2026-10-21): 74 changes of side with it, 40 without. What it
+# measured (2026-10-21): 74 changes of side with it, 40 without; 75 and 22
+# once every car measured on one spot of the pad. What it
 # does is held where it can be stated exactly, in the conformance vectors
 # (`heat-goes-round-two-cars-at-once`, `one-rival-at-a-time`), and what it
 # does to a race is printed here: the changes of side, the frames two cars

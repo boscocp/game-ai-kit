@@ -69,7 +69,7 @@ way and has a hairpin and a chicane; nothing was tuned on it.
 | level | lookahead | grip margin | wander | the loop | the kidney |
 |---|---|---|---|---|---|
 | easy | 0.5 s | 0.75 | 2.0 m | 50.61 s | 43.90 s |
-| normal | 0.7 s | 0.86 | 1.0 m | 48.43 s | 41.85 s |
+| normal | 0.7 s | 0.86 | 1.0 m | 48.43 s | 41.86 s |
 | hard | 0.9 s | 0.97 | 0.3 m | 47.20 s | 40.41 s |
 
 Every rung is more than the stated second apart on both tracks. The racing
@@ -84,9 +84,9 @@ laps unless said:
 
 | | mean distance off where it wants to be | frames on the grass | laps |
 |---|---|---|---|
-| full PID, measured grip | 2.03 m | 0 | 49.7, 46.1, 46.0 s |
-| proportional only | 302 m | 20284 | 51.7 s, then off the road |
-| on the car's sheet | 83 m | 16148 | 85.6, 88.4, 142.3 s |
+| full PID, measured grip | 2.02 m | 0 | 49.7, 46.1, 46.0 s |
+| proportional only | 263 m | 20385 | 51.7 s, then off the road |
+| on the car's sheet | 79 m | 13309 | 84.8, 87.5, 85.2 s |
 
 - **The PID.** With the proportional term alone this car does not settle
   off the line in a long bend; it swings, wider each time, until it leaves
@@ -99,29 +99,36 @@ laps unless said:
 - **The heat line is printed, not claimed.** In a race of four (two easy, a
   normal, the hard car last on the grid; three seeds), the claim first
   written for it -- that the cars change the side they pass on less often
-  with it -- **did not hold**: 74 changes of side with the heat line, 40
-  reacting to one rival at a time. The cars touched less with it, 1088
-  car-frames against 1370, and the hard car finished its nine laps with it
-  (49.2 to 63.0 s) and not without (two laps of 202 and 277 s, off the
-  road). The hard car led at the end of none of the six races, either way:
-  three laps from the back is not enough. What the heat line does is held
+  with it -- **did not hold**: 75 changes of side with the heat line, 22
+  reacting to one rival at a time. The cars touched less with it, 1092
+  car-frames against 1452, and the hard car's slowest lap was 66.6 s with
+  it and 130.3 s without (laps of 75 to 130 s are crashes). The hard car
+  led at the end of none of the six races, either way: three laps from the
+  back is not enough. **These race numbers are fragile**: when every car
+  started measuring from one spot of the pad (review of wave 73), the
+  measured grip moved by about 2e-6 m/s^2, and the changes of side went
+  from 74 against 40 to 75 against 22. Traffic multiplies a difference that
+  small into a different race; the claims held above are the ones that
+  survive it. What the heat line does is held
   where it can be stated exactly, in the conformance vectors
   (`heat-goes-round-two-cars-at-once`, `one-rival-at-a-time`).
 
 ## No cheating
 
 `make test-racing3d-does-not-cheat` records a race of the three levels,
-cars colliding, two laps -- 6197 physics frames -- and on every frame holds
+cars colliding, two laps -- 6198 physics frames -- and on every frame holds
 one `CarPhysics3D` for all, unchanged; no car past its top speed, no tyre
-past its grip; the knobs each driver used are the ones entered; every car
+past its grip (the force it applied, not a clamped copy); the grip,
+braking and slip steer each driver races on are what its own car
+measured; the knobs each driver used are the ones entered; every car
 covers its laps. It then races an honest twin from what it entered, with
 plain drivers, and every car's place and velocity and every decision must
 equal the twin's. They do, bit for bit: Jolt replays a run on one binary
-(T50), so the tolerance is zero. Nine planted races are each refused by the
+(T50), so the tolerance is zero. Ten planted races are each refused by the
 rule they break -- a stronger shared engine, a car given a stronger copy, a
 launch past the top speed, a rubber band in the knob and one on the pedal,
 a nudge, a level changed and reported, a margin used whole and reported as
-the level's, a stall -- and loosening the twin's tolerance lets the three
+the level's, a stall, more grip than its car measured -- and loosening the twin's tolerance lets the three
 only the twin can see through.
 
 ## What the physics forced, each measured

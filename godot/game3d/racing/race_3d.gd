@@ -5,8 +5,8 @@
 ## two parts:
 ##
 ##   1. **Measuring.** Every car is driven through `GripTest3D` on a test pad
-##      of the same tarmac, far from the track, side by side and through
-##      each other. Each driver keeps what its own car measured -- or, with
+##      of the same tarmac, far from the track, all from one spot and
+##      through each other. Each driver keeps what its own car measured -- or, with
 ##      `measured_grip` off, the numbers off the car's sheet instead, which
 ##      is the toggle that shows why it measures.
 ##   2. **Racing.** The cars are put on the grid at rest, and on every
@@ -25,14 +25,13 @@
 class_name Race3D
 extends Node3D
 
-## The test pad: where on the map and how big; the cars measure on it in
-## rows of `PAD_ROW`, `PAD_LANES` metres apart across and `PAD_ROWS` metres
-## apart along -- room for sixteen, each run taking about 150 metres.
+## The test pad: where on the map and how big. Every car starts its test
+## on the same spot, through the others: measured, cars tested 200 m apart
+## measured grips that differed by about 2e-6 m/s^2 (single-precision
+## positions further from the origin), and a test should not depend on
+## which car was entered first.
 const PAD_CENTRE: Vector2 = Vector2(-2500.0, 0.0)
 const PAD_SIZE: float = 1000.0
-const PAD_ROW: int = 4
-const PAD_LANES: float = 200.0
-const PAD_ROWS: float = 240.0
 ## Metres between two rows of the grid, and either side of the line.
 const GRID_GAP: float = 10.0
 const GRID_SIDE: float = 2.5
@@ -93,14 +92,12 @@ static func sheet_of(car_physics: CarPhysics3D) -> Dictionary:
 	}
 
 
-## A car for `driver`, on its lane of the test pad. Returns its number.
+## A car for `driver`, on the test pad. Returns its number.
 func enter(driver: RaceDriver3D) -> int:
 	var number: int = cars.size()
 	var car := RaceCar3D.new(physics, true)
 	car.name = "Car%d" % number
-	var across: float = (number % PAD_ROW - (PAD_ROW - 1) / 2.0) * PAD_LANES
-	var along: float = PAD_SIZE * 0.4 - (number / PAD_ROW) * PAD_ROWS
-	car.position = Vector3(PAD_CENTRE.x + across, car.ride_height(), PAD_CENTRE.y + along)
+	car.position = Vector3(PAD_CENTRE.x, car.ride_height(), PAD_CENTRE.y + PAD_SIZE * 0.4)
 	add_child(car)
 	cars.append(car)
 	drivers.append(driver)
