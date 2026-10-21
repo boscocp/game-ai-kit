@@ -294,8 +294,8 @@ func _place_camera() -> void:
 		return
 	if _follow and bot.alive():
 		var behind := Vector2.RIGHT.rotated(bot.facing) * -5.0
-		_camera.position = Vector3(bot.position.x + behind.x, 3.5, bot.position.y + behind.y)
-		_camera.look_at(Vector3(bot.position.x, 1.2, bot.position.y))
+		_camera.position = world.arena.above(bot.position, 3.5) + Vector3(behind.x, 0.0, behind.y)
+		_camera.look_at(world.arena.above(bot.position, 1.2))
 		return
 	var offset := Vector3(sin(_orbit_angle), 0.0, cos(_orbit_angle)) * _orbit_distance * 0.6
 	_camera.position = CENTRE + offset + Vector3(0, _orbit_distance * 0.8, 0)

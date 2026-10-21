@@ -1,0 +1,23 @@
+{
+  "about": "A small arena for botmatch_test.gd's height checks, not a map to play: a platform 2.5 m up with a stair rising east onto it from the west, a low box standing on the platform, and a high wall and a low box on the ground. The stair is four steps of half a metre, and the platform's west side, beside the stair, is the cliff a grid without heights would walk up.",
+  "width": 20,
+  "depth": 12,
+  "points": [
+    {"id": "A", "x": 15, "z": 5}
+  ],
+  "spawns": {
+    "blue": [[1.5, 5.5]],
+    "red": [[18.5, 10.5]]
+  },
+  "boxes": [
+    {"x": 16.5, "z": 5, "width": 1, "depth": 2, "height": 3.6},
+    {"x": 4, "z": 9, "width": 1, "depth": 3, "height": 2.5},
+    {"x": 9, "z": 9.5, "width": 2, "depth": 1, "height": 1.1}
+  ],
+  "platforms": [
+    {"x": 15, "z": 5, "width": 6, "depth": 6, "height": 2.5}
+  ],
+  "stairs": [
+    {"x": 10, "z": 5, "width": 4, "depth": 2, "height": 2.5, "rises": "east"}
+  ]
+}

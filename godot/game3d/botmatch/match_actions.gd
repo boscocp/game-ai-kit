@@ -68,7 +68,7 @@ static func fire(world: BotMatch, shooter: MatchBot, target: MatchBot) -> void:
 # missed, past the target to one side, alternating with each shot -- drawn
 # only, so it uses no random number and changes no match.
 static func _bot_shot_end(world: BotMatch, shooter: MatchBot, target: MatchBot, hit: bool) -> Vector3:
-	var chest := Vector3(target.position.x, world.rules.chest_height, target.position.y)
+	var chest: Vector3 = world.arena.above(target.position, world.rules.chest_height)
 	if hit:
 		return chest
 	var across: Vector2 = (target.position - shooter.position).normalized().orthogonal()
@@ -78,15 +78,15 @@ static func _bot_shot_end(world: BotMatch, shooter: MatchBot, target: MatchBot, 
 
 # Whether the line from the shooter's eyes to the target's waist is blocked.
 static func _waist_hidden(world: BotMatch, shooter: MatchBot, target: MatchBot) -> bool:
-	var eyes := Vector3(shooter.position.x, world.rules.eye_height, shooter.position.y)
-	return not world.arena.clear_line(eyes, Vector3(target.position.x, WAIST, target.position.y))
+	var eyes: Vector3 = world.arena.above(shooter.position, world.rules.eye_height)
+	return not world.arena.clear_line(eyes, world.arena.above(target.position, WAIST))
 
 
 ## The person's shot, as in a first-person shooter: a ray from their eyes
 ## along where they look, yaw and pitch. It strikes the first enemy whose
 ## body it passes through -- within `body_half_width` across, and between
-## the floor and the top of the body, standing or crouched -- unless a box,
-## or the floor, comes first. The person's own aim is the aim error.
+## the floor it stands on and the top of the body, standing or crouched --
+## unless a box, or the ground, comes first. A platform is a box. The person's own aim is the aim error.
 static func fire_aimed(world: BotMatch, shooter: MatchBot) -> void:
 	shooter.ammo -= 1
 	shooter.fire_cooldown = world.rules.fire_interval
@@ -95,7 +95,7 @@ static func fire_aimed(world: BotMatch, shooter: MatchBot) -> void:
 	var look: Vector3 = look_of(shooter)
 	var far: Vector3 = eyes + look * world.rules.max_range
 	var reach: float = world.arena.first_block(eyes, far) * world.rules.max_range
-	# Aimed down, the floor stops it too.
+	# Aimed down, the ground stops it too.
 	if look.y < 0.0:
 		reach = minf(reach, eyes.y / -look.y)
 	var struck: MatchBot = null
@@ -111,10 +111,11 @@ static func fire_aimed(world: BotMatch, shooter: MatchBot) -> void:
 		struck.last_hit_by = shooter.id
 
 
-## Where a bot's eyes are: lower when it crouches.
+## Where a bot's eyes are: above the floor it stands on, lower when it
+## crouches.
 static func eyes_of(world: BotMatch, bot: MatchBot) -> Vector3:
 	var height: float = world.rules.eye_height - (world.rules.body_height - world.rules.crouched_body_height) * float(bot.crouched)
-	return Vector3(bot.position.x, height, bot.position.y)
+	return world.arena.above(bot.position, height)
 
 
 ## Where a shot towards `to` leaves the gun: in front of the eyes, a little
@@ -135,7 +136,7 @@ static func look_of(bot: MatchBot) -> Vector3:
 
 # How far along the look the ray passes through `other`'s body, or INF: its
 # nearest approach across must be within the half-width, and at that point
-# the ray must be between the floor and the top of the body.
+# the ray must be between the floor it stands on and the top of the body.
 static func _crossing(world: BotMatch, eyes: Vector3, look: Vector3, other: MatchBot) -> float:
 	var flat := Vector2(look.x, look.z)
 	if flat.length() < 1e-6:
@@ -147,18 +148,20 @@ static func _crossing(world: BotMatch, eyes: Vector3, look: Vector3, other: Matc
 		return INF
 	var along: float = along_flat / flat.length()
 	var height: float = eyes.y + look.y * along
-	var top: float = world.rules.crouched_body_height if other.crouched else world.rules.body_height
-	return along if height >= 0.0 and height <= top else INF
+	var feet: float = world.arena.floor_at(other.position)
+	var top: float = feet + (world.rules.crouched_body_height if other.crouched else world.rules.body_height)
+	return along if height >= feet and height <= top else INF
 
 
-# The person's bot: walk where they push, blocked by the boxes as a bot is,
-# slower crouched, and fire while the trigger is held.
+# The person's bot: walk where they push, blocked by the boxes and by any
+# rise higher than a step, as a bot is; slower crouched, and fire while the
+# trigger is held.
 static func _played(world: BotMatch, bot: MatchBot, delta: float) -> void:
 	var pace: float = 0.5 if bot.crouched else 1.0
 	var stride: Vector2 = bot.wants_to_walk.limit_length(1.0) * world.rules.speed * pace * delta
 	for step: Vector2 in [stride, Vector2(stride.x, 0.0), Vector2(0.0, stride.y)]:
 		var next: Vector2 = bot.position + step
-		if world.arena.can_stand(next, world.rules.body_radius):
+		if world.arena.can_step(bot.position, next, world.rules.body_radius):
 			bot.position = next
 			break
 	if bot.reload_left > 0.0:

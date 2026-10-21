@@ -63,7 +63,7 @@ var _places: Array[Vector2] = []
 var _place_ids: Array[String] = []
 var _cover_count: int = 0
 var _next_decision: float = 0.0
-var _finder := GridPathfinder.new(AStarSearch.new())
+var _search := AStarSearch.new()
 
 
 ## A new match. `blue` and `red` are the two teams, made by the caller with
@@ -139,7 +139,7 @@ func play_out() -> void:
 
 
 ## Send `bot` towards `goal`, holding place `place` (-1: none), by A* over
-## the walk grid. The path is only searched again when the goal moves.
+## the walk grid and its heights (`ArenaWalk`). The path is only searched again when the goal moves.
 func send(bot: MatchBot, goal: Vector2, place: int) -> void:
 	bot.spot = place
 	if goal.distance_to(bot.goal) < 0.01 and not bot.path.is_empty():
@@ -156,8 +156,8 @@ func send(bot: MatchBot, goal: Vector2, place: int) -> void:
 # and both sides walk each other's mirror image exactly.
 func _path_for(side: int, from: Vector2i, to: Vector2i) -> Array[Vector2i]:
 	if side == BLUE:
-		return _finder.find_path(arena.walk, from, to)
-	var path: Array[Vector2i] = _finder.find_path(arena.walk, _mirrored(from), _mirrored(to))
+		return _search.search(arena.walk_graph, from, to).path
+	var path: Array[Vector2i] = _search.search(arena.walk_graph, _mirrored(from), _mirrored(to)).path
 	var back: Array[Vector2i] = []
 	for cell: Vector2i in path:
 		back.append(_mirrored(cell))
@@ -194,7 +194,8 @@ func places_near(centre: Vector2, radius: float) -> Array[int]:
 
 
 ## Whether `looker` sees `target` now: in range, ahead of it or near, and a
-## clear line from its eyes to the target's body, crouched or standing.
+## clear line from its eyes to the target's body, crouched or standing --
+## each above the floor it stands on.
 func sees(looker: MatchBot, target: MatchBot) -> bool:
 	var offset: Vector2 = target.position - looker.position
 	var distance: float = offset.length()
@@ -203,8 +204,8 @@ func sees(looker: MatchBot, target: MatchBot) -> bool:
 	if distance > NEAR and absf(wrapf(offset.angle() - looker.facing, -PI, PI)) > VIEW_HALF_ANGLE:
 		return false
 	var height: float = rules.crouched_height if target.crouched else rules.chest_height
-	var eyes := Vector3(looker.position.x, rules.eye_height, looker.position.y)
-	return arena.clear_line(eyes, Vector3(target.position.x, height, target.position.y))
+	var eyes: Vector3 = arena.above(looker.position, rules.eye_height)
+	return arena.clear_line(eyes, arena.above(target.position, height))
 
 
 ## Note a shot for the view: who, at whom, whether it hit, and where it went.
@@ -378,9 +379,9 @@ func _push_apart(one: MatchBot, other: MatchBot, touching: float) -> void:
 	# Exactly on top of each other: apart along the lower id's facing.
 	var away: Vector2 = offset / distance if distance > 1e-6 else Vector2.RIGHT.rotated(one.facing)
 	var shove: Vector2 = away * (touching - distance) / 2.0
-	if arena.can_stand(other.position + shove, rules.body_radius):
+	if arena.can_step(other.position, other.position + shove, rules.body_radius):
 		other.position += shove
-	if arena.can_stand(one.position - shove, rules.body_radius):
+	if arena.can_step(one.position, one.position - shove, rules.body_radius):
 		one.position -= shove
 
 

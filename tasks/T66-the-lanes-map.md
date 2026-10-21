@@ -17,6 +17,22 @@ in their words:
 6. and that the AI takes all of it into its decisions: "mais dificil acertar
    cabeca com mais recompensa", "ajustar a IA com esses novos parametros".
 
+And three more, asked during step 1 the same day:
+
+7. "a municao acaba, começa com 120. na base tem uma area pra reabastecer
+   municao. ai tem que decidir se volta";
+8. "uma area do mapa tem uma arma mais forte que respawna depois de 1
+   minuto. com só 20 municoes, e tem 3x mais dano que a arma principal. ai
+   os bots decidem se pegam ou nao";
+9. "depois de matar 5x ele pode pegar essa arma melhor na base junto da
+   municao".
+
+Answered the same day: five kills are "desde a ultima morte, se morrer
+conta do inicio"; the 120 are "30 tiros no pente mas 3 recargas de 30";
+"ao acabar a municao da arma especial o jogador pode pegar a arma original
+onde carrega na base"; and "se morrer volta a arma original tbm, com todas
+as municoes".
+
 This task also carries T65's question: on a map that rewards holding,
 does the coordinated team win? T65 stays open until this task has
 measured that.
@@ -106,7 +122,25 @@ measured that.
    aim where that is highest. A bot's hit then lands by that chance on the
    aimed zone, spilling to a neighbour zone otherwise. Draw the choice in
    the overlay: each zone's chance and expected damage.
-8. **Re-measure** with `botmatch_effects.gd` on the new map and rules,
+8. **Ammunition runs out, and the base refills it** (ask 7). A bot starts
+   with 120 rounds: a magazine of 30 and three reloads of 30. A reload
+   takes from what is left, and at none the rifle is dry. Each
+   spawn room has a resupply area that fills a bot back to 120. In
+   `rules.json`. Going back is a decision: a bot weighs the walk to its
+   base, the rounds it has, and what its squad's order is worth, and the
+   overlay shows the weighing. A planted bot that never goes back must run
+   dry, and one that always goes back must hold less.
+9. **The power weapon** (ask 8): one place on the map holds a weapon with
+   20 rounds and three times the rifle's damage. Taken, it is gone, and it
+   comes back 60 s later. A bot holding it has no rifle until it takes one
+   again at its base's resupply, which it may do once the power weapon is
+   empty. A bot that dies respawns with the rifle and all 120 rounds. A bot decides whether to fetch it -- its distance
+   and danger against the gain -- and the team never sends two for it.
+   Drawn on the map and in the 3D scene, with the time left to its return.
+10. **The reward for five kills** (ask 9): a bot with five kills since its
+   last death -- a death starts the count again -- may take the power
+   weapon at its own base's resupply, with ammunition.
+11. **Re-measure** with `botmatch_effects.gd` on the new map and rules,
    mirror fair, every existing claim with its planted case. Add:
    - aiming by expected damage does more damage a shot than always
      aiming at the head, at range; a planted always-head bot is the case
@@ -114,7 +148,7 @@ measured that.
    - T65's claim, if the numbers hold it: a team with every technique on
      holds points longer than the same team with any one off, by a margin
      in standard errors. If they do not, say so, as T51 did.
-9. `docs/godot/botmatch.md`: the new map, rules and numbers.
+12. `docs/godot/botmatch.md`: the new map, rules and numbers.
 
 ## Acceptance
 
@@ -137,3 +171,5 @@ Play `make demo-botmatch` and take a bot over (T).
 - Does sprinting feel right, and does the reload read as a reload?
 - Does a headshot feel like one?
 - Watching a bot (V), does its aim choice match the numbers drawn?
+- Does a bot low on rounds go back to its base when it should, and does
+  the power weapon get fought over?
