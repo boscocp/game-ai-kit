@@ -45,7 +45,7 @@ var reason: String = ""
 
 var _round: Array[Vector2i] = []
 var _next_waypoint: int = 0
-var _search := AStarSearch.new()
+var _router := GridPathfinder.new(AStarSearch.new())
 
 
 func _init(guard_unit: Unit, waypoints: Array) -> void:
@@ -114,7 +114,7 @@ func _goal() -> Vector2i:
 # round, it turns a quarter instead: looking round is what a guard at the spot
 # it heard something does.
 func _walk_towards(graph: GridGraph, goal: Vector2i, occupied: Array[Vector2i]) -> void:
-	route = _search.find_path(_with_others_in_the_way(graph, goal, occupied), unit.cell, goal)
+	route = _router.find_path(_with_others_in_the_way(graph, goal, occupied), unit.cell, goal)
 	if route.is_empty():
 		facing = Vector2i(-facing.y, facing.x)
 		return

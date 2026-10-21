@@ -1,15 +1,12 @@
 {
   "module": "league",
   "kind": "example",
-  "about": "T25's league: one team per technique on the tactical board.",
+  "about": "T25's league: the tournament and its table of results, over the tactical board's controllers (TacticalRoster, T63).",
   "owns": [
     "godot/game/league/",
     "godot/test/league/"
   ],
   "depends_on": [
-    "ai_behaviour",
-    "ai_core",
-    "ai_planning",
     "board",
     "tactical"
   ],

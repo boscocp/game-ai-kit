@@ -74,8 +74,6 @@ var plan: PlanResult = null
 var next_step: int = -1
 ## Why the plan was last made, in words for the screen.
 var why_planned: String = ""
-## True to print each new plan to the console, as the scene does.
-var verbose: bool = false
 
 var _planner := HeuristicPlanner.new()
 var _aim: PackedStringArray = PackedStringArray()
@@ -234,8 +232,6 @@ func _make_plan(state: BoardState, why: String) -> void:
 	_planned_on_turn = state.turn_number
 	why_planned = "on round %d, %s" % [state.turn_number / TacticalScenario.FACTIONS + 1, why]
 	_aim = TacticalPlanBridge.goal() if not plan.partial else _what_it_adds(world)
-	if verbose:
-		print("\n".join(plan_lines()))
 
 
 # What a partial plan is for: what holds at its end that did not at the

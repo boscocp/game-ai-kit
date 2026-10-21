@@ -2,14 +2,14 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-19
+verified_on: 2026-10-21
 tier: 1
 source: book:David R. Hunter, "MM algorithms for generalized Bradley-Terry models", Annals of Statistics 32(1), 384-406, 2004
 invalidated_if: a team, the tactical rules, the scenario or LeagueRating changes, or league_runner.gd prints a different table
 teaches: comparing-techniques
 -->
 
-> Measured with `godot/test/league/league_runner.gd`, five seeds a seat, in wave 58.
+> Measured with `godot/test/league/league_runner.gd`, five seeds a seat, in wave 68.
 > Every way this kit has of deciding the tactical board plays every other,
 > from both seats, and the league says who wins, by how much it can tell,
 > and what each decision cost. This is the **strength** half of T25. The
@@ -19,18 +19,21 @@ teaches: comparing-techniques
 
 ## The teams
 
-Eight teams, each a `BlueController`, made fresh for every game:
+Eight teams, each a `BlueController`, made fresh for every game. They are
+the rows of `TacticalRoster` that play in the league -- the same table the
+demo's C key cycles, in its order (T63); of the three levels only `hard`
+plays, so the lookahead is measured at its strongest:
 
 | team | how it decides | hands to the rules |
 |---|---|---|
 | rules | priority rules: build what beats most, walk at their workshop (T30, T45) | nothing |
+| planner | heuristic STRIPS for purchases, ADR 0010 (T11) | walking, attacks |
+| learned | the combat and capture models for its walkers (T44, T46) | production |
+| hard | the lookahead: two plies at the exact odds of a fight, T12's hard level | production |
 | state machine | a machine per walker; it commits until an arrow fires (T15) | production, attacks |
 | behaviour tree | one tree, asked from the root each turn; it reconsiders (T15) | production, attacks |
 | GOAP | a goal per walker, the cheapest plan to it in turns, replanned every decision (T15) | production, attacks |
 | HTN | ranked methods per walker, the plan kept until done, broken or bettered (T15) | production, attacks |
-| planner | heuristic STRIPS for purchases, ADR 0010 (T11) | walking, attacks |
-| learned | the combat and capture models for its walkers (T44, T46) | production |
-| lookahead (hard) | two plies at the exact odds of a fight, T12's hard level | production |
 
 The four T15 teams share their facts (`TeamFacts`) and five deeds -- siege,
 hunt, defend, take point, fall back -- so a difference between them is a
@@ -44,14 +47,14 @@ scale, the rules at 0, with 95% bootstrap intervals (`LeagueRating`):
 
 | team | won | lost | rating | 95% interval |
 |---|---|---|---|---|
-| learned | 59 | 11 | +311 | +219 to +417 |
-| lookahead (hard) | 55 | 15 | +263 | +162 to +397 |
-| HTN | 38 | 32 | +92 | -4 to +199 |
-| GOAP | 33 | 37 | +46 | -61 to +154 |
-| behaviour tree | 31 | 39 | +28 | -75 to +121 |
+| learned | 63 | 7 | +389 | +305 to +507 |
+| hard | 57 | 13 | +303 | +192 to +456 |
+| HTN | 37 | 33 | +87 | -11 to +203 |
+| GOAP | 32 | 38 | +38 | -63 to +160 |
+| behaviour tree | 29 | 41 | +10 | -104 to +125 |
 | rules | 28 | 42 | 0 | -- |
-| state machine | 25 | 45 | -28 | -134 to +76 |
-| planner | 11 | 59 | -177 | -312 to -69 |
+| state machine | 23 | 47 | -49 | -154 to +43 |
+| planner | 11 | 59 | -181 | -295 to -73 |
 
 No game was drawn: T47's last round settles them all.
 
@@ -61,24 +64,36 @@ rules? Three are. The learned policy and the lookahead beat them, their
 intervals clear of 0. The planner loses to them, clear of 0 the other way --
 as T12 found, T11's plan to save for the forge and a ram is a worse use of
 the money than buying what beats most. The four T15 teams are **not told
-apart from the rules**: each interval covers 0 -- the HTN's only just, at
--4, so it is the one a longer league might separate. Whether, say, the lookahead
+apart from the rules**: each interval covers 0 -- the HTN's nearly, at
+-11, so it is the one a longer league might separate. Whether, say, the lookahead
 is told apart from the HTN is a question these intervals do not answer, and
 the page does not claim it.
 
 **What it cannot say.** That the four T15 techniques are equally good. They
 are not told apart *here*, with five deeds and the rules' production under
-them. The deeds are where the walking is decided, and over the 41,000 to
-47,000 decisions each made (the runner prints each count) the four spent
+them. The deeds are where the walking is decided, and over the 38,000 to
+46,000 decisions each made (the runner prints each count) the four spent
 them alike -- about half siege, a quarter points, a tenth defending, the
-rest hunting and falling back. The state machine defends most (16%), as
-its arrow home waits for home to be clear, not merely unthreatened. On this
+rest hunting and falling back. The state machine and the HTN defend most
+(14% each): the machine's arrow home waits for home to be clear, not merely
+unthreatened, and the HTN keeps its defend step until its effect shows. On this
 board that documented difference moves the result less than the noise does.
 
-The table moved between two runs in this wave, after a fix to how a point
+The table moved between two runs in wave 58, after a fix to how a point
 is read (an enemy standing on it no longer counts as free -- wave 58's
 review): the four T15 teams gained, the state machine least. Their
 intervals covered 0 both times.
+
+**And it moved in wave 68 with no team changing.** T63 made the league read
+the C key's table, in C's order, and `League.schedule` seats the team listed
+first as red on a pairing's own dice seed and the other on the offset one.
+Reorder the teams and the same pairing plays different dice. Wave 68
+measured that this is all that moved: the new code with the old order put
+back reproduced wave 58's table exactly, and so did `main`. In the new order
+the learned policy went from 59 wins to 63, and the lookahead from 55 to
+57. No conclusion changed. The same teams are told apart from the rules,
+and the four T15 teams still are not. That is what five seeds a seat is
+worth: the intervals, not the ratings, are the result.
 
 ## What a decision costs
 
@@ -88,22 +103,23 @@ technique counts any:
 
 | team | decisions | mean | 95th | slowest | work |
 |---|---|---|---|---|---|
-| rules | 23,363 | 0.63 | 1.72 | 6.33 | -- |
-| state machine | 46,174 | 0.93 | 4.28 | 14.92 | 0.5 states updated |
-| behaviour tree | 41,723 | 0.93 | 4.19 | 12.82 | 5.2 nodes ticked |
-| GOAP | 42,232 | 1.23 | 4.02 | 10.98 | 1.3 worlds |
-| HTN | 42,910 | 0.94 | 4.17 | 15.30 | 0.4 tasks; planned before 17% of decisions |
-| planner | 25,371 | 0.70 | 2.21 | 5.96 | 0.1 worlds; planned before 3% |
-| learned | 44,684 | 0.61 | 1.81 | 5.46 | -- |
-| lookahead (hard) | 44,024 | 1.20 | 3.97 | 16.60 | -- |
+| rules | 23,363 | 0.64 | 1.74 | 6.39 | -- |
+| planner | 22,622 | 0.71 | 2.24 | 5.43 | 0.1 worlds; planned before 3% |
+| learned | 45,616 | 0.62 | 1.83 | 6.75 | -- |
+| hard | 41,768 | 1.22 | 4.05 | 17.09 | -- |
+| state machine | 45,389 | 0.94 | 4.25 | 14.96 | 0.5 states updated |
+| behaviour tree | 38,887 | 0.96 | 4.29 | 12.01 | 5.3 nodes ticked |
+| GOAP | 41,734 | 1.25 | 4.00 | 11.14 | 1.3 worlds |
+| HTN | 43,299 | 0.94 | 4.09 | 15.55 | 0.4 tasks; planned before 17% of decisions |
 
 The league holds the teams that count worlds -- the planner and GOAP -- to
 T11's 2000 a decision, and every team to the clock's budget at the 95th
 percentile. The others count no worlds (the rules, the learned policy, the
 lookahead) or count in other units (nodes, tasks, states), and T11's budget
 says nothing about them. The slowest decision is printed, not held: in this
-run none passed 16.7 ms, in the run before three did, once each in tens of
-thousands of decisions -- the machine, not the technique.
+run one passed 16.7 ms, the lookahead's 17.1 ms, once in 41,768 decisions;
+in wave 58's last run none did, and in the run before it three did -- the
+machine, not the technique.
 
 **The search is not the cost.** GOAP looks at 1.3 worlds a decision and the
 HTN at 0.4 tasks; the tree ticks five nodes. The four cost 0.3 to 0.6 ms

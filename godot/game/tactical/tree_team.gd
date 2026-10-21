@@ -1,5 +1,5 @@
-## The league's behaviour tree: one tree, asked from the root for every
-## walker every turn.
+## The behaviour-tree team (T25), one of the board's controllers: one tree,
+## asked from the root for every walker every turn.
 ##
 ##     selector "walker"
 ##       sequence "save itself"    in danger? wounded? then fall back

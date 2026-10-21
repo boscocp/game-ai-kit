@@ -58,6 +58,45 @@ has the same signature, and only `ai_search` implements it.
    it, decided in this task; if it moves, `modules/ai_core.json` and the
    README's addon table follow.
 
+## Decided (wave 68, before code)
+
+Read first, as step 1 asks: the five files call `contains` (once, on the
+start), `neighbours` and `cost_at`, and A\* adds its own `heuristic`. No other
+method of `GridGraph` is called. So the port is those three plus the estimate.
+
+- **Where the port lives: `SearchGraph`, `@abstract`, in `ai_search`**, with
+  `GridSearchGraph` beside it -- the recommendation. Someone who wants only
+  A\* still copies two folders.
+- **A\*'s estimate: `SearchGraph.estimate(node, goal)`, owned by the graph.**
+  The recommendation said *admissible*; the promise written on it is
+  **consistent**, which is stronger, because `astar.gd` refuses to expand a
+  node twice and that is only safe with a consistent guess
+  (`docs/concepts/search.md` already said so for Manhattan). The waypoint
+  test's estimate is fewest hops left times the cheapest hop, not
+  straight-line distance: the port charges per node entered, and a distance
+  along a road is a per-edge cost it cannot express.
+- **A node stays `Vector2i`** -- the recommendation; the "when not to use it"
+  in `search_graph.gd` says so, and adds the one thing the port cannot say, a
+  cost per edge (Dijkstra's missing improvement branch).
+- **Found in reading, not in the plan: `Search` stops being a `Pathfinder`.**
+  `Pathfinder.find_path` takes a `GridGraph`, so a `Search` that implemented
+  it would name the grid in `search.gd`, which the acceptance forbids. One
+  adapter, `GridPathfinder` (a `Search` held as a `Pathfinder`), is the only
+  file in `ai_search` that knows both. Its callers -- stealth, the behaviour
+  demo, the RTS budget, the tactical game's router -- now build
+  `GridPathfinder.new(AStarSearch.new())`.
+- **Step 6: `Pathfinder` stays in `ai_core`.** Measured by who uses it: one
+  holder, `game/tactical/learned_policy.gd`'s router, and it is what keeps
+  `tactical` free of `ai_search` (`modules/tactical.json` lists `ai_search`
+  only under `tests_depend_on`). Moved to `ai_search`, that dependency would
+  become real. `SearchResult.NO_ROUTE` replaces `GridGraph.BLOCKED` as the
+  cost of no route, the same `-1`, so `search_result.gd` names no grid either.
+- **What the extra layer costs, measured:** `make test-rts-budget` times 200
+  A\* searches on the RTS map. Three runs each: 288-290 ms on `af35c9d`,
+  302-308 ms through `GridSearchGraph` -- about 5%, one more call per
+  neighbour asked. Kept: the files are teaching material first, and the
+  throughput answer was always `AStarGrid2D`.
+
 ## Acceptance
 
 ```bash

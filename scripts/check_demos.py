@@ -40,7 +40,13 @@ the menu and this gate share:
     use", the most a reading can hold; whether the scene takes that path at
     run time is the card's manual check;
   * no script an example reaches calls quit(), which would take the menu
-    down with it (C8).
+    down with it (C8);
+  * a card that lists the `controllers` its example offers names the
+    `roster` its game cycles them from, and the two agree: every name listed
+    is a row of that table, every row is listed, in the table's order and
+    once each (C9). A row
+    is a line opening a list with its name as a string literal, which is how
+    `TacticalRoster` writes them (T63); one in a comment is not a row.
 
 Exit codes
 ----------
@@ -220,6 +226,10 @@ def example_scenes_on_disk(root: pathlib.Path) -> set[str]:
 
 CATALOGUE = "godot/menu/catalogue.json"
 CARD_TEXT = ("title", "decides", "watch", "docs")
+
+#: A row of a controller table: a line opening a list, its name the first
+#: element, written as a literal.
+ROSTER_ROW = re.compile(r'^\s*\[\s*"([^"]+)"\s*,', re.MULTILINE)
 #: Folders whose scripts are not part of any example: the test framework and
 #: the tests themselves, which reference everything.
 NOT_EXAMPLE_CODE = ("addons/gdUnit4/", "test/")
@@ -357,6 +367,28 @@ def card_findings(reach: Reach, card: dict, techniques: dict, opened: str | None
     run = reach.scripts(scene) if exists else set()
     for entry in named:
         findings += technique_findings(reach, target, entry, techniques, run)
+    return findings + controller_findings(reach.root, card)
+
+
+def controller_findings(root: pathlib.Path, card: dict) -> list[str]:
+    """The card's controllers against the table its game cycles them from (C9)."""
+    target, listed, roster = card.get("target", "?"), card.get("controllers"), card.get("roster")
+    if listed is None and roster is None:
+        return []
+    if not listed or not roster:
+        return [f"C9 {target}: a card offering controllers names both the list and its roster"]
+    path = root / "godot" / str(roster).removeprefix("res://")
+    if not path.is_file():
+        return [f"C9 {target}: its roster {roster} does not exist"]
+    rows = ROSTER_ROW.findall(code_of(path.read_text(encoding="utf-8"), keep_strings=True))
+    if not rows:
+        return [f"C9 {target}: {roster} has no rows"]
+    findings = [f"C9 {target}: {name!r} is on the card and is not a row of {roster}"
+                for name in listed if name not in rows]
+    findings += [f"C9 {target}: {name!r} is a row of {roster} and is not on the card"
+                 for name in rows if name not in listed]
+    if not findings and list(listed) != rows:
+        findings.append(f"C9 {target}: the card lists the rows of {roster} out of order, or one twice")
     return findings
 
 
@@ -475,6 +507,16 @@ func decision_overlay() -> Dictionary:
 """
 
 
+SOUND_ROSTER = """\
+static func rows() -> Array[Array]:
+\treturn [
+\t\t["rules", "the baseline",
+\t\t\tfunc() -> int: return 1],
+\t\t["planner", "plans", func() -> int: return 2],
+\t]
+"""
+
+
 def card(target: str, scene: str, **changes: object) -> dict:
     """One sound card, changed where a test says."""
     sound = {"target": target, "title": "An example", "scene": f"res://{scene}",
@@ -509,7 +551,7 @@ def build(folder: pathlib.Path, makefile: str = SOUND_MAKEFILE, search_script: s
           legend: bool = True, listed: tuple[str, ...] = ("game/main.tscn", "demos/search.tscn"),
           scenes: tuple[str, ...] = ("game/main.tscn", "demos/search.tscn"), commented: str = "",
           detached_legend: bool = False, stray: bool = False, editor_form: bool = False,
-          catalogue: str | None = catalogue_text()) -> pathlib.Path:
+          catalogue: str | None = catalogue_text(), roster: str = SOUND_ROSTER) -> pathlib.Path:
     """A small repository with two examples, broken where a test says."""
     godot = folder / "godot"
     for made in ("game", "demos", "test", "menu", "addons/ai_search"):
@@ -523,6 +565,7 @@ def build(folder: pathlib.Path, makefile: str = SOUND_MAKEFILE, search_script: s
     (godot / "project.godot").write_text('[application]\nrun/main_scene="res://game/main.tscn"\n',
                                          encoding="utf-8")
     (godot / "game" / "main.gd").write_text(SOUND_SCRIPT, encoding="utf-8")
+    (godot / "game" / "roster.gd").write_text(roster, encoding="utf-8")
     (godot / "demos" / "search.gd").write_text(search_script, encoding="utf-8")
     (godot / LEGEND_SCRIPT).write_text("class_name Legend\nextends Control\n", encoding="utf-8")
     for scene in scenes:
@@ -550,6 +593,7 @@ def catalogue_cases() -> dict[str, tuple[dict, str | None]]:
     """The catalogue's planted cases, each with the code its rule writes."""
     search = "demos/search.tscn"
     without_astar = SOUND_SCRIPT.replace("var search := AStarSearch.new()", "var search := 1")
+    offering = card("run", "game/main.tscn", controllers=["rules", "planner"], roster="res://game/roster.gd")
     return {
         "no catalogue": ({"catalogue": None}, "C1"),
         "a catalogue that is not JSON": ({"catalogue": "{"}, "C1"),
@@ -572,6 +616,28 @@ def catalogue_cases() -> dict[str, tuple[dict, str | None]]:
             {"search_script": SOUND_SCRIPT + '\nfunc _done() -> void:\n\tget_tree().call("quit")\n'}, "C8"),
         "a technique only in a single-quoted block": (
             {"search_script": without_astar + "const NOTE = '''\nAStarSearch.new()\n'''\n"}, "C7"),
+        "a card offering controllers": (
+            {"catalogue": catalogue_text((offering, SOUND_CARDS[1]))}, None),
+        "a controller that is not a row": (
+            {"catalogue": catalogue_text((card("run", "game/main.tscn", controllers=["rules", "planner", "cheat"],
+                                               roster="res://game/roster.gd"), SOUND_CARDS[1]))}, "C9"),
+        "a row that is not on the card": (
+            {"catalogue": catalogue_text((card("run", "game/main.tscn", controllers=["rules"],
+                                               roster="res://game/roster.gd"), SOUND_CARDS[1]))}, "C9"),
+        "a row only in a comment": (
+            {"catalogue": catalogue_text((offering, SOUND_CARDS[1])),
+             "roster": SOUND_ROSTER.replace('\t\t["planner"', '\t\t# ["planner"')}, "C9"),
+        "the rows out of order": (
+            {"catalogue": catalogue_text((card("run", "game/main.tscn", controllers=["planner", "rules"],
+                                               roster="res://game/roster.gd"), SOUND_CARDS[1]))}, "C9"),
+        "a row listed twice": (
+            {"catalogue": catalogue_text((card("run", "game/main.tscn", controllers=["rules", "planner", "rules"],
+                                               roster="res://game/roster.gd"), SOUND_CARDS[1]))}, "C9"),
+        "controllers with no roster": (
+            {"catalogue": catalogue_text((card("run", "game/main.tscn", controllers=["rules"]), SOUND_CARDS[1]))}, "C9"),
+        "a roster that does not exist": (
+            {"catalogue": catalogue_text((card("run", "game/main.tscn", controllers=["rules", "planner"],
+                                               roster="res://game/nowhere.gd"), SOUND_CARDS[1]))}, "C9"),
         "a technique only as a type": ({"search_script": without_astar + "var never: AStarSearch = null\n"}, "C7"),
         "a technique only for a constant": (
             {"search_script": without_astar + "var cost: int = AStarSearch.MAX_COST\n"}, "C7"),

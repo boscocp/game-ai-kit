@@ -16,7 +16,7 @@ teaches: planning
 
 **In the game since T11.** `make demo-tactical`, then C: blue is played by a
 plan over the tactical domain (`spec/pddl/tactics-domain.pddl`), drawn on the
-board and printed to the console. The game plans with `HeuristicPlanner`;
+board, and listed on the panel and in the decision overlay. The game plans with `HeuristicPlanner`;
 `StripsPlanner` is the version to read first. What follows is how to call
 either from your own code.
 

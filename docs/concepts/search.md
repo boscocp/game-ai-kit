@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-13
+verified_on: 2026-10-21
 tier: 0
 source: https://en.wikipedia.org/wiki/A*_search_algorithm
-invalidated_if: GridGraph starts charging a cost per edge rather than per cell entered, or the kit's heuristic stops being Manhattan distance
+invalidated_if: SearchGraph starts charging a cost per edge rather than per node entered, or GridSearchGraph's estimate stops being Manhattan distance
 teaches: search
 -->
 
@@ -39,6 +39,34 @@ off the frontier next:
 `g` is what it cost to get to a cell; `h` is a guess at what is left. The
 names are the literature's and the code keeps them.
 
+## What a search asks of a graph
+
+Read the four files top to bottom and they ask a graph four things, and
+nothing else. That list, named, is the **port** -- `SearchGraph` -- and the
+searches are written against it rather than against a grid:
+
+| the search asks | `SearchGraph` | a grid answers (`GridSearchGraph`) | six waypoints answer (`waypoint_test.gd`) |
+|---|---|---|---|
+| is this somewhere I can start? | `contains(node)` | the cell is on the board | it is one of the six |
+| where can I go from here? | `neighbours(node)` | the four cardinal cells, walls dropped | where its roads lead |
+| what does going there cost? | `cost_at(node)` | the cell's cost to enter | 9 for the ford, 1 elsewhere |
+| how far is the goal, at best? (A\* only) | `estimate(node, goal)` | Manhattan distance | fewest hops left, times the cheapest hop |
+
+The last row is why the port exists rather than only tidiness. A\*'s guess
+is safe or not because of what the *graph* can cost, so the graph owns it:
+Manhattan distance is right on a grid whose cheapest cell costs one, and
+would be meaningless on waypoints. On the waypoint graph the route with fewest
+hops crosses the ford for 10 and the cheapest goes round for 4; breadth-first
+takes the first, Dijkstra and A\* the second, and an A\* handed a guess that
+calls the long way dear takes the ford too -- which the same test shows
+happening.
+
+A node is still a `Vector2i`. A grid names cells that way and waypoints can be
+named by position, and the files keep reading like the pseudocode. The
+general answer, an opaque id, costs every reader a lookup. A game holding
+`ai_core`'s `Pathfinder` gets any of the four through `GridPathfinder`, which
+is the only file in `ai_search` that knows both a grid and that interface.
+
 ## Why A\* is right, and when it is not
 
 Hart, Nilsson and Raphael published A\* in 1968. Its guarantee has a
@@ -55,7 +83,8 @@ cells, ignoring what is in the way. It is admissible **because no cell costs
 less than one to enter**. A route cannot have fewer steps than the Manhattan
 distance, and each step costs at least one, so the guess cannot exceed the
 truth. That is why `GridGraph.set_cost` clamps any cost below one: the board
-that would break the heuristic cannot be built.
+that would break the heuristic cannot be built. The guess is
+`GridSearchGraph.estimate`, beside the grid it is safe for, not in `astar.gd`.
 
 There is a second, stronger property, and this kit's A\* relies on it. It
 refuses to expand a cell twice, and that shortcut is only safe when the

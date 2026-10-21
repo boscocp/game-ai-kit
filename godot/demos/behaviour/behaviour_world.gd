@@ -53,7 +53,7 @@ var catches: int = 0
 var last_move: Move
 var last_board: BoardState
 
-var _search := AStarSearch.new()
+var _router := GridPathfinder.new(AStarSearch.new())
 var _loop_index: int = 0
 var _paused: int = 0
 
@@ -113,7 +113,7 @@ func _intruder_steps() -> bool:
 		_loop_index = (_loop_index + 1) % INTRUDER_LOOP.size()
 	var around: GridGraph = room.graph.duplicate_graph()
 	around.block(guard.cell)
-	var route: Array[Vector2i] = _search.find_path(around, intruder.cell, INTRUDER_LOOP[_loop_index])
+	var route: Array[Vector2i] = _router.find_path(around, intruder.cell, INTRUDER_LOOP[_loop_index])
 	if route.is_empty():
 		return false
 	intruder.cell = route[mini(INTRUDER_PACE, route.size()) - 1]

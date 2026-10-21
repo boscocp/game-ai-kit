@@ -15,6 +15,11 @@
 class_name SearchResult
 extends RefCounted
 
+## The cost of a route that does not exist. The same number as
+## `GridGraph.BLOCKED`, so a grid's caller compares it with what it knows; named
+## here because a search over waypoints has no grid to borrow it from.
+const NO_ROUTE: int = -1
+
 ## The route, excluding the start and including the goal, exactly as
 ## `Pathfinder` requires. Empty when there is no route -- and also empty when
 ## the start *is* the goal, which is why `reached` exists.
@@ -26,8 +31,8 @@ var expanded: Array[Vector2i]
 ## What was still waiting when the search stopped.
 var frontier: Array[Vector2i]
 
-## What the path costs on the graph it was found on, or `GridGraph.BLOCKED`
-## when there is no path. Carried rather than recomputed: the caller would have
+## What the path costs on the graph it was found on, or `NO_ROUTE` when
+## there is no path. Carried rather than recomputed: the caller would have
 ## to be handed the graph again to ask, and two answers to one question is how
 ## they drift.
 var cost: int
@@ -54,5 +59,5 @@ func _init(found_path: Array[Vector2i], cells_expanded: Array[Vector2i],
 static func nothing_found(cells_expanded: Array[Vector2i],
 		cells_waiting: Array[Vector2i]) -> SearchResult:
 	return SearchResult.new(
-		[] as Array[Vector2i], cells_expanded, cells_waiting, GridGraph.BLOCKED, false
+		[] as Array[Vector2i], cells_expanded, cells_waiting, NO_ROUTE, false
 	)

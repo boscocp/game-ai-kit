@@ -67,7 +67,7 @@ static func check(name: String, data: Dictionary, searches: Dictionary) -> Array
 	for label: String in searches:
 		var search: Search = searches[label]
 		problems += _check_one(
-			name, label, search.search(graph, from, to), graph, from, to, expected
+			name, label, search.search(GridSearchGraph.new(graph), from, to), graph, from, to, expected
 		)
 	return problems
 
@@ -148,7 +148,7 @@ static func _check_failure(name: String, label: String, result: SearchResult) ->
 	var problems: Array[String] = []
 	if result.path.size() != 0:
 		problems.append("%s/%s: unreachable, but returned a path" % [name, label])
-	if result.cost != GridGraph.BLOCKED:
+	if result.cost != SearchResult.NO_ROUTE:
 		problems.append("%s/%s: unreachable, but cost is %d" % [name, label, result.cost])
 	return problems
 

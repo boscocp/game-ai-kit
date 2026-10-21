@@ -352,7 +352,7 @@ func test_route_costs_are_the_cheapest_walks_dijkstra_finds() -> void:
 	for from: Vector2i in [RED_WORKSHOP + Vector2i(1, 0), BLUE_WORKSHOP + Vector2i(-1, 0)]:
 		var costs: Dictionary = TacticalReach.route_costs(state.graph, from)
 		for cell: Vector2i in costs:
-			assert_int(costs[cell]).is_equal(DijkstraSearch.new().search(state.graph, from, cell).cost)
+			assert_int(costs[cell]).is_equal(DijkstraSearch.new().search(GridSearchGraph.new(state.graph), from, cell).cost)
 
 
 func test_blue_s_turn_is_legal_on_every_decision_over_many_seeded_games() -> void:

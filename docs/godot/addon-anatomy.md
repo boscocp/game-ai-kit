@@ -31,7 +31,7 @@ of that, because `class_name` already does the work:
 
 So `ai_search`, `ai_planning`, `ai_learning` and `ai_llm` have **no
 `plugin.cfg`** and nothing to enable. You copy the folder in, and
-`AStarSearch.find_path(...)` is available. One less thing between a reader and
+`AStarSearch.new().search(...)` is available. One less thing between a reader and
 the algorithm.
 
 `gdUnit4` is the exception in this repository: it *is* an editor plugin, it is

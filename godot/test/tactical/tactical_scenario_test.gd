@@ -127,9 +127,9 @@ func test_a_runner_can_cross_the_river_only_by_the_bridge_or_a_ford() -> void:
 	var fords: Array[Vector2i] = TacticalRules.cells_of(TacticalScenario.MAP, TacticalRules.FORD)
 
 	assert_int(fords.size()).is_equal(4)
-	assert_bool(AStarSearch.new().search(_without(state.graph, bridge), start, goal).reached).is_true()
-	assert_bool(AStarSearch.new().search(_without(state.graph, fords), start, goal).reached).is_true()
-	assert_bool(AStarSearch.new().search(_without(state.graph, bridge + fords), start, goal).reached).is_false()
+	assert_bool(AStarSearch.new().search(GridSearchGraph.new(_without(state.graph, bridge)), start, goal).reached).is_true()
+	assert_bool(AStarSearch.new().search(GridSearchGraph.new(_without(state.graph, fords)), start, goal).reached).is_true()
+	assert_bool(AStarSearch.new().search(GridSearchGraph.new(_without(state.graph, bridge + fords)), start, goal).reached).is_false()
 
 
 func test_a_ford_costs_its_own_price_to_walk_and_one_to_wade() -> void:

@@ -34,7 +34,7 @@ extends Search
 
 # The cheapest route from `from` to `to`, counting what each cell costs to
 # enter.
-func _explore(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
+func _explore(graph: SearchGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 	var frontier: Array[Vector2i] = [from]
 	var came_from: Dictionary = {from: NO_PARENT}
 	# Cost so far, per cell. `g` is the literature's name for it and renaming
@@ -72,7 +72,7 @@ func _explore(graph: GridGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 # 250 boards, that branch fired **zero** times -- see the header for why -- so
 # it is not written here. A* orders by `g + h` instead, where it fires
 # constantly, and its version of this function has it.
-static func _relax(graph: GridGraph, current: Vector2i, came_from: Dictionary,
+static func _relax(graph: SearchGraph, current: Vector2i, came_from: Dictionary,
 		g: Dictionary, frontier: Array[Vector2i]) -> void:
 	for step: Vector2i in graph.neighbours(current):
 		if g.has(step):

@@ -1,5 +1,6 @@
-## The league's state machine: every walker has a machine of its own, five
-## states named for the five deeds, and the arrows between them.
+## The state-machine team (T25), one of the board's controllers: every walker
+## has a machine of its own, five states named for the five deeds, and the
+## arrows between them.
 ##
 ##     advance    --in danger and wounded-->    fall back
 ##     advance    --home threatened-->          defend

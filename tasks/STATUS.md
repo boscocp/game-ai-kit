@@ -126,11 +126,33 @@ touches, and later a library others can install.
 | T58 | Modules, and gates that run for what a wave touches | done | wave 63: 23 manifests in `modules/`, held to the code by `lint-modules` (M0-M10); tests filed in `godot/test/<module>/`; `make check-affected` runs the lints and the modules a change reaches (code uses followed on, test-only uses not): 25-64 s for a change that evolves one module, against 550 s; a wave lands by pull request, as desk-panel's do; CI ran for the first time and found four defects in bootstrap and the runner rules; mk fragments dropped (measured, no gain); ports, kernel, registry and the library are later tasks; manual check the owner's |
 | T60 | `ai_learning` without the board | done | wave 67: the adapter (`BoardFeatures`, `LearnedPolicy`, `LearnedDecision`) and the weights to `game/tactical`, the clone's weights to `game/fighting`; no default paths in the technique; `gameaikit.training` generic and in `ai_learning`, the tactical fit is `gameaikit.tactical`; checkers depends on `ai_learning`, not tactical; the skirmish found inside `game_shared` and made its own module; retrained, same numbers |
 | T61 | A small shared kernel: the board leaves `ai_core` | done | wave 67: `ai_core` is `GridGraph` and `Pathfinder`; the board's eight classes are module `board` in `game/board/` (ADR 0021); addon comments name no board class; `unit_view.gd` owned by tactical, so `game_shared` depends on `ai_core` alone; a board change selects 10 modules, 19 before |
-| T62 | Search over a port, not over a grid | todo | after T61: `SearchGraph` in `ai_search` with a `GridSearchGraph` adapter, nodes still `Vector2i`, A\*'s estimate owned by the graph and admissible (recommended, decided in the task); vectors replay unchanged; a waypoint graph test where cost and hops disagree |
-| T63 | The controller registry | todo | the four T15 teams move to `game/tactical/`; `next_controller`'s `if playing is` chain and `League.roster()` become one table; `catalogue.json` lists each example's controllers, held by `check_demos.py`; `tactical` stops depending on `league` |
+| T62 | Search over a port, not over a grid | done | wave 68: `SearchGraph` (contains, neighbours, cost_at, estimate) in `ai_search`, `GridSearchGraph` the grid's adapter with Manhattan moved there; the estimate promises consistency, not only admissibility; `Search` stops being a `Pathfinder` and `GridPathfinder` holds one as such; `Pathfinder` stays in `ai_core` (it keeps `tactical` free of `ai_search`); vectors replay unchanged; a waypoint test where hops and cost disagree, a hop-counting Dijkstra planted and caught; the adapter costs ~5% on 200 A\* searches |
+| T63 | The controller registry | done | wave 68: `TacticalRoster`, ten rows in C's old order, read by `next_controller`, the league and the sentence on screen (the list lived three times); the four T15 teams and `TeamFacts` moved to `game/tactical/` with their tests; `tactical` drops `league`; the tactical card lists its controllers and `check_demos.py` C9 holds them to the table both ways; RTS, racing, fighting and the behaviour demo measured: each already one table, no chain |
 | T64 | The library | todo | after T60-T63; names: only ports and kernel prefixed (owner, 2026-10-20), the prefix by ADR; addon zips filtered by manifest; `pyproject.toml`, flat layout, no dependencies; an entry-point group for a user's technique; installed and run outside the repo; publishing stays the owner's act |
 
 ---
+
+## Resuming after 2026-10-21 (wave 68)
+
+**Where it stopped -- read first.** Wave 68 did T62 and T63 together, as
+the owner asked: one branch, each task in its own commits, one review. The
+review record is `docs/reviews/68-search-port-and-registry.md`.
+
+**What landed.** The four searches run on any `SearchGraph`, and the grid
+is one adapter. A waypoint test shows the port, and shows why the estimate
+must be consistent and not only admissible. The tactical board's
+controllers are one table, `TacticalRoster`, read by the C key, the league
+and the sentence on screen, and the menu's card is held to it (C9).
+`tactical` no longer depends on `league`.
+
+**Measured, worth knowing.** The extra layer costs about 5% on 200 A\*
+searches. The league reads the table in C's order and seats teams by
+place, so its table moved inside its intervals: same games, different
+dice, the same verdicts. The old order put back reproduces `main` exactly.
+
+**Next.** T64, the library (it needs T60-T63, all done now). Then milestone
+5, after the owner decides ADR 0018, and T55-T57 last. Open by hand, since
+`make wave` picks by table order: `make wave-start BRANCH=wave/69-the-library`.
 
 ## Resuming after 2026-10-20 (wave 67)
 

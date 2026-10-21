@@ -85,7 +85,7 @@ func test_the_board_is_read_row_major() -> void:
 # a unit may enter -- and all of them hold for this. It is the same shape as the
 # unvalidated `from` the wave 08 review found, at the other end of the path.
 class StrollsOffAndSaysItArrived extends Search:
-	func _explore(graph: GridGraph, from: Vector2i, _to: Vector2i) -> SearchResult:
+	func _explore(graph: SearchGraph, from: Vector2i, _to: Vector2i) -> SearchResult:
 		var step: Array[Vector2i] = [graph.neighbours(from)[0]]
 		var looked_at: Array[Vector2i] = [from]
 		return SearchResult.new(step, looked_at, [] as Array[Vector2i], 1, true)

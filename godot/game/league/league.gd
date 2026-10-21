@@ -10,9 +10,11 @@
 ## from that seed, never from the board's dice.
 ##
 ## What each decides, and what it hands the rules, is in its own header and in
-## the table `roster` returns. Behaviour cloning on this board (T25's eighth
-## team) joins once there are recordings of a person to clone; until then the
-## league says so rather than fielding a clone of nothing.
+## `TacticalRoster`, the one table of the board's controllers, which the
+## league reads rather than keeping a list of its own (T63). Behaviour
+## cloning on this board (T25's eighth team) joins once there are recordings
+## of a person to clone; until then the league says so rather than fielding a
+## clone of nothing.
 ##
 ## When not to use it: as a menu of opponents. A team is chosen here for being
 ## a technique, not for being good to play against; the demo's C key is the
@@ -20,44 +22,30 @@
 class_name League
 extends RefCounted
 
-## The level T12's technique plays at in the league: its strongest, so the
-## technique is measured at its best, as every other team is.
-const LEVEL: String = "hard"
-
 ## Teams the task names that have not joined yet, and why, for the table.
 const NOT_YET: Array[String] = [
 	"cloned: behaviour cloning needs a person's recordings of this board (make record-tactical); none are committed yet",
 ]
 
 
-## Every team: [name, what it is, what it delegates, Callable(seed) -> a new
-## `BlueController`], in the order the table prints them.
+## Every team, in the order the table prints them: the rows of
+## `TacticalRoster` that play in the league -- the same table the demo's C
+## key cycles, so the two cannot list different controllers. A row is that
+## table's, `[name, what it is, what it delegates, plays in the league,
+## Callable(seed) -> a new BlueController]`.
 static func roster() -> Array[Array]:
-	return [
-		["rules", "priority rules, the baseline (T30, T45)", "nothing",
-			func(_seed: int) -> BlueController: return RuleBasedBlue.new()],
-		["state machine", "a finite state machine per walker (T15)", "production and attacks, to the rules",
-			func(_seed: int) -> BlueController: return MachineTeam.new()],
-		["behaviour tree", "a behaviour tree, ticked from the root (T15)", "production and attacks, to the rules",
-			func(_seed: int) -> BlueController: return TreeTeam.new()],
-		["GOAP", "goal-oriented action planning per walker (T15)", "production and attacks, to the rules",
-			func(_seed: int) -> BlueController: return GoapTeam.new()],
-		["HTN", "a hierarchical task network per walker (T15)", "production and attacks, to the rules",
-			func(_seed: int) -> BlueController: return HtnTeam.new()],
-		["planner", "heuristic STRIPS for purchases, ADR 0010 (T11)", "walking and attacks, to the rules",
-			func(_seed: int) -> BlueController: return PlannedBlue.new()],
-		["learned", "trained regressions for fights and points (T44, T46)", "production, to the rules",
-			func(_seed: int) -> BlueController: return LearnedBlue.new()],
-		["lookahead (%s)" % LEVEL, "two plies at the fight's odds, T12's %s level" % LEVEL, "production, to the rules",
-			func(seed_number: int) -> BlueController: return LeveledBlue.new(Difficulty.named(LEVEL), seed_number)],
-	]
+	var teams: Array[Array] = []
+	for row: Array in TacticalRoster.rows():
+		if row[TacticalRoster.IN_LEAGUE]:
+			teams.append(row)
+	return teams
 
 
 ## The team names, in roster order.
 static func names() -> Array[String]:
 	var found: Array[String] = []
 	for team: Array in roster():
-		found.append(team[0])
+		found.append(team[TacticalRoster.NAME])
 	return found
 
 

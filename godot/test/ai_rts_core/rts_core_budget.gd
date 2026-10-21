@@ -160,7 +160,7 @@ func _it_worked(world: RtsWorld, starts: Dictionary) -> Array[String]:
 
 
 func _what_it_saved(world: RtsWorld) -> Array[String]:
-	var search := AStarSearch.new()
+	var search := GridPathfinder.new(AStarSearch.new())
 	var started: int = Time.get_ticks_usec()
 	for index: int in range(UNITS):
 		var from := Vector2i(4 + index % 10, 27 + index / 10 % 10)

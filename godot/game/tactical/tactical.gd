@@ -36,10 +36,6 @@ extends Node2D
 ## What the scene says it is, on screen, before anything else.
 const WHAT_THIS_IS: String = "tactics in the style of Advance Wars: build, cross the river, destroy the enemy workshop"
 
-## The controllers still to come, named on screen beside the one playing, so
-## a person knows the computer is a slot and not a fixed opponent.
-const CONTROLLERS_TO_COME: String = "C hands the computer to the next controller -- rules, planner, learned, easy, normal, hard, state machine, behaviour tree, GOAP, HTN -- and S swaps sides; either starts a new game"
-
 @onready var _board: BoardView = $BoardView
 @onready var _units: UnitView = $UnitView
 @onready var _intent: IntentView = $IntentView
@@ -380,38 +376,26 @@ func _press(keycode: Key) -> void:
 		_refresh()
 
 
-## Hand the computer's side to the next controller -- rules, planner,
-## learned, each difficulty level, then the four T15 techniques (T25), and
-## round again -- and start again: a
-## controller swapped mid-game would inherit a board it did not play.
+## Every controller C cycles through, named on screen beside the one playing,
+## so a person knows the computer is a slot and not a fixed opponent. The
+## names come from `TacticalRoster`, so the sentence cannot fall behind it.
+static func controllers_to_come() -> String:
+	return "C hands the computer to the next controller -- %s -- and S swaps sides; either starts a new game" % ", ".join(TacticalRoster.names())
+
+
+## Hand the computer's side to the next row of `TacticalRoster`, round to
+## the first after the last, and start again: a controller swapped mid-game
+## would inherit a board it did not play.
 func swap_controller() -> void:
 	computer = next_controller(computer)
 	new_game()
 
 
-## The controller after `playing` in the order C cycles through. A level is
-## seeded afresh each time, from the engine's own random numbers -- its
-## noise is its own, never the board's dice.
+## The controller after `playing`: the next row of the table, built fresh. A
+## level is seeded afresh each time, from the engine's own random numbers --
+## its noise is its own, never the board's dice.
 static func next_controller(playing: BlueController) -> BlueController:
-	var levels: Array[Difficulty] = Difficulty.presets()
-	if playing is LeveledBlue:
-		var at: int = levels.map(func(level: Difficulty) -> String: return level.name).find(playing.controller_name())
-		return LeveledBlue.new(levels[at + 1], randi()) if at + 1 < levels.size() else MachineTeam.new()
-	if playing is PlannedBlue:
-		return LearnedBlue.new()
-	if playing is LearnedBlue:
-		return LeveledBlue.new(levels[0], randi())
-	if playing is MachineTeam:
-		return TreeTeam.new()
-	if playing is TreeTeam:
-		return GoapTeam.new()
-	if playing is GoapTeam:
-		return HtnTeam.new()
-	if playing is HtnTeam:
-		return RuleBasedBlue.new()
-	var planner := PlannedBlue.new()
-	planner.verbose = true
-	return planner
+	return TacticalRoster.build(TacticalRoster.after(playing.controller_name()), randi())
 
 
 ## The person takes the other side, and a new game starts: the same board,
@@ -592,7 +576,7 @@ func _status_text() -> String:
 	if winner != TacticalVictory.NOBODY:
 		return TacticalVictory.announcement(winner, state)
 	if not _persons_turn():
-		return TacticalStatus.computer_text(state, _computer_turn, computer, _last_event) + "\n\n" + CONTROLLERS_TO_COME
+		return TacticalStatus.computer_text(state, _computer_turn, computer, _last_event) + "\n\n" + controllers_to_come()
 	var unit: Unit = state.unit_by_id(_selected_id)
 	var news: String = _last_event
 	if unit == null and _turn.unspent(state).is_empty():

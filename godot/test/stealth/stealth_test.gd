@@ -325,7 +325,7 @@ func test_the_danger_map_peaks_under_each_guard() -> void:
 
 func test_the_default_room_has_a_way_out() -> void:
 	var room: StealthRoom = StealthRoom.default_room()
-	var route: Array[Vector2i] = AStarSearch.new().find_path(room.graph, room.player_start, room.exit)
+	var route: Array[Vector2i] = GridPathfinder.new().find_path(room.graph, room.player_start, room.exit)
 	assert_array(route).is_not_empty()
 
 
@@ -333,7 +333,7 @@ func test_walking_straight_across_alarms_a_guard_on_the_way() -> void:
 	# The manual check is to watch suspicion rise and fall; on the obvious
 	# route it has to rise, or the room teaches nothing to the obvious player.
 	var world := StealthWorld.new(StealthRoom.default_room())
-	var search := AStarSearch.new()
+	var search := GridPathfinder.new(AStarSearch.new())
 	var alarmed: bool = false
 	for _turn: int in range(40):
 		var route: Array[Vector2i] = search.find_path(world.room.graph, world.player.cell, world.room.exit)

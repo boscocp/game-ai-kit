@@ -1,7 +1,7 @@
-## One team in the league written with one of T15's ways of deciding: the
-## state machine, the behaviour tree, GOAP and the HTN each play the tactical
-## board as a `BlueController`, the way `GuardBrain` lets them play T15's
-## guard.
+## One of the tactical board's teams (T25) written with one of T15's ways of
+## deciding: the state machine, the behaviour tree, GOAP and the HTN each play
+## the tactical board as a `BlueController`, the way `GuardBrain` lets them
+## play T15's guard.
 ##
 ## A team answers one question per walker, `decide`: which of five deeds to do
 ## this turn, given the facts (`TeamFacts`). Everything else is shared, so the

@@ -75,8 +75,8 @@ static func _play_league(roster: Array[Array], schedule: Array[Array]) -> Dictio
 		costs.append([])
 		deeds.append({})
 	for game: Array in schedule:
-		var red := MeteredTeam.new((roster[game[0]][3] as Callable).call(game[2]))
-		var blue := MeteredTeam.new((roster[game[1]][3] as Callable).call(game[2]))
+		var red := MeteredTeam.new((roster[game[0]][TacticalRoster.BUILD] as Callable).call(game[2]))
+		var blue := MeteredTeam.new((roster[game[1]][TacticalRoster.BUILD] as Callable).call(game[2]))
 		var result: Dictionary = TacticalMatch.play(red, blue, game[2])
 		# Who sat where is read back off the seats, not the schedule, so a
 		# runner that seated them the wrong way round is seen doing it.
@@ -92,7 +92,7 @@ static func _play_league(roster: Array[Array], schedule: Array[Array]) -> Dictio
 # The roster index of the team in `seat`, by the name it gives itself.
 static func _index_of(roster: Array[Array], seat: MeteredTeam) -> int:
 	for index: int in range(roster.size()):
-		if (roster[index][3] as Callable).call(0).controller_name() == seat.controller_name():
+		if (roster[index][TacticalRoster.BUILD] as Callable).call(0).controller_name() == seat.controller_name():
 			return index
 	return -1
 
@@ -164,10 +164,10 @@ static func _even_seats(league: Dictionary, teams: int) -> Array[String]:
 static func _within_budget(league: Dictionary, roster: Array[Array]) -> int:
 	var failures: int = 0
 	for team: int in range(roster.size()):
-		var unit: String = (roster[team][3] as Callable).call(0).work_unit()
+		var unit: String = (roster[team][TacticalRoster.BUILD] as Callable).call(0).work_unit()
 		var over: Array[String] = _over_budget(league["costs"][team], unit)
 		for said: String in over:
-			printerr("league_runner: %s: %s" % [roster[team][0], said])
+			printerr("league_runner: %s: %s" % [roster[team][TacticalRoster.NAME], said])
 		failures += over.size()
 	return failures
 
@@ -248,12 +248,12 @@ static func _print_table(league: Dictionary, roster: Array[Array]) -> void:
 		_tally(tally, result)
 	var ratings: Array[float] = LeagueRating.fit(games, teams)
 	var bars: Array[Array] = LeagueRating.intervals(games, teams)
-	print("\nthe table: Bradley-Terry ratings on the Elo scale, %s at 0, with 95%% bootstrap intervals" % roster[0][0])
+	print("\nthe table: Bradley-Terry ratings on the Elo scale, %s at 0, with 95%% bootstrap intervals" % roster[0][TacticalRoster.NAME])
 	print("  %-18s %5s %5s %5s %7s  %s" % ["team", "won", "lost", "drawn", "rating", "95% interval"])
 	var order: Array = range(teams)
 	order.sort_custom(func(one: int, other: int) -> bool: return ratings[one] > ratings[other])
 	for team: int in order:
-		print("  %-18s %5d %5d %5d %+7.0f  %+.0f to %+.0f" % [roster[team][0], tally[team][0], tally[team][1],
+		print("  %-18s %5d %5d %5d %+7.0f  %+.0f to %+.0f" % [roster[team][TacticalRoster.NAME], tally[team][0], tally[team][1],
 			tally[team][2], ratings[team], bars[team][0], bars[team][1]])
 
 
@@ -279,15 +279,15 @@ static func _print_costs(league: Dictionary, roster: Array[Array]) -> void:
 		for decision: Dictionary in decisions:
 			work += decision["work"]
 			replanned += 1 if decision["replanned"] else 0
-		var unit: String = (roster[team][3] as Callable).call(0).work_unit()
+		var unit: String = (roster[team][TacticalRoster.BUILD] as Callable).call(0).work_unit()
 		var counted: String = "nothing it counts"
 		if unit != "" and work > 0:
 			counted = "%.1f %s a decision" % [float(work) / decisions.size(), unit]
 		if replanned > 0:
 			counted += "; a plan made before %d of its %d decisions" % [replanned, decisions.size()]
-		print("  %-18s %d decisions; %6.2f %6.2f %6.2f ms; %s" % [roster[team][0], decisions.size(), _mean(times),
+		print("  %-18s %d decisions; %6.2f %6.2f %6.2f ms; %s" % [roster[team][TacticalRoster.NAME], decisions.size(), _mean(times),
 			_percentile(times, 0.95), times.back() if not times.is_empty() else 0.0, counted])
-		print("  %-18s delegates %s" % ["", roster[team][2]])
+		print("  %-18s delegates %s" % ["", roster[team][TacticalRoster.DELEGATES]])
 		if not league["deeds"][team].is_empty():
 			print("  %-18s deeds: %s" % ["", _shares(league["deeds"][team])])
 
