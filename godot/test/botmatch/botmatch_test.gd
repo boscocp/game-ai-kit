@@ -247,8 +247,12 @@ func _mean_walks(side: int) -> PackedFloat64Array:
 	return means
 
 
-# Seconds for `bot` to walk from `start` to `goal` in `world`, by its path.
+# Seconds for `bot` to walk from `start` to `goal` in `world`, by its path,
+# alone: the others are out of the match, so this is the map's walk and not
+# a queue behind teammates standing in the spawn room.
 func _walk_time(world: BotMatch, bot: MatchBot, start: Vector2, goal: Vector2) -> float:
+	for other: MatchBot in world.bots:
+		other.respawn_left = INF if other != bot else 0.0
 	bot.position = start
 	bot.path.clear()
 	bot.goal = start
@@ -710,6 +714,49 @@ func test_a_team_sends_one_bot_for_the_power_weapon_and_not_into_enemies() -> vo
 		team.remember(enemy, world.arena.power_place + Vector2(2.0, 0.0), world.time)
 	world.supply.think(world, team)
 	assert_int(world.supply.fetcher[0]).is_equal(-1)
+
+
+func test_nobody_walks_through_a_body_friend_or_enemy() -> void:
+	# Walking into another body, on the open floor and with it pinned
+	# against the low box in lane A: stopped at two radii, and it unmoved.
+	var rules := MatchRules.new()
+	var touching: float = rules.body_radius * 2.0
+	for other_id: int in [6, 1]:
+		for pinned: bool in [false, true]:
+			var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+			var mine: MatchBot = world.bots[0]
+			var other: MatchBot = world.bots[other_id]
+			mine.controlled = true
+			other.controlled = true
+			mine.wants_to_walk = Vector2.RIGHT
+			mine.position = Vector2(15.0, 5.0 if pinned else 3.0)
+			other.position = Vector2(18.0 if pinned else 17.0, mine.position.y)
+			var stood: Vector2 = other.position
+			for _step: int in range(60):
+				world.step()
+			var label: String = "%s, %s" % ["enemy" if other_id == 6 else "teammate", "pinned" if pinned else "open"]
+			assert_float(mine.position.distance_to(other.position)).override_failure_message(label).is_greater_equal(touching - 1e-3)
+			assert_vector(other.position).override_failure_message(label).is_equal_approx(stood, Vector2(1e-3, 1e-3))
+
+
+func test_a_bot_holding_its_spot_gives_way_to_a_teammate_wedged_behind_it() -> void:
+	# Measured in a match: two of a team against lane A's north wall, the
+	# one going west waited on the one holding for 13 s.
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var walker: MatchBot = world.bots[4]
+	var holder: MatchBot = world.bots[5]
+	holder.position = Vector2(24.75, 2.8)
+	holder.goal = holder.position
+	holder.action = MatchBot.HOLD
+	walker.position = Vector2(24.98, 2.014)
+	walker.path = [Vector2i(23, 2)] as Array[Vector2i]
+	walker.goal = Vector2(23.25, 2.8)
+	walker.action = MatchBot.MOVE
+	for _step: int in range(40):
+		MatchActions.act(world, walker, rules.step)
+	assert_bool(walker.arrived()).override_failure_message("stuck at %s" % walker.position).is_true()
+	assert_float(walker.position.distance_to(holder.position)).is_greater_equal(rules.body_radius * 2.0 - 1e-3)
 
 
 func test_teammates_leave_a_persons_spot_to_them_and_the_list_takes_back_over() -> void:

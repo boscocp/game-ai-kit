@@ -373,8 +373,10 @@ func _points_covered(side: int) -> int:
 
 
 # Two bodies closer than two radii are pushed apart, half each, where each
-# can stand. Without it every bot of a team could share the one best spot,
-# and bunching would cost nothing -- the reason claims exist would be gone.
+# can stand. A step into a body is refused (`MatchActions.clear_of_bodies`),
+# so this only parts bodies that began inside each other -- a respawn on a
+# spot someone stands on. Without either, every bot of a team could share
+# the one best spot, and bunching would cost nothing.
 func _keep_bodies_apart() -> void:
 	var touching: float = rules.body_radius * 2.0
 	for first: int in range(bots.size()):

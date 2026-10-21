@@ -189,7 +189,7 @@ static func _played(world: BotMatch, bot: MatchBot, delta: float) -> void:
 	var stride: Vector2 = bot.wants_to_walk.limit_length(1.0) * speed_of(world, bot) * delta
 	for step: Vector2 in [stride, Vector2(stride.x, 0.0), Vector2(0.0, stride.y)]:
 		var next: Vector2 = bot.position + step
-		if world.arena.can_step(bot.position, next, world.rules.body_radius):
+		if world.arena.can_step(bot.position, next, world.rules.body_radius) and clear_of_bodies(world, bot, next):
 			bot.position = next
 			break
 	# A reload is the person's to start, with R (the owner's ask): an empty
@@ -243,15 +243,68 @@ static func _walk(world: BotMatch, bot: MatchBot, delta: float) -> void:
 		bot.turn_to(towards, world.teams[bot.team].turn_rate, delta)
 
 
-# Move `delta` seconds' worth along the path; the waypoint it moved towards.
+# Nothing in `_around` was free: a teammate standing in the way, holding
+# its spot, steps aside by as much, away from the bot that wants by -- where
+# it can stand and touches nobody. An enemy is never moved, and nobody walks
+# through anybody: without this, two of a team wedged against a wall waited
+# on each other for good (13 s measured, till the holder moved on).
+static func _ask_way(world: BotMatch, bot: MatchBot, step: Vector2) -> void:
+	for other: MatchBot in world.bots.filter(func(other: MatchBot) -> bool: return _holding_in_the_way(world, bot, other, step)):
+		var aside: Vector2 = (other.position - bot.position).normalized() * step.length()
+		var to: Vector2 = other.position + aside
+		if world.arena.can_step(other.position, to, world.rules.body_radius) and clear_of_bodies(world, other, to):
+			other.position = to
+
+
+# A living teammate of `bot`'s, holding its spot under its list, where the
+# step would touch it.
+static func _holding_in_the_way(world: BotMatch, bot: MatchBot, other: MatchBot, step: Vector2) -> bool:
+	var touched: bool = other.position.distance_to(bot.position + step) < world.rules.body_radius * 2.0
+	var holding: bool = other.action == MatchBot.HOLD and not other.controlled
+	return other != bot and other.alive() and other.team == bot.team and touched and holding
+
+
+# The step a bot wants, then the same step turned 45 and then 90 degrees to
+# either side: a body in the way is walked round, not waited behind. The
+# straight step is tried first, so nothing changes on an open floor.
+static func _around(step: Vector2) -> Array[Vector2]:
+	var tried: Array[Vector2] = [step]
+	for turn: float in [PI / 4.0, -PI / 4.0, PI / 2.0, -PI / 2.0]:
+		tried.append(step.rotated(turn))
+	return tried
+
+
+## Whether `bot` may step to `next` for the other bodies: nobody living,
+## friend or enemy, ends up nearer than two radii -- unless it was already
+## that near and the step takes it further off, so two bodies that start
+## inside each other (a respawn on a spot someone stands on) can part.
+## Nobody walks through anybody (the owner's ask).
+static func clear_of_bodies(world: BotMatch, bot: MatchBot, next: Vector2) -> bool:
+	var touching: float = world.rules.body_radius * 2.0
+	for other: MatchBot in world.bots:
+		if other == bot or not other.alive():
+			continue
+		var after: float = next.distance_to(other.position)
+		if after < touching and after < bot.position.distance_to(other.position) - 1e-6:
+			return false
+	return true
+
+
+# Move `delta` seconds' worth along the path, sliding along a body in the
+# way, or waiting behind it; the waypoint it moved towards.
 static func _step_towards(world: BotMatch, bot: MatchBot, delta: float) -> Vector2:
 	var towards: Vector2 = _next_waypoint(world, bot)
 	var offset: Vector2 = towards - bot.position
 	var stride: float = speed_of(world, bot) * delta
-	if offset.length() <= stride:
-		bot.position = towards
-	else:
-		bot.position += offset.normalized() * stride
+	var step: Vector2 = offset if offset.length() <= stride else offset.normalized() * stride
+	var moved: bool = false
+	for tried: Vector2 in _around(step):
+		var walkable: bool = world.arena.walkable(bot.position, bot.position + tried)
+		if not moved and walkable and clear_of_bodies(world, bot, bot.position + tried):
+			bot.position += tried
+			moved = true
+	if not moved:
+		_ask_way(world, bot, step)
 	# Everything up to the cell it stands in is behind it, wherever in the path
 	# that cell is: a bot cutting a corner skips cells, and one that only
 	# dropped the first never moved past it, looking at the same few ahead.
