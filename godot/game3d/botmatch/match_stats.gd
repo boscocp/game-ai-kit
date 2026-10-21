@@ -25,6 +25,9 @@ var retreat_decisions: int = 0
 var bunched_seconds: float = 0.0
 var shots: int = 0
 var hits: int = 0
+## Health taken off enemies, and hits by zone (head, torso, limb).
+var damage: int = 0
+var zone_hits: Dictionary = {}
 ## Shots at a target that was not in the shooter's own sight row. The
 ## honest bots never make one; a planted cheat must.
 var shots_unseen: int = 0

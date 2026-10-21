@@ -55,6 +55,9 @@ var fire_cooldown: float = 0.0
 var reload_left: float = 0.0
 var respawn_left: float = 0.0
 var crouched: bool = false
+## The zone its shots are aimed at: its own choice (`AimChoice`), or the
+## torso, where a rifle is pointed by default.
+var aim_zone: String = MatchRules.TORSO
 ## Running at the rules' sprint speed; it may not fire while it is.
 var sprinting: bool = false
 ## What the list chose last, and at whom it is aimed (-1: nobody).

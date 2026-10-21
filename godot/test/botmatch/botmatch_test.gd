@@ -205,11 +205,13 @@ func test_a_shot_level_across_the_platform_hits_a_body_standing_on_it() -> void:
 	mine.position = Vector2(13.5, 3.5)
 	mine.facing = 0.0
 	enemy.position = Vector2(15.5, 3.5)
+	mine.pitch = atan2(rules.chest_height - rules.eye_height, 2.0)
 	MatchActions.fire_aimed(world, mine)
 	assert_int(enemy.health).is_equal(rules.health - rules.damage)
 	# From the ground below, level, the platform's side takes the shot.
 	mine.position = Vector2(9.5, 3.0)
 	enemy.position = Vector2(14.5, 3.0)
+	mine.pitch = 0.0
 	MatchActions.fire_aimed(world, mine)
 	assert_int(enemy.health).is_equal(rules.health - rules.damage)
 
@@ -326,6 +328,8 @@ func test_a_person_hits_what_they_aim_at_and_not_through_a_wall() -> void:
 	var enemy: MatchBot = world.bots[6]
 	mine.position = Vector2(15.0, 13.0)
 	mine.facing = 0.0
+	# Down at the chest, 1.2 m up, six metres on: the torso.
+	mine.pitch = atan2(rules.chest_height - rules.eye_height, 6.0)
 	enemy.position = Vector2(21.0, 13.0)
 	MatchActions.fire_aimed(world, mine)
 	assert_int(enemy.health).is_equal(rules.health - rules.damage)
@@ -347,6 +351,7 @@ func test_a_person_hits_what_they_aim_at_and_not_through_a_wall() -> void:
 	MatchActions.fire_aimed(world, mine)
 	assert_int(enemy.health).is_equal(rules.health - rules.damage)
 	mine.pitch = 0.0
+	mine.pitch = atan2(rules.chest_height - rules.eye_height, 6.0)
 	# Off the aim by more than a body's half-width: no hit either.
 	mine.position = Vector2(15.0, 13.0)
 	enemy.position = Vector2(21.0, 13.5)
@@ -431,6 +436,57 @@ func test_a_bot_reloads_early_only_with_nobody_in_sight_and_where_it_was_going()
 	bot.ammo = rules.reload_below
 	bot.decide(1.0, [] as Array[int], places, 0.0, false)
 	assert_str(bot.action).is_equal(MatchBot.HOLD)
+
+
+func test_a_shot_takes_the_damage_of_the_zone_it_crosses() -> void:
+	# Six metres apart, standing: aimed at the middle of each zone in turn.
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var mine: MatchBot = world.bots[0]
+	var enemy: MatchBot = world.bots[6]
+	mine.position = Vector2(15.0, 3.0)
+	mine.facing = 0.0
+	enemy.position = Vector2(21.0, 3.0)
+	var expected: Dictionary = {MatchRules.HEAD: 24, MatchRules.TORSO: 12, MatchRules.LIMB: 6}
+	for zone: String in expected:
+		enemy.health = rules.health
+		var middle: float = MatchActions.zone_middle(rules, zone, false)
+		mine.pitch = atan2(middle - rules.eye_height, 6.0)
+		MatchActions.fire_aimed(world, mine)
+		assert_int(rules.health - enemy.health).override_failure_message(zone).is_equal(expected[zone])
+		assert_str(str(world.recent_shots[-1][6])).is_equal(zone)
+	assert_int(world.stats[0].zone_hits[MatchRules.HEAD]).is_equal(1)
+	# Over the shoulder, beside the head: air, and no hit.
+	enemy.health = rules.health
+	enemy.position = Vector2(21.0, 3.0 + rules.head_half_width + 0.05)
+	mine.pitch = atan2(MatchActions.zone_middle(rules, MatchRules.HEAD, false) - rules.eye_height, 6.0)
+	MatchActions.fire_aimed(world, mine)
+	assert_int(enemy.health).is_equal(rules.health)
+
+
+func test_the_zones_shrink_with_a_crouched_body() -> void:
+	var rules := MatchRules.new()
+	var shrink: float = rules.crouched_body_height / rules.body_height
+	assert_str(rules.zone_at(rules.head_from * shrink + 0.01, 0.0, true)).is_equal(MatchRules.HEAD)
+	assert_str(rules.zone_at(rules.head_from * shrink + 0.01, 0.0, false)).is_equal(MatchRules.TORSO)
+	assert_str(rules.zone_at(rules.crouched_body_height + 0.05, 0.0, true)).is_equal(MatchRules.NONE)
+	assert_str(rules.zone_at(1.0, rules.torso_half_width + 0.05, false)).is_equal(MatchRules.LIMB)
+	assert_str(rules.zone_at(0.4, 0.0, false)).is_equal(MatchRules.LIMB)
+
+
+func test_the_humanoid_drawn_is_the_zones_of_the_rules() -> void:
+	# What a person sees is where a shot lands: the boxes' edges are the
+	# rules' zone edges, at the rules' height.
+	var rules := MatchRules.new()
+	var height: float = rules.body_height
+	var head: Array = AssetShelf.HUMANOID["Head"]
+	var torso: Array = AssetShelf.HUMANOID["Torso"]
+	var arm: Array = AssetShelf.HUMANOID["ArmRight"]
+	assert_float(((head[1] as Vector3).y - (head[0] as Vector3).y / 2.0) * height).is_equal_approx(rules.head_from, 0.01)
+	assert_float((head[0] as Vector3).x / 2.0 * height).is_equal_approx(rules.head_half_width, 0.01)
+	assert_float(((torso[1] as Vector3).y - (torso[0] as Vector3).y / 2.0) * height).is_equal_approx(rules.torso_from, 0.01)
+	assert_float((torso[0] as Vector3).x / 2.0 * height).is_equal_approx(rules.torso_half_width, 0.01)
+	assert_float(((arm[1] as Vector3).x + (arm[0] as Vector3).x / 2.0) * height).is_equal_approx(rules.body_half_width, 0.01)
 
 
 func test_teammates_leave_a_persons_spot_to_them_and_the_list_takes_back_over() -> void:

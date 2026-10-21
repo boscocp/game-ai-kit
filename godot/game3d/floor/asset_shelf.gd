@@ -22,7 +22,7 @@ const FALLBACKS: Array[String] = ["capsule", "humanoid", "box", "car", "none"]
 ## and legs the rest, 0.33 across in all), so a person sees where a head is;
 ## `botmatch_test.gd` holds the two together.
 const HUMANOID: Dictionary = {
-	"Head": [Vector3(0.13, 0.1667, 0.13), Vector3(0, 0.9167, 0)],
+	"Head": [Vector3(0.1333, 0.1667, 0.13), Vector3(0, 0.9167, 0)],
 	"Torso": [Vector3(0.2222, 0.3611, 0.12), Vector3(0, 0.6528, 0)],
 	"ArmLeft": [Vector3(0.0556, 0.3333, 0.07), Vector3(-0.1389, 0.6667, 0)],
 	"ArmRight": [Vector3(0.0556, 0.3333, 0.07), Vector3(0.1389, 0.6667, 0)],

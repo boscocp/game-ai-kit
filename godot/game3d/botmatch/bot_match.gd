@@ -54,7 +54,8 @@ var squad_confidence: Array[Dictionary] = [{}, {}]
 ## What the effects test reads, by team.
 var stats: Array[MatchStats] = [MatchStats.new(), MatchStats.new()]
 ## The last shots, newest last: [time, shooter, target (-1: none), hit,
-## from, to] -- the two ends in 3D, for the view's tracers.
+## from, to, zone] -- the two ends in 3D, for the view's tracers, and the
+## zone hit (NONE for a miss), for the headshot marker.
 var recent_shots: Array[Array] = []
 ## Every shot fired since the match began, for the view to hear the new ones.
 var shots_fired: int = 0
@@ -211,8 +212,8 @@ func sees(looker: MatchBot, target: MatchBot) -> bool:
 
 
 ## Note a shot for the view: who, at whom, whether it hit, and where it went.
-func record_shot(shooter: MatchBot, target: int, hit: bool, to: Vector3) -> void:
-	recent_shots.append([time, shooter.id, target, hit, MatchActions.muzzle_of(self, shooter, to), to])
+func record_shot(shooter: MatchBot, target: int, hit: bool, to: Vector3, zone: String = MatchRules.NONE) -> void:
+	recent_shots.append([time, shooter.id, target, hit, MatchActions.muzzle_of(self, shooter, to), to, zone])
 	shots_fired += 1
 	if recent_shots.size() > SHOTS_KEPT:
 		recent_shots.pop_front()

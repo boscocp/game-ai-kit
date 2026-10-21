@@ -59,23 +59,44 @@ static func fire(world: BotMatch, shooter: MatchBot, target: MatchBot) -> void:
 	var shown: float = world.rules.body_half_width * (PARTIAL_COVER if _waist_hidden(world, shooter, target) else 1.0)
 	var chance: float = clampf(shown / (distance * tan(maxf(aim_error, 1e-4))), 0.0, 1.0)
 	var hit: bool = world.random.randf() < chance
-	world.record_shot(shooter, target.id, hit, _bot_shot_end(world, shooter, target, hit))
+	var zone: String = shooter.aim_zone if hit else MatchRules.NONE
+	world.record_shot(shooter, target.id, hit, _bot_shot_end(world, shooter, target, hit), zone)
 	if hit and target.alive():
-		stats.hits += 1
-		target.health -= world.rules.damage
-		target.last_hit_by = shooter.id
+		land(world, shooter, target, zone)
 
 
-# Where a bot's shot is drawn ending: the target's chest when it hit; when it
-# missed, past the target to one side, alternating with each shot -- drawn
-# only, so it uses no random number and changes no match.
+## A hit on `target` in `zone`: its damage, counted for the shooter's team.
+static func land(world: BotMatch, shooter: MatchBot, target: MatchBot, zone: String) -> void:
+	var stats: MatchStats = world.stats[shooter.team]
+	var damage: int = world.rules.damage_in(zone)
+	stats.hits += 1
+	stats.damage += damage
+	stats.zone_hits[zone] = int(stats.zone_hits.get(zone, 0)) + 1
+	target.health -= damage
+	target.last_hit_by = shooter.id
+
+
+# Where a bot's shot is drawn ending: the middle of the zone it aimed at,
+# when it hit; when it missed, past that to one side, alternating with each
+# shot -- drawn only, so it uses no random number and changes no match.
 static func _bot_shot_end(world: BotMatch, shooter: MatchBot, target: MatchBot, hit: bool) -> Vector3:
-	var chest: Vector3 = world.arena.above(target.position, world.rules.chest_height)
+	var chest: Vector3 = world.arena.above(target.position, zone_middle(world.rules, shooter.aim_zone, target.crouched))
 	if hit:
 		return chest
 	var across: Vector2 = (target.position - shooter.position).normalized().orthogonal()
 	var side: float = MISS_DRAWN * (1.0 if world.stats[shooter.team].shots % 2 == 0 else -1.0)
 	return chest + Vector3(across.x * side, 0.3, across.y * side)
+
+
+## How high above the feet the middle of `zone` is, crouched or not.
+static func zone_middle(rules: MatchRules, zone: String, crouched: bool) -> float:
+	var shrink: float = rules.crouched_body_height / rules.body_height if crouched else 1.0
+	var middles: Dictionary = {
+		MatchRules.HEAD: (rules.head_from + rules.body_height) / 2.0,
+		MatchRules.TORSO: (rules.torso_from + rules.head_from) / 2.0,
+		MatchRules.LIMB: rules.torso_from / 2.0,
+	}
+	return float(middles.get(zone, rules.chest_height)) * shrink
 
 
 # Whether the line from the shooter's eyes to the target's waist is blocked.
@@ -86,9 +107,9 @@ static func _waist_hidden(world: BotMatch, shooter: MatchBot, target: MatchBot) 
 
 ## The person's shot, as in a first-person shooter: a ray from their eyes
 ## along where they look, yaw and pitch. It strikes the first enemy whose
-## body it passes through -- within `body_half_width` across, and between
-## the floor it stands on and the top of the body, standing or crouched --
-## unless a box, or the ground, comes first. A platform is a box. The person's own aim is the aim error.
+## body it passes through -- in one of its zones where the ray comes
+## nearest, standing or crouched -- unless a box, or the ground, comes
+## first. A platform is a box. The zone is the damage: head, torso, limb. The person's own aim is the aim error.
 static func fire_aimed(world: BotMatch, shooter: MatchBot) -> void:
 	shooter.ammo -= 1
 	shooter.fire_cooldown = world.rules.fire_interval
@@ -102,16 +123,16 @@ static func fire_aimed(world: BotMatch, shooter: MatchBot) -> void:
 	if look.y < 0.0:
 		reach = minf(reach, eyes.y / -look.y)
 	var struck: MatchBot = null
+	var zone: String = MatchRules.NONE
 	for other: MatchBot in world.bots:
-		var along: float = _crossing(world, eyes, look, other)
-		if other.team != shooter.team and other.alive() and along < reach:
-			reach = along
+		var crossing: Array = _crossing(world, eyes, look, other)
+		if other.team != shooter.team and other.alive() and float(crossing[0]) < reach:
+			reach = crossing[0]
+			zone = crossing[1]
 			struck = other
-	world.record_shot(shooter, struck.id if struck != null else -1, struck != null, eyes + look * reach)
+	world.record_shot(shooter, struck.id if struck != null else -1, struck != null, eyes + look * reach, zone)
 	if struck != null:
-		world.stats[shooter.team].hits += 1
-		struck.health -= world.rules.damage
-		struck.last_hit_by = shooter.id
+		land(world, shooter, struck, zone)
 
 
 ## Where a bot's eyes are: above the floor it stands on, lower when it
@@ -137,23 +158,22 @@ static func look_of(bot: MatchBot) -> Vector3:
 	return Vector3(cos(bot.pitch) * cos(bot.facing), sin(bot.pitch), cos(bot.pitch) * sin(bot.facing))
 
 
-# How far along the look the ray passes through `other`'s body, or INF: its
-# nearest approach across must be within the half-width, and at that point
-# the ray must be between the floor it stands on and the top of the body.
-static func _crossing(world: BotMatch, eyes: Vector3, look: Vector3, other: MatchBot) -> float:
+# Where the look passes `other`'s body: [how far along the ray, the zone],
+# or [INF, NONE]. Taken where the ray comes nearest the body's middle, from
+# above: how far across it passes then, and how high above its feet.
+static func _crossing(world: BotMatch, eyes: Vector3, look: Vector3, other: MatchBot) -> Array:
+	var missed: Array = [INF, MatchRules.NONE]
 	var flat := Vector2(look.x, look.z)
 	if flat.length() < 1e-6:
-		return INF
+		return missed
 	var offset: Vector2 = other.position - Vector2(eyes.x, eyes.z)
 	var along_flat: float = offset.dot(flat.normalized())
-	var across: float = absf(offset.cross(flat.normalized()))
-	if along_flat <= 0.0 or across > world.rules.body_half_width:
-		return INF
+	if along_flat <= 0.0:
+		return missed
 	var along: float = along_flat / flat.length()
-	var height: float = eyes.y + look.y * along
-	var feet: float = world.arena.floor_at(other.position)
-	var top: float = feet + (world.rules.crouched_body_height if other.crouched else world.rules.body_height)
-	return along if height >= feet and height <= top else INF
+	var height: float = eyes.y + look.y * along - world.arena.floor_at(other.position)
+	var zone: String = world.rules.zone_at(height, offset.cross(flat.normalized()), other.crouched)
+	return missed if zone == MatchRules.NONE else [along, zone]
 
 
 ## How fast a bot walks now: its sprint, its walk, or half that crouched.
