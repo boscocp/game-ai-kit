@@ -135,8 +135,10 @@ purpose and each measured; `docs/godot/racing3d.md` has the numbers.
 - **Two gates beyond the task's**: `racing3d_car.gd` (the car's three
   physics claims and its reproducible measurement) and
   `racing3d_effects.gd` (what each switch does), plus
-  `racing3d_portable_test.gd`, which reads the decision's code for anything
-  of a track.
+  `racing3d_portable_test.gd`, which reads the decision's code: only an
+  allow-list of classes, no other door to the world, no level title, no
+  track name. A reading cannot see a number tuned to one track; the
+  untuned kidney in the ladder is the real defence (review of wave 73).
 
 Measured: laps easy 50.61, normal 48.43, hard 47.20 s on the loop; 43.90,
 41.85 and 40.41 on the kidney; the ladder's gap 1.0 s. The does-not-cheat

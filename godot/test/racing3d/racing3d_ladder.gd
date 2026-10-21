@@ -15,8 +15,9 @@
 # on another track it must cope). The kidney is narrower, runs the other
 # way, has a hairpin and a chicane the loop has not, and nothing was tuned
 # on it: the knobs, the gains and the line-finding are the loop's.
-# `racing3d_portable_test.gd` holds the other half, that the decision's
-# code names no track.
+# This race is the real defence; `racing3d_portable_test.gd` adds what a
+# reading can hold -- that the decision's code names only an allow-list of
+# classes and no track -- and cannot see a number tuned to one track.
 #
 # "Alone" is a ghost race: every level and seed is a car in one race, all on
 # the same spot of the grid, driving through each other and seeing nobody.

@@ -5,7 +5,8 @@
 ## it can see -- and acts on the car it drives. Put on another track it sees
 ## another road and drives it the same way; `racing3d_ladder.gd` holds that
 ## on a track it was never tuned on, and `racing3d_portable_test.gd` that
-## its code names no track. Each decision, in order:
+## its code names only an allow-list of classes and no track (a reading,
+## blind to a number tuned to one track). Each decision, in order:
 ##
 ##   1. **How fast the road ahead allows** (T23's speed profile, made from
 ##      what it sees): at each point, the speed at which the bend there asks

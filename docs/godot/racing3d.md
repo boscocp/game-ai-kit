@@ -24,8 +24,14 @@ the brakes inside each tyre's friction circle. Weight transfer is written
 nowhere; the tyres push at the road below the centre of mass, and braking
 pitches the body. The driver is an agent: it sees a `RaceView3D` -- the
 road ahead in its own frame, its speed, how far it is off the line, the cars
-near it -- and sets the wheels and pedals. Nothing in the decision is a
-track, and `racing3d_portable_test.gd` holds that by reading its code.
+near it -- and sets the wheels and pedals. The defence that it is not
+tuned to one track is the race on the kidney, which nothing was tuned on
+(the ladder below). A reading holds less, and says so:
+`racing3d_portable_test.gd` holds that the decision's code names, of the
+project's classes, only an allow-list (its view, its knobs, its traffic,
+the PID and the heat line), opens no other door to the world, never reads
+a level's title, and contains no track's name. It cannot see a number
+tuned to one track.
 
 Before the start every car is driven on a test pad of the same tarmac
 (`GripTest3D`): braked hard from 25 m/s, then held at 13 m/s with the wheels
