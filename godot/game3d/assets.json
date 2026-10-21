@@ -1,0 +1,41 @@
+{
+  "about": "Every 3D file the examples use, referenced and never committed (ADR 0018). `make assets-3d` downloads each pack's archive, checks it, and copies out the files below into godot/game3d/downloaded/, which git ignores. A missing file is drawn as its fallback primitive. Each pack's `members` lists the sha256 of every file in its archive (`fetch_assets_3d.py --list-members`), so check_no_assets.py knows a pack's file nobody uses.",
+  "into": "godot/game3d/downloaded",
+  "packs": {
+    "kenney-mini-characters": {
+      "title": "Mini Characters 1.0, by Kenney",
+      "page": "https://kenney.nl/assets/mini-characters",
+      "archive": "https://kenney.nl/media/pages/assets/mini-characters/bfc7e272b4-1774770718/kenney_mini-characters.zip",
+      "archive_sha256": "9e1d48e6d7b8479ebbe84df71eb5bd8e1b3f0da546dea641890dccc8a02d0999",
+      "licence": "Creative Commons Zero, CC0 (the page, and License.txt in the archive)",
+      "members": "godot/game3d/packs/kenney-mini-characters.sha256",
+      "checked": "2026-10-21"
+    }
+  },
+  "files": [
+    {
+      "name": "bot_blue",
+      "pack": "kenney-mini-characters",
+      "path": "Models/GLB format/character-male-a.glb",
+      "saved_as": "kenney-mini-characters/character-male-a.glb",
+      "sha256": "77572792bfe2773b715b8cd8e18644b52b3e1f155fe10450254b50f9c364382a",
+      "fallback": "capsule"
+    },
+    {
+      "name": "bot_red",
+      "pack": "kenney-mini-characters",
+      "path": "Models/GLB format/character-female-a.glb",
+      "saved_as": "kenney-mini-characters/character-female-a.glb",
+      "sha256": "8cfcff43460da8b421f2a7fdfb43ec177321cad2746db9497cbf128d5806e2a8",
+      "fallback": "capsule"
+    },
+    {
+      "name": "mini_characters_colormap",
+      "pack": "kenney-mini-characters",
+      "path": "Models/GLB format/Textures/colormap.png",
+      "saved_as": "kenney-mini-characters/Textures/colormap.png",
+      "sha256": "0d4947d34ff32acf4a359c7f22ca784e057e7e72f622170a9a77b6fc88fdb70e",
+      "fallback": "none"
+    }
+  ]
+}

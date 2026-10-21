@@ -15,8 +15,8 @@ the floor the three 3D examples (T51, T52, T54) stand on.
 Nothing here is AI. It is the gates and the plumbing, kept small so that the
 examples after it are about their bots.
 
-**Blocked until the owner accepts ADR 0018** (or picks another option; this
-task is then rewritten to match).
+ADR 0018 was accepted by the owner on 2026-10-21: option A (`godot/game3d/`
+in the one project), the assets out of git and referenced by their links.
 
 ## Steps
 
@@ -66,10 +66,11 @@ make test-godot
 ```
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/game3d_floor.gd
+./scripts/godot --headless --path godot -s res://test/game3d/game3d_floor.gd
+python3 scripts/fetch_assets_3d.py --self-test
 ```
 
-`game3d_floor.gd` holds: the dropped body rests within 0.05 m of the floor
+`game3d_floor.gd` (in `godot/test/game3d/`, the module's test folder) holds: the dropped body rests within 0.05 m of the floor
 after 120 physics frames; the ray hits the box and misses beyond it; the
 baked path goes round the wall; a scene whose assets are missing loads with
 primitives. It reads its own output for `SCRIPT ERROR` (CLAUDE.md's trap).

@@ -1,0 +1,17 @@
+{
+  "module": "game3d",
+  "kind": "example",
+  "about": "The 3D tier's floor (ADR 0018): the assets' manifest and its fallback primitives, the test arena, and what headless 3D was measured to do.",
+  "owns": [
+    "godot/game3d/",
+    "godot/test/game3d/",
+    "scripts/fetch_assets_3d.py",
+    "python/tests/test_fetch_assets_3d.py"
+  ],
+  "depends_on": [
+    "game_shared"
+  ],
+  "gates": [
+    "test-game3d-floor"
+  ]
+}

@@ -49,10 +49,13 @@ Four tiers. **No lesson lives only in the expensive tier.**
 | **0** | nothing | read `docs/concepts/` — the algorithms and why they work |
 | **1** | Python 3 (already on Linux and macOS) | read a PDDL domain and check it, train the regressions, read the weights. Standard library only — **no pip, no numpy, no install step** |
 | **2** | Godot 4 (~130 MB, runs on integrated graphics) | play the game, open the demos, modify the addons |
+| **2, in 3D** | Godot 4 and integrated graphics that draw a 3D scene (measured: about 1,000 fps for the 3D test arena on a Radeon 610M, 1280×720 -- a 2022 chip, newer than the 2015 floor below; nothing older was measured) | the 3D examples in `godot/game3d/`, with `make assets-3d` for their models or plain shapes without; their decisions run on snapshots with Python twins, so the lesson is tier 1 (ADR 0018) |
 | **3** | a GPU with some VRAM | run a local LLM for real, once `ai_llm` exists; generate your own art with a local image model (`make artgen-bootstrap`, then `make artgen`; see [the how-to](docs/howto/generate-art.md)). Optional: the CC0 art is committed and is the default, so nothing needs this tier |
 
 The game targets 1280×720 at 60 fps on integrated graphics, using the
-Compatibility (OpenGL) renderer. There are no 3D nodes and no large assets.
+Compatibility (OpenGL) renderer. The 2D kit has no 3D nodes and no large
+assets; the 3D examples live apart in `godot/game3d/`, on the same renderer,
+and their models are downloaded, never committed (ADR 0018).
 
 The plan for the LLM addon, when it is written, is three transports —
 `replay` (recorded responses, needing nothing, the default in the demos),

@@ -12,6 +12,10 @@ easy to undo by accident:
      floor for everyone.
   2. Nothing under `game/` or `demos/` is a 3D node. A single Node3D pulls in
      the 3D renderer and the floor rises with it.
+  3. Nothing under `game/` or `demos/` loads from `game3d/` (R6). The 3D
+     examples have a folder and a tier of their own (ADR 0018); a 2D scene
+     that preloads one of them is 3D again by the back door, and no type
+     name in it would show it.
 
 Why this gate exists
 --------------------
@@ -20,7 +24,7 @@ hardware tiers are a promise in the README, and a promise with no gate is prose.
 
 Exit codes
 ----------
-0   renderer pinned, no 3D nodes found
+0   renderer pinned, no 3D nodes and no path into game3d/ found
 1   violations found (each one printed)
 2   wrong usage, or a file that cannot be read
 
@@ -58,6 +62,40 @@ THREE_D_TYPES = (
     "SpotLight3D",
     "GPUParticles3D",
     "CollisionShape3D",
+    # Added for ADR 0018, which named the gaps: the 3D examples need these,
+    # and each one is as 3D as a Node3D.
+    "VehicleBody3D",
+    "VehicleWheel3D",
+    "AnimatableBody3D",
+    "PhysicalBone3D",
+    "Skeleton3D",
+    "RayCast3D",
+    "ShapeCast3D",
+    "SpringArm3D",
+    "NavigationRegion3D",
+    "NavigationAgent3D",
+    "NavigationObstacle3D",
+    "NavigationLink3D",
+    "MultiMeshInstance3D",
+    "CPUParticles3D",
+    "GridMap",
+    "Path3D",
+    "PathFollow3D",
+    "Marker3D",
+    "Sprite3D",
+    "Label3D",
+    "CSGBox3D",
+    "CSGCombiner3D",
+    "CSGCylinder3D",
+    "CSGMesh3D",
+    "CSGPolygon3D",
+    "CSGSphere3D",
+    "CSGTorus3D",
+    "ReflectionProbe",
+    "LightmapGI",
+    "VoxelGI",
+    "Decal",
+    "FogVolume",
 )
 
 # `type=` anywhere in the node line, not immediately after `name=`: Godot
@@ -73,6 +111,16 @@ SCRIPT_TYPE = re.compile(
 # Directories whose contents must stay 2D. addons/ is deliberately absent: an
 # addon is a library and may legitimately offer 3D helpers later.
 TIER_TWO_DIRS = ("game", "demos")
+
+# A path into game3d/, written any way GDScript and a scene accept one:
+# `res://game3d/...`, or relative, `../../game3d/...`. Matched inside quotes,
+# where a path is, so a sentence naming the folder in a comment is not one.
+INTO_GAME3D = re.compile(r"""["'](?:res://|(?:\.\./)+|\./)game3d/""")
+# The third way to name a file: by its uid, which says nothing of the folder.
+UID = re.compile(r"uid://[a-z0-9]+")
+# What R6 reads; `.tres` too, whose `ext_resource` lines name files as a
+# scene's do.
+SCANNED = (".tscn", ".gd", ".tres")
 
 
 def strip_comments(text: str) -> str:
@@ -133,6 +181,20 @@ def strip_gdscript_comments(text: str) -> str:
     return "\n".join(kept)
 
 
+def uids_under(folder: pathlib.Path) -> set[str]:
+    """Every uid a file under `folder` is known by: a script's `.uid` beside
+    it, a scene's or resource's own header, an import's `.import`."""
+    uids: set[str] = set()
+    if not folder.exists():
+        return uids
+    for path in folder.rglob("*"):
+        if path.suffix in (".uid", ".tscn", ".tres", ".import"):
+            text = path.read_text(encoding="utf-8", errors="replace")
+            header = text if path.suffix == ".uid" else "\n".join(text.splitlines()[:3])
+            uids.update(UID.findall(header))
+    return uids
+
+
 def check_no_3d_nodes(godot_dir: pathlib.Path) -> list[str]:
     """Report any 3D node declared under the tier-2 directories.
 
@@ -143,12 +205,13 @@ def check_no_3d_nodes(godot_dir: pathlib.Path) -> list[str]:
     """
     findings = []
     inspected = 0
+    game3d_uids = uids_under(godot_dir / "game3d")
     for directory in TIER_TWO_DIRS:
         root = godot_dir / directory
         if not root.exists():
             continue
         for path in sorted(root.rglob("*")):
-            if path.suffix not in (".tscn", ".gd"):
+            if path.suffix not in SCANNED:
                 continue
             text = path.read_text(encoding="utf-8")
             inspected += 1
@@ -157,6 +220,8 @@ def check_no_3d_nodes(godot_dir: pathlib.Path) -> list[str]:
                 # the addon, which CLAUDE.md requires -- and `Node3D.new()`
                 # written there was being reported as a use of it.
                 text = strip_gdscript_comments(text)
+            if INTO_GAME3D.search(text) or set(UID.findall(text)) & game3d_uids:
+                findings.append(f"R6 {path} loads from res://game3d/; the 2D kit stays 2D")
             pattern = SCENE_TYPE if path.suffix == ".tscn" else SCRIPT_TYPE
             for found in pattern.findall(text):
                 # SCRIPT_TYPE has two groups; exactly one matches per hit.
@@ -284,6 +349,52 @@ def self_test() -> int:
             f'[rendering]\n\nrenderer/rendering_method="{REQUIRED_METHOD}"\n'
         )
         expect("other renderer named in a comment", quiet(mentions), 0)
+
+        # Planted: a 2D scene that preloads a 3D example by path, with no 3D
+        # type named anywhere in it -- the back door R6 closes.
+        backdoor = make_project(root / "backdoor", REQUIRED_METHOD)
+        (backdoor / "game" / "menu.gd").write_text(
+            'extends Node2D\n\nconst ARENA := preload("res://game3d/arena/arena.tscn")\n')
+        expect("a 2D script preloading from game3d/", quiet(backdoor), 1)
+        ext = make_project(root / "ext", REQUIRED_METHOD)
+        (ext / "demos" / "d.tscn").write_text(
+            '[ext_resource type="PackedScene" path="res://game3d/arena/arena.tscn" id="1"]\n'
+            '[node name="D" type="Node2D"]\n')
+        expect("a 2D scene with an ext_resource in game3d/", quiet(ext), 1)
+
+        # Planted: the same back door by a relative path, by uid, and from a
+        # `.tres`. A comment naming the folder is still not a use.
+        relative = make_project(root / "relative", REQUIRED_METHOD)
+        (relative / "game" / "r.gd").write_text(
+            'extends Node2D\n\nconst ARENA := preload("../game3d/arena/arena.tscn")\n')
+        expect("a 2D script preloading game3d/ by a relative path", quiet(relative), 1)
+        by_uid = make_project(root / "by_uid", REQUIRED_METHOD)
+        (by_uid / "game3d").mkdir()
+        (by_uid / "game3d" / "arena.gd.uid").write_text("uid://b3darena\n")
+        (by_uid / "game" / "u.gd").write_text(
+            'extends Node2D\n\nvar arena: Resource = load("uid://b3darena")\n')
+        expect("a 2D script loading a game3d/ file by uid", quiet(by_uid), 1)
+        resource = make_project(root / "resource", REQUIRED_METHOD)
+        (resource / "game" / "theme.tres").write_text(
+            '[gd_resource type="Theme" format=3]\n\n'
+            '[ext_resource type="Texture2D" path="res://game3d/look.png" id="1"]\n')
+        expect("a 2D .tres naming a game3d/ file", quiet(resource), 1)
+        remark = make_project(root / "remark", REQUIRED_METHOD)
+        (remark / "game" / "c.gd").write_text(
+            "extends Node2D\n\n# The 3D examples live in game3d/ and res://game3d/arena.\n")
+        expect("game3d/ named in a comment", quiet(remark), 0)
+
+        # Planted: one of the types ADR 0018 found missing from the list.
+        vehicle = make_project(root / "vehicle", REQUIRED_METHOD)
+        (vehicle / "game" / "car.gd").write_text("extends VehicleBody3D\n")
+        expect("a VehicleBody3D", quiet(vehicle), 1)
+
+        # A 3D example under game3d/ is not a finding: that is where it lives.
+        allowed = make_project(root / "allowed", REQUIRED_METHOD)
+        (allowed / "game3d").mkdir()
+        (allowed / "game3d" / "arena.gd").write_text("extends Node3D\n")
+        (allowed / "game" / "ok.gd").write_text("extends Node2D\n")
+        expect("3D under game3d/", quiet(allowed), 0)
 
         # Planted: no project file at all.
         expect("missing project.godot", quiet(root / "nowhere"), 1)

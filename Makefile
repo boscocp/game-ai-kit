@@ -95,10 +95,10 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-decisions test-demo-overlays test-menu-walk test-replay test-opponent-levels test-opponent-properties \
        test-clone-rows test-inference-budget test-clone-report test-difficulty-knobs \
        test-rts-budget test-rts-simulation test-rts-match test-steering-properties \
-       test-racing-ladder test-racing-does-not-cheat ## Run every gate
+       test-racing-ladder test-racing-does-not-cheat test-game3d-floor ## Run every gate
 
 .PHONY: check-no-engine
-check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-readability lint-demos \
+check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-no-assets lint-readability lint-demos \
        lint-addon-deps lint-modules lint-tiers lint-links lint-workflow lint-license \
        lint-employer-refs lint-docs-freshness lint-no-training lint-selftests \
        test-python test-models ## Every gate that does not need the engine installed
@@ -136,6 +136,10 @@ lint-disk-layout: ## Nothing of the toolchain may land on the small disk
 .PHONY: lint-renderer
 lint-renderer: ## Renderer stays Compatibility; no 3D nodes in game/ or demos/
 	@$(PYTHON) scripts/check_renderer.py
+
+.PHONY: lint-no-assets
+lint-no-assets: ## ADR 0018: nothing from a 3D pack is tracked, and every manifest row has a sha256
+	@$(PYTHON) scripts/check_no_assets.py
 
 .PHONY: lint-demos
 lint-demos: ## Invariant 13: every example has a target, a scene, a legend and its decision
@@ -642,6 +646,19 @@ fighter-strips: ## Cut the fighters' strips from the downloaded sheets, after ch
 #
 # Referenced, never committed, not even crops: Bos Wars is GPL, and nothing of
 # it is redistributed here. The game draws plain shapes without them.
+
+.PHONY: assets-3d
+assets-3d: ## Download the 3D packs into build/assets-3d/ and the files used into godot/game3d/downloaded/ (gitignored), sha256 checked
+	@$(PYTHON) scripts/fetch_assets_3d.py
+
+.PHONY: test-game3d-floor
+test-game3d-floor: import ## Headless 3D physics, rays, a baked path, a replay, and the arena with its models missing (T50)
+	@$(GODOT) --headless --path godot -s res://test/game3d/game3d_floor.gd
+
+.PHONY: measure-3d
+measure-3d: import ## Windowed: the 3D test arena's frame rate, with models and without (T50); not a gate
+	@$(GODOT) --path godot -s res://test/game3d/arena_fps.gd
+	@$(GODOT) --path godot -s res://test/game3d/arena_fps.gd -- --primitives
 
 .PHONY: rts-art
 rts-art: ## Download the RTS's Bos Wars sheets into build/rts-art/ (gitignored), refusing any whose sha256 differs
