@@ -23,6 +23,10 @@ class_name BotArena
 extends RefCounted
 
 const ARENA: String = "res://game3d/botmatch/arena.json"
+## The second arena, unlike the first: the same agents, another map.
+const YARDS: String = "res://game3d/botmatch/yards.json"
+## Every arena a match may be played on, the default first.
+const ARENAS: Array[String] = [ARENA, YARDS]
 ## No two spots along a face closer than this, in metres.
 const SPOT_SPACING: float = 1.5
 ## How far out from a face a spot stands, beyond the bot's radius.
@@ -344,13 +348,23 @@ func _cover_spots(body_radius: float) -> Array[Spot]:
 # two faces side by side, and two bots on them were bunched however the
 # claims kept them off each other's spot. "First" is by distance from the
 # mirror line, then by z -- the same on both sides, so the spots dropped on
-# one side are the mirror of those dropped on the other.
+# one side are the mirror of those dropped on the other. Two of the same
+# key are each other's mirror across the line, and both go: keeping either
+# would hand one side the spot; or they stand in one place, and the lower
+# box's stays, an order the mirror keeps.
 func _crowded(candidates: Array[Spot], spot: Spot) -> bool:
+	return candidates.any(func(other: Spot) -> bool: return _crowds(other, spot))
+
+
+func _crowds(other: Spot, spot: Spot) -> bool:
+	if other.box == spot.box or other.position.distance_to(spot.position) >= SPOT_SPACING - 1e-4:
+		return false
 	var key := Vector2(absf(spot.position.x - width / 2.0), spot.position.y)
-	return candidates.any(func(other: Spot) -> bool:
-		var other_key := Vector2(absf(other.position.x - width / 2.0), other.position.y)
-		var near: bool = other.position.distance_to(spot.position) < SPOT_SPACING - 1e-4
-		return other.box != spot.box and near and other_key < key)
+	var other_key := Vector2(absf(other.position.x - width / 2.0), other.position.y)
+	if not other_key.is_equal_approx(key):
+		return other_key < key
+	var same_place: bool = other.position.distance_to(spot.position) < 1e-4
+	return other.box < spot.box if same_place else true
 
 
 func _spot(number: int, place: Vector2, box: int) -> Spot:

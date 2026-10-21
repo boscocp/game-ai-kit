@@ -6,7 +6,8 @@
 ## Keys: 1, 2, 3 switch blue's claims, commander and retreat; with Shift,
 ## red's. Tab watches the next bot, M shows the other team's map, C follows
 ## the watched bot or frees the camera (arrows turn and zoom it), F runs at
-## four times speed, P pauses, Space one decision while paused, N a new match.
+## four times speed, P pauses, Space one decision while paused, N a new match,
+## L the next arena -- the same agents on another map.
 ##
 ## T takes the watched bot over, either team, and T again gives it back to
 ## its priority list (the owner's choice, 2026-10-21): the same body by the
@@ -21,8 +22,6 @@
 extends Node3D
 
 const SEEDS_FROM: int = 1
-## Where the free camera turns about: the arena's middle.
-const CENTRE: Vector3 = Vector3(24, 0, 16)
 ## Radians the view turns per pixel of mouse movement.
 const MOUSE_TURN: float = 0.0025
 ## How far up or down a person can look.
@@ -32,6 +31,8 @@ const SPEAKERS: int = 8
 
 var world: BotMatch
 var _seed: int = SEEDS_FROM
+## Which of `BotArena.ARENAS` the match is played on (L cycles them).
+var _arena_index: int = 0
 var _watched: int = 0
 var _paused: bool = false
 var _fast: bool = false
@@ -126,42 +127,9 @@ func decision_overlay() -> Dictionary:
 			candidates.append({"spot": spot, "status": choice.statuses[index], "score": choice.scores[index]})
 		chosen = world.place_id(places[choice.chosen]) if choice.chosen != -1 else "none"
 	var watched: Dictionary = {"bot": bot.id, "action": bot.action, "chosen": chosen, "candidates": candidates,
-			"aim": aim_overlay(bot), "errand": bot.errand, "errands": bot.errand_weighing}
+			"aim": BotMatchLines.aim_overlay(bot), "errand": bot.errand, "errands": bot.errand_weighing,
+			"passage": bot.last_passage}
 	return {"time": world.time, "watched": watched, "squads": _squads_overlay()}
-
-
-## The watched bot's last aim: each zone's own chance and expected damage,
-## and the zone it aimed at; empty before its first shot.
-static func aim_overlay(bot: MatchBot) -> Dictionary:
-	if bot.last_aim.is_empty():
-		return {}
-	var zones: Array = []
-	for index: int in range((bot.last_aim[1] as Array).size()):
-		zones.append({"zone": bot.last_aim[1][index], "chance": bot.last_aim[2][index], "expected": bot.last_aim[3][index]})
-	return {"target": bot.last_aim[0], "aimed": bot.last_aim[1][bot.last_aim[4]], "zones": zones}
-
-
-## One line for the panel: "aims at torso: head 5% 0.10 | torso ...".
-static func aim_line(bot: MatchBot) -> String:
-	var aim: Dictionary = aim_overlay(bot)
-	if aim.is_empty():
-		return "no shot aimed yet"
-	var parts: Array[String] = []
-	for zone: Dictionary in aim["zones"]:
-		parts.append("%s %.0f%% %.2f" % [zone["zone"], float(zone["chance"]) * 100.0, zone["expected"]])
-	return "aims at %s (chance, damage a shot): %s" % [aim["aimed"], " | ".join(parts)]
-
-
-## One line for the panel: its weapon and rounds, and each errand's score
-## as gain - walk - cost, the one it took marked.
-static func errand_line(bot: MatchBot) -> String:
-	var parts: Array[String] = []
-	for errand: String in bot.errand_weighing:
-		var weighed: Array = bot.errand_weighing[errand]
-		var mark: String = "> " if errand == bot.errand else ""
-		parts.append("%s%s %.2f - %.1f s - %.2f = %.2f" % [mark, errand, weighed[0], weighed[1], weighed[2], weighed[3]])
-	var rounds: String = "%s %d/%d, streak %d" % [bot.weapon, bot.ammo, bot.reserve, bot.streak]
-	return "%s; errands: %s" % [rounds, " | ".join(parts) if not parts.is_empty() else "none weighed yet"]
 
 
 func _squads_overlay() -> Array:
@@ -215,6 +183,9 @@ func _view_key(keycode: Key) -> void:
 			_paused = not _paused
 		KEY_SPACE:
 			step_decision()
+		KEY_L:
+			_arena_index = (_arena_index + 1) % BotArena.ARENAS.size()
+			_new_match()
 		KEY_N:
 			_seed += 1
 			_new_match()
@@ -294,7 +265,7 @@ func _new_match() -> void:
 			fresh.use_claims = world.teams[side].use_claims
 			fresh.use_commander = world.teams[side].use_commander
 			fresh.may_retreat = world.teams[side].may_retreat
-	world = BotMatch.new(_seed, blue, red, rules)
+	world = BotMatch.new(_seed, blue, red, rules, BotArena.new(rules.body_radius, BotArena.ARENAS[_arena_index]))
 	_heard = 0
 	_played = -1
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -364,8 +335,10 @@ func _place_camera() -> void:
 		_camera.look_at(world.arena.above(bot.position, 1.2))
 		return
 	var offset := Vector3(sin(_orbit_angle), 0.0, cos(_orbit_angle)) * _orbit_distance * 0.6
-	_camera.position = CENTRE + offset + Vector3(0, _orbit_distance * 0.8, 0)
-	_camera.look_at(CENTRE)
+	# The free camera turns about the arena's middle, whichever arena it is.
+	var centre := Vector3(world.arena.width / 2.0, 0.0, world.arena.depth / 2.0)
+	_camera.position = centre + offset + Vector3(0, _orbit_distance * 0.8, 0)
+	_camera.look_at(centre)
 
 
 func _panel_text() -> String:
@@ -381,9 +354,10 @@ func _panel_text() -> String:
 	var target: String = " at bot %d" % bot.target if bot.target != -1 else ""
 	var you: String = "  -- YOU: %d/%d ammo, %d health" % [bot.ammo, world.rules.magazine, bot.health] if _played == bot.id else ""
 	lines.append("watching bot %d (%s): %s%s%s" % [bot.id, world.teams[bot.team].name, bot.action, target, you])
-	lines.append(aim_line(bot))
-	lines.append(errand_line(bot))
-	lines.append("1/2/3 blue's switches, Shift red's; Tab bot, T take it over, M map, C camera, F fast, P pause, N new")
+	lines.append(BotMatchLines.aim_line(bot))
+	lines.append(BotMatchLines.errand_line(bot))
+	lines.append(BotMatchLines.passage_line(bot))
+	lines.append("1/2/3 blue's switches, Shift red's; Tab bot, T take it over, M map, C camera, F fast, P pause, N new, L arena")
 	if _played != -1:
 		lines.append("playing: WASD walk, Shift sprint, mouse turns, click fires, R reloads, Ctrl crouches, T gives it back")
 	return "\n".join(lines)

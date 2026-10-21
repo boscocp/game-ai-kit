@@ -16,8 +16,12 @@ const WALK_TOLERANCE: float = 1.0
 const HEIGHT_ARENA: String = "res://test/botmatch/height_arena.json"
 
 
-func test_the_arena_is_its_own_mirror_across_the_middle() -> void:
-	var arena := BotArena.new(0.4)
+func test_every_arena_is_its_own_mirror_across_the_middle() -> void:
+	for path: String in BotArena.ARENAS:
+		_assert_mirrored(BotArena.new(0.4, path))
+
+
+func _assert_mirrored(arena: BotArena) -> void:
 	var mirrored: Dictionary = {}
 	for box: AABB in arena.boxes:
 		mirrored["%.2f %.2f %.2f %.2f %.2f" % [box.position.x, box.position.z, box.size.x, box.size.z, box.size.y]] = true
@@ -39,7 +43,11 @@ func test_the_arena_is_its_own_mirror_across_the_middle() -> void:
 
 
 func test_the_cover_spots_are_a_mirror_and_never_crowd_each_other() -> void:
-	var arena := BotArena.new(0.4)
+	for path: String in BotArena.ARENAS:
+		_assert_spots_mirrored(BotArena.new(0.4, path))
+
+
+func _assert_spots_mirrored(arena: BotArena) -> void:
 	var places: Dictionary = {}
 	for spot: BotArena.Spot in arena.spots:
 		places["%.3f %.3f %s" % [spot.position.x, spot.position.y, spot.low]] = true
@@ -109,23 +117,66 @@ func test_every_point_is_as_far_from_each_spawn_and_within_three_to_nine_seconds
 	# Walked by the match itself: a bot sent from each spawn to each point,
 	# timed until it arrives. Per team, each point's mean over the spawns is
 	# within WALK_TOLERANCE of the others', and red's are blue's, mirrored.
-	var blue: PackedFloat64Array = _mean_walks(BotMatch.BLUE)
-	var red: PackedFloat64Array = _mean_walks(BotMatch.RED)
+	for path: String in BotArena.ARENAS:
+		_assert_walks_even(path)
+
+
+func _assert_walks_even(path: String) -> void:
+	var blue: PackedFloat64Array = _mean_walks(BotMatch.BLUE, path)
+	var red: PackedFloat64Array = _mean_walks(BotMatch.RED, path)
 	for point: int in range(blue.size()):
 		var apart: float = absf(blue[point] - blue[0])
-		assert_float(apart).override_failure_message("blue: %s" % blue).is_less_equal(WALK_TOLERANCE)
+		assert_float(apart).override_failure_message("%s, blue: %s" % [path, blue]).is_less_equal(WALK_TOLERANCE)
 		assert_float(red[point]).is_equal_approx(blue[point], 0.05)
 
 
 func test_no_point_sees_into_a_spawn() -> void:
 	# A body standing on a spawn, from eyes standing on a point.
 	var rules := MatchRules.new()
-	var arena := BotArena.new(rules.body_radius)
+	for path: String in BotArena.ARENAS:
+		_assert_no_point_sees_a_spawn(rules, BotArena.new(rules.body_radius, path))
+
+
+func _assert_no_point_sees_a_spawn(rules: MatchRules, arena: BotArena) -> void:
 	var starts: Array = arena.spawns["blue"] + arena.spawns["red"]
 	for point: Vector2 in arena.point_places:
 		for start: Vector2 in starts:
 			var seen: bool = arena.clear_line(arena.above(point, rules.eye_height), arena.above(start, rules.chest_height))
 			assert_bool(seen).override_failure_message("%s sees %s" % [point, start]).is_false()
+
+
+func test_the_same_agents_play_a_whole_match_on_the_other_arena() -> void:
+	# The owner's test of an agent (AIMA's): on another map it must cope,
+	# with nothing in its code knowing which map it is on. Every point is
+	# taken by someone, both sides fire, the power weapon is fetched, and
+	# nobody stands blocked for long.
+	var counter := ErrorCounter.new()
+	OS.add_logger(counter)
+	var rules := MatchRules.new()
+	var world := BotMatch.new(3, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules,
+			BotArena.new(rules.body_radius, BotArena.YARDS))
+	var taken: Dictionary = {}
+	var longest_blocked: float = 0.0
+	while not world.over():
+		world.step()
+		for index: int in range(world.point_owner.size()):
+			taken[index] = taken.get(index, false) or world.point_owner[index] != -1
+		longest_blocked = maxf(longest_blocked, _most_blocked(world))
+	OS.remove_logger(counter)
+	assert_int(counter.errors).is_equal(0)
+	assert_bool(taken.values().all(func(was: bool) -> bool: return was)).override_failure_message("taken: %s" % taken).is_true()
+	assert_int(world.stats[0].shots).is_greater(100)
+	assert_int(world.stats[1].shots).is_greater(100)
+	assert_int(world.stats[0].power_taken + world.stats[1].power_taken).is_greater(0)
+	assert_float(longest_blocked).is_less(rules.passage_patience + 0.01)
+
+
+# The longest any bot of `world` has now waited blocked.
+func _most_blocked(world: BotMatch) -> float:
+	var longest: float = 0.0
+	for bot: MatchBot in world.bots:
+		longest = maxf(longest, bot.blocked_for)
+	return longest
 
 
 func test_a_stair_is_cut_into_steps_and_the_floor_rises_with_it() -> void:
@@ -231,9 +282,10 @@ func test_a_shot_level_across_the_platform_hits_a_body_standing_on_it() -> void:
 
 # Each point's mean walk, in seconds, from every spawn of `side`; each walk
 # is asserted within three to nine seconds on the way.
-func _mean_walks(side: int) -> PackedFloat64Array:
+func _mean_walks(side: int, path: String) -> PackedFloat64Array:
 	var rules := MatchRules.new()
-	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules,
+			BotArena.new(rules.body_radius, path))
 	var bot: MatchBot = world.bots[side * BotMatch.BOTS_A_SIDE]
 	var starts: Array = world.arena.spawns[BotMatch.TEAM_NAMES[side]]
 	var means := PackedFloat64Array()
