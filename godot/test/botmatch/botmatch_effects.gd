@@ -75,7 +75,12 @@ const AIM_BETTER: float = 1.1
 ## Measured with the fair mirror: 0.0 s bunched with claims, 79 s without.
 const CLAIMS_BUNCHED_ON: float = 10.0
 const CLAIMS_BUNCHED_OFF: float = 40.0
-const COMMANDER_SPREAD: float = 1.2
+## The commander's orders must span this many times the points of each bot
+## going to its own nearest. 1.2 was set in T51, when the commander made
+## 1.29 times; on the lanes it makes 2.0 times, and the planted commander on
+## one point made 1.19, 1.24 and 1.29 times in three runs -- passing 1.2 in
+## the last. 1.5 asks more of the commander and rejects the plant.
+const COMMANDER_SPREAD: float = 1.5
 const MIRROR_ERRORS: float = 2.5
 const PAIRINGS: Array[String] = ["everything", "no claims", "no commander", "no retreat"]
 const PLANTED: Array[String] = ["commander on one point", "retreat in one wave", "sharper blue",
