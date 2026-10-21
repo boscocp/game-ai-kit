@@ -13,9 +13,9 @@
 class_name Unit
 extends RefCounted
 
-## Factions are small integers rather than a string or an enum in `ai_core`: a
-## scenario may have three sides, and an enum here would be a list this addon
-## has no business owning.
+## Factions are small integers rather than a string or an enum in the board:
+## a scenario may have three sides, and an enum here would be a list this
+## kernel has no business owning.
 var faction: int
 
 ## Where the unit stands, in board coordinates -- *not* pixels. `position` is

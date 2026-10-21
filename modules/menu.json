@@ -20,7 +20,7 @@
     "tictactoe"
   ],
   "tests_depend_on": [
-    "ai_core",
+    "board",
     "game_shared"
   ],
   "gates": [

@@ -56,6 +56,21 @@ game's -- the tactical board, which the league and the behaviour demo play.
    ("only on `ai_core` (types and interfaces, no logic)") are re-read
    against what `ai_core` now holds.
 
+## What was done (wave 67)
+
+- Steps 1-5 as written; ADR 0021 records the decision. `ai_core` is now
+  `grid_graph.gd` and `pathfinder.gd`. `interfaces_test.gd` was split, and
+  the `DecisionPolicy` cases went to `godot/test/board/`.
+- Measured, a change to `board_state.gd` selected **19 modules before, 10
+  after**: `board`, `tactical`, `skirmish`, `league`, `demo_behaviour`,
+  `stealth`, `menu`, and the tests of `ai_planning`, `ai_rts_core` and
+  `game_shared`.
+- **Found while measuring:** the first cut still selected 17, through
+  `game_shared`, which every example depends on. Of its files only
+  `unit_view.gd` uses the board, and only the tactical board and the
+  skirmish draw with it. It is now owned by `tactical` (by path, the file
+  stays where it is), and `game_shared` depends on `ai_core` alone.
+
 ## Acceptance
 
 ```bash
@@ -66,10 +81,12 @@ make check
 ls godot/addons/ai_core/*.gd | xargs -n1 basename | sort | tr '\n' ' ' | grep -qx 'grid_graph.gd pathfinder.gd '
 ```
 
-A change to the board no longer reaches steering or the RTS:
+A change to the board no longer reaches the techniques it does not touch, the
+RTS game, racing, steering, checkers or tic-tac-toe. (`ai_rts_core`'s *tests*
+stay selected: T19's benchmark measures `BoardState`, on purpose.)
 
 ```bash
-! printf 'godot/game/board/board_state.gd\n' | python3 scripts/affected.py --paths - | grep -qE '^selected:.*\b(ai_rts_core|rts|ai_search|demo_racing)\b'
+! printf 'godot/game/board/board_state.gd\n' | python3 scripts/affected.py --paths - | grep -qE '^selected:.*\b(rts|ai_search|demo_racing|demo_steering|checkers|tictactoe)\b'
 ```
 
 ```bash

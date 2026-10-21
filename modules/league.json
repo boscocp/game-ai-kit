@@ -10,6 +10,7 @@
     "ai_behaviour",
     "ai_core",
     "ai_planning",
+    "board",
     "tactical"
   ],
   "gates": []

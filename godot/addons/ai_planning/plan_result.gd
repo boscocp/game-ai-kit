@@ -42,7 +42,7 @@ var gave_up: bool
 ## Only a search with a guess about distance can say which world looked
 ## nearest, so only `HeuristicPlanner`'s A* returns one. A caller should treat
 ## it as a direction, not a promise -- the world it ends at may be a dead end
-## the budget hid -- and plan again soon: the tactical board's `PlannedBlue`
+## the budget hid -- and plan again soon: the tactical board's planner (T11)
 ## follows its steps and plans again when they are done or on its cadence,
 ## whichever comes first.
 var partial: bool = false

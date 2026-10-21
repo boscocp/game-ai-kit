@@ -1,8 +1,9 @@
 ## A real-time match's whole state, changed in place, one fixed tick at a time.
 ##
-## `ai_core`'s `BoardState` answers every move with a new board. That is what
-## lets a search try a thousand moves, and it cost 50 ms to move 200 units one
-## cell each, measured in T19 -- three whole frames. So this core mutates:
+## A turn-based board can answer every move with a new board. That is what
+## lets a search try a thousand moves, and the kit's tactical board does it;
+## but it cost 50 ms to move 200 units one cell each, measured in T19 --
+## three whole frames. So this core mutates:
 ## a tick moves every unit a little, and nothing is copied. What searches get
 ## instead is a frozen copy, `RtsSnapshot`, which is also the only thing an AI
 ## is ever shown. The game mutates; the planner reads a snapshot.

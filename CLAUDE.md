@@ -31,8 +31,8 @@ than none.
 
 1. **The code is teaching material before it is a library.** When this conflicts
    with any other rule below, this one wins. See "Readable by a person".
-2. **No addon depends on another addon**, only on `ai_core` (types and
-   interfaces, no logic). Someone who wants only A\* copies two folders.
+2. **No addon depends on another addon**, only on `ai_core` (the grid and
+   the pathfinder interface, no logic; ADR 0021). Someone who wants only A\* copies two folders.
 3. **Every acceptance criterion is a command with an exit code.** A game is
    visual, and that is exactly where "looks like it works" becomes debt.
    Anything needing human eyes lives under `## Manual check` and does not

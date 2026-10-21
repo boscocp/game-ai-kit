@@ -1,16 +1,16 @@
 ## One unit or building in a real-time match, changed in place every tick.
 ##
-## `ai_core`'s `Unit` is a fact a new board copies; this one is a thing the
-## world moves. It stands at a `position` in cells, as a fraction -- (3.5,
-## 2.5) is the middle of cell (3, 2) -- because a unit half way between two
-## cells is where an RTS unit spends most of its life. It carries its current
+## A turn-based board's unit is a fact a new board copies; this one is a
+## thing the world moves. It stands at a `position` in cells, as a fraction
+## -- (3.5, 2.5) is the middle of cell (3, 2) -- because a unit half way
+## between two cells is where an RTS unit spends most of its life. It carries its current
 ## order and how far through it is; the world reads both every tick.
 ##
 ## Only `RtsWorld` writes to one. An AI never holds one at all: it is handed
 ## an `RtsSnapshot`, which copies what it may see into plain values.
 ##
-## When not to use it: a turn-based board, where `ai_core.Unit` and a fresh
-## state per move are simpler and every search depends on them.
+## When not to use it: a turn-based board, where an immutable unit and a
+## fresh state per move are simpler and every search depends on them.
 class_name RtsUnit
 extends RefCounted
 

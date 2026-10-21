@@ -1,0 +1,13 @@
+{
+  "module": "board",
+  "kind": "kernel",
+  "about": "The examples' shared kernel: the tactical board's state, units and their types, attacks, upgrades, production, moves and the decision interface typed on them (T61, ADR 0021).",
+  "owns": [
+    "godot/game/board/",
+    "godot/test/board/"
+  ],
+  "depends_on": [
+    "ai_core"
+  ],
+  "gates": []
+}

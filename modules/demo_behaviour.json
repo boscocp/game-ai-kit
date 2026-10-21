@@ -11,6 +11,7 @@
     "ai_core",
     "ai_perception",
     "ai_search",
+    "board",
     "game_shared",
     "stealth"
   ],

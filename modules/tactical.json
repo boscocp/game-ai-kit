@@ -17,12 +17,14 @@
     "spec/pddl/tactics-opening-problem.pddl",
     "spec/pddl/tactics.json",
     "python/tests/test_training.py",
-    "python/gameaikit/tactical/"
+    "python/gameaikit/tactical/",
+    "godot/game/unit_view.gd"
   ],
   "depends_on": [
     "ai_core",
     "ai_learning",
     "ai_planning",
+    "board",
     "game_shared",
     "league"
   ],

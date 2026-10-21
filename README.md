@@ -29,9 +29,11 @@ readable one.
 | the racing driver, in `godot/demos/racing/` | pure pursuit on `ai_steering`'s seek, and a speed limit carried back from every corner -- three difficulties in one car, none of them a rubber band | `make demo-racing`: race it in the same car, its steering point, braking bar and the line it dares drawn as you go; Tab watches the three levels; two gates hold the ladder and that nobody cheats | [why](docs/concepts/racing-ai.md) |
 | `ai_llm` | a local model as an advisor, with everything it says validated before it becomes an action | **not written**, and no task scheduled yet | -- |
 
-`ai_core` sits under all of them: the board, the units, and the two interfaces
-the others implement. Take any one addon and `ai_core` with it, and nothing
-else.
+`ai_core` sits under all of them, and is small on purpose: the grid
+(`GridGraph`) and the pathfinder interface (`Pathfinder`). Take any one addon
+and `ai_core` with it, and nothing else. The examples' own board -- its
+state, units, moves and the `DecisionPolicy` typed on them -- is in
+`godot/game/board/`, the examples' kernel (ADR 0021).
 
 Machine learning is applied to **specific pieces**, never to the whole game.
 That is the point. A logistic regression that decides *attack or retreat* has

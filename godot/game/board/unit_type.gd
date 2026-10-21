@@ -9,7 +9,7 @@
 ##
 ## A tower or a building is a type with `mobile` false, not a class of its
 ## own: a unit that cannot move is still a unit, standing on a cell, owned by
-## a faction, and everything else in `ai_core` already knows how to hold one.
+## a faction, and everything else in the board already knows how to hold one.
 ##
 ## When not to use it: per-unit variation (veterancy, damage taken). A type is
 ## shared by every unit of that kind and never changes during a game.
@@ -41,7 +41,7 @@ var mobile: bool
 
 ## Which cost map it walks on: `GROUND` for the board's own, or a name the
 ## scenario gave another one (see `BoardState.movement_graphs`). This is how
-## one type crosses water the rest cannot, without `ai_core` knowing what
+## one type crosses water the rest cannot, without the board knowing what
 ## water is.
 var mover: String
 
