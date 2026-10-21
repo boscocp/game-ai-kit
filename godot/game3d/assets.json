@@ -19,6 +19,15 @@
       "licence": "Creative Commons Zero, CC0 (the page, and License.txt in the archive)",
       "members": "godot/game3d/packs/kenney-mini-characters.sha256",
       "checked": "2026-10-21"
+    },
+    "kenney-racing-kit": {
+      "title": "Racing Kit 2.0, by Kenney",
+      "page": "https://kenney.nl/assets/racing-kit",
+      "archive": "https://kenney.nl/media/pages/assets/racing-kit/933b8fd9fd-1677580949/kenney_racing-kit.zip",
+      "archive_sha256": "8a71ea16219315a01d00d5a90c4f6b5c090faddbc56d80ecf727e2b3b853c6c0",
+      "licence": "Creative Commons Zero, CC0 (the page, and License.txt in the archive)",
+      "members": "godot/game3d/packs/kenney-racing-kit.sha256",
+      "checked": "2026-10-21"
     }
   },
   "files": [
@@ -77,6 +86,54 @@
       "saved_as": "kenney-mini-characters/Textures/colormap.png",
       "sha256": "0d4947d34ff32acf4a359c7f22ca784e057e7e72f622170a9a77b6fc88fdb70e",
       "fallback": "none"
+    },
+    {
+      "name": "racer_red",
+      "pack": "kenney-racing-kit",
+      "path": "Models/GLTF format/raceCarRed.glb",
+      "saved_as": "kenney-racing-kit/raceCarRed.glb",
+      "sha256": "1098f37bd5bfad5e6d46266b57f146e0f1f8ea96193df03653966d58f0692b3c",
+      "fallback": "car"
+    },
+    {
+      "name": "racer_green",
+      "pack": "kenney-racing-kit",
+      "path": "Models/GLTF format/raceCarGreen.glb",
+      "saved_as": "kenney-racing-kit/raceCarGreen.glb",
+      "sha256": "9d5fe01fb3dd1cc656238a669a79764aeaa45cecbd36cbd7321a38ec04b2cb55",
+      "fallback": "car"
+    },
+    {
+      "name": "racer_orange",
+      "pack": "kenney-racing-kit",
+      "path": "Models/GLTF format/raceCarOrange.glb",
+      "saved_as": "kenney-racing-kit/raceCarOrange.glb",
+      "sha256": "3f7d799e54e0f64c846db3764f04ccfcddfbfe48d7d59f366495d4585a35a980",
+      "fallback": "car"
+    },
+    {
+      "name": "racer_white",
+      "pack": "kenney-racing-kit",
+      "path": "Models/GLTF format/raceCarWhite.glb",
+      "saved_as": "kenney-racing-kit/raceCarWhite.glb",
+      "sha256": "b1e50959852ec6f91070f802edd1be42896b2c87fbacfebab72f6e1017832cd0",
+      "fallback": "car"
+    },
+    {
+      "name": "trackside_tree",
+      "pack": "kenney-racing-kit",
+      "path": "Models/GLTF format/treeLarge.glb",
+      "saved_as": "kenney-racing-kit/treeLarge.glb",
+      "sha256": "3fcba4474bc490a5e589ce4924e972ca629029f2ade17a20f4ca3a7f253a3168",
+      "fallback": "capsule"
+    },
+    {
+      "name": "trackside_grandstand",
+      "pack": "kenney-racing-kit",
+      "path": "Models/GLTF format/grandStand.glb",
+      "saved_as": "kenney-racing-kit/grandStand.glb",
+      "sha256": "6f5db4f9d9fd82080a561e78d6bc3420e5ed4ed7d8d91ed8bae7f5a7a469645b",
+      "fallback": "box"
     }
   ]
 }

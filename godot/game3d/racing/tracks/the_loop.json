@@ -1,0 +1,10 @@
+{
+  "title": "The loop",
+  "about": "T23's 2D track, its last bend eased, its nodes in metres on the map (x, z): a long straight, a fast sweeper, a hairpin and an S. The racing line is found from this shape, not written here.",
+  "half_width": 9.0,
+  "nodes": [
+    [110, 293], [200, 295], [330, 292], [405, 275], [440, 225], [432, 160],
+    [390, 122], [335, 118], [300, 150], [262, 178], [220, 160], [205, 110],
+    [225, 62], [195, 28], [130, 30], [85, 62], [52, 120], [36, 200], [42, 248], [70, 283]
+  ]
+}

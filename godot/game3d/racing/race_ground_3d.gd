@@ -7,10 +7,10 @@
 ## to a car, and nothing about it at all to a driver: grass is slower because
 ## the tyres hold less on it, not because a rule says so.
 ##
-## The grass is a box whose top is `GRASS_DROP` below the tarmac, so a
-## wheel's ray finds the tarmac where there is tarmac and the grass
-## everywhere else. The drop is a centimetre: a wheel leaving the road does
-## not feel a step.
+## The road is one triangle strip along the track, at y = 0, and the grass a
+## box whose top is `GRASS_DROP` below it, so a wheel's ray finds the road
+## where there is road and the grass everywhere else. The drop is a
+## centimetre: a wheel leaving the road does not feel a step.
 ##
 ## When not to use it: a road that climbs. This one is flat, and so is every
 ## speed limit computed on it.
@@ -26,6 +26,7 @@ const GRASS_DROP: float = 0.01
 const GRASS_SIZE: float = 8000.0
 const ROAD_COLOUR: Color = Color(0.22, 0.22, 0.24)
 const GRASS_COLOUR: Color = Color(0.28, 0.5, 0.22)
+const KERB_COLOUR: Color = Color(0.85, 0.85, 0.85)
 
 
 ## The grass under everything, drawn when `drawn`.
@@ -42,6 +43,27 @@ static func pad(size: float, centre: Vector2, drawn: bool) -> StaticBody3D:
 	var body: StaticBody3D = _surface("TestPad", TARMAC_GRIP, TARMAC_ROLLING)
 	var box := Vector3(size, 1.0, size)
 	_add_box(body, box, Vector3(centre.x, -0.5, centre.y), ROAD_COLOUR if drawn else Color.TRANSPARENT)
+	return body
+
+
+## The track's tarmac: one quad from each centre sample to the next, the
+## half width either side. Drawn with white edges when `drawn`.
+static func road(track: RaceTrack3D, drawn: bool) -> StaticBody3D:
+	var body: StaticBody3D = _surface("Road", TARMAC_GRIP, TARMAC_ROLLING)
+	var faces := PackedVector3Array()
+	for index: int in range(track.centre.size()):
+		var next: int = track.wrapped(index + 1)
+		_quad(faces, _edge(track, index, 1.0), _edge(track, index, -1.0),
+			_edge(track, next, 1.0), _edge(track, next, -1.0))
+	var shape := ConcavePolygonShape3D.new()
+	shape.set_faces(faces)
+	shape.backface_collision = true
+	var holder := CollisionShape3D.new()
+	holder.shape = shape
+	body.add_child(holder)
+	if drawn:
+		body.add_child(_mesh_of(faces, ROAD_COLOUR))
+		body.add_child(_kerbs(track))
 	return body
 
 
@@ -70,6 +92,44 @@ static func _add_box(body: StaticBody3D, size: Vector3, at: Vector3, colour: Col
 		drawn.position = at
 		drawn.material_override = _material(colour)
 		body.add_child(drawn)
+
+
+# The point `side` half widths left of the centre at sample `index` (1 the
+# left edge, -1 the right), at `height` above the road.
+static func _edge(track: RaceTrack3D, index: int, side: float, height: float = 0.0) -> Vector3:
+	var at: Vector2 = track.centre[index] + track.left[index] * track.half_width * side
+	return Vector3(at.x, height, at.y)
+
+
+# Two triangles, wound so their faces look up.
+static func _quad(faces: PackedVector3Array, left_here: Vector3, right_here: Vector3,
+		left_next: Vector3, right_next: Vector3) -> void:
+	faces.append_array([left_here, right_here, right_next, left_here, right_next, left_next])
+
+
+# A white strip half a metre wide along each edge, a centimetre up.
+static func _kerbs(track: RaceTrack3D) -> MeshInstance3D:
+	var faces := PackedVector3Array()
+	var inner: float = 1.0 - 0.5 / track.half_width
+	for index: int in range(track.centre.size()):
+		var next: int = track.wrapped(index + 1)
+		_quad(faces, _edge(track, index, 1.0, 0.01), _edge(track, index, inner, 0.01),
+			_edge(track, next, 1.0, 0.01), _edge(track, next, inner, 0.01))
+		_quad(faces, _edge(track, index, -inner, 0.01), _edge(track, index, -1.0, 0.01),
+			_edge(track, next, -inner, 0.01), _edge(track, next, -1.0, 0.01))
+	return _mesh_of(faces, KERB_COLOUR)
+
+
+static func _mesh_of(faces: PackedVector3Array, colour: Color) -> MeshInstance3D:
+	var arrays: Array = []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = faces
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var drawn := MeshInstance3D.new()
+	drawn.mesh = mesh
+	drawn.material_override = _material(colour)
+	return drawn
 
 
 static func _material(colour: Color) -> StandardMaterial3D:

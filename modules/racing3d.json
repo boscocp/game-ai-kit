@@ -6,7 +6,9 @@
     "godot/game3d/racing/",
     "godot/test/racing3d/"
   ],
-  "depends_on": [],
+  "depends_on": [
+    "game3d"
+  ],
   "gates": [
     "test-racing3d-car"
   ]
