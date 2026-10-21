@@ -23,6 +23,9 @@
 class_name AimChoice
 extends RefCounted
 
+## The least spread taken, in metres: a perfectly steady hand.
+const SMALLEST_SPREAD: float = 0.001
+
 
 ## One zone of a target: what a hit there is worth, where it is, and how
 ## much of it the shooter can see.
@@ -53,7 +56,10 @@ class Choice extends RefCounted:
 ## The chance a shot aimed at `aim`, spread `spread` either side, lands in
 ## each zone, in the zones' order.
 static func chances_from(aim: Vector2, spread: float, zones: Array[Zone]) -> PackedFloat64Array:
-	var reach: float = maxf(spread, 1e-6)
+	# Never under a millimetre: `Rect2` is 32-bit, and at a micrometre the
+	# overlap of a square round a point a metre up rounds to more than the
+	# square -- a chance of 1.013, measured by a vector.
+	var reach: float = maxf(spread, SMALLEST_SPREAD)
 	var square := Rect2(aim - Vector2(reach, reach), Vector2(reach, reach) * 2.0)
 	var found := PackedFloat64Array()
 	for zone: Zone in zones:

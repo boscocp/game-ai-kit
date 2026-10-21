@@ -245,22 +245,30 @@ static func _walk(world: BotMatch, bot: MatchBot, delta: float) -> void:
 
 # Of the step a bot wants and the same step turned 45 and 90 degrees either
 # way, the free one that leaves it nearest `towards`, and of equals the one
-# furthest from any body; INF when none is free. Chosen by where each step
-# leaves it, not by an order of turns: a fixed "left first" turned blue
-# south and red north round the same body, and blue won the yards' mirror
-# 9 to 1. On an open floor the straight step is nearest, so nothing changes.
+# furthest from any body, and of exact equals -- a body square on the line
+# of the step -- the one further south, which the mirror across x keeps;
+# INF when none is free. Chosen by where each step leaves it, not by an
+# order of turns: a fixed "left first" turned blue south and red north round
+# the same body, and blue won the yards' mirror 9 to 1. On an open floor
+# the straight step is nearest, so nothing changes.
 static func _best_step(world: BotMatch, bot: MatchBot, step: Vector2, towards: Vector2) -> Vector2:
 	var best: Vector2 = Vector2.INF
-	var best_score := Vector2(INF, INF)
+	var best_score := Vector3(INF, INF, INF)
 	for tried: Vector2 in _around(step):
 		var at: Vector2 = bot.position + tried
 		if not world.arena.walkable(bot.position, at) or not clear_of_bodies(world, bot, at):
 			continue
-		var score := Vector2(snappedf(at.distance_to(towards), 1e-6), -_clearance(world, bot, at))
+		var score: Vector3 = _step_score(world, bot, at, towards, tried)
 		if score < best_score:
 			best_score = score
 			best = tried
 	return best
+
+
+# What a step is ranked by, least first: how far it leaves the bot from
+# `towards`, how near a body, and how far north.
+static func _step_score(world: BotMatch, bot: MatchBot, at: Vector2, towards: Vector2, tried: Vector2) -> Vector3:
+	return Vector3(snappedf(at.distance_to(towards), 1e-6), snappedf(-_clearance(world, bot, at), 1e-6), -snappedf(tried.y, 1e-6))
 
 
 # How far `at` is from the nearest living body but `bot`'s own.

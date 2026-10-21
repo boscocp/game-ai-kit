@@ -71,6 +71,11 @@ var spawns: Dictionary = {}
 ## power weapon lies.
 var resupply: Dictionary = {}
 var power_place: Vector2 = Vector2.INF
+## Whether the arena says it is its own mirror across x = width / 2: then
+## red's paths are searched in the mirror (`BotMatch._path_for`), which is
+## what keeps A*'s tie order from favouring a side. An arena that is not
+## mirrored says so, and both sides search it as it is.
+var mirrored: bool = false
 var spots: Array[Spot] = []
 ## Where a bot can walk: one metre cells, those too near a box blocked.
 var walk: GridGraph
@@ -84,6 +89,7 @@ var walk_graph: ArenaWalk
 func _init(body_radius: float, path: String = ARENA) -> void:
 	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
 	width = float(data["width"])
+	mirrored = bool(data.get("mirrored", false))
 	depth = float(data["depth"])
 	for box: Dictionary in data["boxes"]:
 		boxes.append(_block(box))

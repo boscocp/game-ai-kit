@@ -58,7 +58,7 @@ that must agree bit for bit would need rounded costs.
 | `passage` | a blocked bot's facts, and requests to a teammate with its prices | each way's cost in seconds (null: impossible) and the way taken; each request's cost to the teammate and whether it is granted |
 | `aim` | a spread, a target's zones (multiplier, aim point, rectangles, exposure), rolls | each zone's own chance and worth aimed at, the zone aimed at, the chances from it, where each roll lands |
 
-## The thirty
+## The thirty-two
 
 | file | what it pins |
 |---|---|
@@ -85,11 +85,12 @@ that must agree bit for bit would need rounded costs.
 | `equal-worth-goes-to-the-first` | of two zones tied, the first is aimed at |
 | `nothing-exposed-aims-at-nothing` | every zone hidden: nothing is aimed at, every roll misses |
 | `a-roll-on-a-boundary-misses` | a roll exactly on a chance's end goes past it, with a strict `<` |
-
+| `a-steady-hand-has-no-spread` | a spread of 0 is taken as a millimetre: no division by zero, no chance over 1 |
 | `wait-for-one-walking-off` | a body leaving: waiting beats the way round |
 | `round-one-who-holds` | a body holding: waiting is never done |
 | `ask-a-teammate-when-round-is-long` | asking a teammate beats a long way round; an enemy, or a teammate that refused, is not asked |
 | `another-spot-when-nothing-else` | no way round, an enemy in the way: the next spot |
+| `nobody-leaving-and-no-gap-is-no-wait` | gap and leaving both 0: waiting is impossible, not free |
 | `nothing-possible-waits` | every way impossible: the bot waits |
 | `equal-ways-go-to-the-first` | of two ways tied, the first in the order |
 | `a-teammate-weighs-the-request` | the teammate's cost, a fight's high price, a saving that must be larger, and the two limits |

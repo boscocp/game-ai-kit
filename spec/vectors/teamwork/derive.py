@@ -157,7 +157,7 @@ def body(head=1.0, torso=1.0, arms=1.0, legs=1.0):
             {"name": "legs", "multiplier": 0.5, "aim": [0.0, 0.425], "rects": [[-0.3, 0.0, 0.3, 0.85]], "exposure": legs}]
 
 def shares(aim, spread, zones):
-    r = max(spread, 1e-6)
+    r = max(spread, 0.001)
     lo_x, lo_y, hi_x, hi_y = aim[0] - r, aim[1] - r, aim[0] + r, aim[1] + r
     out = []
     for z in zones:
@@ -254,6 +254,10 @@ def passage_vectors():
     yield passage("another-spot-when-nothing-else",
                   "No way round, an enemy in the way: the next spot, 5 points less at 10 a second, is 0.5 s.",
                   [passage_facts(gap=0.4, loss=5.0)], [])
+    yield passage("nobody-leaving-and-no-gap-is-no-wait",
+                  "A body touching and not moving off: gap 0, leaving 0. Waiting is impossible, not free -- "
+                  "a >= in place of the > would divide 0 by 0 -- and the way round is taken.",
+                  [passage_facts(gap=0.0, leaving=0.0, detour=3.0)], [])
     yield passage("nothing-possible-waits",
                   "No way round, an enemy, no other spot: every way impossible, and the bot waits.",
                   [passage_facts(gap=0.4)], [])
@@ -373,6 +377,11 @@ def aim_vectors():
               0.125, [{"name": "left", "multiplier": 1.0, "aim": [-1.0, 1.0], "rects": [[-1.125, 0.875, -0.875, 1.125]], "exposure": 1.0},
                       {"name": "right", "multiplier": 1.0, "aim": [1.0, 1.0], "rects": [[0.875, 0.875, 1.125, 1.125]], "exposure": 1.0}],
               [0.0, 0.5, 1.0])
+    yield aim("a-steady-hand-has-no-spread",
+              "A spread of 0: the technique takes a millimetre, so a shot aimed at a zone lands in it -- not "
+              "a division by zero, and not a chance over 1, which a micrometre gave in GDScript's 32-bit "
+              "Rect2 -- and the head, worth most, is aimed at.",
+              0.0, body(), [0.0, 0.5])
     yield aim("nothing-exposed-aims-at-nothing",
               "Every zone behind cover: nothing is worth a shot, nothing is aimed at, and every roll misses.",
               0.3, body(0.0, 0.0, 0.0, 0.0), [0.0])

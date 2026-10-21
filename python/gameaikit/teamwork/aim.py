@@ -11,6 +11,9 @@ from __future__ import annotations
 
 import dataclasses
 
+#: The least spread taken, in metres; GDScript's 32-bit Rect2 rounds below it.
+SMALLEST_SPREAD = 0.001
+
 #: A rectangle as (low x, low y, high x, high y): across, up from the feet.
 Rect = tuple[float, float, float, float]
 
@@ -46,7 +49,7 @@ def _overlap(one: Rect, other: Rect) -> float:
 
 def chances_from(aim: tuple[float, float], spread: float, zones: list[Zone]) -> list[float]:
     """The chance a shot aimed at `aim` lands in each zone, in their order."""
-    reach = max(spread, 1e-6)
+    reach = max(spread, SMALLEST_SPREAD)
     square = (aim[0] - reach, aim[1] - reach, aim[0] + reach, aim[1] + reach)
     area = (2.0 * reach) ** 2
     return [sum(_overlap(square, rect) for rect in zone.rects) / area * zone.exposure for zone in zones]

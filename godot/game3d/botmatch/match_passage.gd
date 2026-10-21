@@ -35,15 +35,23 @@ static func decide(world: BotMatch, bot: MatchBot, step: Vector2) -> void:
 			_take_the_next_spot(world, bot)
 
 
-# The body the step runs into: the nearest living one it would touch.
+# The body the step runs into: the nearest living one it would touch, and
+# of two as near, a teammate -- the one it may ask -- rather than the lower
+# id, which is blue's whichever side asks.
 static func _blocker(world: BotMatch, bot: MatchBot, step: Vector2) -> MatchBot:
 	var found: MatchBot = null
 	var touching: float = world.rules.body_radius * 2.0
 	for other: MatchBot in world.bots:
 		var near: bool = other != bot and other.alive() and other.position.distance_to(bot.position + step) < touching
-		if near and (found == null or other.position.distance_to(bot.position) < found.position.distance_to(bot.position)):
+		if near and (found == null or _nearer_blocker(bot, other, found)):
 			found = other
 	return found
+
+
+static func _nearer_blocker(bot: MatchBot, other: MatchBot, found: MatchBot) -> bool:
+	var apart: float = snappedf(other.position.distance_to(bot.position), 1e-6)
+	var found_apart: float = snappedf(found.position.distance_to(bot.position), 1e-6)
+	return apart < found_apart or (apart == found_apart and other.team == bot.team and found.team != bot.team)
 
 
 # The cells a body within reach leaves no room in -- their middle nearer it
@@ -173,16 +181,19 @@ static func prices_of(rules: MatchRules) -> PassageChoice.Prices:
 
 
 # Where `asked` steps aside to: of a step away from the asker and a step to
-# either side of that, the free one furthest from the asker -- chosen by
-# where it leaves them, not by an order of turns, which would favour one
-# side of the mirror; INF when none is free.
+# either side of that, the free one furthest from the asker, and of two as
+# far -- either side, when straight away is blocked -- the one further
+# south, which the mirror across x keeps; INF when none is free. Not by an
+# order of turns: "+90 first" sent blue's teammate north and red's south.
 static func _aside(world: BotMatch, asker: MatchBot, asked: MatchBot) -> Vector2:
 	var away: Vector2 = (asked.position - asker.position).normalized()
 	var best: Vector2 = Vector2.INF
+	var best_score := Vector2(INF, INF)
 	for turn: float in [0.0, PI / 2.0, -PI / 2.0]:
 		var to: Vector2 = asked.position + away.rotated(turn) * world.rules.passage_step_aside
-		var further: bool = best == Vector2.INF or to.distance_to(asker.position) > best.distance_to(asker.position) + 1e-6
-		if _free_for(world, asked, to) and further:
+		var score := Vector2(-snappedf(to.distance_to(asker.position), 1e-6), -snappedf(to.y, 1e-6))
+		if _free_for(world, asked, to) and score < best_score:
+			best_score = score
 			best = to
 	return best
 

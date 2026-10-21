@@ -9,6 +9,12 @@ const RAYS: int = 1600
 ## A ray this close to a box's surface may be answered either way: the slab
 ## test counts touching as a hit, and a physics engine keeps a margin.
 const GRAZE: float = 0.02
+## The longest a bot may stand wanting to move, in a whole match: measured
+## at 3 s over six matches once bodies were solid and passing was weighed.
+const STILL_AT_MOST: float = 5.0
+## How much further on one side of a mirrored meeting may get than the
+## other, in metres: under one stride at the walking speed.
+const MEETING_LEAD: float = 0.2
 ## How far apart, in seconds, the mean walks from a team's spawns to its
 ## points may be: under one second's walk is under five metres.
 const WALK_TOLERANCE: float = 1.0
@@ -156,27 +162,189 @@ func test_the_same_agents_play_a_whole_match_on_the_other_arena() -> void:
 	var world := BotMatch.new(3, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules,
 			BotArena.new(rules.body_radius, BotArena.YARDS))
 	var taken: Dictionary = {}
-	var longest_blocked: float = 0.0
+	var still: PackedFloat64Array = PackedFloat64Array()
+	still.resize(world.bots.size())
+	var longest_still: float = 0.0
 	while not world.over():
+		var before: Array[Vector2] = []
+		for bot: MatchBot in world.bots:
+			before.append(bot.position)
 		world.step()
 		for index: int in range(world.point_owner.size()):
 			taken[index] = taken.get(index, false) or world.point_owner[index] != -1
-		longest_blocked = maxf(longest_blocked, _most_blocked(world))
+		for bot: MatchBot in world.bots:
+			still[bot.id] = still[bot.id] + rules.step if _wants_to_move_and_did_not(bot, before[bot.id]) else 0.0
+			longest_still = maxf(longest_still, still[bot.id])
 	OS.remove_logger(counter)
 	assert_int(counter.errors).is_equal(0)
 	assert_bool(taken.values().all(func(was: bool) -> bool: return was)).override_failure_message("taken: %s" % taken).is_true()
 	assert_int(world.stats[0].shots).is_greater(100)
 	assert_int(world.stats[1].shots).is_greater(100)
 	assert_int(world.stats[0].power_taken + world.stats[1].power_taken).is_greater(0)
-	assert_float(longest_blocked).is_less(rules.passage_patience + 0.01)
+	# How long any bot wanted to move and stood: not `blocked_for`, which the
+	# passage choice resets each time it decides, so could never grow.
+	assert_float(longest_still).override_failure_message("stood %.1f s wanting to move" % longest_still).is_less(STILL_AT_MOST)
 
 
-# The longest any bot of `world` has now waited blocked.
-func _most_blocked(world: BotMatch) -> float:
-	var longest: float = 0.0
+# Alive, walking or falling back, not yet where it goes, and where it was.
+func _wants_to_move_and_did_not(bot: MatchBot, before: Vector2) -> bool:
+	var moving: bool = bot.action == MatchBot.MOVE or bot.action == MatchBot.FALL_BACK
+	return bot.alive() and moving and not bot.arrived() and bot.position.distance_to(before) < 0.01
+
+
+func test_the_acting_order_turns_round_so_neither_side_always_moves_first() -> void:
+	# Bodies are solid: who moves first takes a contested door, and in id
+	# order that was always blue.
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var first: Array[int] = [0, 0]
+	for _step: int in range(20):
+		first[world.acting_order()[0].team] += 1
+		world.time += rules.step
+	assert_array(first).is_equal([10, 10])
+
+
+func test_an_exact_tie_round_a_body_turns_both_sides_the_same_way() -> void:
+	# A body square on the line of the step: turning 45 degrees either way is
+	# as near and as clear. The tie goes south for both, which the mirror
+	# across x keeps -- a fixed "+45 first" turned blue south and red north.
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
 	for bot: MatchBot in world.bots:
-		longest = maxf(longest, bot.blocked_for)
-	return longest
+		bot.respawn_left = INF
+	var turned: Array[float] = []
+	for side: Array in [[0, 6, 1.0], [6, 0, -1.0]]:
+		var mover: MatchBot = world.bots[side[0]]
+		var body: MatchBot = world.bots[side[1]]
+		mover.respawn_left = 0.0
+		body.respawn_left = 0.0
+		mover.position = Vector2(24.0 - 0.45 * side[2], 16.5)
+		body.position = Vector2(24.0 + 0.45 * side[2], 16.5)
+		var step := Vector2(0.225 * side[2], 0.0)
+		turned.append(MatchActions._best_step(world, mover, step, mover.position + step * 20.0).y)
+		mover.respawn_left = INF
+		body.respawn_left = INF
+	assert_float(turned[0]).is_greater(0.0)
+	assert_float(turned[1]).is_equal_approx(turned[0], 1e-6)
+
+
+func test_a_teammate_stepping_aside_takes_the_same_side_for_both_teams() -> void:
+	# Straight away from the asker blocked by a third body: either side is as
+	# far from it, and the tie goes south for both -- "+90 first" sent blue's
+	# teammate north and red's south.
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	for bot: MatchBot in world.bots:
+		bot.respawn_left = INF
+	var asides: Array[float] = []
+	for side: Array in [[0, 1, 2, 1.0], [6, 7, 8, -1.0]]:
+		var placed: Array[MatchBot] = []
+		for index: int in range(3):
+			var bot: MatchBot = world.bots[side[index]]
+			bot.respawn_left = 0.0
+			bot.position = Vector2(24.0 + (index - 1.5) * 0.85 * side[3], 16.5)
+			placed.append(bot)
+		asides.append(MatchPassage._aside(world, placed[0], placed[1]).y)
+		for bot: MatchBot in placed:
+			bot.respawn_left = INF
+	assert_float(asides[0]).is_greater(16.5)
+	assert_float(asides[1]).is_equal_approx(asides[0], 1e-6)
+
+
+func test_a_head_on_meeting_favours_neither_side() -> void:
+	# Blue east and red west along one row, meeting at the mirror line, in
+	# the match's own acting order. Moving one after the other, they cannot
+	# end as each other's mirror -- the first to step aside takes a side,
+	# and the other takes the free one -- but neither may get further on.
+	# This one holds the whole of it; the two above hold each rule.
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	for bot: MatchBot in world.bots:
+		bot.respawn_left = INF
+	var blue: MatchBot = _walker(world, 0, Vector2(21.5, 16.5), Vector2(27.5, 16.5))
+	var red: MatchBot = _walker(world, 6, Vector2(26.5, 16.5), Vector2(20.5, 16.5))
+	var widest: float = 0.0
+	for _step: int in range(40):
+		for bot: MatchBot in world.acting_order().filter(func(each: MatchBot) -> bool: return each.alive()):
+			MatchActions.act(world, bot, rules.step)
+		world.time += rules.step
+		widest = maxf(widest, absf((blue.position.x - 21.5) - (26.5 - red.position.x)))
+	assert_bool(blue.arrived() and red.arrived()).is_true()
+	assert_float(widest).override_failure_message("one got %.2f m further on" % widest).is_less(MEETING_LEAD)
+
+
+func _walker(world: BotMatch, bot_id: int, start: Vector2, goal: Vector2) -> MatchBot:
+	var bot: MatchBot = world.bots[bot_id]
+	bot.respawn_left = 0.0
+	bot.position = start
+	world.send(bot, goal, -1)
+	bot.action = MatchBot.MOVE
+	return bot
+
+
+func test_red_walks_the_mirror_of_blues_path_to_a_point_on_the_line() -> void:
+	# Every point sits on the mirror line, a cell edge: red's path must be
+	# blue's mirrored, not one cell short.
+	var rules := MatchRules.new()
+	for path: String in BotArena.ARENAS:
+		_assert_every_path_mirrors(_match_on(rules, path))
+
+
+func _match_on(rules: MatchRules, path: String) -> BotMatch:
+	var arena := BotArena.new(rules.body_radius, path)
+	return BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules, arena)
+
+
+func _assert_every_path_mirrors(world: BotMatch) -> void:
+	for point: Vector2 in world.arena.point_places:
+		_assert_paths_mirror(world, point)
+
+
+func _assert_paths_mirror(world: BotMatch, point: Vector2) -> void:
+	var blue: MatchBot = world.bots[0]
+	var red: MatchBot = world.bots[6]
+	world.send(blue, point, -1)
+	world.send(red, point, -1)
+	var mirrored: Array[Vector2i] = []
+	for cell: Vector2i in red.path:
+		mirrored.append(Vector2i(int(world.arena.width) - 1 - cell.x, cell.y))
+	assert_array(mirrored).override_failure_message("to %s" % point).is_equal(blue.path)
+
+
+func test_a_part_used_power_weapon_is_worth_no_walk_home() -> void:
+	# The base gives its holder nothing until it is empty: weighed as spent,
+	# a holder with seven rounds walked home and stood there for the match.
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var bot: MatchBot = world.bots[0]
+	world.supply.power_back_at = INF
+	world.teams[0].bot_modes[bot.id] = MatchTeam.HOLD
+	MatchSupply.arm_power(bot, rules)
+	bot.ammo = 7
+	bot.position = world.arena.resupply["blue"]
+	world.supply.think(world, world.teams[0])
+	assert_str(bot.errand).is_equal(MatchSupply.NO_ERRAND)
+	# Empty, the base gives it a rifle: then it is worth the walk.
+	bot.ammo = 0
+	bot.position = Vector2(10.5, 16.5)
+	world.supply.think(world, world.teams[0])
+	assert_str(bot.errand).is_equal(MatchSupply.RESUPPLY)
+
+
+func test_a_respawn_leaves_nothing_of_the_last_life_behind() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var bot: MatchBot = world.bots[0]
+	bot.velocity = Vector2(40.0, 0.0)
+	bot.blocked_for = 0.2
+	bot.refused_by[1] = 3.0
+	bot.last_passage = {"chosen": PassageChoice.WAIT}
+	bot.reload_left = 1.0
+	world.respawn(bot)
+	assert_vector(bot.velocity).is_equal(Vector2.ZERO)
+	assert_float(bot.blocked_for).is_equal(0.0)
+	assert_bool(bot.refused_by.is_empty() and bot.last_passage.is_empty()).is_true()
+	assert_float(bot.reload_left).is_equal(0.0)
 
 
 func test_a_stair_is_cut_into_steps_and_the_floor_rises_with_it() -> void:

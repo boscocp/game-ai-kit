@@ -10,11 +10,13 @@
 ## since its last death earn a bot the power weapon at its own base.
 ##
 ## Two errands, each weighed as a score -- a gain less its costs, the
-## plainest utility -- and each bot takes the larger if it is above zero. Going back to the base is worth the
-## share of its rounds spent -- and the power weapon, when its streak earned
-## one -- less each second of the walk, less what leaving its post costs.
-## Fetching the power weapon is worth a fixed gain, less each second of the
-## walk, less each enemy its team remembers near it; a team sends at most
+## plainest utility -- and each bot takes the larger if it is above zero.
+## Going back to the base is worth the share of its rounds spent -- and the
+## power weapon, when its streak earned one -- less each second of the
+## walk, less what leaving its post costs; a part-used power weapon is
+## worth no walk, since the base gives its holder nothing until it is empty.
+## Fetching the power weapon is worth a fixed gain, less each second of
+## the walk, less each enemy its team remembers near it; a team sends at most
 ## one bot, the one it is worth most to. The walks are read off a flood of
 ## walk steps made once a match, not searched each decision.
 class_name MatchSupply
@@ -52,6 +54,7 @@ func _init(arena: BotArena) -> void:
 ## A rifle, full: the magazine and every reload.
 static func arm_rifle(bot: MatchBot, rules: MatchRules) -> void:
 	bot.weapon = RIFLE
+	bot.reload_left = 0.0
 	bot.ammo = rules.magazine
 	bot.reserve = rules.reserve
 
@@ -93,7 +96,9 @@ func _nearest_to_power(world: BotMatch, bot: MatchBot) -> bool:
 	var mine: float = bot.position.distance_to(world.arena.power_place)
 	for other: MatchBot in world.bots:
 		var could: bool = other != bot and other.alive() and other.weapon == RIFLE
-		if could and other.position.distance_to(world.arena.power_place) < mine:
+		# Exactly as near: neither takes it this step, rather than the first
+		# in id order.
+		if could and other.position.distance_to(world.arena.power_place) <= mine:
 			return false
 	return true
 
@@ -152,6 +157,11 @@ func weigh_resupply(world: BotMatch, team: MatchTeam, bot: MatchBot) -> Array:
 	var rules: MatchRules = world.rules
 	var full: int = rules.power_rounds if bot.weapon == POWER else rules.magazine + rules.reserve
 	var gain: float = 1.0 - float(bot.ammo + bot.reserve) / full
+	# The base gives a power weapon's holder nothing until it is empty, so a
+	# part-used one is worth no walk: weighed as spent, a holder with seven
+	# rounds walked home and stood in its spawn for the rest of the match.
+	if bot.weapon == POWER and bot.ammo > 0:
+		gain = 0.0
 	if bot.weapon == RIFLE and bot.streak >= rules.streak_for_power:
 		gain += rules.power_worth
 	var walk: float = _walk_seconds(world, _base_steps[bot.team], bot)

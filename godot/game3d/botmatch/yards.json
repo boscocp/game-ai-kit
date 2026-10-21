@@ -1,5 +1,6 @@
 {
   "about": "A second arena for the bot match (T66), made unlike the first so the same agents are seen to cope on another map: 64 by 40 metres, x east and z south. B stands on a tower 3 m up in the middle, climbed by a stair from the west, the east, the north and the south; A and C lie in yards to the north and south, walled on the side towards the middle; houses stand along the streets between. Each spawn room's front is a wall, its doors open north and south, and a house stands before it, so nothing in the middle sees in. Every box, platform and stair has its mirror across x = 32, and the map is its own mirror across z = 20. The power weapon lies south of the tower, on the mirror line.",
+  "mirrored": true,
   "width": 64,
   "depth": 40,
   "points": [

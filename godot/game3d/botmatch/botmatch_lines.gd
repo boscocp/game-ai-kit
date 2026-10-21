@@ -29,13 +29,15 @@ static func aim_line(bot: MatchBot) -> String:
 
 
 ## One line for the panel: its weapon and rounds, and each errand's score
-## as gain - walk - cost, the one it took marked.
+## as gain - walk x its weight - cost, the one it took marked, so the sum
+## on the screen is the sum the bot made.
 static func errand_line(bot: MatchBot) -> String:
 	var parts: Array[String] = []
 	for errand: String in bot.errand_weighing:
 		var weighed: Array = bot.errand_weighing[errand]
 		var mark: String = "> " if errand == bot.errand else ""
-		parts.append("%s%s %.2f - %.1f s - %.2f = %.2f" % [mark, errand, weighed[0], weighed[1], weighed[2], weighed[3]])
+		var weight: float = (weighed[0] - weighed[2] - weighed[3]) / weighed[1] if weighed[1] > 0.0 else 0.0
+		parts.append("%s%s %.2f - %.1f s x %.2f - %.2f = %.2f" % [mark, errand, weighed[0], weighed[1], weight, weighed[2], weighed[3]])
 	var rounds: String = "%s %d/%d, streak %d" % [bot.weapon, bot.ammo, bot.reserve, bot.streak]
 	return "%s; errands: %s" % [rounds, " | ".join(parts) if not parts.is_empty() else "none weighed yet"]
 

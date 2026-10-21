@@ -102,6 +102,7 @@ func step() -> void:
 	var before: Array[Vector2] = []
 	for bot: MatchBot in bots:
 		before.append(bot.position)
+	for bot: MatchBot in acting_order():
 		MatchActions.act(self, bot, rules.step)
 	_keep_bodies_apart()
 	for bot: MatchBot in bots:
@@ -145,6 +146,16 @@ func _count_retreats(team: MatchTeam) -> void:
 		stats[team.side].retreats_uncovered += 0 if covering else 1
 
 
+## The order the bots act in this step. Bodies are solid, so who moves first
+## takes a contested door: in id order that was always blue. The order
+## turns round every step, so each side goes first as often as the other.
+func acting_order() -> Array[MatchBot]:
+	var order: Array[MatchBot] = bots.duplicate()
+	if roundi(time / rules.step) % 2 == 1:
+		order.reverse()
+	return order
+
+
 ## Step until the match is over.
 func play_out() -> void:
 	while not over():
@@ -158,22 +169,25 @@ func send(bot: MatchBot, goal: Vector2, place: int) -> void:
 	if goal.distance_to(bot.goal) < 0.01 and not bot.path.is_empty():
 		return
 	bot.goal = goal
-	bot.path = _path_for(bot.team, BotArena.cell_of(bot.position), BotArena.cell_of(goal))
+	bot.path = _path_for(bot.team, bot.position, goal)
 
 
 # A* breaks ties by a fixed order of neighbours -- north, east, south, west
 # -- so a path east is not the mirror of a path west, and on a mirrored
 # arena one side walked different, longer-looking routes: measured, blue
-# won a mirror match 10-0 while the order held. The arena is its own mirror
-# across x = 24, so red's path is searched in the mirror and mirrored back,
-# and both sides walk each other's mirror image exactly.
-func _path_for(side: int, from: Vector2i, to: Vector2i, closed: Array[Vector2i] = []) -> Array[Vector2i]:
-	if side == BLUE:
-		return _search.search(_graph_with(closed), from, to).path
+# won a mirror match 18-2 while the order held. On an arena that says it is
+# its own mirror (`BotArena.mirrored`), red's path is searched in the mirror
+# and mirrored back, so both sides walk each other's mirror image exactly.
+# The places are mirrored before they are made cells: a goal on the mirror
+# line sits on a cell edge, and mirroring its cell sent red one cell short.
+func _path_for(side: int, from: Vector2, to: Vector2, closed: Array[Vector2i] = []) -> Array[Vector2i]:
+	if side == BLUE or not arena.mirrored:
+		return _search.search(_graph_with(closed), BotArena.cell_of(from), BotArena.cell_of(to)).path
 	var mirrored_closed: Array[Vector2i] = []
 	for cell: Vector2i in closed:
 		mirrored_closed.append(_mirrored(cell))
-	var path: Array[Vector2i] = _search.search(_graph_with(mirrored_closed), _mirrored(from), _mirrored(to)).path
+	var path: Array[Vector2i] = _search.search(_graph_with(mirrored_closed), BotArena.cell_of(_mirrored_place(from)),
+			BotArena.cell_of(_mirrored_place(to))).path
 	var back: Array[Vector2i] = []
 	for cell: Vector2i in path:
 		back.append(_mirrored(cell))
@@ -188,7 +202,11 @@ func _graph_with(closed: Array[Vector2i]) -> SearchGraph:
 ## A route for `bot` to `to` round the cells `closed` by bodies -- in the
 ## mirror for red, as every path is -- or an empty one when there is none.
 func detour(bot: MatchBot, to: Vector2i, closed: Array[Vector2i]) -> Array[Vector2i]:
-	return _path_for(bot.team, BotArena.cell_of(bot.position), to, closed)
+	return _path_for(bot.team, bot.position, BotArena.centre_of(to), closed)
+
+
+func _mirrored_place(place: Vector2) -> Vector2:
+	return Vector2(arena.width - place.x, place.y)
 
 
 func _mirrored(cell: Vector2i) -> Vector2i:
@@ -275,7 +293,8 @@ func replace_bot(bot_id: int, replacement: MatchBot) -> void:
 func respawn(bot: MatchBot) -> void:
 	var spawns: Array = arena.spawns[TEAM_NAMES[bot.team]]
 	bot.position = spawns[bot.place_in_team % spawns.size()]
-	bot.facing = 0.0 if bot.team == BLUE else PI
+	# Facing the points, wherever the arena puts the spawn.
+	bot.facing = (_centre_of_points() - bot.position).angle()
 	bot.health = rules.health
 	MatchSupply.arm_rifle(bot, rules)
 	bot.streak = 0
@@ -289,6 +308,19 @@ func respawn(bot: MatchBot) -> void:
 	bot.chose_at = -INF
 	bot.seen_since.clear()
 	bot.last_hit_by = -1
+	# What its last life left: the jump back to the spawn is no speed, and a
+	# blocker, a refusal or a passage weighed then is not this life's.
+	bot.velocity = Vector2.ZERO
+	bot.blocked_for = 0.0
+	bot.refused_by.clear()
+	bot.last_passage = {}
+
+
+func _centre_of_points() -> Vector2:
+	var total := Vector2.ZERO
+	for place: Vector2 in arena.point_places:
+		total += place
+	return total / maxi(arena.point_places.size(), 1)
 
 
 func _add_bot(side: int, place_in_team: int) -> int:

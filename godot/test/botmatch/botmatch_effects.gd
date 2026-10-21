@@ -31,6 +31,8 @@
 #      errors of the two margins;
 #   7. the mirror on the other arena (T66): the same agents, on the yards,
 #      are as fair as on the lanes -- the map is in the data, not the code.
+#      It is claim 0's check, `_fair`, asked of another arena, so claim 0's
+#      planted sharper blue is its planted case too.
 #
 # Each is also asked of a planted case and must reject it: a blue team with
 # a faster reaction and a steadier aim, for the mirror; the claims check
@@ -38,8 +40,8 @@
 # point; a retreat that moves the whole squad at once; a bot that shoots the
 # nearest enemy through walls, and one that keeps firing at whom it saw for
 # a second after without looking again; a blue that always aims at the
-# head; and the weighing blue against itself, for the margin of one that
-# always goes back.
+# head put in aiming by worth's place; the weighing blue put in always going
+# back's; and the matches without claims in the claims' place.
 #
 # What the fighting makes of the decisions -- points held by each side,
 # wins, the mean margin and its standard error over the seeds -- is printed
@@ -67,7 +69,7 @@ const SHARPER_MATCHES: int = 10
 ## swing more (+-250 s), and ten measured blue 7-3 at 1.5 errors after two
 ## mirror faults were fixed, and 9-1 before: a fault would show, noise less.
 const YARDS_MATCHES: int = 20
-## Measured on the lanes: 4.93 damage a shot by worth, 3.80 always the head.
+## Measured on the lanes: 4.70 damage a shot by worth, 3.73 always the head.
 const AIM_BETTER: float = 1.1
 
 ## Measured with the fair mirror: 0.0 s bunched with claims, 79 s without.
@@ -288,7 +290,8 @@ func _claims(totals: Dictionary) -> Array[String]:
 	var numbers: Array = [totals["everything"]["bunched"], totals["no claims"]["bunched"], CLAIMS_BUNCHED_ON, CLAIMS_BUNCHED_OFF]
 	if not _claims_hold(totals["everything"], totals["no claims"]):
 		failures.append("claims: bunched %.1f s with them, %.1f s without; needs <= %.0f and >= %.0f" % numbers)
-	if _claims_hold(totals["no claims"], totals["no claims"]):
+	# Planted: the matches without claims put where the claims should be.
+	if _claims_hold(totals["no claims"], totals["everything"]):
 		failures.append("claims: planted, the matches without claims met the margin")
 	return failures
 
@@ -339,7 +342,9 @@ func _aim(totals: Dictionary) -> Array[String]:
 	var numbers: Array = [_per_shot(totals["everything"]), _per_shot(totals["always the head"]), AIM_BETTER]
 	if not _aim_holds(totals["everything"], totals["always the head"]):
 		failures.append("aim: %.2f damage a shot by worth, %.2f always the head; needs %.2f times" % numbers)
-	if _aim_holds(totals["always the head"], totals["always the head"]):
+	# Planted: always the head put where aiming by worth should be. Asked of
+	# itself, x >= 1.1 x, it could never pass, so it planted nothing.
+	if _aim_holds(totals["always the head"], totals["everything"]):
 		failures.append("aim: planted, always aiming at the head passed as aiming by worth")
 	return failures
 
@@ -355,8 +360,9 @@ func _ammunition(totals: Dictionary) -> Array[String]:
 	var failures: Array[String] = []
 	if not _holds_less(totals["always resupply"], totals["everything"]):
 		failures.append("ammunition: always going back held no less than weighing it")
-	if _holds_less(totals["everything"], totals["everything"]):
-		failures.append("ammunition: planted, the weighing blue held less than itself")
+	# Planted: the weighing blue put where always going back should be.
+	if _holds_less(totals["everything"], totals["always resupply"]):
+		failures.append("ammunition: planted, weighing passed as holding less than always going back")
 	return failures
 
 
