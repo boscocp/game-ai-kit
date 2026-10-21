@@ -96,6 +96,8 @@ var torso_multiplier: float = 1.0
 var limb_multiplier: float = 0.5
 var body_radius: float = 0.4
 var max_range: float = 40.0
+## A shot is heard by the enemy within this, loudest beside it (`Hearing`).
+var shot_heard_metres: float = 30.0
 var capture_radius: float = 3.0
 var capture_time: float = 4.0
 var score_limit: int = 300

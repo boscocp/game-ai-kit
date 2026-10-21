@@ -20,9 +20,10 @@
 ## enemy in sight and far to go, and never while it shoots (`choose_pace`).
 ##
 ## A bot has no sense the player would not have: it shoots only at what its
-## own row of the sight table says it sees, after a reaction, and it turns at
-## a limited rate (the honest knobs). `MatchBot` never reads another bot's
-## mind; what it knows of enemies it was told by `BotMatch`'s sight table.
+## own eyes say it sees, after a reaction, and it turns at a limited rate
+## (the honest knobs). Its decision reads one record, `MatchPercepts` --
+## what its cone and its ears gave it, its body and its orders -- and
+## nothing else: never another bot's mind, never the match.
 class_name MatchBot
 extends RefCounted
 
@@ -123,32 +124,32 @@ func arrived() -> bool:
 	return position.distance_to(goal) <= ARRIVED
 
 
-## The priority list. `visible` is this bot's row of the sight table, enemy
-## ids it sees now; `positions` every bot's place by id; `moving_in_retreat`
-## whether its squad's retreat has it in the moving wave. Sets `action` and
-## `target`; moving and shooting are `BotMatch`'s, by the rules.
-func decide(now: float, visible: Array[int], positions: Dictionary, reaction: float,
-		moving_in_retreat: bool) -> void:
+## The priority list, over what it perceives (`percepts`, the one record it
+## reads) and its team's `reaction`. Sets `action` and `target`; moving and
+## shooting are `BotMatch`'s, by the rules.
+func decide(percepts: MatchPercepts, reaction: float) -> void:
 	target = -1
+	see(percepts.now, percepts.in_sight)
 	if controlled:
 		# PLAYED while it reloads too: the person walks on as the magazine
 		# goes in, and `_played` carries the reload.
 		action = DEAD if not alive() else PLAYED
 		crouched = wants_to_crouch and alive()
 		return
-	if not alive():
+	var there: bool = percepts.to_go() <= ARRIVED
+	if not percepts.alive:
 		action = DEAD
-	elif reload_left > 0.0 or (ammo <= 0 and reserve > 0):
+	elif percepts.reloading or (percepts.rounds <= 0 and percepts.reserve > 0):
 		action = RELOAD
-	elif moving_in_retreat:
+	elif percepts.moving_in_retreat:
 		action = FALL_BACK
-	elif ammo < reload_below and reserve > 0 and visible.is_empty() and arrived():
+	elif percepts.rounds < reload_below and percepts.reserve > 0 and percepts.in_sight.is_empty() and there:
 		action = RELOAD
 	else:
 		# An empty weapon shoots at nobody: it goes where its errand sends it.
-		target = _reacted_target(now, visible, positions, reaction) if ammo > 0 else -1
-		action = SHOOT if target != -1 else (HOLD if arrived() else MOVE)
-	crouched = action == RELOAD or (action == HOLD and spot != -1)
+		target = _reacted_target(percepts, reaction) if percepts.rounds > 0 else -1
+		action = SHOOT if target != -1 else (HOLD if there else MOVE)
+	crouched = action == RELOAD or (action == HOLD and percepts.holds_a_spot)
 
 
 ## Whether to sprint, after `decide`: a person sprints while they hold the
@@ -185,12 +186,12 @@ func turn_to(towards: Vector2, turn_rate: float, delta: float) -> bool:
 
 
 # The nearest enemy in sight that has been in sight for the reaction time.
-func _reacted_target(now: float, visible: Array[int], positions: Dictionary, reaction: float) -> int:
+func _reacted_target(percepts: MatchPercepts, reaction: float) -> int:
 	var best: int = -1
 	var best_distance: float = INF
-	for enemy: int in visible:
-		var ready: bool = now - float(seen_since.get(enemy, now)) >= reaction
-		var distance: float = position.distance_to(positions[enemy])
+	for enemy: int in percepts.in_sight:
+		var ready: bool = percepts.now - float(seen_since.get(enemy, percepts.now)) >= reaction
+		var distance: float = percepts.position.distance_to(percepts.enemy_places[enemy])
 		if ready and distance < best_distance:
 			best_distance = distance
 			best = enemy

@@ -93,9 +93,8 @@ class WallhackBot extends MatchBot:
 	var world_ref: WeakRef
 
 	## The honest list, then the cheat: aim at the nearest enemy, seen or not.
-	func decide(now: float, visible: Array[int], positions: Dictionary, reaction: float,
-			moving_in_retreat: bool) -> void:
-		super(now, visible, positions, reaction, moving_in_retreat)
+	func decide(percepts: MatchPercepts, reaction: float) -> void:
+		super(percepts, reaction)
 		if not alive() or action == RELOAD:
 			return
 		var world: BotMatch = world_ref.get_ref()
@@ -119,9 +118,9 @@ class StaleSightBot extends MatchBot:
 	var _last_seen: float = -INF
 
 	## The honest list; then, with nobody in sight, the last enemy it saw.
-	func decide(now: float, visible: Array[int], positions: Dictionary, reaction: float,
-			moving_in_retreat: bool) -> void:
-		super(now, visible, positions, reaction, moving_in_retreat)
+	func decide(percepts: MatchPercepts, reaction: float) -> void:
+		super(percepts, reaction)
+		var now: float = percepts.now
 		if target != -1:
 			_last_target = target
 			_last_seen = now

@@ -4,9 +4,9 @@
 ## The 3D scene draws one of these; `botmatch_effects.gd` runs hundreds.
 ##
 ## Every step, in order: every `decision_interval`, the sight table is built
-## (who sees whom, by `BotArena.clear_line`), each team remembers what its
-## bots saw and thinks (`TeamTactics`), and every bot runs its priority list
-## (`MatchBot.decide`). Then every bot acts on what it chose, points are
+## (who sees whom, by each bot's cone, `MatchSenses`), each team remembers
+## what its bots saw and thinks (`TeamTactics`), and every bot decides from
+## what it perceives (`MatchBot.decide` over `MatchPercepts`). Then every bot acts on what it chose, points are
 ## captured, and the score grows by each point held. One random generator,
 ## seeded, and bots always taken in id order: the same seed is the same match.
 ##
@@ -27,9 +27,6 @@ const BOTS_A_SIDE: int = 6
 ## three, both sides' commanders sent everyone to the two nearest points and
 ## left the third to whoever wandered there alone.
 const PER_SQUAD: int = 2
-## A bot sees ahead within this half-angle, and all round within NEAR.
-const VIEW_HALF_ANGLE: float = deg_to_rad(60.0)
-const NEAR: float = 3.0
 ## Two bots holding cover spots this close count as bunched.
 const BUNCHED: float = 1.0
 ## The places around a point a bot attacking it may stand on.
@@ -59,12 +56,17 @@ var stats: Array[MatchStats] = [MatchStats.new(), MatchStats.new()]
 var recent_shots: Array[Array] = []
 ## Every shot fired since the match began, for the view to hear the new ones.
 var shots_fired: int = 0
+## The shots fired since the last decision, as the bots hear them: [the
+## shooter's side, where it stood].
+var noises: Array[Array] = []
 ## Cover spots, then the places on each point.
 var _places: Array[Vector2] = []
 var _place_ids: Array[String] = []
 var _cover_count: int = 0
 var _next_decision: float = 0.0
 var _search := AStarSearch.new()
+## Every bot's eyes: the same cone (`MatchSenses.cone_of`).
+var _cone: VisionCone
 ## The ammunition, the weapons and the errands they make.
 var supply: MatchSupply
 
@@ -78,6 +80,7 @@ func _init(seed_value: int, blue: MatchTeam, red: MatchTeam, match_rules: MatchR
 	arena = match_arena if match_arena != null else BotArena.new(rules.body_radius)
 	teams = [blue, red]
 	supply = MatchSupply.new(arena)
+	_cone = MatchSenses.cone_of(rules)
 	_build_places()
 	for point: Vector2 in arena.point_places:
 		point_owner.append(-1)
@@ -118,18 +121,18 @@ func step() -> void:
 	time += rules.step
 
 
-# Look, let each team think, and let each bot run its list.
+# Look, let each team think, and let each bot decide from what it perceives.
 func _decide() -> void:
 	_look()
 	for team: MatchTeam in teams:
 		TeamTactics.think(self, team, time)
-	var places: Dictionary = _positions()
 	for bot: MatchBot in bots:
 		var team: MatchTeam = teams[bot.team]
 		var retreating: bool = TeamTactics.moving_in_retreat(self, team, bot)
-		var row: Array[int] = sight.get(bot.id, [] as Array[int])
-		bot.decide(time, row, places, team.reaction, retreating)
-		bot.choose_pace(row, rules.sprint_from)
+		var percepts: MatchPercepts = MatchSenses.perceive(self, bot, retreating)
+		bot.decide(percepts, team.reaction)
+		bot.choose_pace(percepts.in_sight, rules.sprint_from)
+	noises.clear()
 	for team: MatchTeam in teams:
 		_count_retreats(team)
 
@@ -238,25 +241,18 @@ func places_near(centre: Vector2, radius: float) -> Array[int]:
 	return near
 
 
-## Whether `looker` sees `target` now: in range, ahead of it or near, and a
-## clear line from its eyes to the target's body, crouched or standing --
-## each above the floor it stands on.
+## Whether `looker` sees `target` now, through its cone (`MatchSenses`): in
+## range, ahead of it or near, and a clear line from its eyes to the
+## target's body, crouched or standing -- each above the floor it stands on.
 func sees(looker: MatchBot, target: MatchBot) -> bool:
-	var offset: Vector2 = target.position - looker.position
-	var distance: float = offset.length()
-	if distance > rules.max_range:
-		return false
-	if distance > NEAR and absf(wrapf(offset.angle() - looker.facing, -PI, PI)) > VIEW_HALF_ANGLE:
-		return false
-	var height: float = rules.crouched_height if target.crouched else rules.chest_height
-	var eyes: Vector3 = arena.above(looker.position, rules.eye_height)
-	return arena.clear_line(eyes, arena.above(target.position, height))
+	return MatchSenses.sees(self, _cone, looker, target)
 
 
 ## Note a shot for the view: who, at whom, whether it hit, and where it went.
 func record_shot(shooter: MatchBot, target: int, hit: bool, to: Vector3, zone: String = MatchRules.NONE) -> void:
 	recent_shots.append([time, shooter.id, target, hit, MatchActions.muzzle_of(self, shooter, to), to, zone])
 	shots_fired += 1
+	noises.append([shooter.team, shooter.position])
 	if recent_shots.size() > SHOTS_KEPT:
 		recent_shots.pop_front()
 	if hit:
@@ -359,7 +355,6 @@ func _look() -> void:
 		for target: int in row:
 			teams[looker.team].remember(target, bots[target].position, time)
 		sight[looker.id] = row
-		looker.see(time, row)
 
 
 # The enemies `looker` sees now; nobody, when it is dead.
@@ -371,13 +366,6 @@ func _row_of(looker: MatchBot) -> Array[int]:
 		if target.team != looker.team and target.alive() and sees(looker, target):
 			row.append(target.id)
 	return row
-
-
-func _positions() -> Dictionary:
-	var places: Dictionary = {}
-	for bot: MatchBot in bots:
-		places[bot.id] = bot.position
-	return places
 
 
 # Each point: the side alone on it moves its progress, a full bar owns it,

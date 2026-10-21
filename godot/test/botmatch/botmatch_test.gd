@@ -659,19 +659,19 @@ func test_a_bot_reloads_early_only_with_nobody_in_sight_and_where_it_was_going()
 	bot.position = Vector2(15.0, 3.0)
 	bot.goal = bot.position
 	bot.ammo = rules.reload_below - 1
-	bot.decide(1.0, [] as Array[int], places, 0.0, false)
+	bot.decide(_percepts(bot, 1.0, [] as Array[int], places), 0.0)
 	assert_str(bot.action).is_equal(MatchBot.RELOAD)
 	# An enemy in sight, even one not reacted to yet: it does not.
-	bot.decide(1.0, [6] as Array[int], places, 5.0, false)
+	bot.decide(_percepts(bot, 1.0, [6] as Array[int], places), 5.0)
 	assert_str(bot.action).is_not_equal(MatchBot.RELOAD)
 	# On its way somewhere: not yet.
 	bot.goal = Vector2(25.0, 3.0)
-	bot.decide(1.0, [] as Array[int], places, 0.0, false)
+	bot.decide(_percepts(bot, 1.0, [] as Array[int], places), 0.0)
 	assert_str(bot.action).is_equal(MatchBot.MOVE)
 	# Enough rounds left: it holds.
 	bot.goal = bot.position
 	bot.ammo = rules.reload_below
-	bot.decide(1.0, [] as Array[int], places, 0.0, false)
+	bot.decide(_percepts(bot, 1.0, [] as Array[int], places), 0.0)
 	assert_str(bot.action).is_equal(MatchBot.HOLD)
 
 
@@ -791,7 +791,7 @@ func test_a_rifle_has_120_rounds_and_a_reload_takes_only_what_is_left() -> void:
 	assert_int(bot.reserve).is_equal(0)
 	# Nothing left: no reload, and its list does not ask for one.
 	bot.ammo = 0
-	bot.decide(1.0, [] as Array[int], {}, 0.0, false)
+	bot.decide(_percepts(bot, 1.0), 0.0)
 	assert_str(bot.action).is_not_equal(MatchBot.RELOAD)
 
 
@@ -981,7 +981,7 @@ func test_a_teammate_asked_to_make_way_weighs_it_and_steps_aside() -> void:
 	walker.action = MatchBot.MOVE
 	for _step: int in range(40):
 		MatchActions.act(world, walker, rules.step)
-		holder.decide(world.time, [] as Array[int], {}, 0.0, false)
+		holder.decide(_percepts(holder, world.time), 0.0)
 		MatchActions.act(world, holder, rules.step)
 	assert_bool(walker.arrived()).override_failure_message("stuck at %s" % walker.position).is_true()
 	assert_str(str(walker.last_passage["chosen"])).is_equal(PassageChoice.ASK)
@@ -1133,3 +1133,45 @@ func _solid(box: AABB) -> StaticBody3D:
 	body.add_child(holder)
 	body.position = box.get_center()
 	return body
+
+
+# What `bot` perceives with `in_sight` enemies standing at `places`: the
+# record its decision reads, built by hand.
+static func _percepts(bot: MatchBot, now: float, in_sight: Array[int] = [], places: Dictionary = {}) -> MatchPercepts:
+	var percepts: MatchPercepts = MatchPercepts.of_body(bot, now, 30)
+	percepts.in_sight = in_sight
+	percepts.enemy_places = places
+	return percepts
+
+
+func test_a_bot_decides_from_its_percepts_alone_with_no_match_at_all() -> void:
+	# No arena, no teams, no world: the record is all it reads (T67).
+	var bot := MatchBot.new()
+	bot.ammo = 30
+	bot.reserve = 90
+	var percepts: MatchPercepts = _percepts(bot, 5.0, [9] as Array[int], {9: Vector2(10.0, 0.0)})
+	bot.decide(percepts, 0.3)
+	# Seen for the first time now: not reacted to yet, so it holds.
+	assert_str(bot.action).is_equal(MatchBot.HOLD)
+	percepts.now = 5.5
+	bot.decide(percepts, 0.3)
+	assert_str(bot.action).is_equal(MatchBot.SHOOT)
+	assert_int(bot.target).is_equal(9)
+
+
+func test_an_enemy_shot_is_heard_louder_nearer_and_a_friends_is_not_news() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var listener: MatchBot = world.bots[0]
+	listener.position = Vector2(15.5, 3.5)
+	world.bots[1].position = Vector2(16.5, 3.5)
+	world.bots[6].position = Vector2(30.5, 3.5)
+	world.record_shot(world.bots[1], -1, false, Vector3.ZERO)
+	assert_float(MatchSenses.perceive(world, listener, false).heard).is_equal(0.0)
+	world.record_shot(world.bots[6], -1, false, Vector3.ZERO)
+	var heard: MatchPercepts = MatchSenses.perceive(world, listener, false)
+	assert_float(heard.heard).is_equal_approx(1.0 - 15.0 / rules.shot_heard_metres, 1e-6)
+	assert_vector(heard.heard_from).is_equal(world.bots[6].position)
+	# Out of hearing, nothing.
+	listener.position = Vector2(0.5, 3.5)
+	assert_float(MatchSenses.perceive(world, listener, false).heard).is_equal(0.0)

@@ -50,6 +50,7 @@
   "limb_multiplier": 0.5,
   "body_radius": 0.4,
   "max_range": 40.0,
+  "shot_heard_metres": 30.0,
   "capture_radius": 3.0,
   "capture_time": 4.0,
   "score_limit": 300,
