@@ -48,6 +48,7 @@ func test_the_slab_test_agrees_with_godots_own_rays() -> void:
 	random.seed = 51
 	var disagreements: Array[String] = []
 	var compared: int = 0
+	var blocked: int = 0
 	for _ray: int in range(RAYS):
 		var from := Vector3(random.randf_range(0, 48), random.randf_range(0.5, 1.6), random.randf_range(0, 32))
 		var to := Vector3(random.randf_range(0, 48), random.randf_range(0.5, 1.6), random.randf_range(0, 32))
@@ -57,10 +58,15 @@ func test_the_slab_test_agrees_with_godots_own_rays() -> void:
 			continue
 		compared += 1
 		var physics_clear: bool = space.intersect_ray(PhysicsRayQueryParameters3D.create(from, to)).is_empty()
+		blocked += 0 if physics_clear else 1
 		if physics_clear != arena.clear_line(from, to) and not _grazes(arena, from, to):
 			disagreements.append("%s -> %s: physics %s" % [from, to, physics_clear])
 	world.queue_free()
 	assert_int(compared).is_greater(RAYS * 3 / 4)
+	# Both answers occur, or agreeing would prove nothing: an arena with no
+	# boxes agrees on every ray.
+	assert_int(blocked).is_greater(compared / 10)
+	assert_int(compared - blocked).is_greater(compared / 10)
 	assert_array(disagreements).is_empty()
 
 
@@ -162,14 +168,62 @@ func test_teammates_leave_a_persons_spot_to_them_and_the_list_takes_back_over() 
 	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
 	var mine: MatchBot = world.bots[0]
 	mine.controlled = true
-	var spot: Vector2 = world.place_position(0)
+	# A place by point A, inside the area a squad holding A chooses in.
+	var held: int = world.places_near(world.arena.point_places[0], 3.0)[0]
+	var spot: Vector2 = world.place_position(held)
 	mine.position = spot
 	world.step()
-	assert_int(world.teams[0].claims.get(0, -1)).is_equal(mine.id)
+	assert_int(world.teams[0].claims.get(held, -1)).is_equal(mine.id)
+	# A teammate choosing round that spot finds it closed to it.
+	var mate: MatchBot = world.bots[1]
+	mate.position = spot + Vector2(2.0, 0.0)
+	world.teams[0].bot_points[mate.id] = 0
+	world.teams[0].bot_modes[mate.id] = MatchTeam.HOLD
+	TeamTactics.choose_spot(world, world.teams[0], mate, world.time)
+	var choice: TacticalPositions.Choice = world.teams[0].last_choice[mate.id][0]
+	var places: Array = world.teams[0].last_choice[mate.id][1]
+	assert_bool(places.has(held)).override_failure_message("the spot was not among its candidates").is_true()
+	assert_str(choice.statuses[places.find(held)]).is_equal(TacticalPositions.CLAIMED)
+	assert_int(mate.spot).is_not_equal(held)
+	# Given back, it runs its list again and chooses a spot of its own.
 	mine.controlled = false
+	mine.path.clear()
+	mine.chose_at = -INF
 	for _step: int in range(int(1.0 / rules.step)):
 		world.step()
 	assert_str(mine.action).is_not_equal(MatchBot.PLAYED)
+	assert_float(mine.chose_at).is_greater(0.0)
+
+
+func test_shots_of_every_length_are_drawn_without_an_engine_error() -> void:
+	var counter := ErrorCounter.new()
+	OS.add_logger(counter)
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var drawing := BotMatchDrawing.new()
+	drawing.shelf = AssetShelf.new(AssetShelf.MANIFEST, "res://test/botmatch/nothing_downloaded/")
+	(Engine.get_main_loop() as SceneTree).root.add_child(drawing)
+	drawing.build(world)
+	var shooter: MatchBot = world.bots[0]
+	var eyes: Vector3 = MatchActions.eyes_of(world, shooter)
+	# Planted: shots ending at the muzzle, inside the tracer's first metre,
+	# straight up, and far -- every case the tracer's shape must survive.
+	for end: Vector3 in [eyes, eyes + Vector3(0.5, 0, 0), eyes + Vector3(0, 5, 0), eyes + Vector3(30, -1, 2)]:
+		world.record_shot(shooter, -1, false, end)
+	drawing.refresh(world, 0)
+	OS.remove_logger(counter)
+	drawing.queue_free()
+	assert_int(counter.errors).is_equal(0)
+
+
+## Counts what the engine reports as an error.
+class ErrorCounter extends Logger:
+	var errors: int = 0
+
+	func _log_error(_function: String, _file: String, _line: int, _code: String,
+			_rationale: String, _editor_notify: bool, _error_type: int,
+			_script_backtraces: Array[ScriptBacktrace]) -> void:
+		errors += 1
 
 
 func _played(seed_value: int) -> String:

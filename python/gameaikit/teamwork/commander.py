@@ -17,6 +17,9 @@ NOBODY, US, THEM = 0, 1, -1
 
 @dataclasses.dataclass
 class Objective:
+    """One objective as the commander sees it: who holds it, how many bots it
+    should have, and the team's influence there (below zero, the enemy's)."""
+
     id: str
     position: tuple[float, float]
     held_by: int = NOBODY
@@ -26,6 +29,8 @@ class Objective:
 
 @dataclasses.dataclass
 class SquadReport:
+    """One squad as it reports up: where it is, how many it has."""
+
     id: str
     position: tuple[float, float]
     size: int = 1
@@ -33,6 +38,9 @@ class SquadReport:
 
 @dataclasses.dataclass
 class Weights:
+    """What each objective is worth; `nearest_metres` keeps a squad standing
+    on one from costing zero."""
+
     take: float = 3.0
     hold: float = 1.0
     defend: float = 2.0

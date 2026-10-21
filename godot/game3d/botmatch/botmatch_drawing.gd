@@ -33,6 +33,8 @@ const SPARK: Color = Color(0.8, 0.8, 0.8)
 ## How long, in match seconds, a tracer and its flash stay drawn.
 const TRACER_SECONDS: float = 0.08
 const FLASH_SECONDS: float = 0.05
+## Shorter than this, a tracer is not drawn.
+const MIN_TRACER: float = 0.05
 
 var shelf: AssetShelf = AssetShelf.new()
 var _bots: Array[Node3D] = []
@@ -172,8 +174,11 @@ func _draw_shots(world: BotMatch) -> void:
 		var from: Vector3 = shot[4]
 		var to: Vector3 = shot[5]
 		# A metre out from the muzzle: closer, a tracer is a bar across the
-		# shooter's own view.
-		used = _effect(used, _tracer_transform(from.move_toward(to, 1.0), to), TRACER)
+		# shooter's own view. A shot that ends within it has no tracer, only
+		# its spark -- and no zero-length box for `looking_at` to refuse.
+		var start: Vector3 = from.move_toward(to, 1.0)
+		if start.distance_to(to) > MIN_TRACER:
+			used = _effect(used, _tracer_transform(start, to), TRACER)
 		used = _effect(used, Transform3D(Basis.from_scale(Vector3.ONE * 0.12), to), BLOOD if shot[3] else SPARK)
 		if age <= FLASH_SECONDS:
 			used = _effect(used, Transform3D(Basis.from_scale(Vector3.ONE * 0.035), from), FLASH)

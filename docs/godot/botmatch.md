@@ -11,8 +11,8 @@ teaches: none
 
 > T51's example, played and measured. The techniques and where they come
 > from are in [the shooter AI page](../concepts/shooter-ai.md). This page
-> covers what they did here, including the one result that did not go the
-> way the task expected.
+> covers what they did here, including the two results that did not go
+> the way the task expected.
 
 ## What it is
 
@@ -67,57 +67,86 @@ first cut in third person.
 `make test-botmatch-effects`: 20 seeded matches per pairing. Red always
 plays with everything on, and blue has one technique off at a time. The
 seeds are the same in every pairing. These are the numbers with the
-rifle's rules: ten shots a second, a magazine of thirty, nine hits to kill.
+rifle's rules (ten shots a second, a magazine of thirty, nine hits to
+kill) and a fair mirror (below).
 
-| blue plays | points held | its orders span | points covered | bunched in cover | bots lost a point lost |
-|---|---|---|---|---|---|
-| everything on | 5423 s | 2.44 points | 0.71 | 0.1 s | 34.2 |
-| no claims | 5816 s | 2.51 | 0.96 | 500.4 s | 56.2 |
-| no commander | 5166 s | 1.94 | 0.70 | 3.1 s | 29.5 |
-| no retreat | 6001 s | 2.64 | 1.44 | 0.3 s | 700.0 |
+What each technique decides, which the test holds:
 
-Each technique does what it is for, and the test holds that much:
+| blue plays | its orders span | bunched in cover | retreating decisions, none uncovered |
+|---|---|---|---|
+| everything on | 2.34 points | 0.0 s | 2835 |
+| no claims | 2.32 | 79.2 s | 2781 |
+| no commander | 1.81 | 0.2 s | 2739 |
+| no retreat | 2.55 | 0.1 s | 0 |
 
-- **Claims** keep a squad off one spot: 0.1 seconds bunched, against 500.
-- **The commander** sends its squads over the map: its orders span 2.44
-  points at once, against 1.94 when each bot picks its own nearest.
-- **Retreat** loses far fewer bots for each point it gives up: 34 against
-  700.
-- **Honesty:** in about 460,000 shots, no bot fired at an enemy outside
-  its own sight row. A planted bot that shoots the nearest enemy through
-  walls fired 455 such shots, and the same count caught every one.
+- **Claims** keep a squad off one spot: 0.0 seconds bunched, against 79.
+- **The commander** sends its squads over the map: its orders span 2.34
+  points at once, against 1.81 when each bot picks its own nearest point
+  not yet its team's.
+- **Retreat** falls back in two waves. In 2835 decisions of a squad
+  retreating, never once was every member on the move with nobody
+  covering. A planted retreat that moves the whole squad at once is caught
+  (605 of 704).
+- **Honesty:** a shot is checked along the line at the moment it is
+  fired, not by the sight table, which is up to a decision old. In about
+  515,000 shots no bot fired at an enemy it could not see. Two planted
+  bots are caught:
+  - one that shoots the nearest enemy through walls (666 shots);
+  - one that fires at whom it saw at its last decision without looking
+    again (32 shots at enemies gone behind cover since).
 
-**What none of them does is win.** With claims off, blue held its points
-longer. With retreat off, it held them longest, and never gave red a
-point to keep (6001 s is the pairing's ceiling). With the commander off,
-blue held 5166 s against 5423: 5% less, inside the noise. The first rules,
-at four shots a second, gave the opposite sign. So the task's first claim
-for the commander, "holds points longer", is not one the test makes.
+And what the fighting made of it, printed and not claimed. The margin is
+blue's points held minus red's, a match, with its standard error over the
+20 seeds:
 
-On this arena caution loses to aggression, and each technique is a kind
-of caution:
+| blue plays | wins, blue - red | margin a match |
+|---|---|---|
+| everything on (the mirror) | 9 - 11 | -4.5 +- 49.1 s |
+| no claims | 11 - 9 | +57.8 +- 54.1 s |
+| no commander | 6 - 14 | -80.3 +- 44.7 s |
+| no retreat | 20 - 0 | +297.5 +- 1.5 s |
 
-- claims send a bot to the second-best spot;
-- the commander keeps squads on points the team already has;
-- retreat gives a point up.
+- **Claims** change nothing in the score that 20 matches can tell (1.1
+  errors).
+- **The commander** looks like it helps: without it blue lost 6 to 14, at
+  1.8 errors. That is suggestive, not shown.
+- **Retreat** costs the match, and by far: a team that never falls back
+  won all 20 against one that does.
 
-Days Gone's own talk says its squads are built for legibility, not
-efficiency [Karlsson 2021], and that is what was measured here.
+Days Gone's own talk says its squads retreat for legibility, not
+efficiency [Karlsson 2021], and on this arena it is not efficient. The
+task's two claims about the score -- the commander holds points longer,
+retreat loses fewer bots a point lost -- are not ones the test makes. The
+owner decided, on 2026-10-21, to state what was measured rather than tune
+until the expected result appeared.
 
-The owner decided, on 2026-10-21, to state this result rather than tune
-the match until the expected one appeared. Making a coordinated team win
-is a task of its own, T65, which studies how shipped bot matches reward
-holding before it changes a number.
+Making a coordinated team win clearly is T65, after the map the owner
+asked for: lanes, flanks, protected spawns and high ground, on which
+falling back to cover may pay.
+
+## The mirror, and how it was bent twice
+
+Every comparison above stands on the mirror being fair: with the same
+techniques on both sides, the test needs blue's mean margin within 2.5
+standard errors of zero. A planted blue with a faster reaction and a
+steadier aim must fail that check, and does (+300 a match). The mirror
+was bent twice before it held:
+
+- **The spawns sat on cell edges.** x = 3 and x = 45 mirror each other on
+  the floor but not on the walk grid, so red started one cell further from
+  every point. Blue won 14 to 6.
+- **A\* breaks ties by a fixed order of neighbours** -- north, east, south,
+  west -- so a path east is not the mirror of a path west. Blue won 18 to 2,
+  and every pairing above was measured against that bent mirror until the
+  runner printed red's score too. Red's paths are now searched in the
+  mirrored arena and mirrored back, so the two sides walk each other's
+  mirror image exactly.
 
 ## What was fixed on the way, each measured
 
 - **Shots were resolved in id order**, so blue fired first in every step,
   and a red bot killed that step could not fire back. Deaths are now
   settled when the step ends.
-- **The spawns sat on cell edges.** x = 3 and x = 45 mirror each other on
-  the floor but not on the walk grid, so red started one cell further from
-  every point. The mirror test won 14-6 for blue until the spawns moved to
-  cell centres. It then went 9-11.
 - **A point inside a box.** The places "on" point B were in blocked cells,
   so the path there was empty and bots stood still.
 - **Moving a body through its node** reaches the physics space only on the

@@ -7,6 +7,7 @@
     "godot/test/menu/"
   ],
   "depends_on": [
+    "botmatch",
     "checkers",
     "demo_behaviour",
     "demo_racing",

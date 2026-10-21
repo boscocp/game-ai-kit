@@ -190,8 +190,14 @@ func _watch_next() -> void:
 
 func _take_over_or_give_back() -> void:
 	if _played != -1:
-		world.bots[_played].controlled = false
-		world.bots[_played].pitch = 0.0
+		var given_back: MatchBot = world.bots[_played]
+		given_back.controlled = false
+		given_back.pitch = 0.0
+		# Its old path starts from where it stood before it was played;
+		# walked from here, it could cross a box. It chooses afresh.
+		given_back.path.clear()
+		given_back.goal = given_back.position
+		given_back.chose_at = -INF
 		_played = -1
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	else:

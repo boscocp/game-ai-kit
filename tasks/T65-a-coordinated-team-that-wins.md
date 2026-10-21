@@ -4,13 +4,19 @@ Size: M · Prereqs: T51 · Files: `docs/concepts/`, `godot/game3d/botmatch/`, `g
 
 ## Goal
 
-T51 measured what its three techniques do, and the result went against the
-task's expectation. Claims keep a squad off one spot, the commander spreads
-the team over the points, and retreat loses fewer bots per point given up.
-But a team with all three on loses to the same team with any one of them
-off: on that arena caution loses to aggression
-(`docs/godot/botmatch.md`). The owner chose, on 2026-10-21, to state it,
-and to give "a coordinated team that wins" a task of its own.
+T51 measured what its three techniques decide, and what the fighting
+made of it on a fair mirror (`docs/godot/botmatch.md`):
+
+- claims change nothing in the score that 20 matches can tell;
+- the commander looks like it helps, but at 1.8 standard errors that is
+  not shown;
+- retreat costs the match: a team that never falls back won 20 to 0.
+
+The owner chose, on 2026-10-21, to state that, and to give "a coordinated
+team that wins" a task of its own. The owner also asked, the same day,
+for a better map: covered capture points, flank routes, spawns behind
+corridors, and high ground you can climb. That map is the likeliest place
+for falling back to cover to pay.
 
 Studied before anything is tuned ([research before tuning]): what in a
 shipped bot match makes holding, spreading and falling back pay?
@@ -28,7 +34,8 @@ shipped bot match makes holding, spreading and falling back pay?
    before measuring it. The owner picks among them.
 3. **Measure** with `botmatch_effects.gd`, and add the claim T51 dropped:
    a team with every technique on holds points longer than the same team
-   with any one of them off, by a margin stated in the header.
+   with any one of them off, by a margin stated in standard errors in the
+   header, and the mirror still fair.
 4. If no change from the reading makes it true, say so, and stop.
 
 ## Acceptance

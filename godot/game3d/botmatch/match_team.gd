@@ -4,7 +4,8 @@
 ##   * claims (`TacticalPositions`): a spot one bot chose is closed to the
 ##     rest of its team. Off, they bunch on the best spot;
 ##   * the commander (`TeamCommander` over `TeamInfluence`): each squad sent
-##     to a weighed objective. Off, every bot goes to its own nearest point;
+##     to a weighed objective. Off, every bot goes to its own nearest point
+##     that is not its team's;
 ##   * retreat (`SquadConfidence`): a squad losing falls back in two waves.
 ##     Off, it never falls back.
 ##
@@ -23,6 +24,11 @@ var side: int = 0
 var use_claims: bool = true
 var use_commander: bool = true
 var may_retreat: bool = true
+## How many bots the commander wants on each point: a squad's worth.
+var bots_per_point: int = BotMatch.PER_SQUAD
+## True only in a planted test: the whole squad falls back at once, with
+## nobody left to cover it. The effects test must catch it.
+var retreat_in_one_wave: bool = false
 ## The honest knobs, the same body driven faster or better.
 var reaction: float = 0.3
 var turn_rate: float = deg_to_rad(270.0)

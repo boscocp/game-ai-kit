@@ -116,6 +116,20 @@ func _decide() -> void:
 		var team: MatchTeam = teams[bot.team]
 		var retreating: bool = TeamTactics.moving_in_retreat(self, team, bot)
 		bot.decide(time, sight.get(bot.id, [] as Array[int]), places, team.reaction, retreating)
+	for team: MatchTeam in teams:
+		_count_retreats(team)
+
+
+# For each squad of two or more living that is retreating: one decision
+# counted, and one more if nobody is left covering.
+func _count_retreats(team: MatchTeam) -> void:
+	for index: int in range(team.squads.size()):
+		var living: Array = team.squads[index].filter(func(bot_id: int) -> bool: return bots[bot_id].alive())
+		if team.squad_states[index] != SquadConfidence.RETREAT or living.size() < 2:
+			continue
+		stats[team.side].retreat_decisions += 1
+		var covering: bool = living.any(func(bot_id: int) -> bool: return bots[bot_id].action != MatchBot.FALL_BACK)
+		stats[team.side].retreats_uncovered += 0 if covering else 1
 
 
 ## Step until the match is over.
@@ -131,10 +145,31 @@ func send(bot: MatchBot, goal: Vector2, place: int) -> void:
 	if goal.distance_to(bot.goal) < 0.01 and not bot.path.is_empty():
 		return
 	bot.goal = goal
-	bot.path = _finder.find_path(arena.walk, BotArena.cell_of(bot.position), BotArena.cell_of(goal))
+	bot.path = _path_for(bot.team, BotArena.cell_of(bot.position), BotArena.cell_of(goal))
 
 
-## A place's floor position and id, by index: cover spots first.
+# A* breaks ties by a fixed order of neighbours -- north, east, south, west
+# -- so a path east is not the mirror of a path west, and on a mirrored
+# arena one side walked different, longer-looking routes: measured, blue
+# won a mirror match 10-0 while the order held. The arena is its own mirror
+# across x = 24, so red's path is searched in the mirror and mirrored back,
+# and both sides walk each other's mirror image exactly.
+func _path_for(side: int, from: Vector2i, to: Vector2i) -> Array[Vector2i]:
+	if side == BLUE:
+		return _finder.find_path(arena.walk, from, to)
+	var path: Array[Vector2i] = _finder.find_path(arena.walk, _mirrored(from), _mirrored(to))
+	var back: Array[Vector2i] = []
+	for cell: Vector2i in path:
+		back.append(_mirrored(cell))
+	return back
+
+
+func _mirrored(cell: Vector2i) -> Vector2i:
+	return Vector2i(int(arena.width) - 1 - cell.x, cell.y)
+
+
+## A place's floor position, by index: cover spots first, then the places
+## on the points.
 func place_position(place: int) -> Vector2:
 	return _places[place]
 

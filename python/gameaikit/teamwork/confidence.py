@@ -15,6 +15,8 @@ ATTACK, HOLD, RETREAT = "attack", "hold", "retreat"
 
 @dataclasses.dataclass
 class Facts:
+    """A squad's strength, the enemy's near it, and its recent kills and losses."""
+
     friendly_strength: float
     enemy_strength: float
     kills: int = 0
@@ -23,6 +25,9 @@ class Facts:
 
 @dataclasses.dataclass
 class Thresholds:
+    """The confidence at which a squad enters and leaves each state, and what
+    a kill and a loss are worth."""
+
     attack_at: float = 1.3
     keep_attacking_at: float = 1.1
     retreat_at: float = 0.7

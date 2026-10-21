@@ -24,7 +24,8 @@ const RETREAT: String = "retreat"
 class Facts extends RefCounted:
 	## Each living member's health as a share of full, added.
 	var friendly_strength: float = 0.0
-	## The same for the enemies the squad knows of near it.
+	## The same for the enemies the squad knows of near it -- or, when their
+	## health cannot be seen, one for each of them, as the bot match counts.
 	var enemy_strength: float = 0.0
 	## Enemies the squad killed, and members it lost, lately.
 	var kills: int = 0

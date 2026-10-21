@@ -93,13 +93,18 @@ each margin stated as a number in its header:
 - with claims on, two bots of one team stand within one metre of each other
   in cover less often than with claims off;
 - a team with the commander on orders its bots over more points at once
-  than the same team with it off. **Changed by the owner, 2026-10-21:** the task said
-  "holds points longer", and measured, it does not -- a team with every
-  technique on loses to the same team with any one of them off. The owner
-  chose to state that (`docs/godot/botmatch.md`) rather than tune until it
-  passed; making the coordinated team win is T65;
+  than the same team with it off. **Changed by the owner, 2026-10-21:** the
+  task said "holds points longer", and measured on a fair mirror it is
+  suggested, not shown (1.8 standard errors). The owner chose to state what
+  was measured (`docs/godot/botmatch.md`) rather than tune until it passed;
+  making the coordinated team win clearly is T65;
 - a team whose squads retreat in waves loses fewer bots per point lost than
-  the same team that never retreats;
+  the same team that never retreats. **Changed, the same decision:** the
+  ratio rewards giving points up, and the review said so. Measured, retreat
+  costs the match (a team that never retreats won 20 to 0). The test holds
+  what retreat decides: a retreating squad always leaves someone covering;
+- the mirror is fair: with the same techniques on both sides, blue's mean
+  margin is within 2.5 standard errors of zero (added in review);
 - every bot fires only at an enemy in its own sight table -- no bot shoots
   through a wall or at what it has not seen.
 
@@ -119,9 +124,13 @@ simulation anyway, which is faster: about four minutes for 80 matches.
   not used.
 - The views: free camera, follow camera, and the 2D map with influence,
   orders, confidence and the frontline. The owner's takeover of any bot.
-- The four claims, measured with the rifle's rules: bunched 0.1 s against
-  500; orders over 2.44 points against 1.94; 34 bots lost a point lost
-  against 700; 0 unseen shots, and 455 from the planted cheat.
+- The claims, measured with the rifle's rules on a fair mirror:
+  - the mirror itself, 9 to 11 at -4.5 +- 49 s a match;
+  - bunched 0.0 s with claims, against 79 s without;
+  - orders spanning 2.34 points with the commander, against 1.81 without;
+  - in 2835 retreating decisions, none uncovered;
+  - no shot at an unseen enemy, checked along the line at the moment of
+    the shot, and both planted cheats caught.
 - First person, after the owner played the third-person cut and found it
   "mt esquisito". The shot is a 3D ray with tracers, a muzzle flash, hit
   markers, a hurt flash, a rifle in view and a generated sound. The rifle's

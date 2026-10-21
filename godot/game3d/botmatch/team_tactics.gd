@@ -83,7 +83,17 @@ static func _give_orders(world: BotMatch, team: MatchTeam) -> void:
 		var point_id: String = _order_for(world, team, bot_id, objectives)
 		var point: int = world.arena.point_ids.find(point_id)
 		team.bot_points[bot_id] = point
-		team.bot_modes[bot_id] = MatchTeam.HOLD if world.point_owner[point] == team.side else MatchTeam.ATTACK
+		team.bot_modes[bot_id] = _mode_for(world, team, bot_id, point)
+
+
+# On a point of ours, hold it. On one to take, only a squad whose confidence
+# says attack steps onto it; a squad that only holds takes cover near it and
+# contests it by fire. So the attack state decides where the bots stand.
+static func _mode_for(world: BotMatch, team: MatchTeam, bot_id: int, point: int) -> String:
+	if world.point_owner[point] == team.side:
+		return MatchTeam.HOLD
+	var confident: bool = team.squad_states[team.squad_of(bot_id)] == SquadConfidence.ATTACK
+	return MatchTeam.ATTACK if confident else MatchTeam.HOLD
 
 
 static func _order_for(world: BotMatch, team: MatchTeam, bot_id: int,
@@ -106,7 +116,7 @@ static func _objectives(world: BotMatch, team: MatchTeam) -> Array[TeamCommander
 		objective.position = world.arena.point_places[index]
 		var owner: int = world.point_owner[index]
 		objective.held_by = TeamCommander.NOBODY if owner == -1 else (TeamCommander.US if owner == team.side else TeamCommander.THEM)
-		objective.ideal = BotMatch.PER_SQUAD
+		objective.ideal = team.bots_per_point
 		objective.influence = team.influence.value_at(objective.position)
 		objectives.append(objective)
 	return objectives
@@ -151,8 +161,6 @@ static func _update_confidence(world: BotMatch, team: MatchTeam, index: int, now
 		_advance_waves(world, team, index, now, before != SquadConfidence.RETREAT)
 
 
-# A new retreat starts at phase 0; a wave ends when its movers arrived or
-# its time ran out, and the next wave's movers choose a spot at once.
 ## The confidence thresholds the match plays with: the technique's, with
 ## the rules' retreat and recovery.
 static func thresholds_of(rules: MatchRules) -> SquadConfidence.Thresholds:
@@ -162,6 +170,8 @@ static func thresholds_of(rules: MatchRules) -> SquadConfidence.Thresholds:
 	return thresholds
 
 
+# A new retreat starts at phase 0; a wave ends when its movers arrived or
+# its time ran out, and the next wave's movers choose a spot at once.
 static func _advance_waves(world: BotMatch, team: MatchTeam, index: int, now: float, starting: bool) -> void:
 	var moving: Array[int] = _waves(world, team, index).moving
 	var all_there: bool = moving.all(func(bot_id: int) -> bool: return world.bots[bot_id].arrived())
@@ -178,6 +188,10 @@ static func _waves(world: BotMatch, team: MatchTeam, index: int) -> SquadConfide
 	for bot_id: int in team.squads[index]:
 		if world.bots[bot_id].alive():
 			living.append(bot_id)
+	if team.retreat_in_one_wave:
+		var everyone := SquadConfidence.Waves.new()
+		everyone.moving = living
+		return everyone
 	return SquadConfidence.waves(living, team.squad_phases[index])
 
 

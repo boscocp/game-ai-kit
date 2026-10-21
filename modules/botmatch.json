@@ -9,7 +9,9 @@
   "depends_on": [
     "ai_core",
     "ai_search",
-    "ai_teamwork"
+    "ai_teamwork",
+    "game3d",
+    "game_shared"
   ],
   "gates": [
     "test-botmatch-effects"

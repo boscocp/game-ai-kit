@@ -219,7 +219,7 @@
         {"technique": "a-star", "part": "each bot's walk to its spot, over a one-metre grid of the arena"}
       ],
       "controls": "1/2/3 blue's claims, commander, retreat (Shift: red's); Tab watches the next bot, T takes it over (WASD, mouse, click, R reload, Ctrl crouch) and gives it back; M the other team's map, C camera, F fast, P pause, Space one decision, N new match",
-      "watch": "Turn blue's claims off and watch two blue bots end up behind the same box. Turn off the commander: blue's bots stop spreading over the three points and gather. And watch the score: on this arena the cautious team loses.",
+      "watch": "Turn blue's claims off and watch two blue bots end up behind the same box. Turn off the commander and watch the map's arrows: each blue bot is sent to its own nearest point not yet blue's, and the orders bunch onto fewer points. The score is the fight's, not the techniques': see docs/godot/botmatch.md.",
       "docs": "docs/concepts/shooter-ai.md"
     }
   ]

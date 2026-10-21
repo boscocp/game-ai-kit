@@ -16,6 +16,11 @@ var point_coverage: float = 0.0
 ## Distinct points this team's living bots are ordered to, times the
 ## seconds: what the commander decides, before the fighting has a say.
 var order_spread: float = 0.0
+## Decisions at which a retreating squad of two or more had every living
+## member on the move: zero when it retreats in waves, one half covering.
+var retreats_uncovered: int = 0
+## Decisions at which a squad of two or more living was retreating.
+var retreat_decisions: int = 0
 ## Seconds two of its bots held cover spots within a metre, summed over pairs.
 var bunched_seconds: float = 0.0
 var shots: int = 0

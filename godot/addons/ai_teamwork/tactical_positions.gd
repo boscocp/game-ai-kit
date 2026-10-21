@@ -9,7 +9,7 @@
 ## another agent already took, which is what keeps a squad from bunching.
 ## Linear in the candidates.
 ##
-## It reads facts, not geometry: whoever builds a `PositionCandidate` has
+## It reads facts, not geometry: whoever builds a `Candidate` has
 ## already cast the rays. So a test can state a query in a few numbers, and
 ## the Python twin can answer it without a physics engine.
 ##

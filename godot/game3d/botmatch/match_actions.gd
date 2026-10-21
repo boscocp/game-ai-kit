@@ -43,11 +43,12 @@ static func act(world: BotMatch, bot: MatchBot, delta: float) -> void:
 
 
 ## Fire one shot from `shooter` at `target`, by the rules: counted, checked
-## against the shooter's own sight row, and landing by the aim error.
+## against the line as it is at this moment -- not the sight table, which
+## is up to a decision old -- and landing by the aim error.
 static func fire(world: BotMatch, shooter: MatchBot, target: MatchBot) -> void:
 	var stats: MatchStats = world.stats[shooter.team]
 	stats.shots += 1
-	if not (target.id in world.sight.get(shooter.id, [])):
+	if not world.sees(shooter, target):
 		stats.shots_unseen += 1
 	shooter.ammo -= 1
 	shooter.fire_cooldown = world.rules.fire_interval
@@ -160,7 +161,9 @@ static func _played(world: BotMatch, bot: MatchBot, delta: float) -> void:
 		if world.arena.can_stand(next, world.rules.body_radius):
 			bot.position = next
 			break
-	if bot.wants_to_fire and bot.ammo <= 0:
+	if bot.reload_left > 0.0:
+		_reload(world, bot, delta)
+	elif bot.wants_to_fire and bot.ammo <= 0:
 		bot.reload_left = world.rules.reload_time
 	elif bot.wants_to_fire and bot.fire_cooldown <= 0.0:
 		fire_aimed(world, bot)
@@ -182,7 +185,10 @@ static func _shoot(world: BotMatch, bot: MatchBot, delta: float) -> void:
 	if not bot.arrived():
 		_step_towards(world, bot, delta * SHOOTING_PACE)
 	var facing: bool = bot.turn_to(target.position, world.teams[bot.team].turn_rate, delta)
-	if facing and bot.fire_cooldown <= 0.0 and bot.ammo > 0 and target.alive():
+	# The table said it could see the target when it decided; a target that
+	# has stepped behind a box since is not shot through it.
+	var still_seen: bool = world.sees(bot, target) or not bot.checks_its_line
+	if facing and still_seen and bot.fire_cooldown <= 0.0 and bot.ammo > 0 and target.alive():
 		fire(world, bot, target)
 
 

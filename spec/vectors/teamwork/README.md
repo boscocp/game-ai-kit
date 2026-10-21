@@ -40,6 +40,13 @@ either way, so no vector can tell the two apart.
 and the scores, influences and confidences in 64-bit floats. A status, an
 id or a state must be equal.
 
+What the vectors cannot catch, said so: both sides break a tie with a
+strict `<`, and the vectors pin only exact ties. A near tie -- two costs
+that differ only in the last bits of a float -- may fall the other way in
+GDScript's 32-bit `Vector2` than in Python's 64-bit tuples. The game never
+compares the two languages' answers, so it costs nothing there; a twin
+that must agree bit for bit would need rounded costs.
+
 ## The kinds
 
 | kind | query | answer |

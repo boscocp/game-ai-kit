@@ -76,8 +76,9 @@ static func priority_of(objective: Objective, weights: Weights) -> float:
 
 
 ## The objective id each squad is sent to, by squad id. While an objective
-## has room, squads fill it cheapest first; once none has, the rest go where
-## the priority is highest, so no squad is left without an order.
+## has room, squads fill it cheapest first; once none has, the rest go to
+## the cheapest of all -- distance over priority, room or not -- so no squad
+## is left without an order.
 static func assign(squads: Array[SquadReport], objectives: Array[Objective], weights: Weights) -> Dictionary:
 	var orders: Dictionary = {}
 	if objectives.is_empty():
