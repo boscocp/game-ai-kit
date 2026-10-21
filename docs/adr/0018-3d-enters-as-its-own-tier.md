@@ -17,6 +17,13 @@ the owner's, and not decided here: the tier's name (T50 measures its target
 first), whether the tier-1 rule for a 3D example gets a gate, and whether the
 assets rule reaches back to the 2D art.
 
+**What T50 measured and corrected (2026-10-21)**, in `docs/godot/3d-headless.md`:
+physics, rays and a navmesh baked from collision shapes all run headless; a
+run replays bit-identically on one binary; Kenney's pages *do* link their
+archive directly (the URL carries a hash and a timestamp, so it changes when
+a pack is updated, and the sha256 catches that). The licence of each pack is
+in the manifest's `packs` table, not a separate `LICENCES.md`.
+
 ## Context
 
 ADR 0001 made the kit 2D on the Compatibility renderer, so that it runs on

@@ -66,10 +66,11 @@ make test-godot
 ```
 
 ```bash
-./scripts/godot --headless --path godot -s res://test/game3d_floor.gd
+./scripts/godot --headless --path godot -s res://test/game3d/game3d_floor.gd
+python3 scripts/fetch_assets_3d.py --self-test
 ```
 
-`game3d_floor.gd` holds: the dropped body rests within 0.05 m of the floor
+`game3d_floor.gd` (in `godot/test/game3d/`, the module's test folder) holds: the dropped body rests within 0.05 m of the floor
 after 120 physics frames; the ray hits the box and misses beyond it; the
 baked path goes round the wall; a scene whose assets are missing loads with
 primitives. It reads its own output for `SCRIPT ERROR` (CLAUDE.md's trap).

@@ -111,7 +111,7 @@ sha256 and never committed.
 | # | Task | State | Notes |
 |---|---|---|---|
 | T49 | How shooter AI is made | done | `docs/concepts/shooter-ai.md`: 48 references, each opened, a third only in part and said so; one bot, bots that cooperate, the stealth version; T51 and T52 written from it |
-| T50 | The 3D tier, measured before anything is built | wip | headless physics, rays and navigation, replay, frame rate, one pack's real formats; `assets.json` and `make assets-3d`; `check_renderer` for `game3d/`, `check_no_assets.py`; wave 69, ADR 0018 accepted (option A) |
+| T50 | The 3D tier, measured before anything is built | done | wave 69, ADR 0018 accepted (option A): physics, rays and a navmesh from collision shapes run headless; a run replays bit-identically on one binary; a navmesh set on a region's second frame never reaches the map (set it before the tree); about 1,000 fps for the 16-bot arena on a Radeon 610M; a body moved through its node is in the physics space a frame late; Kenney Mini Characters by URL and sha256, `make assets-3d`, primitives when missing; `check_no_assets.py`, R6 in `check_renderer.py`; Jolt explicit; `docs/godot/3d-headless.md`; manual check still the owner's |
 | T51 | A bot match: two teams of bots, cover, and a commander | blocked | capture and hold, bots only, no network; scored positions with claims, a commander over an influence map, squad confidence and retreat in waves -- each drawn and switchable |
 | T52 | Bots against the player, with an optional stealth | blocked | third person; a role arbiter, awareness that accumulates with three alert levels, a shared belief map for the search -- each drawn and switchable |
 
@@ -131,6 +131,40 @@ touches, and later a library others can install.
 | T64 | The library | todo | after T60-T63; names: only ports and kernel prefixed (owner, 2026-10-20), the prefix by ADR; addon zips filtered by manifest; `pyproject.toml`, flat layout, no dependencies; an entry-point group for a user's technique; installed and run outside the repo; publishing stays the owner's act |
 
 ---
+
+## Resuming after 2026-10-21 (wave 69)
+
+**Where it stopped -- read first.** The owner accepted ADR 0018 on
+2026-10-21, option A: the 3D lives in `godot/game3d/` inside the one
+project, and its assets are out of git, referenced by their links. That
+reordered the plan: milestone 5 opened before T64. Wave 69 did T50. The
+review record is `docs/reviews/69-the-3d-tier.md`.
+
+**What landed.** Jolt is set explicitly. `godot/game3d/assets.json` names
+Kenney's Mini Characters (CC0) by page, archive URL and sha256.
+`make assets-3d` fetches them into `godot/game3d/downloaded/` (gitignored).
+`AssetShelf` hands back a primitive when a model is missing. A test arena
+of T51's size has a legend and a sight-line overlay. `make test-game3d-floor`
+holds what was measured. `check_no_assets.py` refuses a pack's file
+committed under any name. `check_renderer.py` gains the missing 3D types and
+R6: nothing in `game/` or `demos/` loads from `game3d/`.
+
+**Measured, worth knowing** (`docs/godot/3d-headless.md`). Headless 3D
+works, and a run replays bit-identically on one binary. A navmesh set on a
+region's second physics frame never reaches the map. Every node under
+`root` shares one navigation map, so a test makes its own. A body moved
+through its node is in the physics space only a physics frame later; told
+to the server, at once. On this machine
+Godot used the integrated GPU only under X11, with three environment
+variables set.
+
+**Still the owner's.** The tier's name: the README writes "2, in 3D"
+provisionally. Whether the tier-1 rule for a 3D example gets a gate.
+Whether the assets rule reaches back to the 2D art. T50's manual check: open
+the arena with and without the models (`make measure-3d` opens it).
+
+**Next.** T51, the bot match, or T64, the library, which was next before
+the owner opened milestone 5. Ask which.
 
 ## Resuming after 2026-10-21 (wave 68)
 

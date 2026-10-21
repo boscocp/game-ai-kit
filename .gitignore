@@ -43,3 +43,7 @@ scripts/forbidden-term-hashes.txt
 # A person's own generated art (T31). Theirs, never the repository's: the game
 # draws from here when a picture is present and falls back on the CC0 set.
 godot/assets/generated/
+
+# The 3D examples' models and textures (ADR 0018): downloaded by
+# `make assets-3d` from the links in godot/game3d/assets.json, never committed.
+godot/game3d/downloaded/

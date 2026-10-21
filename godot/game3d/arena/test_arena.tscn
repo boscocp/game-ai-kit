@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game3d/arena/test_arena.gd" id="1_arena"]
+[ext_resource type="Script" path="res://game/legend.gd" id="2_legend"]
+
+[node name="TestArena" type="Node3D"]
+script = ExtResource("1_arena")
+
+[node name="Camera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 0, 26, 15)
+fov = 60.0
+
+[node name="Interface" type="CanvasLayer" parent="."]
+
+[node name="Legend" type="Control" parent="Interface"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 520.0
+offset_bottom = 90.0
+script = ExtResource("2_legend")
