@@ -73,7 +73,7 @@ And each bot weighs, rather than follows a rule:
 The match runs as a simulation with no physics engine in it: a sight line
 is a segment against the boxes, answered exactly, and
 `botmatch_test.gd` holds that answer to Godot's own ray casts on the same
-boxes, platforms and stairs. So 149 matches run headless in about 21
+boxes, platforms and stairs. So 169 matches run headless in about 25
 minutes. The 3D scene draws one match; the techniques never read anything
 the scene computes.
 
@@ -100,6 +100,20 @@ what to do towards its goal, so that on another map it copes.
   Whom it shoots is the enemy reacted to that a shot is worth most at. A
   reload not carried on is lost, so it is a choice and not a lock. The
   panel shows every score (`weighs: > shoot 0.92 | reload 0.00 | ...`).
+- **It weighs how to hold its body and how fast to go**, after the
+  action, from the same numbers (`postures` and `paces` in
+  `actions.json`; the panel shows `body:` and `pace:`). Crouching is
+  weighed down while it moves (a crouch halves its speed) and while it
+  shoots (behind low cover a crouched bot shoots into the box), and up by
+  what the cover beside it hides -- a low box all of it, a high one less,
+  the open nothing -- by the danger it perceives, and while it reloads.
+  Danger is 1 with an enemy in sight, else the louder of a shot heard and
+  the nearest enemy its team remembers, by closeness within 20 m.
+  Sprinting counts only while it moves, is worth more the further it has
+  to go -- passing walking just beyond 8 m, as the old rule did -- and
+  less with danger; an enemy in sight vetoes it, because a sprinting bot
+  may not fire. That is still the game's rule, in the rules; the bot only
+  weighs the chance it will need to fire.
 - **The errands are a technique**, `ErrandChoice`, with its twin and
   vectors; the weights are still `rules.json`'s.
 - **Steering was not taken.** `ai_steering`'s avoid is for round
@@ -111,52 +125,68 @@ what to do towards its goal, so that on another map it copes.
   platform and its stair -- keeping only one where every point and spawn
   can be reached. The effects test plays six, one match each.
 
-What is still fixed, said so: a dead bot waits and a person drives the
-one they took; posture follows the action (crouched to reload or to hold a
-spot); pace is a rule (it sprints moving with nobody in sight and far to
-go). The orders -- where to stand, which point -- are still the team's
+What is still fixed, said so: a dead bot waits, and a person drives the
+one they took, with Shift and Ctrl as before. The orders -- where to stand, which point -- are still the team's
 techniques, read by the bot as its orders.
 
 ### What T67 measured
 
-`make test-botmatch-effects`, the run after the fix below: every claim
-held, 0 failures, 1270 s.
+`make test-botmatch-effects`, after posture and pace became weighed:
+every claim held, 0 failures, 1466 s.
 
 | claim | measured | needs |
 |---|---|---|
-| the mirror, lanes | +25.3 +- 18.2 s, 13-7 | within 2.5 errors |
-| the mirror, yards | -10.8 +- 35.1 s, 9-11 | within 2.5 errors |
-| claims | 1.0 s bunched with them, 465.3 s without | <= 10 and >= 40 |
-| the commander | orders over 2.67 points with it, 1.39 without | 1.2 times |
-| retreat, lanes and yards | 13171 and 13970 retreating decisions, none uncovered | some, none |
-| honesty, every arena | 0 of about 255,000 shots at an unseen enemy | none |
-| sprint, every arena | 0 shots while sprinting | none, some sprinting |
-| aim | 4.67 damage a shot by worth, 3.66 always the head | 1.1 times |
-| ammunition | always going back: -254.9 +- 20.2 s, 0-10 | below weighing by 2.5 errors |
+| the mirror, lanes | -13.6 +- 26.0 s, 8-12 | within 2.5 errors |
+| the mirror, yards (40 matches) | +32.4 +- 28.5 s, 24-16 | within 2.5 errors |
+| claims | 1.2 s bunched with them, 400.3 s without | <= 10 and >= 40 |
+| the commander | orders over 2.67 points with it, 1.35 without | 1.2 times |
+| retreat, lanes and yards | 13076 and 24761 retreating decisions, none uncovered | some, none |
+| honesty, every arena | 0 of about 291,000 shots at an unseen enemy | none |
+| sprint, every arena | 0 shots while sprinting, 8493 s sprinted by both sides on the lanes | none, some sprinting |
+| aim | 4.54 damage a shot by worth, 3.50 always the head | 1.1 times |
+| ammunition | always going back: -223.5 +- 27.8 s, 0-10 | below weighing by 2.5 errors |
 | portability | 6 random arenas, every point taken, every match ended | all |
 
 Each planted case was caught: a sharper blue (+300 +- 0, 10-0), a
-commander on one point, a retreat in one wave (3044 of 3407 uncovered), a
-wallhack (917 shots) and a bot firing on stale sight (20), always the
+commander on one point, a retreat in one wave (3799 of 4118 uncovered), a
+wallhack (689 shots) and a bot firing on stale sight (17), always the
 head, the weighing blue against itself, and a random arena with point C
 walled in.
+
+**The yards now play forty matches, not twenty.** With posture and pace
+weighed, twenty put blue at +100.1 +- 32.4 s, 14-6 -- 3.1 errors, a
+failed mirror. The next twenty seeds alone gave -35.2 +- 42.5 s, 10-10. A
+fault in the mirror does not reverse with the seeds; this map swings
++-250 s a match, and twenty were too few. Forty measure +32.4 +- 28.5 s.
+That is a change to the test after it failed, so it is stated here and
+the owner is asked to confirm it.
+
+**Posture and pace make no claim of their own in the effects test.** They
+are held in `botmatch_test.gd` -- idle in the open it stands, at low
+cover or reloading it crouches, it stands to shoot over cover and to
+walk; it sprints far, walks near, with a shot heard close, or with an
+enemy in sight -- and each test fails with the weighing it holds set to
+nothing. No measure of the match was found that a bot that never crouches
+must fail, so none is claimed. The sprint claim is unchanged: no shot
+while sprinting, with some sprinting done.
 
 T65's question, again, blue's margin a match against red with everything:
 
 | blue plays | margin a match | wins |
 |---|---|---|
-| everything | +25.3 +- 18.2 s | 13-7 |
-| no claims | -29.6 +- 23.2 s | 8-12 |
-| no commander | -45.6 +- 19.1 s | 7-13 |
-| no retreat | +237.1 +- 7.0 s | 20-0 |
+| everything | -13.6 +- 26.0 s | 8-12 |
+| no claims | -68.0 +- 21.7 s | 5-15 |
+| no commander | -8.7 +- 12.8 s | 9-11 |
+| no retreat | +249.5 +- 6.9 s | 20-0 |
 
-- **The commander helps**: without it blue is 70.9 s worse a match, 2.7
-  combined errors.
-- **Claims** now look like they help, 54.9 s, 1.9 errors: suggested, not
+- **The commander no longer shows in the score**: without it blue is
+  4.9 s better, 0.2 errors. Before posture and pace were weighed it was
+  70.9 s worse, 2.7 errors. What it decides -- orders over twice the
+  points -- still holds.
+- **Claims** look like they help, 54.4 s, 1.6 errors: suggested, not
   shown.
 - **Retreat still costs the match**, 20-0 for the team that never falls
-  back. Weighing actions did not change that; it is the squad's choice,
-  and the moving wave falls back unless a good shot outweighs it.
+  back.
 
 **The fault the first run found.** The first full run with the weighing
 bots failed one planted case: the sharper blue passed the mirror as even,
