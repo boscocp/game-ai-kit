@@ -115,6 +115,7 @@ sha256 and never committed.
 | T51 | A bot match: two teams of bots, cover, and a commander | done | wave 70: `ai_teamwork` (tactical positions with claims, team influence, a commander, squad confidence and waves), Python twins, 17 vectors; a 6-a-side match as a physics-free simulation held to Godot's rays, mirrored; first-person takeover of any bot (owner's choice), tracers, hit markers, a rifle; measured on a fair mirror (9-11; A*'s tie order had bent it 18-2): claims cut bunching 0 s against 79, the commander spreads orders over 2.34 points against 1.81, retreat always leaves someone covering, no shot at an unseen enemy; in the score, retreat costs the match (20-0 without it), the commander suggests help (1.8 errors), claims nothing -- said as measured, as the owner chose (`docs/godot/botmatch.md`), T65 split off; manual check still the owner's |
 | T52 | Bots against the player, with an optional stealth | todo | T50 done; reuse T51's first-person shot, tracers and HUD; third person; a role arbiter, awareness that accumulates with three alert levels, a shared belief map for the search -- each drawn and switchable |
 | T65 | A coordinated team that wins | todo | split from T51 by the owner: on a fair mirror retreat costs the match and the commander's help is not shown; with the owner's map (lanes, flanks, protected spawns, high ground); read how CS and UT maps reward holding before changing a number |
+| T66 | The bot match on a map made for tactics, with a body to aim at | todo | the owner's six asks after playing T51: three-lane map (option 1, Dust2-style, research done), sprint without shooting, a visible reload, a humanoid body, head 2x / torso 1x / limbs 0.5x, aim by expected damage; carries T65's question; wave 71 |
 
 ## The kit as modules
 
@@ -132,6 +133,33 @@ touches, and later a library others can install.
 | T64 | The library | todo | after T60-T63; names: only ports and kernel prefixed (owner, 2026-10-20), the prefix by ADR; addon zips filtered by manifest; `pyproject.toml`, flat layout, no dependencies; an entry-point group for a user's technique; installed and run outside the repo; publishing stays the owner's act |
 
 ---
+
+## Resuming after 2026-10-21 (wave 70 merged, wave 71 opened)
+
+**Where it stopped -- read first.** Wave 70 (T51, the bot match) merged as
+PR #8 (`d98060a`). The owner asked for it to be merged before the CI had
+finished: the full `make check-affected` was green locally on the merged
+commit, and the gates job had failed only on the PR title's length. Read
+`docs/godot/botmatch.md` for what T51 measured.
+
+**Now: wave 71, T66** (`tasks/T66-the-lanes-map.md`), on branch
+`wave/71-the-lanes-map`. It holds the owner's six asks after playing the
+match, all written in the task:
+1. a three-lane map with protected spawns, flanks and high ground (option
+   1 chosen, research done);
+2. sprint with Shift, no firing while sprinting;
+3. a reload you can see and hear;
+4. a humanoid body;
+5. hit zones: head 2x, torso 1x, limbs 0.5x;
+6. bots that aim where the expected damage is highest.
+
+It also carries T65's question: does the coordinated team win on this map?
+
+**Start at T66 step 1**, height in the simulation: a floor height per walk
+cell, and a height-aware `SearchGraph` for A*. Two things T51 learned
+must hold throughout. Red's paths stay searched in the mirror. The built
+map must be mirrored exactly; the sketch is not quite. The fair mirror is
+claim 0 of `botmatch_effects.gd`.
 
 ## Resuming after 2026-10-21 (wave 70)
 
