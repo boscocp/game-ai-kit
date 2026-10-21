@@ -127,7 +127,7 @@ func _physics_process(delta: float) -> void:
 	for number: int in range(cars.size()):
 		_locate(number)
 	for number: int in range(cars.size()):
-		views[number] = RaceSenses3D.view_of(track, cars, samples, number, time, delta)
+		views[number] = RaceSenses3D.view_of(track, cars, samples, number, time, delta, not ghosts)
 		drivers[number].decide(views[number])
 		_drive(cars[number], drivers[number])
 	time += delta

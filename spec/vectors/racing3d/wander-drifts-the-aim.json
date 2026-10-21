@@ -19,7 +19,8 @@
   "drift_phases": [
    0.7,
    2.1
-  ]
+  ],
+  "switches": {}
  },
  "frames": [
   {
@@ -285,7 +286,8 @@
     "target_speed": 50.0,
     "braking_in": -1.0,
     "aim_forward": 14.0,
-    "aim_left": 1.5074270538865648
+    "aim_left": 1.5074270538865648,
+    "wanted_left": 1.5074270538865648
    }
   },
   {
@@ -545,13 +547,14 @@
     "rivals": []
    },
    "expect": {
-    "steer": 0.0657989975697904,
+    "steer": -0.09102413681189862,
     "throttle": 1.0,
     "brake": 0.0,
     "target_speed": 50.0,
     "braking_in": -1.0,
     "aim_forward": 14.0,
-    "aim_left": 0.9910636434845108
+    "aim_left": 0.9910636434845108,
+    "wanted_left": 0.9910636434845108
    }
   },
   {
@@ -811,13 +814,14 @@
     "rivals": []
    },
    "expect": {
-    "steer": -0.08499207336480617,
+    "steer": -0.09102413681189862,
     "throttle": 1.0,
     "brake": 0.0,
     "target_speed": 50.0,
     "braking_in": -1.0,
     "aim_forward": 14.0,
-    "aim_left": -1.2819307884521716
+    "aim_left": -1.2819307884521716,
+    "wanted_left": -1.2819307884521716
    }
   }
  ]

@@ -10,11 +10,16 @@ to the same trajectories.
     car.position, car.speed()          # at rest, at (30, 0)
 
 Read `vector.py`, then `vehicle.py`, then `behaviours.py`: the arithmetic,
-the thing that moves, and what tells it where.
+the thing that moves, and what tells it where. `pid.py` and `heat_line.py`
+are the two pieces T54's 3D driver adds: a PID controller, and Melder's
+heat line for where across a road to be.
 """
 
 from .behaviours import Arrive, Avoid, Pursue, Seek, clamped, combined, direction_to
+from .heat_line import HeatLine
+from .pid import PidController
 from .vector import Vec
 from .vehicle import Vehicle, run
 
-__all__ = ["Arrive", "Avoid", "Pursue", "Seek", "Vec", "Vehicle", "clamped", "combined", "direction_to", "run"]
+__all__ = ["Arrive", "Avoid", "HeatLine", "PidController", "Pursue", "Seek", "Vec", "Vehicle", "clamped", "combined",
+           "direction_to", "run"]

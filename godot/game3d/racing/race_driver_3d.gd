@@ -14,11 +14,21 @@
 ##      sheet -- the tyres decide them now. Following the profile is braking
 ##      on time: the car brakes where, braking that hard, it would otherwise
 ##      no longer make the bend ahead.
-##   2. **Where to steer** (T23's pure pursuit): at the point `lookahead`
-##      metres down the line, drifted `wander` metres sideways, with the
-##      bicycle model's angle for the arc that reaches it.
-##   3. **The pedals**: proportional to how far the car is from the speed
-##      it wants. A car ahead in its lane caps that speed at the other's.
+##   2. **Where across the road** (`RaceTraffic3D`): on the line, or where
+##      the heat line's ball rests with other cars about; plus the wander.
+##   3. **Where to steer** (T23's pure pursuit): at the point `lookahead`
+##      seconds of travel down the line, moved across by step 2, with the
+##      bicycle model's angle for the arc that reaches it -- and a **PID**
+##      on how far the car is from where step 2 wants it (Melder &
+##      Tomlinson), because a car whose tyres slip needs more than the arc.
+##      Never past the angle the measured slip makes worth turning.
+##   4. **The pedals**: a PI controller on how far the car is from the
+##      speed it wants. A car ahead where it means to be caps that speed.
+##
+## Three techniques can be switched off, which is what the player does:
+## `full_pid` (off: proportional only, and the car settles off the line in
+## a long bend), the traffic's `heat_vision` (off: one rival at a time),
+## and the measured grip, which the race decides (`Race3D.measured_grip`).
 ##
 ## The knobs are read once a decision, through the three `*_now`
 ## functions, and what was read is kept in `used`, recorded from inside the
@@ -37,13 +47,14 @@ const BEND_REACH: int = 2
 const CAR_WIDTH: float = 2.2
 ## Metres beyond its braking distance a car ahead is followed from.
 const FOLLOW_MARGIN: float = 15.0
-## Pedal per metre a second the car is off the speed it wants: two metres a
-## second slow is full throttle.
-const PEDAL_GAIN: float = 0.5
-## Radians of steering added per metre the car is off the line it wants.
-## Pure pursuit steers for the arc; a car whose tyres slip needs more than
-## the arc, and this is what gives it.
-const STEER_GAIN: float = 0.04
+## The steering PID on metres off the line, in radians: Melder & Tomlinson's
+## rule of thumb, Ki and Kd about half of Kp. The integral may add at most
+## a tenth of a radian.
+const LINE_GAINS: Array[float] = [0.04, 0.02, 0.02, 0.1]
+## The pedal's PI on metres a second off the speed wanted: two metres a
+## second slow is full throttle. No derivative: the speed wanted jumps where
+## the road changes, and the rate of a jump is a kick on the pedal.
+const SPEED_GAINS: Array[float] = [0.5, 0.25, 0.0, 0.3]
 ## The nearest the aimed-at point comes, in metres, however slow the car.
 const MIN_AIM: float = 8.0
 ## Metres of tarmac the aimed-at point keeps from either edge.
@@ -78,6 +89,15 @@ var aim_left: float = 0.0
 var limits := PackedFloat64Array()
 ## The three knobs as this decision used them.
 var used: Dictionary = {}
+## Where across the road this decision wanted the car, and how far off
+## that the car was: the error the steering PID worked on.
+var wanted_left: float = 0.0
+var line_error: float = 0.0
+## The techniques a player may switch off.
+var full_pid: bool = true
+var line_pid := PidController.new(LINE_GAINS[0], LINE_GAINS[1], LINE_GAINS[2], LINE_GAINS[3])
+var speed_pid := PidController.new(SPEED_GAINS[0], SPEED_GAINS[1], SPEED_GAINS[2], SPEED_GAINS[3])
+var traffic := RaceTraffic3D.new()
 
 
 ## A driver for `driving_level`. `known` holds the car as the driver knows
@@ -105,14 +125,21 @@ func drift_from(seed_value: int) -> void:
 func decide(view: RaceView3D) -> void:
 	used = {"lookahead": lookahead_now(), "grip_margin": grip_margin_now(), "wander": wander_now()}
 	limits = speed_limits(view, used["grip_margin"])
+	var reach: float = maxf(MIN_AIM, used["lookahead"] * view.speed)
+	var ahead: int = _point_at(view, reach)
+	var side: float = traffic.plan(view.rivals, view.room_left[ahead] - AIM_MARGIN,
+		view.room_right[ahead] - AIM_MARGIN, view.speed, view.step)
+	wanted_left = side + used["wander"] * drift(view.time)
 	target_speed = minf(limits[_first_ahead(view)], _traffic_limit(view))
 	braking_in = _braking_in(view)
-	_aim(view, maxf(MIN_AIM, used["lookahead"] * view.speed), used["wander"] * drift(view.time))
-	var wanted_left: float = used["wander"] * drift(view.time)
-	var correction: float = STEER_GAIN * (wanted_left - view.cross_track)
+	_aim(view, reach, wanted_left)
+	line_pid.proportional_only = not full_pid
+	speed_pid.proportional_only = not full_pid
+	line_error = wanted_left - view.cross_track
 	var most: float = steer_limit(view.speed)
-	steer = clampf(pursuit_steer(aim_forward, aim_left, wheelbase) + correction, -most, most)
-	var pedal: float = PEDAL_GAIN * (target_speed - view.speed)
+	var pursuit: float = pursuit_steer(aim_forward, aim_left, wheelbase)
+	steer = clampf(pursuit + line_pid.update(line_error, view.step), -most, most)
+	var pedal: float = speed_pid.update(target_speed - view.speed, view.step)
 	throttle = clampf(pedal, 0.0, 1.0)
 	brake = clampf(-pedal, 0.0, 1.0)
 
@@ -196,14 +223,16 @@ func _first_ahead(view: RaceView3D) -> int:
 	return 0
 
 
-# The slowest car close ahead in the car's lane -- near enough that braking
-# to its speed must start now -- caps the speed; infinity when none is.
+# The slowest car close ahead where this one is or means to be -- near
+# enough that braking to its speed must start now -- caps the speed;
+# infinity when none is. Where it is, too: a car that has only decided to
+# pull out is still behind the other.
 func _traffic_limit(view: RaceView3D) -> float:
 	var capped: float = INF
 	for rival: PackedFloat64Array in view.rivals:
 		var reach: float = _stopping(view.speed, rival[2]) + FOLLOW_MARGIN
-		var in_lane: bool = absf(rival[1] - view.cross_track) < CAR_WIDTH
-		if rival[0] > 0.0 and rival[0] < reach and in_lane:
+		var in_the_way: bool = absf(rival[1] - wanted_left) < CAR_WIDTH or absf(rival[1] - view.cross_track) < CAR_WIDTH
+		if rival[0] > 0.0 and rival[0] < reach and in_the_way:
 			capped = minf(capped, rival[2])
 	return capped
 
@@ -221,6 +250,16 @@ func _braking_in(view: RaceView3D) -> float:
 		if limits[index] < view.speed:
 			return view.line_forward[index]
 	return -1.0
+
+
+# The first point at least `distance` metres along the line, or the last.
+func _point_at(view: RaceView3D, distance: float) -> int:
+	var walked: float = 0.0
+	for index: int in range(view.line_forward.size() - 1):
+		if walked >= distance:
+			return index
+		walked += _distance(view, index, index + 1)
+	return view.line_forward.size() - 1
 
 
 # The point `distance` metres along the line from its first point, pushed

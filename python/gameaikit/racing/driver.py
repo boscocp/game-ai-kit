@@ -10,16 +10,26 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
+from gameaikit.steering.heat_line import HeatLine
+from gameaikit.steering.pid import PidController
+
 #: Points either side of a point the bend there is measured over.
 BEND_REACH = 2
 #: How wide a car is taken to be when asking whether one is in the way.
 CAR_WIDTH = 2.2
 #: Metres beyond its braking distance a car ahead is followed from.
 FOLLOW_MARGIN = 15.0
-#: Pedal per metre a second the car is off the speed it wants.
-PEDAL_GAIN = 0.5
-#: Radians of steering added per metre the car is off the line it wants.
-STEER_GAIN = 0.04
+#: The steering PID's gains and integral limit, and the pedal's.
+LINE_GAINS = [0.04, 0.02, 0.02, 0.1]
+SPEED_GAINS = [0.5, 0.25, 0.0, 0.3]
+#: The traffic's reach, a car alongside, a car's heat, spread, gap, side speed.
+REACH = 60.0
+BESIDE = 6.0
+RIVAL_HEAT = 3.0
+SPREAD = 2.6
+ALONGSIDE = 3.0
+PASS_GAP = 1.2
+SIDE_SPEED = 4.0
 #: The nearest the aimed-at point comes, in metres.
 MIN_AIM = 8.0
 #: Metres of tarmac the aimed-at point keeps from either edge.
@@ -95,6 +105,59 @@ def pursuit_steer(forward: float, left: float, axles: float) -> float:
     return math.atan(axles * 2.0 * math.sin(math.atan2(left, forward)) / reach)
 
 
+def move_toward(start: float, end: float, most: float) -> float:
+    """GDScript's move_toward."""
+    if abs(end - start) <= most:
+        return end
+    return start + math.copysign(most, end - start)
+
+
+class Traffic:
+    """`RaceTraffic3D`: the heat line, or one rival at a time."""
+
+    def __init__(self) -> None:
+        self.heat_vision = True
+        self.heat = HeatLine()
+        self.offset = 0.0
+        self.passing_side = 0
+
+    def plan(self, rivals: list[list[float]], room_left: float, room_right: float, speed: float, step: float) -> float:
+        """The offset from the line to steer for."""
+        if self.heat_vision:
+            wanted = self._heat_vision(rivals, room_left, room_right, speed, step)
+        else:
+            wanted = self._one_rival(rivals, room_left, room_right)
+        self.offset = move_toward(self.offset, wanted, SIDE_SPEED * step)
+        return self.offset
+
+    def _heat_vision(self, rivals, room_left, room_right, speed, step) -> float:
+        self.heat.build(room_left, room_right)
+        for ahead, left, rival_speed in rivals:
+            alongside = -BESIDE < ahead <= 0.0
+            closing = 0.0 < ahead < REACH and rival_speed < speed + 1.0
+            if alongside:
+                self.heat.heat_up(left, RIVAL_HEAT * ALONGSIDE, SPREAD)
+            elif closing:
+                self.heat.heat_up(left, RIVAL_HEAT * (1.0 - ahead / REACH), SPREAD)
+        self.heat.roll(step)
+        return self.heat.ball
+
+    def _one_rival(self, rivals, room_left, room_right) -> float:
+        nearest = -1
+        for index, (ahead, left, _speed) in enumerate(rivals):
+            blocking = abs(left) < SPREAD + PASS_GAP
+            near = -BESIDE < ahead < REACH
+            if near and blocking and (nearest < 0 or abs(ahead) < abs(rivals[nearest][0])):
+                nearest = index
+        if nearest < 0:
+            self.passing_side = 0
+            return 0.0
+        rival_left = rivals[nearest][1]
+        if self.passing_side == 0:
+            self.passing_side = 1 if room_left - rival_left >= rival_left + room_right else -1
+        return clamp(rival_left + self.passing_side * (SPREAD + PASS_GAP), -room_right, room_left)
+
+
 class Driver:
     """A driver of one level, knowing its car as `known` says."""
 
@@ -112,21 +175,32 @@ class Driver:
         self.aim_forward = self.aim_left = 0.0
         self.limits: list[float] = []
         self.used: dict = {}
+        self.wanted_left = self.line_error = 0.0
+        self.full_pid = True
+        self.line_pid = PidController(*LINE_GAINS)
+        self.speed_pid = PidController(*SPEED_GAINS)
+        self.traffic = Traffic()
 
     def decide(self, view: View) -> None:
         """This frame's steering and pedals, from `view`."""
         self.used = {"lookahead": self.level.lookahead, "grip_margin": self.level.grip_margin,
                      "wander": self.level.wander}
         self.limits = self.speed_limits(view, self.used["grip_margin"])
+        reach = max(MIN_AIM, self.used["lookahead"] * view.speed)
+        ahead = self._point_at(view, reach)
+        side = self.traffic.plan(view.rivals, view.room_left[ahead] - AIM_MARGIN,
+                                 view.room_right[ahead] - AIM_MARGIN, view.speed, view.step)
+        self.wanted_left = side + self.used["wander"] * self.drift(view.time)
         self.target_speed = min(self.limits[self._first_ahead(view)], self._traffic_limit(view))
         self.braking_in = self._braking_in(view)
-        self._aim(view, max(MIN_AIM, self.used["lookahead"] * view.speed),
-                  self.used["wander"] * self.drift(view.time))
-        wanted_left = self.used["wander"] * self.drift(view.time)
-        correction = STEER_GAIN * (wanted_left - view.cross_track)
+        self._aim(view, reach, self.wanted_left)
+        self.line_pid.proportional_only = not self.full_pid
+        self.speed_pid.proportional_only = not self.full_pid
+        self.line_error = self.wanted_left - view.cross_track
         most = self.steer_limit(view.speed)
-        self.steer = clamp(pursuit_steer(self.aim_forward, self.aim_left, self.wheelbase) + correction, -most, most)
-        pedal = PEDAL_GAIN * (self.target_speed - view.speed)
+        pursuit = pursuit_steer(self.aim_forward, self.aim_left, self.wheelbase)
+        self.steer = clamp(pursuit + self.line_pid.update(self.line_error, view.step), -most, most)
+        pedal = self.speed_pid.update(self.target_speed - view.speed, view.step)
         self.throttle = clamp(pedal, 0.0, 1.0)
         self.brake = clamp(-pedal, 0.0, 1.0)
 
@@ -162,9 +236,18 @@ class Driver:
         capped = math.inf
         for ahead, left, speed in view.rivals:
             reach = self._stopping(view.speed, speed) + FOLLOW_MARGIN
-            if 0.0 < ahead < reach and abs(left - view.cross_track) < CAR_WIDTH:
+            in_the_way = abs(left - self.wanted_left) < CAR_WIDTH or abs(left - view.cross_track) < CAR_WIDTH
+            if 0.0 < ahead < reach and in_the_way:
                 capped = min(capped, speed)
         return capped
+
+    def _point_at(self, view: View, reach: float) -> int:
+        walked = 0.0
+        for index in range(len(view.line_forward) - 1):
+            if walked >= reach:
+                return index
+            walked += distance(view, index, index + 1)
+        return len(view.line_forward) - 1
 
     def _stopping(self, speed: float, other: float) -> float:
         if speed <= other:

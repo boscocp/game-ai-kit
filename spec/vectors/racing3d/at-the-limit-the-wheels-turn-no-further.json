@@ -19,7 +19,8 @@
   "drift_phases": [
    0.0,
    0.0
-  ]
+  ],
+  "switches": {}
  },
  "frames": [
   {
@@ -285,7 +286,8 @@
     "target_speed": 11.27438455129349,
     "braking_in": 0.0,
     "aim_forward": 13.487391298038073,
-    "aim_left": -13.887138114485559
+    "aim_left": -13.887138114485559,
+    "wanted_left": 0.0
    }
   }
  ]

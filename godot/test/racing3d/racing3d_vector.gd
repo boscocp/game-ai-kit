@@ -12,7 +12,9 @@ extends RefCounted
 ## Shared with `python/tests/test_racing3d_vectors.py`. Both sides compute
 ## in 64-bit floats.
 const TOLERANCE: float = 1e-9
-const DECIDED: Array[String] = ["steer", "throttle", "brake", "target_speed", "braking_in", "aim_forward", "aim_left"]
+const DECIDED: Array[String] = [
+	"steer", "throttle", "brake", "target_speed", "braking_in", "aim_forward", "aim_left", "wanted_left",
+]
 
 
 ## Why `vector` is not a racing vector, or "" when it is one.
@@ -53,6 +55,9 @@ static func decisions(vector: Dictionary) -> Array[Dictionary]:
 		float(knobs["grip_margin"]), float(knobs["wander"]))
 	var driver := RaceDriver3D.new(level, spec["known"])
 	driver.drift_phases = PackedFloat64Array(spec["drift_phases"])
+	var switches: Dictionary = spec.get("switches", {})
+	driver.full_pid = bool(switches.get("full_pid", true))
+	driver.traffic.heat_vision = bool(switches.get("heat_vision", true))
 	var decided: Array[Dictionary] = []
 	for frame: Dictionary in vector["frames"]:
 		driver.decide(RaceView3D.from_dictionary(frame["view"]))

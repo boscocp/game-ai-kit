@@ -22,9 +22,10 @@ const SEEN_AHEAD: float = 200.0
 
 ## The view of car `number`, nearest the track's sample `samples[number]`,
 ## among `cars`, `time` seconds into the race and for a decision `step`
-## seconds long.
+## seconds long. A ghost race's cars drive through each other and do not
+## see each other: each races alone (`with_rivals` false).
 static func view_of(track: RaceTrack3D, cars: Array[RaceCar3D], samples: PackedInt64Array,
-		number: int, time: float, step: float) -> RaceView3D:
+		number: int, time: float, step: float, with_rivals: bool = true) -> RaceView3D:
 	var view := RaceView3D.new()
 	var car: RaceCar3D = cars[number]
 	var here: int = samples[number]
@@ -43,7 +44,7 @@ static func view_of(track: RaceTrack3D, cars: Array[RaceCar3D], samples: PackedI
 		view.room_left.append(track.half_width - track.offsets[sample])
 		view.room_right.append(track.half_width + track.offsets[sample])
 	for other: int in range(cars.size()):
-		if other != number:
+		if other != number and with_rivals:
 			_see(view, track, cars[other], here, samples[other])
 	return view
 

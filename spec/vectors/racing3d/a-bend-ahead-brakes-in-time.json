@@ -19,7 +19,8 @@
   "drift_phases": [
    0.0,
    0.0
-  ]
+  ],
+  "switches": {}
  },
  "frames": [
   {
@@ -280,12 +281,13 @@
    },
    "expect": {
     "steer": 0.0,
-    "throttle": 0.46551784331679613,
+    "throttle": 0.46939715867776943,
     "brake": 0.0,
     "target_speed": 35.93103568663359,
     "braking_in": 6.0,
     "aim_forward": 24.5,
-    "aim_left": 0.0
+    "aim_left": 0.0,
+    "wanted_left": 0.0
    }
   },
   {
@@ -547,11 +549,12 @@
    "expect": {
     "steer": 0.0,
     "throttle": 0.0,
-    "brake": 0.5307280287315699,
+    "brake": 0.5312714469433597,
     "target_speed": 28.93854394253686,
     "braking_in": 0.0,
     "aim_forward": 21.0,
-    "aim_left": 0.0
+    "aim_left": 0.0,
+    "wanted_left": 0.0
    }
   }
  ]

@@ -20,19 +20,22 @@ from gameaikit.racing import Driver, Level, View
 VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "racing3d"
 
 #: Fewer than this and something is wrong with the directory, not the vectors.
-FEWEST_VECTORS = 8
+FEWEST_VECTORS = 14
 
 #: How far a number may stray. Shared with `godot/test/racing3d/racing3d_vector.gd`.
 TOLERANCE = 1e-9
 
 #: What each frame must decide, in the order the file writes it.
-DECIDED = ["steer", "throttle", "brake", "target_speed", "braking_in", "aim_forward", "aim_left"]
+DECIDED = ["steer", "throttle", "brake", "target_speed", "braking_in", "aim_forward", "aim_left", "wanted_left"]
 
 
 def answers(vector: dict) -> list[dict]:
     """What `gameaikit.racing` decides on each of the vector's frames, in turn."""
     spec = vector["driver"]
     driver = Driver(Level(**spec["level"]), spec["known"], spec["drift_phases"])
+    switches = spec.get("switches", {})
+    driver.full_pid = switches.get("full_pid", True)
+    driver.traffic.heat_vision = switches.get("heat_vision", True)
     decided = []
     for frame in vector["frames"]:
         driver.decide(View.from_dict(frame["view"]))

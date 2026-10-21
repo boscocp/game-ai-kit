@@ -10,10 +10,12 @@
     "spec/vectors/racing3d/"
   ],
   "depends_on": [
+    "ai_steering",
     "game3d"
   ],
   "gates": [
     "test-racing3d-car",
-    "test-racing3d-vectors"
+    "test-racing3d-vectors",
+    "test-racing3d-effects"
   ]
 }

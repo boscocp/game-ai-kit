@@ -10,6 +10,8 @@ import random
 import unittest
 
 from gameaikit.steering import Arrive, Avoid, Pursue, Seek, Vec, Vehicle, clamped, direction_to
+from gameaikit.steering.heat_line import HeatLine
+from gameaikit.steering.pid import PidController
 
 DT = 1.0 / 60.0
 #: At rest: under a thousandth of top speed, for a whole second.
@@ -96,6 +98,35 @@ class SteeringTests(unittest.TestCase):
     def test_avoid_sees_nothing_when_standing_still(self) -> None:
         car = Vehicle(Vec(0.0, 0.0), Vec(0.0, 0.0), 10.0, 20.0)
         self.assertEqual(Avoid([Vec(1.0, 0.0)], [2.0], 5.0).force(car), Vec(0.0, 0.0))
+
+
+def settle(controller: PidController, seconds: float) -> float:
+    """A cart pushed towards zero against a steady pull of 0.5: where it rests."""
+    where, speed = 1.0, 0.0
+    for _ in range(round(seconds / DT)):
+        push = controller.update(-where, DT)
+        speed += (push - 0.5 - 2.0 * speed) * DT
+        where += speed * DT
+    return where
+
+
+class PidAndHeatTests(unittest.TestCase):
+    """The two pieces T54's driver adds to ai_steering, as the GDScript
+    suite `godot/test/ai_steering/pid_and_heat_test.gd` asks them."""
+
+    def test_proportional_alone_settles_off_and_the_integral_does_not(self) -> None:
+        alone = PidController(2.0, 1.0, 1.0, 10.0)
+        alone.proportional_only = True
+        self.assertAlmostEqual(settle(alone, 30.0), -0.25, places=3)
+        self.assertLess(abs(settle(PidController(2.0, 1.0, 1.0, 10.0), 30.0)), 1e-3)
+
+    def test_the_ball_rolls_away_from_a_car(self) -> None:
+        line = HeatLine()
+        for _ in range(240):
+            line.build(6.0, 6.0)
+            line.heat_up(0.5, 3.0, 2.2)
+            line.roll(DT)
+        self.assertLess(line.ball, -1.5)
 
 
 if __name__ == "__main__":
