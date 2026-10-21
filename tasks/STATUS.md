@@ -124,13 +124,32 @@ touches, and later a library others can install.
 | # | Task | State | Notes |
 |---|---|---|---|
 | T58 | Modules, and gates that run for what a wave touches | done | wave 63: 23 manifests in `modules/`, held to the code by `lint-modules` (M0-M10); tests filed in `godot/test/<module>/`; `make check-affected` runs the lints and the modules a change reaches (code uses followed on, test-only uses not): 25-64 s for a change that evolves one module, against 550 s; a wave lands by pull request, as desk-panel's do; CI ran for the first time and found four defects in bootstrap and the runner rules; mk fragments dropped (measured, no gain); ports, kernel, registry and the library are later tasks; manual check the owner's |
-| T60 | `ai_learning` without the board | todo | the technique keeps `LearnedModel`, `SoftmaxModel`, `ModelFile`, `CaseTable`, `ClonedPlayer`; `BoardFeatures`, `LearnedPolicy`, `LearnedDecision` and the weights go to their games; `gameaikit.training` keeps descent, models, split, so checkers stops depending on the tactical dataset |
-| T61 | A small shared kernel: the board leaves `ai_core` | todo | after T60: `ai_core` keeps `GridGraph` and `Pathfinder`; the six board types, `DecisionPolicy` (typed on `BoardState`) and `Move` become the board's own kernel at `game/board/` (owner, 2026-10-20), by ADR |
+| T60 | `ai_learning` without the board | done | wave 67: the adapter (`BoardFeatures`, `LearnedPolicy`, `LearnedDecision`) and the weights to `game/tactical`, the clone's weights to `game/fighting`; no default paths in the technique; `gameaikit.training` generic and in `ai_learning`, the tactical fit is `gameaikit.tactical`; checkers depends on `ai_learning`, not tactical; the skirmish found inside `game_shared` and made its own module; retrained, same numbers |
+| T61 | A small shared kernel: the board leaves `ai_core` | done | wave 67: `ai_core` is `GridGraph` and `Pathfinder`; the board's eight classes are module `board` in `game/board/` (ADR 0021); addon comments name no board class; `unit_view.gd` owned by tactical, so `game_shared` depends on `ai_core` alone; a board change selects 10 modules, 19 before |
 | T62 | Search over a port, not over a grid | todo | after T61: `SearchGraph` in `ai_search` with a `GridSearchGraph` adapter, nodes still `Vector2i`, A\*'s estimate owned by the graph and admissible (recommended, decided in the task); vectors replay unchanged; a waypoint graph test where cost and hops disagree |
 | T63 | The controller registry | todo | the four T15 teams move to `game/tactical/`; `next_controller`'s `if playing is` chain and `League.roster()` become one table; `catalogue.json` lists each example's controllers, held by `check_demos.py`; `tactical` stops depending on `league` |
 | T64 | The library | todo | after T60-T63; names: only ports and kernel prefixed (owner, 2026-10-20), the prefix by ADR; addon zips filtered by manifest; `pyproject.toml`, flat layout, no dependencies; an entry-point group for a user's technique; installed and run outside the repo; publishing stays the owner's act |
 
 ---
+
+## Resuming after 2026-10-20 (wave 67)
+
+**Where it stopped -- read first.** Wave 67 did T60 and T61 together, as
+the owner asked: one branch, each task in its own commits, one review. The
+review record is `docs/reviews/67-learning-and-the-small-kernel.md`.
+
+**What landed.** `ai_learning` reads no board, and `ai_core` holds only the
+grid and the pathfinder interface; the tactical board is the examples'
+kernel, `game/board/` (ADR 0021). Measured with `affected.py`: a change to
+the learned model selects 9 modules (15 before), and a change to the board
+selects 10 (19 before). Two couplings the plan did not know about were found
+by measuring: the skirmish lived inside `game_shared`, and so did the one
+view that draws board units.
+
+**Next.** T62 (search over a port; it needs T61, now done) and T63 (the
+controller registry), in either order, then T64. Then milestone 5, after
+the owner decides ADR 0018. Open by hand, since `make wave` picks by table
+order: `make wave-start BRANCH=wave/68-search-over-a-port`.
 
 ## Resuming after 2026-10-20 (wave 66)
 
