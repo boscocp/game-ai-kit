@@ -99,9 +99,13 @@ func step() -> void:
 	if time >= _next_decision:
 		_decide()
 		_next_decision += rules.decision_interval
+	var before: Array[Vector2] = []
 	for bot: MatchBot in bots:
+		before.append(bot.position)
 		MatchActions.act(self, bot, rules.step)
 	_keep_bodies_apart()
+	for bot: MatchBot in bots:
+		bot.velocity = (bot.position - before[bot.id]) / rules.step
 	for bot: MatchBot in bots:
 		if bot.alive():
 			supply.touch(self, bot)
@@ -163,14 +167,28 @@ func send(bot: MatchBot, goal: Vector2, place: int) -> void:
 # won a mirror match 10-0 while the order held. The arena is its own mirror
 # across x = 24, so red's path is searched in the mirror and mirrored back,
 # and both sides walk each other's mirror image exactly.
-func _path_for(side: int, from: Vector2i, to: Vector2i) -> Array[Vector2i]:
+func _path_for(side: int, from: Vector2i, to: Vector2i, closed: Array[Vector2i] = []) -> Array[Vector2i]:
 	if side == BLUE:
-		return _search.search(arena.walk_graph, from, to).path
-	var path: Array[Vector2i] = _search.search(arena.walk_graph, _mirrored(from), _mirrored(to)).path
+		return _search.search(_graph_with(closed), from, to).path
+	var mirrored_closed: Array[Vector2i] = []
+	for cell: Vector2i in closed:
+		mirrored_closed.append(_mirrored(cell))
+	var path: Array[Vector2i] = _search.search(_graph_with(mirrored_closed), _mirrored(from), _mirrored(to)).path
 	var back: Array[Vector2i] = []
 	for cell: Vector2i in path:
 		back.append(_mirrored(cell))
 	return back
+
+
+# The walk, or the walk with `closed` cells shut by bodies (`CrowdedWalk`).
+func _graph_with(closed: Array[Vector2i]) -> SearchGraph:
+	return arena.walk_graph if closed.is_empty() else CrowdedWalk.new(arena.walk_graph, closed)
+
+
+## A route for `bot` to `to` round the cells `closed` by bodies -- in the
+## mirror for red, as every path is -- or an empty one when there is none.
+func detour(bot: MatchBot, to: Vector2i, closed: Array[Vector2i]) -> Array[Vector2i]:
+	return _path_for(bot.team, BotArena.cell_of(bot.position), to, closed)
 
 
 func _mirrored(cell: Vector2i) -> Vector2i:

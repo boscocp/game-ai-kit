@@ -243,27 +243,6 @@ static func _walk(world: BotMatch, bot: MatchBot, delta: float) -> void:
 		bot.turn_to(towards, world.teams[bot.team].turn_rate, delta)
 
 
-# Nothing in `_around` was free: a teammate standing in the way, holding
-# its spot, steps aside by as much, away from the bot that wants by -- where
-# it can stand and touches nobody. An enemy is never moved, and nobody walks
-# through anybody: without this, two of a team wedged against a wall waited
-# on each other for good (13 s measured, till the holder moved on).
-static func _ask_way(world: BotMatch, bot: MatchBot, step: Vector2) -> void:
-	for other: MatchBot in world.bots.filter(func(other: MatchBot) -> bool: return _holding_in_the_way(world, bot, other, step)):
-		var aside: Vector2 = (other.position - bot.position).normalized() * step.length()
-		var to: Vector2 = other.position + aside
-		if world.arena.can_step(other.position, to, world.rules.body_radius) and clear_of_bodies(world, other, to):
-			other.position = to
-
-
-# A living teammate of `bot`'s, holding its spot under its list, where the
-# step would touch it.
-static func _holding_in_the_way(world: BotMatch, bot: MatchBot, other: MatchBot, step: Vector2) -> bool:
-	var touched: bool = other.position.distance_to(bot.position + step) < world.rules.body_radius * 2.0
-	var holding: bool = other.action == MatchBot.HOLD and not other.controlled
-	return other != bot and other.alive() and other.team == bot.team and touched and holding
-
-
 # The step a bot wants, then the same step turned 45 and then 90 degrees to
 # either side: a body in the way is walked round, not waited behind. The
 # straight step is tried first, so nothing changes on an open floor.
@@ -291,7 +270,7 @@ static func clear_of_bodies(world: BotMatch, bot: MatchBot, next: Vector2) -> bo
 
 
 # Move `delta` seconds' worth along the path, sliding along a body in the
-# way, or waiting behind it; the waypoint it moved towards.
+# way; blocked, it decides how to get past; the waypoint it moved towards.
 static func _step_towards(world: BotMatch, bot: MatchBot, delta: float) -> Vector2:
 	var towards: Vector2 = _next_waypoint(world, bot)
 	var offset: Vector2 = towards - bot.position
@@ -303,8 +282,12 @@ static func _step_towards(world: BotMatch, bot: MatchBot, delta: float) -> Vecto
 		if not moved and walkable and clear_of_bodies(world, bot, bot.position + tried):
 			bot.position += tried
 			moved = true
-	if not moved:
-		_ask_way(world, bot, step)
+	# Blocked for its patience, it weighs the ways past (`MatchPassage`), and
+	# is patient again after; moving, it never was.
+	bot.blocked_for = 0.0 if moved else bot.blocked_for + delta
+	if bot.blocked_for >= world.rules.passage_patience:
+		bot.blocked_for = 0.0
+		MatchPassage.decide(world, bot, step)
 	# Everything up to the cell it stands in is behind it, wherever in the path
 	# that cell is: a bot cutting a corner skips cells, and one that only
 	# dropped the first never moved past it, looking at the same few ahead.

@@ -719,29 +719,35 @@ func test_a_team_sends_one_bot_for_the_power_weapon_and_not_into_enemies() -> vo
 func test_nobody_walks_through_a_body_friend_or_enemy() -> void:
 	# Walking into another body, on the open floor and with it pinned
 	# against the low box in lane A: stopped at two radii, and it unmoved.
-	var rules := MatchRules.new()
-	var touching: float = rules.body_radius * 2.0
 	for other_id: int in [6, 1]:
 		for pinned: bool in [false, true]:
-			var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
-			var mine: MatchBot = world.bots[0]
-			var other: MatchBot = world.bots[other_id]
-			mine.controlled = true
-			other.controlled = true
-			mine.wants_to_walk = Vector2.RIGHT
-			mine.position = Vector2(15.0, 5.0 if pinned else 3.0)
-			other.position = Vector2(18.0 if pinned else 17.0, mine.position.y)
-			var stood: Vector2 = other.position
-			for _step: int in range(60):
-				world.step()
-			var label: String = "%s, %s" % ["enemy" if other_id == 6 else "teammate", "pinned" if pinned else "open"]
-			assert_float(mine.position.distance_to(other.position)).override_failure_message(label).is_greater_equal(touching - 1e-3)
-			assert_vector(other.position).override_failure_message(label).is_equal_approx(stood, Vector2(1e-3, 1e-3))
+			_walk_into(other_id, pinned)
 
 
-func test_a_bot_holding_its_spot_gives_way_to_a_teammate_wedged_behind_it() -> void:
+func _walk_into(other_id: int, pinned: bool) -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var mine: MatchBot = world.bots[0]
+	var other: MatchBot = world.bots[other_id]
+	mine.controlled = true
+	other.controlled = true
+	mine.wants_to_walk = Vector2.RIGHT
+	mine.position = Vector2(15.0, 5.0 if pinned else 3.0)
+	other.position = Vector2(18.0 if pinned else 17.0, mine.position.y)
+	var stood: Vector2 = other.position
+	for _step: int in range(60):
+		world.step()
+	var label: String = "%s, %s" % ["enemy" if other_id == 6 else "teammate", "pinned" if pinned else "open"]
+	assert_float(mine.position.distance_to(other.position)).override_failure_message(label) \
+			.is_greater_equal(rules.body_radius * 2.0 - 1e-3)
+	assert_vector(other.position).override_failure_message(label).is_equal_approx(stood, Vector2(1e-3, 1e-3))
+
+
+func test_a_teammate_asked_to_make_way_weighs_it_and_steps_aside() -> void:
 	# Measured in a match: two of a team against lane A's north wall, the
-	# one going west waited on the one holding for 13 s.
+	# one going west waited on the one holding for 13 s. Now the blocked one
+	# weighs its ways (no way round, nobody leaving), asks, and the holder,
+	# with nobody in sight, finds it cheap and steps aside.
 	var rules := MatchRules.new()
 	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
 	var walker: MatchBot = world.bots[4]
@@ -755,8 +761,30 @@ func test_a_bot_holding_its_spot_gives_way_to_a_teammate_wedged_behind_it() -> v
 	walker.action = MatchBot.MOVE
 	for _step: int in range(40):
 		MatchActions.act(world, walker, rules.step)
+		holder.decide(world.time, [] as Array[int], {}, 0.0, false)
+		MatchActions.act(world, holder, rules.step)
 	assert_bool(walker.arrived()).override_failure_message("stuck at %s" % walker.position).is_true()
+	assert_str(str(walker.last_passage["chosen"])).is_equal(PassageChoice.ASK)
+	assert_str(str(walker.last_passage["answer"])).is_equal("granted")
 	assert_float(walker.position.distance_to(holder.position)).is_greater_equal(rules.body_radius * 2.0 - 1e-3)
+
+
+func test_a_teammate_in_a_fight_refuses_and_the_asker_remembers_it() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var holder: MatchBot = world.bots[5]
+	var request: PassageChoice.Request = MatchPassage.request_to(world, holder)
+	request.saves = 2.0
+	assert_bool(PassageChoice.answer(request, MatchPassage.prices_of(rules)).granted).is_true()
+	# Two enemies in sight, shooting: 0.5 + 2 x 2.0 + 1.5 = 6 s, more than 2.
+	request.enemies_in_sight = 2
+	request.shooting = true
+	var reply: PassageChoice.Answer = PassageChoice.answer(request, MatchPassage.prices_of(rules))
+	assert_float(reply.cost).is_equal_approx(6.0, 1e-9)
+	assert_bool(reply.granted).is_false()
+	# And when nothing else gets the asker past, its saving has no end: granted.
+	request.saves = INF
+	assert_bool(PassageChoice.answer(request, MatchPassage.prices_of(rules)).granted).is_true()
 
 
 func test_teammates_leave_a_persons_spot_to_them_and_the_list_takes_back_over() -> void:

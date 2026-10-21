@@ -1,0 +1,42 @@
+{
+ "name": "equal-ways-go-to-the-first",
+ "why": "Waiting and going round both 1 s: the first in the order, waiting, is taken. Numbers in powers of two, so neither side rounds.",
+ "kind": "passage",
+ "prices": {
+  "step_seconds": 0.5,
+  "per_enemy_seen": 2.0,
+  "shooting": 1.5,
+  "reloading": 0.5,
+  "covering_a_retreat": 3.0
+ },
+ "query": {
+  "facts": [
+   {
+    "gap": 0.5,
+    "leaving_speed": 0.5,
+    "detour_metres": 4.0,
+    "speed": 4.0,
+    "teammate": false,
+    "refused": false,
+    "ask_seconds": 1.0,
+    "spot_loss": null,
+    "points_a_second": 10.0
+   }
+  ],
+  "requests": []
+ },
+ "expect": {
+  "costs": [
+   [
+    1.0,
+    1.0,
+    null,
+    null
+   ]
+  ],
+  "chosen": [
+   "wait"
+  ],
+  "answers": []
+ }
+}

@@ -58,7 +58,7 @@ static func _claim_where_standing(world: BotMatch, team: MatchTeam, bot: MatchBo
 # retreat -- a covering bot stays where it is and shoots.
 static func _due_a_choice(world: BotMatch, team: MatchTeam, bot: MatchBot, now: float) -> bool:
 	var due: bool = bot.alive() and now - bot.chose_at >= world.rules.position_interval
-	return due and not _covering_a_retreat(world, team, bot)
+	return due and not covering_a_retreat(world, team, bot)
 
 
 ## Whether `bot` is in the moving wave of its squad's retreat.
@@ -206,7 +206,9 @@ static func _waves(world: BotMatch, team: MatchTeam, index: int) -> SquadConfide
 	return SquadConfidence.waves(living, team.squad_phases[index])
 
 
-static func _covering_a_retreat(world: BotMatch, team: MatchTeam, bot: MatchBot) -> bool:
+## Whether `bot` is in the covering wave of its squad's retreat: it stays
+## where it is and shoots while the others fall back.
+static func covering_a_retreat(world: BotMatch, team: MatchTeam, bot: MatchBot) -> bool:
 	var index: int = team.squad_of(bot.id)
 	return team.squad_states[index] == SquadConfidence.RETREAT and not moving_in_retreat(world, team, bot)
 

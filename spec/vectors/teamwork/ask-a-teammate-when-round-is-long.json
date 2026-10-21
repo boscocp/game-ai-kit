@@ -1,0 +1,78 @@
+{
+ "name": "ask-a-teammate-when-round-is-long",
+ "why": "A teammate holding, the way round 9 m (2 s): asking, 1 s, is cheaper. An enemy in the same place may not be asked, and the bot goes round. A teammate that refused lately may not be asked either.",
+ "kind": "passage",
+ "prices": {
+  "step_seconds": 0.5,
+  "per_enemy_seen": 2.0,
+  "shooting": 1.5,
+  "reloading": 0.5,
+  "covering_a_retreat": 3.0
+ },
+ "query": {
+  "facts": [
+   {
+    "gap": 0.4,
+    "leaving_speed": 0.0,
+    "detour_metres": 9.0,
+    "speed": 4.5,
+    "teammate": true,
+    "refused": false,
+    "ask_seconds": 1.0,
+    "spot_loss": null,
+    "points_a_second": 10.0
+   },
+   {
+    "gap": 0.4,
+    "leaving_speed": 0.0,
+    "detour_metres": 9.0,
+    "speed": 4.5,
+    "teammate": false,
+    "refused": false,
+    "ask_seconds": 1.0,
+    "spot_loss": null,
+    "points_a_second": 10.0
+   },
+   {
+    "gap": 0.4,
+    "leaving_speed": 0.0,
+    "detour_metres": 9.0,
+    "speed": 4.5,
+    "teammate": true,
+    "refused": true,
+    "ask_seconds": 1.0,
+    "spot_loss": null,
+    "points_a_second": 10.0
+   }
+  ],
+  "requests": []
+ },
+ "expect": {
+  "costs": [
+   [
+    null,
+    2.0,
+    1.0,
+    null
+   ],
+   [
+    null,
+    2.0,
+    null,
+    null
+   ],
+   [
+    null,
+    2.0,
+    null,
+    null
+   ]
+  ],
+  "chosen": [
+   "ask to pass",
+   "go round",
+   "go round"
+  ],
+  "answers": []
+ }
+}

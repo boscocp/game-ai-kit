@@ -187,6 +187,88 @@ def aim(name, why, spread, zones, rolls):
     return {"name": name, "why": why, "kind": "aim", "query": {"spread": spread, "zones": zones, "rolls": rolls},
             "expect": {"own_chances": own, "expected": worth, "aimed": aimed, "chances": chosen, "landed": landed}}
 
+# --- passage ---------------------------------------------------------------
+
+# JSON has no infinity: an impossible way, or a fact with no bound, is null.
+WAYS = ["wait", "go round", "ask to pass", "another spot"]
+PRICES = {"step_seconds": 0.5, "per_enemy_seen": 2.0, "shooting": 1.5, "reloading": 0.5, "covering_a_retreat": 3.0}
+
+def way_costs(f):
+    inf = float("inf")
+    detour = inf if f["detour_metres"] is None else f["detour_metres"]
+    loss = inf if f["spot_loss"] is None else f["spot_loss"]
+    return [f["gap"] / f["leaving_speed"] if f["leaving_speed"] > 0 else inf,
+            detour / max(f["speed"], 1e-6),
+            f["ask_seconds"] if f["teammate"] and not f["refused"] else inf,
+            loss / max(f["points_a_second"], 1e-6)]
+
+def nulled(values):
+    return [None if v == float("inf") else v for v in values]
+
+def passage_facts(gap=0.0, leaving=0.0, detour=None, speed=4.5, teammate=False, refused=False, ask=1.0,
+                  loss=None, points=10.0):
+    return {"gap": gap, "leaving_speed": leaving, "detour_metres": detour, "speed": speed, "teammate": teammate,
+            "refused": refused, "ask_seconds": ask, "spot_loss": loss, "points_a_second": points}
+
+def request(saves, enemies=0, shooting=False, reloading=False, covering=False, person=False, room=True):
+    return {"saves": saves, "enemies_in_sight": enemies, "shooting": shooting, "reloading": reloading,
+            "covering_a_retreat": covering, "driven_by_a_person": person, "room_to_step": room}
+
+def step_aside_cost(r, p):
+    if r["driven_by_a_person"] or not r["room_to_step"]:
+        return None
+    return (p["step_seconds"] + p["per_enemy_seen"] * r["enemies_in_sight"] + p["shooting"] * r["shooting"]
+            + p["reloading"] * r["reloading"] + p["covering_a_retreat"] * r["covering_a_retreat"])
+
+def passage(name, why, facts, requests):
+    costs, chosen = [], []
+    for f in facts:
+        c = way_costs(f)
+        best, way = float("inf"), "wait"
+        for w, cost in zip(WAYS, c):
+            if cost < best:
+                best, way = cost, w
+        costs.append(nulled(c))
+        chosen.append(way)
+    answers = []
+    for r in requests:
+        cost = step_aside_cost(r, PRICES)
+        saves = float("inf") if r["saves"] is None else r["saves"]
+        answers.append({"cost": cost, "granted": cost is not None and saves > cost})
+    return {"name": name, "why": why, "kind": "passage", "prices": PRICES,
+            "query": {"facts": facts, "requests": requests}, "expect": {"costs": costs, "chosen": chosen, "answers": answers}}
+
+def passage_vectors():
+    yield passage("wait-for-one-walking-off",
+                  "A body 0.4 m from clearing, leaving at 2 m/s: 0.2 s of waiting beats a 3 m way round (0.67 s).",
+                  [passage_facts(gap=0.4, leaving=2.0, detour=3.0)], [])
+    yield passage("round-one-who-holds",
+                  "A body holding (not leaving): waiting is never done, and 3 m round at 4.5 m/s is 0.67 s.",
+                  [passage_facts(gap=0.4, detour=3.0)], [])
+    yield passage("ask-a-teammate-when-round-is-long",
+                  "A teammate holding, the way round 9 m (2 s): asking, 1 s, is cheaper. An enemy in the same "
+                  "place may not be asked, and the bot goes round. A teammate that refused lately may not be "
+                  "asked either.",
+                  [passage_facts(gap=0.4, detour=9.0, teammate=True), passage_facts(gap=0.4, detour=9.0),
+                   passage_facts(gap=0.4, detour=9.0, teammate=True, refused=True)], [])
+    yield passage("another-spot-when-nothing-else",
+                  "No way round, an enemy in the way: the next spot, 5 points less at 10 a second, is 0.5 s.",
+                  [passage_facts(gap=0.4, loss=5.0)], [])
+    yield passage("nothing-possible-waits",
+                  "No way round, an enemy, no other spot: every way impossible, and the bot waits.",
+                  [passage_facts(gap=0.4)], [])
+    yield passage("equal-ways-go-to-the-first",
+                  "Waiting and going round both 1 s: the first in the order, waiting, is taken. Numbers in "
+                  "powers of two, so neither side rounds.",
+                  [passage_facts(gap=0.5, leaving=0.5, detour=4.0, speed=4.0)], [])
+    yield passage("a-teammate-weighs-the-request",
+                  "Idle, its cost is the step, 0.5 s: a saving of 2 s is granted. Two enemies in sight and "
+                  "shooting, 0.5 + 4 + 1.5 = 6 s: refused. Covering a retreat and reloading, 4 s, against a "
+                  "saving of exactly 4: refused, the saving must be larger. With no other way the saving has "
+                  "no end and even a fight gives way; a person at the controls, or no room to step, never.",
+                  [], [request(2.0), request(2.0, enemies=2, shooting=True), request(4.0, reloading=True, covering=True),
+                       request(None, enemies=2, shooting=True), request(None, person=True), request(None, room=False)])
+
 # --- the vectors -----------------------------------------------------------
 
 def vectors():
@@ -304,7 +386,7 @@ def aim_vectors():
 
 def main(directory):
     folder = pathlib.Path(directory)
-    for vector in list(vectors()) + list(aim_vectors()):
+    for vector in list(vectors()) + list(aim_vectors()) + list(passage_vectors()):
         (folder / f"{vector['name']}.json").write_text(json.dumps(vector, indent=1) + "\n", encoding="utf-8")
 
 if __name__ == "__main__":

@@ -9,11 +9,11 @@ invalidated_if: a technique's rule changes -- a condition's order, a weight's me
 teaches: none
 -->
 
-> Five techniques, two languages, and the files that say they gave the
+> Six techniques, two languages, and the files that say they gave the
 > same answers.
 
 `ai_teamwork` (GDScript) and `gameaikit.teamwork` (Python) implement the
-same five things T51's and T66's bot match decides with. Each vector is one `.json`
+same six things T51's and T66's bot match decides with. Each vector is one `.json`
 file: a query and the answer it must get. Both sides answer it and check
 every value against the file, never against each other: `make test-vectors`
 on the GDScript side, `make test-python` on the Python side.
@@ -55,9 +55,10 @@ that must agree bit for bit would need rounded costs.
 | `influence` | a map's shape, sources with their strength, points asked | the value at each point |
 | `commander` | squads and objectives | each objective's priority, the commander's assignment, and nearest-first without it |
 | `confidence` | facts over time, a squad's members, phases | each confidence, the states with and without retreat, the waves |
+| `passage` | a blocked bot's facts, and requests to a teammate with its prices | each way's cost in seconds (null: impossible) and the way taken; each request's cost to the teammate and whether it is granted |
 | `aim` | a spread, a target's zones (multiplier, aim point, rectangles, exposure), rolls | each zone's own chance and worth aimed at, the zone aimed at, the chances from it, where each roll lands |
 
-## The twenty-three
+## The thirty
 
 | file | what it pins |
 |---|---|
@@ -84,6 +85,18 @@ that must agree bit for bit would need rounded costs.
 | `equal-worth-goes-to-the-first` | of two zones tied, the first is aimed at |
 | `nothing-exposed-aims-at-nothing` | every zone hidden: nothing is aimed at, every roll misses |
 | `a-roll-on-a-boundary-misses` | a roll exactly on a chance's end goes past it, with a strict `<` |
+
+| `wait-for-one-walking-off` | a body leaving: waiting beats the way round |
+| `round-one-who-holds` | a body holding: waiting is never done |
+| `ask-a-teammate-when-round-is-long` | asking a teammate beats a long way round; an enemy, or a teammate that refused, is not asked |
+| `another-spot-when-nothing-else` | no way round, an enemy in the way: the next spot |
+| `nothing-possible-waits` | every way impossible: the bot waits |
+| `equal-ways-go-to-the-first` | of two ways tied, the first in the order |
+| `a-teammate-weighs-the-request` | the teammate's cost, a fight's high price, a saving that must be larger, and the two limits |
+
+JSON has no infinity: in the passage vectors an impossible way, a detour
+or a spot that does not exist, and a saving with no bound are `null`, and
+both sides read and write them so.
 
 The aim vectors' numbers are powers of two wherever a tie or a boundary is
 pinned: GDScript's `Rect2` is 32-bit, and with 0.1 and 1.1 an exact tie in

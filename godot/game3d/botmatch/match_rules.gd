@@ -50,6 +50,22 @@ var power_danger_weight: float = 0.3
 var power_danger_radius: float = 12.0
 ## Kills since its last death that earn a bot the power weapon at its base.
 var streak_for_power: int = 5
+## Getting past a body (`PassageChoice`): blocked this long, a bot weighs its
+## ways on; bodies this near close cells for the way round; asking costs
+## this many seconds; a spot's score point is worth this many a second; a
+## refusal is remembered this long; a teammate steps this far aside.
+var passage_patience: float = 0.3
+var passage_body_reach: float = 4.0
+var passage_ask_seconds: float = 1.0
+var passage_points_a_second: float = 10.0
+var passage_refusal_memory: float = 3.0
+var passage_step_aside: float = 0.6
+## What stepping aside costs a teammate asked, in seconds, by what it does.
+var make_way_step_seconds: float = 0.5
+var make_way_per_enemy: float = 2.0
+var make_way_shooting: float = 1.5
+var make_way_reloading: float = 0.5
+var make_way_covering: float = 3.0
 var respawn_time: float = 4.0
 var speed: float = 4.5
 ## Sprinting (Shift, the owner's ask): faster, and no shot while it lasts.

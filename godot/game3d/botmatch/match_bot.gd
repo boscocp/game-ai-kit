@@ -73,6 +73,13 @@ var aim_zone: String = MatchRules.TORSO
 ## Its last shot's aim, for the overlay: [target id, zone names, each zone's
 ## own chance aimed at, each zone's expected damage, the index aimed at].
 var last_aim: Array = []
+## How long it has wanted to move and could not, its velocity last step,
+## who refused it passage and when (bot id -> time), and its last weighing
+## of the ways past a body, for the view.
+var blocked_for: float = 0.0
+var velocity: Vector2 = Vector2.ZERO
+var refused_by: Dictionary = {}
+var last_passage: Dictionary = {}
 ## Running at the rules' sprint speed; it may not fire while it is.
 var sprinting: bool = false
 ## What the list chose last, and at whom it is aimed (-1: nobody).

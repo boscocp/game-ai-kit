@@ -1,0 +1,101 @@
+{
+ "name": "a-teammate-weighs-the-request",
+ "why": "Idle, its cost is the step, 0.5 s: a saving of 2 s is granted. Two enemies in sight and shooting, 0.5 + 4 + 1.5 = 6 s: refused. Covering a retreat and reloading, 4 s, against a saving of exactly 4: refused, the saving must be larger. With no other way the saving has no end and even a fight gives way; a person at the controls, or no room to step, never.",
+ "kind": "passage",
+ "prices": {
+  "step_seconds": 0.5,
+  "per_enemy_seen": 2.0,
+  "shooting": 1.5,
+  "reloading": 0.5,
+  "covering_a_retreat": 3.0
+ },
+ "query": {
+  "facts": [],
+  "requests": [
+   {
+    "saves": 2.0,
+    "enemies_in_sight": 0,
+    "shooting": false,
+    "reloading": false,
+    "covering_a_retreat": false,
+    "driven_by_a_person": false,
+    "room_to_step": true
+   },
+   {
+    "saves": 2.0,
+    "enemies_in_sight": 2,
+    "shooting": true,
+    "reloading": false,
+    "covering_a_retreat": false,
+    "driven_by_a_person": false,
+    "room_to_step": true
+   },
+   {
+    "saves": 4.0,
+    "enemies_in_sight": 0,
+    "shooting": false,
+    "reloading": true,
+    "covering_a_retreat": true,
+    "driven_by_a_person": false,
+    "room_to_step": true
+   },
+   {
+    "saves": null,
+    "enemies_in_sight": 2,
+    "shooting": true,
+    "reloading": false,
+    "covering_a_retreat": false,
+    "driven_by_a_person": false,
+    "room_to_step": true
+   },
+   {
+    "saves": null,
+    "enemies_in_sight": 0,
+    "shooting": false,
+    "reloading": false,
+    "covering_a_retreat": false,
+    "driven_by_a_person": true,
+    "room_to_step": true
+   },
+   {
+    "saves": null,
+    "enemies_in_sight": 0,
+    "shooting": false,
+    "reloading": false,
+    "covering_a_retreat": false,
+    "driven_by_a_person": false,
+    "room_to_step": false
+   }
+  ]
+ },
+ "expect": {
+  "costs": [],
+  "chosen": [],
+  "answers": [
+   {
+    "cost": 0.5,
+    "granted": true
+   },
+   {
+    "cost": 6.0,
+    "granted": false
+   },
+   {
+    "cost": 4.0,
+    "granted": false
+   },
+   {
+    "cost": 6.0,
+    "granted": true
+   },
+   {
+    "cost": null,
+    "granted": false
+   },
+   {
+    "cost": null,
+    "granted": false
+   }
+  ]
+ }
+}

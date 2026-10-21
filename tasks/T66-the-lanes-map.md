@@ -27,6 +27,11 @@ And three more, asked during step 1 the same day:
 9. "depois de matar 5x ele pode pegar essa arma melhor na base junto da
    municao".
 
+And, after playing: bodies are solid -- "nao é pra poder atravessar nem
+aliado nem inimigo" -- and how a bot gets past one is a decision: "uma IA,
+ou faça parte da IA existente que decida, dado o contexto, melhor forma de
+contornar o obstáculo incluindo um colega".
+
 Answered the same day: five kills are "desde a ultima morte, se morrer
 conta do inicio"; the 120 are "30 tiros no pente mas 3 recargas de 30";
 "ao acabar a municao da arma especial o jogador pode pegar a arma original
@@ -140,6 +145,15 @@ measured that.
 10. **The reward for five kills** (ask 9): a bot with five kills since its
    last death -- a death starts the count again -- may take the power
    weapon at its own base's resupply, with ammunition.
+10b. **Getting past a body is a decision** (`PassageChoice`, in
+   `ai_teamwork`, with a Python twin and vectors). A blocked bot weighs
+   four ways on, each a cost in seconds: wait for the body to move off
+   (its gap over the speed it leaves at; never, if it holds), go round it
+   (the extra walk of an A* that treats the bodies near as blocked -- a
+   `SearchGraph` over the walk, searched in the mirror for red), ask a
+   teammate to step aside (a fixed cost, and only a teammate neither
+   shooting nor reloading), or take another spot (how much less it is
+   worth). It takes the cheapest; the overlay shows the four.
 11. **Re-measure** with `botmatch_effects.gd` on the new map and rules,
    mirror fair, every existing claim with its planted case. Add:
    - aiming by expected damage does more damage a shot than always
