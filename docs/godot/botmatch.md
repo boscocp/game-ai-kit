@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-21
+verified_on: 2026-10-22
 tier: 2
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: the match's rules, arenas or techniques change, and botmatch_effects.gd prints different numbers
@@ -218,6 +218,69 @@ nothing until it is empty. That fault was T66's; weighing bots that kill
 faster met it more. The facts now count only what the base gives back,
 and `botmatch_test.gd` holds it.
 
+## Health that comes back, and healing weighed (T68)
+
+**The rule** (`rules.json`, `MatchHealth`). After 10 s without a hit --
+the owner's number -- health comes back 20 points a second, to the whole
+100 and never past it; a hit starts the clock again. At its base, where
+the rounds are, a bot is healed whole at once. The person's bot follows
+the same rule. Twenty a second fills an empty bar in 5 s, slower than
+every refill the sources give (Halo: Combat Evolved's shields take 4 s,
+Halo 3's 2 s, Modern Warfare's health about 1.4 s), because the owner
+asked for it to come back gradually; the 10 s delay is longer than every
+delay they give (4.25 to about 6 s). The sources, and what could not be
+opened, are in the shooter AI page's T68 section.
+
+**Healing is weighed, not a threshold.** `ErrandChoice` weighs three
+errands in one unit -- a gain less its costs -- beside staying at the
+post, which is no errand: what leaving costs (0.3 holding, 0.5 attacking)
+is the fight's price.
+
+- **Go home**: the share of rounds spent plus the share of health
+  missing, less 0.05 a second of the walk, less leaving.
+- **Hide**: the share of health that would come back, less 0.02 a second
+  away -- the walk to cover and the wait for the delay and the refill --
+  less leaving. Where it hides is `TacticalPositions` asked to hide: a
+  place within 15 m that no enemy its team knows of sees it crouched on,
+  the nearest, nobody else's. With no enemy known it has nothing to hide
+  from, and heals where it stands.
+- So a deep wound near cover is worth hiding for, a scratch is not, and
+  a wound near home is worth going home for. Hiding is only looked for
+  when its best case -- cover at its feet -- could score above zero:
+  asking every hurt bot every decision made a match four times slower.
+
+**What it measured.** `make test-botmatch-effects`: every claim held, 0
+failures, 2356 s over 189 matches.
+
+| claim | measured | needs |
+|---|---|---|
+| regeneration | none before 10 s, never past 100, back to 100 | all three; health at once is caught |
+| healing weighed | weighing +13.9 +- 25.2 s, 11-9; never heals -121.6 +- 17.3 s, 2-18; heals below half -198.6 +- 14.8 s, 0-20 | neither healer above weighing by 2.5 errors |
+
+Every margin is blue's against a red that weighs. The claim asked only
+that weighing hold at least as long; it holds more, by about 4.4
+combined errors over never healing and 7.3 over always breaking off below
+half. The planted case, always going back for rounds (-299.4 +- 0.7 s),
+is caught as holding less than never healing.
+
+What healing does inside a match, blue with everything, a match: 169
+health regenerated, 3049 healed at the base, 25.5 s spent hiding. The
+team that breaks off below half spent 215.6 s hiding a match and lost
+every match: a fixed threshold sends bots out of fights they were
+winning.
+
+**Two numbers moved, printed and not claimed.**
+
+- **Without the commander** blue now beats a red with it: +60.8 +- 11.7
+  s, 19-1, where T67 measured -9.2 +- 14.9 -- and it died 587 times in
+  twenty matches against 954 with the commander. A guess, not measured:
+  each bot at its own nearest point stays nearer its base, which now
+  heals. The commander's orders still span 2.1 times the points (2.72
+  against 1.28), the claim it is held to.
+- **The yards' mirror** is -47.6 +- 21.0 s, 5-15: 2.3 errors, inside the
+  2.5 the claim allows, and the nearest to its edge of any mirror so far.
+  The lanes' mirror is +13.9 +- 25.2 s, 11-9.
+
 ## Watching, and playing inside a team
 
 Tab watches the next bot. The discs round it are every spot it weighed,
@@ -236,6 +299,10 @@ first cut in third person.
 - **The shot:** a ray from your eyes. It takes the zone it crosses -- a
   headshot shows a larger marker and HEADSHOT -- and a box, a platform or
   the ground stops it.
+- **Your health** (T68): the corner says how many seconds until it
+  starts to come back, then that it is coming back; at your base it is
+  whole at once. The watched bot's overlay says the same of it, and where
+  it would hide; its errands line shows hiding's score beside going home.
 - **What you see:** every shot leaves a tracer, a flash at the muzzle and
   a spark where it struck. A hit shows a marker, being hit reddens the
   screen's edge, and each shot makes a sound generated in code.
