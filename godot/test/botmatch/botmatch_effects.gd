@@ -76,14 +76,13 @@ const PLANTED_MATCHES: int = 5
 ## stood at the base all match, a fault in the errand's facts, now fixed.
 const SHARPER_MATCHES: int = 10
 const ALWAYS_BACK_MATCHES: int = 10
-## The yards' mirror. Its matches swing more (+-250 s), and ten measured
-## blue 7-3 at 1.5 errors after two mirror faults were fixed, and 9-1
-## before: a fault would show, noise less. Twenty, once the bots weighed
-## their posture and pace (T67), put blue at +100.1 +- 32.4 s, 14-6, 3.1
-## errors -- and the next twenty seeds alone at -35.2 +- 42.5 s, 10-10. A
-## fault does not reverse with the seeds; twenty were too few for a map
-## that swings this much, so it plays forty, and the owner is told why.
-const YARDS_MATCHES: int = 40
+## The yards' mirror: as many matches as the lanes' claims. Its matches
+## swing more (+-250 s), and ten measured blue 7-3 at 1.5 errors after two
+## mirror faults were fixed, and 9-1 before: a fault would show, noise less.
+## When T67's weighing bots failed it at 20 (+100.1 +- 32.4 s), the cause
+## was a fault -- red perceived blue's new posture, blue red's old one --
+## and it was fixed rather than the count raised (the owner's rule).
+const YARDS_MATCHES: int = 20
 ## Measured on the lanes: 4.70 damage a shot by worth, 3.73 always the head.
 ## Arenas made at random, one match each: enough to meet several maps, few
 ## enough to keep the run in minutes.
