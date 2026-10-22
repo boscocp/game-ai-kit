@@ -23,49 +23,44 @@
 class_name GuardChoice
 extends RefCounted
 
-## How long a heard sound or a glimpse counts as "noticed".
-const NOTICED_FOR: float = 3.0
-## How long a remembered place counts as known.
-const KNOWN_FOR: float = 60.0
-const UNDER_FIRE_FOR: float = 2.0
-
-
 ## The numbers `guard`'s considerations read, each 0 to 1, by name.
 static func numbers_of(guard: InfiltrationGuard, world: InfiltrationWorld) -> Dictionary:
-	var phase: int = guard.mind.phase()
+	var reads: InfiltrationRules = world.rules
 	var memory: TargetMemory = guard.mind.memory
-	var knows: bool = memory.known and memory.age(world.time) <= KNOWN_FOR
+	var knows: bool = memory.known and memory.age(world.time) <= reads.reading("known_for")
 	return {
 		"calm": 1.0 - clampf(guard.aware(), 0.0, 1.0),
-		"suspicious": 1.0 if phase >= 1 else 0.0, "searching": 1.0 if phase >= 2 else 0.0,
+		"suspicious": 1.0 if guard.mind.at_least(str(reads.decision["suspect_from"])) else 0.0,
+		"searching": 1.0 if guard.mind.at_least(str(reads.decision["search_from"])) else 0.0,
 		"alert": 1.0 if guard.alert() else 0.0,
-		"noticed": 1.0 if world.time - guard.noticed_at <= NOTICED_FOR else 0.0,
+		"noticed": 1.0 if world.time - guard.noticed_at <= reads.reading("noticed_for") else 0.0,
 		"knows": 1.0 if knows else 0.0,
 		"unreported": 1.0 if knows and memory.source == "sight" and memory.at - guard.reported_at >= world.rules.guard("report_every") else 0.0,
 		"uncalled": 0.0 if guard.called else 1.0,
 		"granted_last_known": 1.0 if guard.granted_last_known else 0.0,
-		"near_last_known": 1.0 if knows and guard.position.distance_to(memory.place) <= 2.0 else 0.0,
+		"near_last_known": 1.0 if knows and guard.position.distance_to(memory.place) <= reads.reading("near_last_known") else 0.0,
 		"has_spot": 1.0 if guard.spot != -1 else 0.0,
 		"has_way_out": 1.0 if guard.way_out != Vector2.INF else 0.0,
 		"can_shoot": 1.0 if can_shoot(guard, world) else 0.0,
 		"shooter": 1.0 if guard.role == RoleArbiter.SHOOTER else 0.0,
 		"flanker": 1.0 if guard.role == RoleArbiter.FLANKER else 0.0,
-		"under_fire": 1.0 if world.time - guard.hit_at <= UNDER_FIRE_FOR else 0.0,
+		"under_fire": 1.0 if world.time - guard.hit_at <= reads.reading("under_fire_for") else 0.0,
 		"hurt": 1.0 - guard.health / world.rules.guard("health"),
 		"body_unraised": 1.0 if guard.body_unraised != Vector2.INF else 0.0,
 		"partner_quiet": 1.0 if guard.quiet_place != Vector2.INF else 0.0,
-		"away": clampf(_away(guard) / 5.0, 0.0, 1.0),
+		"away": clampf(_away(guard) / reads.reading("away_scale"), 0.0, 1.0),
 	}
 
 
-## True when the guard sees the player now, in range, with a clear line to
-## the chest.
+## True when the guard sees the player now surely enough to shoot -- at
+## least `shoot_certainty` -- with the chest among the points its eye saw,
+## and within range of where it saw it: all from its percept, nothing from
+## where the player really is.
 static func can_shoot(guard: InfiltrationGuard, world: InfiltrationWorld) -> bool:
-	if not guard.percept.sight.perceived():
+	var sight: VisionPercept = guard.percept.sight
+	if sight.certainty < world.rules.guard("shoot_certainty") or sight.points.size() < 2 or not sight.points[1]:
 		return false
-	var chest: float = world.rules.points_of(world.player.stance)[1]
-	var clear: bool = world.level.arena.clear_line(guard.eye(world.level.arena, world.rules), world.level.arena.above(world.player.position, chest))
-	return clear and guard.position.distance_to(world.player.position) <= float(world.rules.player["shot_range"])
+	return guard.percept.distance <= float(world.rules.player["shot_range"])
 
 
 ## Score every action from `guard`'s numbers, take the highest, and record

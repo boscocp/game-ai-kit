@@ -52,6 +52,17 @@ func phase() -> int:
 	return highest
 
 
+## True when the guard is in the phase named `phase_name` or a later one,
+## by its own type's row -- read by name, so a type whose row has other
+## phases or thresholds is read right. False when the row has no such phase.
+func at_least(phase_name: String) -> bool:
+	var phases: Array = type.awareness["phases"]
+	for index: int in range(phases.size()):
+		if str(phases[index]["name"]) == phase_name:
+			return phase() >= index
+	return false
+
+
 ## The name of `phase()`, from the guard type's row.
 func phase_name() -> String:
 	return str(type.awareness["phases"][phase()]["name"])

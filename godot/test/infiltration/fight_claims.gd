@@ -58,6 +58,20 @@ static func _shot_since(world: InfiltrationWorld, time: float) -> bool:
 	return world.shots.any(func(shot: Dictionary) -> bool: return float(shot["at"]) >= time)
 
 
+## Planted: a guard that never shoots -- whatever it chose, it glances.
+static func never_shoots(guard: InfiltrationGuard, world: InfiltrationWorld) -> void:
+	GuardChoice.decide(guard, world)
+	if guard.action == "engage":
+		guard.action = "glance"
+
+
+## Planted: a guard that opens fire on a glimpse, below alert.
+static func shoots_on_a_glimpse(guard: InfiltrationGuard, world: InfiltrationWorld) -> void:
+	GuardChoice.decide(guard, world)
+	if not guard.alert() and guard.percept.sight.perceived():
+		guard.action = "engage"
+
+
 ## Planted: an arbiter that grants two flanks.
 static func two_flankers(requests: Array[Dictionary], use: bool) -> PackedStringArray:
 	return RoleArbiter.grant(requests, use, 2)
@@ -87,6 +101,9 @@ static func awareness_reached(level: InfiltrationLevel, trail: Array[Vector2i], 
 	var stop: Callable = func(seen: InfiltrationWorld) -> bool:
 		return seen.guards.any(func(guard: InfiltrationGuard) -> bool: return guard.percept.sight.perceived())
 	InfiltrationRuns.play(world, ScriptedPlayer.new("replay", trail), watch, stop)
+	# The world's Callables hold the world: let them go, or it never frees.
+	world.sounds.on_screen = Callable()
+	world.sounds.hearing = PathHearing.loudness
 	return PackedFloat64Array(highest)
 
 

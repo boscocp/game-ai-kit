@@ -44,6 +44,29 @@ static func stage(world: InfiltrationWorld, seed_value: int) -> bool:
 	return true
 
 
+## Stage two searches at once: the player hidden as `stage` hides it, and
+## two calls for help from the two guards furthest apart, each carrying the
+## other's place -- heard along the level by whoever is in earshot, so the
+## guards come to know two different places. False when it cannot be staged.
+static func stage_two_calls(world: InfiltrationWorld, seed_value: int) -> bool:
+	if world.guards.size() < 2 or not stage(world, seed_value):
+		return false
+	var pair: Array[InfiltrationGuard] = _furthest_apart(world.guards)
+	world.sounds.emit(world, "call_for_help", pair[0].position, pair[0].id, pair[1].position, URGENCY)
+	world.sounds.emit(world, "call_for_help", pair[1].position, pair[1].id, pair[0].position, URGENCY)
+	return true
+
+
+static func _furthest_apart(guards: Array[InfiltrationGuard]) -> Array[InfiltrationGuard]:
+	var best: Array[InfiltrationGuard] = [guards[0], guards[1]]
+	for pair: int in range(guards.size() * guards.size()):
+		var one: InfiltrationGuard = guards[floori(pair / float(guards.size()))]
+		var other: InfiltrationGuard = guards[pair % guards.size()]
+		if one.position.distance_to(other.position) > best[0].position.distance_to(best[1].position):
+			best = [one, other]
+	return best
+
+
 ## True when a guard is within reach of the player or sees it.
 static func found(world: InfiltrationWorld) -> bool:
 	return world.guards.any(func(guard: InfiltrationGuard) -> bool:

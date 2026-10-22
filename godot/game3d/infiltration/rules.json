@@ -1,5 +1,5 @@
 {
-  "about": "The infiltration example's rules (T70): the player's stances, the guards' bodies and weapons, the belief and the search, and the difficulty knobs. Distances in metres, times in seconds, angles in degrees, speeds in metres a second. The player's walk and sprint speeds are the bot match's (rules.json, T66: 4.5 and 6.5); crouching and lying prone are rows added here, each with its own speed, noise and body points.",
+  "about": "The infiltration example's rules (T70): the player's stances, the guards' bodies and weapons, how a guard reads its own state for a decision, the belief and the search, and the difficulty knobs. Distances in metres, times in seconds, angles in degrees, speeds in metres a second. Sourced: the player's walk and sprint speeds are the bot match's (its rules.json, T66: 4.5 and 6.5). Everything else in this file is the kit's own, set by measuring with infiltration_properties.gd, not taken from any game: the crouch and prone rows, the guards' numbers, the decision's windows, the belief's spread, the search's weights and cap, and the knobs. Each is named in docs/godot/infiltration.md.",
   "step_seconds": 0.1,
   "decision_seconds": 0.3,
   "player": {
@@ -25,6 +25,7 @@
     "health": 100,
     "shot_interval": 0.6,
     "shot_damage": 20,
+    "shoot_certainty": 0.3,
     "body_radius": 0.4,
     "check_in_every": 8.0,
     "quiet_after": 20.0,
@@ -33,6 +34,15 @@
     "report_every": 5.0,
     "seen_threshold": 0.15,
     "flank_distance": 7.0
+  },
+  "decision": {
+    "noticed_for": 3.0,
+    "known_for": 60.0,
+    "under_fire_for": 2.0,
+    "near_last_known": 2.0,
+    "away_scale": 5.0,
+    "suspect_from": "suspicious",
+    "search_from": "searching"
   },
   "belief": {"spread": 0.4},
   "search": {"worth": 10.0, "travel": 0.2, "last_known_cap": 2, "spot_radius": 2.5},

@@ -21,6 +21,9 @@ var decision_seconds: float = 0.3
 var stances: Dictionary = {}
 var player: Dictionary = {}
 var guards: Dictionary = {}
+## How a guard reads its own state for a decision: the windows a glimpse,
+## a memory and a hit count for, and the phases searching starts from.
+var decision: Dictionary = {}
 var spread: float = 0.4
 var search: Dictionary = {}
 ## The knobs: reaction (s), turn_rate (degrees a second), aim_error, the
@@ -50,6 +53,7 @@ static func read(path: String = FILE) -> InfiltrationRules:
 	rules.player = data["player"]
 	rules.stances = data["player"]["stances"]
 	rules.guards = data["guards"]
+	rules.decision = data["decision"]
 	rules.spread = float(data["belief"]["spread"])
 	rules.search = data["search"]
 	var knobs: Dictionary = data["difficulty"]
@@ -71,6 +75,11 @@ static func actions() -> Array[ActionChoice.Action]:
 ## A guard's number by name, from the `guards` row.
 func guard(field: String) -> float:
 	return float(guards[field])
+
+
+## A decision's number by name, from the `decision` row.
+func reading(field: String) -> float:
+	return float(decision[field])
 
 
 ## The heights of the player's body points in `stance`, head first.

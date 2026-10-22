@@ -139,10 +139,10 @@ func _draw_watched(world: InfiltrationWorld, guard: InfiltrationGuard) -> void:
 	if guard.mind.memory.known:
 		_ghost.visible = true
 		_ghost.position = world.level.arena.above(guard.mind.memory.place, 0.0)
-	var searching: bool = guard.mind.phase() >= 2
+	var searching: bool = guard.mind.at_least(str(world.rules.decision["search_from"]))
 	for index: int in range(world.team.spots.size()):
 		var spot: Dictionary = world.team.spots[index]
-		if searching and (bool(spot["searched"]) or index == guard.spot):
+		if searching and (guard.searched.has(index) or index == guard.spot):
 			var place: Vector3 = world.level.arena.above(spot["place"], 0.1)
 			var colour: Color = SPOT if index == guard.spot else SEARCHED
 			_line(place + Vector3(-0.3, 0, -0.3), place + Vector3(0.3, 0, 0.3), colour)

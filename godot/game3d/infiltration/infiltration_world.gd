@@ -12,7 +12,7 @@
 ##
 ## A few seams are Callables so the properties can plant a broken technique
 ## in the same world: the coordinator, the arbiter, what counts as seen, the
-## decision, and where a guard's post comes from. The game sets none of them.
+## decision, the act, and where a guard's post comes from. The game sets none of them.
 ##
 ## A step is linear in the guards, plus a flood per sound and a ray per
 ## cell in reach for each guard's belief.
@@ -43,6 +43,7 @@ var coordinator: Callable = SearchCoordinator.assign
 var arbiter: Callable = func(requests: Array[Dictionary], use: bool) -> PackedStringArray: return RoleArbiter.grant(requests, use)
 var seen_by: Callable = GuardEyes.seen_cells
 var decide: Callable = GuardChoice.decide
+var act: Callable = GuardActs.carry
 
 
 ## A world on `level` under `rules`, from `seed_value`. `specs` overrides
@@ -87,7 +88,7 @@ func step(intent: PlayerIntent) -> void:
 		_decide_all()
 	for guard: InfiltrationGuard in guards:
 		if guard.alive():
-			GuardActs.carry(guard, self, seconds)
+			act.call(guard, self, seconds)
 			_finish_call(guard)
 	_end_when_over()
 

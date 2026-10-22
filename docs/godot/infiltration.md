@@ -30,6 +30,15 @@ the work as plain data -- `SearchCoordinator` (who searches which spot, a
 cap on who goes to the last known position) and `RoleArbiter` (one flanker,
 someone shooting), both new in `ai_teamwork` with Python twins and vectors.
 
+**What is shared follows what was heard** (`GuardSearch`). Guards whose
+memories hold the same place -- because they heard the same report or saw
+the same sighting -- search together: spots weighed from the freshest
+one's belief, the spots any of them has seen off the list, divided so no
+two take one. A guard whose knowledge no one shares searches alone from
+its own belief. "Searched" is each guard's own, since its knowledge last
+changed. The cap on the last known position is per place known. A fight
+is shared by every guard in it, so the arbiter weighs them all.
+
 Two hand-made levels (`levels/the_warehouse.json`, `levels/the_courtyard.json`)
 in `arena.json`'s shape, built by `BotArena` and walked by `ArenaWalk`, and
 a generator for more (`LevelGenerator`). The same guards, with no line
@@ -84,15 +93,16 @@ drives scripted players over the two hand-made levels and generated levels
 
 | claim | planted case |
 |---|---|
-| help is heard, not shared: every report is heard by exactly the guards with a path within its radius | a broadcast to every guard |
-| a call cut short (its caller downed as it starts) reaches no one | -- |
-| the search is divided: no two guards hold one spot; every spot in sight is marked | claims off inside the coordinator |
+| help is heard, not shared: every report is heard by exactly the guards with a path within its radius, and every guard that learns a place from a report heard one | a broadcast to every guard |
+| a call cut short (its caller downed as it starts) reaches no one -- 8 calls cut | -- |
+| the search is divided: among guards who know the same place, no two hold one spot and none holds one they searched -- 325 decisions with two or more searching together | claims off inside the coordinator |
+| a search is shared only by what was heard: no guard is sent by a belief it never heard (two calls for help, each heard nearby) | every searcher in one group |
 | the belief finds a hidden player sooner, by `MARGIN` = 5 s | a belief that never spreads |
-| the quiet route and the loud one | guard types blind to light alert on the quiet route |
-| the arbiter: one flanker at most; shots only on decisions taken alert; an alert guard able to shoot is answered within reaction + a decision + a shot | two flanks granted |
+| the quiet route and the loud one | a plain yes-or-no sight test (the accumulator off) |
+| the arbiter: one flanker at most; shots only on decisions taken alert; an alert guard able to shoot is answered within reaction + a decision + a shot -- 24 shots fired | two flanks granted; a guard that never shoots; a guard that fires on a glimpse |
 | off-screen halving only lowers what a guard hears | the factor as a gain |
-| every decision is on the overlay | a decision taken outside the selector |
-| portable: the guards' scripts name no level | posts read from the first level's file |
+| every decision is on the overlay, and done: the record is the action, and the guard walks where it says | a decision taken outside the selector; an act that ignores the action |
+| portable: the guards' scripts name no level, and each guard stands at its level's post | a guard script that reads the first level's file |
 
 **The search.** A staged search (`HidingStage`): the player lies prone at a
 hiding place no guard watches, and a radio report says it was seen 8 to 14
@@ -100,6 +110,13 @@ steps away, out of sight of it. Over 15 runs (5 levels, 3 seeds), the
 player is found on average after **6.9 s** with the belief, **21.0 s**
 without it, and **18.4 s** with a belief that never spreads -- so it is the
 spreading, not merely knowing a place, that finds a player.
+
+**The quiet route does not show the light term.** The scripted sneak keeps
+out of every zone, so guards blind to light do not alert on its route
+either (printed per level); routed through zones where they are dark, the
+honest guards alerted on two levels. What the quiet route does show is the
+accumulator: a plain yes-or-no sight test alerts on it on both hand-made
+levels, from the glimpses the accumulator lets fade.
 
 **The quiet route -- printed on generated levels, not held.** A scripted
 player crouched in the shadows finishes the two hand-made levels and
@@ -111,6 +128,22 @@ scripted sneak -- a heuristic, not a person -- failing, and no number tells
 the two apart, so the gate holds the quiet half on the hand-made levels and
 prints it on the generated ones.
 
+## The kit's own numbers
+
+Sourced: the player's walk and sprint speeds (the bot match's), and, from
+T69, the phases' thresholds, the rate's range and the off-screen half. Every
+other number is the kit's own, set by measuring with the properties, not
+taken from any game: in `rules.json`, the crouch and prone rows,
+`shot_interval`, `shot_damage`, `shoot_certainty` (0.3), `check_in_every`
+(8 s), `quiet_after` (20 s), `call_seconds` (1 s), `help_lasts`,
+`report_every` (5 s), `seen_threshold` (0.15), `flank_distance` (7 m), the
+whole `decision` row (`noticed_for` 3 s, `known_for` 60 s, `under_fire_for`
+2 s, `near_last_known` 2 m, `away_scale` 5 m), `belief.spread` (0.4), the
+search's `worth`, `travel`, `last_known_cap` (2) and `spot_radius` (2.5 m),
+and every knob; in `guard_types.json`, the per-phase decays (0.02 and 0.015
+while searching and alert); and in `guard_actions.json`, every weight and
+curve.
+
 ## Where this was done differently from the task, and why
 
 - **The HUD and map are new** (`InfiltrationHud`, `InfiltrationRadar`), not
@@ -120,9 +153,14 @@ prints it on the generated ones.
   `rules.json`**, not the bot match's: adding them there would make every
   change to them select the bot match's slow gates. The walk and sprint
   speeds are copied from the bot match's file, and say so.
-- **Each guard has its own belief**, not one shared map: a shared map would
-  hand every guard what one saw, and help would be shared, not heard. A
-  guard's belief takes another's only from a report it heard.
+- **Each guard has its own belief**, not one shared map, and a search is
+  shared only among guards who know the same thing: a shared map, or one
+  search for all, would hand every guard what one saw, and help would be
+  shared, not heard (the wave 80 review).
+- **A guard shoots at what it saw**: its percept's place, its chest among
+  the points seen, at a certainty of at least `shoot_certainty`. The
+  off-screen halving reads the true distance to the player, on the
+  engine's side, as T69's technique does: it is a rule about the camera.
 - **The off-screen halving is tied to the camera's frustum** in the demo;
   the properties stand in for the camera with "within 10 m of the player".
 

@@ -73,7 +73,7 @@ static func _check_on_partner(guard: InfiltrationGuard) -> void:
 static func _engage(guard: InfiltrationGuard, world: InfiltrationWorld) -> Vector2:
 	guard.goal = Vector2.INF
 	_shoot(guard, world)
-	return world.player.position if guard.percept.sight.perceived() else guard.mind.memory.place
+	return guard.percept.seen_place if guard.percept.sight.perceived() else guard.mind.memory.place
 
 
 ## Where a flanker goes: beside the last known position, a flank distance
@@ -149,12 +149,12 @@ static func _shoot(guard: InfiltrationGuard, world: InfiltrationWorld) -> void:
 	if not ready or not GuardChoice.can_shoot(guard, world):
 		return
 	guard.next_shot_at = world.time + world.rules.guard("shot_interval")
-	var distance: float = guard.position.distance_to(world.player.position)
+	var distance: float = guard.percept.distance
 	var hit: bool = world.rng.randf() < clampf(1.0 - world.rules.aim_error * distance, 0.05, 0.95)
 	if hit:
 		world.player.health -= world.rules.guard("shot_damage")
 	world.shots.append({"from": guard.id, "at": world.time, "hit": hit})
-	world.sounds.emit(world, "guard_shot", guard.position, guard.id, world.player.position, 1.0)
+	world.sounds.emit(world, "guard_shot", guard.position, guard.id, guard.percept.seen_place, 1.0)
 
 
 static func _walk(guard: InfiltrationGuard, world: InfiltrationWorld, seconds: float) -> void:

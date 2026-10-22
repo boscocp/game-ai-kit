@@ -38,6 +38,14 @@ var running: bool = false
 ## What the team gave it: a spot to search (its index), a way out to
 ## cover, the last known position, a role in a fight.
 var spot: int = -1
+## Whose belief its spot was weighed from, by id; -1, none. And what it
+## knew when it was given it: the place its memory held.
+var spot_from: int = -1
+var spot_for: Vector2 = Vector2.INF
+## The spots it has seen a hidden body would be found at, since its
+## knowledge was last of `searched_for`.
+var searched: Dictionary[int, bool] = {}
+var searched_for: Vector2 = Vector2.INF
 var way_out: Vector2 = Vector2.INF
 var granted_last_known: bool = false
 var role: String = RoleArbiter.NONE

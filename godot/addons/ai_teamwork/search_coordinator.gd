@@ -62,12 +62,6 @@ static func score(spot: Dictionary, cost: float, weights: Weights) -> float:
 	return float(spot["worth"]) * weights.worth - cost * weights.travel
 
 
-## Every spot index in `seen` marked searched: a sight line reached it.
-static func mark(spots: Array[Dictionary], seen: PackedInt32Array) -> void:
-	for index: int in seen:
-		spots[index]["searched"] = true
-
-
 ## Which of the searchers wanting the last known position may go: the `cap`
 ## nearest, by `costs` (one per searcher), as indices in the searchers'
 ## order; the nearer of equal costs is the earlier.

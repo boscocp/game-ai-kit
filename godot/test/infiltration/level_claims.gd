@@ -14,7 +14,7 @@ const MARGIN: float = 5.0
 const SEARCH_FOR: float = 60.0
 ## The guards' own scripts, which must name no level.
 const GUARD_SCRIPTS: Array[String] = ["infiltration_guard", "guard_choice", "guard_acts", "guard_eyes", "guard_team",
-	"guard_ways_out", "infiltration_senses", "level_sounds", "guard_mind", "guard_type"]
+	"guard_search", "guard_ways_out", "infiltration_senses", "level_sounds", "guard_mind", "guard_type"]
 
 
 ## A claim held: no findings for the honest runs, at least one for the
@@ -40,34 +40,68 @@ static func quiet_trails(levels: Array[InfiltrationLevel]) -> Array:
 
 
 ## The quiet route finishes with no guard alert, and the same route walked
-## loudly brings one to alert; planted, guards blind to light alert on it.
+## loudly brings one to alert. Planted: guards whose sight is a plain
+## yes-or-no -- the accumulator off -- must alert on the quiet route on
+## every level the quiet half is held on: the glimpses a quiet route gives
+## are what the accumulator lets fade. (On a generated level the sneak may
+## never be glimpsed at all -- generated 3 -- and there the plant has
+## nothing to bite on; the generated levels are printed, not held.)
+##
+## **This claim does not show the light term**, and says so. Measured
+## (2026-10-22): the scripted sneak keeps out of every zone, so guards
+## blind to light (`blind_to_light`) do not alert on its route either;
+## routed through zones where they are dark instead, the honest guards
+## alerted on two levels. The blind guards' runs are printed, not held.
 ##
 ## **The quiet half is held on the hand-made levels and printed on the
 ## generated ones.** Measured (2026-10-22): on a generated level the
-## scripted sneak -- a heuristic, not a person -- can find no unwatched way
-## past a patrol that noticed it and follows, and is caught; that is the
-## guards working, and the test player failing, and no number here can
-## tell the two apart. The loud half is held everywhere.
+## scripted sneak -- a heuristic, not a person -- can find no way past a
+## patrol that noticed it and follows, and is caught; that is the guards
+## working and the test player failing, and no number here can tell the
+## two apart. The loud half is held everywhere.
 static func quiet_and_loud(levels: Array[InfiltrationLevel], trails: Array) -> Array[String]:
 	var honest: Array[String] = []
-	var planted: Array[String] = []
+	var bites: int = 0
+	var held: int = 0
 	for index: int in range(levels.size()):
 		var level: InfiltrationLevel = levels[index]
-		var quiet := ScriptedPlayer.new("quiet")
-		var world: InfiltrationWorld = InfiltrationWorld.make(level, InfiltrationRules.read(), 1)
-		var found: Array[String] = []
-		_add(found, InfiltrationRuns.play(world, quiet, _no_alert))
-		if world.outcome != "escaped":
-			found.append("%s: the quiet player did not finish (%s)" % [level.name, world.outcome if world.outcome != "" else "out of time"])
+		var found: Array[String] = _quiet_run(level, Callable())
 		print("  quiet route on %s: %s" % [level.name, "no guard alert, finished" if found.is_empty() else "; ".join(found)])
 		if index < InfiltrationLevel.HAND_MADE.size():
 			honest.append_array(found)
 		if InfiltrationRuns.highest_phase(level, InfiltrationRules.read(), ScriptedPlayer.new("replay", trails[index])) < 3:
 			honest.append("%s: the quiet route walked loudly brought no guard to alert" % level.name)
-		var blind: InfiltrationWorld = InfiltrationWorld.make(level, InfiltrationRules.read(), 1)
-		blind_to_light(blind)
-		_add(planted, InfiltrationRuns.play(blind, ScriptedPlayer.new("quiet"), _no_alert))
-	return pair("the quiet route and the loud one", honest, planted)
+		if not found.is_empty() or index >= InfiltrationLevel.HAND_MADE.size():
+			continue
+		held += 1
+		var plain: Array[String] = _quiet_run(level, _a_plain_sight_test)
+		bites += 1 if not plain.is_empty() else 0
+		var blind: Array[String] = _quiet_run(level, blind_to_light)
+		print("    a plain yes-or-no sight test there: %s" % ("; ".join(plain) if not plain.is_empty() else "no alert -- did not bite"))
+		print("    guards blind to light there (printed): %s" % ("; ".join(blind) if not blind.is_empty() else "no alert"))
+	var caught: Array[String] = []
+	if held > 0 and bites == held:
+		caught.append("a plain sight test alerted on every level the quiet route held")
+	return pair("the quiet route and the loud one", honest, caught)
+
+
+# Planted: the accumulator off -- a guard alert the moment it perceives
+# anything at all.
+static func _a_plain_sight_test(world: InfiltrationWorld) -> void:
+	world.rules.use_accumulator = false
+
+
+# The quiet player on `level`, `change` applied to the world when valid:
+# what went wrong -- an alert, or not finishing -- or nothing.
+static func _quiet_run(level: InfiltrationLevel, change: Callable) -> Array[String]:
+	var world: InfiltrationWorld = InfiltrationWorld.make(level, InfiltrationRules.read(), 1)
+	if change.is_valid():
+		change.call(world)
+	var found: Array[String] = []
+	_add(found, InfiltrationRuns.play(world, ScriptedPlayer.new("quiet"), _no_alert))
+	if found.is_empty() and world.outcome != "escaped":
+		found.append("%s: the quiet player did not finish (%s)" % [level.name, world.outcome if world.outcome != "" else "out of time"])
+	return found
 
 
 static func _no_alert(world: InfiltrationWorld) -> String:
@@ -166,21 +200,24 @@ static func _mean_found(levels: Array[InfiltrationLevel], seeds: Array[int], cha
 	return [total / maxf(staged.size(), 1.0), staged.size()]
 
 
-## Portable: the guards' scripts name no level, and guards whose posts are
-## read from the first level's file are broken by the others.
+## Portable: the guards' own scripts name no level, and on every other
+## level each guard stands at that level's post. Planted: one of the guards'
+## scripts as it would read with a line that loads the first level's file.
 static func portable(levels: Array[InfiltrationLevel]) -> Array[String]:
 	var honest: Array[String] = []
 	for script: String in GUARD_SCRIPTS:
-		honest.append_array(_levels_named(script))
-	var planted: Array[String] = []
+		honest.append_array(_levels_named(script, _script_text(script)))
 	for level: InfiltrationLevel in levels.slice(1):
 		honest.append_array(_posts_are_the_levels(InfiltrationWorld.make(level, InfiltrationRules.read(), 1)))
-		planted.append_array(_posts_are_the_levels(InfiltrationWorld.make(level, InfiltrationRules.read(), 1, levels[0].guard_specs)))
-	return pair("portable", honest, planted)
+	var reading_a_level: String = _script_text("infiltration_guard") + "\nvar post_from := InfiltrationLevel.read(\"res://game3d/infiltration/levels/the_warehouse.json\")\n"
+	return pair("portable", honest, _levels_named("infiltration_guard", reading_a_level))
 
 
-static func _levels_named(script: String) -> Array[String]:
-	var text: String = FileAccess.get_file_as_string("res://game3d/infiltration/%s.gd" % script)
+static func _script_text(script: String) -> String:
+	return FileAccess.get_file_as_string("res://game3d/infiltration/%s.gd" % script)
+
+
+static func _levels_named(script: String, text: String) -> Array[String]:
 	var found: Array[String] = []
 	for named: String in ["levels/", "the_warehouse", "the_courtyard", "WAREHOUSE", "COURTYARD"]:
 		if text.contains(named):

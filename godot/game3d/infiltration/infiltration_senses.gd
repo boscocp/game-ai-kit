@@ -91,7 +91,7 @@ static func _find_bodies(guard: InfiltrationGuard, world: InfiltrationWorld) -> 
 static func _update_belief(guard: InfiltrationGuard, world: InfiltrationWorld, perceived: bool) -> void:
 	var seen: PackedInt32Array = world.seen_by.call(guard, world.level, world.rules)
 	guard.seen_cells = seen
-	world.team.mark_seen(seen)
+	world.team.search.mark_seen(guard, seen)
 	if not world.rules.use_belief:
 		return
 	var cell: Vector2i = world.level.cell_of(guard.percept.seen_place)

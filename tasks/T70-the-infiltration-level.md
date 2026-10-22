@@ -177,9 +177,12 @@ less fair, and which way would you leave it?
 What was built differs from the steps above in these places, each on
 purpose; `docs/godot/infiltration.md` has the numbers.
 
-- **Each guard has its own belief**, not one shared map: a shared map
-  would hand every guard what one saw, and help would be shared, not
-  heard. A guard takes another's knowledge only from a report it heard.
+- **Each guard has its own belief, and a search is shared only by what
+  was heard** (the wave 80 review): guards whose memories hold the same
+  place search together, from the freshest one's belief; a guard whose
+  knowledge no one shares searches alone. "Searched" is each guard's own,
+  the cap on the last known position is per place known, and each spot
+  records whose belief it was weighed from.
 - **"Seen" is "a hidden body there would have been perceived"** (T69's
   review, finding 10): a prone body, in that cell's light and hiding, at
   the rules' `seen_threshold`. T69's reading is kept as
@@ -203,10 +206,19 @@ purpose; `docs/godot/infiltration.md` has the numbers.
 - **The quiet route is held on the hand-made levels and printed on the
   generated ones**: on generated level 1 the guard notices the scripted
   sneak in the dark and follows it, and no number tells the guards
-  working from the test player failing.
+  working from the test player failing. **It does not show the light
+  term**: the sneak keeps out of every zone, so guards blind to light do
+  not alert on it either; its planted case is a plain yes-or-no sight
+  test, which alerts on both hand-made levels.
+- **The phases are read by name** (`GuardMind.at_least`), and the windows
+  a decision reads -- noticed, known, under fire, near, away -- are the
+  `decision` row of `rules.json`, labelled the kit's own with every other
+  number that is.
 
 Measured: every claim of `infiltration_properties.gd` holds and every
-planted case is caught, in about a minute. A hidden player is found
+planted case is caught, in about a minute -- after the review, ten claims
+and thirteen plants, with 8 calls cut short, 325 decisions with two or
+more guards searching one place, and 24 shots fired. A hidden player is found
 after 6.9 s with the belief, 21.0 s without, 18.4 s with a belief that
 never spreads (15 runs each). The quiet route finishes with no guard
 alert on four of the five levels; walked loudly it brings a guard to

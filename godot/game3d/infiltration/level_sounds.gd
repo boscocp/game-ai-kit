@@ -69,7 +69,10 @@ func loudness_at(world: InfiltrationWorld, guard: InfiltrationGuard, kind: Strin
 
 
 ## The factor a guard's radius is scaled by for `kind`: T69's off-screen
-## halving when the knob is on, and 1 otherwise.
+## halving when the knob is on, and 1 otherwise. It reads the guard's true
+## distance from the player, on the engine's side: the halving is a rule
+## about the camera, not something the guard perceives -- as T69's
+## technique is.
 func factor_for(world: InfiltrationWorld, guard: InfiltrationGuard, kind: String) -> float:
 	if not world.rules.off_screen_halving:
 		return 1.0

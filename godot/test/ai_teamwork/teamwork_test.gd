@@ -177,8 +177,7 @@ func _unique(values: Array) -> Array:
 
 
 func test_a_marked_spot_is_given_to_no_one() -> void:
-	var spots: Array[Dictionary] = [{"worth": 1.0, "searched": false}]
-	SearchCoordinator.mark(spots, PackedInt32Array([0]))
+	var spots: Array[Dictionary] = [{"worth": 1.0, "searched": true}]
 	var given: PackedInt32Array = SearchCoordinator.assign(spots, [PackedFloat64Array([1.0])], true, SearchCoordinator.Weights.new())
 	assert_int(given[0]).is_equal(-1)
 
