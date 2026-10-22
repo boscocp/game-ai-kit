@@ -84,17 +84,30 @@ shows it all from above; the panel shows the watched guard's every score.
 - **Sound floods the 4-connected walk graph, and says so**: a radius is a
   diamond; slow ground is quieter to hear across. No second graph was built
   -- every walk cell here costs one and there are no doors.
+- **A sound that goes on is heard while it goes on** (T81, wave 82). The
+  owner, playing it: walking behind a guard, it did not seem to hear. The
+  player makes a footstep every `noise_every` (0.4 s) and the world steps
+  0.1 s; a guard heard a footstep only in the step it arrived, a quarter
+  of the time, and its awareness fell in the other three -- standing 1 m
+  behind a guard, noticed at 5.8 s or never, 3 m never. Now a sound is
+  delivered with how long it holds (the player's steps, their cadence; a
+  one-off, none) and heard until it ends or a louder one comes. Not T69's
+  event lifetime: that is how long an event is remembered (4 s for a
+  footstep), and a footstep heard 4 s would raise a guard to alert from one
+  step. And a guard's glance now turns to where it heard: it read a sound
+  already emptied by the time a guard acts.
 
 ## Measured (2026-10-22)
 
 `make test-infiltration` (`infiltration_properties.gd`, about a minute)
 drives scripted players over the two hand-made levels and generated levels
-1-3. Every claim holds and every planted case is caught:
+1-3, about 100 s since wave 82. Every claim holds and every planted case
+is caught:
 
 | claim | planted case |
 |---|---|
 | help is heard, not shared: every report is heard by exactly the guards with a path within its radius, and every guard that learns a place from a report heard one | a broadcast to every guard |
-| a call cut short (its caller downed as it starts) reaches no one -- 8 calls cut | -- |
+| a call cut short (its caller downed as it starts) reaches no one -- 12 calls cut (8 before wave 82) | -- |
 | the search is divided: among guards who know the same place, no two hold one spot and none holds one they searched -- 325 decisions with two or more searching together | claims off inside the coordinator |
 | a search is shared only by what was heard: no guard is sent by a belief it never heard (two calls for help, each heard nearby) | every searcher in one group |
 | the belief finds a hidden player sooner, by `MARGIN` = 5 s | a belief that never spreads |
@@ -103,6 +116,18 @@ drives scripted players over the two hand-made levels and generated levels
 | off-screen halving only lowers what a guard hears | the factor as a gain |
 | every decision is on the overlay, and done: the record is the action, and the guard walks where it says | a decision taken outside the selector; an act that ignores the action |
 | portable: the guards' scripts name no level, and each guard stands at its level's post | a guard script that reads the first level's file |
+| a guard hears a player walking behind it (wave 82): standing 1 m and 3 m behind it along the floor, out of its sight, noticed within 2 s; crouched at 3 m no sooner; prone never -- 12 guards on five levels | each sound heard for the one step it arrives in (wave 80) |
+
+**Hearing.** A guard frozen where it stands, alone on its level, the
+player walking to and fro behind it along the grid's axis nearest straight
+behind (3 m away is then 3 m along the floor, the way sound is measured):
+standing, noticed -- its phase past unaware -- in 0.5 to 0.9 s at 1 m and
+0.9 to 1.8 s at 3 m (the sentry, `heard_rate` 0.4, is the slower);
+crouched at 3 m, outside the creep's 2 m, and prone, never. Before wave 82
+the same trials gave 5.8 s or never at 1 m, never at 3 m. The bound of 2 s
+is the upper end of The Last of Us's "around 1 or 2 seconds" to perceive a
+seen player [McIntosh 2015]; no source opened gives a time for hearing
+footsteps, so the kit takes the same.
 
 **The search.** A staged search (`HidingStage`): the player lies prone at a
 hiding place no guard watches, and a radio report says it was seen 8 to 14

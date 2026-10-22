@@ -66,3 +66,26 @@ python3 scripts/check_doc_freshness.py
 Play `make demo-infiltration`, walk up behind a guard standing: does it
 turn within a second or two? Crouched: does it take longer, or not hear
 you at all? Prone: never?
+
+## Done in wave 82 (2026-10-22)
+
+- **The claim failed on wave 80's code** as the owner felt it: standing 1
+  m behind a guard, noticed at 5.8 s (the patrol) or never (the sentry); 3
+  m, never -- on every one of twelve guards across the five levels.
+- **The hold is the emitter's cadence** (`noise_every`, 0.4 s), passed as
+  the sound is made; a one-off holds none, as before. It lives in the
+  infiltration module (`LevelSounds`), not in `ai_perception`: how long a
+  sound goes on is the level's knowledge of what made it, and T69's
+  `Awareness` already does the rest. No twin or vector moved.
+- **Measured after**: noticed in 0.5-0.9 s at 1 m and 0.9-1.8 s at 3 m;
+  crouched at 3 m (outside the creep's 2 m) and prone, never. The claim is
+  measured along the grid's axis nearest straight behind, because sound is
+  measured along the floor: a guard facing diagonally hears a player 3 m
+  straight behind it 4 m along the floor (T69's diamond), and a sentry
+  took 4.6 s there.
+- **The glance** read `guard.heard`, which the senses had emptied before a
+  guard acts, so a glance never turned to a sound; it reads the percept.
+- **What moved in `make test-infiltration`**: calls cut short 8 -> 12;
+  the search (6.9 / 20.8 / 18.4 s), the quiet route, the arbiter's 24
+  shots and 325 group decisions did not. It takes about 100 s, the new
+  claim's 96 trials included.
