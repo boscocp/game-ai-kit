@@ -1302,3 +1302,68 @@ func test_the_cover_a_bot_stands_at_is_low_high_or_none() -> void:
 		if world.arena.spots_near(aside, MatchSenses.COVER_REACH).is_empty() and open_floor == Vector2.INF:
 			open_floor = aside
 	assert_float(MatchSenses.cover_at(world, open_floor)).is_equal(0.0)
+
+
+# A mirrored 2v2 on the yards, from T67's review: blue 0 and red 6 at a
+# low cover spot and its mirror, crouched and sent ten metres off; blue 1
+# and red 7 in the open, at its mirror, facing the middle of the enemies
+# and long reacted to them. Everyone else dead and out of the way.
+static func _mirrored_two_a_side() -> BotMatch:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules,
+			BotArena.new(rules.body_radius, BotArena.YARDS))
+	for bot: MatchBot in world.bots:
+		bot.respawn_left = 100.0
+	for pair: Array in [[0, Vector2(30.3, 5.0)], [1, Vector2(16.5, 27.5)]]:
+		for bot: MatchBot in [world.bots[pair[0]], world.bots[pair[0] + 6]]:
+			var place: Vector2 = pair[1]
+			bot.respawn_left = 0.0
+			bot.position = place if bot.team == BotMatch.BLUE else Vector2(world.arena.width - place.x, place.y)
+			bot.goal = bot.position + (Vector2(0.0, 10.0) if pair[0] == 0 else Vector2.ZERO)
+			bot.crouched = pair[0] == 0
+	world.bots[0].facing = 0.0
+	world.bots[6].facing = PI
+	world.bots[1].facing = ((world.bots[6].position + world.bots[7].position) / 2.0 - world.bots[1].position).angle()
+	world.bots[7].facing = ((world.bots[0].position + world.bots[1].position) / 2.0 - world.bots[7].position).angle()
+	for id: int in [1, 7]:
+		for enemy: int in [0, 1, 6, 7]:
+			world.bots[id].seen_since[enemy] = -10.0
+	world.time = 1.0
+	world._look()
+	return world
+
+
+# Whether the two open bots chose each other's mirror: the same action and
+# posture, and targets that are each other's mirror.
+static func _decided_alike(world: BotMatch) -> bool:
+	var blue: MatchBot = world.bots[1]
+	var red: MatchBot = world.bots[7]
+	var mirrored_target: int = red.target - BotMatch.BOTS_A_SIDE if red.target != -1 else -1
+	return blue.action == red.action and blue.target == mirrored_target and blue.crouched == red.crouched
+
+
+func test_every_bot_perceives_before_any_decides_so_both_sides_decide_alike() -> void:
+	var world: BotMatch = _mirrored_two_a_side()
+	world.decide_every_bot()
+	var shown: String = "blue %s, red %s" % [world.bots[1].action, world.bots[7].action]
+	assert_bool(_decided_alike(world)).override_failure_message(shown).is_true()
+	# Planted: one pass in id order, perceiving and deciding each bot in
+	# turn -- red then reads blue's new posture. It must be told apart.
+	var planted: BotMatch = _mirrored_two_a_side()
+	for bot: MatchBot in planted.bots:
+		bot.decide(MatchSenses.perceive(planted, bot, false), planted.teams[bot.team].reaction)
+	assert_bool(_decided_alike(planted)).is_false()
+
+
+func test_a_turn_to_what_is_exactly_behind_sweeps_the_same_way_on_both_sides() -> void:
+	var blue := MatchBot.new()
+	blue.position = Vector2(10.5, 5.5)
+	blue.facing = 0.0
+	var red := MatchBot.new()
+	red.position = Vector2(29.5, 5.5)
+	red.facing = PI
+	blue.turn_to(Vector2(2.5, 5.5), 3.0, 0.1)
+	red.turn_to(Vector2(37.5, 5.5), 3.0, 0.1)
+	# Red's facing is the mirror of blue's across x: PI less it.
+	assert_float(wrapf(red.facing, -PI, PI)).is_equal_approx(wrapf(PI - blue.facing, -PI, PI), 1e-6)
+	assert_float(sin(blue.facing)).is_greater(0.0)

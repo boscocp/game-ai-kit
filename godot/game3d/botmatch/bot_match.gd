@@ -5,10 +5,14 @@
 ##
 ## Every step, in order: every `decision_interval`, the sight table is built
 ## (who sees whom, by each bot's cone, `MatchSenses`), each team remembers
-## what its bots saw and thinks (`TeamTactics`), and every bot decides from
-## what it perceives (`MatchBot.decide` over `MatchPercepts`). Then every bot acts on what it chose, points are
-## captured, and the score grows by each point held. One random generator,
-## seeded, and bots always taken in id order: the same seed is the same match.
+## what its bots saw and thinks (`TeamTactics`), every bot perceives
+## (`MatchSenses`), and then every bot decides from what it perceived
+## (`MatchBot.decide` over `MatchPercepts`) -- all perceive before any
+## decides, so no bot sees another's new posture before that one has seen
+## its own. Then every bot acts on what it chose, points are captured, and
+## the score grows by each point held. One random generator, seeded, and
+## bots taken in id order where order cannot tell one side from the other:
+## the same seed is the same match.
 ##
 ## What it counts -- points held, deaths, points lost, bots bunched in one
 ## spot, and every shot with whether its target was in the shooter's sight
@@ -129,14 +133,24 @@ func _decide() -> void:
 	_look()
 	for team: MatchTeam in teams:
 		TeamTactics.think(self, team, time)
-	for bot: MatchBot in bots:
-		var team: MatchTeam = teams[bot.team]
-		var retreating: bool = TeamTactics.moving_in_retreat(self, team, bot)
-		var percepts: MatchPercepts = MatchSenses.perceive(self, bot, retreating)
-		bot.decide(percepts, team.reaction)
+	decide_every_bot()
 	noises.clear()
 	for team: MatchTeam in teams:
 		_count_retreats(team)
+
+
+## Every bot perceives, and then every bot decides: two passes, not one.
+## A decision changes a bot's posture at once, and a shot's worth reads the
+## target's posture, so in one pass in id order red perceived blue's new
+## posture and blue red's old one -- 312 of 12,325 mirrored setups on the
+## yards decided differently on the two sides (T67's review).
+func decide_every_bot() -> void:
+	var perceived: Array[MatchPercepts] = []
+	for bot: MatchBot in bots:
+		var retreating: bool = TeamTactics.moving_in_retreat(self, teams[bot.team], bot)
+		perceived.append(MatchSenses.perceive(self, bot, retreating))
+	for bot: MatchBot in bots:
+		bot.decide(perceived[bot.id], teams[bot.team].reaction)
 
 
 # For each squad of two or more living that is retreating: one decision

@@ -260,6 +260,11 @@ func see(now: float, visible: Array[int]) -> void:
 func turn_to(towards: Vector2, turn_rate: float, delta: float) -> bool:
 	var wanted: float = (towards - position).angle()
 	var left: float = wrapf(wanted - facing, -PI, PI)
+	# Exactly behind, either way round is as short, and the wrap picks -PI
+	# on both sides: blue turned north and red south. Turn towards +z, the
+	# way the mirror across x keeps, whichever way it faces.
+	if is_equal_approx(absf(left), PI):
+		left = PI * signf(cos(facing)) if cos(facing) != 0.0 else PI
 	facing += clampf(left, -turn_rate * delta, turn_rate * delta)
 	return absf(wrapf(wanted - facing, -PI, PI)) <= AIM_CONE
 
