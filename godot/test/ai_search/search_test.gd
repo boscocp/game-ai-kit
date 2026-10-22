@@ -287,3 +287,18 @@ func _why_unwalkable(graph: GridGraph, from: Vector2i, path: Array[Vector2i]) ->
 			return "%s is blocked" % cell
 		previous = cell
 	return ""
+
+
+func test_a_flood_goes_round_a_wall_and_stops_at_its_limit() -> void:
+	var graph := GridGraph.new(3, 3)
+	graph.block(Vector2i(1, 0))
+	graph.block(Vector2i(1, 1))
+	var reached: Dictionary[Vector2i, int] = CostFlood.within(GridSearchGraph.new(graph), Vector2i(0, 0), 4)
+	assert_int(reached[Vector2i(0, 0)]).is_equal(0)
+	assert_int(reached[Vector2i(1, 2)]).is_equal(3)
+	assert_int(reached[Vector2i(2, 2)]).is_equal(4)
+	assert_bool(reached.has(Vector2i(2, 1))).is_false()
+
+
+func test_a_flood_from_off_the_graph_reaches_nothing() -> void:
+	assert_int(CostFlood.within(GridSearchGraph.new(GridGraph.new(2, 2)), Vector2i(5, 5), 9).size()).is_equal(0)

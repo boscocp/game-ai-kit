@@ -1,6 +1,6 @@
-# VisionShape, one claim per test: the zones, the body points and what
-# light, movement and hiding do. The claims over many shapes are in
-# test/infiltration/awareness_properties.gd.
+# The stealth senses, one claim per test: the vision shape, light at the
+# feet, and hearing along a path. The claims over many shapes and graphs
+# are in test/infiltration/awareness_properties.gd.
 extends GdUnitTestSuite
 
 
@@ -82,3 +82,19 @@ func test_a_lamp_put_out_leaves_the_ambient_light() -> void:
 	assert_float(light.at(Vector2i(0, 0))).is_equal(1.0)
 	light.clear_light(Vector2i(0, 0))
 	assert_float(light.at(Vector2i(0, 0))).is_equal_approx(0.2, 1e-9)
+
+
+func test_no_path_is_silence_at_any_distance() -> void:
+	assert_float(PathHearing.loudness(PathHearing.NO_PATH, 10.0)).is_equal(0.0)
+	assert_float(PathHearing.loudness(INF, 10.0)).is_equal(0.0)
+
+
+func test_loudness_falls_along_the_path_to_the_radius() -> void:
+	assert_float(PathHearing.loudness(0.0, 10.0)).is_equal(1.0)
+	assert_float(PathHearing.loudness(4.0, 10.0)).is_equal_approx(0.6, 1e-9)
+	assert_float(PathHearing.loudness(10.0, 10.0)).is_equal(0.0)
+
+
+func test_the_off_screen_halving_halves_the_radius_and_never_raises() -> void:
+	assert_float(PathHearing.loudness(4.0, 10.0, 0.5)).is_equal_approx(0.2, 1e-9)
+	assert_float(PathHearing.loudness(4.0, 10.0, 3.0)).is_equal_approx(0.6, 1e-9)
