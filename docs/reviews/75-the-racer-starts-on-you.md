@@ -47,3 +47,10 @@ Each one is followed by what was done about it.
 5. **T54's "21 m in three seconds"** is the probe before the fix, not the
    gate's number (nit). *Left*: it is history, and the doc cites the
    gate's 9.3 m.
+
+## What was done about them
+
+Findings 1 and 2 were fixed on the branch in `16254f9`, and the gate run
+again: 0 failure(s), your car 0.10 m idle and 9.32 m with Up held, the
+racing panel naming Tab, the camera back on car 3 after a restart. 3 to 5
+were left, each for the reason given beside it above.
