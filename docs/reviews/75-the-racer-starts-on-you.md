@@ -13,6 +13,17 @@ car that moves by itself. It ran `check_readability`, `check_modules`,
 
 **Verdict: merge**, with two cheap fixes first.
 
+## What was reviewed
+
+- `CLAUDE.md`, T54's task, `docs/godot/racing3d.md`, and
+  `git diff origin/main...HEAD`.
+- Whether `watched = race.drivers.find(human)` holds on R and T: the
+  human is entered last, so it is car 3 every time.
+- Whether anything else read `watched`: `demo_overlays.gd` skips the
+  human and never reads it; no other test does.
+- Whether the gate could go green with the bug present: the panel read,
+  the key injection, the idle window, and each planted case.
+
 ## Findings
 
 Each one is followed by what was done about it.
