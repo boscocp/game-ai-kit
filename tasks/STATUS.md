@@ -3,6 +3,42 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-10-22 (waves 75 to 82 merged)
+
+**Where it stopped -- read first.** Eight waves landed in one session,
+each by pull request after a fresh-context review whose findings were
+applied on the branch, checked locally (CI stays off while the repo is
+private): 75 (the 3D racer starts on your car, PR #13), 76 (T68, health
+that comes back, weighed by exposure, #15), 77 (T71, a new gate selects
+its module, #14), 78 (T72, the botmatch effects gate in parallel shards,
+six times faster, #16), the task files T73-T80 (#17), 79 (T69, what a
+guard perceives and knows, #18), 80 (T70, the infiltration level,
+`make demo-infiltration`, #19), 81 (T73, the literature and a roadmap,
+#20) and 82 (T81, guards hear a player walking behind them, #21). Their
+reviews are in `docs/reviews/7[5-9]-*`, `8[0-2]-*` and
+`teaching-docs-and-roadmap.md`.
+
+**Waiting on the owner:**
+- T73's seven questions, at the end of
+  `docs/concepts/the-literature-and-the-kit.md` (pt-BR and en): which
+  roadmap entries and in what order, the board game for MCTS, whether
+  ADR 0016's exception extends to bandits or player modelling, `ai_llm`
+  now or after T64. Follow-up tasks are written only after the answers.
+- The decisions written at the top of T74 and T78 (pages side by side,
+  `docs/concepts/` and `docs/godot/` stay English, CSV keyed by English,
+  the system language by default).
+- The manual checks: `make demo-racing3d`, `make demo-botmatch` (T, then
+  watch health come back), `make demo-infiltration` (walk behind a guard:
+  it should turn within about two seconds), and T65 (retreat).
+
+**Next:** T74 and T78 (teaching pages, localisation) are unblocked now
+that T70 is in; T64 (the library) before T77.
+
+**A defect found, no task yet:** every worktree shares one `user://`
+(`scripts/godot` sets `XDG_DATA_HOME` to `$toolchain/xdg`), so two waves
+running Godot tests at once can collide -- it failed wave 78's
+`effect_shards_test.gd` during wave 80's check. Give each checkout its own.
+
 ## Resuming after 2026-10-22 (waves 71 to 74 merged)
 
 **Where it stopped -- read first.** Four waves landed in one session,
