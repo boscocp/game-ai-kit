@@ -104,3 +104,33 @@ make lint-tasks lint-status
 The owner reads the roadmap and picks the entries; the follow-up tasks are
 written from those answers. Does each row the kit claims to have match what
 the demo shows?
+
+## Done in wave 81 (2026-10-22)
+
+`docs/concepts/the-literature-and-the-kit.md`: 43 techniques in seven
+tables, each against the kit -- a module, a path or `not in the kit`, the
+demo's make target, the tier. Sources, all opened on 2026-10-22 and each
+saying how much was read: AIMA 4th ed.'s full contents with section
+titles; Yannakakis & Togelius 2nd ed.'s contents; Millington 3rd ed.'s
+chapter titles; the Game AI Pro index; and fifteen chapters, slides and
+papers by their opening pages (Booth's Left 4 Dead slides in part).
+Buckland's book, the AI Game Programming Wisdom series, Isla's Halo 2
+paper and Mark's GDC 2015 talk could not be opened and are listed under
+"Could not be checked", not used.
+
+What it found: the decision layer is well covered and AIMA's part IV is
+not (MCTS, CSP, filters, MDPs, bandits); nothing teaches content
+generation or pacing; `ai_teamwork`, `ai_opponent`, `ai_adversarial` and
+`ai_rts_core` are each shown in one game only. The roadmap has eight new
+techniques and six "second game" entries, each with its tier, size and
+the invariants it touches -- bandits and player modelling fall squarely
+under invariant 6, `ai_llm` under 7. It ends with seven questions for the
+owner, in Portuguese and English; the follow-up tasks are written after
+the answers, as step 5 says.
+
+`scripts/check_literature_table.py` (`make lint-literature`, in `make
+check` through `check-no-engine`, its self-test found by
+`lint-selftests`): rules L1-L5, six self-test cases -- no table, a cell
+that names nothing, a missing addon, a missing path, a missing demo, an
+empty directory (exit 2). On its first run it caught the page itself:
+the planned `ai_llm`, written in backticks as if it were a module.
