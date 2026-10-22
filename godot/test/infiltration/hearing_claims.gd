@@ -6,9 +6,12 @@
 ## way the sound is measured (a diagonal 3 m is 4 along a 4-connected floor,
 ## T69's diamond, and is not this claim's): how long until the
 ## guard's phase is past unaware. Standing at 1 m and 3 m it must be within
-## NOTICE_WITHIN; crouched at 3 m, slower than standing or never; prone,
-## never within WATCH_FOR. The guard is frozen so that turning to the sound
-## does not end the trial by sight: what is measured is what it heard.
+## NOTICE_WITHIN; crouched at 1 m, inside the creep's radius, it must be
+## noticed within WATCH_FOR and no sooner than standing there; crouched at
+## 3 m, outside that radius, and prone anywhere, never within WATCH_FOR --
+## those two hold by the events' data, and are kept to catch a change to it.
+## The guard is frozen so that turning to the sound does not end the trial
+## by sight: what is measured is what it heard.
 ##
 ## When not to use it: as the level's sound. This only tests it.
 class_name HearingClaims
@@ -20,7 +23,8 @@ extends RefCounted
 const NOTICE_WITHIN: float = 2.0
 ## How long a trial watches before it calls the guard deaf to it.
 const WATCH_FOR: float = 10.0
-## Steps each way before the player turns back: a few tenths of a metre.
+## Steps each way before the player turns back: standing, 0.45 m a step,
+## so it walks between the spot and 0.9 m further on.
 const TURN_EVERY: int = 2
 
 
@@ -30,13 +34,15 @@ const TURN_EVERY: int = 2
 ## the guard saw the player). `holding` false is the planted case: each
 ## sound heard for the one step it arrives in, as in wave 80.
 static func time_to_notice(level: InfiltrationLevel, index: int, distance: float, stance: String, holding: bool) -> float:
-	var world: InfiltrationWorld = InfiltrationWorld.make(level, InfiltrationRules.read(), 1, [level.guard_specs[index]])
+	var rules: InfiltrationRules = InfiltrationRules.read()
+	var world: InfiltrationWorld = InfiltrationWorld.make(level, rules, 1, [level.guard_specs[index]])
 	world.sounds.holding = holding
 	world.act = func(_guard: InfiltrationGuard, _world: InfiltrationWorld, _seconds: float) -> void: pass
 	var guard: InfiltrationGuard = world.guards[0]
 	var away: Vector2 = _behind_on_the_grid(guard.facing)
 	var spot: Vector2 = guard.position + away * distance
-	if not level.walkable(level.cell_of(spot)) or not level.walkable(level.cell_of(spot + away * 0.5)):
+	var reach: float = TURN_EVERY * float(rules.stances[stance]["speed"]) * rules.step_seconds
+	if not level.walkable(level.cell_of(spot)) or not level.walkable(level.cell_of(spot + away * reach)):
 		return -1.0
 	world.player.position = spot
 	var intent := PlayerIntent.new()
@@ -62,7 +68,8 @@ static func _behind_on_the_grid(facing: float) -> Vector2:
 
 
 ## Every guard of every level that can be tried, by `holding`: a row per
-## guard, {level, guard, "standing 1", "standing 3", "crouched 3", "prone 1"}
+## guard, {level, guard, "standing 1", "standing 3", "crouched 1",
+## "crouched 3", "prone 1"}
 ## in seconds -- a guard with any trial that could not be made is left out.
 static func trials(levels: Array[InfiltrationLevel], holding: bool) -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
@@ -74,13 +81,14 @@ static func trials(levels: Array[InfiltrationLevel], holding: bool) -> Array[Dic
 
 static func _row(level: InfiltrationLevel, index: int, holding: bool) -> Dictionary:
 	var row: Dictionary = {"level": level.name, "guard": index}
-	for key: Array in [["standing", 1.0], ["standing", 3.0], ["crouched", 3.0], ["prone", 1.0]]:
+	for key: Array in [["standing", 1.0], ["standing", 3.0], ["crouched", 1.0], ["crouched", 3.0], ["prone", 1.0]]:
 		row["%s %d" % [key[0], int(key[1])]] = time_to_notice(level, index, key[1], key[0], holding)
 	return row
 
 
 ## The findings for `rows`: a standing player noticed within NOTICE_WITHIN
-## at 1 m and 3 m, crouched at 3 m no sooner than standing, prone never.
+## at 1 m and 3 m; crouched at 1 m noticed, no sooner than standing; crouched
+## at 3 m and prone, never.
 static func heard(rows: Array[Dictionary]) -> Array[String]:
 	if rows.is_empty():
 		return ["no guard could be tried: no floor behind any of them"]
@@ -96,8 +104,12 @@ static func _findings_for(row: Dictionary) -> Array[String]:
 	for key: String in ["standing 1", "standing 3"]:
 		if float(row[key]) > NOTICE_WITHIN:
 			failures.append("%s: %s m behind it, noticed at %s, over %.1f s" % [who, key, _seconds(row[key]), NOTICE_WITHIN])
-	if float(row["crouched 3"]) < float(row["standing 3"]):
-		failures.append("%s: crouched at 3 m noticed sooner than standing" % who)
+	if float(row["crouched 1"]) == INF:
+		failures.append("%s: crouched at 1 m, inside the creep's radius, never noticed" % who)
+	elif float(row["crouched 1"]) < float(row["standing 1"]):
+		failures.append("%s: crouched at 1 m noticed sooner than standing" % who)
+	if float(row["crouched 3"]) != INF:
+		failures.append("%s: crouched at 3 m, outside the creep's radius, noticed at %s" % [who, _seconds(row["crouched 3"])])
 	if float(row["prone 1"]) != INF:
 		failures.append("%s: prone at 1 m noticed at %s" % [who, _seconds(row["prone 1"])])
 	return failures
@@ -107,9 +119,9 @@ static func _findings_for(row: Dictionary) -> Array[String]:
 static func lines(rows: Array[Dictionary]) -> Array[String]:
 	var printed: Array[String] = []
 	for row: Dictionary in rows:
-		printed.append("  %s guard %d: standing 1 m %s, 3 m %s; crouched 3 m %s; prone 1 m %s" % [
+		printed.append("  %s guard %d: standing 1 m %s, 3 m %s; crouched 1 m %s, 3 m %s; prone 1 m %s" % [
 			row["level"], row["guard"], _seconds(row["standing 1"]), _seconds(row["standing 3"]),
-			_seconds(row["crouched 3"]), _seconds(row["prone 1"])])
+			_seconds(row["crouched 1"]), _seconds(row["crouched 3"]), _seconds(row["prone 1"])])
 	return printed
 
 

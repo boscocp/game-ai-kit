@@ -91,7 +91,9 @@ shows it all from above; the panel shows the watched guard's every score.
   of the time, and its awareness fell in the other three -- standing 1 m
   behind a guard, noticed at 5.8 s or never, 3 m never. Now a sound is
   delivered with how long it holds (the player's steps, their cadence; a
-  one-off, none) and heard until it ends or a louder one comes. Not T69's
+  one-off, none) and heard until it ends or another sound is made -- any
+  sound made in a later step replaces it, so a held footstep never hides a
+  throw or a takedown; within one step the louder wins. Not T69's
   event lifetime: that is how long an event is remembered (4 s for a
   footstep), and a footstep heard 4 s would raise a guard to alert from one
   step. And a guard's glance now turns to where it heard: it read a sound
@@ -116,15 +118,21 @@ is caught:
 | off-screen halving only lowers what a guard hears | the factor as a gain |
 | every decision is on the overlay, and done: the record is the action, and the guard walks where it says | a decision taken outside the selector; an act that ignores the action |
 | portable: the guards' scripts name no level, and each guard stands at its level's post | a guard script that reads the first level's file |
-| a guard hears a player walking behind it (wave 82): standing 1 m and 3 m behind it along the floor, out of its sight, noticed within 2 s; crouched at 3 m no sooner; prone never -- 12 guards on five levels | each sound heard for the one step it arrives in (wave 80) |
+| a guard hears a player walking behind it (wave 82): standing 1 m and 3 m behind it along the floor, out of its sight, noticed within 2 s; crouched at 1 m, inside the creep's radius, noticed and no sooner than standing; crouched at 3 m, outside it, and prone, never -- 10 guards on five levels | each sound heard for the one step it arrives in (wave 80) |
 
 **Hearing.** A guard frozen where it stands, alone on its level, the
 player walking to and fro behind it along the grid's axis nearest straight
 behind (3 m away is then 3 m along the floor, the way sound is measured):
 standing, noticed -- its phase past unaware -- in 0.5 to 0.9 s at 1 m and
 0.9 to 1.8 s at 3 m (the sentry, `heard_rate` 0.4, is the slower);
-crouched at 3 m, outside the creep's 2 m, and prone, never. Before wave 82
-the same trials gave 5.8 s or never at 1 m, never at 3 m. The bound of 2 s
+crouched, in 0.9 to 1.5 s at 1 m, inside the creep's 2 m radius; crouched
+at 3 m, outside it, and prone, never -- those two hold by the events' data,
+and are kept to catch a change to it. Before wave 82 the same trials gave
+5.8 s or never at 1 m, never at 3 m. **Facing matters**: a guard facing
+diagonally hears a player 3 m straight behind it 4 m along the floor (sound
+is 4-connected, T69's diamond), and a sentry took 4.6 s there -- the
+owner's own case is the axis one only when the guard faces along a
+corridor. The bound of 2 s
 is the upper end of The Last of Us's "around 1 or 2 seconds" to perceive a
 seen player [McIntosh 2015]; no source opened gives a time for hearing
 footsteps, so the kit takes the same.
@@ -132,8 +140,9 @@ footsteps, so the kit takes the same.
 **The search.** A staged search (`HidingStage`): the player lies prone at a
 hiding place no guard watches, and a radio report says it was seen 8 to 14
 steps away, out of sight of it. Over 15 runs (5 levels, 3 seeds), the
-player is found on average after **6.9 s** with the belief, **21.0 s**
-without it, and **18.4 s** with a belief that never spreads -- so it is the
+player is found on average after **6.9 s** with the belief, **20.8 s**
+without it (21.0 s in wave 80's first run, before its review's fixes; 20.8
+after them and again in wave 82), and **18.4 s** with a belief that never spreads -- so it is the
 spreading, not merely knowing a place, that finds a player.
 
 **The quiet route does not show the light term.** The scripted sneak keeps

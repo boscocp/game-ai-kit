@@ -23,7 +23,9 @@
 ## arrived heard a walking player a quarter of the time, and its awareness
 ## fell in between. So a sound is delivered with how long it holds -- the
 ## steps, their own cadence; a one-off event, a throw or a shot, none -- and
-## the guard hears it in every step until it ends or a louder one comes.
+## the guard hears it in every step until it ends or another is made --
+## any sound made in a later step replaces it, and within a step the louder
+## wins, so a held footstep never hides a throw or a takedown.
 ## Not T69's event lifetime: that is how long an event is remembered and
 ## claimed, 4 s for a footstep, and one footstep heard for 4 s would raise
 ## a guard to alert.
@@ -74,7 +76,7 @@ func emit(world: InfiltrationWorld, kind: String, place: Vector2, from: int, car
 			_deliver(world, guard, sound)
 			record["heard_by"].append(guard.id)
 	recent.append(record)
-	recent = recent.filter(func(sound: Dictionary) -> bool: return world.time - float(sound["at"]) <= DRAWN_FOR)
+	recent = recent.filter(func(made: Dictionary) -> bool: return world.time - float(made["at"]) <= DRAWN_FOR)
 
 
 ## How loud a sound of `kind` and `radius`, whose flood is `reached`, is
@@ -107,7 +109,11 @@ func _deliver(world: InfiltrationWorld, guard: InfiltrationGuard, sound: Diction
 		_hear_report(world, guard, kind, sound["place"], sound["carries"], sound["urgency"])
 		return
 	var loudness: float = sound["loudness"]
-	if guard.heard.is_empty() or loudness > float(guard.heard["loudness"]) or world.time >= float(guard.heard["until"]):
+	# A sound made in a later step replaces the held one, however quiet: a
+	# hold keeps a walking player heard, it must not deafen the guard to a
+	# throw or a takedown while the player walks (the review of wave 82).
+	# Within one step, the louder wins.
+	if guard.heard.is_empty() or world.time > float(guard.heard["at"]) or loudness > float(guard.heard["loudness"]):
 		var hold: float = float(sound["hold"]) if holding else 0.0
 		guard.heard = {"loudness": loudness, "place": sound["place"], "kind": kind, "at": world.time, "until": world.time + hold}
 

@@ -36,3 +36,44 @@ func test_the_player_walking_holds_its_steps_for_their_cadence() -> void:
 	world.step(intent)
 	assert_bool(guard.heard.is_empty()).is_false()
 	assert_float(float(guard.heard["until"]) - float(guard.heard["at"])).is_equal_approx(float(rules.player["noise_every"]), 1e-9)
+
+
+func _world_of_one() -> InfiltrationWorld:
+	var level: InfiltrationLevel = InfiltrationLevel.read(InfiltrationLevel.WAREHOUSE)
+	return InfiltrationWorld.make(level, InfiltrationRules.read(), 1, [level.guard_specs[0]])
+
+
+func _throw(loudness: float) -> Dictionary:
+	return {"kind": "thrown_object", "place": Vector2(5, 5), "from": -1, "carries": Vector2.INF,
+		"urgency": 0.0, "loudness": loudness, "hold": 0.0}
+
+
+func test_a_held_footstep_does_not_hide_a_quieter_throw_made_later() -> void:
+	var guard: InfiltrationGuard = _guard_hearing(0.8, 1.0, 0.4)
+	var world: InfiltrationWorld = _world_of_one()
+	world.time = 1.1
+	world.sounds._deliver(world, guard, _throw(0.3))
+	assert_str(str(LevelSounds.heard_now(guard, 1.1)["kind"])).is_equal("thrown_object")
+
+
+func test_within_one_step_the_louder_sound_is_the_one_heard() -> void:
+	var guard: InfiltrationGuard = _guard_hearing(0.8, 1.0, 0.4)
+	var world: InfiltrationWorld = _world_of_one()
+	world.time = 1.0
+	world.sounds._deliver(world, guard, _throw(0.3))
+	assert_str(str(LevelSounds.heard_now(guard, 1.0)["kind"])).is_equal("footstep")
+
+
+# A one-off: by the time the guard acts its senses have let it go, so a
+# glance that read `guard.heard` (wave 80) looked nowhere.
+func test_a_glance_turns_to_a_sound_heard_out_of_sight() -> void:
+	var world: InfiltrationWorld = _world_of_one()
+	var guard: InfiltrationGuard = world.guards[0]
+	world.player.position = guard.position - Vector2.from_angle(guard.facing) * 2.0
+	world.time = 1.0
+	world.sounds.emit(world, "thrown_object", world.player.position, -1)
+	InfiltrationSenses.sense(guard, world, 0.1, false)
+	assert_bool(guard.percept.sight.perceived()).is_false()
+	assert_float(guard.percept.loudness).is_greater(0.0)
+	guard.action = "glance"
+	assert_vector(GuardActs._act(guard, world)).is_equal(guard.percept.heard_place)

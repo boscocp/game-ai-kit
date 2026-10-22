@@ -37,7 +37,8 @@ old behaviour fails.
    long it holds: the player's steps hold for `noise_every`, the cadence
    of the noise its own rules make; a one-off event (a throw, a shot, a
    report) holds for none, as before. The guard hears a held sound in every
-   step until it ends or a louder one replaces it. Not T69's event
+   step until it ends or another is made (a later sound replaces it; in
+   one step the louder wins). Not T69's event
    lifetime: that is how long an event is remembered and claimed (4 s for a
    footstep), and a guard hearing one footstep for 4 s would be alert from
    a single step.
@@ -89,3 +90,21 @@ you at all? Prone: never?
   the search (6.9 / 20.8 / 18.4 s), the quiet route, the arbiter's 24
   shots and 325 group decisions did not. It takes about 100 s, the new
   claim's 96 trials included.
+
+### After the review of wave 82
+
+- **A held footstep hid quieter sounds**: a throw 5 m off (about 0.5)
+  under a footstep at 1 m (about 0.83) was dropped for the whole hold, and
+  a walking player renews it, so the distraction failed. Now any sound made
+  in a later step replaces the held one, and within a step the louder wins:
+  holding is about a sound going on, not about drowning others out. Tested
+  (`level_sounds_test.gd`), and the test fails on the old rule.
+- **The glance has a test**, which fails with the old `guard.heard` line.
+- **The crouched half now proves something**: crouched at 1 m, inside the
+  creep's 2 m, is noticed in 0.9-1.5 s and no sooner than standing; at 3 m,
+  outside it, and prone, never -- those hold by the data and are kept to
+  catch a change to it. The floor is checked to the end of the player's
+  swing (two steps, 0.9 m standing), which leaves 10 guards to try.
+- **Facing matters**: a guard facing diagonally took 4.6 s for a player 3 m
+  straight behind it (4 m along the 4-connected floor); the docs and the
+  manual check say so.
