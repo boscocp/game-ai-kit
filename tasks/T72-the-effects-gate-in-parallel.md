@@ -5,8 +5,8 @@ Size: S · Prereqs: T51, T66, T67, T68 · Files: `godot/test/botmatch/`, `script
 ## Goal
 
 `make test-botmatch-effects` plays every pairing's matches one after
-another in one Godot process: 147 whole matches, and two planted cheats'
--- 187 with T68's pairings -- 2343 s on wave 76, against 1279 s in T67. Every wave that touches the bot match runs it,
+another in one Godot process: 187 whole matches since T68, and two
+planted cheats', 2343 s on wave 76, against 1279 s in T67. Every wave that touches the bot match runs it,
 and it runs again after a review changes the code, because the claims are
 about what the matches did. The owner, 2026-10-22, watching wave 76 run
 it a second time: "de novo? pq ta repetindo? precisa mesmo?" -- it does
@@ -69,10 +69,13 @@ share.
   after seeds 1 and 2 gave the same margin to the last decimal place.
 - **The proof**: a temporary line printed every pairing's sums in full;
   the serial and the sharded run of the whole gate printed the same
-  thirteen lines, and the same report. At `--matches 2` too.
-- **The times**, both running at once on 12 cores: 1396 s serial, 250 s
-  sharded (230 s of shards, 20 s of merge, the planted cheats' two
-  matches). At `--matches 2`: 700 s against 139 s.
+  thirteen lines, and the same report. At `--matches 2` too. And again
+  after rebasing onto T68 (wave 76), on the merged gate of 187 matches:
+  fifteen lines of exact sums and the 94-line report, identical.
+- **The times**, both running at once on 12 cores, on the merged gate:
+  2748 s serial, 455 s sharded (423 s of shards, 31 s of merge, the
+  planted cheats' two matches and T68's regeneration check) -- 6.0 times
+  faster. Before T68, 147 matches: 1396 s against 250 s. At `--matches 2`: 700 s against 139 s.
 - **Planted**: in `effect_shards_test.gd`, a merge missing a match, one
   with a match nobody asked for, a shard that played nothing, a malformed
   `--shard`; in the runner's `--self-test`, a SCRIPT ERROR, an engine
@@ -87,7 +90,12 @@ share.
   -- a planted `deaths` kept as the last value, not a sum, turned it red;
   a match two shards played is refused; a shard prints only how many
   matches it played; a passing run's folder is removed. And the count was
-  wrong: this gate plays 147 matches (187 with T68's pairings), not 189.
+  wrong: this gate played 147 matches before T68 and plays 187 with
+  its two healer pairings, not 189.
+- **The rebase** met CLAUDE.md's `class_name` trap: T68's new
+  `MatchHealth` was unknown until the project was imported, and the first
+  run printed nothing on either side -- the runner exited 2, and an
+  "identical" comparison of zero lines was caught by counting them.
 - **Not done**: the quick/full split of step (b) was not needed.
 - The suite caught one fault on the way: `store_var` writes a length before
   the value, and the first reader decoded the file's bytes whole.

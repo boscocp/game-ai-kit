@@ -323,9 +323,9 @@ measured apart.
 
 ## Running the effects gate in shards (T72)
 
-`make test-botmatch-effects` plays 147 whole matches, and two planted
-cheats' (T68's pairings make it 187). One after another,
-in one Godot process, they took 1279 s in T67 and 2343 s on T68's branch,
+`make test-botmatch-effects` plays 187 whole matches, and two planted
+cheats'. One after another, in one Godot process, they took 1279 s in T67
+(147 matches) and 2343 s on T68's branch,
 and a wave runs the gate again whenever its review changes the code. The
 matches are independent: each is a function of its pairing and its seed,
 and draws from its own random generator (`world.random`). Measured on
@@ -339,14 +339,17 @@ is K modulo N, and writes each match's counts (`EffectShards`, in
 `test/botmatch/`). A last process, told `-- --merge DIR`, plays nothing:
 it adds the counts back one match at a time in seed order, the order the
 serial run adds them, and asks every claim and planted case as before.
-Only the two planted cheats' matches are played in the merge, about 20 s.
+Only the two planted cheats' matches and T68's regeneration check are
+played in the merge, about 30 s.
 
 **The same numbers, bit for bit.** With a temporary line printing every
 pairing's sums in full (`var_to_str`), the serial run and the sharded run
-of the whole gate printed the same thirteen lines character for character,
-and the same report. Times on this machine, the two running at the same
-time on its 12 cores: 1396 s serial, 250 s sharded (230 s of shards, 20 s
-of merge) -- 5.6 times faster. Run alone, the shards would have the cores
+of the whole gate printed the same lines character for character, and
+the same report: thirteen lines before T68, and fifteen and a 94-line
+report on the gate with T68's pairings. Times on this machine, the two
+running at the same time on its 12 cores, on that gate: 2748 s serial,
+455 s sharded (423 s of shards, 31 s of merge) -- 6.0 times faster;
+before T68, 1396 s against 250 s. Run alone, the shards would have the cores
 to themselves; how much faster that is was not measured.
 
 What the runner refuses, each a planted case: a shard that exits non-zero,

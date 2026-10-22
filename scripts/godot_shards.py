@@ -3,8 +3,8 @@
 
 What it does
 ------------
-`botmatch_effects.gd` plays 147 whole matches, one after another, in one
-process: over twenty minutes. Each match is independent, so this starts N
+`botmatch_effects.gd` plays 187 whole matches, one after another, in one
+process: about forty-five minutes. Each match is independent, so this starts N
 Godot processes, each told `-- --shard K/N --out DIR` and playing its share,
 waits for all of them, and runs the gate once more with `-- --merge DIR`,
 which reads every shard's counts back, adds them in the serial order and
@@ -58,9 +58,10 @@ GODOT = ROOT / "scripts" / "godot"
 BUILD = ROOT / "build" / "shards"
 #: More processes than this gains little and starves whatever else runs.
 MOST_SHARDS = 12
-#: Seconds every shard together, and then the merge, may take. The whole
-#: gate measured 1396 s in one process (2026-10-22), so a shard that takes
-#: longer than that, more than twice, has hung rather than worked.
+#: Seconds every shard together, and then the merge, may take. In shards the
+#: gate measured 455 s (2026-10-22), so a shard still running after eight
+#: times that has hung rather than worked; one process alone took 2748 s,
+#: and a longer gate run serially wants `--timeout`.
 TIMEOUT = 3600.0
 #: Lines Godot prints for an error.
 ENGINE_ERROR = re.compile(r"^(SCRIPT ERROR|ERROR):", re.MULTILINE)
