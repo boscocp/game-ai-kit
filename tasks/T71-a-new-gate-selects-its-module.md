@@ -70,3 +70,40 @@ python3 scripts/check_modules.py
 Read the new reader of the `Makefile` diff top to bottom: is it simple
 enough that a person trusts it to say "local"? If it is not, the nine
 minutes are the cheaper price.
+
+## Done in wave 77 (2026-10-22)
+
+`affected.py` has a fifth rule. The reader of the diff is its own file,
+`scripts/added_gates.py`, so the selector stays short and the new rule can
+be read top to bottom, the manual check's question.
+
+- **What it accepts**: hunks of `git diff -U0` that are only new `test-`
+  targets (`.PHONY`, the rule, the recipe) whose recipes name files one
+  module owns, using no variable but `$(GODOT)`, `$(PYTHON)` and
+  `$(CURDIR)`, with no recipe line right after them; and the `check:` list
+  with the same words in the same order and those names put in. A manifest
+  only when nothing but `gates` changed, the old list is the start of the
+  new one, and every name appended is a gate the same change added for
+  that module.
+- **Step 5's open choice**: a new target whose recipe runs another
+  module's file selects **everything**, not both modules: the manifest
+  says one module and the recipe another, and that disagreement is a
+  doubt.
+- **`--paths` never takes rule 5**: a list of paths has no diff.
+- **Planted cases**: wave 75's shape is the honest one (selects `play` and
+  `c` on the fixture); fourteen planted ones select everything, among them
+  a changed recipe elsewhere, a recipe of another module, a removed
+  target, a variable, an unreadable line, an insertion inside another
+  recipe, a changed `owns` or `depends_on`, a recipe line swapped for a
+  gate, a recipe naming two modules, a rule for an old target, a gate put
+  into `check:` while another is taken out, and the Makefile given by path
+  alone. Nine mutations of the guards, each caught by one of them.
+
+Measured on wave 75's own commits (`--base origin/main --head
+wave/75-the-racer-starts-on-you`): before, `selected: everything`, because
+`Makefile` and `modules/racing3d.json` are global; after, `selected: menu,
+racing3d` -- the two paths "only add a gate of racing3d", and `menu` uses
+it. The narrowed run took 133 s of lints and gates plus 4 s of gdUnit
+suites, against `make check`'s 1957 s on the same machine -- that run
+shared the machine with two other waves' Godot runs, so it is slower than
+the nine minutes usually quoted; the saving is the ratio, not the seconds.
