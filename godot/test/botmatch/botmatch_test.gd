@@ -1301,6 +1301,8 @@ func test_the_cover_a_bot_stands_at_is_low_high_or_none() -> void:
 		var aside: Vector2 = spot.position + Vector2(0.0, 2.0)
 		if world.arena.spots_near(aside, MatchSenses.COVER_REACH).is_empty() and open_floor == Vector2.INF:
 			open_floor = aside
+	# Found first, or the check below would be asked of nothing.
+	assert_bool(open_floor == Vector2.INF).is_false()
 	assert_float(MatchSenses.cover_at(world, open_floor)).is_equal(0.0)
 
 
@@ -1367,3 +1369,36 @@ func test_a_turn_to_what_is_exactly_behind_sweeps_the_same_way_on_both_sides() -
 	# Red's facing is the mirror of blue's across x: PI less it.
 	assert_float(wrapf(red.facing, -PI, PI)).is_equal_approx(wrapf(PI - blue.facing, -PI, PI), 1e-6)
 	assert_float(sin(blue.facing)).is_greater(0.0)
+
+
+# The vectors that copy `actions.json` by hand, in `spec/`, by the list each copies.
+const COPIED_LISTS: Dictionary = {
+	"the-bot-match-weighs-its-actions.json": "actions",
+	"the-bot-match-weighs-its-posture.json": "postures",
+	"the-bot-match-weighs-its-pace.json": "paces",
+}
+
+
+# A list of actions as plain data, every number a float, to compare.
+static func _plain(actions: Array[ActionChoice.Action]) -> Array:
+	var found: Array = []
+	for each: ActionChoice.Action in actions:
+		var considerations: Array = each.considerations.map(func(said: ActionChoice.Consideration) -> Array:
+			return [said.percept, said.curve, said.slope, said.intercept, said.at, said.below, said.above])
+		found.append([each.name, each.weight, considerations])
+	return found
+
+
+func test_the_vectors_copy_the_bots_own_actions_postures_and_paces() -> void:
+	# derive.py imports nothing from the repository, so it copies the
+	# match's lists by hand; this ties each copy to `actions.json`.
+	var folder: String = ProjectSettings.globalize_path("res://").path_join("../spec/vectors/teamwork")
+	for file: String in COPIED_LISTS:
+		var vector: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(folder.path_join(file)))
+		var copied: Array = _plain(ActionChoice.actions_from(vector["query"]["actions"]))
+		assert_array(copied).override_failure_message(file).is_not_empty()
+		assert_str(str(copied)).override_failure_message(file).is_equal(str(_plain(MatchBot.default_choices(COPIED_LISTS[file]))))
+	# Planted: one weight changed in a copy, and the two must differ.
+	var changed: Array = (JSON.parse_string(FileAccess.get_file_as_string(folder.path_join(COPIED_LISTS.keys()[0]))) as Dictionary)["query"]["actions"]
+	changed[0]["weight"] = float(changed[0]["weight"]) + 0.5
+	assert_str(str(_plain(ActionChoice.actions_from(changed)))).is_not_equal(str(_plain(MatchBot.default_choices("actions"))))

@@ -153,7 +153,10 @@ func arrived() -> bool:
 	return position.distance_to(goal) <= ARRIVED
 
 
-## One list every bot weighs from, by its key in `actions.json`.
+## One list every bot weighs from, by its key in `actions.json`. The
+## Action objects are shared by every bot, read once: nothing writes to an
+## Action after it is read, and a test that wants other numbers gives a bot
+## a list of its own.
 static func default_choices(key: String) -> Array[ActionChoice.Action]:
 	if not _defaults.has(key):
 		var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(ACTIONS))

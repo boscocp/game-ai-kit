@@ -13,6 +13,9 @@ from __future__ import annotations
 import dataclasses
 
 LINEAR, STEP = "linear", "step"
+CURVES = (LINEAR, STEP)
+ACTION_KEYS = {"name", "weight", "considerations"}
+CONSIDERATION_KEYS = {"percept", "curve", "slope", "intercept", "at", "below", "above"}
 
 
 @dataclasses.dataclass
@@ -60,7 +63,27 @@ def choose(actions: list[Action], percepts: dict[str, float]) -> tuple[list[floa
     return scores, answers, chosen
 
 
+def why_not_actions(data: list) -> str:
+    """Why `data` is not a list of actions, or "" when it is."""
+    for entry in data:
+        if not isinstance(entry, dict) or "name" not in entry:
+            return f"an action must be a dict with a name: {entry!r}"
+        if set(entry) - ACTION_KEYS:
+            return f"action {entry['name']} has an unknown key, {sorted(set(entry) - ACTION_KEYS)[0]}"
+        for fields in entry.get("considerations", []):
+            if not isinstance(fields, dict) or "percept" not in fields:
+                return f"action {entry['name']}: a consideration must be a dict with a percept: {fields!r}"
+            if set(fields) - CONSIDERATION_KEYS:
+                return f"action {entry['name']}: an unknown key, {sorted(set(fields) - CONSIDERATION_KEYS)[0]}"
+            if fields.get("curve", LINEAR) not in CURVES:
+                return f"action {entry['name']}: no curve called {fields['curve']}"
+    return ""
+
+
 def actions_from(data: list[dict]) -> list[Action]:
-    """Actions from plain data, as the JSON files write them."""
+    """Actions from plain data, as the JSON files write them; ValueError on data `why_not_actions` objects to."""
+    objection = why_not_actions(data)
+    if objection:
+        raise ValueError(objection)
     return [Action(entry["name"], float(entry.get("weight", 1.0)),
                    [Consideration(**fields) for fields in entry.get("considerations", [])]) for entry in data]

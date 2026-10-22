@@ -167,6 +167,18 @@ class TeamworkVectorTests(unittest.TestCase):
             with self.subTest(vector=path.name):
                 self.assertTrue(misses(vector["expect"], answer))
 
+    def test_actions_with_an_unknown_key_or_curve_are_refused(self) -> None:
+        good = [{"name": "go", "weight": 1.0, "considerations": [{"percept": "x", "curve": "step", "at": 0.5}]}]
+        self.assertEqual(action.why_not_actions(good), "")
+        self.assertEqual(len(action.actions_from(good)), 1)
+        for planted in ([{"name": "go", "wieght": 1.0}],
+                        [{"name": "go", "considerations": [{"percept": "x", "curve": "stepp"}]}],
+                        [{"name": "go", "considerations": [{"percept": "x", "slop": 2.0}]}],
+                        [{"weight": 1.0}]):
+            with self.subTest(planted=planted):
+                with self.assertRaises(ValueError):
+                    action.actions_from(planted)
+
     def test_a_number_off_by_ten_tolerances_is_caught(self) -> None:
         self.assertTrue(misses(1.0, 1.0 + 10 * TOLERANCE))
         self.assertFalse(misses(1.0, 1.0 + TOLERANCE / 10))

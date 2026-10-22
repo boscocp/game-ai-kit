@@ -37,6 +37,10 @@ extends RefCounted
 ## The two curves.
 const LINEAR: String = "linear"
 const STEP: String = "step"
+const CURVES: Array[String] = [LINEAR, STEP]
+## The keys an action and a consideration may have in plain data.
+const ACTION_KEYS: Array[String] = ["name", "weight", "considerations"]
+const CONSIDERATION_KEYS: Array[String] = ["percept", "curve", "slope", "intercept", "at", "below", "above"]
 
 
 ## One reason for or against an action: a percept, and the curve that turns
@@ -108,8 +112,15 @@ static func choose(actions: Array[Action], percepts: Dictionary) -> Choice:
 
 ## Actions from plain data, as a JSON file writes them: a list of
 ## {name, weight, considerations: [{percept, curve, and its numbers}]}.
+## Data `why_not_actions` objects to is refused whole -- an error, and no
+## actions -- rather than read as something else: a misspelt key or curve
+## would otherwise weigh silently with a default.
 static func actions_from(data: Array) -> Array[Action]:
 	var actions: Array[Action] = []
+	var objection: String = why_not_actions(data)
+	if objection != "":
+		push_error("ActionChoice: %s" % objection)
+		return actions
 	for entry: Dictionary in data:
 		var action := Action.new()
 		action.name = str(entry["name"])
@@ -118,6 +129,48 @@ static func actions_from(data: Array) -> Array[Action]:
 			action.considerations.append(_consideration_from(fields))
 		actions.append(action)
 	return actions
+
+
+## Why `data` is not a list of actions, or "" when it is: every entry and
+## consideration a Dictionary of known keys, a name and a percept given,
+## and every curve one of CURVES.
+static func why_not_actions(data: Array) -> String:
+	for entry: Variant in data:
+		var objection: String = _why_not_action(entry)
+		if objection != "":
+			return objection
+	return ""
+
+
+static func _why_not_action(entry: Variant) -> String:
+	if not (entry is Dictionary) or not (entry as Dictionary).has("name"):
+		return "an action must be a Dictionary with a name: %s" % [entry]
+	var unknown: String = _unknown_key(entry, ACTION_KEYS)
+	if unknown != "":
+		return "action %s has an unknown key, %s" % [entry["name"], unknown]
+	for fields: Variant in (entry as Dictionary).get("considerations", []):
+		var objection: String = _why_not_consideration(fields)
+		if objection != "":
+			return "action %s: %s" % [entry["name"], objection]
+	return ""
+
+
+static func _why_not_consideration(fields: Variant) -> String:
+	if not (fields is Dictionary) or not (fields as Dictionary).has("percept"):
+		return "a consideration must be a Dictionary with a percept: %s" % [fields]
+	var unknown: String = _unknown_key(fields, CONSIDERATION_KEYS)
+	if unknown != "":
+		return "consideration %s has an unknown key, %s" % [fields["percept"], unknown]
+	if not (str((fields as Dictionary).get("curve", LINEAR)) in CURVES):
+		return "consideration %s has no curve called %s" % [fields["percept"], fields["curve"]]
+	return ""
+
+
+static func _unknown_key(fields: Dictionary, known: Array[String]) -> String:
+	for key: Variant in fields:
+		if not (str(key) in known):
+			return str(key)
+	return ""
 
 
 static func _consideration_from(fields: Dictionary) -> Consideration:
