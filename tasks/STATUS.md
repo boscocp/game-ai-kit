@@ -3,6 +3,25 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-10-22 (waves 71 to 74 merged)
+
+**Where it stopped -- read first.** Four waves landed in one session,
+each by pull request after a fresh-context review and green CI: 71 (T66,
+the lanes, the yards and bots that weigh, PR #9), 73 (T54, the 3D racer,
+PR #10), 74 (stealth research; T52 became T69 and T70, PR #11) and 72
+(T67, the bot as an agent). Their reviews are in `docs/reviews/7[1-4]-*`.
+
+**Waiting on the owner:** the manual checks -- `make demo-botmatch` (T to
+play, L for the yards, V for the AI's scores) and `make demo-racing3d` --
+and the owner's comments on them; and T65 (change retreat, or close it as
+measured).
+
+**Next, in the owner's order:** T68 (health that comes back, weighed by
+the bot; needs T67, now merged), then T69 and T70 (the stealth example).
+The owner's standing rule, for every example: a bot is an AIMA agent that
+weighs what it perceives -- as few fixed if/else in a demo as can be --
+and copes on another map.
+
 ## Resuming after 2026-10-21 (wave 73)
 
 **Where it stopped -- read first.** Wave 73 did T54, the 3D racer, in
@@ -156,9 +175,9 @@ sha256 and never committed.
 | T51 | A bot match: two teams of bots, cover, and a commander | done | wave 70: `ai_teamwork` (tactical positions with claims, team influence, a commander, squad confidence and waves), Python twins, 17 vectors; a 6-a-side match as a physics-free simulation held to Godot's rays, mirrored; first-person takeover of any bot (owner's choice), tracers, hit markers, a rifle; measured on a fair mirror (9-11; A*'s tie order had bent it 18-2): claims cut bunching 0 s against 79, the commander spreads orders over 2.34 points against 1.81, retreat always leaves someone covering, no shot at an unseen enemy; in the score, retreat costs the match (20-0 without it), the commander suggests help (1.8 errors), claims nothing -- said as measured, as the owner chose (`docs/godot/botmatch.md`), T65 split off; manual check still the owner's |
 | T69 | What a guard perceives, how aware it is, and what it knows | todo | the owner's T52, first half (split 2026-10-21; numbered T52.1 at first); needs T67; research in `docs/concepts/stealth-ai.md` (wave 74); vision zones and body points, light at the feet, hearing by path length, typed events, an awareness accumulator and phases read from data thresholds, memory and a shared belief map in `ai_perception`, which takes the fuzzy rate and the `ai_search` flood as data (invariant 2); the `infiltration` module wires them -- techniques only, twins and vectors, no level |
 | T70 | The infiltration level: guards that search together and call for help | todo | the owner's T52, second half (numbered T52.2 at first); needs T69 and T67; third person, reusing T66's level JSON, BotArena/ArenaWalk, BotBody, BotMatchHud, shot ray and rules.json; guards as T67's agent; search coordinator and role arbiter in `ai_teamwork`, fed data; help is heard, not shared; off-screen hearing halved on by default, shown; Metal Gear as design only; single-player, gated by claims on two levels and generated ones |
-| T65 | A coordinated team that wins | todo | split from T51 by the owner. T66 measured it on the lanes: claims and the commander each about one standard error better (not shown), retreat costs the match (20-0 without it); the owner decides whether to change retreat or close it as measured |
-| T66 | The bot match on a map made for tactics, with a body to aim at | wip | wave 71, written and reviewed (`docs/reviews/71-the-lanes-map.md`), merge next: height in the simulation (`ArenaWalk`), the three-lane map and a second unlike it (`yards.json`), sprint, a seen and heard reload, 120 rounds and a base resupply, a power weapon and the five-kill reward, a humanoid body (Kenney Survivors, CC0), head/torso/limb zones, solid bodies; `AimChoice` and `PassageChoice` in `ai_teamwork` with twins and 15 vectors; both mirrors fair, every claim with a planted case that truly rejects; in the score claims and the commander about one error each, retreat costs the match (20-0) -- said as measured (`docs/godot/botmatch.md`); manual check the owner's |
-| T67 | The bot as an agent: it perceives, weighs and decides, on any map | wip | wave 72: percepts through `ai_perception` into one record (shots heard), `ActionChoice` (a utility choice) in `ai_teamwork` for the action, the posture and the pace, `ErrandChoice` for the errands, each with a twin and vectors; `ai_steering` not adopted (its avoid swerves to one fixed side); portability held on random mirrored arenas; review next |
+| T65 | A coordinated team that wins | todo | measured again after T67, on the lanes: the commander +40.7 s a match at 1.5 errors and claims +38.2 s at 0.9 (suggested, not shown); retreat loses every match (20-0 without it); the owner decides whether to change retreat or close it as measured |
+| T66 | The bot match on a map made for tactics, with a body to aim at | done | wave 71 (PR #9): height in the simulation (`ArenaWalk`), the three lanes and the yards, sprint, a seen and heard reload, 120 rounds and a base resupply, a power weapon and the five-kill reward, a humanoid body, head/torso/limb zones, solid bodies; `AimChoice` and `PassageChoice` with twins and vectors; reviewed (13 findings applied); both mirrors fair; manual check the owner's |
+| T67 | The bot as an agent: it perceives, weighs and decides, on any map | done | wave 72: percepts through `ai_perception` into one record (shots heard), `ActionChoice` in `ai_teamwork` for the action, the posture and the pace, `ErrandChoice` for the errands, twins and vectors; reviewed (8 findings applied, among them perceiving and deciding in one loop, which bent the yards' mirror); both mirrors fair at 20 matches; random arenas played; manual check the owner's |
 | T68 | Health that comes back, and a bot that weighs falling back to heal | todo | the owner, 2026-10-21: after 10 s without damage health regenerates gradually, the base heals whole at once, and whether to hide, go home or fight on is weighed in T67's selector; read Halo's and Call of Duty's rules first; needs T67 |
 
 ## The kit as modules
