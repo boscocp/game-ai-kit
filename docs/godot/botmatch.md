@@ -321,6 +321,54 @@ measured apart.
   +10.0 +- 22.7 s, 12-8. Twenty matches on the yards swing by that much,
   and a mirror within 2.5 errors either side is what the claim can tell.
 
+## Running the effects gate in shards (T72)
+
+`make test-botmatch-effects` plays 187 whole matches, and two planted
+cheats'. One after another, in one Godot process, they took 1279 s in T67
+(147 matches) and 2343 s on T68's branch,
+and a wave runs the gate again whenever its review changes the code. The
+matches are independent: each is a function of its pairing and its seed,
+and draws from its own random generator (`world.random`). Measured on
+2026-10-22, seed 3 played alone and after seeds 1 and 2 gave the same
+margin to the last decimal place.
+
+So `scripts/godot_shards.py` starts one Godot process a core (12 here,
+capped at 12), each told `-- --shard K/N --out DIR`. A shard walks the
+gate's own list of pairings and seeds, plays the matches whose place in it
+is K modulo N, and writes each match's counts (`EffectShards`, in
+`test/botmatch/`). A last process, told `-- --merge DIR`, plays nothing:
+it adds the counts back one match at a time in seed order, the order the
+serial run adds them, and asks every claim and planted case as before.
+Only the two planted cheats' matches and T68's regeneration check are
+played in the merge, about 30 s.
+
+**The same numbers, bit for bit.** With a temporary line printing every
+pairing's sums in full (`var_to_str`), the serial run and the sharded run
+of the whole gate printed the same lines character for character, and
+the same report: thirteen lines before T68, and fifteen and a 94-line
+report on the gate with T68's pairings. Times on this machine, the two
+running at the same time on its 12 cores, on that gate: 2748 s serial,
+455 s sharded (423 s of shards, 31 s of merge) -- 6.0 times faster;
+before T68, 1396 s against 250 s. Run alone, the shards would have the cores
+to themselves; how much faster that is was not measured.
+
+What the runner refuses, each a planted case: a shard that exits non-zero,
+writes no counts or is still running at `--timeout` (an hour by default;
+an error inside `_initialize` can leave a script that never quits), and
+Godot that cannot be started (exit 2: it did not run); an engine error in a
+shard's or the merge's output (exit 1: a SCRIPT ERROR does not fail a `-s`
+run, so the exit code alone cannot say a shard played its share); and the
+merge's own 0, 1 or 2 otherwise. A passing run's folder under
+`build/shards/` is removed; a failing one's is kept and named. The merge
+refuses a missing shard file, a match no shard played, a match two shards
+played, a match the gate never asked for, a shard that played nothing, and
+a stat that is neither a sum nor a margin: summing a maximum would be a
+different number with nothing to say so, which is also why every stat the
+gate's `_add` keeps must be a sum, and a suite case plays two real matches
+both ways and compares them exactly. With one of the twelve files removed,
+the real gate failed 13 times and exited 1. The serial run is still there, unchanged:
+`./scripts/godot --headless --path godot -s res://test/botmatch/botmatch_effects.gd`.
+
 ## Watching, and playing inside a team
 
 Tab watches the next bot. The discs round it are every spot it weighed,
