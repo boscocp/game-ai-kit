@@ -16,6 +16,9 @@ class_name LevelGenerator
 extends RefCounted
 
 const TRIES: int = 40
+## No guard is placed nearer the west edge than this, so the player starts
+## out of every guard's sight, as a designer would place them.
+const CLEAR_OF_START: int = 12
 const HEIGHTS: Array[float] = [1.1, 2.5, 2.5]
 
 
@@ -72,7 +75,7 @@ static func _guards(rng: RandomNumberGenerator, data: Dictionary) -> Array:
 	var arena := BotArena.new(InfiltrationLevel.BODY_RADIUS, data)
 	var free: Array[Vector2i] = []
 	for cell: Vector2i in InfiltrationLevel.every_cell(arena):
-		if cell.x >= 6 and cell.x < int(arena.width) - 2 and not arena.walk.is_blocked(cell):
+		if cell.x >= CLEAR_OF_START and cell.x < int(arena.width) - 2 and not arena.walk.is_blocked(cell):
 			free.append(cell)
 	if free.size() < 8:
 		return []
@@ -84,7 +87,7 @@ static func _guards(rng: RandomNumberGenerator, data: Dictionary) -> Array:
 			route.append([cell.x + 0.5, cell.y + 0.5])
 		guards.append({"type": "patrol", "route": route})
 	var post: Vector2i = free[rng.randi_range(0, free.size() - 1)]
-	guards.append({"type": "sentry", "post": [post.x + 0.5, post.y + 0.5], "facing": rng.randf_range(0.0, 360.0)})
+	guards.append({"type": "sentry", "post": [post.x + 0.5, post.y + 0.5], "facing": rng.randf_range(-90.0, 90.0)})
 	return guards
 
 

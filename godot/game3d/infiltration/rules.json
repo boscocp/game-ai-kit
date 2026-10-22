@@ -1,0 +1,47 @@
+{
+  "about": "The infiltration example's rules (T70): the player's stances, the guards' bodies and weapons, the belief and the search, and the difficulty knobs. Distances in metres, times in seconds, angles in degrees, speeds in metres a second. The player's walk and sprint speeds are the bot match's (rules.json, T66: 4.5 and 6.5); crouching and lying prone are rows added here, each with its own speed, noise and body points.",
+  "step_seconds": 0.1,
+  "decision_seconds": 0.3,
+  "player": {
+    "stances": {
+      "standing": {"speed": 4.5, "noise": "footstep", "points": [1.6, 1.2, 0.3]},
+      "crouched": {"speed": 2.2, "noise": "creep", "points": [1.0, 0.7, 0.3]},
+      "prone": {"speed": 1.0, "noise": "", "points": [0.35, 0.25, 0.15]}
+    },
+    "sprint_speed": 6.5,
+    "sprint_noise": "sprint",
+    "noise_every": 0.4,
+    "health": 100,
+    "throw_range": 12.0,
+    "takedown_range": 1.6,
+    "takedown_behind": 100.0,
+    "shot_damage": 50,
+    "shot_range": 40.0
+  },
+  "guards": {
+    "walk_speed": 2.5,
+    "run_speed": 4.5,
+    "eye_height": 1.6,
+    "health": 100,
+    "shot_interval": 0.6,
+    "shot_damage": 20,
+    "body_radius": 0.4,
+    "check_in_every": 8.0,
+    "quiet_after": 20.0,
+    "call_seconds": 1.0,
+    "help_lasts": 15.0,
+    "report_every": 5.0,
+    "seen_threshold": 0.15,
+    "flank_distance": 7.0
+  },
+  "belief": {"spread": 0.4},
+  "search": {"worth": 10.0, "travel": 0.2, "last_known_cap": 2, "spot_radius": 2.5},
+  "difficulty": {
+    "reaction": 0.5,
+    "turn_rate": 180.0,
+    "aim_error": 0.03,
+    "awareness_rate": 1.0,
+    "belief_steps": 2.0,
+    "off_screen_halving": true
+  }
+}

@@ -27,15 +27,16 @@ func _init(guard_type: GuardType) -> void:
 		awareness[stimulus] = Awareness.new()
 
 
-## One step of `seconds`, ending at `now`, from `percept` alone.
-func step(percept: GuardPercept, now: float, seconds: float) -> void:
+## One step of `seconds`, ending at `now`, from `percept` alone; both
+## rates scaled by `rate_scale`, the difficulty's awareness knob.
+func step(percept: GuardPercept, now: float, seconds: float, rate_scale: float = 1.0) -> void:
 	var seeing: bool = percept.sight.perceived()
 	var sight_rate: float = 0.0
 	if seeing:
-		sight_rate = type.rate(percept.sight.certainty, percept.light, percept.motion, percept.distance)
+		sight_rate = type.rate(percept.sight.certainty, percept.light, percept.motion, percept.distance) * rate_scale
 	awareness["sight"].step(type.awareness, seeing, sight_rate, seconds, now)
 	var hearing: bool = percept.loudness > 0.0
-	var sound_rate: float = percept.loudness * float(type.hearing["heard_rate"])
+	var sound_rate: float = percept.loudness * float(type.hearing["heard_rate"]) * rate_scale
 	awareness["sound"].step(type.awareness, hearing, sound_rate, seconds, now)
 	if seeing:
 		memory.remember(percept.seen_place, now, "sight")

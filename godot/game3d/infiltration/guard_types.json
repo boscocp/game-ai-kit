@@ -1,5 +1,5 @@
 {
-  "about": "What a guard of each type perceives and how fast it becomes aware: every number the infiltration example tunes, one row per type, as Crysis keeps its archetypes in data (Welsh 2013). The sources for each field are in docs/concepts/stealth-ai.md. Distances are metres, times seconds, shares 0 to 1.",
+  "about": "What a guard of each type perceives and how fast it becomes aware, and the events every guard notices (T70 added the creep, the takedown, the radio report and the check-in carried by radio -- radios are heard along the level like the rest, louder -- the alarm, a guard's shot, and a partner gone quiet, which no one hears but the guard who notices the silence): every number the infiltration example tunes, one row per type, as Crysis keeps its archetypes in data (Welsh 2013). The sources for each field are in docs/concepts/stealth-ai.md. Distances are metres, times seconds, shares 0 to 1.",
   "events": {
     "footstep": {"sense": "sound", "priority": 1, "radius": 6.0, "lifetime": 4.0},
     "sprint": {"sense": "sound", "priority": 1, "radius": 12.0, "lifetime": 4.0},
@@ -7,7 +7,14 @@
     "open_door": {"sense": "sight", "priority": 2, "radius": 0.0, "lifetime": 30.0},
     "shot": {"sense": "sound", "priority": 3, "radius": 40.0, "lifetime": 20.0},
     "body": {"sense": "sight", "priority": 3, "radius": 0.0, "lifetime": 120.0},
-    "call_for_help": {"sense": "sound", "priority": 3, "radius": 25.0, "lifetime": 15.0}
+    "call_for_help": {"sense": "sound", "priority": 3, "radius": 25.0, "lifetime": 15.0},
+    "creep": {"sense": "sound", "priority": 1, "radius": 2.0, "lifetime": 4.0},
+    "takedown": {"sense": "sound", "priority": 2, "radius": 4.0, "lifetime": 8.0},
+    "radio_report": {"sense": "sound", "priority": 3, "radius": 60.0, "lifetime": 20.0},
+    "alarm": {"sense": "sound", "priority": 3, "radius": 80.0, "lifetime": 30.0},
+    "guard_shot": {"sense": "sound", "priority": 3, "radius": 40.0, "lifetime": 20.0},
+    "check_in": {"sense": "sound", "priority": 0, "radius": 30.0, "lifetime": 8.0},
+    "partner_quiet": {"sense": "sound", "priority": 2, "radius": 0.0, "lifetime": 30.0}
   },
   "guards": {
     "patrol": {
@@ -29,8 +36,8 @@
         "phases": [
           {"name": "unaware", "at": 0.0},
           {"name": "suspicious", "at": 0.25},
-          {"name": "searching", "at": 0.625},
-          {"name": "alert", "at": 1.0}
+          {"name": "searching", "at": 0.625, "decay": 0.02},
+          {"name": "alert", "at": 1.0, "decay": 0.02}
         ],
         "caution": {"floor": 0.25, "seconds": 30.0}
       },
@@ -73,8 +80,8 @@
         "phases": [
           {"name": "unaware", "at": 0.0},
           {"name": "suspicious", "at": 0.3},
-          {"name": "searching", "at": 0.65},
-          {"name": "alert", "at": 1.0}
+          {"name": "searching", "at": 0.65, "decay": 0.015},
+          {"name": "alert", "at": 1.0, "decay": 0.015}
         ],
         "caution": {"floor": 0.3, "seconds": 45.0}
       },
