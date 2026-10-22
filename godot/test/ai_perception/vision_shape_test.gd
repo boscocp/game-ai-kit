@@ -67,3 +67,18 @@ func test_movement_adds_and_a_hiding_spot_takes_away() -> void:
 
 func test_certainty_never_passes_one() -> void:
 	assert_float(_coffin().percept(1.0, 0.0, _all_clear(), 1, 1.0, true, 0.0).certainty).is_equal(1.0)
+
+
+func test_light_is_read_at_the_feet_and_unset_cells_are_ambient() -> void:
+	var light := LightMap.new(0.1)
+	light.set_light(Vector2i(2, 3), 0.9)
+	assert_float(light.at_feet(Vector2(5.5, 7.9), 2.0)).is_equal_approx(0.9, 1e-9)
+	assert_float(light.at_feet(Vector2(-0.5, 7.9), 2.0)).is_equal_approx(0.1, 1e-9)
+
+
+func test_a_lamp_put_out_leaves_the_ambient_light() -> void:
+	var light := LightMap.new(0.2)
+	light.set_light(Vector2i(0, 0), 3.0)
+	assert_float(light.at(Vector2i(0, 0))).is_equal(1.0)
+	light.clear_light(Vector2i(0, 0))
+	assert_float(light.at(Vector2i(0, 0))).is_equal_approx(0.2, 1e-9)
