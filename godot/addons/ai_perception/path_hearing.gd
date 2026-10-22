@@ -5,7 +5,7 @@
 ## heard through walls" [Walsh 2015]; Mark of the Ninja runs its search over
 ## the level, and a guard inside the radius with no path to the noise does
 ## not hear it [Miles 2013]. So this takes the path length, not the two
-## positions -- the caller floods the level (`CostFlood` in `ai_search`) and
+## positions -- the caller floods the level (the cost flood in `ai_search`) and
 ## passes what it found. `Hearing`, the straight line, stays for the 2D
 ## stealth demo, whose walls a guard is meant to hear through.
 ##

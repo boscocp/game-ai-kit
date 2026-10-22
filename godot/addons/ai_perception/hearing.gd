@@ -9,7 +9,7 @@
 ## `PathHearing`, which takes the length of the way round instead.
 ##
 ## When not to use it: when the walls should matter. Sound that goes round
-## corners is a search over the grid (`CostFlood`, a Dijkstra flood from the
+## corners is a search over the grid (`ai_search`'s cost flood, Dijkstra from the
 ## source) and `PathHearing` on what it finds.
 class_name Hearing
 extends RefCounted
