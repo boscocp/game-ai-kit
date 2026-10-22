@@ -1,6 +1,6 @@
-# T76 — How to use the library, in two languages
+# T77 — How to use the library, in two languages
 
-Size: S · Prereqs: T64, T74 · Files: `docs/techniques/`, `README.md`
+Size: S · Prereqs: T64, T75 · Files: `docs/techniques/`, `scripts/`, `Makefile`, `README.md`
 
 ## Goal
 
@@ -9,7 +9,7 @@ The owner, 2026-10-22: "como usar a lib." (the whole request is quoted in T74.)
 T64 makes the kit a library: addon zips filtered by manifest, and a
 `pyproject.toml` for the Python twins. This task writes how a person uses
 it, in English and pt-BR, after T64 says what "install" means. Until then
-T74's pages say "copy the folders", which is what works today.
+T74's and T75's pages say "copy the folders", which is what works today.
 
 ## Steps
 
@@ -25,19 +25,23 @@ T74's pages say "copy the folders", which is what works today.
      Python while GDScript only infers (invariant 6);
    - versions: the pinned Godot (`.godot-version`), what the library
      promises to keep stable, and the licence and NOTICE (invariant 9).
-2. **Run it outside the repo**, as T64's acceptance does: the page's steps
-   are scripted into a headless check that installs one addon into an empty
-   project in a temporary folder and runs T74's minimal example there. A
-   step on the page the script does not run is a finding.
-3. **T74's pages** switch their "in your own project" section from "copy
-   the folders" to the library, keeping the copy as the alternative.
+2. **The page is what T64's `make library-check` runs**: that check
+   already installs the wheel and one addon outside the repository. Extend
+   it to follow the page's steps and run T74's minimal example there --
+   the real portability proof, since inside `godot/` every `class_name` is
+   already registered. Each step on the page is marked so the check can
+   list them; a planted case -- a step on the page the check does not run
+   -- must fail.
+3. **T74's and T75's pages** switch their "in your own project" section
+   from "copy the folders" to the library, keeping the copy as the
+   alternative.
 
 ## Acceptance
 
 ```bash
 python3 scripts/check_translations_docs.py
 python3 scripts/check_doc_freshness.py
-make test-library-outside
+make library-check
 make lint-tasks lint-status
 ```
 

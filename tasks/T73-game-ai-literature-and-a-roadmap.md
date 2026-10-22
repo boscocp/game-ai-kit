@@ -1,6 +1,6 @@
 # T73 — The game-AI literature against this kit, and a roadmap
 
-Size: M · Prereqs: T58 · Files: `docs/concepts/the-literature-and-the-kit.md`, `tasks/`
+Size: M · Prereqs: T58 · Files: `docs/concepts/the-literature-and-the-kit.md`, `scripts/check_literature_table.py`, `Makefile`, `tasks/`
 
 ## Goal
 
@@ -26,8 +26,8 @@ entry, kept apart:
   `ai_teamwork` is used by the bot match alone, `ai_fuzzy` by the stealth
   hall alone, `ai_opponent` by the fighting game alone (from `modules/*.json`).
 
-This runs in parallel with everything else: it writes a page and task
-files, and changes no code.
+This runs in parallel with everything else: it writes a page, its gate
+and task files, and changes no game or addon code.
 
 ## Steps
 
@@ -68,7 +68,12 @@ files, and changes no code.
    demo, or a new game -- and which known game, the owner's rule of
    building on games people already know); the tier it needs; its size;
    and for "a second game" entries, which addon is reused and what the
-   second use would show about its interface. Candidates the research
+   second use would show about its interface. Each entry also names the
+   invariants it touches: **6** (no training at game time -- player
+   modelling and difficulty that adapts are exactly that, and ADR 0016's
+   count-during-one-fight is the only exception the owner has made) and
+   **7** (the LLM never blocks a frame and its output passes a validator --
+   `ai_llm`, and any LLM agent). Candidates the research
    should at least weigh: MCTS (a board game or the tactical game),
    utility AI as its own addon, influence maps shared by the RTS and the
    bot match, a director that paces a level, Bayesian or particle-filter
@@ -80,7 +85,10 @@ files, and changes no code.
    are written after the answers, numbered then.
 6. **A gate on the table**: every row that names a module or a path must
    name one that exists, so the page cannot claim what the kit lost. A
-   planted row naming a missing addon must fail.
+   planted row naming a missing addon must fail. `scripts/check_literature_table.py`
+   with `--self-test`, exit codes 0/1/2.
+7. **Wire the gate in**: a `Makefile` target, in `make check`, and its
+   self-test in `make lint-selftests` (`scripts/run_selftests.py`).
 
 ## Acceptance
 

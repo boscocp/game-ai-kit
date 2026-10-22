@@ -208,12 +208,14 @@ techniques and of second games that test the library's generality.
 
 | # | Task | State | Notes |
 |---|---|---|---|
-| T73 | The game-AI literature against this kit, and a roadmap | todo | in parallel, now: AIMA 4th ed. by chapter, Millington, Buckland, Game AI Pro, Yannakakis & Togelius, named industry practice; a table technique × kit (module, demo, tier), gated; a roadmap of new techniques and of second games for existing addons; the owner picks, then the follow-up tasks are written |
-| T74 | A page per technique, in English and Brazilian Portuguese | todo | after the current work (T69, T70); `docs/techniques/<module>.md` and `.pt-BR.md`, the translation pinned by a source hash, headings and code blocks equal; a minimal example per technique run headless outside every demo |
-| T75 | A catalogue of the games and the techniques in each | todo | after T74; generated from `modules/*.json` and the `demo-*` help, gated against drift; replaces three hand-written lists |
-| T76 | How to use the library, in two languages | todo | after T64 and T74; the steps scripted into a check that installs an addon into an empty project outside the repo |
-| T77 | The demos speak Portuguese: the switch, the gate, the board games | todo | after the current work (T69, T70); Godot's CSV translations (stdlib-checkable, tier 1), the English text as the key, the system language by default and a remembered switch in the menu; a stdlib gate and a headless one for strings not wrapped in `tr()` |
-| T78 | The real-time and 3D demos speak Portuguese | todo | after T77; steering, both racers, the bot match and infiltration, the RTS, the fighting game |
+| T73 | The game-AI literature against this kit, and a roadmap | todo | in parallel, now: AIMA 4th ed. by chapter, Millington, Buckland, Game AI Pro, Yannakakis & Togelius, named industry practice; a table technique × kit (module, demo, tier), gated; a roadmap of new techniques and of second games for existing addons, each naming invariants 6 and 7 where they bite; the owner picks, then the follow-up tasks are written |
+| T74 | Technique pages in two languages: the shape, the gate, the first three | todo | after the current work (T69, T70); `docs/techniques/<module>.md` and `.pt-BR.md`, the translation pinned by a source hash, anchors and code blocks equal; a `techniques` layer for the freshness gate; a glossary; `ai_core`, `ai_search`, `ai_steering`, `ai_behaviour` first |
+| T75 | Technique pages in two languages: every other technique | todo | after T74; the other seven technique modules and the four non-module techniques, each with a minimal example in its addon's test folder |
+| T76 | A catalogue of the games and the techniques in each | todo | after T75; generated from `modules/*.json`, the `demo-*` help and a declared `games.json`, gated against drift; replaces three hand-written lists; `README.pt-BR.md` as the way in |
+| T77 | How to use the library, in two languages | todo | after T64 and T75; the page's steps run by T64's `make library-check` outside the repository |
+| T78 | The demos speak Portuguese: the mechanism, the gate, the switch | todo | after the current work (T69, T70); measure auto-translation first; Godot CSV, the English text as the key, the system language by default and a remembered switch; a static gate over `draw_string`, `.text =` and `Label3D`, and a headless one; checkers and the search demo |
+| T79 | The turn-based demos speak Portuguese | todo | after T78; skirmish, noughts and crosses, tactical, stealth, the four-brained guard |
+| T80 | The real-time and 3D demos speak Portuguese | todo | after T78; steering, both racers, the bot match and infiltration, the RTS, the fighting game |
 
 ---
 
