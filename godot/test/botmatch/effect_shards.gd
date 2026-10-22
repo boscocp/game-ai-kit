@@ -96,21 +96,32 @@ func merge_into(sums: Dictionary, pairing: String, seed_value: int) -> void:
 	if not _records.has(key):
 		problems.append("shards: no shard played '%s', seed %d" % [pairing, seed_value])
 		return
-	add(sums, _records[key])
+	var refused: String = add(sums, _records[key])
+	if refused != "":
+		problems.append(refused)
 	_used += 1
 
 
 ## `record` added into `sums` key by key: numbers summed, arrays of margins
 ## appended. Starting from the same empty sums, adding the matches in seed
 ## order makes the same floats the serial run makes.
-static func add(sums: Dictionary, record: Dictionary) -> void:
+##
+## That holds only while every stat the gate's `_add` keeps is a sum or an
+## appended margin. A maximum, or the last match's value, summed here would
+## be a different number with nothing to say so -- so any other type is
+## refused, and the finding returned; "" when every key was added.
+static func add(sums: Dictionary, record: Dictionary) -> String:
 	for key: String in record:
-		if record[key] is PackedFloat64Array:
+		var value: Variant = record[key]
+		if value is PackedFloat64Array:
 			var values: PackedFloat64Array = sums[key]
-			values.append_array(record[key])
+			values.append_array(value)
 			sums[key] = values
+		elif value is int or value is float:
+			sums[key] += value
 		else:
-			sums[key] += record[key]
+			return "shards: '%s' is a %s, neither a sum nor margins: it cannot be merged" % [key, type_string(typeof(value))]
+	return ""
 
 
 ## The problems, and in a merge any match a shard played that the gate never
@@ -137,6 +148,7 @@ func write() -> int:
 		printerr("shards: cannot write to %s: %s" % [folder, error_string(FileAccess.get_open_error())])
 		return 2
 	file.store_var({"shard": shard, "of": count, "records": _records})
+	print("shard %d/%d: played %d matches" % [shard, count, _records.size()])
 	return 0
 
 
@@ -168,6 +180,9 @@ func _read_one(name: String, data: Dictionary, of: int, seen: Dictionary) -> voi
 	if (data["records"] as Dictionary).is_empty():
 		problems.append("shards: %s played no match" % name)
 	seen[data["shard"]] = true
+	for key: String in data["records"]:
+		if _records.has(key):
+			problems.append("shards: '%s' was played by two shards" % key)
 	_records.merge(data["records"])
 
 

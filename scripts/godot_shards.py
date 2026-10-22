@@ -3,8 +3,8 @@
 
 What it does
 ------------
-`botmatch_effects.gd` plays 189 whole matches, one after another, in one
-process: about forty minutes. Each match is independent, so this starts N
+`botmatch_effects.gd` plays 147 whole matches, one after another, in one
+process: over twenty minutes. Each match is independent, so this starts N
 Godot processes, each told `-- --shard K/N --out DIR` and playing its share,
 waits for all of them, and runs the gate once more with `-- --merge DIR`,
 which reads every shard's counts back, adds them in the serial order and
@@ -15,24 +15,29 @@ What it refuses
 ---------------
 A `-s` script that hits a SCRIPT ERROR still exits 0 (CLAUDE.md's trap),
 and a shard that played nothing would pass by finding nothing. So a shard
-fails when it exits non-zero, writes no counts, or prints an engine error;
-the merge's own output is read for engine errors the same way. Each is a
-planted case in `--self-test`.
+fails when it exits non-zero, writes no counts, prints an engine error, or
+outlives `--timeout` -- an error inside `_initialize` can leave a script
+that never reaches `quit()`, and a gate that waits on it waits forever. The
+merge's own output is read for engine errors the same way, and it has the
+same deadline. Each is a planted case in `--self-test`.
 
 Exit codes
 ----------
 0   every shard ran clean, and the merge exited 0
 1   an engine error in a shard or in the merge, or the merge exited 1
-2   wrong usage, a shard that could not run or wrote nothing, or the merge
-    exited 2 (the gate's own 2: an exploring run that claims nothing)
+2   wrong usage, Godot could not be started, a shard that could not run,
+    wrote nothing or timed out, or the merge exited 2 (the gate's own 2: an
+    exploring run that claims nothing) or timed out
 
 Usage
 -----
-    godot_shards.py [--shards N] SCRIPT [-- GATE ARGUMENTS]
+    godot_shards.py [--shards N] [--timeout SECONDS] SCRIPT [-- GATE ARGUMENTS]
     godot_shards.py --self-test
 
 Each shard gets its own `--log-file`: Godot's default log is one file under
 `user://`, and twelve processes rotating it at once is a race nobody needs.
+A run's folder under `build/shards/` is removed when it passes, and kept,
+and named, when it does not.
 """
 
 from __future__ import annotations
@@ -41,6 +46,7 @@ import argparse
 import os
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -52,6 +58,10 @@ GODOT = ROOT / "scripts" / "godot"
 BUILD = ROOT / "build" / "shards"
 #: More processes than this gains little and starves whatever else runs.
 MOST_SHARDS = 12
+#: Seconds every shard together, and then the merge, may take. The whole
+#: gate measured 1396 s in one process (2026-10-22), so a shard that takes
+#: longer than that, more than twice, has hung rather than worked.
+TIMEOUT = 3600.0
 #: Lines Godot prints for an error.
 ENGINE_ERROR = re.compile(r"^(SCRIPT ERROR|ERROR):", re.MULTILINE)
 #: Printed at exit by a script that leaves objects alive: a leak report, not a
@@ -72,12 +82,15 @@ def engine_errors(output: str) -> list[str]:
     return found
 
 
-def shard_verdict(shard: int, returncode: int, output: str, wrote: bool) -> tuple[int, list[str]]:
+def shard_verdict(shard: int, returncode: int | None, output: str, wrote: bool) -> tuple[int, list[str]]:
     """The exit code one shard earns, and why: 0 clean, 1 an engine error, 2 it did not run.
 
     A shard with no counts file counts as not run, whatever its exit code:
-    a runner that finds nothing must not pass (CLAUDE.md).
+    a runner that finds nothing must not pass (CLAUDE.md). A `returncode` of
+    None is a shard that outlived the deadline and was killed.
     """
+    if returncode is None:
+        return 2, [f"shard {shard}: still running at the deadline, killed"]
     if returncode != 0 or not wrote:
         return 2, [f"shard {shard}: exit {returncode}, {'wrote' if wrote else 'wrote no'} counts"]
     errors = engine_errors(output)
@@ -91,6 +104,7 @@ def overall(shard_codes: list[int], merge_code: int | None, merge_errors: list[s
 
     A shard that did not run outranks everything (2), then any engine error
     (1); with clean shards and a clean merge, the merge's own code stands.
+    A merge that never ran or timed out is None, and a 2.
     """
     if 2 in shard_codes or merge_code is None:
         return 2
@@ -99,22 +113,37 @@ def overall(shard_codes: list[int], merge_code: int | None, merge_errors: list[s
     return merge_code
 
 
+def wait_or_kill(process: subprocess.Popen, seconds: float) -> int | None:
+    """Its exit code, or None when it was still running after `seconds` and was killed.
+
+    Why: a `-s` script whose `_initialize` stops on an error never quits, and
+    `wait()` with no deadline would hold the gate, and the wave, forever.
+    """
+    try:
+        return process.wait(timeout=max(seconds, 0.0))
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait()
+        return None
+
+
 def godot_command(script: str, log: pathlib.Path, extra: list[str]) -> list[str]:
     """One headless Godot run of `script`, its log in `log`, `extra` after `--`."""
     return [str(GODOT), "--headless", "--path", str(ROOT / "godot"), "--log-file", str(log), "-s", script, "--", *extra]
 
 
-def run_shards(script: str, count: int, folder: pathlib.Path, gate_arguments: list[str]) -> list[int]:
-    """Start every shard at once, wait for all, and judge each one."""
+def run_shards(script: str, count: int, folder: pathlib.Path, gate_arguments: list[str], timeout: float) -> list[int]:
+    """Start every shard at once, wait for all until the deadline, and judge each one."""
     running = []
     for shard in range(count):
         output = (folder / f"shard-{shard}.out").open("w", encoding="utf-8")
         extra = [*gate_arguments, "--shard", f"{shard}/{count}", "--out", str(folder)]
         command = godot_command(script, folder / f"shard-{shard}.log", extra)
         running.append((subprocess.Popen(command, stdout=output, stderr=subprocess.STDOUT), output))
+    deadline = time.monotonic() + timeout
     codes = []
     for shard, (process, output) in enumerate(running):
-        returncode = process.wait()
+        returncode = wait_or_kill(process, deadline - time.monotonic())
         output.close()
         text = (folder / f"shard-{shard}.out").read_text(encoding="utf-8", errors="replace")
         code, reasons = shard_verdict(shard, returncode, text, (folder / f"shard-{shard}.bin").is_file())
@@ -124,10 +153,14 @@ def run_shards(script: str, count: int, folder: pathlib.Path, gate_arguments: li
     return codes
 
 
-def run_merge(script: str, folder: pathlib.Path, gate_arguments: list[str]) -> tuple[int, list[str]]:
+def run_merge(script: str, folder: pathlib.Path, gate_arguments: list[str], timeout: float) -> tuple[int | None, list[str]]:
     """The gate once more, reading the shards' counts; its output is shown as it is."""
     command = godot_command(script, folder / "merge.log", [*gate_arguments, "--merge", str(folder)])
-    done = subprocess.run(command, capture_output=True, text=True, check=False)
+    try:
+        done = subprocess.run(command, capture_output=True, text=True, check=False, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        print(f"merge: still running after {timeout:.0f} s, killed", file=sys.stderr)
+        return None, []
     sys.stdout.write(done.stdout)
     sys.stderr.write(done.stderr)
     errors = engine_errors(done.stdout + done.stderr)
@@ -136,18 +169,35 @@ def run_merge(script: str, folder: pathlib.Path, gate_arguments: list[str]) -> t
     return done.returncode, errors
 
 
-def run(script: str, count: int, gate_arguments: list[str]) -> int:
-    """Shards, then the merge if every shard ran clean; the exit code."""
+def run(script: str, count: int, gate_arguments: list[str], timeout: float) -> int:
+    """Shards, then the merge if every shard ran clean; the exit code.
+
+    The run's folder is removed when it passed and kept when it did not, so
+    the logs of a failure are there to read and a green run leaves nothing.
+    """
     BUILD.mkdir(parents=True, exist_ok=True)
     folder = pathlib.Path(tempfile.mkdtemp(prefix="effects-", dir=BUILD))
     started = time.monotonic()
-    codes = run_shards(script, count, folder, gate_arguments)
-    print(f"godot_shards: {count} shards in {time.monotonic() - started:.0f} s, kept in {folder}")
-    if any(codes):
-        return overall(codes, 0, [])
-    merge_code, merge_errors = run_merge(script, folder, gate_arguments)
-    print(f"godot_shards: done in {time.monotonic() - started:.0f} s")
-    return overall(codes, merge_code, merge_errors)
+    try:
+        codes = run_shards(script, count, folder, gate_arguments, timeout)
+        print(f"godot_shards: {count} shards in {time.monotonic() - started:.0f} s")
+        merge_code, merge_errors = (0, []) if any(codes) else run_merge(script, folder, gate_arguments, timeout)
+    except OSError as error:
+        print(f"godot_shards: could not start Godot ({error}); the logs are in {folder}", file=sys.stderr)
+        return 2
+    code = overall(codes, merge_code, merge_errors)
+    print(f"godot_shards: done in {time.monotonic() - started:.0f} s, exit {code}")
+    if code == 0:
+        shutil.rmtree(folder, ignore_errors=True)
+    else:
+        print(f"godot_shards: the shards' counts and logs are kept in {folder}", file=sys.stderr)
+    return code
+
+
+def _a_hung_process_is_killed() -> int | None:
+    """A process that outlives its deadline: its exit code, None when it was killed."""
+    process = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+    return wait_or_kill(process, 0.2)
 
 
 def self_test() -> int:
@@ -159,11 +209,13 @@ def self_test() -> int:
         ("a shard with an engine ERROR", shard_verdict(0, 0, "ERROR: Condition failed.\n", True)[0], 1),
         ("a shard that wrote no counts", shard_verdict(0, 0, clean, False)[0], 2),
         ("a shard that exited 1", shard_verdict(0, 1, clean, True)[0], 2),
+        ("a shard killed at the deadline", shard_verdict(0, None, clean, True)[0], 2),
         ("a leak report, forgiven", shard_verdict(0, 0, "ERROR: 18 resources still in use at exit\n", True)[0], 0),
         ("a merge with an engine error", overall([0, 0], 0, ["SCRIPT ERROR: x"]), 1),
         ("a merge that failed a claim", overall([0, 0], 1, []), 1),
-        ("a merge that never ran", overall([0, 0], None, []), 2),
+        ("a merge that never ran or timed out", overall([0, 0], None, []), 2),
         ("one shard not run among clean ones", overall([0, 2, 0], 0, []), 2),
+        ("a process past its deadline", _a_hung_process_is_killed(), None),
     ]
     wrong = [f"{label}: {got}, expected {want}" for label, got, want in cases if got != want]
     for line in wrong:
@@ -181,14 +233,15 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("script", nargs="?")
     parser.add_argument("--shards", type=int, default=min(os.cpu_count() or 1, MOST_SHARDS))
+    parser.add_argument("--timeout", type=float, default=TIMEOUT)
     parser.add_argument("--self-test", action="store_true")
     options = parser.parse_args(argv)
     if options.self_test:
         return self_test()
-    if options.script is None or options.shards < 1:
+    if options.script is None or options.shards < 1 or options.timeout <= 0:
         parser.print_usage(sys.stderr)
         return 2
-    return run(options.script, options.shards, gate_arguments)
+    return run(options.script, options.shards, gate_arguments, options.timeout)
 
 
 if __name__ == "__main__":

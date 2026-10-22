@@ -354,7 +354,7 @@ test-racing-does-not-cheat: import ## One physics for every car, no limit broken
 	@$(GODOT) --headless --path godot -s res://test/demo_racing/racing_does_not_cheat.gd
 
 .PHONY: test-botmatch-effects
-test-botmatch-effects: import ## What claims, the commander, retreat and the rest each do, over 189 bot matches in parallel shards (T51, T72)
+test-botmatch-effects: import ## What claims, the commander, retreat and the rest each do, over 147 bot matches in parallel shards (T51, T72)
 	@# The matches are independent: scripts/godot_shards.py plays them in one
 	@# Godot process a core and merges the counts, the serial run's numbers bit
 	@# for bit. The serial run is still `./scripts/godot --headless --path

@@ -282,6 +282,9 @@ func _blue_for(pairing: String, rules: MatchRules) -> MatchTeam:
 	return blue
 
 
+# Every stat kept here must be a sum or an appended margin: the sharded run
+# adds each match's counts back with `EffectShards.add`, which refuses any
+# other kind rather than summing a maximum (T72).
 func _add(sums: Dictionary, world: BotMatch) -> void:
 	var blue: MatchStats = world.stats[BotMatch.BLUE]
 	var red: MatchStats = world.stats[BotMatch.RED]
@@ -323,6 +326,9 @@ func _add(sums: Dictionary, world: BotMatch) -> void:
 
 
 func _report(pairing: String, sums: Dictionary) -> void:
+	# A shard's sums are empty: its matches are kept, not added (T72).
+	if _shards.mode == EffectShards.Mode.SHARD:
+		return
 	var margin: Vector2 = _mean_and_error(sums["margins"])
 	var outcome: Array = [pairing, sums["held"], sums["red held"], sums["blue wins"], sums["red wins"], margin.x, margin.y]
 	print("%-22s held blue %6.0f s, red %6.0f s; wins %d-%d; margin %+.1f +- %.1f s a match" % outcome)

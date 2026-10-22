@@ -323,7 +323,8 @@ measured apart.
 
 ## Running the effects gate in shards (T72)
 
-`make test-botmatch-effects` plays 189 whole matches. One after another,
+`make test-botmatch-effects` plays 147 whole matches, and two planted
+cheats' (T68's pairings make it 187). One after another,
 in one Godot process, they took 1279 s in T67 and 2343 s on T68's branch,
 and a wave runs the gate again whenever its review changes the code. The
 matches are independent: each is a function of its pairing and its seed,
@@ -348,14 +349,21 @@ time on its 12 cores: 1396 s serial, 250 s sharded (230 s of shards, 20 s
 of merge) -- 5.6 times faster. Run alone, the shards would have the cores
 to themselves; how much faster that is was not measured.
 
-What the runner refuses, each a planted case: a shard that exits non-zero
-or writes no counts (exit 2: it did not run), an engine error in a shard's
-or the merge's output (exit 1: a SCRIPT ERROR does not fail a `-s` run, so
-the exit code alone cannot say a shard played its share), and the merge's
-own 0, 1 or 2 otherwise. The merge refuses a missing shard file, a match no
-shard played, a match the gate never asked for, and a shard that played
-nothing: with one of the twelve files removed, the real gate failed 13
-times and exited 1. The serial run is still there, unchanged:
+What the runner refuses, each a planted case: a shard that exits non-zero,
+writes no counts or is still running at `--timeout` (an hour by default;
+an error inside `_initialize` can leave a script that never quits), and
+Godot that cannot be started (exit 2: it did not run); an engine error in a
+shard's or the merge's output (exit 1: a SCRIPT ERROR does not fail a `-s`
+run, so the exit code alone cannot say a shard played its share); and the
+merge's own 0, 1 or 2 otherwise. A passing run's folder under
+`build/shards/` is removed; a failing one's is kept and named. The merge
+refuses a missing shard file, a match no shard played, a match two shards
+played, a match the gate never asked for, a shard that played nothing, and
+a stat that is neither a sum nor a margin: summing a maximum would be a
+different number with nothing to say so, which is also why every stat the
+gate's `_add` keeps must be a sum, and a suite case plays two real matches
+both ways and compares them exactly. With one of the twelve files removed,
+the real gate failed 13 times and exited 1. The serial run is still there, unchanged:
 `./scripts/godot --headless --path godot -s res://test/botmatch/botmatch_effects.gd`.
 
 ## Watching, and playing inside a team

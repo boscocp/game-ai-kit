@@ -1,8 +1,12 @@
-# The effects gate's shards, without a match played: that every match is
-# one shard's, that the merge adds the counts back to the serial sums bit
-# for bit, and that a merge with a match missing, a match too many, or a
-# shard that played nothing is refused rather than passed (T72).
+# The effects gate's shards: that every match is one shard's, that the
+# merge adds the counts back to the serial sums bit for bit -- with made-up
+# counts, and with two real matches through the gate's own `_add` -- and that
+# a merge with a match missing, a match too many, a match two shards played,
+# a stat that is not a sum, or a shard that played nothing is refused
+# rather than passed (T72).
 extends GdUnitTestSuite
+
+const GATE: String = "res://test/botmatch/botmatch_effects.gd"
 
 ## Margins with long binary fractions: added in a different order, these
 ## sum to a different float, so an order slip would show.
@@ -40,6 +44,37 @@ func test_a_merge_with_a_match_nobody_asked_for_is_refused() -> void:
 	assert_str("\n".join(merge.findings)).contains("1 match(es) played that the gate did not ask for")
 
 
+# Two real matches, played serially and in two shards, through the gate's
+# own `_play` and `_add`: the merged sums must print exactly as the serial
+# ones. A stat `_add` keeps that is not a sum would show here.
+func test_real_matches_merge_to_the_serial_sums_exactly() -> void:
+	var serial: Dictionary = _gate_play(EffectShards.from_arguments(PackedStringArray()))
+	var folder: String = _folder()
+	for shard: int in range(2):
+		var shards := EffectShards.from_arguments(PackedStringArray(["--shard", "%d/2" % shard, "--out", folder]))
+		_gate_play(shards)
+		assert_int(shards.write()).is_equal(0)
+	var merging := EffectShards.from_arguments(PackedStringArray(["--merge", folder]))
+	var merged: Dictionary = _gate_play(merging)
+	assert_array(merging.findings()).is_empty()
+	assert_str(var_to_str(merged)).is_equal(var_to_str(serial))
+
+
+func test_a_stat_that_is_not_a_sum_is_refused() -> void:
+	var sums: Dictionary = {"best": Vector2.ZERO}
+	assert_str(EffectShards.add(sums, {"best": Vector2.ONE})).contains("neither a sum nor margins")
+
+
+func test_a_match_two_shards_played_is_refused() -> void:
+	var folder: String = _folder()
+	for shard: int in range(2):
+		var shards := EffectShards.from_arguments(PackedStringArray(["--shard", "%d/2" % shard, "--out", folder]))
+		shards.keep("everything", 1, _one_match(1.0))
+		assert_int(shards.write()).is_equal(0)
+	var merging := EffectShards.from_arguments(PackedStringArray(["--merge", folder]))
+	assert_str("\n".join(merging.findings())).contains("'everything|1' was played by two shards")
+
+
 func test_a_shard_that_played_nothing_is_refused() -> void:
 	var shards: EffectShards = _shard(0, 2)
 	shards.folder = _folder()
@@ -58,6 +93,16 @@ static func _share(shards: EffectShards) -> Array[int]:
 		if shards.plays("everything", seed_value):
 			mine.append(seed_value)
 	return mine
+
+
+# The gate's own `_play` of two matches of "everything", in the mode
+# `shards` says; the sums it returns (empty in a shard).
+func _gate_play(shards: EffectShards) -> Dictionary:
+	var gate: Object = (load(GATE) as GDScript).new()
+	gate.set("_shards", shards)
+	var sums: Dictionary = gate.call("_play", "everything", 2)
+	gate.free()
+	return sums
 
 
 func _shard(shard: int, count: int) -> EffectShards:

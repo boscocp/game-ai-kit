@@ -5,8 +5,8 @@ Size: S · Prereqs: T51, T66, T67, T68 · Files: `godot/test/botmatch/`, `script
 ## Goal
 
 `make test-botmatch-effects` plays every pairing's matches one after
-another in one Godot process: 189 whole matches after T68, 2343 s on wave
-76, against 1279 s in T67. Every wave that touches the bot match runs it,
+another in one Godot process: 147 whole matches, and two planted cheats'
+-- 187 with T68's pairings -- 2343 s on wave 76, against 1279 s in T67. Every wave that touches the bot match runs it,
 and it runs again after a review changes the code, because the claims are
 about what the matches did. The owner, 2026-10-22, watching wave 76 run
 it a second time: "de novo? pq ta repetindo? precisa mesmo?" -- it does
@@ -79,6 +79,15 @@ share.
   ERROR, no counts written, a shard that exited 1, a merge that never ran.
   On the real gate, one shard file of twelve removed: 13 failures, exit 1.
   A gate script that does not exist: exit 2.
+- **After the review** (five findings, all applied): a shard or a merge
+  still running at `--timeout` is killed and fails with 2, as does Godot
+  that cannot start; `EffectShards.add` refuses a stat that is not a sum
+  or a margin, and a suite case plays two real matches serially and in two
+  shards through the gate's own `_add` and compares them with `var_to_str`
+  -- a planted `deaths` kept as the last value, not a sum, turned it red;
+  a match two shards played is refused; a shard prints only how many
+  matches it played; a passing run's folder is removed. And the count was
+  wrong: this gate plays 147 matches (187 with T68's pairings), not 189.
 - **Not done**: the quick/full split of step (b) was not needed.
 - The suite caught one fault on the way: `store_var` writes a length before
   the value, and the first reader decoded the file's bytes whole.
