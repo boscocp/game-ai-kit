@@ -50,6 +50,7 @@ import argparse
 import dataclasses
 import json
 import pathlib
+import re
 import subprocess
 import sys
 import tempfile
@@ -235,7 +236,7 @@ MANIFESTS = {
 }
 
 MAKEFILE_TEXT = """\
-check: check-no-engine test-a-properties test-play-match
+check: check-no-engine test-a-properties test-play-match ## Run every gate
 check-no-engine: lint-one lint-no-training
 lint-one:
 \t@true
@@ -243,9 +244,12 @@ lint-no-training:
 \t@true
 test-a-properties:
 \t@true
+# a note inside the recipe
 \t@true
 test-play-match:
 \t@true
+WORDS = one \\
+  two
 """
 
 # Wave 75's shape, on the fixture: a new gate of `play`, its name put into
@@ -282,19 +286,19 @@ def rename_case(root: pathlib.Path) -> list[str]:
 def added_gate(makefile: str, gate: str = NEW_GATE, listed: str = "test-play-you") -> str:
     """The fixture Makefile with `gate` appended and `listed` put into `check:`."""
     first, rest = makefile.split("\n", 1)
-    return f"{first} {listed}\n{rest}{gate}"
+    return f"{first.replace(' ##', f' {listed} ##', 1)}\n{rest}{gate}"
 
 
 def gate_change(root: pathlib.Path, label: str, makefile: str,
-                manifests: dict[str, dict]) -> Selection:
-    """What a committed change to the fixture's Makefile and manifests selects.
+                manifests: dict[str, dict], before: str = MAKEFILE_TEXT) -> Selection:
+    """What a committed change from `before` to `makefile`, and to the manifests, selects.
 
     A real repository and a real diff: rule 5 reads the diff, so its
     planted cases must have one.
     """
-    repo = root / label.replace(" ", "-")
+    repo = root / re.sub(r"\W+", "-", label)
     (repo / "modules").mkdir(parents=True)
-    (repo / "Makefile").write_text(MAKEFILE_TEXT)
+    (repo / "Makefile").write_text(before)
     for name, manifest in MANIFESTS.items():
         (repo / "modules" / f"{name}.json").write_text(json.dumps(manifest, indent=2) + "\n")
 
@@ -314,43 +318,71 @@ def gate_change(root: pathlib.Path, label: str, makefile: str,
     return select(paths, modules, added_gates.local_paths(repo, "HEAD^1", "HEAD", paths, modules))
 
 
-def gate_cases(root: pathlib.Path) -> list[str]:
-    """Rule 5: wave 75's shape selects its module; each doubt selects everything."""
+def planted_neighbour_changes(play: dict) -> dict[str, tuple]:
+    """Rule 5's cases from wave 77's review: a gate that runs into the lines around it."""
+    wave75 = added_gate(MAKEFILE_TEXT)
+    named_before = MAKEFILE_TEXT.replace("test-play-match:\n", "test-play-match: test-play-you\n")
+    conditional = MAKEFILE_TEXT + "ifdef QUIET\nendif\n"
+    return {
+        "a trailing backslash on the new recipe": (
+            added_gate(MAKEFILE_TEXT, "").replace("test-play-match:", NEW_GATE.lstrip().rstrip("\n")
+                                                  + " \\\ntest-play-match:"), {"play": play}),
+        "a backslash on the line before": (
+            added_gate(MAKEFILE_TEXT, "").replace("WORDS = one \\\n", "WORDS = one \\\n" + NEW_GATE.lstrip()),
+            {"play": play}),
+        "a line joined into check": (
+            wave75.replace("gate\ncheck-no-engine:", "gate check-no-engine:"), {"play": play}),
+        "a name put in after check's comment": (
+            MAKEFILE_TEXT.replace("every gate\n", "every gate test-play-you\n", 1) + NEW_GATE, {"play": play}),
+        "a name the old Makefile used": (added_gate(named_before), {"play": play}, None, named_before),
+        "a conditional in the Makefile": (added_gate(conditional), {"play": play}, None, conditional),
+    }
+
+
+def planted_gate_changes() -> dict[str, tuple]:
+    """Rule 5's cases: (new Makefile, changed manifests, modules or None, old Makefile)."""
     play = {**MANIFESTS["play"], "gates": [*MANIFESTS["play"]["gates"], "test-play-you"]}
+    wave75 = added_gate(MAKEFILE_TEXT)
     other_module = NEW_GATE.replace("res://game/play/", "res://addons/a/")
-    cases = {
-        "a new gate of play": (added_gate(MAKEFILE_TEXT), {"play": play}, {"play", "c"}),
+    return {
+        **planted_neighbour_changes(play),
+        "a new gate of play": (wave75, {"play": play}, {"play", "c"}, MAKEFILE_TEXT),
         "and another recipe changed": (
-            added_gate(MAKEFILE_TEXT).replace("\t@true\ntest-play-match", "\t@false\ntest-play-match"),
-            {"play": play}, None),
-        "a gate of play running a's file": (added_gate(MAKEFILE_TEXT, other_module), {"play": play}, None),
-        "a target removed": (MAKEFILE_TEXT.replace("test-play-match:\n\t@true\n", ""), {}, None),
-        "a variable": (
-            added_gate(MAKEFILE_TEXT).replace("check-no-engine:", "GODOT := elsewhere\ncheck-no-engine:"),
-            {"play": play}, None),
-        "an unreadable line": (added_gate(MAKEFILE_TEXT, NEW_GATE + "ifeq ($(X),1)\n"), {"play": play}, None),
+            wave75.replace("\t@true\ntest-play-match", "\t@false\ntest-play-match"), {"play": play}),
+        "a gate of play running a's file": (added_gate(MAKEFILE_TEXT, other_module), {"play": play}),
+        "a target removed": (MAKEFILE_TEXT.replace("test-play-match:\n\t@true\n", ""), {}),
+        "a variable": (wave75.replace("check-no-engine:", "GODOT := elsewhere\ncheck-no-engine:"), {"play": play}),
+        "an unreadable line": (added_gate(MAKEFILE_TEXT, NEW_GATE + "vpath %.gd godot\n"), {"play": play}),
         "inside another recipe": (
-            added_gate(MAKEFILE_TEXT, "").replace("\t@true\n\t@true\n", "\t@true\n" + NEW_GATE.lstrip() + "\t@true\n"),
-            {"play": play}, None),
-        "an owns changed": (MAKEFILE_TEXT, {"a": {**MANIFESTS["a"], "owns": ["godot/addons/a2/"]}}, None),
-        "a gate added and a dependency changed": (
-            added_gate(MAKEFILE_TEXT), {"play": {**play, "depends_on": ["a", "b"]}}, None),
+            added_gate(MAKEFILE_TEXT, "").replace("# a note inside the recipe\n",
+                                                  "# a note inside the recipe\n" + NEW_GATE.lstrip()),
+            {"play": play}),
+        "before a comment inside another recipe": (
+            added_gate(MAKEFILE_TEXT, "").replace("\t@true\n# a note", "\t@true\n" + NEW_GATE.lstrip() + "# a note"),
+            {"play": play}),
+        "a gate added and its module's owns changed": (
+            wave75, {"play": {**play, "owns": [*play["owns"], "godot/game/play2/"]}}),
+        "a gate added and a dependency changed": (wave75, {"play": {**play, "depends_on": ["a", "b"]}}),
         "an old recipe line swapped for a gate": (
             added_gate(MAKEFILE_TEXT, "").replace("test-play-match:\n\t@true\n", "test-play-match:\n" + NEW_GATE),
-            {"play": play}, None),
+            {"play": play}),
         "a gate running two modules' files": (
-            added_gate(MAKEFILE_TEXT, NEW_GATE + "\t@$(GODOT) -s res://addons/a/x.gd\n"), {}, None),
+            added_gate(MAKEFILE_TEXT, NEW_GATE + "\t@$(GODOT) -s res://addons/a/x.gd\n"), {}),
         "a recipe with another variable": (
-            added_gate(MAKEFILE_TEXT, NEW_GATE.replace("--path godot", "--path $(ELSEWHERE)")), {}, None),
+            added_gate(MAKEFILE_TEXT, NEW_GATE.replace("--path godot", "--path $(ELSEWHERE)")), {}),
         "a second rule for an old target": (
             MAKEFILE_TEXT + NEW_GATE.replace(".PHONY: test-play-you\n", "").replace(
-                "test-play-you", "test-play-match"), {}, None),
-        "a gate put in, another taken out of check": (
-            added_gate(MAKEFILE_TEXT).replace(" test-a-properties", "", 1), {"play": play}, None),
+                "test-play-you", "test-play-match"), {}),
+        "a gate put in, another taken out of check": (wave75.replace(" test-a-properties", "", 1), {"play": play}),
     }
+
+
+def gate_cases(root: pathlib.Path) -> list[str]:
+    """Rule 5: wave 75's shape selects its module; each doubt selects everything."""
     failures = []
-    for label, (makefile, manifests, chosen) in cases.items():
-        got = gate_change(root, label, makefile, manifests)
+    for label, case in planted_gate_changes().items():
+        makefile, manifests, chosen, before = case if len(case) == 4 else (*case, None, MAKEFILE_TEXT)
+        got = gate_change(root, label, makefile, manifests, before)
         if (chosen is None) != got.everything or (chosen and set(got.modules) != chosen):
             failures.append(f"rule 5, {label}: expected {sorted(chosen) if chosen else 'everything'}, "
                             f"got {explain(got)!r}")

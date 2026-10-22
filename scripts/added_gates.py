@@ -14,11 +14,16 @@ What counts as only adding a gate
 Any doubt is global. A Makefile hunk is accepted only when it is one of:
 
   * lines added, none removed: whole new `test-...` targets -- `.PHONY`,
-    the rule, its recipe -- whose recipe names files one module owns, and
-    the first line after them is not a recipe line (an insertion in the
+    the rule, its recipe -- named nowhere in the old Makefile, whose
+    recipe names files one module owns; not joined to a neighbour by a
+    `\\`, and with no old recipe line after them (an insertion in the
     middle of another target's recipe would take its tail);
   * the `check:` list, the same words in the same order with new targets'
-    names put in.
+    names put in before its `##` comment, both sides inside that one line.
+
+A Makefile with a conditional, a `define` or an `include` anywhere is
+global whatever changed: what a line means there depends on lines the hunk
+does not show. This repository's has none.
 
 A manifest is accepted only when nothing but its `gates` changed, the old
 list is the start of the new one, and every name appended is a target the
@@ -41,9 +46,12 @@ from check_modules import Module, is_global, owner_of
 
 MAKEFILE = "Makefile"
 MANIFESTS = "modules/"
-HUNK_HEADER = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
-# Any rule of the old Makefile, so a "new" target is truly new.
-ANY_RULE = re.compile(r"^([^\s:#=$]+):(?!=)")
+HUNK_HEADER = re.compile(r"^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@")
+# Every word of the old Makefile, so a "new" target is truly new.
+WORD = re.compile(r"[\w.-]+")
+# Make's conditionals, multi-line variables and includes: a line between
+# them means something the hunk alone does not show, so none is read.
+DIRECTIVE = re.compile(r"^\s*-?(define|endef|ifeq|ifneq|ifdef|ifndef|else|endif|include)\b")
 # A gate's rule: a `test-` name, prerequisites that are plain names, and
 # the `## help` comment the Makefile gives every target.
 RULE = re.compile(r"^(test-[a-z0-9-]+):(?![=:])((?:\s+[a-z0-9-]+)*)\s*(##.*)?$")
@@ -56,8 +64,9 @@ REPO_PATH = re.compile(r"(?:\$\(CURDIR\)/|(?<![\w/.]))((?:scripts|python|spec)/[
 
 @dataclasses.dataclass
 class Hunk:
-    """One `-U0` hunk: the line it starts at in the new file, and its lines."""
+    """One `-U0` hunk: the lines it starts at in the old and new file, and its lines."""
 
+    old_start: int
     new_start: int
     removed: list[str] = dataclasses.field(default_factory=list)
     added: list[str] = dataclasses.field(default_factory=list)
@@ -88,7 +97,7 @@ def parse_hunks(diff: list[str]) -> list[Hunk] | None:
     for line in diff:
         header = HUNK_HEADER.match(line)
         if header:
-            hunks.append(Hunk(int(header.group(1))))
+            hunks.append(Hunk(int(header.group(1)), int(header.group(2))))
         elif not hunks:
             continue
         elif line.startswith("-"):
@@ -103,10 +112,17 @@ def parse_hunks(diff: list[str]) -> list[Hunk] | None:
 def new_gates(hunk: Hunk, new_lines: list[str], known: set[str]) -> dict[str, list[str]] | None:
     """The targets an added-only hunk defines, with their recipes; None if not only that.
 
-    `known` is every target the old Makefile had: a rule for one of those is
-    a change to it, not an addition. A recipe line before any rule in the
-    hunk belongs to an old target, so it is refused like any other line.
+    `known` is every word of the old Makefile: a name already used there --
+    as a rule, a prerequisite, one of several targets -- is not new. A
+    recipe line before any rule in the hunk belongs to an old target, so it
+    is refused like any other line. And the hunk must not run into its
+    neighbours: no `\\` on its last line or on the line before it (either
+    joins two lines into one), and no old recipe line after it -- make skips
+    blank and comment lines inside a recipe, so the search does too.
     """
+    before = new_lines[hunk.new_start - 2] if hunk.new_start >= 2 else ""
+    if before.endswith("\\") or (hunk.added and hunk.added[-1].endswith("\\")):
+        return None
     gates: dict[str, list[str]] = {}
     current = None
     for line in hunk.added:
@@ -119,7 +135,8 @@ def new_gates(hunk: Hunk, new_lines: list[str], known: set[str]) -> dict[str, li
         elif not (line.strip() == "" or (phony and phony.group(1) not in known)):
             return None
     after = hunk.new_start - 1 + len(hunk.added)
-    following = next((line for line in new_lines[after:] if line.strip()), "")
+    following = next((line for line in new_lines[after:]
+                      if line.strip() and not line.strip().startswith("#")), "")
     if hunk.removed or not gates or following.startswith("\t"):
         return None
     return gates
@@ -144,18 +161,31 @@ def logical_start(lines: list[str], index: int) -> int:
     return index
 
 
-def check_list_names(hunk: Hunk, new_lines: list[str]) -> list[str] | None:
-    """The names a hunk put into the `check:` list; None if it did anything else."""
-    first = hunk.new_start - 1
-    if not hunk.removed or not hunk.added or first < 0:
-        return None
-    starts = {logical_start(new_lines, first + offset) for offset in range(len(hunk.added))}
-    if len(starts) != 1 or not new_lines[starts.pop()].startswith("check:"):
+def inside_check(lines: list[str], first: int, count: int) -> bool:
+    """True when lines `first` to `first + count - 1` are all one `check:` line."""
+    if first < 0 or count == 0:
+        return False
+    starts = {logical_start(lines, first + offset) for offset in range(count)}
+    return len(starts) == 1 and lines[starts.pop()].startswith("check:")
+
+
+def check_list_names(hunk: Hunk, old_lines: list[str], new_lines: list[str]) -> list[str] | None:
+    """The names a hunk put into the `check:` list; None if it did anything else.
+
+    Both sides of the hunk must lie inside the `check:` line, before and
+    after, so a neighbouring line cannot be joined into it and lost; the
+    words must be the old ones in order with names put in; and every name
+    must come before the `## help` comment, where it would be prose.
+    """
+    if not (inside_check(old_lines, hunk.old_start - 1, len(hunk.removed))
+            and inside_check(new_lines, hunk.new_start - 1, len(hunk.added))):
         return None
     old_words = " ".join(hunk.removed).split()
     new_words = " ".join(hunk.added).split()
     put_in = [word for word in new_words if word not in old_words]
-    if not put_in or [word for word in new_words if word not in put_in] != old_words:
+    comment = next((index for index, word in enumerate(new_words) if word.startswith("#")), len(new_words))
+    if not put_in or [word for word in new_words if word not in put_in] != old_words \
+            or any(new_words.index(word) > comment for word in put_in):
         return None
     return put_in
 
@@ -172,12 +202,12 @@ def makefile_gates(repo: pathlib.Path, fork: str, head: str | None,
     new = file_at(repo, head, MAKEFILE)
     ends = [fork] if head is None else [fork, head]
     hunks = parse_hunks(git_lines(repo, "diff", "-U0", "--no-renames", *ends, "--", MAKEFILE) or [])
-    if old is None or new is None or not hunks:
+    if old is None or new is None or not hunks or any(map(DIRECTIVE.match, old + new)):
         return None
-    known = {match.group(1) for match in map(ANY_RULE.match, old) if match}
+    known = set(WORD.findall("\n".join(old)))
     added, listed = {}, []
     for hunk in hunks:
-        gates, names = new_gates(hunk, new, known), check_list_names(hunk, new)
+        gates, names = new_gates(hunk, new, known), check_list_names(hunk, old, new)
         if gates is None and names is None:
             return None
         added.update(gates or {})
