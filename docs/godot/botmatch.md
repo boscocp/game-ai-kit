@@ -231,55 +231,95 @@ asked for it to come back gradually; the 10 s delay is longer than every
 delay they give (4.25 to about 6 s). The sources, and what could not be
 opened, are in the shooter AI page's T68 section.
 
-**Healing is weighed, not a threshold.** `ErrandChoice` weighs three
-errands in one unit -- a gain less its costs -- beside staying at the
-post, which is no errand: what leaving costs (0.3 holding, 0.5 attacking)
-is the fight's price.
+**Healing is weighed, and priced by the fight.** `ErrandChoice` weighs
+three errands in one unit -- a gain less its costs -- beside staying at
+the post, which is no errand.
 
-- **Go home**: the share of rounds spent plus the share of health
-  missing, less 0.05 a second of the walk, less leaving.
-- **Hide**: the share of health that would come back, less 0.02 a second
-  away -- the walk to cover and the wait for the delay and the refill --
-  less leaving. Where it hides is `TacticalPositions` asked to hide: a
-  place within 15 m that no enemy its team knows of sees it crouched on,
-  the nearest, nobody else's. With no enemy known it has nothing to hide
-  from, and heals where it stands.
-- So a deep wound near cover is worth hiding for, a scratch is not, and
-  a wound near home is worth going home for. Hiding is only looked for
-  when its best case -- cover at its feet -- could score above zero:
-  asking every hurt bot every decision made a match four times slower.
+- **Health comes back while a bot stays, too, unless it is hit.** So the
+  health either errand gains is the share missing times the bot's
+  **exposure** where it stands (`MatchHealth.exposure`): 1 when it was hit
+  in the last 2 s, under fire whoever fired; else the share of the enemies
+  its team knows of with a line from their eyes to its body; 0 when it
+  knows of none. Unseen and unhit, a hurt bot heals where it stands, and
+  going home for health alone is worth nothing. (The first cut counted
+  the health whatever the exposure, and the constant cost of leaving
+  made it a threshold in disguise -- the wave 76 review's finding.)
+- **Go home**: the share of rounds spent, plus the health times the
+  exposure, less 0.05 a second of the walk, less leaving (0.3 holding a
+  point, 0.5 attacking one).
+- **Hide**: the health times the exposure, less 0.02 a second away -- the
+  walk to cover, then what is left of the delay and the refill -- less
+  leaving. Where it hides is `TacticalPositions` asked to hide: a place
+  within 15 m that no enemy its team knows of sees it crouched on, the
+  nearest, nobody else's. It is asked again when the known enemies change,
+  and otherwise kept a second, as a fighting spot is.
 
-**What it measured.** `make test-botmatch-effects`: every claim held, 0
-failures, 2356 s over 189 matches.
+**The break-even**, under fire (exposure 1), cover at its feet, just hit
+(a 10 s wait plus the refill): hiding pays when 0.9 x hurt > 0.5 holding
+a point -- below 44 health -- and 0.9 x hurt > 0.7 attacking -- below 22.
+At half exposure it never pays: 0.4 x hurt cannot reach 0.5. Going home
+with full rounds, 4 s from the base, holding: below 50 health under fire,
+never unseen.
+
+`ErrandChoice`, not T67's `ActionChoice`, though step 3 named the
+selector: `ActionChoice` multiplies answers in [0, 1], so it can veto and
+grade but cannot set a gain against a cost in one unit, which is what the
+step asks for; and an errand changes where a bot is sent, which is the
+team's to carry out (`TeamTactics`). Each bot is weighed on its own facts.
+
+Hiding is only looked for when its best case -- cover at its feet --
+could score above zero: asking every hurt bot every decision made a
+match four times slower.
+
+**What it measured.** `make test-botmatch-effects`, after the review's
+fixes, on main with waves 75 and 77: every claim held, 0 failures. The
+healing claim held is the weak one, and what it cannot catch is said
+below.
 
 | claim | measured | needs |
 |---|---|---|
 | regeneration | none before 10 s, never past 100, back to 100 | all three; health at once is caught |
-| healing weighed | weighing +13.9 +- 25.2 s, 11-9; never heals -121.6 +- 17.3 s, 2-18; heals below half -198.6 +- 14.8 s, 0-20 | neither healer above weighing by 2.5 errors |
+| healing weighed | weighing +10.0 +- 22.7 s, 12-8; never heals +25.4 +- 23.7 s, 10-10; heals below half -53.1 +- 20.8 s, 6-14 | neither fixed healer above weighing by 2.5 errors |
 
-Every margin is blue's against a red that weighs. The claim asked only
-that weighing hold at least as long; it holds more, by about 4.4
-combined errors over never healing and 7.3 over always breaking off below
-half. The planted case, always going back for rounds (-299.4 +- 0.7 s),
-is caught as holding less than never healing.
+Every margin is blue's against a red that weighs.
 
-What healing does inside a match, blue with everything, a match: 169
-health regenerated, 3049 healed at the base, 25.5 s spent hiding. The
-team that breaks off below half spent 215.6 s hiding a match and lost
-every match: a fixed threshold sends bots out of fights they were
-winning.
+**What the weak claim cannot catch: a weighing that does nothing.** Never
+healing, put in the weigher's place, passes it. The review asked for the
+stronger claim, that weighing holds longer than each fixed rule; it was
+written and measured, and it failed: weighing is 0.5 errors *behind*
+never healing, and 2.1 errors ahead of breaking off below half, short of
+2.5. Said as measured, not tuned until it passed: priced by exposure, a
+weighing bot seldom breaks off -- 4.3 s hiding a match, 1171 health
+healed at its base, 732 regenerated -- and that is about what never
+breaking off does. What the numbers do show is that a fixed threshold
+loses: below half, blue spent its time out of fights it could stay in.
+The gate's planted case is one the weak claim rejects: always going back
+for rounds (-292.1 +- 3.3 s).
 
-**Two numbers moved, printed and not claimed.**
+Before the fixes the same run measured weighing +13.9, never healing
+-121.6 and below half -198.6, with every hurt bot's health counted as a
+gain whatever its exposure, and 3049 points a match healed at the base.
+The gap closed with the fixes; which of them closed how much was not
+measured apart.
 
-- **Without the commander** blue now beats a red with it: +60.8 +- 11.7
-  s, 19-1, where T67 measured -9.2 +- 14.9 -- and it died 587 times in
-  twenty matches against 954 with the commander. A guess, not measured:
-  each bot at its own nearest point stays nearer its base, which now
-  heals. The commander's orders still span 2.1 times the points (2.72
-  against 1.28), the claim it is held to.
-- **The yards' mirror** is -47.6 +- 21.0 s, 5-15: 2.3 errors, inside the
-  2.5 the claim allows, and the nearest to its edge of any mirror so far.
-  The lanes' mirror is +13.9 +- 25.2 s, 11-9.
+**Two numbers that moved, and where they came from.**
+
+- **Without the commander** blue measured +60.8 +- 11.7 s, 19-1, before
+  the fixes; after them, -4.1 +- 13.5 s, 9-11, as in T67 (-9.2). Planting
+  the old step order back -- the base healing a bot a lethal hit had taken
+  -- with the exposure pricing kept, moved it by about a second (+11.1
+  with the commander, -5.0 without, twenty matches each). So the shift came
+  from the first cut's weighing, not from the resurrection. Where blue
+  died and lived, after the fixes: with the commander, 343 of 956 deaths
+  within 15 m of its base, living 13.4 m from it on average; without,
+  135 of 691, at 18.3 m: the commander keeps blue nearer its base. That
+  this is why the first cut's healer favoured the team without one is a
+  guess the numbers do not test.
+- **The yards' mirror** sat at -47.6 +- 21.0 s before the fixes, 2.3 of
+  the 2.5 errors allowed, the nearest to its edge so far. After them it is
+  +47.6 +- 32.0 s, 13-7, 1.5 errors the other way; the lanes' mirror is
+  +10.0 +- 22.7 s, 12-8. Twenty matches on the yards swing by that much,
+  and a mirror within 2.5 errors either side is what the claim can tell.
 
 ## Watching, and playing inside a team
 

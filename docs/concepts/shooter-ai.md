@@ -588,10 +588,13 @@ the sources has a resupply room.
 And the choice to break off is weighed, never a threshold: hiding to wait
 out the delay, going home to be healed whole, or staying in the fight are
 each a gain less its costs in one unit, in `ErrandChoice`, beside going
-back for rounds and fetching the power weapon. What a bot hides behind is
-asked of `TacticalPositions` with a condition of its own: covered from
-every enemy its team knows of, not only the nearest. The measured results
-are in [`docs/godot/botmatch.md`](../godot/botmatch.md).
+back for rounds and fetching the power weapon. Health comes back while a
+bot stays too, unless it is hit, so the health either errand gains is
+priced by how exposed the bot is where it stands -- the delay's point,
+turned round: what breaking off buys is the hit it avoids. What a bot
+hides behind is asked of `TacticalPositions` with a condition of its own:
+covered from every enemy its team knows of, not only the nearest. The
+measured results are in [`docs/godot/botmatch.md`](../godot/botmatch.md).
 
 ## Could not be checked
 

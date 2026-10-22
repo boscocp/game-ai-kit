@@ -43,12 +43,20 @@
 #      before the rules' delay, never passes its whole, and does come back
 #      to it -- the rule stepped alone, as a match steps it;
 #  10. healing weighed (T68): a blue that weighs when to break off to heal
-#      holds points longer than one that never breaks off to heal and one
-#      that always does below a fixed health -- each holds less than it by
-#      MIRROR_ERRORS standard errors of the two margins. The task asked for
-#      "at least as long"; its review found that a weighing that did nothing
-#      -- one that behaves as never healing -- would pass that, so the claim
-#      is the stronger one the numbers hold, and that is its planted case.
+#      holds points at least as long as one that never breaks off to heal
+#      and one that always does below a fixed health -- neither holds more
+#      than it by MIRROR_ERRORS standard errors of the two margins.
+#
+#      **What this claim cannot catch, said outright: a weighing that does
+#      nothing.** Never healing put in the weigher's place passes it. The
+#      wave 76 review asked for the stronger claim -- weighing holds longer
+#      than each -- and it was written and measured, once the health an
+#      errand gains was priced by the bot's exposure: weighing +10.0 +- 22.7
+#      s a match, never healing +25.4 +- 23.7, below half -53.1 +- 20.8. It
+#      failed for both (0.5 errors the wrong way; 2.1 errors, short of 2.5),
+#      and the owner's rule is to say so rather than tune until it passes.
+#      So the weak claim is held, the strong one printed, and the planted
+#      case is one the weak claim can reject: always going back for rounds.
 #
 # Each is also asked of a planted case and must reject it: a blue team with
 # a faster reaction and a steadier aim, for the mirror; the claims check
@@ -59,7 +67,7 @@
 # head put in aiming by worth's place; the weighing blue put in always going
 # back's; the matches without claims in the claims' place; a random
 # arena with one point walled in, for portability; regeneration with no
-# delay; and never healing put in the weighing healer's place.
+# delay; and always going back put in the weighing healer's place.
 #
 # What the fighting makes of the decisions -- points held by each side,
 # wins, the mean margin and its standard error over the seeds -- is printed
@@ -505,22 +513,31 @@ static func regeneration_fault(rules: MatchRules) -> String:
 func _healing(totals: Dictionary) -> Array[String]:
 	var failures: Array[String] = []
 	for healer: String in HEALERS:
-		var counted: Array = [healer, MIRROR_ERRORS]
-		if not _holds_less(totals[healer], totals["everything"]):
-			failures.append("healing: a blue that %s held no less than one weighing it, by %.1f errors" % counted)
-	# Planted: never healing put in the weighing healer's place -- a
-	# weighing that does nothing must not pass.
-	if _heals_better(totals[HEALERS[0]], totals):
-		failures.append("healing: planted, never healing passed as weighing it")
+		var ahead: float = _errors_ahead(totals["everything"], totals[healer])
+		print("healing: weighing ahead of a blue that %s by %+.1f errors (printed, not claimed)" % [healer, ahead])
+	if not _heals_as_long(totals["everything"], totals):
+		failures.append("healing: a fixed healer held more than weighing, by %.1f errors" % MIRROR_ERRORS)
+	# Planted: always going back for rounds, which holds less, put in the
+	# weighing healer's place. Never healing would pass, and is no plant.
+	if _heals_as_long(totals["always resupply"], totals):
+		failures.append("healing: planted, always going back passed as holding as long as the fixed healers")
 	return failures
 
 
-# Whether `weigher` holds longer than every fixed healer, by the margins.
-func _heals_better(weigher: Dictionary, totals: Dictionary) -> bool:
+# Whether `weigher` holds no less than every fixed healer, by the margins.
+func _heals_as_long(weigher: Dictionary, totals: Dictionary) -> bool:
 	for healer: String in HEALERS:
-		if not _holds_less(totals[healer], weigher):
+		if _holds_less(weigher, totals[healer]):
 			return false
 	return true
+
+
+# By how many combined standard errors `one`'s mean margin is above
+# `other`'s.
+static func _errors_ahead(one: Dictionary, other: Dictionary) -> float:
+	var high: Vector2 = _mean_and_error(one["margins"])
+	var low: Vector2 = _mean_and_error(other["margins"])
+	return (high.x - low.x) / maxf(sqrt(low.y * low.y + high.y * high.y), 1e-6)
 
 
 # --- portability (T67) ---------------------------------------------------------
