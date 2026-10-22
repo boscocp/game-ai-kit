@@ -102,7 +102,7 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-no-assets lint-readability lint-demos \
        lint-addon-deps lint-modules lint-tiers lint-links lint-workflow lint-license \
-       lint-employer-refs lint-docs-freshness lint-no-training lint-selftests \
+       lint-employer-refs lint-docs-freshness lint-literature lint-no-training lint-selftests \
        test-python test-models ## Every gate that does not need the engine installed
 	@# CI's gate job runs exactly this. It used to hand-list the targets,
 	@# because `check` includes lint-disk-layout, which cannot run where the
@@ -160,6 +160,10 @@ lint-employer-refs: ## Nothing of the author's day job, in the tree or the histo
 .PHONY: lint-docs-freshness
 lint-docs-freshness: ## Every doc page declares its half-life, and is inside it
 	@$(PYTHON) scripts/check_doc_freshness.py
+
+.PHONY: lint-literature
+lint-literature: ## Every module, path and demo the literature page claims the kit has exists (T73)
+	@$(PYTHON) scripts/check_literature_table.py
 
 .PHONY: lint-no-training
 lint-no-training: ## Invariant 6: Python trains, GDScript only infers
