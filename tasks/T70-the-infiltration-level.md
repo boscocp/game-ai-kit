@@ -171,3 +171,44 @@ like a choice you made? Does a guard who calls for help sound like one, and
 do the ones who did not hear it go on as if nothing happened? Turn the
 off-screen halving off: is being heard by a guard you cannot see fairer or
 less fair, and which way would you leave it?
+
+## Done in wave 80 (2026-10-22)
+
+What was built differs from the steps above in these places, each on
+purpose; `docs/godot/infiltration.md` has the numbers.
+
+- **Each guard has its own belief**, not one shared map: a shared map
+  would hand every guard what one saw, and help would be shared, not
+  heard. A guard takes another's knowledge only from a report it heard.
+- **"Seen" is "a hidden body there would have been perceived"** (T69's
+  review, finding 10): a prone body, in that cell's light and hiding, at
+  the rules' `seen_threshold`. T69's reading is kept as
+  `GuardEyes.seen_cells_by_line`, named, for what it gets wrong.
+- **Sound floods the 4-connected walk graph**, and the headers say so: a
+  radius is a diamond. No second graph -- every cell costs one, and there
+  are no doors.
+- **A phase may set its own decay** (`Awareness`, its twin and a vector):
+  with one decay, a search after an alert faded in a fraction of a second
+  or every glimpse added up to an alert.
+- **A radio report is re-sent at most every `report_every` seconds**: a
+  guard that keeps seeing reported every decision, and its hearers' fear
+  ran away with them.
+- **The HUD and radar are new**, not `BotMatchHud` and the bot match's
+  map, which read a `BotMatch`. **Crouch and prone are rows of this
+  example's `rules.json`**, not the bot match's, so a change to them does
+  not select the bot match's slow gates.
+- **The belief's margin is measured on a staged search** (`HidingStage`):
+  the player hidden, a radio report placing it 8-14 steps away out of
+  sight. A player run at guards to get seen was shot before it hid.
+- **The quiet route is held on the hand-made levels and printed on the
+  generated ones**: on generated level 1 the guard notices the scripted
+  sneak in the dark and follows it, and no number tells the guards
+  working from the test player failing.
+
+Measured: every claim of `infiltration_properties.gd` holds and every
+planted case is caught, in about a minute. A hidden player is found
+after 6.9 s with the belief, 21.0 s without, 18.4 s with a belief that
+never spreads (15 runs each). The quiet route finishes with no guard
+alert on four of the five levels; walked loudly it brings a guard to
+alert on all five. Screenshots were taken windowed before any claim
+about the view; the manual check is still the owner's.

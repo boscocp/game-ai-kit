@@ -97,7 +97,7 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-rts-budget test-rts-simulation test-rts-match test-steering-properties \
        test-racing-ladder test-racing-does-not-cheat test-game3d-floor test-botmatch-effects \
        test-racing3d-car test-racing3d-effects test-racing3d-ladder test-racing3d-does-not-cheat test-racing3d-you-drive \
-       test-infiltration-properties ## Run every gate
+       test-infiltration-properties test-infiltration ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-no-assets lint-readability lint-demos \
@@ -322,6 +322,10 @@ test-menace-vectors: import ## The MENACE vectors, against the game's bead playe
 	@# itself, because Python's generator and Godot's differ.
 	@$(GODOT) --headless --path godot -s res://test/tictactoe/menace_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/menace
+
+.PHONY: test-infiltration
+test-infiltration: import ## The infiltration level's guards: help heard, the search shared, quiet and loud, the arbiter, the halving, every decision on the overlay, portable (T70)
+	@$(GODOT) --headless --path godot -s res://test/infiltration/infiltration_properties.gd
 
 .PHONY: test-infiltration-properties
 test-infiltration-properties: import ## A guard knows only what it perceived; awareness, phases, sound and belief hold on generated levels (T69)
@@ -550,6 +554,10 @@ demo-racing: import ## Race an AI in the same car: arrows/WASD drive, 1-3 the AI
 .PHONY: demo-racing3d
 demo-racing3d: import ## A 3D race, you and three AI levels: arrows/WASD drive, 1 PID, 2 heat line, 3 measured grip, Tab watch, C camera, T track, R again, Space pause
 	@$(GODOT) --path godot res://game3d/racing/racing3d.tscn
+
+.PHONY: demo-infiltration
+demo-infiltration: import ## Sneak past guards in third person: WASD, mouse camera, C crouch, Z prone, Shift sprint, G throw, E takedown, click shoot; 1-5 switches, Tab a guard, L level
+	@$(GODOT) --path godot res://game3d/infiltration/infiltration.tscn
 
 .PHONY: demo-botmatch
 demo-botmatch: import ## A 3D bot match, six against six: 1-3 blue's claims/commander/retreat (Shift: red's), Tab a bot, T take it over, M map, C camera, P pause, N new, L the other arena
