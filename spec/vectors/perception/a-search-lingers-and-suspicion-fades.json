@@ -1,0 +1,115 @@
+{
+ "name": "a-search-lingers-and-suspicion-fades",
+ "why": "With a slow decay set for searching and alert and the row's fast one below, a fall from the peak lingers while searching and drops fast once suspicious.",
+ "kind": "awareness",
+ "row": {
+  "peak": 1.0,
+  "decay": 0.1,
+  "phases": [
+   {
+    "name": "unaware",
+    "at": 0.0
+   },
+   {
+    "name": "suspicious",
+    "at": 0.25
+   },
+   {
+    "name": "searching",
+    "at": 0.625,
+    "decay": 0.02
+   },
+   {
+    "name": "alert",
+    "at": 1.0,
+    "decay": 0.02
+   }
+  ],
+  "caution": {
+   "floor": 0.0,
+   "seconds": 0.0
+  }
+ },
+ "query": {
+  "steps": [
+   {
+    "perceived": true,
+    "rate": 2.0,
+    "seconds": 1.0,
+    "now": 0.0
+   },
+   {
+    "perceived": false,
+    "rate": 0.0,
+    "seconds": 5.0,
+    "now": 105.0
+   },
+   {
+    "perceived": false,
+    "rate": 0.0,
+    "seconds": 5.0,
+    "now": 110.0
+   },
+   {
+    "perceived": false,
+    "rate": 0.0,
+    "seconds": 5.0,
+    "now": 115.0
+   },
+   {
+    "perceived": false,
+    "rate": 0.0,
+    "seconds": 5.0,
+    "now": 120.0
+   },
+   {
+    "perceived": false,
+    "rate": 0.0,
+    "seconds": 5.0,
+    "now": 125.0
+   },
+   {
+    "perceived": false,
+    "rate": 0.0,
+    "seconds": 5.0,
+    "now": 130.0
+   },
+   {
+    "perceived": false,
+    "rate": 0.0,
+    "seconds": 5.0,
+    "now": 135.0
+   },
+   {
+    "perceived": false,
+    "rate": 0.0,
+    "seconds": 5.0,
+    "now": 140.0
+   }
+  ]
+ },
+ "expect": {
+  "values": [
+   1.0,
+   0.9,
+   0.8,
+   0.7000000000000001,
+   0.6000000000000001,
+   0.10000000000000009,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "phases": [
+   3,
+   2,
+   2,
+   2,
+   1,
+   0,
+   0,
+   0,
+   0
+  ]
+ }
+}
