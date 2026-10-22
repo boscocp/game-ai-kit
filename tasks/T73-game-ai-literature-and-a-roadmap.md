@@ -104,3 +104,48 @@ make lint-tasks lint-status
 The owner reads the roadmap and picks the entries; the follow-up tasks are
 written from those answers. Does each row the kit claims to have match what
 the demo shows?
+
+## Done in wave 81 (2026-10-22)
+
+`docs/concepts/the-literature-and-the-kit.md`: 48 techniques in nine
+tables, each against the kit -- a module, a path or `not in the kit`, the
+demo's make target, the tier. Sources, all opened on 2026-10-22 and each
+saying how much was read: AIMA 4th ed.'s full contents with section
+titles; Yannakakis & Togelius 2nd ed.'s contents; Millington 3rd ed.'s
+chapter titles; the Game AI Pro index; and fifteen chapters, slides and
+papers by their opening pages (Booth's Left 4 Dead slides in part).
+Buckland's book, the AI Game Programming Wisdom series, Isla's Halo 2
+paper and Mark's GDC 2015 talk could not be opened and are listed under
+"Could not be checked", not used.
+
+What it found: the decision layer is well covered and AIMA's part IV is
+not (MCTS, CSP, filters, MDPs, bandits); nothing teaches content
+generation or pacing; `ai_opponent`, `ai_adversarial` and `ai_rts_core`
+are each shown in one game only (`ai_teamwork` gained its second with
+T70, merged while this was written). The roadmap has eight new
+techniques and six "second game" entries, each with its tier, size and
+the invariants it touches -- bandits and player modelling fall squarely
+under invariant 6, `ai_llm` under 7. It ends with seven questions for the
+owner, in Portuguese and English; the follow-up tasks are written after
+the answers, as step 5 says.
+
+`scripts/check_literature_table.py` (`make lint-literature`, in `make
+check` through `check-no-engine`, its self-test found by
+`lint-selftests`): rules L1-L6, nine self-test cases -- no table, a cell
+that names nothing, a missing addon, a hyphenated name, a missing path, a
+missing demo, a demo written without backticks, a table without the kit
+column, an empty directory (exit 2). On its first run it caught the page
+itself: the planned `ai_llm`, written in backticks as if it were a module.
+
+The review (fix before merge, all applied): invariant 6 is about fitting,
+not saving -- ADR 0016 covers only the n-gram table, on three conditions
+(counts only, empty at the start, rebuildable from a log), so bandits and
+player modelling each need the owner to extend it; a director stays
+inside invariant 6 while all its numbers are fixed. The gate had three
+holes (a hyphenated name, a demo without backticks, a header edited away),
+each now a rule with a planted case. The Tier column is now each kit
+page's own `tier:`, and the LLM row's lesson is tier 1. Added: the RTS's
+influence map and B.5 rewritten as three maps, the 2D racer's lookahead
+and rubber-banding refused, the difficulty knobs of the fighting game and
+the RTS, fuzzy in the infiltration guards, the team rows' arbiter and
+confidence, fog of war, and AIMA's framing chapters (2, 7-10, 26).
