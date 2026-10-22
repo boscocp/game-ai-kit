@@ -154,3 +154,40 @@ with a planted case it must reject (invariant 4):
 None of this is on screen yet; T70 draws it. Read `awareness_properties.gd`'s
 output for `SCRIPT ERROR`, not only its exit code (CLAUDE.md's trap), and
 read one guard type's JSON row aloud: does each number say what it tunes?
+
+## Done in wave 79 (2026-10-22)
+
+What was built differs from the steps above in these places, each on
+purpose; `docs/concepts/stealth-ai.md`'s last section has the map and the
+numbers.
+
+- **T67's percept record was read, not extended.** `MatchPercepts` is the
+  bot match's, and holds rounds, orders and cover a guard has no use for.
+  The guard's own record is `GuardPercept`, in `infiltration`, the same
+  idea: one record a step, and a mind that reads nothing else.
+- **The fuzzy rate's vector is an ordinary fuzzy vector**,
+  `spec/vectors/fuzzy/a-guards-awareness-rate.json`, checked by `make
+  test-fuzzy-vectors` and by `gameaikit.fuzzy` -- the rate's Python twin is
+  the fuzzy package. `guard_type_test.gd` holds its controller equal to the
+  patrol row's.
+- **The flood's Python twin is `gameaikit.search.flood`**, a new package;
+  the flood vectors are `flood-*.json` in `spec/vectors/search`, checked by
+  `make test-search-vectors` and `make test-python`.
+- **Two guard types**, a patrol and a sentry, so "the wrong row" and
+  "every guard type" are claims about more than one row.
+- **Portable, planted as the task says**: a row with a `post_cell`, used
+  as where a noise is made; on levels too small to have that cell, the
+  noise is not heard where it is made. The honest rows are also read for
+  any key naming a cell, a position or a place.
+- **Honest steps are counted**: the claim "nothing known that was not
+  perceived" fails if the walks never give an empty step or never a
+  perceived one, so it cannot pass on an empty scene.
+
+Measured: every claim holds on 150 generated levels and both types, and
+every planted case is caught, each by its own claim (printed once, by a
+probe not committed): the truth told changed the memory on an empty step;
+inverted light lowered awareness as the light rose; the wrong row read
+0.25 as phase 0; Euclidean hearing let a cell behind a full wall hear; a
+doubling factor made a far cell louder; a leaking diffusion gave a node a
+share from no neighbour; the posted noise was off a smaller level. The
+properties take about 30 s.
