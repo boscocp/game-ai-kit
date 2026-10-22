@@ -1,0 +1,55 @@
+{
+ "name": "the-highest-of-three-and-ties-go-back-then-fetch",
+ "why": "Hide 0.5 over back 0.25 and fetch 0: hide. All three 0.5: back. Fetch and hide 0.5, back 0.25: fetch. Hide alone below zero: no errand.",
+ "kind": "errands",
+ "weights": {
+  "resupply_walk": 0.05,
+  "leave_holding": 0.3,
+  "leave_attacking": 0.5,
+  "health_worth": 1.0,
+  "power_worth": 1.0,
+  "power_walk": 0.08,
+  "power_danger": 0.3,
+  "hide_second": 0.02
+ },
+ "query": {
+  "resupply": [],
+  "fetch": [],
+  "hide": [],
+  "teams": [],
+  "pairs": [
+   [
+    0.25,
+    0.0,
+    0.5
+   ],
+   [
+    0.5,
+    0.5,
+    0.5
+   ],
+   [
+    0.25,
+    0.5,
+    0.5
+   ],
+   [
+    0.0,
+    0.0,
+    -0.25
+   ]
+  ]
+ },
+ "expect": {
+  "resupply": [],
+  "fetch": [],
+  "hide": [],
+  "fetcher": [],
+  "chosen": [
+   "hide to heal",
+   "resupply",
+   "fetch power",
+   ""
+  ]
+ }
+}

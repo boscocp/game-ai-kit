@@ -16,6 +16,7 @@ TOO_FAR = "too_far"
 OUTSIDE_AREA = "outside_area"
 CLAIMED = "claimed"
 EXPOSED = "exposed"
+SEEN = "seen"
 
 
 @dataclasses.dataclass
@@ -30,6 +31,7 @@ class Candidate:
     covered_from_others: float = 0.0
     in_area: bool = True
     claimed_by: int = -1
+    hidden_from_all: bool = False
 
 
 @dataclasses.dataclass
@@ -44,6 +46,7 @@ class Weights:
     preferred_metres: float = 15.0
     range_band: float = 10.0
     max_travel: float = 20.0
+    cover_from_all: bool = False
 
 
 @dataclasses.dataclass
@@ -63,6 +66,8 @@ def status_of(bot_id: int, candidate: Candidate, weights: Weights, has_threat: b
         return OUTSIDE_AREA
     if use_claims and candidate.claimed_by not in (-1, bot_id):
         return CLAIMED
+    if has_threat and weights.cover_from_all and not candidate.hidden_from_all:
+        return SEEN
     if has_threat and not candidate.covered_from_main and not candidate.fires_on_main:
         return EXPOSED
     return KEPT

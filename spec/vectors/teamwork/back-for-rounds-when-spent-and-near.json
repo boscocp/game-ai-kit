@@ -6,14 +6,18 @@
   "resupply_walk": 0.05,
   "leave_holding": 0.3,
   "leave_attacking": 0.5,
+  "health_worth": 1.0,
   "power_worth": 1.0,
   "power_walk": 0.08,
-  "power_danger": 0.3
+  "power_danger": 0.3,
+  "hide_second": 0.02
  },
  "query": {
   "resupply": [
    {
     "spent": 0.75,
+    "hurt": 0.0,
+    "exposure": 0.0,
     "earned_power": false,
     "walk_seconds": 2.0,
     "attacking": false,
@@ -21,6 +25,8 @@
    },
    {
     "spent": 0.0,
+    "hurt": 0.0,
+    "exposure": 0.0,
     "earned_power": false,
     "walk_seconds": 2.0,
     "attacking": false,
@@ -28,6 +34,7 @@
    }
   ],
   "fetch": [],
+  "hide": [],
   "teams": [],
   "pairs": []
  },
@@ -47,6 +54,7 @@
    ]
   ],
   "fetch": [],
+  "hide": [],
   "fetcher": [],
   "chosen": []
  }

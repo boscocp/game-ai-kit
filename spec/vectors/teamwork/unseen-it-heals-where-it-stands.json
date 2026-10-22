@@ -1,0 +1,77 @@
+{
+ "name": "unseen-it-heals-where-it-stands",
+ "why": "The review's case: three quarters gone, four seconds from its base, no enemy known and no hit lately (exposure 0): its health comes back where it stands, so the health is worth nothing to an errand, -0.5, and it stays. Half exposed: 0.375 - 0.5 = -0.125, still stays. Hiding, unseen: 0 - 10 x 0.02 - 0.3 = -0.5.",
+ "kind": "errands",
+ "weights": {
+  "resupply_walk": 0.05,
+  "leave_holding": 0.3,
+  "leave_attacking": 0.5,
+  "health_worth": 1.0,
+  "power_worth": 1.0,
+  "power_walk": 0.08,
+  "power_danger": 0.3,
+  "hide_second": 0.02
+ },
+ "query": {
+  "resupply": [
+   {
+    "spent": 0.0,
+    "hurt": 0.75,
+    "exposure": 0.0,
+    "earned_power": false,
+    "walk_seconds": 4.0,
+    "attacking": false,
+    "empty": false
+   },
+   {
+    "spent": 0.0,
+    "hurt": 0.75,
+    "exposure": 0.5,
+    "earned_power": false,
+    "walk_seconds": 4.0,
+    "attacking": false,
+    "empty": false
+   }
+  ],
+  "fetch": [],
+  "hide": [
+   {
+    "available": true,
+    "hurt": 0.75,
+    "exposure": 0.0,
+    "walk_seconds": 2.0,
+    "wait_seconds": 8.0,
+    "attacking": false
+   }
+  ],
+  "teams": [],
+  "pairs": []
+ },
+ "expect": {
+  "resupply": [
+   [
+    0.0,
+    4.0,
+    0.3,
+    -0.5
+   ],
+   [
+    0.375,
+    4.0,
+    0.3,
+    -0.125
+   ]
+  ],
+  "fetch": [],
+  "hide": [
+   [
+    0.0,
+    10.0,
+    0.3,
+    -0.5
+   ]
+  ],
+  "fetcher": [],
+  "chosen": []
+ }
+}

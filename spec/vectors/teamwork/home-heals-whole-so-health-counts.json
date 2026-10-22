@@ -1,0 +1,61 @@
+{
+ "name": "home-heals-whole-so-health-counts",
+ "why": "Full of rounds, three quarters of its health gone, under fire (exposure 1), four seconds from its base, holding: 0 + 0.75 - 0.2 - 0.3 = 0.25, worth going to be healed whole. A quarter gone: -0.25, it stays.",
+ "kind": "errands",
+ "weights": {
+  "resupply_walk": 0.05,
+  "leave_holding": 0.3,
+  "leave_attacking": 0.5,
+  "health_worth": 1.0,
+  "power_worth": 1.0,
+  "power_walk": 0.08,
+  "power_danger": 0.3,
+  "hide_second": 0.02
+ },
+ "query": {
+  "resupply": [
+   {
+    "spent": 0.0,
+    "hurt": 0.75,
+    "exposure": 1.0,
+    "earned_power": false,
+    "walk_seconds": 4.0,
+    "attacking": false,
+    "empty": false
+   },
+   {
+    "spent": 0.0,
+    "hurt": 0.25,
+    "exposure": 1.0,
+    "earned_power": false,
+    "walk_seconds": 4.0,
+    "attacking": false,
+    "empty": false
+   }
+  ],
+  "fetch": [],
+  "hide": [],
+  "teams": [],
+  "pairs": []
+ },
+ "expect": {
+  "resupply": [
+   [
+    0.75,
+    4.0,
+    0.3,
+    0.25000000000000006
+   ],
+   [
+    0.25,
+    4.0,
+    0.3,
+    -0.25
+   ]
+  ],
+  "fetch": [],
+  "hide": [],
+  "fetcher": [],
+  "chosen": []
+ }
+}

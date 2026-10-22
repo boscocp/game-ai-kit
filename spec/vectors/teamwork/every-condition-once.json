@@ -25,7 +25,8 @@
     "fires_on_main": true,
     "covered_from_others": 0.0,
     "in_area": true,
-    "claimed_by": -1
+    "claimed_by": -1,
+    "hidden_from_all": false
    },
    {
     "id": "out",
@@ -35,7 +36,8 @@
     "fires_on_main": true,
     "covered_from_others": 0.0,
     "in_area": false,
-    "claimed_by": -1
+    "claimed_by": -1,
+    "hidden_from_all": false
    },
    {
     "id": "theirs",
@@ -45,7 +47,8 @@
     "fires_on_main": true,
     "covered_from_others": 0.0,
     "in_area": true,
-    "claimed_by": 4
+    "claimed_by": 4,
+    "hidden_from_all": false
    },
    {
     "id": "bare",
@@ -55,7 +58,8 @@
     "fires_on_main": false,
     "covered_from_others": 0.0,
     "in_area": true,
-    "claimed_by": -1
+    "claimed_by": -1,
+    "hidden_from_all": false
    },
    {
     "id": "mine",
@@ -65,7 +69,8 @@
     "fires_on_main": false,
     "covered_from_others": 0.0,
     "in_area": true,
-    "claimed_by": 3
+    "claimed_by": 3,
+    "hidden_from_all": false
    }
   ]
  },

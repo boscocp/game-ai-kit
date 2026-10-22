@@ -94,7 +94,8 @@ static func _positions(vector: Dictionary) -> Dictionary:
 	var query: Dictionary = vector["query"]
 	var weights := TacticalPositions.Weights.new()
 	for key: String in vector["weights"]:
-		weights.set(key, float(vector["weights"][key]))
+		var value: Variant = vector["weights"][key]
+		weights.set(key, value if value is bool else float(value))
 	var candidates: Array[TacticalPositions.Candidate] = []
 	for fields: Dictionary in query["candidates"]:
 		var candidate := TacticalPositions.Candidate.new()
@@ -249,11 +250,18 @@ static func _errands(vector: Dictionary) -> Dictionary:
 		for key: String in fields:
 			facts.set(key, int(fields[key]) if key == "enemies_near" else fields[key])
 		out.append(Array(ErrandChoice.weigh_fetch(facts, weights)))
+	var hidden: Array = []
+	for fields: Dictionary in query["hide"]:
+		var facts := ErrandChoice.Hide.new()
+		for key: String in fields:
+			facts.set(key, fields[key])
+		hidden.append(Array(ErrandChoice.weigh_hide(facts, weights)))
 	var sent: Array = (query["teams"] as Array).map(func(scores: Array) -> int:
 		return ErrandChoice.fetcher(PackedFloat64Array(scores)))
+	# A pair is [back, fetch], or [back, fetch, hide].
 	var chosen: Array = (query["pairs"] as Array).map(func(pair: Array) -> String:
-		return ErrandChoice.choose(float(pair[0]), float(pair[1])))
-	return {"resupply": back, "fetch": out, "fetcher": sent, "chosen": chosen}
+		return ErrandChoice.choose(float(pair[0]), float(pair[1]), float(pair[2]) if pair.size() > 2 else 0.0))
+	return {"resupply": back, "fetch": out, "hide": hidden, "fetcher": sent, "chosen": chosen}
 
 
 static func _states(values: Array, thresholds: SquadConfidence.Thresholds, may_retreat: bool) -> Array:

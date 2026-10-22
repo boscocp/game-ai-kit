@@ -1,5 +1,6 @@
-## The bot match's ammunition and its two weapons, and the two errands they
-## make a decision of (the owner's asks, 2026-10-21).
+## The bot match's ammunition and its two weapons, and the errands they
+## make a decision of (the owner's asks, 2026-10-21) -- and, since T68, the
+## errand of hiding to heal, whose facts are `MatchHealth`'s.
 ##
 ## A rifle has 120 rounds, a magazine of 30 and three reloads, and only the
 ## resupply in a team's spawn room gives more. The power weapon lies in one
@@ -9,9 +10,10 @@
 ## is empty, and a bot that dies comes back with a full rifle. Five kills
 ## since its last death earn a bot the power weapon at its own base.
 ##
-## Two errands, each weighed by `ErrandChoice` in `ai_teamwork` -- a gain
-## less its costs -- and each bot takes the larger if it is above zero:
-## back to its base for rounds, or out for the power weapon, one bot a team.
+## Three errands, each weighed by `ErrandChoice` in `ai_teamwork` -- a gain
+## less its costs -- and each bot takes the largest if it is above zero:
+## back to its base for rounds and health, out for the power weapon, one
+## bot a team, or into cover to heal.
 ## This file measures the facts the technique weighs and carries out its
 ## answer; the weights are the rules'. The walks are read off a flood of
 ## walk steps made once a match, not searched each decision.
@@ -20,12 +22,14 @@ extends RefCounted
 
 const RIFLE: String = "rifle"
 const POWER: String = "power"
-## The errands: none, back to the base, or to the power weapon.
+## The errands: none, back to the base, to the power weapon, or to hide.
 const NO_ERRAND: String = ErrandChoice.NONE
 const RESUPPLY: String = ErrandChoice.RESUPPLY
 const FETCH: String = ErrandChoice.FETCH
-## How a team decides on going back: weighing it, or -- planted, for the
-## effects test -- never, or always once a round is spent.
+const HIDE: String = ErrandChoice.HIDE
+## How a team decides on going back, and on healing: weighing it, or --
+## planted, for the effects test -- never, or always: once a round is
+## spent, or below a fixed health.
 const WEIGH: String = "weigh"
 const NEVER: String = "never"
 const ALWAYS: String = "always"
@@ -68,7 +72,8 @@ func power_there(now: float) -> bool:
 	return now >= power_back_at
 
 
-## What `bot` standing where it is takes: at its base, a full rifle -- or
+## What `bot` standing where it is takes: at its base, its whole health and
+## a full rifle -- or
 ## the power weapon, its streak earning one -- unless it holds a power
 ## weapon with rounds left; at the power weapon's place, it, if it is
 ## there and the bot holds a rifle.
@@ -77,6 +82,9 @@ func touch(world: BotMatch, bot: MatchBot) -> void:
 	var base: Vector2 = world.arena.resupply.get(BotMatch.TEAM_NAMES[bot.team], Vector2.INF)
 	if base != Vector2.INF and bot.position.distance_to(base) <= rules.resupply_radius:
 		_resupply(rules, bot)
+		# The base heals whole, at once (T68, the owner's ask).
+		world.stats[bot.team].healed_at_base += rules.health - bot.health
+		bot.health = rules.health
 	var at_power: bool = bot.position.distance_to(world.arena.power_place) <= rules.power_pickup_radius
 	if at_power and power_there(world.time) and bot.weapon == RIFLE and _nearest_to_power(world, bot):
 		arm_power(bot, rules)
@@ -120,9 +128,13 @@ func think(world: BotMatch, team: MatchTeam) -> void:
 		if not bot.alive() or bot.controlled:
 			bot.errand = NO_ERRAND
 			continue
+		var hiding: Array = MatchHealth.hide_facts(world, team, bot)
+		bot.hide_spot = hiding[1]
+		bot.hide_place = hiding[2]
 		bot.errand_weighing = {
 			RESUPPLY: ErrandChoice.weigh_resupply(resupply_facts(world, team, bot), weights),
 			FETCH: ErrandChoice.weigh_fetch(fetch_facts(world, team, bot), weights),
+			HIDE: ErrandChoice.weigh_hide(hiding[0], weights),
 		}
 		weighed.append(bot_id)
 		fetch_scores.append(bot.errand_weighing[FETCH][3])
@@ -133,15 +145,22 @@ func think(world: BotMatch, team: MatchTeam) -> void:
 
 
 # Its errand, by the technique -- or, planted for the effects test, always
-# back once a round is spent, or never.
+# back once a round is spent, or never; and always breaking off to heal
+# below a fixed health: to hide if it can, else home.
 func _choose_errand(team: MatchTeam, bot: MatchBot) -> void:
 	var back: float = bot.errand_weighing[RESUPPLY][3]
 	var fetch: float = bot.errand_weighing[FETCH][3] if fetcher[team.side] == bot.id else 0.0
+	var hide: float = bot.errand_weighing[HIDE][3]
 	if team.resupply_rule == ALWAYS and bot.errand_weighing[RESUPPLY][0] > 0.0:
 		back = INF
 	elif team.resupply_rule == NEVER:
 		back = 0.0
-	bot.errand = ErrandChoice.choose(back, fetch)
+	if team.heal_rule == ALWAYS:
+		var below: bool = bot.health < MatchHealth.ALWAYS_BELOW
+		var can_hide: bool = bot.hide_spot != -1
+		hide = INF if below and can_hide else 0.0
+		back = INF if below and not can_hide else back
+	bot.errand = ErrandChoice.choose(back, fetch, hide)
 
 
 ## The rules' weights, as the technique takes them.
@@ -150,6 +169,7 @@ static func weights_of(rules: MatchRules) -> ErrandChoice.Weights:
 	weights.resupply_walk = rules.resupply_walk_weight
 	weights.leave_holding = rules.resupply_hold_weight
 	weights.leave_attacking = rules.resupply_attack_weight
+	weights.health_worth = rules.health_worth
 	weights.power_worth = rules.power_worth
 	weights.power_walk = rules.power_walk_weight
 	weights.power_danger = rules.power_danger_weight
@@ -157,9 +177,10 @@ static func weights_of(rules: MatchRules) -> ErrandChoice.Weights:
 
 
 ## What going back is weighed on, for `bot`: the share of its rounds the
-## base would give back, whether its streak earned the power weapon, the
-## walk to its base, whether it is attacking, and whether it has no round
-## left. A power weapon with rounds in it is given nothing at the base --
+## base would give back, the share of its health it would and how exposed
+## it is where it stands (`MatchHealth.exposure`), whether its streak
+## earned the power weapon, the walk to its base, whether it is attacking,
+## and whether it has no round left. A power weapon with rounds in it is given nothing at the base --
 ## it changes for a rifle only once empty -- so its spent share is no gain:
 ## counted as one, a sharp team's power holders went back half full and
 ## stood at their base for the rest of the match (T67, measured).
@@ -169,6 +190,9 @@ func resupply_facts(world: BotMatch, team: MatchTeam, bot: MatchBot) -> ErrandCh
 	var facts := ErrandChoice.Resupply.new()
 	var refilled: bool = bot.weapon == RIFLE or bot.ammo <= 0
 	facts.spent = 1.0 - float(bot.ammo + bot.reserve) / full if refilled else 0.0
+	# Planted: a team that never breaks off to heal counts no health.
+	facts.hurt = 0.0 if team.heal_rule == NEVER else 1.0 - float(bot.health) / rules.health
+	facts.exposure = MatchHealth.exposure(world, team, bot) if facts.hurt > 0.0 else 0.0
 	facts.earned_power = bot.weapon == RIFLE and bot.streak >= rules.streak_for_power
 	facts.walk_seconds = _walk_seconds(world, _base_steps[bot.team], bot)
 	facts.attacking = team.bot_modes.get(bot.id, MatchTeam.HOLD) == MatchTeam.ATTACK
@@ -190,10 +214,13 @@ func fetch_facts(world: BotMatch, team: MatchTeam, bot: MatchBot) -> ErrandChoic
 	return facts
 
 
-## Where an errand sends `bot`: its base, or the power weapon.
+## Where an errand sends `bot`: its base, the power weapon, or where it
+## hides.
 static func errand_place(world: BotMatch, bot: MatchBot) -> Vector2:
 	if bot.errand == FETCH:
 		return world.arena.power_place
+	if bot.errand == HIDE:
+		return bot.hide_place
 	return world.arena.resupply[BotMatch.TEAM_NAMES[bot.team]]
 
 

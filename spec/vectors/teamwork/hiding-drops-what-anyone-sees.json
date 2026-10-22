@@ -1,0 +1,69 @@
+{
+ "name": "hiding-drops-what-anyone-sees",
+ "why": "Asked to hide, threat weights at zero, nearness alone: the nearest spot (2 m) is covered from the main threat and fires on it, but a second threat sees it -- seen. The one at 6 m is hidden from all, 14 of 20 by nearness; the one at 10 m too, 10. The nearest hidden wins.",
+ "kind": "positions",
+ "weights": {
+  "partial_cover": 0.0,
+  "line_of_fire": 0.0,
+  "other_cover": 0.0,
+  "nearness": 20.0,
+  "preferred_range": 0.0,
+  "preferred_metres": 15.0,
+  "range_band": 10.0,
+  "max_travel": 20.0,
+  "cover_from_all": true
+ },
+ "query": {
+  "bot": 0,
+  "has_threat": true,
+  "use_claims": true,
+  "candidates": [
+   {
+    "id": "near",
+    "travel": 2.0,
+    "threat_distance": 8.0,
+    "covered_from_main": true,
+    "fires_on_main": true,
+    "covered_from_others": 0.0,
+    "in_area": true,
+    "claimed_by": -1,
+    "hidden_from_all": false
+   },
+   {
+    "id": "mid",
+    "travel": 6.0,
+    "threat_distance": 12.0,
+    "covered_from_main": true,
+    "fires_on_main": false,
+    "covered_from_others": 1.0,
+    "in_area": true,
+    "claimed_by": -1,
+    "hidden_from_all": true
+   },
+   {
+    "id": "far",
+    "travel": 10.0,
+    "threat_distance": 16.0,
+    "covered_from_main": true,
+    "fires_on_main": false,
+    "covered_from_others": 1.0,
+    "in_area": true,
+    "claimed_by": -1,
+    "hidden_from_all": true
+   }
+  ]
+ },
+ "expect": {
+  "statuses": [
+   "seen",
+   "kept",
+   "kept"
+  ],
+  "scores": [
+   0.0,
+   14.0,
+   10.0
+  ],
+  "chosen": 1
+ }
+}

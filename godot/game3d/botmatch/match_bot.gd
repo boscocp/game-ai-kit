@@ -126,6 +126,16 @@ var chose_at: float = -INF
 ## Who hit it last, for the kill when it falls (-1: nobody), and when.
 var last_hit_by: int = -1
 var hurt_at: float = -INF
+## What regeneration has given back short of a whole point (`MatchHealth`).
+var regeneration_carry: float = 0.0
+## Where it would hide to heal, as its last weighing found: the place's
+## index and position (-1 and INF: nowhere).
+var hide_spot: int = -1
+var hide_place: Vector2 = Vector2.INF
+## When it last looked for a place to hide, and the enemies its team knew
+## of then, by id.
+var hide_asked_at: float = -INF
+var hide_asked_for: Array = []
 ## Whether it looks along the line again before each shot. Always, for an
 ## honest bot; `botmatch_effects.gd` plants one that does not, and the
 ## honesty count must catch its shots at targets gone behind cover.

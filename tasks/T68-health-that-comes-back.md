@@ -73,6 +73,29 @@ python3 scripts/check_modules.py
 python3 scripts/check_doc_freshness.py
 ```
 
+## Where this was done differently, and why
+
+- **Not in T67's selector.** Step 3 asked for hiding and going home to be
+  actions in `ActionChoice`. They are errands in `ErrandChoice`, beside
+  going back for rounds and fetching the power weapon, decided each team
+  decision in `MatchSupply.think`. Two reasons. `ActionChoice` multiplies
+  answers in [0, 1], so it can veto and grade but cannot set a gain
+  against a cost in one unit -- which is what step 3 asks for ("a cost and
+  a gain in one unit"). And an errand changes where the bot is sent,
+  which is the team's (`TeamTactics`), not a single decision's action.
+  Each bot is still weighed on its own facts; the team only carries the
+  answer out.
+- **The health gain is priced by exposure** (the wave 76 review). Health
+  comes back while a bot stays, too, unless it is hit; so what breaking
+  off gains is the hit it avoids. Without that, the constant cost of
+  leaving made the weighing a threshold in disguise.
+- **The healing claim stays the weak one, and says what it cannot catch.**
+  "At least as long" passes a weighing that does nothing. The review asked
+  for "longer"; it was written and measured after the fixes and failed --
+  weighing +10.0 +- 22.7 s, never healing +25.4 +- 23.7, below half -53.1
+  +- 20.8 -- so the gate holds the weak claim, prints the strong one, and
+  says so (`docs/godot/botmatch.md`).
+
 ## Manual check
 
 Play `make demo-botmatch` and take a bot over (T).

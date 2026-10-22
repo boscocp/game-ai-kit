@@ -118,8 +118,9 @@ def answer_errands(vector: dict) -> dict:
     query = vector["query"]
     return {"resupply": [errands.weigh_resupply(errands.Resupply(**each), weights) for each in query["resupply"]],
             "fetch": [errands.weigh_fetch(errands.Fetch(**each), weights) for each in query["fetch"]],
+            "hide": [errands.weigh_hide(errands.Hide(**each), weights) for each in query["hide"]],
             "fetcher": [errands.fetcher(scores) for scores in query["teams"]],
-            "chosen": [errands.choose(back, out) for back, out in query["pairs"]]}
+            "chosen": [errands.choose(*pair) for pair in query["pairs"]]}
 
 
 ANSWER = {"errands": answer_errands, "action": answer_action, "passage": answer_passage, "positions": answer_positions, "influence": answer_influence,

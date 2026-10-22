@@ -8,7 +8,9 @@
 ##   * fires on it: the line from a bot standing on the spot to its chest is
 ##     clear, and within range;
 ##   * covered from the others: the share of the other threats whose eyes
-##     cannot see the crouched bot.
+##     cannot see the crouched bot;
+##   * hidden from all: covered from the main threat and from every other
+##     one asked -- what a bot hiding to heal needs (T68).
 ##
 ## Travel is the straight distance, not the walked one. A walked distance is
 ## an A* per candidate; the straight one is what CryEngine's own queries
@@ -38,6 +40,7 @@ static func build(world: BotMatch, team: MatchTeam, bot: MatchBot, place: int, a
 	var chest: Vector3 = world.arena.above(main, rules.chest_height)
 	candidate.fires_on_main = candidate.threat_distance <= rules.max_range and world.arena.clear_line(standing, chest)
 	candidate.covered_from_others = _share_covered(world, threats.slice(1), at)
+	candidate.hidden_from_all = candidate.covered_from_main and (threats.size() == 1 or candidate.covered_from_others >= 1.0)
 	return candidate
 
 

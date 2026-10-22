@@ -13,14 +13,16 @@ import json, math, pathlib, sys
 WEIGHTS = {"partial_cover": 40.0, "line_of_fire": 20.0, "other_cover": 20.0, "nearness": 20.0,
            "preferred_range": 10.0, "preferred_metres": 15.0, "range_band": 10.0, "max_travel": 20.0}
 
-def candidate(id, travel, threat=0.0, covered=False, fires=False, others=0.0, area=True, claimed=-1):
+def candidate(id, travel, threat=0.0, covered=False, fires=False, others=0.0, area=True, claimed=-1, hidden=False):
     return {"id": id, "travel": travel, "threat_distance": threat, "covered_from_main": covered,
-            "fires_on_main": fires, "covered_from_others": others, "in_area": area, "claimed_by": claimed}
+            "fires_on_main": fires, "covered_from_others": others, "in_area": area, "claimed_by": claimed,
+            "hidden_from_all": hidden}
 
 def status(bot, c, w, threat, claims):
     if c["travel"] > w["max_travel"]: return "too_far"
     if not c["in_area"]: return "outside_area"
     if claims and c["claimed_by"] not in (-1, bot): return "claimed"
+    if threat and w.get("cover_from_all", False) and not c["hidden_from_all"]: return "seen"
     if threat and not c["covered_from_main"] and not c["fires_on_main"]: return "exposed"
     return "kept"
 
@@ -31,12 +33,12 @@ def score(c, w, threat):
     s += w["other_cover"] * c["covered_from_others"]
     return s + w["preferred_range"] * max(0.0, 1 - abs(c["threat_distance"] - w["preferred_metres"]) / w["range_band"])
 
-def positions(name, why, bot, candidates, threat, claims):
-    statuses = [status(bot, c, WEIGHTS, threat, claims) for c in candidates]
-    scores = [score(c, WEIGHTS, threat) if s == "kept" else 0.0 for c, s in zip(candidates, statuses)]
+def positions(name, why, bot, candidates, threat, claims, weights=WEIGHTS):
+    statuses = [status(bot, c, weights, threat, claims) for c in candidates]
+    scores = [score(c, weights, threat) if s == "kept" else 0.0 for c, s in zip(candidates, statuses)]
     kept = [i for i, s in enumerate(statuses) if s == "kept"]
     chosen = max(kept, key=lambda i: (scores[i], -i)) if kept else -1
-    return {"name": name, "why": why, "kind": "positions", "weights": WEIGHTS,
+    return {"name": name, "why": why, "kind": "positions", "weights": weights,
             "query": {"bot": bot, "has_threat": threat, "use_claims": claims, "candidates": candidates},
             "expect": {"statuses": statuses, "scores": scores, "chosen": chosen}}
 
@@ -335,6 +337,13 @@ def vectors():
                     "Two squads equally far from the one point with room for one of them: the first listed "
                     "gets it, the second is sent on to the far point.",
                     [squad("s1", -5, 0), squad("s2", 5, 0)], [objective("A", 0, 0), objective("B", 0, 30)])
+    yield positions("hiding-drops-what-anyone-sees",
+                    "Asked to hide, threat weights at zero, nearness alone: the nearest spot (2 m) is covered "
+                    "from the main threat and fires on it, but a second threat sees it -- seen. The one at 6 m "
+                    "is hidden from all, 14 of 20 by nearness; the one at 10 m too, 10. The nearest hidden wins.",
+                    0, [candidate("near", 2.0, 8.0, True, True, 0.0), candidate("mid", 6.0, 12.0, True, False, 1.0, hidden=True),
+                        candidate("far", 10.0, 16.0, True, False, 1.0, hidden=True)], True, True,
+                    dict(WEIGHTS, partial_cover=0.0, line_of_fire=0.0, other_cover=0.0, preferred_range=0.0, cover_from_all=True))
     yield positions("equal-scores-go-to-the-first",
                     "Two candidates with the same facts score the same; the first listed wins.",
                     1, [candidate("left", 5.0, 15.0, True, True), candidate("right", 5.0, 15.0, True, True)], True, True)
@@ -511,16 +520,26 @@ def action_vectors():
 
 # The bot match's own numbers, from its rules.json, copied here by hand.
 ERRAND_WEIGHTS = {"resupply_walk": 0.05, "leave_holding": 0.3, "leave_attacking": 0.5,
-                  "power_worth": 1.0, "power_walk": 0.08, "power_danger": 0.3}
+                  "health_worth": 1.0, "power_worth": 1.0, "power_walk": 0.08, "power_danger": 0.3, "hide_second": 0.02}
 
-def going_back(spent=0.0, earned=False, walk=0.0, attacking=False, empty=False):
-    return {"spent": spent, "earned_power": earned, "walk_seconds": walk, "attacking": attacking, "empty": empty}
+def going_back(spent=0.0, earned=False, walk=0.0, attacking=False, empty=False, hurt=0.0, exposure=0.0):
+    return {"spent": spent, "hurt": hurt, "exposure": exposure, "earned_power": earned, "walk_seconds": walk, "attacking": attacking, "empty": empty}
 
 def fetching(available=True, walk=0.0, near=0):
     return {"available": available, "walk_seconds": walk, "enemies_near": near}
 
+def hiding(available=True, hurt=0.0, walk=0.0, wait=0.0, attacking=False, exposure=1.0):
+    return {"available": available, "hurt": hurt, "exposure": exposure, "walk_seconds": walk, "wait_seconds": wait, "attacking": attacking}
+
+def weigh_hide(f, w):
+    if not f["available"]:
+        return [0.0, 0.0, 0.0, 0.0]
+    gain, away = f["hurt"] * f["exposure"] * w["health_worth"], f["walk_seconds"] + f["wait_seconds"]
+    leaving = w["leave_attacking"] if f["attacking"] else w["leave_holding"]
+    return [gain, away, leaving, gain - away * w["hide_second"] - leaving]
+
 def weigh_back(f, w):
-    gain = f["spent"] + (w["power_worth"] if f["earned_power"] else 0.0)
+    gain = f["spent"] + f["hurt"] * f["exposure"] * w["health_worth"] + (w["power_worth"] if f["earned_power"] else 0.0)
     leaving = 0.0 if f["empty"] else (w["leave_attacking"] if f["attacking"] else w["leave_holding"])
     return [gain, f["walk_seconds"], leaving, gain - f["walk_seconds"] * w["resupply_walk"] - leaving]
 
@@ -537,17 +556,21 @@ def sent(scores):
             best, top = index, score
     return best
 
-def errand_of(back, out):
-    if back > 0.0 and back >= out:
+def errand_of(back, out, hide=0.0):
+    best = max(back, out, hide)
+    if best <= 0.0:
+        return ""
+    if back >= best:
         return "resupply"
-    return "fetch power" if out > 0.0 else ""
+    return "fetch power" if out >= best else "hide to heal"
 
-def errands(name, why, back=(), out=(), teams=(), pairs=()):
-    w = ERRAND_WEIGHTS
+def errands(name, why, back=(), out=(), teams=(), pairs=(), hide=(), weights=ERRAND_WEIGHTS):
+    w = weights
     return {"name": name, "why": why, "kind": "errands", "weights": w,
-            "query": {"resupply": list(back), "fetch": list(out), "teams": list(teams), "pairs": list(pairs)},
+            "query": {"resupply": list(back), "fetch": list(out), "hide": list(hide), "teams": list(teams), "pairs": list(pairs)},
             "expect": {"resupply": [weigh_back(f, w) for f in back], "fetch": [weigh_out(f, w) for f in out],
-                       "fetcher": [sent(scores) for scores in teams], "chosen": [errand_of(b, o) for b, o in pairs]}}
+                       "hide": [weigh_hide(f, w) for f in hide],
+                       "fetcher": [sent(scores) for scores in teams], "chosen": [errand_of(*pair) for pair in pairs]}}
 
 def errand_vectors():
     yield errands("back-for-rounds-when-spent-and-near",
@@ -558,6 +581,25 @@ def errand_vectors():
                   "No round left, attacking, ten seconds away: leaving costs it nothing, 1 - 0.5 = 0.5. With a "
                   "tenth left it has a post: 0.9 - 0.5 - 0.5 = -0.1.",
                   back=[going_back(1.0, walk=10.0, attacking=True, empty=True), going_back(0.9, walk=10.0, attacking=True)])
+    yield errands("home-heals-whole-so-health-counts",
+                  "Full of rounds, three quarters of its health gone, under fire (exposure 1), four seconds from its "
+                  "base, holding: 0 + 0.75 - 0.2 - 0.3 = 0.25, worth going to be healed whole. A quarter gone: "
+                  "-0.25, it stays.",
+                  back=[going_back(walk=4.0, hurt=0.75, exposure=1.0), going_back(walk=4.0, hurt=0.25, exposure=1.0)])
+    yield errands("unseen-it-heals-where-it-stands",
+                  "The review's case: three quarters gone, four seconds from its base, no enemy known and no hit "
+                  "lately (exposure 0): its health comes back where it stands, so the health is worth nothing to "
+                  "an errand, -0.5, and it stays. Half exposed: 0.375 - 0.5 = -0.125, still stays. Hiding, unseen: "
+                  "0 - 10 x 0.02 - 0.3 = -0.5.",
+                  back=[going_back(walk=4.0, hurt=0.75), going_back(walk=4.0, hurt=0.75, exposure=0.5)],
+                  hide=[hiding(hurt=0.75, walk=2.0, wait=8.0, exposure=0.0)])
+    yield errands("health-worth-half-of-the-rounds",
+                  "Health worth 0.5 of all the rounds: three quarters gone under fire, four seconds from home, "
+                  "holding: 0.375 - 0.2 - 0.3 = -0.125, it stays; hiding two seconds off with an eight-second wait: "
+                  "0.375 - 0.2 - 0.3 = -0.125.",
+                  back=[going_back(walk=4.0, hurt=0.75, exposure=1.0)],
+                  hide=[hiding(hurt=0.75, walk=2.0, wait=8.0)],
+                  weights=dict(ERRAND_WEIGHTS, health_worth=0.5))
     yield errands("the-streak-earns-the-power-weapon-at-home",
                   "Full of rounds, but five kills earned the power weapon at its base: 0 + 1 - 0.2 - 0.3 = 0.5.",
                   back=[going_back(0.0, earned=True, walk=4.0)])
@@ -573,6 +615,18 @@ def errand_vectors():
                   "Equal scores, 0.5 each: back. Back 0.25, fetch 0.5: fetch. Back exactly 0: fetch 0.25. Both "
                   "0, or both below: no errand.",
                   pairs=[[0.5, 0.5], [0.25, 0.5], [0.0, 0.25], [0.0, 0.0], [-1.0, -1.0]])
+
+    yield errands("hide-when-the-wound-is-deep-and-the-wait-short",
+                  "Under fire (exposure 1). Hurt 0.75, cover two seconds off, eight seconds' wait, holding: "
+                  "0.75 - 10 x 0.02 - 0.3 = 0.25, "
+                  "worth hiding. Hurt 0.25: -0.25, a scratch is not. Hurt 0.75 attacking with a 25 s wait: -0.29. "
+                  "Nowhere to hide: nothing at all.",
+                  hide=[hiding(hurt=0.75, walk=2.0, wait=8.0), hiding(hurt=0.25, walk=2.0, wait=8.0),
+                        hiding(hurt=0.75, walk=2.0, wait=25.0, attacking=True), hiding(False, 0.75, 2.0, 8.0)])
+    yield errands("the-highest-of-three-and-ties-go-back-then-fetch",
+                  "Hide 0.5 over back 0.25 and fetch 0: hide. All three 0.5: back. Fetch and hide 0.5, back 0.25: "
+                  "fetch. Hide alone below zero: no errand.",
+                  pairs=[[0.25, 0.0, 0.5], [0.5, 0.5, 0.5], [0.25, 0.5, 0.5], [0.0, 0.0, -0.25]])
 
 def posture_vectors():
     yield action("the-bot-match-weighs-its-posture",

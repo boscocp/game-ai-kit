@@ -2,8 +2,9 @@
 ## first-person shooter: a crosshair where the shot goes, a hit marker when
 ## it struck someone -- larger, with HEADSHOT, when it struck a head -- the
 ## screen's edge flashing red when they are hit,
-## their health, weapon, rounds and kill streak in a corner, and a reload's
-## progress under the crosshair while it lasts.
+## their health, weapon, rounds and kill streak in a corner -- with the
+## seconds until their health starts to come back, or that it is coming
+## back (T68) -- and a reload's progress under the crosshair while it lasts.
 ##
 ## Drawn only while a bot is played; watching, the panel and map say more.
 class_name BotMatchHud
@@ -50,10 +51,22 @@ func _draw() -> void:
 	var weapon: String = "POWER" if bot.weapon == MatchSupply.POWER else "rifle"
 	var streak: String = "    streak %d/%d" % [bot.streak, world.rules.streak_for_power]
 	var dry: String = "  -- back to your base for rounds" if bot.ammo + bot.reserve <= 0 else ""
-	var status: String = "%d health    %s %d / %d%s%s%s" % [bot.health, weapon, bot.ammo, bot.reserve, reloading, streak, dry]
+	var status: String = "%s    %s %d / %d%s%s%s" % [health_text(world.rules, bot, world.time), weapon, bot.ammo,
+			bot.reserve, reloading, streak, dry]
 	# Bottom left: the bottom right is where the rifle is.
 	var at := Vector2(30.0, size.y - 30.0)
 	draw_string(ThemeDB.fallback_font, at, status, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 26, CROSSHAIR)
+
+
+## The played bot's health as the corner says it: whole, coming back, or
+## the seconds until it starts to (the rules' delay since the last hit).
+static func health_text(rules: MatchRules, bot: MatchBot, now: float) -> String:
+	if bot.health >= mini(rules.regeneration_to, rules.health):
+		return "%d health" % bot.health
+	var left: float = MatchHealth.delay_left(rules, bot, now)
+	if left <= 0.0:
+		return "%d health, coming back" % bot.health
+	return "%d health, back in %.0f s" % [bot.health, ceilf(left)]
 
 
 # "RELOADING" and a bar filling as it goes, under the crosshair.

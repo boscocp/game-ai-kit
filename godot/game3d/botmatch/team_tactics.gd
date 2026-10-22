@@ -38,12 +38,14 @@ static func think(world: BotMatch, team: MatchTeam, now: float) -> void:
 			choose_spot(world, team, bot, now)
 
 
-# A bot on an errand gives up its spot and heads for the errand's place;
-# back from it, it chooses a spot at once.
+# A bot on an errand gives up its spot and heads for the errand's place --
+# hiding, it claims the place it hides at, so two do not share it; back
+# from it, it chooses a spot at once.
 static func _run_errand(world: BotMatch, team: MatchTeam, bot: MatchBot) -> void:
-	team.claim(bot.id, -1)
+	var spot: int = bot.hide_spot if bot.errand == MatchSupply.HIDE else -1
+	team.claim(bot.id, spot)
 	bot.chose_at = -INF
-	world.send(bot, MatchSupply.errand_place(world, bot), -1)
+	world.send(bot, MatchSupply.errand_place(world, bot), spot)
 
 
 # A person's bot claims the place it stands on, if it stands on one, so its

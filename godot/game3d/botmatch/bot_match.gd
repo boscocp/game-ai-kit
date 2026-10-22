@@ -9,8 +9,9 @@
 ## (`MatchSenses`), and then every bot decides from what it perceived
 ## (`MatchBot.decide` over `MatchPercepts`) -- all perceive before any
 ## decides, so no bot sees another's new posture before that one has seen
-## its own. Then every bot acts on what it chose, points are captured, and
-## the score grows by each point held. One random generator, seeded, and
+## its own. Then every bot acts on what it chose, takes what its base gives,
+## and gets back the health that has come back (`MatchHealth`); points are
+## captured, and the score grows by each point held. One random generator, seeded, and
 ## bots taken in id order where order cannot tell one side from the other:
 ## the same seed is the same match.
 ##
@@ -117,12 +118,15 @@ func step() -> void:
 	_keep_bodies_apart()
 	for bot: MatchBot in bots:
 		bot.velocity = (bot.position - before[bot.id]) / rules.step
-	for bot: MatchBot in bots:
-		if bot.alive():
-			supply.touch(self, bot)
+	# The dead first: a bot a lethal hit took this step is not healed by its
+	# base, nor by regeneration, on the way down (the T68 review's finding).
 	for bot: MatchBot in bots:
 		if bot.alive() and bot.health <= 0:
 			killed(bot, bot.last_hit_by)
+	for bot: MatchBot in bots:
+		if bot.alive():
+			supply.touch(self, bot)
+			stats[bot.team].regenerated += MatchHealth.regenerate(rules, bot, time, rules.step)
 	_capture(rules.step)
 	_count(rules.step)
 	time += rules.step
@@ -273,6 +277,7 @@ func record_shot(shooter: MatchBot, target: int, hit: bool, to: Vector3, zone: S
 		recent_shots.pop_front()
 	if hit:
 		bots[target].hurt_at = time
+		bots[target].regeneration_carry = 0.0
 
 
 ## A bot was killed by `killer` (-1: nobody); count it on both sides.
@@ -282,6 +287,11 @@ func killed(victim: MatchBot, killer: int) -> void:
 	# A body seen falling is not a threat any more.
 	teams[1 - victim.team].remembered.erase(victim.id)
 	stats[victim.team].deaths += 1
+	var from_base: float = victim.position.distance_to(arena.resupply.get(TEAM_NAMES[victim.team], victim.position))
+	if from_base <= MatchStats.NEAR_BASE:
+		stats[victim.team].deaths_near_base += 1
+	else:
+		stats[victim.team].deaths_far += 1
 	teams[victim.team].losses[teams[victim.team].squad_of(victim.id)].append(time)
 	if killer != -1:
 		bots[killer].streak += 1
@@ -308,9 +318,14 @@ func respawn(bot: MatchBot) -> void:
 	# Facing the points, wherever the arena puts the spawn.
 	bot.facing = (_centre_of_points() - bot.position).angle()
 	bot.health = rules.health
+	bot.regeneration_carry = 0.0
 	MatchSupply.arm_rifle(bot, rules)
 	bot.streak = 0
 	bot.errand = MatchSupply.NO_ERRAND
+	bot.hide_spot = -1
+	bot.hide_place = Vector2.INF
+	bot.hide_asked_at = -INF
+	bot.hide_asked_for = []
 	bot.reload_left = 0.0
 	bot.respawn_left = 0.0
 	bot.spot = -1
@@ -474,6 +489,11 @@ func _count(delta: float) -> void:
 	for bot: MatchBot in bots:
 		stats[bot.team].sprint_seconds += delta if bot.alive() and bot.sprinting else 0.0
 		stats[bot.team].dry_seconds += delta if bot.alive() and bot.ammo + bot.reserve <= 0 else 0.0
+		stats[bot.team].hiding_seconds += delta if bot.alive() and bot.errand == MatchSupply.HIDE else 0.0
+		if bot.alive():
+			var base: Vector2 = arena.resupply.get(TEAM_NAMES[bot.team], bot.position)
+			stats[bot.team].base_metre_seconds += delta * bot.position.distance_to(base)
+			stats[bot.team].living_seconds += delta
 
 
 # Pairs of one team's bots in cover within BUNCHED metres of each other: each

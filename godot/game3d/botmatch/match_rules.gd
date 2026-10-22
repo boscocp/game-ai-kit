@@ -33,6 +33,17 @@ var resupply_radius: float = 1.5
 var resupply_walk_weight: float = 0.05
 var resupply_hold_weight: float = 0.3
 var resupply_attack_weight: float = 0.5
+## What a whole bar of health is worth to an errand, as all of a bot's
+## rounds are 1: the base heals a bot whole (T68), so going back is worth
+## the health it is missing as well as the rounds.
+var health_worth: float = 1.0
+## What hiding to heal is weighed by (T68): each second away from its post
+## -- the walk to cover and the wait for its health -- and how far a bot
+## looks for cover from every enemy its team knows of. A second away costs
+## less than a second's walk back to the base, 0.05, which counts only the
+## way there of a walk both ways.
+var hide_second_weight: float = 0.02
+var hide_metres: float = 15.0
 ## The power weapon: three times the rifle's damage, 20 rounds and no
 ## more, back 60 s after it is taken, picked up within a metre.
 var power_damage_multiplier: float = 3.0
@@ -64,6 +75,16 @@ var make_way_shooting: float = 1.5
 var make_way_reloading: float = 0.5
 var make_way_covering: float = 3.0
 var respawn_time: float = 4.0
+## Health that comes back (T68, the owner's ask): after
+## `regeneration_delay` seconds without a hit -- the owner's ten -- health
+## comes back `regeneration_rate` points a second, up to `regeneration_to`
+## and never past the rules' `health`. Twenty a second fills an empty bar in
+## five seconds, a little slower than Halo's shields (four, Halo: Combat
+## Evolved) -- "aos poucos", gradually, as the owner asked; the sources are
+## in `docs/concepts/shooter-ai.md`.
+var regeneration_delay: float = 10.0
+var regeneration_rate: float = 20.0
+var regeneration_to: int = 100
 var speed: float = 4.5
 ## Sprinting (Shift, the owner's ask): faster, and no shot while it lasts
 ## -- the game's rule. When a bot sprints is its own weighing (`paces` in

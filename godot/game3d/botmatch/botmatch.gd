@@ -113,7 +113,8 @@ func step_decision() -> void:
 
 ## What the AI is reasoning with now: the watched bot's choice of spot, with
 ## every candidate's status and score, where its last shot was aimed and
-## what each zone was worth, and every squad's confidence, state and order.
+## what each zone was worth, its health and where it would hide (T68), and
+## every squad's confidence, state and order.
 func decision_overlay() -> Dictionary:
 	var bot: MatchBot = world.bots[_watched]
 	var team: MatchTeam = world.teams[bot.team]
@@ -133,8 +134,17 @@ func decision_overlay() -> Dictionary:
 	var watched: Dictionary = {"bot": bot.id, "action": bot.action, "chosen": chosen, "candidates": candidates,
 			"aim": BotMatchLines.aim_overlay(bot), "errand": bot.errand if bot.errand != "" else "none",
 			"errands": bot.errand_weighing if not bot.errand_weighing.is_empty() else {"weighed": "not yet"},
-			"passage": BotMatchLines.passage_overlay(bot), "actions": BotMatchLines.action_overlay(bot)}
+			"passage": BotMatchLines.passage_overlay(bot), "actions": BotMatchLines.action_overlay(bot),
+			"health": _health_overlay(bot)}
 	return {"time": world.time, "watched": watched, "squads": _squads_overlay()}
+
+
+# The watched bot's health (T68): how much, how long until it comes back,
+# and where it would hide to let it.
+func _health_overlay(bot: MatchBot) -> Dictionary:
+	var hiding: String = world.place_id(bot.hide_spot) if bot.hide_spot != -1 else "nowhere asked"
+	return {"health": bot.health, "comes back in": MatchHealth.delay_left(world.rules, bot, world.time),
+			"would hide at": hiding}
 
 
 func _squads_overlay() -> Array:
@@ -357,7 +367,8 @@ func _panel_text() -> String:
 		var switches: Array = [team.name, _on(team.use_claims), _on(team.use_commander), _on(team.may_retreat)]
 		lines.append("%s: claims %s, commander %s, retreat %s" % switches)
 	var target: String = " at bot %d" % bot.target if bot.target != -1 else ""
-	var you: String = "  -- YOU: %d/%d ammo, %d health" % [bot.ammo, world.rules.magazine, bot.health] if _played == bot.id else ""
+	var health: String = BotMatchHud.health_text(world.rules, bot, world.time)
+	var you: String = "  -- YOU: %d/%d ammo, %s" % [bot.ammo, world.rules.magazine, health] if _played == bot.id else ""
 	lines.append("watching bot %d (%s): %s%s%s" % [bot.id, world.teams[bot.team].name, bot.action, target, you])
 	lines.append(BotMatchLines.action_line(bot))
 	lines.append(BotMatchLines.aim_line(bot))
