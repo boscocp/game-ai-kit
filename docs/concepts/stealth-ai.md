@@ -474,9 +474,22 @@ chosen to be read and measured rather than taken from any game:
   NPC" [McIntosh 2015]; at its slowest, 0.10 a second, about ten;
 - **the off-screen factor**, a half, is Walsh's [Walsh 2015].
 
-The zones' distances and certainties, the decay, the caution floor and its
-seconds, the stances' point counts and the events' radii and lifetimes are
-the kit's own, and a sentence on each would be a guess about some game.
+The rest are the kit's own, and a sentence on each would be a guess about
+some game: the zones' distances, openings and certainties; `dark_share`
+(0.3 and 0.25) and `motion_bonus` (0.15 and 0.2); the decay; the caution
+floor and its seconds; the stances' point counts; `heard_rate` (0.6 for
+the patrol, 0.4 for the sentry); `off_screen_beyond` (8 m) and
+`minor_priority` (1); the fuzzy sets' breakpoints; and the events' radii
+and lifetimes.
+
+Two limits of what was built, for T70. Sound floods the walk graph, which
+is 4-connected: a radius is a diamond, not a circle, ground slow to walk
+is quieter to hear across, a door is only open or shut, and there is no
+height -- an octile graph or a sound graph of its own would fix the first.
+And in the properties a cell counts as seen when it is in a zone with a
+clear line; in T70 it must mean that a target standing there would be
+perceived, given its stance and the light, or the belief zeroes the cell
+where a hidden player really is and loses them for good.
 
 `make test-infiltration-properties` holds the claims T69 asks for on 150
 generated levels and both types, each with a planted case it caught

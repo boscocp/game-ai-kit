@@ -12,9 +12,9 @@
 #   4. sound goes round, not through -- planted: Euclidean distance;
 #   5. off-screen halving only lowers -- planted: a factor above 1;
 #   6. the belief is honest -- planted: diffusion through a wall;
-#   7. portable: every claim runs on generated levels, and a guard type
-#      whose data names a cell of one level is broken by them -- planted:
-#      a row with a `post_cell`.
+#   7. portable: every claim runs on generated levels; no guard type's row
+#      names a cell, and a noise posted at a cell of one level is broken by
+#      them -- planted: a row with a `post_cell`, for each half.
 #
 # Engine errors are counted (`PerceptionErrors`): a SCRIPT ERROR aborts the
 # function it is in and the script would still print "0 failure(s)".
@@ -82,7 +82,9 @@ func _sound_claims(types: Dictionary[String, GuardType], data: Dictionary) -> Ar
 	planted_row["post_cell"] = [7, 3]
 	var post := Vector2i(int(planted_row["post_cell"][0]), int(planted_row["post_cell"][1]))
 	failures.append_array(_pair("portable: no guard type names a cell",
-		_rows_name_no_cell(data["guards"]) + SoundClaims.goes_round(SoundClaims.along_the_level, SoundClaims.anywhere, SEEDS),
+		_rows_name_no_cell(data["guards"]), _rows_name_no_cell({"planted": planted_row})))
+	failures.append_array(_pair("portable: generated levels break a noise posted on one",
+		SoundClaims.goes_round(SoundClaims.along_the_level, SoundClaims.anywhere, SEEDS),
 		SoundClaims.goes_round(SoundClaims.along_the_level, func(_level: GridGraph, _rng: RandomNumberGenerator) -> Vector2i: return post, SEEDS)))
 	return failures
 
@@ -99,7 +101,9 @@ func _pair(claim: String, honest: Array[String], planted: Array[String]) -> Arra
 
 
 # Every row's key that names a place on one level -- a cell, a position --
-# is a finding: a guard type must cope on any level.
+# is a finding: a guard type must cope on any level. It matches by name
+# only (`*cell`, `*position`, `*place`): a key called "spawn": [7, 3] would
+# pass it, and only the generated levels would catch that one.
 func _rows_name_no_cell(rows: Dictionary) -> Array[String]:
 	var found: Array[String] = []
 	for type_name: String in rows:

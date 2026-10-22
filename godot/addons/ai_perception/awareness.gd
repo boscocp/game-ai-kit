@@ -15,7 +15,9 @@
 ##
 ## - falling, one step never leaves more than one phase behind -- it stops at
 ##   the floor of the phase below -- so every phase in between is passed
-##   through, however long the step [Leonard 2003];
+##   through, however long the step [Leonard 2003]. The price: one long
+##   step falls less than many short ones of the same total, because it
+##   stops at that floor. Step at the rate the game decides, not in jumps;
 ## - after an alert, the number stays at or above the row's caution floor
 ##   for the row's seconds -- Metal Gear's evasion, Shadows' lasting
 ##   suspicion [Alexander 2009; Ubisoft 2024].
@@ -57,6 +59,27 @@ func lowest_after_falling(row: Dictionary, now: float) -> float:
 	if now < caution_until:
 		lowest = maxf(lowest, float(row["caution"]["floor"]) * float(row["peak"]))
 	return minf(lowest, value)
+
+
+## Why `row` cannot drive an awareness, or "" when it can: a positive peak,
+## phases from 0 rising strictly, a decay and caution seconds of at least 0,
+## and a caution floor below the last threshold -- at or above it, a guard
+## once alerted would stay alert for good.
+static func problem(row: Dictionary) -> String:
+	for field: String in ["peak", "decay", "phases", "caution"]:
+		if not row.has(field):
+			return "the row has no %s" % field
+	var phases: Array = row["phases"]
+	if float(row["peak"]) <= 0.0 or phases.is_empty() or float(phases[0]["at"]) != 0.0:
+		return "the peak must be above 0 and the first phase at 0"
+	for index: int in range(1, phases.size()):
+		if float(phases[index]["at"]) <= float(phases[index - 1]["at"]):
+			return "phase %s does not rise above the one before" % phases[index]["name"]
+	if float(row["decay"]) < 0.0 or float(row["caution"]["seconds"]) < 0.0:
+		return "the decay and the caution's seconds must be at least 0"
+	if float(row["caution"]["floor"]) >= float(phases[phases.size() - 1]["at"]):
+		return "the caution floor is at or above the last phase: once alert, always alert"
+	return ""
 
 
 ## The phase `number` is in: the index of the last phase whose threshold,

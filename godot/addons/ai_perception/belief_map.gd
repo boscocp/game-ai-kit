@@ -81,10 +81,15 @@ static func spread_along_edges(from: PackedFloat64Array, graph_neighbours: Array
 	return to
 
 
+# Even over the nodes not in `seen`, which is made a set first: asking the
+# array `has` for every node would be O(V x |seen|), not O(V + E).
 func _reseed(seen: PackedInt32Array) -> void:
+	var is_seen: Dictionary[int, bool] = {}
+	for node: int in seen:
+		is_seen[node] = true
 	var unseen: Array[int] = []
 	for node: int in range(shares.size()):
-		if not seen.has(node):
+		if not is_seen.has(node):
 			unseen.append(node)
 	shares.fill(0.0)
 	for node: int in unseen:

@@ -18,16 +18,17 @@ const TOLERANCE: float = 1e-9
 
 ## The sight awareness a guard of `type` reaches after WATCHED_SECONDS of a
 ## body `distance` metres straight ahead, in `light`, `moving` or not, with
-## `clear` of its three points showing. `light_seen` turns the light at its
-## feet into what the guard is told -- the honest one passes it through.
+## `clear` of its three points showing, in `stance`, `angle` degrees off the
+## facing. `light_seen` turns the light at its feet into what the guard is
+## told -- the honest one passes it through.
 static func reached(type: GuardType, distance: float, light: float, moving: bool, clear: int,
-		light_seen: Callable) -> float:
+		light_seen: Callable, stance: String = "standing", angle: float = 0.0) -> float:
 	var told: float = float(light_seen.call(light))
 	var points: Array[bool] = [clear > 0, clear > 1, clear > 2]
 	var mind := GuardMind.new(type)
 	for step: int in range(roundi(WATCHED_SECONDS / STEP_SECONDS)):
 		var percept := GuardPercept.new()
-		percept.sight = type.vision.percept(distance, 0.0, points, type.needed_for("standing"), told, moving, 0.0)
+		percept.sight = type.vision.percept(distance, angle, points, type.needed_for(stance), told, moving, 0.0)
 		percept.distance = distance
 		percept.light = told
 		percept.motion = 1.0 if moving else 0.0
@@ -36,8 +37,9 @@ static func reached(type: GuardType, distance: float, light: float, moving: bool
 
 
 ## Awareness follows exposure: nearer along the facing, into light, or
-## starting to move never lowers what is reached; outside every zone, or
-## with no point showing, nothing is.
+## starting to move never lowers what is reached; outside every zone -- too
+## far, or inside the distance but off to the side -- or with fewer points
+## showing than the stance needs, nothing is.
 static func follows_exposure(type: GuardType, light_seen: Callable) -> Array[String]:
 	var reach: float = _furthest(type)
 	var found: Array[String] = []
@@ -46,8 +48,25 @@ static func follows_exposure(type: GuardType, light_seen: Callable) -> Array[Str
 		if nearer != "":
 			return [nearer]
 	found.append_array(_more_light_and_movement(type, reach, light_seen))
-	if reached(type, reach + 1.0, 1.0, true, 3, light_seen) > 0.0 or reached(type, 1.0, 1.0, true, 0, light_seen) > 0.0:
-		found.append("awareness rose outside every zone or with no point showing")
+	found.append_array(_unseen_rises_nothing(type, reach, light_seen))
+	return found
+
+
+# Too far; inside the middle zone's distance but behind its opening; no
+# point showing standing; one point showing crouched, which needs more.
+static func _unseen_rises_nothing(type: GuardType, reach: float, light_seen: Callable) -> Array[String]:
+	var middle: Dictionary = type.vision.zones[1]
+	var inside: float = (float(middle["near"]) + float(middle["far"])) / 2.0
+	var cases: Dictionary = {
+		"beyond every zone": reached(type, reach + 1.0, 1.0, true, 3, light_seen),
+		"off the side of the middle zone": reached(type, inside, 1.0, true, 3, light_seen, "standing", 179.0),
+		"no point showing": reached(type, 1.0, 1.0, true, 0, light_seen),
+		"one point showing, crouched": reached(type, inside, 1.0, true, 1, light_seen, "crouched"),
+	}
+	var found: Array[String] = []
+	for case: String in cases:
+		if float(cases[case]) > 0.0:
+			found.append("awareness rose with the body %s" % case)
 	return found
 
 

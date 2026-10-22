@@ -191,3 +191,15 @@ inverted light lowered awareness as the light rose; the wrong row read
 doubling factor made a far cell louder; a leaking diffusion gave a node a
 share from no neighbour; the posted noise was off a smaller level. The
 properties take about 30 s.
+
+After the review (wave 79): the portability claim is two pairs, each with
+its own planted case, and its key check says it matches by name only;
+`Awareness.problem` refuses a row whose phases do not rise from 0 or whose
+caution floor would keep a guard alert for good; the walk takes a stance
+and low cover at random, so the stance's count is exercised, and reads the
+footstep's radius from the events; the exposure claim adds a crouched body
+with one point showing and one off the side of a zone; the reseed is
+O(V + E) on both sides. The headers say that a flood over the 4-connected
+walk graph hears in a diamond, and why light and motion are read twice.
+The review's note for T70 -- "seen" must mean "would be perceived there"
+-- is in `docs/concepts/stealth-ai.md`.

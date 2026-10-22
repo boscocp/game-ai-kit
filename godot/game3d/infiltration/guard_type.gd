@@ -9,6 +9,14 @@
 ## row. No number in this file tunes a guard and none names a level; a new
 ## guard type is a new row.
 ##
+## Light and motion are read twice, on purpose. The vision shape's
+## certainty is how sure the eye is that something is there, and light and
+## movement make it surer [Rabin 2015]; the rate's light and motion are how
+## alarming that something is -- a lit, moving body is a threat sooner than
+## a still one in the dark, even seen as clearly. Crysis keeps the two
+## apart the same way: a stimulus's strength and the envelope it drives
+## [Welsh 2013].
+##
 ## When not to use it: a guard whose numbers change during play -- tired at
 ## night, wary after a body. Then the row is a starting point and a copy
 ## per guard is what changes.

@@ -30,8 +30,9 @@ class BeliefMap:
         total = sum(moved)
         self.reseeded = total <= 0.0
         if self.reseeded:
-            unseen = [node for node in range(len(moved)) if node not in seen]
-            self.shares = [1.0 / len(unseen) if node in unseen else 0.0 for node in range(len(moved))]
+            seen_set = set(seen)
+            unseen = len(moved) - len(seen_set)
+            self.shares = [0.0 if node in seen_set else 1.0 / unseen for node in range(len(moved))]
         else:
             self.shares = [share / total for share in moved]
 

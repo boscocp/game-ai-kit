@@ -17,7 +17,12 @@
 ##
 ## When not to use it: sound that should go through a thin wall at a cost.
 ## Give the wall a cost in the graph the flood walks, and this still works;
-## leave it out of the graph and nothing is heard through it.
+## leave it out of the graph and nothing is heard through it. And mind what
+## the path length is: on a 4-connected grid it is a Manhattan distance, so
+## the radius is a diamond, not a circle -- a footstep of radius 6 is not
+## heard 3 cells across and 3 along, 4.24 m away in a straight line. A
+## level that wants circles floods an 8-connected (octile) graph, or a
+## sound graph of its own.
 class_name PathHearing
 extends RefCounted
 

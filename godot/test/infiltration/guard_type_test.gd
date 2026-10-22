@@ -24,6 +24,21 @@ func test_the_rate_vector_holds_the_patrol_rows_controller() -> void:
 	assert_dict(vector["controller"]).is_equal(GuardType.read_file()["guards"]["patrol"]["rate"])
 
 
+func test_every_guard_types_awareness_row_is_sound() -> void:
+	var types: Dictionary[String, GuardType] = _types()
+	for type_name: String in types:
+		assert_str(Awareness.problem(types[type_name].awareness)).is_empty()
+
+
+func test_a_floor_at_the_last_phase_or_phases_out_of_order_are_refused() -> void:
+	var row: Dictionary = _types()["patrol"].awareness.duplicate(true)
+	row["caution"]["floor"] = 1.0
+	assert_str(Awareness.problem(row)).contains("once alert, always alert")
+	row = _types()["patrol"].awareness.duplicate(true)
+	row["phases"][2]["at"] = 0.1
+	assert_str(Awareness.problem(row)).contains("does not rise")
+
+
 func test_the_events_are_a_sound_table() -> void:
 	assert_str(StimulusTable.problem(GuardType.read_file()["events"])).is_empty()
 

@@ -14,6 +14,13 @@
 ## The flood is linear in the cells within the radius, squared by the
 ## frontier scan (`dijkstra.gd` says why); a loudness is constant time.
 ##
+## What the flood walks is the level's walk graph, and that has costs: a
+## 4-connected grid, so the radius is a diamond, not a circle (a footstep
+## of radius 6 is not heard at 3 across and 3 along, 4.24 m in a straight
+## line); ground that is slow to walk is quieter to hear across; a door is
+## only blocked or open; and there is no height. T70 should flood an
+## octile graph, or a sound graph of its own, if those matter on its level.
+##
 ## When not to use it: a level whose sound should carry through thin walls.
 ## Give those walls a cost instead of blocking them, and this still works.
 class_name SoundPaths
