@@ -555,11 +555,12 @@ is worth running to recover.
   fully recharge from a total drain"; Halo 2's, 4.25 s and 1.75 s; Halo
   3's, 5 s and 2 s [Halopedia, Energy shielding]. The pattern is a delay of
   a few seconds and a refill shorter than the delay.
-- **Call of Duty: Modern Warfare (2019)**, as one player measured it and an
-  article reported: "around 6 seconds to start regenerating health", then
-  "another 1.4 seconds to get back to full health"; the Quickfix perk cuts
-  it while getting kills [Upcomer]. A player's measurement, not the
-  developer's figure, and the article says so.
+- **Call of Duty: Modern Warfare (2019)**, as an article reported it:
+  "around 6 seconds to start regenerating health", then "another 1.4
+  seconds to get back to full health"; the Quickfix perk cuts it while
+  getting kills [Upcomer]. The piece is built on a video creator's tests
+  (TheXclusiveAce) but does not say whose these two figures are, and does
+  not present them as the developer's.
 - **Black Ops 4 took it out**: "health regeneration is not automatic
   anymore"; a player presses a button to heal, with a cooldown, so that
   "every decision a player makes is important" [CharlieIntel]. The
@@ -796,8 +797,8 @@ Research:
   Analyzing Combat and Stealth Games." IEEE CIG 2014.
   <https://www.cs.mcgill.ca/~jtremb59/Papers/CIG-2014-JTremblay.pdf>
 - Upcomer. "Is the Quickfix perk worth running in Modern Warfare?"
-  The page's date was not read; it calls itself over six years old. One
-  player's measurements, reported. <https://upcomer.com/is-the-quickfix-perk-worth-running-in-modern-warfare/>
+  The page's date was not read; it calls itself over six years old.
+  Figures reported, not attributed to the developer. <https://upcomer.com/is-the-quickfix-perk-worth-running-in-modern-warfare/>
 - Vanden Bossche, A. "Analysis: Video Games' Regeneration Station." Game
   Developer, 2009-10-22.
   <https://www.gamedeveloper.com/game-platforms/analysis-video-games-regeneration-station>

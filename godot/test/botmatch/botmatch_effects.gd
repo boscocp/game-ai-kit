@@ -43,11 +43,12 @@
 #      before the rules' delay, never passes its whole, and does come back
 #      to it -- the rule stepped alone, as a match steps it;
 #  10. healing weighed (T68): a blue that weighs when to break off to heal
-#      holds points at least as long as one that never breaks off to heal
-#      and one that always does below a fixed health -- neither holds more
-#      than it by MIRROR_ERRORS standard errors of the two margins. "At
-#      least as long", not "longer": what the task asked, and a claim that
-#      only rules out the weighing being worse.
+#      holds points longer than one that never breaks off to heal and one
+#      that always does below a fixed health -- each holds less than it by
+#      MIRROR_ERRORS standard errors of the two margins. The task asked for
+#      "at least as long"; its review found that a weighing that did nothing
+#      -- one that behaves as never healing -- would pass that, so the claim
+#      is the stronger one the numbers hold, and that is its planted case.
 #
 # Each is also asked of a planted case and must reject it: a blue team with
 # a faster reaction and a steadier aim, for the mirror; the claims check
@@ -58,7 +59,7 @@
 # head put in aiming by worth's place; the weighing blue put in always going
 # back's; the matches without claims in the claims' place; a random
 # arena with one point walled in, for portability; regeneration with no
-# delay; and always going back put in the weighing healer's place.
+# delay; and never healing put in the weighing healer's place.
 #
 # What the fighting makes of the decisions -- points held by each side,
 # wins, the mean margin and its standard error over the seeds -- is printed
@@ -211,7 +212,8 @@ func _play(pairing: String, matches: int) -> Dictionary:
 	var rules := MatchRules.new()
 	var sums: Dictionary = {"untaken": 0, "unfinished": 0, "held": 0.0, "red held": 0.0, "bunched": 0.0, "deaths": 0, "lost": 0,
 			"unseen": 0, "shots": 0, "sprinting shots": 0, "sprinted": 0.0,
-			"blue shots": 0, "blue damage": 0, "dry": 0.0, "power": 0, "regenerated": 0, "healed at base": 0, "hiding": 0.0, "matches": 0, "ordered": 0.0, "seconds": 0.0, "retreats": 0, "uncovered": 0,
+			"blue shots": 0, "blue damage": 0, "dry": 0.0, "power": 0, "regenerated": 0, "healed at base": 0, "hiding": 0.0, "deaths near base": 0, "deaths far": 0,
+			"base metre seconds": 0.0, "living seconds": 0.0, "matches": 0, "ordered": 0.0, "seconds": 0.0, "retreats": 0, "uncovered": 0,
 			"blue wins": 0, "red wins": 0, "margins": PackedFloat64Array()}
 	for seed_value: int in range(1, matches + 1):
 		var red := MatchTeam.new("red", BotMatch.RED, rules)
@@ -278,6 +280,10 @@ func _add(sums: Dictionary, world: BotMatch) -> void:
 	sums["regenerated"] += blue.regenerated
 	sums["healed at base"] += blue.healed_at_base
 	sums["hiding"] += blue.hiding_seconds
+	sums["deaths near base"] += blue.deaths_near_base
+	sums["deaths far"] += blue.deaths_far
+	sums["base metre seconds"] += blue.base_metre_seconds
+	sums["living seconds"] += blue.living_seconds
 	sums["matches"] += 1
 	sums["untaken"] += Array(world.times_taken).count(0)
 	# A script error aborts the match where it happens and the run carries
@@ -308,6 +314,9 @@ func _report(pairing: String, sums: Dictionary) -> void:
 	print("%22s blue: %.2f damage a shot, %.1f s dry a match, power weapon taken %.1f a match" % supplied)
 	var healed: Array = ["", _per_match(sums, "regenerated"), _per_match(sums, "healed at base"), _per_match(sums, "hiding")]
 	print("%22s blue: %.0f health regenerated, %.0f healed at the base, %.1f s hiding a match" % healed)
+	var where: Array = ["", sums["deaths near base"], MatchStats.NEAR_BASE, sums["deaths far"],
+			float(sums["base metre seconds"]) / maxf(float(sums["living seconds"]), 1.0)]
+	print("%22s blue: %d deaths within %.0f m of its base, %d further; living, %.1f m from it on average" % where)
 
 
 # The mean of `values` and its standard error, the spread of that mean over
@@ -496,13 +505,22 @@ static func regeneration_fault(rules: MatchRules) -> String:
 func _healing(totals: Dictionary) -> Array[String]:
 	var failures: Array[String] = []
 	for healer: String in HEALERS:
-		if _holds_less(totals["everything"], totals[healer]):
-			failures.append("healing: weighing it held less than a blue that %s" % healer)
-	# Planted: always going back for rounds, which holds less, put in the
-	# weighing healer's place.
-	if not _holds_less(totals["always resupply"], totals[HEALERS[0]]):
-		failures.append("healing: planted, always going back passed as holding as long as never healing")
+		var counted: Array = [healer, MIRROR_ERRORS]
+		if not _holds_less(totals[healer], totals["everything"]):
+			failures.append("healing: a blue that %s held no less than one weighing it, by %.1f errors" % counted)
+	# Planted: never healing put in the weighing healer's place -- a
+	# weighing that does nothing must not pass.
+	if _heals_better(totals[HEALERS[0]], totals):
+		failures.append("healing: planted, never healing passed as weighing it")
 	return failures
+
+
+# Whether `weigher` holds longer than every fixed healer, by the margins.
+func _heals_better(weigher: Dictionary, totals: Dictionary) -> bool:
+	for healer: String in HEALERS:
+		if not _holds_less(totals[healer], weigher):
+			return false
+	return true
 
 
 # --- portability (T67) ---------------------------------------------------------

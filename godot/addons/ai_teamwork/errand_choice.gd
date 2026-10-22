@@ -15,8 +15,13 @@
 ## fetch it, the one it is worth most to, so two do not race for one gun.
 ## Hiding is worth the share of health that would come back, less each
 ## second away -- the walk to cover and the wait for the health -- less
-## what leaving its post costs (T68). Not a threshold: a deep wound near
-## cover is worth hiding for, a scratch or a long wait is not.
+## what leaving its post costs (T68). Health comes back while it stays too,
+## unless it is hit, so the health either errand gains is priced by its
+## exposure where it stands, 0 to 1: what staying would cost it, the
+## fight it is in. Unseen and unhit, staying heals it as well as leaving,
+## and the health is worth nothing to an errand. Not a threshold: a deep
+## wound under fire near cover is worth hiding for; a scratch, a long wait,
+## or a wound nobody can see is not.
 ##
 ## Each weighing is a list -- [gain, walk seconds, cost, score] -- so a view
 ## can show why. Constant time a bot. When not to use it: errands that
@@ -52,8 +57,10 @@ class Weights extends RefCounted:
 class Resupply extends RefCounted:
 	## The share of its rounds it has spent, 0 full to 1 none left.
 	var spent: float = 0.0
-	## The share of its health missing, 0 whole to 1 none left.
+	## The share of its health missing, 0 whole to 1 none left, and how
+	## exposed it is where it stands, 0 to 1 -- what the health is worth.
 	var hurt: float = 0.0
+	var exposure: float = 0.0
 	## Whether its kills have earned it the power weapon at its base.
 	var earned_power: bool = false
 	var walk_seconds: float = 0.0
@@ -78,8 +85,10 @@ class Hide extends RefCounted:
 	## Whether there is cover from every enemy it knows of to hide behind,
 	## and health to come back.
 	var available: bool = false
-	## The share of its health that would come back, 0 to 1.
+	## The share of its health that would come back, 0 to 1, and how
+	## exposed it is where it stands, 0 to 1.
 	var hurt: float = 0.0
+	var exposure: float = 0.0
 	## Seconds to walk there, and to wait there for the health.
 	var walk_seconds: float = 0.0
 	var wait_seconds: float = 0.0
@@ -88,7 +97,7 @@ class Hide extends RefCounted:
 
 ## Going back, weighed: [gain, walk seconds, cost of leaving, score].
 static func weigh_resupply(facts: Resupply, weights: Weights) -> PackedFloat64Array:
-	var gain: float = facts.spent + facts.hurt * weights.health_worth
+	var gain: float = facts.spent + facts.hurt * facts.exposure * weights.health_worth
 	gain += weights.power_worth if facts.earned_power else 0.0
 	var leaving: float = weights.leave_attacking if facts.attacking else weights.leave_holding
 	if facts.empty:
@@ -112,7 +121,7 @@ static func weigh_fetch(facts: Fetch, weights: Weights) -> PackedFloat64Array:
 static func weigh_hide(facts: Hide, weights: Weights) -> PackedFloat64Array:
 	if not facts.available:
 		return PackedFloat64Array([0.0, 0.0, 0.0, 0.0])
-	var gain: float = facts.hurt * weights.health_worth
+	var gain: float = facts.hurt * facts.exposure * weights.health_worth
 	var away: float = facts.walk_seconds + facts.wait_seconds
 	var leaving: float = weights.leave_attacking if facts.attacking else weights.leave_holding
 	return PackedFloat64Array([gain, away, leaving, gain - away * weights.hide_second - leaving])

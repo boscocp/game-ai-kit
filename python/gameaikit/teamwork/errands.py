@@ -2,7 +2,7 @@
 
 The tier-1 half of `godot/addons/ai_teamwork/errand_choice.gd`: each errand
 is a gain less its costs -- going back is worth the rounds spent and the
-health missing -- and the larger is taken when above zero. A team
+health missing, priced by how exposed the bot is where it stands -- and the larger is taken when above zero. A team
 sends one bot to fetch, the one the weapon is worth most to.
 """
 
@@ -33,6 +33,7 @@ class Resupply:
 
     spent: float = 0.0
     hurt: float = 0.0
+    exposure: float = 0.0
     earned_power: bool = False
     walk_seconds: float = 0.0
     attacking: bool = False
@@ -54,6 +55,7 @@ class Hide:
 
     available: bool = False
     hurt: float = 0.0
+    exposure: float = 0.0
     walk_seconds: float = 0.0
     wait_seconds: float = 0.0
     attacking: bool = False
@@ -63,7 +65,7 @@ def weigh_hide(facts: Hide, weights: Weights) -> list[float]:
     """[gain, seconds away, cost of leaving, score]; all nothing when unavailable."""
     if not facts.available:
         return [0.0, 0.0, 0.0, 0.0]
-    gain = facts.hurt * weights.health_worth
+    gain = facts.hurt * facts.exposure * weights.health_worth
     away = facts.walk_seconds + facts.wait_seconds
     leaving = weights.leave_attacking if facts.attacking else weights.leave_holding
     return [gain, away, leaving, gain - away * weights.hide_second - leaving]
@@ -71,7 +73,7 @@ def weigh_hide(facts: Hide, weights: Weights) -> list[float]:
 
 def weigh_resupply(facts: Resupply, weights: Weights) -> list[float]:
     """[gain, walk seconds, cost of leaving, score]."""
-    gain = facts.spent + facts.hurt * weights.health_worth + (weights.power_worth if facts.earned_power else 0.0)
+    gain = facts.spent + facts.hurt * facts.exposure * weights.health_worth + (weights.power_worth if facts.earned_power else 0.0)
     leaving = 0.0 if facts.empty else (weights.leave_attacking if facts.attacking else weights.leave_holding)
     return [gain, facts.walk_seconds, leaving, gain - facts.walk_seconds * weights.resupply_walk - leaving]
 

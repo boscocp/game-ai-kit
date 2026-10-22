@@ -118,13 +118,15 @@ func step() -> void:
 	_keep_bodies_apart()
 	for bot: MatchBot in bots:
 		bot.velocity = (bot.position - before[bot.id]) / rules.step
+	# The dead first: a bot a lethal hit took this step is not healed by its
+	# base, nor by regeneration, on the way down (the T68 review's finding).
+	for bot: MatchBot in bots:
+		if bot.alive() and bot.health <= 0:
+			killed(bot, bot.last_hit_by)
 	for bot: MatchBot in bots:
 		if bot.alive():
 			supply.touch(self, bot)
 			stats[bot.team].regenerated += MatchHealth.regenerate(rules, bot, time, rules.step)
-	for bot: MatchBot in bots:
-		if bot.alive() and bot.health <= 0:
-			killed(bot, bot.last_hit_by)
 	_capture(rules.step)
 	_count(rules.step)
 	time += rules.step
@@ -285,6 +287,11 @@ func killed(victim: MatchBot, killer: int) -> void:
 	# A body seen falling is not a threat any more.
 	teams[1 - victim.team].remembered.erase(victim.id)
 	stats[victim.team].deaths += 1
+	var from_base: float = victim.position.distance_to(arena.resupply.get(TEAM_NAMES[victim.team], victim.position))
+	if from_base <= MatchStats.NEAR_BASE:
+		stats[victim.team].deaths_near_base += 1
+	else:
+		stats[victim.team].deaths_far += 1
 	teams[victim.team].losses[teams[victim.team].squad_of(victim.id)].append(time)
 	if killer != -1:
 		bots[killer].streak += 1
@@ -318,6 +325,7 @@ func respawn(bot: MatchBot) -> void:
 	bot.hide_spot = -1
 	bot.hide_place = Vector2.INF
 	bot.hide_asked_at = -INF
+	bot.hide_asked_for = []
 	bot.reload_left = 0.0
 	bot.respawn_left = 0.0
 	bot.spot = -1
@@ -482,6 +490,10 @@ func _count(delta: float) -> void:
 		stats[bot.team].sprint_seconds += delta if bot.alive() and bot.sprinting else 0.0
 		stats[bot.team].dry_seconds += delta if bot.alive() and bot.ammo + bot.reserve <= 0 else 0.0
 		stats[bot.team].hiding_seconds += delta if bot.alive() and bot.errand == MatchSupply.HIDE else 0.0
+		if bot.alive():
+			var base: Vector2 = arena.resupply.get(TEAM_NAMES[bot.team], bot.position)
+			stats[bot.team].base_metre_seconds += delta * bot.position.distance_to(base)
+			stats[bot.team].living_seconds += delta
 
 
 # Pairs of one team's bots in cover within BUNCHED metres of each other: each

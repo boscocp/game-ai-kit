@@ -47,3 +47,11 @@ var regenerated: int = 0
 var healed_at_base: int = 0
 ## Seconds its living bots spent on the errand of hiding to heal, summed.
 var hiding_seconds: float = 0.0
+## Where its bots fall and how far from their base they live (T68's
+## review): deaths within NEAR_BASE metres of its resupply and beyond, and
+## living seconds times metres from it -- over the living seconds, the mean.
+const NEAR_BASE: float = 15.0
+var deaths_near_base: int = 0
+var deaths_far: int = 0
+var base_metre_seconds: float = 0.0
+var living_seconds: float = 0.0

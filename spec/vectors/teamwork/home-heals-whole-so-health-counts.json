@@ -1,6 +1,6 @@
 {
  "name": "home-heals-whole-so-health-counts",
- "why": "Full of rounds, three quarters of its health gone, four seconds from its base, holding: 0 + 0.75 - 0.2 - 0.3 = 0.25, worth going to be healed whole. A quarter gone: -0.25, it stays.",
+ "why": "Full of rounds, three quarters of its health gone, under fire (exposure 1), four seconds from its base, holding: 0 + 0.75 - 0.2 - 0.3 = 0.25, worth going to be healed whole. A quarter gone: -0.25, it stays.",
  "kind": "errands",
  "weights": {
   "resupply_walk": 0.05,
@@ -17,6 +17,7 @@
    {
     "spent": 0.0,
     "hurt": 0.75,
+    "exposure": 1.0,
     "earned_power": false,
     "walk_seconds": 4.0,
     "attacking": false,
@@ -25,6 +26,7 @@
    {
     "spent": 0.0,
     "hurt": 0.25,
+    "exposure": 1.0,
     "earned_power": false,
     "walk_seconds": 4.0,
     "attacking": false,

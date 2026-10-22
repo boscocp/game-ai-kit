@@ -122,3 +122,32 @@ func test_the_corner_says_when_health_comes_back() -> void:
 	assert_str(BotMatchHud.health_text(rules, bot, 20.0)).is_equal("40 health, coming back")
 	bot.health = rules.health
 	assert_str(BotMatchHud.health_text(rules, bot, 13.5)).is_equal("100 health")
+
+
+func test_a_lethal_hit_at_the_base_is_not_healed_on_the_way_down() -> void:
+	var world: BotMatch = _world()
+	var bot: MatchBot = world.bots[0]
+	var enemy: MatchBot = world.bots[6]
+	bot.position = world.arena.resupply["blue"]
+	bot.health = 10
+	MatchActions.land(world, enemy, bot, MatchRules.TORSO)
+	assert_int(bot.health).is_less_equal(0)
+	world.step()
+	assert_bool(bot.alive()).is_false()
+	assert_int(world.stats[0].healed_at_base).is_equal(0)
+
+
+func test_unseen_and_unhit_a_hurt_bot_heals_where_it_stands() -> void:
+	var world: BotMatch = _world()
+	var team: MatchTeam = world.teams[0]
+	var bot: MatchBot = world.bots[0]
+	bot.health = 25
+	bot.hurt_at = world.time - 100.0
+	assert_float(MatchHealth.exposure(world, team, bot)).is_equal(0.0)
+	var facts: ErrandChoice.Resupply = world.supply.resupply_facts(world, team, bot)
+	assert_float(facts.exposure).is_equal(0.0)
+	var weighed: PackedFloat64Array = ErrandChoice.weigh_resupply(facts, MatchSupply.weights_of(world.rules))
+	assert_float(weighed[3]).is_less(0.0)
+	# Hit a moment ago: under fire, whoever fired.
+	bot.hurt_at = world.time
+	assert_float(MatchHealth.exposure(world, team, bot)).is_equal(1.0)

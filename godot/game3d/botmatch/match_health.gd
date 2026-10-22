@@ -9,8 +9,12 @@
 ## away with the clock. Constant time a bot a step.
 ##
 ## Whether to break off and hide while it comes back is weighed, not a
-## threshold: `hide_facts` measures what `ErrandChoice` weighs hiding by --
-## the nearest place hidden from every enemy the team knows of, asked of
+## threshold. Health comes back while a bot stays, too, unless it is hit:
+## so what breaking off gains is the hit it avoids, and `exposure` measures
+## that from what the bot perceives -- 1 under fire lately, else the share
+## of the enemies its team knows of with a line to its body now. And
+## `hide_facts` measures what `ErrandChoice` weighs hiding by -- the
+## nearest place hidden from every enemy the team knows of, asked of
 ## `TacticalPositions`, how long the walk there and the wait for the health
 ## would take -- beside going home to be healed whole and staying to fight.
 ## A query over the places near the bot, two rays each per known enemy.
@@ -57,7 +61,8 @@ static func delay_left(rules: MatchRules, bot: MatchBot, now: float) -> float:
 ## best case, with no place, rather than spend the rays: measured, asking
 ## every hurt bot every decision made a match four times slower. And the
 ## place found is kept for the rules' `position_interval`, as a fighting
-## spot is: a second, not a decision.
+## spot is -- unless the enemies its team knows of change, when it is
+## asked again: a place hidden from the old set may not be from the new.
 static func hide_facts(world: BotMatch, team: MatchTeam, bot: MatchBot) -> Array:
 	var rules: MatchRules = world.rules
 	var facts := ErrandChoice.Hide.new()
@@ -67,6 +72,7 @@ static func hide_facts(world: BotMatch, team: MatchTeam, bot: MatchBot) -> Array
 		return [facts, -1, Vector2.INF]
 	facts.available = true
 	facts.hurt = float(missing) / rules.health
+	facts.exposure = exposure(world, team, bot)
 	facts.wait_seconds = delay_left(rules, bot, world.time) + missing / rules.regeneration_rate
 	facts.attacking = team.bot_modes.get(bot.id, MatchTeam.HOLD) == MatchTeam.ATTACK
 	var best_case: float = ErrandChoice.weigh_hide(facts, MatchSupply.weights_of(rules))[3]
@@ -75,15 +81,47 @@ static func hide_facts(world: BotMatch, team: MatchTeam, bot: MatchBot) -> Array
 		bot.hide_asked_at = -INF
 		return [facts, -1, Vector2.INF]
 	var place: int = bot.hide_spot
-	if world.time - bot.hide_asked_at >= rules.position_interval:
+	var known: Array = _known_ids(team)
+	if world.time - bot.hide_asked_at >= rules.position_interval or known != bot.hide_asked_for:
 		place = hiding_place(world, team, bot, threats)
 		bot.hide_asked_at = world.time
+		bot.hide_asked_for = known
 	if place == -1:
 		return [ErrandChoice.Hide.new(), -1, Vector2.INF]
 	var at: Vector2 = world.place_position(place)
 	facts.walk_seconds = bot.position.distance_to(at) / rules.speed
-	facts.wait_seconds = maxf(0.0, delay_left(rules, bot, world.time) - facts.walk_seconds) + missing / rules.regeneration_rate
+	var still_delayed: float = maxf(0.0, delay_left(rules, bot, world.time) - facts.walk_seconds)
+	facts.wait_seconds = still_delayed + missing / rules.regeneration_rate
 	return [facts, place, at]
+
+
+## How exposed `bot` is where it stands, 0 to 1, from what it perceives:
+## 1 when it was hit within the rules' `confidence_memory` -- under fire,
+## whoever fired -- else the share of the enemies its team knows of whose
+## eyes, where they were seen, have a clear line to its body; 0 when it
+## knows of none. What staying would cost it: the hit that resets its
+## clock. A ray per known enemy.
+static func exposure(world: BotMatch, team: MatchTeam, bot: MatchBot) -> float:
+	var rules: MatchRules = world.rules
+	if world.time - bot.hurt_at <= rules.confidence_memory:
+		return 1.0
+	var enemies: Array[Vector2] = team.known_enemies()
+	if enemies.is_empty():
+		return 0.0
+	var height: float = rules.crouched_height if bot.crouched else rules.chest_height
+	var body: Vector3 = world.arena.above(bot.position, height)
+	var seeing: int = 0
+	for enemy: Vector2 in enemies:
+		seeing += 1 if world.arena.clear_line(world.arena.above(enemy, rules.eye_height), body) else 0
+	return float(seeing) / enemies.size()
+
+
+# The ids of the enemies `team` knows of, in order: a hiding place found
+# for one set is asked again when it changes, not kept for a second.
+static func _known_ids(team: MatchTeam) -> Array:
+	var ids: Array = team.remembered.keys()
+	ids.sort()
+	return ids
 
 
 ## The nearest place within the rules' `hide_metres` that no enemy in

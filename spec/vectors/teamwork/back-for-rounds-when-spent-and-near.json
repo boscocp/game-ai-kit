@@ -17,6 +17,7 @@
    {
     "spent": 0.75,
     "hurt": 0.0,
+    "exposure": 0.0,
     "earned_power": false,
     "walk_seconds": 2.0,
     "attacking": false,
@@ -25,6 +26,7 @@
    {
     "spent": 0.0,
     "hurt": 0.0,
+    "exposure": 0.0,
     "earned_power": false,
     "walk_seconds": 2.0,
     "attacking": false,

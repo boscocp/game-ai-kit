@@ -1,0 +1,62 @@
+{
+ "name": "health-worth-half-of-the-rounds",
+ "why": "Health worth 0.5 of all the rounds: three quarters gone under fire, four seconds from home, holding: 0.375 - 0.2 - 0.3 = -0.125, it stays; hiding two seconds off with an eight-second wait: 0.375 - 0.2 - 0.3 = -0.125.",
+ "kind": "errands",
+ "weights": {
+  "resupply_walk": 0.05,
+  "leave_holding": 0.3,
+  "leave_attacking": 0.5,
+  "health_worth": 0.5,
+  "power_worth": 1.0,
+  "power_walk": 0.08,
+  "power_danger": 0.3,
+  "hide_second": 0.02
+ },
+ "query": {
+  "resupply": [
+   {
+    "spent": 0.0,
+    "hurt": 0.75,
+    "exposure": 1.0,
+    "earned_power": false,
+    "walk_seconds": 4.0,
+    "attacking": false,
+    "empty": false
+   }
+  ],
+  "fetch": [],
+  "hide": [
+   {
+    "available": true,
+    "hurt": 0.75,
+    "exposure": 1.0,
+    "walk_seconds": 2.0,
+    "wait_seconds": 8.0,
+    "attacking": false
+   }
+  ],
+  "teams": [],
+  "pairs": []
+ },
+ "expect": {
+  "resupply": [
+   [
+    0.375,
+    4.0,
+    0.3,
+    -0.125
+   ]
+  ],
+  "fetch": [],
+  "hide": [
+   [
+    0.375,
+    10.0,
+    0.3,
+    -0.125
+   ]
+  ],
+  "fetcher": [],
+  "chosen": []
+ }
+}

@@ -38,8 +38,9 @@ three comparisons of the choice, and each of the weighing's branches --
 the earned weapon, the empty bot, attacking, a weapon not there. T68's
 additions were asked the same in the Python twin: the choice of three's
 `>=` and its floor of zero, and the hiding query's SEEN condition removed
--- each fails a vector. Not pinned: `health_worth` is 1 in every vector,
-the bot match's own number, so dropping it from the gain fails none.
+-- each fails a vector. So, after the review, do dropping `health_worth`
+or the exposure from either gain: a vector weighs health at 0.5, and one
+is the review's case, a hurt bot nobody sees, which stays.
 
     python3 spec/vectors/teamwork/derive.py spec/vectors/teamwork
 

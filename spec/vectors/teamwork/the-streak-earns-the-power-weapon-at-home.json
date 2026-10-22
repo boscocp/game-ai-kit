@@ -17,6 +17,7 @@
    {
     "spent": 0.0,
     "hurt": 0.0,
+    "exposure": 0.0,
     "earned_power": true,
     "walk_seconds": 4.0,
     "attacking": false,

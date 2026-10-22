@@ -1,6 +1,6 @@
 {
  "name": "hide-when-the-wound-is-deep-and-the-wait-short",
- "why": "Hurt 0.75, cover two seconds off, eight seconds' wait, holding: 0.75 - 10 x 0.02 - 0.3 = 0.25, worth hiding. Hurt 0.25: -0.25, a scratch is not. Hurt 0.75 attacking with a 25 s wait: -0.29. Nowhere to hide: nothing at all.",
+ "why": "Under fire (exposure 1). Hurt 0.75, cover two seconds off, eight seconds' wait, holding: 0.75 - 10 x 0.02 - 0.3 = 0.25, worth hiding. Hurt 0.25: -0.25, a scratch is not. Hurt 0.75 attacking with a 25 s wait: -0.29. Nowhere to hide: nothing at all.",
  "kind": "errands",
  "weights": {
   "resupply_walk": 0.05,
@@ -19,6 +19,7 @@
    {
     "available": true,
     "hurt": 0.75,
+    "exposure": 1.0,
     "walk_seconds": 2.0,
     "wait_seconds": 8.0,
     "attacking": false
@@ -26,6 +27,7 @@
    {
     "available": true,
     "hurt": 0.25,
+    "exposure": 1.0,
     "walk_seconds": 2.0,
     "wait_seconds": 8.0,
     "attacking": false
@@ -33,6 +35,7 @@
    {
     "available": true,
     "hurt": 0.75,
+    "exposure": 1.0,
     "walk_seconds": 2.0,
     "wait_seconds": 25.0,
     "attacking": true
@@ -40,6 +43,7 @@
    {
     "available": false,
     "hurt": 0.75,
+    "exposure": 1.0,
     "walk_seconds": 2.0,
     "wait_seconds": 8.0,
     "attacking": false
