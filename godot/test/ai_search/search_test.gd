@@ -302,3 +302,19 @@ func test_a_flood_goes_round_a_wall_and_stops_at_its_limit() -> void:
 
 func test_a_flood_from_off_the_graph_reaches_nothing() -> void:
 	assert_int(CostFlood.within(GridSearchGraph.new(GridGraph.new(2, 2)), Vector2i(5, 5), 9).size()).is_equal(0)
+
+
+func _flood_vector(reached: Array) -> Dictionary:
+	return {"kind": "flood", "costs": [[1, 1], [1, 1]], "from": [0, 0], "limit": 1, "expect": {"reached": reached}}
+
+
+func test_a_flood_vector_that_is_right_passes_and_a_wrong_cost_is_named() -> void:
+	var right: Array = [[0, 0, 0], [1, 0, 1], [0, 1, 1]]
+	assert_array(FloodVector.check("right", _flood_vector(right))).is_empty()
+	var wrong: Array = [[0, 0, 0], [1, 0, 2], [0, 1, 1]]
+	assert_array(FloodVector.check("wrong", _flood_vector(wrong))).has_size(1)
+
+
+func test_a_flood_vector_that_misses_a_cell_or_expects_nothing_is_refused() -> void:
+	assert_array(FloodVector.check("short", _flood_vector([[0, 0, 0], [1, 0, 1]]))).is_not_empty()
+	assert_str(FloodVector.why_not_a_vector(_flood_vector([]))).contains("empty")

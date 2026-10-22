@@ -1,0 +1,36 @@
+{
+ "name": "flood-shut-in",
+ "why": "Walls on every side: only the start is reached, at no cost.",
+ "kind": "flood",
+ "costs": [
+  [
+   -1,
+   -1,
+   -1
+  ],
+  [
+   -1,
+   1,
+   -1
+  ],
+  [
+   -1,
+   -1,
+   -1
+  ]
+ ],
+ "from": [
+  1,
+  1
+ ],
+ "limit": 9,
+ "expect": {
+  "reached": [
+   [
+    1,
+    1,
+    0
+   ]
+  ]
+ }
+}

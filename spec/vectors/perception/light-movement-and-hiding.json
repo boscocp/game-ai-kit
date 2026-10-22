@@ -1,0 +1,117 @@
+{
+ "name": "light-movement-and-hiding",
+ "why": "The same zone in the dark, in the light, moving, and half behind a hiding spot; certainty never passes 1.",
+ "kind": "shape",
+ "shape": {
+  "zones": [
+   {
+    "name": "beside",
+    "near": 0.0,
+    "far": 2.5,
+    "half_angle": 110.0,
+    "certainty": 1.0
+   },
+   {
+    "name": "ahead",
+    "near": 2.5,
+    "far": 10.0,
+    "half_angle": 50.0,
+    "certainty": 0.8
+   },
+   {
+    "name": "far",
+    "near": 10.0,
+    "far": 18.0,
+    "half_angle": 20.0,
+    "certainty": 0.4
+   }
+  ],
+  "dark_share": 0.3,
+  "motion_bonus": 0.15
+ },
+ "query": {
+  "looks": [
+   {
+    "distance": 5.0,
+    "angle": 0.0,
+    "points": [
+     true,
+     true,
+     true
+    ],
+    "needed": 1,
+    "light": 0.0,
+    "moving": false,
+    "hidden": 0.0
+   },
+   {
+    "distance": 5.0,
+    "angle": 0.0,
+    "points": [
+     true,
+     true,
+     true
+    ],
+    "needed": 1,
+    "light": 0.5,
+    "moving": false,
+    "hidden": 0.0
+   },
+   {
+    "distance": 5.0,
+    "angle": 0.0,
+    "points": [
+     true,
+     true,
+     true
+    ],
+    "needed": 1,
+    "light": 1.0,
+    "moving": true,
+    "hidden": 0.0
+   },
+   {
+    "distance": 5.0,
+    "angle": 0.0,
+    "points": [
+     true,
+     true,
+     true
+    ],
+    "needed": 1,
+    "light": 1.0,
+    "moving": true,
+    "hidden": 0.5
+   },
+   {
+    "distance": 1.0,
+    "angle": 0.0,
+    "points": [
+     true,
+     true,
+     true
+    ],
+    "needed": 1,
+    "light": 1.0,
+    "moving": true,
+    "hidden": 0.0
+   }
+  ]
+ },
+ "expect": {
+  "zones": [
+   1,
+   1,
+   1,
+   1,
+   0
+  ],
+  "certainties": [
+   0.24,
+   0.5199999999999999,
+   0.9500000000000001,
+   0.47500000000000003,
+   1.0
+  ]
+ }
+}

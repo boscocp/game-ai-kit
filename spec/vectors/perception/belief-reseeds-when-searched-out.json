@@ -1,0 +1,75 @@
+{
+ "name": "belief-reseeds-when-searched-out",
+ "why": "The only nodes it could be in are seen: the belief is reseeded over the rest, evenly.",
+ "kind": "belief",
+ "query": {
+  "neighbours": [
+   [
+    1,
+    2
+   ],
+   [
+    0,
+    3
+   ],
+   [
+    0,
+    3
+   ],
+   [
+    1,
+    2,
+    4
+   ],
+   [
+    3
+   ]
+  ],
+  "steps": [
+   {
+    "collapse": 4
+   },
+   {
+    "seen": [
+     3,
+     4
+    ],
+    "spread": 0.5
+   },
+   {
+    "seen": [],
+    "spread": 0.3
+   }
+  ]
+ },
+ "expect": {
+  "shares": [
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   [
+    0.3333333333333333,
+    0.3333333333333333,
+    0.3333333333333333,
+    0.0,
+    0.0
+   ],
+   [
+    0.3333333333333333,
+    0.2833333333333333,
+    0.2833333333333333,
+    0.09999999999999999,
+    0.0
+   ]
+  ],
+  "reseeded": [
+   false,
+   true,
+   false
+  ]
+ }
+}

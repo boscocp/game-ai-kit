@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: structure
-verified_on: 2026-10-12
+verified_on: 2026-10-22
 tier: 1
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: the GridGraph cost convention changes, or a vector field is renamed
@@ -49,5 +49,15 @@ cost the same, and which one an implementation returns depends on tie-breaking.
 Pinning the cells would make a correct implementation fail for a reason that is
 not about being correct, and the fix for that kind of failure is always to
 weaken the test, which is how a conformance suite dies.
+
+## Floods
+
+A file with `"kind": "flood"` asks for every cell a flood reaches, not a
+route (T69): `costs` and `from` as above, a `limit`, and `expect.reached`, a
+list of `[x, y, cost]` -- every cell reached at a cost of `limit` or less,
+each once, the start at 0. `CostFlood` answers it in GDScript and
+`gameaikit.search.flood` in `make test-python`; `derive_flood.py` writes
+the files from a third copy of the rule. A flood is how far a sound
+carries along a level, round its walls.
 
 Run them with `make test-vectors`.

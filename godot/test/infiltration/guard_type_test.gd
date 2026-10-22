@@ -15,6 +15,15 @@ func test_the_file_reads_and_every_type_has_a_sound_controller() -> void:
 		assert_str(types[type_name].rate_controller.problem()).is_empty()
 
 
+func test_the_rate_vector_holds_the_patrol_rows_controller() -> void:
+	# The fuzzy vector pins the rate both languages compute; it is only
+	# worth that while its controller is the one the patrol guard uses.
+	var path: String = ProjectSettings.globalize_path("res://").path_join("../spec/vectors/fuzzy/a-guards-awareness-rate.json")
+	var vector: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	assert_bool(vector is Dictionary).is_true()
+	assert_dict(vector["controller"]).is_equal(GuardType.read_file()["guards"]["patrol"]["rate"])
+
+
 func test_the_events_are_a_sound_table() -> void:
 	assert_str(StimulusTable.problem(GuardType.read_file()["events"])).is_empty()
 

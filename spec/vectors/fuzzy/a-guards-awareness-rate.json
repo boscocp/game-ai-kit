@@ -1,0 +1,315 @@
+{
+ "name": "a guard's awareness rate",
+ "why": "The patrol guard's fuzzy rate (T69): how fast awareness rises, in shares of the peak a second, from certainty, light, motion and distance. The controller is guard_types.json's patrol row.",
+ "controller": {
+  "inputs": [
+   {
+    "name": "certainty",
+    "minimum": 0.0,
+    "maximum": 1.0,
+    "sets": {
+     "faint": [
+      0.0,
+      0.0,
+      0.2,
+      0.6
+     ],
+     "clear": [
+      0.2,
+      0.6,
+      1.0,
+      1.0
+     ]
+    }
+   },
+   {
+    "name": "light",
+    "minimum": 0.0,
+    "maximum": 1.0,
+    "sets": {
+     "dark": [
+      0.0,
+      0.0,
+      0.2,
+      0.6
+     ],
+     "lit": [
+      0.2,
+      0.6,
+      1.0,
+      1.0
+     ]
+    }
+   },
+   {
+    "name": "motion",
+    "minimum": 0.0,
+    "maximum": 1.0,
+    "sets": {
+     "still": [
+      0.0,
+      0.0,
+      0.2,
+      0.6
+     ],
+     "moving": [
+      0.2,
+      0.6,
+      1.0,
+      1.0
+     ]
+    }
+   },
+   {
+    "name": "distance",
+    "minimum": 0.0,
+    "maximum": 18.0,
+    "sets": {
+     "near": [
+      0.0,
+      0.0,
+      3.0,
+      10.0
+     ],
+     "far": [
+      3.0,
+      10.0,
+      18.0,
+      18.0
+     ]
+    }
+   }
+  ],
+  "outputs": [
+   {
+    "name": "rate",
+    "minimum": 0.0,
+    "maximum": 1.0,
+    "samples": 101,
+    "sets": {
+     "slow": [
+      0.0,
+      0.0,
+      0.05,
+      0.3
+     ],
+     "fast": [
+      0.2,
+      0.6,
+      1.0,
+      1.0
+     ]
+    }
+   }
+  ],
+  "rules": [
+   {
+    "if": [
+     [
+      "certainty",
+      "clear"
+     ],
+     [
+      "light",
+      "lit"
+     ],
+     [
+      "distance",
+      "near"
+     ]
+    ],
+    "connective": "and",
+    "then": [
+     "rate",
+     "fast"
+    ]
+   },
+   {
+    "if": [
+     [
+      "certainty",
+      "clear"
+     ],
+     [
+      "motion",
+      "moving"
+     ],
+     [
+      "distance",
+      "near"
+     ]
+    ],
+    "connective": "and",
+    "then": [
+     "rate",
+     "fast"
+    ]
+   },
+   {
+    "if": [
+     [
+      "certainty",
+      "faint"
+     ]
+    ],
+    "connective": "and",
+    "then": [
+     "rate",
+     "slow"
+    ]
+   },
+   {
+    "if": [
+     [
+      "distance",
+      "far"
+     ]
+    ],
+    "connective": "and",
+    "then": [
+     "rate",
+     "slow"
+    ]
+   },
+   {
+    "if": [
+     [
+      "light",
+      "dark"
+     ],
+     [
+      "motion",
+      "still"
+     ]
+    ],
+    "connective": "and",
+    "then": [
+     "rate",
+     "slow"
+    ]
+   }
+  ]
+ },
+ "cases": [
+  {
+   "kind": "evaluate",
+   "name": "close-clear-lit",
+   "why": "every fast rule's lit half fully true",
+   "inputs": {
+    "certainty": 1.0,
+    "light": 1.0,
+    "motion": 0.0,
+    "distance": 1.0
+   },
+   "activations": {
+    "rate": {
+     "slow": 0.0,
+     "fast": 1.0
+    }
+   },
+   "outputs": {
+    "rate": 0.6914876033057851
+   }
+  },
+  {
+   "kind": "evaluate",
+   "name": "close-clear-dark-moving",
+   "why": "the moving rule carries it in the dark",
+   "inputs": {
+    "certainty": 1.0,
+    "light": 0.0,
+    "motion": 1.0,
+    "distance": 1.0
+   },
+   "activations": {
+    "rate": {
+     "slow": 0.0,
+     "fast": 1.0
+    }
+   },
+   "outputs": {
+    "rate": 0.6914876033057851
+   }
+  },
+  {
+   "kind": "evaluate",
+   "name": "close-clear-dark-still",
+   "why": "only slow rules: dark and still",
+   "inputs": {
+    "certainty": 1.0,
+    "light": 0.0,
+    "motion": 0.0,
+    "distance": 1.0
+   },
+   "activations": {
+    "rate": {
+     "slow": 1.0,
+     "fast": 0.0
+    }
+   },
+   "outputs": {
+    "rate": 0.09944444444444447
+   }
+  },
+  {
+   "kind": "evaluate",
+   "name": "far-off",
+   "why": "far is slow whatever else",
+   "inputs": {
+    "certainty": 1.0,
+    "light": 1.0,
+    "motion": 1.0,
+    "distance": 16.0
+   },
+   "activations": {
+    "rate": {
+     "slow": 1.0,
+     "fast": 0.0
+    }
+   },
+   "outputs": {
+    "rate": 0.09944444444444447
+   }
+  },
+  {
+   "kind": "evaluate",
+   "name": "faint",
+   "why": "a faint look is slow",
+   "inputs": {
+    "certainty": 0.1,
+    "light": 1.0,
+    "motion": 1.0,
+    "distance": 1.0
+   },
+   "activations": {
+    "rate": {
+     "slow": 1.0,
+     "fast": 0.0
+    }
+   },
+   "outputs": {
+    "rate": 0.09944444444444447
+   }
+  },
+  {
+   "kind": "evaluate",
+   "name": "halfway",
+   "why": "every input in a slope: both terms partly true",
+   "inputs": {
+    "certainty": 0.4,
+    "light": 0.4,
+    "motion": 0.4,
+    "distance": 6.0
+   },
+   "activations": {
+    "rate": {
+     "slow": 0.49999999999999994,
+     "fast": 0.5000000000000001
+    }
+   },
+   "outputs": {
+    "rate": 0.5184926510031114
+   }
+  }
+ ]
+}

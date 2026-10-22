@@ -247,7 +247,7 @@ train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-racing3d-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-racing3d-vectors test-perception-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -321,6 +321,12 @@ test-menace-vectors: import ## The MENACE vectors, against the game's bead playe
 	@# itself, because Python's generator and Godot's differ.
 	@$(GODOT) --headless --path godot -s res://test/tictactoe/menace_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/menace
+
+.PHONY: test-perception-vectors
+test-perception-vectors: import ## The stealth senses: shape, loudness, awareness, phase, belief, against ai_perception (T69)
+	@# The other half is `make test-python`.
+	@$(GODOT) --headless --path godot -s res://test/ai_perception/perception_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/perception
 
 .PHONY: test-teamwork-vectors
 test-teamwork-vectors: import ## Positions, influence, commander and confidence, against ai_teamwork (T51)

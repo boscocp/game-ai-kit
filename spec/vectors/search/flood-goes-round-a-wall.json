@@ -1,0 +1,66 @@
+{
+ "name": "flood-goes-round-a-wall",
+ "why": "A sound round a wall: the cell beside the source on the far side is six away, not two.",
+ "kind": "flood",
+ "costs": [
+  [
+   1,
+   -1,
+   1
+  ],
+  [
+   1,
+   -1,
+   1
+  ],
+  [
+   1,
+   1,
+   1
+  ]
+ ],
+ "from": [
+  0,
+  0
+ ],
+ "limit": 10,
+ "expect": {
+  "reached": [
+   [
+    0,
+    0,
+    0
+   ],
+   [
+    2,
+    0,
+    6
+   ],
+   [
+    0,
+    1,
+    1
+   ],
+   [
+    2,
+    1,
+    5
+   ],
+   [
+    0,
+    2,
+    2
+   ],
+   [
+    1,
+    2,
+    3
+   ],
+   [
+    2,
+    2,
+    4
+   ]
+  ]
+ }
+}
