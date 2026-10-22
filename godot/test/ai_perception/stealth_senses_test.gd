@@ -98,3 +98,39 @@ func test_loudness_falls_along_the_path_to_the_radius() -> void:
 func test_the_off_screen_halving_halves_the_radius_and_never_raises() -> void:
 	assert_float(PathHearing.loudness(4.0, 10.0, 0.5)).is_equal_approx(0.2, 1e-9)
 	assert_float(PathHearing.loudness(4.0, 10.0, 3.0)).is_equal_approx(0.6, 1e-9)
+
+
+func _events() -> StimulusTable:
+	return StimulusTable.new({
+		"footstep": {"sense": "sound", "priority": 1, "radius": 6.0, "lifetime": 4.0},
+		"shot": {"sense": "sound", "priority": 3, "radius": 40.0, "lifetime": 20.0},
+		"body": {"sense": "sight", "priority": 3, "radius": 0.0, "lifetime": 60.0},
+	})
+
+
+func test_a_row_without_a_field_or_with_an_unknown_sense_is_refused() -> void:
+	assert_str(StimulusTable.problem({"step": {"sense": "sound", "priority": 1, "radius": 2.0}})).is_equal("event step has no lifetime")
+	assert_str(StimulusTable.problem({"smell": {"sense": "smell", "priority": 1, "radius": 2.0, "lifetime": 1.0}})).contains("none of")
+	assert_str(StimulusTable.problem({"step": {"sense": "sound", "priority": 1, "radius": 2.0, "lifetime": 1.0}})).is_empty()
+
+
+func test_a_higher_priority_replaces_and_a_lower_does_not() -> void:
+	var interest := Interest.new()
+	assert_bool(interest.offer(_events(), "footstep", Vector2(1, 1), 0.0)).is_true()
+	assert_bool(interest.offer(_events(), "shot", Vector2(9, 9), 1.0)).is_true()
+	assert_bool(interest.offer(_events(), "footstep", Vector2(2, 2), 2.0)).is_false()
+	assert_str(interest.kind).is_equal("shot")
+
+
+func test_the_same_priority_replaces_the_older() -> void:
+	var interest := Interest.new()
+	interest.offer(_events(), "shot", Vector2(9, 9), 0.0)
+	assert_bool(interest.offer(_events(), "body", Vector2(3, 3), 1.0)).is_true()
+	assert_vector(interest.place).is_equal(Vector2(3, 3))
+
+
+func test_a_stale_interest_gives_way_to_anything() -> void:
+	var interest := Interest.new()
+	interest.offer(_events(), "shot", Vector2(9, 9), 0.0)
+	assert_bool(interest.held(_events(), 25.0)).is_false()
+	assert_bool(interest.offer(_events(), "footstep", Vector2(2, 2), 25.0)).is_true()
