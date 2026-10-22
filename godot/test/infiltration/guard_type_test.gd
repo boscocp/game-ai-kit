@@ -43,6 +43,43 @@ func test_only_a_minor_event_off_screen_and_far_is_halved() -> void:
 	assert_float(SoundPaths.listener_factor(hearing, 3, false, 20.0)).is_equal(1.0)
 
 
+func _seen_at(place: Vector2) -> GuardPercept:
+	var percept := GuardPercept.new()
+	percept.sight.certainty = 0.9
+	percept.seen_place = place
+	percept.distance = 2.0
+	percept.light = 1.0
+	percept.motion = 1.0
+	return percept
+
+
+func test_a_mind_seeing_the_target_grows_aware_and_remembers_where() -> void:
+	var mind := GuardMind.new(_types()["patrol"])
+	for second: int in range(1, 4):
+		mind.step(_seen_at(Vector2(4, 5)), float(second), 1.0)
+	assert_str(mind.phase_name()).is_equal("alert")
+	assert_vector(mind.memory.place).is_equal(Vector2(4, 5))
+	assert_str(mind.memory.source).is_equal("sight")
+
+
+func test_a_mind_that_perceives_nothing_learns_nothing() -> void:
+	var mind := GuardMind.new(_types()["patrol"])
+	mind.step(GuardPercept.new(), 1.0, 1.0)
+	assert_bool(mind.memory.known).is_false()
+	assert_str(mind.phase_name()).is_equal("unaware")
+
+
+func test_a_heard_footstep_is_remembered_as_one() -> void:
+	var mind := GuardMind.new(_types()["patrol"])
+	var percept := GuardPercept.new()
+	percept.loudness = 0.5
+	percept.heard_place = Vector2(7, 1)
+	percept.heard_kind = "footstep"
+	mind.step(percept, 1.0, 1.0)
+	assert_str(mind.memory.source).is_equal("footstep")
+	assert_float(mind.awareness["sound"].value).is_equal_approx(0.3, 1e-9)
+
+
 func test_a_stance_the_data_forgot_needs_every_point() -> void:
 	var patrol: GuardType = _types()["patrol"]
 	assert_int(patrol.needed_for("crouched")).is_equal(2)
