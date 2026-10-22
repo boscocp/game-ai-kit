@@ -6,6 +6,7 @@
   "resupply_walk": 0.05,
   "leave_holding": 0.3,
   "leave_attacking": 0.5,
+  "health_worth": 1.0,
   "power_worth": 1.0,
   "power_walk": 0.08,
   "power_danger": 0.3

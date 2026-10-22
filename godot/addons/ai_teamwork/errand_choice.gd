@@ -3,7 +3,8 @@
 ## less its costs, the plainest utility, and the larger taken when it is
 ## above zero (the owner's asks for the bot match, 2026-10-21).
 ##
-## Going back is worth the share of its rounds spent, and the power weapon
+## Going back is worth the share of its rounds spent, the share of its
+## health missing -- the base heals it whole (T68) -- and the power weapon
 ## too when its kills have earned one there; it costs each second of the
 ## walk, and what leaving its post costs -- more attacking a point than
 ## holding one, nothing when it has no round left to fight with. Fetching
@@ -29,6 +30,8 @@ class Weights extends RefCounted:
 	var resupply_walk: float = 0.05
 	var leave_holding: float = 0.3
 	var leave_attacking: float = 0.5
+	## What all of a bot's health is worth, as all of its rounds are 1.
+	var health_worth: float = 1.0
 	## The power weapon's worth, a second of walking to it, and each enemy
 	## known near it.
 	var power_worth: float = 1.0
@@ -40,6 +43,8 @@ class Weights extends RefCounted:
 class Resupply extends RefCounted:
 	## The share of its rounds it has spent, 0 full to 1 none left.
 	var spent: float = 0.0
+	## The share of its health missing, 0 whole to 1 none left.
+	var hurt: float = 0.0
 	## Whether its kills have earned it the power weapon at its base.
 	var earned_power: bool = false
 	var walk_seconds: float = 0.0
@@ -61,7 +66,8 @@ class Fetch extends RefCounted:
 
 ## Going back, weighed: [gain, walk seconds, cost of leaving, score].
 static func weigh_resupply(facts: Resupply, weights: Weights) -> PackedFloat64Array:
-	var gain: float = facts.spent + (weights.power_worth if facts.earned_power else 0.0)
+	var gain: float = facts.spent + facts.hurt * weights.health_worth
+	gain += weights.power_worth if facts.earned_power else 0.0
 	var leaving: float = weights.leave_attacking if facts.attacking else weights.leave_holding
 	if facts.empty:
 		leaving = 0.0

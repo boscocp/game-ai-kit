@@ -10,6 +10,7 @@
   "resupply_walk_weight": 0.05,
   "resupply_hold_weight": 0.3,
   "resupply_attack_weight": 0.5,
+  "health_worth": 1.0,
   "power_damage_multiplier": 3.0,
   "power_rounds": 20,
   "power_respawn": 60.0,

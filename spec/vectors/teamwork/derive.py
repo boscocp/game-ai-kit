@@ -511,16 +511,16 @@ def action_vectors():
 
 # The bot match's own numbers, from its rules.json, copied here by hand.
 ERRAND_WEIGHTS = {"resupply_walk": 0.05, "leave_holding": 0.3, "leave_attacking": 0.5,
-                  "power_worth": 1.0, "power_walk": 0.08, "power_danger": 0.3}
+                  "health_worth": 1.0, "power_worth": 1.0, "power_walk": 0.08, "power_danger": 0.3}
 
-def going_back(spent=0.0, earned=False, walk=0.0, attacking=False, empty=False):
-    return {"spent": spent, "earned_power": earned, "walk_seconds": walk, "attacking": attacking, "empty": empty}
+def going_back(spent=0.0, earned=False, walk=0.0, attacking=False, empty=False, hurt=0.0):
+    return {"spent": spent, "hurt": hurt, "earned_power": earned, "walk_seconds": walk, "attacking": attacking, "empty": empty}
 
 def fetching(available=True, walk=0.0, near=0):
     return {"available": available, "walk_seconds": walk, "enemies_near": near}
 
 def weigh_back(f, w):
-    gain = f["spent"] + (w["power_worth"] if f["earned_power"] else 0.0)
+    gain = f["spent"] + f["hurt"] * w["health_worth"] + (w["power_worth"] if f["earned_power"] else 0.0)
     leaving = 0.0 if f["empty"] else (w["leave_attacking"] if f["attacking"] else w["leave_holding"])
     return [gain, f["walk_seconds"], leaving, gain - f["walk_seconds"] * w["resupply_walk"] - leaving]
 
@@ -558,6 +558,10 @@ def errand_vectors():
                   "No round left, attacking, ten seconds away: leaving costs it nothing, 1 - 0.5 = 0.5. With a "
                   "tenth left it has a post: 0.9 - 0.5 - 0.5 = -0.1.",
                   back=[going_back(1.0, walk=10.0, attacking=True, empty=True), going_back(0.9, walk=10.0, attacking=True)])
+    yield errands("home-heals-whole-so-health-counts",
+                  "Full of rounds, three quarters of its health gone, four seconds from its base, holding: "
+                  "0 + 0.75 - 0.2 - 0.3 = 0.25, worth going to be healed whole. A quarter gone: -0.25, it stays.",
+                  back=[going_back(walk=4.0, hurt=0.75), going_back(walk=4.0, hurt=0.25)])
     yield errands("the-streak-earns-the-power-weapon-at-home",
                   "Full of rounds, but five kills earned the power weapon at its base: 0 + 1 - 0.2 - 0.3 = 0.5.",
                   back=[going_back(0.0, earned=True, walk=4.0)])

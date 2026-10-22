@@ -59,3 +59,17 @@ func test_a_hit_starts_the_clock_again_and_throws_the_fraction_away() -> void:
 	assert_float(bot.regeneration_carry).is_equal(0.0)
 	assert_float(MatchHealth.delay_left(world.rules, bot, 34.0)).is_equal_approx(6.0, 1e-6)
 	assert_float(MatchHealth.delay_left(world.rules, bot, 45.0)).is_equal(0.0)
+
+
+func test_the_base_heals_whole_at_once_and_going_back_counts_the_health() -> void:
+	var world: BotMatch = _world()
+	var team: MatchTeam = world.teams[0]
+	var bot: MatchBot = world.bots[0]
+	bot.health = 25
+	var facts: ErrandChoice.Resupply = world.supply.resupply_facts(world, team, bot)
+	assert_float(facts.hurt).is_equal_approx(0.75, 1e-9)
+	bot.hurt_at = world.time
+	bot.position = world.arena.resupply["blue"]
+	world.supply.touch(world, bot)
+	assert_int(bot.health).is_equal(world.rules.health)
+	assert_int(world.stats[0].healed_at_base).is_equal(75)

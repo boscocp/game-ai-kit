@@ -1,7 +1,8 @@
 """Two errands a bot may leave its post for: back for rounds, or out for a power weapon.
 
 The tier-1 half of `godot/addons/ai_teamwork/errand_choice.gd`: each errand
-is a gain less its costs, and the larger is taken when above zero. A team
+is a gain less its costs -- going back is worth the rounds spent and the
+health missing -- and the larger is taken when above zero. A team
 sends one bot to fetch, the one the weapon is worth most to.
 """
 
@@ -19,6 +20,7 @@ class Weights:
     resupply_walk: float = 0.05
     leave_holding: float = 0.3
     leave_attacking: float = 0.5
+    health_worth: float = 1.0
     power_worth: float = 1.0
     power_walk: float = 0.08
     power_danger: float = 0.3
@@ -29,6 +31,7 @@ class Resupply:
     """What going back is weighed on."""
 
     spent: float = 0.0
+    hurt: float = 0.0
     earned_power: bool = False
     walk_seconds: float = 0.0
     attacking: bool = False
@@ -46,7 +49,7 @@ class Fetch:
 
 def weigh_resupply(facts: Resupply, weights: Weights) -> list[float]:
     """[gain, walk seconds, cost of leaving, score]."""
-    gain = facts.spent + (weights.power_worth if facts.earned_power else 0.0)
+    gain = facts.spent + facts.hurt * weights.health_worth + (weights.power_worth if facts.earned_power else 0.0)
     leaving = 0.0 if facts.empty else (weights.leave_attacking if facts.attacking else weights.leave_holding)
     return [gain, facts.walk_seconds, leaving, gain - facts.walk_seconds * weights.resupply_walk - leaving]
 

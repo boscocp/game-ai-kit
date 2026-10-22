@@ -68,7 +68,8 @@ func power_there(now: float) -> bool:
 	return now >= power_back_at
 
 
-## What `bot` standing where it is takes: at its base, a full rifle -- or
+## What `bot` standing where it is takes: at its base, its whole health and
+## a full rifle -- or
 ## the power weapon, its streak earning one -- unless it holds a power
 ## weapon with rounds left; at the power weapon's place, it, if it is
 ## there and the bot holds a rifle.
@@ -77,6 +78,9 @@ func touch(world: BotMatch, bot: MatchBot) -> void:
 	var base: Vector2 = world.arena.resupply.get(BotMatch.TEAM_NAMES[bot.team], Vector2.INF)
 	if base != Vector2.INF and bot.position.distance_to(base) <= rules.resupply_radius:
 		_resupply(rules, bot)
+		# The base heals whole, at once (T68, the owner's ask).
+		world.stats[bot.team].healed_at_base += rules.health - bot.health
+		bot.health = rules.health
 	var at_power: bool = bot.position.distance_to(world.arena.power_place) <= rules.power_pickup_radius
 	if at_power and power_there(world.time) and bot.weapon == RIFLE and _nearest_to_power(world, bot):
 		arm_power(bot, rules)
@@ -150,6 +154,7 @@ static func weights_of(rules: MatchRules) -> ErrandChoice.Weights:
 	weights.resupply_walk = rules.resupply_walk_weight
 	weights.leave_holding = rules.resupply_hold_weight
 	weights.leave_attacking = rules.resupply_attack_weight
+	weights.health_worth = rules.health_worth
 	weights.power_worth = rules.power_worth
 	weights.power_walk = rules.power_walk_weight
 	weights.power_danger = rules.power_danger_weight
@@ -157,7 +162,7 @@ static func weights_of(rules: MatchRules) -> ErrandChoice.Weights:
 
 
 ## What going back is weighed on, for `bot`: the share of its rounds the
-## base would give back, whether its streak earned the power weapon, the
+## base would give back, the share of its health it would, whether its streak earned the power weapon, the
 ## walk to its base, whether it is attacking, and whether it has no round
 ## left. A power weapon with rounds in it is given nothing at the base --
 ## it changes for a rifle only once empty -- so its spent share is no gain:
@@ -169,6 +174,7 @@ func resupply_facts(world: BotMatch, team: MatchTeam, bot: MatchBot) -> ErrandCh
 	var facts := ErrandChoice.Resupply.new()
 	var refilled: bool = bot.weapon == RIFLE or bot.ammo <= 0
 	facts.spent = 1.0 - float(bot.ammo + bot.reserve) / full if refilled else 0.0
+	facts.hurt = 1.0 - float(bot.health) / rules.health
 	facts.earned_power = bot.weapon == RIFLE and bot.streak >= rules.streak_for_power
 	facts.walk_seconds = _walk_seconds(world, _base_steps[bot.team], bot)
 	facts.attacking = team.bot_modes.get(bot.id, MatchTeam.HOLD) == MatchTeam.ATTACK
