@@ -1,4 +1,4 @@
-## How a bot carries out what its priority list chose, within the rules: a
+## How a bot carries out what it chose, within the rules: a
 ## limited speed and turn rate, a sprint that forbids a shot, a fire
 ## interval, a magazine, a reload, and a shot that lands by the team's aim
 ## error. The same body for every bot.
@@ -10,6 +10,18 @@
 ## steadier hand, is hit more often; and a target behind low cover shows no
 ## legs -- partial cover is the Killzone weight's reason, and here it is
 ## the rule that makes it worth 40.
+##
+## A bot walks its path cell by cell, and a body in the way is stepped
+## round by `_best_step` or, blocked, weighed by `PassageChoice`. Not by
+## `ai_steering`, asked for T67 and measured against this map: its avoid
+## swerves from round obstacles only -- "not walls, corridors", its own
+## header says, and the passages here are doors and corridors between
+## boxes; and head-on it turns to the vehicle's left, a fixed side: north
+## for a bot going east, south for one going west, which is the very fault
+## that bent the yards' mirror 9 to 1 in T66. Its arrive slows a vehicle
+## into its target, and a bot here already stops on its goal at its walking
+## pace, with no overshoot to damp. Its vehicles have inertia, and a bot's
+## turn rate is a knob of the honest bot, not a force.
 class_name MatchActions
 extends RefCounted
 
@@ -29,6 +41,10 @@ static func act(world: BotMatch, bot: MatchBot, delta: float) -> void:
 		if bot.respawn_left <= 0.0:
 			world.respawn(bot)
 		return
+	# A reload the bot chose not to carry on is lost, as a magazine pulled
+	# half way: its weighing found something better to do.
+	if bot.reload_left > 0.0 and bot.action != MatchBot.RELOAD and bot.action != MatchBot.PLAYED:
+		bot.reload_left = 0.0
 	match bot.action:
 		MatchBot.RELOAD:
 			_reload(world, bot, delta)
@@ -36,8 +52,16 @@ static func act(world: BotMatch, bot: MatchBot, delta: float) -> void:
 			_shoot(world, bot, delta)
 		MatchBot.MOVE, MatchBot.FALL_BACK:
 			_walk(world, bot, delta)
+		MatchBot.LOOK:
+			_look(world, bot, delta)
 		MatchBot.PLAYED:
 			_played(world, bot, delta)
+
+
+# Turn towards the shot it heard, where it stands.
+static func _look(world: BotMatch, bot: MatchBot, delta: float) -> void:
+	if bot.look_at != Vector2.INF:
+		bot.turn_to(bot.look_at, world.teams[bot.team].turn_rate, delta)
 
 
 ## Fire one shot from `shooter` at `target`, by the rules: counted, checked
@@ -185,7 +209,7 @@ static func speed_of(world: BotMatch, bot: MatchBot) -> float:
 # sprinting.
 static func _played(world: BotMatch, bot: MatchBot, delta: float) -> void:
 	# Every step, not every decision: a key answers at once.
-	bot.choose_pace([] as Array[int], world.rules.sprint_from)
+	bot.choose_played_pace()
 	var stride: Vector2 = bot.wants_to_walk.limit_length(1.0) * speed_of(world, bot) * delta
 	for step: Vector2 in [stride, Vector2(stride.x, 0.0), Vector2(0.0, stride.y)]:
 		var next: Vector2 = bot.position + step

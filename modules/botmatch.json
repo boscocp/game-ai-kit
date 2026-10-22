@@ -8,6 +8,7 @@
   ],
   "depends_on": [
     "ai_core",
+    "ai_perception",
     "ai_search",
     "ai_teamwork",
     "game3d",

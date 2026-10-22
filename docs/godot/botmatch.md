@@ -9,8 +9,8 @@ invalidated_if: the match's rules, arenas or techniques change, and botmatch_eff
 teaches: none
 -->
 
-> T51's example, rebuilt by T66 on maps made for tactics, played and
-> measured. The techniques and where they come from are in [the shooter AI
+> T51's example, rebuilt by T66 on maps made for tactics, its bots made
+> agents by T67, played and measured. The techniques and where they come from are in [the shooter AI
 > page](../concepts/shooter-ai.md); the level design the maps follow is its
 > T66 section. This page covers what they did here, including the results
 > that did not go the way the tasks expected.
@@ -64,17 +64,159 @@ And each bot weighs, rather than follows a rule:
   teammate, or take another spot, each priced in seconds; a teammate
   asked weighs what moving costs it against what it saves the asker (the
   owner's design);
-- **its errands** (`MatchSupply`): go back for rounds, or fetch the power
-  weapon, each a gain less its costs.
-
-What is still a fixed rule -- the bot's priority list, and its perception
-written for this match rather than taken from `ai_perception` -- is T67's.
+- **its errands** (`ErrandChoice`, T67): go back for rounds, or fetch the
+  power weapon, each a gain less its costs;
+- **what to do now** (`ActionChoice`, T67): reload, fall back, shoot, move,
+  look towards a shot it heard, or hold -- every one scored at once from
+  what it perceives, the highest done (below).
 
 The match runs as a simulation with no physics engine in it: a sight line
 is a segment against the boxes, answered exactly, and
 `botmatch_test.gd` holds that answer to Godot's own ray casts on the same
-boxes, platforms and stairs. So 142 matches run headless in about sixteen minutes. The 3D scene draws
-one match; the techniques never read anything the scene computes.
+boxes, platforms and stairs. So 149 matches run headless in about 21
+minutes. The 3D scene draws one match; the techniques never read anything
+the scene computes.
+
+## The bot as an agent (T67)
+
+The owner's ask, during T66: as few fixed `if`s in a demo as can be, and
+the bot as AIMA's agent, which perceives the world and itself and decides
+what to do towards its goal, so that on another map it copes.
+
+- **It perceives through `ai_perception`, into one record.** Its eyes are
+  a `VisionCone` asked in the open -- 40 m, 60 degrees either side, all
+  round within 3 m -- with the line answered by the arena's boxes. Its
+  ears are `Hearing`: every enemy shot within 30 m, louder nearer, through
+  walls. That, its body and its orders are `MatchPercepts`, and
+  `MatchBot.decide` reads nothing else; a test decides a bot with no match
+  at all.
+- **It weighs, it does not follow a list.** T51's priority list -- dead,
+  reload, fall back, reload early, shoot, go -- is `ActionChoice` over six
+  actions in `actions.json`: each consideration one percept through a
+  line or a step, multiplied, times the action's weight. An empty
+  magazine vetoes a shot; a reload is worth more the emptier the magazine,
+  less with an enemy it could fire at, less away from its spot; a shot is
+  worth what `AimChoice` expects of it, so a far one loses to walking on.
+  Whom it shoots is the enemy reacted to that a shot is worth most at. A
+  reload not carried on is lost, so it is a choice and not a lock. The
+  panel shows every score (`weighs: > shoot 0.92 | reload 0.00 | ...`).
+- **It weighs how to hold its body and how fast to go**, after the
+  action, from the same numbers (`postures` and `paces` in
+  `actions.json`; the panel shows `body:` and `pace:`). Crouching is
+  weighed down while it moves (a crouch halves its speed) and while it
+  shoots (behind low cover a crouched bot shoots into the box), and up by
+  what the cover beside it hides -- a low box all of it, a high one less,
+  the open nothing -- by the danger it perceives, and while it reloads.
+  Danger is 1 with an enemy in sight, else the louder of a shot heard and
+  the nearest enemy its team remembers, by closeness within 20 m.
+  Sprinting counts only while it moves, is worth more the further it has
+  to go -- passing walking just beyond 8 m, as the old rule did -- and
+  less with danger; an enemy in sight vetoes it, because a sprinting bot
+  may not fire. That is still the game's rule, in the rules; the bot only
+  weighs the chance it will need to fire.
+- **The errands are a technique**, `ErrandChoice`, with its twin and
+  vectors; the weights are still `rules.json`'s.
+- **Steering was not taken.** `ai_steering`'s avoid is for round
+  obstacles, not walls or corridors, and head-on it turns to the vehicle's
+  left: north going east, south going west -- the fixed side that bent the
+  yards' mirror in T66. The step round a body and `PassageChoice` stay.
+- **Portability is held by a test.** `RandomArena` makes an arena from a
+  seed, random within the mirror -- size, points, cover, pillars, walls, a
+  platform and its stair -- keeping only one where every point and spawn
+  can be reached. The effects test plays six, one match each.
+
+What is still fixed, said so, and where it would move:
+
+- **a dead bot waits, and a person drives the one they took**, with Shift
+  and Ctrl as before -- neither is the bot's choice, and stays so;
+- **whom it shoots** (`MatchBot._best_target`): the reacted enemy a shot
+  is worth most at -- a single score, not a weighing of several reasons;
+  a target choice by `ActionChoice` (threat, distance, who is aiming at
+  it) is later work, after T68;
+- **danger and cover as numbers**: `danger_of`, its `DANGER_METRES` of
+  20 m, and the cover values 1, 0.5 and 0 are code, not data. T68, whose
+  healing is weighed against danger, is where they would move into
+  `actions.json`;
+- **a reload not carried on is lost** (`MatchActions.act`): a rule of the
+  body, as a magazine pulled half way, and stays one;
+- **an errand overrides the spot** (`TeamTactics.think`): a bot sent back
+  for rounds gives up its spot without weighing the one against the
+  other. Weighing errand against post in one choice is later work, after
+  T68, which adds a third errand, going home to heal;
+- **the orders** -- where to stand, which point -- are the team's
+  techniques, read by the bot as its orders.
+
+### What T67 measured
+
+`make test-botmatch-effects` on this branch rebased onto main (the T66
+review's fixes included), after the review's findings were fixed: every
+claim held, 0 failures, 1279 s over 149 matches.
+
+| claim | measured | needs |
+|---|---|---|
+| the mirror, lanes | +31.5 +- 22.8 s, 13-7 | within 2.5 errors |
+| the mirror, yards | +8.9 +- 32.0 s, 11-9 | within 2.5 errors |
+| claims | 1.2 s bunched with them, 368.4 s without | <= 10 and >= 40 |
+| the commander | orders over 2.69 points with it, 1.33 without | 1.5 times |
+| retreat, lanes and yards | 13503 and 14346 retreating decisions, none uncovered | some, none |
+| honesty, every arena | 0 of about 251,000 shots at an unseen enemy | none |
+| sprint, every arena | 0 shots while sprinting, 8155 s sprinted by both sides on the lanes | none, some sprinting |
+| aim | 4.53 damage a shot by worth, 3.80 always the head | 1.1 times |
+| ammunition | always going back: -260.0 +- 11.7 s, 0-10 | below weighing by 2.5 errors |
+| portability | 6 random arenas, every point taken, every match ended | all |
+
+Each planted case was caught: a sharper blue (+300 +- 0, 10-0), a
+commander on one point, a retreat in one wave (3203 of 3547 uncovered), a
+wallhack (574 shots) and a bot firing on stale sight (34), always the
+head, the weighing blue against itself, and a random arena with point C
+walled in.
+
+**Two mirror faults, found by the review and fixed.** Each bot used to
+perceive and decide in one pass in id order, and a decision sets its
+posture at once; a shot's worth reads the target's posture, so red
+perceived blue's new posture and blue red's old one. On the yards 312 of
+12,325 mirrored two-a-side setups decided differently on the two sides,
+and the yards' mirror failed at 20 matches (+100.1 +- 32.4 s, 14-6).
+Every bot now perceives before any decides, and the same twenty measure
++8.9 +- 32.0 s. And a turn to what was exactly behind wrapped the same
+way for both sides, north for blue and south for red; it now sweeps
+towards +z for both. `botmatch_test.gd` holds each, with the faulty order
+planted.
+
+**Posture and pace make no claim of their own in the effects test.** They
+are held in `botmatch_test.gd` -- idle in the open it stands, at low
+cover or reloading it crouches, it stands to shoot over cover and to
+walk; it sprints far, walks near, with a shot heard close, or with an
+enemy in sight -- and each test fails with the weighing it holds set to
+nothing. No measure of the match was found that a bot that never crouches
+must fail, so none is claimed. The sprint claim is unchanged: no shot
+while sprinting, with some sprinting done.
+
+T65's question, again, blue's margin a match against red with everything:
+
+| blue plays | margin a match | wins |
+|---|---|---|
+| everything | +31.5 +- 22.8 s | 13-7 |
+| no claims | -6.7 +- 33.3 s | 11-9 |
+| no commander | -9.2 +- 14.9 s | 9-11 |
+| no retreat | +241.6 +- 8.3 s | 20-0 |
+
+- **The commander** is 40.7 s a match better, 1.5 combined errors:
+  suggested, not shown. What it decides -- orders over twice the points
+  -- holds.
+- **Claims**, 38.2 s, 0.9 errors: nothing the score can tell.
+- **Retreat still costs the match**, 20-0 for the team that never falls
+  back.
+
+**The fault the first run found.** The first full run with the weighing
+bots failed one planted case: the sharper blue passed the mirror as even,
+at ten matches (+64 +- 44) and at twenty (+17 +- 28, 6-14). Watched, its
+bots killed sixty for two and then stood at their base all match: their
+streaks earned power weapons, and going back counted the share of a power
+weapon's rounds spent as a gain, though the base gives a power weapon
+nothing until it is empty. That fault was T66's; weighing bots that kill
+faster met it more. The facts now count only what the base gives back,
+and `botmatch_test.gd` holds it.
 
 ## Watching, and playing inside a team
 

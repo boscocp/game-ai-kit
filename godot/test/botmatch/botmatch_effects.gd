@@ -32,7 +32,13 @@
 #   7. the mirror on the other arena (T66): the same agents, on the yards,
 #      are as fair as on the lanes -- the map is in the data, not the code.
 #      It is claim 0's check, `_fair`, asked of another arena, so claim 0's
-#      planted sharper blue is its planted case too.
+#      planted sharper blue is its planted case too. And on the yards too
+#      nobody fires unseen or sprinting, and a retreat always leaves
+#      someone covering (T67);
+#   8. portability (T67): on RANDOM_ARENAS arenas made by `RandomArena`,
+#      random within the mirror and never seen before, every match plays to
+#      its end, every point is taken at least once, and nobody fires at an
+#      enemy unseen or while sprinting.
 #
 # Each is also asked of a planted case and must reject it: a blue team with
 # a faster reaction and a steadier aim, for the mirror; the claims check
@@ -41,7 +47,8 @@
 # nearest enemy through walls, and one that keeps firing at whom it saw for
 # a second after without looking again; a blue that always aims at the
 # head put in aiming by worth's place; the weighing blue put in always going
-# back's; and the matches without claims in the claims' place.
+# back's; the matches without claims in the claims' place; and a random
+# arena with one point walled in, for portability.
 #
 # What the fighting makes of the decisions -- points held by each side,
 # wins, the mean margin and its standard error over the seeds -- is printed
@@ -64,12 +71,22 @@ const PLANTED_MATCHES: int = 5
 ## The planted sharper blue, against the mirror: with the lanes' fewer
 ## fights, five matches left its margin inside the errors (+80 +- 76 s);
 ## and always going back, five of which held less at only 2.2 errors.
+## In T67 ten, and then twenty, passed it as even (+64 +- 44, +17 +- 28)
+## -- not for want of matches: its power holders went back half full and
+## stood at the base all match, a fault in the errand's facts, now fixed.
 const SHARPER_MATCHES: int = 10
+const ALWAYS_BACK_MATCHES: int = 10
 ## The yards' mirror: as many matches as the lanes' claims. Its matches
 ## swing more (+-250 s), and ten measured blue 7-3 at 1.5 errors after two
 ## mirror faults were fixed, and 9-1 before: a fault would show, noise less.
+## When T67's weighing bots failed it at 20 (+100.1 +- 32.4 s), the cause
+## was a fault -- red perceived blue's new posture, blue red's old one --
+## and it was fixed rather than the count raised (the owner's rule).
 const YARDS_MATCHES: int = 20
 ## Measured on the lanes: 4.70 damage a shot by worth, 3.73 always the head.
+## Arenas made at random, one match each: enough to meet several maps, few
+## enough to keep the run in minutes.
+const RANDOM_ARENAS: int = 6
 const AIM_BETTER: float = 1.1
 
 ## Measured with the fair mirror: 0.0 s bunched with claims, 79 s without.
@@ -93,9 +110,8 @@ class WallhackBot extends MatchBot:
 	var world_ref: WeakRef
 
 	## The honest list, then the cheat: aim at the nearest enemy, seen or not.
-	func decide(now: float, visible: Array[int], positions: Dictionary, reaction: float,
-			moving_in_retreat: bool) -> void:
-		super(now, visible, positions, reaction, moving_in_retreat)
+	func decide(percepts: MatchPercepts, reaction: float) -> void:
+		super(percepts, reaction)
 		if not alive() or action == RELOAD:
 			return
 		var world: BotMatch = world_ref.get_ref()
@@ -119,9 +135,9 @@ class StaleSightBot extends MatchBot:
 	var _last_seen: float = -INF
 
 	## The honest list; then, with nobody in sight, the last enemy it saw.
-	func decide(now: float, visible: Array[int], positions: Dictionary, reaction: float,
-			moving_in_retreat: bool) -> void:
-		super(now, visible, positions, reaction, moving_in_retreat)
+	func decide(percepts: MatchPercepts, reaction: float) -> void:
+		super(percepts, reaction)
+		var now: float = percepts.now
 		if target != -1:
 			_last_target = target
 			_last_seen = now
@@ -144,12 +160,15 @@ func _initialize() -> void:
 		totals[pairing] = _play(pairing, _matches)
 		_report(pairing, totals[pairing])
 	for pairing: String in PLANTED:
-		totals[pairing] = _play(pairing, SHARPER_MATCHES if pairing in ["sharper blue", "always resupply"] else PLANTED_MATCHES)
+		totals[pairing] = _play(pairing, _planted_matches(pairing))
 		_report(pairing, totals[pairing])
 	totals["the yards"] = _play("the yards", YARDS_MATCHES)
 	_report("the yards", totals["the yards"])
+	for pairing: String in ["random arenas", "a point walled in"]:
+		totals[pairing] = _play(pairing, RANDOM_ARENAS if pairing == "random arenas" else 1)
+		_report(pairing, totals[pairing])
 	var failures: Array[String] = _mirror(totals) + _claims(totals) + _commander(totals) + _retreat(totals)
-	failures += _honesty(totals) + _aim(totals) + _ammunition(totals)
+	failures += _honesty(totals) + _aim(totals) + _ammunition(totals) + _portability(totals)
 	for failure: String in failures:
 		print(failure)
 	print("botmatch effects: %d pairings of %d matches, %.0f s, %d failure(s)" % [
@@ -160,21 +179,42 @@ func _initialize() -> void:
 	quit(2 if explored else (1 if not failures.is_empty() else 0))
 
 
+# How many matches a planted pairing plays: enough for its effect to show.
+static func _planted_matches(pairing: String) -> int:
+	if pairing == "sharper blue":
+		return SHARPER_MATCHES
+	return ALWAYS_BACK_MATCHES if pairing == "always resupply" else PLANTED_MATCHES
+
+
 # Blue's counts summed over the pairing's matches, both sides' unseen shots,
 # and each match's margin of points held, blue's minus red's.
 func _play(pairing: String, matches: int) -> Dictionary:
 	var rules := MatchRules.new()
-	var arena := BotArena.new(rules.body_radius, BotArena.YARDS if pairing == "the yards" else BotArena.ARENA)
-	var sums: Dictionary = {"held": 0.0, "red held": 0.0, "bunched": 0.0, "deaths": 0, "lost": 0,
+	var sums: Dictionary = {"untaken": 0, "unfinished": 0, "held": 0.0, "red held": 0.0, "bunched": 0.0, "deaths": 0, "lost": 0,
 			"unseen": 0, "shots": 0, "sprinting shots": 0, "sprinted": 0.0,
 			"blue shots": 0, "blue damage": 0, "dry": 0.0, "power": 0, "matches": 0, "ordered": 0.0, "seconds": 0.0, "retreats": 0, "uncovered": 0,
 			"blue wins": 0, "red wins": 0, "margins": PackedFloat64Array()}
 	for seed_value: int in range(1, matches + 1):
 		var red := MatchTeam.new("red", BotMatch.RED, rules)
+		var arena: BotArena = _arena_for(pairing, seed_value, rules)
 		var world := BotMatch.new(seed_value, _blue_for(pairing, rules), red, rules, arena)
 		world.play_out()
 		_add(sums, world)
 	return sums
+
+
+# The lanes, the yards, an arena made from the seed -- or, planted, one
+# with its point C walled in by a box no bot can stand near.
+static func _arena_for(pairing: String, seed_value: int, rules: MatchRules) -> BotArena:
+	if pairing == "the yards":
+		return BotArena.new(rules.body_radius, BotArena.YARDS)
+	if pairing != "random arenas" and pairing != "a point walled in":
+		return BotArena.new(rules.body_radius, BotArena.ARENA)
+	var data: Dictionary = RandomArena.make(seed_value, rules.body_radius)
+	if pairing == "a point walled in":
+		var point: Dictionary = data["points"][2]
+		(data["boxes"] as Array).append({"x": point["x"], "z": point["z"], "width": 7, "depth": 7, "height": 5.0})
+	return BotArena.new(rules.body_radius, data)
 
 
 func _blue_for(pairing: String, rules: MatchRules) -> MatchTeam:
@@ -213,6 +253,10 @@ func _add(sums: Dictionary, world: BotMatch) -> void:
 	sums["dry"] += blue.dry_seconds
 	sums["power"] += blue.power_taken
 	sums["matches"] += 1
+	sums["untaken"] += Array(world.times_taken).count(0)
+	# A script error aborts the match where it happens and the run carries
+	# on (CLAUDE.md's trap): a match not over is how one shows here.
+	sums["unfinished"] += 0 if world.over() else 1
 	sums["shots"] += blue.shots + red.shots
 	sums["ordered"] += blue.order_spread
 	sums["seconds"] += world.time
@@ -330,6 +374,8 @@ func _retreat(totals: Dictionary) -> Array[String]:
 	var numbers: Array = [totals["everything"]["retreats"], totals["everything"]["uncovered"]]
 	if not _retreat_holds(totals["everything"]):
 		failures.append("retreat: %d retreating decisions, %d with nobody covering; needs some, and none uncovered" % numbers)
+	if not _retreat_holds(totals["the yards"]):
+		failures.append("retreat: on the yards, %d retreating decisions, %d uncovered" % [totals["the yards"]["retreats"], totals["the yards"]["uncovered"]])
 	if _retreat_holds(totals["retreat in one wave"]):
 		failures.append("retreat: planted, a squad falling back all at once passed as covered")
 	return failures
@@ -379,12 +425,39 @@ static func _holds_less(fewer: Dictionary, more: Dictionary) -> bool:
 	return high.x - low.x > MIRROR_ERRORS * sqrt(low.y * low.y + high.y * high.y)
 
 
+# --- portability (T67) ---------------------------------------------------------
+
+
+func _portability(totals: Dictionary) -> Array[String]:
+	var failures: Array[String] = []
+	var random: Dictionary = totals["random arenas"]
+	var counted: String = "%d random arenas, %d points never taken, %d matches unfinished" % [
+			random["matches"], random["untaken"], random["unfinished"]]
+	print("portability: %s" % counted)
+	if not _plays_everywhere(random, RANDOM_ARENAS):
+		failures.append("portability: on %s" % counted)
+	if _plays_everywhere(totals["a point walled in"], 1):
+		failures.append("portability: planted, an arena with a point walled in had every point taken")
+	return failures
+
+
+static func _plays_everywhere(sums: Dictionary, matches: int) -> bool:
+	return int(sums["matches"]) == matches and int(sums["untaken"]) == 0 and int(sums["unfinished"]) == 0
+
+
 # --- honesty -------------------------------------------------------------------
+
+
+# Every pairing played by honest bots, on every arena.
+func _honest_pairings() -> Array[String]:
+	var all: Array[String] = PAIRINGS.duplicate()
+	all.append_array(["the yards", "random arenas"])
+	return all
 
 
 func _honesty(totals: Dictionary) -> Array[String]:
 	var failures: Array[String] = []
-	for pairing: String in PAIRINGS:
+	for pairing: String in _honest_pairings():
 		if totals[pairing]["unseen"] > 0:
 			failures.append("honesty: %d shots at unseen enemies in '%s'" % [totals[pairing]["unseen"], pairing])
 	failures.append_array(_sprint(totals))
@@ -403,7 +476,7 @@ func _honesty(totals: Dictionary) -> Array[String]:
 # sprint is botmatch_test.gd's.
 func _sprint(totals: Dictionary) -> Array[String]:
 	var failures: Array[String] = []
-	for pairing: String in PAIRINGS:
+	for pairing: String in _honest_pairings():
 		var sums: Dictionary = totals[pairing]
 		var counted: Array = [sums["sprinting shots"], sums["sprinted"], pairing]
 		if sums["sprinting shots"] > 0 or sums["sprinted"] <= 0.0:

@@ -85,9 +85,11 @@ var heights: PackedFloat64Array = PackedFloat64Array()
 var walk_graph: ArenaWalk
 
 
-## Reads `path`; `body_radius` is how far from a box a bot's centre must keep.
-func _init(body_radius: float, path: String = ARENA) -> void:
-	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+## Reads `source` -- a file's path, or the same data already parsed, as a
+## test that makes its own arena hands it; `body_radius` is how far from a
+## box a bot's centre must keep.
+func _init(body_radius: float, source: Variant = ARENA) -> void:
+	var data: Dictionary = source if source is Dictionary else JSON.parse_string(FileAccess.get_file_as_string(source))
 	width = float(data["width"])
 	mirrored = bool(data.get("mirrored", false))
 	depth = float(data["depth"])

@@ -1,0 +1,62 @@
+{
+ "name": "nothing-above-zero-chooses-nothing",
+ "why": "Every action vetoed: nothing is chosen, -1, rather than the first of zeros.",
+ "kind": "action",
+ "query": {
+  "actions": [
+   {
+    "name": "shoot",
+    "weight": 1.0,
+    "considerations": [
+     {
+      "percept": "loaded",
+      "curve": "step",
+      "at": 0.5,
+      "below": 0.0,
+      "above": 1.0
+     }
+    ]
+   },
+   {
+    "name": "reload",
+    "weight": 1.0,
+    "considerations": [
+     {
+      "percept": "has_reserve",
+      "curve": "step",
+      "at": 0.5,
+      "below": 0.0,
+      "above": 1.0
+     }
+    ]
+   }
+  ],
+  "percepts": [
+   {
+    "loaded": 0.0,
+    "has_reserve": 0.0
+   }
+  ]
+ },
+ "expect": {
+  "scores": [
+   [
+    0.0,
+    0.0
+   ]
+  ],
+  "answers": [
+   [
+    [
+     0.0
+    ],
+    [
+     0.0
+    ]
+   ]
+  ],
+  "chosen": [
+   -1
+  ]
+ }
+}

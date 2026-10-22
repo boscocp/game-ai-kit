@@ -1,0 +1,155 @@
+{
+ "name": "the-bot-match-weighs-its-posture",
+ "why": "The bot match's postures (a copy of `actions.json`). Idle in the open, nothing perceived: crouching is 0.306 against standing's 0.33. Idle at low cover: 0.51, crouch. Reloading in the open: 0.36, crouch. Shooting at low cover with an enemy in sight: 0.17, stand -- crouched it would shoot into the box. Walking: 0.085, stand, for a crouch halves its speed.",
+ "kind": "action",
+ "query": {
+  "actions": [
+   {
+    "name": "stand",
+    "weight": 0.33,
+    "considerations": []
+   },
+   {
+    "name": "crouch",
+    "weight": 1.0,
+    "considerations": [
+     {
+      "percept": "moving",
+      "curve": "step",
+      "at": 0.5,
+      "below": 1.0,
+      "above": 0.1
+     },
+     {
+      "percept": "shooting",
+      "curve": "step",
+      "at": 0.5,
+      "below": 1.0,
+      "above": 0.2
+     },
+     {
+      "percept": "cover",
+      "curve": "linear",
+      "slope": 0.4,
+      "intercept": 0.6
+     },
+     {
+      "percept": "danger",
+      "curve": "linear",
+      "slope": 0.5,
+      "intercept": 0.6
+     },
+     {
+      "percept": "reloading",
+      "curve": "step",
+      "at": 0.5,
+      "below": 0.85,
+      "above": 1.0
+     }
+    ]
+   }
+  ],
+  "percepts": [
+   {},
+   {
+    "cover": 1.0
+   },
+   {
+    "reloading": 1.0
+   },
+   {
+    "shooting": 1.0,
+    "cover": 1.0,
+    "danger": 1.0
+   },
+   {
+    "moving": 1.0,
+    "cover": 1.0,
+    "danger": 1.0
+   }
+  ]
+ },
+ "expect": {
+  "scores": [
+   [
+    0.33,
+    0.306
+   ],
+   [
+    0.33,
+    0.51
+   ],
+   [
+    0.33,
+    0.36
+   ],
+   [
+    0.33,
+    0.17
+   ],
+   [
+    0.33,
+    0.085
+   ]
+  ],
+  "answers": [
+   [
+    [],
+    [
+     1.0,
+     1.0,
+     0.6,
+     0.6,
+     0.85
+    ]
+   ],
+   [
+    [],
+    [
+     1.0,
+     1.0,
+     1.0,
+     0.6,
+     0.85
+    ]
+   ],
+   [
+    [],
+    [
+     1.0,
+     1.0,
+     0.6,
+     0.6,
+     1.0
+    ]
+   ],
+   [
+    [],
+    [
+     1.0,
+     0.2,
+     1.0,
+     1.0,
+     0.85
+    ]
+   ],
+   [
+    [],
+    [
+     0.1,
+     1.0,
+     1.0,
+     1.0,
+     0.85
+    ]
+   ]
+  ],
+  "chosen": [
+   0,
+   1,
+   1,
+   0,
+   0
+  ]
+ }
+}

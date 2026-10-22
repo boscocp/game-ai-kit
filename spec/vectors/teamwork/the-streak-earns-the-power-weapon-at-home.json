@@ -1,0 +1,40 @@
+{
+ "name": "the-streak-earns-the-power-weapon-at-home",
+ "why": "Full of rounds, but five kills earned the power weapon at its base: 0 + 1 - 0.2 - 0.3 = 0.5.",
+ "kind": "errands",
+ "weights": {
+  "resupply_walk": 0.05,
+  "leave_holding": 0.3,
+  "leave_attacking": 0.5,
+  "power_worth": 1.0,
+  "power_walk": 0.08,
+  "power_danger": 0.3
+ },
+ "query": {
+  "resupply": [
+   {
+    "spent": 0.0,
+    "earned_power": true,
+    "walk_seconds": 4.0,
+    "attacking": false,
+    "empty": false
+   }
+  ],
+  "fetch": [],
+  "teams": [],
+  "pairs": []
+ },
+ "expect": {
+  "resupply": [
+   [
+    1.0,
+    4.0,
+    0.3,
+    0.5
+   ]
+  ],
+  "fetch": [],
+  "fetcher": [],
+  "chosen": []
+ }
+}

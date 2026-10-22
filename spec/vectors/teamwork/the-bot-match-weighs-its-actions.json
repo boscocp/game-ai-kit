@@ -1,0 +1,325 @@
+{
+ "name": "the-bot-match-weighs-its-actions",
+ "why": "The bot match's own six actions. Loaded at its spot, a shot worth 0.25: shoot. Empty, away from its goal with an enemy near: reload, 0.6, beats moving on, 0.5. Ten rounds left at its spot, nobody in sight: reload early, 0.5. A loud shot heard (0.75) at its spot with nobody in sight: look, 0.45, beats holding. In the moving wave of a retreat with a poor shot (0.0625): fall back, 0.8, beats the shot, 0.5.",
+ "kind": "action",
+ "query": {
+  "actions": [
+   {
+    "name": "reload",
+    "weight": 1.0,
+    "considerations": [
+     {
+      "percept": "rounds_left",
+      "curve": "linear",
+      "slope": -1.5,
+      "intercept": 1.0
+     },
+     {
+      "percept": "has_reserve",
+      "curve": "step",
+      "at": 0.5,
+      "below": 0.0,
+      "above": 1.0
+     },
+     {
+      "percept": "could_fire",
+      "curve": "step",
+      "at": 0.5,
+      "below": 1.0,
+      "above": 0.4
+     },
+     {
+      "percept": "to_go",
+      "curve": "step",
+      "at": 0.3,
+      "below": 1.0,
+      "above": 0.6
+     }
+    ]
+   },
+   {
+    "name": "fall back",
+    "weight": 0.8,
+    "considerations": [
+     {
+      "percept": "in_retreat_wave",
+      "curve": "step",
+      "at": 0.5,
+      "below": 0.0,
+      "above": 1.0
+     }
+    ]
+   },
+   {
+    "name": "shoot",
+    "weight": 1.0,
+    "considerations": [
+     {
+      "percept": "ready_to_fire",
+      "curve": "step",
+      "at": 0.5,
+      "below": 0.0,
+      "above": 1.0
+     },
+     {
+      "percept": "shot_worth",
+      "curve": "linear",
+      "slope": 8.0,
+      "intercept": 0.0
+     }
+    ]
+   },
+   {
+    "name": "move",
+    "weight": 0.5,
+    "considerations": [
+     {
+      "percept": "to_go",
+      "curve": "step",
+      "at": 0.3,
+      "below": 0.0,
+      "above": 1.0
+     }
+    ]
+   },
+   {
+    "name": "look",
+    "weight": 0.45,
+    "considerations": [
+     {
+      "percept": "heard",
+      "curve": "linear",
+      "slope": 2.0,
+      "intercept": 0.0
+     },
+     {
+      "percept": "enemy_in_sight",
+      "curve": "step",
+      "at": 0.5,
+      "below": 1.0,
+      "above": 0.0
+     }
+    ]
+   },
+   {
+    "name": "hold",
+    "weight": 0.3,
+    "considerations": []
+   }
+  ],
+  "percepts": [
+   {
+    "ready_to_fire": 1.0,
+    "shot_worth": 0.25,
+    "rounds_left": 1.0,
+    "has_reserve": 1.0,
+    "could_fire": 1.0,
+    "to_go": 0.0,
+    "enemy_in_sight": 1.0
+   },
+   {
+    "ready_to_fire": 0.0,
+    "shot_worth": 0.0,
+    "rounds_left": 0.0,
+    "has_reserve": 1.0,
+    "could_fire": 0.0,
+    "to_go": 6.0,
+    "enemy_in_sight": 1.0
+   },
+   {
+    "ready_to_fire": 1.0,
+    "shot_worth": 0.0,
+    "rounds_left": 0.3333333333333333,
+    "has_reserve": 1.0,
+    "could_fire": 0.0,
+    "to_go": 0.0,
+    "enemy_in_sight": 0.0
+   },
+   {
+    "ready_to_fire": 1.0,
+    "rounds_left": 1.0,
+    "has_reserve": 1.0,
+    "heard": 0.75,
+    "to_go": 0.0
+   },
+   {
+    "ready_to_fire": 1.0,
+    "shot_worth": 0.0625,
+    "rounds_left": 1.0,
+    "has_reserve": 1.0,
+    "could_fire": 1.0,
+    "to_go": 8.0,
+    "enemy_in_sight": 1.0,
+    "in_retreat_wave": 1.0
+   }
+  ]
+ },
+ "expect": {
+  "scores": [
+   [
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.3
+   ],
+   [
+    0.6,
+    0.0,
+    0.0,
+    0.5,
+    0.0,
+    0.3
+   ],
+   [
+    0.5,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.3
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.45,
+    0.3
+   ],
+   [
+    0.0,
+    0.8,
+    0.5,
+    0.5,
+    0.0,
+    0.3
+   ]
+  ],
+  "answers": [
+   [
+    [
+     0.0,
+     1.0,
+     0.4,
+     1.0
+    ],
+    [
+     0.0
+    ],
+    [
+     1.0,
+     1.0
+    ],
+    [
+     0.0
+    ],
+    [
+     0.0,
+     0.0
+    ],
+    []
+   ],
+   [
+    [
+     1.0,
+     1.0,
+     1.0,
+     0.6
+    ],
+    [
+     0.0
+    ],
+    [
+     0.0,
+     0.0
+    ],
+    [
+     1.0
+    ],
+    [
+     0.0,
+     0.0
+    ],
+    []
+   ],
+   [
+    [
+     0.5,
+     1.0,
+     1.0,
+     1.0
+    ],
+    [
+     0.0
+    ],
+    [
+     1.0,
+     0.0
+    ],
+    [
+     0.0
+    ],
+    [
+     0.0,
+     1.0
+    ],
+    []
+   ],
+   [
+    [
+     0.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    [
+     0.0
+    ],
+    [
+     1.0,
+     0.0
+    ],
+    [
+     0.0
+    ],
+    [
+     1.0,
+     1.0
+    ],
+    []
+   ],
+   [
+    [
+     0.0,
+     1.0,
+     0.4,
+     0.6
+    ],
+    [
+     1.0
+    ],
+    [
+     1.0,
+     0.5
+    ],
+    [
+     1.0
+    ],
+    [
+     0.0,
+     0.0
+    ],
+    []
+   ]
+  ],
+  "chosen": [
+   2,
+   0,
+   0,
+   4,
+   1
+  ]
+ }
+}

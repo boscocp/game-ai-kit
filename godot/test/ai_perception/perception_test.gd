@@ -197,3 +197,38 @@ func test_watchers_make_their_own_cells_the_most_dangerous() -> void:
 	assert_float(map.value_at(Vector2i(2, 2))).is_equal(1.0)
 	assert_float(map.value_at(Vector2i(4, 2))).is_greater(0.0)
 	assert_float(map.value_at(Vector2i(0, 2))).is_equal(0.0)
+
+
+func test_in_the_open_the_cone_has_its_reach_and_its_angle() -> void:
+	var cone := VisionCone.new(10.0, 60.0)
+	var clear: Callable = func() -> bool: return true
+	assert_bool(cone.sees_in_the_open(Vector2.ZERO, 0.0, Vector2(9.0, 3.0), clear)).is_true()
+	assert_bool(cone.sees_in_the_open(Vector2.ZERO, 0.0, Vector2(10.5, 0.0), clear)).is_false()
+	# 70 degrees off its facing, outside a 60-degree half-angle.
+	assert_bool(cone.sees_in_the_open(Vector2.ZERO, 0.0, Vector2.from_angle(deg_to_rad(70.0)) * 5.0, clear)).is_false()
+	# Facing the other way, the same place is ahead.
+	assert_bool(cone.sees_in_the_open(Vector2.ZERO, PI, Vector2(-9.0, 3.0), clear)).is_true()
+
+
+func test_in_the_open_a_body_beside_is_seen_whichever_way_it_faces() -> void:
+	var cone := VisionCone.new(10.0, 60.0)
+	var clear: Callable = func() -> bool: return true
+	var behind := Vector2(-2.0, 0.0)
+	assert_bool(cone.sees_in_the_open(Vector2.ZERO, 0.0, behind, clear)).is_false()
+	cone.all_round_within = 3.0
+	assert_bool(cone.sees_in_the_open(Vector2.ZERO, 0.0, behind, clear)).is_true()
+	assert_bool(cone.sees_in_the_open(Vector2.ZERO, 0.0, behind * 2.0, clear)).is_false()
+
+
+func test_in_the_open_the_world_answers_the_line_and_only_when_asked() -> void:
+	var cone := VisionCone.new(10.0, 60.0)
+	var asked: Array[int] = [0]
+	var walled: Callable = func() -> bool:
+		asked[0] += 1
+		return false
+	assert_bool(cone.sees_in_the_open(Vector2.ZERO, 0.0, Vector2(5.0, 0.0), walled)).is_false()
+	assert_int(asked[0]).is_equal(1)
+	# Out of the cone, the line is never asked: the cheap tests come first.
+	cone.sees_in_the_open(Vector2.ZERO, PI, Vector2(5.0, 0.0), walled)
+	cone.sees_in_the_open(Vector2.ZERO, 0.0, Vector2(50.0, 0.0), walled)
+	assert_int(asked[0]).is_equal(1)

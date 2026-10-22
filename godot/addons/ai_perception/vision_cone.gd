@@ -5,6 +5,11 @@
 ## expensive one runs. `visible_cells` asks every cell within reach: O(reach²
 ## x reach), which is a few hundred line walks on this board.
 ##
+## The same cone in the open, off any grid (`sees_in_the_open`): the reach
+## and the angle are the cone's, and the line is the world's to answer -- a
+## world of boxes with heights, or a physics space, knows its walls exactly,
+## where cells would not. The bot match's eyes are this (T67).
+##
 ## When not to use it: hundreds of watchers on a big map. Cast rays outwards
 ## once per watcher, or use the engine's physics, rather than asking each cell.
 class_name VisionCone
@@ -19,6 +24,11 @@ var reach: float
 var half_angle_degrees: float
 
 var opaque_from_cost: int
+
+## In the open, whoever stands within this of the eye is seen whichever way
+## the watcher faces: a body at arm's length is felt, if not looked at. 0,
+## the default, is the cone alone.
+var all_round_within: float = 0.0
 
 
 func _init(cone_reach: float, cone_half_angle_degrees: float,
@@ -44,6 +54,22 @@ func sees(graph: GridGraph, eye: Vector2i, facing: Vector2i, target: Vector2i) -
 	if facing != Vector2i.ZERO and not _within_angle(Vector2(facing), offset):
 		return false
 	return LineOfSight.clear(graph, eye, target, opaque_from_cost)
+
+
+## True when a watcher at `eye`, facing `facing_angle` radians (0 along +x,
+## turning towards +y), sees `target` in the open: within reach, within the
+## cone or `all_round_within`, and `line_is_clear` -- a Callable taking
+## nothing and answering a bool -- says nothing stands between. Cheapest
+## first, as on the grid: the line, the expensive test, is asked last, and
+## only of what the cone has let through.
+func sees_in_the_open(eye: Vector2, facing_angle: float, target: Vector2, line_is_clear: Callable) -> bool:
+	var offset: Vector2 = target - eye
+	if offset.length() > reach:
+		return false
+	var beside: bool = offset.length() <= all_round_within
+	if not beside and not _within_angle(Vector2.from_angle(facing_angle), offset):
+		return false
+	return bool(line_is_clear.call())
 
 
 ## How near `target` is, from 1 at the eye to 0 at the edge of reach.

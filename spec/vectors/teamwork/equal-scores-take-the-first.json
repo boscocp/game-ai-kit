@@ -1,0 +1,39 @@
+{
+ "name": "equal-scores-take-the-first",
+ "why": "Two actions scoring 0.5 each: the first listed is taken, on both sides.",
+ "kind": "action",
+ "query": {
+  "actions": [
+   {
+    "name": "left",
+    "weight": 0.5,
+    "considerations": []
+   },
+   {
+    "name": "right",
+    "weight": 0.5,
+    "considerations": []
+   }
+  ],
+  "percepts": [
+   {}
+  ]
+ },
+ "expect": {
+  "scores": [
+   [
+    0.5,
+    0.5
+   ]
+  ],
+  "answers": [
+   [
+    [],
+    []
+   ]
+  ],
+  "chosen": [
+   0
+  ]
+ }
+}

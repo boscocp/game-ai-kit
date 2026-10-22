@@ -128,3 +128,17 @@ func test_the_checker_catches_a_wrong_number_a_wrong_word_and_a_missing_key() ->
 	var none: Array[String] = []
 	TeamworkVector.differences({"value": 1.0, "list": [1, "x"]}, {"value": 1.00001, "list": [1.0, "x"]}, "n", none)
 	assert_array(none).is_empty()
+
+
+func test_actions_with_an_unknown_key_or_curve_are_refused() -> void:
+	var good: Array = [{"name": "go", "weight": 1.0, "considerations": [{"percept": "x", "curve": "step", "at": 0.5}]}]
+	assert_str(ActionChoice.why_not_actions(good)).is_empty()
+	assert_int(ActionChoice.actions_from(good).size()).is_equal(1)
+	var planted: Array = [
+		[{"name": "go", "wieght": 1.0}],
+		[{"name": "go", "considerations": [{"percept": "x", "curve": "stepp"}]}],
+		[{"name": "go", "considerations": [{"percept": "x", "slop": 2.0}]}],
+		[{"weight": 1.0}],
+	]
+	for data: Array in planted:
+		assert_str(ActionChoice.why_not_actions(data)).override_failure_message(str(data)).is_not_empty()

@@ -1,0 +1,53 @@
+{
+ "name": "back-for-rounds-when-spent-and-near",
+ "why": "Three quarters spent, two seconds from its base, holding: 0.75 - 0.1 - 0.3 = 0.35, worth going. Full, the same walk: -0.4, and it stays.",
+ "kind": "errands",
+ "weights": {
+  "resupply_walk": 0.05,
+  "leave_holding": 0.3,
+  "leave_attacking": 0.5,
+  "power_worth": 1.0,
+  "power_walk": 0.08,
+  "power_danger": 0.3
+ },
+ "query": {
+  "resupply": [
+   {
+    "spent": 0.75,
+    "earned_power": false,
+    "walk_seconds": 2.0,
+    "attacking": false,
+    "empty": false
+   },
+   {
+    "spent": 0.0,
+    "earned_power": false,
+    "walk_seconds": 2.0,
+    "attacking": false,
+    "empty": false
+   }
+  ],
+  "fetch": [],
+  "teams": [],
+  "pairs": []
+ },
+ "expect": {
+  "resupply": [
+   [
+    0.75,
+    2.0,
+    0.3,
+    0.35000000000000003
+   ],
+   [
+    0.0,
+    2.0,
+    0.3,
+    -0.4
+   ]
+  ],
+  "fetch": [],
+  "fetcher": [],
+  "chosen": []
+ }
+}

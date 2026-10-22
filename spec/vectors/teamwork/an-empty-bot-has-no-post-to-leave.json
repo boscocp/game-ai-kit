@@ -1,0 +1,53 @@
+{
+ "name": "an-empty-bot-has-no-post-to-leave",
+ "why": "No round left, attacking, ten seconds away: leaving costs it nothing, 1 - 0.5 = 0.5. With a tenth left it has a post: 0.9 - 0.5 - 0.5 = -0.1.",
+ "kind": "errands",
+ "weights": {
+  "resupply_walk": 0.05,
+  "leave_holding": 0.3,
+  "leave_attacking": 0.5,
+  "power_worth": 1.0,
+  "power_walk": 0.08,
+  "power_danger": 0.3
+ },
+ "query": {
+  "resupply": [
+   {
+    "spent": 1.0,
+    "earned_power": false,
+    "walk_seconds": 10.0,
+    "attacking": true,
+    "empty": true
+   },
+   {
+    "spent": 0.9,
+    "earned_power": false,
+    "walk_seconds": 10.0,
+    "attacking": true,
+    "empty": false
+   }
+  ],
+  "fetch": [],
+  "teams": [],
+  "pairs": []
+ },
+ "expect": {
+  "resupply": [
+   [
+    1.0,
+    10.0,
+    0.0,
+    0.5
+   ],
+   [
+    0.9,
+    10.0,
+    0.5,
+    -0.09999999999999998
+   ]
+  ],
+  "fetch": [],
+  "fetcher": [],
+  "chosen": []
+ }
+}

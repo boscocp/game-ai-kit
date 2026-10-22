@@ -48,6 +48,26 @@ func _assert_mirrored(arena: BotArena) -> void:
 		assert_int(BotArena.cell_of(red).x).is_equal(int(arena.width) - 1 - BotArena.cell_of(blue).x)
 
 
+func test_an_arena_made_at_random_is_a_mirror_and_playable() -> void:
+	# T67's third arena, which the effects test plays: a few seeds' worth.
+	for seed_value: int in range(1, 6):
+		var data: Dictionary = RandomArena.make(seed_value)
+		assert_bool(data.is_empty()).override_failure_message("seed %d made no arena" % seed_value).is_false()
+		var arena := BotArena.new(0.4, data)
+		_assert_mirrored(arena)
+		_assert_spots_mirrored(arena)
+		assert_bool(RandomArena.playable(arena, 0.4)).is_true()
+		assert_int(arena.spots.size()).is_greater(10)
+
+
+func test_an_arena_with_a_point_walled_in_is_not_playable() -> void:
+	# The generator's own check, shown a point inside a box: it must refuse.
+	var data: Dictionary = RandomArena.make(1)
+	var point: Dictionary = data["points"][2]
+	(data["boxes"] as Array).append({"x": point["x"], "z": point["z"], "width": 7, "depth": 7, "height": 5.0})
+	assert_bool(RandomArena.playable(BotArena.new(0.4, data), 0.4)).is_false()
+
+
 func test_the_cover_spots_are_a_mirror_and_never_crowd_each_other() -> void:
 	for path: String in BotArena.ARENAS:
 		_assert_spots_mirrored(BotArena.new(0.4, path))
@@ -596,24 +616,31 @@ func test_a_person_hits_what_they_aim_at_and_not_through_a_wall() -> void:
 	assert_int(enemy.health).is_equal(rules.health - rules.damage)
 
 
-func test_a_bot_sprints_to_a_far_goal_and_walks_once_an_enemy_is_seen() -> void:
+func test_a_bot_weighs_sprinting_by_the_way_left_and_the_danger_it_perceives() -> void:
 	var rules := MatchRules.new()
 	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
 	var bot: MatchBot = world.bots[0]
-	# Along lane A's north side, clear of every box.
+	# Along lane A's north side, clear of every box, 12 m to go: sprint
+	# (0.75 against walking's 0.5).
 	bot.position = Vector2(15.0, 3.0)
-	world.send(bot, Vector2(15.0 + rules.sprint_from + 4.0, 3.0), -1)
-	bot.action = MatchBot.MOVE
-	bot.choose_pace([] as Array[int], rules.sprint_from)
+	world.send(bot, Vector2(27.0, 3.0), -1)
+	bot.decide(_percepts(bot, 1.0), 0.3)
+	assert_str(bot.action).is_equal(MatchBot.MOVE)
 	assert_bool(bot.sprinting).is_true()
 	MatchActions.act(world, bot, 1.0)
 	assert_float(bot.position.x).is_equal_approx(15.0 + rules.sprint_speed, 1e-3)
-	# An enemy in its row: it walks, the same far goal or not.
-	bot.choose_pace([6] as Array[int], rules.sprint_from)
+	# Back at 12 m, a shot heard close by (0.5): 0.45, it walks.
+	bot.position = Vector2(15.0, 3.0)
+	var heard: MatchPercepts = _percepts(bot, 2.0)
+	heard.heard = 0.5
+	bot.decide(heard, 0.3)
 	assert_bool(bot.sprinting).is_false()
-	# Near its goal it walks too.
-	bot.position = Vector2(15.0 + rules.sprint_from, 3.0)
-	bot.choose_pace([] as Array[int], rules.sprint_from)
+	# An enemy in sight vetoes it: a sprinting bot may not fire.
+	bot.decide(_percepts(bot, 3.0, [6] as Array[int], {6: Vector2(40.0, 3.0)}), 5.0)
+	assert_bool(bot.sprinting).is_false()
+	# Six metres from its goal it walks too (0.375).
+	bot.position = Vector2(21.0, 3.0)
+	bot.decide(_percepts(bot, 4.0), 0.3)
 	assert_bool(bot.sprinting).is_false()
 
 
@@ -651,27 +678,28 @@ func test_nobody_fires_while_sprinting() -> void:
 	assert_int(world.stats[0].shots_sprinting).is_equal(1)
 
 
-func test_a_bot_reloads_early_only_with_nobody_in_sight_and_where_it_was_going() -> void:
+func test_a_bot_reloads_early_when_it_weighs_quiet_and_where_it_was_going() -> void:
 	var rules := MatchRules.new()
 	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
 	var bot: MatchBot = world.bots[0]
 	var places: Dictionary = {6: Vector2(30.0, 3.0)}
 	bot.position = Vector2(15.0, 3.0)
 	bot.goal = bot.position
-	bot.ammo = rules.reload_below - 1
-	bot.decide(1.0, [] as Array[int], places, 0.0, false)
+	# Nine rounds of thirty: reloading is worth 0.55, holding 0.3.
+	bot.ammo = 9
+	bot.decide(_percepts(bot, 1.0, [] as Array[int], places), 0.0)
 	assert_str(bot.action).is_equal(MatchBot.RELOAD)
 	# An enemy in sight, even one not reacted to yet: it does not.
-	bot.decide(1.0, [6] as Array[int], places, 5.0, false)
+	bot.decide(_percepts(bot, 1.0, [6] as Array[int], places), 5.0)
 	assert_str(bot.action).is_not_equal(MatchBot.RELOAD)
 	# On its way somewhere: not yet.
 	bot.goal = Vector2(25.0, 3.0)
-	bot.decide(1.0, [] as Array[int], places, 0.0, false)
+	bot.decide(_percepts(bot, 1.0, [] as Array[int], places), 0.0)
 	assert_str(bot.action).is_equal(MatchBot.MOVE)
-	# Enough rounds left: it holds.
+	# Enough rounds left -- sixteen, worth 0.2 to reload: it holds.
 	bot.goal = bot.position
-	bot.ammo = rules.reload_below
-	bot.decide(1.0, [] as Array[int], places, 0.0, false)
+	bot.ammo = 16
+	bot.decide(_percepts(bot, 1.0, [] as Array[int], places), 0.0)
 	assert_str(bot.action).is_equal(MatchBot.HOLD)
 
 
@@ -791,7 +819,7 @@ func test_a_rifle_has_120_rounds_and_a_reload_takes_only_what_is_left() -> void:
 	assert_int(bot.reserve).is_equal(0)
 	# Nothing left: no reload, and its list does not ask for one.
 	bot.ammo = 0
-	bot.decide(1.0, [] as Array[int], {}, 0.0, false)
+	bot.decide(_percepts(bot, 1.0), 0.0)
 	assert_str(bot.action).is_not_equal(MatchBot.RELOAD)
 
 
@@ -904,6 +932,18 @@ func test_going_back_is_weighed_and_the_planted_rules_never_and_always_differ() 
 	world.supply.think(world, team)
 	assert_str(bot.errand).is_equal(MatchSupply.RESUPPLY)
 	assert_float(float(bot.errand_weighing[MatchSupply.RESUPPLY][3])).is_greater(0.0)
+	# A power weapon half spent: the base gives it nothing, so it stays;
+	# empty, the base gives a rifle, and it goes.
+	MatchSupply.arm_power(bot, rules)
+	bot.ammo = rules.power_rounds / 2
+	world.supply.think(world, team)
+	assert_str(bot.errand).is_equal(MatchSupply.NO_ERRAND)
+	bot.ammo = 0
+	world.supply.think(world, team)
+	assert_str(bot.errand).is_equal(MatchSupply.RESUPPLY)
+	MatchSupply.arm_rifle(bot, rules)
+	bot.ammo = 10
+	bot.reserve = 0
 	# Planted: a team that never goes back, and one that always does.
 	team.resupply_rule = MatchSupply.NEVER
 	world.supply.think(world, team)
@@ -981,7 +1021,7 @@ func test_a_teammate_asked_to_make_way_weighs_it_and_steps_aside() -> void:
 	walker.action = MatchBot.MOVE
 	for _step: int in range(40):
 		MatchActions.act(world, walker, rules.step)
-		holder.decide(world.time, [] as Array[int], {}, 0.0, false)
+		holder.decide(_percepts(holder, world.time), 0.0)
 		MatchActions.act(world, holder, rules.step)
 	assert_bool(walker.arrived()).override_failure_message("stuck at %s" % walker.position).is_true()
 	assert_str(str(walker.last_passage["chosen"])).is_equal(PassageChoice.ASK)
@@ -1133,3 +1173,232 @@ func _solid(box: AABB) -> StaticBody3D:
 	body.add_child(holder)
 	body.position = box.get_center()
 	return body
+
+
+# What `bot` perceives with `in_sight` enemies standing at `places`: the
+# record its decision reads, built by hand.
+static func _percepts(bot: MatchBot, now: float, in_sight: Array[int] = [], places: Dictionary = {}) -> MatchPercepts:
+	var percepts: MatchPercepts = MatchPercepts.of_body(bot, now, 30)
+	percepts.in_sight = in_sight
+	percepts.enemy_places = places
+	return percepts
+
+
+func test_a_bot_decides_from_its_percepts_alone_with_no_match_at_all() -> void:
+	# No arena, no teams, no world: the record is all it reads (T67).
+	var bot := MatchBot.new()
+	bot.ammo = 30
+	bot.reserve = 90
+	var percepts: MatchPercepts = _percepts(bot, 5.0, [9] as Array[int], {9: Vector2(10.0, 0.0)})
+	percepts.shot_worth = {9: 0.25}
+	bot.decide(percepts, 0.3)
+	# Seen for the first time now: not reacted to yet, so it holds.
+	assert_str(bot.action).is_equal(MatchBot.HOLD)
+	percepts.now = 5.5
+	bot.decide(percepts, 0.3)
+	assert_str(bot.action).is_equal(MatchBot.SHOOT)
+	assert_int(bot.target).is_equal(9)
+	# Every action was weighed, and the shot scored highest.
+	var shoot: int = bot.actions.map(func(each: ActionChoice.Action) -> String: return each.name).find(MatchBot.SHOOT)
+	assert_int(bot.last_choice.chosen).is_equal(shoot)
+	assert_int(bot.last_choice.scores.size()).is_equal(bot.actions.size())
+
+
+func test_an_enemy_shot_is_heard_louder_nearer_and_a_friends_is_not_news() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var listener: MatchBot = world.bots[0]
+	listener.position = Vector2(15.5, 3.5)
+	world.bots[1].position = Vector2(16.5, 3.5)
+	world.bots[6].position = Vector2(30.5, 3.5)
+	world.record_shot(world.bots[1], -1, false, Vector3.ZERO)
+	assert_float(MatchSenses.perceive(world, listener, false).heard).is_equal(0.0)
+	world.record_shot(world.bots[6], -1, false, Vector3.ZERO)
+	var heard: MatchPercepts = MatchSenses.perceive(world, listener, false)
+	assert_float(heard.heard).is_equal_approx(1.0 - 15.0 / rules.shot_heard_metres, 1e-6)
+	assert_vector(heard.heard_from).is_equal(world.bots[6].position)
+	# Out of hearing, nothing.
+	listener.position = Vector2(0.5, 3.5)
+	assert_float(MatchSenses.perceive(world, listener, false).heard).is_equal(0.0)
+
+
+# A bot with a full rifle at its goal, perceiving `cover` and nothing else.
+static func _still_bot(cover: float) -> Array:
+	var bot := MatchBot.new()
+	bot.ammo = 30
+	bot.reserve = 90
+	var percepts: MatchPercepts = _percepts(bot, 5.0)
+	percepts.cover = cover
+	return [bot, percepts]
+
+
+func test_a_bot_weighs_crouching_by_its_cover_its_danger_and_what_it_does() -> void:
+	# Idle in the open, nothing perceived: it stands (crouch 0.31, stand 0.33).
+	var idle: Array = _still_bot(0.0)
+	idle[0].decide(idle[1], 0.3)
+	assert_bool(idle[0].crouched).is_false()
+	# The same at low cover: crouched, nothing shows (0.51).
+	var covered: Array = _still_bot(1.0)
+	covered[0].decide(covered[1], 0.3)
+	assert_bool(covered[0].crouched).is_true()
+	# Reloading in the open: crouching is worth it (0.36).
+	var reloading: Array = _still_bot(0.0)
+	reloading[0].ammo = 0
+	reloading[1].rounds = 0
+	reloading[0].decide(reloading[1], 0.3)
+	assert_str(reloading[0].action).is_equal(MatchBot.RELOAD)
+	assert_bool(reloading[0].crouched).is_true()
+	# A shot remembered near, in the open and idle: danger tips it to crouch.
+	var wary: Array = _still_bot(0.0)
+	wary[1].heard = 0.6
+	wary[0].decide(wary[1], 0.3)
+	assert_bool(wary[0].crouched).is_true()
+
+
+func test_a_bot_stands_to_shoot_over_low_cover_and_to_walk() -> void:
+	var shooter: Array = _still_bot(1.0)
+	var percepts: MatchPercepts = shooter[1]
+	percepts.in_sight = [9] as Array[int]
+	percepts.enemy_places = {9: Vector2(10.0, 0.0)}
+	percepts.shot_worth = {9: 0.25}
+	shooter[0].decide(percepts, 0.3)
+	percepts.now += 1.0
+	shooter[0].decide(percepts, 0.3)
+	assert_str(shooter[0].action).is_equal(MatchBot.SHOOT)
+	assert_bool(shooter[0].crouched).is_false()
+	var walker: Array = _still_bot(1.0)
+	walker[1].goal = Vector2(10.0, 0.0)
+	walker[0].decide(walker[1], 0.3)
+	assert_str(walker[0].action).is_equal(MatchBot.MOVE)
+	assert_bool(walker[0].crouched).is_false()
+
+
+func test_danger_is_what_it_sees_hears_or_its_team_remembers_near() -> void:
+	var bot := MatchBot.new()
+	var percepts: MatchPercepts = _percepts(bot, 1.0)
+	assert_float(MatchBot.danger_of(percepts)).is_equal(0.0)
+	percepts.heard = 0.25
+	percepts.remembered = [Vector2(10.0, 0.0), Vector2(30.0, 0.0)] as Array[Vector2]
+	assert_float(MatchBot.danger_of(percepts)).is_equal_approx(0.5, 1e-6)
+	percepts.in_sight = [9] as Array[int]
+	assert_float(MatchBot.danger_of(percepts)).is_equal(1.0)
+
+
+func test_the_cover_a_bot_stands_at_is_low_high_or_none() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	var low: BotArena.Spot = null
+	var high: BotArena.Spot = null
+	for spot: BotArena.Spot in world.arena.spots:
+		if spot.low and low == null:
+			low = spot
+		elif not spot.low and high == null:
+			high = spot
+	assert_float(MatchSenses.cover_at(world, low.position)).is_equal(1.0)
+	assert_float(MatchSenses.cover_at(world, high.position)).is_equal(0.5)
+	var open_floor: Vector2 = Vector2.INF
+	for spot: BotArena.Spot in world.arena.spots:
+		var aside: Vector2 = spot.position + Vector2(0.0, 2.0)
+		if world.arena.spots_near(aside, MatchSenses.COVER_REACH).is_empty() and open_floor == Vector2.INF:
+			open_floor = aside
+	# Found first, or the check below would be asked of nothing.
+	assert_bool(open_floor == Vector2.INF).is_false()
+	assert_float(MatchSenses.cover_at(world, open_floor)).is_equal(0.0)
+
+
+# A mirrored 2v2 on the yards, from T67's review: blue 0 and red 6 at a
+# low cover spot and its mirror, crouched and sent ten metres off; blue 1
+# and red 7 in the open, at its mirror, facing the middle of the enemies
+# and long reacted to them. Everyone else dead and out of the way.
+static func _mirrored_two_a_side() -> BotMatch:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules,
+			BotArena.new(rules.body_radius, BotArena.YARDS))
+	for bot: MatchBot in world.bots:
+		bot.respawn_left = 100.0
+	for pair: Array in [[0, Vector2(30.3, 5.0)], [1, Vector2(16.5, 27.5)]]:
+		for bot: MatchBot in [world.bots[pair[0]], world.bots[pair[0] + 6]]:
+			var place: Vector2 = pair[1]
+			bot.respawn_left = 0.0
+			bot.position = place if bot.team == BotMatch.BLUE else Vector2(world.arena.width - place.x, place.y)
+			bot.goal = bot.position + (Vector2(0.0, 10.0) if pair[0] == 0 else Vector2.ZERO)
+			bot.crouched = pair[0] == 0
+	world.bots[0].facing = 0.0
+	world.bots[6].facing = PI
+	world.bots[1].facing = ((world.bots[6].position + world.bots[7].position) / 2.0 - world.bots[1].position).angle()
+	world.bots[7].facing = ((world.bots[0].position + world.bots[1].position) / 2.0 - world.bots[7].position).angle()
+	for id: int in [1, 7]:
+		for enemy: int in [0, 1, 6, 7]:
+			world.bots[id].seen_since[enemy] = -10.0
+	world.time = 1.0
+	world._look()
+	return world
+
+
+# Whether the two open bots chose each other's mirror: the same action and
+# posture, and targets that are each other's mirror.
+static func _decided_alike(world: BotMatch) -> bool:
+	var blue: MatchBot = world.bots[1]
+	var red: MatchBot = world.bots[7]
+	var mirrored_target: int = red.target - BotMatch.BOTS_A_SIDE if red.target != -1 else -1
+	return blue.action == red.action and blue.target == mirrored_target and blue.crouched == red.crouched
+
+
+func test_every_bot_perceives_before_any_decides_so_both_sides_decide_alike() -> void:
+	var world: BotMatch = _mirrored_two_a_side()
+	world.decide_every_bot()
+	var shown: String = "blue %s, red %s" % [world.bots[1].action, world.bots[7].action]
+	assert_bool(_decided_alike(world)).override_failure_message(shown).is_true()
+	# Planted: one pass in id order, perceiving and deciding each bot in
+	# turn -- red then reads blue's new posture. It must be told apart.
+	var planted: BotMatch = _mirrored_two_a_side()
+	for bot: MatchBot in planted.bots:
+		bot.decide(MatchSenses.perceive(planted, bot, false), planted.teams[bot.team].reaction)
+	assert_bool(_decided_alike(planted)).is_false()
+
+
+func test_a_turn_to_what_is_exactly_behind_sweeps_the_same_way_on_both_sides() -> void:
+	var blue := MatchBot.new()
+	blue.position = Vector2(10.5, 5.5)
+	blue.facing = 0.0
+	var red := MatchBot.new()
+	red.position = Vector2(29.5, 5.5)
+	red.facing = PI
+	blue.turn_to(Vector2(2.5, 5.5), 3.0, 0.1)
+	red.turn_to(Vector2(37.5, 5.5), 3.0, 0.1)
+	# Red's facing is the mirror of blue's across x: PI less it.
+	assert_float(wrapf(red.facing, -PI, PI)).is_equal_approx(wrapf(PI - blue.facing, -PI, PI), 1e-6)
+	assert_float(sin(blue.facing)).is_greater(0.0)
+
+
+# The vectors that copy `actions.json` by hand, in `spec/`, by the list each copies.
+const COPIED_LISTS: Dictionary = {
+	"the-bot-match-weighs-its-actions.json": "actions",
+	"the-bot-match-weighs-its-posture.json": "postures",
+	"the-bot-match-weighs-its-pace.json": "paces",
+}
+
+
+# A list of actions as plain data, every number a float, to compare.
+static func _plain(actions: Array[ActionChoice.Action]) -> Array:
+	var found: Array = []
+	for each: ActionChoice.Action in actions:
+		var considerations: Array = each.considerations.map(func(said: ActionChoice.Consideration) -> Array:
+			return [said.percept, said.curve, said.slope, said.intercept, said.at, said.below, said.above])
+		found.append([each.name, each.weight, considerations])
+	return found
+
+
+func test_the_vectors_copy_the_bots_own_actions_postures_and_paces() -> void:
+	# derive.py imports nothing from the repository, so it copies the
+	# match's lists by hand; this ties each copy to `actions.json`.
+	var folder: String = ProjectSettings.globalize_path("res://").path_join("../spec/vectors/teamwork")
+	for file: String in COPIED_LISTS:
+		var vector: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(folder.path_join(file)))
+		var copied: Array = _plain(ActionChoice.actions_from(vector["query"]["actions"]))
+		assert_array(copied).override_failure_message(file).is_not_empty()
+		assert_str(str(copied)).override_failure_message(file).is_equal(str(_plain(MatchBot.default_choices(COPIED_LISTS[file]))))
+	# Planted: one weight changed in a copy, and the two must differ.
+	var changed: Array = (JSON.parse_string(FileAccess.get_file_as_string(folder.path_join(COPIED_LISTS.keys()[0]))) as Dictionary)["query"]["actions"]
+	changed[0]["weight"] = float(changed[0]["weight"]) + 0.5
+	assert_str(str(_plain(ActionChoice.actions_from(changed)))).is_not_equal(str(_plain(MatchBot.default_choices("actions"))))

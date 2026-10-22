@@ -1,0 +1,45 @@
+{
+  "about": "What a bot of the match can do, and why it would (T67): each action's weight and its considerations, for ActionChoice -- and, weighed the same way after the action, how it holds its body (postures: stand or crouch) and how fast it goes (paces: walk or sprint; a sprinting bot may not fire, which is the game's rule, so the bot weighs the chance it will need to). A consideration reads one percept MatchBot.numbers_of names -- ready_to_fire, shot_worth, rounds_left, has_reserve, could_fire, enemy_in_sight, in_retreat_wave, to_go (metres), heard; and for the postures moving, shooting, reloading (what the action chose), cover (1 at low cover, 0.5 at high, 0 none) and danger (1 an enemy in sight, else the loudest shot heard or the nearest enemy remembered, by closeness) -- through a line (slope times it, plus intercept, clamped to 0 and 1) or a step (above from at up, below under it). The score is the weight times every answer; the highest is done. Change these and the bot weighs differently; no line of code says which action comes first.",
+  "actions": [
+    {"name": "reload", "weight": 1.0, "considerations": [
+      {"percept": "rounds_left", "curve": "linear", "slope": -1.5, "intercept": 1.0},
+      {"percept": "has_reserve", "curve": "step", "at": 0.5, "below": 0.0, "above": 1.0},
+      {"percept": "could_fire", "curve": "step", "at": 0.5, "below": 1.0, "above": 0.4},
+      {"percept": "to_go", "curve": "step", "at": 0.3, "below": 1.0, "above": 0.6}
+    ]},
+    {"name": "fall back", "weight": 0.8, "considerations": [
+      {"percept": "in_retreat_wave", "curve": "step", "at": 0.5, "below": 0.0, "above": 1.0}
+    ]},
+    {"name": "shoot", "weight": 1.0, "considerations": [
+      {"percept": "ready_to_fire", "curve": "step", "at": 0.5, "below": 0.0, "above": 1.0},
+      {"percept": "shot_worth", "curve": "linear", "slope": 8.0, "intercept": 0.0}
+    ]},
+    {"name": "move", "weight": 0.5, "considerations": [
+      {"percept": "to_go", "curve": "step", "at": 0.3, "below": 0.0, "above": 1.0}
+    ]},
+    {"name": "look", "weight": 0.45, "considerations": [
+      {"percept": "heard", "curve": "linear", "slope": 2.0, "intercept": 0.0},
+      {"percept": "enemy_in_sight", "curve": "step", "at": 0.5, "below": 1.0, "above": 0.0}
+    ]},
+    {"name": "hold", "weight": 0.3, "considerations": []}
+  ],
+  "postures": [
+    {"name": "stand", "weight": 0.33, "considerations": []},
+    {"name": "crouch", "weight": 1.0, "considerations": [
+      {"percept": "moving", "curve": "step", "at": 0.5, "below": 1.0, "above": 0.1},
+      {"percept": "shooting", "curve": "step", "at": 0.5, "below": 1.0, "above": 0.2},
+      {"percept": "cover", "curve": "linear", "slope": 0.4, "intercept": 0.6},
+      {"percept": "danger", "curve": "linear", "slope": 0.5, "intercept": 0.6},
+      {"percept": "reloading", "curve": "step", "at": 0.5, "below": 0.85, "above": 1.0}
+    ]}
+  ],
+  "paces": [
+    {"name": "walk", "weight": 0.5, "considerations": []},
+    {"name": "sprint", "weight": 1.0, "considerations": [
+      {"percept": "moving", "curve": "step", "at": 0.5, "below": 0.0, "above": 1.0},
+      {"percept": "to_go", "curve": "linear", "slope": 0.0625, "intercept": 0.0},
+      {"percept": "enemy_in_sight", "curve": "step", "at": 0.5, "below": 1.0, "above": 0.0},
+      {"percept": "danger", "curve": "linear", "slope": -0.8, "intercept": 1.0}
+    ]}
+  ]
+}

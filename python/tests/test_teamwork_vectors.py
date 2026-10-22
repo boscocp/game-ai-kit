@@ -14,7 +14,7 @@ import math
 import pathlib
 import unittest
 
-from gameaikit.teamwork import aim, commander, confidence, influence, passage, positions
+from gameaikit.teamwork import action, aim, commander, confidence, errands, influence, passage, positions
 
 VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "teamwork"
 
@@ -25,7 +25,7 @@ FEWEST_VECTORS = 10
 #: GDScript side's 32-bit `Vector2`.
 TOLERANCE = 1e-4
 
-KINDS = ("positions", "influence", "commander", "confidence", "aim", "passage")
+KINDS = ("positions", "influence", "commander", "confidence", "aim", "passage", "action", "errands")
 
 
 def answer_positions(vector: dict) -> dict:
@@ -102,7 +102,27 @@ def answer_passage(vector: dict) -> dict:
     return {"costs": costs, "chosen": chosen, "answers": answers}
 
 
-ANSWER = {"passage": answer_passage, "positions": answer_positions, "influence": answer_influence,
+def answer_action(vector: dict) -> dict:
+    actions = action.actions_from(vector["query"]["actions"])
+    scores, answers, chosen = [], [], []
+    for percepts in vector["query"]["percepts"]:
+        found, why, taken = action.choose(actions, percepts)
+        scores.append(found)
+        answers.append(why)
+        chosen.append(taken)
+    return {"scores": scores, "answers": answers, "chosen": chosen}
+
+
+def answer_errands(vector: dict) -> dict:
+    weights = errands.Weights(**vector["weights"])
+    query = vector["query"]
+    return {"resupply": [errands.weigh_resupply(errands.Resupply(**each), weights) for each in query["resupply"]],
+            "fetch": [errands.weigh_fetch(errands.Fetch(**each), weights) for each in query["fetch"]],
+            "fetcher": [errands.fetcher(scores) for scores in query["teams"]],
+            "chosen": [errands.choose(back, out) for back, out in query["pairs"]]}
+
+
+ANSWER = {"errands": answer_errands, "action": answer_action, "passage": answer_passage, "positions": answer_positions, "influence": answer_influence,
           "commander": answer_commander, "confidence": answer_confidence, "aim": answer_aim}
 
 
@@ -146,6 +166,18 @@ class TeamworkVectorTests(unittest.TestCase):
             answer[first_key] = "planted"
             with self.subTest(vector=path.name):
                 self.assertTrue(misses(vector["expect"], answer))
+
+    def test_actions_with_an_unknown_key_or_curve_are_refused(self) -> None:
+        good = [{"name": "go", "weight": 1.0, "considerations": [{"percept": "x", "curve": "step", "at": 0.5}]}]
+        self.assertEqual(action.why_not_actions(good), "")
+        self.assertEqual(len(action.actions_from(good)), 1)
+        for planted in ([{"name": "go", "wieght": 1.0}],
+                        [{"name": "go", "considerations": [{"percept": "x", "curve": "stepp"}]}],
+                        [{"name": "go", "considerations": [{"percept": "x", "slop": 2.0}]}],
+                        [{"weight": 1.0}]):
+            with self.subTest(planted=planted):
+                with self.assertRaises(ValueError):
+                    action.actions_from(planted)
 
     def test_a_number_off_by_ten_tolerances_is_caught(self) -> None:
         self.assertTrue(misses(1.0, 1.0 + 10 * TOLERANCE))

@@ -9,15 +9,11 @@
 ## is empty, and a bot that dies comes back with a full rifle. Five kills
 ## since its last death earn a bot the power weapon at its own base.
 ##
-## Two errands, each weighed as a score -- a gain less its costs, the
-## plainest utility -- and each bot takes the larger if it is above zero.
-## Going back to the base is worth the share of its rounds spent -- and the
-## power weapon, when its streak earned one -- less each second of the
-## walk, less what leaving its post costs; a part-used power weapon is
-## worth no walk, since the base gives its holder nothing until it is empty.
-## Fetching the power weapon is worth a fixed gain, less each second of
-## the walk, less each enemy its team remembers near it; a team sends at most
-## one bot, the one it is worth most to. The walks are read off a flood of
+## Two errands, each weighed by `ErrandChoice` in `ai_teamwork` -- a gain
+## less its costs -- and each bot takes the larger if it is above zero:
+## back to its base for rounds, or out for the power weapon, one bot a team.
+## This file measures the facts the technique weighs and carries out its
+## answer; the weights are the rules'. The walks are read off a flood of
 ## walk steps made once a match, not searched each decision.
 class_name MatchSupply
 extends RefCounted
@@ -25,9 +21,9 @@ extends RefCounted
 const RIFLE: String = "rifle"
 const POWER: String = "power"
 ## The errands: none, back to the base, or to the power weapon.
-const NO_ERRAND: String = ""
-const RESUPPLY: String = "resupply"
-const FETCH: String = "fetch power"
+const NO_ERRAND: String = ErrandChoice.NONE
+const RESUPPLY: String = ErrandChoice.RESUPPLY
+const FETCH: String = ErrandChoice.FETCH
 ## How a team decides on going back: weighing it, or -- planted, for the
 ## effects test -- never, or always once a round is spent.
 const WEIGH: String = "weigh"
@@ -116,73 +112,82 @@ func _resupply(rules: MatchRules, bot: MatchBot) -> void:
 ## Every errand of `team`'s bots, decided: who is sent for the power weapon,
 ## and who goes back to its base. Each bot's weighing is kept for the view.
 func think(world: BotMatch, team: MatchTeam) -> void:
-	var best: int = -1
-	var best_score: float = 0.0
+	var weights: ErrandChoice.Weights = weights_of(world.rules)
+	var weighed: Array[int] = []
+	var fetch_scores := PackedFloat64Array()
 	for bot_id: int in team.members:
 		var bot: MatchBot = world.bots[bot_id]
 		if not bot.alive() or bot.controlled:
 			bot.errand = NO_ERRAND
 			continue
-		bot.errand_weighing = {RESUPPLY: weigh_resupply(world, team, bot), FETCH: weigh_power(world, team, bot)}
-		var power_score: float = bot.errand_weighing[FETCH][3]
-		if power_score > best_score:
-			best_score = power_score
-			best = bot_id
-	fetcher[team.side] = best
-	for bot_id: int in team.members:
+		bot.errand_weighing = {
+			RESUPPLY: ErrandChoice.weigh_resupply(resupply_facts(world, team, bot), weights),
+			FETCH: ErrandChoice.weigh_fetch(fetch_facts(world, team, bot), weights),
+		}
+		weighed.append(bot_id)
+		fetch_scores.append(bot.errand_weighing[FETCH][3])
+	var sent: int = ErrandChoice.fetcher(fetch_scores)
+	fetcher[team.side] = weighed[sent] if sent != -1 else -1
+	for bot_id: int in weighed:
 		_choose_errand(team, world.bots[bot_id])
 
 
+# Its errand, by the technique -- or, planted for the effects test, always
+# back once a round is spent, or never.
 func _choose_errand(team: MatchTeam, bot: MatchBot) -> void:
-	if not bot.alive() or bot.controlled:
-		return
 	var back: float = bot.errand_weighing[RESUPPLY][3]
 	var fetch: float = bot.errand_weighing[FETCH][3] if fetcher[team.side] == bot.id else 0.0
-	bot.errand = NO_ERRAND
 	if team.resupply_rule == ALWAYS and bot.errand_weighing[RESUPPLY][0] > 0.0:
 		back = INF
 	elif team.resupply_rule == NEVER:
 		back = 0.0
-	if back > 0.0 and back >= fetch:
-		bot.errand = RESUPPLY
-	elif fetch > 0.0:
-		bot.errand = FETCH
+	bot.errand = ErrandChoice.choose(back, fetch)
 
 
-## Going back, weighed: [gain, walk seconds, cost of leaving, score]. The
-## gain is the share of its rounds spent, plus the power weapon's worth
-## when its streak has earned one; a bot with no round left has no post to
-## leave.
-func weigh_resupply(world: BotMatch, team: MatchTeam, bot: MatchBot) -> Array:
+## The rules' weights, as the technique takes them.
+static func weights_of(rules: MatchRules) -> ErrandChoice.Weights:
+	var weights := ErrandChoice.Weights.new()
+	weights.resupply_walk = rules.resupply_walk_weight
+	weights.leave_holding = rules.resupply_hold_weight
+	weights.leave_attacking = rules.resupply_attack_weight
+	weights.power_worth = rules.power_worth
+	weights.power_walk = rules.power_walk_weight
+	weights.power_danger = rules.power_danger_weight
+	return weights
+
+
+## What going back is weighed on, for `bot`: the share of its rounds the
+## base would give back, whether its streak earned the power weapon, the
+## walk to its base, whether it is attacking, and whether it has no round
+## left. A power weapon with rounds in it is given nothing at the base --
+## it changes for a rifle only once empty -- so its spent share is no gain:
+## counted as one, a sharp team's power holders went back half full and
+## stood at their base for the rest of the match (T67, measured).
+func resupply_facts(world: BotMatch, team: MatchTeam, bot: MatchBot) -> ErrandChoice.Resupply:
 	var rules: MatchRules = world.rules
 	var full: int = rules.power_rounds if bot.weapon == POWER else rules.magazine + rules.reserve
-	var gain: float = 1.0 - float(bot.ammo + bot.reserve) / full
-	# The base gives a power weapon's holder nothing until it is empty, so a
-	# part-used one is worth no walk: weighed as spent, a holder with seven
-	# rounds walked home and stood in its spawn for the rest of the match.
-	if bot.weapon == POWER and bot.ammo > 0:
-		gain = 0.0
-	if bot.weapon == RIFLE and bot.streak >= rules.streak_for_power:
-		gain += rules.power_worth
-	var walk: float = _walk_seconds(world, _base_steps[bot.team], bot)
-	var attacking: bool = team.bot_modes.get(bot.id, MatchTeam.HOLD) == MatchTeam.ATTACK
-	var leaving: float = rules.resupply_attack_weight if attacking else rules.resupply_hold_weight
-	if bot.ammo + bot.reserve <= 0:
-		leaving = 0.0
-	return [gain, walk, leaving, gain - walk * rules.resupply_walk_weight - leaving]
+	var facts := ErrandChoice.Resupply.new()
+	var refilled: bool = bot.weapon == RIFLE or bot.ammo <= 0
+	facts.spent = 1.0 - float(bot.ammo + bot.reserve) / full if refilled else 0.0
+	facts.earned_power = bot.weapon == RIFLE and bot.streak >= rules.streak_for_power
+	facts.walk_seconds = _walk_seconds(world, _base_steps[bot.team], bot)
+	facts.attacking = team.bot_modes.get(bot.id, MatchTeam.HOLD) == MatchTeam.ATTACK
+	facts.empty = bot.ammo + bot.reserve <= 0
+	return facts
 
 
-## Fetching the power weapon, weighed: [worth, walk seconds, danger, score];
-## nothing, when it is not there or the bot holds it.
-func weigh_power(world: BotMatch, team: MatchTeam, bot: MatchBot) -> Array:
+## What fetching is weighed on, for `bot`: whether the power weapon lies
+## there for it, the walk, and the enemies its team remembers near it.
+func fetch_facts(world: BotMatch, team: MatchTeam, bot: MatchBot) -> ErrandChoice.Fetch:
 	var rules: MatchRules = world.rules
-	if not power_there(world.time) or bot.weapon == POWER or _power_steps.is_empty():
-		return [0.0, 0.0, 0.0, 0.0]
-	var walk: float = _walk_seconds(world, _power_steps, bot)
-	var near: int = team.known_enemies().filter(func(place: Vector2) -> bool:
+	var facts := ErrandChoice.Fetch.new()
+	facts.available = power_there(world.time) and bot.weapon != POWER and not _power_steps.is_empty()
+	if not facts.available:
+		return facts
+	facts.walk_seconds = _walk_seconds(world, _power_steps, bot)
+	facts.enemies_near = team.known_enemies().filter(func(place: Vector2) -> bool:
 		return place.distance_to(world.arena.power_place) <= rules.power_danger_radius).size()
-	var danger: float = near * rules.power_danger_weight
-	return [rules.power_worth, walk, danger, rules.power_worth - walk * rules.power_walk_weight - danger]
+	return facts
 
 
 ## Where an errand sends `bot`: its base, or the power weapon.

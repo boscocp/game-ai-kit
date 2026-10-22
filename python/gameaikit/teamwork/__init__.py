@@ -11,8 +11,12 @@ answers.
     influence.py    a team's additive hold on the map
     commander.py    objectives with an ideal number of bots, filled greedily
     confidence.py   attack, hold or retreat, and the retreat in waves
+    aim.py          where on a body to aim, by the damage a shot is worth
+    passage.py      how to get past a body: wait, go round, ask, or another spot
+    action.py       what to do now: every action scored by its considerations
+    errands.py      back for rounds or out for a power weapon, each a gain less its costs
 """
 
-from . import commander, confidence, influence, positions
+from . import action, aim, commander, confidence, errands, influence, passage, positions
 
-__all__ = ["commander", "confidence", "influence", "positions"]
+__all__ = ["action", "aim", "commander", "confidence", "errands", "influence", "passage", "positions"]

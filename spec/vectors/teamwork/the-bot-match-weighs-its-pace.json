@@ -1,0 +1,148 @@
+{
+ "name": "the-bot-match-weighs-its-pace",
+ "why": "The bot match's paces (a copy of `actions.json`). Moving, 16 m to go, nothing perceived: sprint, 1. Eight metres: 0.5, a tie, and walking is listed first. Twelve metres with a shot heard at 0.5: 0.45, walk. An enemy in sight: sprinting is vetoed, for a sprinting bot may not fire. Holding, not moving: 0.",
+ "kind": "action",
+ "query": {
+  "actions": [
+   {
+    "name": "walk",
+    "weight": 0.5,
+    "considerations": []
+   },
+   {
+    "name": "sprint",
+    "weight": 1.0,
+    "considerations": [
+     {
+      "percept": "moving",
+      "curve": "step",
+      "at": 0.5,
+      "below": 0.0,
+      "above": 1.0
+     },
+     {
+      "percept": "to_go",
+      "curve": "linear",
+      "slope": 0.0625,
+      "intercept": 0.0
+     },
+     {
+      "percept": "enemy_in_sight",
+      "curve": "step",
+      "at": 0.5,
+      "below": 1.0,
+      "above": 0.0
+     },
+     {
+      "percept": "danger",
+      "curve": "linear",
+      "slope": -0.8,
+      "intercept": 1.0
+     }
+    ]
+   }
+  ],
+  "percepts": [
+   {
+    "moving": 1.0,
+    "to_go": 16.0
+   },
+   {
+    "moving": 1.0,
+    "to_go": 8.0
+   },
+   {
+    "moving": 1.0,
+    "to_go": 12.0,
+    "danger": 0.5
+   },
+   {
+    "moving": 1.0,
+    "to_go": 16.0,
+    "enemy_in_sight": 1.0,
+    "danger": 1.0
+   },
+   {
+    "to_go": 16.0
+   }
+  ]
+ },
+ "expect": {
+  "scores": [
+   [
+    0.5,
+    1.0
+   ],
+   [
+    0.5,
+    0.5
+   ],
+   [
+    0.5,
+    0.44999999999999996
+   ],
+   [
+    0.5,
+    0.0
+   ],
+   [
+    0.5,
+    0.0
+   ]
+  ],
+  "answers": [
+   [
+    [],
+    [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   ],
+   [
+    [],
+    [
+     1.0,
+     0.5,
+     1.0,
+     1.0
+    ]
+   ],
+   [
+    [],
+    [
+     1.0,
+     0.75,
+     1.0,
+     0.6
+    ]
+   ],
+   [
+    [],
+    [
+     1.0,
+     1.0,
+     0.0,
+     0.19999999999999996
+    ]
+   ],
+   [
+    [],
+    [
+     0.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   ]
+  ],
+  "chosen": [
+   1,
+   0,
+   0,
+   0,
+   0
+  ]
+ }
+}

@@ -1,9 +1,54 @@
 ## The panel's lines of what the watched bot is reasoning with, one per
-## decision: where it aimed and what each zone was worth, its errands, and
-## its last weighing of the ways past a body. Read off the bot, built here
-## so the scene keeps to drawing and keys.
+## decision: every action's score, where it aimed and what each zone was
+## worth, its errands, and its last weighing of the ways past a body. Read
+## off the bot, built here so the scene keeps to drawing and keys.
 class_name BotMatchLines
 extends RefCounted
+
+
+## The watched bot's last weighing of what to do: each action's score, and
+## the one it took; before its first decision, that there was none.
+static func action_overlay(bot: MatchBot) -> Dictionary:
+	if bot.last_choice == null:
+		return {"weighed": "not yet"}
+	var scores: Dictionary = {}
+	for index: int in range(bot.actions.size()):
+		scores[bot.actions[index].name] = bot.last_choice.scores[index]
+	var chosen: int = bot.last_choice.chosen
+	var found: Dictionary = {"chosen": bot.actions[chosen].name if chosen != -1 else "none", "scores": scores}
+	if bot.last_posture != null:
+		found["posture"] = _scores(bot.postures, bot.last_posture)
+	if bot.last_pace != null:
+		found["pace"] = _scores(bot.paces, bot.last_pace)
+	return found
+
+
+static func _scores(options: Array[ActionChoice.Action], choice: ActionChoice.Choice) -> Dictionary:
+	var scores: Dictionary = {}
+	for index: int in range(options.size()):
+		scores[options[index].name] = choice.scores[index]
+	return scores
+
+
+## One line for the panel: "weighs: > shoot 0.92 | reload 0.00 | ...",
+## then its posture's weighing: "body: stand 0.33 | > crouch 0.51".
+static func action_line(bot: MatchBot) -> String:
+	if bot.last_choice == null:
+		return "nothing weighed yet"
+	var line: String = "weighs: %s" % _weighing(bot.actions, bot.last_choice)
+	if bot.last_posture != null:
+		line += "   body: %s" % _weighing(bot.postures, bot.last_posture)
+	if bot.last_pace != null:
+		line += "   pace: %s" % _weighing(bot.paces, bot.last_pace)
+	return line
+
+
+static func _weighing(options: Array[ActionChoice.Action], choice: ActionChoice.Choice) -> String:
+	var parts: Array[String] = []
+	for index: int in range(options.size()):
+		var mark: String = "> " if index == choice.chosen else ""
+		parts.append("%s%s %.2f" % [mark, options[index].name, choice.scores[index]])
+	return " | ".join(parts)
 
 
 ## The watched bot's last aim: each zone's own chance and expected damage,

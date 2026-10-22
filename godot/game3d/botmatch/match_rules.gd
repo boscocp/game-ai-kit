@@ -22,9 +22,6 @@ var damage: int = 12
 var fire_interval: float = 0.1
 var magazine: int = 30
 var reload_time: float = 2.0
-## A bot reloads early, with rounds still in the magazine, when it has
-## fewer than this, no enemy in sight, and it stands where it was going.
-var reload_below: int = 10
 ## Ammunition (the owner's asks): a rifle starts with a magazine of 30 and
 ## three reloads of 30 more, 120 in all, and only the base gives more.
 var reserve: int = 90
@@ -68,11 +65,10 @@ var make_way_reloading: float = 0.5
 var make_way_covering: float = 3.0
 var respawn_time: float = 4.0
 var speed: float = 4.5
-## Sprinting (Shift, the owner's ask): faster, and no shot while it lasts.
-## A bot sprints only with no enemy in sight and its goal sprint_from
-## metres away or more.
+## Sprinting (Shift, the owner's ask): faster, and no shot while it lasts
+## -- the game's rule. When a bot sprints is its own weighing (`paces` in
+## `actions.json`).
 var sprint_speed: float = 6.5
-var sprint_from: float = 8.0
 var eye_height: float = 1.5
 var chest_height: float = 1.2
 var crouched_height: float = 0.7
@@ -96,6 +92,8 @@ var torso_multiplier: float = 1.0
 var limb_multiplier: float = 0.5
 var body_radius: float = 0.4
 var max_range: float = 40.0
+## A shot is heard by the enemy within this, loudest beside it (`Hearing`).
+var shot_heard_metres: float = 30.0
 var capture_radius: float = 3.0
 var capture_time: float = 4.0
 var score_limit: int = 300

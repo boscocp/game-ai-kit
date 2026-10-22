@@ -1,0 +1,56 @@
+{
+ "name": "a-step-on-its-threshold-is-above",
+ "why": "A step at 0.5: exactly 0.5 answers `above`, 0.25 answers `below` -- the comparison is >=.",
+ "kind": "action",
+ "query": {
+  "actions": [
+   {
+    "name": "go",
+    "weight": 1.0,
+    "considerations": [
+     {
+      "percept": "far",
+      "curve": "step",
+      "at": 0.5,
+      "below": 0.25,
+      "above": 0.75
+     }
+    ]
+   }
+  ],
+  "percepts": [
+   {
+    "far": 0.5
+   },
+   {
+    "far": 0.25
+   }
+  ]
+ },
+ "expect": {
+  "scores": [
+   [
+    0.75
+   ],
+   [
+    0.25
+   ]
+  ],
+  "answers": [
+   [
+    [
+     0.75
+    ]
+   ],
+   [
+    [
+     0.25
+    ]
+   ]
+  ],
+  "chosen": [
+   0,
+   0
+  ]
+ }
+}

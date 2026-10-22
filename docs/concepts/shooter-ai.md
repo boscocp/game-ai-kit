@@ -5,7 +5,7 @@ half_life: concept
 verified_on: 2026-10-21
 tier: 1
 source: https://www.gameaipro.com/
-invalidated_if: T51, T52 or T66 stop doing what the sections on what the kit takes say they take from here
+invalidated_if: T51, T52, T66 or T67 stop doing what the sections on what the kit takes say they take from here
 teaches: shooter-ai
 -->
 
@@ -452,8 +452,8 @@ about which shots may land.
   to be, would be a later task, not a first.
 - **GOAP and HTN for the single bot.** F.E.A.R.'s and Killzone's choice, and
   a good one; but the kit's planner is T4/T11's, and T15 is where the four
-  ways to decide are compared. T51 and T52 use the plainest selector that
-  holds (a priority list) and leave the comparison to T15.
+  ways to decide are compared. T51 used the plainest selector that holds
+  (a priority list); T67 replaced it with a utility choice, below.
 - **Opponent prediction** [Laird] and **a director** [Booth]: each worth a
   task of its own once the bots exist.
 - **Hitman's disguises and crowds**, the **Metal Gear** caution phase after
@@ -506,6 +506,40 @@ the lanes, two bridges over B with a stair at each end, low cover of 1.1 m
 and pillars of 2.5 m. `botmatch_test.gd` holds two of the rules as
 commands: every walk from a spawn to a point takes 4.8 to 6.7 s, the means
 per point within one second; and no point sees into a spawn.
+
+## The bot as an agent: percepts, and a weighed choice (T67)
+
+The owner's ask: the bot is AIMA's agent, which perceives the world and
+its own state and decides what to do to reach its goal -- a function from
+percepts to actions [Russell & Norvig, ch. 2] -- so that on another map,
+in another context, it copes. T67 made that literal in three places.
+
+- **One record of percepts.** Each bot's eyes are `ai_perception`'s
+  `VisionCone`, asked in the open: its reach and angle, a radius all round
+  for a body beside it, and the line answered by the world -- here the
+  arena's boxes, exactly and with heights, which the addon's grid line of
+  sight cannot be. Its ears are `Hearing`: every shot is a noise, heard
+  through walls, louder nearer. What they give, with its body and its
+  orders, is `MatchPercepts`, and the decision reads nothing else.
+- **A utility choice, not a priority list.** `ActionChoice`: every action
+  scored at once, each consideration one percept through a response curve
+  into [0, 1], the answers multiplied, so any one at zero vetoes the
+  action. It is Guild Wars 2: Heart of Thorns' form, after the Infinite
+  Axis Utility System, which is also data-driven: "any consideration can
+  disqualify an entire decision from being selected simply by scoring
+  zero" [Lewis 2017]. The bot's six actions and their numbers are a data
+  file (`actions.json`). A behaviour tree's selector is the priority list
+  it replaced, and GOAP, a search for a chain of actions, has no chain to
+  find when one action is chosen each decision.
+- **The errands a technique.** Going back for rounds and fetching the
+  power weapon, each a gain less its costs, moved from the demo into
+  `ErrandChoice`.
+
+`ai_steering` was asked for the last metres and does not serve here: its
+avoid swerves from round obstacles and, head-on, always to the vehicle's
+left -- a fixed side, which on a mirrored map is the fault that bent the
+yards' mirror in T66. The measured results are in
+[`docs/godot/botmatch.md`](../godot/botmatch.md).
 
 ## Could not be checked
 
@@ -586,6 +620,9 @@ Shipped games -- talks, chapters and papers by their developers:
 - Leonard, T. "Building an AI Sensory System: Examining the Design of
   Thief: The Dark Project." GDC 2003; the reprint.
   <https://www.gamedeveloper.com/programming/building-an-ai-sensory-system-examining-the-design-of-i-thief-the-dark-project-i->
+- Lewis, M. "Choosing Effective Utility-Based Considerations." Game AI
+  Pro 3, 2017, ch. 13.
+  <https://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter13_Choosing_Effective_Utility-Based_Considerations.pdf>
 - Mark, D. "Modular Tactical Influence Maps." Game AI Pro 2, 2015, ch. 30.
   <https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter30_Modular_Tactical_Influence_Maps.pdf>
 - McIntosh, T. "Human Enemy AI in The Last of Us." Game AI Pro 2, 2015,
@@ -682,6 +719,8 @@ Research:
   <https://www.cs.ubc.ca/~krasic/cpsc538a/papers/Agents01.pdf>
 - Polceanu, M. "MirrorBot: Using Human-inspired Mirroring Behavior To Pass
   A Turing Test." IEEE CIG 2013. <https://hal.science/hal-00864153/document>
+- Russell, S., Norvig, P. *Artificial Intelligence: A Modern Approach*, 4th
+  edition, 2020, ch. 2, "Intelligent Agents". A book.
 - Schrum, J., Karpov, I.V., Miikkulainen, R. "UT^2: Human-like Behavior via
   Neuroevolution of Combat Behavior and Replay of Human Traces." IEEE CIG
   2011. <https://nn.cs.utexas.edu/downloads/papers/schrum.cig11competition.pdf>
