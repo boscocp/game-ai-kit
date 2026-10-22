@@ -4,7 +4,9 @@
   "about": "The bot match (T51): two teams of bots on a capture-and-hold arena, with claims, a commander and squads that retreat in waves, each switchable per team.",
   "owns": [
     "godot/game3d/botmatch/",
-    "godot/test/botmatch/"
+    "godot/test/botmatch/",
+    "scripts/godot_shards.py",
+    "python/tests/test_godot_shards.py"
   ],
   "depends_on": [
     "ai_core",

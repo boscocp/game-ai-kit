@@ -172,12 +172,15 @@ class StaleSightBot extends MatchBot:
 
 ## `-- --matches N` plays N instead, to explore.
 var _matches: int = MATCHES
+## Serial, one shard of the matches, or the merge of every shard's (T72).
+var _shards: EffectShards = null
 
 
 func _initialize() -> void:
 	var arguments: PackedStringArray = OS.get_cmdline_user_args()
-	if arguments.size() == 2 and arguments[0] == "--matches":
-		_matches = int(arguments[1])
+	if arguments.find("--matches") != -1 and arguments.find("--matches") + 1 < arguments.size():
+		_matches = int(arguments[arguments.find("--matches") + 1])
+	_shards = EffectShards.from_arguments(arguments)
 	var started: int = Time.get_ticks_msec()
 	var totals: Dictionary = {}
 	for pairing: String in PAIRINGS:
@@ -194,7 +197,10 @@ func _initialize() -> void:
 	for pairing: String in ["random arenas", "a point walled in"]:
 		totals[pairing] = _play(pairing, RANDOM_ARENAS if pairing == "random arenas" else 1)
 		_report(pairing, totals[pairing])
-	var failures: Array[String] = _mirror(totals) + _claims(totals) + _commander(totals) + _retreat(totals)
+	if _shards.mode == EffectShards.Mode.SHARD:
+		quit(_shards.write())
+		return
+	var failures: Array[String] = _shards.findings() + _mirror(totals) + _claims(totals) + _commander(totals) + _retreat(totals)
 	failures += _honesty(totals) + _aim(totals) + _ammunition(totals) + _portability(totals)
 	failures += _regeneration() + _healing(totals)
 	for failure: String in failures:
@@ -224,11 +230,17 @@ func _play(pairing: String, matches: int) -> Dictionary:
 			"base metre seconds": 0.0, "living seconds": 0.0, "matches": 0, "ordered": 0.0, "seconds": 0.0, "retreats": 0, "uncovered": 0,
 			"blue wins": 0, "red wins": 0, "margins": PackedFloat64Array()}
 	for seed_value: int in range(1, matches + 1):
+		if _shards.mode == EffectShards.Mode.MERGE:
+			_shards.merge_into(sums, pairing, seed_value)
+		if not _shards.plays(pairing, seed_value):
+			continue
 		var red := MatchTeam.new("red", BotMatch.RED, rules)
 		var arena: BotArena = _arena_for(pairing, seed_value, rules)
 		var world := BotMatch.new(seed_value, _blue_for(pairing, rules), red, rules, arena)
 		world.play_out()
-		_add(sums, world)
+		var into: Dictionary = _shards.sums_for(sums)
+		_add(into, world)
+		_shards.keep(pairing, seed_value, into)
 	return sums
 
 
