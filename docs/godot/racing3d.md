@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-21
+verified_on: 2026-10-22
 tier: 2
 source: https://github.com/boscocp/game-ai-kit
-invalidated_if: the car's physics, the driver's decision, the levels or the tracks change, and racing3d_ladder.gd, racing3d_effects.gd or racing3d_does_not_cheat.gd print different numbers
+invalidated_if: the car's physics, the driver's decision, the levels or the tracks change, and racing3d_ladder.gd, racing3d_effects.gd, racing3d_does_not_cheat.gd or racing3d_you_drive.gd print different numbers
 teaches: none
 -->
 
@@ -59,6 +59,16 @@ braking, a post at each tyre (green with grip to spare, yellow near it,
 red sliding), and across the road ahead of the watched car the heat line
 and its yellow ball. Under the panel, the trace of the watched car's
 distance off where it wants to be; the map shows the race from above.
+
+The camera starts on your car, the red one, and the keys do nothing for
+the first twenty seconds or so: every car is being measured on the test
+pad (1307 physics frames, measured 2026-10-22). The panel says both. Until
+wave 75 the camera started on the first AI car, and the owner, playing it,
+could not drive -- the keys reached the red car, off screen, while the car
+on screen ignored them. `make test-racing3d-you-drive` holds the fix
+through the scene a person opens: the camera on your car, the wait said,
+and a held Up, pressed as a keyboard would, moving your car 9.3 m in two
+seconds where with no key it stays within 0.1 m.
 
 ## The ladder, and the second track
 

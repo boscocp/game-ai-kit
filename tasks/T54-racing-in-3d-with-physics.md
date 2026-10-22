@@ -146,3 +146,15 @@ Measured: laps easy 50.61, normal 48.43, hard 47.20 s on the loop; 43.90,
 race is 6198 frames and matches its honest twin bit for bit; ten planted
 cheats are each refused by their rule. Fourteen vectors at 1e-9. The
 manual check is still the owner's.
+
+## The owner's first play (2026-10-22), fixed in wave 75
+
+The owner ran `make demo-racing3d` and could not drive. Measured headless,
+the keys did reach the red car: a held Up moved it 21 m in three seconds.
+But the camera started on the first AI car, so the car on screen ignored
+the keys, and the twenty seconds of measuring before the grid (1307
+frames) looked the same. Wave 75 starts the camera on your car, says in
+the panel that the keys wait for the grid -- and, once racing, how to
+watch your car again when watching another -- and holds it with
+`make test-racing3d-you-drive`, through the scene itself, the key pressed
+as a keyboard would. The rest of the manual check is still the owner's.

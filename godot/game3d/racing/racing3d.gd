@@ -2,7 +2,9 @@
 ## whose line the drivers find for themselves.
 ##
 ## Before the start every car is measured on the test pad -- the camera
-## watches it -- and each driver keeps what its own car did. Then the grid.
+## watches yours, the red one -- and each driver keeps what its own car
+## did. Then the grid, and only then do the keys drive: for about twenty
+## seconds they do nothing, and the status panel says so.
 ## The overlay (`RaceOverlay3D`) puts every decision on the road, the map
 ## shows the race from above, and the trace under it is the watched car's
 ## distance off where it wants to be.
@@ -78,7 +80,9 @@ func restart() -> void:
 	_apply_switches()
 	_map.race = race
 	_map.colours = COLOURS
-	watched = mini(watched, race.cars.size() - 1)
+	# Your car, not the first AI's: watching another car while the keys
+	# drive yours reads as keys that do nothing (the owner, 2026-10-22).
+	watched = race.drivers.find(human)
 
 
 ## One decision: every driver shown what it sees now, nothing moved.
