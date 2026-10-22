@@ -41,3 +41,5 @@ var sprint_seconds: float = 0.0
 ## power weapon was taken from its place, and won by a streak at the base.
 var dry_seconds: float = 0.0
 var power_taken: int = 0
+## Health its bots got back by regenerating, in points (T68).
+var regenerated: int = 0

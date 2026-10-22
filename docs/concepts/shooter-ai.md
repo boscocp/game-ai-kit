@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-21
+verified_on: 2026-10-22
 tier: 1
 source: https://www.gameaipro.com/
-invalidated_if: T51, T52, T66 or T67 stop doing what the sections on what the kit takes say they take from here
+invalidated_if: T51, T52, T66, T67 or T68 stop doing what the sections on what the kit takes say they take from here
 teaches: shooter-ai
 -->
 
@@ -541,6 +541,57 @@ left -- a fixed side, which on a mirrored map is the fault that bent the
 yards' mirror in T66. The measured results are in
 [`docs/godot/botmatch.md`](../godot/botmatch.md).
 
+## Health that comes back, and when to break off to heal (T68)
+
+The owner's ask: after ten seconds without taking damage, health comes back
+a little at a time, as in the shooters on the market; at the base, where
+the rounds are, it comes back whole at once; and the AI weighs whether it
+is worth running to recover.
+
+**What shipped shooters do, as opened.**
+
+- **Halo's shields** wait, then fill fast. Halo: Combat Evolved's "begin
+  regenerating 5 seconds after last being hit and take four seconds to
+  fully recharge from a total drain"; Halo 2's, 4.25 s and 1.75 s; Halo
+  3's, 5 s and 2 s [Halopedia, Energy shielding]. The pattern is a delay of
+  a few seconds and a refill shorter than the delay.
+- **Call of Duty: Modern Warfare (2019)**, as one player measured it and an
+  article reported: "around 6 seconds to start regenerating health", then
+  "another 1.4 seconds to get back to full health"; the Quickfix perk cuts
+  it while getting kills [Upcomer]. A player's measurement, not the
+  developer's figure, and the article says so.
+- **Black Ops 4 took it out**: "health regeneration is not automatic
+  anymore"; a player presses a button to heal, with a cooldown, so that
+  "every decision a player makes is important" [CharlieIntel]. The
+  counterexample: healing as a choice the player makes, which is what this
+  kit asks the bot to do.
+- **What regeneration does to how people fight.** "Regenerating health is
+  most commonly associated with the run and hide cover system"; and where
+  regeneration "doesn't occur during combat, it doesn't encourage this sort
+  of behavior" [Vanden Bossche 2009]. That is why the delay matters: health
+  that came back mid-fight would never make leaving the fight worth
+  anything; a delay makes breaking line of sight the price of healing.
+
+No developer's own statement of *why* a delay of five seconds, rather than
+two or ten, was found open; the numbers above are what the games do, not
+the reasons for them.
+
+**What the kit takes.** The owner's delay, 10 s -- longer than every
+delay above, so breaking off to heal costs a bot real time off its post,
+which is what makes it a decision. A rate of 20 points a second, an empty
+bar in 5 s: slower than every refill above (Halo: Combat Evolved's 4 s is
+the slowest), because the owner asked for it to come back gradually. Both
+are in `rules.json`. Healing at the base is the owner's own rule; none of
+the sources has a resupply room.
+
+And the choice to break off is weighed, never a threshold: hiding to wait
+out the delay, going home to be healed whole, or staying in the fight are
+each a gain less its costs in one unit, in `ErrandChoice`, beside going
+back for rounds and fetching the power weapon. What a bot hides behind is
+asked of `TacticalPositions` with a condition of its own: covered from
+every enemy its team knows of, not only the nearest. The measured results
+are in [`docs/godot/botmatch.md`](../godot/botmatch.md).
+
 ## Could not be checked
 
 Not used above:
@@ -563,6 +614,12 @@ Not used above:
   Thompson 2017).
 - The *Science* version of Jaderberg et al. (blocked); the arXiv version is
   cited.
+- For T68: the Halo fandom wiki's Health page and the Call of Duty
+  fandom wiki's Health page (both refused the fetch; their numbers were
+  seen only in a search engine's summary, and are not used); the Valve
+  Developer Community's "Regenerating Health" page and the GameDev.net
+  round table on regenerating health (both refused); the Wireframe
+  article on Halo's shields (refused after a redirect).
 - Brothers in Arms, Rainbow Six, ArmA, The Division, Ghost Recon,
   Battlefield and Half-Life's squads: no readable primary source looked at.
 
@@ -702,6 +759,11 @@ Research:
 - Borodovski, A., Verbrugge, C. "Analyzing Stealth Games with
   Distractions." AAAI, 2016.
   <https://www.sable.mcgill.ca/~clump/papers/borodovski-16-analyzing.pdf>
+- CharlieIntel. "Big changes to health system in Call of Duty: Black Ops
+  4." Before the game's release in 2018; the page's own date was not
+  read. <https://www.charlieintel.com/call-of-duty/big-changes-to-health-system-in-call-of-duty-black-ops-4-46147/>
+- Halopedia. "Energy shielding." Wiki article, read 2026-10-22.
+  <https://www.halopedia.org/Energy_shielding>
 - Hingston, P. "A Turing Test for Computer Game Bots." IEEE Transactions on
   Computational Intelligence and AI in Games 1(3), 2009; record and abstract
   only. <https://ro.ecu.edu.au/ecuworks/594>
@@ -733,6 +795,12 @@ Research:
 - Tremblay, J., Torres, P.A., Verbrugge, C. "An Algorithmic Approach to
   Analyzing Combat and Stealth Games." IEEE CIG 2014.
   <https://www.cs.mcgill.ca/~jtremb59/Papers/CIG-2014-JTremblay.pdf>
+- Upcomer. "Is the Quickfix perk worth running in Modern Warfare?"
+  The page's date was not read; it calls itself over six years old. One
+  player's measurements, reported. <https://upcomer.com/is-the-quickfix-perk-worth-running-in-modern-warfare/>
+- Vanden Bossche, A. "Analysis: Video Games' Regeneration Station." Game
+  Developer, 2009-10-22.
+  <https://www.gamedeveloper.com/game-platforms/analysis-video-games-regeneration-station>
 - Wydmuch, M., Kempka, M., Jaśkowski, W. "ViZDoom Competitions: Playing
   Doom from Pixels." arXiv:1809.03470, 2018.
   <https://arxiv.org/abs/1809.03470>

@@ -126,6 +126,8 @@ var chose_at: float = -INF
 ## Who hit it last, for the kill when it falls (-1: nobody), and when.
 var last_hit_by: int = -1
 var hurt_at: float = -INF
+## What regeneration has given back short of a whole point (`MatchHealth`).
+var regeneration_carry: float = 0.0
 ## Whether it looks along the line again before each shot. Always, for an
 ## honest bot; `botmatch_effects.gd` plants one that does not, and the
 ## honesty count must catch its shots at targets gone behind cover.

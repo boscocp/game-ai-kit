@@ -64,6 +64,16 @@ var make_way_shooting: float = 1.5
 var make_way_reloading: float = 0.5
 var make_way_covering: float = 3.0
 var respawn_time: float = 4.0
+## Health that comes back (T68, the owner's ask): after
+## `regeneration_delay` seconds without a hit -- the owner's ten -- health
+## comes back `regeneration_rate` points a second, up to `regeneration_to`
+## and never past the rules' `health`. Twenty a second fills an empty bar in
+## five seconds, a little slower than Halo's shields (four, Halo: Combat
+## Evolved) -- "aos poucos", gradually, as the owner asked; the sources are
+## in `docs/concepts/shooter-ai.md`.
+var regeneration_delay: float = 10.0
+var regeneration_rate: float = 20.0
+var regeneration_to: int = 100
 var speed: float = 4.5
 ## Sprinting (Shift, the owner's ask): faster, and no shot while it lasts
 ## -- the game's rule. When a bot sprints is its own weighing (`paces` in

@@ -9,8 +9,9 @@
 ## (`MatchSenses`), and then every bot decides from what it perceived
 ## (`MatchBot.decide` over `MatchPercepts`) -- all perceive before any
 ## decides, so no bot sees another's new posture before that one has seen
-## its own. Then every bot acts on what it chose, points are captured, and
-## the score grows by each point held. One random generator, seeded, and
+## its own. Then every bot acts on what it chose, takes what its base gives,
+## and gets back the health that has come back (`MatchHealth`); points are
+## captured, and the score grows by each point held. One random generator, seeded, and
 ## bots taken in id order where order cannot tell one side from the other:
 ## the same seed is the same match.
 ##
@@ -120,6 +121,7 @@ func step() -> void:
 	for bot: MatchBot in bots:
 		if bot.alive():
 			supply.touch(self, bot)
+			stats[bot.team].regenerated += MatchHealth.regenerate(rules, bot, time, rules.step)
 	for bot: MatchBot in bots:
 		if bot.alive() and bot.health <= 0:
 			killed(bot, bot.last_hit_by)
@@ -273,6 +275,7 @@ func record_shot(shooter: MatchBot, target: int, hit: bool, to: Vector3, zone: S
 		recent_shots.pop_front()
 	if hit:
 		bots[target].hurt_at = time
+		bots[target].regeneration_carry = 0.0
 
 
 ## A bot was killed by `killer` (-1: nobody); count it on both sides.
@@ -308,6 +311,7 @@ func respawn(bot: MatchBot) -> void:
 	# Facing the points, wherever the arena puts the spawn.
 	bot.facing = (_centre_of_points() - bot.position).angle()
 	bot.health = rules.health
+	bot.regeneration_carry = 0.0
 	MatchSupply.arm_rifle(bot, rules)
 	bot.streak = 0
 	bot.errand = MatchSupply.NO_ERRAND
