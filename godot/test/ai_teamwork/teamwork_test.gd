@@ -142,3 +142,55 @@ func test_actions_with_an_unknown_key_or_curve_are_refused() -> void:
 	]
 	for data: Array in planted:
 		assert_str(ActionChoice.why_not_actions(data)).override_failure_message(str(data)).is_not_empty()
+
+
+func test_with_claims_no_two_searchers_share_a_spot_over_random_queries() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	for trial: int in range(TRIALS):
+		var spots: Array[Dictionary] = []
+		for spot: int in range(rng.randi_range(1, 6)):
+			spots.append({"worth": rng.randf_range(-0.2, 1.0), "searched": rng.randf() < 0.2})
+		var costs: Array[PackedFloat64Array] = []
+		for searcher: int in range(rng.randi_range(1, 5)):
+			costs.append(_random_walks(rng, spots.size()))
+		var given: PackedInt32Array = SearchCoordinator.assign(spots, costs, true, SearchCoordinator.Weights.new())
+		var used: Array = Array(given).filter(func(spot: int) -> bool: return spot != -1)
+		assert_int(used.size()).is_equal(_unique(used).size())
+		for spot: int in used:
+			assert_bool(bool(spots[spot]["searched"]) or float(spots[spot]["worth"]) <= 0.0).is_false()
+
+
+func _random_walks(rng: RandomNumberGenerator, count: int) -> PackedFloat64Array:
+	var row := PackedFloat64Array()
+	for spot: int in range(count):
+		row.append(rng.randf_range(0.0, 30.0))
+	return row
+
+
+func _unique(values: Array) -> Array:
+	var seen: Array = []
+	for value: Variant in values:
+		if not seen.has(value):
+			seen.append(value)
+	return seen
+
+
+func test_a_marked_spot_is_given_to_no_one() -> void:
+	var spots: Array[Dictionary] = [{"worth": 1.0, "searched": false}]
+	SearchCoordinator.mark(spots, PackedInt32Array([0]))
+	var given: PackedInt32Array = SearchCoordinator.assign(spots, [PackedFloat64Array([1.0])], true, SearchCoordinator.Weights.new())
+	assert_int(given[0]).is_equal(-1)
+
+
+func test_the_arbiter_grants_one_flanker_and_keeps_a_shooter_over_random_requests() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	for trial: int in range(TRIALS):
+		var requests: Array[Dictionary] = []
+		for request: int in range(rng.randi_range(1, 6)):
+			requests.append({"role": "flanker" if rng.randf() < 0.6 else "shooter", "score": rng.randf(), "can_shoot": rng.randf() < 0.8})
+		var granted: PackedStringArray = RoleArbiter.grant(requests, true)
+		assert_int(RoleArbiter.count(granted, RoleArbiter.FLANKER)).is_less_equal(1)
+		var anyone_can: bool = requests.any(func(request: Dictionary) -> bool: return request["can_shoot"])
+		assert_bool(RoleArbiter.count(granted, RoleArbiter.SHOOTER) > 0 or not anyone_can).is_true()

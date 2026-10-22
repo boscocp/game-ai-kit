@@ -1,0 +1,39 @@
+{
+ "name": "one-flanker-and-the-rest-shoot",
+ "why": "Three ask to flank, one to shoot: the best flank is granted, the others refused and shoot.",
+ "kind": "roles",
+ "query": {
+  "requests": [
+   {
+    "role": "flanker",
+    "score": 0.4,
+    "can_shoot": true
+   },
+   {
+    "role": "flanker",
+    "score": 0.9,
+    "can_shoot": true
+   },
+   {
+    "role": "shooter",
+    "score": 0.5,
+    "can_shoot": true
+   },
+   {
+    "role": "flanker",
+    "score": 0.6,
+    "can_shoot": true
+   }
+  ],
+  "use_arbiter": true,
+  "max_flankers": 1
+ },
+ "expect": {
+  "granted": [
+   "shooter",
+   "flanker",
+   "shooter",
+   "shooter"
+  ]
+ }
+}

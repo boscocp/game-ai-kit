@@ -14,7 +14,7 @@ import math
 import pathlib
 import unittest
 
-from gameaikit.teamwork import action, aim, commander, confidence, errands, influence, passage, positions
+from gameaikit.teamwork import action, aim, commander, confidence, errands, influence, passage, positions, roles, search
 
 VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "teamwork"
 
@@ -25,7 +25,7 @@ FEWEST_VECTORS = 10
 #: GDScript side's 32-bit `Vector2`.
 TOLERANCE = 1e-4
 
-KINDS = ("positions", "influence", "commander", "confidence", "aim", "passage", "action", "errands")
+KINDS = ("positions", "influence", "commander", "confidence", "aim", "passage", "action", "errands", "search", "roles")
 
 
 def answer_positions(vector: dict) -> dict:
@@ -113,6 +113,18 @@ def answer_action(vector: dict) -> dict:
     return {"scores": scores, "answers": answers, "chosen": chosen}
 
 
+def answer_search(vector: dict) -> dict:
+    query = vector["query"]
+    weights = search.Weights(**vector["weights"])
+    return {"assigned": search.assign(query["spots"], query["costs"], query["use_claims"], weights),
+            "granted": search.grant_last_known(query["last_known"], query["cap"])}
+
+
+def answer_roles(vector: dict) -> dict:
+    query = vector["query"]
+    return {"granted": roles.grant(query["requests"], query["use_arbiter"], query["max_flankers"])}
+
+
 def answer_errands(vector: dict) -> dict:
     weights = errands.Weights(**vector["weights"])
     query = vector["query"]
@@ -124,7 +136,8 @@ def answer_errands(vector: dict) -> dict:
 
 
 ANSWER = {"errands": answer_errands, "action": answer_action, "passage": answer_passage, "positions": answer_positions, "influence": answer_influence,
-          "commander": answer_commander, "confidence": answer_confidence, "aim": answer_aim}
+          "commander": answer_commander, "confidence": answer_confidence, "aim": answer_aim,
+          "search": answer_search, "roles": answer_roles}
 
 
 def misses(expected, found, where: str = "") -> list[str]:

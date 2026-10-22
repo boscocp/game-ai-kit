@@ -1,0 +1,58 @@
+{
+ "name": "without-claims-they-search-the-same-spot",
+ "why": "The same query with claims off: both guards go to the best spot. The cap of one sends only the nearest, and of equal walks the earlier.",
+ "kind": "search",
+ "weights": {
+  "worth": 10.0,
+  "travel": 0.2
+ },
+ "query": {
+  "spots": [
+   {
+    "worth": 0.5,
+    "searched": false
+   },
+   {
+    "worth": 0.3,
+    "searched": false
+   },
+   {
+    "worth": 0.2,
+    "searched": true
+   },
+   {
+    "worth": 0.0,
+    "searched": false
+   }
+  ],
+  "costs": [
+   [
+    2.0,
+    9.0,
+    1.0,
+    1.0
+   ],
+   [
+    3.0,
+    4.0,
+    1.0,
+    1.0
+   ]
+  ],
+  "use_claims": false,
+  "cap": 1,
+  "last_known": [
+   2.0,
+   2.0
+  ]
+ },
+ "expect": {
+  "assigned": [
+   0,
+   0
+  ],
+  "granted": [
+   0
+  ]
+ }
+}

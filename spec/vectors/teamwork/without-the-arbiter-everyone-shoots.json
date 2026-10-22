@@ -1,0 +1,33 @@
+{
+ "name": "without-the-arbiter-everyone-shoots",
+ "why": "The arbiter off: everyone who can shoot does, flank requests or not.",
+ "kind": "roles",
+ "query": {
+  "requests": [
+   {
+    "role": "flanker",
+    "score": 0.9,
+    "can_shoot": true
+   },
+   {
+    "role": "shooter",
+    "score": 0.5,
+    "can_shoot": true
+   },
+   {
+    "role": "flanker",
+    "score": 0.4,
+    "can_shoot": false
+   }
+  ],
+  "use_arbiter": false,
+  "max_flankers": 1
+ },
+ "expect": {
+  "granted": [
+   "shooter",
+   "shooter",
+   "none"
+  ]
+ }
+}
