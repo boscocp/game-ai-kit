@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: structure
-verified_on: 2026-10-21
+verified_on: 2026-10-22
 tier: 1
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: a technique's rule changes -- a condition's order, a weight's meaning, the commander's tie, a threshold's gap -- or Vector2 becomes double precision
@@ -35,7 +35,11 @@ of zero, both ends of the line's clamp and the 0 an absent percept counts
 as -- each changed once in GDScript and once in Python, and each change
 failed a vector. So was `ErrandChoice`: the fetcher's strict `>`, the
 three comparisons of the choice, and each of the weighing's branches --
-the earned weapon, the empty bot, attacking, a weapon not there.
+the earned weapon, the empty bot, attacking, a weapon not there. T68's
+additions were asked the same in the Python twin: the choice of three's
+`>=` and its floor of zero, and the hiding query's SEEN condition removed
+-- each fails a vector. Not pinned: `health_worth` is 1 in every vector,
+the bot match's own number, so dropping it from the gain fails none.
 
     python3 spec/vectors/teamwork/derive.py spec/vectors/teamwork
 
@@ -57,13 +61,13 @@ that must agree bit for bit would need rounded costs.
 
 | kind | query | answer |
 |---|---|---|
-| `positions` | a bot, its candidates' facts, whether it knows a threat, whether claims are on | each candidate's status and score, and the index chosen |
+| `positions` | a bot, its candidates' facts, whether it knows a threat, whether claims are on; asked to hide, `cover_from_all` in the weights (T68) | each candidate's status and score, and the index chosen |
 | `influence` | a map's shape, sources with their strength, points asked | the value at each point |
 | `commander` | squads and objectives | each objective's priority, the commander's assignment, and nearest-first without it |
 | `confidence` | facts over time, a squad's members, phases | each confidence, the states with and without retreat, the waves |
 | `passage` | a blocked bot's facts, and requests to a teammate with its prices | each way's cost in seconds (null: impossible) and the way taken; each request's cost to the teammate and whether it is granted |
 | `aim` | a spread, a target's zones (multiplier, aim point, rectangles, exposure), rolls | each zone's own chance and worth aimed at, the zone aimed at, the chances from it, where each roll lands |
-| `errands` | the weights; facts for going back and for fetching; each team's fetching scores; pairs of scores | each weighing as [gain, walk, cost, score]; whom each team sends (-1: nobody); each pair's errand ("": none) |
+| `errands` | the weights; facts for going back, for fetching and for hiding to heal (T68); each team's fetching scores; pairs -- or triples, with hiding -- of scores | each weighing as [gain, walk, cost, score], hiding's walk the seconds away; whom each team sends (-1: nobody); each pair's errand ("": none) |
 | `action` | actions as plain data (weight, considerations with their curves), records of percepts | for each record, every action's score, every consideration's answer, and the action taken (-1: none) |
 
 ## The forty-eight

@@ -45,3 +45,5 @@ var power_taken: int = 0
 ## (T68).
 var regenerated: int = 0
 var healed_at_base: int = 0
+## Seconds its living bots spent on the errand of hiding to heal, summed.
+var hiding_seconds: float = 0.0

@@ -37,6 +37,13 @@ var resupply_attack_weight: float = 0.5
 ## rounds are 1: the base heals a bot whole (T68), so going back is worth
 ## the health it is missing as well as the rounds.
 var health_worth: float = 1.0
+## What hiding to heal is weighed by (T68): each second away from its post
+## -- the walk to cover and the wait for its health -- and how far a bot
+## looks for cover from every enemy its team knows of. A second away costs
+## less than a second's walk back to the base, 0.05, which counts only the
+## way there of a walk both ways.
+var hide_second_weight: float = 0.02
+var hide_metres: float = 15.0
 ## The power weapon: three times the rifle's damage, 20 rounds and no
 ## more, back 60 s after it is taken, picked up within a metre.
 var power_damage_multiplier: float = 3.0

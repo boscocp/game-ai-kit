@@ -9,11 +9,13 @@
   "health_worth": 1.0,
   "power_worth": 1.0,
   "power_walk": 0.08,
-  "power_danger": 0.3
+  "power_danger": 0.3,
+  "hide_second": 0.02
  },
  "query": {
   "resupply": [],
   "fetch": [],
+  "hide": [],
   "teams": [],
   "pairs": [
    [
@@ -41,6 +43,7 @@
  "expect": {
   "resupply": [],
   "fetch": [],
+  "hide": [],
   "fetcher": [],
   "chosen": [
    "resupply",

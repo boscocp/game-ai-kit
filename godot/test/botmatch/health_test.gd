@@ -73,3 +73,41 @@ func test_the_base_heals_whole_at_once_and_going_back_counts_the_health() -> voi
 	world.supply.touch(world, bot)
 	assert_int(bot.health).is_equal(world.rules.health)
 	assert_int(world.stats[0].healed_at_base).is_equal(75)
+
+
+func test_a_hurt_bot_finds_cover_from_every_enemy_its_team_knows() -> void:
+	var world: BotMatch = _world()
+	var team: MatchTeam = world.teams[0]
+	var bot: MatchBot = world.bots[0]
+	bot.position = world.arena.point_places[1]
+	bot.health = 20
+	bot.hurt_at = world.time
+	# Nobody known: nothing to hide from, it heals where it stands.
+	assert_bool((MatchHealth.hide_facts(world, team, bot)[0] as ErrandChoice.Hide).available).is_false()
+	var enemies: Array[Vector2] = [world.arena.point_places[0], world.arena.point_places[2]]
+	for index: int in range(enemies.size()):
+		team.remember(6 + index, enemies[index], world.time)
+	var found: Array = MatchHealth.hide_facts(world, team, bot)
+	var facts: ErrandChoice.Hide = found[0]
+	assert_bool(facts.available).is_true()
+	assert_float(facts.hurt).is_equal_approx(0.8, 1e-9)
+	# The wait: what is left of the delay after the walk, then 80 points at 20.
+	assert_float(facts.walk_seconds + facts.wait_seconds).is_greater_equal(10.0 + 4.0 - 1e-6)
+	var at: Vector2 = found[2]
+	for enemy: Vector2 in enemies:
+		var eyes: Vector3 = world.arena.above(enemy, world.rules.eye_height)
+		assert_bool(world.arena.clear_line(eyes, world.arena.above(at, world.rules.crouched_height))).is_false()
+	# Whole, there is nothing to come back.
+	bot.health = world.rules.health
+	assert_bool((MatchHealth.hide_facts(world, team, bot)[0] as ErrandChoice.Hide).available).is_false()
+
+
+func test_a_team_that_never_heals_weighs_no_health_and_never_hides() -> void:
+	var world: BotMatch = _world()
+	var team: MatchTeam = world.teams[0]
+	team.heal_rule = MatchSupply.NEVER
+	var bot: MatchBot = world.bots[0]
+	bot.health = 10
+	team.remember(6, world.arena.point_places[0], world.time)
+	assert_float(world.supply.resupply_facts(world, team, bot).hurt).is_equal(0.0)
+	assert_bool((MatchHealth.hide_facts(world, team, bot)[0] as ErrandChoice.Hide).available).is_false()

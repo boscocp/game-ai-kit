@@ -36,6 +36,10 @@ var aims_by_worth: bool = true
 ## How its bots decide on going back to the base for rounds: by weighing it
 ## (`MatchSupply.WEIGH`), or -- planted -- NEVER, or ALWAYS once one is spent.
 var resupply_rule: String = MatchSupply.WEIGH
+## How its bots decide on breaking off to heal (T68): by weighing it
+## (`MatchSupply.WEIGH`), or -- planted -- NEVER, health counting for
+## nothing, or ALWAYS below `MatchHealth.ALWAYS_BELOW`, a fixed threshold.
+var heal_rule: String = MatchSupply.WEIGH
 ## The honest knobs, the same body driven faster or better.
 var reaction: float = 0.3
 var turn_rate: float = deg_to_rad(270.0)

@@ -315,6 +315,9 @@ func respawn(bot: MatchBot) -> void:
 	MatchSupply.arm_rifle(bot, rules)
 	bot.streak = 0
 	bot.errand = MatchSupply.NO_ERRAND
+	bot.hide_spot = -1
+	bot.hide_place = Vector2.INF
+	bot.hide_asked_at = -INF
 	bot.reload_left = 0.0
 	bot.respawn_left = 0.0
 	bot.spot = -1
@@ -478,6 +481,7 @@ func _count(delta: float) -> void:
 	for bot: MatchBot in bots:
 		stats[bot.team].sprint_seconds += delta if bot.alive() and bot.sprinting else 0.0
 		stats[bot.team].dry_seconds += delta if bot.alive() and bot.ammo + bot.reserve <= 0 else 0.0
+		stats[bot.team].hiding_seconds += delta if bot.alive() and bot.errand == MatchSupply.HIDE else 0.0
 
 
 # Pairs of one team's bots in cover within BUNCHED metres of each other: each

@@ -1,0 +1,83 @@
+{
+ "name": "hide-when-the-wound-is-deep-and-the-wait-short",
+ "why": "Hurt 0.75, cover two seconds off, eight seconds' wait, holding: 0.75 - 10 x 0.02 - 0.3 = 0.25, worth hiding. Hurt 0.25: -0.25, a scratch is not. Hurt 0.75 attacking with a 25 s wait: -0.29. Nowhere to hide: nothing at all.",
+ "kind": "errands",
+ "weights": {
+  "resupply_walk": 0.05,
+  "leave_holding": 0.3,
+  "leave_attacking": 0.5,
+  "health_worth": 1.0,
+  "power_worth": 1.0,
+  "power_walk": 0.08,
+  "power_danger": 0.3,
+  "hide_second": 0.02
+ },
+ "query": {
+  "resupply": [],
+  "fetch": [],
+  "hide": [
+   {
+    "available": true,
+    "hurt": 0.75,
+    "walk_seconds": 2.0,
+    "wait_seconds": 8.0,
+    "attacking": false
+   },
+   {
+    "available": true,
+    "hurt": 0.25,
+    "walk_seconds": 2.0,
+    "wait_seconds": 8.0,
+    "attacking": false
+   },
+   {
+    "available": true,
+    "hurt": 0.75,
+    "walk_seconds": 2.0,
+    "wait_seconds": 25.0,
+    "attacking": true
+   },
+   {
+    "available": false,
+    "hurt": 0.75,
+    "walk_seconds": 2.0,
+    "wait_seconds": 8.0,
+    "attacking": false
+   }
+  ],
+  "teams": [],
+  "pairs": []
+ },
+ "expect": {
+  "resupply": [],
+  "fetch": [],
+  "hide": [
+   [
+    0.75,
+    10.0,
+    0.3,
+    0.25000000000000006
+   ],
+   [
+    0.25,
+    10.0,
+    0.3,
+    -0.25
+   ],
+   [
+    0.75,
+    27.0,
+    0.5,
+    -0.29000000000000004
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  ],
+  "fetcher": [],
+  "chosen": []
+ }
+}

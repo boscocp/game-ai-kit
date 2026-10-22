@@ -25,7 +25,8 @@
     "fires_on_main": true,
     "covered_from_others": 0.5,
     "in_area": true,
-    "claimed_by": 1
+    "claimed_by": 1,
+    "hidden_from_all": false
    },
    {
     "id": "B",
@@ -35,7 +36,8 @@
     "fires_on_main": true,
     "covered_from_others": 0.0,
     "in_area": true,
-    "claimed_by": -1
+    "claimed_by": -1,
+    "hidden_from_all": false
    },
    {
     "id": "C",
@@ -45,7 +47,8 @@
     "fires_on_main": true,
     "covered_from_others": 0.0,
     "in_area": true,
-    "claimed_by": -1
+    "claimed_by": -1,
+    "hidden_from_all": false
    }
   ]
  },
