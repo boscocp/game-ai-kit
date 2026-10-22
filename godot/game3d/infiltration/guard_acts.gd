@@ -60,7 +60,9 @@ static func _act(guard: InfiltrationGuard, world: InfiltrationWorld) -> Vector2:
 
 static func _glance(guard: InfiltrationGuard) -> Vector2:
 	guard.goal = Vector2.INF
-	return guard.percept.seen_place if guard.percept.sight.perceived() else guard.heard.get("place", Vector2.INF)
+	if guard.percept.sight.perceived():
+		return guard.percept.seen_place
+	return guard.percept.heard_place if guard.percept.loudness > 0.0 else Vector2.INF
 
 
 # Walk to where the partner was last heard; there, the worry is settled.

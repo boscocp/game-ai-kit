@@ -22,11 +22,11 @@ extends RefCounted
 ## Sense one step of `seconds`; spread or collapse the belief when `belief_due`.
 static func sense(guard: InfiltrationGuard, world: InfiltrationWorld, seconds: float, belief_due: bool) -> void:
 	var percept: GuardPercept = GuardEyes.look_at_player(guard, world.player, world.level, world.rules, seconds)
-	if not guard.heard.is_empty():
-		percept.loudness = float(guard.heard["loudness"])
-		percept.heard_place = guard.heard["place"]
-		percept.heard_kind = str(guard.heard["kind"])
-		guard.heard = {}
+	var heard: Dictionary = LevelSounds.heard_now(guard, world.time)
+	if not heard.is_empty():
+		percept.loudness = float(heard["loudness"])
+		percept.heard_place = heard["place"]
+		percept.heard_kind = str(heard["kind"])
 	guard.percept = percept
 	var perceived: bool = percept.sight.perceived()
 	guard.sees_since = minf(guard.sees_since, world.time) if perceived else INF

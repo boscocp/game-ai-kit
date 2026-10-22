@@ -17,6 +17,17 @@
 ##
 ## Each sound is a flood over the cells within its radius.
 ##
+## **A sound that goes on is heard while it goes on** (T81). The player's
+## steps are one footstep every `noise_every` seconds, and a step of the
+## world is shorter; a guard that heard a footstep only in the step it
+## arrived heard a walking player a quarter of the time, and its awareness
+## fell in between. So a sound is delivered with how long it holds -- the
+## steps, their own cadence; a one-off event, a throw or a shot, none -- and
+## the guard hears it in every step until it ends or a louder one comes.
+## Not T69's event lifetime: that is how long an event is remembered and
+## claimed, 4 s for a footstep, and one footstep heard for 4 s would raise
+## a guard to alert.
+##
 ## When not to use it: radios that reach any distance. Give the radio row a
 ## radius as large as the level, or bypass the hearing -- and then help is
 ## shared, and the claim that it is heard no longer holds.
@@ -37,6 +48,9 @@ var recent: Array[Dictionary] = []
 var hearing: Callable = PathHearing.loudness
 ## Which guards are on screen: (guard) -> bool. The demo sets the camera's.
 var on_screen: Callable = func(_guard: InfiltrationGuard) -> bool: return true
+## Whether a sound that goes on is heard for as long as it goes on. False is
+## the planted case of T81: each sound heard for the one step it arrives in.
+var holding: bool = true
 
 
 func _init(events: StimulusTable) -> void:
@@ -44,18 +58,20 @@ func _init(events: StimulusTable) -> void:
 
 
 ## Make a sound of `kind` at `place`, from guard `from` (-1, the player),
-## carrying `carries` (a reported place, or INF) at `urgency` (0 to 1).
-## Every living guard but the sender hears it, or not, by its path.
+## carrying `carries` (a reported place, or INF) at `urgency` (0 to 1),
+## going on for `hold` seconds after it is made (0, a one-off). Every
+## living guard but the sender hears it, or not, by its path.
 func emit(world: InfiltrationWorld, kind: String, place: Vector2, from: int, carries: Vector2 = Vector2.INF,
-		urgency: float = 0.0) -> void:
+		urgency: float = 0.0, hold: float = 0.0) -> void:
 	var radius: float = table.radius(kind)
 	var reached: Dictionary[Vector2i, int] = CostFlood.within(world.level.arena.walk_graph, world.level.cell_of(place), floori(radius))
 	var record: Dictionary = {"kind": kind, "place": place, "at": world.time, "from": from, "reached": reached, "heard_by": []}
+	var sound: Dictionary = {"kind": kind, "place": place, "from": from, "carries": carries, "urgency": urgency, "hold": hold}
 	for guard: InfiltrationGuard in world.guards:
 		var listens: bool = guard.alive() and guard.id != from
-		var loudness: float = loudness_at(world, guard, kind, reached, radius) if listens else 0.0
-		if loudness > 0.0:
-			_deliver(world, guard, kind, place, from, carries, urgency, loudness)
+		sound["loudness"] = loudness_at(world, guard, kind, reached, radius) if listens else 0.0
+		if sound["loudness"] > 0.0:
+			_deliver(world, guard, sound)
 			record["heard_by"].append(guard.id)
 	recent.append(record)
 	recent = recent.filter(func(sound: Dictionary) -> bool: return world.time - float(sound["at"]) <= DRAWN_FOR)
@@ -80,17 +96,33 @@ func factor_for(world: InfiltrationWorld, guard: InfiltrationGuard, kind: String
 		guard.position.distance_to(world.player.position))
 
 
-func _deliver(world: InfiltrationWorld, guard: InfiltrationGuard, kind: String, place: Vector2, from: int,
-		carries: Vector2, urgency: float, loudness: float) -> void:
+# `sound` holds kind, place, from, carries, urgency, loudness and hold.
+func _deliver(world: InfiltrationWorld, guard: InfiltrationGuard, sound: Dictionary) -> void:
+	var kind: String = sound["kind"]
 	if kind == "check_in":
-		var known: Array = guard.partners.get(from, [0, 0.0, place])
-		guard.partners[from] = [int(known[0]) + 1, world.time, place]
+		var known: Array = guard.partners.get(sound["from"], [0, 0.0, sound["place"]])
+		guard.partners[sound["from"]] = [int(known[0]) + 1, world.time, sound["place"]]
 		return
 	if REPORTS.has(kind):
-		_hear_report(world, guard, kind, place, carries, urgency)
+		_hear_report(world, guard, kind, sound["place"], sound["carries"], sound["urgency"])
 		return
-	if loudness > float(guard.heard.get("loudness", 0.0)):
-		guard.heard = {"loudness": loudness, "place": place, "kind": kind}
+	var loudness: float = sound["loudness"]
+	if guard.heard.is_empty() or loudness > float(guard.heard["loudness"]) or world.time >= float(guard.heard["until"]):
+		var hold: float = float(sound["hold"]) if holding else 0.0
+		guard.heard = {"loudness": loudness, "place": sound["place"], "kind": kind, "at": world.time, "until": world.time + hold}
+
+
+## What `guard` hears this step at `now`: the sound it holds, or {} -- and
+## it lets go of a sound whose hold is over. A sound is heard in the step it
+## arrives and in every step before its hold ends.
+static func heard_now(guard: InfiltrationGuard, now: float) -> Dictionary:
+	if guard.heard.is_empty():
+		return {}
+	var heard: Dictionary = guard.heard
+	var arrived_now: bool = float(heard["at"]) == now
+	if now >= float(heard["until"]):
+		guard.heard = {}
+	return heard if arrived_now or now < float(heard["until"]) else {}
 
 
 # A report: the place it carries is remembered and believed, and the
