@@ -111,3 +111,14 @@ func test_a_team_that_never_heals_weighs_no_health_and_never_hides() -> void:
 	team.remember(6, world.arena.point_places[0], world.time)
 	assert_float(world.supply.resupply_facts(world, team, bot).hurt).is_equal(0.0)
 	assert_bool((MatchHealth.hide_facts(world, team, bot)[0] as ErrandChoice.Hide).available).is_false()
+
+
+func test_the_corner_says_when_health_comes_back() -> void:
+	var rules := MatchRules.new()
+	var bot := MatchBot.new()
+	bot.health = 40
+	bot.hurt_at = 10.0
+	assert_str(BotMatchHud.health_text(rules, bot, 13.5)).is_equal("40 health, back in 7 s")
+	assert_str(BotMatchHud.health_text(rules, bot, 20.0)).is_equal("40 health, coming back")
+	bot.health = rules.health
+	assert_str(BotMatchHud.health_text(rules, bot, 13.5)).is_equal("100 health")
