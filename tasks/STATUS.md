@@ -197,6 +197,24 @@ touches, and later a library others can install.
 | T64 | The library | todo | after T60-T63; names: only ports and kernel prefixed (owner, 2026-10-20), the prefix by ADR; addon zips filtered by manifest; `pyproject.toml`, flat layout, no dependencies; an entry-point group for a user's technique; installed and run outside the repo; publishing stays the owner's act |
 | T71 | A new gate selects its module, not everything | done | wave 77: `affected.py` rule 5, the diff read by `added_gates.py`: only new `test-` targets of one module, their names in `check:` and in that module's `gates`, select the module; any other change to the Makefile or a manifest stays global; wave 75's diff went from everything to `menu, racing3d` (137 s against `make check`); 21 planted cases, 16 mutations caught, each by its own case (after the review) |
 
+## Teaching, in two languages, and what the field has that the kit does not
+
+The owner's request of 2026-10-22: bilingual teaching docs (pt-BR and
+English) -- each technique briefly, how to use it in another repository,
+a catalogue of every demo and its techniques, how to use the library --
+the demos localised with a switch to pt-BR, and, in parallel, a survey of
+AIMA and the game-AI literature against the kit, for a roadmap of new
+techniques and of second games that test the library's generality.
+
+| # | Task | State | Notes |
+|---|---|---|---|
+| T73 | The game-AI literature against this kit, and a roadmap | todo | in parallel, now: AIMA 4th ed. by chapter, Millington, Buckland, Game AI Pro, Yannakakis & Togelius, named industry practice; a table technique × kit (module, demo, tier), gated; a roadmap of new techniques and of second games for existing addons; the owner picks, then the follow-up tasks are written |
+| T74 | A page per technique, in English and Brazilian Portuguese | todo | after the current work (T69, T70); `docs/techniques/<module>.md` and `.pt-BR.md`, the translation pinned by a source hash, headings and code blocks equal; a minimal example per technique run headless outside every demo |
+| T75 | A catalogue of the games and the techniques in each | todo | after T74; generated from `modules/*.json` and the `demo-*` help, gated against drift; replaces three hand-written lists |
+| T76 | How to use the library, in two languages | todo | after T64 and T74; the steps scripted into a check that installs an addon into an empty project outside the repo |
+| T77 | The demos speak Portuguese: the switch, the gate, the board games | todo | after the current work (T69, T70); Godot's CSV translations (stdlib-checkable, tier 1), the English text as the key, the system language by default and a remembered switch in the menu; a stdlib gate and a headless one for strings not wrapped in `tr()` |
+| T78 | The real-time and 3D demos speak Portuguese | todo | after T77; steering, both racers, the bot match and infiltration, the RTS, the fighting game |
+
 ---
 
 ## Resuming after 2026-10-21 (wave 70 merged, wave 71 opened)
