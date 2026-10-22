@@ -96,7 +96,8 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-clone-rows test-inference-budget test-clone-report test-difficulty-knobs \
        test-rts-budget test-rts-simulation test-rts-match test-steering-properties \
        test-racing-ladder test-racing-does-not-cheat test-game3d-floor test-botmatch-effects \
-       test-racing3d-car test-racing3d-effects test-racing3d-ladder test-racing3d-does-not-cheat test-racing3d-you-drive ## Run every gate
+       test-racing3d-car test-racing3d-effects test-racing3d-ladder test-racing3d-does-not-cheat test-racing3d-you-drive \
+       test-infiltration-properties ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-no-assets lint-readability lint-demos \
@@ -247,7 +248,7 @@ train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-racing3d-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-racing3d-vectors test-perception-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -321,6 +322,16 @@ test-menace-vectors: import ## The MENACE vectors, against the game's bead playe
 	@# itself, because Python's generator and Godot's differ.
 	@$(GODOT) --headless --path godot -s res://test/tictactoe/menace_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/menace
+
+.PHONY: test-infiltration-properties
+test-infiltration-properties: import ## A guard knows only what it perceived; awareness, phases, sound and belief hold on generated levels (T69)
+	@$(GODOT) --headless --path godot -s res://test/infiltration/awareness_properties.gd
+
+.PHONY: test-perception-vectors
+test-perception-vectors: import ## The stealth senses: shape, loudness, awareness, phase, belief, against ai_perception (T69)
+	@# The other half is `make test-python`.
+	@$(GODOT) --headless --path godot -s res://test/ai_perception/perception_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/perception
 
 .PHONY: test-teamwork-vectors
 test-teamwork-vectors: import ## Positions, influence, commander and confidence, against ai_teamwork (T51)

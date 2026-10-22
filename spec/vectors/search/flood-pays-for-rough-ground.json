@@ -1,0 +1,56 @@
+{
+ "name": "flood-pays-for-rough-ground",
+ "why": "A cell that costs three to enter: the way through it and the way round cost the same.",
+ "kind": "flood",
+ "costs": [
+  [
+   1,
+   3,
+   1
+  ],
+  [
+   1,
+   1,
+   1
+  ]
+ ],
+ "from": [
+  0,
+  0
+ ],
+ "limit": 5,
+ "expect": {
+  "reached": [
+   [
+    0,
+    0,
+    0
+   ],
+   [
+    1,
+    0,
+    3
+   ],
+   [
+    2,
+    0,
+    4
+   ],
+   [
+    0,
+    1,
+    1
+   ],
+   [
+    1,
+    1,
+    2
+   ],
+   [
+    2,
+    1,
+    3
+   ]
+  ]
+ }
+}

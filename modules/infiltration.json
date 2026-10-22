@@ -1,0 +1,18 @@
+{
+  "module": "infiltration",
+  "kind": "example",
+  "about": "The stealth example's guards (T69, T70): types read from data, wiring ai_perception's senses, events and awareness to a fuzzy rate and a flood over the walk graph.",
+  "owns": [
+    "godot/game3d/infiltration/",
+    "godot/test/infiltration/"
+  ],
+  "depends_on": [
+    "ai_core",
+    "ai_fuzzy",
+    "ai_perception",
+    "ai_search"
+  ],
+  "gates": [
+    "test-infiltration-properties"
+  ]
+}

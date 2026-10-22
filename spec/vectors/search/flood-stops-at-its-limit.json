@@ -1,0 +1,56 @@
+{
+ "name": "flood-stops-at-its-limit",
+ "why": "The same wall with a limit of four: the far side is past it and is not reached at all.",
+ "kind": "flood",
+ "costs": [
+  [
+   1,
+   -1,
+   1
+  ],
+  [
+   1,
+   -1,
+   1
+  ],
+  [
+   1,
+   1,
+   1
+  ]
+ ],
+ "from": [
+  0,
+  0
+ ],
+ "limit": 4,
+ "expect": {
+  "reached": [
+   [
+    0,
+    0,
+    0
+   ],
+   [
+    0,
+    1,
+    1
+   ],
+   [
+    0,
+    2,
+    2
+   ],
+   [
+    1,
+    2,
+    3
+   ],
+   [
+    2,
+    2,
+    4
+   ]
+  ]
+ }
+}

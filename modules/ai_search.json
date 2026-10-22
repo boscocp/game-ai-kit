@@ -1,11 +1,13 @@
 {
   "module": "ai_search",
   "kind": "technique",
-  "about": "A*, breadth-first, depth-first and Dijkstra.",
+  "about": "A*, breadth-first, depth-first and Dijkstra, and a cost flood to every node within a limit.",
   "owns": [
     "godot/addons/ai_search/",
     "godot/test/ai_search/",
-    "spec/vectors/search/"
+    "spec/vectors/search/",
+    "python/gameaikit/search/",
+    "python/tests/test_search_flood_vectors.py"
   ],
   "depends_on": [
     "ai_core"

@@ -1,0 +1,55 @@
+{
+ "name": "loudness-along-the-path",
+ "why": "Loud at the source, nothing at the radius and with no path, half the radius when off screen, a factor above one read as one.",
+ "kind": "loudness",
+ "query": {
+  "heard": [
+   [
+    0.0,
+    10.0,
+    1.0
+   ],
+   [
+    4.0,
+    10.0,
+    1.0
+   ],
+   [
+    10.0,
+    10.0,
+    1.0
+   ],
+   [
+    -1.0,
+    10.0,
+    1.0
+   ],
+   [
+    4.0,
+    10.0,
+    0.5
+   ],
+   [
+    4.0,
+    10.0,
+    3.0
+   ],
+   [
+    2.0,
+    0.0,
+    1.0
+   ]
+  ]
+ },
+ "expect": {
+  "loudness": [
+   1.0,
+   0.6,
+   0.0,
+   0.0,
+   0.19999999999999996,
+   0.6,
+   0.0
+  ]
+ }
+}

@@ -4,9 +4,13 @@
 ## large one. Loudness falls off in a straight line with distance, and walls
 ## do not stop it. Constant time per listener.
 ##
+## This is the 2D stealth demo's hearing, whose guards are meant to hear
+## through its walls. A level whose walls should stop sound uses
+## `PathHearing`, which takes the length of the way round instead.
+##
 ## When not to use it: when the walls should matter. Sound that goes round
-## corners is a search over the grid (a Dijkstra flood from the source), and a
-## good deal more than this.
+## corners is a search over the grid (`ai_search`'s cost flood, Dijkstra from the
+## source) and `PathHearing` on what it finds.
 class_name Hearing
 extends RefCounted
 

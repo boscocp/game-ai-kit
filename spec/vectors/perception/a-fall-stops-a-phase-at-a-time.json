@@ -1,0 +1,65 @@
+{
+ "name": "a-fall-stops-a-phase-at-a-time",
+ "why": "From searching, a hundred-second fall stops at the floor of suspicious, and the next at nothing.",
+ "kind": "awareness",
+ "row": {
+  "peak": 1.0,
+  "decay": 0.1,
+  "phases": [
+   {
+    "name": "unaware",
+    "at": 0.0
+   },
+   {
+    "name": "suspicious",
+    "at": 0.25
+   },
+   {
+    "name": "searching",
+    "at": 0.625
+   },
+   {
+    "name": "alert",
+    "at": 1.0
+   }
+  ],
+  "caution": {
+   "floor": 0.25,
+   "seconds": 30.0
+  }
+ },
+ "query": {
+  "steps": [
+   {
+    "perceived": true,
+    "rate": 0.7,
+    "seconds": 1.0,
+    "now": 1.0
+   },
+   {
+    "perceived": false,
+    "rate": 0.0,
+    "seconds": 100.0,
+    "now": 101.0
+   },
+   {
+    "perceived": false,
+    "rate": 0.0,
+    "seconds": 100.0,
+    "now": 201.0
+   }
+  ]
+ },
+ "expect": {
+  "values": [
+   0.7,
+   0.25,
+   0.0
+  ],
+  "phases": [
+   2,
+   1,
+   0
+  ]
+ }
+}

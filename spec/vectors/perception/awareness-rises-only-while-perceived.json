@@ -1,0 +1,65 @@
+{
+ "name": "awareness-rises-only-while-perceived",
+ "why": "Half a peak a second for a second, then a step with nothing perceived and a high rate: it falls, never rises.",
+ "kind": "awareness",
+ "row": {
+  "peak": 1.0,
+  "decay": 0.1,
+  "phases": [
+   {
+    "name": "unaware",
+    "at": 0.0
+   },
+   {
+    "name": "suspicious",
+    "at": 0.25
+   },
+   {
+    "name": "searching",
+    "at": 0.625
+   },
+   {
+    "name": "alert",
+    "at": 1.0
+   }
+  ],
+  "caution": {
+   "floor": 0.25,
+   "seconds": 30.0
+  }
+ },
+ "query": {
+  "steps": [
+   {
+    "perceived": true,
+    "rate": 0.5,
+    "seconds": 1.0,
+    "now": 1.0
+   },
+   {
+    "perceived": false,
+    "rate": 9.0,
+    "seconds": 1.0,
+    "now": 2.0
+   },
+   {
+    "perceived": true,
+    "rate": 0.25,
+    "seconds": 2.0,
+    "now": 4.0
+   }
+  ]
+ },
+ "expect": {
+  "values": [
+   0.5,
+   0.4,
+   0.9
+  ],
+  "phases": [
+   1,
+   1,
+   2
+  ]
+ }
+}

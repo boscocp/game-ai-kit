@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: structure
-verified_on: 2026-10-13
+verified_on: 2026-10-22
 tier: 1
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: the controller shape changes, or the centroid stops sampling at evenly spaced points
@@ -53,6 +53,13 @@ be checked by hand. In `two-rules-overlap.json` the output is sampled at
 - **both** (noise 5): quiet and loud are each 1/4. Both terms are cut at 1/4,
   which leaves height 1/4 at every sample except 50. The answer is
   (0 + 10 + … + 40 + 60 + … + 100) / 10 = **50**, strictly between the two.
+
+`a-guards-awareness-rate.json` (T69) is the patrol guard's awareness rate,
+the controller in `godot/game3d/infiltration/guard_types.json`. It is kept,
+not thrown away: `derive_guard_rate.py` beside it writes it from a third
+copy of Mamdani inference in plain floats, and `guard_type_test.gd` holds
+its controller equal to the patrol row's, so the vector pins the rate the
+guard really uses.
 
 ## The shape
 

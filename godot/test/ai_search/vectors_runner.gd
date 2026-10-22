@@ -1,4 +1,5 @@
-# Run the conformance vectors in spec/vectors/search against all four searches.
+# Run the conformance vectors in spec/vectors/search against all four searches,
+# and the flood vectors (`"kind": "flood"`) against `CostFlood`.
 #
 # The vectors sit outside the Godot project on purpose: the Python side of the
 # kit is held to the same answers, and a file inside `res://` would quietly
@@ -49,11 +50,12 @@ func _run(directory: String) -> int:
 		if vector.is_empty():
 			printerr("vectors_runner: %s is not readable JSON" % name)
 			return 2
-		var wrong: String = SearchVector.why_not_a_vector(vector)
+		var flood: bool = str(vector.get("kind", "")) == "flood"
+		var wrong: String = FloodVector.why_not_a_vector(vector) if flood else SearchVector.why_not_a_vector(vector)
 		if wrong != "":
 			printerr("vectors_runner: %s is not a search vector -- %s" % [name, wrong])
 			return 2
-		failures += SearchVector.check(name, vector, searches)
+		failures += FloodVector.check(name, vector) if flood else SearchVector.check(name, vector, searches)
 
 	for failure: String in failures:
 		print(failure)
