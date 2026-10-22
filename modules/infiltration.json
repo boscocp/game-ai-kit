@@ -12,5 +12,7 @@
     "ai_perception",
     "ai_search"
   ],
-  "gates": []
+  "gates": [
+    "test-infiltration-properties"
+  ]
 }
