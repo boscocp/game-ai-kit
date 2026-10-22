@@ -96,7 +96,7 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-clone-rows test-inference-budget test-clone-report test-difficulty-knobs \
        test-rts-budget test-rts-simulation test-rts-match test-steering-properties \
        test-racing-ladder test-racing-does-not-cheat test-game3d-floor test-botmatch-effects \
-       test-racing3d-car test-racing3d-effects test-racing3d-ladder test-racing3d-does-not-cheat ## Run every gate
+       test-racing3d-car test-racing3d-effects test-racing3d-ladder test-racing3d-does-not-cheat test-racing3d-you-drive ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-no-assets lint-readability lint-demos \
@@ -693,6 +693,10 @@ test-racing3d-ladder: import ## The 3D racer's three levels finish, in order, a 
 .PHONY: test-racing3d-does-not-cheat
 test-racing3d-does-not-cheat: import ## One physics for every 3D car, no limit broken, no knob moved, and an honest twin race matched bit for bit (T54)
 	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_does_not_cheat.gd
+
+.PHONY: test-racing3d-you-drive
+test-racing3d-you-drive: import ## The racer's scene starts on your car, says the keys wait for the grid, and a held Up drives it (wave 75)
+	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_you_drive.gd
 
 .PHONY: test-racing3d-effects
 test-racing3d-effects: import ## Slow (~75 s): what the PID, the measured grip and the heat line each do to a 3D race, measured (T54)

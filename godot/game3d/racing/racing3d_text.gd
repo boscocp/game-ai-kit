@@ -18,6 +18,8 @@ static func status(race: Race3D, watched: int, human: RaceHumanDriver3D, switche
 		lines.append(_measuring(race, watched))
 	else:
 		lines.append(_watched(race, watched, human))
+		if race.drivers[watched] != human:
+			lines.append("the keys drive your car, the red one: Tab until \"you\" to watch it")
 	lines.append("")
 	lines.append("1 PID: %s" % ("full" if switches[0] else "proportional only"))
 	lines.append("2 traffic: %s" % ("heat line" if switches[1] else "one rival at a time"))
@@ -31,7 +33,7 @@ static func status(race: Race3D, watched: int, human: RaceHumanDriver3D, switche
 static func _measuring(race: Race3D, watched: int) -> String:
 	var test: GripTest3D = race.tests[watched]
 	var sheet: Dictionary = Race3D.sheet_of(race.physics)
-	return "Measuring each car on the test pad.\ncornering now %.1f m/s^2, best %.2f (sheet %.2f)\nbraking %.2f m/s^2 (sheet %.2f)" % [
+	return "Measuring each car on the test pad: the keys drive yours once\nevery car is on the grid, in about twenty seconds.\ncornering now %.1f m/s^2, best %.2f (sheet %.2f)\nbraking %.2f m/s^2 (sheet %.2f)" % [
 		test.cornering, test.grip, sheet["grip"], test.braking, sheet["braking"]]
 
 

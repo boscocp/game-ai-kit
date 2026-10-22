@@ -19,6 +19,7 @@
     "test-racing3d-vectors",
     "test-racing3d-effects",
     "test-racing3d-ladder",
-    "test-racing3d-does-not-cheat"
+    "test-racing3d-does-not-cheat",
+    "test-racing3d-you-drive"
   ]
 }
