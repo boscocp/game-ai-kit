@@ -75,7 +75,7 @@ func step(intent: PlayerIntent) -> void:
 	player.move(intent, level, rules, seconds)
 	var noise: String = player.step_noise(rules, time)
 	if noise != "":
-		sounds.emit(self, noise, player.position, -1)
+		sounds.emit(self, noise, player.position, -1, Vector2.INF, 0.0, float(rules.player["noise_every"]))
 	PlayerActions.apply(self, intent)
 	var belief_due: bool = time >= next_belief
 	if belief_due:

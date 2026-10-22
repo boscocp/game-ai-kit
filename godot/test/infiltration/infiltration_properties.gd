@@ -23,7 +23,11 @@
 #      taken outside the selector; an act that ignores the action;
 #   7. portable: every claim runs on the second level and the generated
 #      ones, the guards' scripts name no level, and each guard stands at its
-#      level's post -- planted: a guard script naming the first level.
+#      level's post -- planted: a guard script naming the first level;
+#   8. a guard hears a player walking behind it (T81): standing 1 m and 3 m
+#      along the floor, noticed within `HearingClaims.NOTICE_WITHIN`;
+#      crouched at 3 m no sooner; prone never -- planted: each sound heard
+#      for the one step it arrives in, wave 80's behaviour.
 #
 # Engine errors are counted (`PerceptionErrors`); read the output for
 # SCRIPT ERROR too (CLAUDE.md's trap).
@@ -53,6 +57,7 @@ func _initialize() -> void:
 	failures.append_array(LevelClaims.halving(levels, trails))
 	failures.append_array(_overlay(levels))
 	failures.append_array(LevelClaims.portable(levels))
+	failures.append_array(_hearing(levels))
 	if _errors.count > 0:
 		failures.append("%d engine error(s) during the claims" % _errors.count)
 	for failure: String in failures:
@@ -123,6 +128,14 @@ static func _with_claims_off(world: InfiltrationWorld) -> void:
 
 static func _claims_off(spots: Array[Dictionary], costs: Array[PackedFloat64Array], _claims: bool, weights: SearchCoordinator.Weights) -> PackedInt32Array:
 	return SearchCoordinator.assign(spots, costs, false, weights)
+
+
+func _hearing(levels: Array[InfiltrationLevel]) -> Array[String]:
+	var rows: Array[Dictionary] = HearingClaims.trials(levels, true)
+	for line: String in HearingClaims.lines(rows):
+		print(line)
+	var planted: Array[String] = HearingClaims.heard(HearingClaims.trials(levels, false))
+	return LevelClaims.pair("a guard hears a player walking behind it (%d guards)" % rows.size(), HearingClaims.heard(rows), planted)
 
 
 func _arbiter(levels: Array[InfiltrationLevel]) -> Array[String]:

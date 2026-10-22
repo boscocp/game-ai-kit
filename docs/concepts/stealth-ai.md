@@ -482,6 +482,14 @@ the patrol, 0.4 for the sentry); `off_screen_beyond` (8 m) and
 `minor_priority` (1); the fuzzy sets' breakpoints; and the events' radii
 and lifetimes.
 
+A third limit, found by the owner playing T70 and fixed in wave 82 (T81):
+a footstep is an event, but a player walking makes one every 0.4 s; a guard
+that hears an event only in the step it arrives hears a walking player a
+quarter of the time, and `Awareness` falls in between, because it rises
+only while perceived. So a sound that goes on is held for as long as it
+goes on -- delivered with its emitter's cadence -- and is not the event's
+lifetime, which is how long it is remembered.
+
 Two limits of what was built, for T70. Sound floods the walk graph, which
 is 4-connected: a radius is a diamond, not a circle, ground slow to walk
 is quieter to hear across, a door is only open or shut, and there is no
