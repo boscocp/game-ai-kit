@@ -15,8 +15,10 @@ answers.
     passage.py      how to get past a body: wait, go round, ask, or another spot
     action.py       what to do now: every action scored by its considerations
     errands.py      back for rounds or out for a power weapon, each a gain less its costs
+    search.py       spots divided among searchers, and a cap on the last known position
+    roles.py        shooter or flanker once a fight starts, one flanker at most
 """
 
-from . import action, aim, commander, confidence, errands, influence, passage, positions
+from . import action, aim, commander, confidence, errands, influence, passage, positions, roles, search
 
-__all__ = ["action", "aim", "commander", "confidence", "errands", "influence", "passage", "positions"]
+__all__ = ["action", "aim", "commander", "confidence", "errands", "influence", "passage", "positions", "roles", "search"]

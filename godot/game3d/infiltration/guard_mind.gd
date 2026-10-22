@@ -27,15 +27,16 @@ func _init(guard_type: GuardType) -> void:
 		awareness[stimulus] = Awareness.new()
 
 
-## One step of `seconds`, ending at `now`, from `percept` alone.
-func step(percept: GuardPercept, now: float, seconds: float) -> void:
+## One step of `seconds`, ending at `now`, from `percept` alone; both
+## rates scaled by `rate_scale`, the difficulty's awareness knob.
+func step(percept: GuardPercept, now: float, seconds: float, rate_scale: float = 1.0) -> void:
 	var seeing: bool = percept.sight.perceived()
 	var sight_rate: float = 0.0
 	if seeing:
-		sight_rate = type.rate(percept.sight.certainty, percept.light, percept.motion, percept.distance)
+		sight_rate = type.rate(percept.sight.certainty, percept.light, percept.motion, percept.distance) * rate_scale
 	awareness["sight"].step(type.awareness, seeing, sight_rate, seconds, now)
 	var hearing: bool = percept.loudness > 0.0
-	var sound_rate: float = percept.loudness * float(type.hearing["heard_rate"])
+	var sound_rate: float = percept.loudness * float(type.hearing["heard_rate"]) * rate_scale
 	awareness["sound"].step(type.awareness, hearing, sound_rate, seconds, now)
 	if seeing:
 		memory.remember(percept.seen_place, now, "sight")
@@ -49,6 +50,17 @@ func phase() -> int:
 	for stimulus: String in STIMULI:
 		highest = maxi(highest, Awareness.phase(awareness[stimulus].value, type.awareness))
 	return highest
+
+
+## True when the guard is in the phase named `phase_name` or a later one,
+## by its own type's row -- read by name, so a type whose row has other
+## phases or thresholds is read right. False when the row has no such phase.
+func at_least(phase_name: String) -> bool:
+	var phases: Array = type.awareness["phases"]
+	for index: int in range(phases.size()):
+		if str(phases[index]["name"]) == phase_name:
+			return phase() >= index
+	return false
 
 
 ## The name of `phase()`, from the guard type's row.

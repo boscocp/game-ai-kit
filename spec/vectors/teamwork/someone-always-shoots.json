@@ -1,0 +1,27 @@
+{
+ "name": "someone-always-shoots",
+ "why": "The only one who can shoot asks to flank, the other cannot shoot: the flank is refused, it shoots.",
+ "kind": "roles",
+ "query": {
+  "requests": [
+   {
+    "role": "flanker",
+    "score": 0.9,
+    "can_shoot": true
+   },
+   {
+    "role": "flanker",
+    "score": 0.5,
+    "can_shoot": false
+   }
+  ],
+  "use_arbiter": true,
+  "max_flankers": 1
+ },
+ "expect": {
+  "granted": [
+   "shooter",
+   "none"
+  ]
+ }
+}

@@ -26,7 +26,8 @@ Each file has `name`, `why`, `kind`, `query` and `expect`. The kinds:
   `certainties`.
 - **`loudness`** -- `heard`, a list of `[path length, radius, listener
   factor]`; a negative length means no path. Expects each `loudness`.
-- **`awareness`** -- a `row` (`Awareness`') and `steps`, each `perceived`,
+- **`awareness`** -- a `row` (`Awareness`'; a phase may carry its own
+  `decay`, T70) and `steps`, each `perceived`,
   `rate`, `seconds` and `now`, from a fresh number. Expects the `values`
   after each step and the `phases` (indices) they read as.
 - **`phase`** -- a `row` and `numbers`. Expects each one's phase index.

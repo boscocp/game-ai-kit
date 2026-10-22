@@ -10,7 +10,7 @@ extends RefCounted
 ## Shared with `python/tests/test_teamwork_vectors.py`; sized for `Vector2`'s
 ## 32-bit floats.
 const TOLERANCE: float = 1e-4
-const KINDS: Array[String] = ["positions", "influence", "commander", "confidence", "aim", "passage", "action", "errands"]
+const KINDS: Array[String] = ["positions", "influence", "commander", "confidence", "aim", "passage", "action", "errands", "search", "roles"]
 
 
 ## Why `vector` is not a teamwork vector, or "" when it is one.
@@ -50,6 +50,10 @@ static func answer_to(vector: Dictionary) -> Dictionary:
 			return _action(vector)
 		"errands":
 			return _errands(vector)
+		"search":
+			return _search(vector)
+		"roles":
+			return _roles(vector)
 	return _confidence(vector)
 
 
@@ -231,6 +235,30 @@ static func _action(vector: Dictionary) -> Dictionary:
 		answers.append(choice.answers.map(func(found: PackedFloat64Array) -> Array: return Array(found)))
 		chosen.append(choice.chosen)
 	return {"scores": scores, "answers": answers, "chosen": chosen}
+
+
+static func _search(vector: Dictionary) -> Dictionary:
+	var weights := SearchCoordinator.Weights.new()
+	weights.worth = float(vector["weights"]["worth"])
+	weights.travel = float(vector["weights"]["travel"])
+	var query: Dictionary = vector["query"]
+	var spots: Array[Dictionary] = []
+	for spot: Dictionary in query["spots"]:
+		spots.append(spot)
+	var costs: Array[PackedFloat64Array] = []
+	for row: Array in query["costs"]:
+		costs.append(PackedFloat64Array(row))
+	var assigned: PackedInt32Array = SearchCoordinator.assign(spots, costs, bool(query["use_claims"]), weights)
+	var granted: PackedInt32Array = SearchCoordinator.grant_last_known(PackedFloat64Array(query["last_known"]), int(query["cap"]))
+	return {"assigned": Array(assigned), "granted": Array(granted)}
+
+
+static func _roles(vector: Dictionary) -> Dictionary:
+	var query: Dictionary = vector["query"]
+	var requests: Array[Dictionary] = []
+	for request: Dictionary in query["requests"]:
+		requests.append(request)
+	return {"granted": Array(RoleArbiter.grant(requests, bool(query["use_arbiter"]), int(query["max_flankers"])))}
 
 
 static func _errands(vector: Dictionary) -> Dictionary:

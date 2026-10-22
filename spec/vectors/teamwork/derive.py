@@ -646,9 +646,96 @@ def posture_vectors():
                  [{"moving": 1.0, "to_go": 16.0}, {"moving": 1.0, "to_go": 8.0}, {"moving": 1.0, "to_go": 12.0, "danger": 0.5},
                   {"moving": 1.0, "to_go": 16.0, "enemy_in_sight": 1.0, "danger": 1.0}, {"to_go": 16.0}])
 
+# --- the search coordinator and the role arbiter (T70) --------------------
+
+SEARCH_WEIGHTS = {"worth": 10.0, "travel": 0.2}
+
+def search_score(spot, cost, w):
+    if spot["searched"] or spot["worth"] <= 0 or cost is None:
+        return None
+    return spot["worth"] * w["worth"] - cost * w["travel"]
+
+def search_assign(spots, costs, claims, w):
+    def best_spot(row, taken):
+        best = None
+        for s, facts in enumerate(spots):
+            v = search_score(facts, row[s], w)
+            if s not in taken and v is not None and (best is None or v > best[1]):
+                best = (s, v)
+        return best
+    if not claims:
+        return [(best_spot(row, set()) or (-1, 0))[0] for row in costs]
+    given, taken = [-1] * len(costs), set()
+    while True:
+        pair = None
+        for g, row in enumerate(costs):
+            found = best_spot(row, taken) if given[g] == -1 else None
+            if found and (pair is None or found[1] > pair[2]):
+                pair = (g, found[0], found[1])
+        if pair is None:
+            return given
+        given[pair[0]] = pair[1]
+        taken.add(pair[1])
+
+def search(name, why, spots, costs, claims, cap, last_known):
+    return {"name": name, "why": why, "kind": "search", "weights": SEARCH_WEIGHTS,
+            "query": {"spots": spots, "costs": costs, "use_claims": claims, "cap": cap, "last_known": last_known},
+            "expect": {"assigned": search_assign(spots, [[None if c is None else c for c in row] for row in costs], claims, SEARCH_WEIGHTS),
+                       "granted": sorted(sorted(range(len(last_known)), key=lambda i: (last_known[i], i))[:cap])}}
+
+def roles_grant(requests, use, most):
+    granted = ["shooter" if r["can_shoot"] else "none" for r in requests]
+    if not use:
+        return granted
+    order = sorted(range(len(requests)), key=lambda i: (-requests[i]["score"], i))
+    flankers = 0
+    for i in order:
+        if requests[i]["role"] == "flanker" and flankers < most:
+            granted[i] = "flanker"
+            flankers += 1
+    if "shooter" not in granted:
+        for i in order:
+            if requests[i]["can_shoot"] and granted[i] == "flanker":
+                granted[i] = "shooter"
+                break
+    return granted
+
+def roles(name, why, requests, use, most=1):
+    return {"name": name, "why": why, "kind": "roles",
+            "query": {"requests": requests, "use_arbiter": use, "max_flankers": most},
+            "expect": {"granted": roles_grant(requests, use, most)}}
+
+def ask(role, score, can_shoot=True):
+    return {"role": role, "score": score, "can_shoot": can_shoot}
+
+def coordination_vectors():
+    spots = [{"worth": 0.5, "searched": False}, {"worth": 0.3, "searched": False},
+             {"worth": 0.2, "searched": True}, {"worth": 0.0, "searched": False}]
+    yield search("claims-divide-the-search",
+                 "Two guards, both nearer the best spot. With claims, guard 0 (nearest) takes it and guard 1 the "
+                 "next; the searched spot and the worthless one go to no one. Two of three wanting the last known "
+                 "position go: the nearest.",
+                 spots, [[2.0, 9.0, 1.0, 1.0], [3.0, 4.0, 1.0, 1.0]], True, 2, [5.0, 1.0, 3.0])
+    yield search("without-claims-they-search-the-same-spot",
+                 "The same query with claims off: both guards go to the best spot. The cap of one sends only the "
+                 "nearest, and of equal walks the earlier.",
+                 spots, [[2.0, 9.0, 1.0, 1.0], [3.0, 4.0, 1.0, 1.0]], False, 1, [2.0, 2.0])
+    yield search("no-spot-left-no-search",
+                 "Every spot searched or worthless: no one is given a spot, and a cap of zero sends no one.",
+                 [{"worth": 0.4, "searched": True}, {"worth": 0.0, "searched": False}], [[1.0, 1.0]], True, 0, [1.0])
+    yield roles("one-flanker-and-the-rest-shoot",
+                "Three ask to flank, one to shoot: the best flank is granted, the others refused and shoot.",
+                [ask("flanker", 0.4), ask("flanker", 0.9), ask("shooter", 0.5), ask("flanker", 0.6)], True)
+    yield roles("someone-always-shoots",
+                "The only one who can shoot asks to flank, the other cannot shoot: the flank is refused, it shoots.",
+                [ask("flanker", 0.9), ask("flanker", 0.5, False)], True)
+    yield roles("without-the-arbiter-everyone-shoots",
+                "The arbiter off: everyone who can shoot does, flank requests or not.",
+                [ask("flanker", 0.9), ask("shooter", 0.5), ask("flanker", 0.4, False)], False)
+
 def main(directory):
     folder = pathlib.Path(directory)
-    for vector in list(vectors()) + list(aim_vectors()) + list(passage_vectors()) + list(action_vectors()) + list(errand_vectors()) + list(posture_vectors()):
+    for vector in list(vectors()) + list(aim_vectors()) + list(passage_vectors()) + list(action_vectors()) + list(errand_vectors()) + list(posture_vectors()) + list(coordination_vectors()):
         (folder / f"{vector['name']}.json").write_text(json.dumps(vector, indent=1) + "\n", encoding="utf-8")
 
 if __name__ == "__main__":

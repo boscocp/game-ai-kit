@@ -86,7 +86,8 @@ def aware_step(state, row, perceived, rate, seconds, now):
         lowest = row["phases"][max(phase(value, row) - 1, 0)]["at"] * peak
         if now < until:
             lowest = max(lowest, row["caution"]["floor"] * peak)
-        value = max(value - row["decay"] * peak * seconds, min(lowest, value))
+        decay = row["phases"][phase(value, row)].get("decay", row["decay"])
+        value = max(value - decay * peak * seconds, min(lowest, value))
     if phase(value, row) == len(row["phases"]) - 1:
         until = now + row["caution"]["seconds"]
     return value, until
@@ -145,6 +146,11 @@ def unseen_step(shares, neighbours, seen, spread):
     return [m / total for m in moved], False
 
 
+LINGERING = {"peak": 1.0, "decay": 0.1,
+             "phases": [{"name": "unaware", "at": 0.0}, {"name": "suspicious", "at": 0.25},
+                        {"name": "searching", "at": 0.625, "decay": 0.02}, {"name": "alert", "at": 1.0, "decay": 0.02}],
+             "caution": {"floor": 0.0, "seconds": 0.0}}
+
 CORRIDOR = [[1], [0, 2], [1, 3], [2]]
 ROOMS = [[1, 2], [0, 3], [0, 3], [1, 2, 4], [3]]
 
@@ -177,6 +183,11 @@ def vectors():
         awareness_vector("caution-holds-after-an-alert", "Alerted at ten, it falls to the caution floor "
                          "and stays there until forty, then falls to nothing.",
                          [step(True, 2.0, 1.0, 10.0)] + [step(False, 0.0, 5.0, 10.0 + 5 * k) for k in range(1, 11)]),
+        awareness_vector("a-search-lingers-and-suspicion-fades", "With a slow decay set for searching and alert "
+                         "and the row's fast one below, a fall from the peak lingers while searching and drops fast "
+                         "once suspicious.",
+                         [step(True, 2.0, 1.0, 0.0)] + [step(False, 0.0, 5.0, 100.0 + 5 * k) for k in range(1, 9)],
+                         row=LINGERING),
         phase_vector("the-phases-are-read-from-the-row", "Each threshold is the start of its phase.",
                      [0.0, 0.24, 0.25, 0.6, 0.625, 0.99, 1.0]),
         belief_vector("belief-spreads-along-a-corridor", "Seen at one end, then unseen: it spreads one "

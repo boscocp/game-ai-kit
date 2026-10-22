@@ -1,0 +1,38 @@
+{
+ "name": "no-spot-left-no-search",
+ "why": "Every spot searched or worthless: no one is given a spot, and a cap of zero sends no one.",
+ "kind": "search",
+ "weights": {
+  "worth": 10.0,
+  "travel": 0.2
+ },
+ "query": {
+  "spots": [
+   {
+    "worth": 0.4,
+    "searched": true
+   },
+   {
+    "worth": 0.0,
+    "searched": false
+   }
+  ],
+  "costs": [
+   [
+    1.0,
+    1.0
+   ]
+  ],
+  "use_claims": true,
+  "cap": 0,
+  "last_known": [
+   1.0
+  ]
+ },
+ "expect": {
+  "assigned": [
+   -1
+  ],
+  "granted": []
+ }
+}

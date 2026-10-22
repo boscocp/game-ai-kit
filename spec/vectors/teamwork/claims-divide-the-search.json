@@ -1,0 +1,60 @@
+{
+ "name": "claims-divide-the-search",
+ "why": "Two guards, both nearer the best spot. With claims, guard 0 (nearest) takes it and guard 1 the next; the searched spot and the worthless one go to no one. Two of three wanting the last known position go: the nearest.",
+ "kind": "search",
+ "weights": {
+  "worth": 10.0,
+  "travel": 0.2
+ },
+ "query": {
+  "spots": [
+   {
+    "worth": 0.5,
+    "searched": false
+   },
+   {
+    "worth": 0.3,
+    "searched": false
+   },
+   {
+    "worth": 0.2,
+    "searched": true
+   },
+   {
+    "worth": 0.0,
+    "searched": false
+   }
+  ],
+  "costs": [
+   [
+    2.0,
+    9.0,
+    1.0,
+    1.0
+   ],
+   [
+    3.0,
+    4.0,
+    1.0,
+    1.0
+   ]
+  ],
+  "use_claims": true,
+  "cap": 2,
+  "last_known": [
+   5.0,
+   1.0,
+   3.0
+  ]
+ },
+ "expect": {
+  "assigned": [
+   0,
+   1
+  ],
+  "granted": [
+   1,
+   2
+  ]
+ }
+}

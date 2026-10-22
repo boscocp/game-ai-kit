@@ -6,7 +6,10 @@
 ## some amount of time, passing through all the intermediate states" [Leonard
 ## 2003]. So this is one number, from 0 to the row's `peak`. It rises by the
 ## rate it is given -- computed elsewhere, by whatever reads the percept; the
-## example uses a fuzzy controller -- and falls at the row's own `decay`.
+## example uses a fuzzy controller -- and falls at the row's own `decay`,
+## or at the `decay` of the phase it is in when that phase has its own: a
+## search that lingers after an alert while a glimpse's suspicion fades
+## fast, as an envelope's release is set per stimulus in Crysis [Welsh 2013].
 ##
 ## The **phases** are a reading of the number, not states: thresholds as
 ## fractions of the peak, in data, as Crysis does [Welsh 2013], and `phase`
@@ -23,7 +26,8 @@
 ##   suspicion [Alexander 2009; Ubisoft 2024].
 ##
 ## A row: `{"peak": p, "decay": per second as a share of the peak,
-## "phases": [{"name": n, "at": share}, ...] lowest first, the first at 0,
+## "phases": [{"name": n, "at": share, and optionally "decay": d}, ...]
+## lowest first, the first at 0,
 ## "caution": {"floor": share, "seconds": s}}`. Constant time per step, and
 ## linear in the phases to read one.
 ##
@@ -46,7 +50,7 @@ func step(row: Dictionary, perceived: bool, rate: float, seconds: float, now: fl
 	if perceived:
 		value = minf(peak, value + maxf(rate, 0.0) * peak * seconds)
 	else:
-		value = maxf(value - float(row["decay"]) * peak * seconds, lowest_after_falling(row, now))
+		value = maxf(value - decay_in(value, row) * peak * seconds, lowest_after_falling(row, now))
 	if phase(value, row) == (row["phases"] as Array).size() - 1:
 		caution_until = now + float(row["caution"]["seconds"])
 
@@ -59,6 +63,13 @@ func lowest_after_falling(row: Dictionary, now: float) -> float:
 	if now < caution_until:
 		lowest = maxf(lowest, float(row["caution"]["floor"]) * float(row["peak"]))
 	return minf(lowest, value)
+
+
+## How fast `number` falls, per second as a share of the peak: its phase's
+## own decay when the row gives one, the row's otherwise.
+static func decay_in(number: float, row: Dictionary) -> float:
+	var phase_row: Dictionary = row["phases"][phase(number, row)]
+	return float(phase_row.get("decay", row["decay"]))
 
 
 ## Why `row` cannot drive an awareness, or "" when it can: a positive peak,
@@ -75,7 +86,8 @@ static func problem(row: Dictionary) -> String:
 	for index: int in range(1, phases.size()):
 		if float(phases[index]["at"]) <= float(phases[index - 1]["at"]):
 			return "phase %s does not rise above the one before" % phases[index]["name"]
-	if float(row["decay"]) < 0.0 or float(row["caution"]["seconds"]) < 0.0:
+	var slowest: float = phases.reduce(func(least: float, entry: Dictionary) -> float: return minf(least, float(entry.get("decay", row["decay"]))), float(row["decay"]))
+	if slowest < 0.0 or float(row["caution"]["seconds"]) < 0.0:
 		return "the decay and the caution's seconds must be at least 0"
 	if float(row["caution"]["floor"]) >= float(phases[phases.size() - 1]["at"]):
 		return "the caution floor is at or above the last phase: once alert, always alert"
