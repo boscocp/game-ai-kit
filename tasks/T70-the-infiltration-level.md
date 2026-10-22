@@ -1,14 +1,15 @@
-# T52.2 — The infiltration level: guards that search together and call for help
+# T70 — The infiltration level: guards that search together and call for help
 
-Size: L · Prereqs: T50, T52.1, T67 · Files: `godot/game3d/infiltration/`, `godot/game3d/assets.json`, `godot/addons/ai_teamwork/`, T67's selector addon, `python/gameaikit/teamwork/`, `spec/vectors/teamwork/`, `godot/test/infiltration/`, `modules/infiltration.json`, `Makefile`, `docs/godot/infiltration.md`
+Size: L · Prereqs: T50, T66, T67, T69 · Files: `godot/game3d/infiltration/`, `godot/game3d/assets.json`, `godot/addons/ai_teamwork/`, T67's selector addon, `python/gameaikit/teamwork/`, `spec/vectors/teamwork/`, `godot/test/infiltration/`, `modules/infiltration.json`, `Makefile`, `docs/godot/infiltration.md`
 
 ## Goal
 
 The second half of the owner's T52 (2026-10-21): bots against the player
 with an optional stealth, "inspirado no assassins creed, splinter cell e
-metal gear". T52.1 built what a guard perceives, how aware it is and what
-it knows; this task puts guards made of it in a level, in third person,
-against a person.
+metal gear". It was numbered T52.2 at first, renumbered T70 because `make
+wave` reads only whole numbers. T69 built what a guard perceives, how aware
+it is and what it knows; this task puts guards made of it in a level, in
+third person, against a person.
 
 The guards are T67's agent: "o bot é um agente que deve perceber o mundo e
 suas acoes e decidir o que fazer pra atingir seu objetivo ... em outro
@@ -32,13 +33,18 @@ The player can go in shooting, or stay unseen; both are the same guards.
   all -- a detection bar, the last known position as a silhouette, a radar
   map [Walsh 2015; Martin 2009; Wikipedia, MGS 1998].
 - **Third person**, the owner's confirmation.
-- **Reuse the bot match** wherever it fits, the owner's instruction: levels
-  as JSON like `arena.json` and `yards.json`; `BotArena`'s boxes,
-  platforms and stairs and `ArenaWalk`'s heights; `BotBody`, the humanoid
-  (Kenney's Animated Characters Survivors, referenced through
-  `assets.json`); the HUD; the shot's ray logic, adapted from first person;
-  the sprint rule in `rules.json`. These are T66's (waves 71-72) and are on
-  main once T67 is.
+- **Reuse the bot match** wherever it fits, the owner's instruction. These
+  are T66's, merged in wave 71 and on main: levels as JSON like
+  `arena.json` and `yards.json`; `BotArena`'s boxes, platforms and stairs,
+  and `ArenaWalk`'s heights; `BotBody`, the humanoid (Kenney's Animated
+  Characters Survivors, referenced through `assets.json`); `BotMatchHud`;
+  the shot's ray logic, adapted from first person; the sprint rule in
+  `rules.json`. T67's selector and percept record are wave 72's, not yet
+  merged -- hence the prerequisite.
+- **Invariant 2**: `ai_teamwork` depends on nothing, so the search
+  coordinator and the arbiter take the sight lines, the belief and the
+  candidate spots as data, computed by `infiltration` with `ai_perception`
+  and `ai_search`.
 - **Metal Gear is taken as design only**: the phases as pacing, guards who
   radio for help and a radio that can be cut, reinforcements that sweep
   where the player hid, the radar, and levels built of places to hide. No
@@ -48,14 +54,14 @@ The player can go in shooting, or stay unseen; both are the same guards.
   fairness gate does not apply. The gates are claims about the guards; a
   person judges whether being seen felt fair.
 - **Off-screen hearing halved, on by default**, a named difficulty knob
-  shown on the overlay (T52.1's factor, tied here to the camera) [Walsh
-  2015; Reparaz 2024].
+  shown on the overlay (T69's factor, tied here to the camera) [Walsh 2015;
+  Reparaz 2024].
 
 ## Steps
 
 1. **Levels as data**, `infiltration/levels/*.json` in `arena.json`'s
-   shape, read by `BotArena` and walked by `ArenaWalk`: boxes, platforms,
-   stairs, plus T52.1's light per cell, hiding spots, and the guards' posts
+   shape, built by `BotArena` and walked by `ArenaWalk`: boxes, platforms,
+   stairs, plus T69's light per cell, hiding spots, and the guards' posts
    and routes. Two hand-made levels, built of places to hide; and a seeded
    generator for a third. Nothing in the guards' code names a level or a
    cell.
@@ -63,15 +69,16 @@ The player can go in shooting, or stay unseen; both are the same guards.
    route, glance, investigate a point, search a spot, cover a way out of
    the belief's region (computed from the walk graph, not marked by hand),
    report by radio, call for help, raise the alarm, engage, take cover,
-   return. Each scored from T52.1's percepts, awareness, phase reading and
+   return. Each scored from T69's percepts, awareness, phase reading and
    belief; weights in data. A cautious and an aggressive search are what
    the scores do at low and high awareness, not two code paths.
-3. **Cooperation, in `ai_teamwork`**, with Python twins and vectors: a
-   search coordinator -- spots hidden from the belief's likely cells,
-   claimed on T51's claims, marked off by any guard that sees them; a cap
-   from data on how many go to a last known position; the role arbiter once
-   a fight starts, requests granted and refused on screen.
-4. **Help is heard.** A call or a radio report is a T52.1 event the hearing
+3. **Cooperation, in `ai_teamwork`**, with Python twins and vectors, its
+   inputs plain data: a search coordinator -- spots hidden from the belief's
+   likely cells, claimed on T51's claims, marked off when any guard's sight
+   line reaches them; a cap from data on how many go to a last known
+   position; the role arbiter once a fight starts, requests granted and
+   refused on screen.
+4. **Help is heard.** A call or a radio report is a T69 event the hearing
    carries, so who learns it is who heard it; a call cut short (the caller
    downed) is not sent; reinforcements are guards who heard the alarm,
    choosing to come. A partner gone quiet -- in earshot for a while, then
@@ -82,16 +89,16 @@ The player can go in shooting, or stay unseen; both are the same guards.
    takedown from behind, which leaves a body; the bot match's rifle, its
    shot's ray adapted to an over-the-shoulder camera. The primitive
    fallback when nothing is downloaded.
-6. **The overlay** (invariant 13), on the bot match's HUD and map: each
-   guard's detection bar with its thresholds and phase; its vision zones
-   and the body points it saw; the last known position as a silhouette; the
-   belief as a heat map; claimed and searched spots; heard events as rings
-   along the graph; every action's score for the guard under the cursor;
-   a 2D radar map with all of it; and a line saying when off-screen hearing
-   is halved. Each technique switchable: belief off (guards walk to the last
-   known position and give up), coordinator off (each searches alone),
-   arbiter off (everyone who can shoot does), accumulator off (a plain
-   yes-or-no sight test).
+6. **The overlay** (invariant 13), on `BotMatchHud` and the bot match's
+   map: each guard's detection bar with its thresholds and phase; its
+   vision zones and the body points it saw; the last known position as a
+   silhouette; the belief as a heat map; claimed and searched spots; heard
+   events as rings along the graph; every action's score for the guard
+   under the cursor; a 2D radar map with all of it; and a line saying when
+   off-screen hearing is halved. Each technique switchable: belief off
+   (guards walk to the last known position and give up), coordinator off
+   (each searches alone), arbiter off (everyone who can shoot does),
+   accumulator off (a plain yes-or-no sight test).
 7. **Difficulty as named knobs**: reaction, turn rate, aim error, the
    awareness rates, the belief's diffusion steps (Dishonored 2's step limit
    was its difficulty [Couvidou 2021]), and the off-screen halving.
@@ -126,15 +133,22 @@ unchanged, and holds each claim with a planted case it must reject
   report learns nothing from it; a call cut short reaches no one. Planted:
   a broadcast to every guard.
 - **The search divides the area.** No two guards claim one spot; a spot any
-  guard saw is marked. With the belief on, guards reach the player's hiding
+  guard's sight line reached is marked. Planted: claims switched off inside
+  the coordinator. With the belief on, guards reach the player's hiding
   place in fewer steps on average than with it off, by a margin stated in
-  the header. Planted: claims switched off inside the coordinator.
+  the header. Planted: a belief that never diffuses, which must lose the
+  margin.
 - **The quiet route and the loud one.** A seeded player in shadow, crouched
   and out of the zones finishes a level without any guard reaching alert;
   the same route walked upright and sprinting does reach it -- so the
-  first claim is not passing on guards that perceive nothing.
-- **The arbiter**, once a fight starts: at most one flanker, and on every
-  frame where any guard can see the player, at least one is shooting.
+  first claim is not passing on guards that perceive nothing. Planted: a
+  guard type with no light term in its rate, which must alert on the quiet
+  route.
+- **The arbiter.** Once any guard is in the alert phase, at most one guard
+  holds the flanker role, and within a stated reaction window of a guard
+  in the alert phase seeing the player, at least one guard is shooting. A
+  glimpse below alert starts no shooting. Planted: two flank requests both
+  granted.
 - **Off-screen halving only lowers**, in the level: no guard reaches a
   higher awareness with it on than off, on the same seeded run; the overlay
   says it is on whenever it is. Planted: the factor applied to guards on
@@ -144,6 +158,8 @@ unchanged, and holds each claim with a planted case it must reject
   Planted: a decision taken outside the selector.
 - **Portable.** Every claim above holds on the second level and on the
   generated ones; the guards' scripts name no level file and no cell.
+  Planted: a guard that reads a post's position from the first level's
+  file, which the second level and the generated ones must break.
 
 ## Manual check
 

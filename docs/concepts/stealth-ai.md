@@ -5,11 +5,11 @@ half_life: concept
 verified_on: 2026-10-21
 tier: 1
 source: https://www.gameaipro.com/
-invalidated_if: T52.1 or T52.2 stops doing what the last section says it takes from here, or T67's selector stops being how a bot chooses
+invalidated_if: T69 or T70 stops doing what the last section says, or T67's selector stops being how a bot chooses
 teaches: stealth-ai
 -->
 
-> Before writing the guards of T52 -- bots against the player, with an
+> Before writing the guards of T69 and T70 -- bots against the player, with an
 > optional stealth in the manner of Assassin's Creed, Splinter Cell and
 > Metal Gear Solid -- read how others have. This page goes one level deeper
 > than the stealth section of [the shooter AI page](shooter-ai.md), and is
@@ -33,16 +33,20 @@ teaches: stealth-ai
   machine. Crysis stores them as fractions of a stimulus's peak -- a
   quarter "interesting", five-eighths "threatening", the peak "aggressive"
   -- in a configuration file [Welsh 2013]. Metal Gear made the phases the
-  game's rhythm, as design -- nothing about its AI's code could be read: alert, then an evasion phase "that creates a cautious
-  behavior for the enemies after Snake evades the alert" [Alexander 2009,
-  an article on Kojima's GDC talk].
+  game's rhythm, as design -- nothing about its AI's code could be read:
+  alert, then an evasion phase "that creates a cautious behavior for the
+  enemies after Snake evades the alert" [Alexander 2009, an article on
+  Kojima's GDC talk].
 - **A guard knows only what it perceived or was told.** The Last of Us's
-  enemies never update the player's position unless one of them perceives
-  him [McIntosh 2015]; Crytek's reason is that once players see the AI
-  cheat, "they naturally tend to feel cheated" [Welsh 2013]. The two
-  admitted exceptions in these sources -- a few seconds of "knowing" after
-  sight is lost, and a search weight towards the player's real position
-  [Welsh 2015] -- are cheats, and the sources say so.
+  enemies "did not cheat with regard to knowing the player's location in
+  most circumstances": nobody updates it unless one of them perceives him
+  [McIntosh 2015]; Crytek's reason is that once players see the AI cheat,
+  "they naturally tend to feel cheated" [Welsh 2013]. The three admitted
+  exceptions in these sources -- a few seconds of "knowing" after sight is
+  lost, a search weight towards the player's real position [Welsh 2015],
+  and The Last of Us sending an enemy at once when the player is more than
+  5 m from where the enemies think [McIntosh 2015] -- are cheats, and the
+  sources say so.
 - **The search runs on a belief, shared.** A map of where the player could
   be, spreading while nobody looks and wiped where any guard can see [Isla
   2013; McIntosh 2015], or a flood from the last known position [Couvidou
@@ -57,8 +61,8 @@ teaches: stealth-ai
 - **The player must be able to read all of it.** Blacklist's detection HUD
   is the player's "window of opportunity to break LOS" [Walsh 2015];
   Conviction drew the AI's best guess of the player as a silhouette
-  [Martin 2009, a press preview]; Metal Gear's radar showed every guard's
-  field of vision [Wikipedia, MGS 1998, an overview]. Assassin's Creed
+  [Martin 2009, a press preview]; Metal Gear's radar showed nearby
+  enemies and their field of vision [Wikipedia, MGS 1998, an overview]. Assassin's Creed
   Mirage's vision is "shaped like a coffin" so that players "feel as
   though they're in perfect control" [Reparaz 2024, Ubisoft's article on
   the developers' GDC talk].
@@ -115,9 +119,10 @@ safety" [Leonard 2003]. Mark of the Ninja's sight test asks whether the
 target "is currently lit by a light source", unless the guard has night
 vision [Miles 2013]. Assassin's Creed Shadows makes the rule absolute at
 night -- "hiding in the shadows will make you invisible to enemies" -- and
-lets the player make shadow by shooting out lanterns, with crouching and
-going prone reducing "visibility" [Ubisoft 2024]. Clint Hocking, Splinter
-Cell's designer, puts the risk: with modern diffuse lighting it is "very
+lets the player make shadow by "destroying lanterns with a shuriken";
+standing up increases "visibility", crouching quiets footsteps, and going
+prone reduces visibility further [Ubisoft 2024]. Clint Hocking, a Splinter
+Cell designer and Chaos Theory's creative director, puts the risk: with modern diffuse lighting it is "very
 hard to tell what's light, what's shadow, what's dark, what's safe, what's
 dangerous" [White 2026, an interview]. The article on Kojima's talk
 credits Metal Gear Solid 2 with shadows enemies could cast and spot
@@ -329,16 +334,18 @@ design, and makes no claim about its AI's internals:
 - **Radio and reinforcements**: guards who radio for a strike team, take
   cover to call for backup, a radio the player can shoot out, and a team
   that sweeps in to check where the player hid [Wikipedia, MGS2].
-- **The radar**: where enemies off screen are, and their fields of vision,
-  switched off in alert and evasion [Alexander 2009; Wikipedia, MGS 1998].
-- **The level**: boxes to hide under and in, walls to duck behind, and 3D
+- **The radar**: where enemies off screen are, and nearby enemies' field
+  of vision, switched off in alert and evasion [Alexander 2009; Wikipedia,
+  MGS 1998].
+- **The level**: objects to crawl under, boxes as cover, walls to duck
+  behind, and 3D
   that "created additional hiding spaces when the player is pursued"
   [Wikipedia, MGS 1998; Alexander 2009].
 
 How a guard reaches an alert, or how a strike team searches, the kit takes
 from the sources above that describe their code.
 
-## What this kit takes for T52, and what it leaves
+## What this kit takes for T69 and T70, and what it leaves
 
 The owner's rule for every example is that the AI is an agent -- it
 perceives the world and its own actions and decides what to do to reach
@@ -347,36 +354,46 @@ cope on another map with other models. T67 makes the bot match's bot that
 agent: it perceives through
 [`ai_perception`](../../godot/addons/ai_perception/), and a weighed
 selector -- utility over actions, with a Python twin and vectors -- replaces
-its priority list. T52's guards are the same agent with other percepts and
-other actions. Nothing below is a state machine the demo writes. T52 is
-split in two: T52.1 builds items 1-3 as techniques with twins and vectors,
-T52.2 the level, items 4-8 and the player on top of them.
+its priority list. The stealth guards (the owner's T52, split into T69 and
+T70) are the same agent with other percepts and other actions. Nothing
+below is a state machine the demo writes. T69 builds items 1-3 as
+techniques with twins and vectors, T70 the level, items 4-8 and the player
+on top of them.
+
+Invariant 2 shapes where each piece lives: `ai_perception` depends only
+on `ai_core`, and `ai_teamwork` on nothing. So the techniques take what
+another addon computes as plain data -- a rate per step, path distances,
+a neighbour list, which cells are seen -- and the guard's own module, the
+example, wires `ai_fuzzy`, `ai_search` and them together, as T14 did.
 
 **Taken**, mapped onto the kit's techniques:
 
 1. **Percepts, in `ai_perception`.** A vision shape that widens and then
    narrows, read as certainty by zone [Walsh 2015; McIntosh 2015; Rabin
    2015]; rays to a few points on the body, the count a stance rule
-   [Walsh 2015], with the overlay drawing which points were seen
-   [McIntosh 2015]; light sampled at the player's feet [Leonard 2003];
-   hearing along the level's walk graph, never through a wall [Walsh 2015;
-   Miles 2013] -- replacing today's straight-line `Hearing`, whose header
-   already names the flood as the way. Typed events -- noise, body, open
+   [Walsh 2015], and the overlay drawing which points were seen (the
+   kit's addition); light sampled at the player's feet [Leonard 2003];
+   hearing by path length along the level's walk graph, never through a
+   wall [Walsh 2015; Miles 2013] -- the path lengths a flood the caller
+   runs with `ai_search`, as today's straight-line `Hearing`'s header
+   already says it should be. Typed events -- noise, body, open
    door, a guard's own call -- as data rows with a priority and a lifetime
    [Miles 2013; Welsh 2013].
-2. **Awareness, in `ai_perception`, with its rate from `ai_fuzzy`.** One
-   number per guard and stimulus that rises with exposure and decays
-   through every intermediate value [McIntosh 2015; Leonard 2003]; its rate
-   a fuzzy controller of certainty, light, motion and distance, as T14's
-   suspicion already is; thresholds as fractions in data [Welsh 2013], and
+2. **Awareness, in `ai_perception`; its rate from `ai_fuzzy`, in the
+   example.** One number per guard and stimulus that rises with exposure
+   and decays through every intermediate value [McIntosh 2015; Leonard
+   2003]; the accumulator takes its rate per step as a number, which the
+   example computes with a fuzzy controller of certainty, light, motion and
+   distance, as T14's suspicion already is; thresholds as fractions in data [Welsh 2013], and
    a caution floor after an alert [Alexander 2009; Ubisoft 2024]. The
    phases are a *reading* of the number, which the selector takes as an
    input, not states with transitions in code.
 3. **Knowledge, in `ai_perception`.** Each guard's memory of where and when
    it last perceived the player; and a shared belief -- an occupancy map
-   over the walk graph, diffusing and cleared by every guard's view [Isla
-   2013; McIntosh 2015] -- written only from percepts and from reports a
-   guard heard.
+   over the walk graph, given as a neighbour list: collapsed to the seen
+   cell while the player is perceived, and otherwise diffusing, with every
+   cell a guard sees zeroed [Isla 2013; McIntosh 2015] -- written only from
+   percepts and from reports a guard heard.
 4. **Decisions, in T67's selector.** Hold the post, glance, investigate a
    point, search a spot, cover a way out, report, call for help, raise the
    alarm, engage, take cover, return: each a scored action whose
@@ -384,10 +401,11 @@ T52.2 the level, items 4-8 and the player on top of them.
    and "aggressive" searches [Welsh 2015] are what the scores produce at low
    and high awareness, not two code paths.
 5. **Cooperation, in `ai_teamwork`.** Welsh's search coordinator -- spots
-   hidden from the belief's likely cells, claimed, marked off by sight -- on
-   T51's claims; a cap on how many go to the last known position, from data
-   [Welsh 2015; Miles 2013]; and, once a fight starts, T52's role arbiter
-   [McIntosh 2015]. Calling for help is an action whose effect is a sound
+   hidden from the belief's likely cells, claimed, marked off by sight --
+   on T51's claims, the sight lines and the belief passed in as data; a cap
+   on how many go to the last known position, from data [Welsh 2015; Miles
+   2013]; and, once a fight starts, the role arbiter that T49 picked for
+   this task [McIntosh 2015]. Calling for help is an action whose effect is a sound
    event, heard or not by the same hearing, so a guard out of earshot does
    not learn it, and a call cut short is never sent -- Metal Gear Solid 2's
    radio can be shot out [Wikipedia, MGS2].
@@ -396,7 +414,7 @@ T52.2 the level, items 4-8 and the player on top of them.
    [Couvidou 2021], so a second level needs a graph, not code.
 7. **Readable on screen** (invariant 13): each guard's detection bar with
    its thresholds [Walsh 2015], the last known position as a silhouette
-   [Martin 2009], a radar map with every guard's shape [Wikipedia, MGS
+   [Martin 2009], a radar map with the guards' shapes [Wikipedia, MGS
    1998], the belief as a heat map [Isla 2013], claimed and searched spots,
    and every action's score.
 8. **Off-screen hearing halved, on by default** [Walsh 2015]: for footsteps
@@ -443,8 +461,9 @@ Not used above:
   headline.
 - Splinter Cell: Conviction: no AI talk or slides found; the last known
   position is used through a press preview only.
-- Hitman: Vehkala's GDC Europe 2013 talk, Fauerby's and Büttner's Game/AI
-  Conference 2012 talks -- used only through Thompson's article on them.
+- Hitman: Vehkala's GDC Europe 2013 talk, Fauerby's Game/AI Conference
+  2012 talk and Büttner's paper there, and Schroder & Petersen's nucl.AI
+  2016 talk -- used only through Thompson's article on them.
 - Al Enezi & Verbrugge, "Evaluating Player Experience in Stealth Games"
   (AIIDE 2023): only a search summary seen, not used.
 - Isla, "Probabilistic Target Tracking and Search Using Occupancy Maps", AI
@@ -520,4 +539,5 @@ Research:
   Dialogs on Player Enjoyment in Stealth Games." AIIDE 2023, poster;
   abstract only. <https://ojs.aaai.org/index.php/AIIDE/article/view/27512>
 - Xu, K., Verbrugge, C. "Generic Guard AI in Stealth Game with Composite
-  Potential Fields." AIIDE 2025. <https://arxiv.org/abs/2508.18527>
+  Potential Fields." arXiv:2508.18527, 2025; the arXiv page names no
+  venue. <https://arxiv.org/abs/2508.18527>
