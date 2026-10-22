@@ -16,10 +16,15 @@ The rules, one finding each
       that holds -- "found nothing" is never a pass.
   L2  a row whose "In the kit" cell neither names something in backticks nor
       says `not in the kit`: a claim with nothing to check it against.
-  L3  a backticked name that looks like a module (`ai_search`) and is not one.
+  L3  a backticked name in the kit cell that is neither a module nor an
+      existing path -- `ai_gone`, `ai-gone`, `two words` alike. A name in
+      backticks is a claim; there is no backticked name the gate skips.
   L4  a backticked path (anything with a `/`) that does not exist.
-  L5  a demo cell naming a make target (`demo-x`, `run`, `make x`) that the
-      Makefile does not define.
+  L5  a demo cell that is not `--` or a list of backticked make targets the
+      Makefile defines (`demo-x`, `run`, `make x`): a demo written without
+      backticks would otherwise never be read.
+  L6  a table on the page without an "In the kit" column: a header edited
+      away would otherwise drop its rows from the check without a word.
 
 Exit codes
 ----------
@@ -53,14 +58,14 @@ KIT_COLUMN = "In the kit"
 DEMO_COLUMN = "Demos"
 
 TICKED_RE = re.compile(r"`([^`]+)`")
-MODULE_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 TARGET_RE = re.compile(r"^(?:make\s+)?([a-z][a-z0-9-]*)$")
 RULE_RE = re.compile(r"^([A-Za-z0-9_.-]+):", re.M)
 
 
-def table_rows(text: str) -> list[dict[str, str]]:
-    """Every body row of every table whose header has an "In the kit" column."""
+def tables(text: str) -> tuple[list[dict[str, str]], list[str]]:
+    """Every body row of the page's tables, and the headers missing the kit column."""
     rows: list[dict[str, str]] = []
+    headless: list[str] = []
     header: list[str] | None = None
     for line in text.splitlines():
         if not line.startswith("|"):
@@ -68,10 +73,12 @@ def table_rows(text: str) -> list[dict[str, str]]:
             continue
         cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
         if header is None:
-            header = cells if KIT_COLUMN in cells else []
-        elif header and not set("".join(cells)) <= set("-: "):
+            header = cells
+            if KIT_COLUMN not in cells:
+                headless.append(line.strip())
+        elif KIT_COLUMN in header and not set("".join(cells)) <= set("-: "):
             rows.append(dict(zip(header, cells)))
-    return rows
+    return rows, headless
 
 
 def kit_findings(row: dict[str, str], root: pathlib.Path, modules: set[str]) -> list[str]:
@@ -83,33 +90,40 @@ def kit_findings(row: dict[str, str], root: pathlib.Path, modules: set[str]) -> 
         return [f"L2 {technique}: the kit cell names nothing and does not say `{NOT_IN_KIT}`"]
     findings = []
     for name in names:
-        if "/" in name and not (root / name).exists():
+        if name in modules or (root / name).exists():
+            continue
+        if "/" in name:
             findings.append(f"L4 {technique}: path `{name}` does not exist")
-        elif "/" not in name and MODULE_RE.match(name) and name not in modules:
-            findings.append(f"L3 {technique}: `{name}` is not a module in modules/")
+        else:
+            findings.append(f"L3 {technique}: `{name}` is neither a module in modules/ nor a path")
     return findings
 
 
 def demo_findings(row: dict[str, str], targets: set[str]) -> list[str]:
-    """Every make target the demo cell names that the Makefile does not define."""
+    """What is wrong with one row's demo cell: it is `--`, or backticked targets only."""
     technique = row.get("Technique", "?")
+    cell = row.get(DEMO_COLUMN, "")
+    if cell == "--":
+        return []
+    if TICKED_RE.sub("", cell).strip(" ,") or not TICKED_RE.search(cell):
+        return [f"L5 {technique}: the demo cell must be `--` or backticked make targets, not {cell!r}"]
     findings = []
-    for name in TICKED_RE.findall(row.get(DEMO_COLUMN, "")):
+    for name in TICKED_RE.findall(cell):
         target = TARGET_RE.match(name)
-        if target and target.group(1) not in targets:
+        if target is None or target.group(1) not in targets:
             findings.append(f"L5 {technique}: `{name}` is not a make target")
     return findings
 
 
 def check(root: pathlib.Path) -> list[str]:
     """Every finding for the page under `root`; raises OSError if unreadable."""
-    rows = table_rows((root / PAGE).read_text(encoding="utf-8"))
+    rows, headless = tables((root / PAGE).read_text(encoding="utf-8"))
     if not rows:
         return [f"L1 {PAGE}: no table with an `{KIT_COLUMN}` column was found"]
+    findings = [f"L6 a table without an `{KIT_COLUMN}` column: {header}" for header in headless]
     modules = {json.loads(path.read_text(encoding="utf-8"))["module"]
                for path in (root / "modules").glob("*.json")}
     targets = set(RULE_RE.findall((root / "Makefile").read_text(encoding="utf-8")))
-    findings = []
     for row in rows:
         findings.extend(kit_findings(row, root, modules))
         findings.extend(demo_findings(row, targets))
@@ -126,7 +140,7 @@ def run(root: pathlib.Path) -> int:
     for finding in findings:
         print(finding)
     if not findings:
-        print(f"check_literature_table: ok -- {len(table_rows((root / PAGE).read_text(encoding='utf-8')))} rows")
+        print(f"check_literature_table: ok -- {len(tables((root / PAGE).read_text(encoding='utf-8'))[0])} rows")
     return 1 if findings else 0
 
 
@@ -156,6 +170,10 @@ def self_test() -> int:
         "a missing addon": (HEADER + "| A* | AIMA | `ai_missing` | -- |\n", 1, "L3"),
         "a missing path": (HEADER + "| A* | AIMA | `godot/addons/ai_gone` | -- |\n", 1, "L4"),
         "a missing demo": (HEADER + "| A* | AIMA | `ai_search` | `demo-gone` |\n", 1, "L5"),
+        "a hyphenated name": (HEADER + "| A* | AIMA | `ai-gone` | -- |\n", 1, "L3"),
+        "a demo without backticks": (HEADER + "| A* | AIMA | `ai_search` | demo-gone |\n", 1, "L5"),
+        "a table without the column": (HEADER + "| A* | AIMA | `ai_search` | -- |\n\n"
+                                       "| Technique | Literature |\n|---|---|\n| MCTS | AIMA |\n", 1, "L6"),
     }
     failures = []
     for label, (rows, want, rule) in cases.items():

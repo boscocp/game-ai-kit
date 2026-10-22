@@ -107,7 +107,7 @@ the demo shows?
 
 ## Done in wave 81 (2026-10-22)
 
-`docs/concepts/the-literature-and-the-kit.md`: 43 techniques in seven
+`docs/concepts/the-literature-and-the-kit.md`: 48 techniques in nine
 tables, each against the kit -- a module, a path or `not in the kit`, the
 demo's make target, the tier. Sources, all opened on 2026-10-22 and each
 saying how much was read: AIMA 4th ed.'s full contents with section
@@ -131,7 +131,21 @@ the answers, as step 5 says.
 
 `scripts/check_literature_table.py` (`make lint-literature`, in `make
 check` through `check-no-engine`, its self-test found by
-`lint-selftests`): rules L1-L5, six self-test cases -- no table, a cell
-that names nothing, a missing addon, a missing path, a missing demo, an
-empty directory (exit 2). On its first run it caught the page itself:
-the planned `ai_llm`, written in backticks as if it were a module.
+`lint-selftests`): rules L1-L6, nine self-test cases -- no table, a cell
+that names nothing, a missing addon, a hyphenated name, a missing path, a
+missing demo, a demo written without backticks, a table without the kit
+column, an empty directory (exit 2). On its first run it caught the page
+itself: the planned `ai_llm`, written in backticks as if it were a module.
+
+The review (fix before merge, all applied): invariant 6 is about fitting,
+not saving -- ADR 0016 covers only the n-gram table, on three conditions
+(counts only, empty at the start, rebuildable from a log), so bandits and
+player modelling each need the owner to extend it; a director stays
+inside invariant 6 while all its numbers are fixed. The gate had three
+holes (a hyphenated name, a demo without backticks, a header edited away),
+each now a rule with a planted case. The Tier column is now each kit
+page's own `tier:`, and the LLM row's lesson is tier 1. Added: the RTS's
+influence map and B.5 rewritten as three maps, the 2D racer's lookahead
+and rubber-banding refused, the difficulty knobs of the fighting game and
+the RTS, fuzzy in the infiltration guards, the team rows' arbiter and
+confidence, fog of war, and AIMA's framing chapters (2, 7-10, 26).
