@@ -1,0 +1,41 @@
+{
+  "about": "The infiltration example's first level (T70): a warehouse of shelf rows, 36 by 24 metres, x east and z south. Shelves (2.5 m) hide a standing body; crates (1.1 m) only a crouched or prone one. Lamps light the aisles and leave the corners dark. You start at the west door and leave by the east one. Two guards patrol, one stands a post.",
+  "width": 36,
+  "depth": 24,
+  "points": [],
+  "spawns": {"player": [[1.5, 12.5]]},
+  "exit": [34.5, 12.5],
+  "boxes": [
+    {"x": 8, "z": 6, "width": 1, "depth": 6, "height": 2.5},
+    {"x": 8, "z": 18, "width": 1, "depth": 6, "height": 2.5},
+    {"x": 14, "z": 7, "width": 1, "depth": 8, "height": 2.5},
+    {"x": 14, "z": 18.5, "width": 1, "depth": 5, "height": 2.5},
+    {"x": 20, "z": 5, "width": 1, "depth": 6, "height": 2.5},
+    {"x": 20, "z": 17, "width": 1, "depth": 10, "height": 2.5},
+    {"x": 26, "z": 8, "width": 1, "depth": 10, "height": 2.5},
+    {"x": 26, "z": 20, "width": 1, "depth": 4, "height": 2.5},
+    {"x": 11, "z": 12, "width": 2, "depth": 2, "height": 1.1},
+    {"x": 17, "z": 3, "width": 2, "depth": 2, "height": 1.1},
+    {"x": 23, "z": 13, "width": 2, "depth": 2, "height": 1.1},
+    {"x": 30, "z": 6, "width": 2, "depth": 2, "height": 1.1},
+    {"x": 31, "z": 18, "width": 2, "depth": 2, "height": 1.1}
+  ],
+  "ambient": 0.1,
+  "lights": [
+    {"x": 11, "z": 6, "radius": 6.0, "value": 1.0},
+    {"x": 17, "z": 13, "radius": 6.0, "value": 1.0},
+    {"x": 23, "z": 19, "radius": 6.0, "value": 1.0},
+    {"x": 30, "z": 12, "radius": 6.0, "value": 1.0},
+    {"x": 5, "z": 20, "radius": 5.0, "value": 0.9}
+  ],
+  "hiding": [
+    {"x": 4, "z": 4, "width": 2, "depth": 2, "hides": 0.7},
+    {"x": 17, "z": 21, "width": 2, "depth": 2, "hides": 0.7},
+    {"x": 33, "z": 21, "width": 2, "depth": 2, "hides": 0.7}
+  ],
+  "guards": [
+    {"type": "patrol", "route": [[11.5, 9.5], [17.5, 9.5], [17.5, 14.5], [11.5, 14.5]]},
+    {"type": "patrol", "route": [[23.5, 2.5], [31.5, 2.5], [31.5, 10.5], [23.5, 10.5]]},
+    {"type": "sentry", "post": [29.5, 15.5], "facing": 180.0}
+  ]
+}

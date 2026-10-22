@@ -10,7 +10,8 @@
     "ai_core",
     "ai_fuzzy",
     "ai_perception",
-    "ai_search"
+    "ai_search",
+    "botmatch"
   ],
   "gates": [
     "test-infiltration-properties"
