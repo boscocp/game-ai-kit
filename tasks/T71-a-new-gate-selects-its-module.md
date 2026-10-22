@@ -107,3 +107,16 @@ it. The narrowed run took 133 s of lints and gates plus 4 s of gdUnit
 suites, against `make check`'s 1957 s on the same machine -- that run
 shared the machine with two other waves' Godot runs, so it is slower than
 the nine minutes usually quoted; the saving is the ratio, not the seconds.
+
+**After the review** (`docs/reviews/77-a-new-gate-selects-its-module.md`):
+four more ways a "new" gate could still change an old one are refused --
+a `\` on the new recipe's last line or on the line before it, an old
+recipe line after a comment (make skips comment lines inside a recipe), a
+`check:` hunk that joins the next line in, and a name the old Makefile
+already used anywhere -- and a Makefile with a conditional, `define` or
+`include` is global whatever changed (this one has none). The planted
+cases for rule 5 are now 21, the by-path one included, and sixteen
+one-line mutations of the guards are each caught by the case written for
+it. On wave 75's merged commit (`--base dac9ecf~1 --head dac9ecf`) the
+selection is still `menu, racing3d`, now with `test-racing3d-you-drive`
+among the targets.
