@@ -8,17 +8,20 @@
 # grid looked the same. Three claims hold the fix:
 #
 #   1. **the camera starts on your car**: once the scene is loaded, the
-#      watched car is the human driver's;
+#      watched car is the human driver's -- and again after watching an AI
+#      car and starting the race again (R or T);
 #   2. **the wait is said**: while the cars are measured, the status panel
-#      says the keys drive once every car is on the grid;
+#      says the keys drive once every car is on the grid; racing, while an
+#      AI car is watched, it says how to watch yours;
 #   3. **the keys drive it**: once racing, your car stays put for
 #      IDLE_FRAMES with no key held, then moves at least MIN_MOVED metres
 #      in HELD_FRAMES with Up held -- pressed as a person's keyboard
 #      would, through `Input.parse_input_event`.
 #
 # Each claim is first shown planted numbers it must refuse: the first AI's
-# car watched, a panel that says nothing of the keys, a car the key does
-# not move, and a car that moves with no key held.
+# car watched, at the start or after a restart, a panel that says nothing
+# of the keys or of Tab, a car the key does not move, and a car that moves
+# with no key held.
 #
 #     ./scripts/godot --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_you_drive.gd
 #
@@ -31,13 +34,15 @@ const SCENE: String = "res://game3d/racing/racing3d.tscn"
 const GIVE_UP: int = 3000
 const IDLE_FRAMES: int = 60
 const HELD_FRAMES: int = 120
-## Metres a held Up must move the car in HELD_FRAMES; measured 9.6 m in
+## Metres a held Up must move the car in HELD_FRAMES; measured 9.3 m in
 ## two seconds from rest, so a fifth of that is still unmistakably driving.
 const MIN_MOVED: float = 2.0
 ## Metres the car may creep with no key held, settling on its springs.
 const STILL: float = 0.2
-## Words the panel must show while measuring.
+## Words the panel must show while measuring, and racing while an AI car
+## is watched.
 const WAIT_WORDS: String = "the keys drive yours"
+const TAB_WORDS: String = "Tab until"
 
 var _errors := Racing3DErrors.new()
 ## The counter's own planted case, run first: "" when it counted it.
@@ -66,6 +71,7 @@ func _run() -> void:
 		failures.append("the race never started: still measuring after %d frames" % GIVE_UP)
 	else:
 		seen.merge(await _drive(scene.race.cars[you]))
+		seen.merge(await _watch_another(scene))
 		print("racing after %d frames; your car moved %.2f m idle, %.2f m with Up held" % [frames, seen["idle"], seen["held"]])
 	failures.append_array(claims(seen))
 	if _counter_works != "":
@@ -94,6 +100,19 @@ func _drive(car: RaceCar3D) -> Dictionary:
 	return {"idle": idle, "held": start.distance_to(car.global_position)}
 
 
+# Racing, an AI car watched: what the panel says; then the race started
+# again, as R does, and which car the camera is on.
+func _watch_another(scene: Node) -> Dictionary:
+	scene.watched = 0
+	# `process_frame` is emitted before the scene's `_process`: two frames,
+	# so the panel has been drawn once since.
+	await process_frame
+	await process_frame
+	var hint: String = scene._status.text
+	scene.restart()
+	return {"racing_panel": hint, "after_restart": scene.watched}
+
+
 func _press(key: Key, down: bool) -> void:
 	var event := InputEventKey.new()
 	event.keycode = key
@@ -103,14 +122,19 @@ func _press(key: Key, down: bool) -> void:
 
 
 ## The findings for what the scene showed: `seen` holds the watched car,
-## yours, the panel's text while measuring, and the metres your car moved
-## idle and with Up held (absent when the race never started).
+## yours, the panel's text while measuring, and -- absent when the race
+## never started -- the metres your car moved idle and with Up held, the
+## panel racing with an AI car watched, and the car watched after a restart.
 static func claims(seen: Dictionary) -> Array[String]:
 	var failures: Array[String] = []
 	if seen["watched"] != seen["you"]:
 		failures.append("the camera starts on car %d, yours is car %d" % [seen["watched"], seen["you"]])
 	if not WAIT_WORDS in String(seen["panel"]):
 		failures.append("while measuring, the panel does not say when the keys drive")
+	if seen.has("racing_panel") and not TAB_WORDS in String(seen["racing_panel"]):
+		failures.append("racing, with an AI car watched, the panel does not say how to watch yours")
+	if seen.has("after_restart") and seen["after_restart"] != seen["you"]:
+		failures.append("after a restart the camera is on car %d, yours is car %d" % [seen["after_restart"], seen["you"]])
 	if seen.has("held") and float(seen["held"]) < MIN_MOVED:
 		failures.append("Up held moved your car %.2f m, under %.1f" % [seen["held"], MIN_MOVED])
 	if seen.has("idle") and float(seen["idle"]) > STILL:
@@ -121,7 +145,8 @@ static func claims(seen: Dictionary) -> Array[String]:
 # Every claim is shown one planted case it must refuse, and an honest one
 # it must pass (invariant 4).
 func _planted() -> Array[String]:
-	var honest: Dictionary = {"watched": 3, "you": 3, "panel": WAIT_WORDS, "idle": 0.0, "held": 9.6}
+	var honest: Dictionary = {"watched": 3, "you": 3, "panel": WAIT_WORDS, "idle": 0.0, "held": 9.3,
+		"racing_panel": TAB_WORDS, "after_restart": 3}
 	var failures: Array[String] = []
 	if not claims(honest).is_empty():
 		failures.append("planted: an honest scene was refused: %s" % "; ".join(claims(honest)))
@@ -129,7 +154,9 @@ func _planted() -> Array[String]:
 		"the first AI's car watched": {"watched": 0},
 		"a panel silent about the keys": {"panel": "Measuring each car on the test pad."},
 		"a car the key does not move": {"held": 0.0},
-		"a car that moves with no key": {"idle": 9.6},
+		"a car that moves with no key": {"idle": 9.3},
+		"a racing panel silent about Tab": {"racing_panel": "easy: 80 km/h"},
+		"the first AI's car after a restart": {"after_restart": 0},
 	}
 	for name: String in planted:
 		var case: Dictionary = honest.duplicate()
