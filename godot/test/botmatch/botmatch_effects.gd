@@ -38,7 +38,16 @@
 #   8. portability (T67): on RANDOM_ARENAS arenas made by `RandomArena`,
 #      random within the mirror and never seen before, every match plays to
 #      its end, every point is taken at least once, and nobody fires at an
-#      enemy unseen or while sprinting.
+#      enemy unseen or while sprinting;
+#   9. regeneration (T68): after a hit, a bot's health does not come back
+#      before the rules' delay, never passes its whole, and does come back
+#      to it -- the rule stepped alone, as a match steps it;
+#  10. healing weighed (T68): a blue that weighs when to break off to heal
+#      holds points at least as long as one that never breaks off to heal
+#      and one that always does below a fixed health -- neither holds more
+#      than it by MIRROR_ERRORS standard errors of the two margins. "At
+#      least as long", not "longer": what the task asked, and a claim that
+#      only rules out the weighing being worse.
 #
 # Each is also asked of a planted case and must reject it: a blue team with
 # a faster reaction and a steadier aim, for the mirror; the claims check
@@ -47,8 +56,9 @@
 # nearest enemy through walls, and one that keeps firing at whom it saw for
 # a second after without looking again; a blue that always aims at the
 # head put in aiming by worth's place; the weighing blue put in always going
-# back's; the matches without claims in the claims' place; and a random
-# arena with one point walled in, for portability.
+# back's; the matches without claims in the claims' place; a random
+# arena with one point walled in, for portability; regeneration with no
+# delay; and always going back put in the weighing healer's place.
 #
 # What the fighting makes of the decisions -- points held by each side,
 # wins, the mean margin and its standard error over the seeds -- is printed
@@ -102,6 +112,11 @@ const MIRROR_ERRORS: float = 2.5
 const PAIRINGS: Array[String] = ["everything", "no claims", "no commander", "no retreat"]
 const PLANTED: Array[String] = ["commander on one point", "retreat in one wave", "sharper blue",
 		"always the head", "never resupply", "always resupply"]
+## The two healers the weighing one is held against (T68): as many matches
+## as the pairings above, for their margins are compared with its.
+const HEALERS: Array[String] = ["never heals", "heals below half"]
+## How long a regeneration is stepped, after a hit at its start.
+const REGENERATION_SECONDS: float = 20.0
 
 
 ## A bot that shoots the nearest living enemy, seen or not: the cheat the
@@ -162,6 +177,9 @@ func _initialize() -> void:
 	for pairing: String in PLANTED:
 		totals[pairing] = _play(pairing, _planted_matches(pairing))
 		_report(pairing, totals[pairing])
+	for pairing: String in HEALERS:
+		totals[pairing] = _play(pairing, _matches)
+		_report(pairing, totals[pairing])
 	totals["the yards"] = _play("the yards", YARDS_MATCHES)
 	_report("the yards", totals["the yards"])
 	for pairing: String in ["random arenas", "a point walled in"]:
@@ -169,6 +187,7 @@ func _initialize() -> void:
 		_report(pairing, totals[pairing])
 	var failures: Array[String] = _mirror(totals) + _claims(totals) + _commander(totals) + _retreat(totals)
 	failures += _honesty(totals) + _aim(totals) + _ammunition(totals) + _portability(totals)
+	failures += _regeneration() + _healing(totals)
 	for failure: String in failures:
 		print(failure)
 	print("botmatch effects: %d pairings of %d matches, %.0f s, %d failure(s)" % [
@@ -192,7 +211,7 @@ func _play(pairing: String, matches: int) -> Dictionary:
 	var rules := MatchRules.new()
 	var sums: Dictionary = {"untaken": 0, "unfinished": 0, "held": 0.0, "red held": 0.0, "bunched": 0.0, "deaths": 0, "lost": 0,
 			"unseen": 0, "shots": 0, "sprinting shots": 0, "sprinted": 0.0,
-			"blue shots": 0, "blue damage": 0, "dry": 0.0, "power": 0, "matches": 0, "ordered": 0.0, "seconds": 0.0, "retreats": 0, "uncovered": 0,
+			"blue shots": 0, "blue damage": 0, "dry": 0.0, "power": 0, "regenerated": 0, "healed at base": 0, "hiding": 0.0, "matches": 0, "ordered": 0.0, "seconds": 0.0, "retreats": 0, "uncovered": 0,
 			"blue wins": 0, "red wins": 0, "margins": PackedFloat64Array()}
 	for seed_value: int in range(1, matches + 1):
 		var red := MatchTeam.new("red", BotMatch.RED, rules)
@@ -230,6 +249,10 @@ func _blue_for(pairing: String, rules: MatchRules) -> MatchTeam:
 		blue.resupply_rule = MatchSupply.NEVER
 	if pairing == "always resupply":
 		blue.resupply_rule = MatchSupply.ALWAYS
+	if pairing == "never heals":
+		blue.heal_rule = MatchSupply.NEVER
+	if pairing == "heals below half":
+		blue.heal_rule = MatchSupply.ALWAYS
 	if pairing == "sharper blue":
 		blue.reaction = 0.0
 		blue.aim_error = deg_to_rad(1.0)
@@ -252,6 +275,9 @@ func _add(sums: Dictionary, world: BotMatch) -> void:
 	sums["blue damage"] += blue.damage
 	sums["dry"] += blue.dry_seconds
 	sums["power"] += blue.power_taken
+	sums["regenerated"] += blue.regenerated
+	sums["healed at base"] += blue.healed_at_base
+	sums["hiding"] += blue.hiding_seconds
 	sums["matches"] += 1
 	sums["untaken"] += Array(world.times_taken).count(0)
 	# A script error aborts the match where it happens and the run carries
@@ -280,6 +306,8 @@ func _report(pairing: String, sums: Dictionary) -> void:
 	print("%22s %.0f s sprinted, %d shots while sprinting" % ["", sums["sprinted"], sums["sprinting shots"]])
 	var supplied: Array = ["", _per_shot(sums), _per_match(sums, "dry"), _per_match(sums, "power")]
 	print("%22s blue: %.2f damage a shot, %.1f s dry a match, power weapon taken %.1f a match" % supplied)
+	var healed: Array = ["", _per_match(sums, "regenerated"), _per_match(sums, "healed at base"), _per_match(sums, "hiding")]
+	print("%22s blue: %.0f health regenerated, %.0f healed at the base, %.1f s hiding a match" % healed)
 
 
 # The mean of `values` and its standard error, the spread of that mean over
@@ -423,6 +451,58 @@ static func _holds_less(fewer: Dictionary, more: Dictionary) -> bool:
 	var low: Vector2 = _mean_and_error(fewer["margins"])
 	var high: Vector2 = _mean_and_error(more["margins"])
 	return high.x - low.x > MIRROR_ERRORS * sqrt(low.y * low.y + high.y * high.y)
+
+
+# --- health (T68) ---------------------------------------------------------------
+
+
+func _regeneration() -> Array[String]:
+	var failures: Array[String] = []
+	var found: String = regeneration_fault(MatchRules.new())
+	print("regeneration: %s" % (found if found != "" else "nothing before the delay, never past whole, back to whole"))
+	if found != "":
+		failures.append("regeneration: %s" % found)
+	# Planted: health that starts to come back at once.
+	var at_once := MatchRules.new()
+	at_once.regeneration_delay = 0.0
+	if regeneration_fault(at_once) == "":
+		failures.append("regeneration: planted, health that came back at once passed")
+	return failures
+
+
+## What is wrong with regeneration under `rules`, or "": a bot hit half a
+## step before the clock starts, stepped by the match's own step for
+## REGENERATION_SECONDS. Judged against the delay the match is played
+## with, MatchRules' own -- so a rules file that drops it is caught too.
+static func regeneration_fault(rules: MatchRules) -> String:
+	var delay: float = MatchRules.new().regeneration_delay
+	var bot := MatchBot.new()
+	bot.health = 30
+	bot.hurt_at = -rules.step / 2.0
+	var now: float = 0.0
+	while now < REGENERATION_SECONDS:
+		var before: int = bot.health
+		MatchHealth.regenerate(rules, bot, now, rules.step)
+		if bot.health > before and now - bot.hurt_at < delay:
+			return "health came back %.2f s after the hit, before the %.0f s delay" % [now - bot.hurt_at, delay]
+		if bot.health > rules.health:
+			return "health %d, past its whole %d" % [bot.health, rules.health]
+		now += rules.step
+	if bot.health != mini(rules.regeneration_to, rules.health):
+		return "health %d after %.0f s, never back to whole" % [bot.health, REGENERATION_SECONDS]
+	return ""
+
+
+func _healing(totals: Dictionary) -> Array[String]:
+	var failures: Array[String] = []
+	for healer: String in HEALERS:
+		if _holds_less(totals["everything"], totals[healer]):
+			failures.append("healing: weighing it held less than a blue that %s" % healer)
+	# Planted: always going back for rounds, which holds less, put in the
+	# weighing healer's place.
+	if not _holds_less(totals["always resupply"], totals[HEALERS[0]]):
+		failures.append("healing: planted, always going back passed as holding as long as never healing")
+	return failures
 
 
 # --- portability (T67) ---------------------------------------------------------
