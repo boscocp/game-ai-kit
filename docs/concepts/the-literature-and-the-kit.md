@@ -39,13 +39,13 @@ teaches: none
   topics: a **director** that paces a level [Booth 2009; Brewer 2021],
   and **procedural content generation** [Smith 2015; Yannakakis &
   Togelius, part III].
-- **Several techniques live in one game only.** `ai_teamwork` is used by
-  the bot match alone, `ai_opponent` by the fighting game alone,
-  `ai_adversarial` by checkers alone, `ai_rts_core` by the RTS alone
-  (`modules/*.json`). Until a second game configures them, the claim of
-  T58-T63 -- that an addon is a module any game can use -- is shown for
-  them only once. `ai_fuzzy` has just gained its second (the infiltration
-  guards, T69).
+- **Several techniques live in one game only.** `ai_opponent` is used by
+  the fighting game alone, `ai_adversarial` by checkers alone,
+  `ai_rts_core` by the RTS alone (`modules/*.json`). Until a second game
+  configures them, the claim of T58-T63 -- that an addon is a module any
+  game can use -- is shown for them only once. `ai_fuzzy` and
+  `ai_teamwork` have just gained their second: the infiltration guards
+  (T69, T70).
 
 ## How to read the table
 
@@ -69,7 +69,7 @@ holds every name in the last three columns to the repository.
 | A\* and Dijkstra | AIMA 3.5-3.6; GAP1 ch. 17-18 | every game that moves | `ai_search`, `ai_core` | `demo-search`, `demo-stealth`, `demo-botmatch` | 0 |
 | Faster grid search (JPS+, subgoal graphs, goal bounding) | GAP2 ch. 14-15; GAP3 ch. 22-23 | large static grids | not in the kit | -- | 1 |
 | Flow fields | GAP1 ch. 23 | crowds, RTS | `ai_rts_core` | `demo-rts` | 1 |
-| A cost flood to every node within a limit | GAP Online 2021 ch. 6 (*Dishonored 2*) | stealth chase, hearing round walls | `ai_search`, `godot/addons/ai_search/cost_flood.gd` | -- | 1 |
+| A cost flood to every node within a limit | GAP Online 2021 ch. 6 (*Dishonored 2*) | stealth chase, hearing round walls | `ai_search`, `godot/addons/ai_search/cost_flood.gd` | `demo-infiltration` | 1 |
 | Local search and evolutionary optimisation | AIMA 4.1-4.2; Y&T 3.3, 8.2 | tuning, search-based content | not in the kit | -- | 1 |
 | Steering (seek, arrive, pursue, avoid) | Millington ch. 3; Booth 2009 (reactive path following) | vehicles, crowds | `ai_steering` | `demo-steering`, `demo-racing` | 0 |
 | PID control, a racing line, a heat line | GAP1 ch. 38-41 (via `racing-ai.md`) | racing | `ai_steering`, `racing3d` | `demo-racing3d` | 1 |
@@ -100,7 +100,7 @@ holds every name in the last three columns to the repository.
 | Classical planning (STRIPS, PDDL, heuristics) | AIMA 11.1-11.3 | strategy | `ai_planning`, `python/gameaikit/pddl` | `demo-rts`, `demo-tactical` | 1 |
 | GOAP | Orkin 2006 | *F.E.A.R.* | `ai_behaviour` | `demo-behaviour`, `demo-tactical` | 0 |
 | HTN planning | AIMA 11.4; GAP1 ch. 12 | strategy, squads | `ai_behaviour` | `demo-behaviour`, `demo-rts` | 0 |
-| Utility choice (scored considerations) | AIMA ch. 16; GAP1 ch. 9; GAP3 ch. 13, 31 | *Dragon Age: Inquisition* (GAP3 ch. 31); *Guild Wars 2* (via `shooter-ai.md`) | `ai_teamwork`, `godot/addons/ai_teamwork/action_choice.gd` | `demo-botmatch` | 1 |
+| Utility choice (scored considerations) | AIMA ch. 16; GAP1 ch. 9; GAP3 ch. 13, 31 | *Dragon Age: Inquisition* (GAP3 ch. 31); *Guild Wars 2* (via `shooter-ai.md`) | `ai_teamwork`, `godot/addons/ai_teamwork/action_choice.gd` | `demo-botmatch`, `demo-infiltration` | 1 |
 | Fuzzy logic | the kit's `stealth.md` (no source opened here places it) | suspicion, soft thresholds | `ai_fuzzy` | `demo-stealth` | 1 |
 
 ### Space, perception and teams
@@ -109,8 +109,8 @@ holds every name in the last three columns to the repository.
 |---|---|---|---|---|---|
 | Influence maps | GAP2 ch. 29-30; GAP Online 2021 ch. 6 | shooters, RPGs, strategy | `ai_perception`, `godot/addons/ai_perception/influence_map.gd`, `godot/addons/ai_teamwork/team_influence.gd` | `demo-stealth`, `demo-botmatch` | 1 |
 | Tactical position selection | GAP1 ch. 26; GAP3 ch. 24, 26 | shooters, *Paragon* (GAP3 ch. 24) | `ai_teamwork`, `godot/addons/ai_teamwork/tactical_positions.gd` | `demo-botmatch` | 1 |
-| Perception: sight, hearing, light, awareness, memory | Millington ch. 10 (title); the kit's `stealth-ai.md` | stealth | `ai_perception`, `infiltration` | `demo-stealth`, `demo-behaviour` | 1 |
-| Team coordination (claims, a commander, squads) | AIMA 18.1, 18.3 (titles); the kit's `shooter-ai.md` | team shooters | `ai_teamwork` | `demo-botmatch` | 1 |
+| Perception: sight, hearing, light, awareness, memory | Millington ch. 10 (title); the kit's `stealth-ai.md` | stealth | `ai_perception`, `infiltration` | `demo-stealth`, `demo-behaviour`, `demo-infiltration` | 1 |
+| Team coordination (claims, a commander, squads, a search divided) | AIMA 18.1, 18.3 (titles); the kit's `shooter-ai.md`, `stealth-ai.md` | team shooters, guards that search together | `ai_teamwork`, `godot/addons/ai_teamwork/search_coordinator.gd` | `demo-botmatch`, `demo-infiltration` | 1 |
 | A frame budget | Millington ch. 9 (title) | RTS, many agents | `ai_rts_core`, `godot/addons/ai_rts_core/frame_budget.gd` | `demo-rts` | 2 |
 
 ### Uncertainty and sequential decisions
@@ -118,7 +118,7 @@ holds every name in the last three columns to the repository.
 | Technique | Literature | Known for | In the kit | Demos | Tier |
 |---|---|---|---|---|---|
 | Bayesian networks | AIMA ch. 13 | reasoning under uncertainty | not in the kit | -- | 1 |
-| Tracking over time: a grid belief, HMMs, Kalman and particle filters | AIMA ch. 14; GAP Online 2021 ch. 6 | chasing an unseen player | a grid belief that spreads and is cleared where seen: `godot/addons/ai_perception/belief_map.gd` | -- | 1 |
+| Tracking over time: a grid belief, HMMs, Kalman and particle filters | AIMA ch. 14; GAP Online 2021 ch. 6 | chasing an unseen player | a grid belief that spreads and is cleared where seen: `godot/addons/ai_perception/belief_map.gd` | `demo-infiltration` | 1 |
 | MDPs, value and policy iteration | AIMA 17.1-17.2 | small grid worlds | not in the kit | -- | 1 |
 | Bandits (UCB1, regret matching) | AIMA 17.3; GAP2 ch. 25 | choosing among strategies by their payoff | not in the kit | -- | 1 |
 | POMDPs | AIMA 17.4-17.5 | acting on beliefs | not in the kit | -- | 1 |
@@ -159,7 +159,7 @@ holds every name in the last three columns to the repository.
    survivor's "emotional intensity" and removes threats when it runs high
    [Booth 2009]; *Warframe* does the same over procedural levels [Brewer
    2021]. The kit has difficulty only as fixed knobs.
-4. **Four technique addons are shown in one game only** (above). That is
+4. **Three technique addons are shown in one game only** (above). That is
    a statement about the interface, not the technique: an addon used once
    may have its game's assumptions baked in, and only a second game finds
    them.
@@ -227,10 +227,10 @@ and its output passes a validator). Sizes use the tasks' S/M/L.
 
 ### B. A second game for a technique the kit has
 
-1. **`ai_teamwork` in the infiltration level** -- already happening:
-   T70 adds a search coordinator and a role arbiter there (in review).
-   What the second use shows: whether claims and a commander are about
-   teams or about the bot match's arena.
+1. **`ai_teamwork` in the infiltration level** -- done in T70 (wave
+   80): the guards use its utility choice, and it gained a search
+   coordinator and a role arbiter. Listed to show the shape of a second
+   use: what the bot match had assumed came out when the guards used it.
 2. **`ai_adversarial` in a second board game** -- the same game as A.1,
    so MCTS and alpha-beta face the same position. What it shows: whether
    `AdversarialGame` is an interface or checkers' shape.
@@ -246,9 +246,9 @@ and its output passes a validator). Sizes use the tasks' S/M/L.
    `ai_teamwork`). What it shows: whether one interface serves a strategic
    and a tactical map [Mark 2015].
 6. **Utility choice as its own addon.** `ActionChoice` and `ErrandChoice`
-   live in `ai_teamwork`, though nothing in them is about teams. Moving
-   them out, used by the bot match and the infiltration guards, would
-   show they are general.
+   live in `ai_teamwork`, though nothing in them is about teams, and the
+   bot match and the infiltration guards both use them. Moving them out
+   would let a game take utility choice without taking teamwork.
 
 ### A new game, or the ones there are?
 

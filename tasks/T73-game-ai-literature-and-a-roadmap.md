@@ -120,8 +120,9 @@ paper and Mark's GDC 2015 talk could not be opened and are listed under
 
 What it found: the decision layer is well covered and AIMA's part IV is
 not (MCTS, CSP, filters, MDPs, bandits); nothing teaches content
-generation or pacing; `ai_teamwork`, `ai_opponent`, `ai_adversarial` and
-`ai_rts_core` are each shown in one game only. The roadmap has eight new
+generation or pacing; `ai_opponent`, `ai_adversarial` and `ai_rts_core`
+are each shown in one game only (`ai_teamwork` gained its second with
+T70, merged while this was written). The roadmap has eight new
 techniques and six "second game" entries, each with its tier, size and
 the invariants it touches -- bandits and player modelling fall squarely
 under invariant 6, `ai_llm` under 7. It ends with seven questions for the
