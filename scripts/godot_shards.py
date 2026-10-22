@@ -140,7 +140,11 @@ def run_shards(script: str, count: int, folder: pathlib.Path, gate_arguments: li
         output = (folder / f"shard-{shard}.out").open("w", encoding="utf-8")
         extra = [*gate_arguments, "--shard", f"{shard}/{count}", "--out", str(folder)]
         command = godot_command(script, folder / f"shard-{shard}.log", extra)
-        running.append((subprocess.Popen(command, stdout=output, stderr=subprocess.STDOUT), output))
+        try:
+            running.append((subprocess.Popen(command, stdout=output, stderr=subprocess.STDOUT), output))
+        except OSError:
+            output.close()
+            raise
     deadline = time.monotonic() + timeout
     codes = []
     for shard, (process, output) in enumerate(running):
