@@ -23,6 +23,10 @@ It fails towards running more, never less:
      read it run on every wave anyway.
   4. An empty change still runs the lints. Invariant 4 asks of every gate
      whether it passes on an empty scene; this one would, and must not.
+  5. T71's one exception to rule 2: a Makefile or manifest change that only
+     adds gates of one module selects that module, as a change to its code
+     would. `added_gates.py` reads the diff to say so, and any doubt leaves
+     the path global. It needs the diff, so `--paths` never takes it.
 
 Exit codes
 ----------
@@ -51,6 +55,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import added_gates  # noqa: E402 -- rule 5: a change that only adds a gate
 import check_modules  # noqa: E402 -- the manifests and the ownership rules
 from check_modules import PROSE, Module, is_under, owner_of  # noqa: E402
 
@@ -81,18 +86,25 @@ def changed_paths(repo: pathlib.Path, base: str, head: str | None) -> list[str]:
     selected only the module it moved into, and the stealth code that still
     preloads the old path went untested. Both ends of a move are changes.
     """
-    def git(*args: str) -> list[str]:
-        done = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True)
-        if done.returncode != 0:
-            raise ChangeUnknown(f"git {' '.join(args)}: {done.stderr.strip()} -- is {base!r} a "
-                                "commit this clone has? (on CI: a first push, or a force push)")
-        return [line for line in done.stdout.splitlines() if line]
-
     if head is not None:
-        return git("diff", "--name-only", "--no-renames", f"{base}...{head}")
-    fork = git("merge-base", base, "HEAD")[0]
-    return sorted(set(git("diff", "--name-only", "--no-renames", fork))
-                  | set(git("ls-files", "--others", "--exclude-standard")))
+        return git_answer(repo, base, "diff", "--name-only", "--no-renames", f"{base}...{head}")
+    fork = fork_point(repo, base, None)
+    return sorted(set(git_answer(repo, base, "diff", "--name-only", "--no-renames", fork))
+                  | set(git_answer(repo, base, "ls-files", "--others", "--exclude-standard")))
+
+
+def git_answer(repo: pathlib.Path, base: str, *args: str) -> list[str]:
+    """git's non-empty output lines; ChangeUnknown, naming `base`, when it fails."""
+    done = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True)
+    if done.returncode != 0:
+        raise ChangeUnknown(f"git {' '.join(args)}: {done.stderr.strip()} -- is {base!r} a "
+                            "commit this clone has? (on CI: a first push, or a force push)")
+    return [line for line in done.stdout.splitlines() if line]
+
+
+def fork_point(repo: pathlib.Path, base: str, head: str | None) -> str:
+    """Where the change began: the merge base of `base` and `head` (or HEAD)."""
+    return git_answer(repo, base, "merge-base", base, head or "HEAD")[0]
 
 
 def dependents(modules: dict[str, Module]) -> tuple[dict[str, set[str]], dict[str, set[str]]]:
@@ -107,16 +119,24 @@ def dependents(modules: dict[str, Module]) -> tuple[dict[str, set[str]], dict[st
     return by_code, by_tests
 
 
-def select(paths: list[str], modules: dict[str, Module]) -> Selection:
+def select(paths: list[str], modules: dict[str, Module],
+           local: dict[str, str] | None = None) -> Selection:
     """Rules 1-3 for each path, then every dependent, transitively.
 
     A module whose code uses a changed one is changed in effect, and its own
     users are followed in turn. A module whose tests alone use it has its
-    tests run and is followed no further: its code is what it was.
+    tests run and is followed no further: its code is what it was. `local`
+    names the global paths whose change only added a gate (rule 5), each
+    with the module it selects instead.
     """
-    touched, reasons = set(), []
+    local = local or {}
+    touched, reasons, notes = set(), [], []
     for path in paths:
         if is_under(path, PROSE):
+            continue
+        if path in local:
+            touched.add(local[path])
+            notes.append(f"{path} only adds a gate of {local[path]}")
             continue
         if check_modules.is_global(path, modules):
             reasons.append(f"{path} is global: every gate stands on it")
@@ -136,7 +156,7 @@ def select(paths: list[str], modules: dict[str, Module]) -> Selection:
             changed.add(name)
             waiting.extend(sorted(by_code.get(name, ())))
     tested = {user for name in changed for user in by_tests.get(name, ())} - changed
-    reasons = [f"{name} changed" for name in sorted(touched)]
+    reasons = notes + [f"{name} changed" for name in sorted(touched)]
     reasons += [f"{name} uses a module that changed" for name in sorted(changed - touched)]
     reasons += [f"{name}'s tests use a module that changed" for name in sorted(tested)]
     return Selection(False, frozenset(changed | tested), tuple(reasons))
@@ -223,8 +243,17 @@ lint-no-training:
 \t@true
 test-a-properties:
 \t@true
+\t@true
 test-play-match:
 \t@true
+"""
+
+# Wave 75's shape, on the fixture: a new gate of `play`, its name put into
+# `check:`, and appended to `play`'s manifest.
+NEW_GATE = """
+.PHONY: test-play-you
+test-play-you: import ## You drive (planted)
+\t@$(GODOT) --headless --path godot -s res://game/play/you_gate.gd
 """
 
 
@@ -248,6 +277,84 @@ def rename_case(root: pathlib.Path) -> list[str]:
     if paths != ["godot/game/one/x.gd", "godot/game/two/x.gd"]:
         return [f"a move between modules: expected both paths, got {paths}"]
     return []
+
+
+def added_gate(makefile: str, gate: str = NEW_GATE, listed: str = "test-play-you") -> str:
+    """The fixture Makefile with `gate` appended and `listed` put into `check:`."""
+    first, rest = makefile.split("\n", 1)
+    return f"{first} {listed}\n{rest}{gate}"
+
+
+def gate_change(root: pathlib.Path, label: str, makefile: str,
+                manifests: dict[str, dict]) -> Selection:
+    """What a committed change to the fixture's Makefile and manifests selects.
+
+    A real repository and a real diff: rule 5 reads the diff, so its
+    planted cases must have one.
+    """
+    repo = root / label.replace(" ", "-")
+    (repo / "modules").mkdir(parents=True)
+    (repo / "Makefile").write_text(MAKEFILE_TEXT)
+    for name, manifest in MANIFESTS.items():
+        (repo / "modules" / f"{name}.json").write_text(json.dumps(manifest, indent=2) + "\n")
+
+    def git(*args: str) -> None:
+        subprocess.run(["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@t",
+                        *args], check=True, capture_output=True)
+
+    git("init", "-q")
+    git("add", "-A")
+    git("commit", "-qm", "before")
+    (repo / "Makefile").write_text(makefile)
+    for name, manifest in manifests.items():
+        (repo / "modules" / f"{name}.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    git("commit", "-qam", "after")
+    modules = check_modules.load_modules(repo)
+    paths = changed_paths(repo, "HEAD^1", "HEAD")
+    return select(paths, modules, added_gates.local_paths(repo, "HEAD^1", "HEAD", paths, modules))
+
+
+def gate_cases(root: pathlib.Path) -> list[str]:
+    """Rule 5: wave 75's shape selects its module; each doubt selects everything."""
+    play = {**MANIFESTS["play"], "gates": [*MANIFESTS["play"]["gates"], "test-play-you"]}
+    other_module = NEW_GATE.replace("res://game/play/", "res://addons/a/")
+    cases = {
+        "a new gate of play": (added_gate(MAKEFILE_TEXT), {"play": play}, {"play", "c"}),
+        "and another recipe changed": (
+            added_gate(MAKEFILE_TEXT).replace("\t@true\ntest-play-match", "\t@false\ntest-play-match"),
+            {"play": play}, None),
+        "a gate of play running a's file": (added_gate(MAKEFILE_TEXT, other_module), {"play": play}, None),
+        "a target removed": (MAKEFILE_TEXT.replace("test-play-match:\n\t@true\n", ""), {}, None),
+        "a variable": (
+            added_gate(MAKEFILE_TEXT).replace("check-no-engine:", "GODOT := elsewhere\ncheck-no-engine:"),
+            {"play": play}, None),
+        "an unreadable line": (added_gate(MAKEFILE_TEXT, NEW_GATE + "ifeq ($(X),1)\n"), {"play": play}, None),
+        "inside another recipe": (
+            added_gate(MAKEFILE_TEXT, "").replace("\t@true\n\t@true\n", "\t@true\n" + NEW_GATE.lstrip() + "\t@true\n"),
+            {"play": play}, None),
+        "an owns changed": (MAKEFILE_TEXT, {"a": {**MANIFESTS["a"], "owns": ["godot/addons/a2/"]}}, None),
+        "a gate added and a dependency changed": (
+            added_gate(MAKEFILE_TEXT), {"play": {**play, "depends_on": ["a", "b"]}}, None),
+        "an old recipe line swapped for a gate": (
+            added_gate(MAKEFILE_TEXT, "").replace("test-play-match:\n\t@true\n", "test-play-match:\n" + NEW_GATE),
+            {"play": play}, None),
+        "a gate running two modules' files": (
+            added_gate(MAKEFILE_TEXT, NEW_GATE + "\t@$(GODOT) -s res://addons/a/x.gd\n"), {}, None),
+        "a recipe with another variable": (
+            added_gate(MAKEFILE_TEXT, NEW_GATE.replace("--path godot", "--path $(ELSEWHERE)")), {}, None),
+        "a second rule for an old target": (
+            MAKEFILE_TEXT + NEW_GATE.replace(".PHONY: test-play-you\n", "").replace(
+                "test-play-you", "test-play-match"), {}, None),
+        "a gate put in, another taken out of check": (
+            added_gate(MAKEFILE_TEXT).replace(" test-a-properties", "", 1), {"play": play}, None),
+    }
+    failures = []
+    for label, (makefile, manifests, chosen) in cases.items():
+        got = gate_change(root, label, makefile, manifests)
+        if (chosen is None) != got.everything or (chosen and set(got.modules) != chosen):
+            failures.append(f"rule 5, {label}: expected {sorted(chosen) if chosen else 'everything'}, "
+                            f"got {explain(got)!r}")
+    return failures
 
 
 def target_cases(repo: pathlib.Path, modules: dict[str, Module]) -> list[str]:
@@ -298,10 +405,13 @@ def self_test() -> int:
         expect("an unowned path", ["godot/addons/a/x.gd", "godot/new/thing.gd"], True, set())
         expect("a script", ["scripts/check_x.py"], True, set())
         expect("a manifest", ["modules/a.json"], True, set())
+        # Rule 5 reads the diff; a list of paths has none, so it stays global.
+        expect("the Makefile, by its path alone", ["Makefile"], True, set())
         expect("a module's own script", ["scripts/fetch_play_art.py"], False, {"play", "c"})
         expect("prose", ["docs/reviews/63.md", "tasks/STATUS.md"], False, set())
         failures += target_cases(repo, modules)
         failures += rename_case(pathlib.Path(workspace))
+        failures += gate_cases(pathlib.Path(workspace))
 
     for failure in failures:
         print(f"self-test FAIL: {failure}")
@@ -334,15 +444,18 @@ def main(argv: list[str]) -> int:
         return 2
     try:
         modules = check_modules.load_modules(args.repo)
+        local = {}
         if args.paths:
             stream = sys.stdin if args.paths == "-" else open(args.paths, encoding="utf-8")
             paths = [line.strip() for line in stream if line.strip()]
         else:
             paths = changed_paths(args.repo, args.base, args.head)
+            fork = fork_point(args.repo, args.base, args.head)
+            local = added_gates.local_paths(args.repo, fork, args.head, paths, modules)
     except (check_modules.BadManifest, ChangeUnknown, OSError) as error:
         print(f"affected: {error}", file=sys.stderr)
         return 2
-    selection = select(paths, modules)
+    selection = select(paths, modules, local)
     chosen = targets(args.repo, selection, modules)
     if args.run:
         print(explain(selection))
