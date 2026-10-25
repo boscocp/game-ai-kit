@@ -49,12 +49,14 @@ const JAB_EVERY: int = 60
 ## stage units: about where its uppercut comes out in time to meet you.
 const ANTI_AIR_RANGE: int = 110
 
-## The controller, as the keys (wave 84): the stick walks, jumps and
-## crouches; X and Y punch, A and B kick, light then heavy; RB throws, LB
-## evades, Menu pauses.
+## The controller, as the keys (wave 84): the stick or the D-pad walks,
+## jumps and crouches -- both at once, as the owner asked (wave 85): a key
+## either one holds stays down until both let go; X and Y punch, A and B
+## kick, light then heavy; RB throws, LB evades, Menu pauses.
 const PAD_BUTTONS: Dictionary = {JOY_BUTTON_X: KEY_U, JOY_BUTTON_Y: KEY_I, JOY_BUTTON_A: KEY_J,
 		JOY_BUTTON_B: KEY_K, JOY_BUTTON_RIGHT_SHOULDER: KEY_L, JOY_BUTTON_LEFT_SHOULDER: KEY_O,
-		JOY_BUTTON_START: KEY_P}
+		JOY_BUTTON_START: KEY_P, JOY_BUTTON_DPAD_LEFT: KEY_A, JOY_BUTTON_DPAD_RIGHT: KEY_D,
+		JOY_BUTTON_DPAD_UP: KEY_W, JOY_BUTTON_DPAD_DOWN: KEY_S}
 
 var data: FightData = FightData.read()
 var state: FightState

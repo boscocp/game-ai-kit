@@ -22,7 +22,8 @@
 #      even when both arrive in the same frame;
 #   7. a key two inputs hold -- the racers' throttle, the stick's up and RT
 #      -- stays down while either holds it: the stick wobbling near zero as
-#      you steer does not lift the throttle RT still holds.
+#      you steer does not lift the throttle RT still holds; and the
+#      fighting game's walk, the stick's left and the D-pad's (wave 85).
 #
 # Planted, and refused: each claim's numbers with that one claim broken, a
 # pad that presses only the keycode -- the fighting game would not move --
@@ -85,7 +86,8 @@ const ALL_HELD: Dictionary = {"button_held": true, "button_physical": true, "but
 		"stick_pressed": true, "stick_kept": true, "stick_let_go": true, "stick_up": true,
 		"click": true, "click_released": true, "looked": true, "swap_released": true,
 		"trigger_held": true, "trigger_released": true, "shift_carried": true,
-		"shift_same_frame": true, "shared_kept": true, "shared_released": true}
+		"shift_same_frame": true, "shared_kept": true, "shared_released": true,
+		"stick_and_dpad_kept": true, "stick_and_dpad_released": true}
 
 
 func _initialize() -> void:
@@ -101,8 +103,9 @@ func _run() -> void:
 	if claims(keycode_only).is_empty():
 		failures.append("planted: a pad pressing only the keycode passed")
 	var one_owner: Dictionary = await _measure(OneOwnerPad.new())
-	if not "shared_kept did not hold" in claims(one_owner):
-		failures.append("planted: a pad where a key has one owner kept the throttle")
+	for claim: String in ["shared_kept", "stick_and_dpad_kept"]:
+		if not "%s did not hold" % claim in claims(one_owner):
+			failures.append("planted: a pad where a key has one owner passed %s" % claim)
 	print("pad_as_keys: measured %s" % seen)
 	for failure: String in failures:
 		print("FAIL ", failure)
@@ -218,6 +221,15 @@ func _shared_key(pad: PadAsKeys) -> Dictionary:
 	seen["shared_kept"] = Input.is_physical_key_pressed(KEY_UP)
 	await _axis(JOY_AXIS_TRIGGER_RIGHT, 0.0)
 	seen["shared_released"] = not Input.is_physical_key_pressed(KEY_UP)
+	# The fighting game: the stick held left, the D-pad's left pressed too,
+	# then the stick let go -- the D-pad still walks.
+	pad.use({JOY_BUTTON_DPAD_LEFT: KEY_A}, [KEY_A, KEY_D, KEY_W, KEY_S])
+	await _axis(JOY_AXIS_LEFT_X, -0.9)
+	await _button(JOY_BUTTON_DPAD_LEFT, true)
+	await _axis(JOY_AXIS_LEFT_X, 0.0)
+	seen["stick_and_dpad_kept"] = Input.is_physical_key_pressed(KEY_A)
+	await _button(JOY_BUTTON_DPAD_LEFT, false)
+	seen["stick_and_dpad_released"] = not Input.is_physical_key_pressed(KEY_A)
 	return seen
 
 
