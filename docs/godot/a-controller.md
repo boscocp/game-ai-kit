@@ -55,7 +55,7 @@ the racers steer as they do from a keyboard.
 | `make demo-racing3d` | steers | RT drives, LT brakes, D-pad left/up/right the full PID, heat line and measured grip on and off (1-3), Y watches, B camera, LB track, X again, Menu pauses |
 | `make demo-infiltration` | walks | right stick looks, RT shoots (the first pull takes the camera, as a click does), A takedown, B crouch, X prone, RB throws, LB held sprints, Y next guard |
 | `make demo-botmatch` | walks | A takes a bot over; playing, right stick looks, RT fires, B held crouches, LB held sprints, X reloads; Y next bot, RB camera, D-pad orbits the camera (and, playing, walks the bot, as the arrows do), Menu pauses |
-| `make demo-fighting` | walks, jumps, crouches | the D-pad too, with the stick or alone; X/Y light/heavy punch, A/B light/heavy kick, RB throw, LB evade, Menu pauses |
+| `make demo-fighting` | walks, jumps, crouches | the D-pad too, with the stick or alone; X/Y light/heavy punch, A/B light/heavy kick, RB throw, LB or back twice evade, Menu pauses |
 | `make demo-stealth` | -- | D-pad walks a cell, with LB held two; A waits, Y danger map, X again |
 
 Each example's table is its `PAD_BUTTONS` constant. With a pad connected,

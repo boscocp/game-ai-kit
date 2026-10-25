@@ -4,8 +4,9 @@
 ## You are player one: A and D walk, W jumps -- with A or D, that way -- S
 ## crouches, U and I punch light and heavy, J and K kick light and heavy --
 ## in the air, each is a jump-in attack, one a jump -- S with I is the
-## anti-air uppercut, L throws, O evades -- a backdash, which strikes and
-## throws pass through at first and which cannot guard at the end (T40);
+## anti-air uppercut, L throws, O -- or back tapped twice -- evades: a
+## backdash, which strikes and throws pass through at first and which cannot
+## guard at the end (T40);
 ## jump forwards from close and you cross over
 ## to the dummy's other side; holding back from a strike guards, standing or
 ## -- with S -- crouching. C swaps which character you play. The dummy, player two, does
@@ -85,6 +86,8 @@ var recording: bool = OS.get_cmdline_user_args().has("--record")
 var fights_kept: int = 0
 var _kept: bool = false
 var _characters: Array[String] = ["lancer", "dancer"]
+# Back tapped twice becomes the evade bit before the frame is logged (wave 86).
+var _double_tap: FightDoubleTap = FightDoubleTap.new()
 
 @onready var _view: FightView = $FightView
 @onready var _status: Label = $Interface/Status
@@ -153,6 +156,7 @@ func restart() -> void:
 	_kept = false
 	state = FightState.starting(data, _characters[0], _characters[1])
 	input_log.clear()
+	_double_tap = FightDoubleTap.new()
 	_seat_opponent()
 	_refresh()
 
@@ -178,9 +182,16 @@ func _seat_opponent() -> void:
 
 ## One frame: read both inputs, resolve, and keep them in the log.
 func step_decision() -> void:
+	step_decision_with(_held_keys())
+
+
+## One frame with `held` as your keys: what `step_decision` does once it has
+## read them, and what a test drives. Back tapped twice is turned into the
+## evade here, so the log keeps the bit and replays without knowing why.
+func step_decision_with(held: int) -> void:
 	if data.refusal != "":
 		return
-	var inputs: Array[int] = [_held_keys(), _dummy_input()]
+	var inputs: Array[int] = [_double_tap.read(held, state.fighters[0].facing), _dummy_input()]
 	input_log.append([inputs[0], inputs[1]])
 	state = FightRules.step(state, inputs, data)
 	if state.winner != FightState.NOBODY:
@@ -319,7 +330,7 @@ func _refresh() -> void:
 		_status.text = "the frame data was refused: " + data.refusal
 		return
 	_view.show_fight(state, data)
-	_status.text = ("A/D walk, W jump, S crouch, U/I punch, J/K kick, S+I uppercut, L throw, O evade, hold away to guard\n"
+	_status.text = ("A/D walk, W jump, S crouch, U/I punch, J/K kick, S+I uppercut, L throw, O or back twice evade, hold away to guard\n"
 			+ "C swap characters  ·  M dummy: %s  ·  P pause, space one frame  ·  R restart" % dummy_mode
 			+ ("\nrecording: %d fight(s) kept in data/fights/" % fights_kept if recording else ""))
 	_panel.text = FightingPanel.describe(state, data, paused, seat)
