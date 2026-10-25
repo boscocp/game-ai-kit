@@ -24,8 +24,9 @@ const THROW: int = 128
 ## Held to jump, with left or right to jump that way (T38).
 const UP: int = 256
 ## Pressed to evade: a backdash, away from the way the fighter faces (T40).
-## A button of its own, not back pressed twice: a log recorded before it
-## existed never holds this bit, and so replays exactly as it did.
+## A button of its own, so a log recorded before it existed never holds
+## this bit and replays exactly as it did. A person may also tap back twice:
+## `FightDoubleTap` turns that into this bit before the frame is logged.
 const EVADE: int = 512
 ## The name a pressed evade is buffered under, beside the buttons' names.
 const EVADE_NAME: String = "evade"

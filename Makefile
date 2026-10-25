@@ -615,7 +615,7 @@ record-tactical: import ## Play the tactical board and keep every game you finis
 	@$(GODOT) --path godot res://game/tactical/tactical.tscn -- --record
 
 .PHONY: demo-fighting
-demo-fighting: import ## Training mode, you against a dummy: A/D walk, W jump, S crouch, U/I punch, J/K kick, L throw, O evade, hold away to guard, M dummy mode, P pause, space one frame
+demo-fighting: import ## Training mode, you against a dummy: A/D walk, W jump, S crouch, U/I punch, J/K kick, L throw, O or back twice evade, hold away to guard, M dummy mode, P pause, space one frame
 	@$(GODOT) --path godot res://game/fighting/fighting.tscn
 
 .PHONY: record-replay
