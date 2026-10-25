@@ -113,10 +113,33 @@ def committed_files(repo: pathlib.Path, folder: str) -> list[str]:
 
 def committed_bytes(repo: pathlib.Path, path: str) -> bytes:
     """A file's content as HEAD has it, whatever the working tree says."""
-    return subprocess.run(
-        ["git", "-C", str(repo), "show", f"HEAD:{path}"],
-        capture_output=True, check=True,
-    ).stdout
+    return committed_contents(repo, [path])[path]
+
+
+def committed_contents(repo: pathlib.Path, paths: list[str]) -> dict[str, bytes]:
+    """Many files' contents as HEAD has them, read by one git process.
+
+    One `git show` a file cost the self-test over two minutes on Windows,
+    where starting a process takes about 30 ms: it builds the addons fourteen
+    times, nearly four thousand files. `git cat-file --batch` answers every
+    path on its stdin with a header -- `<sha> blob <size>` -- and the bytes.
+    """
+    if not paths:
+        return {}
+    request = "".join(f"HEAD:{path}\n" for path in paths).encode()
+    answer = subprocess.run(["git", "-C", str(repo), "cat-file", "--batch"],
+                            input=request, capture_output=True, check=True).stdout
+    contents = {}
+    position = 0
+    for path in paths:
+        header_end = answer.index(b"\n", position)
+        header = answer[position:header_end].split()
+        if len(header) != 3 or header[1] != b"blob":
+            raise subprocess.CalledProcessError(128, f"git cat-file HEAD:{path}")
+        size = int(header[2])
+        contents[path] = answer[header_end + 1:header_end + 1 + size]
+        position = header_end + 1 + size + 1
+    return contents
 
 
 def checked_version(text: str) -> str:
@@ -146,7 +169,7 @@ def add_entry(bundle: zipfile.ZipFile, name: str, data: bytes, mode: int = 0o644
 def attribution(repo: pathlib.Path, skip_notice: bool) -> dict[str, bytes]:
     """The files every artifact must carry, minus NOTICE when planting a fault."""
     names = [name for name in ATTRIBUTION if not (skip_notice and name == "NOTICE")]
-    return {name: committed_bytes(repo, name) for name in names}
+    return committed_contents(repo, names)
 
 
 def build_addon(repo: pathlib.Path, addon: str, version: str,
@@ -159,11 +182,9 @@ def build_addon(repo: pathlib.Path, addon: str, version: str,
     this decides which bytes those are.
     """
     prefix = f"godot/addons/{addon}/"
-    files = {
-        path[len(prefix):]: committed_bytes(repo, path)
-        for path in committed_files(repo, prefix)
-        if path[len(prefix):] not in ATTRIBUTION
-    }
+    shipped = [path for path in committed_files(repo, prefix)
+               if path[len(prefix):] not in ATTRIBUTION]
+    files = {path[len(prefix):]: data for path, data in committed_contents(repo, shipped).items()}
     if not files:
         raise Refused(f"{addon} has no committed files to ship")
     files.update(attribution(repo, skip_notice))
@@ -211,10 +232,8 @@ def build_wheel(repo: pathlib.Path, version: str,
     every one of them with its hash, and itself without one, which is how the
     format says a reader knows the file it is reading is the last word.
     """
-    files = {
-        path[len("python/"):]: committed_bytes(repo, path)
-        for path in committed_files(repo, f"python/{PACKAGE}/")
-    }
+    package = committed_files(repo, f"python/{PACKAGE}/")
+    files = {path[len("python/"):]: data for path, data in committed_contents(repo, package).items()}
     if not files:
         raise Refused(f"python/{PACKAGE} has no committed files to ship")
 
