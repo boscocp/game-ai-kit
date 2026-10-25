@@ -29,6 +29,14 @@ const MODEL_HEIGHT: float = 1.25
 const CHASE_BEHIND: float = 10.0
 const CHASE_ABOVE: float = 3.5
 
+## The controller, as the keys (wave 84): the stick steers, the triggers
+## brake and drive, the D-pad turns the full PID (left), the heat line (up)
+## and the measured grip (right) on and off, Y watches, B the camera,
+## LB the track, X starts again, Menu pauses.
+const PAD_BUTTONS: Dictionary = {JOY_BUTTON_DPAD_LEFT: KEY_1, JOY_BUTTON_DPAD_UP: KEY_2,
+		JOY_BUTTON_DPAD_RIGHT: KEY_3, JOY_BUTTON_Y: KEY_TAB, JOY_BUTTON_B: KEY_C,
+		JOY_BUTTON_LEFT_SHOULDER: KEY_T, JOY_BUTTON_X: KEY_R, JOY_BUTTON_START: KEY_SPACE}
+
 var race: Race3D = null
 var human: RaceHumanDriver3D = null
 var watched: int = 0
@@ -58,6 +66,10 @@ func _ready() -> void:
 		[RaceOverlay3D.COOL, "heat line, cool to hot, of the watched car"],
 		[RaceOverlay3D.BALL_COLOUR, "the ball: where that car means to be"],
 	])
+	var pad := PadAsKeys.new()
+	pad.use(PAD_BUTTONS, [KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN], false, [KEY_DOWN, KEY_UP])
+	add_child(pad)
+	pad.add_to(_legend)
 	add_child(_overlay)
 	restart()
 

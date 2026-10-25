@@ -15,6 +15,13 @@ const DIRECTIONS: Dictionary = {
 @onready var _board: BoardView = $BoardView
 @onready var _view: StealthView = $StealthView
 @onready var _status: Label = $Interface/Status
+## The controller, as the keys (wave 84): the D-pad walks a cell, with LB
+## held two; A waits, Y the danger map, X starts again.
+const PAD_BUTTONS: Dictionary = {JOY_BUTTON_DPAD_UP: KEY_UP, JOY_BUTTON_DPAD_DOWN: KEY_DOWN,
+		JOY_BUTTON_DPAD_LEFT: KEY_LEFT, JOY_BUTTON_DPAD_RIGHT: KEY_RIGHT,
+		JOY_BUTTON_LEFT_SHOULDER: KEY_SHIFT, JOY_BUTTON_A: KEY_SPACE, JOY_BUTTON_Y: KEY_D,
+		JOY_BUTTON_X: KEY_R}
+
 @onready var _legend: Legend = $Interface/Legend
 
 var world: StealthWorld
@@ -38,6 +45,10 @@ func _ready() -> void:
 		[BoardView.tile_texture(BoardView.TREES), "trees: slow, block sight"],
 		[BoardView.tile_texture(BoardView.WALL), "wall"],
 	] as Array[Array])
+	var pad := PadAsKeys.new()
+	pad.use(PAD_BUTTONS)
+	add_child(pad)
+	pad.add_to(_legend)
 	restart()
 
 

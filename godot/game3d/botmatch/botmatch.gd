@@ -29,6 +29,16 @@ const LOOK_LIMIT: float = deg_to_rad(80.0)
 ## How many shots can sound at once.
 const SPEAKERS: int = 8
 
+## The controller, as the keys (wave 84): A takes a bot over and gives it
+## back; playing, the left stick walks, the right looks, RT fires, B held
+## crouches, LB held sprints, X reloads; Y the next bot, RB the camera, the
+## D-pad turns and pulls the camera -- and, playing a bot, walks it too, as
+## the arrow keys do -- Menu pauses.
+const PAD_BUTTONS: Dictionary = {JOY_BUTTON_A: KEY_T, JOY_BUTTON_B: KEY_CTRL, JOY_BUTTON_X: KEY_R,
+		JOY_BUTTON_Y: KEY_TAB, JOY_BUTTON_LEFT_SHOULDER: KEY_SHIFT, JOY_BUTTON_RIGHT_SHOULDER: KEY_C,
+		JOY_BUTTON_START: KEY_P, JOY_BUTTON_DPAD_LEFT: KEY_LEFT, JOY_BUTTON_DPAD_RIGHT: KEY_RIGHT,
+		JOY_BUTTON_DPAD_UP: KEY_UP, JOY_BUTTON_DPAD_DOWN: KEY_DOWN}
+
 var world: BotMatch
 var _seed: int = SEEDS_FROM
 ## Which of `BotArena.ARENAS` the match is played on (L cycles them).
@@ -73,6 +83,10 @@ func _ready() -> void:
 		[BotMatchDrawing.DROPPED, "dropped: too far, or outside its squad's area"],
 		[BotMatchDrawing.SIGHT, "the watched bot's sight lines"],
 	])
+	var pad := PadAsKeys.new()
+	pad.use(PAD_BUTTONS, [KEY_A, KEY_D, KEY_W, KEY_S], true)
+	add_child(pad)
+	pad.add_to(_legend)
 	_viewmodel.visible = false
 	_camera.add_child(_viewmodel)
 	var sound: AudioStreamWAV = GunshotSound.make()

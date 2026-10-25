@@ -12,7 +12,9 @@
   "depends_on": [
     "ai_core"
   ],
-  "gates": [],
+  "gates": [
+    "test-pad"
+  ],
   "tests_depend_on": [
     "skirmish"
   ]

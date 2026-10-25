@@ -49,6 +49,13 @@ const JAB_EVERY: int = 60
 ## stage units: about where its uppercut comes out in time to meet you.
 const ANTI_AIR_RANGE: int = 110
 
+## The controller, as the keys (wave 84): the stick walks, jumps and
+## crouches; X and Y punch, A and B kick, light then heavy; RB throws, LB
+## evades, Menu pauses.
+const PAD_BUTTONS: Dictionary = {JOY_BUTTON_X: KEY_U, JOY_BUTTON_Y: KEY_I, JOY_BUTTON_A: KEY_J,
+		JOY_BUTTON_B: KEY_K, JOY_BUTTON_RIGHT_SHOULDER: KEY_L, JOY_BUTTON_LEFT_SHOULDER: KEY_O,
+		JOY_BUTTON_START: KEY_P}
+
 var data: FightData = FightData.read()
 var state: FightState
 ## What the dummy does: an entry of `MODES`. It starts as the medium
@@ -93,6 +100,10 @@ func _ready() -> void:
 		[FightView.THROW, "orange box: a throw, which no guard stops"],
 		[FightView.STUNNED_SPRITE, "paler: stunned, taking off, landing or evading"],
 	] as Array[Array])
+	var pad := PadAsKeys.new()
+	pad.use(PAD_BUTTONS, [KEY_A, KEY_D, KEY_W, KEY_S])
+	add_child(pad)
+	pad.add_to(_legend)
 	restart()
 
 
