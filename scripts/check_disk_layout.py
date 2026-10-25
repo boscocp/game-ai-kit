@@ -14,6 +14,9 @@ on Godot 4.7.2: `._sc_` redirects editor settings, cache and export templates
 -- the part that grows past 1 GB -- but a single `--headless --import` still
 recreated `~/.local/share/godot/app_userdata/`, because the project's `user://`
 directory is not editor data. The second mechanism, XDG_DATA_HOME, covers it.
+On Windows the engine reads APPDATA and LOCALAPPDATA instead (OS_Windows's
+get_config_path and get_cache_path), so scripts/godot points those two at the
+toolchain, and the leaks looked for include where they would land.
 
 Two mechanisms means two ways to silently regress, so both are asserted here
 rather than trusted.
@@ -66,9 +69,14 @@ LEAK_PATHS = (
     ".cache/huggingface",
     ".cache/torch",
     ".triton",
+    # Windows: %APPDATA%/Godot holds editor data and user://, and
+    # %LOCALAPPDATA%/Godot the cache, when scripts/godot is bypassed.
+    "AppData/Roaming/Godot",
+    "AppData/Local/Godot",
 )
 
-DEFAULT_TOOLCHAIN = "/mnt/games/gamedev/toolchain"
+WINDOWS = os.name == "nt"
+DEFAULT_TOOLCHAIN = "D:/games/gamedev/toolchain" if WINDOWS else "/mnt/games/gamedev/toolchain"
 
 
 def find_leaks(home: pathlib.Path) -> list[str]:
@@ -86,16 +94,25 @@ def find_leaks(home: pathlib.Path) -> list[str]:
     return findings
 
 
-def check_toolchain(toolchain: pathlib.Path) -> list[str]:
-    """Report a toolchain that is missing or has lost self-contained mode."""
+def check_toolchain(toolchain: pathlib.Path, windows: bool = WINDOWS) -> list[str]:
+    """Report a toolchain that is missing or has lost self-contained mode.
+
+    On Windows the toolchain is two programs: `godot_console.exe`, which
+    scripts/godot calls, and the `godot.exe` it starts. Either one missing is
+    a toolchain that cannot run. There is no execute bit to ask about there --
+    `os.access(X_OK)` is true of any file -- so being a file is what is asked.
+    """
     findings = []
-    binary = toolchain / "godot" / "godot"
+    names = ("godot_console.exe", "godot.exe") if windows else ("godot",)
     marker = toolchain / "godot" / "._sc_"
 
-    # `exists()` was true for a *directory* named godot/godot, which then
-    # satisfied every other check here.
-    if not binary.is_file() or not os.access(binary, os.X_OK):
-        findings.append(f"D2 no executable Godot at {binary} -- run 'make bootstrap'")
+    for name in names:
+        binary = toolchain / "godot" / name
+        # `exists()` was true for a *directory* named godot/godot, which then
+        # satisfied every other check here.
+        if not binary.is_file() or not (windows or os.access(binary, os.X_OK)):
+            findings.append(f"D2 no executable Godot at {binary} -- run 'make bootstrap'")
+    if findings:
         return findings
     if not marker.exists():
         findings.append(f"D3 self-contained marker missing: {marker}")
@@ -128,8 +145,8 @@ def check_repo_location(repo: pathlib.Path, home: pathlib.Path,
 
 
 def run(repo: pathlib.Path, toolchain: pathlib.Path, home: pathlib.Path,
-        on_runner: bool = False) -> int:
-    findings = (find_leaks(home) + check_toolchain(toolchain)
+        on_runner: bool = False, windows: bool = WINDOWS) -> int:
+    findings = (find_leaks(home) + check_toolchain(toolchain, windows)
                 + check_repo_location(repo, home, on_runner))
     for finding in findings:
         print(finding)
@@ -150,10 +167,16 @@ def self_test() -> int:
         if got != want:
             failures.append(f"{label}: expected exit {want}, got {got}")
 
-    def quiet(*call_args) -> int:
-        """Run the check without printing: a planted finding is not a failure."""
+    def quiet(repo: pathlib.Path, toolchain: pathlib.Path, home: pathlib.Path,
+              on_runner: bool = False, windows: bool = False) -> int:
+        """Run the check without printing: a planted finding is not a failure.
+
+        The Linux layout unless told otherwise, whatever the host: a planted
+        missing `._sc_` must be refused for that, not because a Windows host
+        went looking for `godot.exe` beside it.
+        """
         with contextlib.redirect_stdout(io.StringIO()):
-            return run(*call_args)
+            return run(repo, toolchain, home, on_runner, windows)
 
     with tempfile.TemporaryDirectory() as workspace:
         root = pathlib.Path(workspace)
@@ -166,10 +189,34 @@ def self_test() -> int:
         binary.write_text("#!/bin/sh\n")
         binary.chmod(0o755)
         (good_toolchain / "godot" / "._sc_").touch()
+        # Both layouts are held on every host: the cases pass `windows`
+        # explicitly where it matters, so neither depends on the desk.
+        for name in ("godot_console.exe", "godot.exe"):
+            (good_toolchain / "godot" / name).write_text("MZ")
         repo_off_home = root / "repo"
         repo_off_home.mkdir()
 
-        expect("clean layout", quiet(repo_off_home, good_toolchain, clean_home), 0)
+        expect("clean layout", quiet(repo_off_home, good_toolchain, clean_home, False, False), 0)
+        expect("clean Windows layout",
+               quiet(repo_off_home, good_toolchain, clean_home, False, True), 0)
+
+        # Planted: Godot run on Windows without scripts/godot, so user://
+        # landed under %APPDATA%.
+        roaming_home = root / "roaming-home"
+        (roaming_home / "AppData/Roaming/Godot/app_userdata/game-ai-kit").mkdir(parents=True)
+        expect("leaked %APPDATA% user:// dir",
+               quiet(repo_off_home, good_toolchain, roaming_home, False, True), 1)
+
+        # Planted: a Windows toolchain with the console twin and no editor
+        # for it to start -- and its mirror image.
+        for missing in ("godot.exe", "godot_console.exe"):
+            half = root / ("half-" + missing)
+            (half / "godot" / "editor_data").mkdir(parents=True)
+            (half / "godot" / "._sc_").touch()
+            for name in {"godot.exe", "godot_console.exe"} - {missing}:
+                (half / "godot" / name).write_text("MZ")
+            expect(f"Windows toolchain without {missing}",
+                   quiet(repo_off_home, half, clean_home, False, True), 1)
 
         # Planted: the exact leak measured during bootstrap.
         dirty_home = root / "dirty-home"
@@ -208,8 +255,13 @@ def self_test() -> int:
         (not_executable / "godot" / "godot").write_text("#!/bin/sh\n")
         (not_executable / "godot" / "godot").chmod(0o644)
         (not_executable / "godot" / "._sc_").touch()
-        expect("binary without the execute bit",
-               quiet(repo_off_home, not_executable, clean_home), 1)
+        # Windows has no execute bit to take away: chmod leaves os.access
+        # saying yes, so this case is held only where it can be planted.
+        if not WINDOWS:
+            expect("binary without the execute bit",
+                   quiet(repo_off_home, not_executable, clean_home), 1)
+        else:
+            print("self-test note: the execute-bit case needs a POSIX host; skipped here")
 
         # Planted: no toolchain at all.
         expect("absent toolchain", quiet(repo_off_home, root / "nowhere", clean_home), 1)

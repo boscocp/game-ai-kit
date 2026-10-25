@@ -26,11 +26,27 @@ here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 toolchain=${1:?usage: bootstrap.sh TOOLCHAIN_DIR GODOT_VERSION}
 version=${2:?usage: bootstrap.sh TOOLCHAIN_DIR GODOT_VERSION}
 
-archive="Godot_v${version}_linux.x86_64.zip"
 base="https://github.com/godotengine/godot/releases/download/${version}"
-binary="$toolchain/godot/godot"
 
-if [[ -x "$binary" ]] && "$binary" --headless --version 2>/dev/null | grep -q "^${version%-stable}.stable"; then
+# Windows (Git Bash): the release's win64 zip holds two programs, the editor
+# and a `_console` twin that is the only one whose output and exit code reach
+# a terminal. They keep each other's names minus `_console`, which is how the
+# twin finds the editor. user:// follows APPDATA there, not XDG_DATA_HOME.
+if [[ "${OS:-}" == "Windows_NT" ]]; then
+  archive="Godot_v${version}_win64.exe.zip"
+  unpacked=("Godot_v${version}_win64.exe" "Godot_v${version}_win64_console.exe")
+  installed=(godot.exe godot_console.exe)
+  binary="$toolchain/godot/godot_console.exe"
+  redirect=(APPDATA="$toolchain/appdata" LOCALAPPDATA="$toolchain/localappdata")
+else
+  archive="Godot_v${version}_linux.x86_64.zip"
+  unpacked=("Godot_v${version}_linux.x86_64")
+  installed=(godot)
+  binary="$toolchain/godot/godot"
+  redirect=(XDG_DATA_HOME="$toolchain/xdg")
+fi
+
+if [[ -x "$binary" ]] && "$binary" --headless --version 2>/dev/null | tr -d '\r' | grep -q "^${version%-stable}.stable"; then
   echo "bootstrap: Godot $version already installed at $binary"
 else
   mkdir -p "$toolchain/godot" "$toolchain/dl"
@@ -48,8 +64,10 @@ else
   sha512sum -c expected.sha512
 
   unzip -q -o "$archive" -d "$toolchain/godot"
-  mv -f "$toolchain/godot/Godot_v${version}_linux.x86_64" "$binary"
-  chmod +x "$binary"
+  for index in "${!unpacked[@]}"; do
+    mv -f "$toolchain/godot/${unpacked[$index]}" "$toolchain/godot/${installed[$index]}"
+    chmod +x "$toolchain/godot/${installed[$index]}"
+  done
   popd >/dev/null
 fi
 
@@ -58,8 +76,9 @@ fi
 touch "$toolchain/godot/._sc_"
 
 # Mechanism 2: the project's user:// directory, which self-contained mode does
-# not cover. scripts/godot sets XDG_DATA_HOME to this path on every call.
-mkdir -p "$toolchain/xdg"
+# not cover. scripts/godot sets XDG_DATA_HOME (APPDATA on Windows) to this
+# path on every call.
+for setting in "${redirect[@]}"; do mkdir -p "${setting#*=}"; done
 
 # Create editor_data/ now so check_disk_layout.py can assert ._sc_ is honoured
 # without waiting for someone to open the editor. `--quit`, not `--version`:
@@ -67,7 +86,7 @@ mkdir -p "$toolchain/xdg"
 # the editor's paths exist, and creates nothing. This line used `--version`
 # from the start, and only CI's first run on a fresh runner (wave 63) showed
 # it -- the author's toolchain had had its editor_data/ for months.
-env XDG_DATA_HOME="$toolchain/xdg" "$binary" --headless --quit >/dev/null 2>&1
+env "${redirect[@]}" "$binary" --headless --quit >/dev/null 2>&1
 
 # Export templates (T24), for `make export`. The archive is 1.28 GB and holds
 # every platform; only the Linux x86_64 pair is unpacked, because that is the

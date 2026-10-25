@@ -423,14 +423,16 @@ def self_test() -> int:
 
         # Planted: the exit status switched off. This is what a person writes
         # when a criterion is inconvenient, which is when it matters most.
-        for label, suffix in (
+        for position, (label, suffix) in enumerate((
             ("|| true", "make test-godot || true"),
             ("; true", "python3 scripts/check_readability.py; true"),
             ("set +e", "set +e\nmake check"),
-        ):
+        )):
             silenced_task = GOOD_TASK.replace("make test-godot", suffix)
+            # The folder is named by the case's position, not its label: `|`
+            # is not allowed in a Windows file name.
             expect(f"silenced with {label}",
-                   quiet(tasks_with(root, f"silenced-{label.replace(' ', '')}", silenced_task)), 1)
+                   quiet(tasks_with(root, f"silenced-{position}", silenced_task)), 1)
 
         # Planted: a human verdict as a trailing comment inside the fence, where
         # the prose check never looked.

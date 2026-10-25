@@ -5,9 +5,24 @@
 
 SHELL := /bin/bash
 TOOLCHAIN ?= /mnt/games/gamedev/toolchain
+PYTHON ?= python3
+
+# Windows: GNU make for Windows, run from Git Bash (docs/howto/windows.md).
+# That make cannot see /bin/bash -- it is a Git Bash path, not a Windows one
+# -- so the shell is named and found on PATH, where Git Bash puts its own
+# ahead of System32's WSL launcher. The large disk is D:, and `python3` is
+# the Microsoft Store's placeholder, which exits 9009 and installs nothing.
+# PYTHONUTF8 makes Python read, write and print UTF-8 as it does on Linux;
+# without it a gate's output dies on the console's cp1252.
+ifeq ($(OS),Windows_NT)
+SHELL := bash.exe
+TOOLCHAIN := D:/games/gamedev/toolchain
+PYTHON := python
+export PYTHONUTF8 := 1
+endif
+
 GODOT_VERSION := $(shell tr -d '[:space:]' < .godot-version)
 GODOT := ./scripts/godot
-PYTHON ?= python3
 
 .DEFAULT_GOAL := help
 
@@ -686,7 +701,9 @@ FIGHTER_SHEETS := build/fighter-sheets
 .PHONY: fighter-sheets
 fighter-sheets: ## Download the fighters' CC0 template sheets into build/fighter-sheets/ (gitignored)
 	@mkdir -p $(FIGHTER_SHEETS)
-	@$(PYTHON) -c 'import json; t = json.load(open("godot/game/fighting/sprites.json")); print("\n".join(n + " " + s["url"] for n, s in t["sheets"].items()))' | \
+	@# `tr -d '\r'`: Python on Windows ends a printed line with CRLF, and the
+	@# carriage return left on each URL made curl refuse it as malformed.
+	@$(PYTHON) -c 'import json; t = json.load(open("godot/game/fighting/sprites.json")); print("\n".join(n + " " + s["url"] for n, s in t["sheets"].items()))' | tr -d '\r' | \
 		while read name url; do curl -sSfL -o "$(FIGHTER_SHEETS)/$$name" "$$url" || exit 1; echo "downloaded $$name"; done
 
 .PHONY: fighter-strips

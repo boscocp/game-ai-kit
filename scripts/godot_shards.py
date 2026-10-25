@@ -129,8 +129,13 @@ def wait_or_kill(process: subprocess.Popen, seconds: float) -> int | None:
 
 
 def godot_command(script: str, log: pathlib.Path, extra: list[str]) -> list[str]:
-    """One headless Godot run of `script`, its log in `log`, `extra` after `--`."""
-    return [str(GODOT), "--headless", "--path", str(ROOT / "godot"), "--log-file", str(log), "-s", script, "--", *extra]
+    """One headless Godot run of `script`, its log in `log`, `extra` after `--`.
+
+    On Windows a bash script is not a program Windows can start, so Git
+    Bash's `bash` is named in front of the wrapper.
+    """
+    shell = ["bash"] if os.name == "nt" else []
+    return [*shell, str(GODOT), "--headless", "--path", str(ROOT / "godot"), "--log-file", str(log), "-s", script, "--", *extra]
 
 
 def run_shards(script: str, count: int, folder: pathlib.Path, gate_arguments: list[str], timeout: float) -> list[int]:
