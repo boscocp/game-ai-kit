@@ -55,7 +55,7 @@ the racers steer as they do from a keyboard.
 | `make demo-racing3d` | steers | RT drives, LT brakes, D-pad left/up/right the full PID, heat line and measured grip on and off (1-3), Y watches, B camera, LB track, X again, Menu pauses |
 | `make demo-infiltration` | walks | right stick looks, RT shoots (the first pull takes the camera, as a click does), A takedown, B crouch, X prone, RB throws, LB held sprints, Y next guard |
 | `make demo-botmatch` | walks | A takes a bot over; playing, right stick looks, RT fires, B held crouches, LB held sprints, X reloads; Y next bot, RB camera, D-pad orbits the camera (and, playing, walks the bot, as the arrows do), Menu pauses |
-| `make demo-fighting` | walks, jumps, crouches | X/Y light/heavy punch, A/B light/heavy kick, RB throw, LB evade, Menu pauses |
+| `make demo-fighting` | walks, jumps, crouches | the D-pad too, with the stick or alone; X/Y light/heavy punch, A/B light/heavy kick, RB throw, LB evade, Menu pauses |
 | `make demo-stealth` | -- | D-pad walks a cell, with LB held two; A waits, Y danger map, X again |
 
 Each example's table is its `PAD_BUTTONS` constant. With a pad connected,
@@ -64,7 +64,7 @@ the legend shows it under the AI's colours.
 ## Held by
 
 `make test-pad` drives a `PadAsKeys` with pad events made the way a real
-pad's arrive, and reads `Input` after each: seventeen claims, each one broken
+pad's arrive, and reads `Input` after each: nineteen claims, each one broken
 alone and found; a planted pad that sets only the keycode -- which the
 fighting game would never see -- refused; and one where a key has a single
 owner, refused on the throttle the racers share between the stick and RT.
