@@ -15,6 +15,17 @@ context reviewed the diff and ran `make test-godot-some SUITES=test/fighting`.
 
 **Verdict: fix first**, then merge.
 
+## What was reviewed
+
+- The tap detection: the window, its edges, both keys held, a turn in the
+  air or after a cross-over, and the rules' pressed edge on the evade bit.
+- Replay: `FightReplay` feeds logged pairs to `FightRules.step`, so a double
+  tap's evade replays as the logged bit, and older logs are unchanged.
+- The opponent model and the clone: they classify an evade by `stun_kind`,
+  not by raw bits, so one from a double tap is one from O.
+- The restart, which makes a new `FightDoubleTap`, and every other driver of
+  the scene: `step_decision_with` is the only way in.
+
 ## Findings
 
 1. **A key held through a turn counted as a first tap** (medium): crossing
