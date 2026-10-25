@@ -3,6 +3,23 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-10-25 (waves 83 and 84, on Windows)
+
+**Where it stopped -- read first.** The owner develops on Linux and uses a
+Windows desk to play the examples with colleagues. Wave 83 (PR #22) made
+the Makefile run there from Git Bash (`docs/howto/windows.md`); wave 84
+(T82) made an Xbox controller play the menu and the real-time demos
+(`docs/godot/a-controller.md`). Both were reviewed by a fresh context
+before merging (`docs/reviews/83-windows.md`, `84-xbox-controller.md`).
+Both merged on the owner's word, with the full check left for Linux.
+
+**Next, on Linux:** `make check` on main. On Windows, `test-rts-budget` and
+`test-rts-match` fail their frame shares (the same code about twice as
+slow), and the botmatch effects, the 3D racer's gates and infiltration's
+were not run there.
+
+**Waiting on the owner:** T82's manual check, with a pad.
+
 ## Resuming after 2026-10-22 (waves 75 to 82 merged)
 
 **Where it stopped -- read first.** Eight waves landed in one session,
@@ -219,6 +236,7 @@ sha256 and never committed.
 | T68 | Health that comes back, and a bot that weighs falling back to heal | done | wave 76: 10 s delay, 20 a second to 100 (sources: Halopedia, Upcomer, CharlieIntel, Game Developer); the base heals whole; ErrandChoice weighs hiding (TacticalPositions asked for cover from every known enemy) beside going home, the health priced by the bot's exposure (the review); effects after the review: weighing +10.0 +- 22.7 s, never healing +25.4 +- 23.7, below half -53.1 +- 20.8 -- the weak claim holds, the strong one does not, said so; manual check waits for the owner |
 | T72 | The bot match's effects gate, in parallel | done | wave 78: `scripts/godot_shards.py` runs it in one Godot process a core and merges the counts in seed order; on the gate with T68 (187 matches), every pairing's exact sums equal the serial run's; 2748 s serial against 455 s sharded on 12 cores, both running at once; planted: a missing shard, a match too many, none or twice, a stat that is not a sum, a SCRIPT ERROR, a shard that wrote nothing or hung |
 | T81 | Guards hear a player walking behind them | done | wave 82: the owner, 2026-10-22, playing T70, walking behind a guard it did not seem to hear -- a footstep counted only in the step it arrived; a sound now held for its emitter's cadence (`noise_every`), not the event's lifetime; the glance turns to what was heard; standing behind a guard, noticed in 0.5-0.9 s at 1 m and 0.9-1.8 s at 3 m (was 5.8 s or never, and never), crouched 0.9-1.5 s at 1 m, crouched at 3 m and prone never; a later sound replaces a held one, so a footstep never hides a throw; the eighth claim of `make test-infiltration`, its plant (one step heard, wave 80) caught; calls cut short 8 -> 12, the search and quiet route unchanged; manual check the owner's |
+| T82 | An Xbox controller plays the real-time demos | done | wave 84: the owner, 2026-10-25; `PadAsKeys` turns a pad into the keys each example already reads, from a `PAD_BUTTONS` table it declares; the menu (D-pad, A, LB/RB, View back) and six demos -- both racers, infiltration, the bot match, the fighting game, stealth; Godot 4.7's `ui_*` actions name no pad button, measured; a key held by two inputs goes up with the last (the review's finding: the racers lost their throttle while steering); `make test-pad`, seventeen claims, two planted pads refused; manual check the owner's, with a pad |
 
 ## The kit as modules
 

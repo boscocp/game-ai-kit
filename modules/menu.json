@@ -14,6 +14,7 @@
     "demo_search",
     "demo_steering",
     "fighting",
+    "game_shared",
     "infiltration",
     "racing3d",
     "rts",
@@ -23,8 +24,7 @@
     "tictactoe"
   ],
   "tests_depend_on": [
-    "board",
-    "game_shared"
+    "board"
   ],
   "gates": [
     "test-demo-overlays",

@@ -113,7 +113,7 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-rts-budget test-rts-simulation test-rts-match test-steering-properties \
        test-racing-ladder test-racing-does-not-cheat test-game3d-floor test-botmatch-effects \
        test-racing3d-car test-racing3d-effects test-racing3d-ladder test-racing3d-does-not-cheat test-racing3d-you-drive \
-       test-infiltration-properties test-infiltration ## Run every gate
+       test-infiltration-properties test-infiltration test-pad ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-no-assets lint-readability lint-demos \
@@ -350,6 +350,10 @@ test-infiltration: import ## The infiltration level's guards: help heard, the se
 .PHONY: test-infiltration-properties
 test-infiltration-properties: import ## A guard knows only what it perceived; awareness, phases, sound and belief hold on generated levels (T69)
 	@$(GODOT) --headless --path godot -s res://test/infiltration/awareness_properties.gd
+
+.PHONY: test-pad
+test-pad: import ## A controller presses the keys an example reads: buttons, stick, triggers, mouse (wave 84)
+	@$(GODOT) --headless --path godot -s res://test/game_shared/pad_as_keys_claims.gd
 
 .PHONY: test-perception-vectors
 test-perception-vectors: import ## The stealth senses: shape, loudness, awareness, phase, belief, against ai_perception (T69)

@@ -19,6 +19,12 @@ const CAMERA_UP: float = 2.2
 ## Levels L cycles: the hand-made ones, then this many generated.
 const GENERATED: int = 3
 
+## The controller, as the keys (wave 84): the left stick walks, the right
+## looks, RT shoots (the first pull takes the camera, as a click does), A a
+## takedown, B crouch, X prone, RB throws, LB held sprints, Y the next guard.
+const PAD_BUTTONS: Dictionary = {JOY_BUTTON_A: KEY_E, JOY_BUTTON_B: KEY_C, JOY_BUTTON_X: KEY_Z,
+		JOY_BUTTON_RIGHT_SHOULDER: KEY_G, JOY_BUTTON_LEFT_SHOULDER: KEY_SHIFT, JOY_BUTTON_Y: KEY_TAB}
+
 var world: InfiltrationWorld
 var rules: InfiltrationRules = InfiltrationRules.read()
 var _level_index: int = 0
@@ -52,6 +58,10 @@ func _ready() -> void:
 		[InfiltrationDrawing.SPOT, "the spot it was given to search; grey: searched"],
 		[InfiltrationDrawing.SOUND, "a sound's reach along the level"],
 	])
+	var pad := PadAsKeys.new()
+	pad.use(PAD_BUTTONS, [KEY_A, KEY_D, KEY_W, KEY_S], true)
+	add_child(pad)
+	pad.add_to(_legend)
 	_new_world()
 
 

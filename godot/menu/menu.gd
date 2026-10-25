@@ -32,10 +32,21 @@ const LIST_WIDTH: float = 360.0
 const TITLE_SIZE: int = 30
 const LIST_SIZE: int = 22
 const CARD_SIZE: int = 17
+## The controller on the menu (wave 84): the D-pad or the stick chooses, A
+## plays, LB and RB scroll the card. Godot 4.7's own `ui_*` actions name no
+## pad button at all, measured, so nothing here would move without it.
+const MENU_PAD: Dictionary = {JOY_BUTTON_DPAD_UP: KEY_UP, JOY_BUTTON_DPAD_DOWN: KEY_DOWN,
+		JOY_BUTTON_A: KEY_ENTER, JOY_BUTTON_LEFT_SHOULDER: KEY_PAGEUP,
+		JOY_BUTTON_RIGHT_SHOULDER: KEY_PAGEDOWN}
+## Inside an example, only View, as Escape, back to the menu: every other
+## button is the example's own.
+const PLAYING_PAD: Dictionary = {JOY_BUTTON_BACK: KEY_ESCAPE}
 
 ## The cards, in the order they are listed.
 var catalogue: ExampleCatalogue
 
+var _pad := PadAsKeys.new()
+var _pad_on_menu: bool = false
 var _list: ItemList
 var _heading: Label
 var _card: RichTextLabel
@@ -54,6 +65,7 @@ func _ready() -> void:
 		_heading.text = "No examples to show"
 		_card.text = ExampleCatalogue.plain(catalogue.problem)
 	_list.grab_focus()
+	add_child(_pad)
 
 
 ## True while an example, not the menu, is the current scene.
@@ -105,6 +117,12 @@ func back() -> void:
 func _process(_delta: float) -> void:
 	if is_playing() and get_index() != get_parent().get_child_count() - 1:
 		get_parent().move_child(self, -1)
+	if is_playing() == _pad_on_menu:
+		_pad_on_menu = not is_playing()
+		if _pad_on_menu:
+			_pad.use(MENU_PAD, [KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN])
+		else:
+			_pad.use(PLAYING_PAD)
 
 
 # Escape is read here, in `_input`, before the GUI and -- because the menu
@@ -133,7 +151,7 @@ func _build() -> void:
 	var size_now: Vector2 = get_viewport_rect().size
 	add_child(_label("game-ai-kit: every example", Vector2(MARGIN, MARGIN), TITLE_SIZE, TEXT))
 	var help: String = "Up and down choose, Enter plays, Page Up and Down scroll the card, " \
-			+ "Esc inside an example comes back here"
+			+ "Esc inside an example comes back here; on a pad, the D-pad, A, LB and RB, and View"
 	add_child(_label(help,
 			Vector2(MARGIN, size_now.y - MARGIN - 24.0), CARD_SIZE, QUIET))
 	_list = ItemList.new()

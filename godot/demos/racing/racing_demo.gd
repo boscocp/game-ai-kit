@@ -32,6 +32,13 @@ const DOTS: Array[Color] = [Color(0.95, 0.3, 0.1), Color(0.2, 0.55, 1.0), Color(
 ## Each car's wander follows the same seed, so a restart races the same race.
 const SEED: int = 23
 
+## The controller, as the keys (wave 84): the stick steers, the triggers
+## brake and drive, the D-pad chooses the AI, Y watches, X starts again,
+## B one step while paused, Menu pauses. Arrows, not WASD: A is a key here.
+const PAD_BUTTONS: Dictionary = {JOY_BUTTON_DPAD_LEFT: KEY_1, JOY_BUTTON_DPAD_UP: KEY_2,
+		JOY_BUTTON_DPAD_RIGHT: KEY_3, JOY_BUTTON_Y: KEY_TAB, JOY_BUTTON_X: KEY_R,
+		JOY_BUTTON_B: KEY_PERIOD, JOY_BUTTON_START: KEY_P}
+
 @onready var _status: Label = $Interface/Status
 @onready var _legend: Legend = $Interface/Legend
 @onready var _banner: Label = $Interface/Banner
@@ -71,6 +78,10 @@ func _ready() -> void:
 		[RacingTrackView.SLOW, "line: it must be slow here"],
 		[RacingTrackView.FAST, "line: only top speed limits it"],
 	] as Array[Array])
+	var pad := PadAsKeys.new()
+	pad.use(PAD_BUTTONS, [KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN], false, [KEY_DOWN, KEY_UP])
+	add_child(pad)
+	pad.add_to(_legend)
 
 
 func _physics_process(delta: float) -> void:
