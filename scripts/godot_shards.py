@@ -123,14 +123,49 @@ def wait_or_kill(process: subprocess.Popen, seconds: float) -> int | None:
     try:
         return process.wait(timeout=max(seconds, 0.0))
     except subprocess.TimeoutExpired:
-        process.kill()
+        kill_tree(process)
         process.wait()
         return None
 
 
+def kill_tree(process: subprocess.Popen) -> None:
+    """Kill `process` and everything it started.
+
+    On Linux `scripts/godot` ends in `exec`, so the process is Godot and
+    `kill()` reaches it. Git Bash's `exec` of a Windows program leaves bash
+    behind as a stub, and killing the stub left Godot running, holding its
+    log, its counts and the shared user:// (a review of wave 83 measured
+    it). `taskkill /T` takes the whole tree.
+    """
+    if os.name == "nt":
+        subprocess.run(["taskkill", "/T", "/F", "/PID", str(process.pid)],
+                       capture_output=True, check=False)
+    else:
+        process.kill()
+
+
+def windows_bash() -> str:
+    """Git Bash's bash, which runs `scripts/godot` on Windows.
+
+    Asked of PATH, not left to Windows: a bare "bash" is looked for in
+    System32 before PATH, and there, on a machine with WSL, is WSL's
+    launcher -- where `scripts/godot` would look for a Linux toolchain.
+    """
+    found = shutil.which("bash")
+    system = os.environ.get("SystemRoot", r"C:\Windows").lower()
+    if found is None or found.lower().startswith(system):
+        raise OSError(f"no Git Bash on PATH (found {found!r}); run this from Git Bash")
+    return found
+
+
 def godot_command(script: str, log: pathlib.Path, extra: list[str]) -> list[str]:
-    """One headless Godot run of `script`, its log in `log`, `extra` after `--`."""
-    return [str(GODOT), "--headless", "--path", str(ROOT / "godot"), "--log-file", str(log), "-s", script, "--", *extra]
+    """One headless Godot run of `script`, its log in `log`, `extra` after `--`.
+
+    On Windows a bash script is not a program Windows can start, so Git
+    Bash's `bash` is named in front of the wrapper.
+    """
+    shell = [windows_bash()] if os.name == "nt" else []
+    return [*shell, str(GODOT), "--headless", "--path", str(ROOT / "godot"), "--log-file", str(log), "-s", script, "--", *extra]
 
 
 def run_shards(script: str, count: int, folder: pathlib.Path, gate_arguments: list[str], timeout: float) -> list[int]:
@@ -161,17 +196,20 @@ def run_shards(script: str, count: int, folder: pathlib.Path, gate_arguments: li
 def run_merge(script: str, folder: pathlib.Path, gate_arguments: list[str], timeout: float) -> tuple[int | None, list[str]]:
     """The gate once more, reading the shards' counts; its output is shown as it is."""
     command = godot_command(script, folder / "merge.log", [*gate_arguments, "--merge", str(folder)])
-    try:
-        done = subprocess.run(command, capture_output=True, text=True, check=False, timeout=timeout)
-    except subprocess.TimeoutExpired:
+    # To a file and our own deadline, not `run(timeout=)`: after its kill,
+    # `run` reads the pipes to the end, and on Windows a Godot that outlived
+    # the stub kept them open -- the timeout became a hang.
+    with (folder / "merge.out").open("w", encoding="utf-8") as output:
+        returncode = wait_or_kill(subprocess.Popen(command, stdout=output, stderr=subprocess.STDOUT), timeout)
+    text = (folder / "merge.out").read_text(encoding="utf-8", errors="replace")
+    if returncode is None:
         print(f"merge: still running after {timeout:.0f} s, killed", file=sys.stderr)
         return None, []
-    sys.stdout.write(done.stdout)
-    sys.stderr.write(done.stderr)
-    errors = engine_errors(done.stdout + done.stderr)
+    sys.stdout.write(text)
+    errors = engine_errors(text)
     for line in errors[:5]:
         print(f"merge: {line}", file=sys.stderr)
-    return done.returncode, errors
+    return returncode, errors
 
 
 def run(script: str, count: int, gate_arguments: list[str], timeout: float) -> int:
@@ -205,6 +243,28 @@ def _a_hung_process_is_killed() -> int | None:
     return wait_or_kill(process, 0.2)
 
 
+def _a_grandchild_outlives_the_kill() -> bool:
+    """A stub that started a child, as Git Bash's `exec` leaves one: is the child alive after the kill?
+
+    Windows only: on Linux `scripts/godot` execs, so there is no stub, and a
+    plain kill does not reach a grandchild -- this case would plant a shape
+    that cannot happen there.
+    """
+    with tempfile.TemporaryDirectory() as workspace:
+        pid_file = pathlib.Path(workspace) / "child.pid"
+        stub = ("import pathlib, subprocess, sys, time; "
+                "child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(30)']); "
+                f"pathlib.Path({str(pid_file)!r}).write_text(str(child.pid)); time.sleep(30)")
+        process = subprocess.Popen([sys.executable, "-c", stub])
+        while not pid_file.is_file() or not pid_file.read_text():
+            time.sleep(0.05)
+        wait_or_kill(process, 0.2)
+        # Bytes: tasklist writes in the console's code page, not UTF-8.
+        listing = subprocess.run(["tasklist", "/FI", f"PID eq {pid_file.read_text()}", "/NH"],
+                                 capture_output=True, check=False).stdout
+        return pid_file.read_bytes() in listing
+
+
 def self_test() -> int:
     """Every refusal, asked of a planted case it must refuse; 0 when all were."""
     clean = "botmatch effects: 4 pairings of 20 matches\n"
@@ -222,6 +282,8 @@ def self_test() -> int:
         ("one shard not run among clean ones", overall([0, 2, 0], 0, []), 2),
         ("a process past its deadline", _a_hung_process_is_killed(), None),
     ]
+    if os.name == "nt":
+        cases.append(("a stub's child past its deadline", _a_grandchild_outlives_the_kill(), False))
     wrong = [f"{label}: {got}, expected {want}" for label, got, want in cases if got != want]
     for line in wrong:
         print(f"self-test: {line}")

@@ -3,4 +3,8 @@
 # a valid commit message is. Opt in with `make hooks` -- git does not run hooks
 # from a fresh clone, and that is a security property worth keeping.
 set -euo pipefail
-exec python3 "$(git rev-parse --show-toplevel)/scripts/check_commit_msg.py" "$1"
+# On Windows `python3` is the Microsoft Store's placeholder, which runs and
+# fails; `python` is the real one there.
+python=python3
+python3 -c '' 2>/dev/null || python=python
+exec "$python" "$(git rev-parse --show-toplevel)/scripts/check_commit_msg.py" "$1"

@@ -579,7 +579,9 @@ def self_test() -> int:
     def make_repo(root: pathlib.Path) -> pathlib.Path:
         root.mkdir(parents=True, exist_ok=True)
         for name, text in ROOT_TEXT.items():
-            (root / name).write_text(text)
+            # LF on every host: the archives planted below carry LF, and on
+            # Windows a bare write_text would write CRLF and fail them on L10.
+            (root / name).write_text(text, newline="\n")
         return root
 
     def make_addon(repo: pathlib.Path, name: str, with_files: bool) -> pathlib.Path:

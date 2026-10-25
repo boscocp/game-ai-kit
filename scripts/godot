@@ -10,12 +10,25 @@
 #      self-contained mode does NOT cover. Measured on 4.7.2: without it,
 #      `--import` alone recreates ~/.local/share/godot/app_userdata/.
 #
+# On Windows (Git Bash) the second mechanism is APPDATA, with LOCALAPPDATA for
+# the cache: OS_Windows reads those two and not XDG_*. The binary called is the
+# `_console` one, the only build whose output and exit code reach a terminal.
+# docs/howto/windows.md.
+#
 # check_disk_layout.py fails if either one stops working.
 set -euo pipefail
 
 here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
-toolchain=${GAK_TOOLCHAIN:-/mnt/games/gamedev/toolchain}
-binary="$toolchain/godot/godot"
+
+if [[ "${OS:-}" == "Windows_NT" ]]; then
+  toolchain=${GAK_TOOLCHAIN:-D:/games/gamedev/toolchain}
+  binary="$toolchain/godot/godot_console.exe"
+  redirect=(APPDATA="$toolchain/appdata" LOCALAPPDATA="$toolchain/localappdata")
+else
+  toolchain=${GAK_TOOLCHAIN:-/mnt/games/gamedev/toolchain}
+  binary="$toolchain/godot/godot"
+  redirect=(XDG_DATA_HOME="$toolchain/xdg")
+fi
 
 if [[ ! -x "$binary" ]]; then
   echo "scripts/godot: toolchain missing at $binary -- run 'make bootstrap'" >&2
@@ -23,10 +36,10 @@ if [[ ! -x "$binary" ]]; then
 fi
 
 want=$(tr -d '[:space:]' < "$here/.godot-version")
-have=$("$binary" --headless --version 2>/dev/null | head -1)
+have=$("$binary" --headless --version 2>/dev/null | tr -d '\r' | head -1)
 if [[ "$have" != "${want%-stable}.stable"* ]]; then
   echo "scripts/godot: pinned $want but toolchain reports $have" >&2
   exit 2
 fi
 
-exec env XDG_DATA_HOME="$toolchain/xdg" "$binary" "$@"
+exec env "${redirect[@]}" "$binary" "$@"
