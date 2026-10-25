@@ -99,8 +99,12 @@ templates_dest="$toolchain/godot/editor_data/export_templates/${version/-/.}"
 
 # CI sets GAK_SKIP_TEMPLATES=1: it runs the tests, never `make export`, and
 # 1.28 GB in its cache would buy nothing.
+# Windows skips them too: the pair unpacked is Linux's, and `make export`
+# builds and starts a Linux executable, which is not ported there.
 if [[ "${GAK_SKIP_TEMPLATES:-}" == "1" ]]; then
   echo "bootstrap: export templates skipped (GAK_SKIP_TEMPLATES=1)"
+elif [[ "${OS:-}" == "Windows_NT" ]]; then
+  echo "bootstrap: export templates skipped on Windows (make export is Linux only)"
 elif [[ -f "$templates_dest/linux_release.x86_64" && -f "$templates_dest/.pinned-sha512" ]] \
     && grep -q "$templates_sha" "$templates_dest/.pinned-sha512"; then
   echo "bootstrap: export templates $version already installed"

@@ -37,6 +37,9 @@ make hooks
 make check
 ```
 
+`bootstrap` skips the 1.28 GB of export templates on Windows, since `make
+export` is not ported there.
+
 ## What differs, and why
 
 | | Linux | Windows |
@@ -46,7 +49,10 @@ make check
 | `user://` kept off the small disk by | `XDG_DATA_HOME` | `APPDATA` and `LOCALAPPDATA` |
 | Python | `python3` | `python`, with `PYTHONUTF8=1` |
 
-`GAK_TOOLCHAIN` moves the toolchain on either system.
+To put the toolchain elsewhere, on either system: `make bootstrap
+TOOLCHAIN=E:/tc` installs it there, and `GAK_TOOLCHAIN=E:/tc` in the
+environment is where `scripts/godot` and the gates then look for it. The
+two are separate names, and both must say the same place.
 
 **Two programs, not one.** The Windows release of Godot is a GUI program and
 a `_console` twin that starts it with a console attached. Measured on 4.7.2
@@ -68,6 +74,21 @@ first gate whose output held a character outside it died with a
 `UnicodeEncodeError`. UTF-8 mode makes it behave as it does on Linux.
 
 ## What does not work on Windows
+
+- **`make test-rts-budget` fails on the author's desk under Windows.**
+  Measured on 2026-10-25, idle, three runs: the RTS core's simulation took
+  1.47 ms a step on average and its flow fields 1.85-2.00 ms at the 95th
+  percentile, against a 1.5 ms share. The gate's own comment records 0.7 ms
+  for the simulation on the same desk under Linux: the same core runs about
+  twice as slow here. The share is a frame on the machine a person plays on,
+  so this is a finding about Windows, not noise, and the gate is left to
+  say so rather than loosened. **`make test-rts-match` fails the same
+  way**: one plan took 7.9 ms against the strategy's 1.5 ms share; its other
+  claims held. The project is developed on Linux, where both hold; Windows
+  is for playing the examples.
+- **Not run on Windows yet**: `test-botmatch-effects`, the four
+  `test-racing3d-*` gates and the two infiltration gates. The full check
+  runs on Linux.
 
 - **`make export` and `make release`** build and start a *Linux* executable,
   the one platform the project exports to (T24). They are not ported.

@@ -3,22 +3,23 @@
 # check -- see scripts/check_*.py, each of which carries a --self-test with a
 # planted case it must reject.
 
-SHELL := /bin/bash
-TOOLCHAIN ?= /mnt/games/gamedev/toolchain
-PYTHON ?= python3
-
 # Windows: GNU make for Windows, run from Git Bash (docs/howto/windows.md).
 # That make cannot see /bin/bash -- it is a Git Bash path, not a Windows one
 # -- so the shell is named and found on PATH, where Git Bash puts its own
 # ahead of System32's WSL launcher. The large disk is D:, and `python3` is
 # the Microsoft Store's placeholder, which exits 9009 and installs nothing.
 # PYTHONUTF8 makes Python read, write and print UTF-8 as it does on Linux;
-# without it a gate's output dies on the console's cp1252.
+# without it a gate's output dies on the console's cp1252. The defaults are
+# `?=` on both systems, so the environment can move either.
 ifeq ($(OS),Windows_NT)
 SHELL := bash.exe
-TOOLCHAIN := D:/games/gamedev/toolchain
-PYTHON := python
+TOOLCHAIN ?= D:/games/gamedev/toolchain
+PYTHON ?= python
 export PYTHONUTF8 := 1
+else
+SHELL := /bin/bash
+TOOLCHAIN ?= /mnt/games/gamedev/toolchain
+PYTHON ?= python3
 endif
 
 GODOT_VERSION := $(shell tr -d '[:space:]' < .godot-version)
