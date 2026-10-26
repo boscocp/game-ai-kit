@@ -203,6 +203,7 @@ func _initialize() -> void:
 	var failures: Array[String] = _shards.findings() + _mirror(totals) + _claims(totals) + _commander(totals) + _retreat(totals)
 	failures += _honesty(totals) + _aim(totals) + _ammunition(totals) + _portability(totals)
 	failures += _regeneration() + _healing(totals)
+	_print_dying(totals["everything"])
 	for failure: String in failures:
 		print(failure)
 	print("botmatch effects: %d pairings of %d matches, %.0f s, %d failure(s)" % [
@@ -228,7 +229,9 @@ func _play(pairing: String, matches: int) -> Dictionary:
 			"unseen": 0, "shots": 0, "sprinting shots": 0, "sprinted": 0.0,
 			"blue shots": 0, "blue damage": 0, "dry": 0.0, "power": 0, "regenerated": 0, "healed at base": 0, "hiding": 0.0, "deaths near base": 0, "deaths far": 0,
 			"base metre seconds": 0.0, "living seconds": 0.0, "matches": 0, "ordered": 0.0, "seconds": 0.0, "retreats": 0, "uncovered": 0,
-			"blue wins": 0, "red wins": 0, "margins": PackedFloat64Array()}
+			"blue wins": 0, "red wins": 0, "margins": PackedFloat64Array(),
+			"fall backs": 0, "fall backs held": 0, "fall backs lost": 0,
+			"dying samples": PackedFloat64Array(), "dying deaths": PackedFloat64Array()}
 	for seed_value: int in range(1, matches + 1):
 		if _shards.mode == EffectShards.Mode.MERGE:
 			_shards.merge_into(sums, pairing, seed_value)
@@ -237,6 +240,8 @@ func _play(pairing: String, matches: int) -> Dictionary:
 		var red := MatchTeam.new("red", BotMatch.RED, rules)
 		var arena: BotArena = _arena_for(pairing, seed_value, rules)
 		var world := BotMatch.new(seed_value, _blue_for(pairing, rules), red, rules, arena)
+		# Dying is sampled on the mirror alone: both sides, every technique on.
+		world.fall_back_counts.samples_dying = pairing == "everything"
 		world.play_out()
 		var into: Dictionary = _shards.sums_for(sums)
 		_add(into, world)
@@ -323,6 +328,20 @@ func _add(sums: Dictionary, world: BotMatch) -> void:
 	var margins: PackedFloat64Array = sums["margins"]
 	margins.append(blue.point_seconds - red.point_seconds)
 	sums["margins"] = margins
+	sums["fall backs"] += blue.fall_backs
+	sums["fall backs held"] += blue.fall_backs_held
+	sums["fall backs lost"] += blue.fall_backs_lost
+	# Each match's table of both sides, appended: summed band by band when
+	# printed, for a sharded run can only append arrays (T72).
+	sums["dying samples"] = _appended(sums["dying samples"], blue.dying_samples, red.dying_samples)
+	sums["dying deaths"] = _appended(sums["dying deaths"], blue.dying_deaths, red.dying_deaths)
+
+
+# `into` with one more table on its end, `one` and `other` added band by band.
+static func _appended(into: PackedFloat64Array, one: PackedFloat64Array, other: PackedFloat64Array) -> PackedFloat64Array:
+	for index: int in range(one.size()):
+		into.append(one[index] + other[index])
+	return into
 
 
 func _report(pairing: String, sums: Dictionary) -> void:
@@ -343,6 +362,14 @@ func _report(pairing: String, sums: Dictionary) -> void:
 	var where: Array = ["", sums["deaths near base"], MatchStats.NEAR_BASE, sums["deaths far"],
 			float(sums["base metre seconds"]) / maxf(float(sums["living seconds"]), 1.0)]
 	print("%22s blue: %d deaths within %.0f m of its base, %d further; living, %.1f m from it on average" % where)
+	var fell: Array = ["", sums["fall backs"], _per_match(sums, "fall backs"), sums["fall backs held"],
+			sums["fall backs lost"], MatchFallBacks.LOST_WITHIN, _lost_share(sums)]
+	print("%22s blue: %d fall-backs (%.1f a match), %d from a held point, %d of those lost it within %.0f s (share %.3f)" % fell)
+
+
+# Of the fall-backs from a held point, the share followed by losing it.
+static func _lost_share(sums: Dictionary) -> float:
+	return float(sums["fall backs lost"]) / maxf(float(sums["fall backs held"]), 1.0)
 
 
 # The mean of `values` and its standard error, the spread of that mean over
@@ -632,3 +659,36 @@ func _planted_cheat(wallhack: bool) -> int:
 	world.replace_bot(0, cheat)
 	world.play_out()
 	return world.stats[BotMatch.BLUE].shots_unseen
+
+
+# --- dying, measured (T65) -------------------------------------------------------
+
+
+# The share of bots in each band of health and exposure that died within
+# MatchFallBacks.DYING_WITHIN seconds, over both sides of the mirror: the
+# table `rules.json` keeps, printed as its JSON.
+func _print_dying(sums: Dictionary) -> void:
+	var bands: int = MatchFallBacks.HEALTH_BANDS * MatchFallBacks.EXPOSURE_BANDS
+	var samples: PackedFloat64Array = _by_band(sums["dying samples"], bands)
+	var deaths: PackedFloat64Array = _by_band(sums["dying deaths"], bands)
+	var rows: Array[String] = []
+	var counts: Array[String] = []
+	for health_band: int in range(MatchFallBacks.HEALTH_BANDS):
+		var cells: Array[String] = []
+		for exposure_band: int in range(MatchFallBacks.EXPOSURE_BANDS):
+			var index: int = health_band * MatchFallBacks.EXPOSURE_BANDS + exposure_band
+			cells.append("%.4f" % (deaths[index] / maxf(samples[index], 1.0)))
+			counts.append("%d/%d" % [deaths[index], samples[index]])
+		rows.append("[%s]" % ", ".join(cells))
+	print("dying within %.0f s, by health tenth (rows) and exposure 0, 0.5, 1: [%s]" % [MatchFallBacks.DYING_WITHIN, ", ".join(rows)])
+	print("dying, deaths/samples by band: %s" % " ".join(counts))
+
+
+# The tables appended match by match, added band by band.
+static func _by_band(tables: PackedFloat64Array, bands: int) -> PackedFloat64Array:
+	var total := PackedFloat64Array()
+	total.resize(bands)
+	total.fill(0.0)
+	for index: int in range(tables.size()):
+		total[index % bands] += tables[index]
+	return total

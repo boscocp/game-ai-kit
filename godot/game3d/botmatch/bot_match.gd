@@ -76,6 +76,8 @@ var _search := AStarSearch.new()
 var _cone: VisionCone
 ## The ammunition, the weapons and the errands they make.
 var supply: MatchSupply
+## Fall-backs and dying, counted for the effects gate (T65).
+var fall_back_counts := MatchFallBacks.new()
 
 
 ## A new match. `blue` and `red` are the two teams, made by the caller with
@@ -138,6 +140,7 @@ func _decide() -> void:
 	for team: MatchTeam in teams:
 		TeamTactics.think(self, team, time)
 	decide_every_bot()
+	fall_back_counts.after_decision(self)
 	noises.clear()
 	for team: MatchTeam in teams:
 		_count_retreats(team)
@@ -283,6 +286,7 @@ func record_shot(shooter: MatchBot, target: int, hit: bool, to: Vector3, zone: S
 ## A bot was killed by `killer` (-1: nobody); count it on both sides.
 func killed(victim: MatchBot, killer: int) -> void:
 	victim.respawn_left = rules.respawn_time
+	fall_back_counts.died(self, victim)
 	teams[victim.team].claim(victim.id, -1)
 	# A body seen falling is not a threat any more.
 	teams[1 - victim.team].remembered.erase(victim.id)
@@ -417,6 +421,7 @@ func _change_owner(index: int) -> void:
 	if neutralised:
 		stats[owner].points_lost += 1
 		point_owner[index] = -1
+		fall_back_counts.neutralised(self, owner, index)
 	if absf(now) >= 1.0 and point_owner[index] == -1:
 		point_owner[index] = BLUE if now > 0.0 else RED
 		times_taken[index] += 1

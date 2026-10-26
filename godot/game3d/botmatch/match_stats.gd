@@ -55,3 +55,16 @@ var deaths_near_base: int = 0
 var deaths_far: int = 0
 var base_metre_seconds: float = 0.0
 var living_seconds: float = 0.0
+## How dying is measured (T65): for each band of health and exposure
+## (`MatchFallBacks.band`), how many times a living bot of this team was in
+## it at a decision, and how many of those times it died within
+## `MatchFallBacks.DYING_WITHIN` seconds after. Filled only when the match
+## is asked to sample it.
+var dying_samples: PackedFloat64Array = MatchFallBacks.empty_bands()
+var dying_deaths: PackedFloat64Array = MatchFallBacks.empty_bands()
+## Fall-backs begun -- a bot starting to move back -- those begun by a bot
+## within the area radius of a point its team owned, and of those, how many
+## saw that point neutralised within `MatchFallBacks.LOST_WITHIN` seconds.
+var fall_backs: int = 0
+var fall_backs_held: int = 0
+var fall_backs_lost: int = 0
