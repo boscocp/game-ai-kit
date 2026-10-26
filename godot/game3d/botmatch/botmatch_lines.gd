@@ -158,6 +158,10 @@ static func aim_line(bot: MatchBot) -> String:
 static func errand_line(bot: MatchBot) -> String:
 	var parts: Array[String] = []
 	for errand: String in bot.errand_weighing:
+		# Falling back has a line of its own, term by term (T65): four on
+		# one line ran off the window in Portuguese.
+		if errand == ErrandChoice.FALL_BACK:
+			continue
 		var weighed: Array = bot.errand_weighing[errand]
 		var mark: String = "> " if errand == bot.errand else ""
 		var weight: float = (weighed[0] - weighed[2] - weighed[3]) / weighed[1] if weighed[1] > 0.0 else 0.0
@@ -191,6 +195,8 @@ static func fall_back_line(world: BotMatch, bot: MatchBot) -> String:
 		there = "%.0f" % (facts.dying_there * 100.0), death = "%.1f" % facts.death_seconds,
 		death_weight = "%.2f" % weights.death_second, away = "%.1f" % weighed[1], away_weight = "%.2f" % weights.hide_second,
 		point = "%.1f" % facts.point_seconds, point_weight = "%.2f" % weights.point_second, score = "%.2f" % weighed[3]})
+	if bot.errand == ErrandChoice.FALL_BACK:
+		line = "> " + line
 	if weighed[3] > 0.0 and TeamTactics.covering_a_retreat(world, team, bot):
 		line += TranslationServer.translate("  (covering: a teammate falls back first)")
 	return line
