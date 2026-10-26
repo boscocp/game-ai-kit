@@ -39,7 +39,7 @@ decisions and changes them there.
 python3 scripts/check_translations_docs.py
 python3 scripts/check_doc_freshness.py
 python3 scripts/check_no_employer_refs.py
-make test-godot-some SUITES="test/ai_adversarial test/ai_fuzzy test/ai_learning test/ai_opponent test/ai_perception test/ai_planning test/ai_rts_core test/ai_teamwork"
+make test-godot-some SUITES="test/ai_adversarial test/ai_fuzzy test/ai_learning test/ai_opponent test/ai_perception test/ai_planning test/ai_rts_core test/ai_teamwork test/tictactoe test/checkers test/fighting test/demo_racing"
 make lint-tasks lint-status
 ```
 
