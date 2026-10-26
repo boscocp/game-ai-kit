@@ -10,9 +10,8 @@
 ## an armed tower when `TowerWorth` weighs the gun as saving more of a raid
 ## at home than it costs (T56); the expansion once the match is old enough.
 ## **How to get there**: `BuildOrder` plans the chain, by STRIPS or by HTN.
-## **When**:
-## `BuildSchedule` times the plan by jumping from one affordable moment to
-## the next, which is what the screen shows beside each step.
+## **When**: `BuildSchedule` times the plan by jumping from one affordable
+## moment to the next, which is what the screen shows beside each step.
 ##
 ## It replans on a cadence and when the plan breaks, never every frame
 ## (ADR 0010, point 5) -- the world does not wait while it thinks, and that
