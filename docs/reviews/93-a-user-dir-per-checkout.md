@@ -152,7 +152,8 @@ its script's own `--self-test`: **23 killed**. They cover:
   checkout always passing, and a bare repository unseen;
 - export ignoring the exit code, and export accepting an empty answer.
 
-Re-run after the fixes (no `make check`, by the owner's instruction):
+Re-run after the fixes. `make check` was first left out by the owner's
+instruction, then asked for by the coordinator once main had failed it:
 
 | Command | Result |
 |---|---|
@@ -163,14 +164,40 @@ Re-run after the fixes (no `make check`, by the owner's instruction):
 | `check_readability.py --self-test` | ok |
 | `check_readability.py`, with planted `.gd` in `.user-data/` and `.claude/worktrees/` | 0 (main's version: findings on the plant) |
 | `check_no_training.py --self-test` | ok |
-| `check_no_training.py`, with the same plants | 1: only main's N5, below |
+| `check_no_training.py`, with the same plants | 1 before the N5 fix (main's N5 only); 0 after it |
 | `make lint-tasks lint-status` | 0 |
 | `check_no_employer_refs.py` | 0, with the term list present |
 | `check_doc_freshness.py`, `check_links.py` | 0 |
+| `make -k check 2>&1 \| grep -E '^make: \*\*\*'` | prints nothing; `make -k check` exit 0 |
 
-**Found on main, not this wave's:** `check_no_training.py` reports
-`N5 godot/game/tictactoe/tictactoe_panel.gd:142 changes a bead count`. The
-line is `bead = overlay["bead"]`, a key in a dictionary literal that wave
-91 (T79) added for `.format()`. That is a false positive. The file is
-identical to main's, and main's own copy of the gate, run on this tree,
-reports the same line.
+## Added at the coordinator's request: N5's false positive
+
+`make -k check` on main (6905e16) failed two lints. One was
+lint-readability (finding 4). The other was lint-no-training: `N5
+godot/game/tictactoe/tictactoe_panel.gd:142 changes a bead count`.
+
+- That line continues a Lua-style dictionary literal that wave 91 (T79)
+  added for `.format()`: `bead = overlay["bead"], total = overlay["total"]}`.
+- N5's "bare reassignment" pattern, `(?:^|;|:)\s*\w*bead\w*\s*=(?!=)`,
+  matched the key at the start of the line. The file is main's,
+  unchanged here, and main's own copy of the gate reports it.
+
+Fixed in the gate rather than the panel, because the gate can be made
+precise:
+- GDScript has no braces around blocks, and the code view has blanked
+  strings and comments. So a `{` still open at the start of a line opens a
+  dictionary.
+- `open_braces` tracks that depth line by line. On a line that begins
+  inside one, `DICT_KEY_RE` takes off the leading `name =` key only. The
+  rest of the line is still read by every pattern, so a write in a value
+  is still a write.
+
+Planted in the self-test:
+- Read as clean: wave 91's two-line literal with a `bead = ...` key, and a
+  multi-line `show({ beads = count, box = 4, })`.
+- Still N5: `bead = 3` on the line after a literal closes, `beads[move] +=
+  1` after a one-line literal, and `bead = beads.append(1)` inside a
+  literal.
+
+Four mutations were killed: the key never taken off, the whole line taken
+off, every line treated as inside a literal, and a literal never closing.

@@ -59,7 +59,9 @@ collided -- wave 78's `effect_shards_test.gd` failed during wave 80's check
    `check_no_training.py`) skip dot folders below their root, since
    `.user-data/` is now inside the tree and `.claude/worktrees/` holds
    other checkouts. Bootstrap and `export.py` refuse an empty or failed
-   redirect: without one, Godot writes under `~`.
+   redirect: without one, Godot writes under `~`. And `check_no_training.py`'s
+   N5 no longer reads a `bead = ...` key continuing a dictionary literal as
+   a write. Wave 91's tictactoe panel had failed it on main.
 5. **`make worktree-setup`** (`scripts/worktree_setup.py`): finds the main
    checkout from `git worktree list --porcelain`, copies what is missing,
    leaves what is present, exits 2 naming the missing source. Copies, not
