@@ -156,9 +156,11 @@ def missing_paths(root: pathlib.Path, techniques: list[dict]) -> list[str]:
 def normalised(text: str) -> str:
     """The text with Windows line endings made Unix ones.
 
-    The owner plays these on a Windows desk; a checkout there may carry CRLF,
-    and a hash that changes with the line endings would call every
-    translation stale.
+    The owner plays these on a Windows desk, where a checkout may carry CRLF,
+    and a hash that changed with the line endings would call every
+    translation stale. `read_text` already reads CRLF and a lone CR as `\n`
+    (universal newlines), so for a file this changes nothing; it is here for
+    text that did not come through it, and so the rule is written down once.
     """
     return text.replace("\r\n", "\n")
 
@@ -167,20 +169,26 @@ def body_hash(english: str) -> str:
     """sha256 of the English page with its doc-meta block taken out.
 
     The block is left out because `verified_on` moves when someone rechecks
-    the sources, and that does not make the translation wrong.
+    the sources, and that does not make the translation wrong. So are the
+    trailing newlines: an editor adding or dropping one at the end of the
+    file has changed nothing a reader sees.
     """
-    body = META_RE.sub("", normalised(english), count=1)
+    body = META_RE.sub("", normalised(english), count=1).rstrip("\n") + "\n"
     return hashlib.sha256(body.encode("utf-8")).hexdigest()
 
 
 def outside_fences(text: str) -> list[tuple[int, str]]:
     """(line number, line) for every line not inside a fenced code block."""
-    found, fenced = [], False
+    found, opener = [], None
     for number, line in enumerate(text.splitlines(), start=1):
-        if FENCE_RE.match(line):
-            fenced = not fenced
+        fence = FENCE_RE.match(line)
+        if fence and opener is None:
+            opener = fence.group(1)
             continue
-        if not fenced:
+        if fence and fence.group(1) == opener:
+            opener = None
+            continue
+        if opener is None:
             found.append((number, line))
     return found
 
@@ -197,23 +205,26 @@ def headings(text: str) -> list[tuple[int, int, str | None]]:
     return found
 
 
-def code_blocks(text: str) -> list[tuple[str | None, str]]:
-    """(example file or None, contents) for every fenced block, in order.
+def code_blocks(text: str) -> list[tuple[str | None, str, str]]:
+    """(example file or None, opening fence line, contents) per fenced block.
 
     The example file is the one named by an `<!-- example: … -->` line
-    directly above the fence.
+    directly above the fence. The opening line is kept because it carries
+    the language (```gdscript is not ```gd), and a block opened with ```
+    closes only on ``` -- a ~~~ inside it is code, not the end.
     """
     blocks, lines, index = [], text.splitlines(), 0
     while index < len(lines):
-        if not FENCE_RE.match(lines[index]):
+        fence = FENCE_RE.match(lines[index])
+        if fence is None:
             index += 1
             continue
         marker = EXAMPLE_RE.match(lines[index - 1]) if index > 0 else None
         end = index + 1
-        while end < len(lines) and not FENCE_RE.match(lines[end]):
+        while end < len(lines) and not lines[end].startswith(fence.group(1)):
             end += 1
         contents = "".join(line + "\n" for line in lines[index + 1:end])
-        blocks.append((marker.group(1) if marker else None, contents))
+        blocks.append((marker.group(1) if marker else None, lines[index], contents))
         index = end + 1
     return blocks
 
@@ -232,7 +243,7 @@ def anchor_findings(label: str, text: str) -> list[str]:
 def example_findings(root: pathlib.Path, label: str, text: str) -> list[str]:
     """D9: an example block that is not exactly the file it names."""
     findings = []
-    for example, contents in code_blocks(text):
+    for example, _, contents in code_blocks(text):
         if example is None:
             continue
         path = root / example
@@ -249,7 +260,7 @@ def shape_findings(label: str, text: str) -> list[str]:
     findings = []
     if [anchor for anchor in anchors if anchor in SHAPE] != list(SHAPE):
         findings.append(f"{label}: D10 the ## sections must include {', '.join(SHAPE)}, in that order")
-    if not any(example for example, _ in code_blocks(text)):
+    if not any(example for example, _, _ in code_blocks(text)):
         findings.append(f"{label}: D10 no <!-- example: … --> block; the minimal example is run, not only read")
     return findings
 
@@ -276,7 +287,7 @@ def pair_findings(english_path: pathlib.Path, translated_path: pathlib.Path) -> 
         )
     if heading_shape(english) != heading_shape(translated):
         findings.append(f"{names}: D6 the headings' levels or anchors differ from the English page's")
-    if [contents for _, contents in code_blocks(english)] != [contents for _, contents in code_blocks(translated)]:
+    if [block[1:] for block in code_blocks(english)] != [block[1:] for block in code_blocks(translated)]:
         findings.append(f"{names}: D8 the code blocks differ; code is not translated")
     return findings
 
@@ -348,6 +359,11 @@ def content_findings(root: pathlib.Path, techniques: list[str]) -> list[str]:
 
 
 def check(root: pathlib.Path, to_write: tuple[str, ...] = STILL_TO_WRITE) -> list[str]:
+    """Every finding over the repository at `root`, in the order a reader fixes them.
+
+    `to_write` is a parameter rather than the constant read directly, so the
+    self-test can plant a list without editing this file.
+    """
     techniques, _ = expected_pages(root)
     if not technique_modules(root):
         return [f"D1 no module of kind technique under {root / 'modules'}; nothing to check"]
@@ -358,6 +374,11 @@ def check(root: pathlib.Path, to_write: tuple[str, ...] = STILL_TO_WRITE) -> lis
 
 
 def run(root: pathlib.Path, to_write: tuple[str, ...] = STILL_TO_WRITE) -> int:
+    """Print the findings and return the exit code: 0 clean, 1 findings, 2 unreadable.
+
+    An unreadable manifest or page is 2, not 1, because it is the check that
+    failed, not the pages -- the distinction CLAUDE.md asks of every gate.
+    """
     try:
         findings = check(root, to_write)
     except (Unreadable, OSError, UnicodeDecodeError) as error:
@@ -434,6 +455,11 @@ def build(root: pathlib.Path, name: str, pages: dict[str, str], example: str = E
 
 
 def good_pages(english: str = ENGLISH) -> dict[str, str]:
+    """A folder the gate must pass: the technique pair and ai_core's pair.
+
+    Every planted case is one change to this, so a case that fails names
+    exactly the drift it planted.
+    """
     kernel = "# ai_core\n\n## The grid {#grid}\n\nCells.\n"
     kernel_pt = "# ai_core\n\n<!-- doc-meta\ntranslation_of: " + body_hash(kernel) + "\n-->\n\n## A grade {#grid}\n\nCélulas.\n"
     return {"ai_x.md": english, "ai_x.pt-BR.md": translation_of(english),
@@ -469,18 +495,50 @@ def self_test_cases(root: pathlib.Path) -> list[tuple[str, pathlib.Path, int, st
         ("a page outside the shape",
          build(root, "shape", good_pages(ENGLISH.replace("{#watch}", "{#look}"))), 1, "D10"),
         ("a stray page", build(root, "stray", dict(pages, **{"notes.md": "# Notes\n"})), 1, "D12"),
+        *more_cases(root, pages),
+    ]
+
+
+def more_cases(root: pathlib.Path, pages: dict[str, str]) -> list[tuple[str, pathlib.Path, int, str]]:
+    """The planted cases the review found missing: one per rule branch."""
+    translated = pages["ai_x.pt-BR.md"]
+    no_claim = dict(pages, **{"ai_x.pt-BR.md": "\n".join(
+        line for line in translated.splitlines() if not line.startswith("translation_of:")) + "\n"})
+    other_fence = dict(pages, **{"ai_x.pt-BR.md": translated.replace("```gdscript", "```gd")})
+    gone = ENGLISH.replace(EXAMPLE_FILE, "godot/test/ai_x/gone.gd")
+    unmarked = ENGLISH.replace(f"<!-- example: {EXAMPLE_FILE} -->\n", "")
+    trailing = dict(pages, **{"ai_x.md": ENGLISH + "\n\n"})
+    nowhere = build(root, "non-module", dict(pages, **{"ai_y.md": "", "ai_y.pt-BR.md": ""}))
+    (nowhere / NON_MODULE).write_text(json.dumps({"techniques": [{"page": "ai_y", "lives_in": ["python/gone/"]}]}))
+    return [
+        ("a translation with no English page",
+         build(root, "orphan", dict(pages, **{"notes.pt-BR.md": "# Notas\n"})), 1, "D4"),
+        ("a translation with no translation_of", build(root, "no-claim", no_claim), 1, "D5"),
+        ("a code block whose language differs", build(root, "fence", other_fence), 1, "D8"),
+        ("an example naming no file", build(root, "gone", good_pages(gone)), 1, "D9"),
+        ("a technique page with no example", build(root, "unmarked", good_pages(unmarked)), 1, "D10"),
+        ("a non-module technique naming a missing path", nowhere, 1, "D13"),
+        # Not a drift: an editor adding newlines at the end changes nothing.
+        ("trailing newlines added to the English page", build(root, "trailing", trailing), 0, ""),
     ]
 
 
 def self_test() -> int:
+    """Run every planted case; 0 when each is rejected or passed as it must be.
+
+    Invariant 4: a gate that only knows how to go green is the most expensive
+    defect, so each rule has a case it must reject.
+    """
     failures = []
     with tempfile.TemporaryDirectory() as workspace:
         root = pathlib.Path(workspace)
         (root / "empty" / "modules").mkdir(parents=True)
         for label, repo, want, code in self_test_cases(root):
             failures += expect_run(label, repo, want, code, ())
-        # Planted: a page still declared to write after it was written.
+        # Planted: a page still declared to write after it was written, and a
+        # name on the list that is no technique at all.
         failures += expect_run("a written page still on the list", root / "good", 1, "D11", ("ai_x",))
+        failures += expect_run("a list naming no technique", root / "good", 1, "D11", ("ai_gone",))
         # The same page, missing and declared: allowed until T75.
         repo = build(root, "declared", {key: value for key, value in good_pages().items() if "ai_x" not in key})
         failures += expect_run("a missing page on the list", repo, 0, "", ("ai_x",))
@@ -507,6 +565,11 @@ def expect_run(label: str, repo: pathlib.Path, want: int, code: str, to_write: t
 
 
 def main(argv: list[str]) -> int:
+    """Parse the command line and run the gate or its self-test.
+
+    `--help` keeps argparse's exit 0; any other usage error is 2, which every
+    gate here returns for wrong usage.
+    """
     parser = argparse.ArgumentParser(add_help=True, description=__doc__)
     parser.add_argument("--root", default=None)
     parser.add_argument("--self-test", action="store_true")

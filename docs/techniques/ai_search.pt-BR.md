@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 3 ; https://docs.godotengine.org/en/stable/classes/class_astargrid2d.html
 invalidated_if: the kit's Search, SearchGraph, GridPathfinder or GridGraph signatures change, or the demos that use them are renamed
 teaches: search
-translation_of: b4028cc48349e7eb9844b56750fe4aa467920a050d35947510e089c66a262fc5
+translation_of: fd3e8b90d4d4ce9e12edbfce20a9853212b32b5d256a80569121fbbe0f0820a3
 -->
 
 > English: [ai_search.md](ai_search.md). Os termos que ficam em inglês
@@ -36,14 +36,17 @@ Dijkstra com passos a mais.
 - `make demo-search` -- as quatro buscas num tabuleiro que você pinta.
   **1-4** escolhem a busca, **espaço** revela mais uma célula expandida,
   **enter** revela o resto: você vê a fronteira crescer, não só a rota.
-- `make demo-stealth`, `make demo-tactical`, `make demo-rts` e os exemplos
-  3D usam a busca por baixo, para mover guardas e unidades.
+- `make demo-behaviour`, `make demo-stealth` e `make demo-skirmish` usam a
+  busca por baixo para mover um guarda ou uma unidade; dois dos exemplos 3D
+  também, `make demo-infiltration` (por onde um guarda anda, até onde um som
+  chega) e `make demo-botmatch` (por onde um bot anda).
 - Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
 
 ## Neste kit {#in-this-kit}
 
 `godot/demos/search/search_demo.gd` monta um `GridGraph` a partir de um
-tabuleiro com nome, roda as quatro buscas nele e repete
+tabuleiro com nome, embrulha-o em `GridSearchGraph.new(grid)` -- o adaptador
+que deixa uma busca ler uma grade -- roda as quatro buscas nele e repete
 `SearchResult.expanded` uma célula por vez. Os ajustes que importam:
 
 | ajuste | onde | o que muda |
@@ -51,7 +54,7 @@ tabuleiro com nome, roda as quatro buscas nele e repete
 | qual busca | `AStarSearch`, `DijkstraSearch`, `BreadthFirstSearch`, `DepthFirstSearch` | a ordem em que a fronteira é consumida -- e com ela a rota e o trabalho |
 | o custo de uma célula | `GridGraph.set_cost(cell, cost)` | quanto custa entrar nela; no mínimo 1, `GridGraph.BLOCKED` é parede |
 | a estimativa | `SearchGraph.estimate` | a heurística do A\*; precisa ser *consistente*, e zero transforma o A\* em Dijkstra |
-| o limite | `CostFlood.within(graph, from, limit)` | até onde a inundação se espalha |
+| o limite | `CostFlood.within(GridSearchGraph.new(grid), from, limit)` | até onde a inundação se espalha |
 
 ## No seu projeto {#your-project}
 
@@ -64,7 +67,7 @@ classe se registra pelo `class_name`. Abra o projeto uma vez, ou rode
 
 ### Um exemplo mínimo {#example}
 
-Um nó seu que acha uma rota ao entrar na cena. Prenda-o em qualquer nó;
+Um nó seu que acha uma rota ao entrar na cena. Anexe-o a qualquer nó;
 `route` guarda as células a percorrer. Este arquivo é executado por
 `route_example_test.gd`, e o gate garante que a página é igual a ele. Os
 comentários do código ficam em inglês, como no arquivo.
@@ -95,7 +98,12 @@ func _ready() -> void:
 ### O que você implementa {#implement}
 
 Nada, numa grade quadrada: preencha um `GridGraph` a partir do seu
-`TileMapLayer` (um `set_cost` por tile). Em qualquer outra coisa --
+`TileMapLayer` (um `set_cost` por tile). Só para a rota, entregue-o a um
+`Pathfinder`, como no exemplo. Para ver também o que a busca olhou,
+embrulhe-o: `AStarSearch.new().search(GridSearchGraph.new(grid), from, to)`
+devolve um `SearchResult` com `path`, `cost`, `expanded` e `frontier` -- uma
+busca recebe um `SearchGraph`, e um `GridGraph` não é um. Em qualquer outra
+coisa --
 *waypoints*, salas, os polígonos de uma malha de navegação -- estenda
 `SearchGraph` com quatro métodos (`contains`, `neighbours`, `cost_at`,
 `estimate`) e chame `search(graph, from, to)` em qualquer uma das quatro;

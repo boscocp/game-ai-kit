@@ -84,6 +84,11 @@ var target: Vector2 = Vector2(300, 200)
 var vehicle := SteeringVehicle.new(Vector2.ZERO, Vector2.ZERO, 120.0, 240.0)
 
 
+func _ready() -> void:
+	# Start where the node was placed, or it would jump to the origin.
+	vehicle.position = position
+
+
 func _physics_process(delta: float) -> void:
 	# Brake from 100 units out. Seek here instead, and it overshoots forever.
 	var arrive := ArriveBehaviour.new(target, 100.0)

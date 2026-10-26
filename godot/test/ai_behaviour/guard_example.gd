@@ -32,7 +32,7 @@ func decide(facts: Dictionary) -> String:
 ## Every node the last tick asked and what each answered: draw it, and the
 ## player sees why the guard did what it did.
 func trail() -> Array[String]:
-	return _tree.trail
+	return _tree.trail.duplicate()
 
 
 # A condition: one fact, read from what the game filled in.

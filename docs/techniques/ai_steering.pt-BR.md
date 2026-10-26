@@ -7,7 +7,7 @@ tier: 2
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
 invalidated_if: the kit's SteeringVehicle, SteeringBehaviour or Steering.combined signatures change, or the demos that use them are renamed
 teaches: steering
-translation_of: 81434d49280cb2e863e462a0344c4dd89e9275a81e93ed685a717764e2677410
+translation_of: d567f68f9c6f001909260451d83d243fe219ff76f88b91db87593864c6e6e541
 -->
 
 > English: [ai_steering.md](ai_steering.md). Os termos que ficam em inglês
@@ -86,6 +86,11 @@ var target: Vector2 = Vector2(300, 200)
 ## The point the forces move: top speed 120 a second, and it may change its
 ## velocity by at most 240 a second.
 var vehicle := SteeringVehicle.new(Vector2.ZERO, Vector2.ZERO, 120.0, 240.0)
+
+
+func _ready() -> void:
+	# Start where the node was placed, or it would jump to the origin.
+	vehicle.position = position
 
 
 func _physics_process(delta: float) -> void:

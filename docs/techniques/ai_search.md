@@ -33,22 +33,25 @@ nothing to lean on and is Dijkstra with extra steps.
 - `make demo-search` -- the four searches on a board you can paint. **1-4**
   choose the search, **space** reveals one more expanded cell, **enter** the
   rest: you watch the frontier grow, not only the route.
-- `make demo-stealth`, `make demo-tactical`, `make demo-rts` and the 3D
-  examples use it underneath, to move guards and units.
+- `make demo-behaviour`, `make demo-stealth` and `make demo-skirmish` use it
+  underneath to move a guard or a unit; so do two of the 3D examples,
+  `make demo-infiltration` (where a guard walks, how far a sound carries)
+  and `make demo-botmatch` (where a bot walks).
 - Which demo uses which technique, both ways: the catalogue (T76, coming).
 
 ## In this kit {#in-this-kit}
 
-`godot/demos/search/search_demo.gd` builds a `GridGraph` from a named board
-and runs all four searches on it, then replays `SearchResult.expanded` a cell
-at a time. The knobs that matter:
+`godot/demos/search/search_demo.gd` builds a `GridGraph` from a named board,
+wraps it as `GridSearchGraph.new(grid)` -- the adapter that lets a search
+read a grid -- and runs all four searches on it, then replays
+`SearchResult.expanded` a cell at a time. The knobs that matter:
 
 | knob | where | what it changes |
 |---|---|---|
 | which search | `AStarSearch`, `DijkstraSearch`, `BreadthFirstSearch`, `DepthFirstSearch` | the order the frontier is taken in -- and so the route and the work |
 | a cell's cost | `GridGraph.set_cost(cell, cost)` | what entering it costs; at least 1, `GridGraph.BLOCKED` is a wall |
 | the guess | `SearchGraph.estimate` | A\*'s heuristic; must be *consistent*, zero makes A\* Dijkstra |
-| the limit | `CostFlood.within(graph, from, limit)` | how far a flood spreads |
+| the limit | `CostFlood.within(GridSearchGraph.new(grid), from, limit)` | how far a flood spreads |
 
 ## In your own project {#your-project}
 
@@ -91,10 +94,14 @@ func _ready() -> void:
 ### What you implement {#implement}
 
 Nothing, on a square grid: fill a `GridGraph` from your `TileMapLayer` (one
-`set_cost` per tile). On anything else -- waypoints, rooms, a navigation
-mesh's polygons -- extend `SearchGraph` with four methods (`contains`,
-`neighbours`, `cost_at`, `estimate`) and call `search(graph, from, to)` on
-any of the four; `godot/test/ai_search/waypoint_test.gd` is a whole one.
+`set_cost` per tile). For the route alone, hand it to a `Pathfinder` as the
+example does. For what the search looked at too, wrap it:
+`AStarSearch.new().search(GridSearchGraph.new(grid), from, to)` returns a
+`SearchResult` with `path`, `cost`, `expanded` and `frontier` -- a search
+takes a `SearchGraph`, and a `GridGraph` is not one. On anything else --
+waypoints, rooms, a navigation mesh's polygons -- extend `SearchGraph` with
+four methods (`contains`, `neighbours`, `cost_at`, `estimate`) and call
+`search(graph, from, to)` on any of the four; `godot/test/ai_search/waypoint_test.gd` is a whole one.
 
 ## Deeper {#deeper}
 

@@ -7,7 +7,7 @@ tier: 2
 source: book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 5 on decision making ; book:Steve Rabin (ed.), "Game AI Pro", CRC Press, 2013 -- ch. 12 (Humphreys, HTN planners)
 invalidated_if: the kit's StateMachine, BehaviourTree, GoapPlanner or HtnPlanner signatures change, or the demos that use them are renamed
 teaches: ways-to-decide
-translation_of: d58f1e55d5c4d66d51b27d68638acede4e35c9102e686e3de5d2c7f2ef6e929e
+translation_of: 7fe413b922e6b3e81d07a8d6a0a0c22f431066f1d054b7b0a228c3d707c09e9b
 -->
 
 > English: [ai_behaviour.md](ai_behaviour.md). Os termos que ficam em inglês
@@ -113,7 +113,7 @@ func decide(facts: Dictionary) -> String:
 ## Every node the last tick asked and what each answered: draw it, and the
 ## player sees why the guard did what it did.
 func trail() -> Array[String]:
-	return _tree.trail
+	return _tree.trail.duplicate()
 
 
 # A condition: one fact, read from what the game filled in.

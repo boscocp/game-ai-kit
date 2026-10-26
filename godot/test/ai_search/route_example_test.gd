@@ -13,7 +13,7 @@ func test_the_example_finds_the_route_through_the_gap() -> void:
 	var example: Node = EXAMPLE.new()
 	scene.add_child(example)
 	var route: Array[Vector2i] = example.get("route")
-	# Down three, across six, up three: the gap is at the bottom of column 3.
+	# Down three, across five, up three: the gap is at the bottom of column 3.
 	assert_int(route.size()).is_equal(11)
 	assert_array(route).contains([Vector2i(3, 3)])
 	assert_object(route.back()).is_equal(Vector2i(5, 0))
