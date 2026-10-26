@@ -8,6 +8,13 @@
 extends GdUnitTestSuite
 
 
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T78);
+# the Portuguese screen is test/locale's.
+func before() -> void:
+	TranslationServer.set_locale("en")
+
+
 func test_the_game_opens_with_red_to_move_and_says_what_to_do() -> void:
 	var scene: CheckersExample = _mounted()
 

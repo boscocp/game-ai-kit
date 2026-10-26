@@ -8,6 +8,13 @@
 # everything passed.
 extends GdUnitTestSuite
 
+
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T78);
+# the Portuguese screen is test/locale's.
+func before() -> void:
+	TranslationServer.set_locale("en")
+
 const BREADTH_FIRST: int = 0
 const DEPTH_FIRST: int = 1
 const DIJKSTRA: int = 2

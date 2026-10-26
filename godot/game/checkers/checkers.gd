@@ -50,18 +50,31 @@ var _board_before_decision: CheckersBoard
 
 
 func _ready() -> void:
-	_legend.set_entries([
-		[Art.texture(Art.RED_MAN), "red: you, moving up the board, first"],
-		[Art.texture(Art.WHITE_MAN), "white: the computer, moving down"],
-		[Art.texture(Art.CROWN), "crown: a king, moves both ways", CheckersView.CROWN],
-		[CheckersView.SELECTED, "yellow ring: the piece in your hand"],
-		[CheckersView.MUST_CAPTURE, "orange ring: must capture; cross: taken"],
-		[CheckersView.TARGET, "green: where the piece in hand can go"],
-		[CheckersView.LAST_MOVE, "grey squares: the last move played"],
-		[CheckersView.CONSIDERED, "blue arrow: a move white considered"],
-		[CheckersView.CHOSEN, "pink arrow: the move white will play"],
-	] as Array[Array])
+	_legend.set_entries(_legend_entries())
 	new_game()
+
+
+# The words are rebuilt in the language just chosen: a Label set from code
+# keeps the text it was given, and the board's labels are drawn, not
+# Controls. The notification also comes on entering the tree, before _ready.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_legend.set_entries(_legend_entries())
+		_refresh()
+
+
+func _legend_entries() -> Array[Array]:
+	return [
+		[Art.texture(Art.RED_MAN), tr("red: you, moving up the board, first")],
+		[Art.texture(Art.WHITE_MAN), tr("white: the computer, moving down")],
+		[Art.texture(Art.CROWN), tr("crown: a king, moves both ways"), CheckersView.CROWN],
+		[CheckersView.SELECTED, tr("yellow ring: the piece in your hand")],
+		[CheckersView.MUST_CAPTURE, tr("orange ring: must capture; cross: taken")],
+		[CheckersView.TARGET, tr("green: where the piece in hand can go")],
+		[CheckersView.LAST_MOVE, tr("grey squares: the last move played")],
+		[CheckersView.CONSIDERED, tr("blue arrow: a move white considered")],
+		[CheckersView.CHOSEN, tr("pink arrow: the move white will play")],
+	] as Array[Array]
 
 
 func _unhandled_input(event: InputEvent) -> void:

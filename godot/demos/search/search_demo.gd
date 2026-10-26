@@ -26,6 +26,9 @@ const MUD: int = 8
 const CHEAPEST_MUD: int = 2
 const DEAREST_MUD: int = 9
 
+## The names the overlay and the tests use. The screen shows them through
+## `tr()`: Brazilian Portuguese says "busca em largura", and keeps Dijkstra
+## and A* as they are (T74's glossary).
 const NAMES: Array[String] = ["breadth-first", "depth-first", "dijkstra", "a*"]
 ## What each one's route is the least of, beside its name. T41: the demo
 ## opens on breadth-first, whose route wades straight through the mud, and the
@@ -77,20 +80,33 @@ var _last_dragged := Vector2i(-1, -1)
 
 
 func _ready() -> void:
-	_legend.set_entries([
-		[ExpansionView.NEXT, "white outline: the cell it takes next"],
-		[ExpansionView.FRONTIER, "pink outline: the frontier,"],
-		[Color.TRANSPARENT, "    what it chooses among"],
-		[ExpansionView.EARLY, "dark square: expanded early"],
-		[ExpansionView.LATE, "bright square: expanded late"],
-		[Color.TRANSPARENT, "    (dark to bright is the order)"],
-		[ExpansionView.PATH, "line: the route the chosen search found"],
-		[ExpansionView.START, "yellow dot: start"],
-		[ExpansionView.GOAL, "red dot: goal"],
-		[BoardView.tile_texture(BoardView.ROUGH), "mud: costs the number on it"],
-		[BoardView.tile_texture(BoardView.WALL), "wall"],
-	] as Array[Array])
+	_legend.set_entries(_legend_entries())
 	load_board(0)
+
+
+# Rebuilt in the language just chosen (T78): the status and the help are
+# set from code and keep the words they were given, and the legend is drawn.
+# The notification also comes on entering the tree, before _ready.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_legend.set_entries(_legend_entries())
+		_refresh()
+
+
+func _legend_entries() -> Array[Array]:
+	return [
+		[ExpansionView.NEXT, tr("white outline: the cell it takes next")],
+		[ExpansionView.FRONTIER, tr("pink outline: the frontier,")],
+		[Color.TRANSPARENT, "    " + tr("what it chooses among")],
+		[ExpansionView.EARLY, tr("dark square: expanded early")],
+		[ExpansionView.LATE, tr("bright square: expanded late")],
+		[Color.TRANSPARENT, "    " + tr("(dark to bright is the order)")],
+		[ExpansionView.PATH, tr("line: the route the chosen search found")],
+		[ExpansionView.START, tr("yellow dot: start")],
+		[ExpansionView.GOAL, tr("red dot: goal")],
+		[BoardView.tile_texture(BoardView.ROUGH), tr("mud: costs the number on it")],
+		[BoardView.tile_texture(BoardView.WALL), tr("wall")],
+	] as Array[Array]
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -248,10 +264,11 @@ func move_goal(cell: Vector2i) -> bool:
 	return true
 
 
-## The name of the board on screen, and whether it has been edited.
+## The name of the board on screen, and whether it has been edited, in the
+## language the demo speaks.
 func board_name() -> String:
-	var named: String = "blank" if _blank else _boards[_board_index].name
-	return named + (", edited" if _edited else "")
+	var named: String = tr("blank") if _blank else tr(_boards[_board_index].name)
+	return tr("{board}, edited").format({board = named}) if _edited else named
 
 
 ## True when the board on screen still keeps the promise of the named board it
@@ -425,13 +442,11 @@ func _refresh() -> void:
 
 
 func _status_line() -> String:
-	return (
-		"%s (%s)  ·  expanded %d of %d  ·  steps %d  ·  %s"
-		+ "\n%s"
-		+ "\n%s"
-		+ "\n1-4 choose  ·  space steps  ·  enter finishes"
-	) % [NAMES[_chosen], FINDS[_chosen], _revealed, _result.expanded.size(), _result.path.size(),
-		_route_cost(_result), expansion_counts(), promise_line()]
+	var progress: String = tr("{name} ({finds})  ·  expanded {revealed} of {total}  ·  steps {steps}  ·  {cost}").format({
+		name = tr(NAMES[_chosen]), finds = tr(FINDS[_chosen]), revealed = _revealed,
+		total = _result.expanded.size(), steps = _result.path.size(), cost = _route_cost(_result)})
+	return "\n".join([progress, expansion_counts(), promise_line(),
+		tr("1-4 choose  ·  space steps  ·  enter finishes")])
 
 
 ## What each of the four paid to answer the same question, and what its
@@ -441,8 +456,9 @@ func _status_line() -> String:
 func expansion_counts() -> String:
 	var parts: Array[String] = []
 	for index: int in range(_all.size()):
-		parts.append("%s %d cells, %s" % [NAMES[index], _all[index].expanded.size(), _route_cost(_all[index])])
-	return "expanded / route cost:  " + "  ·  ".join(parts)
+		parts.append(tr("{name} {cells} cells, {cost}").format({name = tr(NAMES[index]),
+			cells = _all[index].expanded.size(), cost = _route_cost(_all[index])}))
+	return tr("expanded / route cost:") + "  " + "  ·  ".join(parts)
 
 
 ## Which board this is and what it was chosen to show -- and, once it has
@@ -450,27 +466,29 @@ func expansion_counts() -> String:
 ## says so rather than leaving the reader to wonder why A* looks no better.
 func promise_line() -> String:
 	if _blank:
-		return "board: blank  ·  paint something and see what each search makes of it"
-	var verdict: String = "it does" if promise_holds() else "not any more"
+		return tr("board: blank  ·  paint something and see what each search makes of it")
+	var verdict: String = tr("it does") if promise_holds() else tr("not any more")
 	if not _edited:
-		return "board: %s  ·  %s" % [board_name(), _boards[_board_index].promise]
-	return "board: %s  ·  does it still show what it was for?  %s" % [board_name(), verdict]
+		return tr("board: {board}  ·  {promise}").format({board = board_name(),
+			promise = tr(_boards[_board_index].promise)})
+	return tr("board: {board}  ·  does it still show what it was for?  {verdict}").format(
+		{board = board_name(), verdict = verdict})
 
 
 # "No route" is an answer like any other, and the work done to reach it is
 # still on screen: the whole region the start could reach.
 func _route_cost(result: SearchResult) -> String:
-	return "cost %d" % result.cost if result.reached else "no route"
+	return tr("cost {cost}").format({cost = result.cost}) if result.reached else tr("no route")
 
 
 func _help_text() -> String:
 	return "\n".join([
-		"Edit the board",
-		"left-drag: paint %s" % BRUSH_NAMES[_brush],
-		"right-drag: erase to open ground",
-		"W wall  ·  M mud  ·  G open ground",
-		"- and =: mud costs %d" % _mud_cost,
-		"drag a dot to move start or goal",
-		"B next board  ·  C clear",
-		"R rebuilds the named board",
+		tr("Edit the board"),
+		tr("left-drag: paint {brush}").format({brush = tr(BRUSH_NAMES[_brush])}),
+		tr("right-drag: erase to open ground"),
+		tr("W wall  ·  M mud  ·  G open ground"),
+		tr("- and =: mud costs {cost}").format({cost = _mud_cost}),
+		tr("drag a dot to move start or goal"),
+		tr("B next board  ·  C clear"),
+		tr("R rebuilds the named board"),
 	])
