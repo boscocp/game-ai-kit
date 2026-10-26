@@ -1,11 +1,11 @@
-# T100 — Utility choice as its own addon, out of `ai_teamwork`
+# T101 — Utility choice as its own addon, out of `ai_teamwork`
 
 Size: M · Prereqs: T67, T70 · Files: `godot/addons/ai_utility/`, `godot/addons/ai_teamwork/`, `godot/test/ai_utility/`, `godot/test/ai_teamwork/`, `modules/ai_utility.json`, `modules/ai_teamwork.json`, `modules/botmatch.json`, `modules/infiltration.json`, `python/gameaikit/utility/`, `python/gameaikit/teamwork/`, `spec/vectors/utility/`, `spec/vectors/teamwork/`, `python/tests/`, `godot/game3d/botmatch/`, `godot/game3d/infiltration/`, `docs/techniques/`, `docs/concepts/the-literature-and-the-kit.md`, `Makefile`
 
 ## Goal
 
 The owner, 2026-10-26, answering T73's question 5: part B "segue o
-recomendado" -- B.2 with MCTS (T87), and **B.6, utility choice as its own
+recomendado" -- B.2 with MCTS (T88), and **B.6, utility choice as its own
 addon**. T73's page: "`ActionChoice` and `ErrandChoice` live in
 `ai_teamwork`, though nothing in them is about teams, and the bot match and
 the infiltration guards both use them. Moving them out would let a game

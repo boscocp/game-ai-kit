@@ -1,6 +1,6 @@
-# T87 — Expectiminimax faces MCTS on the same positions
+# T88 — Expectiminimax faces MCTS on the same positions
 
-Size: M · Prereqs: T86 · Files: `godot/addons/ai_adversarial/`, `godot/test/ai_adversarial/`, `python/gameaikit/adversarial/`, `spec/vectors/adversarial/`, `godot/game/squad/`, `godot/test/squad/`, `docs/godot/squad.md`, `docs/concepts/`, `docs/techniques/ai_adversarial.md`, `docs/techniques/ai_adversarial.pt-BR.md`, `Makefile`
+Size: M · Prereqs: T87 · Files: `godot/addons/ai_adversarial/`, `godot/test/ai_adversarial/`, `python/gameaikit/adversarial/`, `spec/vectors/adversarial/`, `godot/game/squad/`, `godot/test/squad/`, `spec/squad/`, `python/gameaikit/squad/`, `python/tests/`, `docs/godot/squad.md`, `docs/concepts/`, `docs/techniques/ai_adversarial.md`, `docs/techniques/ai_adversarial.pt-BR.md`, `Makefile`
 
 ## Goal
 
@@ -35,7 +35,7 @@ position, at one time limit.
   by both at the same wall-clock budget per decision (50, 200, 1,000 ms),
   and in full seeded matches against each other and against T85's
   baseline. Written down as measured, whichever wins.
-- **Fog**: the same single determinization as T86, so the two are compared
+- **Fog**: the same single determinization as T87, so the two are compared
   on the same information.
 
 ## Steps
@@ -43,11 +43,13 @@ position, at one time limit.
 1. Expectiminimax with a depth cutoff, its `AdversarialResult` carrying
    per root action its expected value; gdUnit cases on hand-built trees
    with known values, chance nodes included; checkers' suite unchanged.
-2. The Python twin of it in `python/gameaikit/adversarial/`, and vectors:
-   the root values of three squad positions at depth 2 and 3, equal in
-   both languages.
+2. The Python twin of it in `python/gameaikit/adversarial/`, and the
+   addon's vectors on T86's toy dice game (root values at depth 2 and 3,
+   equal in both languages) -- the addon's twin imports no example. The
+   squad positions' expected values are the squad's own gate, in
+   `godot/test/squad/` and the squad's Python tests.
 3. `ExpectiSquad` in the squad roster; it searches across frames under the
-   same per-frame budget as T86 (iterative deepening, the deepest finished
+   same per-frame budget as T87 (iterative deepening, the deepest finished
    depth's answer -- anytime too, by a different route).
 4. The duel: `make test-squad-duel` runs the 30 positions and 100 seeded
    matches a seat, and prints a table; `docs/godot/squad.md` keeps it.
@@ -55,12 +57,13 @@ position, at one time limit.
 5. The `ai_adversarial` technique page, both languages, and the
    `docs/concepts/` page: when each family wins, from the table.
 6. T73's literature page: the MCTS and "stochastic games" rows now name
-   `ai_adversarial` and `demo-squad` (`make lint-literature` holds them).
+   `ai_adversarial` and `demo-tactical` (`make lint-literature` holds them).
 
 ## Acceptance
 
 ```bash
 make test-adversarial-vectors
+make test-checkers-vectors
 make test-squad-duel
 make test-godot-some SUITES="test/ai_adversarial test/squad test/checkers"
 python3 -m unittest discover -s python/tests -t python -p "test_adversarial*.py"
@@ -73,14 +76,14 @@ make lint-tasks lint-status
 
 ## Manual check
 
-Open one of the positions where the two disagree (`make demo-squad`, the
+Open one of the positions where the two disagree (`make demo-tactical MODE=squad`, the
 position picker), with V: do the two overlays -- expected values per
 option, visits per option -- make it clear *why* each chose what it chose?
 
 How invariant 13 is met: for expectiminimax, each option's expected value
 and the depth finished so far, drawn on the board before the move; at a
 shot, the hit and miss branches with their probabilities. Side by side
-with T86's overlay on the same position.
+with T87's overlay on the same position.
 
 References, opened on 2026-10-26: AIMA 4th ed., contents (5.5 Stochastic
 Games, 5.5.1 Evaluation functions for games of chance)

@@ -1,4 +1,4 @@
-# T94 — Levels declared, not drawn: a constraint solver places the infiltration level
+# T95 — Levels declared, not drawn: a constraint solver places the infiltration level
 
 Size: M · Prereqs: T70 · Files: `godot/addons/ai_constraints/`, `godot/test/ai_constraints/`, `modules/ai_constraints.json`, `python/gameaikit/constraints/`, `spec/vectors/constraints/`, `python/tests/`, `godot/game3d/infiltration/`, `godot/test/infiltration/`, `docs/techniques/`, `docs/concepts/`, `Makefile`
 
@@ -6,7 +6,7 @@ Size: M · Prereqs: T70 · Files: `godot/addons/ai_constraints/`, `godot/test/ai
 
 The owner, 2026-10-26, answering T73's question 1: every entry of part A,
 "todos" -- after the recommended three, the rest: CSP and wave function
-collapse for levels (this task and T95), the MDP, bandits, player
+collapse for levels (this task and T96), the MDP, bandits, player
 modelling, `ai_llm`.
 
 Constraint satisfaction teaches **declaring what a solution is instead of
@@ -31,8 +31,8 @@ finds a level that meets all of them or says none exists.
   another addon (invariant 2); reachability, a global constraint, is given
   as a callback the game supplies.
 - **Home: the infiltration level** (recommended), so that the lesson is a
-  before-and-after on one generator; the squad mode's maps (T84) are the
-  alternative, and T95's WFC goes there instead.
+  before-and-after on one generator; the XCOM mode's maps (T84) are the
+  alternative, and T96's WFC goes there instead.
 - **What the level must satisfy**, as constraints in a file
   (`godot/game3d/infiltration/level_constraints.json`, beside
   `guard_types.json`): the exit reachable from
@@ -80,8 +80,9 @@ Generate ten levels each way (N, with the mode switched) and play two of
 each: do the constraint-built levels feel designed where the drawn ones
 feel random? Is there always a dark way through?
 
-How invariant 13 is met: a "generation" view (a key free in the demo,
-named on its legend -- G is taken) shows the solver at work -- each variable's remaining domain as a count on its cell, the
+How invariant 13 is met: a "generation" view (K -- free in the
+infiltration demo, where 1-6, G, H, L, N, P, Tab and the movement keys are
+taken; named on its legend) shows the solver at work -- each variable's remaining domain as a count on its cell, the
 cell chosen next by minimum remaining values, propagation crossing values
 out, and a backtrack drawn as the cells it undoes -- so the person sees
 the decisions that built the level, not only the level.

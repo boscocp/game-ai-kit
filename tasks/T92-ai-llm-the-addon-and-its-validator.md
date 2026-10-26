@@ -1,4 +1,4 @@
-# T91 — `ai_llm`: the addon, its validator, and invariant 7's gate
+# T92 — `ai_llm`: the addon, its validator, and invariant 7's gate
 
 Size: M · Prereqs: none · Files: `godot/addons/ai_llm/`, `godot/test/ai_llm/`, `modules/ai_llm.json`, `python/gameaikit/llm/`, `python/tests/`, `spec/llm/`, `spec/vectors/llm/`, `scripts/check_llm_validated.py`, `Makefile`, `CLAUDE.md`, `docs/techniques/`, `docs/concepts/`
 
@@ -10,7 +10,7 @@ the owner's own idea: "algum exemplo de jogo textual de narrativa que
 envolve algum desafio narrativo de conversar com um agente por texto
 rodando uma LLM local" -- a text narrative game where you converse with an
 agent run by a local LLM and must overcome a narrative challenge. That game
-is T93; the local runtime is T92; this task is the addon and the rule that
+is T94; the local runtime is T93; this task is the addon and the rule that
 holds it.
 
 Invariant 7, throughout: **the LLM never blocks a frame, and nothing it
@@ -38,7 +38,7 @@ outcome.
   (`intent: "unclear"` with a line the game wrote) -- never a retry loop,
   never a stall.
 - **Constrained decoding is a convenience, not the validator.** The
-  runtimes T92 weighs can constrain output to a JSON schema (llama.cpp
+  runtimes T93 weighs can constrain output to a JSON schema (llama.cpp
   passes it "inside the `response_format` body field" of
   `/chat/completions`; Ollama "constrain[s] a model's output to a specific
   format defined by a JSON schema" through `format`). The validator runs
@@ -54,7 +54,10 @@ outcome.
 - **A runtime is a port**: `LlmRuntime` (send a request, signal a reply)
   with two implementations -- `RecordedRuntime`, which answers from
   committed recordings and needs nothing installed (tier 1 and 2), and
-  `HttpRuntime` for T92's local server (tier 3). If T64's prefix ADR has
+  answers **asynchronously too** (its reply arrives by the same signal, a
+  frame or more later, never inside the call), so a game written against
+  the recorded runtime cannot come to depend on an instant answer; and
+  `HttpRuntime` for T93's local server (tier 3). If T64's prefix ADR has
   landed, the port is named by it; otherwise T64's rename covers it.
 - **What the LLM is not told it cannot leak**: the game's secrets (a
   password, the truth of a case) never enter a prompt. The validator also
@@ -77,9 +80,15 @@ outcome.
    refuse -- not JSON, a missing key, an extra key, an intent not
    declared, an argument not of its intent, two lines, 281 characters, a
    secret in the speech, a JSON object wrapped in prose -- read by both
-   languages (`make test-llm-vectors`).
+   languages (`make test-llm-vectors`). This is where "every refusal is
+   refused by both validators" is held -- by running them, which a static
+   gate cannot do.
 5. **Invariant 7's gate**, `scripts/check_llm_validated.py`, exit codes
-   0/1/2, `--self-test`:
+   0/1/2, `--self-test`. It is **static**: it reads GDScript as text and
+   runs nothing (no engine, no model), like `check_no_training.py`'s N1 to
+   N3. It walks every `.gd` under `godot/` except vendored folders
+   (`VENDORED_DIRS`, gdUnit4 today, as `check_readability.py` and
+   `check_no_training.py` skip it) and dot folders (`.godot/`):
    - V1 no GDScript outside `ai_llm` uses `HTTPRequest`, `HTTPClient` or a
      raw TCP stream to reach a runtime;
    - V2 no GDScript outside `ai_llm`'s validator constructs an `LlmReply`,
@@ -87,11 +96,15 @@ outcome.
    - V3 nothing in `ai_llm` waits on the frame: no `OS.delay_msec`, no
      `Thread.wait_to_finish` outside teardown, no polling loop, and every
      `HTTPRequest` it creates sets `use_threads`;
-   - V4 every refusal vector is refused by both validators.
    Planted cases, each must be rejected: a game script that opens its own
    `HTTPRequest`; one that builds an `LlmReply` by hand; a `while` loop
-   polling an `HTTPClient`; a validator that accepts an undeclared intent.
-   In `make check` and `make lint-selftests`.
+   polling an `HTTPClient`; an `HTTPRequest` created without
+   `use_threads`; and a file under a vendored folder that does all of
+   these must *not* be reported. The self-test may also run the Python
+   validator on a mutated copy (an intent list with one entry removed
+   from its check) and expect `make test-llm-vectors`' Python half to fail
+   -- the static gate itself never executes the validator. In `make check`
+   and `make lint-selftests`.
 6. `CLAUDE.md`: invariant 7's row names the gate; `modules/ai_llm.json`;
    the technique page in both languages (T74's shape), its minimal example
    a `RecordedRuntime` conversation; the literature page's LLM row names
@@ -119,7 +132,7 @@ Read `LlmValidator` and its page: could a person who has never used an
 LLM say, from them, what a reply may contain and what happens when it does
 not? Is it clear that the game, not the model, decides?
 
-How invariant 13 is met: by the game (T93) -- every reply is shown with
+How invariant 13 is met: by the game (T94) -- every reply is shown with
 its intent and argument as the validator accepted them, or with the
 reason it was refused, beside the character's line. This task gives the
 game what to show: `LlmReply` carries the raw text's refusal reason.

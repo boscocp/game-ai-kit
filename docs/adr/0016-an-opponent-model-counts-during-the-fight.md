@@ -74,26 +74,43 @@ T73's roadmap (`docs/concepts/the-literature-and-the-kit.md`, questions 3
 and 4) asked whether two more things that learn while a game runs could
 come in under this record. The owner answered both on 2026-10-26:
 
-- **Bandits** (question 3): "faz o recomendado pensando em didática de IA"
-  -- do the recommended, with teaching AI in mind. The recommendation was
-  to extend this exception to them on its three conditions.
+- **Bandits** (question 3, which offered two answers -- extend the
+  exception on its three conditions, or leave bandits out -- and
+  recommended neither): "faz o recomendado pensando em didática de IA" --
+  do the recommended, with teaching AI in mind. Read as: **extend**. A
+  bandit fitted offline would teach the arithmetic and lose the lesson,
+  which is exploration against exploitation happening while you watch;
+  roadmap entry A.6 had already said it "needs a new decision by the owner
+  extending ADR 0016 to it, on the same three conditions". The reading is
+  this record's, and the owner confirms it in the review of T99.
 - **Player modelling for difficulty** (question 4): option 3 -- extend
   this record to it on the same three conditions, rather than leave it out
   or allow only a model fitted in Python and shipped fixed.
 
-So the exception is no longer the n-gram's alone. It covers **a component
-that counts what it sees during one fight or one match**, and only while
-all three conditions hold -- the same three as above, stated once for
-every such component:
+### What is covered: three components, by name
 
-1. **It counts; it does not descend.** Its state is counts and sums of what
-   happened -- pulls and payoffs per arm, shots and hits, damage taken per
-   encounter -- and what it decides is computed from those counts by a
-   formula whose every constant is fixed in the code or in a shipped file.
-   A mean kept as a sum and a count is counts. A count discounted by a
-   fixed factor, as the n-gram's decay does, is counts. A value moved a
-   step towards a target (`x += rate * (target - x)`), an Elo or TrueSkill
-   update, a weight with a gradient: those are descent, and stay Python's.
+The exception is not a class of components. It covers exactly these, and
+anything else that counts during play needs its own decision by the owner:
+
+| component | where | rule |
+|---|---|---|
+| the n-gram opponent model (T17) | `godot/addons/ai_opponent/` | N9 |
+| a bandit choosing among an opponent's fixed options (T99) | `godot/addons/ai_bandit/` | N13 |
+| the player model that sets difficulty in the bot match (T100) | its class in `godot/game3d/botmatch/` | N14 |
+
+Each holds the same three conditions as the n-gram:
+
+1. **It counts; it does not descend.** Its state is counts and sums of
+   what happened -- pulls and payoff sums per arm, shots and hits, damage
+   taken per encounter. A mean is **kept as a sum and a count and computed
+   when read**; it is never updated in place. The incremental form
+   `mean += (reward - mean) / n` is exact arithmetic for a mean, and it is
+   still refused: it has the shape of a step towards a target
+   (`x += rate * (target - x)` with `rate = 1 / n`), and a gate cannot tell
+   it from one whose rate is a constant. A count discounted by a fixed
+   factor, as the n-gram's decay does, is counts. A value moved a step
+   towards a target, an Elo or TrueSkill update, a weight with a gradient:
+   those are descent, and stay Python's.
 2. **It starts empty every fight or match, and is never written down.** No
    file, no table carried into the next fight, nothing loaded at start but
    fixed constants. A restart or a new match seats a new one.
@@ -106,51 +123,62 @@ every such component:
 
 What a bandit and a player model are, here:
 
-- **A bandit** (AIMA 17.3) chooses among a fixed set of options -- an
-  opponent's scripted plans -- by their payoffs so far. UCB1 [Auer,
-  Cesa-Bianchi & Fischer 2002] is counts and sums with a fixed constant,
-  and so is epsilon-greedy with a fixed epsilon. Thompson sampling over
-  Beta counts would be too, and draws from the game's seeded generator.
+- **A bandit** (AIMA 17.3) chooses among a fixed set of options by their
+  payoffs so far. UCB1 [Auer, Cesa-Bianchi & Fischer 2002] is counts and
+  sums with a fixed constant, and so is epsilon-greedy with a fixed
+  epsilon.
 - **A player model for difficulty** estimates how well the person is
-  playing from counts -- a hit rate, damage taken per encounter, as
-  Hamlet estimates the damage a player will take from what it has seen
-  [Hunicke & Chapman, undated] -- and a fixed table turns the estimate into
-  the opponents' knobs (accuracy, as GAP3 ch. 33 tunes it). It never
-  outlives the match, so it is a reading of this person now, not a profile.
+  playing from counts -- a hit rate, damage taken -- as Hamlet models the
+  damage a player takes as a distribution [Hunicke & Chapman, undated],
+  and a fixed table turns the estimate into the opponents' knobs
+  (accuracy, as GAP3 ch. 33 tunes it). It never outlives the match, so it
+  is a reading of this person now, not a profile.
 
 ### What `check_no_training.py` must then allow and still refuse
 
 N9 stays as it is. Two rules join it, each with planted cases it must
-reject (invariant 4), written by the first task that brings the
-component in:
+reject (invariant 4), written by the task that brings its component in.
+Each finds its targets the way N9 does (`OPPONENT_ADDON` and
+`TABLE_HOLDERS_RE` in `check_no_training.py`): every file under the
+component's folder, plus any GDScript anywhere that names the component's
+class -- a script holding an instance by type.
 
-- **N13 -- the bandit** (written by T98, the first task that needs it):
-  nothing in the bandit's addon writes a file; no GDScript anywhere writes
-  a bandit's counts or sums to a file, a `ConfigFile` or a resource; no
-  GDScript in it assigns a step towards a target (`+= ... * (... - ...)`
-  on a field it keeps). Planted: a bandit that saves its counts, one that
-  saves them under another name from a script that holds it, and one
-  whose arm value moves by a learning rate.
-- **N14 -- the player model** (written by T99): the same three refusals
-  for the player model's class, plus no line that loads its state at
-  start -- a model read back from `user://` would be a profile, and a
-  profile outlives the match. Planted: a saved model, a model loaded at
-  start, and an Elo-style update.
+- **N13 -- the bandit** (written by T99): in those files, no line writes a
+  file, a `ConfigFile` or a resource; and no line moves a field it keeps
+  by a step towards a target -- `+=` or `-=` with a right-hand side that
+  multiplies or divides a difference (`* (a - b)`, `(a - b) / n`).
+  Planted: a bandit that saves its counts; one saved under another name
+  from a script that holds it; one whose arm value moves by a learning
+  rate (`*`); one that keeps an incremental mean (`/ n`).
+- **N14 -- the player model** (written by T100): the same refusals for the
+  player model's class and the scripts that hold it, plus no line that
+  loads its state at start -- a model read back from `user://` would be a
+  profile, and a profile outlives the match. Planted: a saved model, a
+  model loaded at start, an Elo-style update, an incremental mean. **The
+  match's event log is not an N14 finding**: it holds events, not counts,
+  is written only when the match is opened with `-- --record` (ADR 0017),
+  and is what condition 3 replays. N14 reads the player model's files and
+  holders, and the log's writer is neither.
 
 Both stay what N1 to N3 and N9 are: a net for the common spellings, not a
 proof. Condition 3 is held by each task's replay test, not by the gate.
-T98 also updates invariant 6's row and text in `CLAUDE.md` -- "its one
-exception, ADR 0016, is N9" becomes "ADR 0016's exceptions are N9, N13
-and N14" -- since that file names the exception.
+
+**Proposed, for the owner to confirm** (T99 makes the change, since
+`CLAUDE.md` names the exception): invariant 6's row in `CLAUDE.md`, "its
+one exception, ADR 0016, is N9", becomes "ADR 0016's exceptions, by name,
+are N9, N13 and N14"; invariant 6's text names the bandit and the
+difficulty model beside the opponent model; and `check_no_training.py`'s
+docstring for N9 says it is one of three.
 
 ### What is still refused
 
 Everything this record did not already allow: fitting weights, beads or
 evaluations in GDScript (N1 to N8, N10 to N12); any count that survives
-the fight; a learning rate, a gradient, a loss. Q-learning or any temporal
-difference update at game time stays out -- it is a step towards a target
-even when written as counts -- and an MDP's policy (T97) is solved in
-Python and shipped, like every other fitted number.
+the fight; a learning rate, a gradient, a loss; any fourth component that
+counts during play, until the owner decides it. Q-learning or any
+temporal-difference update at game time stays out -- it is a step towards
+a target even when written with counts -- and an MDP's policy (T98) is
+solved in Python and shipped, like every other fitted number.
 
 ### References for the amendment
 

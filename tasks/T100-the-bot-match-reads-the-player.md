@@ -1,6 +1,6 @@
-# T99 — The bot match reads how well you play, during one match
+# T100 — The bot match reads how well you play, during one match
 
-Size: M · Prereqs: T98, T66 · Files: `godot/game3d/botmatch/`, `godot/test/botmatch/`, `python/gameaikit/teamwork/`, `spec/vectors/`, `python/tests/`, `scripts/check_no_training.py`, `docs/godot/botmatch.md`, `docs/concepts/`, `Makefile`
+Size: M · Prereqs: T99, T66 · Files: `godot/game3d/botmatch/`, `godot/test/botmatch/`, `python/gameaikit/botmatch/`, `modules/botmatch.json`, `spec/vectors/`, `python/tests/`, `scripts/check_no_training.py`, `docs/godot/botmatch.md`, `docs/concepts/`, `Makefile`
 
 ## Goal
 
@@ -40,17 +40,23 @@ balances difficulty through the enemies' accuracy [GAP3 ch. 33].
   0017 requires. A test replays a log through a fresh model twice and
   compares the counts and the knob's history.
 - **The gate**: **N14** in `check_no_training.py`, as the amendment
-  specifies -- the same refusals as N13 for the player model's class, and
-  no line that loads its state at start. Planted: a model saved to
-  `user://`, a model loaded at start, an Elo-style update.
+  specifies. Its targets, found as N9's are: the player model's file in
+  `godot/game3d/botmatch/` and any GDScript naming its class. In them, the
+  same refusals as N13, and no line that loads its state at start.
+  Planted: a model saved to `user://`, a model loaded at start, an
+  Elo-style update, an incremental mean. **The event log is not an N14
+  finding**: it holds events, not counts, is written only under
+  `-- --record`, and its writer is neither the model nor a script that
+  holds one -- which is why it sits in its own file.
 
 ## Steps
 
 1. Read the amendment, `match_aim.gd`, `match_stats.gd`, and how the
    person takes over a bot.
 2. Python first: the model and the knob table in
-   `python/gameaikit/teamwork/` (or a module of its own if the reviewer
-   prefers), vectors -- an event list in, the estimate and the knob after
+   `python/gameaikit/botmatch/`, owned by the `botmatch` manifest -- the
+   model is the bot match's, not `ai_teamwork`'s, whose twin
+   `python/gameaikit/teamwork/` is; vectors -- an event list in, the estimate and the knob after
    each interval out.
 3. `PlayerModel` in `godot/game3d/botmatch/`, held to the vectors; the
    event log and its replay test.

@@ -1,16 +1,20 @@
-# T98 — A bandit chooses the fighting opponent's answers, during one fight
+# T99 — A bandit chooses the fighting opponent's answers, during one fight
 
-Size: M · Prereqs: T37, ADR 0016 · Files: `godot/addons/ai_bandit/`, `godot/test/ai_bandit/`, `modules/ai_bandit.json`, `python/gameaikit/bandit/`, `spec/vectors/bandit/`, `python/tests/`, `godot/game/fighting/`, `godot/test/fighting/`, `scripts/check_no_training.py`, `CLAUDE.md`, `docs/techniques/`, `docs/concepts/`, `Makefile`
+Size: M · Prereqs: T37 · Files: `godot/addons/ai_bandit/`, `godot/test/ai_bandit/`, `modules/ai_bandit.json`, `python/gameaikit/bandit/`, `spec/vectors/bandit/`, `python/tests/`, `godot/game/fighting/`, `godot/test/fighting/`, `scripts/check_no_training.py`, `CLAUDE.md`, `docs/techniques/`, `docs/concepts/`, `Makefile`
 
 ## Goal
 
 The owner, 2026-10-26, answering T73's question 3 -- bandits learn from
 payoffs at game time; extend ADR 0016's exception to them, or leave them
 out? -- "faz o recomendado pensando em didática de IA": do the
-recommended, with teaching AI in mind. The recommendation was to extend
-the exception on its three conditions, and ADR 0016's amendment of
-2026-10-26 records it: **counts only; empty at the start of every fight;
-rebuildable from that fight's log**.
+recommended, with teaching AI in mind. The question itself recommended
+neither answer; ADR 0016's amendment of 2026-10-26 reads the owner's words
+as **extend** -- a bandit fitted offline would lose the lesson, which is
+exploration against exploitation while you watch -- and names this
+bandit as one of the three components the exception covers, on its three
+conditions: **counts only; empty at the start of every fight; rebuildable
+from that fight's log**. The owner confirms that reading in this task's
+review.
 
 A bandit teaches exploration against exploitation (AIMA 4th ed., 17.3
 Bandit Problems; GAP2 ch. 25 presents it for games). UCB1 plays each arm
@@ -37,16 +41,26 @@ confidence interval" [Auer, Cesa-Bianchi & Fischer 2002].
   fixed epsilon for the comparison; arms are indices, payoffs floats, no
   fighting word inside (invariant 2). Python twin, vectors.
 - **ADR 0016's three conditions, held**: the state is pulls and payoff
-  sums per arm; `new_fight` empties it; a recorded fight replayed through
+  **sums** per arm, and an arm's mean is computed when it is read
+  (`sum / pulls`), never kept and updated in place -- the incremental
+  `mean += (reward - mean) / n` is refused by the amendment, because it has
+  the shape of a learning-rate step; `new_fight` empties it; a recorded fight replayed through
   a fresh bandit opponent seated on the same frame rebuilds the same
   counts, twice, compared (`FightReplay`, as T17's test does).
 - **The gate**: this task writes **N13** in `check_no_training.py`, as the
-  amendment specifies -- nothing in `ai_bandit` writes a file; no GDScript
-  writes a bandit's counts or sums to a file, a `ConfigFile` or a
-  resource; nothing in it moves a value a step towards a target. Planted:
-  a bandit that saves its counts, one saved under another name from a
-  script that holds it, and one whose arm value moves by a learning rate.
-  And `CLAUDE.md`'s invariant 6 row and text name the extension.
+  amendment specifies. It finds its targets as N9 does (`OPPONENT_ADDON`
+  and `TABLE_HOLDERS_RE`): every file under `godot/addons/ai_bandit/`, and
+  any GDScript that names the bandit's classes -- a script holding one by
+  type. In those, no line writes a file, a `ConfigFile` or a resource, and
+  no `+=` or `-=` multiplies or divides a difference. Planted: a bandit
+  that saves its counts; one saved under another name from a script that
+  holds it; an arm value moved by a learning rate (`* (a - b)`); an
+  incremental mean (`(a - b) / n`).
+- **What the amendment proposes for `CLAUDE.md`** -- invariant 6's row
+  naming N9, N13 and N14 as ADR 0016's exceptions, by name -- is made here
+  only once the owner confirms it in review; N9's docstring in
+  `check_no_training.py` (which today calls the n-gram "the one exception
+  to this invariant") says it is one of three.
 
 ## Steps
 
@@ -60,7 +74,7 @@ confidence interval" [Auer, Cesa-Bianchi & Fischer 2002].
    solves, the complexity, when not to use it, and cites the ADR.
 4. `FightBanditOpponent` in `godot/game/fighting/`, a level in the
    opponent list ("bandit"); the replay test of condition 3.
-5. N13 with its planted cases; `CLAUDE.md`.
+5. N13 with its planted cases; N9's docstring; `CLAUDE.md`, as confirmed.
 6. Measured, in the fighting page: against T18's stand-in players and the
    owner's recordings, the bandit opponent against T37's medium and hard,
    100 fights each; how many pulls it takes to settle on an answer.

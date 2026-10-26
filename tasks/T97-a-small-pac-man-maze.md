@@ -1,4 +1,4 @@
-# T96 — A small Pac-Man maze, with ghosts that follow the arcade's rules
+# T97 — A small Pac-Man maze, with ghosts that follow the arcade's rules
 
 Size: M · Prereqs: none · Files: `godot/game/maze/`, `godot/test/maze/`, `modules/maze.json`, `spec/maze/`, `spec/vectors/maze/`, `python/gameaikit/maze/`, `python/tests/`, `godot/menu/catalogue.json`, `godot/locale/maze.csv`, `scripts/check_demos.py`, `docs/godot/`, `Makefile`
 
@@ -6,7 +6,7 @@ Size: M · Prereqs: none · Files: `godot/game/maze/`, `godot/test/maze/`, `modu
 
 The owner, 2026-10-26, answering T73's question 6: the MDP gets a small
 **Pac-Man-style maze demo** (one or few ghosts), with value iteration in
-Python and the policy shipped (invariant 6). This task is the game; T97 is
+Python and the policy shipped (invariant 6). This task is the game; T98 is
 the MDP that plays it.
 
 The ghosts are an AI lesson in themselves, and a famous one. Pittman's
@@ -22,21 +22,21 @@ target tile.
 ## Decisions written down first (the owner confirms in review)
 
 - **Small on purpose**: a maze of about 50 walkable cells, a handful of
-  pellets (four, so T97's state space stays small -- see there), one
+  pellets (four, so T98's state space stays small -- see there), one
   ghost by default and a second as an option; grid movement, one cell per
   step, a fixed clock. Not the arcade's full board.
 - **The ghost follows the Dossier's rules as written**, with Blinky's
   target in chase -- "Pac-Man's current tile as his target" -- and his
-  home corner in scatter, and one addition for T97, written in the rules
+  home corner in scatter, and one addition for T98, written in the rules
   file and on screen: in chase, at
   each intersection the ghost takes the Dossier's choice with a fixed
   probability and a random legal exit otherwise -- an imprecise ghost. Its
   reason: an MDP needs chance in the world, and stating it as a rule of the
-  game makes T97's model exact rather than an approximation.
-- **The person plays Pac-Man**; T97 adds the MDP as a controller and C
+  game makes T98's model exact rather than an approximation.
+- **The person plays Pac-Man**; T98 adds the MDP as a controller and C
   cycles between them, as in the tactical game.
 - **A Python twin of the rules**, held by vectors (a seed and inputs in,
-  the positions every step out), because T97's value iteration runs on the
+  the positions every step out), because T98's value iteration runs on the
   Python rules and its policy must mean the same thing in Godot.
 
 ## Steps
@@ -49,7 +49,7 @@ target tile.
    reverses outside a mode change, a ghost never enters a wall, a seeded
    game replays).
 3. The scene: walls, pellets, Pac-Man, the ghost, shapes only (no art
-   needed; open art could follow under ADR 0020's rule, as T88).
+   needed; open art could follow under ADR 0020's rule, as T89).
 4. `make demo-maze`; a menu card naming Pac-Man; `check_demos.py`;
    `godot/locale/maze.csv`.
 

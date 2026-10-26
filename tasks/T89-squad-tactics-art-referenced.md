@@ -1,15 +1,19 @@
-# T88 — Art for the squad mode: open packs, referenced
+# T89 — Art for the XCOM mode, if the tactical pieces are not enough: open packs, referenced
 
 Size: S · Prereqs: T85 · Files: `godot/game/squad/art_sources.json`, `godot/game/squad/`, `scripts/fetch_squad_art.py`, `scripts/check_no_assets.py`, `python/tests/`, `docs/adr/`, `Makefile`, `.gitignore`
 
 ## Goal
 
 The owner, 2026-10-26: "se precisar veja assets open ou free pra demo
-x-com" -- if it needs them, look for open or free assets for the XCOM
-demo. T85 draws the squad mode with shapes; this task finds open art that
-fits a top-down or isometric squad-tactics look -- soldiers, aliens or
-enemies, cover pieces (walls, crates, low cover), floor tiles -- and wires
-it the way the repository's art rules say.
+x-com" -- **if it needs them**, look for open or free assets for the XCOM
+demo. The XCOM mode is a mode of the tactical game (T84), so it already
+draws the tactical game's committed Kenney pieces and terrain (ADR 0012).
+This task runs only if, after T85's manual check, the owner finds that
+look wrong for the mode -- no soldier that reads as a soldier, no cover
+that reads as cover. Then it finds open art for a top-down or isometric
+squad-tactics look -- soldiers, aliens or enemies, cover pieces (walls,
+crates, low cover), floor tiles -- and wires it the way the repository's
+art rules say, with the Kenney pieces as the fallback instead of shapes.
 
 **Which rule applies.** Three art records are in force, and they differ:
 
@@ -63,7 +67,8 @@ only; extending it to all 2D art stays the owner's.
    the self-test and holds the manifest to every kind the mode draws.
 5. The mode reads the files from outside the project, as `RtsArt` does
    (`Image.load_from_file`), so nothing is imported and nothing exported;
-   `found` false means shapes. No test depends on the art.
+   `found` false means the tactical game's Kenney pieces. No test depends
+   on the art.
 6. **A gate that a picture was not committed.** `check_no_assets.py`'s A2
    reads only `godot/game3d/assets.json` today, and the RTS's sheets are
    held by nothing but `.gitignore` and their GPL. Teach A2 to read every
@@ -83,9 +88,10 @@ make lint-tasks lint-status
 
 ## Manual check
 
-Run `make squad-art`, then `make demo-squad`: can you tell a soldier from
-an alien and half cover from full cover at a glance? Then delete
-`build/squad-art/` and play again: does the shape fallback still read?
+Run `make squad-art`, then `make demo-tactical MODE=squad`: can you tell a
+soldier from an alien and half cover from full cover at a glance? Then
+delete `build/squad-art/` and play again: does the Kenney fallback still
+read?
 
 How invariant 13 is met: unchanged from T85 -- the decision overlay is
 drawn over the art, and this task must not hide it (the overlay stays on

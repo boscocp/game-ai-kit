@@ -1,11 +1,11 @@
-# T95 — Wave function collapse builds the squad mode's maps
+# T96 — Wave function collapse builds maps for the tactical game's XCOM mode
 
-Size: S · Prereqs: T94, T85 · Files: `godot/addons/ai_constraints/`, `godot/test/ai_constraints/`, `python/gameaikit/constraints/`, `spec/vectors/constraints/`, `spec/squad/`, `godot/game/squad/`, `godot/test/squad/`, `docs/techniques/`, `Makefile`
+Size: S · Prereqs: T95, T85 · Files: `godot/addons/ai_constraints/`, `godot/test/ai_constraints/`, `python/gameaikit/constraints/`, `spec/vectors/constraints/`, `spec/squad/`, `godot/game/squad/`, `godot/test/squad/`, `docs/techniques/`, `Makefile`
 
 ## Goal
 
 The owner, 2026-10-26: every entry of part A, "todos" -- CSP and wave
-function collapse among them (T94's quote). T73's roadmap: "WFC as a
+function collapse among them (T95's quote). T73's roadmap: "WFC as a
 CSP", size S "on top" of the solver.
 
 mxgmn's README says it in one line: "WFC translates a texture synthesis
@@ -18,28 +18,31 @@ propagates; and it can run into "a contradiction and can not continue",
 
 ## Decisions written down first (the owner confirms in review)
 
-- **On T94's solver, not beside it**: WFC's simple tiled model as a
+- **On T95's solver, not beside it**: WFC's simple tiled model as a
   problem `ai_constraints` already solves -- a variable per cell, a domain
   of tiles, adjacency constraints, the minimal-entropy cell as the
   variable order, a weighted random value order -- so the lesson is that
   WFC is a CSP with a particular order, not a separate algorithm.
   On a contradiction it restarts with the next seed, and says how often.
-- **Home: the squad mode's maps** (T84), a tile grid with cover pieces;
-  each tile's edges carry the cover T84's rules read. T84's rules then
-  check the map is playable: both squads' starts connected, each start
-  with cover within one move.
-- **The tiles are ours, drawn in shapes**: the art (T88) is referenced and
-  may be absent, so the tile set is data in `spec/squad/tiles.json`, and a
-  map is valid without pictures.
+- **Home: the tactical game's XCOM mode** (T84). It plays on the tactical
+  map today; WFC gives it more maps made of the same terrain -- plain,
+  trees, rock, water, bridge, ford, the characters `TacticalRules` names --
+  with adjacency rules learned from nothing but a table written in
+  `spec/squad/tiles.json`. T84's rules then check a map is playable: both
+  squads' starts connected, each start with cover (trees or rock) within
+  one action.
+- **No new pictures**: the tiles are the terrain the tactical game already
+  draws, so a generated map looks like the game it belongs to.
 
 ## Steps
 
 1. Python: the tile set, adjacency from it, the generator; vectors (a
    seed in, the map and the restart count out).
 2. GDScript, held to the vectors.
-3. The squad mode gains "new map" (a key) using the generator; T86's and
-   T87's searches play on generated maps too, so their claims are not one
-   map's.
+3. The XCOM mode gains "new map" (a key free in the tactical scene, named
+   on its legend) using the generator. Re-running T87's and T88's
+   measurements on generated maps is left to whichever of them lands
+   after this; it is not this task's.
 4. The `ai_constraints` page, both languages, gains WFC.
 
 ## Acceptance
@@ -56,7 +59,7 @@ make lint-tasks lint-status
 
 ## Manual check
 
-Generate twenty maps in `make demo-squad`: do they look like places --
+Generate twenty maps in `make demo-tactical MODE=squad`: do they look like places --
 walls that meet, cover in clusters -- rather than noise? Play two.
 
 How invariant 13 is met: the map can be built step by step (a key): each

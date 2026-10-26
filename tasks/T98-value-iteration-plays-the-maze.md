@@ -1,11 +1,11 @@
-# T97 — Value iteration plays the maze: an MDP solved in Python, its policy shipped
+# T98 — Value iteration plays the maze: an MDP solved in Python, its policy shipped
 
-Size: M · Prereqs: T96 · Files: `python/gameaikit/mdp/`, `python/tests/`, `spec/vectors/mdp/`, `data/maze/`, `godot/game/maze/`, `godot/test/maze/`, `modules/maze.json`, `scripts/check_no_training.py`, `docs/concepts/`, `docs/techniques/`, `Makefile`
+Size: M · Prereqs: T97 · Files: `python/gameaikit/mdp/`, `python/tests/`, `spec/vectors/mdp/`, `data/maze/`, `godot/game/maze/`, `godot/test/maze/`, `modules/maze.json`, `scripts/check_no_training.py`, `docs/concepts/`, `docs/techniques/`, `Makefile`
 
 ## Goal
 
 The owner, 2026-10-26, answering T73's question 6: a small Pac-Man-style
-maze (T96), **value iteration in Python, the policy shipped** (invariant
+maze (T97), **value iteration in Python, the policy shipped** (invariant
 6). It teaches the step from search to sequential decisions under chance:
 states, actions, a transition model, rewards, a discount, and the Bellman
 update until the values settle (AIMA 4th ed., 17.1-17.2: 17.2.1 Value
@@ -25,15 +25,16 @@ owner chose the maze: a game people know, with an opponent in it.
   measured before the size is fixed, and the page says how long it took.
   A second ghost multiplies it by about 200, so it stays out of the solved
   game unless measured feasible.
-- **The transition model is the game's rules**, imported from T96's
+- **The transition model is the game's rules**, imported from T97's
   Python twin, not rewritten: the imprecise ghost's probability is where
   the chance comes from. Rewards: a pellet +1, all pellets +10 and the
   episode ends, caught -10 and it ends, a small cost per step; discount
   0.95. All in `spec/maze/mdp.json`.
 - **Invariant 6**: value iteration runs in Python and writes
   `data/maze/policy.json` (state to action) and `data/maze/values.json`;
-  Godot reads and looks up, never updates. `check_no_training.py` gains a
-  rule, numbered the next free N when written: the published policy is
+  Godot reads and looks up, never updates. `check_no_training.py` gains
+  **N15** (N13 and N14 are reserved for T99 and T100 by ADR 0016's
+  amendment, and this task may land first): the published policy is
   what `gameaikit.mdp` produces from the committed rules (a fresh run
   matches it), and no GDScript writes where it lives. Planted: a policy
   edited by hand, and a GDScript that writes one. Q-learning or any update
@@ -47,7 +48,7 @@ owner chose the maze: a game people know, with an opponent in it.
    transition, reward, discount), value iteration with a stopping
    threshold, policy iteration, both tested on two small grids whose
    values are worked out by hand, one of them Frozen-Lake-like.
-2. The maze as an MDP from T96's rules; solve; write the policy and the
+2. The maze as an MDP from T97's rules; solve; write the policy and the
    values. Vectors: for ten states, the value and the action.
 3. `MdpPacMan`, a controller in `godot/game/maze/` that looks the policy
    up; C cycles person and MDP.
