@@ -16,6 +16,21 @@ const CONVENTIONS: Dictionary = {
 }
 
 
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T79);
+# the Portuguese screen is test/locale's. The locale found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
+
 func test_a_sound_vector_is_accepted_and_claims_nothing_false() -> void:
 	assert_str(LearningVector.why_not_a_vector(_sound())).is_empty()
 	assert_array(LearningVector.check("sound", _sound())).is_empty()

@@ -41,7 +41,7 @@ const BUILD: int = 4
 ## Only `hard` of the three levels plays in the league: a technique is
 ## measured at its strongest, as every other team is.
 static func rows() -> Array[Array]:
-	return [
+	return [  # not shown: the names reach the screen through TacticalStatus.controller_said
 		["rules", "priority rules, the baseline (T30, T45)", "nothing", true,
 			func(_seed: int) -> BlueController: return RuleBasedBlue.new()],
 		["planner", "heuristic STRIPS for purchases, ADR 0010 (T11)", "walking and attacks, to the rules", true,

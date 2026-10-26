@@ -46,6 +46,8 @@ const OUTCOMES: Array[String] = ["red", "blue", "draw", "at-the-limit", "red-stu
 
 
 func _init() -> void:
+	# The reasons are read in English, whatever the machine's locale (T79).
+	TranslationServer.set_locale("en")
 	var arguments: PackedStringArray = OS.get_cmdline_user_args()
 	var games: int = int(arguments[0]) if not arguments.is_empty() and arguments[0].is_valid_int() else DEFAULT_GAMES
 	var limits: Array[Array] = _limits(arguments)

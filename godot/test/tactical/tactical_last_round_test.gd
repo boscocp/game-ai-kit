@@ -5,6 +5,21 @@ const RED: int = TacticalScenario.RED
 const BLUE: int = TacticalScenario.BLUE
 
 
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T79);
+# the Portuguese screen is test/locale's. The locale found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
+
 func test_an_equal_position_at_the_limit_is_still_a_draw() -> void:
 	# The planted case: the opening, mirrored -- without the shield blue is
 	# given for moving second -- carried to the limit untouched. Every score

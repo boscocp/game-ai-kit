@@ -18,6 +18,21 @@ const BRIDGE_WEST := Vector2i(6, 4)
 const IN_FRONT_OF_THE_BRIDGE := Vector2i(5, 4)
 
 
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T79);
+# the Portuguese screen is test/locale's. The locale found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
+
 func test_blue_wins_when_red_parks_a_runner_on_the_bridge() -> void:
 	assert_int(_play_against_a_parked_runner(BRIDGE_WEST)).is_equal(BLUE)
 

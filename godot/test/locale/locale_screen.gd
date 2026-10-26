@@ -35,6 +35,9 @@ const EXAMPLES: Dictionary = {
 	"res://game/tictactoe/tictactoe.tscn": ["Interface/Status", "Interface/Decision", "Interface/Legend"],
 	"res://game/stealth/stealth.tscn": ["Interface/Status", "Interface/Legend"],
 	"res://demos/behaviour/behaviour_demo.tscn": ["Interface/Status", "Interface/Legend"],
+	"res://game/tactical/tactical.tscn": ["Interface/Header", "Interface/Status", "Interface/EndTurn",
+		"Interface/Undo", "Interface/Legend"],
+	"res://game/main.tscn": ["Interface/Status", "Interface/Legend"],
 	"res://menu/menu.tscn": [],
 }
 
@@ -72,6 +75,9 @@ func _run() -> void:
 	TranslationServer.set_locale("pt_BR")
 	failures += await _planted()
 	for path: String in EXAMPLES:
+		# Counted from before the load: a script that fails to parse fails
+		# there, and the scene still opens without it (T79 found one).
+		_counter.errors = 0
 		failures += await _look_at(path, (load(path) as PackedScene).instantiate(), EXAMPLES[path])
 	TranslationServer.set_locale("en")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SETTINGS))
@@ -158,8 +164,9 @@ func _is_english(text: String) -> bool:
 	return _english.any(func(pattern: RegEx) -> bool: return pattern.search(text) != null)
 
 
+# The errors counted since `_counter.errors` was last set to 0 are this
+# example's: the caller zeroes it before it loads the scene.
 func _look_at(label: String, example: Node, expected: Array) -> Array[String]:
-	_counter.errors = 0
 	_lines_read = 0
 	if example is ExampleMenu:
 		(example as ExampleMenu).settings_path = SETTINGS
@@ -190,6 +197,7 @@ func _look_at(label: String, example: Node, expected: Array) -> Array[String]:
 func _planted() -> Array[String]:
 	var failures: Array[String] = []
 	for text: String in ["Play  (Enter)", "expandiu 3  ·  cost 7"]:
+		_counter.errors = 0
 		var planted := Label.new()
 		planted.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 		planted.text = text
@@ -197,6 +205,7 @@ func _planted() -> Array[String]:
 		holder.add_child(planted)
 		if (await _look_at("planted", holder, [])).is_empty():
 			failures.append("the planted Label %s was not seen: this check sees nothing" % text)
+	_counter.errors = 0
 	if (await _look_at("planted", Node2D.new(), [])).is_empty():
 		failures.append("an empty scene passed: this check would pass a blank screen")
 	return failures

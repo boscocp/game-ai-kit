@@ -70,14 +70,14 @@ static func hold(deciding_id: int, why: String, at: Vector2i) -> TacticalDecisio
 ## What kind of decision it is, as the overlay names it.
 func kind() -> String:
 	if move != null:
-		return "move"
+		return "move"  # not shown: the overlay's kind
 	if order != null:
-		return "build"
+		return "build"  # not shown: the overlay's kind
 	if attack != null:
-		return "attack"
+		return "attack"  # not shown: the overlay's kind
 	if upgrade != null:
-		return "buy"
-	return "hold"
+		return "buy"  # not shown: the overlay's kind
+	return "hold"  # not shown: the overlay's kind
 
 
 ## The state after this decision, or null when the board refuses it. A hold

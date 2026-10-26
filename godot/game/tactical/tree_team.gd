@@ -29,7 +29,9 @@ var _trails: Dictionary[int, String] = {}
 
 
 func _init() -> void:
-	var branches: Array[BehaviourTree.TreeNode] = [
+	# Not shown as written: the label of the branch that answers is translated
+	# where the trail is said (`_answered`), and the facts are keys.
+	var branches: Array[BehaviourTree.TreeNode] = [  # not shown
 		_branch("save itself", ["in danger?", "in_danger", "wounded?", "wounded"], "fall back", FALL_BACK),
 		_branch("defend", ["home threatened?", "home_threatened"], "defend", DEFEND),
 		_branch("siege", ["at their workshop?", "at_their_workshop"], "siege", SIEGE),
@@ -37,17 +39,17 @@ func _init() -> void:
 		_branch("take a point", ["a point free?", "point_free"], "take point", TAKE_POINT),
 		_do("march", SIEGE),
 	]
-	tree = BehaviourTree.new(BehaviourTree.Selector.new("walker", branches))
+	tree = BehaviourTree.new(BehaviourTree.Selector.new("walker", branches))  # not shown
 
 
 ## The name the league table and the screen give it.
 func controller_name() -> String:
-	return "behaviour tree"
+	return "behaviour tree"  # shown through tr()
 
 
 ## One line for the screen: what kind of thinking this is.
 func describe() -> String:
-	return "a behaviour tree, asked from the root every turn: it reconsiders everything, every time; builds by the rules"
+	return tr("a behaviour tree, asked from the root every turn: it reconsiders everything, every time; builds by the rules")
 
 
 ## Tick the tree from the root; the deed is the action that answered.
@@ -61,21 +63,23 @@ func decide(unit: Unit, known: TeamFacts) -> String:
 
 ## The branch that answered for this walker, from its last tick.
 func thinking(unit_id: int) -> String:
-	return _trails.get(unit_id, "not asked yet")
+	return _trails.get(unit_id, tr("not asked yet"))
 
 
 ## "Nodes ticked": every node a tick visited.
 func work_unit() -> String:
-	return "nodes ticked"
+	return "nodes ticked"  # not shown: the league's console counts in it
 
 
 # The trail's last few entries before the root's, which name the branch that
-# answered: "take a point: running", and the conditions that let it.
+# answered: "take a point: running", and the conditions that let it. The
+# trail is the addon's, in English; the branch's label is translated here.
 static func _answered(trail: Array[String]) -> String:
 	for entry: String in trail:
-		if entry.ends_with(": running"):
-			return "the tree answered with " + entry.trim_suffix(": running")
-	return "the tree answered nothing"
+		var branch: String = TranslationServer.translate(entry.trim_suffix(": running"))  # not shown
+		if entry.ends_with(": running"):  # not shown
+			return TranslationServer.translate("the tree answered with {branch}").format({branch = branch})
+	return TranslationServer.translate("the tree answered nothing")
 
 
 # A sequence named `label`: each [question, fact] pair in `asks` must hold,

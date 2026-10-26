@@ -18,7 +18,10 @@
     "spec/pddl/tactics.json",
     "python/tests/test_training.py",
     "python/gameaikit/tactical/",
-    "godot/game/unit_view.gd"
+    "godot/game/unit_view.gd",
+    "godot/locale/tactical.csv",
+    "godot/locale/tactical.csv.import",
+    "godot/locale/tactical.pt_BR.translation"
   ],
   "depends_on": [
     "ai_behaviour",

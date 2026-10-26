@@ -6,6 +6,21 @@
 extends GdUnitTestSuite
 
 
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T79);
+# the Portuguese screen is test/locale's. The locale found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
+
 func test_every_level_plays_a_game_the_board_accepts_every_decision_of() -> void:
 	for level: Difficulty in Difficulty.presets():
 		var result: Dictionary = TacticalMatch.play(LeveledBlue.new(level, 1), RuleBasedBlue.new(), 3)

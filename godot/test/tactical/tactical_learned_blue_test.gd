@@ -13,6 +13,21 @@ const CONVENTIONS: Dictionary = {"nearby_radius": 2, "reinforcement_distance_whe
 	"cheapest_ground": 1, "dearest_ground": 3}
 
 
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T79);
+# the Portuguese screen is test/locale's. The locale found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
+
 # --- the counter, shared and seen ------------------------------------------
 
 func test_the_rules_file_s_counter_table_is_the_game_s() -> void:

@@ -7,7 +7,10 @@
     "godot/game/main.tscn",
     "godot/game/plan_view.gd",
     "godot/game/skirmish_victory.gd",
-    "godot/test/skirmish/"
+    "godot/test/skirmish/",
+    "godot/locale/skirmish.csv",
+    "godot/locale/skirmish.csv.import",
+    "godot/locale/skirmish.pt_BR.translation"
   ],
   "depends_on": [
     "ai_core",

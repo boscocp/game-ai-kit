@@ -1,0 +1,275 @@
+en,pt_BR
+{side} is paid {amount} for holding the point(s) at {cells},as {side} recebem {amount} por segurar o(s) ponto(s) em {cells}
+nobody,ninguém
+points (each pays its holder {income} a turn): {points},pontos (cada um paga {income} por turno a quem o segura): {points}
+"GOAP: a goal per walker, the cheapest plan to it by turns on this board, replanned every decision; builds by the rules","GOAP: um objetivo por unidade, o plano mais barato até ele em turnos neste tabuleiro, refeito a cada decisão; constrói pelas regras"
+then,depois
+none,nenhum
+"goal {goal}, plan {plan}","objetivo {goal}, plano {plan}"
+no plan yet,ainda sem plano
+GOAP,GOAP
+"an HTN per walker: a plan by ranked methods, kept over turns until done, broken or bettered; builds by the rules","uma HTN por unidade: um plano por métodos em ordem, mantido entre turnos até ser cumprido, quebrado ou superado; constrói pelas regras"
+"method {method}, step {step} of {steps} ({deeds}), planned {why}","método {method}, passo {step} de {steps} ({deeds}), planejado {why}"
+at its first decision,na sua primeira decisão
+because the plan was done,porque o plano foi cumprido
+because {deed} could no longer run,porque {deed} não podia mais ser feito
+because {method} became possible,porque {method} ficou possível
+HTN,HTN
+save itself,salvar-se
+defend home,defender a base
+press the siege,apertar o cerco
+"hunt, then march","caçar, depois marchar"
+hold a point,segurar um ponto
+march,marchar
+take a point,tomar um ponto
+"the learned policy: the combat model's p(win) sets a walker out for a fight at {commit}, and it gives that fight up at {give_up} or below; a walker beside its side's attack joins it; it retreats only when the enemy is far stronger near it; the capture model picks the point; builds and sieges by the rules","a política aprendida: o p(vitória) do modelo de combate manda uma unidade a uma luta a partir de {commit}, e ela desiste dessa luta em {give_up} ou menos; uma unidade ao lado de um ataque do seu lado entra nele; só recua quando o inimigo é muito mais forte perto dela; o modelo de captura escolhe o ponto; constrói e sitia pelas regras"
+stays: the learned policy cannot decide -- {why},fica: a política aprendida não consegue decidir -- {why}
+"stays on the point at {cell}: a point left is a point not paid for (a rule, not the model)","fica no ponto em {cell}: ponto deixado é ponto que não paga (uma regra, não o modelo)"
+"the enemy holds it, and standing beside it breaks the hold (a rule, not the model)","o inimigo o segura, e ficar ao lado quebra isso (uma regra, não o modelo)"
+"attacks the enemy workshop at {cell}: destroying it wins (a rule, not the model)","ataca a oficina inimiga em {cell}: destruí-la vence (uma regra, não o modelo)"
+attacks {target} at {cell}: {why},ataca {target} em {cell}: {why}
+"p(win) {chance}, above the give-up bar {bar}: it set out for this {piece} and keeps on","p(vitória) {chance}, acima do limite de desistência {bar}: partiu para este {piece} e segue"
+"p(win) {chance}, at or above the commit bar {bar}","p(vitória) {chance}, no limite de compromisso {bar} ou acima"
+"p(win) {chance}, under its bar, but another walker of its side attacked within {cells} cells this turn and it joins in rather than leave (this board's rule, after Wesnoth's attack_close)","p(vitória) {chance}, abaixo do seu limite, mas outra unidade do seu lado atacou a até {cells} casas neste turno e ela entra junto em vez de sair (regra deste tabuleiro, a partir do attack_close do Wesnoth)"
+"it did not retreat from {piece} at {cell}, though p(win) {chance} is under its bar {bar}: the enemy's strength near it does not outweigh its side's by Wesnoth's caution {caution}","não recuou ({piece} em {cell}), embora p(vitória) {chance} esteja abaixo do seu limite {bar}: a força inimiga perto dela não supera a do seu lado pela cautela {caution} do Wesnoth"
+stays to attack {target} at {cell}: {why},fica para atacar {target} em {cell}: {why}
+walks to {walk} to attack {target} at {cell}: {why},anda até {walk} para atacar {target} em {cell}: {why}
+"the best fight in reach, {target} at {cell}, is p(win) {chance}, below the commit bar {bar}","a melhor luta ao alcance, {target} em {cell}, tem p(vitória) {chance}, abaixo do limite de compromisso {bar}"
+"the best fight in reach, {target} at {cell}, is p(win) {chance}, below the give-up bar {bar}","a melhor luta ao alcance, {target} em {cell}, tem p(vitória) {chance}, abaixo do limite de desistência {bar}"
+"stays, out of the reach of {piece} at {cell} or as far from it as it can be: {why}","fica, fora do alcance da ameaça ({piece} em {cell}) ou o mais longe dela que pode: {why}"
+"retreats to {walk}, out of the reach of {piece} at {cell} or as far as it can: {why}","recua até {walk}, fora do alcance da ameaça ({piece} em {cell}) ou o mais longe que pode: {why}"
+"no walk this turn brings it nearer the point at {point}, which it wants because {why}","nenhuma caminhada neste turno a aproxima do ponto em {point}, que ela quer porque {why}"
+"walks to {walk}, towards the point at {point}: {why}","anda até {walk}, rumo ao ponto em {point}: {why}"
+"the capture model says {turns} turns, against {other} for {cell}","o modelo de captura diz {turns} turnos, contra {other} para {cell}"
+the capture model says {turns} turns,o modelo de captura diz {turns} turnos
+unit {unit} attacks unit {opponent}: p(win) {chance} at or above {bar},"unidade {unit} ataca a unidade {opponent}: p(vitória) {chance}, em {bar} ou acima"
+unit {unit} retreats from unit {opponent}: p(win) {chance} below {bar},"unidade {unit} recua da unidade {opponent}: p(vitória) {chance}, abaixo de {bar}"
+unit {unit} advances on {node}: {turns} turns,unidade {unit} avança sobre {node}: {turns} turnos
+"unit {unit} advances on {node}: {turns} turns, against {other} at {cell}","unidade {unit} avança sobre {node}: {turns} turnos, contra {other} em {cell}"
+"unit {unit} contests {node}: unit {holder} stands on it, and a node left to the enemy is lost (a rule, not the model)","unidade {unit} disputa {node}: a unidade {holder} está nele, e nó deixado ao inimigo é nó perdido (uma regra, não o modelo)"
+unit {unit} holds: {why},unidade {unit} fica: {why}
+attack,atacar
+retreat,recuar
+advance,avançar
+contest,disputar
+hold,ficar
+no weights file was given to the policy,a política não recebeu arquivo de pesos
+the weights file publishes no `{model}` model,o arquivo de pesos não publica o modelo `{model}`
+no unit with that id is on the board,nenhuma unidade com esse id está no tabuleiro
+it is not this unit's side to move,não é a vez do lado desta unidade
+the combat model was handed a row it cannot read,o modelo de combate recebeu uma linha que não consegue ler
+no node was given to walk at,nenhum nó foi dado para onde andar
+the capture model was handed a row it cannot read,o modelo de captura recebeu uma linha que não consegue ler
+"{deed} (worth {worth}, {depth} ply)","{deed} (vale {worth}, {depth} meio-lance(s))"
+"attacks {target} at {cell}, as it walked here to","ataca {target} em {cell}, como veio fazer"
+attacks {target} at {cell}: worth {worth} where it stands,ataca {target} em {cell}: vale {worth} de onde está
+stays at {walk},fica em {walk}
+walks to {walk},anda até {walk}
+stays at {walk} to attack {target} at {cell},fica em {walk} para atacar {target} em {cell}
+walks to {walk} to attack {target} at {cell},anda até {walk} para atacar {target} em {cell}
+a state machine per walker: it commits to a state until an arrow fires; builds by the rules,uma máquina de estados por unidade: fica num estado até uma seta disparar; constrói pelas regras
+no machine yet,ainda sem máquina
+no arrow fired,nenhuma seta disparou
+"state {state}, {arrow}","estado {state}, {arrow}"
+state machine,máquina de estados
+in danger and wounded,em perigo e ferida
+an enemy walker is near its workshop,uma unidade inimiga está perto da sua oficina
+a piece it beats is in reach,uma peça que ela vence está ao alcance
+a control point is free,um ponto de controle está livre
+nothing it beats is in reach,nada que ela vence está ao alcance
+no point is free,nenhum ponto está livre
+home is clear,a base está livre
+out of danger,fora de perigo
+"a plan: STRIPS over the tactical domain with {guide}, made every {turns} turns or when it stops running; its walkers take the rules' routes","um plano: STRIPS sobre o domínio tático com {guide}, feito a cada {turns} turnos ou quando deixa de valer; suas unidades seguem as rotas das regras"
+the plan buys nothing more,o plano não compra mais nada
+no step of the plan is this {piece}'s,nenhum passo do plano é deste {piece}
+"plan ({guide}, {worlds} worlds searched): made {why}","plano ({guide}, {worlds} mundos examinados): feito {why}"
+no plan found: everything is the rules',nenhum plano achado: tudo fica com as regras
+(off: no remaining part of the plan runs from this board; it plans again next turn),(fora: nenhuma parte restante do plano vale neste tabuleiro; planeja de novo no próximo turno)
+"(partial: the budget ran out; these steps head for the goal, and it plans again when they are done)","(parcial: o orçamento acabou; estes passos vão rumo ao objetivo, e planeja de novo quando forem cumpridos)"
+off,fora
+done,feito
+next,agora
+at the start of the game,no começo da partida
+because {turns} of its turns had passed,porque {turns} turnos seus tinham passado
+"again, because the last call ran out of budget with nothing to follow","de novo, porque a última busca estourou o orçamento sem nada a seguir"
+"again, because the last call proved there is none","de novo, porque a última busca provou que não há plano"
+because the plan stopped running: {why},porque o plano deixou de valer: {why}
+because the partial plan's steps were done,porque os passos do plano parcial foram cumpridos
+"on round {round}, {why}","na rodada {round}, {why}"
+"step {step}, {name}, needs {fact}, which no longer holds","o passo {step}, {name}, precisa de {fact}, que não vale mais"
+"from step {step}, {name}, the rest no longer reaches {facts}","a partir do passo {step}, {name}, o resto não chega mais a {facts}"
+"{step}: saves, with {funds} funds, for {what}","{step}: guarda dinheiro, com {funds} de fundos, para {what}"
+{step}: cannot -- {why},{step}: não pode -- {why}
+{step}: saves -- {why},{step}: guarda dinheiro -- {why}
+"{step}: buys the forge, which a ram needs","{step}: compra a forja, de que o aríete precisa"
+{step}: builds {piece} at {cell},{step}: constrói {piece} em {cell}
+"step {step}, {name}, is not a purchase","o passo {step}, {name}, não é uma compra"
+nothing the plan names,nada que o plano nomeie
+the forge,a forja
+"plan step {step} of {steps}, {name}","passo {step} de {steps} do plano, {name}"
+{reason} ({why}: the rules decide),{reason} ({why}: as regras decidem)
+planner,planejador
+"rules, not a plan: build what beats the most enemy pieces, walk every unit at the enemy workshop","regras, não um plano: construir o que vence mais peças inimigas, mandar toda unidade à oficina inimiga"
+"builds {piece} at {cell}: the enemy's pieces shut every way its walkers have, and {piece} still gets there","constrói {piece} em {cell}: as peças inimigas fecham todo caminho das suas unidades, e {piece} ainda chega lá"
+"builds {piece} at {cell}: it beats {count} enemy piece(s), {beaten}","constrói {piece} em {cell}: vence {count} peça(s) inimiga(s), {beaten}"
+the enemy's pieces stand on every way to the enemy workshop this turn,as peças inimigas estão em todo caminho até a oficina inimiga neste turno
+{piece} at {cell},{piece} em {cell}
+"stays in reach of {aim}, to attack it","fica onde alcança {aim}, para atacar"
+{aim} already has one of its side's walkers for each cell beside it,{aim} já tem uma unidade do seu lado para cada casa ao lado
+no walk this turn brings it nearer {aim},"nenhuma caminhada neste turno a aproxima do alvo, {aim}"
+"walks to {cell}, towards {piece} at {enemy_cell}: {why}, so it goes for the nearest enemy piece it can (a fallback rule)","anda até {cell}, buscando {piece} em {enemy_cell}: {why}, então vai à peça inimiga mais próxima que puder (uma regra de reserva)"
+stays: no walk this turn brings it nearer its goal or any enemy piece -- {why},fica: nenhuma caminhada neste turno a aproxima do objetivo ou de alguma peça inimiga -- {why}
+builds nothing: {why},não constrói nada: {why}
+"builds {piece} at {cell}: nothing it can build beats an enemy piece, and money banked is a piece not on the board (spend first)","constrói {piece} em {cell}: nada que pode construir vence uma peça inimiga, e dinheiro guardado é peça fora do tabuleiro (gastar primeiro)"
+"builds {piece} at {cell}: it beats {count} enemy piece(s), {beaten} -- none of what beats them can get to the enemy workshop now, so it holds the bank until the way opens (spend first)","constrói {piece} em {cell}: vence {count} peça(s) inimiga(s), {beaten} -- nada do que as vence chega à oficina inimiga agora, então segura o caixa até o caminho abrir (gastar primeiro)"
+attacks the enemy workshop at {cell}: destroying it wins,ataca a oficina inimiga em {cell}: destruí-la vence
+"attacks {target} at {cell}: {mine} beats {theirs}, by the counter table","ataca {target} em {cell}: {mine} vence {theirs}, pela tabela de vantagens"
+nothing stops it: it can build,nada impede: pode construir
+"walks to {cell}, towards {aim}","anda até {cell}, buscando {aim}"
+"walks to {cell}, towards {aim}, crossing the bridge","anda até {cell}, buscando {aim}, pela ponte"
+"walks to {cell}, towards {aim}, crossing by the ford","anda até {cell}, buscando {aim}, pelo vau"
+"walks to {cell}, towards {aim}, wading across the river","anda até {cell}, buscando {aim}, atravessando o rio na água"
+"walks to {cell}, towards {aim}, making for a crossing","anda até {cell}, buscando {aim}, rumo a uma travessia"
+no room beside the workshop: every cell next to it is taken,sem espaço ao lado da oficina: toda casa vizinha está ocupada
+rules,regras
+easy,fácil
+normal,normal
+hard,difícil
+End turn (space),Encerrar turno (espaço)
+Undo (Z),Desfazer (Z)
+{cell} is {side}'s {piece} -- you can pick up only your own pieces,{cell}: {piece} das {side} -- você só pode pegar as suas peças
+this unit has attacked this turn; Z takes the attack back,esta unidade já atacou neste turno; Z desfaz o ataque
+the workshop has already built this turn; Z takes the build back,a oficina já construiu neste turno; Z desfaz a construção
+built {piece} at {cell}; it moves next turn,construiu {piece} em {cell}; ele se move no próximo turno
+nothing in hand that can still move,nada na mão que ainda possa se mover
+{piece} waits at {cell},{piece} espera em {cell}
+bought the forge: rams can be built,comprou a forja: já dá para construir aríetes
+nothing to take back this turn,nada a desfazer neste turno
+taken back,desfeito
+{count} unit(s) have not moved. End the turn anyway? Press space or the button again,{count} unidade(s) não se moveu(ram). Encerrar o turno assim mesmo? Aperte espaço ou o botão de novo
+C hands the computer to the next controller -- {names} -- and S swaps sides; either starts a new game,C troca o controlador do computador -- {names} -- e S troca de lado; ambos recomeçam a partida
+this {piece} has moved this turn,este {piece} já se moveu neste turno
+this {piece} has moved this turn; it can still attack an enemy in reach; Z takes the move back,este {piece} já se moveu neste turno; ainda pode atacar um inimigo ao alcance; Z desfaz o movimento
+this {piece} has moved this turn; it can still attack an enemy in reach,este {piece} já se moveu neste turno; ainda pode atacar um inimigo ao alcance
+this {piece} has moved this turn; Z takes the move back,este {piece} já se moveu neste turno; Z desfaz o movimento
+"{refusal}: water, which only waders cross","{refusal}: água, que só anfíbios atravessam"
+"{refusal}: rock, which nothing crosses","{refusal}: rocha, que nada atravessa"
+{side}'s attacks:,ataques das {side}:
+you play {person}; {computer} is played by {controller},você joga com as {person}; as {computer} são jogadas por: {controller}
+recording: {count} game(s) kept in data/tactical/,gravando: {count} partida(s) guardada(s) em data/tactical/
+every unit has moved: space ends the turn,toda unidade já se moveu: espaço encerra o turno
+"tactics in the style of Advance Wars: build, cross the river, destroy the enemy workshop","tática no estilo de Advance Wars: construa, atravesse o rio, destrua a oficina inimiga"
+no unit {unit} is on the board,nenhuma unidade {unit} está no tabuleiro
+it is not the {piece}'s side's turn,não é a vez do lado desta peça ({piece})
+{piece} cannot attack,{piece} não pode atacar
+"{piece} fires by itself, at the start of its side's turn","{piece} atira sozinha, no começo do turno do seu lado"
+no unit {unit} is on the board to attack,nenhuma unidade {unit} está no tabuleiro para atacar
+{piece} at {cell} is on the same side,{piece} em {cell} é do mesmo lado
+"{side}'s {piece} at {cell} is {apart} away, and {attacker} reaches {reach}","{piece} das {side} em {cell} está a {apart} de distância, e {attacker} alcança {reach}"
+"the {who} struck the {whom}, which has {health} health left (the attacker {left})","{who} atingiu {whom}, que ficou com {health} de vida (o atacante, {left})"
+"the {who} destroyed the {whom}, and has {left} health left","{who} destruiu {whom}, e ficou com {left} de vida"
+the {who} attacked the {whom} and was destroyed; {piece} has {health} health left,{who} atacou {whom} e caiu; {piece} ficou com {health} de vida
+{side} {piece} at {cell},{piece} das {side} em {cell}
+red side: yours,lado vermelho: o seu
+blue side: the computer,lado azul: o computador
+where the piece in hand can walk,onde a peça na mão pode andar
+greyed: moved this turn,cinza: já se moveu neste turno
+yellow number: health,número amarelo: vida
+pink: what blue will do next,rosa: o que as azuis vão fazer
+red: enemy reach (T),vermelho: alcance inimigo (T)
+open ground,terreno aberto
+trees: cost 3 to enter,árvores: custam 3 para entrar
+rock: nothing crosses,rocha: nada atravessa
+deep water: only waders cross,água funda: só anfíbios atravessam
+bridge: the quick crossing,ponte: a travessia rápida
+"ford: anyone crosses, cost {cost}","vau: todos atravessam, custo {cost}"
+"flag: a point, +{income} a turn to its holder","bandeira: ponto, dá +{income} por turno"
+fixed,fixa
+moves {cells},vai {cells}
+every building,toda construção
+"{piece}: {motion}, beats {beaten}","{piece}: {motion}, bate {beaten}"
+runner,corredor
+shield,escudo
+mortar,morteiro
+wader,anfíbio
+ram,aríete
+bolt tower,balista
+watchtower,torre de vigia
+workshop,oficina
+forge,forja
+"Z takes back the last thing you did  ·  space ends your turn, and {side} is paid {income} and its points","Z desfaz a última coisa que você fez  ·  espaço encerra seu turno, e as {side} recebem {income} mais seus pontos"
+refused: {why},recusado: {why}
+{side} is thinking with {controller},as {side} pensam com: {controller}
+next (drawn in pink): unit {unit} {why},próximo (em rosa): unidade {unit} {why}
+space plays it  ·  enter plays the rest of {side}'s turn,espaço joga  ·  enter joga o resto do turno das {side}
+{side} has finished its turn. Space hands it back to {other},as {side} terminaram o turno. Espaço devolve a vez às {other}
+{count} decision(s) played this turn,{count} decisão(ões) jogada(s) neste turno
+(the numbers on the board are the pieces each step counts on),(os números no tabuleiro são as peças com que cada passo conta)
+red,vermelhas
+blue,azuis
+not owned,não comprada
+owned,comprada
+round {round}  ·  {side} to move  ·  funds {funds}  ·  forge {forge},rodada {round}  ·  vez das {side}  ·  fundos {funds}  ·  forja {forge}
+nothing in hand,nada na mão
+nothing,nada
+does not move,não se move
+movement left {points},movimento restante {points}
+in hand: {piece} (unit {unit})  ·  health {health}  ·  {motion}  ·  reach {reach}  ·  beats {beats},na mão: {piece} (unidade {unit})  ·  vida {health}  ·  {motion}  ·  alcance {reach}  ·  vence {beats}
+click one of your pieces.,clique numa peça sua.
+press 1-5 to build: {prices}.,aperte 1-5 para construir: {prices}.
+press 1-5 to build: {prices}. U buys the forge ({cost}).,aperte 1-5 para construir: {prices}. U compra a forja ({cost}).
+{piece} cannot move. Click another of your pieces.,{piece} não se move. Clique em outra peça sua.
+this unit has no movement left. Click another of your pieces.,esta unidade não tem mais movimento. Clique em outra peça sua.
+"click a lit cell to walk there, and the unit is spent until your next turn; W has it wait where it is. A step costs the number on the cell, or 1.","clique numa casa acesa para andar até lá, e a unidade fica gasta até o seu próximo turno; W a faz esperar onde está. Um passo custa o número da casa, ou 1."
+"{piece} at {cell}, health {health}","{piece} em {cell}, vida {health}"
+"{piece} at {cell}, health {health} (you beat it)","{piece} em {cell}, vida {health} (vantagem sua)"
+"{piece} at {cell}, health {health} (it beats you)","{piece} em {cell}, vida {health} (vantagem dele)"
+"click an enemy to attack it, once a turn: {targets}","clique num inimigo para atacá-lo, uma vez por turno: {targets}"
+the runner,o corredor
+the shield,o escudo
+the mortar,o morteiro
+the wader,o anfíbio
+the ram,o aríete
+the bolt tower,a balista
+the watchtower,a torre de vigia
+the workshop,a oficina
+a runner,um corredor
+a shield,um escudo
+a mortar,um morteiro
+a wader,um anfíbio
+a ram,um aríete
+a bolt tower,uma balista
+a watchtower,uma torre de vigia
+a workshop,uma oficina
+"to win: destroy the enemy workshop -- attack it with a unit in reach. After {rounds} rounds the higher score wins: workshop health, then point-turns held (each point, each turn it was held), then what is left standing; blue moves second and starts with one more shield","para vencer: destrua a oficina inimiga -- ataque-a com uma unidade ao alcance. Depois de {rounds} rodadas vence a maior pontuação: vida da oficina, depois turnos-ponto segurados (cada ponto, cada turno em que foi segurado), depois o que restou de pé; as azuis jogam em segundo e começam com um escudo a mais"
+"to win: destroy the enemy workshop -- attack it with a unit in reach. After {rounds} rounds the higher score wins: workshop health, then point-turns held (each point, each turn it was held), then what is left standing","para vencer: destrua a oficina inimiga -- ataque-a com uma unidade ao alcance. Depois de {rounds} rodadas vence a maior pontuação: vida da oficina, depois turnos-ponto segurados (cada ponto, cada turno em que foi segurado), depois o que restou de pé"
+"a draw: {rounds} rounds, and nobody destroyed a workshop.  R starts again.","empate: {rounds} rodadas, e ninguém destruiu uma oficina.  R recomeça."
+{winner} wins: the {loser} workshop is destroyed.  R starts again.,as {winner} vencem: a oficina das {loser} foi destruída.  R recomeça.
+"red {red}, blue {blue} (workshop health, point-turns held, left standing)","vermelhas {red}, azuis {blue} (vida da oficina, turnos-ponto, o que restou de pé)"
+"a draw: {rounds} rounds, and the scores are equal -- {scores}.  R starts again.","empate: {rounds} rodadas, e as pontuações são iguais -- {scores}.  R recomeça."
+{winner} wins on score after {rounds} rounds: {scores}.  R starts again.,as {winner} vencem por pontos depois de {rounds} rodadas: {scores}.  R recomeça.
+nothing pressing,nada urgente
+the enemy walker nearest its workshop,a unidade inimiga mais perto da sua oficina
+"{prey} at {cell}, which {piece} beats","{prey} em {cell}, que {piece} vence"
+"stays in reach of {aim}, to strike it","fica onde alcança {aim}, para golpear"
+"walks to {walk}, in reach of {aim}","anda até {walk}, de onde alcança {aim}"
+"{what}, {piece} at {cell}","{what}, {piece} em {cell}"
+stays in reach of {aim},fica onde alcança {aim}
+stays: no walk this turn brings it nearer {aim},"fica: nenhuma caminhada neste turno a aproxima do alvo, {aim}"
+"stays on the point at {cell}, which pays while it holds it","fica no ponto em {cell}, que paga enquanto ela o segura"
+"no walk this turn brings it nearer the point at {cell}, so by the rules: {reason}","nenhuma caminhada neste turno a aproxima do ponto em {cell}, então pelas regras: {reason}"
+"walks to {walk}, towards the point at {cell}","anda até {walk}, rumo ao ponto em {cell}"
+stays: no walk this turn leaves fewer of what beats it in reach ({count}),fica: nenhuma caminhada neste turno deixa menos do que a vence ao alcance ({count})
+"walks back to {walk}, where {count} of what beats it could strike","volta até {walk}, onde {count} do que a vence poderia golpear"
+siege,sitiar
+hunt,caçar
+defend,defender
+take point,tomar o ponto
+fall back,recuar
+"a behaviour tree, asked from the root every turn: it reconsiders everything, every time; builds by the rules","uma behaviour tree, consultada da raiz a cada turno: reconsidera tudo, toda vez; constrói pelas regras"
+not asked yet,ainda não consultada
+the tree answered with {branch},a árvore respondeu com {branch}
+the tree answered nothing,a árvore não respondeu nada
+behaviour tree,behaviour tree
+learned policy,política aprendida

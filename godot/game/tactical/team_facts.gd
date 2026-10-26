@@ -85,7 +85,7 @@ func said() -> String:
 	for name: String in facts:
 		if facts[name]:
 			true_ones.append(name)
-	return ", ".join(true_ones) if not true_ones.is_empty() else "nothing pressing"
+	return ", ".join(true_ones) if not true_ones.is_empty() else tr("nothing pressing")
 
 
 # Home: the enemy walker nearest its workshop, and whether it is near enough

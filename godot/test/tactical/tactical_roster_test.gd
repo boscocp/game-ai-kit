@@ -10,6 +10,21 @@ const ORDER_BEFORE: Array[String] = ["rules", "planner", "learned", "easy", "nor
 	"state machine", "behaviour tree", "GOAP", "HTN"]
 
 
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T79);
+# the Portuguese screen is test/locale's. The locale found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
+
 func test_every_row_builds_a_controller_that_answers_to_its_name() -> void:
 	# The game finds the row it is on by the name the controller gives
 	# itself, so a row whose controller called itself something else would

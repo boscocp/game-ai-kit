@@ -64,7 +64,7 @@ func _draw_number(middle: Vector2) -> void:
 ## winning for a fight weighed, the turns to hold for a node chosen.
 static func number_of(decision: LearnedDecision) -> String:
 	if is_finite(decision.win_probability):
-		return "p(win) %.2f" % decision.win_probability
+		return TranslationServer.translate("p(win) {chance}").format({chance = "%.2f" % decision.win_probability})
 	if is_finite(decision.predicted_turns):
-		return "%.1f turns" % decision.predicted_turns
-	return decision.action
+		return TranslationServer.translate("{turns} turns").format({turns = "%.1f" % decision.predicted_turns})
+	return TranslationServer.translate(decision.action)

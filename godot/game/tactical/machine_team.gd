@@ -29,7 +29,7 @@
 class_name MachineTeam
 extends TechniqueTeam
 
-const ADVANCE: String = "advance"
+const ADVANCE: String = "advance"  # shown through tr()
 
 # Walker id -> its machine. A walker met for the first time starts advancing.
 var _machines: Dictionary[int, StateMachine] = {}
@@ -38,12 +38,12 @@ var _last_turn: int = -1
 
 ## The name the league table and the screen give it.
 func controller_name() -> String:
-	return "state machine"
+	return "state machine"  # shown through tr()
 
 
 ## One line for the screen: what kind of thinking this is.
 func describe() -> String:
-	return "a state machine per walker: it commits to a state until an arrow fires; builds by the rules"
+	return tr("a state machine per walker: it commits to a state until an arrow fires; builds by the rules")
 
 
 ## A new turn; a turn no later than the last means a new game, and every
@@ -68,13 +68,14 @@ func decide(unit: Unit, known: TeamFacts) -> String:
 func thinking(unit_id: int) -> String:
 	var machine: StateMachine = _machines.get(unit_id)
 	if machine == null:
-		return "no machine yet"
-	return "state %s, %s" % [machine.current, machine.last_change if machine.last_change != "" else "no arrow fired"]
+		return tr("no machine yet")
+	var arrow: String = tr(machine.last_change) if machine.last_change != "" else tr("no arrow fired")
+	return tr("state {state}, {arrow}").format({state = tr(machine.current), arrow = arrow})
 
 
 ## "States updated": one per walker decision.
 func work_unit() -> String:
-	return "states updated"
+	return "states updated"  # not shown: the league's console counts in it
 
 
 static func _made() -> StateMachine:
@@ -82,13 +83,13 @@ static func _made() -> StateMachine:
 	var danger: Callable = func(facts: Dictionary) -> bool: return facts["in_danger"] and facts["wounded"]
 	var threatened: Callable = func(facts: Dictionary) -> bool: return facts["home_threatened"]
 	for from: String in [ADVANCE, HUNT, TAKE_POINT, DEFEND]:
-		machine.add_arrow(from, FALL_BACK, danger, "in danger and wounded")
+		machine.add_arrow(from, FALL_BACK, danger, "in danger and wounded")  # shown through tr()
 		if from != DEFEND:
-			machine.add_arrow(from, DEFEND, threatened, "an enemy walker is near its workshop")
-	machine.add_arrow(ADVANCE, HUNT, func(facts: Dictionary) -> bool: return facts["prey_in_reach"], "a piece it beats is in reach")
-	machine.add_arrow(ADVANCE, TAKE_POINT, func(facts: Dictionary) -> bool: return facts["point_free"], "a control point is free")
-	machine.add_arrow(HUNT, ADVANCE, func(facts: Dictionary) -> bool: return not facts["prey_in_reach"], "nothing it beats is in reach")
-	machine.add_arrow(TAKE_POINT, ADVANCE, func(facts: Dictionary) -> bool: return not facts["point_free"], "no point is free")
-	machine.add_arrow(DEFEND, ADVANCE, func(facts: Dictionary) -> bool: return facts["home_clear"], "home is clear")
-	machine.add_arrow(FALL_BACK, ADVANCE, func(facts: Dictionary) -> bool: return not facts["in_danger"], "out of danger")
+			machine.add_arrow(from, DEFEND, threatened, "an enemy walker is near its workshop")  # shown through tr()
+	machine.add_arrow(ADVANCE, HUNT, func(facts: Dictionary) -> bool: return facts["prey_in_reach"], "a piece it beats is in reach")  # shown through tr()
+	machine.add_arrow(ADVANCE, TAKE_POINT, func(facts: Dictionary) -> bool: return facts["point_free"], "a control point is free")  # shown through tr()
+	machine.add_arrow(HUNT, ADVANCE, func(facts: Dictionary) -> bool: return not facts["prey_in_reach"], "nothing it beats is in reach")  # shown through tr()
+	machine.add_arrow(TAKE_POINT, ADVANCE, func(facts: Dictionary) -> bool: return not facts["point_free"], "no point is free")  # shown through tr()
+	machine.add_arrow(DEFEND, ADVANCE, func(facts: Dictionary) -> bool: return facts["home_clear"], "home is clear")  # shown through tr()
+	machine.add_arrow(FALL_BACK, ADVANCE, func(facts: Dictionary) -> bool: return not facts["in_danger"], "out of danger")  # shown through tr()
 	return machine
