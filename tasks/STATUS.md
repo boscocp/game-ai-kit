@@ -327,6 +327,7 @@ review.
 | T102 | The tactical match's header and status fit the window | todo | found by T80's width check: the header runs off the window in English too (`NOT_YET_FITTED`); the status has no margin in pt-BR |
 | T103 | The pad's legend line speaks Portuguese | todo | `PadAsKeys.add_to`'s line is English on every demo (`game_shared` has no table); a planted pad for the screen check |
 | T104 | The tactical AI keeps its reasons as keys, translated where shown | todo | T79 worded the tactical teams' reasons with `tr()` at decision time; T80's review moved the RTS and fighting AIs to `Sentence`; the same for tactical and the skirmish |
+| T105 | Seek is given a time to reach its velocity | wip | wave 98: the follow-up from T75's review -- seek closed the velocity gap at an implicit gain of one a second, and the racing example multiplied its force by 10; seek and pursue gain arrive's `time_to_target` (Millington), default 1 s, today's behaviour |
 
 ---
 
