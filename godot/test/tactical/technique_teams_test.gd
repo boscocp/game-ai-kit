@@ -5,6 +5,21 @@
 extends GdUnitTestSuite
 
 
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T79);
+# the Portuguese screen is test/locale's. The locale found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
+
 func test_the_state_machine_stays_a_defender_until_home_is_clear() -> void:
 	var team := MachineTeam.new()
 	var walker: Unit = _red_runner(TacticalScenario.build())

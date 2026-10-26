@@ -23,7 +23,7 @@ class_name HtnTeam
 extends TechniqueTeam
 
 ## The top task every walker breaks down.
-const TOP: String = "walker"
+const TOP: String = "walker"  # not shown
 
 var _planner := HtnPlanner.new()
 var _domain: HtnDomain = domain()
@@ -35,12 +35,12 @@ var _replans: int = 0
 
 ## The name the league table and the screen give it.
 func controller_name() -> String:
-	return "HTN"
+	return "HTN"  # shown through tr()
 
 
 ## One line for the screen: what kind of thinking this is.
 func describe() -> String:
-	return "an HTN per walker: a plan by ranked methods, kept over turns until done, broken or bettered; builds by the rules"
+	return tr("an HTN per walker: a plan by ranked methods, kept over turns until done, broken or bettered; builds by the rules")
 
 
 ## The walker's primitive tasks and the one compound task, with its methods
@@ -54,12 +54,12 @@ static func domain() -> HtnDomain:
 	made.add_primitive(HUNT, {"prey_in_reach": true}, {"prey_in_reach": false})
 	made.add_primitive(SIEGE, {}, {"workshop_fallen": true})
 	made.add_primitive(TAKE_POINT, {"point_free": true}, {"point_kept": true})
-	made.add_method(TOP, "save itself", {"in_danger": true, "wounded": true}, [FALL_BACK] as Array[String])
-	made.add_method(TOP, "defend home", {"home_threatened": true}, [DEFEND] as Array[String])
-	made.add_method(TOP, "press the siege", {"at_their_workshop": true}, [SIEGE] as Array[String])
-	made.add_method(TOP, "hunt, then march", {"prey_in_reach": true}, [HUNT, SIEGE] as Array[String])
-	made.add_method(TOP, "hold a point", {"point_free": true}, [TAKE_POINT] as Array[String])
-	made.add_method(TOP, "march", {}, [SIEGE] as Array[String])
+	made.add_method(TOP, "save itself", {"in_danger": true, "wounded": true}, [FALL_BACK] as Array[String])  # shown through tr()
+	made.add_method(TOP, "defend home", {"home_threatened": true}, [DEFEND] as Array[String])  # shown through tr()
+	made.add_method(TOP, "press the siege", {"at_their_workshop": true}, [SIEGE] as Array[String])  # shown through tr()
+	made.add_method(TOP, "hunt, then march", {"prey_in_reach": true}, [HUNT, SIEGE] as Array[String])  # shown through tr()
+	made.add_method(TOP, "hold a point", {"point_free": true}, [TAKE_POINT] as Array[String])  # shown through tr()
+	made.add_method(TOP, "march", {}, [SIEGE] as Array[String])  # shown through tr()
 	return made
 
 
@@ -91,12 +91,18 @@ func decide(unit: Unit, known: TeamFacts) -> String:
 ## The walker's method, the step it is on, and why it last planned.
 func thinking(unit_id: int) -> String:
 	if not _plans.has(unit_id):
-		return "no plan yet"
+		return tr("no plan yet")
 	var held: Array = _plans[unit_id]
 	var plan: BehaviourPlan = held[0]
-	return "method %s, step %d of %d (%s), planned %s" % [
-		plan.methods[0].trim_prefix(TOP + ": ") if not plan.methods.is_empty() else "none",
-		held[1] + 1, plan.steps.size(), " then ".join(plan.steps), held[2]]
+	var method: String = tr("none")
+	if not plan.methods.is_empty():
+		method = tr(plan.methods[0].trim_prefix(TOP + ": "))
+	var steps: Array[String] = []
+	for step: String in plan.steps:
+		steps.append(tr(step))
+	return tr("method {method}, step {step} of {steps} ({deeds}), planned {why}").format({
+		method = method, step = held[1] + 1, steps = plan.steps.size(),
+		deeds = (" %s " % tr("then")).join(steps), why = held[2]})
 
 
 ## "Tasks": the tasks the decomposition visited.
@@ -119,13 +125,15 @@ func _skip_steps_done(plan: BehaviourPlan, next: int, facts: Dictionary) -> int:
 # Why to plan again this turn, or "" to carry on.
 func _why_plan_again(plan: BehaviourPlan, next: int, facts: Dictionary) -> String:
 	if plan.steps.is_empty():
-		return "at its first decision"
+		return tr("at its first decision")
 	if next >= plan.steps.size():
-		return "because the plan was done"
+		return tr("because the plan was done")
 	if not HtnDomain.holds(_domain.primitives[plan.steps[next]][0], facts):
-		return "because %s could no longer run" % plan.steps[next]
+		return tr("because {deed} could no longer run").format({deed = tr(plan.steps[next])})
 	var better: String = _better_method(plan, facts)
-	return "because %s became possible" % better if better != "" else ""
+	if better == "":
+		return ""
+	return tr("because {method} became possible").format({method = tr(better)})
 
 
 # A method ranked above the one being carried out whose conditions now hold.

@@ -34,7 +34,7 @@ class_name TacticalGame
 extends Node2D
 
 ## What the scene says it is, on screen, before anything else.
-const WHAT_THIS_IS: String = "tactics in the style of Advance Wars: build, cross the river, destroy the enemy workshop"
+const WHAT_THIS_IS: String = "tactics in the style of Advance Wars: build, cross the river, destroy the enemy workshop"  # shown through tr()
 
 @onready var _board: BoardView = $BoardView
 @onready var _units: UnitView = $UnitView
@@ -84,11 +84,27 @@ var _starting_seed: int = 0
 
 
 func _ready() -> void:
-	_legend.set_entries(TacticalLegend.entries(_types))
+	_set_words()
 	_end_button.pressed.connect(end_turn)
 	_undo_button.pressed.connect(undo)
 	new_game()
 	BoardLayout.lay_out(self, state.graph, _status, _legend)
+	Language.apply_if_opened_alone(self)
+
+
+# The words are rebuilt in the language just chosen (T79): text set from code
+# keeps the words it was given. The notification also comes on entering the
+# tree, before _ready, when there is nothing to rebuild yet.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_set_words()
+		_refresh()
+
+
+func _set_words() -> void:
+	_legend.set_entries(TacticalLegend.entries(_types))
+	_end_button.text = tr("End turn (space)")
+	_undo_button.text = tr("Undo (Z)")
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -145,8 +161,8 @@ func click_cell(cell: Vector2i) -> void:
 	elif occupant != null and state.unit_by_id(_selected_id) != null:
 		attack(occupant)
 	elif occupant != null:
-		_last_refusal = "%s is %s's %s -- you can pick up only your own pieces" % [
-			cell, TacticalStatus.side_name(occupant.faction), occupant.type.type_name]
+		_last_refusal = tr("{cell} is {side}'s {piece} -- you can pick up only your own pieces").format({
+			cell = cell, side = TacticalStatus.side_name(occupant.faction), piece = TacticalStatus.piece(occupant.type.type_name)})
 	else:
 		_walk_to(cell)
 	_refresh()
@@ -159,7 +175,7 @@ func attack(target: Unit) -> void:
 	if not _persons_turn():
 		return
 	if _turn.has_attacked(_selected_id):
-		_refuse("this unit has attacked this turn; Z takes the attack back")
+		_refuse(tr("this unit has attacked this turn; Z takes the attack back"))
 		return
 	var strike := Attack.new(_selected_id, target.id)
 	var before: BoardState = state
@@ -183,14 +199,14 @@ func build(index: int) -> void:
 	var kind: UnitType = _types[TacticalRules.BUILDABLE[index]]
 	var workshop: Unit = state.unit_by_id(_selected_id)
 	if workshop != null and not workshop.type.produces.is_empty() and _turn.is_spent(workshop.id):
-		_refuse("the workshop has already built this turn; Z takes the build back")
+		_refuse(tr("the workshop has already built this turn; Z takes the build back"))
 		return
 	var order := ProductionOrder.new(_selected_id, kind, TacticalRules.free_cell_beside(state, workshop, kind))
 	var before: BoardState = state
 	if _act(state.produce(order), state.why_production_refused(order)):
 		_note(TacticalDecision.build(order.producer_id, order, ""), before)
 		_turn.spend(_selected_id)
-		_last_event = "built a %s at %s; it moves next turn" % [kind.type_name, order.cell]
+		_last_event = tr("built {piece} at {cell}; it moves next turn").format({piece = TacticalStatus.a_piece(kind.type_name), cell = order.cell})
 	_refresh()
 
 
@@ -201,12 +217,12 @@ func wait() -> void:
 	_confirming_end = false
 	var unit: Unit = state.unit_by_id(_selected_id)
 	if unit == null or not unit.id in _turn.unspent(state):
-		_refuse("nothing in hand that can still move")
+		_refuse(tr("nothing in hand that can still move"))
 		return
 	_turn.remember(state)
 	_note(TacticalDecision.hold(unit.id, "", unit.cell), state)
 	_turn.spend(unit.id)
-	_last_event = "the %s waits at %s" % [unit.type.type_name, unit.cell]
+	_last_event = tr("{piece} waits at {cell}").format({piece = TacticalStatus.the_piece(unit.type.type_name), cell = unit.cell})
 	_last_refusal = ""
 	_select_next_unspent()
 	_refresh()
@@ -221,7 +237,7 @@ func buy_forge() -> void:
 	var before: BoardState = state
 	if _act(state.buy(forge), state.why_upgrade_refused(forge)):
 		_note(TacticalDecision.buy(_selected_id, forge, "", Vector2i.ZERO), before)
-		_last_event = "bought the forge: rams can be built"
+		_last_event = tr("bought the forge: rams can be built")
 	_refresh()
 
 
@@ -234,14 +250,14 @@ func undo() -> void:
 	var spent_before: Array[int] = _turn.spent_ids()
 	var before: BoardState = _turn.undo()
 	if before == null:
-		_refuse("nothing to take back this turn")
+		_refuse(tr("nothing to take back this turn"))
 		return
 	state = before
 	# Every action undo can take back remembered one state and wrote one row.
 	if not _recorded.is_empty():
 		_recorded.pop_back()
 	_last_refusal = ""
-	_last_event = "taken back"
+	_last_event = tr("taken back")
 	_hold_what_was_taken_back(spent_before)
 	_refresh()
 
@@ -265,7 +281,7 @@ func end_turn() -> void:
 	var waiting: int = _turn.unspent(state).size()
 	if waiting > 0 and not _confirming_end:
 		_confirming_end = true
-		_refuse("%d unit(s) have not moved. End the turn anyway? Press space or the button again" % waiting)
+		_refuse(tr("{count} unit(s) have not moved. End the turn anyway? Press space or the button again").format({count = waiting}))
 		return
 	_hand_to_computer()
 
@@ -380,7 +396,11 @@ func _press(keycode: Key) -> void:
 ## so a person knows the computer is a slot and not a fixed opponent. The
 ## names come from `TacticalRoster`, so the sentence cannot fall behind it.
 static func controllers_to_come() -> String:
-	return "C hands the computer to the next controller -- %s -- and S swaps sides; either starts a new game" % ", ".join(TacticalRoster.names())
+	var names: Array[String] = []
+	for row_name: String in TacticalRoster.names():
+		names.append(TacticalStatus.name_said(row_name))
+	return TranslationServer.translate("C hands the computer to the next controller -- {names} -- and S swaps sides; either starts a new game").format({
+		names = ", ".join(names)})
 
 
 ## Hand the computer's side to the next row of `TacticalRoster`, round to
@@ -412,9 +432,21 @@ func _pick_up(unit: Unit) -> void:
 		# Held, so the status describes it, but with nothing lit: a spent unit
 		# has nowhere to go until next turn -- though one that has walked may
 		# still attack from where it stopped.
-		var still: String = "" if _turn.has_attacked(unit.id) else "; it can still attack an enemy in reach"
-		var back: String = "; Z takes the move back" if _turn.can_undo() else ""
-		_last_refusal = "this %s has moved this turn%s%s" % [unit.type.type_name, still, back]
+		_last_refusal = _moved_already(unit, not _turn.has_attacked(unit.id), _turn.can_undo())
+
+
+# What a person is told about a unit that has walked this turn: whether it
+# may still attack, and whether Z can take the walk back -- four sentences,
+# not one with pieces glued on, so each reads whole in either language.
+func _moved_already(unit: Unit, can_attack: bool, can_undo: bool) -> String:
+	var said: String = tr("this {piece} has moved this turn")
+	if can_attack and can_undo:
+		said = tr("this {piece} has moved this turn; it can still attack an enemy in reach; Z takes the move back")
+	elif can_attack:
+		said = tr("this {piece} has moved this turn; it can still attack an enemy in reach")
+	elif can_undo:
+		said = tr("this {piece} has moved this turn; Z takes the move back")
+	return said.format({piece = TacticalStatus.piece(unit.type.type_name)})
 
 
 # Walk the unit in hand along the cheapest route the highlight offered, or,
@@ -422,7 +454,7 @@ func _pick_up(unit: Unit) -> void:
 func _walk_to(cell: Vector2i) -> void:
 	var unit: Unit = state.unit_by_id(_selected_id)
 	if unit != null and _turn.is_spent(unit.id):
-		_refuse("this %s has moved this turn; Z takes the move back" % unit.type.type_name)
+		_refuse(_moved_already(unit, false, true))
 		return
 	var walks: Dictionary = TacticalReach.walks_for(state, unit) if unit != null else {}
 	var path: Array[Vector2i] = [cell]
@@ -456,13 +488,13 @@ func _refuse(reason: String) -> void:
 
 # The board says a cell is blocked; the game knows what it is blocked *by*.
 func _explained(refusal: String, cell: Vector2i) -> String:
-	if not refusal.ends_with("is blocked") or not state.graph.contains(cell):
+	if not refusal.ends_with("is blocked") or not state.graph.contains(cell):  # not shown: the board's English, compared
 		return refusal
 	match TacticalScenario.MAP[cell.y][cell.x]:
 		TacticalRules.WATER:
-			return refusal + ": water, which only waders cross"
+			return tr("{refusal}: water, which only waders cross").format({refusal = TacticalRefusal.words(refusal)})
 		TacticalRules.ROCK:
-			return refusal + ": rock, which nothing crosses"
+			return tr("{refusal}: rock, which nothing crosses").format({refusal = TacticalRefusal.words(refusal)})
 	return refusal
 
 
@@ -509,7 +541,7 @@ func _open_turn() -> void:
 func _with_computer_news(towers: String) -> String:
 	if _computer_news.is_empty():
 		return towers
-	var lines: Array[String] = ["%s's attacks:" % TacticalStatus.side_name(TacticalScenario.FACTIONS - 1 - person_side)]
+	var lines: Array[String] = [tr("{side}'s attacks:").format({side = TacticalStatus.side_name(TacticalScenario.FACTIONS - 1 - person_side)})]
 	lines.append_array(_computer_news)
 	if towers != "":
 		lines.append(towers)
@@ -527,6 +559,8 @@ func _described(decision: TacticalDecision) -> Dictionary:
 
 
 func _refresh() -> void:
+	if state == null:
+		return
 	# The computer's turn draws neither the person's reach nor their spent
 	# units: what is on screen then is the computer's decision.
 	var reach: Array[Vector2i] = []
@@ -542,14 +576,15 @@ func _refresh() -> void:
 		marks = computer.plan_marks(state)
 	_intent.show_plan(marks)
 	_intent.show_threat(threat() if _showing_threat else {} as Dictionary[Vector2i, int])
-	_header.text = "%s\n%s\nyou play %s; %s is played by %s" % [WHAT_THIS_IS, TacticalVictory.rule(),
-		TacticalStatus.side_name(person_side), TacticalStatus.side_name(TacticalScenario.FACTIONS - 1 - person_side), computer.describe()]
+	_header.text = "\n".join([tr(WHAT_THIS_IS), TacticalVictory.rule(), tr("you play {person}; {computer} is played by {controller}").format({
+		person = TacticalStatus.side_name(person_side), computer = TacticalStatus.side_name(TacticalScenario.FACTIONS - 1 - person_side),
+		controller = computer.describe()})])
 	_keep_if_over()
 	_end_button.disabled = not _persons_turn()
 	_undo_button.disabled = not (_persons_turn() and _turn.can_undo())
 	_status.text = _status_text()
 	if recording:
-		_status.text += "\nrecording: %d game(s) kept in data/tactical/" % games_kept
+		_status.text += "\n" + tr("recording: {count} game(s) kept in data/tactical/").format({count = games_kept})
 
 
 # Write `decision`, played on `before`, into this game's rows -- when
@@ -580,7 +615,7 @@ func _status_text() -> String:
 	var unit: Unit = state.unit_by_id(_selected_id)
 	var news: String = _last_event
 	if unit == null and _turn.unspent(state).is_empty():
-		news = (news + "\n" if news != "" else "") + "every unit has moved: space ends the turn"
+		news = (news + "\n" if news != "" else "") + tr("every unit has moved: space ends the turn")
 	return TacticalStatus.text(state, unit, _last_refusal, news, unit != null and not _turn.has_attacked(unit.id))
 
 

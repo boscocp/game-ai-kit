@@ -13,6 +13,21 @@ const RED: int = TacticalScenario.RED
 const BLUE: int = TacticalScenario.BLUE
 
 
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T79);
+# the Portuguese screen is test/locale's. The locale found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
+
 func test_a_runner_cannot_step_into_water() -> void:
 	# Row 0: deep water. Row 1's is a ford since T48, and anyone wades that.
 	var state: BoardState = _state_with(TacticalRules.RUNNER, Vector2i(5, 0))

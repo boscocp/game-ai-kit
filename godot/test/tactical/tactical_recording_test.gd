@@ -5,6 +5,21 @@
 extends GdUnitTestSuite
 
 
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T79);
+# the Portuguese screen is test/locale's. The locale found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
+
 func test_a_recorded_game_replays_to_the_same_end_through_its_file() -> void:
 	var played: Dictionary = _recorded_game(7)
 	var read: Dictionary = JSON.parse_string(JSON.stringify(played["recording"]))

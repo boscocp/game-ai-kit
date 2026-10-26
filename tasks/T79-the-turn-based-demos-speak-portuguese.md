@@ -36,4 +36,10 @@ make lint-tasks lint-status
 
 In PT-BR, play a skirmish, noughts and crosses against MENACE, a tactical
 match, the stealth hall and the four-brained guard: is every word on
-screen Portuguese, and does every panel still fit?
+screen Portuguese, and does every panel still fit? Code identifiers stay
+English by the owner's rule (2026-10-26) and are not a finding: a planner's
+step names (`cross_the_river_ram`, `build_ram`), facts (`point_free`), the
+guide `h_max`, GOAP's goal `pressure`. Provoke a refusal too -- in the
+tactical match, ask the workshop for a ram before the forge is bought -- and
+read it in Portuguese. The tactical header ran off the window in English
+before this task; it still does.

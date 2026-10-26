@@ -87,21 +87,24 @@ static func why_refused(state: BoardState, attack: Attack) -> String:
 	var attacker: Unit = state.unit_by_id(attack.attacker_id)
 	var target: Unit = state.unit_by_id(attack.target_id)
 	if attacker == null:
-		return "no unit %d is on the board" % attack.attacker_id
+		return TranslationServer.translate("no unit {unit} is on the board").format({unit = attack.attacker_id})
 	if attacker.faction != state.current_faction:
-		return "it is not the %s's side's turn" % attacker.type.type_name
+		return TranslationServer.translate("it is not the {piece}'s side's turn").format({piece = TacticalStatus.piece(attacker.type.type_name)})
 	if attacker.type.attack_range <= 0:
-		return "a %s cannot attack" % attacker.type.type_name
+		return TranslationServer.translate("{piece} cannot attack").format({piece = TacticalStatus.a_piece(attacker.type.type_name)})
 	if not attacker.type.mobile:
-		return "a %s fires by itself, at the start of its side's turn" % attacker.type.type_name
+		return TranslationServer.translate("{piece} fires by itself, at the start of its side's turn").format({
+			piece = TacticalStatus.a_piece(attacker.type.type_name)})
 	if target == null:
-		return "no unit %d is on the board to attack" % attack.target_id
+		return TranslationServer.translate("no unit {unit} is on the board to attack").format({unit = attack.target_id})
 	if target.faction == attacker.faction:
-		return "the %s at %s is on the same side" % [target.type.type_name, target.cell]
+		return TranslationServer.translate("{piece} at {cell} is on the same side").format({
+			piece = TacticalStatus.the_piece(target.type.type_name), cell = target.cell})
 	var apart: int = distance(attacker.cell, target.cell)
 	if apart > attacker.type.attack_range:
-		return "%s's %s at %s is %d away, and a %s reaches %d" % [TacticalStatus.side_name(target.faction),
-			target.type.type_name, target.cell, apart, attacker.type.type_name, attacker.type.attack_range]
+		return TranslationServer.translate("{side}'s {piece} at {cell} is {apart} away, and {attacker} reaches {reach}").format({
+			side = TacticalStatus.side_name(target.faction), piece = TacticalStatus.piece(target.type.type_name), cell = target.cell,
+			apart = apart, attacker = TacticalStatus.a_piece(attacker.type.type_name), reach = attacker.type.attack_range})
 	return BoardState.LEGAL
 
 
@@ -163,17 +166,24 @@ static func towers_fire(state: BoardState) -> Array:
 static func told(before: BoardState, attack: Attack, after: BoardState) -> String:
 	var attacker: Unit = before.unit_by_id(attack.attacker_id)
 	var target: Unit = before.unit_by_id(attack.target_id)
-	var who: String = "%s %s at %s" % [TacticalStatus.side_name(attacker.faction), attacker.type.type_name, attacker.cell]
-	var whom: String = "%s %s at %s" % [TacticalStatus.side_name(target.faction), target.type.type_name, target.cell]
+	var who: String = _side_piece(attacker)
+	var whom: String = _side_piece(target)
 	var survivor: Unit = after.unit_by_id(attacker.id)
 	var struck: Unit = after.unit_by_id(target.id)
 	if survivor != null and struck != null:
-		return "the %s struck the %s, which has %d health left (the attacker %d)" % [
-			who, whom, struck.health, survivor.health]
+		return TranslationServer.translate("the {who} struck the {whom}, which has {health} health left (the attacker {left})").format({
+			who = who, whom = whom, health = struck.health, left = survivor.health})
 	if survivor != null:
-		return "the %s destroyed the %s, and has %d health left" % [who, whom, survivor.health]
-	return "the %s attacked the %s and was destroyed; the %s has %d health left" % [
-		who, whom, target.type.type_name, struck.health]
+		return TranslationServer.translate("the {who} destroyed the {whom}, and has {left} health left").format({
+			who = who, whom = whom, left = survivor.health})
+	return TranslationServer.translate("the {who} attacked the {whom} and was destroyed; {piece} has {health} health left").format({
+		who = who, whom = whom, piece = TacticalStatus.the_piece(target.type.type_name), health = struck.health})
+
+
+# "red runner at (3, 4)": a piece in a line about a fight, with its side.
+static func _side_piece(unit: Unit) -> String:
+	return TranslationServer.translate("{side} {piece} at {cell}").format({
+		side = TacticalStatus.side_name(unit.faction), piece = TacticalStatus.piece(unit.type.type_name), cell = unit.cell})
 
 
 static func _weakest_walker_in_reach(state: BoardState, tower: Unit) -> Unit:

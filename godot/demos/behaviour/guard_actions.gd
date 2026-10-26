@@ -22,15 +22,15 @@ static func htn() -> HtnDomain:
 	var domain := HtnDomain.new()
 	for row: Array in _deeds():
 		domain.add_primitive(row[0], row[1], row[2])
-	domain.add_method("guard", "seize them", {"alerted": true, "next_to_player": true}, [GuardBrain.CATCH] as Array[String])
-	domain.add_method("guard", "chase them", {"alerted": true, "sees_player": true}, [GuardBrain.CHASE, GuardBrain.CATCH] as Array[String])
+	domain.add_method("guard", "seize them", {"alerted": true, "next_to_player": true}, [GuardBrain.CATCH] as Array[String])  # shown through tr()
+	domain.add_method("guard", "chase them", {"alerted": true, "sees_player": true}, [GuardBrain.CHASE, GuardBrain.CATCH] as Array[String])  # shown through tr()
 	# Without this one the HTN walked to where it already stood: it knows only
 	# the orders its methods write, and "go, then look" was the only one.
-	domain.add_method("guard", "look here", {"suspicious": true, "at_last_known": true, "area_checked": false},
+	domain.add_method("guard", "look here", {"suspicious": true, "at_last_known": true, "area_checked": false},  # shown through tr()
 		[GuardBrain.LOOK_AROUND] as Array[String])
-	domain.add_method("guard", "go and look", {"suspicious": true, "knows_where": true, "area_checked": false},
+	domain.add_method("guard", "go and look", {"suspicious": true, "knows_where": true, "area_checked": false},  # shown through tr()
 		[GuardBrain.GO_TO_LAST_KNOWN, GuardBrain.LOOK_AROUND] as Array[String])
-	domain.add_method("guard", "walk the round", {}, [GuardBrain.WALK_ROUND] as Array[String])
+	domain.add_method("guard", "walk the round", {}, [GuardBrain.WALK_ROUND] as Array[String])  # shown through tr()
 	return domain
 
 

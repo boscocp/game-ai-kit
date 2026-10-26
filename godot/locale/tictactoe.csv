@@ -1,0 +1,68 @@
+en,pt_BR
+"X: MENACE, the matchbox machine, first","X: MENACE, a máquina de caixas de fósforo, começa"
+O: you,O: você
+number and bar: beads for that move,número e barra: as contas desse lance
+and the chance one of them is drawn,e a chance de tirar uma delas
+"grey: the same move turned or mirrored,","cinza: o mesmo lance girado ou espelhado,"
+so it shares one colour of bead,e por isso com a mesma cor de conta
+pink square: the move MENACE drew,quadrado rosa: o lance que o MENACE tirou
+green (M): what each square leads to with,verde (M): aonde cada casa leva com
+"perfect play, for whoever moves now","jogo perfeito, para quem joga agora"
+it is MENACE's turn: space draws its bead,é a vez do MENACE: espaço tira a conta dele
+that square is taken,essa casa já está ocupada
+"It learnt in Python, before the game: after each game every bead","Aprendeu em Python, antes do jogo: depois de cada partida, cada conta"
+"it drew went back with 3 more for a win, 1 for a draw, or stayed","tirada voltava com mais 3 se ganhou, mais 1 se empatou, ou ficava"
+"out for a loss. Draws earn beads too, so even an old box keeps","fora se perdeu. Empates também rendem contas, e até uma caixa velha"
+some on lesser moves. Here it only draws -- it learns nothing from you.,guarda algumas em lances piores. Aqui ele só tira -- não aprende com você.
+MENACE wins  ·  R plays again,o MENACE vence  ·  R joga de novo
+you win  ·  R plays again,você vence  ·  R joga de novo
+a draw  ·  R plays again,empate  ·  R joga de novo
+perfect play: every move wins for {who} from here.,"jogo perfeito: daqui, {who} vence com qualquer lance."
+perfect play: every move draws for {who} from here.,"jogo perfeito: daqui, {who} empata com qualquer lance."
+perfect play: every move loses for {who} from here.,"jogo perfeito: daqui, {who} perde com qualquer lance."
+"perfect play, for {who}, wins with",jogo perfeito: {who} vence jogando
+"perfect play, for {who}, draws with",jogo perfeito: {who} empata jogando
+"perfect play, for {who}, loses with",jogo perfeito: {who} perde jogando
+"the {squares},","{squares},"
+and the rest do worse.,e o resto é pior.
+{first} or {last},{first} ou {last}
+MENACE,o MENACE
+you,você
+"1-4: MENACE after 10, 100, 1,000 or 10,000 games (now {games})  ·  M: perfect play on  ·  R: new game","1-4: MENACE após 10, 100, 1.000 ou 10.000 partidas (agora {games})  ·  M: jogo perfeito ligado  ·  R: nova partida"
+"1-4: MENACE after 10, 100, 1,000 or 10,000 games (now {games})  ·  M: perfect play off  ·  R: new game","1-4: MENACE após 10, 100, 1.000 ou 10.000 partidas (agora {games})  ·  M: jogo perfeito desligado  ·  R: nova partida"
+MENACE AFTER {games} GAMES,MENACE APÓS {games} PARTIDAS
+"one square left: the move is forced, and there is no box for it.","só resta uma casa: o lance é forçado, e não há caixa para ele."
+its box for this position is empty: every move from here lost.,a caixa desta posição está vazia: todo lance daqui perdeu.
+"its box holds {beads} beads, counted out in this order:","a caixa tem {beads} contas, contadas nesta ordem:"
+bead {first},conta {first}
+beads {first}-{last},contas {first}-{last}
+MENACE resigns: its box is empty -- every move from here lost before,o MENACE desiste: a caixa está vazia -- todo lance daqui já perdeu
+your turn: click an empty square,sua vez: clique numa casa vazia
+"MENACE's turn: one square left, so the move is forced  ·  space plays it","vez do MENACE: só resta uma casa, o lance é forçado  ·  espaço joga"
+"MENACE's turn: its box is empty  ·  space, and it resigns","vez do MENACE: a caixa está vazia  ·  espaço, e ele desiste"
+MENACE's turn: its beads are on the squares  ·  space shakes the box and draws one,vez do MENACE: as contas estão nas casas  ·  espaço sacode a caixa e tira uma
+"its last move, at {games} games: it drew from an empty box, and resigned.","o último lance, com {games} partidas: tirou de uma caixa vazia, e desistiu."
+"its last move, at {games} games: forced, the {square}.","o último lance, com {games} partidas: forçado, a casa {square}."
+"its last move, at {games} games: it drew bead {bead} of {total},","o último lance, com {games} partidas: tirou a conta {bead} de {total},"
+which is the {square}.,que é a casa {square}.
+top left,em cima à esquerda
+top edge,em cima no meio
+top right,em cima à direita
+left edge,no meio à esquerda
+centre,no centro
+right edge,no meio à direita
+bottom left,embaixo à esquerda
+bottom edge,embaixo no meio
+bottom right,embaixo à direita
+if X takes it: wins,se X jogar: vence
+if X takes it: draws,se X jogar: empata
+if X takes it: loses,se X jogar: perde
+if you take it: wins,se você jogar: vence
+if you take it: draws,se você jogar: empata
+if you take it: loses,se você jogar: perde
+forced,forçado
+the last square,a última casa
+same move as,mesmo lance que
+the {square},{square}
+bead · {percent},conta · {percent}
+beads · {percent},contas · {percent}

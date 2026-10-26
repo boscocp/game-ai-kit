@@ -35,6 +35,21 @@ const SOUND: Dictionary = {
 }
 
 
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T79);
+# the Portuguese screen is test/locale's. The locale found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
+
 func test_a_linear_model_answers_the_number_itself() -> void:
 	var model := LearnedModel.new(
 		LearnedModel.LINEAR, PackedStringArray(["one", "two"]),

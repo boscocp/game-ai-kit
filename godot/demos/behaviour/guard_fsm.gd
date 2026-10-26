@@ -18,14 +18,17 @@
 ## memory is the state itself, and it is why this brain snaps: nothing
 ## changes until an arrow fires, and then everything does.
 ##
+## The states' names and the arrows' reasons are English keys, translated
+## where the panel draws them (`BrainPanel.words`).
+##
 ## When not to use it: see `StateMachine`.
 class_name GuardFsm
 extends GuardBrain
 
-const PATROL: String = "patrol"
-const SUSPICIOUS: String = "suspicious"
-const SEARCHING: String = "searching"
-const ALERTED: String = "alerted"
+const PATROL: String = "patrol"  # shown through tr()
+const SUSPICIOUS: String = "suspicious"  # shown through tr()
+const SEARCHING: String = "searching"  # shown through tr()
+const ALERTED: String = "alerted"  # shown through tr()
 
 ## The machine; public so the demo can draw it with the current state lit.
 var machine := StateMachine.new(PATROL)
@@ -33,19 +36,19 @@ var machine := StateMachine.new(PATROL)
 
 func _init() -> void:
 	var alerted: Callable = func(facts: Dictionary) -> bool: return facts["alerted"]
-	machine.add_arrow(PATROL, ALERTED, alerted, "suspicion reached the chase")
-	machine.add_arrow(PATROL, SUSPICIOUS, func(facts: Dictionary) -> bool: return facts["suspicious"], "something is off")
-	machine.add_arrow(SUSPICIOUS, ALERTED, alerted, "suspicion reached the chase")
-	machine.add_arrow(SUSPICIOUS, SEARCHING, func(facts: Dictionary) -> bool: return facts["knows_where"], "it knows where to look")
-	machine.add_arrow(SUSPICIOUS, PATROL, func(facts: Dictionary) -> bool: return facts["calm"], "it calmed down")
-	machine.add_arrow(SEARCHING, ALERTED, alerted, "suspicion reached the chase")
-	machine.add_arrow(SEARCHING, PATROL, func(facts: Dictionary) -> bool: return facts["calm"] or facts["area_checked"], "calm, or the place is checked")
-	machine.add_arrow(ALERTED, SEARCHING, func(facts: Dictionary) -> bool: return facts["cooling"], "lost the trail")
+	machine.add_arrow(PATROL, ALERTED, alerted, "suspicion reached the chase")  # shown through tr()
+	machine.add_arrow(PATROL, SUSPICIOUS, func(facts: Dictionary) -> bool: return facts["suspicious"], "something is off")  # shown through tr()
+	machine.add_arrow(SUSPICIOUS, ALERTED, alerted, "suspicion reached the chase")  # shown through tr()
+	machine.add_arrow(SUSPICIOUS, SEARCHING, func(facts: Dictionary) -> bool: return facts["knows_where"], "it knows where to look")  # shown through tr()
+	machine.add_arrow(SUSPICIOUS, PATROL, func(facts: Dictionary) -> bool: return facts["calm"], "it calmed down")  # shown through tr()
+	machine.add_arrow(SEARCHING, ALERTED, alerted, "suspicion reached the chase")  # shown through tr()
+	machine.add_arrow(SEARCHING, PATROL, func(facts: Dictionary) -> bool: return facts["calm"] or facts["area_checked"], "calm, or the place is checked")  # shown through tr()
+	machine.add_arrow(ALERTED, SEARCHING, func(facts: Dictionary) -> bool: return facts["cooling"], "lost the trail")  # shown through tr()
 
 
 ## The name the screen gives this way of deciding.
 func brain_name() -> String:
-	return "state machine"
+	return "state machine"  # shown through tr()
 
 
 ## Take an arrow if one fires, then do what the state does.
@@ -73,4 +76,4 @@ static func _alerted(facts: Dictionary) -> String:
 ## The state it is in, every state, and the arrow it last took.
 func thinking() -> Dictionary:
 	return {"state": machine.current, "states": machine.states(),
-		"changed": machine.last_change if machine.last_change != "" else "no arrow fired"}
+		"changed": machine.last_change if machine.last_change != "" else "no arrow fired"}  # shown through tr()

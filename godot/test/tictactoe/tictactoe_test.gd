@@ -5,7 +5,25 @@
 # Whether a person feels the 10-game machine play worse than the 10,000-game
 # one is the task's manual check. That the beads differ, and that MENACE
 # plays the bead the draw lands on, is held here.
+#
+# The scene's words are read in English, so each test starts in English
+# whatever the machine's locale (the engine starts in the system's, measured
+# in docs/godot/localisation.md); the Portuguese ones say so and set it.
 extends GdUnitTestSuite
+
+var _locale_before: String = ""
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+
+
+func before_test() -> void:
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
 
 
 func test_the_published_file_holds_four_ages_of_304_boxes() -> void:
@@ -196,6 +214,22 @@ func test_no_panel_line_runs_off_the_window() -> void:
 		assert_float(right).override_failure_message("\"%s\" ends at %.0f" % [line, right]).is_less_equal(1280.0)
 
 
+func test_no_panel_line_runs_off_the_window_in_portuguese() -> void:
+	# A Portuguese line is longer (T79): the same widest panel, in pt-BR.
+	TranslationServer.set_locale("pt_BR")
+	var scene: TicTacToeExample = _mounted()
+	scene.menace_moves(0.4)
+	scene._handle_key(KEY_M)
+	var panel: Label = scene.get_node("Interface/Decision")
+	var font: Font = panel.get_theme_font("font")
+	var size: int = panel.get_theme_font_size("font_size")
+
+	assert_str(panel.text).contains("PARTIDAS")
+	for line: String in panel.text.split("\n"):
+		var right: float = panel.position.x + font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1.0, size).x
+		assert_float(right).override_failure_message("\"%s\" ends at %.0f" % [line, right]).is_less_equal(1280.0)
+
+
 func test_the_legend_ends_above_the_panel() -> void:
 	var scene: TicTacToeExample = _mounted()
 	var legend: Legend = scene.get_node("Interface/Legend")
@@ -206,17 +240,36 @@ func test_the_legend_ends_above_the_panel() -> void:
 
 func test_the_panel_ends_above_the_status_line_with_seven_moves_and_a_draw_shown() -> void:
 	# The widest the panel gets: seven empty squares, all different, a draw
-	# to report and perfect play on.
+	# to report and perfect play on -- in English and in Portuguese, whose
+	# lines are longer (T79).
+	for locale: String in ["en", "pt_BR"]:
+		TranslationServer.set_locale(locale)
+		var scene: TicTacToeExample = _widest_panel()
+		var panel: Label = scene.get_node("Interface/Decision")
+		var status: Label = scene.get_node("Interface/Status")
+
+		assert_float(panel.position.y + float(panel.get_line_count() * panel.get_line_height())).is_less_equal(status.position.y)
+		for line: String in panel.text.split("\n"):
+			_assert_fits(panel, line, locale)
+
+
+# The scene with the most the panel ever says.
+func _widest_panel() -> TicTacToeExample:
 	var scene: TicTacToeExample = _mounted()
 	scene._board = "OX......."
 	scene._last_draw = {"chance": 0.4, "square": 1, "board": TicTacToeBoard.START, "age": 10,
 			"forced": false, "total": 26, "bead": 11}
 	scene._handle_key(KEY_4)
 	scene._handle_key(KEY_M)
+	return scene
 
-	var panel: Label = scene.get_node("Interface/Decision")
-	var status: Label = scene.get_node("Interface/Status")
-	assert_float(panel.position.y + float(panel.get_line_count() * panel.get_line_height())).is_less_equal(status.position.y)
+
+# The panel's `line` ends inside the 1280-pixel window.
+func _assert_fits(panel: Label, line: String, locale: String) -> void:
+	var font: Font = panel.get_theme_font("font")
+	var size: int = panel.get_theme_font_size("font_size")
+	var right: float = panel.position.x + font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1.0, size).x
+	assert_float(right).override_failure_message("%s: \"%s\" ends at %.0f" % [locale, line, right]).is_less_equal(1280.0)
 
 
 func test_the_bead_drawn_can_be_found_in_the_panel_s_list() -> void:
@@ -273,6 +326,8 @@ func test_small_chances_and_large_ages_read_as_a_person_writes_them() -> void:
 	assert_str(TicTacToePanel.percent(0.0)).is_equal("0%")
 	assert_str(TicTacToePanel.games(10000)).is_equal("10,000")
 	assert_str(TicTacToePanel.games(100)).is_equal("100")
+	TranslationServer.set_locale("pt_BR")
+	assert_str(TicTacToePanel.games(10000)).is_equal("10.000")
 
 
 # The panel line naming `square`, or "".

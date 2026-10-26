@@ -62,12 +62,12 @@ func _init(published: ModelFile, nodes: Array[Vector2i],
 ## and looks thoughtful.
 func why_unusable() -> String:
 	if _published == null:
-		return "no weights file was given to the policy"
+		return tr("no weights file was given to the policy")
 	if not _published.is_loaded():
 		return _published.error
 	for name: String in [COMBAT_MODEL, CAPTURE_MODEL]:
 		if _published.model(name) == null:
-			return "the weights file publishes no `%s` model" % name
+			return tr("the weights file publishes no `{model}` model").format({model = name})
 	return ""
 
 
@@ -86,9 +86,9 @@ func decide(state: BoardState, unit_id: int) -> LearnedDecision:
 		return LearnedDecision.hold(unit_id, unusable)
 	var unit: Unit = state.unit_by_id(unit_id)
 	if unit == null:
-		return LearnedDecision.hold(unit_id, "no unit with that id is on the board")
+		return LearnedDecision.hold(unit_id, tr("no unit with that id is on the board"))
 	if unit.faction != state.current_faction:
-		return LearnedDecision.hold(unit_id, "it is not this unit's side to move")
+		return LearnedDecision.hold(unit_id, tr("it is not this unit's side to move"))
 	var opponent: Unit = _fight_within_reach(state, unit)
 	if opponent != null:
 		return _fight_or_break_off(state, unit, opponent)
@@ -163,7 +163,7 @@ func _fight_or_break_off(state: BoardState, unit: Unit,
 	# that has become very timid.
 	if not is_finite(chance):
 		return LearnedDecision.hold(
-			unit.id, "the combat model was handed a row it cannot read")
+			unit.id, tr("the combat model was handed a row it cannot read"))
 	if chance >= _threshold:
 		return LearnedDecision.attack(
 			unit.id, _move_at(state, unit, opponent.cell),
@@ -184,11 +184,11 @@ func _fight_or_break_off(state: BoardState, unit: Unit,
 # a few lines away; this one has no honest correction, so it is said instead.
 func _advance_on_a_node(state: BoardState, unit: Unit) -> LearnedDecision:
 	if _nodes.is_empty():
-		return LearnedDecision.hold(unit.id, "no node was given to walk at")
+		return LearnedDecision.hold(unit.id, tr("no node was given to walk at"))
 	var ranked: Array[Dictionary] = rank_nodes(state, unit.faction, _nodes)
 	if ranked.is_empty():
 		return LearnedDecision.hold(
-			unit.id, "the capture model was handed a row it cannot read")
+			unit.id, tr("the capture model was handed a row it cannot read"))
 	var best: Dictionary = ranked[0]
 	return LearnedDecision.advance(
 		unit.id, _move_at(state, unit, best["cell"]),
@@ -206,11 +206,11 @@ static func _quicker_node(one: Dictionary, other: Dictionary) -> bool:
 	return Vector2i(one["cell"]) < Vector2i(other["cell"])
 
 
-# The phrase naming what the chosen node was chosen over, or "" for one node.
-static func _runner_up(ranked: Array[Dictionary]) -> String:
+# The node the chosen one was chosen over, or {} when there was one node.
+static func _runner_up(ranked: Array[Dictionary]) -> Dictionary:
 	if ranked.size() < 2:
-		return ""
-	return ", against %.1f at %s" % [ranked[1]["turns"], ranked[1]["cell"]]
+		return {}
+	return ranked[1]
 
 
 # The nearest enemy this unit could plausibly reach this turn, or null.

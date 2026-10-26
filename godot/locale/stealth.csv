@@ -1,0 +1,32 @@
+en,pt_BR
+guard on its round,guarda fazendo a ronda
+guard going to look,guarda indo verificar
+guard giving chase,guarda perseguindo
+"bar: suspicion, white tick: target","barra: suspeita, traço branco: alvo"
+"dots: next steps, ring: where it","pontos: próximos passos, anel: onde"
+"thinks you are, line: its facing","acha que você está, linha: o olhar"
+what a guard sees,o que um guarda vê
+danger map (D),mapa de perigo (D)
+the way out,a saída
+you,você
+"floor, lit","chão, iluminado"
+"shade: dark, harder to see you","sombra: escuro, mais difícil de ver você"
+"trees: slow, block sight","árvores: lentas, bloqueiam a visão"
+wall,parede
+guard {id}  {reason}  ·  {inputs}  ·  {terms},guarda {id}  {reason}  ·  {inputs}  ·  {terms}
+turn {turn}  ·  arrows walk  ·  shift sprints  ·  space waits  ·  D danger  ·  R restarts,turno {turn}  ·  setas andam  ·  shift corre  ·  espaço espera  ·  D perigo  ·  R recomeça
+turn {turn}  ·  ESCAPED  ·  arrows walk  ·  shift sprints  ·  space waits  ·  D danger  ·  R restarts,turno {turn}  ·  ESCAPOU  ·  setas andam  ·  shift corre  ·  espaço espera  ·  D perigo  ·  R recomeça
+turn {turn}  ·  CAUGHT  ·  arrows walk  ·  shift sprints  ·  space waits  ·  D danger  ·  R restarts,turno {turn}  ·  PEGO  ·  setas andam  ·  shift corre  ·  espaço espera  ·  D perigo  ·  R recomeça
+nothing perceived yet,nada percebido ainda
+distance {distance}  light {light}  noise {noise}  silence {silence},distância {distance}  luz {light}  ruído {noise}  silêncio {silence}
+rules: none yet,regras: nenhuma ainda
+rules: {terms},regras: {terms}
+calm {strength},calmo {strength}
+wary {strength},desconfiado {strength}
+alarmed {strength},alarmado {strength}
+patrol,ronda
+alert,alerta
+{state} · suspicion {before} → {after} · nothing,{state} · suspeita {before} → {after} · nada
+{state} · suspicion {before} → {after} · sees you,{state} · suspeita {before} → {after} · vê você
+{state} · suspicion {before} → {after} · heard {loudness}%,{state} · suspeita {before} → {after} · ouviu {loudness}%
+investigating,investigando

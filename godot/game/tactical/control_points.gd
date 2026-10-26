@@ -44,7 +44,7 @@ static func held_by(state: BoardState, side: int) -> Array[Vector2i]:
 
 ## What `BoardState.tally` counts the points under: for each side, the
 ## points it held summed over the turns it held them (T47).
-const POINT_TURNS: String = "point turns"
+const POINT_TURNS: String = "point turns"  # not shown
 
 
 ## Pay the side to move for every point it holds, as `[BoardState, String]`:
@@ -64,8 +64,8 @@ static func pay(state: BoardState) -> Array:
 	var where: Array[String] = []
 	for point: Vector2i in held:
 		where.append(str(point))
-	return [paid, "%s is paid %d for holding the point(s) at %s" % [
-		TacticalStatus.side_name(side), held.size() * TacticalRules.POINT_INCOME, ", ".join(where)]]
+	return [paid, TranslationServer.translate("{side} is paid {amount} for holding the point(s) at {cells}").format({
+		side = TacticalStatus.side_name(side), amount = held.size() * TacticalRules.POINT_INCOME, cells = ", ".join(where)})]
 
 
 ## One line for the screen: each point and who holds it.
@@ -73,5 +73,6 @@ static func describe(state: BoardState) -> String:
 	var parts: Array[String] = []
 	for point: Vector2i in TacticalScenario.POINTS:
 		var side: int = holder(state, point)
-		parts.append("%s %s" % [point, TacticalStatus.side_name(side) if side != NOBODY else "nobody"])
-	return "points (each pays its holder %d a turn): %s" % [TacticalRules.POINT_INCOME, ", ".join(parts)]
+		parts.append("%s %s" % [point, TacticalStatus.side_name(side) if side != NOBODY else TranslationServer.translate("nobody")])
+	return TranslationServer.translate("points (each pays its holder {income} a turn): {points}").format({
+		income = TacticalRules.POINT_INCOME, points = ", ".join(parts)})

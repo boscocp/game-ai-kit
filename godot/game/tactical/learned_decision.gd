@@ -12,19 +12,19 @@ class_name LearnedDecision
 extends RefCounted
 
 ## Close with the enemy the model says this unit beats.
-const ATTACK: String = "attack"
+const ATTACK: String = "attack"  # shown through tr()
 
 ## Break off from the enemy the model says it does not.
-const RETREAT: String = "retreat"
+const RETREAT: String = "retreat"  # shown through tr()
 
 ## Nobody worth fighting is in reach; walk at the node that looks quickest.
-const ADVANCE: String = "advance"
+const ADVANCE: String = "advance"  # shown through tr()
 
 ## An enemy stands on a node; walk at it. A rule, not a model's answer.
-const CONTEST: String = "contest"
+const CONTEST: String = "contest"  # shown through tr()
 
 ## Stand still. Also what a decision that could not be made comes back as.
-const HOLD: String = "hold"
+const HOLD: String = "hold"  # shown through tr()
 
 ## One of the five above.
 var action: String
@@ -64,9 +64,8 @@ static func attack(unit_id: int, chosen: Move, opponent: Unit, chance: float,
 	var decision := LearnedDecision.new(ATTACK, unit_id, chosen)
 	decision.win_probability = chance
 	decision.opponent_id = opponent.id
-	decision.reason = "unit %d attacks unit %d: p(win) %.2f at or above %.2f" % [
-		unit_id, opponent.id, chance, threshold,
-	]
+	decision.reason = TranslationServer.translate("unit {unit} attacks unit {opponent}: p(win) {chance} at or above {bar}").format({
+		unit = unit_id, opponent = opponent.id, chance = "%.2f" % chance, bar = "%.2f" % threshold})
 	return decision
 
 
@@ -76,21 +75,23 @@ static func retreat(unit_id: int, chosen: Move, opponent: Unit, chance: float,
 	var decision := LearnedDecision.new(RETREAT, unit_id, chosen)
 	decision.win_probability = chance
 	decision.opponent_id = opponent.id
-	decision.reason = "unit %d retreats from unit %d: p(win) %.2f below %.2f" % [
-		unit_id, opponent.id, chance, threshold,
-	]
+	decision.reason = TranslationServer.translate("unit {unit} retreats from unit {opponent}: p(win) {chance} below {bar}").format({
+		unit = unit_id, opponent = opponent.id, chance = "%.2f" % chance, bar = "%.2f" % threshold})
 	return decision
 
 
-## Walk at the node the capture model puts first.
+## Walk at the node the capture model puts first. `runner_up` is the node it
+## was chosen over, as {"turns", "cell"}, or {} when there was only one.
 static func advance(unit_id: int, chosen: Move, node: Vector2i, turns: float,
-		against: String) -> LearnedDecision:
+		runner_up: Dictionary) -> LearnedDecision:
 	var decision := LearnedDecision.new(ADVANCE, unit_id, chosen)
 	decision.target = node
 	decision.predicted_turns = turns
-	decision.reason = "unit %d advances on %s: %.1f turns%s" % [
-		unit_id, node, turns, against,
-	]
+	var said: Dictionary = {unit = unit_id, node = node, turns = "%.1f" % turns}
+	decision.reason = TranslationServer.translate("unit {unit} advances on {node}: {turns} turns").format(said)
+	if not runner_up.is_empty():
+		said.merge({other = "%.1f" % runner_up["turns"], cell = runner_up["cell"]})
+		decision.reason = TranslationServer.translate("unit {unit} advances on {node}: {turns} turns, against {other} at {cell}").format(said)
 	return decision
 
 
@@ -101,9 +102,8 @@ static func contest(unit_id: int, chosen: Move, node: Vector2i, holder: Unit) ->
 	var decision := LearnedDecision.new(CONTEST, unit_id, chosen)
 	decision.target = node
 	decision.opponent_id = holder.id
-	decision.reason = "unit %d contests %s: unit %d stands on it, and a node left to the enemy is lost (a rule, not the model)" % [
-		unit_id, node, holder.id,
-	]
+	decision.reason = TranslationServer.translate("unit {unit} contests {node}: unit {holder} stands on it, and a node left to the enemy is lost (a rule, not the model)").format({
+		unit = unit_id, node = node, holder = holder.id})
 	return decision
 
 
@@ -111,5 +111,5 @@ static func contest(unit_id: int, chosen: Move, node: Vector2i, holder: Unit) ->
 ## hold is the one answer a reader cannot tell from a policy that crashed.
 static func hold(unit_id: int, why: String) -> LearnedDecision:
 	var decision := LearnedDecision.new(HOLD, unit_id, Move.new(unit_id, [] as Array[Vector2i]))
-	decision.reason = "unit %d holds: %s" % [unit_id, why]
+	decision.reason = TranslationServer.translate("unit {unit} holds: {why}").format({unit = unit_id, why = why})
 	return decision

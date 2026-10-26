@@ -59,12 +59,12 @@ var _pricing_state: BoardState
 
 ## The name the league table and the screen give it.
 func controller_name() -> String:
-	return "GOAP"
+	return "GOAP"  # shown through tr()
 
 
 ## One line for the screen: what kind of thinking this is.
 func describe() -> String:
-	return "GOAP: a goal per walker, the cheapest plan to it by turns on this board, replanned every decision; builds by the rules"
+	return tr("GOAP: a goal per walker, the cheapest plan to it by turns on this board, replanned every decision; builds by the rules")
 
 
 ## The board is kept for the prices, then the rules' decision is made as
@@ -80,13 +80,17 @@ func decide(unit: Unit, known: TeamFacts) -> String:
 	plan = _planner.plan(actions_for(_pricing_state, unit, known), known.facts, goal)
 	_work += plan.visited
 	var first: String = plan.steps[0] if not plan.steps.is_empty() else SIEGE
-	_said[unit.id] = "goal %s, plan %s" % [", ".join(goal.keys()), " then ".join(plan.steps) if plan.solved else "none"]
+	var steps: Array[String] = []
+	for step: String in plan.steps:
+		steps.append(tr(step))
+	var planned: String = (" %s " % tr("then")).join(steps) if plan.solved else tr("none")
+	_said[unit.id] = tr("goal {goal}, plan {plan}").format({goal = ", ".join(goal.keys()), plan = planned})
 	return first
 
 
 ## The walker's goal and the plan to it, from its last decision.
 func thinking(unit_id: int) -> String:
-	return _said.get(unit_id, "no plan yet")
+	return _said.get(unit_id, tr("no plan yet"))
 
 
 ## "Worlds": the goals-still-to-do the backward search looked at.

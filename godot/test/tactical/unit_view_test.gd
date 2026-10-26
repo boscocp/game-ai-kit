@@ -8,6 +8,19 @@ const RED: int = TacticalScenario.RED
 const BLUE: int = TacticalScenario.BLUE
 
 var _generated_before: String
+# The legend is read in English; the engine starts in the system's locale,
+# so on a Portuguese system it would read the pt-BR words (T79). The locale
+# found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
 
 
 # Judged on the committed sheets, never on a person's own generated ones.

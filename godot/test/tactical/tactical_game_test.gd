@@ -10,6 +10,21 @@ const RED_WORKSHOP := Vector2i(1, 7)
 const BLUE_WORKSHOP := Vector2i(12, 1)
 
 
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T79);
+# the Portuguese screen is test/locale's. The locale found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
+
 # --- red's turn --------------------------------------------------------------
 
 func test_a_spent_unit_cannot_move_again_this_turn() -> void:

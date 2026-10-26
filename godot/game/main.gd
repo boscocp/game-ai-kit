@@ -31,7 +31,7 @@ const FACTIONS: int = 2
 const RED: int = 0
 const BLUE: int = 1
 
-const SIDE_NAMES: Array[String] = ["red", "blue"]
+const SIDE_NAMES: Array[String] = ["red", "blue"]  # shown through tr()
 
 ## The side the learned policy plays. Red is the player's.
 const AI_FACTION: int = BLUE
@@ -64,17 +64,7 @@ var _blue_to_decide: Array[int] = []
 
 
 func _ready() -> void:
-	_legend.set_entries([
-		[UnitView.legend_picture(RED, Art.NO_TYPE), "red: yours (white: id, yellow: health)"],
-		[UnitView.legend_picture(BLUE, Art.NO_TYPE), "blue: the learned opponent"],
-		[Color.TRANSPARENT, "white frame round a unit: the one in hand"],
-		[PlanView.ROUTE, "blue's next move, not yet played"],
-		[BoardView.REACHABLE, "where the unit in hand can step"],
-		[BoardView.tile_texture(BoardView.NODE), "a node: hold it %d turns to win" % SkirmishVictory.HOLD_TURNS],
-		[BoardView.tile_texture(BoardView.PLAIN), "open ground"],
-		[BoardView.tile_texture(BoardView.ROUGH), "rough ground: costs the number on it"],
-		[BoardView.tile_texture(BoardView.WALL), "wall"],
-	] as Array[Array])
+	_legend.set_entries(_legend_entries())
 	_state = _build_scenario()
 	BoardLayout.lay_out(self, _state.graph, _status, _legend)
 	# The search goes in from here rather than from inside the policy: a route
@@ -85,6 +75,30 @@ func _ready() -> void:
 		LearnedPolicy.DEFAULT_THRESHOLD, GridPathfinder.new(AStarSearch.new()))
 	_select_first_unit_of_the_side_to_move()
 	_refresh()
+	Language.apply_if_opened_alone(self)
+
+
+# The words are rebuilt in the language just chosen (T79): a Label set from
+# code keeps the words it was given. The notification also comes on entering
+# the tree, before _ready, when there is nothing to rebuild yet.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_legend.set_entries(_legend_entries())
+		_refresh()
+
+
+func _legend_entries() -> Array[Array]:
+	return [
+		[UnitView.legend_picture(RED, Art.NO_TYPE), tr("red: yours (white: id, yellow: health)")],
+		[UnitView.legend_picture(BLUE, Art.NO_TYPE), tr("blue: the learned opponent")],
+		[Color.TRANSPARENT, tr("white frame round a unit: the one in hand")],
+		[PlanView.ROUTE, tr("blue's next move, not yet played")],
+		[BoardView.REACHABLE, tr("where the unit in hand can step")],
+		[BoardView.tile_texture(BoardView.NODE), tr("a node: hold it {turns} turns to win").format({turns = SkirmishVictory.HOLD_TURNS})],
+		[BoardView.tile_texture(BoardView.PLAIN), tr("open ground")],
+		[BoardView.tile_texture(BoardView.ROUGH), tr("rough ground: costs the number on it")],
+		[BoardView.tile_texture(BoardView.WALL), tr("wall")],
+	] as Array[Array]
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -106,7 +120,7 @@ func _click_cell(cell: Vector2i) -> void:
 	if _victory.winner != SkirmishVictory.NOBODY:
 		return
 	if _state.current_faction == AI_FACTION:
-		_last_refusal = "blue is deciding -- space plays the move it has drawn"
+		_last_refusal = tr("blue is deciding -- space plays the move it has drawn")
 		_refresh()
 		return
 	var occupant: Unit = _state.unit_at(cell)
@@ -122,7 +136,7 @@ func _click_cell(cell: Vector2i) -> void:
 func _try_step(cell: Vector2i) -> void:
 	var unit: Unit = _state.unit_by_id(_selected_id)
 	if unit == null:
-		_last_refusal = "nothing is selected -- click one of your own units first"
+		_last_refusal = tr("nothing is selected -- click one of your own units first")
 		_refresh()
 		return
 	# Without this, a click on the far side of the board was refused with "a
@@ -131,10 +145,7 @@ func _try_step(cell: Vector2i) -> void:
 	# scene cannot build a route at all, and the player deserves to be told
 	# that rather than a rule they did not break.
 	if not GridGraph.DIRECTIONS.has(cell - unit.cell):
-		_last_refusal = (
-			"%s is more than one step away -- you move one cell at a time, " % cell
-			+ "onto a highlighted cell"
-		)
+		_last_refusal = tr("{cell} is more than one step away -- you move one cell at a time, onto a highlighted cell").format({cell = cell})
 		_refresh()
 		return
 	var path: Array[Vector2i] = [cell]
@@ -213,7 +224,7 @@ func _plan_the_next_unit() -> void:
 	_plan = null
 	var unusable: String = _policy.why_unusable()
 	if unusable != "":
-		_ai_reasons.append("blue cannot think: " + unusable)
+		_ai_reasons.append(tr("blue cannot think: {why}").format({why = unusable}))
 		_blue_to_decide.clear()
 	while _plan == null and not _blue_to_decide.is_empty():
 		var unit_id: int = _blue_to_decide.pop_front()
@@ -276,44 +287,41 @@ func _status_line() -> String:
 	if holds != "":
 		lines.append(holds)
 	if _last_refusal != BoardState.LEGAL:
-		lines.append("\nrefused: " + _last_refusal)
+		lines.append("\n" + tr("refused: {why}").format({why = TacticalRefusal.words(_last_refusal)}))
 	if not _ai_reasons.is_empty():
-		lines.append("\nblue this turn:")
+		lines.append("\n" + tr("blue this turn:"))
 		for reason: String in _ai_reasons:
 			lines.append(reason)
 	if _plan != null:
-		lines.append("\nnext, not yet played: " + _plan.reason)
+		lines.append("\n" + tr("next, not yet played: {why}").format({why = _plan.reason}))
 	return "\n".join(lines)
 
 
 func _whose_turn() -> String:
 	if _state.current_faction == AI_FACTION:
-		return "turn %d  ·  blue to move: the learned opponent" % _state.turn_number
-	return "turn %d  ·  red to move: you are red" % _state.turn_number
+		return tr("turn {turn}  ·  blue to move: the learned opponent").format({turn = _state.turn_number})
+	return tr("turn {turn}  ·  red to move: you are red").format({turn = _state.turn_number})
 
 
 func _in_hand() -> String:
 	if _plan != null:
-		return "blue's unit %d is deciding" % _plan.unit_id
+		return tr("blue's unit {unit} is deciding").format({unit = _plan.unit_id})
 	var unit: Unit = _state.unit_by_id(_selected_id)
 	if unit == null:
-		return "no unit in hand"
-	return "unit %d in hand  ·  movement left: %d" % [unit.id, unit.movement_points]
+		return tr("no unit in hand")
+	return tr("unit {unit} in hand  ·  movement left: {points}").format({unit = unit.id, points = unit.movement_points})
 
 
 # The next thing to do, for the state the board is actually in: an
 # instruction to click a highlighted cell is wrong when none is highlighted.
 func _what_to_do() -> String:
 	if _plan != null:
-		return "space plays the move drawn as a blue line and box."
+		return tr("space plays the move drawn as a blue line and box.")
 	if _selected_id == -1:
-		return "click one of your units. Space ends your turn."
+		return tr("click one of your units. Space ends your turn.")
 	if _affordable_steps().is_empty():
-		return "this unit cannot step anywhere now -- click another of your units, or press space to end your turn."
-	return (
-		"click one of your units, then a highlighted cell next to it. A step "
-		+ "costs the number on the cell it enters, or 1. Space ends your turn."
-	)
+		return tr("this unit cannot step anywhere now -- click another of your units, or press space to end your turn.")
+	return tr("click one of your units, then a highlighted cell next to it. A step costs the number on the cell it enters, or 1. Space ends your turn.")
 
 
 # Two units a side, a wall to walk around, rough ground to pay for, and two

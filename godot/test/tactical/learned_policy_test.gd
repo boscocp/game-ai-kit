@@ -27,6 +27,21 @@ const CAPTURE_FEATURES: Array = [
 const NODES: Array[Vector2i] = [Vector2i(0, 0), Vector2i(9, 6)]
 
 
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T79);
+# the Portuguese screen is test/locale's. The locale found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
+
 func test_a_policy_over_a_missing_file_says_so_and_holds() -> void:
 	# The opponent that stands still and looks thoughtful is the failure this
 	# avoids: a file that did not load has to arrive as a sentence.

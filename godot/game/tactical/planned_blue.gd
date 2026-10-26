@@ -86,13 +86,13 @@ var _plans_made: int = 0
 
 ## "planner": the name the header and the overlay use.
 func controller_name() -> String:
-	return "planner"
+	return "planner"  # shown through tr()
 
 
 ## What decides, in one line for the screen.
 func describe() -> String:
-	return "a plan: STRIPS over the tactical domain with %s, made every %d turns or when it stops running; its walkers take the rules' routes" % [
-		guide_name(GUIDE), REPLAN_EVERY]
+	return tr("a plan: STRIPS over the tactical domain with {guide}, made every {turns} turns or when it stops running; its walkers take the rules' routes").format({
+		guide = guide_name(GUIDE), turns = REPLAN_EVERY})
 
 
 ## Worlds every planning call has visited, added up.
@@ -116,7 +116,7 @@ func decide_build(state: BoardState, workshop_id: int) -> TacticalDecision:
 	_find_the_place(state)
 	var index: int = _next_purchase(next_step)
 	if index == -1:
-		return _by_the_rules(super.decide_build(state, workshop_id), "the plan buys nothing more")
+		return _by_the_rules(super.decide_build(state, workshop_id), tr("the plan buys nothing more"))
 	return _purchase(state, state.unit_by_id(workshop_id), index)
 
 
@@ -129,7 +129,7 @@ func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 	var index: int = _step_for(state, unit)
 	var walk: TacticalDecision = super.decide_move(state, unit_id)
 	if index == -1:
-		return _by_the_rules(walk, "no step of the plan is this %s's" % unit.type.type_name)
+		return _by_the_rules(walk, tr("no step of the plan is this {piece}'s").format({piece = TacticalStatus.piece(unit.type.type_name)}))
 	walk.reason = "%s: %s" % [_step_label(index), walk.reason]
 	return walk
 
@@ -138,25 +138,32 @@ func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 ## each step, marked done, next, or to come.
 func plan_lines() -> Array[String]:
 	if plan == null:
-		return ["no plan yet"]
-	var lines: Array[String] = ["plan (%s, %d worlds searched): made %s" % [
-		guide_name(GUIDE), plan.visited, why_planned]]
+		return [tr("no plan yet")]
+	var lines: Array[String] = [tr("plan ({guide}, {worlds} worlds searched): made {why}").format({
+		guide = guide_name(GUIDE), worlds = plan.visited, why = why_planned})]
 	if not plan.solved and not plan.partial:
-		lines.append("  no plan found: everything is the rules'")
+		lines.append("  " + tr("no plan found: everything is the rules'"))
 	for index: int in range(plan.steps.size()):
-		var mark: String = "    "
-		if next_step == -1:
-			mark = "off "
-		elif index < next_step:
-			mark = "done"
-		elif index == next_step:
-			mark = "next"
-		lines.append("  %s  %d. %s" % [mark, index + 1, plan.steps[index].name])
+		lines.append("  %s  %d. %s" % [_mark(index), index + 1, plan.steps[index].name])
 	if next_step == -1 and (plan.solved or plan.partial):
-		lines.append("  (off: no remaining part of the plan runs from this board; it plans again next turn)")
+		lines.append("  " + tr("(off: no remaining part of the plan runs from this board; it plans again next turn)"))
 	if plan.partial:
-		lines.append("  (partial: the budget ran out; these steps head for the goal, and it plans again when they are done)")
+		lines.append("  " + tr("(partial: the budget ran out; these steps head for the goal, and it plans again when they are done)"))
 	return lines
+
+
+# The mark beside step `index` in the plan's lines -- off, done, next or
+# nothing -- padded to the widest of them in the language on screen, so the
+# step numbers stay in one column.
+func _mark(index: int) -> String:
+	var marks: Array[String] = [tr("off"), tr("done"), tr("next"), ""]
+	var width: int = marks.map(func(word: String) -> int: return word.length()).max()
+	var which: int = 3
+	if next_step == -1:
+		which = 0
+	elif index <= next_step:
+		which = 1 if index < next_step else 2
+	return marks[which].rpad(width)
 
 
 ## What to draw for the plan: for each piece that has a step still to do, its
@@ -211,16 +218,18 @@ func _why_plan_again(state: BoardState) -> String:
 	if horizon == 0:
 		return ""
 	if plan == null:
-		return "at the start of the game"
+		return tr("at the start of the game")
 	if state.turn_number - _planned_on_turn >= REPLAN_EVERY * TacticalScenario.FACTIONS:
-		return "because %d of its turns had passed" % REPLAN_EVERY
+		return tr("because {turns} of its turns had passed").format({turns = REPLAN_EVERY})
+	if not plan.solved and not plan.partial and plan.gave_up:
+		return tr("again, because the last call ran out of budget with nothing to follow")
 	if not plan.solved and not plan.partial:
-		return "again, because the last call %s" % ("ran out of budget with nothing to follow" if plan.gave_up else "proved there is none")
+		return tr("again, because the last call proved there is none")
 	var at: int = _where_the_board_is(state)
 	if at == -1:
-		return "because the plan stopped running: %s" % _what_broke(state)
+		return tr("because the plan stopped running: {why}").format({why = _what_broke(state)})
 	if at == plan.steps.size():
-		return "because the partial plan's steps were done"
+		return tr("because the partial plan's steps were done")
 	return ""
 
 
@@ -230,7 +239,7 @@ func _make_plan(state: BoardState, why: String) -> void:
 	_worlds += plan.visited
 	_plans_made += 1
 	_planned_on_turn = state.turn_number
-	why_planned = "on round %d, %s" % [state.turn_number / TacticalScenario.FACTIONS + 1, why]
+	why_planned = tr("on round {round}, {why}").format({round = state.turn_number / TacticalScenario.FACTIONS + 1, why = why})
 	_aim = TacticalPlanBridge.goal() if not plan.partial else _what_it_adds(world)
 
 
@@ -278,10 +287,12 @@ func _what_broke(state: BoardState) -> String:
 	var start: int = clampi(next_step, 0, plan.steps.size() - 1)
 	for index: int in range(start, plan.steps.size()):
 		var missing: String = _first_missing(plan.steps[index], world)
+		var said: Dictionary = {step = index + 1, name = plan.steps[index].name, fact = missing}
 		if missing != "":
-			return "step %d, %s, needs %s, which no longer holds" % [index + 1, plan.steps[index].name, missing]
+			return tr("step {step}, {name}, needs {fact}, which no longer holds").format(said)
 		world = plan.steps[index].apply(world)
-	return "from step %d, %s, the rest no longer reaches %s" % [start + 1, plan.steps[start].name, ", ".join(_aim)]
+	return tr("from step {step}, {name}, the rest no longer reaches {facts}").format({
+		step = start + 1, name = plan.steps[start].name, facts = ", ".join(_aim)})
 
 
 static func _first_missing(step: StripsAction, world: WorldState) -> String:
@@ -325,16 +336,20 @@ func _purchase(state: BoardState, workshop: Unit, index: int) -> TacticalDecisio
 		var then: int = _next_purchase(index + 1)
 		if then != -1 and _why_not_now(state, workshop, then) == BoardState.LEGAL:
 			return _purchase(state, workshop, then)
-		return TacticalDecision.hold(workshop.id, "%s: saves, with %d funds, for %s" % [
-			_step_label(index), state.funds_of(state.current_faction), _what(then)], workshop.cell)
+		return TacticalDecision.hold(workshop.id, tr("{step}: saves, with {funds} funds, for {what}").format({
+			step = _step_label(index), funds = state.funds_of(state.current_faction), what = _what(then)}), workshop.cell)
 	var refusal: String = _why_not_now(state, workshop, index)
 	if refusal != BoardState.LEGAL:
-		var waits: String = "saves" if _plan_cost(asked) > state.funds_of(state.current_faction) else "cannot"
-		return TacticalDecision.hold(workshop.id, "%s: %s -- %s" % [_step_label(index), waits, refusal], workshop.cell)
+		var waits: String = tr("{step}: cannot -- {why}")
+		if _plan_cost(asked) > state.funds_of(state.current_faction):
+			waits = tr("{step}: saves -- {why}")
+		return TacticalDecision.hold(workshop.id, waits.format({step = _step_label(index), why = TacticalRefusal.words(refusal)}), workshop.cell)
 	if asked[0] == TacticalPlanBridge.BUY:
-		return TacticalDecision.buy(workshop.id, TacticalRules.forge(), "%s: buys the forge, which a ram needs" % _step_label(index), workshop.cell)
+		return TacticalDecision.buy(workshop.id, TacticalRules.forge(), tr("{step}: buys the forge, which a ram needs").format({
+			step = _step_label(index)}), workshop.cell)
 	var order: ProductionOrder = _order(state, workshop, asked[1])
-	return TacticalDecision.build(workshop.id, order, "%s: builds a %s at %s" % [_step_label(index), asked[1], order.cell])
+	return TacticalDecision.build(workshop.id, order, tr("{step}: builds {piece} at {cell}").format({
+		step = _step_label(index), piece = TacticalStatus.a_piece(asked[1]), cell = order.cell}))
 
 
 # Why purchase step `index` cannot be made on this board, or LEGAL.
@@ -344,7 +359,7 @@ func _why_not_now(state: BoardState, workshop: Unit, index: int) -> String:
 		return state.why_upgrade_refused(TacticalRules.forge())
 	if asked[0] == TacticalPlanBridge.BUILD:
 		return state.why_production_refused(_order(state, workshop, asked[1]))
-	return "step %d, %s, is not a purchase" % [index + 1, plan.steps[index].name]
+	return tr("step {step}, {name}, is not a purchase").format({step = index + 1, name = plan.steps[index].name})
 
 
 # What purchase `asked` costs: the forge's price, or the unit type's.
@@ -362,18 +377,18 @@ func _order(state: BoardState, workshop: Unit, type_name: String) -> ProductionO
 # What step `index` buys, in words: "the forge", "a ram", or "nothing".
 func _what(index: int) -> String:
 	if index == -1:
-		return "nothing the plan names"
+		return tr("nothing the plan names")
 	var asked: Array[String] = TacticalPlanBridge.asks(plan.steps[index].name)
-	return "the forge" if asked[0] == TacticalPlanBridge.BUY else "a %s" % asked[1]
+	return tr("the forge") if asked[0] == TacticalPlanBridge.BUY else TacticalStatus.a_piece(asked[1])
 
 
 func _step_label(index: int) -> String:
-	return "plan step %d of %d, %s" % [index + 1, plan.steps.size(), plan.steps[index].name]
+	return tr("plan step {step} of {steps}, {name}").format({step = index + 1, steps = plan.steps.size(), name = plan.steps[index].name})
 
 
 # A decision the rules made, saying why the plan did not make it.
 static func _by_the_rules(decision: TacticalDecision, why: String) -> TacticalDecision:
-	decision.reason = "%s (%s: the rules decide)" % [decision.reason, why]
+	decision.reason = TranslationServer.translate("{reason} ({why}: the rules decide)").format({reason = decision.reason, why = why})
 	return decision
 
 

@@ -124,7 +124,8 @@ func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 	var cell: Vector2i = best[0]
 	var target: Unit = best[1]
 	_strike[unit_id] = target.id if target != null else CHOSE_NOT_TO
-	var why: String = "%s (worth %.2f, %d ply)" % [_said(unit, cell, target), best[2], level.search_depth]
+	var why: String = tr("{deed} (worth {worth}, {depth} ply)").format({
+		deed = _said(unit, cell, target), worth = "%.2f" % best[2], depth = level.search_depth})
 	if cell == unit.cell:
 		return TacticalDecision.hold(unit_id, why, cell)
 	return TacticalDecision.walk(unit_id, TacticalReach.walks_for(state, unit)[cell], why, cell)
@@ -142,7 +143,8 @@ func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
 		return null
 	var planned: Unit = state.unit_by_id(chosen)
 	if planned != null and TacticalCombat.why_refused(state, Attack.new(unit_id, planned.id)) == BoardState.LEGAL:
-		return TacticalDecision.strike(unit_id, planned, "attacks the %s at %s, as it walked here to" % [planned.type.type_name, planned.cell])
+		return TacticalDecision.strike(unit_id, planned, tr("attacks {target} at {cell}, as it walked here to").format({
+			target = TacticalStatus.the_piece(planned.type.type_name), cell = planned.cell}))
 	var best: Unit = null
 	var best_worth: float = 0.0
 	for enemy: Unit in _enemies(state):
@@ -154,7 +156,8 @@ func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
 			best_worth = worth
 	if best == null:
 		return null
-	return TacticalDecision.strike(unit_id, best, "attacks the %s at %s: worth %.2f where it stands" % [best.type.type_name, best.cell, best_worth])
+	return TacticalDecision.strike(unit_id, best, tr("attacks {target} at {cell}: worth {worth} where it stands").format({
+		target = TacticalStatus.the_piece(best.type.type_name), cell = best.cell, worth = "%.2f" % best_worth}))
 
 
 # [cell, target or null, worth] of the best option, ties to the first found.
@@ -354,7 +357,8 @@ func _noise() -> float:
 
 # What the option is, in words.
 func _said(unit: Unit, cell: Vector2i, target: Unit) -> String:
-	var where: String = "stays at %s" % cell if cell == unit.cell else "walks to %s" % cell
+	var stays: bool = cell == unit.cell
 	if target == null:
-		return where
-	return "%s to attack the %s at %s" % [where, target.type.type_name, target.cell]
+		return (tr("stays at {walk}") if stays else tr("walks to {walk}")).format({walk = cell})
+	var deed: String = tr("stays at {walk} to attack {target} at {cell}") if stays else tr("walks to {walk} to attack {target} at {cell}")
+	return deed.format({walk = cell, target = TacticalStatus.the_piece(target.type.type_name), cell = target.cell})

@@ -134,10 +134,11 @@ static func rows_of(recording: Dictionary) -> Array[Dictionary]:
 ## Why `parsed` is not a recording this reads, or "" when it is one.
 static func why_not_a_recording(parsed: Variant) -> String:
 	if not parsed is Dictionary:
-		return "not a JSON object"
+		return "not a JSON object"  # not shown: read by the tools that load recordings
 	for key: String in ["format", "version", "player", "side", "opponent", "dice_seed", "decisions", "end"]:
 		if not parsed.has(key):
-			return "no %s" % key
+			return "no %s" % key  # not shown
 	if parsed["format"] != FORMAT or int(parsed["version"]) != VERSION:
-		return "a %s version %s, not %s version %d" % [parsed["format"], parsed["version"], FORMAT, VERSION]
+		return "a %s version %s, not %s version %d" % [  # not shown
+			parsed["format"], parsed["version"], FORMAT, VERSION]
 	return ""

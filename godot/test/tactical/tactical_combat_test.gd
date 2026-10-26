@@ -7,6 +7,21 @@ const BLUE: int = TacticalScenario.BLUE
 const SEEDS: int = 400
 
 
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T79);
+# the Portuguese screen is test/locale's. The locale found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
+
 func test_the_game_s_rules_are_the_spec_s_byte_for_byte() -> void:
 	var spec: String = ProjectSettings.globalize_path("res://").path_join("../spec/combat/rules.json")
 	assert_str(FileAccess.get_file_as_string(TacticalCombat.RULES_PATH)).is_equal(FileAccess.get_file_as_string(spec))

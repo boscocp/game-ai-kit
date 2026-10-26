@@ -15,6 +15,21 @@ const BLUE: int = BoardGame.BLUE
 const FLAG := Vector2i(2, 6)
 
 
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T79);
+# the Portuguese screen is test/locale's. The locale found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
+
 func test_three_turn_starts_on_a_node_win() -> void:
 	var victory := SkirmishVictory.new([FLAG] as Array[Vector2i])
 	var state: BoardState = _board_with([[RED, FLAG]], RED)

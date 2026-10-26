@@ -32,7 +32,7 @@ const BUY: String = "buy"
 const BUILD: String = "build"
 const CROSS: String = "cross"
 const CLOSE_IN: String = "close_in"
-const SIEGE: String = "siege"
+const SIEGE: String = "siege"  # not shown: a step name
 
 static var _actions: Array[StripsAction] = []
 static var _goal: PackedStringArray = PackedStringArray()

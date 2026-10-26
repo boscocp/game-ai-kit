@@ -76,7 +76,8 @@ func progress(state: BoardState, side_names: Array[String]) -> String:
 	for node: Vector2i in _nodes.filter(func(node: Vector2i) -> bool:
 			return _held.has(node) and holder_of(state, node) == _held[node][0]):
 		var held: Array = _held[node]
-		lines.append("%s holds the node at %s: %d of %d turns" % [side_names[held[0]], node, held[1], HOLD_TURNS])
+		lines.append(TranslationServer.translate("{side} holds the node at {node}: {held} of {turns} turns").format({
+			side = TranslationServer.translate(side_names[held[0]]), node = node, held = held[1], turns = HOLD_TURNS}))
 	return "\n".join(lines)
 
 
@@ -96,13 +97,13 @@ func _count(node: Vector2i, side: int, holding: bool) -> int:
 
 ## The rule, as the screen states it before anybody has won.
 static func rule() -> String:
-	return "to win: start %d of your turns in a row with a unit on a node and no enemy beside it -- or it is a draw after %d rounds" % [
-		HOLD_TURNS, ROUND_LIMIT]
+	return TranslationServer.translate("to win: start {turns} of your turns in a row with a unit on a node and no enemy beside it -- or it is a draw after {rounds} rounds").format({
+		turns = HOLD_TURNS, rounds = ROUND_LIMIT})
 
 
 ## The words for the end of a game.
 static func announcement(winner_side: int, side_names: Array[String]) -> String:
 	if winner_side == DRAW:
-		return "a draw: %d rounds, and nobody held a node.  R starts again." % ROUND_LIMIT
-	return "%s wins: it held a node for %d of its turns in a row.  R starts again." % [
-		side_names[winner_side], HOLD_TURNS]
+		return TranslationServer.translate("a draw: {rounds} rounds, and nobody held a node.  R starts again.").format({rounds = ROUND_LIMIT})
+	return TranslationServer.translate("{side} wins: it held a node for {turns} of its turns in a row.  R starts again.").format({
+		side = TranslationServer.translate(side_names[winner_side]), turns = HOLD_TURNS})

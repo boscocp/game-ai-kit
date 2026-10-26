@@ -69,17 +69,17 @@ const SECOND_PLAYER_SHIELD: bool = true
 ## Health added to blue's workshop.
 const SECOND_PLAYER_WORKSHOP_HEALTH: int = 0
 
-const RUNNER: String = "runner"
-const SHIELD: String = "shield"
-const MORTAR: String = "mortar"
-const WADER: String = "wader"
-const RAM: String = "ram"
-const BOLT_TOWER: String = "bolt tower"
-const WATCHTOWER: String = "watchtower"
-const WORKSHOP: String = "workshop"
+const RUNNER: String = "runner"  # shown through tr()
+const SHIELD: String = "shield"  # shown through tr()
+const MORTAR: String = "mortar"  # shown through tr()
+const WADER: String = "wader"  # shown through tr()
+const RAM: String = "ram"  # shown through tr()
+const BOLT_TOWER: String = "bolt tower"  # shown through tr()
+const WATCHTOWER: String = "watchtower"  # shown through tr()
+const WORKSHOP: String = "workshop"  # shown through tr()
 
 ## The one upgrade: a forge, which the ram needs.
-const FORGE: String = "forge"
+const FORGE: String = "forge"  # shown through tr()
 const FORGE_COST: int = 5
 
 ## The five types a workshop makes, in the order the number keys pick them.

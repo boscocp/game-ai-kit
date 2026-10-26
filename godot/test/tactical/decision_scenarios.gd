@@ -35,6 +35,8 @@ const NODES: Array[Vector2i] = [Vector2i(0, 0), Vector2i(8, 6)]
 
 
 func _init() -> void:
+	# The reasons are read in English, whatever the machine's locale (T79).
+	TranslationServer.set_locale("en")
 	var published: ModelFile = ModelFile.load_from(LearnedPolicy.WEIGHTS_PATH)
 	if not published.is_loaded():
 		printerr("decision_scenarios: %s" % published.error)

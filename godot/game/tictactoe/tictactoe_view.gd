@@ -3,7 +3,9 @@
 ## of each square.
 ##
 ## Static functions that draw onto the scene's own canvas, because the scene
-## is a 3x3 grid and a second node would only pass the board along.
+## is a 3x3 grid and a second node would only pass the board along. Every
+## word goes through `TranslationServer.translate` before it is drawn: text
+## handed to `draw_string` is drawn as it is given (T79).
 class_name TicTacToeView
 extends RefCounted
 
@@ -12,6 +14,15 @@ const BIG: int = 34
 const SMALL: int = 15
 ## How much of a square an X or an O covers.
 const MARK_SIZE: float = 0.66
+## The squares as a person names them, in board order.
+const SQUARE_NAMES: Array[String] = ["top left", "top edge", "top right",  # shown through tr()
+		"left edge", "centre", "right edge", "bottom left", "bottom edge", "bottom right"]
+## What taking a square leads to with perfect play, by `TicTacToeSolver.words`
+## and by who would take it.
+const IF_CROSS_TAKES: Dictionary = {  # shown through tr()
+	"wins": "if X takes it: wins", "draws": "if X takes it: draws", "loses": "if X takes it: loses"}
+const IF_YOU_TAKE: Dictionary = {  # shown through tr()
+	"wins": "if you take it: wins", "draws": "if you take it: draws", "loses": "if you take it: loses"}
 
 
 ## The grid and the pieces on it. The marks are white pictures from `Art`,
@@ -46,20 +57,22 @@ static func draw_beads(canvas: CanvasItem, squares: Array) -> void:
 	for entry: Dictionary in squares:
 		var corner: Vector2 = Vector2(entry["square"] % 3, entry["square"] / 3) * CELL
 		if entry.get("forced", false):
-			_write(canvas, font, corner + Vector2(14.0, CELL * 0.5), "forced", SMALL + 7, TicTacToeExample.BEAD_COLOUR)
-			_write(canvas, font, corner + Vector2(14.0, CELL * 0.5 + 22.0), "the last square", SMALL, TicTacToeExample.BEAD_COLOUR)
+			_write(canvas, font, corner + Vector2(14.0, CELL * 0.5), TranslationServer.translate("forced"), SMALL + 7, TicTacToeExample.BEAD_COLOUR)
+			_write(canvas, font, corner + Vector2(14.0, CELL * 0.5 + 22.0), TranslationServer.translate("the last square"), SMALL, TicTacToeExample.BEAD_COLOUR)
 			continue
 		if entry.has("same_move_as"):
-			_write(canvas, font, corner + Vector2(12.0, CELL * 0.55), "same move as", SMALL, grey)
-			_write(canvas, font, corner + Vector2(12.0, CELL * 0.55 + 18.0), "the " + square_name(entry["same_move_as"]), SMALL, grey)
+			_write(canvas, font, corner + Vector2(12.0, CELL * 0.55), TranslationServer.translate("same move as"), SMALL, grey)
+			_write(canvas, font, corner + Vector2(12.0, CELL * 0.55 + 18.0), TranslationServer.translate("the {square}").format({square = square_name(entry["same_move_as"])}), SMALL, grey)
 			continue
 		_draw_bead_count(canvas, font, corner, entry["beads"], entry["probability"])
 
 
 static func _draw_bead_count(canvas: CanvasItem, font: Font, corner: Vector2, beads: int, probability: float) -> void:
-	var noun: String = "bead" if beads == 1 else "beads"
+	var count_line: String = TranslationServer.translate("beads · {percent}")
+	if beads == 1:
+		count_line = TranslationServer.translate("bead · {percent}")
 	_write(canvas, font, corner + Vector2(14.0, CELL * 0.5 + 4.0), str(beads), BIG, TicTacToeExample.BEAD_COLOUR)
-	_write(canvas, font, corner + Vector2(14.0, CELL * 0.5 + 26.0), "%s · %s" % [noun, TicTacToePanel.percent(probability)], SMALL, TicTacToeExample.BEAD_COLOUR)
+	_write(canvas, font, corner + Vector2(14.0, CELL * 0.5 + 26.0), count_line.format({percent = TicTacToePanel.percent(probability)}), SMALL, TicTacToeExample.BEAD_COLOUR)
 	var full := Rect2(corner + Vector2(10.0, CELL - 26.0), Vector2(CELL - 20.0, 14.0))
 	canvas.draw_rect(full, Color(1, 1, 1, 0.12))
 	canvas.draw_rect(Rect2(full.position, Vector2(full.size.x * probability, full.size.y)), TicTacToeExample.BEAD_COLOUR)
@@ -76,11 +89,11 @@ static func draw_chosen(canvas: CanvasItem, square: int) -> void:
 ## square is as good, when framing one would pick a favourite that is not there.
 static func draw_perfect(canvas: CanvasItem, perfect: Dictionary) -> void:
 	var font: Font = ThemeDB.fallback_font
-	var who: String = "if X takes it" if perfect["for"] == TicTacToeExample.MENACE_SIDE else "if you take it"
+	var outcomes: Dictionary = IF_CROSS_TAKES if perfect["for"] == TicTacToeExample.MENACE_SIDE else IF_YOU_TAKE
 	var values: Dictionary = perfect["values"]
 	for square: int in values:
 		var corner: Vector2 = Vector2(square % 3, square / 3) * CELL
-		_write(canvas, font, corner + Vector2(10.0, 22.0), "%s: %s" % [who, TicTacToeSolver.words(values[square])], SMALL - 2, TicTacToeExample.MINIMAX_COLOUR)
+		_write(canvas, font, corner + Vector2(10.0, 22.0), TranslationServer.translate(outcomes[TicTacToeSolver.words(values[square])]), SMALL - 2, TicTacToeExample.MINIMAX_COLOUR)
 	if (perfect["best"] as Array).size() == values.size():
 		return
 	for square: int in perfect["best"]:
@@ -103,8 +116,7 @@ static func centre_of(square: int) -> Vector2:
 
 ## A square as a person names it: "top left", "centre", "bottom edge".
 static func square_name(square: int) -> String:
-	return ["top left", "top edge", "top right", "left edge", "centre", "right edge",
-			"bottom left", "bottom edge", "bottom right"][square]
+	return TranslationServer.translate(SQUARE_NAMES[square])
 
 
 static func _write(canvas: CanvasItem, font: Font, at: Vector2, words: String, size: int, colour: Color) -> void:

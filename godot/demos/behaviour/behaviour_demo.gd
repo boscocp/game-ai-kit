@@ -28,6 +28,15 @@ const GUTTER: float = BoardLayout.GUTTER
 const BOARD_CORNER := Vector2(48.0, 48.0)
 ## How tall the legend is, above the brain's panel in the right column.
 const LEGEND_HEIGHT: float = 210.0
+## When each of the four brains is the right answer: `WaysToDecide`'s words
+## for them, which the addon keeps in English and this demo translates. A
+## test holds the two to the same sentences.
+const RIGHT_WHEN: Array[String] = [  # shown through tr()
+	"a few states, each with a clear way out",
+	"reusable parts, re-judged every tick",
+	"many ways to a goal; find the cheap one",
+	"the designer knows the order, and wants it kept",
+]
 
 @onready var _board: BoardView = $BoardView
 @onready var _view: BehaviourView = $BehaviourView
@@ -39,19 +48,33 @@ var world: BehaviourWorld
 
 
 func _ready() -> void:
-	_legend.set_entries([
-		[BehaviourView.GUARD, "the guard (line: facing)"],
-		[BehaviourView.SIGHT, "what the guard sees"],
-		[BehaviourView.LAST_KNOWN, "ring: last seen or heard"],
-		[BehaviourView.STEP, "dots: its move this turn"],
-		[BehaviourView.INTRUDER, "the intruder's loop"],
-		[BrainPanel.LIT, "panel: the state or step now"],
-		[BrainPanel.SHARED, "panel: one subtree, two branches"],
-		[BoardView.tile_texture(BoardView.TREES), "trees: slow, block sight"],
-		[BoardView.tile_texture(BoardView.WALL), "wall"],
-	] as Array[Array])
+	_legend.set_entries(_legend_entries())
 	restart()
 	_lay_out()
+	Language.apply_if_opened_alone(self)
+
+
+# The words are rebuilt in the language just chosen: a Label set from code
+# keeps the text it was given, and the panel's are drawn, not Controls. The
+# notification also comes on entering the tree, before _ready.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_legend.set_entries(_legend_entries())
+		_refresh()
+
+
+func _legend_entries() -> Array[Array]:
+	return [
+		[BehaviourView.GUARD, tr("the guard (line: facing)")],
+		[BehaviourView.SIGHT, tr("what the guard sees")],
+		[BehaviourView.LAST_KNOWN, tr("ring: last seen or heard")],
+		[BehaviourView.STEP, tr("dots: its move this turn")],
+		[BehaviourView.INTRUDER, tr("the intruder's loop")],
+		[BrainPanel.LIT, tr("panel: the state or step now")],
+		[BrainPanel.SHARED, tr("panel: one subtree, two branches")],
+		[BoardView.tile_texture(BoardView.TREES), tr("trees: slow, block sight")],
+		[BoardView.tile_texture(BoardView.WALL), tr("wall")],
+	] as Array[Array]
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -102,14 +125,15 @@ func decision_overlay() -> Dictionary:
 ## last one off the bottom.
 func status_text() -> String:
 	var brain: GuardBrain = world.brain
-	var lines: Array[String] = [
-		"turn %d  ·  the guard thinks with: %s -- right when: %s" % [world.turn, brain.brain_name(), _when_right(brain.brain_name())],
-		"suspicion %.0f  ·  deed: %s  ·  caught %d time(s)%s" % [world.senses.suspicion.level,
-			brain.deed if brain.deed != "" else "(decides on the next turn)", world.catches,
-			"  ·  CAUGHT -- it starts its loop again" if world.caught else ""],
-		"1 state machine  ·  2 behaviour tree  ·  3 GOAP  ·  4 HTN  ·  space: a turn  ·  enter: ten  ·  R: again",
-	]
-	return "\n".join(lines)
+	var thinks: String = tr("turn {turn}  ·  the guard thinks with: {brain} -- right when: {when}").format({
+		turn = world.turn, brain = BrainPanel.words(brain.brain_name()), when = tr(_when_right(brain.brain_name()))})
+	var deed: String = BrainPanel.words(brain.deed) if brain.deed != "" else tr("(decides on the next turn)")
+	var does: String = tr("suspicion {suspicion}  ·  deed: {deed}  ·  caught {catches} time(s)")
+	if world.caught:
+		does = tr("suspicion {suspicion}  ·  deed: {deed}  ·  caught {catches} time(s)  ·  CAUGHT -- it starts its loop again")
+	var keys: String = tr("1 state machine  ·  2 behaviour tree  ·  3 GOAP  ·  4 HTN  ·  space: a turn  ·  enter: ten  ·  R: again")
+	return "\n".join([thinks, does.format({suspicion = "%.0f" % world.senses.suspicion.level,
+		deed = deed, catches = world.catches}), keys])
 
 
 # The board left, the status under it, the legend and the brain's panel in

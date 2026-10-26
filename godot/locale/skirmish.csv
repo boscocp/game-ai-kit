@@ -1,0 +1,34 @@
+en,pt_BR
+"red: yours (white: id, yellow: health)","vermelhas: suas (branco: id, amarelo: vida)"
+blue: the learned opponent,azuis: o adversário que aprendeu
+white frame round a unit: the one in hand,moldura branca: a unidade na mão
+"blue's next move, not yet played","o próximo lance das azuis, ainda não jogado"
+where the unit in hand can step,onde a unidade na mão pode pisar
+a node: hold it {turns} turns to win,um nó: segure por {turns} turnos para vencer
+open ground,terreno aberto
+rough ground: costs the number on it,terreno difícil: custa o número nele
+wall,parede
+blue is deciding -- space plays the move it has drawn,as azuis estão decidindo -- espaço joga o lance que elas desenharam
+nothing is selected -- click one of your own units first,nada selecionado -- clique antes numa unidade sua
+"{cell} is more than one step away -- you move one cell at a time, onto a highlighted cell","{cell} está a mais de um passo -- você anda uma casa por vez, para uma casa destacada"
+blue cannot think: {why},as azuis não conseguem pensar: {why}
+refused: {why},recusado: {why}
+blue this turn:,as azuis neste turno:
+"next, not yet played: {why}","próximo, ainda não jogado: {why}"
+turn {turn}  ·  blue to move: the learned opponent,turno {turn}  ·  vez das azuis: o adversário que aprendeu
+turn {turn}  ·  red to move: you are red,turno {turn}  ·  vez das vermelhas: você joga com as vermelhas
+blue's unit {unit} is deciding,a unidade {unit} das azuis está decidindo
+no unit in hand,nenhuma unidade na mão
+unit {unit} in hand  ·  movement left: {points},unidade {unit} na mão  ·  movimento restante: {points}
+space plays the move drawn as a blue line and box.,espaço joga o lance desenhado como linha e caixa azuis.
+click one of your units. Space ends your turn.,clique numa unidade sua. Espaço encerra seu turno.
+"this unit cannot step anywhere now -- click another of your units, or press space to end your turn.","esta unidade não pode pisar em lugar nenhum agora -- clique em outra unidade sua, ou aperte espaço para encerrar seu turno."
+"click one of your units, then a highlighted cell next to it. A step costs the number on the cell it enters, or 1. Space ends your turn.","clique numa unidade sua, depois numa casa destacada ao lado. Um passo custa o número da casa em que entra, ou 1. Espaço encerra seu turno."
+red,vermelhas
+blue,azuis
+p(win) {chance},p(vitória) {chance}
+{turns} turns,{turns} turnos
+{side} holds the node at {node}: {held} of {turns} turns,as {side} seguram o nó em {node}: {held} de {turns} turnos
+to win: start {turns} of your turns in a row with a unit on a node and no enemy beside it -- or it is a draw after {rounds} rounds,para vencer: comece {turns} turnos seguidos seus com uma unidade num nó e nenhum inimigo ao lado -- ou é empate depois de {rounds} rodadas
+"a draw: {rounds} rounds, and nobody held a node.  R starts again.","empate: {rounds} rodadas, e ninguém segurou um nó.  R recomeça."
+{side} wins: it held a node for {turns} of its turns in a row.  R starts again.,as {side} vencem: seguraram um nó por {turns} turnos seguidos.  R recomeça.

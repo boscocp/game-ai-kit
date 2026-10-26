@@ -8,6 +8,63 @@ extends GdUnitTestSuite
 ## setting out to look, looking, and the chase. What `WaysToDecide` reports.
 const MEASURED: Array[String] = ["2/2", "3/3", "2/2", "3/3"]
 
+var _locale_before: String = ""
+
+
+# The demo's words are read in English unless a test says otherwise, whatever
+# the machine's locale (T79).
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+
+
+func before_test() -> void:
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
+
+func test_the_words_the_demo_translates_are_the_addon_s_words() -> void:
+	# `RIGHT_WHEN` and `TREE_ANSWERS` copy English the addon writes, so that
+	# the demo's table can translate it; a change in the addon must show here,
+	# or the screen would fall back to English without a word.
+	# Asked by each brain's own name, as the status asks: a row the addon
+	# renamed would leave the screen saying nothing, and a loop over the
+	# addon's rows would not miss it.
+	for brain: GuardBrain in _brains():
+		var when: String = BehaviourDemo._when_right(brain.brain_name())
+		assert_str(when).override_failure_message("%s: no row in WaysToDecide" % brain.brain_name()).is_not_empty()
+		assert_array(BehaviourDemo.RIGHT_WHEN).contains([when])
+	for answer: BehaviourTree.Status in [BehaviourTree.Status.SUCCESS, BehaviourTree.Status.FAILURE,
+			BehaviourTree.Status.RUNNING]:
+		assert_array(BrainPanel.TREE_ANSWERS).contains([BehaviourTree.said(answer)])
+
+
+func test_the_panel_translates_each_name_and_keeps_the_notation() -> void:
+	TranslationServer.set_locale("pt_BR")
+
+	assert_str(BrainPanel.words("patrol -> suspicious: something is off")).is_equal(
+		"ronda -> desconfiado: algo está estranho")
+	assert_str(BrainPanel.words("go and look: running")).is_equal("ir olhar: em execução")
+	assert_str(BrainPanel.words("guard: seize them")).is_equal("guarda: agarrar o intruso")
+	assert_str(BrainPanel.words("walk_round")).is_equal("fazer a ronda")
+
+
+func test_in_portuguese_the_status_stays_three_lines_for_every_brain() -> void:
+	# The window has room under the board for three lines and no more, and a
+	# Portuguese line is longer: one that wrapped would push the keys off.
+	TranslationServer.set_locale("pt_BR")
+	var demo: BehaviourDemo = auto_free(load("res://demos/behaviour/behaviour_demo.tscn").instantiate())
+	add_child(demo)
+	var status: Label = demo.get_node("Interface/Status")
+	for brain: int in range(4):
+		demo.swap_brain(brain)
+		demo.step_decision()
+
+		assert_str(status.text).contains("turno")
+		assert_int(status.get_line_count()).override_failure_message(status.text).is_less_equal(3)
+
 
 func test_a_state_machine_takes_the_first_arrow_that_holds_and_only_one() -> void:
 	var machine := StateMachine.new("a")

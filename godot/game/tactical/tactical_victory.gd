@@ -84,9 +84,11 @@ static func _higher_score(state: BoardState) -> int:
 ## The rule, as the screen states it before anybody has won -- and, since
 ## T47, the second player's counter, which is part of what is fair about it.
 static func rule() -> String:
-	var counter: String = "; blue moves second and starts with one more shield" if TacticalRules.SECOND_PLAYER_SHIELD else ""
-	return "to win: destroy the enemy workshop -- attack it with a unit in reach. After %d rounds the higher score wins: workshop health, then point-turns held (each point, each turn it was held), then what is left standing%s" % [
-		ROUND_LIMIT, counter]
+	if TacticalRules.SECOND_PLAYER_SHIELD:
+		return TranslationServer.translate("to win: destroy the enemy workshop -- attack it with a unit in reach. After {rounds} rounds the higher score wins: workshop health, then point-turns held (each point, each turn it was held), then what is left standing; blue moves second and starts with one more shield").format({
+			rounds = ROUND_LIMIT})
+	return TranslationServer.translate("to win: destroy the enemy workshop -- attack it with a unit in reach. After {rounds} rounds the higher score wins: workshop health, then point-turns held (each point, each turn it was held), then what is left standing").format({
+		rounds = ROUND_LIMIT})
 
 
 ## The words for the end of a game.
@@ -94,17 +96,19 @@ static func announcement(winner_side: int, state: BoardState = null) -> String:
 	if state != null and at_the_limit(state):
 		return _at_the_limit_said(winner_side, state)
 	if winner_side == DRAW:
-		return "a draw: %d rounds, and nobody destroyed a workshop.  R starts again." % ROUND_LIMIT
-	return "%s wins: the %s workshop is destroyed.  R starts again." % [
-		TacticalStatus.side_name(winner_side), TacticalStatus.side_name(TacticalScenario.FACTIONS - 1 - winner_side)]
+		return TranslationServer.translate("a draw: {rounds} rounds, and nobody destroyed a workshop.  R starts again.").format({rounds = ROUND_LIMIT})
+	return TranslationServer.translate("{winner} wins: the {loser} workshop is destroyed.  R starts again.").format({
+		winner = TacticalStatus.side_name(winner_side), loser = TacticalStatus.side_name(TacticalScenario.FACTIONS - 1 - winner_side)})
 
 
 static func _at_the_limit_said(winner_side: int, state: BoardState) -> String:
-	var scores: String = "red %s, blue %s (workshop health, point-turns held, left standing)" % [
-		score(state, TacticalScenario.RED), score(state, TacticalScenario.BLUE)]
+	var scores: String = TranslationServer.translate("red {red}, blue {blue} (workshop health, point-turns held, left standing)").format({
+		red = score(state, TacticalScenario.RED), blue = score(state, TacticalScenario.BLUE)})
 	if winner_side == DRAW:
-		return "a draw: %d rounds, and the scores are equal -- %s.  R starts again." % [ROUND_LIMIT, scores]
-	return "%s wins on score after %d rounds: %s.  R starts again." % [TacticalStatus.side_name(winner_side), ROUND_LIMIT, scores]
+		return TranslationServer.translate("a draw: {rounds} rounds, and the scores are equal -- {scores}.  R starts again.").format({
+			rounds = ROUND_LIMIT, scores = scores})
+	return TranslationServer.translate("{winner} wins on score after {rounds} rounds: {scores}.  R starts again.").format({
+		winner = TacticalStatus.side_name(winner_side), rounds = ROUND_LIMIT, scores = scores})
 
 
 static func _has_workshop(state: BoardState, side: int) -> bool:

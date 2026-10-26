@@ -15,6 +15,10 @@
 # EXAMPLES must be there, and at least one line read, or a blank scene
 # would pass.
 #
+# A refusal is provoked too, in the tactical match: the board writes its
+# refusals in English and the demo translates them where they are shown
+# (`TacticalRefusal`), and no example stepped on its own is ever refused.
+#
 # Planted: a Label whose auto-translation is disabled, a formatted English
 # line, and an empty scene; each must be refused, or the check sees nothing
 # and says so. Any engine error while the demos run is a failure too: a
@@ -32,6 +36,12 @@ const SEGMENT: String = "  ·  "
 const EXAMPLES: Dictionary = {
 	"res://game/checkers/checkers.tscn": ["Interface/Status", "Interface/Decision", "Interface/Legend"],
 	"res://demos/search/search_demo.tscn": ["Interface/Status", "Interface/Help", "Interface/Legend"],
+	"res://game/tictactoe/tictactoe.tscn": ["Interface/Status", "Interface/Decision", "Interface/Legend"],
+	"res://game/stealth/stealth.tscn": ["Interface/Status", "Interface/Legend"],
+	"res://demos/behaviour/behaviour_demo.tscn": ["Interface/Status", "Interface/Legend"],
+	"res://game/tactical/tactical.tscn": ["Interface/Header", "Interface/Status", "Interface/EndTurn",
+		"Interface/Undo", "Interface/Legend"],
+	"res://game/main.tscn": ["Interface/Status", "Interface/Legend"],
 	"res://menu/menu.tscn": [],
 }
 
@@ -69,6 +79,9 @@ func _run() -> void:
 	TranslationServer.set_locale("pt_BR")
 	failures += await _planted()
 	for path: String in EXAMPLES:
+		# Counted from before the load: a script that fails to parse fails
+		# there, and the scene still opens without it (T79 found one).
+		_counter.errors = 0
 		failures += await _look_at(path, (load(path) as PackedScene).instantiate(), EXAMPLES[path])
 	TranslationServer.set_locale("en")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SETTINGS))
@@ -155,8 +168,9 @@ func _is_english(text: String) -> bool:
 	return _english.any(func(pattern: RegEx) -> bool: return pattern.search(text) != null)
 
 
+# The errors counted since `_counter.errors` was last set to 0 are this
+# example's: the caller zeroes it before it loads the scene.
 func _look_at(label: String, example: Node, expected: Array) -> Array[String]:
-	_counter.errors = 0
 	_lines_read = 0
 	if example is ExampleMenu:
 		(example as ExampleMenu).settings_path = SETTINGS
@@ -168,6 +182,8 @@ func _look_at(label: String, example: Node, expected: Array) -> Array[String]:
 			example.step_decision()
 		await process_frame
 	var failures: Array[String] = []
+	if example is TacticalGame:
+		failures += await _provoke_a_refusal(example as TacticalGame)
 	for path: String in expected:
 		if not example.has_node(path):
 			failures.append("%s: has no %s to read" % [label, path])
@@ -182,11 +198,32 @@ func _look_at(label: String, example: Node, expected: Array) -> Array[String]:
 	return failures
 
 
+# The person's workshop asked for a ram before the forge is bought: the board
+# refuses it, and the status must say so -- in Portuguese, which the walk
+# below then checks. Fails when no refusal could be provoked, so the check
+# cannot pass on a screen that never showed one.
+func _provoke_a_refusal(game: TacticalGame) -> Array[String]:
+	game.new_game()
+	if game.state.current_faction != game.person_side:
+		game.swap_sides()
+	for unit: Unit in game.state.units:
+		if unit.faction == game.person_side and unit.type.type_name == TacticalRules.WORKSHOP:
+			game.click_cell(unit.cell)
+	game.build(TacticalRules.BUILDABLE.find(TacticalRules.RAM))
+	await process_frame
+	var status: Label = game.get_node("Interface/Status")
+	var refused: String = TranslationServer.translate("refused: {why}").split("{")[0]
+	if not status.text.contains(refused):
+		return ["tactical: no refusal could be provoked to check:\n" + status.text]
+	return []
+
+
 # The planted cases: a key on a Label that may not translate itself, a line
 # formatted from a key, and a scene with nothing in it.
 func _planted() -> Array[String]:
 	var failures: Array[String] = []
 	for text: String in ["Play  (Enter)", "expandiu 3  ·  cost 7"]:
+		_counter.errors = 0
 		var planted := Label.new()
 		planted.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 		planted.text = text
@@ -194,6 +231,7 @@ func _planted() -> Array[String]:
 		holder.add_child(planted)
 		if (await _look_at("planted", holder, [])).is_empty():
 			failures.append("the planted Label %s was not seen: this check sees nothing" % text)
+	_counter.errors = 0
 	if (await _look_at("planted", Node2D.new(), [])).is_empty():
 		failures.append("an empty scene passed: this check would pass a blank screen")
 	return failures
