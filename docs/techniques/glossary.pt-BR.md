@@ -90,3 +90,13 @@ também em itálico, ficam como foram publicados.
 | GPU, VRAM | a placa de vídeo, e a memória dela; um LLM local precisa das duas |
 | OpenGL, Compatibility | a interface gráfica que o Godot usa nas máquinas mais simples, e o nome do renderizador dele que a usa |
 | *script* | um arquivo de código GDScript, anexado a um nó ou registrado com `class_name` |
+| *frame data* | a tabela de cada golpe de um jogo de luta, contada em *frames* (quadros): quanto demora a sair, quanto fica ativo, quanto demora a voltar |
+| *startup*, *active*, *recovery* | as três fases de um golpe na *frame data*: saindo, podendo acertar, voltando; ficam em inglês, como os jogadores de luta dizem |
+| *hitbox*, *hurtbox* | a caixa que um golpe acerta, e a caixa onde um lutador pode ser acertado |
+| *hitstun*, *blockstun* | os *frames* em que um lutador, acertado ou defendendo, ainda não pode agir |
+| *counter-hit* | acertar o outro lutador enquanto o golpe dele ainda está saindo; vale mais dano e mais *hitstun* |
+| *overhead* | um golpe que vem de cima e só a defesa em pé segura |
+| *buffer* | guardar o botão apertado um pouco antes, para o golpe sair assim que o lutador puder |
+| *jab*, *uppercut*, *side_kick*, *low_jab* | os nomes dos golpes da demo de luta, como a *frame data* os escreve; ficam com o nome do código, como os personagens *lancer* e *dancer* |
+| *build_lab*, *train_runners*, *mortars_ready* | passos e fatos do plano do comandante da demo de RTS, com o nome que o código e o domínio PDDL dão |
+| *grid* | o grid de largada de uma corrida, onde os carros esperam lado a lado |

@@ -45,3 +45,10 @@ make lint-tasks lint-status
 In PT-BR, race the 3D racer, take over a bot in the bot match (T), and play
 a fighting round and an RTS match: is every word on screen Portuguese, and
 does every panel still fit?
+
+Code identifiers stay English by the owner's rule (2026-10-26) and are not
+a finding: the RTS plan's steps and facts (`build_lab`, `mortars_ready`), a
+fighting move's name (`jab`, `side_kick`), the characters, the clone's case
+key and features. The pad's legend line is still English. Provoke an RTS
+refusal (a worker asked for a lab before a barracks) and read it in
+Portuguese; in the fighting game, read a frame's events while paused.
