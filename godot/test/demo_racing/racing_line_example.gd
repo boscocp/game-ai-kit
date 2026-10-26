@@ -22,11 +22,10 @@ var grip_margin: float = 1.0
 const GRIP: float = 300.0
 const BRAKING: float = 400.0
 const TOP_SPEED: float = 400.0
-## How hard seek's force is applied. ai_steering's seek returns the velocity
-## gap itself, which `step` closes at a gain of 1 a second: too slow for a
-## car on a line, which then runs wide of every corner. Ten closes it in
-## about a tenth of a second.
-const RESPONSE: float = 10.0
+## Seconds seek is given to reach the velocity it wants. Seek's default, a
+## second, is too slow for a car on a line, which then runs wide of every
+## corner; a tenth holds it.
+const TIME_TO_TARGET: float = 0.1
 
 ## The car: its speed is capped at the profile's limit each frame, and it
 ## may change its velocity by 600 a second.
@@ -48,7 +47,7 @@ func _physics_process(delta: float) -> void:
 	var aim: Vector2 = line[(_at + lookahead) % line.size()]
 	# ai_steering's seek, with the profile's speed as the top speed here.
 	vehicle.max_speed = speed_limits[_at]
-	vehicle.step(SeekBehaviour.new(aim).force(vehicle) * RESPONSE, delta)
+	vehicle.step(SeekBehaviour.new(aim, TIME_TO_TARGET).force(vehicle), delta)
 	position = vehicle.position
 
 

@@ -1,0 +1,110 @@
+{
+ "name": "pursue-sharp-a-crossing-quarry",
+ "why": "pursue-a-crossing-quarry's chase with a quarter of a second to reach each velocity, handed on to the seek pursue runs: it turns onto the guess sooner and closes on the quarry faster than with the default second.",
+ "steps_per_second": 60,
+ "vehicle": {
+  "position": [
+   0.0,
+   0.0
+  ],
+  "velocity": [
+   0.0,
+   0.0
+  ],
+  "max_speed": 10.0,
+  "max_force": 20.0
+ },
+ "behaviours": [
+  {
+   "kind": "pursue",
+   "quarry": {
+    "position": [
+     20.0,
+     -10.0
+    ],
+    "velocity": [
+     0.0,
+     4.0
+    ]
+   },
+   "time_to_target": 0.25
+  }
+ ],
+ "samples": [
+  {
+   "step": 0,
+   "position": [
+    0.0,
+    0.0
+   ],
+   "velocity": [
+    0.0,
+    0.0
+   ],
+   "force": [
+    19.15652570442303,
+    -5.7469577113269095
+   ]
+  },
+  {
+   "step": 1,
+   "position": [
+    0.005321257140117508,
+    -0.0015963771420352524
+   ],
+   "velocity": [
+    0.3192754284070505,
+    -0.09578262852211515
+   ],
+   "force": [
+    19.174631893379892,
+    -5.6862546331815516
+   ]
+  },
+  {
+   "step": 30,
+   "position": [
+    2.3377051701186615,
+    -0.6005198341115028
+   ],
+   "velocity": [
+    8.01238827333218,
+    -1.8396682327011993
+   ],
+   "force": [
+    7.229514465267492,
+    -0.2014098549347434
+   ]
+  },
+  {
+   "step": 90,
+   "position": [
+    11.834406442113265,
+    -1.5423677319064153
+   ],
+   "velocity": [
+    9.926746067112902,
+    0.5254218926348166
+   ],
+   "force": [
+    0.023158806103850793,
+    2.5368177140705237
+   ]
+  },
+  {
+   "step": 150,
+   "position": [
+    21.464851876988448,
+    -0.4460624803789023
+   ],
+   "velocity": [
+    6.707615382613361,
+    1.8106546243189423
+   ],
+   "force": [
+    -19.293075944083775,
+    5.270409909657501
+   ]
+  }
+ ]
+}

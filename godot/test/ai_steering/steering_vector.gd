@@ -18,9 +18,9 @@ const TOLERANCE: float = 1e-3
 ## Every key a behaviour of each kind may carry. A misspelt key is refused,
 ## or `"braking_raduis"` would quietly be no braking radius at all.
 const BEHAVIOUR_KEYS: Dictionary = {
-	"seek": ["kind", "weight", "target"],
+	"seek": ["kind", "weight", "target", "time_to_target"],
 	"arrive": ["kind", "weight", "target", "braking_radius", "time_to_target"],
-	"pursue": ["kind", "weight", "quarry", "max_prediction"],
+	"pursue": ["kind", "weight", "quarry", "max_prediction", "time_to_target"],
 	"avoid": ["kind", "weight", "centres", "radii", "look_ahead"],
 }
 
@@ -97,7 +97,7 @@ static func replay(vector: Dictionary) -> Dictionary:
 static func _behaviour(spec: Dictionary) -> SteeringBehaviour:
 	match spec["kind"]:
 		"seek":
-			return SeekBehaviour.new(_vector(spec["target"]))
+			return _seek(spec)
 		"arrive":
 			return _arrive(spec)
 		"pursue":
@@ -108,8 +108,14 @@ static func _behaviour(spec: Dictionary) -> SteeringBehaviour:
 	return AvoidBehaviour.new(centres, PackedFloat64Array(spec["radii"]), spec["look_ahead"])
 
 
-# A field the file leaves out is left to the library's own default, so the
-# vectors pin the defaults too.
+# A field the file leaves out is left to the library's own default -- read
+# from a behaviour built without it -- so the vectors pin the defaults too.
+static func _seek(spec: Dictionary) -> SeekBehaviour:
+	var target: Vector2 = _vector(spec["target"])
+	var defaults := SeekBehaviour.new(target)
+	return SeekBehaviour.new(target, spec.get("time_to_target", defaults.time_to_target))
+
+
 static func _arrive(spec: Dictionary) -> ArriveBehaviour:
 	if spec.has("time_to_target"):
 		return ArriveBehaviour.new(_vector(spec["target"]), spec["braking_radius"], spec["time_to_target"])
@@ -118,9 +124,11 @@ static func _arrive(spec: Dictionary) -> ArriveBehaviour:
 
 static func _pursue(spec: Dictionary) -> PursueBehaviour:
 	var quarry: Dictionary = spec["quarry"]
-	if spec.has("max_prediction"):
-		return PursueBehaviour.new(_vector(quarry["position"]), _vector(quarry["velocity"]), spec["max_prediction"])
-	return PursueBehaviour.new(_vector(quarry["position"]), _vector(quarry["velocity"]))
+	var at: Vector2 = _vector(quarry["position"])
+	var moving: Vector2 = _vector(quarry["velocity"])
+	var defaults := PursueBehaviour.new(at, moving)
+	var look_ahead: float = spec.get("max_prediction", defaults.max_prediction)
+	return PursueBehaviour.new(at, moving, look_ahead, spec.get("time_to_target", defaults.time_to_target))
 
 
 # A quarry moves on at its own velocity after every step, as the file's does.

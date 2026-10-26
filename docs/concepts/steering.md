@@ -2,9 +2,9 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-19
+verified_on: 2026-10-26
 tier: 1
-source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
+source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement ; https://github.com/idmillington/aicore
 invalidated_if: ai_steering's behaviours change their formula, or test/ai_steering/steering_properties.gd's thresholds change
 teaches: steering
 -->
@@ -37,6 +37,136 @@ can apply. Nothing in it ever asks for less than full speed, so a vehicle
 seeking a point drives through it, turns, comes back through it, and keeps
 doing that. Over 300 random starts, in both languages, seek's longest
 stretch spent under a thousandth of its top speed was **one step**.
+
+## How fast the gap closes: the time it is given
+
+Seek's force is a gap between two velocities, and a force is a change of
+velocity per second -- so something has to say how many seconds the gap
+gets. The two books say it differently.
+
+**Reynolds (1999), section "A Simple Vehicle Model".** The vehicle has a
+`mass`, and each step
+
+    steering_force = truncate (steering_direction, max_force)
+    acceleration   = steering_force / mass
+    velocity       = truncate (velocity + acceleration, max_speed)
+    position       = position + velocity
+
+with seek's `steering = desired_velocity - velocity`. There is no `dt`:
+the update is per step, and the mass is the knob. With a mass of 1 the
+whole gap closes in one step (up to `max_force`); a mass of 10 closes a
+tenth of it a step.
+
+**Millington (*AI for Games*, chapter 3).** Forces are accelerations
+integrated over seconds -- his `aicore` source, the code that shipped with
+the first edition, does `velocity += steer.linear * duration`
+(`src/location.cpp`). The behaviours that match a velocity, velocity
+matching and the dynamic arrive, divide the velocity gap by a
+`timeToTarget`, 0.1 s -- that is where the name comes from. `aicore` has
+the name too, in its *kinematic* arrive (`src/kinematic.cpp`, "We'd like
+to arrive in timeToTarget seconds"), but there it divides a position
+offset by the time to get a velocity: a different quotient, not this
+one. His seek
+is different again: `aicore`'s `Seek::getSteering` asks for full
+acceleration towards the target, no velocity gap at all
+(`src/steering.cpp`). Read in this wave: Reynolds' paper and `aicore`'s
+source; the third edition's chapter was not opened again -- the 0.1 is
+the form T22 took for arrive from it.
+
+This kit had Reynolds' formula on Millington's integrator: the gap,
+added times seconds, without Reynolds' per-step mass. So seek closed the
+gap at an implicit gain of one a second -- a one-second time constant
+nobody chose. At sixty steps a second that is sixty times softer than
+Reynolds' own mass-1 vehicle, and it showed: the racing example
+(`docs/techniques/racing_driver.md`) ran wide of every corner with plain
+seek, and wave 90 multiplied its force by ten to keep it on the line.
+
+**What the kit chose:** Millington's time, on seek and pursue as it
+already was on arrive -- `SeekBehaviour.new(target, time_to_target)`,
+`PursueBehaviour.new(at, moving, look_ahead, time_to_target)`, all three
+through `Steering.towards_velocity(vehicle, desired, time_to_target)`,
+which returns `(desired - velocity) / time_to_target`, clamped. Why this
+one:
+
+- a reader of Millington recognises it, and it is the knob arrive already
+  has here -- one name for one idea, not two;
+- it is in seconds, so it means the same at any frame rate -- while it is
+  several frames long (below). Reynolds' mass is per step, and would mean
+  something else at 30 and at 120 frames a second on this integrator;
+- it belongs to the behaviour that asks, not to the vehicle. A
+  vehicle-level gain (Reynolds' mass, in effect) would also scale avoid,
+  which asks for `max_force` sideways and no gap, and arrive, which
+  already divides by its own time; and `RacingDriver`, which adds seek's
+  force to a velocity itself, never calls `step` and would not see it;
+- a bare multiplier (`force * RESPONSE`) is the same number upside down,
+  1 / time, and names nothing a book does.
+
+**What the time means, and where it stops meaning it.** It is a time
+constant, not a deadline. Unclamped, `velocity += (desired - velocity) /
+time * dt` is exponential decay: about two-thirds of the gap (1 - 1/e)
+closes in `time_to_target`, and the rest ever more slowly. Millington's
+"arrive in timeToTarget seconds" is loose the same way. And it is
+explicit Euler: each step multiplies the gap by (1 - dt / time). While the
+time is several frames long, that is close to the continuous answer at any
+frame rate. Under half a frame the factor goes below -1: each step
+overshoots the velocity wanted and the next swings back, and only
+`max_force` bounds it. Measured on a car going east at 10 that seeks far
+north, with force to spare, by the eastward speed left after one second:
+
+| `time_to_target` | 30 Hz | 60 Hz | 120 Hz | 240 Hz |
+|---|---|---|---|---|
+| 1 | 3.62 | 3.65 | 3.66 | 3.67 |
+| 0.1 | 0.00 | 0.00 | 0.00 | 0.00 |
+| 0.01 | 7.00 (chatters) | 0.00 | 0.00 | 0.00 |
+| 0.005 | 7.48 (chatters) | 5.97 (chatters) | 0.00 | 0.00 |
+| 0 (floored to 0.001) | 7.48 | 5.97 | -3.76 | -2.03 |
+
+A time of zero or less is floored at `Steering.SHORTEST_TIME`, not
+refused: arrive has floored its time since T22, and a test holds that. The
+floor only keeps the division finite and does not stop the chatter. Keep
+the time several frames long. `steering_test.gd` and `test_steering.py`
+hold both halves: the same answer at 60 and 120 frames a second for 1 and
+0.1, and chatter for 0.005 at 60 frames a second but not at 240.
+
+**The default is one second**, what seek always was here, so no one who
+calls `SeekBehaviour.new(target)` sees a change. Measured before and after
+on 2026-10-26, on every gate that runs steering, the same to the last
+printed digit:
+
+| gate | before and after |
+|---|---|
+| the six existing steering vectors | unchanged, byte for byte, when `derive.py` writes them again; 0 failures in both languages |
+| steering properties | 100 starts, arrive settled in 100, 0 failures |
+| racing ladder (2D) | 32.52 / 31.30 / 29.89 s a lap |
+| racing does-not-cheat (2D) | 3 cars, 3931 frames, 0 failures |
+| racing3d ladder | 50.61 / 48.43 / 47.20 s on the loop, 43.90 / 41.86 / 40.41 on the kidney |
+| racing3d does-not-cheat | 6198 frames, 0 failures (it steers with `PidController` and `HeatLine`, not seek) |
+| demo overlays | 14 examples in each language, 0 failures |
+| suites `ai_steering`, `demo_racing`, `racing3d` | 65 cases before, 70 after (the five new), 0 failures |
+
+A sharper default would be closer to both books, and it would move
+measured results. With seek's default at a tenth, measured: the 2D racing
+ladder goes to 32.46 / 31.17 / 29.67 s (the AI driver adds seek's force
+to its velocity, so a sharper seek is a sharper driver), its race runs
+3987 frames instead of 3931, and 36 of the 44 vector samples fail --
+the vectors pin the default on purpose. So the default stays at a second,
+and a caller who wants sharper asks for it.
+
+On the racing example's circle (radius 200, the car started 60 off the
+line), its test holds the car within 30 of the line from the third second
+on, every frame for twenty seconds:
+
+| `time_to_target` | failed assertions |
+|---|---|
+| 1 (the default; the old implicit gain) | 1019 -- the number wave 90 measured with `RESPONSE = 1` |
+| 0.75 | 963 |
+| 0.5 | 0 |
+| 0.33 | 0 |
+| 0.2 | 0 |
+| 0.1 (the example's, as `RESPONSE = 10` was) | 0 |
+
+`seek-sharp-turns-in-a-tenth` and `pursue-sharp-a-crossing-quarry` pin
+the knob in both languages; ignoring it -- the old gain -- turns both red.
 
 ## Arrive: the few lines that look competent
 
@@ -89,7 +219,7 @@ was the behaviour's. `seek-and-avoid-head-on` pins the fix.
 ## Two languages, one answer
 
 The Python half exists so the lesson needs nothing but Python (tier 1), and
-so the two can be held to one answer. `spec/vectors/steering/` pins six
+so the two can be held to one answer. `spec/vectors/steering/` pins eight
 trajectories, written by a third copy of the maths that imports nothing
 from either. Godot's `Vector2` holds 32-bit floats and Python's 64
 ([why it matters](../godot/vector2-is-single-precision.md)), so the vectors
@@ -113,4 +243,11 @@ its vector by 4e-2.
 
 - Craig W. Reynolds, "Steering Behaviors For Autonomous Characters", Game
   Developers Conference, 1999. <https://www.red3d.com/cwr/steer/gdc99/>
+  Read in wave 98 from a copy of the paper's PDF
+  (<https://ics-websites.science.uu.nl/docs/vakken/mcrws/papers_new/Reynolds%20-%201999%20-%20Steering%20behaviors%20for%20autonomous%20characters.pdf>),
+  section "A Simple Vehicle Model"; red3d.com refused the connection that day.
 - Ian Millington, *AI for Games*, 3rd edition, CRC Press, 2019, chapter 3.
+- Ian Millington, `aicore`, the code of the first edition (2003-2009;
+  its README calls it "a historical curiosity" next to the third edition's
+  listings): <https://github.com/idmillington/aicore> -- `src/steering.cpp`,
+  `src/kinematic.cpp`, `src/location.cpp`, read at commit 52fc032.

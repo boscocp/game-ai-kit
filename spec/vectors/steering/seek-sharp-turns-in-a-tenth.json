@@ -1,0 +1,119 @@
+{
+ "name": "seek-sharp-turns-in-a-tenth",
+ "why": "Seek given a tenth of a second to reach the velocity it wants (time_to_target 0.1, Millington's form) rather than the default second: the same start as seek-turns-and-overshoots on a vehicle with force to spare (20), so the gap divided by a tenth is clamped to full force for most of the turn and the vehicle swings round far sooner. Dropping the time -- the old implicit gain of one a second -- moves every sample after the first.",
+ "steps_per_second": 60,
+ "vehicle": {
+  "position": [
+   0.0,
+   0.0
+  ],
+  "velocity": [
+   0.0,
+   -5.0
+  ],
+  "max_speed": 10.0,
+  "max_force": 20.0
+ },
+ "behaviours": [
+  {
+   "kind": "seek",
+   "target": [
+    20.0,
+    15.0
+   ],
+   "time_to_target": 0.1
+  }
+ ],
+ "samples": [
+  {
+   "step": 0,
+   "position": [
+    0.0,
+    0.0
+   ],
+   "velocity": [
+    0.0,
+    -5.0
+   ],
+   "force": [
+    11.763433953500924,
+    16.17472168606377
+   ]
+  },
+  {
+   "step": 1,
+   "position": [
+    0.0032676205426391456,
+    -0.07884035508720451
+   ],
+   "velocity": [
+    0.19605723255834873,
+    -4.73042130523227
+   ],
+   "force": [
+    11.733163482633064,
+    16.19669332579357
+   ]
+  },
+  {
+   "step": 15,
+   "position": [
+    0.38742778961140023,
+    -0.7074835176868779
+   ],
+   "velocity": [
+    2.8881627946671276,
+    -0.9187095729822142
+   ],
+   "force": [
+    11.311579046232605,
+    16.49388309285692
+   ]
+  },
+  {
+   "step": 45,
+   "position": [
+    3.19826822078481,
+    0.9011165689153874
+   ],
+   "velocity": [
+    7.483954498510636,
+    6.13416330889288
+   ],
+   "force": [
+    1.763649993655152,
+    2.9386167475944447
+   ]
+  },
+  {
+   "step": 90,
+   "position": [
+    8.927147691253634,
+    5.699639356079534
+   ],
+   "velocity": [
+    7.657295083705648,
+    6.431489712062215
+   ],
+   "force": [
+    0.00038042266441884465,
+    0.0009247258647970824
+   ]
+  },
+  {
+   "step": 150,
+   "position": [
+    16.58447605208105,
+    12.131215733809983
+   ],
+   "velocity": [
+    7.6573311340396435,
+    6.431584553764162
+   ],
+   "force": [
+    -5.107407829996191e-09,
+    3.0529978545246195e-08
+   ]
+  }
+ ]
+}
