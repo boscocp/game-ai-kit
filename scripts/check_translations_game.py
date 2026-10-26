@@ -45,6 +45,10 @@ L6  a key given a `?context` in one table and none in another. Measured on
     the context-free row shadows the other (docs/godot/localisation.md).
 L7  a key built inside the call -- `tr("wins %s" % name)`, `tr("a" + b)` --
     which no table can hold; translate the sentence, then `.format()` it.
+L8  a key two tables translate differently. Every table is loaded into the
+    one TranslationServer, so a key has one translation in the whole game
+    and which table answers is not the reader's to choose: the stealth
+    guard's "investigate" and the behaviour tree's said two things (T79).
 
 What it cannot see
 ------------------
@@ -438,6 +442,17 @@ def shadowed(tables: dict[str, Table]) -> list[str]:
             if context and key in without]
 
 
+def disagreeing(tables: dict[str, Table]) -> list[str]:
+    """L8: one key, two translations, in two tables."""
+    said: dict[tuple[str, str], dict[str, str]] = {}
+    for table in tables.values():
+        for row, portuguese in table.rows.items():
+            said.setdefault(row, {})[table.path] = portuguese
+    return [f"L8 {key!r} is {' and '.join(repr(text) for text in sorted(set(where.values())))} "
+            f"in {', '.join(sorted(where))}: one key has one translation in the whole game"
+            for (_, key), where in sorted(said.items()) if len(set(where.values())) > 1]
+
+
 def check(repo: pathlib.Path) -> list[str]:
     """Every finding for every translated module."""
     owners = load_owners(repo)
@@ -448,7 +463,7 @@ def check(repo: pathlib.Path) -> list[str]:
     findings = []
     for module, table in tables.items():
         findings += check_module(repo, module, owners, table)
-    findings += shadowed(tables)
+    findings += shadowed(tables) + disagreeing(tables)
     for stray in sorted((repo / LOCALE).glob("*.csv")) if (repo / LOCALE).is_dir() else []:
         if stray.stem not in owners:
             findings.append(f"L4 {LOCALE}/{stray.name}: names no module")
@@ -551,6 +566,10 @@ def _table_cases(root: pathlib.Path, expect) -> None:
         "modules/menu.json": json.dumps({"module": "menu", "owns": ["godot/menu/"]}),
         "godot/menu/menu.gd": 'func _ready() -> void:\n\t$Button.text = tr("breadth-first", "a card")\n',
         "godot/locale/menu.csv": "en,?context,pt_BR\nbreadth-first,a card,largura\n"}), 1, "L6")
+    expect("two translations", build(root, "two", extra={
+        "modules/menu.json": json.dumps({"module": "menu", "owns": ["godot/menu/"]}),
+        "godot/menu/menu.gd": 'func _ready() -> void:\n\t$Button.text = tr("breadth-first")\n',
+        "godot/locale/menu.csv": "en,pt_BR\nbreadth-first,largura\n"}), 1, "L8")
     expect("key built with %", build(root, "percent", CLEAN_SCRIPT + '\tprint(tr("cost %d" % 3))\n'), 1, "L7")
     expect("key built with +", build(root, "plus", CLEAN_SCRIPT + '\tprint(tr("cost " + str(3)))\n'), 1, "L7")
 
