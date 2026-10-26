@@ -1,7 +1,24 @@
 # The stealth scenario: suspicion, the guards' three states, the rules of a
 # turn, and the demo -- that it loads and writes out what each guard thinks.
 # Whether that reads as a decision is the manual check, and a person's.
+#
+# The words are read in English, so each test starts in English whatever the
+# machine's locale; the Portuguese one says so and sets it (T79).
 extends GdUnitTestSuite
+
+var _locale_before: String = ""
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+
+
+func before_test() -> void:
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
 
 
 func _open_room(guard_round: Array = [Vector2i(5, 1), Vector2i(8, 1)]) -> StealthRoom:
@@ -360,6 +377,21 @@ func test_the_demo_loads_and_writes_out_every_guard() -> void:
 	demo.toggle_danger()
 	demo.restart()
 	assert_str(demo.status_text()).contains("turn 0")
+
+
+func test_switching_to_portuguese_rewords_the_turn_already_played() -> void:
+	# A guard's reason is put into words when it is read, so the line about
+	# the last turn follows the language, and the scene rebuilds its status.
+	var demo: StealthDemo = auto_free(load("res://game/stealth/stealth.tscn").instantiate())
+	add_child(demo)
+	demo.press(Vector2i.RIGHT)
+	TranslationServer.set_locale("pt_BR")
+	var status: Label = demo.get_node("Interface/Status")
+
+	assert_str(status.text).contains("turno 1")
+	assert_str(status.text).contains("guarda 1  ronda · suspeita")
+	assert_str(status.text).contains("regras: calmo")
+	assert_str(status.text).not_contains("patrol")
 
 
 # Trees cost what rough ground costs, so the board would draw them as mud

@@ -16,17 +16,17 @@ class_name GuardBrain
 extends DecisionPolicy
 
 ## Walk on towards the next waypoint of the round.
-const WALK_ROUND: String = "walk_round"
+const WALK_ROUND: String = "walk_round"  # shown through tr()
 ## Stop and turn towards what it heard.
-const TURN_TOWARDS: String = "turn_towards"
+const TURN_TOWARDS: String = "turn_towards"  # shown through tr()
 ## Walk to where the intruder was last seen or heard.
-const GO_TO_LAST_KNOWN: String = "go_to_last_known"
+const GO_TO_LAST_KNOWN: String = "go_to_last_known"  # shown through tr()
 ## Stand there and look round.
-const LOOK_AROUND: String = "look_around"
+const LOOK_AROUND: String = "look_around"  # shown through tr()
 ## Run at the intruder, two cells a turn.
-const CHASE: String = "chase"
+const CHASE: String = "chase"  # shown through tr()
 ## Seize the intruder, standing next to it.
-const CATCH: String = "catch"
+const CATCH: String = "catch"  # shown through tr()
 
 ## What it knows; set by the world before each turn.
 var senses: GuardSenses

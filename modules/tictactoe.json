@@ -8,7 +8,10 @@
     "godot/assets/tictactoe/",
     "spec/vectors/menace/",
     "python/gameaikit/menace/",
-    "python/tests/test_menace.py"
+    "python/tests/test_menace.py",
+    "godot/locale/tictactoe.csv",
+    "godot/locale/tictactoe.csv.import",
+    "godot/locale/tictactoe.pt_BR.translation"
   ],
   "depends_on": [
     "game_shared"

@@ -1,0 +1,70 @@
+en,pt_BR
+the guard (line: facing),o guarda (linha: o olhar)
+what the guard sees,o que o guarda vê
+ring: last seen or heard,anel: onde foi visto ou ouvido
+dots: its move this turn,pontos: o passo deste turno
+the intruder's loop,o circuito do intruso
+panel: the state or step now,painel: o estado ou passo atual
+"panel: one subtree, two branches","painel: uma subárvore, dois ramos"
+"trees: slow, block sight","árvores: lentas, bloqueiam a visão"
+wall,parede
+turn {turn}  ·  the guard thinks with: {brain} -- right when: {when},turno {turn}  ·  pensa com: {brain} -- bom quando: {when}
+suspicion {suspicion}  ·  deed: {deed}  ·  caught {catches} time(s),suspeita {suspicion}  ·  ação: {deed}  ·  pegou {catches} vez(es)
+suspicion {suspicion}  ·  deed: {deed}  ·  caught {catches} time(s)  ·  CAUGHT -- it starts its loop again,suspeita {suspicion}  ·  ação: {deed}  ·  pegou {catches} vez(es)  ·  PEGO -- o intruso recomeça o circuito
+(decides on the next turn),(decide no próximo turno)
+1 state machine  ·  2 behaviour tree  ·  3 GOAP  ·  4 HTN  ·  space: a turn  ·  enter: ten  ·  R: again,1 máquina de estados  ·  2 behaviour tree  ·  3 GOAP  ·  4 HTN  ·  espaço: um turno  ·  enter: dez  ·  R: de novo
+"a few states, each with a clear way out","poucos estados, cada um com saída clara"
+"reusable parts, re-judged every tick","partes reusáveis, rejulgadas a cada tick"
+many ways to a goal; find the cheap one,muitos caminhos a um objetivo; ache o barato
+"the designer knows the order, and wants it kept",o designer sabe a ordem e quer mantê-la
+state machine,máquina de estados
+behaviour tree,behaviour tree
+patrol,ronda
+suspicious,desconfiado
+searching,procurando
+alerted,alarmado
+suspicion reached the chase,a suspeita chegou à perseguição
+something is off,algo está estranho
+it knows where to look,sabe onde procurar
+it calmed down,acalmou-se
+"calm, or the place is checked","calmo, ou o lugar foi vistoriado"
+lost the trail,perdeu o rastro
+no arrow fired,nenhuma seta disparou
+go and look,ir olhar
+look round there,olhar em volta lá
+look round,olhar em volta
+go there,ir até lá
+close in,aproximar-se
+seize,agarrar
+run,correr
+investigate,investigar
+walk the round,fazer a ronda
+guard,guarda
+at the place?,no lugar?
+alerted?,alarmado?
+next to it?,ao lado do intruso?
+sees it?,vê o intruso?
+suspicious?,desconfiado?
+knows where?,sabe onde?
+success,sucesso
+failure,falha
+running,em execução
+walk_round,fazer a ronda
+turn_towards,virar para o som
+go_to_last_known,ir aonde o viu
+look_around,olhar em volta
+chase,perseguir
+catch,pegar
+player_caught,intruso pego
+area_checked,lugar vistoriado
+round_walked,ronda feita
+seize them,agarrar o intruso
+chase them,perseguir o intruso
+look here,olhar aqui
+goal: {goals},objetivo: {goals}
+method: {methods},método: {methods}
+worlds looked at: {count},mundos examinados: {count}
+planned because:,planejou porque:
+the plan was done,o plano terminou
+{name} could no longer run,{name} não podia mais ser feito
+{name} became possible,{name} ficou possível

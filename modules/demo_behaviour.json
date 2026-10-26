@@ -4,7 +4,10 @@
   "about": "One guard, four ways to decide.",
   "owns": [
     "godot/demos/behaviour/",
-    "godot/test/demo_behaviour/"
+    "godot/test/demo_behaviour/",
+    "godot/locale/demo_behaviour.csv",
+    "godot/locale/demo_behaviour.csv.import",
+    "godot/locale/demo_behaviour.pt_BR.translation"
   ],
   "depends_on": [
     "ai_behaviour",

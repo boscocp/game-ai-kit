@@ -32,6 +32,9 @@ const SEGMENT: String = "  ·  "
 const EXAMPLES: Dictionary = {
 	"res://game/checkers/checkers.tscn": ["Interface/Status", "Interface/Decision", "Interface/Legend"],
 	"res://demos/search/search_demo.tscn": ["Interface/Status", "Interface/Help", "Interface/Legend"],
+	"res://game/tictactoe/tictactoe.tscn": ["Interface/Status", "Interface/Decision", "Interface/Legend"],
+	"res://game/stealth/stealth.tscn": ["Interface/Status", "Interface/Legend"],
+	"res://demos/behaviour/behaviour_demo.tscn": ["Interface/Status", "Interface/Legend"],
 	"res://menu/menu.tscn": [],
 }
 

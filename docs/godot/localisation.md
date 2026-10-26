@@ -48,6 +48,24 @@ teaches: none
 - A Portuguese line is longer. `make test-demo-overlays` steps every example
   in English and again in pt-BR, and fails a legend line that runs off the
   window -- two of the search demo's did, and were shortened.
+- Every table is loaded into the one `TranslationServer`, so a key has one
+  translation in the whole game, whichever module's table holds it. T79
+  found the stealth guard's "investigate" and the behaviour tree's said two
+  things; rule L8 refuses that now.
+- Names the code shows (T79). A brain's states, a tree's nodes, a deed's
+  name (`walk_round`), a goal's fact (`player_caught`) are identifiers the
+  logic compares, so they stay English in the code and are translated
+  where they are drawn: the behaviour demo's panel translates each name of a
+  line and keeps the addon's notation, "from -> to: why" and "name:
+  answer". In English the screen still shows the identifier as it is
+  written; in pt-BR it shows words. Text an addon writes in English
+  (`WaysToDecide`'s table, a tree node's answer) is copied into the demo
+  that translates it, and a test holds the copy to the addon's words, since
+  a changed key would fall back to English without a sound.
+- A sentence is not glued from English grammar. Where the English built a
+  plural by trimming an "s", or a square's name with "the " in front, there
+  is now a key per case, and the Portuguese puts the name where Portuguese
+  puts it.
 
 ## Measured on 4.7.2
 
@@ -91,14 +109,17 @@ same.
   inverted rule gives 132. Then: every key in its table with a `pt_BR` (L2);
   no orphan row (L3); the table well formed and without a BOM (L4); the
   same `{placeholders}` on both sides (L5); no context shadowed (L6); no key
-  built inside the call, `tr("wins %s" % name)` (L7).
+  built inside the call, `tr("wins %s" % name)` (L7); no key translated
+  two ways by two tables (L8, T79).
 - What it still cannot see, said plainly: a one-word literal that is not a
   key of the table and does not go straight to a drawing call is taken for
   data; text written in a `.tscn` is not read (the scenes say "loading" and
   are filled from code); the `?plural` column and `tr_n()` are not checked,
   since nothing uses them yet.
 - `godot/test/locale/locale_screen.gd` (`make test-locale-screen`) opens
-  checkers, the search demo and the menu in pt-BR, steps them, and fails on
+  each translated example (checkers, the search demo, noughts and crosses,
+  the stealth hall, the four-brained guard, the tactical match, the
+  skirmish) and the menu in pt-BR, steps them, and fails on
   any Control line or legend entry -- whole, or one of its "  ·  "
   segments -- that is the English of a translated key, a `{placeholder}`
   matching any text. It fails an example that lacks the nodes it should

@@ -41,23 +41,36 @@ var _message: String = ""
 
 
 func _ready() -> void:
-	_legend.set_entries([
-		[CROSS_COLOUR, "X: MENACE, the matchbox machine, first"],
-		[NOUGHT_COLOUR, "O: you"],
-		[BEAD_COLOUR, "number and bar: beads for that move"],
-		[Color.TRANSPARENT, "   and the chance one of them is drawn"],
-		[Color(0.7, 0.7, 0.7), "grey: the same move turned or mirrored,"],
-		[Color.TRANSPARENT, "   so it shares one colour of bead"],
-		[CHOSEN_COLOUR, "pink square: the move MENACE drew"],
-		[MINIMAX_COLOUR, "green (M): what each square leads to with"],
-		[Color.TRANSPARENT, "   perfect play, for whoever moves now"],
-	] as Array[Array])
+	_legend.set_entries(_legend_entries())
 	_menace = MenacePlayer.load_published()
 	# The youngest first: the manual check plays the 10-game machine, then the
 	# 10,000-game one.
 	age_index = 0
 	_dice.seed = 1961
 	new_game()
+	Language.apply_if_opened_alone(self)
+
+
+# The words are rebuilt in the language just chosen: a Label set from code
+# keeps the text it was given, and the squares' words are drawn, not Controls.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_legend.set_entries(_legend_entries())
+		_refresh()
+
+
+func _legend_entries() -> Array[Array]:
+	return [
+		[CROSS_COLOUR, tr("X: MENACE, the matchbox machine, first")],
+		[NOUGHT_COLOUR, tr("O: you")],
+		[BEAD_COLOUR, tr("number and bar: beads for that move")],
+		[Color.TRANSPARENT, "   " + tr("and the chance one of them is drawn")],
+		[Color(0.7, 0.7, 0.7), tr("grey: the same move turned or mirrored,")],
+		[Color.TRANSPARENT, "   " + tr("so it shares one colour of bead")],
+		[CHOSEN_COLOUR, tr("pink square: the move MENACE drew")],
+		[MINIMAX_COLOUR, tr("green (M): what each square leads to with")],
+		[Color.TRANSPARENT, "   " + tr("perfect play, for whoever moves now")],
+	] as Array[Array]
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -84,9 +97,9 @@ func click_square(square: int) -> void:
 	if square < 0 or TicTacToeBoard.winner(_board) != "":
 		return
 	if TicTacToeBoard.to_move(_board) != PERSON_SIDE:
-		_message = "it is MENACE's turn: space draws its bead"
+		_message = "it is MENACE's turn: space draws its bead"  # shown through tr()
 	elif _board[square] != TicTacToeBoard.EMPTY:
-		_message = "that square is taken"
+		_message = "that square is taken"  # shown through tr()
 	else:
 		_board = TicTacToeBoard.play(_board, square)
 	_refresh()
@@ -132,7 +145,7 @@ func decision_overlay() -> Dictionary:
 	if not _is_over():
 		overlay["perfect"] = _perfect_play()
 	if not _last_draw.is_empty():
-		for key: String in ["chance", "bead", "total", "forced"]:
+		for key: String in ["chance", "bead", "total", "forced"]:  # not shown
 			overlay[key] = _last_draw[key]
 		overlay["chosen"] = _last_draw["square"]
 		overlay["drawn_at_age"] = _last_draw["age"]

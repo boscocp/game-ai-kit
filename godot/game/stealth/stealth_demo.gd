@@ -22,34 +22,53 @@ const PAD_BUTTONS: Dictionary = {JOY_BUTTON_DPAD_UP: KEY_UP, JOY_BUTTON_DPAD_DOW
 		JOY_BUTTON_LEFT_SHOULDER: KEY_SHIFT, JOY_BUTTON_A: KEY_SPACE, JOY_BUTTON_Y: KEY_D,
 		JOY_BUTTON_X: KEY_R}
 
+## The fuzzy controller's alarm terms, as the status line names them.
+const TERM_WORDS: Dictionary = {  # shown through tr()
+	"calm": "calm {strength}", "wary": "wary {strength}", "alarmed": "alarmed {strength}"}
+
 @onready var _legend: Legend = $Interface/Legend
 
 var world: StealthWorld
 var _show_danger: bool = false
+var _pad := PadAsKeys.new()
 
 
 func _ready() -> void:
-	_legend.set_entries([
-		[StealthView.STATE_COLOURS[StealthGuard.PATROL], "guard on its round"],
-		[StealthView.STATE_COLOURS[StealthGuard.INVESTIGATE], "guard going to look"],
-		[StealthView.STATE_COLOURS[StealthGuard.ALERT], "guard giving chase"],
-		[Color.TRANSPARENT, "  bar: suspicion, white tick: target"],
-		[Color.TRANSPARENT, "  dots: next steps, ring: where it"],
-		[Color.TRANSPARENT, "  thinks you are, line: its facing"],
-		[StealthView.SIGHT, "what a guard sees"],
-		[StealthView.DANGER, "danger map (D)"],
-		[StealthView.EXIT, "the way out"],
-		[StealthView.PLAYER, "you"],
-		[BoardView.tile_texture(BoardView.PLAIN), "floor, lit"],
-		[StealthView.DARKNESS, "shade: dark, harder to see you"],
-		[BoardView.tile_texture(BoardView.TREES), "trees: slow, block sight"],
-		[BoardView.tile_texture(BoardView.WALL), "wall"],
-	] as Array[Array])
-	var pad := PadAsKeys.new()
-	pad.use(PAD_BUTTONS)
-	add_child(pad)
-	pad.add_to(_legend)
+	_pad.use(PAD_BUTTONS)
+	add_child(_pad)
+	_show_legend()
 	restart()
+	Language.apply_if_opened_alone(self)
+
+
+# The words are rebuilt in the language just chosen: a Label set from code
+# keeps the text it was given. The notification also comes on entering the
+# tree, before _ready.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_show_legend()
+		_refresh()
+
+
+# The legend, then the pad's buttons under it when a pad is connected.
+func _show_legend() -> void:
+	_legend.set_entries([
+		[StealthView.STATE_COLOURS[StealthGuard.PATROL], tr("guard on its round")],
+		[StealthView.STATE_COLOURS[StealthGuard.INVESTIGATE], tr("guard going to look")],
+		[StealthView.STATE_COLOURS[StealthGuard.ALERT], tr("guard giving chase")],
+		[Color.TRANSPARENT, "  " + tr("bar: suspicion, white tick: target")],
+		[Color.TRANSPARENT, "  " + tr("dots: next steps, ring: where it")],
+		[Color.TRANSPARENT, "  " + tr("thinks you are, line: its facing")],
+		[StealthView.SIGHT, tr("what a guard sees")],
+		[StealthView.DANGER, tr("danger map (D)")],
+		[StealthView.EXIT, tr("the way out")],
+		[StealthView.PLAYER, tr("you")],
+		[BoardView.tile_texture(BoardView.PLAIN), tr("floor, lit")],
+		[StealthView.DARKNESS, tr("shade: dark, harder to see you")],
+		[BoardView.tile_texture(BoardView.TREES), tr("trees: slow, block sight")],
+		[BoardView.tile_texture(BoardView.WALL), tr("wall")],
+	] as Array[Array])
+	_pad.add_to(_legend)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -90,7 +109,7 @@ func step_decision() -> void:
 func decision_overlay() -> Dictionary:
 	var guards: Array[Dictionary] = []
 	for guard: StealthGuard in world.guards:
-		guards.append({
+		guards.append({  # not shown: the overlay's data, for the tests
 			"state": guard.state,
 			"suspicion": guard.suspicion.level,
 			"alarm": guard.suspicion.alarm,
@@ -113,8 +132,8 @@ func toggle_danger() -> void:
 func status_text() -> String:
 	var lines: Array[String] = [_headline()]
 	for guard: StealthGuard in world.guards:
-		lines.append("guard %d  %s  ·  %s  ·  %s" % [
-			guard.unit.id, guard.reason, _inputs(guard.suspicion), _terms(guard.suspicion)])
+		lines.append(tr("guard {id}  {reason}  ·  {inputs}  ·  {terms}").format({id = guard.unit.id,
+			reason = guard.reason, inputs = _inputs(guard.suspicion), terms = _terms(guard.suspicion)}))
 	return "\n".join(lines)
 
 
@@ -124,9 +143,12 @@ func _refresh() -> void:
 
 
 func _headline() -> String:
-	var ending: String = {StealthWorld.ESCAPED: "  ·  ESCAPED", StealthWorld.CAUGHT: "  ·  CAUGHT"}.get(world.outcome, "")
-	return "turn %d%s  ·  arrows walk  ·  shift sprints  ·  space waits  ·  D danger  ·  R restarts" % [
-		world.turn, ending]
+	var line: String = tr("turn {turn}  ·  arrows walk  ·  shift sprints  ·  space waits  ·  D danger  ·  R restarts")
+	if world.outcome == StealthWorld.ESCAPED:
+		line = tr("turn {turn}  ·  ESCAPED  ·  arrows walk  ·  shift sprints  ·  space waits  ·  D danger  ·  R restarts")
+	elif world.outcome == StealthWorld.CAUGHT:
+		line = tr("turn {turn}  ·  CAUGHT  ·  arrows walk  ·  shift sprints  ·  space waits  ·  D danger  ·  R restarts")
+	return line.format({turn = world.turn})
 
 
 # What the controller was given: the half of the decision a person needs to
@@ -134,17 +156,20 @@ func _headline() -> String:
 func _inputs(suspicion: Suspicion) -> String:
 	var given: Dictionary = suspicion.inputs
 	if given.is_empty():
-		return "nothing perceived yet"
-	return "distance %.1f  light %.2f  noise %.2f  silence %d" % [
-		given["distance"], given["light"], given["noise"], int(given["silence"])]
+		return tr("nothing perceived yet")
+	return tr("distance {distance}  light {light}  noise {noise}  silence {silence}").format({
+		distance = "%.1f" % given["distance"], light = "%.2f" % given["light"],
+		noise = "%.2f" % given["noise"], silence = int(given["silence"])})
 
 
 func _terms(suspicion: Suspicion) -> String:
 	var strengths: Dictionary = suspicion.activations.get("alarm", {})
 	var parts: Array[String] = []
 	for term: String in strengths:
-		parts.append("%s %.2f" % [term, strengths[term]])
-	return "rules: " + ("  ".join(parts) if not parts.is_empty() else "none yet")
+		parts.append(tr(TERM_WORDS[term]).format({strength = "%.2f" % strengths[term]}))
+	if parts.is_empty():
+		return tr("rules: none yet")
+	return tr("rules: {terms}").format({terms = "  ".join(parts)})
 
 
 # The room's dear ground is trees, which the board would otherwise draw from

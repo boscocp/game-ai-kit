@@ -10,9 +10,11 @@
 class_name StealthGuard
 extends RefCounted
 
-const PATROL: String = "patrol"
-const INVESTIGATE: String = "investigate"
-const ALERT: String = "alert"
+# The states are also the words the reason line names them by, translated
+# where it is written.
+const PATROL: String = "patrol"  # shown through tr()
+const INVESTIGATE: String = "investigate"  # shown through tr()
+const ALERT: String = "alert"  # shown through tr()
 
 ## Suspicion at which a patrolling guard goes to look.
 const INVESTIGATE_AT: float = 40.0
@@ -40,12 +42,20 @@ var last_known: Vector2i = NOWHERE
 ## The route the guard means to walk, next cell first. The overlay draws it.
 var route: Array[Vector2i] = []
 
-## One line saying what the guard is doing and why, for the overlay.
-var reason: String = ""
+## One line saying what the guard is doing and why, for the overlay, in the
+## language spoken when it is read -- so switching language mid-game rewords
+## the last turn too. Empty before the guard's first turn.
+var reason: String:
+	get:
+		return _explain(_seen, _noise) if _has_turned else ""
 
 var _round: Array[Vector2i] = []
 var _next_waypoint: int = 0
 var _router := GridPathfinder.new(AStarSearch.new())
+# What the last turn perceived, which `reason` puts into words.
+var _has_turned: bool = false
+var _seen: bool = false
+var _noise: float = 0.0
 
 
 func _init(guard_unit: Unit, waypoints: Array) -> void:
@@ -72,7 +82,9 @@ func take_turn(room: StealthRoom, cone: VisionCone, player: Unit, noise_radius: 
 	if seen or noise > 0.0:
 		last_known = player.cell
 	state = next_state(state, suspicion.level)
-	reason = _explain(seen, noise)
+	_has_turned = true
+	_seen = seen
+	_noise = noise
 
 
 ## The state a guard in `current` moves to at suspicion `level`.
@@ -140,5 +152,11 @@ func _with_others_in_the_way(graph: GridGraph, goal: Vector2i,
 
 
 func _explain(seen: bool, noise: float) -> String:
-	var why: String = "sees you" if seen else ("heard %.0f%%" % (noise * 100.0) if noise > 0.0 else "nothing")
-	return "%s · suspicion %.0f → %.0f · %s" % [state, suspicion.level, suspicion.alarm, why]
+	var line: String = "{state} · suspicion {before} → {after} · nothing"  # shown through tr()
+	if seen:
+		line = "{state} · suspicion {before} → {after} · sees you"  # shown through tr()
+	elif noise > 0.0:
+		line = "{state} · suspicion {before} → {after} · heard {loudness}%"  # shown through tr()
+	return TranslationServer.translate(line).format({state = TranslationServer.translate(state),
+			before = "%.0f" % suspicion.level, after = "%.0f" % suspicion.alarm,
+			loudness = "%.0f" % (noise * 100.0)})

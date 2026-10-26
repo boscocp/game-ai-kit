@@ -4,7 +4,10 @@
   "about": "Cross the hall unseen: guards that see, hear and suspect.",
   "owns": [
     "godot/game/stealth/",
-    "godot/test/stealth/"
+    "godot/test/stealth/",
+    "godot/locale/stealth.csv",
+    "godot/locale/stealth.csv.import",
+    "godot/locale/stealth.pt_BR.translation"
   ],
   "depends_on": [
     "ai_core",
