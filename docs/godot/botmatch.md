@@ -50,12 +50,9 @@ that team alone:
 - **the commander** (`TeamCommander` over `TeamInfluence`): each squad is
   sent to a point by its worth and its distance. Without it, every bot heads
   for its own nearest point;
-- **retreat**: each bot weighs falling back to cover near its squad's
-  point (`ErrandChoice`, T65), and a squad's members fall back in two
-  waves, one moving while the other covers (`SquadConfidence`). Without
-  it, a bot never falls back, though it may still hide to heal. Until
-  wave 97 a squad whose confidence fell below 0.5 walked 8 m towards its
-  spawn.
+- **retreat** (`SquadConfidence`): a squad whose confidence falls below
+  0.5 falls back in two waves, one moving while the other covers. Without
+  it, a squad never falls back.
 
 And each bot weighs, rather than follows a rule:
 
@@ -343,69 +340,42 @@ it. Blue's deaths: 956 with retreat, 958 without -- the retreat saves no
 lives. Why, from the reading, and what T65 proposes, is in the shooter AI
 page's T65 section.
 
-## Falling back weighed, and respawn waves (T65, wave 97)
+## Falling back weighed, and respawn waves: tried, and reverted (T65, wave 97)
 
-The owner picked on 2026-10-26: "t65 segue o recomendado, 1+2 depois 3" --
-proposals 1 and 2 together, measured, then proposal 3, measured again.
+The owner picked T65's recommended proposals on 2026-10-26 -- "1+2 depois
+3" -- and wave 97 built and measured them. They did not make a team that
+falls back win, and the owner closed T65 as measured: **all three were
+reverted, and the match plays as above.** This is the record; the code
+was at `6523962` (1 and 2) and `8739ed5` (with 3) on PR #40's branch
+before its rebase, which the squash merge drops.
 
-**Where (proposal 1).** A bot falls back to cover near its squad's point,
-not towards its spawn: T68's hiding query -- the nearest place no enemy
-its team knows of sees it crouched on -- asked within `hide_metres` (15 m)
-of the point (`MatchHealth.hiding_place` with a centre). With none, it
-holds where it is: staying at its post is what holding is, and there is
-nothing to weigh. `fallback_metres` is gone.
+**What was tried.**
 
-**When (proposal 2).** Each bot weighs falling back as an errand in
-`ErrandChoice`'s unit, beside going home, fetching and hiding
-(`ErrandChoice.weigh_fall_back`, its facts measured by `FallBackFacts`):
+1. *Where*: a bot fell back to T68's hiding place -- hidden from every
+   enemy its team knew of -- within 15 m of its squad's point, not 8 m
+   towards its spawn; with none, it held.
+2. *When*: falling back was a fourth errand in `ErrandChoice`'s unit,
+   weighed by each bot. Gain: the health missing times its exposure (as
+   T68 prices hiding), plus the death it would avoid -- the chance of
+   dying within 5 s where it stood less the chance in cover, times the
+   respawn wait and the walk back, at 0.05 a second. Costs: each second
+   away at 0.02, and, for the last of its team within 4.5 m of its point
+   with an enemy known within 20 m, the seconds until the enemy would own
+   it at 0.3. The chance was not chosen: a printed run of the gate at
+   581820e counted, for every living bot of both sides at every decision,
+   its band of health (tenths) and exposure (0, a half, 1) and whether it
+   died within 5 s, and that table went into `rules.json` with the commit.
+   The waves stayed -- one member moved while another covered -- and
+   confidence chose only attack or hold.
+3. *A rule*: respawn waves every 10 s, a dead bot joining the wave after
+   next -- 10 to 20 s, as Team Fortress 2's, unscaled.
 
-- the gain: the health that would come back times the bot's exposure, as
-  T68 prices hiding, plus the death it would avoid -- the chance of dying
-  within 5 s where it stands less the chance in cover (exposure 0), times
-  what a death costs in seconds (the wait to come back and the walk from
-  the base to the point), at the walk's weight, 0.05 a second;
-- the costs: each second away (the walk and the wait for the health) at
-  hiding's 0.02, and the point it would give up: the seconds until the
-  enemy would own it -- 8 from a point held -- at the hold weight, 0.3 a
-  second, counted only when it is the last of its team within the 4.5 m
-  area radius of its point, with an enemy known within 20 m of it.
-
-*The chance of dying is measured, not chosen.* A printed run of the gate
-at 581820e -- today's retreat still in play -- counted, for every living
-bot of both sides of the mirror at every decision, its band of health
-(tenths) and of exposure (0, a half, 1), and whether it died within the
-next 5 s. That table is `rules.json`'s `dying`, with the commit. It is data
-measured offline, as invariant 6 allows; nothing is learned during a match.
-*Why the difference, not the chance alone:* with the chance alone a bot
-would count a death avoided by standing where it is, and every bot not
-last at its point would "fall back" to its own feet.
-
-*The waves stay as the coordination.* When every living member of a squad
-of two or more weighs falling back above zero, `SquadConfidence.waves`
-splits them: one half keeps the errand and moves, the other stays and
-shoots, and they swap when the movers arrive or after 3 s. When only one
-wants to, it goes, and the other covers it.
-
-*Confidence is a percept.* A squad's confidence still says whether it
-steps onto a point to take it (attack) or holds in cover near it, and the
-map still shows it; it no longer sends anyone back. `retreat_at` and
-`recover_at` are gone from `rules.json`.
-
-*Watchable (invariant 13).* The panel's errand line shows falling back's
-score beside the others, and a new line shows its sum term by term:
-`fall back: health 0.50 x 1.00 + dying 27% - 22% x 19.5 s x 0.05 - 14.0 s
-x 0.02 - point 0.0 s x 0.30 = 0.27`, marked when taken, and says when it is
-held back to cover a teammate. On the map each bot falling back is ringed, with a line to its
-cover, and its squad's label reads "retreat". Both in English and pt-BR.
-
-**Proposal 3, a rule.** Bots come back in waves, as Team Fortress 2's do:
-one every 10 s of the match, and a bot that dies joins the wave after
-next, 10 to 20 s (`rules.json`'s `respawn_wave`, `MatchRules.respawn_wait`).
-TF2 scales its wave down below 8 players; this one is not scaled.
+The panel showed the fall-back sum term by term, in both languages, and
+the map ringed each bot falling back.
 
 **What it measured.** `make test-botmatch-effects`, 20 matches a pairing
-on the lanes, blue against red with everything; the number in brackets is
-how many combined standard errors everything is ahead of that pairing:
+on the lanes, blue against red with everything; in brackets, how many
+combined errors everything is ahead of that pairing:
 
 | blue plays | before (581820e) | 1+2 (6523962) | 1+2+3 (8739ed5) |
 |---|---|---|---|
@@ -422,25 +392,62 @@ how many combined standard errors everything is ahead of that pairing:
 | the same, the point's cost at 0 (planted) | -- | 0.026 | 0.034 |
 | deaths, with it / never falling back | 956 / 958 | 850 / 645 | 439 / 339 |
 
-**The T65 claim does not hold, and step 4 applies.** Never falling back
-is still 20-0, 7.2 errors ahead of everything after all three proposals.
-Every prediction was wrong: proposal 2 was to bring no retreat to about
-+10, proposal 3 to -40 to -80; the task file has each outcome beside its
-prediction. The claims of the new weighing held -- at least one fall-back
-a match (251), and at most half today's share of points lost after one
-(0.027 against 0.159) -- but the second's planted case, the point's cost
-set to nothing, passed it: the point's cost is not what keeps the point;
-falling back to cover *near* it is. And on the six random arenas 3, then
-2, points were never taken, where every point was before: played again
-with falling back off on both sides, the same arenas took every point 2
-to 7 times. The gate exits 1 on those two, as measured.
+**Each prediction against its outcome** (the task file has them beside
+each other):
 
-Seen, not tested apart: a fall-back is short and constant -- 251 a match,
-about 1.3 s each -- and blue regenerated less health with it (571 points
-a match) than never falling back (883). The health is priced by exposure
-where the bot stands, as T68 prices hiding: in cover that reads 0, and
-the bot walks back out before it heals. What the owner does with that is
-the owner's: the task file lists the choices.
+- 1 alone, no retreat at about +100: not measured -- the owner picked 1 and
+  2 together;
+- 2 with 1, no retreat at about +10 +- 30, within 1.5 errors: **+223.1 +-
+  8.4, 20-0**, 10.2 errors ahead -- wrong;
+- 3 with 1 and 2, no retreat at -40 to -80: **+200.5 +- 14.1, 20-0**,
+  everything 7.2 errors behind -- wrong;
+- the weighing's own claims: (a) at least one fall-back a match held, 251;
+  (b) at most half today's share of points lost after a fall-back (0.159)
+  held, 0.027 -- but its planted case, the point's cost at 0, passed it at
+  0.026.
+
+**Two findings of the gate, with the change in.** Portability regressed:
+on the six random arenas 3 points, then 2, were never taken, where every
+point had been; replayed with falling back off on both sides, the same
+arenas took every point 2 to 7 times, and with it on one never had a bot
+within 3 m of its point A. And claim (b)'s plant passing says the point's
+cost kept no point that falling back near it did not already keep.
+
+**Without the commander** blue swung from -4.1 (9-11) to -182.0 (0-20)
+once falling back was weighed. Nobody predicted it, and it was not
+studied further.
+
+**Why, as far as the counts say -- not tested apart.** Falling back was
+short and constant: 251 a match, about 1.3 s each by the squad-decisions
+spent on it, and blue regenerated less health with it (571 points a
+match) than never falling back (883). The health a bot would regain was
+priced by its exposure *where it stands*; once in cover that reads 0, the
+reason to be there was gone, and the bot walked back out before it
+healed. Blue died more with it than without (850 to 645).
+
+**Possible future work, not tasks:** price the health at the post a bot
+left -- the exposure it would return to -- rather than where it stands;
+and respawn waves alone, never measured without 2.
+
+**What stayed.** The gate still prints, for each pairing, blue's
+fall-backs a match and the share of those from a held point followed by
+losing it within 8 s, and for the mirror the dying table by band
+(`MatchFallBacks`): measurements of today's retreat, read and never
+claimed, which change no step of play. And a bot no longer claims a
+hiding place over a teammate's claim -- in wave 97's first run, places
+claimed that way stacked two bodies on one spot, 366 s bunched.
+
+**The match after the revert** (c5a995a, on main at 3ab7462): `make
+test-botmatch-effects`, 0 failures, 431 s in 12 shards. The pairings the
+claim guard cannot touch -- no claims, never resupply, always resupply,
+never heals, the random arenas -- measured exactly the baseline's. The
+rest moved, because a bot no longer claims a hiding place over a
+teammate: everything -5.7 +- 20.4 s, 11-9 (was +10.0 +- 22.7, 12-8; the
+mirror fair, 0.3 errors); no commander +5.2 +- 13.5, 11-9 (-4.1); no
+retreat +184.5 +- 10.1, 20-0 (+186.7), 8.4 errors ahead of everything;
+heals below half -38.9 +- 17.0 (-53.1); the yards' mirror +45.0 +- 31.4,
+13-7 (+47.6), fair. Today's retreat: 133.1 fall-backs a match, a held
+point lost within 8 s after 95 of 293 (0.324).
 
 ## Running the effects gate in shards (T72)
 
@@ -494,10 +501,8 @@ the real gate failed 13 times and exited 1. The serial run is still there, uncha
 
 Tab watches the next bot. The discs round it are every spot it weighed,
 coloured by why each was kept or dropped, with its score. The map (top
-right) shows the watched team's influence, each squad's order, each
-squad's confidence bar with its attack mark, and each bot falling back
-ringed, with a line to its cover; the panel spells out its fall-back sum
-term by term (T65).
+right) shows the watched team's influence, each squad's order, and each
+squad's confidence bar with its retreat and attack marks.
 
 T takes the watched bot over, on either team (the owner's choice,
 2026-10-21), and T again gives it back. You play it in first person, as

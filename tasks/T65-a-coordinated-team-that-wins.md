@@ -257,17 +257,43 @@ claims and planted cases above, and the T65 claim (everything ahead of
 each one-off pairing by 2.5 errors) is added only once a measured run
 supports it.
 
-## Where it stands (wave 97, 2026-10-26)
+## Where it stands (wave 97, 2026-10-26): closed as measured
 
-The owner picked "t65 segue o recomendado, 1+2 depois 3". Built: proposals
-1 and 2 together, measured, then 3, measured again; the outcomes are
-written beside each prediction above. **Step 4 applies: no change from
-the reading makes the T65 claim true, and the task stops here.** Nothing
-was tuned to reach it.
+The owner picked "t65 segue o recomendado, 1+2 depois 3". Wave 97 built
+proposals 1 and 2 together, measured them, then added 3 and measured
+again; the outcomes are written beside each prediction above. **Step 4
+applied: no change from the reading made the T65 claim true.** Nothing
+was tuned to reach it. Shown the result, the owner chose on 2026-10-26 to
+close T65 as measured (option a): **the three proposals were reverted,
+and the match plays as it did before wave 97.**
+
+**Where the code is.** The measured commits were `6523962` (1 and 2, after
+a claims fault was fixed) and `8739ed5` (with 3), on the PR #40 branch
+`wave/97-a-team-that-falls-back` before it was rebased; the branch is
+deleted after merge and the squash drops them, so this file and
+`docs/godot/botmatch.md` are the record. GitHub's timeline of PR #40 shows
+the force-push from them. What was built, in short:
+
+- *where*: T68's hiding query asked within `hide_metres` of the squad's
+  point (`MatchHealth.hiding_place` with a centre), holding when none;
+- *when*: `ErrandChoice.weigh_fall_back`, a fourth errand -- gain: the
+  health missing times exposure, plus the chance of dying within 5 s
+  where it stands less in cover, times the respawn wait and the walk back
+  at 0.05 a second; costs: the seconds away at 0.02 and, for the last of
+  its team within 4.5 m of its point with an enemy known within 20 m, the
+  seconds until the enemy owns it at 0.3. Its facts were
+  `FallBackFacts`; the chance came from a table measured at 581820e and
+  kept in `rules.json` with that commit. The waves split a squad that all
+  wanted to fall back; confidence chose only attack or hold, and
+  `retreat_at`, `recover_at` and `fallback_metres` were removed;
+- *a rule*: respawn waves every 10 s, a dead bot joining the wave after
+  next (`respawn_wave`), unscaled;
+- *watchable*: a panel line with the fall-back sum term by term in both
+  languages, and each bot falling back ringed on the map.
 
 `make test-botmatch-effects`, blue's margin a match against red with
-everything, 20 matches each on the lanes; "errors" is how far everything
-is ahead of that pairing, in combined standard errors:
+everything, 20 matches each on the lanes; in brackets, how many combined
+standard errors everything is ahead of that pairing:
 
 | blue plays | before (581820e) | 1+2 (6523962) | 1+2+3 (8739ed5) |
 |---|---|---|---|
@@ -277,37 +303,47 @@ is ahead of that pairing, in combined standard errors:
 | no retreat | +186.7 +- 10.2 s, 20-0 (-7.1) | +223.1 +- 8.4 s, 20-0 (-10.2) | +200.5 +- 14.1 s, 20-0 (-7.2) |
 | the yards' mirror | +47.6 +- 32.0 s, 13-7 | -8.4 +- 38.1 s, 8-12 | -0.7 +- 41.0 s, 11-9 |
 
-The mirror stayed fair on both arenas. The T65 claim -- everything ahead
-of every one-off pairing by 2.5 errors -- holds only against no
-commander; it is printed by the gate, not claimed.
+| falling back (blue, everything) | before | 1+2 | 1+2+3 |
+|---|---|---|---|
+| fall-backs a match | 130.3 | 251.2 | 144.5 |
+| from a held point, then lost within 8 s | 95 of 298, 0.319 | 9 of 334, 0.027 | 8 of 303, 0.026 |
+| the same, the point's cost at 0 (planted) | -- | 0.026 | 0.034 |
+| deaths, with it / never falling back | 956 / 958 | 850 / 645 | 439 / 339 |
 
-**The gate exits 1 after the change, on two findings, left as measured:**
+The mirror stayed fair on both arenas. The T65 claim held only against no
+commander -- and that is the swing to note: without the commander blue
+went from -4.1 (9-11) to -182.0 (0-20) once falling back was weighed, a
+change nobody predicted, not studied further.
 
-- **portability**: on the six random arenas, 3 points (1+2) and 2 points
-  (1+2+3) were never taken; before, none. Played again with falling back
-  off on both sides, the same six arenas took every point 2 to 7 times;
-  with it on, one of them never had a bot within 3 m of its point A.
-- **claim (b)'s planted case passed** (above): the point's cost changes
-  nothing that claim can see.
+**The gate's two findings, with the change in:**
 
-Seen in the counts, and not tested apart: falling back is short and
-constant -- 251 fall-backs a match, about 1.3 s each by the squad-decisions
-spent on them -- and health
-regenerated fell (571 points a match against 883 never falling back).
-The health a bot would regain is priced by its exposure *where it
-stands*, as T68 prices hiding: once in cover that reads 0, the reason to
-be there is gone, and it walks back out before it heals. Blue died more
-with it (850 deaths against 645). Which of that costs the margin is a
-guess the numbers do not test.
+- **portability regressed**: on the six random arenas 3 points (1+2), then
+  2 (1+2+3), were never taken; before, none. Replayed with falling back
+  off on both sides, the same arenas took every point 2 to 7 times; with
+  it on, one arena never had a bot within 3 m of its point A;
+- **claim (b)'s planted case passed**: pricing the point at nothing lost a
+  held point after 0.026 of its fall-backs, the weighing 0.027 -- the
+  point's cost was not what kept points; falling back near them was.
 
-Recorded with each run: 506 s (baseline), 743 s and 439 s wall clock in
-12 shards on 12 cores shared with other work. The dying table in
-`rules.json` is the baseline's, with its commit; the gate prints it again
-every run (at 8739ed5 the fully exposed column runs 0.09 to 0.54, against
-the baseline's 0.19 to 0.37: the bands mean something else once bots
-fall back).
+**The diagnosis, from the counts, not tested apart.** Falling back was
+short and constant -- 251 a match, about 1.3 s each by the squad-decisions
+spent on it -- and blue regenerated less health with it, 571 points a
+match against 883 never falling back. The health a bot would regain was
+priced by its exposure *where it stands*, as T68 prices hiding: once in
+cover that reads 0, the reason to be there is gone, and it walked back out
+before it healed.
 
-What the owner decides next, not started: whether falling back should
-price returning -- the exposure at the post it left -- rather than where
-it stands, which is a new proposal; whether to keep 2 at all; and whether
-3 stays (alone, it was not measured).
+**Possible future work, not tasks.** Price the health at the post the bot
+left -- the exposure it would return to -- rather than where it stands;
+and respawn waves alone, which were never measured without 2.
+
+**What stayed.** The gate prints, for every pairing, the fall-backs a
+match and the share of held-point fall-backs followed by a loss within
+8 s, and for the mirror the dying table by band -- measurements of today's
+retreat, never claimed (`MatchFallBacks`). And a bot no longer claims a
+hiding place over a teammate: that stacked two bodies on one spot when
+places were claimed by the weighed fall-back, 366 s bunched in its first
+run. That guard moved the baseline a little, and the mirror stayed fair:
+on the reverted code (c5a995a) everything is -5.7 +- 20.4 s, 11-9, and no
+retreat +184.5 +- 10.1 s, 20-0; the pairings it cannot touch are
+unchanged (`docs/godot/botmatch.md` has every number).

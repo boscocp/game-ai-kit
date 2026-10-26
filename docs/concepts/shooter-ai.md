@@ -773,22 +773,21 @@ and how each is measured are in
 Recommended: 1 and 2, then 3 -- the bot weighs, and the match gives it
 something worth weighing.
 
-### What the owner picked, and what it measured (wave 97)
+### What the owner picked, what it measured, and why it was reverted (wave 97)
 
-The owner picked 1 and 2, then 3. All three were built and measured
-([the bot match page](../godot/botmatch.md) has the tables), and **every
-prediction above was wrong**: never falling back was +223.1 +- 8.4 s a
-match after 1 and 2, and +200.5 +- 14.1 s after 3 -- still 20-0, 7.2
+The owner picked 1 and 2, then 3. All three were built and measured, and
+**every prediction above was wrong**: never falling back was +223.1 +- 8.4
+s a match after 1 and 2, and +200.5 +- 14.1 s after 3 -- still 20-0, 7.2
 combined errors ahead of everything. The reading's answer -- fall back at
 the objective, to cover, weighed, and make a death dear -- did not make
-falling back pay in this match. Step 4 of the task applies: said, and
-stopped. Two things the reading did not foresee were measured: the
-point's cost in the weighing kept no point that falling back to cover
-near it did not already keep; and falling back was short and constant,
-because the health it would win is priced where the bot stands, and in
-cover that reads nothing. Since wave 97 a death costs 10 to 20 s plus the
-walk back, not 4 s: the bullet above about 7 to 13 s is the match before
-proposal 3.
+falling back pay in this match. Two things it did not foresee were
+measured: the point's cost in the weighing kept no point that falling
+back to cover near it did not already keep; and falling back was short and
+constant, because the health it would win was priced where the bot stood,
+and in cover that reads nothing. The owner closed T65 as measured, and the
+three proposals were reverted; the match's rules above are still its
+rules. [The bot match page](../godot/botmatch.md) has the tables, the
+commits, and two possible next steps.
 
 ## Could not be checked
 
