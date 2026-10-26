@@ -90,7 +90,19 @@ func _ready() -> void:
 	_undo_button.pressed.connect(undo)
 	new_game()
 	BoardLayout.lay_out(self, state.graph, _status, _legend)
+	_give_the_status_its_column()
 	Language.apply_if_opened_alone(self)
+
+
+# The status takes the whole left column, from the header's top edge to the
+# gutter above the window's bottom: the header sits over the board and the
+# legend only. Begun level with the board, the planner's turn in a played
+# game -- a strike's news, a long reason, six plan steps -- ran to y=834 of
+# 720 in pt-BR (T102's review).
+func _give_the_status_its_column() -> void:
+	var bottom: float = _status.position.y + _status.size.y
+	_status.position.y = _header.position.y
+	_status.size.y = bottom - _status.position.y
 
 
 # The words are rebuilt in the language just chosen (T79): text set from code

@@ -67,17 +67,19 @@ const SCREEN_HEIGHT: float = 720.0
 ## gutter `BoardLayout` leaves between a panel and the edge. Words that end
 ## at 719 of 720 fit and still read as cut off (T80's review).
 const BOTTOM_MARGIN: float = BoardLayout.GUTTER
-## Labels known to run off the window in English as well, so a layout fix
-## rather than a translation one: named here rather than hidden. Each is
-## "scene:node". T102 fitted the tactical header and took it out; its new
-## measure of a wrapped Label found these three, left for T107 (where their
-## words end, in English and in pt-BR). The planted cases below keep the
-## check honest meanwhile.
-const NOT_YET_FITTED: Array[String] = [
-	"res://demos/behaviour/behaviour_demo.tscn:Interface/Status",  # 711, 711
-	"res://game/main.tscn:Interface/Status",  # 658, 716
-	"res://game/rts/rts.tscn:Interface/Card/Info",  # 721, 741: past the window
-]
+## Wrapped Labels known to end too low, a layout fix rather than a
+## translation one: named here rather than hidden, "scene:node" to the y
+## their words were measured to end at in pt-BR. That y is a ceiling, not an
+## exemption: a panel named here that gets any lower still fails, and its
+## width is measured as any other's. T102 fitted the tactical header and took
+## it out; its measure of a wrapped Label found these three, left for T107
+## (in English they end at 711, 658 and 721). The planted cases below keep
+## the check honest meanwhile.
+const NOT_YET_FITTED: Dictionary[String, float] = {
+	"res://demos/behaviour/behaviour_demo.tscn:Interface/Status": 711.0,
+	"res://game/main.tscn:Interface/Status": 716.0,
+	"res://game/rts/rts.tscn:Interface/Card/Info": 741.0,  # past the window: a line is cut off
+}
 
 
 class ErrorCounter extends Logger:
@@ -286,8 +288,6 @@ func _provoke_an_rts_refusal(game: RtsGame) -> Array[String]:
 func _past_the_edge(label: String, path: NodePath, shown: Label) -> Array[String]:
 	if shown.clip_text or not shown.is_visible_in_tree():
 		return []
-	if "%s:%s" % [label, path] in NOT_YET_FITTED:
-		return []
 	if shown.autowrap_mode != TextServer.AUTOWRAP_OFF:
 		return _wrapped_past_the_edge(label, path, shown)
 	var font: Font = shown.get_theme_font("font")
@@ -311,9 +311,10 @@ func _wrapped_past_the_edge(label: String, path: NodePath, shown: Label) -> Arra
 	if box.end.x > SCREEN_WIDTH:
 		failures.append("%s: %s runs off the window, to x=%.0f" % [label, path, box.end.x])
 	var bottom: float = box.position.y + shown.get_combined_minimum_size().y
-	if bottom > SCREEN_HEIGHT - BOTTOM_MARGIN:
-		failures.append("%s: %s runs off the window, its words ending at y=%.0f of %.0f (keep %.0f px clear)" % [
-			label, path, bottom, SCREEN_HEIGHT, BOTTOM_MARGIN])
+	var lowest: float = NOT_YET_FITTED.get("%s:%s" % [label, path], SCREEN_HEIGHT - BOTTOM_MARGIN)
+	if bottom > lowest:
+		failures.append("%s: %s runs off the window, its words ending at y=%.0f, below %.0f (the window is %.0f)" % [
+			label, path, bottom, lowest, SCREEN_HEIGHT])
 	return failures
 
 

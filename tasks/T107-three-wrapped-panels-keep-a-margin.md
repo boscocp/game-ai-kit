@@ -15,7 +15,11 @@ than hide them or fix three other modules' layouts in its own wave:
 - the skirmish's (`game/main.tscn`) `Interface/Status`, to y=716 in pt-BR
   (658 in English);
 - the RTS's `Interface/Card/Info`, to y=741 in pt-BR and 721 in English:
-  past the window, so its last line is cut off.
+  past the window -- in pt-BR a whole line is cut off, in English the last
+  line is 1 px out. This one is a visible fault, not a margin: do it soon.
+
+Each is named in `NOT_YET_FITTED` with the y it was measured at, as a
+ceiling: one that gets lower fails the check meanwhile.
 
 ## Steps
 

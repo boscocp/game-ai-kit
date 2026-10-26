@@ -173,18 +173,30 @@ RTS and the fighting game, by the same rules, with what they added:
 
 ## The tactical screen fits, and a wrapped Label is measured (T102, wave 100)
 
-- **The header wraps.** The tactical header was three lines, each its own
-  width, the rule line 2,005 px in English and 2,408 in pt-BR. It now wraps
-  inside its 1,232 px, at 13 px, and its last line ends above the board
-  under every controller in both languages (34 px clear at worst, the
-  learned policy's description in pt-BR). The status is 13 px too. The
-  line naming every controller C cycles through left the status for a line
-  of its own under the board, `Interface/Keys`, shown on either turn: with
-  the planner's plan in the status, the column's words ran to y=900 of 720
-  in English, measured at 14 px. The computer's keys and its count of decisions follow the
-  decision with no blank line between. `test/tactical/tactical_layout_test.gd`
-  holds the header, the status on both turns and the keys line, in both
-  languages, under every controller.
+- **The header wraps, over the board and the legend.** The tactical header
+  was three lines, each its own width, the rule line 2,005 px in English
+  and 2,408 in pt-BR. It now wraps at 12 px inside x=304..1256, over the
+  board and the legend only, and its last line ends at y=125 at worst (the
+  learned policy's description in pt-BR), 19 px above the board.
+- **The status has the whole left column.** It runs from y=8, level with
+  the header, to the gutter above the window's bottom, at 13 px. The line
+  naming every controller C cycles through has a line of its own under the
+  board, `Interface/Keys`, shown on either turn (it ends at y=689). On the
+  computer's turn one blank line, before the decision, is kept; the news,
+  the keys, the count and the plan follow without one. Nothing the status
+  said was dropped.
+- **Measured over played games, not the opening screen.** T102's first
+  version measured round 1 only, and its review played whole games: the
+  planner's turn in round 3 -- a strike's news, a long "stays" reason, four
+  decisions played, six plan steps -- ended at y=771 in English and 834 in
+  pt-BR, plan steps 5-6 off the window. `test/tactical/tactical_layout_test.gd`
+  now plays ten rounds of a seeded game under every controller in both
+  languages, twice (the person waiting, and the person sending each unit
+  at the nearest enemy, a strike or a refusal), and takes the lowest the
+  status's words go at every computer decision and with each of the
+  person's units in hand. Worst now: y=656 (planner, round 3, pt-BR) and
+  593 in English, against a limit of 696. That is what is measured: other
+  games, longer than ten rounds or with the person walking, are not.
 - **A wrapped Label is measured whole.** Measured on the pinned engine: a
   Label that wraps reports, as its minimum height, the height of its
   wrapped words, and grows to it past the size it was given (the tactical
@@ -194,7 +206,14 @@ RTS and the fighting game, by the same rules, with what they added:
   wrapped Label too tall and one too wide. It found three more, named in
   `NOT_YET_FITTED` and left for T107: the behaviour demo's status (711 in
   both languages), the skirmish's (716 in pt-BR) and the RTS card's info
-  (741 in pt-BR, 721 in English: past the window).
+  (741 in pt-BR, 721 in English: past the window). Each is named with the
+  y it was measured at, a ceiling: one that gets lower still fails.
+- **What stays English.** A plan's steps show as the code names them
+  (`buy_the_forge`, `cross_the_river_ram`) in pt-BR too, as the glossary
+  says (`docs/techniques/glossary.pt-BR.md`). Every difficulty preset says
+  "plans 0 actions ahead": that is the data, not a fault of `describe()` --
+  each preset's `plan_horizon` is 0, no plan at all, because a plan was
+  measured to make a side weaker on this board (`Difficulty.presets()`).
 - **An addon's English, worded by the game that shows it.** The difficulty
   levels on the tactical header said `Difficulty.describe()`'s English in
   pt-BR (`ai_planning`). No addon here calls `tr()` -- an addon depends on
