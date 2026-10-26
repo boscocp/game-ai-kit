@@ -292,3 +292,7 @@ a {kind} cannot stand on {cell},{kind} não pode ficar na casa {cell}
 any length,qualquer extensão
 {count} actions,{count} ações
 "{level}: plans {horizon} ahead, searches {depth} ply/plies, noise {noise}","{level}: planeja {horizon} à frente, busca {depth} meio-lance(s), ruído {noise}"
+{error} -- run `make train`,{error} -- rode `make train`
+the file publishes no feature_conventions block,o arquivo não publica o bloco feature_conventions
+"feature_conventions.{name} is {value}, and the game needs a positive whole number","feature_conventions.{name} é {value}, e o jogo precisa de um número inteiro positivo"
+feature_conventions says the cheapest ground ({cheapest}) costs more than the dearest ({dearest}),feature_conventions diz que o terreno mais barato ({cheapest}) custa mais que o mais caro ({dearest})
