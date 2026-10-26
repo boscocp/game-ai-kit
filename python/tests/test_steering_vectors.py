@@ -31,9 +31,9 @@ TOLERANCE = 1e-3
 #: Every key a behaviour of each kind may carry; a misspelt one is refused
 #: rather than ignored, or `"braking_raduis"` would quietly fall back to nothing.
 BEHAVIOUR_KEYS = {
-    "seek": {"kind", "weight", "target"},
+    "seek": {"kind", "weight", "target", "time_to_target"},
     "arrive": {"kind", "weight", "target", "braking_radius", "time_to_target"},
-    "pursue": {"kind", "weight", "quarry", "max_prediction"},
+    "pursue": {"kind", "weight", "quarry", "max_prediction", "time_to_target"},
     "avoid": {"kind", "weight", "centres", "radii", "look_ahead"},
 }
 
@@ -50,7 +50,7 @@ def behaviour(spec: dict):
     # vectors pin the default too.
     optional = {key: spec[key] for key in ("time_to_target", "max_prediction") if key in spec}
     if kind == "seek":
-        return Seek(vec(spec["target"]))
+        return Seek(vec(spec["target"]), **optional)
     if kind == "arrive":
         return Arrive(vec(spec["target"]), spec["braking_radius"], **optional)
     if kind == "pursue":

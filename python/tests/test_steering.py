@@ -95,6 +95,19 @@ class SteeringTests(unittest.TestCase):
         self.assertEqual(Arrive(Vec(0.0, 0.0), 5.0).time_to_target, 0.1)
         self.assertEqual(Arrive(Vec(0.0, 0.0), 5.0, 0.0).time_to_target, 0.001)
 
+    def test_seek_closes_the_gap_within_the_time_it_is_given(self) -> None:
+        # Still, top speed 10, force to spare: the gap is (10, 0). The default
+        # second asks for the gap itself, a tenth for ten times it.
+        car = Vehicle(Vec(0.0, 0.0), Vec(0.0, 0.0), 10.0, 1000.0)
+        self.assertEqual(Seek(Vec(50.0, 0.0)).force(car), Vec(10.0, 0.0))
+        self.assertAlmostEqual(Seek(Vec(50.0, 0.0), 0.1).force(car).x, 100.0)
+        self.assertEqual(Seek(Vec(50.0, 0.0), 0.0).time_to_target, 0.001)
+
+    def test_pursue_hands_its_time_on_to_the_seek_it_runs(self) -> None:
+        car = Vehicle(Vec(0.0, 0.0), Vec(0.0, 0.0), 10.0, 1000.0)
+        self.assertAlmostEqual(Pursue(Vec(50.0, 0.0), Vec(0.0, 0.0), 1.0, 0.25).force(car).x, 40.0)
+        self.assertEqual(Pursue(Vec(50.0, 0.0), Vec(0.0, 0.0)).time_to_target, 1.0)
+
     def test_avoid_sees_nothing_when_standing_still(self) -> None:
         car = Vehicle(Vec(0.0, 0.0), Vec(0.0, 0.0), 10.0, 20.0)
         self.assertEqual(Avoid([Vec(1.0, 0.0)], [2.0], 5.0).force(car), Vec(0.0, 0.0))

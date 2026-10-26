@@ -18,12 +18,16 @@ var quarry_position: Vector2
 var quarry_velocity: Vector2
 ## The furthest ahead it guesses, in seconds.
 var max_prediction: float
+## Seconds the vehicle is given to reach the velocity it wants: seek's knob,
+## handed on to the seek it runs.
+var time_to_target: float
 
 
-func _init(at: Vector2, moving: Vector2, look_ahead: float = 1.0) -> void:
+func _init(at: Vector2, moving: Vector2, look_ahead: float = 1.0, within: float = 1.0) -> void:
 	quarry_position = at
 	quarry_velocity = moving
 	max_prediction = look_ahead
+	time_to_target = maxf(within, Steering.SHORTEST_TIME)
 
 
 ## Where the quarry will be when the chase arrives: what seek is aimed at.
@@ -36,4 +40,4 @@ func predicted(vehicle: SteeringVehicle) -> Vector2:
 
 ## Seek, aimed at the prediction.
 func force(vehicle: SteeringVehicle) -> Vector2:
-	return SeekBehaviour.new(predicted(vehicle)).force(vehicle)
+	return SeekBehaviour.new(predicted(vehicle), time_to_target).force(vehicle)

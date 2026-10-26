@@ -27,7 +27,7 @@ def toward(p, q):
     return (0.0, 0.0) if big == 0 else unit(mul(o, 1.0 / big))
 
 def seek(car, b):
-    return limit(sub(mul(toward(car["p"], b["target"]), car["top"]), car["v"]), car["force"])
+    return limit(mul(sub(mul(toward(car["p"], b["target"]), car["top"]), car["v"]), 1.0 / b.get("time_to_target", 1.0)), car["force"])
 def arrive(car, b):
     d = length(sub(b["target"], car["p"]))
     s = car["top"] * (d / b["braking_radius"] if d < b["braking_radius"] else 1.0)
@@ -36,7 +36,7 @@ def arrive(car, b):
 def pursue(car, b):
     q = b["quarry"]
     t = min(length(sub(q["position"], car["p"])) / car["top"], b.get("max_prediction", 1.0))
-    return seek(car, {"target": add(q["position"], mul(q["velocity"], t))})
+    return seek(car, {"target": add(q["position"], mul(q["velocity"], t)), "time_to_target": b.get("time_to_target", 1.0)})
 def avoid(car, b):
     h = unit(car["v"])
     if h == (0.0, 0.0): return (0.0, 0.0)
@@ -87,6 +87,10 @@ vectors = {
  "seek-and-avoid-go-round": dict(why="Seek and avoid added with weights 1 and 2 and clamped once (Steering.combined): an obstacle sits a little off the straight line to the target, and the two together go round it.",
    vehicle=car([0.0, 0.0], [10.0, 0.0]), behaviours=[{"kind": "seek", "target": [24.0, 0.0], "weight": 1.0},
      {"kind": "avoid", "centres": [[10.0, 0.6]], "radii": [2.5], "look_ahead": 6.0, "weight": 2.0}], sample_steps=[0, 1, 20, 60, 120, 180]),
+ "seek-sharp-turns-in-a-tenth": dict(why="Seek given a tenth of a second to reach the velocity it wants (time_to_target 0.1, Millington's form) rather than the default second: the same start as seek-turns-and-overshoots on a vehicle with force to spare (20), so the gap divided by a tenth is clamped to full force for most of the turn and the vehicle swings round far sooner. Dropping the time -- the old implicit gain of one a second -- moves every sample after the first.",
+   vehicle=car([0.0, 0.0], [0.0, -5.0]), behaviours=[{"kind": "seek", "target": [20.0, 15.0], "time_to_target": 0.1}], sample_steps=[0, 1, 15, 45, 90, 150]),
+ "pursue-sharp-a-crossing-quarry": dict(why="pursue-a-crossing-quarry's chase with a quarter of a second to reach each velocity, handed on to the seek pursue runs: it turns onto the guess sooner and closes on the quarry faster than with the default second.",
+   vehicle=car([0.0, 0.0], [0.0, 0.0]), behaviours=[{"kind": "pursue", "quarry": {"position": [20.0, -10.0], "velocity": [0.0, 4.0]}, "time_to_target": 0.25}], sample_steps=[0, 1, 30, 90, 150]),
  "seek-and-avoid-head-on": dict(why="The obstacle exactly on the line to the target: no side to choose, so avoid turns left, and the two together go round. Its first version pushed straight back from the end of the look-ahead instead, and the vehicle stalled in front of the obstacle for good.",
    vehicle=car([0.0, 0.0], [10.0, 0.0]), behaviours=[{"kind": "seek", "target": [24.0, 0.0], "weight": 1.0},
      {"kind": "avoid", "centres": [[10.0, 0.0]], "radii": [2.5], "look_ahead": 6.0, "weight": 2.0}], sample_steps=[0, 1, 30, 60, 120, 180]),

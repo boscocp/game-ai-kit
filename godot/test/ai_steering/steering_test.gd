@@ -123,3 +123,20 @@ func test_avoid_takes_the_first_of_two_equal_threats_and_pushes_off_its_side() -
 func test_arrive_waits_a_tenth_of_a_second_unless_told_otherwise_and_never_zero() -> void:
 	assert_float(ArriveBehaviour.new(Vector2.ZERO, 5.0).time_to_target).is_equal_approx(0.1, 1e-9)
 	assert_float(ArriveBehaviour.new(Vector2.ZERO, 5.0, 0.0).time_to_target).is_equal(ArriveBehaviour.SHORTEST_TIME)
+
+
+func test_seek_closes_the_gap_within_the_time_it_is_given() -> void:
+	# Still, top speed 10, force to spare: the gap is (10, 0). Given the
+	# default second, seek asks for the gap itself -- what it always did;
+	# given a tenth, ten times the gap; given nothing, the shortest time.
+	var car := SteeringVehicle.new(Vector2.ZERO, Vector2.ZERO, 10.0, 1000.0)
+	assert_vector(SeekBehaviour.new(Vector2(50, 0)).force(car)).is_equal_approx(Vector2(10, 0), Vector2(1e-4, 1e-4))
+	assert_vector(SeekBehaviour.new(Vector2(50, 0), 0.1).force(car)).is_equal_approx(Vector2(100, 0), Vector2(1e-3, 1e-3))
+	assert_float(SeekBehaviour.new(Vector2(50, 0), 0.0).time_to_target).is_equal(Steering.SHORTEST_TIME)
+
+
+func test_pursue_hands_its_time_on_to_the_seek_it_runs() -> void:
+	var car := SteeringVehicle.new(Vector2.ZERO, Vector2.ZERO, 10.0, 1000.0)
+	var still_quarry := PursueBehaviour.new(Vector2(50, 0), Vector2.ZERO, 1.0, 0.25)
+	assert_vector(still_quarry.force(car)).is_equal_approx(Vector2(40, 0), Vector2(1e-3, 1e-3))
+	assert_float(PursueBehaviour.new(Vector2(50, 0), Vector2.ZERO).time_to_target).is_equal(1.0)

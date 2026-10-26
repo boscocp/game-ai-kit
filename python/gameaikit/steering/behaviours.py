@@ -54,9 +54,16 @@ def clamped(force: Vec, limit: float) -> Vec:
     return force.limit_length(limit)
 
 
-def towards_velocity(vehicle: Vehicle, desired: Vec) -> Vec:
-    """Reynolds' steering: desired velocity minus velocity, clamped."""
-    return clamped(desired - vehicle.velocity, vehicle.max_force)
+SHORTEST_TIME = 0.001
+"""The shortest time to reach a velocity that is taken: zero would divide by zero."""
+
+
+def towards_velocity(vehicle: Vehicle, desired: Vec, time_to_target: float = 1.0) -> Vec:
+    """Reynolds' steering, desired velocity minus velocity, divided by the
+    seconds it is given (Millington's form) and clamped. The default second
+    is what the gap alone meant here, since `Vehicle.step` adds force times
+    seconds."""
+    return clamped((desired - vehicle.velocity) / max(time_to_target, SHORTEST_TIME), vehicle.max_force)
 
 
 def combined(vehicle: Vehicle, forces: list[Vec], weights: list[float]) -> Vec:
@@ -69,13 +76,23 @@ def combined(vehicle: Vehicle, forces: list[Vec], weights: list[float]) -> Vec:
 
 @dataclasses.dataclass
 class Seek:
-    """Full speed at `target`. Never asks for less, so never stops there."""
+    """Full speed at `target`. Never asks for less, so never stops there.
+
+    The velocity is asked to change within `time_to_target` seconds, the
+    same knob as arrive's: a second by default, what seek always was here; a
+    tenth for a car that must hold a line.
+    """
 
     target: Vec
+    time_to_target: float = 1.0
+
+    def __post_init__(self) -> None:
+        self.time_to_target = max(self.time_to_target, SHORTEST_TIME)
 
     def force(self, vehicle: Vehicle) -> Vec:
         """Full speed towards the target."""
-        return towards_velocity(vehicle, direction_to(vehicle.position, self.target) * vehicle.max_speed)
+        desired = direction_to(vehicle.position, self.target) * vehicle.max_speed
+        return towards_velocity(vehicle, desired, self.time_to_target)
 
 
 @dataclasses.dataclass
@@ -93,7 +110,7 @@ class Arrive:
     time_to_target: float = 0.1
 
     def __post_init__(self) -> None:
-        self.time_to_target = max(self.time_to_target, 0.001)
+        self.time_to_target = max(self.time_to_target, SHORTEST_TIME)
 
     def force(self, vehicle: Vehicle) -> Vec:
         """Towards the target at a speed that falls as the distance does."""
@@ -102,17 +119,19 @@ class Arrive:
         if distance < self.braking_radius:
             speed *= distance / self.braking_radius
         desired = direction_to(vehicle.position, self.target) * speed
-        return clamped((desired - vehicle.velocity) / self.time_to_target, vehicle.max_force)
+        return towards_velocity(vehicle, desired, self.time_to_target)
 
 
 @dataclasses.dataclass
 class Pursue:
     """Seek where the quarry will be: its velocity times the chase's length,
-    never more than `max_prediction` seconds ahead."""
+    never more than `max_prediction` seconds ahead. `time_to_target` is
+    handed on to that seek."""
 
     quarry_position: Vec
     quarry_velocity: Vec
     max_prediction: float = 1.0
+    time_to_target: float = 1.0
 
     def predicted(self, vehicle: Vehicle) -> Vec:
         """Where the quarry will be when the chase arrives."""
@@ -124,7 +143,7 @@ class Pursue:
 
     def force(self, vehicle: Vehicle) -> Vec:
         """Seek, aimed at the prediction."""
-        return Seek(self.predicted(vehicle)).force(vehicle)
+        return Seek(self.predicted(vehicle), self.time_to_target).force(vehicle)
 
 
 @dataclasses.dataclass

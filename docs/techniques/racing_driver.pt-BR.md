@@ -7,7 +7,7 @@ tier: 2
 source: https://www.gameaipro.com/ ; https://www.ri.cmu.edu/pub_files/pub3/coulter_r_craig_1992_1/coulter_r_craig_1992_1.pdf
 invalidated_if: RacingDriver, RacingLevel or RacingTrack change what they decide, or demo-racing is renamed
 teaches: racing-ai
-translation_of: d5240990317d9cf4d5d437057fe8032891f568dc937157e5047233373a4771e3
+translation_of: 02d2b556c905b8585b3fcf6d286ebdf53b3a62bd388937a0c42ff4e0b9ebe98e
 -->
 
 > English: [racing_driver.md](racing_driver.md). Os termos que ficam em
@@ -109,11 +109,10 @@ var grip_margin: float = 1.0
 const GRIP: float = 300.0
 const BRAKING: float = 400.0
 const TOP_SPEED: float = 400.0
-## How hard seek's force is applied. ai_steering's seek returns the velocity
-## gap itself, which `step` closes at a gain of 1 a second: too slow for a
-## car on a line, which then runs wide of every corner. Ten closes it in
-## about a tenth of a second.
-const RESPONSE: float = 10.0
+## Seconds seek is given to reach the velocity it wants. Seek's default, a
+## second, is too slow for a car on a line, which then runs wide of every
+## corner; a tenth holds it.
+const TIME_TO_TARGET: float = 0.1
 
 ## The car: its speed is capped at the profile's limit each frame, and it
 ## may change its velocity by 600 a second.
@@ -135,7 +134,7 @@ func _physics_process(delta: float) -> void:
 	var aim: Vector2 = line[(_at + lookahead) % line.size()]
 	# ai_steering's seek, with the profile's speed as the top speed here.
 	vehicle.max_speed = speed_limits[_at]
-	vehicle.step(SeekBehaviour.new(aim).force(vehicle) * RESPONSE, delta)
+	vehicle.step(SeekBehaviour.new(aim, TIME_TO_TARGET).force(vehicle), delta)
 	position = vehicle.position
 
 
@@ -184,14 +183,14 @@ esterço, como o `RacingDriver.pursuit_turn` faz. E os níveis: dê a cada um
 um *lookahead* e uma margem de aderência -- e, se acrescentar um desvio,
 afaste o ponto mirado para o lado --, fixos durante a corrida inteira.
 
-O exemplo multiplica a força do *seek* por `RESPONSE`, e isso não é
-enfeite. O *seek* do `ai_steering` devolve a diferença entre a velocidade
-que ele quer e a que ele tem, e `SteeringVehicle.step` soma essa força
-vezes os segundos do quadro: a diferença se fecha com um ganho implícito de
-1 por segundo. Medido no círculo do exemplo: com esse ganho -- `RESPONSE`
-1, ou o *seek* puro com a velocidade limitada pelo perfil -- o carro abre
-nas curvas e sai da faixa de 30 unidades em volta da linha que o teste
-exige; com 3, 5 ou 10 ele fica dentro.
+O exemplo dá ao *seek* um décimo de segundo, `TIME_TO_TARGET`, e isso não
+é enfeite. O *seek* pede a diferença entre a velocidade que ele quer e a
+que ele tem, dividida pelos segundos que ele recebe para fechá-la -- o
+`time_to_target` de Millington, o mesmo ajuste que o *arrive* tem. O
+padrão é um segundo, que é o que o *seek* sempre foi, e no círculo do
+exemplo, com esse padrão, o carro abre nas curvas e sai da faixa de 30
+unidades em volta da linha que o teste exige; com um décimo ele fica
+dentro ([a medida, em inglês](../concepts/steering.md)).
 
 ## Para ir mais fundo {#deeper}
 

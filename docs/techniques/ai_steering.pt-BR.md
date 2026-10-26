@@ -7,7 +7,7 @@ tier: 2
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
 invalidated_if: the kit's SteeringVehicle, SteeringBehaviour or Steering.combined signatures change, or the demos that use them are renamed
 teaches: steering
-translation_of: d567f68f9c6f001909260451d83d243fe219ff76f88b91db87593864c6e6e541
+translation_of: c98ee5e97cc7138a61c5970aa2c0c9f2e75e04640f710d394f94d0962bc1189e
 -->
 
 > English: [ai_steering.md](ai_steering.md). Os termos que ficam em inglês
@@ -55,6 +55,7 @@ importam:
 | velocidade máxima | `SteeringVehicle.max_speed` | o mais rápido que ele anda |
 | força | `SteeringVehicle.max_force` | o quanto ele consegue virar e frear; toda força é limitada a isso |
 | raio de frenagem | `ArriveBehaviour.new(target, radius)` | onde o *arrive* começa a desacelerar; pequeno demais e ele passa do ponto |
+| tempo até o alvo | `SeekBehaviour.new(target, seconds)`, e o mesmo último argumento de `ArriveBehaviour` e `PursueBehaviour` | quantos segundos a velocidade tem para virar a desejada: o padrão do *seek* e do *pursue* é 1, o do *arrive* 0,1; um carro numa linha quer cerca de 0,1 ([por quê, em inglês](../concepts/steering.md)) |
 | antecipação | `PursueBehaviour` `max_prediction`, `AvoidBehaviour` `look_ahead` | o quanto ele adivinha à frente, ou procura obstáculos |
 | pesos | `Steering.combined(vehicle, forces, weights)` | quanto cada comportamento conta quando vários falam |
 

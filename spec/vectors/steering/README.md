@@ -2,14 +2,14 @@
 
 <!-- doc-meta
 half_life: structure
-verified_on: 2026-10-19
+verified_on: 2026-10-26
 tier: 1
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: a behaviour's formula changes, the vehicle stops being explicit Euler, or Vector2 becomes double precision
 teaches: none
 -->
 
-> Six trajectories, two languages, and the files that say they drove the
+> Eight trajectories, two languages, and the files that say they drove the
 > same way.
 
 `ai_steering` (GDScript) and `gameaikit.steering` (Python) implement the same
@@ -45,7 +45,7 @@ A field a vector leaves out -- `time_to_target`, `max_prediction` -- is left
 to the library's own default on both sides, so the vectors pin the defaults
 too.
 
-## The six
+## The eight
 
 | file | what it pins |
 |---|---|
@@ -54,6 +54,8 @@ too.
 | `pursue-a-crossing-quarry` | pursue aims ahead of a quarry crossing in front, which moves on after every step |
 | `avoid-swerves-alone` | avoid pushes sideways while the obstacle is ahead, then asks for nothing and the vehicle coasts past |
 | `seek-and-avoid-go-round` | the two, weighted 1 and 2, go round an obstacle a little off the line |
+| `seek-sharp-turns-in-a-tenth` | seek given `time_to_target` 0.1 instead of its default second, on a vehicle with force to spare: it swings round far sooner; ignoring the time (the old implicit gain of one a second) moves every sample after the first (T105) |
+| `pursue-sharp-a-crossing-quarry` | the crossing chase with `time_to_target` 0.25, handed on to the seek pursue runs: it closes on the quarry sooner (T105) |
 | `seek-and-avoid-head-on` | the obstacle on the line: avoid turns left and the two go round (its first version stalled in front, for good) |
 
 ## The shape
@@ -69,8 +71,8 @@ too.
 }
 ```
 
-A behaviour is `seek` (`target`), `arrive` (`target`, `braking_radius`,
+A behaviour is `seek` (`target`, optional `time_to_target`), `arrive` (`target`, `braking_radius`,
 optional `time_to_target`), `pursue` (`quarry` with `position` and
-`velocity`, optional `max_prediction`; the quarry moves on by its velocity
+`velocity`, optional `max_prediction` and `time_to_target`; the quarry moves on by its velocity
 after every step) or `avoid` (`centres`, `radii`, `look_ahead`). A field a
 kind does not know is refused on both sides.

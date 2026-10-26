@@ -102,11 +102,10 @@ var grip_margin: float = 1.0
 const GRIP: float = 300.0
 const BRAKING: float = 400.0
 const TOP_SPEED: float = 400.0
-## How hard seek's force is applied. ai_steering's seek returns the velocity
-## gap itself, which `step` closes at a gain of 1 a second: too slow for a
-## car on a line, which then runs wide of every corner. Ten closes it in
-## about a tenth of a second.
-const RESPONSE: float = 10.0
+## Seconds seek is given to reach the velocity it wants. Seek's default, a
+## second, is too slow for a car on a line, which then runs wide of every
+## corner; a tenth holds it.
+const TIME_TO_TARGET: float = 0.1
 
 ## The car: its speed is capped at the profile's limit each frame, and it
 ## may change its velocity by 600 a second.
@@ -128,7 +127,7 @@ func _physics_process(delta: float) -> void:
 	var aim: Vector2 = line[(_at + lookahead) % line.size()]
 	# ai_steering's seek, with the profile's speed as the top speed here.
 	vehicle.max_speed = speed_limits[_at]
-	vehicle.step(SeekBehaviour.new(aim).force(vehicle) * RESPONSE, delta)
+	vehicle.step(SeekBehaviour.new(aim, TIME_TO_TARGET).force(vehicle), delta)
 	position = vehicle.position
 
 
@@ -177,13 +176,14 @@ that can only turn takes the angle to the aim point as its steering, as
 a grip margin -- and if you add a wander, drift the aim point sideways --
 fixed for the whole race.
 
-The example multiplies seek's force by `RESPONSE`, and that is not
-decoration. `ai_steering`'s seek returns the gap between the velocity it
-wants and the one it has, and `SteeringVehicle.step` adds that force times
-the frame's seconds: the gap closes at an implicit gain of 1 a second.
-Measured on the example's circle: at that gain -- `RESPONSE` 1, or plain
-seek with the speed capped at the profile -- the car runs wide and leaves
-the 30-unit band round the line its test holds; at 3, 5 or 10 it stays in.
+The example gives seek a tenth of a second, `TIME_TO_TARGET`, and that is
+not decoration. Seek asks for the gap between the velocity it wants and
+the one it has, divided by the seconds it is given to close it --
+Millington's `time_to_target`, the knob arrive has too. Its default is a
+second, which is what seek always was, and on the example's circle at
+that default the car runs wide and leaves the 30-unit band round the line
+its test holds; at a tenth it stays in
+([the measurement](../concepts/steering.md)).
 
 ## Deeper {#deeper}
 
