@@ -17,7 +17,10 @@ um quer dizer. Ela vale para as páginas de técnica (T74, T75) e para os
 textos dos jogos (T78).
 
 Os nomes no código -- classes, métodos, campos -- nunca são traduzidos: são o
-que você vai digitar.
+que você vai digitar. Nem os comentários e as *docstrings* do código: o
+código fica em inglês, e só a documentação é traduzida. Um termo no plural
+(*features*, *bots*) está aqui no singular; títulos de livros e de artigos,
+também em itálico, ficam como foram publicados.
 
 ## Termos {#terms}
 
@@ -49,7 +52,7 @@ que você vai digitar.
 | *expectiminimax* | o *minimax* com nós de sorte, para jogos com dados |
 | *n-gram* | uma tabela do que veio depois de cada sequência curta de ações |
 | *prior*, *decay* | as contagens imaginárias com que toda ação começa, e o quanto uma contagem antiga pesa diante de uma nova |
-| *feature* | um número (ou uma palavra) medido do jogo que um modelo lê; ninguém diz "característica" numa conversa sobre aprendizado de máquina |
+| *feature* | um número (ou uma palavra) medido do jogo que um modelo lê; os textos brasileiros de aprendizado de máquina dizem também "característica" ou "atributo", e o kit fica com *feature*, que é o nome no código |
 | *bias* | o termo constante de um modelo linear, o `b` de `w·x + b` |
 | *self-play* | o programa jogando contra si mesmo para gerar partidas |
 | *ghost*, *clone* | os dois adversários do *behaviour cloning*: a tabela consultada e o modelo ajustado |
@@ -66,3 +69,10 @@ que você vai digitar.
 | *lookahead* | a distância à frente para onde o piloto mira |
 | *rubber band* | a trapaça de acelerar o carro que ficou para trás; o piloto deste kit não usa |
 | *string*, *array* | os tipos de texto e de lista; ficam em inglês como no código |
+| *docstring* | o comentário de documentação de uma função ou classe, o `##` do GDScript |
+| *softmax* | a função que transforma as notas de várias respostas em probabilidades que somam 1 |
+| *shadow* | o adversário de Killer Instinct treinado com as lutas do próprio jogador; as *Shadows* do jogo |
+| *baked* | pré-calculado: os pontos que o Godot calcula uma vez ao longo de uma curva |
+| *skirmish* | a escaramuça: a demo por turnos em que o azul é a política aprendida |
+| *easy*, *medium*, *hard* | os nomes dos níveis de dificuldade como aparecem na tela das demos |
+| *wave* | uma rodada de trabalho neste repositório: um ramo, uma revisão, uma junção ao principal |

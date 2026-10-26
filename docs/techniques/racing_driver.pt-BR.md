@@ -7,7 +7,7 @@ tier: 2
 source: https://www.gameaipro.com/ ; https://www.ri.cmu.edu/pub_files/pub3/coulter_r_craig_1992_1/coulter_r_craig_1992_1.pdf
 invalidated_if: RacingDriver, RacingLevel or RacingTrack change what they decide, or demo-racing is renamed
 teaches: racing-ai
-translation_of: 3f5e2ddda970e0bf22764b8b1b4f8c6322fa932b5cab443ac78b2ec5f4cabca1
+translation_of: d5240990317d9cf4d5d437057fe8032891f568dc937157e5047233373a4771e3
 -->
 
 > English: [racing_driver.md](racing_driver.md). Os termos que ficam em
@@ -77,7 +77,7 @@ sobre qualquer linha que você der a ele.
 ### Um exemplo mínimo {#example}
 
 Um carro seu que dá voltas numa linha de corrida que você entrega -- um
-`Path2D` assado, por exemplo: ele mira alguns pontos à frente e nunca anda
+`Path2D` pré-calculado (*baked*), por exemplo: ele mira alguns pontos à frente e nunca anda
 mais rápido do que o perfil de velocidade da linha permite. Colocado fora
 da linha, ele a encontra. Este arquivo é executado por
 `racing_line_example_test.gd`, e o *gate* garante que a página é igual a
@@ -102,15 +102,22 @@ var lookahead: int = 8
 ## below it brakes earlier and corners slower. No rubber band.
 var grip_margin: float = 1.0
 
-## How hard it can turn and brake, units a second squared: a corner of
-## radius r is taken at most at sqrt(GRIP * r).
+## What the speed profile asks of the car, units a second squared: a
+## corner of radius r is taken at most at sqrt(GRIP * r), and it brakes at
+## BRAKING. The car can do more -- its `max_force` is 600 -- so the profile,
+## not the car, is the limit, and `grip_margin` is what the driver dares.
 const GRIP: float = 300.0
 const BRAKING: float = 400.0
-## How quickly it closes on the velocity it wants: a tenth of a second.
+const TOP_SPEED: float = 400.0
+## How hard seek's force is applied. ai_steering's seek returns the velocity
+## gap itself, which `step` closes at a gain of 1 a second: too slow for a
+## car on a line, which then runs wide of every corner. Ten closes it in
+## about a tenth of a second.
 const RESPONSE: float = 10.0
 
-## Top speed 400 a second; it may change its velocity by 600 a second.
-var vehicle := SteeringVehicle.new(Vector2.ZERO, Vector2.ZERO, 400.0, 600.0)
+## The car: its speed is capped at the profile's limit each frame, and it
+## may change its velocity by 600 a second.
+var vehicle := SteeringVehicle.new(Vector2.ZERO, Vector2.ZERO, TOP_SPEED, 600.0)
 ## The fastest it will be at each point of the line.
 var speed_limits := PackedFloat64Array()
 
@@ -119,17 +126,16 @@ var _at: int = 0
 
 func _ready() -> void:
 	vehicle.position = position
-	speed_limits = speed_profile(line, GRIP * grip_margin, BRAKING * grip_margin, vehicle.max_speed)
+	speed_limits = speed_profile(line, GRIP * grip_margin, BRAKING * grip_margin, TOP_SPEED)
 	_at = _nearest(0, line.size())
 
 
 func _physics_process(delta: float) -> void:
 	_at = _nearest(_at, 2 * lookahead)
 	var aim: Vector2 = line[(_at + lookahead) % line.size()]
-	# Seek, with the profile's speed in place of top speed: the force is
-	# the velocity it wants minus the one it has, closed at RESPONSE.
-	var wanted: Vector2 = vehicle.position.direction_to(aim) * speed_limits[_at]
-	vehicle.step((wanted - vehicle.velocity) * RESPONSE, delta)
+	# ai_steering's seek, with the profile's speed as the top speed here.
+	vehicle.max_speed = speed_limits[_at]
+	vehicle.step(SeekBehaviour.new(aim).force(vehicle) * RESPONSE, delta)
 	position = vehicle.position
 
 
@@ -177,6 +183,15 @@ carro que só consegue virar toma o ângulo até o ponto mirado como o seu
 esterço, como o `RacingDriver.pursuit_turn` faz. E os níveis: dê a cada um
 um *lookahead* e uma margem de aderência -- e, se acrescentar um desvio,
 afaste o ponto mirado para o lado --, fixos durante a corrida inteira.
+
+O exemplo multiplica a força do *seek* por `RESPONSE`, e isso não é
+enfeite. O *seek* do `ai_steering` devolve a diferença entre a velocidade
+que ele quer e a que ele tem, e `SteeringVehicle.step` soma essa força
+vezes os segundos do quadro: a diferença se fecha com um ganho implícito de
+1 por segundo. Medido no círculo do exemplo: com esse ganho -- `RESPONSE`
+1, ou o *seek* puro com a velocidade limitada pelo perfil -- o carro abre
+nas curvas e sai da faixa de 30 unidades em volta da linha que o teste
+exige; com 3, 5 ou 10 ele fica dentro.
 
 ## Para ir mais fundo {#deeper}
 

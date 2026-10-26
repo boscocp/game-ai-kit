@@ -7,7 +7,7 @@ tier: 2
 source: book:Ian Millington and John Funge, "Artificial Intelligence for Games", 2nd edition, Morgan Kaufmann, 2009 -- chapter 7, Learning
 invalidated_if: the kit's NGramPredictor signature changes, ADR 0016 is withdrawn, or the demos that use it are renamed
 teaches: fighting-game-ai
-translation_of: 963e44712e0c904f37033543a284fe7eab42dd4fc15870b3826116238d4f9f8b
+translation_of: 9212134db2e4e2d534362511ca6d250dfd0de63deb0ec8f381e8b27101bb765f
 -->
 
 > English: [ai_opponent.md](ai_opponent.md). Os termos que ficam em inglês
@@ -93,6 +93,12 @@ const BEATEN_BY: Dictionary = {"rock": "paper", "paper": "scissors", "scissors":
 # context counts 0.9 of the one after it, so a player who changes habits is
 # followed. The table starts empty and is never saved (ADR 0016).
 var _predictor := NGramPredictor.new(3, MOVES, 0.9)
+
+
+func _ready() -> void:
+	# An order below 1 or a decay outside (0, 1] is refused here.
+	if _predictor.problem() != "":
+		push_error(_predictor.problem())
 
 
 ## The player just played `move`: count it.

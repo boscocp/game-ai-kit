@@ -29,7 +29,9 @@ offline, and the game only multiplies.
 
 When nobody can say which counts matter: a fit only weighs the features it
 is given, and three good counts fitted beat thirty guessed ones. Counts
-that move together (men and advancement here, r = 0.89) share their credit
+that move together (men and advancement here, r = 0.89, measured in the
+wave 33 review -- see
+[concepts/learned-evaluation.md](../concepts/learned-evaluation.md)) share their credit
 unpredictably, so a weight alone is not a lesson about the game. And
 weights that change during play: that is training at game time, which
 invariant 6 forbids.

@@ -39,3 +39,9 @@ func test_the_example_says_which_rule_fired() -> void:
 	var why: Dictionary = guard.why(1.0, 1.0)
 	assert_float(why["alarmed"]).is_equal(1.0)
 	assert_float(why["calm"]).is_equal(0.0)
+
+
+func test_the_example_refuses_an_input_that_is_not_a_number() -> void:
+	var guard: Node = _guard()
+	assert_bool(is_nan(guard.alarm(NAN, 1.0))).is_true()
+	assert_dict(guard.why(NAN, 1.0)).is_empty()

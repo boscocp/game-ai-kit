@@ -15,6 +15,12 @@ const BEATEN_BY: Dictionary = {"rock": "paper", "paper": "scissors", "scissors":
 var _predictor := NGramPredictor.new(3, MOVES, 0.9)
 
 
+func _ready() -> void:
+	# An order below 1 or a decay outside (0, 1] is refused here.
+	if _predictor.problem() != "":
+		push_error(_predictor.problem())
+
+
 ## The player just played `move`: count it.
 func player_played(move: String) -> void:
 	_predictor.observe(move)

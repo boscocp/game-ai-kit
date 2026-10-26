@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 5, figures 5.3 and 5.7
 invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch or AdversarialResult signatures change, or the demos that use them are renamed
 teaches: adversarial-search
-translation_of: 2cbf25263397608df31647dd3303f886b3495544905f2aec3395e107452ec68b
+translation_of: 8665d9003dc501d7a2cc5b70bf413a4bbb9c84ec7f29829dc1294ade75973e3d
 -->
 
 > English: [ai_adversarial.md](ai_adversarial.md). Os termos que ficam em
@@ -39,7 +39,8 @@ ele encurta.
 
 - `make run` -- damas contra o *minimax*. **Espaço** joga a vez das
   brancas, **1-6** escolhem quantos *plies* ele olha à frente. Cada jogada
-  que ele considerou é uma seta **azul** com o seu valor, e o painel diz
+  que ele considerou é uma seta **azul** com o seu valor, a que ele vai
+  jogar é **rosa**, e o painel diz
   quantas posições ele examinou e quantas respostas pulou.
 - Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
 

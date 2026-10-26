@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 19, linear and logistic regression ; https://docs.godotengine.org/en/stable/classes/class_json.html
 invalidated_if: the kit's LearnedModel, ModelFile, SoftmaxModel, CaseTable or ClonedPlayer signatures change, or the demos that use them are renamed
 teaches: learning
-translation_of: 2cbc21be6d80bf17ac06423a1a8b3c711a856f69e699728541e93a173a61b17c
+translation_of: 97a529fd8b385fee46735d76f6253cc8a5354ab481c690eefac06516822d0905
 -->
 
 > English: [ai_learning.md](ai_learning.md). Os termos que ficam em inglês
@@ -54,9 +54,10 @@ exceção é o *n-gram* do `ai_opponent` (ADR 0016).
 
 ## Neste kit {#in-this-kit}
 
-`godot/game/tactical/learned_policy.gd` carrega o `weights.json` por
-`ModelFile.load_from`, tira dele os modelos `combat` e `capture`, e compara
-a probabilidade do modelo de combate com um limiar.
+`godot/game/main.gd` (o *skirmish*) e `godot/game/tactical/learned_blue.gd`
+carregam o `weights.json` por `ModelFile.load_from` e o entregam ao
+`LearnedPolicy` (`learned_policy.gd`), que tira dele os modelos `combat` e
+`capture` e compara a probabilidade do modelo de combate com um limiar.
 `godot/game/fighting/fight_clone_opponent.gd` joga com um `ClonedPlayer`.
 Os ajustes que importam:
 
@@ -109,15 +110,18 @@ func _ready() -> void:
 	_model = model_from(PUBLISHED)
 
 
-## A model from one published entry, or null when the entry is not one.
+## A model from one published entry, or null when the entry is not one --
+## refused whole, as the kit's `ModelFile` does, never filled in with a guess.
 static func model_from(entry: Dictionary) -> LearnedModel:
 	if not LearnedModel.KINDS.has(entry.get("kind")):
+		return null
+	if not (entry.get("bias") is float or entry.get("bias") is int):
 		return null
 	var features := PackedStringArray(entry.get("features", []))
 	var weights := PackedFloat64Array(entry.get("weights", []))
 	if features.is_empty() or features.size() != weights.size():
 		return null
-	return LearnedModel.new(entry["kind"], features, weights, float(entry.get("bias", 0.0)))
+	return LearnedModel.new(entry["kind"], features, weights, float(entry["bias"]))
 
 
 ## How likely an attack is to win, 0 to 1, from the facts by name. A fact the

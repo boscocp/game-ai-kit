@@ -95,15 +95,22 @@ var lookahead: int = 8
 ## below it brakes earlier and corners slower. No rubber band.
 var grip_margin: float = 1.0
 
-## How hard it can turn and brake, units a second squared: a corner of
-## radius r is taken at most at sqrt(GRIP * r).
+## What the speed profile asks of the car, units a second squared: a
+## corner of radius r is taken at most at sqrt(GRIP * r), and it brakes at
+## BRAKING. The car can do more -- its `max_force` is 600 -- so the profile,
+## not the car, is the limit, and `grip_margin` is what the driver dares.
 const GRIP: float = 300.0
 const BRAKING: float = 400.0
-## How quickly it closes on the velocity it wants: a tenth of a second.
+const TOP_SPEED: float = 400.0
+## How hard seek's force is applied. ai_steering's seek returns the velocity
+## gap itself, which `step` closes at a gain of 1 a second: too slow for a
+## car on a line, which then runs wide of every corner. Ten closes it in
+## about a tenth of a second.
 const RESPONSE: float = 10.0
 
-## Top speed 400 a second; it may change its velocity by 600 a second.
-var vehicle := SteeringVehicle.new(Vector2.ZERO, Vector2.ZERO, 400.0, 600.0)
+## The car: its speed is capped at the profile's limit each frame, and it
+## may change its velocity by 600 a second.
+var vehicle := SteeringVehicle.new(Vector2.ZERO, Vector2.ZERO, TOP_SPEED, 600.0)
 ## The fastest it will be at each point of the line.
 var speed_limits := PackedFloat64Array()
 
@@ -112,17 +119,16 @@ var _at: int = 0
 
 func _ready() -> void:
 	vehicle.position = position
-	speed_limits = speed_profile(line, GRIP * grip_margin, BRAKING * grip_margin, vehicle.max_speed)
+	speed_limits = speed_profile(line, GRIP * grip_margin, BRAKING * grip_margin, TOP_SPEED)
 	_at = _nearest(0, line.size())
 
 
 func _physics_process(delta: float) -> void:
 	_at = _nearest(_at, 2 * lookahead)
 	var aim: Vector2 = line[(_at + lookahead) % line.size()]
-	# Seek, with the profile's speed in place of top speed: the force is
-	# the velocity it wants minus the one it has, closed at RESPONSE.
-	var wanted: Vector2 = vehicle.position.direction_to(aim) * speed_limits[_at]
-	vehicle.step((wanted - vehicle.velocity) * RESPONSE, delta)
+	# ai_steering's seek, with the profile's speed as the top speed here.
+	vehicle.max_speed = speed_limits[_at]
+	vehicle.step(SeekBehaviour.new(aim).force(vehicle) * RESPONSE, delta)
 	position = vehicle.position
 
 
@@ -170,6 +176,14 @@ that can only turn takes the angle to the aim point as its steering, as
 `RacingDriver.pursuit_turn` does. And the levels: give each a lookahead and
 a grip margin -- and if you add a wander, drift the aim point sideways --
 fixed for the whole race.
+
+The example multiplies seek's force by `RESPONSE`, and that is not
+decoration. `ai_steering`'s seek returns the gap between the velocity it
+wants and the one it has, and `SteeringVehicle.step` adds that force times
+the frame's seconds: the gap closes at an implicit gain of 1 a second.
+Measured on the example's circle: at that gain -- `RESPONSE` 1, or plain
+seek with the speed capped at the profile -- the car runs wide and leaves
+the 30-unit band round the line its test holds; at 3, 5 or 10 it stays in.
 
 ## Deeper {#deeper}
 

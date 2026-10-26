@@ -53,7 +53,7 @@ matter:
 
 | knob | where | what it changes |
 |---|---|---|
-| cells per tick | `FlowField.settle(budget)`; the world's `FIELD_CELLS_PER_TICK` | how soon a new field is ready, against how much of the frame it takes |
+| flood steps per tick | `FlowField.settle(budget)`; the world's `FIELD_CELLS_PER_TICK` | how soon a new field is ready, against how much of the frame it takes; a budget counts steps of the flood (`FlowField.work`), not cells settled |
 | cell costs | `GridGraph.set_cost`, `GridGraph.block` | where the arrows lead; a field already built does not see a change |
 | bucket size | `SpatialHash.new(size)` | about the radius most questions ask; smaller reads more buckets, larger turns more away |
 | the shares | `FrameBudget.SHARES` | milliseconds each layer may take of the 16.7 |
@@ -87,9 +87,11 @@ that way, round a wall, through its gap. This file is run by
 # a slice every frame.
 extends Node
 
-## How many cells the flood may settle in one frame: the share of the frame
-## you give it. More, and the field is ready sooner.
-const CELLS_PER_FRAME: int = 64
+## How many steps the flood may take in one frame -- each step takes one
+## cell off its queue, a stale copy or an empty bucket included, so a few
+## settle nothing: the share of the frame you give it. More, and the field
+## is ready sooner.
+const STEPS_PER_FRAME: int = 64
 
 ## Your map: 1 is open ground, dearer cells are slower, blocked is a wall.
 ## Change it before you send anyone; a field already built does not see it.
@@ -100,7 +102,7 @@ var _field: FlowField
 
 func _physics_process(_delta: float) -> void:
 	if _field != null:
-		_field.settle(CELLS_PER_FRAME)
+		_field.settle(STEPS_PER_FRAME)
 
 
 ## Send everybody to `goal`. The field is built over the next frames.

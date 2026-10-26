@@ -3,11 +3,16 @@
 # crosses by the beads Python published, and never adds or takes one.
 extends Node
 
+## Where `gameaikit.menace.report --write` put the beads. Moved without
+## changing this, the file is not found and every box is empty: MENACE
+## resigns every move, which `has_beads()` lets your game say out loud.
+const BEADS: String = "res://game/tictactoe/menace_beads.json"
+
 ## How many games MENACE had played when the beads were published: 10,
 ## 100, 1000 or 10000. Fewer, and it plays like a beginner.
 var age: int = 10000
 
-var _menace: MenacePlayer = MenacePlayer.load_published()
+var _menace: MenacePlayer = MenacePlayer.load_published(BEADS)
 var _dice := RandomNumberGenerator.new()
 
 
@@ -24,3 +29,9 @@ func chances(board: String) -> Dictionary:
 	for square: Dictionary in _menace.squares_for(age, board):
 		by_square[square["square"]] = square["probability"]
 	return by_square
+
+
+## True when the published beads were read: false means the file is not at
+## `BEADS`, and every move would be a resignation.
+func has_beads() -> bool:
+	return not _menace.ages.is_empty()

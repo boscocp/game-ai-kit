@@ -37,8 +37,9 @@ beside the thing it shortens.
 
 - `make run` -- checkers against minimax. **Space** plays white's move,
   **1-6** set how many plies it looks ahead. Every move it considered is a
-  **blue** arrow with its value, and the panel says how many positions it
-  searched and how many replies it skipped.
+  **blue** arrow with its value, the one it will play is **pink**, and the
+  panel says how many positions it searched and how many replies it
+  skipped.
 - Which demo uses which technique, both ways: the catalogue (T76, coming).
 
 ## In this kit {#in-this-kit}

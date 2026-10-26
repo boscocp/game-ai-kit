@@ -50,9 +50,11 @@ the one exception is `ai_opponent`'s n-gram (ADR 0016).
 
 ## In this kit {#in-this-kit}
 
-`godot/game/tactical/learned_policy.gd` loads `weights.json` through
-`ModelFile.load_from`, takes the `combat` and `capture` models from it, and
-compares the combat model's probability against a threshold.
+`godot/game/main.gd` (the skirmish) and `godot/game/tactical/learned_blue.gd`
+load `weights.json` through `ModelFile.load_from` and hand it to
+`LearnedPolicy` (`learned_policy.gd`), which takes the `combat` and
+`capture` models from it and compares the combat model's probability
+against a threshold.
 `godot/game/fighting/fight_clone_opponent.gd` plays a `ClonedPlayer`. The
 knobs that matter:
 
@@ -104,15 +106,18 @@ func _ready() -> void:
 	_model = model_from(PUBLISHED)
 
 
-## A model from one published entry, or null when the entry is not one.
+## A model from one published entry, or null when the entry is not one --
+## refused whole, as the kit's `ModelFile` does, never filled in with a guess.
 static func model_from(entry: Dictionary) -> LearnedModel:
 	if not LearnedModel.KINDS.has(entry.get("kind")):
+		return null
+	if not (entry.get("bias") is float or entry.get("bias") is int):
 		return null
 	var features := PackedStringArray(entry.get("features", []))
 	var weights := PackedFloat64Array(entry.get("weights", []))
 	if features.is_empty() or features.size() != weights.size():
 		return null
-	return LearnedModel.new(entry["kind"], features, weights, float(entry.get("bias", 0.0)))
+	return LearnedModel.new(entry["kind"], features, weights, float(entry["bias"]))
 
 
 ## How likely an attack is to win, 0 to 1, from the facts by name. A fact the

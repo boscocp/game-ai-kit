@@ -7,7 +7,7 @@ tier: 2
 source: book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 5, fuzzy logic ; book:IEC 61131-7, "Programmable controllers -- Part 7: Fuzzy control programming", 2000
 invalidated_if: the kit's FuzzySet, FuzzyVariable, FuzzyRule or FuzzyRuleBase signatures change, or the demos that use them are renamed
 teaches: stealth-ai
-translation_of: 608fcc48be7f430f5c6006a8004c0e4bad328a83231cc5a3c33a79848e86dcc3
+translation_of: 34d862b02b9a560b57487122d42a19108de27498f252793028f524425e3f0164
 -->
 
 > English: [ai_fuzzy.md](ai_fuzzy.md). Os termos que ficam em inglês estão
@@ -121,9 +121,10 @@ func alarm(distance: float, light: float) -> float:
 
 
 ## Why: how strongly each of calm, wary and alarmed was concluded. Draw it,
-## and the player sees which rule fired.
+## and the player sees which rule fired. Empty when an input is not a finite
+## number, as `alarm` is then NAN: refused, not read as zero.
 func why(distance: float, light: float) -> Dictionary:
-	return _controller.activations({"distance": distance, "light": light})["alarm"]
+	return _controller.activations({"distance": distance, "light": light}).get("alarm", {})
 
 
 # IF distance IS `near_or_far` AND light IS `dark_or_lit` THEN alarm IS `alarm_term`.

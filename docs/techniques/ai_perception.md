@@ -113,6 +113,13 @@ var _awareness := Awareness.new()
 var _seconds: float = 0.0
 
 
+func _ready() -> void:
+	# A row with phases out of order, or a caution floor above alert, is
+	# refused here rather than found out in play.
+	if Awareness.problem(AWARENESS) != "":
+		push_error(Awareness.problem(AWARENESS))
+
+
 func _physics_process(delta: float) -> void:
 	_seconds += delta
 	_awareness.step(AWARENESS, sees_target(), RISE, delta, _seconds)

@@ -46,3 +46,9 @@ func test_an_older_machine_is_surer_of_its_opening() -> void:
 	player.age = 10000
 	var old: float = player.chances(".........").values().max()
 	assert_float(old).is_greater(young)
+
+
+func test_the_example_says_when_its_beads_are_missing() -> void:
+	var player: Node = _player()
+	assert_bool(player.has_beads()).is_true()
+	assert_bool(MenacePlayer.load_published("res://no/such/beads.json").ages.is_empty()).is_true()

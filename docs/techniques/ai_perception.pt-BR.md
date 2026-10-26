@@ -7,7 +7,7 @@ tier: 2
 source: book:Travis McIntosh, "Human Enemy AI in The Last of Us", in Steve Rabin (ed.), "Game AI Pro 2", CRC Press, 2015 ; https://www.gameaipro.com/
 invalidated_if: the kit's VisionCone, Awareness, LineOfSight, Hearing, VisionShape or BeliefMap signatures change, or the demos that use them are renamed
 teaches: perception
-translation_of: f334a33748d1529e3977bf7757f7f5d8ad3dd6d868e203b46d90170492a035d7
+translation_of: 34cec9839fabeaafbc061988c3840a9fa97fdd05fad7483ca55460637c051497
 -->
 
 > English: [ai_perception.md](ai_perception.md). Os termos que ficam em
@@ -118,6 +118,13 @@ var cone := VisionCone.new(300.0, 45.0)
 
 var _awareness := Awareness.new()
 var _seconds: float = 0.0
+
+
+func _ready() -> void:
+	# A row with phases out of order, or a caution floor above alert, is
+	# refused here rather than found out in play.
+	if Awareness.problem(AWARENESS) != "":
+		push_error(Awareness.problem(AWARENESS))
 
 
 func _physics_process(delta: float) -> void:

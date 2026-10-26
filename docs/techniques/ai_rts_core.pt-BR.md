@@ -7,7 +7,7 @@ tier: 2
 source: https://ojs.aaai.org/index.php/AIIDE/article/view/12435/12294 ; book:Elijah Emerson, "Crowd Pathfinding and Steering Using Flow Field Tiles", in Steve Rabin (ed.), "Game AI Pro", CRC Press, 2013
 invalidated_if: the kit's FlowField, SpatialHash, FrameBudget, RtsWorld or RtsController signatures change, or the demos that use them are renamed
 teaches: strategy-ai
-translation_of: 9c744b516b193a017df870d9bc720956f49ef7d5b2d1ecda739bba161249cca2
+translation_of: 6bc91478081f6297e8300c14d920a9362d73c85fbe703b14df780c6ea466478e
 -->
 
 > English: [ai_rts_core.md](ai_rts_core.md). Os termos que ficam em inglês
@@ -57,7 +57,7 @@ importam:
 
 | ajuste | onde | o que muda |
 |---|---|---|
-| células por *tick* | `FlowField.settle(budget)`; o `FIELD_CELLS_PER_TICK` do mundo | quão cedo um campo novo fica pronto, contra quanto do quadro ele ocupa |
+| passos da inundação por *tick* | `FlowField.settle(budget)`; o `FIELD_CELLS_PER_TICK` do mundo | quão cedo um campo novo fica pronto, contra quanto do quadro ele ocupa; o orçamento conta passos da inundação (`FlowField.work`), não células assentadas |
 | custo das células | `GridGraph.set_cost`, `GridGraph.block` | para onde as setas levam; um campo já montado não vê uma mudança |
 | tamanho do balde | `SpatialHash.new(size)` | mais ou menos o raio que a maioria das perguntas usa; menor lê mais baldes, maior descarta mais |
 | as partes | `FrameBudget.SHARES` | os milissegundos que cada camada pode ocupar dos 16,7 |
@@ -93,9 +93,11 @@ inglês, como no arquivo.
 # a slice every frame.
 extends Node
 
-## How many cells the flood may settle in one frame: the share of the frame
-## you give it. More, and the field is ready sooner.
-const CELLS_PER_FRAME: int = 64
+## How many steps the flood may take in one frame -- each step takes one
+## cell off its queue, a stale copy or an empty bucket included, so a few
+## settle nothing: the share of the frame you give it. More, and the field
+## is ready sooner.
+const STEPS_PER_FRAME: int = 64
 
 ## Your map: 1 is open ground, dearer cells are slower, blocked is a wall.
 ## Change it before you send anyone; a field already built does not see it.
@@ -106,7 +108,7 @@ var _field: FlowField
 
 func _physics_process(_delta: float) -> void:
 	if _field != null:
-		_field.settle(CELLS_PER_FRAME)
+		_field.settle(STEPS_PER_FRAME)
 
 
 ## Send everybody to `goal`. The field is built over the next frames.

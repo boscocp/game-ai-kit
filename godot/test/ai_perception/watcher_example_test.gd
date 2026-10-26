@@ -65,3 +65,24 @@ func test_the_example_calms_down_through_every_phase() -> void:
 	# ...and then it falls to calm.
 	_run(guard, 5.0)
 	assert_str(guard.phase()).is_equal("calm")
+
+
+# Inside a moved and turned parent, as a guard in a level usually is: the
+# cone must look from where the guard really is, facing where it really
+# faces, not from its position relative to the parent.
+func test_the_example_sees_from_its_global_place_and_facing() -> void:
+	var scene: Node = auto_free(Node.new())
+	add_child(scene)
+	var room := Node2D.new()
+	room.position = Vector2(1000, 500)
+	room.rotation = PI / 2.0
+	scene.add_child(room)
+	var guard: Node2D = EXAMPLE.new()
+	room.add_child(guard)
+	var ahead := Node2D.new()
+	ahead.position = Vector2(1000, 600)
+	scene.add_child(ahead)
+	guard.target = ahead
+	assert_bool(guard.sees_target()).is_true()
+	ahead.position = Vector2(1100, 500)
+	assert_bool(guard.sees_target()).is_false()

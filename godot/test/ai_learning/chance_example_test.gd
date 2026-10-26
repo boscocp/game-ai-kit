@@ -31,4 +31,5 @@ func test_the_example_answers_nan_when_a_fact_is_missing() -> void:
 func test_the_example_refuses_an_entry_that_is_not_a_model() -> void:
 	assert_object(EXAMPLE.model_from({"kind": "tree", "features": ["x"], "weights": [1.0]})).is_null()
 	assert_object(EXAMPLE.model_from({"kind": "linear", "features": ["x", "y"], "weights": [1.0]})).is_null()
+	assert_object(EXAMPLE.model_from({"kind": "linear", "features": ["x"], "weights": [1.0]})).is_null()
 	assert_object(EXAMPLE.model_from(EXAMPLE.PUBLISHED)).is_not_null()

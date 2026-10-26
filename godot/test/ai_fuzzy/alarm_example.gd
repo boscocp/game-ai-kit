@@ -40,9 +40,10 @@ func alarm(distance: float, light: float) -> float:
 
 
 ## Why: how strongly each of calm, wary and alarmed was concluded. Draw it,
-## and the player sees which rule fired.
+## and the player sees which rule fired. Empty when an input is not a finite
+## number, as `alarm` is then NAN: refused, not read as zero.
 func why(distance: float, light: float) -> Dictionary:
-	return _controller.activations({"distance": distance, "light": light})["alarm"]
+	return _controller.activations({"distance": distance, "light": light}).get("alarm", {})
 
 
 # IF distance IS `near_or_far` AND light IS `dark_or_lit` THEN alarm IS `alarm_term`.
