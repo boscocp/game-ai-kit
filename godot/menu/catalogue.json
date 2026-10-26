@@ -236,11 +236,11 @@
       "target": "demo-botmatch",
       "title": "Bot match: two teams of bots, capture and hold (3D)",
       "scene": "res://game3d/botmatch/botmatch.tscn",
-      "decides": "Where each bot stands, which point each squad is sent to, and when a squad falls back -- on both teams, each switch yours to turn off.",
+      "decides": "Where each bot stands, which point each squad is sent to, and when a bot falls back to cover near its point -- on both teams, each switch yours to turn off.",
       "techniques": [
         {"technique": "tactical-positions", "part": "the discs round the watched bot: every spot it weighed, coloured by why it was kept or dropped, its score above it; a teammate's claim closes a spot"},
         {"technique": "team-commander", "part": "the map's arrows: each squad sent to a point by worth and distance, over the team's influence (the map's colours)"},
-        {"technique": "squad-confidence", "part": "the bar under each squad on the map, with its retreat and attack marks: below the first it falls back in two waves"},
+        {"technique": "squad-confidence", "part": "the bar under each squad on the map, with its attack mark: above it the squad steps onto its point. Falling back is each bot's own weighing (the panel's fall-back line, term by term): a bot falling back is ringed on the map with a line to its cover, and its squad falls back in two waves, one covering"},
         {"technique": "a-star", "part": "each bot's walk to its spot, over a one-metre grid of the arena"}
       ],
       "controls": "1/2/3 blue's claims, commander, retreat (Shift: red's); Tab watches the next bot, T takes it over (WASD, mouse, click, R reload, Ctrl crouch) and gives it back; M the other team's map, C camera, F fast, P pause, Space one decision, N new match",

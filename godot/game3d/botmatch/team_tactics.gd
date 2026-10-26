@@ -55,6 +55,16 @@ static func _run_errand(world: BotMatch, team: MatchTeam, bot: MatchBot) -> void
 		spot = bot.hide_spot
 	elif bot.errand == MatchSupply.FALL_BACK:
 		spot = bot.fall_back_spot
+	# A teammate took the place since this bot found it -- the places are
+	# found before anyone claims, and kept a second: it stays at its post
+	# this decision and looks again. Claiming over it stacked two bodies on
+	# one spot (wave 97, measured: 366 s bunched with claims on).
+	var taken: bool = spot != -1 and int(team.claims.get(spot, bot.id)) != bot.id
+	if taken and team.use_claims:
+		bot.errand = MatchSupply.NO_ERRAND
+		bot.hide_asked_at = -INF
+		bot.fall_back_asked_at = -INF
+		return
 	team.claim(bot.id, spot)
 	bot.chose_at = -INF
 	world.send(bot, MatchSupply.errand_place(world, bot), spot)

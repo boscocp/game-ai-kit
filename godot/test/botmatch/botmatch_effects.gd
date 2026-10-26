@@ -353,11 +353,16 @@ func _add(sums: Dictionary, world: BotMatch) -> void:
 	var margins: PackedFloat64Array = sums["margins"]
 	margins.append(blue.point_seconds - red.point_seconds)
 	sums["margins"] = margins
+	_add_fall_backs(sums, blue, red)
+
+
+# Blue's fall-backs, and both sides' dying by band (T65). Each match's table
+# is appended, and summed band by band when printed: a sharded run can only
+# append arrays (T72).
+static func _add_fall_backs(sums: Dictionary, blue: MatchStats, red: MatchStats) -> void:
 	sums["fall backs"] += blue.fall_backs
 	sums["fall backs held"] += blue.fall_backs_held
 	sums["fall backs lost"] += blue.fall_backs_lost
-	# Each match's table of both sides, appended: summed band by band when
-	# printed, for a sharded run can only append arrays (T72).
 	sums["dying samples"] = _appended(sums["dying samples"], blue.dying_samples, red.dying_samples)
 	sums["dying deaths"] = _appended(sums["dying deaths"], blue.dying_deaths, red.dying_deaths)
 

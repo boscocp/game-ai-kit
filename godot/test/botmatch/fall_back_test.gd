@@ -186,3 +186,28 @@ func test_the_panel_shows_the_fall_back_sum_term_by_term() -> void:
 	assert_str(line).contains("health 0.50 x 1.00").contains("= 0.40")
 	world.teams[0].may_retreat = false
 	assert_str(BotMatchLines.fall_back_line(world, bot)).contains("retreat is off")
+
+
+func test_a_place_a_teammate_claimed_is_not_claimed_over() -> void:
+	var world: BotMatch = _world()
+	var team: MatchTeam = world.teams[0]
+	team.claim(1, 0)
+	var bot: MatchBot = world.bots[0]
+	bot.errand = ErrandChoice.FALL_BACK
+	bot.fall_back_spot = 0
+	bot.fall_back_place = world.place_position(0)
+	TeamTactics._run_errand(world, team, bot)
+	assert_str(bot.errand).is_equal(ErrandChoice.NONE)
+	assert_int(int(team.claims[0])).is_equal(1)
+	# Without claims, sharing a place is what the team does.
+	team.use_claims = false
+	bot.errand = ErrandChoice.FALL_BACK
+	TeamTactics._run_errand(world, team, bot)
+	assert_int(int(team.claims[0])).is_equal(0)
+
+
+func test_bots_come_back_in_waves_the_wave_after_next() -> void:
+	var rules := MatchRules.new()
+	assert_float(rules.respawn_wait(13.0)).is_equal_approx(17.0, 1e-6)
+	assert_float(rules.respawn_wait(20.0)).is_equal_approx(20.0, 1e-6)
+	assert_float(rules.respawn_wait(29.5)).is_equal_approx(10.5, 1e-6)
