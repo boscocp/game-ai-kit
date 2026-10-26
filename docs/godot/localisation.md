@@ -102,8 +102,12 @@ RTS and the fighting game, by the same rules, with what they added:
   the same English word for another sense -- checkers' "red" pieces, its
   "played" move, the bot match's "sprint" pace against the infiltration's
   "sprint" sound -- the name is shown through a key of its own (`SAID_AS`),
-  as L8 requires. In English the screen shows "blue team" where it showed
-  "blue".
+  as L8 requires. In English the bot match's watched line says "(blue
+  team)" where it said "(blue)"; its switches have a key per team, so they
+  still read "blue: claims on, ...". A kind of unit takes its article from
+  `RtsWords`' own keys ("a lab", "the tower", "3 workers"): Portuguese
+  gives a tower and a barracks different genders, so no sentence glues an
+  article before a name.
 - **English that is data, translated where shown, by shape.** The RTS
   rules (`ai_rts_core`, no table) word their refusals in English and the
   AIs read them; `RtsRefusal` copies their shapes as `TacticalRefusal`
@@ -114,13 +118,21 @@ RTS and the fighting game, by the same rules, with what they added:
   fight in `data/fights/` and holds each event it makes to a shape (it
   found "trade", which no shape had). The perception addon's eye reasons
   (`VisionShape.percept`) are copied the same way, in `InfiltrationWords`.
-- **Reasons made by the logic only to be read** -- an RTS queue's wish, a
-  focus's why, a fighting opponent's choice, the clone's "found" -- are
-  worded where they are made, through `tr()`, as the tactical match's are
-  (T79): nothing compares them, they are remade at every decision, and the
-  suites that read them pin English. A squad's arrow reasons are written
-  once, when the squad is made, so they are keys translated where the panel
-  shows them.
+- **Reasons the AI keeps are keys, not words.** An RTS queue's wish, a
+  squad's focus and its last arrow, the clone's "found" are kept as a
+  `Sentence` (`godot/game/sentence.gd`): the English key and its values,
+  a value a number, an identifier or another sentence. `RtsThinking` and
+  `FightingPanel` word it with `Sentence.translated` where they show it;
+  the overlays and the tests read `Sentence.english`. A fighting
+  opponent's decision is kept as identifiers -- the option drawn, whether
+  it was fumbled late or came out as another, the move or the step in --
+  and its `choice` stays the English it always was. So the AI's state and
+  every overlay are the same in any language, and a language switched mid
+  match rewords the panel at once. T80 first worded these where they were
+  made, as T79 had the tactical teams do; the review refused it -- the
+  owner's rule is that code and identifiers stay English and the prose is
+  translated where it is shown -- and T104 brings the tactical match to
+  the same shape.
 - **What stays English on screen**: a plan's step names and facts in the
   RTS (`build_lab`, `mortars_ready`), as the tactical planner's; a fighting
   move's name and the frame data's terms (`jab`, startup, active, recovery,
@@ -129,7 +141,7 @@ RTS and the fighting game, by the same rules, with what they added:
   speak to whoever edits the JSON, in its keys' language. The glossary
   defines the terms. The pad's legend line (`PadAsKeys.add_to`, in
   `game_shared`, which has no table) is still English: key and button
-  names, and the words "pad" and "stick".
+  names, and the words "pad" and "stick" (T103).
 - **Numbers.** A number a person reads as prose follows the language's
   decimal separator, through `Language.decimal`: the 2D racer's winning
   margin ("vence por 1,4 s") and the 3D racer's last lap time. Every other
@@ -155,7 +167,9 @@ RTS and the fighting game, by the same rules, with what they added:
   demo's lines too long in pt-BR (shortened, the bot match's split in two),
   and the tactical match's header too long in English as well -- a layout
   fix, not a translation one, so it is named in `NOT_YET_FITTED` and left
-  for a task.
+  for T102. Only a visible Label that does not wrap is measured: a Button,
+  a Label3D, a HUD drawn with `draw_string` and a panel shown only when
+  toggled are not.
 
 ## Measured on 4.7.2
 

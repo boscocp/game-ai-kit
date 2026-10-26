@@ -324,6 +324,9 @@ review.
 | T99 | A bandit chooses the fighting opponent's answers, during one fight | todo | `ai_bandit` (UCB1, epsilon-greedy), sums and counts with the mean computed on read; one bandit per T37 situation; ADR 0016's three conditions; writes N13; `CLAUDE.md` and N9's docstring once the owner confirms |
 | T100 | The bot match reads how well you play, during one match | todo | counts (Beta means, no Elo) set the other team's `aim_error` from a fixed table; the model is the bot match's (`python/gameaikit/botmatch/`); an event log under ADR 0017, not an N14 finding; writes N14 |
 | T101 | Utility choice as its own addon, out of `ai_teamwork` | todo | B.6: `ActionChoice`, `ErrandChoice` to `ai_utility`; `AimChoice`, `PassageChoice` examined; same seeds, same results; best before T64 |
+| T102 | The tactical match's header and status fit the window | todo | found by T80's width check: the header runs off the window in English too (`NOT_YET_FITTED`); the status has no margin in pt-BR |
+| T103 | The pad's legend line speaks Portuguese | todo | `PadAsKeys.add_to`'s line is English on every demo (`game_shared` has no table); a planted pad for the screen check |
+| T104 | The tactical AI keeps its reasons as keys, translated where shown | todo | T79 worded the tactical teams' reasons with `tr()` at decision time; T80's review moved the RTS and fighting AIs to `Sentence`; the same for tactical and the skirmish |
 
 ---
 
