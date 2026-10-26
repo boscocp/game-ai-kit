@@ -37,7 +37,7 @@ class_name LevelSounds
 extends RefCounted
 
 ## The kinds that carry a place and an urgency: what a guard says.
-const REPORTS: Array[String] = ["radio_report", "call_for_help", "alarm", "guard_shot"]
+const REPORTS: Array[String] = ["radio_report", "call_for_help", "alarm", "guard_shot"]  # not shown: an identifier
 ## How long a sound stays drawn, for the overlay's rings.
 const DRAWN_FOR: float = 1.5
 

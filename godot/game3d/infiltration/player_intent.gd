@@ -11,7 +11,7 @@ extends RefCounted
 
 ## Floor direction, x east and y south, length at most 1.
 var direction: Vector2 = Vector2.ZERO
-var stance: String = "standing"
+var stance: String = "standing"  # not shown: an identifier
 var sprint: bool = false
 ## Where a distraction is thrown to, or INF: nothing thrown.
 var throw_at: Vector2 = Vector2.INF

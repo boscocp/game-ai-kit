@@ -1,0 +1,14 @@
+en,pt_BR
+seek,seek
+arrive,arrive
+pursue,pursue
+seek + avoid,seek + avoid
+the force it asks for,a força que ele pede
+where it is going,para onde ele está indo
+cross: target; dot: quarry,cruz: alvo; ponto: a presa
+"braking circle, guess, look","círculo de freio, palpite, olhar"
+an obstacle,um obstáculo
+{seconds} s,{seconds} s
+{seconds} s  (paused),{seconds} s  (pausado)
+click: target  ·  space: pause  ·  .: one step  ·  R: again,clique: alvo  ·  espaço: pausa  ·  .: um passo  ·  R: de novo
+"{behaviour}: speed {speed}, force {force}, {distance} to go","{behaviour}: velocidade {speed}, força {force}, faltam {distance}"

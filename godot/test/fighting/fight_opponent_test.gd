@@ -7,6 +7,20 @@ extends GdUnitTestSuite
 
 var _data: FightData
 
+# English, whatever the machine speaks: the engine starts in the system's
+# locale, and these read the English the game writes (T80). The locale
+# found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
 
 ## A planted opponent: it asks to see `asked` frames late, and writes down
 ## the frame of every fight it is handed.
@@ -62,8 +76,8 @@ func test_a_level_draws_only_the_options_its_tactics_allow() -> void:
 			return option[0])
 	for decision: int in range(200):
 		easy._decide(neutral, 1)
-		var known: bool = allowed.any(func(option: String) -> bool: return easy.choice.begins_with(option))
-		assert_bool(known).override_failure_message("easy drew %s, past its first %d" % [easy.choice, tactics]).is_true()
+		assert_bool(easy.drawn in allowed).override_failure_message(
+			"easy drew %s, past its first %d" % [easy.drawn, tactics]).is_true()
 	assert_int(FightOpponent.SITUATIONS["neutral"].size()).is_greater(tactics)
 
 

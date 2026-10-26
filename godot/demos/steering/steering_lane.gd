@@ -36,11 +36,20 @@ var quarry_angle: float = 0.0
 var force: Vector2 = Vector2.ZERO
 var obstacles: Array[Vector2] = [Vector2(16, 10), Vector2(26, 17), Vector2(20, 22)]
 var radii := PackedFloat64Array([3.0, 3.5, 2.5])
+# The title as drawn: looked up once per language, not on every frame.
+var _shown_title: String
 
 
 func _init(which: String) -> void:
 	title = which
+	_shown_title = which
 	restart(Vector2(36, 14))
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED:
+		_shown_title = tr(title)
+		queue_redraw()
 
 
 ## Back to the start: the vehicle at the left edge, going nowhere.
@@ -101,7 +110,7 @@ func aim_point() -> Vector2:
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, SIZE * SCALE), Color(0.12, 0.13, 0.15))
 	draw_rect(Rect2(Vector2.ZERO, SIZE * SCALE), Color(0.4, 0.4, 0.45), false, 1.0)
-	draw_string(ThemeDB.fallback_font, Vector2(8, 18), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 16)
+	draw_string(ThemeDB.fallback_font, Vector2(8, 18), _shown_title, HORIZONTAL_ALIGNMENT_LEFT, -1, 16)
 	_draw_reasoning()
 	var at: Vector2 = vehicle.position * SCALE
 	draw_line(at, at + vehicle.velocity * VELOCITY_SECONDS * SCALE, VELOCITY_COLOUR, 3.0)

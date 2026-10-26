@@ -4,7 +4,10 @@
   "about": "The stealth example (T69, T70): guards read from data that perceive, grow aware, believe, search together, call for help and fight, on two hand-made levels and generated ones, in third person.",
   "owns": [
     "godot/game3d/infiltration/",
-    "godot/test/infiltration/"
+    "godot/test/infiltration/",
+    "godot/locale/infiltration.csv",
+    "godot/locale/infiltration.csv.import",
+    "godot/locale/infiltration.pt_BR.translation"
   ],
   "depends_on": [
     "ai_core",

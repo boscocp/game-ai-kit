@@ -50,9 +50,11 @@ func _init(side: int, seed_value: int) -> void:
 	_dice.seed = seed_value
 
 
-## Wish for `what` at `priority`, said to be because of `why`. A wish for
-## the same thing replaces the old one, so asking every decision is safe.
-func wish(what: String, priority: int, why: String) -> void:
+## Wish for `what` at `priority`, said to be because of `why`, a
+## `Sentence`: its English key and values, worded where it is shown (T80). A
+## wish for the same thing replaces the old one, so asking every decision is
+## safe.
+func wish(what: String, priority: int, why: Array) -> void:
 	forget(what)
 	var index: int = 0
 	while index < wishes.size() and wishes[index]["priority"] >= priority:
@@ -91,14 +93,15 @@ func commands(view: RtsSnapshot) -> Array[RtsCommand]:
 	return given
 
 
-## The top wish and why it waits, for the screen: "" when the queue is empty.
-func waiting_for(view: RtsSnapshot) -> String:
+## The top wish and why it waits, for the screen, as a `Sentence`: empty
+## when the queue is.
+func waiting_for(view: RtsSnapshot) -> Array:
 	if wishes.is_empty():
-		return ""
+		return []
 	var top: String = wishes[0]["what"]
 	if not view.can_pay(RtsKinds.cost(top)):
-		return "%s: saving up" % top
-	return "%s: %s" % [top, wishes[0]["why"]]
+		return Sentence.of("{kind}: saving up", {kind = top})  # shown through tr()
+	return Sentence.of("{kind}: {why}", {kind = top, why = wishes[0]["why"]})  # shown through tr()
 
 
 # The command that buys `what` now, or null when it cannot be had yet --
@@ -225,7 +228,7 @@ static func _fit_to_build_on(view: RtsSnapshot, cell: Vector2i, taken: Dictionar
 
 # Its own expansion's cell, when no base of anybody's stands near it.
 func _expansion_site(view: RtsSnapshot) -> Vector2i:
-	var region: String = "west expansion" if _side == RtsScenario.WEST else "east expansion"
+	var region: String = "west expansion" if _side == RtsScenario.WEST else "east expansion"  # not shown: an identifier
 	var cell: Vector2i = RtsScenario.REGIONS[region]["cell"]
 	for unit: Dictionary in view.units:
 		if unit["kind"] == RtsKinds.BASE and (unit["position"] as Vector2).distance_to(Vector2(cell)) < 4.0:

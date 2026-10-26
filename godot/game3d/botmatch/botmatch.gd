@@ -63,6 +63,7 @@ var _was_reloading: Dictionary = {}
 var _reload_speakers: Array[AudioStreamPlayer3D] = []
 ## The rifle in the person's hands, on the camera while they play.
 var _viewmodel := Viewmodel.new()
+var _pad := PadAsKeys.new()
 
 @onready var _drawing: BotMatchDrawing = $Drawing
 @onready var _map: BotMatchMap = $Interface/Map
@@ -73,20 +74,9 @@ var _viewmodel := Viewmodel.new()
 
 
 func _ready() -> void:
-	($Interface/Legend as Legend).set_entries([
-		[BotMatchDrawing.BLUE, "blue bot; its line runs to the spot it claimed"],
-		[BotMatchDrawing.RED, "red bot"],
-		[BotMatchDrawing.KEPT, "a spot the watched bot weighed: taller scored higher"],
-		[BotMatchDrawing.CHOSEN, "the spot it chose"],
-		[BotMatchDrawing.CLAIMED, "closed: a teammate claimed it"],
-		[BotMatchDrawing.EXPOSED, "dropped: no cover and no line of fire"],
-		[BotMatchDrawing.DROPPED, "dropped: too far, or outside its squad's area"],
-		[BotMatchDrawing.SIGHT, "the watched bot's sight lines"],
-	])
-	var pad := PadAsKeys.new()
-	pad.use(PAD_BUTTONS, [KEY_A, KEY_D, KEY_W, KEY_S], true)
-	add_child(pad)
-	pad.add_to(_legend)
+	_pad.use(PAD_BUTTONS, [KEY_A, KEY_D, KEY_W, KEY_S], true)
+	add_child(_pad)
+	_show_legend()
 	_viewmodel.visible = false
 	_camera.add_child(_viewmodel)
 	var sound: AudioStreamWAV = GunshotSound.make()
@@ -104,6 +94,29 @@ func _ready() -> void:
 		add_child(speaker)
 		_reload_speakers.append(speaker)
 	_new_match()
+	Language.apply_if_opened_alone(self)
+
+
+# The legend is drawn, so it is rebuilt in the language just chosen (T80);
+# the panel and the labels are rebuilt every frame anyway.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_show_legend()
+
+
+# The legend, then the pad's buttons under it when a pad is connected.
+func _show_legend() -> void:
+	_legend.set_entries([
+		[BotMatchDrawing.BLUE, tr("blue bot; its line runs to the spot it claimed")],
+		[BotMatchDrawing.RED, tr("red bot")],
+		[BotMatchDrawing.KEPT, tr("a spot the watched bot weighed: taller scored higher")],
+		[BotMatchDrawing.CHOSEN, tr("the spot it chose")],
+		[BotMatchDrawing.CLAIMED, tr("closed: a teammate claimed it")],
+		[BotMatchDrawing.EXPOSED, tr("dropped: no cover and no line of fire")],
+		[BotMatchDrawing.DROPPED, tr("dropped: too far, or outside its squad's area")],
+		[BotMatchDrawing.SIGHT, tr("the watched bot's sight lines")],
+	])
+	_pad.add_to(_legend)
 
 
 func _physics_process(delta: float) -> void:
@@ -133,7 +146,7 @@ func decision_overlay() -> Dictionary:
 	var bot: MatchBot = world.bots[_watched]
 	var team: MatchTeam = world.teams[bot.team]
 	var candidates: Array = []
-	var chosen: String = "none yet"
+	var chosen: String = "none yet"  # not shown: the overlay is the gate's
 	if team.last_choice.has(bot.id):
 		var choice: TacticalPositions.Choice = team.last_choice[bot.id][0]
 		var places: Array = team.last_choice[bot.id][1]
@@ -143,11 +156,11 @@ func decision_overlay() -> Dictionary:
 		chosen = world.place_id(places[choice.chosen]) if choice.chosen != -1 else "none"
 	if candidates.is_empty():
 		# On an errand, or not yet asked: say which, rather than show nothing.
-		var why: String = "on an errand: %s" % bot.errand if bot.errand != "" else "not chosen yet"
+		var why: String = "on an errand: %s" % bot.errand if bot.errand != "" else "not chosen yet"  # not shown
 		candidates.append({"spot": "none", "status": why, "score": 0.0})
 	var watched: Dictionary = {"bot": bot.id, "action": bot.action, "chosen": chosen, "candidates": candidates,
 			"aim": BotMatchLines.aim_overlay(bot), "errand": bot.errand if bot.errand != "" else "none",
-			"errands": bot.errand_weighing if not bot.errand_weighing.is_empty() else {"weighed": "not yet"},
+			"errands": bot.errand_weighing if not bot.errand_weighing.is_empty() else {"weighed": "not yet"},  # not shown
 			"passage": BotMatchLines.passage_overlay(bot), "actions": BotMatchLines.action_overlay(bot),
 			"health": _health_overlay(bot)}
 	return {"time": world.time, "watched": watched, "squads": _squads_overlay()}
@@ -156,7 +169,7 @@ func decision_overlay() -> Dictionary:
 # The watched bot's health (T68): how much, how long until it comes back,
 # and where it would hide to let it.
 func _health_overlay(bot: MatchBot) -> Dictionary:
-	var hiding: String = world.place_id(bot.hide_spot) if bot.hide_spot != -1 else "nowhere asked"
+	var hiding: String = world.place_id(bot.hide_spot) if bot.hide_spot != -1 else "nowhere asked"  # not shown
 	return {"health": bot.health, "comes back in": MatchHealth.delay_left(world.rules, bot, world.time),
 			"would hide at": hiding}
 
@@ -347,7 +360,7 @@ func _show() -> void:
 	_map.queue_redraw()
 	_hud.queue_redraw()
 	_place_camera()
-	_panel.text = _panel_text()
+	_panel.text = BotMatchLines.panel(world, _watched, _played, _thinking_shown)
 
 
 func _place_camera() -> void:
@@ -368,31 +381,3 @@ func _place_camera() -> void:
 	var centre := Vector3(world.arena.width / 2.0, 0.0, world.arena.depth / 2.0)
 	_camera.position = centre + offset + Vector3(0, _orbit_distance * 0.8, 0)
 	_camera.look_at(centre)
-
-
-func _panel_text() -> String:
-	var bot: MatchBot = world.bots[_watched]
-	if _played != -1:
-		var shown: Array = [world.time, world.score[0], world.score[1], "hide" if _thinking_shown else "show"]
-		return "%.0f s   blue %.0f - %.0f red     T give it back, V %s the AI's thinking" % shown
-	var over: String = "   (over)" if world.over() else ""
-	var lines: Array[String] = ["%.0f s   blue %.0f - %.0f red%s" % [world.time, world.score[0], world.score[1], over]]
-	for team: MatchTeam in world.teams:
-		var switches: Array = [team.name, _on(team.use_claims), _on(team.use_commander), _on(team.may_retreat)]
-		lines.append("%s: claims %s, commander %s, retreat %s" % switches)
-	var target: String = " at bot %d" % bot.target if bot.target != -1 else ""
-	var health: String = BotMatchHud.health_text(world.rules, bot, world.time)
-	var you: String = "  -- YOU: %d/%d ammo, %s" % [bot.ammo, world.rules.magazine, health] if _played == bot.id else ""
-	lines.append("watching bot %d (%s): %s%s%s" % [bot.id, world.teams[bot.team].name, bot.action, target, you])
-	lines.append(BotMatchLines.action_line(bot))
-	lines.append(BotMatchLines.aim_line(bot))
-	lines.append(BotMatchLines.errand_line(bot))
-	lines.append(BotMatchLines.passage_line(bot))
-	lines.append("1/2/3 blue's switches, Shift red's; Tab bot, T take it over, M map, C camera, F fast, P pause, N new, L arena")
-	if _played != -1:
-		lines.append("playing: WASD walk, Shift sprint, mouse turns, click fires, R reloads, Ctrl crouches, T gives it back")
-	return "\n".join(lines)
-
-
-static func _on(value: bool) -> String:
-	return "on" if value else "OFF"

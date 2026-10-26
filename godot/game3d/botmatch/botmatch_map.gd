@@ -75,7 +75,7 @@ func _draw_bar(at: Vector2, team: MatchTeam, index: int) -> void:
 	for mark: Array in [[thresholds.retreat_at, RETREAT_MARK], [thresholds.attack_at, ATTACK_MARK]]:
 		var x: float = at.x + BAR_WIDTH * float(mark[0]) / full
 		draw_line(Vector2(x, at.y - 2.0), Vector2(x, at.y + 8.0), mark[1], 2.0)
-	draw_string(ThemeDB.fallback_font, at + Vector2(0, 18.0), team.squad_states[index],
+	draw_string(ThemeDB.fallback_font, at + Vector2(0, 18.0), BotMatchWords.word(team.squad_states[index]),
 			HORIZONTAL_ALIGNMENT_LEFT, -1.0, 11)
 
 

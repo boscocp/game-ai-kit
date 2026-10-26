@@ -50,7 +50,7 @@ func _init(seated: FightOpponent, index: int) -> void:
 	opponent = seated
 	_index = index
 	reaction = seated.reaction
-	var asks_too_soon: String = "an opponent must see the fight at least %d frames late, and this one asks for %d"
+	var asks_too_soon: String = "an opponent must see the fight at least %d frames late, and this one asks for %d"  # not shown: a refusal for whoever edits the data, in its keys' English
 	if reaction < MINIMUM_REACTION:
 		refusal = asks_too_soon % [MINIMUM_REACTION, reaction]
 

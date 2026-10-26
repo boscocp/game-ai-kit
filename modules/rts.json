@@ -9,7 +9,10 @@
     "python/tests/test_fetch_rts_art.py",
     "spec/pddl/rts-build-order-domain.pddl",
     "spec/pddl/rts-build-order-problem.pddl",
-    "spec/pddl/rts-build-order.json"
+    "spec/pddl/rts-build-order.json",
+    "godot/locale/rts.csv",
+    "godot/locale/rts.csv.import",
+    "godot/locale/rts.pt_BR.translation"
   ],
   "depends_on": [
     "ai_behaviour",

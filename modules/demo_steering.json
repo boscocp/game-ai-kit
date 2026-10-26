@@ -3,7 +3,10 @@
   "kind": "example",
   "about": "Four vehicles, each force drawn.",
   "owns": [
-    "godot/demos/steering/"
+    "godot/demos/steering/",
+    "godot/locale/demo_steering.csv",
+    "godot/locale/demo_steering.csv.import",
+    "godot/locale/demo_steering.pt_BR.translation"
   ],
   "depends_on": [
     "ai_steering",

@@ -37,7 +37,7 @@ extends FightOpponent
 ## Where the published cloned player lives. Published by `make train-clone`.
 const PUBLISHED_PATH: String = "res://game/fighting/clone_weights.json"
 
-const SOURCES: Array[String] = ["ghost: exact", "ghost: nearest", "clone"]
+const SOURCES: Array[String] = ["ghost: exact", "ghost: nearest", "clone"]  # not shown: an identifier
 ## How a probability becomes a whole-number weight to draw by: per thousand.
 const PER: int = 1000
 
@@ -46,7 +46,11 @@ var player: ClonedPlayer
 ## Its last decision, for the panel: the situation in words, how it found the
 ## answers, and the answers it drew from with their weights.
 var seen_situation: Dictionary = {}
-var found: String = "nothing seen yet"
+var found: String = "nothing seen yet"  # not shown: an identifier
+## `found` as a `Sentence`, for the panel to word in the language on screen
+## (T80); and whether nothing it found could be done, so it guards.
+var found_said: Array = Sentence.of("nothing seen yet")  # shown through tr()
+var guards_instead: bool = false
 var considered: Array = []
 
 var _last: String = ""
@@ -64,7 +68,7 @@ func new_fight() -> void:
 	super()
 	_last = ""
 	seen_situation = {}
-	found = "nothing seen yet"
+	_found(Sentence.of("nothing seen yet"))  # shown through tr()
 	considered = []
 
 
@@ -96,29 +100,31 @@ func _weighted_options(_name: String, character: String) -> Array:
 		if int(weights[action]) > 0 and _has_option(character, action):
 			considered.append([action, int(weights[action])])
 	if considered.is_empty():
-		found += "; nothing it can do, so it guards"
-		considered = [["guard standing", 1]]
+		found += "; nothing it can do, so it guards"  # not shown: the overlay's English; the panel words the decision from its fields
+		guards_instead = true
+		considered = [["guard standing", 1]]  # not shown: an identifier
 	return considered
 
 
 # `{action: weight}` from the source, and `found` saying where it came from.
 func _answers() -> Dictionary:
 	if not player.is_loaded():
-		found = "no recorded player: " + player.error
+		_found(Sentence.of("no recorded player: {why}", {why = player.error}))  # shown through tr()
 		return {}
 	if Array(player.cases.features) != FightSituation.FEATURES:
-		found = "the recorded player was cut with other features (%s) -- run `make train-clone`" % ", ".join(
-			player.cases.features)
+		_found(Sentence.of("the recorded player was cut with other features ({features}) -- run `make train-clone`",  # shown through tr()
+			{features = ", ".join(player.cases.features)}))
 		return {}
 	match level:
 		"ghost: exact":
 			return _exact()
 		"ghost: nearest":
 			var nearest: Dictionary = player.cases.nearest(seen_situation)
-			found = "%d case(s), %d feature(s) apart" % [nearest["keys"].size(), nearest["distance"]]
+			var apart: Dictionary = {cases = nearest["keys"].size(), apart = nearest["distance"]}
+			_found(Sentence.of("{cases} case(s), {apart} feature(s) apart", apart))  # shown through tr()
 			return nearest["counts"]
 	var chances: Dictionary = player.model.probabilities(seen_situation)
-	found = "the model's probabilities"
+	_found(Sentence.of("the model's probabilities"))  # shown through tr()
 	var weights: Dictionary = {}
 	for action: String in chances:
 		weights[action] = roundi(chances[action] * PER)
@@ -129,9 +135,15 @@ func _answers() -> Dictionary:
 func _exact() -> Dictionary:
 	var counts: Dictionary = player.cases.exact(seen_situation)
 	if counts.is_empty():
-		found = "never met this one: all its play"
+		_found(Sentence.of("never met this one: all its play"))  # shown through tr()
 		return player.cases.everything()
 	var times: int = counts.values().reduce(func(sum: int, count: Variant) -> int: return sum + int(count), 0)
-	found = "met it %d time(s)" % times
+	_found(Sentence.of("met it {times} time(s)", {times = times}))  # shown through tr()
 	return counts
 
+
+# Where the answers came from, kept as a sentence and as its English.
+func _found(said: Array) -> void:
+	found_said = said
+	found = Sentence.english(said)
+	guards_instead = false

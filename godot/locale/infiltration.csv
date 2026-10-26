@@ -1,0 +1,68 @@
+en,pt_BR
+a guard's zones and bar: calm,as zonas e a barra de um guarda: calmo
+suspicious,desconfiado
+searching,procurando
+alert,alerta
+a body point the guard sees; red: hidden by a box,ponto do corpo visto; vermelho: atrás de caixa
+where the watched guard believes you are,onde o guarda assistido acredita que você está
+the spot it was given to search; grey: searched,o lugar que ele recebeu para vasculhar; cinza: vasculhado
+a sound's reach along the level,até onde um som chega pelo nível
+CALLING FOR HELP,PEDINDO AJUDA
+heard: {source},ouviu: {source}
+off-screen hearing halved: {halving},audição fora da tela pela metade: {halving}
+E: take the guard down,E: derrubar o guarda
+"ESCAPED -- N for another try, L for another level","ESCAPOU -- N para tentar de novo, L para outro nível"
+"CAUGHT -- N for another try, L for another level","PEGO -- N para tentar de novo, L para outro nível"
+health {health}   {stance} sprinting,vida {health}   {stance} correndo
+health {health}   {stance},vida {health}   {stance}
+  eye: {why},  olho: {why}
+nothing,nada
+"1 belief {belief}, 2 coordinator {coordinator}, 3 arbiter {arbiter}, 4 accumulator {accumulator}, 5 off-screen halving {halving}","1 crença {belief}, 2 coordenador {coordinator}, 3 árbitro {arbiter}, 4 acumulador {accumulator}, 5 metade fora da tela {halving}"
+on,ligado
+OFF,DESLIGADO
+"guard {guard} ({type}): {phase}, sight {sight}, sound {sound}, {action}","guarda {guard} ({type}): {phase}, visão {sight}, som {sound}, {action}"
+"guard {guard} ({type}): {phase}, sight {sight}, sound {sound}, downed","guarda {guard} ({type}): {phase}, visão {sight}, som {sound}, derrubado"
+{clear} of {points} points clear; the stance needs {needed},{clear} de {points} pontos à vista; a postura pede {needed}
+in {zone},na zona {zone}
+generated level {seed},nível gerado {seed}
+unaware,desatento
+patrol,ronda
+glance,olhar de relance
+investigate,investigar
+search,vasculhar
+cover a way out,cobrir uma saída
+report,relatar
+call for help,pedir ajuda
+raise the alarm,dar o alarme
+check on a partner,ver como está o parceiro
+engage,enfrentar
+flank,flanquear
+take cover,proteger-se
+return,voltar
+sentry,sentinela
+shooter,atirador
+flanker,flanqueador
+standing,em pé
+crouched,agachado
+prone,deitado
+beside,ao lado
+ahead,à frente
+far,distante
+sight,visão
+body,um corpo
+footstep,passos
+thrown_object,objeto arremessado
+open_door,porta aberta
+shot,tiro
+call_for_help,pedido de ajuda
+creep,passos furtivos
+takedown,derrubada
+radio_report,relato pelo rádio
+alarm,alarme
+guard_shot,tiro de guarda
+check_in,chamada pelo rádio
+partner_quiet,parceiro em silêncio
+a sprint,uma corrida
+the warehouse,o armazém
+the courtyard,o pátio
+outside every zone,fora de todas as zonas

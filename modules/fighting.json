@@ -12,7 +12,10 @@
     "tools/fighters/",
     "python/gameaikit/cloning/",
     "python/tests/test_cloning.py",
-    "python/tests/test_cloning_vectors.py"
+    "python/tests/test_cloning_vectors.py",
+    "godot/locale/fighting.csv",
+    "godot/locale/fighting.csv.import",
+    "godot/locale/fighting.pt_BR.translation"
   ],
   "depends_on": [
     "ai_learning",

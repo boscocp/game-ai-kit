@@ -6,6 +6,20 @@ extends GdUnitTestSuite
 
 const StagedRaid := preload("res://test/rts/staged_raid.gd")
 
+# English, whatever the machine speaks: the engine starts in the system's
+# locale, and these read the English the game writes (T80). The locale
+# found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
 
 func test_the_games_domain_is_a_byte_for_byte_copy_of_the_spec() -> void:
 	var spec: String = ProjectSettings.globalize_path("res://").path_join("../spec/pddl/rts-build-order.json")
@@ -59,8 +73,8 @@ func test_the_top_wish_waits_and_nothing_below_it_spends_meanwhile() -> void:
 	var world: RtsWorld = RtsScenario.start(1)
 	world.set_funds(RtsScenario.WEST, 120)
 	var queue := EconomyQueue.new(RtsScenario.WEST, 1)
-	queue.wish(RtsKinds.BARRACKS, 70, "planted: dearer than what is held")
-	queue.wish(RtsKinds.WORKER, 50, "planted: affordable, but below")
+	queue.wish(RtsKinds.BARRACKS, 70, Sentence.of("planted: dearer than what is held"))
+	queue.wish(RtsKinds.WORKER, 50, Sentence.of("planted: affordable, but below"))
 	var given: Array[RtsCommand] = queue.commands(RtsSnapshot.of(world, RtsScenario.WEST))
 	for command: RtsCommand in given:
 		assert_str(command.kind).is_not_equal(RtsCommand.TRAIN)
@@ -157,7 +171,7 @@ func test_runners_focus_the_mortar_they_beat_before_a_shield_and_a_worker() -> v
 	var view: RtsSnapshot = RtsSnapshot.of(world, 0)
 	var scored: Array[Dictionary] = FocusFire.scores(view, view.mine(), Vector2(5.5, 4.5), Squad.NEAR)
 	assert_int(scored[0]["id"]).is_equal(mortar.id)
-	assert_str(scored[0]["why"]).contains("we beat it")
+	assert_str(Sentence.english(scored[0]["why"])).contains("we beat it")
 	assert_int(scored[-1]["id"]).is_equal(worker.id)
 	assert_bool(scored.any(func(entry: Dictionary) -> bool: return entry["id"] == shield.id)).is_true()
 
@@ -177,7 +191,6 @@ func test_a_member_that_struck_the_nearest_is_turned_to_the_squads_focus() -> vo
 	assert_int(given.size()).is_equal(1)
 	assert_int(given[0].target_id).is_equal(mortar.id)
 	assert_bool(squad.members[0] in given[0].unit_ids).is_true()
-
 
 
 func test_a_trained_step_waits_for_its_producer_and_buys_a_squad() -> void:

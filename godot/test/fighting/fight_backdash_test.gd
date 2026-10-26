@@ -14,6 +14,20 @@ const JAB: int = FightInput.LIGHT_PUNCH
 
 var _data: FightData
 
+# English, whatever the machine speaks: the engine starts in the system's
+# locale, and these read the English the game writes (T80). The locale
+# found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
 
 func before_test() -> void:
 	_data = FightData.read()

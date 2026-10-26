@@ -35,9 +35,10 @@ var _thinking: bool = true
 var _carried: float = 0.0
 var _yaw: float = 0.0
 var _pitch: float = -0.3
-var _stance: String = "standing"
+var _stance: String = "standing"  # not shown: an identifier
 ## The one-shot wishes the input gathered since the last step.
 var _pending := PlayerIntent.new()
+var _pad := PadAsKeys.new()
 
 @onready var _drawing: InfiltrationDrawing = $Drawing
 @onready var _camera: Camera3D = $Camera
@@ -48,21 +49,33 @@ var _pending := PlayerIntent.new()
 
 
 func _ready() -> void:
-	_legend.set_entries([
-		[InfiltrationDrawing.PHASES[0], "a guard's zones and bar: calm"],
-		[InfiltrationDrawing.PHASES[1], "suspicious"],
-		[InfiltrationDrawing.PHASES[2], "searching"],
-		[InfiltrationDrawing.PHASES[3], "alert"],
-		[InfiltrationDrawing.CLEAR, "a body point the guard sees; red: hidden by a box"],
-		[InfiltrationDrawing.BELIEF, "where the watched guard believes you are"],
-		[InfiltrationDrawing.SPOT, "the spot it was given to search; grey: searched"],
-		[InfiltrationDrawing.SOUND, "a sound's reach along the level"],
-	])
-	var pad := PadAsKeys.new()
-	pad.use(PAD_BUTTONS, [KEY_A, KEY_D, KEY_W, KEY_S], true)
-	add_child(pad)
-	pad.add_to(_legend)
+	_pad.use(PAD_BUTTONS, [KEY_A, KEY_D, KEY_W, KEY_S], true)
+	add_child(_pad)
+	_show_legend()
 	_new_world()
+	Language.apply_if_opened_alone(self)
+
+
+# The legend is drawn, so it is rebuilt in the language just chosen (T80);
+# the panel and the guards' labels are rebuilt every frame anyway.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_show_legend()
+
+
+# The legend, then the pad's buttons under it when a pad is connected.
+func _show_legend() -> void:
+	_legend.set_entries([
+		[InfiltrationDrawing.PHASES[0], tr("a guard's zones and bar: calm")],
+		[InfiltrationDrawing.PHASES[1], tr("suspicious")],
+		[InfiltrationDrawing.PHASES[2], tr("searching")],
+		[InfiltrationDrawing.PHASES[3], tr("alert")],
+		[InfiltrationDrawing.CLEAR, tr("a body point the guard sees; red: hidden by a box")],
+		[InfiltrationDrawing.BELIEF, tr("where the watched guard believes you are")],
+		[InfiltrationDrawing.SPOT, tr("the spot it was given to search; grey: searched")],
+		[InfiltrationDrawing.SOUND, tr("a sound's reach along the level")],
+	])
+	_pad.add_to(_legend)
 
 
 func _physics_process(delta: float) -> void:
@@ -114,9 +127,9 @@ func _unhandled_input(event: InputEvent) -> void:
 func _key(keycode: Key) -> void:
 	match keycode:
 		KEY_C:
-			_stance = "standing" if _stance == "crouched" else "crouched"
+			_stance = "standing" if _stance == "crouched" else "crouched"  # not shown: an identifier
 		KEY_Z:
-			_stance = "standing" if _stance == "prone" else "prone"
+			_stance = "standing" if _stance == "prone" else "prone"  # not shown: an identifier
 		KEY_G:
 			_pending.throw_at = _aim_point()
 		KEY_E:
@@ -159,7 +172,7 @@ func _new_world() -> void:
 		level = InfiltrationLevel.read(InfiltrationLevel.HAND_MADE[_level_index])
 	else:
 		var generated: int = _seed + _level_index
-		level = InfiltrationLevel.read(LevelGenerator.make(generated), "generated %d" % generated)
+		level = InfiltrationLevel.read(LevelGenerator.make(generated), "generated %d" % generated)  # not shown as written: InfiltrationWords.level words it
 	world = InfiltrationWorld.make(level, rules, _seed)
 	world.sounds.on_screen = _on_screen
 	_watched = mini(_watched, world.guards.size() - 1)
@@ -193,7 +206,7 @@ func _show() -> void:
 	_radar.watched = _watched
 	_hud.queue_redraw()
 	_radar.queue_redraw()
-	_panel.text = InfiltrationText.panel(world, _watched) if _thinking else world.level.name
+	_panel.text = InfiltrationText.panel(world, _watched) if _thinking else InfiltrationWords.level(world.level.name)
 
 
 # Behind the player and above, looking the way the mouse turned it: `_yaw`

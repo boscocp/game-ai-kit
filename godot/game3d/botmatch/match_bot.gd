@@ -31,14 +31,14 @@
 class_name MatchBot
 extends RefCounted
 
-const DEAD: String = "dead"
-const RELOAD: String = "reload"
-const FALL_BACK: String = "fall back"
-const SHOOT: String = "shoot"
-const MOVE: String = "move"
-const HOLD: String = "hold"
+const DEAD: String = "dead"  # shown through tr()
+const RELOAD: String = "reload"  # shown through tr()
+const FALL_BACK: String = "fall back"  # shown through tr()
+const SHOOT: String = "shoot"  # shown through tr()
+const MOVE: String = "move"  # shown through tr()
+const HOLD: String = "hold"  # shown through tr()
 ## Turn towards a shot it heard.
-const LOOK: String = "look"
+const LOOK: String = "look"  # shown through tr()
 ## A person is driving it.
 const PLAYED: String = "played"
 ## Facing within this of the target, a shot may be taken.
@@ -49,11 +49,11 @@ const ARRIVED: float = 0.3
 const ACTIONS: String = "res://game3d/botmatch/actions.json"
 
 ## Postures: stand or crouch.
-const STAND: String = "stand"
-const CROUCH: String = "crouch"
+const STAND: String = "stand"  # shown through tr()
+const CROUCH: String = "crouch"  # shown through tr()
 ## Paces: walk or sprint.
-const WALK: String = "walk"
-const SPRINT: String = "sprint"
+const WALK: String = "walk"  # shown through tr()
+const SPRINT: String = "sprint"  # shown through tr()
 ## Enemies remembered further than this are no danger to its posture.
 const DANGER_METRES: float = 20.0
 
@@ -75,7 +75,7 @@ var health: int = 100
 var ammo: int = 20
 ## Which weapon it holds (`MatchSupply.RIFLE` or `POWER`), the rounds it
 ## has beyond the magazine, and its kills since it last died.
-var weapon: String = "rifle"
+var weapon: String = "rifle"  # shown through tr()
 var reserve: int = 0
 var streak: int = 0
 ## An errand its team's supply sent it on (`MatchSupply.RESUPPLY`, `FETCH`,

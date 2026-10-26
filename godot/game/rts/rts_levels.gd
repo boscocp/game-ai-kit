@@ -38,8 +38,8 @@ extends RefCounted
 ## normal beat easy 17 - 3.
 static func presets() -> Array[Difficulty]:
 	return [
-		Difficulty.new("easy", 0, 1, 0.6),
-		Difficulty.new("normal", 4, 1, 0.2),
+		Difficulty.new("easy", 0, 1, 0.6),  # not shown: an identifier
+		Difficulty.new("normal", 4, 1, 0.2),  # not shown: an identifier
 	]
 
 

@@ -111,7 +111,7 @@ func _init(body_radius: float, source: Variant = ARENA) -> void:
 		spawns[team] = places
 	for team: String in data.get("resupply", {}):
 		resupply[team] = Vector2(float(data["resupply"][team][0]), float(data["resupply"][team][1]))
-	if data.has("power"):
+	if data.has("power"):  # not shown
 		power_place = Vector2(float(data["power"][0]), float(data["power"][1]))
 	heights = _floor_heights()
 	walk = _walk_grid(body_radius)

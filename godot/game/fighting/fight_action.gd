@@ -13,8 +13,8 @@ class_name FightAction
 extends RefCounted
 
 ## Every action a fighter can be read as doing.
-const ACTIONS: Array[String] = ["step in", "step out", "crouch", "jump", "high", "mid", "low", "overhead", "throw",
-		"guard standing", "guard crouching", "evade"]
+const ACTIONS: Array[String] = ["step in", "step out", "crouch", "jump", "high", "mid", "low", "overhead", "throw",  # shown through tr(): FightWords.word says each action
+		"guard standing", "guard crouching", "evade"]  # shown through tr(): FightWords.word says each action
 
 
 ## What fighter `index` is doing in `state`, as one of `ACTIONS`, or "" when
@@ -22,19 +22,19 @@ const ACTIONS: Array[String] = ["step in", "step out", "crouch", "jump", "high",
 static func of(state: FightState, index: int, data: FightData) -> String:
 	var fighter: FighterState = state.fighters[index]
 	if fighter.is_airborne() or fighter.stun_kind == "takeoff":
-		return "jump"
+		return "jump"  # not shown: an identifier
 	if fighter.move != "":
 		return data.move(fighter.character, fighter.move)["height"]
 	if fighter.stun_kind == FightBackdash.KIND:
-		return "evade"
+		return "evade"  # not shown: an identifier
 	if fighter.stun_kind == "block":
-		return "guard crouching" if fighter.crouching else "guard standing"
+		return "guard crouching" if fighter.crouching else "guard standing"  # not shown: an identifier
 	if fighter.stun > 0:
 		return ""
 	if fighter.crouching:
-		return "crouch"
+		return "crouch"  # not shown: an identifier
 	var walking: int = FightInput.walk_direction(fighter.held_before)
 	if walking == 0:
 		return ""
 	var toward: int = signi(state.fighters[1 - index].x - fighter.x)
-	return "step in" if walking == toward else "step out"
+	return "step in" if walking == toward else "step out"  # not shown: an identifier

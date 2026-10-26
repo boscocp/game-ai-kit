@@ -1,0 +1,46 @@
+en,pt_BR
+easy,fácil
+normal,normal
+hard,difícil
+you,você
+easy AI,IA fácil
+normal AI,IA normal
+hard AI,IA difícil
+dot: where the AI steers,ponto: para onde a IA mira
+bar: where it must be braking,barra: onde ela já deve frear
+"yellow bar: brake here, you","barra amarela: frear aqui, você"
+line: it must be slow here,linha: aqui ela precisa ir devagar
+line: only top speed limits it,linha: só a velocidade máxima a limita
+"YOU AGAINST THE {level} AI, {laps} laps","VOCÊ CONTRA A IA {level}, {laps} voltas"
+  (paused),  (pausado)
+arrows or WASD drive  ·  1-3 the AI's level,setas ou WASD dirigem  ·  1-3 o nível da IA
+R again  ·  P pause  ·  Tab watch the three AIs,R de novo  ·  P pausa  ·  Tab assistir às três IAs
+you: {car},você: {car}
+AI:  {car},IA:  {car}
+"What the AI does, every frame:","O que a IA faz, a cada quadro:"
+"· steers at the white dot, {metres} m down the line","· mira no ponto branco, {metres} m adiante na linha"
+"· keeps to the speed the line allows: red, slow","· respeita a velocidade que a linha permite: vermelho, devagar"
+· must be braking by the white bar (yours: yellow),· tem de estar freando na barra branca (a sua: amarela)
+· dares {percent}% of the tyres' grip,· arrisca {percent}% da aderência dos pneus
+· steps aside to pass a slower car,· desvia para passar um carro mais lento
+Harder AIs dare more grip: they brake later.,IAs mais difíceis arriscam mais aderência: freiam mais tarde.
+Same car as yours; it starts on the inside.,O mesmo carro que o seu; ela larga por dentro.
+WATCHING THE THREE AIs,ASSISTINDO ÀS TRÊS IAs
+1-3 follow one  ·  A alone  ·  R again  ·  Tab race them,1-3 seguir uma  ·  A só ela  ·  R de novo  ·  Tab correr contra elas
+"Same car, three drivers, easy starting in front: the harder ones pass it.","Mesmo carro, três pilotos, a fácil largando na frente: as mais difíceis a passam."
+"Their bar sits closer to each corner, their line greener.","A barra delas fica mais perto de cada curva, a linha mais verde."
+"lap {lap}, {speed} km/h","volta {lap}, {speed} km/h"
+"lap {lap}/{laps}, {speed} km/h, {place}","volta {lap}/{laps}, {speed} km/h, {place}"
+You win,Você vence
+The {level} AI wins,A IA {level} vence
+You win by {seconds} s  ·  R to race again,Você vence por {seconds} s  ·  R para correr de novo
+The {level} AI wins by {seconds} s  ·  R to race again,A IA {level} vence por {seconds} s  ·  R para correr de novo
+BRAKE,FREIO
+throttle,acelerador
+coasting,embalado
+{speed} km/h   {pedal},{speed} km/h   {pedal}
+{speed} km/h   {pedal}   ON THE GRASS,{speed} km/h   {pedal}   NA GRAMA
+1st,1º
+2nd,2º
+3rd,3º
+4th,4º

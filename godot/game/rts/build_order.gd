@@ -142,19 +142,19 @@ static func _decompose(held: PackedStringArray, goal: PackedStringArray) -> Dict
 			makes[fact] = true
 		domain.add_primitive(action.name, needs, makes)
 	for fact: String in RECIPES:
-		domain.add_method("get " + fact, "have it", {fact: true}, [] as Array[String])
+		domain.add_method("get " + fact, "have it", {fact: true}, [] as Array[String])  # not shown: the HTN's names
 		var subtasks: Array[String] = []
 		for part: String in RECIPES[fact]:
 			subtasks.append(part if BUYS.has(part) else "get " + part)
-		domain.add_method("get " + fact, "make it", {}, subtasks)
+		domain.add_method("get " + fact, "make it", {}, subtasks)  # not shown: the HTN's names
 	var top: Array[String] = []
 	for fact: String in goal:
 		top.append("get " + fact)
-	domain.add_method("the goal", "in order", {}, top)
+	domain.add_method("the goal", "in order", {}, top)  # not shown: the HTN's names
 	var world: Dictionary = {}
 	for fact: String in held:
 		world[fact] = true
-	var found: BehaviourPlan = HtnPlanner.new().plan(domain, world, "the goal", BUDGET)
+	var found: BehaviourPlan = HtnPlanner.new().plan(domain, world, "the goal", BUDGET)  # not shown
 	return {"steps": PackedStringArray(found.steps), "solved": found.solved, "partial": false,
 		"visited": found.visited}
 

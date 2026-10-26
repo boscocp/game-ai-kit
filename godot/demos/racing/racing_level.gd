@@ -48,7 +48,7 @@ func _init(name_shown: String, aim_distance: float, margin: float, drift: float)
 ## its wheels on the grass, up to two seconds over three laps.
 static func ladder() -> Array[RacingLevel]:
 	return [
-		RacingLevel.new("easy", 8.0, 0.75, 2.0),
-		RacingLevel.new("normal", 12.0, 0.84, 1.0),
-		RacingLevel.new("hard", 16.0, 0.97, 0.3),
+		RacingLevel.new("easy", 8.0, 0.75, 2.0),  # shown through tr()
+		RacingLevel.new("normal", 12.0, 0.84, 1.0),  # shown through tr()
+		RacingLevel.new("hard", 16.0, 0.97, 0.3),  # shown through tr()
 	]

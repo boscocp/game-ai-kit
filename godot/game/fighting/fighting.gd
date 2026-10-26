@@ -33,9 +33,9 @@
 class_name FightingExample
 extends Node2D
 
-const MODES: Array[String] = ["stand", "guard standing", "guard crouching", "jab", "throw", "low kick",
-		"anti-air (sees you now)", "opponent: easy", "opponent: medium", "opponent: hard", "learner: easy",
-		"learner: medium", "learner: hard", "ghost: exact", "ghost: nearest", "clone"]
+const MODES: Array[String] = ["stand", "guard standing", "guard crouching", "jab", "throw", "low kick",  # shown through tr(): FightWords.word says each mode
+		"anti-air (sees you now)", "opponent: easy", "opponent: medium", "opponent: hard", "learner: easy",  # shown through tr(): FightWords.word says each mode
+		"learner: medium", "learner: hard", "ghost: exact", "ghost: nearest", "clone"]  # shown through tr(): FightWords.word says each mode
 const OPPONENT_MODE: String = "opponent: "
 ## The same levels with an n-gram behind them, learning you as you fight (T17).
 const LEARNER_MODE: String = "learner: "
@@ -88,6 +88,7 @@ var _kept: bool = false
 var _characters: Array[String] = ["lancer", "dancer"]
 # Back tapped twice becomes the evade bit before the frame is logged (wave 86).
 var _double_tap: FightDoubleTap = FightDoubleTap.new()
+var _pad := PadAsKeys.new()
 
 @onready var _view: FightView = $FightView
 @onready var _status: Label = $Interface/Status
@@ -96,20 +97,25 @@ var _double_tap: FightDoubleTap = FightDoubleTap.new()
 
 
 func _ready() -> void:
-	_legend.set_entries([
-		[FightView.SIDES[0], "left health bar: you (player one)"],
-		[FightView.SIDES[1], "right health bar: the dummy (player two)"],
-		[FightView.HURTBOX, "outline: hurtbox, where it can be hit"],
-		[FightView.INVULNERABLE, "grey outline: evading, nothing can hit it"],
-		[FightView.HITBOX, "red box: hitbox, where it reaches"],
-		[FightView.THROW, "orange box: a throw, which no guard stops"],
-		[FightView.STUNNED_SPRITE, "paler: stunned, taking off, landing or evading"],
-	] as Array[Array])
-	var pad := PadAsKeys.new()
-	pad.use(PAD_BUTTONS, [KEY_A, KEY_D, KEY_W, KEY_S])
-	add_child(pad)
-	pad.add_to(_legend)
+	_pad.use(PAD_BUTTONS, [KEY_A, KEY_D, KEY_W, KEY_S])
+	add_child(_pad)
+	_show_legend()
 	restart()
+	Language.apply_if_opened_alone(self)
+
+
+# The legend, then the pad's buttons under it when a pad is connected.
+func _show_legend() -> void:
+	_legend.set_entries([
+		[FightView.SIDES[0], tr("left health bar: you (player one)")],
+		[FightView.SIDES[1], tr("right health bar: the dummy (player two)")],
+		[FightView.HURTBOX, tr("outline: hurtbox, where it can be hit")],
+		[FightView.INVULNERABLE, tr("grey outline: evading, nothing can hit it")],
+		[FightView.HITBOX, tr("red box: hitbox, where it reaches")],
+		[FightView.THROW, tr("orange box: a throw, which no guard stops")],
+		[FightView.STUNNED_SPRITE, tr("paler: stunned, taking off, landing or evading")],
+	] as Array[Array])
+	_pad.add_to(_legend)
 
 
 func _physics_process(_delta: float) -> void:
@@ -213,9 +219,14 @@ func keep_fight() -> void:
 		fights_kept += 1
 
 
+# Kept when the window closes; and rebuilt in the language just chosen
+# (T80): the status and the panel are set from code, and the legend is drawn.
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		keep_fight()
+	elif what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_show_legend()
+		_refresh()
 
 
 ## What the frame is resolving with: each fighter's move, the frame of it and
@@ -226,7 +237,7 @@ func decision_overlay() -> Dictionary:
 	var fighters: Array[Dictionary] = []
 	for fighter: FighterState in state.fighters:
 		fighters.append(_fighter_overlay(fighter))
-	var happened: String = ", ".join(state.events) if not state.events.is_empty() else "nothing connected"
+	var happened: String = ", ".join(state.events) if not state.events.is_empty() else "nothing connected"  # not shown: the gate's overlay
 	return {"frame": state.frame, "fighters": fighters, "events": happened, "dummy": dummy_mode,
 			"opponent": opponent_overlay()}
 
@@ -236,7 +247,7 @@ func decision_overlay() -> Dictionary:
 ## is scripted or the opponent has not seen the fight yet.
 func opponent_overlay() -> Dictionary:
 	if opponent == null:
-		return {"level": "none, the dummy is scripted", "situation": "none", "seen_frame": -1, "choice": "none"}
+		return {"level": "none, the dummy is scripted", "situation": "none", "seen_frame": -1, "choice": "none"}  # not shown
 	var shown: Dictionary = {"level": opponent.level, "reaction": seat.reaction, "situation": opponent.situation,
 			"seen_frame": opponent.seen_frame, "choice": opponent.choice}
 	var learner := opponent as FightModelOpponent
@@ -252,9 +263,9 @@ func opponent_overlay() -> Dictionary:
 # answers came from and what it drew among.
 func _clone_overlay(imitator: FightCloneOpponent) -> Dictionary:
 	var seen: Dictionary = imitator.seen_situation
-	return {"imitates": cloned.trained_on.get("player", "nobody: " + cloned.error),
-			"situation_words": cloned.cases.key_of(seen) if cloned.is_loaded() and not seen.is_empty() else "nothing seen yet",
-			"found": imitator.found, "considered": str(imitator.considered) if not imitator.considered.is_empty() else "nothing yet"}
+	return {"imitates": cloned.trained_on.get("player", "nobody: " + cloned.error),  # not shown
+			"situation_words": cloned.cases.key_of(seen) if cloned.is_loaded() and not seen.is_empty() else "nothing seen yet",  # not shown
+			"found": imitator.found, "considered": str(imitator.considered) if not imitator.considered.is_empty() else "nothing yet"}  # not shown
 
 
 # What the learner expects, from which context, and its table.
@@ -262,8 +273,8 @@ func _model_overlay(learner: FightModelOpponent) -> Dictionary:
 	var table: PackedStringArray = learner.model.rows()
 	var context: String = learner.expected_after
 	return {"expects": learner.expected, "confidence": learner.confidence, "answered": learner.answered,
-			"expected_after": context if context != "" else "nothing seen yet",
-			"table": table if not table.is_empty() else PackedStringArray(["nothing counted yet"])}
+			"expected_after": context if context != "" else "nothing seen yet",  # not shown
+			"table": table if not table.is_empty() else PackedStringArray(["nothing counted yet"])}  # not shown
 
 
 func _fighter_overlay(fighter: FighterState) -> Dictionary:
@@ -273,7 +284,7 @@ func _fighter_overlay(fighter: FighterState) -> Dictionary:
 			"hitbox": str(hitbox) if not hitbox.is_empty() else "none", "hurtbox": str(FightBoxes.hurtbox(fighter, data)),
 			"height": data.move(fighter.character, fighter.move)["height"] if fighter.move != "" else "none",
 			"crouching": fighter.crouching, "evading": _evading(fighter),
-			"stun": fighter.stun, "buffered": fighter.buffered if fighter.buffered != "" else "nothing",
+			"stun": fighter.stun, "buffered": fighter.buffered if fighter.buffered != "" else "nothing",  # not shown: an identifier
 			"health": fighter.health}
 
 
@@ -281,8 +292,8 @@ func _fighter_overlay(fighter: FighterState) -> Dictionary:
 func _evading(fighter: FighterState) -> String:
 	var frame: int = FightBackdash.frame_of(fighter, data)
 	if frame == 0:
-		return "not evading"
-	return "frame %d, %s" % [frame, "invulnerable" if FightBackdash.invulnerable(fighter, data) else "cannot guard"]
+		return "not evading"  # not shown: the gate's overlay
+	return "frame %d, %s" % [frame, "invulnerable" if FightBackdash.invulnerable(fighter, data) else "cannot guard"]  # not shown
 
 
 func _held_keys() -> int:
@@ -327,10 +338,15 @@ func _refresh() -> void:
 	if not is_node_ready():
 		return
 	if data.refusal != "":
-		_status.text = "the frame data was refused: " + data.refusal
+		_status.text = tr("the frame data was refused: {why}").format({why = data.refusal})
 		return
 	_view.show_fight(state, data)
-	_status.text = ("A/D walk, W jump, S crouch, U/I punch, J/K kick, S+I uppercut, L throw, O or back twice evade, hold away to guard\n"
-			+ "C swap characters  ·  M dummy: %s  ·  P pause, space one frame  ·  R restart" % dummy_mode
-			+ ("\nrecording: %d fight(s) kept in data/fights/" % fights_kept if recording else ""))
+	var lines: Array[String] = [
+		tr("A/D walk, W jump, S crouch, U/I punch, J/K kick, S+I uppercut, L throw, O or back twice evade, hold away to guard"),
+		tr("C swap characters  ·  M dummy: {mode}  ·  P pause, space one frame  ·  R restart").format({
+			mode = FightWords.word(dummy_mode)}),
+	]
+	if recording:
+		lines.append(tr("recording: {count} fight(s) kept in data/fights/").format({count = fights_kept}))
+	_status.text = "\n".join(lines)
 	_panel.text = FightingPanel.describe(state, data, paused, seat)

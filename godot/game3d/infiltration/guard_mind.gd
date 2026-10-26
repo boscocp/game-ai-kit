@@ -14,7 +14,7 @@
 class_name GuardMind
 extends RefCounted
 
-const STIMULI: Array[String] = ["sight", "sound"]
+const STIMULI: Array[String] = ["sight", "sound"]  # not shown: an identifier
 
 var type: GuardType
 var awareness: Dictionary[String, Awareness] = {}
@@ -39,7 +39,7 @@ func step(percept: GuardPercept, now: float, seconds: float, rate_scale: float =
 	var sound_rate: float = percept.loudness * float(type.hearing["heard_rate"]) * rate_scale
 	awareness["sound"].step(type.awareness, hearing, sound_rate, seconds, now)
 	if seeing:
-		memory.remember(percept.seen_place, now, "sight")
+		memory.remember(percept.seen_place, now, "sight")  # not shown: an identifier
 	elif hearing:
 		memory.remember(percept.heard_place, now, percept.heard_kind)
 

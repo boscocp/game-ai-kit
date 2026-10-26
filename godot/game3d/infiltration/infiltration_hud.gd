@@ -19,6 +19,12 @@ const TICK: Color = Color(1, 1, 1, 0.9)
 const CALLING: Color = Color(1.0, 0.3, 0.3)
 const HEARD: Color = Color(0.4, 0.85, 1.0)
 
+## The end of a try, by `InfiltrationWorld.outcome`: one sentence each.
+const OUTCOMES: Dictionary = {
+	"escaped": "ESCAPED -- N for another try, L for another level",  # shown through tr()
+	"caught": "CAUGHT -- N for another try, L for another level",  # shown through tr()
+}
+
 var world: InfiltrationWorld
 var camera: Camera3D
 var watched: int = 0
@@ -44,27 +50,30 @@ func _draw_guard(guard: InfiltrationGuard, at: Vector2) -> void:
 	for row: Dictionary in guard.type.awareness["phases"]:
 		var tick: float = corner.x + BAR.x * float(row["at"])
 		draw_line(Vector2(tick, corner.y - 2), Vector2(tick, corner.y + BAR.y + 2), TICK)
-	var label: String = "%s%s: %s" % ["> " if guard.id == watched else "", guard.mind.phase_name(), guard.action]
+	var label: String = "%s%s: %s" % ["> " if guard.id == watched else "", InfiltrationWords.word(guard.mind.phase_name()),
+		InfiltrationWords.word(guard.action)]
 	if guard.role != RoleArbiter.NONE:
-		label += " (%s)" % guard.role
+		label += " (%s)" % InfiltrationWords.word(guard.role)
 	draw_string(font, corner + Vector2(0, -4), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, colour)
 	if guard.calling_until >= 0.0:
-		draw_string(font, corner + Vector2(0, BAR.y + 14), "CALLING FOR HELP", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, CALLING)
+		draw_string(font, corner + Vector2(0, BAR.y + 14), tr("CALLING FOR HELP"), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, CALLING)
 	elif world.time - guard.help_heard_at <= 3.0:
-		draw_string(font, corner + Vector2(0, BAR.y + 14), "heard: %s" % guard.mind.memory.source, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, HEARD)
+		var heard: String = tr("heard: {source}").format({source = InfiltrationWords.word(guard.mind.memory.source)})
+		draw_string(font, corner + Vector2(0, BAR.y + 14), heard, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, HEARD)
 
 
 func _draw_corner() -> void:
 	var font: Font = ThemeDB.fallback_font
 	var player: InfiltrationPlayer = world.player
+	var body: String = "health {health}   {stance} sprinting" if player.sprinting else "health {health}   {stance}"  # shown through tr()
 	var lines: Array[String] = [
-		"health %d   %s%s" % [player.health, player.stance, " sprinting" if player.sprinting else ""],
-		"off-screen hearing halved: %s" % ("on" if world.rules.off_screen_halving else "off"),
+		tr(body).format({health = player.health, stance = InfiltrationWords.word(player.stance)}),
+		tr("off-screen hearing halved: {halving}").format({halving = InfiltrationText.on(world.rules.off_screen_halving)}),
 	]
 	if PlayerActions.takedown_target(world) != null:
-		lines.append("E: take the guard down")
+		lines.append(tr("E: take the guard down"))
 	if world.outcome != "":
-		lines.append("%s -- N for another try, L for another level" % world.outcome.to_upper())
+		lines.append(tr(OUTCOMES.get(world.outcome, world.outcome)))
 	for index: int in range(lines.size()):
 		draw_string(font, Vector2(16, size.y - 20 - 18 * (lines.size() - 1 - index)), lines[index], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color.WHITE)
 	var middle: Vector2 = size / 2.0

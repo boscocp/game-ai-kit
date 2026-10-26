@@ -27,7 +27,7 @@ var post: Vector2 = Vector2.ZERO
 var post_facing: float = 0.0
 var route_index: int = 0
 ## Its decision: the action taken, every score, and the numbers behind them.
-var action: String = "patrol"
+var action: String = "patrol"  # not shown: an identifier
 var choice: ActionChoice.Choice
 var numbers: Dictionary = {}
 ## Where it is walking, and the walk; INF, standing.

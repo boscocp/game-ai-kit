@@ -62,26 +62,40 @@ var alone: bool = false
 var paused: bool = false
 ## Seconds left before the start; the race does not move until it is 0.
 var countdown: float = 0.0
+var _pad := PadAsKeys.new()
 
 
 func _ready() -> void:
 	add_child(camera)
 	restart()
+	_pad.use(PAD_BUTTONS, [KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN], false, [KEY_DOWN, KEY_UP])
+	add_child(_pad)
+	_show_legend()
+	Language.apply_if_opened_alone(self)
+
+
+# Rebuilt in the language just chosen (T80): the panel and the banner are set
+# from code and keep the words they were given, and the legend is drawn.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_show_legend()
+		_refresh()
+
+
+# The legend, then the pad's buttons under it when a pad is connected.
+func _show_legend() -> void:
 	_legend.set_entries([
-		[Art.texture(Art.RACING_CARS[0]), "you"],
-		[Art.texture(Art.RACING_CARS[1]), "easy AI"],
-		[Art.texture(Art.RACING_CARS[2]), "normal AI"],
-		[Art.texture(Art.RACING_CARS[3]), "hard AI"],
-		[RacingRaceView.MARK, "dot: where the AI steers"],
-		[RacingRaceView.MARK, "bar: where it must be braking"],
-		[RacingRaceView.YOURS, "yellow bar: brake here, you"],
-		[RacingTrackView.SLOW, "line: it must be slow here"],
-		[RacingTrackView.FAST, "line: only top speed limits it"],
+		[Art.texture(Art.RACING_CARS[0]), tr("you")],
+		[Art.texture(Art.RACING_CARS[1]), tr("easy AI")],
+		[Art.texture(Art.RACING_CARS[2]), tr("normal AI")],
+		[Art.texture(Art.RACING_CARS[3]), tr("hard AI")],
+		[RacingRaceView.MARK, tr("dot: where the AI steers")],
+		[RacingRaceView.MARK, tr("bar: where it must be braking")],
+		[RacingRaceView.YOURS, tr("yellow bar: brake here, you")],
+		[RacingTrackView.SLOW, tr("line: it must be slow here")],
+		[RacingTrackView.FAST, tr("line: only top speed limits it")],
 	] as Array[Array])
-	var pad := PadAsKeys.new()
-	pad.use(PAD_BUTTONS, [KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN], false, [KEY_DOWN, KEY_UP])
-	add_child(pad)
-	pad.add_to(_legend)
+	_pad.add_to(_legend)
 
 
 func _physics_process(delta: float) -> void:

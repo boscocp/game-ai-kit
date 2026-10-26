@@ -26,7 +26,7 @@ const WALK_FRAMES_PER_CEL: int = 4
 ## How many frames of hitstun each cel of the hit animation is held for.
 const STUN_PER_CEL: int = 3
 ## The animations every character needs besides its moves.
-const ANIMATIONS: Array[String] = ["idle", "walk", "crouch", "guard", "guard_crouching", "hit", "down", "jump"]
+const ANIMATIONS: Array[String] = ["idle", "walk", "crouch", "guard", "guard_crouching", "hit", "down", "jump"]  # not shown: an identifier
 
 ## Everything the file says.
 var table: Dictionary = {}
@@ -108,13 +108,13 @@ func pose(fighter: FighterState, data: FightData, clock: int, knocked_out: bool)
 		var last: int = cels(fighter.character, "hit").size() - 1
 		return ["hit", last - mini(last, fighter.stun / STUN_PER_CEL)]
 	if fighter.stun_kind == FightBackdash.KIND:
-		return ["jump", backdash_index(fighter, data)]
+		return ["jump", backdash_index(fighter, data)]  # not shown: an identifier
 	if fighter.is_airborne():
-		return ["jump", jump_index(fighter, data)]
+		return ["jump", jump_index(fighter, data)]  # not shown: an identifier
 	if fighter.stun_kind == "takeoff":
-		return ["jump", 0]
+		return ["jump", 0]  # not shown: an identifier
 	if fighter.crouching or fighter.stun_kind == "landing":
-		return ["crouch", _held("crouch", fighter, clock)]
+		return ["crouch", _held("crouch", fighter, clock)]  # not shown: an identifier
 	if walks(fighter):
 		var stride: int = int(data.character(fighter.character)["walk_speed"]) * WALK_FRAMES_PER_CEL
 		return ["walk", posmod(fighter.x * fighter.facing / stride, cels(fighter.character, "walk").size())]
@@ -133,7 +133,7 @@ static func walks(fighter: FighterState) -> bool:
 ## evenly over the whole arc, take-off first, so the picture rises and falls
 ## with the frame data.
 func jump_index(fighter: FighterState, data: FightData) -> int:
-	var shown: int = cels(fighter.character, "jump").size()
+	var shown: int = cels(fighter.character, "jump").size()  # not shown: an identifier
 	return mini(shown - 1, (fighter.jump_frame - 1) * shown / data.jump_length(fighter.character))
 
 
@@ -141,7 +141,7 @@ func jump_index(fighter: FighterState, data: FightData) -> int:
 ## on: the template has no backdash, and a backdash is a hop backwards, so
 ## the jump's cels are spread over its frames as they are over a jump's.
 func backdash_index(fighter: FighterState, data: FightData) -> int:
-	var shown: int = cels(fighter.character, "jump").size()
+	var shown: int = cels(fighter.character, "jump").size()  # not shown: an identifier
 	var frames: int = int(data.character(fighter.character)["backdash"]["frames"])
 	return mini(shown - 1, (FightBackdash.frame_of(fighter, data) - 1) * shown / frames)
 

@@ -29,7 +29,7 @@ const UP: int = 256
 ## `FightDoubleTap` turns that into this bit before the frame is logged.
 const EVADE: int = 512
 ## The name a pressed evade is buffered under, beside the buttons' names.
-const EVADE_NAME: String = "evade"
+const EVADE_NAME: String = "evade"  # not shown: an identifier
 
 ## The buttons, by the name the frame data's moves use, in the order they are
 ## looked at when two are pressed on one frame: the last one wins.

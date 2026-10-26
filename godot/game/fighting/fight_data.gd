@@ -21,12 +21,12 @@ const PATH: String = "res://game/fighting/characters.json"
 ## The whole numbers every move must carry.
 const MOVE_NUMBERS: Array[String] = ["startup", "active", "recovery", "damage", "hitstun", "blockstun", "hurtbox_reach"]
 ## A move's stance: whether it is done standing, holding down, or in the air.
-const STANCES: Array[String] = ["standing", "crouching", "air"]
+const STANCES: Array[String] = ["standing", "crouching", "air"]  # not shown: an identifier
 ## A move's height: which guard stops it. A `high` is aimed above any crouch
 ## and is stopped standing, `mid` is stopped by either, `low` only crouching,
 ## `overhead` only standing, and a `throw` by neither. Where it reaches is
 ## its `rise`; the height is only which guard stops it.
-const HEIGHTS: Array[String] = ["high", "mid", "low", "overhead", "throw"]
+const HEIGHTS: Array[String] = ["high", "mid", "low", "overhead", "throw"]  # not shown: an identifier
 
 ## The whole numbers every character must carry.
 const CHARACTER_NUMBERS: Array[String] = ["health", "walk_speed", "body", "tall", "crouching_tall"]
@@ -46,7 +46,7 @@ static func read(path: String = PATH) -> FightData:
 	var data := FightData.new()
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if not parsed is Dictionary:
-		data.refusal = "%s is not a JSON object" % path
+		data.refusal = "%s is not a JSON object" % path  # not shown: a refusal for whoever edits the data, in its keys' English
 		return data
 	data.table = parsed
 	data.refusal = data._problem()
@@ -76,17 +76,17 @@ func move(character_name: String, move_name: String) -> Dictionary:
 ## air only an air move will do: a standing punch has no floor to stand on.
 func move_for_button(character_name: String, button: String, crouching: bool = false, airborne: bool = false) -> String:
 	if airborne:
-		return _move_in_stance(character_name, button, "air")
-	var standing: String = _move_in_stance(character_name, button, "standing")
+		return _move_in_stance(character_name, button, "air")  # not shown: an identifier
+	var standing: String = _move_in_stance(character_name, button, "standing")  # not shown: an identifier
 	if not crouching:
 		return standing
-	var low: String = _move_in_stance(character_name, button, "crouching")
+	var low: String = _move_in_stance(character_name, button, "crouching")  # not shown: an identifier
 	return low if low != "" else standing
 
 
 ## True when the move is a throw: never blocked, never a counter-hit.
 func is_throw(character_name: String, move_name: String) -> bool:
-	return move(character_name, move_name)["height"] == "throw"
+	return move(character_name, move_name)["height"] == "throw"  # not shown: an identifier
 
 
 func _move_in_stance(character_name: String, button: String, stance: String) -> String:
@@ -137,12 +137,12 @@ func number(key: String) -> int:
 func _problem() -> String:
 	for key: String in ["stage", "buffer_frames", "pushback", "counter_hit", "characters"]:
 		if not table.has(key):
-			return "the frame data has no `%s`" % key
+			return "the frame data has no `%s`" % key  # not shown: a refusal for whoever edits the data, in its keys' English
 	var stage: Variant = table["stage"]
 	var tops: Array = [table["buffer_frames"], table["pushback"], table["counter_hit"].get("damage_percent"),
 			table["counter_hit"].get("extra_hitstun"), stage.get("width")] + Array(stage.get("starts", [null]))
 	if not tops.all(_is_count):
-		return "the stage, buffer, pushback and counter-hit numbers must all be whole and not negative"
+		return "the stage, buffer, pushback and counter-hit numbers must all be whole and not negative"  # not shown: a refusal for whoever edits the data, in its keys' English
 	for name: String in table["characters"]:
 		var problem: String = _character_problem(name, table["characters"][name])
 		if problem != "":
@@ -153,17 +153,17 @@ func _problem() -> String:
 func _character_problem(name: String, numbers: Dictionary) -> String:
 	for key: String in CHARACTER_NUMBERS:
 		if not _is_count(numbers.get(key)):
-			return "%s's %s is not a whole number" % [name, key]
+			return "%s's %s is not a whole number" % [name, key]  # not shown: a refusal for whoever edits the data, in its keys' English
 	var jump: Variant = numbers.get("jump")
 	if not jump is Dictionary or not JUMP_NUMBERS.all(func(key: String) -> bool: return _is_count(jump.get(key))):
-		return "%s's jump needs %s, each a whole number" % [name, JUMP_NUMBERS]
+		return "%s's jump needs %s, each a whole number" % [name, JUMP_NUMBERS]  # not shown: a refusal for whoever edits the data, in its keys' English
 	if int(jump["rise"]) < 1 or int(jump["fall"]) < 1 or int(jump["height"]) < 1:
-		return "%s's jump must take at least one frame up and one down, and leave the floor" % name
+		return "%s's jump must take at least one frame up and one down, and leave the floor" % name  # not shown: a refusal for whoever edits the data, in its keys' English
 	var problem: String = _backdash_problem(name, numbers.get("backdash"))
 	if problem != "":
 		return problem
 	if not numbers.get("moves") is Dictionary or numbers["moves"].is_empty():
-		return "%s has no moves" % name
+		return "%s has no moves" % name  # not shown: a refusal for whoever edits the data, in its keys' English
 	for move_name: String in numbers["moves"]:
 		problem = _move_problem(name, move_name, numbers["moves"][move_name], numbers["moves"])
 		if problem != "":
@@ -176,10 +176,10 @@ func _character_problem(name: String, numbers: Dictionary) -> String:
 # would carry its protection into whatever the fighter did next.
 func _backdash_problem(name: String, backdash: Variant) -> String:
 	if not backdash is Dictionary or not BACKDASH_NUMBERS.all(func(key: String) -> bool: return _is_count(backdash.get(key))):
-		return "%s's backdash needs %s, each a whole number" % [name, BACKDASH_NUMBERS]
+		return "%s's backdash needs %s, each a whole number" % [name, BACKDASH_NUMBERS]  # not shown: a refusal for whoever edits the data, in its keys' English
 	var frames: int = int(backdash["frames"])
 	if frames < 1 or int(backdash["invulnerable"]) > frames or int(backdash["travel"]) > frames:
-		return "%s's backdash must last a frame or more, its invulnerable frames and its travel inside it" % name
+		return "%s's backdash must last a frame or more, its invulnerable frames and its travel inside it" % name  # not shown: a refusal for whoever edits the data, in its keys' English
 	return ""
 
 
@@ -187,40 +187,40 @@ func _backdash_problem(name: String, backdash: Variant) -> String:
 # pressed standing: "no button is dead while crouched" needs the other way
 # round to hold as well.
 func _dead_button(name: String, moves: Dictionary) -> String:
-	var standing: Array = moves.values().filter(func(frames: Dictionary) -> bool: return frames["stance"] == "standing")
+	var standing: Array = moves.values().filter(func(frames: Dictionary) -> bool: return frames["stance"] == "standing")  # not shown: an identifier
 	var buttons: Array = standing.map(func(frames: Dictionary) -> String: return frames["button"])
 	for move_name: String in moves:
 		if not buttons.has(moves[move_name]["button"]):
-			return "%s's %s has no standing move on its button, so standing it does nothing" % [name, move_name]
+			return "%s's %s has no standing move on its button, so standing it does nothing" % [name, move_name]  # not shown: a refusal for whoever edits the data, in its keys' English
 	return ""
 
 
 func _move_problem(name: String, move_name: String, frames: Dictionary, moves: Dictionary) -> String:
-	var label: String = "%s's %s" % [name, move_name]
+	var label: String = "%s's %s" % [name, move_name]  # not shown: a refusal for whoever edits the data, in its keys' English
 	for key: String in MOVE_NUMBERS:
 		if not _is_count(frames.get(key)):
-			return "%s has no whole, non-negative %s" % [label, key]
+			return "%s has no whole, non-negative %s" % [label, key]  # not shown: a refusal for whoever edits the data, in its keys' English
 	if int(frames["startup"]) < 1 or int(frames["active"]) < 1:
-		return "%s must have at least one startup and one active frame" % label
+		return "%s must have at least one startup and one active frame" % label  # not shown: a refusal for whoever edits the data, in its keys' English
 	if not FightInput.BUTTONS.has(frames.get("button")):
-		return "%s has no button among %s" % [label, FightInput.BUTTONS.keys()]
+		return "%s has no button among %s" % [label, FightInput.BUTTONS.keys()]  # not shown: a refusal for whoever edits the data, in its keys' English
 	if not STANCES.has(frames.get("stance")) or not HEIGHTS.has(frames.get("height")):
-		return "%s needs a stance among %s and a height among %s" % [label, STANCES, HEIGHTS]
-	if frames["stance"] == "air" and frames["height"] != "overhead":
-		return "%s: a move from the air hits as an overhead, and this one says %s" % [label, frames["height"]]
+		return "%s needs a stance among %s and a height among %s" % [label, STANCES, HEIGHTS]  # not shown: a refusal for whoever edits the data, in its keys' English
+	if frames["stance"] == "air" and frames["height"] != "overhead":  # not shown: an identifier
+		return "%s: a move from the air hits as an overhead, and this one says %s" % [label, frames["height"]]  # not shown: a refusal for whoever edits the data, in its keys' English
 	if not _is_rise(frames.get("rise")):
-		return "%s needs a rise: two whole numbers, bottom first, up from its feet" % label
-	var is_throw: bool = frames["height"] == "throw"
-	if is_throw != (frames["button"] == "throw") or (is_throw and frames["stance"] != "standing"):
-		return "%s: a throw is done standing, on the throw button, and only a throw is" % label
+		return "%s needs a rise: two whole numbers, bottom first, up from its feet" % label  # not shown: a refusal for whoever edits the data, in its keys' English
+	var is_throw: bool = frames["height"] == "throw"  # not shown: an identifier
+	if is_throw != (frames["button"] == "throw") or (is_throw and frames["stance"] != "standing"):  # not shown: an identifier
+		return "%s: a throw is done standing, on the throw button, and only a throw is" % label  # not shown: a refusal for whoever edits the data, in its keys' English
 	for other: String in moves:
 		if other != move_name and moves[other].get("button") == frames["button"] and moves[other].get("stance") == frames["stance"]:
-			return "%s and %s are both %s %s: a press could not tell them apart" % [label, other, frames["stance"], frames["button"]]
+			return "%s and %s are both %s %s: a press could not tell them apart" % [label, other, frames["stance"], frames["button"]]  # not shown: a refusal for whoever edits the data, in its keys' English
 	if not _is_span(frames.get("hitbox")) or not _is_span(frames.get("cancel_window")):
-		return "%s needs a hitbox and a cancel window, each two whole numbers, near first" % label
+		return "%s needs a hitbox and a cancel window, each two whole numbers, near first" % label  # not shown: a refusal for whoever edits the data, in its keys' English
 	for target: Variant in frames.get("cancels_into", [null]):
 		if not moves.has(target):
-			return "%s cancels into %s, which is not one of its moves" % [label, target]
+			return "%s cancels into %s, which is not one of its moves" % [label, target]  # not shown: a refusal for whoever edits the data, in its keys' English
 	return ""
 
 

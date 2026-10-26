@@ -62,16 +62,16 @@ const LEVELS: Dictionary = {
 ## a long strike caught it 5 times in about 800). What it does is follow:
 ## a backdash gives up ground, and one more into the corner goes nowhere.
 const SITUATIONS: Dictionary = {
-	"after being hit": [["high", 3], ["step out", 2], ["guard standing", 3], ["guard crouching", 2], ["low", 3],
-			["evade", 1]],
-	"after blocking": [["high", 2], ["evade", 1], ["guard standing", 2], ["throw", 3], ["low", 3],
-			["guard crouching", 1]],
-	"it blocked": [["high", 3], ["throw", 3], ["step in", 1], ["low", 3]],
-	"it evaded": [["step in", 3], ["high", 1]],
-	"it whiffed": [["step in", 2], ["high", 2], ["mid", 4], ["low", 4]],
-	"it crouches": [["high", 3], ["step in", 1], ["throw", 4], ["mid", 3], ["overhead", 2]],
-	"neutral": [["step in", 3], ["high", 2], ["guard standing", 2], ["mid", 4], ["low", 4],
-			["throw", 3], ["guard crouching", 1], ["overhead", 1], ["step out", 1], ["evade", 1]],
+	"after being hit": [["high", 3], ["step out", 2], ["guard standing", 3], ["guard crouching", 2], ["low", 3],  # not shown: an identifier
+			["evade", 1]],  # not shown: an identifier
+	"after blocking": [["high", 2], ["evade", 1], ["guard standing", 2], ["throw", 3], ["low", 3],  # not shown: an identifier
+			["guard crouching", 1]],  # not shown: an identifier
+	"it blocked": [["high", 3], ["throw", 3], ["step in", 1], ["low", 3]],  # not shown: an identifier
+	"it evaded": [["step in", 3], ["high", 1]],  # not shown: an identifier
+	"it whiffed": [["step in", 2], ["high", 2], ["mid", 4], ["low", 4]],  # not shown: an identifier
+	"it crouches": [["high", 3], ["step in", 1], ["throw", 4], ["mid", 3], ["overhead", 2]],  # not shown: an identifier
+	"neutral": [["step in", 3], ["high", 2], ["guard standing", 2], ["mid", 4], ["low", 4],  # not shown: an identifier
+			["throw", 3], ["guard crouching", 1], ["overhead", 1], ["step out", 1], ["evade", 1]],  # not shown: an identifier
 }
 
 ## How long a guard or a step is held, in frames, before it looks again.
@@ -86,9 +86,19 @@ var reaction: int = FightDelay.MINIMUM_REACTION
 var level: String = ""
 ## Its last decision, for the panel: the situation it saw, the frame it saw
 ## it on, and what it chose. -1 and "nothing yet" before its first.
-var situation: String = "nothing seen yet"
+var situation: String = "nothing seen yet"  # not shown: an identifier
 var seen_frame: int = -1
-var choice: String = "nothing yet"
+var choice: String = "nothing yet"  # not shown: an identifier
+## The same decision as identifiers, for the panel to word in the language
+## on screen (T80): the option drawn; whether execution spoilt it late, or
+## into another action; and, for a strike, the move pressed or that it was
+## out of reach and became a step in. `choice` is their English, for the
+## overlay and the tests.
+var drawn: String = ""
+var late: bool = false
+var came_out_as: String = ""
+var struck_with: String = ""
+var stepped_in: bool = false
 
 var _tactics: int = 0
 var _execution: int = 100
@@ -115,9 +125,10 @@ func _init(level_name: String, data: FightData, chance_seed: int = 0) -> void:
 ## an opponent that remembers more than its plan forgets it here too.
 func new_fight() -> void:
 	_plan.clear()
-	situation = "nothing seen yet"
+	situation = "nothing seen yet"  # not shown: an identifier
 	seen_frame = -1
-	choice = "nothing yet"
+	choice = "nothing yet"  # not shown: an identifier
+	_forget_the_decision()
 
 
 ## Its input this frame, as player `me`, from `seen` -- the fight as it was
@@ -136,15 +147,27 @@ func _decide(seen: FightState, me: int) -> void:
 	situation = situation_of(seen, me, _data)
 	var chosen: String = _draw(situation, seen.fighters[me].character)
 	choice = chosen
-	var late: int = 0
+	_forget_the_decision()
+	drawn = chosen
+	var hesitation: int = 0
 	if _rng.randi_range(1, 100) > _execution:
 		if _rng.randi_range(0, 1) == 0:
-			late = HESITATION_FRAMES
-			choice += " (fumbled: late)"
+			hesitation = HESITATION_FRAMES
+			late = true
+			choice += " (fumbled: late)"  # not shown: the overlay's English; the panel words the decision from its fields
 		else:
 			chosen = _slip(seen.fighters[me].character)
-			choice += " (fumbled: came out as %s)" % chosen
-	_plan = _held(0, late) + _inputs_for(chosen, seen, me)
+			came_out_as = chosen
+			choice += " (fumbled: came out as %s)" % chosen  # not shown: the overlay's English; the panel words the decision from its fields
+	_plan = _held(0, hesitation) + _inputs_for(chosen, seen, me)
+
+
+func _forget_the_decision() -> void:
+	drawn = ""
+	late = false
+	came_out_as = ""
+	struck_with = ""
+	stepped_in = false
 
 
 ## Which of the seven situations `seen` is, for player `me`: its own stun
@@ -155,18 +178,18 @@ static func situation_of(seen: FightState, me: int, data: FightData) -> String:
 	var mine: FighterState = seen.fighters[me]
 	var other: FighterState = seen.fighters[1 - me]
 	if mine.stun_kind == "hit":
-		return "after being hit"
+		return "after being hit"  # not shown: an identifier
 	if mine.stun_kind == "block":
-		return "after blocking"
+		return "after blocking"  # not shown: an identifier
 	if other.stun_kind == "block":
-		return "it blocked"
+		return "it blocked"  # not shown: an identifier
 	if other.stun_kind == FightBackdash.KIND:
-		return "it evaded"
+		return "it evaded"  # not shown: an identifier
 	if other.move != "" and not other.connected and FightBoxes.phase(other, data) == "recovery":
-		return "it whiffed"
+		return "it whiffed"  # not shown: an identifier
 	if other.crouching and other.is_free():
-		return "it crouches"
-	return "neutral"
+		return "it crouches"  # not shown: an identifier
+	return "neutral"  # not shown: an identifier
 
 
 # One of the options the level knows, drawn by weight.
@@ -212,7 +235,7 @@ static func strike_for(data: FightData, character: String, height: String) -> St
 	var found: String = ""
 	var moves: Dictionary = data.character(character)["moves"]
 	for name: String in moves:
-		if moves[name]["stance"] == "air" or moves[name]["height"] != height:
+		if moves[name]["stance"] == "air" or moves[name]["height"] != height:  # not shown: an identifier
 			continue
 		if found == "" or moves[name]["startup"] < moves[found]["startup"]:
 			found = name
@@ -244,9 +267,11 @@ func _inputs_for(option: String, seen: FightState, me: int) -> Array[int]:
 			return _evade(mine.character)
 	var move: String = strike_for(_data, mine.character, option)
 	if not _reaches(move, mine, other):
-		choice += ", out of reach: steps in"
+		choice += ", out of reach: steps in"  # not shown: the overlay's English; the panel words the decision from its fields
+		stepped_in = true
 		return _held(toward, STEP_FRAMES)
 	choice += " -- " + move
+	struck_with = move
 	return _pressed(move, mine.character)
 
 
@@ -263,7 +288,7 @@ func _reaches(move: String, mine: FighterState, other: FighterState) -> bool:
 # out crouching even if the press waits in the buffer.
 func _pressed(move: String, character: String) -> Array[int]:
 	var frames: Dictionary = _data.move(character, move)
-	var down: int = FightInput.DOWN if frames["stance"] == "crouching" else 0
+	var down: int = FightInput.DOWN if frames["stance"] == "crouching" else 0  # not shown: an identifier
 	var inputs: Array[int] = _held(down, _data.length_of(character, move))
 	inputs[0] = FightInput.BUTTONS[frames["button"]] | down
 	return inputs

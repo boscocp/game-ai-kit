@@ -85,6 +85,92 @@ teaches: none
   is now a key per case, and the Portuguese puts the name where Portuguese
   puts it.
 
+## The real-time demos (T80)
+
+The steering demo, both racers, the bot match, the infiltration level, the
+RTS and the fighting game, by the same rules, with what they added:
+
+- **Names, one class per demo.** Each 3D or real-time demo shows dozens of
+  identifiers its logic compares -- an action, a squad's state, a unit's
+  kind, a guard's phase, a zone. `BotMatchWords`, `InfiltrationWords`,
+  `RtsWords` and `FightWords` list every one (`SHOWN`, marked
+  `# shown through tr()`, so the table must hold each) and translate it
+  where it is drawn. A test per demo holds the list to the data and the
+  constants that write the names (`actions.json`, `guard_types.json`,
+  `RtsKinds`, `FightAction.ACTIONS`...): a name added there and not here
+  would show English with no sound. Where another table already translates
+  the same English word for another sense -- checkers' "red" pieces, its
+  "played" move, the bot match's "sprint" pace against the infiltration's
+  "sprint" sound -- the name is shown through a key of its own (`SAID_AS`),
+  as L8 requires. In English the bot match's watched line says "(blue
+  team)" where it said "(blue)"; its switches have a key per team, so they
+  still read "blue: claims on, ...". A kind of unit takes its article from
+  `RtsWords`' own keys ("a lab", "the tower", "3 workers"): Portuguese
+  gives a tower and a barracks different genders, so no sentence glues an
+  article before a name.
+- **English that is data, translated where shown, by shape.** The RTS
+  rules (`ai_rts_core`, no table) word their refusals in English and the
+  AIs read them; `RtsRefusal` copies their shapes as `TacticalRefusal`
+  does, and a test reads `rts_rules.gd` and holds every refusal to one.
+  The fighting rules write each frame's events in English into the frame's
+  digest, which `test-replay` compares; `FightWords.event` matches them by
+  shape, a reason in brackets on its own, and a test replays every recorded
+  fight in `data/fights/` and holds each event it makes to a shape (it
+  found "trade", which no shape had). The perception addon's eye reasons
+  (`VisionShape.percept`) are copied the same way, in `InfiltrationWords`.
+- **Reasons the AI keeps are keys, not words.** An RTS queue's wish, a
+  squad's focus and its last arrow, the clone's "found" are kept as a
+  `Sentence` (`godot/game/sentence.gd`): the English key and its values,
+  a value a number, an identifier or another sentence. `RtsThinking` and
+  `FightingPanel` word it with `Sentence.translated` where they show it;
+  the overlays and the tests read `Sentence.english`. A fighting
+  opponent's decision is kept as identifiers -- the option drawn, whether
+  it was fumbled late or came out as another, the move or the step in --
+  and its `choice` stays the English it always was. So the AI's state and
+  every overlay are the same in any language, and a language switched mid
+  match rewords the panel at once. T80 first worded these where they were
+  made, as T79 had the tactical teams do; the review refused it -- the
+  owner's rule is that code and identifiers stay English and the prose is
+  translated where it is shown -- and T104 brings the tactical match to
+  the same shape.
+- **What stays English on screen**: a plan's step names and facts in the
+  RTS (`build_lab`, `mortars_ready`), as the tactical planner's; a fighting
+  move's name and the frame data's terms (`jab`, startup, active, recovery,
+  hitstun) and the characters; the clone's case key and its feature names,
+  which are the recordings' columns; the frame data's own refusals, which
+  speak to whoever edits the JSON, in its keys' language. The glossary
+  defines the terms. The pad's legend line (`PadAsKeys.add_to`, in
+  `game_shared`, which has no table) is still English: key and button
+  names, and the words "pad" and "stick" (T103).
+- **Numbers.** A number a person reads as prose follows the language's
+  decimal separator, through `Language.decimal`: the 2D racer's winning
+  margin ("vence por 1,4 s") and the 3D racer's last lap time. Every other
+  number on these panels -- speeds, PID terms, scores, grip, probabilities
+  -- is a measurement, and keeps the point in both languages, as every
+  number a gate or a log parses does. km/h, m, s and m/s^2 are not
+  translated.
+- **Every frame.** The 3D racer's status, the bot match's and the
+  infiltration's panels and HUDs are rebuilt every frame, as they were
+  before: each sentence is one lookup and one `format()`. A lookup measured
+  0.56 µs (pt-BR, 100,000 lookups, eight tables loaded); a `format()` with
+  a dictionary 0.52 µs, against 0.35 µs for the `%` it replaced. The bot
+  match's panel makes about forty lookups a frame -- a fortieth of a
+  millisecond. Text drawn in a loop that does not change with the frame
+  (the steering lanes' titles) is looked up once per language, on
+  `NOTIFICATION_TRANSLATION_CHANGED`. `test-rts-budget` and
+  `test-rts-match` hold the RTS's frame shares as before.
+- **A line that fits.** `test-locale-screen` now opens these seven demos
+  too, reads a `Label3D` as it reads a `Label`, provokes an RTS refusal,
+  and fails a line of a Label that does not wrap and runs past the
+  1280-pixel window, measured in the Label's own font (planted: a line of
+  400 "x"). It found the bot match's errand line and four of the search
+  demo's lines too long in pt-BR (shortened, the bot match's split in two),
+  and the tactical match's header too long in English as well -- a layout
+  fix, not a translation one, so it is named in `NOT_YET_FITTED` and left
+  for T102. Only a visible Label that does not wrap is measured: a Button,
+  a Label3D, a HUD drawn with `draw_string` and a panel shown only when
+  toggled are not.
+
 ## Measured on 4.7.2
 
 A scratch project, one table, the locale set with
@@ -137,13 +223,15 @@ same.
 - `godot/test/locale/locale_screen.gd` (`make test-locale-screen`) opens
   each translated example (checkers, the search demo, noughts and crosses,
   the stealth hall, the four-brained guard, the tactical match, the
-  skirmish) and the menu in pt-BR, steps them, and fails on
-  any Control line or legend entry -- whole, or one of its "  ·  "
+  skirmish, and since T80 the steering demo, both racers, the bot match,
+  the infiltration level, the RTS and the fighting game) and the menu in
+  pt-BR, steps them, and fails on any Control or `Label3D` line, or legend
+  entry -- whole, or one of its "  ·  "
   segments -- that is the English of a translated key, a `{placeholder}`
   matching any text. It fails an example that lacks the nodes it should
   show words in, or shows no line at all. Planted: a Label with
-  auto-translation off, a formatted English segment ("cost 7"), and an
-  empty scene. Before it runs, the target refuses a committed
+  auto-translation off, a formatted English segment ("cost 7"), a line
+  too wide for the window, and an empty scene. Before it runs, the target refuses a committed
   `.translation` that `make import` rewrote while its CSV did not change: a
   table committed with stale words.
 

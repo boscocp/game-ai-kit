@@ -1,0 +1,125 @@
+en,pt_BR
+nothing seen yet,nada visto ainda
+"; nothing it can do, so it guards","; nada que ele possa fazer, então defende"
+no recorded player: {why},nenhum jogador gravado: {why}
+the recorded player was cut with other features ({features}) -- run `make train-clone`,o jogador gravado foi cortado com outras features ({features}) -- rode `make train-clone`
+"{cases} case(s), {apart} feature(s) apart","{cases} caso(s), a {apart} feature(s) de distância"
+the model's probabilities,as probabilidades do modelo
+never met this one: all its play,nunca viu esta: todo o seu jogo
+met it {times} time(s),viu esta {times} vez(es)
+"(expecting {action}, {percent}%)","(esperando {action}, {percent}%)"
+"(expecting {action}, {percent}%, no answer among its options)","(esperando {action}, {percent}%, nenhuma resposta entre suas opções)"
+(fumbled: late),(errou a execução: atrasado)
+(fumbled: came out as {action}),(errou a execução: saiu {action})
+", out of reach: steps in",", fora de alcance: aproxima-se"
+step in,aproximar-se
+step out,afastar-se
+crouch,agachado
+jump,pular
+high,alto
+mid,médio
+low,baixo
+overhead,overhead
+throw,agarrão
+guard standing,defesa em pé
+guard crouching,defesa agachada
+evade,esquivar
+after being hit,depois de apanhar
+after blocking,depois de bloquear
+it blocked,ele bloqueou
+it evaded,ele esquivou
+it whiffed,ele errou o golpe
+it crouches,ele se agacha
+neutral,neutro
+stand,em pé
+jab,jab
+low kick,chute baixo
+anti-air (sees you now),antiaéreo (vê você agora)
+opponent: easy,oponente: fácil
+opponent: medium,oponente: médio
+opponent: hard,oponente: difícil
+learner: easy,aprendiz: fácil
+learner: medium,aprendiz: médio
+learner: hard,aprendiz: difícil
+ghost: exact,ghost: exato
+ghost: nearest,ghost: o mais próximo
+clone,clone
+easy,fácil
+medium,médio
+hard,difícil
+standing,em pé
+crouching,agachado
+air,no ar
+light_punch,soco fraco
+heavy_punch,soco forte
+light_kick,chute fraco
+heavy_kick,chute forte
+(anything),(qualquer coisa)
+nothing yet,nada ainda
+p{first} cancels {from} into {to},p{first} cancela {from} em {to}
+p{first}'s {move} passes through p{second} (evading),o {move} de p{first} atravessa p{second} (esquivando)
+p{first}'s throw is beaten by p{second}'s {move} (strike beats throw),o agarrão de p{first} perde para o {move} de p{second} (golpe vence agarrão)
+the throws clash and both break,os agarrões se chocam e os dois se desfazem
+p{first}'s {move} passes over p{second},o {move} de p{first} passa por cima de p{second}
+p{first}'s {move} passes under p{second},o {move} de p{first} passa por baixo de p{second}
+p{first} is blocked by p{second} with {move},p{first} tem o {move} bloqueado por p{second}
+p{first} counter-hits p{second} with {move},p{first} dá counter-hit em p{second} com {move}
+p{first} hits p{second} with {move},p{first} acerta p{second} com {move}
+p{first} throws p{second} with {move},p{first} agarra p{second} com {move}
+(a throw cannot be blocked),(agarrão não se bloqueia)
+"(caught evading, which cannot guard)","(pego esquivando, sem poder defender)"
+"(caught in the air, starting up)","(pego no ar, no startup)"
+"(in the air, which cannot guard)","(no ar, sem poder defender)"
+"(holding away, {guard})","(segurando para trás, {guard})"
+(a low through a {guard} guard),(um golpe baixo atravessa a defesa {guard})
+(an overhead through a {guard} guard),(um overhead atravessa a defesa {guard})
+(a high through a {guard} guard),(um golpe alto atravessa a defesa {guard})
+(caught starting up),(pego no startup)
+(a high misses a crouch),(um golpe alto não pega quem está agachado)
+(a low misses a fighter in the air),(um golpe baixo não pega quem está no ar)
+(it is in the air),(ele está no ar)
+left health bar: you (player one),barra de vida à esquerda: você (jogador um)
+right health bar: the dummy (player two),barra de vida à direita: o boneco (jogador dois)
+"outline: hurtbox, where it can be hit","contorno: hurtbox, onde pode ser atingido"
+"grey outline: evading, nothing can hit it","contorno cinza: esquivando, nada o atinge"
+"red box: hitbox, where it reaches","caixa vermelha: hitbox, até onde alcança"
+"orange box: a throw, which no guard stops","caixa laranja: um agarrão, que nenhuma defesa para"
+"paler: stunned, taking off, landing or evading","mais pálido: atordoado, saltando, aterrissando ou esquivando"
+the frame data was refused: {why},a frame data foi recusada: {why}
+"A/D walk, W jump, S crouch, U/I punch, J/K kick, S+I uppercut, L throw, O or back twice evade, hold away to guard","A/D andar, W pular, S agachar, U/I soco, J/K chute, S+I uppercut, L agarrão, O ou trás duas vezes esquiva, segure para trás para defender"
+"C swap characters  ·  M dummy: {mode}  ·  P pause, space one frame  ·  R restart","C trocar personagens  ·  M boneco: {mode}  ·  P pausa, espaço um frame  ·  R recomeçar"
+recording: {count} fight(s) kept in data/fights/,gravando: {count} luta(s) guardada(s) em data/fights/
+this frame: {events},neste frame: {events}
+nothing connected,nada acertou
+DRAW,EMPATE
+PLAYER {number} WINS,JOGADOR {number} VENCE
+"player {number}, the {character}: {health} health","jogador {number}, {character}: {health} de vida"
+"  in the air, frame {frame} of {frames}, {up} up","  no ar, frame {frame} de {frames}, {up} de altura"
+"  in {kind}stun, {frames} frame(s) left","  em {kind}stun, faltam {frames} frame(s)"
+"  free to act, crouching","  livre para agir, agachado"
+  free to act,  livre para agir
+"  buffered: {move}, until frame {frame}","  no buffer: {move}, até o frame {frame}"
+strikes and throws pass through,golpes e agarrões atravessam
+"cannot guard, can be thrown","não pode defender, pode ser agarrado"
+"  evading, frame {frame} of {frames}: {part} (invulnerable {invulnerable}, travel {travel})","  esquivando, frame {frame} de {frames}: {part} (invulnerável {invulnerable}, deslocamento {travel})"
+"  {stance} {button}, hits {height}","  {stance} {button}, acerta {height}"
+"the opponent ({level}), seeing {frames} frames late:","o oponente ({level}), vendo com {frames} frames de atraso:"
+  refused: {why},  recusado: {why}
+  has not seen the fight yet,  ainda não viu a luta
+"  saw frame {frame}, {ago} frames ago: {situation}","  viu o frame {frame}, há {ago} frames: {situation}"
+  drew: {choice},  sorteou: {choice}
+"its model (order {order}, decay {decay}), right {right} of its last {last}:","seu modelo (ordem {order}, decay {decay}), acertou {right} dos últimos {last}:"
+nothing,nada
+  now the context is {context},  agora o contexto é {context}
+  ... and {count} more,  ... e mais {count}
+it imitates nobody: {why},não imita ninguém: {why}
+"it imitates {player}, from {count} recording(s):","imita {player}, a partir de {count} gravação(ões):"
+  has decided nothing yet,  ainda não decidiu nada
+  {found}; drew among:,  {found}; sorteou entre:
+"  at its last decision, after {after} it expected {action}, {percent}%","  na última decisão, depois de {after} esperava {action}, {percent}%"
+"  at its last decision, after {after} it expected {action}, {percent}% -- none of its options answers that","  na última decisão, depois de {after} esperava {action}, {percent}% -- nenhuma de suas opções responde a isso"
+frame {frame}  ·  paused,frame {frame}  ·  pausado
+frame {frame},frame {frame}
+"  taking off, {frames} frame(s) left","  saltando, faltam {frames} frame(s)"
+"  landing, {frames} frame(s) left","  aterrissando, faltam {frames} frame(s)"
+trade,troca (os dois acertam)

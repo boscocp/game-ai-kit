@@ -15,7 +15,9 @@ extends Node2D
 
 const MARGIN := Vector2(24.0, 24.0)
 const GAP: float = 24.0
-const TITLES: Array[String] = ["seek", "arrive", "pursue", "seek + avoid"]
+## The behaviours' names, which the lanes compare and show through tr(); they
+## stay English in pt-BR too (docs/techniques/glossary.pt-BR.md).
+const TITLES: Array[String] = ["seek", "arrive", "pursue", "seek + avoid"]  # shown through tr()
 
 @onready var _status: Label = $Interface/Status
 @onready var _legend: Legend = $Interface/Legend
@@ -32,14 +34,27 @@ func _ready() -> void:
 		lane.position = MARGIN + Vector2(index % 2 * (size.x + GAP), index / 2 * (size.y + GAP))
 		add_child(lane)
 		lanes.append(lane)
-	_legend.set_entries([
-		[SteeringLane.FORCE_COLOUR, "the force it asks for"],
-		[SteeringLane.VELOCITY_COLOUR, "where it is going"],
-		[SteeringLane.TARGET_COLOUR, "cross: target; dot: quarry"],
-		[SteeringLane.REASONING_COLOUR, "braking circle, guess, look"],
-		[SteeringLane.OBSTACLE_COLOUR, "an obstacle"],
-	] as Array[Array])
+	_legend.set_entries(_legend_entries())
 	_refresh()
+	Language.apply_if_opened_alone(self)
+
+
+# Rebuilt in the language just chosen (T80): the status is set from code and
+# keeps the words it was given, and the legend is drawn.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_legend.set_entries(_legend_entries())
+		_refresh()
+
+
+func _legend_entries() -> Array[Array]:
+	return [
+		[SteeringLane.FORCE_COLOUR, tr("the force it asks for")],
+		[SteeringLane.VELOCITY_COLOUR, tr("where it is going")],
+		[SteeringLane.TARGET_COLOUR, tr("cross: target; dot: quarry")],
+		[SteeringLane.REASONING_COLOUR, tr("braking circle, guess, look")],
+		[SteeringLane.OBSTACLE_COLOUR, tr("an obstacle")],
+	] as Array[Array]
 
 
 func _physics_process(_delta: float) -> void:
@@ -101,9 +116,12 @@ func _place_target(at: Vector2) -> void:
 
 
 func _refresh() -> void:
-	var lines: Array[String] = ["%.1f s%s  ·  click: target  ·  space: pause  ·  .: one step  ·  R: again" % [
-		steps / 60.0, "  (paused)" if paused else ""]]
+	var clock: String = tr("{seconds} s  (paused)") if paused else tr("{seconds} s")
+	var lines: Array[String] = ["  ·  ".join([clock.format({seconds = "%.1f" % (steps / 60.0)}),
+		tr("click: target  ·  space: pause  ·  .: one step  ·  R: again")])]
 	for lane: SteeringLane in lanes:
 		var seen: Dictionary = lane.overlay()
-		lines.append("%s: speed %.1f, force %.1f, %.1f to go" % [seen["behaviour"], seen["speed"], seen["force"], seen["distance"]])
+		lines.append(tr("{behaviour}: speed {speed}, force {force}, {distance} to go").format({
+			behaviour = tr(seen["behaviour"]), speed = "%.1f" % seen["speed"],
+			force = "%.1f" % seen["force"], distance = "%.1f" % seen["distance"]}))
 	_status.text = "\n".join(lines)

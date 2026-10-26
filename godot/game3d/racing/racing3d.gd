@@ -48,6 +48,7 @@ var measured_grip: bool = true
 ## Which shelf the models come from; a test sets one with nothing on it.
 var shelf: AssetShelf = AssetShelf.new()
 var _overlay := RaceOverlay3D.new()
+var _pad := PadAsKeys.new()
 
 @onready var _legend: Legend = $Interface/Legend
 @onready var _status: Label = $Interface/Status
@@ -57,21 +58,33 @@ var _overlay := RaceOverlay3D.new()
 
 
 func _ready() -> void:
-	_legend.set_entries([
-		[RaceScenery3D.LINE_COLOUR, "the racing line each driver found"],
-		[RaceOverlay3D.AIM_COLOUR, "white post: its aim; white bar: its braking point"],
-		[RaceOverlay3D.GRIP_SPARE, "tyre with grip to spare"],
-		[RaceOverlay3D.GRIP_NEAR, "tyre near its grip"],
-		[RaceOverlay3D.SLIDING, "tyre past its peak slip: sliding"],
-		[RaceOverlay3D.COOL, "heat line, cool to hot, of the watched car"],
-		[RaceOverlay3D.BALL_COLOUR, "the ball: where that car means to be"],
-	])
-	var pad := PadAsKeys.new()
-	pad.use(PAD_BUTTONS, [KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN], false, [KEY_DOWN, KEY_UP])
-	add_child(pad)
-	pad.add_to(_legend)
+	_pad.use(PAD_BUTTONS, [KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN], false, [KEY_DOWN, KEY_UP])
+	add_child(_pad)
+	_show_legend()
 	add_child(_overlay)
 	restart()
+	Language.apply_if_opened_alone(self)
+
+
+# The legend is drawn, so it is rebuilt in the language just chosen (T80);
+# the status is rebuilt every frame anyway.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_show_legend()
+
+
+# The legend, then the pad's buttons under it when a pad is connected.
+func _show_legend() -> void:
+	_legend.set_entries([
+		[RaceScenery3D.LINE_COLOUR, tr("the racing line each driver found")],
+		[RaceOverlay3D.AIM_COLOUR, tr("white post: its aim; white bar: its braking point")],
+		[RaceOverlay3D.GRIP_SPARE, tr("tyre with grip to spare")],
+		[RaceOverlay3D.GRIP_NEAR, tr("tyre near its grip")],
+		[RaceOverlay3D.SLIDING, tr("tyre past its peak slip: sliding")],
+		[RaceOverlay3D.COOL, tr("heat line, cool to hot, of the watched car")],
+		[RaceOverlay3D.BALL_COLOUR, tr("the ball: where that car means to be")],
+	])
+	_pad.add_to(_legend)
 
 
 ## A new race on the current track: measuring first, then the grid.

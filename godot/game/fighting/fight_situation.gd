@@ -28,7 +28,7 @@ extends RefCounted
 ## The features, in the order a row is written.
 const FEATURES: Array[String] = ["last", "other", "me", "distance", "health", "corner"]
 ## What `last` and `other` say when there is nothing to say.
-const NOTHING: String = "nothing"
+const NOTHING: String = "nothing"  # not shown: an identifier
 ## The widest gap, in stage units, at which the two count as close and near:
 ## a throw reaches about 40 to 48, most standing strikes 60 to 110.
 const CLOSE: int = 50

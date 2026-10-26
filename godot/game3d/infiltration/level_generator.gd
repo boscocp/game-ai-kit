@@ -38,7 +38,7 @@ static func _draw(rng: RandomNumberGenerator) -> Dictionary:
 	var depth: int = rng.randi_range(18, 28)
 	var middle: float = floorf(depth / 2.0) + 0.5
 	var data: Dictionary = {
-		"about": "A generated infiltration level.", "width": width, "depth": depth, "points": [],
+		"about": "A generated infiltration level.", "width": width, "depth": depth, "points": [],  # not shown: the data's own note
 		"spawns": {"player": [[1.5, middle]]}, "exit": [width - 1.5, middle],
 		"boxes": _boxes(rng, width, depth), "ambient": 0.1,
 		"lights": _scattered(rng, width, depth, rng.randi_range(3, 6), "light"),
@@ -85,9 +85,9 @@ static func _guards(rng: RandomNumberGenerator, data: Dictionary) -> Array:
 		for point: int in range(3):
 			var cell: Vector2i = free[rng.randi_range(0, free.size() - 1)]
 			route.append([cell.x + 0.5, cell.y + 0.5])
-		guards.append({"type": "patrol", "route": route})
+		guards.append({"type": "patrol", "route": route})  # not shown: an identifier
 	var post: Vector2i = free[rng.randi_range(0, free.size() - 1)]
-	guards.append({"type": "sentry", "post": [post.x + 0.5, post.y + 0.5], "facing": rng.randf_range(-90.0, 90.0)})
+	guards.append({"type": "sentry", "post": [post.x + 0.5, post.y + 0.5], "facing": rng.randf_range(-90.0, 90.0)})  # not shown: an identifier
 	return guards
 
 

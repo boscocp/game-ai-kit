@@ -6,7 +6,10 @@
     "godot/game3d/botmatch/",
     "godot/test/botmatch/",
     "scripts/godot_shards.py",
-    "python/tests/test_godot_shards.py"
+    "python/tests/test_godot_shards.py",
+    "godot/locale/botmatch.csv",
+    "godot/locale/botmatch.csv.import",
+    "godot/locale/botmatch.pt_BR.translation"
   ],
   "depends_on": [
     "ai_core",

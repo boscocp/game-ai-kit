@@ -96,7 +96,8 @@ func refresh(world: BotMatch, watched: int, hidden: int = -1, thinking: bool = t
 		body.stand(world.arena.above(bot.position, 0.0), bot.facing, bot.crouched, world.time - _drawn_at)
 	_power.visible = world.supply.power_there(world.time)
 	var back_in: float = world.supply.power_back_at - world.time
-	_power_label.text = "POWER" if back_in <= 0.0 else "power back in %.0f s" % back_in
+	_power_label.text = tr("POWER") if back_in <= 0.0 else tr("power back in {seconds} s").format({
+		seconds = "%.0f" % back_in})
 	for index: int in range(_points.size()):
 		var owner: int = world.point_owner[index]
 		var colour: Color = NOBODY if owner == -1 else (BLUE if owner == BotMatch.BLUE else RED)
@@ -199,7 +200,7 @@ func _draw_aim(world: BotMatch, watched: int) -> void:
 	var lines: Array[String] = []
 	for index: int in range((aim[1] as Array).size()):
 		var mark: String = "> " if index == int(aim[4]) else "  "
-		lines.append("%s%s %.0f%%  %.2f" % [mark, aim[1][index], float(aim[2][index]) * 100.0, aim[3][index]])
+		lines.append("%s%s %.0f%%  %.2f" % [mark, BotMatchWords.word(aim[1][index]), float(aim[2][index]) * 100.0, aim[3][index]])
 	var label := Label3D.new()
 	label.text = "\n".join(lines)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED

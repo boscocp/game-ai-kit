@@ -46,6 +46,13 @@ const READY_FACT: Dictionary = {
 	RtsKinds.RUNNER: "runners_ready", RtsKinds.SHIELD: "shields_ready", RtsKinds.MORTAR: "mortars_ready",
 }
 
+## The goal met, the army kept coming: a sentence per fighter.
+const MORE: Dictionary = {
+	RtsKinds.RUNNER: "goal met: more runners",  # shown through tr()
+	RtsKinds.SHIELD: "goal met: more shields",  # shown through tr()
+	RtsKinds.MORTAR: "goal met: more mortars",  # shown through tr()
+}
+
 var planner: BuildOrder.Planner
 ## The plan in hand, its goal, and its timing: what the screen draws.
 var steps := PackedStringArray()
@@ -129,7 +136,8 @@ func _arm_if_worth_it(view: RtsSnapshot) -> void:
 	if not may_arm or not arming["worth_it"]:
 		return
 	var towers: Array[Dictionary] = view.mine(RtsKinds.TOWER)
-	var why: String = "weighed: the gun kills %d of a raid, costs %d" % [roundi(arming["killed"]), arming["price"]]
+	var why: Array = Sentence.of("weighed: the gun kills {killed} of a raid, costs {price}",  # shown through tr()
+		{killed = roundi(arming["killed"]), price = arming["price"]})
 	if towers.is_empty():
 		_wish(RtsKinds.TOWER, ARM_PRIORITY, why)
 	elif towers.any(func(tower: Dictionary) -> bool: return tower["complete"]):
@@ -142,8 +150,8 @@ func overlay(view: RtsSnapshot) -> Dictionary:
 	shown["goal"] = goal_facts
 	shown["arming"] = arming.duplicate()
 	shown["plan"] = schedule.duplicate(true)
-	shown["planner"] = "no plan: the queues' rules" if level.plan_horizon == 0 \
-		else ("STRIPS" if planner == BuildOrder.Planner.STRIPS else "HTN")
+	var planner_name: String = "STRIPS" if planner == BuildOrder.Planner.STRIPS else "HTN"
+	shown["planner"] = "no plan: the queues' rules" if level.plan_horizon == 0 else planner_name  # shown through tr()
 	return shown
 
 
@@ -199,7 +207,7 @@ func _follow(held: PackedStringArray) -> void:
 	if steps[0] == "mine_magma":
 		queue.magma_wanted = true
 	elif what != "":
-		_wish(what, 80, "plan, step 1 of %d: %s" % [steps.size(), steps[0]])
+		_wish(what, 80, Sentence.of("plan, step 1 of {count}: {step}", {count = steps.size(), step = steps[0]}))  # shown through tr()
 
 
 # Every fighter the goal asked for and has, kept coming to replace losses.
@@ -207,9 +215,9 @@ func _keep_the_army_coming(held: PackedStringArray) -> void:
 	for kind: String in READY_FACT:
 		var fact: String = READY_FACT[kind]
 		if fact in goal_facts and fact in held:
-			_wish(kind, 30, "goal met: more %ss" % kind)
+			_wish(kind, 30, Sentence.of(MORE[kind]))
 
 
-func _wish(what: String, priority: int, why: String) -> void:
+func _wish(what: String, priority: int, why: Array) -> void:
 	queue.wish(what, priority, why)
 	_wished.append(what)

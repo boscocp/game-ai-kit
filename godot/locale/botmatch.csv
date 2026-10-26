@@ -1,0 +1,78 @@
+en,pt_BR
+blue bot; its line runs to the spot it claimed,bot azul; a linha vai até o lugar que ele reservou
+red bot,bot vermelho
+a spot the watched bot weighed: taller scored higher,um lugar que o bot assistido pesou: mais alto teve nota maior
+the spot it chose,o lugar que ele escolheu
+closed: a teammate claimed it,fechado: um colega o reservou
+dropped: no cover and no line of fire,descartado: sem cobertura e sem linha de tiro
+"dropped: too far, or outside its squad's area","descartado: longe demais, ou fora da área do esquadrão"
+the watched bot's sight lines,as linhas de visão do bot assistido
+POWER,ARMA ESPECIAL
+power back in {seconds} s,arma especial de volta em {seconds} s
+down -- back in {seconds} s,abatido -- de volta em {seconds} s
+HEADSHOT,TIRO NA CABEÇA
+{weapon} {ammo} / {reserve},{weapon} {ammo} / {reserve}
+reloading,recarregando
+sprinting,correndo
+streak {streak}/{needed},sequência {streak}/{needed}
+-- back to your base for rounds,-- volte à sua base para buscar munição
+{health} health,{health} de vida
+"{health} health, coming back","{health} de vida, voltando"
+"{health} health, back in {seconds} s","{health} de vida, volta em {seconds} s"
+RELOADING,RECARREGANDO
+"blue: claims {claims}, commander {commander}, retreat {retreat}","azul: reservas {claims}, comandante {commander}, recuo {retreat}"
+"red: claims {claims}, commander {commander}, retreat {retreat}","vermelho: reservas {claims}, comandante {commander}, recuo {retreat}"
+"1/2/3 blue's switches, Shift red's; Tab bot, T take it over, M map, C camera, F fast, P pause, N new, L arena","1/2/3 chaves do azul, Shift as do vermelho; Tab bot, T assumir, M mapa, C câmera, F rápido, P pausa, N nova, L arena"
+watching bot {bot} ({team}): {action},assistindo ao bot {bot} ({team}): {action}
+watching bot {bot} ({team}): {action} at bot {target},assistindo ao bot {bot} ({team}): {action} no bot {target}
+"  -- YOU: {ammo}/{magazine} ammo, {health}","  -- VOCÊ: {ammo}/{magazine} de munição, {health}"
+nothing weighed yet,nada pesado ainda
+weighs: {options},pesa: {options}
+body: {options},corpo: {options}
+pace: {options},ritmo: {options}
+no shot aimed yet,nenhum tiro mirado ainda
+"aims at {zone} (chance, damage a shot): {zones}","mira em {zone} (chance, dano por tiro): {zones}"
+{mark}{errand} {gain} - {walk} s x {weight} - {cost} = {score},{mark}{errand} {gain} - {walk} s x {weight} - {cost} = {score}
+none weighed yet,nenhuma pesada ainda
+"{weapon} {ammo}/{reserve}, streak {streak}","{weapon} {ammo}/{reserve}, sequência {streak}"
+errands: {errands},tarefas: {errands}
+never blocked yet,nunca bloqueado ainda
+{seconds} s,{seconds} s
+on,ligado
+OFF,DESLIGADO
+{time} s   blue {blue} - {red} red,{time} s   azul {blue} - {red} vermelho
+{time} s   blue {blue} - {red} red   (over),{time} s   azul {blue} - {red} vermelho   (fim)
+"{time} s   blue {blue} - {red} red     T give it back, V show the AI's thinking","{time} s   azul {blue} - {red} vermelho     T devolver, V mostrar o que a IA pensa"
+"{time} s   blue {blue} - {red} red     T give it back, V hide the AI's thinking","{time} s   azul {blue} - {red} vermelho     T devolver, V esconder o que a IA pensa"
+past bot {blocker}: {ways},passar o bot {blocker}: {ways}
+"past bot {blocker}: {ways} (bot {blocker} granted it: saves {saves} s, costs it {cost} s)","passar o bot {blocker}: {ways} (o bot {blocker} deixou: poupa {saves} s, custa a ele {cost} s)"
+"past bot {blocker}: {ways} (bot {blocker} refused it: saves {saves} s, costs it {cost} s)","passar o bot {blocker}: {ways} (o bot {blocker} recusou: pouparia {saves} s, custaria a ele {cost} s)"
+dead,morto
+reload,recarregar
+fall back,recuar
+shoot,atirar
+move,mover
+hold,ficar
+look,olhar
+stand,em pé
+crouch,agachado
+walk,andar
+sprint,correr
+resupply,reabastecer
+fetch power,buscar a arma especial
+hide to heal,esconder-se para curar
+head,cabeça
+torso,tronco
+arms,braços
+legs,pernas
+rifle,fuzil
+power,arma especial
+wait,esperar
+go round,contornar
+ask to pass,pedir passagem
+another spot,outro lugar
+attack,atacar
+retreat,recuar
+blue team,time azul
+red team,time vermelho
+played by a person,jogado por uma pessoa
