@@ -5,7 +5,7 @@ half_life: concept
 verified_on: 2026-10-22
 tier: 0
 source: https://aima.cs.berkeley.edu/contents.html
-invalidated_if: a module, a demo or a source named in the table changes, or the owner answers the questions at the end and the roadmap is written as tasks
+invalidated_if: a module, a demo or a source named in the table changes, or a task of the roadmap (T84-T100) lands and changes what the kit has
 teaches: none
 -->
 
@@ -181,7 +181,8 @@ tier 1, as invariant 5 asks. Running a model live is tier 3 and optional.
 
 ## The roadmap
 
-The owner chooses; nothing below is a task yet. Ranked by what each adds
+The owner chose on 2026-10-26 (see the answers after the questions), and
+every entry below is now a task, T84 to T100. Ranked by what each adds
 for its size. Every entry names the invariants it touches: **6** (no
 training at game time) and **7** (the LLM never blocks a frame, and its
 output passes a validator). Invariant 6 is about **fitting**, not about
@@ -331,6 +332,63 @@ Answer by number; the tasks are written after the answers.
    entra agora no roadmap ou continua para depois da biblioteca (T64)?
    **en:** Does `ai_llm` (A.7; its lesson at tier 1, running live at
    tier 3) go on the roadmap now, or wait until after the library (T64)?
+
+## Respostas do dono / The owner's answers (2026-10-26)
+
+**pt-BR:** O dono respondeu às sete perguntas em 2026-10-26. As tarefas
+estão em `tasks/` e na seção "The roadmap after T73" de `tasks/STATUS.md`;
+cada decisão em aberto nelas está escrita para o dono confirmar na revisão.
+
+1. "todos" -- todas as entradas da parte A, primeiro as três recomendadas:
+   MCTS (T84-T88), o diretor (T89), o filtro de partículas (T90); depois
+   `ai_llm` (T91-T93), CSP e WFC (T94, T95), o MDP (T96, T97), bandits
+   (T98) e a modelagem do jogador (T99).
+2. "será que pode ser estilo X-com?" -- confirmado: um **modo** estilo
+   XCOM do jogo tático, no mesmo módulo `board` (esquadrão pequeno,
+   cobertura, chance de acerto, pontos de ação, névoa), não um jogo novo
+   nem uma reescrita do tático atual (T84, T85). O alpha-beta o enfrenta
+   como expectiminimax (T87).
+3. "faz o recomendado pensando em didática de IA" -- a exceção da ADR
+   0016 vale para bandits nas três condições; a emenda da ADR registra
+   (T98 escreve a regra N13).
+4. Opção 3 -- a ADR 0016 se estende à modelagem do jogador nas mesmas três
+   condições (T99 escreve a regra N14).
+5. "segue o recomendado" -- B.2 junto com A.1 (T87) e B.6, utilidade como
+   addon próprio (T100).
+6. Um labirinto pequeno estilo **Pac-Man** (T96), iteração de valor em
+   Python e a política enviada pronta (T97).
+7. `ai_llm` "entra agora", não depois da T64. O exemplo é ideia do dono:
+   "algum exemplo de jogo textual de narrativa que envolve algum desafio
+   narrativo de conversar com um agente por texto rodando uma LLM local"
+   (T93); o addon e o portão da invariante 7 em T91, o runtime local em T92.
+
+**en:** The owner answered the seven questions on 2026-10-26. The tasks
+are in `tasks/` and in `tasks/STATUS.md`'s "The roadmap after T73"
+section; every open decision in them is written down for the owner to
+confirm in review.
+
+1. "todos" -- every entry of part A, the recommended three first: MCTS
+   (T84-T88), the director (T89), the particle filter (T90); then `ai_llm`
+   (T91-T93), CSP and WFC (T94, T95), the MDP (T96, T97), bandits (T98)
+   and player modelling (T99).
+2. "será que pode ser estilo X-com?" -- confirmed: an XCOM-style **mode**
+   of the tactical game on the same `board` module (a small squad, cover,
+   hit chances, action points, fog), not a new game and not a rewrite of
+   the existing tactical game (T84, T85). Alpha-beta faces it as
+   expectiminimax (T87).
+3. "faz o recomendado pensando em didática de IA" -- ADR 0016's exception
+   extends to bandits on its three conditions; the ADR's amendment records
+   it (T98 writes rule N13).
+4. Option 3 -- ADR 0016 extends to player modelling on the same three
+   conditions (T99 writes rule N14).
+5. "segue o recomendado" -- B.2 together with A.1 (T87), and B.6, utility
+   choice as its own addon (T100).
+6. A small **Pac-Man**-style maze (T96), value iteration in Python and the
+   policy shipped (T97).
+7. `ai_llm` "entra agora", not after T64. Its example is the owner's own
+   idea -- a text narrative game whose challenge is talking, by text, to an
+   agent run by a local LLM (T93); the addon and invariant 7's gate in
+   T91, the local runtime in T92.
 
 ## Could not be checked
 

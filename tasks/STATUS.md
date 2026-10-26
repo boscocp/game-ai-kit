@@ -275,6 +275,41 @@ techniques and of second games that test the library's generality.
 | T79 | The turn-based demos speak Portuguese | done | wave 91: tables for skirmish, tictactoe, tactical, stealth, demo_behaviour; English grammar glued in code (MENACE's plural by trimming an s, "the " before a square, articles before a piece) became a key per case; the stealth guard's reason is worded when read; the behaviour panel translates each name in the addon's notation, and the addon's English it translates is copied and held to the addon by a test; L8 (one key, one translation across tables -- "investigate" said two things); `test-locale-screen` opens all eight and now counts errors from before the scene loads (a parse error passed it); new pt-BR fit tests found the MENACE panel, the guard's status and five legend lines too long; the tactical header ran off the window in English already; English says "learned policy" where it said "learned"; manual check the owner's |
 | T80 | The real-time and 3D demos speak Portuguese | todo | after T78; steering, both racers, the bot match and infiltration, the RTS, the fighting game |
 
+## The roadmap after T73: the owner's answers of 2026-10-26
+
+T73's seven questions, answered by the owner on 2026-10-26 (recorded in
+`docs/concepts/the-literature-and-the-kit.md`, both languages): every
+entry of part A ("todos"), MCTS, the director and the particle filter
+first; MCTS in an XCOM-style mode of the tactical game ("será que pode ser
+estilo X-com?"), alpha-beta facing it as expectiminimax (B.2); bandits and
+player modelling under ADR 0016, extended on its three conditions (its
+amendment of 2026-10-26); B.6, utility choice as its own addon; a small
+Pac-Man maze for the MDP; and `ai_llm` now, with a text game where you
+talk to a character run by a local LLM. Proposed order: T84-T88, T89,
+T90, T91-T93, T94-T95, T96-T97, T98, T99; T100 at any point, best before
+T64. Every decision in these files is written down for the owner to
+confirm in review.
+
+| # | Task | State | Notes |
+|---|---|---|---|
+| T84 | An XCOM-style mode of the tactical game: the rules | todo | module `squad` on `board`: four against four, two actions a turn, cover 20/40 negated by a flank, hit = aim - defence - cover (UFOpaedia, EU2012), fog by side; overwatch and hunker down left out; a turn is one unit's action (Roelofs, GAP3 ch. 28, *Xenonauts 2*); Python twin of the shot |
+| T85 | The XCOM-style mode you can play, against an enemy that weighs | todo | `make demo-squad`, menu card naming XCOM; `WeighedSquad` scores one action ahead on its side's view; a does-not-cheat gate; V draws every option's score and hit chance |
+| T86 | Monte Carlo tree search plays the squad | todo | MCTS (UCT) in `ai_adversarial`, not a new addon (invariant 2 and one game interface); `AdversarialGame` drops "players alternate", gains `outcomes`; chance nodes per shot; iterations per frame, never on the frame; a shared xorshift for the Python twin |
+| T87 | Expectiminimax faces MCTS on the same positions | todo | B.2: chance nodes summed, a hand-written evaluation; 30 committed positions and seeded matches at 50/200/1,000 ms; the literature rows name `ai_adversarial` |
+| T88 | Art for the squad mode: open packs, referenced | todo | the owner, 2026-10-26: "se precisar veja assets open ou free pra demo x-com"; a survey (URL, licence, fit); ADR 0020's rule -- referenced by URL and sha256, never committed, not even crops; shapes without it; `check_no_assets.py` A2 learns `art_sources.json` |
+| T89 | A director paces the infiltration level | todo | Booth 2009: intensity raised by events, decaying, four phases (build up, sustain peak, peak fade, relax); fixed numbers, invariant 6 untouched; it sends reserve patrols, never tells a guard where you are |
+| T90 | A particle filter tracks the unseen player | todo | `ParticleBelief` in `ai_perception` beside `BeliefMap`: heading-keeping motion, weights from what was not seen and not heard, systematic resampling; "finds you sooner" measured again |
+| T91 | `ai_llm`: the addon, its validator, and invariant 7's gate | todo | reply `{speech, intent, argument}`, the game declares the intents (Façade's discourse acts); `RecordedRuntime` (tier 1-2) and `HttpRuntime` (tier 3); `HTTPRequest` with threads, measured; `check_llm_validated.py` V1-V4 with planted cases |
+| T92 | A local LLM runtime on the large disk, pinned and measured | todo | llama.cpp's server recommended over Ollama, for the sha256; a bake-off of three small models in English and pt-BR; `make llm-bootstrap`, `llm-serve`, `llm-smoke`; nothing in `$HOME` |
+| T93 | Talk your way past the guard: a text game with a local LLM | todo | the owner's idea; known games Suck Up!, Vaudeville, Façade; the guard's trust and suspicion are rules, the LLM only reads your act and voices the guard; the secret never in a prompt; recorded, live and record modes |
+| T94 | Levels declared, not drawn: a constraint solver places the infiltration level | todo | `ai_constraints`: AC-3, backtracking with MRV and LCV; against `LevelGenerator`'s draw-and-test, with two constraints a designer wants added |
+| T95 | Wave function collapse builds the squad mode's maps | todo | WFC as a CSP on T94's solver (mxgmn: "translates a texture synthesis problem into a constraint satisfaction problem"); minimal-entropy order, restart on contradiction |
+| T96 | A small Pac-Man maze, with ghosts that follow the arcade's rules | todo | `make demo-maze`; the Pac-Man Dossier's target tiles, no reversing, modes; one imprecise ghost (a rule, for the MDP's chance); Python twin |
+| T97 | Value iteration plays the maze: an MDP solved in Python, its policy shipped | todo | about 320,000 states, measured before fixed; policy and values in `data/maze/`; a new N rule; policy iteration compared; the value map drawn |
+| T98 | A bandit chooses the fighting opponent's answers, during one fight | todo | `ai_bandit` (UCB1, epsilon-greedy); one bandit per T37 situation, payoff in [0, 1]; ADR 0016's three conditions; writes N13 and updates `CLAUDE.md`'s invariant 6 |
+| T99 | The bot match reads how well you play, during one match | todo | counts (Beta means, no Elo) set the other team's `aim_error` from a fixed table; an event log under ADR 0017 for condition 3; writes N14 |
+| T100 | Utility choice as its own addon, out of `ai_teamwork` | todo | B.6: `ActionChoice`, `ErrandChoice` to `ai_utility`; `AimChoice`, `PassageChoice` examined; same seeds, same results; best before T64 |
+
 ---
 
 ## Resuming after 2026-10-21 (wave 70 merged, wave 71 opened)
