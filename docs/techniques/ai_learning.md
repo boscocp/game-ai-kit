@@ -43,15 +43,18 @@ the one exception is `ai_opponent`'s n-gram (ADR 0016).
 - `make demo-fighting` -- **M** cycles the dummy; "ghost: exact", "ghost:
   nearest" and "clone" are a `CaseTable` and a `SoftmaxModel` fitted to a
   recorded player (see [behaviour_cloning](behaviour_cloning.md)).
-- `make run` (checkers) declares this addon in its manifest but uses none
-  of its classes: its learned weights are read by its own
-  `CheckersWeights` (see [learned_evaluation](learned_evaluation.md)).
+- `make run` (checkers) declares this module for its Python half: the
+  trainer fits with `gameaikit.training`. The game uses none of the addon's
+  classes -- its learned weights are read by its own `CheckersWeights` (see
+  [learned_evaluation](learned_evaluation.md)).
 - Which demo uses which technique, both ways: the catalogue (T76, coming).
 
 ## In this kit {#in-this-kit}
 
 `godot/game/main.gd` (the skirmish) and `godot/game/tactical/learned_blue.gd`
-load `weights.json` through `ModelFile.load_from` and hand it to
+load `weights.json` through `TacticalWeights.load_from` -- `ModelFile`, and
+the tactical game's own check of the conventions it publishes beside the
+models -- and hand it to
 `LearnedPolicy` (`learned_policy.gd`), which takes the `combat` and
 `capture` models from it and compares the combat model's probability
 against a threshold.
@@ -72,15 +75,17 @@ knobs that matter:
 One folder: `godot/addons/ai_learning/`. It needs nothing else, not even
 `ai_core`. Open the project once, or run `godot --headless --import`, so
 Godot registers its classes. The fitting is Python's: `python/gameaikit/`
-(`training/` for the regressions, `cloning/` for a cloned player) -- copy
-what you fit with, and keep it out of the game.
+(`training/` for the regressions and `training/model_file.py` to write the
+file, `cloning/` for a cloned player) -- copy what you fit with, and keep it
+out of the game.
 
 ### A minimal example {#example}
 
 A unit of yours that asks a model Python fitted how likely an attack is to
-win. The model's entry is written in the file so the example runs alone;
-yours comes from your JSON file. This file is run by
-`chance_example_test.gd`, and the gate holds the page equal to it.
+win. It loads `chance_model.json`, written by hand beside it: one model
+and nothing else, which is all a model file needs. Yours is the file your
+Python side wrote. This file is run by `chance_example_test.gd`, and the
+gate holds the page equal to it.
 
 <!-- example: godot/test/ai_learning/chance_example.gd -->
 ```gdscript
@@ -90,34 +95,26 @@ yours comes from your JSON file. This file is run by
 # changes a weight.
 extends Node
 
-## One model as Python publishes it. Your game reads this from the JSON file
-## your Python side wrote; it is here so the example runs on its own.
-const PUBLISHED: Dictionary = {
-	"kind": "logistic",
-	"features": ["my_health", "their_health", "distance"],
-	"weights": [0.05, -0.05, -0.2],
-	"bias": 0.5,
-}
+## Where your Python side wrote the model file. This one is the kit's,
+## written by hand beside this example: one model, nothing else.
+const MODEL_PATH: String = "res://test/ai_learning/chance_model.json"
 
 var _model: LearnedModel
 
 
 func _ready() -> void:
-	_model = model_from(PUBLISHED)
+	_model = model_from(MODEL_PATH)
 
 
-## A model from one published entry, or null when the entry is not one --
-## refused whole, as the kit's `ModelFile` does, never filled in with a guess.
-static func model_from(entry: Dictionary) -> LearnedModel:
-	if not LearnedModel.KINDS.has(entry.get("kind")):
+## The `chance` model in the file at `path`, or null when the file is
+## refused -- whole, with the reason in one sentence, never filled in with a
+## guess.
+static func model_from(path: String) -> LearnedModel:
+	var published: ModelFile = ModelFile.load_from(path)
+	if not published.is_loaded():
+		push_warning(published.error)
 		return null
-	if not (entry.get("bias") is float or entry.get("bias") is int):
-		return null
-	var features := PackedStringArray(entry.get("features", []))
-	var weights := PackedFloat64Array(entry.get("weights", []))
-	if features.is_empty() or features.size() != weights.size():
-		return null
-	return LearnedModel.new(entry["kind"], features, weights, float(entry["bias"]))
+	return published.model("chance")
 
 
 ## How likely an attack is to win, 0 to 1, from the facts by name. A fact the
@@ -131,12 +128,14 @@ func chance_to_win(facts: Dictionary) -> float:
 The features, measured from your game under the names the file uses, and
 what to do with the answer -- usually one comparison against a threshold.
 The weights apply to raw game numbers: the Python side folds its scaling
-back in before publishing, so there is nothing to scale here. **A finding:**
-`ModelFile`, the kit's loader, refuses any file without the tactical game's
-four `feature_conventions` (`nearby_radius` and three more), so outside
-that game build `LearnedModel` from your own entry, as the example does --
-or publish those four. `ClonedPlayer.load_from(path)` has no such tie: it
-loads any cloned player the Python side writes.
+back in before publishing, so there is nothing to scale here. The file is
+`models`, each with `kind`, `features`, `weights` and `bias`; anything else
+in it is yours, handed over unread in `ModelFile.extra`. If your features
+need numbers that are not weights -- a radius, what "alone" reads as --
+publish them there and check them yourself on top of `ModelFile`, as the
+tactical game's `TacticalWeights` does with its four `feature_conventions`.
+`ClonedPlayer.load_from(path)` loads any cloned player the Python side
+writes.
 
 ## Deeper {#deeper}
 

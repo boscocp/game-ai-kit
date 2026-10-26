@@ -4,34 +4,26 @@
 # changes a weight.
 extends Node
 
-## One model as Python publishes it. Your game reads this from the JSON file
-## your Python side wrote; it is here so the example runs on its own.
-const PUBLISHED: Dictionary = {
-	"kind": "logistic",
-	"features": ["my_health", "their_health", "distance"],
-	"weights": [0.05, -0.05, -0.2],
-	"bias": 0.5,
-}
+## Where your Python side wrote the model file. This one is the kit's,
+## written by hand beside this example: one model, nothing else.
+const MODEL_PATH: String = "res://test/ai_learning/chance_model.json"
 
 var _model: LearnedModel
 
 
 func _ready() -> void:
-	_model = model_from(PUBLISHED)
+	_model = model_from(MODEL_PATH)
 
 
-## A model from one published entry, or null when the entry is not one --
-## refused whole, as the kit's `ModelFile` does, never filled in with a guess.
-static func model_from(entry: Dictionary) -> LearnedModel:
-	if not LearnedModel.KINDS.has(entry.get("kind")):
+## The `chance` model in the file at `path`, or null when the file is
+## refused -- whole, with the reason in one sentence, never filled in with a
+## guess.
+static func model_from(path: String) -> LearnedModel:
+	var published: ModelFile = ModelFile.load_from(path)
+	if not published.is_loaded():
+		push_warning(published.error)
 		return null
-	if not (entry.get("bias") is float or entry.get("bias") is int):
-		return null
-	var features := PackedStringArray(entry.get("features", []))
-	var weights := PackedFloat64Array(entry.get("weights", []))
-	if features.is_empty() or features.size() != weights.size():
-		return null
-	return LearnedModel.new(entry["kind"], features, weights, float(entry["bias"]))
+	return published.model("chance")
 
 
 ## How likely an attack is to win, 0 to 1, from the facts by name. A fact the

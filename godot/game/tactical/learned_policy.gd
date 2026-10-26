@@ -31,7 +31,7 @@ const CAPTURE_MODEL: String = "capture"
 ## that becomes a difficulty setting.
 const DEFAULT_THRESHOLD: float = 0.5
 
-var _published: ModelFile
+var _published: TacticalWeights
 var _combat: LearnedModel
 var _capture: LearnedModel
 var _nodes: Array[Vector2i]
@@ -39,7 +39,7 @@ var _threshold: float
 var _router: Pathfinder
 
 
-func _init(published: ModelFile, nodes: Array[Vector2i],
+func _init(published: TacticalWeights, nodes: Array[Vector2i],
 		threshold: float = DEFAULT_THRESHOLD, router: Pathfinder = null) -> void:
 	_published = published
 	_nodes = nodes.duplicate()

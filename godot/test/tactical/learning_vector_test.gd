@@ -50,7 +50,7 @@ func test_a_vector_with_no_conventions_is_refused() -> void:
 	var data: Dictionary = _sound()
 	data.erase("feature_conventions")
 
-	assert_str(LearningVector.why_not_a_vector(data)).contains("M9")
+	assert_str(LearningVector.why_not_a_vector(data)).contains("W6")
 
 
 func test_a_case_of_an_unknown_kind_is_refused() -> void:

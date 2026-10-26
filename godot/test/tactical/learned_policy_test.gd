@@ -46,7 +46,7 @@ func test_a_policy_over_a_missing_file_says_so_and_holds() -> void:
 	# The opponent that stands still and looks thoughtful is the failure this
 	# avoids: a file that did not load has to arrive as a sentence.
 	var policy := LearnedPolicy.new(
-		ModelFile.load_from("res://game/tactical/nothing.json"), NODES)
+		TacticalWeights.load_from("res://game/tactical/nothing.json"), NODES)
 
 	assert_str(policy.why_unusable()).contains("M1")
 	var decision: LearnedDecision = policy.decide(_two_sides(), 2)
@@ -56,7 +56,7 @@ func test_a_policy_over_a_missing_file_says_so_and_holds() -> void:
 
 
 func test_a_policy_over_a_file_with_one_model_missing_says_which() -> void:
-	var half: ModelFile = ModelFile.from_dictionary({
+	var half: TacticalWeights = TacticalWeights.from_dictionary({
 		"feature_conventions": CONVENTIONS,
 		"models": {"combat": _always(0.9)},
 	}, "the test")
@@ -311,8 +311,8 @@ func _policy(chance: float) -> LearnedPolicy:
 
 
 # A published file holding these two models.
-func _file(combat: Dictionary, capture: Dictionary = _flat_model()) -> ModelFile:
-	return ModelFile.from_dictionary({
+func _file(combat: Dictionary, capture: Dictionary = _flat_model()) -> TacticalWeights:
+	return TacticalWeights.from_dictionary({
 		"feature_conventions": CONVENTIONS,
 		"models": {"combat": combat, "capture": capture},
 	}, "the test")

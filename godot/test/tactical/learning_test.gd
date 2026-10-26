@@ -1,11 +1,12 @@
-# The addon's three pieces, each held to the thing it is easy to get wrong:
-# the model to its arithmetic, the file to its refusals, and the features to
-# the conventions the training published.
+# The tactical game's side of its learned models: its weights file held to
+# the conventions the training published, and the features to those
+# conventions. The model's arithmetic and every way a model file in general
+# can be malformed are the addon's, in test/ai_learning/model_file_test.gd.
 #
-# The conformance vectors in spec/vectors/learning/ already hold the model and
-# the features against the Python side. These are the claims that have no
-# Python half to disagree with -- every way a weights file can be malformed,
-# and the clamp that reads terrain the data never covered.
+# The conformance vectors in spec/vectors/learning/ already hold the features
+# against the Python side. These are the claims that have no Python half to
+# disagree with -- the clamp that reads terrain the data never covered -- and
+# the conventions' refusals, which `gameaikit.tactical.report` holds too.
 extends GdUnitTestSuite
 
 const SOUND: Dictionary = {
@@ -50,31 +51,6 @@ func after() -> void:
 	TranslationServer.set_locale(_locale_before)
 
 
-func test_a_linear_model_answers_the_number_itself() -> void:
-	var model := LearnedModel.new(
-		LearnedModel.LINEAR, PackedStringArray(["one", "two"]),
-		PackedFloat64Array([2.0, 0.25]), -1.0)
-
-	assert_float(model.predict(PackedFloat64Array([4.0, 8.0]))).is_equal_approx(9.0, 1e-12)
-
-
-func test_a_logistic_model_answers_a_probability() -> void:
-	var model := LearnedModel.new(
-		LearnedModel.LOGISTIC, PackedStringArray(["one"]),
-		PackedFloat64Array([1.0]), 0.0)
-
-	assert_float(model.predict(PackedFloat64Array([0.0]))).is_equal_approx(0.5, 1e-12)
-	assert_bool(model.predict(PackedFloat64Array([4.0])) > 0.98).is_true()
-
-
-func test_a_row_of_the_wrong_length_answers_nan_rather_than_a_number() -> void:
-	# The fail-loud choice. A short row padded with zeros would come back as a
-	# probability, and a probability is indistinguishable from an answer.
-	var model: LearnedModel = _published().model("combat")
-
-	assert_bool(is_nan(model.predict(PackedFloat64Array([1.0])))).is_true()
-
-
 func test_nan_cannot_be_mistaken_for_clearing_a_threshold() -> void:
 	# The property the rest of the addon rests on: a row nobody could read is
 	# never an attack. Asserted rather than assumed, because it is a property
@@ -85,39 +61,8 @@ func test_nan_cannot_be_mistaken_for_clearing_a_threshold() -> void:
 	assert_bool(nothing >= LearnedPolicy.DEFAULT_THRESHOLD).is_false()
 
 
-func test_a_named_row_is_read_by_name_and_not_by_the_order_it_was_built_in() -> void:
-	# The weight order is the published contract. A caller handing over a
-	# dictionary cannot get it wrong, which is the whole reason this call
-	# exists beside the one taking an array.
-	var model: LearnedModel = _published().model("combat")
-	var forwards: float = model.predict_named({
-		"health_difference": 4, "numeric_advantage": 1,
-		"defender_terrain": 2, "reinforcement_distance": 3,
-	})
-	var backwards: float = model.predict_named({
-		"reinforcement_distance": 3, "defender_terrain": 2,
-		"numeric_advantage": 1, "health_difference": 4,
-	})
-
-	assert_float(forwards).is_equal_approx(backwards, 1e-15)
-	assert_float(forwards).is_equal_approx(0.9740426428022031, 1e-12)
-
-
-func test_a_named_row_missing_a_feature_answers_nan() -> void:
-	var model: LearnedModel = _published().model("combat")
-
-	assert_bool(is_nan(model.predict_named({"health_difference": 4}))).is_true()
-
-
-func test_the_sigmoid_survives_the_row_that_overflows_the_obvious_spelling() -> void:
-	# `1.0 / (1.0 + exp(-value))` returns inf for the second of these, and a
-	# model that dies on one unusual row dies mid-game.
-	assert_float(LearnedModel.sigmoid(800.0)).is_equal_approx(1.0, 1e-12)
-	assert_float(LearnedModel.sigmoid(-800.0)).is_equal_approx(0.0, 1e-12)
-
-
 func test_a_sound_file_publishes_both_models_and_its_conventions() -> void:
-	var published: ModelFile = _published()
+	var published: TacticalWeights = _published()
 
 	assert_str(published.error).is_empty()
 	assert_array(published.model_names()).contains_exactly(["capture", "combat"])
@@ -128,104 +73,42 @@ func test_a_sound_file_publishes_both_models_and_its_conventions() -> void:
 func test_the_published_weights_load() -> void:
 	# Not a duplicate of the above: this is the file `make train` wrote and
 	# the game loads, read through the same rules as everything else.
-	var published: ModelFile = ModelFile.load_from(LearnedPolicy.WEIGHTS_PATH)
+	var published: TacticalWeights = TacticalWeights.load_from(LearnedPolicy.WEIGHTS_PATH)
 
 	assert_str(published.error).is_empty()
-	assert_str(published.generated_by).contains("gameaikit.tactical")
+	assert_str(published.generated_by()).contains("gameaikit.tactical")
 
 
-func test_a_missing_file_is_refused_by_name() -> void:
-	var published: ModelFile = ModelFile.load_from("res://game/tactical/nothing.json")
+func test_a_missing_file_is_refused_by_name_and_says_how_to_make_one() -> void:
+	var published: TacticalWeights = TacticalWeights.load_from("res://game/tactical/nothing.json")
 
-	assert_str(published.error).contains("M1")
+	assert_str(published.error).starts_with("M1 ")
+	assert_str(published.error).contains("make train")
 	assert_bool(published.is_loaded()).is_false()
 
 
-func test_a_file_that_is_not_json_is_refused() -> void:
-	var path: String = "user://not-a-model.txt"
-	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
-	file.store_string("weights: lots\n")
-	file.close()
-
-	assert_str(ModelFile.load_from(path).error).contains("M2")
-
-
-func test_a_refused_file_has_no_models_at_all() -> void:
-	# The property that matters more than the message: a half-read file must
-	# not leave a model predicting from whatever survived.
-	var published: ModelFile = ModelFile.from_dictionary({}, "nothing")
+func test_a_file_refused_for_its_conventions_has_no_models_at_all() -> void:
+	# The property that matters more than the message: the addon loaded both
+	# models, and this game's refusal must still leave none to predict with.
+	var data: Dictionary = SOUND.duplicate(true)
+	data.erase("feature_conventions")
+	var published: TacticalWeights = TacticalWeights.from_dictionary(data, "the test")
 
 	assert_object(published.model("combat")).is_null()
 	assert_array(published.model_names()).is_empty()
+	assert_str(published.generated_by()).is_empty()
 
 
-func test_a_file_publishing_no_models_is_refused() -> void:
-	assert_str(_but({"models": {}}).error).contains("M3")
-
-
-func test_a_model_missing_a_field_is_refused() -> void:
-	var model: Dictionary = _a_model()
-	model.erase("bias")
-
-	assert_str(_with_model(model).error).contains("M4")
-
-
-func test_a_model_that_is_not_an_object_at_all_is_refused() -> void:
-	# Found missing by review: this rule could be deleted with every gate in
-	# the repository staying green.
-	assert_str(_but({"models": {"combat": "0.5, probably"}}).error).contains("M10")
-
-
-func test_a_feature_name_that_is_not_a_string_is_refused() -> void:
-	# The other rule review found with no planted case. Rows are matched by
-	# name, and a name that is a number matches nothing the game can build.
-	var model: Dictionary = _a_model({"features": [7], "weights": [1.0]})
-
-	assert_str(_with_model(model).error).contains("not a string")
-
-
-func test_a_kind_nothing_can_evaluate_is_refused() -> void:
-	# Named rather than guessed at. A file asking for a kind of model this
-	# addon does not implement is a file from a later lesson, and quietly
-	# treating it as linear would answer with great confidence.
-	assert_str(_with_model(_a_model({"kind": "random_forest"})).error).contains("M5")
-
-
-func test_a_feature_listed_twice_is_refused() -> void:
-	# Rows are matched by name, so a name appearing twice is a weight that
-	# can never be applied and a row that quietly means something else.
-	var model: Dictionary = _a_model({"features": ["one", "one"], "weights": [1.0, 2.0]})
-
-	assert_str(_with_model(model).error).contains("twice")
-
-
-func test_a_model_with_no_features_is_refused() -> void:
-	assert_str(_with_model(_a_model({"features": [], "weights": []})).error).contains(
-		"lists no features")
-
-
-func test_a_weight_missing_from_a_feature_is_refused() -> void:
-	var model: Dictionary = _a_model({"features": ["one", "two"], "weights": [1.0]})
-
-	assert_str(_with_model(model).error).contains("M7")
-
-
-func test_a_weight_that_is_not_a_number_is_refused() -> void:
-	assert_str(_with_model(_a_model({"weights": ["heavy"]})).error).contains("M8")
-
-
-func test_an_infinite_bias_is_refused() -> void:
-	# JSON cannot spell an infinity, and `1e400` parses to one. A bias of inf
-	# multiplies every feature into the same answer.
-	assert_str(_with_model(_a_model({"bias": INF})).error).contains("M8")
+func test_a_file_the_addon_refuses_is_refused_in_the_addon_s_words() -> void:
+	assert_str(_but({"models": {}}).error).starts_with("M3 ")
 
 
 func test_a_file_with_no_conventions_is_refused() -> void:
 	var data: Dictionary = SOUND.duplicate(true)
 	data.erase("feature_conventions")
 
-	assert_str(ModelFile.from_dictionary(data, "the test").error).contains(
-		"no feature_conventions block")
+	assert_str(TacticalWeights.from_dictionary(data, "the test").error).starts_with(
+		"W6 the file publishes no feature_conventions block")
 
 
 func test_a_radius_of_zero_is_refused() -> void:
@@ -236,7 +119,18 @@ func test_a_radius_of_zero_is_refused() -> void:
 		"reinforcement_distance_when_alone": 15,
 		"cheapest_ground": 1,
 		"dearest_ground": 3,
-	}}).error).contains("needs a positive number")
+	}}).error).starts_with("W6 feature_conventions.nearby_radius is 0")
+
+
+func test_a_radius_with_a_fraction_is_refused() -> void:
+	# The Python side publishes whole numbers and holds them to it; a radius
+	# of 2.5 counts the same friends as 2, and says it counts more.
+	assert_str(_but({"feature_conventions": {
+		"nearby_radius": 2.5,
+		"reinforcement_distance_when_alone": 15,
+		"cheapest_ground": 1,
+		"dearest_ground": 3,
+	}}).error).starts_with("W6 feature_conventions.nearby_radius is 2.5")
 
 
 func test_a_terrain_range_the_wrong_way_round_is_refused() -> void:
@@ -248,7 +142,7 @@ func test_a_terrain_range_the_wrong_way_round_is_refused() -> void:
 		"reinforcement_distance_when_alone": 15,
 		"cheapest_ground": 3,
 		"dearest_ground": 1,
-	}}).error).contains("costs more than the dearest")
+	}}).error).starts_with("W7 ")
 
 
 func test_a_convention_nobody_publishes_answers_minus_one() -> void:
@@ -349,8 +243,8 @@ func test_a_side_with_nothing_on_the_board_produces_no_row() -> void:
 
 
 # A sound published file, as the game would have loaded one.
-func _published() -> ModelFile:
-	return ModelFile.from_dictionary(SOUND.duplicate(true), "the test")
+func _published() -> TacticalWeights:
+	return TacticalWeights.from_dictionary(SOUND.duplicate(true), "the test")
 
 
 # The sound file with something replaced, for a rule to object to.
@@ -358,21 +252,8 @@ func _published() -> ModelFile:
 # Replaced, never removed: `merge` puts keys in. A test that needs a key gone
 # builds the dictionary itself, which is a distinction this helper cost a
 # green run to make.
-func _but(changed: Dictionary) -> ModelFile:
+func _but(changed: Dictionary) -> TacticalWeights:
 	var data: Dictionary = SOUND.duplicate(true)
 	data.merge(changed, true)
-	return ModelFile.from_dictionary(data, "the test")
+	return TacticalWeights.from_dictionary(data, "the test")
 
-
-# A single-feature model, with whatever this case needs changed about it.
-func _a_model(changed: Dictionary = {}) -> Dictionary:
-	var model: Dictionary = {
-		"kind": "linear", "features": ["one"], "weights": [1.0], "bias": 0.0,
-	}
-	model.merge(changed, true)
-	return model
-
-
-# The sound file with one model replaced by a broken one.
-func _with_model(model: Dictionary) -> ModelFile:
-	return _but({"models": {"only": model}})

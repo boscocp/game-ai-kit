@@ -24,6 +24,7 @@ import sys
 from ..dataset.rows import CAPTURE_FEATURES, COMBAT_FEATURES
 from ..dataset.board import CHEAPEST_GROUND, DEAREST_GROUND
 from ..dataset.simulate import NEARBY, WIDTH
+from ..training import model_file
 from .train import DATA_SEED, SPLIT_SEED, Fitted, Training, run
 
 #: Numbers the *game* has to know to build a feature row, and could otherwise
@@ -197,18 +198,21 @@ def _capture_caveat(training: Training) -> list[str]:
 
 
 def as_json(training: Training) -> dict:
-    """Both models in the shape `ai_learning` will read back in T6."""
-    return {
-        "generated_by": "gameaikit.tactical.report",
-        "games": training.games,
-        "data_seed": DATA_SEED,
-        "split_seed": SPLIT_SEED,
-        "feature_conventions": dict(FEATURE_CONVENTIONS),
-        "models": {
-            "combat": training.combat.model.to_dict(),
-            "capture": training.capture.model.to_dict(),
-        },
-    }
+    """Both models, as the generic model file `ai_learning` reads.
+
+    The format is `gameaikit.training.model_file`'s and belongs to no game.
+    What is this game's is the fields beside the models: the run that made
+    them, and the conventions `_check_conventions` holds -- which the game
+    checks again on its side, in `TacticalWeights`.
+    """
+    return model_file.as_json(
+        {"combat": training.combat.model, "capture": training.capture.model},
+        generated_by="gameaikit.tactical.report",
+        games=training.games,
+        data_seed=DATA_SEED,
+        split_seed=SPLIT_SEED,
+        feature_conventions=dict(FEATURE_CONVENTIONS),
+    )
 
 
 def write(directory: pathlib.Path, training: Training) -> list[pathlib.Path]:
@@ -247,6 +251,13 @@ def findings_for(first: dict, second: dict) -> list[str]:
     findings += _check_conventions(first.get("feature_conventions"))
     for name, model in sorted(first["models"].items()):
         findings += _check_model(name, model)
+    # Last, and in the loader's own words: the game refuses a file on these
+    # rules, so the writer does too. Most of them overlap the W rules above,
+    # which say more about a model this pipeline fitted; this one also holds
+    # what those never looked at, such as each model's `kind`.
+    unloadable = model_file.why_wrong(first)
+    if unloadable:
+        findings.append(unloadable)
     return findings
 
 
@@ -268,6 +279,12 @@ def _check_conventions(published: dict | None) -> list[str]:
                 f"W6 feature_conventions.{name} is {value!r}, and the game needs "
                 "a positive whole number"
             )
+    if not findings and published["cheapest_ground"] > published["dearest_ground"]:
+        findings.append(
+            f"W7 feature_conventions says the cheapest ground "
+            f"({published['cheapest_ground']}) costs more than the dearest "
+            f"({published['dearest_ground']})"
+        )
     return findings
 
 

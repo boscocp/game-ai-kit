@@ -9,12 +9,14 @@ this one found nine of exactly those in a conformance runner.
 import argparse
 import copy
 import dataclasses
+import pathlib
 import unittest
 
 from gameaikit.dataset.rows import CAPTURE_FEATURES, COMBAT_FEATURES
 from gameaikit.dataset import board, simulate
 from gameaikit.dataset.simulate import collect
 from gameaikit.tactical import evaluate, report
+from gameaikit.training import model_file
 from gameaikit.training.models import Model
 from gameaikit.training.split import split_by_game
 from gameaikit.tactical import train
@@ -27,12 +29,14 @@ def sound_report() -> dict:
         "feature_conventions": dict(report.FEATURE_CONVENTIONS),
         "models": {
             "combat": {
+                "kind": "logistic",
                 "features": list(COMBAT_FEATURES),
                 "weights": [1.0, 2.0, -3.0, -0.5, 1.5],
                 "comparable_weights": [2.0, 1.4, -1.3, -0.6, 0.9],
                 "bias": 0.5,
             },
             "capture": {
+                "kind": "linear",
                 "features": list(CAPTURE_FEATURES),
                 "weights": [1.0, 0.1, 0.1, 0.4],
                 "comparable_weights": [1.1, 0.2, 0.1, 0.1],
@@ -175,6 +179,35 @@ class TheReportsRules(unittest.TestCase):
         zeroed = sound_report()
         zeroed["feature_conventions"]["nearby_radius"] = 0
         self.assertIn("W6", report.findings_for(zeroed, zeroed)[0])
+
+    def test_a_terrain_range_the_wrong_way_round_is_caught(self) -> None:
+        # Both numbers positive, and the pair nonsense: the game clamps
+        # terrain between them, and a clamp whose minimum is above its maximum
+        # answers the same wrong number for every cell.
+        reversed_range = sound_report()
+        reversed_range["feature_conventions"]["cheapest_ground"] = 3
+        reversed_range["feature_conventions"]["dearest_ground"] = 1
+        self.assertIn("W7", report.findings_for(reversed_range, reversed_range)[0])
+
+    def test_a_report_the_game_s_loader_would_refuse_is_caught(self) -> None:
+        # A kind nothing can evaluate. No W rule looks at the kind, and the
+        # game's `ModelFile` refuses the file whole for it.
+        unknown = sound_report()
+        unknown["models"]["capture"]["kind"] = "random_forest"
+        self.assertEqual(report.findings_for(unknown, unknown), [
+            "M5 model `capture` is of kind `random_forest`, which nothing here can evaluate"])
+
+    def test_the_committed_weights_are_a_model_file_any_reader_loads(self) -> None:
+        # The published file, through the generic rules alone: no field was
+        # added for them, and none had to be (T106).
+        committed = (pathlib.Path(__file__).resolve().parents[2]
+                     / "godot" / "game" / "tactical" / "weights.json")
+        self.assertEqual(model_file.why_unreadable(committed), "")
+
+    def test_the_sound_report_has_no_findings(self) -> None:
+        # The other half of every test above: each one plants one thing, and
+        # that is worth something only if the unplanted report is clean.
+        self.assertEqual(report.findings_for(sound_report(), sound_report()), [])
 
     def test_the_published_conventions_are_the_simulator_s_own(self) -> None:
         # Not a restatement of the constant: it asserts that what the report

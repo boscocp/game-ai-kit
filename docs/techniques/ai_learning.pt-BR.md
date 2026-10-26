@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 19, linear and logistic regression ; https://docs.godotengine.org/en/stable/classes/class_json.html
 invalidated_if: the kit's LearnedModel, ModelFile, SoftmaxModel, CaseTable or ClonedPlayer signatures change, or the demos that use them are renamed
 teaches: learning
-translation_of: 97a529fd8b385fee46735d76f6253cc8a5354ab481c690eefac06516822d0905
+translation_of: 2342257f2fb37545c0f127045d256c0571d5a9b2771e3c7deec1256e9c640f4c
 -->
 
 > English: [ai_learning.md](ai_learning.md). Os termos que ficam em inglês
@@ -47,15 +47,18 @@ exceção é o *n-gram* do `ai_opponent` (ADR 0016).
   "ghost: nearest" e "clone" são um `CaseTable` e um `SoftmaxModel`
   ajustados a um jogador gravado (veja
   [behaviour_cloning](behaviour_cloning.pt-BR.md)).
-- `make run` (damas) declara este *addon* no seu manifesto mas não usa
-  nenhuma das classes dele: os pesos aprendidos são lidos pelo seu próprio
+- `make run` (damas) declara este módulo pela sua metade Python: o
+  treinador ajusta com `gameaikit.training`. O jogo não usa nenhuma das
+  classes do *addon* -- os pesos aprendidos são lidos pelo seu próprio
   `CheckersWeights` (veja [learned_evaluation](learned_evaluation.pt-BR.md)).
 - Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
 
 ## Neste kit {#in-this-kit}
 
 `godot/game/main.gd` (o *skirmish*) e `godot/game/tactical/learned_blue.gd`
-carregam o `weights.json` por `ModelFile.load_from` e o entregam ao
+carregam o `weights.json` por `TacticalWeights.load_from` -- o `ModelFile`,
+e a verificação do próprio jogo tático das convenções que ele publica ao
+lado dos modelos -- e o entregam ao
 `LearnedPolicy` (`learned_policy.gd`), que tira dele os modelos `combat` e
 `capture` e compara a probabilidade do modelo de combate com um limiar.
 `godot/game/fighting/fight_clone_opponent.gd` joga com um `ClonedPlayer`.
@@ -75,14 +78,16 @@ Os ajustes que importam:
 Uma pasta: `godot/addons/ai_learning/`. Ela não precisa de mais nada, nem
 do `ai_core`. Abra o projeto uma vez, ou rode `godot --headless --import`,
 para o Godot registrar as classes. O ajuste é do Python: `python/gameaikit/`
-(`training/` para as regressões, `cloning/` para um jogador clonado) --
-copie aquilo com que você ajusta, e deixe isso fora do jogo.
+(`training/` para as regressões e `training/model_file.py` para escrever o
+arquivo, `cloning/` para um jogador clonado) -- copie aquilo com que você
+ajusta, e deixe isso fora do jogo.
 
 ### Um exemplo mínimo {#example}
 
 Uma unidade sua que pergunta a um modelo ajustado no Python qual a chance
-de um ataque dar certo. A entrada do modelo está escrita no arquivo para o
-exemplo rodar sozinho; a sua vem do seu arquivo JSON. Este arquivo é
+de um ataque dar certo. Ela carrega o `chance_model.json`, escrito à mão ao
+lado dela: um modelo e nada mais, que é tudo de que um arquivo de modelo
+precisa. O seu é o arquivo que o seu lado Python escreveu. Este arquivo é
 executado por `chance_example_test.gd`, e o *gate* garante que a página é
 igual a ele. Os comentários do código ficam em inglês, como no arquivo.
 
@@ -94,34 +99,26 @@ igual a ele. Os comentários do código ficam em inglês, como no arquivo.
 # changes a weight.
 extends Node
 
-## One model as Python publishes it. Your game reads this from the JSON file
-## your Python side wrote; it is here so the example runs on its own.
-const PUBLISHED: Dictionary = {
-	"kind": "logistic",
-	"features": ["my_health", "their_health", "distance"],
-	"weights": [0.05, -0.05, -0.2],
-	"bias": 0.5,
-}
+## Where your Python side wrote the model file. This one is the kit's,
+## written by hand beside this example: one model, nothing else.
+const MODEL_PATH: String = "res://test/ai_learning/chance_model.json"
 
 var _model: LearnedModel
 
 
 func _ready() -> void:
-	_model = model_from(PUBLISHED)
+	_model = model_from(MODEL_PATH)
 
 
-## A model from one published entry, or null when the entry is not one --
-## refused whole, as the kit's `ModelFile` does, never filled in with a guess.
-static func model_from(entry: Dictionary) -> LearnedModel:
-	if not LearnedModel.KINDS.has(entry.get("kind")):
+## The `chance` model in the file at `path`, or null when the file is
+## refused -- whole, with the reason in one sentence, never filled in with a
+## guess.
+static func model_from(path: String) -> LearnedModel:
+	var published: ModelFile = ModelFile.load_from(path)
+	if not published.is_loaded():
+		push_warning(published.error)
 		return null
-	if not (entry.get("bias") is float or entry.get("bias") is int):
-		return null
-	var features := PackedStringArray(entry.get("features", []))
-	var weights := PackedFloat64Array(entry.get("weights", []))
-	if features.is_empty() or features.size() != weights.size():
-		return null
-	return LearnedModel.new(entry["kind"], features, weights, float(entry["bias"]))
+	return published.model("chance")
 
 
 ## How likely an attack is to win, 0 to 1, from the facts by name. A fact the
@@ -135,13 +132,14 @@ func chance_to_win(facts: Dictionary) -> float:
 As *features*, medidas no seu jogo com os nomes que o arquivo usa, e o que
 fazer com a resposta -- em geral uma comparação com um limiar. Os pesos se
 aplicam aos números crus do jogo: o lado Python desfaz a sua normalização
-antes de publicar, então aqui não há nada a normalizar. **Um achado:** o
-`ModelFile`, o carregador do kit, recusa qualquer arquivo sem as quatro
-`feature_conventions` do jogo tático (`nearby_radius` e mais três); fora
-desse jogo, monte o `LearnedModel` a partir da sua própria entrada, como o
-exemplo faz -- ou publique essas quatro. `ClonedPlayer.load_from(path)` não
-tem esse vínculo: ele carrega qualquer jogador clonado que o lado Python
-escreva.
+antes de publicar, então aqui não há nada a normalizar. O arquivo é
+`models`, cada um com `kind`, `features`, `weights` e `bias`; qualquer outra
+coisa nele é sua, entregue sem leitura em `ModelFile.extra`. Se as suas
+*features* precisam de números que não são pesos -- um raio, o que "sozinho"
+vale --, publique-os ali e verifique-os você mesmo por cima do `ModelFile`,
+como o `TacticalWeights` do jogo tático faz com as suas quatro
+`feature_conventions`. `ClonedPlayer.load_from(path)` carrega qualquer
+jogador clonado que o lado Python escreva.
 
 ## Para ir mais fundo {#deeper}
 

@@ -40,7 +40,7 @@ func test_the_rules_file_s_counter_table_is_the_game_s() -> void:
 
 func test_the_combat_row_carries_the_counter_from_the_attacker_s_side() -> void:
 	var state: BoardState = _board([[BLUE, TacticalRules.RUNNER, Vector2i(3, 3)], [RED, TacticalRules.MORTAR, Vector2i(4, 3)]])
-	var published: ModelFile = _file(_always(0.5))
+	var published: TacticalWeights = _file(_always(0.5))
 
 	assert_int(BoardFeatures.combat_row(state, state.unit_by_id(1), state.unit_by_id(2), published)["counter"]).is_equal(1)
 	assert_int(BoardFeatures.combat_row(state, state.unit_by_id(2), state.unit_by_id(1), published)["counter"]).is_equal(-1)
@@ -372,8 +372,8 @@ func _board(pieces: Array, to_move: int = BLUE) -> BoardState:
 	return BoardState.new(GridGraph.new(14, 9), units, to_move)
 
 
-func _file(combat: Dictionary, capture: Dictionary = _by_distance(1.0)) -> ModelFile:
-	return ModelFile.from_dictionary({"feature_conventions": CONVENTIONS,
+func _file(combat: Dictionary, capture: Dictionary = _by_distance(1.0)) -> TacticalWeights:
+	return TacticalWeights.from_dictionary({"feature_conventions": CONVENTIONS,
 		"models": {"combat": combat, "capture": capture}}, "the test")
 
 

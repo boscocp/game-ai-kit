@@ -1,4 +1,4 @@
-## Loads `weights.json`, or says in one sentence why it will not.
+## Loads a model file, or says in one sentence why it will not.
 ##
 ## Everything here is about refusing. A model built from a half-read file
 ## predicts from zeros, and nobody can tell that from a decision -- so a file
@@ -6,50 +6,53 @@
 ## on screen. The rules are in `_why_wrong`, each with a code, and
 ## `from_dictionary` is public so a test can plant each one.
 ##
-## When not to use it: any format but the one `gameaikit.tactical.report`
-## writes, which that module's header describes.
+## The format, which `gameaikit.training.model_file` writes: a JSON object
+## whose `models` maps a name to `kind`, `features`, `weights` and `bias`.
+## Anything else at the top level is the publishing game's, and is handed to
+## it unread in `extra` -- what those fields must hold is that game's rule to
+## check, on top of this one. Complexity: one pass over the numbers.
+##
+## When not to use it: a model that is not one weight per feature.
 class_name ModelFile
 extends RefCounted
 
 ## The fields every published model carries.
 const MODEL_FIELDS: Array[String] = ["kind", "features", "weights", "bias"]
 
-## Numbers the game needs that are not weights: how close a unit must be to
-## count as nearby, what a unit with no friends reports, and the range of
-## ground the data was gathered on. Required, because the alternative is each
-## reader inventing its own and quietly feeding the model a different feature.
-const REQUIRED_CONVENTIONS: Array[String] = [
-	"nearby_radius",
-	"reinforcement_distance_when_alone",
-	"cheapest_ground",
-	"dearest_ground",
-]
-
 ## Why this file is unusable, or "" when it loaded. One sentence, not a list:
 ## the first thing wrong with a weights file is the thing to fix, and a screen
 ## full of consequences buries it.
 var error: String = ""
 
-## Feature name to value, from the file's `feature_conventions` block.
-var conventions: Dictionary = {}
-
 ## What wrote the file. Carried so a reader can tell a published artifact from
 ## a table somebody typed.
 var generated_by: String = ""
+
+## Every top-level field but `models`, as the file wrote it and unchecked.
+## Where a game publishes the numbers it needs that are not weights -- a
+## radius, a sentinel -- and checks them itself, because only that game knows
+## what they mean. Empty on a refused file.
+var extra: Dictionary = {}
 
 # Model name to LearnedModel. Private: `model()` is how it is read, so an
 # absent name answers null rather than whatever a dictionary lookup does.
 var _models: Dictionary = {}
 
 
-## The weights at `path`, loaded and checked.
+## The model file at `path`, loaded and checked.
 ##
 ## Never null and never half built: on any refusal the result carries `error`
 ## and no models at all.
 static func load_from(path: String) -> ModelFile:
 	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if file == null:
-		return _refused("M1 no weights file at %s -- run `make train`" % path)
+		return _refused("M1 no model file at %s" % path)
+	return from_text(file.get_as_text(), path)
+
+
+## The same checks, over the text of a file already in hand -- one a game
+## keeps inside a resource, say, rather than at a path.
+static func from_text(text: String, source: String) -> ModelFile:
 	# `JSON.new().parse()` rather than the static `JSON.parse_string()`.
 	# Measured on the pinned engine: the static one prints an engine error to
 	# the console on bad input and then returns null, so a file this type is
@@ -58,13 +61,13 @@ static func load_from(path: String) -> ModelFile:
 	# This form returns the code and hands over the parser's own message,
 	# which is more than the static one tells the caller anyway.
 	var reader := JSON.new()
-	if reader.parse(file.get_as_text()) != OK:
+	if reader.parse(text) != OK:
 		return _refused("M2 %s is not JSON: %s, at line %d" % [
-			path, reader.get_error_message(), reader.get_error_line(),
+			source, reader.get_error_message(), reader.get_error_line(),
 		])
 	if not (reader.data is Dictionary):
-		return _refused("M2 %s is JSON, but not an object" % path)
-	return from_dictionary(reader.data, path)
+		return _refused("M2 %s is JSON, but not an object" % source)
+	return from_dictionary(reader.data, source)
 
 
 ## The same checks, over content already in hand.
@@ -75,7 +78,8 @@ static func from_dictionary(data: Dictionary, source: String) -> ModelFile:
 
 	var loaded := ModelFile.new()
 	loaded.generated_by = str(data.get("generated_by", "unknown"))
-	loaded.conventions = data["feature_conventions"]
+	loaded.extra = data.duplicate(true)
+	loaded.extra.erase("models")
 	for name: String in data["models"]:
 		loaded._models[name] = _model_from(data["models"][name])
 	return loaded
@@ -89,15 +93,6 @@ func is_loaded() -> bool:
 ## The model published under this name, or null.
 func model(name: String) -> LearnedModel:
 	return _models.get(name)
-
-
-## A published convention, or -1 when this file has none by that name.
-##
-## Every name in `REQUIRED_CONVENTIONS` is present on a loaded file, so -1
-## means a caller asked for something nobody publishes -- a typo, and one that
-## would otherwise read as a very small radius.
-func convention(name: String) -> int:
-	return int(conventions.get(name, -1))
 
 
 ## The names this file publishes, sorted. For a report, and for a test that
@@ -116,7 +111,9 @@ static func _why_wrong(data: Dictionary) -> String:
 		var wrong: String = _why_model_is_wrong(name, data["models"][name])
 		if wrong != "":
 			return wrong
-	return _why_conventions_are_wrong(data)
+	# There is no M9. It was a rule about one game's own fields, which that
+	# game now checks over `extra`; the codes are identifiers, not a count.
+	return ""
 
 
 # One model: present, the right shape, and every number a number.
@@ -173,33 +170,6 @@ static func _why_weights_are_wrong(name: String, entry: Dictionary) -> String:
 static func _not_a_number(name: String, number: Variant) -> String:
 	return "M8 model `%s` publishes %s, which is not a finite number" % [
 		name, JSON.stringify(number),
-	]
-
-
-# The conventions block: present, and every required number a positive one.
-static func _why_conventions_are_wrong(data: Dictionary) -> String:
-	if not (data.get("feature_conventions") is Dictionary):
-		return "M9 the file publishes no feature_conventions block"
-	var published: Dictionary = data["feature_conventions"]
-	for name: String in REQUIRED_CONVENTIONS:
-		var value: Variant = published.get(name)
-		if not _is_a_number(value) or float(value) <= 0.0:
-			return _not_a_convention(name, value)
-	# Each number is sound on its own and the pair can still be nonsense.
-	# Reversed, a feature that clamps terrain between them clamps with a
-	# minimum above its maximum -- which `clampi` answers rather than refuses,
-	# so every cell on the board would come back as the same wrong number.
-	if int(published["cheapest_ground"]) > int(published["dearest_ground"]):
-		return "M9 feature_conventions says the cheapest ground (%s) costs more than the dearest (%s)" % [
-			published["cheapest_ground"], published["dearest_ground"],
-		]
-	return ""
-
-
-# The M9 sentence, out of line for the same reason as M8's.
-static func _not_a_convention(name: String, value: Variant) -> String:
-	return "M9 feature_conventions.%s is %s, and a game needs a positive number" % [
-		name, JSON.stringify(value),
 	]
 
 

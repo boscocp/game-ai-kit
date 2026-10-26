@@ -1,0 +1,11 @@
+{
+  "generated_by": "written by hand for docs/techniques/ai_learning.md",
+  "models": {
+    "chance": {
+      "kind": "logistic",
+      "features": ["my_health", "their_health", "distance"],
+      "weights": [0.05, -0.05, -0.2],
+      "bias": 0.5
+    }
+  }
+}
