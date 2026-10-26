@@ -113,13 +113,14 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-rts-budget test-rts-simulation test-rts-match test-steering-properties \
        test-racing-ladder test-racing-does-not-cheat test-game3d-floor test-botmatch-effects \
        test-racing3d-car test-racing3d-effects test-racing3d-ladder test-racing3d-does-not-cheat test-racing3d-you-drive \
-       test-infiltration-properties test-infiltration test-pad ## Run every gate
+       test-infiltration-properties test-infiltration test-pad \
+       test-locale-screen ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-no-assets lint-readability lint-demos \
        lint-addon-deps lint-modules lint-tiers lint-links lint-workflow lint-license \
        lint-employer-refs lint-docs-freshness lint-literature lint-no-training lint-selftests \
-       lint-translations-docs \
+       lint-translations-docs lint-translations-game \
        test-python test-models ## Every gate that does not need the engine installed
 	@# CI's gate job runs exactly this. It used to hand-list the targets,
 	@# because `check` includes lint-disk-layout, which cannot run where the
@@ -479,7 +480,33 @@ test-menu-walk: import ## The menu, walked: every card plays its example, Escape
 test-demo-overlays: import ## Every example, stepped headless: its overlay holds the AI's reasoning
 	@# The engine half of invariant 13; `lint-demos` is the half without it.
 	@# Neither can see the screen, and the seeing is each example's manual check.
-	@$(GODOT) --headless --path godot -s res://test/menu/demo_overlays.gd
+	@# Twice: in English, and in pt-BR, where a legend line is longer (T78).
+	@$(GODOT) --headless --path godot -s res://test/menu/demo_overlays.gd -- --locale=en
+	@$(GODOT) --headless --path godot -s res://test/menu/demo_overlays.gd -- --locale=pt_BR
+
+# --- the examples in Portuguese (T78) ----------------------------------------
+
+.PHONY: lint-translations-game
+lint-translations-game: ## The translated examples: no word reaches the screen untranslated, every key in its table
+	@$(PYTHON) scripts/check_translations_game.py
+
+.PHONY: test-locale-screen
+test-locale-screen: import ## Each translated example opened in pt-BR: no Control or legend shows a translated key's English
+	@# Its own target, as the racer's are, for --fixed-fps 60. It sets the
+	@# locale with TranslationServer.set_locale, not --language: the menu sets
+	@# it the same way. docs/godot/localisation.md.
+	@#
+	@# First, a table committed without the .translation its import makes
+	@# would load the old words. `import` has just run, so a .translation that
+	@# differs from the commit while its CSV does not was committed stale.
+	@for table in godot/locale/*.csv; do \
+		output=$${table%.csv}.pt_BR.translation; \
+		if git diff --quiet HEAD -- "$$table" && ! git diff --quiet HEAD -- "$$output"; then \
+			echo "test-locale-screen: $$output is stale against $$table; commit what make import wrote" >&2; \
+			exit 1; fi; done
+	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/locale/locale_screen.gd
+
+# ------------------------------------------------------------------------------
 
 .PHONY: test-decisions
 test-decisions: import ## The two fights the learned opponent has to get right, and a node

@@ -4,7 +4,11 @@
   "about": "One window for every example, and the walks that hold every card to its scene.",
   "owns": [
     "godot/menu/",
-    "godot/test/menu/"
+    "godot/test/menu/",
+    "godot/locale/menu.csv",
+    "godot/locale/menu.csv.import",
+    "godot/locale/menu.pt_BR.translation",
+    "godot/test/locale/"
   ],
   "depends_on": [
     "botmatch",
@@ -28,6 +32,7 @@
   ],
   "gates": [
     "test-demo-overlays",
+    "test-locale-screen",
     "test-menu-walk"
   ]
 }

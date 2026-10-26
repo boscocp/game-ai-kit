@@ -50,18 +50,32 @@ var _board_before_decision: CheckersBoard
 
 
 func _ready() -> void:
-	_legend.set_entries([
-		[Art.texture(Art.RED_MAN), "red: you, moving up the board, first"],
-		[Art.texture(Art.WHITE_MAN), "white: the computer, moving down"],
-		[Art.texture(Art.CROWN), "crown: a king, moves both ways", CheckersView.CROWN],
-		[CheckersView.SELECTED, "yellow ring: the piece in your hand"],
-		[CheckersView.MUST_CAPTURE, "orange ring: must capture; cross: taken"],
-		[CheckersView.TARGET, "green: where the piece in hand can go"],
-		[CheckersView.LAST_MOVE, "grey squares: the last move played"],
-		[CheckersView.CONSIDERED, "blue arrow: a move white considered"],
-		[CheckersView.CHOSEN, "pink arrow: the move white will play"],
-	] as Array[Array])
+	_legend.set_entries(_legend_entries())
 	new_game()
+	Language.apply_if_opened_alone(self)
+
+
+# The words are rebuilt in the language just chosen: a Label set from code
+# keeps the text it was given, and the board's labels are drawn, not
+# Controls. The notification also comes on entering the tree, before _ready.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_legend.set_entries(_legend_entries())
+		_refresh()
+
+
+func _legend_entries() -> Array[Array]:
+	return [
+		[Art.texture(Art.RED_MAN), tr("red: you, moving up the board, first")],
+		[Art.texture(Art.WHITE_MAN), tr("white: the computer, moving down")],
+		[Art.texture(Art.CROWN), tr("crown: a king, moves both ways"), CheckersView.CROWN],
+		[CheckersView.SELECTED, tr("yellow ring: the piece in your hand")],
+		[CheckersView.MUST_CAPTURE, tr("orange ring: must capture; cross: taken")],
+		[CheckersView.TARGET, tr("green: where the piece in hand can go")],
+		[CheckersView.LAST_MOVE, tr("grey squares: the last move played")],
+		[CheckersView.CONSIDERED, tr("blue arrow: a move white considered")],
+		[CheckersView.CHOSEN, tr("pink arrow: the move white will play")],
+	] as Array[Array]
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -94,7 +108,7 @@ func click_square(square: Vector2i) -> void:
 	_message = ""
 	var owner: int = CheckersBoard.owner_of(_board.piece_at(square))
 	if _board.to_move != PERSON:
-		_message = "it is white's turn: space plays the pink move"
+		_message = "it is white's turn: space plays the pink move"  # shown through tr()
 	elif _hand.is_holding() and _hand.targets(_board).has(square):
 		# Before "pick up your own piece": a king's capture can end on the
 		# square it started from, which holds the king itself.
@@ -105,9 +119,9 @@ func click_square(square: Vector2i) -> void:
 	elif _hand.is_holding():
 		_move_hand_to(square)
 	elif owner == COMPUTER:
-		_message = "that is one of white's pieces: yours are red"
+		_message = "that is one of white's pieces: yours are red"  # shown through tr()
 	else:
-		_message = "click one of your red pieces first"
+		_message = "click one of your red pieces first"  # shown through tr()
 	_refresh()
 
 
@@ -152,7 +166,7 @@ func use_learned(learned: bool) -> void:
 
 ## Which evaluation white is searching with, as the panel names it.
 func evaluation_name() -> String:
-	return "learned" if _learned else "hand-written"
+	return "learned" if _learned else "hand-written"  # shown through tr()
 
 
 ## Why the chosen move scores as it does: the position at the end of the line

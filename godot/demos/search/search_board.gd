@@ -42,16 +42,16 @@ func _init(board_name: String, board_promise: String, board_rows: Array[String],
 ## The boards the demo offers, in the order B steps through them.
 static func named() -> Array[SearchBoard]:
 	return [
-		SearchBoard.new("wall and mud",
+		SearchBoard.new("wall and mud",  # shown through tr()
 			"Dijkstra goes round the mud breadth-first wades through; A* takes the same route and looks at less",
 			_wall_and_mud(), _astar_saves_work_round_the_mud),
-		SearchBoard.new("maze",
+		SearchBoard.new("maze",  # shown through tr()
 			"one way through: all four find the same route, and only the work differs",
 			_maze(), _every_route_costs_the_same),
-		SearchBoard.new("open field",
+		SearchBoard.new("open field",  # shown through tr()
 			"nothing in the way: A* heads for the goal and expands under a quarter of what Dijkstra does",
 			_open_field(), _astar_expands_under_a_quarter),
-		SearchBoard.new("depth-first trap",
+		SearchBoard.new("depth-first trap",  # shown through tr()
 			"the goal is two cells away, but depth-first tries left first: its route costs more than Dijkstra's",
 			_depth_first_trap(), _depth_first_pays_more),
 	] as Array[SearchBoard]

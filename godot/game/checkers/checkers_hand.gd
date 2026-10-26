@@ -70,7 +70,7 @@ func click(board: CheckersBoard, square: Vector2i) -> CheckersMove:
 		if move.to() == square and square != route[0]:
 			return move
 	if route.size() > 1:
-		refusal = "the jump is not finished: click the next green square"
+		refusal = "the jump is not finished: click the next green square"  # shown through tr()
 	else:
 		refusal = CheckersRules.why_refused(board, route[0], square)
 	return null
@@ -90,5 +90,5 @@ func _follows_route(move: CheckersMove) -> bool:
 
 func _why_it_cannot_move(board: CheckersBoard, square: Vector2i) -> String:
 	if CheckersRules.must_capture(board):
-		return "a capture is compulsory, and this piece cannot capture: the ringed pieces can"
-	return "that piece has no move from here: every square it could reach is taken"
+		return "a capture is compulsory, and this piece cannot capture: the ringed pieces can"  # shown through tr()
+	return "that piece has no move from here: every square it could reach is taken"  # shown through tr()

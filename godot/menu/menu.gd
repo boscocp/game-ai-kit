@@ -20,6 +20,11 @@
 ##
 ## A catalogue, not a game, and laid out like one: light text on a dark
 ## ground, nothing under 17 px, nothing pinned small in a corner (T8).
+##
+## The button at the top right, or L, or Y on a pad, switches every example
+## between English and Brazilian Portuguese at once, and the choice is kept
+## for next time (T78, `Language`). The cards themselves are still English:
+## their words are the catalogue's, translated in a later task.
 class_name ExampleMenu
 extends Control
 
@@ -37,13 +42,17 @@ const CARD_SIZE: int = 17
 ## pad button at all, measured, so nothing here would move without it.
 const MENU_PAD: Dictionary = {JOY_BUTTON_DPAD_UP: KEY_UP, JOY_BUTTON_DPAD_DOWN: KEY_DOWN,
 		JOY_BUTTON_A: KEY_ENTER, JOY_BUTTON_LEFT_SHOULDER: KEY_PAGEUP,
-		JOY_BUTTON_RIGHT_SHOULDER: KEY_PAGEDOWN}
+		JOY_BUTTON_RIGHT_SHOULDER: KEY_PAGEDOWN, JOY_BUTTON_Y: KEY_L}
 ## Inside an example, only View, as Escape, back to the menu: every other
 ## button is the example's own.
 const PLAYING_PAD: Dictionary = {JOY_BUTTON_BACK: KEY_ESCAPE}
 
 ## The cards, in the order they are listed.
 var catalogue: ExampleCatalogue
+## Where the language chosen is kept. A test points it somewhere of its own
+## before the menu enters the tree, so a person's choice never leaks into a
+## test, nor a test's into the person's game.
+var settings_path: String = Language.SETTINGS
 
 var _pad := PadAsKeys.new()
 var _pad_on_menu: bool = false
@@ -51,21 +60,56 @@ var _list: ItemList
 var _heading: Label
 var _card: RichTextLabel
 var _play: Button
+var _title: Label
+var _help: Label
+var _language: Button
 
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	catalogue = ExampleCatalogue.load_from()
 	_build()
+	# After the build: the change of locale notifies at once, and
+	# `is_node_ready()` is already true inside _ready, so the words it sets
+	# must have somewhere to go.
+	Language.apply(settings_path)
 	for card: Dictionary in catalogue.cards:
 		_list.add_item(card.get("title", "?"))
+		# A card's title is the catalogue's, not a key: never looked up.
+		_list.set_item_auto_translate_mode(_list.item_count - 1, Node.AUTO_TRANSLATE_MODE_DISABLED)
 	if not catalogue.cards.is_empty():
 		select(0)
 	else:
-		_heading.text = "No examples to show"
 		_card.text = ExampleCatalogue.plain(catalogue.problem)
+	_retranslate()
 	_list.grab_focus()
 	add_child(_pad)
+
+
+## Speak the other language, everywhere, and remember it.
+func switch_language() -> void:
+	Language.choose(Language.other(), settings_path)
+
+
+# Text set from code keeps the words it was given; set it again in the
+# language just chosen. Also sent on entering the tree, before _ready.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_retranslate()
+
+
+func _retranslate() -> void:
+	_title.text = tr("game-ai-kit: every example")
+	_help.text = "\n".join([
+		tr("Up and down choose, Enter plays, Page Up and Down scroll the card, L switches the language;"),
+		tr("Esc inside an example comes back here. On a pad: the D-pad, A, LB and RB, Y, and View."),
+	])
+	_play.text = tr("Play  (Enter)")
+	_language.text = tr("Language: English  (L)")
+	if catalogue.cards.is_empty():
+		_heading.text = tr("No examples to show")
+	elif not _list.get_selected_items().is_empty():
+		select(_list.get_selected_items()[0])
 
 
 ## True while an example, not the menu, is the current scene.
@@ -137,6 +181,9 @@ func _input(event: InputEvent) -> void:
 	if is_playing() and key.keycode == KEY_ESCAPE and not key.echo:
 		get_viewport().set_input_as_handled()
 		back()
+	elif not is_playing() and key.keycode == KEY_L and not key.echo:
+		get_viewport().set_input_as_handled()
+		switch_language()
 	elif not is_playing() and key.keycode in [KEY_PAGEUP, KEY_PAGEDOWN]:
 		var bar: VScrollBar = _card.get_v_scroll_bar()
 		bar.value += bar.page * (1.0 if key.keycode == KEY_PAGEDOWN else -1.0)
@@ -149,14 +196,20 @@ func _build() -> void:
 	ground.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(ground)
 	var size_now: Vector2 = get_viewport_rect().size
-	add_child(_label("game-ai-kit: every example", Vector2(MARGIN, MARGIN), TITLE_SIZE, TEXT))
-	var help: String = "Up and down choose, Enter plays, Page Up and Down scroll the card, " \
-			+ "Esc inside an example comes back here; on a pad, the D-pad, A, LB and RB, and View"
-	add_child(_label(help,
-			Vector2(MARGIN, size_now.y - MARGIN - 24.0), CARD_SIZE, QUIET))
+	_title = _label(Vector2(MARGIN, MARGIN), TITLE_SIZE, TEXT)
+	add_child(_title)
+	_help = _label(Vector2(MARGIN, size_now.y - MARGIN - 48.0), CARD_SIZE, QUIET)
+	add_child(_help)
+	_language = Button.new()
+	_language.position = Vector2(size_now.x - MARGIN - 340.0, MARGIN)
+	_language.size = Vector2(340.0, 40.0)
+	_language.add_theme_font_size_override("font_size", CARD_SIZE)
+	_language.focus_mode = Control.FOCUS_NONE
+	_language.pressed.connect(switch_language)
+	add_child(_language)
 	_list = ItemList.new()
 	_list.position = Vector2(MARGIN, MARGIN * 3.0)
-	_list.size = Vector2(LIST_WIDTH, size_now.y - MARGIN * 5.5)
+	_list.size = Vector2(LIST_WIDTH, size_now.y - MARGIN * 5.5 - 24.0)
 	_list.add_theme_font_size_override("font_size", LIST_SIZE)
 	_list.add_theme_constant_override("v_separation", 12)
 	_list.item_selected.connect(select)
@@ -168,7 +221,9 @@ func _build() -> void:
 func _build_card(size_now: Vector2) -> void:
 	var left: float = MARGIN * 2.0 + LIST_WIDTH
 	var width: float = size_now.x - left - MARGIN
-	_heading = _label("", Vector2(left, MARGIN * 3.0), TITLE_SIZE - 4, ACCENT)
+	_heading = _label(Vector2(left, MARGIN * 3.0), TITLE_SIZE - 4, ACCENT)
+	# The heading shows a card's title, from the catalogue: not a key.
+	_heading.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	add_child(_heading)
 	_card = RichTextLabel.new()
 	_card.bbcode_enabled = true
@@ -180,7 +235,6 @@ func _build_card(size_now: Vector2) -> void:
 	_card.focus_mode = Control.FOCUS_NONE
 	add_child(_card)
 	_play = Button.new()
-	_play.text = "Play  (Enter)"
 	_play.position = Vector2(left, size_now.y - MARGIN * 2.5 - 48.0)
 	_play.add_theme_font_size_override("font_size", LIST_SIZE)
 	_play.focus_mode = Control.FOCUS_NONE
@@ -188,9 +242,8 @@ func _build_card(size_now: Vector2) -> void:
 	add_child(_play)
 
 
-func _label(words: String, where: Vector2, font_size: int, colour: Color) -> Label:
+func _label(where: Vector2, font_size: int, colour: Color) -> Label:
 	var label := Label.new()
-	label.text = words
 	label.position = where
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", colour)

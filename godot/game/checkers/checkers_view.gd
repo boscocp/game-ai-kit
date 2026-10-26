@@ -53,15 +53,18 @@ static func centre_of(square: Vector2i) -> Vector2:
 
 
 ## A value as the board and the panel write it: signed, two decimals, `≤` in
-## front of a bound, and "wins" or "loses" for a game the search saw finish.
+## front of a bound, and "wins" or "loses" for a game the search saw finish --
+## in the language the examples speak, so static, through TranslationServer.
 static func value_words(value: float, exact: bool) -> String:
 	var bound: String = "" if exact else "≤ "
 	if value >= CheckersGame.WIN:
 		# A bound at a win says nothing about the move: it was cut short once
 		# a winning move had been found, and could be worth anything.
-		return "wins" if exact else "≤ wins: not looked at"
+		if exact:
+			return TranslationServer.translate("wins")
+		return "≤ " + TranslationServer.translate("wins: not looked at")
 	if value <= -CheckersGame.WIN:
-		return bound + "loses"
+		return bound + TranslationServer.translate("loses")
 	# Rounded first, so a value a hair below zero is not printed as "-0.00".
 	var shown: float = snappedf(value, 0.01)
 	return bound + "%+.2f" % (0.0 if is_zero_approx(shown) else shown)

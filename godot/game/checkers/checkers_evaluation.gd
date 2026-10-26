@@ -24,7 +24,7 @@ extends RefCounted
 ## The counts, in the order every weight list follows. Python's
 ## `gameaikit.checkers.evaluation.FEATURES` is the same list, and the
 ## evaluation vector holds the two to it.
-const FEATURES: Array[String] = ["men", "kings", "advancement"]
+const FEATURES: Array[String] = ["men", "kings", "advancement"]  # shown through tr()
 
 const MAN: float = 1.0
 const KING: float = 1.5

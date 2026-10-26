@@ -1,0 +1,63 @@
+en,pt_BR
+white has not moved yet.,as brancas ainda não jogaram.
+"when it is white's turn, every move it considered","na vez das brancas, cada lance que elas consideraram"
+"appears here and on the board, with its value,","aparece aqui e no tabuleiro, com o seu valor,"
+before it plays one.,antes de jogarem um deles.
+"value: white's lead at the line's end, by these weights (E):","valor: a vantagem das brancas no fim da linha, por estes pesos (E):"
+1-6: how many plies white looks ahead (now {depth})  ·  E: hand or learned weights  ·  R: new game,1-6: quantos meios-lances as brancas calculam (agora {depth})  ·  E: pesos escritos à mão ou aprendidos  ·  R: nova partida
+white searches with the {weights} weights,as brancas buscam com os pesos {weights}
+hand-written,escritos à mão
+learned,aprendidos
+hand,à mão
+"searched {positions} positions; skipped {pruned} replies, whole branches","examinou {positions} posições; pulou {pruned} respostas, ramos inteiros"
+"WHITE IS ABOUT TO MOVE  ·  alpha-beta, 1 ply ahead","AS BRANCAS VÃO JOGAR  ·  alpha-beta, 1 meio-lance à frente"
+"WHITE'S LAST MOVE  ·  alpha-beta, 1 ply ahead","ÚLTIMO LANCE DAS BRANCAS  ·  alpha-beta, 1 meio-lance à frente"
+"WHITE IS ABOUT TO MOVE  ·  alpha-beta, {depth} plies ahead","AS BRANCAS VÃO JOGAR  ·  alpha-beta, {depth} meios-lances à frente"
+"WHITE'S LAST MOVE  ·  alpha-beta, {depth} plies ahead","ÚLTIMO LANCE DAS BRANCAS  ·  alpha-beta, {depth} meios-lances à frente"
+white ahead,vantagem
+count,contagem
+men,pedras
+kings,damas
+advancement,avanço
+drawn: forty moves each with no capture and no man moved,empate: quarenta lances de cada lado sem captura e sem pedra movida
+"your move: click a red piece, then a green square","sua vez: clique numa peça vermelha, depois numa casa verde"
+white will play the pink arrow  ·  space plays it,as brancas vão jogar a seta rosa  ·  espaço joga
+piece in hand: click a green square -- a jump goes one hop per click,peça na mão: clique numa casa verde -- uma captura avança um salto por clique
+you must capture: click a ringed piece,a captura é obrigatória: clique numa peça com anel
+you win: white has no pieces left,você venceu: as brancas não têm mais peças
+you win: white cannot move,você venceu: as brancas não podem se mover
+white wins: you have no pieces left,as brancas venceram: você não tem mais peças
+white wins: you cannot move,as brancas venceram: você não pode se mover
+drawn in {moves} moves each unless a piece is taken or a man moves,"empate em {moves} lances de cada lado, a menos que uma peça seja capturada ou uma pedra se mova"
+"and {count} more, none better","e mais {count}, nenhum melhor"
+will play,vai jogar
+played,jogou
+white,brancas
+red,vermelhas
+"the line it expects, which gives that value:","a linha que elas esperam, que dá esse valor:"
+"≤ x: cut short once proved worth at most x, so no better.","≤ x: interrompido ao provar que vale no máximo x, portanto não é melhor."
+a tie goes to the move white lists first.,um empate fica com o lance que as brancas listam primeiro.
+wins,vence
+wins: not looked at,vence: não examinado
+loses,perde
+"red: you, moving up the board, first","vermelhas: você, subindo o tabuleiro, começa"
+"white: the computer, moving down","brancas: o computador, descendo"
+"crown: a king, moves both ways","coroa: uma dama, anda nos dois sentidos"
+yellow ring: the piece in your hand,anel amarelo: a peça na sua mão
+orange ring: must capture; cross: taken,anel laranja: deve capturar; cruz: capturada
+green: where the piece in hand can go,verde: aonde a peça na mão pode ir
+grey squares: the last move played,casas cinza: o último lance jogado
+blue arrow: a move white considered,seta azul: um lance que as brancas consideraram
+pink arrow: the move white will play,seta rosa: o lance que as brancas vão jogar
+it is white's turn: space plays the pink move,é a vez das brancas: espaço joga o lance rosa
+that is one of white's pieces: yours are red,essa peça é das brancas: as suas são vermelhas
+click one of your red pieces first,clique primeiro numa das suas peças vermelhas
+the jump is not finished: click the next green square,a captura não terminou: clique na próxima casa verde
+"a capture is compulsory, and this piece cannot capture: the ringed pieces can","a captura é obrigatória, e esta peça não pode capturar: as peças com anel podem"
+that piece has no move from here: every square it could reach is taken,essa peça não tem lance daqui: toda casa que ela alcançaria está ocupada
+that is not one of your pieces,essa peça não é sua
+"a capture is compulsory: jump over a piece, and finish every jump that follows",a captura é obrigatória: salte sobre uma peça e termine todos os saltos seguintes
+pieces move only to an empty dark square,as peças só vão para uma casa escura vazia
+pieces move only diagonally,as peças só andam na diagonal
+a man moves only forward; it can move back once it is crowned,a pedra só anda para a frente; pode voltar depois de virar dama
+a piece steps one square diagonally,a peça anda uma casa na diagonal
