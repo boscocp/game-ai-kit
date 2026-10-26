@@ -95,9 +95,10 @@ func controller_name() -> String:
 	return level.name
 
 
-## The level's three knobs, for the screen.
+## The level's three knobs, for the screen, in its language: the addon's
+## `Difficulty.describe()` is English, and `DifficultyWords` translates it.
 func describe() -> String:
-	return level.describe()
+	return DifficultyWords.said(level)
 
 
 ## A new turn: plan as the level allows, forget last turn's strikes, and at

@@ -171,6 +171,40 @@ RTS and the fighting game, by the same rules, with what they added:
   a Label3D, a HUD drawn with `draw_string` and a panel shown only when
   toggled are not.
 
+## The tactical screen fits, and a wrapped Label is measured (T102, wave 100)
+
+- **The header wraps.** The tactical header was three lines, each its own
+  width, the rule line 2,005 px in English and 2,408 in pt-BR. It now wraps
+  inside its 1,232 px, at 13 px, and its last line ends above the board
+  under every controller in both languages (34 px clear at worst, the
+  learned policy's description in pt-BR). The status is 13 px too. The
+  line naming every controller C cycles through left the status for a line
+  of its own under the board, `Interface/Keys`, shown on either turn: with
+  the planner's plan in the status, the column's words ran to y=900 of 720
+  in English, measured at 14 px. The computer's keys and its count of decisions follow the
+  decision with no blank line between. `test/tactical/tactical_layout_test.gd`
+  holds the header, the status on both turns and the keys line, in both
+  languages, under every controller.
+- **A wrapped Label is measured whole.** Measured on the pinned engine: a
+  Label that wraps reports, as its minimum height, the height of its
+  wrapped words, and grows to it past the size it was given (the tactical
+  status, given 552 px, held 569). `test-locale-screen` now measures every
+  visible wrapped Label too: its rectangle inside the window's width, and
+  its words ending the gutter (24 px) above the bottom -- planted: a
+  wrapped Label too tall and one too wide. It found three more, named in
+  `NOT_YET_FITTED` and left for T105: the behaviour demo's status (711 in
+  both languages), the skirmish's (716 in pt-BR) and the RTS card's info
+  (741 in pt-BR, 721 in English: past the window).
+- **An addon's English, worded by the game that shows it.** The difficulty
+  levels on the tactical header said `Difficulty.describe()`'s English in
+  pt-BR (`ai_planning`). No addon here calls `tr()` -- an addon depends on
+  `ai_core` only, never on a game's tables -- so `describe()` stays
+  English, for the logs and `difficulty_knobs.gd`, and `DifficultyWords`
+  in the tactical game copies its sentence as keys. A test holds the copy
+  to the addon: equal in English, no English word left in pt-BR, and every
+  field of `Difficulty` named in `DifficultyWords.FIELDS` (a planted
+  field, and a reworded `describe()`, each fail it).
+
 ## Measured on 4.7.2
 
 A scratch project, one table, the locale set with

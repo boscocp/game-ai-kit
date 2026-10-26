@@ -289,3 +289,6 @@ the side to move already owns {upgrade},o lado da vez já tem a melhoria {upgrad
 {step} is occupied by unit {id},a casa {step} está ocupada pela unidade {id}
 {cell} is not next to unit {id},a casa {cell} não fica ao lado da unidade {id}
 a {kind} cannot stand on {cell},{kind} não pode ficar na casa {cell}
+any length,qualquer extensão
+{count} actions,{count} ações
+"{level}: plans {horizon} ahead, searches {depth} ply/plies, noise {noise}","{level}: planeja {horizon} à frente, busca {depth} meio-lance(s), ruído {noise}"

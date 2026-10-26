@@ -41,6 +41,7 @@ const WHAT_THIS_IS: String = "tactics in the style of Advance Wars: build, cross
 @onready var _intent: IntentView = $IntentView
 @onready var _status: Label = $Interface/Status
 @onready var _header: Label = $Interface/Header
+@onready var _keys: Label = $Interface/Keys
 @onready var _legend: Legend = $Interface/Legend
 @onready var _end_button: Button = $Interface/EndTurn
 @onready var _undo_button: Button = $Interface/Undo
@@ -105,6 +106,7 @@ func _set_words() -> void:
 	_legend.set_entries(TacticalLegend.entries(_types))
 	_end_button.text = tr("End turn (space)")
 	_undo_button.text = tr("Undo (Z)")
+	_keys.text = controllers_to_come()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -392,8 +394,10 @@ func _press(keycode: Key) -> void:
 		_refresh()
 
 
-## Every controller C cycles through, named on screen beside the one playing,
-## so a person knows the computer is a slot and not a fixed opponent. The
+## Every controller C cycles through, named on screen under the board on
+## either side's turn, so a person knows the computer is a slot and not a
+## fixed opponent. Under the board, not in the status: the planner's plan
+## filled the status column past the window's bottom (T102). The
 ## names come from `TacticalRoster`, so the sentence cannot fall behind it.
 static func controllers_to_come() -> String:
 	var names: Array[String] = []
@@ -611,7 +615,7 @@ func _status_text() -> String:
 	if winner != TacticalVictory.NOBODY:
 		return TacticalVictory.announcement(winner, state)
 	if not _persons_turn():
-		return TacticalStatus.computer_text(state, _computer_turn, computer, _last_event) + "\n\n" + controllers_to_come()
+		return TacticalStatus.computer_text(state, _computer_turn, computer, _last_event)
 	var unit: Unit = state.unit_by_id(_selected_id)
 	var news: String = _last_event
 	if unit == null and _turn.unspent(state).is_empty():

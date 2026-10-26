@@ -50,7 +50,10 @@ static func text(state: BoardState, in_hand: Unit, refusal: String, news: String
 
 
 ## What the status says on the computer's turn, whichever side it plays: who
-## is playing it, what it is about to do and why, and what to press.
+## is playing it, what it is about to do and why, and what to press. The
+## keys and the count follow the decision with no blank line between: with
+## the planner's plan below them the column was 30 px from the window's
+## bottom in pt-BR (T102).
 static func computer_text(state: BoardState, turn: BlueTurn, controller: BlueController, news: String = "") -> String:
 	var side: String = side_name(state.current_faction)
 	var lines: Array[String] = [_headline(state), ControlPoints.describe(state),
@@ -59,11 +62,11 @@ static func computer_text(state: BoardState, turn: BlueTurn, controller: BlueCon
 		lines.append("\n" + news)
 	if turn.next != null:
 		lines.append("\n" + TranslationServer.translate("next (drawn in pink): unit {unit} {why}").format({unit = turn.next.unit_id, why = turn.next.reason}))
-		lines.append("\n" + TranslationServer.translate("space plays it  ·  enter plays the rest of {side}'s turn").format({side = side}))
+		lines.append(TranslationServer.translate("space plays it  ·  enter plays the rest of {side}'s turn").format({side = side}))
 	else:
 		lines.append("\n" + TranslationServer.translate("{side} has finished its turn. Space hands it back to {other}").format({
 			side = side, other = side_name(TacticalScenario.FACTIONS - 1 - state.current_faction)}))
-	lines.append("\n" + TranslationServer.translate("{count} decision(s) played this turn").format({count = turn.played.size()}))
+	lines.append(TranslationServer.translate("{count} decision(s) played this turn").format({count = turn.played.size()}))
 	var plan: Array[String] = controller.plan_lines()
 	if not plan.is_empty():
 		lines.append("\n" + "\n".join(plan) + "\n" + TranslationServer.translate("(the numbers on the board are the pieces each step counts on)"))

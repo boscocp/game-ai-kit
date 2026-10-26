@@ -22,10 +22,14 @@
 #
 # A line of a Label that does not wrap must fit the window, too: a
 # Portuguese line is longer, and T78's review found one running off the
-# screen. A Label3D's words are read as a Label's are (T80).
+# screen. A Label that wraps must fit as a whole: its rectangle inside the
+# window's width, and its wrapped words ending a margin above the window's
+# bottom (T102, after the tactical header ran to x=2432 and its status to
+# y=719 of 720). A Label3D's words are read as a Label's are (T80).
 #
 # Planted: a Label whose auto-translation is disabled, a formatted English
-# line, and an empty scene; each must be refused, or the check sees nothing
+# line, a line too wide, a wrapped Label too tall and one too wide, and an
+# empty scene; each must be refused, or the check sees nothing
 # and says so. Any engine error while the demos run is a failure too: a
 # SCRIPT ERROR aborts only its function and the run would otherwise print a
 # clean summary.
@@ -44,8 +48,8 @@ const EXAMPLES: Dictionary = {
 	"res://game/tictactoe/tictactoe.tscn": ["Interface/Status", "Interface/Decision", "Interface/Legend"],
 	"res://game/stealth/stealth.tscn": ["Interface/Status", "Interface/Legend"],
 	"res://demos/behaviour/behaviour_demo.tscn": ["Interface/Status", "Interface/Legend"],
-	"res://game/tactical/tactical.tscn": ["Interface/Header", "Interface/Status", "Interface/EndTurn",
-		"Interface/Undo", "Interface/Legend"],
+	"res://game/tactical/tactical.tscn": ["Interface/Header", "Interface/Status", "Interface/Keys",
+		"Interface/EndTurn", "Interface/Undo", "Interface/Legend"],
 	"res://game/main.tscn": ["Interface/Status", "Interface/Legend"],
 	"res://demos/steering/steering_demo.tscn": ["Interface/Status", "Interface/Legend"],
 	"res://demos/racing/racing_demo.tscn": ["Interface/Status", "Interface/Speedo", "Interface/Legend"],
@@ -56,12 +60,24 @@ const EXAMPLES: Dictionary = {
 	"res://game/fighting/fighting.tscn": ["Interface/Status", "Interface/Decision", "Interface/Legend"],
 	"res://menu/menu.tscn": [],
 }
-## The window's width, from `project.godot`: a line past it is cut off.
+## The window's size, from `project.godot`: words past it are cut off.
 const SCREEN_WIDTH: float = 1280.0
+const SCREEN_HEIGHT: float = 720.0
+## What a wrapped Label keeps clear above the window's bottom edge: the
+## gutter `BoardLayout` leaves between a panel and the edge. Words that end
+## at 719 of 720 fit and still read as cut off (T80's review).
+const BOTTOM_MARGIN: float = BoardLayout.GUTTER
 ## Labels known to run off the window in English as well, so a layout fix
-## rather than a translation one: reported in T80, not hidden. Each is
-## "scene:node".
-const NOT_YET_FITTED: Array[String] = ["res://game/tactical/tactical.tscn:Interface/Header"]
+## rather than a translation one: named here rather than hidden. Each is
+## "scene:node". T102 fitted the tactical header and took it out; its new
+## measure of a wrapped Label found these three, left for T105 (where their
+## words end, in English and in pt-BR). The planted cases below keep the
+## check honest meanwhile.
+const NOT_YET_FITTED: Array[String] = [
+	"res://demos/behaviour/behaviour_demo.tscn:Interface/Status",  # 711, 711
+	"res://game/main.tscn:Interface/Status",  # 658, 716
+	"res://game/rts/rts.tscn:Interface/Card/Info",  # 721, 741: past the window
+]
 
 
 class ErrorCounter extends Logger:
@@ -262,15 +278,18 @@ func _provoke_an_rts_refusal(game: RtsGame) -> Array[String]:
 
 
 # Each line of a Label that does not wrap or clip, measured in its own font:
-# one that reaches past the window's edge is cut off on the screen. Only a
-# visible Label is measured, in the state the stepped scene left it: a
-# Button, a Label3D, a HUD drawn with draw_string and a panel shown only
-# when toggled are not (the legends are, by test-demo-overlays).
+# one that reaches past the window's edge is cut off on the screen. A Label
+# that wraps is measured whole, by `_wrapped_past_the_edge`. Only a visible
+# Label is measured, in the state the stepped scene left it: a Button, a
+# Label3D, a HUD drawn with draw_string and a panel shown only when toggled
+# are not (the legends are, by test-demo-overlays).
 func _past_the_edge(label: String, path: NodePath, shown: Label) -> Array[String]:
-	if shown.autowrap_mode != TextServer.AUTOWRAP_OFF or shown.clip_text or not shown.is_visible_in_tree():
+	if shown.clip_text or not shown.is_visible_in_tree():
 		return []
 	if "%s:%s" % [label, path] in NOT_YET_FITTED:
 		return []
+	if shown.autowrap_mode != TextServer.AUTOWRAP_OFF:
+		return _wrapped_past_the_edge(label, path, shown)
 	var font: Font = shown.get_theme_font("font")
 	var size: int = shown.get_theme_font_size("font_size")
 	var failures: Array[String] = []
@@ -281,9 +300,26 @@ func _past_the_edge(label: String, path: NodePath, shown: Label) -> Array[String
 	return failures
 
 
+# A Label that wraps breaks its lines at its own width, so no line is wider
+# than the Label: what can run off is the Label itself, to the right, or its
+# words, downwards. Its minimum height is the height of its wrapped words
+# (measured on the pinned engine: the tactical status, given 552 px, held
+# words 569 px tall and grew to them), so that is where its words end.
+func _wrapped_past_the_edge(label: String, path: NodePath, shown: Label) -> Array[String]:
+	var box: Rect2 = shown.get_global_rect()
+	var failures: Array[String] = []
+	if box.end.x > SCREEN_WIDTH:
+		failures.append("%s: %s runs off the window, to x=%.0f" % [label, path, box.end.x])
+	var bottom: float = box.position.y + shown.get_combined_minimum_size().y
+	if bottom > SCREEN_HEIGHT - BOTTOM_MARGIN:
+		failures.append("%s: %s runs off the window, its words ending at y=%.0f of %.0f (keep %.0f px clear)" % [
+			label, path, bottom, SCREEN_HEIGHT, BOTTOM_MARGIN])
+	return failures
+
+
 # The planted cases: a key on a Label that may not translate itself, a line
-# formatted from a key, a line too long for the window, and a scene with
-# nothing in it.
+# formatted from a key, a line too long for the window, a wrapped Label too
+# tall for it and one too wide, and a scene with nothing in it.
 func _planted() -> Array[String]:
 	var failures: Array[String] = []
 	for text: String in ["Play  (Enter)", "expandiu 3  ·  cost 7"]:
@@ -303,10 +339,29 @@ func _planted() -> Array[String]:
 	var found: Array[String] = await _look_at("planted", wide_holder, [])
 	if not found.any(func(failure: String) -> bool: return failure.contains("runs off the window")):
 		failures.append("the planted line of 400 x was not seen running off the window")
+	failures += await _planted_wrapped("too tall", Rect2(24, 8, 1232, 40), "a header that says too much ".repeat(200))
+	failures += await _planted_wrapped("too wide", Rect2(1000, 8, 600, 40), "a header laid past the edge")
 	_counter.errors = 0
 	if (await _look_at("planted", Node2D.new(), [])).is_empty():
 		failures.append("an empty scene passed: this check would pass a blank screen")
 	return failures
+
+
+# A wrapped Label laid at `box`, as the tactical header is, saying `words`:
+# the check must find it running off the window.
+func _planted_wrapped(what: String, box: Rect2, words: String) -> Array[String]:
+	_counter.errors = 0
+	var wrapped := Label.new()
+	wrapped.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	wrapped.position = box.position
+	wrapped.size = box.size
+	wrapped.text = words
+	var holder := CanvasLayer.new()
+	holder.add_child(wrapped)
+	var found: Array[String] = await _look_at("planted", holder, [])
+	if not found.any(func(failure: String) -> bool: return failure.contains("runs off the window")):
+		return ["the planted wrapped Label %s was not seen running off the window" % what]
+	return []
 
 
 func _walk(node: Node) -> Array[Node]:
