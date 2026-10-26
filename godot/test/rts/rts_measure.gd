@@ -12,6 +12,7 @@
 # `test/rts/rts_match.gd` holds the claims a check needs.
 extends SceneTree
 
+const StagedRaid := preload("res://test/rts/staged_raid.gd")
 const SEEDS: int = 10
 
 
@@ -41,9 +42,10 @@ func _init() -> void:
 
 
 # The arm's ablation (T56): a normal commander that may arm against the same
-# commander told never to. Both raid -- each goes for the other's home --
-# so the record is what arming is worth against a side that raids.
-# `-- arm` runs only this.
+# commander told never to, over whole matches -- each attacks the other's
+# home, so the record says whether that ever makes one arm. Then the moment
+# the arm is for, staged (`staged_raid.gd`): in the gun's reach both ways,
+# and out of it. `-- arm` runs only this.
 func _arming_ablated() -> void:
 	var normal: Difficulty = RtsLevels.named("normal")
 	_pairing("commander that may arm vs one that never does (normal)",
@@ -52,64 +54,40 @@ func _arming_ablated() -> void:
 			var unarmed := RtsCommander.new(side, normal, seed_value)
 			unarmed.may_arm = false
 			return unarmed)
-	for may_arm: bool in [true, false]:
-		_raided_with_the_army_away(may_arm)
+	_staged("in the gun's reach, may arm", StagedRaid.IN_REACH, true)
+	_staged("in the gun's reach, never arms", StagedRaid.IN_REACH, false)
+	_staged("out of the gun's reach, may arm", StagedRaid.OUT_OF_REACH, true)
 
 
-# The situation the arm is for, played on purpose, since whole matches seldom
-# reach it: west mid-match with a tower up and funds to spare, its four
-# shields in the far east corner, and four east runners held at its home for
-# 90 s. Over SEEDS, how many arms west bought, and the worth west kept less
-# the worth east kept (`RtsVictory.worth`, which prices an arm as it does a
-# unit, so buying one moves nothing by itself).
-func _raided_with_the_army_away(may_arm: bool) -> void:
+# The staged raid, four runners held at `spot` for 90 s with west's army
+# away, over SEEDS: arms bought, when the first came, the worth west kept
+# less the worth east kept (`RtsVictory.worth` prices an arm as it does a
+# unit, so buying one moves nothing by itself), and the raiders left.
+func _staged(label: String, spot: Vector2i, may_arm: bool) -> void:
 	var margin: int = 0
 	var arms: int = 0
+	var first_seconds: Array[float] = []
 	var raiders_left: int = 0
 	for seed_value: int in range(1, SEEDS + 1):
-		var world: RtsWorld = _a_raided_home(seed_value)
-		var commander := RtsCommander.new(RtsScenario.WEST, RtsLevels.named("normal"), seed_value)
-		commander.may_arm = may_arm
-		var played := RtsMatch.new(world, seed_value, {RtsScenario.WEST: commander})
-		var before: int = RtsVictory.worth(world, RtsScenario.WEST) - RtsVictory.worth(world, RtsScenario.EAST)
-		for _second: int in range(90):
-			played.play(RtsWorld.TICKS_PER_SECOND)
-			_hold_the_raid(world)
-		margin += RtsVictory.worth(world, RtsScenario.WEST) - RtsVictory.worth(world, RtsScenario.EAST) - before
-		arms += _arms_bought(played, RtsScenario.WEST)
-		raiders_left += world.units().filter(func(unit: RtsUnit) -> bool: return unit.side == RtsScenario.EAST \
-			and RtsKinds.fights(unit.kind)).size()
-	print("raided with the army away, %s: %d arms over %d seeds; worth margin moved %+.0f a match; raiders left %d" % [
-		"may arm" if may_arm else "never arms", arms, SEEDS, float(margin) / SEEDS, raiders_left])
+		var world: RtsWorld = StagedRaid.stage(seed_value, 4, spot, false)
+		var before: int = _margin(world)
+		var played: RtsMatch = StagedRaid.play(world, seed_value, spot, may_arm, 90)
+		margin += _margin(world) - before
+		arms += StagedRaid.arms_by(played, RtsScenario.WEST)
+		var first: int = StagedRaid.first_arm_tick(played, RtsScenario.WEST)
+		if first >= 0:
+			first_seconds.append(float(first) / RtsWorld.TICKS_PER_SECOND)
+		raiders_left += world.units().filter(func(unit: RtsUnit) -> bool:
+			return unit.side == RtsScenario.EAST and RtsKinds.fights(unit.kind)).size()
+	var when: String = "" if first_seconds.is_empty() else ", first at %.1f s on average" % (
+		first_seconds.reduce(func(total: float, each: float) -> float: return total + each, 0.0) / first_seconds.size())
+	print("staged raid, %s: %d arms over %d seeds%s; worth margin moved %+.0f a match; raiders left %d" % [
+		label, arms, SEEDS, when, float(margin) / SEEDS, raiders_left])
 
 
-# West's home as `_raided_with_the_army_away` describes it.
-static func _a_raided_home(seed_value: int) -> RtsWorld:
-	var world: RtsWorld = RtsScenario.start(seed_value)
-	var home: Vector2i = RtsScenario.home(RtsScenario.WEST)
-	world.add_unit(RtsKinds.BARRACKS, RtsScenario.WEST, home + Vector2i(0, -3))
-	world.add_unit(RtsKinds.TOWER, RtsScenario.WEST, home + Vector2i(3, -3))
-	world.set_funds(RtsScenario.WEST, 2000, 2000)
-	var vent: RtsUnit = world.nearest(Vector2(home), RtsWorld.NEUTRAL, RtsKinds.VENT)
-	var workers: Array[int] = []
-	for unit: RtsUnit in world.units():
-		if unit.side == RtsScenario.WEST and unit.kind == RtsKinds.WORKER:
-			workers.append(unit.id)
-	world.command(RtsScenario.WEST, RtsCommand.gather(workers, vent.id))
-	for index: int in range(4):
-		world.add_unit(RtsKinds.SHIELD, RtsScenario.WEST, world.free_cell_near(Vector2i(44, 3)))
-		world.add_unit(RtsKinds.RUNNER, RtsScenario.EAST, world.free_cell_near(home + Vector2i(4, 0)))
-	return world
-
-
-# Every east fighter still standing that wandered off is put back by west's home.
-static func _hold_the_raid(world: RtsWorld) -> void:
-	var home := Vector2(RtsScenario.home(RtsScenario.WEST))
-	var wandered: Array = world.units().filter(func(unit: RtsUnit) -> bool:
-		return unit.side == RtsScenario.EAST and RtsKinds.fights(unit.kind) \
-			and unit.position.distance_to(home) > TowerWorth.RAID_REACH - 2.0)
-	for unit: RtsUnit in wandered:
-		world.place(unit, home + Vector2(3.5, 0.5))
+# West's worth less east's.
+static func _margin(world: RtsWorld) -> int:
+	return RtsVictory.worth(world, RtsScenario.WEST) - RtsVictory.worth(world, RtsScenario.EAST)
 
 
 # Each level against the one below it. `-- levels` runs only this.

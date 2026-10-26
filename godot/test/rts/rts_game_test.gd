@@ -4,6 +4,8 @@
 # match; these hold the parts small enough that a failure names the part.
 extends GdUnitTestSuite
 
+const StagedRaid := preload("res://test/rts/staged_raid.gd")
+
 
 func test_the_games_domain_is_a_byte_for_byte_copy_of_the_spec() -> void:
 	var spec: String = ProjectSettings.globalize_path("res://").path_join("../spec/pddl/rts-build-order.json")
@@ -271,20 +273,15 @@ func test_the_schedule_times_the_arm_after_the_tower_stands() -> void:
 
 func test_the_arm_is_weighed_by_the_raid_and_by_how_soon_help_comes() -> void:
 	# A tower standing and funds to spare: only the raid and help change.
-	var world: RtsWorld = _a_home_with_a_tower()
+	var world: RtsWorld = StagedRaid.home_with_a_tower(1)
 	var home: Vector2i = RtsScenario.home(RtsScenario.WEST)
+	var raid: Array[RtsUnit] = StagedRaid.add(world, RtsScenario.EAST, RtsKinds.RUNNER, 4, home + StagedRaid.IN_REACH)
 	var belief := RtsInfluence.new(48, 32)
-	var raid: Array[RtsUnit] = []
-	for index: int in range(4):
-		raid.append(world.add_unit(RtsKinds.RUNNER, RtsScenario.EAST, home + Vector2i(3, index - 2)))
 	belief.update(RtsSnapshot.of(world, RtsScenario.WEST))
-	var weighed: Dictionary = TowerWorth.weigh(RtsSnapshot.of(world, RtsScenario.WEST), belief)
-	assert_bool(weighed["worth_it"]).is_true()
+	assert_bool(TowerWorth.weigh(RtsSnapshot.of(world, RtsScenario.WEST), belief)["worth_it"]).is_true()
 	# The same raid with its own shields standing at home: help is there.
-	var guards: Array[RtsUnit] = []
-	for index: int in range(4):
-		guards.append(world.add_unit(RtsKinds.SHIELD, RtsScenario.WEST, home + Vector2i(1, index - 2)))
-	weighed = TowerWorth.weigh(RtsSnapshot.of(world, RtsScenario.WEST), belief)
+	var guards: Array[RtsUnit] = StagedRaid.add(world, RtsScenario.WEST, RtsKinds.SHIELD, 4, home + Vector2i(1, -1))
+	var weighed: Dictionary = TowerWorth.weigh(RtsSnapshot.of(world, RtsScenario.WEST), belief)
 	assert_float(weighed["help"]).is_less(2.0)
 	assert_bool(weighed["worth_it"]).is_false()
 	# One scout, the shields gone: too little to pay for a gun.
@@ -296,13 +293,22 @@ func test_the_arm_is_weighed_by_the_raid_and_by_how_soon_help_comes() -> void:
 	assert_bool(TowerWorth.weigh(RtsSnapshot.of(world, RtsScenario.WEST), scout)["worth_it"]).is_false()
 
 
-func test_a_raid_lost_from_sight_is_weighed_less_as_it_fades() -> void:
-	var world: RtsWorld = _a_home_with_a_tower()
+func test_a_raid_out_of_the_guns_reach_is_not_weighed() -> void:
+	var world: RtsWorld = StagedRaid.home_with_a_tower(1)
 	var home: Vector2i = RtsScenario.home(RtsScenario.WEST)
+	StagedRaid.add(world, RtsScenario.EAST, RtsKinds.RUNNER, 4, home + StagedRaid.OUT_OF_REACH)
 	var belief := RtsInfluence.new(48, 32)
-	var raid: Array[RtsUnit] = []
-	for index: int in range(4):
-		raid.append(world.add_unit(RtsKinds.RUNNER, RtsScenario.EAST, home + Vector2i(3, index - 2)))
+	belief.update(RtsSnapshot.of(world, RtsScenario.WEST))
+	var weighed: Dictionary = TowerWorth.weigh(RtsSnapshot.of(world, RtsScenario.WEST), belief)
+	assert_float(weighed["raid"]).is_equal(0.0)
+	assert_bool(weighed["worth_it"]).is_false()
+
+
+func test_a_raid_lost_from_sight_is_weighed_less_as_it_fades() -> void:
+	var world: RtsWorld = StagedRaid.home_with_a_tower(1)
+	var home: Vector2i = RtsScenario.home(RtsScenario.WEST)
+	var raid: Array[RtsUnit] = StagedRaid.add(world, RtsScenario.EAST, RtsKinds.RUNNER, 4, home + StagedRaid.IN_REACH)
+	var belief := RtsInfluence.new(48, 32)
 	belief.update(RtsSnapshot.of(world, RtsScenario.WEST))
 	var seen: float = TowerWorth.weigh(RtsSnapshot.of(world, RtsScenario.WEST), belief)["raid"]
 	for unit: RtsUnit in raid:
@@ -314,36 +320,48 @@ func test_a_raid_lost_from_sight_is_weighed_less_as_it_fades() -> void:
 	assert_float(remembered).is_less(seen * 0.6)
 
 
-func test_raided_while_the_army_is_away_the_commander_arms_its_tower() -> void:
-	var played: RtsMatch = _a_raid_played(4, false)
-	assert_int(_arms_by(played, RtsScenario.WEST)).is_equal(1)
+func test_raided_while_the_army_is_away_the_gun_stands_when_the_weighing_said() -> void:
+	# What the weighing promises from the staged start, plus the first
+	# decision's half second and a second's grace: a gun bought behind other
+	# steps, as it once was, came some 25 s late.
+	var start: RtsSnapshot = RtsSnapshot.of(StagedRaid.home_with_a_tower(1), RtsScenario.WEST)
+	var promised: float = TowerWorth.gun_ready_in(start) + 1.5
+	var played: RtsMatch = StagedRaid.play(StagedRaid.stage(1, 4, StagedRaid.IN_REACH, false), 1, StagedRaid.IN_REACH, true,
+		ceili(promised))
+	assert_int(StagedRaid.arms_by(played, RtsScenario.WEST)).is_equal(1)
+	var towers: Array[Dictionary] = RtsSnapshot.of(played.world, RtsScenario.WEST).mine(RtsKinds.TOWER)
+	assert_bool(towers[0]["armed"]).is_true()
 
 
 func test_a_passing_scout_buys_no_arm() -> void:
-	assert_int(_arms_by(_a_raid_played(1, false), RtsScenario.WEST)).is_equal(0)
+	var played: RtsMatch = StagedRaid.play(StagedRaid.stage(1, 1, StagedRaid.IN_REACH, false), 1, StagedRaid.IN_REACH,
+		true, 60)
+	assert_int(StagedRaid.arms_by(played, RtsScenario.WEST)).is_equal(0)
 
 
 func test_the_same_raid_met_by_its_squad_at_home_buys_no_arm() -> void:
-	assert_int(_arms_by(_a_raid_played(4, true), RtsScenario.WEST)).is_equal(0)
+	var played: RtsMatch = StagedRaid.play(StagedRaid.stage(1, 4, StagedRaid.IN_REACH, true), 1, StagedRaid.IN_REACH,
+		true, 60)
+	assert_int(StagedRaid.arms_by(played, RtsScenario.WEST)).is_equal(0)
 
 
-func test_the_arm_does_not_blow_up_the_search() -> void:
-	# Every set of the seven economy facts held, against each army goal with
-	# the arm in it: h_add's worst stays small, and no plan is longer than
-	# h_max's shortest. With h_max the worst here was 90 worlds.
+func test_the_same_raid_out_of_the_guns_reach_buys_no_arm() -> void:
+	var played: RtsMatch = StagedRaid.play(StagedRaid.stage(1, 4, StagedRaid.OUT_OF_REACH, false), 1,
+		StagedRaid.OUT_OF_REACH, true, 60)
+	assert_int(StagedRaid.arms_by(played, RtsScenario.WEST)).is_equal(0)
+
+
+func test_no_goal_the_commander_sets_searches_past_the_gate() -> void:
+	# Every set of the seven economy facts held, against every goal the
+	# commander can set, at normal's horizon -- the search the game runs.
 	var economy: Array[String] = ["supply_room", "workers_saturated", "magma_flowing", "barracks_up", "lab_up",
 		"tower_up", "expansion_up"]
-	var armies: Array[String] = ["runners_ready", "shields_ready", "mortars_ready"]
+	var horizon: int = RtsLevels.named("normal").plan_horizon
+	var goals: Array[PackedStringArray] = _every_goal_set()
 	var worst: int = 0
-	# One question per (held set, army goal), the held set the high part.
-	for question: int in range((1 << economy.size()) * armies.size()):
-		var held: PackedStringArray = _the_ones_in(economy, question / armies.size())
-		var goal := PackedStringArray(["workers_saturated", armies[question % armies.size()], "expansion_up",
-			"tower_armed"])
-		var found: Dictionary = BuildOrder.plan(held, goal, BuildOrder.Planner.STRIPS)
-		var shortest: PlanResult = HeuristicPlanner.new().plan(BuildOrder.actions(), WorldState.new(held), goal,
-			HeuristicPlanner.Guide.H_MAX, BuildOrder.BUDGET)
-		assert_int((found["steps"] as PackedStringArray).size()).is_equal(shortest.action_names().size())
+	for question: int in range((1 << economy.size()) * goals.size()):
+		var held: PackedStringArray = _the_ones_in(economy, question / goals.size())
+		var found: Dictionary = BuildOrder.plan(held, goals[question % goals.size()], BuildOrder.Planner.STRIPS, horizon)
 		worst = maxi(worst, found["visited"])
 	assert_int(worst).is_less_equal(BuildOrder.WORST_VISITED)
 
@@ -363,49 +381,16 @@ func test_the_queues_arm_their_tower_while_raided_and_take_the_wish_back_after()
 	assert_bool(queue.wishes.any(func(wish: Dictionary) -> bool: return wish["what"] == RtsKinds.ARM)).is_false()
 
 
-# West's home mid-match: a barracks and a tower up, its workers on the
-# nearest vent, so magma flows, and funds to spare.
-func _a_home_with_a_tower() -> RtsWorld:
-	var world: RtsWorld = RtsScenario.start(1)
-	var home: Vector2i = RtsScenario.home(RtsScenario.WEST)
-	world.add_unit(RtsKinds.BARRACKS, RtsScenario.WEST, home + Vector2i(0, -3))
-	world.add_unit(RtsKinds.TOWER, RtsScenario.WEST, home + Vector2i(3, -3))
-	world.set_funds(RtsScenario.WEST, 2000, 2000)
-	var vent: RtsUnit = world.nearest(Vector2(home), RtsWorld.NEUTRAL, RtsKinds.VENT)
-	var workers: Array[int] = []
-	for unit: RtsUnit in world.units():
-		if unit.side == RtsScenario.WEST and unit.kind == RtsKinds.WORKER:
-			workers.append(unit.id)
-	world.command(RtsScenario.WEST, RtsCommand.gather(workers, vent.id))
-	return world
-
-
-# A normal commander as west, `raiders` east runners at its home for sixty
-# seconds -- put back there every second, so the raid is held -- and four
-# west shields at home when `defended`, else in the far east corner.
-func _a_raid_played(raiders: int, defended: bool) -> RtsMatch:
-	var world: RtsWorld = _a_home_with_a_tower()
-	var home: Vector2i = RtsScenario.home(RtsScenario.WEST)
-	var away: Vector2i = home + Vector2i(1, -1) if defended else Vector2i(44, 3)
-	for index: int in range(4):
-		world.add_unit(RtsKinds.SHIELD, RtsScenario.WEST, world.free_cell_near(away))
-	var raid: Array[RtsUnit] = []
-	for index: int in range(raiders):
-		raid.append(world.add_unit(RtsKinds.RUNNER, RtsScenario.EAST, world.free_cell_near(home + Vector2i(4, 0))))
-	var commander := RtsCommander.new(RtsScenario.WEST, RtsLevels.named("normal"), 1)
-	var played := RtsMatch.new(world, 1, {RtsScenario.WEST: commander})
-	for _second: int in range(60):
-		played.play(RtsWorld.TICKS_PER_SECOND)
-		_hold_at_home(world, raid)
-	return played
-
-
-# Every raider still standing that wandered off is put back by west's home.
-func _hold_at_home(world: RtsWorld, raid: Array[RtsUnit]) -> void:
-	var home := Vector2(RtsScenario.home(RtsScenario.WEST))
-	for raider: RtsUnit in raid:
-		if raider.health > 0 and raider.position.distance_to(home) > TowerWorth.RAID_REACH - 2.0:
-			world.place(raider, home + Vector2(3.5, 0.5))
+# Every goal `RtsCommander.goal` can return: workers, one army, and with
+# or without the scouting tower and the expansion.
+static func _every_goal_set() -> Array[PackedStringArray]:
+	var goals: Array[PackedStringArray] = []
+	for army: String in ["runners_ready", "shields_ready", "mortars_ready"]:
+		for extra: int in range(4):
+			var goal := PackedStringArray(["workers_saturated", army])
+			goal.append_array(_the_ones_in(["tower_up", "expansion_up"] as Array[String], extra))
+			goals.append(goal)
+	return goals
 
 
 # The facts of `facts` whose bits are set in `mask`.
@@ -415,14 +400,6 @@ static func _the_ones_in(facts: Array[String], mask: int) -> PackedStringArray:
 		if mask & (1 << index):
 			held.append(facts[index])
 	return held
-
-
-static func _arms_by(played: RtsMatch, side: int) -> int:
-	var bought: int = 0
-	for entry: Dictionary in played.accepted:
-		if entry["side"] == side and entry["command"]["what"] == RtsKinds.ARM:
-			bought += 1
-	return bought
 
 
 static func _runner_up(scores: Dictionary, best: String) -> String:

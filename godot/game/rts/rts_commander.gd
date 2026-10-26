@@ -7,8 +7,10 @@
 ## always, then the counter to the fighter the enemy has shown most -- a
 ## mortar for shields, a shield for runners, a runner for mortars -- and
 ## the tower when nothing has been seen for a while, so it can find out;
-## an armed tower when `TowerWorth` weighs the gun as saving more of a raid
-## at home than it costs (T56); the expansion once the match is old enough.
+## the expansion once the match is old enough. Beside the plan, not in it,
+## the armed tower (T56): wished at the top of the queue when `TowerWorth`
+## weighs the enemy worth the gun would kill before help comes above its
+## price.
 ## **How to get there**: `BuildOrder` plans the chain, by STRIPS or by HTN.
 ## **When**: `BuildSchedule` times the plan by jumping from one affordable
 ## moment to the next, which is what the screen shows beside each step.
@@ -30,10 +32,10 @@ extends RtsSide
 const REPLAN_SECONDS: float = 10.0
 ## With no enemy fighter seen this long, the commander builds a tower to look.
 const SCOUT_AFTER_SECONDS: float = 120.0
-## How long an armed tower stays in the goal once it was weighed worth it:
-## the tower and the arm take twenty seconds, and a goal that dropped the arm
-## the moment the raid stepped out of sight replanned it away every time.
-const COMMIT_SECONDS: float = 30.0
+## The queue priority of a tower and its arm weighed worth it: above the
+## plan's step (80), so the gun comes when the weighing timed it to, and under
+## the depot reflex (95), which only the room running out raises.
+const ARM_PRIORITY: int = 85
 ## The match time after which the expansion joins the goal.
 const EXPAND_AFTER_SECONDS: float = 240.0
 ## The fighter that beats each kind: the counter to what was seen.
@@ -57,14 +59,12 @@ var arming: Dictionary = {}
 var may_arm: bool = true
 
 var _planned_at: int = -1
-# The tick until which the goal keeps an armed tower; -1 for never chosen.
-var _arm_wanted_until: int = -1
 # How much it over- or under-counts each kind of enemy fighter it has seen:
 # `evaluation_noise` read as a misjudgement of the enemy's army, drawn once
 # so it misreads the same way all match rather than dithering between
 # counters. 1 for each at a noise of 0.
 var _misjudged: Dictionary = {}
-# What the plan put in the queue last decision.
+# What the plan, and the arm, put in the queue last decision.
 var _wished: Array[String] = []
 
 
@@ -88,7 +88,6 @@ func _fill_queue(view: RtsSnapshot) -> void:
 		schedule.clear()
 		QueueSide.wish_by_rules(queue, view)
 		return
-	_weigh_the_arm(view)
 	var held: PackedStringArray = BuildOrder.facts(view)
 	var wanted: PackedStringArray = goal(view)
 	steps = _still_to_do(steps, held)
@@ -96,6 +95,7 @@ func _fill_queue(view: RtsSnapshot) -> void:
 		_plan(view, held, wanted)
 	schedule = BuildSchedule.of(steps, view)
 	_follow(held)
+	_arm_if_worth_it(view)
 
 
 ## What to aim at now, from what this side has seen and how long the match
@@ -114,19 +114,26 @@ func goal(view: RtsSnapshot) -> PackedStringArray:
 			wanted.append("tower_up")
 	else:
 		wanted.append(READY_FACT[COUNTER[most]])
-	if view.tick < _arm_wanted_until:
-		wanted.append("tower_armed")
 	if seconds >= EXPAND_AFTER_SECONDS:
 		wanted.append("expansion_up")
 	return wanted
 
 
-# Weigh the arm now; while it is worth it, keep it in the goal for
-# `COMMIT_SECONDS` past the last time it was.
-func _weigh_the_arm(view: RtsSnapshot) -> void:
+# Weigh the arm now, and when it is worth it wish what it still needs at
+# `ARM_PRIORITY`: a tower if the side has none, the arm once one stands
+# complete. A tower still going up needs nothing bought. The weighing reads
+# the belief the last decision built -- `RtsSide.decide` updates it after
+# the economy has spent, as it always has.
+func _arm_if_worth_it(view: RtsSnapshot) -> void:
 	arming = TowerWorth.weigh(view, belief)
-	if may_arm and arming["worth_it"]:
-		_arm_wanted_until = view.tick + int(COMMIT_SECONDS * RtsWorld.TICKS_PER_SECOND)
+	if not may_arm or not arming["worth_it"]:
+		return
+	var towers: Array[Dictionary] = view.mine(RtsKinds.TOWER)
+	var why: String = "weighed: the gun kills %d of a raid, costs %d" % [roundi(arming["killed"]), arming["price"]]
+	if towers.is_empty():
+		_wish(RtsKinds.TOWER, ARM_PRIORITY, why)
+	elif towers.any(func(tower: Dictionary) -> bool: return tower["complete"]):
+		_wish(RtsKinds.ARM, ARM_PRIORITY, why)
 
 
 ## The plan, its timing and the economy under it, for the screen.

@@ -19,6 +19,9 @@ class_name QueueSide
 extends RtsSide
 
 ## How near its home an enemy fighter in sight fires the tower rule, in cells.
+## Its own number, not `TowerWorth`'s: the rule asks "is the home raided",
+## the commander "would the gun reach the raid", and the baseline is meant
+## to ask the cruder question.
 const RAID_CELLS: float = 10.0
 ## When the lab is wanted, and when the expansion may be: in seconds.
 const LAB_AFTER_SECONDS: int = 180
