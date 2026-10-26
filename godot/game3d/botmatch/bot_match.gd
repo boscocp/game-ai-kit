@@ -160,18 +160,16 @@ func decide_every_bot() -> void:
 		bot.decide(perceived[bot.id], teams[bot.team].reaction)
 
 
-# For each squad of two or more living with a member falling back: one
-# decision counted, and one more if nobody is left covering -- every living
-# member on the errand.
+# For each squad of two or more living that is retreating: one decision
+# counted, and one more if nobody is left covering.
 func _count_retreats(team: MatchTeam) -> void:
 	for index: int in range(team.squads.size()):
 		var living: Array = team.squads[index].filter(func(bot_id: int) -> bool: return bots[bot_id].alive())
-		var falling: Array = living.filter(func(bot_id: int) -> bool:
-			return TeamTactics.moving_in_retreat(self, team, bots[bot_id]))
-		if falling.is_empty() or living.size() < 2:
+		if team.squad_states[index] != SquadConfidence.RETREAT or living.size() < 2:
 			continue
 		stats[team.side].retreat_decisions += 1
-		stats[team.side].retreats_uncovered += 1 if falling.size() == living.size() else 0
+		var covering: bool = living.any(func(bot_id: int) -> bool: return bots[bot_id].action != MatchBot.FALL_BACK)
+		stats[team.side].retreats_uncovered += 0 if covering else 1
 
 
 ## The order the bots act in this step. Bodies are solid, so who moves first
@@ -287,7 +285,7 @@ func record_shot(shooter: MatchBot, target: int, hit: bool, to: Vector3, zone: S
 
 ## A bot was killed by `killer` (-1: nobody); count it on both sides.
 func killed(victim: MatchBot, killer: int) -> void:
-	victim.respawn_left = rules.respawn_wait(time)
+	victim.respawn_left = rules.respawn_time
 	fall_back_counts.died(self, victim)
 	teams[victim.team].claim(victim.id, -1)
 	# A body seen falling is not a threat any more.
@@ -332,11 +330,6 @@ func respawn(bot: MatchBot) -> void:
 	bot.hide_place = Vector2.INF
 	bot.hide_asked_at = -INF
 	bot.hide_asked_for = []
-	bot.fall_back_facts = ErrandChoice.FallBack.new()
-	bot.fall_back_spot = -1
-	bot.fall_back_place = Vector2.INF
-	bot.fall_back_asked_at = -INF
-	bot.fall_back_asked_for = []
 	bot.reload_left = 0.0
 	bot.respawn_left = 0.0
 	bot.spot = -1

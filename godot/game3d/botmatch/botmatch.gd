@@ -162,7 +162,7 @@ func decision_overlay() -> Dictionary:
 			"aim": BotMatchLines.aim_overlay(bot), "errand": bot.errand if bot.errand != "" else "none",
 			"errands": bot.errand_weighing if not bot.errand_weighing.is_empty() else {"weighed": "not yet"},  # not shown
 			"passage": BotMatchLines.passage_overlay(bot), "actions": BotMatchLines.action_overlay(bot),
-			"health": _health_overlay(bot), "fall back": _fall_back_overlay(bot)}
+			"health": _health_overlay(bot)}
 	return {"time": world.time, "watched": watched, "squads": _squads_overlay()}
 
 
@@ -172,17 +172,6 @@ func _health_overlay(bot: MatchBot) -> Dictionary:
 	var hiding: String = world.place_id(bot.hide_spot) if bot.hide_spot != -1 else "nowhere asked"  # not shown
 	return {"health": bot.health, "comes back in": MatchHealth.delay_left(world.rules, bot, world.time),
 			"would hide at": hiding}
-
-
-# The watched bot's weighing of falling back, term by term (T65), and where
-# it would go.
-func _fall_back_overlay(bot: MatchBot) -> Dictionary:
-	var facts: ErrandChoice.FallBack = bot.fall_back_facts
-	var place: String = world.place_id(bot.fall_back_spot) if bot.fall_back_spot != -1 else "nowhere asked"  # not shown
-	return {"weighed": facts.available, "hurt": facts.hurt, "exposure": facts.exposure,
-			"dying here": facts.dying_here, "dying in cover": facts.dying_there, "death seconds": facts.death_seconds,
-			"point seconds": facts.point_seconds, "would go to": place,
-			"score": bot.errand_weighing.get(ErrandChoice.FALL_BACK, PackedFloat64Array([0.0, 0.0, 0.0, 0.0]))[3]}
 
 
 func _squads_overlay() -> Array:

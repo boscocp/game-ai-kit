@@ -1,7 +1,6 @@
 ## The panel's lines of what the watched bot is reasoning with, one per
 ## decision: every action's score, where it aimed and what each zone was
-## worth, its errands, its weighing of falling back term by term (T65),
-## and its last weighing of the ways past a body. Read
+## worth, its errands, and its last weighing of the ways past a body. Read
 ## off the bot, built here so the scene keeps to drawing and keys.
 ##
 ## The panel is rebuilt every frame, as it was before T80. Each sentence is
@@ -29,8 +28,6 @@ const SCORE: Array[String] = [  # shown through tr()
 	"{time} s   blue {blue} - {red} red     T give it back, V show the AI's thinking",
 	"{time} s   blue {blue} - {red} red     T give it back, V hide the AI's thinking",
 ]
-## Falling back's sum, one term a placeholder (T65).
-const FALL_BACK_TERMS: String = "fall back: health {hurt} x {exposure} + dying {here}% - {there}% x {death} s x {death_weight} - {away} s x {away_weight} - point {point} s x {point_weight} = {score}"  # shown through tr()
 ## The last body in its way, by the teammate's answer: none asked, granted,
 ## refused -- one sentence each, so no verb is glued in.
 const PASSED: Array[String] = [  # shown through tr()
@@ -54,7 +51,6 @@ static func panel(world: BotMatch, watched: int, played: int, thinking_shown: bo
 	lines.append(action_line(bot))
 	lines.append(aim_line(bot))
 	lines.append(errand_line(bot))
-	lines.append(fall_back_line(world, bot))
 	lines.append(passage_line(bot))
 	lines.append(TranslationServer.translate("1/2/3 blue's switches, Shift red's; Tab bot, T take it over, M map, C camera, F fast, P pause, N new, L arena"))
 	return "\n".join(lines)
@@ -158,10 +154,6 @@ static func aim_line(bot: MatchBot) -> String:
 static func errand_line(bot: MatchBot) -> String:
 	var parts: Array[String] = []
 	for errand: String in bot.errand_weighing:
-		# Falling back has a line of its own, term by term (T65): four on
-		# one line ran off the window in Portuguese.
-		if errand == ErrandChoice.FALL_BACK:
-			continue
 		var weighed: Array = bot.errand_weighing[errand]
 		var mark: String = "> " if errand == bot.errand else ""
 		var weight: float = (weighed[0] - weighed[2] - weighed[3]) / weighed[1] if weighed[1] > 0.0 else 0.0
@@ -173,33 +165,6 @@ static func errand_line(bot: MatchBot) -> String:
 	return TranslationServer.translate("{weapon} {ammo}/{reserve}, streak {streak}").format({
 		weapon = BotMatchWords.word(bot.weapon), ammo = bot.ammo, reserve = bot.reserve, streak = bot.streak}) \
 		+ "\n" + TranslationServer.translate("errands: {errands}").format({errands = weighed_errands})
-
-
-## Falling back, term by term (T65): the health that would come back times
-## its exposure, plus the chance of dying where it stands less in cover --
-## the measured table's -- times a death's seconds and their weight, less
-## the seconds away and the point given up, each times its weight. So the
-## sum on the screen is the bot's. Its team off, or nothing to gain, it says
-## so; weighed above zero but held back to cover a teammate, it says that.
-static func fall_back_line(world: BotMatch, bot: MatchBot) -> String:
-	var team: MatchTeam = world.teams[bot.team]
-	if not team.may_retreat:
-		return TranslationServer.translate("fall back: not weighed, its team's retreat is off")
-	var facts: ErrandChoice.FallBack = bot.fall_back_facts
-	if not bot.errand_weighing.has(ErrandChoice.FALL_BACK) or not facts.available:
-		return TranslationServer.translate("fall back: nothing to gain -- no enemy known, or unseen and unhit")
-	var weighed: PackedFloat64Array = bot.errand_weighing[ErrandChoice.FALL_BACK]
-	var weights: ErrandChoice.Weights = MatchSupply.weights_of(world.rules, team)
-	var line: String = TranslationServer.translate(FALL_BACK_TERMS).format({
-		hurt = "%.2f" % facts.hurt, exposure = "%.2f" % facts.exposure, here = "%.0f" % (facts.dying_here * 100.0),
-		there = "%.0f" % (facts.dying_there * 100.0), death = "%.1f" % facts.death_seconds,
-		death_weight = "%.2f" % weights.death_second, away = "%.1f" % weighed[1], away_weight = "%.2f" % weights.hide_second,
-		point = "%.1f" % facts.point_seconds, point_weight = "%.2f" % weights.point_second, score = "%.2f" % weighed[3]})
-	if bot.errand == ErrandChoice.FALL_BACK:
-		line = "> " + line
-	if weighed[3] > 0.0 and TeamTactics.covering_a_retreat(world, team, bot):
-		line += TranslationServer.translate("  (covering: a teammate falls back first)")
-	return line
 
 
 ## The watched bot's last weighing of the ways past a body: each way and

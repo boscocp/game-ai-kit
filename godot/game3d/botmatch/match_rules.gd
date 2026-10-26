@@ -74,12 +74,7 @@ var make_way_per_enemy: float = 2.0
 var make_way_shooting: float = 1.5
 var make_way_reloading: float = 0.5
 var make_way_covering: float = 3.0
-## Bots come back in waves, as Team Fortress 2's do (T65, proposal 3):
-## one every `respawn_wave` seconds of the match, and a bot that dies joins
-## the wave after next -- 10 to 20 s, against healing's 10 to 15 s. TF2
-## scales its wave down below 8 players, by a formula its page does not
-## give; this one is not scaled, and says so.
-var respawn_wave: float = 10.0
+var respawn_time: float = 4.0
 ## Health that comes back (T68, the owner's ask): after
 ## `regeneration_delay` seconds without a hit -- the owner's ten -- health
 ## comes back `regeneration_rate` points a second, up to `regeneration_to`
@@ -142,26 +137,18 @@ var remembered_for: float = 10.0
 ## seeing, not of everything it remembers.
 var squad_sight_radius: float = 20.0
 var confidence_memory: float = 2.0
-## How long a wave of a squad's fall-back may take before the other half
-## moves (T65: no threshold sends a squad back, and no distance; each bot
-## weighs falling back to cover near its point).
+## A squad's confidence thresholds, by SquadConfidence's names; the rest
+## are its defaults. Later than the technique's defaults: measured, a squad
+## that fell back at 0.7 gave up every point to a side that never did.
+var retreat_at: float = 0.5
+var recover_at: float = 0.9
+## How far back a retreating squad falls, and how long a wave may take.
+var fallback_metres: float = 8.0
 var wave_timeout: float = 3.0
-## The chance a bot dies within `within` seconds, by its health in tenths
-## (rows) and its exposure, none, a half or all (columns): measured by a
-## printed run of the effects gate at `commit`, never chosen and never
-## learned during a match (T65, invariant 6). What a bot falling back weighs
-## the death it would avoid by (`FallBackFacts`).
-var dying: Dictionary = {}
 ## The default knobs, per team.
 var reaction: float = 0.3
 var turn_rate_degrees: float = 270.0
 var aim_error_degrees: float = 3.0
-
-
-## Seconds a bot dying at `now` waits to come back: until the wave after
-## the next one.
-func respawn_wait(now: float) -> float:
-	return floorf(now / respawn_wave) * respawn_wave + 2.0 * respawn_wave - now
 
 
 ## The zone a point of a body is in: `height` above its feet and `across`

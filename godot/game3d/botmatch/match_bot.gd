@@ -136,14 +136,6 @@ var hide_place: Vector2 = Vector2.INF
 ## of then, by id.
 var hide_asked_at: float = -INF
 var hide_asked_for: Array = []
-## Falling back (T65): what its last weighing measured, for the view, and
-## where it would go -- the place's index and position -- and when it last
-## asked, and for which enemies, as for hiding.
-var fall_back_facts: ErrandChoice.FallBack = ErrandChoice.FallBack.new()
-var fall_back_spot: int = -1
-var fall_back_place: Vector2 = Vector2.INF
-var fall_back_asked_at: float = -INF
-var fall_back_asked_for: Array = []
 ## Whether it looks along the line again before each shot. Always, for an
 ## honest bot; `botmatch_effects.gd` plants one that does not, and the
 ## honesty count must catch its shots at targets gone behind cover.

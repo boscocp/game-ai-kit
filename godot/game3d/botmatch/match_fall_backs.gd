@@ -2,13 +2,11 @@
 ## often a bot in each band of health and exposure dies soon after, and
 ## how often a fall-back from a point is followed by losing it.
 ##
-## The first is the table a bot weighs falling back by: the chance of dying
-## is not a number to choose -- picking a curve would be a tuning constant
-## under another name -- so a printed run of the effects gate counts it, and
-## `rules.json` keeps that table with the commit of the run (invariant 6:
-## measured offline, never learned during a match). The second is what the
-## gate claims of a fall-back: one that gives a held point up shows as the
-## point neutralised within LOST_WITHIN seconds of it.
+## Printed by the effects gate, never claimed and never read by a bot.
+## Wave 97 built a fall-back weighed from the first table, and measured it
+## with the second; it lost to never falling back, and the owner closed T65
+## as measured, reverting it (docs/godot/botmatch.md). The counts stayed:
+## they read today's retreat without changing a step of it.
 ##
 ## Constant work a bot a decision, plus a ray per known enemy for each bot
 ## sampled. When not to use it: to decide anything. It only counts.

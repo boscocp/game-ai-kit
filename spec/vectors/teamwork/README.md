@@ -68,7 +68,7 @@ that must agree bit for bit would need rounded costs.
 | `confidence` | facts over time, a squad's members, phases | each confidence, the states with and without retreat, the waves |
 | `passage` | a blocked bot's facts, and requests to a teammate with its prices | each way's cost in seconds (null: impossible) and the way taken; each request's cost to the teammate and whether it is granted |
 | `aim` | a spread, a target's zones (multiplier, aim point, rectangles, exposure), rolls | each zone's own chance and worth aimed at, the zone aimed at, the chances from it, where each roll lands |
-| `errands` | the weights; facts for going back, for fetching, for hiding to heal (T68) and for falling back (T65); each team's fetching scores; pairs -- or triples with hiding, or fours with falling back -- of scores | each weighing as [gain, walk, cost, score], hiding's and falling back's walk the seconds away and falling back's cost the point given up; whom each team sends (-1: nobody); each pair's errand ("": none) |
+| `errands` | the weights; facts for going back, for fetching and for hiding to heal (T68); each team's fetching scores; pairs -- or triples, with hiding -- of scores | each weighing as [gain, walk, cost, score], hiding's walk the seconds away; whom each team sends (-1: nobody); each pair's errand ("": none) |
 | `action` | actions as plain data (weight, considerations with their curves), records of percepts | for each record, every action's score, every consideration's answer, and the action taken (-1: none) |
 
 ## The forty-eight
@@ -123,8 +123,6 @@ that must agree bit for bit would need rounded costs.
 | `fetch-unless-far-guarded-or-gone` | the walk and each enemy near the weapon cost; a weapon not there is worth nothing |
 | `the-team-sends-the-one-it-is-worth-most-to` | the first of the highest, and nobody when none is above zero |
 | `going-back-wins-a-tie-and-zero-is-no-errand` | back on a tie; a score of exactly 0 is no errand |
-| `fall-back-unless-it-gives-the-point-up` | the health and the death avoided against the seconds away; the last holder of a point stays; unseen, nothing is gained |
-| `falling-back-comes-last-of-equals` | falling back over a lower hide, hide over an equal fall back, back over all |
 
 JSON has no infinity: in the passage vectors an impossible way, a detour
 or a spot that does not exist, and a saving with no bound are `null`, and

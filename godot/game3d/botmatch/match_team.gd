@@ -6,10 +6,8 @@
 ##   * the commander (`TeamCommander` over `TeamInfluence`): each squad sent
 ##     to a weighed objective. Off, every bot goes to its own nearest point
 ##     that is not its team's;
-##   * retreat: each bot weighs falling back to cover near its squad's
-##     point (`ErrandChoice`, `FallBackFacts`, T65), and a squad's members
-##     fall back in waves (`SquadConfidence`), one moving while another
-##     covers. Off, it never falls back -- it may still hide to heal (T68).
+##   * retreat (`SquadConfidence`): a squad losing falls back in two waves.
+##     Off, it never falls back.
 ##
 ## What it knows of the enemy is what its bots saw, kept for a while
 ## (`remembered`): the team reasons with the same partial picture its bots
@@ -31,9 +29,6 @@ var bots_per_point: int = BotMatch.PER_SQUAD
 ## True only in a planted test: the whole squad falls back at once, with
 ## nobody left to cover it. The effects test must catch it.
 var retreat_in_one_wave: bool = false
-## False only in a planted test: falling back prices the point it gives up
-## at nothing (T65). The effects test must catch it giving points up.
-var prices_the_point: bool = true
 ## Whether its bots aim where a shot is worth the most damage (`AimChoice`);
 ## off, they always aim at the head -- the planted case the effects test
 ## must tell apart, at range.

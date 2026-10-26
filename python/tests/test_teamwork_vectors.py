@@ -131,7 +131,6 @@ def answer_errands(vector: dict) -> dict:
     return {"resupply": [errands.weigh_resupply(errands.Resupply(**each), weights) for each in query["resupply"]],
             "fetch": [errands.weigh_fetch(errands.Fetch(**each), weights) for each in query["fetch"]],
             "hide": [errands.weigh_hide(errands.Hide(**each), weights) for each in query["hide"]],
-            "fall_back": [errands.weigh_fall_back(errands.FallBack(**each), weights) for each in query["fall_back"]],
             "fetcher": [errands.fetcher(scores) for scores in query["teams"]],
             "chosen": [errands.choose(*pair) for pair in query["pairs"]]}
 

@@ -10,9 +10,7 @@
   "power_worth": 1.0,
   "power_walk": 0.08,
   "power_danger": 0.3,
-  "hide_second": 0.02,
-  "death_second": 0.05,
-  "point_second": 0.3
+  "hide_second": 0.02
  },
  "query": {
   "resupply": [],
@@ -39,7 +37,6 @@
    }
   ],
   "hide": [],
-  "fall_back": [],
   "teams": [],
   "pairs": []
  },
@@ -72,7 +69,6 @@
    ]
   ],
   "hide": [],
-  "fall_back": [],
   "fetcher": [],
   "chosen": []
  }

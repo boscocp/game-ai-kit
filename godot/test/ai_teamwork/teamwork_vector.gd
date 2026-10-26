@@ -284,31 +284,12 @@ static func _errands(vector: Dictionary) -> Dictionary:
 		for key: String in fields:
 			facts.set(key, fields[key])
 		hidden.append(Array(ErrandChoice.weigh_hide(facts, weights)))
-	var falling: Array = _fall_backs(query["fall_back"], weights)
 	var sent: Array = (query["teams"] as Array).map(func(scores: Array) -> int:
 		return ErrandChoice.fetcher(PackedFloat64Array(scores)))
-	var chosen: Array = (query["pairs"] as Array).map(func(pair: Array) -> String: return _chosen(pair))
-	return {"resupply": back, "fetch": out, "hide": hidden, "fall_back": falling, "fetcher": sent, "chosen": chosen}
-
-
-# Each falling back's weighing, from its facts (T65).
-static func _fall_backs(rows: Array, weights: ErrandChoice.Weights) -> Array:
-	var falling: Array = []
-	for fields: Dictionary in rows:
-		var facts := ErrandChoice.FallBack.new()
-		for key: String in fields:
-			facts.set(key, fields[key])
-		falling.append(Array(ErrandChoice.weigh_fall_back(facts, weights)))
-	return falling
-
-
-# A pair is [back, fetch], or [back, fetch, hide], or with fall back too:
-# the errand its scores choose.
-static func _chosen(pair: Array) -> String:
-	var scores: Array = pair.duplicate()
-	scores.resize(4)
-	return ErrandChoice.choose(float(scores[0]), float(scores[1]), float(scores[2] if scores[2] != null else 0.0),
-			float(scores[3] if scores[3] != null else 0.0))
+	# A pair is [back, fetch], or [back, fetch, hide].
+	var chosen: Array = (query["pairs"] as Array).map(func(pair: Array) -> String:
+		return ErrandChoice.choose(float(pair[0]), float(pair[1]), float(pair[2]) if pair.size() > 2 else 0.0))
+	return {"resupply": back, "fetch": out, "hide": hidden, "fetcher": sent, "chosen": chosen}
 
 
 static func _states(values: Array, thresholds: SquadConfidence.Thresholds, may_retreat: bool) -> Array:

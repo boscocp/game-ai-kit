@@ -1,7 +1,6 @@
 ## The bot match's ammunition and its two weapons, and the errands they
 ## make a decision of (the owner's asks, 2026-10-21) -- and, since T68, the
-## errand of hiding to heal, whose facts are `MatchHealth`'s; since T65,
-## falling back to cover near its squad's point, whose are `FallBackFacts`'.
+## errand of hiding to heal, whose facts are `MatchHealth`'s.
 ##
 ## A rifle has 120 rounds, a magazine of 30 and three reloads, and only the
 ## resupply in a team's spawn room gives more. The power weapon lies in one
@@ -11,10 +10,10 @@
 ## is empty, and a bot that dies comes back with a full rifle. Five kills
 ## since its last death earn a bot the power weapon at its own base.
 ##
-## Four errands, each weighed by `ErrandChoice` in `ai_teamwork` -- a gain
+## Three errands, each weighed by `ErrandChoice` in `ai_teamwork` -- a gain
 ## less its costs -- and each bot takes the largest if it is above zero:
 ## back to its base for rounds and health, out for the power weapon, one
-## bot a team, into cover to heal, or back to cover near its squad's point.
+## bot a team, or into cover to heal.
 ## This file measures the facts the technique weighs and carries out its
 ## answer; the weights are the rules'. The walks are read off a flood of
 ## walk steps made once a match, not searched each decision.
@@ -28,7 +27,6 @@ const NO_ERRAND: String = ErrandChoice.NONE
 const RESUPPLY: String = ErrandChoice.RESUPPLY
 const FETCH: String = ErrandChoice.FETCH
 const HIDE: String = ErrandChoice.HIDE
-const FALL_BACK: String = ErrandChoice.FALL_BACK
 ## How a team decides on going back, and on healing: weighing it, or --
 ## planted, for the effects test -- never, or always: once a round is
 ## spent, or below a fixed health.
@@ -122,7 +120,7 @@ func _resupply(rules: MatchRules, bot: MatchBot) -> void:
 ## Every errand of `team`'s bots, decided: who is sent for the power weapon,
 ## and who goes back to its base. Each bot's weighing is kept for the view.
 func think(world: BotMatch, team: MatchTeam) -> void:
-	var weights: ErrandChoice.Weights = weights_of(world.rules, team)
+	var weights: ErrandChoice.Weights = weights_of(world.rules)
 	var weighed: Array[int] = []
 	var fetch_scores := PackedFloat64Array()
 	for bot_id: int in team.members:
@@ -138,24 +136,12 @@ func think(world: BotMatch, team: MatchTeam) -> void:
 			FETCH: ErrandChoice.weigh_fetch(fetch_facts(world, team, bot), weights),
 			HIDE: ErrandChoice.weigh_hide(hiding[0], weights),
 		}
-		if team.may_retreat:
-			_weigh_falling_back(world, team, bot, weights)
 		weighed.append(bot_id)
 		fetch_scores.append(bot.errand_weighing[FETCH][3])
 	var sent: int = ErrandChoice.fetcher(fetch_scores)
 	fetcher[team.side] = weighed[sent] if sent != -1 else -1
 	for bot_id: int in weighed:
 		_choose_errand(team, world.bots[bot_id])
-
-
-# Falling back (T65): its facts kept for the view, its place for the
-# errand, its weighing beside the others.
-func _weigh_falling_back(world: BotMatch, team: MatchTeam, bot: MatchBot, weights: ErrandChoice.Weights) -> void:
-	var falling: Array = FallBackFacts.build(world, team, bot)
-	bot.fall_back_facts = falling[0]
-	bot.fall_back_spot = falling[1]
-	bot.fall_back_place = falling[2]
-	bot.errand_weighing[FALL_BACK] = ErrandChoice.weigh_fall_back(falling[0], weights)
 
 
 # Its errand, by the technique -- or, planted for the effects test, always
@@ -174,15 +160,11 @@ func _choose_errand(team: MatchTeam, bot: MatchBot) -> void:
 		var can_hide: bool = bot.hide_spot != -1
 		hide = INF if below and can_hide else 0.0
 		back = INF if below and not can_hide else back
-	var fall: float = bot.errand_weighing[FALL_BACK][3] if bot.errand_weighing.has(FALL_BACK) else 0.0
-	bot.errand = ErrandChoice.choose(back, fetch, hide, fall)
+	bot.errand = ErrandChoice.choose(back, fetch, hide)
 
 
-## The rules' weights, as the technique takes them -- for `team`, when it
-## is given: a team planted not to price the point it gives up falling back
-## prices it at nothing. A death's second is the walk's weight, and a point
-## given up the hold weight a second (T65's proposal 2).
-static func weights_of(rules: MatchRules, team: MatchTeam = null) -> ErrandChoice.Weights:
+## The rules' weights, as the technique takes them.
+static func weights_of(rules: MatchRules) -> ErrandChoice.Weights:
 	var weights := ErrandChoice.Weights.new()
 	weights.resupply_walk = rules.resupply_walk_weight
 	weights.leave_holding = rules.resupply_hold_weight
@@ -191,10 +173,6 @@ static func weights_of(rules: MatchRules, team: MatchTeam = null) -> ErrandChoic
 	weights.power_worth = rules.power_worth
 	weights.power_walk = rules.power_walk_weight
 	weights.power_danger = rules.power_danger_weight
-	weights.hide_second = rules.hide_second_weight
-	weights.death_second = rules.resupply_walk_weight
-	var priced: bool = team == null or team.prices_the_point
-	weights.point_second = rules.resupply_hold_weight if priced else 0.0
 	return weights
 
 
@@ -243,16 +221,7 @@ static func errand_place(world: BotMatch, bot: MatchBot) -> Vector2:
 		return world.arena.power_place
 	if bot.errand == HIDE:
 		return bot.hide_place
-	if bot.errand == FALL_BACK:
-		return bot.fall_back_place
 	return world.arena.resupply[BotMatch.TEAM_NAMES[bot.team]]
-
-
-## Seconds of walking from `side`'s base to `place`: the walk back after a
-## respawn, for the base is in the spawn room. UNREACHED when it cannot be
-## walked.
-func walk_from_base(world: BotMatch, side: int, place: Vector2) -> float:
-	return _seconds_at(world, _base_steps[side], place)
 
 
 ## How far a walk is never: a cell the flood did not reach.
@@ -261,12 +230,7 @@ const UNREACHED: float = 1e6
 
 # Seconds of walking from `bot`'s cell, by the flood `steps`.
 static func _walk_seconds(world: BotMatch, steps: PackedInt32Array, bot: MatchBot) -> float:
-	return _seconds_at(world, steps, bot.position)
-
-
-# Seconds of walking from `place`'s cell, by the flood `steps`.
-static func _seconds_at(world: BotMatch, steps: PackedInt32Array, place: Vector2) -> float:
-	var cell: Vector2i = BotArena.cell_of(place)
+	var cell: Vector2i = BotArena.cell_of(bot.position)
 	if steps.is_empty() or not world.arena.walk.contains(cell):
 		return UNREACHED
 	var walked: int = steps[cell.y * int(world.arena.width) + cell.x]
