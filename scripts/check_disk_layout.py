@@ -144,10 +144,132 @@ def check_repo_location(repo: pathlib.Path, home: pathlib.Path,
     return [f"D5 the repository itself is under {home} -- it belongs on the large disk"]
 
 
+# --- each checkout its own user:// (T83) ------------------------------------
+#
+# Until wave 93 scripts/godot pointed every checkout's user:// at one
+# directory under the toolchain, and two waves testing at once wrote each
+# other's files (wave 78's effects shards failed during wave 80's check). The
+# wrapper now points it inside its own checkout, at .user-data/, and prints
+# that redirect when asked -- so what is checked here is what Godot is given,
+# not a copy of the rule.
+
+PRINT_REDIRECT = "--gak-print-redirect"
+
+# What one checkout's wrapper redirects user:// to: its NAME=PATH paths, or
+# None when the wrapper predates T83 and cannot say.
+Redirects = dict[pathlib.Path, "list[pathlib.Path] | None"]
+
+
+def list_checkouts(repo: pathlib.Path) -> list[pathlib.Path]:
+    """Every checkout git knows for this repository: the main one and each worktree.
+
+    A copy with no git (a release unpacked somewhere) is one checkout, itself.
+    A worktree whose folder is gone is skipped: nothing there can run Godot.
+    """
+    listed = subprocess.run(["git", "-C", str(repo), "worktree", "list", "--porcelain"],
+                            capture_output=True, text=True)
+    if listed.returncode != 0:
+        return [repo]
+    paths = [pathlib.Path(line.split(" ", 1)[1]) for line in listed.stdout.splitlines()
+             if line.startswith("worktree ")]
+    return [path for path in paths if path.is_dir()] or [repo]
+
+
+def read_redirect(checkout: pathlib.Path) -> "list[pathlib.Path] | None":
+    """Ask one checkout's own scripts/godot where it sends user://.
+
+    None for a wrapper that does not know the question: running an older one
+    with an unknown flag would start Godot, so it is not run at all.
+    """
+    wrapper = checkout / "scripts" / "godot"
+    if not wrapper.is_file() or PRINT_REDIRECT not in wrapper.read_text(errors="replace"):
+        return None
+    printed = subprocess.run(["bash", str(wrapper), PRINT_REDIRECT],
+                             capture_output=True, text=True, timeout=60)
+    return [pathlib.Path(line.split("=", 1)[1].strip())
+            for line in printed.stdout.splitlines() if "=" in line]
+
+
+def is_inside(path: pathlib.Path, folder: pathlib.Path) -> bool:
+    """Whether path is folder or lies under it, after resolving both."""
+    try:
+        path.resolve().relative_to(folder.resolve())
+    except ValueError:
+        return False
+    return True
+
+
+def ignored_by_git(checkout: pathlib.Path, path: pathlib.Path) -> bool:
+    """Whether git in that checkout ignores path: user:// holds logs, never commits."""
+    asked = subprocess.run(["git", "-C", str(checkout), "check-ignore", "-q", str(path)],
+                           capture_output=True)
+    return asked.returncode == 0
+
+
+def check_own_redirect(checkout: pathlib.Path, folders: list[pathlib.Path], home: pathlib.Path,
+                       on_runner: bool, ignored) -> list[str]:
+    """D6 and D8 for one checkout: off home, inside itself, and ignored by git.
+
+    Under home on a CI runner is a note, as D5 is: there the checkout itself
+    is under home, and so is everything inside it.
+    """
+    if not folders:
+        return [f"D8 {checkout}/scripts/godot printed no user:// redirect"]
+    findings = []
+    for folder in folders:
+        if is_inside(folder, home) and on_runner:
+            print(f"D6 note: user:// at {folder} is under {home}, on a one-disk CI runner")
+        elif is_inside(folder, home):
+            findings.append(f"D6 user:// for {checkout} is {folder}, under {home} -- the small disk")
+        if not is_inside(folder, checkout):
+            findings.append(f"D8 user:// for {checkout} is {folder}, outside the checkout "
+                            "-- shared by every checkout that resolves there (docs/adr/0022)")
+        elif not ignored(checkout, folder):
+            findings.append(f"D8 user:// for {checkout} is {folder}, which git does not ignore")
+    return findings
+
+
+def check_shared_redirects(redirects: Redirects) -> list[str]:
+    """D7: no two checkouts write one user://, nor one inside the other's."""
+    findings = []
+    known = [(checkout, folder) for checkout, folders in redirects.items()
+             for folder in folders or []]
+    for index, (first, first_folder) in enumerate(known):
+        for second, second_folder in known[index + 1:]:
+            if first != second and (is_inside(first_folder, second_folder)
+                                    or is_inside(second_folder, first_folder)):
+                findings.append(f"D7 {first} and {second} share user:// "
+                                f"({first_folder} and {second_folder})")
+    return findings
+
+
+def check_user_dirs(redirects: Redirects, home: pathlib.Path, on_runner: bool = False,
+                    ignored=ignored_by_git) -> list[str]:
+    """D6-D8 over every checkout: each its own user://, on the large disk.
+
+    A checkout whose wrapper predates T83 is a note: it is another branch's
+    state, and it stops being one when that branch takes main.
+    """
+    older = sorted(str(checkout) for checkout, folders in redirects.items() if folders is None)
+    if older:
+        print(f"D7 note: {len(older)} checkout(s) predate T83 and still share the old "
+              f"user:// -- {', '.join(older)}")
+    findings = []
+    for checkout, folders in redirects.items():
+        if folders is not None:
+            findings += check_own_redirect(checkout, folders, home, on_runner, ignored)
+    return findings + check_shared_redirects(redirects)
+
+
 def run(repo: pathlib.Path, toolchain: pathlib.Path, home: pathlib.Path,
-        on_runner: bool = False, windows: bool = WINDOWS) -> int:
+        on_runner: bool = False, windows: bool = WINDOWS,
+        redirects: "Redirects | None" = None, ignored=ignored_by_git) -> int:
+    """Every check; the redirects are read from the checkouts unless given."""
+    if redirects is None:
+        redirects = {checkout: read_redirect(checkout) for checkout in list_checkouts(repo)}
     findings = (find_leaks(home) + check_toolchain(toolchain, windows)
-                + check_repo_location(repo, home, on_runner))
+                + check_repo_location(repo, home, on_runner)
+                + check_user_dirs(redirects, home, on_runner, ignored))
     for finding in findings:
         print(finding)
     return 1 if findings else 0
@@ -158,6 +280,59 @@ def run(repo: pathlib.Path, toolchain: pathlib.Path, home: pathlib.Path,
 # Every gate in this repo is born with a case it must reject. A gate that only
 # knows how to go green is worse than no gate, because nobody investigates a
 # green.
+
+
+def wrapper_copy(root: pathlib.Path, name: str) -> pathlib.Path:
+    """A checkout holding only this repository's real scripts/godot.
+
+    The wrapper's own answer is what the case holds, so a wrapper changed back
+    to one directory for everyone fails the self-test, not just a planted dict.
+    """
+    checkout = root / name
+    (checkout / "scripts").mkdir(parents=True)
+    source = pathlib.Path(__file__).resolve().parent / "godot"
+    (checkout / "scripts" / "godot").write_text(source.read_text())
+    return checkout
+
+
+def user_dir_cases(root: pathlib.Path, toolchain: pathlib.Path, home: pathlib.Path,
+                   repo: pathlib.Path, expect, said) -> None:
+    """The planted user:// layouts (T83): D6, D7 and D8, each asked for by code."""
+    other = root / "other-checkout"
+    other.mkdir()
+    shared = toolchain / "xdg"
+    # Planted: the layout before T83 -- two checkouts, one directory.
+    expect("two checkouts, one user:// (D7)",
+           int(said("D7", repo, toolchain, home, {repo: [shared], other: [shared]})), 1)
+    # Planted: one checkout back on the toolchain; with one checkout (CI)
+    # there is nothing to collide with, and D8 is what catches it.
+    expect("user:// outside its checkout (D8)",
+           int(said("D8", repo, toolchain, home, {repo: [shared]})), 1)
+    expect("user:// under home (D6)",
+           int(said("D6", repo, toolchain, home, {repo: [home / ".user-data"]})), 1)
+    expect("user:// git does not ignore (D8)",
+           int(said("D8", repo, toolchain, home, {repo: [repo / ".user-data"]},
+                    ignored=lambda *_: False)), 1)
+    expect("a wrapper that prints nothing (D8)", int(said("D8", repo, toolchain, home, {repo: []})), 1)
+    # Planted, D7 alone: a checkout inside another's user://, so each is
+    # inside itself and only the overlap is wrong.
+    inner = repo / ".user-data" / "xdg" / "inner"
+    expect("one user:// inside another's (D7 alone)",
+           int(said("D7", repo, toolchain, home,
+                    {repo: [repo / ".user-data" / "xdg"], inner: [inner / ".user-data"]})), 1)
+    with contextlib.redirect_stdout(io.StringIO()):
+        older = run(repo, toolchain, home, False, False,
+                    {repo: [repo / ".user-data"], other: None}, lambda *_: True)
+        on_runner = run(home / "runner-repo", toolchain, home, True, False,
+                        {home / "runner-repo": [home / "runner-repo" / ".user-data"]},
+                        lambda *_: True)
+    expect("a worktree that predates T83 is a note", older, 0)
+    expect("user:// under home on a runner is a note", on_runner, 0)
+    first, second = wrapper_copy(root, "copy-one"), wrapper_copy(root, "copy-two")
+    real = {first: read_redirect(first), second: read_redirect(second)}
+    with contextlib.redirect_stdout(io.StringIO()):
+        expect("the real wrapper in two checkouts",
+               run(repo, toolchain, home, False, False, real, lambda *_: True), 0)
 
 
 def self_test() -> int:
@@ -173,10 +348,28 @@ def self_test() -> int:
 
         The Linux layout unless told otherwise, whatever the host: a planted
         missing `._sc_` must be refused for that, not because a Windows host
-        went looking for `godot.exe` beside it.
+        went looking for `godot.exe` beside it. The checkout's user:// is the
+        decided one, inside it, so these cases plant one thing each.
         """
+        own = {repo: [repo / ".user-data" / "xdg"]}
         with contextlib.redirect_stdout(io.StringIO()):
-            return run(repo, toolchain, home, on_runner, windows)
+            return run(repo, toolchain, home, on_runner, windows, own, lambda *_: True)
+
+    def said(code: str, repo: pathlib.Path, toolchain: pathlib.Path, home: pathlib.Path,
+             redirects: Redirects, on_runner: bool = False, ignored=lambda *_: True) -> bool:
+        """Whether a planted user:// layout fails with that code among its findings.
+
+        The code is asked for, not only exit 1: the cases overlap (a shared
+        directory is also outside its checkout), and a gate with one of its
+        checks deleted would still exit 1 on the others.
+        """
+        printed = io.StringIO()
+        with contextlib.redirect_stdout(printed):
+            code_returned = run(repo, toolchain, home, on_runner, False, redirects, ignored)
+        lines = printed.getvalue().splitlines()
+        return code_returned == 1 and any(line.startswith(code + " ")
+                                          and not line.startswith(code + " note")
+                                          for line in lines)
 
     with tempfile.TemporaryDirectory() as workspace:
         root = pathlib.Path(workspace)
@@ -274,6 +467,8 @@ def self_test() -> int:
         # is not a finding -- but a leak there still is.
         expect("repo under home on a runner", quiet(repo_on_home, good_toolchain, clean_home, True), 0)
         expect("a leak on a runner", quiet(repo_on_home, good_toolchain, dirty_home, True), 1)
+
+        user_dir_cases(root, good_toolchain, clean_home, repo_off_home, expect, said)
 
         # Usage errors must be exit 2, never confused with a finding.
         script = pathlib.Path(__file__).resolve()

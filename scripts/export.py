@@ -145,9 +145,11 @@ def run_godot(*arguments: str) -> subprocess.CompletedProcess:
 
 def start_problem(binary: pathlib.Path) -> str:
     """Why the exported binary did not start and stop cleanly, or ""."""
-    # The exported game writes user:// like any Godot program; XDG_DATA_HOME
-    # keeps it on the large disk, as scripts/godot does for the editor.
-    environment = {**os.environ, "XDG_DATA_HOME": str(TOOLCHAIN / "xdg")}
+    # The exported game writes user:// like any Godot program. The same
+    # redirect scripts/godot sets -- this checkout's .user-data/ (T83) --
+    # asked of it rather than copied, keeps it on the large disk.
+    redirect = run_godot("--gak-print-redirect").stdout.splitlines()
+    environment = {**os.environ, **dict(line.split("=", 1) for line in redirect)}
     ran = subprocess.run([str(binary), "--headless", "--quit-after", str(FRAMES)], env=environment,
                          capture_output=True, text=True, timeout=120)
     printed = ran.stdout + ran.stderr

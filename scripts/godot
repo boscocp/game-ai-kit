@@ -15,7 +15,17 @@
 # `_console` one, the only build whose output and exit code reach a terminal.
 # docs/howto/windows.md.
 #
-# check_disk_layout.py fails if either one stops working.
+# The redirect points inside this checkout, at `.user-data/` (ignored by git),
+# so each worktree has its own `user://` (T83, docs/adr/0022). Under the
+# toolchain it was one directory for every checkout, and two waves testing at
+# once wrote each other's files. The checkout is on the large disk already:
+# check_disk_layout.py's D5 holds that.
+#
+# `scripts/godot --gak-print-redirect` prints the redirect, one NAME=PATH a
+# line, and exits without starting Godot: bootstrap, export.py and the gate
+# read the decision from here instead of copying it.
+#
+# check_disk_layout.py fails if either mechanism stops working.
 set -euo pipefail
 
 here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
@@ -23,11 +33,20 @@ here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 if [[ "${OS:-}" == "Windows_NT" ]]; then
   toolchain=${GAK_TOOLCHAIN:-D:/games/gamedev/toolchain}
   binary="$toolchain/godot/godot_console.exe"
-  redirect=(APPDATA="$toolchain/appdata" LOCALAPPDATA="$toolchain/localappdata")
+  # `pwd -W` is Git Bash's D:/... form: godot.exe is a Windows program and
+  # reads APPDATA as a Windows path, not as /d/....
+  user_data="$(cd -- "$here" && pwd -W)/.user-data"
+  redirect=(APPDATA="$user_data/appdata" LOCALAPPDATA="$user_data/localappdata")
 else
   toolchain=${GAK_TOOLCHAIN:-/mnt/games/gamedev/toolchain}
   binary="$toolchain/godot/godot"
-  redirect=(XDG_DATA_HOME="$toolchain/xdg")
+  user_data="$here/.user-data"
+  redirect=(XDG_DATA_HOME="$user_data/xdg")
+fi
+
+if [[ "${1:-}" == "--gak-print-redirect" ]]; then
+  printf '%s\n' "${redirect[@]}"
+  exit 0
 fi
 
 if [[ ! -x "$binary" ]]; then
