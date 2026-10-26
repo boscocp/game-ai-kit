@@ -1,0 +1,33 @@
+{
+  "about": "Techniques shown in a demo that are not a module of kind technique: they live in Python (which trains) and in the example that uses what Python emitted, or in the demo itself. Each gets a technique page, like a module (T74). T76's catalogue reads this file too. check_translations_docs.py holds that every path named here exists.",
+  "techniques": [
+    {
+      "page": "menace",
+      "name": "MENACE, the matchbox learner",
+      "lives_in": ["python/gameaikit/menace/", "godot/game/tictactoe/"],
+      "demos": ["demo-tictactoe"],
+      "concept": "docs/concepts/menace.md"
+    },
+    {
+      "page": "learned_evaluation",
+      "name": "Samuel's learned checkers evaluation",
+      "lives_in": ["python/gameaikit/checkers/", "godot/game/checkers/checkers_evaluation.gd"],
+      "demos": ["run"],
+      "concept": "docs/concepts/learned-evaluation.md"
+    },
+    {
+      "page": "behaviour_cloning",
+      "name": "Behaviour cloning, the fighter that plays like you",
+      "lives_in": ["python/gameaikit/cloning/", "godot/game/fighting/fight_clone_opponent.gd"],
+      "demos": ["demo-fighting"],
+      "concept": "docs/concepts/behaviour-cloning.md"
+    },
+    {
+      "page": "racing_driver",
+      "name": "The racing driver: a lookahead point, a speed profile, difficulty without a rubber band",
+      "lives_in": ["godot/demos/racing/racing_driver.gd"],
+      "demos": ["demo-racing"],
+      "concept": "docs/concepts/racing-ai.md"
+    }
+  ]
+}

@@ -3,7 +3,8 @@
   "kind": "technique",
   "about": "State machine, behaviour tree, GOAP and HTN.",
   "owns": [
-    "godot/addons/ai_behaviour/"
+    "godot/addons/ai_behaviour/",
+    "godot/test/ai_behaviour/"
   ],
   "depends_on": [],
   "gates": []
