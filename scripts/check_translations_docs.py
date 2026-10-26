@@ -32,6 +32,12 @@ Prose cannot be compared across languages, so three things that can be are:
   * fenced code blocks are not translated (their comments are English, once),
     so they must match byte for byte, in order.
 
+Every translation also opens the same way, before its first section: a
+quoted line linking its English page and the glossary of the English words a
+Brazilian developer keeps -- the same words on every page, so a reader who
+meets *steering* on any of them knows where it is explained (the owner,
+2026-10-26: what has no good translation stays in English, in a glossary).
+
 And the page's minimal example is run, not only read: a block marked
 `<!-- example: godot/test/<addon>/<file>.gd -->` must equal that file, which
 a gdUnit suite beside it loads into an empty scene.
@@ -51,6 +57,8 @@ The rules, one finding each
   D11 STILL_TO_WRITE names a page that exists, or no technique at all
   D12 a page in docs/techniques/ that no technique or rule accounts for
   D13 a non-module technique naming a path that does not exist
+  D14 a translation that does not open, before its first section, with the
+      line linking its English page and the glossary
 
 Exit codes
 ----------
@@ -84,7 +92,8 @@ TRANSLATION_SUFFIX = ".pt-BR.md"
 # Pages that are not a technique and still belong in the folder: the
 # glossary is Portuguese only, being a list of the English words a Brazilian
 # developer keeps (step 3).
-OTHER_PAGES = {"glossary.pt-BR.md"}
+GLOSSARY = "glossary.pt-BR.md"
+OTHER_PAGES = {GLOSSARY}
 
 # The kernels that get a page although they are not a technique: ai_core is
 # the grid and the pathfinder port every addon stands on. `board` is not here
@@ -231,6 +240,37 @@ def code_blocks(text: str) -> list[tuple[str | None, str, str]]:
 # --- the checks on one pair --------------------------------------------------
 
 
+def glossary_note(name: str) -> str:
+    """The line every translation opens with, for the page called `name`."""
+    return (f"English: [{name}.md]({name}.md). Os termos que ficam em inglês "
+            f"estão no [glossário]({GLOSSARY}).")
+
+
+def opening_quote(text: str) -> str:
+    """The first quoted block above the first section, its lines joined.
+
+    The doc-meta block is left out, and so is anything from the first `##`
+    heading on: a note further down is not where a reader looks first.
+    """
+    quoted: list[str] = []
+    for _, line in outside_fences(META_RE.sub("", text, count=1)):
+        if line.startswith("## "):
+            break
+        if line.startswith(">"):
+            quoted.append(line[1:].strip())
+        elif quoted:
+            break
+    return " ".join(part for part in quoted if part)
+
+
+def glossary_findings(label: str, name: str, text: str) -> list[str]:
+    """D14: a translation that does not open with the glossary line."""
+    if opening_quote(text) == glossary_note(name):
+        return []
+    return [f"{label}: D14 it must open, before its first section, with the quoted line "
+            f"\"{glossary_note(name)}\""]
+
+
 def anchor_findings(label: str, text: str) -> list[str]:
     """D7: a heading below the title with no explicit anchor."""
     return [
@@ -354,6 +394,8 @@ def content_findings(root: pathlib.Path, techniques: list[str]) -> list[str]:
             findings += shape_findings(f"{PAGES}/{english.name}", english.read_text(encoding="utf-8"))
         if translated.exists():
             findings += pair_findings(english, translated)
+            findings += glossary_findings(f"{PAGES}/{translated.name}", english.stem,
+                                          normalised(translated.read_text(encoding="utf-8")))
     return findings
 
 
@@ -433,6 +475,7 @@ def translation_of(english: str, claimed: str | None = None) -> str:
     """A faithful pt-BR page for `english`: every heading and block kept."""
     digest = claimed if claimed is not None else body_hash(english)
     text = english.replace("verified_on: 2026-10-26", f"verified_on: 2026-10-26\ntranslation_of: {digest}")
+    text = text.replace("-->\n", f"-->\n\n> {glossary_note('ai_x')}\n", 1)
     for before, after in (("It decides.", "Decide."), ("Rarely.", "Raramente."),
                           ("What it decides", "O que decide"), ("Deeper", "Mais fundo")):
         text = text.replace(before, after)
@@ -460,7 +503,8 @@ def good_pages(english: str = ENGLISH) -> dict[str, str]:
     exactly the drift it planted.
     """
     kernel = "# ai_core\n\n## The grid {#grid}\n\nCells.\n"
-    kernel_pt = "# ai_core\n\n<!-- doc-meta\ntranslation_of: " + body_hash(kernel) + "\n-->\n\n## A grade {#grid}\n\nCélulas.\n"
+    kernel_pt = ("# ai_core\n\n<!-- doc-meta\ntranslation_of: " + body_hash(kernel) + "\n-->\n\n> "
+                 + glossary_note("ai_core") + "\n\n## A grade {#grid}\n\nCélulas.\n")
     return {"ai_x.md": english, "ai_x.pt-BR.md": translation_of(english),
             "ai_core.md": kernel, "ai_core.pt-BR.md": kernel_pt}
 
@@ -517,8 +561,28 @@ def more_cases(root: pathlib.Path, pages: dict[str, str]) -> list[tuple[str, pat
         ("an example naming no file", build(root, "gone", good_pages(gone)), 1, "D9"),
         ("a technique page with no example", build(root, "unmarked", good_pages(unmarked)), 1, "D10"),
         ("a non-module technique naming a missing path", nowhere, 1, "D13"),
+        *glossary_cases(root, pages),
         # Not a drift: an editor adding newlines at the end changes nothing.
         ("trailing newlines added to the English page", build(root, "trailing", trailing), 0, ""),
+    ]
+
+
+def glossary_cases(root: pathlib.Path, pages: dict[str, str]) -> list[tuple[str, pathlib.Path, int, str]]:
+    """D14's planted cases: the line missing, reworded, moved below a section."""
+    translated = pages["ai_x.pt-BR.md"]
+    note = f"> {glossary_note('ai_x')}\n"
+    missing = dict(pages, **{"ai_x.pt-BR.md": translated.replace(note, "")})
+    reworded = dict(pages, **{"ai_x.pt-BR.md": translated.replace("[glossário]", "[vocabulário]")})
+    moved = dict(pages, **{"ai_x.pt-BR.md": translated.replace(note, "").replace(
+        "Raramente.", "Raramente.\n\n" + note)})
+    wrapped = dict(pages, **{"ai_x.pt-BR.md": translated.replace(
+        "Os termos que ficam", "Os termos\n> que ficam")})
+    return [
+        ("a translation with no glossary line", build(root, "no-glossary", missing), 1, "D14"),
+        ("a glossary line in other words", build(root, "reworded", reworded), 1, "D14"),
+        ("a glossary line below the first section", build(root, "low-glossary", moved), 1, "D14"),
+        # Not a drift: the same line wrapped differently reads the same.
+        ("the glossary line wrapped elsewhere", build(root, "wrapped", wrapped), 0, ""),
     ]
 
 
