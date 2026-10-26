@@ -19,6 +19,10 @@
 ; mortar is the end of the longest chain in the game: workers, magma, room,
 ; barracks, lab, mortars.
 ;
+; `tower_armed` is T56's one upgrade: a tower standing, then its gun bought.
+; It costs magma too, so it needs `magma_flowing`, and its price competes
+; with a squad's -- which is the choice the commander has to time.
+;
 ; Kept equal to `rts-build-order.json` beside it by `make test-python`; the
 ; game reads a byte-for-byte copy of that JSON
 ; (`godot/game/rts/build_order_domain.json`).
@@ -31,6 +35,7 @@
     (barracks_up)
     (lab_up)
     (tower_up)
+    (tower_armed)
     (expansion_up)
     (runners_ready)
     (shields_ready)
@@ -65,6 +70,11 @@
     :parameters ()
     :precondition (and (magma_flowing))
     :effect (and (tower_up)))
+
+  (:action arm_tower
+    :parameters ()
+    :precondition (and (tower_up) (magma_flowing))
+    :effect (and (tower_armed)))
 
   (:action expand
     :parameters ()

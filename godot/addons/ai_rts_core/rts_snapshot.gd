@@ -27,7 +27,8 @@ var resources: Dictionary = {}
 var supply_used: int = 0
 var supply_cap: int = 0
 ## What this side can see, each unit as a read-only dictionary: id, side,
-## kind, position, health and complete; and for its own units also order,
+## kind, position, health, complete and armed -- a gun on a tower is in
+## plain sight; and for its own units also order,
 ## its target and goal, carrying and carried, progress, and its queue (and
 ## queued, how many that is). Sorted by id.
 var units: Array[Dictionary] = []
@@ -92,7 +93,8 @@ func _where(test: Callable) -> Array[Dictionary]:
 
 static func _frozen(unit: RtsUnit, own: bool) -> Dictionary:
 	var values: Dictionary = {"id": unit.id, "side": unit.side, "kind": unit.kind,
-		"position": unit.position, "health": unit.health, "complete": unit.complete}
+		"position": unit.position, "health": unit.health, "complete": unit.complete,
+		"armed": unit.armed}
 	if own:
 		values.merge({"order": unit.order, "carrying": unit.carrying, "carried": unit.carried,
 			"queued": unit.queue.size(), "queue": unit.queue.duplicate(), "target": unit.target_id,

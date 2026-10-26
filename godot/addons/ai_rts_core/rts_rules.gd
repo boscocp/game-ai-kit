@@ -133,6 +133,9 @@ static func _why_train_refused(world: RtsWorld, side: int, order: RtsCommand) ->
 		return "unit %d is still being built" % producer.id
 	if not order.what in RtsKinds.of(producer.kind, "trains"):
 		return "a %s does not train a %s" % [producer.kind, order.what]
+	var bought: String = _why_upgrade_refused(producer, order.what)
+	if bought != "":
+		return bought
 	if producer.queue.size() >= RtsKinds.QUEUE_LIMIT:
 		return "unit %d already has %d in its queue" % [producer.id, RtsKinds.QUEUE_LIMIT]
 	var missing: String = _why_needs_missing(world, side, order.what)
@@ -143,6 +146,18 @@ static func _why_train_refused(world: RtsWorld, side: int, order: RtsCommand) ->
 		return "a %s needs %d supply and you have %d free of %d" % [
 			order.what, RtsKinds.of(order.what, "supply"), room, world.supply_cap(side)]
 	return _why_unaffordable(world, side, order.what)
+
+
+# An upgrade is bought once: a tower armed, or arming, is refused another,
+# which would be paid for and change nothing.
+static func _why_upgrade_refused(producer: RtsUnit, what: String) -> String:
+	if not RtsKinds.is_upgrade(what):
+		return ""
+	if producer.armed:
+		return "unit %d is already armed" % producer.id
+	if what in producer.queue:
+		return "unit %d is already arming" % producer.id
+	return ""
 
 
 # A kind that needs a building cannot be had until one of that side's stands

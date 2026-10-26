@@ -16,7 +16,8 @@ import unittest
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "godot" / "game" / "rts" / "art_sources.json"
 
-#: Every kind in `RtsKinds.TABLE`, by the names the game uses.
+#: Every kind in `RtsKinds.TABLE` that stands on the map and so is drawn, by
+#: the names the game uses -- `arm`, a tower's upgrade, is a row with no unit.
 KINDS = ("worker", "runner", "shield", "mortar", "base", "barracks", "lab", "depot", "tower", "rocks", "vent")
 
 

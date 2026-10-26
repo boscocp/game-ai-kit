@@ -13,6 +13,7 @@
 ## own tick of the cycle, so the questions are spread evenly. Measured in T19:
 ## 200 idle soldiers asking every tick cost about 7 ms, more than the whole
 ## simulation's share. Six looks a second is still quicker than a person.
+## An armed tower looks on the same cycle and strikes from where it stands.
 ##
 ## When not to use it: units that need to plan more than one step of their
 ## own. That is a controller's job, through `RtsCommand`.
@@ -136,6 +137,8 @@ static func _move(world: RtsWorld, unit: RtsUnit) -> void:
 static func _idle(world: RtsWorld, unit: RtsUnit) -> void:
 	if RtsKinds.is_building(unit.kind):
 		_train(world, unit)
+		if unit.armed:
+			_shoot(world, unit)
 	elif RtsKinds.fights(unit.kind) and _looking(world, unit):
 		var enemy: RtsUnit = nearest_enemy(world, unit)
 		if enemy != null:
@@ -265,14 +268,55 @@ static func _repair(world: RtsWorld, unit: RtsUnit) -> void:
 
 # A building works through its queue: the first in it trains, and when it is
 # ready steps out into the nearest free cell -- or waits, ready, until one is.
+# An upgrade steps out nowhere: done, it is the building's.
 static func _train(world: RtsWorld, building: RtsUnit) -> void:
 	if not building.complete or building.queue.is_empty():
 		return
 	building.progress = mini(building.progress + 1, RtsKinds.of(building.queue[0], "ticks"))
 	if building.progress < RtsKinds.of(building.queue[0], "ticks"):
 		return
+	if RtsKinds.is_upgrade(building.queue[0]):
+		building.queue.pop_front()
+		building.armed = true
+		building.progress = 0
+		return
 	var cell: Vector2i = world.free_cell_near(building.cell())
 	if cell == building.cell():
 		return
 	world.add_unit(building.queue.pop_front(), building.side, cell)
 	building.progress = 0
+
+
+## The enemy an armed `tower` would strike now: the nearest in `RtsKinds.ARM`'s
+## reach that its side can see, with a line of fire to it -- the same line
+## every shot needs, so a tower never fires through a wall. Ties to the
+## lowest id; null for none.
+static func tower_target(world: RtsWorld, tower: RtsUnit) -> RtsUnit:
+	var best: RtsUnit = null
+	var reach: float = RtsKinds.of(RtsKinds.ARM, "reach")
+	for id: int in world.spatial.near(tower.position, reach):
+		var other: RtsUnit = world.unit(id)
+		if other.side == tower.side or other.side == RtsWorld.NEUTRAL or other.health <= 0:
+			continue
+		if not world.visible_to(tower.side, other.position) or not world.line_of_fire(tower.position, other.position):
+			continue
+		if best == null or other.position.distance_to(tower.position) < best.position.distance_to(tower.position):
+			best = other
+	return best
+
+
+# An armed tower's reflex, the same for both sides and for a person's: when
+# its gun is ready, on its tick of the look cycle, strike `tower_target`.
+# It takes no order -- a building takes none but to train -- so whom it
+# struck last is kept in `target_id`, for the screen to draw.
+static func _shoot(world: RtsWorld, tower: RtsUnit) -> void:
+	if tower.cooldown > 0 or not _looking(world, tower):
+		return
+	var target: RtsUnit = tower_target(world, tower)
+	if target == null:
+		return
+	target.health -= RtsKinds.blow(RtsKinds.ARM, target.kind, world.rng.randi_range(0, 2))
+	tower.cooldown = RtsKinds.of(RtsKinds.ARM, "cooldown")
+	tower.target_id = target.id
+	if world.visible_to(target.side, tower.position):
+		_strike_back(target, tower)

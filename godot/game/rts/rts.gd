@@ -30,7 +30,7 @@ const FIRST_SPEED: int = 1
 const BUILD_KEYS: Dictionary = {KEY_B: RtsKinds.BARRACKS, KEY_D: RtsKinds.DEPOT, KEY_L: RtsKinds.LAB,
 	KEY_T: RtsKinds.TOWER, KEY_E: RtsKinds.BASE}
 const TRAIN_KEYS: Dictionary = {KEY_W: RtsKinds.WORKER, KEY_1: RtsKinds.RUNNER, KEY_2: RtsKinds.SHIELD,
-	KEY_3: RtsKinds.MORTAR}
+	KEY_3: RtsKinds.MORTAR, KEY_A: RtsKinds.ARM}
 ## How near a click must be to a unit to mean it, in cells.
 const CLICK_REACH: float = 0.75
 const SEED: int = 20
@@ -356,10 +356,15 @@ func _selected_worker() -> int:
 func _train(kind: String) -> void:
 	for id: int in _view.selected:
 		var unit: RtsUnit = world.unit(id)
-		if unit != null and unit.side == RtsScenario.WEST and kind in RtsKinds.of(unit.kind, "trains"):
+		# An armed or arming tower cannot take another arm: the next one may.
+		var taken: bool = unit != null and RtsKinds.is_upgrade(kind) and (unit.armed or kind in unit.queue)
+		if unit != null and unit.side == RtsScenario.WEST and kind in RtsKinds.of(unit.kind, "trains") and not taken:
 			_give(RtsCommand.train(id, kind))
 			return
-	_say("select a building that trains a %s" % kind, true)
+	if RtsKinds.is_upgrade(kind):
+		_say("select a tower, complete and not yet armed", true)
+	else:
+		_say("select a building that trains a %s" % kind, true)
 
 
 func _give(command: RtsCommand) -> void:

@@ -47,8 +47,8 @@ static func why(world: RtsWorld) -> String:
 	return "time: west worth %d, east %d" % [west, east]
 
 
-## What `side` holds, priced: every unit and building at its cost, and its
-## funds, both resources counted alike.
+## What `side` holds, priced: every unit and building at its cost, an armed
+## tower's arm too, and its funds, both resources counted alike.
 static func worth(world: RtsWorld, side: int) -> int:
 	var total: int = 0
 	for unit: RtsUnit in world.units():
@@ -56,6 +56,7 @@ static func worth(world: RtsWorld, side: int) -> int:
 			continue
 		for resource: String in RtsKinds.RESOURCES:
 			total += RtsKinds.cost(unit.kind)[resource]
+			total += RtsKinds.cost(RtsKinds.ARM)[resource] if unit.armed else 0
 	for resource: String in RtsKinds.RESOURCES:
 		total += world.funds(side)[resource]
 	return total

@@ -120,7 +120,7 @@ func shown_units() -> Array[Dictionary]:
 	var listed: Array[Dictionary] = []
 	for unit: RtsUnit in world.units():
 		listed.append({"id": unit.id, "side": unit.side, "kind": unit.kind, "position": unit.position,
-			"health": unit.health, "complete": unit.complete})
+			"health": unit.health, "complete": unit.complete, "armed": unit.armed})
 	return listed
 
 
@@ -187,6 +187,10 @@ func _draw_unit(unit: Dictionary) -> void:
 		_draw_shape(kind, centre, colour)
 	if selected.has(unit["id"]):
 		draw_arc(centre, CELL * 0.62, 0.0, TAU, 20, SELECTED, 1.5)
+	if unit["armed"]:
+		# The gun's reach, faint: where a unit walks into its fire.
+		var reach: float = RtsKinds.of(RtsKinds.ARM, "reach")
+		draw_arc(centre, CELL * reach, 0.0, TAU, 48, Color(colour, 0.35), 1.0)
 	var full: float = float(RtsKinds.of(kind, "health"))
 	var bar := Rect2(centre + Vector2(-CELL * 0.4, -CELL * 0.7), Vector2(CELL * 0.8, 4.0))
 	draw_rect(bar, Color(0.2, 0.0, 0.0))
@@ -219,9 +223,12 @@ func _draw_strikes(shown: Array[Dictionary]) -> void:
 		seen[unit["id"]] = true
 	for unit: Dictionary in shown:
 		var striker: RtsUnit = world.unit(unit["id"])
-		if striker == null or striker.order != RtsCommand.ATTACK or not seen.has(striker.target_id):
+		# An armed tower takes no attack order; whom it struck last is its target.
+		var striking: bool = striker != null and (striker.order == RtsCommand.ATTACK or striker.armed)
+		if not striking or not seen.has(striker.target_id):
 			continue
-		var since: int = int(RtsKinds.of(striker.kind, "cooldown")) - striker.cooldown
+		var gun: String = RtsKinds.ARM if striker.armed else striker.kind
+		var since: int = int(RtsKinds.of(gun, "cooldown")) - striker.cooldown
 		var from: Vector2 = to_screen(striker.position)
 		var to: Vector2 = to_screen(world.unit(striker.target_id).position)
 		if RtsKinds.of(striker.kind, "siege"):

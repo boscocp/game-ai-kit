@@ -129,8 +129,11 @@ func _buy(view: RtsSnapshot, what: String, funds: Dictionary, already: Array[Rts
 	return null
 
 
+# Complete, able to train it, nothing queued -- and, for a tower, not armed
+# already: the rules refuse a second arm, and asking would hold the queue.
 static func _free_to_train(producer: Dictionary, what: String) -> bool:
-	return producer["complete"] and what in RtsKinds.of(producer["kind"], "trains") and producer["queued"] == 0
+	return producer["complete"] and what in RtsKinds.of(producer["kind"], "trains") and producer["queued"] == 0 \
+		and not producer["armed"]
 
 
 static func _units_in(commands_given: Array[RtsCommand]) -> Dictionary:

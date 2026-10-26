@@ -64,6 +64,17 @@
       ]
     },
     {
+      "name": "arm_tower",
+      "preconditions": [
+        "tower_up",
+        "magma_flowing"
+      ],
+      "deletes": [],
+      "adds": [
+        "tower_armed"
+      ]
+    },
+    {
       "name": "expand",
       "preconditions": [
         "workers_saturated"

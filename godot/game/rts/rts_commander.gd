@@ -7,10 +7,13 @@
 ## always, then the counter to the fighter the enemy has shown most -- a
 ## mortar for shields, a shield for runners, a runner for mortars -- and
 ## the tower when nothing has been seen for a while, so it can find out;
-## the expansion once the match is old enough. **How to get there**:
-## `BuildOrder` plans the chain, by STRIPS or by HTN. **When**:
-## `BuildSchedule` times the plan by jumping from one affordable moment to
-## the next, which is what the screen shows beside each step.
+## the expansion once the match is old enough. Beside the plan, not in it,
+## the armed tower (T56): wished at the top of the queue when `TowerWorth`
+## weighs the enemy worth the gun would kill before help comes above its
+## price.
+## **How to get there**: `BuildOrder` plans the chain, by STRIPS or by HTN.
+## **When**: `BuildSchedule` times the plan by jumping from one affordable
+## moment to the next, which is what the screen shows beside each step.
 ##
 ## It replans on a cadence and when the plan breaks, never every frame
 ## (ADR 0010, point 5) -- the world does not wait while it thinks, and that
@@ -29,6 +32,10 @@ extends RtsSide
 const REPLAN_SECONDS: float = 10.0
 ## With no enemy fighter seen this long, the commander builds a tower to look.
 const SCOUT_AFTER_SECONDS: float = 120.0
+## The queue priority of a tower and its arm weighed worth it: above the
+## plan's step (80), so the gun comes when the weighing timed it to, and under
+## the depot reflex (95), which only the room running out raises.
+const ARM_PRIORITY: int = 85
 ## The match time after which the expansion joins the goal.
 const EXPAND_AFTER_SECONDS: float = 240.0
 ## The fighter that beats each kind: the counter to what was seen.
@@ -46,6 +53,10 @@ var goal_facts := PackedStringArray()
 var schedule: Array[Dictionary] = []
 ## Every planning call: {tick, microseconds, visited, steps, solved}.
 var plans: Array[Dictionary] = []
+## The last weighing of the arm, `TowerWorth.weigh`'s: what the panel shows.
+var arming: Dictionary = {}
+## False to never arm: how `rts-measure` asks what arming is worth.
+var may_arm: bool = true
 
 var _planned_at: int = -1
 # How much it over- or under-counts each kind of enemy fighter it has seen:
@@ -53,7 +64,7 @@ var _planned_at: int = -1
 # so it misreads the same way all match rather than dithering between
 # counters. 1 for each at a noise of 0.
 var _misjudged: Dictionary = {}
-# What the plan put in the queue last decision.
+# What the plan, and the arm, put in the queue last decision.
 var _wished: Array[String] = []
 
 
@@ -84,6 +95,7 @@ func _fill_queue(view: RtsSnapshot) -> void:
 		_plan(view, held, wanted)
 	schedule = BuildSchedule.of(steps, view)
 	_follow(held)
+	_arm_if_worth_it(view)
 
 
 ## What to aim at now, from what this side has seen and how long the match
@@ -107,10 +119,28 @@ func goal(view: RtsSnapshot) -> PackedStringArray:
 	return wanted
 
 
+# Weigh the arm now, and when it is worth it wish what it still needs at
+# `ARM_PRIORITY`: a tower if the side has none, the arm once one stands
+# complete. A tower still going up needs nothing bought. The weighing reads
+# the belief the last decision built -- `RtsSide.decide` updates it after
+# the economy has spent, as it always has.
+func _arm_if_worth_it(view: RtsSnapshot) -> void:
+	arming = TowerWorth.weigh(view, belief)
+	if not may_arm or not arming["worth_it"]:
+		return
+	var towers: Array[Dictionary] = view.mine(RtsKinds.TOWER)
+	var why: String = "weighed: the gun kills %d of a raid, costs %d" % [roundi(arming["killed"]), arming["price"]]
+	if towers.is_empty():
+		_wish(RtsKinds.TOWER, ARM_PRIORITY, why)
+	elif towers.any(func(tower: Dictionary) -> bool: return tower["complete"]):
+		_wish(RtsKinds.ARM, ARM_PRIORITY, why)
+
+
 ## The plan, its timing and the economy under it, for the screen.
 func overlay(view: RtsSnapshot) -> Dictionary:
 	var shown: Dictionary = super(view)
 	shown["goal"] = goal_facts
+	shown["arming"] = arming.duplicate()
 	shown["plan"] = schedule.duplicate(true)
 	shown["planner"] = "no plan: the queues' rules" if level.plan_horizon == 0 \
 		else ("STRIPS" if planner == BuildOrder.Planner.STRIPS else "HTN")
