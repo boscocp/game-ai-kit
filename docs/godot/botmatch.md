@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-22
+verified_on: 2026-10-26
 tier: 2
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: the match's rules, arenas or techniques change, and botmatch_effects.gd prints different numbers
@@ -320,6 +320,25 @@ measured apart.
   +47.6 +- 32.0 s, 13-7, 1.5 errors the other way; the lanes' mirror is
   +10.0 +- 22.7 s, 12-8. Twenty matches on the yards swing by that much,
   and a mirror within 2.5 errors either side is what the claim can tell.
+
+## Retreat measured again, before T65 (wave 96)
+
+T68's runs played the no-retreat pairing, but nobody wrote its number
+down. `make test-botmatch-effects` on main at 1b70831, 0 failures, 657 s
+on 12 shared cores, every pairing below on the lanes:
+
+| blue plays | margin a match | wins |
+|---|---|---|
+| everything | +10.0 +- 22.7 s | 12-8 |
+| no claims | -37.3 +- 23.3 s | 7-13 |
+| no commander | -4.1 +- 13.5 s | 9-11 |
+| no retreat | +186.7 +- 10.2 s | 20-0 |
+
+T68 as a whole -- health that comes back and the weighing of when to heal,
+not measured apart -- narrowed the gap from T67's +241.6 and did not close
+it. Blue's deaths: 956 with retreat, 958 without -- the retreat saves no
+lives. Why, from the reading, and what T65 proposes, is in the shooter AI
+page's T65 section.
 
 ## Running the effects gate in shards (T72)
 
