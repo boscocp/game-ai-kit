@@ -108,6 +108,28 @@ class SteeringTests(unittest.TestCase):
         self.assertAlmostEqual(Pursue(Vec(50.0, 0.0), Vec(0.0, 0.0), 1.0, 0.25).force(car).x, 40.0)
         self.assertEqual(Pursue(Vec(50.0, 0.0), Vec(0.0, 0.0)).time_to_target, 1.0)
 
+    @staticmethod
+    def _sideways_after_a_second(time_to_target: float, hertz: int) -> float:
+        """The eastward speed left after a second of seeking far north."""
+        car = Vehicle(Vec(0.0, 0.0), Vec(10.0, 0.0), 10.0, 1000.0)
+        seek = Seek(Vec(0.0, -1e6), time_to_target)
+        for _ in range(hertz):
+            car.step(seek.force(car), 1.0 / hertz)
+        return car.velocity.x
+
+    def test_a_time_of_several_frames_answers_the_same_at_two_frame_rates(self) -> None:
+        for time in (1.0, 0.1):
+            self.assertAlmostEqual(self._sideways_after_a_second(time, 60),
+                                   self._sideways_after_a_second(time, 120), delta=0.05)
+
+    def test_a_time_under_half_a_frame_chatters_instead_of_settling(self) -> None:
+        self.assertGreater(abs(self._sideways_after_a_second(0.005, 60)), 1.0)
+        self.assertLess(abs(self._sideways_after_a_second(0.005, 240)), 0.01)
+
+    def test_a_time_of_zero_or_less_is_floored_not_refused(self) -> None:
+        self.assertEqual(Seek(Vec(0.0, 0.0), -1.0).time_to_target, 0.001)
+        self.assertEqual(Pursue(Vec(0.0, 0.0), Vec(0.0, 0.0), 1.0, 0.0).time_to_target, 0.001)
+
     def test_avoid_sees_nothing_when_standing_still(self) -> None:
         car = Vehicle(Vec(0.0, 0.0), Vec(0.0, 0.0), 10.0, 20.0)
         self.assertEqual(Avoid([Vec(1.0, 0.0)], [2.0], 5.0).force(car), Vec(0.0, 0.0))

@@ -18,8 +18,9 @@ var quarry_position: Vector2
 var quarry_velocity: Vector2
 ## The furthest ahead it guesses, in seconds.
 var max_prediction: float
-## Seconds the vehicle is given to reach the velocity it wants: seek's knob,
-## handed on to the seek it runs.
+## The time constant, in seconds, of the change to the velocity it wants:
+## seek's knob, handed on to the seek it runs; never under
+## `Steering.SHORTEST_TIME`.
 var time_to_target: float
 
 

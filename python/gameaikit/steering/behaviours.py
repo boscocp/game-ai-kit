@@ -55,14 +55,18 @@ def clamped(force: Vec, limit: float) -> Vec:
 
 
 SHORTEST_TIME = 0.001
-"""The shortest time to reach a velocity that is taken: zero would divide by zero."""
+"""The shortest `time_to_target` taken. It only keeps zero (or less) from
+dividing by zero; under half a frame each step overshoots the velocity wanted
+and the next swings back -- it chatters, bounded only by `max_force`."""
 
 
 def towards_velocity(vehicle: Vehicle, desired: Vec, time_to_target: float = 1.0) -> Vec:
-    """Reynolds' steering, desired velocity minus velocity, divided by the
-    seconds it is given (Millington's form) and clamped. The default second
-    is what the gap alone meant here, since `Vehicle.step` adds force times
-    seconds."""
+    """Reynolds' steering, desired velocity minus velocity, divided by
+    `time_to_target` (Millington's form) and clamped. The time is a time
+    constant: unclamped, about two-thirds of the gap closes in it. The
+    default second is what the gap alone meant here, since `Vehicle.step`
+    adds force times seconds. The same at any frame rate while the time is
+    several frames long; under half a frame it chatters."""
     return clamped((desired - vehicle.velocity) / max(time_to_target, SHORTEST_TIME), vehicle.max_force)
 
 
@@ -78,9 +82,10 @@ def combined(vehicle: Vehicle, forces: list[Vec], weights: list[float]) -> Vec:
 class Seek:
     """Full speed at `target`. Never asks for less, so never stops there.
 
-    The velocity is asked to change within `time_to_target` seconds, the
-    same knob as arrive's: a second by default, what seek always was here; a
-    tenth for a car that must hold a line.
+    `time_to_target` is a time constant, the same knob as arrive's: about
+    two-thirds of the gap to the velocity wanted closes in it. A second by
+    default, what seek always was here; a tenth for a car that must hold a
+    line. Floored at `SHORTEST_TIME`.
     """
 
     target: Vec
@@ -99,8 +104,8 @@ class Seek:
 class Arrive:
     """Seek, with the desired speed falling to zero inside `braking_radius`.
 
-    The velocity is asked to change within `time_to_target` seconds
-    (Millington's form), which damps the approach so it comes to rest -- and
+    The gap to the velocity wanted is divided by `time_to_target`, a time
+    constant (Millington's form), which damps the approach so it comes to rest -- and
     asks harder than seek outside the radius too. Never under a thousandth of
     a second, which would divide by zero.
     """
@@ -126,12 +131,15 @@ class Arrive:
 class Pursue:
     """Seek where the quarry will be: its velocity times the chase's length,
     never more than `max_prediction` seconds ahead. `time_to_target` is
-    handed on to that seek."""
+    handed on to that seek, floored at `SHORTEST_TIME` as Seek's is."""
 
     quarry_position: Vec
     quarry_velocity: Vec
     max_prediction: float = 1.0
     time_to_target: float = 1.0
+
+    def __post_init__(self) -> None:
+        self.time_to_target = max(self.time_to_target, SHORTEST_TIME)
 
     def predicted(self, vehicle: Vehicle) -> Vec:
         """Where the quarry will be when the chase arrives."""

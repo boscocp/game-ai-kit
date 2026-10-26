@@ -52,7 +52,7 @@ matter:
 | top speed | `SteeringVehicle.max_speed` | the fastest it goes |
 | strength | `SteeringVehicle.max_force` | how hard it can turn and brake; every force is clamped to it |
 | braking radius | `ArriveBehaviour.new(target, radius)` | where arrive starts slowing; too small and it overshoots |
-| time to target | `SeekBehaviour.new(target, seconds)`, and the same last argument of `ArriveBehaviour` and `PursueBehaviour` | how many seconds the velocity is given to become the one wanted: seek's and pursue's default is 1, arrive's 0.1; a car on a line wants about 0.1 ([why](../concepts/steering.md)) |
+| time to target | `SeekBehaviour.new(target, seconds)`, and the same last argument of `ArriveBehaviour` and `PursueBehaviour` | how sharply the velocity turns into the one wanted -- a time constant: about two-thirds of the gap closes in that many seconds. Seek's and pursue's default is 1, arrive's 0.1; a car on a line wants about 0.1. Keep it several frames long, or it chatters ([why](../concepts/steering.md)) |
 | look-ahead | `PursueBehaviour` `max_prediction`, `AvoidBehaviour` `look_ahead` | how far ahead it guesses, or looks for obstacles |
 | weights | `Steering.combined(vehicle, forces, weights)` | how much each behaviour counts when several speak |
 

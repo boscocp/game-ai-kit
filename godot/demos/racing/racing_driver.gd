@@ -136,6 +136,9 @@ static func speed_limit(track: RacingTrack, index: int, physics: RacingPhysics, 
 static func pursuit_turn(car: RacingCar, point: Vector2) -> float:
 	var mirror := SteeringVehicle.new(car.position, car.velocity(), car.physics.top_speed,
 		2.0 * car.physics.top_speed)
+	# Velocity plus force is a velocity only because seek's default
+	# time_to_target is one second: the force is then the gap itself. Give
+	# seek another time here and this sum stops being the wish.
 	var desired: Vector2 = mirror.velocity + SeekBehaviour.new(point).force(mirror)
 	var angle: float = Vector2.from_angle(car.heading).angle_to(desired)
 	var distance: float = maxf(car.position.distance_to(point), 1.0)

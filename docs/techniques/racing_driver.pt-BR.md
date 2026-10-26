@@ -7,7 +7,7 @@ tier: 2
 source: https://www.gameaipro.com/ ; https://www.ri.cmu.edu/pub_files/pub3/coulter_r_craig_1992_1/coulter_r_craig_1992_1.pdf
 invalidated_if: RacingDriver, RacingLevel or RacingTrack change what they decide, or demo-racing is renamed
 teaches: racing-ai
-translation_of: 02d2b556c905b8585b3fcf6d286ebdf53b3a62bd388937a0c42ff4e0b9ebe98e
+translation_of: d89a03410f8d248fc8f06b184a5aa8a206e52f035528fa97065bf25a89a45308
 -->
 
 > English: [racing_driver.md](racing_driver.md). Os termos que ficam em
@@ -185,12 +185,12 @@ afaste o ponto mirado para o lado --, fixos durante a corrida inteira.
 
 O exemplo dá ao *seek* um décimo de segundo, `TIME_TO_TARGET`, e isso não
 é enfeite. O *seek* pede a diferença entre a velocidade que ele quer e a
-que ele tem, dividida pelos segundos que ele recebe para fechá-la -- o
-`time_to_target` de Millington, o mesmo ajuste que o *arrive* tem. O
-padrão é um segundo, que é o que o *seek* sempre foi, e no círculo do
-exemplo, com esse padrão, o carro abre nas curvas e sai da faixa de 30
-unidades em volta da linha que o teste exige; com um décimo ele fica
-dentro ([a medida, em inglês](../concepts/steering.md)).
+que ele tem, dividida por `time_to_target` -- o ajuste de Millington, que o
+*arrive* também tem: uma constante de tempo, em que cerca de dois terços da
+diferença se fecham. O padrão é um segundo, que é o que o *seek* sempre
+foi, e no círculo do exemplo, com esse padrão, o carro abre nas curvas e
+sai da faixa de 30 unidades em volta da linha que o teste exige; com um
+décimo ele fica dentro ([a medida, em inglês](../concepts/steering.md)).
 
 ## Para ir mais fundo {#deeper}
 

@@ -7,11 +7,12 @@
 ## turns, drives through it again, and never stops.
 ## `test/ai_steering/steering_properties.gd` measures exactly that. Constant time.
 ##
-## `time_to_target` is how sharply it answers: the velocity is asked to
-## change within that many seconds (Millington's form, the same knob as
-## arrive's). The default, a second, is what seek always was here; a car on
-## a line wants about a tenth, or it runs wide of every corner
-## (`docs/concepts/steering.md` has the measurement).
+## `time_to_target` is how sharply it answers: a time constant, in which
+## about two-thirds of the gap to the velocity wanted closes (Millington's
+## form, the same knob as arrive's). The default, a second, is what seek
+## always was here; a car on a line wants about a tenth, or it runs wide of
+## every corner (`docs/concepts/steering.md` has the measurement). Keep it
+## several frames long: under half a frame it chatters.
 ##
 ## When not to use it: a target to stop at. That is `ArriveBehaviour`, which
 ## differs by the few lines that slow down.
@@ -19,7 +20,8 @@ class_name SeekBehaviour
 extends SteeringBehaviour
 
 var target: Vector2
-## Seconds the vehicle is given to reach the velocity it wants.
+## The time constant, in seconds, of the change to the velocity it wants;
+## never under `Steering.SHORTEST_TIME`.
 var time_to_target: float
 
 

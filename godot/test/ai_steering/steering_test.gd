@@ -140,3 +140,30 @@ func test_pursue_hands_its_time_on_to_the_seek_it_runs() -> void:
 	var still_quarry := PursueBehaviour.new(Vector2(50, 0), Vector2.ZERO, 1.0, 0.25)
 	assert_vector(still_quarry.force(car)).is_equal_approx(Vector2(40, 0), Vector2(1e-3, 1e-3))
 	assert_float(PursueBehaviour.new(Vector2(50, 0), Vector2.ZERO).time_to_target).is_equal(1.0)
+
+
+# The eastward speed left after one second of seeking far north at `hertz`
+# frames a second, from due east at full speed, with force to spare.
+func _sideways_after_a_second(time_to_target: float, hertz: int) -> float:
+	var car := SteeringVehicle.new(Vector2.ZERO, Vector2(10, 0), 10.0, 1000.0)
+	var seek := SeekBehaviour.new(Vector2(0, -1e6), time_to_target)
+	for frame: int in range(hertz):
+		car.step(seek.force(car), 1.0 / hertz)
+	return car.velocity.x
+
+
+func test_a_time_of_several_frames_answers_the_same_at_two_frame_rates() -> void:
+	for time: float in [1.0, 0.1]:
+		assert_float(_sideways_after_a_second(time, 60)).is_equal_approx(_sideways_after_a_second(time, 120), 0.05)
+
+
+func test_a_time_under_half_a_frame_chatters_instead_of_settling() -> void:
+	# 0.005 s is under half of a 60th: each step overshoots, the next swings
+	# back. At 240 frames a second the same time is over half a frame.
+	assert_float(absf(_sideways_after_a_second(0.005, 60))).is_greater(1.0)
+	assert_float(absf(_sideways_after_a_second(0.005, 240))).is_less(0.01)
+
+
+func test_a_time_of_zero_or_less_is_floored_not_refused() -> void:
+	assert_float(SeekBehaviour.new(Vector2.ZERO, -1.0).time_to_target).is_equal(Steering.SHORTEST_TIME)
+	assert_float(PursueBehaviour.new(Vector2.ZERO, Vector2.ZERO, 1.0, 0.0).time_to_target).is_equal(Steering.SHORTEST_TIME)

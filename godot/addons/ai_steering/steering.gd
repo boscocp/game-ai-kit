@@ -23,8 +23,10 @@
 class_name Steering
 extends RefCounted
 
-## The shortest time to reach a velocity that is taken: zero would divide by
-## zero.
+## The shortest `time_to_target` taken. It only keeps a time of zero (or
+## less) from dividing by zero; it does not make so short a time sensible.
+## Below half a frame, each step overshoots the velocity wanted and the next
+## swings back -- it chatters, bounded only by `max_force`.
 const SHORTEST_TIME: float = 0.001
 
 
@@ -51,13 +53,16 @@ static func direction_to(from: Vector2, to: Vector2) -> Vector2:
 	return (offset / larger).normalized()
 
 
-## The force that turns `vehicle`'s velocity into `desired` within
-## `time_to_target` seconds: Reynolds' "steering = desired velocity -
-## velocity", divided by the time it is given (Millington's form), clamped.
-## The time is the knob that says how sharply a behaviour answers. Its
-## default, a second, is what the gap alone always meant here, because
+## The force that turns `vehicle`'s velocity towards `desired`: Reynolds'
+## "steering = desired velocity - velocity", divided by `time_to_target`
+## (Millington's form), clamped. The time is a time constant, not a
+## deadline: unclamped, about two-thirds of the gap closes in that time, and
+## the rest ever more slowly (Millington's "reach it in this time" is loose
+## the same way). It is the knob that says how sharply a behaviour answers.
+## Its default, a second, is what the gap alone always meant here, because
 ## `SteeringVehicle.step` adds force times seconds: seek's old answer, kept.
-## Never under `SHORTEST_TIME`, which would divide by zero.
+## The answer is the same at any frame rate while the time is several frames
+## long; under half a frame it chatters (see `SHORTEST_TIME`, the floor).
 static func towards_velocity(vehicle: SteeringVehicle, desired: Vector2, time_to_target: float = 1.0) -> Vector2:
 	return clamped((desired - vehicle.velocity) / maxf(time_to_target, SHORTEST_TIME), vehicle.max_force)
 

@@ -6,12 +6,13 @@
 ## exactly as it reaches the target. Those few lines are the whole difference
 ## between an AI that looks competent and one that looks drunk. Constant time.
 ##
-## The velocity is asked to change within `time_to_target` seconds
-## (Millington's form), a tenth by default against seek's second, so arrive
-## asks ten times as hard as a default seek for the same change -- outside
-## the radius too, which is where it differs from seek before it slows. Without it the slow-down is a spring too soft
-## for its mass and the vehicle rocks past the target before it settles;
-## with it, the approach is damped and it comes to rest.
+## The gap to the velocity wanted is divided by `time_to_target`, a time
+## constant (Millington's form): a tenth by default against seek's second,
+## so arrive asks ten times as hard as a default seek for the same change --
+## outside the radius too, which is where it differs from seek before it
+## slows. Without it the slow-down is a spring too soft for its mass and the
+## vehicle rocks past the target before it settles; with it, the approach is
+## damped and it comes to rest.
 ##
 ## When not to use it: a target that moves fast. Arrive aims at where it is,
 ## not where it will be -- pursue first, and arrive only at the last metre.
@@ -21,10 +22,11 @@ extends SteeringBehaviour
 var target: Vector2
 ## Where slowing starts, in units from the target.
 var braking_radius: float
-## Seconds the vehicle is given to reach the velocity it wants.
+## The time constant, in seconds, of the change to the velocity it wants.
 var time_to_target: float
 
-## The shortest `time_to_target` taken: zero would divide by zero.
+## The shortest `time_to_target` taken: zero would divide by zero. A floor,
+## not a refusal -- `Steering.SHORTEST_TIME` says what it does not fix.
 const SHORTEST_TIME: float = Steering.SHORTEST_TIME
 
 

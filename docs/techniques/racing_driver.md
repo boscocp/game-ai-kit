@@ -178,12 +178,12 @@ fixed for the whole race.
 
 The example gives seek a tenth of a second, `TIME_TO_TARGET`, and that is
 not decoration. Seek asks for the gap between the velocity it wants and
-the one it has, divided by the seconds it is given to close it --
-Millington's `time_to_target`, the knob arrive has too. Its default is a
-second, which is what seek always was, and on the example's circle at
-that default the car runs wide and leaves the 30-unit band round the line
-its test holds; at a tenth it stays in
-([the measurement](../concepts/steering.md)).
+the one it has, divided by `time_to_target` -- Millington's knob, which
+arrive has too: a time constant, in which about two-thirds of the gap
+closes. Its default is a second, which is what seek always was, and on
+the example's circle at that default the car runs wide and leaves the
+30-unit band round the line its test holds; at a tenth it stays in ([the
+measurement](../concepts/steering.md)).
 
 ## Deeper {#deeper}
 

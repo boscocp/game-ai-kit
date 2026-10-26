@@ -7,7 +7,7 @@ tier: 2
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
 invalidated_if: the kit's SteeringVehicle, SteeringBehaviour or Steering.combined signatures change, or the demos that use them are renamed
 teaches: steering
-translation_of: c98ee5e97cc7138a61c5970aa2c0c9f2e75e04640f710d394f94d0962bc1189e
+translation_of: 019b6629b9ea352945d78ebe7ed962276b2c7091f4d9231a094fa10c4f1c87d3
 -->
 
 > English: [ai_steering.md](ai_steering.md). Os termos que ficam em inglês
@@ -55,7 +55,7 @@ importam:
 | velocidade máxima | `SteeringVehicle.max_speed` | o mais rápido que ele anda |
 | força | `SteeringVehicle.max_force` | o quanto ele consegue virar e frear; toda força é limitada a isso |
 | raio de frenagem | `ArriveBehaviour.new(target, radius)` | onde o *arrive* começa a desacelerar; pequeno demais e ele passa do ponto |
-| tempo até o alvo | `SeekBehaviour.new(target, seconds)`, e o mesmo último argumento de `ArriveBehaviour` e `PursueBehaviour` | quantos segundos a velocidade tem para virar a desejada: o padrão do *seek* e do *pursue* é 1, o do *arrive* 0,1; um carro numa linha quer cerca de 0,1 ([por quê, em inglês](../concepts/steering.md)) |
+| tempo até o alvo | `SeekBehaviour.new(target, seconds)`, e o mesmo último argumento de `ArriveBehaviour` e `PursueBehaviour` | o quão rápido a velocidade vira a desejada -- uma constante de tempo: cerca de dois terços da diferença se fecham nesses segundos. O padrão do *seek* e do *pursue* é 1, o do *arrive* 0,1; um carro numa linha quer cerca de 0,1. Mantenha-o com vários quadros de duração, ou ele oscila ([por quê, em inglês](../concepts/steering.md)) |
 | antecipação | `PursueBehaviour` `max_prediction`, `AvoidBehaviour` `look_ahead` | o quanto ele adivinha à frente, ou procura obstáculos |
 | pesos | `Steering.combined(vehicle, forces, weights)` | quanto cada comportamento conta quando vários falam |
 

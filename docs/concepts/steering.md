@@ -61,9 +61,12 @@ tenth of it a step.
 integrated over seconds -- his `aicore` source, the code that shipped with
 the first edition, does `velocity += steer.linear * duration`
 (`src/location.cpp`). The behaviours that match a velocity, velocity
-matching and the dynamic arrive, divide the gap by a `timeToTarget`, 0.1
-s; `aicore`'s kinematic arrive carries the same idea in its comment, "We'd
-like to arrive in timeToTarget seconds" (`src/kinematic.cpp`). His seek
+matching and the dynamic arrive, divide the velocity gap by a
+`timeToTarget`, 0.1 s -- that is where the name comes from. `aicore` has
+the name too, in its *kinematic* arrive (`src/kinematic.cpp`, "We'd like
+to arrive in timeToTarget seconds"), but there it divides a position
+offset by the time to get a velocity: a different quotient, not this
+one. His seek
 is different again: `aicore`'s `Seek::getSteering` asks for full
 acceleration towards the target, no velocity gap at all
 (`src/steering.cpp`). Read in this wave: Reynolds' paper and `aicore`'s
@@ -87,9 +90,9 @@ one:
 
 - a reader of Millington recognises it, and it is the knob arrive already
   has here -- one name for one idea, not two;
-- it is in seconds, so it means the same at any frame rate; Reynolds' mass
-  is per step, and would mean something else at 30 and at 120 frames a
-  second on this integrator;
+- it is in seconds, so it means the same at any frame rate -- while it is
+  several frames long (below). Reynolds' mass is per step, and would mean
+  something else at 30 and at 120 frames a second on this integrator;
 - it belongs to the behaviour that asks, not to the vehicle. A
   vehicle-level gain (Reynolds' mass, in effect) would also scale avoid,
   which asks for `max_force` sideways and no gap, and arrive, which
@@ -97,6 +100,33 @@ one:
   force to a velocity itself, never calls `step` and would not see it;
 - a bare multiplier (`force * RESPONSE`) is the same number upside down,
   1 / time, and names nothing a book does.
+
+**What the time means, and where it stops meaning it.** It is a time
+constant, not a deadline. Unclamped, `velocity += (desired - velocity) /
+time * dt` is exponential decay: about two-thirds of the gap (1 - 1/e)
+closes in `time_to_target`, and the rest ever more slowly. Millington's
+"arrive in timeToTarget seconds" is loose the same way. And it is
+explicit Euler: each step multiplies the gap by (1 - dt / time). While the
+time is several frames long, that is close to the continuous answer at any
+frame rate. Under half a frame the factor goes below -1: each step
+overshoots the velocity wanted and the next swings back, and only
+`max_force` bounds it. Measured on a car going east at 10 that seeks far
+north, with force to spare, by the eastward speed left after one second:
+
+| `time_to_target` | 30 Hz | 60 Hz | 120 Hz | 240 Hz |
+|---|---|---|---|---|
+| 1 | 3.62 | 3.65 | 3.66 | 3.67 |
+| 0.1 | 0.00 | 0.00 | 0.00 | 0.00 |
+| 0.01 | 7.00 (chatters) | 0.00 | 0.00 | 0.00 |
+| 0.005 | 7.48 (chatters) | 5.97 (chatters) | 0.00 | 0.00 |
+| 0 (floored to 0.001) | 7.48 | 5.97 | -3.76 | -2.03 |
+
+A time of zero or less is floored at `Steering.SHORTEST_TIME`, not
+refused: arrive has floored its time since T22, and a test holds that. The
+floor only keeps the division finite and does not stop the chatter. Keep
+the time several frames long. `steering_test.gd` and `test_steering.py`
+hold both halves: the same answer at 60 and 120 frames a second for 1 and
+0.1, and chatter for 0.005 at 60 frames a second but not at 240.
 
 **The default is one second**, what seek always was here, so no one who
 calls `SeekBehaviour.new(target)` sees a change. Measured before and after
@@ -112,7 +142,7 @@ printed digit:
 | racing3d ladder | 50.61 / 48.43 / 47.20 s on the loop, 43.90 / 41.86 / 40.41 on the kidney |
 | racing3d does-not-cheat | 6198 frames, 0 failures (it steers with `PidController` and `HeatLine`, not seek) |
 | demo overlays | 14 examples in each language, 0 failures |
-| suites `ai_steering`, `demo_racing`, `racing3d` | 65 cases before, 67 after (the two new), 0 failures |
+| suites `ai_steering`, `demo_racing`, `racing3d` | 65 cases before, 70 after (the five new), 0 failures |
 
 A sharper default would be closer to both books, and it would move
 measured results. With seek's default at a tenth, measured: the 2D racing
