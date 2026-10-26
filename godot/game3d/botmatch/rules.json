@@ -33,7 +33,7 @@
   "make_way_shooting": 1.5,
   "make_way_reloading": 0.5,
   "make_way_covering": 3.0,
-  "respawn_time": 4.0,
+  "respawn_wave": 10.0,
   "regeneration_delay": 10.0,
   "regeneration_rate": 20.0,
   "regeneration_to": 100,

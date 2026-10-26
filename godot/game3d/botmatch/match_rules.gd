@@ -74,7 +74,12 @@ var make_way_per_enemy: float = 2.0
 var make_way_shooting: float = 1.5
 var make_way_reloading: float = 0.5
 var make_way_covering: float = 3.0
-var respawn_time: float = 4.0
+## Bots come back in waves, as Team Fortress 2's do (T65, proposal 3):
+## one every `respawn_wave` seconds of the match, and a bot that dies joins
+## the wave after next -- 10 to 20 s, against healing's 10 to 15 s. TF2
+## scales its wave down below 8 players, by a formula its page does not
+## give; this one is not scaled, and says so.
+var respawn_wave: float = 10.0
 ## Health that comes back (T68, the owner's ask): after
 ## `regeneration_delay` seconds without a hit -- the owner's ten -- health
 ## comes back `regeneration_rate` points a second, up to `regeneration_to`
@@ -153,9 +158,10 @@ var turn_rate_degrees: float = 270.0
 var aim_error_degrees: float = 3.0
 
 
-## Seconds a bot dying at `now` waits to come back.
-func respawn_wait(_now: float) -> float:
-	return respawn_time
+## Seconds a bot dying at `now` waits to come back: until the wave after
+## the next one.
+func respawn_wait(now: float) -> float:
+	return floorf(now / respawn_wave) * respawn_wave + 2.0 * respawn_wave - now
 
 
 ## The zone a point of a body is in: `height` above its feet and `across`
