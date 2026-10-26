@@ -29,13 +29,13 @@ const DEAREST_MUD: int = 9
 ## The names the overlay and the tests use. The screen shows them through
 ## `tr()`: Brazilian Portuguese says "busca em largura", and keeps Dijkstra
 ## and A* as they are (T74's glossary).
-const NAMES: Array[String] = ["breadth-first", "depth-first", "dijkstra", "a*"]
+const NAMES: Array[String] = ["breadth-first", "depth-first", "dijkstra", "a*"]  # shown through tr()
 ## What each one's route is the least of, beside its name. T41: the demo
 ## opens on breadth-first, whose route wades straight through the mud, and the
 ## owner read it as Dijkstra's -- the board's own line says "Dijkstra goes
 ## round the mud" right under it, and nothing said whose route was on screen
 ## or that this one never looks at cost.
-const FINDS: Array[String] = [
+const FINDS: Array[String] = [  # shown through tr()
 	"fewest steps, blind to what a cell costs",
 	"the first route it stumbles on",
 	"the cheapest route",
@@ -44,7 +44,7 @@ const FINDS: Array[String] = [
 
 ## What a left-drag paints, in the order W, M and G choose them.
 enum Brush { WALL, MUD, GROUND }
-const BRUSH_NAMES: Array[String] = ["wall", "mud", "open ground"]
+const BRUSH_NAMES: Array[String] = ["wall", "mud", "open ground"]  # shown through tr()
 
 # What the mouse is holding while a button is down.
 enum Holding { NOTHING, START, GOAL, BRUSH, ERASER }
@@ -82,6 +82,7 @@ var _last_dragged := Vector2i(-1, -1)
 func _ready() -> void:
 	_legend.set_entries(_legend_entries())
 	load_board(0)
+	Language.apply_if_opened_alone(self)
 
 
 # Rebuilt in the language just chosen (T78): the status and the help are
@@ -155,7 +156,7 @@ func decision_overlay() -> Dictionary:
 	elif _result.reached:
 		overlay["route"] = _result.path
 	else:
-		overlay["route"] = "no route: the goal is walled off"
+		overlay["route"] = "no route: the goal is walled off"  # not shown
 	return overlay
 
 

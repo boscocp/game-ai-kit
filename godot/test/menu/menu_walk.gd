@@ -29,6 +29,7 @@ extends SceneTree
 
 const MENU: String = "res://menu/menu.tscn"
 const TACTICAL: String = "res://game/tactical/tactical.tscn"
+const SETTINGS: String = "user://menu_walk_settings.cfg"
 
 ## Each planted example's script body, and the words its failure must use
 ## ("" for the ones that must pass).
@@ -68,7 +69,11 @@ func _initialize() -> void:
 # A coroutine: a scene added to the tree is not ready until the loop turns.
 func _run() -> void:
 	_menu = (load(MENU) as PackedScene).instantiate() as ExampleMenu
+	# Its own settings file, never the person's: all checkouts share one
+	# user:// (T78). And English, whatever the machine speaks.
+	_menu.settings_path = SETTINGS
 	root.add_child(_menu)
+	TranslationServer.set_locale("en")
 	current_scene = _menu
 	await process_frame
 	var failures: Array[String] = await _planted_examples()

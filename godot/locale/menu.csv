@@ -5,3 +5,11 @@ game-ai-kit: every example,game-ai-kit: todos os exemplos
 Play  (Enter),Jogar  (Enter)
 Language: English  (L),Idioma: português (Brasil)  (L)
 No examples to show,Nenhum exemplo para mostrar
+{path} is not a catalogue: it needs `examples` and `techniques`,{path} não é um catálogo: precisa de `examples` e `techniques`
+in the kit's repository: {docs}; [b]make {target}[/b] opens it on its own,no repositório do kit: {docs}; [b]make {target}[/b] abre o exemplo sozinho
+{keys}; Esc comes back here,{keys}; Esc volta aqui
+What the AI decides,O que a IA decide
+How it decides,Como ela decide
+What to watch,O que observar
+Keys,Teclas
+Read more,Para ler mais

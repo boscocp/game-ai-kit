@@ -99,22 +99,22 @@ static func must_capture(board: CheckersBoard) -> bool:
 static func why_refused(board: CheckersBoard, from: Vector2i, to: Vector2i) -> String:
 	var piece: int = board.piece_at(from)
 	if CheckersBoard.owner_of(piece) != board.to_move:
-		return "that is not one of your pieces"
+		return "that is not one of your pieces"  # shown through tr()
 	for move: CheckersMove in moves_of(board, from):
 		if move.to() == to:
 			return ""
 	var compulsory: bool = must_capture(board)
 	if compulsory and jumps_from(board, from).is_empty():
-		return "a capture is compulsory, and this piece cannot capture: the ringed pieces can"
+		return "a capture is compulsory, and this piece cannot capture: the ringed pieces can"  # shown through tr()
 	if compulsory:
-		return "a capture is compulsory: jump over a piece, and finish every jump that follows"
+		return "a capture is compulsory: jump over a piece, and finish every jump that follows"  # shown through tr()
 	if not CheckersBoard.is_dark(to) or board.piece_at(to) != CheckersBoard.EMPTY:
-		return "pieces move only to an empty dark square"
+		return "pieces move only to an empty dark square"  # shown through tr()
 	if absi(to.x - from.x) != absi(to.y - from.y):
-		return "pieces move only diagonally"
+		return "pieces move only diagonally"  # shown through tr()
 	if not CheckersBoard.is_king(piece) and signi(to.y - from.y) != CheckersBoard.forward(board.to_move):
-		return "a man moves only forward; it can move back once it is crowned"
-	return "a piece steps one square diagonally"
+		return "a man moves only forward; it can move back once it is crowned"  # shown through tr()
+	return "a piece steps one square diagonally"  # shown through tr()
 
 
 # The one-square diagonal steps of the piece on `square`.

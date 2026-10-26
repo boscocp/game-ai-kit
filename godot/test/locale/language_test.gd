@@ -44,6 +44,17 @@ func test_a_choice_is_spoken_at_once_and_remembered() -> void:
 	assert_str(TranslationServer.get_locale()).is_equal(Language.PORTUGUESE)
 
 
+func test_a_scene_a_test_or_the_menu_opened_keeps_the_language_it_was_given() -> void:
+	Language.choose(Language.PORTUGUESE, SETTINGS)
+	TranslationServer.set_locale(Language.ENGLISH)
+	var scene: Node = auto_free(Node.new())
+	add_child(scene)
+
+	Language.apply_if_opened_alone(scene, SETTINGS)
+
+	assert_str(TranslationServer.get_locale()).is_equal(Language.ENGLISH)
+
+
 func test_a_saved_value_that_is_no_language_here_is_ignored() -> void:
 	var settings := ConfigFile.new()
 	settings.set_value(Language.SECTION, Language.KEY, "klingon")
@@ -63,9 +74,11 @@ func test_the_tables_are_loaded_and_answer_in_portuguese() -> void:
 # Step 1's measurement, kept: the property holds the English key, and the
 # screen -- the lookup that honours the node's mode -- the Portuguese.
 func test_a_label_keeps_its_key_and_shows_the_translation() -> void:
+	TranslationServer.set_locale(Language.ENGLISH)
 	var label: Label = auto_free(Label.new())
 	label.text = "Play  (Enter)"
 	add_child(label)
+	await await_idle_frame()
 	var english_width: float = label.get_minimum_size().x
 	TranslationServer.set_locale(Language.PORTUGUESE)
 	await await_idle_frame()
@@ -87,10 +100,12 @@ func test_a_label_with_auto_translation_off_shows_its_key() -> void:
 
 
 func test_the_menu_switch_changes_the_words_and_back() -> void:
-	TranslationServer.set_locale(Language.ENGLISH)
 	var menu: ExampleMenu = auto_free((load("res://menu/menu.tscn") as PackedScene).instantiate())
 	menu.settings_path = SETTINGS
 	add_child(menu)
+	# Nothing is saved, so the menu opened in the system's language; English
+	# from here, whatever the machine speaks.
+	TranslationServer.set_locale(Language.ENGLISH)
 	var play: Button = _button_named(menu, "Jogar  (Enter)", "Play  (Enter)")
 
 	menu.switch_language()

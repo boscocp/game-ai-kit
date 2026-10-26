@@ -1,11 +1,11 @@
 en,pt_BR
-white outline: the cell it takes next,contorno branco: a célula que ela pega em seguida
+white outline: the cell it takes next,contorno branco: a próxima célula
 "pink outline: the frontier,","contorno rosa: a fronteira,"
 what it chooses among,entre as quais ela escolhe
 dark square: expanded early,quadrado escuro: expandido cedo
 bright square: expanded late,quadrado claro: expandido tarde
 (dark to bright is the order),(do escuro ao claro é a ordem)
-line: the route the chosen search found,linha: a rota que a busca escolhida achou
+line: the route the chosen search found,linha: a rota da busca escolhida
 yellow dot: start,ponto amarelo: início
 red dot: goal,ponto vermelho: objetivo
 mud: costs the number on it,lama: custa o número escrito nela
@@ -26,7 +26,7 @@ blank,em branco
 expanded / route cost:,expandidas / custo da rota:
 board: blank  ·  paint something and see what each search makes of it,tabuleiro: em branco  ·  pinte algo e veja o que cada busca faz com isso
 it does,mostra
-not any more,não mais
+not any more,não mostra mais
 board: {board}  ·  {promise},tabuleiro: {board}  ·  {promise}
 board: {board}  ·  does it still show what it was for?  {verdict},tabuleiro: {board}  ·  ainda mostra aquilo para que serve?  {verdict}
 cost {cost},custo {cost}
@@ -47,3 +47,5 @@ open field,campo aberto
 nothing in the way: A* heads for the goal and expands under a quarter of what Dijkstra does,nada no caminho: A* vai direto ao objetivo e expande menos de um quarto do que Dijkstra expande
 depth-first trap,armadilha da busca em profundidade
 "the goal is two cells away, but depth-first tries left first: its route costs more than Dijkstra's","o objetivo está a duas células, mas a busca em profundidade tenta a esquerda primeiro: sua rota custa mais que a de Dijkstra"
+dijkstra,dijkstra
+a*,a*

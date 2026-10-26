@@ -3,6 +3,20 @@
 # the score -- so a person can see why the two choose differently.
 extends GdUnitTestSuite
 
+# These tests read the English words. The engine starts in the system's
+# locale, so on a Portuguese system they would read the pt-BR ones (T78);
+# the Portuguese screen is test/locale's. The locale found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
 
 func test_the_published_weights_are_the_ones_read() -> void:
 	var published: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(CheckersWeights.PATH))

@@ -52,6 +52,17 @@ static func apply(path: String = SETTINGS) -> void:
 	TranslationServer.set_locale(chosen(path))
 
 
+## Speak the chosen language when `scene` was opened on its own -- `make run`,
+## `make demo-search` -- and not from the menu, which has chosen already, nor
+## from a test, which sets its own. Measured on 4.7.2: a scene the engine
+## opens as the main scene is already `current_scene` in its `_ready`; one the
+## menu or a test adds is not. Call it last in `_ready`: the change of locale
+## notifies at once, and the scene rebuilds its words then.
+static func apply_if_opened_alone(scene: Node, path: String = SETTINGS) -> void:
+	if scene.get_tree().current_scene == scene:
+		apply(path)
+
+
 ## Speak `locale` from now on, and remember it in `path`. Every Control and
 ## every node listening for NOTIFICATION_TRANSLATION_CHANGED redraws itself.
 static func choose(locale: String, path: String = SETTINGS) -> Error:

@@ -19,7 +19,12 @@
 # is the rule being shown a crash, not a failure. `check_demos.py` refuses a
 # `make demo-*` missing from SCENES.
 #
-#     ./scripts/godot --headless --path godot -s res://test/menu/demo_overlays.gd
+# The examples are stepped in one language, English unless `--locale=pt_BR`
+# follows `--`, and never in the machine's: the engine starts in the system's
+# locale (T78), and a Portuguese legend line is longer -- one ran off the
+# window in pt-BR only. `make test-demo-overlays` runs it in both.
+#
+#     ./scripts/godot --headless --path godot -s res://test/menu/demo_overlays.gd -- --locale=pt_BR
 extends SceneTree
 
 const SCENES: Array[String] = [
@@ -85,7 +90,16 @@ var _counter := ErrorCounter.new()
 
 func _initialize() -> void:
 	OS.add_logger(_counter)
+	TranslationServer.set_locale(chosen_locale(OS.get_cmdline_user_args()))
 	_run()
+
+
+## The locale named by `--locale=...` among `arguments`, or English.
+static func chosen_locale(arguments: PackedStringArray) -> String:
+	for argument: String in arguments:
+		if argument.begins_with("--locale="):
+			return argument.trim_prefix("--locale=")
+	return "en"
 
 
 # A coroutine, because a scene added to the tree from `_initialize` is not
@@ -98,7 +112,8 @@ func _run() -> void:
 		failures += await _check_scene(path)
 	for failure: String in failures:
 		print(failure)
-	print("demo overlays: %d example(s), %d failure(s)" % [SCENES.size(), failures.size()])
+	print("demo overlays: %d example(s) in %s, %d failure(s)" % [SCENES.size(), TranslationServer.get_locale(),
+		failures.size()])
 	quit(1 if not failures.is_empty() else 0)
 
 

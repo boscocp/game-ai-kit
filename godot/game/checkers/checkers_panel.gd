@@ -50,7 +50,7 @@ static func status(board: CheckersBoard, pending: bool, holding: bool, depth: in
 ## true while the move is on show and not yet played; `evaluation` names the
 ## weights white searched with, and `why` is `CheckersExample.why()`.
 static func describe(decision: AdversarialResult, expected: Array[CheckersMove], pending: bool,
-		evaluation: String = "hand-written", why: Dictionary = {}) -> String:
+		evaluation: String = "hand-written", why: Dictionary = {}) -> String:  # not shown
 	if decision == null:
 		var waiting: PackedStringArray = _before_white_moves()
 		waiting.append(_what_a_value_means())
@@ -92,28 +92,34 @@ static func _heading(depth: int, pending: bool) -> String:
 static func why_lines(evaluation: String, why: Dictionary) -> PackedStringArray:
 	if why.is_empty():
 		return PackedStringArray()
-	var searching_with_hand: bool = evaluation == "hand-written"
+	var searching_with_hand: bool = evaluation == "hand-written"  # not shown
 	var hand: String = TranslationServer.translate("hand")
 	var learned_name: String = TranslationServer.translate("learned")
 	if searching_with_hand:
 		hand = "▶ " + hand
 	else:
 		learned_name = "▶ " + learned_name
-	var lines: PackedStringArray = ["%-12s %6s %10s %10s" % [TranslationServer.translate("white ahead"),
-			TranslationServer.translate("count"), hand, learned_name]]
+	var count: String = TranslationServer.translate("count")
+	# Each column as wide as its heading, whichever language that is in:
+	# "▶ aprendidos" is twelve characters, and the numbers line up under it.
+	var widths: Vector2i = Vector2i(maxi(6, count.length()), maxi(10, maxi(hand.length(), learned_name.length())))
+	var lines: PackedStringArray = ["%-12s %s %s %s" % [TranslationServer.translate("white ahead"),
+			count.lpad(widths.x), hand.lpad(widths.y), learned_name.lpad(widths.y)]]
 	for index: int in range(CheckersEvaluation.FEATURES.size()):
-		lines.append(_why_row(why, index))
+		lines.append(_why_row(why, index, widths))
 	return lines
 
 
 # One count's row: its name, white's lead in it, and what that adds to the
 # score under each set of weights -- a dash when there is no learned set.
-static func _why_row(why: Dictionary, index: int) -> String:
+# `widths` are the count's column and each weight's, from the headings.
+static func _why_row(why: Dictionary, index: int, widths: Vector2i) -> String:
 	var learned: Array = why.get("learned", [])
-	var learned_part: String = "%+10.2f" % learned[index] if not learned.is_empty() else "%10s" % "-"
-	var count: int = int(why["counts"][index])
+	var learned_part: String = "%+.2f" % learned[index] if not learned.is_empty() else "-"
+	var count: String = "%+d" % int(why["counts"][index])
+	var hand: String = "%+.2f" % why["hand"][index]
 	var feature: String = TranslationServer.translate(CheckersEvaluation.FEATURES[index])
-	return "%-12s %+6d %+10.2f %s" % [feature, count, why["hand"][index], learned_part]
+	return "%-12s %s %s %s" % [feature, count.lpad(widths.x), hand.lpad(widths.y), learned_part.lpad(widths.y)]
 
 
 static func _situation(board: CheckersBoard, pending: bool, holding: bool) -> String:

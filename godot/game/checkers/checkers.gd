@@ -52,6 +52,7 @@ var _board_before_decision: CheckersBoard
 func _ready() -> void:
 	_legend.set_entries(_legend_entries())
 	new_game()
+	Language.apply_if_opened_alone(self)
 
 
 # The words are rebuilt in the language just chosen: a Label set from code
@@ -107,7 +108,7 @@ func click_square(square: Vector2i) -> void:
 	_message = ""
 	var owner: int = CheckersBoard.owner_of(_board.piece_at(square))
 	if _board.to_move != PERSON:
-		_message = "it is white's turn: space plays the pink move"
+		_message = "it is white's turn: space plays the pink move"  # shown through tr()
 	elif _hand.is_holding() and _hand.targets(_board).has(square):
 		# Before "pick up your own piece": a king's capture can end on the
 		# square it started from, which holds the king itself.
@@ -118,9 +119,9 @@ func click_square(square: Vector2i) -> void:
 	elif _hand.is_holding():
 		_move_hand_to(square)
 	elif owner == COMPUTER:
-		_message = "that is one of white's pieces: yours are red"
+		_message = "that is one of white's pieces: yours are red"  # shown through tr()
 	else:
-		_message = "click one of your red pieces first"
+		_message = "click one of your red pieces first"  # shown through tr()
 	_refresh()
 
 
@@ -165,7 +166,7 @@ func use_learned(learned: bool) -> void:
 
 ## Which evaluation white is searching with, as the panel names it.
 func evaluation_name() -> String:
-	return "learned" if _learned else "hand-written"
+	return "learned" if _learned else "hand-written"  # shown through tr()
 
 
 ## Why the chosen move scores as it does: the position at the end of the line

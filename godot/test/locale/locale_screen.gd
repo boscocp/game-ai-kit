@@ -7,13 +7,19 @@
 # the screen shows its translation, so the property alone says nothing. The
 # screen shows `atr(text)` -- the lookup that honours the node's
 # auto-translate mode, and returns the text unchanged where that is off.
-# Each line is checked on its own, since a status is several sentences.
 # A legend is drawn, not a Control; its entries are the words it draws.
 #
-# Planted: a Label whose auto-translation is disabled, holding a key. If this
-# does not see it, it sees nothing, and says so. Any engine error while the
-# demos run is a failure too: a SCRIPT ERROR aborts only its function and
-# the run would otherwise print a clean summary.
+# Each line is read whole and in its "  ·  " segments, and a key with
+# `{placeholders}` is matched as a pattern, so "cost 7" is the English of
+# "cost {cost}". An example must show something: the nodes named in
+# EXAMPLES must be there, and at least one line read, or a blank scene
+# would pass.
+#
+# Planted: a Label whose auto-translation is disabled, a formatted English
+# line, and an empty scene; each must be refused, or the check sees nothing
+# and says so. Any engine error while the demos run is a failure too: a
+# SCRIPT ERROR aborts only its function and the run would otherwise print a
+# clean summary.
 #
 #     ./scripts/godot --headless --fixed-fps 60 --path godot -s res://test/locale/locale_screen.gd
 extends SceneTree
@@ -21,10 +27,12 @@ extends SceneTree
 const LOCALE_FOLDER: String = "res://locale"
 const SETTINGS: String = "user://locale_screen_settings.cfg"
 const FRAMES: int = 5
+const SEGMENT: String = "  ·  "
+## Each translated example, and the nodes its words must be found in.
 const EXAMPLES: Dictionary = {
-	"checkers": "res://game/checkers/checkers.tscn",
-	"search demo": "res://demos/search/search_demo.tscn",
-	"menu": "res://menu/menu.tscn",
+	"res://game/checkers/checkers.tscn": ["Interface/Status", "Interface/Decision", "Interface/Legend"],
+	"res://demos/search/search_demo.tscn": ["Interface/Status", "Interface/Help", "Interface/Legend"],
+	"res://menu/menu.tscn": [],
 }
 
 
@@ -41,8 +49,11 @@ class ErrorCounter extends Logger:
 
 
 var _counter := ErrorCounter.new()
-# The English of every key whose pt_BR differs from it.
-var _translated_keys: Dictionary = {}
+# One pattern per key whose pt_BR differs from it, matched against a whole
+# line or segment.
+var _english: Array[RegEx] = []
+# Lines read in the example being looked at.
+var _lines_read: int = 0
 
 
 func _initialize() -> void:
@@ -51,14 +62,14 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	_translated_keys = english_keys()
+	_english = english_patterns()
 	var failures: Array[String] = []
-	if _translated_keys.is_empty():
+	if _english.is_empty():
 		failures.append("no key with a pt_BR translation under %s" % LOCALE_FOLDER)
 	TranslationServer.set_locale("pt_BR")
 	failures += await _planted()
-	for label: String in EXAMPLES:
-		failures += await _look_at(label, EXAMPLES[label])
+	for path: String in EXAMPLES:
+		failures += await _look_at(path, (load(path) as PackedScene).instantiate(), EXAMPLES[path])
 	TranslationServer.set_locale("en")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SETTINGS))
 	for failure: String in failures:
@@ -67,30 +78,51 @@ func _run() -> void:
 	quit(1 if not failures.is_empty() else 0)
 
 
-## Every key in every table under res://locale whose pt_BR is not itself.
-static func english_keys() -> Dictionary:
-	var keys: Dictionary = {}
+## A pattern for every key in the tables under res://locale whose pt_BR is
+## not itself: the key escaped, each `{placeholder}` standing for any text.
+static func english_patterns() -> Array[RegEx]:
+	var patterns: Array[RegEx] = []
+	var keys: Array[String] = []
 	for name: String in DirAccess.get_files_at(LOCALE_FOLDER):
-		if not name.ends_with(".csv"):
-			continue
-		keys.merge(_translated_rows(LOCALE_FOLDER.path_join(name)))
-	return keys
+		if name.ends_with(".csv"):
+			keys.append_array(_translated_rows(LOCALE_FOLDER.path_join(name)))
+	for key: String in keys:
+		patterns.append(RegEx.create_from_string("^" + _escaped(key) + "$"))
+	return patterns
 
 
 # The keys of one table whose pt_BR says something else.
-static func _translated_rows(path: String) -> Dictionary:
-	var keys: Dictionary = {}
+static func _translated_rows(path: String) -> Array[String]:
+	var keys: Array[String] = []
 	var table := FileAccess.open(path, FileAccess.READ)
 	var portuguese: int = table.get_csv_line().find("pt_BR")
 	while not table.eof_reached():
 		var row: PackedStringArray = table.get_csv_line()
 		if row.size() > portuguese and row[0] != "" and row[portuguese] != row[0]:
-			keys[row[0]] = true
+			keys.append(row[0])
 	return keys
 
 
-## What `node` puts on the screen in English that has a translation, line by
-## line: a Control's text as it is shown, or a legend's words.
+# A key as a regular expression: its text literal, its placeholders wild.
+static func _escaped(key: String) -> String:
+	var pattern: String = ""
+	for piece: String in key.split("{"):
+		var closing: int = piece.find("}")
+		var literal: String = piece if closing < 0 else piece.substr(closing + 1)
+		pattern += ("" if closing < 0 else ".+") + _quoted(literal)
+	return pattern
+
+
+static func _quoted(text: String) -> String:
+	var quoted: String = ""
+	for character: String in text:
+		quoted += ("\\" + character) if "\\^$.|?*+()[]{}".contains(character) else character
+	return quoted
+
+
+## What `node` puts on the screen in English that has a translation: each
+## line of a Control's text as it is shown, or of a legend's words, and each
+## of a line's "  ·  " segments.
 func english_on_screen(node: Node) -> Array[String]:
 	var shown: Array[String] = []
 	if node is Label or node is Button:
@@ -100,22 +132,32 @@ func english_on_screen(node: Node) -> Array[String]:
 			shown.append(str(entry[1]))
 	var found: Array[String] = []
 	for text: String in shown:
-		found.append_array(_keys_among(text.split("\n")))
+		for line: String in text.split("\n"):
+			found.append_array(_english_in(line.strip_edges()))
 	return found
 
 
-# The lines that are, whole, the English of a translated key.
-func _keys_among(lines: PackedStringArray) -> Array[String]:
+# The line, or those of its segments, that are the English of a key.
+func _english_in(line: String) -> Array[String]:
+	if line == "":
+		return []
+	_lines_read += 1
 	var found: Array[String] = []
-	for line: String in lines:
-		if _translated_keys.has(line.strip_edges()):
-			found.append(line.strip_edges())
+	var pieces: PackedStringArray = line.split(SEGMENT)
+	pieces.append(line)
+	for piece: String in pieces:
+		if _is_english(piece.strip_edges()):
+			found.append(piece.strip_edges())
 	return found
 
 
-func _look_at(label: String, scene_path: String) -> Array[String]:
+func _is_english(text: String) -> bool:
+	return _english.any(func(pattern: RegEx) -> bool: return pattern.search(text) != null)
+
+
+func _look_at(label: String, example: Node, expected: Array) -> Array[String]:
 	_counter.errors = 0
-	var example: Node = (load(scene_path) as PackedScene).instantiate()
+	_lines_read = 0
 	if example is ExampleMenu:
 		(example as ExampleMenu).settings_path = SETTINGS
 	root.add_child(example)
@@ -126,27 +168,35 @@ func _look_at(label: String, scene_path: String) -> Array[String]:
 			example.step_decision()
 		await process_frame
 	var failures: Array[String] = []
+	for path: String in expected:
+		if not example.has_node(path):
+			failures.append("%s: has no %s to read" % [label, path])
 	for node: Node in _walk(example):
 		for english: String in english_on_screen(node):
 			failures.append("%s: %s shows the English %s" % [label, example.get_path_to(node), english])
+	if _lines_read == 0:
+		failures.append("%s: shows no words at all to check" % label)
 	if _counter.errors > 0:
 		failures.append("%s: %d engine error(s) while it ran" % [label, _counter.errors])
 	example.free()
 	return failures
 
 
-# The planted case: a key on a Label that may not translate itself.
+# The planted cases: a key on a Label that may not translate itself, a line
+# formatted from a key, and a scene with nothing in it.
 func _planted() -> Array[String]:
-	var planted := Label.new()
-	planted.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
-	planted.text = "Play  (Enter)"
-	root.add_child(planted)
-	await process_frame
-	var seen: bool = not english_on_screen(planted).is_empty()
-	planted.free()
-	if seen:
-		return []
-	return ["the planted Label with auto-translation off was not seen: this check sees nothing"]
+	var failures: Array[String] = []
+	for text: String in ["Play  (Enter)", "expandiu 3  ·  cost 7"]:
+		var planted := Label.new()
+		planted.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+		planted.text = text
+		var holder := Node2D.new()
+		holder.add_child(planted)
+		if (await _look_at("planted", holder, [])).is_empty():
+			failures.append("the planted Label %s was not seen: this check sees nothing" % text)
+	if (await _look_at("planted", Node2D.new(), [])).is_empty():
+		failures.append("an empty scene passed: this check would pass a blank screen")
+	return failures
 
 
 func _walk(node: Node) -> Array[Node]:

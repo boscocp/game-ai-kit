@@ -10,10 +10,10 @@ hand-written,escritos à mão
 learned,aprendidos
 hand,à mão
 "searched {positions} positions; skipped {pruned} replies, whole branches","examinou {positions} posições; pulou {pruned} respostas, ramos inteiros"
-"WHITE IS ABOUT TO MOVE  ·  alpha-beta, 1 ply ahead","AS BRANCAS VÃO JOGAR  ·  alfa-beta, 1 meio-lance à frente"
-"WHITE'S LAST MOVE  ·  alpha-beta, 1 ply ahead","ÚLTIMO LANCE DAS BRANCAS  ·  alfa-beta, 1 meio-lance à frente"
-"WHITE IS ABOUT TO MOVE  ·  alpha-beta, {depth} plies ahead","AS BRANCAS VÃO JOGAR  ·  alfa-beta, {depth} meios-lances à frente"
-"WHITE'S LAST MOVE  ·  alpha-beta, {depth} plies ahead","ÚLTIMO LANCE DAS BRANCAS  ·  alfa-beta, {depth} meios-lances à frente"
+"WHITE IS ABOUT TO MOVE  ·  alpha-beta, 1 ply ahead","AS BRANCAS VÃO JOGAR  ·  alpha-beta, 1 meio-lance à frente"
+"WHITE'S LAST MOVE  ·  alpha-beta, 1 ply ahead","ÚLTIMO LANCE DAS BRANCAS  ·  alpha-beta, 1 meio-lance à frente"
+"WHITE IS ABOUT TO MOVE  ·  alpha-beta, {depth} plies ahead","AS BRANCAS VÃO JOGAR  ·  alpha-beta, {depth} meios-lances à frente"
+"WHITE'S LAST MOVE  ·  alpha-beta, {depth} plies ahead","ÚLTIMO LANCE DAS BRANCAS  ·  alpha-beta, {depth} meios-lances à frente"
 white ahead,vantagem
 count,contagem
 men,pedras

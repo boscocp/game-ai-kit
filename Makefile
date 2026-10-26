@@ -480,7 +480,9 @@ test-menu-walk: import ## The menu, walked: every card plays its example, Escape
 test-demo-overlays: import ## Every example, stepped headless: its overlay holds the AI's reasoning
 	@# The engine half of invariant 13; `lint-demos` is the half without it.
 	@# Neither can see the screen, and the seeing is each example's manual check.
-	@$(GODOT) --headless --path godot -s res://test/menu/demo_overlays.gd
+	@# Twice: in English, and in pt-BR, where a legend line is longer (T78).
+	@$(GODOT) --headless --path godot -s res://test/menu/demo_overlays.gd -- --locale=en
+	@$(GODOT) --headless --path godot -s res://test/menu/demo_overlays.gd -- --locale=pt_BR
 
 # --- the examples in Portuguese (T78) ----------------------------------------
 
@@ -493,6 +495,15 @@ test-locale-screen: import ## Each translated example opened in pt-BR: no Contro
 	@# Its own target, as the racer's are, for --fixed-fps 60. It sets the
 	@# locale with TranslationServer.set_locale, not --language: the menu sets
 	@# it the same way. docs/godot/localisation.md.
+	@#
+	@# First, a table committed without the .translation its import makes
+	@# would load the old words. `import` has just run, so a .translation that
+	@# differs from the commit while its CSV does not was committed stale.
+	@for table in godot/locale/*.csv; do \
+		output=$${table%.csv}.pt_BR.translation; \
+		if git diff --quiet HEAD -- "$$table" && ! git diff --quiet HEAD -- "$$output"; then \
+			echo "test-locale-screen: $$output is stale against $$table; commit what make import wrote" >&2; \
+			exit 1; fi; done
 	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/locale/locale_screen.gd
 
 # ------------------------------------------------------------------------------

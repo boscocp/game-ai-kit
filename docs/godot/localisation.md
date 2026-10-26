@@ -27,7 +27,10 @@ teaches: none
 - `Language` (`godot/game/language.gd`) chooses the locale: the choice
   saved in `user://settings.cfg`, otherwise `pt` on the system means pt-BR
   and anything else English. The menu applies it when it opens; its button,
-  L, or Y on a pad switch it and save it.
+  L, or Y on a pad switch it and save it. A translated example opened on
+  its own (`make run`, `make demo-search`) applies it too, through
+  `Language.apply_if_opened_alone` -- only when it is the main scene, so a
+  test that opens it, or the menu, keeps the language it set.
 - A `Label` or `Button` whose whole text is a key translates itself. Text
   built in code goes through `tr()`, or `TranslationServer.translate()` in
   a static function, where `tr()` -- a method of an object -- is not there.
@@ -38,8 +41,13 @@ teaches: none
   `draw_string` is drawn once. So each translated scene rebuilds its words
   on `NOTIFICATION_TRANSLATION_CHANGED`.
 - What stays English: key names (Enter, Page Up, WASD), technique names the
-  field says in English in Brazil (A\*, Dijkstra, minimax), and the `##`
-  help of `make` targets.
+  field says in English in Brazil (A\*, Dijkstra, minimax, alpha-beta --
+  `docs/techniques/glossary.pt-BR.md`), and the `##` help of `make`
+  targets. Breadth-first and depth-first are shown as "busca em largura" and
+  "em profundidade", which the glossary allows.
+- A Portuguese line is longer. `make test-demo-overlays` steps every example
+  in English and again in pt-BR, and fails a legend line that runs off the
+  window -- two of the search demo's did, and were shortened.
 
 ## Measured on 4.7.2
 
@@ -56,7 +64,8 @@ A scratch project, one table, the locale set with
 | A `pt_PT` system? | `set_locale("pt_PT")` answered from the `pt_BR` table (the nearest language). `Language` says `pt` → pt-BR by rule anyway. |
 | A table with only `en,pt_BR`? | Works: in English `tr()` returns the key itself. No `en` column needed. |
 | `?context` (4.6+)? | A table with a `?context` column was stored uncompressed and kept its contexts apart. But a **compressed** table (the default, any table without contexts) answers its key whatever context is asked: with `Play` in one and `Play`/`a card` in another, `tr("Play", "a card")` returned the first's `Jogar`. A key with a context must not also appear without one -- rule L6. |
-| A byte order mark? | Imported without complaint, and the key read correctly. The documentation still asks for UTF-8 without one, and Excel writes one, so the gate refuses it (L4). |
+| A byte order mark? | Imported without complaint, and the key read correctly. The documentation still asks for UTF-8 without one, and some editors, and Excel's "CSV UTF-8", write one, so the gate refuses it (L4). |
+| Is a scene opened by the engine already `current_scene` in its `_ready`? | **Yes** (`current_scene == self` printed `true` for a scene run as `godot --path p res://alone.tscn`). The menu sets `current_scene` after `add_child`, and a test never does, so `apply_if_opened_alone` tells the three apart. |
 | A fresh checkout without the `.translation` files? | `--import` printed `ERROR: Cannot open file 'res://locale/....translation'` for each, because the engine loads the project's translation list before it imports -- and `make import` fails on any ERROR. Hence they are committed. The import is deterministic (same bytes from the same CSV, checked by hash). |
 
 Not used: the project's `internationalization/locale/test` setting, which
@@ -67,18 +76,37 @@ same.
 ## The gates
 
 - `scripts/check_translations_game.py` (`make lint-translations-game`),
-  for each module that has a table: no literal with a word in it handed to
-  `draw_string` or assigned to a `.text` outside a translation call (L1);
-  every literal key in its table with a non-empty `pt_BR` (L2); no orphan
-  row (L3); the table well formed and without a BOM (L4); the same
-  `{placeholders}` on both sides (L5); context shadowing (L6). It cannot
-  follow a key through a variable -- a rule's reason, kept in English
-  because the rules' vectors state it so, or a board's name.
+  for each module that has a table. L1 is inverted: in a translated
+  module, every literal that says something -- a letter and a space, or a
+  key of the table -- passes a translation call, is a key into data
+  (`.get("x")`, `x["y"]`, `{"x": ...}`, a `res://` path), or carries a
+  marker where its statement starts: `# shown through tr()` (an English key
+  translated where it is shown, such as a rule's reason the vectors state in
+  English, or a const list read as `tr(NAMES[i])`; L2 then holds it to the
+  table) or `# not shown` (data, a comparison). A literal handed straight to
+  `draw_string`, `set_text`, `Legend.set_entries` or a `.text` must be
+  translated even as one word. The first L1 looked only inside the drawing
+  statement, and the review ran it over the untranslated checkers and search
+  with these tables: 0 findings for some ninety English strings; the
+  inverted rule gives 132. Then: every key in its table with a `pt_BR` (L2);
+  no orphan row (L3); the table well formed and without a BOM (L4); the
+  same `{placeholders}` on both sides (L5); no context shadowed (L6); no key
+  built inside the call, `tr("wins %s" % name)` (L7).
+- What it still cannot see, said plainly: a one-word literal that is not a
+  key of the table and does not go straight to a drawing call is taken for
+  data; text written in a `.tscn` is not read (the scenes say "loading" and
+  are filled from code); the `?plural` column and `tr_n()` are not checked,
+  since nothing uses them yet.
 - `godot/test/locale/locale_screen.gd` (`make test-locale-screen`) opens
-  checkers, the search demo and the menu in pt-BR, steps them, and fails
-  on any Control line or legend entry that is the English of a translated
-  key -- which is where a key passed through a variable is seen. Its
-  planted case is a Label with auto-translation off.
+  checkers, the search demo and the menu in pt-BR, steps them, and fails on
+  any Control line or legend entry -- whole, or one of its "  ·  "
+  segments -- that is the English of a translated key, a `{placeholder}`
+  matching any text. It fails an example that lacks the nodes it should
+  show words in, or shows no line at all. Planted: a Label with
+  auto-translation off, a formatted English segment ("cost 7"), and an
+  empty scene. Before it runs, the target refuses a committed
+  `.translation` that `make import` rewrote while its CSV did not change: a
+  table committed with stale words.
 
 ## Adding a language string
 

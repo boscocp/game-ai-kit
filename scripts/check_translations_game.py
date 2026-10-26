@@ -7,39 +7,55 @@ A module is translated when `godot/locale/<module>.csv` exists. That file is
 its table: Godot's CSV translation format, one row a string, the first column
 the key -- the English text itself, so the code still reads as English -- and
 a `pt_BR` column beside it. The first cell of the header is ignored by the
-engine and is written `en` here, for the reader. Two modules are translated
-after T78, every example after T80.
+engine and is written `en` here, for the reader. Two examples (and the menu)
+are translated after T78, every example after T80.
 
 The rules, for each translated module's scripts (not its tests)
 ---------------------------------------------------------------
-L1  a word reaches the screen without passing a translation: a string
-    literal with a letter in it is handed to `draw_string`,
-    `draw_multiline_string` (and their `_outline` forms), `set_text`, or
-    assigned to a `.text`, outside `tr()`, `atr()`, `tr_n()`, `atr_n()` or
-    `TranslationServer.translate()`. The overlays are drawn, not Controls,
-    so no walk over the scene's Labels would see them; this is how they are
-    seen. A literal that is only a format, a number or punctuation ("%+.2f",
-    "  ·  ", "\\n") carries no word and is not a finding.
-L2  a key passed to a translation call as a literal is not in the module's
-    table, or its `pt_BR` is empty.
+L1  every word passes a translation. A string literal that says something
+    -- it has a letter and a space, or it is a key of the module's table --
+    must sit inside `tr()`, `atr()`, `tr_n()`, `atr_n()` or
+    `TranslationServer.translate()`, or be a key into data (`card.get("x")`,
+    `entry["x"]`, `{"x": ...}`, a `res://` path), or be marked on the line
+    where its statement starts:
+        # shown through tr()   the English is a key, translated where it is
+                               shown (a rule's reason the vectors state in
+                               English, a const list read as tr(NAMES[i]));
+                               it must then be in the table (L2)
+        # not shown            data or a comparison, never on the screen
+    A literal handed to `draw_string`, `draw_multiline_string` (and their
+    `_outline` forms), `set_text`, `Legend.set_entries` or assigned to a
+    `.text` must be translated even when it is one word, marker or not.
+    Inverted, because the words are built in helpers far from the call that
+    draws them: a gate that looked only inside the drawing statement saw none
+    of ninety untranslated strings (wave 88's review).
+L2  a key passed to a translation call as a literal, or marked
+    `# shown through tr()`, is not in the module's table, or its `pt_BR`
+    is empty.
 L3  a row of the table no script of the module mentions: an orphan, which
     a translator would keep translating for nothing.
 L4  the table itself: a byte order mark (Godot's documentation asks for
-    UTF-8 without one, and Excel writes one), a header without `en` first and
-    `pt_BR`, a row with an empty key or a key over two lines, or a key twice.
+    UTF-8 without one; some editors, and Excel's "CSV UTF-8", write one), a
+    header without `en` first and `pt_BR`, a row with an empty key or a key
+    over two lines, or a key twice.
 L5  a `pt_BR` that does not carry exactly its key's `{named}` placeholders:
     `String.format()` would leave a hole on the screen, or a brace.
 L6  a key given a `?context` in one table and none in another. Measured on
     4.7.2: a compressed table answers its key whatever context is asked, so
     the context-free row shadows the other (docs/godot/localisation.md).
+L7  a key built inside the call -- `tr("wins %s" % name)`, `tr("a" + b)` --
+    which no table can hold; translate the sentence, then `.format()` it.
 
 What it cannot see
 ------------------
-A key that reaches a translation call through a variable -- a rule's
-reason kept in English because the rules' vectors state it in English, a
-board's name -- is not checked against the table by L2; L3 still holds its
-row to a literal somewhere in the module. `make test-locale-screen` opens
-the demos in pt-BR and looks at what their Controls show.
+A one-word literal that is not a key of the table and is not handed straight
+to a drawing call is taken for data (`"font_size"`, `"abcdefgh"`); a single
+English word built into text elsewhere passes. Text written in a `.tscn` is
+not read: the scenes here say "loading" and are filled from code. The
+`?plural` column and `tr_n()`'s plural argument are not checked; nothing uses
+them yet. `make test-locale-screen` opens the demos in pt-BR and looks at
+what their Controls and legends show, which catches what this misses on
+the screens it opens.
 
 Exit codes
 ----------
@@ -72,6 +88,8 @@ LOCALE = "godot/locale"
 PORTUGUESE = "pt_BR"
 CONTEXT = "?context"
 BOM = b"\xef\xbb\xbf"
+SHOWN_LATER = "shown through tr()"
+NOT_SHOWN = "not shown"
 
 # The calls that translate their first argument, and where each keeps the
 # context: tr(message, context), tr_n(message, plural, n, context).
@@ -79,28 +97,40 @@ TRANSLATING_RE = re.compile(r"(?:(?<![\w.])|(?<=\.))(tr|atr|tr_n|atr_n)\s*\(|Tra
 CONTEXT_ARGUMENT = {"tr": 1, "atr": 1, "tr_n": 3, "atr_n": 3, "translate": 1}
 # Where a word becomes pixels: these calls, and an assignment to `.text`.
 SINK_CALL_RE = re.compile(r"\b(draw_string|draw_multiline_string|draw_string_outline|"
-                          r"draw_multiline_string_outline|set_text)\s*\(")
+                          r"draw_multiline_string_outline|set_text|set_entries)\s*\(")
 TEXT_ASSIGN_RE = re.compile(r"(?:\.|^[ \t]*)text\s*\+?=(?!=)", re.M)
 LITERAL_RE = re.compile(r"\"@(\d+)\"")
-FORMAT_RE = re.compile(r"%[-+ 0#]*\d*(?:\.\d+)?[a-zA-Z%]|\{\w*\}")
+FORMAT_RE = re.compile(r"%[-+ 0#]*\d*(?:\.\d+)?[a-zA-Z%]|\{\w*\}|\[/?\w+(?:=[^\]]*)?\]")
 PLACEHOLDER_RE = re.compile(r"\{(\w+)\}")
 LETTER_RE = re.compile(r"[^\W\d_]")
 # A literal right after these is a key into data -- `card.get("title")`,
 # `entry["value"]` -- and not a word on the screen.
-LOOKUP_RE = re.compile(r"(?:\.get\(|[\w)\]]\[)\s*$")
+LOOKUP_BEFORE_RE = re.compile(r"(?:\.get\(|[\w)\]]\[)\s*$")
+# ...and a literal followed by a colon is a dictionary's key: `{"move": m}`.
+LOOKUP_AFTER_RE = re.compile(r"\s*:(?!=)")
+# A key built at the call: the first argument goes on past its literal.
+BUILT_KEY_RE = re.compile(r"\s*\"@\d+\"\s*[%+]")
 
 
 @dataclasses.dataclass
 class Script:
     """One .gd file with its comments gone and each string literal replaced
-    by `"@<index>"`, so a regex over the code cannot match inside a string."""
+    by `"@<index>"`, so a regex over the code cannot match inside a string.
+    `comments` keeps each comment's text by line, for the markers."""
 
     path: str
     code: str
     literals: list[str]
+    comments: dict[int, str]
 
     def line_of(self, position: int) -> int:
         return self.code.count("\n", 0, position) + 1
+
+    def line_start(self, line: int) -> int:
+        position = 0
+        for _ in range(line - 1):
+            position = self.code.index("\n", position) + 1
+        return position
 
 
 @dataclasses.dataclass
@@ -119,21 +149,27 @@ def masked(path: str, text: str) -> Script:
     """`text` with comments removed and string literals swapped for tokens."""
     out: list[str] = []
     literals: list[str] = []
+    comments: dict[int, str] = {}
+    line = 1
     index = 0
     while index < len(text):
         char = text[index]
         if char == "#":
-            while index < len(text) and text[index] != "\n":
-                index += 1
+            end = text.find("\n", index)
+            end = len(text) if end < 0 else end
+            comments[line] = text[index:end]
+            index = end
             continue
         if char in "\"'":
             value, index = _read_string(text, index)
             out.append(f'"@{len(literals)}"' + "\n" * value.count("\n"))
+            line += value.count("\n")
             literals.append(value)
             continue
+        line += char == "\n"
         out.append(char)
         index += 1
-    return Script(path, "".join(out), literals)
+    return Script(path, "".join(out), literals, comments)
 
 
 def _read_string(text: str, start: int) -> tuple[str, int]:
@@ -211,29 +247,83 @@ def translation_calls(script: Script) -> list[tuple[int, int, str | None, str]]:
     return calls
 
 
+def built_keys(script: Script) -> list[str]:
+    """L7: translation calls whose first argument is a literal and more."""
+    findings = []
+    for match in TRANSLATING_RE.finditer(script.code):
+        spans = _arguments(script.code, match.end() - 1)[1]
+        if spans and BUILT_KEY_RE.match(script.code, spans[0][0]):
+            findings.append(f"L7 {script.path}:{script.line_of(match.start())}: the key is built "
+                            "inside the call; translate the sentence, then .format() it")
+    return findings
+
+
 def has_a_word(value: str) -> bool:
     """True when a literal says something, not only how to format a number."""
     return LETTER_RE.search(FORMAT_RE.sub("", value)) is not None
 
 
-def bare_words(script: Script) -> list[str]:
-    """L1: literals with a word in them that reach the screen untranslated."""
-    translated = [(start, end) for start, end, _, _ in translation_calls(script)]
+def marked(script: Script, marker: str) -> list[tuple[int, int]]:
+    """The statements whose first line carries `# <marker>`."""
+    regions = []
+    for line, comment in script.comments.items():
+        if marker in comment:
+            start = script.line_start(line)
+            regions.append((start, _statement_end(script.code, start)))
+    return regions
+
+
+def _within(position: int, regions: list[tuple[int, int]]) -> bool:
+    return any(low <= position <= high for low, high in regions)
+
+
+def _is_data(script: Script, position: int, end: int, value: str) -> bool:
+    """A literal used as a key into data, or a path: never a word on screen."""
+    line_start = script.code.rfind("\n", 0, position) + 1
+    return (LOOKUP_BEFORE_RE.search(script.code, line_start, position) is not None
+            or LOOKUP_AFTER_RE.match(script.code, end) is not None
+            or value.startswith(("res://", "user://")))
+
+
+def sink_regions(script: Script) -> list[tuple[int, int]]:
+    """Where a literal goes straight to the screen."""
     regions = []
     for match in SINK_CALL_RE.finditer(script.code):
         regions.append((match.start(), _arguments(script.code, match.end() - 1)[0]))
     for match in TEXT_ASSIGN_RE.finditer(script.code):
         regions.append((match.start(), _statement_end(script.code, match.end())))
+    return regions
+
+
+def bare_words(script: Script, keys: set[str]) -> list[str]:
+    """L1: literals that say something and pass no translation."""
+    translated = [(start, end) for start, end, _, _ in translation_calls(script)]
+    excused = marked(script, SHOWN_LATER) + marked(script, NOT_SHOWN)
+    sinks = sink_regions(script)
     findings = []
-    for start, end in regions:
+    for literal in LITERAL_RE.finditer(script.code):
+        value = script.literals[int(literal.group(1))]
+        if not has_a_word(value) or _within(literal.start(), translated):
+            continue
+        if _is_data(script, literal.start(), literal.end(), value):
+            continue
+        to_screen = _within(literal.start(), sinks)
+        says_something = to_screen or " " in value.strip() or value in keys
+        if says_something and (to_screen or not _within(literal.start(), excused)):
+            findings.append(f"L1 {script.path}:{script.line_of(literal.start())}: {value!r} passes "
+                            f"no tr(); translate it, or mark it `# {SHOWN_LATER}` or `# {NOT_SHOWN}`")
+    return findings
+
+
+def keys_shown_later(script: Script) -> list[tuple[int, str]]:
+    """The literals marked `# shown through tr()`: each a key the table must hold."""
+    found = []
+    for start, end in marked(script, SHOWN_LATER):
         for literal in LITERAL_RE.finditer(script.code, start, end):
-            inside = any(low <= literal.start() <= high for low, high in translated)
-            lookup = LOOKUP_RE.search(script.code, start, literal.start()) is not None
             value = script.literals[int(literal.group(1))]
-            if not inside and not lookup and has_a_word(value):
-                findings.append(f"L1 {script.path}:{script.line_of(literal.start())}: {value!r} "
-                                "reaches the screen without tr()")
-    return sorted(set(findings))
+            if has_a_word(value) and not _is_data(script, literal.start(), literal.end(), value):
+                found.append((literal.start(), value))
+    return found
 
 
 # --- reading the tables --------------------------------------------------------
@@ -313,21 +403,24 @@ def scripts_of(repo: pathlib.Path, module: str, owners: dict[str, tuple[str, ...
     return scripts
 
 
+def _keys_used(script: Script) -> list[tuple[int, str, str]]:
+    """Every key the script names: literal translation calls, and marked literals."""
+    used = [(start, key, context) for start, _, key, context in translation_calls(script) if key is not None]
+    return used + [(start, key, "") for start, key in keys_shown_later(script)]
+
+
 def check_module(repo: pathlib.Path, module: str, owners: dict[str, tuple[str, ...]],
                  table: Table) -> list[str]:
-    """L1, L2 and L3 for one translated module."""
-    scripts = scripts_of(repo, module, owners)
+    """L1, L2, L3 and L7 for one translated module."""
+    keys = {key for _, key in table.rows}
     findings = list(table.findings)
     mentioned: set[str] = set()
-    for script in scripts:
-        findings += bare_words(script)
+    for script in scripts_of(repo, module, owners):
+        findings += bare_words(script, keys) + built_keys(script)
         mentioned |= set(script.literals)
-        for start, _, key, context in translation_calls(script):
-            if key is None:
-                continue
-            where = f"{script.path}:{script.line_of(start)}"
+        for start, key, context in _keys_used(script):
             if (context, key) not in table.rows:
-                findings.append(f"L2 {where}: {key!r} is not in {table.path}")
+                findings.append(f"L2 {script.path}:{script.line_of(start)}: {key!r} is not in {table.path}")
     for context, key in sorted(table.rows):
         if not table.rows[(context, key)]:
             findings.append(f"L2 {table.path}: {key!r} has no {PORTUGUESE}")
@@ -376,21 +469,47 @@ def run(repo: pathlib.Path) -> int:
 # --- self-test -----------------------------------------------------------------
 
 CLEAN_SCRIPT = '''extends Node2D
-const NAMES: Array[String] = ["breadth-first"]
+const NAMES: Array[String] = ["breadth-first"]  # shown through tr()
+const FINDS: Array[String] = [  # shown through tr()
+	"the cheapest route",
+]
+
+func _ready() -> void:
+	_legend.set_entries([[Color.RED, tr("red dot: goal")]] as Array[Array])
 
 func _draw() -> void:
 	draw_string(font, Vector2.ZERO, tr("left-drag: paint {brush}").format({brush = tr(NAMES[0])}))
 	draw_string(font, Vector2.ZERO, "%+.2f" % value)  # a format, not a word
 	$Label.text = "  ·  ".join([tr("cost {cost}").format({cost = 3}), str(4)])
 	$Heading.text = card.get("title", "") + entry["name"]
+	var overlay: Dictionary = {"route": path, "board name": name}
 	var waiting: String = TranslationServer.translate(
 			"white has not moved yet.")
+	if evaluation == "hand written":  # not shown
+		load("res://game/some file.gd")
+	var finds: String = tr(FINDS[0])
+	var bold: String = "[b]%s[/b] -- %s" % [first, second]
 '''
 CLEAN_TABLE = ("en,pt_BR\n"
                "left-drag: paint {brush},arrastar: pinta {brush}\n"
                "breadth-first,busca em largura\n"
+               "the cheapest route,a rota mais barata\n"
                "cost {cost},custo {cost}\n"
+               "red dot: goal,ponto vermelho: objetivo\n"
                "white has not moved yet.,as brancas ainda não jogaram.\n")
+# The real shapes wave 88's review planted, each one a line added to the clean
+# script: words built in a helper, a legend, a variable handed to draw_string.
+PLANTED_L1 = {
+    "a legend entry": '\t_legend.set_entries([[Color.RED, "red dot: goal"]] as Array[Array])\n',
+    "a helper's line": '\treturn "\\n".join([tr("cost {cost}"), "Edit the board"])\n',
+    "a status line": '\tvar line: String = "1-4 choose  ·  space steps"\n',
+    "through a variable": '\tvar words := "you lose"\n\tdraw_string(font, p, words)\n',
+    "a one-word key": '\tvar shown: String = "breadth-first"\n',
+    "bare draw_string": '\tdraw_string(font, p, "wins")\n',
+    "bare .text": '\t$Status.text = "Play" if mine else "Wait"\n',
+    "bare set_text": '\t$Label.set_text("Play")\n',
+    "a marker on a sink": '\t$Label.text = "your move"  # not shown\n',
+}
 
 
 def build(root: pathlib.Path, name: str, script: str = CLEAN_SCRIPT, table: str | bytes = CLEAN_TABLE,
@@ -403,7 +522,7 @@ def build(root: pathlib.Path, name: str, script: str = CLEAN_SCRIPT, table: str 
         "godot/demo/demo.gd": script,
         "godot/locale/demo.csv": table,
         # Not translated: a bare literal there is not this gate's business yet.
-        "godot/other/other.gd": 'func _ready() -> void:\n\t$Label.text = "Hello"\n',
+        "godot/other/other.gd": 'func _ready() -> void:\n\t$Label.text = "Hello there"\n',
     }
     files.update(extra or {})
     for relative, content in files.items():
@@ -414,6 +533,26 @@ def build(root: pathlib.Path, name: str, script: str = CLEAN_SCRIPT, table: str 
         else:
             path.write_text(content, encoding="utf-8")
     return repo
+
+
+def _table_cases(root: pathlib.Path, expect) -> None:
+    expect("missing key", build(root, "missing", CLEAN_SCRIPT + '\tprint(tr("not in the table"))\n'), 1, "L2")
+    expect("marked key missing", build(root, "marked", CLEAN_SCRIPT
+           + '\tvar reason: String = "no such reason here"  # shown through tr()\n'), 1, "L2")
+    expect("empty pt_BR", build(root, "empty", table=CLEAN_TABLE.replace("busca em largura", "")), 1, "L2")
+    expect("orphan key", build(root, "orphan", table=CLEAN_TABLE + "nobody says this,ninguém diz isto\n"),
+           1, "L3")
+    expect("byte order mark", build(root, "bom", table=BOM + CLEAN_TABLE.encode("utf-8")), 1, "byte order mark")
+    expect("header", build(root, "header", table=CLEAN_TABLE.replace("en,pt_BR", "keys,pt_PT")), 1, "L4")
+    expect("key twice", build(root, "twice", table=CLEAN_TABLE + "breadth-first,largura\n"), 1, "L4")
+    expect("placeholder lost", build(root, "placeholder", table=CLEAN_TABLE.replace(
+        "custo {cost}", "custo")), 1, "L5")
+    expect("context shadowed", build(root, "context", extra={
+        "modules/menu.json": json.dumps({"module": "menu", "owns": ["godot/menu/"]}),
+        "godot/menu/menu.gd": 'func _ready() -> void:\n\t$Button.text = tr("breadth-first", "a card")\n',
+        "godot/locale/menu.csv": "en,?context,pt_BR\nbreadth-first,a card,largura\n"}), 1, "L6")
+    expect("key built with %", build(root, "percent", CLEAN_SCRIPT + '\tprint(tr("cost %d" % 3))\n'), 1, "L7")
+    expect("key built with +", build(root, "plus", CLEAN_SCRIPT + '\tprint(tr("cost " + str(3)))\n'), 1, "L7")
 
 
 def self_test() -> int:
@@ -430,26 +569,10 @@ def self_test() -> int:
     with tempfile.TemporaryDirectory() as workspace:
         root = pathlib.Path(workspace)
         expect("clean", build(root, "clean"), 0)
-        expect("bare draw_string", build(root, "draw", CLEAN_SCRIPT.replace(
-            '"%+.2f" % value', '"wins"')), 1, "L1")
-        expect("bare .text", build(root, "text", CLEAN_SCRIPT.replace(
-            "\t$Label.text", '\t$Status.text = "your move" if mine else "white thinks"\n\t$Label.text')), 1, "L1")
-        expect("bare set_text", build(root, "set_text", CLEAN_SCRIPT + '\t$Label.set_text("Play")\n'), 1, "L1")
-        expect("missing key", build(root, "missing", CLEAN_SCRIPT + '\tprint(tr("not in the table"))\n'), 1, "L2")
-        expect("empty pt_BR", build(root, "empty", table=CLEAN_TABLE.replace(
-            "busca em largura", "")), 1, "L2")
-        expect("orphan key", build(root, "orphan", table=CLEAN_TABLE + "nobody says this,ninguém diz isto\n"),
-               1, "L3")
-        expect("byte order mark", build(root, "bom", table=BOM + CLEAN_TABLE.encode("utf-8")), 1, "L4")
-        expect("header", build(root, "header", table=CLEAN_TABLE.replace("en,pt_BR", "keys,pt_PT")), 1, "L4")
-        expect("key twice", build(root, "twice", table=CLEAN_TABLE + "breadth-first,largura\n"), 1, "L4")
-        expect("placeholder lost", build(root, "placeholder", table=CLEAN_TABLE.replace(
-            "custo {cost}", "custo")), 1, "L5")
-        expect("context shadowed", build(root, "context", extra={
-            "modules/menu.json": json.dumps({"module": "menu", "owns": ["godot/menu/"]}),
-            "godot/menu/menu.gd": 'func _ready() -> void:\n\t$Button.text = tr("breadth-first", "a card")\n',
-            "godot/locale/menu.csv": "en,?context,pt_BR\nbreadth-first,a card,largura\n"}), 1, "L6")
-        expect("a comment is not code", build(root, "comment", CLEAN_SCRIPT + '\t# draw_string(font, p, "words")\n'), 0)
+        for number, (label, line) in enumerate(PLANTED_L1.items()):
+            expect(label, build(root, f"l1_{number}", CLEAN_SCRIPT + line), 1, "L1")
+        expect("a comment is not code", build(root, "comment", CLEAN_SCRIPT + '\t# draw_string(font, p, "a b")\n'), 0)
+        _table_cases(root, expect)
 
         script = pathlib.Path(__file__).resolve()
         extra = subprocess.run([sys.executable, str(script), "--unknown-flag"], capture_output=True)

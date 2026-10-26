@@ -24,7 +24,8 @@ static func load_from(path: String = PATH) -> ExampleCatalogue:
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if not (parsed is Dictionary) or not (parsed.get("examples") is Array) \
 			or not (parsed.get("techniques") is Dictionary):
-		catalogue.problem = "%s is not a catalogue: it needs `examples` and `techniques`" % path
+		var problem: String = TranslationServer.translate("{path} is not a catalogue: it needs `examples` and `techniques`")
+		catalogue.problem = problem.format({path = path})
 		return catalogue
 	for entry: Variant in parsed["examples"]:
 		catalogue.cards.append(_card_of(entry as Dictionary, parsed["techniques"]))
@@ -46,21 +47,25 @@ static func _card_of(entry: Dictionary, techniques: Dictionary) -> Dictionary:
 
 ## The card's words, as the menu lays them out, in BBCode: each heading in
 ## the accent colour, what is under it indented as a block, so a wrapped line
-## stays under its heading rather than running back to the margin.
+## stays under its heading rather than running back to the margin. The
+## headings are in the language the menu speaks (T78); what the catalogue
+## says under them is still English, until the catalogue is translated.
 static func text_of(card: Dictionary, accent: Color) -> String:
 	var techniques: PackedStringArray = []
 	for technique: Array in card.get("techniques", []):
 		techniques.append("[b]%s[/b] -- %s" % [plain(technique[0]), plain(technique[1])])
 	# In the repository, not in the executable: someone holding only the zip
 	# has neither the page nor `make` (wave 59's review), and is told so.
-	var more: String = "in the kit's repository: %s; [b]make %s[/b] opens it on its own" % [
-		plain(card.get("docs", "")), plain(card.get("target", ""))]
+	var more: String = TranslationServer.translate("in the kit's repository: {docs}; [b]make {target}[/b] opens it on its own").format(
+		{docs = plain(card.get("docs", "")), target = plain(card.get("target", ""))})
+	var keys: String = TranslationServer.translate("{keys}; Esc comes back here").format(
+		{keys = plain(card.get("controls", ""))})
 	var sections: Array[Array] = [
-		["What the AI decides", plain(card.get("decides", ""))],
-		["How it decides", "\n".join(techniques)],
-		["What to watch", plain(card.get("watch", ""))],
-		["Keys", plain(card.get("controls", "")) + "; Esc comes back here"],
-		["Read more", more],
+		[TranslationServer.translate("What the AI decides"), plain(card.get("decides", ""))],
+		[TranslationServer.translate("How it decides"), "\n".join(techniques)],
+		[TranslationServer.translate("What to watch"), plain(card.get("watch", ""))],
+		[TranslationServer.translate("Keys"), keys],
+		[TranslationServer.translate("Read more"), more],
 	]
 	var text: PackedStringArray = []
 	for section: Array in sections:

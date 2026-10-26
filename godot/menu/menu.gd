@@ -108,6 +108,8 @@ func _retranslate() -> void:
 	_language.text = tr("Language: English  (L)")
 	if catalogue.cards.is_empty():
 		_heading.text = tr("No examples to show")
+	elif not _list.get_selected_items().is_empty():
+		select(_list.get_selected_items()[0])
 
 
 ## True while an example, not the menu, is the current scene.
