@@ -76,3 +76,11 @@ também em itálico, ficam como foram publicados.
 | *skirmish* | a escaramuça: a demo por turnos em que o azul é a política aprendida |
 | *easy*, *medium*, *hard* | os nomes dos níveis de dificuldade como aparecem na tela das demos |
 | *wave* | uma rodada de trabalho neste repositório: um ramo, uma revisão, uma junção ao principal |
+| MENACE | a máquina de caixas de fósforo de Donald Michie (1961), que aprende o jogo da velha com contas coloridas; nome próprio |
+| *h_max*, *h_add* | as heurísticas do planejador STRIPS: o custo do fato mais caro do objetivo, ou a soma de todos; aparecem com o nome do código |
+| *pressure* | o objetivo do GOAP do time tático: pressionar o inimigo, caçando, tomando um ponto ou sitiando a oficina |
+| *point_free*, *in_danger*, *prey_in_reach* | fatos que os planejadores e as árvores leem do tabuleiro; ficam com o nome do código |
+| *build_ram*, *cross_the_river_ram* | passos de um plano STRIPS, com o nome que o código dá à ação |
+| *attack_close* | a regra do Wesnoth que deixa uma unidade se juntar a um ataque já feito perto dela |
+| *id* | o número que identifica uma unidade no tabuleiro |
+| *enter*, *shift* | nomes de teclas, como estão no teclado |
