@@ -3,7 +3,8 @@
   "kind": "technique",
   "about": "Minimax and alpha-beta over any two-player game.",
   "owns": [
-    "godot/addons/ai_adversarial/"
+    "godot/addons/ai_adversarial/",
+    "godot/test/ai_adversarial/"
   ],
   "depends_on": [],
   "gates": []
