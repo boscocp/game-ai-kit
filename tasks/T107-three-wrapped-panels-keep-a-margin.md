@@ -1,4 +1,4 @@
-# T105 — Three wrapped panels keep clear of the window's bottom
+# T107 — Three wrapped panels keep clear of the window's bottom
 
 Size: S · Prereqs: T102 · Files: `godot/demos/behaviour/`, `godot/game/main.tscn`, `godot/game/main.gd`, `godot/game/rts/`, `godot/test/locale/locale_screen.gd`
 

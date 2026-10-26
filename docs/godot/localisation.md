@@ -192,7 +192,7 @@ RTS and the fighting game, by the same rules, with what they added:
   visible wrapped Label too: its rectangle inside the window's width, and
   its words ending the gutter (24 px) above the bottom -- planted: a
   wrapped Label too tall and one too wide. It found three more, named in
-  `NOT_YET_FITTED` and left for T105: the behaviour demo's status (711 in
+  `NOT_YET_FITTED` and left for T107: the behaviour demo's status (711 in
   both languages), the skirmish's (716 in pt-BR) and the RTS card's info
   (741 in pt-BR, 721 in English: past the window).
 - **An addon's English, worded by the game that shows it.** The difficulty

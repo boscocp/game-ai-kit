@@ -70,7 +70,7 @@ const BOTTOM_MARGIN: float = BoardLayout.GUTTER
 ## Labels known to run off the window in English as well, so a layout fix
 ## rather than a translation one: named here rather than hidden. Each is
 ## "scene:node". T102 fitted the tactical header and took it out; its new
-## measure of a wrapped Label found these three, left for T105 (where their
+## measure of a wrapped Label found these three, left for T107 (where their
 ## words end, in English and in pt-BR). The planted cases below keep the
 ## check honest meanwhile.
 const NOT_YET_FITTED: Array[String] = [
