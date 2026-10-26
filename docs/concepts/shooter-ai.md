@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-22
+verified_on: 2026-10-26
 tier: 1
 source: https://www.gameaipro.com/
-invalidated_if: T51, T52, T66, T67 or T68 stop doing what the sections on what the kit takes say they take from here
+invalidated_if: T51, T52, T65, T66, T67 or T68 stop doing what the sections on what the kit takes say they take from here
 teaches: shooter-ai
 -->
 
@@ -596,6 +596,156 @@ hides behind is asked of `TacticalPositions` with a condition of its own:
 covered from every enemy its team knows of, not only the nearest. The
 measured results are in [`docs/godot/botmatch.md`](../godot/botmatch.md).
 
+## What makes holding, spreading and falling back pay (T65)
+
+T51, T66 and T67 measured the same thing three times: a team that never
+falls back beats one that does, 20 matches to 0. The owner chose on
+2026-10-26 to change retreat rather than close the question as measured,
+and to read first. Every source below was opened on that day.
+
+### What the shipped games and their sources say
+
+**Unreal Tournament's domination: touching a point takes it, and dying
+costs only time.** "To take control of a location, players must touch it's
+control point", and "For each control point taken, the team scores 1
+point every 5 seconds" [Liandri Archives, Domination]. Double Domination
+needs both points "at the same time for ten seconds"; a point stays taken
+"until an opponent runs over them"; and players hold by standing there:
+"one or two players ... will stand guard at each captured Point" [Liandri
+Archives, Double Domination]. The research paper that played it with bots
+puts the consequence plainly: fights away from the points "generally do
+not contribute to win", because "if a player is killed, it simply reappears
+in a random location and has no effect in the score" [Smith et al. 2007,
+section "RL for Coordinating Teams of Bots"]. The paper's strongest
+scripted opponent kept "control of half plus one of the locations" (its
+Table 1). Where UT's bots do fall back, it is to a place the designer
+named: in Assault, "The optional FallBackFort attribute specifies which
+fort defenders should fallback to if the FortStandard is destroyed", and
+defenders stand at DefensePoints, "higher priorities are manned earlier"
+[Polge, UT AI for level designers]. A DefensePoint is put "at every
+location you want a bot who has its orders set to 'Defend' to go"
+[Unreal Wiki, Strategic Bots]. No source opened gives a defender's distance
+from a point in metres.
+
+**Killzone's warzone: the commander holds what it has, and spawns are what
+it fights over.** Killzone 2's commander: "For every area we control;
+generate an DefendMarker objective", and attacks only "as many areas as we
+still want to capture (based on current score, heuristic)", choosing them
+by "nearby friendlies, own spawnpoints" [Straatman et al. 2009, slide 40].
+Killzone 3's, in Capture and Hold: "if a faction is ahead in score and owns
+two of the three areas, it can decide to only generate defend objectives
+for the areas it has already captured" [Straatman et al. 2013, §29.6.1, p.
+386]. Tactical spawn points matter "because of the shorter travel
+distances to objectives for re-spawning team members" (the same page), and
+in the chapter's worked match "ISA defenders that did not survive will
+spawn at the nearby TSP to get back to defending the capture point" (§29.7,
+p. 387). Falling back is the commander's, not the squad's: a squad reports
+"imminent failure—for instance, when the squad has been decimated during an
+attack" (§29.3, p. 378), and squads gather at "regroup markers, which are
+safe locations near the objective", chosen by the influence map (§29.5.2,
+p. 384). Defenders stand at designer-placed "Defend locations" (§29.6.2,
+p. 387).
+
+**Halo: a fallback is a second position at the same objective.** "Two-stage
+fallback -- Enemies occupy a territory -- Pushed to 'fallback' point --
+Pushed to 'last-stand' point -- Player 'breaks' them" [Isla, Halo 3
+objectives slides, "The Canonical Encounter"]; each stage is a task under
+the same objective, its forward task held while more than 75% are alive
+and its fallback while more than 50% ("3 Generators Revisited"). The first
+Halo lists "Retreat Conditions" and "Defensive Fortification" among the
+encounter's attacking and defending states, and a "Breaking point" where an
+enemy may "Flee in Terror, Berserk, Retreat" [Butcher & Griesemer] -- the
+slides give no rule for when.
+
+**F.E.A.R.: leave cover only for cover.** Its soldiers "always try to stay
+covered, never leave cover unless threatened and other cover is available"
+[Orkin 2006], and fleeing is conditional on there being somewhere to go:
+"An A.I. trying to escape danger will run away if he can find a path to
+safety, or hunker down in place if he can't."
+
+**Days Gone: a short step back, to cover, by whoever has none.** "Since a
+retreating AI is vulnerable, the distance they move is relatively short",
+to "a new position to fight from that is directly away from the
+Frontline"; "The AIs that are closest to the Frontline, or who do not have
+valid cover, are chosen to move"; and a squad retreats "until an obstacle
+prevents it from moving any further, it regains its Confidence, or it loses
+contact with the enemy" [Karlsson 2021, §6.3]. A wounded member counts for
+less in confidence (§3.1). Its encounters have no point to hold, and its
+goal is "good-looking combat" rather than the "most effective behavior"
+(§7).
+
+**Respawn waves and tickets: what makes a death cost.** Team Fortress 2:
+"Most official maps use a 10-second respawn wave time", "generally reduced
+for the team that controls the most control points", and "When a player
+dies, they are assigned to the respawn wave after the next one. Therefore,
+if the respawn wave time is currently 10 seconds for the player's team,
+they respawn somewhere between 10 and 20 seconds after their death" [Team
+Fortress Wiki, Respawn -- read through the Internet Archive's copy of 1
+January 2025; the live wiki was down for maintenance]. Battlefield's
+Conquest: "Each death costs one of the team's tickets", and "A 1:1 ratio of
+enemies and friendlies in the area will cause the capture to pause", the
+point going slowly "to the team with more members in the area" [HandWiki,
+Conquest -- a wiki article, not a developer's].
+
+**Health that comes back rewards running and hiding only when it waits.**
+Already read for T68: regeneration "is most commonly associated with the run
+and hide cover system", and where it "doesn't occur during combat, it
+doesn't encourage this sort of behavior" [Vanden Bossche 2009].
+
+### What that says about this match
+
+Put the bot match's own rules (`rules.json`) beside them:
+
+- **A death here costs about 10 s and refills the bot.** Respawn is 4 s, one
+  bot at a time, and the walk back to a point 4.8 to 6.7 s (held by
+  `botmatch_test.gd`): 9 to 11 s off the point, and the bot comes back with
+  full health and a full rifle. That is UT's rule -- a death has "no effect
+  in the score" -- not TF2's 10 to 20 s or Battlefield's ticket.
+- **Breaking off to heal costs more than dying.** Health comes back after
+  10 s unhit, at 20 a second: 10 to 15 s away, plus the walk to cover, and
+  no rounds. So a hurt bot that stays and dies is back sooner, and fuller,
+  than one that falls back and heals. No weighing can make falling back pay
+  while that holds; it can only stop it costing.
+- **The retreat gives the point away by a rule that never looks at it.** A
+  squad whose confidence falls to 0.5 walks 8 m towards its spawn in
+  waves; the capture radius is 3 m and an uncontested point turns in 4 s.
+  Every source that falls back on purpose falls back *at the objective* --
+  Halo's fallback point, UT's FallBackFort, Killzone's regroup marker near
+  it, Days Gone's short step to cover -- and none towards its spawn.
+- **Contested capture already pauses** whenever both sides stand on a
+  point, at any ratio: one covering bot left on it holds it. Battlefield's
+  majority rule would take that away from a squad falling back in waves,
+  so it is not proposed.
+
+Measured on main before any change (wave 96, 20 matches): never falling
+back is +186.7 +- 10.2 s a match ahead, 20-0, with 958 deaths against the
+retreating team's 956 -- the retreat saves no lives and costs the points.
+
+### Proposed, for the owner to pick
+
+Each with its prediction -- blue never falling back, against red with
+everything, as `botmatch_effects.gd` prints it -- written before measuring;
+the full statements and how each is measured are in
+[the task](../../tasks/T65-a-coordinated-team-that-wins.md).
+
+1. **Fall back to cover at the point, not towards the spawn** -- T68's
+   hiding query near the squad's point, or hold if there is none. About
+   +100 +- 20 s, still 17-20 of 20.
+2. **Falling back weighed, not switched**: health regained (priced by
+   exposure, as T68) and a death avoided (the enemy's share of the
+   strength near it, times what a death costs) against the seconds away
+   and the point given up when it is the last defender; the waves stay as
+   the coordination; confidence becomes a percept. About 0 +- 30 s, 8-12 of
+   20: retreat stops costing, and is not shown to help.
+3. **Respawn in waves, as TF2 does** (10 s, the wave after next): a death
+   costs 10-20 s plus the walk, more than healing. With 2: about -40 to
+   -80 +- 25 s, 4-7 of 20 for never falling back.
+4. **A 5 s regeneration delay** (Halo's, Modern Warfare's), listed and not
+   recommended: it is the owner's own 10 s.
+
+Recommended: 2, then 3 -- the bot weighs, and the match gives it something
+worth weighing.
+
 ## Could not be checked
 
 Not used above:
@@ -624,6 +774,12 @@ Not used above:
   Developer Community's "Regenerating Health" page and the GameDev.net
   round table on regenerating health (both refused); the Wireframe
   article on Halo's shields (refused after a redirect).
+- For T65: the Team Fortress Wiki's live "Respawn" and "Respawn time"
+  pages (down for maintenance; the Respawn page was read in the Internet
+  Archive's copy instead), the Valve Developer Community's "Modifying the
+  Respawn Time" (refused the fetch), the Battlefield fandom wiki's Conquest
+  page (refused), and the Unreal Wiki's DefensePoint page (gone). No source
+  for Killzone's warzone gives a capture radius or a defender's distance.
 - Brothers in Arms, Rainbow Six, ArmA, The Division, Ghost Recon,
   Battlefield and Half-Life's squads: no readable primary source looked at.
 
@@ -642,6 +798,14 @@ Level design, for T66's map:
   <https://unrealarchive.org/wikis/unreal-wiki/Legacy:Mapping_For_DDOM.html>,
   <https://unrealarchive.org/wikis/unreal-wiki/Legacy:Placing_PlayerStart.html>,
   <https://unrealarchive.org/wikis/unreal-wiki/Legacy:Z-Axis.html>
+- Polge, S. "Unreal Tournament AI and Game Play for Level Designers."
+  Epic Games; the Unreal Archive's copy, year not printed.
+  <https://unrealarchive.org/unreal-tournament/documents/reference/unrealed/unreal-tournament-ai/index.html>
+- The Liandri Archives (archived). "Domination" and "Double Domination".
+  <https://unrealarchive.org/wikis/the-liandri-archives/Domination.html>,
+  <https://unrealarchive.org/wikis/the-liandri-archives/Double_Domination.html>
+- Unreal Wiki (legacy, archived). "Strategic Bots".
+  <https://unrealarchive.org/wikis/unreal-wiki/Legacy:Strategic_Bots.html>
 - World of Level Design. "How to create competitive Counter-Strike gameplay
   map layouts?"
   <https://worldofleveldesign.com/categories/csgo-tutorials/csgo-how-to-design-gameplay-map-layouts.php>
@@ -708,7 +872,9 @@ Shipped games -- talks, chapters and papers by their developers:
   <https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter04_Vision_Zones_and_Object_Identification_Certainty.pdf>
 - Straatman, R., Verweij, T., Champandard, A. "Killzone 2 Multiplayer
   Bots." Paris Game AI Conference, 2009. Slides, mostly images; partial text.
-  <https://www.guerrilla-games.com/read/killzone-2-multiplayer-bots>
+  <https://www.guerrilla-games.com/read/killzone-2-multiplayer-bots>; the
+  slides themselves, read for T65:
+  <https://www.guerrilla-games.com/media/News/Files/GAIC09_Killzone2Bots_StraatmanChampandard.pdf>
 - Straatman, R., Verweij, T., Champandard, A., Morcus, R., Kleve, H.
   "Hierarchical AI for Multiplayer Bots in Killzone 3." Game AI Pro, 2013,
   ch. 29.
@@ -766,6 +932,11 @@ Research:
 - CharlieIntel. "Big changes to health system in Call of Duty: Black Ops
   4." Before the game's release in 2018; the page's own date was not
   read. <https://www.charlieintel.com/call-of-duty/big-changes-to-health-system-in-call-of-duty-black-ops-4-46147/>
+- HandWiki. "Conquest (gametype)." A wiki article, not a developer's.
+  <https://handwiki.org/wiki/Software:Conquest_(gametype)>
+- Team Fortress Wiki. "Respawn." Read in the Internet Archive's copy of
+  2025-01-01.
+  <https://web.archive.org/web/20250101224642/https://wiki.teamfortress.com/wiki/Respawn>
 - Halopedia. "Energy shielding." Wiki article, read 2026-10-22.
   <https://www.halopedia.org/Energy_shielding>
 - Hingston, P. "A Turing Test for Computer Game Bots." IEEE Transactions on
