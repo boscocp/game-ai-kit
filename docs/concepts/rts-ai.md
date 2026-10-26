@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-20
+verified_on: 2026-10-26
 tier: 1
 source: https://ojs.aaai.org/index.php/AIIDE/article/view/12435/12294 ; https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter31_Spatial_Reasoning_for_Strategic_Decision_Making.pdf ; https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter12_Exploring_HTN_Planners_through_Example.pdf ; https://docs.wildfiregames.com/javascript/petra/PETRA.QueueManager.html
 invalidated_if: test/rts/rts_measure.gd or test/rts/rts_match.gd print records that differ from the ones below, or the build-order domain changes
@@ -28,6 +28,14 @@ rule, and the tower that sees eleven cells. Buildings take a third of any
 blow but the mortar's: without that, the first matches ended with runners
 razing a base at two minutes, and no match ever reached the lab.
 
+One upgrade (T56): a complete tower may be **armed** -- 100 ore and 75
+magma, ten seconds, queued at the tower as a fighter is at a barracks
+(`RtsKinds.ARM`). Armed, it strikes the nearest enemy its side sees within
+six cells, every three quarters of a second, with the line of fire every
+shot needs, so never through a wall. Arming is not armed, and the gun is
+the tower's: a tower lost loses it. The price is a squad's worth of magma,
+which is the point -- an armed tower is bought instead of fighters.
+
 The map is T10's ground, grown: a river, one bridge two cells wide -- the
 chokepoint -- and two slow fords. Each side has a home and, by the far
 ford, an expansion. A match ends when a side has no base, or at twenty
@@ -39,9 +47,15 @@ minutes on what each side holds, priced.
 second. *What to aim at*: workers always; then the counter to the fighter
 it has seen most -- mortars for shields -- or runners when it has seen
 nothing; a tower when nothing has been seen for two minutes, so it can
-look; the expansion after four. *How*: a plan over a level 1 PDDL domain,
+look; an armed tower when its home is threatened; the expansion after
+four. Threatened is weighed, not a trigger: the share of the fighting
+strength its belief puts at its home that is the enemy's
+(`home_threat`), above a half -- so a raid seen and lost from sight still
+counts while the memory fades, and its own squads standing there count
+against it. *How*: a plan over a level 1 PDDL domain,
 [`rts-build-order-domain.pddl`](../../spec/pddl/rts-build-order-domain.pddl),
-ten actions and ten facts, by T11's heuristic STRIPS or T15's HTN.
+eleven actions and eleven facts (`arm_tower`, `tower_armed`), by T11's
+heuristic STRIPS or T15's HTN.
 *When*: `BuildSchedule` times each step by jumping to the moment its price
 is met at the side's income -- Churchill and Buro's trick -- so the screen
 can say "build lab: in 14 s, waiting for magma". It replans every ten
@@ -55,7 +69,9 @@ rule: the top wish waits for its price, and nothing below it spends
 meanwhile. The plan's next step is wished at 80; reflexes -- a depot
 before the room runs out, workers to a full home, a barracks when ore piles
 up -- sit under it. `QueueSide` is the same queue filled by fixed rules and
-no plan: the bar a commander must clear.
+no plan: the bar a commander must clear. Its tower rule is a rule: an
+enemy fighter in sight within ten cells of home wishes a tower, then its
+arm, and the wishes are taken back when the raid is out of sight.
 
 **Squads** of six run a state machine -- gather, advance, fight, fall back
 -- and go where `SquadTactics` scores highest: each region's worth to the
@@ -80,7 +96,8 @@ the focus and its two rivals with their scores; the panel says why.
 The rules under it are the same for both sides, a person's units included:
 units keep apart, an idle fighter takes on the nearest enemy its side can
 see within two cells past its own sight, and strikes back at a striker it
-can see; a shot from afar needs a line clear of walls and buildings.
+can see; a shot from afar needs a line clear of walls and buildings; an
+armed tower shoots by itself. The board rings an armed tower's reach.
 Only the choices -- the plan, the queue, the region, the focus -- are the
 computer's.
 
@@ -110,6 +127,34 @@ Before the review's fixes the queues' mirror went 15 - 5 to the west seat;
 after them, 9 - 11. T57 makes that a gate, since a person always plays
 west.
 
+### With the armed tower (T56)
+
+`make rts-measure` again on 2026-10-26, on wave 89's branch. "Armed" is
+how many tower arms each side bought over the 20 matches, first side
+first:
+
+| pairing | record | armed |
+|---|---|---|
+| commander (normal, STRIPS) against the queues alone | 19 - 1 | 0 - 5 |
+| commander with STRIPS against with the HTN | 12 - 8 | 1 - 0 |
+| normal against easy | 20 - 0 | 1 - 4 |
+| the queues against themselves, by seat | 12 - 8 | 14 - 13 |
+
+The commander still beats the queues 19 - 1 -- and **never armed a tower
+doing it**. That is its goal working, not failing: it attacks first, with
+runners at once, so its own home is seldom where the enemy is, and the
+threat that would ask for a gun never rises above a half. The queues, who
+are raided, buy the arm five times and lose anyway. Where the commander
+did arm, it was in the long STRIPS-against-HTN matches (median 480 s) and
+once against easy. The arm is a choice the commander makes when it is on
+the back foot, and on this map it rarely is; whether it is the *right*
+choice there is not shown by these numbers, since a raided commander is
+mostly a losing one. The queues' mirror went 12 - 8 to the west seat, from
+9 - 11 -- within what 20 matches can tell apart, and T57's gate to settle.
+The planners still found the same plans, 1.21 steps long on 14 distinct
+questions: STRIPS 1.8 worlds in 80 us, the HTN 6.2 tasks in 53 us. The
+slowest planning call was 1.14 ms, still inside the 1.5 ms strategy share.
+
 ## Difficulty, without cheating
 
 The levels are T12's knobs (`RtsLevels`), and nothing else -- no level
@@ -122,8 +167,9 @@ here are a step or two long, so a longer horizon changes nothing.
 
 ## What it does not do
 
-No formations, no air or water, no abilities, no upgrades -- the armed
-tower is T56. Squads do not split to flank. The commander does not plan
+No formations, no air or water, no abilities, and one upgrade only, the
+armed tower. The influence map does not weigh an armed tower as strength,
+so a squad's odds at home do not count the gun. Squads do not split to flank. The commander does not plan
 the army's moves: a plan per squad, F.E.A.R.'s way, is the alternative
 ADR 0010 left to T25's league. The reaction delay and the cap on actions
 per minute that make a side look human are T55's.
