@@ -70,6 +70,13 @@
 #      longer than any one technique off, by MIRROR_ERRORS combined errors --
 #      is printed, and claimed only once a measured run supports it.
 #
+#      **Measured in wave 97, and left failing as measured:** the second
+#      planted case passes -- a blue pricing the point at nothing lost a
+#      held point after 0.026 of its fall-backs, the weighing blue 0.027
+#      -- so the point's cost is not what keeps the point; falling back to
+#      cover near it is. And the T65 claim does not hold: never falling
+#      back is 7.2 errors ahead of everything (docs/godot/botmatch.md).
+#
 # Each is also asked of a planted case and must reject it: a blue team with
 # a faster reaction and a steadier aim, for the mirror; the claims check
 # of the matches without claims; a commander that wants every bot on one

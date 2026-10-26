@@ -129,6 +129,8 @@ measuring, and are to be compared with what is measured, not tuned to.
    compounds -- and a hidden bot's exposure falls to 0, so it heals. If
    that halves the 1.8 s of margin a retreat-second costs: 177 / 2, about
    90, over everything's +10: about +100.
+   *Measured (wave 97):* not alone -- the owner picked 1 and 2 together,
+   and 1 was built and measured with 2 (below).
 2. **Falling back weighed, not switched** (when; the owner's rule for a
    bot), **to proposal 1's place** -- so it needs proposal 1, which gives
    it somewhere to go once `fallback_metres` is gone. Each member of a
@@ -161,6 +163,10 @@ measuring, and are to be compared with what is measured, not tuned to.
    more, against a death avoided worth 7 to 13 s only times its chance; so
    it falls back seldom (T68's weighing hides 5.3 s a match), and the 177 s
    today's retreat costs mostly goes.
+   *Measured (wave 97, at 6523962):* no retreat **+223.1 +- 8.4 s, 20-0**,
+   against everything's -38.7 +- 24.3 s, 8-12: never falling back 10.2
+   combined errors ahead, not within 1.5. The prediction was wrong. It
+   does not fall back seldom: 251 fall-backs a match.
    **What it can claim, and how a weighing that does nothing is caught**
    (T68's hole): (a) blue falls back at least once a match on average, and
    (b) of its fall-backs, the share after which a point it held was
@@ -172,6 +178,16 @@ measuring, and are to be compared with what is measured, not tuned to.
    none uncovered) stays; if proposal 2 falls back too seldom to meet (a),
    that is the finding -- the weighing does nothing here -- and is written
    down, not tuned away.
+   *Measured (wave 97, at 6523962):* the baseline first, at 581820e
+   (today's retreat, its play unchanged: the same four margins as wave
+   96): 130.3 fall-backs a match, and after 95 of the 298 from a held point
+   it was lost within 8 s, a share of 0.319 -- so the threshold written
+   before measuring is 0.159. Then (a) 251.2 a match, held, and its
+   planted never-falls-back (0) rejected; (b) 9 of 334, 0.027, held -- but
+   its planted case, the point's cost at 0, measured 0.026 and **was not
+   rejected**: the point's cost is not what keeps the point here; falling
+   back to cover near it is. The existing retreat claim held (33516
+   decisions, none uncovered). Said as measured, not tuned away.
 3. **A death costs what it does in TF2: respawn in waves** (a rule). Waves
    every 10 s, a dead bot joining the wave after next, so 10 to 20 s plus
    the walk back, against healing's 10 to 15 s (`rules.json`'s
@@ -191,6 +207,10 @@ measuring, and are to be compared with what is measured, not tuned to.
    Blue dies about 48 times a match; if the weighing avoids a quarter, 12
    deaths times 8 s is about 100 bot-seconds, and at about half a
    point-second each, about 50 s of margin.
+   *Measured (wave 97):* with today's retreat, not measured -- it was
+   gone by then. With 1 and 2, at 8739ed5: no retreat **+200.5 +- 14.1 s,
+   20-0**, against everything's +0.2 +- 23.8 s, 12-8 -- everything 7.2
+   errors *behind*, not 1.5 to 3 ahead. Wrong, and step 4 applies.
 4. **The team holding most points respawns sooner** -- TF2's other rule
    ("generally reduced for the team that controls the most control
    points"), with 3: a reward for holding, which is what coordination is
@@ -236,3 +256,58 @@ chosen, so the T65 claim is held on two maps. Proposal 2 adds its decision
 claims and planted cases above, and the T65 claim (everything ahead of
 each one-off pairing by 2.5 errors) is added only once a measured run
 supports it.
+
+## Where it stands (wave 97, 2026-10-26)
+
+The owner picked "t65 segue o recomendado, 1+2 depois 3". Built: proposals
+1 and 2 together, measured, then 3, measured again; the outcomes are
+written beside each prediction above. **Step 4 applies: no change from
+the reading makes the T65 claim true, and the task stops here.** Nothing
+was tuned to reach it.
+
+`make test-botmatch-effects`, blue's margin a match against red with
+everything, 20 matches each on the lanes; "errors" is how far everything
+is ahead of that pairing, in combined standard errors:
+
+| blue plays | before (581820e) | 1+2 (6523962) | 1+2+3 (8739ed5) |
+|---|---|---|---|
+| everything | +10.0 +- 22.7 s, 12-8 | -38.7 +- 24.3 s, 8-12 | +0.2 +- 23.8 s, 12-8 |
+| no claims | -37.3 +- 23.3 s, 7-13 (+1.5) | -49.3 +- 24.5 s, 8-12 (+0.3) | -13.4 +- 33.5 s, 7-13 (+0.3) |
+| no commander | -4.1 +- 13.5 s, 9-11 (+0.5) | -182.0 +- 7.7 s, 0-20 (+5.6) | -161.7 +- 10.0 s, 0-20 (+6.3) |
+| no retreat | +186.7 +- 10.2 s, 20-0 (-7.1) | +223.1 +- 8.4 s, 20-0 (-10.2) | +200.5 +- 14.1 s, 20-0 (-7.2) |
+| the yards' mirror | +47.6 +- 32.0 s, 13-7 | -8.4 +- 38.1 s, 8-12 | -0.7 +- 41.0 s, 11-9 |
+
+The mirror stayed fair on both arenas. The T65 claim -- everything ahead
+of every one-off pairing by 2.5 errors -- holds only against no
+commander; it is printed by the gate, not claimed.
+
+**The gate exits 1 after the change, on two findings, left as measured:**
+
+- **portability**: on the six random arenas, 3 points (1+2) and 2 points
+  (1+2+3) were never taken; before, none. Played again with falling back
+  off on both sides, the same six arenas took every point 2 to 7 times;
+  with it on, one of them never had a bot within 3 m of its point A.
+- **claim (b)'s planted case passed** (above): the point's cost changes
+  nothing that claim can see.
+
+Seen in the counts, and not tested apart: falling back is short and
+constant -- 251 fall-backs a match, about 1.3 s each by the squad-decisions
+spent on them -- and health
+regenerated fell (571 points a match against 883 never falling back).
+The health a bot would regain is priced by its exposure *where it
+stands*, as T68 prices hiding: once in cover that reads 0, the reason to
+be there is gone, and it walks back out before it heals. Blue died more
+with it (850 deaths against 645). Which of that costs the margin is a
+guess the numbers do not test.
+
+Recorded with each run: 506 s (baseline), 743 s and 439 s wall clock in
+12 shards on 12 cores shared with other work. The dying table in
+`rules.json` is the baseline's, with its commit; the gate prints it again
+every run (at 8739ed5 the fully exposed column runs 0.09 to 0.54, against
+the baseline's 0.19 to 0.37: the bands mean something else once bots
+fall back).
+
+What the owner decides next, not started: whether falling back should
+price returning -- the exposure at the post it left -- rather than where
+it stands, which is a new proposal; whether to keep 2 at all; and whether
+3 stays (alone, it was not measured).
