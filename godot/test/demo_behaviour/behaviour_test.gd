@@ -29,9 +29,13 @@ func test_the_words_the_demo_translates_are_the_addon_s_words() -> void:
 	# `RIGHT_WHEN` and `TREE_ANSWERS` copy English the addon writes, so that
 	# the demo's table can translate it; a change in the addon must show here,
 	# or the screen would fall back to English without a word.
-	for row: Array in WaysToDecide.when_each_is_right():
-		if row[0] in ["state machine", "behaviour tree", "GOAP", "HTN"]:
-			assert_array(BehaviourDemo.RIGHT_WHEN).contains([row[1]])
+	# Asked by each brain's own name, as the status asks: a row the addon
+	# renamed would leave the screen saying nothing, and a loop over the
+	# addon's rows would not miss it.
+	for brain: GuardBrain in _brains():
+		var when: String = BehaviourDemo._when_right(brain.brain_name())
+		assert_str(when).override_failure_message("%s: no row in WaysToDecide" % brain.brain_name()).is_not_empty()
+		assert_array(BehaviourDemo.RIGHT_WHEN).contains([when])
 	for answer: BehaviourTree.Status in [BehaviourTree.Status.SUCCESS, BehaviourTree.Status.FAILURE,
 			BehaviourTree.Status.RUNNING]:
 		assert_array(BrainPanel.TREE_ANSWERS).contains([BehaviourTree.said(answer)])

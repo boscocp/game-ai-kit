@@ -76,9 +76,10 @@ func work_unit() -> String:
 # trail is the addon's, in English; the branch's label is translated here.
 static func _answered(trail: Array[String]) -> String:
 	for entry: String in trail:
-		var branch: String = TranslationServer.translate(entry.trim_suffix(": running"))  # not shown
-		if entry.ends_with(": running"):  # not shown
-			return TranslationServer.translate("the tree answered with {branch}").format({branch = branch})
+		if not entry.ends_with(": running"):  # not shown: the addon's word for an answer, compared
+			continue
+		var label: String = entry.trim_suffix(": running")  # not shown: cut off, the label is what is said
+		return TranslationServer.translate("the tree answered with {branch}").format({branch = TranslationServer.translate(label)})
 	return TranslationServer.translate("the tree answered nothing")
 
 

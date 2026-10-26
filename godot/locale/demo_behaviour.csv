@@ -66,5 +66,5 @@ method: {methods},método: {methods}
 worlds looked at: {count},mundos examinados: {count}
 planned because:,planejou porque:
 the plan was done,o plano terminou
-{name} could no longer run,{name} não podia mais ser feito
-{name} became possible,{name} ficou possível
+{name} could no longer run,o passo {name} já não podia ser feito
+{name} became possible,o método {name} ficou possível

@@ -15,6 +15,10 @@
 # EXAMPLES must be there, and at least one line read, or a blank scene
 # would pass.
 #
+# A refusal is provoked too, in the tactical match: the board writes its
+# refusals in English and the demo translates them where they are shown
+# (`TacticalRefusal`), and no example stepped on its own is ever refused.
+#
 # Planted: a Label whose auto-translation is disabled, a formatted English
 # line, and an empty scene; each must be refused, or the check sees nothing
 # and says so. Any engine error while the demos run is a failure too: a
@@ -178,6 +182,8 @@ func _look_at(label: String, example: Node, expected: Array) -> Array[String]:
 			example.step_decision()
 		await process_frame
 	var failures: Array[String] = []
+	if example is TacticalGame:
+		failures += await _provoke_a_refusal(example as TacticalGame)
 	for path: String in expected:
 		if not example.has_node(path):
 			failures.append("%s: has no %s to read" % [label, path])
@@ -190,6 +196,26 @@ func _look_at(label: String, example: Node, expected: Array) -> Array[String]:
 		failures.append("%s: %d engine error(s) while it ran" % [label, _counter.errors])
 	example.free()
 	return failures
+
+
+# The person's workshop asked for a ram before the forge is bought: the board
+# refuses it, and the status must say so -- in Portuguese, which the walk
+# below then checks. Fails when no refusal could be provoked, so the check
+# cannot pass on a screen that never showed one.
+func _provoke_a_refusal(game: TacticalGame) -> Array[String]:
+	game.new_game()
+	if game.state.current_faction != game.person_side:
+		game.swap_sides()
+	for unit: Unit in game.state.units:
+		if unit.faction == game.person_side and unit.type.type_name == TacticalRules.WORKSHOP:
+			game.click_cell(unit.cell)
+	game.build(TacticalRules.BUILDABLE.find(TacticalRules.RAM))
+	await process_frame
+	var status: Label = game.get_node("Interface/Status")
+	var refused: String = TranslationServer.translate("refused: {why}").split("{")[0]
+	if not status.text.contains(refused):
+		return ["tactical: no refusal could be provoked to check:\n" + status.text]
+	return []
 
 
 # The planted cases: a key on a Label that may not translate itself, a line

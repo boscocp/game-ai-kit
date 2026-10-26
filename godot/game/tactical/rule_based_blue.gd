@@ -312,7 +312,7 @@ func _why_nothing(state: BoardState, workshop: Unit) -> String:
 	var order := ProductionOrder.new(workshop.id, cheapest, TacticalRules.free_cell_beside(state, workshop, cheapest))
 	var refusal: String = state.why_production_refused(order)
 	if refusal != BoardState.LEGAL:
-		return refusal
+		return TacticalRefusal.words(refusal)
 	# Since T45 a workshop with room and money always builds (`_spend_anyway`),
 	# so this is only reached by a caller asking about a board where it could.
 	return tr("nothing stops it: it can build")

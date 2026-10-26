@@ -26,6 +26,7 @@ perfect play: every move loses for {who} from here.,"jogo perfeito: daqui, {who}
 "the {squares},","{squares},"
 and the rest do worse.,e o resto é pior.
 {first} or {last},{first} ou {last}
+MENACE,o MENACE
 you,você
 "1-4: MENACE after 10, 100, 1,000 or 10,000 games (now {games})  ·  M: perfect play on  ·  R: new game","1-4: MENACE após 10, 100, 1.000 ou 10.000 partidas (agora {games})  ·  M: jogo perfeito ligado  ·  R: nova partida"
 "1-4: MENACE after 10, 100, 1,000 or 10,000 games (now {games})  ·  M: perfect play off  ·  R: new game","1-4: MENACE após 10, 100, 1.000 ou 10.000 partidas (agora {games})  ·  M: jogo perfeito desligado  ·  R: nova partida"

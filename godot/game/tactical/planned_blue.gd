@@ -156,18 +156,14 @@ func plan_lines() -> Array[String]:
 # nothing -- padded to the widest of them in the language on screen, so the
 # step numbers stay in one column.
 func _mark(index: int) -> String:
-	var marks: Array[String] = [tr("off"), tr("done"), tr("next")]
-	var width: int = 0
-	for word: String in marks:
-		width = maxi(width, word.length())
-	var mark: String = ""
+	var marks: Array[String] = [tr("off"), tr("done"), tr("next"), ""]
+	var width: int = marks.map(func(word: String) -> int: return word.length()).max()
+	var which: int = 3
 	if next_step == -1:
-		mark = marks[0]
-	elif index < next_step:
-		mark = marks[1]
-	elif index == next_step:
-		mark = marks[2]
-	return mark.rpad(width)
+		which = 0
+	elif index <= next_step:
+		which = 1 if index < next_step else 2
+	return marks[which].rpad(width)
 
 
 ## What to draw for the plan: for each piece that has a step still to do, its
@@ -347,7 +343,7 @@ func _purchase(state: BoardState, workshop: Unit, index: int) -> TacticalDecisio
 		var waits: String = tr("{step}: cannot -- {why}")
 		if _plan_cost(asked) > state.funds_of(state.current_faction):
 			waits = tr("{step}: saves -- {why}")
-		return TacticalDecision.hold(workshop.id, waits.format({step = _step_label(index), why = refusal}), workshop.cell)
+		return TacticalDecision.hold(workshop.id, waits.format({step = _step_label(index), why = TacticalRefusal.words(refusal)}), workshop.cell)
 	if asked[0] == TacticalPlanBridge.BUY:
 		return TacticalDecision.buy(workshop.id, TacticalRules.forge(), tr("{step}: buys the forge, which a ram needs").format({
 			step = _step_label(index)}), workshop.cell)

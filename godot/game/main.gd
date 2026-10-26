@@ -287,7 +287,7 @@ func _status_line() -> String:
 	if holds != "":
 		lines.append(holds)
 	if _last_refusal != BoardState.LEGAL:
-		lines.append("\n" + tr("refused: {why}").format({why = _last_refusal}))
+		lines.append("\n" + tr("refused: {why}").format({why = TacticalRefusal.words(_last_refusal)}))
 	if not _ai_reasons.is_empty():
 		lines.append("\n" + tr("blue this turn:"))
 		for reason: String in _ai_reasons:

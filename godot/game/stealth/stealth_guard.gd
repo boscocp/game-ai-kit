@@ -10,11 +10,15 @@
 class_name StealthGuard
 extends RefCounted
 
-# The states are also the words the reason line names them by, translated
-# where it is written.
-const PATROL: String = "patrol"  # shown through tr()
-const INVESTIGATE: String = "investigate"  # shown through tr()
-const ALERT: String = "alert"  # shown through tr()
+const PATROL: String = "patrol"  # not shown: a state, compared; STATE_WORDS says it
+const INVESTIGATE: String = "investigate"  # not shown
+const ALERT: String = "alert"  # not shown
+## What the reason line calls each state. Its own keys, not the states': the
+## behaviour demo's tree has an "investigate" node, an order, and one key has
+## one translation in the whole game (rule L8) -- here it is what the guard is
+## doing, "investigando".
+const STATE_WORDS: Dictionary = {  # shown through tr()
+	PATROL: "patrol", INVESTIGATE: "investigating", ALERT: "alert"}
 
 ## Suspicion at which a patrolling guard goes to look.
 const INVESTIGATE_AT: float = 40.0
@@ -157,6 +161,6 @@ func _explain(seen: bool, noise: float) -> String:
 		line = "{state} · suspicion {before} → {after} · sees you"  # shown through tr()
 	elif noise > 0.0:
 		line = "{state} · suspicion {before} → {after} · heard {loudness}%"  # shown through tr()
-	return TranslationServer.translate(line).format({state = TranslationServer.translate(state),
+	return TranslationServer.translate(line).format({state = TranslationServer.translate(STATE_WORDS[state]),
 			before = "%.0f" % suspicion.level, after = "%.0f" % suspicion.alarm,
 			loudness = "%.0f" % (noise * 100.0)})

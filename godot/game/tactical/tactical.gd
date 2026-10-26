@@ -488,13 +488,13 @@ func _refuse(reason: String) -> void:
 
 # The board says a cell is blocked; the game knows what it is blocked *by*.
 func _explained(refusal: String, cell: Vector2i) -> String:
-	if not refusal.ends_with("is blocked") or not state.graph.contains(cell):  # not shown
+	if not refusal.ends_with("is blocked") or not state.graph.contains(cell):  # not shown: the board's English, compared
 		return refusal
 	match TacticalScenario.MAP[cell.y][cell.x]:
 		TacticalRules.WATER:
-			return tr("{refusal}: water, which only waders cross").format({refusal = refusal})
+			return tr("{refusal}: water, which only waders cross").format({refusal = TacticalRefusal.words(refusal)})
 		TacticalRules.ROCK:
-			return tr("{refusal}: rock, which nothing crosses").format({refusal = refusal})
+			return tr("{refusal}: rock, which nothing crosses").format({refusal = TacticalRefusal.words(refusal)})
 	return refusal
 
 

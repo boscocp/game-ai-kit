@@ -141,8 +141,7 @@ func controller_name() -> String:
 
 ## What decides, in one line for the screen.
 func describe() -> String:
-	return tr("the learned policy: the combat model's p(win) sets a walker out for a fight at {commit}, and it gives that fight up at {give_up} or below; a walker beside its side's attack joins it; it retreats only when the enemy is far stronger near it; the capture model picks the point; builds and sieges by the rules").format({
-		commit = "%.2f" % COMMIT_AT, give_up = "%.2f" % GIVE_UP_AT})
+	return tr("the learned policy: the combat model's p(win) sets a walker out for a fight at {commit}, and it gives that fight up at {give_up} or below; a walker beside its side's attack joins it; it retreats only when the enemy is far stronger near it; the capture model picks the point; builds and sieges by the rules").format({commit = "%.2f" % COMMIT_AT, give_up = "%.2f" % GIVE_UP_AT})
 
 
 ## A walk decided by the order the header gives: a fight, a point held, a
@@ -169,8 +168,7 @@ func _walk_at_a_goal(state: BoardState, unit: Unit, walks: Dictionary) -> Tactic
 	var unit_id: int = unit.id
 	if unit.cell in TacticalScenario.POINTS:
 		_claim(state, unit.cell)
-		return TacticalDecision.hold(unit_id, tr("stays on the point at {cell}: a point left is a point not paid for (a rule, not the model)").format({
-			cell = unit.cell}), unit.cell)
+		return TacticalDecision.hold(unit_id, tr("stays on the point at {cell}: a point left is a point not paid for (a rule, not the model)").format({cell = unit.cell}), unit.cell)
 	var contested: Vector2i = _point_red_holds(state)
 	if contested != Vector2i(-1, -1) and _claim(state, contested):
 		return _walk_at(state, unit, walks, contested,
@@ -207,8 +205,7 @@ func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
 	# The blow ends the fight one way or the other, and the way there with it.
 	_committed.erase(unit_id)
 	_attacked_from[unit_id] = unit.cell
-	return TacticalDecision.strike(unit_id, best, tr("attacks {target} at {cell}: {why}").format({
-		target = TacticalStatus.the_piece(best.type.type_name), cell = best.cell, why = why}))
+	return TacticalDecision.strike(unit_id, best, tr("attacks {target} at {cell}: {why}").format({target = TacticalStatus.the_piece(best.type.type_name), cell = best.cell, why = why}))
 
 
 # Why `unit` fights `enemy` at `chance`, or "" when it should not: above the
@@ -216,13 +213,11 @@ func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
 # bar, or beside a fight another walker of its side started this turn.
 func _why_fight(unit: Unit, enemy: Unit, chance: float) -> String:
 	if _committed.get(unit.id, -1) == enemy.id and chance > GIVE_UP_AT:
-		return tr("p(win) {chance}, above the give-up bar {bar}: it set out for this {piece} and keeps on").format({
-			chance = "%.2f" % chance, bar = "%.2f" % GIVE_UP_AT, piece = TacticalStatus.piece(enemy.type.type_name)})
+		return tr("p(win) {chance}, above the give-up bar {bar}: it set out for this {piece} and keeps on").format({chance = "%.2f" % chance, bar = "%.2f" % GIVE_UP_AT, piece = TacticalStatus.piece(enemy.type.type_name)})
 	if chance >= COMMIT_AT:
 		return tr("p(win) {chance}, at or above the commit bar {bar}").format({chance = "%.2f" % chance, bar = "%.2f" % COMMIT_AT})
 	if _beside_a_fight(unit):
-		return tr("p(win) {chance}, under its bar, but another walker of its side attacked within {cells} cells this turn and it joins in rather than leave (this board's rule, after Wesnoth's attack_close)").format({
-			chance = "%.2f" % chance, cells = JOIN_RADIUS})
+		return tr("p(win) {chance}, under its bar, but another walker of its side attacked within {cells} cells this turn and it joins in rather than leave (this board's rule, after Wesnoth's attack_close)").format({chance = "%.2f" % chance, cells = JOIN_RADIUS})
 	return ""
 
 
@@ -384,10 +379,8 @@ func _walk_at(state: BoardState, unit: Unit, walks: Dictionary, point: Vector2i,
 	var best: Vector2i = _nearest_walk_to(state, unit, walks, point)
 	if best == unit.cell:
 		_claims[point] -= 1
-		return _fallback(state, unit, walks, tr("no walk this turn brings it nearer the point at {point}, which it wants because {why}").format({
-			point = point, why = why}))
-	return TacticalDecision.walk(unit.id, walks[best], tr("walks to {walk}, towards the point at {point}: {why}").format({
-		walk = best, point = point, why = why}), best)
+		return _fallback(state, unit, walks, tr("no walk this turn brings it nearer the point at {point}, which it wants because {why}").format({point = point, why = why}))
+	return TacticalDecision.walk(unit.id, walks[best], tr("walks to {walk}, towards the point at {point}: {why}").format({walk = best, point = point, why = why}), best)
 
 
 # The first point red holds, or (-1, -1).
@@ -412,8 +405,7 @@ func _points_nobody_of_ours_is_on(state: BoardState) -> Array[Vector2i]:
 # Why the first point: what the capture model said of it, and of the next.
 static func _ranking(ranked: Array[Dictionary]) -> String:
 	if ranked.size() > 1:
-		return TranslationServer.translate("the capture model says {turns} turns, against {other} for {cell}").format({
-			turns = "%.1f" % ranked[0]["turns"], other = "%.1f" % ranked[1]["turns"], cell = ranked[1]["cell"]})
+		return TranslationServer.translate("the capture model says {turns} turns, against {other} for {cell}").format({turns = "%.1f" % ranked[0]["turns"], other = "%.1f" % ranked[1]["turns"], cell = ranked[1]["cell"]})
 	return TranslationServer.translate("the capture model says {turns} turns").format({turns = "%.1f" % ranked[0]["turns"]})
 
 

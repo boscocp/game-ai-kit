@@ -25,8 +25,8 @@ calm {strength},calmo {strength}
 wary {strength},desconfiado {strength}
 alarmed {strength},alarmado {strength}
 patrol,ronda
-investigate,investigar
 alert,alerta
 {state} · suspicion {before} → {after} · nothing,{state} · suspeita {before} → {after} · nada
 {state} · suspicion {before} → {after} · sees you,{state} · suspeita {before} → {after} · vê você
 {state} · suspicion {before} → {after} · heard {loudness}%,{state} · suspeita {before} → {after} · ouviu {loudness}%
+investigating,investigando

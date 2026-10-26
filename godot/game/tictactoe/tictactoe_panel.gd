@@ -152,7 +152,10 @@ static func _last_draw_line(overlay: Dictionary) -> String:
 # several are as good -- or when every move is as bad.
 static func _perfect_line(perfect: Dictionary) -> String:
 	var values: Dictionary = perfect["values"]
-	var who: String = "MENACE" if perfect["for"] == TicTacToeExample.MENACE_SIDE else TranslationServer.translate("you")
+	# "MENACE" is a key too: Portuguese says "o MENACE", as it does everywhere else.
+	var who: String = TranslationServer.translate("you")
+	if perfect["for"] == TicTacToeExample.MENACE_SIDE:
+		who = TranslationServer.translate("MENACE")
 	var best: Array = perfect["best"]
 	var outcome: String = TicTacToeSolver.words(values[best[0]])
 	if best.size() == values.size():

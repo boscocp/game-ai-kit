@@ -45,7 +45,7 @@ static func text(state: BoardState, in_hand: Unit, refusal: String, news: String
 	if news != "":
 		lines.append("\n" + news)
 	if refusal != BoardState.LEGAL:
-		lines.append("\n" + TranslationServer.translate("refused: {why}").format({why = refusal}))
+		lines.append("\n" + TranslationServer.translate("refused: {why}").format({why = TacticalRefusal.words(refusal)}))
 	return "\n".join(lines)
 
 

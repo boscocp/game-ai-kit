@@ -45,13 +45,31 @@ teaches: none
   `docs/techniques/glossary.pt-BR.md`), and the `##` help of `make`
   targets. Breadth-first and depth-first are shown as "busca em largura" and
   "em profundidade", which the glossary allows.
+- Code stays English, the owner's rule (2026-10-26): identifiers, and the
+  docstrings in the code. Only the documentation and the prose on screen are
+  translated. So a planner's identifiers stay as the code writes them even
+  in pt-BR: STRIPS step names (`cross_the_river_ram`, `build_ram`), facts
+  (`point_free`, `in_danger`), the guide's name (`h_max`), GOAP's goal name
+  (`pressure`). A term with no good translation stays English and is defined
+  in the pt-BR glossary.
+- A refusal the board writes. `BoardState` words its refusals in English,
+  and the logic, the RTS and the tests read those words, so they are not
+  translated where they are written. `TacticalRefusal` copies the shapes the
+  board writes as keys (`{kind} needs the {upgrade} upgrade first`) and
+  translates a refusal where it reaches the screen; a test reads
+  `board_state.gd` and holds every refusal it can return to one of the
+  shapes, and `test-locale-screen` provokes one (T79's review).
 - A Portuguese line is longer. `make test-demo-overlays` steps every example
   in English and again in pt-BR, and fails a legend line that runs off the
   window -- two of the search demo's did, and were shortened.
 - Every table is loaded into the one `TranslationServer`, so a key has one
   translation in the whole game, whichever module's table holds it. T79
   found the stealth guard's "investigate" and the behaviour tree's said two
-  things; rule L8 refuses that now.
+  things; rule L8 refuses that now. A context cannot keep two meanings
+  apart either, while one table holds the key without one (L6). So the
+  tactical match shows the controller "learned" as "learned policy": the
+  roster and the league still call it "learned", and checkers' "learned"
+  (its weights, "aprendidos") already holds that key.
 - Names the code shows (T79). A brain's states, a tree's nodes, a deed's
   name (`walk_round`), a goal's fact (`player_caught`) are identifiers the
   logic compares, so they stay English in the code and are translated

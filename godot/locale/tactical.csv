@@ -74,9 +74,9 @@ no arrow fired,nenhuma seta disparou
 state machine,máquina de estados
 in danger and wounded,em perigo e ferida
 an enemy walker is near its workshop,uma unidade inimiga está perto da sua oficina
-a piece it beats is in reach,uma peça que ela vence está ao alcance
+a piece it beats is in reach,uma peça que ela bate está ao alcance
 a control point is free,um ponto de controle está livre
-nothing it beats is in reach,nada que ela vence está ao alcance
+nothing it beats is in reach,nada que ela bate está ao alcance
 no point is free,nenhum ponto está livre
 home is clear,a base está livre
 out of danger,fora de perigo
@@ -110,9 +110,9 @@ the forge,a forja
 "plan step {step} of {steps}, {name}","passo {step} de {steps} do plano, {name}"
 {reason} ({why}: the rules decide),{reason} ({why}: as regras decidem)
 planner,planejador
-"rules, not a plan: build what beats the most enemy pieces, walk every unit at the enemy workshop","regras, não um plano: construir o que vence mais peças inimigas, mandar toda unidade à oficina inimiga"
+"rules, not a plan: build what beats the most enemy pieces, walk every unit at the enemy workshop","regras, não um plano: construir o que bate mais peças inimigas, mandar toda unidade à oficina inimiga"
 "builds {piece} at {cell}: the enemy's pieces shut every way its walkers have, and {piece} still gets there","constrói {piece} em {cell}: as peças inimigas fecham todo caminho das suas unidades, e {piece} ainda chega lá"
-"builds {piece} at {cell}: it beats {count} enemy piece(s), {beaten}","constrói {piece} em {cell}: vence {count} peça(s) inimiga(s), {beaten}"
+"builds {piece} at {cell}: it beats {count} enemy piece(s), {beaten}","constrói {piece} em {cell}: bate {count} peça(s) inimiga(s), {beaten}"
 the enemy's pieces stand on every way to the enemy workshop this turn,as peças inimigas estão em todo caminho até a oficina inimiga neste turno
 {piece} at {cell},{piece} em {cell}
 "stays in reach of {aim}, to attack it","fica onde alcança {aim}, para atacar"
@@ -121,10 +121,10 @@ no walk this turn brings it nearer {aim},"nenhuma caminhada neste turno a aproxi
 "walks to {cell}, towards {piece} at {enemy_cell}: {why}, so it goes for the nearest enemy piece it can (a fallback rule)","anda até {cell}, buscando {piece} em {enemy_cell}: {why}, então vai à peça inimiga mais próxima que puder (uma regra de reserva)"
 stays: no walk this turn brings it nearer its goal or any enemy piece -- {why},fica: nenhuma caminhada neste turno a aproxima do objetivo ou de alguma peça inimiga -- {why}
 builds nothing: {why},não constrói nada: {why}
-"builds {piece} at {cell}: nothing it can build beats an enemy piece, and money banked is a piece not on the board (spend first)","constrói {piece} em {cell}: nada que pode construir vence uma peça inimiga, e dinheiro guardado é peça fora do tabuleiro (gastar primeiro)"
-"builds {piece} at {cell}: it beats {count} enemy piece(s), {beaten} -- none of what beats them can get to the enemy workshop now, so it holds the bank until the way opens (spend first)","constrói {piece} em {cell}: vence {count} peça(s) inimiga(s), {beaten} -- nada do que as vence chega à oficina inimiga agora, então segura o caixa até o caminho abrir (gastar primeiro)"
+"builds {piece} at {cell}: nothing it can build beats an enemy piece, and money banked is a piece not on the board (spend first)","constrói {piece} em {cell}: nada que pode construir bate uma peça inimiga, e dinheiro guardado é peça fora do tabuleiro (gastar primeiro)"
+"builds {piece} at {cell}: it beats {count} enemy piece(s), {beaten} -- none of what beats them can get to the enemy workshop now, so it holds the bank until the way opens (spend first)","constrói {piece} em {cell}: bate {count} peça(s) inimiga(s), {beaten} -- nada do que as bate chega à oficina inimiga agora, então segura o caixa até o caminho abrir (gastar primeiro)"
 attacks the enemy workshop at {cell}: destroying it wins,ataca a oficina inimiga em {cell}: destruí-la vence
-"attacks {target} at {cell}: {mine} beats {theirs}, by the counter table","ataca {target} em {cell}: {mine} vence {theirs}, pela tabela de vantagens"
+"attacks {target} at {cell}: {mine} beats {theirs}, by the counter table","ataca {target} em {cell}: {mine} bate {theirs}, pela tabela de vantagens"
 nothing stops it: it can build,nada impede: pode construir
 "walks to {cell}, towards {aim}","anda até {cell}, buscando {aim}"
 "walks to {cell}, towards {aim}, crossing the bridge","anda até {cell}, buscando {aim}, pela ponte"
@@ -215,7 +215,7 @@ nothing in hand,nada na mão
 nothing,nada
 does not move,não se move
 movement left {points},movimento restante {points}
-in hand: {piece} (unit {unit})  ·  health {health}  ·  {motion}  ·  reach {reach}  ·  beats {beats},na mão: {piece} (unidade {unit})  ·  vida {health}  ·  {motion}  ·  alcance {reach}  ·  vence {beats}
+in hand: {piece} (unit {unit})  ·  health {health}  ·  {motion}  ·  reach {reach}  ·  beats {beats},na mão: {piece} (unidade {unit})  ·  vida {health}  ·  {motion}  ·  alcance {reach}  ·  bate {beats}
 click one of your pieces.,clique numa peça sua.
 press 1-5 to build: {prices}.,aperte 1-5 para construir: {prices}.
 press 1-5 to build: {prices}. U buys the forge ({cost}).,aperte 1-5 para construir: {prices}. U compra a forja ({cost}).
@@ -224,7 +224,7 @@ this unit has no movement left. Click another of your pieces.,esta unidade não 
 "click a lit cell to walk there, and the unit is spent until your next turn; W has it wait where it is. A step costs the number on the cell, or 1.","clique numa casa acesa para andar até lá, e a unidade fica gasta até o seu próximo turno; W a faz esperar onde está. Um passo custa o número da casa, ou 1."
 "{piece} at {cell}, health {health}","{piece} em {cell}, vida {health}"
 "{piece} at {cell}, health {health} (you beat it)","{piece} em {cell}, vida {health} (vantagem sua)"
-"{piece} at {cell}, health {health} (it beats you)","{piece} em {cell}, vida {health} (vantagem dele)"
+"{piece} at {cell}, health {health} (it beats you)","{piece} em {cell}, vida {health} (vantagem inimiga)"
 "click an enemy to attack it, once a turn: {targets}","clique num inimigo para atacá-lo, uma vez por turno: {targets}"
 the runner,o corredor
 the shield,o escudo
@@ -251,7 +251,7 @@ a workshop,uma oficina
 {winner} wins on score after {rounds} rounds: {scores}.  R starts again.,as {winner} vencem por pontos depois de {rounds} rodadas: {scores}.  R recomeça.
 nothing pressing,nada urgente
 the enemy walker nearest its workshop,a unidade inimiga mais perto da sua oficina
-"{prey} at {cell}, which {piece} beats","{prey} em {cell}, que {piece} vence"
+"{prey} at {cell}, which {piece} beats","{prey} em {cell}, que {piece} bate"
 "stays in reach of {aim}, to strike it","fica onde alcança {aim}, para golpear"
 "walks to {walk}, in reach of {aim}","anda até {walk}, de onde alcança {aim}"
 "{what}, {piece} at {cell}","{what}, {piece} em {cell}"
@@ -260,8 +260,8 @@ stays: no walk this turn brings it nearer {aim},"fica: nenhuma caminhada neste t
 "stays on the point at {cell}, which pays while it holds it","fica no ponto em {cell}, que paga enquanto ela o segura"
 "no walk this turn brings it nearer the point at {cell}, so by the rules: {reason}","nenhuma caminhada neste turno a aproxima do ponto em {cell}, então pelas regras: {reason}"
 "walks to {walk}, towards the point at {cell}","anda até {walk}, rumo ao ponto em {cell}"
-stays: no walk this turn leaves fewer of what beats it in reach ({count}),fica: nenhuma caminhada neste turno deixa menos do que a vence ao alcance ({count})
-"walks back to {walk}, where {count} of what beats it could strike","volta até {walk}, onde {count} do que a vence poderia golpear"
+stays: no walk this turn leaves fewer of what beats it in reach ({count}),fica: nenhuma caminhada neste turno deixa menos do que a bate ao alcance ({count})
+"walks back to {walk}, where {count} of what beats it could strike","volta até {walk}, onde {count} do que a bate poderia golpear"
 siege,sitiar
 hunt,caçar
 defend,defender
@@ -273,3 +273,19 @@ the tree answered with {branch},a árvore respondeu com {branch}
 the tree answered nothing,a árvore não respondeu nada
 behaviour tree,behaviour tree
 learned policy,política aprendida
+no unit with id {id} is on the board,nenhuma unidade com id {id} está no tabuleiro
+"unit {id} belongs to faction {owner}, and faction {mover} is to move","a unidade {id} é da facção {owner}, e é a vez da facção {mover}"
+unit {id} is a {kind} and cannot move,a unidade {id} ({kind}) não se move
+the move costs {cost} and unit {id} has {left} movement left,o movimento custa {cost} e a unidade {id} tem {left} de movimento
+the side to move has no building with id {id},o lado da vez não tem construção com id {id}
+the order names no unit type,a ordem não diz o tipo de unidade
+unit {id} does not produce {kind},a unidade {id} não produz {kind}
+{kind} needs the {upgrade} upgrade first,"{kind}: antes, compre a melhoria {upgrade}"
+{kind} costs {cost} and the side to move has {funds},"{kind}: custa {cost}, e o lado da vez tem {funds}"
+the side to move already owns {upgrade},o lado da vez já tem a melhoria {upgrade}
+"{step} does not follow {previous}; a step is one cell, no diagonals","{step} não vem depois de {previous}; um passo é uma casa, sem diagonais"
+{step} is off the board,a casa {step} está fora do tabuleiro
+{step} is blocked,a casa {step} está bloqueada
+{step} is occupied by unit {id},a casa {step} está ocupada pela unidade {id}
+{cell} is not next to unit {id},a casa {cell} não fica ao lado da unidade {id}
+a {kind} cannot stand on {cell},{kind} não pode ficar na casa {cell}
