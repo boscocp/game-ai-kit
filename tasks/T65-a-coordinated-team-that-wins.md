@@ -264,15 +264,17 @@ proposals 1 and 2 together, measured them, then added 3 and measured
 again; the outcomes are written beside each prediction above. **Step 4
 applied: no change from the reading made the T65 claim true.** Nothing
 was tuned to reach it. Shown the result, the owner chose on 2026-10-26 to
-close T65 as measured (option a): **the three proposals were reverted,
+close T65 as measured (the owner's "close as measured" choice -- not the
+option (a) above, which was to change retreat): **the three proposals were reverted,
 and the match plays as it did before wave 97.**
 
-**Where the code is.** The measured commits were `6523962` (1 and 2, after
-a claims fault was fixed) and `8739ed5` (with 3), on the PR #40 branch
-`wave/97-a-team-that-falls-back` before it was rebased; the branch is
-deleted after merge and the squash drops them, so this file and
-`docs/godot/botmatch.md` are the record. GitHub's timeline of PR #40 shows
-the force-push from them. What was built, in short:
+**Where the code is.** Every hash this file cites -- `581820e` (the baseline run, and the source of the dying table), `6523962` (1 and 2, after a claims fault was fixed), `8739ed5` (with 3) and `c5a995a` (the reverted match) --
+is a commit of PR #40's branch `wave/97-a-team-that-falls-back`, the first
+three from before its rebase. None survives the squash merge, and the
+branch is deleted after it, so this file and `docs/godot/botmatch.md` are
+the record; GitHub's timeline of PR #40 shows the force-push from them. The
+reverted state on main is the squash-merge commit of PR #40. What was
+built, in short:
 
 - *where*: T68's hiding query asked within `hide_metres` of the squad's
   point (`MatchHealth.hiding_place` with a centre), holding when none;

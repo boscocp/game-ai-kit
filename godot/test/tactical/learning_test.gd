@@ -111,6 +111,21 @@ func test_a_file_with_no_conventions_is_refused() -> void:
 		"W6 the file publishes no feature_conventions block")
 
 
+func test_a_refusal_is_shown_in_the_language_chosen_and_keeps_its_code() -> void:
+	# The skirmish's panel shows why blue cannot think: the prose is
+	# translated, the W code and the source are not, and `error` stays the
+	# English the Python side compares.
+	var data: Dictionary = SOUND.duplicate(true)
+	data.erase("feature_conventions")
+	var refused: TacticalWeights = TacticalWeights.from_dictionary(data, "the test")
+	assert_str(refused.error_shown()).is_equal(refused.error)
+	TranslationServer.set_locale("pt_BR")
+	var shown: String = refused.error_shown()
+	TranslationServer.set_locale("en")
+	assert_str(shown).starts_with("W6 o arquivo não publica").ends_with("(the test)")
+	assert_str(refused.error).starts_with("W6 the file publishes no feature_conventions block")
+
+
 func test_a_radius_of_zero_is_refused() -> void:
 	# Zero is what a missing key reads as the moment somebody writes
 	# `get(name, 0)` on the other side, and it is a radius that counts nobody.

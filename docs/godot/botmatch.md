@@ -345,9 +345,10 @@ page's T65 section.
 The owner picked T65's recommended proposals on 2026-10-26 -- "1+2 depois
 3" -- and wave 97 built and measured them. They did not make a team that
 falls back win, and the owner closed T65 as measured: **all three were
-reverted, and the match plays as above.** This is the record; the code
-was at `6523962` (1 and 2) and `8739ed5` (with 3) on PR #40's branch
-before its rebase, which the squash merge drops.
+reverted, and the match plays as above.** This is the record. Every
+hash here -- `581820e` (the baseline run, and the source of the dying table), `6523962` (1 and 2, after a claims fault was fixed), `8739ed5` (with 3) and `c5a995a` (the reverted match) -- is a commit of PR #40's branch, the first
+three from before its rebase; none survives the squash merge. The
+reverted state on main is the squash-merge commit of PR #40.
 
 **What was tried.**
 
@@ -445,9 +446,18 @@ rest moved, because a bot no longer claims a hiding place over a
 teammate: everything -5.7 +- 20.4 s, 11-9 (was +10.0 +- 22.7, 12-8; the
 mirror fair, 0.3 errors); no commander +5.2 +- 13.5, 11-9 (-4.1); no
 retreat +184.5 +- 10.1, 20-0 (+186.7), 8.4 errors ahead of everything;
-heals below half -38.9 +- 17.0 (-53.1); the yards' mirror +45.0 +- 31.4,
-13-7 (+47.6), fair. Today's retreat: 133.1 fall-backs a match, a held
-point lost within 8 s after 95 of 293 (0.324).
+heals below half -38.9 +- 17.0 (-53.1); always the head -187.0 (-170.9);
+the yards' mirror +45.0 +- 31.4, 13-7 (+47.6), fair. Today's retreat:
+133.1 fall-backs a match, a held point lost within 8 s after 95 of 293
+(0.324).
+
+The no-commander comparison flipped sign with the guard: everything is
+now 0.4 errors *behind* no commander, where it was 0.5 ahead. What this
+page says of the commander's help -- suggested at best -- is weaker still:
+on this run it is not suggested at all. The numbers in
+`botmatch_effects.gd`'s header (its line 105 and round it) and the T51
+and T68 tables above predate the guard; they are to be refreshed at the
+next effects run.
 
 ## Running the effects gate in shards (T72)
 
