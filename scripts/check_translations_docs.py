@@ -14,9 +14,10 @@ Which pages must exist: one per module of kind `technique` in
 `modules/*.json`, the techniques that live in Python and a demo only
 (`docs/techniques/non_module_techniques.json`), and `ai_core`, the kernel
 every addon stands on. `board` is the examples' own kernel and has none
-(ADR 0021). Until T75 writes the rest, a page may be named in
-`STILL_TO_WRITE` below instead -- and a page named there that exists is a
-finding too, so the list can only shrink.
+(ADR 0021). A page may be named in `STILL_TO_WRITE` below instead of
+written -- T74 used it for the pages T75 then wrote, and T75 emptied it --
+and a page named there that exists is a finding too, so the list can only
+shrink.
 
 How the two languages are compared
 ----------------------------------
@@ -90,13 +91,11 @@ OTHER_PAGES = {"glossary.pt-BR.md"}
 # on purpose -- it is the examples' kernel, not something a reader copies.
 KERNEL_PAGES = ("ai_core",)
 
-# T75 writes these; until then they are declared rather than missing. Remove
-# a name the day its page lands -- the gate says so if you forget.
-STILL_TO_WRITE = (
-    "ai_adversarial", "ai_fuzzy", "ai_learning", "ai_opponent", "ai_perception",
-    "ai_planning", "ai_rts_core", "ai_teamwork",
-    "menace", "learned_evaluation", "behaviour_cloning", "racing_driver",
-)
+# Pages declared rather than missing. Empty since T75 wrote the last of
+# them: from here a technique without a page in both languages is a finding.
+# A new technique module may be named here for the wave that writes its
+# page, and taken off the day it lands -- the gate says so if you forget.
+STILL_TO_WRITE: tuple[str, ...] = ()
 
 # The sections every technique page has, by anchor, in this order (step 2).
 SHAPE = ("what", "when-not", "watch", "in-this-kit", "your-project", "deeper")
@@ -539,7 +538,7 @@ def self_test() -> int:
         # name on the list that is no technique at all.
         failures += expect_run("a written page still on the list", root / "good", 1, "D11", ("ai_x",))
         failures += expect_run("a list naming no technique", root / "good", 1, "D11", ("ai_gone",))
-        # The same page, missing and declared: allowed until T75.
+        # The same page, missing and declared: allowed while it is on the list.
         repo = build(root, "declared", {key: value for key, value in good_pages().items() if "ai_x" not in key})
         failures += expect_run("a missing page on the list", repo, 0, "", ("ai_x",))
     script = pathlib.Path(__file__).resolve()

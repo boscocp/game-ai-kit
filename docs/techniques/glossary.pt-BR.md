@@ -45,3 +45,24 @@ que você vai digitar.
 | *minimax*, *alpha-beta* | a busca dos jogos de dois jogadores, e o seu corte |
 | *fuzzy* | lógica *fuzzy* (nebulosa): verdade em graus, não só sim ou não |
 | *behaviour cloning* | aprender a jogar copiando partidas gravadas de uma pessoa |
+| *ply* (*plies*) | a jogada de um só jogador; duas fazem uma rodada. É a unidade de profundidade do *minimax* |
+| *expectiminimax* | o *minimax* com nós de sorte, para jogos com dados |
+| *n-gram* | uma tabela do que veio depois de cada sequência curta de ações |
+| *prior*, *decay* | as contagens imaginárias com que toda ação começa, e o quanto uma contagem antiga pesa diante de uma nova |
+| *feature* | um número (ou uma palavra) medido do jogo que um modelo lê; ninguém diz "característica" numa conversa sobre aprendizado de máquina |
+| *bias* | o termo constante de um modelo linear, o `b` de `w·x + b` |
+| *self-play* | o programa jogando contra si mesmo para gerar partidas |
+| *ghost*, *clone* | os dois adversários do *behaviour cloning*: a tabela consultada e o modelo ajustado |
+| *utility* | dar nota a todas as ações de uma vez e ficar com a maior; "IA de *utility*" é o nome corrente |
+| *bot* | um jogador controlado pela IA num jogo de tiro |
+| *stealth* | o gênero de jogos de infiltração, em que o jogador evita ser visto |
+| *awareness* | o quanto um guarda está atento a um estímulo, de calmo a alerta |
+| *raycast* | um raio lançado pela física da *engine* para saber se algo está no caminho |
+| *engine* | o motor do jogo, aqui o Godot |
+| *designer* | quem desenha o jogo e ajusta os números; "projetista" quase não se usa |
+| *spatial hash*, *quadtree* | duas formas de achar quem está perto de um ponto sem perguntar a todo mundo |
+| *frame budget* | quanto de um quadro cada parte do jogo pode ocupar |
+| *pure pursuit* | perseguir um ponto a uma distância fixa à frente no caminho |
+| *lookahead* | a distância à frente para onde o piloto mira |
+| *rubber band* | a trapaça de acelerar o carro que ficou para trás; o piloto deste kit não usa |
+| *string*, *array* | os tipos de texto e de lista; ficam em inglês como no código |
