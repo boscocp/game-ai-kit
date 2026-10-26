@@ -43,6 +43,9 @@ var cooldown: int = 0
 var complete: bool = true
 ## What a building has been told to train, first first.
 var queue: Array[String] = []
+## True for a tower whose `RtsKinds.ARM` is bought and done: it strikes. On
+## the unit, so a tower lost loses it, and one still arming is not armed.
+var armed: bool = false
 
 
 func _init(unit_id: int, unit_side: int, unit_kind: String, at: Vector2, unit_health: int) -> void:
@@ -62,4 +65,4 @@ func cell() -> Vector2i:
 ## the world is taken over, and what a snapshot copies.
 func state() -> Array:
 	return [id, side, kind, position.x, position.y, health, order, goal.x, goal.y, target_id,
-		carrying, carried, progress, cooldown, complete, queue.duplicate()]
+		carrying, carried, progress, cooldown, complete, queue.duplicate(), armed]

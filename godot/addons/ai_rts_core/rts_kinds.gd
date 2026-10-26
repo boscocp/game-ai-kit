@@ -9,7 +9,9 @@
 ## because a population cap that forces a building lengthens the build
 ## order without a new rule; and T10's tower that sees, which buys vision
 ## without spending a unit. T19 started with a smaller table and said T20
-## would replace it; this is that table.
+## would replace it; this is that table. T56 added the one upgrade, `ARM`:
+## a tower bought a gun, priced and timed like training, so the build order
+## has a purchase that competes with a squad for the same ore and magma.
 ##
 ## Speeds are cells a second; times are ticks, at `RtsWorld.TICKS_PER_SECOND`.
 ## Damage was raised half again after the owner played it: two shields took
@@ -18,7 +20,8 @@
 ## `test/rts/rts_match.gd`, not derived; change one and run it.
 ##
 ## When not to use it: a game whose kinds differ in more than numbers --
-## abilities, upgrades, armour types. Those are code, not a row.
+## abilities, a tech tree, armour types. Those are code, not a row; the one
+## upgrade here is a row only because it is bought like a unit.
 class_name RtsKinds
 extends RefCounted
 
@@ -33,6 +36,8 @@ const DEPOT: String = "depot"
 const TOWER: String = "tower"
 const ROCKS: String = "rocks"
 const VENT: String = "vent"
+## The tower's upgrade: not a unit, a purchase a tower queues like one.
+const ARM: String = "arm"
 
 ## The two resources, in the order every list of them keeps.
 const ORE: String = "ore"
@@ -49,7 +54,9 @@ const FIGHTERS: Array[String] = [RUNNER, SHIELD, MORTAR]
 ## unit takes; provides: room a building gives; needs: a building that must
 ## stand, complete, before this may be built or trained; beats: the kinds it
 ## strikes twice as hard; yields: the resource a deposit holds, its health
-## being what is left in it.
+## being what is left in it; upgrades: the kind a row that is no unit at
+## all is bought at, which keeps it -- `ARM`'s damage, reach and cooldown
+## are the armed tower's strike.
 const TABLE: Dictionary = {
 	WORKER: {"mobile": true, "health": 40, "speed": 2.0, "sight": 5.0, "cost": {ORE: 50}, "ticks": 300,
 		"damage": 3, "reach": 1.1, "cooldown": 60, "supply": 1},
@@ -66,7 +73,10 @@ const TABLE: Dictionary = {
 	LAB: {"mobile": false, "health": 500, "sight": 5.0, "cost": {ORE: 150, MAGMA: 100}, "ticks": 1200,
 		"needs": BARRACKS},
 	DEPOT: {"mobile": false, "health": 300, "sight": 4.0, "cost": {ORE: 100}, "ticks": 600, "provides": 8},
-	TOWER: {"mobile": false, "health": 300, "sight": 11.0, "cost": {ORE: 75, MAGMA: 25}, "ticks": 600},
+	TOWER: {"mobile": false, "health": 300, "sight": 11.0, "cost": {ORE: 75, MAGMA: 25}, "ticks": 600,
+		"trains": [ARM]},
+	ARM: {"mobile": false, "health": 0, "sight": 0.0, "cost": {ORE: 100, MAGMA: 75}, "ticks": 600,
+		"damage": 10, "reach": 6.0, "cooldown": 45, "upgrades": TOWER},
 	ROCKS: {"mobile": false, "health": 2500, "sight": 0.0, "yields": ORE},
 	VENT: {"mobile": false, "health": 2000, "sight": 0.0, "yields": MAGMA},
 }
@@ -75,7 +85,7 @@ const TABLE: Dictionary = {
 ## what makes its kind different, so the table reads as the game's design.
 const DEFAULTS: Dictionary = {"speed": 0.0, "cost": {}, "ticks": 0, "damage": 0, "reach": 0.0,
 	"cooldown": 0, "siege": false, "trains": [], "supply": 0, "provides": 0, "needs": "", "beats": [],
-	"yields": ""}
+	"yields": "", "upgrades": ""}
 
 ## Ticks a worker spends filling up at a deposit, and what it then carries.
 const GATHER_TICKS: int = 120
@@ -126,7 +136,13 @@ static func sight(kind: String, complete: bool) -> float:
 
 ## True for the kinds that stand still and block their cell.
 static func is_building(kind: String) -> bool:
-	return not TABLE[kind]["mobile"]
+	return not TABLE[kind]["mobile"] and not is_upgrade(kind)
+
+
+## True for a row that is bought at a building and changes it, rather than
+## standing anywhere itself: `ARM`.
+static func is_upgrade(kind: String) -> bool:
+	return of(kind, "upgrades") != ""
 
 
 ## True for a deposit: something that belongs to nobody and is gathered.

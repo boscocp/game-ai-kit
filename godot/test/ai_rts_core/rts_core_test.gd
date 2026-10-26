@@ -477,3 +477,55 @@ func test_a_mortar_does_not_fire_through_a_wall_in_reach() -> void:
 	for _tick: int in range(30):
 		world.step()
 	assert_int(shield.health).is_equal(RtsKinds.of(RtsKinds.SHIELD, "health"))
+
+
+func test_a_tower_shoots_only_once_armed_and_arms_once() -> void:
+	# An enemy worker three cells off, well inside the gun's reach: a worker
+	# stands idle, so nothing but the tower can hurt it.
+	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var tower: RtsUnit = world.add_unit(RtsKinds.TOWER, 0, Vector2i(3, 5))
+	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 1, Vector2i(6, 5))
+	var full: int = RtsKinds.of(RtsKinds.WORKER, "health")
+	for _tick: int in range(60):
+		world.step()
+	assert_int(worker.health).is_equal(full)
+	world.set_funds(0, 500, 500)
+	assert_str(world.command(0, RtsCommand.train(tower.id, RtsKinds.ARM))).is_empty()
+	assert_str(world.command(0, RtsCommand.train(tower.id, RtsKinds.ARM))).contains("already arming")
+	# Arming is not armed: one tick short of done, still nothing.
+	for _tick: int in range(int(RtsKinds.of(RtsKinds.ARM, "ticks")) - 1):
+		world.step()
+	assert_bool(tower.armed).is_false()
+	assert_int(worker.health).is_equal(full)
+	for _tick: int in range(RtsOrders.LOOK_EVERY + 1):
+		world.step()
+	assert_bool(tower.armed).is_true()
+	assert_int(worker.health).is_less(full)
+	assert_str(world.command(0, RtsCommand.train(tower.id, RtsKinds.ARM))).contains("already armed")
+
+
+func test_an_armed_tower_does_not_fire_through_a_wall() -> void:
+	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	for row: int in range(4, 7):
+		world.add_wall(Vector2i(5, row))
+	var tower: RtsUnit = world.add_unit(RtsKinds.TOWER, 0, Vector2i(3, 5))
+	tower.armed = true
+	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 1, Vector2i(7, 5))
+	assert_object(RtsOrders.tower_target(world, tower)).is_null()
+	for _tick: int in range(120):
+		world.step()
+	assert_int(worker.health).is_equal(RtsKinds.of(RtsKinds.WORKER, "health"))
+	# Past the end of the wall, in the open and still in reach, the same gun
+	# finds it: the wall was what stopped it.
+	world.place(worker, Vector2(6.5, 10.5))
+	assert_object(RtsOrders.tower_target(world, tower)).is_same(worker)
+
+
+func test_a_tower_still_going_up_cannot_arm_and_the_arm_is_no_building() -> void:
+	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(2, 2))
+	var site: RtsUnit = world.add_unit(RtsKinds.TOWER, 0, Vector2i(5, 5), false)
+	world.set_funds(0, 500, 500)
+	assert_str(world.command(0, RtsCommand.train(site.id, RtsKinds.ARM))).contains("still being built")
+	assert_str(world.command(0, RtsCommand.build(worker.id, RtsKinds.ARM, Vector2i(3, 3)))).contains("not something a worker builds")
+	assert_bool(RtsKinds.is_building(RtsKinds.ARM)).is_false()
