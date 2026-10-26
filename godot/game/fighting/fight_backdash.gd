@@ -24,7 +24,7 @@ class_name FightBackdash
 extends RefCounted
 
 ## What `stun_kind` says while a fighter is evading.
-const KIND: String = "evade"
+const KIND: String = "evade"  # not shown: an identifier
 
 
 ## Start a backdash: its frame 1 is this one, already a step away, and the

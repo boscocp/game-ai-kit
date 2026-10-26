@@ -28,6 +28,7 @@
     "tictactoe"
   ],
   "tests_depend_on": [
+    "ai_rts_core",
     "board"
   ],
   "gates": [

@@ -37,7 +37,7 @@ extends FightOpponent
 ## Where the published cloned player lives. Published by `make train-clone`.
 const PUBLISHED_PATH: String = "res://game/fighting/clone_weights.json"
 
-const SOURCES: Array[String] = ["ghost: exact", "ghost: nearest", "clone"]
+const SOURCES: Array[String] = ["ghost: exact", "ghost: nearest", "clone"]  # not shown as written: an identifier, or the digest's English (FightWords)
 ## How a probability becomes a whole-number weight to draw by: per thousand.
 const PER: int = 1000
 
@@ -46,7 +46,7 @@ var player: ClonedPlayer
 ## Its last decision, for the panel: the situation in words, how it found the
 ## answers, and the answers it drew from with their weights.
 var seen_situation: Dictionary = {}
-var found: String = "nothing seen yet"
+var found: String = "nothing seen yet"  # shown through tr()
 var considered: Array = []
 
 var _last: String = ""
@@ -64,7 +64,7 @@ func new_fight() -> void:
 	super()
 	_last = ""
 	seen_situation = {}
-	found = "nothing seen yet"
+	found = tr("nothing seen yet")
 	considered = []
 
 
@@ -96,29 +96,30 @@ func _weighted_options(_name: String, character: String) -> Array:
 		if int(weights[action]) > 0 and _has_option(character, action):
 			considered.append([action, int(weights[action])])
 	if considered.is_empty():
-		found += "; nothing it can do, so it guards"
-		considered = [["guard standing", 1]]
+		found += tr("; nothing it can do, so it guards")
+		considered = [["guard standing", 1]]  # not shown as written: an identifier, or the digest's English (FightWords)
 	return considered
 
 
 # `{action: weight}` from the source, and `found` saying where it came from.
 func _answers() -> Dictionary:
 	if not player.is_loaded():
-		found = "no recorded player: " + player.error
+		found = tr("no recorded player: {why}").format({why = player.error})
 		return {}
 	if Array(player.cases.features) != FightSituation.FEATURES:
-		found = "the recorded player was cut with other features (%s) -- run `make train-clone`" % ", ".join(
-			player.cases.features)
+		var features: String = ", ".join(player.cases.features)
+		found = tr("the recorded player was cut with other features ({features}) -- run `make train-clone`").format({features = features})
 		return {}
 	match level:
 		"ghost: exact":
 			return _exact()
 		"ghost: nearest":
 			var nearest: Dictionary = player.cases.nearest(seen_situation)
-			found = "%d case(s), %d feature(s) apart" % [nearest["keys"].size(), nearest["distance"]]
+			var cases: int = nearest["keys"].size()
+			found = tr("{cases} case(s), {apart} feature(s) apart").format({cases = cases, apart = nearest["distance"]})
 			return nearest["counts"]
 	var chances: Dictionary = player.model.probabilities(seen_situation)
-	found = "the model's probabilities"
+	found = tr("the model's probabilities")
 	var weights: Dictionary = {}
 	for action: String in chances:
 		weights[action] = roundi(chances[action] * PER)
@@ -129,9 +130,9 @@ func _answers() -> Dictionary:
 func _exact() -> Dictionary:
 	var counts: Dictionary = player.cases.exact(seen_situation)
 	if counts.is_empty():
-		found = "never met this one: all its play"
+		found = tr("never met this one: all its play")
 		return player.cases.everything()
 	var times: int = counts.values().reduce(func(sum: int, count: Variant) -> int: return sum + int(count), 0)
-	found = "met it %d time(s)" % times
+	found = tr("met it {times} time(s)").format({times = times})
 	return counts
 

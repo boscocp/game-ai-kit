@@ -6,6 +6,20 @@ extends GdUnitTestSuite
 
 const StagedRaid := preload("res://test/rts/staged_raid.gd")
 
+# English, whatever the machine speaks: the engine starts in the system's
+# locale, and these read the English the game writes (T80). The locale
+# found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
 
 func test_the_games_domain_is_a_byte_for_byte_copy_of_the_spec() -> void:
 	var spec: String = ProjectSettings.globalize_path("res://").path_join("../spec/pddl/rts-build-order.json")
@@ -177,7 +191,6 @@ func test_a_member_that_struck_the_nearest_is_turned_to_the_squads_focus() -> vo
 	assert_int(given.size()).is_equal(1)
 	assert_int(given[0].target_id).is_equal(mortar.id)
 	assert_bool(squad.members[0] in given[0].unit_ids).is_true()
-
 
 
 func test_a_trained_step_waits_for_its_producer_and_buys_a_squad() -> void:

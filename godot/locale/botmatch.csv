@@ -33,7 +33,8 @@ no shot aimed yet,nenhum tiro mirado ainda
 "aims at {zone} (chance, damage a shot): {zones}","mira em {zone} (chance, dano por tiro): {zones}"
 {mark}{errand} {gain} - {walk} s x {weight} - {cost} = {score},{mark}{errand} {gain} - {walk} s x {weight} - {cost} = {score}
 none weighed yet,nenhuma pesada ainda
-"{weapon} {ammo}/{reserve}, streak {streak}; errands: {errands}","{weapon} {ammo}/{reserve}, sequência {streak}; tarefas: {errands}"
+"{weapon} {ammo}/{reserve}, streak {streak}","{weapon} {ammo}/{reserve}, sequência {streak}"
+errands: {errands},tarefas: {errands}
 never blocked yet,nunca bloqueado ainda
 {seconds} s,{seconds} s
 on,ligado

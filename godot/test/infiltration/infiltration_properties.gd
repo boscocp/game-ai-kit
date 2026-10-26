@@ -43,6 +43,9 @@ var _errors := PerceptionErrors.new()
 
 
 func _initialize() -> void:
+	# The panel's English words are what one claim looks for, and the engine
+	# starts in the machine's locale (T80): English, whatever it speaks.
+	TranslationServer.set_locale("en")
 	OS.add_logger(_errors)
 	var failures: Array[String] = []
 	var counter: String = _errors.self_check()

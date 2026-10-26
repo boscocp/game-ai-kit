@@ -74,8 +74,9 @@ static func _threat(kind: String, members: Array[Dictionary]) -> float:
 static func _why(enemy: Dictionary, members: Array[Dictionary], threat: float, to_kill: float) -> String:
 	var said: Array[String] = []
 	if members.any(func(member: Dictionary) -> bool: return enemy["kind"] in RtsKinds.of(member["kind"], "beats")):
-		said.append("we beat it")
+		said.append(TranslationServer.translate("we beat it"))
 	if threat == 0.0:
-		said.append("unarmed")
-	said.append("%d hp, %.0f s to kill" % [enemy["health"], to_kill])
+		said.append(TranslationServer.translate("unarmed"))
+	said.append(TranslationServer.translate("{health} hp, {seconds} s to kill").format({health = enemy["health"],
+		seconds = "%.0f" % to_kill}))
 	return ", ".join(said)

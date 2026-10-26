@@ -50,6 +50,9 @@ var _counter_works: String = ""
 
 
 func _initialize() -> void:
+	# The panel's English words are what it looks for, and the engine starts
+	# in the machine's locale (T80): English, whatever the machine speaks.
+	TranslationServer.set_locale("en")
 	OS.add_logger(_errors)
 	_counter_works = _errors.self_check()
 	_run()

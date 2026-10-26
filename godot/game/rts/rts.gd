@@ -68,15 +68,30 @@ func _ready() -> void:
 	_view.art = RtsArt.new(RtsView.SIDE_COLOURS)
 	_minimap.board = _view
 	_card.chosen.connect(_on_card)
-	_legend.set_entries([
-		[RtsView.SIDE_COLOURS[RtsScenario.WEST], "you: west"],
-		[RtsView.SIDE_COLOURS[RtsScenario.EAST], "the computer: east"],
-		[RtsThinking.STATE_COLOURS[Squad.ADVANCE], "its squad advancing, to its region"],
-		[RtsThinking.STATE_COLOURS[Squad.FIGHT], "its squad fighting"],
-		[RtsThinking.STATE_COLOURS[Squad.RETREAT], "its squad falling back"],
-		[RtsThinking.PLAN_COLOUR, "where its plan will build"],
-	] as Array[Array])
+	_legend.set_entries(_legend_entries())
 	restart()
+	Language.apply_if_opened_alone(self)
+
+
+# Rebuilt in the language just chosen (T80): the header, the panel and the
+# card are set from code and keep the words they were given, and the legend
+# is drawn.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_legend.set_entries(_legend_entries())
+		_card.forget_buttons()
+		_refresh()
+
+
+func _legend_entries() -> Array[Array]:
+	return [
+		[RtsView.SIDE_COLOURS[RtsScenario.WEST], tr("you: west")],
+		[RtsView.SIDE_COLOURS[RtsScenario.EAST], tr("the computer: east")],
+		[RtsThinking.STATE_COLOURS[Squad.ADVANCE], tr("its squad advancing, to its region")],
+		[RtsThinking.STATE_COLOURS[Squad.FIGHT], tr("its squad fighting")],
+		[RtsThinking.STATE_COLOURS[Squad.RETREAT], tr("its squad falling back")],
+		[RtsThinking.PLAN_COLOUR, tr("where its plan will build")],
+	] as Array[Array]
 
 
 ## A new match from the same seed, with the level, planner and mode chosen,
@@ -134,9 +149,9 @@ func decision_overlay() -> Dictionary:
 	var shown: Dictionary = {"tick": world.tick, "level": computer.level.name, "goal": thinking["goal"]}
 	var plan: Array[String] = []
 	for step: Dictionary in thinking["plan"]:
-		plan.append("%s at %.1f s" % [step["step"], step["starts"]])
-	shown["plan"] = plan if not plan.is_empty() else ["goal met"]
-	shown["waiting"] = thinking["waiting"] if thinking["waiting"] != "" else "nothing"
+		plan.append("%s at %.1f s" % [step["step"], step["starts"]])  # not shown: the gate's overlay
+	shown["plan"] = plan if not plan.is_empty() else ["goal met"]  # not shown
+	shown["waiting"] = thinking["waiting"] if thinking["waiting"] != "" else "nothing"  # not shown
 	shown["income"] = BuildSchedule.income(RtsSnapshot.of(world, computer.side))
 	if not thinking["squads"].is_empty():
 		shown["squads"] = thinking["squads"]
@@ -205,13 +220,13 @@ func _on_mouse_motion(motion: InputEventMouseMotion) -> void:
 func _why_not_here(what: String, cell: Vector2i) -> String:
 	var builder: int = _selected_worker()
 	if builder < 0:
-		return "select a worker to build with"
-	return RtsRules.why_refused(world, RtsScenario.WEST, RtsCommand.build(builder, what, cell))
+		return tr("select a worker to build with")
+	return RtsRefusal.words(RtsRules.why_refused(world, RtsScenario.WEST, RtsCommand.build(builder, what, cell)))
 
 
 func _on_key(code: Key) -> void:
 	if BUILD_KEYS.has(code) and not watching:
-		_on_card("build", BUILD_KEYS[code])
+		_on_card("build", BUILD_KEYS[code])  # not shown: an identifier
 	elif TRAIN_KEYS.has(code) and not watching:
 		_train(TRAIN_KEYS[code])
 	match code:
@@ -247,9 +262,10 @@ func _on_card(action: String, what: String) -> void:
 		_send_a_repairer()
 	elif _selected_worker() >= 0:
 		_view.placing = what
-		_say("click open ground to put the %s -- green is a place it can go; right click cancels" % what, false)
+		_say(tr("click open ground to put down: {what} -- green is a place it can go; right click cancels").format({
+			what = RtsWords.word(what)}), false)
 	else:
-		_say("select a worker to build with", true)
+		_say(tr("select a worker to build with"), true)
 	_refresh()
 
 
@@ -304,7 +320,7 @@ func _send_a_repairer() -> void:
 		if world.unit(id) != null and world.unit(id).side == RtsScenario.WEST and RtsKinds.is_building(world.unit(id).kind):
 			building = world.unit(id)
 	if building == null:
-		_say("select a building of yours to repair", true)
+		_say(tr("select a building of yours to repair"), true)
 		return
 	var nearest: RtsUnit = null
 	for unit: RtsUnit in world.units():
@@ -313,18 +329,18 @@ func _send_a_repairer() -> void:
 		if nearest == null or unit.position.distance_to(building.position) < nearest.position.distance_to(building.position):
 			nearest = unit
 	if nearest == null:
-		_say("no worker to send", true)
+		_say(tr("no worker to send"), true)
 		return
 	_give(RtsCommand.repair([nearest.id] as Array[int], building.id))
 	if last_refusal == "":
-		_say("a worker is on its way to mend the %s" % building.kind, false)
+		_say(tr("a worker is on its way to mend it: {kind}").format({kind = RtsWords.word(building.kind)}), false)
 
 
 func _place(cell: Vector2i) -> void:
 	var builder: int = _selected_worker()
 	var what: String = _view.placing
 	if builder < 0:
-		_say("select a worker to build with", true)
+		_say(tr("select a worker to build with"), true)
 		_view.placing = ""
 		return
 	_give(RtsCommand.build(builder, what, cell))
@@ -332,7 +348,8 @@ func _place(cell: Vector2i) -> void:
 		return
 	_view.placing = ""
 	var seconds: float = float(RtsKinds.of(what, "ticks")) / RtsWorld.TICKS_PER_SECOND
-	_say("%s placed -- the worker walks there and builds it (%d s of game)" % [what, roundi(seconds)], false)
+	_say(tr("{what} placed -- the worker walks there and builds it ({seconds} s of game)").format({
+		what = RtsWords.title(what), seconds = roundi(seconds)}), false)
 
 
 # Only the workers of the selection: repair is a worker's order, and a mixed
@@ -362,15 +379,15 @@ func _train(kind: String) -> void:
 			_give(RtsCommand.train(id, kind))
 			return
 	if RtsKinds.is_upgrade(kind):
-		_say("select a tower, complete and not yet armed", true)
+		_say(tr("select a tower, complete and not yet armed"), true)
 	else:
-		_say("select a building that trains a %s" % kind, true)
+		_say(tr("select a building that trains this: {kind}").format({kind = RtsWords.word(kind)}), true)
 
 
 func _give(command: RtsCommand) -> void:
 	last_refusal = played.give(RtsScenario.WEST, command)
 	if last_refusal != "":
-		_say(last_refusal, true)
+		_say(RtsRefusal.words(last_refusal), true)
 
 
 # A message across the top of the map for a few seconds: what happened to
@@ -399,7 +416,7 @@ func _refresh() -> void:
 	_thinking.world = world
 	_thinking.watcher = -1 if (reveal or watching) else RtsScenario.WEST
 	_header.text = _header_text(yours)
-	_panel.text = "What the computer is thinking\n" + "\n".join(_thinking.lines())
+	_panel.text = tr("What the computer is thinking") + "\n" + "\n".join(_thinking.lines())
 	_card.show_selection(yours, _view.selected)
 	_redraw()
 
@@ -412,14 +429,14 @@ func _redraw() -> void:
 
 func _header_text(yours: RtsSnapshot) -> String:
 	var seconds: int = world.tick / RtsWorld.TICKS_PER_SECOND
-	var who: String = "the queues (watching)" if watching else "you"
-	var state: String = "PAUSED -- space to play" if paused else "speed x%s (+ -)" % SPEEDS[speed_index]
-	var line: String = "ore %d   magma %d   supply %d/%d   |   %d:%02d  %s   |   %s (west, blue)  vs  the commander (east, red): %s, %s" % [
-		yours.resources[RtsKinds.ORE], yours.resources[RtsKinds.MAGMA], yours.supply_used, yours.supply_cap,
-		seconds / 60, seconds % 60, state, who, computer.level.name,
-		"STRIPS" if planner == BuildOrder.Planner.STRIPS else "HTN"]
+	var who: String = tr("the queues (watching)") if watching else tr("you")
+	var state: String = tr("PAUSED -- space to play") if paused else tr("speed x{speed} (+ -)").format({speed = SPEEDS[speed_index]})
+	var line: String = tr("ore {ore}   magma {magma}   supply {used}/{cap}   |   {clock}  {state}   |   {who} (west, blue)  vs  the commander (east, red): {level}, {planner}").format({
+		ore = yours.resources[RtsKinds.ORE], magma = yours.resources[RtsKinds.MAGMA], used = yours.supply_used,
+		cap = yours.supply_cap, clock = "%d:%02d" % [seconds / 60, seconds % 60], state = state, who = who,
+		level = RtsWords.word(computer.level.name), planner = "STRIPS" if planner == BuildOrder.Planner.STRIPS else "HTN"})
 	if RtsVictory.winner(world) != RtsVictory.UNDECIDED:
-		return line + "\nover: " + RtsVictory.why(world) + " -- R plays again"
+		return line + "\n" + tr("over: {why} -- R plays again").format({why = RtsVictory.told(world)})
 	if last_refusal != "":
-		return line + "\n" + last_refusal
-	return line + "\nV watch two computers · C level · H planner · I influence · F fog · R again · arrows or the edge: look round"
+		return line + "\n" + RtsRefusal.words(last_refusal)
+	return line + "\n" + tr("V watch two computers · C level · H planner · I influence · F fog · R again · arrows or the edge: look round")

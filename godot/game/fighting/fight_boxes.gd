@@ -77,10 +77,10 @@ static func misses_vertically(attacker: FighterState, defender: FighterState, da
 	if FightBoxes.overlap(hit, hurt):
 		return ""
 	var height: String = data.move(attacker.character, attacker.move)["height"]
-	var why: String = {"high": " (a high misses a crouch)", "low": " (a low misses a fighter in the air)"}.get(height, "")
+	var why: String = {"high": " (a high misses a crouch)", "low": " (a low misses a fighter in the air)"}.get(height, "")  # not shown as written: an identifier, or the digest's English (FightWords)
 	if hit[0] > hurt[1]:
-		return "passes over p%d" + (why if height == "high" and defender.crouching else "")
-	return "passes under p%d" + (why if height == "low" and defender.is_airborne() else " (it is in the air)")
+		return "passes over p%d" + (why if height == "high" and defender.crouching else "")  # not shown as written: an identifier, or the digest's English (FightWords)
+	return "passes under p%d" + (why if height == "low" and defender.is_airborne() else " (it is in the air)")  # not shown as written: an identifier, or the digest's English (FightWords)
 
 
 ## True when two intervals share at least one unit. An empty box overlaps nothing.

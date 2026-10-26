@@ -38,7 +38,7 @@ static func _draw(rng: RandomNumberGenerator) -> Dictionary:
 	var depth: int = rng.randi_range(18, 28)
 	var middle: float = floorf(depth / 2.0) + 0.5
 	var data: Dictionary = {
-		"about": "A generated infiltration level.", "width": width,  # not shown: the data's own note "depth": depth, "points": [],
+		"about": "A generated infiltration level.", "width": width, "depth": depth, "points": [],  # not shown: the data's own note
 		"spawns": {"player": [[1.5, middle]]}, "exit": [width - 1.5, middle],
 		"boxes": _boxes(rng, width, depth), "ambient": 0.1,
 		"lights": _scattered(rng, width, depth, rng.randi_range(3, 6), "light"),

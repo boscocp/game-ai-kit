@@ -18,10 +18,10 @@
 class_name Squad
 extends RefCounted
 
-const GATHER: String = "gather"
-const ADVANCE: String = "advance"
-const FIGHT: String = "fight"
-const RETREAT: String = "retreat"
+const GATHER: String = "gather"  # not shown: an identifier
+const ADVANCE: String = "advance"  # not shown: an identifier
+const FIGHT: String = "fight"  # not shown: an identifier
+const RETREAT: String = "retreat"  # not shown: an identifier
 
 ## How much better another target must score before a squad turns to it.
 const STICK: float = 1.25
@@ -56,24 +56,26 @@ var scores: Dictionary = {}
 var _home: Vector2i
 
 
+# Each arrow's reason is a key the panel translates and formats with SIZE
+# (T80): written once, here, it must not be in the language of the moment.
 func _init(squad_id: int, side: int) -> void:
 	id = squad_id
 	_home = RtsScenario.home(side)
-	machine.add_arrow(GATHER, FIGHT, func(facts: Dictionary) -> bool: return facts["enemies_near"],
+	machine.add_arrow(GATHER, FIGHT, func(facts: Dictionary) -> bool: return facts["enemies_near"],  # shown through tr()
 		"enemies at home: defending")
-	machine.add_arrow(GATHER, ADVANCE, func(facts: Dictionary) -> bool: return facts["size"] >= SIZE,
-		"%d strong: setting out" % SIZE)
-	machine.add_arrow(ADVANCE, RETREAT, func(facts: Dictionary) -> bool: return facts["ratio"] < RETREAT_RATIO,
+	machine.add_arrow(GATHER, ADVANCE, func(facts: Dictionary) -> bool: return facts["size"] >= SIZE,  # shown through tr()
+		"{size} strong: setting out")
+	machine.add_arrow(ADVANCE, RETREAT, func(facts: Dictionary) -> bool: return facts["ratio"] < RETREAT_RATIO,  # shown through tr()
 		"outmatched on the way: falling back")
-	machine.add_arrow(ADVANCE, FIGHT, func(facts: Dictionary) -> bool: return facts["enemies_near"],
+	machine.add_arrow(ADVANCE, FIGHT, func(facts: Dictionary) -> bool: return facts["enemies_near"],  # shown through tr()
 		"enemies in sight: engaging")
-	machine.add_arrow(FIGHT, RETREAT, func(facts: Dictionary) -> bool: return facts["ratio"] < RETREAT_RATIO,
+	machine.add_arrow(FIGHT, RETREAT, func(facts: Dictionary) -> bool: return facts["ratio"] < RETREAT_RATIO,  # shown through tr()
 		"outmatched: falling back")
-	machine.add_arrow(FIGHT, ADVANCE, func(facts: Dictionary) -> bool: return not facts["enemies_near"] and facts["size"] >= SIZE / 2,
+	machine.add_arrow(FIGHT, ADVANCE, func(facts: Dictionary) -> bool: return not facts["enemies_near"] and facts["size"] >= SIZE / 2,  # shown through tr()
 		"nothing left in sight: on to the target")
-	machine.add_arrow(FIGHT, GATHER, func(facts: Dictionary) -> bool: return not facts["enemies_near"],
+	machine.add_arrow(FIGHT, GATHER, func(facts: Dictionary) -> bool: return not facts["enemies_near"],  # shown through tr()
 		"nothing left in sight, too few to go on: regrouping")
-	machine.add_arrow(RETREAT, GATHER, func(facts: Dictionary) -> bool: return facts["at_home"],
+	machine.add_arrow(RETREAT, GATHER, func(facts: Dictionary) -> bool: return facts["at_home"],  # shown through tr()
 		"home: regrouping")
 
 

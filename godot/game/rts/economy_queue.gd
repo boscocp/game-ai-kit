@@ -97,8 +97,8 @@ func waiting_for(view: RtsSnapshot) -> String:
 		return ""
 	var top: String = wishes[0]["what"]
 	if not view.can_pay(RtsKinds.cost(top)):
-		return "%s: saving up" % top
-	return "%s: %s" % [top, wishes[0]["why"]]
+		return TranslationServer.translate("{kind}: saving up").format({kind = RtsWords.word(top)})
+	return "%s: %s" % [RtsWords.word(top), wishes[0]["why"]]
 
 
 # The command that buys `what` now, or null when it cannot be had yet --
@@ -225,7 +225,7 @@ static func _fit_to_build_on(view: RtsSnapshot, cell: Vector2i, taken: Dictionar
 
 # Its own expansion's cell, when no base of anybody's stands near it.
 func _expansion_site(view: RtsSnapshot) -> Vector2i:
-	var region: String = "west expansion" if _side == RtsScenario.WEST else "east expansion"
+	var region: String = "west expansion" if _side == RtsScenario.WEST else "east expansion"  # not shown: an identifier
 	var cell: Vector2i = RtsScenario.REGIONS[region]["cell"]
 	for unit: Dictionary in view.units:
 		if unit["kind"] == RtsKinds.BASE and (unit["position"] as Vector2).distance_to(Vector2(cell)) < 4.0:

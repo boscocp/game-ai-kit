@@ -15,9 +15,14 @@
 # EXAMPLES must be there, and at least one line read, or a blank scene
 # would pass.
 #
-# A refusal is provoked too, in the tactical match: the board writes its
-# refusals in English and the demo translates them where they are shown
-# (`TacticalRefusal`), and no example stepped on its own is ever refused.
+# A refusal is provoked too, in the tactical match and in the RTS: the
+# board and the RTS rules write their refusals in English and the demos
+# translate them where they are shown (`TacticalRefusal`, `RtsRefusal`), and
+# no example stepped on its own is ever refused.
+#
+# A line of a Label that does not wrap must fit the window, too: a
+# Portuguese line is longer, and T78's review found one running off the
+# screen. A Label3D's words are read as a Label's are (T80).
 #
 # Planted: a Label whose auto-translation is disabled, a formatted English
 # line, and an empty scene; each must be refused, or the check sees nothing
@@ -42,8 +47,21 @@ const EXAMPLES: Dictionary = {
 	"res://game/tactical/tactical.tscn": ["Interface/Header", "Interface/Status", "Interface/EndTurn",
 		"Interface/Undo", "Interface/Legend"],
 	"res://game/main.tscn": ["Interface/Status", "Interface/Legend"],
+	"res://demos/steering/steering_demo.tscn": ["Interface/Status", "Interface/Legend"],
+	"res://demos/racing/racing_demo.tscn": ["Interface/Status", "Interface/Speedo", "Interface/Legend"],
+	"res://game3d/racing/racing3d.tscn": ["Interface/Status", "Interface/Legend"],
+	"res://game3d/botmatch/botmatch.tscn": ["Interface/Panel", "Interface/Legend"],
+	"res://game3d/infiltration/infiltration.tscn": ["Interface/Panel", "Interface/Legend"],
+	"res://game/rts/rts.tscn": ["Interface/Header", "Interface/Thinking", "Interface/Card/Info", "Interface/Legend"],
+	"res://game/fighting/fighting.tscn": ["Interface/Status", "Interface/Decision", "Interface/Legend"],
 	"res://menu/menu.tscn": [],
 }
+## The window's width, from `project.godot`: a line past it is cut off.
+const SCREEN_WIDTH: float = 1280.0
+## Labels known to run off the window in English as well, so a layout fix
+## rather than a translation one: reported in T80, not hidden. Each is
+## "scene:node".
+const NOT_YET_FITTED: Array[String] = ["res://game/tactical/tactical.tscn:Interface/Header"]
 
 
 class ErrorCounter extends Logger:
@@ -138,7 +156,7 @@ static func _quoted(text: String) -> String:
 ## of a line's "  ·  " segments.
 func english_on_screen(node: Node) -> Array[String]:
 	var shown: Array[String] = []
-	if node is Label or node is Button:
+	if node is Label or node is Button or node is Label3D:
 		shown.append(node.atr(node.text))
 	elif node is Legend:
 		for entry: Array in (node as Legend).entries:
@@ -184,12 +202,16 @@ func _look_at(label: String, example: Node, expected: Array) -> Array[String]:
 	var failures: Array[String] = []
 	if example is TacticalGame:
 		failures += await _provoke_a_refusal(example as TacticalGame)
+	if example is RtsGame:
+		failures += await _provoke_an_rts_refusal(example as RtsGame)
 	for path: String in expected:
 		if not example.has_node(path):
 			failures.append("%s: has no %s to read" % [label, path])
 	for node: Node in _walk(example):
 		for english: String in english_on_screen(node):
 			failures.append("%s: %s shows the English %s" % [label, example.get_path_to(node), english])
+		if node is Label:
+			failures += _past_the_edge(label, example.get_path_to(node), node as Label)
 	if _lines_read == 0:
 		failures.append("%s: shows no words at all to check" % label)
 	if _counter.errors > 0:
@@ -218,8 +240,45 @@ func _provoke_a_refusal(game: TacticalGame) -> Array[String]:
 	return []
 
 
+# The RTS: one of your workers ordered to build a lab with no barracks yet.
+# The rules refuse it in English, and the header must say so through
+# `RtsRefusal` -- in Portuguese, which the walk then checks.
+func _provoke_an_rts_refusal(game: RtsGame) -> Array[String]:
+	var worker: int = -1
+	for unit: RtsUnit in game.world.units():
+		if unit.side == RtsScenario.WEST and unit.kind == RtsKinds.WORKER:
+			worker = unit.id
+	game._give(RtsCommand.build(worker, RtsKinds.LAB, RtsScenario.home(RtsScenario.WEST)))
+	game._refresh()
+	await process_frame
+	if game.last_refusal == "":
+		return ["rts: no refusal could be provoked to check"]
+	var header: Label = game.get_node("Interface/Header")
+	if not header.text.contains(RtsRefusal.words(game.last_refusal)) or game.last_refusal == RtsRefusal.words(game.last_refusal):
+		return ["rts: the refusal \"%s\" is not shown translated:\n%s" % [game.last_refusal, header.text]]
+	return []
+
+
+# Each line of a Label that does not wrap or clip, measured in its own font:
+# one that reaches past the window's edge is cut off on the screen.
+func _past_the_edge(label: String, path: NodePath, shown: Label) -> Array[String]:
+	if shown.autowrap_mode != TextServer.AUTOWRAP_OFF or shown.clip_text or not shown.is_visible_in_tree():
+		return []
+	if "%s:%s" % [label, path] in NOT_YET_FITTED:
+		return []
+	var font: Font = shown.get_theme_font("font")
+	var size: int = shown.get_theme_font_size("font_size")
+	var failures: Array[String] = []
+	for line: String in shown.atr(shown.text).split("\n"):
+		var right: float = shown.get_global_rect().position.x + font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+		if right > SCREEN_WIDTH:
+			failures.append("%s: %s runs off the window, to x=%.0f: %s" % [label, path, right, line])
+	return failures
+
+
 # The planted cases: a key on a Label that may not translate itself, a line
-# formatted from a key, and a scene with nothing in it.
+# formatted from a key, a line too long for the window, and a scene with
+# nothing in it.
 func _planted() -> Array[String]:
 	var failures: Array[String] = []
 	for text: String in ["Play  (Enter)", "expandiu 3  ·  cost 7"]:
@@ -231,6 +290,14 @@ func _planted() -> Array[String]:
 		holder.add_child(planted)
 		if (await _look_at("planted", holder, [])).is_empty():
 			failures.append("the planted Label %s was not seen: this check sees nothing" % text)
+	_counter.errors = 0
+	var wide := Label.new()
+	wide.text = "x".repeat(400)
+	var wide_holder := Node2D.new()
+	wide_holder.add_child(wide)
+	var found: Array[String] = await _look_at("planted", wide_holder, [])
+	if not found.any(func(failure: String) -> bool: return failure.contains("runs off the window")):
+		failures.append("the planted line of 400 x was not seen running off the window")
 	_counter.errors = 0
 	if (await _look_at("planted", Node2D.new(), [])).is_empty():
 		failures.append("an empty scene passed: this check would pass a blank screen")

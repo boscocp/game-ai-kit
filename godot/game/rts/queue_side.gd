@@ -40,20 +40,20 @@ static func wish_by_rules(queue: EconomyQueue, view: RtsSnapshot) -> void:
 	var have: Dictionary = _have(view)
 	var seconds: float = float(view.tick) / RtsWorld.TICKS_PER_SECOND
 	if have.get(RtsKinds.BARRACKS, 0) == 0:
-		queue.wish(RtsKinds.BARRACKS, 70, "rule: no barracks")
+		queue.wish(RtsKinds.BARRACKS, 70, TranslationServer.translate("rule: no barracks"))
 		return
 	queue.magma_wanted = true
 	if have.get(RtsKinds.LAB, 0) == 0 and seconds >= LAB_AFTER_SECONDS:
-		queue.wish(RtsKinds.LAB, 45, "rule: three minutes in, no lab")
+		queue.wish(RtsKinds.LAB, 45, TranslationServer.translate("rule: three minutes in, no lab"))
 	if have.get(RtsKinds.BASE, 0) < 2 and seconds >= EXPAND_AFTER_SECONDS \
 			and have.get(RtsKinds.WORKER, 0) >= EconomyQueue.WORKERS_PER_BASE:
-		queue.wish(RtsKinds.BASE, 60, "rule: a full home, five minutes in")
+		queue.wish(RtsKinds.BASE, 60, TranslationServer.translate("rule: a full home, five minutes in"))
 	_arm_the_home(queue, view, have)
 	var fewest: String = _fewest_fighter(view, have)
 	for kind: String in RtsKinds.FIGHTERS:
 		if kind != fewest:
 			queue.forget(kind)
-	queue.wish(fewest, 30, "rule: fewest %ss" % fewest)
+	queue.wish(fewest, 30, TranslationServer.translate("rule: the fewest of its fighters, {kind}").format({kind = RtsWords.word(fewest)}))
 
 
 # A tower at home first, then its gun: a rule, so it fires on what is in
@@ -68,9 +68,9 @@ static func _arm_the_home(queue: EconomyQueue, view: RtsSnapshot, have: Dictiona
 	if not _raided(view) or have.get(RtsKinds.ARM, 0) > 0:
 		return
 	if have.get(RtsKinds.TOWER, 0) == 0:
-		queue.wish(RtsKinds.TOWER, 25, "rule: an enemy at the home, a tower")
+		queue.wish(RtsKinds.TOWER, 25, TranslationServer.translate("rule: an enemy at the home, a tower"))
 	elif view.mine(RtsKinds.TOWER).any(func(tower: Dictionary) -> bool: return tower["complete"]):
-		queue.wish(RtsKinds.ARM, 25, "rule: an enemy at the home, arm the tower")
+		queue.wish(RtsKinds.ARM, 25, TranslationServer.translate("rule: an enemy at the home, arm the tower"))
 
 
 # True when an enemy fighter is in sight within `RAID_CELLS` of the home.

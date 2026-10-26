@@ -130,16 +130,16 @@ func _fill_queue(_view: RtsSnapshot) -> void:
 func _reflexes(view: RtsSnapshot) -> void:
 	var held: PackedStringArray = BuildOrder.facts(view)
 	if BuildOrder.free_room(view) < 2 and view.supply_cap < RtsKinds.SUPPLY_LIMIT:
-		queue.wish(RtsKinds.DEPOT, 95, "reflex: the room is nearly gone")
+		queue.wish(RtsKinds.DEPOT, 95, TranslationServer.translate("reflex: the room is nearly gone"))
 	else:
 		queue.forget(RtsKinds.DEPOT)
 	if not "workers_saturated" in held:
-		queue.wish(RtsKinds.WORKER, 50, "reflex: the home is short of workers")
+		queue.wish(RtsKinds.WORKER, 50, TranslationServer.translate("reflex: the home is short of workers"))
 	else:
 		queue.forget(RtsKinds.WORKER)
 	var barracks: int = view.mine(RtsKinds.BARRACKS).size()
 	if barracks > 0 and barracks < MOST_BARRACKS and view.resources[RtsKinds.ORE] >= FLOATING_ORE:
-		queue.wish(RtsKinds.BARRACKS, 35, "reflex: ore piling up, another barracks")
+		queue.wish(RtsKinds.BARRACKS, 35, TranslationServer.translate("reflex: ore piling up, another barracks"))
 
 
 ## What the side is thinking, for the screen and `test/menu/demo_overlays.gd`.

@@ -23,7 +23,7 @@ blank,em branco
 {name} ({finds})  ·  expanded {revealed} of {total}  ·  steps {steps}  ·  {cost},{name} ({finds})  ·  expandiu {revealed} de {total}  ·  passos {steps}  ·  {cost}
 1-4 choose  ·  space steps  ·  enter finishes,1-4 escolhem  ·  espaço avança um passo  ·  enter termina
 "{name} {cells} cells, {cost}","{name} {cells} células, {cost}"
-expanded / route cost:,expandidas / custo da rota:
+expanded / route cost:,expandidas / custo:
 board: blank  ·  paint something and see what each search makes of it,tabuleiro: em branco  ·  pinte algo e veja o que cada busca faz com isso
 it does,mostra
 not any more,não mostra mais
@@ -32,11 +32,11 @@ board: {board}  ·  does it still show what it was for?  {verdict},tabuleiro: {b
 cost {cost},custo {cost}
 no route,sem rota
 Edit the board,Edite o tabuleiro
-left-drag: paint {brush},arrastar com o botão esquerdo: pinta {brush}
-right-drag: erase to open ground,arrastar com o botão direito: apaga para terreno aberto
-W wall  ·  M mud  ·  G open ground,W parede  ·  M lama  ·  G terreno aberto
+left-drag: paint {brush},arraste (esq.): pinta {brush}
+right-drag: erase to open ground,arraste (dir.): limpa o chão
+W wall  ·  M mud  ·  G open ground,W parede  ·  M lama  ·  G chão
 - and =: mud costs {cost},- e =: a lama custa {cost}
-drag a dot to move start or goal,arraste um ponto para mover o início ou o objetivo
+drag a dot to move start or goal,arraste um ponto: início ou objetivo
 B next board  ·  C clear,B próximo tabuleiro  ·  C limpa
 R rebuilds the named board,R reconstrói o tabuleiro nomeado
 wall and mud,parede e lama

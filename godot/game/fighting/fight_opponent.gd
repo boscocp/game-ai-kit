@@ -62,16 +62,16 @@ const LEVELS: Dictionary = {
 ## a long strike caught it 5 times in about 800). What it does is follow:
 ## a backdash gives up ground, and one more into the corner goes nowhere.
 const SITUATIONS: Dictionary = {
-	"after being hit": [["high", 3], ["step out", 2], ["guard standing", 3], ["guard crouching", 2], ["low", 3],
+	"after being hit": [["high", 3], ["step out", 2], ["guard standing", 3], ["guard crouching", 2], ["low", 3],  # not shown as written: an identifier, or the digest's English (FightWords)
 			["evade", 1]],
-	"after blocking": [["high", 2], ["evade", 1], ["guard standing", 2], ["throw", 3], ["low", 3],
-			["guard crouching", 1]],
-	"it blocked": [["high", 3], ["throw", 3], ["step in", 1], ["low", 3]],
-	"it evaded": [["step in", 3], ["high", 1]],
-	"it whiffed": [["step in", 2], ["high", 2], ["mid", 4], ["low", 4]],
-	"it crouches": [["high", 3], ["step in", 1], ["throw", 4], ["mid", 3], ["overhead", 2]],
-	"neutral": [["step in", 3], ["high", 2], ["guard standing", 2], ["mid", 4], ["low", 4],
-			["throw", 3], ["guard crouching", 1], ["overhead", 1], ["step out", 1], ["evade", 1]],
+	"after blocking": [["high", 2], ["evade", 1], ["guard standing", 2], ["throw", 3], ["low", 3],  # not shown as written: an identifier, or the digest's English (FightWords)
+			["guard crouching", 1]],  # not shown as written: an identifier, or the digest's English (FightWords)
+	"it blocked": [["high", 3], ["throw", 3], ["step in", 1], ["low", 3]],  # not shown as written: an identifier, or the digest's English (FightWords)
+	"it evaded": [["step in", 3], ["high", 1]],  # not shown as written: an identifier, or the digest's English (FightWords)
+	"it whiffed": [["step in", 2], ["high", 2], ["mid", 4], ["low", 4]],  # not shown as written: an identifier, or the digest's English (FightWords)
+	"it crouches": [["high", 3], ["step in", 1], ["throw", 4], ["mid", 3], ["overhead", 2]],  # not shown as written: an identifier, or the digest's English (FightWords)
+	"neutral": [["step in", 3], ["high", 2], ["guard standing", 2], ["mid", 4], ["low", 4],  # not shown as written: an identifier, or the digest's English (FightWords)
+			["throw", 3], ["guard crouching", 1], ["overhead", 1], ["step out", 1], ["evade", 1]],  # not shown as written: an identifier, or the digest's English (FightWords)
 }
 
 ## How long a guard or a step is held, in frames, before it looks again.
@@ -86,9 +86,9 @@ var reaction: int = FightDelay.MINIMUM_REACTION
 var level: String = ""
 ## Its last decision, for the panel: the situation it saw, the frame it saw
 ## it on, and what it chose. -1 and "nothing yet" before its first.
-var situation: String = "nothing seen yet"
+var situation: String = "nothing seen yet"  # not shown as written: an identifier, or the digest's English (FightWords)
 var seen_frame: int = -1
-var choice: String = "nothing yet"
+var choice: String = "nothing yet"  # not shown as written: an identifier, or the digest's English (FightWords)
 
 var _tactics: int = 0
 var _execution: int = 100
@@ -115,9 +115,9 @@ func _init(level_name: String, data: FightData, chance_seed: int = 0) -> void:
 ## an opponent that remembers more than its plan forgets it here too.
 func new_fight() -> void:
 	_plan.clear()
-	situation = "nothing seen yet"
+	situation = "nothing seen yet"  # not shown as written: an identifier, or the digest's English (FightWords)
 	seen_frame = -1
-	choice = "nothing yet"
+	choice = "nothing yet"  # not shown as written: an identifier, or the digest's English (FightWords)
 
 
 ## Its input this frame, as player `me`, from `seen` -- the fight as it was
@@ -135,15 +135,15 @@ func _decide(seen: FightState, me: int) -> void:
 	seen_frame = seen.frame
 	situation = situation_of(seen, me, _data)
 	var chosen: String = _draw(situation, seen.fighters[me].character)
-	choice = chosen
+	choice = FightWords.word(chosen)
 	var late: int = 0
 	if _rng.randi_range(1, 100) > _execution:
 		if _rng.randi_range(0, 1) == 0:
 			late = HESITATION_FRAMES
-			choice += " (fumbled: late)"
+			choice += " " + tr("(fumbled: late)")
 		else:
 			chosen = _slip(seen.fighters[me].character)
-			choice += " (fumbled: came out as %s)" % chosen
+			choice += " " + tr("(fumbled: came out as {action})").format({action = FightWords.word(chosen)})
 	_plan = _held(0, late) + _inputs_for(chosen, seen, me)
 
 
@@ -155,18 +155,18 @@ static func situation_of(seen: FightState, me: int, data: FightData) -> String:
 	var mine: FighterState = seen.fighters[me]
 	var other: FighterState = seen.fighters[1 - me]
 	if mine.stun_kind == "hit":
-		return "after being hit"
+		return "after being hit"  # not shown as written: an identifier, or the digest's English (FightWords)
 	if mine.stun_kind == "block":
-		return "after blocking"
+		return "after blocking"  # not shown as written: an identifier, or the digest's English (FightWords)
 	if other.stun_kind == "block":
-		return "it blocked"
+		return "it blocked"  # not shown as written: an identifier, or the digest's English (FightWords)
 	if other.stun_kind == FightBackdash.KIND:
-		return "it evaded"
+		return "it evaded"  # not shown as written: an identifier, or the digest's English (FightWords)
 	if other.move != "" and not other.connected and FightBoxes.phase(other, data) == "recovery":
-		return "it whiffed"
+		return "it whiffed"  # not shown as written: an identifier, or the digest's English (FightWords)
 	if other.crouching and other.is_free():
-		return "it crouches"
-	return "neutral"
+		return "it crouches"  # not shown as written: an identifier, or the digest's English (FightWords)
+	return "neutral"  # not shown: an identifier
 
 
 # One of the options the level knows, drawn by weight.
@@ -212,7 +212,7 @@ static func strike_for(data: FightData, character: String, height: String) -> St
 	var found: String = ""
 	var moves: Dictionary = data.character(character)["moves"]
 	for name: String in moves:
-		if moves[name]["stance"] == "air" or moves[name]["height"] != height:
+		if moves[name]["stance"] == "air" or moves[name]["height"] != height:  # not shown: an identifier
 			continue
 		if found == "" or moves[name]["startup"] < moves[found]["startup"]:
 			found = name
@@ -244,7 +244,7 @@ func _inputs_for(option: String, seen: FightState, me: int) -> Array[int]:
 			return _evade(mine.character)
 	var move: String = strike_for(_data, mine.character, option)
 	if not _reaches(move, mine, other):
-		choice += ", out of reach: steps in"
+		choice += tr(", out of reach: steps in")
 		return _held(toward, STEP_FRAMES)
 	choice += " -- " + move
 	return _pressed(move, mine.character)
@@ -263,7 +263,7 @@ func _reaches(move: String, mine: FighterState, other: FighterState) -> bool:
 # out crouching even if the press waits in the buffer.
 func _pressed(move: String, character: String) -> Array[int]:
 	var frames: Dictionary = _data.move(character, move)
-	var down: int = FightInput.DOWN if frames["stance"] == "crouching" else 0
+	var down: int = FightInput.DOWN if frames["stance"] == "crouching" else 0  # not shown: an identifier
 	var inputs: Array[int] = _held(down, _data.length_of(character, move))
 	inputs[0] = FightInput.BUTTONS[frames["button"]] | down
 	return inputs

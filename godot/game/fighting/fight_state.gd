@@ -50,4 +50,4 @@ func copy() -> FightState:
 ## Everything about this frame as one line of text. Two runs agree on a frame
 ## when their digests are equal.
 func digest() -> String:
-	return "%d w%d | %s | %s | %s" % [frame, winner, fighters[0].digest(), fighters[1].digest(), ", ".join(events)]
+	return "%d w%d | %s | %s | %s" % [frame, winner, fighters[0].digest(), fighters[1].digest(), ", ".join(events)]  # not shown as written: an identifier, or the digest's English (FightWords)

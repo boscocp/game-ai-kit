@@ -54,7 +54,7 @@ static func step(state: FightState, inputs: Array[int], data: FightData) -> Figh
 	for index: int in range(2):
 		_act(next.fighters[index], inputs[index], data)
 		if next.fighters[index].cancelled_from != "":
-			next.events.append("p%d cancels %s into %s" % [index + 1, next.fighters[index].cancelled_from, next.fighters[index].move])
+			next.events.append("p%d cancels %s into %s" % [index + 1, next.fighters[index].cancelled_from, next.fighters[index].move])  # not shown as written: an identifier, or the digest's English (FightWords)
 			next.fighters[index].cancelled_from = ""
 	_separate(next, data)
 	_face_each_other(next)
@@ -111,7 +111,7 @@ static func _act(fighter: FighterState, held: int, data: FightData) -> void:
 		var speed: int = int(data.character(fighter.character)["walk_speed"])
 		fighter.x += FightInput.walk_direction(held) * speed
 	if fighter.move != "":
-		fighter.crouching = data.move(fighter.character, fighter.move)["stance"] == "crouching"
+		fighter.crouching = data.move(fighter.character, fighter.move)["stance"] == "crouching"  # not shown: an identifier
 	elif not fighter.is_airborne():
 		fighter.crouching = FightInput.holds_down(held) and not fighter.stun_kind in STANDING_STUNS
 
@@ -267,11 +267,11 @@ static func _connections(state: FightState, data: FightData) -> Array[int]:
 		if not FightBoxes.overlap(FightBoxes.hitbox(attacker, data), FightBoxes.hurtbox(defender, data)):
 			continue
 		if FightBackdash.invulnerable(defender, data):
-			state.events.append("p%d's %s passes through p%d (evading)" % [index + 1, attacker.move, 2 - index])
+			state.events.append("p%d's %s passes through p%d (evading)" % [index + 1, attacker.move, 2 - index])  # not shown as written: an identifier, or the digest's English (FightWords)
 			continue
 		var missed: String = FightBoxes.misses_vertically(attacker, defender, data)
 		if missed != "":
-			state.events.append("p%d's %s %s" % [index + 1, attacker.move, missed % (2 - index)])
+			state.events.append("p%d's %s %s" % [index + 1, attacker.move, missed % (2 - index)])  # not shown as written: an identifier, or the digest's English (FightWords)
 		else:
 			attackers.append(index)
 	return attackers
@@ -291,7 +291,7 @@ static func _settle_throws(state: FightState, attackers: Array[int], data: Fight
 	if throwers.size() == 1:
 		var striker: int = 1 - throwers[0]
 		var strike: String = state.fighters[striker].move
-		state.events.append("p%d's throw is beaten by p%d's %s (strike beats throw)" % [2 - striker, striker + 1, strike])
+		state.events.append("p%d's throw is beaten by p%d's %s (strike beats throw)" % [2 - striker, striker + 1, strike])  # not shown as written: an identifier, or the digest's English (FightWords)
 		return [striker] as Array[int]
 	return attackers
 
@@ -308,7 +308,7 @@ static func _break_both_throws(state: FightState, data: FightData) -> void:
 		_push_back(state, state.fighters[index], state.fighters[1 - index], data)
 		state.fighters[index].move = ""
 		state.fighters[index].move_frame = 0
-	state.events.append("the throws clash and both break")
+	state.events.append("the throws clash and both break")  # not shown as written: an identifier, or the digest's English (FightWords)
 
 
 # Steps 6 to 9. Every connection is judged on the fighters as step 4 found
@@ -323,7 +323,7 @@ static func _resolve(state: FightState, attackers: Array[int], inputs: Array[int
 	for index: int in range(attackers.size()):
 		_apply(state, attackers[index], moves[index], verdicts[index], data)
 	if attackers.size() == 2:
-		state.events.append("trade")
+		state.events.append("trade")  # not shown as written: the digest's English (FightWords)
 	_keep_on_stage(state, data)
 
 
@@ -337,33 +337,33 @@ static func _judge(state: FightState, attacker: int, defender_held: int, data: F
 	var defender: FighterState = state.fighters[1 - attacker]
 	var height: String = data.move(hitter.character, hitter.move)["height"]
 	if height == "throw":
-		return ["throw", " (a throw cannot be blocked)"]
+		return ["throw", " (a throw cannot be blocked)"]  # not shown as written: an identifier, or the digest's English (FightWords)
 	var can_block: bool = defender.is_free() or defender.stun_kind == "block"
 	if defender.stun_kind == FightBackdash.KIND:
-		return ["hit", " (caught evading, which cannot guard)"]
+		return ["hit", " (caught evading, which cannot guard)"]  # not shown as written: an identifier, or the digest's English (FightWords)
 	if defender.is_airborne():
 		var starting: bool = FightBoxes.phase(defender, data) == "startup"
-		return ["counter-hit", " (caught in the air, starting up)"] if starting else ["hit", " (in the air, which cannot guard)"]
+		return ["counter-hit", " (caught in the air, starting up)"] if starting else ["hit", " (in the air, which cannot guard)"]  # not shown as written: an identifier, or the digest's English (FightWords)
 	var crouched: bool = FightInput.holds_down(defender_held)
-	var guard: String = "crouching" if crouched else "standing"
+	var guard: String = "crouching" if crouched else "standing"  # not shown: an identifier
 	if can_block and FightInput.holds_back_from(defender_held, hitter.facing):
 		if _guard_stops(height, crouched):
-			return ["block", " (holding away, %s)" % guard]
-		return ["hit", " (%s through a %s guard)" % [_a_height(height), guard]]
+			return ["block", " (holding away, %s)" % guard]  # not shown as written: an identifier, or the digest's English (FightWords)
+		return ["hit", " (%s through a %s guard)" % [_a_height(height), guard]]  # not shown as written: an identifier, or the digest's English (FightWords)
 	if FightBoxes.phase(defender, data) == "startup":
-		return ["counter-hit", " (caught starting up)"]
+		return ["counter-hit", " (caught starting up)"]  # not shown as written: an identifier, or the digest's English (FightWords)
 	return ["hit", ""]
 
 
 # True when a guard -- crouching or not -- stops a strike of `height`.
 static func _guard_stops(height: String, crouched: bool) -> bool:
-	return height == "mid" or (height == "low" and crouched) or (height in ["overhead", "high"] and not crouched)
+	return height == "mid" or (height == "low" and crouched) or (height in ["overhead", "high"] and not crouched)  # not shown: an identifier
 
 
 # A height in words. "high" is here for completeness: a high never meets a
 # crouching guard, since every high's rise is above every crouch.
 static func _a_height(height: String) -> String:
-	return {"low": "a low", "overhead": "an overhead", "high": "a high"}[height]
+	return {"low": "a low", "overhead": "an overhead", "high": "a high"}[height]  # not shown as written: an identifier, or the digest's English (FightWords)
 
 
 # Apply one connection. `move` is the attacker's move as step 4 found it: in a
@@ -393,11 +393,11 @@ static func _apply(state: FightState, attacker: int, move: String, verdict: Arra
 			defender.jump_direction = 0
 		defender.move_frame = 0
 		defender.connected = false
-	state.events.append("p%d %s p%d with %s%s" % [attacker + 1, _verb(outcome), 2 - attacker, move, verdict[1]])
+	state.events.append("p%d %s p%d with %s%s" % [attacker + 1, _verb(outcome), 2 - attacker, move, verdict[1]])  # not shown as written: an identifier, or the digest's English (FightWords)
 
 
 static func _verb(outcome: String) -> String:
-	return {"block": "is blocked by", "counter-hit": "counter-hits", "hit": "hits", "throw": "throws"}[outcome]
+	return {"block": "is blocked by", "counter-hit": "counter-hits", "hit": "hits", "throw": "throws"}[outcome]  # not shown as written: an identifier, or the digest's English (FightWords)
 
 
 # Step 9's pushback. The defender is pushed away; what a wall stops it from

@@ -22,6 +22,11 @@ const STATE_COLOURS: Dictionary = {
 }
 const SCORE_COLOUR := Color(1.0, 1.0, 1.0, 0.9)
 const PLAN_COLOUR := Color(1.0, 0.5, 0.9)
+## The arm weighed, worth it and not: a sentence each.
+const ARMING: Array[String] = [  # shown through tr()
+	"arm a tower? raid {raid} in its reach, help in {help} s, gun in {ready} s: kills {killed}, costs {price} -- yes",
+	"arm a tower? raid {raid} in its reach, help in {help} s, gun in {ready} s: kills {killed}, costs {price} -- no",
+]
 
 ## The side whose thinking is drawn, or null for none.
 var side: RtsSide
@@ -44,37 +49,48 @@ func lines() -> Array[String]:
 	var said: Array[String] = []
 	var thinking: Dictionary = side.overlay(view)
 	if thinking.has("goal") and (thinking["goal"] as PackedStringArray).is_empty():
-		return ["not thought yet: it decides twice a second once the match runs"]
+		return [tr("not thought yet: it decides twice a second once the match runs")]
 	if thinking.has("plan"):
-		said.append("goal: %s  (%s)" % [", ".join(thinking["goal"]), thinking["planner"]])
+		said.append(tr("goal: {goal}  ({planner})").format({goal = ", ".join(thinking["goal"]),
+			planner = tr(thinking["planner"])}))
 		var number: int = 1
 		for step: Dictionary in thinking["plan"]:
 			said.append("  %d. %s" % [number, _timed(step)])
 			number += 1
 		if (thinking["plan"] as Array).is_empty():
-			said.append("  (goal met: replacing losses)")
+			said.append("  " + tr("(goal met: replacing losses)"))
 	var arming: Dictionary = thinking.get("arming", {})
 	if not arming.is_empty() and arming["bought"]:
-		said.append("arm a tower: bought")
+		said.append(tr("arm a tower: bought"))
 	elif not arming.is_empty() and arming["raid"] > 0.0:
 		said.append(arming_line(arming))
-	said.append("queue: " + (thinking["waiting"] if thinking["waiting"] != "" else "empty"))
+	said.append(tr("queue: {waiting}").format({waiting = thinking["waiting"] if thinking["waiting"] != "" else tr("empty")}))
 	for squad: Dictionary in thinking["squads"]:
-		said.append("squad %d: %s, %d strong%s" % [squad["id"], squad["state"], squad["size"],
-			" -> " + squad["target"] if squad["state"] == Squad.ADVANCE else ""])
-		if squad["news"] != "":
-			said.append("  " + squad["news"])
-		if squad["state"] == Squad.FIGHT and not (squad["focus"] as Dictionary).is_empty():
-			said.append("  focus: %s %d -- %s" % [squad["focus"]["kind"], squad["focus"]["id"], squad["focus"]["why"]])
+		said.append_array(_squad_lines(squad))
+	return said
+
+
+# One squad: its state and size, the region it advances to, the reason of
+# its last arrow -- a key, written when the squad was made -- and its focus.
+func _squad_lines(squad: Dictionary) -> Array[String]:
+	var line: String = tr("squad {id}: {state}, {size} strong").format({id = squad["id"],
+		state = RtsWords.word(squad["state"]), size = squad["size"]})
+	var said: Array[String] = [line + (" -> " + RtsWords.word(squad["target"]) if squad["state"] == Squad.ADVANCE else "")]
+	if squad["news"] != "":
+		said.append("  " + tr(squad["news"]).format({size = Squad.SIZE}))
+	if squad["state"] == Squad.FIGHT and not (squad["focus"] as Dictionary).is_empty():
+		var focus: Dictionary = squad["focus"]
+		said.append("  " + tr("focus: {kind} {id} -- {why}").format({kind = RtsWords.word(focus["kind"]), id = focus["id"],
+			why = focus["why"]}))
 	return said
 
 
 ## The arm, weighed, in one line: the enemy worth the gun would kill near
 ## it before help comes, against its price -- `TowerWorth`'s numbers.
 static func arming_line(weighed: Dictionary) -> String:
-	return "arm a tower? raid %d in its reach, help in %.0f s, gun in %.0f s: kills %d, costs %d -- %s" % [
-		roundi(weighed["raid"]), weighed["help"], minf(weighed["ready"], 999.0), roundi(weighed["killed"]),
-		weighed["price"], "yes" if weighed["worth_it"] else "no"]
+	var line: String = ARMING[0 if weighed["worth_it"] else 1]
+	return TranslationServer.translate(line).format({raid = roundi(weighed["raid"]), help = "%.0f" % weighed["help"],
+		ready = "%.0f" % minf(weighed["ready"], 999.0), killed = roundi(weighed["killed"]), price = weighed["price"]})
 
 
 func _draw() -> void:
@@ -102,7 +118,7 @@ func _draw_squad(squad: Squad) -> void:
 	var colour: Color = STATE_COLOURS.get(squad.machine.current, Color.WHITE)
 	var from: Vector2 = RtsView.to_screen(squad.centre)
 	draw_circle(from, 4.0, colour)
-	draw_string(ThemeDB.fallback_font, from + Vector2(6.0, -6.0), "%d %s" % [squad.id, squad.machine.current],
+	draw_string(ThemeDB.fallback_font, from + Vector2(6.0, -6.0), "%d %s" % [squad.id, RtsWords.word(squad.machine.current)],
 		HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12, colour)
 	if squad.machine.current == Squad.FIGHT:
 		_draw_focus(squad, from, colour)
@@ -160,9 +176,11 @@ func _draw_influence() -> void:
 
 
 static func _timed(step: Dictionary) -> String:
+	var words: Dictionary = {step = step["step"], waits = RtsWords.word(step["waits"]), seconds = roundi(step["starts"])}
 	if step["starts"] == BuildSchedule.NEVER:
-		return "%s: never -- nothing mines %s" % [step["step"], step["waits"]]
+		return TranslationServer.translate("{step}: never -- nothing mines {waits}").format(words)
 	if step["starts"] < 0.5:
-		return "%s: now" % step["step"]
-	var waits: String = "" if step["waits"] == "" else ", waiting for " + step["waits"]
-	return "%s: in %d s%s" % [step["step"], roundi(step["starts"]), waits]
+		return TranslationServer.translate("{step}: now").format(words)
+	if step["waits"] == "":
+		return TranslationServer.translate("{step}: in {seconds} s").format(words)
+	return TranslationServer.translate("{step}: in {seconds} s, waiting for {waits}").format(words)

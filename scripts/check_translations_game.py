@@ -165,9 +165,14 @@ def masked(path: str, text: str) -> Script:
             index = end
             continue
         if char in "\"'":
+            start = index
             value, index = _read_string(text, index)
-            out.append(f'"@{len(literals)}"' + "\n" * value.count("\n"))
-            line += value.count("\n")
+            # The lines the literal spans in the source, not the newlines
+            # in its value: a "\n" escape is one line of code (T80 found
+            # every finding after one reported a line too far down).
+            spanned = text.count("\n", start, index)
+            out.append(f'"@{len(literals)}"' + "\n" * spanned)
+            line += spanned
             literals.append(value)
             continue
         line += char == "\n"
@@ -591,6 +596,10 @@ def self_test() -> int:
         for number, (label, line) in enumerate(PLANTED_L1.items()):
             expect(label, build(root, f"l1_{number}", CLEAN_SCRIPT + line), 1, "L1")
         expect("a comment is not code", build(root, "comment", CLEAN_SCRIPT + '\t# draw_string(font, p, "a b")\n'), 0)
+        # A "\n" escape is not a line of code: the finding names the line it is on.
+        escaped = CLEAN_SCRIPT + '\tvar joined: String = "\\n".join([])\n\tvar shown: String = "Edit the board"\n'
+        expect("the line after a \\n escape", build(root, "escape", escaped), 1,
+               f"demo.gd:{escaped.count(chr(10))}: 'Edit the board'")
         _table_cases(root, expect)
 
         script = pathlib.Path(__file__).resolve()

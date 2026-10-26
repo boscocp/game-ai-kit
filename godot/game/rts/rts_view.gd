@@ -256,7 +256,7 @@ func _draw_construction(unit: Dictionary, centre: Vector2) -> void:
 	if unit.has("progress"):
 		share = float(unit["progress"]) / float(RtsKinds.of(unit["kind"], "ticks"))
 	draw_rect(Rect2(centre - Vector2(CELL, CELL) * 0.5, Vector2(CELL, CELL)), Color(1.0, 0.9, 0.3), false, 2.0)
-	draw_string(ThemeDB.fallback_font, centre + Vector2(-CELL, CELL * 0.95), "building %d%%" % roundi(share * 100.0),
+	draw_string(ThemeDB.fallback_font, centre + Vector2(-CELL, CELL * 0.95), tr("building {percent}%").format({percent = roundi(share * 100.0)}),
 		HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12, Color(1.0, 0.9, 0.3))
 
 
@@ -270,7 +270,7 @@ func _draw_placing() -> void:
 	if art == null or not art.draw_unit(self, ghost, centre, CELL, Vector2.ZERO, false, tick, tint):
 		draw_rect(Rect2(centre - Vector2(CELL, CELL) * 0.5, Vector2(CELL, CELL)), tint)
 	draw_rect(Rect2(centre - Vector2(CELL, CELL) * 0.5, Vector2(CELL, CELL)), tint, false, 2.0)
-	var words: String = "click to build the %s" % placing if good else placing_refusal
+	var words: String = tr("click to build here: {kind}").format({kind = RtsWords.word(placing)}) if good else placing_refusal
 	draw_string(ThemeDB.fallback_font, centre + Vector2(CELL, -CELL * 0.6), words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 13, tint)
 
 

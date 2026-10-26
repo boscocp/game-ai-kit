@@ -116,7 +116,7 @@ static func start(match_seed: int) -> RtsWorld:
 
 ## The cell `side`'s first base stands on.
 static func home(side: int) -> Vector2i:
-	return REGIONS["west home" if side == WEST else "east home"]["cell"]
+	return REGIONS["west home" if side == WEST else "east home"]["cell"]  # not shown: an identifier
 
 
 ## The other side.

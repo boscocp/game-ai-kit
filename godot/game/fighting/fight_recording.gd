@@ -109,13 +109,13 @@ static func last_seen(states: Array[FightState], index: int, data: FightData) ->
 static func rows_text(recordings: Dictionary, data: FightData) -> String:
 	var header: Dictionary = {"generated_by": "godot/test/fighting/export_clone_rows.gd", "reaction": REACTION,
 			"features": FightSituation.FEATURES, "actions": FightAction.ACTIONS}
-	var lines: PackedStringArray = ["{", ' "header": %s,' % JSON.stringify(header), ' "sessions": [']
+	var lines: PackedStringArray = ["{", ' "header": %s,' % JSON.stringify(header), ' "sessions": [']  # not shown: a refusal for whoever edits the data, in its keys' English
 	var names: Array = recordings.keys()
 	for index: int in range(names.size()):
 		var recording: Dictionary = recordings[names[index]]
 		var about: Dictionary = {"recording": names[index], "player": recording["player"]}
 		about["characters"] = recording["characters"]
-		lines.append('  {"about": %s, "rows": [' % JSON.stringify(about))
+		lines.append('  {"about": %s, "rows": [' % JSON.stringify(about))  # not shown: a refusal for whoever edits the data, in its keys' English
 		var rows: PackedStringArray = []
 		for row: Dictionary in rows_of(recording, data):
 			rows.append("   " + JSON.stringify(_words(row)))
@@ -157,12 +157,12 @@ static func read_all(folder: String, refused: Array[String]) -> Dictionary:
 ## What is wrong with `parsed` as a recording, or "" when nothing is.
 static func why_not_a_recording(parsed: Variant) -> String:
 	if not parsed is Dictionary:
-		return "not a JSON object"
+		return "not a JSON object"  # not shown: a refusal for whoever edits the data, in its keys' English
 	for field: String in ["player", "characters", "inputs"]:
 		if not parsed.has(field):
-			return "no \"%s\"" % field
+			return "no \"%s\"" % field  # not shown: a refusal for whoever edits the data, in its keys' English
 	if not parsed["characters"] is Array or parsed["characters"].size() != 2:
-		return "\"characters\" is not two names"
+		return "\"characters\" is not two names"  # not shown: a refusal for whoever edits the data, in its keys' English
 	if not parsed["inputs"] is Array:
-		return "\"inputs\" is not a list"
+		return "\"inputs\" is not a list"  # not shown: a refusal for whoever edits the data, in its keys' English
 	return ""

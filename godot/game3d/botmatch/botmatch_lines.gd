@@ -143,7 +143,7 @@ static func aim_line(bot: MatchBot) -> String:
 		zone = BotMatchWords.word(aim["aimed"]), zones = " | ".join(parts)})
 
 
-## One line for the panel: its weapon and rounds, and each errand's score
+## Two lines for the panel: its weapon and rounds, and each errand's score
 ## as gain - walk x its weight - cost, the one it took marked, so the sum
 ## on the screen is the sum the bot made.
 static func errand_line(bot: MatchBot) -> String:
@@ -156,9 +156,10 @@ static func errand_line(bot: MatchBot) -> String:
 			mark = mark, errand = BotMatchWords.word(errand), gain = "%.2f" % weighed[0], walk = "%.1f" % weighed[1],
 			weight = "%.2f" % weight, cost = "%.2f" % weighed[2], score = "%.2f" % weighed[3]}))
 	var weighed_errands: String = " | ".join(parts) if not parts.is_empty() else TranslationServer.translate("none weighed yet")
-	return TranslationServer.translate("{weapon} {ammo}/{reserve}, streak {streak}; errands: {errands}").format({
-		weapon = BotMatchWords.word(bot.weapon), ammo = bot.ammo, reserve = bot.reserve, streak = bot.streak,
-		errands = weighed_errands})
+	# Two lines: in Portuguese one ran off the window (T80).
+	return TranslationServer.translate("{weapon} {ammo}/{reserve}, streak {streak}").format({
+		weapon = BotMatchWords.word(bot.weapon), ammo = bot.ammo, reserve = bot.reserve, streak = bot.streak}) \
+		+ "\n" + TranslationServer.translate("errands: {errands}").format({errands = weighed_errands})
 
 
 ## The watched bot's last weighing of the ways past a body: each way and

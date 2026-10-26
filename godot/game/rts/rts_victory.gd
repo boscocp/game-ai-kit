@@ -33,18 +33,34 @@ static func winner(world: RtsWorld) -> int:
 	return _on_worth(world)
 
 
-## Why the match ended as it did, in a sentence for the screen and the log.
+## Why the match ended as it did, in a sentence for the log: English,
+## whatever the screen speaks.
 static func why(world: RtsWorld) -> String:
+	var said: Array = _sentence(world)
+	return (said[0] as String).format(said[1])
+
+
+## The same sentence for the screen, in the language chosen (T80).
+static func told(world: RtsWorld) -> String:
+	var said: Array = _sentence(world)
+	var values: Dictionary = (said[1] as Dictionary).duplicate()
+	if values.has("side"):
+		values["side"] = RtsWords.word(values["side"])
+	return TranslationServer.translate(said[0]).format(values)
+
+
+# [key, values]: the end of the match, with its numbers.
+static func _sentence(world: RtsWorld) -> Array:
 	var won: int = winner(world)
 	if won == UNDECIDED:
-		return "still going"
+		return ["still going", {}]  # shown through tr()
 	var west: int = worth(world, RtsScenario.WEST)
 	var east: int = worth(world, RtsScenario.EAST)
 	if world.tick < RtsScenario.TIME_LIMIT_SECONDS * RtsWorld.TICKS_PER_SECOND:
-		return "%s's last base fell" % _name(RtsScenario.enemy_of(won))
+		return ["{side}'s last base fell", {side = _name(RtsScenario.enemy_of(won))}]  # shown through tr()
 	if won == DRAW:
-		return "time: both sides worth %d" % west
-	return "time: west worth %d, east %d" % [west, east]
+		return ["time: both sides worth {worth}", {worth = west}]  # shown through tr()
+	return ["time: west worth {west}, east {east}", {west = west, east = east}]  # shown through tr()
 
 
 ## What `side` holds, priced: every unit and building at its cost, an armed
@@ -80,4 +96,4 @@ static func _has_a_base(world: RtsWorld, side: int) -> bool:
 
 
 static func _name(side: int) -> String:
-	return "west" if side == RtsScenario.WEST else "east"
+	return "west" if side == RtsScenario.WEST else "east"  # shown through tr()

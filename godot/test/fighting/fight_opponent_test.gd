@@ -7,6 +7,20 @@ extends GdUnitTestSuite
 
 var _data: FightData
 
+# English, whatever the machine speaks: the engine starts in the system's
+# locale, and these read the English the game writes (T80). The locale
+# found is put back.
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
+
 
 ## A planted opponent: it asks to see `asked` frames late, and writes down
 ## the frame of every fight it is handed.
