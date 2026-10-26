@@ -30,13 +30,14 @@ const ROLES: Dictionary = {
 	RtsKinds.BARRACKS: "trains runners, shields and mortars",
 	RtsKinds.LAB: "lets the barracks train mortars",
 	RtsKinds.DEPOT: "8 more supply, so more units",
-	RtsKinds.TOWER: "sees 11 cells round it once built -- it does not shoot; it buys sight without a unit",
+	RtsKinds.TOWER: "sees 11 cells round it once built; armed (A), it shoots what it sees within 6",
+	RtsKinds.ARM: "a gun for this tower: it strikes the nearest enemy it sees within 6 cells, never through a wall",
 	RtsKinds.ROCKS: "ore, for workers to gather",
 	RtsKinds.VENT: "magma, for workers to gather",
 }
 const KEYS: Dictionary = {
 	RtsKinds.BARRACKS: "B", RtsKinds.DEPOT: "D", RtsKinds.LAB: "L", RtsKinds.TOWER: "T", RtsKinds.BASE: "E",
-	RtsKinds.WORKER: "W", RtsKinds.RUNNER: "1", RtsKinds.SHIELD: "2", RtsKinds.MORTAR: "3",
+	RtsKinds.WORKER: "W", RtsKinds.RUNNER: "1", RtsKinds.SHIELD: "2", RtsKinds.MORTAR: "3", RtsKinds.ARM: "A",
 }
 const HOW_TO_PLAY: String = "How to play -- space starts the clock\n" \
 	+ "1. Drag a box over your workers by the base; right-click a rock to mine ore.\n" \
@@ -97,6 +98,8 @@ func _describe(units: Array[Dictionary]) -> String:
 		var whose: String = "" if unit.has("order") else "the computer's "
 		var lines: Array[String] = ["%s%s  %d/%d" % [whose, unit["kind"].capitalize(), unit["health"],
 			RtsKinds.of(unit["kind"], "health")], ROLES[unit["kind"]]]
+		if unit["armed"]:
+			lines.append("armed")
 		if not unit["complete"]:
 			lines.append("being built")
 		elif not (unit.get("queue", []) as Array).is_empty():
@@ -157,6 +160,8 @@ static func _why_not(view: RtsSnapshot, action: String, what: String, units: Arr
 		return "no supply -- build a depot"
 	if action == "train" and not units.any(func(unit: Dictionary) -> bool: return unit["complete"]):
 		return "the building is not finished"
+	if RtsKinds.is_upgrade(what) and units.all(func(unit: Dictionary) -> bool: return unit["armed"] or what in unit["queue"]):
+		return "already armed"
 	return ""
 
 

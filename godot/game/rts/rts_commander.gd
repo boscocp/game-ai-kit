@@ -7,7 +7,8 @@
 ## always, then the counter to the fighter the enemy has shown most -- a
 ## mortar for shields, a shield for runners, a runner for mortars -- and
 ## the tower when nothing has been seen for a while, so it can find out;
-## the expansion once the match is old enough. **How to get there**:
+## an armed tower when it believes the enemy holds its home more firmly
+## than it does (T56); the expansion once the match is old enough. **How to get there**:
 ## `BuildOrder` plans the chain, by STRIPS or by HTN. **When**:
 ## `BuildSchedule` times the plan by jumping from one affordable moment to
 ## the next, which is what the screen shows beside each step.
@@ -29,6 +30,9 @@ extends RtsSide
 const REPLAN_SECONDS: float = 10.0
 ## With no enemy fighter seen this long, the commander builds a tower to look.
 const SCOUT_AFTER_SECONDS: float = 120.0
+## The share of the fighting strength believed at its home that must be the
+## enemy's before the goal asks for an armed tower: more theirs than its own.
+const THREATENED_SHARE: float = 0.5
 ## The match time after which the expansion joins the goal.
 const EXPAND_AFTER_SECONDS: float = 240.0
 ## The fighter that beats each kind: the counter to what was seen.
@@ -102,9 +106,21 @@ func goal(view: RtsSnapshot) -> PackedStringArray:
 			wanted.append("tower_up")
 	else:
 		wanted.append(READY_FACT[COUNTER[most]])
+	if home_threat() > THREATENED_SHARE:
+		wanted.append("tower_armed")
 	if seconds >= EXPAND_AFTER_SECONDS:
 		wanted.append("expansion_up")
 	return wanted
+
+
+## How much of the fighting strength this side believes stands at its home
+## is the enemy's, from 0 to 1: the two layers of its `RtsInfluence` at the
+## home's square, so a raid seen and lost from sight is still weighed, fading,
+## and its own squads standing there weigh against it. 0 when nobody is.
+func home_threat() -> float:
+	var there: Array[float] = belief.at(RtsScenario.home(side))
+	var total: float = there[0] + there[1]
+	return there[1] / total if total > 0.0 else 0.0
 
 
 ## The plan, its timing and the economy under it, for the screen.

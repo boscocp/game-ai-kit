@@ -236,6 +236,77 @@ func test_the_focus_holds_until_another_scores_a_quarter_better() -> void:
 	assert_int(squad.focus["id"]).is_equal(other.id)
 
 
+func test_a_tower_arming_or_armed_holds_tower_armed_and_one_lost_does_not() -> void:
+	var world: RtsWorld = RtsScenario.start(1)
+	var home: Vector2i = RtsScenario.home(RtsScenario.WEST)
+	var tower: RtsUnit = world.add_unit(RtsKinds.TOWER, RtsScenario.WEST, world.free_cell_near(home))
+	world.set_funds(RtsScenario.WEST, 500, 500)
+	assert_str(world.command(RtsScenario.WEST, RtsCommand.train(tower.id, RtsKinds.ARM))).is_empty()
+	assert_bool("tower_armed" in BuildOrder.facts(RtsSnapshot.of(world, RtsScenario.WEST))).is_true()
+	tower.queue.clear()
+	tower.armed = true
+	assert_bool("tower_armed" in BuildOrder.facts(RtsSnapshot.of(world, RtsScenario.WEST))).is_true()
+	tower.health = 0
+	world.step()
+	assert_bool("tower_armed" in BuildOrder.facts(RtsSnapshot.of(world, RtsScenario.WEST))).is_false()
+
+
+func test_both_planners_raise_a_tower_then_arm_it() -> void:
+	var held := PackedStringArray(["supply_room", "workers_saturated", "magma_flowing"])
+	for planner: BuildOrder.Planner in [BuildOrder.Planner.STRIPS, BuildOrder.Planner.HTN]:
+		var found: Dictionary = BuildOrder.plan(held, PackedStringArray(["tower_armed"]), planner)
+		assert_array(Array(found["steps"])).is_equal(["build_tower", "arm_tower"])
+
+
+func test_the_schedule_times_the_arm_after_the_tower_stands() -> void:
+	var world: RtsWorld = RtsScenario.start(1)
+	world.set_funds(RtsScenario.WEST, 2000, 2000)
+	var view: RtsSnapshot = _with_workers_on_ore(world)
+	var timed: Array[Dictionary] = BuildSchedule.of(PackedStringArray(["build_tower", "arm_tower"]), view)
+	assert_float(timed[1]["starts"]).is_equal(timed[0]["ready"])
+	assert_str(timed[1]["waits"]).is_equal(RtsKinds.TOWER)
+	var arm_seconds: float = float(RtsKinds.of(RtsKinds.ARM, "ticks")) / RtsWorld.TICKS_PER_SECOND
+	assert_float(timed[1]["ready"] - timed[1]["starts"]).is_equal_approx(arm_seconds, 0.001)
+
+
+func test_the_commander_wants_an_armed_tower_only_while_the_enemy_outweighs_it_at_home() -> void:
+	var world: RtsWorld = RtsScenario.start(1)
+	var home: Vector2i = RtsScenario.home(RtsScenario.WEST)
+	var commander := RtsCommander.new(RtsScenario.WEST, RtsLevels.named("normal"), 1)
+	assert_bool("tower_armed" in _goal_after_a_look(commander, world)).is_false()
+	for index: int in range(3):
+		world.add_unit(RtsKinds.RUNNER, RtsScenario.EAST, home + Vector2i(3, index - 1))
+	assert_float(commander.home_threat()).is_equal(0.0)
+	assert_bool("tower_armed" in _goal_after_a_look(commander, world)).is_true()
+	assert_float(commander.home_threat()).is_equal(1.0)
+	# Its own fighters there, worth more than the raid: weighed, not feared.
+	for index: int in range(4):
+		world.add_unit(RtsKinds.SHIELD, RtsScenario.WEST, home + Vector2i(1, index - 2))
+	assert_bool("tower_armed" in _goal_after_a_look(commander, world)).is_false()
+
+
+func test_the_queues_arm_their_tower_while_raided_and_take_the_wish_back_after() -> void:
+	var world: RtsWorld = RtsScenario.start(1)
+	var home: Vector2i = RtsScenario.home(RtsScenario.WEST)
+	world.add_unit(RtsKinds.BARRACKS, RtsScenario.WEST, home + Vector2i(0, -3))
+	world.add_unit(RtsKinds.TOWER, RtsScenario.WEST, home + Vector2i(3, -3))
+	var raider: RtsUnit = world.add_unit(RtsKinds.RUNNER, RtsScenario.EAST, home + Vector2i(4, 0))
+	var queue := EconomyQueue.new(RtsScenario.WEST, 1)
+	QueueSide.wish_by_rules(queue, RtsSnapshot.of(world, RtsScenario.WEST))
+	assert_bool(queue.wishes.any(func(wish: Dictionary) -> bool: return wish["what"] == RtsKinds.ARM)).is_true()
+	raider.health = 0
+	world.step()
+	QueueSide.wish_by_rules(queue, RtsSnapshot.of(world, RtsScenario.WEST))
+	assert_bool(queue.wishes.any(func(wish: Dictionary) -> bool: return wish["what"] == RtsKinds.ARM)).is_false()
+
+
+# The commander's goal once its belief has taken in what `world` shows it.
+func _goal_after_a_look(commander: RtsCommander, world: RtsWorld) -> PackedStringArray:
+	var view: RtsSnapshot = RtsSnapshot.of(world, RtsScenario.WEST)
+	commander.belief.update(view)
+	return commander.goal(view)
+
+
 static func _runner_up(scores: Dictionary, best: String) -> String:
 	var second: String = ""
 	for region: String in scores:

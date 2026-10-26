@@ -31,11 +31,12 @@ const ROOM_FOR_A_BATCH: int = 4
 const BUDGET: int = 2000
 
 ## Each action's purchase: the kind it wishes for. `mine_magma` buys
-## nothing; it turns workers onto the vents.
+## nothing; it turns workers onto the vents. `arm_tower` buys an upgrade,
+## `RtsKinds.ARM`, which a tower queues as a barracks queues a fighter.
 const BUYS: Dictionary = {
 	"train_workers": RtsKinds.WORKER, "build_depot": RtsKinds.DEPOT, "mine_magma": "",
 	"build_barracks": RtsKinds.BARRACKS, "build_lab": RtsKinds.LAB, "build_tower": RtsKinds.TOWER,
-	"expand": RtsKinds.BASE, "train_runners": RtsKinds.RUNNER, "train_shields": RtsKinds.SHIELD,
+	"arm_tower": RtsKinds.ARM, "expand": RtsKinds.BASE, "train_runners": RtsKinds.RUNNER, "train_shields": RtsKinds.SHIELD,
 	"train_mortars": RtsKinds.MORTAR,
 }
 
@@ -50,6 +51,7 @@ const RECIPES: Dictionary = {
 	"barracks_up": ["build_barracks"],
 	"lab_up": ["barracks_up", "magma_flowing", "build_lab"],
 	"tower_up": ["magma_flowing", "build_tower"],
+	"tower_armed": ["tower_up", "magma_flowing", "arm_tower"],
 	"expansion_up": ["workers_saturated", "expand"],
 	"runners_ready": ["barracks_up", "supply_room", "train_runners"],
 	"shields_ready": ["barracks_up", "magma_flowing", "supply_room", "train_shields"],
@@ -82,7 +84,7 @@ static func action_named(step: String) -> StripsAction:
 ## What holds for the side `view` belongs to, as the domain's facts. A
 ## building counts from the moment it is paid for, so a plan never asks for
 ## a second barracks while the first goes up; a unit counts from the moment
-## it is queued, for the same reason.
+## it is queued, for the same reason, and so does a tower's arm.
 static func facts(view: RtsSnapshot) -> PackedStringArray:
 	var counts: Dictionary = _counts(view)
 	var held := PackedStringArray()
@@ -92,7 +94,8 @@ static func facts(view: RtsSnapshot) -> PackedStringArray:
 		held.append("supply_room")
 	if _on_magma(view) > 0:
 		held.append("magma_flowing")
-	for pair: Array in [[RtsKinds.BARRACKS, "barracks_up"], [RtsKinds.LAB, "lab_up"], [RtsKinds.TOWER, "tower_up"]]:
+	for pair: Array in [[RtsKinds.BARRACKS, "barracks_up"], [RtsKinds.LAB, "lab_up"], [RtsKinds.TOWER, "tower_up"],
+			[RtsKinds.ARM, "tower_armed"]]:
 		if counts.get(pair[0], 0) > 0:
 			held.append(pair[1])
 	if counts.get(RtsKinds.BASE, 0) >= 2:
@@ -146,11 +149,14 @@ static func _decompose(held: PackedStringArray, goal: PackedStringArray) -> Dict
 		"visited": found.visited}
 
 
-# Own units by kind, queued ones counted as if standing.
+# Own units by kind, queued ones counted as if standing, and an armed
+# tower's arm as one of `RtsKinds.ARM`.
 static func _counts(view: RtsSnapshot) -> Dictionary:
 	var counts: Dictionary = {}
 	for unit: Dictionary in view.mine():
 		counts[unit["kind"]] = counts.get(unit["kind"], 0) + 1
+		if unit["armed"]:
+			counts[RtsKinds.ARM] = counts.get(RtsKinds.ARM, 0) + 1
 		for queued: String in unit.get("queue", []):
 			counts[queued] = counts.get(queued, 0) + 1
 	return counts

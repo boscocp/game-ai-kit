@@ -30,7 +30,7 @@ const FIRST_SPEED: int = 1
 const BUILD_KEYS: Dictionary = {KEY_B: RtsKinds.BARRACKS, KEY_D: RtsKinds.DEPOT, KEY_L: RtsKinds.LAB,
 	KEY_T: RtsKinds.TOWER, KEY_E: RtsKinds.BASE}
 const TRAIN_KEYS: Dictionary = {KEY_W: RtsKinds.WORKER, KEY_1: RtsKinds.RUNNER, KEY_2: RtsKinds.SHIELD,
-	KEY_3: RtsKinds.MORTAR}
+	KEY_3: RtsKinds.MORTAR, KEY_A: RtsKinds.ARM}
 ## How near a click must be to a unit to mean it, in cells.
 const CLICK_REACH: float = 0.75
 const SEED: int = 20

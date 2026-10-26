@@ -3,7 +3,8 @@
 ##
 ## Each rule looks at the snapshot and, when it fires, wishes for one thing
 ## at one priority: a barracks if there is none, magma once there is one, a
-## lab after three minutes, the expansion once the home is full, and
+## lab after three minutes, the expansion once the home is full, a tower
+## and then its gun while an enemy fighter is in sight at home (T56), and
 ## fighters in turn, whichever of the three it has fewest of. No rule knows
 ## why another fires, and none looks further than the next purchase -- so
 ## it never saves for the lab while the barracks is wanted, and it builds
@@ -17,6 +18,8 @@
 class_name QueueSide
 extends RtsSide
 
+## How near its home an enemy fighter in sight fires the tower rule, in cells.
+const RAID_CELLS: float = 10.0
 ## When the lab is wanted, and when the expansion may be: in seconds.
 const LAB_AFTER_SECONDS: int = 180
 const EXPAND_AFTER_SECONDS: int = 300
@@ -42,11 +45,35 @@ static func wish_by_rules(queue: EconomyQueue, view: RtsSnapshot) -> void:
 	if have.get(RtsKinds.BASE, 0) < 2 and seconds >= EXPAND_AFTER_SECONDS \
 			and have.get(RtsKinds.WORKER, 0) >= EconomyQueue.WORKERS_PER_BASE:
 		queue.wish(RtsKinds.BASE, 60, "rule: a full home, five minutes in")
+	_arm_the_home(queue, view, have)
 	var fewest: String = _fewest_fighter(view, have)
 	for kind: String in RtsKinds.FIGHTERS:
 		if kind != fewest:
 			queue.forget(kind)
 	queue.wish(fewest, 30, "rule: fewest %ss" % fewest)
+
+
+# A tower at home first, then its gun: a rule, so it fires on what is in
+# sight now and asks nothing about whether the gun beats another squad. The
+# wishes are taken back when the raid is out of sight: one left at the top
+# for a tower since lost would hold every purchase under it for ever.
+static func _arm_the_home(queue: EconomyQueue, view: RtsSnapshot, have: Dictionary) -> void:
+	if not _raided(view):
+		queue.forget(RtsKinds.TOWER)
+		queue.forget(RtsKinds.ARM)
+	elif have.get(RtsKinds.TOWER, 0) == 0:
+		queue.wish(RtsKinds.TOWER, 40, "rule: an enemy at the home, a tower")
+	elif have.get(RtsKinds.ARM, 0) == 0:
+		queue.wish(RtsKinds.ARM, 40, "rule: an enemy at the home, arm the tower")
+
+
+# True when an enemy fighter is in sight within `RAID_CELLS` of the home.
+static func _raided(view: RtsSnapshot) -> bool:
+	var home := Vector2(RtsScenario.home(view.side))
+	for enemy: Dictionary in view.enemies():
+		if RtsKinds.fights(enemy["kind"]) and (enemy["position"] as Vector2).distance_to(home) <= RAID_CELLS:
+			return true
+	return false
 
 
 # The fighter it has fewest of, among those it can train now -- runners
@@ -70,11 +97,13 @@ static func _can_have(view: RtsSnapshot, have: Dictionary, kind: String) -> bool
 	return BuildSchedule.income(view)[RtsKinds.MAGMA] > 0.0
 
 
-# Own units by kind, queued ones counted.
+# Own units by kind, queued ones counted, an armed tower's arm as one.
 static func _have(view: RtsSnapshot) -> Dictionary:
 	var have: Dictionary = {}
 	for unit: Dictionary in view.mine():
 		have[unit["kind"]] = have.get(unit["kind"], 0) + 1
+		if unit["armed"]:
+			have[RtsKinds.ARM] = have.get(RtsKinds.ARM, 0) + 1
 		for queued: String in unit["queue"]:
 			have[queued] = have.get(queued, 0) + 1
 	return have
