@@ -5,7 +5,7 @@ half_life: concept
 verified_on: 2026-10-22
 tier: 0
 source: https://aima.cs.berkeley.edu/contents.html
-invalidated_if: a module, a demo or a source named in the table changes, or the owner answers the questions at the end and the roadmap is written as tasks
+invalidated_if: a module, a demo or a source named in the table changes, or a task of the roadmap (T84-T101) lands and changes what the kit has
 teaches: none
 -->
 
@@ -181,14 +181,21 @@ tier 1, as invariant 5 asks. Running a model live is tier 3 and optional.
 
 ## The roadmap
 
-The owner chooses; nothing below is a task yet. Ranked by what each adds
+Written on 2026-10-22 as T73's proposal, before the owner chose, and kept
+as written. **Where the owner's answers of 2026-10-26 changed it, it is
+superseded** -- the answers, after the questions, say how, and each
+statement below that no longer holds is marked *(superseded)* with the
+task that replaces it. Ranked by what each adds
 for its size. Every entry names the invariants it touches: **6** (no
 training at game time) and **7** (the LLM never blocks a frame, and its
 output passes a validator). Invariant 6 is about **fitting**, not about
 what is saved: a component stays inside it while every number it uses is
 fixed -- written by hand, or fitted in Python and shipped -- and it only
 computes a state from what it sees. ADR 0016 is the one exception, and it
-covers `ai_opponent`'s n-gram table alone, on three conditions: it only
+covers `ai_opponent`'s n-gram table alone *(superseded: since its
+amendment of 2026-10-26 it covers three named components -- the n-gram,
+the bandit of T99 and the difficulty model of T100 -- and nothing else
+without the owner)*, on three conditions: it only
 counts (no descent), it starts empty every fight, and it can be rebuilt
 from the fight's log. Sizes use the tasks' S/M/L.
 
@@ -200,7 +207,10 @@ from the fight's log. Sizes use the tasks' S/M/L.
    needs a good evaluation and MCTS needs none; or the tactical game as a
    second, harder home (GAP3 ch. 28 is about exactly that). It would be
    a new module beside `ai_adversarial`, with a Python twin. Tier 1. Size
-   M. Invariants: none (it searches, it does not learn).
+   M. Invariants: none (it searches, it does not learn). *(Superseded:
+   the home is an XCOM-style mode of the tactical game, T84-T87, and MCTS
+   goes inside `ai_adversarial`, not beside it -- invariant 2 would make a
+   separate addon copy the game interface; T86.)*
 2. **A director that paces a level.** Teaches adapting the game, not the
    enemy: measure intensity, then build up, peak, relax [Booth 2009].
    Where: the infiltration level (T70) or the bot match -- the director
@@ -222,12 +232,15 @@ from the fight's log. Sizes use the tasks' S/M/L.
    what a solution is instead of how to find it [Foged & Horswill 2015],
    and WFC as a CSP [mxgmn]. Where: generated infiltration levels or
    tactical maps, with a gate that every generated level is solvable.
-   Tier 1. Size M (CSP) + S (WFC on top). Invariants: none.
+   Tier 1. Size M (CSP) + S (WFC on top). Invariants: none. *(Now: CSP in
+   the infiltration level, T95; WFC on maps for the tactical game's XCOM
+   mode, T96.)*
 5. **MDP and value iteration on a small grid game.** Teaches the step from
    search to sequential decisions under chance (AIMA ch. 17). Where: a
    known small game -- *Frozen Lake*-style ice, or a Pac-Man maze with
    one ghost. Tier 1. Size S. **Invariant 6**: value iteration runs in
    Python and the policy is shipped, as the kit's other models are.
+   *(Now: the Pac-Man maze, T97 and T98, size M each.)*
 6. **Bandits to choose among scripted strategies.** Teaches exploration
    against exploitation (AIMA 17.3; GAP2 ch. 25). Where: the fighting
    game's opponent picking among its fixed plans, or the RTS commander
@@ -235,13 +248,16 @@ from the fight's log. Sizes use the tasks' S/M/L.
    bandit learns from payoffs at game time. It needs a new decision by
    the owner extending ADR 0016 to it, on the same three conditions:
    counts only, empty at the start of every fight, rebuildable from the
-   fight's log.
+   fight's log. *(Decided: ADR 0016's amendment of 2026-10-26; the
+   fighting opponent, T99.)*
 7. **`ai_llm`.** Teaches an LLM as one more decider, behind a validator.
    Where: the tactical game's orders, or a guard's spoken report in the
    infiltration level. Tier 3 to run for real, with a tier-1 lesson
    through recorded answers. Size L. **Invariant 7** throughout: never
    on the frame, and nothing it says becomes an action without passing a
-   validator.
+   validator. *(Superseded: its example is the owner's own idea, a text
+   game where you talk your way past a guard, T92-T94, not the tactical
+   game's orders.)*
 8. **Player modelling for difficulty.** Teaches estimating skill from
    play (Y&T ch. 10-12; GAP3 ch. 33 on accuracy). Where: any demo with
    difficulty knobs. **Invariant 6**: a player model that estimates skill
@@ -250,8 +266,14 @@ from the fight's log. Sizes use the tasks' S/M/L.
    decision by the owner extending ADR 0016 to it, on the same three
    conditions (counts only, empty at the start, rebuildable from a log);
    a model fitted in Python from recordings and shipped fixed needs none.
+   *(Superseded: "ADR 0016 covers only the n-gram table" no longer holds;
+   the owner extended it to this model on the same three conditions --
+   its amendment of 2026-10-26 -- and its home is the bot match, T100.)*
 
 ### B. A second game for a technique the kit has
+
+*(Of these, only B.2 (T88) and B.6 (T101) are on the roadmap, as the
+owner answered; B.1 was done in T70; B.3, B.4 and B.5 are not tasks.)*
 
 1. **`ai_teamwork` in the infiltration level** -- done in T70 (wave
    80): the guards use its utility choice, and it gained a search
@@ -282,6 +304,11 @@ from the fight's log. Sizes use the tasks' S/M/L.
    would let a game take utility choice without taking teamwork.
 
 ### A new game, or the ones there are?
+
+*(Superseded on 2026-10-26: no Connect Four or Othello. MCTS and B.2 go
+to an XCOM-style mode of the tactical game -- a mode, not a new game;
+bandits to the fighting game; `ai_llm` to a new text game; the MDP to a
+small Pac-Man maze. The paragraph below is T73's proposal.)*
 
 Most entries fit a demo that exists: the infiltration level takes the
 director, the particle filter and the generated levels; the tactical game
@@ -331,6 +358,74 @@ Answer by number; the tasks are written after the answers.
    entra agora no roadmap ou continua para depois da biblioteca (T64)?
    **en:** Does `ai_llm` (A.7; its lesson at tier 1, running live at
    tier 3) go on the roadmap now, or wait until after the library (T64)?
+
+## Respostas do dono / The owner's answers (2026-10-26)
+
+**pt-BR:** O dono respondeu às sete perguntas em 2026-10-26. As tarefas
+estão em `tasks/` e na seção "The roadmap after T73" de `tasks/STATUS.md`;
+cada decisão em aberto nelas está escrita para o dono confirmar na revisão.
+
+1. "todos" -- todas as entradas da parte A, primeiro as três recomendadas:
+   MCTS (T84-T89), o diretor (T90), o filtro de partículas (T91); depois
+   `ai_llm` (T92-T94), CSP e WFC (T95, T96), o MDP (T97, T98), bandits
+   (T99) e a modelagem do jogador (T100).
+2. "será que pode ser estilo X-com?" -- confirmado: um **modo** estilo
+   XCOM do jogo tático, no mesmo módulo `board`, não um jogo novo nem uma
+   reescrita do tático atual. O modo entra pelo próprio cartão e pela
+   própria cena do jogo tático, com o mesmo estado (`BoardState`), o mesmo
+   mapa, as mesmas peças e teclas; o que muda é o conjunto de regras: tiro
+   com chance de acerto, cobertura, duas ações, névoa (T84, T85). O MCTS
+   joga nele (T86, T87) e o alpha-beta o enfrenta como expectiminimax
+   (T88).
+3. "faz o recomendado pensando em didática de IA" -- a pergunta não
+   recomendava nenhuma das duas respostas; a emenda da ADR 0016 lê as
+   palavras do dono como **estender** a exceção ao bandit, nas três
+   condições, e o dono confirma essa leitura na revisão da T99 (que
+   escreve a regra N13).
+4. Opção 3 -- a ADR 0016 se estende ao modelo do jogador para dificuldade
+   nas mesmas três condições (T100 escreve a regra N14). A exceção cobre
+   três componentes, pelo nome; qualquer outro precisa de nova decisão.
+5. "segue o recomendado" -- B.2 junto com A.1 (T88) e B.6, utilidade como
+   addon próprio (T101).
+6. Um labirinto pequeno estilo **Pac-Man** (T97), iteração de valor em
+   Python e a política enviada pronta (T98).
+7. `ai_llm` "entra agora", não depois da T64. O exemplo é ideia do dono:
+   "algum exemplo de jogo textual de narrativa que envolve algum desafio
+   narrativo de conversar com um agente por texto rodando uma LLM local"
+   (T94); o addon e o portão da invariante 7 em T92, o runtime local em T93.
+
+**en:** The owner answered the seven questions on 2026-10-26. The tasks
+are in `tasks/` and in `tasks/STATUS.md`'s "The roadmap after T73"
+section; every open decision in them is written down for the owner to
+confirm in review.
+
+1. "todos" -- every entry of part A, the recommended three first: MCTS
+   (T84-T89), the director (T90), the particle filter (T91); then `ai_llm`
+   (T92-T94), CSP and WFC (T95, T96), the MDP (T97, T98), bandits (T99)
+   and player modelling (T100).
+2. "será que pode ser estilo X-com?" -- confirmed: an XCOM-style **mode**
+   of the tactical game on the same `board` module, not a new game and not
+   a rewrite of the existing tactical game. The mode is entered from the
+   tactical game's own card and scene, on the same state (`BoardState`),
+   map, pieces and keys; what changes is the ruleset: a shot with a hit
+   chance, cover, two actions, fog (T84, T85). MCTS plays it (T86, T87)
+   and alpha-beta faces it as expectiminimax (T88).
+3. "faz o recomendado pensando em didática de IA" -- the question
+   recommended neither answer; ADR 0016's amendment reads the owner's
+   words as **extend** the exception to the bandit, on its three
+   conditions, and the owner confirms that reading in T99's review (which
+   writes rule N13).
+4. Option 3 -- ADR 0016 extends to the player model for difficulty on the
+   same three conditions (T100 writes rule N14). The exception covers
+   three components by name; any other needs a new decision.
+5. "segue o recomendado" -- B.2 together with A.1 (T88), and B.6, utility
+   choice as its own addon (T101).
+6. A small **Pac-Man**-style maze (T97), value iteration in Python and the
+   policy shipped (T98).
+7. `ai_llm` "entra agora", not after T64. Its example is the owner's own
+   idea -- a text narrative game whose challenge is talking, by text, to an
+   agent run by a local LLM (T94); the addon and invariant 7's gate in
+   T92, the local runtime in T93.
 
 ## Could not be checked
 
