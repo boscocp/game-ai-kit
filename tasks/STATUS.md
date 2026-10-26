@@ -3,17 +3,38 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
-## Resuming after 2026-10-26 (the roadmap after T73, as tasks)
+## Resuming after 2026-10-26 (waves 87 to 100 merged)
 
-**Where it stopped -- read first.** The owner answered T73's seven
-questions on 2026-10-26, and the roadmap is now T84 to T101, in the
-section "The roadmap after T73" below, with the proposed order there.
-ADR 0016 was amended (bandits and the difficulty model, by name). Every
-task carries decisions the owner confirms in its review; the largest is
-T84's: the XCOM-style **mode** is a second ruleset on the tactical game's
-own state, map, pieces and scene, not a new game.
+**Where it stopped -- read first.** Fifteen pull requests (#26 to #40) landed in one
+session, each reviewed by a fresh context before merging, its findings
+applied on the branch and checked locally (CI stays off while the repo is
+private): 87 T74 (#26), 88 T78 (#27), 89 T56 (#28), 90 T75 (#29), 91 T79
+(#30), 92 T76 (#31), 93 T83 (#32), 94 T80 (#35), 96 the T65 reading (#33),
+the roadmap after T73 as tasks T84-T101 (#34), the lint-commits exception
+(#38), 98 T105 (#36), 100 T102 (#37), 99 T106 (#39), and 97 T65 (#40).
+T65 is closed as measured by the owner's choice: falling back weighed and
+respawn waves were built, lost to never falling back (20-0, 7.2 errors),
+and were reverted; the record is in `docs/godot/botmatch.md`.
 
-**Next:** T84 (or T86, T92, T97, which need nothing before them).
+`make check` was green on main at f5ec5d5. **Run it again first**: waves
+97 to 100 landed after it.
+
+**Waiting on the owner:**
+
+- the manual checks of the localised demos and the technique pages;
+- T84's XCOM-mode design, and the other decisions T84-T101 leave for the
+  owner to confirm in review;
+- the proposed invariant-6 wording in ADR 0016's amendment;
+- deleting `$toolchain/xdg` once no pre-T83 branch remains;
+- T83's check on Windows.
+
+**Known gap:** while CI is off, a merge has no message gate in code
+(`docs/reviews/fix-a-long-subject-on-main.md`). Always run
+`python3 scripts/check_pr_message.py && python3 scripts/check_commit_msg.py`
+before `gh pr merge`.
+
+**Next:** in parallel, T84, T86, T92, T97, T101, T103, T104, T107; T64
+alone; T77 after it.
 
 ## Resuming after 2026-10-25 (waves 83 and 84, on Windows)
 
@@ -242,7 +263,7 @@ sha256 and never committed.
 | T51 | A bot match: two teams of bots, cover, and a commander | done | wave 70: `ai_teamwork` (tactical positions with claims, team influence, a commander, squad confidence and waves), Python twins, 17 vectors; a 6-a-side match as a physics-free simulation held to Godot's rays, mirrored; first-person takeover of any bot (owner's choice), tracers, hit markers, a rifle; measured on a fair mirror (9-11; A*'s tie order had bent it 18-2): claims cut bunching 0 s against 79, the commander spreads orders over 2.34 points against 1.81, retreat always leaves someone covering, no shot at an unseen enemy; in the score, retreat costs the match (20-0 without it), the commander suggests help (1.8 errors), claims nothing -- said as measured, as the owner chose (`docs/godot/botmatch.md`), T65 split off; manual check still the owner's |
 | T69 | What a guard perceives, how aware it is, and what it knows | done | wave 79: in `ai_perception` a vision shape read as certainty with body points, light at the feet, hearing along a path (`PathHearing`, from `ai_search`'s new `CostFlood`), typed events, `Awareness` (rises only while perceived, falls a phase at a time, a caution floor after an alert), `TargetMemory` and `BeliefMap`; the `infiltration` module reads two guard types from JSON and wires the fuzzy rate (fastest 0.69 of the peak a second, alert in about 1.5 s; slowest 0.10) and the flood; Python twins, 10 perception and 4 flood vectors, the rate as a fuzzy vector; `make test-infiltration-properties` holds seven claims on 150 generated levels, each planted case caught; nothing on screen yet, which is T70 |
 | T70 | The infiltration level: guards that search together and call for help | done | wave 80: third person, two hand-made levels and generated ones; each guard T67's agent weighing 13 actions from `guard_actions.json`, its own belief cleared only where a hidden body would be perceived (T69 finding 10), a search shared only among guards who heard the same thing; `SearchCoordinator` and `RoleArbiter` in `ai_teamwork` with twins and vectors; help heard along the level, a call cut short never sent; a phase may set its own decay; `make demo-infiltration`, `make test-infiltration`: every claim holds and every planted case is caught; a hidden player found in 6.9 s with the belief, 20.8 s without (21.0 before its review's fixes), 18.4 s with one that never spreads; the quiet route held on the hand-made levels, printed on generated ones (caught on generated 1), and it does not show the light term; manual check the owner's |
-| T65 | A coordinated team that wins | todo | measured again after T67, on the lanes: the commander +40.7 s a match at 1.5 errors and claims +38.2 s at 0.9 (suggested, not shown); retreat loses every match (20-0 without it); the owner decides whether to change retreat or close it as measured |
+| T65 | A coordinated team that wins | done | wave 97, closed as measured by the owner's choice (step 4): proposals 1+2 then 3 -- falling back weighed to cover near the squad's point, its dying table measured by the gate, respawn waves -- were built and measured; never falling back still won 20-0 (+200.5 +- 14.1 s against everything's +0.2 +- 23.8, 7.2 errors), every prediction that was measured was wrong, portability regressed and claim (b)'s plant passed; all three reverted, the gate's counts of today's falling back kept, printed; the record and two untried options in `docs/godot/botmatch.md` |
 | T66 | The bot match on a map made for tactics, with a body to aim at | done | wave 71 (PR #9): height in the simulation (`ArenaWalk`), the three lanes and the yards, sprint, a seen and heard reload, 120 rounds and a base resupply, a power weapon and the five-kill reward, a humanoid body, head/torso/limb zones, solid bodies; `AimChoice` and `PassageChoice` with twins and vectors; reviewed (13 findings applied); both mirrors fair; manual check the owner's |
 | T67 | The bot as an agent: it perceives, weighs and decides, on any map | done | wave 72: percepts through `ai_perception` into one record (shots heard), `ActionChoice` in `ai_teamwork` for the action, the posture and the pace, `ErrandChoice` for the errands, twins and vectors; reviewed (8 findings applied, among them perceiving and deciding in one loop, which bent the yards' mirror); both mirrors fair at 20 matches; random arenas played; manual check the owner's |
 | T68 | Health that comes back, and a bot that weighs falling back to heal | done | wave 76: 10 s delay, 20 a second to 100 (sources: Halopedia, Upcomer, CharlieIntel, Game Developer); the base heals whole; ErrandChoice weighs hiding (TacticalPositions asked for cover from every known enemy) beside going home, the health priced by the bot's exposure (the review); effects after the review: weighing +10.0 +- 22.7 s, never healing +25.4 +- 23.7, below half -53.1 +- 20.8 -- the weak claim holds, the strong one does not, said so; manual check waits for the owner |

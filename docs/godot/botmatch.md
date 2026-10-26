@@ -340,6 +340,125 @@ it. Blue's deaths: 956 with retreat, 958 without -- the retreat saves no
 lives. Why, from the reading, and what T65 proposes, is in the shooter AI
 page's T65 section.
 
+## Falling back weighed, and respawn waves: tried, and reverted (T65, wave 97)
+
+The owner picked T65's recommended proposals on 2026-10-26 -- "1+2 depois
+3" -- and wave 97 built and measured them. They did not make a team that
+falls back win, and the owner closed T65 as measured: **all three were
+reverted, and the match plays as above.** This is the record. Every
+hash here -- `581820e` (the baseline run, and the source of the dying table), `6523962` (1 and 2, after a claims fault was fixed), `8739ed5` (with 3) and `c5a995a` (the reverted match) -- is a commit of PR #40's branch, the first
+three from before its rebase; none survives the squash merge. The
+reverted state on main is the squash-merge commit of PR #40.
+
+**What was tried.**
+
+1. *Where*: a bot fell back to T68's hiding place -- hidden from every
+   enemy its team knew of -- within 15 m of its squad's point, not 8 m
+   towards its spawn; with none, it held.
+2. *When*: falling back was a fourth errand in `ErrandChoice`'s unit,
+   weighed by each bot. Gain: the health missing times its exposure (as
+   T68 prices hiding), plus the death it would avoid -- the chance of
+   dying within 5 s where it stood less the chance in cover, times the
+   respawn wait and the walk back, at 0.05 a second. Costs: each second
+   away at 0.02, and, for the last of its team within 4.5 m of its point
+   with an enemy known within 20 m, the seconds until the enemy would own
+   it at 0.3. The chance was not chosen: a printed run of the gate at
+   581820e counted, for every living bot of both sides at every decision,
+   its band of health (tenths) and exposure (0, a half, 1) and whether it
+   died within 5 s, and that table went into `rules.json` with the commit.
+   The waves stayed -- one member moved while another covered -- and
+   confidence chose only attack or hold.
+3. *A rule*: respawn waves every 10 s, a dead bot joining the wave after
+   next -- 10 to 20 s, as Team Fortress 2's, unscaled.
+
+The panel showed the fall-back sum term by term, in both languages, and
+the map ringed each bot falling back.
+
+**What it measured.** `make test-botmatch-effects`, 20 matches a pairing
+on the lanes, blue against red with everything; in brackets, how many
+combined errors everything is ahead of that pairing:
+
+| blue plays | before (581820e) | 1+2 (6523962) | 1+2+3 (8739ed5) |
+|---|---|---|---|
+| everything | +10.0 +- 22.7 s, 12-8 | -38.7 +- 24.3 s, 8-12 | +0.2 +- 23.8 s, 12-8 |
+| no claims | -37.3 +- 23.3 s, 7-13 (+1.5) | -49.3 +- 24.5 s, 8-12 (+0.3) | -13.4 +- 33.5 s, 7-13 (+0.3) |
+| no commander | -4.1 +- 13.5 s, 9-11 (+0.5) | -182.0 +- 7.7 s, 0-20 (+5.6) | -161.7 +- 10.0 s, 0-20 (+6.3) |
+| no retreat | +186.7 +- 10.2 s, 20-0 (-7.1) | +223.1 +- 8.4 s, 20-0 (-10.2) | +200.5 +- 14.1 s, 20-0 (-7.2) |
+| the yards' mirror | +47.6 +- 32.0 s, 13-7 | -8.4 +- 38.1 s, 8-12 | -0.7 +- 41.0 s, 11-9 |
+
+| falling back (blue, everything) | before | 1+2 | 1+2+3 |
+|---|---|---|---|
+| fall-backs a match | 130.3 | 251.2 | 144.5 |
+| from a held point, then lost within 8 s | 95 of 298, 0.319 | 9 of 334, 0.027 | 8 of 303, 0.026 |
+| the same, the point's cost at 0 (planted) | -- | 0.026 | 0.034 |
+| deaths, with it / never falling back | 956 / 958 | 850 / 645 | 439 / 339 |
+
+**Each prediction against its outcome** (the task file has them beside
+each other):
+
+- 1 alone, no retreat at about +100: not measured -- the owner picked 1 and
+  2 together;
+- 2 with 1, no retreat at about +10 +- 30, within 1.5 errors: **+223.1 +-
+  8.4, 20-0**, 10.2 errors ahead -- wrong;
+- 3 with 1 and 2, no retreat at -40 to -80: **+200.5 +- 14.1, 20-0**,
+  everything 7.2 errors behind -- wrong;
+- the weighing's own claims: (a) at least one fall-back a match held, 251;
+  (b) at most half today's share of points lost after a fall-back (0.159)
+  held, 0.027 -- but its planted case, the point's cost at 0, passed it at
+  0.026.
+
+**Two findings of the gate, with the change in.** Portability regressed:
+on the six random arenas 3 points, then 2, were never taken, where every
+point had been; replayed with falling back off on both sides, the same
+arenas took every point 2 to 7 times, and with it on one never had a bot
+within 3 m of its point A. And claim (b)'s plant passing says the point's
+cost kept no point that falling back near it did not already keep.
+
+**Without the commander** blue swung from -4.1 (9-11) to -182.0 (0-20)
+once falling back was weighed. Nobody predicted it, and it was not
+studied further.
+
+**Why, as far as the counts say -- not tested apart.** Falling back was
+short and constant: 251 a match, about 1.3 s each by the squad-decisions
+spent on it, and blue regenerated less health with it (571 points a
+match) than never falling back (883). The health a bot would regain was
+priced by its exposure *where it stands*; once in cover that reads 0, the
+reason to be there was gone, and the bot walked back out before it
+healed. Blue died more with it than without (850 to 645).
+
+**Possible future work, not tasks:** price the health at the post a bot
+left -- the exposure it would return to -- rather than where it stands;
+and respawn waves alone, never measured without 2.
+
+**What stayed.** The gate still prints, for each pairing, blue's
+fall-backs a match and the share of those from a held point followed by
+losing it within 8 s, and for the mirror the dying table by band
+(`MatchFallBacks`): measurements of today's retreat, read and never
+claimed, which change no step of play. And a bot no longer claims a
+hiding place over a teammate's claim -- in wave 97's first run, places
+claimed that way stacked two bodies on one spot, 366 s bunched.
+
+**The match after the revert** (c5a995a, on main at 3ab7462): `make
+test-botmatch-effects`, 0 failures, 431 s in 12 shards. The pairings the
+claim guard cannot touch -- no claims, never resupply, always resupply,
+never heals, the random arenas -- measured exactly the baseline's. The
+rest moved, because a bot no longer claims a hiding place over a
+teammate: everything -5.7 +- 20.4 s, 11-9 (was +10.0 +- 22.7, 12-8; the
+mirror fair, 0.3 errors); no commander +5.2 +- 13.5, 11-9 (-4.1); no
+retreat +184.5 +- 10.1, 20-0 (+186.7), 8.4 errors ahead of everything;
+heals below half -38.9 +- 17.0 (-53.1); always the head -187.0 (-170.9);
+the yards' mirror +45.0 +- 31.4, 13-7 (+47.6), fair. Today's retreat:
+133.1 fall-backs a match, a held point lost within 8 s after 95 of 293
+(0.324).
+
+The no-commander comparison flipped sign with the guard: everything is
+now 0.4 errors *behind* no commander, where it was 0.5 ahead. What this
+page says of the commander's help -- suggested at best -- is weaker still:
+on this run it is not suggested at all. The numbers in
+`botmatch_effects.gd`'s header (its line 105 and round it) and the T51
+and T68 tables above predate the guard; they are to be refreshed at the
+next effects run.
+
 ## Running the effects gate in shards (T72)
 
 `make test-botmatch-effects` plays 187 whole matches, and two planted

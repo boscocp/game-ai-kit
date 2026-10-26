@@ -23,9 +23,23 @@ const REQUIRED_CONVENTIONS: Array[String] = [
 	"dearest_ground",
 ]
 
+## The refusals this game adds, each a key with named placeholders: its
+## code (W6, W7) stays outside it, untranslated, and the English is the
+## Python side's own sentence. Shown on the skirmish's panel when blue
+## cannot think, so each is translated where it is shown (`error_shown`).
+const RUN_TRAIN: String = "{error} -- run `make train`"  # shown through tr()
+const NO_BLOCK: String = "the file publishes no feature_conventions block"  # shown through tr()
+const NOT_WHOLE: String = "feature_conventions.{name} is {value}, and the game needs a positive whole number"  # shown through tr()
+const REVERSED: String = "feature_conventions says the cheapest ground ({cheapest}) costs more than the dearest ({dearest})"  # shown through tr()
+
 ## Why these weights are unusable, or "" when they loaded. One sentence, as
 ## `ModelFile.error` is, and that sentence when the file itself was refused.
+## English: the tests and the Python side compare it.
 var error: String = ""
+
+# The refusal as words to translate: [code ("" for none), key, values,
+# where it came from ("" for nowhere)]; empty for an addon's own sentence.
+var _error_words: Array = []
 
 ## Convention name to value, from the file's `feature_conventions` block.
 var conventions: Dictionary = {}
@@ -42,7 +56,7 @@ var _file: ModelFile = null
 static func load_from(path: String) -> TacticalWeights:
 	var file: ModelFile = ModelFile.load_from(path)
 	if file.error.begins_with("M1 "):
-		return _refused("%s -- run `make train`" % file.error)
+		return _refused_with(["", RUN_TRAIN, {error = file.error}, ""])
 	return over(file, path)
 
 
@@ -56,13 +70,23 @@ static func from_dictionary(data: Dictionary, source: String) -> TacticalWeights
 static func over(file: ModelFile, source: String) -> TacticalWeights:
 	if not file.is_loaded():
 		return _refused(file.error)
-	var wrong: String = _why_conventions_are_wrong(file.extra)
-	if wrong != "":
-		return _refused("%s (%s)" % [wrong, source])
+	var wrong: Array = _why_conventions_are_wrong(file.extra)
+	if not wrong.is_empty():
+		wrong[3] = source
+		return _refused_with(wrong)
 	var loaded := TacticalWeights.new()
 	loaded._file = file
 	loaded.conventions = file.extra["feature_conventions"]
 	return loaded
+
+
+## `error` in the language chosen, for the screen: this game's sentences
+## translated, their codes and values as they are; an addon's sentence
+## (`ModelFile`'s M codes) as the addon wrote it.
+func error_shown() -> String:
+	if _error_words.is_empty():
+		return error
+	return _words(_error_words, true)
 
 
 ## True when there are models to predict with.
@@ -95,12 +119,13 @@ func convention(name: String) -> int:
 
 
 # The conventions block: present, every required number a positive whole one,
-# and the terrain range the right way round. The sentences are the Python
-# side's own (`report._check_conventions`), so one code means one rule in
-# both languages.
-static func _why_conventions_are_wrong(extra: Dictionary) -> String:
+# and the terrain range the right way round -- as [code, key, values, ""],
+# or empty when it is sound. The sentences are the Python side's own
+# (`report._check_conventions`), so one code means one rule in both
+# languages.
+static func _why_conventions_are_wrong(extra: Dictionary) -> Array:
 	if not (extra.get("feature_conventions") is Dictionary):
-		return "W6 the file publishes no feature_conventions block"
+		return ["W6", NO_BLOCK, {}, ""]
 	var published: Dictionary = extra["feature_conventions"]
 	for name: String in REQUIRED_CONVENTIONS:
 		var value: Variant = published.get(name)
@@ -110,19 +135,16 @@ static func _why_conventions_are_wrong(extra: Dictionary) -> String:
 	# Reversed, a feature that clamps terrain between them clamps with a
 	# minimum above its maximum -- which `clampi` answers rather than refuses,
 	# so every cell on the board would come back as the same wrong number.
+	var ground: Dictionary = {cheapest = str(published["cheapest_ground"]), dearest = str(published["dearest_ground"])}
 	if int(published["cheapest_ground"]) > int(published["dearest_ground"]):
-		return "W7 feature_conventions says the cheapest ground (%s) costs more than the dearest (%s)" % [
-			published["cheapest_ground"], published["dearest_ground"],
-		]
-	return ""
+		return ["W7", REVERSED, ground, ""]
+	return []
 
 
 # The W6 sentence for one value, out of line so the loop above stays three
 # deep.
-static func _not_a_convention(name: String, value: Variant) -> String:
-	return "W6 feature_conventions.%s is %s, and the game needs a positive whole number" % [
-		name, JSON.stringify(value),
-	]
+static func _not_a_convention(name: String, value: Variant) -> Array:
+	return ["W6", NOT_WHOLE, {name = name, value = JSON.stringify(value)}, ""]
 
 
 # A number with no fraction. JSON hands every number over as a float, so
@@ -131,6 +153,23 @@ static func _is_a_whole_number(value: Variant) -> bool:
 	if not (value is float or value is int):
 		return false
 	return is_finite(float(value)) and float(value) == floorf(float(value))
+
+
+# A refusal in this game's words: the English `error`, and the words kept to
+# translate it where it is shown.
+static func _refused_with(words: Array) -> TacticalWeights:
+	var refused: TacticalWeights = _refused(_words(words, false))
+	refused._error_words = words
+	return refused
+
+
+# [code, key, values, source] as one sentence, translated or in English.
+static func _words(words: Array, translated: bool) -> String:
+	var key: String = words[1]
+	var sentence: String = (TranslationServer.translate(key) if translated else key).format(words[2])
+	if words[0] != "":
+		sentence = "%s %s" % [words[0], sentence]
+	return sentence if words[3] == "" else "%s (%s)" % [sentence, words[3]]
 
 
 # The result of a refusal: an error, and nothing to predict with.

@@ -64,7 +64,7 @@ func why_unusable() -> String:
 	if _published == null:
 		return tr("no weights file was given to the policy")
 	if not _published.is_loaded():
-		return _published.error
+		return _published.error_shown()
 	for name: String in [COMBAT_MODEL, CAPTURE_MODEL]:
 		if _published.model(name) == null:
 			return tr("the weights file publishes no `{model}` model").format({model = name})

@@ -43,6 +43,16 @@ static func think(world: BotMatch, team: MatchTeam, now: float) -> void:
 # from it, it chooses a spot at once.
 static func _run_errand(world: BotMatch, team: MatchTeam, bot: MatchBot) -> void:
 	var spot: int = bot.hide_spot if bot.errand == MatchSupply.HIDE else -1
+	# A teammate took the place since this bot found it -- places are found
+	# before anyone claims, and kept a second: it stays at its post this
+	# decision and looks again. Claiming over it stacks two bodies on one
+	# spot (wave 97 measured it, 366 s bunched, with a fall-back errand that
+	# claimed places as hiding does).
+	var taken: bool = spot != -1 and int(team.claims.get(spot, bot.id)) != bot.id
+	if taken and team.use_claims:
+		bot.errand = MatchSupply.NO_ERRAND
+		bot.hide_asked_at = -INF
+		return
 	team.claim(bot.id, spot)
 	bot.chose_at = -INF
 	world.send(bot, MatchSupply.errand_place(world, bot), spot)
