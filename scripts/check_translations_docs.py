@@ -59,6 +59,18 @@ The rules, one finding each
   D13 a non-module technique naming a path that does not exist
   D14 a translation that does not open, before its first section, with the
       line linking its English page and the glossary
+  D15 a mirrored page (README.pt-BR.md) without its English page, or a part
+      it declares to mirror missing from either
+  D16 a mirrored part whose code blocks differ from the English part's
+
+Two more kinds of page are held here (T76). The catalogue,
+`catalogue.md` and `catalogue.pt-BR.md`, is written by `scripts/catalogue.py`
+in both languages at once: it is a pair like any other -- anchors, code,
+the glossary line -- except that it carries no translation_of, because no
+person translated it and the generator's own --check keeps the two in step.
+And `README.pt-BR.md`, the way in for a Portuguese reader, is short on
+purpose: it mirrors only the parts of `README.md` declared in MIRRORS below,
+whose headings must both be there and whose code blocks must be equal.
 
 Exit codes
 ----------
@@ -76,6 +88,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import dataclasses
 import hashlib
 import io
 import json
@@ -105,6 +118,35 @@ KERNEL_PAGES = ("ai_core",)
 # A new technique module may be named here for the wave that writes its
 # page, and taken off the day it lands -- the gate says so if you forget.
 STILL_TO_WRITE: tuple[str, ...] = ()
+
+# Pages written by scripts/catalogue.py, both languages at once (T76): held
+# as a pair, but never pinned by translation_of, since nobody translates them.
+GENERATED_PAGES = ("catalogue",)
+
+
+@dataclasses.dataclass(frozen=True)
+class Mirror:
+    """A pt-BR page outside this folder that mirrors parts of an English one.
+
+    `parts` pairs each English heading with its translation, `#`s included,
+    so a heading moved to another level is a heading that is not there.
+    """
+
+    page: str
+    english: str
+    glossary: str
+    parts: tuple[tuple[str, str], ...]
+
+
+# README.pt-BR.md is short: what the kit is, the tiers, the summary, and how
+# to start. Those parts mirror README.md; the rest stays in English only.
+MIRRORS = (
+    Mirror("README.pt-BR.md", "README.md", f"{PAGES}/{GLOSSARY}", (
+        ("## What it covers", "## O que o kit cobre"),
+        ("## Will it run on my machine?", "## Vai rodar na minha máquina?"),
+        ("## Getting started", "## Para começar"),
+    )),
+)
 
 # The sections every technique page has, by anchor, in this order (step 2).
 SHAPE = ("what", "when-not", "watch", "in-this-kit", "your-project", "deeper")
@@ -240,10 +282,14 @@ def code_blocks(text: str) -> list[tuple[str | None, str, str]]:
 # --- the checks on one pair --------------------------------------------------
 
 
-def glossary_note(name: str) -> str:
-    """The line every translation opens with, for the page called `name`."""
+def glossary_note(name: str, glossary: str = GLOSSARY) -> str:
+    """The line every translation opens with, for the page called `name`.
+
+    `glossary` is the glossary's path from where the page is: beside it for
+    a technique page, `docs/techniques/…` for the README at the root.
+    """
     return (f"English: [{name}.md]({name}.md). Os termos que ficam em inglês "
-            f"estão no [glossário]({GLOSSARY}).")
+            f"estão no [glossário]({glossary}).")
 
 
 def opening_quote(text: str) -> str:
@@ -263,12 +309,12 @@ def opening_quote(text: str) -> str:
     return " ".join(part for part in quoted if part)
 
 
-def glossary_findings(label: str, name: str, text: str) -> list[str]:
+def glossary_findings(label: str, name: str, text: str, glossary: str = GLOSSARY) -> list[str]:
     """D14: a translation that does not open with the glossary line."""
-    if opening_quote(text) == glossary_note(name):
+    if opening_quote(text) == glossary_note(name, glossary):
         return []
     return [f"{label}: D14 it must open, before its first section, with the quoted line "
-            f"\"{glossary_note(name)}\""]
+            f"\"{glossary_note(name, glossary)}\""]
 
 
 def anchor_findings(label: str, text: str) -> list[str]:
@@ -310,10 +356,24 @@ def heading_shape(text: str) -> list[tuple[int, str | None]]:
 
 
 def pair_findings(english_path: pathlib.Path, translated_path: pathlib.Path) -> list[str]:
-    """D5, D6, D8: the translation against its English page."""
+    """D5, D6, D8: the translation against its English page.
+
+    D5 is not asked of a generated page: the generator writes both halves,
+    and its own --check is what says they are current.
+    """
     english = normalised(english_path.read_text(encoding="utf-8"))
     translated = normalised(translated_path.read_text(encoding="utf-8"))
     names = f"{translated_path.name} (translating {english_path.name})"
+    findings = [] if english_path.stem in GENERATED_PAGES else translation_findings(names, english, translated)
+    if heading_shape(english) != heading_shape(translated):
+        findings.append(f"{names}: D6 the headings' levels or anchors differ from the English page's")
+    if [block[1:] for block in code_blocks(english)] != [block[1:] for block in code_blocks(translated)]:
+        findings.append(f"{names}: D8 the code blocks differ; code is not translated")
+    return findings
+
+
+def translation_findings(names: str, english: str, translated: str) -> list[str]:
+    """D5: the translation_of a translator set, against the English page now."""
     findings = []
     meta = META_RE.search(translated)
     claimed = TRANSLATION_OF_RE.search(meta.group(1)) if meta else None
@@ -324,10 +384,46 @@ def pair_findings(english_path: pathlib.Path, translated_path: pathlib.Path) -> 
             f"{names}: D5 stale -- the English page changed since this was translated; "
             f"read the change, update the translation, then set translation_of: {body_hash(english)}"
         )
-    if heading_shape(english) != heading_shape(translated):
-        findings.append(f"{names}: D6 the headings' levels or anchors differ from the English page's")
-    if [block[1:] for block in code_blocks(english)] != [block[1:] for block in code_blocks(translated)]:
-        findings.append(f"{names}: D8 the code blocks differ; code is not translated")
+    return findings
+
+
+# --- the mirrored pages ----------------------------------------------------
+
+
+def section(text: str, heading: str) -> str | None:
+    """The part of a page under `heading`, to the next heading as high; None if absent."""
+    level = len(heading) - len(heading.lstrip("#"))
+    found = outside_fences(text)
+    starts = [number for number, line in found if line.rstrip() == heading]
+    if not starts:
+        return None
+    ends = [number for number, line in found if number > starts[0] and HEADING_RE.match(line)
+            and len(HEADING_RE.match(line).group(1)) <= level]
+    lines = text.splitlines()
+    return "".join(line + "\n" for line in lines[starts[0] - 1:(ends[0] - 1 if ends else len(lines))])
+
+
+def mirror_findings(root: pathlib.Path, mirror: Mirror) -> list[str]:
+    """D14, D15, D16 for one mirrored page; nothing when neither page exists.
+
+    Neither existing is a repository without READMEs -- every planted one in
+    the self-test -- not a mirror gone missing.
+    """
+    page, english = root / mirror.page, root / mirror.english
+    if not page.is_file() and not english.is_file():
+        return []
+    if not page.is_file() or not english.is_file():
+        return [f"{mirror.page}: D15 it mirrors {mirror.english}, and one of the two is missing"]
+    texts = (normalised(english.read_text(encoding="utf-8")), normalised(page.read_text(encoding="utf-8")))
+    findings = glossary_findings(mirror.page, pathlib.PurePath(mirror.english).stem, texts[1], mirror.glossary)
+    for headings_pair in mirror.parts:
+        parts = [section(text, heading) for text, heading in zip(texts, headings_pair)]
+        if None in parts:
+            findings.append(f"{mirror.page}: D15 the declared part {headings_pair[0]!r} / "
+                            f"{headings_pair[1]!r} is missing from one of the two pages")
+        elif [block[1:] for block in code_blocks(parts[0])] != [block[1:] for block in code_blocks(parts[1])]:
+            findings.append(f"{mirror.page}: D16 the code blocks under {headings_pair[1]!r} differ "
+                            f"from {mirror.english}'s; code is not translated")
     return findings
 
 
@@ -353,7 +449,7 @@ def presence_findings(root: pathlib.Path, techniques: list[str], to_write: tuple
     for name in [*techniques, *KERNEL_PAGES]:
         if name not in to_write and not (folder / f"{name}.md").exists():
             findings.append(f"{PAGES}/{name}.md: D2 the technique {name} has no page")
-    known = set(techniques) | set(KERNEL_PAGES)
+    known = set(techniques) | set(KERNEL_PAGES) | set(GENERATED_PAGES)
     for page in sorted(folder.glob("*.md")) if folder.is_dir() else []:
         findings += page_presence(page, known)
     return findings
@@ -411,6 +507,8 @@ def check(root: pathlib.Path, to_write: tuple[str, ...] = STILL_TO_WRITE) -> lis
     findings = missing_paths(root, non_module_techniques(root))
     findings += presence_findings(root, techniques, to_write)
     findings += content_findings(root, techniques)
+    for mirror in MIRRORS:
+        findings += mirror_findings(root, mirror)
     return findings
 
 
@@ -562,6 +660,8 @@ def more_cases(root: pathlib.Path, pages: dict[str, str]) -> list[tuple[str, pat
         ("a technique page with no example", build(root, "unmarked", good_pages(unmarked)), 1, "D10"),
         ("a non-module technique naming a missing path", nowhere, 1, "D13"),
         *glossary_cases(root, pages),
+        *generated_cases(root, pages),
+        *mirror_cases(root, pages),
         # Not a drift: an editor adding newlines at the end changes nothing.
         ("trailing newlines added to the English page", build(root, "trailing", trailing), 0, ""),
     ]
@@ -583,6 +683,68 @@ def glossary_cases(root: pathlib.Path, pages: dict[str, str]) -> list[tuple[str,
         ("a glossary line below the first section", build(root, "low-glossary", moved), 1, "D14"),
         # Not a drift: the same line wrapped differently reads the same.
         ("the glossary line wrapped elsewhere", build(root, "wrapped", wrapped), 0, ""),
+    ]
+
+
+GENERATED_EN = "# Catalogue\n\n## The matrix {#matrix}\n\nRows.\n"
+GENERATED_PT = (f"# Catálogo\n\n> {glossary_note('catalogue')}\n\n"
+                "## A matriz {#matrix}\n\nLinhas.\n")
+
+
+def generated_cases(root: pathlib.Path, pages: dict[str, str]) -> list[tuple[str, pathlib.Path, int, str]]:
+    """The catalogue's pair: held like a translation, never pinned by a hash."""
+    generated = dict(pages, **{"catalogue.md": GENERATED_EN, "catalogue.pt-BR.md": GENERATED_PT})
+    moved = dict(generated, **{"catalogue.pt-BR.md": GENERATED_PT.replace("{#matrix}", "{#matriz}")})
+    bare = dict(generated, **{"catalogue.pt-BR.md": GENERATED_PT.replace(
+        f"> {glossary_note('catalogue')}\n\n", "")})
+    return [
+        # Not a drift: a generated pair carries no translation_of.
+        ("a generated pair, no translation_of", build(root, "generated", generated), 0, ""),
+        ("a generated pair whose anchors differ", build(root, "generated-anchor", moved), 1, "D6"),
+        ("a generated pair with no glossary line", build(root, "generated-bare", bare), 1, "D14"),
+        ("a generated page with no translation",
+         build(root, "generated-alone", dict(pages, **{"catalogue.md": GENERATED_EN})), 1, "D3"),
+    ]
+
+
+README_EN = ("# Kit\n\n## What it covers\n\nA table.\n\n## Will it run on my machine?\n\nTiers.\n\n"
+             "## Getting started\n\n```bash\nmake run   # play\n```\n\n## Licence\n\nApache.\n")
+README_PT = (f"# Kit\n\n> {glossary_note('README', f'{PAGES}/{GLOSSARY}')}\n\n"
+             "## O que o kit cobre\n\nUma tabela.\n\n## Vai rodar na minha máquina?\n\nNíveis.\n\n"
+             "## Para começar\n\n```bash\nmake run   # play\n```\n")
+
+
+def with_readmes(repo: pathlib.Path, english: str | None, translated: str | None) -> pathlib.Path:
+    """The repository with these READMEs at its root; None leaves one out."""
+    for name, text in (("README.md", english), ("README.pt-BR.md", translated)):
+        if text is not None:
+            (repo / name).write_text(text)
+    return repo
+
+
+def mirror_cases(root: pathlib.Path, pages: dict[str, str]) -> list[tuple[str, pathlib.Path, int, str]]:
+    """README.pt-BR.md against the parts of README.md it declares it mirrors."""
+    def readmes(name: str, english: str | None, translated: str | None) -> pathlib.Path:
+        """A planted repository with the good pages and these two READMEs."""
+        return with_readmes(build(root, name, pages), english, translated)
+    # A code block in a part that is not mirrored is the English page's own.
+    licence_code = README_EN + "\n```\nApache-2.0\n```\n"
+    return [
+        ("a README pair that mirrors", readmes("readme", README_EN, README_PT), 0, ""),
+        ("code outside the mirrored parts", readmes("readme-own", licence_code, README_PT), 0, ""),
+        ("an English README with no pt-BR", readmes("readme-alone", README_EN, None), 1, "D15"),
+        ("a pt-BR README with no English", readmes("readme-orphan", None, README_PT), 1, "D15"),
+        ("a mirrored part missing", readmes("readme-part", README_EN, README_PT.replace(
+            "## Vai rodar", "### Vai rodar")), 1, "D15"),
+        ("a mirrored part's code changed", readmes("readme-code", README_EN, README_PT.replace(
+            "# play", "# jogar")), 1, "D16"),
+        ("a pt-BR README with no glossary line", readmes("readme-bare", README_EN, README_PT.replace(
+            "English: [README.md]", "Inglês: [README.md]")), 1, "D14"),
+        # A part runs to the next heading as high as its own: code under a
+        # lower heading inside it is still the part's.
+        ("a mirrored part's code changed under a sub-heading", readmes(
+            "readme-sub", README_EN.replace("```bash", "### Tier 1\n\n```bash"),
+            README_PT.replace("```bash", "### Nível 1\n\n```bash").replace("# play", "# jogar")), 1, "D16"),
     ]
 
 

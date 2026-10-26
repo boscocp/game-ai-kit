@@ -20,16 +20,16 @@ it:
 
 ## The examples, and what each one teaches
 
-| target | the game | the technique | what is drawn |
-|---|---|---|---|
-| `make run` | checkers, you against white | minimax with alpha-beta (`ai_adversarial`) | every move white considered with its value, the one it will play in pink, the line of play it expects, the positions searched and the replies skipped |
-| `make demo-skirmish` | the 12×8 skirmish board | logistic and linear regression (`ai_learning`), A\* routes (`ai_search`) | each blue unit's decision and the probability it was made on |
-| `make demo-tictactoe` | noughts and crosses, you against MENACE | Michie's matchboxes, reinforcement learning trained in Python; minimax as the yardstick | each empty square's beads and chance before the draw, the bead drawn, and (M) what perfect play makes of each square |
-| `make demo-search` | four searches on a board you can paint, and four named boards | BFS, DFS, Dijkstra, A\* (`ai_search`) | the expansion order, the frontier, the route |
-| `make demo-tactical` | Advance Wars style tactics, you against blue | rule-based blue, chosen as a `BlueController` (the board's `DecisionPolicy`); `ai_search`-style reach | blue's next decision in pink before it is played, with why; your spent units greyed |
-| `make demo-stealth` | cross a hall unseen | sight and hearing (`ai_perception`), fuzzy suspicion (`ai_fuzzy`) | each guard's cone, suspicion and state |
+This page used to keep a table of them, by hand, and it stopped at six of
+the fourteen. The list is now generated from the modules' manifests and the
+code each demo's scene reaches, so it cannot fall behind:
+[the catalogue](../techniques/catalogue.md) has every demo, the known game
+it is like, the keys that show the decision, and the techniques it uses --
+read from either side (T76). What each one draws is on its card in
+`make menu` (`godot/menu/catalogue.json`).
 
-`make run` is the project's main scene, so it names no scene in its recipe.
+`make menu` opens the project's main scene, so it names no scene in its
+recipe; `make run` opens checkers.
 Until T27 it opened the skirmish board, which is now `demo-skirmish`.
 
 ## The five parts

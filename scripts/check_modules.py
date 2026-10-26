@@ -106,7 +106,7 @@ GLOBAL = (
 # What only a person reads. The lints that read it run on every wave anyway,
 # so a change here selects no module.
 PROSE = (
-    "docs/", "tasks/", "README.md", "CONTRIBUTING.md", "CLAUDE.md",
+    "docs/", "tasks/", "README.md", "README.pt-BR.md", "CONTRIBUTING.md", "CLAUDE.md",
     "LICENSE", "NOTICE", "VERSION", ".gitignore",
 )
 

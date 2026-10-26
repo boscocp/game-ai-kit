@@ -1,0 +1,380 @@
+{
+  "about": "T76's one hand-written input to the catalogue: for each demo, keyed by its make target, its name, the known game it is like (the owner's rule: build on games people already know) and the keys that show its AI deciding -- each in English and pt-BR, the keys held to the target's make help line; and a short name in both languages for each algorithm the menu's cards (godot/menu/catalogue.json) list. Which techniques and algorithms a demo uses is never written here: scripts/catalogue.py measures it from modules/*.json, the cards and the code its scene reaches. verified_on is the day someone last opened the demos and checked these lines against them; the catalogue pages carry it.",
+  "verified_on": "2026-10-26",
+  "demos": {
+    "run": {
+      "game": {
+        "en": "Checkers",
+        "pt-BR": "Damas"
+      },
+      "like": {
+        "en": "checkers, you against the computer",
+        "pt-BR": "damas, você contra o computador"
+      },
+      "keys": {
+        "en": "space plays white's move; 1-6 how far it looks; E swaps its evaluation for the learned one",
+        "pt-BR": "espaço faz a jogada das brancas; 1-6 até onde ela olha; E troca a avaliação pela aprendida"
+      }
+    },
+    "demo-skirmish": {
+      "game": {
+        "en": "The skirmish",
+        "pt-BR": "A escaramuça (*skirmish*)"
+      },
+      "like": {
+        "en": "a small Advance Wars battle",
+        "pt-BR": "uma batalha pequena de Advance Wars"
+      },
+      "keys": {
+        "en": "space ends your turn, and each blue unit then says what it decided, and the probability it decided on",
+        "pt-BR": "espaço encerra o seu turno, e cada unidade azul diz então o que decidiu, e com que probabilidade"
+      }
+    },
+    "demo-tictactoe": {
+      "game": {
+        "en": "Noughts and crosses",
+        "pt-BR": "Jogo da velha"
+      },
+      "like": {
+        "en": "tic-tac-toe, against Michie's matchbox machine",
+        "pt-BR": "jogo da velha, contra a máquina de caixas de fósforo de Michie"
+      },
+      "keys": {
+        "en": "space draws MENACE's bead; 1-4 its age; M what perfect play makes of each square",
+        "pt-BR": "espaço sorteia a conta do MENACE; 1-4 a idade dele; M o que o jogo perfeito faz de cada casa"
+      }
+    },
+    "demo-search": {
+      "game": {
+        "en": "Four searches",
+        "pt-BR": "Quatro buscas"
+      },
+      "like": {
+        "en": "the click-to-move of any strategy game, slowed down to one cell at a time",
+        "pt-BR": "o clicar-e-andar de qualquer jogo de estratégia, em câmera lenta, uma célula por vez"
+      },
+      "keys": {
+        "en": "1-4 choose the search; space reveals the next cell it expanded; B the next board",
+        "pt-BR": "1-4 escolhem a busca; espaço mostra a próxima célula expandida; B o próximo tabuleiro"
+      }
+    },
+    "demo-stealth": {
+      "game": {
+        "en": "Stealth",
+        "pt-BR": "*Stealth*"
+      },
+      "like": {
+        "en": "the top-down stealth of the first Metal Gear",
+        "pt-BR": "o *stealth* visto de cima do primeiro Metal Gear"
+      },
+      "keys": {
+        "en": "space waits, and each guard's cone and suspicion move on; D shows the danger map",
+        "pt-BR": "espaço espera, e o cone e a suspeita de cada guarda seguem mudando; D mostra o mapa de perigo"
+      }
+    },
+    "demo-steering": {
+      "game": {
+        "en": "Steering",
+        "pt-BR": "*Steering*"
+      },
+      "like": {
+        "en": "the enemies of an action game chasing and stopping, one force at a time",
+        "pt-BR": "os inimigos de um jogo de ação perseguindo e parando, uma força por vez"
+      },
+      "keys": {
+        "en": "click moves a target; space pauses; . one step",
+        "pt-BR": "o clique move um alvo; espaço pausa; . um passo"
+      }
+    },
+    "demo-racing": {
+      "game": {
+        "en": "Racing",
+        "pt-BR": "Corrida"
+      },
+      "like": {
+        "en": "Micro Machines, seen from above, the AI in the same car as yours",
+        "pt-BR": "Micro Machines, visto de cima, a IA no mesmo carro que o seu"
+      },
+      "keys": {
+        "en": "1-3 the AI's level; Tab watches the three AIs race",
+        "pt-BR": "1-3 o nível da IA; Tab assiste às três IAs correndo"
+      }
+    },
+    "demo-racing3d": {
+      "game": {
+        "en": "Racing in 3D",
+        "pt-BR": "Corrida em 3D"
+      },
+      "like": {
+        "en": "Gran Turismo, on tyres that slip",
+        "pt-BR": "Gran Turismo, com pneus que derrapam"
+      },
+      "keys": {
+        "en": "1 PID, 2 heat line, 3 measured grip -- each on or off; Tab watches the next car",
+        "pt-BR": "1 PID, 2 *heat line*, 3 aderência medida -- cada um liga ou desliga; Tab assiste ao próximo carro"
+      }
+    },
+    "demo-infiltration": {
+      "game": {
+        "en": "Infiltration",
+        "pt-BR": "Infiltração"
+      },
+      "like": {
+        "en": "Metal Gear Solid, in third person",
+        "pt-BR": "Metal Gear Solid, em terceira pessoa"
+      },
+      "keys": {
+        "en": "1-5 switch each part of the guards' reasoning; Tab follows the next guard",
+        "pt-BR": "1-5 ligam e desligam cada parte do raciocínio dos guardas; Tab segue o próximo guarda"
+      }
+    },
+    "demo-botmatch": {
+      "game": {
+        "en": "Bot match",
+        "pt-BR": "Partida de *bots*"
+      },
+      "like": {
+        "en": "a bot match in Unreal Tournament or Counter-Strike",
+        "pt-BR": "uma partida contra *bots* em Unreal Tournament ou Counter-Strike"
+      },
+      "keys": {
+        "en": "1-3 blue's claims, commander and retreat; Tab a bot; T take it over; M the map",
+        "pt-BR": "1-3 a marcação de posições, o comandante e o recuo do azul; Tab um *bot*; T assume o controle dele; M o mapa"
+      }
+    },
+    "demo-behaviour": {
+      "game": {
+        "en": "One guard, four ways to decide",
+        "pt-BR": "Um guarda, quatro jeitos de decidir"
+      },
+      "like": {
+        "en": "a guard on its rounds, as in Metal Gear or Thief",
+        "pt-BR": "um guarda fazendo a ronda, como em Metal Gear ou Thief"
+      },
+      "keys": {
+        "en": "1-4 swap the state machine, the behaviour tree, GOAP and HTN mid-round; space a turn",
+        "pt-BR": "1-4 trocam a máquina de estados, a *behaviour tree*, GOAP e HTN no meio da ronda; espaço um turno"
+      }
+    },
+    "demo-rts": {
+      "game": {
+        "en": "Real-time strategy",
+        "pt-BR": "Estratégia em tempo real"
+      },
+      "like": {
+        "en": "StarCraft or Age of Empires, against a commander that plans",
+        "pt-BR": "StarCraft ou Age of Empires, contra um comandante que planeja"
+      },
+      "keys": {
+        "en": "V watches two computers; H the planner; I the influence map; F lifts the fog",
+        "pt-BR": "V assiste a dois computadores; H o planejador; I o mapa de influência; F tira a névoa"
+      }
+    },
+    "demo-tactical": {
+      "game": {
+        "en": "Tactics",
+        "pt-BR": "Tática"
+      },
+      "like": {
+        "en": "Advance Wars",
+        "pt-BR": "Advance Wars"
+      },
+      "keys": {
+        "en": "C changes the computer, whose next decision is drawn in pink before space plays it; S swaps sides",
+        "pt-BR": "C troca o computador, cuja próxima decisão aparece em rosa antes de o espaço jogá-la; S troca de lado"
+      }
+    },
+    "demo-fighting": {
+      "game": {
+        "en": "Fighting, training mode",
+        "pt-BR": "Luta, modo treino"
+      },
+      "like": {
+        "en": "Street Fighter's training mode, against a dummy that learns how you play",
+        "pt-BR": "o modo treino de Street Fighter, contra um boneco que aprende o seu jeito de jogar"
+      },
+      "keys": {
+        "en": "M cycles the dummy's mode; space one frame; P pause",
+        "pt-BR": "M troca o modo do boneco; espaço um quadro; P pausa"
+      }
+    }
+  },
+  "algorithms": {
+    "minimax": {
+      "en": "minimax with alpha-beta",
+      "pt-BR": "*minimax* com *alpha-beta*"
+    },
+    "learned-evaluation": {
+      "en": "a learned evaluation",
+      "pt-BR": "uma avaliação aprendida"
+    },
+    "learned-model": {
+      "en": "a regression trained in Python",
+      "pt-BR": "uma regressão treinada no Python"
+    },
+    "a-star": {
+      "en": "A*",
+      "pt-BR": "A*"
+    },
+    "breadth-first": {
+      "en": "BFS",
+      "pt-BR": "BFS"
+    },
+    "depth-first": {
+      "en": "DFS",
+      "pt-BR": "DFS"
+    },
+    "dijkstra": {
+      "en": "Dijkstra",
+      "pt-BR": "Dijkstra"
+    },
+    "menace": {
+      "en": "MENACE's matchboxes",
+      "pt-BR": "as caixas de fósforo do MENACE"
+    },
+    "perfect-play": {
+      "en": "perfect play by minimax",
+      "pt-BR": "jogo perfeito por *minimax*"
+    },
+    "perception": {
+      "en": "vision cone with line of sight and hearing",
+      "pt-BR": "cone de visão com linha de visão e audição"
+    },
+    "fuzzy-logic": {
+      "en": "fuzzy logic",
+      "pt-BR": "lógica *fuzzy*"
+    },
+    "influence-map": {
+      "en": "influence map",
+      "pt-BR": "mapa de influência"
+    },
+    "state-machine": {
+      "en": "state machine",
+      "pt-BR": "máquina de estados"
+    },
+    "behaviour-tree": {
+      "en": "behaviour tree",
+      "pt-BR": "*behaviour tree*"
+    },
+    "goap": {
+      "en": "GOAP",
+      "pt-BR": "GOAP"
+    },
+    "htn": {
+      "en": "HTN",
+      "pt-BR": "HTN"
+    },
+    "seek": {
+      "en": "seek",
+      "pt-BR": "*seek*"
+    },
+    "arrive": {
+      "en": "arrive",
+      "pt-BR": "*arrive*"
+    },
+    "pursue": {
+      "en": "pursue",
+      "pt-BR": "*pursue*"
+    },
+    "avoid": {
+      "en": "avoid",
+      "pt-BR": "*avoid*"
+    },
+    "pure-pursuit": {
+      "en": "pure pursuit",
+      "pt-BR": "*pure pursuit*"
+    },
+    "speed-profile": {
+      "en": "speed profile",
+      "pt-BR": "perfil de velocidade"
+    },
+    "pid-control": {
+      "en": "PID controller",
+      "pt-BR": "controlador PID"
+    },
+    "heat-line": {
+      "en": "heat line",
+      "pt-BR": "*heat line*"
+    },
+    "measured-grip": {
+      "en": "measured grip",
+      "pt-BR": "aderência medida"
+    },
+    "strips": {
+      "en": "STRIPS over PDDL",
+      "pt-BR": "STRIPS sobre PDDL"
+    },
+    "lookahead": {
+      "en": "lookahead with exact odds",
+      "pt-BR": "*lookahead* com chances exatas"
+    },
+    "rules": {
+      "en": "hand-written rules",
+      "pt-BR": "regras escritas à mão"
+    },
+    "reaction-delay": {
+      "en": "reaction delay",
+      "pt-BR": "atraso de reação"
+    },
+    "n-gram": {
+      "en": "n-gram",
+      "pt-BR": "*n-gram*"
+    },
+    "case-lookup": {
+      "en": "the ghost's case lookup",
+      "pt-BR": "a consulta de casos do *ghost*"
+    },
+    "behaviour-cloning": {
+      "en": "behaviour cloning",
+      "pt-BR": "*behaviour cloning*"
+    },
+    "priority-queue": {
+      "en": "priority queue of wishes",
+      "pt-BR": "fila de prioridade de desejos"
+    },
+    "utility": {
+      "en": "utility over regions",
+      "pt-BR": "*utility* por região"
+    },
+    "flow-field": {
+      "en": "flow fields",
+      "pt-BR": "*flow fields*"
+    },
+    "tactical-positions": {
+      "en": "tactical positions with claims",
+      "pt-BR": "posições táticas com marcação"
+    },
+    "team-commander": {
+      "en": "team commander over influence",
+      "pt-BR": "comandante do time sobre a influência"
+    },
+    "squad-confidence": {
+      "en": "squad confidence and retreat in waves",
+      "pt-BR": "confiança do esquadrão e recuo em ondas"
+    },
+    "stealth-senses": {
+      "en": "vision shape with light and hearing",
+      "pt-BR": "forma da visão com luz e audição"
+    },
+    "awareness": {
+      "en": "awareness",
+      "pt-BR": "*awareness*"
+    },
+    "belief-map": {
+      "en": "belief map",
+      "pt-BR": "mapa de crença"
+    },
+    "search-coordinator": {
+      "en": "a shared search",
+      "pt-BR": "uma busca dividida"
+    },
+    "role-arbiter": {
+      "en": "role arbiter",
+      "pt-BR": "árbitro de papéis"
+    },
+    "weighed-actions": {
+      "en": "utility-weighed actions",
+      "pt-BR": "ações pesadas por *utility*"
+    }
+  }
+}
