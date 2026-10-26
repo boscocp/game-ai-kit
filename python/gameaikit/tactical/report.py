@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import pathlib
 import sys
 
@@ -270,11 +271,14 @@ def _check_conventions(published: dict | None) -> list[str]:
     is the arrangement this block exists to end.
     """
     if not isinstance(published, dict):
-        return ["W6 the report publishes no feature_conventions block"]
+        return ["W6 the file publishes no feature_conventions block"]
     findings = []
-    for name in sorted(FEATURE_CONVENTIONS):
+    # In the order they are declared, which is the order the game walks them
+    # (`TacticalWeights.REQUIRED_CONVENTIONS`): its first finding is this
+    # list's first.
+    for name in FEATURE_CONVENTIONS:
         value = published.get(name)
-        if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+        if not _is_a_whole_number(value) or value <= 0:
             findings.append(
                 f"W6 feature_conventions.{name} is {value!r}, and the game needs "
                 "a positive whole number"
@@ -286,6 +290,22 @@ def _check_conventions(published: dict | None) -> list[str]:
             f"({published['dearest_ground']})"
         )
     return findings
+
+
+def _is_a_whole_number(value: object) -> bool:
+    """A finite number with no fraction: 2 and 2.0, never 2.5, `True` or 1e400.
+
+    2.0 counts because the game's JSON reader hands every number over as a
+    float, so the game cannot tell 2.0 from 2 and accepts both; this side
+    accepting only `int` would refuse a file the game loads.
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    try:
+        as_float = float(value)
+    except OverflowError:
+        return False
+    return math.isfinite(as_float) and as_float == math.floor(as_float)
 
 
 def _check_model(name: str, model: dict) -> list[str]:

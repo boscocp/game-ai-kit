@@ -290,6 +290,108 @@
       "why": "A bias JSON cannot spell but can still carry: 1e400 parses to infinity, which multiplies every feature into one answer.",
       "text": "{\"models\": {\"only\": {\"kind\": \"linear\", \"features\": [\"one\"], \"weights\": [1.0], \"bias\": 1e400}}}\n",
       "refused": "M8"
+    },
+    {
+      "why": "`NaN` is not JSON, though Python's reader accepts it unless told not to: both languages refuse the text, not the number.",
+      "text": "{\"models\": {\"only\": {\"kind\": \"linear\", \"features\": [\"one\"], \"weights\": [NaN], \"bias\": 0.0}}}\n",
+      "refused": "M2"
+    },
+    {
+      "why": "Nor is `Infinity`, for the same reason.",
+      "text": "{\"models\": {\"only\": {\"kind\": \"linear\", \"features\": [\"one\"], \"weights\": [1.0], \"bias\": -Infinity}}}\n",
+      "refused": "M2"
+    },
+    {
+      "why": "An integer too big for a float, with no exponent: the game reads infinity, and Python must not crash converting it.",
+      "text": "{\"models\": {\"only\": {\"kind\": \"linear\", \"features\": [\"one\"], \"weights\": [10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000], \"bias\": 0.0}}}\n",
+      "refused": "M8"
+    },
+    {
+      "why": "A sound first model does not excuse a broken second: the file is refused whole.",
+      "file": {
+        "models": {
+          "first": {
+            "kind": "linear",
+            "features": [
+              "one"
+            ],
+            "weights": [
+              1.0
+            ],
+            "bias": 0.0
+          },
+          "second": {
+            "kind": "linear",
+            "features": [
+              "one",
+              "two"
+            ],
+            "weights": [
+              1.0
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M7"
+    },
+    {
+      "why": "A weight that is `false`: a yes-or-no inside the numbers.",
+      "file": {
+        "models": {
+          "only": {
+            "kind": "linear",
+            "features": [
+              "one"
+            ],
+            "weights": [
+              false
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M8"
+    },
+    {
+      "why": "A kind that is a number, not a name.",
+      "file": {
+        "models": {
+          "only": {
+            "kind": 7,
+            "features": [
+              "one"
+            ],
+            "weights": [
+              1.0
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M5"
+    },
+    {
+      "why": "A name listed twice before a name that is not a string: the first wrong name is the one reported, in both languages.",
+      "file": {
+        "models": {
+          "only": {
+            "kind": "linear",
+            "features": [
+              "a",
+              "a",
+              1
+            ],
+            "weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M6"
     }
   ]
 }

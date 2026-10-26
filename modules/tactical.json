@@ -21,7 +21,8 @@
     "godot/game/unit_view.gd",
     "godot/locale/tactical.csv",
     "godot/locale/tactical.csv.import",
-    "godot/locale/tactical.pt_BR.translation"
+    "godot/locale/tactical.pt_BR.translation",
+    "spec/vectors/tactical_conventions/"
   ],
   "depends_on": [
     "ai_behaviour",

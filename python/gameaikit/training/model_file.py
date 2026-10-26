@@ -46,12 +46,21 @@ def why_unreadable(path: pathlib.Path) -> str:
 def why_text_is_wrong(text: str, source: str) -> str:
     """The same, over a file's text already in hand."""
     try:
-        data = json.loads(text)
+        data = json.loads(text, parse_constant=_not_json)
     except json.JSONDecodeError as problem:
         return f"M2 {source} is not JSON: {problem.msg}, at line {problem.lineno}"
     if not isinstance(data, dict):
         return f"M2 {source} is JSON, but not an object"
     return why_wrong(data)
+
+
+def _not_json(word: str) -> float:
+    """Refuse `NaN`, `Infinity` and `-Infinity`, which JSON does not have.
+
+    Python's reader accepts them by default and the game's does not, so left
+    alone the same file would be an M8 here and an M2 there.
+    """
+    raise json.JSONDecodeError(f"{word} is not a JSON value", word, 0)
 
 
 def why_wrong(data: dict) -> str:
@@ -92,11 +101,15 @@ def _why_features_are_wrong(name: str, given: object) -> str:
     """The feature names: a non-empty list of distinct strings."""
     if not isinstance(given, list) or not given:
         return f"M6 model `{name}` lists no features"
-    if not all(isinstance(feature, str) for feature in given):
-        return f"M6 model `{name}` has a feature name that is not a string"
+    # One walk, each name checked in turn, in the game's order: the first
+    # name that is wrong is the one reported, in both languages.
+    seen = set()
     for feature in given:
-        if given.count(feature) > 1:
+        if not isinstance(feature, str):
+            return f"M6 model `{name}` has a feature name that is not a string"
+        if feature in seen:
             return f"M6 model `{name}` lists the feature `{feature}` twice"
+        seen.add(feature)
     return ""
 
 
@@ -109,4 +122,10 @@ def _is_a_number(value: object) -> bool:
     """
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return False
-    return math.isfinite(value)
+    # An integer too big for a float -- `1` and four hundred zeros -- is one
+    # Python keeps exactly and the game reads as infinity. `math.isfinite`
+    # raises on it rather than answering, so it is converted first.
+    try:
+        return math.isfinite(float(value))
+    except OverflowError:
+        return False

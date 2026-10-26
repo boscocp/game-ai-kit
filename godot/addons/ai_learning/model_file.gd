@@ -60,10 +60,12 @@ static func from_text(text: String, source: String) -> ModelFile:
 	# and a log full of errors during a normal run is a log nobody reads.
 	# This form returns the code and hands over the parser's own message,
 	# which is more than the static one tells the caller anyway.
+	# The line is counted from 1 here, as an editor and the Python side count
+	# it: measured on the pinned engine, `get_error_line()` counts from 0.
 	var reader := JSON.new()
 	if reader.parse(text) != OK:
 		return _refused("M2 %s is not JSON: %s, at line %d" % [
-			source, reader.get_error_message(), reader.get_error_line(),
+			source, reader.get_error_message(), reader.get_error_line() + 1,
 		])
 	if not (reader.data is Dictionary):
 		return _refused("M2 %s is JSON, but not an object" % source)

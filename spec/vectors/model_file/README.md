@@ -37,6 +37,16 @@ green. M1, a missing file, is a path and not content, and each side tests it
 on its own. There is no M9: it was the tactical board's conventions rule,
 which that game now holds itself.
 
+## Where the two readers had to be made to agree
+
+Found by review, each now a case: Python's `json` accepts `NaN` and
+`Infinity` and Godot's does not, so Python refuses them as M2 too; an
+integer too big for a float (`1` and four hundred zeros) is infinity to
+Godot and made Python's `math.isfinite` raise, so Python converts it first
+and refuses it as M8; and the feature names are walked once, in order, so
+`["a", "a", 1]` is "listed twice" in both. A parse error's line is counted
+from 1 in both (Godot's `get_error_line()` counts from 0).
+
 ## Where the cases came from
 
 Written by hand, one rule broken per file, each beside the sentence saying

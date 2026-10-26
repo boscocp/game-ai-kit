@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 19, linear and logistic regression ; https://docs.godotengine.org/en/stable/classes/class_json.html
 invalidated_if: the kit's LearnedModel, ModelFile, SoftmaxModel, CaseTable or ClonedPlayer signatures change, or the demos that use them are renamed
 teaches: learning
-translation_of: 2342257f2fb37545c0f127045d256c0571d5a9b2771e3c7deec1256e9c640f4c
+translation_of: 9485775528fd02339b768cef5a455e85195ad18bba3e18db29bf12fe38c475ed
 -->
 
 > English: [ai_learning.md](ai_learning.md). Os termos que ficam em inglês
@@ -51,7 +51,7 @@ exceção é o *n-gram* do `ai_opponent` (ADR 0016).
   treinador ajusta com `gameaikit.training`. O jogo não usa nenhuma das
   classes do *addon* -- os pesos aprendidos são lidos pelo seu próprio
   `CheckersWeights` (veja [learned_evaluation](learned_evaluation.pt-BR.md)).
-- Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
+- Qual demo usa qual técnica, nos dois sentidos: [o catálogo](catalogue.pt-BR.md#ai_learning).
 
 ## Neste kit {#in-this-kit}
 
@@ -121,9 +121,12 @@ static func model_from(path: String) -> LearnedModel:
 	return published.model("chance")
 
 
-## How likely an attack is to win, 0 to 1, from the facts by name. A fact the
-## model needs and was not given answers NAN, which no threshold passes.
+## How likely an attack is to win, 0 to 1, from the facts by name. With no
+## model, or a fact the model needs and was not given, the answer is NAN,
+## which no threshold passes.
 func chance_to_win(facts: Dictionary) -> float:
+	if _model == null:
+		return NAN
 	return _model.predict_named(facts)
 ```
 

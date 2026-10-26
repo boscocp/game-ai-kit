@@ -9,8 +9,20 @@ on 2026-10-26, and T64 (the library) needs gone. `ModelFile`, the addon's
 loader, refuses any file without the tactical game's four
 `feature_conventions`, so outside that game a reader builds `LearnedModel`
 by hand: the addon is not usable by somebody else's game. And
-`modules/checkers.json` declares `ai_learning` for the game, when only its
-test folder's learned-evaluation example uses it.
+`modules/checkers.json` was recorded as declaring `ai_learning` for the game
+when only its test folder's learned-evaluation example uses it.
+
+**That second finding was measured wrong, and is reversed here.** Moving
+`ai_learning` to `tests_depend_on` made `make lint-modules` refuse (M3): the
+checkers *Python trainer* imports `gameaikit.training`, which `ai_learning`'s
+manifest owns (`python/gameaikit/checkers/train.py:36-37`,
+`python/gameaikit/checkers/report.py:23`). The dependency is the game
+module's own, so it stays in `depends_on`; the catalogue's ○ (declared,
+never reached from the scene) is right, and the page says why. What
+`lint-modules` did find was the skirmish: once `main.gd` loads its weights
+through the tactical game's `TacticalWeights`, it names no `ai_learning`
+class, so `skirmish.json` drops the dependency and reaches it through
+`tactical` (◐ in the catalogue).
 
 The addon keeps what every model file has -- `models`, each with `kind`,
 `features`, `weights` and `bias` -- and refuses what is wrong with those.
@@ -33,8 +45,9 @@ retrained (invariant 6, and `check_no_training.py` compares it).
    both languages to the same code for each planted file.
 4. The technique page, both languages: the example loads a model file of
    its own through `ModelFile`; the finding goes.
-5. `checkers.json`: `ai_learning` moves to `tests_depend_on`; the catalogue
-   regenerated.
+5. The manifests, as `lint-modules` measures them: `checkers.json` keeps
+   `ai_learning` (its trainer's), the page explains the ○; `skirmish.json`
+   drops it; the catalogue regenerated.
 6. STATUS: the two follow-up lines go.
 
 ## Acceptance

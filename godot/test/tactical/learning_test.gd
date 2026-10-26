@@ -145,6 +145,31 @@ func test_a_terrain_range_the_wrong_way_round_is_refused() -> void:
 	}}).error).starts_with("W7 ")
 
 
+func test_every_conventions_vector_case_gets_the_answer_it_claims() -> void:
+	# spec/vectors/tactical_conventions/, which `gameaikit.tactical.report`
+	# is held to as well: the same code, and for W6 the same convention.
+	var cases: Array = _conventions_vector()["cases"]
+
+	assert_int(cases.size()).is_greater(10)
+	for case: Dictionary in cases:
+		assert_str(_conventions_answer(case)).override_failure_message(case["why"]).is_equal(
+			_conventions_claim(case))
+
+
+func test_a_wrong_conventions_claim_is_caught() -> void:
+	# Each kind of claim made wrong, and put through the same comparison.
+	var cases: Array = _conventions_vector()["cases"]
+	var wrong_code: Dictionary = cases[-1].duplicate(true)
+	wrong_code["refused"] = "W6"
+	var wrong_name: Dictionary = cases[4].duplicate(true)
+	wrong_name["about"] = "dearest_ground"
+	var wrong_load: Dictionary = cases[2].duplicate(true)
+	wrong_load["loads"] = true
+
+	for wrong: Dictionary in [wrong_code, wrong_name, wrong_load]:
+		assert_str(_conventions_answer(wrong)).is_not_equal(_conventions_claim(wrong))
+
+
 func test_a_convention_nobody_publishes_answers_minus_one() -> void:
 	assert_int(_published().convention("neerby_radius")).is_equal(-1)
 
@@ -257,3 +282,35 @@ func _but(changed: Dictionary) -> TacticalWeights:
 	data.merge(changed, true)
 	return TacticalWeights.from_dictionary(data, "the test")
 
+
+
+# The conventions vector, from the spec directory beside the Godot project.
+func _conventions_vector() -> Dictionary:
+	var path: String = ProjectSettings.globalize_path("res://").path_join(
+		"../spec/vectors/tactical_conventions/conventions.json")
+	return JSON.parse_string(FileAccess.get_file_as_string(path))
+
+
+# What `TacticalWeights` makes of one case: "loads", a code, or for a W6 on
+# one convention the code and that convention's name.
+func _conventions_answer(case: Dictionary) -> String:
+	var data: Dictionary = SOUND.duplicate(true)
+	if case["conventions"] == null:
+		data.erase("feature_conventions")
+	else:
+		data["feature_conventions"] = case["conventions"]
+	var error: String = TacticalWeights.from_dictionary(data, "the vector").error
+	if error == "":
+		return "loads"
+	if error.begins_with("W6 feature_conventions."):
+		return "W6 " + error.get_slice(".", 1).get_slice(" ", 0)
+	return error.get_slice(" ", 0)
+
+
+# The same, as the vector claims it.
+func _conventions_claim(case: Dictionary) -> String:
+	if case.get("loads", false):
+		return "loads"
+	if case.has("about"):
+		return "%s %s" % [case["refused"], case["about"]]
+	return case["refused"]

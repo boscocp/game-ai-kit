@@ -80,11 +80,35 @@ func test_every_vector_case_gets_the_answer_it_claims() -> void:
 
 func test_a_wrong_claim_in_the_vector_is_caught() -> void:
 	# The planted case for the comparison itself: claims this side meets are
-	# worth something only if a wrong one fails.
-	var case: Dictionary = _vector()["cases"][4]
+	# worth something only if a wrong one fails. Each kind of claim made
+	# wrong, and put through the same comparison.
+	var cases: Array = _vector()["cases"]
+	var wrong_code: Dictionary = cases[4].duplicate(true)
+	wrong_code["refused"] = "M4"
+	var wrong_names: Dictionary = cases[0].duplicate(true)
+	wrong_names["loads"] = ["somebody else's"]
+	var wrong_fields: Dictionary = cases[1].duplicate(true)
+	wrong_fields["extra"] = ["generated_by"]
 
-	assert_str(case["refused"]).is_equal("M3")
-	assert_str(_answer(case)).is_not_equal("M4")
+	for wrong: Dictionary in [wrong_code, wrong_names, wrong_fields]:
+		assert_str(_answer(wrong)).is_not_equal(_claimed(wrong))
+
+
+func test_the_first_wrong_feature_name_is_the_one_reported() -> void:
+	# The code alone cannot tell the two M6 sentences apart; the names are
+	# walked once, in order, and the repeat comes before the number.
+	var published: ModelFile = ModelFile.from_dictionary({"models": {"only": {
+		"kind": "linear", "features": ["a", "a", 1], "weights": [1.0, 1.0, 1.0], "bias": 0.0,
+	}}}, "the test")
+
+	assert_str(published.error).contains("twice")
+
+
+func test_a_parse_error_is_placed_on_the_line_an_editor_shows() -> void:
+	# Counted from 1, as the Python side counts it: the third line here.
+	var published: ModelFile = ModelFile.from_text('{\n"a": 1,\n oops\n}', "the test")
+
+	assert_str(published.error).ends_with("at line 3")
 
 
 func test_a_missing_file_is_refused_by_name() -> void:

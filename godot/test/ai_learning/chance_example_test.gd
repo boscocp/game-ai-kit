@@ -28,6 +28,13 @@ func test_the_example_answers_nan_when_a_fact_is_missing() -> void:
 	assert_bool(is_nan(unit.chance_to_win({"my_health": 100}))).is_true()
 
 
+func test_a_unit_whose_file_was_refused_answers_nan_rather_than_crashing() -> void:
+	# Readers copy this example. A unit whose model never loaded must not
+	# call through null; NAN is the answer no threshold passes.
+	var unit: Node = auto_free(EXAMPLE.new())
+	assert_bool(is_nan(unit.chance_to_win({"my_health": 100, "their_health": 20, "distance": 1}))).is_true()
+
+
 func test_the_example_loads_its_own_file_and_refuses_a_missing_one() -> void:
 	assert_object(EXAMPLE.model_from(EXAMPLE.MODEL_PATH)).is_not_null()
 	assert_object(EXAMPLE.model_from("res://test/ai_learning/nothing.json")).is_null()

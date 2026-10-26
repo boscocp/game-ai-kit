@@ -9,6 +9,7 @@ this one found nine of exactly those in a conformance runner.
 import argparse
 import copy
 import dataclasses
+import json
 import pathlib
 import unittest
 
@@ -204,6 +205,15 @@ class TheReportsRules(unittest.TestCase):
                      / "godot" / "game" / "tactical" / "weights.json")
         self.assertEqual(model_file.why_unreadable(committed), "")
 
+    def test_a_weight_too_big_for_a_float_is_refused_not_crashed_on(self) -> None:
+        # `1` and four hundred zeros: an exact int in Python, infinity in the
+        # game. The loader's rules convert it rather than letting
+        # `math.isfinite` raise, so the report says so and goes on.
+        huge = sound_report()
+        huge["models"]["capture"]["weights"][0] = 10 ** 400
+        findings = report.findings_for(huge, huge)
+        self.assertTrue(any(finding.startswith("M8 ") for finding in findings), findings)
+
     def test_the_sound_report_has_no_findings(self) -> None:
         # The other half of every test above: each one plants one thing, and
         # that is worth something only if the unplanted report is clean.
@@ -228,6 +238,49 @@ class TheReportsRules(unittest.TestCase):
         flat["models"]["capture"]["weights"] = [0.0, 0.0, 0.0, 0.0]
 
         self.assertIn("W5", report.findings_for(flat, flat)[0])
+
+
+CONVENTIONS_VECTOR = (pathlib.Path(__file__).resolve().parents[2]
+                      / "spec" / "vectors" / "tactical_conventions" / "conventions.json")
+
+
+def conventions_answer(case: dict) -> str:
+    """What the report makes of one conventions case: a code, the convention
+    a W6 names, or "loads"."""
+    findings = report._check_conventions(case["conventions"])
+    if not findings:
+        return "loads"
+    first = findings[0]
+    if first.startswith("W6 feature_conventions."):
+        return "W6 " + first.split(".", 1)[1].split(" ", 1)[0]
+    return first.split(" ", 1)[0]
+
+
+def conventions_claim(case: dict) -> str:
+    """The same, as the vector claims it."""
+    if case.get("loads"):
+        return "loads"
+    return " ".join(filter(None, [case["refused"], case.get("about")]))
+
+
+class TheConventionsVector(unittest.TestCase):
+    """`spec/vectors/tactical_conventions/`, which `TacticalWeights` reads too."""
+
+    def test_every_case_gets_the_answer_the_vector_claims(self) -> None:
+        cases = json.loads(CONVENTIONS_VECTOR.read_text(encoding="utf-8"))["cases"]
+        self.assertGreater(len(cases), 10)
+        for case in cases:
+            with self.subTest(case["why"]):
+                self.assertEqual(conventions_answer(case), conventions_claim(case))
+
+    def test_a_wrong_claim_is_caught(self) -> None:
+        cases = json.loads(CONVENTIONS_VECTOR.read_text(encoding="utf-8"))["cases"]
+        wrong_code = dict(cases[-1], refused="W6")
+        wrong_name = dict(cases[4], about="dearest_ground")
+        wrong_load = dict(cases[2], loads=True)
+        for wrong in (wrong_code, wrong_name, wrong_load):
+            with self.subTest(wrong["why"]):
+                self.assertNotEqual(conventions_answer(wrong), conventions_claim(wrong))
 
 
 class TheBaselineProperties(unittest.TestCase):

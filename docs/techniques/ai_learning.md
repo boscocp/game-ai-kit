@@ -47,7 +47,7 @@ the one exception is `ai_opponent`'s n-gram (ADR 0016).
   trainer fits with `gameaikit.training`. The game uses none of the addon's
   classes -- its learned weights are read by its own `CheckersWeights` (see
   [learned_evaluation](learned_evaluation.md)).
-- Which demo uses which technique, both ways: the catalogue (T76, coming).
+- Which demo uses which technique, both ways: [the catalogue](catalogue.md#ai_learning).
 
 ## In this kit {#in-this-kit}
 
@@ -117,9 +117,12 @@ static func model_from(path: String) -> LearnedModel:
 	return published.model("chance")
 
 
-## How likely an attack is to win, 0 to 1, from the facts by name. A fact the
-## model needs and was not given answers NAN, which no threshold passes.
+## How likely an attack is to win, 0 to 1, from the facts by name. With no
+## model, or a fact the model needs and was not given, the answer is NAN,
+## which no threshold passes.
 func chance_to_win(facts: Dictionary) -> float:
+	if _model == null:
+		return NAN
 	return _model.predict_named(facts)
 ```
 
