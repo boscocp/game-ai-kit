@@ -1,6 +1,6 @@
 # T83 — Each checkout gets its own Godot `user://`, and a worktree its ignored files
 
-Size: S · Prereqs: none · Files: `scripts/godot`, `scripts/bootstrap.sh`, `scripts/export.py`, `scripts/check_disk_layout.py`, `scripts/worktree_setup.py`, `Makefile`, `.gitignore`, `docs/adr/0022-a-user-dir-per-checkout.md`, `docs/godot/user-data.md`, `CLAUDE.md`
+Size: S · Prereqs: none · Files: `scripts/godot`, `scripts/bootstrap.sh`, `scripts/export.py`, `scripts/check_disk_layout.py`, `scripts/worktree_setup.py`, `Makefile`, `.gitignore`, `docs/adr/0022-a-user-dir-per-checkout.md`, `docs/godot/user-data.md`, `CLAUDE.md`, `docs/adr/0002-toolchain-on-the-large-disk.md`, `docs/howto/windows.md`, `docs/godot/exporting.md`, `godot/game/language.gd`, `godot/test/locale/language_test.gd`
 
 ## Goal
 

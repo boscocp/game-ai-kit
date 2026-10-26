@@ -21,6 +21,13 @@ toolchain, and the leaks looked for include where they would land.
 Two mechanisms means two ways to silently regress, so both are asserted here
 rather than trusted.
 
+Where the second one points is asserted too (T83, docs/adr/0022). It used to
+be one directory under the toolchain for every git worktree, and a suite
+ending in one worktree deleted the files of a test running in another. Each
+checkout's own scripts/godot is asked where it sends user:// (D6 not under
+home, D7 no two checkouts sharing one, D8 inside its own checkout and ignored
+by git); a checkout whose wrapper predates the question is a note.
+
 The art generator (T31) has the same trap, larger: tens of GB of model that Hugging
 Face, torch and Triton would all cache under ~/.cache by default. scripts/artgen
 points every one of them at the toolchain directory, and the paths below say

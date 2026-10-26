@@ -90,6 +90,7 @@ make test-python   # stdlib unittest, no install step
 make test-godot    # headless
 make godot-version # what is pinned vs what is installed
 make hooks         # opt in to .githooks
+make worktree-setup # in a new git worktree: copy gdUnit4 and the term list from the main checkout
 ./scripts/godot …  # the ONLY way to invoke Godot (see below)
 ```
 
@@ -179,7 +180,16 @@ Findings that survive both steps go in `docs/godot/`, with the source URL and a
   that it checked nothing. The note it prints on every run is the only warning
   you get. Restore it with
   `git show d11fc91:scripts/forbidden-term-hashes.txt > scripts/forbidden-term-hashes.txt`,
-  or rebuild it with `--add-term`.
+  or rebuild it with `--add-term`. **A new git worktree starts without it**,
+  and without `godot/addons/gdUnit4/` too: run `make worktree-setup` in the
+  worktree first. It copies both from the main checkout, leaves what is
+  already there, and refuses by name a source the main checkout lacks.
+
+- **Each checkout has its own `user://`** (ADR 0022): `scripts/godot`
+  points it at the checkout's `.user-data/`, ignored by git. Two worktrees
+  testing at once no longer delete each other's files (gdUnit4 clears
+  `user://tmp` after every suite), and a language picked in one is not the
+  one another starts in. `git clean -fdx` deletes it with the rest.
 
 - **A wave does not run `make check`, and a new file must have a module.**
   Since wave 63 a wave runs `make check-affected`: `scripts/affected.py`

@@ -19,7 +19,7 @@ extends RefCounted
 const ENGLISH: String = "en"
 const PORTUGUESE: String = "pt_BR"
 ## Where the choice is kept. `user://`, which `scripts/godot` redirects off
-## the home folder (CLAUDE.md's trap, ADR 0002).
+## the home folder and into the checkout's own `.user-data/` (ADR 0002, 0022).
 const SETTINGS: String = "user://settings.cfg"
 const SECTION: String = "language"
 const KEY: String = "locale"

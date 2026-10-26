@@ -20,7 +20,9 @@ Everything — the editor binary, editor data, export templates, the project's
    which redirects editor settings, cache and export templates to
    `editor_data/` next to the executable;
 2. `XDG_DATA_HOME` pointed at the toolchain directory, which redirects the
-   project's `user://` data.
+   project's `user://` data. **Amended by ADR 0022 (T83):** it now points
+   inside each checkout, at its own `.user-data/`, because one directory
+   under the toolchain was shared by every git worktree.
 
 ## Alternatives considered
 

@@ -65,7 +65,11 @@ started from one keeps printing its log there.
 editor's own data beside the binary on both systems, and on neither does it
 cover the project's `user://`. On Linux the engine finds that under
 `XDG_DATA_HOME`; on Windows `OS_Windows::get_config_path` reads `APPDATA`, and
-the cache `LOCALAPPDATA`. `scripts/godot` points both at the toolchain, and
+the cache `LOCALAPPDATA`. `scripts/godot` points both inside the checkout,
+at its own `.user-data/` (ADR 0022: one directory per checkout, so two
+worktrees never share a `user://`), written as `D:/...` by Git Bash's
+`pwd -W` because `godot.exe` reads them as Windows paths (written on
+Linux and not yet run on Windows: T83's manual check); and
 `make lint-disk-layout` fails if `%APPDATA%\Godot` or `%LOCALAPPDATA%\Godot`
 appears.
 
