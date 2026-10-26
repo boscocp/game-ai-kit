@@ -113,13 +113,14 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-rts-budget test-rts-simulation test-rts-match test-steering-properties \
        test-racing-ladder test-racing-does-not-cheat test-game3d-floor test-botmatch-effects \
        test-racing3d-car test-racing3d-effects test-racing3d-ladder test-racing3d-does-not-cheat test-racing3d-you-drive \
-       test-infiltration-properties test-infiltration test-pad ## Run every gate
+       test-infiltration-properties test-infiltration test-pad \
+       test-locale-screen ## Run every gate
 
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-no-assets lint-readability lint-demos \
        lint-addon-deps lint-modules lint-tiers lint-links lint-workflow lint-license \
        lint-employer-refs lint-docs-freshness lint-literature lint-no-training lint-selftests \
-       lint-translations-docs \
+       lint-translations-docs lint-translations-game \
        test-python test-models ## Every gate that does not need the engine installed
 	@# CI's gate job runs exactly this. It used to hand-list the targets,
 	@# because `check` includes lint-disk-layout, which cannot run where the
@@ -480,6 +481,21 @@ test-demo-overlays: import ## Every example, stepped headless: its overlay holds
 	@# The engine half of invariant 13; `lint-demos` is the half without it.
 	@# Neither can see the screen, and the seeing is each example's manual check.
 	@$(GODOT) --headless --path godot -s res://test/menu/demo_overlays.gd
+
+# --- the examples in Portuguese (T78) ----------------------------------------
+
+.PHONY: lint-translations-game
+lint-translations-game: ## The translated examples: no word reaches the screen untranslated, every key in its table
+	@$(PYTHON) scripts/check_translations_game.py
+
+.PHONY: test-locale-screen
+test-locale-screen: import ## Each translated example opened in pt-BR: no Control or legend shows a translated key's English
+	@# Its own target, as the racer's are, for --fixed-fps 60. It sets the
+	@# locale with TranslationServer.set_locale, not --language: the menu sets
+	@# it the same way. docs/godot/localisation.md.
+	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/locale/locale_screen.gd
+
+# ------------------------------------------------------------------------------
 
 .PHONY: test-decisions
 test-decisions: import ## The two fights the learned opponent has to get right, and a node
