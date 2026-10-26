@@ -323,8 +323,9 @@ measured apart.
 
 ## Retreat measured again, before T65 (wave 96)
 
-Retreat had not been measured since T68. `make test-botmatch-effects` on
-main at 1b70831, 0 failures, 657 s on 12 shared cores:
+T68's runs played the no-retreat pairing, but nobody wrote its number
+down. `make test-botmatch-effects` on main at 1b70831, 0 failures, 657 s
+on 12 shared cores, every pairing below on the lanes:
 
 | blue plays | margin a match | wins |
 |---|---|---|
@@ -333,7 +334,8 @@ main at 1b70831, 0 failures, 657 s on 12 shared cores:
 | no commander | -4.1 +- 13.5 s | 9-11 |
 | no retreat | +186.7 +- 10.2 s | 20-0 |
 
-Health that comes back narrowed the gap from T67's +241.6 and did not close
+T68 as a whole -- health that comes back and the weighing of when to heal,
+not measured apart -- narrowed the gap from T67's +241.6 and did not close
 it. Blue's deaths: 956 with retreat, 958 without -- the retreat saves no
 lives. Why, from the reading, and what T65 proposes, is in the shooter AI
 page's T65 section.

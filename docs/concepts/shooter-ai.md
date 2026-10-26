@@ -608,7 +608,7 @@ and to read first. Every source below was opened on that day.
 **Unreal Tournament's domination: touching a point takes it, and dying
 costs only time.** "To take control of a location, players must touch it's
 control point", and "For each control point taken, the team scores 1
-point every 5 seconds" [Liandri Archives, Domination]. Double Domination
+point every 5 seconds" [Liandri Archives, Domination -- a fan wiki]. Double Domination
 needs both points "at the same time for ten seconds"; a point stays taken
 "until an opponent runs over them"; and players hold by standing there:
 "one or two players ... will stand guard at each captured Point" [Liandri
@@ -617,34 +617,37 @@ puts the consequence plainly: fights away from the points "generally do
 not contribute to win", because "if a player is killed, it simply reappears
 in a random location and has no effect in the score" [Smith et al. 2007,
 section "RL for Coordinating Teams of Bots"]. The paper's strongest
-scripted opponent kept "control of half plus one of the locations" (its
-Table 1). Where UT's bots do fall back, it is to a place the designer
+opponent, HTNBots, which plans with a hierarchical task network rather
+than a fixed script, tries to keep "control of half plus one of the
+locations" (its Table 1). Where UT's bots do fall back, it is to a place the designer
 named: in Assault, "The optional FallBackFort attribute specifies which
 fort defenders should fallback to if the FortStandard is destroyed", and
 defenders stand at DefensePoints, "higher priorities are manned earlier"
 [Polge, UT AI for level designers]. A DefensePoint is put "at every
 location you want a bot who has its orders set to 'Defend' to go"
-[Unreal Wiki, Strategic Bots]. No source opened gives a defender's distance
-from a point in metres.
+[Unreal Wiki, Strategic Bots] -- whose list of places goes on "and
+possibly control point, although I'm not sure of the specifics for either
+Assault or Domination". No source opened gives a defender's distance from
+a point in metres.
 
 **Killzone's warzone: the commander holds what it has, and spawns are what
 it fights over.** Killzone 2's commander: "For every area we control;
 generate an DefendMarker objective", and attacks only "as many areas as we
 still want to capture (based on current score, heuristic)", choosing them
-by "nearby friendlies, own spawnpoints" [Straatman et al. 2009, slide 40].
+by "nearby friendlies, own spawnpoints" [Straatman et al. 2009, slide 41].
 Killzone 3's, in Capture and Hold: "if a faction is ahead in score and owns
 two of the three areas, it can decide to only generate defend objectives
 for the areas it has already captured" [Straatman et al. 2013, §29.6.1, p.
-386]. Tactical spawn points matter "because of the shorter travel
+387]. Tactical spawn points matter "because of the shorter travel
 distances to objectives for re-spawning team members" (the same page), and
 in the chapter's worked match "ISA defenders that did not survive will
 spawn at the nearby TSP to get back to defending the capture point" (§29.7,
-p. 387). Falling back is the commander's, not the squad's: a squad reports
+p. 388). Falling back is the commander's, not the squad's: a squad reports
 "imminent failure—for instance, when the squad has been decimated during an
 attack" (§29.3, p. 378), and squads gather at "regroup markers, which are
 safe locations near the objective", chosen by the influence map (§29.5.2,
-p. 384). Defenders stand at designer-placed "Defend locations" (§29.6.2,
-p. 387).
+p. 385). Defenders stand at designer-placed "Defend locations" (§29.6.2,
+p. 388).
 
 **Halo: a fallback is a second position at the same objective.** "Two-stage
 fallback -- Enemies occupy a territory -- Pushed to 'fallback' point --
@@ -679,7 +682,10 @@ goal is "good-looking combat" rather than the "most effective behavior"
 for the team that controls the most control points", and "When a player
 dies, they are assigned to the respawn wave after the next one. Therefore,
 if the respawn wave time is currently 10 seconds for the player's team,
-they respawn somewhere between 10 and 20 seconds after their death" [Team
+they respawn somewhere between 10 and 20 seconds after their death". The
+wave "is then scaled down when the team has less than 8 players in it",
+to a minimum of 5 seconds at three or fewer -- the formula between is not
+given -- and the team holding the most points gets the shorter one [Team
 Fortress Wiki, Respawn -- read through the Internet Archive's copy of 1
 January 2025; the live wiki was down for maintenance]. Battlefield's
 Conquest: "Each death costs one of the team's tickets", and "A 1:1 ratio of
@@ -694,57 +700,78 @@ doesn't encourage this sort of behavior" [Vanden Bossche 2009].
 
 ### What that says about this match
 
-Put the bot match's own rules (`rules.json`) beside them:
+Put the bot match's own rules (`rules.json`) and code beside them:
 
-- **A death here costs about 10 s and refills the bot.** Respawn is 4 s, one
-  bot at a time, and the walk back to a point 4.8 to 6.7 s (held by
-  `botmatch_test.gd`): 9 to 11 s off the point, and the bot comes back with
-  full health and a full rifle. That is UT's rule -- a death has "no effect
-  in the score" -- not TF2's 10 to 20 s or Battlefield's ticket.
-- **Breaking off to heal costs more than dying.** Health comes back after
-  10 s unhit, at 20 a second: 10 to 15 s away, plus the walk to cover, and
-  no rounds. So a hurt bot that stays and dies is back sooner, and fuller,
-  than one that falls back and heals. No weighing can make falling back pay
-  while that holds; it can only stop it costing.
+- **A death here costs 7 to 13 s and refills the bot.** Each bot respawns
+  4 s after its own death, and walks back to a point in 3 to 9 s
+  (`botmatch_test.gd` holds every walk within that, and the means per point
+  within a second of each other; T66 measured 4.8 to 6.7 s). The bot comes
+  back with full health and a full rifle. That is UT's rule -- a death has
+  "no effect in the score" -- not TF2's 10 to 20 s or Battlefield's
+  ticket. It is not quite free: each kill counts towards the killer's
+  streak, and five earn a power weapon at its base.
+- **Breaking off to heal costs as much as dying, or more.** Health comes
+  back after 10 s unhit, at 20 a second: 10 to 15 s away, plus the walk to
+  cover, and no rounds. A hurt bot that stays and dies is back about as
+  soon, and fuller. So healing alone will seldom pay for falling back.
+  What can is the point: blue's deaths are the same with retreat and
+  without (956 and 958, below), so what today's retreat costs is the point
+  it gives up, not lives -- and a fall-back that keeps the point contested
+  would not pay that.
 - **The retreat gives the point away by a rule that never looks at it.** A
   squad whose confidence falls to 0.5 walks 8 m towards its spawn in
-  waves; the capture radius is 3 m and an uncontested point turns in 4 s.
+  waves; an uncontested point is neutral in 4 s and the enemy's in 8.
   Every source that falls back on purpose falls back *at the objective* --
   Halo's fallback point, UT's FallBackFort, Killzone's regroup marker near
   it, Days Gone's short step to cover -- and none towards its spawn.
+- **How big a point is against how far its defender sits -- the match's
+  own answer.** A point is contested only by bodies within its 3 m capture
+  radius (`BotMatch._present`). A squad holding it stands in cover within
+  the 4.5 m area radius, and weighs spots up to 8.5 m out (that plus
+  `TeamTactics.AREA_MARGIN`). So a holder in cover often does not contest
+  its own point at all: one enemy standing on it turns it. No source gave
+  a number for this; this is the match's.
 - **Contested capture already pauses** whenever both sides stand on a
-  point, at any ratio: one covering bot left on it holds it. Battlefield's
+  point, at any ratio: one bot left within 3 m holds it. Battlefield's
   majority rule would take that away from a squad falling back in waves,
   so it is not proposed.
 
-Measured on main before any change (wave 96, 20 matches): never falling
-back is +186.7 +- 10.2 s a match ahead, 20-0, with 958 deaths against the
-retreating team's 956 -- the retreat saves no lives and costs the points.
+Measured on main before any change (wave 96, 20 matches on the lanes):
+never falling back is +186.7 +- 10.2 s a match ahead of red, 20-0, against
++10.0 +- 22.7 s for everything on, with 958 deaths against 956 -- the
+retreat saves no lives and costs the points.
 
 ### Proposed, for the owner to pick
 
 Each with its prediction -- blue never falling back, against red with
-everything, as `botmatch_effects.gd` prints it -- written before measuring;
-the full statements and how each is measured are in
+everything, on the lanes, as `botmatch_effects.gd` prints it -- written
+before measuring, with the arithmetic it comes from; the full statements
+and how each is measured are in
 [the task](../../tasks/T65-a-coordinated-team-that-wins.md).
 
 1. **Fall back to cover at the point, not towards the spawn** -- T68's
    hiding query near the squad's point, or hold if there is none. About
-   +100 +- 20 s, still 17-20 of 20.
-2. **Falling back weighed, not switched**: health regained (priced by
-   exposure, as T68) and a death avoided (the enemy's share of the
-   strength near it, times what a death costs) against the seconds away
-   and the point given up when it is the last defender; the waves stay as
-   the coordination; confidence becomes a percept. About 0 +- 30 s, 8-12 of
-   20: retreat stops costing, and is not shown to help.
+   +100 +- 20 s, still 17-20 of 20: the threshold still gives the point
+   up, but the way back is shorter and a hidden bot heals.
+2. **Falling back weighed, not switched**, to proposal 1's place, so it
+   needs 1: health regained (priced by exposure, as T68) and a death
+   avoided (a chance measured from the gate's own matches, not tuned,
+   times what a death costs) against the seconds away and the point given
+   up when it is the last of its team within the area radius; the waves
+   stay as the coordination; confidence becomes a percept. With 1: about
+   the everything margin, +10 +- 30 s, 8-14 of 20 -- retreat stops
+   costing, and is not shown to help.
 3. **Respawn in waves, as TF2 does** (10 s, the wave after next): a death
-   costs 10-20 s plus the walk, more than healing. With 2: about -40 to
-   -80 +- 25 s, 4-7 of 20 for never falling back.
-4. **A 5 s regeneration delay** (Halo's, Modern Warfare's), listed and not
-   recommended: it is the owner's own 10 s.
+   costs 10-20 s plus the walk, more than healing. With 1 and 2: about -40
+   to -80 +- 25 s, 4-7 of 20 for never falling back.
+4. **The team holding most points respawns sooner**, TF2's other rule: a
+   reward for holding, which amplifies whoever holds; listed with 3.
+5. **A 5 s regeneration delay** (Halo: Combat Evolved's and Halo 3's;
+   Modern Warfare's is about 6 s, from an article that does not say whose
+   figure it is), listed and not recommended: it is the owner's own 10 s.
 
-Recommended: 2, then 3 -- the bot weighs, and the match gives it something
-worth weighing.
+Recommended: 1 and 2, then 3 -- the bot weighs, and the match gives it
+something worth weighing.
 
 ## Could not be checked
 
