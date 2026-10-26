@@ -76,8 +76,8 @@ func test_a_level_draws_only_the_options_its_tactics_allow() -> void:
 			return option[0])
 	for decision: int in range(200):
 		easy._decide(neutral, 1)
-		var known: bool = allowed.any(func(option: String) -> bool: return easy.choice.begins_with(option))
-		assert_bool(known).override_failure_message("easy drew %s, past its first %d" % [easy.choice, tactics]).is_true()
+		assert_bool(easy.drawn in allowed).override_failure_message(
+			"easy drew %s, past its first %d" % [easy.drawn, tactics]).is_true()
 	assert_int(FightOpponent.SITUATIONS["neutral"].size()).is_greater(tactics)
 
 

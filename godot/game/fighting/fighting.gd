@@ -33,9 +33,9 @@
 class_name FightingExample
 extends Node2D
 
-const MODES: Array[String] = ["stand", "guard standing", "guard crouching", "jab", "throw", "low kick",  # not shown as written: an identifier, or the digest's English (FightWords)
-		"anti-air (sees you now)", "opponent: easy", "opponent: medium", "opponent: hard", "learner: easy",  # not shown as written: an identifier, or the digest's English (FightWords)
-		"learner: medium", "learner: hard", "ghost: exact", "ghost: nearest", "clone"]  # not shown as written: an identifier, or the digest's English (FightWords)
+const MODES: Array[String] = ["stand", "guard standing", "guard crouching", "jab", "throw", "low kick",  # shown through tr(): FightWords.word says each mode
+		"anti-air (sees you now)", "opponent: easy", "opponent: medium", "opponent: hard", "learner: easy",  # shown through tr(): FightWords.word says each mode
+		"learner: medium", "learner: hard", "ghost: exact", "ghost: nearest", "clone"]  # shown through tr(): FightWords.word says each mode
 const OPPONENT_MODE: String = "opponent: "
 ## The same levels with an n-gram behind them, learning you as you fight (T17).
 const LEARNER_MODE: String = "learner: "

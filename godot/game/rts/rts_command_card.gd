@@ -121,7 +121,7 @@ func _describe(units: Array[Dictionary]) -> String:
 		counts[unit["kind"]] = counts.get(unit["kind"], 0) + 1
 	var parts: Array[String] = []
 	for kind: String in counts:
-		parts.append("%d %s" % [counts[kind], RtsWords.word(kind)])
+		parts.append(RtsWords.counted(counts[kind], kind))
 	return ", ".join(parts) + "\n" + tr("right-click: move, attack, or (workers) gather")
 
 
@@ -164,7 +164,7 @@ static func _why_not(view: RtsSnapshot, action: String, what: String, units: Arr
 		return "" if not view.mine(RtsKinds.WORKER).is_empty() else TranslationServer.translate("no worker to send")
 	var needed: String = RtsKinds.of(what, "needs")
 	if needed != "" and not _has_complete(view, needed):
-		return TranslationServer.translate("needs this first: {kind}").format({kind = RtsWords.word(needed)})
+		return TranslationServer.translate("needs {what} first").format({what = RtsWords.with_a(needed)})
 	for resource: String in RtsKinds.RESOURCES:
 		if view.resources[resource] < RtsKinds.cost(what)[resource]:
 			return TranslationServer.translate("not enough {resource}").format({resource = RtsWords.word(resource)})

@@ -33,6 +33,14 @@ func _fill_queue(view: RtsSnapshot) -> void:
 	wish_by_rules(queue, view)
 
 
+## The rule for the fighter it has fewest of, a sentence per fighter.
+const FEWEST: Dictionary = {
+	RtsKinds.RUNNER: "rule: fewest runners",  # shown through tr()
+	RtsKinds.SHIELD: "rule: fewest shields",  # shown through tr()
+	RtsKinds.MORTAR: "rule: fewest mortars",  # shown through tr()
+}
+
+
 ## The rules, wished into `queue` for the side `view` belongs to. Static, so
 ## a commander told to plan nothing (horizon 0, `RtsLevels`' easy) plays its
 ## economy by exactly these.
@@ -40,20 +48,20 @@ static func wish_by_rules(queue: EconomyQueue, view: RtsSnapshot) -> void:
 	var have: Dictionary = _have(view)
 	var seconds: float = float(view.tick) / RtsWorld.TICKS_PER_SECOND
 	if have.get(RtsKinds.BARRACKS, 0) == 0:
-		queue.wish(RtsKinds.BARRACKS, 70, TranslationServer.translate("rule: no barracks"))
+		queue.wish(RtsKinds.BARRACKS, 70, Sentence.of("rule: no barracks"))  # shown through tr()
 		return
 	queue.magma_wanted = true
 	if have.get(RtsKinds.LAB, 0) == 0 and seconds >= LAB_AFTER_SECONDS:
-		queue.wish(RtsKinds.LAB, 45, TranslationServer.translate("rule: three minutes in, no lab"))
+		queue.wish(RtsKinds.LAB, 45, Sentence.of("rule: three minutes in, no lab"))  # shown through tr()
 	if have.get(RtsKinds.BASE, 0) < 2 and seconds >= EXPAND_AFTER_SECONDS \
 			and have.get(RtsKinds.WORKER, 0) >= EconomyQueue.WORKERS_PER_BASE:
-		queue.wish(RtsKinds.BASE, 60, TranslationServer.translate("rule: a full home, five minutes in"))
+		queue.wish(RtsKinds.BASE, 60, Sentence.of("rule: a full home, five minutes in"))  # shown through tr()
 	_arm_the_home(queue, view, have)
 	var fewest: String = _fewest_fighter(view, have)
 	for kind: String in RtsKinds.FIGHTERS:
 		if kind != fewest:
 			queue.forget(kind)
-	queue.wish(fewest, 30, TranslationServer.translate("rule: the fewest of its fighters, {kind}").format({kind = RtsWords.word(fewest)}))
+	queue.wish(fewest, 30, Sentence.of(FEWEST[fewest]))
 
 
 # A tower at home first, then its gun: a rule, so it fires on what is in
@@ -68,9 +76,9 @@ static func _arm_the_home(queue: EconomyQueue, view: RtsSnapshot, have: Dictiona
 	if not _raided(view) or have.get(RtsKinds.ARM, 0) > 0:
 		return
 	if have.get(RtsKinds.TOWER, 0) == 0:
-		queue.wish(RtsKinds.TOWER, 25, TranslationServer.translate("rule: an enemy at the home, a tower"))
+		queue.wish(RtsKinds.TOWER, 25, Sentence.of("rule: an enemy at the home, a tower"))  # shown through tr()
 	elif view.mine(RtsKinds.TOWER).any(func(tower: Dictionary) -> bool: return tower["complete"]):
-		queue.wish(RtsKinds.ARM, 25, TranslationServer.translate("rule: an enemy at the home, arm the tower"))
+		queue.wish(RtsKinds.ARM, 25, Sentence.of("rule: an enemy at the home, arm the tower"))  # shown through tr()
 
 
 # True when an enemy fighter is in sight within `RAID_CELLS` of the home.

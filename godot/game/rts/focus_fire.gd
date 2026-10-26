@@ -28,6 +28,13 @@ extends RefCounted
 const PASSIVE: float = 0.5
 ## Distance, in cells, at which an enemy's score halves.
 const NEAR_SCALE: float = 4.0
+## Why an enemy scored as it did: plain, beaten by the squad, unarmed, both.
+const WHY: Array[String] = [  # shown through tr()
+	"{health} hp, {seconds} s to kill",
+	"we beat it, {health} hp, {seconds} s to kill",
+	"unarmed, {health} hp, {seconds} s to kill",
+	"we beat it, unarmed, {health} hp, {seconds} s to kill",
+]
 
 
 ## Every enemy within `reach` of the squad's middle, scored, best first:
@@ -69,14 +76,11 @@ static func _threat(kind: String, members: Array[Dictionary]) -> float:
 	return total / members.size()
 
 
-# A few words a person can check: does the squad beat it, does it beat the
-# squad, how much is left of it.
-static func _why(enemy: Dictionary, members: Array[Dictionary], threat: float, to_kill: float) -> String:
-	var said: Array[String] = []
-	if members.any(func(member: Dictionary) -> bool: return enemy["kind"] in RtsKinds.of(member["kind"], "beats")):
-		said.append(TranslationServer.translate("we beat it"))
-	if threat == 0.0:
-		said.append(TranslationServer.translate("unarmed"))
-	said.append(TranslationServer.translate("{health} hp, {seconds} s to kill").format({health = enemy["health"],
-		seconds = "%.0f" % to_kill}))
-	return ", ".join(said)
+# A few words a person can check, as a `Sentence`: does the squad beat it,
+# does it beat the squad, how much is left of it. One key each way, so no
+# clause is glued to another (T80).
+static func _why(enemy: Dictionary, members: Array[Dictionary], threat: float, to_kill: float) -> Array:
+	var beaten: bool = members.any(func(member: Dictionary) -> bool:
+		return enemy["kind"] in RtsKinds.of(member["kind"], "beats"))
+	var key: String = WHY[(1 if beaten else 0) + (2 if threat == 0.0 else 0)]
+	return Sentence.of(key, {health = enemy["health"], seconds = "%.0f" % to_kill})

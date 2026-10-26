@@ -20,6 +20,12 @@ extends RefCounted
 const ROWS_SHOWN: int = 8
 ## What the learner expected at its last decision: with an answer among its
 ## options, and without one.
+## What the learner was expecting when it drew, with an answer among its
+## options and without one.
+const EXPECTING: Array[String] = [  # shown through tr()
+	"(expecting {action}, {percent}%)",
+	"(expecting {action}, {percent}%, no answer among its options)",
+]
 const EXPECTED: Array[String] = [  # shown through tr()
 	"  at its last decision, after {after} it expected {action}, {percent}%",
 	"  at its last decision, after {after} it expected {action}, {percent}% -- none of its options answers that",
@@ -107,7 +113,7 @@ static func _opponent_lines(state: FightState, seat: FightDelay) -> PackedString
 		return lines
 	lines.append(TranslationServer.translate("  saw frame {frame}, {ago} frames ago: {situation}").format({frame = opponent.seen_frame,
 		ago = state.frame - opponent.seen_frame, situation = FightWords.word(opponent.situation)}))
-	lines.append(TranslationServer.translate("  drew: {choice}").format({choice = opponent.choice}))
+	lines.append(TranslationServer.translate("  drew: {choice}").format({choice = _drew(opponent)}))
 	var learner := opponent as FightModelOpponent
 	if learner != null:
 		lines.append_array(_model_lines(learner))
@@ -115,6 +121,30 @@ static func _opponent_lines(state: FightState, seat: FightDelay) -> PackedString
 	if imitator != null:
 		lines.append_array(_clone_lines(imitator))
 	return lines
+
+
+# What the opponent drew, worded from its decision's identifiers -- the
+# option, how execution spoilt it, the move or the step in, and what a
+# learner expected -- in the language on screen. Its `choice` is the same in
+# English.
+static func _drew(opponent: FightOpponent) -> String:
+	if opponent.drawn == "":
+		return FightWords.word(opponent.choice)
+	var said: String = FightWords.word(opponent.drawn)
+	if opponent.late:
+		said += " " + TranslationServer.translate("(fumbled: late)")
+	if opponent.came_out_as != "":
+		said += " " + TranslationServer.translate("(fumbled: came out as {action})").format({
+			action = FightWords.word(opponent.came_out_as)})
+	if opponent.stepped_in:
+		said += TranslationServer.translate(", out of reach: steps in")
+	elif opponent.struck_with != "":
+		said += " -- " + opponent.struck_with
+	var learner := opponent as FightModelOpponent
+	if learner != null:
+		said += " " + TranslationServer.translate(EXPECTING[0 if learner.answered else 1]).format({
+			action = FightWords.word(learner.expected), percent = roundi(learner.confidence * 100.0)})
+	return said
 
 
 # The learner's table, as it stands: what it expects, from which context,
@@ -154,7 +184,10 @@ static func _clone_lines(imitator: FightCloneOpponent) -> PackedStringArray:
 		return lines
 	lines.append("  " + player.cases.key_of(imitator.seen_situation))
 	lines.append("  (%s)" % " | ".join(FightSituation.FEATURES))
-	lines.append(TranslationServer.translate("  {found}; drew among:").format({found = imitator.found}))
+	var found: String = Sentence.translated(imitator.found_said, FightWords.word)
+	if imitator.guards_instead:
+		found += TranslationServer.translate("; nothing it can do, so it guards")
+	lines.append(TranslationServer.translate("  {found}; drew among:").format({found = found}))
 	var weighed: Array = imitator.considered.duplicate()
 	weighed.sort_custom(func(one: Array, other: Array) -> bool: return one[1] > other[1])
 	var cells: PackedStringArray = []

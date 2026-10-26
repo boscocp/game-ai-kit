@@ -1,12 +1,16 @@
 en,pt_BR
 {kind}: saving up,{kind}: juntando recursos
-we beat it,nós o vencemos
-unarmed,desarmado
+{kind}: {why},{kind}: {why}
 "{health} hp, {seconds} s to kill","{health} de vida, {seconds} s para abater"
+"we beat it, {health} hp, {seconds} s to kill","nós o vencemos, {health} de vida, {seconds} s para abater"
+"unarmed, {health} hp, {seconds} s to kill","desarmado, {health} de vida, {seconds} s para abater"
+"we beat it, unarmed, {health} hp, {seconds} s to kill","nós o vencemos, desarmado, {health} de vida, {seconds} s para abater"
 rule: no barracks,regra: nenhum quartel
 "rule: three minutes in, no lab","regra: três minutos de jogo, nenhum laboratório"
 "rule: a full home, five minutes in","regra: casa cheia, cinco minutos de jogo"
-"rule: the fewest of its fighters, {kind}","regra: o lutador que ela tem menos, {kind}"
+rule: fewest runners,regra: menos corredores
+rule: fewest shields,regra: menos escudos
+rule: fewest mortars,regra: menos morteiros
 "rule: an enemy at the home, a tower","regra: um inimigo na casa, uma torre"
 "rule: an enemy at the home, arm the tower","regra: um inimigo na casa, armar a torre"
 you: west,você: oeste
@@ -16,13 +20,13 @@ its squad fighting,esquadrão dele lutando
 its squad falling back,esquadrão dele recuando
 where its plan will build,onde o plano dele vai construir
 select a worker to build with,selecione um trabalhador para construir
-click open ground to put down: {what} -- green is a place it can go; right click cancels,clique em terreno livre para pôr: {what} -- verde é onde dá; botão direito cancela
+click open ground to put {what} -- green is a place it can go; right click cancels,clique em terreno livre para pôr {what} -- verde é onde dá; botão direito cancela
 select a building of yours to repair,selecione um prédio seu para consertar
 no worker to send,nenhum trabalhador para mandar
-a worker is on its way to mend it: {kind},um trabalhador está a caminho para consertar: {kind}
-{what} placed -- the worker walks there and builds it ({seconds} s of game),{what} posto -- o trabalhador vai até lá e constrói ({seconds} s de jogo)
+a worker is on its way to mend {what},um trabalhador está a caminho para consertar {what}
+{what} placed -- the worker walks there and builds it ({seconds} s of game),{what}: lugar marcado -- o trabalhador vai até lá e constrói ({seconds} s de jogo)
 "select a tower, complete and not yet armed","selecione uma torre, pronta e ainda não armada"
-select a building that trains this: {kind},selecione um prédio que treine isto: {kind}
+select a building that trains {what},selecione um prédio que treine {what}
 What the computer is thinking,O que o computador está pensando
 the queues (watching),as filas (assistindo)
 you,você
@@ -36,7 +40,7 @@ armed,armada
 being built,em construção
 "right-click: move, attack, or (workers) gather","botão direito: mover, atacar ou (trabalhadores) juntar"
 not damaged,sem dano
-needs this first: {kind},precisa antes disto: {kind}
+needs {what} first,precisa antes de {what}
 not enough {resource},falta {resource}
 no supply -- build a depot,sem suprimento -- construa um depósito
 the building is not finished,o prédio não está pronto
@@ -68,7 +72,9 @@ training {kind} {bar} {seconds} s,treinando {kind} {bar} {seconds} s
 "training {kind} {bar} {seconds} s, then {more} more","treinando {kind} {bar} {seconds} s, depois mais {more}"
 "weighed: the gun kills {killed} of a raid, costs {price}","pesado: a arma abate {killed} de um ataque, custa {price}"
 "plan, step 1 of {count}: {step}","plano, passo 1 de {count}: {step}"
-"goal met: more of them, {kind}","objetivo cumprido: mais deles, {kind}"
+goal met: more runners,objetivo cumprido: mais corredores
+goal met: more shields,objetivo cumprido: mais escudos
+goal met: more mortars,objetivo cumprido: mais morteiros
 no plan: the queues' rules,sem plano: as regras das filas
 there is no order called {order},não existe ordem chamada {order}
 an order needs at least one unit,uma ordem precisa de pelo menos uma unidade
@@ -120,7 +126,7 @@ time: both sides worth {worth},tempo: os dois lados valem {worth}
 west,oeste
 east,leste
 building {percent}%,construindo {percent}%
-click to build here: {kind},clique para construir aqui: {kind}
+click to build {what},clique para construir {what}
 worker,trabalhador
 runner,corredor
 shield,escudo
@@ -131,7 +137,6 @@ lab,laboratório
 depot,depósito
 tower,torre
 arm,armar
-rocks,rochas
 vent,fenda de magma
 ore,minério
 magma,magma
@@ -161,3 +166,40 @@ outmatched: falling back,em desvantagem: recuando
 nothing left in sight: on to the target,nada mais à vista: rumo ao alvo
 "nothing left in sight, too few to go on: regrouping","nada mais à vista, poucos para seguir: reagrupando"
 home: regrouping,em casa: reagrupando
+a worker,um trabalhador
+a runner,um corredor
+a shield,um escudo
+a mortar,um morteiro
+a base,uma base
+a barracks,um quartel
+a lab,um laboratório
+a depot,um depósito
+a tower,uma torre
+an arm,uma arma
+a rock,uma rocha
+a vent,uma fenda de magma
+the worker,o trabalhador
+the runner,o corredor
+the shield,o escudo
+the mortar,o morteiro
+the base,a base
+the barracks,o quartel
+the lab,o laboratório
+the depot,o depósito
+the tower,a torre
+the arm,a arma
+the rocks,as rochas
+the vent,a fenda de magma
+{count} workers,{count} trabalhadores
+{count} runners,{count} corredores
+{count} shields,{count} escudos
+{count} mortars,{count} morteiros
+{count} bases,{count} bases
+{count} barracks,{count} quartéis
+{count} labs,{count} laboratórios
+{count} depots,{count} depósitos
+{count} towers,{count} torres
+{count} arms,{count} armas
+{count} rocks,{count} rochas
+{count} vents,{count} fendas de magma
+rocks,rochas

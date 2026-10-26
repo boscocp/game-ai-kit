@@ -1,5 +1,5 @@
 ## An RTS refusal in the language on screen: "a mortar needs a lab first"
-## becomes "morteiro: antes, um laboratório".
+## becomes "morteiro: antes é preciso laboratório".
 ##
 ## `RtsRules.why_refused` says why an order is refused in English, and the
 ## rules and the AIs read those words -- an empty refusal is a yes -- so they

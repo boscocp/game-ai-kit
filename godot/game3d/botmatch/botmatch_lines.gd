@@ -12,6 +12,12 @@
 class_name BotMatchLines
 extends RefCounted
 
+## Each team's three switches, a line per team: the team's name is its own
+## word, which in Portuguese is not checkers' "red" (T80's review).
+const SWITCHES: Dictionary = {
+	"blue": "blue: claims {claims}, commander {commander}, retreat {retreat}",  # shown through tr()
+	"red": "red: claims {claims}, commander {commander}, retreat {retreat}",  # shown through tr()
+}
 ## A team's switch, as the panel says it: on, then off.
 const ON_OFF: Array[String] = ["on", "OFF"]  # shown through tr()
 ## The score: while watching, once the match is over, and while a person
@@ -38,8 +44,7 @@ static func panel(world: BotMatch, watched: int, played: int, thinking_shown: bo
 		return TranslationServer.translate(SCORE[3 if thinking_shown else 2]).format(_score(world))
 	var lines: Array[String] = [TranslationServer.translate(SCORE[1 if world.over() else 0]).format(_score(world))]
 	for team: MatchTeam in world.teams:
-		lines.append(TranslationServer.translate("{team}: claims {claims}, commander {commander}, retreat {retreat}").format({
-			team = BotMatchWords.word(team.name),
+		lines.append(TranslationServer.translate(SWITCHES[team.name]).format({
 			claims = _on(team.use_claims), commander = _on(team.use_commander), retreat = _on(team.may_retreat)}))
 	var bot: MatchBot = world.bots[watched]
 	lines.append(_watching(world, bot, played))

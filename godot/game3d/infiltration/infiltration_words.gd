@@ -42,7 +42,7 @@ const SAID_AS: Dictionary = {
 ## its words, since a changed shape would fall back to English unseen.
 const OUTSIDE: String = "outside every zone"  # shown through tr()
 const TOO_FEW_RE: String = "^(\\d+) of (\\d+) points clear; the stance needs (\\d+)$"  # not shown: a pattern
-const IN_ZONE_RE: String = "^in (\\w+)$"  # not shown: a pattern
+const IN_ZONE_RE: String = "^in (.+)$"  # not shown: a pattern
 ## A generated level's name, as `Infiltration` writes it with its seed.
 const GENERATED_RE: String = "^generated (\\d+)$"  # not shown: a pattern
 

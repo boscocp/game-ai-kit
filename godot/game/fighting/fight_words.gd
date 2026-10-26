@@ -147,9 +147,10 @@ static func _patterns(shapes: Array[String]) -> Array[RegEx]:
 		var pattern: String = "^" + _quoted(pieces[0])
 		for piece: String in pieces.slice(1):
 			var closing: int = piece.find("}")
-			# A value holds no bracket: the reason in brackets after an event
-			# is matched on its own, and a move must not swallow it.
-			pattern += "(?<%s>[^()]+?)" % piece.left(closing) + _quoted(piece.substr(closing + 1))
+			# A value is one word -- a player's number, a move's name, a
+			# guard -- with no bracket: the reason in brackets is matched on
+			# its own, and a reworded event must not hide inside a value.
+			pattern += "(?<%s>[^() ]+)" % piece.left(closing) + _quoted(piece.substr(closing + 1))
 		made.append(RegEx.create_from_string(pattern + "$"))
 	return made
 

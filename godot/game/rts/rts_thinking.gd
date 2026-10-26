@@ -64,7 +64,8 @@ func lines() -> Array[String]:
 		said.append(tr("arm a tower: bought"))
 	elif not arming.is_empty() and arming["raid"] > 0.0:
 		said.append(arming_line(arming))
-	said.append(tr("queue: {waiting}").format({waiting = thinking["waiting"] if thinking["waiting"] != "" else tr("empty")}))
+	var waiting: String = Sentence.translated(thinking["waiting"], RtsWords.word) if not thinking["waiting"].is_empty() else tr("empty")
+	said.append(tr("queue: {waiting}").format({waiting = waiting}))
 	for squad: Dictionary in thinking["squads"]:
 		said.append_array(_squad_lines(squad))
 	return said
@@ -76,12 +77,12 @@ func _squad_lines(squad: Dictionary) -> Array[String]:
 	var line: String = tr("squad {id}: {state}, {size} strong").format({id = squad["id"],
 		state = RtsWords.word(squad["state"]), size = squad["size"]})
 	var said: Array[String] = [line + (" -> " + RtsWords.word(squad["target"]) if squad["state"] == Squad.ADVANCE else "")]
-	if squad["news"] != "":
-		said.append("  " + tr(squad["news"]).format({size = Squad.SIZE}))
+	if not squad["news"].is_empty():
+		said.append("  " + Sentence.translated(squad["news"], RtsWords.word))
 	if squad["state"] == Squad.FIGHT and not (squad["focus"] as Dictionary).is_empty():
 		var focus: Dictionary = squad["focus"]
 		said.append("  " + tr("focus: {kind} {id} -- {why}").format({kind = RtsWords.word(focus["kind"]), id = focus["id"],
-			why = focus["why"]}))
+			why = Sentence.translated(focus["why"], RtsWords.word)}))
 	return said
 
 

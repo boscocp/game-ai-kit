@@ -95,6 +95,6 @@ func is_airborne() -> bool:
 ## Every field, as one line of text: two fighters with the same digest are
 ## the same fighter.
 func digest() -> String:
-	return "%s x%d y%d j%d:%d:%d f%d h%d %s:%d c%d k%d s%d%s b%s:%d i%d" % [character, x, y, jump_frame,  # not shown as written: an identifier, or the digest's English (FightWords)
+	return "%s x%d y%d j%d:%d:%d f%d h%d %s:%d c%d k%d s%d%s b%s:%d i%d" % [character, x, y, jump_frame,  # not shown: the digest's notation
 			jump_direction, int(air_spent), facing, health, move, move_frame, int(connected), int(crouching), stun,
 			stun_kind, buffered, buffered_until, held_before]

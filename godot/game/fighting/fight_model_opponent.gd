@@ -32,10 +32,10 @@ const ACTIONS: Array[String] = FightAction.ACTIONS
 ## an overhead or a throw for a crouching one; a backdash to following it,
 ## and a throw to a backdash, which it passes through.
 const ANSWERS: Dictionary = {
-	"high": ["guard crouching", "low"], "mid": ["guard standing", "guard crouching"], "low": ["guard crouching"],  # not shown as written: an identifier, or the digest's English (FightWords)
-	"overhead": ["guard standing", "high"], "throw": ["high", "mid", "evade"], "jump": ["high"],  # not shown as written: an identifier, or the digest's English (FightWords)
+	"high": ["guard crouching", "low"], "mid": ["guard standing", "guard crouching"], "low": ["guard crouching"],  # not shown: an identifier
+	"overhead": ["guard standing", "high"], "throw": ["high", "mid", "evade"], "jump": ["high"],  # not shown: an identifier
 	"crouch": ["overhead", "throw"], "guard crouching": ["overhead", "throw"], "guard standing": ["low", "throw"],  # not shown: an identifier
-	"step in": ["mid", "throw"], "step out": ["step in"], "evade": ["step in"],  # not shown as written: an identifier, or the digest's English (FightWords)
+	"step in": ["mid", "throw"], "step out": ["step in"], "evade": ["step in"],  # not shown: an identifier
 }
 ## How much weight an answer gains when the model is as sure as it can be;
 ## none when it knows no more than chance, and in between in proportion.
@@ -54,7 +54,7 @@ var model: NGramPredictor
 ## What it expected you to do next at its last decision, how sure it was,
 ## the context it was expecting it after, and whether its level had an answer
 ## to lean towards. The table moves on every frame it watches; these do not.
-var expected: String = "nothing yet"  # not shown as written: an identifier, or the digest's English (FightWords)
+var expected: String = "nothing yet"  # not shown: an identifier
 var confidence: float = 0.0
 var expected_after: String = ""
 var answered: bool = false
@@ -79,7 +79,7 @@ func new_fight() -> void:
 	model = NGramPredictor.new(model.order, ACTIONS, model.decay, model.prior)
 	guesses.clear()
 	_last_action = ""
-	expected = "nothing yet"  # not shown as written: an identifier, or the digest's English (FightWords)
+	expected = "nothing yet"  # not shown: an identifier
 	confidence = 0.0
 	expected_after = ""
 	answered = false
@@ -111,8 +111,8 @@ static func action_of(state: FightState, index: int, data: FightData) -> String:
 # As the fixed opponent's, and the choice says what it was expecting.
 func _decide(seen: FightState, me: int) -> void:
 	super(seen, me)
-	var leaning: String = "(expecting {action}, {percent}%)" if answered else "(expecting {action}, {percent}%, no answer among its options)"  # shown through tr()
-	choice += " " + tr(leaning).format({action = FightWords.word(expected), percent = roundi(confidence * 100.0)})
+	var leaning: String = "" if answered else ", no answer among its options"  # not shown: the overlay's English; the panel words the decision from its fields
+	choice += " (expecting %s, %d%%%s)" % [expected, roundi(confidence * 100.0), leaning]  # not shown: the overlay's English; the panel words the decision from its fields
 
 
 ## How many of its last `SCORED` guesses were right, and of how many.

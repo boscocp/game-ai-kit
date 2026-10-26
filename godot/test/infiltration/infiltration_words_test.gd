@@ -47,10 +47,21 @@ func test_every_reason_the_eye_writes_reads_in_portuguese() -> void:
 		shape.percept(3.0, 0.0, [true, true, true] as Array[bool], 1, 1.0, false, 0.0).why,
 	]
 	assert_str(reasons[0]).is_equal("outside every zone")
+	assert_int(reasons.size()).override_failure_message("the eye writes a reason this test does not make").is_equal(
+		_reasons_in_the_addon())
+	for zone: Dictionary in row["zones"]:
+		reasons.append("in " + str(zone["name"]))
 	for reason: String in reasons:
 		assert_str(InfiltrationWords.eye(reason)).override_failure_message(
 			"no shape in InfiltrationWords for the eye's \"%s\"" % reason).is_not_equal(reason)
 	assert_str(InfiltrationWords.eye(reasons[2])).is_equal("na zona à frente")
+
+
+# How many reasons `VisionShape.percept` can write, read from its source: a
+# new one is a reason with no shape until this test makes it.
+static func _reasons_in_the_addon() -> int:
+	var source: String = FileAccess.get_file_as_string("res://addons/ai_perception/vision_shape.gd")
+	return RegEx.create_from_string("seen\\.why = \"").search_all(source).size()
 
 
 func test_in_english_the_reasons_and_names_are_left_as_written() -> void:

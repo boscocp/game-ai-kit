@@ -248,6 +248,8 @@ func _provoke_an_rts_refusal(game: RtsGame) -> Array[String]:
 	for unit: RtsUnit in game.world.units():
 		if unit.side == RtsScenario.WEST and unit.kind == RtsKinds.WORKER:
 			worker = unit.id
+	if worker == -1:
+		return ["rts: no worker of yours to give the order to"]
 	game._give(RtsCommand.build(worker, RtsKinds.LAB, RtsScenario.home(RtsScenario.WEST)))
 	game._refresh()
 	await process_frame
@@ -260,7 +262,10 @@ func _provoke_an_rts_refusal(game: RtsGame) -> Array[String]:
 
 
 # Each line of a Label that does not wrap or clip, measured in its own font:
-# one that reaches past the window's edge is cut off on the screen.
+# one that reaches past the window's edge is cut off on the screen. Only a
+# visible Label is measured, in the state the stepped scene left it: a
+# Button, a Label3D, a HUD drawn with draw_string and a panel shown only
+# when toggled are not (the legends are, by test-demo-overlays).
 func _past_the_edge(label: String, path: NodePath, shown: Label) -> Array[String]:
 	if shown.autowrap_mode != TextServer.AUTOWRAP_OFF or shown.clip_text or not shown.is_visible_in_tree():
 		return []

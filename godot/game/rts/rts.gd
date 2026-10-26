@@ -151,7 +151,7 @@ func decision_overlay() -> Dictionary:
 	for step: Dictionary in thinking["plan"]:
 		plan.append("%s at %.1f s" % [step["step"], step["starts"]])  # not shown: the gate's overlay
 	shown["plan"] = plan if not plan.is_empty() else ["goal met"]  # not shown
-	shown["waiting"] = thinking["waiting"] if thinking["waiting"] != "" else "nothing"  # not shown
+	shown["waiting"] = Sentence.english(thinking["waiting"]) if not thinking["waiting"].is_empty() else "nothing"  # not shown: the gate's overlay
 	shown["income"] = BuildSchedule.income(RtsSnapshot.of(world, computer.side))
 	if not thinking["squads"].is_empty():
 		shown["squads"] = thinking["squads"]
@@ -262,8 +262,8 @@ func _on_card(action: String, what: String) -> void:
 		_send_a_repairer()
 	elif _selected_worker() >= 0:
 		_view.placing = what
-		_say(tr("click open ground to put down: {what} -- green is a place it can go; right click cancels").format({
-			what = RtsWords.word(what)}), false)
+		_say(tr("click open ground to put {what} -- green is a place it can go; right click cancels").format({
+			what = RtsWords.with_the(what)}), false)
 	else:
 		_say(tr("select a worker to build with"), true)
 	_refresh()
@@ -333,7 +333,7 @@ func _send_a_repairer() -> void:
 		return
 	_give(RtsCommand.repair([nearest.id] as Array[int], building.id))
 	if last_refusal == "":
-		_say(tr("a worker is on its way to mend it: {kind}").format({kind = RtsWords.word(building.kind)}), false)
+		_say(tr("a worker is on its way to mend {what}").format({what = RtsWords.with_the(building.kind)}), false)
 
 
 func _place(cell: Vector2i) -> void:
@@ -381,7 +381,7 @@ func _train(kind: String) -> void:
 	if RtsKinds.is_upgrade(kind):
 		_say(tr("select a tower, complete and not yet armed"), true)
 	else:
-		_say(tr("select a building that trains this: {kind}").format({kind = RtsWords.word(kind)}), true)
+		_say(tr("select a building that trains {what}").format({what = RtsWords.with_a(kind)}), true)
 
 
 func _give(command: RtsCommand) -> void:

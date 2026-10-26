@@ -33,8 +33,8 @@ cost {cost},custo {cost}
 no route,sem rota
 Edit the board,Edite o tabuleiro
 left-drag: paint {brush},arraste (esq.): pinta {brush}
-right-drag: erase to open ground,arraste (dir.): limpa o chão
-W wall  ·  M mud  ·  G open ground,W parede  ·  M lama  ·  G chão
+right-drag: erase to open ground,arraste (dir.): terreno aberto
+W wall  ·  M mud  ·  G open ground,W parede · M lama · G terreno aberto
 - and =: mud costs {cost},- e =: a lama custa {cost}
 drag a dot to move start or goal,arraste um ponto: início ou objetivo
 B next board  ·  C clear,B próximo tabuleiro  ·  C limpa

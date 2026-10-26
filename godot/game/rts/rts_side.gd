@@ -130,16 +130,16 @@ func _fill_queue(_view: RtsSnapshot) -> void:
 func _reflexes(view: RtsSnapshot) -> void:
 	var held: PackedStringArray = BuildOrder.facts(view)
 	if BuildOrder.free_room(view) < 2 and view.supply_cap < RtsKinds.SUPPLY_LIMIT:
-		queue.wish(RtsKinds.DEPOT, 95, TranslationServer.translate("reflex: the room is nearly gone"))
+		queue.wish(RtsKinds.DEPOT, 95, Sentence.of("reflex: the room is nearly gone"))  # shown through tr()
 	else:
 		queue.forget(RtsKinds.DEPOT)
 	if not "workers_saturated" in held:
-		queue.wish(RtsKinds.WORKER, 50, TranslationServer.translate("reflex: the home is short of workers"))
+		queue.wish(RtsKinds.WORKER, 50, Sentence.of("reflex: the home is short of workers"))  # shown through tr()
 	else:
 		queue.forget(RtsKinds.WORKER)
 	var barracks: int = view.mine(RtsKinds.BARRACKS).size()
 	if barracks > 0 and barracks < MOST_BARRACKS and view.resources[RtsKinds.ORE] >= FLOATING_ORE:
-		queue.wish(RtsKinds.BARRACKS, 35, TranslationServer.translate("reflex: ore piling up, another barracks"))
+		queue.wish(RtsKinds.BARRACKS, 35, Sentence.of("reflex: ore piling up, another barracks"))  # shown through tr()
 
 
 ## What the side is thinking, for the screen and `test/menu/demo_overlays.gd`.
@@ -147,9 +147,16 @@ func overlay(view: RtsSnapshot) -> Dictionary:
 	var listed: Array[Dictionary] = []
 	for squad: Squad in squads:
 		listed.append({"id": squad.id, "state": squad.machine.current, "size": squad.members.size(),
-			"target": squad.target, "ratio": squad.ratio, "news": squad_news.get(squad.id, ""), "focus": squad.focus,
+			"target": squad.target, "ratio": squad.ratio, "news": _news(squad), "focus": squad.focus,
 			"scores": squad.scores if squad.machine.current == Squad.ADVANCE else {}})
 	return {"wishes": queue.wishes.duplicate(true), "waiting": queue.waiting_for(view), "squads": listed}
+
+
+# The reason of the squad's last arrow, a key written when the squad was
+# made, as a `Sentence` with the size it names; empty before any arrow.
+func _news(squad: Squad) -> Array:
+	var arrow: String = squad_news.get(squad.id, "")
+	return Sentence.of(arrow, {size = Squad.SIZE}) if arrow != "" else []
 
 
 func _record(layer: String, microseconds: int) -> void:

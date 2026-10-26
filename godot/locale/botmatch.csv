@@ -20,7 +20,8 @@ streak {streak}/{needed},sequência {streak}/{needed}
 "{health} health, coming back","{health} de vida, voltando"
 "{health} health, back in {seconds} s","{health} de vida, volta em {seconds} s"
 RELOADING,RECARREGANDO
-"{team}: claims {claims}, commander {commander}, retreat {retreat}","{team}: reservas {claims}, comandante {commander}, recuo {retreat}"
+"blue: claims {claims}, commander {commander}, retreat {retreat}","azul: reservas {claims}, comandante {commander}, recuo {retreat}"
+"red: claims {claims}, commander {commander}, retreat {retreat}","vermelho: reservas {claims}, comandante {commander}, recuo {retreat}"
 "1/2/3 blue's switches, Shift red's; Tab bot, T take it over, M map, C camera, F fast, P pause, N new, L arena","1/2/3 chaves do azul, Shift as do vermelho; Tab bot, T assumir, M mapa, C câmera, F rápido, P pausa, N nova, L arena"
 watching bot {bot} ({team}): {action},assistindo ao bot {bot} ({team}): {action}
 watching bot {bot} ({team}): {action} at bot {target},assistindo ao bot {bot} ({team}): {action} no bot {target}
