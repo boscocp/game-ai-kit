@@ -1,0 +1,72 @@
+## Which language the examples speak: English, or Brazilian Portuguese (T78).
+##
+## The words themselves live in `godot/locale/<module>.csv`, one file per
+## module, keyed by the English text, and Godot's TranslationServer does the
+## looking up. This only decides the locale: the person's saved choice if
+## there is one, otherwise the system's -- `pt` means pt-BR, anything else
+## English -- and remembers a choice made in the menu.
+##
+## The engine already starts in the system's locale (measured on 4.7.2, see
+## docs/godot/localisation.md); this is here so a choice survives closing the
+## game, and so a Portuguese system from Portugal still gets the pt-BR words
+## by a rule a person can read, not by the engine's nearest match.
+##
+## When not to use it: a game with more than two languages wants a list, not
+## a toggle.
+class_name Language
+extends RefCounted
+
+const ENGLISH: String = "en"
+const PORTUGUESE: String = "pt_BR"
+## Where the choice is kept. `user://`, which `scripts/godot` redirects off
+## the home folder (CLAUDE.md's trap, ADR 0002).
+const SETTINGS: String = "user://settings.cfg"
+const SECTION: String = "language"
+const KEY: String = "locale"
+
+
+## The locale for a system whose language is `system_language`, as
+## `OS.get_locale_language()` reports it: Portuguese of any country reads the
+## pt-BR words, everything else the English ones.
+static func for_system(system_language: String) -> String:
+	return PORTUGUESE if system_language == "pt" else ENGLISH
+
+
+## The choice saved in `path`, or "" when nothing usable is saved there.
+static func saved(path: String = SETTINGS) -> String:
+	var settings := ConfigFile.new()
+	if settings.load(path) != OK:
+		return ""
+	var locale: String = str(settings.get_value(SECTION, KEY, ""))
+	return locale if locale in [ENGLISH, PORTUGUESE] else ""
+
+
+## The locale to speak: the saved choice, else the system's.
+static func chosen(path: String = SETTINGS) -> String:
+	var remembered: String = saved(path)
+	return remembered if remembered != "" else for_system(OS.get_locale_language())
+
+
+## Speak the chosen language. The menu calls it once, when it opens.
+static func apply(path: String = SETTINGS) -> void:
+	TranslationServer.set_locale(chosen(path))
+
+
+## Speak `locale` from now on, and remember it in `path`. Every Control and
+## every node listening for NOTIFICATION_TRANSLATION_CHANGED redraws itself.
+static func choose(locale: String, path: String = SETTINGS) -> Error:
+	TranslationServer.set_locale(locale)
+	var settings := ConfigFile.new()
+	settings.load(path)
+	settings.set_value(SECTION, KEY, locale)
+	return settings.save(path)
+
+
+## The other language: what the menu's switch changes to.
+static func other() -> String:
+	return ENGLISH if is_portuguese() else PORTUGUESE
+
+
+## True while the examples speak Portuguese.
+static func is_portuguese() -> bool:
+	return TranslationServer.get_locale().begins_with("pt")

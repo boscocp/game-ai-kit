@@ -6,6 +6,11 @@ godot/.godot/
 # the uid other files can name it by, and Godot's documentation says to commit
 # it. The imported copy itself lives under .godot/ and stays out.
 !godot/assets/**/*.import
+# The same for a translation table (T78). Its .translation, which `--import`
+# writes beside the CSV, is committed too: project.godot lists it, and the
+# engine loads that list before it imports anything -- measured on 4.7.2, a
+# checkout without it fails `make import`. docs/godot/localisation.md.
+!godot/locale/*.import
 # export_presets.cfg is committed (T24): `make export` needs the preset, and
 # since Godot 4.1 the secrets an export may carry live in
 # .godot/export_credentials.cfg, which the line above already keeps out.

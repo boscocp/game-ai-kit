@@ -4,6 +4,9 @@
   "about": "The four searches on a board you can paint.",
   "owns": [
     "godot/demos/search/",
+    "godot/locale/demo_search.csv",
+    "godot/locale/demo_search.csv.import",
+    "godot/locale/demo_search.pt_BR.translation",
     "godot/test/demo_search/"
   ],
   "depends_on": [

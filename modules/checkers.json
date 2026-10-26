@@ -4,6 +4,9 @@
   "about": "Checkers against minimax, and Samuel's learned evaluation.",
   "owns": [
     "godot/game/checkers/",
+    "godot/locale/checkers.csv",
+    "godot/locale/checkers.csv.import",
+    "godot/locale/checkers.pt_BR.translation",
     "godot/test/checkers/",
     "godot/assets/checkers/",
     "spec/vectors/checkers/",

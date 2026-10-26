@@ -19,6 +19,10 @@ run/main_scene="res://menu/menu.tscn"
 window/size/viewport_width=1280
 window/size/viewport_height=720
 
+[internationalization]
+
+locale/translations=PackedStringArray("res://locale/checkers.pt_BR.translation", "res://locale/demo_search.pt_BR.translation", "res://locale/menu.pt_BR.translation")
+
 [physics]
 
 3d/physics_engine="Jolt Physics"

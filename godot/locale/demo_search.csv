@@ -1,0 +1,49 @@
+en,pt_BR
+white outline: the cell it takes next,contorno branco: a célula que ela pega em seguida
+"pink outline: the frontier,","contorno rosa: a fronteira,"
+what it chooses among,entre as quais ela escolhe
+dark square: expanded early,quadrado escuro: expandido cedo
+bright square: expanded late,quadrado claro: expandido tarde
+(dark to bright is the order),(do escuro ao claro é a ordem)
+line: the route the chosen search found,linha: a rota que a busca escolhida achou
+yellow dot: start,ponto amarelo: início
+red dot: goal,ponto vermelho: objetivo
+mud: costs the number on it,lama: custa o número escrito nela
+wall,parede
+mud,lama
+open ground,terreno aberto
+breadth-first,busca em largura
+depth-first,busca em profundidade
+"fewest steps, blind to what a cell costs","menos passos, cega ao custo de cada célula"
+the first route it stumbles on,a primeira rota que encontra por acaso
+the cheapest route,a rota mais barata
+"the cheapest route, aimed at the goal","a rota mais barata, mirando o objetivo"
+blank,em branco
+"{board}, edited","{board}, editado"
+{name} ({finds})  ·  expanded {revealed} of {total}  ·  steps {steps}  ·  {cost},{name} ({finds})  ·  expandiu {revealed} de {total}  ·  passos {steps}  ·  {cost}
+1-4 choose  ·  space steps  ·  enter finishes,1-4 escolhem  ·  espaço avança um passo  ·  enter termina
+"{name} {cells} cells, {cost}","{name} {cells} células, {cost}"
+expanded / route cost:,expandidas / custo da rota:
+board: blank  ·  paint something and see what each search makes of it,tabuleiro: em branco  ·  pinte algo e veja o que cada busca faz com isso
+it does,mostra
+not any more,não mais
+board: {board}  ·  {promise},tabuleiro: {board}  ·  {promise}
+board: {board}  ·  does it still show what it was for?  {verdict},tabuleiro: {board}  ·  ainda mostra aquilo para que serve?  {verdict}
+cost {cost},custo {cost}
+no route,sem rota
+Edit the board,Edite o tabuleiro
+left-drag: paint {brush},arrastar com o botão esquerdo: pinta {brush}
+right-drag: erase to open ground,arrastar com o botão direito: apaga para terreno aberto
+W wall  ·  M mud  ·  G open ground,W parede  ·  M lama  ·  G terreno aberto
+- and =: mud costs {cost},- e =: a lama custa {cost}
+drag a dot to move start or goal,arraste um ponto para mover o início ou o objetivo
+B next board  ·  C clear,B próximo tabuleiro  ·  C limpa
+R rebuilds the named board,R reconstrói o tabuleiro nomeado
+wall and mud,parede e lama
+Dijkstra goes round the mud breadth-first wades through; A* takes the same route and looks at less,Dijkstra contorna a lama que a busca em largura atravessa; A* faz a mesma rota e examina menos
+maze,labirinto
+"one way through: all four find the same route, and only the work differs","um só caminho: as quatro acham a mesma rota, e só o trabalho muda"
+open field,campo aberto
+nothing in the way: A* heads for the goal and expands under a quarter of what Dijkstra does,nada no caminho: A* vai direto ao objetivo e expande menos de um quarto do que Dijkstra expande
+depth-first trap,armadilha da busca em profundidade
+"the goal is two cells away, but depth-first tries left first: its route costs more than Dijkstra's","o objetivo está a duas células, mas a busca em profundidade tenta a esquerda primeiro: sua rota custa mais que a de Dijkstra"
