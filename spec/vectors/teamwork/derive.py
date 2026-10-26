@@ -520,7 +520,8 @@ def action_vectors():
 
 # The bot match's own numbers, from its rules.json, copied here by hand.
 ERRAND_WEIGHTS = {"resupply_walk": 0.05, "leave_holding": 0.3, "leave_attacking": 0.5,
-                  "health_worth": 1.0, "power_worth": 1.0, "power_walk": 0.08, "power_danger": 0.3, "hide_second": 0.02}
+                  "health_worth": 1.0, "power_worth": 1.0, "power_walk": 0.08, "power_danger": 0.3, "hide_second": 0.02,
+                  "death_second": 0.05, "point_second": 0.3}
 
 def going_back(spent=0.0, earned=False, walk=0.0, attacking=False, empty=False, hurt=0.0, exposure=0.0):
     return {"spent": spent, "hurt": hurt, "exposure": exposure, "earned_power": earned, "walk_seconds": walk, "attacking": attacking, "empty": empty}
@@ -530,6 +531,17 @@ def fetching(available=True, walk=0.0, near=0):
 
 def hiding(available=True, hurt=0.0, walk=0.0, wait=0.0, attacking=False, exposure=1.0):
     return {"available": available, "hurt": hurt, "exposure": exposure, "walk_seconds": walk, "wait_seconds": wait, "attacking": attacking}
+
+def falling(available=True, hurt=0.0, exposure=1.0, here=0.0, there=0.0, death=0.0, walk=0.0, wait=0.0, point=0.0):
+    return {"available": available, "hurt": hurt, "exposure": exposure, "dying_here": here, "dying_there": there,
+            "death_seconds": death, "walk_seconds": walk, "wait_seconds": wait, "point_seconds": point}
+
+def weigh_fall_back(f, w):
+    if not f["available"]:
+        return [0.0, 0.0, 0.0, 0.0]
+    gain = f["hurt"] * f["exposure"] * w["health_worth"] + (f["dying_here"] - f["dying_there"]) * f["death_seconds"] * w["death_second"]
+    away, point = f["walk_seconds"] + f["wait_seconds"], f["point_seconds"] * w["point_second"]
+    return [gain, away, point, gain - away * w["hide_second"] - point]
 
 def weigh_hide(f, w):
     if not f["available"]:
@@ -556,20 +568,23 @@ def sent(scores):
             best, top = index, score
     return best
 
-def errand_of(back, out, hide=0.0):
-    best = max(back, out, hide)
+def errand_of(back, out, hide=0.0, fall=0.0):
+    best = max(back, out, hide, fall)
     if best <= 0.0:
         return ""
     if back >= best:
         return "resupply"
-    return "fetch power" if out >= best else "hide to heal"
+    if out >= best:
+        return "fetch power"
+    return "hide to heal" if hide >= best else "fall back"
 
-def errands(name, why, back=(), out=(), teams=(), pairs=(), hide=(), weights=ERRAND_WEIGHTS):
+def errands(name, why, back=(), out=(), teams=(), pairs=(), hide=(), fall=(), weights=ERRAND_WEIGHTS):
     w = weights
     return {"name": name, "why": why, "kind": "errands", "weights": w,
-            "query": {"resupply": list(back), "fetch": list(out), "hide": list(hide), "teams": list(teams), "pairs": list(pairs)},
+            "query": {"resupply": list(back), "fetch": list(out), "hide": list(hide), "fall_back": list(fall),
+                      "teams": list(teams), "pairs": list(pairs)},
             "expect": {"resupply": [weigh_back(f, w) for f in back], "fetch": [weigh_out(f, w) for f in out],
-                       "hide": [weigh_hide(f, w) for f in hide],
+                       "hide": [weigh_hide(f, w) for f in hide], "fall_back": [weigh_fall_back(f, w) for f in fall],
                        "fetcher": [sent(scores) for scores in teams], "chosen": [errand_of(*pair) for pair in pairs]}}
 
 def errand_vectors():
@@ -627,6 +642,20 @@ def errand_vectors():
                   "Hide 0.5 over back 0.25 and fetch 0: hide. All three 0.5: back. Fetch and hide 0.5, back 0.25: "
                   "fetch. Hide alone below zero: no errand.",
                   pairs=[[0.25, 0.0, 0.5], [0.5, 0.5, 0.5], [0.25, 0.5, 0.5], [0.0, 0.0, -0.25]])
+    yield errands("fall-back-unless-it-gives-the-point-up",
+                  "T65. Half its health gone under fire, the measured chance of dying 0.25 where it stands and 0.125 "
+                  "in cover, a death 16 s, cover two seconds off and eight seconds' wait: 0.5 + 0.125 x 16 x 0.05 "
+                  "= 0.6, less 10 x 0.02 = 0.4. The last of its team at a held point, the enemy owning it in 8 s: "
+                  "less 8 x 0.3 = 2.4, -2.0, it stays. Unseen and unhit (exposure 0, the same chance both places): "
+                  "-0.2. No cover near the point: nothing at all.",
+                  fall=[falling(hurt=0.5, here=0.25, there=0.125, death=16.0, walk=2.0, wait=8.0),
+                        falling(hurt=0.5, here=0.25, there=0.125, death=16.0, walk=2.0, wait=8.0, point=8.0),
+                        falling(hurt=0.5, exposure=0.0, here=0.125, there=0.125, death=16.0, walk=2.0, wait=8.0),
+                        falling(False, 0.5, 1.0, 0.25, 0.125, 16.0, 2.0, 8.0)])
+    yield errands("falling-back-comes-last-of-equals",
+                  "Fall back 0.5 over hide 0.25: fall back. Hide and fall back both 0.5: hide. All four 0.5: back. "
+                  "Fall back alone below zero: no errand.",
+                  pairs=[[0.0, 0.0, 0.25, 0.5], [0.0, 0.0, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5], [0.0, 0.0, 0.0, -0.25]])
 
 def posture_vectors():
     yield action("the-bot-match-weighs-its-posture",

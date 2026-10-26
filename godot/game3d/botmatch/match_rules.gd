@@ -137,18 +137,25 @@ var remembered_for: float = 10.0
 ## seeing, not of everything it remembers.
 var squad_sight_radius: float = 20.0
 var confidence_memory: float = 2.0
-## A squad's confidence thresholds, by SquadConfidence's names; the rest
-## are its defaults. Later than the technique's defaults: measured, a squad
-## that fell back at 0.7 gave up every point to a side that never did.
-var retreat_at: float = 0.5
-var recover_at: float = 0.9
-## How far back a retreating squad falls, and how long a wave may take.
-var fallback_metres: float = 8.0
+## How long a wave of a squad's fall-back may take before the other half
+## moves (T65: no threshold sends a squad back, and no distance; each bot
+## weighs falling back to cover near its point).
 var wave_timeout: float = 3.0
+## The chance a bot dies within `within` seconds, by its health in tenths
+## (rows) and its exposure, none, a half or all (columns): measured by a
+## printed run of the effects gate at `commit`, never chosen and never
+## learned during a match (T65, invariant 6). What a bot falling back weighs
+## the death it would avoid by (`FallBackFacts`).
+var dying: Dictionary = {}
 ## The default knobs, per team.
 var reaction: float = 0.3
 var turn_rate_degrees: float = 270.0
 var aim_error_degrees: float = 3.0
+
+
+## Seconds a bot dying at `now` waits to come back.
+func respawn_wait(_now: float) -> float:
+	return respawn_time
 
 
 ## The zone a point of a body is in: `height` above its feet and `across`

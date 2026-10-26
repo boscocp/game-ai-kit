@@ -284,12 +284,19 @@ static func _errands(vector: Dictionary) -> Dictionary:
 		for key: String in fields:
 			facts.set(key, fields[key])
 		hidden.append(Array(ErrandChoice.weigh_hide(facts, weights)))
+	var falling: Array = []
+	for fields: Dictionary in query["fall_back"]:
+		var facts := ErrandChoice.FallBack.new()
+		for key: String in fields:
+			facts.set(key, fields[key])
+		falling.append(Array(ErrandChoice.weigh_fall_back(facts, weights)))
 	var sent: Array = (query["teams"] as Array).map(func(scores: Array) -> int:
 		return ErrandChoice.fetcher(PackedFloat64Array(scores)))
-	# A pair is [back, fetch], or [back, fetch, hide].
+	# A pair is [back, fetch], or [back, fetch, hide], or with fall back too.
 	var chosen: Array = (query["pairs"] as Array).map(func(pair: Array) -> String:
-		return ErrandChoice.choose(float(pair[0]), float(pair[1]), float(pair[2]) if pair.size() > 2 else 0.0))
-	return {"resupply": back, "fetch": out, "hide": hidden, "fetcher": sent, "chosen": chosen}
+		return ErrandChoice.choose(float(pair[0]), float(pair[1]), float(pair[2]) if pair.size() > 2 else 0.0,
+				float(pair[3]) if pair.size() > 3 else 0.0))
+	return {"resupply": back, "fetch": out, "hide": hidden, "fall_back": falling, "fetcher": sent, "chosen": chosen}
 
 
 static func _states(values: Array, thresholds: SquadConfidence.Thresholds, may_retreat: bool) -> Array:

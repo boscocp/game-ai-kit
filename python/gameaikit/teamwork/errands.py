@@ -1,16 +1,19 @@
-"""Three errands a bot may leave its post for: back for rounds and health, out for a power weapon, or into hiding to heal.
+"""Four errands a bot may leave its post for: back for rounds and health, out for a power weapon, into hiding to heal, or falling back to cover near its squad's point.
 
 The tier-1 half of `godot/addons/ai_teamwork/errand_choice.gd`: each errand
 is a gain less its costs -- going back is worth the rounds spent and the
 health missing, priced by how exposed the bot is where it stands -- and the larger is taken when above zero. A team
-sends one bot to fetch, the one the weapon is worth most to.
+sends one bot to fetch, the one the weapon is worth most to. Falling back
+(T65) is worth the health priced by exposure and the death it would avoid
+-- the measured chance of dying where it stands less in cover, times a
+death's seconds -- less each second away and the point it would give up.
 """
 
 from __future__ import annotations
 
 import dataclasses
 
-NONE, RESUPPLY, FETCH, HIDE = "", "resupply", "fetch power", "hide to heal"
+NONE, RESUPPLY, FETCH, HIDE, FALL_BACK = "", "resupply", "fetch power", "hide to heal", "fall back"
 
 
 @dataclasses.dataclass
@@ -25,6 +28,8 @@ class Weights:
     power_walk: float = 0.08
     power_danger: float = 0.3
     hide_second: float = 0.02
+    death_second: float = 0.05
+    point_second: float = 0.3
 
 
 @dataclasses.dataclass
@@ -59,6 +64,33 @@ class Hide:
     walk_seconds: float = 0.0
     wait_seconds: float = 0.0
     attacking: bool = False
+
+
+@dataclasses.dataclass
+class FallBack:
+    """What falling back is weighed on."""
+
+    available: bool = False
+    hurt: float = 0.0
+    exposure: float = 0.0
+    dying_here: float = 0.0
+    dying_there: float = 0.0
+    death_seconds: float = 0.0
+    walk_seconds: float = 0.0
+    wait_seconds: float = 0.0
+    point_seconds: float = 0.0
+
+
+def weigh_fall_back(facts: FallBack, weights: Weights) -> list[float]:
+    """[gain, seconds away, the point's cost, score]; all nothing when unavailable."""
+    if not facts.available:
+        return [0.0, 0.0, 0.0, 0.0]
+    health = facts.hurt * facts.exposure * weights.health_worth
+    death = (facts.dying_here - facts.dying_there) * facts.death_seconds * weights.death_second
+    away = facts.walk_seconds + facts.wait_seconds
+    point = facts.point_seconds * weights.point_second
+    gain = health + death
+    return [gain, away, point, gain - away * weights.hide_second - point]
 
 
 def weigh_hide(facts: Hide, weights: Weights) -> list[float]:
@@ -96,11 +128,13 @@ def fetcher(scores: list[float]) -> int:
     return best
 
 
-def choose(resupply_score: float, fetch_score: float, hide_score: float = 0.0) -> str:
-    """The highest above zero; of equals back, then fetch, then hide."""
-    best = max(resupply_score, fetch_score, hide_score)
+def choose(resupply_score: float, fetch_score: float, hide_score: float = 0.0, fall_back_score: float = 0.0) -> str:
+    """The highest above zero; of equals back, then fetch, then hide, then fall back."""
+    best = max(resupply_score, fetch_score, hide_score, fall_back_score)
     if best <= 0.0:
         return NONE
     if resupply_score >= best:
         return RESUPPLY
-    return FETCH if fetch_score >= best else HIDE
+    if fetch_score >= best:
+        return FETCH
+    return HIDE if hide_score >= best else FALL_BACK

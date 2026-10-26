@@ -17,9 +17,10 @@
 #      COMMANDER_SPREAD times as many distinct points at once, on average,
 #      as without it, when each bot heads for its own nearest point not its
 #      team's;
-#   3. retreat: blue's squads do retreat, and a retreating squad of two or
-#      more always leaves someone covering -- it falls back in two waves,
-#      never all at once;
+#   3. retreat: blue's squads do fall back, and a squad of two or more with
+#      a member falling back always leaves someone covering -- it falls
+#      back in two waves, never all at once (since T65 each bot weighs
+#      falling back, and the waves are the squad's coordination);
 #   4. honesty: no bot of either side, in any match, fires at an enemy it
 #      cannot see along the line at the moment of the shot, and none fires
 #      while it sprints, with some sprinting done (T66);
@@ -58,6 +59,17 @@
 #      So the weak claim is held, the strong one printed, and the planted
 #      case is one the weak claim can reject: always going back for rounds.
 #
+#  11. falling back weighed (T65): blue falls back at least
+#      FALL_BACKS_A_MATCH times a match on average, and of its fall-backs
+#      from a point it held, the share followed by that point neutralised
+#      within MatchFallBacks.LOST_WITHIN seconds is at most LOST_SHARE --
+#      half the share today's retreat measured before the change. The two
+#      planted cases: a blue that never falls back (the no-retreat
+#      pairing) fails the first; one that prices the point it gives up at
+#      nothing fails the second. And the T65 claim -- everything holds points
+#      longer than any one technique off, by MIRROR_ERRORS combined errors --
+#      is printed, and claimed only once a measured run supports it.
+#
 # Each is also asked of a planted case and must reject it: a blue team with
 # a faster reaction and a steadier aim, for the mirror; the claims check
 # of the matches without claims; a commander that wants every bot on one
@@ -67,7 +79,9 @@
 # head put in aiming by worth's place; the weighing blue put in always going
 # back's; the matches without claims in the claims' place; a random
 # arena with one point walled in, for portability; regeneration with no
-# delay; and always going back put in the weighing healer's place.
+# delay; always going back put in the weighing healer's place; and, for
+# falling back, the blue that never does and one that prices at nothing
+# the point it gives up.
 #
 # What the fighting makes of the decisions -- points held by each side,
 # wins, the mean margin and its standard error over the seeds -- is printed
@@ -118,9 +132,16 @@ const CLAIMS_BUNCHED_OFF: float = 40.0
 ## the last. 1.5 asks more of the commander and rejects the plant.
 const COMMANDER_SPREAD: float = 1.5
 const MIRROR_ERRORS: float = 2.5
+## Falling back weighed (T65). At least this many fall-backs a match: the
+## weighing must do something, T68's hole.
+const FALL_BACKS_A_MATCH: float = 1.0
+## Half the share measured before the change: today's retreat, at 581820e (wave 96's play), lost a held point within 8 s after 95 of its 298 fall-backs from one, 0.319.
+const LOST_SHARE: float = 0.159
+## The planted blue that prices the point at nothing plays this many.
+const POINT_FREE_MATCHES: int = 10
 const PAIRINGS: Array[String] = ["everything", "no claims", "no commander", "no retreat"]
 const PLANTED: Array[String] = ["commander on one point", "retreat in one wave", "sharper blue",
-		"always the head", "never resupply", "always resupply"]
+		"always the head", "never resupply", "always resupply", "the point priced at nothing"]
 ## The two healers the weighing one is held against (T68): as many matches
 ## as the pairings above, for their margins are compared with its.
 const HEALERS: Array[String] = ["never heals", "heals below half"]
@@ -202,7 +223,8 @@ func _initialize() -> void:
 		return
 	var failures: Array[String] = _shards.findings() + _mirror(totals) + _claims(totals) + _commander(totals) + _retreat(totals)
 	failures += _honesty(totals) + _aim(totals) + _ammunition(totals) + _portability(totals)
-	failures += _regeneration() + _healing(totals)
+	failures += _regeneration() + _healing(totals) + _falling_back(totals)
+	_print_team_claim(totals)
 	_print_dying(totals["everything"])
 	for failure: String in failures:
 		print(failure)
@@ -218,6 +240,8 @@ func _initialize() -> void:
 static func _planted_matches(pairing: String) -> int:
 	if pairing == "sharper blue":
 		return SHARPER_MATCHES
+	if pairing == "the point priced at nothing":
+		return POINT_FREE_MATCHES
 	return ALWAYS_BACK_MATCHES if pairing == "always resupply" else PLANTED_MATCHES
 
 
@@ -271,6 +295,7 @@ func _blue_for(pairing: String, rules: MatchRules) -> MatchTeam:
 	if pairing == "commander on one point":
 		blue.bots_per_point = BotMatch.BOTS_A_SIDE * 10
 	blue.retreat_in_one_wave = pairing == "retreat in one wave"
+	blue.prices_the_point = pairing != "the point priced at nothing"
 	blue.aims_by_worth = pairing != "always the head"
 	if pairing == "never resupply":
 		blue.resupply_rule = MatchSupply.NEVER
@@ -692,3 +717,36 @@ static func _by_band(tables: PackedFloat64Array, bands: int) -> PackedFloat64Arr
 	for index: int in range(tables.size()):
 		total[index % bands] += tables[index]
 	return total
+
+
+# --- falling back weighed (T65) ---------------------------------------------------
+
+
+func _falling_back(totals: Dictionary) -> Array[String]:
+	var failures: Array[String] = []
+	var everything: Dictionary = totals["everything"]
+	var numbers: Array = [_per_match(everything, "fall backs"), FALL_BACKS_A_MATCH, _lost_share(everything), LOST_SHARE]
+	if not _falls_back(everything) or not _keeps_points(everything):
+		failures.append("falling back: %.1f fall-backs a match (needs >= %.1f), a held point lost after %.3f of them (needs <= %.3f)" % numbers)
+	# Planted: a blue that never falls back, and one that gives points up.
+	if _falls_back(totals["no retreat"]):
+		failures.append("falling back: planted, a blue that never falls back passed as falling back")
+	if _keeps_points(totals["the point priced at nothing"]):
+		failures.append("falling back: planted, a blue pricing the point at nothing passed as keeping its points")
+	return failures
+
+
+static func _falls_back(sums: Dictionary) -> bool:
+	return _per_match(sums, "fall backs") >= FALL_BACKS_A_MATCH
+
+
+static func _keeps_points(sums: Dictionary) -> bool:
+	return _lost_share(sums) <= LOST_SHARE
+
+
+# T65's claim, printed: everything ahead of each one-off pairing, in
+# combined standard errors. Claimed only once a measured run supports it.
+func _print_team_claim(totals: Dictionary) -> void:
+	for pairing: String in ["no claims", "no commander", "no retreat"]:
+		var ahead: float = _errors_ahead(totals["everything"], totals[pairing])
+		print("team: everything ahead of %s by %+.1f errors (printed, not claimed; T65 asks %.1f)" % [pairing, ahead, MIRROR_ERRORS])

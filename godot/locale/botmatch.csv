@@ -76,3 +76,7 @@ retreat,recuar
 blue team,time azul
 red team,time vermelho
 played by a person,jogado por uma pessoa
+"fall back: not weighed, its team's retreat is off","recuar: não pesado, o recuo do time está desligado"
+"fall back: nothing to gain -- no enemy known, or unseen and unhit","recuar: nada a ganhar -- nenhum inimigo conhecido, ou sem ser visto nem atingido"
+fall back: health {hurt} x {exposure} + dying {here}% - {there}% x {death} s x {death_weight} - {away} s x {away_weight} - point {point} s x {point_weight} = {score},recuar: vida {hurt} x {exposure} + morrer {here}% - {there}% x {death} s x {death_weight} - {away} s x {away_weight} - ponto {point} s x {point_weight} = {score}
+  (covering: a teammate falls back first),  (cobrindo: um colega recua primeiro)

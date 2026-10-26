@@ -1,6 +1,12 @@
 ## Where a team's three techniques are asked, once per decision: the
-## commander over the influence map, each squad's confidence and waves, and
-## each bot's position among the spots.
+## commander over the influence map, each squad's confidence, the waves its
+## fall-backs keep to, and each bot's position among the spots.
+##
+## Since T65 no threshold sends a squad back: confidence is what a squad
+## perceives of the fight -- it decides whether the squad steps onto a
+## point to take it -- and falling back is each bot's own errand, weighed
+## (`FallBackFacts`). The waves are the coordination: a squad's member falls
+## back only while another covers it.
 ##
 ## Each technique is ai_teamwork's, and reads facts. This file builds those
 ## facts from the match -- the team's memory of the enemy, its own bots, the
@@ -26,8 +32,10 @@ static func think(world: BotMatch, team: MatchTeam, now: float) -> void:
 	team.influence = _influence(world, team)
 	_give_orders(world, team)
 	for index: int in range(team.squads.size()):
-		_update_confidence(world, team, index, now)
+		_update_confidence(world, team, index)
 	world.supply.think(world, team)
+	for index: int in range(team.squads.size()):
+		_keep_to_waves(world, team, index, now)
 	for bot_id: int in team.members:
 		var bot: MatchBot = world.bots[bot_id]
 		if bot.controlled:
@@ -39,10 +47,14 @@ static func think(world: BotMatch, team: MatchTeam, now: float) -> void:
 
 
 # A bot on an errand gives up its spot and heads for the errand's place --
-# hiding, it claims the place it hides at, so two do not share it; back
-# from it, it chooses a spot at once.
+# hiding or falling back, it claims the place it goes to, so two do not
+# share it; back from it, it chooses a spot at once.
 static func _run_errand(world: BotMatch, team: MatchTeam, bot: MatchBot) -> void:
-	var spot: int = bot.hide_spot if bot.errand == MatchSupply.HIDE else -1
+	var spot: int = -1
+	if bot.errand == MatchSupply.HIDE:
+		spot = bot.hide_spot
+	elif bot.errand == MatchSupply.FALL_BACK:
+		spot = bot.fall_back_spot
 	team.claim(bot.id, spot)
 	bot.chose_at = -INF
 	world.send(bot, MatchSupply.errand_place(world, bot), spot)
@@ -57,18 +69,16 @@ static func _claim_where_standing(world: BotMatch, team: MatchTeam, bot: MatchBo
 
 
 # Alive, its last choice older than the rules' interval, and not covering a
-# retreat -- a covering bot stays where it is and shoots.
+# fall-back -- a covering bot stays where it is and shoots.
 static func _due_a_choice(world: BotMatch, team: MatchTeam, bot: MatchBot, now: float) -> bool:
 	var due: bool = bot.alive() and now - bot.chose_at >= world.rules.position_interval
 	return due and not covering_a_retreat(world, team, bot)
 
 
-## Whether `bot` is in the moving wave of its squad's retreat.
-static func moving_in_retreat(world: BotMatch, team: MatchTeam, bot: MatchBot) -> bool:
-	var index: int = team.squad_of(bot.id)
-	if team.squad_states[index] != SquadConfidence.RETREAT:
-		return false
-	return bot.id in _waves(world, team, index).moving
+## Whether `bot` is falling back now: on the errand, which the waves left
+## it -- in the moving wave of its squad.
+static func moving_in_retreat(_world: BotMatch, _team: MatchTeam, bot: MatchBot) -> bool:
+	return bot.alive() and bot.errand == MatchSupply.FALL_BACK
 
 
 # --- the commander ---------------------------------------------------------
@@ -153,7 +163,10 @@ static func _reports(world: BotMatch, team: MatchTeam) -> Array[TeamCommander.Sq
 # --- confidence and the waves ----------------------------------------------
 
 
-static func _update_confidence(world: BotMatch, team: MatchTeam, index: int, now: float) -> void:
+# The squad's confidence, as Days Gone's squads keep it, and from it whether
+# it attacks or holds. Never retreat: that is each bot's to weigh (T65).
+static func _update_confidence(world: BotMatch, team: MatchTeam, index: int) -> void:
+	var now: float = world.time
 	var living: Array[Vector2] = _living_places(world, team.squads[index])
 	var facts := SquadConfidence.Facts.new()
 	for bot_id: int in team.squads[index]:
@@ -165,54 +178,50 @@ static func _update_confidence(world: BotMatch, team: MatchTeam, index: int, now
 			facts.enemy_strength += 1.0
 	facts.kills = team.kills[index].size()
 	facts.losses = team.losses[index].size()
-	var thresholds: SquadConfidence.Thresholds = thresholds_of(world.rules)
-	var value: float = SquadConfidence.confidence(facts, thresholds)
+	var value: float = SquadConfidence.confidence(facts, SquadConfidence.Thresholds.new())
 	var before: String = team.squad_states[index]
-	team.squad_states[index] = SquadConfidence.next_state(before, value, thresholds, team.may_retreat)
+	team.squad_states[index] = SquadConfidence.next_state(before, value, SquadConfidence.Thresholds.new(), false)
 	world.squad_confidence[team.side][index] = value
-	if team.squad_states[index] == SquadConfidence.RETREAT:
-		_advance_waves(world, team, index, now, before != SquadConfidence.RETREAT)
 
 
-## The confidence thresholds the match plays with: the technique's, with
-## the rules' retreat and recovery.
-static func thresholds_of(rules: MatchRules) -> SquadConfidence.Thresholds:
-	var thresholds := SquadConfidence.Thresholds.new()
-	thresholds.retreat_at = rules.retreat_at
-	thresholds.recover_at = rules.recover_at
-	return thresholds
-
-
-# A new retreat starts at phase 0; a wave ends when its movers arrived or
-# its time ran out, and the next wave's movers choose a spot at once.
-static func _advance_waves(world: BotMatch, team: MatchTeam, index: int, now: float, starting: bool) -> void:
-	var moving: Array[int] = _waves(world, team, index).moving
-	var all_there: bool = moving.all(func(bot_id: int) -> bool: return world.bots[bot_id].arrived())
-	if starting or all_there or now - team.wave_started[index] > world.rules.wave_timeout:
-		if not starting:
-			team.squad_phases[index] += 1
-		team.wave_started[index] = now
-		for bot_id: int in _waves(world, team, index).moving:
-			world.bots[bot_id].chose_at = -INF
-
-
-static func _waves(world: BotMatch, team: MatchTeam, index: int) -> SquadConfidence.Waves:
+# A member falls back only while another covers it. When every living
+# member of a squad of two or more weighed falling back, the waves split
+# them: one half keeps the errand and moves, the other stays and shoots,
+# and they swap when the movers arrived or the rules' wave time ran out.
+# A planted team that retreats in one wave lets them all go at once.
+static func _keep_to_waves(world: BotMatch, team: MatchTeam, index: int, now: float) -> void:
 	var living: Array[int] = []
 	for bot_id: int in team.squads[index]:
 		if world.bots[bot_id].alive():
 			living.append(bot_id)
-	if team.retreat_in_one_wave:
-		var everyone := SquadConfidence.Waves.new()
-		everyone.moving = living
-		return everyone
-	return SquadConfidence.waves(living, team.squad_phases[index])
+	var wanting: Array[int] = living.filter(func(bot_id: int) -> bool:
+		return world.bots[bot_id].errand == MatchSupply.FALL_BACK)
+	var all_want: bool = living.size() >= 2 and wanting.size() == living.size()
+	if not all_want or team.retreat_in_one_wave:
+		team.wave_started[index] = -INF
+		return
+	var split: SquadConfidence.Waves = SquadConfidence.waves(living, team.squad_phases[index])
+	var all_there: bool = split.moving.all(func(bot_id: int) -> bool: return world.bots[bot_id].arrived())
+	var timed_out: bool = now - team.wave_started[index] > world.rules.wave_timeout
+	if team.wave_started[index] == -INF:
+		team.wave_started[index] = now
+	elif all_there or timed_out:
+		team.squad_phases[index] += 1
+		team.wave_started[index] = now
+		split = SquadConfidence.waves(living, team.squad_phases[index])
+	for bot_id: int in split.covering:
+		world.bots[bot_id].errand = MatchSupply.NO_ERRAND
 
 
-## Whether `bot` is in the covering wave of its squad's retreat: it stays
-## where it is and shoots while the others fall back.
+## Whether `bot` covers a fall-back: alive, staying, while a member of its
+## squad falls back. It stays where it is and shoots.
 static func covering_a_retreat(world: BotMatch, team: MatchTeam, bot: MatchBot) -> bool:
-	var index: int = team.squad_of(bot.id)
-	return team.squad_states[index] == SquadConfidence.RETREAT and not moving_in_retreat(world, team, bot)
+	if not bot.alive() or moving_in_retreat(world, team, bot):
+		return false
+	for bot_id: int in team.squads[team.squad_of(bot.id)]:
+		if moving_in_retreat(world, team, world.bots[bot_id]):
+			return true
+	return false
 
 
 # --- where to stand --------------------------------------------------------
@@ -237,15 +246,10 @@ static func choose_spot(world: BotMatch, team: MatchTeam, bot: MatchBot, now: fl
 	world.send(bot, world.place_position(picked) if picked != -1 else area[0], picked)
 
 
-## Where `bot` should be: [centre, radius]. A retreat's movers fall back
-## towards their spawn; a squad attacking stands on its point, one holding
-## stands in cover near it.
+## Where `bot` should be: [centre, radius]. A squad attacking stands on
+## its point, one holding stands in cover near it. (A bot falling back is
+## on an errand, sent to its place by `_run_errand`.)
 static func area_of(world: BotMatch, team: MatchTeam, bot: MatchBot) -> Array:
-	if moving_in_retreat(world, team, bot):
-		var squad_places: Array[Vector2] = _living_places(world, team.squads[team.squad_of(bot.id)])
-		var centre: Vector2 = _centre(squad_places)
-		var home: Vector2 = _centre(world.arena.spawns[team.name])
-		return [centre + (home - centre).normalized() * world.rules.fallback_metres, world.rules.area_radius]
 	var point: Vector2 = world.arena.point_places[team.bot_points[bot.id]]
 	var attacking: bool = team.bot_modes[bot.id] == MatchTeam.ATTACK
 	return [point, world.rules.attack_radius if attacking else world.rules.area_radius]

@@ -1,8 +1,9 @@
 ## The whole match from above, in 2D, where the team decisions are easiest
 ## to read at once: the watched team's influence map as a heat, every bot,
 ## every squad's order as an arrow to its point, its confidence as a bar
-## with the attack and retreat thresholds marked, and the frontline between
-## the two sides' centres.
+## with the attack threshold marked, each bot of the watched team falling
+## back ringed with a line to the cover it goes to (T65: weighed, not a
+## threshold on the bar), and the frontline between the two sides' centres.
 class_name BotMatchMap
 extends Control
 
@@ -40,6 +41,7 @@ func _draw() -> void:
 		if bot.alive():
 			draw_circle(bot.position * SCALE, 3.5, _team_colour(bot.team))
 	_draw_squads(world.teams[watched_team])
+	_draw_fall_backs(world.teams[watched_team])
 	_draw_frontline()
 
 
@@ -67,16 +69,30 @@ func _draw_squads(team: MatchTeam) -> void:
 
 
 func _draw_bar(at: Vector2, team: MatchTeam, index: int) -> void:
-	var thresholds: SquadConfidence.Thresholds = TeamTactics.thresholds_of(world.rules)
 	var full: float = 2.0
 	var value: float = clampf(float(world.squad_confidence[team.side].get(index, 1.0)), 0.0, full)
 	draw_rect(Rect2(at, Vector2(BAR_WIDTH, 6.0)), Color(0, 0, 0, 0.7))
 	draw_rect(Rect2(at, Vector2(BAR_WIDTH * value / full, 6.0)), _team_colour(team.side))
-	for mark: Array in [[thresholds.retreat_at, RETREAT_MARK], [thresholds.attack_at, ATTACK_MARK]]:
-		var x: float = at.x + BAR_WIDTH * float(mark[0]) / full
-		draw_line(Vector2(x, at.y - 2.0), Vector2(x, at.y + 8.0), mark[1], 2.0)
-	draw_string(ThemeDB.fallback_font, at + Vector2(0, 18.0), BotMatchWords.word(team.squad_states[index]),
+	var x: float = at.x + BAR_WIDTH * SquadConfidence.Thresholds.new().attack_at / full
+	draw_line(Vector2(x, at.y - 2.0), Vector2(x, at.y + 8.0), ATTACK_MARK, 2.0)
+	# A member falling back shows on its squad: the weighing is each bot's.
+	var state: String = team.squad_states[index]
+	for bot_id: int in team.squads[index]:
+		if TeamTactics.moving_in_retreat(world, team, world.bots[bot_id]):
+			state = SquadConfidence.RETREAT
+	draw_string(ThemeDB.fallback_font, at + Vector2(0, 18.0), BotMatchWords.word(state),
 			HORIZONTAL_ALIGNMENT_LEFT, -1.0, 11)
+
+
+# Each bot of `team` falling back: a ring, and a line to its cover.
+func _draw_fall_backs(team: MatchTeam) -> void:
+	for bot_id: int in team.members:
+		var bot: MatchBot = world.bots[bot_id]
+		if not TeamTactics.moving_in_retreat(world, team, bot):
+			continue
+		draw_arc(bot.position * SCALE, 6.0, 0, TAU, 16, RETREAT_MARK, 2.0)
+		if bot.fall_back_place != Vector2.INF:
+			draw_line(bot.position * SCALE, bot.fall_back_place * SCALE, RETREAT_MARK, 1.5)
 
 
 # The line between the two sides' living centres, and its middle marked.

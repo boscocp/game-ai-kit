@@ -67,7 +67,7 @@ static func hide_facts(world: BotMatch, team: MatchTeam, bot: MatchBot) -> Array
 	var rules: MatchRules = world.rules
 	var facts := ErrandChoice.Hide.new()
 	var missing: int = mini(rules.regeneration_to, rules.health) - bot.health
-	var threats: Array[Vector2] = _nearest_first(bot.position, team.known_enemies())
+	var threats: Array[Vector2] = nearest_first(bot.position, team.known_enemies())
 	if missing <= 0 or threats.is_empty() or team.heal_rule == MatchSupply.NEVER:
 		return [facts, -1, Vector2.INF]
 	facts.available = true
@@ -81,7 +81,7 @@ static func hide_facts(world: BotMatch, team: MatchTeam, bot: MatchBot) -> Array
 		bot.hide_asked_at = -INF
 		return [facts, -1, Vector2.INF]
 	var place: int = bot.hide_spot
-	var known: Array = _known_ids(team)
+	var known: Array = known_ids(team)
 	if world.time - bot.hide_asked_at >= rules.position_interval or known != bot.hide_asked_for:
 		place = hiding_place(world, team, bot, threats)
 		bot.hide_asked_at = world.time
@@ -116,42 +116,49 @@ static func exposure(world: BotMatch, team: MatchTeam, bot: MatchBot) -> float:
 	return float(seeing) / enemies.size()
 
 
-# The ids of the enemies `team` knows of, in order: a hiding place found
-# for one set is asked again when it changes, not kept for a second.
-static func _known_ids(team: MatchTeam) -> Array:
+## The ids of the enemies `team` knows of, in order: a hiding place found
+## for one set is asked again when it changes, not kept for a second.
+static func known_ids(team: MatchTeam) -> Array:
 	var ids: Array = team.remembered.keys()
 	ids.sort()
 	return ids
 
 
-## The nearest place within the rules' `hide_metres` that no enemy in
-## `threats` would see `bot` crouched on, nobody else of its team holds:
-## `TacticalPositions` asked to hide, nearness alone ranking. -1: none.
-static func hiding_place(world: BotMatch, team: MatchTeam, bot: MatchBot, threats: Array[Vector2]) -> int:
-	var area: Array = [bot.position, world.rules.hide_metres]
-	var nearby: Array[int] = world.places_near(bot.position, world.rules.hide_metres)
+## The nearest place to `bot` within the rules' `hide_metres` of `centre`
+## -- the bot itself, or, falling back (T65), its squad's point -- that no
+## enemy in `threats` would see it crouched on and nobody else of its team
+## holds: `TacticalPositions` asked to hide, nearness alone ranking. -1:
+## none.
+static func hiding_place(world: BotMatch, team: MatchTeam, bot: MatchBot, threats: Array[Vector2],
+		centre: Vector2 = Vector2.INF) -> int:
+	var around: Vector2 = bot.position if centre == Vector2.INF else centre
+	var area: Array = [around, world.rules.hide_metres]
+	var nearby: Array[int] = world.places_near(around, world.rules.hide_metres)
 	var candidates: Array[TacticalPositions.Candidate] = []
 	for place: int in nearby:
 		candidates.append(SpotFacts.build(world, team, bot, place, area, threats))
-	var choice: TacticalPositions.Choice = TacticalPositions.choose(bot.id, candidates, _hiding_weights(world.rules),
+	# As far as the furthest place in the area can be from the bot.
+	var reach: float = world.rules.hide_metres + bot.position.distance_to(around)
+	var choice: TacticalPositions.Choice = TacticalPositions.choose(bot.id, candidates, _hiding_weights(reach),
 			true, team.use_claims)
 	return nearby[choice.chosen] if choice.chosen != -1 else -1
 
 
 # The query's weights to hide, not to fight: every threat term at zero, so
-# nearness alone ranks what no threat sees.
-static func _hiding_weights(rules: MatchRules) -> TacticalPositions.Weights:
+# nearness alone ranks what no threat sees, out to `reach` metres.
+static func _hiding_weights(reach: float) -> TacticalPositions.Weights:
 	var weights := TacticalPositions.Weights.new()
 	weights.partial_cover = 0.0
 	weights.line_of_fire = 0.0
 	weights.other_cover = 0.0
 	weights.preferred_range = 0.0
-	weights.max_travel = rules.hide_metres
+	weights.max_travel = reach
 	weights.cover_from_all = true
 	return weights
 
 
-static func _nearest_first(place: Vector2, enemies: Array[Vector2]) -> Array[Vector2]:
+## `enemies`, the nearest to `place` first.
+static func nearest_first(place: Vector2, enemies: Array[Vector2]) -> Array[Vector2]:
 	var sorted: Array[Vector2] = enemies.duplicate()
 	sorted.sort_custom(func(one: Vector2, other: Vector2) -> bool:
 		return place.distance_squared_to(one) < place.distance_squared_to(other))

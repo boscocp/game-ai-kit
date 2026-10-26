@@ -1,6 +1,7 @@
-## Three errands a bot may leave its post for -- back to its base for
-## rounds and health, out to fetch a power weapon lying on the map, or into
-## hiding to let its health come back -- each weighed as a gain less its
+## Four errands a bot may leave its post for -- back to its base for
+## rounds and health, out to fetch a power weapon lying on the map, into
+## hiding to let its health come back, or falling back to cover near its
+## squad's point (T65) -- each weighed as a gain less its
 ## costs, the plainest utility, and the largest taken when it is above zero
 ## (the owner's asks for the bot match, 2026-10-21). Staying at its post is
 ## no errand: what leaving costs is the fight's price.
@@ -23,6 +24,16 @@
 ## wound under fire near cover is worth hiding for; a scratch, a long wait,
 ## or a wound nobody can see is not.
 ##
+## Falling back is hiding's sibling, weighed where the squad fights (T65):
+## to cover near its squad's point, worth the health that would come back
+## priced by exposure, as hiding is, and the death it would avoid -- the
+## chance of dying where it stands less the chance in cover, measured and
+## not chosen, times what a death costs in seconds; less each second away,
+## and less the point it would give up: the seconds until the enemy owns
+## it, when it is the last of its team near a point held or being taken
+## with an enemy known near. No threshold: a squad's confidence does not
+## send it back.
+##
 ## Each weighing is a list -- [gain, walk seconds, cost, score] -- so a view
 ## can show why. Constant time a bot. When not to use it: errands that
 ## chain (go here, then there), or a gain that is not a sum of parts; then
@@ -34,6 +45,7 @@ const NONE: String = ""
 const RESUPPLY: String = "resupply"
 const FETCH: String = "fetch power"
 const HIDE: String = "hide to heal"
+const FALL_BACK: String = "fall back"
 
 
 ## What each part of a weighing is worth, in score points.
@@ -51,6 +63,10 @@ class Weights extends RefCounted:
 	var power_danger: float = 0.3
 	## A second away from its post to hide and wait for its health.
 	var hide_second: float = 0.02
+	## A second of what a death costs -- the wait to come back and the walk
+	## back -- and a second of a point given up to the enemy (T65).
+	var death_second: float = 0.05
+	var point_second: float = 0.3
 
 
 ## What going back is weighed on, as the game measured it.
@@ -95,6 +111,27 @@ class Hide extends RefCounted:
 	var attacking: bool = false
 
 
+## What falling back is weighed on (T65).
+class FallBack extends RefCounted:
+	## Whether there is cover near its squad's point to fall back to.
+	var available: bool = false
+	## The share of its health that would come back, and how exposed it is
+	## where it stands, 0 to 1, as hiding's.
+	var hurt: float = 0.0
+	var exposure: float = 0.0
+	## The chance it dies soon where it stands, and in cover, as measured;
+	## and what a death costs it, in seconds.
+	var dying_here: float = 0.0
+	var dying_there: float = 0.0
+	var death_seconds: float = 0.0
+	## Seconds to walk there, and to wait there for the health.
+	var walk_seconds: float = 0.0
+	var wait_seconds: float = 0.0
+	## Seconds until the enemy owns the point it would give up; 0 when it
+	## gives none up.
+	var point_seconds: float = 0.0
+
+
 ## Going back, weighed: [gain, walk seconds, cost of leaving, score].
 static func weigh_resupply(facts: Resupply, weights: Weights) -> PackedFloat64Array:
 	var gain: float = facts.spent + facts.hurt * facts.exposure * weights.health_worth
@@ -127,6 +164,20 @@ static func weigh_hide(facts: Hide, weights: Weights) -> PackedFloat64Array:
 	return PackedFloat64Array([gain, away, leaving, gain - away * weights.hide_second - leaving])
 
 
+## Falling back, weighed: [gain, seconds away, the point's cost, score];
+## all nothing when there is no cover to fall back to. The gain is the
+## health times the exposure and the death avoided times its seconds.
+static func weigh_fall_back(facts: FallBack, weights: Weights) -> PackedFloat64Array:
+	if not facts.available:
+		return PackedFloat64Array([0.0, 0.0, 0.0, 0.0])
+	var health: float = facts.hurt * facts.exposure * weights.health_worth
+	var death: float = (facts.dying_here - facts.dying_there) * facts.death_seconds * weights.death_second
+	var away: float = facts.walk_seconds + facts.wait_seconds
+	var point: float = facts.point_seconds * weights.point_second
+	var gain: float = health + death
+	return PackedFloat64Array([gain, away, point, gain - away * weights.hide_second - point])
+
+
 ## Which of a team's bots is sent to fetch, by their fetching scores: the
 ## one it is worth most to, above zero, the first of equal worth; -1 nobody.
 static func fetcher(scores: PackedFloat64Array) -> int:
@@ -141,11 +192,14 @@ static func fetcher(scores: PackedFloat64Array) -> int:
 
 ## One bot's errand, from its scores -- `fetch_score` 0 unless its team
 ## sent it: the highest above zero, and of equals back first, then fetch,
-## then hide; none, when none is above zero.
-static func choose(resupply_score: float, fetch_score: float, hide_score: float = 0.0) -> String:
-	var best: float = maxf(resupply_score, maxf(fetch_score, hide_score))
+## then hide, then fall back; none, when none is above zero.
+static func choose(resupply_score: float, fetch_score: float, hide_score: float = 0.0,
+		fall_back_score: float = 0.0) -> String:
+	var best: float = maxf(maxf(resupply_score, fetch_score), maxf(hide_score, fall_back_score))
 	if best <= 0.0:
 		return NONE
 	if resupply_score >= best:
 		return RESUPPLY
-	return FETCH if fetch_score >= best else HIDE
+	if fetch_score >= best:
+		return FETCH
+	return HIDE if hide_score >= best else FALL_BACK
