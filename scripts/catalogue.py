@@ -11,8 +11,8 @@ times (the README's table, `docs/godot/examples.md`'s list, the help of each
 
   * `docs/techniques/catalogue.md` and `catalogue.pt-BR.md`: the matrix of
     demo by technique, a line per demo (its command, the known game it is
-    like, the keys that show the decision), and a line per technique (the
-    demos it appears in);
+    like, the keys that show the decision, its techniques and the
+    algorithms of each), and a line per technique (the demos it appears in);
   * a short summary of the two, between `<!-- catalogue:summary -->` and
     `<!-- /catalogue:summary -->` in `README.md` and `README.pt-BR.md`.
 
@@ -24,17 +24,32 @@ are the techniques that module's manifest declares in `depends_on`, directly
 or through another example it depends on (`demo_behaviour` -> `stealth`).
 A declaration alone is not enough: `checkers` declares `ai_learning` because
 its Python trains the evaluation with it, and the game never touches it. So
-each candidate is classified by what the scene actually reaches -- every
-class name and `res://` path, file by file, from the scene the target
-opens, tests left out (the same evidence `check_modules.py` reads):
+each candidate is classified by what the scene reaches, file by file, read
+with the rule `check_demos.py` holds the menu's cards to: a class counts
+when the code constructs it, calls it or extends it, a `res://` path when
+it names a script or a scene; comments, strings, type annotations and
+constant reads do not count, and tests are left out:
 
   ●  the demo's own code reaches it;
   ◐  only another example's code reaches it -- the line names which;
   ○  its own manifest declares it and nothing the scene reaches uses it.
 
+The algorithms come from the demo's card in the menu
+(`godot/menu/catalogue.json`), whose evidence classes `check_demos.py`
+already holds to the scene: each is filed under the technique whose code
+holds the evidence class the scene reaches -- a non-module technique's
+files first, then a technique module -- or under "written inside the
+example itself" when that class is the example's own (tic-tac-toe's
+perfect play is a minimax the game writes for itself).
+
+What a reading cannot see: a script loaded from a path built at run time,
+and whether a branch that uses a class is ever taken. The second is each
+card's manual check.
+
 A technique that is not a module (`non_module_techniques.json`) is marked ●
-on the demos that file names, and a demo whose scene never reaches the
-technique's Godot code is a finding.
+on the demos that file names, and a demo whose scene never reaches one of
+the technique's Godot scripts is a finding -- the scene file itself does
+not count, or a technique living in the scene's folder would always pass.
 
 The rules, one finding each
 ---------------------------
@@ -46,7 +61,11 @@ The rules, one finding each
   C4  a README without exactly one pair of summary markers, in order
   C5  a demo whose recipe opens no scene, or a scene no module owns
   C6  a non-module technique naming a demo that is not a target, or one whose
-      scene never reaches the technique's Godot code
+      scene never reaches the technique's Godot scripts
+  C7  an algorithm on a demo's menu card with no short name in games.json in
+      both languages, or a name for an algorithm no card lists
+  C8  a key games.json gives for a demo that its target's `##` help line
+      does not name: the two say the same thing, so one is held to the other
 
 Exit codes
 ----------
@@ -75,12 +94,14 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import check_modules  # noqa: E402 -- the manifests, ownership, and how code names code
-from check_modules import CLASS_NAME_RE, RES_PATH_RE, WORD_RE, owner_of  # noqa: E402
+import check_demos  # noqa: E402 -- what a scene reaches by use, the menu cards' rule
+import check_modules  # noqa: E402 -- the manifests, and who owns a file
+from check_modules import owner_of  # noqa: E402
 
 PAGES = pathlib.PurePosixPath("docs/techniques")
 GAMES = PAGES / "games.json"
 NON_MODULE = PAGES / "non_module_techniques.json"
+MENU = "godot/menu/catalogue.json"
 LANGUAGES = ("en", "pt-BR")
 SUFFIX = {"en": ".md", "pt-BR": ".pt-BR.md"}
 CATALOGUE = {language: PAGES / f"catalogue{SUFFIX[language]}" for language in LANGUAGES}
@@ -90,10 +111,10 @@ CLOSE = "<!-- /catalogue:summary -->"
 GAME_FIELDS = ("game", "like", "keys")
 
 DIRECT, THROUGH, OFFLINE = "●", "◐", "○"
-DEMO_RE = re.compile(r"^(run|demo-[\w-]+):[^#\n]*##", re.M)
+# The column for an algorithm the example writes for itself.
+INSIDE = ""
+DEMO_RE = re.compile(r"^(run|demo-[\w-]+):[^#\n]*##[ \t]*(.*)$", re.M)
 SCENE_RE = re.compile(r"res://([\w./-]+\.tscn)")
-READ_SUFFIXES = (".gd", ".tscn", ".json")
-GODOT_TESTS = "godot/test/"
 
 
 class Unreadable(Exception):
@@ -114,12 +135,14 @@ class Demo:
     """One row: its target, its module, and how it reaches each technique.
 
     `uses` maps a technique's page to (mark, the example it is reached
-    through, or "" when the mark needs no name).
+    through, or "" when the mark needs no name). `algorithms` maps a page,
+    or INSIDE, to the keys of the menu card's algorithms filed under it.
     """
 
     target: str
     module: str
     uses: dict[str, tuple[str, str]]
+    algorithms: dict[str, list[str]]
     text: dict[str, dict[str, str]]
 
 
@@ -129,6 +152,7 @@ class Catalogue:
 
     techniques: list[Technique]
     demos: list[Demo]
+    names: dict[str, dict[str, str]]
     verified_on: str
     findings: list[str]
 
@@ -152,16 +176,19 @@ def load_modules(root: pathlib.Path) -> dict[str, check_modules.Module]:
         raise Unreadable(f"modules/: {error}") from error
 
 
-def demo_targets(root: pathlib.Path) -> list[tuple[str, str | None]]:
-    """(target, the scene its recipe opens or None), in the Makefile's order."""
+def demo_targets(root: pathlib.Path) -> list[tuple[str, str | None, str]]:
+    """(target, the scene its recipe opens or None, its help line), in order.
+
+    The scene is relative to `godot/`, as `res://` paths are.
+    """
     try:
         text = (root / "Makefile").read_text(encoding="utf-8")
     except OSError as error:
         raise Unreadable(f"Makefile: {error}") from error
     targets = []
-    for target in DEMO_RE.findall(text):
+    for target, help_line in DEMO_RE.findall(text):
         scene = SCENE_RE.search(check_modules.recipe(text, target))
-        targets.append((target, f"godot/{scene.group(1)}" if scene else None))
+        targets.append((target, scene.group(1) if scene else None, help_line))
     return targets
 
 
@@ -204,70 +231,71 @@ def non_module(root: pathlib.Path) -> list[dict]:
         raise Unreadable(f"{path}: {error!r}") from error
 
 
+def menu(root: pathlib.Path) -> tuple[dict, dict]:
+    """The menu's algorithms, by key, and its cards, by target.
+
+    No menu is no cards: the catalogue then names techniques without their
+    algorithms, and `check_demos.py` is the gate that says a card is missing.
+    """
+    path = root / MENU
+    if not path.exists():
+        return {}, {}
+    raw = read_json(path)
+    try:
+        return dict(raw["techniques"]), {card["target"]: card for card in raw["examples"]}
+    except (KeyError, TypeError) as error:
+        raise Unreadable(f"{path}: {error!r}") from error
+
+
 # --- what a scene reaches ----------------------------------------------------
 
 
-class CodeIndex:
-    """The Godot code every module owns, tests left out, and who names what."""
+class SceneCode:
+    """The project's Godot code, read the way check_demos.py reads it.
 
-    def __init__(self, root: pathlib.Path, modules: dict) -> None:
-        """Read every owned file once, comments out, and map each class to its file.
+    One rule for "this scene uses that class" across the kit: the menu's
+    cards are held to it already, and a catalogue that counted a type
+    annotation as a use would disagree with them about the same scene.
+    """
 
-        Comments are left out because a class named in a sentence is not a
-        class used -- the same rule as check_modules.py.
-        """
-        self.texts: dict[str, str] = {}
-        for module in modules.values():
-            for owned in module.owns:
-                self._read(root, owned)
-        self.classes = {name: path for path, text in self.texts.items()
-                        if path.endswith(".gd") for name in CLASS_NAME_RE.findall(text)}
-
-    def _read(self, root: pathlib.Path, owned: str) -> None:
-        """Index one owned path: a file, or every readable file in a folder."""
-        base = root / owned
-        files = [base] if base.is_file() else sorted(base.rglob("*")) if base.is_dir() else []
-        for file in files:
-            path = file.relative_to(root).as_posix()
-            if file.suffix in READ_SUFFIXES and file.is_file() and not path.startswith(GODOT_TESTS):
-                code = file.read_text(encoding="utf-8")
-                self.texts[path] = check_modules.without_comments(code, file.suffix)
+    def __init__(self, root: pathlib.Path) -> None:
+        """Every class in the project, tests left out, to the script declaring it."""
+        self.root = root
+        self.classes = check_demos.project_classes(root)
+        self._named: dict[str, set[str]] = {}
 
     def named_by(self, path: str) -> set[str]:
-        """The files one file reaches: the classes it names, the paths it loads."""
-        code = self.texts[path]
-        found = {self.classes[word] for word in WORD_RE.findall(code) if word in self.classes}
-        for named in RES_PATH_RE.findall(code):
-            named = f"godot/{named}"
-            folder = named.rstrip("/") + "/"
-            found |= {named} if named in self.texts else {
-                other for other in self.texts if other.startswith(folder)}
-        return found - {path}
+        """The scripts and scenes one file reaches by use, relative to godot/."""
+        if path not in self._named:
+            self._named[path] = check_demos.references_of(self.root, path, self.classes)
+        return self._named[path]
 
 
-def scene_reach(index: CodeIndex, modules: dict, scene: str) -> tuple[dict[str, set[str]], set[str]]:
-    """The modules a scene reaches, each with the examples it came through.
+def scene_reach(code: SceneCode, modules: dict, scene: str) -> tuple[dict[str, set[str]], set[str]]:
+    """The modules a scene reaches, each with the examples it came through,
+    and every script it reaches (repository paths, the scene itself not one).
 
-    "" in a module's set means the demo's own code reached it. The walk
-    stops at a technique or a kernel: those depend on nothing a demo is
-    about. A file is visited once per example it is reached through, so the
-    answer does not depend on which way round the walk went first.
+    "" in a module's set means the demo's own code reached it. A file is
+    visited once per example it is reached through, so the answer does not
+    depend on which way round the walk went first.
     """
-    own = owner_of(scene, modules)
+    own = owner_of(f"godot/{scene}", modules)
     reached: dict[str, set[str]] = {}
     seen, waiting = {(scene, "")}, [(scene, "")]
     while waiting:
         path, through = waiting.pop()
-        owner = owner_of(path, modules)
+        owner = owner_of(f"godot/{path}", modules)
+        if owner is None:
+            continue
         if modules[owner].kind != "example":
             reached.setdefault(owner, set()).add(through)
-            continue
-        through = through or ("" if owner == own else owner)
-        for following in index.named_by(path):
+        else:
+            through = through or ("" if owner == own else owner)
+        for following in code.named_by(path):
             if (following, through) not in seen:
                 seen.add((following, through))
                 waiting.append((following, through))
-    return reached, {path for path, _ in seen}
+    return reached, {f"godot/{path}" for path, _ in seen if path.endswith(".gd")}
 
 
 def declared(modules: dict, name: str) -> tuple[set[str], set[str]]:
@@ -306,14 +334,43 @@ def reaches(visited: set[str], path: str) -> bool:
     return path in visited or any(file.startswith(folder) for file in visited)
 
 
+def column_of(path: str, modules: dict, entries: list[dict]) -> str:
+    """The column a script belongs to: a non-module technique naming it, then
+    the technique module owning it, else INSIDE -- the example's own code."""
+    for entry in entries:
+        if any(reaches({path}, lives) for lives in entry.get("lives_in", [])):
+            return entry["page"]
+    owner = owner_of(path, modules)
+    return owner if owner and modules[owner].kind == "technique" else INSIDE
+
+
+def file_algorithms(card: dict | None, algorithms: dict, code: SceneCode, scripts: set[str],
+                    modules: dict, entries: list[dict]) -> dict[str, list[str]]:
+    """Each algorithm a demo's card names, filed under the column whose code runs it.
+
+    An algorithm whose evidence is both in a technique and in the example's
+    own code is the technique's: the example only wires it.
+    """
+    filed: dict[str, list[str]] = {}
+    for entry in (card or {}).get("techniques", []):
+        key = entry.get("technique", "")
+        evidence = [f"godot/{code.classes[name]}" for name in algorithms.get(key, {}).get("evidence", [])
+                    if name in code.classes]
+        columns = [column_of(path, modules, entries) for path in evidence if path in scripts]
+        named = [column for column in columns if column != INSIDE]
+        for column in dict.fromkeys(named or columns):
+            filed.setdefault(column, []).append(key)
+    return filed
+
+
 # --- the catalogue -----------------------------------------------------------
 
 
-def games(root: pathlib.Path) -> tuple[dict, str]:
-    """games.json's entries by target, and the day they were last checked."""
+def games(root: pathlib.Path) -> tuple[dict, dict, str]:
+    """games.json's entries by target, its algorithm names, and the day checked."""
     raw = read_json(root / GAMES)
     try:
-        return dict(raw["demos"]), str(raw["verified_on"])
+        return dict(raw["demos"]), dict(raw.get("algorithms", {})), str(raw["verified_on"])
     except (KeyError, TypeError, ValueError) as error:
         raise Unreadable(f"{root / GAMES}: {error!r}") from error
 
@@ -337,20 +394,55 @@ def game_findings(entries: dict, targets: list[str]) -> list[str]:
     return findings
 
 
+def key_tokens(keys: str) -> list[str]:
+    """The key each `;` clause of a keys line opens with: what a person presses."""
+    return [clause.split()[0] for clause in keys.split(";") if clause.split()]
+
+
+def key_findings(entries: dict, helps: dict[str, str]) -> list[str]:
+    """C8: every key games.json names for a demo is one its help line names.
+
+    The keys are a selection of the help line, the ones that show the AI
+    deciding, so the help line is the authority: a key renamed in the
+    Makefile and not here would send a reader to press the wrong one.
+    """
+    findings = []
+    for target, help_line in helps.items():
+        for token in key_tokens(text_of(entries.get(target), "keys", "en")):
+            if not re.search(rf"(?<![\w-]){re.escape(token)}(?![\w-])", help_line, re.I):
+                findings.append(f"{GAMES}: C8 {target}'s keys name {token!r}, and its make help "
+                                f"line does not: {help_line!r}")
+    return findings
+
+
+def name_findings(demos: list[Demo], names: dict) -> list[str]:
+    """C7: a short name, in both languages, for each algorithm a card lists, and no more."""
+    listed = {key for demo in demos for keys in demo.algorithms.values() for key in keys}
+    findings = [f"{GAMES}: C7 the menu card's algorithm {key!r} has no short name in {language}"
+                for key in sorted(listed) for language in LANGUAGES if not text_of(names, key, language)]
+    findings += [f"{GAMES}: C7 {key!r} names an algorithm no demo's card lists"
+                 for key in sorted(set(names) - listed)]
+    return findings
+
+
 def build_demos(root: pathlib.Path, modules: dict, entries: dict) -> tuple[list[Demo], list[str]]:
     """Every demo the Makefile has, marked from what its scene reaches; C5, C6."""
-    index = CodeIndex(root, modules)
+    code, (algorithms, cards), declared_elsewhere = SceneCode(root), menu(root), non_module(root)
     demos, findings, visits = [], [], {}
-    for target, scene in demo_targets(root):
-        if scene is None or scene not in index.texts:
+    for target, scene, _ in demo_targets(root):
+        module = owner_of(f"godot/{scene}", modules) if scene else None
+        if module is None or not (root / "godot" / scene).is_file():
             findings.append(f"Makefile: C5 {target} opens {scene or 'no res://….tscn scene'}, "
                             f"which is not a file any module owns")
             continue
-        reached, visits[target] = scene_reach(index, modules, scene)
-        module = owner_of(scene, modules)
+        reached, visits[target] = scene_reach(code, modules, scene)
+        filed = file_algorithms(cards.get(target), algorithms, code, visits[target], modules,
+                                declared_elsewhere)
+        uses = marks(modules, module, reached)
+        uses.update({page: (DIRECT, "") for page in filed if page != INSIDE and page not in uses})
         text = {language: {field: text_of(entries.get(target), field, language) for field in GAME_FIELDS}
                 for language in LANGUAGES}
-        demos.append(Demo(target, module, marks(modules, module, reached), text))
+        demos.append(Demo(target, module, uses, filed, text))
     return demos, findings + non_module_marks(root, demos, visits)
 
 
@@ -358,7 +450,7 @@ def non_module_marks(root: pathlib.Path, demos: list[Demo], visits: dict[str, se
     """Mark each non-module technique on the demos it names; C6 where it cannot be.
 
     The file declares the demos by hand, so the scene is asked to agree: one
-    of the technique's Godot paths must be among the files it reaches.
+    of the technique's Godot paths must hold a script the scene reaches.
     """
     by_target = {demo.target: demo for demo in demos}
     findings = []
@@ -369,9 +461,9 @@ def non_module_marks(root: pathlib.Path, demos: list[Demo], visits: dict[str, se
                 findings.append(f"{NON_MODULE}: C6 {entry['page']} names {target}, which is not a demo")
             elif not any(reaches(visits[target], path) for path in paths):
                 findings.append(f"{NON_MODULE}: C6 {target}'s scene never reaches {entry['page']}'s "
-                                f"Godot code ({', '.join(paths) or 'none named'})")
+                                f"Godot scripts ({', '.join(paths) or 'none named'})")
             else:
-                by_target[target].uses[entry["page"]] = (DIRECT, "")
+                by_target[target].uses.setdefault(entry["page"], (DIRECT, ""))
     return findings
 
 
@@ -379,13 +471,15 @@ def catalogue(root: pathlib.Path) -> Catalogue:
     """Read every input and measure every demo: what the pages are written from."""
     modules = load_modules(root)
     techniques, findings = technique_pages(root, modules)
-    entries, verified_on = games(root)
-    targets = [target for target, _ in demo_targets(root)]
+    entries, names, verified_on = games(root)
+    targets = demo_targets(root)
     if not targets:
         findings.append("Makefile: C0 no run or demo-* target with a ## help line; a catalogue of nothing")
     demos, more = build_demos(root, modules, entries)
-    findings += more + game_findings(entries, targets)
-    return Catalogue(techniques, demos, verified_on, findings)
+    findings += more + game_findings(entries, [target for target, _, _ in targets])
+    findings += name_findings(demos, names)
+    findings += key_findings(entries, {target: help_line for target, _, help_line in targets})
+    return Catalogue(techniques, demos, names, verified_on, findings)
 
 
 # --- writing it, in two languages ----------------------------------------------
@@ -395,19 +489,23 @@ WORDS = {
         "title": "The catalogue: every demo, and the AI in it",
         "quote": "Em português: [catalogue.pt-BR.md](catalogue.pt-BR.md).",
         "generated": "Generated by `scripts/catalogue.py` from `modules/*.json`, the Makefile's `run` and "
-                     "`demo-*` targets, `non_module_techniques.json` and `games.json`. Do not edit it by "
-                     "hand: `make catalogue` writes it again, and `make lint-catalogue` fails while it is "
-                     "stale.",
+                     "`demo-*` targets, the menu's cards, `non_module_techniques.json` and `games.json`. "
+                     "Do not edit it by hand: `make catalogue` writes it again, and `make lint-catalogue` "
+                     "fails while it is stale.",
         "matrix": "The demos and their techniques {#matrix}",
-        "matrix_intro": "A row per demo, a column per technique; each mark links the technique's page.",
+        "matrix_intro": "A row per demo, a column per technique; each mark links the technique's page, "
+                        "and the lines below name the algorithms.",
         "by_demo": "Demo by demo {#by-demo}",
         "by_technique": "Technique by technique {#by-technique}",
         "how": "How the marks are measured {#how}",
         "how_text": [
             "A mark is measured, not written. The catalogue starts from the techniques a demo's "
             "manifest declares (`depends_on` in `modules/<example>.json`, directly or through another "
-            "example it uses), and follows the code from the scene its `make` target opens -- every "
-            "class name and every `res://` path, file by file, tests left out:",
+            "example it uses), and follows the code from the scene its `make` target opens, file by "
+            "file, with the rule `check_demos.py` holds the menu's cards to: a class counts when the "
+            "code constructs it, calls it or extends it, and a `res://` path when it names a script or "
+            "a scene. Comments, strings, type annotations and constant reads do not count, and tests "
+            "are left out:",
             "",
             f"- {DIRECT} the demo's own code reaches the technique;",
             f"- {THROUGH} only another example's code reaches it, and the line names which;",
@@ -415,21 +513,30 @@ WORDS = {
             "dependency belongs to code the demo does not run -- the Python that trains it, or a file "
             "the scene never loads.",
             "",
+            "The algorithms come from the demo's card in the menu (`godot/menu/catalogue.json`): each "
+            "is filed under the technique whose code holds the class its card names as evidence, or "
+            "under *written inside the example itself* when that class is the example's own.",
+            "",
+            "What a reading cannot see: a script loaded from a path built at run time, and whether a "
+            "branch that uses a class is ever taken. Opening the demo is the check for both.",
+            "",
             "A technique that lives in Python and a demo rather than in an addon "
             "(`non_module_techniques.json`) is marked " + DIRECT + " on the demos that file names, and "
-            "`make lint-catalogue` fails when such a demo's scene never reaches the technique's Godot "
-            "code. The known game and the keys come from `games.json`, the one hand-written input; "
-            "`make menu` opens every demo here.",
+            "`make lint-catalogue` fails when such a demo's scene never reaches one of the technique's "
+            "Godot scripts. The known game, the keys and the algorithms' short names come from "
+            "`games.json`, the one hand-written input, and the keys are held to each target's "
+            "`make help` line.",
         ],
         "demo": "demo", "like": "like", "keys": "keys", "techniques": "techniques",
+        "inside": "written inside the example itself", "inside_short": "inside the example",
         "through": "through", "offline": "declared in its manifest, never reached from its scene",
         "none_used": "none", "no_demo": "no demo yet", "seen": "Watch it in",
         "summary_intro": "The AI is what this kit is about, so here it is both ways round, generated "
-                         f"from the modules' manifests. {DIRECT} the demo's own code uses the technique; "
-                         f"{THROUGH} it reaches it through another example's code. [The catalogue]"
-                         "({catalogue}) has the whole matrix, the keys that show each decision, and how "
-                         "the marks are measured.",
-        "summary_techniques": ["technique", "what it decides", "where to watch it"],
+                         f"from the modules' manifests and the menu's cards. {DIRECT} the demo's own code "
+                         f"uses the technique; {THROUGH} it reaches it through another example's code. "
+                         "[The catalogue]({catalogue}) has the whole matrix, the keys that show each "
+                         "decision, and how the marks are measured.",
+        "summary_techniques": ["technique", "what it decides", "algorithms", "where to watch it"],
         "summary_demos": ["demo", "like", "the AI in it"],
     },
     "pt-BR": {
@@ -437,19 +544,23 @@ WORDS = {
         "quote": "English: [catalogue.md](catalogue.md). Os termos que ficam em inglês estão no "
                  "[glossário](glossary.pt-BR.md).",
         "generated": "Gerado por `scripts/catalogue.py` a partir de `modules/*.json`, dos alvos `run` e "
-                     "`demo-*` do Makefile, de `non_module_techniques.json` e de `games.json`. Não edite "
-                     "à mão: `make catalogue` escreve de novo, e `make lint-catalogue` falha enquanto "
-                     "estiver desatualizado.",
+                     "`demo-*` do Makefile, dos cartões do menu, de `non_module_techniques.json` e de "
+                     "`games.json`. Não edite à mão: `make catalogue` escreve de novo, e "
+                     "`make lint-catalogue` falha enquanto estiver desatualizado.",
         "matrix": "As demos e suas técnicas {#matrix}",
-        "matrix_intro": "Uma linha por demo, uma coluna por técnica; cada marca leva à página da técnica.",
+        "matrix_intro": "Uma linha por demo, uma coluna por técnica; cada marca leva à página da técnica, "
+                        "e as linhas abaixo dão os nomes dos algoritmos.",
         "by_demo": "Demo por demo {#by-demo}",
         "by_technique": "Técnica por técnica {#by-technique}",
         "how": "Como as marcas são medidas {#how}",
         "how_text": [
             "Uma marca é medida, não escrita. O catálogo parte das técnicas que o manifesto da demo "
             "declara (`depends_on` em `modules/<exemplo>.json`, direto ou por outro exemplo que ela "
-            "usa) e segue o código a partir da cena que o alvo do `make` abre -- cada nome de classe e "
-            "cada caminho `res://`, arquivo por arquivo, sem os testes:",
+            "usa) e segue o código a partir da cena que o alvo do `make` abre, arquivo por arquivo, "
+            "com a regra que o `check_demos.py` aplica aos cartões do menu: uma classe conta quando o "
+            "código a constrói, a chama ou a estende, e um caminho `res://` quando nomeia um script ou "
+            "uma cena. Comentários, *strings*, anotações de tipo e leituras de constante não contam, e "
+            "os testes ficam de fora:",
             "",
             f"- {DIRECT} o código da própria demo alcança a técnica;",
             f"- {THROUGH} só o código de outro exemplo a alcança, e a linha diz qual;",
@@ -457,22 +568,32 @@ WORDS = {
             "é de um código que a demo não roda -- o Python que a treina, ou um arquivo que a cena "
             "nunca carrega.",
             "",
+            "Os algoritmos vêm do cartão da demo no menu (`godot/menu/catalogue.json`): cada um fica "
+            "sob a técnica cujo código tem a classe que o cartão dá como evidência, ou sob *escrito "
+            "dentro do próprio exemplo* quando essa classe é do exemplo.",
+            "",
+            "O que uma leitura não vê: um script carregado de um caminho montado durante a execução, e "
+            "se um ramo que usa uma classe chega a ser tomado. Abrir a demo é a verificação das duas "
+            "coisas.",
+            "",
             "Uma técnica que vive no Python e numa demo, e não num *addon* "
             "(`non_module_techniques.json`), recebe " + DIRECT + " nas demos que esse arquivo cita, e "
-            "`make lint-catalogue` falha quando a cena de uma delas nunca alcança o código Godot da "
-            "técnica. O jogo conhecido e as teclas vêm de `games.json`, a única entrada escrita à mão; "
-            "`make menu` abre todas as demos daqui.",
+            "`make lint-catalogue` falha quando a cena de uma delas não alcança nenhum dos scripts "
+            "Godot da técnica. O jogo conhecido, as teclas e os nomes curtos dos algoritmos vêm de "
+            "`games.json`, a única entrada escrita à mão, e as teclas são conferidas com a linha de "
+            "`make help` de cada alvo.",
         ],
-        "demo": "demo", "like": "como", "keys": "teclas", "techniques": "técnicas",
+        "demo": "demo", "like": "parecido com", "keys": "teclas", "techniques": "técnicas",
+        "inside": "escrito dentro do próprio exemplo", "inside_short": "dentro do exemplo",
         "through": "por", "offline": "declarada no manifesto, nunca alcançada pela cena",
         "none_used": "nenhuma", "no_demo": "nenhuma demo ainda", "seen": "Veja em",
         "summary_intro": "A IA é o foco deste kit, então aqui ela está nos dois sentidos, gerada a "
-                         f"partir dos manifestos dos módulos. {DIRECT} o código da própria demo usa a "
-                         f"técnica; {THROUGH} ela a alcança pelo código de outro exemplo. [O catálogo]"
-                         "({catalogue}) tem a matriz inteira, as teclas que mostram cada decisão e como "
-                         "as marcas são medidas.",
-        "summary_techniques": ["técnica", "o que decide", "onde ver"],
-        "summary_demos": ["demo", "como", "a IA nela"],
+                         f"partir dos manifestos dos módulos e dos cartões do menu. {DIRECT} o código da "
+                         f"própria demo usa a técnica; {THROUGH} ela a alcança pelo código de outro "
+                         "exemplo. [O catálogo]({catalogue}) tem a matriz inteira, as teclas que mostram "
+                         "cada decisão e como as marcas são medidas.",
+        "summary_techniques": ["técnica", "o que decide", "algoritmos", "onde ver"],
+        "summary_demos": ["demo", "parecido com", "a IA nela"],
     },
 }
 
@@ -494,13 +615,15 @@ def page_link(page: str, language: str, prefix: str = "") -> str:
 
 
 def command(target: str) -> str:
-    """How a reader opens a demo."""
+    """How a reader opens a demo: the command, never the bare target name,
+    because a reader who copies `demo-rts` into a shell gets nothing."""
     return f"`make {target}`"
 
 
 def table_row(cells: list[str]) -> str:
-    """One markdown table row."""
-    return "| " + " | ".join(cells) + " |"
+    """One markdown table row, its cells' own pipes escaped: an algorithm
+    name with a `|` in it would otherwise split its cell in two."""
+    return "| " + " | ".join(cell.replace("|", "\\|") for cell in cells) + " |"
 
 
 def sentence(text: str) -> str:
@@ -508,18 +631,28 @@ def sentence(text: str) -> str:
     return text if text.endswith((".", "?", "!")) else f"{text}."
 
 
-def why(mark: str, through: str, language: str) -> str:
-    """What follows a mark: the example it came through, or why it is hollow."""
+def named(model: Catalogue, keys: list[str], language: str) -> str:
+    """The short names of some algorithms, in one language."""
+    return ", ".join(text_of(model.names, key, language) or key for key in keys)
+
+
+def note(demo: Demo, page: str, language: str, model: Catalogue) -> str:
+    """What follows a technique on a demo's line: the example it came through,
+    why its mark is hollow, and the algorithms filed under it."""
+    mark, through = demo.uses[page]
+    parts = []
     if mark == THROUGH:
-        return f" ({WORDS[language]['through']} `{through}`)"
+        parts.append(f"{WORDS[language]['through']} `{through}`")
     if mark == OFFLINE:
-        return f" ({WORDS[language]['offline']})"
-    return ""
+        parts.append(WORDS[language]["offline"])
+    if demo.algorithms.get(page):
+        parts.append(named(model, demo.algorithms[page], language))
+    return f" ({'; '.join(parts)})" if parts else ""
 
 
 def matrix(model: Catalogue, language: str) -> list[str]:
     """The table of demo by technique, a mark linking the page in each cell."""
-    header = [WORDS[language]["demo"], *(technique.name[language] for technique in model.techniques)]
+    header = [WORDS[language]["demo"], *(f"`{technique.page}`" for technique in model.techniques)]
     rows = [table_row(header), table_row(["---"] * len(header))]
     for demo in model.demos:
         cells = [f"[{demo.text[language]['game']}](#{demo.target})"]
@@ -537,12 +670,14 @@ def by_demo(model: Catalogue, language: str) -> list[str]:
     for demo in model.demos:
         text = demo.text[language]
         used = [f"{demo.uses[technique.page][0]} [{technique.name[language]}]"
-                f"({page_link(technique.page, language)}){why(*demo.uses[technique.page], language)}"
+                f"({page_link(technique.page, language)}){note(demo, technique.page, language, model)}"
                 for technique in model.techniques if technique.page in demo.uses]
         lines += [f"- <a id=\"{demo.target}\"></a>**{text['game']}**, {command(demo.target)} -- "
                   f"{words['like']} {sentence(text['like'])}",
                   f"  - {words['keys']}: {sentence(text['keys'])}",
-                  f"  - {words['techniques']}: {', '.join(used) or words['none_used']}."]
+                  f"  - {words['techniques']}: {'; '.join(used) or words['none_used']}."]
+        if demo.algorithms.get(INSIDE):
+            lines.append(f"  - {words['inside']}: {named(model, demo.algorithms[INSIDE], language)}.")
     return lines
 
 
@@ -552,13 +687,13 @@ def by_technique(model: Catalogue, language: str) -> list[str]:
     lines = []
     for technique in model.techniques:
         shown = [f"{demo.uses[technique.page][0]} [{command(demo.target)}](#{demo.target})"
-                 f"{why(*demo.uses[technique.page], language)}"
+                 f"{note(demo, technique.page, language, model)}"
                  for demo in model.demos if technique.page in demo.uses]
         decides = technique.decides[language]
         title = f"[{technique.name[language]}]({page_link(technique.page, language)})"
         lines.append(f"- <a id=\"{technique.page}\"></a>{title}"
                      f"{' -- ' + sentence(decides) if decides else '.'} "
-                     f"{words['seen']}: {', '.join(shown) or words['no_demo']}.")
+                     f"{words['seen']}: {'; '.join(shown) or words['no_demo']}.")
     return lines
 
 
@@ -574,19 +709,24 @@ def render_page(model: Catalogue, language: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def summary_techniques(model: Catalogue, language: str, catalogue_path: str) -> list[str]:
-    """The README's first table: each technique and the demos that show it.
+def watched(demo: Demo, page: str) -> bool:
+    """True when a demo is a place to watch the technique: it uses it, not
+    only declares it. The README's summary lists only these."""
+    return demo.uses.get(page, (OFFLINE,))[0] != OFFLINE
 
-    A hollow mark is left out here: the summary says where to watch a
-    technique, and a demo that only declares it is not such a place.
-    """
-    rows = [table_row(WORDS[language]["summary_techniques"]), table_row(["---"] * 3)]
+
+def summary_techniques(model: Catalogue, language: str, catalogue_path: str) -> list[str]:
+    """The README's first table: each technique, its algorithms, the demos that show it."""
+    rows = [table_row(WORDS[language]["summary_techniques"]), table_row(["---"] * 4)]
     for technique in model.techniques:
+        demos = [demo for demo in model.demos if watched(demo, technique.page)]
+        keys = list(dict.fromkeys(key for demo in demos for key in demo.algorithms.get(technique.page, [])))
         shown = [f"{demo.uses[technique.page][0]} [{command(demo.target)}]({catalogue_path}#{demo.target})"
-                 for demo in model.demos if demo.uses.get(technique.page, (OFFLINE,))[0] != OFFLINE]
+                 for demo in demos]
         rows.append(table_row([
             f"[{technique.name[language]}]({page_link(technique.page, language, f'{PAGES}/')})",
-            technique.decides[language], ", ".join(shown) or WORDS[language]["no_demo"]]))
+            technique.decides[language], named(model, keys, language),
+            ", ".join(shown) or WORDS[language]["no_demo"]]))
     return rows
 
 
@@ -596,11 +736,14 @@ def summary_demos(model: Catalogue, language: str, catalogue_path: str) -> list[
     for demo in model.demos:
         used = [f"{demo.uses[technique.page][0]} [{technique.name[language]}]"
                 f"({page_link(technique.page, language, f'{PAGES}/')})"
-                for technique in model.techniques
-                if demo.uses.get(technique.page, (OFFLINE,))[0] != OFFLINE]
+                + (f": {named(model, demo.algorithms[technique.page], language)}"
+                   if demo.algorithms.get(technique.page) else "")
+                for technique in model.techniques if watched(demo, technique.page)]
+        if demo.algorithms.get(INSIDE):
+            used.append(f"{WORDS[language]['inside_short']}: {named(model, demo.algorithms[INSIDE], language)}")
         rows.append(table_row([f"[{command(demo.target)}]({catalogue_path}#{demo.target}) "
                                f"{demo.text[language]['game']}", demo.text[language]["like"],
-                               ", ".join(used) or WORDS[language]["none_used"]]))
+                               "; ".join(used) or WORDS[language]["none_used"]]))
     return rows
 
 
@@ -676,11 +819,21 @@ def run(root: pathlib.Path, check_only: bool) -> int:
 # --- self-test -------------------------------------------------------------
 #
 # A tiny repository with one demo that shows each mark: `play` uses ai_a
-# itself, reaches ai_b only through the `lib` example, declares ai_c that
-# only its test and a comment name, and carries the non-module `trick`.
+# itself, reaches ai_b only through the `lib` example, and declares ai_c
+# that only a type annotation, a comment and a test name. It carries the
+# non-module `trick`, in a folder of its own, and an algorithm of its own
+# (`Own`) that its card names.
 
-MAKEFILE = ".PHONY: demo-play\ndemo-play: import ## Play against it\n" \
+MAKEFILE = ".PHONY: demo-play\ndemo-play: import ## Play against it: space plays, K keeps\n" \
            "\t@$(GODOT) --path godot res://game/play/play.tscn\n"
+
+PLAY_SCRIPT = ("extends Node\nvar a := AiA.new()\nvar lib := Lib.new()\nvar trick := Trick.new()\n"
+               "var own := Own.new()\nvar hinted: AiC\nvar probe := PlayTest.new()\n"
+               "# AiC is only mentioned here\n")
+
+# Each algorithm on the card, to its evidence classes. `mixed` has evidence in a
+# technique and in the example itself, and belongs to the technique alone.
+CARD_ALGORITHMS = {"alpha": ["AiA"], "beta": ["AiB"], "own": ["Own"], "tricky": ["Trick"], "mixed": ["Own", "AiA"]}
 
 
 def manifest(name: str, kind: str, owns: list[str], depends_on: list[str] = ()) -> str:
@@ -688,20 +841,32 @@ def manifest(name: str, kind: str, owns: list[str], depends_on: list[str] = ()) 
     return json.dumps({"module": name, "kind": kind, "owns": owns, "depends_on": list(depends_on)})
 
 
-def games_text(demos: dict[str, dict]) -> str:
-    """games.json for these entries."""
-    return json.dumps({"verified_on": "2026-10-26", "demos": demos})
+def games_text(demos: dict[str, dict], names: dict[str, dict] | None = None) -> str:
+    """games.json for these entries, and a name for each card algorithm by default."""
+    if names is None:
+        names = {key: {"en": key.title(), "pt-BR": f"{key} em português"} for key in CARD_ALGORITHMS}
+    return json.dumps({"verified_on": "2026-10-26", "demos": demos, "algorithms": names})
 
 
 def game_entry(name: str) -> dict:
-    """A complete games.json entry."""
-    return {field: {"en": f"{name} {field}", "pt-BR": f"{name} {field} em português"}
-            for field in GAME_FIELDS}
+    """A complete games.json entry, its keys ones the help line names."""
+    entry = {field: {"en": f"{name} {field}", "pt-BR": f"{name} {field} em português"}
+             for field in GAME_FIELDS}
+    entry["keys"] = {"en": "space plays; K keeps", "pt-BR": "espaço joga; K guarda"}
+    return entry
 
 
 def non_module_text(lives_in: str, demo: str = "demo-play") -> str:
     """non_module_techniques.json with the one technique, `trick`."""
     return json.dumps({"techniques": [{"page": "trick", "lives_in": [lives_in], "demos": [demo]}]})
+
+
+def menu_text() -> str:
+    """The menu's catalogue: one card, naming the four algorithms by their evidence."""
+    return json.dumps({
+        "techniques": {key: {"name": key, "evidence": names} for key, names in CARD_ALGORITHMS.items()},
+        "examples": [{"target": "demo-play", "techniques": [{"technique": key} for key in CARD_ALGORITHMS]}],
+    })
 
 
 def fixture() -> dict[str, str]:
@@ -716,12 +881,13 @@ def fixture() -> dict[str, str]:
         "godot/game/lib/lib.gd": "class_name Lib\nvar helper := AiB.new()\n",
         "godot/game/lib/unused.gd": "class_name Unused\n",
         "godot/game/play/play.tscn": '[ext_resource type="Script" path="res://game/play/play.gd" id="1"]\n',
-        "godot/game/play/play.gd": "extends Node\nvar a := AiA.new()\nvar lib := Lib.new()\n"
-                                   "var trick := Trick.new()\n# AiC is only mentioned here\n",
-        "godot/game/play/trick.gd": "class_name Trick\n",
-        "godot/test/play/play_test.gd": "var c := AiC.new()\n",
+        "godot/game/play/play.gd": PLAY_SCRIPT,
+        "godot/game/play/own.gd": "class_name Own\n",
+        "godot/game/play/tricks/trick.gd": "class_name Trick\n",
+        "godot/test/play/play_test.gd": "class_name PlayTest\nvar c := AiC.new()\n",
+        MENU: menu_text(),
         str(GAMES): games_text({"demo-play": game_entry("Play")}),
-        str(NON_MODULE): non_module_text("godot/game/play/trick.gd"),
+        str(NON_MODULE): non_module_text("godot/game/play/tricks/"),
         "README.md": f"# Kit\n\n{OPEN}\n{CLOSE}\n\nMore.\n",
         "README.pt-BR.md": f"# Kit\n\n{OPEN}\n{CLOSE}\n\nMais.\n",
     }
@@ -749,24 +915,25 @@ def planted(root: pathlib.Path, name: str, changes: dict[str, str | None]) -> pa
     """The good repository, its pages written, then `changes` made to it."""
     repo = root / name
     lay_out(repo, fixture())
-    with contextlib.redirect_stdout(io.StringIO()):
+    output = io.StringIO()
+    with contextlib.redirect_stdout(output):
         if run(repo, check_only=False) != 0:
-            raise AssertionError("the self-test's own fixture does not generate")
+            raise AssertionError(f"the self-test's own fixture does not generate: {output.getvalue()}")
     lay_out(repo, changes)
     return repo
 
 
 def cases() -> list[tuple[str, dict[str, str | None], int, str]]:
     """(label, changes to the generated repository, exit, the finding it must name)."""
-    good = fixture()
     new_demo = MAKEFILE + MAKEFILE.replace("demo-play", "demo-more")
+    play = {"demo-play": game_entry("Play")}
     return [
         ("the pages as written", {}, 0, ""),
         ("a demo added without regenerating",
-         {"Makefile": new_demo, str(GAMES): games_text({"demo-play": game_entry("Play"),
-                                                        "demo-more": game_entry("More")})}, 1, "C1"),
+         {"Makefile": new_demo, str(GAMES): games_text(dict(play, **{"demo-more": game_entry("More")}))},
+         1, "C1"),
         ("a demo's code now reaching a technique, not regenerated",
-         {"godot/game/play/play.gd": good["godot/game/play/play.gd"] + "var c := AiC.new()\n"}, 1, "C1"),
+         {"godot/game/play/play.gd": PLAY_SCRIPT + "var c := AiC.new()\n"}, 1, "C1"),
         ("a key changed in games.json, not regenerated",
          {str(GAMES): games_text({"demo-play": dict(game_entry("Play"), keys={"en": "K", "pt-BR": "T"})})},
          1, f"{CATALOGUE['en']}: C1"),
@@ -774,18 +941,40 @@ def cases() -> list[tuple[str, dict[str, str | None], int, str]]:
         ("a technique with no pt-BR page", {f"{PAGES}/ai_b.pt-BR.md": None}, 1, "C2"),
         ("a demo missing from games.json", {str(GAMES): games_text({})}, 1, "C3"),
         ("games.json naming no demo",
-         {str(GAMES): games_text({"demo-play": game_entry("Play"), "demo-gone": game_entry("Gone")})}, 1, "C3"),
+         {str(GAMES): games_text(dict(play, **{"demo-gone": game_entry("Gone")}))}, 1, "C3"),
         ("an entry with a language missing",
          {str(GAMES): games_text({"demo-play": dict(game_entry("Play"), like={"en": "Play like"})})}, 1, "C3"),
         ("a README without its markers", {"README.md": "# Kit\n"}, 1, "C4"),
         ("no demo at all", {"Makefile": "all:\n\t@true\n"}, 1, "C0"),
         ("a demo opening a scene nobody owns",
          {"Makefile": MAKEFILE.replace("game/play/play.tscn", "game/gone/gone.tscn")}, 1, "C5"),
+        *planted_reach_cases(play),
+    ]
+
+
+def planted_reach_cases(play: dict) -> list[tuple[str, dict[str, str | None], int, str]]:
+    """C6, C7 and C8: the scene, the cards and the keys held to each other."""
+    names = json.loads(games_text(play))["algorithms"]
+    return [
         ("a non-module technique its demo never reaches",
          {str(NON_MODULE): non_module_text("godot/game/lib/unused.gd")}, 1, "C6"),
+        # The scene is not a script the technique could live in: a folder or
+        # file counted by the scene alone would pass every time.
+        ("a non-module technique living in the scene file",
+         {str(NON_MODULE): non_module_text("godot/game/play/play.tscn")}, 1, "C6"),
         ("a non-module technique naming no demo",
-         {str(NON_MODULE): non_module_text("godot/game/play/trick.gd", "demo-gone")}, 1, "C6"),
+         {str(NON_MODULE): non_module_text("godot/game/play/tricks/", "demo-gone")}, 1, "C6"),
+        ("a card's algorithm with no short name",
+         {str(GAMES): games_text(play, {key: value for key, value in names.items() if key != "own"})}, 1, "C7"),
+        ("a card's algorithm named in one language",
+         {str(GAMES): games_text(play, dict(names, own={"en": "Own"}))}, 1, "C7"),
+        ("a short name for an algorithm no card lists",
+         {str(GAMES): games_text(play, dict(names, gone={"en": "Gone", "pt-BR": "Ido"}))}, 1, "C7"),
+        ("a key the help line does not name",
+         {str(GAMES): games_text({"demo-play": dict(game_entry("Play"), keys={"en": "Q quits", "pt-BR": "Q"})})},
+         1, "C8"),
         ("a manifest that is not JSON", {"modules/lib.json": "{"}, 2, ""),
+        ("a menu that is not JSON", {MENU: "{"}, 2, ""),
     ]
 
 
@@ -801,20 +990,25 @@ def drifted_summary_case(root: pathlib.Path) -> list[str]:
 
 
 def mark_cases(root: pathlib.Path) -> list[str]:
-    """Each mark is measured as the module docstring says, in both directions."""
+    """Each mark and each algorithm is filed as the module docstring says."""
     repo = root / "the pages as written"
     page = (repo / CATALOGUE["en"]).read_text(encoding="utf-8")
-    readme = (repo / README["en"]).read_text(encoding="utf-8")
+    readme = (repo / README["en"]).read_text(encoding="utf-8").split(OPEN)[1]
     wanted = {
-        "the demo's own use": f"{DIRECT} [ai_a](ai_a.md)",
-        "a use through another example": f"{THROUGH} [ai_b](ai_b.md) (through `lib`)",
-        "a declaration only a test and a comment use": f"{OFFLINE} [ai_c](ai_c.md)",
-        "a non-module technique": f"{DIRECT} [trick](trick.md)",
-        "the technique's way back to its demo": f"{THROUGH} [`make demo-play`](#demo-play) (through `lib`)",
+        "the demo's own use, with its algorithm": f"{DIRECT} [ai_a](ai_a.md) (Alpha, Mixed)",
+        "a use through another example": f"{THROUGH} [ai_b](ai_b.md) (through `lib`; Beta)",
+        "a declaration only a type, a test and a comment use":
+            f"{OFFLINE} [ai_c](ai_c.md) (declared in its manifest, never reached from its scene)",
+        "a non-module technique in a folder": f"{DIRECT} [trick](trick.md) (Tricky)",
+        "an algorithm the example writes itself": "  - written inside the example itself: Own.",
+        "the technique's way back to its demo":
+            f"{THROUGH} [`make demo-play`](#demo-play) (through `lib`; Beta)",
     }
     failures = [f"{label}: expected {text!r} in the page" for label, text in wanted.items() if text not in page]
-    if OFFLINE in readme.split(OPEN)[1]:
+    if OFFLINE in readme:
         failures.append("a hollow mark reached the README summary, which says where to watch")
+    if "| Alpha, Mixed |" not in readme or "inside the example: Own" not in readme:
+        failures.append("the README summary does not name the algorithms")
     return failures
 
 

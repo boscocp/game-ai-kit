@@ -585,7 +585,7 @@ test-godot-some: import ## Only these gdUnit4 suites or folders: SUITES="test/ai
 # hangs CI. Everything automated here runs --headless.
 
 .PHONY: run
-run: import ## Checkers against minimax: click a piece, click a green square; space plays white's move, 1-6 sets its depth
+run: import ## Checkers against minimax: click a piece, click a green square; space plays white's move, 1-6 sets its depth, E the learned evaluation
 	@# T27: the first thing a person opens is a game nobody needs explained.
 	@# T24 made the menu the project's main scene, so this names the board.
 	@$(GODOT) --path godot res://game/checkers/checkers.tscn

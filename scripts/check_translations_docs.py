@@ -740,6 +740,11 @@ def mirror_cases(root: pathlib.Path, pages: dict[str, str]) -> list[tuple[str, p
             "# play", "# jogar")), 1, "D16"),
         ("a pt-BR README with no glossary line", readmes("readme-bare", README_EN, README_PT.replace(
             "English: [README.md]", "Inglês: [README.md]")), 1, "D14"),
+        # A part runs to the next heading as high as its own: code under a
+        # lower heading inside it is still the part's.
+        ("a mirrored part's code changed under a sub-heading", readmes(
+            "readme-sub", README_EN.replace("```bash", "### Tier 1\n\n```bash"),
+            README_PT.replace("```bash", "### Nível 1\n\n```bash").replace("# play", "# jogar")), 1, "D16"),
     ]
 
 

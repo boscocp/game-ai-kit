@@ -85,3 +85,8 @@ também em itálico, ficam como foram publicados.
 | *id* | o número que identifica uma unidade no tabuleiro |
 | *enter*, *shift*, Tab | nomes de teclas, como estão no teclado |
 | *LLM* | um modelo de linguagem grande (*large language model*), que gera texto; aqui, um conselheiro cuja resposta é validada antes de virar ação |
+| BFS, DFS | as siglas de *breadth-first search* e *depth-first search*, a busca em largura e a em profundidade |
+| PDDL | a linguagem em que se escreve um domínio de planejamento STRIPS: os fatos, as ações e o objetivo |
+| GPU, VRAM | a placa de vídeo, e a memória dela; um LLM local precisa das duas |
+| OpenGL, Compatibility | a interface gráfica que o Godot usa nas máquinas mais simples, e o nome do renderizador dele que a usa |
+| *script* | um arquivo de código GDScript, anexado a um nó ou registrado com `class_name` |
