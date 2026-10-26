@@ -154,9 +154,13 @@ def check_message(lines):
 # can is a required status check on `main`, which is a repository setting and
 # not code.
 PUBLISHED_EXCEPTIONS: dict[str, str] = {
-    # Subjects already on main that predate a rule, each with the reason it
-    # is allowed to stay. Empty today: this repository's history starts
-    # under the rule. An entry here is a confession, not a convenience.
+    # Subjects already on main that break a rule, each with the reason it
+    # is allowed to stay. The history started under the rule; one entry
+    # broke it. An entry here is a confession, not a convenience.
+    "feat: T105, seek and pursue are given a time to reach their velocity "
+    "(wave 98) (#36)":
+        "squash-merged on 2026-10-26 although check_pr_message.py had refused "
+        "its 78-character title; the merge command did not wait for the check",
 }
 
 
