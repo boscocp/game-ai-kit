@@ -36,7 +36,7 @@ var wheel: float = 0.0
 
 
 func _init() -> void:
-	super(RacingLevel.new("you", 0.0, ADVICE_MARGIN, 0.0), 0)
+	super(RacingLevel.new("you", 0.0, ADVICE_MARGIN, 0.0), 0)  # shown through tr()
 
 
 ## The speed and turn the held keys ask for, and where you must be braking.

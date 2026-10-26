@@ -81,3 +81,12 @@ static func other() -> String:
 ## True while the examples speak Portuguese.
 static func is_portuguese() -> bool:
 	return TranslationServer.get_locale().begins_with("pt")
+
+
+## `value` with `places` decimals, its separator the language's: "1.5" in
+## English, "1,5" in Portuguese (T80). Only for a number a person reads as
+## prose -- a lap time, a margin -- never for one a gate or a log parses,
+## which keeps the point whatever the language.
+static func decimal(value: float, places: int) -> String:
+	var written: String = ("%." + str(places) + "f") % value
+	return written.replace(".", ",") if is_portuguese() else written

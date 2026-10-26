@@ -9,9 +9,15 @@
 class_name Racing3DText
 extends RefCounted
 
+## The three switches' lines, on and then off.
+const PID: Array[String] = ["1 PID: full", "1 PID: proportional only"]  # shown through tr()
+const TRAFFIC: Array[String] = ["2 traffic: heat line", "2 traffic: one rival at a time"]  # shown through tr()
+const GRIP: Array[String] = ["3 grip: measured", "3 grip: off the car's sheet"]  # shown through tr()
+
 
 ## The status panel for `race`, watching car `watched`; `human` is yours,
-## and `switches` says [full PID, heat line, measured grip].
+## and `switches` says [full PID, heat line, measured grip]. Rebuilt every
+## frame, as it was before T80: each line is one lookup and one format.
 static func status(race: Race3D, watched: int, human: RaceHumanDriver3D, switches: Array) -> String:
 	var lines: PackedStringArray = []
 	if not race.racing:
@@ -19,11 +25,11 @@ static func status(race: Race3D, watched: int, human: RaceHumanDriver3D, switche
 	else:
 		lines.append(_watched(race, watched, human))
 		if race.drivers[watched] != human:
-			lines.append("the keys drive your car, the red one: Tab until \"you\" to watch it")
+			lines.append(TranslationServer.translate("the keys drive your car, the red one: Tab until \"you\" to watch it"))
 	lines.append("")
-	lines.append("1 PID: %s" % ("full" if switches[0] else "proportional only"))
-	lines.append("2 traffic: %s" % ("heat line" if switches[1] else "one rival at a time"))
-	lines.append("3 grip: %s" % ("measured" if switches[2] else "off the car's sheet"))
+	lines.append(TranslationServer.translate(PID[0 if switches[0] else 1]))
+	lines.append(TranslationServer.translate(TRAFFIC[0 if switches[1] else 1]))
+	lines.append(TranslationServer.translate(GRIP[0 if switches[2] else 1]))
 	lines.append("")
 	for number: int in range(race.cars.size()):
 		lines.append(_laps(race, number, human))
@@ -33,24 +39,47 @@ static func status(race: Race3D, watched: int, human: RaceHumanDriver3D, switche
 static func _measuring(race: Race3D, watched: int) -> String:
 	var test: GripTest3D = race.tests[watched]
 	var sheet: Dictionary = Race3D.sheet_of(race.physics)
-	return "Measuring each car on the test pad: the keys drive yours once\nevery car is on the grid, in about twenty seconds.\ncornering now %.1f m/s^2, best %.2f (sheet %.2f)\nbraking %.2f m/s^2 (sheet %.2f)" % [
-		test.cornering, test.grip, sheet["grip"], test.braking, sheet["braking"]]
+	return "\n".join([
+		TranslationServer.translate("Measuring each car on the test pad: the keys drive yours once"),
+		TranslationServer.translate("every car is on the grid, in about twenty seconds."),
+		TranslationServer.translate("cornering now {cornering} m/s^2, best {best} (sheet {sheet_grip})").format({
+			cornering = "%.1f" % test.cornering, best = "%.2f" % test.grip, sheet_grip = "%.2f" % sheet["grip"]}),
+		TranslationServer.translate("braking {braking} m/s^2 (sheet {sheet_braking})").format({
+			braking = "%.2f" % test.braking, sheet_braking = "%.2f" % sheet["braking"]}),
+	])
 
 
 static func _watched(race: Race3D, watched: int, human: RaceHumanDriver3D) -> String:
 	var driver: RaceDriver3D = race.drivers[watched]
 	var speed: float = race.cars[watched].forward_speed()
-	var who: String = "you" if driver == human else driver.level.title
-	var braking: String = "brakes in %.0f m" % driver.braking_in if driver.braking_in >= 0.0 else "no braking in sight"
+	var braking: String = TranslationServer.translate("no braking in sight")
+	if driver.braking_in >= 0.0:
+		braking = TranslationServer.translate("brakes in {metres} m").format({metres = "%.0f" % driver.braking_in})
 	var pid: PidController = driver.line_pid
-	return "%s: %.0f km/h, wants %.0f; %s\noff where it wants to be: %.2f m\nPID: P %.3f  I %.3f  D %.3f rad\nheat ball %.2f m; races on grip %.2f, braking %.2f" % [
-		who, speed * 3.6, driver.target_speed * 3.6, braking, driver.line_error,
-		pid.proportional_term, pid.integral_term, pid.derivative_term,
-		driver.traffic.heat.ball, driver.grip, driver.braking]
+	return "\n".join([
+		TranslationServer.translate("{who}: {speed} km/h, wants {wanted}; {braking}").format({
+			who = _who(race, watched, human), speed = "%.0f" % (speed * 3.6),
+			wanted = "%.0f" % (driver.target_speed * 3.6), braking = braking}),
+		TranslationServer.translate("off where it wants to be: {off} m").format({off = "%.2f" % driver.line_error}),
+		TranslationServer.translate("PID: P {p}  I {i}  D {d} rad").format({p = "%.3f" % pid.proportional_term,
+			i = "%.3f" % pid.integral_term, d = "%.3f" % pid.derivative_term}),
+		TranslationServer.translate("heat ball {ball} m; races on grip {grip}, braking {braking}").format({
+			ball = "%.2f" % driver.traffic.heat.ball, grip = "%.2f" % driver.grip, braking = "%.2f" % driver.braking}),
+	])
 
 
+# A finished lap's time is read as prose, so its decimal separator follows
+# the language; the panel's other numbers are measurements and keep the point.
 static func _laps(race: Race3D, number: int, human: RaceHumanDriver3D) -> String:
-	var who: String = "you" if race.drivers[number] == human else race.drivers[number].level.title
 	var done: int = race.laps(number)
-	var last: String = "%.1f s" % race.lap_time(number, done - 1) if done > 0 else "-"
-	return "%s: lap %d, last %s" % [who, done + 1, last]
+	var last: String = "-"
+	if done > 0:
+		last = TranslationServer.translate("{seconds} s").format({seconds = Language.decimal(race.lap_time(number, done - 1), 1)})
+	return TranslationServer.translate("{who}: lap {lap}, last {last}").format({
+		who = _who(race, number, human), lap = done + 1, last = last})
+
+
+# Who drives car `number`, as the panel names it: you, or the AI's level.
+static func _who(race: Race3D, number: int, human: RaceHumanDriver3D) -> String:
+	var driver: RaceDriver3D = race.drivers[number]
+	return TranslationServer.translate("you" if driver == human else driver.level.title)

@@ -70,9 +70,9 @@ func build(world: InfiltrationWorld) -> void:
 func refresh(world: InfiltrationWorld, watched: int, thinking: bool) -> void:
 	var delta: float = world.time - _drawn_at
 	_drawn_at = world.time
-	var crouched: bool = world.player.stance != "standing"
+	var crouched: bool = world.player.stance != "standing"  # not shown: an identifier
 	_player.stand(world.level.arena.above(world.player.position, 0.0), world.player.facing, crouched, delta)
-	_player.scale.y = 0.25 if world.player.stance == "prone" else _player.scale.y
+	_player.scale.y = 0.25 if world.player.stance == "prone" else _player.scale.y  # not shown: an identifier
 	for guard: InfiltrationGuard in world.guards:
 		var body: BotBody = _guards[guard.id]
 		body.stand(world.level.arena.above(guard.position, 0.0), guard.facing, false, delta)

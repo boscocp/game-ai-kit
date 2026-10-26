@@ -72,7 +72,7 @@ static func would_see(guard: InfiltrationGuard, level: InfiltrationLevel, rules:
 	var zone: int = guard.type.vision.zone_at(offset.length(), angle_off(guard.facing, offset))
 	if zone == -1:
 		return false
-	var lowest: float = rules.points_of("prone")[rules.points_of("prone").size() - 1]
+	var lowest: float = rules.points_of("prone")[rules.points_of("prone").size() - 1]  # not shown: an identifier
 	var sure: float = guard.type.vision.certainty_in(zone, level.light_at(place), false, level.hidden_at(place))
 	return sure >= rules.guard("seen_threshold") and level.arena.clear_line(guard.eye(level.arena, rules), level.arena.above(place, lowest))
 

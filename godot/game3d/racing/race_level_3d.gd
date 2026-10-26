@@ -46,7 +46,7 @@ func _init(name_shown: String, aim_distance: float, margin: float, drift: float)
 ## margin puts it on the grass (`racing3d_effects.gd`).
 static func ladder() -> Array[RaceLevel3D]:
 	return [
-		RaceLevel3D.new("easy", 0.5, 0.75, 2.0),
-		RaceLevel3D.new("normal", 0.7, 0.86, 1.0),
-		RaceLevel3D.new("hard", 0.9, 0.97, 0.3),
+		RaceLevel3D.new("easy", 0.5, 0.75, 2.0),  # shown through tr()
+		RaceLevel3D.new("normal", 0.7, 0.86, 1.0),  # shown through tr()
+		RaceLevel3D.new("hard", 0.9, 0.97, 0.3),  # shown through tr()
 	]

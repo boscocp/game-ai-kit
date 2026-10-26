@@ -32,7 +32,7 @@ func _draw() -> void:
 	var middle: Vector2 = size / 2.0
 	_draw_hurt(bot)
 	if not bot.alive():
-		var waiting: String = "down -- back in %.1f s" % bot.respawn_left
+		var waiting: String = tr("down -- back in {seconds} s").format({seconds = "%.1f" % bot.respawn_left})
 		draw_string(ThemeDB.fallback_font, middle + Vector2(-90, 0), waiting, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 24, HURT)
 		return
 	for direction: Vector2 in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
@@ -44,35 +44,46 @@ func _draw() -> void:
 		for corner: Vector2 in [Vector2(1, 1), Vector2(-1, 1), Vector2(1, -1), Vector2(-1, -1)]:
 			draw_line(middle + corner * 6.0, middle + corner * reach, HEADSHOT if head else HIT_MARKER, 3.0 if head else 2.5)
 		if head:
-			draw_string(ThemeDB.fallback_font, middle + Vector2(-48, -34), "HEADSHOT", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 20, HEADSHOT)
+			draw_string(ThemeDB.fallback_font, middle + Vector2(-48, -34), tr("HEADSHOT"), HORIZONTAL_ALIGNMENT_LEFT, -1.0, 20, HEADSHOT)
 	if bot.reload_left > 0.0:
 		_draw_reload(middle, 1.0 - bot.reload_left / world.rules.reload_time)
-	var reloading: String = "  reloading" if bot.reload_left > 0.0 else ("  sprinting" if bot.sprinting else "")
-	var weapon: String = "POWER" if bot.weapon == MatchSupply.POWER else "rifle"
-	var streak: String = "    streak %d/%d" % [bot.streak, world.rules.streak_for_power]
-	var dry: String = "  -- back to your base for rounds" if bot.ammo + bot.reserve <= 0 else ""
-	var status: String = "%s    %s %d / %d%s%s%s" % [health_text(world.rules, bot, world.time), weapon, bot.ammo,
-			bot.reserve, reloading, streak, dry]
-	# Bottom left: the bottom right is where the rifle is.
-	var at := Vector2(30.0, size.y - 30.0)
-	draw_string(ThemeDB.fallback_font, at, status, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 26, CROSSHAIR)
+	draw_string(ThemeDB.fallback_font, Vector2(30.0, size.y - 30.0), _status(bot), HORIZONTAL_ALIGNMENT_LEFT,
+			-1.0, 26, CROSSHAIR)
+
+
+# The corner's line: health, weapon and rounds, what the body is doing, the
+# streak, and, out of rounds, where to get more. Drawn every frame while a
+# bot is played; its pieces are separate clauses, each its own key.
+func _status(bot: MatchBot) -> String:
+	var parts: Array[String] = [health_text(world.rules, bot, world.time),
+		tr("{weapon} {ammo} / {reserve}").format({weapon = tr("POWER") if bot.weapon == MatchSupply.POWER
+			else BotMatchWords.word(MatchSupply.RIFLE), ammo = bot.ammo, reserve = bot.reserve})]
+	if bot.reload_left > 0.0:
+		parts.append(tr("reloading"))
+	elif bot.sprinting:
+		parts.append(tr("sprinting"))
+	parts.append(tr("streak {streak}/{needed}").format({streak = bot.streak, needed = world.rules.streak_for_power}))
+	if bot.ammo + bot.reserve <= 0:
+		parts.append(tr("-- back to your base for rounds"))
+	return "    ".join(parts)
 
 
 ## The played bot's health as the corner says it: whole, coming back, or
 ## the seconds until it starts to (the rules' delay since the last hit).
 static func health_text(rules: MatchRules, bot: MatchBot, now: float) -> String:
 	if bot.health >= mini(rules.regeneration_to, rules.health):
-		return "%d health" % bot.health
+		return TranslationServer.translate("{health} health").format({health = bot.health})
 	var left: float = MatchHealth.delay_left(rules, bot, now)
 	if left <= 0.0:
-		return "%d health, coming back" % bot.health
-	return "%d health, back in %.0f s" % [bot.health, ceilf(left)]
+		return TranslationServer.translate("{health} health, coming back").format({health = bot.health})
+	return TranslationServer.translate("{health} health, back in {seconds} s").format({health = bot.health,
+		seconds = "%.0f" % ceilf(left)})
 
 
 # "RELOADING" and a bar filling as it goes, under the crosshair.
 func _draw_reload(middle: Vector2, done: float) -> void:
 	var at: Vector2 = middle + Vector2(-60.0, 40.0)
-	draw_string(ThemeDB.fallback_font, at, "RELOADING", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 20, CROSSHAIR)
+	draw_string(ThemeDB.fallback_font, at, tr("RELOADING"), HORIZONTAL_ALIGNMENT_LEFT, -1.0, 20, CROSSHAIR)
 	draw_rect(Rect2(at + Vector2(0, 8), Vector2(120, 6)), Color(0, 0, 0, 0.6))
 	draw_rect(Rect2(at + Vector2(0, 8), Vector2(120 * clampf(done, 0.0, 1.0), 6)), CROSSHAIR)
 

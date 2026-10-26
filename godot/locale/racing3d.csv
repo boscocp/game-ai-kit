@@ -1,0 +1,31 @@
+en,pt_BR
+easy,fácil
+normal,normal
+hard,difícil
+you,você
+the racing line each driver found,a linha de corrida que cada piloto achou
+white post: its aim; white bar: its braking point,poste branco: a mira; barra branca: o ponto de frenagem
+tyre with grip to spare,pneu com aderência de sobra
+tyre near its grip,pneu perto do limite de aderência
+tyre past its peak slip: sliding,pneu além do pico de escorregamento: deslizando
+"heat line, cool to hot, of the watched car","heat line, de frio a quente, do carro assistido"
+the ball: where that car means to be,a bola: onde aquele carro quer estar
+"the keys drive your car, the red one: Tab until ""you"" to watch it","as teclas dirigem o seu carro, o vermelho: Tab até ""você"" para assisti-lo"
+Measuring each car on the test pad: the keys drive yours once,Medindo cada carro na pista de teste: as teclas dirigem o seu quando
+"every car is on the grid, in about twenty seconds.","todos estiverem no grid, em uns vinte segundos."
+"cornering now {cornering} m/s^2, best {best} (sheet {sheet_grip})","curva agora {cornering} m/s^2, melhor {best} (ficha {sheet_grip})"
+braking {braking} m/s^2 (sheet {sheet_braking}),frenagem {braking} m/s^2 (ficha {sheet_braking})
+no braking in sight,nenhuma frenagem à vista
+brakes in {metres} m,freia em {metres} m
+"{who}: {speed} km/h, wants {wanted}; {braking}","{who}: {speed} km/h, quer {wanted}; {braking}"
+off where it wants to be: {off} m,fora de onde quer estar: {off} m
+PID: P {p}  I {i}  D {d} rad,PID: P {p}  I {i}  D {d} rad
+"heat ball {ball} m; races on grip {grip}, braking {braking}","bola da heat line {ball} m; corre com aderência {grip}, frenagem {braking}"
+{seconds} s,{seconds} s
+"{who}: lap {lap}, last {last}","{who}: volta {lap}, última {last}"
+1 PID: full,1 PID: completo
+1 PID: proportional only,1 PID: só proporcional
+2 traffic: heat line,2 tráfego: heat line
+2 traffic: one rival at a time,2 tráfego: um rival por vez
+3 grip: measured,3 aderência: medida
+3 grip: off the car's sheet,3 aderência: a da ficha do carro

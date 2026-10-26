@@ -7,7 +7,10 @@
     "godot/test/racing3d/",
     "python/gameaikit/racing/",
     "python/tests/test_racing3d_vectors.py",
-    "spec/vectors/racing3d/"
+    "spec/vectors/racing3d/",
+    "godot/locale/racing3d.csv",
+    "godot/locale/racing3d.csv.import",
+    "godot/locale/racing3d.pt_BR.translation"
   ],
   "depends_on": [
     "ai_steering",

@@ -71,6 +71,15 @@ func test_the_tables_are_loaded_and_answer_in_portuguese() -> void:
 	assert_str(TranslationServer.translate("Play  (Enter)")).is_equal("Jogar  (Enter)")
 
 
+func test_a_number_read_as_prose_takes_the_language_s_decimal_separator() -> void:
+	TranslationServer.set_locale(Language.ENGLISH)
+	assert_str(Language.decimal(1.24, 1)).is_equal("1.2")
+	assert_str(Language.decimal(3.0, 1)).is_equal("3.0")
+	TranslationServer.set_locale(Language.PORTUGUESE)
+	assert_str(Language.decimal(1.24, 1)).is_equal("1,2")
+	assert_str(Language.decimal(12.4, 0)).is_equal("12")
+
+
 # Step 1's measurement, kept: the property holds the English key, and the
 # screen -- the lookup that honours the node's mode -- the Portuguese.
 func test_a_label_keeps_its_key_and_shows_the_translation() -> void:

@@ -16,8 +16,8 @@ class_name MatchTeam
 extends RefCounted
 
 ## What an order sends a squad or a bot to do at its point.
-const ATTACK: String = "attack"
-const HOLD: String = "hold"
+const ATTACK: String = "attack"  # shown through tr()
+const HOLD: String = "hold"  # shown through tr()
 
 var name: String = ""
 var side: int = 0

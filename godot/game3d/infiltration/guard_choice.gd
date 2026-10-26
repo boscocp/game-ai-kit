@@ -35,7 +35,7 @@ static func numbers_of(guard: InfiltrationGuard, world: InfiltrationWorld) -> Di
 		"alert": 1.0 if guard.alert() else 0.0,
 		"noticed": 1.0 if world.time - guard.noticed_at <= reads.reading("noticed_for") else 0.0,
 		"knows": 1.0 if knows else 0.0,
-		"unreported": 1.0 if knows and memory.source == "sight" and memory.at - guard.reported_at >= world.rules.guard("report_every") else 0.0,
+		"unreported": 1.0 if knows and memory.source == "sight" and memory.at - guard.reported_at >= world.rules.guard("report_every") else 0.0,  # not shown: an identifier
 		"uncalled": 0.0 if guard.called else 1.0,
 		"granted_last_known": 1.0 if guard.granted_last_known else 0.0,
 		"near_last_known": 1.0 if knows and guard.position.distance_to(memory.place) <= reads.reading("near_last_known") else 0.0,
@@ -68,7 +68,7 @@ static func can_shoot(guard: InfiltrationGuard, world: InfiltrationWorld) -> boo
 static func decide(guard: InfiltrationGuard, world: InfiltrationWorld) -> void:
 	guard.numbers = numbers_of(guard, world)
 	guard.choice = ActionChoice.choose(world.actions, guard.numbers)
-	guard.action = world.actions[guard.choice.chosen].name if guard.choice.chosen != -1 else "patrol"
+	guard.action = world.actions[guard.choice.chosen].name if guard.choice.chosen != -1 else "patrol"  # not shown: an identifier
 	world.decisions[guard.id] = record_of(guard, world)
 
 

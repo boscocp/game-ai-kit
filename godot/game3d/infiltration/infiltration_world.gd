@@ -114,7 +114,7 @@ func _finish_call(guard: InfiltrationGuard) -> void:
 		return
 	guard.calling_until = -1.0
 	guard.called = true
-	sounds.emit(self, "call_for_help", guard.position, guard.id, guard.mind.memory.place, 1.0)
+	sounds.emit(self, "call_for_help", guard.position, guard.id, guard.mind.memory.place, 1.0)  # not shown: an identifier
 
 
 func _end_when_over() -> void:

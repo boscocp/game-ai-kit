@@ -47,7 +47,7 @@ static func check_in(world: InfiltrationWorld) -> void:
 	for guard: InfiltrationGuard in world.guards:
 		if guard.alive() and world.time >= guard.next_check_in:
 			guard.next_check_in = world.time + world.rules.guard("check_in_every")
-			world.sounds.emit(world, "check_in", guard.position, guard.id)
+			world.sounds.emit(world, "check_in", guard.position, guard.id)  # not shown: an identifier
 	for guard: InfiltrationGuard in world.guards:
 		if guard.alive():
 			_notice_silence(guard, world)
@@ -64,7 +64,7 @@ static func _notice_silence(guard: InfiltrationGuard, world: InfiltrationWorld) 
 static func _gone_quiet(guard: InfiltrationGuard, world: InfiltrationWorld, partner: int, place: Vector2) -> void:
 	guard.quiet_place = place
 	guard.partners[partner] = [-1, INF, place]
-	var noticed: Dictionary = {"kind": "partner_quiet", "place": place, "at": world.time, "from": guard.id}
+	var noticed: Dictionary = {"kind": "partner_quiet", "place": place, "at": world.time, "from": guard.id}  # not shown: an identifier
 	noticed["reached"] = {}
 	noticed["heard_by"] = [guard.id]
 	world.sounds.recent.append(noticed)
@@ -84,7 +84,7 @@ static func _find_bodies(guard: InfiltrationGuard, world: InfiltrationWorld) -> 
 	for body: Vector2 in world.bodies:
 		if not guard.bodies_known.has(body) and GuardEyes.sees_body(guard, world.level, world.rules, body):
 			guard.body_unraised = body
-			guard.mind.memory.remember(body, world.time, "body")
+			guard.mind.memory.remember(body, world.time, "body")  # not shown: an identifier
 			return
 
 

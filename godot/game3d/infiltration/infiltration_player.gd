@@ -16,7 +16,7 @@ extends RefCounted
 var position: Vector2 = Vector2.ZERO
 ## Radians, 0 along +x, turning towards +z.
 var facing: float = 0.0
-var stance: String = "standing"
+var stance: String = "standing"  # not shown: an identifier
 var sprinting: bool = false
 var health: float = 100.0
 ## How far it moved in the last step, in metres.
@@ -40,7 +40,7 @@ func alive() -> bool:
 ## into a wall slides along it, as a body would.
 func move(intent: PlayerIntent, level: InfiltrationLevel, rules: InfiltrationRules, seconds: float) -> void:
 	stance = intent.stance if rules.stances.has(intent.stance) else stance
-	sprinting = intent.sprint and stance == "standing"
+	sprinting = intent.sprint and stance == "standing"  # not shown: an identifier
 	var speed: float = float(rules.player["sprint_speed"]) if sprinting else float(rules.stances[stance]["speed"])
 	var wanted: Vector2 = intent.direction.limit_length(1.0) * speed * seconds
 	var before: Vector2 = position

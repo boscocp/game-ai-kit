@@ -4,7 +4,10 @@
   "about": "Three drivers in one car: a lookahead point, a speed profile, and difficulty without a rubber band.",
   "owns": [
     "godot/demos/racing/",
-    "godot/test/demo_racing/"
+    "godot/test/demo_racing/",
+    "godot/locale/demo_racing.csv",
+    "godot/locale/demo_racing.csv.import",
+    "godot/locale/demo_racing.pt_BR.translation"
   ],
   "depends_on": [
     "ai_steering",

@@ -13,7 +13,7 @@ class_name MatchAim
 extends RefCounted
 
 ## The zones, in the order `AimChoice` weighs them, and the damage each is.
-const ZONES: Array[String] = ["head", "torso", "arms", "legs"]
+const ZONES: Array[String] = ["head", "torso", "arms", "legs"]  # shown through tr()
 const DAMAGE_ZONE: Dictionary = {
 	"head": MatchRules.HEAD, "torso": MatchRules.TORSO, "arms": MatchRules.LIMB, "legs": MatchRules.LIMB,
 }
@@ -73,10 +73,10 @@ static func _body(rules: MatchRules, crouched: bool) -> Array[AimChoice.Zone]:
 	var legs := Rect2(-rules.body_half_width, 0.0, rules.body_half_width * 2.0, torso_from)
 	var arm_aim := Vector2(rules.torso_half_width + arm_width * ARM_AIM_SHARE, chest)
 	return [
-		_zone(rules, "head", Vector2(0.0, (head_from + top) / 2.0), [head]),
-		_zone(rules, "torso", Vector2(0.0, chest), [torso]),
-		_zone(rules, "arms", arm_aim, [left_arm, right_arm]),
-		_zone(rules, "legs", Vector2(0.0, torso_from / 2.0), [legs]),
+		_zone(rules, "head", Vector2(0.0, (head_from + top) / 2.0), [head]),  # shown through tr()
+		_zone(rules, "torso", Vector2(0.0, chest), [torso]),  # shown through tr()
+		_zone(rules, "arms", arm_aim, [left_arm, right_arm]),  # shown through tr()
+		_zone(rules, "legs", Vector2(0.0, torso_from / 2.0), [legs]),  # shown through tr()
 	]
 
 

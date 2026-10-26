@@ -60,7 +60,7 @@ static func from_file(path: String) -> RaceTrack3D:
 	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	var track := RaceTrack3D.new()
 	if not (data is Dictionary):
-		push_error("RaceTrack3D: cannot read %s" % path)
+		push_error("RaceTrack3D: cannot read %s" % path)  # not shown: a log
 		return track
 	var nodes: Array[Vector2] = []
 	for pair: Array in data["nodes"]:

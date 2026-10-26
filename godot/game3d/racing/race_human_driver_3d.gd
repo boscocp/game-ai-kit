@@ -26,7 +26,7 @@ var _wheel: float = 0.0
 
 
 func _init(known: Dictionary) -> void:
-	super(RaceLevel3D.new("you", 0.0, ADVICE_MARGIN, 0.0), known)
+	super(RaceLevel3D.new("you", 0.0, ADVICE_MARGIN, 0.0), known)  # shown through tr()
 
 
 ## The wheel and pedals the held keys ask for, and where you must be braking.

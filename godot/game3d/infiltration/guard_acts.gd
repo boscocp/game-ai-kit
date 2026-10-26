@@ -129,12 +129,12 @@ static func _speak(guard: InfiltrationGuard, world: InfiltrationWorld) -> Vector
 	var memory: TargetMemory = guard.mind.memory
 	match guard.action:
 		"report":
-			world.sounds.emit(world, "radio_report", guard.position, guard.id, memory.place, guard.aware())
+			world.sounds.emit(world, "radio_report", guard.position, guard.id, memory.place, guard.aware())  # not shown: an identifier
 			guard.reported_at = world.time
 		"call for help":
 			_start_call(guard, world)
 		"raise the alarm":
-			world.sounds.emit(world, "alarm", guard.position, guard.id, guard.body_unraised, 1.0)
+			world.sounds.emit(world, "alarm", guard.position, guard.id, guard.body_unraised, 1.0)  # not shown: an identifier
 			guard.bodies_known.append(guard.body_unraised)
 			guard.body_unraised = Vector2.INF
 	return memory.place if memory.known else Vector2.INF
@@ -156,7 +156,7 @@ static func _shoot(guard: InfiltrationGuard, world: InfiltrationWorld) -> void:
 	if hit:
 		world.player.health -= world.rules.guard("shot_damage")
 	world.shots.append({"from": guard.id, "at": world.time, "hit": hit})
-	world.sounds.emit(world, "guard_shot", guard.position, guard.id, guard.percept.seen_place, 1.0)
+	world.sounds.emit(world, "guard_shot", guard.position, guard.id, guard.percept.seen_place, 1.0)  # not shown: an identifier
 
 
 static func _walk(guard: InfiltrationGuard, world: InfiltrationWorld, seconds: float) -> void:

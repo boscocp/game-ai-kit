@@ -9,8 +9,8 @@ extends RefCounted
 
 const RULES: String = "res://game3d/botmatch/rules.json"
 ## The hit zones' names, and NONE for a point of the body's box that is air.
-const HEAD: String = "head"
-const TORSO: String = "torso"
+const HEAD: String = "head"  # shown through tr()
+const TORSO: String = "torso"  # shown through tr()
 const LIMB: String = "limb"
 const NONE: String = ""
 

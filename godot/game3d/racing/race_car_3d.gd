@@ -36,7 +36,7 @@ const CRAWL: float = 2.0
 const BODY_SIZE: Vector3 = Vector3(1.8, 0.5, 4.2)
 const BODY_LIFT: float = 0.15
 ## The four wheels, in this order everywhere.
-const WHEEL_NAMES: Array[String] = ["front left", "front right", "rear left", "rear right"]
+const WHEEL_NAMES: Array[String] = ["front left", "front right", "rear left", "rear right"]  # not shown: the gates' logs
 
 var physics: CarPhysics3D
 ## What the driver asks: the front wheels' angle, in radians (positive is

@@ -21,7 +21,7 @@ const CHEST: float = 1.2
 static func apply(world: InfiltrationWorld, intent: PlayerIntent) -> void:
 	var player: InfiltrationPlayer = world.player
 	if intent.throw_at != Vector2.INF and intent.throw_at.distance_to(player.position) <= float(world.rules.player["throw_range"]):
-		world.sounds.emit(world, "thrown_object", intent.throw_at, -1)
+		world.sounds.emit(world, "thrown_object", intent.throw_at, -1)  # not shown: an identifier
 	if intent.takedown:
 		_take_down(world)
 	if intent.shoot != Vector3.ZERO:
@@ -45,7 +45,7 @@ static func _take_down(world: InfiltrationWorld) -> void:
 	if guard == null:
 		return
 	down(world, guard)
-	world.sounds.emit(world, "takedown", world.player.position, -1)
+	world.sounds.emit(world, "takedown", world.player.position, -1)  # not shown: an identifier
 
 
 static func _shoot(world: InfiltrationWorld, aim: Vector3) -> void:
@@ -60,7 +60,7 @@ static func _shoot(world: InfiltrationWorld, aim: Vector3) -> void:
 		if guard.alive() and along > 0.0 and along < nearest and (eye + aim * along).distance_to(chest) <= BODY:
 			struck = guard
 			nearest = along
-	world.sounds.emit(world, "shot", player.position, -1)
+	world.sounds.emit(world, "shot", player.position, -1)  # not shown: an identifier
 	if struck != null:
 		struck.hit_at = world.time
 		struck.health -= float(world.rules.player["shot_damage"])

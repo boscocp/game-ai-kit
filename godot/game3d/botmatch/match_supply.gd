@@ -20,8 +20,8 @@
 class_name MatchSupply
 extends RefCounted
 
-const RIFLE: String = "rifle"
-const POWER: String = "power"
+const RIFLE: String = "rifle"  # shown through tr()
+const POWER: String = "power"  # shown through tr()
 ## The errands: none, back to the base, to the power weapon, or to hide.
 const NO_ERRAND: String = ErrandChoice.NONE
 const RESUPPLY: String = ErrandChoice.RESUPPLY
