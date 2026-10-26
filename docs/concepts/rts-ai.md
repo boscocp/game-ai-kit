@@ -47,11 +47,10 @@ minutes on what each side holds, priced.
 second. *What to aim at*: workers always; then the counter to the fighter
 it has seen most -- mortars for shields -- or runners when it has seen
 nothing; a tower when nothing has been seen for two minutes, so it can
-look; an armed tower when the gun is worth its price; the expansion
-after four. *How*: a plan over a level 1 PDDL domain,
+look; the expansion after four. *How*: a plan over a level 1 PDDL domain,
 [`rts-build-order-domain.pddl`](../../spec/pddl/rts-build-order-domain.pddl),
-eleven actions and eleven facts (`arm_tower`, `tower_armed`), by T11's
-heuristic STRIPS -- A\* with h_add -- or T15's HTN. *When*:
+eleven actions and eleven facts, by T11's heuristic STRIPS or T15's HTN.
+*When*:
 `BuildSchedule` times each step by jumping to the moment its price is met
 at the side's income -- Churchill and Buro's trick -- so the screen can
 say "build lab: in 14 s, waiting for magma". It replans every ten
@@ -59,21 +58,26 @@ seconds, or at once when the next step cannot run or the goal changed.
 That is the lesson the clock adds to T11: the world does not wait while
 the plan is made, and a plan is a direction followed and corrected.
 
-**Whether to arm** is weighed in quantities, not triggered (`TowerWorth`,
-on the panel as "arm a tower? raid 300 at home, help in 24 s, gun in 10 s:
-saves 220 of 175 -- yes"). The raid is the enemy fighters its belief
-remembers within ten cells of home, priced, each scaled by how much it is
-still trusted -- so a raid lost from sight is worth less every second, and
-one scout is worth little. Help is the first moment its own fighters
-walking home would match the raid, or, if they never would, the time a
-fresh squad takes to train: the other way to spend the ore. The gun is
-ready when `BuildSchedule` says the arm step stands, a tower first if there
-is none. What the gun saves is the share of the raid it would kill between
-being ready and help coming, priced; the arm goes into the goal when that
-is more than its 175. Once chosen it stays for thirty seconds: without
-that, the goal dropped the arm the moment the raid left sight, the plan
-was made again, and a commander raided at ninety seconds never armed. It
-counts one raid only, though a gun lasts for the next -- the cautious
+**Whether to arm** is a fourth question, asked beside the plan and not in
+it, and weighed in quantities rather than triggered (`TowerWorth`; on the
+panel, "arm a tower? raid 300 in its reach, help in 24 s, gun in 10 s:
+kills 231, costs 175 -- yes"). The raid is the enemy fighters its belief
+remembers within the gun's six cells of its tower -- of its home when it has
+no tower yet -- priced, each scaled by how much it is still trusted: a raid
+lost from sight is worth less every second, one scout is worth little, and
+a raid the gun could not reach is worth nothing to it. Help is the first
+moment its own fighters walking home would match the raid, or, if they
+never would, the time a fresh squad takes to train: the other way to spend
+the ore. The gun is ready when `BuildSchedule` says a tower (if there is
+none) and the arm would stand, bought from now. What it kills is the share
+of the raid's health the gun would take between being ready and help
+coming, priced. When that is more than the arm's 175, the commander wishes
+the tower or the arm at 85 -- above the plan's 80 -- so the gun comes when
+the weighing timed it to. In an earlier version the arm was a goal fact:
+the plan put it behind other steps, and the gun came some 25 seconds after
+the panel said it would. `arm_tower` and `tower_armed` stay in the domain
+because `BuildSchedule` times the gun by them, but no goal asks for them.
+It counts one raid only, though a gun lasts for the next: the cautious
 half, and the measured one.
 
 **The economy** under it is a priority queue (`EconomyQueue`), what Age
@@ -142,50 +146,64 @@ west.
 
 ### With the armed tower (T56)
 
-`make rts-measure` again on 2026-10-26, on wave 89's branch after its
-review: the arm weighed by `TowerWorth`, STRIPS on h_add. "Armed" is how
-many tower arms each side bought over the 20 matches, first side first:
+`make rts-measure` again on 2026-10-26, on wave 89's branch after its two
+reviews: the arm weighed by `TowerWorth` and bought beside the plan, STRIPS
+on h_max as before. "Armed" is how many tower arms each side bought over
+the 20 matches, first side first:
 
 | pairing | record | armed |
 |---|---|---|
 | commander (normal, STRIPS) against the queues alone | 19 - 1 | 0 - 1 |
-| commander with STRIPS against with the HTN | 12 - 8 | 2 - 1 |
+| commander with STRIPS against with the HTN | 12 - 8 | 0 - 0 |
 | normal against easy | 19 - 1 | 0 - 1 |
-| a commander that may arm against one that never does | 14 - 6 | 0 - 0 |
+| a commander that may arm against one that never does | 13 - 7 | 0 - 0 |
 | the queues against themselves, by seat | 11 - 9 | 11 - 9 |
 
-The ablation answers less than it was built to. In 20 whole matches the
-commander allowed to arm **never armed**, so the two sides played alike
-but for their dice, and 14 - 6 is what 20 matches give two equal sides:
-read every record above that is closer than that as a tie, STRIPS against
-the HTN's 12 - 8 among them. Whole matches seldom reach the arm's moment:
-a raid at home while the army is away *and* a tower already standing.
-Without a tower, the tower and the arm take twenty seconds, a fresh squad
-twenty-four, and the gun would fire for four -- never worth 175.
+In whole matches the commander **never armed**, so the ablation's two
+sides played alike but for their dice, and 13 - 7 is what 20 matches give
+two equal sides. Read every record above that is that close or closer as a
+tie, STRIPS against the HTN's 12 - 8 among them. Whole matches seldom reach
+the arm's moment: a raid in the gun's reach while the army is away, *and* a
+tower already standing. Without a tower, the tower and the arm take twenty
+seconds against a fresh squad's twenty-four, and the gun would fire for
+four -- never worth 175.
 
-So the moment was played on purpose: west mid-match with a tower up and
-funds to spare, its four shields in the far east corner, four east runners
-held at its home for 90 seconds, ten seeds each way.
+So the moment was staged (`test/rts/staged_raid.gd`), and the staging is
+generous to the gun. West mid-match, a tower up at home + (3, -3), 2000
+ore and 2000 magma, its four shields in the far east corner; four east
+runners **held** for 90 seconds at a spot -- any that wander more than two
+cells off are put back every second, so a gun that cannot move always has
+them. Ten seeds each way:
 
-| raided with the army away | arms bought | worth margin moved, a match | raiders left |
-|---|---|---|---|
-| may arm | 10 of 10 | +1219 | 0 |
-| never arms | 0 | +555 | 4 |
+| staged raid | arms bought | first arm | worth margin moved, a match | raiders left |
+|---|---|---|---|---|
+| in the gun's reach, may arm | 10 of 10 | 1.5 s | +1389 | 0 |
+| in the gun's reach, never arms | 0 | -- | +1448 | 0 |
+| out of the gun's reach (home + (-4, 4)), may arm | 0 | -- | +2000 | 0 |
 
-There, arming is right: the gun killed every raider, and west came out
-664 worth ahead of the same commander without it. The raid is held there
-by hand, which flatters a gun that cannot move; the matches say the moment
-is rare. The commander arms when it should and, on this map, seldom has to.
+The weighing does what it says. It arms at once when the raid is in reach,
+and the gun stands when the panel said it would. It does not arm a raid
+the gun could not reach. **It does not show that arming is worth it.** The
+same commander that never arms clears the same raid as well, 59 worth a
+match better, by training fighters with the same money. The weighing
+counts help as a fresh squad 24 seconds away and does not see that a side
+this rich trains one sooner, so here it values the gun above what it buys.
+With 2000 of each to spend, a gun or a squad both win. Whether the arm
+pays when money is short is not measured. Neither is whether it pays
+against raids that recur, which is when a lasting gun ought to.
 
 The planners still found the same plans, 1.38 steps long on 13 distinct
-questions: STRIPS 2.1 worlds in 91 us, the HTN 6.8 tasks in 48 us. The
-arm nearly tripled h_max's worst search (33 worlds to 90 over every set of
-the seven economy facts against each army goal), so STRIPS moved to h_add,
-which visits 13 at worst there and never found a longer plan;
-`rts_game_test.gd` gates the count, `BuildOrder.WORST_VISITED`, because a
-count holds on any machine and a time does not. The slowest call in these
-matches was 1.05 ms of wall time, inside the 1.5 ms strategy share but not
-what is gated.
+questions: STRIPS 2.1 worlds in 93 us, the HTN 6.8 tasks in 48 us. No goal
+the commander sets asks for the arm, so the search is the one it was. A
+goal with the arm in it would have raised h_max's worst from 33 worlds to
+90 with no horizon, and from 69 to 76 at normal's horizon of four; h_add
+would not help, as it also visits 76 at that horizon. `rts_game_test.gd`
+gates the count the game runs: every set of the seven economy facts held,
+against every goal the commander can set, at normal's horizon, at most
+`BuildOrder.WORST_VISITED` (70; 69 measured). A count holds on any
+machine, and a time does not. The slowest call in these matches was
+1.13 ms of wall time, inside the 1.5 ms strategy share but not what is
+gated.
 
 ## Difficulty, without cheating
 
