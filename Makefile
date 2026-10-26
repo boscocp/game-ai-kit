@@ -857,3 +857,7 @@ godot-version: ## Print the Godot the repo is pinned to, and what is installed
 hooks: ## Opt in to the repo's git hooks
 	@git config core.hooksPath .githooks
 	@echo "hooks enabled: .githooks"
+
+.PHONY: worktree-setup
+worktree-setup: ## Copy gdUnit4 and the term list into a new worktree from the main checkout
+	@$(PYTHON) scripts/worktree_setup.py

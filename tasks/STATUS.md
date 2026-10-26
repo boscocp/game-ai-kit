@@ -53,7 +53,7 @@ reviews are in `docs/reviews/7[5-9]-*`, `8[0-2]-*` and
 **Next:** T74 and T78 (teaching pages, localisation) are unblocked now
 that T70 is in; T64 (the library) before T77.
 
-**A defect found, no task yet:** every worktree shares one `user://`
+**A defect found** (T83 since, wave 93): every worktree shares one `user://`
 (`scripts/godot` sets `XDG_DATA_HOME` to `$toolchain/xdg`), so two waves
 running Godot tests at once can collide -- it failed wave 78's
 `effect_shards_test.gd` during wave 80's check. Give each checkout its own.
@@ -253,6 +253,7 @@ touches, and later a library others can install.
 | T63 | The controller registry | done | wave 68: `TacticalRoster`, ten rows in C's old order, read by `next_controller`, the league and the sentence on screen (the list lived three times); the four T15 teams and `TeamFacts` moved to `game/tactical/` with their tests; `tactical` drops `league`; the tactical card lists its controllers and `check_demos.py` C9 holds them to the table both ways; RTS, racing, fighting and the behaviour demo measured: each already one table, no chain |
 | T64 | The library | todo | after T60-T63; names: only ports and kernel prefixed (owner, 2026-10-20), the prefix by ADR; addon zips filtered by manifest; `pyproject.toml`, flat layout, no dependencies; an entry-point group for a user's technique; installed and run outside the repo; publishing stays the owner's act |
 | T71 | A new gate selects its module, not everything | done | wave 77: `affected.py` rule 5, the diff read by `added_gates.py`: only new `test-` targets of one module, their names in `check:` and in that module's `gates`, select the module; any other change to the Makefile or a manifest stays global; wave 75's diff went from everything to `menu, racing3d` (137 s against `make check`); 21 planted cases, 16 mutations caught, each by its own case (after the review) |
+| T83 | Each checkout its own Godot `user://`, and a worktree its ignored files | done | wave 93: the owner, 2026-10-26, after wave 78's `effect_shards_test.gd` failed during wave 80's check -- every worktree shared `$toolchain/xdg`; `scripts/godot` points it at the checkout's own `.user-data/` (ADR 0022) and prints it with `--gak-print-redirect`; the cause measured: gdUnit4 deletes `user://tmp` after every suite, so any suite in one checkout wiped another's temp files (shown with a marker, both ways); two checkouts ran 63 cases at once, clean; `check_disk_layout.py` D6-D8 over every checkout git lists, each deleted alone caught by name; `make worktree-setup` copies gdUnit4 and the term list from the main checkout; E0 stays a note (proposed, not changed); the old `$toolchain/xdg` deleted by hand once no branch predates this; Windows untested, manual check (`docs/godot/user-data.md`) |
 
 ## Teaching, in two languages, and what the field has that the kit does not
 

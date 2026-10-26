@@ -37,13 +37,22 @@ if [[ "${OS:-}" == "Windows_NT" ]]; then
   unpacked=("Godot_v${version}_win64.exe" "Godot_v${version}_win64_console.exe")
   installed=(godot.exe godot_console.exe)
   binary="$toolchain/godot/godot_console.exe"
-  redirect=(APPDATA="$toolchain/appdata" LOCALAPPDATA="$toolchain/localappdata")
 else
   archive="Godot_v${version}_linux.x86_64.zip"
   unpacked=("Godot_v${version}_linux.x86_64")
   installed=(godot)
   binary="$toolchain/godot/godot"
-  redirect=(XDG_DATA_HOME="$toolchain/xdg")
+fi
+# Where user:// goes is scripts/godot's decision (this checkout's .user-data/,
+# docs/adr/0022); asked, not copied, so the two cannot drift apart.
+# Captured first, then split: `set -e` does not see a failure inside a process
+# substitution, and an empty redirect would run Godot with none at all --
+# measured by the review, that writes ~/.local/share/godot/app_userdata/.
+printed=$(GAK_TOOLCHAIN="$toolchain" bash "$here/scripts/godot" --gak-print-redirect | tr -d '\r')
+mapfile -t redirect <<<"$printed"
+if [[ -z "$printed" ]]; then
+  echo "bootstrap: scripts/godot --gak-print-redirect gave no user:// redirect; refusing to run Godot" >&2
+  exit 2
 fi
 
 if [[ -x "$binary" ]] && "$binary" --headless --version 2>/dev/null | tr -d '\r' | grep -q "^${version%-stable}.stable"; then
@@ -77,7 +86,8 @@ touch "$toolchain/godot/._sc_"
 
 # Mechanism 2: the project's user:// directory, which self-contained mode does
 # not cover. scripts/godot sets XDG_DATA_HOME (APPDATA on Windows) to this
-# path on every call.
+# path on every call; Godot would create it too (measured, T83), and making it
+# here only means the first run finds it.
 for setting in "${redirect[@]}"; do mkdir -p "${setting#*=}"; done
 
 # Create editor_data/ now so check_disk_layout.py can assert ._sc_ is honoured

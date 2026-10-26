@@ -22,7 +22,8 @@ stops. This gate is four claims about that split:
     run still produces them;
   * N5 no GDScript writes a bead count. MENACE (T28) learns by adding and
     removing beads, and that is training whatever the words: Godot reads the
-    published beads and plays by them;
+    published beads and plays by them. A `bead = ...` key on a line that
+    continues a dictionary literal is a key, not a write (wave 93);
   * N6 the published beads are what `gameaikit.menace` trains from its seed,
     and a fresh run still produces them;
   * N7 the published checkers weights (T32) are what `gameaikit.checkers`
@@ -188,6 +189,13 @@ def _bead_patterns(words: str) -> list[re.Pattern]:
     ]
 
 
+# A Lua-style key at the start of a line that begins inside an open `{`:
+# `bead = overlay["bead"],` continuing a dictionary literal is a key, not an
+# assignment, and N5 read it as one (wave 91's tictactoe panel, found in
+# wave 93). Only the key is taken off; the value after it is still read by
+# every pattern, so `bead = beads.append(1)` there is still a write.
+DICT_KEY_RE = re.compile(r"^\s*\w+\s*=(?!=)")
+
 BEAD_PATTERNS = _bead_patterns(BEAD_WORD)
 BEAD_GAME_PATTERNS = _bead_patterns(BEAD_GAME_WORDS)
 
@@ -279,10 +287,21 @@ def gdscript_files(root: pathlib.Path) -> list[pathlib.Path]:
     """Every .gd file this project authors, vendored code excluded."""
     if not root.is_dir():
         return []
-    return [
-        path for path in sorted(root.rglob("*.gd"))
-        if not any(part in VENDORED_DIRS for part in path.parts)
-    ]
+    return [path for path in sorted(root.rglob("*.gd")) if not is_skipped(path, root)]
+
+
+def is_skipped(path: pathlib.Path, root: pathlib.Path) -> bool:
+    """Vendored code, or anything under a folder below root whose name starts with a dot.
+
+    The dot folders are tool state, never this project's source. This gate
+    reads `godot/` only, so the one it meets is `godot/.godot/`, the import
+    cache; check_readability.py reads the whole checkout and skips the same
+    rule's `.user-data/` and `.claude/worktrees/` too (T83). Only the parts
+    *below* root are asked, so a checkout that itself lives under
+    `.claude/worktrees/` is still read.
+    """
+    folders = path.relative_to(root).parts[:-1]
+    return any(part in VENDORED_DIRS or part.startswith(".") for part in folders)
 
 
 def code_only(text: str) -> str:
@@ -403,6 +422,19 @@ def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
     return findings
 
 
+def open_braces(code: list[str]) -> list[bool]:
+    """For each line of the code view, whether it begins inside an open `{...}`.
+
+    GDScript has no braces around blocks, and the code view has blanked
+    strings and comments, so a `{` still standing opens a dictionary.
+    """
+    inside, depth = [], 0
+    for line in code:
+        inside.append(depth > 0)
+        depth = max(0, depth + line.count("{") - line.count("}"))
+    return inside
+
+
 def check_bead_writes(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
     """N5: no GDScript changes a bead count. Adding and removing beads is how
     MENACE learns, so a bead written in the game is training at game time."""
@@ -412,7 +444,9 @@ def check_bead_writes(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
         code = code_only("\n".join(raw)).splitlines()
         in_game = is_under(path, root, BEAD_GAME)
         patterns = BEAD_GAME_PATTERNS if in_game else BEAD_PATTERNS
-        for number, (line, written) in enumerate(zip(raw, code), start=1):
+        for number, (line, written, inside) in enumerate(zip(raw, code, open_braces(code)), start=1):
+            if inside:
+                written = DICT_KEY_RE.sub("", written, count=1)
             if _writes_a_bead(written, patterns) or (in_game and BEAD_SET_BY_NAME_RE.search(line)):
                 findings.append(
                     f"N5 {_label(path, repo)}:{number} changes a bead count; MENACE learns "
@@ -940,6 +974,19 @@ def self_test() -> int:
         expect("a forbidden word in vendored code", quiet(build(root, "vendored2", dict(
             sound, **{vendored: "var learning_rate: float = 0.1\n"}))), 3)
 
+        # Planted (T83): the same word under godot/.godot/, the engine's
+        # import cache -- the one dot folder inside what this gate reads
+        # (godot/; a checkout's .user-data/ and .claude/worktrees/ lie
+        # outside it, so planting there would prove nothing).
+        stray = str(GODOT / ".godot" / "editor" / "Fitter.gd")
+        expect("a forbidden word under godot/.godot", quiet(build(root, "dot-cache", dict(
+            sound, **{stray: "var learning_rate: float = 0.1\n"}))), 3)
+        # ... but a checkout that itself lives under .claude/worktrees is read.
+        expect("a checkout under .claude/worktrees still read", quiet(build(
+            root / ".claude" / "worktrees", "this-one", dict(
+                sound, **{str(GODOT / "game" / "fit.gd"): "var value: float = learning_rate\n"}))),
+            1, "N1")
+
         # Planted: the update step with the numbers called something else,
         # inside the addon. Thirty-four lines of real gradient descent got
         # past N1 to N3 during review by doing exactly this -- and a second
@@ -1030,7 +1077,14 @@ def self_test() -> int:
                          "\tbeads.encode_s32(0, 99)\n",
                          "\tvar x := 0; beads[move] += 1\n",
                          "\tif true: beads[move] += 1\n",
-                         "\tpass; beads[move] += 1\n"]:
+                         "\tpass; beads[move] += 1\n",
+                         # Statements after a dictionary literal closes: the
+                         # key rule is for inside one only.
+                         "\tvar values: Dictionary = {games = 3,\n\t\ttotal = 9}\n\tbead = 3\n",
+                         "\tshow({games = 3})\n\tbeads[move] += 1\n",
+                         # A write in a value inside the literal: only the
+                         # key is taken off.
+                         "\tvar values: Dictionary = {games = 3,\n\t\tbead = beads.append(1)}\n"]:
             expect(f"a bead written as {spelling.strip()[:34]}", quiet(build(
                 root, "bead" + str(abs(hash(spelling))), dict(
                     sound, **{game_file: spelling, str(BEADS): json.dumps(SOUND_BEADS)}))),
@@ -1058,7 +1112,11 @@ def self_test() -> int:
                         "\tfor count: int in beads:\n\t\ttotal += count\n",
                         "\tif beads[0] <= 3 and beads[1] >= 2 and beads[2] != 0:\n\t\tpass\n",
                         '\tvar words: String = "beads[move] += 1"\n',
-                        "\t# never beads[move] += 1 here\n"]:
+                        "\t# never beads[move] += 1 here\n",
+                        # A Lua-style key continuing a dictionary literal, as
+                        # wave 91's panel writes it for `.format()`.
+                        '\tvar values: Dictionary = {games = 3,\n\t\t\tbead = overlay["bead"], total = 9}\n',
+                        "\tshow({\n\t\tbeads = count,\n\t\tbox = 4,\n\t})\n"]:
             expect(f"reading beads: {reading.strip()[:30]}", quiet(build(
                 root, "read" + str(abs(hash(reading))), dict(
                     sound, **{game_file: reading, str(BEADS): json.dumps(SOUND_BEADS)}))), 3)

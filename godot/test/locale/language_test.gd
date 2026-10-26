@@ -4,9 +4,9 @@
 # written in docs/godot/localisation.md.
 #
 # Every file this writes is its own, under user://, and is removed after:
-# all checkouts share one user:// (scripts/godot sets XDG_DATA_HOME), so a
-# test that read or left the real settings.cfg would depend on whoever ran
-# last.
+# each checkout has its own user:// since T83 (ADR 0022), but every suite of
+# one run shares it, so a test that read or left the real settings.cfg would
+# depend on whoever ran last.
 extends GdUnitTestSuite
 
 const SETTINGS: String = "user://language_test_settings.cfg"

@@ -52,3 +52,7 @@ godot/assets/generated/
 # The 3D examples' models and textures (ADR 0018): downloaded by
 # `make assets-3d` from the links in godot/game3d/assets.json, never committed.
 godot/game3d/downloaded/
+
+# This checkout's own Godot user:// (T83, docs/adr/0022): scripts/godot points
+# XDG_DATA_HOME (APPDATA on Windows) here. Logs and test leftovers only.
+/.user-data/

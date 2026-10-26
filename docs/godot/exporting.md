@@ -56,4 +56,5 @@ entries that way ended exactly at the end of the file. Scripts ship as
 - The exported binary honours `--headless` and `--quit-after N` and exits
   0, which is how `export.py` proves a build starts.
 - It writes `user://` like any Godot program, under `XDG_DATA_HOME`;
-  `export.py` sets that to the toolchain's `xdg/`, as `scripts/godot` does.
+  `export.py` sets that to what `scripts/godot --gak-print-redirect` says,
+  the checkout's own `.user-data/` (ADR 0022).
