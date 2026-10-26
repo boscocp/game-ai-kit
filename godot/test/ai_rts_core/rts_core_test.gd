@@ -529,3 +529,25 @@ func test_a_tower_still_going_up_cannot_arm_and_the_arm_is_no_building() -> void
 	assert_str(world.command(0, RtsCommand.train(site.id, RtsKinds.ARM))).contains("still being built")
 	assert_str(world.command(0, RtsCommand.build(worker.id, RtsKinds.ARM, Vector2i(3, 3)))).contains("not something a worker builds")
 	assert_bool(RtsKinds.is_building(RtsKinds.ARM)).is_false()
+
+
+func test_a_match_with_an_arm_bought_and_shots_fired_replays_to_its_digest() -> void:
+	var played := RtsMatch.new(_a_tower_and_a_shield(), 1)
+	var tower: int = 1
+	assert_str(played.give(0, RtsCommand.train(tower, RtsKinds.ARM))).is_empty()
+	played.play(int(RtsKinds.of(RtsKinds.ARM, "ticks")) + RtsWorld.TICKS_PER_SECOND * 3)
+	assert_bool(played.world.unit(tower).armed).is_true()
+	# Nothing but the gun can hurt the shield here: shots were fired.
+	assert_int(played.world.unit(2).health).is_less(RtsKinds.of(RtsKinds.SHIELD, "health"))
+	var fresh: RtsWorld = _a_tower_and_a_shield()
+	assert_str(RtsMatch.replay(fresh, played.recording())).is_empty()
+	assert_str(fresh.digest()).is_equal(played.world.digest())
+
+
+# Side 0's tower (id 1) and side 1's idle shield three cells off it.
+func _a_tower_and_a_shield() -> RtsWorld:
+	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	world.add_unit(RtsKinds.TOWER, 0, Vector2i(3, 5))
+	world.add_unit(RtsKinds.SHIELD, 1, Vector2i(6, 5))
+	world.set_funds(0, 500, 500)
+	return world

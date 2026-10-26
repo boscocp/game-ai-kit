@@ -7,12 +7,17 @@
 ## 4): `facts` turns the snapshot into "enough of" facts, and how long each
 ## step will wait for its price is `BuildSchedule`'s question, asked after.
 ##
-## **STRIPS** (`Planner.STRIPS`) searches: A* with h_max over bits, inside a
-## budget, looking `horizon` actions ahead -- the difficulty knob. It finds
-## an order nobody wrote. **HTN** (`Planner.HTN`) decomposes: `RECIPES` is
-## the designer's order for getting each fact, written by hand, and the
-## planner only chooses among the orders written there (Humphreys, Game AI
-## Pro ch. 12). ADR 0010 asked which the RTS commander should use; T20
+## **STRIPS** (`Planner.STRIPS`) searches: A* with h_add over bits, inside a
+## budget, looking `horizon` actions ahead -- the difficulty knob. h_add and
+## not h_max since T56: a goal here is a handful of nearly independent facts,
+## and h_max, which counts only the dearest, let the armed tower nearly
+## triple the worst search (33 worlds to 90, over all 128 sets of the seven
+## economy facts held, against each army goal); h_add visits 13 at worst and,
+## on that sweep, never found a longer plan -- `test/rts/rts_game_test.gd`
+## holds both. It finds an order nobody wrote. **HTN** (`Planner.HTN`)
+## decomposes: `RECIPES` is the designer's order for getting each fact,
+## written by hand, and the planner only chooses among the orders written
+## there (Humphreys, Game AI Pro ch. 12). ADR 0010 asked which the RTS commander should use; T20
 ## measures both in `test/rts/rts_match.gd` and the ADR records the answer.
 ##
 ## When not to use it: a side whose economy has no chain -- one producer,
@@ -29,6 +34,10 @@ const SQUAD: int = 4
 const ROOM_FOR_A_BATCH: int = 4
 ## Worlds taken off the frontier, or tasks taken up, before a call gives up.
 const BUDGET: int = 2000
+## The most worlds one STRIPS call may visit on the worst question the game
+## can ask -- counted, not timed, so the gate holds on any machine. Measured
+## 13 with the arm; h_max visited 90.
+const WORST_VISITED: int = 20
 
 ## Each action's purchase: the kind it wishes for. `mine_magma` buys
 ## nothing; it turns workers onto the vents. `arm_tower` buys an upgrade,
@@ -114,7 +123,7 @@ static func plan(held: PackedStringArray, goal: PackedStringArray, planner: Plan
 	if planner == Planner.HTN:
 		return _decompose(held, goal)
 	var found: PlanResult = HeuristicPlanner.new().plan(actions(), WorldState.new(held), goal,
-		HeuristicPlanner.Guide.H_MAX, BUDGET, horizon)
+		HeuristicPlanner.Guide.H_ADD, BUDGET, horizon)
 	return {"steps": found.action_names(), "solved": found.solved, "partial": found.partial,
 		"visited": found.visited}
 

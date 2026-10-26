@@ -54,17 +54,20 @@ static func wish_by_rules(queue: EconomyQueue, view: RtsSnapshot) -> void:
 
 
 # A tower at home first, then its gun: a rule, so it fires on what is in
-# sight now and asks nothing about whether the gun beats another squad. The
-# wishes are taken back when the raid is out of sight: one left at the top
-# for a tower since lost would hold every purchase under it for ever.
+# sight now and asks nothing about whether the gun beats another squad. Both
+# wish under the fighters, at 25: the queue stops at the first wish it cannot
+# pay, and a tower above them stopped all training for as long as a raid
+# lasted. The arm is wished only with a complete tower to take it, and both
+# wishes are taken back when the raid is out of sight.
 static func _arm_the_home(queue: EconomyQueue, view: RtsSnapshot, have: Dictionary) -> void:
-	if not _raided(view):
-		queue.forget(RtsKinds.TOWER)
-		queue.forget(RtsKinds.ARM)
-	elif have.get(RtsKinds.TOWER, 0) == 0:
-		queue.wish(RtsKinds.TOWER, 40, "rule: an enemy at the home, a tower")
-	elif have.get(RtsKinds.ARM, 0) == 0:
-		queue.wish(RtsKinds.ARM, 40, "rule: an enemy at the home, arm the tower")
+	queue.forget(RtsKinds.TOWER)
+	queue.forget(RtsKinds.ARM)
+	if not _raided(view) or have.get(RtsKinds.ARM, 0) > 0:
+		return
+	if have.get(RtsKinds.TOWER, 0) == 0:
+		queue.wish(RtsKinds.TOWER, 25, "rule: an enemy at the home, a tower")
+	elif view.mine(RtsKinds.TOWER).any(func(tower: Dictionary) -> bool: return tower["complete"]):
+		queue.wish(RtsKinds.ARM, 25, "rule: an enemy at the home, arm the tower")
 
 
 # True when an enemy fighter is in sight within `RAID_CELLS` of the home.

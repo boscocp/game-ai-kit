@@ -356,10 +356,15 @@ func _selected_worker() -> int:
 func _train(kind: String) -> void:
 	for id: int in _view.selected:
 		var unit: RtsUnit = world.unit(id)
-		if unit != null and unit.side == RtsScenario.WEST and kind in RtsKinds.of(unit.kind, "trains"):
+		# An armed or arming tower cannot take another arm: the next one may.
+		var taken: bool = unit != null and RtsKinds.is_upgrade(kind) and (unit.armed or kind in unit.queue)
+		if unit != null and unit.side == RtsScenario.WEST and kind in RtsKinds.of(unit.kind, "trains") and not taken:
 			_give(RtsCommand.train(id, kind))
 			return
-	_say("select a building that trains a %s" % kind, true)
+	if RtsKinds.is_upgrade(kind):
+		_say("select a tower, complete and not yet armed", true)
+	else:
+		_say("select a building that trains a %s" % kind, true)
 
 
 func _give(command: RtsCommand) -> void:

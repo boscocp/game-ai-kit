@@ -53,6 +53,8 @@ func lines() -> Array[String]:
 			number += 1
 		if (thinking["plan"] as Array).is_empty():
 			said.append("  (goal met: replacing losses)")
+	if not (thinking.get("arming", {}) as Dictionary).is_empty() and thinking["arming"]["raid"] > 0.0:
+		said.append(arming_line(thinking["arming"]))
 	said.append("queue: " + (thinking["waiting"] if thinking["waiting"] != "" else "empty"))
 	for squad: Dictionary in thinking["squads"]:
 		said.append("squad %d: %s, %d strong%s" % [squad["id"], squad["state"], squad["size"],
@@ -62,6 +64,14 @@ func lines() -> Array[String]:
 		if squad["state"] == Squad.FIGHT and not (squad["focus"] as Dictionary).is_empty():
 			said.append("  focus: %s %d -- %s" % [squad["focus"]["kind"], squad["focus"]["id"], squad["focus"]["why"]])
 	return said
+
+
+## The arm, weighed, in one line: what the gun would save of the raid at
+## home before help comes, against its price -- `TowerWorth`'s numbers.
+static func arming_line(weighed: Dictionary) -> String:
+	return "arm a tower? raid %d at home, help in %.0f s, gun in %.0f s: saves %d of %d -- %s" % [
+		roundi(weighed["raid"]), weighed["help"], minf(weighed["ready"], 999.0), roundi(weighed["saved"]),
+		weighed["price"], "yes" if weighed["worth_it"] else "no"]
 
 
 func _draw() -> void:

@@ -2,7 +2,8 @@
 # priority queues alone, STRIPS against the HTN as the commander's planner,
 # each difficulty level against the one below it, and the queues against
 # themselves for the seat's own bias; and in every pairing, how often each
-# side armed a tower (T56). Every pairing is played over
+# side armed a tower (T56), and the arm's ablation: a commander that may
+# arm against one that never does. Every pairing is played over
 # `SEEDS` with sides swapped, so neither seat decides it.
 #
 #     ./scripts/godot --headless --path godot -s res://test/rts/rts_measure.gd
@@ -19,6 +20,10 @@ func _init() -> void:
 		_levels()
 		quit(0)
 		return
+	if "arm" in OS.get_cmdline_user_args():
+		_arming_ablated()
+		quit(0)
+		return
 	var normal: Difficulty = RtsLevels.named("normal")
 	_pairing("commander (normal, STRIPS) vs the queues alone",
 		func(side: int, seed_value: int) -> RtsSide: return RtsCommander.new(side, normal, seed_value),
@@ -27,11 +32,26 @@ func _init() -> void:
 		func(side: int, seed_value: int) -> RtsSide: return RtsCommander.new(side, normal, seed_value),
 		func(side: int, seed_value: int) -> RtsSide: return RtsCommander.new(side, normal, seed_value, BuildOrder.Planner.HTN))
 	_levels()
+	_arming_ablated()
 	_pairing("the queues vs the queues: the seat's bias, west first",
 		func(side: int, seed_value: int) -> RtsSide: return QueueSide.new(side, normal, seed_value),
 		func(side: int, seed_value: int) -> RtsSide: return QueueSide.new(side, normal, seed_value), true)
 	_planners_on_the_same_questions()
 	quit(0)
+
+
+# The arm's ablation (T56): a normal commander that may arm against the same
+# commander told never to. Both raid -- each goes for the other's home --
+# so the record is what arming is worth against a side that raids.
+# `-- arm` runs only this.
+func _arming_ablated() -> void:
+	var normal: Difficulty = RtsLevels.named("normal")
+	_pairing("commander that may arm vs one that never does (normal)",
+		func(side: int, seed_value: int) -> RtsSide: return RtsCommander.new(side, normal, seed_value),
+		func(side: int, seed_value: int) -> RtsSide:
+			var unarmed := RtsCommander.new(side, normal, seed_value)
+			unarmed.may_arm = false
+			return unarmed)
 
 
 # Each level against the one below it. `-- levels` runs only this.

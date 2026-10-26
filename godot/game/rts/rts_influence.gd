@@ -129,6 +129,19 @@ func seen_fighters() -> Dictionary:
 	return counts
 
 
+## The enemy fighters this side remembers within `reach` cells of `cell`,
+## each as {kind, health, trust}: trust is 1 for one in sight now and falls
+## to 0 over `MEMORY_SECONDS`, so a raid seen and lost from sight is weighed
+## less the longer ago it was -- the question `TowerWorth` asks.
+func fighters_near(cell: Vector2i, reach: float, now: int) -> Array[Dictionary]:
+	var near: Array[Dictionary] = []
+	for id: int in _seen:
+		var memory: Dictionary = _seen[id]
+		if RtsKinds.fights(memory["kind"]) and (memory["position"] as Vector2).distance_to(Vector2(cell)) <= reach:
+			near.append({"kind": memory["kind"], "health": memory["health"], "trust": _trust(memory, now)})
+	return near
+
+
 func _remember(view: RtsSnapshot) -> void:
 	var shown: Dictionary = {}
 	for unit: Dictionary in view.enemies():
