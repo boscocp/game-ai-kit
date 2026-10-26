@@ -83,4 +83,5 @@ também em itálico, ficam como foram publicados.
 | *build_ram*, *cross_the_river_ram* | passos de um plano STRIPS, com o nome que o código dá à ação |
 | *attack_close* | a regra do Wesnoth que deixa uma unidade se juntar a um ataque já feito perto dela |
 | *id* | o número que identifica uma unidade no tabuleiro |
-| *enter*, *shift* | nomes de teclas, como estão no teclado |
+| *enter*, *shift*, Tab | nomes de teclas, como estão no teclado |
+| *LLM* | um modelo de linguagem grande (*large language model*), que gera texto; aqui, um conselheiro cuja resposta é validada antes de virar ação |

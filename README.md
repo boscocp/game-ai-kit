@@ -2,6 +2,8 @@
 
 Teaching AI in games, one readable piece at a time.
 
+> Em português: [README.pt-BR.md](README.pt-BR.md).
+
 A set of Godot 4 addons you can take **one at a time**, plus a small turn-based
 strategy game where each of them actually decides something. The code is written
 to be read: if a passage is fast and unreadable, it loses to the slow and
@@ -13,21 +15,51 @@ readable one.
 
 ## What it covers
 
-| piece | what it decides | where you see it | read |
-|---|---|---|---|
-| `ai_adversarial` | minimax and alpha-beta — the best move, *given that the opponent replies as well as it can* | plays white in `make run`, and draws every move it considered with its value | [page](docs/techniques/ai_adversarial.md) · [pt-BR](docs/techniques/ai_adversarial.pt-BR.md) · [why](docs/concepts/minimax.md) |
-| learned checkers evaluation, in `python/gameaikit/checkers/` | logistic regression on self-play results -- what a position is worth to the search | E in `make run` switches white to it, and the panel shows each count's share of the score | [page](docs/techniques/learned_evaluation.md) · [pt-BR](docs/techniques/learned_evaluation.pt-BR.md) · [why](docs/concepts/learned-evaluation.md) |
-| MENACE, in `python/gameaikit/menace/` | reinforcement learning with 304 matchboxes — which move in noughts and crosses | plays crosses in `make demo-tictactoe`, its beads on every square | [page](docs/techniques/menace.md) · [pt-BR](docs/techniques/menace.pt-BR.md) · [why](docs/concepts/menace.md) |
-| `ai_search` | A\*, BFS, DFS, Dijkstra — how a unit gets there | routes blue's units in `make demo-skirmish` | [page](docs/techniques/ai_search.md) · [pt-BR](docs/techniques/ai_search.pt-BR.md) · [why](docs/concepts/search.md) · [how](docs/godot/search.md) |
-| `ai_planning` | STRIPS — *to attack I need a unit; to have a unit I need resources* | C in `make demo-tactical` hands blue to a plan that decides what to buy -- the forge, then a ram for the siege -- listed step by step, with the pieces it counts on numbered on the board | [page](docs/techniques/ai_planning.md) · [pt-BR](docs/techniques/ai_planning.pt-BR.md) · [why](docs/concepts/planning.md) · [how](docs/godot/planning.md) |
-| `ai_behaviour` | a state machine, a behaviour tree, GOAP and an HTN -- the same guard written four ways, and a table of when each is right | `make demo-behaviour`: 1-4 swap the guard's brain mid-round, and the screen shows its state, its tree's path, or its plan | [page](docs/techniques/ai_behaviour.md) · [pt-BR](docs/techniques/ai_behaviour.pt-BR.md) · [the table](godot/addons/ai_behaviour/ways_to_decide.gd) · [why](docs/concepts/planning-in-strategy-games.md) |
-| `ai_learning` | logistic regression — attack or retreat; linear regression — which target is closer to falling | plays blue in `make demo-skirmish`, and says why on screen | [page](docs/techniques/ai_learning.md) · [pt-BR](docs/techniques/ai_learning.pt-BR.md) · [why](docs/concepts/learning.md) · [how](docs/godot/learning.md) |
-| `ai_opponent` | an n-gram over the player's actions -- what you do after what, counted during the fight | the "learner" modes of `make demo-fighting`, its table and its guess on the panel | [page](docs/techniques/ai_opponent.md) · [pt-BR](docs/techniques/ai_opponent.pt-BR.md) · [ADR 0016](docs/adr/0016-an-opponent-model-counts-during-the-fight.md) |
-| behaviour cloning, in `python/gameaikit/cloning/` and `ai_learning` | a softmax model and two ghosts fitted to a recorded player -- what it would do here | the "ghost" and "clone" modes of `make demo-fighting`; `make record-fights` records you | [page](docs/techniques/behaviour_cloning.md) · [pt-BR](docs/techniques/behaviour_cloning.pt-BR.md) · [why, and what it bought](docs/concepts/behaviour-cloning.md) -- on the owner's nine fights the n-gram guessed best, and a person could not tell the clone, the ghosts and the learner apart |
-| `ai_rts_core` | the state an RTS needs: a world that mutates a fixed tick at a time, flow fields shared by a whole army, one door for every command, each side shown only its own fogged snapshot, and a match that replays from its seed | `make demo-rts`: every unit you order walks a shared flow field; `make test-rts-simulation` plays a scripted match headless, at some 65 times real time | [page](docs/techniques/ai_rts_core.md) · [pt-BR](docs/techniques/ai_rts_core.pt-BR.md) · [ADR 0019](docs/adr/0019-two-cores-one-that-copies-one-that-mutates.md) -- why there are two cores |
-| `ai_steering` | seek, arrive, pursue and avoid -- not which cell, but which way to push and how hard, right now | `make demo-steering`: four vehicles, the force each asks for drawn as an arrow; seek overshoots forever, arrive stops | [page](docs/techniques/ai_steering.md) · [pt-BR](docs/techniques/ai_steering.pt-BR.md) · [why](docs/concepts/steering.md) |
-| the racing driver, in `godot/demos/racing/` | pure pursuit on `ai_steering`'s seek, and a speed limit carried back from every corner -- three difficulties in one car, none of them a rubber band | `make demo-racing`: race it in the same car, its steering point, braking bar and the line it dares drawn as you go; Tab watches the three levels; two gates hold the ladder and that nobody cheats | [page](docs/techniques/racing_driver.md) · [pt-BR](docs/techniques/racing_driver.pt-BR.md) · [why](docs/concepts/racing-ai.md) |
-| `ai_llm` | a local model as an advisor, with everything it says validated before it becomes an action | **not written**, and no task scheduled yet | -- |
+<!-- catalogue:summary -->
+<!-- written by scripts/catalogue.py: edit the inputs, then `make catalogue` -->
+
+The AI is what this kit is about, so here it is both ways round, generated from the modules' manifests. ● the demo's own code uses the technique; ◐ it reaches it through another example's code. [The catalogue](docs/techniques/catalogue.md) has the whole matrix, the keys that show each decision, and how the marks are measured.
+
+| technique | what it decides | where to watch it |
+| --- | --- | --- |
+| [ai_adversarial](docs/techniques/ai_adversarial.md) | the best move against someone who answers | ● [`make run`](docs/techniques/catalogue.md#run) |
+| [ai_behaviour](docs/techniques/ai_behaviour.md) | what to do next | ● [`make demo-behaviour`](docs/techniques/catalogue.md#demo-behaviour), ● [`make demo-rts`](docs/techniques/catalogue.md#demo-rts), ● [`make demo-tactical`](docs/techniques/catalogue.md#demo-tactical) |
+| [ai_fuzzy](docs/techniques/ai_fuzzy.md) | how much, by degrees | ● [`make demo-stealth`](docs/techniques/catalogue.md#demo-stealth), ● [`make demo-infiltration`](docs/techniques/catalogue.md#demo-infiltration), ◐ [`make demo-behaviour`](docs/techniques/catalogue.md#demo-behaviour) |
+| [ai_learning](docs/techniques/ai_learning.md) | using what Python learned | ● [`make demo-skirmish`](docs/techniques/catalogue.md#demo-skirmish), ● [`make demo-tactical`](docs/techniques/catalogue.md#demo-tactical), ● [`make demo-fighting`](docs/techniques/catalogue.md#demo-fighting) |
+| [ai_opponent](docs/techniques/ai_opponent.md) | what will the player do next? | ● [`make demo-fighting`](docs/techniques/catalogue.md#demo-fighting) |
+| [ai_perception](docs/techniques/ai_perception.md) | what a guard sees, hears and believes | ● [`make demo-stealth`](docs/techniques/catalogue.md#demo-stealth), ● [`make demo-infiltration`](docs/techniques/catalogue.md#demo-infiltration), ● [`make demo-botmatch`](docs/techniques/catalogue.md#demo-botmatch), ● [`make demo-behaviour`](docs/techniques/catalogue.md#demo-behaviour) |
+| [ai_planning](docs/techniques/ai_planning.md) | the steps to a goal nobody wrote down | ● [`make demo-rts`](docs/techniques/catalogue.md#demo-rts), ● [`make demo-tactical`](docs/techniques/catalogue.md#demo-tactical) |
+| [ai_rts_core](docs/techniques/ai_rts_core.md) | many units, one frame | ● [`make demo-rts`](docs/techniques/catalogue.md#demo-rts) |
+| [ai_search](docs/techniques/ai_search.md) | finding a route | ● [`make demo-skirmish`](docs/techniques/catalogue.md#demo-skirmish), ● [`make demo-search`](docs/techniques/catalogue.md#demo-search), ● [`make demo-stealth`](docs/techniques/catalogue.md#demo-stealth), ● [`make demo-infiltration`](docs/techniques/catalogue.md#demo-infiltration), ● [`make demo-botmatch`](docs/techniques/catalogue.md#demo-botmatch), ● [`make demo-behaviour`](docs/techniques/catalogue.md#demo-behaviour) |
+| [ai_steering](docs/techniques/ai_steering.md) | which way to push, and how hard | ● [`make demo-steering`](docs/techniques/catalogue.md#demo-steering), ● [`make demo-racing`](docs/techniques/catalogue.md#demo-racing), ● [`make demo-racing3d`](docs/techniques/catalogue.md#demo-racing3d) |
+| [ai_teamwork](docs/techniques/ai_teamwork.md) | weighing actions, and a team that shares the work | ● [`make demo-infiltration`](docs/techniques/catalogue.md#demo-infiltration), ● [`make demo-botmatch`](docs/techniques/catalogue.md#demo-botmatch) |
+| [MENACE](docs/techniques/menace.md) | the matchbox machine that learns noughts and crosses | ● [`make demo-tictactoe`](docs/techniques/catalogue.md#demo-tictactoe) |
+| [Learned evaluation](docs/techniques/learned_evaluation.md) | scoring a position by weights fitted to results | ● [`make run`](docs/techniques/catalogue.md#run) |
+| [Behaviour cloning](docs/techniques/behaviour_cloning.md) | the fighter that plays like you | ● [`make demo-fighting`](docs/techniques/catalogue.md#demo-fighting) |
+| [The racing driver](docs/techniques/racing_driver.md) | a point ahead, a speed profile, no rubber band | ● [`make demo-racing`](docs/techniques/catalogue.md#demo-racing) |
+
+| demo | like | the AI in it |
+| --- | --- | --- |
+| [`make run`](docs/techniques/catalogue.md#run) Checkers | checkers, you against the computer | ● [ai_adversarial](docs/techniques/ai_adversarial.md), ● [Learned evaluation](docs/techniques/learned_evaluation.md) |
+| [`make demo-skirmish`](docs/techniques/catalogue.md#demo-skirmish) The skirmish | a small Advance Wars battle | ● [ai_learning](docs/techniques/ai_learning.md), ● [ai_search](docs/techniques/ai_search.md) |
+| [`make demo-tictactoe`](docs/techniques/catalogue.md#demo-tictactoe) Noughts and crosses | tic-tac-toe, against Michie's matchbox machine | ● [MENACE](docs/techniques/menace.md) |
+| [`make demo-search`](docs/techniques/catalogue.md#demo-search) Four searches | the click-to-move of any strategy game, slowed down to one cell at a time | ● [ai_search](docs/techniques/ai_search.md) |
+| [`make demo-stealth`](docs/techniques/catalogue.md#demo-stealth) Stealth | the top-down stealth of the first Metal Gear | ● [ai_fuzzy](docs/techniques/ai_fuzzy.md), ● [ai_perception](docs/techniques/ai_perception.md), ● [ai_search](docs/techniques/ai_search.md) |
+| [`make demo-steering`](docs/techniques/catalogue.md#demo-steering) Steering | the enemies of an action game chasing and stopping, one force at a time | ● [ai_steering](docs/techniques/ai_steering.md) |
+| [`make demo-racing`](docs/techniques/catalogue.md#demo-racing) Racing | Micro Machines, seen from above, the AI in the same car as yours | ● [ai_steering](docs/techniques/ai_steering.md), ● [The racing driver](docs/techniques/racing_driver.md) |
+| [`make demo-racing3d`](docs/techniques/catalogue.md#demo-racing3d) Racing in 3D | Gran Turismo, on tyres that slip | ● [ai_steering](docs/techniques/ai_steering.md) |
+| [`make demo-infiltration`](docs/techniques/catalogue.md#demo-infiltration) Infiltration | Metal Gear Solid, in third person | ● [ai_fuzzy](docs/techniques/ai_fuzzy.md), ● [ai_perception](docs/techniques/ai_perception.md), ● [ai_search](docs/techniques/ai_search.md), ● [ai_teamwork](docs/techniques/ai_teamwork.md) |
+| [`make demo-botmatch`](docs/techniques/catalogue.md#demo-botmatch) Bot match | a bot match in Unreal Tournament or Counter-Strike | ● [ai_perception](docs/techniques/ai_perception.md), ● [ai_search](docs/techniques/ai_search.md), ● [ai_teamwork](docs/techniques/ai_teamwork.md) |
+| [`make demo-behaviour`](docs/techniques/catalogue.md#demo-behaviour) One guard, four ways to decide | a guard on its rounds, as in Metal Gear or Thief | ● [ai_behaviour](docs/techniques/ai_behaviour.md), ◐ [ai_fuzzy](docs/techniques/ai_fuzzy.md), ● [ai_perception](docs/techniques/ai_perception.md), ● [ai_search](docs/techniques/ai_search.md) |
+| [`make demo-rts`](docs/techniques/catalogue.md#demo-rts) Real-time strategy | StarCraft or Age of Empires, against a commander that plans | ● [ai_behaviour](docs/techniques/ai_behaviour.md), ● [ai_planning](docs/techniques/ai_planning.md), ● [ai_rts_core](docs/techniques/ai_rts_core.md) |
+| [`make demo-tactical`](docs/techniques/catalogue.md#demo-tactical) Tactics | Advance Wars | ● [ai_behaviour](docs/techniques/ai_behaviour.md), ● [ai_learning](docs/techniques/ai_learning.md), ● [ai_planning](docs/techniques/ai_planning.md) |
+| [`make demo-fighting`](docs/techniques/catalogue.md#demo-fighting) Fighting, training mode | Street Fighter's training mode, against a dummy that learns you | ● [ai_learning](docs/techniques/ai_learning.md), ● [ai_opponent](docs/techniques/ai_opponent.md), ● [Behaviour cloning](docs/techniques/behaviour_cloning.md) |
+
+<!-- /catalogue:summary -->
+
+`ai_llm` -- a local model as an advisor, with everything it says validated
+before it becomes an action -- is **not written**, and no task schedules it
+yet.
 
 `ai_core` sits under all of them, and is small on purpose: the grid
 (`GridGraph`) and the pathfinder interface (`Pathfinder`). Take any one addon
