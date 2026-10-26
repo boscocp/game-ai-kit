@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-13
+verified_on: 2026-10-26
 tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html ; https://docs.godotengine.org/en/stable/classes/class_json.html
 invalidated_if: Godot changes how class_name registers a class or how JSON reports a parse error, or the weights.json layout changes
@@ -30,16 +30,31 @@ adapter the same way; it copies these only as an example.
 ## Load the weights, and refuse a bad file
 
 ```gdscript
-var weights: ModelFile = ModelFile.load_from(LearnedPolicy.WEIGHTS_PATH)
-if not weights.is_loaded():
-	push_error(weights.error)
+var file: ModelFile = ModelFile.load_from("res://my_game/weights.json")
+if not file.is_loaded():
+	push_error(file.error)
+var chance: LearnedModel = file.model("chance")
 ```
 
-A missing or malformed file loads **no** models rather than half of one, and
-`error` says why in a sentence with a code in front:
+That is the whole of the addon's side, for any game: a JSON object whose
+`models` maps a name to `kind`, `features`, `weights` and `bias`, which is
+what `gameaikit.training.model_file` writes. A missing or malformed file loads
+**no** models rather than half of one, and `error` says why in a sentence with
+a code in front:
 
 ```
-M1 no weights file at res://nowhere.json -- run `make train`
+M1 no model file at res://nowhere.json
+```
+
+Anything else in the file -- the numbers a game needs that are not weights --
+is handed over unread in `file.extra`, and checking it is the game's job. The
+tactical board does it in `TacticalWeights`, over a loaded `ModelFile`: its
+four `feature_conventions`, refused with `W6` and `W7` as
+`gameaikit.tactical.report` refuses them. Since wave 99 (T106); before it the
+addon refused every file without the tactical board's conventions.
+
+```gdscript
+var weights: TacticalWeights = TacticalWeights.load_from(LearnedPolicy.WEIGHTS_PATH)
 ```
 
 The file is read with `JSON.new().parse()` rather than the static

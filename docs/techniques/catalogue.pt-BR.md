@@ -20,7 +20,7 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
 | demo | `ai_adversarial` | `ai_behaviour` | `ai_fuzzy` | `ai_learning` | `ai_opponent` | `ai_perception` | `ai_planning` | `ai_rts_core` | `ai_search` | `ai_steering` | `ai_teamwork` | `menace` | `learned_evaluation` | `behaviour_cloning` | `racing_driver` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | [Damas](#run) | [●](ai_adversarial.pt-BR.md) |  |  | [○](ai_learning.pt-BR.md) |  |  |  |  |  |  |  |  | [●](learned_evaluation.pt-BR.md) |  |  |
-| [A escaramuça (*skirmish*)](#demo-skirmish) |  |  |  | [●](ai_learning.pt-BR.md) |  |  |  |  | [●](ai_search.pt-BR.md) |  |  |  |  |  |  |
+| [A escaramuça (*skirmish*)](#demo-skirmish) |  |  |  | [◐](ai_learning.pt-BR.md) |  |  |  |  | [●](ai_search.pt-BR.md) |  |  |  |  |  |  |
 | [Jogo da velha](#demo-tictactoe) |  |  |  |  |  |  |  |  |  |  |  | [●](menace.pt-BR.md) |  |  |  |
 | [Quatro buscas](#demo-search) |  |  |  |  |  |  |  |  | [●](ai_search.pt-BR.md) |  |  |  |  |  |  |
 | [*Stealth*](#demo-stealth) |  |  | [●](ai_fuzzy.pt-BR.md) |  |  | [●](ai_perception.pt-BR.md) |  |  | [●](ai_search.pt-BR.md) |  |  |  |  |  |  |
@@ -41,7 +41,7 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
   - técnicas: ● [ai_adversarial](ai_adversarial.pt-BR.md) (*minimax* com *alpha-beta*); ○ [ai_learning](ai_learning.pt-BR.md) (declarada no manifesto, nunca alcançada pela cena); ● [Avaliação aprendida](learned_evaluation.pt-BR.md) (uma avaliação aprendida).
 - <a id="demo-skirmish"></a>**A escaramuça (*skirmish*)**, `make demo-skirmish` -- parecido com uma batalha pequena de Advance Wars.
   - teclas: espaço encerra o seu turno, e cada unidade azul diz então o que decidiu, e com que probabilidade.
-  - técnicas: ● [ai_learning](ai_learning.pt-BR.md) (uma regressão treinada no Python); ● [ai_search](ai_search.pt-BR.md) (A*).
+  - técnicas: ◐ [ai_learning](ai_learning.pt-BR.md) (por `tactical`; uma regressão treinada no Python); ● [ai_search](ai_search.pt-BR.md) (A*).
 - <a id="demo-tictactoe"></a>**Jogo da velha**, `make demo-tictactoe` -- parecido com jogo da velha, contra a máquina de caixas de fósforo de Michie.
   - teclas: espaço sorteia a conta do MENACE; 1-4 a idade dele; M o que o jogo perfeito faz de cada casa.
   - técnicas: ● [MENACE](menace.pt-BR.md) (as caixas de fósforo do MENACE).
@@ -89,7 +89,7 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
 - <a id="ai_adversarial"></a>[ai_adversarial](ai_adversarial.pt-BR.md) -- a melhor jogada contra quem responde. Veja em: ● [`make run`](#run) (*minimax* com *alpha-beta*).
 - <a id="ai_behaviour"></a>[ai_behaviour](ai_behaviour.pt-BR.md) -- o que fazer em seguida. Veja em: ● [`make demo-behaviour`](#demo-behaviour) (máquina de estados, *behaviour tree*, GOAP, HTN); ● [`make demo-rts`](#demo-rts) (HTN, máquina de estados); ● [`make demo-tactical`](#demo-tactical) (máquina de estados, *behaviour tree*, GOAP, HTN).
 - <a id="ai_fuzzy"></a>[ai_fuzzy](ai_fuzzy.pt-BR.md) -- quanto, aos poucos. Veja em: ● [`make demo-stealth`](#demo-stealth) (lógica *fuzzy*); ● [`make demo-infiltration`](#demo-infiltration) (lógica *fuzzy*); ◐ [`make demo-behaviour`](#demo-behaviour) (por `stealth`).
-- <a id="ai_learning"></a>[ai_learning](ai_learning.pt-BR.md) -- usando o que o Python aprendeu. Veja em: ○ [`make run`](#run) (declarada no manifesto, nunca alcançada pela cena); ● [`make demo-skirmish`](#demo-skirmish) (uma regressão treinada no Python); ● [`make demo-tactical`](#demo-tactical) (uma regressão treinada no Python); ● [`make demo-fighting`](#demo-fighting) (a consulta de casos do *ghost*).
+- <a id="ai_learning"></a>[ai_learning](ai_learning.pt-BR.md) -- usando o que o Python aprendeu. Veja em: ○ [`make run`](#run) (declarada no manifesto, nunca alcançada pela cena); ◐ [`make demo-skirmish`](#demo-skirmish) (por `tactical`; uma regressão treinada no Python); ● [`make demo-tactical`](#demo-tactical) (uma regressão treinada no Python); ● [`make demo-fighting`](#demo-fighting) (a consulta de casos do *ghost*).
 - <a id="ai_opponent"></a>[ai_opponent](ai_opponent.pt-BR.md) -- o que o jogador vai fazer agora? Veja em: ● [`make demo-fighting`](#demo-fighting) (*n-gram*).
 - <a id="ai_perception"></a>[ai_perception](ai_perception.pt-BR.md) -- o que um guarda vê, ouve e acredita. Veja em: ● [`make demo-stealth`](#demo-stealth) (cone de visão com linha de visão e audição, mapa de influência); ● [`make demo-infiltration`](#demo-infiltration) (forma da visão com luz e audição, *awareness*, mapa de crença); ● [`make demo-botmatch`](#demo-botmatch); ● [`make demo-behaviour`](#demo-behaviour).
 - <a id="ai_planning"></a>[ai_planning](ai_planning.pt-BR.md) -- os passos até um objetivo que ninguém escreveu. Veja em: ● [`make demo-rts`](#demo-rts) (STRIPS sobre PDDL); ● [`make demo-tactical`](#demo-tactical) (STRIPS sobre PDDL).

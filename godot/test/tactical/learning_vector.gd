@@ -29,7 +29,7 @@ const UNIT_FIELDS: Array[String] = ["id", "faction", "x", "y", "health"]
 
 ## Why this dictionary is not a usable vector, or "" when it is one.
 static func why_not_a_vector(data: Dictionary) -> String:
-	var published: ModelFile = models_of(data)
+	var published: TacticalWeights = models_of(data)
 	if not published.is_loaded():
 		return published.error
 	if not (data.get("cases") is Array) or (data["cases"] as Array).is_empty():
@@ -49,8 +49,8 @@ static func why_not_a_vector(data: Dictionary) -> String:
 ## The vector carries its own weights rather than reading the published ones,
 ## so retraining cannot change what a conformance vector claims. What it pins
 ## is the arithmetic, which is the thing two languages have to agree on.
-static func models_of(data: Dictionary) -> ModelFile:
-	return ModelFile.from_dictionary(data, "the vector")
+static func models_of(data: Dictionary) -> TacticalWeights:
+	return TacticalWeights.from_dictionary(data, "the vector")
 
 
 ## The board this vector describes, or null when it describes none.
@@ -77,7 +77,7 @@ static func board_of(data: Dictionary) -> BoardState:
 
 ## Everything this vector claims, checked against the addon.
 static func check(name: String, data: Dictionary) -> Array[String]:
-	var published: ModelFile = models_of(data)
+	var published: TacticalWeights = models_of(data)
 	var state: BoardState = board_of(data)
 	var failures: Array[String] = []
 	for case: Dictionary in data["cases"]:
@@ -87,7 +87,7 @@ static func check(name: String, data: Dictionary) -> Array[String]:
 
 # One case: the row the board produces, and what the model says about it.
 static func _check_case(name: String, case: Dictionary, state: BoardState,
-		published: ModelFile) -> Array[String]:
+		published: TacticalWeights) -> Array[String]:
 	var label: String = "%s [%s]" % [name, str(case["why"])]
 	var failures: Array[String] = []
 	var expected: Dictionary = case["features"]
@@ -105,7 +105,7 @@ static func _check_case(name: String, case: Dictionary, state: BoardState,
 
 # The row this case's board produces, or {} for a case that supplies its own.
 static func _row_for(case: Dictionary, state: BoardState,
-		published: ModelFile) -> Dictionary:
+		published: TacticalWeights) -> Dictionary:
 	if case["kind"] == "combat":
 		return BoardFeatures.combat_row(
 			state, state.unit_by_id(int(case["attacker"])),

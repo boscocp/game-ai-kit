@@ -20,7 +20,7 @@ A row per demo, a column per technique; each mark links the technique's page, an
 | demo | `ai_adversarial` | `ai_behaviour` | `ai_fuzzy` | `ai_learning` | `ai_opponent` | `ai_perception` | `ai_planning` | `ai_rts_core` | `ai_search` | `ai_steering` | `ai_teamwork` | `menace` | `learned_evaluation` | `behaviour_cloning` | `racing_driver` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | [Checkers](#run) | [●](ai_adversarial.md) |  |  | [○](ai_learning.md) |  |  |  |  |  |  |  |  | [●](learned_evaluation.md) |  |  |
-| [The skirmish](#demo-skirmish) |  |  |  | [●](ai_learning.md) |  |  |  |  | [●](ai_search.md) |  |  |  |  |  |  |
+| [The skirmish](#demo-skirmish) |  |  |  | [◐](ai_learning.md) |  |  |  |  | [●](ai_search.md) |  |  |  |  |  |  |
 | [Noughts and crosses](#demo-tictactoe) |  |  |  |  |  |  |  |  |  |  |  | [●](menace.md) |  |  |  |
 | [Four searches](#demo-search) |  |  |  |  |  |  |  |  | [●](ai_search.md) |  |  |  |  |  |  |
 | [Stealth](#demo-stealth) |  |  | [●](ai_fuzzy.md) |  |  | [●](ai_perception.md) |  |  | [●](ai_search.md) |  |  |  |  |  |  |
@@ -41,7 +41,7 @@ A row per demo, a column per technique; each mark links the technique's page, an
   - techniques: ● [ai_adversarial](ai_adversarial.md) (minimax with alpha-beta); ○ [ai_learning](ai_learning.md) (declared in its manifest, never reached from its scene); ● [Learned evaluation](learned_evaluation.md) (a learned evaluation).
 - <a id="demo-skirmish"></a>**The skirmish**, `make demo-skirmish` -- like a small Advance Wars battle.
   - keys: space ends your turn, and each blue unit then says what it decided, and the probability it decided on.
-  - techniques: ● [ai_learning](ai_learning.md) (a regression trained in Python); ● [ai_search](ai_search.md) (A*).
+  - techniques: ◐ [ai_learning](ai_learning.md) (through `tactical`; a regression trained in Python); ● [ai_search](ai_search.md) (A*).
 - <a id="demo-tictactoe"></a>**Noughts and crosses**, `make demo-tictactoe` -- like tic-tac-toe, against Michie's matchbox machine.
   - keys: space draws MENACE's bead; 1-4 its age; M what perfect play makes of each square.
   - techniques: ● [MENACE](menace.md) (MENACE's matchboxes).
@@ -89,7 +89,7 @@ A row per demo, a column per technique; each mark links the technique's page, an
 - <a id="ai_adversarial"></a>[ai_adversarial](ai_adversarial.md) -- the best move against someone who answers. Watch it in: ● [`make run`](#run) (minimax with alpha-beta).
 - <a id="ai_behaviour"></a>[ai_behaviour](ai_behaviour.md) -- what to do next. Watch it in: ● [`make demo-behaviour`](#demo-behaviour) (state machine, behaviour tree, GOAP, HTN); ● [`make demo-rts`](#demo-rts) (HTN, state machine); ● [`make demo-tactical`](#demo-tactical) (state machine, behaviour tree, GOAP, HTN).
 - <a id="ai_fuzzy"></a>[ai_fuzzy](ai_fuzzy.md) -- how much, by degrees. Watch it in: ● [`make demo-stealth`](#demo-stealth) (fuzzy logic); ● [`make demo-infiltration`](#demo-infiltration) (fuzzy logic); ◐ [`make demo-behaviour`](#demo-behaviour) (through `stealth`).
-- <a id="ai_learning"></a>[ai_learning](ai_learning.md) -- using what Python learned. Watch it in: ○ [`make run`](#run) (declared in its manifest, never reached from its scene); ● [`make demo-skirmish`](#demo-skirmish) (a regression trained in Python); ● [`make demo-tactical`](#demo-tactical) (a regression trained in Python); ● [`make demo-fighting`](#demo-fighting) (the ghost's case lookup).
+- <a id="ai_learning"></a>[ai_learning](ai_learning.md) -- using what Python learned. Watch it in: ○ [`make run`](#run) (declared in its manifest, never reached from its scene); ◐ [`make demo-skirmish`](#demo-skirmish) (through `tactical`; a regression trained in Python); ● [`make demo-tactical`](#demo-tactical) (a regression trained in Python); ● [`make demo-fighting`](#demo-fighting) (the ghost's case lookup).
 - <a id="ai_opponent"></a>[ai_opponent](ai_opponent.md) -- what will the player do next? Watch it in: ● [`make demo-fighting`](#demo-fighting) (n-gram).
 - <a id="ai_perception"></a>[ai_perception](ai_perception.md) -- what a guard sees, hears and believes. Watch it in: ● [`make demo-stealth`](#demo-stealth) (vision cone with line of sight and hearing, influence map); ● [`make demo-infiltration`](#demo-infiltration) (vision shape with light and hearing, awareness, belief map); ● [`make demo-botmatch`](#demo-botmatch); ● [`make demo-behaviour`](#demo-behaviour).
 - <a id="ai_planning"></a>[ai_planning](ai_planning.md) -- the steps to a goal nobody wrote down. Watch it in: ● [`make demo-rts`](#demo-rts) (STRIPS over PDDL); ● [`make demo-tactical`](#demo-tactical) (STRIPS over PDDL).

@@ -42,7 +42,7 @@ const TERRAIN_ON_THE_WAY: String = "terrain_on_the_way"
 ## itself by identity, as the simulator does, so one copied out of an earlier
 ## state would count itself among the friends standing next to it.
 static func combat_row(state: BoardState, attacker: Unit, defender: Unit,
-		published: ModelFile) -> Dictionary:
+		published: TacticalWeights) -> Dictionary:
 	var radius: int = published.convention("nearby_radius")
 	return {
 		HEALTH_DIFFERENCE: attacker.health - defender.health,
@@ -86,7 +86,7 @@ static func is_walker(unit: Unit) -> bool:
 ## 2 gives 3 here and 1 there. `ai_core` allows three sides, so this is a
 ## limit of what the model was fitted on rather than of the board.
 static func capture_row(state: BoardState, faction: int, node: Vector2i,
-		published: ModelFile) -> Dictionary:
+		published: TacticalWeights) -> Dictionary:
 	var own: Array[Unit] = _walkers(state.units_of(faction))
 	if own.is_empty():
 		return {}
@@ -112,7 +112,7 @@ static func distance_between(one: Vector2i, other: Vector2i) -> int:
 ## generated ground above `dearest_ground`, so the honest answer for either is
 ## "the worst ground the model has seen", and the clamp says it out loud
 ## instead of feeding a logistic regression a -1 it will happily multiply.
-static func terrain_at(graph: GridGraph, cell: Vector2i, published: ModelFile) -> int:
+static func terrain_at(graph: GridGraph, cell: Vector2i, published: TacticalWeights) -> int:
 	var dearest: int = published.convention("dearest_ground")
 	if graph.is_blocked(cell):
 		return dearest
@@ -153,7 +153,7 @@ static func _walkers(units: Array[Unit]) -> Array[Unit]:
 # this has none -- reporting fifteen would tell the model nobody is coming
 # while a friend is on the way.
 static func _nearest_friend(state: BoardState, unit: Unit,
-		published: ModelFile) -> int:
+		published: TacticalWeights) -> int:
 	var closest: int = -1
 	for other: Unit in _walkers(state.units_of(unit.faction)):
 		var apart: int = distance_between(other.cell, unit.cell)
@@ -187,7 +187,7 @@ static func _nearest_to(units: Array[Unit], cell: Vector2i) -> Unit:
 # dataset impossible to rebuild from its description. The Python side walks
 # the same two axes in the same order.
 static func _terrain_between(graph: GridGraph, start: Vector2i, target: Vector2i,
-		published: ModelFile) -> float:
+		published: TacticalWeights) -> float:
 	var costs: Array[int] = []
 	var walker: Vector2i = start
 	while walker.x != target.x:

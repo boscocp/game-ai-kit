@@ -9,12 +9,15 @@ this one found nine of exactly those in a conformance runner.
 import argparse
 import copy
 import dataclasses
+import json
+import pathlib
 import unittest
 
 from gameaikit.dataset.rows import CAPTURE_FEATURES, COMBAT_FEATURES
 from gameaikit.dataset import board, simulate
 from gameaikit.dataset.simulate import collect
 from gameaikit.tactical import evaluate, report
+from gameaikit.training import model_file
 from gameaikit.training.models import Model
 from gameaikit.training.split import split_by_game
 from gameaikit.tactical import train
@@ -27,12 +30,14 @@ def sound_report() -> dict:
         "feature_conventions": dict(report.FEATURE_CONVENTIONS),
         "models": {
             "combat": {
+                "kind": "logistic",
                 "features": list(COMBAT_FEATURES),
                 "weights": [1.0, 2.0, -3.0, -0.5, 1.5],
                 "comparable_weights": [2.0, 1.4, -1.3, -0.6, 0.9],
                 "bias": 0.5,
             },
             "capture": {
+                "kind": "linear",
                 "features": list(CAPTURE_FEATURES),
                 "weights": [1.0, 0.1, 0.1, 0.4],
                 "comparable_weights": [1.1, 0.2, 0.1, 0.1],
@@ -176,6 +181,44 @@ class TheReportsRules(unittest.TestCase):
         zeroed["feature_conventions"]["nearby_radius"] = 0
         self.assertIn("W6", report.findings_for(zeroed, zeroed)[0])
 
+    def test_a_terrain_range_the_wrong_way_round_is_caught(self) -> None:
+        # Both numbers positive, and the pair nonsense: the game clamps
+        # terrain between them, and a clamp whose minimum is above its maximum
+        # answers the same wrong number for every cell.
+        reversed_range = sound_report()
+        reversed_range["feature_conventions"]["cheapest_ground"] = 3
+        reversed_range["feature_conventions"]["dearest_ground"] = 1
+        self.assertIn("W7", report.findings_for(reversed_range, reversed_range)[0])
+
+    def test_a_report_the_game_s_loader_would_refuse_is_caught(self) -> None:
+        # A kind nothing can evaluate. No W rule looks at the kind, and the
+        # game's `ModelFile` refuses the file whole for it.
+        unknown = sound_report()
+        unknown["models"]["capture"]["kind"] = "random_forest"
+        self.assertEqual(report.findings_for(unknown, unknown), [
+            "M5 model `capture` is of kind `random_forest`, which nothing here can evaluate"])
+
+    def test_the_committed_weights_are_a_model_file_any_reader_loads(self) -> None:
+        # The published file, through the generic rules alone: no field was
+        # added for them, and none had to be (T106).
+        committed = (pathlib.Path(__file__).resolve().parents[2]
+                     / "godot" / "game" / "tactical" / "weights.json")
+        self.assertEqual(model_file.why_unreadable(committed), "")
+
+    def test_a_weight_too_big_for_a_float_is_refused_not_crashed_on(self) -> None:
+        # `1` and four hundred zeros: an exact int in Python, infinity in the
+        # game. The loader's rules convert it rather than letting
+        # `math.isfinite` raise, so the report says so and goes on.
+        huge = sound_report()
+        huge["models"]["capture"]["weights"][0] = 10 ** 400
+        findings = report.findings_for(huge, huge)
+        self.assertTrue(any(finding.startswith("M8 ") for finding in findings), findings)
+
+    def test_the_sound_report_has_no_findings(self) -> None:
+        # The other half of every test above: each one plants one thing, and
+        # that is worth something only if the unplanted report is clean.
+        self.assertEqual(report.findings_for(sound_report(), sound_report()), [])
+
     def test_the_published_conventions_are_the_simulator_s_own(self) -> None:
         # Not a restatement of the constant: it asserts that what the report
         # publishes is what `simulate.py` actually used, so renaming or
@@ -195,6 +238,49 @@ class TheReportsRules(unittest.TestCase):
         flat["models"]["capture"]["weights"] = [0.0, 0.0, 0.0, 0.0]
 
         self.assertIn("W5", report.findings_for(flat, flat)[0])
+
+
+CONVENTIONS_VECTOR = (pathlib.Path(__file__).resolve().parents[2]
+                      / "spec" / "vectors" / "tactical_conventions" / "conventions.json")
+
+
+def conventions_answer(case: dict) -> str:
+    """What the report makes of one conventions case: a code, the convention
+    a W6 names, or "loads"."""
+    findings = report._check_conventions(case["conventions"])
+    if not findings:
+        return "loads"
+    first = findings[0]
+    if first.startswith("W6 feature_conventions."):
+        return "W6 " + first.split(".", 1)[1].split(" ", 1)[0]
+    return first.split(" ", 1)[0]
+
+
+def conventions_claim(case: dict) -> str:
+    """The same, as the vector claims it."""
+    if case.get("loads"):
+        return "loads"
+    return " ".join(filter(None, [case["refused"], case.get("about")]))
+
+
+class TheConventionsVector(unittest.TestCase):
+    """`spec/vectors/tactical_conventions/`, which `TacticalWeights` reads too."""
+
+    def test_every_case_gets_the_answer_the_vector_claims(self) -> None:
+        cases = json.loads(CONVENTIONS_VECTOR.read_text(encoding="utf-8"))["cases"]
+        self.assertGreater(len(cases), 10)
+        for case in cases:
+            with self.subTest(case["why"]):
+                self.assertEqual(conventions_answer(case), conventions_claim(case))
+
+    def test_a_wrong_claim_is_caught(self) -> None:
+        cases = json.loads(CONVENTIONS_VECTOR.read_text(encoding="utf-8"))["cases"]
+        wrong_code = dict(cases[-1], refused="W6")
+        wrong_name = dict(cases[4], about="dearest_ground")
+        wrong_load = dict(cases[2], loads=True)
+        for wrong in (wrong_code, wrong_name, wrong_load):
+            with self.subTest(wrong["why"]):
+                self.assertNotEqual(conventions_answer(wrong), conventions_claim(wrong))
 
 
 class TheBaselineProperties(unittest.TestCase):

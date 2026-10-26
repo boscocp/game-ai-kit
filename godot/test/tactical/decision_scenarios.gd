@@ -37,7 +37,7 @@ const NODES: Array[Vector2i] = [Vector2i(0, 0), Vector2i(8, 6)]
 func _init() -> void:
 	# The reasons are read in English, whatever the machine's locale (T79).
 	TranslationServer.set_locale("en")
-	var published: ModelFile = ModelFile.load_from(LearnedPolicy.WEIGHTS_PATH)
+	var published: TacticalWeights = TacticalWeights.load_from(LearnedPolicy.WEIGHTS_PATH)
 	if not published.is_loaded():
 		printerr("decision_scenarios: %s" % published.error)
 		quit(2)
@@ -60,7 +60,7 @@ func _init() -> void:
 # The friend was at (7,4) and that claim was false: four cells from the
 # defender is outside `nearby_radius`, so it moved `reinforcement_distance`
 # and left `numeric_advantage` at zero. Measured, and moved to (5,4).
-func _the_fight_it_should_take(published: ModelFile) -> Array[String]:
+func _the_fight_it_should_take(published: TacticalWeights) -> Array[String]:
 	var state := BoardState.new(GridGraph.new(9, 7), [
 		Unit.new(1, RED, Vector2i(4, 3), 4, POINTS),
 		Unit.new(2, BLUE, Vector2i(7, 3), 16, POINTS),
@@ -79,7 +79,7 @@ func _the_fight_it_should_take(published: ModelFile) -> Array[String]:
 
 # The same board turned around: one hurt unit, no friends left, and a healthy
 # enemy standing in cover. The model has to be able to say no.
-func _the_fight_it_should_refuse(published: ModelFile) -> Array[String]:
+func _the_fight_it_should_refuse(published: TacticalWeights) -> Array[String]:
 	var graph := GridGraph.new(9, 7)
 	graph.set_cost(Vector2i(4, 3), 3)
 	var state := BoardState.new(graph, [
@@ -100,7 +100,7 @@ func _the_fight_it_should_refuse(published: ModelFile) -> Array[String]:
 # Nobody in reach, and two nodes: one three cells away, one across the board
 # and behind a band of rough ground. The capture model has to prefer the near
 # one, and the decision has to say what it preferred it to.
-func _the_node_it_should_prefer(published: ModelFile) -> Array[String]:
+func _the_node_it_should_prefer(published: TacticalWeights) -> Array[String]:
 	var graph := GridGraph.new(12, 9)
 	for row: int in range(0, 9):
 		graph.set_cost(Vector2i(3, row), 3)
@@ -157,6 +157,6 @@ func _expect_the_move_goes(state: BoardState, decision: LearnedDecision,
 
 
 # A policy over the published weights, with a real search behind it.
-func _policy(published: ModelFile) -> LearnedPolicy:
+func _policy(published: TacticalWeights) -> LearnedPolicy:
 	return LearnedPolicy.new(
 		published, NODES, LearnedPolicy.DEFAULT_THRESHOLD, GridPathfinder.new(AStarSearch.new()))

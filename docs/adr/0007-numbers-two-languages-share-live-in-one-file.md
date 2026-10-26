@@ -22,8 +22,12 @@ that is not the one it was fitted to.
 `weights.json` publishes, beside the weights and biases, every convention the
 game needs to build a feature row: `nearby_radius`,
 `reinforcement_distance_when_alone`, and the range of terrain the data covered
-(`cheapest_ground`, `dearest_ground`). `ModelFile` refuses a file missing any
-of them, and the game reads them from the file rather than keeping a copy.
+(`cheapest_ground`, `dearest_ground`). The game refuses a file missing any
+of them, and reads them from the file rather than keeping a copy. (Amended
+in wave 99, T106: the refusal was `ModelFile`'s, which made the addon
+unusable by any other game; it is now the tactical game's own
+`TacticalWeights`, on top of a `ModelFile` that checks only what every model
+file has. The decision is unchanged.)
 
 Weights are published rounded to six decimals, so that both languages compute
 with the same numbers rather than with two renderings of one double. The

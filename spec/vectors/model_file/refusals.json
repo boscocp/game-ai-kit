@@ -1,0 +1,397 @@
+{
+  "name": "what every model file must be",
+  "why": "The format ai_learning's ModelFile reads and gameaikit.training.model_file writes, held to one answer per file in both languages: the code of the first rule it breaks, or the models it publishes and the fields beside them.",
+  "cases": [
+    {
+      "why": "The smallest file there is: one model and nothing else. No game's fields, and nothing asks for any.",
+      "file": {
+        "models": {
+          "chance": {
+            "kind": "logistic",
+            "features": [
+              "my_health",
+              "their_health"
+            ],
+            "weights": [
+              0.05,
+              -0.05
+            ],
+            "bias": 0.5
+          }
+        }
+      },
+      "loads": [
+        "chance"
+      ],
+      "extra": []
+    },
+    {
+      "why": "Fields beside `models` are the publishing game's. They are handed over unread, and a file is not refused for carrying them.",
+      "file": {
+        "generated_by": "somebody's trainer",
+        "my_radius": 3,
+        "models": {
+          "b": {
+            "kind": "linear",
+            "features": [
+              "one"
+            ],
+            "weights": [
+              1.0
+            ],
+            "bias": 0.0
+          },
+          "a": {
+            "kind": "logistic",
+            "features": [
+              "one"
+            ],
+            "weights": [
+              1.0
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "loads": [
+        "a",
+        "b"
+      ],
+      "extra": [
+        "generated_by",
+        "my_radius"
+      ]
+    },
+    {
+      "why": "Not JSON at all.",
+      "text": "weights: lots\n",
+      "refused": "M2"
+    },
+    {
+      "why": "JSON, but a list: there is nowhere for `models` to be.",
+      "text": "[1, 2]\n",
+      "refused": "M2"
+    },
+    {
+      "why": "An object with no models.",
+      "file": {},
+      "refused": "M3"
+    },
+    {
+      "why": "A `models` that publishes none.",
+      "file": {
+        "models": {}
+      },
+      "refused": "M3"
+    },
+    {
+      "why": "A `models` that is a list rather than names to models.",
+      "file": {
+        "models": [
+          {
+            "kind": "linear",
+            "features": [
+              "one"
+            ],
+            "weights": [
+              1.0
+            ],
+            "bias": 0.0
+          }
+        ]
+      },
+      "refused": "M3"
+    },
+    {
+      "why": "A model that is not an object at all. Found missing by review: this rule could once be deleted with every gate green.",
+      "file": {
+        "models": {
+          "combat": "0.5, probably"
+        }
+      },
+      "refused": "M10"
+    },
+    {
+      "why": "A model with no bias. Defaulting it to 0 is a model nobody fitted.",
+      "file": {
+        "models": {
+          "only": {
+            "kind": "linear",
+            "features": [
+              "one"
+            ],
+            "weights": [
+              1.0
+            ]
+          }
+        }
+      },
+      "refused": "M4"
+    },
+    {
+      "why": "A model with no kind.",
+      "file": {
+        "models": {
+          "only": {
+            "features": [
+              "one"
+            ],
+            "weights": [
+              1.0
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M4"
+    },
+    {
+      "why": "A kind nothing here can evaluate, named rather than guessed at: quietly treating it as linear would answer with great confidence.",
+      "file": {
+        "models": {
+          "only": {
+            "kind": "random_forest",
+            "features": [
+              "one"
+            ],
+            "weights": [
+              1.0
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M5"
+    },
+    {
+      "why": "A model looking at nothing.",
+      "file": {
+        "models": {
+          "only": {
+            "kind": "linear",
+            "features": [],
+            "weights": [],
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M6"
+    },
+    {
+      "why": "A feature name that is a number. Rows are matched by name, and this one matches nothing a game can build.",
+      "file": {
+        "models": {
+          "only": {
+            "kind": "linear",
+            "features": [
+              7
+            ],
+            "weights": [
+              1.0
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M6"
+    },
+    {
+      "why": "A feature listed twice: a weight that can never be applied.",
+      "file": {
+        "models": {
+          "only": {
+            "kind": "linear",
+            "features": [
+              "one",
+              "one"
+            ],
+            "weights": [
+              1.0,
+              2.0
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M6"
+    },
+    {
+      "why": "One weight short.",
+      "file": {
+        "models": {
+          "only": {
+            "kind": "linear",
+            "features": [
+              "one",
+              "two"
+            ],
+            "weights": [
+              1.0
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M7"
+    },
+    {
+      "why": "Weights that are not a list.",
+      "file": {
+        "models": {
+          "only": {
+            "kind": "linear",
+            "features": [
+              "one"
+            ],
+            "weights": 1.0,
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M7"
+    },
+    {
+      "why": "A weight that is a word.",
+      "file": {
+        "models": {
+          "only": {
+            "kind": "linear",
+            "features": [
+              "one"
+            ],
+            "weights": [
+              "heavy"
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M8"
+    },
+    {
+      "why": "A bias that is `true`: a yes, not a number, in both languages.",
+      "file": {
+        "models": {
+          "only": {
+            "kind": "linear",
+            "features": [
+              "one"
+            ],
+            "weights": [
+              1.0
+            ],
+            "bias": true
+          }
+        }
+      },
+      "refused": "M8"
+    },
+    {
+      "why": "A bias JSON cannot spell but can still carry: 1e400 parses to infinity, which multiplies every feature into one answer.",
+      "text": "{\"models\": {\"only\": {\"kind\": \"linear\", \"features\": [\"one\"], \"weights\": [1.0], \"bias\": 1e400}}}\n",
+      "refused": "M8"
+    },
+    {
+      "why": "`NaN` is not JSON, though Python's reader accepts it unless told not to: both languages refuse the text, not the number.",
+      "text": "{\"models\": {\"only\": {\"kind\": \"linear\", \"features\": [\"one\"], \"weights\": [NaN], \"bias\": 0.0}}}\n",
+      "refused": "M2"
+    },
+    {
+      "why": "Nor is `Infinity`, for the same reason.",
+      "text": "{\"models\": {\"only\": {\"kind\": \"linear\", \"features\": [\"one\"], \"weights\": [1.0], \"bias\": -Infinity}}}\n",
+      "refused": "M2"
+    },
+    {
+      "why": "An integer too big for a float, with no exponent: the game reads infinity, and Python must not crash converting it.",
+      "text": "{\"models\": {\"only\": {\"kind\": \"linear\", \"features\": [\"one\"], \"weights\": [10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000], \"bias\": 0.0}}}\n",
+      "refused": "M8"
+    },
+    {
+      "why": "A sound first model does not excuse a broken second: the file is refused whole.",
+      "file": {
+        "models": {
+          "first": {
+            "kind": "linear",
+            "features": [
+              "one"
+            ],
+            "weights": [
+              1.0
+            ],
+            "bias": 0.0
+          },
+          "second": {
+            "kind": "linear",
+            "features": [
+              "one",
+              "two"
+            ],
+            "weights": [
+              1.0
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M7"
+    },
+    {
+      "why": "A weight that is `false`: a yes-or-no inside the numbers.",
+      "file": {
+        "models": {
+          "only": {
+            "kind": "linear",
+            "features": [
+              "one"
+            ],
+            "weights": [
+              false
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M8"
+    },
+    {
+      "why": "A kind that is a number, not a name.",
+      "file": {
+        "models": {
+          "only": {
+            "kind": 7,
+            "features": [
+              "one"
+            ],
+            "weights": [
+              1.0
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M5"
+    },
+    {
+      "why": "A name listed twice before a name that is not a string: the first wrong name is the one reported, in both languages.",
+      "file": {
+        "models": {
+          "only": {
+            "kind": "linear",
+            "features": [
+              "a",
+              "a",
+              1
+            ],
+            "weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M6"
+    }
+  ]
+}

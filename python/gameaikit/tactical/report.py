@@ -18,12 +18,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import pathlib
 import sys
 
 from ..dataset.rows import CAPTURE_FEATURES, COMBAT_FEATURES
 from ..dataset.board import CHEAPEST_GROUND, DEAREST_GROUND
 from ..dataset.simulate import NEARBY, WIDTH
+from ..training import model_file
 from .train import DATA_SEED, SPLIT_SEED, Fitted, Training, run
 
 #: Numbers the *game* has to know to build a feature row, and could otherwise
@@ -197,18 +199,21 @@ def _capture_caveat(training: Training) -> list[str]:
 
 
 def as_json(training: Training) -> dict:
-    """Both models in the shape `ai_learning` will read back in T6."""
-    return {
-        "generated_by": "gameaikit.tactical.report",
-        "games": training.games,
-        "data_seed": DATA_SEED,
-        "split_seed": SPLIT_SEED,
-        "feature_conventions": dict(FEATURE_CONVENTIONS),
-        "models": {
-            "combat": training.combat.model.to_dict(),
-            "capture": training.capture.model.to_dict(),
-        },
-    }
+    """Both models, as the generic model file `ai_learning` reads.
+
+    The format is `gameaikit.training.model_file`'s and belongs to no game.
+    What is this game's is the fields beside the models: the run that made
+    them, and the conventions `_check_conventions` holds -- which the game
+    checks again on its side, in `TacticalWeights`.
+    """
+    return model_file.as_json(
+        {"combat": training.combat.model, "capture": training.capture.model},
+        generated_by="gameaikit.tactical.report",
+        games=training.games,
+        data_seed=DATA_SEED,
+        split_seed=SPLIT_SEED,
+        feature_conventions=dict(FEATURE_CONVENTIONS),
+    )
 
 
 def write(directory: pathlib.Path, training: Training) -> list[pathlib.Path]:
@@ -247,6 +252,13 @@ def findings_for(first: dict, second: dict) -> list[str]:
     findings += _check_conventions(first.get("feature_conventions"))
     for name, model in sorted(first["models"].items()):
         findings += _check_model(name, model)
+    # Last, and in the loader's own words: the game refuses a file on these
+    # rules, so the writer does too. Most of them overlap the W rules above,
+    # which say more about a model this pipeline fitted; this one also holds
+    # what those never looked at, such as each model's `kind`.
+    unloadable = model_file.why_wrong(first)
+    if unloadable:
+        findings.append(unloadable)
     return findings
 
 
@@ -259,16 +271,41 @@ def _check_conventions(published: dict | None) -> list[str]:
     is the arrangement this block exists to end.
     """
     if not isinstance(published, dict):
-        return ["W6 the report publishes no feature_conventions block"]
+        return ["W6 the file publishes no feature_conventions block"]
     findings = []
-    for name in sorted(FEATURE_CONVENTIONS):
+    # In the order they are declared, which is the order the game walks them
+    # (`TacticalWeights.REQUIRED_CONVENTIONS`): its first finding is this
+    # list's first.
+    for name in FEATURE_CONVENTIONS:
         value = published.get(name)
-        if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+        if not _is_a_whole_number(value) or value <= 0:
             findings.append(
                 f"W6 feature_conventions.{name} is {value!r}, and the game needs "
                 "a positive whole number"
             )
+    if not findings and published["cheapest_ground"] > published["dearest_ground"]:
+        findings.append(
+            f"W7 feature_conventions says the cheapest ground "
+            f"({published['cheapest_ground']}) costs more than the dearest "
+            f"({published['dearest_ground']})"
+        )
     return findings
+
+
+def _is_a_whole_number(value: object) -> bool:
+    """A finite number with no fraction: 2 and 2.0, never 2.5, `True` or 1e400.
+
+    2.0 counts because the game's JSON reader hands every number over as a
+    float, so the game cannot tell 2.0 from 2 and accepts both; this side
+    accepting only `int` would refuse a file the game loads.
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    try:
+        as_float = float(value)
+    except OverflowError:
+        return False
+    return math.isfinite(as_float) and as_float == math.floor(as_float)
 
 
 def _check_model(name: str, model: dict) -> list[str]:

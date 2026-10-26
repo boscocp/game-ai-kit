@@ -7,7 +7,9 @@
     "godot/test/ai_learning/",
     "spec/vectors/cloning/",
     "python/gameaikit/training/",
-    "python/tests/test_descent.py"
+    "python/tests/test_descent.py",
+    "spec/vectors/model_file/",
+    "python/tests/test_model_file.py"
   ],
   "depends_on": [],
   "gates": [
