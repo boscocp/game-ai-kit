@@ -59,7 +59,21 @@ and written in `docs/godot/user-data.md`.
   they rebase or merge. The gate notes those checkouts by name. When none
   is left, the owner deletes `$toolchain/xdg` by hand.
 - `check_disk_layout.py` holds the decision: D6 (under home), D7 (two
-  checkouts sharing one), D8 (outside its checkout, or not ignored by git).
+  checkouts sharing one), D8 (outside its checkout, inside `godot/`, or not
+  ignored by git). They are findings for the checkout running the gate,
+  and D7 for a pair it belongs to. The same problem in another worktree
+  is a note, because that worktree is another branch's state, often
+  mid-wave (the review).
+- A folder inside the tree that tools write to is now inside the tree the
+  repo-wide gates walk. `check_readability.py` read a gdUnit4 mock under a
+  reviewer's `.user-data/`, and `make check` failed on main. It and
+  `check_no_training.py` now skip every folder below their root whose name
+  starts with a dot: `.user-data/`, `.claude/worktrees/` (other checkouts),
+  `.godot/` and `.git/`. That is a rule about names, not about git. It
+  needs no git, so it holds inside a self-test's temporary tree, and no
+  tracked `.gd` lives in a dot folder. It asks only the parts below the
+  root, so a checkout that itself sits under `.claude/worktrees/` is still
+  read.
 - A worktree also needs the ignored files the main checkout has --
   gdUnit4 and the term list -- and `make worktree-setup` copies them
   (T83).

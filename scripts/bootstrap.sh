@@ -45,7 +45,15 @@ else
 fi
 # Where user:// goes is scripts/godot's decision (this checkout's .user-data/,
 # docs/adr/0022); asked, not copied, so the two cannot drift apart.
-mapfile -t redirect < <(GAK_TOOLCHAIN="$toolchain" bash "$here/scripts/godot" --gak-print-redirect | tr -d '\r')
+# Captured first, then split: `set -e` does not see a failure inside a process
+# substitution, and an empty redirect would run Godot with none at all --
+# measured by the review, that writes ~/.local/share/godot/app_userdata/.
+printed=$(GAK_TOOLCHAIN="$toolchain" bash "$here/scripts/godot" --gak-print-redirect | tr -d '\r')
+mapfile -t redirect <<<"$printed"
+if [[ -z "$printed" ]]; then
+  echo "bootstrap: scripts/godot --gak-print-redirect gave no user:// redirect; refusing to run Godot" >&2
+  exit 2
+fi
 
 if [[ -x "$binary" ]] && "$binary" --headless --version 2>/dev/null | tr -d '\r' | grep -q "^${version%-stable}.stable"; then
   echo "bootstrap: Godot $version already installed at $binary"

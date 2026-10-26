@@ -105,12 +105,22 @@ PARAM_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)\s*(:\s*[^=]+)?(=.*)?$")
 
 def gdscript_files(root: pathlib.Path) -> list[pathlib.Path]:
     """Every .gd file this project authors, vendored code excluded."""
-    found = []
-    for path in sorted(root.rglob("*.gd")):
-        if any(part in VENDORED_DIRS for part in path.parts):
-            continue
-        found.append(path)
-    return found
+    return [path for path in sorted(root.rglob("*.gd")) if not is_skipped(path, root)]
+
+
+def is_skipped(path: pathlib.Path, root: pathlib.Path) -> bool:
+    """Vendored code, or anything under a folder below root whose name starts with a dot.
+
+    The dot folders are tool state, never this project's source: `.godot/`
+    (the import cache), `.user-data/` (a checkout's user://, where gdUnit4
+    leaves its mocks when a run is killed -- T83), `.claude/worktrees/` (other
+    checkouts, holding other branches' half-written code), `.git/`. A main
+    checkout's `make check` failed in wave 93 on a mock under a reviewer's
+    worktree. Only the parts *below* root are asked, so a checkout that itself
+    lives under `.claude/worktrees/` is still read.
+    """
+    folders = path.relative_to(root).parts[:-1]
+    return any(part in VENDORED_DIRS or part.startswith(".") for part in folders)
 
 
 def is_public(name: str) -> bool:
@@ -517,6 +527,20 @@ def self_test() -> int:
         vendor.mkdir(parents=True)
         (vendor / "messy.gd").write_text("func whatever(a, b):\n\tvar z = 1\n")
         expect("vendored code ignored", quiet(root / "vendor"), 0)
+
+        # Planted (T83): a gdUnit4 mock left in a checkout's user://, and
+        # another branch's half-written file in a worktree under the main
+        # checkout. Neither is this checkout's source, and the second is
+        # what failed `make check` on main in wave 93.
+        for dot_folder in (".user-data/xdg/godot/app_userdata/game-ai-kit/tmp/mock",
+                           ".claude/worktrees/someone-else/godot/addons/ai_search"):
+            stray = root / "dots" / dot_folder
+            stray.mkdir(parents=True)
+            (stray / "planted.gd").write_text("func whatever(a, b):\n\tvar z = 1\n")
+        expect("a .gd under .user-data or .claude/worktrees ignored", quiet(root / "dots"), 0)
+        # ... but a checkout that itself lives under .claude/worktrees is read.
+        inside_dot = project(root / ".claude" / "worktrees", "this-one", "func whatever(a, b):\n\tvar z = 1\n")
+        expect("a checkout under .claude/worktrees still read", quiet(inside_dot), 1)
 
         # Planted: the exact file a review used to show this gate going quiet.
         # Indented with spaces, it used to produce an empty function body, which

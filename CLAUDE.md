@@ -84,13 +84,13 @@ make wave-start BRANCH=wave/NN-slug   # cut a branch from a current main
 make check-affected BASE=origin/main  # what a wave runs: the lints, and its modules' gates
 make affected BASE=origin/main        # which modules a change selects, and why
 make wave-merge                       # squash-merge the PR, once reviewed and green
+make worktree-setup                   # in a new worktree: gdUnit4 and the term list, from the main checkout
 make bootstrap     # install the pinned Godot on the large disk, SHA-verified
 make check         # every gate; CI runs it on main, and `make release` needs it
 make test-python   # stdlib unittest, no install step
 make test-godot    # headless
 make godot-version # what is pinned vs what is installed
 make hooks         # opt in to .githooks
-make worktree-setup # in a new git worktree: copy gdUnit4 and the term list from the main checkout
 ./scripts/godot …  # the ONLY way to invoke Godot (see below)
 ```
 
@@ -189,7 +189,11 @@ Findings that survive both steps go in `docs/godot/`, with the source URL and a
   points it at the checkout's `.user-data/`, ignored by git. Two worktrees
   testing at once no longer delete each other's files (gdUnit4 clears
   `user://tmp` after every suite), and a language picked in one is not the
-  one another starts in. `git clean -fdx` deletes it with the rest.
+  one another starts in. `git clean -fdx` deletes it with the rest. Being
+  inside the tree, it is skipped by the gates that walk the tree
+  (`check_readability.py`, `check_no_training.py`). Those gates skip every
+  dot folder below their root, `.claude/worktrees/` included, because a
+  mock gdUnit4 left there failed `make check` on main in wave 93.
 
 - **A wave does not run `make check`, and a new file must have a module.**
   Since wave 63 a wave runs `make check-affected`: `scripts/affected.py`

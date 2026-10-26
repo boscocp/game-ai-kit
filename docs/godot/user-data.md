@@ -77,6 +77,12 @@ So the environment is the one per-process handle there is, and
   `check_disk_layout.py` ask it rather than repeat the rule.
 - `check_disk_layout.py` asks every checkout `git worktree list` names:
   D6 a `user://` under home, D7 two checkouts sharing one, D8 one outside
-  its own checkout or not ignored by git.
+  its own checkout, inside `godot/`, or not ignored by git. These are
+  findings for the checkout running the gate (D7 for a pair it is in). In
+  another worktree they are notes.
+- A `.user-data/` is inside the checkout, so the repo-wide scanners skip
+  dot folders below their root (`check_readability.py`,
+  `check_no_training.py`). gdUnit4 leaves `.gd` mocks in `user://tmp` when
+  a run is killed.
 - A test that writes `user://` still uses a file of its own and removes it:
   within one checkout, the suites of one run share it.

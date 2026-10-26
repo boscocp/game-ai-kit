@@ -143,13 +143,31 @@ def run_godot(*arguments: str) -> subprocess.CompletedProcess:
                           capture_output=True, text=True, timeout=600)
 
 
+def user_data_redirect() -> dict[str, str]:
+    """The NAME=PATH pairs scripts/godot gives user://, refused when it gives none.
+
+    Without them the exported game writes ~/.local/share/godot/app_userdata/
+    (measured by T83's review), so an empty or failed answer stops the export
+    rather than starting the game unredirected.
+    """
+    return redirect_from(run_godot("--gak-print-redirect"))
+
+
+def redirect_from(asked: subprocess.CompletedProcess) -> dict[str, str]:
+    """The wrapper's answer read as NAME=PATH pairs; Refused if it failed or gave none."""
+    pairs = [line.split("=", 1) for line in asked.stdout.splitlines() if "=" in line]
+    if asked.returncode != 0 or not pairs:
+        raise Refused(f"scripts/godot --gak-print-redirect gave no user:// redirect "
+                      f"(exit {asked.returncode}): {asked.stderr.strip()}")
+    return {name: value for name, value in pairs}
+
+
 def start_problem(binary: pathlib.Path) -> str:
     """Why the exported binary did not start and stop cleanly, or ""."""
     # The exported game writes user:// like any Godot program. The same
     # redirect scripts/godot sets -- this checkout's .user-data/ (T83) --
     # asked of it rather than copied, keeps it on the large disk.
-    redirect = run_godot("--gak-print-redirect").stdout.splitlines()
-    environment = {**os.environ, **dict(line.split("=", 1) for line in redirect)}
+    environment = {**os.environ, **user_data_redirect()}
     ran = subprocess.run([str(binary), "--headless", "--quit-after", str(FRAMES)], env=environment,
                          capture_output=True, text=True, timeout=120)
     printed = ran.stdout + ran.stderr
@@ -203,6 +221,25 @@ def planted_pack(names: list[str], magic: bytes = b"GDPC") -> bytes:
     return PACK_HEADER.pack(magic, 4, 4, 7, 2, 2, PACK_HEADER.size, PACK_HEADER.size) + directory
 
 
+def redirect_cases() -> list[str]:
+    """T83's review: an empty or failed redirect answer is refused, a sound one read."""
+    def answer(code: int, printed: str) -> subprocess.CompletedProcess:
+        return subprocess.CompletedProcess(["scripts/godot"], code, printed, "")
+
+    failures = []
+    if redirect_from(answer(0, "XDG_DATA_HOME=/big/repo/.user-data/xdg\n")) != {
+            "XDG_DATA_HOME": "/big/repo/.user-data/xdg"}:
+        failures.append("a sound redirect was not read back")
+    for label, planted in {"an empty answer": answer(0, ""),
+                           "a failed wrapper": answer(2, "XDG_DATA_HOME=/half/said\n")}.items():
+        try:
+            redirect_from(planted)
+            failures.append(f"{label} was not refused: Godot would have written under ~")
+        except Refused:
+            pass
+    return failures
+
+
 def self_test() -> int:
     """Each refusal rejects a planted case, and the sound ones pass."""
     sound = ["project.binary", "menu/catalogue.json", "game/legend.gdc"]
@@ -226,10 +263,10 @@ def self_test() -> int:
         failures.append("a file that is not a pack was read as one")
     except Refused:
         pass
-    failures += template_cases()
+    failures += template_cases() + redirect_cases()
     for failure in failures:
         print(f"FAIL {failure}")
-    print(f"export self-test: 11 cases, {len(failures)} failure(s)")
+    print(f"export self-test: 14 cases, {len(failures)} failure(s)")
     return 1 if failures else 0
 
 

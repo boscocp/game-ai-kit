@@ -279,10 +279,21 @@ def gdscript_files(root: pathlib.Path) -> list[pathlib.Path]:
     """Every .gd file this project authors, vendored code excluded."""
     if not root.is_dir():
         return []
-    return [
-        path for path in sorted(root.rglob("*.gd"))
-        if not any(part in VENDORED_DIRS for part in path.parts)
-    ]
+    return [path for path in sorted(root.rglob("*.gd")) if not is_skipped(path, root)]
+
+
+def is_skipped(path: pathlib.Path, root: pathlib.Path) -> bool:
+    """Vendored code, or anything under a folder below root whose name starts with a dot.
+
+    The dot folders are tool state, never this project's source. This gate
+    reads `godot/` only, so the one it meets is `godot/.godot/`, the import
+    cache; check_readability.py reads the whole checkout and skips the same
+    rule's `.user-data/` and `.claude/worktrees/` too (T83). Only the parts
+    *below* root are asked, so a checkout that itself lives under
+    `.claude/worktrees/` is still read.
+    """
+    folders = path.relative_to(root).parts[:-1]
+    return any(part in VENDORED_DIRS or part.startswith(".") for part in folders)
 
 
 def code_only(text: str) -> str:
@@ -939,6 +950,19 @@ def self_test() -> int:
         vendored = str(GODOT / "addons" / "gdUnit4" / "src" / "Fitter.gd")
         expect("a forbidden word in vendored code", quiet(build(root, "vendored2", dict(
             sound, **{vendored: "var learning_rate: float = 0.1\n"}))), 3)
+
+        # Planted (T83): the same word under godot/.godot/, the engine's
+        # import cache -- the one dot folder inside what this gate reads
+        # (godot/; a checkout's .user-data/ and .claude/worktrees/ lie
+        # outside it, so planting there would prove nothing).
+        stray = str(GODOT / ".godot" / "editor" / "Fitter.gd")
+        expect("a forbidden word under godot/.godot", quiet(build(root, "dot-cache", dict(
+            sound, **{stray: "var learning_rate: float = 0.1\n"}))), 3)
+        # ... but a checkout that itself lives under .claude/worktrees is read.
+        expect("a checkout under .claude/worktrees still read", quiet(build(
+            root / ".claude" / "worktrees", "this-one", dict(
+                sound, **{str(GODOT / "game" / "fit.gd"): "var value: float = learning_rate\n"}))),
+            1, "N1")
 
         # Planted: the update step with the numbers called something else,
         # inside the addon. Thirty-four lines of real gradient descent got

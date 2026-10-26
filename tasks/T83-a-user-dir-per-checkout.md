@@ -47,11 +47,19 @@ collided -- wave 78's `effect_shards_test.gd` failed during wave 80's check
    both.
 4. **The gate**: D6 (a redirect under `$HOME`; a note on a CI runner, as
    D5), D7 (two checkouts share a redirect, or one sits inside the other's),
-   D8 (a redirect outside its own checkout, or not ignored by git).
-   Checkouts come from `git worktree list --porcelain`; one whose wrapper
-   predates this task is a note, not a finding, since it is another
-   branch's state. Planted cases for each; then delete each comparison from
-   the gate in turn and watch the self-test fail.
+   D8 (a redirect outside its own checkout, inside `godot/`, or not ignored
+   by git). Checkouts come from `git worktree list --porcelain`. Findings
+   are for the checkout running the gate, and D7 for a pair it is in. The
+   same in another worktree, or a wrapper there that predates this task, is
+   a note: it is another branch's state. Planted cases for each, and for
+   the notes. Then delete each comparison from the gate in turn and watch
+   the self-test fail.
+
+   **After the review**: the repo-wide scanners (`check_readability.py`,
+   `check_no_training.py`) skip dot folders below their root, since
+   `.user-data/` is now inside the tree and `.claude/worktrees/` holds
+   other checkouts. Bootstrap and `export.py` refuse an empty or failed
+   redirect: without one, Godot writes under `~`.
 5. **`make worktree-setup`** (`scripts/worktree_setup.py`): finds the main
    checkout from `git worktree list --porcelain`, copies what is missing,
    leaves what is present, exits 2 naming the missing source. Copies, not
@@ -75,6 +83,9 @@ collided -- wave 78's `effect_shards_test.gd` failed during wave 80's check
 python3 scripts/check_disk_layout.py --self-test
 python3 scripts/check_disk_layout.py
 python3 scripts/worktree_setup.py --self-test
+python3 scripts/export.py --self-test
+python3 scripts/check_no_training.py --self-test
+python3 scripts/check_readability.py --self-test
 python3 scripts/check_readability.py
 python3 scripts/check_acceptance.py
 python3 scripts/check_status.py
