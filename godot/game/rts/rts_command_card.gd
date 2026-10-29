@@ -10,7 +10,9 @@
 ## greyed before it is made, and the reason is written under the buttons.
 ## The keys still work; each button shows its own.
 ##
-## With nothing selected it says how to play, in four steps.
+## With nothing selected it says how to play, in four steps, across the
+## whole card: there are no buttons then, and in the info's own column the
+## steps wrapped past the window's bottom (y=741 of 720 in pt-BR, T107).
 ##
 ## When not to use it: to decide anything. It only offers what a person
 ## could already order.
@@ -56,6 +58,13 @@ const BUTTON_SIZE := Vector2(74.0, 50.0)
 # What the buttons were last built for: rebuilt only when this changes, so
 # a button is never freed under the click that presses it.
 var _built_for: String = "-"
+# How wide the scene lays the info out, beside the buttons; with no buttons
+# it takes the whole card.
+var _info_width: float = 0.0
+
+
+func _ready() -> void:
+	_info_width = _info.size.x
 
 
 ## Build the buttons again at the next selection shown: their words were
@@ -75,6 +84,7 @@ func show_selection(view: RtsSnapshot, selected: Dictionary) -> void:
 	var offers: Array[Array] = []
 	if yours:
 		offers = _offers(units)
+	_info.size = Vector2(size.x if offers.is_empty() else _info_width, size.y)
 	var reasons: Array[String] = []
 	for offer: Array in offers:
 		reasons.append(_why_not(view, offer[0], offer[1], units))

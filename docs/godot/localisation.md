@@ -2,9 +2,9 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-26
+verified_on: 2026-10-29
 tier: 2
-source: https://docs.godotengine.org/en/stable/tutorials/i18n/internationalizing_games.html ; https://docs.godotengine.org/en/stable/tutorials/i18n/localization_using_spreadsheets.html ; https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-property-auto-translate-mode
+source: https://docs.godotengine.org/en/stable/tutorials/i18n/internationalizing_games.html ; https://docs.godotengine.org/en/stable/tutorials/i18n/localization_using_spreadsheets.html ; https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-property-auto-translate-mode ; https://docs.godotengine.org/en/stable/classes/class_label.html ; https://docs.godotengine.org/en/stable/classes/class_control.html
 invalidated_if: Godot changes when a Control translates its text, what atr() returns with auto-translation off, the CSV importer's columns or compression, or the startup locale
 teaches: none
 -->
@@ -223,6 +223,53 @@ RTS and the fighting game, by the same rules, with what they added:
   to the addon: equal in English, no English word left in pt-BR, and every
   field of `Difficulty` named in `DifficultyWords.FIELDS` (a planted
   field, and a reworded `describe()`, each fail it).
+
+## Three panels fitted, each over a played game (T107, wave 105)
+
+- **The behaviour demo's status** is 13 px (16 before): its three lines,
+  under the board, end at y=696 -- the gutter, with no pixel to spare --
+  under each of the four brains over 300 turns, in both languages. They
+  ended at 711 at 16 px. `behaviour_layout_test.gd` holds it.
+- **The skirmish's status** runs the whole left column from the gutter at
+  the window's top, at 16 px (18 before); the legend stays level with the
+  board. The opening screen was not its longest: blue's reasons stay on it
+  into red's turn, a refused click and a held node each add a line, and at
+  18 px red's round-2 turn with a refusal ended at y=861 in pt-BR.
+  `skirmish_layout_test.gd` plays twelve rounds with red waiting, refused,
+  and walking onto the nodes. The column is what makes the room: kept level
+  with the board, even 14 px ended at 717. With the column, 18 px still
+  fails (833 in pt-BR) and 16 px, the largest that fits, ends at 671 in
+  pt-BR (red walking, a refusal) and 593 in English. `BoardLayout.lay_out`
+  now takes the status column's top, so the tactical match (the header's
+  top) and the skirmish (the gutter) share one layout instead of each
+  moving the status after it.
+- **The RTS card's info** takes the whole card when it has no buttons --
+  with nothing selected, how to play -- and its own 330 px beside them
+  otherwise (the width the scene gives it, read in `_ready`): y=661 in both languages, where it was 741 in pt-BR, a line cut
+  off. `rts_layout_test.gd` selects nothing, each unit alone (yours and the
+  computer's, revealed) and a box over yours, over six minutes the queues
+  play; it measures `Why`, the reasons under the buttons, too: 695 at worst.
+- **`NOT_YET_FITTED` is empty**, and kept with its planted cases.
+- **Measured: Control's combined minimum size lags a resize by a frame.**
+  The 4.7 Control page: `get_combined_minimum_size()` "returns the combined
+  minimum size from custom_minimum_size and get_minimum_size()", and
+  `update_minimum_size()` "invalidates the minimum size cache". Measured on
+  4.7.2, a wrapped 12 px Label, after a frame in the tree:
+  - its width 330 -> 748 px: `get_minimum_size().y` is right at once (137),
+    `get_combined_minimum_size().y` still says 317, the old width's height,
+    until the next frame;
+  - its font 12 -> 16 px: the same, 257 at once, 137 cached for a frame;
+  - its text changed: both right in the same frame.
+
+  So the Label is reshaped at once; what lags is Control's cached combined
+  size, after a resize or a font change and not after a text change. The
+  screen is drawn after the layout, so it is right; `rts_layout_test.gd`,
+  which widens the info, waits a frame before reading it. The behaviour and
+  skirmish tests change only the text, and need no wait.
+- **The planted cases are sharper.** The wrapped Label planted too tall
+  now ends 4 px past the gutter, not 200 lines past it, and one more ends
+  2 px under a ceiling it is given as if `NOT_YET_FITTED` named it: with
+  the ceiling read as an exemption, that one passes and the check fails.
 
 ## Measured on 4.7.2
 

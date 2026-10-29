@@ -1,6 +1,9 @@
 ## Where a board scene puts its three parts: the board in the middle of the
-## window, the status to its left and the legend to its right, all level with
-## the board's top edge.
+## window, the legend to its right level with the board's top edge, and the
+## status running the whole column to its left, from a top the scene gives
+## down to the gutter above the window's bottom. Begun level with the board,
+## the status ran off the window in both scenes that use this, once a played
+## game filled it: the tactical match's (T102) and the skirmish's (T107).
 ##
 ## Shared because two scenes need it and a copy is two layouts that drift. T8
 ## measured why it exists: a board pinned to a corner of the window, and the
@@ -28,11 +31,11 @@ static func window_size() -> Vector2:
 
 
 ## Centre `root` (the node the board, units and overlays hang from) and place
-## the two panels beside it.
-static func lay_out(root: Node2D, graph: GridGraph, status: Control, legend: Control) -> void:
+## the two panels beside it, the status's column starting at `status_top`.
+static func lay_out(root: Node2D, graph: GridGraph, status: Control, legend: Control, status_top: float) -> void:
 	var window: Vector2 = window_size()
 	root.position = BoardView.offset_to_centre(graph, window)
 	var board := Rect2(root.position, BoardView.pixel_size(graph))
-	status.position = Vector2(GUTTER, board.position.y)
-	status.size = Vector2(board.position.x - 2.0 * GUTTER, window.y - board.position.y - GUTTER)
+	status.position = Vector2(GUTTER, status_top)
+	status.size = Vector2(board.position.x - 2.0 * GUTTER, window.y - status_top - GUTTER)
 	legend.position = Vector2(board.end.x + GUTTER, board.position.y)

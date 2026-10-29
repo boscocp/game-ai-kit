@@ -23,7 +23,7 @@ script = ExtResource("4_plan")
 [node name="Status" type="Label" parent="Interface"]
 offset_right = 300.0
 offset_bottom = 500.0
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 text = "loading"
 autowrap_mode = 3
 

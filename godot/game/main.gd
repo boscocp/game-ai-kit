@@ -15,9 +15,10 @@
 ## the manual check in T6 is whether a person can read it.
 ##
 ## The layout is the board in the middle of the window, the status to its left
-## and the legend to its right, all three level with the board's top edge. T8
-## measured the old one: a 384 px board pinned to a corner of a 1280 px window,
-## and the status line it described 600 px away from it.
+## and the legend to its right, the legend level with the board's top edge
+## and the status running the whole left column (T107). T8 measured the old
+## one: a 384 px board pinned to a corner of a 1280 px window, and the status
+## line it described 600 px away from it.
 class_name BoardGame
 extends Node2D
 
@@ -66,7 +67,10 @@ var _blue_to_decide: Array[int] = []
 func _ready() -> void:
 	_legend.set_entries(_legend_entries())
 	_state = _build_scenario()
-	BoardLayout.lay_out(self, _state.graph, _status, _legend)
+	# The status runs the whole left column, from the top gutter: begun level
+	# with the board at 18 px, red's turn after blue's -- its reasons, a held
+	# node, a refused click -- ran to y=861 of 720 in pt-BR (T107).
+	BoardLayout.lay_out(self, _state.graph, _status, _legend, BoardLayout.GUTTER)
 	# The search goes in from here rather than from inside the policy: a route
 	# is a search, and no addon may depend on another. The game owns both and
 	# is the right place to introduce them.

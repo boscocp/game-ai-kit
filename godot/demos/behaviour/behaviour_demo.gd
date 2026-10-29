@@ -121,8 +121,9 @@ func decision_overlay() -> Dictionary:
 
 ## The status line's words. What the brain is thinking is the panel's. Three
 ## lines, each under the board's width (864 px): the window has room under
-## the board for three and no more, and a line that wrapped would push the
-## last one off the bottom.
+## the board for three at 13 px and no more, ending at the gutter above the
+## window's bottom (at 16 px they ended at y=711 of 720, T107), and a line
+## that wrapped would push the last one past it.
 func status_text() -> String:
 	var brain: GuardBrain = world.brain
 	var thinks: String = tr("turn {turn}  ·  the guard thinks with: {brain} -- right when: {when}").format({

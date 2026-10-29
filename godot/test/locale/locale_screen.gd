@@ -28,7 +28,8 @@
 # y=719 of 720). A Label3D's words are read as a Label's are (T80).
 #
 # Planted: a Label whose auto-translation is disabled, a formatted English
-# line, a line too wide, a wrapped Label too tall and one too wide, and an
+# line, a line too wide, a wrapped Label too tall (also under a ceiling)
+# and one too wide, and an
 # empty scene; each must be refused, or the check sees nothing
 # and says so. Any engine error while the demos run is a failure too: a
 # SCRIPT ERROR aborts only its function and the run would otherwise print a
@@ -72,14 +73,11 @@ const BOTTOM_MARGIN: float = BoardLayout.GUTTER
 ## their words were measured to end at in pt-BR. That y is a ceiling, not an
 ## exemption: a panel named here that gets any lower still fails, and its
 ## width is measured as any other's. T102 fitted the tactical header and took
-## it out; its measure of a wrapped Label found these three, left for T107
-## (in English they end at 711, 658 and 721). The planted cases below keep
-## the check honest meanwhile.
-const NOT_YET_FITTED: Dictionary[String, float] = {
-	"res://demos/behaviour/behaviour_demo.tscn:Interface/Status": 711.0,
-	"res://game/main.tscn:Interface/Status": 716.0,
-	"res://game/rts/rts.tscn:Interface/Card/Info": 741.0,  # past the window: a line is cut off
-}
+## it out; T107 fitted the three it then found (the behaviour demo's status,
+## the skirmish's and the RTS card's info) and took them out too. Empty, and
+## kept: a panel found too low and not fitted in the same wave goes here,
+## with its y. The planted cases below keep the check honest either way.
+const NOT_YET_FITTED: Dictionary[String, float] = {}
 
 
 class ErrorCounter extends Logger:
@@ -100,6 +98,8 @@ var _counter := ErrorCounter.new()
 var _english: Array[RegEx] = []
 # Lines read in the example being looked at.
 var _lines_read: int = 0
+# NOT_YET_FITTED, and a planted panel's ceiling while it is looked at.
+var _ceilings: Dictionary[String, float] = NOT_YET_FITTED.duplicate()
 
 
 func _initialize() -> void:
@@ -311,7 +311,7 @@ func _wrapped_past_the_edge(label: String, path: NodePath, shown: Label) -> Arra
 	if box.end.x > SCREEN_WIDTH:
 		failures.append("%s: %s runs off the window, to x=%.0f" % [label, path, box.end.x])
 	var bottom: float = box.position.y + shown.get_combined_minimum_size().y
-	var lowest: float = NOT_YET_FITTED.get("%s:%s" % [label, path], SCREEN_HEIGHT - BOTTOM_MARGIN)
+	var lowest: float = _ceilings.get("%s:%s" % [label, path], SCREEN_HEIGHT - BOTTOM_MARGIN)
 	if bottom > lowest:
 		failures.append("%s: %s runs off the window, its words ending at y=%.0f, below %.0f (the window is %.0f)" % [
 			label, path, bottom, lowest, SCREEN_HEIGHT])
@@ -320,7 +320,8 @@ func _wrapped_past_the_edge(label: String, path: NodePath, shown: Label) -> Arra
 
 # The planted cases: a key on a Label that may not translate itself, a line
 # formatted from a key, a line too long for the window, a wrapped Label too
-# tall for it and one too wide, and a scene with nothing in it.
+# tall for it -- 4 px past the gutter, and the same under a ceiling 2 px
+# above its words -- and one too wide, and a scene with nothing in it.
 func _planted() -> Array[String]:
 	var failures: Array[String] = []
 	for text: String in ["Play  (Enter)", "expandiu 3  ·  cost 7"]:
@@ -340,7 +341,9 @@ func _planted() -> Array[String]:
 	var found: Array[String] = await _look_at("planted", wide_holder, [])
 	if not found.any(func(failure: String) -> bool: return failure.contains("runs off the window")):
 		failures.append("the planted line of 400 x was not seen running off the window")
-	failures += await _planted_wrapped("too tall", Rect2(24, 8, 1232, 40), "a header that says too much ".repeat(200))
+	var too_low := Rect2(24, SCREEN_HEIGHT - BOTTOM_MARGIN - 40 + 4, 1232, 40)
+	failures += await _planted_wrapped("too tall", too_low, "a panel ending 4 px too low")
+	failures += await _planted_wrapped("below its ceiling", too_low, "a panel named in NOT_YET_FITTED", too_low.end.y - 2)
 	failures += await _planted_wrapped("too wide", Rect2(1000, 8, 600, 40), "a header laid past the edge")
 	_counter.errors = 0
 	if (await _look_at("planted", Node2D.new(), [])).is_empty():
@@ -348,18 +351,24 @@ func _planted() -> Array[String]:
 	return failures
 
 
-# A wrapped Label laid at `box`, as the tactical header is, saying `words`:
-# the check must find it running off the window.
-func _planted_wrapped(what: String, box: Rect2, words: String) -> Array[String]:
+# A wrapped Label laid at `box`, as the tactical header is, saying `words`,
+# under `ceiling` as if NOT_YET_FITTED named it (none when negative): the
+# check must find it running off the window. Its minimum height is the
+# box's, so it ends where the box does, a few words in it or not.
+func _planted_wrapped(what: String, box: Rect2, words: String, ceiling: float = -1.0) -> Array[String]:
 	_counter.errors = 0
 	var wrapped := Label.new()
+	wrapped.name = "Planted"
 	wrapped.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	wrapped.position = box.position
-	wrapped.size = box.size
+	wrapped.custom_minimum_size = box.size
 	wrapped.text = words
 	var holder := CanvasLayer.new()
 	holder.add_child(wrapped)
+	if ceiling >= 0.0:
+		_ceilings["planted:Planted"] = ceiling
 	var found: Array[String] = await _look_at("planted", holder, [])
+	_ceilings.erase("planted:Planted")
 	if not found.any(func(failure: String) -> bool: return failure.contains("runs off the window")):
 		return ["the planted wrapped Label %s was not seen running off the window" % what]
 	return []

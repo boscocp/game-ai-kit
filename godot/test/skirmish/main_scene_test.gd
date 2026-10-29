@@ -97,7 +97,12 @@ func test_the_status_and_legend_sit_beside_the_board_inside_the_window() -> void
 		var panel: Rect2 = (main.get_node(name) as Control).get_rect()
 		assert_bool(window.encloses(panel)).override_failure_message(name + " leaves the window").is_true()
 		assert_bool(panel.intersects(board)).override_failure_message(name + " covers the board").is_false()
-		assert_float(panel.position.y).is_equal(board.position.y)
+	# The legend level with the board's top; the status runs the whole left
+	# column beside it, from the top gutter (T107: its words need the room).
+	assert_float((main.get_node("Interface/Legend") as Control).position.y).is_equal(board.position.y)
+	var status: Rect2 = (main.get_node("Interface/Status") as Control).get_rect()
+	assert_float(status.position.y).is_equal(BoardLayout.GUTTER)
+	assert_float(status.end.x).is_less_equal(board.position.x - BoardLayout.GUTTER)
 
 
 func test_clicking_a_neighbouring_cell_moves_and_spends_a_point() -> void:
