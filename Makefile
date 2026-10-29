@@ -110,7 +110,7 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-search-properties test-planner-properties test-planner-benchmark test-perception-properties \
        test-decisions test-demo-overlays test-menu-walk test-replay test-opponent-levels test-opponent-properties \
        test-clone-rows test-inference-budget test-clone-report test-difficulty-knobs \
-       test-rts-budget test-rts-simulation test-rts-match test-steering-properties \
+       test-rts-budget test-mcts-budget test-rts-simulation test-rts-match test-steering-properties \
        test-racing-ladder test-racing-does-not-cheat test-game3d-floor test-botmatch-effects \
        test-racing3d-car test-racing3d-effects test-racing3d-ladder test-racing3d-does-not-cheat test-racing3d-you-drive \
        test-infiltration-properties test-infiltration test-pad \
@@ -288,7 +288,7 @@ train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-racing3d-vectors test-perception-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-racing3d-vectors test-perception-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -355,6 +355,13 @@ test-checkers-vectors: import ## The checkers rules and evaluation vectors, agai
 	@# gameaikit.checkers, the Python that self-plays and fits (T32).
 	@$(GODOT) --headless --path godot -s res://test/checkers/checkers_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/checkers
+
+.PHONY: test-adversarial-vectors
+test-adversarial-vectors: import ## The xorshift draws and MCTS's root visits on Nim and a dice race, against ai_adversarial (T86)
+	@# The other half is `make test-python`, through gameaikit.adversarial.
+	@# The numbers came from neither: spec/vectors/adversarial/derive.py.
+	@$(GODOT) --headless --path godot -s res://test/ai_adversarial/mcts_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/adversarial
 
 .PHONY: test-menace-vectors
 test-menace-vectors: import ## The MENACE vectors, against the game's bead player
@@ -443,6 +450,12 @@ test-rts-budget: import ## The real-time core holds its frame share at 200 units
 	@# A measurement with a pass mark, like test-inference-budget: the old
 	@# core's ~50 ms a step is printed beside the new core's layers.
 	@$(GODOT) --headless --path godot -s res://test/ai_rts_core/rts_core_budget.gd
+
+.PHONY: test-mcts-budget
+test-mcts-budget: import ## A frame's step of MCTS, 100 iterations of the dice race, fits in half a frame (T86)
+	@# A measurement with a pass mark, apart from the gdUnit suites because a
+	@# clock flakes under load: run it alone before believing a red.
+	@$(GODOT) --headless --path godot -s res://test/ai_adversarial/mcts_budget.gd
 
 .PHONY: test-rts-match
 test-rts-match: import ## A whole RTS match ends the same way twice, inside its frame budget, and the commander beats the queues alone (T20)
