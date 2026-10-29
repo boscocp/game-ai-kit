@@ -6,19 +6,8 @@ extends GdUnitTestSuite
 const SEEDS: int = 6
 
 
-# These tests read the English words. The engine starts in the system's
-# locale, so on a Portuguese system they would read the pt-BR ones (T79);
-# the Portuguese screen is test/locale's. The locale found is put back.
-var _locale_before: String
-
-
-func before() -> void:
-	_locale_before = TranslationServer.get_locale()
-	TranslationServer.set_locale("en")
-
-
-func after() -> void:
-	TranslationServer.set_locale(_locale_before)
+# The reasons they read are kept in English whatever the locale (T104), so
+# they run in any language and pin none.
 
 
 # --- the domain is data, and it is the spec's ---------------------------------

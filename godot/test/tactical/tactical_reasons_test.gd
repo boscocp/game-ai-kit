@@ -18,6 +18,20 @@ const ROUNDS: int = 6
 ## here rather than hanging the suite.
 const STEPS_A_TURN: int = 200
 
+## Seeded games each controller plays against the rules, one in each seat.
+const MATCH_SEEDS: Array[int] = [1, 2]
+## Branches a game against a person who waits never reaches: each entry is
+## the keys of one branch, one of which some match must have given (T104's
+## review). Fall-back, defend, retreat, and an HTN plan broken.
+const REACHED: Array[Array] = [
+	["walks back to {walk}, where {count} of what beats it could strike",  # not shown
+		"stays: no walk this turn leaves fewer of what beats it in reach ({count})"],  # not shown
+	["the enemy walker nearest its workshop"],  # not shown
+	["retreats to {walk}, out of the reach of {piece} at {cell} or as far as it can: {why}",  # not shown
+		"stays, out of the reach of {piece} at {cell} or as far from it as it can be: {why}"],  # not shown
+	["because {deed} could no longer run"],  # not shown
+]
+
 var _locale_before: String
 
 
@@ -37,6 +51,25 @@ func test_every_controller_decides_the_same_in_english_and_in_portuguese() -> vo
 			"%s: the computer decided nothing in %d rounds" % [row_name, ROUNDS]).is_greater(ROUNDS)
 		assert_array(in_portuguese).override_failure_message(
 			"%s: the overlays differ with the language\n%s" % [row_name, _first_difference(in_english, in_portuguese)]).is_equal(in_english)
+
+
+# The scene's game above has a person who never moves, so no walker of the
+# computer's is ever threatened, retreats or falls back: the review planted a
+# tr() in the fall-back's reason and every suite stayed green. Here each
+# controller plays whole seeded games against the rules, in either seat, and
+# every reason it gives -- each decision, and the plan's lines -- must be
+# the same in both languages; and the reasons of the branches a quiet game
+# never reaches must have been given somewhere.
+func test_every_controller_against_the_rules_reasons_the_same_in_either_language() -> void:
+	var keys: Dictionary = {}
+	for row_name: String in TacticalRoster.names():
+		var in_english: Array[String] = _reasons_over_matches("en", row_name, keys)
+		var in_portuguese: Array[String] = _reasons_over_matches("pt_BR", row_name, {})
+		assert_array(in_portuguese).override_failure_message(
+			"%s: the reasons differ with the language\n%s" % [row_name, _first_difference(in_english, in_portuguese)]).is_equal(in_english)
+	for wanted: Array in REACHED:
+		assert_bool(wanted.any(func(key: String) -> bool: return keys.has(key))).override_failure_message(
+			"no game gave any of %s" % [wanted]).is_true()
 
 
 func test_the_status_words_the_reason_in_the_language_on_screen() -> void:
@@ -121,3 +154,72 @@ func _mounted_scene(locale: String, row_name: String) -> TacticalGame:
 	scene.computer = TacticalRoster.build(row_name, 0)
 	scene.new_game()
 	return scene
+
+
+# Every reason `row_name` gave over MATCH_SEEDS' games against the rules, in
+# `locale`, each seat in turn; every key it used is added to `keys`.
+func _reasons_over_matches(locale: String, row_name: String, keys: Dictionary) -> Array[String]:
+	TranslationServer.set_locale(locale)
+	var said: Array[String] = []
+	for index: int in range(MATCH_SEEDS.size()):
+		var saying := _Saying.new(TacticalRoster.build(row_name, MATCH_SEEDS[index]), said, keys)
+		if index % TacticalScenario.FACTIONS == TacticalScenario.RED:
+			TacticalMatch.play(saying, RuleBasedBlue.new(), MATCH_SEEDS[index])
+		else:
+			TacticalMatch.play(RuleBasedBlue.new(), saying, MATCH_SEEDS[index])
+	return said
+
+
+# A controller that writes down, in English, every decision the one inside
+# it makes and the plan it shows, and every key its reasons are made of.
+class _Saying:
+	extends BlueController
+
+	var _inner: BlueController
+	var _said: Array[String]
+	var _keys: Dictionary
+
+	func _init(inner: BlueController, said: Array[String], keys: Dictionary) -> void:
+		_inner = inner
+		_said = said
+		_keys = keys
+
+	## The inner start of turn, and the plan it shows then.
+	func begin_turn(state: BoardState) -> void:
+		_inner.begin_turn(state)
+		_said.append_array(_inner.plan_lines(Sentence.english))
+
+	## The inner controller's name.
+	func controller_name() -> String:
+		return _inner.controller_name()
+
+	## The inner controller's line.
+	func describe() -> String:
+		return _inner.describe()
+
+	## The inner build, written down.
+	func decide_build(state: BoardState, workshop_id: int) -> TacticalDecision:
+		return _written(_inner.decide_build(state, workshop_id))
+
+	## The inner walk, written down.
+	func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
+		return _written(_inner.decide_move(state, unit_id))
+
+	## The inner attack, written down when there is one.
+	func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
+		return _written(_inner.decide_attack(state, unit_id))
+
+	func _written(decision: TacticalDecision) -> TacticalDecision:
+		if decision != null:
+			_said.append("%d %s %s: %s" % [decision.unit_id, decision.kind(), decision.target, decision.english()])
+			_collect(decision.reason)
+		return decision
+
+	# Every key of `sentence` and of the sentences inside it.
+	func _collect(sentence: Array) -> void:
+		if sentence.is_empty():
+			return
+		_keys[sentence[0]] = true
+		for value: Variant in sentence[1].values():
+			if value is Array:
+				_collect(value)

@@ -248,7 +248,6 @@ a workshop,uma oficina
 "red {red}, blue {blue} (workshop health, point-turns held, left standing)","vermelhas {red}, azuis {blue} (vida da oficina, turnos-ponto, o que restou de pé)"
 "a draw: {rounds} rounds, and the scores are equal -- {scores}.  R starts again.","empate: {rounds} rodadas, e as pontuações são iguais -- {scores}.  R recomeça."
 {winner} wins on score after {rounds} rounds: {scores}.  R starts again.,as {winner} vencem por pontos depois de {rounds} rodadas: {scores}.  R recomeça.
-nothing pressing,nada urgente
 the enemy walker nearest its workshop,a unidade inimiga mais perto da sua oficina
 "{prey} at {cell}, which {piece} beats","{prey} em {cell}, que {piece} bate"
 "stays in reach of {aim}, to strike it","fica onde alcança {aim}, para golpear"

@@ -79,15 +79,6 @@ static func of(state: BoardState, unit: Unit, strikes: Dictionary, claimed: Dict
 	return known
 
 
-## The facts as one line for a reason: the true ones, by name.
-func said() -> String:
-	var true_ones: Array[String] = []
-	for name: String in facts:
-		if facts[name]:
-			true_ones.append(name)
-	return ", ".join(true_ones) if not true_ones.is_empty() else tr("nothing pressing")
-
-
 # Home: the enemy walker nearest its workshop, and whether it is near enough
 # to be a threat -- and this walker near enough to answer.
 func _read_home(state: BoardState, unit: Unit) -> void:

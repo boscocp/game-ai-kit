@@ -335,9 +335,18 @@ RTS and the fighting game, by the same rules, with what they added:
   of nested sentences (`listed`, "mortar, ram"; `in_order`, "hunt then
   siege"), each worded on its own. A string value is worded by
   `TacticalStatus.word`: a board's refusal by its shape
-  (`TacticalRefusal`), a piece's name or a deed through the tables, and
-  anything else -- a plan step, a fact, a number, a W or M code -- as it
-  is.
+  (`TacticalRefusal`), and every other string through the tables. A
+  piece's name or a deed is a key there and is translated; a plan step, a
+  fact, a GOAP goal's name, a number, a W or M code is not, and comes back
+  as it is -- for now. A step or fact that one day became a key of any
+  table would be translated in every reason that holds it.
+- **Keys that are only shape.** `"{first}, {rest}"`, `"{only}"`,
+  `"{step}: {reason}"`, `"{reason} -- {more}"`,
+  `"{deed} -- {thinking}: {reason}"`, `"{code} {said}"`,
+  `"{said} ({source})"`, `"{refusal}"` and `"{error}"` join sentences and
+  say nothing of their own, so they are deliberately not in the table: the
+  engine returns a key it has no row for as it is, and the gate counts only
+  literals with a word in them.
 - **Where it is worded.** `TacticalStatus.said` on the screen: the
   status's "next" line, the plan's lines (`plan_lines(say)` takes the
   wording, `said` for the status and `Sentence.english` for the
@@ -355,16 +364,28 @@ RTS and the fighting game, by the same rules, with what they added:
   the overlay's `why` worded for the screen instead, the first fails; with
   `LearnedDecision.english()` worded, `test-decisions` fails in pt-BR
   ("contra", not "against").
-- **Pins dropped.** Four suites that pinned English only to read reasons
+- **Games where something happens.** That scene's person never moves, so
+  no walker of the computer's ever retreats, falls back or defends, and
+  the review planted a `tr()` in the fall-back's reason that every suite
+  passed. So `tactical_reasons_test.gd` also has every controller play two
+  whole seeded games against the rules, one in each seat, and holds every
+  decision's English and the plan's lines equal in both languages; and it
+  fails unless some game gave a fall-back, a defence, a retreat and a
+  broken HTN plan. The planted `tr()` fails it now, and lint rule L9
+  refuses a translation call inside `Sentence.of(...)`.
+- **Pins dropped.** Five suites that pinned English only to read reasons
   (`technique_teams_test`, `tactical_bridge_test`, `learned_policy_test`,
-  `tactical_spending_test`) pin nothing now, and pass with the engine
+  `tactical_spending_test`, `tactical_planner_test`) pin nothing now, and pass with the engine
   started in pt-BR (`LANG=pt_BR.UTF-8`). The suites that read the screen
   -- a header, a side's name, a refusal -- keep theirs.
 - **Not in it.** The news of what was played (`TacticalCombat.told`,
   "built a runner at ...", the points paid) is still worded when it
   happens, and keeps the language it happened in until the next event:
   it is the game's report, not a team's reason, and the task's scope was
-  the reasons.
+  the reasons. A state machine's arrow is the addon's own English string
+  (`"advance -> take point: a control point is free"`) and a GOAP goal is
+  named by its fact (`pressure`): both stay English inside a pt-BR
+  reason, as they did before T104.
 
 ## Measured on 4.7.2
 
@@ -409,7 +430,9 @@ same.
   no orphan row (L3); the table well formed and without a BOM (L4); the
   same `{placeholders}` on both sides (L5); no context shadowed (L6); no key
   built inside the call, `tr("wins %s" % name)` (L7); no key translated
-  two ways by two tables (L8, T79).
+  two ways by two tables (L8, T79); no translation call inside
+  `Sentence.of(...)`, a sentence an AI keeps (L9, T104's review; a value
+  translated through a variable or a helper is not seen).
 - What it still cannot see, said plainly: a one-word literal that is not a
   key of the table and does not go straight to a drawing call is taken for
   data; text written in a `.tscn` is not read (the scenes say "loading" and
