@@ -1,6 +1,6 @@
 # T108 — The pad's legend keeps its height
 
-Size: S · Prereqs: T103 · Files: `godot/game/legend.gd`, `godot/game/pad_as_keys.gd`, `godot/game3d/botmatch/`, `godot/demos/racing/`, `godot/game3d/racing/`, `godot/game/maze/`, `godot/test/menu/demo_overlays.gd`, `godot/test/game_shared/`, `docs/godot/localisation.md`
+Size: M · Prereqs: T103 · Files: `godot/game/legend.gd`, `godot/game/pad_as_keys.gd`, `godot/game3d/botmatch/`, `godot/demos/racing/`, `godot/game3d/racing/`, `godot/game/maze/`, `godot/test/menu/demo_overlays.gd`, `godot/test/game_shared/`, `docs/godot/localisation.md`
 
 ## Goal
 
@@ -24,8 +24,13 @@ that it is a task of its own, with a gate (the review's recommendation).
 
 - **The gate measures, the eye does not.** For every example with a pad,
   in English and in pt-BR, with the pad planted: the legend's last line
-  ends the gutter (24 px) above the window's bottom, and does not cross
-  the rectangle of any visible Label or panel beside it. It lives where
+  ends the gutter (24 px, `BoardLayout.GUTTER`, as `locale_screen.gd`'s
+  `BOTTOM_MARGIN`) above the window's bottom, and at least 8 px above the
+  top of any visible Label or panel below it in the same column -- a
+  margin, not mere non-overlap, so a legend ending exactly where its
+  neighbour starts (the maze's, 220 against 220) fails. 8 px is chosen,
+  not measured: about half a 13-16 px line, enough to read two blocks
+  as two; the task may change it with a reason written down. It lives where
   the pad is already planted in both languages, `demo_overlays.gd`
   (`make test-demo-overlays`), or in a target of its own if the reading
   finds that clearer -- either way a command with an exit code.
@@ -43,7 +48,7 @@ that it is a task of its own, with a gate (the review's recommendation).
 1. Read `legend.gd`, `pad_as_keys.gd` (`add_to`, `legend_lines`,
    `planted`), `demo_overlays.gd` and the four scenes' layouts.
 2. Write the gate and its two planted cases; see it fail on today's four
-   examples with the numbers above.
+   examples with the numbers above (the maze's by the 8 px margin).
 3. Lay out each of the four so the gate passes in both languages.
 4. `docs/godot/localisation.md`: the T103 section's "Not fitted" becomes
    what was done, with the measured ends.

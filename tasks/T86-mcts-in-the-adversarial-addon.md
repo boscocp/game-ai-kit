@@ -19,7 +19,7 @@ This task is the technique, in the addon, on a small game the addon's own
 tests own (Nim, and a toy game with dice); T87 puts it in the squad mode.
 Split so that the addon's vectors never depend on an example's rules.
 
-## Decisions written down first (confirmed by the owner, 2026-10-29)
+## Decisions written down first (the owner confirms in review)
 
 - **MCTS lives in `ai_adversarial`, beside alpha-beta**, over the same
   `AdversarialGame` interface. T73's page said "a new module beside

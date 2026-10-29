@@ -122,9 +122,9 @@ snapshots; `test/maze` 15 of 15; the lints and the screen checks, all 0.
 
 ## Decisions for the owner, with the reviewer's opinion
 
-Decided by the owner, 2026-10-29: as recommended. The dice
-stay copied until T109 moves one generator into `ai_core`; the
-generator is not warmed up.
+Decided by the owner, 2026-10-29, as recommended: no frightened mode, two
+steps a second, the precision 0.8, and no warm-up of the generator. The
+copied dice are to become one generator in `ai_core` (T109).
 
 - **No frightened mode** (no energizer): agree.
 - **The dice copied** as `MazeDice` rather than used from `ai_adversarial`:

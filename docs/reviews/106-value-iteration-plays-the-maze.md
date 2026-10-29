@@ -143,8 +143,9 @@ killed; the three game-time update plants survived -- S2.
 
 ## Decisions for the owner, with the reviewer's opinion
 
-Decided by the owner, 2026-10-29: as recommended. N15 is
-in `CLAUDE.md`'s invariant-6 row since wave 110.
+Decided by the owner, 2026-10-29, as recommended: the policy lives in
+`godot/game/maze/` (below), and N15 enters `CLAUDE.md`'s invariant-6 row
+(wave 110).
 
 - **Where the policy lives**: `data/maze/` was outside the Godot project,
   so an export did not carry it. The reviewer's opinion: move the two

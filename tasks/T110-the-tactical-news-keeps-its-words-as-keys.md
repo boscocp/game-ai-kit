@@ -1,6 +1,6 @@
 # T110 — The tactical game's news keeps its words as keys
 
-Size: S · Prereqs: T104 · Files: `godot/game/tactical/`, `godot/test/tactical/`, `docs/godot/localisation.md`
+Size: S · Prereqs: T104 · Files: `godot/game/tactical/`, `godot/test/tactical/`, `godot/locale/`, `docs/godot/localisation.md`
 
 ## Goal
 
@@ -22,8 +22,8 @@ decided on 2026-10-29 that the news follows the reasons.
   returns one; `_last_event` and the computer's news list keep sentences;
   a piece with its article and a side's name are nested sentences, as T104
   made them (`TacticalStatus.the_piece_sentence`, `a_piece_sentence`).
-- **Worded where shown**, by the tactical status, which already rebuilds
-  on `NOTIFICATION_TRANSLATION_CHANGED`. The skirmish keeps no news of its
+- **Worded where shown**, by `tactical.gd`, which already rebuilds the
+  status on `NOTIFICATION_TRANSLATION_CHANGED`. The skirmish keeps no news of its
   own (`main.gd` names neither `told` nor `_last_event`); its towers fire
   through `turn_start.gd`, which this task reads too.
 - **No table loses or gains a key's meaning**: the English keys stay the

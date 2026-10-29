@@ -19,7 +19,7 @@ frightened ghosts "use a pseudo-random number generator (PRNG) to pick a
 way to turn at each intersection". Each ghost's personality is only its
 target tile.
 
-## Decisions written down first (confirmed by the owner, 2026-10-29)
+## Decisions written down first (the owner confirms in review)
 
 - **Small on purpose**: a maze of about 50 walkable cells, a handful of
   pellets (four, so T98's state space stays small -- see there), one
