@@ -1,10 +1,10 @@
-# The ai_teamwork page's minimal example, loaded into an empty scene and
+# The ai_utility page's minimal example, loaded into an empty scene and
 # asked in four situations: it must shoot, reload, take cover and patrol
 # each when its percepts favour that most. The page shows the file's text,
 # held equal by check_translations_docs.py.
 extends GdUnitTestSuite
 
-const EXAMPLE: Script = preload("res://test/ai_teamwork/fighter_example.gd")
+const EXAMPLE: Script = preload("res://test/ai_utility/fighter_example.gd")
 
 
 func _fighter() -> Node:

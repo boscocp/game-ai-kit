@@ -288,7 +288,7 @@ train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-racing3d-vectors test-perception-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -393,6 +393,12 @@ test-teamwork-vectors: import ## Positions, influence, commander and confidence,
 	@# The other half is `make test-python`.
 	@$(GODOT) --headless --path godot -s res://test/ai_teamwork/teamwork_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/teamwork
+
+.PHONY: test-utility-vectors
+test-utility-vectors: import ## Actions scored by their considerations, and errands weighed, against ai_utility (T67, T101)
+	@# The other half is `make test-python`.
+	@$(GODOT) --headless --path godot -s res://test/ai_utility/utility_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/utility
 
 .PHONY: test-racing3d-vectors
 test-racing3d-vectors: import ## The 3D driver's decisions from stated snapshots, against RaceDriver3D (T54)

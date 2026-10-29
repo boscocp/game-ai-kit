@@ -1,6 +1,6 @@
 """What to do now: every action scored by its considerations, the highest taken.
 
-The tier-1 half of `godot/addons/ai_teamwork/action_choice.gd`: a
+The tier-1 half of `godot/addons/ai_utility/action_choice.gd`: a
 consideration reads one percept through a curve -- a line clamped to [0, 1],
 or a step at a threshold -- and an action's score is its weight times every
 answer, so one answer of 0 vetoes it. The highest score wins, the first of

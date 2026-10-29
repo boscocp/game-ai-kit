@@ -1392,7 +1392,7 @@ static func _plain(actions: Array[ActionChoice.Action]) -> Array:
 func test_the_vectors_copy_the_bots_own_actions_postures_and_paces() -> void:
 	# derive.py imports nothing from the repository, so it copies the
 	# match's lists by hand; this ties each copy to `actions.json`.
-	var folder: String = ProjectSettings.globalize_path("res://").path_join("../spec/vectors/teamwork")
+	var folder: String = ProjectSettings.globalize_path("res://").path_join("../spec/vectors/utility")
 	for file: String in COPIED_LISTS:
 		var vector: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(folder.path_join(file)))
 		var copied: Array = _plain(ActionChoice.actions_from(vector["query"]["actions"]))

@@ -10,7 +10,7 @@
 ## is empty, and a bot that dies comes back with a full rifle. Five kills
 ## since its last death earn a bot the power weapon at its own base.
 ##
-## Three errands, each weighed by `ErrandChoice` in `ai_teamwork` -- a gain
+## Three errands, each weighed by `ErrandChoice` in `ai_utility` -- a gain
 ## less its costs -- and each bot takes the largest if it is above zero:
 ## back to its base for rounds and health, out for the power weapon, one
 ## bot a team, or into cover to heal.

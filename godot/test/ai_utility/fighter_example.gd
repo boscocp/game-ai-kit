@@ -1,4 +1,4 @@
-# The minimal example on docs/techniques/ai_teamwork.md, run by
+# The minimal example on docs/techniques/ai_utility.md, run by
 # fighter_example_test.gd. A fighter of your own that weighs every action
 # at once against what it perceives, and takes the highest -- utility.
 extends Node

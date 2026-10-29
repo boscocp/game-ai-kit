@@ -17,22 +17,22 @@ Gerado por `scripts/catalogue.py` a partir de `modules/*.json`, dos alvos `run` 
 
 Uma linha por demo, uma coluna por técnica; cada marca leva à página da técnica, e as linhas abaixo dão os nomes dos algoritmos.
 
-| demo | `ai_adversarial` | `ai_behaviour` | `ai_fuzzy` | `ai_learning` | `ai_opponent` | `ai_perception` | `ai_planning` | `ai_rts_core` | `ai_search` | `ai_steering` | `ai_teamwork` | `menace` | `learned_evaluation` | `behaviour_cloning` | `racing_driver` |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [Damas](#run) | [●](ai_adversarial.pt-BR.md) |  |  | [○](ai_learning.pt-BR.md) |  |  |  |  |  |  |  |  | [●](learned_evaluation.pt-BR.md) |  |  |
-| [A escaramuça (*skirmish*)](#demo-skirmish) |  |  |  | [◐](ai_learning.pt-BR.md) |  |  |  |  | [●](ai_search.pt-BR.md) |  |  |  |  |  |  |
-| [Jogo da velha](#demo-tictactoe) |  |  |  |  |  |  |  |  |  |  |  | [●](menace.pt-BR.md) |  |  |  |
-| [Quatro buscas](#demo-search) |  |  |  |  |  |  |  |  | [●](ai_search.pt-BR.md) |  |  |  |  |  |  |
-| [*Stealth*](#demo-stealth) |  |  | [●](ai_fuzzy.pt-BR.md) |  |  | [●](ai_perception.pt-BR.md) |  |  | [●](ai_search.pt-BR.md) |  |  |  |  |  |  |
-| [*Steering*](#demo-steering) |  |  |  |  |  |  |  |  |  | [●](ai_steering.pt-BR.md) |  |  |  |  |  |
-| [Corrida](#demo-racing) |  |  |  |  |  |  |  |  |  | [●](ai_steering.pt-BR.md) |  |  |  |  | [●](racing_driver.pt-BR.md) |
-| [Corrida em 3D](#demo-racing3d) |  |  |  |  |  |  |  |  |  | [●](ai_steering.pt-BR.md) |  |  |  |  | [●](racing_driver.pt-BR.md) |
-| [Infiltração](#demo-infiltration) |  |  | [●](ai_fuzzy.pt-BR.md) |  |  | [●](ai_perception.pt-BR.md) |  |  | [●](ai_search.pt-BR.md) |  | [●](ai_teamwork.pt-BR.md) |  |  |  |  |
-| [Partida de *bots*](#demo-botmatch) |  |  |  |  |  | [●](ai_perception.pt-BR.md) |  |  | [●](ai_search.pt-BR.md) |  | [●](ai_teamwork.pt-BR.md) |  |  |  |  |
-| [Um guarda, quatro jeitos de decidir](#demo-behaviour) |  | [●](ai_behaviour.pt-BR.md) | [◐](ai_fuzzy.pt-BR.md) |  |  | [●](ai_perception.pt-BR.md) |  |  | [●](ai_search.pt-BR.md) |  |  |  |  |  |  |
-| [Estratégia em tempo real](#demo-rts) |  | [●](ai_behaviour.pt-BR.md) |  |  |  |  | [●](ai_planning.pt-BR.md) | [●](ai_rts_core.pt-BR.md) |  |  |  |  |  |  |  |
-| [Tática](#demo-tactical) |  | [●](ai_behaviour.pt-BR.md) |  | [●](ai_learning.pt-BR.md) |  |  | [●](ai_planning.pt-BR.md) |  |  |  |  |  |  |  |  |
-| [Luta, modo treino](#demo-fighting) |  |  |  | [●](ai_learning.pt-BR.md) | [●](ai_opponent.pt-BR.md) |  |  |  |  |  |  |  |  | [●](behaviour_cloning.pt-BR.md) |  |
+| demo | `ai_adversarial` | `ai_behaviour` | `ai_fuzzy` | `ai_learning` | `ai_opponent` | `ai_perception` | `ai_planning` | `ai_rts_core` | `ai_search` | `ai_steering` | `ai_teamwork` | `ai_utility` | `menace` | `learned_evaluation` | `behaviour_cloning` | `racing_driver` |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| [Damas](#run) | [●](ai_adversarial.pt-BR.md) |  |  | [○](ai_learning.pt-BR.md) |  |  |  |  |  |  |  |  |  | [●](learned_evaluation.pt-BR.md) |  |  |
+| [A escaramuça (*skirmish*)](#demo-skirmish) |  |  |  | [◐](ai_learning.pt-BR.md) |  |  |  |  | [●](ai_search.pt-BR.md) |  |  |  |  |  |  |  |
+| [Jogo da velha](#demo-tictactoe) |  |  |  |  |  |  |  |  |  |  |  |  | [●](menace.pt-BR.md) |  |  |  |
+| [Quatro buscas](#demo-search) |  |  |  |  |  |  |  |  | [●](ai_search.pt-BR.md) |  |  |  |  |  |  |  |
+| [*Stealth*](#demo-stealth) |  |  | [●](ai_fuzzy.pt-BR.md) |  |  | [●](ai_perception.pt-BR.md) |  |  | [●](ai_search.pt-BR.md) |  |  |  |  |  |  |  |
+| [*Steering*](#demo-steering) |  |  |  |  |  |  |  |  |  | [●](ai_steering.pt-BR.md) |  |  |  |  |  |  |
+| [Corrida](#demo-racing) |  |  |  |  |  |  |  |  |  | [●](ai_steering.pt-BR.md) |  |  |  |  |  | [●](racing_driver.pt-BR.md) |
+| [Corrida em 3D](#demo-racing3d) |  |  |  |  |  |  |  |  |  | [●](ai_steering.pt-BR.md) |  |  |  |  |  | [●](racing_driver.pt-BR.md) |
+| [Infiltração](#demo-infiltration) |  |  | [●](ai_fuzzy.pt-BR.md) |  |  | [●](ai_perception.pt-BR.md) |  |  | [●](ai_search.pt-BR.md) |  | [●](ai_teamwork.pt-BR.md) | [●](ai_utility.pt-BR.md) |  |  |  |  |
+| [Partida de *bots*](#demo-botmatch) |  |  |  |  |  | [●](ai_perception.pt-BR.md) |  |  | [●](ai_search.pt-BR.md) |  | [●](ai_teamwork.pt-BR.md) | [●](ai_utility.pt-BR.md) |  |  |  |  |
+| [Um guarda, quatro jeitos de decidir](#demo-behaviour) |  | [●](ai_behaviour.pt-BR.md) | [◐](ai_fuzzy.pt-BR.md) |  |  | [●](ai_perception.pt-BR.md) |  |  | [●](ai_search.pt-BR.md) |  |  |  |  |  |  |  |
+| [Estratégia em tempo real](#demo-rts) |  | [●](ai_behaviour.pt-BR.md) |  |  |  |  | [●](ai_planning.pt-BR.md) | [●](ai_rts_core.pt-BR.md) |  |  |  |  |  |  |  |  |
+| [Tática](#demo-tactical) |  | [●](ai_behaviour.pt-BR.md) |  | [●](ai_learning.pt-BR.md) |  |  | [●](ai_planning.pt-BR.md) |  |  |  |  |  |  |  |  |  |
+| [Luta, modo treino](#demo-fighting) |  |  |  | [●](ai_learning.pt-BR.md) | [●](ai_opponent.pt-BR.md) |  |  |  |  |  |  |  |  |  | [●](behaviour_cloning.pt-BR.md) |  |
 
 ## Demo por demo {#by-demo}
 
@@ -64,10 +64,10 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
   - escrito dentro do próprio exemplo: aderência medida.
 - <a id="demo-infiltration"></a>**Infiltração**, `make demo-infiltration` -- parecido com Metal Gear Solid, em terceira pessoa.
   - teclas: 1-5 ligam e desligam cada parte do raciocínio dos guardas; Tab segue o próximo guarda.
-  - técnicas: ● [ai_fuzzy](ai_fuzzy.pt-BR.md) (lógica *fuzzy*); ● [ai_perception](ai_perception.pt-BR.md) (forma da visão com luz e audição, *awareness*, mapa de crença); ● [ai_search](ai_search.pt-BR.md) (A*); ● [ai_teamwork](ai_teamwork.pt-BR.md) (uma busca dividida, árbitro de papéis, ações pesadas por *utility*).
+  - técnicas: ● [ai_fuzzy](ai_fuzzy.pt-BR.md) (lógica *fuzzy*); ● [ai_perception](ai_perception.pt-BR.md) (forma da visão com luz e audição, *awareness*, mapa de crença); ● [ai_search](ai_search.pt-BR.md) (A*); ● [ai_teamwork](ai_teamwork.pt-BR.md) (uma busca dividida, árbitro de papéis); ● [ai_utility](ai_utility.pt-BR.md) (ações pesadas por *utility*).
 - <a id="demo-botmatch"></a>**Partida de *bots***, `make demo-botmatch` -- parecido com uma partida contra *bots* em Unreal Tournament ou Counter-Strike.
   - teclas: 1-3 a marcação de posições, o comandante e o recuo do azul; Tab um *bot*; T assume o controle dele; M o mapa.
-  - técnicas: ● [ai_perception](ai_perception.pt-BR.md); ● [ai_search](ai_search.pt-BR.md) (A*); ● [ai_teamwork](ai_teamwork.pt-BR.md) (posições táticas com marcação, comandante do time sobre a influência, confiança do esquadrão e recuo em ondas).
+  - técnicas: ● [ai_perception](ai_perception.pt-BR.md); ● [ai_search](ai_search.pt-BR.md) (A*); ● [ai_teamwork](ai_teamwork.pt-BR.md) (posições táticas com marcação, comandante do time sobre a influência, confiança do esquadrão e recuo em ondas); ● [ai_utility](ai_utility.pt-BR.md) (ações pesadas por *utility*).
 - <a id="demo-behaviour"></a>**Um guarda, quatro jeitos de decidir**, `make demo-behaviour` -- parecido com um guarda fazendo a ronda, como em Metal Gear ou Thief.
   - teclas: 1-4 trocam a máquina de estados, a *behaviour tree*, GOAP e HTN no meio da ronda; espaço um turno.
   - técnicas: ● [ai_behaviour](ai_behaviour.pt-BR.md) (máquina de estados, *behaviour tree*, GOAP, HTN); ◐ [ai_fuzzy](ai_fuzzy.pt-BR.md) (por `stealth`); ● [ai_perception](ai_perception.pt-BR.md); ● [ai_search](ai_search.pt-BR.md).
@@ -96,7 +96,8 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
 - <a id="ai_rts_core"></a>[ai_rts_core](ai_rts_core.pt-BR.md) -- muitas unidades, um quadro. Veja em: ● [`make demo-rts`](#demo-rts) (*flow fields*).
 - <a id="ai_search"></a>[ai_search](ai_search.pt-BR.md) -- achar um caminho. Veja em: ● [`make demo-skirmish`](#demo-skirmish) (A*); ● [`make demo-search`](#demo-search) (BFS, DFS, Dijkstra, A*); ● [`make demo-stealth`](#demo-stealth) (A*); ● [`make demo-infiltration`](#demo-infiltration) (A*); ● [`make demo-botmatch`](#demo-botmatch) (A*); ● [`make demo-behaviour`](#demo-behaviour).
 - <a id="ai_steering"></a>[ai_steering](ai_steering.pt-BR.md) -- para que lado empurrar, e com que força. Veja em: ● [`make demo-steering`](#demo-steering) (*seek*, *arrive*, *pursue*, *avoid*); ● [`make demo-racing`](#demo-racing) (*seek*); ● [`make demo-racing3d`](#demo-racing3d) (controlador PID, *heat line*).
-- <a id="ai_teamwork"></a>[ai_teamwork](ai_teamwork.pt-BR.md) -- pesar ações, e um time que divide o trabalho. Veja em: ● [`make demo-infiltration`](#demo-infiltration) (uma busca dividida, árbitro de papéis, ações pesadas por *utility*); ● [`make demo-botmatch`](#demo-botmatch) (posições táticas com marcação, comandante do time sobre a influência, confiança do esquadrão e recuo em ondas).
+- <a id="ai_teamwork"></a>[ai_teamwork](ai_teamwork.pt-BR.md) -- um time que divide o trabalho. Veja em: ● [`make demo-infiltration`](#demo-infiltration) (uma busca dividida, árbitro de papéis); ● [`make demo-botmatch`](#demo-botmatch) (posições táticas com marcação, comandante do time sobre a influência, confiança do esquadrão e recuo em ondas).
+- <a id="ai_utility"></a>[ai_utility](ai_utility.pt-BR.md) -- pesar todas as opções de uma vez. Veja em: ● [`make demo-infiltration`](#demo-infiltration) (ações pesadas por *utility*); ● [`make demo-botmatch`](#demo-botmatch) (ações pesadas por *utility*).
 - <a id="menace"></a>[MENACE](menace.pt-BR.md) -- a máquina de caixas de fósforo que aprende jogo da velha. Veja em: ● [`make demo-tictactoe`](#demo-tictactoe) (as caixas de fósforo do MENACE).
 - <a id="learned_evaluation"></a>[Avaliação aprendida](learned_evaluation.pt-BR.md) -- dar nota a uma posição com pesos ajustados aos resultados. Veja em: ● [`make run`](#run) (uma avaliação aprendida).
 - <a id="behaviour_cloning"></a>[Behaviour cloning](behaviour_cloning.pt-BR.md) -- o lutador que joga como você. Veja em: ● [`make demo-fighting`](#demo-fighting) (*behaviour cloning*).

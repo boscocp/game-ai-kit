@@ -521,7 +521,7 @@ in another context, it copes. T67 made that literal in three places.
   sight cannot be. Its ears are `Hearing`: every shot is a noise, heard
   through walls, louder nearer. What they give, with its body and its
   orders, is `MatchPercepts`, and the decision reads nothing else.
-- **A utility choice, not a priority list.** `ActionChoice`: every action
+- **A utility choice, not a priority list.** `ActionChoice` (`ai_utility`): every action
   scored at once, each consideration one percept through a response curve
   into [0, 1], the answers multiplied, so any one at zero vetoes the
   action. It is Guild Wars 2: Heart of Thorns' form, after the Infinite
@@ -533,7 +533,7 @@ in another context, it copes. T67 made that literal in three places.
   find when one action is chosen each decision.
 - **The errands a technique.** Going back for rounds and fetching the
   power weapon, each a gain less its costs, moved from the demo into
-  `ErrandChoice`.
+  `ErrandChoice` (`ai_utility`).
 
 `ai_steering` was asked for the last metres and does not serve here: its
 avoid swerves from round obstacles and, head-on, always to the vehicle's

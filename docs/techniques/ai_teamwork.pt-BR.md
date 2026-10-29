@@ -1,13 +1,13 @@
-# ai_teamwork — pesar ações, e um time que divide o trabalho
+# ai_teamwork — um time que divide o trabalho
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-26
+verified_on: 2026-10-29
 tier: 2
-source: https://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter13_Choosing_Effective_Utility-Based_Considerations.pdf ; https://www.gameaipro.com/
-invalidated_if: the kit's ActionChoice, RoleArbiter, TeamCommander, TacticalPositions or SearchCoordinator signatures change, or the demos that use them are renamed
+source: https://www.gameaipro.com/
+invalidated_if: the kit's RoleArbiter, TeamCommander, TacticalPositions, SquadConfidence or SearchCoordinator signatures change, or the demos that use them are renamed
 teaches: shooter-ai
-translation_of: 3fbf736cea44f0974c89b6962cbf8546566c6a6947c97d75252e69171893914a
+translation_of: dc8c6e0bf7e5ba4fd84e659f60d75cc8a3a3b4f5ba922ea11194620537775647
 -->
 
 > English: [ai_teamwork.md](ai_teamwork.md). Os termos que ficam em inglês
@@ -15,59 +15,54 @@ translation_of: 3fbf736cea44f0974c89b6962cbf8546566c6a6947c97d75252e69171893914a
 
 ## O que decide {#what}
 
-Duas coisas. O que um *bot* faz agora: o `ActionChoice` dá nota a todas as
-ações de uma vez -- o seu peso vezes a resposta de cada consideração, de 0 a
-1, lida de uma percepção por uma curva de resposta -- e fica com a maior,
-então uma resposta 0 veta a ação e as outras a graduam. Isso é *utility*,
-na forma com que *Guild Wars 2* decidia. E como um time divide o trabalho,
-cada parte uma ponderação própria: `TeamCommander` manda esquadrões para
-objetivos, `TacticalPositions` escolhe onde um *bot* fica e impede dois de
-reivindicarem o mesmo lugar, `RoleArbiter` deixa um *bot* flanquear
-enquanto os outros atiram, `SearchCoordinator` divide os lugares a
-procurar, `SquadConfidence` diz quando atacar, segurar ou recuar, e
-`AimChoice`, `ErrandChoice` e `PassageChoice` pesam o resto. Cada um guarda
-os seus números, para uma tela mostrar o porquê. As fontes: Lewis,
-*Choosing Effective Utility-Based Considerations*, *Game AI Pro 3*,
-capítulo 13, e os capítulos que cada classe cita.
+Como um time divide o trabalho, cada parte uma ponderação própria:
+`TeamCommander` manda esquadrões para objetivos, `TacticalPositions`
+escolhe onde um *bot* fica e impede dois de reivindicarem o mesmo lugar,
+`RoleArbiter` deixa um *bot* flanquear enquanto os outros atiram,
+`SearchCoordinator` divide os lugares a procurar, `SquadConfidence` diz
+quando atacar, segurar ou recuar, e `AimChoice` e `PassageChoice` pesam
+onde mirar e como passar por um corpo no caminho -- esperar, dar a volta,
+pedir a um companheiro que saia da frente, ou ir para outro lugar. Cada um guarda os seus
+números, para uma tela mostrar o porquê. O que um *bot* faz agora, e as
+saídas do posto, não estão aqui: desde a T101 são do
+[`ai_utility`](ai_utility.pt-BR.md), porque nada neles é sobre um time. As
+fontes: os capítulos do *Game AI Pro* que cada classe cita.
 
 ## Quando não usar {#when-not}
 
-Uma ordem que precisa ser mantida ao longo do tempo -- uma recarga
-terminada antes de um tiro, os passos de um plano: isso é de um plano
-(`ai_planning`, uma HTN), ou de um compromisso que as suas percepções
-precisam carregar. Muitas ações ajustadas umas contra as outras: os números
-interagem, então uma curva ajustada para uma mexe nas outras -- mantenha a
-lista curta e as curvas simples. E as classes de time para um esquadrão só
-ou um único lugar onde ficar: o mais próximo primeiro dá a mesma resposta
-com menos a explicar.
+Um esquadrão só, ou um único lugar onde ficar: o mais próximo primeiro dá a
+mesma resposta com menos a explicar. Papéis que são lugares, não tarefas --
+quem segura qual porta: isso é o `TacticalPositions` com reivindicações,
+não o `RoleArbiter`. E um time cujos membros precisam agir numa ordem fixa,
+uma invasão e depois uma varredura: isso é de um plano (`ai_planning`), não
+de uma ponderação que cada *bot* refaz a cada decisão.
 
 ## Onde ver funcionando {#watch}
 
 - `make demo-botmatch` -- seis contra seis. **Tab** observa o próximo *bot*:
-  os discos em volta dele são cada lugar que ele pesou, com a sua nota, e
-  **V** mostra as notas da IA. **1-3** ligam e desligam as reivindicações,
-  o comandante e o recuo do azul (**shift** para os do vermelho), para você
-  ver o time com cada parte desligada. **T** assume o *bot* observado.
-- `make demo-infiltration` -- os guardas escolhem pelo `ActionChoice` a
-  partir de dados, procuram com o `SearchCoordinator` e lutam sob o
-  `RoleArbiter`; **2** e **3** ligam e desligam o coordenador e o árbitro,
-  **Tab** observa o próximo guarda.
-- Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
+  os discos em volta dele são cada lugar que ele pesou, com a sua nota.
+  **1-3** ligam e desligam as reivindicações, o comandante e o recuo do
+  azul (**shift** para os do vermelho), para você ver o time com cada parte
+  desligada. **T** assume o *bot* observado.
+- `make demo-infiltration` -- os guardas procuram com o `SearchCoordinator`
+  e lutam sob o `RoleArbiter`; **2** e **3** ligam e desligam o coordenador
+  e o árbitro, **Tab** observa o próximo guarda.
+- Qual demo usa qual técnica, nos dois sentidos: o
+  [catálogo](catalogue.pt-BR.md).
 
 ## Neste kit {#in-this-kit}
 
-`godot/game3d/botmatch/match_bot.gd` lê as suas ações, posturas e ritmos de
-`actions.json` com `ActionChoice.actions_from`, e chama
-`ActionChoice.choose` a cada decisão; `team_tactics.gd` roda o comandante e
-a confiança dos esquadrões de cada time. Os ajustes que importam:
+`godot/game3d/botmatch/team_tactics.gd` roda o comandante e a confiança dos
+esquadrões de cada time, e pergunta ao `TacticalPositions` onde cada *bot*
+fica. Os guardas da infiltração dividem a busca por
+`godot/game3d/infiltration/guard_team.gd`. Os ajustes que importam:
 
 | ajuste | onde | o que muda |
 |---|---|---|
-| o peso de uma ação | `"weight"` nos dados | o quanto ela importa quando tudo a favorece |
-| uma curva | `"curve": "linear"` (`slope`, `intercept`) ou `"step"` (`at`, `below`, `above`) | como uma percepção vira uma resposta de 0 a 1 |
-| um veto | uma consideração que responde 0 | a ação está fora, seja o que for que a favoreça |
 | flanqueadores | `RoleArbiter.grant(requests, use_arbiter, max_flankers)` | quantos podem contornar de uma vez; alguém sempre atira |
 | reivindicações | `TacticalPositions.choose(...)` | se um lugar que outro *bot* pegou é descartado |
+| o comandante | `TeamCommander.assign(squads, objectives, weights)` | para qual objetivo cada esquadrão vai, e quantos enchem um |
+| o recuo | `SquadConfidence.Thresholds` | quando um esquadrão ataca, segura ou recua, e a folga que o impede de oscilar |
 
 ## No seu projeto {#your-project}
 
@@ -81,71 +76,52 @@ precisa da sua cena.
 
 ### Um exemplo mínimo {#example}
 
-Um lutador seu que pesa atirar, recarregar, se proteger e patrulhar contra
-o que percebe. Com um inimigo à vista, o pente cheio e vida 20, se proteger
-(0,72) ganha de atirar (0,7); com a vida cheia, ele atira. Este arquivo é
-executado por `fighter_example_test.gd`, e o *gate* garante que a página é
-igual a ele. Os comentários do código ficam em inglês, como no arquivo.
+Um esquadrão seu dividindo uma luta. Três lutadores pedem para flanquear e
+um para atirar: o árbitro concede o melhor flanco e os outros atiram; e
+quando o único que pode atirar pede para flanquear, ele continua atirando.
+Este arquivo é executado por `squad_example_test.gd`, e o *gate* garante
+que a página é igual a ele. Os comentários do código ficam em inglês, como
+no arquivo.
 
-<!-- example: godot/test/ai_teamwork/fighter_example.gd -->
+<!-- example: godot/test/ai_teamwork/squad_example.gd -->
 ```gdscript
 # The minimal example on docs/techniques/ai_teamwork.md, run by
-# fighter_example_test.gd. A fighter of your own that weighs every action
-# at once against what it perceives, and takes the highest -- utility.
+# squad_example_test.gd. A squad of your own that shares one fight out:
+# each fighter asks for a role, and an arbiter grants one flank at a time
+# so the others keep shooting -- teamwork as a referee, not a plan.
 extends Node
 
-## The actions, as data a designer edits. A score is the weight times every
-## consideration's answer, each 0 to 1, so one answer of 0 vetoes the
-## action: no enemy in sight, no shot. A `step` curve answers `above` from
-## `at` up and `below` under it (1 and 0 unless given); a `linear` one
-## answers slope times the percept plus intercept, clamped to 0 and 1.
-const ACTIONS: Array = [
-	{"name": "shoot", "weight": 0.7, "considerations": [
-		{"percept": "enemy_visible", "curve": "step", "at": 1.0},
-		{"percept": "ammo", "curve": "step", "at": 1.0},
-	]},
-	{"name": "reload", "weight": 0.8, "considerations": [
-		{"percept": "ammo", "curve": "linear", "slope": -0.1, "intercept": 1.0},
-	]},
-	{"name": "take cover", "weight": 0.9, "considerations": [
-		{"percept": "enemy_visible", "curve": "step", "at": 1.0},
-		{"percept": "health", "curve": "linear", "slope": -0.01, "intercept": 1.0},
-	]},
-	{"name": "patrol", "weight": 0.1, "considerations": []},
-]
-
-var _actions: Array[ActionChoice.Action] = ActionChoice.actions_from(ACTIONS)
+## At most this many go round at once.
+const MAX_FLANKERS: int = 1
 
 
-## The action to take, given `percepts` by name -- `enemy_visible` 0 or 1,
-## `ammo` rounds left, `health` 0 to 100 -- or "" when nothing scores.
-func decide(percepts: Dictionary) -> String:
-	var choice: ActionChoice.Choice = ActionChoice.choose(_actions, percepts)
-	return "" if choice.chosen == -1 else _actions[choice.chosen].name
-
-
-## Every action's score, by name: draw it, and the player sees why the
-## fighter did what it did, and what came second.
-func scores(percepts: Dictionary) -> Dictionary:
-	var choice: ActionChoice.Choice = ActionChoice.choose(_actions, percepts)
+## The role each fighter gets, by name -- "shooter", "flanker" or "none".
+## `fighters` is [{name, wants_to_flank, flank_score, can_shoot}], each a
+## fact your game measured: whether a way round is open, how good it is,
+## whether the fighter has a line and rounds.
+func roles(fighters: Array[Dictionary]) -> Dictionary:
+	var requests: Array[Dictionary] = []
+	for fighter: Dictionary in fighters:
+		requests.append({
+			"role": RoleArbiter.FLANKER if fighter["wants_to_flank"] else RoleArbiter.SHOOTER,
+			"score": fighter["flank_score"],
+			"can_shoot": fighter["can_shoot"],
+		})
+	var granted: PackedStringArray = RoleArbiter.grant(requests, true, MAX_FLANKERS)
 	var by_name: Dictionary = {}
-	for index: int in range(_actions.size()):
-		by_name[_actions[index].name] = choice.scores[index]
+	for index: int in range(fighters.size()):
+		by_name[fighters[index]["name"]] = granted[index]
 	return by_name
 ```
 
 ### O que você implementa {#implement}
 
-As percepções: cada uma um número que o seu jogo mediu nesta decisão, pelo
-nome -- uma percepção não informada vale 0, nada percebido. E a ação: o
-nome que volta é seu para executar, e uma ação que leva tempo (uma recarga)
-é do seu jogo terminar antes de perguntar de novo. Deixe as ações num
-arquivo JSON que um *designer* edita, e carregue-as com
-`ActionChoice.actions_from(data)`: uma chave ou uma curva escrita errado é
-recusada inteira, com um erro, em vez de pesada em silêncio com um valor
-padrão. As classes de time recebem o mesmo tipo de entrada -- `Candidate`,
-`Objective`, `SquadReport` são classes internas que você preenche com
-números -- e vale lê-las na ordem em que a partida de *bots* as usa.
+Quem pede o quê: os pedidos são seus -- se um caminho em volta está aberto
+e quão bom ele é, se um lutador tem linha de tiro e munição --, e os papéis
+que voltam são seus para executar. As outras classes recebem o mesmo tipo
+de entrada -- `Candidate`, `Objective`, `SquadReport` são classes internas
+que você preenche com números -- e vale lê-las na ordem em que a partida de
+*bots* as usa.
 
 ## Para ir mais fundo {#deeper}
 
@@ -153,5 +129,4 @@ números -- e vale lê-las na ordem em que a partida de *bots* as usa.
   inglês): [concepts/shooter-ai.md](../concepts/shooter-ai.md).
 - A partida de *bots*, cada ajuste e cada tecla (em inglês):
   [godot/botmatch.md](../godot/botmatch.md).
-- As outras quatro maneiras de decidir, e quando cada uma é a certa (em
-  inglês): [concepts/ways-to-decide.md](../concepts/ways-to-decide.md).
+- O que um *bot* faz agora, por *utility*: [ai_utility.pt-BR.md](ai_utility.pt-BR.md).

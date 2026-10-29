@@ -241,7 +241,8 @@
         {"technique": "tactical-positions", "part": "the discs round the watched bot: every spot it weighed, coloured by why it was kept or dropped, its score above it; a teammate's claim closes a spot"},
         {"technique": "team-commander", "part": "the map's arrows: each squad sent to a point by worth and distance, over the team's influence (the map's colours)"},
         {"technique": "squad-confidence", "part": "the bar under each squad on the map, with its retreat and attack marks: below the first it falls back in two waves"},
-        {"technique": "a-star", "part": "each bot's walk to its spot, over a one-metre grid of the arena"}
+        {"technique": "a-star", "part": "each bot's walk to its spot, over a one-metre grid of the arena"},
+        {"technique": "weighed-actions", "part": "the panel: every action, posture and pace the watched bot weighed, each with its score, the one taken marked, and each errand as its gain less its costs (V shows it while you play a bot)"}
       ],
       "controls": "1/2/3 blue's claims, commander, retreat (Shift: red's); Tab watches the next bot, T takes it over (WASD, mouse, click, R reload, Ctrl crouch) and gives it back; M the other team's map, C camera, F fast, P pause, Space one decision, N new match",
       "watch": "Turn blue's claims off and watch two blue bots end up behind the same box. Turn off the commander and watch the map's arrows: each blue bot is sent to its own nearest point not yet blue's, and the orders bunch onto fewer points. The score is the fight's, not the techniques': see docs/godot/botmatch.md.",
