@@ -18,9 +18,9 @@ extends RefCounted
 
 
 ## Give each of `searchers` with no spot the nearest free way out of
-## `belief`'s likely region.
-static func assign(level: InfiltrationLevel, belief: BeliefMap, searchers: Array[InfiltrationGuard]) -> void:
-	var exits: Array[Vector2] = ways_out(level, belief)
+## likely region of `shares` (a belief's, one per walk cell).
+static func assign(level: InfiltrationLevel, shares: PackedFloat64Array, searchers: Array[InfiltrationGuard]) -> void:
+	var exits: Array[Vector2] = ways_out(level, shares)
 	var taken: Dictionary[int, bool] = {}
 	for guard: InfiltrationGuard in searchers:
 		if guard.spot != -1:
@@ -33,12 +33,12 @@ static func assign(level: InfiltrationLevel, belief: BeliefMap, searchers: Array
 
 ## The ways out of the likely region: chokes when there are any, else every
 ## cell on its edge.
-static func ways_out(level: InfiltrationLevel, belief: BeliefMap) -> Array[Vector2]:
-	var likely: float = 2.0 / maxf(belief.shares.size(), 1.0)
+static func ways_out(level: InfiltrationLevel, shares: PackedFloat64Array) -> Array[Vector2]:
+	var likely: float = 2.0 / maxf(shares.size(), 1.0)
 	var edge: Dictionary[int, bool] = {}
-	for cell: int in range(belief.shares.size()):
-		if belief.shares[cell] >= likely:
-			_add_unlikely_neighbours(level, belief, cell, likely, edge)
+	for cell: int in range(shares.size()):
+		if shares[cell] >= likely:
+			_add_unlikely_neighbours(level, shares, cell, likely, edge)
 	var chokes: Array[Vector2] = []
 	var open: Array[Vector2] = []
 	for cell: int in edge:
@@ -46,10 +46,10 @@ static func ways_out(level: InfiltrationLevel, belief: BeliefMap) -> Array[Vecto
 	return chokes if not chokes.is_empty() else open
 
 
-static func _add_unlikely_neighbours(level: InfiltrationLevel, belief: BeliefMap, cell: int, likely: float,
+static func _add_unlikely_neighbours(level: InfiltrationLevel, shares: PackedFloat64Array, cell: int, likely: float,
 		edge: Dictionary[int, bool]) -> void:
 	for next: int in level.neighbours[cell]:
-		if belief.shares[next] < likely:
+		if shares[next] < likely:
 			edge[next] = true
 
 

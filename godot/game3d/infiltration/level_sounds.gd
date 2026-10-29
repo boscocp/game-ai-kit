@@ -139,6 +139,6 @@ func _hear_report(world: InfiltrationWorld, guard: InfiltrationGuard, kind: Stri
 	var told: Vector2 = carries if carries != Vector2.INF else place
 	guard.mind.memory.remember(told, world.time, kind)
 	if world.rules.use_belief and world.level.walkable(world.level.cell_of(told)):
-		guard.belief.collapse(world.level.index_of[world.level.cell_of(told)])
+		guard.collapse_belief(world.level.index_of[world.level.cell_of(told)])
 	var sound: Awareness = guard.mind.awareness["sound"]
 	sound.value = maxf(sound.value, clampf(urgency, 0.0, 1.0) * float(guard.type.awareness["peak"]))

@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-22
+verified_on: 2026-10-29
 tier: 2
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: the guards' actions, the guard types, the rules or the levels change, and infiltration_properties.gd prints different numbers
@@ -20,7 +20,8 @@ teaches: none
 You sneak in third person (`make demo-infiltration`) past guards who are
 T67's agent: each step a guard's eyes and ears give it a percept (T69's
 vision shape, body points, light and hearing along the level); its mind
-grows aware and remembers; its own belief map holds where you may be; and
+grows aware and remembers; its own belief -- a grid belief map, or a
+cloud of particles (T91) -- holds where you may be; and
 each decision it scores every action it could take (`guard_actions.json`,
 weighed by `ActionChoice`) and does the highest. Patrol, glance,
 investigate, search a spot, cover a way out, report by radio, call for
@@ -50,8 +51,8 @@ WASD walk, relative to the camera; the mouse turns the camera (click to
 capture it, Esc to free it). C crouches, Z lies prone, Shift sprints
 (upright only). G throws a distraction where the crosshair points; E takes
 down a guard from behind when the corner says you can; a click shoots.
-1-4 switch the belief, the coordinator, the arbiter and the accumulator; 5
-the off-screen halving. Tab watches the next guard, H hides the reasoning,
+1 cycles the belief -- off, the grid, the particles -- 2-4 switch the
+coordinator, the arbiter and the accumulator; 5 the off-screen halving. Tab watches the next guard, H hides the reasoning,
 L the next level (two hand-made, then generated), N again, P pauses, Space
 one decision while paused.
 
@@ -61,7 +62,9 @@ fight; "CALLING FOR HELP" while it calls, and "heard: ..." when a report
 reached it. On the floor, each guard's vision zones in its phase's colour;
 for a guard looking at you, a line to each of your body points, green
 where it sees it and red where a box hides it; the floor's brightness is
-the light a guard reads. For the watched guard: its belief as orange cells,
+the light a guard reads. For the watched guard: its belief as orange cells
+(with the particles on, its cloud as dots sized by the share on each cell,
+and a white square flashing on each cell its sight just emptied),
 its last known position as a grey figure, the spot it was given (purple)
 and the spots searched (grey) while it searches, its way out, and where it
 is walking. Every sound's reach along the level as blue marks. The radar
@@ -162,6 +165,60 @@ scripted sneak -- a heuristic, not a person -- failing, and no number tells
 the two apart, so the gate holds the quiet half on the hand-made levels and
 prints it on the generated ones.
 
+## Particles against the grid
+
+T91 gave every guard a second belief, `ai_perception`'s `ParticleBelief`
+over the same walk graph: 256 particles that walk on (0.7), turn (0.2) or
+stay, weigh 0 where the guard sees and 0.3 where it would have heard a
+footstep (the event's 6 m along the level) and heard nothing, resampled
+every belief step. Both beliefs are stepped every belief step and collapse
+together on a sighting or a report; key 1 chooses which one the search
+reads (`InfiltrationWorld.believed`). The grid stays the default, so every
+number above is unchanged.
+
+`make test-infiltration-tracking` (about 40 s) measures it two ways, with
+the same guards, decisions and seeds:
+
+**A reported player that creeps off and hides.** A radio report says the
+player was seen at a place 8 to 14 steps from a hiding place no guard
+watches (`HidingStage`'s places); it creeps along the walk there and lies
+prone. From the first step it lies hidden and unfound, the clock runs until
+a guard finds it -- within reach, or seeing it at certainty 0.3 -- or 60 s
+pass. The two hand-made levels and generated levels 1 to 20, seeds 1 and 2
+(measured 2026-10-29):
+
+| levels | belief | runs | mean | median | found within 60 s |
+|---|---|---|---|---|---|
+| hand-made | grid | 2 | 6.5 | 10.5 | 2 |
+| hand-made | particles | 2 | 6.5 | 10.5 | 2 |
+| generated | grid | 24 | 4.6 | 1.4 | 23 |
+| generated | particles | 25 | 4.4 | 1.1 | 24 |
+| all | grid | 26 | 4.8 | 1.5 | 25 |
+| all | particles | 27 | 4.5 | 1.4 | 26 |
+
+Of the 26 runs both measured, the particles found the player sooner in 3,
+the grid in none, and 23 took the same time to the step. (The other runs
+could not be staged, or no guard ever lost the player; one more lost it
+with the particles on.) **T70's staged search** -- the player already
+lying hidden when the report arrives, not moving at all -- the other way:
+found after **6.9 s** with the grid and **9.4 s** with the particles on
+average (5 levels, 3 seeds).
+
+So: **not clearly sooner.** When the player moves after it is lost, the
+particles' walking model helps a little, a few runs and never against it.
+When it has not moved, a model that says "a person keeps walking" spreads
+the cloud away from where the player lies, and the grid's slower, even
+spread is closer to the truth. Most runs are decided by a glimpse on the
+way, which collapses both beliefs alike. Measured first with T70's `hide`
+player (show yourself, sprint to a hiding place): most runs never reached
+a hiding place -- the player was shot down or found no way past -- and are
+not a measure of the search; that version was dropped.
+
+The gate holds what can be held: at least 20 runs lost the player in each
+mode, and the particles changed at least one run. Planted: the particles on
+and stepped, the search wired to the grid (`TrackingClaims.wired_to_nothing`),
+which must change none -- caught.
+
 ## The kit's own numbers
 
 Sourced: the player's walk and sprint speeds (the bot match's), and, from
@@ -172,7 +229,8 @@ taken from any game: in `rules.json`, the crouch and prone rows,
 (8 s), `quiet_after` (20 s), `call_seconds` (1 s), `help_lasts`,
 `report_every` (5 s), `seen_threshold` (0.15), `flank_distance` (7 m), the
 whole `decision` row (`noticed_for` 3 s, `known_for` 60 s, `under_fire_for`
-2 s, `near_last_known` 2 m, `away_scale` 5 m), `belief.spread` (0.4), the
+2 s, `near_last_known` 2 m, `away_scale` 5 m), `belief.spread` (0.4) and
+`belief.particles` (256), the
 search's `worth`, `travel`, `last_known_cap` (2) and `spot_radius` (2.5 m),
 and every knob; in `guard_types.json`, the per-phase decays (0.02 and 0.015
 while searching and alert); and in `guard_actions.json`, every weight and
@@ -202,4 +260,8 @@ curve.
 
 See `tasks/T70-the-infiltration-level.md`: play both levels quiet and loud,
 each technique on and off, and say whether being noticed felt readable and
-fair.
+fair. And `tasks/T91-a-particle-filter-tracks-the-player.md`: with the
+particles on (1) and the reasoning shown (H), break line of sight and hide
+-- does the cloud follow where you could have gone, thin where a guard
+looks, drift from where it listened and heard nothing, and is the guard's
+purple cross inside it?

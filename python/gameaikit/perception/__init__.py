@@ -10,9 +10,11 @@ and the GDScript addon to the same answers.
     hearing.py     loudness along a path, and the off-screen factor
     awareness.py   a number that rises, falls a phase at a time, and holds
     belief.py      where the target may be, over a neighbour list
+    particles.py   the same question as a cloud of particles (T91)
+    draws.py       the seeded generator the particles draw from
 
 The rate awareness rises by is a fuzzy controller, checked by the fuzzy
 vectors through the kit's fuzzy package.
 """
 
-from . import awareness, belief, hearing, shape
+from . import awareness, belief, draws, hearing, particles, shape

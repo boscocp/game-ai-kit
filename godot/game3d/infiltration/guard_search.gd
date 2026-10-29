@@ -98,7 +98,7 @@ func searched_by(group: Array[InfiltrationGuard]) -> Dictionary:
 
 func _search_together(world: InfiltrationWorld, group: Array[InfiltrationGuard]) -> void:
 	var lead: InfiltrationGuard = _freshest(group)
-	var worth: Array[Dictionary] = _spots_with_worth(lead.belief, searched_by(group))
+	var worth: Array[Dictionary] = _spots_with_worth(world.believed.call(world, lead), searched_by(group))
 	var costs: Array[PackedFloat64Array] = []
 	for guard: InfiltrationGuard in group:
 		costs.append(_walks(world.level, guard))
@@ -110,16 +110,16 @@ func _search_together(world: InfiltrationWorld, group: Array[InfiltrationGuard])
 		group[index].spot = given[index]
 		group[index].spot_from = lead.id
 		group[index].spot_for = group[index].mind.memory.place
-	GuardWaysOut.assign(world.level, lead.belief, group)
+	GuardWaysOut.assign(world.level, world.believed.call(world, lead), group)
 
 
-func _spots_with_worth(belief: BeliefMap, searched: Dictionary) -> Array[Dictionary]:
+func _spots_with_worth(shares: PackedFloat64Array, searched: Dictionary) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	for index: int in range(spots.size()):
 		rows.append({"worth": 0.0, "searched": searched.has(index)})
-	for cell: int in range(belief.shares.size()):
+	for cell: int in range(shares.size()):
 		for spot: int in spots_near[cell]:
-			rows[spot]["worth"] = float(rows[spot]["worth"]) + belief.shares[cell]
+			rows[spot]["worth"] = float(rows[spot]["worth"]) + shares[cell]
 	return rows
 
 

@@ -4,8 +4,9 @@
 ##
 ## Keys: WASD walk (relative to the camera), the mouse turns the camera, C
 ## crouches, Z lies prone, Shift sprints, G throws a distraction where the
-## crosshair points, E takes down a guard from behind, a click shoots. 1-4
-## switch the belief, the coordinator, the arbiter and the accumulator; 5
+## crosshair points, E takes down a guard from behind, a click shoots. 1
+## cycles the belief (off, grid, particles), 2-4 switch the coordinator,
+## the arbiter and the accumulator; 5
 ## the off-screen halving. Tab watches the next guard, H hides the AI's
 ## reasoning, L the next level (two hand-made, then generated ones), N
 ## starts again, P pauses, Space one decision while paused.
@@ -107,7 +108,7 @@ func decision_overlay() -> Dictionary:
 			"scores": record.get("scores", []), "role": guard.role, "spot": guard.spot,
 			"heard_help": world.time - guard.help_heard_at <= 15.0, "certainty": guard.percept.sight.certainty})
 	return {"time": world.time, "guards": guards, "off_screen_halving": rules.off_screen_halving,
-		"switches": {"belief": rules.use_belief, "coordinator": rules.use_coordinator,
+		"switches": {"belief": rules.use_belief, "particles": rules.use_particles, "coordinator": rules.use_coordinator,
 			"arbiter": rules.use_arbiter, "accumulator": rules.use_accumulator}}
 
 

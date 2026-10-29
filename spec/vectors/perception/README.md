@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: structure
-verified_on: 2026-10-22
+verified_on: 2026-10-29
 tier: 1
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: a stealth technique in ai_perception changes its rule, or a vector field is renamed
@@ -35,6 +35,15 @@ Each file has `name`, `why`, `kind`, `query` and `expect`. The kinds:
   and `steps`, each `{"collapse": node}` or `{"seen": [nodes], "spread":
   s}`, from an even belief. Expects the `shares` after each step and
   whether it was `reseeded`.
+- **`particles`** (T91) -- `neighbours`, a particle `count`, a `seed`, the
+  `knobs` (`walk_on`, `turn`, `unheard`), and `steps`, each `{"collapse":
+  node}` or `{"seen": [nodes], "unheard": [nodes]}`, from a cloud spread
+  evenly. Expects after each step every particle's node (`nodes`), the
+  normalised `weights` the step gave them (all 0 when it reseeded), the
+  `shares` per node, the nodes sight `emptied`, and whether it was
+  `reseeded`. The draws are Marsaglia's xorshift from `seed`, written out
+  in all three copies; a single different draw moves a particle, so these
+  vectors pin the order of the draws as well as the rules.
 
 The guard type's awareness **rate** is a fuzzy controller, so its vector is
 an ordinary fuzzy vector: `spec/vectors/fuzzy/a-guards-awareness-rate.json`.

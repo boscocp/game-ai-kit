@@ -22,6 +22,7 @@
   ],
   "gates": [
     "test-infiltration-properties",
-    "test-infiltration"
+    "test-infiltration",
+    "test-infiltration-tracking"
   ]
 }

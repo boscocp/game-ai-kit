@@ -20,6 +20,8 @@ nothing,nada
 "1 belief {belief}, 2 coordinator {coordinator}, 3 arbiter {arbiter}, 4 accumulator {accumulator}, 5 off-screen halving {halving}","1 crença {belief}, 2 coordenador {coordinator}, 3 árbitro {arbiter}, 4 acumulador {accumulator}, 5 metade fora da tela {halving}"
 on,ligado
 OFF,DESLIGADO
+grid,grade
+particles,partículas
 "guard {guard} ({type}): {phase}, sight {sight}, sound {sound}, {action}","guarda {guard} ({type}): {phase}, visão {sight}, som {sound}, {action}"
 "guard {guard} ({type}): {phase}, sight {sight}, sound {sound}, downed","guarda {guard} ({type}): {phase}, visão {sight}, som {sound}, derrubado"
 {clear} of {points} points clear; the stance needs {needed},{clear} de {points} pontos à vista; a postura pede {needed}

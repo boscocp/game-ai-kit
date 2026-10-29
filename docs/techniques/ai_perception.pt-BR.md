@@ -2,12 +2,12 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-26
+verified_on: 2026-10-29
 tier: 2
 source: book:Travis McIntosh, "Human Enemy AI in The Last of Us", in Steve Rabin (ed.), "Game AI Pro 2", CRC Press, 2015 ; https://www.gameaipro.com/
-invalidated_if: the kit's VisionCone, Awareness, LineOfSight, Hearing, VisionShape or BeliefMap signatures change, or the demos that use them are renamed
+invalidated_if: the kit's VisionCone, Awareness, LineOfSight, Hearing, VisionShape, BeliefMap or ParticleBelief signatures change, or the demos that use them are renamed
 teaches: perception
-translation_of: 34cec9839fabeaafbc061988c3840a9fa97fdd05fad7483ca55460637c051497
+translation_of: cdb99dbde16192bbc89ad0c76f2fe7d079d3b59bf4efd4c2c48d1ce0c2f22a90
 -->
 
 > English: [ai_perception.md](ai_perception.md). Os termos que ficam em
@@ -24,7 +24,9 @@ visto, como uma certeza. Audição: `Hearing` através das paredes,
 enquanto algo é percebido e desce passando por cada fase intermediária --
 calmo, desconfiado, alerta -- quando não é. E crença: `TargetMemory` guarda
 só o que foi percebido, `BeliefMap` espalha onde o alvo pode estar desde
-então. As fontes: McIntosh, *Human Enemy AI in The Last of Us*, em *Game AI
+então, e `ParticleBelief` responde à mesma pergunta com uma nuvem de
+palpites que andam como uma pessoa e rareiam onde um guarda olhou e
+escutou. As fontes: McIntosh, *Human Enemy AI in The Last of Us*, em *Game AI
 Pro 2* (2015), e as outras que [concepts/stealth-ai.md](../concepts/stealth-ai.md)
 lista.
 
@@ -46,9 +48,14 @@ jogador sente isso como trapaça.
   `Hearing`, os mesmos para os seus quatro cérebros; **espaço** joga um
   turno.
 - `make demo-infiltration` -- guardas com um `VisionShape`, um `Awareness`,
-  `PathHearing` e um `BeliefMap` compartilhado quando procuram. Sobre cada
-  guarda fica a sua barra de detecção, com os limiares das fases como
-  marcas; **1** troca a crença, **Tab** observa o próximo guarda.
+  `PathHearing` e um `BeliefMap` ou um `ParticleBelief` quando procuram.
+  Sobre cada guarda fica a sua barra de detecção, com os limiares das fases
+  como marcas; **1** alterna a crença -- desligada, a grade, as partículas
+  --, **H** mostra o raciocínio, **Tab** observa o próximo guarda. Com as
+  partículas ligadas, a nuvem do guarda observado aparece como pontos, um
+  quadrado branco pisca em cada célula que a visão dele acabou de esvaziar,
+  e uma cruz roxa marca o ponto que ele escolheu procurar a partir da
+  nuvem.
 - `make demo-botmatch` -- cada *bot* vê com um `VisionCone` em campo aberto,
   contra as paredes da arena.
 - Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
@@ -67,13 +74,70 @@ importam:
 | as fases | uma linha de *awareness*: `peak`, `decay`, `phases`, `caution` | onde calmo vira desconfiado vira alerta, a rapidez da descida, quanto tempo ele fica cauteloso depois de um alerta |
 | a subida | `Awareness.step(row, perceived, rate, seconds, now)` | a rapidez com que ele fica atento enquanto percebe; calculada por quem lê a percepção |
 | o alcance de um som | `Hearing.loudness_at(listener, source, radius)` | até onde um barulho chega; `PathHearing` mede contornando as paredes |
+| os modelos das partículas | `walk_on` (0,7), `turn` (0,2), `unheard` (0,3) e a contagem de `ParticleBelief` | como um alvo suposto se move, e quanto "não ouvi nada" pesa contra um palpite |
+
+## Um filtro de partículas {#particles}
+
+O capítulo 14 do AIMA acompanha um estado escondido ao longo do tempo com
+dois modelos: como ele se move (transição) e o que um sensor diz dado onde
+ele está (sensor). Filtrar é manter uma crença e atualizá-la a cada passo
+com os dois. Exato, sobre um grafo, isso é o `BeliefMap` com uma transição
+melhor -- mas "um guarda não ouviu nada daqui" e "uma pessoa continua
+andando para onde ia" são difíceis de escrever como uma tabela só. A seção
+14.5.3 ("Approximate inference in DBNs") faz isso por amostragem: guarde
+algumas centenas de palpites, mova cada um pela transição, pese cada um
+pelo sensor, reamostre pelo peso. A robótica fez disso o jeito padrão de
+acompanhar algo que não se vê [Thrun 2002].
+
+`ParticleBelief` faz isso sobre a mesma lista de vizinhos do `BeliefMap`:
+
+- **transição**: um palpite segue em frente para um vizinho que não é de
+  onde veio com `walk_on`, vira para qualquer vizinho com `turn`, e senão
+  fica. Num grafo sem geometria, "manter o rumo" só pode querer dizer "não
+  voltar"; é o que quer dizer aqui.
+- **sensor**: um palpite numa célula que um guarda vê, quando ele não viu
+  ninguém, pesa 0; um numa célula de onde o guarda teria ouvido um passo,
+  quando ele não ouviu nada, pesa `unheard`; qualquer outro, 1. Não 0 para
+  o silêncio: um jogador deitado não faz barulho.
+- **reamostragem**: sistemática, a cada passo. Se todo peso for 0, a nuvem
+  é semeada de novo, por igual, nas células que nenhum guarda vê, e
+  `reseeded` diz isso.
+
+Um avistamento ou um relato colapsa a nuvem numa célula. `shares` é a
+nuvem contada por célula, no mesmo formato de `BeliefMap.shares`, então uma
+busca lê qualquer um dos dois. Todo sorteio vem de `ParticleDraws`, um
+xorshift com semente escrito nas duas linguagens -- uma cópia do de
+`ai_adversarial`, porque um *addon* não depende de nada além de `ai_core`
+--, então uma nuvem é conferida com a sua gêmea em Python
+(`gameaikit.perception.particles`) sorteio a sorteio por
+`spec/vectors/perception/particles-*.json`.
+
+**Isto não é treino (invariante 6).** Toda probabilidade acima é uma
+constante escrita antes de o jogo começar, e nada que o jogo faça muda
+nenhuma. Os pesos são recalculados dessas constantes a cada passo, o que é
+inferência -- filtragem --, não um ajuste. `check_no_training.py` concorda
+pelo motivo certo: a sua regra N3 procura escritas nos `weights` de um
+modelo ou uma atualização composta deles (`weights[i] /= total`), e o
+código não faz nenhuma das duas -- cada passo monta um vetor novo de pesos
+a partir das constantes, já que os antigos não significam nada depois que
+a nuvem se moveu.
+
+**Ele te acha mais cedo?** Medido na fase de infiltração
+(`make test-infiltration-tracking`): pouco, e nem sempre -- os números
+estão em [godot/infiltration.md](../godot/infiltration.md#particles-against-the-grid) (em
+inglês). Na maioria das partidas os guardas acharam o jogador no mesmo
+instante com qualquer uma das crenças, porque um vislumbre no caminho
+colapsa as duas igual; onde diferem, as partículas acharam antes quando o
+jogador tinha se movido desde o relato, e depois quando ele não tinha se
+movido nada.
 
 ## No seu projeto {#your-project}
 
 ### O que copiar {#copy}
 
 Duas pastas: `godot/addons/ai_core/` (a grade, que o cone usa num tabuleiro
-em grade) e `godot/addons/ai_perception/`. Abra o projeto uma vez, ou rode
+em grade) e `godot/addons/ai_perception/` -- para uma crença de partículas
+sozinha, bastam `particle_belief.gd` e `particle_draws.gd`. Abra o projeto uma vez, ou rode
 `godot --headless --import`, para o Godot registrar as classes.
 
 ### Um exemplo mínimo {#example}
@@ -172,3 +236,7 @@ e a sua decisão -- uma árvore, uma máquina de estados, o *utility* do
   inglês): [concepts/stealth-ai.md](../concepts/stealth-ai.md).
 - A fase de infiltração, onde cada classe daqui é usada (em inglês):
   [godot/infiltration.md](../godot/infiltration.md).
+- As fontes do filtro de partículas, abertas em 2026-10-26: AIMA 4ª ed.,
+  cap. 14, seção 14.5.3 "Approximate inference in DBNs"
+  (<https://aima.cs.berkeley.edu/contents.html>); Thrun, S. "Particle Filters
+  in Robotics", UAI 2002 (<https://arxiv.org/abs/1301.0607>).

@@ -25,6 +25,8 @@ var guards: Dictionary = {}
 ## a memory and a hit count for, and the phases searching starts from.
 var decision: Dictionary = {}
 var spread: float = 0.4
+## How many particles a guard's `ParticleBelief` holds (T91).
+var particles: int = 256
 var search: Dictionary = {}
 ## The knobs: reaction (s), turn_rate (degrees a second), aim_error, the
 ## awareness rate's multiplier, belief steps a second, off-screen halving.
@@ -37,8 +39,12 @@ var off_screen_halving: bool = true
 ## The techniques, each switchable: the belief (off: guards walk to the
 ## last known position and give up), the coordinator (off: each searches
 ## alone), the arbiter (off: everyone who can shoot does), the accumulator
-## (off: a plain yes-or-no sight test).
+## (off: a plain yes-or-no sight test). With the belief on, `use_particles`
+## says which one the search reads: the grid's `BeliefMap` or the cloud of
+## a `ParticleBelief` (T91). Both are kept up to date either way, so
+## switching shows each as it stands.
 var use_belief: bool = true
+var use_particles: bool = false
 var use_coordinator: bool = true
 var use_arbiter: bool = true
 var use_accumulator: bool = true
@@ -55,6 +61,7 @@ static func read(path: String = FILE) -> InfiltrationRules:
 	rules.guards = data["guards"]
 	rules.decision = data["decision"]
 	rules.spread = float(data["belief"]["spread"])
+	rules.particles = int(data["belief"]["particles"])
 	rules.search = data["search"]
 	var knobs: Dictionary = data["difficulty"]
 	rules.reaction = float(knobs["reaction"])

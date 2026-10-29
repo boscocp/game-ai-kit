@@ -12,7 +12,8 @@
 ##
 ## A few seams are Callables so the properties can plant a broken technique
 ## in the same world: the coordinator, the arbiter, what counts as seen, the
-## decision, the act, and where a guard's post comes from. The game sets none of them.
+## belief a search is weighed from, the decision, the act, and where a
+## guard's post comes from. The game sets none of them.
 ##
 ## A step is linear in the guards, plus a flood per sound and a ray per
 ## cell in reach for each guard's belief.
@@ -42,6 +43,7 @@ var outcome: String = ""
 var coordinator: Callable = SearchCoordinator.assign
 var arbiter: Callable = func(requests: Array[Dictionary], use: bool) -> PackedStringArray: return RoleArbiter.grant(requests, use)
 var seen_by: Callable = GuardEyes.seen_cells
+var believed: Callable = InfiltrationWorld.searched_from
 var decide: Callable = GuardChoice.decide
 var act: Callable = GuardActs.carry
 
@@ -60,7 +62,8 @@ static func make(on_level: InfiltrationLevel, with_rules: InfiltrationRules, see
 	world.sounds = LevelSounds.new(StimulusTable.new(data["events"]))
 	world.player = InfiltrationPlayer.new(on_level.start, with_rules)
 	for spec: Dictionary in (specs if not specs.is_empty() else on_level.guard_specs):
-		world.guards.append(InfiltrationGuard.new(world.guards.size(), types[spec["type"]], spec, on_level.neighbours, with_rules))
+		world.guards.append(InfiltrationGuard.new(world.guards.size(), types[spec["type"]], spec, on_level.neighbours, with_rules,
+			seed_value * 7919 + world.guards.size()))
 	world.team = GuardTeam.new(on_level, with_rules)
 	return world
 
@@ -100,6 +103,12 @@ func _decide_all() -> void:
 	for guard: InfiltrationGuard in guards:
 		if guard.alive():
 			decide.call(guard, self)
+
+
+## The belief `guard` searches from in `world`: whichever the rules have
+## on (`InfiltrationGuard.believed`).
+static func searched_from(world: InfiltrationWorld, guard: InfiltrationGuard) -> PackedFloat64Array:
+	return guard.believed(world.rules.use_particles)
 
 
 ## The guard by id.

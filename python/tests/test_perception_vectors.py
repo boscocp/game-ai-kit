@@ -2,8 +2,8 @@
 
 The vectors in `spec/vectors/perception/` fix each technique's answer on a
 stated query: the zone and certainty of a look, a loudness along a path,
-an awareness over a run of steps and the phase it reads as, and a belief
-over a run of percepts. Both languages answer them and check every value
+an awareness over a run of steps and the phase it reads as, a belief
+over a run of percepts, and a particle cloud drawn from a stated seed. Both languages answer them and check every value
 against the file, never against each other. `derive.py` beside them is a
 third copy of the rules, importing nothing from this repository.
 """
@@ -12,17 +12,17 @@ import json
 import pathlib
 import unittest
 
-from gameaikit.perception import awareness, belief, hearing, shape
+from gameaikit.perception import awareness, belief, hearing, particles, shape
 
 VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "perception"
 
 #: Fewer than this and something is wrong with the directory, not the vectors.
-FEWEST_VECTORS = 8
+FEWEST_VECTORS = 12
 
 #: Shared with `godot/test/ai_perception/perception_vector.gd`.
 TOLERANCE = 1e-9
 
-KINDS = ("shape", "loudness", "awareness", "phase", "belief")
+KINDS = ("shape", "loudness", "awareness", "phase", "belief", "particles")
 
 
 def answer_shape(vector: dict) -> dict:
@@ -61,8 +61,24 @@ def answer_belief(vector: dict) -> dict:
     return {"shares": shares, "reseeded": reseeded}
 
 
+def answer_particles(vector: dict) -> dict:
+    query = vector["query"]
+    cloud = particles.ParticleBelief(query["neighbours"], query["count"], query["seed"])
+    cloud.walk_on, cloud.turn, cloud.unheard = (query["knobs"][name] for name in ("walk_on", "turn", "unheard"))
+    found = {"nodes": [], "weights": [], "shares": [], "emptied": [], "reseeded": []}
+    for each in query["steps"]:
+        if "collapse" in each:
+            cloud.collapse(each["collapse"])
+        else:
+            cloud.step_unseen(each["seen"], each["unheard"])
+        for name in found:
+            value = getattr(cloud, name)
+            found[name].append(list(value) if isinstance(value, list) else value)
+    return found
+
+
 ANSWERS = {"shape": answer_shape, "loudness": answer_loudness, "awareness": answer_awareness,
-           "phase": answer_phase, "belief": answer_belief}
+           "phase": answer_phase, "belief": answer_belief, "particles": answer_particles}
 
 
 def differences(expected, answer, where: str) -> list[str]:

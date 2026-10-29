@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-26
+verified_on: 2026-10-29
 tier: 2
 source: book:Travis McIntosh, "Human Enemy AI in The Last of Us", in Steve Rabin (ed.), "Game AI Pro 2", CRC Press, 2015 ; https://www.gameaipro.com/
-invalidated_if: the kit's VisionCone, Awareness, LineOfSight, Hearing, VisionShape or BeliefMap signatures change, or the demos that use them are renamed
+invalidated_if: the kit's VisionCone, Awareness, LineOfSight, Hearing, VisionShape, BeliefMap or ParticleBelief signatures change, or the demos that use them are renamed
 teaches: perception
 -->
 
@@ -22,7 +22,9 @@ line test; `VisionShape` for a body half-seen, as a certainty. Hearing:
 number that rises while something is perceived and falls through every
 phase in between -- calm, suspicious, alert -- when it is not. And belief:
 `TargetMemory` keeps only what was perceived, `BeliefMap` spreads where the
-target might be since. The sources: McIntosh, *Human Enemy AI in The Last
+target might be since, and `ParticleBelief` answers the same question with
+a cloud of guesses that walk like a person and thin where a guard looked
+and listened. The sources: McIntosh, *Human Enemy AI in The Last
 of Us*, in *Game AI Pro 2* (2015), and the others
 [concepts/stealth-ai.md](../concepts/stealth-ai.md) lists.
 
@@ -42,9 +44,13 @@ left out on purpose: players feel it as cheating.
 - `make demo-behaviour` -- the guard's senses are a `VisionCone` and
   `Hearing`, the same for its four brains; **space** plays a turn.
 - `make demo-infiltration` -- guards with a `VisionShape`, an `Awareness`,
-  `PathHearing` and a shared `BeliefMap` when they search. Over each guard
-  is its detection bar, with its phases' thresholds as ticks; **1** swaps
-  the belief, **Tab** watches the next guard.
+  `PathHearing` and a `BeliefMap` or a `ParticleBelief` when they search.
+  Over each guard is its detection bar, with its phases' thresholds as
+  ticks; **1** cycles the belief -- off, the grid, the particles -- **H**
+  shows the reasoning, **Tab** watches the next guard. With the particles
+  on, the watched guard's cloud is drawn as dots, a white square flashes on
+  each cell its sight just emptied, and a purple cross marks the spot it
+  chose to search from the cloud.
 - `make demo-botmatch` -- each bot sees with `VisionCone` in the open,
   against the arena's walls.
 - Which demo uses which technique, both ways: the catalogue (T76, coming).
@@ -62,13 +68,65 @@ uses the rest, each guard type a JSON row. The knobs that matter:
 | the phases | an awareness row: `peak`, `decay`, `phases`, `caution` | where calm becomes suspicious becomes alert, how fast it falls, how long it stays wary after an alert |
 | the rise | `Awareness.step(row, perceived, rate, seconds, now)` | how fast it grows aware while it perceives; computed by whatever reads the percept |
 | a sound's reach | `Hearing.loudness_at(listener, source, radius)` | how far a noise carries; `PathHearing` measures it round the walls |
+| the particles' models | `ParticleBelief`'s `walk_on` (0.7), `turn` (0.2), `unheard` (0.3), and its count | how a guessed target moves, and how much "heard nothing" counts against a guess |
+
+## A particle filter {#particles}
+
+AIMA's chapter 14 tracks a hidden state over time with two models: how it
+moves (transition) and what a sensor says given where it is (sensor).
+Filtering keeps a belief and updates it each step with both. Exactly, over
+a graph, that is `BeliefMap` with a better transition -- but "a guard heard
+nothing from here" and "a person keeps walking the way they were going" are
+awkward to write as one table. Section 14.5.3 ("Approximate inference in
+DBNs") does it by sampling: keep a few hundred guesses, move each by the
+transition, weigh each by the sensor, resample by weight. Robotics made it
+the standard way to track something you cannot see [Thrun 2002].
+
+`ParticleBelief` does that over the same neighbour list as `BeliefMap`:
+
+- **transition**: a guess walks on to a neighbour that is not where it came
+  from with `walk_on`, turns to any neighbour with `turn`, else stays. On a
+  graph with no geometry, "keeps its heading" can only mean "does not turn
+  back"; that is what it means here.
+- **sensor**: a guess on a cell a guard sees, when it saw no one, weighs 0;
+  one on a cell from which the guard would have heard a footstep, when it
+  heard nothing, weighs `unheard`; any other, 1. Not 0 for silence: a
+  player lying prone makes no sound.
+- **resampling**: systematic, every step. If every weight is 0, the cloud
+  is reseeded evenly over the cells no guard sees, and `reseeded` says so.
+
+A sighting or a report collapses the cloud onto one cell. `shares` is the
+cloud counted per cell, the same shape as `BeliefMap.shares`, so a search
+reads either. Every draw comes from `ParticleDraws`, a seeded xorshift
+written out in both languages -- a copy of `ai_adversarial`'s, because an
+addon depends on nothing but `ai_core` -- so a cloud is held to its Python
+twin (`gameaikit.perception.particles`) draw for draw by
+`spec/vectors/perception/particles-*.json`.
+
+**This is not training (invariant 6).** Every probability above is a
+constant written before the game starts, and nothing a game does changes
+one. The weights are recomputed from those constants every step, which is
+inference -- filtering -- not a fit. `check_no_training.py` agrees for the
+right reason: its N3 rule looks for writes into a model's `weights` or a
+compound update of them (`weights[i] /= total`), and the code never does
+either -- each step builds a fresh array of weights from the constants,
+since the old ones mean nothing once the cloud has moved.
+
+**Does it find you sooner?** Measured in the infiltration level
+(`make test-infiltration-tracking`): barely, and not always -- the numbers
+are on [godot/infiltration.md](../godot/infiltration.md#particles-against-the-grid). On most
+runs the guards found the player at the same moment with either belief,
+because a glimpse on the way collapses both alike; where they differ, the
+particles were sooner when the player had moved since it was reported, and
+later when it had not moved at all.
 
 ## In your own project {#your-project}
 
 ### What to copy {#copy}
 
 Two folders: `godot/addons/ai_core/` (the grid, which the cone uses on a
-grid board) and `godot/addons/ai_perception/`. Open the project once, or
+grid board) and `godot/addons/ai_perception/` -- for a particle belief
+alone, `particle_belief.gd` and `particle_draws.gd` are enough. Open the project once, or
 run `godot --headless --import`, so Godot registers their classes.
 
 ### A minimal example {#example}
@@ -164,3 +222,7 @@ a row once with `Awareness.problem(row)`: `""` means it is sound.
   [concepts/stealth-ai.md](../concepts/stealth-ai.md).
 - The infiltration level, where every class here is used:
   [godot/infiltration.md](../godot/infiltration.md).
+- The particle filter's sources, opened on 2026-10-26: AIMA 4th ed., ch. 14,
+  section 14.5.3 "Approximate inference in DBNs"
+  (<https://aima.cs.berkeley.edu/contents.html>); Thrun, S. "Particle Filters
+  in Robotics", UAI 2002 (<https://arxiv.org/abs/1301.0607>).

@@ -53,7 +53,7 @@ func _draw_guard(guard: InfiltrationGuard, scale_by: float) -> void:
 func _draw_belief(scale_by: float) -> void:
 	if not world.rules.use_belief or world.guards.is_empty():
 		return
-	var strength: PackedFloat64Array = InfiltrationGround.strengths(world.guard(watched).belief)
+	var strength: PackedFloat64Array = InfiltrationGround.strengths(world.guard(watched).believed(world.rules.use_particles))
 	for index: int in range(strength.size()):
 		if strength[index] > 0.0:
 			var cell: Vector2 = Vector2(world.level.cells[index])
