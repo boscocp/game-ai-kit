@@ -6,9 +6,10 @@
 extends GdUnitTestSuite
 
 
-# These tests read the English words. The engine starts in the system's
-# locale, so on a Portuguese system they would read the pt-BR ones (T79);
-# the Portuguese screen is test/locale's. The locale found is put back.
+# The header these tests read is the screen's, in the language on it: the
+# engine starts in the system's locale, so the suite pins English. The
+# reasons they read need no pin, being kept in English (T104). The locale
+# found is put back.
 var _locale_before: String
 
 
@@ -54,7 +55,7 @@ func test_a_horizon_of_no_actions_makes_no_plan_and_buys_by_the_rules() -> void:
 	var decision: TacticalDecision = level.decide_build(state, workshop.id)
 
 	assert_object(level.plan).is_null()
-	assert_str(decision.reason).is_equal(RuleBasedBlue.new().decide_build(state, workshop.id).reason + " (the plan buys nothing more: the rules decide)")
+	assert_str(decision.english()).is_equal(RuleBasedBlue.new().decide_build(state, workshop.id).english() + " (the plan buys nothing more: the rules decide)")
 
 
 func test_a_search_that_chose_no_attack_is_not_overruled_after_the_walk() -> void:
@@ -111,7 +112,7 @@ func test_the_computer_playing_red_never_calls_the_persons_side_red() -> void:
 
 	assert_str(scene._header.text).contains("you play blue; red is played by")
 	while scene._computer_thinking():
-		var said: String = scene._computer_turn.next.reason
+		var said: String = scene._computer_turn.next.english()
 		assert_str(said).not_contains("red piece")
 		assert_str(said).not_contains("red's workshop")
 		scene.step_decision()
@@ -180,7 +181,7 @@ static func _decisions(controller: LeveledBlue, state: BoardState, dice_seed: in
 	for unit: Unit in board.units_of(board.current_faction):
 		if unit.type.mobile:
 			var decision: TacticalDecision = controller.decide_move(board, unit.id)
-			said.append("%s %s %s" % [decision.kind(), decision.target, decision.reason])
+			said.append("%s %s %s" % [decision.kind(), decision.target, decision.english()])
 	return said
 
 

@@ -65,12 +65,14 @@ func decide(unit: Unit, known: TeamFacts) -> String:
 
 
 ## The walker's state, and the arrow it took this turn.
-func thinking(unit_id: int) -> String:
+func thinking(unit_id: int) -> Array:
 	var machine: StateMachine = _machines.get(unit_id)
 	if machine == null:
-		return tr("no machine yet")
-	var arrow: String = tr(machine.last_change) if machine.last_change != "" else tr("no arrow fired")
-	return tr("state {state}, {arrow}").format({state = tr(machine.current), arrow = arrow})
+		return Sentence.of("no machine yet")  # shown through tr()
+	var arrow: Variant = machine.last_change
+	if machine.last_change == "":
+		arrow = Sentence.of("no arrow fired")  # shown through tr()
+	return Sentence.of("state {state}, {arrow}", {state = machine.current, arrow = arrow})  # shown through tr()
 
 
 ## "States updated": one per walker decision.

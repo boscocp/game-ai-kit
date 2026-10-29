@@ -129,7 +129,7 @@ func test_rule_based_blue_attacks_a_piece_it_beats_and_shows_it_first() -> void:
 
 	assert_str(decision.kind()).is_equal("attack")
 	assert_int(decision.attack.target_id).is_equal(runner.id)
-	assert_str(decision.reason).contains("a shield beats a runner")
+	assert_str(decision.english()).contains("a shield beats a runner")
 
 
 func test_rule_based_blue_does_not_attack_what_it_does_not_beat() -> void:

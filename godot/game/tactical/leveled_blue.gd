@@ -125,7 +125,7 @@ func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 	var cell: Vector2i = best[0]
 	var target: Unit = best[1]
 	_strike[unit_id] = target.id if target != null else CHOSE_NOT_TO
-	var why: String = tr("{deed} (worth {worth}, {depth} ply)").format({
+	var why: Array = Sentence.of("{deed} (worth {worth}, {depth} ply)", {  # shown through tr()
 		deed = _said(unit, cell, target), worth = "%.2f" % best[2], depth = level.search_depth})
 	if cell == unit.cell:
 		return TacticalDecision.hold(unit_id, why, cell)
@@ -144,8 +144,8 @@ func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
 		return null
 	var planned: Unit = state.unit_by_id(chosen)
 	if planned != null and TacticalCombat.why_refused(state, Attack.new(unit_id, planned.id)) == BoardState.LEGAL:
-		return TacticalDecision.strike(unit_id, planned, tr("attacks {target} at {cell}, as it walked here to").format({
-			target = TacticalStatus.the_piece(planned.type.type_name), cell = planned.cell}))
+		return TacticalDecision.strike(unit_id, planned, Sentence.of("attacks {target} at {cell}, as it walked here to", {  # shown through tr()
+			target = TacticalStatus.the_piece_sentence(planned.type.type_name), cell = planned.cell}))
 	var best: Unit = null
 	var best_worth: float = 0.0
 	for enemy: Unit in _enemies(state):
@@ -157,8 +157,8 @@ func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
 			best_worth = worth
 	if best == null:
 		return null
-	return TacticalDecision.strike(unit_id, best, tr("attacks {target} at {cell}: worth {worth} where it stands").format({
-		target = TacticalStatus.the_piece(best.type.type_name), cell = best.cell, worth = "%.2f" % best_worth}))
+	return TacticalDecision.strike(unit_id, best, Sentence.of("attacks {target} at {cell}: worth {worth} where it stands", {  # shown through tr()
+		target = TacticalStatus.the_piece_sentence(best.type.type_name), cell = best.cell, worth = "%.2f" % best_worth}))
 
 
 # [cell, target or null, worth] of the best option, ties to the first found.
@@ -356,10 +356,10 @@ func _noise() -> float:
 	return _blur.randf_range(-1.0, 1.0) * level.evaluation_noise * NOISE_SCALE
 
 
-# What the option is, in words.
-func _said(unit: Unit, cell: Vector2i, target: Unit) -> String:
+# What the option is, as a sentence.
+func _said(unit: Unit, cell: Vector2i, target: Unit) -> Array:
 	var stays: bool = cell == unit.cell
 	if target == null:
-		return (tr("stays at {walk}") if stays else tr("walks to {walk}")).format({walk = cell})
-	var deed: String = tr("stays at {walk} to attack {target} at {cell}") if stays else tr("walks to {walk} to attack {target} at {cell}")
-	return deed.format({walk = cell, target = TacticalStatus.the_piece(target.type.type_name), cell = target.cell})
+		return Sentence.of("stays at {walk}" if stays else "walks to {walk}", {walk = cell})  # shown through tr()
+	var deed: String = "stays at {walk} to attack {target} at {cell}" if stays else "walks to {walk} to attack {target} at {cell}"  # shown through tr()
+	return Sentence.of(deed, {walk = cell, target = TacticalStatus.the_piece_sentence(target.type.type_name), cell = target.cell})

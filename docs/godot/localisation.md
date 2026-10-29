@@ -128,11 +128,10 @@ RTS and the fighting game, by the same rules, with what they added:
   it was fumbled late or came out as another, the move or the step in --
   and its `choice` stays the English it always was. So the AI's state and
   every overlay are the same in any language, and a language switched mid
-  match rewords the panel at once. T80 first worded these where they were
-  made, as T79 had the tactical teams do; the review refused it -- the
-  owner's rule is that code and identifiers stay English and the prose is
-  translated where it is shown -- and T104 brings the tactical match to
-  the same shape.
+  match rewords the panel at once. The owner's rule is that code and
+  identifiers stay English and the prose is translated where it is shown;
+  the tactical match and the skirmish keep theirs the same way since T104
+  (below).
 - **What stays English on screen**: a plan's step names and facts in the
   RTS (`build_lab`, `mortars_ready`), as the tactical planner's; a fighting
   move's name and the frame data's terms (`jab`, startup, active, recovery,
@@ -319,6 +318,53 @@ RTS and the fighting game, by the same rules, with what they added:
   its status at 164; the maze's at 220, touching its `Decision` at 220. It
   was so before this wave, with a real pad. Left to the owner, for a task
   of its own.
+
+## The tactical AI keeps its reasons as keys (T104, wave 108)
+
+- **What changed.** Every reason a tactical team gives -- the rules, the
+  planner, the difficulty levels, the learned policy, the four techniques
+  -- and the skirmish's learned opponent's is a `Sentence` now:
+  `TacticalDecision.reason` and `LearnedDecision.reason`, the planner's
+  `why_planned`, a technique's `thinking()`, the policy's
+  `why_unusable_sentence()` and the weights' `error_sentence()`. Before,
+  each was worded with `tr()` when the team decided (T79), so the reason
+  an AI kept was in the language on screen at that moment.
+- **Values.** A piece with its article is a nested sentence
+  (`TacticalStatus.the_piece_sentence`, `a_piece_sentence`: "the bolt
+  tower" has its own key, as before); several pieces or deeds are a chain
+  of nested sentences (`listed`, "mortar, ram"; `in_order`, "hunt then
+  siege"), each worded on its own. A string value is worded by
+  `TacticalStatus.word`: a board's refusal by its shape
+  (`TacticalRefusal`), a piece's name or a deed through the tables, and
+  anything else -- a plan step, a fact, a number, a W or M code -- as it
+  is.
+- **Where it is worded.** `TacticalStatus.said` on the screen: the
+  status's "next" line, the plan's lines (`plan_lines(say)` takes the
+  wording, `said` for the status and `Sentence.english` for the
+  overlay), the skirmish's "blue this turn" and the number over blue's
+  next move (`PlanView.number_sentence`). Both scenes already rebuild
+  their status on `NOTIFICATION_TRANSLATION_CHANGED`, so a language
+  switched mid-turn rewords the reason on the panel.
+- **What is English whatever the language**: `decision.english()`, the
+  overlays (`why`, the plan, `to_move`, the skirmish's `reason` and
+  `number`), and so every test that compares a reason. Measured:
+  `tactical_reasons_test.gd` plays six rounds of a seeded game under every
+  controller in English and in pt-BR and finds the same overlay at every
+  decision; `skirmish_reasons_test.gd` the same for blue; `make
+  test-decisions` now plays its three scenarios in both languages. With
+  the overlay's `why` worded for the screen instead, the first fails; with
+  `LearnedDecision.english()` worded, `test-decisions` fails in pt-BR
+  ("contra", not "against").
+- **Pins dropped.** Four suites that pinned English only to read reasons
+  (`technique_teams_test`, `tactical_bridge_test`, `learned_policy_test`,
+  `tactical_spending_test`) pin nothing now, and pass with the engine
+  started in pt-BR (`LANG=pt_BR.UTF-8`). The suites that read the screen
+  -- a header, a side's name, a refusal -- keep theirs.
+- **Not in it.** The news of what was played (`TacticalCombat.told`,
+  "built a runner at ...", the points paid) is still worded when it
+  happens, and keeps the language it happened in until the next event:
+  it is the game's report, not a team's reason, and the task's scope was
+  the reasons.
 
 ## Measured on 4.7.2
 

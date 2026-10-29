@@ -55,20 +55,26 @@ func _init(published: TacticalWeights, nodes: Array[Vector2i],
 	_capture = published.model(CAPTURE_MODEL) if published != null else null
 
 
-## Why this policy cannot decide anything, or "" when it can.
+## Why this policy cannot decide anything, in English, or "" when it can.
+func why_unusable() -> String:
+	return Sentence.english(why_unusable_sentence())
+
+
+## Why this policy cannot decide anything, as a `Sentence` to word where it
+## is shown, or none when it can.
 ##
 ## Asked by the game before the first turn, so a missing or malformed weights
 ## file is a sentence on the screen rather than an opponent that stands still
 ## and looks thoughtful.
-func why_unusable() -> String:
+func why_unusable_sentence() -> Array:
 	if _published == null:
-		return tr("no weights file was given to the policy")
+		return Sentence.of("no weights file was given to the policy")  # shown through tr()
 	if not _published.is_loaded():
-		return _published.error_shown()
+		return _published.error_sentence()
 	for name: String in [COMBAT_MODEL, CAPTURE_MODEL]:
 		if _published.model(name) == null:
-			return tr("the weights file publishes no `{model}` model").format({model = name})
-	return ""
+			return Sentence.of("the weights file publishes no `{model}` model", {model = name})  # shown through tr()
+	return []
 
 
 ## The move this policy would make. `DecisionPolicy`'s side of the contract.
@@ -81,14 +87,14 @@ func choose(state: BoardState, unit_id: int) -> Move:
 ## This is the call the game makes, because a move on its own cannot be shown
 ## to anybody. `choose` is the interface; this is the lesson.
 func decide(state: BoardState, unit_id: int) -> LearnedDecision:
-	var unusable: String = why_unusable()
-	if unusable != "":
+	var unusable: Array = why_unusable_sentence()
+	if not unusable.is_empty():
 		return LearnedDecision.hold(unit_id, unusable)
 	var unit: Unit = state.unit_by_id(unit_id)
 	if unit == null:
-		return LearnedDecision.hold(unit_id, tr("no unit with that id is on the board"))
+		return LearnedDecision.hold(unit_id, Sentence.of("no unit with that id is on the board"))  # shown through tr()
 	if unit.faction != state.current_faction:
-		return LearnedDecision.hold(unit_id, tr("it is not this unit's side to move"))
+		return LearnedDecision.hold(unit_id, Sentence.of("it is not this unit's side to move"))  # shown through tr()
 	var opponent: Unit = _fight_within_reach(state, unit)
 	if opponent != null:
 		return _fight_or_break_off(state, unit, opponent)
@@ -162,8 +168,8 @@ func _fight_or_break_off(state: BoardState, unit: Unit,
 	# one side of the two languages would otherwise show up as an opponent
 	# that has become very timid.
 	if not is_finite(chance):
-		return LearnedDecision.hold(
-			unit.id, tr("the combat model was handed a row it cannot read"))
+		return LearnedDecision.hold(  # shown through tr()
+			unit.id, Sentence.of("the combat model was handed a row it cannot read"))
 	if chance >= _threshold:
 		return LearnedDecision.attack(
 			unit.id, _move_at(state, unit, opponent.cell),
@@ -184,11 +190,11 @@ func _fight_or_break_off(state: BoardState, unit: Unit,
 # a few lines away; this one has no honest correction, so it is said instead.
 func _advance_on_a_node(state: BoardState, unit: Unit) -> LearnedDecision:
 	if _nodes.is_empty():
-		return LearnedDecision.hold(unit.id, tr("no node was given to walk at"))
+		return LearnedDecision.hold(unit.id, Sentence.of("no node was given to walk at"))  # shown through tr()
 	var ranked: Array[Dictionary] = rank_nodes(state, unit.faction, _nodes)
 	if ranked.is_empty():
-		return LearnedDecision.hold(
-			unit.id, tr("the capture model was handed a row it cannot read"))
+		return LearnedDecision.hold(  # shown through tr()
+			unit.id, Sentence.of("the capture model was handed a row it cannot read"))
 	var best: Dictionary = ranked[0]
 	return LearnedDecision.advance(
 		unit.id, _move_at(state, unit, best["cell"]),

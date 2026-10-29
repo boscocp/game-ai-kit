@@ -125,7 +125,7 @@ func test_the_learned_blue_attacks_when_the_combat_model_clears_the_threshold() 
 	var strike: TacticalDecision = blue.decide_attack(after, 1)
 
 	assert_int(TacticalCombat.distance(after.unit_by_id(1).cell, Vector2i(5, 3))).is_equal(1)
-	assert_str(walk.reason).contains("p(win) 0.90")
+	assert_str(walk.english()).contains("p(win) 0.90")
 	assert_object(strike).is_not_null()
 	assert_int(strike.attack.target_id).is_equal(2)
 
@@ -139,7 +139,7 @@ func test_the_learned_blue_retreats_when_it_does_not() -> void:
 	var walk: TacticalDecision = blue.decide_move(state, 1)
 	var after: BoardState = walk.played_on(state)
 
-	assert_str(walk.reason).contains("retreats")
+	assert_str(walk.english()).contains("retreats")
 	assert_int(TacticalCombat.distance(after.unit_by_id(1).cell, Vector2i(5, 3))).is_greater(2)
 	assert_object(blue.decide_attack(after, 1)).is_null()
 
@@ -162,7 +162,7 @@ func test_a_retreat_stops_at_the_edge_of_the_threat_s_reach() -> void:
 	blue.retreat_on_strength = false
 	var walk: TacticalDecision = blue.decide_move(state, 1)
 
-	assert_str(walk.reason).contains("retreats")
+	assert_str(walk.english()).contains("retreats")
 	assert_int(TacticalCombat.distance(walk.target, Vector2i(2, 4))).is_equal(6)
 
 
@@ -180,7 +180,7 @@ func test_a_walker_that_set_out_strikes_above_the_give_up_bar() -> void:
 	var strike: TacticalDecision = blue.decide_attack(after, 1)
 
 	assert_object(strike).is_not_null()
-	assert_str(strike.reason).contains("give-up bar")
+	assert_str(strike.english()).contains("give-up bar")
 
 
 func test_a_walker_that_did_not_set_out_does_not_strike_under_the_commit_bar() -> void:
@@ -251,7 +251,7 @@ func test_a_walker_beside_a_fight_its_side_started_joins_it_instead_of_retreatin
 
 	var walk: TacticalDecision = blue.decide_move(state, 1)
 
-	assert_str(walk.reason).contains("joins in")
+	assert_str(walk.english()).contains("joins in")
 	# Joining is not setting out: no lower bar for it later.
 	assert_bool(blue._committed.has(1)).is_false()
 
@@ -265,7 +265,7 @@ func test_an_attack_far_off_does_not_stop_a_retreat() -> void:
 	blue.decide_attack(state, 3)
 	blue.policy = LearnedBlue.new(_file(_always(0.1))).policy
 
-	assert_str(blue.decide_move(state, 1).reason).contains("retreats")
+	assert_str(blue.decide_move(state, 1).english()).contains("retreats")
 
 
 func test_attacks_of_last_turn_are_not_fights_beside_it_now() -> void:
@@ -280,7 +280,7 @@ func test_attacks_of_last_turn_are_not_fights_beside_it_now() -> void:
 	blue.begin_turn(later)
 	blue.policy = LearnedBlue.new(_file(_always(0.1))).policy
 
-	assert_str(blue.decide_move(later, 1).reason).contains("retreats")
+	assert_str(blue.decide_move(later, 1).english()).contains("retreats")
 
 
 func test_a_retreat_names_the_bar_it_fell_under() -> void:
@@ -288,7 +288,7 @@ func test_a_retreat_names_the_bar_it_fell_under() -> void:
 	var blue := LearnedBlue.new(_file(_always(0.1)))
 	blue.retreat_on_strength = false
 
-	assert_str(blue.decide_move(state, 1).reason).contains("below the commit bar 0.50")
+	assert_str(blue.decide_move(state, 1).english()).contains("below the commit bar 0.50")
 
 
 func test_standing_its_ground_says_so_and_names_the_bar() -> void:
@@ -296,8 +296,8 @@ func test_standing_its_ground_says_so_and_names_the_bar() -> void:
 
 	var walk: TacticalDecision = LearnedBlue.new(_file(_always(0.1))).decide_move(state, 1)
 
-	assert_str(walk.reason).contains("did not retreat")
-	assert_str(walk.reason).contains("under its bar 0.50")
+	assert_str(walk.english()).contains("did not retreat")
+	assert_str(walk.english()).contains("under its bar 0.50")
 
 
 func test_a_walker_retreats_on_strength_only_when_red_s_far_outweighs_blue_s() -> void:
@@ -312,8 +312,8 @@ func test_a_walker_retreats_on_strength_only_when_red_s_far_outweighs_blue_s() -
 		[RED, TacticalRules.RUNNER, Vector2i(5, 4)], [RED, TacticalRules.RUNNER, Vector2i(5, 2)],
 		[RED, TacticalRules.RUNNER, Vector2i(6, 3)], [RED, TacticalRules.RUNNER, Vector2i(6, 4)]])
 
-	assert_str(LearnedBlue.new(_file(_always(0.1))).decide_move(even, 1).reason).not_contains("retreats to")
-	assert_str(LearnedBlue.new(_file(_always(0.1))).decide_move(outweighed, 1).reason).contains("retreats to")
+	assert_str(LearnedBlue.new(_file(_always(0.1))).decide_move(even, 1).english()).not_contains("retreats to")
+	assert_str(LearnedBlue.new(_file(_always(0.1))).decide_move(outweighed, 1).english()).contains("retreats to")
 
 
 func test_a_new_game_forgets_who_was_committed() -> void:
@@ -341,8 +341,8 @@ func test_the_learned_blue_walks_at_the_point_the_capture_model_ranks_first() ->
 	var to_nearer: TacticalDecision = LearnedBlue.new(_file(_always(0.5), _by_distance(1.0))).decide_move(state, 1)
 	var to_further: TacticalDecision = LearnedBlue.new(_file(_always(0.5), _by_distance(-1.0))).decide_move(state, 1)
 
-	assert_str(to_nearer.reason).contains(str(nearer))
-	assert_str(to_further.reason).contains(str(further))
+	assert_str(to_nearer.english()).contains(str(nearer))
+	assert_str(to_further.english()).contains(str(further))
 
 
 func test_learned_against_rules_games_all_end_and_nothing_is_refused() -> void:

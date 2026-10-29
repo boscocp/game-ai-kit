@@ -18,19 +18,8 @@ const BRIDGE_WEST := Vector2i(6, 4)
 const IN_FRONT_OF_THE_BRIDGE := Vector2i(5, 4)
 
 
-# These tests read the English words. The engine starts in the system's
-# locale, so on a Portuguese system they would read the pt-BR ones (T79);
-# the Portuguese screen is test/locale's. The locale found is put back.
-var _locale_before: String
-
-
-func before() -> void:
-	_locale_before = TranslationServer.get_locale()
-	TranslationServer.set_locale("en")
-
-
-func after() -> void:
-	TranslationServer.set_locale(_locale_before)
+# The reasons they read are kept in English whatever the locale (T104), so
+# they run in any language and pin none.
 
 
 func test_blue_wins_when_red_parks_a_runner_on_the_bridge() -> void:
@@ -51,7 +40,7 @@ func test_with_every_dry_crossing_shut_blue_builds_a_piece_that_can_wade() -> vo
 
 	assert_str(decision.kind()).is_equal("build")
 	assert_str(decision.order.unit_type.type_name).is_equal(TacticalRules.WADER)
-	assert_str(decision.reason).contains("still gets there")
+	assert_str(decision.english()).contains("still gets there")
 
 
 func test_a_walker_every_crossing_is_shut_to_says_so_and_takes_the_fallback() -> void:
@@ -64,8 +53,8 @@ func test_a_walker_every_crossing_is_shut_to_says_so_and_takes_the_fallback() ->
 	var decision: TacticalDecision = RuleBasedBlue.new().decide_move(state, shield.id)
 
 	assert_object(decision.move).is_not_null()
-	assert_str(decision.reason).contains("the enemy's pieces stand on every way")
-	assert_str(decision.reason).contains("fallback")
+	assert_str(decision.english()).contains("the enemy's pieces stand on every way")
+	assert_str(decision.english()).contains("fallback")
 
 
 # The winner of a whole game in which red's only act is to walk its runner to

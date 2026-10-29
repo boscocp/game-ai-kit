@@ -27,19 +27,8 @@ const CAPTURE_FEATURES: Array = [
 const NODES: Array[Vector2i] = [Vector2i(0, 0), Vector2i(9, 6)]
 
 
-# These tests read the English words. The engine starts in the system's
-# locale, so on a Portuguese system they would read the pt-BR ones (T79);
-# the Portuguese screen is test/locale's. The locale found is put back.
-var _locale_before: String
-
-
-func before() -> void:
-	_locale_before = TranslationServer.get_locale()
-	TranslationServer.set_locale("en")
-
-
-func after() -> void:
-	TranslationServer.set_locale(_locale_before)
+# The reasons they read are kept in English whatever the locale (T104), so
+# they run in any language and pin none.
 
 
 func test_a_policy_over_a_missing_file_says_so_and_holds() -> void:
@@ -51,7 +40,7 @@ func test_a_policy_over_a_missing_file_says_so_and_holds() -> void:
 	assert_str(policy.why_unusable()).contains("M1")
 	var decision: LearnedDecision = policy.decide(_two_sides(), 2)
 	assert_str(decision.action).is_equal(LearnedDecision.HOLD)
-	assert_str(decision.reason).contains("M1")
+	assert_str(decision.english()).contains("M1")
 	assert_array(decision.move.path).is_empty()
 
 
@@ -72,7 +61,7 @@ func test_a_unit_that_is_not_on_the_board_is_a_hold() -> void:
 	var decision: LearnedDecision = _policy(0.9).decide(_two_sides(), 99)
 
 	assert_str(decision.action).is_equal(LearnedDecision.HOLD)
-	assert_str(decision.reason).contains("no unit")
+	assert_str(decision.english()).contains("no unit")
 
 
 func test_a_unit_of_the_side_that_is_not_to_move_is_a_hold() -> void:
@@ -82,7 +71,7 @@ func test_a_unit_of_the_side_that_is_not_to_move_is_a_hold() -> void:
 	var decision: LearnedDecision = _policy(0.9).decide(_two_sides(), 1)
 
 	assert_str(decision.action).is_equal(LearnedDecision.HOLD)
-	assert_str(decision.reason).contains("side to move")
+	assert_str(decision.english()).contains("side to move")
 
 
 func test_a_confident_model_closes_with_the_enemy() -> void:
@@ -133,7 +122,7 @@ func test_a_model_that_cannot_read_the_row_holds_rather_than_retreating() -> voi
 		_file(misnamed), NODES).decide(_two_sides(), 2)
 
 	assert_str(decision.action).is_equal(LearnedDecision.HOLD)
-	assert_str(decision.reason).contains("cannot read")
+	assert_str(decision.english()).contains("cannot read")
 
 
 func test_an_enemy_too_far_to_reach_is_not_a_fight_worth_weighing() -> void:
@@ -186,7 +175,7 @@ func test_the_node_with_the_lower_prediction_is_the_one_walked_at() -> void:
 	assert_str(decision.action).is_equal(LearnedDecision.ADVANCE)
 	assert_vector(decision.target).is_equal(Vector2i(12, 5))
 	assert_float(decision.predicted_turns).is_equal_approx(0.75, 1e-12)
-	assert_str(decision.reason).contains("against 4.0 at (0, 0)")
+	assert_str(decision.english()).contains("against 4.0 at (0, 0)")
 
 
 func test_a_policy_with_nowhere_to_go_holds_and_says_why() -> void:
@@ -198,7 +187,7 @@ func test_a_policy_with_nowhere_to_go_holds_and_says_why() -> void:
 	var decision: LearnedDecision = policy.decide(state, 2)
 
 	assert_str(decision.action).is_equal(LearnedDecision.HOLD)
-	assert_str(decision.reason).contains("no node")
+	assert_str(decision.english()).contains("no node")
 
 
 func test_a_unit_with_no_way_out_still_names_its_decision() -> void:
@@ -367,7 +356,7 @@ func test_a_unit_with_no_fight_in_reach_contests_a_node_an_enemy_stands_on() -> 
 
 	assert_str(decision.action).is_equal(LearnedDecision.CONTEST)
 	assert_vector(decision.target).is_equal(Vector2i(9, 6))
-	assert_str(decision.reason).contains("a rule, not the model")
+	assert_str(decision.english()).contains("a rule, not the model")
 
 
 func test_of_two_held_nodes_the_nearer_is_contested() -> void:

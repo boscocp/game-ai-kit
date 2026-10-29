@@ -55,18 +55,18 @@ static func decision_of(row: Dictionary) -> TacticalDecision:
 	match row["kind"]:
 		"move":
 			var path: Array[Vector2i] = _cells(row["path"])
-			return TacticalDecision.walk(unit_id, path, "recorded", path.back())
+			return TacticalDecision.walk(unit_id, path, Sentence.of("recorded"), path.back())  # not shown: a replay says no reason
 		"build":
 			var at := Vector2i(int(row["cell"][0]), int(row["cell"][1]))
 			var order := ProductionOrder.new(unit_id, TacticalRules.unit_types()[row["type"]], at)
-			return TacticalDecision.build(unit_id, order, "recorded")
+			return TacticalDecision.build(unit_id, order, Sentence.of("recorded"))  # not shown: a replay says no reason
 		"attack":
-			var decision := TacticalDecision.new(unit_id, "recorded", Vector2i.ZERO)
+			var decision := TacticalDecision.new(unit_id, Sentence.of("recorded"), Vector2i.ZERO)  # not shown: a replay says no reason
 			decision.attack = Attack.new(unit_id, int(row["target"]))
 			return decision
 		"buy":
-			return TacticalDecision.buy(unit_id, TacticalRules.forge(), "recorded", Vector2i.ZERO)
-	return TacticalDecision.hold(unit_id, "recorded", Vector2i.ZERO)
+			return TacticalDecision.buy(unit_id, TacticalRules.forge(), Sentence.of("recorded"), Vector2i.ZERO)  # not shown: a replay says no reason
+	return TacticalDecision.hold(unit_id, Sentence.of("recorded"), Vector2i.ZERO)  # not shown: a replay says no reason
 
 
 # A path as the file writes it, [[x, y], ...], as cells.

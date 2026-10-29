@@ -68,7 +68,7 @@ class _PeekingAtTheDice extends LeveledBlue:
 	## The level's walk -- unless the board's next roll is even.
 	func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 		if state.dice_seed % 2 == 0:
-			return TacticalDecision.hold(unit_id, "the next roll is even", state.unit_by_id(unit_id).cell)
+			return TacticalDecision.hold(unit_id, Sentence.of("the next roll is even"), state.unit_by_id(unit_id).cell)
 		return super.decide_move(state, unit_id)
 
 
@@ -222,7 +222,7 @@ static func _resource_problems(controller: LeveledBlue) -> Array[String]:
 		var result: Dictionary = TacticalMatch.play(seats[0], seats[1], game)
 		problems.append_array(watched.changed)
 		for refused: TacticalDecision in result["refused"]:
-			problems.append("the board refused %s" % refused.reason)
+			problems.append("the board refused %s" % refused.english())
 	return problems
 
 
@@ -261,7 +261,7 @@ static func _answers(controller: LeveledBlue, board: BoardState, dice_seed: int)
 	var said: Array[String] = []
 	for unit: Unit in seeded.units_of(seeded.current_faction):
 		if not unit.type.produces.is_empty():
-			said.append(controller.decide_build(seeded, unit.id).reason)
+			said.append(controller.decide_build(seeded, unit.id).english())
 	for unit: Unit in seeded.units_of(seeded.current_faction):
 		if unit.type.mobile:
 			said.append_array(_walk_and_attack(controller, seeded, unit.id, dice_seed))
@@ -273,7 +273,7 @@ static func _walk_and_attack(controller: LeveledBlue, board: BoardState, unit_id
 	var walk: TacticalDecision = controller.decide_move(board, unit_id)
 	var walked: BoardState = walk.played_on(board)
 	if walked == null:
-		return [walk.reason, "refused"]
+		return [walk.english(), "refused"]
 	walked.dice_seed = dice_seed
 	var attack: TacticalDecision = controller.decide_attack(walked, unit_id)
-	return [walk.reason, attack.reason if attack != null else "no attack"]
+	return [walk.english(), attack.english() if attack != null else "no attack"]

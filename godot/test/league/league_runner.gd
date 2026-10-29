@@ -334,7 +334,7 @@ class _Unrepeatable extends RuleBasedBlue:
 	## The rules' walk in its first game, a hold in its second.
 	func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 		if _holds:
-			return TacticalDecision.hold(unit_id, "stays, because a game before this one said so", state.unit_by_id(unit_id).cell)
+			return TacticalDecision.hold(unit_id, Sentence.of("stays, because a game before this one said so"), state.unit_by_id(unit_id).cell)
 		return super.decide_move(state, unit_id)
 
 
@@ -342,4 +342,4 @@ class _Unrepeatable extends RuleBasedBlue:
 class _Refusing extends RuleBasedBlue:
 	## A walk nothing can take.
 	func decide_move(_state: BoardState, unit_id: int) -> TacticalDecision:
-		return TacticalDecision.walk(unit_id, [Vector2i(2, 3)] as Array[Vector2i], "walks into rock", Vector2i(2, 3))
+		return TacticalDecision.walk(unit_id, [Vector2i(2, 3)] as Array[Vector2i], Sentence.of("walks into rock"), Vector2i(2, 3))

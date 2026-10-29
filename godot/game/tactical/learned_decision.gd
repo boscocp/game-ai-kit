@@ -48,8 +48,9 @@ var target: Vector2i = Vector2i.ZERO
 ## What the capture model said that node would take, or NAN.
 var predicted_turns: float = NAN
 
-## One line for a person, naming the number that decided it.
-var reason: String = ""
+## One line for a person, naming the number that decided it: a `Sentence`
+## (T104), worded where it is shown, and the same in any language here.
+var reason: Array = []
 
 
 func _init(decided: String, deciding_for: int, chosen: Move) -> void:
@@ -64,7 +65,7 @@ static func attack(unit_id: int, chosen: Move, opponent: Unit, chance: float,
 	var decision := LearnedDecision.new(ATTACK, unit_id, chosen)
 	decision.win_probability = chance
 	decision.opponent_id = opponent.id
-	decision.reason = TranslationServer.translate("unit {unit} attacks unit {opponent}: p(win) {chance} at or above {bar}").format({
+	decision.reason = Sentence.of("unit {unit} attacks unit {opponent}: p(win) {chance} at or above {bar}", {  # shown through tr()
 		unit = unit_id, opponent = opponent.id, chance = "%.2f" % chance, bar = "%.2f" % threshold})
 	return decision
 
@@ -75,7 +76,7 @@ static func retreat(unit_id: int, chosen: Move, opponent: Unit, chance: float,
 	var decision := LearnedDecision.new(RETREAT, unit_id, chosen)
 	decision.win_probability = chance
 	decision.opponent_id = opponent.id
-	decision.reason = TranslationServer.translate("unit {unit} retreats from unit {opponent}: p(win) {chance} below {bar}").format({
+	decision.reason = Sentence.of("unit {unit} retreats from unit {opponent}: p(win) {chance} below {bar}", {  # shown through tr()
 		unit = unit_id, opponent = opponent.id, chance = "%.2f" % chance, bar = "%.2f" % threshold})
 	return decision
 
@@ -88,10 +89,10 @@ static func advance(unit_id: int, chosen: Move, node: Vector2i, turns: float,
 	decision.target = node
 	decision.predicted_turns = turns
 	var said: Dictionary = {unit = unit_id, node = node, turns = "%.1f" % turns}
-	decision.reason = TranslationServer.translate("unit {unit} advances on {node}: {turns} turns").format(said)
+	decision.reason = Sentence.of("unit {unit} advances on {node}: {turns} turns", said)  # shown through tr()
 	if not runner_up.is_empty():
 		said.merge({other = "%.1f" % runner_up["turns"], cell = runner_up["cell"]})
-		decision.reason = TranslationServer.translate("unit {unit} advances on {node}: {turns} turns, against {other} at {cell}").format(said)
+		decision.reason = Sentence.of("unit {unit} advances on {node}: {turns} turns, against {other} at {cell}", said)  # shown through tr()
 	return decision
 
 
@@ -102,14 +103,19 @@ static func contest(unit_id: int, chosen: Move, node: Vector2i, holder: Unit) ->
 	var decision := LearnedDecision.new(CONTEST, unit_id, chosen)
 	decision.target = node
 	decision.opponent_id = holder.id
-	decision.reason = TranslationServer.translate("unit {unit} contests {node}: unit {holder} stands on it, and a node left to the enemy is lost (a rule, not the model)").format({
+	decision.reason = Sentence.of("unit {unit} contests {node}: unit {holder} stands on it, and a node left to the enemy is lost (a rule, not the model)", {  # shown through tr()
 		unit = unit_id, node = node, holder = holder.id})
 	return decision
 
 
 ## Stand still, and say why. The reason is required, because an unexplained
 ## hold is the one answer a reader cannot tell from a policy that crashed.
-static func hold(unit_id: int, why: String) -> LearnedDecision:
+static func hold(unit_id: int, why: Array) -> LearnedDecision:
 	var decision := LearnedDecision.new(HOLD, unit_id, Move.new(unit_id, [] as Array[Vector2i]))
-	decision.reason = TranslationServer.translate("unit {unit} holds: {why}").format({unit = unit_id, why = why})
+	decision.reason = Sentence.of("unit {unit} holds: {why}", {unit = unit_id, why = why})  # shown through tr()
 	return decision
+
+
+## The reason in English, as a log, a test or an overlay reads it.
+func english() -> String:
+	return Sentence.english(reason)

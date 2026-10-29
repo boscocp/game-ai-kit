@@ -242,7 +242,7 @@ func test_blue_shows_its_decision_before_playing_it() -> void:
 	var shown: TacticalDecision = scene._computer_turn.next
 	var before: BoardState = scene.state
 	assert_object(shown).is_not_null()
-	assert_str(scene.decision_overlay()["next"]["why"]).is_equal(shown.reason)
+	assert_str(scene.decision_overlay()["next"]["why"]).is_equal(shown.english())
 	assert_object(scene.state).is_same(before)
 
 	scene.step_decision()
@@ -270,7 +270,7 @@ func test_blue_builds_what_beats_the_most_red_pieces() -> void:
 
 	assert_str(decision.kind()).is_equal("build")
 	assert_str(decision.order.unit_type.type_name).is_equal(TacticalRules.SHIELD)
-	assert_str(decision.reason).contains("it beats 1 enemy piece(s), runner")
+	assert_str(decision.english()).contains("it beats 1 enemy piece(s), runner")
 
 
 func test_blue_builds_the_counter_to_whatever_red_has_most_of() -> void:
@@ -292,7 +292,7 @@ func test_blue_builds_nothing_it_cannot_pay_for() -> void:
 	var decision: TacticalDecision = RuleBasedBlue.new().decide_build(state, state.unit_at(BLUE_WORKSHOP).id)
 
 	assert_str(decision.kind()).is_equal("hold")
-	assert_str(decision.reason).contains("has 0")
+	assert_str(decision.english()).contains("has 0")
 
 
 func test_blue_walks_at_red_s_workshop_and_makes_for_a_crossing() -> void:
@@ -303,8 +303,8 @@ func test_blue_walks_at_red_s_workshop_and_makes_for_a_crossing() -> void:
 	var decision: TacticalDecision = RuleBasedBlue.new().decide_move(state, runner.id)
 
 	assert_int(routes[decision.target]).is_less(routes[runner.cell])
-	assert_str(decision.reason).contains("the workshop at %s" % RED_WORKSHOP)
-	assert_str(decision.reason).contains("making for a crossing")
+	assert_str(decision.english()).contains("the workshop at %s" % RED_WORKSHOP)
+	assert_str(decision.english()).contains("making for a crossing")
 
 
 func test_a_unit_already_over_the_river_says_nothing_of_the_bridge() -> void:
@@ -314,7 +314,7 @@ func test_a_unit_already_over_the_river_says_nothing_of_the_bridge() -> void:
 
 	var decision: TacticalDecision = RuleBasedBlue.new().decide_move(state, runner.id)
 
-	assert_str(decision.reason).not_contains("bridge")
+	assert_str(decision.english()).not_contains("bridge")
 
 
 func test_blue_s_policy_answers_as_a_decision_policy() -> void:
@@ -341,7 +341,7 @@ func test_a_boxed_in_workshop_says_there_is_no_room() -> void:
 	var decision: TacticalDecision = RuleBasedBlue.new().decide_build(state, state.unit_at(BLUE_WORKSHOP).id)
 
 	assert_str(decision.kind()).is_equal("hold")
-	assert_str(decision.reason).not_contains("beats")
+	assert_str(decision.english()).not_contains("beats")
 
 
 func test_blue_s_workshop_decides_before_anyone_walks() -> void:
@@ -535,10 +535,10 @@ class _HoldingBlue extends BlueController:
 		return "a controller that never moves"
 
 	func decide_build(state: BoardState, workshop_id: int) -> TacticalDecision:
-		return TacticalDecision.hold(workshop_id, "holds", state.unit_by_id(workshop_id).cell)
+		return TacticalDecision.hold(workshop_id, Sentence.of("holds"), state.unit_by_id(workshop_id).cell)
 
 	func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
-		return TacticalDecision.hold(unit_id, "holds", state.unit_by_id(unit_id).cell)
+		return TacticalDecision.hold(unit_id, Sentence.of("holds"), state.unit_by_id(unit_id).cell)
 
 
 # One game of `rounds` rounds, red at random, every blue decision checked.
@@ -569,7 +569,7 @@ func _play_seeded_game(seed_number: int, rounds: int) -> int:
 
 func _checked_play(state: BoardState, turn: BlueTurn, label: String) -> BoardState:
 	assert_str(_why_refused(state, turn.next)).override_failure_message(
-		"%s: %s" % [label, turn.next.reason]).is_equal(BoardState.LEGAL)
+		"%s: %s" % [label, turn.next.english()]).is_equal(BoardState.LEGAL)
 	return turn.play(state)
 
 
@@ -782,8 +782,8 @@ func test_the_overlay_and_the_status_carry_what_blue_did_and_why() -> void:
 	var scene: TacticalGame = _mounted_scene()
 	scene.step_decision()
 	var shown: TacticalDecision = scene._computer_turn.next
-	assert_str(_status_of(scene)).contains(shown.reason)
+	assert_str(_status_of(scene)).contains(shown.english())
 
 	scene.step_decision()
 
-	assert_str(scene.decision_overlay()["played"][0]["why"]).is_equal(shown.reason)
+	assert_str(scene.decision_overlay()["played"][0]["why"]).is_equal(shown.english())

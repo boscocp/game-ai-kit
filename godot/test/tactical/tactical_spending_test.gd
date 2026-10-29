@@ -7,19 +7,8 @@ const BLUE: int = TacticalScenario.BLUE
 const SEEDS: int = 4
 
 
-# These tests read the English words. The engine starts in the system's
-# locale, so on a Portuguese system they would read the pt-BR ones (T79);
-# the Portuguese screen is test/locale's. The locale found is put back.
-var _locale_before: String
-
-
-func before() -> void:
-	_locale_before = TranslationServer.get_locale()
-	TranslationServer.set_locale("en")
-
-
-func after() -> void:
-	TranslationServer.set_locale(_locale_before)
+# The reasons they read are kept in English whatever the locale (T104), so
+# they run in any language and pin none.
 
 
 func test_a_boxed_in_workshop_says_there_is_no_room() -> void:
@@ -29,7 +18,7 @@ func test_a_boxed_in_workshop_says_there_is_no_room() -> void:
 
 	var decision: TacticalDecision = RuleBasedBlue.new().decide_build(state, _workshop(state).id)
 
-	assert_str(decision.reason).contains(RuleBasedBlue.NO_ROOM)
+	assert_str(decision.english()).contains(RuleBasedBlue.NO_ROOM)
 
 
 func test_a_boxed_in_workshop_is_asked_again_after_its_walkers_move() -> void:
@@ -70,7 +59,7 @@ func test_a_walker_with_no_way_to_its_goal_takes_the_fallback() -> void:
 	var decision: TacticalDecision = RuleBasedBlue.new().decide_move(state, shield.id)
 
 	assert_str(decision.kind()).is_equal("move")
-	assert_str(decision.reason).contains("fallback")
+	assert_str(decision.english()).contains("fallback")
 
 
 func test_two_walkers_of_one_side_never_head_for_the_same_point_in_one_turn() -> void:
@@ -117,7 +106,7 @@ func test_a_fifth_walker_at_a_full_workshop_takes_the_fallback() -> void:
 
 	var decision: TacticalDecision = rules.decide_move(state, state.unit_at(Vector2i(9, 3)).id)
 
-	assert_str(decision.reason).contains("already has one of its side's walkers for each cell beside it")
+	assert_str(decision.english()).contains("already has one of its side's walkers for each cell beside it")
 
 
 func test_a_point_is_given_back_when_its_walker_cannot_get_nearer() -> void:
@@ -126,7 +115,7 @@ func test_a_point_is_given_back_when_its_walker_cannot_get_nearer() -> void:
 	var point: Vector2i = TacticalScenario.POINTS[1]
 	learned._claim(state, point)
 
-	learned._walk_at(state, state.unit_at(Vector2i(9, 3)), {}, point, "the test")
+	learned._walk_at(state, state.unit_at(Vector2i(9, 3)), {}, point, Sentence.of("the test"))
 
 	assert_int(learned._claims[point]).is_equal(0)
 
@@ -241,9 +230,9 @@ class _Recording extends BlueController:
 	## The inner walk, with the point it names written down.
 	func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 		var decision: TacticalDecision = inner.decide_move(state, unit_id)
-		var found: int = decision.reason.find("towards the point at ")
+		var found: int = decision.english().find("towards the point at ")
 		if decision.move != null and found != -1:
-			points_by_turn[state.turn_number].append(decision.reason.substr(found, 30).get_slice(":", 0))
+			points_by_turn[state.turn_number].append(decision.english().substr(found, 30).get_slice(":", 0))
 		return decision
 
 	## The inner attack.

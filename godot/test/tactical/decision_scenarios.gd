@@ -26,6 +26,7 @@
 extends SceneTree
 
 const POINTS: int = 4
+const LOCALES: Array[String] = ["en", "pt_BR"]
 const RED: int = 0
 const BLUE: int = 1
 
@@ -35,21 +36,28 @@ const NODES: Array[Vector2i] = [Vector2i(0, 0), Vector2i(8, 6)]
 
 
 func _init() -> void:
-	# The reasons are read in English, whatever the machine's locale (T79).
-	TranslationServer.set_locale("en")
 	var published: TacticalWeights = TacticalWeights.load_from(LearnedPolicy.WEIGHTS_PATH)
 	if not published.is_loaded():
 		printerr("decision_scenarios: %s" % published.error)
 		quit(2)
 		return
 
+	# Played in each language: a reason is kept as its English key and values
+	# (T104), so what the AI decides, and the English its checks read, must
+	# not depend on the language on screen. Worded when it was made (T79),
+	# the third scenario's reason said "contra" in pt-BR, not "against".
 	var failures: Array[String] = []
-	failures += _the_fight_it_should_take(published)
-	failures += _the_fight_it_should_refuse(published)
-	failures += _the_node_it_should_prefer(published)
+	for locale: String in LOCALES:
+		TranslationServer.set_locale(locale)
+		var played: Array[String] = []
+		played += _the_fight_it_should_take(published)
+		played += _the_fight_it_should_refuse(published)
+		played += _the_node_it_should_prefer(published)
+		for failure: String in played:
+			failures.append("%s: %s" % [locale, failure])
 	for failure: String in failures:
 		print(failure)
-	print("decision scenarios: 3 played, %d failure(s)" % failures.size())
+	print("decision scenarios: 3 played in each of %s, %d failure(s)" % [", ".join(LOCALES), failures.size()])
 	quit(1 if not failures.is_empty() else 0)
 
 
@@ -118,9 +126,9 @@ func _the_node_it_should_prefer(published: TacticalWeights) -> Array[String]:
 		LearnedDecision.ADVANCE, state)
 	if decision.target != Vector2i(8, 5):
 		failures.append("the node it should prefer: it walked at %s" % decision.target)
-	if not decision.reason.contains("against"):
+	if not decision.english().contains("against"):
 		failures.append("the node it should prefer: the reason does not say what it "
-			+ "was preferred to -- `%s`" % decision.reason)
+			+ "was preferred to -- `%s`" % decision.english())
 	return failures
 
 
@@ -129,7 +137,7 @@ func _expect(label: String, decision: LearnedDecision, wanted: String,
 		state: BoardState) -> Array[String]:
 	var failures: Array[String] = []
 	if decision.action != wanted:
-		failures.append("%s: it chose to %s -- %s" % [label, decision.action, decision.reason])
+		failures.append("%s: it chose to %s -- %s" % [label, decision.action, decision.english()])
 	var refusal: String = state.why_refused(decision.move)
 	if refusal != BoardState.LEGAL:
 		failures.append("%s: the move it chose is not legal -- %s" % [label, refusal])

@@ -52,8 +52,10 @@ func decide_attack(_state: BoardState, _unit_id: int) -> TacticalDecision:
 
 ## The controller's plan as lines for the screen, or none: only a controller
 ## that plans has one (T11). The rules and the learned policy decide each
-## piece afresh, and say so in their reasons instead.
-func plan_lines() -> Array[String]:
+## piece afresh, and say so in their reasons instead. `say` words each of
+## its sentences: `TacticalStatus.said` for the screen, `Sentence.english`
+## for the overlay and the console (T104).
+func plan_lines(_say: Callable) -> Array[String]:
 	return []
 
 

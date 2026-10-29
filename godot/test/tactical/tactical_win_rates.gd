@@ -46,7 +46,9 @@ const OUTCOMES: Array[String] = ["red", "blue", "draw", "at-the-limit", "red-stu
 
 
 func _init() -> void:
-	# The reasons are read in English, whatever the machine's locale (T79).
+	# Its tally is keyed by the sides' names as the screen says them, so it
+	# reads them in English whatever the machine's locale (T79). The reasons
+	# it reads need no pin: they are kept in English (T104).
 	TranslationServer.set_locale("en")
 	var arguments: PackedStringArray = OS.get_cmdline_user_args()
 	var games: int = int(arguments[0]) if not arguments.is_empty() and arguments[0].is_valid_int() else DEFAULT_GAMES
@@ -202,8 +204,8 @@ class _Counting extends BlueController:
 		_inner.begin_turn(state)
 
 	## The inner controller's plan.
-	func plan_lines() -> Array[String]:
-		return _inner.plan_lines()
+	func plan_lines(say: Callable) -> Array[String]:
+		return _inner.plan_lines(say)
 
 	## The inner controller's name.
 	func controller_name() -> String:
@@ -222,7 +224,7 @@ class _Counting extends BlueController:
 			return decision
 		_asked_on = state.turn_number
 		_counted["build turns"] += 1
-		_missed_because = "" if built else decision.reason.trim_prefix("builds nothing: ")
+		_missed_because = "" if built else decision.english().trim_prefix("builds nothing: ")
 		if built:
 			_counted["built"] += 1
 		else:
@@ -281,7 +283,7 @@ class _Counting extends BlueController:
 		_count_flip(state, unit_id, decision)
 		_count_ford(decision)
 		_counted["decisions"] += 1
-		if decision.reason.begins_with("stays: no walk this turn"):
+		if decision.english().begins_with("stays: no walk this turn"):
 			_counted["stuck"] += 1
 		return decision
 

@@ -54,9 +54,10 @@ var _last_refusal: String = ""
 var _policy: LearnedPolicy
 var _victory: SkirmishVictory = SkirmishVictory.new(NODES, FACTIONS)
 
-# What blue has played this turn, in its own words, and the decision it is
-# about to play -- decided and drawn, not yet played.
-var _ai_reasons: PackedStringArray = PackedStringArray()
+# What blue has played this turn, in its own words -- each a `Sentence`,
+# worded where the status shows it (T104) -- and the decision it is about to
+# play, decided and drawn, not yet played.
+var _ai_reasons: Array[Array] = []
 var _played: Array[LearnedDecision] = []
 var _plan: LearnedDecision = null
 
@@ -182,7 +183,7 @@ func step_decision() -> void:
 		_play_the_plan()
 	else:
 		_hand_over()
-		_ai_reasons = PackedStringArray()
+		_ai_reasons.clear()
 		_played.clear()
 		if _victory.winner == SkirmishVictory.NOBODY:
 			_blue_to_decide.assign(_state.units_of(AI_FACTION).map(func(unit: Unit) -> int: return unit.id))
@@ -198,7 +199,7 @@ func decision_overlay() -> Dictionary:
 	var decisions: Array[Dictionary] = []
 	for decision: LearnedDecision in _played + ([_plan] if _plan != null else []):
 		var entry: Dictionary = {"unit": decision.unit_id, "action": decision.action}
-		entry.merge({"number": PlanView.number_of(decision), "reason": decision.reason})
+		entry.merge({"number": Sentence.english(PlanView.number_sentence(decision)), "reason": decision.english()})
 		if is_finite(decision.win_probability):
 			entry["p_win"] = decision.win_probability
 		if is_finite(decision.predicted_turns):
@@ -226,9 +227,9 @@ func _play_the_plan() -> void:
 # oldest bug in turn-based AI. With nobody left to decide, blue's turn ends.
 func _plan_the_next_unit() -> void:
 	_plan = null
-	var unusable: String = _policy.why_unusable()
-	if unusable != "":
-		_ai_reasons.append(tr("blue cannot think: {why}").format({why = unusable}))
+	var unusable: Array = _policy.why_unusable_sentence()
+	if not unusable.is_empty():
+		_ai_reasons.append(Sentence.of("blue cannot think: {why}", {why = unusable}))  # shown through tr()
 		_blue_to_decide.clear()
 	while _plan == null and not _blue_to_decide.is_empty():
 		var unit_id: int = _blue_to_decide.pop_front()
@@ -294,10 +295,10 @@ func _status_line() -> String:
 		lines.append("\n" + tr("refused: {why}").format({why = TacticalRefusal.words(_last_refusal)}))
 	if not _ai_reasons.is_empty():
 		lines.append("\n" + tr("blue this turn:"))
-		for reason: String in _ai_reasons:
-			lines.append(reason)
+		for reason: Array in _ai_reasons:
+			lines.append(TacticalStatus.said(reason))
 	if _plan != null:
-		lines.append("\n" + tr("next, not yet played: {why}").format({why = _plan.reason}))
+		lines.append("\n" + tr("next, not yet played: {why}").format({why = TacticalStatus.said(_plan.reason)}))
 	return "\n".join(lines)
 
 

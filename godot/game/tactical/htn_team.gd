@@ -74,11 +74,11 @@ func begin_turn(state: BoardState) -> void:
 
 ## The plan's next step, planning again first if it should.
 func decide(unit: Unit, known: TeamFacts) -> String:
-	var held: Array = _plans.get(unit.id, [BehaviourPlan.new(), 0, ""])
+	var held: Array = _plans.get(unit.id, [BehaviourPlan.new(), 0, []])
 	var plan: BehaviourPlan = held[0]
 	var next: int = _skip_steps_done(plan, held[1], known.facts)
-	var why: String = _why_plan_again(plan, next, known.facts)
-	if why != "":
+	var why: Array = _why_plan_again(plan, next, known.facts)
+	if not why.is_empty():
 		plan = _planner.plan(_domain, known.facts, TOP)
 		_work += plan.visited
 		_replans += 1
@@ -89,20 +89,17 @@ func decide(unit: Unit, known: TeamFacts) -> String:
 
 
 ## The walker's method, the step it is on, and why it last planned.
-func thinking(unit_id: int) -> String:
+func thinking(unit_id: int) -> Array:
 	if not _plans.has(unit_id):
-		return tr("no plan yet")
+		return Sentence.of("no plan yet")  # shown through tr()
 	var held: Array = _plans[unit_id]
 	var plan: BehaviourPlan = held[0]
-	var method: String = tr("none")
+	var method: String = "none"  # shown through tr()
 	if not plan.methods.is_empty():
-		method = tr(plan.methods[0].trim_prefix(TOP + ": "))
-	var steps: Array[String] = []
-	for step: String in plan.steps:
-		steps.append(tr(step))
-	return tr("method {method}, step {step} of {steps} ({deeds}), planned {why}").format({
+		method = plan.methods[0].trim_prefix(TOP + ": ")
+	return Sentence.of("method {method}, step {step} of {steps} ({deeds}), planned {why}", {  # shown through tr()
 		method = method, step = held[1] + 1, steps = plan.steps.size(),
-		deeds = (" %s " % tr("then")).join(steps), why = held[2]})
+		deeds = TacticalStatus.in_order(plan.steps), why = held[2]})
 
 
 ## "Tasks": the tasks the decomposition visited.
@@ -122,18 +119,18 @@ func _skip_steps_done(plan: BehaviourPlan, next: int, facts: Dictionary) -> int:
 	return next
 
 
-# Why to plan again this turn, or "" to carry on.
-func _why_plan_again(plan: BehaviourPlan, next: int, facts: Dictionary) -> String:
+# Why to plan again this turn, as a sentence, or none to carry on.
+func _why_plan_again(plan: BehaviourPlan, next: int, facts: Dictionary) -> Array:
 	if plan.steps.is_empty():
-		return tr("at its first decision")
+		return Sentence.of("at its first decision")  # shown through tr()
 	if next >= plan.steps.size():
-		return tr("because the plan was done")
+		return Sentence.of("because the plan was done")  # shown through tr()
 	if not HtnDomain.holds(_domain.primitives[plan.steps[next]][0], facts):
-		return tr("because {deed} could no longer run").format({deed = tr(plan.steps[next])})
+		return Sentence.of("because {deed} could no longer run", {deed = plan.steps[next]})  # shown through tr()
 	var better: String = _better_method(plan, facts)
 	if better == "":
-		return ""
-	return tr("because {method} became possible").format({method = tr(better)})
+		return []
+	return Sentence.of("because {method} became possible", {method = better})  # shown through tr()
 
 
 # A method ranked above the one being carried out whose conditions now hold.

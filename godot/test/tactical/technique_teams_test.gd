@@ -5,19 +5,8 @@
 extends GdUnitTestSuite
 
 
-# These tests read the English words. The engine starts in the system's
-# locale, so on a Portuguese system they would read the pt-BR ones (T79);
-# the Portuguese screen is test/locale's. The locale found is put back.
-var _locale_before: String
-
-
-func before() -> void:
-	_locale_before = TranslationServer.get_locale()
-	TranslationServer.set_locale("en")
-
-
-func after() -> void:
-	TranslationServer.set_locale(_locale_before)
+# The reasons they read are kept in English whatever the locale (T104), so
+# they run in any language and pin none.
 
 
 func test_the_state_machine_stays_a_defender_until_home_is_clear() -> void:
@@ -29,7 +18,7 @@ func test_the_state_machine_stays_a_defender_until_home_is_clear() -> void:
 	# reach: the machine waits for its arrow.
 	assert_str(team.decide(walker, _facts({"prey_in_reach": true}))).is_equal(TechniqueTeam.DEFEND)
 	assert_str(team.decide(walker, _facts({"home_clear": true, "prey_in_reach": true}))).is_equal(TechniqueTeam.SIEGE)
-	assert_str(team.thinking(walker.id)).contains("defend -> advance: home is clear")
+	assert_str(Sentence.english(team.thinking(walker.id))).contains("defend -> advance: home is clear")
 
 
 func test_the_tree_turns_hunter_the_moment_home_is_not_threatened() -> void:
@@ -49,7 +38,7 @@ func test_the_htn_keeps_its_defend_step_until_its_effect_shows() -> void:
 	# Home clear is defend's effect: the plan is done, and it plans again --
 	# in one decision, where the machine took an arrow to advance first.
 	assert_str(team.decide(walker, _facts({"home_clear": true, "prey_in_reach": true}))).is_equal(TechniqueTeam.HUNT)
-	assert_str(team.thinking(walker.id)).contains("because the plan was done")
+	assert_str(Sentence.english(team.thinking(walker.id))).contains("because the plan was done")
 
 
 func test_the_htn_drops_its_plan_for_a_better_method_and_says_which() -> void:
@@ -58,7 +47,7 @@ func test_the_htn_drops_its_plan_for_a_better_method_and_says_which() -> void:
 
 	assert_str(team.decide(walker, _facts({"point_free": true}))).is_equal(TechniqueTeam.TAKE_POINT)
 	assert_str(team.decide(walker, _facts({"point_free": true, "in_danger": true, "wounded": true}))).is_equal(TechniqueTeam.FALL_BACK)
-	assert_str(team.thinking(walker.id)).contains("because save itself became possible")
+	assert_str(Sentence.english(team.thinking(walker.id))).contains("because save itself became possible")
 	assert_int(team.replans()).is_equal(2)
 
 
@@ -73,13 +62,13 @@ func test_goap_takes_the_nearer_of_a_siege_and_a_point_where_the_tree_always_tak
 
 	var goap := GoapTeam.new()
 	goap.begin_turn(state)
-	assert_str(goap.decide_move(state, walker.id).reason).starts_with(TechniqueTeam.SIEGE + " -- ")
+	assert_str(goap.decide_move(state, walker.id).english()).starts_with(TechniqueTeam.SIEGE + " -- ")
 	assert_str(TreeTeam.new().decide(walker, near_their_workshop)).is_equal(TechniqueTeam.TAKE_POINT)
 
 	# Beside a point, the point is the cheaper, and GOAP and the tree agree.
 	walker.cell = Vector2i(5, 1)
 	goap.begin_turn(state)
-	assert_str(goap.decide_move(state, walker.id).reason).starts_with(TechniqueTeam.TAKE_POINT + " -- ")
+	assert_str(goap.decide_move(state, walker.id).english()).starts_with(TechniqueTeam.TAKE_POINT + " -- ")
 
 
 func test_goap_has_two_ways_to_a_safe_home_and_strikes_the_intruder_when_it_can() -> void:
@@ -142,7 +131,7 @@ func test_a_walker_beside_an_enemy_held_point_is_not_left_standing() -> void:
 	for team: TechniqueTeam in [MachineTeam.new(), TreeTeam.new(), HtnTeam.new()]:
 		team.begin_turn(state)
 		var decision: TacticalDecision = team.decide_move(state, walker.id)
-		assert_str(decision.kind()).override_failure_message(team.controller_name() + ": " + decision.reason).is_equal("move")
+		assert_str(decision.kind()).override_failure_message(team.controller_name() + ": " + decision.english()).is_equal("move")
 
 
 func test_the_tree_sieges_a_workshop_in_reach_before_it_hunts() -> void:
