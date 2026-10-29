@@ -16,7 +16,7 @@ taught -- a module any game can take is one whose name and folder say what
 it is. The scored-considerations technique is GAP1 ch. 9's [Graham 2013],
 and T73's table lists it.
 
-## Decisions written down first (the owner confirms in review)
+## Decisions written down first (confirmed by the owner, 2026-10-29)
 
 - **Name: `ai_utility`.** If T64's naming ADR has landed, its rule
   applies (only ports and the kernel prefixed, so a technique addon's

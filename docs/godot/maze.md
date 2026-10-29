@@ -75,7 +75,7 @@ Written in `spec/maze/rules.json`'s "about" too, each on purpose:
   four pellets would hold from the first step. No red zones, the arcade's
   cells above the ghost house where a ghost may not turn up. Four plain pellets keep T98's state space small:
   82,160 states that the rules allow, measured.
-  Frightened mode -- the Dossier's random turns -- is the decision left to
+  Frightened mode -- the Dossier's random turns -- stays out, decided by
   the owner (below).
 - **The imprecise ghost.** In chase, at a fork of two or more ways, a
   uniform draw below `precision` (0.8) keeps the Dossier's way; otherwise a
@@ -192,12 +192,16 @@ games and its move is always the lookahead's best.
   carries it. The task had said `data/maze/`, outside the project.
 - **Frightened mode** is not in the game, since four plain pellets have no
   energizer. Adding one energizer would bring in the Dossier's random turns
-  and a third mode, and multiply T98's states.
+  and a third mode, and multiply T98's states. Decided by the owner,
+  2026-10-29: as recommended, left out.
 - **The generator exists twice** (`ai_adversarial`'s `Xorshift` and the
   maze's `MazeDice`). Moving one copy into `ai_core` would let both use it,
-  and is ADR 0021's to decide.
+  and is ADR 0021's to decide. Decided by the owner, 2026-10-29: one
+  generator in `ai_core`, the same stream bit for bit -- task T109, which
+  amends ADR 0021.
 - **The schedule's scale**, two steps a second of the Dossier's, and the
   precision, 0.8, are numbers in `rules.json`, chosen rather than measured.
+  Decided by the owner, 2026-10-29: as recommended, kept.
 - **T98 and the timed schedule** -- decided (owner, 2026-10-29). The mode
   and the forced reversal depend on the step count, which T98's state does
   not hold. T98 solves the stationary regime, chase for ever as after step
@@ -208,4 +212,5 @@ games and its move is always the lookahead's best.
   with R's seeds 1, 2, 3... the first chase fork of a game almost always
   keeps the Dossier's way; the dice spread from the second or third draw
   on. Warming the generator up, or seeding from a spread value, would
-  change every vector; left as it is, and named here.
+  change every vector; left as it is, and named here. Decided by the
+  owner, 2026-10-29: no warm-up, as recommended.

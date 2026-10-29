@@ -1,6 +1,6 @@
 # T100 — The bot match reads how well you play, during one match
 
-Size: M · Prereqs: T99, T66 · Files: `godot/game3d/botmatch/`, `godot/test/botmatch/`, `python/gameaikit/botmatch/`, `modules/botmatch.json`, `spec/vectors/`, `python/tests/`, `scripts/check_no_training.py`, `docs/godot/botmatch.md`, `docs/concepts/`, `Makefile`
+Size: M · Prereqs: T99, T66 · Files: `godot/game3d/botmatch/`, `godot/test/botmatch/`, `python/gameaikit/botmatch/`, `modules/botmatch.json`, `spec/vectors/`, `python/tests/`, `scripts/check_no_training.py`, `CLAUDE.md`, `docs/godot/botmatch.md`, `docs/concepts/`, `Makefile`
 
 ## Goal
 
@@ -60,7 +60,10 @@ balances difficulty through the enemies' accuracy [GAP3 ch. 33].
    each interval out.
 3. `PlayerModel` in `godot/game3d/botmatch/`, held to the vectors; the
    event log and its replay test.
-4. N14 and its planted cases.
+4. N14 and its planted cases; `CLAUDE.md`'s row 6 names N14 beside N9
+   and N13, and invariant 6's text the difficulty model -- ADR 0016's
+   amendment, confirmed by the owner on 2026-10-29, made as each rule
+   lands.
 5. Measured, in `docs/godot/botmatch.md`: with T66's scripted stand-ins at
    three skills playing the taken-over bot, the knob each settles on and
    the score difference with the model on and off; whether it oscillates.

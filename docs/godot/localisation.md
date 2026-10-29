@@ -316,8 +316,8 @@ RTS and the fighting game, by the same rules, with what they added:
   (800 at three a line); the 2D racer's at 254 in English and 274 in
   pt-BR, over its status, which starts at 200; the 3D racer's at 212, over
   its status at 164; the maze's at 220, touching its `Decision` at 220. It
-  was so before this wave, with a real pad. Left to the owner, for a task
-  of its own.
+  was so before this wave, with a real pad. Decided by the owner,
+  2026-10-29: a task of its own, T108, with a gate that measures it.
 
 ## The tactical AI keeps its reasons as keys (T104, wave 108)
 

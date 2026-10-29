@@ -383,8 +383,8 @@ cada decisão em aberto nelas está escrita para o dono confirmar na revisão.
 3. "faz o recomendado pensando em didática de IA" -- a pergunta não
    recomendava nenhuma das duas respostas; a emenda da ADR 0016 lê as
    palavras do dono como **estender** a exceção ao bandit, nas três
-   condições, e o dono confirma essa leitura na revisão da T99 (que
-   escreve a regra N13).
+   condições; o dono confirmou essa leitura em 2026-10-29, como
+   recomendado (a T99 escreve a regra N13).
 4. Opção 3 -- a ADR 0016 se estende ao modelo do jogador para dificuldade
    nas mesmas três condições (T100 escreve a regra N14). A exceção cobre
    três componentes, pelo nome; qualquer outro precisa de nova decisão.
@@ -416,8 +416,8 @@ confirm in review.
 3. "faz o recomendado pensando em didática de IA" -- the question
    recommended neither answer; ADR 0016's amendment reads the owner's
    words as **extend** the exception to the bandit, on its three
-   conditions, and the owner confirms that reading in T99's review (which
-   writes rule N13).
+   conditions; the owner confirmed that reading on 2026-10-29, as
+   recommended (T99 writes rule N13).
 4. Option 3 -- ADR 0016 extends to the player model for difficulty on the
    same three conditions (T100 writes rule N14). The exception covers
    three components by name; any other needs a new decision.

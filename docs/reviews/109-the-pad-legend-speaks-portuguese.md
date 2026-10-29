@@ -130,6 +130,10 @@ Nine mutations. Every one was caught by some gate except one:
 
 ## Open for the owner
 
+Decided by the owner, 2026-10-29: as recommended. The pt-BR
+words stay as they are ("D-pad cima", arrows as words, "D-pad setas");
+the legend's height is task T108.
+
 - **The pt-BR words.** The reviewer finds them fine. "D-pad para cima"
   would read more naturally than "D-pad cima", at a width cost; "mira"
   is an option for the shooters' right stick.

@@ -141,6 +141,9 @@ through the tests.
 
 ## Open for the owner
 
+Decided by the owner, 2026-10-29: as recommended. The skirmish's
+status runs the whole left column at 16 px, the behaviour demo's at 13 px.
+
 The skirmish's status no longer starts level with the board, where T8 put
 it. It now runs the whole left column, as the tactical match's has since
 T102, and that buys 144 px. The reviewer is in favour. The owner decides,

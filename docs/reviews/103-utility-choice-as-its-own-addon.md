@@ -108,6 +108,9 @@ The diff against main:
 
 ## The owner's decisions, with the reviewer's opinion
 
+Decided by the owner, 2026-10-29: as recommended. Where
+`AimChoice` belongs stays tracked in T64.
+
 - **`AimChoice` stays in `ai_teamwork`.** Agree: it is a shooter's hit
   model, not the scored choice B.6 names. Where it belongs is tracked in
   T64.

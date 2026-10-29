@@ -174,6 +174,8 @@ After the fixes, the wave's own runs:
 
 ## The owner's open choices, with the reviewer's opinion
 
+Decided by the owner, 2026-10-29: as recommended.
+
 - **Ties.** The generator chooses which untried move to expand; ties in
   UCB1 and in the final answer go to the first move in the game's order.
   The reviewer agrees.

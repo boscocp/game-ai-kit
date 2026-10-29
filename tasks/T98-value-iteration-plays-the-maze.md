@@ -16,7 +16,7 @@ goes the intended way or to either side, each with probability 1/3, and
 only the goal pays [Gymnasium] -- and T73 named it as the alternative. The
 owner chose the maze: a game people know, with an opponent in it.
 
-## Decisions written down first (the owner confirms in review)
+## Decisions written down first (confirmed by the owner, 2026-10-29)
 
 - **The state**: Pac-Man's cell, the ghost's cell and heading, the ghost's
   mode, and which pellets remain. With about 50 cells, 4 headings, 2 modes
@@ -105,6 +105,8 @@ make lint-tasks lint-status
 ```
 
 ## Manual check
+
+Done by the owner, 2026-10-29: `make demo-maze` plays well, nothing to adjust.
 
 Watch the MDP play `make demo-maze` with V on: does it wait for the ghost
 to commit before crossing a corridor, and does the value map explain
