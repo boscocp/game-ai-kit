@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# The only way this repo runs the local LLM (T93, docs/adr/0023).
+#
+# llama.cpp's server, its models and every cache it or the GPU driver keeps
+# live under the toolchain directory on the large disk (invariant 8). Left
+# alone they would not: llama.cpp downloads into ~/.cache/llama.cpp
+# (LLAMA_CACHE), the NVIDIA driver keeps compiled shaders in
+# ~/.cache/nvidia and kernels in ~/.nv, Mesa in ~/.cache/mesa_shader_cache.
+# This wrapper points each at the toolchain, as scripts/artgen does for the
+# image model, and check_disk_layout.py fails if llama.cpp's own cache
+# appears under $HOME.
+#
+# Usage:
+#   scripts/llm bootstrap [--model NAME|all] [--flavour vulkan|cpu|cuda|all]
+#   scripts/llm serve     [--model NAME] [--flavour NAME]   on HttpRuntime.PORT
+#   scripts/llm smoke     [--model NAME] [--flavour NAME]   start, one line, stop
+#   scripts/llm bakeoff   [--model NAME|all] [--flavour NAME] [--language en|pt_BR]
+#   scripts/llm table                                        the bake-off's table
+#   scripts/llm --self-test
+#
+# Exit codes: 0 done, 1 a check or the smoke failed, 2 wrong usage or the
+# runtime is not installed.
+set -euo pipefail
+
+here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+toolchain=${GAK_TOOLCHAIN:-/mnt/games/gamedev/toolchain}
+home="$toolchain/llm"
+
+export XDG_CACHE_HOME="$home/cache/xdg"
+export LLAMA_CACHE="$home/cache/llama.cpp"
+export CUDA_CACHE_PATH="$home/cache/nv"
+export __GL_SHADER_DISK_CACHE_PATH="$home/cache/nvidia"
+export MESA_SHADER_CACHE_DIR="$home/cache/mesa"
+# The server never fetches: bootstrap does, pinned. LLAMA_ARG_OFFLINE is
+# `--offline` (tools/server/README.md at the pinned tag).
+export LLAMA_ARG_OFFLINE=1
+
+# What would let a cache land on the small disk, or the server fetch an
+# unpinned file. Empty when the environment is sound. "runner" forgives the
+# toolchain under $HOME, as scripts/artgen does (a GitHub runner has one disk).
+problems() {
+  local root=$1 where=${2:-desk}
+  case "$(realpath -m "$root")/" in "$(realpath -m "$HOME")"/*)
+    if [[ "$where" == runner ]]; then echo "note: the toolchain $root is under \$HOME on a CI runner" >&2
+    else echo "the toolchain $root is under \$HOME"; fi;;
+  esac
+  for variable in XDG_CACHE_HOME LLAMA_CACHE CUDA_CACHE_PATH __GL_SHADER_DISK_CACHE_PATH MESA_SHADER_CACHE_DIR; do
+    [[ "${!variable:-}" == "$root"/* ]] || echo "$variable is outside the toolchain"
+  done
+  [[ "${LLAMA_ARG_OFFLINE:-}" == 1 ]] || echo "LLAMA_ARG_OFFLINE is not 1, so the server could fetch an unpinned model"
+}
+
+if [[ "${1:-}" == "--self-test" ]]; then
+  where=desk; [[ "${GITHUB_ACTIONS:-}" == true ]] && where=runner
+  found=$(problems "$home" "$where")
+  [[ -z "$found" ]] || { echo "self-test FAIL: $found"; exit 1; }
+  # Planted: a toolchain on the small disk.
+  [[ "$(problems "$HOME/toolchain/llm")" == *"under \$HOME"* ]] || { echo "self-test FAIL: a toolchain under \$HOME passed"; exit 1; }
+  # Planted: llama.cpp's download cache left at its default.
+  [[ "$(LLAMA_CACHE="$HOME/.cache/llama.cpp" problems "$home")" == *LLAMA_CACHE* ]] || { echo "self-test FAIL: LLAMA_CACHE under \$HOME passed"; exit 1; }
+  # Planted: the server allowed online.
+  [[ "$(LLAMA_ARG_OFFLINE=0 problems "$home")" == *LLAMA_ARG_OFFLINE* ]] || { echo "self-test FAIL: LLAMA_ARG_OFFLINE=0 passed"; exit 1; }
+  # The pin: a planted file whose sha256 differs must be refused and deleted.
+  exec python3 -I "$here/tools/llm/llm.py" "$toolchain" --self-test
+fi
+
+found=$(problems "$home")
+[[ -z "$found" ]] || { echo "scripts/llm: $found" >&2; exit 2; }
+command -v python3 >/dev/null || { echo "scripts/llm: python3 is required" >&2; exit 2; }
+
+exec python3 -I "$here/tools/llm/llm.py" "$toolchain" "$@"

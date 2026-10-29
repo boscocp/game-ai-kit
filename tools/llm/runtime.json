@@ -1,0 +1,58 @@
+{
+  "about": "What `make llm-bootstrap` installs on the large disk, each file pinned by sha256 (T93, docs/adr/0023). The port is not here: it is HttpRuntime.PORT, which scripts/llm reads, so the game and the server cannot disagree.",
+  "runtime": {
+    "name": "llama.cpp llama-server",
+    "licence": "MIT",
+    "source": "https://github.com/ggml-org/llama.cpp/releases/tag/b11960",
+    "tag": "b11960",
+    "release": "v0.8.0, whose nightly-tag.txt names b11960",
+    "commit": "8642541b255bfb5dc39cd351a178be09013a55d6",
+    "default_flavour": "vulkan",
+    "flavours": {
+      "vulkan": [
+        {"file": "llama-b11960-bin-ubuntu-vulkan-x64.tar.gz", "size": 35474467,
+         "sha256": "164199e978304bb32a8a6c24b8efa015528ddf286821596eab676c90b375feac"}
+      ],
+      "cpu": [
+        {"file": "llama-b11960-bin-ubuntu-x64.tar.gz", "size": 22686210,
+         "sha256": "31cc3a6bc638ac6c48dc4b1b74888f1eaadf3d14227c1e5f67daf9a49541d97a"}
+      ],
+      "cuda": [
+        {"file": "llama-b11960-bin-ubuntu-cuda-13.4-x64.tar.gz", "size": 163957335,
+         "sha256": "0cf758b28483593a5a15e0d2c9b686c40840d1f8be9b5bb2417f04a053113907"},
+        {"file": "cudart-llama-b11960-bin-ubuntu-cuda-13.4-x64.tar.gz", "size": 440232534,
+         "sha256": "756e14988abb5daa60d25f27a9766a9a78f04c88647c4b92a88fb749488d72f7"}
+      ]
+    }
+  },
+  "default_model": "ministral-3-8b",
+  "models": {
+    "gemma-4-e4b": {
+      "repository": "google/gemma-4-E4B-it-qat-q4_0-gguf",
+      "revision": "4b4a2c1d584be7264f87aac328a1bc739ce81b6c",
+      "file": "gemma-4-E4B_q4_0-it.gguf",
+      "size": 5154941280,
+      "sha256": "676c35070db6dbe52f93e9c864ee0fba4eddea94b9c875d9cb10daff453fbaee",
+      "licence": "Apache-2.0",
+      "licence_source": "the model card's front matter, `license: apache-2.0`, linking https://ai.google.dev/gemma/docs/gemma_4_license, which is the Apache License 2.0 page; read 2026-10-29"
+    },
+    "granite-4.2-8b": {
+      "repository": "ibm-granite/granite-4.2-8b-GGUF",
+      "revision": "93f3f6a8938ee922b784cf4e5b4203cd3428df8f",
+      "file": "granite-4.2-8b-Q4_K_M.gguf",
+      "size": 5347917952,
+      "sha256": "16a9369d0805f80b7377d25d87f937a90c05dc04ad79173a52001e42c9aab311",
+      "licence": "Apache-2.0",
+      "licence_source": "the model card's front matter, `license: apache-2.0`, and the base model's card (ibm-granite/granite-4.2-8b), Apache 2.0; read 2026-10-29"
+    },
+    "ministral-3-8b": {
+      "repository": "mistralai/Ministral-3-8B-Instruct-2512-GGUF",
+      "revision": "0102285ad796bd99af90f58de616092e5630e970",
+      "file": "Ministral-3-8B-Instruct-2512-Q4_K_M.gguf",
+      "size": 5198911904,
+      "sha256": "33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761",
+      "licence": "Apache-2.0",
+      "licence_source": "the model card's front matter, `license: apache-2.0`, and its section \"License\"; read 2026-10-29"
+    }
+  }
+}

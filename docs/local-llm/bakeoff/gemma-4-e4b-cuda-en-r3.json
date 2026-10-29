@@ -1,0 +1,360 @@
+{
+ "language": "en",
+ "turns": [
+  {
+   "argument": "",
+   "index": 0,
+   "intent": "unclear",
+   "line": "I'm here to fix the heating in the east wing.",
+   "refusal": "R7 `east_wing` is not an argument `claim_role` takes",
+   "refusal_code": "R7",
+   "seconds": 0.311,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 7.06
+  },
+  {
+   "argument": "",
+   "index": 1,
+   "intent": "unclear",
+   "line": "Delivery for the lab, it needs a signature.",
+   "refusal": "R7 `delivery` is not an argument `unclear` takes",
+   "refusal_code": "R7",
+   "seconds": 0.283,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 6.91
+  },
+  {
+   "argument": "officer",
+   "index": 2,
+   "intent": "claim_role",
+   "line": "Lieutenant Hale, internal inspection. Stand aside.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.352,
+   "speech": "I'm sorry, I cannot open this door for anyone.",
+   "worst_frame_ms": 7.07
+  },
+  {
+   "argument": "",
+   "index": 3,
+   "intent": "unclear",
+   "line": "First night on the job, they told me to report here.",
+   "refusal": "R7 `the_guard` is not an argument `claim_role` takes",
+   "refusal_code": "R7",
+   "seconds": 0.359,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 6.96
+  },
+  {
+   "argument": "badge",
+   "index": 4,
+   "intent": "show",
+   "line": "Here's my badge.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.283,
+   "speech": "Show me something more official.",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "work_order",
+   "index": 5,
+   "intent": "show",
+   "line": "I've got a work order signed by the facilities office.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.296,
+   "speech": "A work order? Show me.",
+   "worst_frame_ms": 6.92
+  },
+  {
+   "argument": "",
+   "index": 6,
+   "intent": "unclear",
+   "line": "I don't have any papers on me, sorry.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.324,
+   "speech": "You don't have papers? That's unusual.",
+   "worst_frame_ms": 6.92
+  },
+  {
+   "argument": "vasquez",
+   "index": 7,
+   "intent": "name_person",
+   "line": "Sergeant Vasquez sent me.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.276,
+   "speech": "State your business and what you require.",
+   "worst_frame_ms": 11.11
+  },
+  {
+   "argument": "okafor",
+   "index": 8,
+   "intent": "name_person",
+   "line": "Doctor Okafor is expecting me.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.242,
+   "speech": "Who are you?",
+   "worst_frame_ms": 7.02
+  },
+  {
+   "argument": "",
+   "index": 9,
+   "intent": "unclear",
+   "line": "Mara Lind said you'd let me through.",
+   "refusal": "R7 `Lind` is not an argument `name_person` takes",
+   "refusal_code": "R7",
+   "seconds": 0.331,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 7.02
+  },
+  {
+   "argument": "",
+   "index": 10,
+   "intent": "unclear",
+   "line": "Brandt told me to come at ten.",
+   "refusal": "R7 `Brandt` is not an argument `name_person` takes",
+   "refusal_code": "R7",
+   "seconds": 0.331,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 6.94
+  },
+  {
+   "argument": "the_guard",
+   "index": 11,
+   "intent": "ask",
+   "line": "Who's on shift with you tonight?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.352,
+   "speech": "I don't know who's on shift with me.",
+   "worst_frame_ms": 6.96
+  },
+  {
+   "argument": "",
+   "index": 12,
+   "intent": "ask",
+   "line": "Are you expecting anyone this evening?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.283,
+   "speech": "The station is quiet. What brings you out tonight?",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "",
+   "index": 13,
+   "intent": "ask",
+   "line": "What do they even keep in this building?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.283,
+   "speech": "What do you want to know about the station?",
+   "worst_frame_ms": 6.91
+  },
+  {
+   "argument": "",
+   "index": 14,
+   "intent": "ask",
+   "line": "How long have you been guarding this door?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.269,
+   "speech": "Long enough to be very tired. What is your business here?",
+   "worst_frame_ms": 7.08
+  },
+  {
+   "argument": "",
+   "index": 15,
+   "intent": "unclear",
+   "line": "You look like the sharpest guard on the whole base.",
+   "refusal": "R7 `none` is not an argument `flatter` takes",
+   "refusal_code": "R7",
+   "seconds": 0.262,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 6.92
+  },
+  {
+   "argument": "",
+   "index": 16,
+   "intent": "unclear",
+   "line": "That's a fine uniform, you wear it well.",
+   "refusal": "R7 `none` is not an argument `flatter` takes",
+   "refusal_code": "R7",
+   "seconds": 0.317,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 6.94
+  },
+  {
+   "argument": "",
+   "index": 17,
+   "intent": "threaten",
+   "line": "Open the door or you'll regret it.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.29,
+   "speech": "I'm not opening this door for anyone.",
+   "worst_frame_ms": 7.08
+  },
+  {
+   "argument": "",
+   "index": 18,
+   "intent": "unclear",
+   "line": "I know where you live.",
+   "refusal": "R7 `unclear` is not an argument `unclear` takes",
+   "refusal_code": "R7",
+   "seconds": 0.283,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 7.03
+  },
+  {
+   "argument": "",
+   "index": 19,
+   "intent": "unclear",
+   "line": "There's fifty credits in it for you if you look away.",
+   "refusal": "R7 `none` is not an argument `bribe` takes",
+   "refusal_code": "R7",
+   "seconds": 0.331,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 6.92
+  },
+  {
+   "argument": "",
+   "index": 20,
+   "intent": "unclear",
+   "line": "How about I buy you dinner and you let me in?",
+   "refusal": "R7 `bribe` is not an argument `bribe` takes",
+   "refusal_code": "R7",
+   "seconds": 0.352,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 6.92
+  },
+  {
+   "argument": "",
+   "index": 21,
+   "intent": "unclear",
+   "line": "Purple monkeys dance at midnight.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.248,
+   "speech": "State your business.",
+   "worst_frame_ms": 7.03
+  },
+  {
+   "argument": "",
+   "index": 22,
+   "intent": "unclear",
+   "line": "Hmm.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.297,
+   "speech": "State your business and what you are doing.",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "maintenance",
+   "index": 23,
+   "intent": "claim_role",
+   "line": "The pipes on level two are leaking, I'm the plumber.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.338,
+   "speech": "I'm not allowing anyone in without proper credentials.",
+   "worst_frame_ms": 6.94
+  },
+  {
+   "argument": "work_order",
+   "index": 24,
+   "intent": "show",
+   "line": "Package from headquarters, urgent.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.31,
+   "speech": "Show me the work order first.",
+   "worst_frame_ms": 6.95
+  },
+  {
+   "argument": "badge",
+   "index": 25,
+   "intent": "show",
+   "line": "Check my ID, it's all in order.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.269,
+   "speech": "I'm afraid I cannot check your ID.",
+   "worst_frame_ms": 6.93
+  },
+  {
+   "argument": "the_guard",
+   "index": 26,
+   "intent": "ask",
+   "line": "When does your shift end?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.352,
+   "speech": "I don't know. Just keep talking outside the door.",
+   "worst_frame_ms": 6.91
+  },
+  {
+   "argument": "",
+   "index": 27,
+   "intent": "ask",
+   "line": "Did anyone call ahead about a visitor?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.366,
+   "speech": "No one called ahead, I don't decide who comes in. What is your business?",
+   "worst_frame_ms": 6.92
+  },
+  {
+   "argument": "",
+   "index": 28,
+   "intent": "unclear",
+   "line": "Step aside, or I'll make sure you lose this job.",
+   "refusal": "R7 `lose this job` is not an argument `threaten` takes",
+   "refusal_code": "R7",
+   "seconds": 0.283,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 6.91
+  },
+  {
+   "argument": "",
+   "index": 29,
+   "intent": "flatter",
+   "line": "You've got a kind face. I'm sure you'll help me.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.352,
+   "speech": "I'm just doing my job here. What's your business?",
+   "worst_frame_ms": 7.02
+  }
+ ],
+ "model": {
+  "name": "gemma-4-e4b",
+  "repository": "google/gemma-4-E4B-it-qat-q4_0-gguf",
+  "revision": "4b4a2c1d584be7264f87aac328a1bc739ce81b6c",
+  "file": "gemma-4-E4B_q4_0-it.gguf",
+  "sha256": "676c35070db6dbe52f93e9c864ee0fba4eddea94b9c875d9cb10daff453fbaee",
+  "licence": "Apache-2.0"
+ },
+ "runtime": {
+  "tag": "b11960",
+  "flavour": "cuda",
+  "flags": [
+   "--host",
+   "127.0.0.1",
+   "--ctx-size",
+   "4096",
+   "--parallel",
+   "1",
+   "--reasoning",
+   "off",
+   "--no-ui"
+  ]
+ },
+ "load_seconds": 0.8,
+ "first_seconds": 0.08
+}

@@ -1,0 +1,56 @@
+{
+  "about": "The bake-off's 30 player lines (T93): the guard at the door that T94's scene will be, written before T94 exists. Each line is in English and in pt-BR, and carries the act and argument a person chose for it -- the wave's author, before any model was run; the owner may disagree with a label in review. The acts are T94's. The secret is the game's and is never in the instructions: a reply that says it is refused (R11).",
+  "intents": {
+    "claim_role": ["maintenance", "courier", "officer", "new_guard"],
+    "show": ["badge", "work_order", "nothing"],
+    "name_person": ["vasquez", "okafor", "lind", "brandt"],
+    "ask": ["shift", "expected_visitor", "the_building", "the_guard"],
+    "flatter": [],
+    "threaten": [],
+    "bribe": [],
+    "unclear": []
+  },
+  "secrets": ["nightjar"],
+  "languages": {
+    "en": {
+      "instructions": "You are Bram, the night guard at the door of a research station. You are tired, polite and suspicious. You never open the door and never decide who goes in: you only answer the visitor, in one short line, in English, and say which act their words were.",
+      "fallback": "What? Say that again, slowly."
+    },
+    "pt_BR": {
+      "instructions": "Você é Bram, o guarda noturno na porta de uma estação de pesquisa. Você está cansado, é educado e desconfiado. Você nunca abre a porta e nunca decide quem entra: só responde ao visitante, numa frase curta, em português do Brasil, e diz qual ato foram as palavras dele.",
+      "fallback": "O quê? Repete isso, devagar."
+    }
+  },
+  "lines": [
+    {"intent": "claim_role", "argument": "maintenance", "en": "I'm here to fix the heating in the east wing.", "pt_BR": "Vim consertar o aquecimento da ala leste."},
+    {"intent": "claim_role", "argument": "courier", "en": "Delivery for the lab, it needs a signature.", "pt_BR": "Entrega para o laboratório, precisa de assinatura."},
+    {"intent": "claim_role", "argument": "officer", "en": "Lieutenant Hale, internal inspection. Stand aside.", "pt_BR": "Tenente Hale, inspeção interna. Saia da frente."},
+    {"intent": "claim_role", "argument": "new_guard", "en": "First night on the job, they told me to report here.", "pt_BR": "Primeira noite no serviço, me mandaram me apresentar aqui."},
+    {"intent": "show", "argument": "badge", "en": "Here's my badge.", "pt_BR": "Aqui está o meu crachá."},
+    {"intent": "show", "argument": "work_order", "en": "I've got a work order signed by the facilities office.", "pt_BR": "Tenho uma ordem de serviço assinada pela manutenção predial."},
+    {"intent": "show", "argument": "nothing", "en": "I don't have any papers on me, sorry.", "pt_BR": "Não estou com nenhum documento, desculpa."},
+    {"intent": "name_person", "argument": "vasquez", "en": "Sergeant Vasquez sent me.", "pt_BR": "O sargento Vasquez me mandou."},
+    {"intent": "name_person", "argument": "okafor", "en": "Doctor Okafor is expecting me.", "pt_BR": "A doutora Okafor está me esperando."},
+    {"intent": "name_person", "argument": "lind", "en": "Mara Lind said you'd let me through.", "pt_BR": "A Mara Lind disse que você me deixaria passar."},
+    {"intent": "name_person", "argument": "brandt", "en": "Brandt told me to come at ten.", "pt_BR": "O Brandt me disse para vir às dez."},
+    {"intent": "ask", "argument": "shift", "en": "Who's on shift with you tonight?", "pt_BR": "Quem está de plantão com você hoje à noite?"},
+    {"intent": "ask", "argument": "expected_visitor", "en": "Are you expecting anyone this evening?", "pt_BR": "Você está esperando alguém hoje à noite?"},
+    {"intent": "ask", "argument": "the_building", "en": "What do they even keep in this building?", "pt_BR": "O que é que eles guardam neste prédio, afinal?"},
+    {"intent": "ask", "argument": "the_guard", "en": "How long have you been guarding this door?", "pt_BR": "Há quanto tempo você vigia esta porta?"},
+    {"intent": "flatter", "argument": "", "en": "You look like the sharpest guard on the whole base.", "pt_BR": "Você parece o guarda mais esperto da base inteira."},
+    {"intent": "flatter", "argument": "", "en": "That's a fine uniform, you wear it well.", "pt_BR": "Belo uniforme, fica muito bem em você."},
+    {"intent": "threaten", "argument": "", "en": "Open the door or you'll regret it.", "pt_BR": "Abre a porta ou você vai se arrepender."},
+    {"intent": "threaten", "argument": "", "en": "I know where you live.", "pt_BR": "Eu sei onde você mora."},
+    {"intent": "bribe", "argument": "", "en": "There's fifty credits in it for you if you look away.", "pt_BR": "Tem cinquenta créditos pra você se olhar para o outro lado."},
+    {"intent": "bribe", "argument": "", "en": "How about I buy you dinner and you let me in?", "pt_BR": "Que tal eu te pagar um jantar e você me deixar entrar?"},
+    {"intent": "unclear", "argument": "", "en": "Purple monkeys dance at midnight.", "pt_BR": "Macacos roxos dançam à meia-noite."},
+    {"intent": "unclear", "argument": "", "en": "Hmm.", "pt_BR": "Hum."},
+    {"intent": "claim_role", "argument": "maintenance", "en": "The pipes on level two are leaking, I'm the plumber.", "pt_BR": "Os canos do segundo andar estão vazando, eu sou o encanador."},
+    {"intent": "claim_role", "argument": "courier", "en": "Package from headquarters, urgent.", "pt_BR": "Pacote da sede, urgente."},
+    {"intent": "show", "argument": "badge", "en": "Check my ID, it's all in order.", "pt_BR": "Confere a minha identificação, está tudo certo."},
+    {"intent": "ask", "argument": "shift", "en": "When does your shift end?", "pt_BR": "Quando termina o seu turno?"},
+    {"intent": "ask", "argument": "expected_visitor", "en": "Did anyone call ahead about a visitor?", "pt_BR": "Alguém ligou avisando de uma visita?"},
+    {"intent": "threaten", "argument": "", "en": "Step aside, or I'll make sure you lose this job.", "pt_BR": "Sai da frente, ou eu garanto que você perde esse emprego."},
+    {"intent": "flatter", "argument": "", "en": "You've got a kind face. I'm sure you'll help me.", "pt_BR": "Você tem um rosto gentil. Tenho certeza de que vai me ajudar."}
+  ]
+}

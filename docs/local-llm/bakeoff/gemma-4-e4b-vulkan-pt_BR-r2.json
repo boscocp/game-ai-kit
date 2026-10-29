@@ -1,0 +1,360 @@
+{
+ "language": "pt_BR",
+ "turns": [
+  {
+   "argument": "",
+   "index": 0,
+   "intent": "unclear",
+   "line": "Vim consertar o aquecimento da ala leste.",
+   "refusal": "R7 `work_order` is not an argument `claim_role` takes",
+   "refusal_code": "R7",
+   "seconds": 0.442,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 6.96
+  },
+  {
+   "argument": "work_order",
+   "index": 1,
+   "intent": "show",
+   "line": "Entrega para o laboratório, precisa de assinatura.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.4,
+   "speech": "Pode deixar aí na porta.",
+   "worst_frame_ms": 6.92
+  },
+  {
+   "argument": "officer",
+   "index": 2,
+   "intent": "claim_role",
+   "line": "Tenente Hale, inspeção interna. Saia da frente.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.386,
+   "speech": "O que você disse, senhor?",
+   "worst_frame_ms": 7.03
+  },
+  {
+   "argument": "new_guard",
+   "index": 3,
+   "intent": "claim_role",
+   "line": "Primeira noite no serviço, me mandaram me apresentar aqui.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.448,
+   "speech": "Apresentação. O que você pretende aqui?",
+   "worst_frame_ms": 6.95
+  },
+  {
+   "argument": "badge",
+   "index": 4,
+   "intent": "show",
+   "line": "Aqui está o meu crachá.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.414,
+   "speech": "Pode mostrar o crachá com mais detalhes, por favor?",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "work_order",
+   "index": 5,
+   "intent": "show",
+   "line": "Tenho uma ordem de serviço assinada pela manutenção predial.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.4,
+   "speech": "Mostre aí a ordem de serviço.",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "",
+   "index": 6,
+   "intent": "unclear",
+   "line": "Não estou com nenhum documento, desculpa.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.365,
+   "speech": "O que você está dizendo?",
+   "worst_frame_ms": 6.91
+  },
+  {
+   "argument": "vasquez",
+   "index": 7,
+   "intent": "name_person",
+   "line": "O sargento Vasquez me mandou.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.435,
+   "speech": "O sargento Vasquez? Pode dizer o que você precisa?",
+   "worst_frame_ms": 6.94
+  },
+  {
+   "argument": "okafor",
+   "index": 8,
+   "intent": "name_person",
+   "line": "A doutora Okafor está me esperando.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.38,
+   "speech": "Quem é você e o que deseja?",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "",
+   "index": 9,
+   "intent": "unclear",
+   "line": "A Mara Lind disse que você me deixaria passar.",
+   "refusal": "R7 `lind` is not an argument `claim_role` takes",
+   "refusal_code": "R7",
+   "seconds": 0.421,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 7.03
+  },
+  {
+   "argument": "",
+   "index": 10,
+   "intent": "unclear",
+   "line": "O Brandt me disse para vir às dez.",
+   "refusal": "R7 `brand` is not an argument `name_person` takes",
+   "refusal_code": "R7",
+   "seconds": 0.379,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 6.91
+  },
+  {
+   "argument": "",
+   "index": 11,
+   "intent": "unclear",
+   "line": "Quem está de plantão com você hoje à noite?",
+   "refusal": "R7 `new_guard` is not an argument `ask` takes",
+   "refusal_code": "R7",
+   "seconds": 0.4,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 7.03
+  },
+  {
+   "argument": "",
+   "index": 12,
+   "intent": "ask",
+   "line": "Você está esperando alguém hoje à noite?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.373,
+   "speech": "Não espero ninguém. O que você quer?",
+   "worst_frame_ms": 7.07
+  },
+  {
+   "argument": "the_building",
+   "index": 13,
+   "intent": "ask",
+   "line": "O que é que eles guardam neste prédio, afinal?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.414,
+   "speech": "O que você quer saber sobre o prédio?",
+   "worst_frame_ms": 6.94
+  },
+  {
+   "argument": "",
+   "index": 14,
+   "intent": "ask",
+   "line": "Há quanto tempo você vigia esta porta?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.318,
+   "speech": "Desde que o turno começou. O que você quer?",
+   "worst_frame_ms": 7.08
+  },
+  {
+   "argument": "",
+   "index": 15,
+   "intent": "unclear",
+   "line": "Você parece o guarda mais esperto da base inteira.",
+   "refusal": "R7 `flatter` is not an argument `flatter` takes",
+   "refusal_code": "R7",
+   "seconds": 0.483,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 6.95
+  },
+  {
+   "argument": "",
+   "index": 16,
+   "intent": "flatter",
+   "line": "Belo uniforme, fica muito bem em você.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.414,
+   "speech": "Eu só estou fazendo meu trabalho, passe sua vez.",
+   "worst_frame_ms": 7.05
+  },
+  {
+   "argument": "",
+   "index": 17,
+   "intent": "unclear",
+   "line": "Abre a porta ou você vai se arrepender.",
+   "refusal": "R7 `none` is not an argument `threaten` takes",
+   "refusal_code": "R7",
+   "seconds": 0.455,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 6.92
+  },
+  {
+   "argument": "",
+   "index": 18,
+   "intent": "threaten",
+   "line": "Eu sei onde você mora.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.331,
+   "speech": "Não sei do que você está falando.",
+   "worst_frame_ms": 6.94
+  },
+  {
+   "argument": "",
+   "index": 19,
+   "intent": "unclear",
+   "line": "Tem cinquenta créditos pra você se olhar para o outro lado.",
+   "refusal": "R7 `bribe` is not an argument `bribe` takes",
+   "refusal_code": "R7",
+   "seconds": 0.4,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 6.95
+  },
+  {
+   "argument": "",
+   "index": 20,
+   "intent": "unclear",
+   "line": "Que tal eu te pagar um jantar e você me deixar entrar?",
+   "refusal": "R7 `bribe` is not an argument `bribe` takes",
+   "refusal_code": "R7",
+   "seconds": 0.435,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 6.92
+  },
+  {
+   "argument": "",
+   "index": 21,
+   "intent": "unclear",
+   "line": "Macacos roxos dançam à meia-noite.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.38,
+   "speech": "O que você está fazendo aqui de madrugada?",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "",
+   "index": 22,
+   "intent": "unclear",
+   "line": "Hum.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.338,
+   "speech": "Diga o que você quer, por favor.",
+   "worst_frame_ms": 6.93
+  },
+  {
+   "argument": "maintenance",
+   "index": 23,
+   "intent": "claim_role",
+   "line": "Os canos do segundo andar estão vazando, eu sou o encanador.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.414,
+   "speech": "Encantado. Qual o seu nome?",
+   "worst_frame_ms": 6.93
+  },
+  {
+   "argument": "work_order",
+   "index": 24,
+   "intent": "show",
+   "line": "Pacote da sede, urgente.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.4,
+   "speech": "O que você diz sobre esse pacote?",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "",
+   "index": 25,
+   "intent": "show",
+   "line": "Confere a minha identificação, está tudo certo.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.386,
+   "speech": "Pode mostrar o que você tem, por favor?",
+   "worst_frame_ms": 7.07
+  },
+  {
+   "argument": "the_guard",
+   "index": 26,
+   "intent": "ask",
+   "line": "Quando termina o seu turno?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.414,
+   "speech": "Meu turno? Eu não saio daqui.",
+   "worst_frame_ms": 6.95
+  },
+  {
+   "argument": "shift",
+   "index": 27,
+   "intent": "ask",
+   "line": "Alguém ligou avisando de uma visita?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.352,
+   "speech": "Eu não sei de nada, o que você quer?",
+   "worst_frame_ms": 7.03
+  },
+  {
+   "argument": "",
+   "index": 28,
+   "intent": "unclear",
+   "line": "Sai da frente, ou eu garanto que você perde esse emprego.",
+   "refusal": "R7 `none` is not an argument `threaten` takes",
+   "refusal_code": "R7",
+   "seconds": 0.414,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 6.91
+  },
+  {
+   "argument": "",
+   "index": 29,
+   "intent": "unclear",
+   "line": "Você tem um rosto gentil. Tenho certeza de que vai me ajudar.",
+   "refusal": "R7 `flatter` is not an argument `flatter` takes",
+   "refusal_code": "R7",
+   "seconds": 0.421,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 7.04
+  }
+ ],
+ "model": {
+  "name": "gemma-4-e4b",
+  "repository": "google/gemma-4-E4B-it-qat-q4_0-gguf",
+  "revision": "4b4a2c1d584be7264f87aac328a1bc739ce81b6c",
+  "file": "gemma-4-E4B_q4_0-it.gguf",
+  "sha256": "676c35070db6dbe52f93e9c864ee0fba4eddea94b9c875d9cb10daff453fbaee",
+  "licence": "Apache-2.0"
+ },
+ "runtime": {
+  "tag": "b11960",
+  "flavour": "vulkan",
+  "flags": [
+   "--host",
+   "127.0.0.1",
+   "--ctx-size",
+   "4096",
+   "--parallel",
+   "1",
+   "--reasoning",
+   "off",
+   "--no-ui"
+  ]
+ },
+ "load_seconds": 6.3,
+ "first_seconds": 5.8
+}

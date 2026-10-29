@@ -7,7 +7,7 @@ tier: 2
 source: https://www.cp.eng.chula.ac.th/~vishnu/gameResearch/story_november_2005/MateasSternTIDSE04.pdf ; https://docs.godotengine.org/en/4.7/classes/class_httprequest.html ; https://ollama.com/blog/structured-outputs
 invalidated_if: the kit's LlmValidator, LlmReply, LlmRuntime, RecordedRuntime, HttpRuntime or LlmConversation signatures change, the reply's shape or its refusal codes change, or T94's game lands and this page does not name it
 teaches: language-models
-translation_of: d5001925bbdabbcb1ff041865bbc8b695c1d44098195cc8e380eb85b1e0cb22a
+translation_of: e52d85c9ee4c7b754e54bee5ef04b2ec553098a717a8ca602c2d7d08ce30cbf2
 -->
 
 > English: [ai_llm.md](ai_llm.md). Os termos que ficam em inglês estão
@@ -82,6 +82,7 @@ estado de "pensando". As regras:
 | R9, R10 | `speech` tem quebra de linha ou caractere de controle, ou marcação (`<>[]*` e a crase) |
 | R11 | `speech` contém um dos segredos do jogo, ignorando maiúsculas e minúsculas de A a Z (só essas letras: Python e Godot tratam as outras de jeitos diferentes) |
 | F1 | nenhuma resposta chegou: o *runtime* falhou ou estourou o tempo |
+| F2 | o servidor recusou o próprio pedido, e disse por quê (qualquer erro HTTP menos 503): vai recusar todo turno até o pedido ser corrigido, por isso não é F1 |
 
 Os ajustes que importam:
 

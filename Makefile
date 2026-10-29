@@ -898,6 +898,31 @@ artgen-clean: ## Delete your generated art; the game is back on the CC0 set
 	@rm -rf godot/assets/generated
 	@$(MAKE) --no-print-directory import
 
+# --- a local LLM (T93: optional, tier 3) -------------------------------------
+#
+# Fenced like the art generator: `make check` never starts the server, and
+# nothing in python/, godot/addons/ or godot/game/ names tools/llm/. The
+# recordings are the lesson; this is for playing live. docs/local-llm/.
+# MODEL= a name in tools/llm/runtime.json (or `all`); FLAVOUR= vulkan, cpu, cuda.
+
+.PHONY: llm-bootstrap
+llm-bootstrap: ## Install llama.cpp's server and the default model on the large disk, each file by sha256 (about 5 GB)
+	@scripts/llm bootstrap $(if $(MODEL),--model $(MODEL)) $(if $(FLAVOUR),--flavour $(FLAVOUR))
+	@$(MAKE) --no-print-directory lint-disk-layout
+
+.PHONY: llm-serve
+llm-serve: ## Serve the local model on HttpRuntime's port until Ctrl+C, for a game in live mode
+	@scripts/llm serve $(if $(MODEL),--model $(MODEL)) $(if $(FLAVOUR),--flavour $(FLAVOUR))
+
+.PHONY: llm-smoke
+llm-smoke: import ## Start the server, send one line through HttpRuntime, check the validator passed it, stop the server
+	@scripts/llm smoke $(if $(MODEL),--model $(MODEL)) $(if $(FLAVOUR),--flavour $(FLAVOUR))
+
+.PHONY: llm-bakeoff
+llm-bakeoff: import ## Every model on the 30 lines, in English and pt-BR, into docs/local-llm/bakeoff/ (minutes, a GPU)
+	@scripts/llm bakeoff $(if $(MODEL),--model $(MODEL)) $(if $(FLAVOUR),--flavour $(FLAVOUR))
+	@scripts/llm table
+
 # --- shipping --------------------------------------------------------------
 
 .PHONY: export

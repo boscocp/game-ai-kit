@@ -115,8 +115,9 @@ func validate(raw_text: String) -> LlmReply:
 
 
 ## The game's own answer, standing in for a reply that was refused -- or for
-## no reply at all, when the runtime failed (`F1`, which is not a rule of
-## this validator but is answered the same way).
+## no reply at all, when the runtime failed (`F1`) or the server refused
+## the request (`F2`), which are not rules of this validator but are
+## answered the same way.
 func fallback(refusal: String, raw_text: String = "") -> LlmReply:
 	return LlmReply.new(_fallback_speech, FALLBACK_INTENT, "", refusal, raw_text)
 

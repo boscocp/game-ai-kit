@@ -1,0 +1,360 @@
+{
+ "language": "en",
+ "turns": [
+  {
+   "argument": "maintenance",
+   "index": 0,
+   "intent": "claim_role",
+   "line": "I'm here to fix the heating in the east wing.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.414,
+   "speech": "Maintenance? You got the wrong wing, friend.",
+   "worst_frame_ms": 6.96
+  },
+  {
+   "argument": "courier",
+   "index": 1,
+   "intent": "claim_role",
+   "line": "Delivery for the lab, it needs a signature.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.414,
+   "speech": "Badges and work orders only, courier.",
+   "worst_frame_ms": 6.94
+  },
+  {
+   "argument": "",
+   "index": 2,
+   "intent": "unclear",
+   "line": "Lieutenant Hale, internal inspection. Stand aside.",
+   "refusal": "R7 `inspection` is not an argument `unclear` takes",
+   "refusal_code": "R7",
+   "seconds": 0.462,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 6.92
+  },
+  {
+   "argument": "expected_visitor",
+   "index": 3,
+   "intent": "ask",
+   "line": "First night on the job, they told me to report here.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.449,
+   "speech": "No visitors allowed past midnight unless you have a badge. Prove it.",
+   "worst_frame_ms": 7.07
+  },
+  {
+   "argument": "badge",
+   "index": 4,
+   "intent": "show",
+   "line": "Here's my badge.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.379,
+   "speech": "Step forward if you're authorized, or step back.",
+   "worst_frame_ms": 6.94
+  },
+  {
+   "argument": "badge",
+   "index": 5,
+   "intent": "show",
+   "line": "I've got a work order signed by the facilities office.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.524,
+   "speech": "Hmm, that’s something. Show me your face, though—just to be sure.",
+   "worst_frame_ms": 6.95
+  },
+  {
+   "argument": "nothing",
+   "index": 6,
+   "intent": "show",
+   "line": "I don't have any papers on me, sorry.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.462,
+   "speech": "Stand clear—the door’s locked until you’re scanned. Move back.",
+   "worst_frame_ms": 6.93
+  },
+  {
+   "argument": "",
+   "index": 7,
+   "intent": "unclear",
+   "line": "Sergeant Vasquez sent me.",
+   "refusal": "R10 the speech has markup in it, one of <>[]*`",
+   "refusal_code": "R10",
+   "seconds": 0.504,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "expected_visitor",
+   "index": 8,
+   "intent": "ask",
+   "line": "Doctor Okafor is expecting me.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.4,
+   "speech": "Show your badge, Doctor.",
+   "worst_frame_ms": 6.94
+  },
+  {
+   "argument": "vasquez",
+   "index": 9,
+   "intent": "name_person",
+   "line": "Mara Lind said you'd let me through.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.483,
+   "speech": "I don’t answer to names. Show me your badge, then.",
+   "worst_frame_ms": 6.96
+  },
+  {
+   "argument": "lind",
+   "index": 10,
+   "intent": "name_person",
+   "line": "Brandt told me to come at ten.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.518,
+   "speech": "Brandt? Did you say Brandt? He’s in the mess hall. Ten is long past.",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "shift",
+   "index": 11,
+   "intent": "ask",
+   "line": "Who's on shift with you tonight?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.428,
+   "speech": "Shift list’s private. Prove you belong here.",
+   "worst_frame_ms": 6.92
+  },
+  {
+   "argument": "expected_visitor",
+   "index": 12,
+   "intent": "ask",
+   "line": "Are you expecting anyone this evening?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.469,
+   "speech": "Check the logbook, it’s not my shift to guess.",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "the_building",
+   "index": 13,
+   "intent": "ask",
+   "line": "What do they even keep in this building?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.421,
+   "speech": "Mind your own business or turn back.",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "maintenance",
+   "index": 14,
+   "intent": "claim_role",
+   "line": "How long have you been guarding this door?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.517,
+   "speech": "I’ve been here since the last shift change—check your tools if you’re supposed to be fixing something.",
+   "worst_frame_ms": 7.05
+  },
+  {
+   "argument": "",
+   "index": 15,
+   "intent": "unclear",
+   "line": "You look like the sharpest guard on the whole base.",
+   "refusal": "R7 `flatter` is not an argument `flatter` takes",
+   "refusal_code": "R7",
+   "seconds": 0.559,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 6.93
+  },
+  {
+   "argument": "",
+   "index": 16,
+   "intent": "unclear",
+   "line": "That's a fine uniform, you wear it well.",
+   "refusal": "R7 `none` is not an argument `flatter` takes",
+   "refusal_code": "R7",
+   "seconds": 0.455,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 7.0
+  },
+  {
+   "argument": "",
+   "index": 17,
+   "intent": "unclear",
+   "line": "Open the door or you'll regret it.",
+   "refusal": "R7 `threaten` is not an argument `threaten` takes",
+   "refusal_code": "R7",
+   "seconds": 0.504,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 7.03
+  },
+  {
+   "argument": "",
+   "index": 18,
+   "intent": "unclear",
+   "line": "I know where you live.",
+   "refusal": "R10 the speech has markup in it, one of <>[]*`",
+   "refusal_code": "R10",
+   "seconds": 0.462,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 6.93
+  },
+  {
+   "argument": "",
+   "index": 19,
+   "intent": "unclear",
+   "line": "There's fifty credits in it for you if you look away.",
+   "refusal": "R7 `shift` is not an argument `bribe` takes",
+   "refusal_code": "R7",
+   "seconds": 0.449,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "",
+   "index": 20,
+   "intent": "unclear",
+   "line": "How about I buy you dinner and you let me in?",
+   "refusal": "R7 `bribe` is not an argument `bribe` takes",
+   "refusal_code": "R7",
+   "seconds": 0.517,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "",
+   "index": 21,
+   "intent": "unclear",
+   "line": "Purple monkeys dance at midnight.",
+   "refusal": "R7 `none` is not an argument `unclear` takes",
+   "refusal_code": "R7",
+   "seconds": 0.517,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 6.94
+  },
+  {
+   "argument": "",
+   "index": 22,
+   "intent": "unclear",
+   "line": "Hmm.",
+   "refusal": "R7 `unclear` is not an argument `unclear` takes",
+   "refusal_code": "R7",
+   "seconds": 0.386,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 7.03
+  },
+  {
+   "argument": "maintenance",
+   "index": 23,
+   "intent": "claim_role",
+   "line": "The pipes on level two are leaking, I'm the plumber.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.379,
+   "speech": "Plumber? Show your work order.",
+   "worst_frame_ms": 6.95
+  },
+  {
+   "argument": "courier",
+   "index": 24,
+   "intent": "claim_role",
+   "line": "Package from headquarters, urgent.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.338,
+   "speech": "Show your badge, or be shown out.",
+   "worst_frame_ms": 6.91
+  },
+  {
+   "argument": "",
+   "index": 25,
+   "intent": "unclear",
+   "line": "Check my ID, it's all in order.",
+   "refusal": "R10 the speech has markup in it, one of <>[]*`",
+   "refusal_code": "R10",
+   "seconds": 0.497,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "shift",
+   "index": 26,
+   "intent": "ask",
+   "line": "When does your shift end?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.448,
+   "speech": "Shift ends at dawn—same as yours, I hope. Who are you again?",
+   "worst_frame_ms": 6.93
+  },
+  {
+   "argument": "",
+   "index": 27,
+   "intent": "ask",
+   "line": "Did anyone call ahead about a visitor?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.435,
+   "speech": "Did who call ahead? And what business do you have here?",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "",
+   "index": 28,
+   "intent": "unclear",
+   "line": "Step aside, or I'll make sure you lose this job.",
+   "refusal": "R7 `threaten` is not an argument `threaten` takes",
+   "refusal_code": "R7",
+   "seconds": 0.497,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 6.94
+  },
+  {
+   "argument": "",
+   "index": 29,
+   "intent": "unclear",
+   "line": "You've got a kind face. I'm sure you'll help me.",
+   "refusal": "R7 `flatter` is not an argument `flatter` takes",
+   "refusal_code": "R7",
+   "seconds": 0.469,
+   "speech": "What? Say that again, slowly.",
+   "worst_frame_ms": 6.92
+  }
+ ],
+ "model": {
+  "name": "ministral-3-8b",
+  "repository": "mistralai/Ministral-3-8B-Instruct-2512-GGUF",
+  "revision": "0102285ad796bd99af90f58de616092e5630e970",
+  "file": "Ministral-3-8B-Instruct-2512-Q4_K_M.gguf",
+  "sha256": "33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761",
+  "licence": "Apache-2.0"
+ },
+ "runtime": {
+  "tag": "b11960",
+  "flavour": "vulkan",
+  "flags": [
+   "--host",
+   "127.0.0.1",
+   "--ctx-size",
+   "4096",
+   "--parallel",
+   "1",
+   "--reasoning",
+   "off",
+   "--no-ui"
+  ]
+ },
+ "load_seconds": 2.3,
+ "first_seconds": 4.87
+}

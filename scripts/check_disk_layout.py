@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail if the Godot toolchain, or the art generator's model, writes to the small disk.
+"""Fail if the Godot toolchain, or an art or LLM model, writes to the small disk.
 
 The rule
 --------
@@ -31,7 +31,9 @@ by git); a checkout whose wrapper predates the question is a note.
 The art generator (T31) has the same trap, larger: tens of GB of model that Hugging
 Face, torch and Triton would all cache under ~/.cache by default. scripts/artgen
 points every one of them at the toolchain directory, and the paths below say
-where they would land if it stopped.
+where they would land if it stopped. The local LLM (T93) is the same again:
+scripts/llm points llama.cpp's model cache, and the GPU driver's, at the
+toolchain, and llama.cpp's own cache under home is a finding.
 
 Exit codes
 ----------
@@ -82,6 +84,15 @@ LEAK_PATHS = (
     # %LOCALAPPDATA%/Godot the cache, when scripts/godot is bypassed.
     "AppData/Roaming/Godot",
     "AppData/Local/Godot",
+    # The local LLM (T93): where llama.cpp's server keeps a model it fetched
+    # itself (`-hf`), when scripts/llm's LLAMA_CACHE is bypassed -- gigabytes
+    # each. Its own name, so unlike ~/.cache/huggingface nothing else puts it
+    # there. %LOCALAPPDATA%/llama.cpp is the same default on Windows. The
+    # driver's shader caches (~/.cache/nvidia, ~/.nv, ~/.cache/mesa_shader_cache)
+    # are not listed, for ~/.nv's reason above: other software keeps them;
+    # that scripts/llm moves them was measured by mtime (docs/local-llm/).
+    ".cache/llama.cpp",
+    "AppData/Local/llama.cpp",
 )
 
 WINDOWS = os.name == "nt"
@@ -527,6 +538,14 @@ def self_test() -> int:
             leaked_home = root / ("leak-" + leak.replace("/", "-"))
             (leaked_home / leak).mkdir(parents=True)
             expect(f"{leak} under home", quiet(repo_off_home, good_toolchain, leaked_home), 1)
+
+        # Planted (T93): llama.cpp's server run without scripts/llm, fetching
+        # a model into its default cache -- on Linux and on Windows.
+        for leak in (".cache/llama.cpp", "AppData/Local/llama.cpp"):
+            llm_home = root / ("llm-" + leak.replace("/", "-"))
+            (llm_home / leak).mkdir(parents=True)
+            (llm_home / leak / "some-model-Q4_K_M.gguf").write_bytes(b"GGUF")
+            expect(f"a model under {leak}", quiet(repo_off_home, good_toolchain, llm_home), 1)
 
         # Planted: someone removed the self-contained marker.
         no_marker = root / "no-marker"

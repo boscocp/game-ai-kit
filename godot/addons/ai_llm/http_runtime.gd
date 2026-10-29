@@ -2,9 +2,17 @@
 ##
 ## It speaks the OpenAI-compatible `/v1/chat/completions` that llama.cpp's
 ## server offers (T93 pins and measures the server; this file only speaks
-## to one). The game's schema goes in `response_format`, so a server that
-## constrains its output to a schema can -- a convenience: whatever comes
-## back is validated anyway, by `LlmConversation`'s `LlmValidator`.
+## to one). The game's schema goes in `response_format`, in OpenAI's form,
+## `{"type": "json_schema", "json_schema": {"schema": ...}}`: measured at
+## the pinned build, the server constrains its output to it -- and silently
+## ignores the form its own README shows, with `schema` one level up
+## (docs/local-llm/server.md). A convenience: whatever comes back is
+## validated anyway, by `LlmConversation`'s `LlmValidator`.
+##
+## No text, two ways: `failed` when no answer came (unreachable, timed out,
+## not ready, an envelope with no reply in it), `refused` when the server
+## answered that it will not take the request, with its reason -- that one
+## comes back every turn until the request is fixed, so it is kept apart.
 ##
 ## Never on the frame (invariant 7). The request goes through an
 ## `HTTPRequest` with `use_threads` on and a fixed `timeout`, one in flight
@@ -19,8 +27,14 @@
 class_name HttpRuntime
 extends LlmRuntime
 
+## The port the local server listens on, and the one place it is written:
+## the kit's server wrapper reads this line to start llama.cpp's server
+## here, and the acceptance gate to know a task naming it needs a model
+## (T93, docs/local-llm/). 9931 is also the server's default at the pin.
+const PORT: int = 9931
+
 ## The server's chat endpoint.
-var url: String = "http://127.0.0.1:8080/v1/chat/completions"
+var url: String = "http://127.0.0.1:%d/v1/chat/completions" % PORT
 
 ## The model name the server is asked for; llama.cpp's server ignores it.
 var model: String = "local"
@@ -33,6 +47,10 @@ const BODY_SIZE_LIMIT: int = 65536
 ## Seconds before a request is given up on, and `failed` says so. Read by
 ## every `send`, so a change applies to the next request.
 var timeout_seconds: float = 30.0
+
+## How much of the server's reason for refusing a request is kept: enough
+## to say what was wrong, short enough to show beside a line.
+const ERROR_LENGTH: int = 160
 
 var _request: HTTPRequest = null
 var _in_flight: bool = false
@@ -116,14 +134,34 @@ static func _text_of(body: String) -> Dictionary:
 	return {"text": message["content"], "failure": ""}
 
 
+# The server's own sentence for why it refused a request, on one short line:
+# llama.cpp answers `{"error": {"code": 400, "message": ...}}` (measured at
+# the pinned build, docs/local-llm/server.md).
+static func _error_of(body: String) -> String:
+	var data: Variant = JSON.parse_string(body)
+	var error: Variant = (data as Dictionary).get("error") if data is Dictionary else null
+	var message: Variant = (error as Dictionary).get("message") if error is Dictionary else null
+	if not (message is String):
+		return "the server gave no reason"
+	return " ".join((message as String).split("\n")).left(ERROR_LENGTH)
+
+
 func _on_request_completed(result: int, response_code: int,
 		_headers: PackedStringArray, body: PackedByteArray) -> void:
 	_in_flight = false
 	if result != HTTPRequest.RESULT_SUCCESS:
 		failed.emit("the request did not complete (HTTPRequest result %d)" % result)
 		return
+	# 503 is the server not ready yet ("Loading model", measured): a turn
+	# lost, and the next one may land. Any other error is the request
+	# refused, with the server's reason -- a 400 for a response_format it
+	# does not know, a 500 for a schema it cannot turn into a grammar
+	# (both measured at the pinned build) -- and it will be refused again.
+	if response_code == 503:
+		failed.emit("the server is not ready: %s" % _error_of(body.get_string_from_utf8()))
+		return
 	if response_code != 200:
-		failed.emit("the server answered HTTP %d" % response_code)
+		refused.emit("HTTP %d: %s" % [response_code, _error_of(body.get_string_from_utf8())])
 		return
 	var answer: Dictionary = _text_of(body.get_string_from_utf8())
 	if answer["failure"] != "":
