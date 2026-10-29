@@ -10,7 +10,9 @@
 ## greyed before it is made, and the reason is written under the buttons.
 ## The keys still work; each button shows its own.
 ##
-## With nothing selected it says how to play, in four steps.
+## With nothing selected it says how to play, in four steps, across the
+## whole card: there are no buttons then, and in the info's own column the
+## steps wrapped past the window's bottom (y=741 of 720 in pt-BR, T107).
 ##
 ## When not to use it: to decide anything. It only offers what a person
 ## could already order.
@@ -48,6 +50,9 @@ const HOW_TO_PLAY: Array[String] = [  # shown through tr()
 	"4. Select fighters, right-click an enemy. A Depot (D) when supply is full.",
 ]
 const BUTTON_SIZE := Vector2(74.0, 50.0)
+## How wide the info is beside the buttons; with no buttons it takes the
+## whole card.
+const INFO_WIDTH: float = 330.0
 
 @onready var _info: Label = $Info
 @onready var _buttons: GridContainer = $Buttons
@@ -75,6 +80,7 @@ func show_selection(view: RtsSnapshot, selected: Dictionary) -> void:
 	var offers: Array[Array] = []
 	if yours:
 		offers = _offers(units)
+	_info.size = Vector2(size.x if offers.is_empty() else INFO_WIDTH, size.y)
 	var reasons: Array[String] = []
 	for offer: Array in offers:
 		reasons.append(_why_not(view, offer[0], offer[1], units))

@@ -72,14 +72,11 @@ const BOTTOM_MARGIN: float = BoardLayout.GUTTER
 ## their words were measured to end at in pt-BR. That y is a ceiling, not an
 ## exemption: a panel named here that gets any lower still fails, and its
 ## width is measured as any other's. T102 fitted the tactical header and took
-## it out; its measure of a wrapped Label found these three, left for T107
-## (in English they end at 711, 658 and 721). The planted cases below keep
-## the check honest meanwhile.
-const NOT_YET_FITTED: Dictionary[String, float] = {
-	"res://demos/behaviour/behaviour_demo.tscn:Interface/Status": 711.0,
-	"res://game/main.tscn:Interface/Status": 716.0,
-	"res://game/rts/rts.tscn:Interface/Card/Info": 741.0,  # past the window: a line is cut off
-}
+## it out; T107 fitted the three it then found (the behaviour demo's status,
+## the skirmish's and the RTS card's info) and took them out too. Empty, and
+## kept: a panel found too low and not fitted in the same wave goes here,
+## with its y. The planted cases below keep the check honest either way.
+const NOT_YET_FITTED: Dictionary[String, float] = {}
 
 
 class ErrorCounter extends Logger:
