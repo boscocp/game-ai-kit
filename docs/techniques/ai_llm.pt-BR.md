@@ -7,7 +7,7 @@ tier: 2
 source: https://www.cp.eng.chula.ac.th/~vishnu/gameResearch/story_november_2005/MateasSternTIDSE04.pdf ; https://docs.godotengine.org/en/4.7/classes/class_httprequest.html ; https://ollama.com/blog/structured-outputs
 invalidated_if: the kit's LlmValidator, LlmReply, LlmRuntime, RecordedRuntime, HttpRuntime or LlmConversation signatures change, the reply's shape or its refusal codes change, or T94's game lands and this page does not name it
 teaches: language-models
-translation_of: a2a79978f34b55e7d69b7ee863aa406f802e5e0fe1b7a89e8d12171411f90228
+translation_of: d5001925bbdabbcb1ff041865bbc8b695c1d44098195cc8e380eb85b1e0cb22a
 -->
 
 > English: [ai_llm.md](ai_llm.md). Os termos que ficam em inglês estão
@@ -195,7 +195,9 @@ verdadeiro, e mostre o `refusal` de cada resposta ao lado da fala quando
 não for vazio, para o jogador ver que o modelo foi desautorizado. Nunca
 leia `raw_text`, nem escute o sinal `replied` de um *runtime*: os dois
 são o texto que ninguém validou, e o *gate* os recusa fora do *addon*.
-Escute `answered`.
+Escute `answered`. Uma resposta é só de leitura -- escrever `intent`
+depois do julgamento é recusado em tempo de execução -- e uma conversa
+morre com o seu *runtime*: libere os dois juntos.
 
 ## Para ir mais fundo {#deeper}
 

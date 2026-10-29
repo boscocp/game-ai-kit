@@ -186,7 +186,9 @@ comes later; draw the character thinking while `is_thinking()` is true,
 and show each reply's `refusal` beside the line when it is not empty, so a
 player can see the model was overruled. Never read `raw_text`, nor
 listen to a runtime's `replied`: both are the text nobody validated, and
-the gate refuses them outside the addon. Listen to `answered`.
+the gate refuses them outside the addon. Listen to `answered`. A reply
+is read-only -- writing `intent` after the ruling is refused at run
+time -- and a conversation dies with its runtime: free them together.
 
 ## Deeper {#deeper}
 

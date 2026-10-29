@@ -15,6 +15,10 @@
 ## them when the conversation is built (`problem`), and every reply for them
 ## again by the validator (R11), as a net.
 ##
+## A conversation dies with its runtime: free the runtime mid-request and
+## no answer comes, so free them together. Taking the runtime out of the
+## tree and putting it back is answered, with F1.
+##
 ## When not to use it: for a single question with no history, which is a
 ## runtime's `send` and a validator's `validate`, and nothing to hold.
 class_name LlmConversation

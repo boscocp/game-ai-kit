@@ -339,6 +339,11 @@
       "refused": "R1"
     },
     {
+      "why": "Nesting 33 deep, one past the cap: the object and 32 lists inside it. With 32 deep accepted beside it, the cap is pinned at 32 exactly.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\", \"x\": [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}",
+      "refused": "R1"
+    },
+    {
       "why": "Lists nested exactly 32 deep: inside the cap, so the reply is refused for its extra key instead.",
       "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\", \"x\": [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}",
       "refused": "R4"

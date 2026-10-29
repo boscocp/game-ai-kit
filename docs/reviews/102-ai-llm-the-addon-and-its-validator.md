@@ -10,7 +10,8 @@ and `HttpRuntime` behind the `LlmRuntime` port; `LlmConversation`; the
 A fresh context reviewed PR #42 at head 2e896f4.
 
 **Verdict: changes requested.** Two blockers, eight should-fix findings,
-three nits. Every one was applied on the branch. **Re-review pending.**
+three nits. Every one was applied on the branch. Re-reviewed at 66aa419:
+ready to merge (see the end).
 
 ## What was reviewed
 
@@ -247,4 +248,33 @@ All 30 were caught. Two needed a vector added first:
 The first round's 30 validator mutants were rerun on the new code, and all
 were caught. The pycache was cleared after both rounds.
 
-Re-review pending.
+After the rebase on 552527d, `make check-affected BASE=origin/main`, which
+selected all of `make check`, exited 0. The reviewer ran
+`make -k check-no-engine`, which also exited 0.
+
+## Re-review
+
+Re-reviewed at 66aa419 (rebased on 552527d) by the same reviewer: ready to
+merge. Both blockers are fixed. Planted files that call a runtime's
+`replied` (by attribute, `&"replied"` or `await`) or `_text_of` are
+refused, and CLAUDE.md row 7 says half held. All 38 language-difference
+inputs now get one answer in both languages, and every round-one mutant the
+reviewer re-ran is now killed. A runtime removed mid-request answers F1 and
+the conversation recovers. The gate runs in 0.33 s, with no false positive
+in the repository. Left as small follow-ups: `extends LlmReply` /
+`extends LlmValidator` outside the addon, and assigning to an `LlmReply`'s
+fields, are neither caught nor listed among the known misses. Also, no
+vector sits at depth 33, so the `MAX_DEPTH = 33` mutant survives.
+
+All three follow-ups were applied, and their mutants were caught:
+
+- V2 refuses `extends LlmReply` and `extends LlmValidator` (by name, or
+  the validator by path) outside the addon, with three planted cases.
+- `LlmReply`'s fields are read-only: properties over private fields whose
+  setters `push_error` and keep the ruling, held by a test.
+  `return LlmReply` and then `.new()` is listed among the gate's known
+  misses.
+- A vector at depth 33 must be R1, and `MAX_DEPTH = 33` now dies in both
+  languages.
+- The nit is applied too: `LlmConversation` and the page say a
+  conversation dies with its runtime.

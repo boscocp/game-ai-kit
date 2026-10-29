@@ -30,6 +30,8 @@ rule is about code -- and refuses the plain ways round it:
       (as `.raw_text` or as the string `"raw_text"`), a runtime's `replied`
       signal (`.replied`, or the string `"replied"`), or `HttpRuntime`'s
       `_text_of(`. Each is text the model sent before anybody ruled on it.
+      Nor may a script there extend `LlmReply` (a forged reply) or
+      `LlmValidator` (a rule overridden to let anything in).
   V3  something waits on the frame. In the addon: `OS.delay_msec` or
       `OS.delay_usec`; another program run (`OS.execute`...); a `Semaphore`;
       `wait_to_finish` outside `_exit_tree` or `_notification` (teardown,
@@ -55,7 +57,10 @@ known: a class or a method named in a string built at run time
 scene by a script it instances; a `Thread` the addon starts and a game
 joins; and a game that reads `LlmReply.speech` and acts on what it says
 rather than on `intent` -- the speech is validated, but a rule that parses
-it has made the model decide again.
+it has made the model decide again; and `LlmReply` reached through a
+function (`return LlmReply`, then `.new()`). Writing to a reply's fields
+is not this gate's business: `LlmReply` refuses it at run time, its fields
+read-only.
 
 Vendored code (`gdUnit4`) and dot folders (`godot/.godot/`) are skipped, as
 `check_readability.py` and `check_no_training.py` skip them.
@@ -105,6 +110,8 @@ PROCESS_RE = re.compile(r"\bOS\s*\.\s*(execute|execute_with_pipe|create_process)
 REPLY_NEW_RE = re.compile(r"\bLlmReply\s*\.\s*new\b")
 REPLY_ALIAS_RE = re.compile(r"(?<![=!<>])=\s*LlmReply\b(?!\s*\.)")
 REPLY_PATH_RE = re.compile(r"llm_reply\.gd")
+SUBCLASS_RE = re.compile(r"^\s*extends\s+(LlmReply|LlmValidator)\b")
+VALIDATOR_PATH_RE = re.compile(r"^\s*extends\s+[\"'][^\"']*llm_validator\.gd")
 RAW_TEXT_RE = re.compile(r"\.\s*raw_text\b")
 RAW_TEXT_NAMED_RE = re.compile(r"[\"']raw_text[\"']")
 REPLIED_RE = re.compile(r"\.\s*replied\b")
@@ -238,6 +245,9 @@ def reading_the_model(place: str, code: str, text: str) -> list[str]:
                         "validator saw; listen to LlmConversation.answered")
     if TEXT_OF_RE.search(code):
         findings.append(f"V2 {place} takes a model's text out of a server's answer itself")
+    if SUBCLASS_RE.search(code) or VALIDATOR_PATH_RE.search(text):
+        findings.append(f"V2 {place} extends the door itself: a subclass of LlmReply "
+                        "forges a reply, one of LlmValidator can rule anything in")
     return findings
 
 
@@ -444,6 +454,14 @@ PLANTED = [
      _game("\truntime.replied.connect(_on_text)\n"), "V2"),
     ("a game script connecting replied by name",
      _game("\t$Runtime.connect(\"replied\", _on_text)\n"), "V2"),
+    ("a game script extending LlmReply to forge one",
+     {GAME: "extends LlmReply\n\n\nfunc _init() -> void:\n\tsuper(\"a\", \"open\", \"\", \"\", \"\")\n"},
+     "V2"),
+    ("a game script extending LlmValidator to let anything in",
+     {GAME: "extends LlmValidator\n\n\nfunc _why_shape_is_wrong(_data: Dictionary) -> String:\n"
+            "\treturn \"\"\n"}, "V2"),
+    ("a game script extending the validator by path",
+     {GAME: "extends \"res://addons/ai_llm/llm_validator.gd\"\n"}, "V2"),
     ("a game script taking the text out of a server's answer",
      _game("\tvar text: String = HttpRuntime._text_of(body)[\"text\"]\n"), "V2"),
     ("a game spinning until the model answers",

@@ -65,6 +65,16 @@ func test_a_refused_reply_is_the_games_line_and_says_why() -> void:
 	assert_str(reply.refusal_code()).is_equal("R1")
 
 
+func test_a_ruling_cannot_be_changed_after_it() -> void:
+	# A game that wrote `intent = "open"` on a refused reply would decide what
+	# the model is not allowed to: the fields refuse, and keep the ruling.
+	var reply: LlmReply = _validator().validate("I'd rather not say.")
+	await assert_error(func() -> void: reply.intent = "open").is_push_error(any_string())
+	await assert_error(func() -> void: reply.refusal = "").is_push_error(any_string())
+	assert_str(reply.intent).is_equal(LlmValidator.FALLBACK_INTENT)
+	assert_str(reply.refusal_code()).is_equal("R1")
+
+
 func test_a_declaration_that_cannot_be_validated_against_is_refused() -> void:
 	assert_str(LlmValidator.new({}, "Again?").problem()).contains("no intents")
 	assert_str(LlmValidator.new({"claim": [""]}, "Again?").problem()).contains("empty argument")
