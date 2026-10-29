@@ -90,8 +90,8 @@ func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
 
 
 ## The inner plan.
-func plan_lines() -> Array[String]:
-	return _inner.plan_lines()
+func plan_lines(say: Callable) -> Array[String]:
+	return _inner.plan_lines(say)
 
 
 ## The inner plan's marks.

@@ -127,13 +127,13 @@ func decide_build(state: BoardState, workshop_id: int) -> TacticalDecision:
 	if best == null:
 		return _spend_anyway(state, workshop, enemies)
 	var beaten: Array[String] = _beaten_by(best.unit_type, enemies)
-	var piece: String = TacticalStatus.a_piece(best.unit_type.type_name)
+	var piece: Array = TacticalStatus.a_piece_sentence(best.unit_type.type_name)
 	if beaten.is_empty():
-		return TacticalDecision.build(workshop_id, best, tr(
-			"builds {piece} at {cell}: the enemy's pieces shut every way its walkers have, and {piece} still gets there"
-		).format({piece = piece, cell = best.cell}))
-	return TacticalDecision.build(workshop_id, best, tr("builds {piece} at {cell}: it beats {count} enemy piece(s), {beaten}").format({
-		piece = piece, cell = best.cell, count = best_count, beaten = TacticalStatus.pieces(beaten)}))
+		return TacticalDecision.build(workshop_id, best, Sentence.of(  # shown through tr()
+			"builds {piece} at {cell}: the enemy's pieces shut every way its walkers have, and {piece} still gets there",
+			{piece = piece, cell = best.cell}))
+	return TacticalDecision.build(workshop_id, best, Sentence.of("builds {piece} at {cell}: it beats {count} enemy piece(s), {beaten}", {  # shown through tr()
+		piece = piece, cell = best.cell, count = best_count, beaten = TacticalStatus.listed(beaten)}))
 
 
 ## A walk towards the nearest enemy workshop, as far as this turn's movement
@@ -144,18 +144,18 @@ func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 	var walks: Dictionary = TacticalReach.walks_for(state, unit)
 	var target: Unit = _nearest_workshop(state, unit)
 	if target == null:
-		return _fallback(state, unit, walks, tr("the enemy's pieces stand on every way to the enemy workshop this turn"))
-	var aim: String = tr("{piece} at {cell}").format({piece = TacticalStatus.the_piece(target.type.type_name), cell = target.cell})
+		return _fallback(state, unit, walks, Sentence.of("the enemy's pieces stand on every way to the enemy workshop this turn"))  # shown through tr()
+	var aim: Array = Sentence.of("{piece} at {cell}", {piece = TacticalStatus.the_piece_sentence(target.type.type_name), cell = target.cell})  # shown through tr()
 	if TacticalCombat.distance(unit.cell, target.cell) <= unit.type.attack_range:
 		_claim(state, target.cell)
-		return TacticalDecision.hold(unit_id, tr("stays in reach of {aim}, to attack it").format({aim = aim}), unit.cell)
+		return TacticalDecision.hold(unit_id, Sentence.of("stays in reach of {aim}, to attack it", {aim = aim}), unit.cell)  # shown through tr()
 	if not _claim(state, target.cell):
-		return _fallback(state, unit, walks, tr("{aim} already has one of its side's walkers for each cell beside it").format({aim = aim}))
+		return _fallback(state, unit, walks, Sentence.of("{aim} already has one of its side's walkers for each cell beside it", {aim = aim}))  # shown through tr()
 	var best: Vector2i = _nearest_walk_to(state, unit, walks, target.cell)
 	if best == unit.cell:
 		_claims[target.cell] -= 1
-		return _fallback(state, unit, walks, tr("no walk this turn brings it nearer {aim}").format({aim = aim}))
-	return TacticalDecision.walk(unit_id, walks[best], _crossing(unit, target).format({cell = best, aim = aim}), best)
+		return _fallback(state, unit, walks, Sentence.of("no walk this turn brings it nearer {aim}", {aim = aim}))  # shown through tr()
+	return TacticalDecision.walk(unit_id, walks[best], Sentence.of(_crossing(unit, target), {cell = best, aim = aim}), best)
 
 
 ## Take `goal` for one more walker this turn, if it has room: one for a
@@ -182,19 +182,18 @@ func _room_at(state: BoardState, goal: Vector2i) -> int:
 ## red piece -- of the `FALLBACK_CANDIDATES` nearest as the crow flies -- that
 ## some walk brings it nearer and that has not already as many of blue's
 ## walkers heading for it as it has open cells beside it; it holds only when
-## none does. `why` is why
-## its goal was out of reach, for the reason.
-func _fallback(state: BoardState, unit: Unit, walks: Dictionary, why: String) -> TacticalDecision:
+## none does. `why` is the sentence for why its goal was out of reach.
+func _fallback(state: BoardState, unit: Unit, walks: Dictionary, why: Array) -> TacticalDecision:
 	for enemy: Unit in _nearest_enemies(state, unit):
 		if _claims.get(enemy.cell, 0) >= _room_at(state, enemy.cell):
 			continue
 		var best: Vector2i = _nearest_walk_to(state, unit, walks, enemy.cell)
-		var said: String = tr("walks to {cell}, towards {piece} at {enemy_cell}: {why}, so it goes for the nearest enemy piece it can (a fallback rule)").format({
-			cell = best, piece = TacticalStatus.the_piece(enemy.type.type_name), enemy_cell = enemy.cell, why = why})
+		var said: Array = Sentence.of("walks to {cell}, towards {piece} at {enemy_cell}: {why}, so it goes for the nearest enemy piece it can (a fallback rule)", {  # shown through tr()
+			cell = best, piece = TacticalStatus.the_piece_sentence(enemy.type.type_name), enemy_cell = enemy.cell, why = why})
 		if best != unit.cell:
 			_claim(state, enemy.cell)
 			return TacticalDecision.walk(unit.id, walks[best], said, best)
-	return TacticalDecision.hold(unit.id, tr("stays: no walk this turn brings it nearer its goal or any enemy piece -- {why}").format({why = why}), unit.cell)
+	return TacticalDecision.hold(unit.id, Sentence.of("stays: no walk this turn brings it nearer its goal or any enemy piece -- {why}", {why = why}), unit.cell)  # shown through tr()
 
 
 # Red's pieces nearest `unit` as the crow flies, at most
@@ -214,7 +213,7 @@ func _nearest_enemies(state: BoardState, unit: Unit) -> Array[Unit]:
 func _spend_anyway(state: BoardState, workshop: Unit, enemies: Array[Unit]) -> TacticalDecision:
 	var buildable: Array[UnitType] = _buildable(state, workshop)
 	if buildable.is_empty():
-		return TacticalDecision.hold(workshop.id, tr("builds nothing: {why}").format({why = _why_nothing(state, workshop)}), workshop.cell)
+		return TacticalDecision.hold(workshop.id, Sentence.of("builds nothing: {why}", {why = _why_nothing(state, workshop)}), workshop.cell)  # shown through tr()
 	var best: UnitType = buildable[0]
 	for kind: UnitType in buildable:
 		var more: int = _beaten_by(kind, enemies).size() - _beaten_by(best, enemies).size()
@@ -222,12 +221,12 @@ func _spend_anyway(state: BoardState, workshop: Unit, enemies: Array[Unit]) -> T
 			best = kind
 	var order := ProductionOrder.new(workshop.id, best, TacticalRules.free_cell_beside(state, workshop, best))
 	var beaten: Array[String] = _beaten_by(best, enemies)
-	var piece: String = TacticalStatus.a_piece(best.type_name)
+	var piece: Array = TacticalStatus.a_piece_sentence(best.type_name)
 	if beaten.is_empty():
-		return TacticalDecision.build(workshop.id, order, tr("builds {piece} at {cell}: nothing it can build beats an enemy piece, and money banked is a piece not on the board (spend first)").format({
+		return TacticalDecision.build(workshop.id, order, Sentence.of("builds {piece} at {cell}: nothing it can build beats an enemy piece, and money banked is a piece not on the board (spend first)", {  # shown through tr()
 			piece = piece, cell = order.cell}))
-	return TacticalDecision.build(workshop.id, order, tr("builds {piece} at {cell}: it beats {count} enemy piece(s), {beaten} -- none of what beats them can get to the enemy workshop now, so it holds the bank until the way opens (spend first)").format({
-		piece = piece, cell = order.cell, count = beaten.size(), beaten = TacticalStatus.pieces(beaten)}))
+	return TacticalDecision.build(workshop.id, order, Sentence.of("builds {piece} at {cell}: it beats {count} enemy piece(s), {beaten} -- none of what beats them can get to the enemy workshop now, so it holds the bank until the way opens (spend first)", {  # shown through tr()
+		piece = piece, cell = order.cell, count = beaten.size(), beaten = TacticalStatus.listed(beaten)}))
 
 
 ## The cell of `walks` -- `TacticalReach.walks_for` the unit -- that leaves
@@ -292,30 +291,31 @@ func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
 		if TacticalCombat.why_refused(state, Attack.new(unit_id, enemy.id)) != BoardState.LEGAL:
 			continue
 		if enemy.type.type_name == TacticalRules.WORKSHOP:
-			return TacticalDecision.strike(unit_id, enemy, tr("attacks the enemy workshop at {cell}: destroying it wins").format({cell = enemy.cell}))
+			return TacticalDecision.strike(unit_id, enemy, Sentence.of("attacks the enemy workshop at {cell}: destroying it wins", {cell = enemy.cell}))  # shown through tr()
 		if enemy.type.type_name in unit.type.strong_against and (best == null or enemy.health < best.health):
 			best = enemy
 	if best == null:
 		return null
-	return TacticalDecision.strike(unit_id, best, tr("attacks {target} at {cell}: {mine} beats {theirs}, by the counter table").format({
-		target = TacticalStatus.the_piece(best.type.type_name), cell = best.cell,
-		mine = TacticalStatus.a_piece(unit.type.type_name), theirs = TacticalStatus.a_piece(best.type.type_name)}))
+	return TacticalDecision.strike(unit_id, best, Sentence.of("attacks {target} at {cell}: {mine} beats {theirs}, by the counter table", {  # shown through tr()
+		target = TacticalStatus.the_piece_sentence(best.type.type_name), cell = best.cell,
+		mine = TacticalStatus.a_piece_sentence(unit.type.type_name), theirs = TacticalStatus.a_piece_sentence(best.type.type_name)}))
 
 
-# Why the workshop builds nothing: no room, no money, nothing worth it, or
-# nothing worth it that could get there.
+# Why the workshop builds nothing, as a sentence: no room, no money, nothing
+# worth it, or nothing worth it that could get there. A board's refusal is
+# kept in its English, and worded by its shape where it is shown.
 # Asked of the cheapest type, because if that cannot be built, none can.
-func _why_nothing(state: BoardState, workshop: Unit) -> String:
+func _why_nothing(state: BoardState, workshop: Unit) -> Array:
 	var cheapest: UnitType = TacticalRules.unit_types()[TacticalRules.RUNNER]
 	if no_room_beside(state, workshop):
-		return tr(NO_ROOM)
+		return Sentence.of(NO_ROOM)
 	var order := ProductionOrder.new(workshop.id, cheapest, TacticalRules.free_cell_beside(state, workshop, cheapest))
 	var refusal: String = state.why_production_refused(order)
 	if refusal != BoardState.LEGAL:
-		return TacticalRefusal.words(refusal)
+		return Sentence.of("{refusal}", {refusal = refusal})
 	# Since T45 a workshop with room and money always builds (`_spend_anyway`),
 	# so this is only reached by a caller asking about a board where it could.
-	return tr("nothing stops it: it can build")
+	return Sentence.of("nothing stops it: it can build")  # shown through tr()
 
 
 # Every buildable type the workshop could build and pay for this turn.
@@ -373,16 +373,16 @@ func _remaining(state: BoardState, unit: Unit, cell: Vector2i, to_target: Dictio
 	return to_target[cell] - graph.cost_at(cell) + graph.cost_at(target)
 
 
-# The sentence for a walk towards `{aim}`, ending `{cell}`: one that says how
-# it crosses the river when it is on its way over, each whole, to format.
+# The key of the sentence for a walk towards `{aim}`, ending `{cell}`: one
+# that says how it crosses the river when it is on its way over, each whole.
 func _crossing(unit: Unit, target: Unit) -> String:
 	if not TacticalScenario.across_the_river(unit.cell, target.cell):
-		return tr("walks to {cell}, towards {aim}")
+		return "walks to {cell}, towards {aim}"  # shown through tr()
 	var here: String = TacticalScenario.MAP[unit.cell.y][unit.cell.x]
 	if here == TacticalRules.BRIDGE:
-		return tr("walks to {cell}, towards {aim}, crossing the bridge")
+		return "walks to {cell}, towards {aim}, crossing the bridge"  # shown through tr()
 	if here == TacticalRules.FORD:
-		return tr("walks to {cell}, towards {aim}, crossing by the ford")
+		return "walks to {cell}, towards {aim}, crossing by the ford"  # shown through tr()
 	if unit.type.mover == TacticalRules.WATER_MOVER:
-		return tr("walks to {cell}, towards {aim}, wading across the river")
-	return tr("walks to {cell}, towards {aim}, making for a crossing")
+		return "walks to {cell}, towards {aim}, wading across the river"  # shown through tr()
+	return "walks to {cell}, towards {aim}, making for a crossing"  # shown through tr()

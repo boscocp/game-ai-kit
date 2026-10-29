@@ -10,6 +10,11 @@
 ## pieces are here too, with their articles, because Portuguese gives a tower
 ## another article than a runner, so "the {piece}" cannot be one key.
 ##
+## A team's reasons are kept as a `Sentence` (T104): its English key and its
+## values. `said` words one in the language on screen, here, where it is
+## shown -- so the AI's state is the same in any language, and a language
+## switched mid-turn rewords the last reason with the rest.
+##
 ## When not to use it: anything the player has not got in hand. The status
 ## describes one piece; the legend describes the rest.
 class_name TacticalStatus
@@ -62,13 +67,13 @@ static func computer_text(state: BoardState, turn: BlueTurn, controller: BlueCon
 	if news != "":
 		lines.append(news)
 	if turn.next != null:
-		lines.append("\n" + TranslationServer.translate("next (drawn in pink): unit {unit} {why}").format({unit = turn.next.unit_id, why = turn.next.reason}))
+		lines.append("\n" + TranslationServer.translate("next (drawn in pink): unit {unit} {why}").format({unit = turn.next.unit_id, why = said(turn.next.reason)}))
 		lines.append(TranslationServer.translate("space plays it  ·  enter plays the rest of {side}'s turn").format({side = side}))
 	else:
 		lines.append("\n" + TranslationServer.translate("{side} has finished its turn. Space hands it back to {other}").format({
 			side = side, other = side_name(TacticalScenario.FACTIONS - 1 - state.current_faction)}))
 	lines.append(TranslationServer.translate("{count} decision(s) played this turn").format({count = turn.played.size()}))
-	var plan: Array[String] = controller.plan_lines()
+	var plan: Array[String] = controller.plan_lines(said)
 	if not plan.is_empty():
 		lines.append("\n".join(plan) + "\n" + TranslationServer.translate("(the numbers on the board are the pieces each step counts on)"))
 	return "\n".join(lines)
@@ -110,6 +115,50 @@ static func pieces(type_names: Array) -> String:
 	for type_name: String in type_names:
 		said.append(piece(type_name))
 	return ", ".join(said)
+
+
+## A sentence a team kept, in the language on screen: its key translated,
+## and each value worded by `word`.
+static func said(sentence: Array) -> String:
+	return Sentence.translated(sentence, TacticalStatus.word)
+
+
+## A value of a kept sentence as the screen says it: a board's refusal by its
+## shape, a piece's name or another key through the tables, and anything
+## else -- a plan's step, a fact, a number -- as it is.
+static func word(value: String) -> String:
+	return TacticalRefusal.words(value)
+
+
+## A piece with "the" before it, as a value of a kept sentence.
+static func the_piece_sentence(type_name: String) -> Array:
+	return Sentence.of(THE_PIECE.get(type_name, type_name))
+
+
+## A piece with "a" before it, as a value of a kept sentence.
+static func a_piece_sentence(type_name: String) -> Array:
+	return Sentence.of(A_PIECE.get(type_name, type_name))
+
+
+## Several values as one value of a kept sentence, "mortar, ram": each is
+## worded on its own where it is shown. Empty for none.
+static func listed(values: Array) -> Array:
+	return _chained(values, "{first}, {rest}")
+
+
+## Several deeds as one value of a kept sentence, in the order they come:
+## "hunt then siege".
+static func in_order(values: Array) -> Array:
+	return _chained(values, "{first} then {rest}")  # shown through tr()
+
+
+# `values` as nested sentences, the first and the rest joined by `key`.
+static func _chained(values: Array, key: String) -> Array:
+	if values.is_empty():
+		return []
+	if values.size() == 1:
+		return Sentence.of("{only}", {only = values[0]})
+	return Sentence.of(key, {first = values[0], rest = _chained(values.slice(1), key)})
 
 
 ## A faction's name as the screen says it.

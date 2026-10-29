@@ -26,7 +26,8 @@ const REQUIRED_CONVENTIONS: Array[String] = [
 ## The refusals this game adds, each a key with named placeholders: its
 ## code (W6, W7) stays outside it, untranslated, and the English is the
 ## Python side's own sentence. Shown on the skirmish's panel when blue
-## cannot think, so each is translated where it is shown (`error_shown`).
+## cannot think, so each is kept as a sentence (`error_sentence`) and
+## translated where it is shown.
 const RUN_TRAIN: String = "{error} -- run `make train`"  # shown through tr()
 const NO_BLOCK: String = "the file publishes no feature_conventions block"  # shown through tr()
 const NOT_WHOLE: String = "feature_conventions.{name} is {value}, and the game needs a positive whole number"  # shown through tr()
@@ -80,13 +81,15 @@ static func over(file: ModelFile, source: String) -> TacticalWeights:
 	return loaded
 
 
-## `error` in the language chosen, for the screen: this game's sentences
-## translated, their codes and values as they are; an addon's sentence
-## (`ModelFile`'s M codes) as the addon wrote it.
-func error_shown() -> String:
+## `error` as a `Sentence`, to word where it is shown: this game's sentences
+## by key, their codes and sources outside the key; an addon's sentence
+## (`ModelFile`'s M codes) as the addon wrote it. None when it loaded.
+func error_sentence() -> Array:
+	if error == "":
+		return []
 	if _error_words.is_empty():
-		return error
-	return _words(_error_words, true)
+		return Sentence.of("{error}", {error = error})
+	return _sentence_of(_error_words)
 
 
 ## True when there are models to predict with.
@@ -158,18 +161,20 @@ static func _is_a_whole_number(value: Variant) -> bool:
 # A refusal in this game's words: the English `error`, and the words kept to
 # translate it where it is shown.
 static func _refused_with(words: Array) -> TacticalWeights:
-	var refused: TacticalWeights = _refused(_words(words, false))
+	var refused: TacticalWeights = _refused(Sentence.english(_sentence_of(words)))
 	refused._error_words = words
 	return refused
 
 
-# [code, key, values, source] as one sentence, translated or in English.
-static func _words(words: Array, translated: bool) -> String:
-	var key: String = words[1]
-	var sentence: String = (TranslationServer.translate(key) if translated else key).format(words[2])
+# [code, key, values, source] as one sentence: the code before the key's
+# sentence and the source after it, each a value left as it is.
+static func _sentence_of(words: Array) -> Array:
+	var said: Array = Sentence.of(words[1], words[2])
 	if words[0] != "":
-		sentence = "%s %s" % [words[0], sentence]
-	return sentence if words[3] == "" else "%s (%s)" % [sentence, words[3]]
+		said = Sentence.of("{code} {said}", {code = words[0], said = said})
+	if words[3] != "":
+		said = Sentence.of("{said} ({source})", {said = said, source = words[3]})
+	return said
 
 
 # The result of a refusal: an error, and nothing to predict with.

@@ -33,6 +33,10 @@
 class_name TacticalGame
 extends Node2D
 
+## The sides as the overlay names them, in English whatever the language on
+## screen, as every reason in it is (T104).
+const SIDES: Array[String] = ["red", "blue"]  # not shown: the overlay's
+
 ## What the scene says it is, on screen, before anything else.
 const WHAT_THIS_IS: String = "tactics in the style of Advance Wars: build, cross the river, destroy the enemy workshop"  # shown through tr()
 
@@ -186,7 +190,7 @@ func attack(target: Unit) -> void:
 	var strike := Attack.new(_selected_id, target.id)
 	var before: BoardState = state
 	if _act(TacticalCombat.apply(state, strike), TacticalCombat.why_refused(state, strike)):
-		_note(TacticalDecision.strike(strike.attacker_id, target, ""), before)
+		_note(TacticalDecision.strike(strike.attacker_id, target, []), before)
 		_last_event = TacticalCombat.told(before, strike, state)
 		_turn.attacked(strike.attacker_id)
 		_turn.seal()
@@ -210,7 +214,7 @@ func build(index: int) -> void:
 	var order := ProductionOrder.new(_selected_id, kind, TacticalRules.free_cell_beside(state, workshop, kind))
 	var before: BoardState = state
 	if _act(state.produce(order), state.why_production_refused(order)):
-		_note(TacticalDecision.build(order.producer_id, order, ""), before)
+		_note(TacticalDecision.build(order.producer_id, order, []), before)
 		_turn.spend(_selected_id)
 		_last_event = tr("built {piece} at {cell}; it moves next turn").format({piece = TacticalStatus.a_piece(kind.type_name), cell = order.cell})
 	_refresh()
@@ -226,7 +230,7 @@ func wait() -> void:
 		_refuse(tr("nothing in hand that can still move"))
 		return
 	_turn.remember(state)
-	_note(TacticalDecision.hold(unit.id, "", unit.cell), state)
+	_note(TacticalDecision.hold(unit.id, [], unit.cell), state)
 	_turn.spend(unit.id)
 	_last_event = tr("{piece} waits at {cell}").format({piece = TacticalStatus.the_piece(unit.type.type_name), cell = unit.cell})
 	_last_refusal = ""
@@ -242,7 +246,7 @@ func buy_forge() -> void:
 	var forge: Upgrade = TacticalRules.forge()
 	var before: BoardState = state
 	if _act(state.buy(forge), state.why_upgrade_refused(forge)):
-		_note(TacticalDecision.buy(_selected_id, forge, "", Vector2i.ZERO), before)
+		_note(TacticalDecision.buy(_selected_id, forge, [], Vector2i.ZERO), before)
 		_last_event = tr("bought the forge: rams can be built")
 	_refresh()
 
@@ -338,15 +342,17 @@ func play_rest_of_computer_turn() -> void:
 
 ## What the computer is reasoning with: who is playing it, the decision about
 ## to be played and why, and what it has done this turn -- for
-## `test/menu/demo_overlays.gd` to check is there.
+## `test/menu/demo_overlays.gd` to check is there. In English, as the AI
+## keeps it, so the same game gives the same overlay in any language.
 func decision_overlay() -> Dictionary:
-	var overlay: Dictionary = {"controller": computer.controller_name(), "to_move": TacticalStatus.side_name(state.current_faction)}
+	var overlay: Dictionary = {"controller": computer.controller_name(), "to_move": SIDES[state.current_faction]}
 	if _computer_thinking():
 		overlay["next"] = _described(_computer_turn.next)
 	if not _computer_turn.played.is_empty():
 		overlay["played"] = _computer_turn.played.map(_described)
-	if not computer.plan_lines().is_empty():
-		overlay["plan"] = computer.plan_lines()
+	var plan: Array[String] = computer.plan_lines(Sentence.english)
+	if not plan.is_empty():
+		overlay["plan"] = plan
 	overlay["threatened cells"] = threat().size()
 	return overlay
 
@@ -471,7 +477,7 @@ func _walk_to(cell: Vector2i) -> void:
 	var move := Move.new(_selected_id, path)
 	var before: BoardState = state
 	if _act(state.apply(move), _explained(state.why_refused(move), cell)):
-		_note(TacticalDecision.walk(move.unit_id, path, "", cell), before)
+		_note(TacticalDecision.walk(move.unit_id, path, [], cell), before)
 		_units.walk(unit.id, unit.cell, path)
 		_turn.spend(_selected_id)
 		_select_next_unspent()
@@ -563,7 +569,7 @@ func _select_next_unspent() -> void:
 
 
 func _described(decision: TacticalDecision) -> Dictionary:
-	return {"unit": decision.unit_id, "kind": decision.kind(), "why": decision.reason, "target": decision.target}
+	return {"unit": decision.unit_id, "kind": decision.kind(), "why": decision.english(), "target": decision.target}
 
 
 func _refresh() -> void:

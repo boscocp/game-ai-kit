@@ -10,5 +10,8 @@
     "board",
     "tactical"
   ],
+  "tests_depend_on": [
+    "game_shared"
+  ],
   "gates": []
 }

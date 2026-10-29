@@ -6,19 +6,8 @@ extends GdUnitTestSuite
 const SEEDS: int = 6
 
 
-# These tests read the English words. The engine starts in the system's
-# locale, so on a Portuguese system they would read the pt-BR ones (T79);
-# the Portuguese screen is test/locale's. The locale found is put back.
-var _locale_before: String
-
-
-func before() -> void:
-	_locale_before = TranslationServer.get_locale()
-	TranslationServer.set_locale("en")
-
-
-func after() -> void:
-	TranslationServer.set_locale(_locale_before)
+# The reasons they read are kept in English whatever the locale (T104), so
+# they run in any language and pin none.
 
 
 # --- the domain is data, and it is the spec's ---------------------------------
@@ -82,7 +71,7 @@ func test_the_opening_plan_buys_the_forge_first_which_the_rules_never_do() -> vo
 	var decision: TacticalDecision = planner.decide_build(state, _workshop(state).id)
 
 	assert_str(decision.kind()).is_equal("buy")
-	assert_str(decision.reason).contains("plan step 1")
+	assert_str(decision.english()).contains("plan step 1")
 	assert_bool(planner.plan.solved).is_true()
 
 
@@ -94,15 +83,15 @@ func test_a_saved_turn_says_what_it_is_saving_for() -> void:
 	var decision: TacticalDecision = planner.decide_build(state, _workshop(state).id)
 
 	assert_str(decision.kind()).is_equal("hold")
-	assert_str(decision.reason).contains("saves")
-	assert_str(decision.reason).contains("ram")
+	assert_str(decision.english()).contains("saves")
+	assert_str(decision.english()).contains("ram")
 
 
 func test_a_walker_no_step_names_is_the_rules_and_says_so() -> void:
 	var planner := PlannedBlue.new()
 	var state: BoardState = _blues_first_turn()
 
-	assert_str(planner.decide_move(state, 9).reason).contains("the rules decide")
+	assert_str(planner.decide_move(state, 9).english()).contains("the rules decide")
 
 
 func test_shut_crossings_break_a_plan_that_crosses_and_the_reason_names_the_fact() -> void:
@@ -114,8 +103,8 @@ func test_shut_crossings_break_a_plan_that_crosses_and_the_reason_names_the_fact
 
 	planner.decide_build(later, _workshop(later).id)
 
-	assert_str(planner.why_planned).contains("stopped running")
-	assert_str(planner.why_planned).contains("crossing_open")
+	assert_str(Sentence.english(planner.why_planned)).contains("stopped running")
+	assert_str(Sentence.english(planner.why_planned)).contains("crossing_open")
 
 
 func test_it_replans_on_its_cadence_when_nothing_broke() -> void:
@@ -127,7 +116,7 @@ func test_it_replans_on_its_cadence_when_nothing_broke() -> void:
 
 	planner.decide_build(later, _workshop(later).id)
 
-	assert_str(planner.why_planned).contains("%d of its turns" % PlannedBlue.REPLAN_EVERY)
+	assert_str(Sentence.english(planner.why_planned)).contains("%d of its turns" % PlannedBlue.REPLAN_EVERY)
 
 
 func test_a_new_game_on_the_same_turn_number_forgets_the_old_plan() -> void:
@@ -136,11 +125,11 @@ func test_a_new_game_on_the_same_turn_number_forgets_the_old_plan() -> void:
 	var planner := PlannedBlue.new()
 	var state: BoardState = _blues_first_turn()
 	planner.begin_turn(state)
-	planner.why_planned = "by the test"
+	planner.why_planned = Sentence.of("by the test")  # not shown: a marker the test plants
 
 	planner.begin_turn(_blues_first_turn())
 
-	assert_str(planner.why_planned).contains("start of the game")
+	assert_str(Sentence.english(planner.why_planned)).contains("start of the game")
 
 
 func test_the_scene_swaps_blue_to_the_planner_and_shows_its_plan() -> void:
@@ -181,7 +170,7 @@ func test_once_the_ram_is_bought_the_plan_is_at_the_crossing_and_buys_no_more() 
 	var decision: TacticalDecision = planner.decide_build(state, _workshop(state).id)
 
 	assert_str(planner.plan.steps[planner.next_step].name).is_equal("cross_the_river_ram")
-	assert_str(decision.reason).contains("the plan buys nothing more")
+	assert_str(decision.english()).contains("the plan buys nothing more")
 
 
 func test_a_banking_step_is_skipped_when_the_next_purchase_can_be_paid_now() -> void:
@@ -209,13 +198,13 @@ func test_it_keeps_its_plan_until_the_cadence_comes_round() -> void:
 	var planner := PlannedBlue.new()
 	var state: BoardState = _blues_first_turn()
 	planner.begin_turn(state)
-	var first: String = planner.why_planned
+	var first: String = Sentence.english(planner.why_planned)
 
 	for own_turns: int in range(1, PlannedBlue.REPLAN_EVERY):
 		var later: BoardState = state.duplicate_state()
 		later.turn_number += own_turns * TacticalScenario.FACTIONS
 		planner.begin_turn(later)
-		assert_str(planner.why_planned).override_failure_message("after %d turns" % own_turns).is_equal(first)
+		assert_str(Sentence.english(planner.why_planned)).override_failure_message("after %d turns" % own_turns).is_equal(first)
 
 
 func test_a_walker_s_walk_is_the_rules_walk_and_only_its_reason_differs() -> void:
@@ -229,7 +218,7 @@ func test_a_walker_s_walk_is_the_rules_walk_and_only_its_reason_differs() -> voi
 
 	assert_str(planned.kind()).is_equal(ruled.kind())
 	assert_that(planned.target).is_equal(ruled.target)
-	assert_str(planned.reason).contains("cross_the_river_ram")
+	assert_str(planned.english()).contains("cross_the_river_ram")
 
 
 func test_a_partial_plan_is_played_without_a_refusal_and_replaced_when_done() -> void:
@@ -237,7 +226,7 @@ func test_a_partial_plan_is_played_without_a_refusal_and_replaced_when_done() ->
 	var planner := PlannedBlue.new()
 	planner.budget = 2
 	var made: Array[String] = []
-	var collect: Callable = func(_state: BoardState) -> void: made.append(planner.why_planned)
+	var collect: Callable = func(_state: BoardState) -> void: made.append(Sentence.english(planner.why_planned))
 
 	var game: Dictionary = TacticalMatch.play(RuleBasedBlue.new(), planner, 0, collect)
 
@@ -258,7 +247,7 @@ func test_the_plan_is_printed_and_marked_on_the_board() -> void:
 	var state: BoardState = _blues_first_turn()
 	planner.decide_build(state, _workshop(state).id)
 
-	assert_str("\n".join(planner.plan_lines())).contains("buy_the_forge")
+	assert_str("\n".join(planner.plan_lines(Sentence.english))).contains("buy_the_forge")
 	assert_str(planner.plan_marks(state).get(_workshop(state).cell, "")).is_equal("1")
 
 

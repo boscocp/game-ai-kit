@@ -3,7 +3,7 @@ en,pt_BR
 nobody,ninguém
 points (each pays its holder {income} a turn): {points},pontos (cada um paga {income} por turno a quem o segura): {points}
 "GOAP: a goal per walker, the cheapest plan to it by turns on this board, replanned every decision; builds by the rules","GOAP: um objetivo por unidade, o plano mais barato até ele em turnos neste tabuleiro, refeito a cada decisão; constrói pelas regras"
-then,depois
+{first} then {rest},{first} depois {rest}
 none,nenhum
 "goal {goal}, plan {plan}","objetivo {goal}, plano {plan}"
 no plan yet,ainda sem plano
@@ -104,7 +104,6 @@ because the partial plan's steps were done,porque os passos do plano parcial for
 {step}: saves -- {why},{step}: guarda dinheiro -- {why}
 "{step}: buys the forge, which a ram needs","{step}: compra a forja, de que o aríete precisa"
 {step}: builds {piece} at {cell},{step}: constrói {piece} em {cell}
-"step {step}, {name}, is not a purchase","o passo {step}, {name}, não é uma compra"
 nothing the plan names,nada que o plano nomeie
 the forge,a forja
 "plan step {step} of {steps}, {name}","passo {step} de {steps} do plano, {name}"
@@ -249,7 +248,6 @@ a workshop,uma oficina
 "red {red}, blue {blue} (workshop health, point-turns held, left standing)","vermelhas {red}, azuis {blue} (vida da oficina, turnos-ponto, o que restou de pé)"
 "a draw: {rounds} rounds, and the scores are equal -- {scores}.  R starts again.","empate: {rounds} rodadas, e as pontuações são iguais -- {scores}.  R recomeça."
 {winner} wins on score after {rounds} rounds: {scores}.  R starts again.,as {winner} vencem por pontos depois de {rounds} rodadas: {scores}.  R recomeça.
-nothing pressing,nada urgente
 the enemy walker nearest its workshop,a unidade inimiga mais perto da sua oficina
 "{prey} at {cell}, which {piece} beats","{prey} em {cell}, que {piece} bate"
 "stays in reach of {aim}, to strike it","fica onde alcança {aim}, para golpear"

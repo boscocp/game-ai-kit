@@ -49,6 +49,12 @@ L8  a key two tables translate differently. Every table is loaded into the
     one TranslationServer, so a key has one translation in the whole game
     and which table answers is not the reader's to choose: the stealth
     guard's "investigate" and the behaviour tree's said two things (T79).
+L9  a translation call inside the arguments of `Sentence.of(...)`. A sentence
+    an AI keeps is its English key and values, worded where it is shown
+    (T80, T104); a key translated as it is kept makes the AI's state, and
+    every overlay and test that reads it, depend on the language on screen.
+    T104's review planted one in a reason no game in the tests reached. A
+    translated value handed in through a variable or a helper is not seen.
 
 What it cannot see
 ------------------
@@ -112,6 +118,9 @@ LETTER_RE = re.compile(r"[^\W\d_]")
 LOOKUP_BEFORE_RE = re.compile(r"(?:\.get\(|[\w)\]]\[)\s*$")
 # ...and a literal followed by a colon is a dictionary's key: `{"move": m}`.
 LOOKUP_AFTER_RE = re.compile(r"\s*:(?!=)")
+# A sentence kept to be worded later (`godot/game/sentence.gd`).
+SENTENCE_RE = re.compile(r"(?<![\w.])Sentence\.of\s*\(")
+
 # A key built at the call: the first argument goes on past its literal.
 BUILT_KEY_RE = re.compile(r"\s*\"@\d+\"\s*[%+]")
 
@@ -264,6 +273,17 @@ def built_keys(script: Script) -> list[str]:
         if spans and BUILT_KEY_RE.match(script.code, spans[0][0]):
             findings.append(f"L7 {script.path}:{script.line_of(match.start())}: the key is built "
                             "inside the call; translate the sentence, then .format() it")
+    return findings
+
+
+def worded_too_soon(script: Script) -> list[str]:
+    """L9: a translation call inside `Sentence.of(...)`'s arguments."""
+    findings = []
+    for match in SENTENCE_RE.finditer(script.code):
+        close = _arguments(script.code, match.end() - 1)[0]
+        if TRANSLATING_RE.search(script.code, match.end(), close) is not None:
+            findings.append(f"L9 {script.path}:{script.line_of(match.start())}: a translation inside "
+                            "Sentence.of(); keep the English key, and word it where it is shown")
     return findings
 
 
@@ -420,12 +440,12 @@ def _keys_used(script: Script) -> list[tuple[int, str, str]]:
 
 def check_module(repo: pathlib.Path, module: str, owners: dict[str, tuple[str, ...]],
                  table: Table) -> list[str]:
-    """L1, L2, L3 and L7 for one translated module."""
+    """L1, L2, L3, L7 and L9 for one translated module."""
     keys = {key for _, key in table.rows}
     findings = list(table.findings)
     mentioned: set[str] = set()
     for script in scripts_of(repo, module, owners):
-        findings += bare_words(script, keys) + built_keys(script)
+        findings += bare_words(script, keys) + built_keys(script) + worded_too_soon(script)
         mentioned |= set(script.literals)
         for start, key, context in _keys_used(script):
             if (context, key) not in table.rows:
@@ -509,6 +529,8 @@ func _draw() -> void:
 		load("res://game/some file.gd")
 	var finds: String = tr(FINDS[0])
 	var bold: String = "[b]%s[/b] -- %s" % [first, second]
+	var kept: Array = Sentence.of("cost {cost}", {cost = 3, then = Sentence.of("red dot: goal")})  # shown through tr()
+	var worded: String = tr("cost {cost}").format({cost = Sentence.english(kept)})
 '''
 CLEAN_TABLE = ("en,pt_BR\n"
                "left-drag: paint {brush},arrastar: pinta {brush}\n"
@@ -577,6 +599,11 @@ def _table_cases(root: pathlib.Path, expect) -> None:
         "godot/locale/menu.csv": "en,pt_BR\nbreadth-first,largura\n"}), 1, "L8")
     expect("key built with %", build(root, "percent", CLEAN_SCRIPT + '\tprint(tr("cost %d" % 3))\n'), 1, "L7")
     expect("key built with +", build(root, "plus", CLEAN_SCRIPT + '\tprint(tr("cost " + str(3)))\n'), 1, "L7")
+    expect("a key translated as it is kept", build(root, "kept", CLEAN_SCRIPT
+           + '\tvar why: Array = Sentence.of(tr("cost {cost}"), {cost = 3})\n'), 1, "L9")
+    expect("a value translated as it is kept", build(root, "value", CLEAN_SCRIPT
+           + '\tvar why: Array = Sentence.of("cost {cost}", {  # shown through tr()\n'
+           + '\t\tcost = TranslationServer.translate("breadth-first")})\n'), 1, "L9")
 
 
 def self_test() -> int:

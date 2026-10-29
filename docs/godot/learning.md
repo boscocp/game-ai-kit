@@ -73,13 +73,15 @@ var policy := LearnedPolicy.new(weights, [Vector2i(10, 1)] as Array[Vector2i],
 	LearnedPolicy.DEFAULT_THRESHOLD, AStarSearch.new())
 
 var decision: LearnedDecision = policy.decide(state, 1)
-print(decision.action, " ", decision.reason)
+print(decision.action, " ", decision.english())
 # attack unit 1 attacks unit 2: p(win) 0.95 at or above 0.50
 ```
 
 `decide` returns the whole decision: `action` (attack, retreat, contest,
 advance or hold), the `move`, the `win_probability` or `predicted_turns` it
-rests on, and `reason`, a sentence carrying the number. `contest` is the one
+rests on, and `reason`, a sentence carrying the number -- kept as a `Sentence`,
+its English key and values (T104): `english()` writes it for a log or a test,
+and `TacticalStatus.said(decision.reason)` in the language on screen. `contest` is the one
 that carries none: a unit with no fight in reach walks at a node an enemy
 stands on before the capture model is asked, and its reason says it is a
 rule, not the model (T41). Show the reason on screen. A unit

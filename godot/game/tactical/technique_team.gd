@@ -62,8 +62,8 @@ var _work: int = 0
 
 
 ## What it is thinking with for `unit_id` -- its state, the tree's trail, the
-## plan -- as one line for the reason and the screen.
-@abstract func thinking(unit_id: int) -> String
+## plan -- as one `Sentence` for the reason, worded where it is shown.
+@abstract func thinking(unit_id: int) -> Array
 
 
 ## A new turn: the rules' claims forgotten, and where each enemy piece could
@@ -91,7 +91,7 @@ func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 	deeds[unit_id] = deed
 	deed_counts[deed] = deed_counts.get(deed, 0) + 1
 	var done: TacticalDecision = _carry_out(state, unit, known, deed)
-	done.reason = "%s -- %s: %s" % [tr(deed), thinking(unit_id), done.reason]
+	done.reason = Sentence.of("{deed} -- {thinking}: {reason}", {deed = deed, thinking = thinking(unit_id), reason = done.reason})
 	return done
 
 
@@ -102,7 +102,7 @@ func _carry_out(state: BoardState, unit: Unit, known: TeamFacts, deed: String) -
 	if deed == HUNT and known.prey != null:
 		return _hunt(unit, known)
 	if deed == DEFEND:
-		return _walk_at_piece(state, unit, known, known.intruder, tr("the enemy walker nearest its workshop"))
+		return _walk_at_piece(state, unit, known, known.intruder, Sentence.of("the enemy walker nearest its workshop"))  # shown through tr()
 	if deed == TAKE_POINT and known.facts["point_free"]:
 		return _take_point(state, unit, known)
 	if deed == FALL_BACK:
@@ -111,41 +111,42 @@ func _carry_out(state: BoardState, unit: Unit, known: TeamFacts, deed: String) -
 
 
 func _hunt(unit: Unit, known: TeamFacts) -> TacticalDecision:
-	var aim: String = tr("{prey} at {cell}, which {piece} beats").format({
-		prey = TacticalStatus.the_piece(known.prey.type.type_name), cell = known.prey.cell, piece = TacticalStatus.a_piece(unit.type.type_name)})
+	var aim: Array = Sentence.of("{prey} at {cell}, which {piece} beats", {  # shown through tr()
+		prey = TacticalStatus.the_piece_sentence(known.prey.type.type_name), cell = known.prey.cell,
+		piece = TacticalStatus.a_piece_sentence(unit.type.type_name)})
 	if known.prey_from == unit.cell:
-		return TacticalDecision.hold(unit.id, tr("stays in reach of {aim}, to strike it").format({aim = aim}), unit.cell)
-	return TacticalDecision.walk(unit.id, known.walks[known.prey_from], tr("walks to {walk}, in reach of {aim}").format({
+		return TacticalDecision.hold(unit.id, Sentence.of("stays in reach of {aim}, to strike it", {aim = aim}), unit.cell)  # shown through tr()
+	return TacticalDecision.walk(unit.id, known.walks[known.prey_from], Sentence.of("walks to {walk}, in reach of {aim}", {  # shown through tr()
 		walk = known.prey_from, aim = aim}), known.prey_from)
 
 
 # A walk towards `piece` by the rules' route; a hold when it is in reach or no
 # walk gets nearer -- or the rules' walk, when there is no such piece.
-func _walk_at_piece(state: BoardState, unit: Unit, known: TeamFacts, piece: Unit, what: String) -> TacticalDecision:
+func _walk_at_piece(state: BoardState, unit: Unit, known: TeamFacts, piece: Unit, what: Array) -> TacticalDecision:
 	if piece == null:
 		return super.decide_move(state, unit.id)
-	var aim: String = tr("{what}, {piece} at {cell}").format({what = what, piece = TacticalStatus.the_piece(piece.type.type_name), cell = piece.cell})
+	var aim: Array = Sentence.of("{what}, {piece} at {cell}", {what = what, piece = TacticalStatus.the_piece_sentence(piece.type.type_name), cell = piece.cell})  # shown through tr()
 	if TacticalCombat.distance(unit.cell, piece.cell) <= unit.type.attack_range:
-		return TacticalDecision.hold(unit.id, tr("stays in reach of {aim}").format({aim = aim}), unit.cell)
+		return TacticalDecision.hold(unit.id, Sentence.of("stays in reach of {aim}", {aim = aim}), unit.cell)  # shown through tr()
 	var best: Vector2i = _nearest_walk_to(state, unit, known.walks, piece.cell)
 	if best == unit.cell:
-		return TacticalDecision.hold(unit.id, tr("stays: no walk this turn brings it nearer {aim}").format({aim = aim}), unit.cell)
-	return TacticalDecision.walk(unit.id, known.walks[best], tr("walks to {cell}, towards {aim}").format({cell = best, aim = aim}), best)
+		return TacticalDecision.hold(unit.id, Sentence.of("stays: no walk this turn brings it nearer {aim}", {aim = aim}), unit.cell)  # shown through tr()
+	return TacticalDecision.walk(unit.id, known.walks[best], Sentence.of("walks to {cell}, towards {aim}", {cell = best, aim = aim}), best)  # shown through tr()
 
 
 func _take_point(state: BoardState, unit: Unit, known: TeamFacts) -> TacticalDecision:
 	if unit.cell == known.point:
 		_claims[known.point] = 1
-		return TacticalDecision.hold(unit.id, tr("stays on the point at {cell}, which pays while it holds it").format({cell = known.point}), unit.cell)
+		return TacticalDecision.hold(unit.id, Sentence.of("stays on the point at {cell}, which pays while it holds it", {cell = known.point}), unit.cell)  # shown through tr()
 	var best: Vector2i = _nearest_walk_to(state, unit, known.walks, known.point)
 	if best == unit.cell:
 		# Never idle (T45): no walk nearer the point, so the rules' walk.
 		var instead: TacticalDecision = super.decide_move(state, unit.id)
-		instead.reason = tr("no walk this turn brings it nearer the point at {cell}, so by the rules: {reason}").format({
+		instead.reason = Sentence.of("no walk this turn brings it nearer the point at {cell}, so by the rules: {reason}", {  # shown through tr()
 			cell = known.point, reason = instead.reason})
 		return instead
 	_claims[known.point] = 1
-	return TacticalDecision.walk(unit.id, known.walks[best], tr("walks to {walk}, towards the point at {cell}").format({
+	return TacticalDecision.walk(unit.id, known.walks[best], Sentence.of("walks to {walk}, towards the point at {cell}", {  # shown through tr()
 		walk = best, cell = known.point}), best)
 
 
@@ -162,8 +163,8 @@ func _fall_back(state: BoardState, unit: Unit, known: TeamFacts) -> TacticalDeci
 			best = cell
 	var count: int = _strikers(state, unit, best)
 	if best == unit.cell:
-		return TacticalDecision.hold(unit.id, tr("stays: no walk this turn leaves fewer of what beats it in reach ({count})").format({count = count}), unit.cell)
-	return TacticalDecision.walk(unit.id, known.walks[best], tr("walks back to {walk}, where {count} of what beats it could strike").format({
+		return TacticalDecision.hold(unit.id, Sentence.of("stays: no walk this turn leaves fewer of what beats it in reach ({count})", {count = count}), unit.cell)  # shown through tr()
+	return TacticalDecision.walk(unit.id, known.walks[best], Sentence.of("walks back to {walk}, where {count} of what beats it could strike", {  # shown through tr()
 		walk = best, count = count}), best)
 
 

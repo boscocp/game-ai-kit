@@ -51,7 +51,7 @@ var goal: Dictionary = {}
 
 var _planner := GoapPlanner.new()
 # Walker id -> its goal and plan, said, from its last decision.
-var _said: Dictionary[int, String] = {}
+var _said: Dictionary[int, Array] = {}
 # The board and walker the prices are read for: `decide` is handed the facts,
 # and a price needs the route.
 var _pricing_state: BoardState
@@ -80,17 +80,14 @@ func decide(unit: Unit, known: TeamFacts) -> String:
 	plan = _planner.plan(actions_for(_pricing_state, unit, known), known.facts, goal)
 	_work += plan.visited
 	var first: String = plan.steps[0] if not plan.steps.is_empty() else SIEGE
-	var steps: Array[String] = []
-	for step: String in plan.steps:
-		steps.append(tr(step))
-	var planned: String = (" %s " % tr("then")).join(steps) if plan.solved else tr("none")
-	_said[unit.id] = tr("goal {goal}, plan {plan}").format({goal = ", ".join(goal.keys()), plan = planned})
+	var planned: Array = TacticalStatus.in_order(plan.steps) if plan.solved else Sentence.of("none")  # shown through tr()
+	_said[unit.id] = Sentence.of("goal {goal}, plan {plan}", {goal = ", ".join(goal.keys()), plan = planned})  # shown through tr()
 	return first
 
 
 ## The walker's goal and the plan to it, from its last decision.
-func thinking(unit_id: int) -> String:
-	return _said.get(unit_id, tr("no plan yet"))
+func thinking(unit_id: int) -> Array:
+	return _said.get(unit_id, Sentence.of("no plan yet"))  # shown through tr()
 
 
 ## "Worlds": the goals-still-to-do the backward search looked at.

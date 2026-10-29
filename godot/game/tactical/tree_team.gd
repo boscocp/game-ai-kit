@@ -25,7 +25,7 @@ var tree: BehaviourTree
 
 # The deed the last tick chose, and each walker's last trail.
 var _deed: String = SIEGE
-var _trails: Dictionary[int, String] = {}
+var _trails: Dictionary[int, Array] = {}
 
 
 func _init() -> void:
@@ -62,8 +62,8 @@ func decide(unit: Unit, known: TeamFacts) -> String:
 
 
 ## The branch that answered for this walker, from its last tick.
-func thinking(unit_id: int) -> String:
-	return _trails.get(unit_id, tr("not asked yet"))
+func thinking(unit_id: int) -> Array:
+	return _trails.get(unit_id, Sentence.of("not asked yet"))  # shown through tr()
 
 
 ## "Nodes ticked": every node a tick visited.
@@ -73,14 +73,15 @@ func work_unit() -> String:
 
 # The trail's last few entries before the root's, which name the branch that
 # answered: "take a point: running", and the conditions that let it. The
-# trail is the addon's, in English; the branch's label is translated here.
-static func _answered(trail: Array[String]) -> String:
+# trail is the addon's, in English; the branch's label is kept as it is, a
+# value of the sentence, and translated where it is shown.
+static func _answered(trail: Array[String]) -> Array:
 	for entry: String in trail:
 		if not entry.ends_with(": running"):  # not shown: the addon's word for an answer, compared
 			continue
 		var label: String = entry.trim_suffix(": running")  # not shown: cut off, the label is what is said
-		return TranslationServer.translate("the tree answered with {branch}").format({branch = TranslationServer.translate(label)})
-	return TranslationServer.translate("the tree answered nothing")
+		return Sentence.of("the tree answered with {branch}", {branch = label})  # shown through tr()
+	return Sentence.of("the tree answered nothing")  # shown through tr()
 
 
 # A sequence named `label`: each [question, fact] pair in `asks` must hold,

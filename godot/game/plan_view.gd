@@ -60,11 +60,18 @@ func _draw_number(middle: Vector2) -> void:
 	draw_string(font, baseline, words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, TEXT_SIZE, Color.WHITE)
 
 
-## The number a decision was made on, as a person reads it: the chance of
-## winning for a fight weighed, the turns to hold for a node chosen.
+## The number a decision was made on, as a person reads it in the language
+## on screen: the chance of winning for a fight weighed, the turns to hold for
+## a node chosen.
 static func number_of(decision: LearnedDecision) -> String:
+	return TacticalStatus.said(number_sentence(decision))
+
+
+## The same number as a `Sentence`, the key and its value: in English for the
+## overlay, whatever the language on screen (T104).
+static func number_sentence(decision: LearnedDecision) -> Array:
 	if is_finite(decision.win_probability):
-		return TranslationServer.translate("p(win) {chance}").format({chance = "%.2f" % decision.win_probability})
+		return Sentence.of("p(win) {chance}", {chance = "%.2f" % decision.win_probability})  # shown through tr()
 	if is_finite(decision.predicted_turns):
-		return TranslationServer.translate("{turns} turns").format({turns = "%.1f" % decision.predicted_turns})
-	return TranslationServer.translate(decision.action)
+		return Sentence.of("{turns} turns", {turns = "%.1f" % decision.predicted_turns})  # shown through tr()
+	return Sentence.of(decision.action)
