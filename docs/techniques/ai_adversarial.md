@@ -16,8 +16,8 @@ teaches: adversarial-search
 
 Which move to make in a two-player game, on the assumption that the other
 player will then make the move worst for you. **Minimax** (`MinimaxSearch`)
-alternates down the tree -- your best, their worst -- to a fixed depth and
-asks the game to score the position it reached. **Alpha-beta**
+looks down the tree -- your best on your turn, their worst on theirs -- to a
+fixed depth and asks the game to score the position it reached. **Alpha-beta**
 (`AlphaBetaSearch`) returns the same move and value after looking at fewer
 positions, by stopping on a move once it is proved no better than one
 already found. Both hand back an `AdversarialResult`: every root move with

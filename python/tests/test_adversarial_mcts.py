@@ -6,10 +6,38 @@ Nim's known winning play, the dice race's obvious choices at the end, and
 the shape of the tree under chance.
 """
 
+import math
 import unittest
 
 from gameaikit.adversarial import AdversarialGame, MonteCarloSearch, Xorshift
+from gameaikit.adversarial.mcts import EXPLORATION
 from gameaikit.adversarial.toy_games import DiceRace, Nim, Pile, Race
+
+#: The seed whose first draw is exactly 2^31, found by running the three
+#: steps of `Xorshift.next` backwards from it.
+BOUNDARY_SEED = 2281717760
+
+
+class SharedLeaves(AdversarialGame):
+    """Two plies, not zero-sum: a state is the moves made so far."""
+
+    LEAVES = {("a", "x"): (1.0, 1.0), ("a", "y"): (0.0, 0.0), ("b",): (0.5, 0.5)}
+    MOVES = {(): ["a", "b"], ("a",): ["x", "y"]}
+
+    def to_move(self, state):
+        return len(state) % 2
+
+    def actions(self, state):
+        return self.MOVES.get(state, [])
+
+    def result(self, state, action):
+        return state + (action,)
+
+    def is_terminal(self, state):
+        return state in self.LEAVES
+
+    def evaluate(self, state, player):
+        return self.LEAVES.get(state, (0.0, 0.0))[player]
 
 
 class TestMonteCarloSearch(unittest.TestCase):
@@ -54,6 +82,28 @@ class TestMonteCarloSearch(unittest.TestCase):
         # A four plays again: that child is the same runner's turn.
         self.assertEqual(roll.children[2].player, 0)
         self.assertEqual(roll.children[0].player, 1)
+
+    def test_a_visited_root_move_reports_its_ucb1_bound(self) -> None:
+        # What T87 draws: mean + C * sqrt(ln(root visits) / visits), the
+        # root visited once an iteration.
+        found = MonteCarloSearch(DiceRace(), Race((0, 0), 0), 2).step(150)
+        for entry in found.considered:
+            expected = entry["mean"] + EXPLORATION * math.sqrt(math.log(found.iterations) / entry["visits"])
+            self.assertAlmostEqual(entry["bound"], expected, places=12)
+
+    def test_a_drawn_number_on_a_boundary_falls_in_the_next_outcome(self) -> None:
+        # BOUNDARY_SEED draws exactly 2^31, a uniform of exactly 0.5: not
+        # below the first outcome's 0.5, below the running 0.75.
+        self.assertEqual(Xorshift(BOUNDARY_SEED).next(), 2 ** 31)
+        search = MonteCarloSearch(DiceRace(), Race((0, 0), 0), BOUNDARY_SEED)
+        self.assertEqual(search._draw_outcome(DiceRace().outcomes(Race((0, 0), 0), "roll")), 1)
+
+    def test_each_chooser_is_credited_with_its_own_value_not_the_opposite(self) -> None:
+        # Not zero-sum: after `a`, player 1 picks between a leaf worth 1 to
+        # both and one worth 0 to both, and takes the 1, so `a` is worth 1
+        # to player 0 -- more than `b`'s 0.5. A search that gave player 1
+        # the negation of player 0's value would take the 0, and play `b`.
+        self.assertEqual(MonteCarloSearch(SharedLeaves(), (), 3).step(300).action, "a")
 
     def test_a_finished_game_is_not_searched(self) -> None:
         found = MonteCarloSearch(Nim(), Pile(0, 1), 1).step(50)

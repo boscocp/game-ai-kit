@@ -3,16 +3,16 @@
 # The vectors hold the two languages to one another, and would pass two
 # searches wrong the same way. These hold the search to the games: the dice
 # race's obvious choices at the end, the tree's shape under chance, anytime
-# steps, and a step's cost. Nim's winning play is `nim_example_test.gd`'s.
+# steps, and the bound T87 will draw. Nim's winning play is
+# `nim_example_test.gd`'s; a step's cost is `make test-mcts-budget`'s, apart,
+# because a clock flakes under load.
 extends GdUnitTestSuite
 
 const DICE_RACE: Script = preload("res://test/ai_adversarial/dice_race.gd")
 const EXAMPLE_NIM: Script = preload("res://test/ai_adversarial/nim_example.gd")
-## A frame at 60 frames a second, in microseconds. The test below asks a
-## step of `ITERATIONS_PER_FRAME` to take half of it at most, the share
-## `FrameBudget` gives all of an RTS's AI together.
-const FRAME_USEC: int = 16667
-const ITERATIONS_PER_FRAME: int = 100
+## The seed whose first draw is exactly 2^31, found by running the three
+## steps of `Xorshift.next` backwards from it.
+const BOUNDARY_SEED: int = 2281717760
 
 
 func test_stopped_in_two_steps_it_is_the_search_run_in_one() -> void:
@@ -81,16 +81,23 @@ func test_the_generator_starts_where_marsaglia_starts_and_zero_is_one() -> void:
 	assert_int(drawn.next()).is_equal(Xorshift.new(9).next())
 
 
-func test_a_frame_of_iterations_fits_in_half_a_frame() -> void:
-	# Measured, not assumed: the mean step of ITERATIONS_PER_FRAME on the
-	# dice race from the start, over twenty frames of one growing tree.
-	var search := MonteCarloSearch.new(DICE_RACE.new(), _race(0, 0, 0), 1)
-	var started: int = Time.get_ticks_usec()
-	for _frame: int in range(20):
-		search.step(ITERATIONS_PER_FRAME)
-	var mean_usec: int = (Time.get_ticks_usec() - started) / 20
-	assert_int(mean_usec).override_failure_message(
-		"a step of %d took %d us on average" % [ITERATIONS_PER_FRAME, mean_usec]).is_less(FRAME_USEC / 2)
+func test_a_visited_root_move_reports_its_ucb1_bound() -> void:
+	# The bound is what T87 draws: mean + C * sqrt(ln(root visits) / visits),
+	# the root visited once an iteration.
+	var found: MctsResult = MonteCarloSearch.new(DICE_RACE.new(), _race(0, 0, 0), 2).step(150)
+	var spread: float = log(float(found.iterations))
+	for entry: Dictionary in found.considered:
+		var bonus: float = MonteCarloSearch.EXPLORATION * sqrt(spread / entry["visits"])
+		assert_float(entry["bound"]).is_equal_approx(entry["mean"] + bonus, 1e-12)
+
+
+func test_a_drawn_number_on_a_boundary_falls_in_the_next_outcome() -> void:
+	# BOUNDARY_SEED draws exactly 2^31 first, so the uniform is exactly
+	# 0.5: not below the first outcome's 0.5, below the running 0.75.
+	assert_int(Xorshift.new(BOUNDARY_SEED).next()).is_equal(2147483648)
+	var search := MonteCarloSearch.new(DICE_RACE.new(), _race(0, 0, 0), BOUNDARY_SEED)
+	var faces: Array = DICE_RACE.new().outcomes(_race(0, 0, 0), "roll")
+	assert_int(search._draw_outcome(faces)).is_equal(1)
 
 
 func _race(first: int, second: int, player: int) -> RefCounted:

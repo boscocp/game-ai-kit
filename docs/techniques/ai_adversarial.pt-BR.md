@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 5, figures 5.3, 5.7 and 5.11
 invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch, AdversarialResult, MonteCarloSearch, MctsResult or Xorshift signatures change, or the demos that use them are renamed
 teaches: adversarial-search
-translation_of: a52af18f6ebcf7373679e79117846824156cd3df264b06bb2b758ad9f104feb6
+translation_of: a52a908c6d1bab274cbe9c4f979d1c664d3b7123a5a67848d6dd371c150a9fbd
 -->
 
 > English: [ai_adversarial.md](ai_adversarial.md). Os termos que ficam em
@@ -17,8 +17,8 @@ translation_of: a52af18f6ebcf7373679e79117846824156cd3df264b06bb2b758ad9f104feb6
 
 Qual jogada fazer num jogo de dois jogadores, supondo que o outro vai
 responder com a jogada pior para você. O *minimax* (`MinimaxSearch`)
-alterna árvore abaixo -- o seu melhor, o pior dele -- até uma profundidade
-fixa e pede ao jogo uma nota para a posição a que chegou. O *alpha-beta*
+olha árvore abaixo -- o seu melhor na sua vez, o pior dele na dele -- até
+uma profundidade fixa e pede ao jogo uma nota para a posição a que chegou. O *alpha-beta*
 (`AlphaBetaSearch`) devolve a mesma jogada e o mesmo valor olhando menos
 posições: abandona uma jogada assim que fica provado que ela não é melhor
 do que uma já encontrada. As duas devolvem um `AdversarialResult`: cada

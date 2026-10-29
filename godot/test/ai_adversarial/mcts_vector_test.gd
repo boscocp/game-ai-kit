@@ -1,6 +1,6 @@
 # The rules `MctsVector` holds a vector to, each with a planted case it must
-# refuse, and the planted search the task asks for: a twin with one draw out
-# of order must fail the vectors (T86). Read from spec/, so these break the
+# refuse, and the planted searches the task asks for: twins whose draws
+# differ from the addon's must fail the vectors (T86). Read from spec/, so these break the
 # day the vectors move -- which is when they should.
 extends GdUnitTestSuite
 
@@ -12,10 +12,18 @@ func test_the_addon_meets_every_claim() -> void:
 	assert_array(MctsVector.wrong_draws(_read("xorshift.json"))).is_empty()
 
 
-func test_a_search_with_one_draw_out_of_order_fails_both_games() -> void:
+func test_a_search_with_a_spare_draw_fails_both_games() -> void:
 	var planted: Callable = func(game: AdversarialGame, state: RefCounted, from_seed: int,
 			exploration: float, limit: int) -> MonteCarloSearch:
-		return OutOfOrder.new(game, state, from_seed, exploration, limit)
+		return SpareDraw.new(game, state, from_seed, exploration, limit)
+	for name: String in ["mcts-nim.json", "mcts-dice-race.json"]:
+		assert_array(MctsVector.wrong_claims(_read(name), planted)).is_not_empty()
+
+
+func test_a_search_with_the_same_draws_read_differently_fails_both_games() -> void:
+	var planted: Callable = func(game: AdversarialGame, state: RefCounted, from_seed: int,
+			exploration: float, limit: int) -> MonteCarloSearch:
+		return MirroredExpansion.new(game, state, from_seed, exploration, limit)
 	for name: String in ["mcts-nim.json", "mcts-dice-race.json"]:
 		assert_array(MctsVector.wrong_claims(_read(name), planted)).is_not_empty()
 
@@ -60,10 +68,14 @@ func _with(dictionary: Dictionary, key: String, value: Variant) -> Dictionary:
 	return changed
 
 
-## A planted search: its playout draws the outcome's number before the move.
-## The same draws, one of them out of place -- the mistake a port makes when
-## it reads the pseudocode instead of the other file.
-class OutOfOrder extends MonteCarloSearch:
+## A planted search with a spare draw: its playout draws an outcome's number
+## before every move, even when the move turns out to have one outcome. On
+## Nim that breaks rule 1 of the vectors' README (a draw only on a real
+## choice); on the dice race, rules 1 and 5. A twin that broke rule 5 alone
+## cannot be written: whether an outcome is drawn at all depends on the move
+## the earlier draw chose, so putting the outcome's draw first changes how
+## many draws there are. `MirroredExpansion` keeps the count instead.
+class SpareDraw extends MonteCarloSearch:
 	func _init(game: AdversarialGame, state: RefCounted, from_seed: int, exploration: float,
 			limit: int) -> void:
 		super(game, state, from_seed, exploration, limit)
@@ -85,3 +97,25 @@ class OutOfOrder extends MonteCarloSearch:
 			if drawn < reached:
 				return index
 		return outcomes.size() - 1
+
+
+## A planted search with the same draws, in the same order, one of them read
+## differently: expansion counts its drawn index from the other end of the
+## untried moves -- rule 2 broken, nothing else.
+class MirroredExpansion extends MonteCarloSearch:
+	func _init(game: AdversarialGame, state: RefCounted, from_seed: int, exploration: float,
+			limit: int) -> void:
+		super(game, state, from_seed, exploration, limit)
+
+	func _expand(leaf: TreeNode, descent: Descent) -> TreeNode:
+		if leaf.terminal:
+			return leaf
+		var drawn: int = _random.index(leaf.untried.size())
+		var index: int = leaf.untried.pop_at(leaf.untried.size() - 1 - drawn)
+		var action: Variant = leaf.actions[index]
+		var branch := Branch.new(action, leaf.player, _game.outcomes(leaf.state, action))
+		leaf.branches[index] = branch
+		descent.branches.append(branch)
+		var child: TreeNode = _child_by_chance(branch)
+		descent.nodes.append(child)
+		return child

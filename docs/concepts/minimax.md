@@ -176,9 +176,13 @@ The first term favours moves that have done well (**exploitation**). The
 second is large for a move tried little and shrinks as it is tried
 (**exploration**), so a move that looked bad after three unlucky playouts
 gets another look, and a move that is bad after three hundred does not.
-With C = √2 this is **UCT**, "UCB applied to trees" (Kocsis and
-Szepesvári, 2006, as AIMA 5.4 cites them), the variant Roelofs used for *Xenonauts 2* and calls
-"the most common and battle tested" (GAP3 ch. 28).
+UCB1 at every node of the tree is **UCT**, "UCB applied to trees" (Kocsis
+and Szepesvári, 2006, as AIMA 5.4 cites them), the variant Roelofs used for
+*Xenonauts 2* and calls "the most common and battle tested" (GAP3 ch. 28).
+C = √2 is the usual default, and the kit's. It is the constant UCB1's
+analysis gives for results between 0 and 1; the kit's toy games score
+from -1 to 1, twice as wide, so at √2 they explore about half as much as
+that analysis suggests -- `exploration` is the knob.
 
 The second thing it teaches is that it is **anytime**. Alpha-beta at depth
 6 has no answer until it has finished depth 6. MCTS has one after every

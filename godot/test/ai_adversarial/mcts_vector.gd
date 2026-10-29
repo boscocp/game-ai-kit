@@ -4,7 +4,7 @@
 ## Apart from the runner, as every family here is: a runner is a `SceneTree`,
 ## hard to test, and a rule living there can be deleted with every gate
 ## green. `mcts_vector_test.gd` plants a case for each rule below, and a
-## search with one draw out of order.
+## search whose draws differ.
 ##
 ## When not to use it: anything but `spec/vectors/adversarial/`, whose README
 ## holds the shape.

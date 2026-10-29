@@ -48,6 +48,19 @@ follow to agree:
    answer is the most visited move, of equal visits the first;
 5. a playout chooses its move first, then its outcome.
 
+A drawn number exactly on a boundary falls in the *next* outcome: the test
+is "below the running sum", so 0.5 against chances 0.5, 0.25, 0.25 is the
+second. `mcts_test.gd` and `test_adversarial_mcts.py` pin it with a seed
+whose first draw is exactly 2^31.
+
+Two planted twins must fail every search file, in both languages. One
+spends a spare draw -- an outcome's number before every playout move, even
+a move with one outcome -- breaking rule 1, and on the dice race rule 5.
+The other makes the same draws in the same order and reads one differently,
+counting expansion's index from the other end: rule 2 alone. A twin that
+broke rule 5 alone cannot be written, because whether an outcome is drawn
+at all depends on the move the earlier draw chose.
+
 ## Where the numbers came from
 
 From neither implementation: `derive.py`, a third MCTS written short and

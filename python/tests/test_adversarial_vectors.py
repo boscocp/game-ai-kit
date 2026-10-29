@@ -4,7 +4,8 @@
 every claim against the file -- never against the other side. The numbers
 came from neither: `derive.py` beside them, a third MCTS importing nothing
 from this repository, wrote them. What they hold is that the two searches
-make the same draws in the same order: the root's visit counts after a
+make the same draws in the same order, and read them the same way: the
+root's visit counts after a
 fixed number of iterations move if a single draw moves.
 """
 
@@ -14,6 +15,7 @@ import pathlib
 import unittest
 
 from gameaikit.adversarial import MonteCarloSearch, Xorshift
+from gameaikit.adversarial.mcts import Branch
 from gameaikit.adversarial.toy_games import DiceRace, Nim, Pile, Race
 
 VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "adversarial"
@@ -59,6 +61,7 @@ def wrong_claims(vector: dict, make=MonteCarloSearch) -> list[str]:
     for case in vector["cases"]:
         search = make(game, state_of(vector["game"], case["state"]), case["seed"],
                       case["exploration"], case["playout_limit"])
+        found = search.result()
         for iterations in case["steps"]:
             found = search.step(iterations)
         visits = [entry["visits"] for entry in found.considered]
@@ -72,11 +75,14 @@ def wrong_claims(vector: dict, make=MonteCarloSearch) -> list[str]:
     return wrong
 
 
-class OutOfOrder(MonteCarloSearch):
-    """A planted twin: its playout draws the outcome's number before the move.
+class SpareDraw(MonteCarloSearch):
+    """A planted twin with a spare draw: an outcome's number before every move.
 
-    The same draws, one of them out of place -- the mistake a port makes when
-    it reads the pseudocode instead of the other file.
+    Drawn even when the move turns out to have one outcome, so on Nim it
+    breaks rule 1 of the vectors' README (a draw only on a real choice), and
+    on the dice race rules 1 and 5. A twin breaking rule 5 alone cannot be
+    written: whether an outcome is drawn depends on the move the earlier draw
+    chose. `MirroredExpansion` keeps the count instead.
     """
 
     def _simulate(self, state):
@@ -88,6 +94,27 @@ class OutOfOrder(MonteCarloSearch):
             state = outcomes[_face(outcomes, early)][1]
             played += 1
         return state
+
+
+class MirroredExpansion(MonteCarloSearch):
+    """A planted twin with the same draws in the same order, one read differently.
+
+    Expansion counts its drawn index from the other end of the untried
+    moves: rule 2 broken, nothing else.
+    """
+
+    def _expand(self, leaf, descent):
+        if leaf.terminal:
+            return leaf
+        drawn = self._random.index(len(leaf.untried))
+        index = leaf.untried.pop(len(leaf.untried) - 1 - drawn)
+        action = leaf.actions[index]
+        branch = Branch(action, leaf.player, self._game.outcomes(leaf.state, action))
+        leaf.branches[index] = branch
+        descent.branches.append(branch)
+        child = self._child_by_chance(branch)
+        descent.nodes.append(child)
+        return child
 
 
 def _face(outcomes: list, drawn: float) -> int:
@@ -118,10 +145,11 @@ class TestAdversarialVectors(unittest.TestCase):
             generator = Xorshift(case["seed"])
             self.assertEqual([generator.next() for _ in case["draws"]], case["draws"])
 
-    def test_a_twin_with_one_draw_out_of_order_fails_both_games(self) -> None:
-        for name in SEARCH_FILES:
-            with self.subTest(vector=name):
-                self.assertNotEqual(wrong_claims(self.read(name), OutOfOrder), [])
+    def test_twins_whose_draws_differ_fail_both_games(self) -> None:
+        for twin in (SpareDraw, MirroredExpansion):
+            for name in SEARCH_FILES:
+                with self.subTest(twin=twin.__name__, vector=name):
+                    self.assertNotEqual(wrong_claims(self.read(name), twin), [])
 
     def test_a_broken_vector_is_refused(self) -> None:
         vector = self.read("mcts-nim.json")

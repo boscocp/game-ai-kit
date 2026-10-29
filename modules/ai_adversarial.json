@@ -12,6 +12,7 @@
   ],
   "depends_on": [],
   "gates": [
-    "test-adversarial-vectors"
+    "test-adversarial-vectors",
+    "test-mcts-budget"
   ]
 }
