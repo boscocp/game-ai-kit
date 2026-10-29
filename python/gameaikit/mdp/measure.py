@@ -1,15 +1,24 @@
-"""How the published policy plays, against a controller that ignores the ghost;
-and value iteration against policy iteration on the maze.
+"""How the published policy plays, against two controllers that do not plan;
+why it is never caught; and value iteration against policy iteration.
 
     PYTHONPATH=python python3 -m gameaikit.mdp.measure [--episodes 1000]
     PYTHONPATH=python python3 -m gameaikit.mdp.measure --compare
 
-Both play `gameaikit.maze.game` -- the game, not the model -- in the
+All three play `gameaikit.maze.game` -- the game, not the model -- in the
 regime the MDP was solved for (Blinky alone, chasing for ever), each
-episode from seed 1, 2, 3 ... so the dice are the same for both. The
+episode from seed 1, 2, 3 ... so the dice are the same for each. The
 MDP reads its action from the published `policy.json`, as Godot does.
 The greedy controller walks the shortest path to the nearest pellet,
-found by A* with the Manhattan distance, and never looks at Blinky.
+found by A* with the Manhattan distance, and never looks at Blinky. The
+safe greedy one walks the same path but refuses any move onto a cell
+Blinky could stand on after the step, taking the first safe move in tie
+order instead -- one rule, no planning.
+
+Never being caught is not luck, and `catch_from_start` shows why: with one
+ghost at Pac-Man's own speed and no dead end, every state has a move with
+no catch in the next step, so a careful Pac-Man is never caught. What
+value iteration adds over the safe greedy rule is the weighing of waiting
+against running: fewer steps to the last pellet.
 
 An episode ends won, caught, or after `STEP_LIMIT` steps, which counts as
 neither: a policy that runs from the ghost for ever is a policy too.
@@ -87,12 +96,32 @@ def greedy_move(played: game.Game) -> str:
     raise ValueError(f"no step from {played.pacman} along {nearest}")
 
 
+def risks_a_catch(state: maze.State, move: str) -> bool:
+    """Whether `move` can end in a catch this step: onto Blinky, or onto a cell he may take."""
+    # An episode ends caught (a loss, even with a pellet eaten on the way) or cleared (a gain).
+    return any(after is None and reward < 0.0
+               for _, reward, after in maze.transition(state, move))
+
+
+def safe_greedy_move(played: game.Game) -> str:
+    """The greedy move, unless it risks a catch; then the first move in tie order that does not."""
+    state = state_of(played)
+    first = greedy_move(played)
+    if not risks_a_catch(state, first):
+        return first
+    return next((move for move in rules.TIE_ORDER if not risks_a_catch(state, move)), first)
+
+
+CONTROLLERS = {"greedy": lambda played, policy: greedy_move(played),
+               "safe greedy": lambda played, policy: safe_greedy_move(played),
+               "mdp": mdp_move}
+
+
 def episode(seed: int, controller: str, policy: list[str]) -> dict:
     """One game from `seed`, played to its end or to `STEP_LIMIT`."""
     played = game.Game(seed, maze.SPEC["ghosts"], maze.SPEC["schedule"])
     while played.outcome == game.PLAYING and played.steps < STEP_LIMIT:
-        move = mdp_move(played, policy) if controller == "mdp" else greedy_move(played)
-        played.step(move)
+        played.step(CONTROLLERS[controller](played, policy))
     eaten = len(maze.PELLETS) - len(played.pellets)
     return {"outcome": played.outcome, "pellets": eaten, "steps": played.steps}
 
@@ -108,7 +137,32 @@ def summary(controller: str, episodes: int, policy: list[str]) -> dict:
         "won": sum(one["outcome"] == game.WON for one in played),
         "unfinished": sum(one["outcome"] == game.PLAYING for one in played),
         "mean_steps_to_win": _mean([one["steps"] for one in played if one["outcome"] == game.WON]),
+        "mean_steps_won_or_lost": _mean([one["steps"] for one in played]),
     }
+
+
+def catch_from_start(policy: list[str]) -> dict:
+    """Every state the published policy can reach from the start, and how many could end in a catch.
+
+    Over the model's outcomes, every way Blinky's dice may fall: if no
+    reachable state's chosen move has a catch among its outcomes, the
+    policy's chance of being caught is exactly 0. Also: how many of all
+    the states have no move free of a catch next step -- 0 means a
+    careful Pac-Man can always step aside.
+    """
+    start = (tuple(maze.rules.MAZE["pacman"]["cell"]), tuple(maze.rules.MAZE["ghosts"]["blinky"]["cell"]),
+             maze.rules.MAZE["ghosts"]["blinky"]["heading"], maze.ALL_PELLETS)
+    seen, waiting, risky = {start}, [start], 0
+    while waiting:
+        state = waiting.pop()
+        move = WORDS[policy[maze.index(state)]]
+        risky += risks_a_catch(state, move)
+        for _, _, after in maze.transition(state, move):
+            if after is not None and after not in seen:
+                seen.add(after)
+                waiting.append(after)
+    cornered = sum(all(risks_a_catch(state, move) for move in maze.ACTIONS) for state in maze.states())
+    return {"reached": len(seen), "reached_with_a_catch_possible": risky, "states_with_no_safe_move": cornered}
 
 
 def _mean(numbers: list[int]) -> float:
@@ -152,8 +206,9 @@ def main(argv: list[str]) -> int:
         print(json.dumps(compare(), indent=1))
         return 0
     policy = read_policy()
-    for controller in ("mdp", "greedy"):
+    for controller in CONTROLLERS:
         print(json.dumps(summary(controller, arguments.episodes, policy)))
+    print(json.dumps(catch_from_start(policy)))
     return 0
 
 

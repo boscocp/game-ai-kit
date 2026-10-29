@@ -52,10 +52,15 @@ stops. This gate is four claims about that split:
     `data/maze/` are what `gameaikit.mdp.publish` solves from the committed
     rules, a fresh run writing the same bytes; and no GDScript writes a
     file where they live -- by their folder, their file names or
-    `MdpPacMan`'s constants -- nor any file from inside the maze game.
-    N13 and N14 are ADR 0016's, reserved for T99 and T100. A value updated
-    at game time (Q-learning, any temporal-difference step) is refused by
-    that ADR's amendment; this rule holds the half a gate can.
+    `MdpPacMan`'s constants -- nor any file from inside the maze game; and
+    nothing updates the tables once read: in the maze game and in any
+    script naming `MdpPacMan`, no line reads an indexed value back into
+    itself (N3's net for an update step, there too), and no line outside
+    `_load_tables` assigns to `_values` or `_letters`. N13 and N14 are ADR
+    0016's, reserved for T99 and T100. A value updated at game time
+    (Q-learning, any temporal-difference step) is refused by that ADR's
+    amendment; this rule is a net for its common spellings, not a proof --
+    an update through a renamed copy of the table passes it.
 
 N4, N6, N7, N10 and N15 are the ones with teeth. The others are about the shape of the code and
 could all pass over a weights file somebody typed by hand.
@@ -164,6 +169,19 @@ MAZE_GAME = GODOT / "game" / "maze"
 MDP_FOLDER = pathlib.Path("data") / "maze"
 MDP_FILES = ("values.json", "policy.json")
 MDP_SOLVER = "gameaikit.mdp.publish"
+# Writing into the tables `MdpPacMan` read: by assignment or by a call that
+# changes a packed array or a string in place. Allowed only in the function
+# that reads them in.
+MDP_TABLE_WRITE_RE = re.compile(
+    r"\b_(?:values|letters)\b(?:\[[^\]]*\])*\s*(?:[-+*/]?=)(?!=)"
+    r"|\b_(?:values|letters)\.(?:set|append|append_array|push_back|fill|resize|insert|remove_at|clear|"
+    r"reverse|sort)\s*\(")
+MDP_TABLE_LOADER = "_load_tables"
+FUNC_NAME_RE = re.compile(r"^(?:static\s+)?func\s+(\w+)")
+# A declaration names a new variable, so it cannot read its own old value:
+# `var ways: Array[Dictionary] = [...] as Array[Dictionary]` has the shape
+# of a read-back and is a type written twice.
+DECLARATION_RE = re.compile(r"^\s*(?:static\s+)?(?:var|const)\s")
 MDP_NAMES_RE = re.compile(r"data/maze|MdpPacMan\.|PUBLISHED_FOLDER|VALUES_FILE|POLICY_FILE"
                           r"|\b(?:values|policy)\.json\b")
 
@@ -618,6 +636,29 @@ def fresh_clone_weights(repo: pathlib.Path, committed: dict) -> dict | None:
     return json.loads(publish.as_text(publish.published(recorded, committed["trained_on"]["player"])))
 
 
+def check_mdp_updates(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
+    """N15's game-time half: nothing in the maze game, or holding `MdpPacMan`,
+    updates the tables it read. A value moved towards a target while playing
+    is Q-learning, and ADR 0016's amendment keeps it out."""
+    findings = []
+    for path in gdscript_files(root):
+        code = code_only(path.read_text(encoding="utf-8")).splitlines()
+        if not (is_under(path, root, MAZE_GAME) or any("MdpPacMan" in line for line in code)):
+            continue
+        function = ""
+        for number, line in enumerate(code, start=1):
+            named = FUNC_NAME_RE.match(line)
+            function = named.group(1) if named else function
+            label = f"{_label(path, repo)}:{number}"
+            if MDP_TABLE_WRITE_RE.search(line) and function != MDP_TABLE_LOADER:
+                findings.append(f"N15 {label} writes into the MDP's tables after they were read; "
+                                "the values are Python's, and the game only looks them up")
+            elif _accumulates(line) and not DECLARATION_RE.match(line):
+                findings.append(f"N15 {label} reads an indexed value back into itself; "
+                                "beside the MDP's tables that is an update step whatever it is called")
+    return findings
+
+
 def check_mdp_policy(repo: pathlib.Path, retrain: bool,
                      solved: tuple[str, str] | None = None) -> tuple[list[str], bool]:
     """N15: the maze's published values and policy are what the MDP solver writes.
@@ -811,6 +852,7 @@ def run(repo: pathlib.Path, retrain: bool | set[str] = True) -> int:
     findings += check_writing(repo / GODOT, repo)
     findings += check_bead_writes(repo / GODOT, repo)
     findings += check_case_writes(repo / GODOT, repo)
+    findings += check_mdp_updates(repo / GODOT, repo)
     ran = {}
     for rule, refit in (("N4", check_weights), ("N6", check_beads),
                         ("N7", check_checkers_weights), ("N10", check_clone_weights),
@@ -1254,6 +1296,26 @@ def self_test() -> int:
         expect("a file written in the maze game", quiet(build(root, "mazegame", dict(
             sound, **{str(MAZE_GAME / "mdp_pac_man.gd"): '\tvar out := FileAccess.open(path, FileAccess.WRITE)\n'}))),
             1, "N15")
+        # Planted: the published values updated at game time -- the review's
+        # three spellings inside the reader, one from a script holding it --
+        # and the reader's own loading, which must stay allowed.
+        reader = str(MAZE_GAME / "mdp_pac_man.gd")
+        for spelling in ["\t_values[slot_of(game)] += 0.1 * (worth - _values[slot_of(game)])\n",
+                         "\t_values[slot_of(game)] = worth\n",
+                         "\t_values.set(slot_of(game), _values[slot_of(game)] + 0.1 * (worth - 1.0))\n"]:
+            expect(f"the MDP's values updated: {spelling.strip()[:34]}", quiet(build(
+                root, "mdpupdate" + str(abs(hash(spelling))), dict(
+                    sound, **{reader: "static func q_value(game: MazeGame) -> float:\n" + spelling}))), 1, "N15")
+        expect("the MDP's policy rewritten from a script that holds it", quiet(build(root, "mdpholder", dict(
+            sound, **{str(GODOT / "game" / "pac.gd"):
+                      "var mdp := MdpPacMan.new()\nfunc play() -> void:\n\tMdpPacMan._letters = \"\"\n"}))),
+            1, "N15")
+        expect("a typed declaration in the maze game is not a read-back", quiet(build(root, "mazedeclares", dict(
+            sound, **{str(MAZE_GAME / "maze_ghost.gd"):
+                      "\tvar open_ways: Array[Dictionary] = [_way(back, goal)] as Array[Dictionary]\n"}))), 3)
+        expect("the MDP's tables read in by their loader", quiet(build(root, "mdploads", dict(
+            sound, **{reader: "static func _load_tables() -> void:\n\t_values.append(1.0)\n"
+                              "\t_letters = \"r\"\n"}))), 3)
         expect("counting in the opponent addon", quiet(build(root, "opponentcounts", dict(
             sound, **{str(OPPONENT_ADDON / "ngram_predictor.gd"):
                       '\trow[action] = row.get(action, 0.0) + 1.0\n'}))), 3)

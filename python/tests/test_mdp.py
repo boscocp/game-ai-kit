@@ -107,8 +107,18 @@ class TheMazeAsAnMdp(unittest.TestCase):
     def setUpClass(cls):
         cls.states = maze.states()
 
-    def test_the_states_are_the_ones_a_game_can_reach(self):
+    def test_the_states_are_the_ones_the_rules_allow_and_most_are_reached(self):
         self.assertEqual(len(self.states), 82160)
+        seen, waiting = {self.start()}, [self.start()]
+        while waiting:
+            state = waiting.pop()
+            for action in maze.ACTIONS:
+                for _, _, after in maze.transition(state, action):
+                    if after is not None and after not in seen:
+                        seen.add(after)
+                        waiting.append(after)
+        self.assertEqual(len(seen), 80288)
+        self.assertLessEqual(seen, set(self.states))
         self.assertEqual(len(set(map(maze.index, self.states))), len(self.states))
         self.assertTrue(all(0 <= maze.index(state) < maze.slots() for state in self.states))
         self.assertIn(self.start(), set(self.states))

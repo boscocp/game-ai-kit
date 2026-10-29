@@ -10,9 +10,11 @@ A state is (Pac-Man's cell, Blinky's cell, Blinky's heading, the pellets
 left as a bit mask). Blinky's next move was chosen at the end of the last
 step from exactly those, so it is not in the state: it is the chance in
 each outcome. An action is one of Pac-Man's four moves. Only states the
-game can reach are listed -- Blinky came from the cell behind him, so
-that cell is floor; Pac-Man never stands on a pellet he has not eaten;
-the two never share a cell, since that ended the game.
+rules allow are listed, 82,160 -- Blinky came from the cell behind him,
+so that cell is floor; Pac-Man never stands on a pellet he has not
+eaten; the two never share a cell, since that ended the game. Of those,
+80,288 can be reached from the start by some moves and dice; the rest
+are solved too, at no harm and little cost.
 
 `index` numbers a state the way the published files are laid out, so
 Godot finds a state's value and action by arithmetic, not by a search.
@@ -47,7 +49,7 @@ State = tuple[tuple[int, int], tuple[int, int], str, int]
 
 
 def states() -> list[State]:
-    """Every state the game can be in while it is on, in the files' order."""
+    """Every state the rules allow while the game is on, in the files' order."""
     found = []
     for pacman in CELLS:
         for ghost in CELLS:
@@ -112,7 +114,7 @@ def transition(state: State, action: str) -> list[Described]:
 
 
 def build() -> FiniteMdp:
-    """The maze's MDP, every reachable state's every action written out."""
+    """The maze's MDP, every allowed state's every action written out."""
     return FiniteMdp.from_model(states(), ACTIONS, transition, SPEC["discount"])
 
 

@@ -22,8 +22,8 @@ AIMA (4th ed., ch. 17, "Making Complex Decisions") writes a Markov
 decision process as five things:
 
 - **states** -- here, Pac-Man's cell, Blinky's cell and the way he last
-  moved, and which of the four pellets are left: 82,160 that a game can
-  reach;
+  moved, and which of the four pellets are left: 82,160 that the rules
+  allow, 80,288 of them reachable from the start;
 - **actions** -- Pac-Man's four moves; into a wall he stays put;
 - **a transition model**, P(s' | s, a): where an action can lead, and how
   likely each is. In the maze the chance is Blinky's: at a fork he takes
@@ -81,7 +81,10 @@ desktop Ryzen 5 9600X (one core; pure Python, no numpy):
 | seconds | 3.4 | 21.6 |
 
 Building the model, 82,160 states with every action's outcomes, takes 1.0
-s, and the whole process peaks at 117 MB. The two agree on every value to
+s, and the whole process peaks at 117 MB. The published values are
+rounded to thousandths and the published policy is the greedy move over
+those, so that Godot's lookahead finds the same move; that changes the
+move in 20 states, at a cost of at most 0.0008 in value. The two agree on every value to
 within 0.0001, and choose differently in 2,109 states -- each one a tie,
 two moves worth exactly the same, most of them two walks into a wall,
 which are the same "stay".
@@ -111,11 +114,29 @@ of the game.
 ## Does it play well?
 
 Over 1,000 seeded games against the imprecise Blinky
-(`PYTHONPATH=python python3 -m gameaikit.mdp.measure`), the policy won all
-1,000, never caught, in 30.5 steps on average. A controller that walks
-the A\* path to the nearest pellet and ignores Blinky won 826 and was
-caught 174 times. The MDP's edge is not cleverness about pellets -- both
-take about 30 steps -- but never stepping where Blinky's dice can reach.
+(`PYTHONPATH=python python3 -m gameaikit.mdp.measure`):
+
+| controller | won | caught | steps to win |
+|---|---|---|---|
+| the MDP's policy | 1,000 | 0 | 30.5 |
+| safe greedy: A\* to the nearest pellet, never onto a cell Blinky may reach next step | 1,000 | 0 | 31.9 |
+| greedy: A\* to the nearest pellet, Blinky ignored | 826 | 174 | 30.0 over its wins; 27.0 over all games, the caught ones cut short |
+
+Never being caught is not the MDP's achievement, and it is not luck
+either. One ghost at Pac-Man's own speed, in a maze with no dead end,
+cannot catch a careful player: in every one of the 82,160 states at least
+one move has no catch among its outcomes, and from the start the
+published policy reaches 684 states, none of whose chosen moves can end
+in a catch, over every way the dice may fall -- its chance of being
+caught is exactly 0 (`measure.catch_from_start`, held by a test). The
+safe-greedy rule, one line on top of A\*, is never caught either.
+
+What value iteration adds is the weighing the safe rule cannot do:
+when to wait for Blinky to turn and when to run past, which pellet to
+take first with him where he is. That is worth about 1.4 steps a game
+here, 30.5 against 31.9. A maze where a ghost *can* corner a careless
+player -- a second ghost, a faster one, a dead end -- is where the gap
+would grow; each multiplies the states (below).
 
 ## Frozen Lake
 

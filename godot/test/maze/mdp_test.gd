@@ -119,6 +119,20 @@ func test_c_hands_pac_man_to_the_mdp_and_back() -> void:
 	assert_bool(demo.decision_overlay().has("mdp")).is_false()
 
 
+func test_c_without_a_published_policy_keeps_your_game_and_says_why() -> void:
+	var demo: MazeDemo = auto_free(load("res://game/maze/maze.tscn").instantiate())
+	add_child(demo)
+	demo.started = true
+	demo.play_step()
+	var before: MazeGame = demo.game
+	demo.hand_over(false)
+	assert_bool(demo.mdp_playing).is_false()
+	assert_object(demo.game).is_same(before)
+	assert_str(demo.get_node("Interface/Status").text).contains("make solve-maze")
+	_press(demo, KEY_V)
+	assert_str(demo.get_node("Interface/Status").text).not_contains("make solve-maze")
+
+
 func _game(seed_number: int = 1) -> MazeGame:
 	return MazeGame.new(seed_number, MdpPacMan.spec()["ghosts"], MdpPacMan.spec()["schedule"])
 

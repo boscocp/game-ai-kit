@@ -56,6 +56,15 @@ class TheVectors(unittest.TestCase):
                                        msg=(case["name"], action))
 
 
+class TheProof(unittest.TestCase):
+    def test_from_the_start_the_published_policy_can_never_be_caught(self):
+        """Over every way Blinky's dice may fall, and in every state some move is safe."""
+        found = measure.catch_from_start(measure.read_policy())
+        self.assertEqual(found["reached_with_a_catch_possible"], 0)
+        self.assertEqual(found["states_with_no_safe_move"], 0)
+        self.assertGreater(found["reached"], 600)
+
+
 class TheCopies(unittest.TestCase):
     def test_every_copy_of_the_mdp_is_the_spec_byte_for_byte(self):
         for copy in COPIES:

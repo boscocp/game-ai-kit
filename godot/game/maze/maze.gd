@@ -54,6 +54,9 @@ var paused: bool = false
 var started: bool = false
 
 var _seed: int = 1
+# C was pressed and the MDP's tables were not there: said on the status line
+# until the next key, and your game left as it was.
+var _no_policy: bool = false
 var _waited: float = 0.0
 var _pad := PadAsKeys.new()
 
@@ -124,6 +127,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if key == null or not key.pressed or key.echo:
 		return
+	_no_policy = false
 	if DIRECTIONS.has(key.keycode):
 		person.press(DIRECTIONS[key.keycode])
 		started = true
@@ -133,9 +137,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		two_ghosts = not two_ghosts
 		restart()
 	elif key.keycode == KEY_C:
-		mdp_playing = not mdp_playing and MdpPacMan.is_published()
-		_show_legend()
-		restart()
+		hand_over(MdpPacMan.is_published())
 	elif key.keycode == KEY_P:
 		paused = not paused
 	elif key.keycode == KEY_SPACE:
@@ -145,6 +147,19 @@ func _unhandled_input(event: InputEvent) -> void:
 		_seed += 1
 		restart()
 	_refresh()
+
+
+## C: Pac-Man to the MDP, or back to you -- unless the MDP's tables were
+## never published (`published` false), when your game goes on untouched and
+## the status line says why.
+func hand_over(published: bool) -> void:
+	if not mdp_playing and not published:
+		_no_policy = true
+		_refresh()
+		return
+	mdp_playing = not mdp_playing
+	_show_legend()
+	restart()
 
 
 ## A new game: the pellets back, everyone on their starting cell, waiting
@@ -223,6 +238,8 @@ func _refresh() -> void:
 	queue_redraw()
 	var overlay: Dictionary = decision_overlay()
 	_status.text = MazePanel.status(overlay, paused, started, view_on, two_ghosts, mdp_playing)
+	if _no_policy:
+		_status.text = tr("C: no MDP policy in data/maze -- run make solve-maze first") + "\n" + _status.text
 	_panel.text = MazePanel.describe(overlay)
 
 

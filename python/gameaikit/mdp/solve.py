@@ -130,8 +130,9 @@ def policy_iteration(mdp: FiniteMdp, epsilon: float) -> Solution:
         improvements += 1
         changed = False
         for state in range(len(mdp.states)):
-            best = greedy(mdp, values, state)
-            if q_value(mdp, values, state, best) > q_value(mdp, values, state, policy[state]):
+            worths = [q_value(mdp, values, state, action) for action in range(len(mdp.actions))]
+            best = max(range(len(worths)), key=lambda action: (worths[action], -action))
+            if worths[best] > worths[policy[state]]:
                 policy[state], changed = best, True
         if not changed:
             return Solution(values, policy, sweeps, backups, improvements)

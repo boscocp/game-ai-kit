@@ -74,7 +74,7 @@ Written in `spec/maze/rules.json`'s "about" too, each on purpose:
   are left (20 on level one) and keeps chasing through scatter, which with
   four pellets would hold from the first step. No red zones, the arcade's
   cells above the ghost house where a ghost may not turn up. Four plain pellets keep T98's state space small:
-  82,160 states, measured.
+  82,160 states that the rules allow, measured.
   Frightened mode -- the Dossier's random turns -- is the decision left to
   the owner (below).
 - **The imprecise ghost.** In chase, at a fork of two or more ways, a
@@ -138,9 +138,10 @@ schedule; G does nothing while the MDP plays, since Pinky is not in its
 model.
 
 - **The state** is Pac-Man's cell, Blinky's cell and heading, and the
-  pellets left: 82,160 a game can reach (the task's estimate was 160,000;
-  a ghost's heading must point away from a floor cell behind it, and
-  Pac-Man never stands on an uneaten pellet). Blinky's next move is chosen
+  pellets left: 82,160 that the rules allow (the task's estimate was
+  160,000; a ghost's heading must point away from a floor cell behind it,
+  and Pac-Man never stands on an uneaten pellet), of which 80,288 can be
+  reached from the start. Blinky's next move is chosen
   before Pac-Man's but does not depend on it, so the policy treats it as
   chance, with the rules' `chances`; the overlay shows the move Blinky
   actually committed, which the policy does not see.
@@ -156,10 +157,21 @@ model.
   looks up; N15 in `check_no_training.py` solves again and fails if they
   differ, and refuses any GDScript that writes them.
 - **How it plays**, `PYTHONPATH=python python3 -m gameaikit.mdp.measure`,
-  1,000 games from seeds 1 to 1,000 in that regime: the MDP won 1,000,
-  caught 0, mean pellets 4.0, 30.5 steps to win. A greedy controller
-  walking the A\* path to the nearest pellet and ignoring Blinky: 826
-  won, 174 caught, mean pellets 3.575, 30.0 steps to win.
+  1,000 games from seeds 1 to 1,000 in that regime:
+  - the MDP: 1,000 won, 0 caught, 30.5 steps to win;
+  - safe greedy (the A\* path to the nearest pellet, never a move onto a
+    cell Blinky may reach next step): 1,000 won, 0 caught, 31.9 steps;
+  - greedy (the same path, Blinky ignored): 826 won, 174 caught, 30.0
+    steps over its wins, 27.0 over all games.
+
+  **Does it ever walk into the ghost? No, and provably.** Blinky alone,
+  at Pac-Man's speed, with no dead end, cannot catch a careful player:
+  every state has a move with no catch next step, and the 684 states the
+  policy reaches from the start include none whose chosen move could end
+  in a catch, whatever the dice (`measure.catch_from_start`, held by a
+  test). So the safe rule is never caught either, and what value
+  iteration adds here is about 1.4 steps a game -- the weighing of
+  waiting for Blinky against running past him.
 
 With V on, the MDP's view is drawn under the ghost's: every cell Pac-Man
 could stand on is tinted from red (the least any cell is worth now) to

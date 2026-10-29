@@ -38,6 +38,9 @@ static var _spec: Dictionary = {}
 static var _cells: Array[Vector2i] = []
 static var _values := PackedFloat64Array()
 static var _letters: String = ""
+# Set once the tables could not be read, so a missing file is named once and
+# not read again on every lookup.
+static var _unreadable: bool = false
 
 
 ## The MDP's numbers: the schedule it was solved for, its ghosts, rewards
@@ -164,12 +167,13 @@ static func value_map(game: MazeGame) -> Dictionary:
 
 
 static func _load_tables() -> void:
-	if not _letters.is_empty():
+	if not _letters.is_empty() or _unreadable:
 		return
 	var folder: String = ProjectSettings.globalize_path("res://").path_join(PUBLISHED_FOLDER).simplify_path()
 	var values: Dictionary = _read(folder.path_join(VALUES_FILE))
 	var policy: Dictionary = _read(folder.path_join(POLICY_FILE))
 	if values.is_empty() or policy.is_empty():
+		_unreadable = true
 		return
 	var scale: float = float(values["scale"])
 	for row: Array in values["values"]:
