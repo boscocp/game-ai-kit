@@ -1,0 +1,132 @@
+{
+ "description": "UCT on the dice race: one child per face drawn, a four plays again.",
+ "game": "dice_race",
+ "cases": [
+  {
+   "name": "from the start",
+   "state": {
+    "squares": [
+     0,
+     0
+    ],
+    "player": 0
+   },
+   "seed": 1,
+   "steps": [
+    400
+   ],
+   "exploration": 1.4142135623730951,
+   "playout_limit": 200,
+   "visits": [
+    100,
+    300
+   ],
+   "means": [
+    -0.02,
+    0.12666666666666668
+   ],
+   "action": "roll"
+  },
+  {
+   "name": "one square from home: walk",
+   "state": {
+    "squares": [
+     5,
+     0
+    ],
+    "player": 0
+   },
+   "seed": 3,
+   "steps": [
+    100,
+    100
+   ],
+   "exploration": 1.4142135623730951,
+   "playout_limit": 200,
+   "visits": [
+    123,
+    77
+   ],
+   "means": [
+    1.0,
+    0.922077922077922
+   ],
+   "action": "walk"
+  },
+  {
+   "name": "behind at the end: roll",
+   "state": {
+    "squares": [
+     4,
+     5
+    ],
+    "player": 0
+   },
+   "seed": 11,
+   "steps": [
+    300
+   ],
+   "exploration": 1.4142135623730951,
+   "playout_limit": 200,
+   "visits": [
+    11,
+    289
+   ],
+   "means": [
+    -0.8181818181818182,
+    0.031141868512110725
+   ],
+   "action": "roll"
+  },
+  {
+   "name": "player one, midway",
+   "state": {
+    "squares": [
+     2,
+     4
+    ],
+    "player": 1
+   },
+   "seed": 5,
+   "steps": [
+    250
+   ],
+   "exploration": 1.4142135623730951,
+   "playout_limit": 200,
+   "visits": [
+    24,
+    226
+   ],
+   "means": [
+    0.16666666666666666,
+    0.6460176991150443
+   ],
+   "action": "roll"
+  },
+  {
+   "name": "short playouts, scored by the lead",
+   "state": {
+    "squares": [
+     1,
+     0
+    ],
+    "player": 0
+   },
+   "seed": 8,
+   "steps": [
+    200
+   ],
+   "exploration": 1.4142135623730951,
+   "playout_limit": 2,
+   "visits": [
+    33,
+    167
+   ],
+   "means": [
+    0.00505050505050506,
+    0.3662674650698603
+   ],
+   "action": "roll"
+  }
+ ]
+}

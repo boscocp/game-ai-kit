@@ -1,0 +1,171 @@
+{
+ "description": "UCT on Nim (take 1-3, last stick wins): visits and means at the root.",
+ "game": "nim",
+ "cases": [
+  {
+   "name": "one stick, one move",
+   "state": {
+    "sticks": 1,
+    "player": 0
+   },
+   "seed": 1,
+   "steps": [
+    3
+   ],
+   "exploration": 1.4142135623730951,
+   "playout_limit": 200,
+   "visits": [
+    3
+   ],
+   "means": [
+    1.0
+   ],
+   "action": 1
+  },
+  {
+   "name": "ten sticks after 300: not sure yet",
+   "state": {
+    "sticks": 10,
+    "player": 0
+   },
+   "seed": 1,
+   "steps": [
+    300
+   ],
+   "exploration": 1.4142135623730951,
+   "playout_limit": 200,
+   "visits": [
+    202,
+    70,
+    28
+   ],
+   "means": [
+    -0.009900990099009901,
+    -0.14285714285714285,
+    -0.42857142857142855
+   ],
+   "action": 1
+  },
+  {
+   "name": "ten sticks after 1000: take two",
+   "state": {
+    "sticks": 10,
+    "player": 0
+   },
+   "seed": 1,
+   "steps": [
+    1000
+   ],
+   "exploration": 1.4142135623730951,
+   "playout_limit": 200,
+   "visits": [
+    202,
+    770,
+    28
+   ],
+   "means": [
+    -0.009900990099009901,
+    0.8519480519480519,
+    -0.42857142857142855
+   ],
+   "action": 2
+  },
+  {
+   "name": "thirteen, in two steps",
+   "state": {
+    "sticks": 13,
+    "player": 0
+   },
+   "seed": 7,
+   "steps": [
+    200,
+    300
+   ],
+   "exploration": 1.4142135623730951,
+   "playout_limit": 200,
+   "visits": [
+    194,
+    196,
+    110
+   ],
+   "means": [
+    -0.010309278350515464,
+    -0.10204081632653061,
+    -0.18181818181818182
+   ],
+   "action": 2
+  },
+  {
+   "name": "five, player one to move",
+   "state": {
+    "sticks": 5,
+    "player": 1
+   },
+   "seed": 42,
+   "steps": [
+    60
+   ],
+   "exploration": 1.4142135623730951,
+   "playout_limit": 200,
+   "visits": [
+    53,
+    2,
+    5
+   ],
+   "means": [
+    0.8490566037735849,
+    -1.0,
+    -0.2
+   ],
+   "action": 1
+  },
+  {
+   "name": "eight: every take loses",
+   "state": {
+    "sticks": 8,
+    "player": 0
+   },
+   "seed": 9,
+   "steps": [
+    120
+   ],
+   "exploration": 1.4142135623730951,
+   "playout_limit": 200,
+   "visits": [
+    51,
+    39,
+    30
+   ],
+   "means": [
+    -0.2549019607843137,
+    -0.3333333333333333,
+    -0.4
+   ],
+   "action": 1
+  },
+  {
+   "name": "ten, a narrow search",
+   "state": {
+    "sticks": 10,
+    "player": 0
+   },
+   "seed": 5,
+   "steps": [
+    150
+   ],
+   "exploration": 0.5,
+   "playout_limit": 200,
+   "visits": [
+    1,
+    148,
+    1
+   ],
+   "means": [
+    -1.0,
+    0.4189189189189189,
+    -1.0
+   ],
+   "action": 2
+  }
+ ]
+}

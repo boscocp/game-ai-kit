@@ -2,15 +2,16 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-14
+verified_on: 2026-10-29
 tier: 0
-source: book:Russell & Norvig, Artificial Intelligence: A Modern Approach, 4th edition, chapter 5
-invalidated_if: ai_adversarial stops returning minimax's value and move from alpha-beta, or the checkers evaluation stops being pieces, kings and advancement
+source: book:Russell & Norvig, Artificial Intelligence: A Modern Approach, 4th edition, chapter 5 (5.4 for Monte Carlo tree search)
+invalidated_if: ai_adversarial stops returning minimax's value and move from alpha-beta, MonteCarloSearch stops being UCT with one child per outcome, or the checkers evaluation stops being pieces, kings and advancement
 teaches: adversarial-search
 -->
 
-> Why the computer in `make run` plays the checkers move it plays, and why
-> alpha-beta finds the same move as minimax after looking at far less. Needs
+> Why the computer in `make run` plays the checkers move it plays, why
+> alpha-beta finds the same move as minimax after looking at far less, and
+> how Monte Carlo tree search chooses with no evaluation at all. Needs
 > nothing but reading. The code is in
 > [`godot/addons/ai_adversarial/`](../../godot/addons/ai_adversarial/).
 
@@ -140,14 +141,84 @@ follow, and both can be watched in `make run`:
 Better evaluations -- or deeper searches -- are the cures. T32 fits one from
 games instead of writing it by hand.
 
+## Monte Carlo tree search: play it out, many times
+
+Everything above leans on the evaluation. Take it away -- a game nobody
+knows how to score halfway, a game with dice, a game too wide for even
+alpha-beta -- and minimax has nothing to stop on. **Monte Carlo tree
+search** (MCTS) needs no evaluation before the end: to judge a move, it
+plays the game out from there with **random moves**, many times, and
+counts who won. A move that wins three playouts in four is probably better
+than one that wins one in four -- not certainly, and the more playouts, the
+less "probably". That is the first thing it teaches: **sampling instead of
+an evaluation function**.
+
+It does not spread the playouts evenly. It grows a tree from the current
+position, one node per playout, and each **iteration** has four phases --
+Russell & Norvig's names, AIMA 5.4, figure 5.11, and the names of the
+functions in `godot/addons/ai_adversarial/mcts.gd`:
+
+1. **Select.** From the root, walk down the tree, at each node taking the
+   move with the highest **UCB1** bound, until a node with a move never
+   tried.
+2. **Expand.** Try one of those untried moves, and add the position it
+   leads to as a new node.
+3. **Simulate.** From the new node, play random moves to the end of the
+   game (the **playout**). Nothing of it is kept.
+4. **Back-propagate.** Walk back up the path, and add the result to every
+   move on it -- for the player who chose that move.
+
+UCB1 is what decides where the next playout goes:
+
+    mean value of the move  +  C * sqrt( ln(visits of the position) / visits of the move )
+
+The first term favours moves that have done well (**exploitation**). The
+second is large for a move tried little and shrinks as it is tried
+(**exploration**), so a move that looked bad after three unlucky playouts
+gets another look, and a move that is bad after three hundred does not.
+With C = √2 this is **UCT**, "UCB applied to trees" (Kocsis and
+Szepesvári, 2006, as AIMA 5.4 cites them), the variant Roelofs used for *Xenonauts 2* and calls
+"the most common and battle tested" (GAP3 ch. 28).
+
+The second thing it teaches is that it is **anytime**. Alpha-beta at depth
+6 has no answer until it has finished depth 6. MCTS has one after every
+iteration -- the move tried most -- and every iteration makes it a little
+better. So a game gives it a budget per frame, `step(iterations)`, and
+asks again next frame; the tree carries over. Checkers' alpha-beta at depth
+6 can stall a frame for ~730 ms; MCTS never has to.
+
+The answer it gives is the **most visited** move, not the one with the
+best mean: a mean from three playouts is a guess, and UCB1 has already
+spent its playouts on the moves it believes in. In the kit's Nim, measured
+over 40 seeds, 1000 iterations find the winning take from every pile up to
+11 sticks; from 13 they need about 2000. After 300 from ten sticks, seed 1
+still prefers taking one -- `spec/vectors/adversarial/mcts-nim.json` keeps
+that case, because an anytime answer is not always a right one.
+
+**Chance.** A game with dice tells the search what a move *may* lead to,
+each with its probability (`AdversarialGame.outcomes`). After such a move
+the tree keeps **one child per outcome**, and each iteration draws which
+one it walks into. What the search learns under a lucky roll stays under
+that roll. The other way, open-loop MCTS -- one child per move, the rolls
+mixed together -- is lighter and is not in the kit.
+
+**Where it is weak.** A random playout must say something about the
+position. In a game where almost every random move loses at once -- a
+tactical trap, a chess position with one saving move -- the playouts
+measure the randomness, not the position, and alpha-beta with a decent
+evaluation wins. Browne et al. (2012) survey the many repairs: smarter
+playouts, a learned evaluation beside the playout or in place of it
+(AlphaGo, then AlphaZero), and more.
+
 ## When not to use either
 
 - **Chance.** Dice or shuffled cards need a third kind of node that
-  averages, not picks: expectiminimax.
+  averages, not picks: expectiminimax. Or Monte Carlo tree search, which
+  draws the dice as it plays them out.
 - **Hidden information.** In poker you do not know the position you are in,
   and minimax assumes you do.
 - **Very wide games.** Go has around 250 moves a position, and even b^(d/2)
-  is out of reach. Monte Carlo tree search is the usual answer.
+  is out of reach. Monte Carlo tree search, above, is the usual answer.
 - **Opponents who are not perfect.** Minimax assumes the best reply. Against
   a beginner, a move that sets a trap they will fall into can be better than
   the move minimax picks. That is an opponent model, T17's subject.

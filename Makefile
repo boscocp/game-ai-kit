@@ -288,7 +288,7 @@ train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-racing3d-vectors test-perception-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-racing3d-vectors test-perception-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -355,6 +355,13 @@ test-checkers-vectors: import ## The checkers rules and evaluation vectors, agai
 	@# gameaikit.checkers, the Python that self-plays and fits (T32).
 	@$(GODOT) --headless --path godot -s res://test/checkers/checkers_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/checkers
+
+.PHONY: test-adversarial-vectors
+test-adversarial-vectors: import ## The xorshift draws and MCTS's root visits on Nim and a dice race, against ai_adversarial (T86)
+	@# The other half is `make test-python`, through gameaikit.adversarial.
+	@# The numbers came from neither: spec/vectors/adversarial/derive.py.
+	@$(GODOT) --headless --path godot -s res://test/ai_adversarial/mcts_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/adversarial
 
 .PHONY: test-menace-vectors
 test-menace-vectors: import ## The MENACE vectors, against the game's bead player

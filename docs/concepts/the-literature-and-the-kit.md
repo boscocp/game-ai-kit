@@ -84,7 +84,7 @@ last three columns to the repository.
 |---|---|---|---|---|---|
 | Minimax and alpha-beta | AIMA 5.2-5.3; Millington ch. 8 | board games | `ai_adversarial`, `checkers` | `run` | 0 |
 | A learned evaluation (Samuel) | AIMA 5.3 (heuristic evaluation); kit's `learned-evaluation.md` | checkers | `checkers`, `python/gameaikit/checkers` | `run` | 1 |
-| Monte Carlo tree search, UCT | AIMA 5.4; Browne et al. 2012; GAP2 ch. 25; GAP3 ch. 28 | Go, strategy and card games | not in the kit | -- | 1 |
+| Monte Carlo tree search, UCT | AIMA 5.4; Browne et al. 2012; GAP2 ch. 25; GAP3 ch. 28 | Go, strategy and card games | `ai_adversarial`, `godot/addons/ai_adversarial/mcts.gd` | -- | 0 |
 | Stochastic and partially observable games | AIMA 5.5-5.6 | dice, cards, fog of war | fog of war only, with no reasoning over it: `rts` | `demo-rts` | 1 |
 
 ### Constraints and content

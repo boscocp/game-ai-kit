@@ -22,6 +22,13 @@ func best_take(sticks: int, depth: int = 12) -> int:
 	return AlphaBetaSearch.new().search(self, Pile.new(sticks, 0), depth).action
 
 
+## The same question asked of Monte Carlo tree search: `iterations` games
+## played out at random from here, spread by UCB1, and the take tried most.
+## No depth and no estimate: `evaluate` is only asked about finished games.
+func most_visited_take(sticks: int, iterations: int = 1000, from_seed: int = 1) -> int:
+	return MonteCarloSearch.new(self, Pile.new(sticks, 0), from_seed).step(iterations).action
+
+
 # Whose turn it is: the search plays for whoever moves at the root.
 func to_move(state: RefCounted) -> int:
 	return (state as Pile).player

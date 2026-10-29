@@ -56,7 +56,7 @@ func search(game: AdversarialGame, state: RefCounted, depth: int) -> Adversarial
 	var alpha: float = -INF
 	for action: Variant in game.actions(state):
 		var pruned_before: int = _pruned
-		var value: float = _min_value(game.result(state, action), alpha, INF, 1)
+		var value: float = _value(game.result(state, action), alpha, INF, 1)
 		# Above `alpha` the value is exact: the window is (alpha, +inf), and
 		# a value inside it is the minimax value. At or below `alpha` it is a
 		# bound when the search below cut something: it proved the move no
@@ -75,6 +75,15 @@ func search(game: AdversarialGame, state: RefCounted, depth: int) -> Adversarial
 	return found
 
 
+# MAX-VALUE or MIN-VALUE by whose turn it is at `state`, as in
+# `MinimaxSearch`: a side that acts twice running stays MAX or MIN, and the
+# window passes down unchanged either way.
+func _value(state: RefCounted, alpha: float, beta: float, depth: int) -> float:
+	if _game.to_move(state) == _player:
+		return _max_value(state, alpha, beta, depth)
+	return _min_value(state, alpha, beta, depth)
+
+
 # MAX to move. `alpha` rises as MAX finds better moves; once the value here
 # reaches `beta`, MIN -- who chooses the move above this position -- already
 # has something better for itself and will never let play come here. The moves
@@ -86,7 +95,7 @@ func _max_value(state: RefCounted, alpha: float, beta: float, depth: int) -> flo
 	var value: float = -INF
 	var actions: Array = _game.actions(state)
 	for index: int in range(actions.size()):
-		value = maxf(value, _min_value(_game.result(state, actions[index]), alpha, beta, depth + 1))
+		value = maxf(value, _value(_game.result(state, actions[index]), alpha, beta, depth + 1))
 		if value >= beta:
 			_pruned += actions.size() - index - 1
 			return value
@@ -103,7 +112,7 @@ func _min_value(state: RefCounted, alpha: float, beta: float, depth: int) -> flo
 	var value: float = INF
 	var actions: Array = _game.actions(state)
 	for index: int in range(actions.size()):
-		value = minf(value, _max_value(_game.result(state, actions[index]), alpha, beta, depth + 1))
+		value = minf(value, _value(_game.result(state, actions[index]), alpha, beta, depth + 1))
 		if value <= alpha:
 			_pruned += actions.size() - index - 1
 			return value

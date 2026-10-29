@@ -1,11 +1,17 @@
 {
   "module": "ai_adversarial",
   "kind": "technique",
-  "about": "Minimax and alpha-beta over any two-player game.",
+  "about": "Minimax, alpha-beta and Monte Carlo tree search over any two-player game.",
   "owns": [
     "godot/addons/ai_adversarial/",
-    "godot/test/ai_adversarial/"
+    "godot/test/ai_adversarial/",
+    "spec/vectors/adversarial/",
+    "python/gameaikit/adversarial/",
+    "python/tests/test_adversarial_mcts.py",
+    "python/tests/test_adversarial_vectors.py"
   ],
   "depends_on": [],
-  "gates": []
+  "gates": [
+    "test-adversarial-vectors"
+  ]
 }
