@@ -146,7 +146,7 @@ last three columns to the repository.
 
 | Technique | Literature | Known for | In the kit | Demos | Tier |
 |---|---|---|---|---|---|
-| LLM agents (memory, reflection, planning) | AIMA ch. 23-24; Y&T 5.5; Park et al. 2023 | a simulated town (Park et al.) | not in the kit (an ai\_llm addon is planned) | -- | 1 |
+| LLM agents (memory, reflection, planning) | AIMA ch. 23-24; Y&T 5.5; Park et al. 2023 | a simulated town (Park et al.) | a model as one more decider, behind a validator (memory, reflection and planning are not in the kit): `ai_llm`, its lesson in `python/gameaikit/llm/`; the text game is T94 | -- | 1 |
 
 The LLM row's tier is its lesson's: recorded answers replayed in Python,
 tier 1, as invariant 5 asks. Running a model live is tier 3 and optional.

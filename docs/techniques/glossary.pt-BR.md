@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-26
+verified_on: 2026-10-29
 tier: 0
 source: book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 ; book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020
 invalidated_if: a technique page in pt-BR translates a term this list says stays in English, or a new technique brings a term missing here
@@ -89,6 +89,10 @@ também em itálico, ficam como foram publicados.
 | *id* | o número que identifica uma unidade no tabuleiro |
 | *enter*, *shift*, Tab | nomes de teclas, como estão no teclado |
 | *LLM* | um modelo de linguagem grande (*large language model*), que gera texto; aqui, um conselheiro cuja resposta é validada antes de virar ação |
+| *prompt* | o texto que se manda a um LLM antes da pergunta: quem ele é, o que deve responder e em que formato |
+| *runtime* | o que roda o modelo e devolve o texto: um servidor local, ou, nos testes, uma gravação |
+| *fallback* | a resposta de reserva que o jogo escreveu, usada quando a do modelo é recusada |
+| *thread* | uma linha de execução paralela; um pedido HTTP com *threads* espera fora do quadro do jogo |
 | BFS, DFS | as siglas de *breadth-first search* e *depth-first search*, a busca em largura e a em profundidade |
 | PDDL | a linguagem em que se escreve um domínio de planejamento STRIPS: os fatos, as ações e o objetivo |
 | GPU, VRAM | a placa de vídeo, e a memória dela; um LLM local precisa das duas |

@@ -1,0 +1,241 @@
+## What a language model's reply may contain, and what happens when it does not.
+##
+## The only door between a model and a game. A model is asked to read what
+## the player typed and answer in one shape, `{"speech", "intent",
+## "argument"}` (spec/llm/reply.schema.json). `validate` takes the text it
+## answered and returns an `LlmReply`: the model's words when they pass every
+## rule below, and otherwise the game's fallback -- the game's own line, the
+## intent `unclear`, and the reason. Never a retry, never a stall.
+##
+## The model never decides an outcome. The game declares the discourse acts
+## it understands (`intents`, after Facade: "a strong many-to-few mapping",
+## Mateas and Stern 2004) and what each may carry; the model only says which
+## one the player's words were, and voices the character. What follows is the
+## game's rules'.
+##
+##   R1  not JSON, as a whole: prose around an object is refused
+##   R2  JSON, but not an object
+##   R3  a key of the shape is missing
+##   R4  a key the shape does not have
+##   R5  a value that is not a string
+##   R6  an intent the game did not declare
+##   R7  an argument that is not empty and not one of its intent's values
+##   R8  a speech that is empty, or longer than SPEECH_LIMIT characters
+##   R9  a speech with a line break, or another control character
+##   R10 a speech with markup in it
+##   R11 a speech that contains one of the game's secrets
+##
+## `gameaikit.llm.validator` is the same rules in Python; spec/vectors/llm/
+## holds both to one code per reply. Complexity: one parse, one pass over the
+## text, and one search of the speech per secret.
+##
+## When not to use it: a line of flavour the game shows and never acts on --
+## it needs only R8 to R11, and this shape would refuse good prose for nothing.
+class_name LlmValidator
+extends RefCounted
+
+## The three keys of a reply, in the order the rules walk them.
+const REPLY_KEYS: Array[String] = ["speech", "intent", "argument"]
+
+## One line in a speech bubble, counted in characters as Python counts them.
+const SPEECH_LIMIT: int = 280
+
+## What a RichTextLabel or a chat model's Markdown would read as formatting.
+const MARKUP: String = "<>[]*`"
+
+## The intent of every refused reply: the one case the game always handles.
+const FALLBACK_INTENT: String = "unclear"
+
+## A JSON number as RFC 8259 spells it. Godot's parser also takes `01` and
+## `1.` (measured on 4.7.2); Python's refuses both, so this refuses them too.
+const JSON_NUMBER: String = "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?$"
+
+# Intent name to the PackedStringArray of arguments it may carry.
+var _intents: Dictionary = {}
+var _fallback_speech: String = ""
+var _secrets: PackedStringArray = PackedStringArray()
+var _number: RegEx = RegEx.create_from_string(JSON_NUMBER)
+# A comma just before the end of an object or a list.
+var _trailing_comma: RegEx = RegEx.create_from_string(",\\s*[}\\]]")
+# Something outside a string that starts like a number, `true` and `null`
+# being the words that do not.
+var _number_like: RegEx = RegEx.create_from_string("[-+.0-9][-+.0-9eE]*")
+
+
+## A validator for one game: the discourse acts it understands (`intents`,
+## each name to the arguments it may take, empty for none), the line its
+## character says when a reply is refused, and the strings no reply may
+## contain. Call `problem()` once after building.
+func _init(intents: Dictionary, fallback_speech: String,
+		secrets: PackedStringArray = PackedStringArray()) -> void:
+	for name: Variant in intents:
+		_intents[str(name)] = PackedStringArray(intents[name])
+	_fallback_speech = fallback_speech
+	_secrets = secrets
+
+
+## Why this game's declaration cannot be validated against, or "". Found
+## when the game is built, rather than on the first reply.
+func problem() -> String:
+	if _intents.is_empty():
+		return "the game declares no intents"
+	for intent: String in _intents:
+		if intent == "" or (_intents[intent] as PackedStringArray).has(""):
+			return "intent `%s` is empty or has an empty argument" % intent
+	if _secrets.has(""):
+		return "an empty secret would be found in every speech"
+	var wrong: String = why_speech_is_wrong(_fallback_speech)
+	if wrong != "":
+		return "the fallback speech breaks the rules it stands in for: %s" % wrong
+	return ""
+
+
+## The reply in `raw_text`, or the game's fallback carrying the reason.
+func validate(raw_text: String) -> LlmReply:
+	var wrong: String = why_refused(raw_text)
+	if wrong != "":
+		return fallback(wrong, raw_text)
+	var reader := JSON.new()
+	reader.parse(raw_text)
+	var data: Dictionary = reader.data
+	return LlmReply.new(data["speech"], data["intent"], data["argument"], "", raw_text)
+
+
+## The game's own answer, standing in for a reply that was refused -- or for
+## no reply at all, when the runtime failed (`F1`, which is not a rule of
+## this validator but is answered the same way).
+func fallback(refusal: String, raw_text: String = "") -> LlmReply:
+	return LlmReply.new(_fallback_speech, FALLBACK_INTENT, "", refusal, raw_text)
+
+
+## The code and sentence of the first rule `raw_text` breaks, or "".
+func why_refused(raw_text: String) -> String:
+	var reader := JSON.new()
+	# `JSON.new().parse()`, not the static parse_string: that one prints an
+	# engine error on bad input (docs/godot/reading-json-in-godot.md).
+	if reader.parse(raw_text) != OK:
+		return "R1 the reply is not JSON: %s" % reader.get_error_message()
+	var not_strict: String = _why_not_strict_json(raw_text)
+	if not_strict != "":
+		return "R1 the reply is not JSON: %s" % not_strict
+	if not (reader.data is Dictionary):
+		return "R2 the reply is JSON, but not an object"
+	var data: Dictionary = reader.data
+	return _why_shape_is_wrong(data)
+
+
+## R8 to R11, on one line of speech. The game's own fallback is held to them.
+func why_speech_is_wrong(speech: String) -> String:
+	if speech.is_empty() or speech.length() > SPEECH_LIMIT:
+		return "R8 the speech is %d characters; 1 to %d are allowed" % [
+			speech.length(), SPEECH_LIMIT]
+	for index: int in speech.length():
+		var code: int = speech.unicode_at(index)
+		if code < 32 or code == 127:
+			return "R9 the speech is more than one line, or has a control character"
+	for character: String in MARKUP:
+		if speech.contains(character):
+			return "R10 the speech has markup in it, one of %s" % MARKUP
+	if gives_away_a_secret(speech):
+		return "R11 the speech gives away one of the game's secrets"
+	return ""
+
+
+## True when `text` contains one of the game's secrets, whatever its case.
+## Also what `LlmConversation` asks of the instructions, before any request.
+func gives_away_a_secret(text: String) -> bool:
+	var lowered: String = text.to_lower()
+	for secret: String in _secrets:
+		if secret != "" and lowered.contains(secret.to_lower()):
+			return true
+	return false
+
+
+## spec/llm/reply.schema.json with `intent` narrowed to this game's acts: what
+## a runtime that can constrain its output is handed. A convenience, not the
+## validator -- it cannot say an argument belongs to its intent, and a runtime
+## may ignore it.
+func json_schema() -> Dictionary:
+	var names: Array = _intents.keys()
+	names.sort()
+	return {
+		"type": "object",
+		"properties": {
+			"speech": {"type": "string", "minLength": 1, "maxLength": SPEECH_LIMIT},
+			"intent": {"type": "string", "enum": names},
+			"argument": {"type": "string"},
+		},
+		"required": REPLY_KEYS.duplicate(),
+		"additionalProperties": false,
+	}
+
+
+## The shape and the acts, in words, for the model's instructions. Generated
+## from the same declaration the replies are checked against, so the prompt
+## cannot promise the model an intent the validator would refuse.
+func instructions() -> String:
+	var lines: PackedStringArray = PackedStringArray([
+		"Answer with one JSON object and nothing else: " +
+		"{\"speech\": \"...\", \"intent\": \"...\", \"argument\": \"...\"}.",
+		"speech: what you say, one line, at most %d characters, no markup." % SPEECH_LIMIT,
+		"intent: which of these the player's words were; argument: one of its values, or empty.",
+	])
+	var names: Array = _intents.keys()
+	names.sort()
+	for name: String in names:
+		var arguments: PackedStringArray = _intents[name]
+		var values: String = ", ".join(arguments) if not arguments.is_empty() else "(none)"
+		lines.append("- %s: %s" % [name, values])
+	return "\n".join(lines)
+
+
+# R3 to R11, on content that parsed as an object.
+func _why_shape_is_wrong(data: Dictionary) -> String:
+	for key: String in REPLY_KEYS:
+		if not data.has(key):
+			return "R3 the reply has no `%s`" % key
+	var keys: Array = data.keys()
+	keys.sort()
+	for key: Variant in keys:
+		if not REPLY_KEYS.has(key):
+			return "R4 the reply has `%s`, which the shape does not" % key
+	for key: String in REPLY_KEYS:
+		if not (data[key] is String):
+			return "R5 `%s` is not a string" % key
+	var intent: String = data["intent"]
+	var argument: String = data["argument"]
+	if not _intents.has(intent):
+		return "R6 `%s` is not an intent this game declared" % intent
+	if argument != "" and not (_intents[intent] as PackedStringArray).has(argument):
+		return "R7 `%s` is not an argument `%s` takes" % [argument, intent]
+	return why_speech_is_wrong(data["speech"])
+
+
+# What Godot's parser takes and JSON does not, measured on 4.7.2: a comma
+# before `}` or `]`, and a number spelt `01` or `1.`. Read outside strings
+# only, so a speech may say "1." and end a list with ", ]".
+func _why_not_strict_json(text: String) -> String:
+	var outside: String = _outside_strings(text)
+	if _trailing_comma.search(outside) != null:
+		return "a comma before the end of an object or a list"
+	for found: RegExMatch in _number_like.search_all(outside):
+		if _number.search(found.get_string()) == null:
+			return "`%s` is not a JSON number" % found.get_string()
+	return ""
+
+
+# The text with every string literal emptied to `""`, so only the structure
+# between them is left to read. A quote closes a string unless the character
+# before it was an escaping backslash.
+func _outside_strings(text: String) -> String:
+	var kept: PackedStringArray = PackedStringArray()
+	var inside: bool = false
+	var escaped: bool = false
+	for character: String in text:
+		var was_inside: bool = inside
+		if character == "\"" and not escaped:
+			inside = not inside
+		escaped = inside and not escaped and character == "\\"
+		if not (was_inside and inside):
+			kept.append(character)
+	return "".join(kept)
