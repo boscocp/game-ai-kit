@@ -69,6 +69,18 @@ T94's game plays from them without it (invariant 5).
    through T92's `HttpRuntime` path, checks the reply passes the
    validator, and stops the server**, whatever happened -- exit code 0 or
    1, and 2 when the runtime is not installed, saying how to install it.
+   T92's review (wave 102) adds two things here. `HttpRuntime` sends the
+   schema as OpenAI's `response_format: {"type": "json_schema",
+   "json_schema": {...}}`, written from the documentation and never
+   measured: measure that the pinned server takes that form, and change
+   the runtime if it does not. And add a recorded test (a stub answer, no
+   model) that tells "the server refused the request" (an HTTP 400, say,
+   for a schema it cannot read) apart from "the model's reply was
+   refused": today both reach the game as the fallback, the first as F1
+   with the status in its sentence -- without a test that keeps them
+   apart, a server that rejects every request turns every turn silently
+   into F1. `HttpRuntime`'s default URL says port 8080; set it from the
+   one place step 3 writes the port.
 4. `check_acceptance.py` today recognises acceptance that needs a local
    model only by `ollama`, `localhost:11434` and `api/chat`
    (`NEEDS_LOCAL_MODEL`). Teach it `llm-smoke`, `llm-serve` and the fixed

@@ -89,4 +89,9 @@ refuses a lone UTF-16 surrogate (`"\ud83d"`), which Python keeps, and it
 keeps the last of a key written twice, as Python does. `LlmValidator`
 refuses the first three itself, outside strings, and `gameaikit.llm`
 refuses the fourth, so both answer R1 -- each a case in
-`spec/vectors/llm/replies.json`.
+`spec/vectors/llm/replies.json`. The review of wave 102 measured three
+more: a `\u0000` escape becomes U+FFFD in Godot (with a Unicode error
+printed) and a real NUL in Python; Godot gives up on lists nested about a
+thousand deep and Python does not; and `to_lower()` and Python's `lower()`
+fold `İ` differently. Both validators refuse the first two before parsing,
+and fold A to Z only when looking for a secret.

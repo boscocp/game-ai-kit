@@ -92,6 +92,8 @@ também em itálico, ficam como foram publicados.
 | *prompt* | o texto que se manda a um LLM antes da pergunta: quem ele é, o que deve responder e em que formato |
 | *runtime* | o que roda o modelo e devolve o texto: um servidor local, ou, nos testes, uma gravação |
 | *fallback* | a resposta de reserva que o jogo escreveu, usada quando a do modelo é recusada |
+| *parser* | o leitor de um formato, aqui o de JSON: o código que transforma o texto em objetos e listas |
+| *escape* | uma sequência como `\n` ou `\u0000` que escreve, dentro de um texto JSON, um caractere que não se digita direto |
 | *thread* | uma linha de execução paralela; um pedido HTTP com *threads* espera fora do quadro do jogo |
 | BFS, DFS | as siglas de *breadth-first search* e *depth-first search*, a busca em largura e a em profundidade |
 | PDDL | a linguagem em que se escreve um domínio de planejamento STRIPS: os fatos, as ações e o objetivo |

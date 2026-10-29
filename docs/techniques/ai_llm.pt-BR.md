@@ -7,7 +7,7 @@ tier: 2
 source: https://www.cp.eng.chula.ac.th/~vishnu/gameResearch/story_november_2005/MateasSternTIDSE04.pdf ; https://docs.godotengine.org/en/4.7/classes/class_httprequest.html ; https://ollama.com/blog/structured-outputs
 invalidated_if: the kit's LlmValidator, LlmReply, LlmRuntime, RecordedRuntime, HttpRuntime or LlmConversation signatures change, the reply's shape or its refusal codes change, or T94's game lands and this page does not name it
 teaches: language-models
-translation_of: f189ddc8b236e4d9c6286b981f49e8c64acc53e3122606fc34ce80668f69c16a
+translation_of: a2a79978f34b55e7d69b7ee863aa406f802e5e0fe1b7a89e8d12171411f90228
 -->
 
 > English: [ai_llm.md](ai_llm.md). Os termos que ficam em inglês estão
@@ -72,7 +72,7 @@ estado de "pensando". As regras:
 
 | código | uma resposta é recusada quando |
 |---|---|
-| R1 | o texto não é JSON por inteiro -- prosa em volta de um objeto, um bloco de código, uma vírgula sobrando no fim |
+| R1 | o texto não é JSON por inteiro -- prosa em volta de um objeto, um bloco de código, uma vírgula sobrando no fim -- ou traz o que os *parsers* das duas linguagens leem de jeitos diferentes: um *escape* de NUL, aninhamento além de 32 níveis |
 | R2 | é JSON, mas não é um objeto |
 | R3, R4 | falta uma chave do formato, ou há uma que o formato não tem |
 | R5 | um valor não é *string* |
@@ -80,7 +80,7 @@ estado de "pensando". As regras:
 | R7 | `argument` não é vazio e não é um dos valores daquele `intent` |
 | R8 | `speech` é vazio, ou passa de 280 caracteres |
 | R9, R10 | `speech` tem quebra de linha ou caractere de controle, ou marcação (`<>[]*` e a crase) |
-| R11 | `speech` contém um dos segredos do jogo |
+| R11 | `speech` contém um dos segredos do jogo, ignorando maiúsculas e minúsculas de A a Z (só essas letras: Python e Godot tratam as outras de jeitos diferentes) |
 | F1 | nenhuma resposta chegou: o *runtime* falhou ou estourou o tempo |
 
 Os ajustes que importam:
@@ -193,8 +193,9 @@ regras recusariam. E a espera: `say` volta na hora, `answered` vem
 depois; desenhe o personagem pensando enquanto `is_thinking()` for
 verdadeiro, e mostre o `refusal` de cada resposta ao lado da fala quando
 não for vazio, para o jogador ver que o modelo foi desautorizado. Nunca
-leia `raw_text`: é o texto que ninguém validou, e o *gate* o recusa fora
-do *addon*.
+leia `raw_text`, nem escute o sinal `replied` de um *runtime*: os dois
+são o texto que ninguém validou, e o *gate* os recusa fora do *addon*.
+Escute `answered`.
 
 ## Para ir mais fundo {#deeper}
 

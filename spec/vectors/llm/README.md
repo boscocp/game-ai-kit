@@ -38,7 +38,13 @@ accepts a trailing comma and the numbers `01` and `1.`, which Python's
 refuses, so `LlmValidator` refuses them itself, outside strings; Python's
 keeps a lone UTF-16 surrogate and `NaN`, which Godot's refuses, so
 `gameaikit.llm` refuses them; both keep the last of a key written twice;
-both count a speech's length in characters, so 280 `ã` pass.
+both count a speech's length in characters, so 280 `ã` pass. Found by
+review, each a case too: a `\u0000` escape becomes U+FFFD in Godot and a
+real NUL in Python, so both refuse it before parsing (R1); lists nested a
+thousand deep make Godot's parser give up and not Python's, so both stop at
+32 (R1); and `"İ".lower()` is two characters in Python and one in Godot, so
+secrets are found folding A to Z only -- a secret's other letters must
+match as written.
 
 ## Where the cases came from
 

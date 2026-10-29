@@ -19,7 +19,9 @@ Every rule has a code, so the two validators -- this one and `ai_llm`'s
 `LlmValidator` -- can be held to one answer per reply by
 `spec/vectors/llm/`. The sentence after the code is each language's own.
 
-  R1  the text is not JSON, as a whole: prose around an object is refused
+  R1  the text is not JSON, as a whole: prose around an object is refused;
+      and what the two languages' parsers read differently (a NUL escape,
+      nesting deeper than MAX_DEPTH) is refused before either reads it
   R2  it is JSON, but not an object
   R3  a key of the shape is missing
   R4  a key the shape does not have
@@ -42,6 +44,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import re
 
 # The three keys of a reply, in the order the rules walk them.
 REPLY_KEYS = ("speech", "intent", "argument")
@@ -53,6 +56,21 @@ SPEECH_LIMIT = 280
 # Characters a rich-text label would read as formatting rather than speech:
 # HTML and BBCode brackets, Markdown's emphasis and code.
 MARKUP = "<>[]*`"
+
+# How deep objects and lists may nest. A reply is one flat object; past
+# this, Godot's parser and Python's give up at different depths, so both
+# validators stop at the same one first.
+MAX_DEPTH = 32
+
+# A JSON escape for the NUL character: an odd run of backslashes, then u0000.
+# Godot's parser turns it into U+FFFD and Python's into a real NUL, so it is
+# refused before either parser sees it.
+NUL_ESCAPE = re.compile(r"(?<!\\)(?:\\\\)*\\u0000")
+
+# Secrets are found whatever their case, folding A-Z only. Python's lower()
+# and Godot's to_lower() fold other letters differently (`İ`), and a rule the
+# two languages answer differently is two rules.
+ASCII_LOWER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
 
 # What a refused reply becomes. The game declares the line; the intent is
 # always this one, so the game's rules have exactly one case to handle.
@@ -143,9 +161,9 @@ def why_speech_is_wrong(speech: str, secrets: tuple[str, ...]) -> str:
         return "R9 the speech is more than one line, or has a control character"
     if any(character in MARKUP for character in speech):
         return f"R10 the speech has markup in it, one of {MARKUP}"
-    lowered = speech.lower()
+    lowered = speech.translate(ASCII_LOWER)
     for secret in secrets:
-        if secret.lower() in lowered:
+        if secret.translate(ASCII_LOWER) in lowered:
             return "R11 the speech gives away one of the game's secrets"
     return ""
 
@@ -194,16 +212,49 @@ def _parsed(raw_text: str) -> tuple[dict, str]:
     # takes them unless told not to.
     # A lone surrogate (`"\ud83d"`) is half a character: Python's parser
     # keeps it and Godot's refuses it, so it is refused here too, found by
-    # the one thing it cannot do -- become UTF-8. Nesting too deep for
-    # Python's stack is not JSON a game can use either.
+    # the one thing it cannot do -- become UTF-8.
+    wrong = _why_not_plain(raw_text)
+    if wrong:
+        return {}, f"R1 the reply is not JSON: {wrong}"
     try:
         data = json.loads(raw_text, strict=False, parse_constant=_not_json)
         json.dumps(data, ensure_ascii=False).encode("utf-8")
-    except (ValueError, RecursionError) as error:
+    except ValueError as error:
         return {}, f"R1 the reply is not JSON: {error}"
     if not isinstance(data, dict):
         return {}, "R2 the reply is JSON, but not an object"
     return data, ""
+
+
+def _why_not_plain(raw_text: str) -> str:
+    """What the two parsers would read differently, found before either reads it."""
+    if "\x00" in raw_text or NUL_ESCAPE.search(raw_text):
+        return "a NUL character"
+    if _deepest(raw_text) > MAX_DEPTH:
+        return f"nested deeper than {MAX_DEPTH}"
+    return ""
+
+
+def _deepest(text: str) -> int:
+    """How deep objects and lists nest in `text`, counted outside strings."""
+    depth = deepest = 0
+    inside = escaped = False
+    for character in text:
+        if inside:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                inside = False
+        elif character == '"':
+            inside = True
+        elif character in "[{":
+            depth += 1
+            deepest = max(deepest, depth)
+        elif character in "]}":
+            depth -= 1
+    return deepest
 
 
 def _not_json(name: str) -> object:

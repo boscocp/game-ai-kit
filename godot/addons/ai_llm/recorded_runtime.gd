@@ -75,7 +75,10 @@ func _answer_later() -> void:
 	for frame: int in maxi(frames_to_wait, 1):
 		await get_tree().process_frame
 		if not is_inside_tree():
+			# Taken out of the tree mid-answer: say so, or a conversation
+			# waiting on this runtime thinks forever.
 			_busy = false
+			failed.emit("the runtime left the scene tree mid-request")
 			return
 	_busy = false
 	if _next >= _recorded.size():

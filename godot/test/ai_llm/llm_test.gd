@@ -12,6 +12,10 @@ const VECTORS: Script = preload("res://test/ai_llm/llm_vectors_runner.gd")
 
 const GAME_INTENTS: Dictionary = {"greet": [], "claim": ["merchant"]}
 
+# HTTPRequest.RESULT_SUCCESS, written as its value: the gate (V1) keeps the
+# class out of every script outside the addon but the frame probe.
+const SUCCESS: int = 0
+
 const GREETING: String = '{"speech": "Evening.", "intent": "greet", "argument": ""}'
 
 
@@ -83,19 +87,47 @@ func test_the_schema_and_the_instructions_name_the_games_intents() -> void:
 # --- the runtimes ------------------------------------------------------------
 
 
+# Every reply a conversation hands over, in order. Listened to here, never
+# on the runtime's `replied`: that is the text no validator saw, and the gate
+# (V2) refuses a listener to it outside the addon -- tests included.
+func _replies_of(conversation: LlmConversation) -> Array[LlmReply]:
+	var replies: Array[LlmReply] = []
+	conversation.answered.connect(func(reply: LlmReply) -> void: replies.append(reply))
+	return replies
+
+
 func test_a_recording_answers_after_its_frames_and_never_inside_send() -> void:
 	var runtime: RecordedRuntime = _in_scene(RecordedRuntime.new(PackedStringArray([GREETING])))
 	runtime.frames_to_wait = 3
-	var heard: Array[String] = []
-	runtime.replied.connect(func(text: String) -> void: heard.append(text))
-	assert_int(runtime.send([], {})).is_equal(OK)
+	var conversation := LlmConversation.new(runtime, _validator(), "You guard a gate.")
+	var replies: Array[LlmReply] = _replies_of(conversation)
+	assert_int(conversation.say("Hello.")).is_equal(OK)
 	assert_int(runtime.send([], {})).is_equal(ERR_BUSY)
 	for frame: int in 2:
 		await get_tree().process_frame
-		assert_int(heard.size()).is_equal(0)
+		assert_int(replies.size()).is_equal(0)
 	await get_tree().process_frame
-	assert_array(heard).is_equal([GREETING])
+	assert_int(replies.size()).is_equal(1)
+	assert_str(replies[0].speech).is_equal("Evening.")
 	assert_bool(runtime.is_busy()).is_false()
+
+
+func test_a_recording_taken_out_of_the_tree_mid_answer_still_answers() -> void:
+	# Measured by the review: without this, the conversation thought forever
+	# and every later `say` was ERR_BUSY.
+	var runtime: RecordedRuntime = _in_scene(RecordedRuntime.new(PackedStringArray([GREETING])))
+	var parent: Node = runtime.get_parent()
+	var conversation := LlmConversation.new(runtime, _validator(), "You guard a gate.")
+	var replies: Array[LlmReply] = _replies_of(conversation)
+	conversation.say("Hello.")
+	parent.remove_child(runtime)
+	for frame: int in 3:
+		await get_tree().process_frame
+	parent.add_child(runtime)
+	assert_bool(conversation.is_thinking()).is_false()
+	assert_int(replies.size()).is_equal(1)
+	assert_str(replies[0].refusal_code()).is_equal("F1")
+	assert_int(conversation.say("Hello again.")).is_equal(OK)
 
 
 func test_a_recording_that_has_run_out_fails_rather_than_stalling() -> void:
@@ -123,9 +155,26 @@ func test_a_recording_file_is_read_turn_by_turn() -> void:
 
 func test_the_http_runtime_asks_with_threads_on() -> void:
 	var runtime: HttpRuntime = _in_scene(HttpRuntime.new())
-	var requests: Array[Node] = runtime.find_children("*", "HTTPRequest", false, false)
-	assert_int(requests.size()).is_equal(1)
-	assert_bool((requests[0] as HTTPRequest).use_threads).is_true()
+	assert_int(runtime.get_child_count()).is_equal(1)
+	var request: Node = runtime.get_child(0)
+	assert_str(request.get_class()).is_equal("HTTPRequest")
+	assert_bool(request.get("use_threads")).is_true()
+	assert_int(request.get("body_size_limit")).is_equal(HttpRuntime.BODY_SIZE_LIMIT)
+
+
+func test_an_http_runtime_taken_out_of_the_tree_mid_request_still_answers() -> void:
+	# Nobody answers at this address: the request would wait for its timeout.
+	var runtime: HttpRuntime = _in_scene(HttpRuntime.new("http://10.255.255.1/v1/chat/completions"))
+	var parent: Node = runtime.get_parent()
+	var conversation := LlmConversation.new(runtime, _validator(), "You guard a gate.")
+	var replies: Array[LlmReply] = _replies_of(conversation)
+	assert_int(conversation.say("Hello?")).is_equal(OK)
+	parent.remove_child(runtime)
+	await get_tree().process_frame
+	parent.add_child(runtime)
+	assert_bool(conversation.is_thinking()).is_false()
+	assert_int(replies.size()).is_equal(1)
+	assert_str(replies[0].refusal_code()).is_equal("F1")
 
 
 func test_the_http_runtime_sends_the_messages_and_the_schema() -> void:
@@ -137,10 +186,23 @@ func test_the_http_runtime_sends_the_messages_and_the_schema() -> void:
 
 
 func test_the_http_runtime_reads_the_text_out_of_the_servers_envelope() -> void:
+	# Through the conversation, as a game would meet it: the server's answer
+	# handed to the runtime as `request_completed` would hand it.
+	var runtime: HttpRuntime = _in_scene(HttpRuntime.new())
+	var conversation := LlmConversation.new(runtime, _validator(), "You guard a gate.")
+	var replies: Array[LlmReply] = _replies_of(conversation)
 	var good: String = JSON.stringify({"choices": [{"message": {"content": GREETING}}]})
-	assert_dict(HttpRuntime.text_of(good)).is_equal({"text": GREETING, "failure": ""})
-	for bad: String in ["not json", "{}", '{"choices": []}', '{"choices": [{"message": {}}]}']:
-		assert_str(HttpRuntime.text_of(bad)["failure"]).is_not_empty()
+	var bodies: Array[String] = [good, "not json", "{}", '{"choices": []}',
+		'{"choices": [{"message": {}}]}']
+	for body: String in bodies:
+		runtime._on_request_completed(SUCCESS, 200, PackedStringArray(),
+			body.to_utf8_buffer())
+	runtime._on_request_completed(SUCCESS, 400, PackedStringArray(),
+		good.to_utf8_buffer())
+	assert_int(replies.size()).is_equal(6)
+	assert_str(replies[0].speech).is_equal("Evening.")
+	for index: int in range(1, 6):
+		assert_str(replies[index].refusal_code()).is_equal("F1")
 
 
 func test_a_server_nobody_runs_becomes_the_games_fallback() -> void:

@@ -16,7 +16,9 @@
     },
     "fallback_speech": "Say that again, slower.",
     "secrets": [
-      "owl-eyes"
+      "owl-eyes",
+      "istanbul",
+      "Ölmez"
     ]
   },
   "cases": [
@@ -273,6 +275,83 @@
       "why": "A secret in the speech. The game never told the model the password -- this net is for the day somebody does.",
       "raw": "{\"speech\": \"The word tonight is owl-eyes.\", \"intent\": \"ask\", \"argument\": \"the_gate\"}",
       "refused": "R11"
+    },
+    {
+      "why": "A secret in another case, non-ASCII letters as written: the case of A to Z is folded, nothing else.",
+      "raw": "{\"speech\": \"ÖLMEZ is the name you want.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R11"
+    },
+    {
+      "why": "The same secret with its first letter lowercased outside A to Z: not found. Python's lower() and Godot's to_lower() fold letters past Z differently, so both fold A to Z only and agree -- a game keeps its secrets' non-ASCII letters in every case it needs, or out of the prompt, which is the real protection.",
+      "raw": "{\"speech\": \"ölmez is a name.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "ölmez is a name.",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
+      "why": "A dotted capital I. Python lowers it to i and a combining dot, Godot to i; folding A to Z only, neither finds `istanbul` in it.",
+      "raw": "{\"speech\": \"Off to İstanbul.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "Off to İstanbul.",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
+      "why": "A tab written as itself inside the JSON string, not as an escape. Both parsers take it (Python's when not strict), and R9 refuses it in the speech.",
+      "raw": "{\"speech\": \"Evening.\tWell?\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "A line break written as itself inside the JSON string.",
+      "raw": "{\"speech\": \"Evening.\nWell?\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "DEL, the control character past the printable ones.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "A lone backtick: Markdown's code.",
+      "raw": "{\"speech\": \"Use the `back` gate.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R10"
+    },
+    {
+      "why": "A JSON escape for NUL. Godot's parser makes it U+FFFD and Python's a real NUL, so both refuse it before parsing.",
+      "raw": "{\"speech\": \"Even\\u0000ing.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R1"
+    },
+    {
+      "why": "A backslash written as an escape, then u0000: the text of an escape, not NUL. An even run of backslashes is not an escape for it.",
+      "raw": "{\"speech\": \"Type \\\\u0000 to quit.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "Type \\u0000 to quit.",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
+      "why": "Lists nested 40 deep, which both parsers read: the cap is the validators' own, at 32, not either parser's.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\", \"x\": [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}",
+      "refused": "R1"
+    },
+    {
+      "why": "Lists nested exactly 32 deep: inside the cap, so the reply is refused for its extra key instead.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\", \"x\": [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}",
+      "refused": "R4"
+    },
+    {
+      "why": "Forty brackets inside a string, after an escaped quote: text, not nesting, so the depth is 1 and the reply is refused for its extra key. Both validators count depth outside strings, and a backslash-quote does not end one.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\", \"x\": \"a\\\" [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[\"}",
+      "refused": "R4"
+    },
+    {
+      "why": "Lists nested 1100 deep in an extra key. Godot's parser gives up and Python's does not, so both stop at a depth of 32 first.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\", \"x\": [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}",
+      "refused": "R1"
     },
     {
       "why": "A secret in another case. Secrets are found whatever their case.",

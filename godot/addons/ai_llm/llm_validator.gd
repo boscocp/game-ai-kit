@@ -13,7 +13,9 @@
 ## one the player's words were, and voices the character. What follows is the
 ## game's rules'.
 ##
-##   R1  not JSON, as a whole: prose around an object is refused
+##   R1  not JSON, as a whole: prose around an object is refused; and
+##       what the two languages' parsers read differently (a NUL escape,
+##       nesting deeper than MAX_DEPTH) is refused before either reads it
 ##   R2  JSON, but not an object
 ##   R3  a key of the shape is missing
 ##   R4  a key the shape does not have
@@ -43,6 +45,16 @@ const SPEECH_LIMIT: int = 280
 ## What a RichTextLabel or a chat model's Markdown would read as formatting.
 const MARKUP: String = "<>[]*`"
 
+## How deep objects and lists may nest. A reply is one flat object; past
+## this, Godot's parser and Python's give up at different depths, so both
+## validators stop at the same one first.
+const MAX_DEPTH: int = 32
+
+## A JSON escape for the NUL character: an odd run of backslashes, then
+## u0000. Godot's parser turns it into U+FFFD and Python's into a real NUL,
+## so both refuse it before parsing.
+const NUL_ESCAPE: String = "(?<!\\\\)(?:\\\\\\\\)*\\\\u0000"
+
 ## The intent of every refused reply: the one case the game always handles.
 const FALLBACK_INTENT: String = "unclear"
 
@@ -55,6 +67,7 @@ var _intents: Dictionary = {}
 var _fallback_speech: String = ""
 var _secrets: PackedStringArray = PackedStringArray()
 var _number: RegEx = RegEx.create_from_string(JSON_NUMBER)
+var _nul_escape: RegEx = RegEx.create_from_string(NUL_ESCAPE)
 # A comma just before the end of an object or a list.
 var _trailing_comma: RegEx = RegEx.create_from_string(",\\s*[}\\]]")
 # Something outside a string that starts like a number, `true` and `null`
@@ -110,14 +123,17 @@ func fallback(refusal: String, raw_text: String = "") -> LlmReply:
 
 ## The code and sentence of the first rule `raw_text` breaks, or "".
 func why_refused(raw_text: String) -> String:
+	# First what the parser would take and should not, or read differently
+	# from Python's -- before it reads it: a NUL escape makes it print a
+	# Unicode error of its own.
+	var not_strict: String = _why_not_strict_json(raw_text)
+	if not_strict != "":
+		return "R1 the reply is not JSON: %s" % not_strict
 	var reader := JSON.new()
 	# `JSON.new().parse()`, not the static parse_string: that one prints an
 	# engine error on bad input (docs/godot/reading-json-in-godot.md).
 	if reader.parse(raw_text) != OK:
 		return "R1 the reply is not JSON: %s" % reader.get_error_message()
-	var not_strict: String = _why_not_strict_json(raw_text)
-	if not_strict != "":
-		return "R1 the reply is not JSON: %s" % not_strict
 	if not (reader.data is Dictionary):
 		return "R2 the reply is JSON, but not an object"
 	var data: Dictionary = reader.data
@@ -141,14 +157,39 @@ func why_speech_is_wrong(speech: String) -> String:
 	return ""
 
 
-## True when `text` contains one of the game's secrets, whatever its case.
-## Also what `LlmConversation` asks of the instructions, before any request.
+## True when `text` contains one of the game's secrets, whatever the case
+## of its letters A to Z. Also what `LlmConversation` asks of the
+## instructions, before any request.
 func gives_away_a_secret(text: String) -> bool:
-	var lowered: String = text.to_lower()
+	var lowered: String = _ascii_lower(text)
 	for secret: String in _secrets:
-		if secret != "" and lowered.contains(secret.to_lower()):
+		if secret != "" and lowered.contains(_ascii_lower(secret)):
 			return true
 	return false
+
+
+# A to Z folded to a to z, and nothing else. String.to_lower() folds other
+# letters too, differently from Python's lower() (`İ`), and a rule the two
+# languages answer differently is two rules.
+static func _ascii_lower(text: String) -> String:
+	var folded: PackedStringArray = PackedStringArray()
+	for character: String in text:
+		var code: int = character.unicode_at(0)
+		folded.append(char(code + 32) if code >= 65 and code <= 90 else character)
+	return "".join(folded)
+
+
+# How deep objects and lists nest, in text whose strings are already emptied.
+static func _deepest(outside: String) -> int:
+	var depth: int = 0
+	var deepest: int = 0
+	for character: String in outside:
+		if character == "{" or character == "[":
+			depth += 1
+			deepest = maxi(deepest, depth)
+		elif character == "}" or character == "]":
+			depth -= 1
+	return deepest
 
 
 ## spec/llm/reply.schema.json with `intent` narrowed to this game's acts: what
@@ -212,10 +253,16 @@ func _why_shape_is_wrong(data: Dictionary) -> String:
 
 
 # What Godot's parser takes and JSON does not, measured on 4.7.2: a comma
-# before `}` or `]`, and a number spelt `01` or `1.`. Read outside strings
-# only, so a speech may say "1." and end a list with ", ]".
+# before `}` or `]`, and a number spelt `01` or `1.`; and what it reads
+# differently from Python's: a NUL escape, and nesting deep enough for one
+# of them to give up. Read outside strings, except the NUL escape, so a
+# speech may say "1." and end a list with ", ]".
 func _why_not_strict_json(text: String) -> String:
+	if _nul_escape.search(text) != null:
+		return "a NUL character"
 	var outside: String = _outside_strings(text)
+	if _deepest(outside) > MAX_DEPTH:
+		return "nested deeper than %d" % MAX_DEPTH
 	if _trailing_comma.search(outside) != null:
 		return "a comma before the end of an object or a list"
 	for found: RegExMatch in _number_like.search_all(outside):

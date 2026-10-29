@@ -65,7 +65,7 @@ request in flight and the thinking state. The rules:
 
 | code | a reply is refused when |
 |---|---|
-| R1 | the text is not JSON as a whole -- prose around an object, a code fence, a trailing comma |
+| R1 | the text is not JSON as a whole -- prose around an object, a code fence, a trailing comma -- or holds what the two languages' parsers read differently: a NUL escape, nesting deeper than 32 |
 | R2 | it is JSON, but not an object |
 | R3, R4 | a key of the shape is missing, or there is one the shape does not have |
 | R5 | a value is not a string |
@@ -73,7 +73,7 @@ request in flight and the thinking state. The rules:
 | R7 | `argument` is not empty and not one of that intent's values |
 | R8 | `speech` is empty, or longer than 280 characters |
 | R9, R10 | `speech` has a line break or control character, or markup (`<>[]*` and the backtick) |
-| R11 | `speech` contains one of the game's secrets |
+| R11 | `speech` contains one of the game's secrets, the case of A to Z ignored (only those letters: Python and Godot fold the others differently) |
 | F1 | no reply came at all: the runtime failed or timed out |
 
 The knobs that matter:
@@ -184,8 +184,9 @@ are appended from the validator, so the prompt cannot promise an act the
 rules would refuse. And the waiting: `say` returns at once, `answered`
 comes later; draw the character thinking while `is_thinking()` is true,
 and show each reply's `refusal` beside the line when it is not empty, so a
-player can see the model was overruled. Never read `raw_text`: it is the
-text nobody validated, and the gate refuses it outside the addon.
+player can see the model was overruled. Never read `raw_text`, nor
+listen to a runtime's `replied`: both are the text nobody validated, and
+the gate refuses them outside the addon. Listen to `answered`.
 
 ## Deeper {#deeper}
 

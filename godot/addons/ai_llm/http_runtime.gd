@@ -25,7 +25,13 @@ var url: String = "http://127.0.0.1:8080/v1/chat/completions"
 ## The model name the server is asked for; llama.cpp's server ignores it.
 var model: String = "local"
 
-## Seconds before a request is given up on, and `failed` says so.
+## The largest answer read, in bytes. A reply is one line of at most 280
+## characters inside a small envelope; a server sending megabytes is wrong,
+## and is refused rather than read.
+const BODY_SIZE_LIMIT: int = 65536
+
+## Seconds before a request is given up on, and `failed` says so. Read by
+## every `send`, so a change applies to the next request.
 var timeout_seconds: float = 30.0
 
 var _request: HTTPRequest = null
@@ -41,15 +47,20 @@ func _init(endpoint: String = "") -> void:
 func _ready() -> void:
 	_request = HTTPRequest.new()
 	_request.use_threads = true
-	_request.timeout = timeout_seconds
+	_request.body_size_limit = BODY_SIZE_LIMIT
 	add_child(_request)
 	_request.request_completed.connect(_on_request_completed)
 
 
+# A request in flight when the runtime leaves the tree is cancelled, and
+# says so: without `failed`, a conversation waiting on it thinks forever.
+# Deferred, so the answer never arrives inside the call that removed it.
 func _exit_tree() -> void:
 	if _request != null:
 		_request.cancel_request()
-	_in_flight = false
+	if _in_flight:
+		_in_flight = false
+		failed.emit.call_deferred("the runtime left the scene tree mid-request")
 
 
 ## Starts one request to the server. ERR_BUSY while one is in flight;
@@ -61,6 +72,7 @@ func send(messages: Array[Dictionary], schema: Dictionary) -> Error:
 	if is_busy():
 		return ERR_BUSY
 	var headers := PackedStringArray(["Content-Type: application/json"])
+	_request.timeout = timeout_seconds
 	var sent: Error = _request.request(url, headers, HTTPClient.METHOD_POST,
 		request_body(messages, schema))
 	_in_flight = sent == OK
@@ -85,10 +97,12 @@ func request_body(messages: Array[Dictionary], schema: Dictionary) -> String:
 	})
 
 
-## The model's text inside a chat-completions answer, as
-## `{"text": ..., "failure": ""}`, or `{"text": "", "failure": why}`. This is
-## the server's envelope, not the reply: the text it holds is validated next.
-static func text_of(body: String) -> Dictionary:
+# The model's text inside a chat-completions answer, as
+# `{"text": ..., "failure": ""}`, or `{"text": "", "failure": why}`. This is
+# the server's envelope, not the reply: the text it holds is validated next.
+# Private, and the gate (V2) refuses a call to it outside the addon: what it
+# returns is the text no validator has seen.
+static func _text_of(body: String) -> Dictionary:
 	var reader := JSON.new()
 	if reader.parse(body) != OK or not (reader.data is Dictionary):
 		return {"text": "", "failure": "the server's answer is not a JSON object"}
@@ -111,7 +125,7 @@ func _on_request_completed(result: int, response_code: int,
 	if response_code != 200:
 		failed.emit("the server answered HTTP %d" % response_code)
 		return
-	var answer: Dictionary = text_of(body.get_string_from_utf8())
+	var answer: Dictionary = _text_of(body.get_string_from_utf8())
 	if answer["failure"] != "":
 		failed.emit(answer["failure"])
 		return

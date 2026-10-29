@@ -75,7 +75,9 @@ be royalty never counts -- because it never reached the rules.
 
 The game runs the addon's `LlmValidator`; this page runs Python's. Each
 refusal in `spec/vectors/llm/replies.json` is refused by both with the same
-code, and `make test-llm-vectors` runs both. Making them agree found three
+code, and `make test-llm-vectors` runs both. Making them agree found
 places where Godot's JSON parser and Python's disagree -- a trailing comma,
-a number spelt `01`, and half a UTF-16 character -- each now a case
+a number spelt `01`, half a UTF-16 character, a NUL escape, nesting a
+thousand deep -- and where their lowercasing does (`İ`), so secrets are
+found folding A to Z only. Each is now a case
 (`spec/vectors/llm/README.md`).
