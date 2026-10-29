@@ -1,6 +1,6 @@
 # T101 — Utility choice as its own addon, out of `ai_teamwork`
 
-Size: M · Prereqs: T67, T70 · Files: `godot/addons/ai_utility/`, `godot/addons/ai_teamwork/`, `godot/test/ai_utility/`, `godot/test/ai_teamwork/`, `modules/ai_utility.json`, `modules/ai_teamwork.json`, `modules/botmatch.json`, `modules/infiltration.json`, `python/gameaikit/utility/`, `python/gameaikit/teamwork/`, `spec/vectors/utility/`, `spec/vectors/teamwork/`, `python/tests/`, `godot/game3d/botmatch/`, `godot/game3d/infiltration/`, `docs/techniques/`, `docs/concepts/the-literature-and-the-kit.md`, `Makefile`
+Size: M · Prereqs: T67, T70 · Files: `godot/addons/ai_utility/`, `godot/addons/ai_teamwork/`, `godot/test/ai_utility/`, `godot/test/ai_teamwork/`, `godot/test/botmatch/`, `modules/ai_utility.json`, `modules/ai_teamwork.json`, `modules/botmatch.json`, `modules/infiltration.json`, `python/gameaikit/utility/`, `python/gameaikit/teamwork/`, `spec/vectors/utility/`, `spec/vectors/teamwork/`, `python/tests/`, `godot/game3d/botmatch/`, `godot/game3d/infiltration/`, `docs/techniques/`, `docs/concepts/the-literature-and-the-kit.md`, `Makefile`
 
 ## Goal
 
@@ -36,6 +36,33 @@ and T73's table lists it.
   part becomes the game's.
 - **Its first new user**: T85's squad enemy, if it lands after this, uses
   `ai_utility` -- a third game for the technique.
+
+## What the wave decided (wave 103)
+
+- **`ActionChoice` and `ErrandChoice` moved**, with their `.uid`s (moved with
+  them, so each script keeps its uid; the import rewrote none), the
+  Python twins (`gameaikit.utility.action`, `.errands`), their 21 vectors
+  (byte for byte: `spec/vectors/utility/derive.py` is the utility half of
+  the old teamwork `derive.py`, and writes every file identical to what is
+  committed), the refusal test and the fighter example. Neither file has a
+  team word; no `ai_teamwork` class used either, so nothing had to move
+  with them and nothing is left behind.
+- **`AimChoice` stays.** Nothing in it is about a team either -- it is one
+  shooter's hit model (zones, a spread, rolls) and the zone worth most --
+  so the rule "moves only if nothing in it is about teams" does not keep
+  it here; what does is that it is not scored choice in the sense B.6
+  names. It is a shooting technique that lives in `ai_teamwork` because the
+  bot match's shooting was put there. Where it belongs is the owner's to
+  say -- a shooting addon, or T64's naming pass; this wave does not decide
+  it.
+- **`PassageChoice` stays.** Its ask is a request to a teammate, and the
+  teammate's answer (`Request`, `Prices`, `answer`) is half the class:
+  that is teamwork.
+- **`ai_teamwork`'s page needed a new minimal example**, since the fighter
+  went with `ActionChoice`: `squad_example.gd`, one flank granted by
+  `RoleArbiter`, run by `squad_example_test.gd`.
+- **One test path changed, no number**: `botmatch_test.gd` reads the bot
+  match's copied actions from `spec/vectors/utility/` now.
 
 ## Steps
 

@@ -16,6 +16,7 @@
     "ai_perception",
     "ai_search",
     "ai_teamwork",
+    "ai_utility",
     "game3d",
     "game_shared"
   ],

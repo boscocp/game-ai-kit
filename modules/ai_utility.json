@@ -1,0 +1,16 @@
+{
+  "module": "ai_utility",
+  "kind": "technique",
+  "about": "Utility choice: every action scored by its considerations through response curves, the highest taken, and errands weighed as a gain less its costs; in GDScript and Python. Moved out of ai_teamwork by T101, for nothing in it is about a team.",
+  "owns": [
+    "godot/addons/ai_utility/",
+    "godot/test/ai_utility/",
+    "spec/vectors/utility/",
+    "python/gameaikit/utility/",
+    "python/tests/test_utility_vectors.py"
+  ],
+  "depends_on": [],
+  "gates": [
+    "test-utility-vectors"
+  ]
+}

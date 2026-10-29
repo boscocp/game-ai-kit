@@ -1,6 +1,6 @@
 """Three errands a bot may leave its post for: back for rounds and health, out for a power weapon, or into hiding to heal.
 
-The tier-1 half of `godot/addons/ai_teamwork/errand_choice.gd`: each errand
+The tier-1 half of `godot/addons/ai_utility/errand_choice.gd`: each errand
 is a gain less its costs -- going back is worth the rounds spent and the
 health missing, priced by how exposed the bot is where it stands -- and the larger is taken when above zero. A team
 sends one bot to fetch, the one the weapon is worth most to.

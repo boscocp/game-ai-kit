@@ -104,7 +104,7 @@ last three columns to the repository.
 | Classical planning (STRIPS, PDDL, heuristics) | AIMA 11.1-11.3 | strategy | `ai_planning`, `python/gameaikit/pddl` | `demo-rts`, `demo-tactical` | 1 |
 | GOAP | Orkin 2006 | *F.E.A.R.* | `ai_behaviour` | `demo-behaviour`, `demo-tactical` | 0 |
 | HTN planning | AIMA 11.4; GAP1 ch. 12 | strategy, squads | `ai_behaviour` | `demo-behaviour`, `demo-rts` | 0 |
-| Utility choice (scored considerations) | AIMA ch. 16; GAP1 ch. 9; GAP3 ch. 13, 31 | *Dragon Age: Inquisition* (GAP3 ch. 31); *Guild Wars 2* (via `shooter-ai.md`) | `ai_teamwork`, `godot/addons/ai_teamwork/action_choice.gd` | `demo-botmatch`, `demo-infiltration` | 1 |
+| Utility choice (scored considerations) | AIMA ch. 16; GAP1 ch. 9; GAP3 ch. 13, 31 | *Dragon Age: Inquisition* (GAP3 ch. 31); *Guild Wars 2* (via `shooter-ai.md`) | `ai_utility`, `godot/addons/ai_utility/action_choice.gd` | `demo-botmatch`, `demo-infiltration` | 1 |
 | Fuzzy logic | Millington ch. 5 (via `stealth.md`) | suspicion, soft thresholds | `ai_fuzzy`, `godot/game3d/infiltration/fuzzy_from_data.gd` | `demo-stealth`, `demo-infiltration` | 0 |
 
 ### Space, perception and teams
@@ -298,10 +298,12 @@ owner answered; B.1 was done in T70; B.3, B.4 and B.5 are not tasks.)*
    What a shared interface would show: whether the combining rule is the
    only difference, so that one map with a pluggable rule serves a
    strategic and a tactical game [Mark 2015].
-6. **Utility choice as its own addon.** `ActionChoice` and `ErrandChoice`
-   live in `ai_teamwork`, though nothing in them is about teams, and the
-   bot match and the infiltration guards both use them. Moving them out
-   would let a game take utility choice without taking teamwork.
+6. **Utility choice as its own addon** -- done in T101 (wave 103).
+   `ActionChoice` and `ErrandChoice` lived in `ai_teamwork`, though
+   nothing in them is about teams, and the bot match and the infiltration
+   guards both use them. They are `ai_utility` now, with their Python
+   twins and vectors, unchanged, so a game takes utility choice without
+   taking teamwork.
 
 ### A new game, or the ones there are?
 

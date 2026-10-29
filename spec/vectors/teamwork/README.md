@@ -13,7 +13,7 @@ teaches: none
 > same answers.
 
 `ai_teamwork` (GDScript) and `gameaikit.teamwork` (Python) implement the
-same eight things T51's, T66's and T67's bot match decides with. Each vector is one `.json`
+same eight things T51's and T66's bot match and T70's guards decide with. Each vector is one `.json`
 file: a query and the answer it must get. Both sides answer it and check
 every value against the file, never against each other: `make test-vectors`
 on the GDScript side, `make test-python` on the Python side.
@@ -29,18 +29,14 @@ so it catches a slip in transcribing them, not a choice that is wrong.
 Every comparison in the four techniques was flipped once (`<` for `<=`
 and back), in both languages, and each flip fails a vector -- but one: the
 influence radius, where a cell exactly at `radius` takes `strength x 0`
-either way, so no vector can tell the two apart. `ActionChoice` (T67)
-was asked the same: its step's `>=`, the choice's strict `>` and its floor
-of zero, both ends of the line's clamp and the 0 an absent percept counts
-as -- each changed once in GDScript and once in Python, and each change
-failed a vector. So was `ErrandChoice`: the fetcher's strict `>`, the
-three comparisons of the choice, and each of the weighing's branches --
-the earned weapon, the empty bot, attacking, a weapon not there. T68's
-additions were asked the same in the Python twin: the choice of three's
-`>=` and its floor of zero, and the hiding query's SEEN condition removed
--- each fails a vector. So, after the review, do dropping `health_worth`
-or the exposure from either gain: a vector weighs health at 0.5, and one
-is the review's case, a hurt bot nobody sees, which stays.
+either way, so no vector can tell the two apart. T68's hiding query was
+asked the same in the Python twin: its SEEN condition removed fails a
+vector.
+
+`ActionChoice` and `ErrandChoice` were vectors here until T101 moved them,
+unchanged, to `ai_utility`: they are in
+[`spec/vectors/utility/`](../utility/README.md) with the mutations they
+were asked.
 
     python3 spec/vectors/teamwork/derive.py spec/vectors/teamwork
 
@@ -68,10 +64,8 @@ that must agree bit for bit would need rounded costs.
 | `confidence` | facts over time, a squad's members, phases | each confidence, the states with and without retreat, the waves |
 | `passage` | a blocked bot's facts, and requests to a teammate with its prices | each way's cost in seconds (null: impossible) and the way taken; each request's cost to the teammate and whether it is granted |
 | `aim` | a spread, a target's zones (multiplier, aim point, rectangles, exposure), rolls | each zone's own chance and worth aimed at, the zone aimed at, the chances from it, where each roll lands |
-| `errands` | the weights; facts for going back, for fetching and for hiding to heal (T68); each team's fetching scores; pairs -- or triples, with hiding -- of scores | each weighing as [gain, walk, cost, score], hiding's walk the seconds away; whom each team sends (-1: nobody); each pair's errand ("": none) |
-| `action` | actions as plain data (weight, considerations with their curves), records of percepts | for each record, every action's score, every consideration's answer, and the action taken (-1: none) |
 
-## The forty-eight
+## The thirty-two
 
 | file | what it pins |
 |---|---|
@@ -107,22 +101,6 @@ that must agree bit for bit would need rounded costs.
 | `nothing-possible-waits` | every way impossible: the bot waits |
 | `equal-ways-go-to-the-first` | of two ways tied, the first in the order |
 | `a-teammate-weighs-the-request` | the teammate's cost, a fight's high price, a saving that must be larger, and the two limits |
-| `the-best-reason-wins` | loaded, shoot; empty, a veto on shooting and reload; nothing to do, hold |
-| `one-zero-vetoes-the-rest` | one answer of 0 makes the product 0 whatever the others say |
-| `a-step-on-its-threshold-is-above` | a percept exactly on a step's `at` answers `above`: the comparison is `>=` |
-| `a-line-is-clamped-at-both-ends` | a line below 0 answers 0, above 1 answers 1 |
-| `equal-scores-take-the-first` | of two actions tied, the first listed is taken |
-| `nothing-above-zero-chooses-nothing` | every action vetoed: -1, not the first of zeros |
-| `an-absent-percept-is-nothing` | a percept not given counts as 0 |
-| `the-bot-match-weighs-its-actions` | the match's own six actions (a copy of `actions.json`) on five moments of a fight |
-| `the-bot-match-weighs-its-pace` | the match's walk-or-sprint: far, a tie on the threshold, danger, an enemy's veto, not moving |
-| `the-bot-match-weighs-its-posture` | the match's stand-or-crouch, the same technique: idle, at low cover, reloading, shooting over cover, walking |
-| `back-for-rounds-when-spent-and-near` | spent and near its base it goes back; full, the same walk is not worth it |
-| `an-empty-bot-has-no-post-to-leave` | with no round left, leaving its post costs nothing |
-| `the-streak-earns-the-power-weapon-at-home` | a full bot whose kills earned the power weapon goes back for it |
-| `fetch-unless-far-guarded-or-gone` | the walk and each enemy near the weapon cost; a weapon not there is worth nothing |
-| `the-team-sends-the-one-it-is-worth-most-to` | the first of the highest, and nobody when none is above zero |
-| `going-back-wins-a-tie-and-zero-is-no-errand` | back on a tie; a score of exactly 0 is no errand |
 
 JSON has no infinity: in the passage vectors an impossible way, a detour
 or a spot that does not exist, and a saving with no bound are `null`, and

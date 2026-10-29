@@ -13,12 +13,13 @@ answers.
     confidence.py   attack, hold or retreat, and the retreat in waves
     aim.py          where on a body to aim, by the damage a shot is worth
     passage.py      how to get past a body: wait, go round, ask, or another spot
-    action.py       what to do now: every action scored by its considerations
-    errands.py      back for rounds or out for a power weapon, each a gain less its costs
     search.py       spots divided among searchers, and a cap on the last known position
     roles.py        shooter or flanker once a fight starts, one flanker at most
+
+What one bot does now, and the errands it leaves its post for, are
+the Python half of `ai_utility` (T101): nothing in them is about a team.
 """
 
-from . import action, aim, commander, confidence, errands, influence, passage, positions, roles, search
+from . import aim, commander, confidence, influence, passage, positions, roles, search
 
-__all__ = ["action", "aim", "commander", "confidence", "errands", "influence", "passage", "positions", "roles", "search"]
+__all__ = ["aim", "commander", "confidence", "influence", "passage", "positions", "roles", "search"]

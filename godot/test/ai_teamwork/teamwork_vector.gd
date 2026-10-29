@@ -10,7 +10,7 @@ extends RefCounted
 ## Shared with `python/tests/test_teamwork_vectors.py`; sized for `Vector2`'s
 ## 32-bit floats.
 const TOLERANCE: float = 1e-4
-const KINDS: Array[String] = ["positions", "influence", "commander", "confidence", "aim", "passage", "action", "errands", "search", "roles"]
+const KINDS: Array[String] = ["positions", "influence", "commander", "confidence", "aim", "passage", "search", "roles"]
 
 
 ## Why `vector` is not a teamwork vector, or "" when it is one.
@@ -46,10 +46,6 @@ static func answer_to(vector: Dictionary) -> Dictionary:
 			return _aim(vector)
 		"passage":
 			return _passage(vector)
-		"action":
-			return _action(vector)
-		"errands":
-			return _errands(vector)
 		"search":
 			return _search(vector)
 		"roles":
@@ -224,19 +220,6 @@ static func _passage(vector: Dictionary) -> Dictionary:
 	return {"costs": costs, "chosen": chosen, "answers": answers}
 
 
-static func _action(vector: Dictionary) -> Dictionary:
-	var actions: Array[ActionChoice.Action] = ActionChoice.actions_from(vector["query"]["actions"])
-	var scores: Array = []
-	var answers: Array = []
-	var chosen: Array = []
-	for percepts: Dictionary in vector["query"]["percepts"]:
-		var choice: ActionChoice.Choice = ActionChoice.choose(actions, percepts)
-		scores.append(Array(choice.scores))
-		answers.append(choice.answers.map(func(found: PackedFloat64Array) -> Array: return Array(found)))
-		chosen.append(choice.chosen)
-	return {"scores": scores, "answers": answers, "chosen": chosen}
-
-
 static func _search(vector: Dictionary) -> Dictionary:
 	var weights := SearchCoordinator.Weights.new()
 	weights.worth = float(vector["weights"]["worth"])
@@ -259,37 +242,6 @@ static func _roles(vector: Dictionary) -> Dictionary:
 	for request: Dictionary in query["requests"]:
 		requests.append(request)
 	return {"granted": Array(RoleArbiter.grant(requests, bool(query["use_arbiter"]), int(query["max_flankers"])))}
-
-
-static func _errands(vector: Dictionary) -> Dictionary:
-	var weights := ErrandChoice.Weights.new()
-	for key: String in vector["weights"]:
-		weights.set(key, float(vector["weights"][key]))
-	var query: Dictionary = vector["query"]
-	var back: Array = []
-	for fields: Dictionary in query["resupply"]:
-		var facts := ErrandChoice.Resupply.new()
-		for key: String in fields:
-			facts.set(key, fields[key])
-		back.append(Array(ErrandChoice.weigh_resupply(facts, weights)))
-	var out: Array = []
-	for fields: Dictionary in query["fetch"]:
-		var facts := ErrandChoice.Fetch.new()
-		for key: String in fields:
-			facts.set(key, int(fields[key]) if key == "enemies_near" else fields[key])
-		out.append(Array(ErrandChoice.weigh_fetch(facts, weights)))
-	var hidden: Array = []
-	for fields: Dictionary in query["hide"]:
-		var facts := ErrandChoice.Hide.new()
-		for key: String in fields:
-			facts.set(key, fields[key])
-		hidden.append(Array(ErrandChoice.weigh_hide(facts, weights)))
-	var sent: Array = (query["teams"] as Array).map(func(scores: Array) -> int:
-		return ErrandChoice.fetcher(PackedFloat64Array(scores)))
-	# A pair is [back, fetch], or [back, fetch, hide].
-	var chosen: Array = (query["pairs"] as Array).map(func(pair: Array) -> String:
-		return ErrandChoice.choose(float(pair[0]), float(pair[1]), float(pair[2]) if pair.size() > 2 else 0.0))
-	return {"resupply": back, "fetch": out, "hide": hidden, "fetcher": sent, "chosen": chosen}
 
 
 static func _states(values: Array, thresholds: SquadConfidence.Thresholds, may_retreat: bool) -> Array:
