@@ -2,7 +2,7 @@
 
 Each case is a maze state with its value, the four moves' Q-values and the
 best move, from `derive.py`'s own value iteration. The published values
-and policy in `data/maze/` must agree, and so must a one-step lookahead
+and policy in `godot/game/maze/` must agree, and so must a one-step lookahead
 over the published values -- what Godot computes beside Pac-Man. The other
 half is `make test-mdp-vectors`, the same file against Godot's reader.
 `mdp.json`'s copies are held to `spec/maze/` byte for byte here too.

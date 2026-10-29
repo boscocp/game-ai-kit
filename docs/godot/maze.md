@@ -150,10 +150,10 @@ model.
   in pure Python. Policy iteration finds the same values (within 0.0001)
   in 22 improvements but 1,233 sweeps, 21.6 s; the 2,109 states where the
   two choose differently are all exact ties.
-- **Published** to `data/maze/`: `values.json`, each state's value in
+- **Published** to `godot/game/maze/`, beside the game, so an export carries it: `values.json`, each state's value in
   thousandths, and `policy.json`, its move as a letter, both laid out so
   that a state's place is arithmetic (`spec/maze/mdp.json`'s "about").
-  `MdpPacMan` reads them from `res://../data/maze`, beside the project, and
+  `MdpPacMan` reads them from `res://game/maze` and
   looks up; N15 in `check_no_training.py` solves again and fails if they
   differ, and refuses any GDScript that writes them.
 - **How it plays**, `PYTHONPATH=python python3 -m gameaikit.mdp.measure`,
@@ -187,12 +187,9 @@ games and its move is always the lookahead's best.
 
 ## Decisions for the owner
 
-- **Where the policy lives.** As the task says, `data/maze/`, outside the
-  Godot project. The checkout reads it, as the fighting game's recordings
-  are found; an exported executable would not carry it, and C then does
-  nothing. Moving the two files into `godot/game/maze/`, as the checkers
-  weights are, would ship them, at about 1.2 MB.
-
+- **Where the policy lives** -- decided (owner, 2026-10-29): beside the
+  game, in `godot/game/maze/`, as the checkers weights are, so an export
+  carries it. The task had said `data/maze/`, outside the project.
 - **Frightened mode** is not in the game, since four plain pellets have no
   energizer. Adding one energizer would bring in the Dossier's random turns
   and a third mode, and multiply T98's states.

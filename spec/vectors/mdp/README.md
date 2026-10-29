@@ -14,7 +14,7 @@ teaches: none
 
 T98 solves the maze as a Markov decision process in Python
 (`gameaikit.mdp`) and publishes the values and the policy to
-`data/maze/`, which Godot only reads (invariant 6). These vectors hold
+`godot/game/maze/`, which Godot only reads (invariant 6). These vectors hold
 both ends to a third reading of the same rules.
 
 `ten-states.json` holds a `tolerance` and ten `cases`. Each case is:

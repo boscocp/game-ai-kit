@@ -3,9 +3,10 @@
 T98: the maze solved as a Markov decision process in Python, in the
 owner's stationary regime (Blinky alone, chasing for ever); value
 iteration and policy iteration, the policy and values published to
-`data/maze/`, `MdpPacMan` looking them up in Godot, C in `make demo-maze`
-handing Pac-Man to the policy with the value map and each move's Q drawn,
-and N15 in `check_no_training.py`.
+`data/maze/` at review (since moved into `godot/game/maze/`), `MdpPacMan`
+looking them up in Godot, C in `make demo-maze` handing Pac-Man to the
+policy with the value map and each move's Q drawn, and N15 in
+`check_no_training.py`.
 
 A fresh context reviewed PR #48 at head 0278f70.
 
@@ -20,7 +21,7 @@ The diff against main:
   `measure`), its tests and `spec/maze/mdp.json` with its two copies;
 - the schedule added to `rules.mode_at`, `MazeRules.mode_at` and both
   games;
-- `data/maze/`, `make solve-maze`, and N15 with its self-test;
+- the published tables, `make solve-maze`, and N15 with its self-test;
 - `spec/vectors/mdp/`, its `derive.py` and README, and both runners;
 - `MdpPacMan`, `MazeGhost.chances`, the demo's C mode, `MazeView`'s heat
   map and lookahead, `MazePanel`'s lines, the pt-BR table;
@@ -113,8 +114,8 @@ The diff against main:
    docstring says what is still not held: an update through a renamed
    copy of the table.
 3. `MazeDemo.hand_over`: with no published tables, C leaves your game as
-   it is and the status line says "C: no MDP policy in data/maze -- run
-   make solve-maze first" (en and pt-BR) until the next key; a suite test
+   it is and the status line says "C: no MDP policy published -- run make solve-maze
+   first" (en and pt-BR) until the next key; a suite test
    holds it. `MdpPacMan` remembers a failed read and does not try again.
 4. The nits:
    - "82,160 that the rules allow, 80,288 reachable from the start", in
@@ -142,10 +143,13 @@ killed; the three game-time update plants survived -- S2.
 
 ## Decisions for the owner, with the reviewer's opinion
 
-- **Where the policy lives**: `data/maze/` is outside the Godot project,
-  so an export does not carry it. The reviewer's opinion: move the two
-  files into `godot/game/maze/`, as the checkers weights are. Asked of
-  the owner; not yet answered.
+- **Where the policy lives**: `data/maze/` was outside the Godot project,
+  so an export did not carry it. The reviewer's opinion: move the two
+  files into `godot/game/maze/`, as the checkers weights are. **Decided by
+  the owner (2026-10-29): moved.** `make solve-maze` writes there,
+  `MdpPacMan` reads `res://game/maze`, N15's folder is the maze game's,
+  and `measure.py` reads the same files; the task file notes the decision
+  over its "data/maze/".
 - **The policy-iteration comparison** -- fewer improvements, more work,
   measured and said: fair.
 - **No technique page** -- the MDP is Python and a lookup inside the maze

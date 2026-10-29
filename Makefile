@@ -294,10 +294,10 @@ train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
 
 .PHONY: solve-maze
-solve-maze: ## Solve the maze's MDP by value iteration and publish its values and policy to data/maze (T98)
+solve-maze: ## Solve the maze's MDP by value iteration and publish its values and policy to the maze game (T98)
 	@# A few seconds, deterministic: N15 in lint-no-training solves again and
 	@# fails if the committed files are not what this writes.
-	@PYTHONPATH=python $(PYTHON) -m gameaikit.mdp.publish --write $(CURDIR)/data/maze
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.mdp.publish --write $(CURDIR)/godot/game/maze
 
 .PHONY: test-vectors
 test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors test-llm-vectors test-maze-vectors test-mdp-vectors ## Every conformance vector in spec/
@@ -407,7 +407,7 @@ test-maze-vectors: import ## The maze vectors: a seed and Pac-Man's moves, every
 		-- $(CURDIR)/spec/vectors/maze
 
 .PHONY: test-mdp-vectors
-test-mdp-vectors: import ## Ten maze states' values and best moves, against the policy Godot reads from data/maze (T98)
+test-mdp-vectors: import ## Ten maze states' values and best moves, against the policy the maze game reads (T98)
 	@# The other half is `make test-python`; the answers came from neither,
 	@# from spec/vectors/mdp/derive.py's own value iteration.
 	@$(GODOT) --headless --path godot -s res://test/maze/mdp_vectors_runner.gd \

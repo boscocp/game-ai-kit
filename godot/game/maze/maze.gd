@@ -239,7 +239,7 @@ func _refresh() -> void:
 	var overlay: Dictionary = decision_overlay()
 	_status.text = MazePanel.status(overlay, paused, started, view_on, two_ghosts, mdp_playing)
 	if _no_policy:
-		_status.text = tr("C: no MDP policy in data/maze -- run make solve-maze first") + "\n" + _status.text
+		_status.text = tr("C: no MDP policy published -- run make solve-maze first") + "\n" + _status.text
 	_panel.text = MazePanel.describe(overlay)
 
 

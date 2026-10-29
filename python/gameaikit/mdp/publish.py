@@ -1,6 +1,6 @@
 """Solve the maze by value iteration and write what Godot plays by.
 
-    PYTHONPATH=python python3 -m gameaikit.mdp.publish --write data/maze
+    PYTHONPATH=python python3 -m gameaikit.mdp.publish --write godot/game/maze
 
 Two files, both laid out by `maze.index`, one line per (Pac-Man's cell,
 Blinky's cell, Blinky's heading) and sixteen slots on it, one per set of

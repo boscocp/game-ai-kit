@@ -1,6 +1,6 @@
 # T98 — Value iteration plays the maze: an MDP solved in Python, its policy shipped
 
-Size: M · Prereqs: T97 · Files: `python/gameaikit/mdp/`, `python/tests/`, `spec/vectors/mdp/`, `data/maze/`, `godot/game/maze/`, `godot/test/maze/`, `modules/maze.json`, `scripts/check_no_training.py`, `docs/concepts/`, `docs/techniques/`, `Makefile`
+Size: M · Prereqs: T97 · Files: `python/gameaikit/mdp/`, `python/tests/`, `spec/vectors/mdp/`, `godot/game/maze/`, `godot/test/maze/`, `modules/maze.json`, `scripts/check_no_training.py`, `docs/concepts/`, `docs/techniques/`, `Makefile`
 
 ## Goal
 
@@ -64,6 +64,12 @@ owner chose the maze: a game people know, with an opponent in it.
   matches it), and no GDScript writes where it lives. Planted: a policy
   edited by hand, and a GDScript that writes one. Q-learning or any update
   at game time is refused by ADR 0016's amendment of 2026-10-26.
+- **Where the tables live -- decided (owner, 2026-10-29), overriding
+  `data/maze/` above.** The review found that `data/maze/` is outside the
+  Godot project, so an exported game would not carry the policy. The two
+  files live beside the game, in `godot/game/maze/` (`values.json`,
+  `policy.json`), as the checkers weights do; `make solve-maze` writes
+  them there and N15 holds them there.
 - **Policy iteration too**, in Python only, as the comparison AIMA draws:
   the same policy, fewer sweeps, more work per sweep -- measured.
 

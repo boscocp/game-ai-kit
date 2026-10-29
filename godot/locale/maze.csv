@@ -57,4 +57,4 @@ averaged over the ways Blinky may take,na média dos caminhos que o Blinky pode 
 P: pause  ·  space: one step  ·  R: again,P: pausa  ·  espaço: um passo  ·  R: de novo
 C: you play,C: você joga
 C: the MDP plays,C: o MDP joga
-C: no MDP policy in data/maze -- run make solve-maze first,C: não há política do MDP em data/maze -- rode make solve-maze antes
+C: no MDP policy published -- run make solve-maze first,C: nenhuma política do MDP publicada -- rode make solve-maze antes

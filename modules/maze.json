@@ -16,8 +16,7 @@
     "python/tests/test_maze.py",
     "python/tests/test_maze_vectors.py",
     "python/tests/test_mdp.py",
-    "python/tests/test_mdp_vectors.py",
-    "data/maze/"
+    "python/tests/test_mdp_vectors.py"
   ],
   "depends_on": [
     "game_shared"

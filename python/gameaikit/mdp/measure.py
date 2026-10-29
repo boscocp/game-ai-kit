@@ -38,7 +38,7 @@ from gameaikit.maze import game, rules
 from gameaikit.mdp import maze, publish, solve
 
 REPOSITORY = pathlib.Path(__file__).resolve().parents[3]
-PUBLISHED = REPOSITORY / "data" / "maze"
+PUBLISHED = REPOSITORY / "godot" / "game" / "maze"
 STEP_LIMIT = 400
 EPISODES = 1000
 WORDS = {letter: word for word, letter in publish.LETTERS.items()}

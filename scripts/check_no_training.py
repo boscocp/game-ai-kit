@@ -49,7 +49,7 @@ stops. This gate is four claims about that split:
     would outlive the fight -- what ADR 0016 allows the n-gram only because
     its table starts empty and is never kept;
   * N15 the maze's MDP (T98): the published values and policy in
-    `data/maze/` are what `gameaikit.mdp.publish` solves from the committed
+    `godot/game/maze/` are what `gameaikit.mdp.publish` solves from the committed
     rules, a fresh run writing the same bytes; and no GDScript writes a
     file where they live -- by their folder, their file names or
     `MdpPacMan`'s constants -- nor any file from inside the maze game; and
@@ -161,12 +161,12 @@ TABLE_HOLDERS_RE = re.compile(r"\b(?:NGramPredictor|FightModelOpponent)\b")
 CHECKERS_NAMES_RE = re.compile(r"checkers_weights|CheckersWeights|game/checkers/")
 
 # The maze's MDP (T98): Python solves it and publishes two tables to
-# `data/maze/`, beside the project, and `MdpPacMan` reads them. A line names
+# the maze game's folder, where `MdpPacMan` reads them. A line names
 # them by the folder, a file name or one of the reader's constants; and any
 # file written from the maze game's own folder is one too many, since the
 # game writes none.
 MAZE_GAME = GODOT / "game" / "maze"
-MDP_FOLDER = pathlib.Path("data") / "maze"
+MDP_FOLDER = MAZE_GAME
 MDP_FILES = ("values.json", "policy.json")
 MDP_SOLVER = "gameaikit.mdp.publish"
 # Writing into the tables `MdpPacMan` read: by assignment or by a call that
@@ -182,7 +182,7 @@ FUNC_NAME_RE = re.compile(r"^(?:static\s+)?func\s+(\w+)")
 # `var ways: Array[Dictionary] = [...] as Array[Dictionary]` has the shape
 # of a read-back and is a type written twice.
 DECLARATION_RE = re.compile(r"^\s*(?:static\s+)?(?:var|const)\s")
-MDP_NAMES_RE = re.compile(r"data/maze|MdpPacMan\.|PUBLISHED_FOLDER|VALUES_FILE|POLICY_FILE"
+MDP_NAMES_RE = re.compile(r"game/maze/|data/maze|MdpPacMan\.|PUBLISHED_FOLDER|VALUES_FILE|POLICY_FILE"
                           r"|\b(?:values|policy)\.json\b")
 
 # Writing a bead count. This rule is a net for the common spellings; the
@@ -1310,11 +1310,14 @@ def self_test() -> int:
             sound, **{str(GODOT / "game" / "pac.gd"):
                       "var mdp := MdpPacMan.new()\nfunc play() -> void:\n\tMdpPacMan._letters = \"\"\n"}))),
             1, "N15")
+        # The tables sit in the maze game's folder, so a planted maze game
+        # that should pass carries a sound pair of them.
+        tables = {str(MDP_FOLDER / name): text for name, text in zip(MDP_FILES, SOUND_MDP)}
         expect("a typed declaration in the maze game is not a read-back", quiet(build(root, "mazedeclares", dict(
-            sound, **{str(MAZE_GAME / "maze_ghost.gd"):
+            sound, **tables, **{str(MAZE_GAME / "maze_ghost.gd"):
                       "\tvar open_ways: Array[Dictionary] = [_way(back, goal)] as Array[Dictionary]\n"}))), 3)
         expect("the MDP's tables read in by their loader", quiet(build(root, "mdploads", dict(
-            sound, **{reader: "static func _load_tables() -> void:\n\t_values.append(1.0)\n"
+            sound, **tables, **{reader: "static func _load_tables() -> void:\n\t_values.append(1.0)\n"
                               "\t_letters = \"r\"\n"}))), 3)
         expect("counting in the opponent addon", quiet(build(root, "opponentcounts", dict(
             sound, **{str(OPPONENT_ADDON / "ngram_predictor.gd"):

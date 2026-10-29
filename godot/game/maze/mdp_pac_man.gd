@@ -3,7 +3,7 @@
 ##
 ## `gameaikit.mdp` (T98) solved the maze as a Markov decision process -- a
 ## state is Pac-Man's cell, Blinky's cell and heading, and the pellets left;
-## Blinky's next move is the chance -- and wrote two tables to `data/maze/`:
+## Blinky's next move is the chance -- and wrote two tables beside this file:
 ## each state's value and its best move. This reads both and does
 ## arithmetic on the index (`mdp.json`'s "about" gives the layout). It is
 ## the shape of every learned thing in the kit (invariant 6): Python solves
@@ -27,8 +27,9 @@ class_name MdpPacMan
 extends RefCounted
 
 const MDP_FILE: String = "res://game/maze/mdp.json"
-## Where Python publishes, beside the project: `res://../data/maze`.
-const PUBLISHED_FOLDER: String = "../data/maze"
+## Where Python publishes: beside this file, so an export carries the
+## tables, as it carries the checkers weights (the owner, 2026-10-29).
+const PUBLISHED_FOLDER: String = "res://game/maze"
 const VALUES_FILE: String = "values.json"
 const POLICY_FILE: String = "policy.json"
 ## The policy's letters, as the published file writes a move.
@@ -169,9 +170,8 @@ static func value_map(game: MazeGame) -> Dictionary:
 static func _load_tables() -> void:
 	if not _letters.is_empty() or _unreadable:
 		return
-	var folder: String = ProjectSettings.globalize_path("res://").path_join(PUBLISHED_FOLDER).simplify_path()
-	var values: Dictionary = _read(folder.path_join(VALUES_FILE))
-	var policy: Dictionary = _read(folder.path_join(POLICY_FILE))
+	var values: Dictionary = _read(PUBLISHED_FOLDER.path_join(VALUES_FILE))
+	var policy: Dictionary = _read(PUBLISHED_FOLDER.path_join(POLICY_FILE))
 	if values.is_empty() or policy.is_empty():
 		_unreadable = true
 		return

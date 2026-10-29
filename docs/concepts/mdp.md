@@ -103,7 +103,7 @@ dozen steps long.
 Solving is a batch job, a few seconds on a desk; looking up is one
 array index. The kit's rule (invariant 6) is that the batch job runs in
 Python and the game only reads what it wrote: `make solve-maze` writes
-`data/maze/values.json` and `policy.json`, `MdpPacMan` in
+`values.json` and `policy.json` beside the maze game, `MdpPacMan` in
 `godot/game/maze/` reads them, and `check_no_training.py`'s N15 solves
 again and fails if the committed files are not what comes out. The
 values Godot draws beside Pac-Man -- each move's Q -- are a one-step
