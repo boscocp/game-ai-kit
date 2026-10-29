@@ -20,7 +20,8 @@ a bot stands and keeps two from claiming one spot, `RoleArbiter` lets one
 bot flank while the others shoot, `SearchCoordinator` splits the places to
 search, `SquadConfidence` says when to attack, hold or retreat, and
 `AimChoice` and `PassageChoice` weigh where to aim and how to get past a
-teammate. Each keeps its numbers, so a view can show why. What one bot does
+body in the way -- wait, go round, ask a teammate to step aside, or take
+another spot. Each keeps its numbers, so a view can show why. What one bot does
 now, and the errands it leaves its post for, are not here: since T101 they
 are [`ai_utility`](ai_utility.md), for nothing in them is about a team. The
 sources: the *Game AI Pro* chapters each class names.

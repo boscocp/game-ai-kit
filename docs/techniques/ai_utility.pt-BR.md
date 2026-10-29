@@ -6,8 +6,8 @@ verified_on: 2026-10-29
 tier: 2
 source: https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter09_An_Introduction_to_Utility_Theory.pdf ; https://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter13_Choosing_Effective_Utility-Based_Considerations.pdf
 invalidated_if: the kit's ActionChoice or ErrandChoice signatures change, or the demos that use them are renamed
-teaches: ways-to-decide
-translation_of: f1d8b8db49bd6377ced59ca63a652fc5dae76b4c25f4f60db8501a3d24d1a5aa
+teaches: shooter-ai
+translation_of: 62a5affaea190aad6d292451efd38b4c098ff55492d279931449974f44920bd3
 -->
 
 > English: [ai_utility.md](ai_utility.md). Os termos que ficam em inglês
@@ -43,9 +43,10 @@ só: um `if` diz o mesmo com menos a explicar.
 ## Onde ver funcionando {#watch}
 
 - `make demo-botmatch` -- seis contra seis. **Tab** observa o próximo *bot*,
-  e **V** mostra as notas da IA: cada ação, postura e ritmo que ele pesou,
-  cada um com a sua nota, o escolhido marcado. **T** assume o *bot*
-  observado.
+  e o painel lista cada ação, postura e ritmo que ele pesou, cada um com a
+  sua nota, o escolhido marcado, e cada saída do posto como o seu ganho
+  menos os seus custos. **T** assume o *bot* observado, e **V** mostra o
+  painel enquanto você joga.
 - `make demo-infiltration` -- os guardas escolhem pelo `ActionChoice` a
   partir de `guard_actions.json`; **Tab** observa o próximo guarda, e o
   painel lista cada ação que ele poderia fazer com a sua nota, a escolhida
@@ -147,10 +148,12 @@ seus `Weights` são os preços do seu jogo.
 
 ## Para ir mais fundo {#deeper}
 
-- Como se faz a IA de jogos de tiro, e por que uma escolha por *utility*
-  substituiu uma lista de prioridades na partida de *bots* (em inglês):
-  [concepts/shooter-ai.md](../concepts/shooter-ai.md).
-- As outras quatro maneiras de decidir, e quando cada uma é a certa (em
-  inglês): [concepts/ways-to-decide.md](../concepts/ways-to-decide.md).
+- Por que uma escolha por *utility* substituiu uma lista de prioridades
+  na partida de *bots*, e de onde vem a sua forma (em inglês):
+  [concepts/shooter-ai.md, o *bot* como agente](../concepts/shooter-ai.md#the-bot-as-an-agent-percepts-and-a-weighed-choice-t67).
+- As quatro maneiras de decidir que este kit comparou antes da *utility* --
+  uma máquina de estados, uma *behaviour tree*, GOAP e uma HTN -- e quando
+  cada uma é a certa (em inglês):
+  [concepts/ways-to-decide.md](../concepts/ways-to-decide.md).
 - Um time que divide o trabalho, o *addon* de onde este saiu:
   [ai_teamwork.pt-BR.md](ai_teamwork.pt-BR.md).

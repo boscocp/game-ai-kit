@@ -6,7 +6,7 @@ verified_on: 2026-10-29
 tier: 2
 source: https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter09_An_Introduction_to_Utility_Theory.pdf ; https://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter13_Choosing_Effective_Utility-Based_Considerations.pdf
 invalidated_if: the kit's ActionChoice or ErrandChoice signatures change, or the demos that use them are renamed
-teaches: ways-to-decide
+teaches: shooter-ai
 -->
 
 > Português: [ai_utility.pt-BR.md](ai_utility.pt-BR.md). The words that
@@ -40,9 +40,10 @@ reason: an `if` says the same with less to explain.
 ## Where to watch it {#watch}
 
 - `make demo-botmatch` -- six against six. **Tab** watches the next bot,
-  and **V** shows the AI's scores: every action, posture and pace it
-  weighed, each with its score, the one taken marked. **T** takes the
-  watched bot over.
+  and the panel lists every action, posture and pace it weighed, each with
+  its score, the one taken marked, and each errand as its gain less its
+  costs. **T** takes the watched bot over, and **V** shows the panel while
+  you play.
 - `make demo-infiltration` -- the guards choose by `ActionChoice` from
   `guard_actions.json`; **Tab** watches the next guard, and the panel
   lists every action it could take with its score, the one taken marked.
@@ -142,9 +143,11 @@ you fill with numbers -- and its `Weights` are your game's prices.
 
 ## Deeper {#deeper}
 
-- How shooter AI is made, and why a utility choice replaced a priority
-  list in the bot match: [concepts/shooter-ai.md](../concepts/shooter-ai.md).
-- The four other ways to decide, and when each is right:
+- Why a utility choice replaced a priority list in the bot match, and
+  where its form comes from:
+  [concepts/shooter-ai.md, the bot as an agent](../concepts/shooter-ai.md#the-bot-as-an-agent-percepts-and-a-weighed-choice-t67).
+- The four ways to decide this kit compared before utility -- a state
+  machine, a behaviour tree, GOAP and an HTN -- and when each is right:
   [concepts/ways-to-decide.md](../concepts/ways-to-decide.md).
 - A team that shares the work, the addon this one came out of:
   [ai_teamwork.md](ai_teamwork.md).

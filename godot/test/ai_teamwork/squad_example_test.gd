@@ -16,8 +16,8 @@ func _squad() -> Node:
 	return example
 
 
-func _fighter(name: String, wants_to_flank: bool, flank_score: float, can_shoot: bool = true) -> Dictionary:
-	return {"name": name, "wants_to_flank": wants_to_flank, "flank_score": flank_score, "can_shoot": can_shoot}
+func _fighter(fighter_name: String, wants_to_flank: bool, flank_score: float, can_shoot: bool = true) -> Dictionary:
+	return {"name": fighter_name, "wants_to_flank": wants_to_flank, "flank_score": flank_score, "can_shoot": can_shoot}
 
 
 func test_one_flanker_and_the_rest_shoot() -> void:

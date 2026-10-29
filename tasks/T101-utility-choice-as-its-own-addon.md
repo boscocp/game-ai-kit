@@ -54,7 +54,7 @@ and T73's table lists it.
   names. It is a shooting technique that lives in `ai_teamwork` because the
   bot match's shooting was put there. Where it belongs is the owner's to
   say -- a shooting addon, or T64's naming pass; this wave does not decide
-  it.
+  it. T64's task file records it as open (the review's nit).
 - **`PassageChoice` stays.** Its ask is a request to a teammate, and the
   teammate's answer (`Request`, `Prices`, `answer`) is half the class:
   that is teamwork.

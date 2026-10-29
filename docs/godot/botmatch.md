@@ -64,9 +64,9 @@ And each bot weighs, rather than follows a rule:
   teammate, or take another spot, each priced in seconds; a teammate
   asked weighs what moving costs it against what it saves the asker (the
   owner's design);
-- **its errands** (`ErrandChoice`, T67): go back for rounds, or fetch the
+- **its errands** (`ErrandChoice` in `ai_utility`, T67): go back for rounds, or fetch the
   power weapon, each a gain less its costs;
-- **what to do now** (`ActionChoice`, T67): reload, fall back, shoot, move,
+- **what to do now** (`ActionChoice` in `ai_utility`, T67): reload, fall back, shoot, move,
   look towards a shot it heard, or hold -- every one scored at once from
   what it perceives, the highest done (below).
 

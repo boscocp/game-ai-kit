@@ -30,6 +30,12 @@ ports and the kernel, the algorithms keep their readable names. The prefix
 itself is chosen in the ADR that opens this task (before step 1), by what
 the Asset Library and PyPI already hold under it.
 
+**Still open, from T101 (wave 103):** where `AimChoice` lives. It stayed
+in `ai_teamwork` when utility choice became `ai_utility`, but nothing in it
+is about a team -- it is one shooter's hit model. A shooting or combat
+addon, or this task's naming pass, is the owner's to choose before the
+library ships `ai_teamwork`'s final shape.
+
 ## Steps
 
 1. **The names**, as decided, in one commit per addon, with the import and

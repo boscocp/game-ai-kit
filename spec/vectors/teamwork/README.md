@@ -63,9 +63,11 @@ that must agree bit for bit would need rounded costs.
 | `commander` | squads and objectives | each objective's priority, the commander's assignment, and nearest-first without it |
 | `confidence` | facts over time, a squad's members, phases | each confidence, the states with and without retreat, the waves |
 | `passage` | a blocked bot's facts, and requests to a teammate with its prices | each way's cost in seconds (null: impossible) and the way taken; each request's cost to the teammate and whether it is granted |
+| `search` | spots (worth, searched), each searcher's walk to each, whether claims are on; the walks to the last known position and a cap (T70) | the spot each searcher is given (-1: none); who goes to the last known position |
+| `roles` | requests (role, score, can shoot), whether the arbiter is on, the most flankers (T70) | the role each request is granted |
 | `aim` | a spread, a target's zones (multiplier, aim point, rectangles, exposure), rolls | each zone's own chance and worth aimed at, the zone aimed at, the chances from it, where each roll lands |
 
-## The thirty-two
+## The thirty-nine
 
 | file | what it pins |
 |---|---|
@@ -101,6 +103,13 @@ that must agree bit for bit would need rounded costs.
 | `nothing-possible-waits` | every way impossible: the bot waits |
 | `equal-ways-go-to-the-first` | of two ways tied, the first in the order |
 | `a-teammate-weighs-the-request` | the teammate's cost, a fight's high price, a saving that must be larger, and the two limits |
+| `hiding-drops-what-anyone-sees` | asked to hide (T68): a spot a second threat sees is dropped, and the nearest hidden one wins |
+| `claims-divide-the-search` | with claims, the nearest guard takes the best spot and the other the next; searched and worthless spots go to no one; the cap sends the nearest |
+| `without-claims-they-search-the-same-spot` | the same with claims off: both go to the best spot; of equal walks the earlier goes |
+| `no-spot-left-no-search` | every spot searched or worthless: no one is given one, and a cap of zero sends no one |
+| `one-flanker-and-the-rest-shoot` | three ask to flank: the best is granted, the others shoot |
+| `someone-always-shoots` | the only one who can shoot asks to flank: refused, it shoots |
+| `without-the-arbiter-everyone-shoots` | the arbiter off: everyone who can shoot does |
 
 JSON has no infinity: in the passage vectors an impossible way, a detour
 or a spot that does not exist, and a saving with no bound are `null`, and
