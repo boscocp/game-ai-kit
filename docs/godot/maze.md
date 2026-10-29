@@ -11,7 +11,8 @@ teaches: none
 
 > T97's example. A small maze, four pellets, you as Pac-Man and Blinky
 > deciding the way the arcade's ghosts decide. T98 solves it as an MDP in
-> Python; this page is the game that MDP plays.
+> Python, and C hands Pac-Man to the policy it found; this page is the
+> game, and how that policy plays it.
 
 ## What it is
 
@@ -72,7 +73,8 @@ Written in `spec/maze/rules.json`'s "about" too, each on purpose:
   or lives. No Cruise Elroy: in the arcade Blinky speeds up once few dots
   are left (20 on level one) and keeps chasing through scatter, which with
   four pellets would hold from the first step. No red zones, the arcade's
-  cells above the ghost house where a ghost may not turn up. Four plain pellets keep T98's state space near 320,000.
+  cells above the ghost house where a ghost may not turn up. Four plain pellets keep T98's state space small:
+  82,160 states that the rules allow, measured.
   Frightened mode -- the Dossier's random turns -- is the decision left to
   the owner (below).
 - **The imprecise ghost.** In chase, at a fork of two or more ways, a
@@ -124,8 +126,70 @@ panel says the same in words: the mode, the target and why, each way with
 its distance, and how it chose -- the roll against the precision, and the
 second draw.
 
+## The MDP plays (T98)
+
+C hands Pac-Man to a policy that value iteration computed in Python
+(`python/gameaikit/mdp/`, the concepts in
+[`docs/concepts/mdp.md`](../concepts/mdp.md)). The game restarts in the
+regime the MDP was solved for -- Blinky alone, chasing for ever, so no
+scheduled mode change and no forced reversal (`spec/maze/mdp.json`) -- and
+Pac-Man moves at once. C again gives him back to you, in the arcade's
+schedule; G does nothing while the MDP plays, since Pinky is not in its
+model.
+
+- **The state** is Pac-Man's cell, Blinky's cell and heading, and the
+  pellets left: 82,160 that the rules allow (the task's estimate was
+  160,000; a ghost's heading must point away from a floor cell behind it,
+  and Pac-Man never stands on an uneaten pellet), of which 80,288 can be
+  reached from the start. Blinky's next move is chosen
+  before Pac-Man's but does not depend on it, so the policy treats it as
+  chance, with the rules' `chances`; the overlay shows the move Blinky
+  actually committed, which the policy does not see.
+- **Solving**, `make solve-maze`: building the model 1.0 s, value
+  iteration 60 sweeps in 3.4 s, peak 117 MB, measured on a Ryzen 5 9600X
+  in pure Python. Policy iteration finds the same values (within 0.0001)
+  in 22 improvements but 1,233 sweeps, 21.6 s; the 2,109 states where the
+  two choose differently are all exact ties.
+- **Published** to `godot/game/maze/`, beside the game, so an export carries it: `values.json`, each state's value in
+  thousandths, and `policy.json`, its move as a letter, both laid out so
+  that a state's place is arithmetic (`spec/maze/mdp.json`'s "about").
+  `MdpPacMan` reads them from `res://game/maze` and
+  looks up; N15 in `check_no_training.py` solves again and fails if they
+  differ, and refuses any GDScript that writes them.
+- **How it plays**, `PYTHONPATH=python python3 -m gameaikit.mdp.measure`,
+  1,000 games from seeds 1 to 1,000 in that regime:
+  - the MDP: 1,000 won, 0 caught, 30.5 steps to win;
+  - safe greedy (the A\* path to the nearest pellet, never a move onto a
+    cell Blinky may reach next step): 1,000 won, 0 caught, 31.9 steps;
+  - greedy (the same path, Blinky ignored): 826 won, 174 caught, 30.0
+    steps over its wins, 27.0 over all games.
+
+  **Does it ever walk into the ghost? No, and provably.** Blinky alone,
+  at Pac-Man's speed, with no dead end, cannot catch a careful player:
+  every state has a move with no catch next step, and the 684 states the
+  policy reaches from the start include none whose chosen move could end
+  in a catch, whatever the dice (`measure.catch_from_start`, held by a
+  test). So the safe rule is never caught either, and what value
+  iteration adds here is about 1.4 steps a game -- the weighing of
+  waiting for Blinky against running past him.
+
+With V on, the MDP's view is drawn under the ghost's: every cell Pac-Man
+could stand on is tinted from red (the least any cell is worth now) to
+green (the most), for Blinky and the pellets as they are, with the
+policy's arrow on it; beside Pac-Man, each of his four moves is written
+with its Q-value -- the step's reward plus 0.95 times the value it leads
+to, averaged over Blinky's ways -- and the one the policy takes is boxed.
+The panel lists the same numbers. Held by `make test-mdp-vectors` (ten
+states' values, Q-values and moves from `spec/vectors/mdp/derive.py`, a
+second value iteration that imports nothing) and
+`make test-godot-some SUITES="test/maze"`, where the policy wins 40 seeded
+games and its move is always the lookahead's best.
+
 ## Decisions for the owner
 
+- **Where the policy lives** -- decided (owner, 2026-10-29): beside the
+  game, in `godot/game/maze/`, as the checkers weights are, so an export
+  carries it. The task had said `data/maze/`, outside the project.
 - **Frightened mode** is not in the game, since four plain pellets have no
   energizer. Adding one energizer would bring in the Dossier's random turns
   and a third mode, and multiply T98's states.

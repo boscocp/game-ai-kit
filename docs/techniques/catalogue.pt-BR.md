@@ -81,9 +81,9 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
   - técnicas: ● [ai_behaviour](ai_behaviour.pt-BR.md) (máquina de estados, *behaviour tree*, GOAP, HTN); ● [ai_learning](ai_learning.pt-BR.md) (uma regressão treinada no Python); ● [ai_planning](ai_planning.pt-BR.md) (STRIPS sobre PDDL).
   - escrito dentro do próprio exemplo: regras escritas à mão, *lookahead* com chances exatas, mapa de influência.
 - <a id="demo-maze"></a>**Pac-Man, um labirinto pequeno**, `make demo-maze` -- parecido com Pac-Man, você contra o Blinky.
-  - teclas: V a visão dos fantasmas: o alvo de cada um e a distância de cada caminho; G traz o Pinky.
+  - teclas: V a visão dos fantasmas: o alvo de cada um e a distância de cada caminho; G traz o Pinky; C entrega o Pac-Man ao MDP: o valor de cada casa, quanto vale cada movimento.
   - técnicas: nenhuma.
-  - escrito dentro do próprio exemplo: uma casa-alvo e a linha reta mais curta.
+  - escrito dentro do próprio exemplo: uma casa-alvo e a linha reta mais curta, iteração de valor, a política de um MDP.
 - <a id="demo-fighting"></a>**Luta, modo treino**, `make demo-fighting` -- parecido com o modo treino de Street Fighter, contra um boneco que aprende o seu jeito de jogar.
   - teclas: M troca o modo do boneco; espaço um quadro; P pausa.
   - técnicas: ● [ai_learning](ai_learning.pt-BR.md) (a consulta de casos do *ghost*); ● [ai_opponent](ai_opponent.pt-BR.md) (*n-gram*); ● [Behaviour cloning](behaviour_cloning.pt-BR.md) (*behaviour cloning*).

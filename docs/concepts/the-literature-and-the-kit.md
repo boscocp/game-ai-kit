@@ -123,7 +123,7 @@ last three columns to the repository.
 |---|---|---|---|---|---|
 | Bayesian networks | AIMA ch. 13 | reasoning under uncertainty | not in the kit | -- | 1 |
 | Tracking over time: a grid belief, HMMs, Kalman and particle filters | AIMA ch. 14; GAP Online 2021 ch. 6 | chasing an unseen player | a grid belief that spreads and is cleared where seen: `godot/addons/ai_perception/belief_map.gd` | `demo-infiltration` | 1 |
-| MDPs, value and policy iteration | AIMA 17.1-17.2 | small grid worlds | not in the kit | -- | 1 |
+| MDPs, value and policy iteration | AIMA 17.1-17.2 | small grid worlds | the maze solved in Python, its policy looked up: `python/gameaikit/mdp/`, `godot/game/maze/mdp_pac_man.gd`; `docs/concepts/mdp.md` | `demo-maze` | 1 |
 | Bandits (UCB1, regret matching) | AIMA 17.3; GAP2 ch. 25 | choosing among strategies by their payoff | not in the kit | -- | 1 |
 | POMDPs | AIMA 17.4-17.5 | acting on beliefs | not in the kit | -- | 1 |
 | Game theory (non-cooperative) | AIMA 18.2 | mixed strategies | not in the kit | -- | 1 |

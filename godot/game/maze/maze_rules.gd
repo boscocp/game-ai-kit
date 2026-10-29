@@ -87,11 +87,12 @@ static func reverse(direction: String) -> String:
 	return direction
 
 
-## The ghosts' mode during step `step`, counted from 0, by the schedule:
-## the Dossier's level one, each of its seconds two steps.
-static func mode_at(step: int) -> String:
+## The ghosts' mode during step `step`, counted from 0, by `schedule`:
+## empty for the arcade's in `rules.json`, the Dossier's level one, each of
+## its seconds two steps; T98's MDP plays chase for ever (`mdp.json`).
+static func mode_at(step: int, given: Array = []) -> String:
 	var start: int = 0
-	var schedule: Array = rules()["schedule"]
+	var schedule: Array = rules()["schedule"] if given.is_empty() else given
 	for period: Dictionary in schedule:
 		if period["steps"] == null or step < start + int(period["steps"]):
 			return period["mode"]

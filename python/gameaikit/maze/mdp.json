@@ -1,0 +1,16 @@
+{
+  "about": "The maze as a Markov decision process (T98), solved by value iteration in Python (gameaikit.mdp) and played by a lookup in Godot. Read by Python from a byte-for-byte copy (python/gameaikit/maze/mdp.json) and by Godot from another (godot/game/maze/mdp.json); tests hold both to this file. The regime is the stationary one the owner chose on 2026-10-29: the ghosts chase for ever (`schedule`), so no mode change and no forced reversal, and Blinky alone. A state is Pac-Man's cell, Blinky's cell, the direction of Blinky's last move, and which pellets remain -- and in that regime it is exact: Blinky's next move, chosen at the end of the last step, depends on nothing else, and not on Pac-Man's coming move, so from the policy's side it is chance, taken from the rules' `chances` (precision x [it is the Dossier's way] + (1 - precision) / ways). The actions are Pac-Man's four moves; into a wall he stays. Rewards, paid on the step that earns them and added together: `step` every step, `pellet` for each pellet eaten, `cleared` on top of the last pellet's (and the episode ends), `caught` when he walks onto Blinky or Blinky onto him (and it ends). A step that eats a pellet and is then caught pays both. `discount` is gamma; value iteration stops when no value moved more than epsilon (1 - gamma) / gamma in a sweep (AIMA 17.2.1). Published beside the game, in godot/game/maze/ (values.json, policy.json): the values in thousandths, as whole numbers so both languages read them exactly, and the policy, one letter a state (u, l, d, r; . for no state) -- the greedy action over the published values, ties going up, left, down, right. Both files are indexed by ((pacman x cells + ghost) x 4 + heading) x 16 + pellets, a cell numbered by `floor_cells` (row by row from the top left), a heading by `tie_order`, and pellet i of maze.json's `pellets` as bit i of the last term.",
+  "schedule": [
+    {"mode": "chase", "steps": null}
+  ],
+  "ghosts": ["blinky"],
+  "rewards": {
+    "step": -0.04,
+    "pellet": 1.0,
+    "cleared": 10.0,
+    "caught": -10.0
+  },
+  "discount": 0.95,
+  "epsilon": 0.001,
+  "published_scale": 1000
+}

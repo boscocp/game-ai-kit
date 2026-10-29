@@ -45,7 +45,8 @@
     "search-coordinator": {"name": "a search shared out by claims", "evidence": ["SearchCoordinator"]},
     "role-arbiter": {"name": "fight roles granted by an arbiter", "evidence": ["RoleArbiter"]},
     "weighed-actions": {"name": "every action scored by its considerations, the highest done", "evidence": ["ActionChoice"]},
-    "target-tile": {"name": "a target tile, and the shortest straight line to it: the arcade's ghosts", "evidence": ["MazeGhost"]}
+    "target-tile": {"name": "a target tile, and the shortest straight line to it: the arcade's ghosts", "evidence": ["MazeGhost"]},
+    "value-iteration": {"name": "value iteration: an MDP solved in Python, its policy looked up", "evidence": ["MdpPacMan"]}
   },
   "examples": [
     {
@@ -274,10 +275,11 @@
       "scene": "res://game/maze/maze.tscn",
       "decides": "Which way each ghost turns at the next fork: the way whose next cell is nearest its target tile -- your cell in chase, its home corner in scatter -- never back the way it came, except when the mode changes.",
       "techniques": [
-        {"technique": "target-tile", "part": "each ghost's target, every way it may take with the straight-line distance from the cell beyond, the way it chose; in chase a roll of the dice may overrule it, a rule of this game"}
+        {"technique": "target-tile", "part": "each ghost's target, every way it may take with the straight-line distance from the cell beyond, the way it chose; in chase a roll of the dice may overrule it, a rule of this game"},
+        {"technique": "value-iteration", "part": "with C, Pac-Man's move: the policy value iteration computed in Python for Blinky chasing for ever, looked up, with every cell's value and each move's worth drawn"}
       ],
-      "controls": "arrows or WASD walk; V the ghosts' view; G brings Pinky in; P pauses, space one step; R again",
-      "watch": "The crossed square is the ghost's target and the numbers on its ways are each next cell's distance to it: the white way is the smallest, chosen before the ghost moves. Orange with a die is the dice overruling it. Watch Blinky leave you for his corner when scatter begins, turning back at once.",
+      "controls": "arrows or WASD walk; V the ghosts' view; G brings Pinky in; C hands Pac-Man to the MDP; P pauses, space one step; R again",
+      "watch": "The crossed square is the ghost's target and the numbers on its ways are each next cell's distance to it: the white way is the smallest, chosen before the ghost moves. Orange with a die is the dice overruling it. Watch Blinky leave you for his corner when scatter begins, turning back at once. With C the MDP plays: green cells are worth much to Pac-Man, red ones a catch to come, and the boxed number beside him is the move it takes.",
       "docs": "docs/godot/maze.md"
     }
   ]

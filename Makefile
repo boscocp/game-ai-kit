@@ -293,8 +293,14 @@ train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac
 	@# committed file has come apart from what this writes.
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
 
+.PHONY: solve-maze
+solve-maze: ## Solve the maze's MDP by value iteration and publish its values and policy to the maze game (T98)
+	@# A few seconds, deterministic: N15 in lint-no-training solves again and
+	@# fails if the committed files are not what this writes.
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.mdp.publish --write $(CURDIR)/godot/game/maze
+
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors test-llm-vectors test-maze-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors test-llm-vectors test-maze-vectors test-mdp-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -399,6 +405,13 @@ test-maze-vectors: import ## The maze vectors: a seed and Pac-Man's moves, every
 	@# from spec/vectors/maze/derive.py.
 	@$(GODOT) --headless --path godot -s res://test/maze/maze_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/maze
+
+.PHONY: test-mdp-vectors
+test-mdp-vectors: import ## Ten maze states' values and best moves, against the policy the maze game reads (T98)
+	@# The other half is `make test-python`; the answers came from neither,
+	@# from spec/vectors/mdp/derive.py's own value iteration.
+	@$(GODOT) --headless --path godot -s res://test/maze/mdp_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/mdp
 
 .PHONY: test-infiltration
 test-infiltration: import ## The infiltration level's guards: help heard, the search shared, quiet and loud, the arbiter, the halving, every decision on the overlay, portable (T70)
@@ -710,7 +723,7 @@ record-tactical: import ## Play the tactical board and keep every game you finis
 	@$(GODOT) --path godot res://game/tactical/tactical.tscn -- --record
 
 .PHONY: demo-maze
-demo-maze: import ## Pac-Man against Blinky, who follows the arcade's rules: arrows walk, V the ghosts' view, G brings Pinky in, P pause, space one step, R again
+demo-maze: import ## Pac-Man against Blinky, who follows the arcade's rules: arrows walk, V the ghosts' view, G brings Pinky in, C hands Pac-Man to the MDP, P pause, space one step, R again
 	@$(GODOT) --path godot res://game/maze/maze.tscn
 
 .PHONY: demo-fighting

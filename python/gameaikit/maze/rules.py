@@ -78,14 +78,19 @@ def reverse(direction: str) -> str:
     raise ValueError(f"no reverse for {direction}")
 
 
-def mode_at(step: int) -> str:
-    """The ghosts' mode during step `step`, counted from 0, by the schedule."""
+def mode_at(step: int, schedule: list[dict] | None = None) -> str:
+    """The ghosts' mode during step `step`, counted from 0, by `schedule`.
+
+    None is the arcade's, from `rules.json`; T98's MDP plays one of its own,
+    chase for ever (`mdp.json`).
+    """
+    periods = RULES["schedule"] if schedule is None else schedule
     start = 0
-    for period in RULES["schedule"]:
+    for period in periods:
         if period["steps"] is None or step < start + period["steps"]:
             return period["mode"]
         start += period["steps"]
-    return RULES["schedule"][-1]["mode"]
+    return periods[-1]["mode"]
 
 
 def target(name: str, mode: str, pacman: tuple[int, int], facing: str) -> tuple[int, int]:

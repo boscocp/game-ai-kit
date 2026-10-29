@@ -1,7 +1,7 @@
 {
   "module": "maze",
   "kind": "example",
-  "about": "A small Pac-Man maze: ghosts that follow the arcade's rules, one imprecise, and their Python twin.",
+  "about": "A small Pac-Man maze: ghosts that follow the arcade's rules, one imprecise, and their Python twin; the maze solved as an MDP by value iteration in Python, its policy looked up by Godot.",
   "owns": [
     "godot/game/maze/",
     "godot/test/maze/",
@@ -10,14 +10,22 @@
     "godot/locale/maze.pt_BR.translation",
     "spec/maze/",
     "spec/vectors/maze/",
+    "spec/vectors/mdp/",
     "python/gameaikit/maze/",
+    "python/gameaikit/mdp/",
     "python/tests/test_maze.py",
-    "python/tests/test_maze_vectors.py"
+    "python/tests/test_maze_vectors.py",
+    "python/tests/test_mdp.py",
+    "python/tests/test_mdp_vectors.py"
   ],
   "depends_on": [
     "game_shared"
   ],
   "gates": [
-    "test-maze-vectors"
+    "test-maze-vectors",
+    "test-mdp-vectors"
+  ],
+  "retrain": [
+    "N15"
   ]
 }

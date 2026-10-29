@@ -136,6 +136,23 @@ static func choose(open_ways: Array[Dictionary], mode: String, dice: MazeDice) -
 	return {"chosen": open_ways[pick]["direction"], "best": best, "kind": DICE, "roll": roll, "pick": pick}
 
 
+## The probability of each of `open_ways` in `mode`, as `choose` takes
+## them: precision x [it is the Dossier's way] + (1 - precision) / ways at
+## an imprecise fork, and certainty for the Dossier's way everywhere else.
+## T98's MDP is built on these numbers; the MDP's lookahead asks them here.
+static func chances(open_ways: Array[Dictionary], mode: String) -> Dictionary:
+	var best: String = nearest(open_ways)
+	var found: Dictionary = {}
+	var imprecise: bool = open_ways.size() > 1 and MazeRules.imprecise_in(mode)
+	for way: Dictionary in open_ways:
+		var keeps: float = 1.0 if way["direction"] == best else 0.0
+		if imprecise:
+			found[way["direction"]] = (1.0 - MazeRules.precision()) / open_ways.size() + MazeRules.precision() * keeps
+		else:
+			found[way["direction"]] = keeps
+	return found
+
+
 ## Take the move it chose: one cell along `next_move`.
 func move() -> void:
 	cell = MazeRules.moved(cell, next_move)

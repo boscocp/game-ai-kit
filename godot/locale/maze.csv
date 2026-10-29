@@ -40,3 +40,21 @@ arrows: walk  ·  P: pause  ·  space: one step  ·  R: again,setas: andar  ·  
 "a second draw picks way {pick} of {ways}: {way}","um segundo sorteio pega o caminho {pick} de {ways}: {way}"
 "dice {roll}, under {precision}: it keeps the shortest, {way}","dados {roll}, abaixo de {precision}: fica com o mais curto, {way}"
 the shortest line to the target: {way},a linha mais curta até o alvo: {way}
+"Pac-Man: the MDP's policy, solved in Python","Pac-Man: a política do MDP, resolvida em Python"
+"Blinky: chases for ever, as the MDP assumes","Blinky: persegue para sempre, como o MDP supõe"
+green cell: worth much to Pac-Man standing there,casa verde: vale muito para o Pac-Man parado nela
+"red cell: worth little, or a catch to come","casa vermelha: vale pouco, ou vem aí uma captura"
+arrow on a cell: the policy's move from there,seta numa casa: o movimento da política dali
+numbers beside Pac-Man: each move's worth,números ao lado do Pac-Man: quanto vale cada movimento
+grey line: a way Blinky may take; white: chosen,linha cinza: um caminho que o Blinky pode tomar; branca: o escolhido
+the MDP plays: Blinky chases for ever,o MDP joga: o Blinky persegue para sempre
+"PAC-MAN, the MDP: value iteration, solved in Python","PAC-MAN, o MDP: iteração de valor, resolvida em Python"
+this state is worth {value},este estado vale {value}
+"each move: its reward, plus {discount} x the value it leads to,","cada movimento: a recompensa, mais {discount} x o valor aonde leva,"
+averaged over the ways Blinky may take,na média dos caminhos que o Blinky pode tomar
+"Blinky has chosen already, but the MDP does not see it:","O Blinky já escolheu, mas o MDP não vê a escolha:"
+"to the policy his move is chance, and it plans for every way.","para a política o movimento dele é acaso, e ela planeja para todo caminho."
+P: pause  ·  space: one step  ·  R: again,P: pausa  ·  espaço: um passo  ·  R: de novo
+C: you play,C: você joga
+C: the MDP plays,C: o MDP joga
+C: no MDP policy published -- run make solve-maze first,C: nenhuma política do MDP publicada -- rode make solve-maze antes

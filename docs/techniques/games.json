@@ -208,8 +208,8 @@
         "pt-BR": "Pac-Man, você contra o Blinky"
       },
       "keys": {
-        "en": "V the ghosts' view: each ghost's target and the distance from each way; G brings Pinky in",
-        "pt-BR": "V a visão dos fantasmas: o alvo de cada um e a distância de cada caminho; G traz o Pinky"
+        "en": "V the ghosts' view: each ghost's target and the distance from each way; G brings Pinky in; C hands Pac-Man to the MDP: each cell's value, each move's worth",
+        "pt-BR": "V a visão dos fantasmas: o alvo de cada um e a distância de cada caminho; G traz o Pinky; C entrega o Pac-Man ao MDP: o valor de cada casa, quanto vale cada movimento"
       }
     }
   },
@@ -393,6 +393,10 @@
     "target-tile": {
       "en": "a target tile and the shortest straight line",
       "pt-BR": "uma casa-alvo e a linha reta mais curta"
+    },
+    "value-iteration": {
+      "en": "value iteration, an MDP's policy",
+      "pt-BR": "iteração de valor, a política de um MDP"
     }
   }
 }
