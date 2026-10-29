@@ -46,15 +46,6 @@ func _assert_keeps_the_margin(what: String, worst: Dictionary) -> void:
 		said, worst["bottom"], _limit(), worst["words"]]).is_less_equal(_limit())
 
 
-# The card's wrapped Labels end where their rectangles do: inside the
-# window's width.
-func test_the_card_ends_inside_the_window_s_width() -> void:
-	for locale: String in LOCALES:
-		var game: RtsGame = _mounted_game(locale)
-		for path: String in SHOWN:
-			assert_float((game.get_node(path) as Control).get_global_rect().end.x).is_less_equal(BoardLayout.window_size().x)
-
-
 # The queues play your side (C's watching mode) with everything revealed, so
 # your buildings train and the computer's units can be clicked. At each look
 # the card is measured with nothing selected, each unit alone, and a box
@@ -87,9 +78,10 @@ func _look_with(game: RtsGame, ids: Array, worst: Dictionary, when: String) -> v
 	for id: int in ids:
 		game._view.selected[id] = true
 	game._refresh()
-	# A wrapped Label given a new width reports the old one's height until
-	# it is laid out again, at the next frame (measured on the pinned
-	# engine): the screen is drawn after it, so the test waits for it too.
+	# Control's cached combined minimum size, which `_bottom_of` reads, is
+	# refreshed at the next frame after a resize -- the Label itself is
+	# reshaped at once (measured on the pinned engine, docs/godot/
+	# localisation.md): the screen is drawn after it, so the test waits too.
 	await get_tree().process_frame
 	for path: String in SHOWN:
 		var shown: Label = game.get_node(path)

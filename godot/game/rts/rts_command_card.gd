@@ -50,9 +50,6 @@ const HOW_TO_PLAY: Array[String] = [  # shown through tr()
 	"4. Select fighters, right-click an enemy. A Depot (D) when supply is full.",
 ]
 const BUTTON_SIZE := Vector2(74.0, 50.0)
-## How wide the info is beside the buttons; with no buttons it takes the
-## whole card.
-const INFO_WIDTH: float = 330.0
 
 @onready var _info: Label = $Info
 @onready var _buttons: GridContainer = $Buttons
@@ -61,6 +58,13 @@ const INFO_WIDTH: float = 330.0
 # What the buttons were last built for: rebuilt only when this changes, so
 # a button is never freed under the click that presses it.
 var _built_for: String = "-"
+# How wide the scene lays the info out, beside the buttons; with no buttons
+# it takes the whole card.
+var _info_width: float = 0.0
+
+
+func _ready() -> void:
+	_info_width = _info.size.x
 
 
 ## Build the buttons again at the next selection shown: their words were
@@ -80,7 +84,7 @@ func show_selection(view: RtsSnapshot, selected: Dictionary) -> void:
 	var offers: Array[Array] = []
 	if yours:
 		offers = _offers(units)
-	_info.size = Vector2(size.x if offers.is_empty() else INFO_WIDTH, size.y)
+	_info.size = Vector2(size.x if offers.is_empty() else _info_width, size.y)
 	var reasons: Array[String] = []
 	for offer: Array in offers:
 		reasons.append(_why_not(view, offer[0], offer[1], units))

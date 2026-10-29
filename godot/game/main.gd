@@ -67,8 +67,10 @@ var _blue_to_decide: Array[int] = []
 func _ready() -> void:
 	_legend.set_entries(_legend_entries())
 	_state = _build_scenario()
-	BoardLayout.lay_out(self, _state.graph, _status, _legend)
-	_give_the_status_its_column()
+	# The status runs the whole left column, from the top gutter: begun level
+	# with the board at 18 px, red's turn after blue's -- its reasons, a held
+	# node, a refused click -- ran to y=861 of 720 in pt-BR (T107).
+	BoardLayout.lay_out(self, _state.graph, _status, _legend, BoardLayout.GUTTER)
 	# The search goes in from here rather than from inside the policy: a route
 	# is a search, and no addon may depend on another. The game owns both and
 	# is the right place to introduce them.
@@ -78,17 +80,6 @@ func _ready() -> void:
 	_select_first_unit_of_the_side_to_move()
 	_refresh()
 	Language.apply_if_opened_alone(self)
-
-
-# The status takes the whole left column, from the gutter at the window's
-# top to the one above its bottom, at 14 px; the legend stays level with the
-# board. Begun level with the board at 18 px, red's turn after blue's -- its
-# reasons, a held node, a refused click -- ran to y=861 of 720 in pt-BR
-# (T107). The tactical match gives its status the column for the same reason.
-func _give_the_status_its_column() -> void:
-	var bottom: float = _status.position.y + _status.size.y
-	_status.position.y = BoardLayout.GUTTER
-	_status.size.y = bottom - _status.position.y
 
 
 # The words are rebuilt in the language just chosen (T79): a Label set from

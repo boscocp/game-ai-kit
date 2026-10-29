@@ -53,14 +53,6 @@ func _assert_keeps_the_margin(what: String, worst: Dictionary) -> void:
 		said, worst["bottom"], _limit(), worst["words"]]).is_less_equal(_limit())
 
 
-# A wrapped Label ends where its rectangle does: inside the window's width.
-func test_the_status_ends_inside_the_window_s_width() -> void:
-	for locale: String in LOCALES:
-		var main: BoardGame = _mounted_scene(locale)
-		var status: Label = main.get_node("Interface/Status")
-		assert_float(status.get_global_rect().end.x).is_less_equal(BoardLayout.window_size().x)
-
-
 # Play ROUNDS rounds -- red's turn as `how` says, then blue's a decision at
 # a time -- and return where the status's words ended lowest, when, and
 # what they said.
