@@ -128,24 +128,6 @@ static func runs(levels: Array[InfiltrationLevel], change: Callable, plant: Call
 	return times
 
 
-## The measured runs of `times` (the NANs left out), from level `first` to
-## before level `last`, as [count, mean, median, found within LOST_FOR].
-static func summary(times: Array[float], first: int, last: int) -> Array:
-	var measured: Array[float] = []
-	for index: int in range(first * SEEDS.size(), mini(last * SEEDS.size(), times.size())):
-		if not is_nan(times[index]):
-			measured.append(times[index])
-	if measured.is_empty():
-		return [0, NAN, NAN, 0]
-	measured.sort()
-	var total: float = 0.0
-	var regained: int = 0
-	for seconds: float in measured:
-		total += seconds
-		regained += 1 if seconds < LOST_FOR else 0
-	return [measured.size(), total / measured.size(), measured[floori(measured.size() / 2.0)], regained]
-
-
 ## The claims over the two modes' runs and the planted one's, as findings:
 ## enough measured in each, and the particles changed something. `planted`
 ## may be shorter -- the first levels' runs only -- and is held against as

@@ -113,7 +113,7 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-rts-budget test-mcts-budget test-rts-simulation test-rts-match test-steering-properties \
        test-racing-ladder test-racing-does-not-cheat test-game3d-floor test-botmatch-effects \
        test-racing3d-car test-racing3d-effects test-racing3d-ladder test-racing3d-does-not-cheat test-racing3d-you-drive \
-       test-infiltration-properties test-infiltration test-infiltration-tracking test-pad \
+       test-infiltration-properties test-infiltration test-pad \
        test-locale-screen ## Run every gate
 
 .PHONY: check-no-engine
@@ -418,7 +418,7 @@ test-infiltration: import ## The infiltration level's guards: help heard, the se
 	@$(GODOT) --headless --path godot -s res://test/infiltration/infiltration_properties.gd
 
 .PHONY: test-infiltration-tracking
-test-infiltration-tracking: import ## Grid belief against particles: a lost player found again, measured and printed (T91)
+test-infiltration-tracking: import ## A measurement, not in make check: grid belief against particles, every run paired, and a step's cost (T91)
 	@$(GODOT) --headless --path godot -s res://test/infiltration/infiltration_tracking.gd
 
 .PHONY: test-infiltration-properties

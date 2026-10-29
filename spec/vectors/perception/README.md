@@ -39,7 +39,9 @@ Each file has `name`, `why`, `kind`, `query` and `expect`. The kinds:
   `knobs` (`walk_on`, `turn`, `unheard`), and `steps`, each `{"collapse":
   node}` or `{"seen": [nodes], "unheard": [nodes]}`, from a cloud spread
   evenly. Expects after each step every particle's node (`nodes`), the
-  normalised `weights` the step gave them (all 0 when it reseeded), the
+  normalised `weights` the step gave them, in the order the particles
+  were weighed, before the resampling that reorders them (all 0 when it
+  reseeded), the
   `shares` per node, the nodes sight `emptied`, and whether it was
   `reseeded`. The draws are Marsaglia's xorshift from `seed`, written out
   in all three copies; a single different draw moves a particle, so these

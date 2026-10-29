@@ -105,20 +105,26 @@ twin (`gameaikit.perception.particles`) draw for draw by
 
 **This is not training (invariant 6).** Every probability above is a
 constant written before the game starts, and nothing a game does changes
-one. The weights are recomputed from those constants every step, which is
-inference -- filtering -- not a fit. `check_no_training.py` agrees for the
+one. The weights are rebuilt from those constants each step, never
+accumulated from one step to the next, which is inference -- filtering --
+not a fit. `check_no_training.py` agrees for the
 right reason: its N3 rule looks for writes into a model's `weights` or a
 compound update of them (`weights[i] /= total`), and the code never does
 either -- each step builds a fresh array of weights from the constants,
 since the old ones mean nothing once the cloud has moved.
 
 **Does it find you sooner?** Measured in the infiltration level
-(`make test-infiltration-tracking`): barely, and not always -- the numbers
-are on [godot/infiltration.md](../godot/infiltration.md#particles-against-the-grid). On most
-runs the guards found the player at the same moment with either belief,
-because a glimpse on the way collapses both alike; where they differ, the
-particles were sooner when the player had moved since it was reported, and
-later when it had not moved at all.
+(`make test-infiltration-tracking`): no difference worth the name -- the
+numbers are on [godot/infiltration.md](../godot/infiltration.md#particles-against-the-grid).
+In 35 of 41 paired runs the guards found the player at the same moment
+with either belief, because a glimpse on the way collapses both alike; the
+few that differ go both ways by a second or two. The scenarios measured
+have little power to tell the two apart, and the page says why.
+
+**Give it enough particles.** Fewer particles than nodes leaves most nodes
+with no share at all after a reseed, and one particle can weigh more than
+a node's even share; the infiltration level gives two a cell. That costs:
+a belief step of 1784 particles measured 1.5 ms there.
 
 ## In your own project {#your-project}
 

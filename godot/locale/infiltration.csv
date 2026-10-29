@@ -5,6 +5,8 @@ searching,procurando
 alert,alerta
 a body point the guard sees; red: hidden by a box,ponto do corpo visto; vermelho: atrás de caixa
 where the watched guard believes you are,onde o guarda assistido acredita que você está
+"particles (1): its guesses, bigger where more","partículas (1): palpites, maiores onde há mais"
+white square: guesses its sight just cleared,quadrado branco: palpites que a visão limpou
 the spot it was given to search; grey: searched,o lugar que ele recebeu para vasculhar; cinza: vasculhado
 a sound's reach along the level,até onde um som chega pelo nível
 CALLING FOR HELP,PEDINDO AJUDA

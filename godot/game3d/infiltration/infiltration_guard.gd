@@ -83,7 +83,7 @@ func _init(number: int, guard_type: GuardType, spec: Dictionary, nodes: Array[Pa
 	type = guard_type
 	mind = GuardMind.new(guard_type)
 	belief = BeliefMap.new(nodes)
-	particles = ParticleBelief.new(nodes, rules.particles, seed_value)
+	particles = ParticleBelief.new(nodes, rules.particles_per_cell * nodes.size(), seed_value)
 	for point: Vector2 in spec["route"]:
 		route.append(point)
 	post = spec["post"]

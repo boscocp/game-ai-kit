@@ -25,8 +25,9 @@ var guards: Dictionary = {}
 ## a memory and a hit count for, and the phases searching starts from.
 var decision: Dictionary = {}
 var spread: float = 0.4
-## How many particles a guard's `ParticleBelief` holds (T91).
-var particles: int = 256
+## How many particles a guard's `ParticleBelief` holds for each walk cell
+## (T91): at least one, so the even start and a reseed cover every cell.
+var particles_per_cell: int = 2
 var search: Dictionary = {}
 ## The knobs: reaction (s), turn_rate (degrees a second), aim_error, the
 ## awareness rate's multiplier, belief steps a second, off-screen halving.
@@ -61,7 +62,7 @@ static func read(path: String = FILE) -> InfiltrationRules:
 	rules.guards = data["guards"]
 	rules.decision = data["decision"]
 	rules.spread = float(data["belief"]["spread"])
-	rules.particles = int(data["belief"]["particles"])
+	rules.particles_per_cell = int(data["belief"]["particles_per_cell"])
 	rules.search = data["search"]
 	var knobs: Dictionary = data["difficulty"]
 	rules.reaction = float(knobs["reaction"])

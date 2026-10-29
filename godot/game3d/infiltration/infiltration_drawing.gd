@@ -168,8 +168,6 @@ func _draw_watched(world: InfiltrationWorld, guard: InfiltrationGuard) -> void:
 # particles its sight emptied in the last step.
 func _draw_particles(world: InfiltrationWorld, guard: InfiltrationGuard) -> void:
 	InfiltrationGround.size_dots(_particles, world.level, guard.particles.shares)
-	if not world.rules.use_belief:
-		return
 	for cell: int in guard.particles.emptied:
 		var middle: Vector3 = world.level.arena.above(BotArena.centre_of(world.level.cells[cell]), 0.09)
 		var corners: Array[Vector3] = [Vector3(-0.45, 0, -0.45), Vector3(0.45, 0, -0.45), Vector3(0.45, 0, 0.45), Vector3(-0.45, 0, 0.45)]

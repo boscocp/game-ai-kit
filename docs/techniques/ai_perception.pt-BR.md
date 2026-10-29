@@ -7,7 +7,7 @@ tier: 2
 source: book:Travis McIntosh, "Human Enemy AI in The Last of Us", in Steve Rabin (ed.), "Game AI Pro 2", CRC Press, 2015 ; https://www.gameaipro.com/
 invalidated_if: the kit's VisionCone, Awareness, LineOfSight, Hearing, VisionShape, BeliefMap or ParticleBelief signatures change, or the demos that use them are renamed
 teaches: perception
-translation_of: cdb99dbde16192bbc89ad0c76f2fe7d079d3b59bf4efd4c2c48d1ce0c2f22a90
+translation_of: c31ba053e38970c11db8c1be03e177a421e1c3f31337b37997daf66d79f084a9
 -->
 
 > English: [ai_perception.md](ai_perception.md). Os termos que ficam em
@@ -114,8 +114,9 @@ xorshift com semente escrito nas duas linguagens -- uma cópia do de
 
 **Isto não é treino (invariante 6).** Toda probabilidade acima é uma
 constante escrita antes de o jogo começar, e nada que o jogo faça muda
-nenhuma. Os pesos são recalculados dessas constantes a cada passo, o que é
-inferência -- filtragem --, não um ajuste. `check_no_training.py` concorda
+nenhuma. Os pesos são refeitos a partir dessas constantes a cada passo,
+nunca acumulados de um passo para o outro, o que é inferência --
+filtragem --, não um ajuste. `check_no_training.py` concorda
 pelo motivo certo: a sua regra N3 procura escritas nos `weights` de um
 modelo ou uma atualização composta deles (`weights[i] /= total`), e o
 código não faz nenhuma das duas -- cada passo monta um vetor novo de pesos
@@ -123,13 +124,19 @@ a partir das constantes, já que os antigos não significam nada depois que
 a nuvem se moveu.
 
 **Ele te acha mais cedo?** Medido na fase de infiltração
-(`make test-infiltration-tracking`): pouco, e nem sempre -- os números
-estão em [godot/infiltration.md](../godot/infiltration.md#particles-against-the-grid) (em
-inglês). Na maioria das partidas os guardas acharam o jogador no mesmo
-instante com qualquer uma das crenças, porque um vislumbre no caminho
-colapsa as duas igual; onde diferem, as partículas acharam antes quando o
-jogador tinha se movido desde o relato, e depois quando ele não tinha se
-movido nada.
+(`make test-infiltration-tracking`): nenhuma diferença que mereça o nome --
+os números estão em [godot/infiltration.md](../godot/infiltration.md#particles-against-the-grid)
+(em inglês). Em 35 de 41 partidas pareadas os guardas acharam o jogador no
+mesmo instante com qualquer uma das crenças, porque um vislumbre no
+caminho colapsa as duas igual; as poucas que diferem vão para os dois
+lados, por um ou dois segundos. Os cenários medidos têm pouca força para
+separar as duas, e a página diz por quê.
+
+**Dê partículas suficientes.** Menos partículas que nós deixa a maioria dos
+nós sem parte nenhuma depois de semear de novo, e uma partícula pode pesar
+mais que a parte uniforme de um nó; a fase de infiltração dá duas por
+célula. Isso custa: um passo da crença com 1784 partículas mediu 1,5 ms
+lá.
 
 ## No seu projeto {#your-project}
 

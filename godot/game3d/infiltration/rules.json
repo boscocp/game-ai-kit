@@ -1,5 +1,5 @@
 {
-  "about": "The infiltration example's rules (T70): the player's stances, the guards' bodies and weapons, how a guard reads its own state for a decision, the belief and the search, and the difficulty knobs. Distances in metres, times in seconds, angles in degrees, speeds in metres a second. Sourced: the player's walk and sprint speeds are the bot match's (its rules.json, T66: 4.5 and 6.5). Everything else in this file is the kit's own, set by measuring with infiltration_properties.gd, not taken from any game: the crouch and prone rows, the guards' numbers, the decision's windows, the belief's spread and its particle count, the search's weights and cap, and the knobs. Each is named in docs/godot/infiltration.md.",
+  "about": "The infiltration example's rules (T70): the player's stances, the guards' bodies and weapons, how a guard reads its own state for a decision, the belief and the search, and the difficulty knobs. Distances in metres, times in seconds, angles in degrees, speeds in metres a second. Sourced: the player's walk and sprint speeds are the bot match's (its rules.json, T66: 4.5 and 6.5). Everything else in this file is the kit's own, set by measuring with infiltration_properties.gd, not taken from any game: the crouch and prone rows, the guards' numbers, the decision's windows, the belief's spread and its particles a walk cell, the search's weights and cap, and the knobs. Each is named in docs/godot/infiltration.md.",
   "step_seconds": 0.1,
   "decision_seconds": 0.3,
   "player": {
@@ -44,7 +44,7 @@
     "suspect_from": "suspicious",
     "search_from": "searching"
   },
-  "belief": {"spread": 0.4, "particles": 256},
+  "belief": {"spread": 0.4, "particles_per_cell": 2},
   "search": {"worth": 10.0, "travel": 0.2, "last_known_cap": 2, "spot_radius": 2.5},
   "difficulty": {
     "reaction": 0.5,

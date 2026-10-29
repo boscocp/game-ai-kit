@@ -26,13 +26,19 @@
 ##
 ## **No training (invariant 6).** Every probability above is a constant set
 ## before the game starts, and none is changed by what happens. The weights
-## are recomputed from those constants every step; that is inference --
-## filtering, in AIMA's word -- not a fit.
+## are rebuilt from those constants each step, never accumulated from one
+## step to the next; that is inference -- filtering, in AIMA's word -- not a
+## fit.
 ##
 ## Every draw comes from `ParticleDraws`, seeded, so a cloud is the same in
 ## `gameaikit.perception.particles` draw for draw.
 ##
 ## O(count + |seen| + |unheard|) a step, plus O(V) to count the shares.
+##
+## **Fewer particles than nodes** leaves nodes with no share at all: the
+## even start and every reseed then land on a stripe of the graph, and one
+## particle can outweigh a node's even share. Give it at least one particle
+## a node -- the infiltration level gives two.
 ##
 ## When not to use it: a level small enough that `BeliefMap` covers every
 ## node -- the exact answer, no draws, nothing to seed. Or a target that
@@ -58,7 +64,9 @@ var unheard: float = UNHEARD
 var nodes: PackedInt32Array = PackedInt32Array()
 var came_from: PackedInt32Array = PackedInt32Array()
 ## What the last weighing gave each particle, summing to one; all 0 when it
-## reseeded. After a collapse, even.
+## reseeded. Indexed by the particles as they were weighed, before the
+## resampling that followed -- `weights[i]` is not `nodes[i]`'s weight now
+## (after resampling every particle weighs the same). After a collapse, even.
 var weights: PackedFloat64Array = PackedFloat64Array()
 ## The share of the cloud on each node, summing to one.
 var shares: PackedFloat64Array = PackedFloat64Array()

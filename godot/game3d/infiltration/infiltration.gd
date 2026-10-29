@@ -73,6 +73,8 @@ func _show_legend() -> void:
 		[InfiltrationDrawing.PHASES[3], tr("alert")],
 		[InfiltrationDrawing.CLEAR, tr("a body point the guard sees; red: hidden by a box")],
 		[InfiltrationDrawing.BELIEF, tr("where the watched guard believes you are")],
+		[InfiltrationDrawing.PARTICLE, tr("particles (1): its guesses, bigger where more")],
+		[InfiltrationDrawing.EMPTIED, tr("white square: guesses its sight just cleared")],
 		[InfiltrationDrawing.SPOT, tr("the spot it was given to search; grey: searched")],
 		[InfiltrationDrawing.SOUND, tr("a sound's reach along the level")],
 	])
