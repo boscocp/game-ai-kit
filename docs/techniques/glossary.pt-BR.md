@@ -88,6 +88,9 @@ também em itálico, ficam como foram publicados.
 | *attack_close* | a regra do Wesnoth que deixa uma unidade se juntar a um ataque já feito perto dela |
 | *id* | o número que identifica uma unidade no tabuleiro |
 | *enter*, *shift*, Tab | nomes de teclas, como estão no teclado |
+| *D-pad* | o direcional do controle, a cruz de quatro direções; fica em inglês, como no menu ("D-pad cima", "D-pad setas") |
+| A, B, X, Y, LB, RB, LT, RT, View, Menu | os nomes impressos nos botões do controle Xbox; ficam como estão no controle |
+| *stick* | a alavanca do controle, que nas telas se chama "analógico": o esquerdo anda, o direito olha |
 | *LLM* | um modelo de linguagem grande (*large language model*), que gera texto; aqui, um conselheiro cuja resposta é validada antes de virar ação |
 | *prompt* | o texto que se manda a um LLM antes da pergunta: quem ele é, o que deve responder e em que formato |
 | *runtime* | o que roda o modelo e devolve o texto: um servidor local, ou, nos testes, uma gravação |

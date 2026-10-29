@@ -16,6 +16,8 @@ extends Control
 const SWATCH: float = 16.0
 const LINE: float = 20.0
 const TEXT_SIZE: int = 14
+## Between the swatch and the words.
+const WORDS_GAP: float = 8.0
 
 # Open ground, under every translucent swatch. Made once, when first drawn.
 var _ground: Texture2D
@@ -24,6 +26,17 @@ var _ground: Texture2D
 ## what it stands for. A picture may carry a third element, the tint the board
 ## draws it with, so the legend shows what the board shows.
 var entries: Array[Array] = []
+
+
+## How wide a line's words may be: the legend's own width, past its swatch.
+## A line added from code -- the pad's table -- breaks to stay inside it.
+func words_width() -> float:
+	return size.x - SWATCH - WORDS_GAP
+
+
+## How wide `words` are drawn, in the legend's font and size.
+static func width_of(words: String) -> float:
+	return ThemeDB.fallback_font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, TEXT_SIZE).x
 
 
 ## Replace what the legend says. Called once, by the example that owns it.
@@ -43,7 +56,7 @@ func _draw() -> void:
 		else:
 			_draw_swatch(square, entries[index][0])
 		var words: String = entries[index][1]
-		draw_string(font, Vector2(SWATCH + 8.0, top + SWATCH + 1.0), words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, TEXT_SIZE)
+		draw_string(font, Vector2(SWATCH + WORDS_GAP, top + SWATCH + 1.0), words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, TEXT_SIZE)
 
 
 # A swatch over a square of open ground. The colours on the board are mostly

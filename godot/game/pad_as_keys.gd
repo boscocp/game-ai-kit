@@ -27,16 +27,31 @@ const RELEASE_AT: float = 0.35
 const LOOK_SPEED: float = 900.0
 ## Below this the right stick is resting, not looking: sticks rarely centre.
 const LOOK_DEADZONE: float = 0.2
-## How many bindings the legend puts on one line, so the table stays narrow.
-const BINDINGS_A_LINE: int = 3
-## The Xbox names for the buttons a table may use, as printed on the pad.
+## The Xbox names for the buttons a table may use, as printed on the pad, and
+## shown as printed in every language.
 const BUTTON_NAMES: Dictionary = {
 	JOY_BUTTON_A: "A", JOY_BUTTON_B: "B", JOY_BUTTON_X: "X", JOY_BUTTON_Y: "Y",
 	JOY_BUTTON_LEFT_SHOULDER: "LB", JOY_BUTTON_RIGHT_SHOULDER: "RB",
 	JOY_BUTTON_BACK: "View", JOY_BUTTON_START: "Menu",
 	JOY_BUTTON_LEFT_STICK: "LS", JOY_BUTTON_RIGHT_STICK: "RS",
+}
+## The D-pad's four directions, which no pad prints: words, so translated.
+const DPAD_NAMES: Dictionary = {  # shown through tr()
 	JOY_BUTTON_DPAD_UP: "D-pad up", JOY_BUTTON_DPAD_DOWN: "D-pad down",
 	JOY_BUTTON_DPAD_LEFT: "D-pad left", JOY_BUTTON_DPAD_RIGHT: "D-pad right",
+}
+## The D-pad's buttons, and the arrow keys, left, right, up and down: the
+## order of `stick_keys`, so four of them read as one binding.
+const DPAD: Array[JoyButton] = [JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_RIGHT, JOY_BUTTON_DPAD_UP,
+		JOY_BUTTON_DPAD_DOWN]
+const ARROWS: Array[Key] = [KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN]
+## Keys whose name `OS.get_keycode_string` writes as an English word, or as
+## a word the key does not print: a space bar prints none, an arrow key an
+## arrow the legend's font cannot draw. The kit's tables say "espaço" and
+## "setas" (the glossary: a key's name is what the key shows).
+const KEY_WORDS: Dictionary = {  # shown through tr()
+	KEY_SPACE: "Space", KEY_PERIOD: ".",
+	KEY_LEFT: "Left", KEY_RIGHT: "Right", KEY_UP: "Up", KEY_DOWN: "Down",
 }
 
 ## Which key each button presses: `{JOY_BUTTON_A: KEY_SPACE}`.
@@ -50,6 +65,10 @@ var stick_keys: Array[Key] = []
 var trigger_keys: Array[Key] = []
 ## Whether the right stick moves the mouse and the right trigger clicks it.
 var looks_with_mouse: bool = false
+## Whether `add_to` writes the table with no controller connected. A check
+## run headless cannot connect one, and must still read the line an example
+## shows somebody holding one (T103). Nothing in a game sets it.
+static var planted: bool = false
 
 # Who holds each key down right now: a key to the pad inputs holding it --
 # "button 0", "stick up", "RT". A key can be reached from two (a racer's
@@ -83,31 +102,102 @@ func release_all() -> void:
 	_right_stick = Vector2.ZERO
 
 
-## Add the table to `legend`, a few bindings a line, when a controller is
-## connected: somebody on the keyboard has no use for it, and the legend's
-## first job is the AI's colours.
+## Add the table to `legend` when a controller is connected: somebody on the
+## keyboard has no use for it, and the legend's first job is the AI's
+## colours. Each example calls it again whenever it rebuilds its legend, a
+## change of language included.
 func add_to(legend: Legend) -> void:
-	if Input.get_connected_joypads().is_empty():
+	if Input.get_connected_joypads().is_empty() and not planted:
 		return
-	var parts: PackedStringArray = describe().trim_prefix("pad: ").split(", ")
-	for first: int in range(0, parts.size(), BINDINGS_A_LINE):
-		var line: String = ", ".join(parts.slice(first, first + BINDINGS_A_LINE))
-		legend.entries.append([Color.TRANSPARENT, ("pad: " if first == 0 else "  ") + line])
+	for line: String in legend_lines(legend):
+		legend.entries.append([Color.TRANSPARENT, line])
 	legend.queue_redraw()
 
 
-## The table in words: "pad: A Space, B C".
+## The lines `add_to` writes into `legend`, in the language chosen now:
+## "pad: " before the first, and as many bindings a line as fit the legend's
+## width. A count of bindings a line did not: three ran off the window in
+## English, in the racers and the stealth hall, and Portuguese is longer.
+func legend_lines(legend: Legend) -> Array[String]:
+	var room: float = legend.words_width()
+	var lines: Array[String] = []
+	var line: String = tr("pad: {bindings}").format({bindings = ""})
+	var bindings_on_line: int = 0
+	for binding: String in _bindings():
+		var longer: String = line + (", " if bindings_on_line > 0 else "") + binding
+		if bindings_on_line > 0 and Legend.width_of(longer) > room:
+			lines.append(line)
+			longer = "  " + binding
+			bindings_on_line = 0
+		line = longer
+		bindings_on_line += 1
+	if bindings_on_line > 0:
+		lines.append(line)
+	return lines
+
+
+## The table in words, on one line: "pad: A Space, B C".
 func describe() -> String:
+	return tr("pad: {bindings}").format({bindings = ", ".join(_bindings())})
+
+
+# Each binding in words: "stick A/D/W/S", "D-pad arrows", "A Space". The
+# words are translated; key names and the names printed on the pad stay as
+# written. The stick is the left one where the right one looks too.
+func _bindings() -> Array[String]:
 	var parts: Array[String] = []
-	if not stick_keys.is_empty():
-		parts.append("stick " + "/".join(stick_keys.map(OS.get_keycode_string)))
+	if not stick_keys.is_empty() and looks_with_mouse:
+		parts.append(tr("left stick {keys}").format({keys = _keys_named(stick_keys)}))
+	elif not stick_keys.is_empty():
+		parts.append(tr("stick {keys}").format({keys = _keys_named(stick_keys)}))
+	var dpad_keys: Array[Key] = _dpad_keys()
+	if not dpad_keys.is_empty():
+		parts.append(tr("D-pad {keys}").format({keys = _keys_named(dpad_keys)}))
 	for button: JoyButton in buttons:
-		parts.append("%s %s" % [BUTTON_NAMES.get(button, str(button)), OS.get_keycode_string(buttons[button])])
+		if dpad_keys.is_empty() or not button in DPAD:
+			parts.append("%s %s" % [_name_of(button), _key_named(buttons[button])])
+	# "LT" as a value, not "LT %s": a literal with a word and a space would
+	# read to check_translations_game.py as prose, and a pad's name is not.
 	if trigger_keys.size() == 2:
-		parts.append("LT %s, RT %s" % [OS.get_keycode_string(trigger_keys[0]), OS.get_keycode_string(trigger_keys[1])])
+		parts.append("%s %s" % ["LT", _key_named(trigger_keys[0])])
+		parts.append("%s %s" % ["RT", _key_named(trigger_keys[1])])
 	if looks_with_mouse:
-		parts.append("right stick looks, RT clicks")
-	return "pad: " + ", ".join(parts)
+		parts.append(tr("right stick looks"))
+		parts.append(tr("RT clicks"))
+	return parts
+
+
+# A button as the legend names it: a D-pad direction in the language chosen,
+# any other as printed on the pad.
+func _name_of(button: JoyButton) -> String:
+	if DPAD_NAMES.has(button):
+		return tr(DPAD_NAMES[button])
+	return BUTTON_NAMES.get(button, str(button))
+
+
+# The keys the D-pad's four directions press, in the order of DPAD, when
+# the table binds all four: they read as one binding. Empty otherwise.
+func _dpad_keys() -> Array[Key]:
+	var keys: Array[Key] = []
+	for button: JoyButton in DPAD:
+		if not buttons.has(button):
+			return []
+		keys.append(buttons[button])
+	return keys
+
+
+# Four direction keys as one name: "arrows", or "A/D/W/S".
+func _keys_named(keys: Array[Key]) -> String:
+	if keys == ARROWS:
+		return tr("arrows")
+	return "/".join(keys.map(_key_named))
+
+
+# A key's name as the key shows it, in the language chosen.
+func _key_named(key: Key) -> String:
+	if KEY_WORDS.has(key):
+		return tr(KEY_WORDS[key])
+	return OS.get_keycode_string(key)
 
 
 func _init() -> void:
@@ -122,7 +212,7 @@ func _exit_tree() -> void:
 func _input(event: InputEvent) -> void:
 	var button := event as InputEventJoypadButton
 	if button != null and buttons.has(button.button_index):
-		_hold("button %d" % button.button_index, buttons[button.button_index], button.pressed)
+		_hold("button %d" % button.button_index, buttons[button.button_index], button.pressed)  # not shown
 		return
 	var motion := event as InputEventJoypadMotion
 	if motion != null:
@@ -145,11 +235,11 @@ func _move_axis(axis: JoyAxis, value: float) -> void:
 	match axis:
 		# A stick's y grows downwards, so up is its negative side.
 		JOY_AXIS_LEFT_X when stick_used:
-			_hold_while("stick left", stick_keys[0], -value)
-			_hold_while("stick right", stick_keys[1], value)
+			_hold_while("stick left", stick_keys[0], -value)  # not shown
+			_hold_while("stick right", stick_keys[1], value)  # not shown
 		JOY_AXIS_LEFT_Y when stick_used:
-			_hold_while("stick up", stick_keys[2], -value)
-			_hold_while("stick down", stick_keys[3], value)
+			_hold_while("stick up", stick_keys[2], -value)  # not shown
+			_hold_while("stick down", stick_keys[3], value)  # not shown
 		JOY_AXIS_RIGHT_X:
 			_right_stick.x = value
 		JOY_AXIS_RIGHT_Y:

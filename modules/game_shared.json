@@ -5,6 +5,9 @@
   "owns": [
     "godot/game/",
     "godot/test/game_shared/",
+    "godot/locale/game_shared.csv",
+    "godot/locale/game_shared.csv.import",
+    "godot/locale/game_shared.pt_BR.translation",
     "godot/assets/",
     "tools/artgen/",
     "scripts/artgen"

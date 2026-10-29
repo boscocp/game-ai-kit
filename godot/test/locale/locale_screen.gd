@@ -27,10 +27,14 @@
 # bottom (T102, after the tactical header ran to x=2432 and its status to
 # y=719 of 720). A Label3D's words are read as a Label's are (T80).
 #
+# No pad can be connected headless, so one is planted (`PadAsKeys.planted`):
+# an example with a pad must show the pad's legend lines as written now,
+# and none of their bindings in English (T103).
+#
 # Planted: a Label whose auto-translation is disabled, a formatted English
 # line, a line too wide, a wrapped Label too tall (also under a ceiling)
-# and one too wide, and an
-# empty scene; each must be refused, or the check sees nothing
+# and one too wide, an empty scene, and a pad's line written in English
+# and not rebuilt; each must be refused, or the check sees nothing
 # and says so. Any engine error while the demos run is a failure too: a
 # SCRIPT ERROR aborts only its function and the run would otherwise print a
 # clean summary.
@@ -114,12 +118,16 @@ func _run() -> void:
 	if _english.is_empty():
 		failures.append("no key with a pt_BR translation under %s" % LOCALE_FOLDER)
 	TranslationServer.set_locale("pt_BR")
+	# No pad can be connected headless, and the pad's line is written only
+	# for one: planted, every example with a pad shows it (T103).
+	PadAsKeys.planted = true
 	failures += await _planted()
 	for path: String in EXAMPLES:
 		# Counted from before the load: a script that fails to parse fails
 		# there, and the scene still opens without it (T79 found one).
 		_counter.errors = 0
 		failures += await _look_at(path, (load(path) as PackedScene).instantiate(), EXAMPLES[path])
+	PadAsKeys.planted = false
 	TranslationServer.set_locale("en")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SETTINGS))
 	for failure: String in failures:
@@ -231,6 +239,7 @@ func _look_at(label: String, example: Node, expected: Array) -> Array[String]:
 			failures.append("%s: %s shows the English %s" % [label, example.get_path_to(node), english])
 		if node is Label:
 			failures += _past_the_edge(label, example.get_path_to(node), node as Label)
+	failures += _pad_line(label, example)
 	if _lines_read == 0:
 		failures.append("%s: shows no words at all to check" % label)
 	if _counter.errors > 0:
@@ -278,6 +287,39 @@ func _provoke_an_rts_refusal(game: RtsGame) -> Array[String]:
 	if not header.text.contains(RtsRefusal.words(game.last_refusal)) or game.last_refusal == RtsRefusal.words(game.last_refusal):
 		return ["rts: the refusal \"%s\" is not shown translated:\n%s" % [game.last_refusal, header.text]]
 	return []
+
+
+# An example with a pad and a legend must show the pad's lines as the pad
+# writes them now, in pt-BR (planted, with no pad connected): otherwise the
+# walk read none of its words, and an English line would pass unseen. Each
+# of a line's ", " bindings is read too, after the line's "pad: ", without
+# its key's name and as that name alone: "stick A/D/W/S" is "stick {keys}",
+# "D-pad up Up" is "D-pad up", and "LT Down" ends in "Down" (T103).
+func _pad_line(label: String, example: Node) -> Array[String]:
+	var pads: Array[Node] = _walk(example).filter(func(node: Node) -> bool: return node is PadAsKeys)
+	var legend := example.find_child("Legend", true, false) as Legend
+	if pads.is_empty() or legend == null:
+		return []
+	var shown: Array = legend.entries.map(func(entry: Array) -> String: return str(entry[1]))
+	var failures: Array[String] = []
+	for line: String in (pads[0] as PadAsKeys).legend_lines(legend):
+		if not line in shown:
+			failures.append("%s: the legend does not show the pad's line %s" % [label, line])
+		for binding: String in _english_bindings(line):
+			failures.append("%s: the pad's line shows the English %s" % [label, binding])
+	return failures
+
+
+# The bindings of a pad's line that are, or are named by, the English of a key.
+func _english_bindings(line: String) -> Array[String]:
+	var before_the_first: String = TranslationServer.translate("pad: {bindings}").split("{")[0]
+	var found: Array[String] = []
+	for binding: String in line.trim_prefix(before_the_first).strip_edges().split(", "):
+		var name: String = binding.substr(0, binding.rfind(" "))
+		var key: String = binding.substr(binding.rfind(" ") + 1)
+		if _is_english(binding) or _is_english(name) or _is_english(key):
+			found.append(binding)
+	return found
 
 
 # Each line of a Label that does not wrap or clip, measured in its own font:
@@ -349,7 +391,27 @@ func _planted() -> Array[String]:
 	_counter.errors = 0
 	if (await _look_at("planted", Node2D.new(), [])).is_empty():
 		failures.append("an empty scene passed: this check would pass a blank screen")
+	failures += await _planted_english_pad()
 	return failures
+
+
+# A legend whose pad line was written in English and never rebuilt: the
+# demo that forgot to call `add_to` again when the language changed.
+func _planted_english_pad() -> Array[String]:
+	_counter.errors = 0
+	var holder := Node2D.new()
+	var legend := Legend.new()
+	legend.name = "Legend"
+	var pad := PadAsKeys.new()
+	pad.use({JOY_BUTTON_DPAD_UP: KEY_UP}, [KEY_A, KEY_D, KEY_W, KEY_S], true)
+	holder.add_child(legend)
+	holder.add_child(pad)
+	TranslationServer.set_locale("en")
+	pad.add_to(legend)
+	var found: Array[String] = await _look_at("planted", holder, [])
+	if not found.any(func(failure: String) -> bool: return failure.contains("shows the English pad: ")):
+		return ["the planted pad line in English was not seen: %s" % [found]]
+	return []
 
 
 # A wrapped Label laid at `box`, as the tactical header is, saying `words`,

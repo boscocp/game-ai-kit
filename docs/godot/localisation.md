@@ -139,9 +139,9 @@ RTS and the fighting game, by the same rules, with what they added:
   hitstun) and the characters; the clone's case key and its feature names,
   which are the recordings' columns; the frame data's own refusals, which
   speak to whoever edits the JSON, in its keys' language. The glossary
-  defines the terms. The pad's legend line (`PadAsKeys.add_to`, in
-  `game_shared`, which has no table) is still English: key and button
-  names, and the words "pad" and "stick" (T103).
+  defines the terms. On the pad's legend line, the key names and the names
+  printed on the pad (A, LB, View, Menu, LT); the rest is translated since
+  T103, below.
 - **Numbers.** A number a person reads as prose follows the language's
   decimal separator, through `Language.decimal`: the 2D racer's winning
   margin ("vence por 1,4 s") and the 3D racer's last lap time. Every other
@@ -270,6 +270,55 @@ RTS and the fighting game, by the same rules, with what they added:
   now ends 4 px past the gutter, not 200 lines past it, and one more ends
   2 px under a ceiling it is given as if `NOT_YET_FITTED` named it: with
   the ceiling read as an exemption, that one passes and the check fails.
+
+## The pad's line (T103, wave 109)
+
+- **`game_shared` has a table**, `godot/locale/game_shared.csv`, for the
+  one line it writes on every real-time demo: the pad's, under the legend
+  (`PadAsKeys.add_to`). "pad: {bindings}" is "controle: {bindings}" (the
+  menu already said "No controle"), "stick {keys}" is "analógico {keys}"
+  -- "left stick", "analógico esquerdo", where the right stick looks too
+  -- the D-pad's directions are words ("D-pad cima"; "D-pad" stays, as the
+  menu's line keeps it), and the right stick looking and RT clicking are
+  two keys. The names printed on the pad (A, LB, LT, View, Menu) stay, as
+  do key names a key prints (Shift, Tab, W). Not the engine's English for
+  keys that print no word: `OS.get_keycode_string` writes "Space", "Up",
+  "Period", and the first version left them in the pt-BR line (wave 109's
+  review). They are "espaço", "cima"/"baixo"/"esquerda"/"direita" and "."
+  now, as the kit's other tables say them; the four arrows together are
+  "setas", and the D-pad's four directions bound together are one binding,
+  "D-pad setas". Arrows would be shorter, and the legend's font has none
+  (`ThemeDB.fallback_font.has_char(0x2190)` is false). The glossary names
+  D-pad, the pad's printed names and the stick.
+  Every demo with a pad already called `add_to` after `set_entries` in the
+  legend rebuild it runs on `NOTIFICATION_TRANSLATION_CHANGED`.
+- **A pad planted for the checks.** None can be connected headless, and
+  the line is written only when one is. `PadAsKeys.planted` writes it
+  anyway; nothing in a game sets it. `test-locale-screen` plants it and
+  fails an example with a pad whose legend does not show the pad's lines
+  as the pad writes them now, and reads each binding as well as the line
+  ("stick A/D/W/S" is the English of "stick {keys}", "LT Down" ends in
+  the English of "Down"). Planted: a legend whose pad line was written in
+  English and not rebuilt. `test-demo-overlays` plants it too, so the
+  legend is measured with the pad's lines, in both languages, and fails an
+  example with a pad none of whose lines reached the legend (planted: one
+  such example) -- without that, a plant ignored would measure nothing.
+  `make test-pad` reads the line for English words in any case: the
+  first claim was lowercase and case-sensitive, and passed "Space".
+- **The line breaks at the legend's width, not every three bindings.**
+  Planted, the English line ran off the window at three a line in the 2D
+  racer (x=1355), the stealth hall (1358) and the 3D racer (1303): it had
+  never been measured, since no gate had a pad. `legend_lines` now puts on
+  a line as many bindings as fit `Legend.words_width()`, the legend's own
+  width past its swatch, measured in the legend's font.
+- **Not fitted: the legend's height.** No gate measures how far down a
+  legend's lines go, and with a pad some go past their box. Measured with
+  the pad planted: the bot match's ends at y=740 of a 720-pixel window
+  (800 at three a line); the 2D racer's at 254 in English and 274 in
+  pt-BR, over its status, which starts at 200; the 3D racer's at 212, over
+  its status at 164; the maze's at 220, touching its `Decision` at 220. It
+  was so before this wave, with a real pad. Left to the owner, for a task
+  of its own.
 
 ## Measured on 4.7.2
 

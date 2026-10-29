@@ -23,11 +23,19 @@
 #   7. a key two inputs hold -- the racers' throttle, the stick's up and RT
 #      -- stays down while either holds it: the stick wobbling near zero as
 #      you steer does not lift the throttle RT still holds; and the
-#      fighting game's walk, the stick's left and the D-pad's (wave 85).
+#      fighting game's walk, the stick's left and the D-pad's (wave 85);
+#   8. the legend's line says the table in English, and in pt-BR keeps no
+#      English word, in any case, but the names a key or the pad prints
+#      (Shift, A, LT) -- not "Space", "Up" or "Period"; with
+#      `PadAsKeys.planted`, it is written with no pad connected, broken
+#      into lines that each fit the legend's width, and nothing dropped
+#      (T103).
 #
 # Planted, and refused: each claim's numbers with that one claim broken, a
 # pad that presses only the keycode -- the fighting game would not move --
-# and a pad where a key has one owner, wave 84's first version.
+# a pad where a key has one owner, wave 84's first version, and the English
+# lines, whose English words must all be found, and the first pt-BR line,
+# which kept the engine's "Space", "Up" and "Period".
 #
 #     ./scripts/godot --headless --path godot -s res://test/game_shared/pad_as_keys_claims.gd
 #
@@ -87,7 +95,25 @@ const ALL_HELD: Dictionary = {"button_held": true, "button_physical": true, "but
 		"click": true, "click_released": true, "looked": true, "swap_released": true,
 		"trigger_held": true, "trigger_released": true, "shift_carried": true,
 		"shift_same_frame": true, "shared_kept": true, "shared_released": true,
-		"stick_and_dpad_kept": true, "stick_and_dpad_released": true}
+		"stick_and_dpad_kept": true, "stick_and_dpad_released": true,
+		"legend_english": true, "legend_portuguese": true, "legend_planted": true,
+		"legend_fits": true, "legend_whole": true}
+## The narrowest legend with a pad's line, the stealth hall's.
+const LEGEND_WIDTH: float = 290.0
+## The lines `_legend_words` expects in English for its two tables, every
+## kind of binding in them.
+const LEGEND_IN_ENGLISH: String = ("pad: left stick A/D/W/S, A Space, D-pad up Up, LT Down, RT Up, "
+		+ "right stick looks, RT clicks")
+const ARROWS_IN_ENGLISH: String = "pad: stick arrows, D-pad arrows, B ."
+## The words of those lines a person reads as English, in any case. Key
+## names a key prints (Shift, Tab, W) and the names printed on the pad (A,
+## LT, Menu) are not among them; "Space", "Up" and "Period" are, since a
+## space bar prints no word and an arrow key an arrow (wave 109's review).
+const ENGLISH_WORDS: Array[String] = ["pad", "stick", "up", "down", "left", "right", "looks", "clicks",
+		"space", "arrows", "period"]
+## The first pt-BR line, which left the engine's English key names in: its
+## six must be found, or the claim would pass it.
+const KEY_NAMES_LEFT_ENGLISH: String = "controle: analógico Left/Right/Up/Down, A Space, B Period"
 
 
 func _initialize() -> void:
@@ -130,6 +156,12 @@ func _planted() -> Array[String]:
 		broken[name] = false
 		if claims(broken).size() != 1:
 			failures.append("planted: %s broken was not found alone" % name)
+	var in_english: Array[String] = english_words(LEGEND_IN_ENGLISH + " " + ARROWS_IN_ENGLISH)
+	if in_english.size() != ENGLISH_WORDS.size() - 1 or "period" in in_english:
+		failures.append("planted: the English lines' words were not all found: %s" % [in_english])
+	var key_names: Array[String] = english_words(KEY_NAMES_LEFT_ENGLISH)
+	if key_names.size() != 6:
+		failures.append("planted: the English key names were not all found: %s" % [key_names])
 	return failures
 
 
@@ -163,6 +195,7 @@ func _measure(pad: PadAsKeys) -> Dictionary:
 	await _button(JOY_BUTTON_A, false)
 	seen.merge(await _triggers_and_shift(pad))
 	seen.merge(await _shared_key(pad))
+	seen.merge(_legend_words(pad))
 	pad.queue_free()
 	counter.queue_free()
 	await _frames(2)
@@ -231,6 +264,53 @@ func _shared_key(pad: PadAsKeys) -> Dictionary:
 	await _button(JOY_BUTTON_DPAD_LEFT, false)
 	seen["stick_and_dpad_released"] = not Input.is_physical_key_pressed(KEY_A)
 	return seen
+
+
+# The legend's line, in English and in pt-BR, with every kind of binding in
+# it; and the line written with no pad connected, once one is planted.
+func _legend_words(pad: PadAsKeys) -> Dictionary:
+	var seen: Dictionary = {}
+	pad.use({JOY_BUTTON_A: KEY_SPACE, JOY_BUTTON_DPAD_UP: KEY_UP}, [KEY_A, KEY_D, KEY_W, KEY_S], true,
+			[KEY_DOWN, KEY_UP])
+	var arrows := PadAsKeys.new()
+	arrows.use({JOY_BUTTON_DPAD_LEFT: KEY_LEFT, JOY_BUTTON_DPAD_RIGHT: KEY_RIGHT, JOY_BUTTON_DPAD_UP: KEY_UP,
+			JOY_BUTTON_DPAD_DOWN: KEY_DOWN, JOY_BUTTON_B: KEY_PERIOD}, [KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN])
+	TranslationServer.set_locale("en")
+	seen["legend_english"] = pad.describe() == LEGEND_IN_ENGLISH and arrows.describe() == ARROWS_IN_ENGLISH
+	TranslationServer.set_locale("pt_BR")
+	var portuguese: String = pad.describe()
+	seen["legend_portuguese"] = english_words(portuguese + " " + arrows.describe()).is_empty() \
+			and portuguese.begins_with("controle: ")
+	print("pad_as_keys: in pt-BR, %s | %s" % [portuguese, arrows.describe()])
+	arrows.free()
+	PadAsKeys.planted = true
+	var legend := Legend.new()
+	legend.size = Vector2(LEGEND_WIDTH, 200.0)
+	pad.add_to(legend)
+	PadAsKeys.planted = false
+	var written: Array[String] = []
+	for entry: Array in legend.entries:
+		written.append(str(entry[1]))
+	seen["legend_planted"] = written == pad.legend_lines(legend) and written.size() > 1
+	seen["legend_fits"] = written.all(func(line: String) -> bool:
+		return Legend.width_of(line) <= legend.words_width())
+	seen["legend_whole"] = ", ".join(written.map(func(line: String) -> String:
+		return line.strip_edges())) == portuguese
+	legend.free()
+	TranslationServer.set_locale("en")
+	pad.use({})
+	return seen
+
+
+## The English words of the pad's line found in `line`, whole words only:
+## none may be left in pt-BR. Key and button names are not among them, and
+## "D-pad", which the menu's Portuguese keeps too, is not "pad".
+static func english_words(line: String) -> Array[String]:
+	var found: Array[String] = []
+	for word: String in ENGLISH_WORDS:
+		if RegEx.create_from_string("(?i)(?<![\\w-])%s(?![\\w-])" % word).search(line) != null:
+			found.append(word)
+	return found
 
 
 # A pad event goes in buffered; the pad node answers it in the next frame
