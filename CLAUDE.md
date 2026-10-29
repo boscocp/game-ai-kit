@@ -8,8 +8,8 @@ something.
 
 An invariant without a gate is prose, and prose does not hold: a rule violated
 twice becomes a script. This section used to claim every invariant had one. It
-did not, and a review said so. Four are still prose or only half held -- 4, 6,
-7 and 13 -- and they are marked. **Marked, not quietly dropped**: an unenforced
+did not, and a review said so. Four are still prose or only half held -- 4,
+6, 7 and 13 -- and they are marked. **Marked, not quietly dropped**: an unenforced
 rule you know about is worth keeping, and one you believe is enforced is worse
 than none.
 
@@ -21,7 +21,7 @@ than none.
 | 4 gate rejects a planted case | `make lint-selftests` runs them; that each one *has* a planted case is still read by a person |
 | 5 no lesson above tier 1 | `check_tiers.py`, via each page's `teaches:` field |
 | 6 no training at game time | half held -- `check_no_training.py` is a net for the common spellings, and says so; its one exception, ADR 0016, is N9; T18's cloned player is N10-N12 |
-| 7 LLM output validated | **none yet** -- arrives with the addon |
+| 7 LLM output validated | half held -- `check_llm_validated.py` (wave 102) is a static net for the common spellings, and says so: no way round `ai_llm`, nothing waiting on the frame (V0-V3); that the validator refuses what it must is `make test-llm-vectors` |
 | 8 toolchain on the large disk | `check_disk_layout.py` |
 | 9 LICENSE and NOTICE ship | `check_license.py` |
 | 10 nothing from the employer | `check_no_employer_refs.py` |

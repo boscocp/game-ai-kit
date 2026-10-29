@@ -1,0 +1,367 @@
+{
+  "name": "what a reply may contain",
+  "why": "One fixed shape, {speech, intent, argument}, against one game's declaration: the code of the first rule a raw reply breaks, or the speech, intent and argument the game may act on. gameaikit.llm.validator and ai_llm's LlmValidator are both held to every case.",
+  "declaration": {
+    "intents": {
+      "greet": [],
+      "ask": [
+        "the_gate",
+        "the_captain"
+      ],
+      "claim": [
+        "merchant",
+        "messenger"
+      ],
+      "threaten": []
+    },
+    "fallback_speech": "Say that again, slower.",
+    "secrets": [
+      "owl-eyes",
+      "istanbul",
+      "Ölmez"
+    ]
+  },
+  "cases": [
+    {
+      "why": "The smallest reply that passes: a greeting, an intent with no argument.",
+      "raw": "{\"speech\": \"Evening. State your business.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "Evening. State your business.",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
+      "why": "An intent with one of its declared arguments.",
+      "raw": "{\"speech\": \"The gate opens at dawn.\", \"intent\": \"ask\", \"argument\": \"the_gate\"}",
+      "accepted": {
+        "speech": "The gate opens at dawn.",
+        "intent": "ask",
+        "argument": "the_gate"
+      }
+    },
+    {
+      "why": "An intent that takes arguments, with none: an empty argument is always allowed.",
+      "raw": "{\"speech\": \"Ask about what?\", \"intent\": \"ask\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "Ask about what?",
+        "intent": "ask",
+        "argument": ""
+      }
+    },
+    {
+      "why": "The keys in another order. JSON objects have no order, and neither does the shape.",
+      "raw": "{\"argument\": \"merchant\", \"intent\": \"claim\", \"speech\": \"A merchant, at this hour?\"}",
+      "accepted": {
+        "speech": "A merchant, at this hour?",
+        "intent": "claim",
+        "argument": "merchant"
+      }
+    },
+    {
+      "why": "Whitespace around the object, and the line break a model often ends on. Both parsers skip it.",
+      "raw": "  {\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\"}\n",
+      "accepted": {
+        "speech": "Evening.",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
+      "why": "Exactly 280 characters, the limit.",
+      "raw": "{\"speech\": \"Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
+      "why": "280 characters that are not ASCII: the limit counts characters, not bytes. Python's len and Godot's String.length both count code points.",
+      "raw": "{\"speech\": \"ãããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããã\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "ãããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããããã",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
+      "why": "A JSON escape for a character that is not ASCII, decoded by both parsers to the same speech.",
+      "raw": "{\"speech\": \"N\\u00e3o.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "Não.",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
+      "why": "A key written twice. Both parsers keep the last value -- measured on Godot 4.7.2 and Python 3 -- and the last value is then validated like any other.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"threaten\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "Evening.",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
+      "why": "Prose with no JSON in it at all: what a model says when it ignores the instructions.",
+      "raw": "I'm not sure what you mean.",
+      "refused": "R1"
+    },
+    {
+      "why": "An object wrapped in prose. A reply is the whole text or nothing: digging an object out of a sentence would accept whatever the sentence happens to contain.",
+      "raw": "Sure! Here is my reply: {\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R1"
+    },
+    {
+      "why": "An object inside a Markdown code fence, the other way a chat-tuned model wraps it.",
+      "raw": "```json\n{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\"}\n```",
+      "refused": "R1"
+    },
+    {
+      "why": "Nothing at all: a runtime that answered with an empty body.",
+      "raw": "",
+      "refused": "R1"
+    },
+    {
+      "why": "Two objects one after the other. Which one would the game act on?",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\"}{\"speech\": \"Go away.\", \"intent\": \"threaten\", \"argument\": \"\"}",
+      "refused": "R1"
+    },
+    {
+      "why": "A trailing comma. Python's parser refuses it and Godot's 4.7.2 accepts it, measured, so LlmValidator refuses it itself: one answer in both languages.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\",}",
+      "refused": "R1"
+    },
+    {
+      "why": "An escaped quote inside the speech, followed by what would not be JSON outside a string. LlmValidator reads numbers and commas outside strings only, and a backslash-quote does not end one.",
+      "raw": "{\"speech\": \"He said \\\"back at 01:00, 1.\\\" and left.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "He said \"back at 01:00, 1.\" and left.",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
+      "why": "A trailing comma inside a list, which Godot's parser accepts too.",
+      "raw": "{\"speech\": [\"Evening.\",], \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R1"
+    },
+    {
+      "why": "A number with a leading zero. Not JSON; Godot's parser reads it as 1 -- measured -- and would then call it R5, a value that is not a string, so LlmValidator checks every number's spelling first.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": 01, \"argument\": \"\"}",
+      "refused": "R1"
+    },
+    {
+      "why": "A number ending in a point, the other spelling Godot's parser takes and JSON does not.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": 1., \"argument\": \"\"}",
+      "refused": "R1"
+    },
+    {
+      "why": "Half a character: a lone UTF-16 surrogate. Godot's parser refuses it, and Python's keeps it unless asked, so gameaikit.llm refuses what cannot become UTF-8.",
+      "raw": "{\"speech\": \"Evening \\ud83d\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R1"
+    },
+    {
+      "why": "A whole character written as a surrogate pair, which both parsers join into one: the speech is two characters long.",
+      "raw": "{\"speech\": \"Hi\\ud83d\\ude00\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "Hi😀",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
+      "why": "NaN, which Python's parser accepts unless told not to, and JSON does not have.",
+      "raw": "{\"speech\": NaN, \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R1"
+    },
+    {
+      "why": "A byte-order mark before the object. Both parsers refuse it.",
+      "raw": "\ufeff{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R1"
+    },
+    {
+      "why": "JSON, but a list.",
+      "raw": "[\"Evening.\", \"greet\", \"\"]",
+      "refused": "R2"
+    },
+    {
+      "why": "JSON, but a string.",
+      "raw": "\"Evening.\"",
+      "refused": "R2"
+    },
+    {
+      "why": "A missing key: no argument.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\"}",
+      "refused": "R3"
+    },
+    {
+      "why": "An extra key. The shape is closed: a `mood` the game never declared is a field nobody validates.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\", \"mood\": \"angry\"}",
+      "refused": "R4"
+    },
+    {
+      "why": "A value that is not a string: argument null.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": null}",
+      "refused": "R5"
+    },
+    {
+      "why": "A value that is not a string: intent a number.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": 3, \"argument\": \"\"}",
+      "refused": "R5"
+    },
+    {
+      "why": "An intent the game did not declare. The model may not invent a discourse act -- `bribe` is not something this game knows how to answer.",
+      "raw": "{\"speech\": \"For a coin, perhaps.\", \"intent\": \"bribe\", \"argument\": \"\"}",
+      "refused": "R6"
+    },
+    {
+      "why": "An intent in the wrong case. Intents are names, compared exactly.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"Greet\", \"argument\": \"\"}",
+      "refused": "R6"
+    },
+    {
+      "why": "An argument that belongs to another intent: `the_gate` is something to ask about, not something to claim to be.",
+      "raw": "{\"speech\": \"The gate, you say?\", \"intent\": \"claim\", \"argument\": \"the_gate\"}",
+      "refused": "R7"
+    },
+    {
+      "why": "An argument for an intent that takes none.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"merchant\"}",
+      "refused": "R7"
+    },
+    {
+      "why": "An argument the game never declared at all.",
+      "raw": "{\"speech\": \"Royalty, is it?\", \"intent\": \"claim\", \"argument\": \"royalty\"}",
+      "refused": "R7"
+    },
+    {
+      "why": "An empty speech.",
+      "raw": "{\"speech\": \"\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R8"
+    },
+    {
+      "why": "281 characters, one past the limit.",
+      "raw": "{\"speech\": \"Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt. Halt!\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R8"
+    },
+    {
+      "why": "Two lines: a line break inside the speech, written as JSON's escape.",
+      "raw": "{\"speech\": \"Evening.\\nState your business.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "A tab, the other control character a model emits.",
+      "raw": "{\"speech\": \"Evening.\\tWell?\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "Markup: BBCode a RichTextLabel would render as bold.",
+      "raw": "{\"speech\": \"[b]Halt![/b]\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R10"
+    },
+    {
+      "why": "Markup: Markdown's emphasis, the stage direction chat models love.",
+      "raw": "{\"speech\": \"*grins* Evening.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R10"
+    },
+    {
+      "why": "Markup: an HTML tag.",
+      "raw": "{\"speech\": \"<i>Evening.</i>\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R10"
+    },
+    {
+      "why": "A secret in the speech. The game never told the model the password -- this net is for the day somebody does.",
+      "raw": "{\"speech\": \"The word tonight is owl-eyes.\", \"intent\": \"ask\", \"argument\": \"the_gate\"}",
+      "refused": "R11"
+    },
+    {
+      "why": "A secret in another case, non-ASCII letters as written: the case of A to Z is folded, nothing else.",
+      "raw": "{\"speech\": \"ÖLMEZ is the name you want.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R11"
+    },
+    {
+      "why": "The same secret with its first letter lowercased outside A to Z: not found. Python's lower() and Godot's to_lower() fold letters past Z differently, so both fold A to Z only and agree -- a game keeps its secrets' non-ASCII letters in every case it needs, or out of the prompt, which is the real protection.",
+      "raw": "{\"speech\": \"ölmez is a name.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "ölmez is a name.",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
+      "why": "A dotted capital I. Python lowers it to i and a combining dot, Godot to i; folding A to Z only, neither finds `istanbul` in it.",
+      "raw": "{\"speech\": \"Off to İstanbul.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "Off to İstanbul.",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
+      "why": "A tab written as itself inside the JSON string, not as an escape. Both parsers take it (Python's when not strict), and R9 refuses it in the speech.",
+      "raw": "{\"speech\": \"Evening.\tWell?\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "A line break written as itself inside the JSON string.",
+      "raw": "{\"speech\": \"Evening.\nWell?\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "DEL, the control character past the printable ones.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "A lone backtick: Markdown's code.",
+      "raw": "{\"speech\": \"Use the `back` gate.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R10"
+    },
+    {
+      "why": "A JSON escape for NUL. Godot's parser makes it U+FFFD and Python's a real NUL, so both refuse it before parsing.",
+      "raw": "{\"speech\": \"Even\\u0000ing.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R1"
+    },
+    {
+      "why": "A backslash written as an escape, then u0000: the text of an escape, not NUL. An even run of backslashes is not an escape for it.",
+      "raw": "{\"speech\": \"Type \\\\u0000 to quit.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "Type \\u0000 to quit.",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
+      "why": "Lists nested 40 deep, which both parsers read: the cap is the validators' own, at 32, not either parser's.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\", \"x\": [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}",
+      "refused": "R1"
+    },
+    {
+      "why": "Nesting 33 deep, one past the cap: the object and 32 lists inside it. With 32 deep accepted beside it, the cap is pinned at 32 exactly.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\", \"x\": [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}",
+      "refused": "R1"
+    },
+    {
+      "why": "Lists nested exactly 32 deep: inside the cap, so the reply is refused for its extra key instead.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\", \"x\": [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}",
+      "refused": "R4"
+    },
+    {
+      "why": "Forty brackets inside a string, after an escaped quote: text, not nesting, so the depth is 1 and the reply is refused for its extra key. Both validators count depth outside strings, and a backslash-quote does not end one.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\", \"x\": \"a\\\" [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[\"}",
+      "refused": "R4"
+    },
+    {
+      "why": "Lists nested 1100 deep in an extra key. Godot's parser gives up and Python's does not, so both stop at a depth of 32 first.",
+      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\", \"x\": [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}",
+      "refused": "R1"
+    },
+    {
+      "why": "A secret in another case. Secrets are found whatever their case.",
+      "raw": "{\"speech\": \"OWL-EYES, that's the word.\", \"intent\": \"ask\", \"argument\": \"the_gate\"}",
+      "refused": "R11"
+    }
+  ]
+}

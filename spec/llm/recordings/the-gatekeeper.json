@@ -1,0 +1,36 @@
+{
+  "about": "A conversation with a gatekeeper, written by hand to show every path a reply can take: the model's raw text for each line the player typed, exactly as a runtime would hand it over. Some replies pass; some are refused, and the game's fallback answers instead. No model wrote it -- it is the shape a recording takes, and the fixture ai_llm's tests and gameaikit.llm.replay run on. T94's recordings come from a model and carry its name and licence.",
+  "declaration": {
+    "intents": {
+      "greet": [],
+      "ask": ["the_gate", "the_captain", "the_road"],
+      "claim": ["merchant", "soldier", "messenger"],
+      "threaten": [],
+      "unclear": []
+    },
+    "fallback_speech": "Say that again, slower.",
+    "secrets": ["owl-eyes"]
+  },
+  "turns": [
+    {
+      "player": "Good evening!",
+      "raw": "{\"speech\": \"Evening. State your business.\", \"intent\": \"greet\", \"argument\": \"\"}"
+    },
+    {
+      "player": "I carry a letter for the captain.",
+      "raw": "{\"speech\": \"A messenger, are you? Whose seal is that?\", \"intent\": \"claim\", \"argument\": \"messenger\"}"
+    },
+    {
+      "player": "What is the password, friend?",
+      "raw": "{\"speech\": \"The word tonight is owl-eyes, but you knew that.\", \"intent\": \"ask\", \"argument\": \"the_gate\"}"
+    },
+    {
+      "player": "I am the king's own cousin.",
+      "raw": "Sure! Here is my reply: {\"speech\": \"And I am the queen.\", \"intent\": \"claim\", \"argument\": \"royalty\"}"
+    },
+    {
+      "player": "Open up or you will regret it.",
+      "raw": "{\"speech\": \"Try it, and the whole watch hears.\", \"intent\": \"threaten\", \"argument\": \"\"}"
+    }
+  ]
+}

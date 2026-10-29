@@ -119,7 +119,7 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
 .PHONY: check-no-engine
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-no-assets lint-readability lint-demos \
        lint-addon-deps lint-modules lint-tiers lint-links lint-workflow lint-license \
-       lint-employer-refs lint-docs-freshness lint-literature lint-no-training lint-selftests \
+       lint-employer-refs lint-docs-freshness lint-literature lint-no-training lint-llm-validated lint-selftests \
        lint-translations-docs lint-translations-game lint-catalogue \
        test-python test-models ## Every gate that does not need the engine installed
 	@# CI's gate job runs exactly this. It used to hand-list the targets,
@@ -210,6 +210,12 @@ lint-no-training: ## Invariant 6: Python trains, GDScript only infers
 	@# nearly all of it checkers self-play and matches (N7).
 	@$(PYTHON) scripts/check_no_training.py
 
+.PHONY: lint-llm-validated
+lint-llm-validated: ## Invariant 7: a model's text reaches a game only through ai_llm's validator, off the frame (T92)
+	@# Static: it reads GDScript as text and runs nothing. That the validator
+	@# refuses what it must is held by running it, in test-llm-vectors.
+	@$(PYTHON) scripts/check_llm_validated.py
+
 .PHONY: lint-addon-deps
 lint-addon-deps: ## Invariant 2: no addon reaches into another
 	@$(PYTHON) scripts/check_addon_deps.py
@@ -288,7 +294,7 @@ train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors test-llm-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -340,6 +346,23 @@ test-combat-vectors: import ## The combat vectors, against the tactical board's 
 	@# The same files are read by `make test-python` through gameaikit.dataset.combat.
 	@$(GODOT) --headless --path godot -s res://test/tactical/combat_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/combat
+
+.PHONY: test-llm-vectors
+test-llm-vectors: import ## What a model's reply may contain: both validators against spec/vectors/llm (T92)
+	@# Both halves here, because this is where "every refusal is refused by
+	@# both validators" is held -- by running them. No model in either.
+	@$(PYTHON) -m unittest discover -s python/tests -t python -p "test_llm_vectors.py" -q
+	@$(GODOT) --headless --path godot -s res://test/ai_llm/llm_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/llm
+
+.PHONY: measure-llm-requests
+measure-llm-requests: import ## The worst frame while an HTTPRequest is in flight, threads on and off, against a stub server (T92)
+	@# A measurement, not a gate: its numbers are in docs/godot/llm-requests.md.
+	@# The stub answers like a local LLM server, with no model behind it.
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.llm.stub_server --port 8765 --delay 0.5 & \
+		stub=$$!; sleep 1; \
+		$(GODOT) --headless --path godot -s res://test/ai_llm/http_frame_probe.gd -- 8765; \
+		status=$$?; kill $$stub; exit $$status
 
 .PHONY: test-fuzzy-vectors
 test-fuzzy-vectors: import ## The fuzzy vectors, against ai_fuzzy

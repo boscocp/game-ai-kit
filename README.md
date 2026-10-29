@@ -26,6 +26,7 @@ The AI is what this kit is about, so here it is both ways round, generated from 
 | [ai_behaviour](docs/techniques/ai_behaviour.md) | what to do next | state machine, behaviour tree, GOAP, HTN | ● [`make demo-behaviour`](docs/techniques/catalogue.md#demo-behaviour), ● [`make demo-rts`](docs/techniques/catalogue.md#demo-rts), ● [`make demo-tactical`](docs/techniques/catalogue.md#demo-tactical) |
 | [ai_fuzzy](docs/techniques/ai_fuzzy.md) | how much, by degrees | fuzzy logic | ● [`make demo-stealth`](docs/techniques/catalogue.md#demo-stealth), ● [`make demo-infiltration`](docs/techniques/catalogue.md#demo-infiltration), ◐ [`make demo-behaviour`](docs/techniques/catalogue.md#demo-behaviour) |
 | [ai_learning](docs/techniques/ai_learning.md) | using what Python learned | a regression trained in Python, the ghost's case lookup | ◐ [`make demo-skirmish`](docs/techniques/catalogue.md#demo-skirmish), ● [`make demo-tactical`](docs/techniques/catalogue.md#demo-tactical), ● [`make demo-fighting`](docs/techniques/catalogue.md#demo-fighting) |
+| [ai_llm](docs/techniques/ai_llm.md) | a language model behind a validator |  | no demo yet |
 | [ai_opponent](docs/techniques/ai_opponent.md) | what will the player do next? | n-gram | ● [`make demo-fighting`](docs/techniques/catalogue.md#demo-fighting) |
 | [ai_perception](docs/techniques/ai_perception.md) | what a guard sees, hears and believes | vision cone with line of sight and hearing, influence map, vision shape with light and hearing, awareness, belief map | ● [`make demo-stealth`](docs/techniques/catalogue.md#demo-stealth), ● [`make demo-infiltration`](docs/techniques/catalogue.md#demo-infiltration), ● [`make demo-botmatch`](docs/techniques/catalogue.md#demo-botmatch), ● [`make demo-behaviour`](docs/techniques/catalogue.md#demo-behaviour) |
 | [ai_planning](docs/techniques/ai_planning.md) | the steps to a goal nobody wrote down | STRIPS over PDDL | ● [`make demo-rts`](docs/techniques/catalogue.md#demo-rts), ● [`make demo-tactical`](docs/techniques/catalogue.md#demo-tactical) |
@@ -58,9 +59,10 @@ The AI is what this kit is about, so here it is both ways round, generated from 
 
 <!-- /catalogue:summary -->
 
-`ai_llm` -- a local model as an advisor, with everything it says validated
-before it becomes an action -- is **not written**, and no task schedules it
-yet.
+`ai_llm` -- a language model as one more decider, with everything it says
+validated before it becomes an action ([its page](docs/techniques/ai_llm.md))
+-- has its addon and its validator; the local runtime (T93) and the text
+game that uses it (T94) are still to come.
 
 `ai_core` sits under all of them, and is small on purpose: the grid
 (`GridGraph`) and the pathfinder interface (`Pathfinder`). Take any one addon
@@ -83,19 +85,18 @@ Four tiers. **No lesson lives only in the expensive tier.**
 | **1** | Python 3 (already on Linux and macOS) | read a PDDL domain and check it, train the regressions, read the weights. Standard library only — **no pip, no numpy, no install step** |
 | **2** | Godot 4 (~130 MB, runs on integrated graphics) | play the game, open the demos, modify the addons |
 | **2, in 3D** | Godot 4 and integrated graphics that draw a 3D scene (measured: about 1,000 fps for the 3D test arena on a Radeon 610M, 1280×720 -- a 2022 chip, newer than the 2015 floor below; nothing older was measured) | the 3D examples in `godot/game3d/`, with `make assets-3d` for their models or plain shapes without; their decisions run on snapshots with Python twins, so the lesson is tier 1 (ADR 0018) |
-| **3** | a GPU with some VRAM | run a local LLM for real, once `ai_llm` exists; generate your own art with a local image model (`make artgen-bootstrap`, then `make artgen`; see [the how-to](docs/howto/generate-art.md)). Optional: the CC0 art is committed and is the default, so nothing needs this tier |
+| **3** | a GPU with some VRAM | run a local LLM for real, through `ai_llm`'s `HttpRuntime`, once T93 pins a runtime; generate your own art with a local image model (`make artgen-bootstrap`, then `make artgen`; see [the how-to](docs/howto/generate-art.md)). Optional: the CC0 art is committed and is the default, so nothing needs this tier |
 
 The game targets 1280×720 at 60 fps on integrated graphics, using the
 Compatibility (OpenGL) renderer. The 2D kit has no 3D nodes and no large
 assets; the 3D examples live apart in `godot/game3d/`, on the same renderer,
 and their models are downloaded, never committed (ADR 0018).
 
-The plan for the LLM addon, when it is written, is three transports —
-`replay` (recorded responses, needing nothing, the default in the demos),
-`ollama`, and any OpenAI-compatible endpoint. Replay is not a consolation
-prize: it is the same object the tests use as a fixture, and it teaches the
-part that matters most, which is **validating a model's output before it
-becomes an action**.
+The LLM addon has two runtimes — `RecordedRuntime` (recorded replies,
+needing nothing) and `HttpRuntime` (a local OpenAI-compatible server, T93).
+The recorded one is not a consolation prize: it is what the tests use, and
+it teaches the part that matters most, which is **validating a model's
+output before it becomes an action**.
 
 ## What you will see
 

@@ -1,0 +1,18 @@
+{
+  "module": "ai_llm",
+  "kind": "technique",
+  "about": "A language model as one more decider, behind a validator: the reply's one shape, the game's declared intents, recorded and HTTP runtimes off the frame, and the Python twin that replays a recorded conversation. No model.",
+  "owns": [
+    "godot/addons/ai_llm/",
+    "godot/test/ai_llm/",
+    "spec/llm/",
+    "spec/vectors/llm/",
+    "python/gameaikit/llm/",
+    "python/tests/test_llm.py",
+    "python/tests/test_llm_vectors.py"
+  ],
+  "depends_on": [],
+  "gates": [
+    "test-llm-vectors"
+  ]
+}
