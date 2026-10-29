@@ -32,7 +32,9 @@ target tile.
   each intersection the ghost takes the Dossier's choice with a fixed
   probability and a random legal exit otherwise -- an imprecise ghost. Its
   reason: an MDP needs chance in the world, and stating it as a rule of the
-  game makes T98's model exact rather than an approximation.
+  game makes T98's model exact rather than an approximation -- exact
+  except for the timed schedule (wave 104's review: the mode and the forced
+  reversal depend on the step count; T98's task file weighs it).
 - **The person plays Pac-Man**; T98 adds the MDP as a controller and C
   cycles between them, as in the tactical game.
 - **A Python twin of the rules**, held by vectors (a seed and inputs in,

@@ -65,16 +65,22 @@ def decide(ghost, mode, reversing, pac, facing, dice):
     options = options or [BACK[ghost["heading"]]]
     far = [(plus(ghost["cell"], d)[0] - goal[0]) ** 2 + (plus(ghost["cell"], d)[1] - goal[1]) ** 2 for d in options]
     best = options[far.index(min(far))]
+    tied = tuple(d for d, f in zip(options, far) if f == min(far))
     if len(options) == 1:
         return best, "only way"
-    if mode not in RULES["imprecise_in"]:
-        return best, "nearest"
-    if dice.next() / 4294967296.0 < RULES["precision"]:
+    if mode not in RULES["imprecise_in"] or dice.next() / 4294967296.0 < RULES["precision"]:
+        if len(tied) > 1:
+            TIES.append(tied)  # a tie the order decided, kept for the cases' checks
         return best, "nearest"
     return options[dice.next() % len(options)], "dice"
 
 
+#: Every tie the order decided in the game being played, as the tied ways.
+TIES = []
+
+
 def play(seed, names, moves):
+    TIES.clear()
     dice = Dice(seed)
     pac, facing = tuple(MAZE["pacman"]["cell"]), MAZE["pacman"]["facing"]
     pellets = [tuple(cell) for cell in MAZE["pellets"]]
@@ -140,6 +146,12 @@ CASES = [
     ("walking-at-blinky-is-a-catch", "Pac-Man walks up the left side and along the top while Blinky circles its scatter corner, and they meet: caught, and the game stays over.",
      1, ["blinky"], ["left"] * 5 + ["up"] * 4 + ["right"] * 5 + ["down"] * 4 + ["right"] * 6 + ["left"] * 6,
      lambda t: t[-1]["outcome"] == "caught"),
+    ("ties-go-up-before-left", "Blinky meets ties the order decides -- up before left, left before down, up before right -- and one turn of the dice.",
+     25, ["blinky"], ['up'] * 3 + ['right'] * 7 + ['down'] * 2 + ['left'] * 2 + ['up'] * 3 + ['down'] * 6 + ['left'] * 12 + ['right'] * 5,
+     lambda t: ("up", "left") in TIES and "dice" in kinds(t)),
+    ("ties-go-down-before-right", "Blinky meets ties the order decides -- down before right, left before right -- and one turn of the dice.",
+     21, ["blinky"], ['down'] * 5 + ['right'] * 3 + ['up'] * 9 + ['right'] * 2 + ['up'] * 6 + ['left'] * 11 + ['down'] * 4,
+     lambda t: ("down", "right") in TIES and ("left", "right") in TIES and "dice" in kinds(t)),
 ]
 
 

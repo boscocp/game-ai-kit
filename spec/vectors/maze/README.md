@@ -39,7 +39,7 @@ copy of the rules, written from the words of `rules.json`'s "about" in
 plain dictionaries, importing nothing from this repository. Independent of
 the code, not of its author: it would repeat a misreading of the Dossier
 the other two share. It also checks that each case shows what its name
-says -- a reversal, a dice turn, Pinky's target with the overflow bug, a
+says -- a reversal, a dice turn, a tie the order decides (up before left, down before right), Pinky's target with the overflow bug, a
 catch, a win -- because a vector named for a rule it never reaches holds
 nothing.
 

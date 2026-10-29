@@ -18,7 +18,7 @@ REPO = pathlib.Path(__file__).resolve().parents[2]
 VECTORS = REPO / "spec" / "vectors" / "maze"
 SPEC = REPO / "spec" / "maze"
 COPIES = (REPO / "python" / "gameaikit" / "maze", REPO / "godot" / "game" / "maze")
-FEWEST_VECTORS = 6
+FEWEST_VECTORS = 8
 
 
 class TheVectors(unittest.TestCase):

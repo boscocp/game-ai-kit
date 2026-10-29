@@ -69,7 +69,10 @@ Written in `spec/maze/rules.json`'s "about" too, each on purpose:
 - **A ghost chooses on the cell it is on**, at the end of a step, rather
   than one tile ahead -- so the choice is on the screen before the move.
 - **No energizers, so no frightened mode;** no ghost house, tunnel, fruit
-  or lives. Four plain pellets keep T98's state space near 320,000.
+  or lives. No Cruise Elroy: in the arcade Blinky speeds up once few dots
+  are left (20 on level one) and keeps chasing through scatter, which with
+  four pellets would hold from the first step. No red zones, the arcade's
+  cells above the ghost house where a ghost may not turn up. Four plain pellets keep T98's state space near 320,000.
   Frightened mode -- the Dossier's random turns -- is the decision left to
   the owner (below).
 - **The imprecise ghost.** In chase, at a fork of two or more ways, a
@@ -79,9 +82,14 @@ Written in `spec/maze/rules.json`'s "about" too, each on purpose:
 
       precision x [it is the Dossier's way] + (1 - precision) / ways
 
-  (`gameaikit.maze.rules.chances`). That is the chance an MDP needs, and
-  making it a rule of the game makes T98's transition model exact rather
-  than an estimate of a deterministic ghost.
+  (`gameaikit.maze.rules.chances`; exact up to the generator's bias of
+  about 2^-32, since a draw is 1 to 2^32 - 1 taken modulo the ways). That
+  is the chance an MDP needs, and making it a rule of the game makes T98's
+  model of a ghost's turn exact rather than an estimate of a deterministic
+  ghost -- exact except for the timed schedule: the mode, and so the forced
+  reversal, depend on the step count, which T98's state does not hold.
+  The owner chose (2026-10-29) that T98 solves the stationary regime,
+  chase for ever, where its state is exact.
 
 ## One game, two languages
 
@@ -126,3 +134,14 @@ second draw.
   and is ADR 0021's to decide.
 - **The schedule's scale**, two steps a second of the Dossier's, and the
   precision, 0.8, are numbers in `rules.json`, chosen rather than measured.
+- **T98 and the timed schedule** -- decided (owner, 2026-10-29). The mode
+  and the forced reversal depend on the step count, which T98's state does
+  not hold. T98 solves the stationary regime, chase for ever as after step
+  168, and the demo gains a mode with that schedule for the policy to play;
+  the arcade schedule stays in the normal game.
+- **Small seeds start small.** Xorshift's first draws from a small seed
+  are small numbers (seed 1 gives 270369, about 0.00006 of the span), so
+  with R's seeds 1, 2, 3... the first chase fork of a game almost always
+  keeps the Dossier's way; the dice spread from the second or third draw
+  on. Warming the generator up, or seeding from a spread value, would
+  change every vector; left as it is, and named here.

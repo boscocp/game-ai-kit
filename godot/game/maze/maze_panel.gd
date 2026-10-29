@@ -55,7 +55,10 @@ static func status(overlay: Dictionary, paused: bool, started: bool, view_on: bo
 ## The panel: each ghost's decision, then the rule the kit adds.
 static func describe(overlay: Dictionary) -> String:
 	var lines: PackedStringArray = []
-	for ghost: Dictionary in overlay["ghosts"]:
+	# Over, a ghost's pending choice is never taken: not shown, as the view
+	# stops drawing it, so it cannot read as a fresh decision.
+	var ghosts: Array = overlay["ghosts"] if overlay["outcome"] == MazeGame.PLAYING else []
+	for ghost: Dictionary in ghosts:
 		lines += _ghost_lines(ghost)
 		lines.append("")
 	for line: String in IMPRECISION:
@@ -117,7 +120,7 @@ static func _target_lines(ghost: Dictionary) -> PackedStringArray:
 
 static func _choice_lines(ghost: Dictionary) -> PackedStringArray:
 	var values: Dictionary = {way = direction_words(ghost["chosen"]), best = direction_words(ghost["best"]),
-			roll = "%.2f" % ghost.get("roll", 0.0), precision = "%.2f" % ghost["precision"],
+			roll = "%.3f" % ghost.get("roll", 0.0), precision = "%.2f" % ghost["precision"],
 			pick = ghost.get("pick", 0) + 1, ways = ghost["ways"].size(), mode = mode_words(ghost["mode"])}
 	if ghost["kind"] == MazeGhost.REVERSAL:
 		return [TranslationServer.translate("the mode changed: it turns back, {way}, without choosing").format(values)]

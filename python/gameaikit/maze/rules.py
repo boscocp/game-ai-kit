@@ -128,11 +128,12 @@ def ways(cell: tuple[int, int], heading: str, goal: tuple[int, int]) -> list[dic
 
 
 def nearest(open_ways: list[dict]) -> str:
-    """The Dossier's choice: the shortest way, the first in tie order on a tie."""
-    best = open_ways[0]
-    for way in open_ways[1:]:
-        if way["squared"] < best["squared"]:
-            best = way
+    """The Dossier's choice: the shortest way, and on a tie the first in `TIE_ORDER`.
+
+    The order is asked here, not left to the order of `open_ways`, so a tie is
+    decided the same however the ways were listed.
+    """
+    best = min(open_ways, key=lambda way: (way["squared"], TIE_ORDER.index(way["direction"])))
     return best["direction"]
 
 
@@ -160,6 +161,8 @@ def chances(open_ways: list[dict], mode: str) -> dict[str, float]:
 
     precision x [it is the Dossier's] + (1 - precision) / ways at an
     imprecise fork, and certainty for the Dossier's way everywhere else.
+    Exact up to the generator's bias, about 2^-32: a draw is 1 to 2^32 - 1,
+    and the second is taken modulo the ways.
     """
     best = nearest(open_ways)
     if len(open_ways) == 1 or mode not in RULES["imprecise_in"]:

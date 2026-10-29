@@ -106,6 +106,31 @@ class TheChoice(unittest.TestCase):
         self.assertEqual(found[0]["squared"], found[1]["squared"])
         self.assertEqual(rules.nearest(found), "down")
 
+    def test_up_wins_a_tie_with_left(self):
+        # From (5, 3) heading left the ways are up and left; (4, 2) is one
+        # cell from both (5, 2) and (4, 3).
+        found = rules.ways((5, 3), "left", (4, 2))
+        self.assertEqual([way["squared"] for way in found], [1, 1])
+        self.assertEqual(rules.nearest(found), "up")
+        self.assertEqual(rules.nearest(list(reversed(found))), "up")
+
+    def test_the_first_draw_decides_keeping_and_the_second_picks_the_way(self):
+        # One stream, as in a game: a small seed's first draw is small, so
+        # fresh seeds would almost never reach the second draw.
+        found = rules.ways((3, 3), "right", (4, 4))
+        dice, mirror = MazeDice(11), MazeDice(11)
+        turns = 0
+        for fork in range(300):
+            roll = mirror.uniform()
+            choice = rules.choose(found, rules.CHASE, dice)
+            if roll < rules.PRECISION:
+                self.assertEqual((choice["kind"], choice["chosen"]), (rules.NEAREST, "down"), fork)
+            else:
+                turns += 1
+                wanted = found[mirror.next() % len(found)]["direction"]
+                self.assertEqual((choice["kind"], choice["chosen"]), (rules.DICE, wanted), fork)
+        self.assertGreater(turns, 30)
+
     def test_scatter_is_never_imprecise_and_draws_nothing(self):
         dice = MazeDice(5)
         found = rules.ways((5, 3), "left", (11, -2))

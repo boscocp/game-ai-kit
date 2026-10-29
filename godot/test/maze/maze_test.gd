@@ -70,6 +70,39 @@ func test_the_way_back_is_never_offered_and_a_tie_goes_up_left_down_right() -> v
 	assert_str(MazeGhost.nearest(ways)).is_equal("down")
 
 
+func test_up_wins_a_tie_with_left_however_the_ways_are_listed() -> void:
+	var ghost := MazeGhost.new("blinky")
+	ghost.cell = Vector2i(5, 3)
+	ghost.heading = "left"
+	# (4, 2) is one cell from both (5, 2), up, and (4, 3), left.
+	var ways: Array[Dictionary] = ghost.ways(Vector2i(4, 2))
+	assert_array(ways.map(func(way: Dictionary) -> int: return way["squared"])).is_equal([1, 1])
+	assert_str(MazeGhost.nearest(ways)).is_equal("up")
+	var listed_backwards: Array[Dictionary] = ways.duplicate()
+	listed_backwards.reverse()
+	assert_str(MazeGhost.nearest(listed_backwards)).is_equal("up")
+
+
+func test_the_first_draw_decides_keeping_and_the_second_picks_the_way() -> void:
+	var ghost := MazeGhost.new("blinky")
+	ghost.cell = Vector2i(3, 3)
+	ghost.heading = "right"
+	var ways: Array[Dictionary] = ghost.ways(Vector2i(4, 4))
+	# One stream, as in a game: a small seed's first draw is small, so fresh
+	# seeds would almost never reach the second draw.
+	var dice := MazeDice.new(11)
+	var mirror := MazeDice.new(11)
+	var turns: int = 0
+	for _fork: int in range(300):
+		var wanted: Array = [MazeGhost.NEAREST, "down"]
+		if mirror.uniform() >= MazeRules.precision():
+			wanted = [MazeGhost.DICE, ways[mirror.next() % ways.size()]["direction"]]
+			turns += 1
+		var choice: Dictionary = MazeGhost.choose(ways, MazeRules.CHASE, dice)
+		assert_array([choice["kind"], choice["chosen"]]).is_equal(wanted)
+	assert_int(turns).is_greater(30)
+
+
 func test_scatter_and_a_single_way_draw_no_dice() -> void:
 	var ghost := MazeGhost.new("blinky")
 	ghost.cell = Vector2i(3, 3)

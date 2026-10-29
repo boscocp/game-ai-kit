@@ -18,7 +18,9 @@
 ## One rule is the kit's, not the arcade's, written in `rules.json`: in
 ## chase, at a fork, the ghost keeps the Dossier's way with a fixed
 ## probability and otherwise takes any way evenly. That chance is what makes
-## the maze an MDP for T98, and stating it as a rule makes T98's model exact.
+## the maze an MDP for T98, and stating it as a rule makes T98's model of a
+## ghost's turn exact -- all but the timed schedule, whose mode changes and
+## forced reversals depend on the step count (T98's task file weighs that).
 ##
 ## Complexity: constant per decision -- at most three ways to measure.
 ##
@@ -83,13 +85,21 @@ func ways(goal: Vector2i) -> Array[Dictionary]:
 	return found
 
 
-## The Dossier's way: the shortest, and the first in tie order on a tie.
+## The Dossier's way: the shortest, and on a tie the first in the tie order
+## -- up, left, down, right -- asked here rather than left to the order the
+## ways were listed in.
 static func nearest(open_ways: Array[Dictionary]) -> String:
 	var best: Dictionary = open_ways[0]
 	for way: Dictionary in open_ways:
-		if way["squared"] < best["squared"]:
+		if _rank(way) < _rank(best):
 			best = way
 	return best["direction"]
+
+
+# A way's place in the Dossier's order: by distance, then by the tie order.
+static func _rank(way: Dictionary) -> Vector2i:
+	var order: Array = MazeRules.rules()["tie_order"]
+	return Vector2i(way["squared"], order.find(way["direction"]))
 
 
 ## Choose the next move, at the end of a step, and keep why in `decision`.
