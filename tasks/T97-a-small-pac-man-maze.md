@@ -78,5 +78,13 @@ each intersection the distances from each exit to the target written on
 the exits, the chosen one highlighted before the ghost turns -- and, on an
 imprecise turn, the dice shown as such.
 
+## As built (wave 104)
+
+The rules are `spec/maze/rules.json`'s "about", every departure from the
+arcade named there and in `docs/godot/maze.md`. Three things this task did
+not settle are left to the owner there: frightened mode (no energizer, so
+none), the generator written twice (`MazeDice` beside `ai_adversarial`'s
+`Xorshift`), and the schedule's scale and the precision, chosen numbers.
+
 References, opened on 2026-10-26: Pittman, J. "The Pac-Man Dossier."
 Game Developer, 2009 <https://www.gamedeveloper.com/design/the-pac-man-dossier>.

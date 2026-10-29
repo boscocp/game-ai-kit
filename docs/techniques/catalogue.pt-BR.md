@@ -32,6 +32,7 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
 | [Um guarda, quatro jeitos de decidir](#demo-behaviour) |  | [●](ai_behaviour.pt-BR.md) | [◐](ai_fuzzy.pt-BR.md) |  |  |  | [●](ai_perception.pt-BR.md) |  |  | [●](ai_search.pt-BR.md) |  |  |  |  |  |  |  |
 | [Estratégia em tempo real](#demo-rts) |  | [●](ai_behaviour.pt-BR.md) |  |  |  |  |  | [●](ai_planning.pt-BR.md) | [●](ai_rts_core.pt-BR.md) |  |  |  |  |  |  |  |  |
 | [Tática](#demo-tactical) |  | [●](ai_behaviour.pt-BR.md) |  | [●](ai_learning.pt-BR.md) |  |  |  | [●](ai_planning.pt-BR.md) |  |  |  |  |  |  |  |  |  |
+| [Pac-Man, um labirinto pequeno](#demo-maze) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | [Luta, modo treino](#demo-fighting) |  |  |  | [●](ai_learning.pt-BR.md) |  | [●](ai_opponent.pt-BR.md) |  |  |  |  |  |  |  |  |  | [●](behaviour_cloning.pt-BR.md) |  |
 
 ## Demo por demo {#by-demo}
@@ -79,6 +80,10 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
   - teclas: C troca o computador, cuja próxima decisão aparece em rosa antes de o espaço jogá-la; S troca de lado.
   - técnicas: ● [ai_behaviour](ai_behaviour.pt-BR.md) (máquina de estados, *behaviour tree*, GOAP, HTN); ● [ai_learning](ai_learning.pt-BR.md) (uma regressão treinada no Python); ● [ai_planning](ai_planning.pt-BR.md) (STRIPS sobre PDDL).
   - escrito dentro do próprio exemplo: regras escritas à mão, *lookahead* com chances exatas, mapa de influência.
+- <a id="demo-maze"></a>**Pac-Man, um labirinto pequeno**, `make demo-maze` -- parecido com Pac-Man, você contra o Blinky.
+  - teclas: V a visão dos fantasmas: o alvo de cada um e a distância de cada caminho; G traz o Pinky.
+  - técnicas: nenhuma.
+  - escrito dentro do próprio exemplo: uma casa-alvo e a linha reta mais curta.
 - <a id="demo-fighting"></a>**Luta, modo treino**, `make demo-fighting` -- parecido com o modo treino de Street Fighter, contra um boneco que aprende o seu jeito de jogar.
   - teclas: M troca o modo do boneco; espaço um quadro; P pausa.
   - técnicas: ● [ai_learning](ai_learning.pt-BR.md) (a consulta de casos do *ghost*); ● [ai_opponent](ai_opponent.pt-BR.md) (*n-gram*); ● [Behaviour cloning](behaviour_cloning.pt-BR.md) (*behaviour cloning*).

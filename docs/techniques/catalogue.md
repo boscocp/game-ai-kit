@@ -32,6 +32,7 @@ A row per demo, a column per technique; each mark links the technique's page, an
 | [One guard, four ways to decide](#demo-behaviour) |  | [●](ai_behaviour.md) | [◐](ai_fuzzy.md) |  |  |  | [●](ai_perception.md) |  |  | [●](ai_search.md) |  |  |  |  |  |  |  |
 | [Real-time strategy](#demo-rts) |  | [●](ai_behaviour.md) |  |  |  |  |  | [●](ai_planning.md) | [●](ai_rts_core.md) |  |  |  |  |  |  |  |  |
 | [Tactics](#demo-tactical) |  | [●](ai_behaviour.md) |  | [●](ai_learning.md) |  |  |  | [●](ai_planning.md) |  |  |  |  |  |  |  |  |  |
+| [Pac-Man, a small maze](#demo-maze) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | [Fighting, training mode](#demo-fighting) |  |  |  | [●](ai_learning.md) |  | [●](ai_opponent.md) |  |  |  |  |  |  |  |  |  | [●](behaviour_cloning.md) |  |
 
 ## Demo by demo {#by-demo}
@@ -79,6 +80,10 @@ A row per demo, a column per technique; each mark links the technique's page, an
   - keys: C changes the computer, whose next decision is drawn in pink before space plays it; S swaps sides.
   - techniques: ● [ai_behaviour](ai_behaviour.md) (state machine, behaviour tree, GOAP, HTN); ● [ai_learning](ai_learning.md) (a regression trained in Python); ● [ai_planning](ai_planning.md) (STRIPS over PDDL).
   - written inside the example itself: hand-written rules, lookahead with exact odds, influence map.
+- <a id="demo-maze"></a>**Pac-Man, a small maze**, `make demo-maze` -- like Pac-Man, you against Blinky.
+  - keys: V the ghosts' view: each ghost's target and the distance from each way; G brings Pinky in.
+  - techniques: none.
+  - written inside the example itself: a target tile and the shortest straight line.
 - <a id="demo-fighting"></a>**Fighting, training mode**, `make demo-fighting` -- like Street Fighter's training mode, against a dummy that learns how you play.
   - keys: M cycles the dummy's mode; space one frame; P pause.
   - techniques: ● [ai_learning](ai_learning.md) (the ghost's case lookup); ● [ai_opponent](ai_opponent.md) (n-gram); ● [Behaviour cloning](behaviour_cloning.md) (behaviour cloning).

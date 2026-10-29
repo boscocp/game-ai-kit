@@ -42,6 +42,7 @@ const SCENES: Array[String] = [
 	"res://game3d/botmatch/botmatch.tscn",
 	"res://game3d/racing/racing3d.tscn",
 	"res://game3d/infiltration/infiltration.tscn",
+	"res://game/maze/maze.tscn",
 ]
 
 ## The field each example's task says its overlay must carry, and whether it
@@ -62,6 +63,7 @@ const REQUIRED: Dictionary = {
 	"res://game3d/botmatch/botmatch.tscn": [["candidates", false], ["confidence", true]],
 	"res://game3d/racing/racing3d.tscn": [["target_speed", true], ["heat_ball", true]],
 	"res://game3d/infiltration/infiltration.tscn": [["awareness", true], ["action", false]],
+	"res://game/maze/maze.tscn": [["target", false], ["distance", true]],
 }
 
 ## Decisions each example takes before it is asked. More than one, so an

@@ -59,6 +59,7 @@ const EXAMPLES: Dictionary = {
 	"res://game3d/infiltration/infiltration.tscn": ["Interface/Panel", "Interface/Legend"],
 	"res://game/rts/rts.tscn": ["Interface/Header", "Interface/Thinking", "Interface/Card/Info", "Interface/Legend"],
 	"res://game/fighting/fighting.tscn": ["Interface/Status", "Interface/Decision", "Interface/Legend"],
+	"res://game/maze/maze.tscn": ["Interface/Status", "Interface/Decision", "Interface/Legend"],
 	"res://menu/menu.tscn": [],
 }
 ## The window's size, from `project.godot`: words past it are cut off.

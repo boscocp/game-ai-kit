@@ -1,0 +1,20 @@
+{
+  "about": "The small Pac-Man maze (T97): the board, where everyone starts, and the four pellets. Read by Python from a byte-for-byte copy in the package (python/gameaikit/maze/maze.json) and by Godot from another (godot/game/maze/maze.json); tests hold both to this file (ADR 0007). A cell is [column, row], column 0 on the left and row 0 at the top, so up is row - 1. In `rows`, # is a wall and every other character is floor. 52 floor cells, no dead end, eight intersections. A ghost's `corner` is its scatter target, outside the walls as in the arcade, so a ghost in scatter never reaches it and circles the nearest block instead (Blinky top right, Pinky top left).",
+  "rows": [
+    "#############",
+    "#.....#.....#",
+    "#.###.#.###.#",
+    "#...........#",
+    "#.#.#####.#.#",
+    "#.#...#...#.#",
+    "#.###.#.###.#",
+    "#...........#",
+    "#############"
+  ],
+  "pellets": [[1, 1], [11, 1], [1, 7], [11, 7]],
+  "pacman": {"cell": [6, 7], "facing": "left"},
+  "ghosts": {
+    "blinky": {"cell": [6, 3], "heading": "left", "corner": [11, -2]},
+    "pinky": {"cell": [6, 3], "heading": "right", "corner": [1, -2]}
+  }
+}
