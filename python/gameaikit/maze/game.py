@@ -35,10 +35,16 @@ class Ghost:
 
 
 class Game:
-    """The maze, Pac-Man, the ghosts and the pellets, from a seed."""
+    """The maze, Pac-Man, the ghosts and the pellets, from a seed.
 
-    def __init__(self, seed: int, ghost_names: list[str] | None = None) -> None:
+    `schedule` is the ghosts' modes over time: None for the arcade's in
+    `rules.json`, or another, as T98's MDP plays chase for ever.
+    """
+
+    def __init__(self, seed: int, ghost_names: list[str] | None = None,
+                 schedule: list[dict] | None = None) -> None:
         self.dice = MazeDice(seed)
+        self.schedule = schedule
         self.pacman = tuple(rules.MAZE["pacman"]["cell"])
         self.facing = rules.MAZE["pacman"]["facing"]
         self.pellets = [tuple(cell) for cell in rules.MAZE["pellets"]]
@@ -52,7 +58,7 @@ class Game:
 
     def mode(self) -> str:
         """The mode the ghosts are in for the step about to be played."""
-        return rules.mode_at(self.steps)
+        return rules.mode_at(self.steps, self.schedule)
 
     def step(self, move: str) -> None:
         """Play one step with Pac-Man's `move`. A finished game stays as it is."""
@@ -83,7 +89,7 @@ class Game:
                 self.outcome = CAUGHT
 
     def _ghosts_choose(self) -> None:
-        reversing = rules.mode_at(self.steps + 1) != rules.mode_at(self.steps)
+        reversing = rules.mode_at(self.steps + 1, self.schedule) != rules.mode_at(self.steps, self.schedule)
         self.steps += 1
         for ghost in self.ghosts:
             self._decide(ghost, reversing)

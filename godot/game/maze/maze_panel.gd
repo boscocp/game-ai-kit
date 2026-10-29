@@ -39,12 +39,15 @@ const IMPRECISION: Array[String] = [  # shown through tr()
 
 
 ## The two lines under the maze: how the game stands, and the keys.
-static func status(overlay: Dictionary, paused: bool, started: bool, view_on: bool, two_ghosts: bool) -> String:
-	var keys: String = _keys(view_on, two_ghosts)
+static func status(overlay: Dictionary, paused: bool, started: bool, view_on: bool, two_ghosts: bool,
+		mdp_playing: bool = false) -> String:
+	var keys: String = _keys(view_on, two_ghosts, mdp_playing)
 	if overlay["outcome"] != MazeGame.PLAYING:
 		return "\n".join([TranslationServer.translate(OUTCOMES[overlay["outcome"]]), keys])
 	var standing: String = TranslationServer.translate("step {step}, {mode}  ·  pellets left: {pellets}").format(
 			{step = overlay["step"], mode = mode_words(overlay["mode"]), pellets = overlay["pellets_left"]})
+	if mdp_playing:
+		standing += "  ·  " + TranslationServer.translate("the MDP plays: Blinky chases for ever")
 	if not started:
 		standing = TranslationServer.translate("press an arrow to start: Pac-Man runs until a wall stops him")
 	elif paused:
@@ -52,18 +55,40 @@ static func status(overlay: Dictionary, paused: bool, started: bool, view_on: bo
 	return "\n".join([standing, keys])
 
 
-## The panel: each ghost's decision, then the rule the kit adds.
+## The panel: the MDP's lookahead when it plays, each ghost's decision,
+## then the rule the kit adds.
 static func describe(overlay: Dictionary) -> String:
 	var lines: PackedStringArray = []
+	if overlay.has("mdp"):
+		lines += mdp_lines(overlay["mdp"])
+		lines.append("")
 	# Over, a ghost's pending choice is never taken: not shown, as the view
 	# stops drawing it, so it cannot read as a fresh decision.
 	var ghosts: Array = overlay["ghosts"] if overlay["outcome"] == MazeGame.PLAYING else []
 	for ghost: Dictionary in ghosts:
 		lines += _ghost_lines(ghost)
 		lines.append("")
+	if overlay.has("mdp"):
+		return "\n".join(lines)
 	for line: String in IMPRECISION:
 		lines.append(TranslationServer.translate(line).format({precision = "%.2f" % overlay["precision"]}))
 	return "\n".join(lines)
+
+
+## What the MDP is weighing: the state's value, and each move's -- the
+## reward of the step plus the discounted value of where it leads, over
+## Blinky's chances -- with the one it takes marked.
+static func mdp_lines(mdp: Dictionary) -> PackedStringArray:
+	var values: Dictionary = {value = "%.3f" % mdp["value"], discount = "%.2f" % mdp["discount"]}
+	var lines: PackedStringArray = [TranslationServer.translate("PAC-MAN, the MDP: value iteration, solved in Python")]
+	lines.append(TranslationServer.translate("this state is worth {value}").format(values))
+	lines.append(TranslationServer.translate("each move: its reward, plus {discount} x the value it leads to,").format(values))
+	lines.append(TranslationServer.translate("averaged over the ways Blinky may take"))
+	for move: Dictionary in mdp["moves"]:
+		lines.append("  %s %-10s %7.3f" % [">" if move["chosen"] else " ", direction_words(move["move"]), move["q"]])
+	lines.append(TranslationServer.translate("Blinky has chosen already, but the MDP does not see it:"))
+	lines.append(TranslationServer.translate("to the policy his move is chance, and it plans for every way."))
+	return lines
 
 
 ## A mode, in words.
@@ -81,15 +106,18 @@ static func cell_words(cell: Vector2i) -> String:
 	return "(%d, %d)" % [cell.x, cell.y]
 
 
-static func _keys(view_on: bool, two_ghosts: bool) -> String:
+static func _keys(view_on: bool, two_ghosts: bool, mdp_playing: bool) -> String:
 	var view: String = TranslationServer.translate("V: the ghosts' view off")
 	if view_on:
 		view = TranslationServer.translate("V: the ghosts' view on")
+	var rest: String = TranslationServer.translate("arrows: walk  ·  P: pause  ·  space: one step  ·  R: again")
+	if mdp_playing:
+		rest = TranslationServer.translate("P: pause  ·  space: one step  ·  R: again")
+		return "  ·  ".join([rest, view, TranslationServer.translate("C: you play")])
 	var second: String = TranslationServer.translate("G: Pinky too")
 	if two_ghosts:
 		second = TranslationServer.translate("G: Blinky alone")
-	var rest: String = TranslationServer.translate("arrows: walk  ·  P: pause  ·  space: one step  ·  R: again")
-	return "  ·  ".join([rest, view, second])
+	return "  ·  ".join([rest, view, second, TranslationServer.translate("C: the MDP plays")])
 
 
 static func _ghost_lines(ghost: Dictionary) -> PackedStringArray:

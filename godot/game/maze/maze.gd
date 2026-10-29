@@ -8,7 +8,14 @@
 ## way it chose, in white -- or in orange with a die, when the imprecise
 ## chase rule rolled. G brings in Pinky, who aims ahead of you. The rules
 ## are `MazeGame`'s; this node only runs the clock, reads the keys and
-## draws. T98 adds a second controller for Pac-Man, the MDP.
+## draws.
+##
+## C hands Pac-Man to the MDP (T98): a policy value iteration computed in
+## Python, looked up by `MdpPacMan`, in the regime it was solved for --
+## Blinky alone, chasing for ever, no scheduled reversal. With V on, the
+## value of every cell for Pac-Man is drawn as a heat map with the policy's
+## arrow on it, and beside him what each of his four moves is worth. Your
+## game keeps the arcade's schedule; C again gives it back to you.
 class_name MazeDemo
 extends Node2D
 
@@ -20,11 +27,12 @@ const DIRECTIONS: Dictionary = {  # not shown: the rules' identifiers
 	KEY_W: "up", KEY_A: "left", KEY_S: "down", KEY_D: "right",
 }
 ## The controller, as the keys (docs/godot/a-controller.md): the stick and
-## the D-pad walk; Y the ghosts' view, B a second ghost, A one step, X again,
+## the D-pad walk; Y the ghosts' view, B a second ghost, RB the MDP, A one step, X again,
 ## Menu pauses.
 const PAD_BUTTONS: Dictionary = {JOY_BUTTON_DPAD_UP: KEY_UP, JOY_BUTTON_DPAD_DOWN: KEY_DOWN,
 		JOY_BUTTON_DPAD_LEFT: KEY_LEFT, JOY_BUTTON_DPAD_RIGHT: KEY_RIGHT,
 		JOY_BUTTON_Y: KEY_V, JOY_BUTTON_B: KEY_G, JOY_BUTTON_A: KEY_SPACE, JOY_BUTTON_X: KEY_R,
+		JOY_BUTTON_RIGHT_SHOULDER: KEY_C,
 		JOY_BUTTON_START: KEY_P}
 const STICK_KEYS: Array[Key] = [KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN]
 
@@ -32,6 +40,10 @@ const STICK_KEYS: Array[Key] = [KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN]
 var game: MazeGame
 ## You, at the keys.
 var person := MazePerson.new()
+## The MDP's policy, looked up.
+var mdp := MdpPacMan.new()
+## Whether the MDP plays Pac-Man, in the regime it was solved for.
+var mdp_playing: bool = false
 ## Whether each ghost's decision is drawn over the maze.
 var view_on: bool = true
 ## Whether Pinky plays beside Blinky.
@@ -67,6 +79,9 @@ func _notification(what: int) -> void:
 
 
 func _show_legend() -> void:
+	if mdp_playing:
+		_show_mdp_legend()
+		return
 	_legend.set_entries([
 		[MazeView.PACMAN, tr("Pac-Man: you")],
 		[MazeView.GHOSTS["blinky"], tr("Blinky: in chase, aims at your cell")],
@@ -76,6 +91,21 @@ func _show_legend() -> void:
 		[MazeView.WAY, tr("grey line: a way it may take, and the")],
 		[Color.TRANSPARENT, "  " + tr("straight line from there to its target")],
 		[MazeView.CHOSEN, tr("white line: the way it chose, before it moves")],
+		[MazeView.DICE, tr("orange and a die: the dice chose the way")],
+	] as Array[Array])
+	_pad.add_to(_legend)
+
+
+func _show_mdp_legend() -> void:
+	_legend.set_entries([
+		[MazeView.PACMAN, tr("Pac-Man: the MDP's policy, solved in Python")],
+		[MazeView.GHOSTS["blinky"], tr("Blinky: chases for ever, as the MDP assumes")],
+		[MazeView.PELLET, tr("pellet: eat all four to win")],
+		[MazeView.VALUE_HIGH, tr("green cell: worth much to Pac-Man standing there")],
+		[MazeView.VALUE_LOW, tr("red cell: worth little, or a catch to come")],
+		[Color.TRANSPARENT, "  " + tr("arrow on a cell: the policy's move from there")],
+		[MazeView.CHOSEN, tr("numbers beside Pac-Man: each move's worth")],
+		[MazeView.WAY, tr("grey line: a way Blinky may take; white: chosen")],
 		[MazeView.DICE, tr("orange and a die: the dice chose the way")],
 	] as Array[Array])
 	_pad.add_to(_legend)
@@ -99,8 +129,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		started = true
 	elif key.keycode == KEY_V:
 		view_on = not view_on
-	elif key.keycode == KEY_G:
+	elif key.keycode == KEY_G and not mdp_playing:
 		two_ghosts = not two_ghosts
+		restart()
+	elif key.keycode == KEY_C:
+		mdp_playing = not mdp_playing and MdpPacMan.is_published()
+		_show_legend()
 		restart()
 	elif key.keycode == KEY_P:
 		paused = not paused
@@ -114,12 +148,16 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 ## A new game: the pellets back, everyone on their starting cell, waiting
-## for an arrow. Each new game takes the next seed, so the dice differ.
+## for an arrow -- or, with the MDP playing, under way at once, Blinky alone
+## and chasing for ever. Each new game takes the next seed, so the dice differ.
 func restart() -> void:
 	var names: Array = ["blinky", "pinky"] if two_ghosts else MazeRules.rules()["ghosts"]
-	game = MazeGame.new(_seed, names)
+	if mdp_playing:
+		game = MazeGame.new(_seed, MdpPacMan.spec()["ghosts"], MdpPacMan.spec()["schedule"])
+	else:
+		game = MazeGame.new(_seed, names)
 	person = MazePerson.new()
-	started = false
+	started = mdp_playing
 	_waited = 0.0
 	_refresh()
 
@@ -127,7 +165,7 @@ func restart() -> void:
 ## One step of the game, with your move.
 func play_step() -> void:
 	started = true
-	game.step(person.move_for(game))
+	game.step(mdp.move_for(game) if mdp_playing else person.move_for(game))
 	_refresh()
 
 
@@ -148,9 +186,20 @@ func decision_overlay() -> Dictionary:
 	var ghosts: Array[Dictionary] = []
 	for ghost: MazeGhost in game.ghosts:
 		ghosts.append(_ghost_overlay(ghost))
-	return {"step": game.steps, "mode": game.mode(), "pacman": game.pacman, "facing": game.facing,
-			"pellets_left": game.pellets.size(), "outcome": game.outcome, "seed": game.seed_used,
-			"precision": MazeRules.precision(), "ghosts": ghosts}
+	var overlay: Dictionary = {"step": game.steps, "mode": game.mode(), "pacman": game.pacman,
+			"facing": game.facing, "pellets_left": game.pellets.size(), "outcome": game.outcome,
+			"seed": game.seed_used, "precision": MazeRules.precision(), "ghosts": ghosts,
+			"controller": "mdp" if mdp_playing else "person"}  # not shown: identifiers, worded by MazePanel
+	if mdp_playing and game.is_playing():
+		overlay["mdp"] = _mdp_overlay()
+	return overlay
+
+
+# What the MDP weighs: the state's value, and each move's from the lookahead.
+func _mdp_overlay() -> Dictionary:
+	var value: float = MdpPacMan.value_at(MdpPacMan.slot_of(game))
+	var discount: float = float(MdpPacMan.spec()["discount"])
+	return {"value": value, "moves": mdp.lookahead(game), "discount": discount}
 
 
 func _ghost_overlay(ghost: MazeGhost) -> Dictionary:
@@ -173,15 +222,20 @@ func _refresh() -> void:
 		return
 	queue_redraw()
 	var overlay: Dictionary = decision_overlay()
-	_status.text = MazePanel.status(overlay, paused, started, view_on, two_ghosts)
+	_status.text = MazePanel.status(overlay, paused, started, view_on, two_ghosts, mdp_playing)
 	_panel.text = MazePanel.describe(overlay)
 
 
 func _draw() -> void:
 	MazeView.draw_maze(self, game.pellets)
-	if view_on and game.is_playing():
+	var thinking: bool = view_on and game.is_playing()
+	if thinking and mdp_playing:
+		MazeView.draw_values(self, MdpPacMan.value_map(game))
+	if thinking:
 		for ghost: MazeGhost in game.ghosts:
 			MazeView.draw_view(self, ghost)
 	MazeView.draw_pacman(self, game.pacman, game.facing)
 	for ghost: MazeGhost in game.ghosts:
 		MazeView.draw_ghost(self, ghost)
+	if thinking and mdp_playing:
+		MazeView.draw_lookahead(self, game.pacman, mdp.lookahead(game))

@@ -35,15 +35,20 @@ var ghosts: Array[MazeGhost] = []
 var steps: int = 0
 ## PLAYING, WON or CAUGHT.
 var outcome: String = PLAYING
+## The ghosts' modes over time: empty for the arcade's in `rules.json`, or
+## another -- T98's MDP plays chase for ever, `mdp.json`'s.
+var schedule: Array = []
 
 var _dice: MazeDice
 
 
 ## A game from `from_seed` with `ghost_names` playing, every ghost's first
 ## move already chosen. null: the ones `rules.json` plays by default; an
-## empty list: no ghost at all.
-func _init(from_seed: int = 1, ghost_names: Variant = null) -> void:
+## empty list: no ghost at all. `modes` is the schedule, empty for the
+## arcade's.
+func _init(from_seed: int = 1, ghost_names: Variant = null, modes: Array = []) -> void:
 	seed_used = from_seed
+	schedule = modes
 	_dice = MazeDice.new(from_seed)
 	var start: Dictionary = MazeRules.maze()["pacman"]
 	pacman = MazeRules.cell_of(start["cell"])
@@ -59,7 +64,7 @@ func _init(from_seed: int = 1, ghost_names: Variant = null) -> void:
 
 ## The ghosts' mode for the step about to be played.
 func mode() -> String:
-	return MazeRules.mode_at(steps)
+	return MazeRules.mode_at(steps, schedule)
 
 
 ## Whether the game is still on.
@@ -89,7 +94,7 @@ func step(move: String) -> void:
 	if _ghost_on_pacman():
 		outcome = CAUGHT
 		return
-	var reversing: bool = MazeRules.mode_at(steps + 1) != MazeRules.mode_at(steps)
+	var reversing: bool = MazeRules.mode_at(steps + 1, schedule) != MazeRules.mode_at(steps, schedule)
 	steps += 1
 	for ghost: MazeGhost in ghosts:
 		ghost.decide(mode(), pacman, facing, reversing, _dice)

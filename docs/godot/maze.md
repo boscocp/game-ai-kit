@@ -11,7 +11,8 @@ teaches: none
 
 > T97's example. A small maze, four pellets, you as Pac-Man and Blinky
 > deciding the way the arcade's ghosts decide. T98 solves it as an MDP in
-> Python; this page is the game that MDP plays.
+> Python, and C hands Pac-Man to the policy it found; this page is the
+> game, and how that policy plays it.
 
 ## What it is
 
@@ -72,7 +73,8 @@ Written in `spec/maze/rules.json`'s "about" too, each on purpose:
   or lives. No Cruise Elroy: in the arcade Blinky speeds up once few dots
   are left (20 on level one) and keeps chasing through scatter, which with
   four pellets would hold from the first step. No red zones, the arcade's
-  cells above the ghost house where a ghost may not turn up. Four plain pellets keep T98's state space near 320,000.
+  cells above the ghost house where a ghost may not turn up. Four plain pellets keep T98's state space small:
+  82,160 states, measured.
   Frightened mode -- the Dossier's random turns -- is the decision left to
   the owner (below).
 - **The imprecise ghost.** In chase, at a fork of two or more ways, a
@@ -124,7 +126,60 @@ panel says the same in words: the mode, the target and why, each way with
 its distance, and how it chose -- the roll against the precision, and the
 second draw.
 
+## The MDP plays (T98)
+
+C hands Pac-Man to a policy that value iteration computed in Python
+(`python/gameaikit/mdp/`, the concepts in
+[`docs/concepts/mdp.md`](../concepts/mdp.md)). The game restarts in the
+regime the MDP was solved for -- Blinky alone, chasing for ever, so no
+scheduled mode change and no forced reversal (`spec/maze/mdp.json`) -- and
+Pac-Man moves at once. C again gives him back to you, in the arcade's
+schedule; G does nothing while the MDP plays, since Pinky is not in its
+model.
+
+- **The state** is Pac-Man's cell, Blinky's cell and heading, and the
+  pellets left: 82,160 a game can reach (the task's estimate was 160,000;
+  a ghost's heading must point away from a floor cell behind it, and
+  Pac-Man never stands on an uneaten pellet). Blinky's next move is chosen
+  before Pac-Man's but does not depend on it, so the policy treats it as
+  chance, with the rules' `chances`; the overlay shows the move Blinky
+  actually committed, which the policy does not see.
+- **Solving**, `make solve-maze`: building the model 1.0 s, value
+  iteration 60 sweeps in 3.4 s, peak 117 MB, measured on a Ryzen 5 9600X
+  in pure Python. Policy iteration finds the same values (within 0.0001)
+  in 22 improvements but 1,233 sweeps, 21.6 s; the 2,109 states where the
+  two choose differently are all exact ties.
+- **Published** to `data/maze/`: `values.json`, each state's value in
+  thousandths, and `policy.json`, its move as a letter, both laid out so
+  that a state's place is arithmetic (`spec/maze/mdp.json`'s "about").
+  `MdpPacMan` reads them from `res://../data/maze`, beside the project, and
+  looks up; N15 in `check_no_training.py` solves again and fails if they
+  differ, and refuses any GDScript that writes them.
+- **How it plays**, `PYTHONPATH=python python3 -m gameaikit.mdp.measure`,
+  1,000 games from seeds 1 to 1,000 in that regime: the MDP won 1,000,
+  caught 0, mean pellets 4.0, 30.5 steps to win. A greedy controller
+  walking the A\* path to the nearest pellet and ignoring Blinky: 826
+  won, 174 caught, mean pellets 3.575, 30.0 steps to win.
+
+With V on, the MDP's view is drawn under the ghost's: every cell Pac-Man
+could stand on is tinted from red (the least any cell is worth now) to
+green (the most), for Blinky and the pellets as they are, with the
+policy's arrow on it; beside Pac-Man, each of his four moves is written
+with its Q-value -- the step's reward plus 0.95 times the value it leads
+to, averaged over Blinky's ways -- and the one the policy takes is boxed.
+The panel lists the same numbers. Held by `make test-mdp-vectors` (ten
+states' values, Q-values and moves from `spec/vectors/mdp/derive.py`, a
+second value iteration that imports nothing) and
+`make test-godot-some SUITES="test/maze"`, where the policy wins 40 seeded
+games and its move is always the lookahead's best.
+
 ## Decisions for the owner
+
+- **Where the policy lives.** As the task says, `data/maze/`, outside the
+  Godot project. The checkout reads it, as the fighting game's recordings
+  are found; an exported executable would not carry it, and C then does
+  nothing. Moving the two files into `godot/game/maze/`, as the checkers
+  weights are, would ship them, at about 1.2 MB.
 
 - **Frightened mode** is not in the game, since four plain pellets have no
   energizer. Adding one energizer would bring in the Dossier's random turns
