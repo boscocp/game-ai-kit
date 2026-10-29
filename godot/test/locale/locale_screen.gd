@@ -292,9 +292,9 @@ func _provoke_an_rts_refusal(game: RtsGame) -> Array[String]:
 # An example with a pad and a legend must show the pad's lines as the pad
 # writes them now, in pt-BR (planted, with no pad connected): otherwise the
 # walk read none of its words, and an English line would pass unseen. Each
-# of a line's ", " bindings is read too, after the line's "pad: " and
-# without its key's name: "stick A/D/W/S" is "stick {keys}", "D-pad up Up"
-# is "D-pad up" (T103).
+# of a line's ", " bindings is read too, after the line's "pad: ", without
+# its key's name and as that name alone: "stick A/D/W/S" is "stick {keys}",
+# "D-pad up Up" is "D-pad up", and "LT Down" ends in "Down" (T103).
 func _pad_line(label: String, example: Node) -> Array[String]:
 	var pads: Array[Node] = _walk(example).filter(func(node: Node) -> bool: return node is PadAsKeys)
 	var legend := example.find_child("Legend", true, false) as Legend
@@ -316,7 +316,8 @@ func _english_bindings(line: String) -> Array[String]:
 	var found: Array[String] = []
 	for binding: String in line.trim_prefix(before_the_first).strip_edges().split(", "):
 		var name: String = binding.substr(0, binding.rfind(" "))
-		if _is_english(binding) or _is_english(name):
+		var key: String = binding.substr(binding.rfind(" ") + 1)
+		if _is_english(binding) or _is_english(name) or _is_english(key):
 			found.append(binding)
 	return found
 

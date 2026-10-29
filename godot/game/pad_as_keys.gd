@@ -40,6 +40,19 @@ const DPAD_NAMES: Dictionary = {  # shown through tr()
 	JOY_BUTTON_DPAD_UP: "D-pad up", JOY_BUTTON_DPAD_DOWN: "D-pad down",
 	JOY_BUTTON_DPAD_LEFT: "D-pad left", JOY_BUTTON_DPAD_RIGHT: "D-pad right",
 }
+## The D-pad's buttons, and the arrow keys, left, right, up and down: the
+## order of `stick_keys`, so four of them read as one binding.
+const DPAD: Array[JoyButton] = [JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_RIGHT, JOY_BUTTON_DPAD_UP,
+		JOY_BUTTON_DPAD_DOWN]
+const ARROWS: Array[Key] = [KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN]
+## Keys whose name `OS.get_keycode_string` writes as an English word, or as
+## a word the key does not print: a space bar prints none, an arrow key an
+## arrow the legend's font cannot draw. The kit's tables say "espaço" and
+## "setas" (the glossary: a key's name is what the key shows).
+const KEY_WORDS: Dictionary = {  # shown through tr()
+	KEY_SPACE: "Space", KEY_PERIOD: ".",
+	KEY_LEFT: "Left", KEY_RIGHT: "Right", KEY_UP: "Up", KEY_DOWN: "Down",
+}
 
 ## Which key each button presses: `{JOY_BUTTON_A: KEY_SPACE}`.
 var buttons: Dictionary = {}
@@ -128,17 +141,26 @@ func describe() -> String:
 	return tr("pad: {bindings}").format({bindings = ", ".join(_bindings())})
 
 
-# Each binding in words: "stick A/D/W/S", "A Space". The words are
-# translated; key names and the names printed on the pad stay as written.
+# Each binding in words: "stick A/D/W/S", "D-pad arrows", "A Space". The
+# words are translated; key names and the names printed on the pad stay as
+# written. The stick is the left one where the right one looks too.
 func _bindings() -> Array[String]:
 	var parts: Array[String] = []
-	if not stick_keys.is_empty():
-		parts.append(tr("stick {keys}").format({keys = "/".join(stick_keys.map(OS.get_keycode_string))}))
+	if not stick_keys.is_empty() and looks_with_mouse:
+		parts.append(tr("left stick {keys}").format({keys = _keys_named(stick_keys)}))
+	elif not stick_keys.is_empty():
+		parts.append(tr("stick {keys}").format({keys = _keys_named(stick_keys)}))
+	var dpad_keys: Array[Key] = _dpad_keys()
+	if not dpad_keys.is_empty():
+		parts.append(tr("D-pad {keys}").format({keys = _keys_named(dpad_keys)}))
 	for button: JoyButton in buttons:
-		parts.append("%s %s" % [_name_of(button), OS.get_keycode_string(buttons[button])])
+		if dpad_keys.is_empty() or not button in DPAD:
+			parts.append("%s %s" % [_name_of(button), _key_named(buttons[button])])
+	# "LT" as a value, not "LT %s": a literal with a word and a space would
+	# read to check_translations_game.py as prose, and a pad's name is not.
 	if trigger_keys.size() == 2:
-		parts.append("%s %s" % ["LT", OS.get_keycode_string(trigger_keys[0])])
-		parts.append("%s %s" % ["RT", OS.get_keycode_string(trigger_keys[1])])
+		parts.append("%s %s" % ["LT", _key_named(trigger_keys[0])])
+		parts.append("%s %s" % ["RT", _key_named(trigger_keys[1])])
 	if looks_with_mouse:
 		parts.append(tr("right stick looks"))
 		parts.append(tr("RT clicks"))
@@ -151,6 +173,31 @@ func _name_of(button: JoyButton) -> String:
 	if DPAD_NAMES.has(button):
 		return tr(DPAD_NAMES[button])
 	return BUTTON_NAMES.get(button, str(button))
+
+
+# The keys the D-pad's four directions press, in the order of DPAD, when
+# the table binds all four: they read as one binding. Empty otherwise.
+func _dpad_keys() -> Array[Key]:
+	var keys: Array[Key] = []
+	for button: JoyButton in DPAD:
+		if not buttons.has(button):
+			return []
+		keys.append(buttons[button])
+	return keys
+
+
+# Four direction keys as one name: "arrows", or "A/D/W/S".
+func _keys_named(keys: Array[Key]) -> String:
+	if keys == ARROWS:
+		return tr("arrows")
+	return "/".join(keys.map(_key_named))
+
+
+# A key's name as the key shows it, in the language chosen.
+func _key_named(key: Key) -> String:
+	if KEY_WORDS.has(key):
+		return tr(KEY_WORDS[key])
+	return OS.get_keycode_string(key)
 
 
 func _init() -> void:

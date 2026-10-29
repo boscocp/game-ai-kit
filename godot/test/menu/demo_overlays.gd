@@ -11,7 +11,9 @@
 #     its task names is there (the search's frontier, the learned policy's
 #     probability as a number), and the overlay has *changed* -- a constant
 #     one used to pass, and showed no decision at all;
-#   * its legend says something on every line, and fits on the screen.
+#   * its legend says something on every line, and fits on the screen --
+#     with a pad's lines in it, planted (`PadAsKeys.planted`), since none
+#     can be connected headless; an example with a pad must show them (T103).
 #
 # Each rule first rejects a planted example built in memory below, because
 # `lint-selftests` only reaches `scripts/` and nothing else would notice one
@@ -148,6 +150,8 @@ func _check_example(label: String, example: Node, required: Array) -> Array[Stri
 	if not example.has_method("step_decision") or not example.has_method("decision_overlay"):
 		return ["%s: has no step_decision() and decision_overlay()" % label]
 	var legend: String = _why_the_legend_fails(example.find_child("Legend", true, false) as Legend)
+	if legend == "":
+		legend = _why_the_pad_is_missing(example, example.find_child("Legend", true, false) as Legend)
 	if legend != "":
 		return ["%s: %s" % [label, legend]]
 	var before: String = str(example.call("decision_overlay"))
@@ -209,7 +213,18 @@ func _why_the_legend_fails(legend: Legend) -> String:
 func _right_edge_of(legend: Legend, words: String) -> float:
 	var width: float = ThemeDB.fallback_font.get_string_size(
 			words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, Legend.TEXT_SIZE).x
-	return legend.get_global_rect().position.x + Legend.SWATCH + 8.0 + width
+	return legend.get_global_rect().position.x + Legend.SWATCH + Legend.WORDS_GAP + width
+
+
+# With the pad planted, an example that has one must show its lines, or the
+# widths above were measured without them (wave 109's review).
+func _why_the_pad_is_missing(example: Node, legend: Legend) -> String:
+	var shown: Array = legend.entries.map(func(entry: Array) -> String: return str(entry[1]))
+	for node: Node in example.get_children():
+		var pad := node as PadAsKeys
+		if pad != null and not pad.legend_lines(legend).any(func(line: String) -> bool: return line in shown):
+			return "has a pad, and none of the pad's lines in its legend"
+	return ""
 
 
 # Why a value tells a person nothing, or "" when it tells them something.
@@ -279,6 +294,13 @@ func _planted_examples() -> Array[String]:
 			counting + "func decision_overlay():\n\treturn {\"p_win\": 0.5, \"n\": count}", true),
 			[["p_win", true], ["seen_frame", true]])
 	failures += _judge_planted("the second of two required fields missing", second_missing, "carries no seen_frame")
+	# A pad whose lines never reached the legend: the plant above ignored.
+	var with_pad: Node = _planted_node(counting + "func decision_overlay():\n\treturn {\"p_win\": 0.5, \"n\": count}", true)
+	var pad := PadAsKeys.new()
+	pad.use({JOY_BUTTON_A: KEY_SPACE})
+	with_pad.add_child(pad)
+	var no_pad_line: Array[String] = await _check_node("planted", with_pad, ["p_win", true])
+	failures += _judge_planted("a pad with no line in the legend", no_pad_line, "none of the pad's lines")
 	return failures
 
 

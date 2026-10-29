@@ -62,8 +62,9 @@ Each example's table is its `PAD_BUTTONS` constant. With a pad connected,
 the legend shows it under the AI's colours, as many bindings a line as fit
 the legend's width (T103: three a line ran off the window in the racers and
 the stealth hall, in English), and in the language chosen. The words are
-translated -- "pad", "stick", the D-pad's directions -- and the key names
-and the names printed on the pad (A, LB, View, Menu) stay as written.
+translated -- "pad", "stick", the D-pad's directions, and the keys that
+print no word (Space is "espaço", the arrows "setas") -- and the names
+printed on the pad (A, LB, View, Menu) and on a key (Shift, Tab) stay.
 
 ## Held by
 
