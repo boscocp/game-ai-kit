@@ -13,7 +13,7 @@ extends RefCounted
 
 ## Shared with `python/tests/test_perception_vectors.py`.
 const TOLERANCE: float = 1e-9
-const KINDS: Array[String] = ["shape", "loudness", "awareness", "phase", "belief"]
+const KINDS: Array[String] = ["shape", "loudness", "awareness", "phase", "belief", "particles"]
 
 
 ## Why `vector` is not a perception vector, or "" when it is one.
@@ -46,6 +46,8 @@ static func answer_to(vector: Dictionary) -> Dictionary:
 			return _awareness(vector)
 		"phase":
 			return _phase(vector)
+		"particles":
+			return _particles(vector)
 	return _belief(vector)
 
 
@@ -125,6 +127,26 @@ static func _belief(vector: Dictionary) -> Dictionary:
 		shares.append(Array(held.shares))
 		reseeded.append(held.reseeded)
 	return {"shares": shares, "reseeded": reseeded}
+
+
+static func _particles(vector: Dictionary) -> Dictionary:
+	var query: Dictionary = vector["query"]
+	var cloud := ParticleBelief.new(_neighbours(query["neighbours"]), int(query["count"]), int(query["seed"]))
+	cloud.walk_on = float(query["knobs"]["walk_on"])
+	cloud.turn = float(query["knobs"]["turn"])
+	cloud.unheard = float(query["knobs"]["unheard"])
+	var found: Dictionary = {"nodes": [], "weights": [], "shares": [], "emptied": [], "reseeded": []}
+	for each: Dictionary in query["steps"]:
+		if each.has("collapse"):
+			cloud.collapse(int(each["collapse"]))
+		else:
+			cloud.step_unseen(PackedInt32Array(each["seen"]), PackedInt32Array(each["unheard"]))
+		found["nodes"].append(Array(cloud.nodes))
+		found["weights"].append(Array(cloud.weights))
+		found["shares"].append(Array(cloud.shares))
+		found["emptied"].append(Array(cloud.emptied))
+		found["reseeded"].append(cloud.reseeded)
+	return found
 
 
 static func _neighbours(lists: Array) -> Array[PackedInt32Array]:

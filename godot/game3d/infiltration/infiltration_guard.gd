@@ -3,8 +3,9 @@
 ##
 ## The guard is T67's agent: each step its eyes and ears give it a
 ## `GuardPercept`; its `GuardMind` (T69) turns that into awareness and a
-## memory; its own `BeliefMap` holds where the player may be, written only
-## from what it perceived or a report it heard; and each decision
+## memory; its own `BeliefMap` and `ParticleBelief` hold where the player
+## may be, written only from what it perceived or a report it heard, and
+## the rules say which one it searches from (`believed`); and each decision
 ## `GuardChoice` scores every action it could take from those numbers
 ## (T67's `ActionChoice`) and `GuardActs` carries out the highest. Nothing
 ## here knows a level: the route and the post are given to it.
@@ -17,6 +18,7 @@ var id: int = 0
 var type: GuardType
 var mind: GuardMind
 var belief: BeliefMap
+var particles: ParticleBelief
 var position: Vector2 = Vector2.ZERO
 ## Radians, 0 along +x, turning towards +z.
 var facing: float = 0.0
@@ -73,11 +75,15 @@ var sees_since: float = INF
 var next_check_in: float = 0.0
 
 
-func _init(number: int, guard_type: GuardType, spec: Dictionary, nodes: Array[PackedInt32Array], rules: InfiltrationRules) -> void:
+## The guard `number` of `guard_type`, standing where `spec` says, believing
+## over the walk graph `nodes`; its particles draw from `seed_value`.
+func _init(number: int, guard_type: GuardType, spec: Dictionary, nodes: Array[PackedInt32Array], rules: InfiltrationRules,
+		seed_value: int = 1) -> void:
 	id = number
 	type = guard_type
 	mind = GuardMind.new(guard_type)
 	belief = BeliefMap.new(nodes)
+	particles = ParticleBelief.new(nodes, rules.particles_per_cell * nodes.size(), seed_value)
 	for point: Vector2 in spec["route"]:
 		route.append(point)
 	post = spec["post"]
@@ -86,6 +92,19 @@ func _init(number: int, guard_type: GuardType, spec: Dictionary, nodes: Array[Pa
 	facing = post_facing
 	health = rules.guard("health")
 	next_check_in = rules.guard("check_in_every") * (1.0 + 0.25 * number)
+
+
+## Where it believes the player is, a share per walk cell: its particles'
+## when `use_particles` is on, else its grid belief's. The search, the ways
+## out and the overlay read this, and so read whichever is on.
+func believed(use_particles: bool) -> PackedFloat64Array:
+	return particles.shares if use_particles else belief.shares
+
+
+## Put all of its belief, both kinds, on walk cell `node`.
+func collapse_belief(node: int) -> void:
+	belief.collapse(node)
+	particles.collapse(node)
 
 
 ## True while it can act.

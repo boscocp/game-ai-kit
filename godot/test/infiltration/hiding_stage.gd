@@ -30,11 +30,11 @@ const FOUND_SURE: float = 0.3
 static func stage(world: InfiltrationWorld, seed_value: int) -> bool:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
-	var hidings: Array[Vector2] = _unwatched_hidings(world)
+	var hidings: Array[Vector2] = unwatched_hidings(world)
 	if hidings.is_empty():
 		return false
 	var hide_at: Vector2 = hidings[rng.randi_range(0, hidings.size() - 1)]
-	var around: Array[Vector2] = _cells_steps_from(world, hide_at)
+	var around: Array[Vector2] = cells_steps_from(world, hide_at)
 	if around.is_empty():
 		return false
 	world.player.position = hide_at
@@ -73,7 +73,9 @@ static func found(world: InfiltrationWorld) -> bool:
 		return guard.alive() and (guard.position.distance_to(world.player.position) <= FOUND_WITHIN or guard.percept.sight.certainty >= FOUND_SURE))
 
 
-static func _unwatched_hidings(world: InfiltrationWorld) -> Array[Vector2]:
+## The hiding places and low-cover spots of `world` no guard watches at
+## the start: where a player can be hidden without a guard glancing at it.
+static func unwatched_hidings(world: InfiltrationWorld) -> Array[Vector2]:
 	var watched: Dictionary = SneakGraph.new(world.level, world.guards, world.rules).watched
 	var found_places: Array[Vector2] = []
 	for cell: Vector2i in world.level.hidden:
@@ -86,7 +88,10 @@ static func _unwatched_hidings(world: InfiltrationWorld) -> Array[Vector2]:
 	return found_places
 
 
-static func _cells_steps_from(world: InfiltrationWorld, place: Vector2) -> Array[Vector2]:
+## The walk cells REPORTED_FROM to REPORTED_TO steps from `place` from which
+## a body lying there cannot be seen: where a report can put a player that
+## is really at `place`.
+static func cells_steps_from(world: InfiltrationWorld, place: Vector2) -> Array[Vector2]:
 	var level: InfiltrationLevel = world.level
 	var steps: PackedInt32Array = level.arena.steps_from([level.cell_of(place)])
 	var lying: Vector3 = level.arena.above(place, world.rules.points_of("prone")[0])

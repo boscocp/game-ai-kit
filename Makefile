@@ -417,6 +417,10 @@ test-mdp-vectors: import ## Ten maze states' values and best moves, against the 
 test-infiltration: import ## The infiltration level's guards: help heard, the search shared, quiet and loud, the arbiter, the halving, every decision on the overlay, portable (T70)
 	@$(GODOT) --headless --path godot -s res://test/infiltration/infiltration_properties.gd
 
+.PHONY: test-infiltration-tracking
+test-infiltration-tracking: import ## A measurement, not in make check: grid belief against particles, every run paired, and a step's cost (T91)
+	@$(GODOT) --headless --path godot -s res://test/infiltration/infiltration_tracking.gd
+
 .PHONY: test-infiltration-properties
 test-infiltration-properties: import ## A guard knows only what it perceived; awareness, phases, sound and belief hold on generated levels (T69)
 	@$(GODOT) --headless --path godot -s res://test/infiltration/awareness_properties.gd
@@ -426,7 +430,7 @@ test-pad: import ## A controller presses the keys an example reads: buttons, sti
 	@$(GODOT) --headless --path godot -s res://test/game_shared/pad_as_keys_claims.gd
 
 .PHONY: test-perception-vectors
-test-perception-vectors: import ## The stealth senses: shape, loudness, awareness, phase, belief, against ai_perception (T69)
+test-perception-vectors: import ## The stealth senses: shape, loudness, awareness, phase, belief, particles, against ai_perception (T69, T91)
 	@# The other half is `make test-python`.
 	@$(GODOT) --headless --path godot -s res://test/ai_perception/perception_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/perception

@@ -6,7 +6,8 @@
 ## guard's ears since the last step (`LevelSounds`), and `GuardMind` (T69)
 ## reads nothing else. The belief collapses on the cell the eye put the
 ## player in, or else spreads and is zeroed where a hidden body would have
-## been perceived; the cells it would have seen mark the team's search
+## been perceived -- and the particles (T91) also thin where a footstep
+## would have been heard and none was; the cells it would have seen mark the team's search
 ## spots searched. With the accumulator switched off, sight is a plain
 ## yes-or-no: the peak when anything is perceived, nothing when not.
 ##
@@ -96,6 +97,40 @@ static func _update_belief(guard: InfiltrationGuard, world: InfiltrationWorld, p
 		return
 	var cell: Vector2i = world.level.cell_of(guard.percept.seen_place)
 	if perceived and world.level.walkable(cell):
-		guard.belief.collapse(world.level.index_of[cell])
+		guard.collapse_belief(world.level.index_of[cell])
 	else:
 		guard.belief.step_unseen(seen, world.rules.spread)
+		guard.particles.step_unseen(seen, would_hear(guard, world))
+
+
+## The walk cells from which the player's quietest moving sound would have
+## reached `guard`, by index -- empty when it heard something this step, so
+## silence is evidence only when there was silence. A particle there is
+## weighed down, not zeroed: a player lying still makes no sound
+## (`ParticleBelief`'s sensor model). The quietest sound a moving stance
+## makes (`quietest_step`: the creep, 2 m), along the level as `LevelSounds`
+## floods it -- a guard that heard nothing knows at least that no one crept
+## that close. The off-screen halving is left out: it is a rule about the
+## camera, not something the guard knows of its own ears.
+static func would_hear(guard: InfiltrationGuard, world: InfiltrationWorld) -> PackedInt32Array:
+	var cells := PackedInt32Array()
+	if guard.percept.loudness > 0.0:
+		return cells
+	var radius: float = quietest_step(world)
+	var reached: Dictionary[Vector2i, int] = CostFlood.within(world.level.arena.walk_graph,
+		world.level.cell_of(guard.position), floori(radius))
+	for reached_cell: Vector2i in reached:
+		if world.level.index_of.has(reached_cell):
+			cells.append(world.level.index_of[reached_cell])
+	return cells
+
+
+## The radius of the quietest sound the player makes while it moves: the
+## smallest among its stances' noises, a silent stance left out.
+static func quietest_step(world: InfiltrationWorld) -> float:
+	var quietest: float = INF
+	for stance: String in world.rules.stances:
+		var noise: String = str(world.rules.stances[stance]["noise"])
+		if noise != "" and world.sounds.table.has(noise):
+			quietest = minf(quietest, world.sounds.table.radius(noise))
+	return quietest if is_finite(quietest) else 0.0

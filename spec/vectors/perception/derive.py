@@ -151,8 +151,100 @@ LINGERING = {"peak": 1.0, "decay": 0.1,
                         {"name": "searching", "at": 0.625, "decay": 0.02}, {"name": "alert", "at": 1.0, "decay": 0.02}],
              "caution": {"floor": 0.0, "seconds": 0.0}}
 
+# --- the particle filter ---------------------------------------------------
+# Marsaglia's xorshift, and the filter written out once more, plainly.
+
+
+def xorshift(state):
+    state ^= (state << 13) & 0xFFFFFFFF
+    state ^= state >> 17
+    state ^= (state << 5) & 0xFFFFFFFF
+    return state
+
+
+class Draw:
+    def __init__(self, seed):
+        self.state = (seed & 0xFFFFFFFF) or 1
+
+    def uniform(self):
+        self.state = xorshift(self.state)
+        return self.state / 4294967296.0
+
+    def pick(self, options):
+        if len(options) <= 1:
+            return options[0]
+        self.state = xorshift(self.state)
+        return options[self.state % len(options)]
+
+
+def even(candidates, count):
+    return [candidates[i * len(candidates) // count] for i in range(count)]
+
+
+def tally(nodes, size):
+    shares = [0.0] * size
+    for n in nodes:
+        shares[n] += 1.0 / len(nodes)
+    return shares
+
+
+def particle_step(cloud, graph, knobs, draw, step):
+    count = len(cloud["nodes"])
+    if "collapse" in step:
+        return {"nodes": [step["collapse"]] * count, "from": [-1] * count, "weights": [1.0 / count] * count,
+                "emptied": [], "reseeded": False}
+    nodes, came = list(cloud["nodes"]), list(cloud["from"])
+    for i in range(count):
+        u = draw.uniform()
+        edges = graph[nodes[i]]
+        if u < knobs["walk_on"]:
+            options = [n for n in edges if n != came[i]] or edges
+        elif u < knobs["walk_on"] + knobs["turn"]:
+            options = edges
+        else:
+            continue
+        if options:
+            came[i], nodes[i] = nodes[i], draw.pick(options)
+    raw, emptied = [], []
+    for n in nodes:
+        raw.append(0.0 if n in step["seen"] else knobs["unheard"] if n in step["unheard"] else 1.0)
+        if n in step["seen"] and n not in emptied:
+            emptied.append(n)
+    total = sum(raw)
+    if total <= 0:
+        unseen = [n for n in range(len(graph)) if n not in step["seen"]] or list(range(len(graph)))
+        return {"nodes": even(unseen, count), "from": [-1] * count, "weights": [0.0] * count,
+                "emptied": emptied, "reseeded": True}
+    weights = [w / total for w in raw]
+    stride = 1.0 / count
+    start, picked, src, acc = draw.uniform() * stride, [], 0, weights[0]
+    for i in range(count):
+        while start + i * stride > acc and src < count - 1:
+            src += 1
+            acc += weights[src]
+        picked.append(src)
+    return {"nodes": [nodes[j] for j in picked], "from": [came[j] for j in picked], "weights": weights,
+            "emptied": emptied, "reseeded": False}
+
+
+def particle_vector(name, why, graph, count, seed, steps, knobs=None):
+    knobs = knobs or {"walk_on": 0.7, "turn": 0.2, "unheard": 0.3}
+    draw = Draw(seed)
+    cloud = {"nodes": even(list(range(len(graph))), count), "from": [-1] * count}
+    out = {"nodes": [], "weights": [], "shares": [], "emptied": [], "reseeded": []}
+    for step in steps:
+        cloud = particle_step(cloud, graph, knobs, draw, step)
+        for key in ("nodes", "weights", "emptied", "reseeded"):
+            out[key].append(cloud[key])
+        out["shares"].append(tally(cloud["nodes"], len(graph)))
+    return {"name": name, "why": why, "kind": "particles",
+            "query": {"neighbours": graph, "count": count, "seed": seed, "knobs": knobs, "steps": steps},
+            "expect": out}
+
+
 CORRIDOR = [[1], [0, 2], [1, 3], [2]]
 ROOMS = [[1, 2], [0, 3], [0, 3], [1, 2, 4], [3]]
+LONG_CORRIDOR = [[1], [0, 2], [1, 3], [2, 4], [3, 5], [4]]
 
 
 def vectors():
@@ -197,6 +289,21 @@ def vectors():
         belief_vector("belief-reseeds-when-searched-out", "The only nodes it could be in are seen: the "
                       "belief is reseeded over the rest, evenly.",
                       ROOMS, [{"collapse": 4}, {"seen": [3, 4], "spread": 0.5}, {"seen": [], "spread": 0.3}]),
+        particle_vector("particles-walk-on-along-a-corridor", "Collapsed at one end of a corridor, unseen and "
+                        "unheard: most particles walk on away from where they were, a few stay.",
+                        LONG_CORRIDOR, 8, 7, [{"collapse": 0}] + [{"seen": [], "unheard": []}] * 3),
+        particle_vector("particles-thin-where-a-guard-looks-and-hears-nothing", "Spread evenly over the rooms; "
+                        "a guard sees one room and would have heard another: the seen room is emptied, the "
+                        "unheard one keeps fewer.",
+                        ROOMS, 10, 3, [{"seen": [3], "unheard": [1]}, {"seen": [3], "unheard": [1]}]),
+        particle_vector("particles-reseed-when-every-one-is-seen", "Collapsed in a dead end the guard then "
+                        "sees: every weight is 0, so the cloud is reseeded evenly over the unseen nodes.",
+                        ROOMS, 6, 11, [{"collapse": 4}, {"seen": [3, 4], "unheard": []},
+                                       {"seen": [], "unheard": [0]}]),
+        particle_vector("particles-without-a-sighting-start-even", "No collapse first: the cloud starts spread "
+                        "over every node, and walks from there.",
+                        CORRIDOR, 7, 0, [{"seen": [], "unheard": [3]}],
+                        knobs={"walk_on": 0.5, "turn": 0.4, "unheard": 0.5}),
     ]
 
 

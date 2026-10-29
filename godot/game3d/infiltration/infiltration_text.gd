@@ -15,6 +15,8 @@ extends RefCounted
 
 ## A switch, as the panel says it: on, then off.
 const ON_OFF: Array[String] = ["on", "OFF"]  # shown through tr()
+## The belief, as the panel says it: the grid's, then the particles'.
+const BELIEFS: Array[String] = ["grid", "particles"]  # shown through tr()
 ## The watched guard: standing, then downed.
 const GUARD_LINE: Array[String] = [  # shown through tr()
 	"guard {guard} ({type}): {phase}, sight {sight}, sound {sound}, {action}",
@@ -57,8 +59,16 @@ static func _scores(world: InfiltrationWorld, guard: InfiltrationGuard) -> Packe
 static func _switches(world: InfiltrationWorld) -> String:
 	var rules: InfiltrationRules = world.rules
 	return TranslationServer.translate("1 belief {belief}, 2 coordinator {coordinator}, 3 arbiter {arbiter}, 4 accumulator {accumulator}, 5 off-screen halving {halving}").format({
-		belief = on(rules.use_belief), coordinator = on(rules.use_coordinator), arbiter = on(rules.use_arbiter),
+		belief = belief_word(rules), coordinator = on(rules.use_coordinator), arbiter = on(rules.use_arbiter),
 		accumulator = on(rules.use_accumulator), halving = on(rules.off_screen_halving)})
+
+
+## Which belief the guards search from, as the panel says it: OFF, grid
+## or particles.
+static func belief_word(rules: InfiltrationRules) -> String:
+	if not rules.use_belief:
+		return on(false)
+	return TranslationServer.translate(BELIEFS[1 if rules.use_particles else 0])
 
 
 ## A switch's state as the panel and the corner say it.

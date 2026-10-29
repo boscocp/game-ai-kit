@@ -1,13 +1,14 @@
 {
   "module": "ai_perception",
   "kind": "technique",
-  "about": "Vision cones and shapes, line of sight, light, hearing straight and along paths, typed events, awareness, memory, a belief map, and an influence map.",
+  "about": "Vision cones and shapes, line of sight, light, hearing straight and along paths, typed events, awareness, memory, a belief map, a particle belief, and an influence map.",
   "owns": [
     "godot/addons/ai_perception/",
     "godot/test/ai_perception/",
     "python/gameaikit/perception/",
     "python/tests/test_perception_vectors.py",
-    "spec/vectors/perception/"
+    "spec/vectors/perception/",
+    "python/tests/test_perception_particles.py"
   ],
   "depends_on": [
     "ai_core"

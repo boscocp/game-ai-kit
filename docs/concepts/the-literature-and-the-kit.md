@@ -122,7 +122,7 @@ last three columns to the repository.
 | Technique | Literature | Known for | In the kit | Demos | Tier |
 |---|---|---|---|---|---|
 | Bayesian networks | AIMA ch. 13 | reasoning under uncertainty | not in the kit | -- | 1 |
-| Tracking over time: a grid belief, HMMs, Kalman and particle filters | AIMA ch. 14; GAP Online 2021 ch. 6 | chasing an unseen player | a grid belief that spreads and is cleared where seen: `godot/addons/ai_perception/belief_map.gd` | `demo-infiltration` | 1 |
+| Tracking over time: a grid belief, HMMs, Kalman and particle filters | AIMA ch. 14; GAP Online 2021 ch. 6 | chasing an unseen player | a grid belief that spreads and is cleared where seen: `godot/addons/ai_perception/belief_map.gd`; a particle filter with a transition and a sensor model, seeded and twinned: `godot/addons/ai_perception/particle_belief.gd` (T91) | `demo-infiltration` | 1 |
 | MDPs, value and policy iteration | AIMA 17.1-17.2 | small grid worlds | the maze solved in Python, its policy looked up: `python/gameaikit/mdp/`, `godot/game/maze/mdp_pac_man.gd`; `docs/concepts/mdp.md` | `demo-maze` | 1 |
 | Bandits (UCB1, regret matching) | AIMA 17.3; GAP2 ch. 25 | choosing among strategies by their payoff | not in the kit | -- | 1 |
 | POMDPs | AIMA 17.4-17.5 | acting on beliefs | not in the kit | -- | 1 |
@@ -164,7 +164,8 @@ tier 1, as invariant 5 asks. Running a model live is tier 3 and optional.
 1. **The decision layer is well covered; the probabilistic layer is
    not.** AIMA part IV -- chapters 12 to 18 -- is nearly absent: the kit's
    only reasoning over time under uncertainty is the guard's belief grid, which spreads
-   and is cleared where seen and has no sensor model. MCTS and bandits,
+   and is cleared where seen and has no sensor model -- and, since T91, a
+   particle filter beside it that has one. MCTS and bandits,
    the two that GAP2 ch. 25 presents for games, are missing too.
 2. **Nothing generates content as a lesson.** The bot match makes arenas
    from a seed, but only to test that bots cope on maps they were not

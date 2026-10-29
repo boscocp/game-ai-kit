@@ -259,14 +259,14 @@
         {"technique": "stealth-senses", "part": "the outlines round each guard: its vision zones, wide and sure near, narrow and doubtful far; the lines to your head, chest and feet, green where it sees them; the floor's brightness, the light it reads; the blue marks, how far a sound reached along the level"},
         {"technique": "awareness", "part": "the bar over each guard: how aware it is, its phases' thresholds as ticks; it falls a phase at a time and stays cautious after an alert"},
         {"technique": "fuzzy-logic", "part": "how fast the bar fills: a fuzzy controller of how sure the eye is, the light, your motion and the distance (4 makes it a plain yes-or-no)"},
-        {"technique": "belief-map", "part": "the orange cells: where the watched guard believes you are, spreading while it cannot see you and cleared where it looks (1 turns it off: guards walk to where they last saw you and give up)"},
+        {"technique": "belief-map", "part": "the orange cells: where the watched guard believes you are, spreading while it cannot see you and cleared where it looks (1 swaps it for a particle filter, its guesses drawn as dots; 1 again turns the belief off: guards walk to where they last saw you and give up)"},
         {"technique": "search-coordinator", "part": "the purple cross: the spot the watched guard was given to search; grey crosses, spots searched (2 turns claims off: they search the same places)"},
         {"technique": "role-arbiter", "part": "the role beside an alert guard's phase: one flanker at most, the rest shoot (3 turns it off: everyone who can shoot does)"},
         {"technique": "weighed-actions", "part": "the panel: every action the watched guard could take and its score, the one taken marked"},
         {"technique": "a-star", "part": "each guard's walk to where it chose to go, over the level's walk grid and its stairs"}
       ],
-      "controls": "WASD walk, mouse camera, C crouch, Z prone, Shift sprint, G throw a distraction, E take down from behind, click shoot; 1 belief, 2 coordinator, 3 arbiter, 4 accumulator, 5 off-screen halving; Tab next guard, H hide the reasoning, L next level, N again, P pause, Space one decision",
-      "watch": "Crouch in the dark and watch a guard's bar fill slowly and fall back while you lie still. Get seen, then hide: the orange belief spreads from where it saw you, the others hear its radio report, and the purple crosses share the search out. Press 1 and hide again: without the belief they walk to where they saw you and give up.",
+      "controls": "WASD walk, mouse camera, C crouch, Z prone, Shift sprint, G throw a distraction, E take down from behind, click shoot; 1 belief (grid, particles, off), 2 coordinator, 3 arbiter, 4 accumulator, 5 off-screen halving; Tab next guard, H hide the reasoning, L next level, N again, P pause, Space one decision",
+      "watch": "Crouch in the dark and watch a guard's bar fill slowly and fall back while you lie still. Get seen, then hide: the orange belief spreads from where it saw you, the others hear its radio report, and the purple crosses share the search out. Press 1 and hide again: the belief is a cloud of particles that walk on as a person would and thin where a guard looks. Press 1 once more: without a belief they walk to where they saw you and give up.",
       "docs": "docs/godot/infiltration.md"
     },
     {

@@ -5,6 +5,8 @@ searching,procurando
 alert,alerta
 a body point the guard sees; red: hidden by a box,ponto do corpo visto; vermelho: atrás de caixa
 where the watched guard believes you are,onde o guarda assistido acredita que você está
+"particles (1): its guesses, bigger where more","partículas (1): palpites, maiores onde há mais"
+white square: guesses its sight just cleared,quadrado branco: palpites que a visão limpou
 the spot it was given to search; grey: searched,o lugar que ele recebeu para vasculhar; cinza: vasculhado
 a sound's reach along the level,até onde um som chega pelo nível
 CALLING FOR HELP,PEDINDO AJUDA
@@ -20,6 +22,8 @@ nothing,nada
 "1 belief {belief}, 2 coordinator {coordinator}, 3 arbiter {arbiter}, 4 accumulator {accumulator}, 5 off-screen halving {halving}","1 crença {belief}, 2 coordenador {coordinator}, 3 árbitro {arbiter}, 4 acumulador {accumulator}, 5 metade fora da tela {halving}"
 on,ligado
 OFF,DESLIGADO
+grid,grade
+particles,partículas
 "guard {guard} ({type}): {phase}, sight {sight}, sound {sound}, {action}","guarda {guard} ({type}): {phase}, visão {sight}, som {sound}, {action}"
 "guard {guard} ({type}): {phase}, sight {sight}, sound {sound}, downed","guarda {guard} ({type}): {phase}, visão {sight}, som {sound}, derrubado"
 {clear} of {points} points clear; the stance needs {needed},{clear} de {points} pontos à vista; a postura pede {needed}

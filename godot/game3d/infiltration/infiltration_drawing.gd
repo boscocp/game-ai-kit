@@ -8,9 +8,12 @@
 ## lying flat. The decisions: each guard's vision zones as outlines on the
 ## floor, in its phase's colour; for a guard looking at the player, a line
 ## to each body point, green where clear and red where a box hid it; the
-## watched guard's belief as a heat map, its last known position as a grey
-## silhouette, the spots it was given and the spots searched, and its way
-## out; every sound's flood as a ring of cells at its edge.
+## watched guard's belief as a heat map -- or, with the particles on (T91),
+## its cloud as dots sized by the share on each cell, and a white square
+## flashing on each cell its sight just emptied -- its last known position
+## as a grey silhouette, the spots it was given (the one it chose from the
+## belief, purple) and the spots searched, and its way out; every sound's
+## flood as a ring of cells at its edge.
 ##
 ## When not to use it: as the HUD. The bars, scores and radar are 2D.
 class_name InfiltrationDrawing
@@ -25,6 +28,8 @@ const EXIT: Color = Color(0.95, 0.85, 0.2)
 const CLEAR: Color = Color(0.3, 0.95, 0.4)
 const BLOCKED: Color = Color(0.95, 0.25, 0.2)
 const BELIEF: Color = Color(1.0, 0.45, 0.1)
+const PARTICLE: Color = Color(1.0, 0.7, 0.2)
+const EMPTIED: Color = Color(1.0, 1.0, 1.0)
 const SEARCHED: Color = Color(0.6, 0.6, 0.6)
 const SPOT: Color = Color(0.7, 0.35, 0.9)
 const SOUND: Color = Color(0.4, 0.85, 1.0)
@@ -38,6 +43,7 @@ var _guards: Array[BotBody] = []
 var _lines := ImmediateMesh.new()
 var _ghost: Node3D
 var _belief: MultiMeshInstance3D
+var _particles: MultiMeshInstance3D
 var _drawn_at: float = 0.0
 
 
@@ -56,6 +62,7 @@ func build(world: InfiltrationWorld) -> void:
 	_ghost = AssetShelf.primitive("humanoid", BotBody.HEIGHT, GHOST)
 	add_child(_ghost)
 	_belief = InfiltrationGround.belief_tiles(self, world.level)
+	_particles = InfiltrationGround.particle_dots(self, world.level)
 	var drawn := MeshInstance3D.new()
 	drawn.mesh = _lines
 	var material := StandardMaterial3D.new()
@@ -79,7 +86,8 @@ func refresh(world: InfiltrationWorld, watched: int, thinking: bool) -> void:
 		body.rotation.z = 0.0 if guard.alive() else PI / 2.0
 	_lines.clear_surfaces()
 	_ghost.visible = false
-	_belief.visible = thinking and world.rules.use_belief
+	_belief.visible = thinking and world.rules.use_belief and not world.rules.use_particles
+	_particles.visible = thinking and world.rules.use_belief and world.rules.use_particles
 	if not thinking:
 		return
 	_lines.surface_begin(Mesh.PRIMITIVE_LINES)
@@ -135,7 +143,10 @@ func _draw_ring(world: InfiltrationWorld, sound: Dictionary) -> void:
 
 
 func _draw_watched(world: InfiltrationWorld, guard: InfiltrationGuard) -> void:
-	InfiltrationGround.colour_belief(_belief, world.level, guard.belief)
+	if world.rules.use_particles:
+		_draw_particles(world, guard)
+	else:
+		InfiltrationGround.colour_belief(_belief, world.level, guard.belief.shares)
 	if guard.mind.memory.known:
 		_ghost.visible = true
 		_ghost.position = world.level.arena.above(guard.mind.memory.place, 0.0)
@@ -151,6 +162,17 @@ func _draw_watched(world: InfiltrationWorld, guard: InfiltrationGuard) -> void:
 		_line(world.level.arena.above(guard.way_out, 0.0), world.level.arena.above(guard.way_out, 2.5), SPOT)
 	if guard.goal != Vector2.INF and is_finite(guard.goal.x):
 		_line(guard.eye(world.level.arena, world.rules), world.level.arena.above(guard.goal, 0.1), Color(1, 1, 1, 0.6))
+
+
+# The cloud the guard decides on, as dots, and a square on each cell whose
+# particles its sight emptied in the last step.
+func _draw_particles(world: InfiltrationWorld, guard: InfiltrationGuard) -> void:
+	InfiltrationGround.size_dots(_particles, world.level, guard.particles.shares)
+	for cell: int in guard.particles.emptied:
+		var middle: Vector3 = world.level.arena.above(BotArena.centre_of(world.level.cells[cell]), 0.09)
+		var corners: Array[Vector3] = [Vector3(-0.45, 0, -0.45), Vector3(0.45, 0, -0.45), Vector3(0.45, 0, 0.45), Vector3(-0.45, 0, 0.45)]
+		for corner: int in range(4):
+			_line(middle + corners[corner], middle + corners[(corner + 1) % 4], EMPTIED)
 
 
 func _line(from: Vector3, to: Vector3, colour: Color) -> void:

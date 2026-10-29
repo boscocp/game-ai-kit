@@ -69,26 +69,62 @@ static func belief_tiles(parent: Node3D, level: InfiltrationLevel) -> MultiMeshI
 	return tiles(parent, level, 0.04)
 
 
-## Colour `shown`'s tiles by `belief`: clear where it is no more than an
-## even share -- a guard that knows nothing believes nothing in particular
-## -- orange and opaque where it is most.
-static func colour_belief(shown: MultiMeshInstance3D, level: InfiltrationLevel, belief: BeliefMap) -> void:
-	var strength: PackedFloat64Array = strengths(belief)
+## Colour `shown`'s tiles by a belief's `shares`: clear where it is no more
+## than an even share -- a guard that knows nothing believes nothing in
+## particular -- orange and opaque where it is most.
+static func colour_belief(shown: MultiMeshInstance3D, level: InfiltrationLevel, shares: PackedFloat64Array) -> void:
+	var strength: PackedFloat64Array = strengths(shares)
 	for index: int in range(level.cells.size()):
 		shown.multimesh.set_instance_color(index, Color(InfiltrationDrawing.BELIEF, 0.75 * strength[index]))
 
 
-## How strongly each cell stands out in `belief`: 0 at or below an even
-## share, 1 at the most believed cell; all 0 when it is even everywhere.
-static func strengths(belief: BeliefMap) -> PackedFloat64Array:
-	var even: float = 1.0 / maxf(belief.shares.size(), 1.0)
+## How strongly each cell stands out in a belief's `shares`: 0 at or below
+## an even share, 1 at the most believed cell; all 0 when it is even
+## everywhere.
+static func strengths(shares: PackedFloat64Array) -> PackedFloat64Array:
+	var even: float = 1.0 / maxf(shares.size(), 1.0)
 	var most: float = 0.0
-	for share: float in belief.shares:
+	for share: float in shares:
 		most = maxf(most, share)
 	var found := PackedFloat64Array()
-	found.resize(belief.shares.size())
+	found.resize(shares.size())
 	if most <= even * 1.01:
 		return found
-	for index: int in range(belief.shares.size()):
-		found[index] = clampf((belief.shares[index] - even) / (most - even), 0.0, 1.0)
+	for index: int in range(shares.size()):
+		found[index] = clampf((shares[index] - even) / (most - even), 0.0, 1.0)
 	return found
+
+
+## The particles' dots, one a walk cell, just above the belief's tiles:
+## a flat disc whose size `size_dots` sets from the cloud (T91).
+static func particle_dots(parent: Node3D, level: InfiltrationLevel) -> MultiMeshInstance3D:
+	var disc := CylinderMesh.new()
+	disc.top_radius = 0.4
+	disc.bottom_radius = 0.4
+	disc.height = 0.02
+	disc.radial_segments = 12
+	var many := MultiMesh.new()
+	many.transform_format = MultiMesh.TRANSFORM_3D
+	many.mesh = disc
+	many.instance_count = level.cells.size()
+	var shown := MultiMeshInstance3D.new()
+	shown.multimesh = many
+	var material := StandardMaterial3D.new()
+	material.albedo_color = InfiltrationDrawing.PARTICLE
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	shown.material_override = material
+	parent.add_child(shown)
+	return shown
+
+
+## Size each cell's dot by the share of the cloud on it: its area grows
+## with the share, the fullest cell's dot fills its tile, and a cell with
+## no particle has none.
+static func size_dots(shown: MultiMeshInstance3D, level: InfiltrationLevel, shares: PackedFloat64Array) -> void:
+	var most: float = 0.0
+	for share: float in shares:
+		most = maxf(most, share)
+	for index: int in range(level.cells.size()):
+		var size: float = sqrt(shares[index] / most) if most > 0.0 else 0.0
+		var place: Vector3 = level.arena.above(BotArena.centre_of(level.cells[index]), 0.06)
+		shown.multimesh.set_instance_transform(index, Transform3D(Basis().scaled(Vector3(size, 1.0, size)), place))
