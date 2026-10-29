@@ -139,9 +139,9 @@ RTS and the fighting game, by the same rules, with what they added:
   hitstun) and the characters; the clone's case key and its feature names,
   which are the recordings' columns; the frame data's own refusals, which
   speak to whoever edits the JSON, in its keys' language. The glossary
-  defines the terms. The pad's legend line (`PadAsKeys.add_to`, in
-  `game_shared`, which has no table) is still English: key and button
-  names, and the words "pad" and "stick" (T103).
+  defines the terms. On the pad's legend line, the key names and the names
+  printed on the pad (A, LB, View, Menu, LT); the rest is translated since
+  T103, below.
 - **Numbers.** A number a person reads as prose follows the language's
   decimal separator, through `Language.decimal`: the 2D racer's winning
   margin ("vence por 1,4 s") and the 3D racer's last lap time. Every other
@@ -270,6 +270,39 @@ RTS and the fighting game, by the same rules, with what they added:
   now ends 4 px past the gutter, not 200 lines past it, and one more ends
   2 px under a ceiling it is given as if `NOT_YET_FITTED` named it: with
   the ceiling read as an exemption, that one passes and the check fails.
+
+## The pad's line (T103, wave 109)
+
+- **`game_shared` has a table**, `godot/locale/game_shared.csv`, for the
+  one line it writes on every real-time demo: the pad's, under the legend
+  (`PadAsKeys.add_to`). "pad: {bindings}" is "controle: {bindings}" (the
+  menu already said "No controle"), "stick {keys}" is "analógico {keys}",
+  the D-pad's directions are words ("D-pad cima"; "D-pad" stays, as the
+  menu's line keeps it), and the right stick looking and RT clicking are
+  two keys. Key names and the names printed on the pad stay as written.
+  Every demo with a pad already called `add_to` after `set_entries` in the
+  legend rebuild it runs on `NOTIFICATION_TRANSLATION_CHANGED`.
+- **A pad planted for the checks.** None can be connected headless, and
+  the line is written only when one is. `PadAsKeys.planted` writes it
+  anyway; nothing in a game sets it. `test-locale-screen` plants it and
+  fails an example with a pad whose legend does not show the pad's lines
+  as the pad writes them now, and reads each binding as well as the line
+  ("stick A/D/W/S" is the English of "stick {keys}"). Planted: a legend
+  whose pad line was written in English and not rebuilt. `test-demo-overlays`
+  plants it too, so the legend is measured with the pad's lines, in both
+  languages.
+- **The line breaks at the legend's width, not every three bindings.**
+  Planted, the English line ran off the window at three a line in the 2D
+  racer (x=1355), the stealth hall (1358) and the 3D racer (1303): it had
+  never been measured, since no gate had a pad. `legend_lines` now puts on
+  a line as many bindings as fit `Legend.words_width()`, the legend's own
+  width past its swatch, measured in the legend's font.
+- **Not fitted: the legend's height.** No gate measures how far down a
+  legend's lines go, and with a pad some go past their box: the bot
+  match's ends at y=760 of a 720-pixel window (800 at three a line), and
+  both racers' run over the status under them (the 2D racer's to y=274,
+  its status starting at 200; the 3D racer's to 232, against 164). It was
+  so before this wave, with a real pad. Left for a task of its own.
 
 ## Measured on 4.7.2
 

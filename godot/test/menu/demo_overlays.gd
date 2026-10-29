@@ -93,6 +93,9 @@ var _counter := ErrorCounter.new()
 func _initialize() -> void:
 	OS.add_logger(_counter)
 	TranslationServer.set_locale(chosen_locale(OS.get_cmdline_user_args()))
+	# The legend measured with the pad's lines in it, as a person with a
+	# controller sees it; none can be connected headless (T103).
+	PadAsKeys.planted = true
 	_run()
 
 

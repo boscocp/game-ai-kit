@@ -59,12 +59,17 @@ the racers steer as they do from a keyboard.
 | `make demo-stealth` | -- | D-pad walks a cell, with LB held two; A waits, Y danger map, X again |
 
 Each example's table is its `PAD_BUTTONS` constant. With a pad connected,
-the legend shows it under the AI's colours.
+the legend shows it under the AI's colours, as many bindings a line as fit
+the legend's width (T103: three a line ran off the window in the racers and
+the stealth hall, in English), and in the language chosen. The words are
+translated -- "pad", "stick", the D-pad's directions -- and the key names
+and the names printed on the pad (A, LB, View, Menu) stay as written.
 
 ## Held by
 
 `make test-pad` drives a `PadAsKeys` with pad events made the way a real
-pad's arrive, and reads `Input` after each: nineteen claims, each one broken
+pad's arrive, and reads `Input` after each, then reads the legend's line in
+English and in pt-BR (T103): twenty-four claims, each one broken
 alone and found; a planted pad that sets only the keycode -- which the
 fighting game would never see -- refused; and one where a key has a single
 owner, refused on the throttle the racers share between the stick and RT.
