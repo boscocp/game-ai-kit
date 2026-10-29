@@ -1,0 +1,33 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/maze/maze.gd" id="1_maze"]
+[ext_resource type="Script" path="res://game/legend.gd" id="9_legend"]
+
+[node name="MazeDemo" type="Node2D"]
+position = Vector2(40, 136)
+script = ExtResource("1_maze")
+
+[node name="Interface" type="CanvasLayer" parent="."]
+
+[node name="Status" type="Label" parent="Interface"]
+offset_left = 32.0
+offset_top = 630.0
+offset_right = 1256.0
+offset_bottom = 700.0
+theme_override_font_sizes/font_size = 15
+text = "loading"
+
+[node name="Decision" type="Label" parent="Interface"]
+offset_left = 680.0
+offset_top = 220.0
+offset_right = 1270.0
+offset_bottom = 620.0
+theme_override_font_sizes/font_size = 15
+text = "loading"
+
+[node name="Legend" type="Control" parent="Interface"]
+offset_left = 680.0
+offset_top = 20.0
+offset_right = 1270.0
+offset_bottom = 210.0
+script = ExtResource("9_legend")

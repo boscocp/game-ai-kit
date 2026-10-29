@@ -1,0 +1,42 @@
+en,pt_BR
+Pac-Man: you,Pac-Man: você
+"Blinky: in chase, aims at your cell","Blinky: em perseguição, mira a sua casa"
+Pinky (G): aims four cells ahead of you,Pinky (G): mira quatro casas à sua frente
+pellet: eat all four to win,pastilha: coma as quatro para vencer
+square with a cross: a ghost's target tile,quadrado com um X: a casa-alvo de um fantasma
+"grey line: a way it may take, and the","linha cinza: um caminho que ele pode tomar, e a"
+straight line from there to its target,distância em linha reta dali até o alvo
+"white line: the way it chose, before it moves","linha branca: o caminho escolhido, antes de ele andar"
+orange and a die: the dice chose the way,laranja e um dado: os dados escolheram o caminho
+up,cima
+left,esquerda
+down,baixo
+right,direita
+scatter mode,modo dispersão
+chase mode,modo perseguição
+BLINKY,BLINKY
+PINKY,PINKY
+target: your cell {cell},alvo: a sua casa {cell}
+"target: four cells ahead of you, {cell}","alvo: quatro casas à sua frente, {cell}"
+"target: its home corner, outside the walls, {cell}","alvo: o canto dele, fora das paredes, {cell}"
+"  and four to the left too: you face up, the arcade's bug","  e mais quatro à esquerda: você está virado para cima, o bug do fliperama"
+all four pellets eaten: you win  ·  R plays again,as quatro pastilhas comidas: você vence  ·  R joga de novo
+caught  ·  R plays again,pego  ·  R joga de novo
+"In chase, at a fork, a ghost keeps the shortest line with","Em perseguição, numa bifurcação, o fantasma fica com a linha mais curta"
+"chance {precision}, otherwise takes any way evenly: a rule","com chance {precision}; senão, toma qualquer caminho por igual: uma regra"
+"of this game, not the arcade's, so the maze has chance in it.","deste jogo, não do fliperama, para o labirinto ter acaso."
+"step {step}, {mode}  ·  pellets left: {pellets}","passo {step}, {mode}  ·  pastilhas restantes: {pellets}"
+press an arrow to start: Pac-Man runs until a wall stops him,aperte uma seta para começar: o Pac-Man corre até uma parede o parar
+"paused: P runs on, space plays one step","pausado: P continua, espaço joga um passo"
+V: the ghosts' view off,V: a visão dos fantasmas desligada
+V: the ghosts' view on,V: a visão dos fantasmas ligada
+G: Pinky too,G: o Pinky também
+G: Blinky alone,G: o Blinky sozinho
+arrows: walk  ·  P: pause  ·  space: one step  ·  R: again,setas: andar  ·  P: pausa  ·  espaço: um passo  ·  R: de novo
+"{ghost}, in {mode}","{ghost}, em {mode}"
+"the mode changed: it turns back, {way}, without choosing","o modo mudou: ele dá meia-volta, {way}, sem escolher"
+"one way open, so no choice: {way}","um só caminho aberto, sem escolha: {way}"
+"dice {roll}, not under {precision}: imprecise","dados {roll}, não abaixo de {precision}: impreciso"
+"a second draw picks way {pick} of {ways}: {way}","um segundo sorteio pega o caminho {pick} de {ways}: {way}"
+"dice {roll}, under {precision}: it keeps the shortest, {way}","dados {roll}, abaixo de {precision}: fica com o mais curto, {way}"
+the shortest line to the target: {way},a linha mais curta até o alvo: {way}

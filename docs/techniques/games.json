@@ -197,6 +197,20 @@
         "en": "M cycles the dummy's mode; space one frame; P pause",
         "pt-BR": "M troca o modo do boneco; espaço um quadro; P pausa"
       }
+    },
+    "demo-maze": {
+      "game": {
+        "en": "Pac-Man, a small maze",
+        "pt-BR": "Pac-Man, um labirinto pequeno"
+      },
+      "like": {
+        "en": "Pac-Man, you against Blinky",
+        "pt-BR": "Pac-Man, você contra o Blinky"
+      },
+      "keys": {
+        "en": "V the ghosts' view: each ghost's target and the distance from each way; G brings Pinky in",
+        "pt-BR": "V a visão dos fantasmas: o alvo de cada um e a distância de cada caminho; G traz o Pinky"
+      }
     }
   },
   "algorithms": {
@@ -375,6 +389,10 @@
     "weighed-actions": {
       "en": "utility-weighed actions",
       "pt-BR": "ações pesadas por *utility*"
+    },
+    "target-tile": {
+      "en": "a target tile and the shortest straight line",
+      "pt-BR": "uma casa-alvo e a linha reta mais curta"
     }
   }
 }

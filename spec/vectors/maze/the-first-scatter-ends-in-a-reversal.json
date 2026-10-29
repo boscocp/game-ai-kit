@@ -1,0 +1,44 @@
+{
+ "description": "Pac-Man paces the bottom row; after 14 scatter steps the mode turns to chase and Blinky reverses without choosing.",
+ "seed": 1,
+ "ghosts": [
+  "blinky"
+ ],
+ "moves": [
+  "left",
+  "left",
+  "left",
+  "left",
+  "right",
+  "right",
+  "right",
+  "right",
+  "left",
+  "left",
+  "left",
+  "left",
+  "right",
+  "right",
+  "right",
+  "right"
+ ],
+ "trace": [
+  {"pacman": [6, 7], "facing": "left", "ghosts": [[6, 3, "left", "only way", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [5, 7], "facing": "left", "ghosts": [[5, 3, "up", "nearest", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [4, 7], "facing": "left", "ghosts": [[5, 2, "up", "only way", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [3, 7], "facing": "left", "ghosts": [[5, 1, "left", "only way", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [2, 7], "facing": "left", "ghosts": [[4, 1, "left", "only way", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [3, 7], "facing": "right", "ghosts": [[3, 1, "left", "only way", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [4, 7], "facing": "right", "ghosts": [[2, 1, "left", "only way", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [5, 7], "facing": "right", "ghosts": [[1, 1, "down", "only way", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [6, 7], "facing": "right", "ghosts": [[1, 2, "down", "only way", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [5, 7], "facing": "left", "ghosts": [[1, 3, "right", "nearest", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [4, 7], "facing": "left", "ghosts": [[2, 3, "right", "only way", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [3, 7], "facing": "left", "ghosts": [[3, 3, "right", "nearest", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [2, 7], "facing": "left", "ghosts": [[4, 3, "right", "only way", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [3, 7], "facing": "right", "ghosts": [[5, 3, "right", "nearest", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [4, 7], "facing": "right", "ghosts": [[6, 3, "left", "reversal", 4, 7]], "pellets": 4, "mode": "chase", "outcome": "playing"},
+  {"pacman": [5, 7], "facing": "right", "ghosts": [[5, 3, "left", "nearest", 5, 7]], "pellets": 4, "mode": "chase", "outcome": "playing"},
+  {"pacman": [6, 7], "facing": "right", "ghosts": [[4, 3, "left", "only way", 6, 7]], "pellets": 4, "mode": "chase", "outcome": "playing"}
+ ]
+}

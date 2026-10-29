@@ -1,0 +1,28 @@
+{
+  "about": "The maze's rules (T97), after Pittman's Pac-Man Dossier (2009), with every departure named. Read by Python from a byte-for-byte copy (python/gameaikit/maze/rules.json) and by Godot from another (godot/game/maze/rules.json); tests hold both to this file. A step: (1) Pac-Man takes his move -- one of the four directions; into a wall he stays where he is; (2) on a ghost's cell he is caught; (3) he eats a pellet on his cell, and with none left he has won; (4) every ghost takes the move it chose at the end of the last step; (5) a ghost on his cell catches him -- the two cannot pass through each other, as the arcade rarely lets them: Pac-Man moves first, so to swap he would have to walk onto the ghost's cell, which is (2); (6) the step is counted, and every ghost chooses its next move: if the mode the schedule gives the next step differs from this one, the move back the way it came (the Dossier's forced reversal), otherwise the Dossier's choice. The choice: never the reverse of its last move, unless there is no other way; with one way, that way; with more, measure the straight line from the cell beyond each way to the ghost's target tile and take the shortest, ties broken up, left, down, right. Distances are compared squared, whole numbers in both languages. In chase only, at a choice of two or more ways, the ghost is imprecise: one uniform draw in (0, 1); below `precision` it keeps the Dossier's choice, otherwise a second draw picks any of the ways evenly, the Dossier's included. So a way is taken with probability precision x [it is the Dossier's] + (1 - precision) / ways -- the chance T98's MDP is built on. The probabilities are exact up to the generator's bias, about 2^-32: a draw is 1 to 2^32 - 1, never 0, and the second is taken modulo the ways. Draws come from Marsaglia's 32-bit xorshift seeded with the game's seed, in the order the ghosts are listed; a forced move draws nothing. Targets: in scatter, the ghost's corner (maze.json); in chase, Blinky's is Pac-Man's cell and Pinky's the cell `tiles` ahead of Pac-Man's facing (the direction of his last move that moved him), with the Dossier's overflow bug -- facing up, also `tiles` to the left. Departures from the arcade, on purpose: one cell a step for everyone (the arcade's Pac-Man runs at 80% and the ghosts at 75% on level one); a ghost chooses on the cell it is on, rather than one tile ahead; no ghost house, tunnel, energizer, frightened mode, fruit or lives -- one catch ends the game; no Cruise Elroy (in the arcade Blinky speeds up once few dots are left, 20 on level one, and keeps chasing through scatter: with four pellets he would from the first step); and no red zones, the arcade's cells where a ghost may not turn up. The schedule is the Dossier's level one in seconds (scatter 7, chase 20, scatter 7, chase 20, scatter 5, chase 20, scatter 5, then chase), each second counted as two steps; `steps` null is for ever.",
+  "directions": {
+    "up": [0, -1],
+    "left": [-1, 0],
+    "down": [0, 1],
+    "right": [1, 0]
+  },
+  "tie_order": ["up", "left", "down", "right"],
+  "schedule": [
+    {"mode": "scatter", "steps": 14},
+    {"mode": "chase", "steps": 40},
+    {"mode": "scatter", "steps": 14},
+    {"mode": "chase", "steps": 40},
+    {"mode": "scatter", "steps": 10},
+    {"mode": "chase", "steps": 40},
+    {"mode": "scatter", "steps": 10},
+    {"mode": "chase", "steps": null}
+  ],
+  "precision": 0.8,
+  "imprecise_in": ["chase"],
+  "ghosts": ["blinky"],
+  "optional_ghosts": ["pinky"],
+  "targets": {
+    "blinky": {"chase": "pacman", "tiles": 0, "up_also_left": false},
+    "pinky": {"chase": "ahead", "tiles": 4, "up_also_left": true}
+  }
+}

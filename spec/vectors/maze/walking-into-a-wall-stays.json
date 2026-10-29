@@ -1,0 +1,18 @@
+{
+ "description": "Pac-Man starts on the bottom row; down is a wall, so he stays and keeps facing left, while Blinky takes his first scatter steps towards the top-right corner.",
+ "seed": 1,
+ "ghosts": [
+  "blinky"
+ ],
+ "moves": [
+  "down",
+  "down",
+  "down"
+ ],
+ "trace": [
+  {"pacman": [6, 7], "facing": "left", "ghosts": [[6, 3, "left", "only way", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [6, 7], "facing": "left", "ghosts": [[5, 3, "up", "nearest", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [6, 7], "facing": "left", "ghosts": [[5, 2, "up", "only way", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"},
+  {"pacman": [6, 7], "facing": "left", "ghosts": [[5, 1, "left", "only way", 11, -2]], "pellets": 4, "mode": "scatter", "outcome": "playing"}
+ ]
+}

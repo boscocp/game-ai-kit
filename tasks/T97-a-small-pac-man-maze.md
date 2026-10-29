@@ -32,7 +32,9 @@ target tile.
   each intersection the ghost takes the Dossier's choice with a fixed
   probability and a random legal exit otherwise -- an imprecise ghost. Its
   reason: an MDP needs chance in the world, and stating it as a rule of the
-  game makes T98's model exact rather than an approximation.
+  game makes T98's model exact rather than an approximation -- exact
+  except for the timed schedule (wave 104's review: the mode and the forced
+  reversal depend on the step count; T98's task file weighs it).
 - **The person plays Pac-Man**; T98 adds the MDP as a controller and C
   cycles between them, as in the tactical game.
 - **A Python twin of the rules**, held by vectors (a seed and inputs in,
@@ -77,6 +79,14 @@ How invariant 13 is met: with V, the ghost's target tile marked, and at
 each intersection the distances from each exit to the target written on
 the exits, the chosen one highlighted before the ghost turns -- and, on an
 imprecise turn, the dice shown as such.
+
+## As built (wave 104)
+
+The rules are `spec/maze/rules.json`'s "about", every departure from the
+arcade named there and in `docs/godot/maze.md`. Three things this task did
+not settle are left to the owner there: frightened mode (no energizer, so
+none), the generator written twice (`MazeDice` beside `ai_adversarial`'s
+`Xorshift`), and the schedule's scale and the precision, chosen numbers.
 
 References, opened on 2026-10-26: Pittman, J. "The Pac-Man Dossier."
 Game Developer, 2009 <https://www.gamedeveloper.com/design/the-pac-man-dossier>.

@@ -294,7 +294,7 @@ train-menace: ## Train MENACE from its seed and publish its beads to the tic-tac
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.menace.report --write $(CURDIR)/godot/game/tictactoe
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors test-llm-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors test-llm-vectors test-maze-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -392,6 +392,13 @@ test-menace-vectors: import ## The MENACE vectors, against the game's bead playe
 	@# itself, because Python's generator and Godot's differ.
 	@$(GODOT) --headless --path godot -s res://test/tictactoe/menace_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/menace
+
+.PHONY: test-maze-vectors
+test-maze-vectors: import ## The maze vectors: a seed and Pac-Man's moves, every step's positions, against the game (T97)
+	@# The other half is `make test-python`; the answers came from neither,
+	@# from spec/vectors/maze/derive.py.
+	@$(GODOT) --headless --path godot -s res://test/maze/maze_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/maze
 
 .PHONY: test-infiltration
 test-infiltration: import ## The infiltration level's guards: help heard, the search shared, quiet and loud, the arbiter, the halving, every decision on the overlay, portable (T70)
@@ -701,6 +708,10 @@ league: import ## T25's league: every team against every other from both seats, 
 .PHONY: record-tactical
 record-tactical: import ## Play the tactical board and keep every game you finish in data/tactical/, T25's human reference
 	@$(GODOT) --path godot res://game/tactical/tactical.tscn -- --record
+
+.PHONY: demo-maze
+demo-maze: import ## Pac-Man against Blinky, who follows the arcade's rules: arrows walk, V the ghosts' view, G brings Pinky in, P pause, space one step, R again
+	@$(GODOT) --path godot res://game/maze/maze.tscn
 
 .PHONY: demo-fighting
 demo-fighting: import ## Training mode, you against a dummy: A/D walk, W jump, S crouch, U/I punch, J/K kick, L throw, O or back twice evade, hold away to guard, M dummy mode, P pause, space one frame

@@ -1,0 +1,23 @@
+{
+  "module": "maze",
+  "kind": "example",
+  "about": "A small Pac-Man maze: ghosts that follow the arcade's rules, one imprecise, and their Python twin.",
+  "owns": [
+    "godot/game/maze/",
+    "godot/test/maze/",
+    "godot/locale/maze.csv",
+    "godot/locale/maze.csv.import",
+    "godot/locale/maze.pt_BR.translation",
+    "spec/maze/",
+    "spec/vectors/maze/",
+    "python/gameaikit/maze/",
+    "python/tests/test_maze.py",
+    "python/tests/test_maze_vectors.py"
+  ],
+  "depends_on": [
+    "game_shared"
+  ],
+  "gates": [
+    "test-maze-vectors"
+  ]
+}

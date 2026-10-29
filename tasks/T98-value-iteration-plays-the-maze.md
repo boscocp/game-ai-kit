@@ -25,6 +25,31 @@ owner chose the maze: a game people know, with an opponent in it.
   measured before the size is fixed, and the page says how long it took.
   A second ghost multiplies it by about 200, so it stays out of the solved
   game unless measured feasible.
+- **That state is not Markov for T97's game, as built** (wave 104's
+  review). The mode follows a timed schedule (`spec/maze/rules.json`:
+  scatter and chase until step 168, then chase for ever), and a mode change
+  forces every ghost to reverse; both depend on the step count, which the
+  state above does not hold. The reviewer found 621 pairs of equal states
+  whose committed ghost moves differed for no reason but a pending
+  reversal. Without reversals and dice, the ghost's committed move *is*
+  determined by the state. Putting the step count in the state as it is
+  (169 values) gives about 29 million states, not workable for pure-Python
+  value iteration on tier 1.
+- **Decided (owner, 2026-10-29): the stationary regime.** T98 solves the
+  MDP of "chase for ever" -- what T97's game becomes after step 168, with
+  no scheduled mode change and so no forced reversal. The demo gains a mode
+  with that schedule, for the policy to play; the arcade schedule stays in
+  the normal game. For that regime the state above is exact, and smaller:
+  the mode is always chase, so about 50 x 50 x 4 x 16 = 160,000 states,
+  within the first estimate of 320,000. The options weighed and set aside:
+  the step count capped at 168 in the state (about 29 million states), and
+  a mode change made a stated random rule (not the arcade's).
+- **The ghost's committed move.** T97's ghost chooses its next move at the
+  end of a step, before Pac-Man's next move, and that choice does not
+  depend on his action. A policy over a state that does not hold it is
+  valid -- the move is chance from the policy's point of view, drawn from
+  `gameaikit.maze.rules.chances` -- just less informed than the overlay,
+  which shows it.
 - **The transition model is the game's rules**, imported from T97's
   Python twin, not rewritten: the imprecise ghost's probability is where
   the chance comes from. Rewards: a pellet +1, all pellets +10 and the

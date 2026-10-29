@@ -44,7 +44,8 @@
     "belief-map": {"name": "a belief over where the player may be, spread and cleared by sight", "evidence": ["BeliefMap"]},
     "search-coordinator": {"name": "a search shared out by claims", "evidence": ["SearchCoordinator"]},
     "role-arbiter": {"name": "fight roles granted by an arbiter", "evidence": ["RoleArbiter"]},
-    "weighed-actions": {"name": "every action scored by its considerations, the highest done", "evidence": ["ActionChoice"]}
+    "weighed-actions": {"name": "every action scored by its considerations, the highest done", "evidence": ["ActionChoice"]},
+    "target-tile": {"name": "a target tile, and the shortest straight line to it: the arcade's ghosts", "evidence": ["MazeGhost"]}
   },
   "examples": [
     {
@@ -266,6 +267,18 @@
       "controls": "WASD walk, mouse camera, C crouch, Z prone, Shift sprint, G throw a distraction, E take down from behind, click shoot; 1 belief, 2 coordinator, 3 arbiter, 4 accumulator, 5 off-screen halving; Tab next guard, H hide the reasoning, L next level, N again, P pause, Space one decision",
       "watch": "Crouch in the dark and watch a guard's bar fill slowly and fall back while you lie still. Get seen, then hide: the orange belief spreads from where it saw you, the others hear its radio report, and the purple crosses share the search out. Press 1 and hide again: without the belief they walk to where they saw you and give up.",
       "docs": "docs/godot/infiltration.md"
+    },
+    {
+      "target": "demo-maze",
+      "title": "Pac-Man: a small maze, and ghosts by the arcade's rules",
+      "scene": "res://game/maze/maze.tscn",
+      "decides": "Which way each ghost turns at the next fork: the way whose next cell is nearest its target tile -- your cell in chase, its home corner in scatter -- never back the way it came, except when the mode changes.",
+      "techniques": [
+        {"technique": "target-tile", "part": "each ghost's target, every way it may take with the straight-line distance from the cell beyond, the way it chose; in chase a roll of the dice may overrule it, a rule of this game"}
+      ],
+      "controls": "arrows or WASD walk; V the ghosts' view; G brings Pinky in; P pauses, space one step; R again",
+      "watch": "The crossed square is the ghost's target and the numbers on its ways are each next cell's distance to it: the white way is the smallest, chosen before the ghost moves. Orange with a die is the dice overruling it. Watch Blinky leave you for his corner when scatter begins, turning back at once.",
+      "docs": "docs/godot/maze.md"
     }
   ]
 }
