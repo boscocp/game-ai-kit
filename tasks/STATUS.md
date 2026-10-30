@@ -3,6 +3,59 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-10-29 (waves 101 to 111 merged)
+
+**Where it stopped -- read first.** Eleven pull requests (#41 to #51)
+landed in one session, each reviewed by a fresh context before merging,
+its findings applied on the branch, the module gates re-run locally by the
+coordinator before `gh pr merge` (CI stays off): 101 T86 MCTS (#41), 102
+T92 `ai_llm` and invariant 7's gate (#42, re-reviewed after two
+blockers), 103 T101 `ai_utility` (#43), 104 T97 the Pac-Man maze (#45),
+105 T107 the wrapped panels (#44), 106 T98 value iteration plays the maze
+(#48), 107 T91 the particle filter (#49), 108 T104 the tactical reasons as
+keys (#47), 109 T103 the pad legend in pt-BR (#46), 110 the owner's
+decisions of 2026-10-29 (#50), 111 T93 a local LLM runtime (#51). Waves
+ran three or four at a time in separate worktrees.
+
+`make check` was green on main at the start (4d73707); every wave's
+`make check-affected` selected all of `make check` and passed on its base;
+the last, T93's, ran on d0661a7 plus T93 (= 4390b60). **Run `make check`
+again first.**
+
+**The owner decided on 2026-10-29** (wave 110): T84's XCOM design
+confirmed; ADR 0016's amendment confirmed (T99 and T100 make the
+`CLAUDE.md` change with N13 and N14); invariant 6's row names N15; T98's
+MDP solves "chase for ever" (option b) and its policy lives in
+`godot/game/maze/`; T93 now; T64 next, alone; new tasks T108 (the pad
+legend's height), T109 (one seeded generator in `ai_core`), T110 (the
+tactical news as a `Sentence`); no maze generator warm-up; the rest
+ratified as listed in each review record. The owner played
+`make demo-maze` (T97, T98): nothing to adjust.
+
+**Waiting on the owner:**
+
+- T93's choices: Ministral 3 8B as the default model (best in pt-BR;
+  Gemma 4 E4B edges it in English), Vulkan as the default with CUDA
+  documented, accepting ADR 0023, skimming the 30 bake-off labels;
+- what each review record leaves open: T86's dice-race scoring; T101's
+  `PassageChoice`, the pages' tier, `squad_example.gd`; T103's width break
+  and `demo_overlays.gd` plant;
+- manual checks: T107's panels windowed in both languages, T103 with a
+  real Xbox pad on the seven demos, T91's particle overlay, T104 switching
+  language mid-turn, and the older ones below (the localised demos, the
+  technique pages, T83 on Windows, deleting `$toolchain/xdg`).
+
+**Known gaps:** while CI is off, a merge has no message gate in code --
+always run `python3 scripts/check_pr_message.py && python3
+scripts/check_commit_msg.py` before `gh pr merge`. The session scratchpad
+is shared between parallel agents: keep each agent's scripts in its own
+folder (an agent once ran another's `mutate.py`).
+
+**Next:** T64 (the library), alone; then T77. After that, in parallel:
+T90 or T95 (one infiltration wave at a time), T57, T108, T109, T110; T94
+after T93 (it measures `anyOf` per intent and the history limit); the
+XCOM chain T84, T85, T87, T88; T99 then T100.
+
 ## Resuming after 2026-10-26 (waves 87 to 100 merged)
 
 **Where it stopped -- read first.** Fifteen pull requests (#26 to #40) landed in one

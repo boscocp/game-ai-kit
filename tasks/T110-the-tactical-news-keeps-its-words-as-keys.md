@@ -36,8 +36,8 @@ decided on 2026-10-29 that the news follows the reasons.
 
 ## Steps
 
-1. Read T104's record (`docs/reviews/108-*` once merged; else T104's task
-   file and the body of PR #47), `sentence.gd`, `tactical_combat.gd`'s
+1. Read T104's record (`docs/reviews/108-the-tactical-ai-keeps-its-reasons-as-keys.md`
+   and the body of PR #47), `sentence.gd`, `tactical_combat.gd`'s
    `told` and `towers_fire`, `turn_start.gd`, and every `_last_event` and
    news line in `tactical.gd`.
 2. Make the news sentences; word them where shown.

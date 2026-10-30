@@ -134,6 +134,9 @@ The diff against main:
 
 ## Open for the owner
 
+Decided by the owner, 2026-10-29: as recommended -- `modules/league.json`
+keeps `tests_depend_on: ["game_shared"]`. The manual check stays open.
+
 - `modules/league.json`'s `tests_depend_on: game_shared`: the reviewer says
   keep it. It is a global path, so a wave touching it runs all of
   `make check`.
