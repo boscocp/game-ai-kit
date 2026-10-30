@@ -42,7 +42,7 @@ its 16 decorators and tests; `release.py`; `library_check.py` and
 - **`Game`** is tested with a game that inherits nothing.
 - **`stranger.gd`** requires its marker, not only the exit code.
 
-## Findings, and what was done
+## Findings
 
 1. **`library_check.py --self-test` had no positive control.** A Godot that
    does not start, or a venv with no pip, would fail both planted cases
@@ -78,6 +78,18 @@ a gdUnit4 suite, in the code and the ADR; the lambda in the self-test made
 two named functions; `python/*.egg-info/` ignored, and ADR 0009 no longer
 claims the two wheels "cannot drift" -- it says what is held; two
 plug-ins declaring one name refused, as a plug-in taking a kit name is.
+
+## What was done about them
+
+Every finding above was applied on the branch, in b4d2397, each as its
+*Applied* says, and the nits as listed: the self-test of `library_check.py`
+now passes the untouched release before it plants anything; every shipped
+manifest carries a `summary`, and the release refuses one without it; the
+wheel's absent packages come from the manifests and a technique's unlisted
+folder is refused, both planted; the Asset Library reading is in
+`docs/godot/addon-anatomy.md` and the script standing in for a test in
+ADR 0024. Then the self-tests, `make library-check` and `make
+check-affected` ran again, green.
 
 Not changed: the README links `github.com/boscocp/game-ai-kit`, private
 today. Nothing is published before the repository is public, and the
