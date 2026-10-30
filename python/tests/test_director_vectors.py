@@ -16,7 +16,7 @@ from gameaikit.director import pacing
 REPO = pathlib.Path(__file__).resolve().parents[2]
 VECTORS = REPO / "spec" / "vectors" / "director"
 GODOT_COPY = REPO / "godot" / "game3d" / "infiltration" / "director.json"
-FEWEST_VECTORS = 6
+FEWEST_VECTORS = 7
 
 
 class TheVectors(unittest.TestCase):

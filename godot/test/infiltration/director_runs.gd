@@ -1,7 +1,9 @@
 ## Runs of the infiltration level with the director on (T90), stepped by
 ## hand so every step can be watched: what each guard believed before and
-## after the director acted, whether the player could see a guard the
-## moment it was sent, and how long the director spent in each phase.
+## after the director acted, whether the route it gave a guard was that
+## guard's beat (or, called back, none), whether the player could see a
+## guard the moment it was sent, and how long the director spent in each
+## phase.
 ##
 ## `director_test.gd` holds its claims on these runs, and
 ## `director_measure.gd` prints them over more levels.
@@ -18,21 +20,22 @@ static func rules() -> InfiltrationRules:
 	return found
 
 
-## Play the scripted player `mode` on `level` for at most `steps` steps,
-## the director sending with `send` when it is valid -- a planted send
-## stops the run at its first finding. What was found and measured.
-static func run(level: InfiltrationLevel, mode: String, steps: int, send: Callable = Callable()) -> Dictionary:
+## Play the scripted player `mode` on `level` for at most `steps` steps.
+## `planted` may replace the director's seams, `send` and `pick`, with a
+## cheat; a planted run stops at its first finding. What was found and
+## measured.
+static func run(level: InfiltrationLevel, mode: String, steps: int, planted: Dictionary = {}) -> Dictionary:
 	var world: InfiltrationWorld = InfiltrationWorld.make(level, rules(), 1)
 	var orders: DirectorOrders = world.director
 	world.director = null
-	if send.is_valid():
-		orders.send = send
+	orders.send = planted.get("send", orders.send)
+	orders.pick = planted.get("pick", orders.pick)
 	var player := ScriptedPlayer.new(mode)
 	var found: Dictionary = {"level": level.name, "player": mode, "belief": [] as Array[String],
-		"seen_sent": [] as Array[String], "seconds": {}, "peaks": 0, "relaxes": 0}
+		"route": [] as Array[String], "seen_sent": [] as Array[String], "seconds": {}, "peaks": 0, "relaxes": 0}
 	for step: int in range(steps):
 		world.step(player.intent(world))
-		if world.outcome != "" or (send.is_valid() and not found["belief"].is_empty()):
+		if world.outcome != "" or (not planted.is_empty() and findings(found) > 0):
 			break
 		var before: Array = beliefs(world)
 		var orders_before: int = orders.orders.size()
@@ -42,6 +45,11 @@ static func run(level: InfiltrationLevel, mode: String, steps: int, send: Callab
 	found["sent"] = orders.orders.filter(func(order: Dictionary) -> bool: return order["order"] == "send").size()
 	found["recalled"] = orders.orders.size() - int(found["sent"])
 	return found
+
+
+## How many findings `run` holds, of every kind.
+static func findings(run: Dictionary) -> int:
+	return (run["belief"] as Array).size() + (run["route"] as Array).size() + (run["seen_sent"] as Array).size()
 
 
 ## One run as a line of the measurement.
@@ -71,5 +79,16 @@ static func _watch(world: InfiltrationWorld, orders: DirectorOrders, orders_befo
 	if beliefs(world) != before:
 		found["belief"].append("%s at %.1f s: a guard's belief changed when the director acted" % [world.level.name, world.time])
 	for order: Dictionary in orders.orders.slice(orders_before):
-		if order["order"] == "send" and DirectorOrders.player_sees(world, world.guard(int(order["guard"])).position):
-			found["seen_sent"].append("%s at %.1f s: guard %d sent in the player's view" % [world.level.name, world.time, order["guard"]])
+		_watch_order(world, order, found)
+
+
+# A send gives the guard its beat and is not in the player's view; a recall
+# leaves it no route.
+static func _watch_order(world: InfiltrationWorld, order: Dictionary, found: Dictionary) -> void:
+	var guard: InfiltrationGuard = world.guard(int(order["guard"]))
+	var where: String = "%s at %.1f s: guard %d" % [world.level.name, world.time, guard.id]
+	var sent: bool = order["order"] == "send"
+	if (sent and guard.route != guard.beat) or (not sent and not guard.route.is_empty()):
+		found["route"].append("%s given a route that is not its order's: %s" % [where, guard.route])
+	if sent and DirectorOrders.player_sees(world, guard.position):
+		found["seen_sent"].append("%s sent in the player's view" % where)

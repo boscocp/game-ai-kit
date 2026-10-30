@@ -35,7 +35,7 @@ dictionaries, importing nothing from this repository. Independent of the
 code, not of its author: it would repeat a misreading of Booth the other
 two share. It also checks that each case shows what its name says -- the
 whole cycle, no decay during a chase, a search adding less the further it
-is, damage in proportion and the top held, a relax cut short by the player
+is, hearing adding its own weight, less than sight's, damage in proportion and the top held, a relax cut short by the player
 moving on, and nothing at all -- because a vector named for a rule it never
 reaches holds nothing.
 

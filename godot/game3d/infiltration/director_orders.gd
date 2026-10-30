@@ -61,11 +61,12 @@ func step(world: InfiltrationWorld) -> void:
 		_order(world)
 
 
-## The reserve guards on patrol now, and in all.
+## The living reserve guards on patrol now, and in all: a downed one is
+## neither sent nor wanted.
 func on_patrol(world: InfiltrationWorld) -> Vector2i:
 	var counted := Vector2i.ZERO
 	for guard: InfiltrationGuard in world.guards:
-		if guard.reserve():
+		if guard.reserve() and guard.alive():
 			counted.y += 1
 			counted.x += 1 if not guard.route.is_empty() else 0
 	return counted

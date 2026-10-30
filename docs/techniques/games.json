@@ -125,7 +125,7 @@
       },
       "keys": {
         "en": "1-6 switch each part of the guards' reasoning and the director; Tab follows the next guard",
-        "pt-BR": "1-6 ligam e desligam cada parte do raciocínio dos guardas e o *director*; Tab segue o próximo guarda"
+        "pt-BR": "1-6 ligam e desligam cada parte do raciocínio dos guardas e o diretor; Tab segue o próximo guarda"
       }
     },
     "demo-botmatch": {
@@ -404,7 +404,7 @@
     },
     "director": {
       "en": "a director pacing the threats by intensity",
-      "pt-BR": "um *director* que dosa as ameaças pela intensidade"
+      "pt-BR": "um diretor (*director*) que dosa as ameaças pela intensidade"
     }
   }
 }

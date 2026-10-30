@@ -279,14 +279,14 @@ levels and eleven generated ones, five minutes at most each, 39 runs:
 
 | | seconds |
 |---|---|
-| building up | 2344.8 |
-| holding the peak | 116.3 |
-| fading | 1003.1 |
+| building up | 2165.4 |
+| holding the peak | 119.3 |
+| fading | 733.9 |
 | relaxing | 86.4 |
 
-32 peaks, 3 relaxes, 69 patrols sent, 4 called back. **The relax is
+33 peaks, 3 relaxes, 71 patrols sent, 4 called back. **The relax is
 rare, and the measurement says why**: most runs end within 40 s, the
-player caught or out, before a fade can finish; and on three generated
+player caught or out, before a fade can finish; and on two generated
 levels the hiding player ends in a stand-off, guards alert and seeing it
 for minutes without closing in, which Booth's rule reads as engagement and
 so never lets the intensity fall (`peak_fade` 290 s). The one run with the
@@ -295,14 +295,25 @@ three peaks, three relaxes, four patrols sent and four called back -- and
 `director_test.gd` holds that run, said as such, so the cycle is held on
 the game and not only on the vectors.
 
-The other claims, each with its planted case: with the director off the
-guards are the level's own; every reserve post is out of the start's sight
-and every reserve place walkable; a reserve guard the player sees is not
-the one sent (a picker that takes the nearest would); across the hiding
-and distracting players' runs on all five levels, no guard's belief or
-memory changes when the director acts (a director that also collapses the
-sent guard's belief onto the player is caught), and no patrol is sent in
-the player's view.
+The other claims: with the director off the guards are the level's own;
+the generator, with the reserve erased, writes for seeds 1-11 the same
+levels it wrote before the reserve existed (fingerprints taken from main
+at b6b86d1), and a generated reserve takes no guard's place, no exit and
+no other reserve cell; every reserve post is out of the start's sight and
+every reserve place walkable. Across the hiding and distracting players'
+runs on all five levels, each with a planted director it must catch:
+
+- no guard's belief or memory changes when the director acts -- a
+  director that also collapses the sent guard's belief onto the player is
+  caught;
+- every route it gives is the guard's own beat, and a recall leaves none
+  -- a director that routes the guard to the player's place, changing no
+  belief at all, is caught;
+- no patrol is sent in the player's view -- a director that sends the
+  waiting reserve guard nearest the player, seen or not, is caught.
+
+Booth's slides were not read again for this wave, as the task's first
+step asked: the director is built from the passages T73 quoted from them.
 
 The director's numbers are the kit's own (`spec/director/director.json`):
 sight 0.25 and hearing 0.2 a phase, 0.01 a point of damage, 0.02 a second

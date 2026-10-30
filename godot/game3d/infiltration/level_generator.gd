@@ -104,7 +104,8 @@ static func _guards(rng: RandomNumberGenerator, data: Dictionary) -> Array:
 
 
 # Two reserve guards, each a post the start cannot see and a beat of two
-# cells, all of them clear of the start and walkable from it.
+# cells, all of them clear of the start, walkable from it, and distinct:
+# from each other, from the level's guards' places and from the exit.
 static func _reserve(seed_value: int, data: Dictionary) -> Array:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value * 7919 + RESERVE_SALT
@@ -117,15 +118,36 @@ static func _reserve(seed_value: int, data: Dictionary) -> Array:
 	var eyes: Vector3 = arena.above(BotArena.centre_of(_start_cell(data)), EYES)
 	var hidden: Array[Vector2i] = free.filter(func(cell: Vector2i) -> bool:
 		return arena.first_block(eyes, arena.above(BotArena.centre_of(cell), EYES)) < 1.0)
+	var taken: Array[Vector2i] = _places_taken(data)
 	var reserve: Array = []
-	for guard: int in range(RESERVE if not hidden.is_empty() else 0):
-		var post: Vector2i = hidden[rng.randi_range(0, hidden.size() - 1)]
-		var beat: Array = []
-		for point: int in range(2):
-			var cell: Vector2i = free[rng.randi_range(0, free.size() - 1)]
-			beat.append([cell.x + 0.5, cell.y + 0.5])
-		reserve.append({"post": [post.x + 0.5, post.y + 0.5], "facing": rng.randf_range(-180.0, 180.0), "beat": beat})
+	for guard: int in range(RESERVE):
+		var post: Vector2i = _draw_free(rng, hidden, taken)
+		var beat: Array = [_draw_free(rng, free, taken), _draw_free(rng, free, taken)]
+		if post.x < 0 or beat.has(Vector2i(-1, -1)):
+			return reserve
+		var places: Array = beat.map(func(cell: Vector2i) -> Array: return [cell.x + 0.5, cell.y + 0.5])
+		reserve.append({"post": [post.x + 0.5, post.y + 0.5], "facing": rng.randf_range(-180.0, 180.0), "beat": places})
 	return reserve
+
+
+# A cell of `cells` not yet `taken`, drawn and then taken; (-1, -1) when
+# every one is.
+static func _draw_free(rng: RandomNumberGenerator, cells: Array[Vector2i], taken: Array[Vector2i]) -> Vector2i:
+	var left: Array[Vector2i] = cells.filter(func(cell: Vector2i) -> bool: return not taken.has(cell))
+	if left.is_empty():
+		return Vector2i(-1, -1)
+	var drawn: Vector2i = left[rng.randi_range(0, left.size() - 1)]
+	taken.append(drawn)
+	return drawn
+
+
+# The exit's cell and every cell a level guard stands on or walks to.
+static func _places_taken(data: Dictionary) -> Array[Vector2i]:
+	var taken: Array[Vector2i] = [BotArena.cell_of(Vector2(data["exit"][0], data["exit"][1]))]
+	for guard: Dictionary in data["guards"]:
+		for pair: Array in guard.get("route", []) + ([guard["post"]] if guard.has("post") else []):
+			taken.append(BotArena.cell_of(Vector2(pair[0], pair[1])))
+	return taken
 
 
 static func _start_cell(data: Dictionary) -> Vector2i:

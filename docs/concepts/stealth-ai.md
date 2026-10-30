@@ -563,6 +563,17 @@ must catch (`director_test.gd`):
   what happened. Python's machine and Godot's are held to the same curves
   by `spec/vectors/director/`.
 
+**What it does in practice is less than the cycle.** Measured over 39
+seeded runs (`make measure-director`, [the infiltration page](../godot/infiltration.md#the-director-t90)):
+seven tenths of the time is building up, a quarter fading, and the relax was
+reached in one run of the 39. With nothing happening the director sends
+both reserve patrols in its first seconds; most runs end, the player caught
+or out, before a fade can finish; and where guards stay alert and see a
+hidden player for minutes, Booth's "no decay while engaged" holds the
+intensity at the top. So the four phases are the machine, held exactly by
+its vectors; on this level the whole cycle is the exception, and the page
+says so rather than tuning it into the rule.
+
 When not to use one: as difficulty. A director that made the guards see
 further when you are doing well would be a rubber band, and players feel
 those. This one only changes how many there are, and when.
@@ -592,9 +603,10 @@ Not used above:
   Game Programming Wisdom 3: still no copy found.
 - Rabin & Delp, "Designing a Realistic and Unified Agent Sensing Model",
   Game Programming Gems 7: cited by Rabin 2015, no copy found.
-- Booth's slides were not opened again for T90: the director above is
-  built from the passages T73 quoted from them (opened on 2026-10-26), and
-  every phrase in quotation marks is one of those. Brewer's chapter on
+- Booth's slides were not opened again for T90, though the task's first
+  step asks for it -- a deviation: the director above is built from the
+  passages T73 quoted from them (opened on 2026-10-26), and every phrase
+  in quotation marks is one of those. Brewer's chapter on
   pacing (Game AI Pro Online Edition 2021, ch. 7), which T73 also cites,
   was not used.
 

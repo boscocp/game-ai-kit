@@ -8,7 +8,9 @@ that ends early, in which the relax ran its full time, would hold nothing.
 
     python3 spec/vectors/director/derive.py spec/vectors/director
 """
-import json, pathlib, sys
+import json
+import pathlib
+import sys
 
 SPEC = json.loads((pathlib.Path(__file__).resolve().parents[2] / "director" / "director.json").read_text())
 STEP = SPEC["step_seconds"]
@@ -22,7 +24,7 @@ def run(steps, events):
     state = {"value": 0.0, "phase": "build_up", "since": 0, "chased": False, "exit": float("inf"), "relax_from": float("inf")}
     curve, changes = [], []
     for number in range(steps):
-        for event in [e for e in events if e["step"] == number]:
+        for event in [happening for happening in events if happening["step"] == number]:
             state["value"] += added(state, event)
         if not state["chased"]:
             state["value"] -= SPEC["decay_per_second"] * STEP
@@ -104,6 +106,13 @@ def holds_early_relax(result):
         entered["build_up"] - entered["relax"] < whole_steps(SPEC["relax_seconds"])
 
 
+def holds_hearing(result):
+    decay = SPEC["decay_per_second"] * STEP
+    heard = round(result["intensity"][3] + decay, 9)
+    seen = round(result["intensity"][13] - result["intensity"][12] + decay, 9)
+    return heard == SPEC["raise"]["heard"] and seen == SPEC["raise"]["seen"] and heard != seen
+
+
 def holds_quiet(result):
     return not result["changes"] and max(result["intensity"]) == 0.0
 
@@ -135,6 +144,9 @@ CASES = {
         "are relax_travel metres nearer, before its time is up.",
         420, sightings(5, 10, 15, 20) + [{"step": 0, "kind": "exit", "metres": 40}] + walking_on(200, 10, 39, 22),
         holds_early_relax),
+    "hearing-adds-less-than-sight": (
+        "A guard hears the player and rises a phase, then another sees it: each adds its own weight, hearing's less than sight's.",
+        20, [{"step": 3, "kind": "heard"}, {"step": 13, "kind": "seen"}], holds_hearing),
     "nothing-happens-and-nothing-changes": (
         "No event: the intensity stays at zero, never below it, and the director stays building up.",
         30, [], holds_quiet),
