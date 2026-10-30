@@ -122,6 +122,10 @@ snapshots; `test/maze` 15 of 15; the lints and the screen checks, all 0.
 
 ## Decisions for the owner, with the reviewer's opinion
 
+Decided by the owner, 2026-10-29, as recommended: no frightened mode, two
+steps a second, the precision 0.8, and no warm-up of the generator. The
+copied dice are to become one generator in `ai_core` (T109).
+
 - **No frightened mode** (no energizer): agree.
 - **The dice copied** as `MazeDice` rather than used from `ai_adversarial`:
   agree.
@@ -129,3 +133,8 @@ snapshots; `test/maze` 15 of 15; the lints and the screen checks, all 0.
   reasonable.
 - **T98's timer**: real. The owner chose the stationary regime, chase for
   ever (2026-10-29), written in T98's task file.
+
+## Manual check
+
+Done by the owner, 2026-10-29: `make demo-maze` plays well, nothing to
+adjust.

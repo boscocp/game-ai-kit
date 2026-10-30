@@ -143,6 +143,10 @@ killed; the three game-time update plants survived -- S2.
 
 ## Decisions for the owner, with the reviewer's opinion
 
+Decided by the owner, 2026-10-29, as recommended: the policy lives in
+`godot/game/maze/` (below), and N15 enters `CLAUDE.md`'s invariant-6 row
+(wave 110).
+
 - **Where the policy lives**: `data/maze/` was outside the Godot project,
   so an export did not carry it. The reviewer's opinion: move the two
   files into `godot/game/maze/`, as the checkers weights are. **Decided by
@@ -155,3 +159,8 @@ killed; the three game-time update plants survived -- S2.
 - **No technique page** -- the MDP is Python and a lookup inside the maze
   game, as MENACE is: agree.
 - **N15 in `CLAUDE.md`'s invariant-6 row**: yes.
+
+## Manual check
+
+Done by the owner, 2026-10-29: `make demo-maze` plays well, nothing to
+adjust.

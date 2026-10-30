@@ -189,6 +189,10 @@ After the fixes, on the branch:
 
 ## Decisions for the owner, with the reviewer's opinion
 
+Decided by the owner, 2026-10-29: as recommended -- the belief stays the
+grid by default, particles not the default. The generator moved into
+`ai_core` is now task T109.
+
 - **Particles as the default belief**: no. Revisit after finding 1 is
   fixed and there is a scenario where the belief decides -- a long chase
   out of sight with several ways the player could have gone.

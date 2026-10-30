@@ -92,7 +92,13 @@ query both rulesets want, say), the change is generic -- no squad word
 enters `board`, ADR 0021 -- and it selects every module that depends on
 `board`, which the review is told.
 
-## Decisions written down first (the owner confirms in review)
+## Decisions written down first (confirmed by the owner, 2026-10-29)
+
+The owner confirmed this design as written on 2026-10-29, as
+recommended: the seam with `AdvanceWarsRuleset` unchanged, `SquadRuleset`
+in module `squad`, the shot and its cover, fog by side, two actions, and
+overwatch and hunker down left out. Step 1's reading can still correct a
+detail; a change to what the owner confirmed goes back to the owner.
 
 - **The rules, small on purpose**: four pieces a side, chosen from the
   tactical walkers (no workshop, towers, funds or building in this mode);

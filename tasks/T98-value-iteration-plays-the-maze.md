@@ -106,6 +106,8 @@ make lint-tasks lint-status
 
 ## Manual check
 
+Done by the owner, 2026-10-29: `make demo-maze` plays well, nothing to adjust.
+
 Watch the MDP play `make demo-maze` with V on: does it wait for the ghost
 to commit before crossing a corridor, and does the value map explain
 why? Does it ever walk into the ghost?

@@ -130,6 +130,12 @@ Nine mutations. Every one was caught by some gate except one:
 
 ## Open for the owner
 
+Decided by the owner, 2026-10-29, as recommended: the pt-BR pad words
+stay ("controle", "analógico", "D-pad cima" and the other directions,
+the right stick's and RT's words), arrows as words, and "D-pad setas";
+the legend's height is a task of its own, T108. The width break and the
+plant in `demo_overlays.gd` stay open.
+
 - **The pt-BR words.** The reviewer finds them fine. "D-pad para cima"
   would read more naturally than "D-pad cima", at a width cost; "mira"
   is an option for the shooters' right stick.

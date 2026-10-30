@@ -174,6 +174,10 @@ After the fixes, the wave's own runs:
 
 ## The owner's open choices, with the reviewer's opinion
 
+Decided by the owner, 2026-10-29, as recommended: the ties (UCB1's and
+the final answer's to the first move), MCTS as a section of `minimax.md`,
+and tier 0 in the literature table. The dice race's scoring stays open.
+
 - **Ties.** The generator chooses which untried move to expand; ties in
   UCB1 and in the final answer go to the first move in the game's order.
   The reviewer agrees.

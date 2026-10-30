@@ -1,8 +1,9 @@
 # 0016 — An opponent model counts during the fight
 
 Status: accepted, amended · 2026-10-15 (decided by the owner for T17;
-extended by the owner on 2026-10-26 to bandits and to player modelling --
-see the amendment at the end)
+extended by the owner on 2026-10-26 to bandits and to player modelling,
+the amendment confirmed by the owner on 2026-10-29 -- see the amendment at
+the end)
 
 ## Context
 
@@ -82,7 +83,7 @@ come in under this record. The owner answered both on 2026-10-26:
   which is exploration against exploitation happening while you watch;
   roadmap entry A.6 had already said it "needs a new decision by the owner
   extending ADR 0016 to it, on the same three conditions". The reading is
-  this record's, and the owner confirms it in the review of T99.
+  this record's; the owner confirmed it on 2026-10-29, as recommended.
 - **Player modelling for difficulty** (question 4): option 3 -- extend
   this record to it on the same three conditions, rather than leave it out
   or allow only a model fitted in Python and shipped fixed.
@@ -163,12 +164,16 @@ class -- a script holding an instance by type.
 Both stay what N1 to N3 and N9 are: a net for the common spellings, not a
 proof. Condition 3 is held by each task's replay test, not by the gate.
 
-**Proposed, for the owner to confirm** (T99 makes the change, since
-`CLAUDE.md` names the exception): invariant 6's row in `CLAUDE.md`, "its
-one exception, ADR 0016, is N9", becomes "ADR 0016's exceptions, by name,
-are N9, N13 and N14"; invariant 6's text names the bandit and the
-difficulty model beside the opponent model; and `check_no_training.py`'s
-docstring for N9 says it is one of three.
+**Confirmed by the owner on 2026-10-29, as recommended**: invariant 6's
+row in `CLAUDE.md`, "its one exception, ADR 0016, is N9", becomes "ADR
+0016's exceptions, by name, are N9, N13 and N14"; invariant 6's text names
+the bandit and the difficulty model beside the opponent model; and
+`check_no_training.py`'s docstring for N9 says it is one of three. The
+change is made by the tasks that bring the rules in, not before: a gate
+row naming a rule that does not exist yet would be false. T99 makes it
+when it writes N13 -- the row naming N9 and N13, the text the bandit, N9's
+docstring one of the exceptions -- and T100 completes it when it writes
+N14.
 
 ### What is still refused
 

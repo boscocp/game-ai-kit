@@ -71,6 +71,8 @@ make lint-tasks lint-status
 
 ## Manual check
 
+Done by the owner, 2026-10-29: `make demo-maze` plays well, nothing to adjust.
+
 Play `make demo-maze`: does the ghost feel like Blinky -- on your tail in
 chase, off to its corner in scatter? With the ghost's view on, do its
 target tile and its choice at each intersection match what it then does?

@@ -13,8 +13,8 @@ as **extend** -- a bandit fitted offline would lose the lesson, which is
 exploration against exploitation while you watch -- and names this
 bandit as one of the three components the exception covers, on its three
 conditions: **counts only; empty at the start of every fight; rebuildable
-from that fight's log**. The owner confirms that reading in this task's
-review.
+from that fight's log**. The owner confirmed that reading on 2026-10-29,
+as recommended.
 
 A bandit teaches exploration against exploitation (AIMA 4th ed., 17.3
 Bandit Problems; GAP2 ch. 25 presents it for games). UCB1 plays each arm
@@ -56,11 +56,14 @@ confidence interval" [Auer, Cesa-Bianchi & Fischer 2002].
   that saves its counts; one saved under another name from a script that
   holds it; an arm value moved by a learning rate (`* (a - b)`); an
   incremental mean (`(a - b) / n`).
-- **What the amendment proposes for `CLAUDE.md`** -- invariant 6's row
-  naming N9, N13 and N14 as ADR 0016's exceptions, by name -- is made here
-  only once the owner confirms it in review; N9's docstring in
-  `check_no_training.py` (which today calls the n-gram "the one exception
-  to this invariant") says it is one of three.
+- **What the amendment says for `CLAUDE.md`** (confirmed by the owner on
+  2026-10-29) -- invariant 6's row naming ADR 0016's exceptions by name,
+  and its text naming the bandit -- is made here, for the rule this task
+  brings in: the row names N9 and N13, not N14, which does not exist until
+  T100 writes it (a row naming a rule that is not there would be false).
+  N9's docstring in `check_no_training.py` (which today calls the n-gram
+  "the one exception to this invariant") says it is one of the
+  exceptions, by name.
 
 ## Steps
 
@@ -74,7 +77,8 @@ confidence interval" [Auer, Cesa-Bianchi & Fischer 2002].
    solves, the complexity, when not to use it, and cites the ADR.
 4. `FightBanditOpponent` in `godot/game/fighting/`, a level in the
    opponent list ("bandit"); the replay test of condition 3.
-5. N13 with its planted cases; N9's docstring; `CLAUDE.md`, as confirmed.
+5. N13 with its planted cases; N9's docstring; `CLAUDE.md`'s row 6 and
+   invariant 6's text, as confirmed.
 6. Measured, in the fighting page: against T18's stand-in players and the
    owner's recordings, the bandit opponent against T37's medium and hard,
    100 fights each; how many pulls it takes to settle on an answer.
