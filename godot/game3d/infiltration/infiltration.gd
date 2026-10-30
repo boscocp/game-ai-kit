@@ -122,11 +122,11 @@ func decision_overlay() -> Dictionary:
 
 
 ## The director's side of the overlay: its phase, the intensity it was
-## taken on, and how many orders it gave; empty with it off.
+## taken on, and how many orders it gave; only `on`, false, with it off.
 func director_overlay() -> Dictionary:
 	if world.director == null:
-		return {}
-	return {"phase": world.director.pacing.phase, "intensity": world.director.pacing.intensity,
+		return {"on": false}
+	return {"on": true, "phase": world.director.pacing.phase, "intensity": world.director.pacing.intensity,
 		"orders": world.director.orders.size(), "on_patrol": world.director.on_patrol(world).x}
 
 
