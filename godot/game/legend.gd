@@ -43,6 +43,8 @@ static func width_of(words: String) -> float:
 ## their descent included, or its swatch, whichever ends lower. The box a
 ## scene gives the legend does not hold it -- `_draw` goes on past it -- so a
 ## check of what overlaps the legend measures this, not `size.y` (T108).
+## A last line with a clear swatch (words alone) draws no swatch, and is
+## over-counted by about a pixel: on the safe side.
 func drawn_height() -> float:
 	if entries.is_empty():
 		return 0.0

@@ -321,7 +321,9 @@ RTS and the fighting game, by the same rules, with what they added:
   example with a pad, in both languages, a legend whose last line ends
   below the gutter (y=696) or less than 8 px above any visible Control
   that starts below its top and shares its width. 8 px is chosen, not
-  measured: half a line, enough to read two blocks as two. Planted: a
+  measured: half a line, enough to read two blocks as two. `HAS_PAD`
+  names the seven examples with a pad, and one whose pad the check does
+  not find fails, rather than going unmeasured. Planted: a
   legend past the window, one over the Label below it, one touching it
   (the maze's case), and one 8 px clear, which must pass. Every pad line
   is kept; per example:
@@ -331,11 +333,21 @@ RTS and the fighting game, by the same rules, with what they added:
   - the 2D racer's status follows the legend, 12 px under its last line
     (`BELOW_LEGEND`; 268 in English, 288 in pt-BR, 208 with no pad), and
     the minimap moved to the view's bottom-left corner (16..326 x
-    476..644) to leave it the room: in pt-BR its words end at 684. They
-    used to end at 596, over the minimap at 544, which nothing measured;
-  - the 3D racer's status follows its legend the same way (226), the
-    trace moved under it (528..600), and the map to the view's
-    bottom-left corner (12..374 x 518..696).
+    476..644) to leave it the room. They used to end at 596, over the
+    minimap at 544, which nothing measured. Now
+    `test/demo_racing/racing_layout_test.gd` holds them above the gutter,
+    both languages, pad planted, racing each level and watching each,
+    paused or not, over 300 steps: the worst is 684, pt-BR, racing
+    (planted: a 30-line status);
+  - the 3D racer's status follows its legend the same way (226), and the
+    map moved to the view's bottom-left corner (12..374 x 518..696).
+    `test/racing3d/racing3d_layout_test.gd` holds the status's words 8 px
+    above the trace and the trace above the gutter, both languages, pad
+    planted, measuring and racing, watching each car, under the eight
+    settings of the three switches (planted: a 20-line status). It found
+    the racing panel, never measured before, ending at 538 in English and
+    559 in pt-BR -- over the trace even before this wave (about 476
+    against 452) -- so the trace moved to 568..640.
   Not measured: the RTS has no pad, and its legend ends at y=160, 6 px
   above `Thinking` at 166 -- the rule, applied there, would fail it.
 

@@ -70,6 +70,20 @@ const REQUIRED: Dictionary = {
 	"res://game/maze/maze.tscn": [["target", false], ["distance", true]],
 }
 
+## The examples a controller drives, whose legends' height is measured with
+## the pad's lines in them (T108). Named, so a pad moved out of an example's
+## direct children -- where `_has_pad` looks -- fails here rather than
+## leaving that legend unmeasured.
+const HAS_PAD: Array[String] = [
+	"res://demos/racing/racing_demo.tscn",
+	"res://game/stealth/stealth.tscn",
+	"res://game/fighting/fighting.tscn",
+	"res://game3d/botmatch/botmatch.tscn",
+	"res://game3d/racing/racing3d.tscn",
+	"res://game3d/infiltration/infiltration.tscn",
+	"res://game/maze/maze.tscn",
+]
+
 ## Decisions each example takes before it is asked. More than one, so an
 ## overlay that is only filled in on the opening frame does not pass.
 const STEPS: int = 3
@@ -180,6 +194,8 @@ func _check_example(label: String, example: Node, required: Array) -> Array[Stri
 			failures.append("%s: overlay field %s is %s" % [label, field, empty])
 	# Measured after the steps, when a status has its words, and only where
 	# there is a pad: its lines are what made legends too tall (T108).
+	if label in HAS_PAD and not _has_pad(example):
+		failures.append("%s: is in HAS_PAD, and has no pad among its children: its legend went unmeasured" % label)
 	if _has_pad(example):
 		var height: String = _why_the_legend_is_too_tall(example, example.find_child("Legend", true, false) as Legend)
 		if height != "":
@@ -252,7 +268,9 @@ func _why_the_legend_is_too_tall(example: Node, legend: Legend) -> String:
 
 # Every visible Control under `node` that starts no higher than `column` and
 # shares some of its width: what the legend could run into. Not the legend,
-# nor what holds it, nor a Label with nothing to say.
+# nor what holds it, nor a Label with nothing to say. A Control starting
+# above the legend is left out on purpose: the racers' background panels
+# start at y=0 and hold the legend, and are not below it.
 func _shown_below(node: Node, legend: Legend, column: Rect2) -> Array[Control]:
 	var found: Array[Control] = []
 	for child: Node in node.get_children():
@@ -279,6 +297,8 @@ func _why_the_pad_is_missing(example: Node, legend: Legend) -> String:
 	return ""
 
 
+# Direct children only, as `_why_the_pad_is_missing` looks: every example
+# adds its pad with `add_child(_pad)` on itself. HAS_PAD catches one that stops.
 func _has_pad(example: Node) -> bool:
 	return example.get_children().any(func(node: Node) -> bool: return node is PadAsKeys)
 

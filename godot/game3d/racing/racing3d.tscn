@@ -48,16 +48,16 @@ script = ExtResource("2_legend")
 offset_left = 908.0
 offset_top = 166.0
 offset_right = 1270.0
-offset_bottom = 520.0
+offset_bottom = 500.0
 theme_override_font_sizes/font_size = 13
 autowrap_mode = 3
 text = "loading"
 
 [node name="Trace" type="Control" parent="Interface"]
 offset_left = 908.0
-offset_top = 528.0
+offset_top = 568.0
 offset_right = 1270.0
-offset_bottom = 600.0
+offset_bottom = 640.0
 script = ExtResource("4_trace")
 
 [node name="Map" type="Control" parent="Interface"]
