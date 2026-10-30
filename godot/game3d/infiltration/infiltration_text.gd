@@ -58,9 +58,9 @@ static func _scores(world: InfiltrationWorld, guard: InfiltrationGuard) -> Packe
 
 static func _switches(world: InfiltrationWorld) -> String:
 	var rules: InfiltrationRules = world.rules
-	return TranslationServer.translate("1 belief {belief}, 2 coordinator {coordinator}, 3 arbiter {arbiter}, 4 accumulator {accumulator}, 5 off-screen halving {halving}").format({
+	return TranslationServer.translate("1 belief {belief}, 2 coordinator {coordinator}, 3 arbiter {arbiter}, 4 accumulator {accumulator}, 5 off-screen halving {halving}, 6 director {director}").format({
 		belief = belief_word(rules), coordinator = on(rules.use_coordinator), arbiter = on(rules.use_arbiter),
-		accumulator = on(rules.use_accumulator), halving = on(rules.off_screen_halving)})
+		accumulator = on(rules.use_accumulator), halving = on(rules.off_screen_halving), director = on(rules.use_director)})
 
 
 ## Which belief the guards search from, as the panel says it: OFF, grid

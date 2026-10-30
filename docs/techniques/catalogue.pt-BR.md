@@ -64,8 +64,9 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
   - técnicas: ● [ai_steering](ai_steering.pt-BR.md) (controlador PID, *heat line*); ● [O piloto de corrida](racing_driver.pt-BR.md) (perfil de velocidade, *pure pursuit*).
   - escrito dentro do próprio exemplo: aderência medida.
 - <a id="demo-infiltration"></a>**Infiltração**, `make demo-infiltration` -- parecido com Metal Gear Solid, em terceira pessoa.
-  - teclas: 1-5 ligam e desligam cada parte do raciocínio dos guardas; Tab segue o próximo guarda.
+  - teclas: 1-6 ligam e desligam cada parte do raciocínio dos guardas e o *director*; Tab segue o próximo guarda.
   - técnicas: ● [ai_fuzzy](ai_fuzzy.pt-BR.md) (lógica *fuzzy*); ● [ai_perception](ai_perception.pt-BR.md) (forma da visão com luz e audição, *awareness*, mapa de crença); ● [ai_search](ai_search.pt-BR.md) (A*); ● [ai_teamwork](ai_teamwork.pt-BR.md) (uma busca dividida, árbitro de papéis); ● [ai_utility](ai_utility.pt-BR.md) (ações pesadas por *utility*).
+  - escrito dentro do próprio exemplo: um *director* que dosa as ameaças pela intensidade.
 - <a id="demo-botmatch"></a>**Partida de *bots***, `make demo-botmatch` -- parecido com uma partida contra *bots* em Unreal Tournament ou Counter-Strike.
   - teclas: 1-3 a marcação de posições, o comandante e o recuo do azul; Tab um *bot*; T assume o controle dele; M o mapa.
   - técnicas: ● [ai_perception](ai_perception.pt-BR.md); ● [ai_search](ai_search.pt-BR.md) (A*); ● [ai_teamwork](ai_teamwork.pt-BR.md) (posições táticas com marcação, comandante do time sobre a influência, confiança do esquadrão e recuo em ondas); ● [ai_utility](ai_utility.pt-BR.md) (ações pesadas por *utility*).

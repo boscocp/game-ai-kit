@@ -4,7 +4,8 @@
 ## pausing.
 ##
 ## 1 the belief -- off, the grid's, the particles' (T91), in turn -- 2 the
-## coordinator, 3 the arbiter, 4 the accumulator, 5 the off-screen halving; Tab the next guard, H the reasoning shown or hidden,
+## coordinator, 3 the arbiter, 4 the accumulator, 5 the off-screen halving, 6 the director (T90:
+## the world starts again, its reserve there only with it on); Tab the next guard, H the reasoning shown or hidden,
 ## L the next level, N again, P pause, Space one decision while paused.
 ##
 ## When not to use it: for moving the player. Those keys are read each step.
@@ -39,6 +40,9 @@ static func switch(demo: Node, keycode: Key) -> void:
 			rules.use_accumulator = not rules.use_accumulator
 		KEY_5:
 			rules.off_screen_halving = not rules.off_screen_halving
+		KEY_6:
+			rules.use_director = not rules.use_director
+			demo.new_world()
 		KEY_TAB:
 			demo.watch_next()
 		KEY_H:

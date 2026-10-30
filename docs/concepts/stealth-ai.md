@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-22
+verified_on: 2026-10-30
 tier: 1
 source: https://www.gameaipro.com/
-invalidated_if: T69 or T70 stops doing what the last section says, or T67's selector stops being how a bot chooses
+invalidated_if: T69 or T70 stops doing what the last section says, T67's selector stops being how a bot chooses, or T90's director stops pacing by the reserve as its section says
 teaches: stealth-ai
 -->
 
@@ -509,6 +509,64 @@ behind a wall hear; a factor above 1 made a far cell louder; diffusion
 through a wall gave a node a share from no neighbour; and a guard posted
 at a cell of one level found itself off the next.
 
+## Pacing: a director over the guards (T90)
+
+Everything above is about one guard, or a team of them, deciding well. A
+**director** decides something else: how hard the *game* pushes, from how
+the player is doing. Left 4 Dead's is the one everyone cites. Booth's
+slides on it [Booth 2009, "Adaptive Dramatic Pacing"] say, nearly word for
+word: estimate each survivor's "emotional intensity"; raise it in
+proportion to the damage taken, and when an infected dies nearby,
+inversely to its distance; let it decay "towards zero over time", but not
+while infected are engaging the survivor; track the highest of the four;
+and read four phases from it --
+
+- **Build Up**: a full population of threats, until the intensity crosses
+  the peak threshold;
+- **Sustain Peak**: the same, three to five seconds more;
+- **Peak Fade**: minimal threats, until the intensity falls out of the
+  peak's range;
+- **Relax**: minimal threats for thirty to forty-five seconds, or until
+  the survivors have travelled far enough towards the next safe room;
+  then Build Up again.
+
+What it teaches is the separation: the enemies stay exactly as good as
+they were, and the *population* -- how many, and when -- follows the
+player. That is why it belongs beside stealth: a stealth level is all
+build-up and release, and a level that never lets go is not tense, only
+tiring.
+
+**What this kit does with it** (T90, the infiltration level, key 6). One
+player, so no maximum over four. The intensity rises when a guard's
+awareness of you rises a phase -- more when it saw you than when it heard
+you -- in proportion to the damage you take, and while a guard searches
+near you, inversely to its distance; it decays at a fixed rate, and not
+while a guard is chasing you (alert and seeing you, the closest thing here
+to "engaging"). The threats are the level's **reserve guards**, patrols
+that wait at posts out of the start's sight: in build up and the sustained
+peak the director wants all of them walking their beats, in the fade and
+the relax none, and it sends or calls back one at a time. The relax ends
+after thirty seconds, or once you are fifteen metres nearer the exit.
+
+Three rules keep it honest, and each is a test with a planted director it
+must catch (`director_test.gd`):
+
+- **it is the game, not a guard.** It knows where you are; no guard learns
+  it through the director. Sending a guard gives it a route and nothing
+  else -- the test compares every guard's belief and memory before and
+  after the director acts, and catches a planted director that tells the
+  guard where you are;
+- **a new patrol never starts in view.** It only sends a guard you cannot
+  see, and calls back only a calm one that sees nothing; nothing teleports;
+- **it fits nothing** (invariant 6). Every weight and threshold is in
+  `spec/director/director.json`; the director computes one number from
+  what happened. Python's machine and Godot's are held to the same curves
+  by `spec/vectors/director/`.
+
+When not to use one: as difficulty. A director that made the guards see
+further when you are doing well would be a rubber band, and players feel
+those. This one only changes how many there are, and when.
+
 ## Could not be checked
 
 Not used above:
@@ -534,11 +592,19 @@ Not used above:
   Game Programming Wisdom 3: still no copy found.
 - Rabin & Delp, "Designing a Realistic and Unified Agent Sensing Model",
   Game Programming Gems 7: cited by Rabin 2015, no copy found.
+- Booth's slides were not opened again for T90: the director above is
+  built from the passages T73 quoted from them (opened on 2026-10-26), and
+  every phrase in quotation marks is one of those. Brewer's chapter on
+  pacing (Game AI Pro Online Edition 2021, ch. 7), which T73 also cites,
+  was not used.
 
 ## References
 
 Shipped games -- talks, chapters and papers by their developers:
 
+- Booth, M. "The AI Systems of Left 4 Dead." Valve, 2009 -- the
+  "Adaptive Dramatic Pacing" slides.
+  <https://steamcdn-a.akamaihd.net/apps/valve/2009/ai_systems_of_l4d_mike_booth.pdf>
 - Couvidou, L. "Flooding the Influence Map for Chase in Dishonored 2." Game
   AI Pro Online Edition 2021, ch. 6.
   <https://www.gameaipro.com/GameAIProOnlineEdition2021/GameAIProOnlineEdition2021_Chapter06_Flooding_the_Influence_Map_for_Chase_in_Dishonored_2.pdf>

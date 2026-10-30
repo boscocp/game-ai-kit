@@ -1,0 +1,45 @@
+{
+ "description": "Thirty points of damage add thirty times hurt_per_point; a hundred and twenty more would pass `most`, and stop there.",
+ "steps": 20,
+ "events": [
+  {
+   "step": 5,
+   "kind": "hurt",
+   "points": 30
+  },
+  {
+   "step": 10,
+   "kind": "hurt",
+   "points": 120
+  }
+ ],
+ "intensity": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.296,
+  0.292,
+  0.288,
+  0.284,
+  0.27999999999999997,
+  1.0,
+  0.996,
+  0.992,
+  0.988,
+  0.984,
+  0.98,
+  0.976,
+  0.972,
+  0.968,
+  0.964
+ ],
+ "changes": [
+  {
+   "step": 10,
+   "from": "build_up",
+   "to": "sustain_peak"
+  }
+ ]
+}

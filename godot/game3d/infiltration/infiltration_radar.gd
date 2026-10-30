@@ -5,7 +5,10 @@
 ## Boxes grey, the exit yellow, the player blue, each guard a dot in its
 ## phase's colour with its nearest vision zone as a fan; the watched guard's
 ## belief as orange cells and its last known position as a white ring;
-## every sound as a blue circle where it was made.
+## every sound as a blue circle where it was made. With the director on
+## (T90), each order of the last few seconds as a line from where the player
+## was to the guard's post: yellow where a patrol was sent from, grey where
+## one was called back to.
 ##
 ## When not to use it: to read the scores. The panel says those.
 class_name InfiltrationRadar
@@ -13,6 +16,8 @@ extends Control
 
 const BACK: Color = Color(0, 0, 0, 0.6)
 const BOX: Color = Color(0.6, 0.6, 0.65)
+## How long a director's order stays drawn, in seconds.
+const ORDER_SHOWN: float = 8.0
 
 var world: InfiltrationWorld
 var watched: int = 0
@@ -31,6 +36,7 @@ func _draw() -> void:
 		draw_arc(Vector2(sound["place"]) * scale_by, 6.0, 0.0, TAU, 16, InfiltrationDrawing.SOUND, 1.0)
 	for guard: InfiltrationGuard in world.guards:
 		_draw_guard(guard, scale_by)
+	_draw_orders(scale_by)
 	draw_circle(world.player.position * scale_by, 3.5, InfiltrationDrawing.PLAYER)
 
 
@@ -58,3 +64,13 @@ func _draw_belief(scale_by: float) -> void:
 		if strength[index] > 0.0:
 			var cell: Vector2 = Vector2(world.level.cells[index])
 			draw_rect(Rect2(cell * scale_by, Vector2.ONE * scale_by), Color(InfiltrationDrawing.BELIEF, 0.8 * strength[index]))
+
+
+func _draw_orders(scale_by: float) -> void:
+	if world.director == null:
+		return
+	for order: Dictionary in world.director.orders:
+		if world.time - float(order["time"]) <= ORDER_SHOWN:
+			var colour: Color = DirectorStrip.SENT if order["order"] == "send" else DirectorStrip.RECALLED
+			draw_line(Vector2(order["from"]) * scale_by, Vector2(order["to"]) * scale_by, colour, 1.5)
+			draw_circle(Vector2(order["to"]) * scale_by, 4.0, colour)

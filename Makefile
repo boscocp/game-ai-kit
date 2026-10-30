@@ -300,7 +300,7 @@ solve-maze: ## Solve the maze's MDP by value iteration and publish its values an
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.mdp.publish --write $(CURDIR)/godot/game/maze
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-bandit-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors test-llm-vectors test-maze-vectors test-mdp-vectors ## Every conformance vector in spec/
+test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-bandit-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors test-llm-vectors test-maze-vectors test-mdp-vectors test-director-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -418,6 +418,18 @@ test-mdp-vectors: import ## Ten maze states' values and best moves, against the 
 	@# from spec/vectors/mdp/derive.py's own value iteration.
 	@$(GODOT) --headless --path godot -s res://test/maze/mdp_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/mdp
+
+.PHONY: test-director-vectors
+test-director-vectors: import ## The director's intensity and phases on event lists, against the infiltration level's Director (T90)
+	@# The other half is `make test-python`; the answers came from neither,
+	@# from spec/vectors/director/derive.py.
+	@$(GODOT) --headless --path godot -s res://test/infiltration/director_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/director
+
+.PHONY: measure-director
+measure-director: import ## T90: the director over seeded runs -- seconds in each phase, peaks, relaxes, patrols sent and called back
+	@# Printed, not a gate: it exits 1 only when no run relaxed at all.
+	@$(GODOT) --headless --path godot -s res://test/infiltration/director_measure.gd
 
 .PHONY: test-infiltration
 test-infiltration: import ## The infiltration level's guards: help heard, the search shared, quiet and loud, the arbiter, the halving, every decision on the overlay, portable (T70)
@@ -698,7 +710,7 @@ demo-racing3d: import ## A 3D race, you and three AI levels: arrows/WASD drive, 
 	@$(GODOT) --path godot res://game3d/racing/racing3d.tscn
 
 .PHONY: demo-infiltration
-demo-infiltration: import ## Sneak past guards in third person: WASD, mouse camera, C crouch, Z prone, Shift sprint, G throw, E takedown, click shoot; 1-5 switches, Tab a guard, L level
+demo-infiltration: import ## Sneak past guards in third person: WASD, mouse camera, C crouch, Z prone, Shift sprint, G throw, E takedown, click shoot; 1-6 switches, Tab a guard, L level
 	@$(GODOT) --path godot res://game3d/infiltration/infiltration.tscn
 
 .PHONY: demo-botmatch

@@ -1,5 +1,5 @@
 {
-  "about": "The infiltration example's second level (T70), unlike the first so the same guards are seen to cope: a courtyard 40 by 28 metres among four houses (5 m), x east and z south. A terrace 3 m up stands in the middle, climbed by a stair from the west, and a sentry watches from it. Hedges (1.1 m) hide a crouched body; bushes hide most of one. Lamps light the corners and the north path. You start at the west gate and leave by the east one. Three guards patrol.",
+  "about": "The infiltration example's second level (T70), unlike the first so the same guards are seen to cope: a courtyard 40 by 28 metres among four houses (5 m), x east and z south. A terrace 3 m up stands in the middle, climbed by a stair from the west, and a sentry watches from it. Hedges (1.1 m) hide a crouched body; bushes hide most of one. Lamps light the corners and the north path. You start at the west gate and leave by the east one. Three guards patrol. Two more wait in the east corners, out of sight of the west gate, for the director to send (T90).",
   "width": 40,
   "depth": 28,
   "points": [],
@@ -39,5 +39,9 @@
     {"type": "patrol", "route": [[3.5, 2.5], [36.5, 2.5]]},
     {"type": "patrol", "route": [[3.5, 25.5], [36.5, 25.5]]},
     {"type": "patrol", "route": [[11.5, 10.5], [28.5, 10.5], [28.5, 17.5], [11.5, 17.5]]}
+  ],
+  "reserve": [
+    {"post": [38.5, 2.5], "facing": 180.0, "beat": [[24.5, 2.5], [24.5, 25.5]]},
+    {"post": [38.5, 25.5], "facing": 180.0, "beat": [[15.5, 25.5], [15.5, 2.5]]}
   ]
 }

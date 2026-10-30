@@ -38,6 +38,10 @@ var exit_place: Vector2 = Vector2.ZERO
 ## Each guard as the level places it: `type`, `route` (Array[Vector2]),
 ## `post` (Vector2, or INF) and `facing` (radians).
 var guard_specs: Array[Dictionary] = []
+## The reserve the director may send (T90): each a patrol standing at its
+## `post`, out of the start's sight, with the `beat` it walks when sent.
+## The world builds them only with the director on.
+var reserve_specs: Array[Dictionary] = []
 ## The free walk cells, and each one's index; their neighbour list.
 var cells: Array[Vector2i] = []
 var index_of: Dictionary[Vector2i, int] = {}
@@ -56,6 +60,8 @@ static func read(source: Variant, level_name: String = "") -> InfiltrationLevel:
 	level.hidden = _hidden_of(data)
 	for spec: Dictionary in data["guards"]:
 		level.guard_specs.append(_guard_spec(spec))
+	for spec: Dictionary in data.get("reserve", []):
+		level.reserve_specs.append(_reserve_spec(spec))
 	level._index_cells()
 	return level
 
@@ -138,3 +144,13 @@ static func _guard_spec(spec: Dictionary) -> Dictionary:
 		route.append(_place(pair))
 	var post: Vector2 = _place(spec["post"]) if spec.has("post") else (route[0] if not route.is_empty() else Vector2.ZERO)
 	return {"type": str(spec["type"]), "route": route, "post": post, "facing": deg_to_rad(float(spec.get("facing", 0.0)))}
+
+
+# A reserve guard stands at its post, with no route, until the director
+# gives it its beat.
+static func _reserve_spec(spec: Dictionary) -> Dictionary:
+	var beat: Array[Vector2] = []
+	for pair: Array in spec["beat"]:
+		beat.append(_place(pair))
+	return {"type": "patrol", "route": [] as Array[Vector2], "post": _place(spec["post"]),  # not shown: an identifier
+		"facing": deg_to_rad(float(spec.get("facing", 0.0))), "beat": beat}

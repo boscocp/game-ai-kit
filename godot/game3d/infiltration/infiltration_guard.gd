@@ -28,6 +28,9 @@ var route: Array[Vector2] = []
 var post: Vector2 = Vector2.ZERO
 var post_facing: float = 0.0
 var route_index: int = 0
+## A reserve guard's beat, the route the director sends it on (T90); empty
+## for the level's own guards.
+var beat: Array[Vector2] = []
 ## Its decision: the action taken, every score, and the numbers behind them.
 var action: String = "patrol"  # not shown: an identifier
 var choice: ActionChoice.Choice
@@ -87,6 +90,8 @@ func _init(number: int, guard_type: GuardType, spec: Dictionary, nodes: Array[Pa
 	for point: Vector2 in spec["route"]:
 		route.append(point)
 	post = spec["post"]
+	for point: Vector2 in spec.get("beat", []):
+		beat.append(point)
 	post_facing = float(spec["facing"])
 	position = route[0] if not route.is_empty() else post
 	facing = post_facing
@@ -105,6 +110,11 @@ func believed(use_particles: bool) -> PackedFloat64Array:
 func collapse_belief(node: int) -> void:
 	belief.collapse(node)
 	particles.collapse(node)
+
+
+## True for a guard of the level's reserve, which the director may send.
+func reserve() -> bool:
+	return not beat.is_empty()
 
 
 ## True while it can act.

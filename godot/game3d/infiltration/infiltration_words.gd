@@ -36,6 +36,10 @@ const SAID_AS: Dictionary = {
 	"sprint": "a sprint",  # shown through tr()
 	"the_warehouse": "the warehouse",  # shown through tr()
 	"the_courtyard": "the courtyard",  # shown through tr()
+	"build_up": "building up",  # shown through tr()
+	"sustain_peak": "holding the peak",  # shown through tr()
+	"peak_fade": "fading",  # shown through tr()
+	"relax": "relaxing",  # shown through tr()
 }
 ## What `VisionShape.percept` writes as its reason, as keys. Copied from the
 ## addon, which writes English and is not translated: a test holds these to

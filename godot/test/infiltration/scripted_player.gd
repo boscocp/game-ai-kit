@@ -1,4 +1,4 @@
-## A player the properties drive instead of a person, one of six ways:
+## A player the properties drive instead of a person, one of seven ways:
 ##
 ## - **loud**: the shortest walk to the exit, upright and sprinting;
 ## - **quiet**: crouched, re-planning every half second over `SneakGraph` --
@@ -12,7 +12,12 @@
 ## - **hide**: upright towards the nearest guard until a guard is alert --
 ##   Metal Gear's evasion -- then a sprint to a hiding place no guard
 ##   watches, along the cells no guard watches when it can, as far from
-##   the guards as can be reached, where it lies prone and stays.
+##   the guards as can be reached, where it lies prone and stays;
+## - **distract**: prone where it starts, out of every guard's sight,
+##   throwing a distraction as far towards the exit as it reaches every
+##   DISTRACT_EVERY seconds -- the run T90's director is measured on: the
+##   guards hear and search, and a player who stays alive is one the
+##   director can let relax.
 ##
 ## It reads what a player can see -- the guards' bodies and facings, the
 ## light -- and never what a guard thinks. Its `PlayerIntent` is the same a
@@ -27,6 +32,8 @@ const REPLAN: float = 0.5
 ## How far a hiding place may be, along the walk, at least and at most.
 const NEAREST_HIDING: int = 6
 const FURTHEST_HIDING: int = 30
+## How often the distracting player throws, in seconds.
+const DISTRACT_EVERY: float = 45.0
 
 var mode: String = "loud"
 var path: Array[Vector2i] = []
@@ -55,6 +62,8 @@ func intent(world: InfiltrationWorld) -> PlayerIntent:
 			_sneak(world, made)
 		"hide":
 			_show_then_hide(world, made)
+		"distract":
+			_distract(world, made)
 		"replay":
 			made.sprint = true
 			made.direction = _follow(world)
@@ -82,6 +91,14 @@ func _sneak(world: InfiltrationWorld, made: PlayerIntent) -> void:
 		made.stance = "prone"
 		return
 	made.direction = _follow(world)
+
+
+func _distract(world: InfiltrationWorld, made: PlayerIntent) -> void:
+	made.stance = "prone"
+	if world.time >= replan_at:
+		replan_at = world.time + DISTRACT_EVERY
+		var reach: float = float(world.rules.player["throw_range"]) - 0.5
+		made.throw_at = world.player.position + world.player.position.direction_to(world.level.exit_place) * reach
 
 
 func _show_then_hide(world: InfiltrationWorld, made: PlayerIntent) -> void:

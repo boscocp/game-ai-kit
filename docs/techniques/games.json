@@ -124,8 +124,8 @@
         "pt-BR": "Metal Gear Solid, em terceira pessoa"
       },
       "keys": {
-        "en": "1-5 switch each part of the guards' reasoning; Tab follows the next guard",
-        "pt-BR": "1-5 ligam e desligam cada parte do raciocínio dos guardas; Tab segue o próximo guarda"
+        "en": "1-6 switch each part of the guards' reasoning and the director; Tab follows the next guard",
+        "pt-BR": "1-6 ligam e desligam cada parte do raciocínio dos guardas e o *director*; Tab segue o próximo guarda"
       }
     },
     "demo-botmatch": {
@@ -401,6 +401,10 @@
     "value-iteration": {
       "en": "value iteration, an MDP's policy",
       "pt-BR": "iteração de valor, a política de um MDP"
+    },
+    "director": {
+      "en": "a director pacing the threats by intensity",
+      "pt-BR": "um *director* que dosa as ameaças pela intensidade"
     }
   }
 }

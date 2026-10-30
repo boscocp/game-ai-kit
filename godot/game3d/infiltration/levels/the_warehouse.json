@@ -1,5 +1,5 @@
 {
-  "about": "The infiltration example's first level (T70): a warehouse of shelf rows, 36 by 24 metres, x east and z south. Shelves (2.5 m) hide a standing body; crates (1.1 m) only a crouched or prone one. Lamps light the aisles and leave the corners dark. You start at the west door and leave by the east one. Two guards patrol, one stands a post.",
+  "about": "The infiltration example's first level (T70): a warehouse of shelf rows, 36 by 24 metres, x east and z south. Shelves (2.5 m) hide a standing body; crates (1.1 m) only a crouched or prone one. Lamps light the aisles and leave the corners dark. You start at the west door and leave by the east one. Two guards patrol, one stands a post. Two more wait in the east corners, out of sight of the west door, for the director to send (T90).",
   "width": 36,
   "depth": 24,
   "points": [],
@@ -37,5 +37,9 @@
     {"type": "patrol", "route": [[11.5, 9.5], [17.5, 9.5], [17.5, 14.5], [11.5, 14.5]]},
     {"type": "patrol", "route": [[23.5, 2.5], [31.5, 2.5], [31.5, 10.5], [23.5, 10.5]]},
     {"type": "sentry", "post": [29.5, 15.5], "facing": 180.0}
+  ],
+  "reserve": [
+    {"post": [34.5, 1.5], "facing": 180.0, "beat": [[28.5, 1.5], [28.5, 22.5]]},
+    {"post": [34.5, 22.5], "facing": 180.0, "beat": [[17.5, 22.5], [17.5, 5.5]]}
   ]
 }

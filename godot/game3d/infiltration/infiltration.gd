@@ -7,7 +7,8 @@
 ## crosshair points, E takes down a guard from behind, a click shoots. 1
 ## cycles the belief (off, grid, particles), 2-4 switch the coordinator,
 ## the arbiter and the accumulator; 5
-## the off-screen halving. Tab watches the next guard, H hides the AI's
+## the off-screen halving; 6 the director (T90), which starts the level
+## again with its reserve guards. Tab watches the next guard, H hides the AI's
 ## reasoning, L the next level (two hand-made, then generated ones), N
 ## starts again, P pauses, Space one decision while paused.
 ##
@@ -40,6 +41,8 @@ var _stance: String = "standing"  # not shown: an identifier
 ## The one-shot wishes the input gathered since the last step.
 var _pending := PlayerIntent.new()
 var _pad := PadAsKeys.new()
+## The director's strip, under the radar.
+var _strip := DirectorStrip.new()
 
 @onready var _drawing: InfiltrationDrawing = $Drawing
 @onready var _camera: Camera3D = $Camera
@@ -52,6 +55,9 @@ var _pad := PadAsKeys.new()
 func _ready() -> void:
 	_pad.use(PAD_BUTTONS, [KEY_A, KEY_D, KEY_W, KEY_S], true)
 	add_child(_pad)
+	_strip.position = Vector2(964, 220)
+	_strip.size = Vector2(300, 90)
+	$Interface.add_child(_strip)
 	_show_legend()
 	_new_world()
 	Language.apply_if_opened_alone(self)
@@ -111,7 +117,17 @@ func decision_overlay() -> Dictionary:
 			"heard_help": world.time - guard.help_heard_at <= 15.0, "certainty": guard.percept.sight.certainty})
 	return {"time": world.time, "guards": guards, "off_screen_halving": rules.off_screen_halving,
 		"switches": {"belief": rules.use_belief, "particles": rules.use_particles, "coordinator": rules.use_coordinator,
-			"arbiter": rules.use_arbiter, "accumulator": rules.use_accumulator}}
+			"arbiter": rules.use_arbiter, "accumulator": rules.use_accumulator, "director": rules.use_director},
+		"director": director_overlay()}
+
+
+## The director's side of the overlay: its phase, the intensity it was
+## taken on, and how many orders it gave; empty with it off.
+func director_overlay() -> Dictionary:
+	if world.director == null:
+		return {}
+	return {"phase": world.director.pacing.phase, "intensity": world.director.pacing.intensity,
+		"orders": world.director.orders.size(), "on_patrol": world.director.on_patrol(world).x}
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -183,6 +199,7 @@ func _new_world() -> void:
 	_drawing.build(world)
 	_hud.world = world
 	_hud.camera = _camera
+	_strip.world = world
 	_radar.world = world
 
 
@@ -209,6 +226,8 @@ func _show() -> void:
 	_radar.watched = _watched
 	_hud.queue_redraw()
 	_radar.queue_redraw()
+	_strip.thinking = _thinking
+	_strip.queue_redraw()
 	_panel.text = InfiltrationText.panel(world, _watched) if _thinking else InfiltrationWords.level(world.level.name)
 
 
