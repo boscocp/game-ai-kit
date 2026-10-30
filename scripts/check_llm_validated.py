@@ -232,12 +232,12 @@ def check_file(source: Source, reply_uid: str) -> list[str]:
 def reaching_a_model(place: str, code: str, is_probe: bool) -> list[str]:
     """V1, on one line outside the addon."""
     findings = [f"V1 {place} uses {found} outside ai_llm; "
-                "a model's text must arrive through an LlmRuntime"
+                "a model's text must arrive through a GakLlmRuntime"
                 for found in NETWORK_RE.findall(code)
                 if not (is_probe and found in PROBE_MAY_USE)]
     if PROCESS_RE.search(code):
         findings.append(f"V1 {place} runs another program outside ai_llm; "
-                        "a model's text must arrive through an LlmRuntime")
+                        "a model's text must arrive through a GakLlmRuntime")
     return findings
 
 
