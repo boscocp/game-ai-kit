@@ -7,7 +7,7 @@ tier: 2
 source: https://ojs.aaai.org/index.php/AIIDE/article/view/12435/12294 ; book:Elijah Emerson, "Crowd Pathfinding and Steering Using Flow Field Tiles", in Steve Rabin (ed.), "Game AI Pro", CRC Press, 2013
 invalidated_if: the kit's FlowField, SpatialHash, FrameBudget, RtsWorld or RtsController signatures change, or the demos that use them are renamed
 teaches: strategy-ai
-translation_of: 6bc91478081f6297e8300c14d920a9362d73c85fbe703b14df780c6ea466478e
+translation_of: 30614c09b10b1cb03f25523ec7073cda8197951efd32e08970af3d4ee68d42b8
 -->
 
 > English: [ai_rts_core.md](ai_rts_core.md). Os termos que ficam em inglês

@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 5, figures 5.3, 5.7 and 5.11
 invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch, AdversarialResult, MonteCarloSearch, MctsResult or Xorshift signatures change, or the demos that use them are renamed
 teaches: adversarial-search
-translation_of: a52a908c6d1bab274cbe9c4f979d1c664d3b7123a5a67848d6dd371c150a9fbd
+translation_of: 55e1b2c2014ad37279633b3908d7e0647cb05bb70b5020d06721c581ce0b0414
 -->
 
 > English: [ai_adversarial.md](ai_adversarial.md). Os termos que ficam em

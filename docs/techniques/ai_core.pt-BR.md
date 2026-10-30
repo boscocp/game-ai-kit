@@ -7,7 +7,7 @@ tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html
 invalidated_if: the kit's GridGraph or Pathfinder signatures change, or ADR 0021 moves what the kernel holds
 teaches: none
-translation_of: 1ec835c07bfde9f704f4c8270e3c6e375f5c46d4ac11262d6ef7075c9ae3b04e
+translation_of: 27d3b25b8a4327d343fcc8d31206c626ae383ca69236c5e62eea5cc9d98e47ed
 -->
 
 > English: [ai_core.md](ai_core.md). Os termos que ficam em inglês estão no

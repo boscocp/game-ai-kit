@@ -7,7 +7,7 @@ tier: 2
 source: https://www.gameaipro.com/
 invalidated_if: the kit's RoleArbiter, TeamCommander, TacticalPositions, SquadConfidence or SearchCoordinator signatures change, or the demos that use them are renamed
 teaches: shooter-ai
-translation_of: dc8c6e0bf7e5ba4fd84e659f60d75cc8a3a3b4f5ba922ea11194620537775647
+translation_of: ea40df0357d4e78bd29a3580d259a982c9b1acc7e347fe223d3656cd41e90c7c
 -->
 
 > English: [ai_teamwork.md](ai_teamwork.md). Os termos que ficam em inglês

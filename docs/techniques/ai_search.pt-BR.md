@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 3 ; https://docs.godotengine.org/en/stable/classes/class_astargrid2d.html
 invalidated_if: the kit's Search, SearchGraph, GridPathfinder or GridGraph signatures change, or the demos that use them are renamed
 teaches: search
-translation_of: fd3e8b90d4d4ce9e12edbfce20a9853212b32b5d256a80569121fbbe0f0820a3
+translation_of: 19cbfb781d5c66333f8c644a583f89fc5a8486d1518df936451481852181b537
 -->
 
 > English: [ai_search.md](ai_search.md). Os termos que ficam em inglês
@@ -89,7 +89,7 @@ func _ready() -> void:
 	var board := GakGridGraph.new(6, 4)
 	for row: int in range(0, 3):
 		board.block(Vector2i(3, row))
-	# Held as ai_core's Pathfinder, so the caller does not care which search
+	# Held as ai_core's GakPathfinder, so the caller does not care which search
 	# answers: swap AStarSearch for DijkstraSearch and nothing else changes.
 	var pathfinder: GakPathfinder = GridPathfinder.new(AStarSearch.new())
 	route = pathfinder.find_path(board, Vector2i(0, 0), Vector2i(5, 0))

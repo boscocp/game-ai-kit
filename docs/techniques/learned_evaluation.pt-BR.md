@@ -7,7 +7,7 @@ tier: 2
 source: book:Arthur L. Samuel, "Some Studies in Machine Learning Using the Game of Checkers", IBM Journal of Research and Development 3(3), July 1959
 invalidated_if: CheckersEvaluation, CheckersWeights, the weights file's shape or gameaikit.checkers's report change, or make run stops opening checkers
 teaches: learned-evaluation
-translation_of: 02b375b948db5f608737a082745f7adc87df37f5a8695345df5bd0994c290071
+translation_of: af46277c2a894ee7f0b081313f6c62a05df5065a31cc76c1240711af7e1bb1d4
 -->
 
 > English: [learned_evaluation.md](learned_evaluation.md). Os termos que

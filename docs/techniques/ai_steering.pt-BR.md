@@ -7,7 +7,7 @@ tier: 2
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
 invalidated_if: the kit's SteeringVehicle, SteeringBehaviour or Steering.combined signatures change, or the demos that use them are renamed
 teaches: steering
-translation_of: 019b6629b9ea352945d78ebe7ed962276b2c7091f4d9231a094fa10c4f1c87d3
+translation_of: 5d4843b21cee59b3464015ff46811be826221b58db697bd4295ba8c3a8a9774c
 -->
 
 > English: [ai_steering.md](ai_steering.md). Os termos que ficam em inglês
