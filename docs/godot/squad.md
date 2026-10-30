@@ -64,9 +64,14 @@ the copies to the spec.
   promised for fog, except a cell beside either end of the line: a piece
   leans out past its own cover, and shoots at a target behind its cover at
   the cover's price. The line is Bresenham's, drawn from the end that sorts
-  first, so sight is always mutual. Pieces never block it.
-- **A shot** needs the target within the shooter's range, in steps, and in
-  its line of sight; and the shooter must still hold a whole action.
+  first, so the line is mutual; the reach is each piece's own (a runner
+  sees 6 steps, a shield 5). Pieces never block it.
+- **A shot** needs the shooter itself to see the target -- within its own
+  sight, with the line clear -- and the target within its range, in steps;
+  and the shooter must still hold a whole action. A mortar reaches 7 and
+  sees 6, so it shoots at 7 only at what it sees; a shot never names an
+  enemy its side's view does not hold, and a refused shot at an unseen
+  enemy says nothing of where it is.
 - **Fog, by side.** A side sees an enemy when one of its pieces is within
   its sight, in steps, with the line clear. `SideView` is a side's board --
   its own pieces and the enemies it sees, with the dice seed taken out --
@@ -114,16 +119,19 @@ Every simplification, so nobody reads the mode as more of XCOM than it is:
 
 ## How it is held
 
-- `make test-squad-vectors`: ten hand-checked shots in
-  `spec/vectors/squad/` -- cover facing and not, flanking, the clamp, a die
-  equal to the chance -- against the GDScript and the Python twin.
+- `make test-squad-vectors`: twelve hand-checked shots in
+  `spec/vectors/squad/` -- cover facing and not, a shooter level with the
+  cover, the shooter's own cell, flanking, the clamp, a die equal to the
+  chance -- against the GDScript and the Python twin.
 - `make test-godot-some SUITES=test/squad`: the rules one at a time, the
   tactical scene handed this ruleset, and the property check over 300
   seeded positions on the tactical map: every legal action leaves a legal
   state, a shot or a dash spends the piece, no side's view holds an enemy
-  it cannot see (nor misses one it can), and a seeded game replays to its
+  it cannot see (nor misses one it can), no listed shot names an enemy
+  outside its side's view, and a seeded game replays to its
   digest. Each of the first three was shown to fail on a planted mutation
-  (no dash rule, a view that sees everything, a shot that does not spend).
+  (no dash rule, a view that sees everything, a shot that does not spend,
+  a shot that needs only the line and not the shooter's sight).
 - Every tactical gate, unchanged, through `AdvanceWarsRuleset`.
 
 ## Manual check

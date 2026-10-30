@@ -88,16 +88,35 @@ func test_a_piece_that_dashed_may_not_shoot() -> void:
 	assert_str(_rules.why_attack_refused(state, Attack.new(1, 2))).contains("dashed or shot")
 
 
-func test_a_target_out_of_range_is_refused() -> void:
-	var state: BoardState = _facing(Vector2i(0, 4), Vector2i(12, 4))
+func test_a_seen_target_out_of_range_is_refused() -> void:
+	# Six steps along a clear row: the runner sees 6 and reaches 5.
+	var state: BoardState = _facing(Vector2i(3, 4), Vector2i(9, 4))
 	assert_str(_rules.why_attack_refused(state, Attack.new(1, 2))).contains("reaches")
+
+
+func test_a_mortar_may_not_shoot_in_its_range_what_it_cannot_see() -> void:
+	# Wave 113's review, planted: a mortar reaches 7 and sees 6, and the row
+	# from (3, 4) to (10, 4) is clear. Without the sight rule this shot was
+	# legal, listed by `actions`, at an enemy red's view did not hold.
+	var state: BoardState = _facing(Vector2i(3, 4), Vector2i(10, 4), TacticalRules.MORTAR, TacticalRules.RUNNER)
+	assert_array(_rules.view(state, RED).seen_enemies()).is_empty()
+	var refusal: String = _rules.why_attack_refused(state, Attack.new(1, 2))
+	assert_str(refusal).is_equal(SquadCombat.unseen(1, 2))
+	assert_array(_rules.shots_of(state, state.unit_by_id(1))).is_empty()
+
+
+func test_a_refusal_at_an_unseen_enemy_says_nothing_a_missing_one_would_not() -> void:
+	var state: BoardState = _facing(Vector2i(3, 4), Vector2i(10, 4), TacticalRules.MORTAR, TacticalRules.RUNNER)
+	assert_str(_rules.why_attack_refused(state, Attack.new(1, 2))).is_equal(
+		_rules.why_attack_refused(state, Attack.new(1, 99)).replace("99", "2"))
+	assert_str(_rules.why_attack_refused(state, Attack.new(1, 2))).not_contains("(10, 4)")
 
 
 func test_trees_two_deep_block_the_shot() -> void:
 	# (8, 5) and (8, 6) are trees on the tactical map; a line from (8, 4) to
 	# (8, 8) crosses both, and only (8, 5) is beside an end.
 	var state: BoardState = _facing(Vector2i(8, 4), Vector2i(8, 8))
-	assert_str(_rules.why_attack_refused(state, Attack.new(1, 2))).contains("cannot see")
+	assert_str(_rules.why_attack_refused(state, Attack.new(1, 2))).is_equal(SquadCombat.unseen(1, 2))
 
 
 func test_the_shot_is_told_with_its_chance_and_cover() -> void:
@@ -186,10 +205,19 @@ func test_the_tactical_scene_handed_this_ruleset_plays_it() -> void:
 	var scene: TacticalGame = auto_free((load("res://game/tactical/tactical.tscn") as PackedScene).instantiate())
 	scene.ruleset = _rules
 	scene.computer = RandomSquad.new(3)
+	scene.recording = true
 	add_child(scene)
+	assert_bool(scene._records()).is_false()
 	assert_int(scene.state.units.size()).is_equal(2 * SquadTable.squad().size())
 	assert_dict(scene.threat()).is_empty()
 	assert_str(scene._header.text).contains(SquadVictory.rule())
+
+
+func test_the_status_offers_the_targets_this_mode_allows() -> void:
+	var seen: BoardState = _facing(Vector2i(3, 4), Vector2i(7, 4))
+	assert_str(TacticalStatus.text(seen, seen.unit_by_id(1), "", "", true, _rules)).contains("click an enemy")
+	var unseen: BoardState = _facing(Vector2i(3, 4), Vector2i(10, 4), TacticalRules.MORTAR, TacticalRules.RUNNER)
+	assert_str(TacticalStatus.text(unseen, unseen.unit_by_id(1), "", "", true, _rules)).not_contains("click an enemy")
 
 
 # "a to b" for each of `cells` that `one` sees and is not seen by, or the
@@ -202,12 +230,14 @@ func _seen_one_way(rows: Array[String], one: Vector2i, cells: Array[Vector2i]) -
 	return found
 
 
-# A red runner on `red_cell` facing a blue shield on `blue_cell`, nobody
-# else, red to move: the smallest board a shot can be asked about.
-func _facing(red_cell: Vector2i, blue_cell: Vector2i) -> BoardState:
+# A red piece (a runner unless named) on `red_cell` facing a blue one (a
+# shield) on `blue_cell`, nobody else, red to move: the smallest board a
+# shot can be asked about.
+func _facing(red_cell: Vector2i, blue_cell: Vector2i, red_piece: String = TacticalRules.RUNNER,
+		blue_piece: String = TacticalRules.SHIELD) -> BoardState:
 	var types: Dictionary = SquadTable.unit_types()
-	var runner: UnitType = types[TacticalRules.RUNNER]
-	var shield: UnitType = types[TacticalRules.SHIELD]
+	var runner: UnitType = types[red_piece]
+	var shield: UnitType = types[blue_piece]
 	var units: Array[Unit] = [
 		Unit.new(1, RED, red_cell, SquadTable.number(runner.type_name, "health"), runner.movement, runner),
 		Unit.new(2, BLUE, blue_cell, SquadTable.number(shield.type_name, "health"), shield.movement, shield),

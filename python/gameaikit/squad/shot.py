@@ -10,7 +10,9 @@ UFOpaedia's "cover only grants a defence bonus if a unit is standing
 directly next to it". A cell of cover at step `d` from the target protects
 against a shooter on that side, where the shooter's offset from the target
 has a positive component along `d`. A shooter on no protected side has
-flanked the target, and it gets nothing.
+flanked the target, and it gets nothing. The cell the shooter stands on is
+never cover against it: a shooter on the tree beside its target does not
+shoot through that tree.
 
 A cell is a pair (column, row), row 0 at the top.
 
@@ -43,7 +45,9 @@ def cover_of(rows: list[str], shooter: tuple[int, int], target: tuple[int, int])
     """
     best, beside_any = 0, False
     for step in STEPS:
-        worth = _cover_worth(rows, (target[0] + step[0], target[1] + step[1]))
+        beside = (target[0] + step[0], target[1] + step[1])
+        # The shooter's own cell is never the target's cover against it.
+        worth = 0 if beside == tuple(shooter) else _cover_worth(rows, beside)
         if worth == 0:
             continue
         beside_any = True

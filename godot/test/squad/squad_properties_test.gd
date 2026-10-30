@@ -4,6 +4,7 @@
 # - every legal action leaves a legal state: every piece alive, on its own
 #   ground, alone on its cell, with movement between none and two actions,
 #   and the same side to move;
+# - no listed shot names an enemy outside its side's view;
 # - a shot or a dash spends the piece: after any action, a piece has either
 #   a whole action left or nothing;
 # - no side's view holds an enemy it cannot see, and it holds every enemy
@@ -94,11 +95,20 @@ func _first_broken_action(state: BoardState) -> String:
 		var after: BoardState = _rules.play(state, action)
 		var broken: String = _why_illegal(after, state.current_faction)
 		if broken == "" and action is Attack:
-			var shooter: Unit = after.unit_by_id((action as Attack).attacker_id)
-			broken = "the shot left its shooter movement" if shooter != null and shooter.movement_points != 0 else ""
+			broken = _why_shot_wrong(state, after, action as Attack)
 		if broken != "":
 			return "%s: %s" % [_named(action), broken]
 	return ""
+
+
+# Why a listed shot is wrong, or "": one at an enemy its side's view does
+# not hold (wave 113's review: a mortar reached what it could not see), or
+# one that left its shooter movement.
+func _why_shot_wrong(before: BoardState, after: BoardState, strike: Attack) -> String:
+	if not strike.target_id in _rules.view(before, before.current_faction).seen_enemies():
+		return "the shot names an enemy its side's view does not hold"
+	var shooter: Unit = after.unit_by_id(strike.attacker_id)
+	return "the shot left its shooter movement" if shooter != null and shooter.movement_points != 0 else ""
 
 
 # The id of an enemy that `side`'s view and its sight disagree about -- held

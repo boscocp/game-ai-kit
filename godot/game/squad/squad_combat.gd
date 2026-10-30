@@ -67,7 +67,11 @@ static func can_shoot(unit: Unit) -> bool:
 
 ## Why this shot cannot be taken, or `BoardState.LEGAL`, in the order a
 ## player wants to hear it: who, whose turn, whether it still may, at whom,
-## how far, and whether it can see.
+## whether the shooter itself sees the target -- within its sight, with the
+## line clear -- and only then how far. A shot needs the shooter's own sight
+## as well as its range: a mortar reaches 7 and sees 6, and without the
+## sight rule it shot an enemy its side's view did not hold (wave 113's
+## review).
 static func why_refused(state: BoardState, rows: Array[String], strike: Attack) -> String:
 	var shooter: Unit = state.unit_by_id(strike.attacker_id)
 	var target: Unit = state.unit_by_id(strike.target_id)
@@ -77,16 +81,23 @@ static func why_refused(state: BoardState, rows: Array[String], strike: Attack) 
 		return "unit %d is not on the side to move" % shooter.id
 	if not can_shoot(shooter):
 		return "unit %d has dashed or shot this turn" % shooter.id
-	if target == null:
-		return "no unit %d is on the board to shoot" % strike.target_id
-	if target.faction == shooter.faction:
+	if target != null and target.faction == shooter.faction:
 		return "unit %d is on the same side" % target.id
+	# A target that is gone and one the shooter cannot see get the same
+	# words, which name no cell and no distance: a refusal that told the
+	# shooter's side how far an unseen enemy stood would be a hole in the fog.
+	if target == null or not SquadSight.sees(rows, shooter, target.cell):
+		return unseen(shooter.id, strike.target_id)
 	var apart: int = SquadSight.steps(shooter.cell, target.cell)
 	if apart > shooter.type.attack_range:
 		return "unit %d is %d away, and unit %d reaches %d" % [target.id, apart, shooter.id, shooter.type.attack_range]
-	if not SquadSight.line_clear(rows, shooter.cell, target.cell):
-		return "unit %d cannot see unit %d: trees or rock are in the way" % [shooter.id, target.id]
 	return BoardState.LEGAL
+
+
+## The refusal for a shot at an enemy the shooter does not see -- or that is
+## not on the board: one sentence for both, so it gives nothing away.
+static func unseen(shooter_id: int, target_id: int) -> String:
+	return "unit %d sees no enemy unit %d to shoot" % [shooter_id, target_id]
 
 
 ## The state after this shot, or null when it is refused. The die comes from

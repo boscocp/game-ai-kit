@@ -95,7 +95,7 @@ func kind() -> String:
 ## `rules` (T84), Advance Wars when none is given; a build and a purchase
 ## are the board's in every mode.
 func played_on(state: BoardState, rules: TacticalRuleset = null) -> BoardState:
-	var playing: TacticalRuleset = rules if rules != null else AdvanceWarsRuleset.new()
+	var playing: TacticalRuleset = AdvanceWarsRuleset.or_default(rules)
 	if move != null:
 		return playing.walk(state, move)
 	if order != null:

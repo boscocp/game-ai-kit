@@ -18,7 +18,7 @@ REPO = pathlib.Path(__file__).resolve().parents[2]
 VECTORS = REPO / "spec" / "vectors" / "squad"
 SPEC = REPO / "spec" / "squad" / "rules.json"
 COPIES = (REPO / "python" / "gameaikit" / "squad" / "rules.json", REPO / "godot" / "game" / "squad" / "rules.json")
-FEWEST_VECTORS = 10
+FEWEST_VECTORS = 12
 
 
 def outcome(vector: dict) -> dict:

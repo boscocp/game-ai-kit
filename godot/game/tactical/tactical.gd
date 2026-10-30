@@ -424,7 +424,7 @@ func _press(keycode: Key) -> void:
 ## Wars, the default -- so the sentence cannot fall behind it.
 static func controllers_to_come(rules: TacticalRuleset = null) -> String:
 	var names: Array[String] = []
-	for row_name: String in _or_advance_wars(rules).roster_names():
+	for row_name: String in AdvanceWarsRuleset.or_default(rules).roster_names():
 		names.append(TacticalStatus.name_said(row_name))
 	return TranslationServer.translate("C hands the computer to the next controller -- {names} -- and S swaps sides; either starts a new game").format({
 		names = ", ".join(names)})
@@ -442,13 +442,8 @@ func swap_controller() -> void:
 ## built fresh. A level is seeded afresh each time, from the engine's own
 ## random numbers -- its noise is its own, never the board's dice.
 static func next_controller(playing: BlueController, rules: TacticalRuleset = null) -> BlueController:
-	var table: TacticalRuleset = _or_advance_wars(rules)
+	var table: TacticalRuleset = AdvanceWarsRuleset.or_default(rules)
 	return table.build_controller(table.controller_after(playing.controller_name()), randi())
-
-
-# The ruleset given, or the scene's default when a caller gave none.
-static func _or_advance_wars(rules: TacticalRuleset) -> TacticalRuleset:
-	return rules if rules != null else AdvanceWarsRuleset.new()
 
 
 ## The person takes the other side, and a new game starts: the same board,
@@ -616,21 +611,29 @@ func _refresh() -> void:
 	_end_button.disabled = not _persons_turn()
 	_undo_button.disabled = not (_persons_turn() and _turn.can_undo())
 	_status.text = _status_text()
-	if recording:
+	if _records():
 		_status.text += "\n" + tr("recording: {count} game(s) kept in data/tactical/").format({count = games_kept})
+
+
+# True when this game is being recorded: the scene was opened to record, and
+# it is playing Advance Wars. A game of another mode is never written to
+# `data/tactical/`: the cloned player learns from those files, and a
+# recording replays by the Advance Wars rules (wave 113's review).
+func _records() -> bool:
+	return recording and ruleset.mode_name() == AdvanceWarsRuleset.MODE
 
 
 # Write `decision`, played on `before`, into this game's rows -- when
 # recording, and only then.
 func _note(decision: TacticalDecision, before: BoardState) -> void:
-	if recording:
+	if _records():
 		_recorded.append(TacticalRecording.row_of(decision, before))
 
 
 # When recording, write this game to `data/tactical/` once it is over: only a
 # game played to its end is kept, so a restart is not a game.
 func _keep_if_over() -> void:
-	if not recording or _kept or winner == TacticalVictory.NOBODY:
+	if not _records() or _kept or winner == TacticalVictory.NOBODY:
 		return
 	_kept = true
 	var rounds: int = mini(state.turn_number / TacticalScenario.FACTIONS + 1, TacticalVictory.ROUND_LIMIT)
@@ -649,7 +652,7 @@ func _status_text() -> String:
 	var news: String = _last_event
 	if unit == null and _turn.unspent(state).is_empty():
 		news = (news + "\n" if news != "" else "") + tr("every unit has moved: space ends the turn")
-	return TacticalStatus.text(state, unit, _last_refusal, news, unit != null and not _turn.has_attacked(unit.id))
+	return TacticalStatus.text(state, unit, _last_refusal, news, unit != null and not _turn.has_attacked(unit.id), ruleset)
 
 
 # Every cell the unit in hand can walk to this turn; nothing for a spent one.

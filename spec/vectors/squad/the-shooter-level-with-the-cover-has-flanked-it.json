@@ -1,0 +1,33 @@
+{
+  "description": "Rock east of the target, the shooter straight below it: its offset (0, 3) has no part along east, so the rock does not face it and the target is flanked. Runner 65 - mortar 0 = 65; the die shows 30, a hit: 7 - 3 = 4.",
+  "map": [
+    ".....",
+    "...#.",
+    ".....",
+    ".....",
+    "....."
+  ],
+  "shooter": {
+    "type": "runner",
+    "cell": [
+      2,
+      4
+    ]
+  },
+  "target": {
+    "type": "mortar",
+    "cell": [
+      2,
+      1
+    ],
+    "health": 7
+  },
+  "roll": 30,
+  "expected": {
+    "cover": 0,
+    "flanked": true,
+    "chance": 65,
+    "hit": true,
+    "target_left": 4
+  }
+}

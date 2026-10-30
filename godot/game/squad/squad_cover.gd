@@ -10,7 +10,8 @@
 ## A cell of cover one step `d` from the target protects it against a shooter
 ## on that side: one whose offset from the target has a positive part along
 ## `d`. A shooter level with the cover, or behind it, is not stopped by it.
-## The best cover facing the shooter counts. A target with cover beside it
+## The best cover facing the shooter counts; the cell the shooter stands on
+## is not cover against it. A target with cover beside it
 ## and none facing the shooter is **flanked**; one in the open is simply
 ## uncovered. The same function as Python's `gameaikit.squad.shot.cover_of`,
 ## line for line, and the vectors in `spec/vectors/squad/` hold the two.
@@ -27,7 +28,9 @@ static func of(rows: Array[String], shooter: Vector2i, target: Vector2i) -> Dict
 	var best: int = 0
 	var beside_any: bool = false
 	for step: Vector2i in GakGridGraph.DIRECTIONS:
-		var worth: int = worth_at(rows, target + step)
+		# The shooter's own cell is never the target's cover: a shooter on
+		# the tree beside its target does not shoot through that tree.
+		var worth: int = 0 if target + step == shooter else worth_at(rows, target + step)
 		if worth == 0:
 			continue
 		beside_any = true

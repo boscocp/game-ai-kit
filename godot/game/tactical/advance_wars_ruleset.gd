@@ -12,10 +12,20 @@
 class_name AdvanceWarsRuleset
 extends TacticalRuleset
 
+## This mode's name. Only games played in it are recorded: the learned
+## opponent's data is Advance Wars games, and a recording replays by its rules.
+const MODE: String = "advance wars"  # not shown: a key, the screen words it
+
+
+## `rules`, or this ruleset when a caller gave none -- the one default every
+## caller of the seam shares, so none of them writes it again.
+static func or_default(rules: TacticalRuleset) -> TacticalRuleset:
+	return rules if rules != null else AdvanceWarsRuleset.new()
+
 
 ## "advance wars".
 func mode_name() -> String:
-	return "advance wars"  # not shown: a key, the screen words it
+	return MODE
 
 
 ## `TacticalScenario.build`: the workshops, the towers, three walkers.

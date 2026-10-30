@@ -41,7 +41,7 @@ var _to_ask_about_attacking: int = -1
 
 func _init(deciding: BlueController, rules: TacticalRuleset = null) -> void:
 	controller = deciding
-	ruleset = rules if rules != null else AdvanceWarsRuleset.new()
+	ruleset = AdvanceWarsRuleset.or_default(rules)
 
 
 ## Start blue's turn on `state`: queue every piece, and decide the first.

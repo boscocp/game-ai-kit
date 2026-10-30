@@ -10,7 +10,7 @@ const RUNNER: GDScript = preload("res://test/squad/squad_vectors_runner.gd")
 func test_every_vector_is_the_games() -> void:
 	var directory: String = _directory()
 	var files: PackedStringArray = RUNNER.vector_files(directory)
-	assert_int(files.size()).is_greater_equal(10)
+	assert_int(files.size()).is_greater_equal(12)
 	for name: String in files:
 		var vector: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(directory.path_join(name)))
 		assert_array(RUNNER.check_vector(name, vector)).is_empty()

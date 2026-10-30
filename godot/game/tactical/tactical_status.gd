@@ -39,10 +39,12 @@ const A_PIECE: Dictionary = {  # shown through tr()
 ## Everything the status says, line by line, for this state, this piece in
 ## hand (or null), the last refusal (or "") and what just happened (or "").
 ## `can_attack` is false for a piece that has attacked this turn: the status
-## must not offer it targets it can no longer strike.
-static func text(state: BoardState, in_hand: Unit, refusal: String, news: String = "", can_attack: bool = true) -> String:
+## must not offer it targets it can no longer strike. The targets offered
+## are the ones `rules` would allow (T84); Advance Wars when none is given.
+static func text(state: BoardState, in_hand: Unit, refusal: String, news: String = "", can_attack: bool = true,
+		rules: TacticalRuleset = null) -> String:
 	var lines: Array[String] = [_headline(state), ControlPoints.describe(state), _piece(in_hand), _what_to_do(state, in_hand)]
-	var targets: String = _targets(state, in_hand) if can_attack else ""
+	var targets: String = _targets(state, in_hand, AdvanceWarsRuleset.or_default(rules)) if can_attack else ""
 	if targets != "":
 		lines.append(targets)
 	lines.append(TranslationServer.translate("Z takes back the last thing you did  ·  space ends your turn, and {side} is paid {income} and its points").format({
@@ -213,14 +215,15 @@ static func _what_to_do(state: BoardState, unit: Unit) -> String:
 	return TranslationServer.translate("click a lit cell to walk there, and the unit is spent until your next turn; W has it wait where it is. A step costs the number on the cell, or 1.")
 
 
-# The enemies the piece in hand could attack from where it stands, with how
-# the counter table leans on each fight -- or "" when none is in reach.
-static func _targets(state: BoardState, unit: Unit) -> String:
+# The enemies the piece in hand could attack from where it stands, by the
+# rules of the mode being played, with how the counter table leans on each
+# fight -- or "" when none is in reach.
+static func _targets(state: BoardState, unit: Unit, rules: TacticalRuleset) -> String:
 	if unit == null or unit.type.attack_range <= 0:
 		return ""
 	var parts: Array[String] = []
 	for enemy: Unit in state.units:
-		if TacticalCombat.why_refused(state, Attack.new(unit.id, enemy.id)) != BoardState.LEGAL:
+		if rules.why_attack_refused(state, Attack.new(unit.id, enemy.id)) != BoardState.LEGAL:
 			continue
 		var lean: int = TacticalCombat.counter(unit.type, enemy.type)
 		var target: String = TranslationServer.translate("{piece} at {cell}, health {health}")

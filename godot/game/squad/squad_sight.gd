@@ -8,9 +8,11 @@
 ## itself blocked would leave cover nothing to do. Pieces never block a line.
 ##
 ## The line is drawn from the end that sorts first, so it is the same line
-## both ways: if one piece sees another, it is seen back. Bresenham from the
-## other end can pass through different cells, and a sight that was not
-## mutual would be a rule nobody could read off the board.
+## both ways: the line is mutual. The reach is each piece's own -- a runner
+## sees 6 steps and a shield 5, so at 6 the runner sees the shield and is not
+## seen back. Bresenham from the other end can pass through different cells,
+## and a line that was clear one way only would be a rule nobody could read
+## off the board.
 ##
 ## Complexity: O(distance) per line.
 ##
