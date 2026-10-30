@@ -52,7 +52,7 @@ muda no lugar, então uma busca não consegue tentar uma jogada e desfazê-la
 `godot/game/rts/` é o RTS construído sobre este núcleo: `rts.gd` avança um
 `RtsWorld` a 60 *ticks* por segundo, o mundo assenta no máximo
 `RtsWorld.FIELD_CELLS_PER_TICK` células de *flow field* por *tick*, e
-`rts_commander.gd` é um `RtsController` que planeja. Os ajustes que
+`rts_commander.gd` é um `GakRtsController` que planeja. Os ajustes que
 importam:
 
 | ajuste | onde | o que muda |

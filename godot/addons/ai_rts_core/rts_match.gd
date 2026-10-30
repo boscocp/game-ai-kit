@@ -27,7 +27,7 @@ const VERSION: int = 1
 var world: RtsWorld
 ## The seed the world was built from: with `accepted`, the whole match.
 var match_seed: int
-## Side -> RtsController.
+## Side -> GakRtsController.
 var controllers: Dictionary = {}
 ## Ticks between two decisions of each side: half a second by default.
 var decide_every: int = RtsWorld.TICKS_PER_SECOND / 2
@@ -44,7 +44,7 @@ var counters: Dictionary = {}
 
 
 ## A match on `new_world`, which was built from the seed `built_from`, between
-## `sides` (side -> RtsController).
+## `sides` (side -> GakRtsController).
 func _init(new_world: RtsWorld, built_from: int, sides: Dictionary = {}) -> void:
 	world = new_world
 	match_seed = built_from
@@ -124,7 +124,7 @@ func _decide_all() -> void:
 
 
 func _decide(side: int) -> void:
-	var controller: RtsController = controllers[side]
+	var controller: GakRtsController = controllers[side]
 	# The view is the match's cost, the same for every controller, so it is
 	# logged beside the decision and not charged to it.
 	var viewing: int = Time.get_ticks_usec()

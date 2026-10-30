@@ -33,7 +33,7 @@ var wishes: Array[Dictionary] = []
 var magma_wanted: bool = false
 ## The wish bought on the last decision, for the screen; {} for none.
 var last_bought: Dictionary = {}
-## Units weighed on the last decision: what `RtsController.work` reports.
+## Units weighed on the last decision: what `GakRtsController.work` reports.
 var work: int = 0
 ## Where the last building it tried to place was to go: what the screen
 ## marks. Kept rather than asked again, because choosing a site rolls the

@@ -48,7 +48,7 @@ move and take it back -- the examples' board does that (ADR 0019).
 `godot/game/rts/` is the RTS built on this core: `rts.gd` steps an
 `RtsWorld` at 60 ticks a second, the world settles at most
 `RtsWorld.FIELD_CELLS_PER_TICK` cells of flow field a tick, and
-`rts_commander.gd` is an `RtsController` that plans. The knobs that
+`rts_commander.gd` is an `GakRtsController` that plans. The knobs that
 matter:
 
 | knob | where | what it changes |
