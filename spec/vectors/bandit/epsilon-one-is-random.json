@@ -1,0 +1,52 @@
+{
+ "description": "Epsilon-greedy at 1 explores on every pull after the first round: two draws a pull, the arm the second one's remainder.",
+ "policy": "epsilon-greedy",
+ "arms": 4,
+ "exploration": 1.4142135623730951,
+ "epsilon": 1.0,
+ "seed": 1,
+ "payoffs": [
+  [
+   0.0
+  ],
+  [
+   0.25
+  ],
+  [
+   0.5
+  ],
+  [
+   1.0
+  ]
+ ],
+ "chosen": [
+  0,
+  1,
+  2,
+  3,
+  1,
+  3,
+  0,
+  2,
+  0,
+  3,
+  2,
+  1,
+  0,
+  1,
+  1,
+  3
+ ],
+ "pulls": [
+  4,
+  5,
+  3,
+  4
+ ],
+ "sums": [
+  0.0,
+  1.25,
+  1.5,
+  4.0
+ ]
+}

@@ -5,7 +5,7 @@ half_life: concept
 verified_on: 2026-10-15
 tier: 1
 source: https://www.ice.ci.ritsumei.ac.jp/~ftgaic/
-invalidated_if: T37, T17 or T18 stop doing what the last section says they take from here
+invalidated_if: T37, T17, T18 or T99 stop doing what the last section says they take from here
 teaches: fighting-game-ai
 -->
 
@@ -225,6 +225,60 @@ the nearest-neighbour ghost, and the small model T18 trains -- and the exact
 lookup is the ghost's simplest form, worth a row of its own. If the ghost is as good as the model here, T18
 says so.
 
+**T99, the bandit opponent**, takes the bandit (AIMA 4th ed., 17.3; GAP2
+ch. 25) and keeps everything T37 decided but the draw. Each situation gets a
+UCB1 bandit [Auer et al. 2002] over the options its level knows there; an
+option is paid the change in the health lead while it played and for half a
+second after, scaled into [0, 1] by a hundred health. The n-gram predicts
+what *you* will do; the bandit only measures what *its own* answers earned
+against you. ADR 0016's amendment lets it count during the fight, on the
+n-gram's three conditions, and `check_no_training.py`'s N13 holds the shape.
+
+Measured with `make measure-bandit` on 2026-10-30: lancer mirrors, 100
+fights per row, the bandit or T37's fixed opponent at the same level
+against each of T18's stand-ins and the owner's ghost (T40's frozen copy of
+the nine fights the owner recorded). "Settled after" is the median, over
+the 100 fights, of the pull after which the arm its busiest situation's
+bandit had pulled most stopped changing; beside it, how many pulls that
+bandit had in all.
+
+| against | level | T37 fixed wins | bandit wins, UCB1 at 0.5 | settled after | of | bandit wins, UCB1 at the square root of two | settled after | of |
+|---|---|---|---|---|---|---|---|---|
+| rushdown | medium | 68 | 78 | 25 | 55 | 71 | 41 | 59 |
+| rushdown | hard | 88 | 83 | 44 | 51 | 76 | 46 | 52 |
+| turtle | medium | 20 | 42 | 45 | 87 | 17 | 72 | 88 |
+| turtle | hard | 73 | 90 | 53 | 71 | 91 | 68 | 83 |
+| jumper | medium | 100 | 100 | 34 | 67 | 100 | 58 | 83 |
+| jumper | hard | 100 | 100 | 54 | 70 | 99 | 67 | 74 |
+| the owner's ghost | medium | 30 | 44 | 46 | 83 | 36 | 59 | 78 |
+| the owner's ghost | hard | 84 | 88 | 46 | 65 | 82 | 61 | 68 |
+
+What it says:
+
+- **At the textbook's constant it barely settles in a fight.** The square
+  root of two is sized for payoffs anywhere in [0, 1]; these lie near 0.5
+  (four in five within a quarter of it, two in five on it), so the
+  exploration term outweighs every difference in mean, and the busiest
+  bandit is still changing its mind four-fifths of the way through the
+  fight. Against T37 it wins about as often -- more against the hard
+  turtle, less against the hard rushdown: it pays for exploring and is not
+  around long enough to collect.
+- **At 0.5, the constant the opponent ships with, it settles sooner** --
+  between half and seven-eighths of the way through its pulls, at medium
+  nearer half -- and the medium bandit beats
+  every opponent here at least as often as T37's medium: the turtle 42
+  times against 20, the owner's ghost 44 against 30.
+- **Hard gains less, and against the rushdown loses** (83 against 88).
+  T40 tuned hard's weights against the owner's ghost, and a fixed draw that
+  is already good leaves a bandit little to find and the price of trying
+  everything first -- ten options in neutral, each once.
+
+So the answer to the task's question -- how many pulls before it settles
+-- is 25 to 54 of its busiest situation's, at 0.5: half to most of what one
+fight gives it. And the lesson the
+table teaches is the bandit's own: exploring costs, and the constant that
+prices it should match how far apart the payoffs are.
+
 **Left, and why:**
 - **Deep reinforcement learning.** Tier 1 cannot train it, and the sources
   show its two failures this kit exists to avoid: exploiting the opponent it
@@ -255,6 +309,10 @@ Not used above, and listed so nobody adds them from memory:
 
 ## References
 
+- **[Auer et al. 2002]** P. Auer, N. Cesa-Bianchi, P. Fischer,
+  "Finite-time Analysis of the Multiarmed Bandit Problem", *Machine
+  Learning* 47, 2002 -- UCB1's statement, figure 1, and theorem 1.
+  <https://homes.di.unimi.it/~cesabian/Pubblicazioni/ml-02.pdf>
 - **[FTGAIC site]** Fighting Game AI Competition, Intelligent Computer
   Entertainment Lab, Ritsumeikan University.
   <https://www.ice.ci.ritsumei.ac.jp/~ftgaic/>

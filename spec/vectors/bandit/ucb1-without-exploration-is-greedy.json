@@ -1,0 +1,38 @@
+{
+ "description": "UCB1 with the constant at 0 is greedy: the arm that paid best on its first pull is never left, though another pays more on average.",
+ "policy": "ucb1",
+ "arms": 2,
+ "exploration": 0.0,
+ "epsilon": 0.0,
+ "seed": 1,
+ "payoffs": [
+  [
+   0.75,
+   0.25
+  ],
+  [
+   0.5,
+   1.0
+  ]
+ ],
+ "chosen": [
+  0,
+  1,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0
+ ],
+ "pulls": [
+  9,
+  1
+ ],
+ "sums": [
+  4.75,
+  0.5
+ ]
+}

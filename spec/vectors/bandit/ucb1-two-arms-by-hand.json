@@ -1,0 +1,34 @@
+{
+ "description": "UCB1, two arms, small enough to work by hand (the README does): each arm once, then the one that paid 1 four times running, until the other's bonus, growing with every pull it is left out of, outweighs the gap.",
+ "policy": "ucb1",
+ "arms": 2,
+ "exploration": 1.4142135623730951,
+ "epsilon": 0.0,
+ "seed": 1,
+ "payoffs": [
+  [
+   1.0
+  ],
+  [
+   0.0,
+   0.5
+  ]
+ ],
+ "chosen": [
+  0,
+  1,
+  0,
+  0,
+  0,
+  0,
+  1
+ ],
+ "pulls": [
+  5,
+  2
+ ],
+ "sums": [
+  5.0,
+  0.5
+ ]
+}

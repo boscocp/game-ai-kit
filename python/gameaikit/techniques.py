@@ -37,7 +37,7 @@ GROUP = "gameaikit.techniques"
 #: `training` is named by its module, for it has no `__init__.py` to
 #: import the rest.
 KIT_MODULES = (
-    "adversarial", "fuzzy", "llm", "ngram", "pddl", "perception",
+    "adversarial", "bandit", "fuzzy", "llm", "ngram", "pddl", "perception",
     "search", "steering", "teamwork", "training.descent", "utility",
 )
 

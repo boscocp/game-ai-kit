@@ -1,0 +1,77 @@
+{
+ "description": "UCB1, three arms paying 1/4, 3/4 and 1/2 on average: it tries each, keeps trying the others now and then, and pulls the best most.",
+ "policy": "ucb1",
+ "arms": 3,
+ "exploration": 1.4142135623730951,
+ "epsilon": 0.0,
+ "seed": 1,
+ "payoffs": [
+  [
+   0.25,
+   0.0,
+   0.5
+  ],
+  [
+   1.0,
+   0.5,
+   0.75
+  ],
+  [
+   0.5,
+   0.25,
+   0.75
+  ]
+ ],
+ "chosen": [
+  0,
+  1,
+  2,
+  1,
+  2,
+  0,
+  1,
+  1,
+  1,
+  2,
+  2,
+  1,
+  0,
+  1,
+  1,
+  2,
+  0,
+  1,
+  1,
+  1,
+  2,
+  2,
+  1,
+  0,
+  1,
+  1,
+  2,
+  1,
+  1,
+  1,
+  2,
+  1,
+  2,
+  0,
+  1,
+  1,
+  1,
+  2,
+  0,
+  1
+ ],
+ "pulls": [
+  7,
+  22,
+  11
+ ],
+ "sums": [
+  1.75,
+  16.75,
+  5.25
+ ]
+}

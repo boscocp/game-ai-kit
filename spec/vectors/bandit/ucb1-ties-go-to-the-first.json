@@ -1,0 +1,40 @@
+{
+ "description": "UCB1 with every arm paying the same: equal bounds go to the first, so it cycles in order.",
+ "policy": "ucb1",
+ "arms": 3,
+ "exploration": 1.4142135623730951,
+ "epsilon": 0.0,
+ "seed": 1,
+ "payoffs": [
+  [
+   0.5
+  ],
+  [
+   0.5
+  ],
+  [
+   0.5
+  ]
+ ],
+ "chosen": [
+  0,
+  1,
+  2,
+  0,
+  1,
+  2,
+  0,
+  1,
+  2
+ ],
+ "pulls": [
+  3,
+  3,
+  3
+ ],
+ "sums": [
+  1.5,
+  1.5,
+  1.5
+ ]
+}

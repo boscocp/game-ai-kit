@@ -30,6 +30,7 @@ Source = "https://github.com/boscocp/game-ai-kit"
 packages = [
     "gameaikit",
     "gameaikit.adversarial",
+    "gameaikit.bandit",
     "gameaikit.fuzzy",
     "gameaikit.llm",
     "gameaikit.ngram",

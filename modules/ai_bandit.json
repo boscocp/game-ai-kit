@@ -1,0 +1,18 @@
+{
+  "module": "ai_bandit",
+  "kind": "technique",
+  "about": "A bandit: UCB1, and epsilon-greedy for the comparison, over pulls and payoff sums per arm; in GDScript and Python. The fighting game's bandit opponent (T99) counts with it during one fight only (ADR 0016, rule N13).",
+  "summary": "A multi-armed bandit: which of a fixed set of options to try next, by what each has paid so far -- UCB1, and epsilon-greedy for comparison, kept as counts and sums.",
+  "owns": [
+    "godot/addons/ai_bandit/",
+    "godot/test/ai_bandit/",
+    "spec/vectors/bandit/",
+    "python/gameaikit/bandit/",
+    "python/tests/test_bandit.py",
+    "python/tests/test_bandit_vectors.py"
+  ],
+  "depends_on": [],
+  "gates": [
+    "test-bandit-vectors"
+  ]
+}

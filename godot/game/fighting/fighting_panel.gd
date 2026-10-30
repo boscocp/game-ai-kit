@@ -18,6 +18,9 @@ extends RefCounted
 
 ## How many rows of a learner's table the panel prints.
 const ROWS_SHOWN: int = 8
+## The longest a bandit's bar is drawn, in characters, a tenth of payoff
+## each: a mean of 1 and an exploration term of 1.5.
+const BAR_LONGEST: int = 25
 ## What the learner expected at its last decision: with an answer among its
 ## options, and without one.
 ## What the learner was expecting when it drew, with an answer among its
@@ -120,7 +123,46 @@ static func _opponent_lines(state: FightState, seat: FightDelay) -> PackedString
 	var imitator := opponent as FightCloneOpponent
 	if imitator != null:
 		lines.append_array(_clone_lines(imitator))
+	var gambler := opponent as FightBanditOpponent
+	if gambler != null:
+		lines.append_array(_bandit_lines(gambler))
 	return lines
+
+
+# The bandit of the situation it just named, one line an option: its pulls,
+# its mean payoff and its UCB1 bound, as numbers and as a bar -- `#` for the
+# mean, `+` for the exploration term on top of it -- the chosen one marked
+# `>` before it is played. Then the last option paid, and what it earned.
+static func _bandit_lines(gambler: FightBanditOpponent) -> PackedStringArray:
+	var bandit: Bandit = gambler.current_bandit()
+	if bandit == null:
+		return PackedStringArray()
+	var lines: PackedStringArray = ["", TranslationServer.translate(
+		"its bandit for {situation} (UCB1, exploration {exploration}), {pulls} pull(s); # mean, + exploration:").format({
+		situation = FightWords.word(gambler.situation), exploration = "%.2f" % bandit.exploration, pulls = bandit.total()})]
+	for arm: int in range(bandit.arms()):
+		var mark: String = ">" if arm == gambler.chosen_arm else " "  # not shown: a mark
+		var option: String = FightWords.word(gambler.options_of[gambler.situation][arm])
+		if bandit.pulls[arm] == 0:
+			lines.append("  %s %s: " % [mark, option] + TranslationServer.translate("never tried, so tried first"))
+			continue
+		lines.append("  %s %s: " % [mark, option] + TranslationServer.translate(
+			"{pulls} pull(s), mean {mean}, bound {bound}").format({pulls = bandit.pulls[arm],
+			mean = "%.2f" % bandit.mean(arm), bound = "%.2f" % bandit.bound(arm)}) + "  " + _bar(bandit, arm))
+	if not gambler.last_paid.is_empty():
+		lines.append(TranslationServer.translate("  last paid: {option} after {situation}, {payoff}").format({
+			option = FightWords.word(gambler.last_paid["option"]), situation = FightWords.word(gambler.last_paid["situation"]),
+			payoff = "%.2f" % gambler.last_paid["payoff"]}))
+	return lines
+
+
+# The arm's bound as a bar, a tenth a character: its mean in `#`, then the
+# exploration term in `+`, cut at `BAR_LONGEST` so an arm pulled once does
+# not run off the panel.
+static func _bar(bandit: Bandit, arm: int) -> String:
+	var mean: int = roundi(bandit.mean(arm) * 10.0)
+	var bonus: int = mini(roundi((bandit.bound(arm) - bandit.mean(arm)) * 10.0), BAR_LONGEST - mean)
+	return "#".repeat(mean) + "+".repeat(bonus)
 
 
 # What the opponent drew, worded from its decision's identifiers -- the
