@@ -14,7 +14,7 @@
 ##
 ## When not to use it: to reach anything that is not a language model. This
 ## port carries chat messages and one text back.
-class_name LlmRuntime
+class_name GakLlmRuntime
 extends Node
 
 ## The model's text, exactly as the runtime received it.

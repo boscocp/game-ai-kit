@@ -14,7 +14,7 @@
 ## recording only knows the lines it was recorded with; past its last turn
 ## it fails every request.
 class_name RecordedRuntime
-extends LlmRuntime
+extends GakLlmRuntime
 
 ## How many frames pass between `send` and `replied`. At least one.
 var frames_to_wait: int = 1
