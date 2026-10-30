@@ -107,13 +107,17 @@ GLOBAL = (
     "godot/test/project_settings_test.gd.uid",
     "godot/.gitignore", "python/gameaikit/__init__.py", "python/tests/__init__.py",
     "python/tests/test_placeholder.py",
+    # The library's own (T64): the registry imports every technique, and the
+    # project file and its attribution decide what any of them ships as.
+    "python/gameaikit/techniques.py", "python/tests/test_techniques.py",
+    "python/pyproject.toml", "python/LICENSE", "python/NOTICE", "python/README.md",
 )
 
 # What only a person reads. The lints that read it run on every wave anyway,
 # so a change here selects no module.
 PROSE = (
     "docs/", "tasks/", "README.md", "README.pt-BR.md", "CONTRIBUTING.md", "CLAUDE.md",
-    "LICENSE", "NOTICE", "VERSION", ".gitignore",
+    "LICENSE", "NOTICE", "VERSION", ".gitignore", "python/README.md",
 )
 
 KINDS = {"kernel", "technique", "example"}

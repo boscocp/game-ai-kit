@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import dataclasses
 
+from gameaikit.techniques import technique
+
 #: The least spread taken, in metres; GDScript's 32-bit Rect2 rounds below it.
 SMALLEST_SPREAD = 0.001
 
@@ -60,6 +62,7 @@ def expected_from(aim: tuple[float, float], spread: float, zones: list[Zone]) ->
     return sum(chance * zone.multiplier for chance, zone in zip(chances_from(aim, spread, zones), zones))
 
 
+@technique("aim-choice", "where on a body to aim: the zone whose shot is worth the most damage")
 def choose(zones: list[Zone], spread: float) -> Choice:
     """Aim at each zone in turn and keep the one worth the most."""
     choice = Choice([], [], -1, [])

@@ -8,12 +8,15 @@ cell's cost is paid on entering it, so the start costs nothing; -1 is a wall.
 
 from __future__ import annotations
 
+from gameaikit.techniques import technique
+
 BLOCKED = -1
 
 #: North, east, south, west: `GakGridGraph.DIRECTIONS`' order.
 DIRECTIONS = ((0, -1), (1, 0), (0, 1), (-1, 0))
 
 
+@technique("cost-flood", "Dijkstra to every cell within a cost: how far a sound travels")
 def within(costs: list[list[int]], start: tuple[int, int], limit: int) -> dict[tuple[int, int], int]:
     """Every cell reached from `start` at a cost of `limit` or less: cell -> cost.
 

@@ -15,6 +15,7 @@ from typing import Any
 
 from gameaikit.adversarial.game import AdversarialGame
 from gameaikit.adversarial.xorshift import Xorshift
+from gameaikit.techniques import technique
 
 #: UCB1's exploration constant, the square root of two.
 EXPLORATION = math.sqrt(2.0)
@@ -64,6 +65,7 @@ class MctsResult:
     iterations: int = 0
 
 
+@technique("monte-carlo-tree-search", "UCT over a game: the move whose random play-outs win most, within a budget")
 class MonteCarloSearch:
     """UCT over an `AdversarialGame`, run a bounded number of iterations at a time."""
 

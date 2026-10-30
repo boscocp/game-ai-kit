@@ -8,7 +8,10 @@ the unseen nodes when nothing is left [Isla 2013; McIntosh 2015].
 
 from __future__ import annotations
 
+from gameaikit.techniques import technique
 
+
+@technique("belief-map", "where an unseen target may be, spread along a neighbour list")
 class BeliefMap:
     """One share per node of a graph given as `neighbours[i]` lists."""
 

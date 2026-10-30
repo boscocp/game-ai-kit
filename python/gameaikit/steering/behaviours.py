@@ -20,6 +20,7 @@ import math
 
 from .vector import ZERO, Vec
 from .vehicle import Vehicle
+from gameaikit.techniques import technique
 
 
 def direction_to(start: Vec, end: Vec) -> Vec:
@@ -78,6 +79,7 @@ def combined(vehicle: Vehicle, forces: list[Vec], weights: list[float]) -> Vec:
     return clamped(total, vehicle.max_force)
 
 
+@technique("seek", "full speed at a point, a force no longer than the vehicle's max_force")
 @dataclasses.dataclass
 class Seek:
     """Full speed at `target`. Never asks for less, so never stops there.
@@ -100,6 +102,7 @@ class Seek:
         return towards_velocity(vehicle, desired, self.time_to_target)
 
 
+@technique("arrive", "seek, slowing inside a braking radius, so it stops")
 @dataclasses.dataclass
 class Arrive:
     """Seek, with the desired speed falling to zero inside `braking_radius`.
@@ -127,6 +130,7 @@ class Arrive:
         return towards_velocity(vehicle, desired, self.time_to_target)
 
 
+@technique("pursue", "seek where a moving quarry will be")
 @dataclasses.dataclass
 class Pursue:
     """Seek where the quarry will be: its velocity times the chase's length,
@@ -154,6 +158,7 @@ class Pursue:
         return Seek(self.predicted(vehicle), self.time_to_target).force(vehicle)
 
 
+@technique("avoid", "swerve from the first round obstacle ahead")
 @dataclasses.dataclass
 class Avoid:
     """Swerve sideways at full force from the first round obstacle within
