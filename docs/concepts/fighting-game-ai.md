@@ -5,7 +5,7 @@ half_life: concept
 verified_on: 2026-10-15
 tier: 1
 source: https://www.ice.ci.ritsumei.ac.jp/~ftgaic/
-invalidated_if: T37, T17 or T18 stop doing what the last section says they take from here
+invalidated_if: T37, T17, T18 or T99 stop doing what the last section says they take from here
 teaches: fighting-game-ai
 -->
 
@@ -225,6 +225,68 @@ the nearest-neighbour ghost, and the small model T18 trains -- and the exact
 lookup is the ghost's simplest form, worth a row of its own. If the ghost is as good as the model here, T18
 says so.
 
+**T99, the bandit opponent**, takes the bandit (AIMA 4th ed., 17.3; GAP2
+ch. 25) and keeps everything T37 decided but the draw. Each situation gets a
+UCB1 bandit [Auer et al. 2002] over the options its level knows there; an
+option is paid the change in the health lead while it played and for half a
+second after, scaled into [0, 1] by a hundred health. The n-gram predicts
+what *you* will do; the bandit only measures what *its own* answers earned
+against you. ADR 0016's amendment lets it count during the fight, on the
+n-gram's three conditions, and `check_no_training.py`'s N13 holds the shape.
+
+Measured with `make measure-bandit` on 2026-10-30, after a choice was
+counted as a pull when made and paid when its window closed: lancer
+mirrors, 100 fights per row, the bandit or T37's fixed opponent at the same
+level against each of T18's stand-ins and the owner's ghost (T40's frozen
+copy of the nine fights the owner recorded). "Settled after" is the median,
+over the 100 fights, of the pull after which the arm its busiest
+situation's bandit had pulled most stopped changing; beside it, how many
+pulls that bandit had in all.
+
+| against | level | T37 fixed wins | bandit wins, UCB1 at 0.5 | settled after | of | bandit wins, UCB1 at the square root of two | settled after | of |
+|---|---|---|---|---|---|---|---|---|
+| rushdown | medium | 68 | 86 | 35 | 60 | 64 | 44 | 64 |
+| rushdown | hard | 88 | 86 | 37 | 50 | 70 | 46 | 52 |
+| turtle | medium | 20 | 15 | 60 | 89 | 8 | 68 | 83 |
+| turtle | hard | 73 | 95 | 55 | 75 | 87 | 71 | 87 |
+| jumper | medium | 100 | 100 | 44 | 78 | 100 | 66 | 89 |
+| jumper | hard | 100 | 100 | 59 | 79 | 100 | 74 | 86 |
+| the owner's ghost | medium | 30 | 45 | 46 | 86 | 20 | 59 | 85 |
+| the owner's ghost | hard | 84 | 77 | 55 | 72 | 63 | 63 | 76 |
+
+**How much to read into it.** Each row is 100 fights from one set of seeds,
+so a difference under about ten wins is noise. And 0.5 was chosen against
+these same stand-ins and this ghost, so the 0.5 column flatters it the way
+T40's tuning flatters hard; no held-out opponent checks it.
+
+What it says:
+
+- **At the textbook's constant it barely settles in a fight, and loses.**
+  The square root of two is sized for payoffs anywhere in [0, 1]; these
+  lie near 0.5 (over four in five within a quarter of it, nearly half on
+  it), so the exploration term outweighs every difference in mean, and the
+  busiest bandit is still changing its mind 70 to 90 % of the way through
+  the fight. It beats T37 only against the hard turtle, and loses clearly
+  against the rushdown and the owner's ghost: it pays for exploring and is
+  not around long enough to collect.
+- **At 0.5, the constant the opponent ships with, it settles sooner** --
+  between half and three-quarters of the way through its pulls -- and
+  wins at least as often as at the square root of two in every row. Against
+  T37 it gains clearly in three: the medium rushdown (86 against 68), the
+  medium ghost (45 against 30), the hard turtle (95 against 73).
+- **Elsewhere it is level, or behind.** Medium against the turtle (15
+  against 20), hard against the rushdown (86 against 88) and the owner's
+  ghost (77 against 84) are within or near the noise. T40 tuned hard's
+  weights against the owner's ghost, and a fixed draw that is already good
+  leaves a bandit little to find and the price of trying everything first
+  -- ten options in neutral, each once.
+
+So the answer to the task's question -- how many pulls before it settles
+-- is 35 to 60 of its busiest situation's, at 0.5: half to three-quarters
+of what one fight gives it. And the lesson the table teaches is the
+bandit's own: exploring costs, and the constant that prices it should
+match how far apart the payoffs are.
+
 **Left, and why:**
 - **Deep reinforcement learning.** Tier 1 cannot train it, and the sources
   show its two failures this kit exists to avoid: exploiting the opponent it
@@ -255,6 +317,10 @@ Not used above, and listed so nobody adds them from memory:
 
 ## References
 
+- **[Auer et al. 2002]** P. Auer, N. Cesa-Bianchi, P. Fischer,
+  "Finite-time Analysis of the Multiarmed Bandit Problem", *Machine
+  Learning* 47, 2002 -- UCB1's statement, figure 1, and theorem 1.
+  <https://homes.di.unimi.it/~cesabian/Pubblicazioni/ml-02.pdf>
 - **[FTGAIC site]** Fighting Game AI Competition, Intelligent Computer
   Entertainment Lab, Ritsumeikan University.
   <https://www.ice.ci.ritsumei.ac.jp/~ftgaic/>

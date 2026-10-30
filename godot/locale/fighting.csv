@@ -41,6 +41,9 @@ opponent: hard,oponente: difícil
 learner: easy,aprendiz: fácil
 learner: medium,aprendiz: médio
 learner: hard,aprendiz: difícil
+bandit: easy,bandit: fácil
+bandit: medium,bandit: médio
+bandit: hard,bandit: difícil
 ghost: exact,ghost: exato
 ghost: nearest,ghost: o mais próximo
 clone,clone
@@ -123,3 +126,7 @@ frame {frame},frame {frame}
 "  taking off, {frames} frame(s) left","  saltando, faltam {frames} frame(s)"
 "  landing, {frames} frame(s) left","  aterrissando, faltam {frames} frame(s)"
 trade,troca (os dois acertam)
+"its bandit for {situation} (UCB1, exploration {exploration}), {pulls} pull(s); # mean, + exploration:","seu bandit para {situation} (UCB1, exploração {exploration}), {pulls} tentativa(s); # média, + exploração:"
+"never tried, so tried first","nunca tentada, então vem primeiro"
+"{pulls} pull(s), mean {mean}, bound {bound}","{pulls} tentativa(s), média {mean}, limite {bound}"
+"  last paid: {option} after {situation}, {payoff}","  último pago: {option} depois de {situation}, {payoff}"

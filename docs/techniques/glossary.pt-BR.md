@@ -54,6 +54,8 @@ também em itálico, ficam como foram publicados.
 | *UCB1*, *UCT* | a fórmula que escolhe a próxima jogada a tentar -- a média mais um bônus para o que foi pouco tentado -- e a *MCTS* que a usa (*UCB applied to trees*) |
 | *playout* | uma partida jogada até o fim com jogadas aleatórias, para medir uma posição |
 | *anytime* | um algoritmo que pode ser parado a qualquer momento e já tem uma resposta, que melhora quanto mais ele roda |
+| *bandit* | quem escolhe entre opções fixas pelo que cada uma rendeu até agora, como um apostador entre caça-níqueis (*one-armed bandits*); cada opção é um braço (*arm*) |
+| *epsilon-greedy* | o *bandit* mais simples: quase sempre a opção de melhor média, e com chance *epsilon* uma qualquer, ao acaso |
 | *n-gram* | uma tabela do que veio depois de cada sequência curta de ações |
 | *prior*, *decay* | as contagens imaginárias com que toda ação começa, e o quanto uma contagem antiga pesa diante de uma nova |
 | *feature* | um número (ou uma palavra) medido do jogo que um modelo lê; os textos brasileiros de aprendizado de máquina dizem também "característica" ou "atributo", e o kit fica com *feature*, que é o nome no código |

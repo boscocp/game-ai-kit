@@ -1,0 +1,27 @@
+{
+ "description": "One arm: there is no choice, so no draw is spent and the arm is pulled every time.",
+ "policy": "epsilon-greedy",
+ "arms": 1,
+ "exploration": 1.4142135623730951,
+ "epsilon": 0.5,
+ "seed": 3,
+ "payoffs": [
+  [
+   0.5,
+   0.25
+  ]
+ ],
+ "chosen": [
+  0,
+  0,
+  0,
+  0,
+  0
+ ],
+ "pulls": [
+  5
+ ],
+ "sums": [
+  2.0
+ ]
+}

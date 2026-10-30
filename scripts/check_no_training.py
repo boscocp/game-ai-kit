@@ -32,10 +32,12 @@ stops. This gate is four claims about that split:
   * N8 no GDScript writes a file where the checkers weights live: the game
     reads them and only multiplies.
   * N9 nothing in `ai_opponent` writes a file, and no GDScript writes an
-    n-gram table anywhere. The one exception to this invariant (ADR 0016):
-    the opponent model counts during a fight, and is allowed to only because
-    its table starts empty, replays from the input log, and is never written
-    down -- a table that was saved would be a model fitted at game time;
+    n-gram table anywhere. One of this invariant's exceptions, which ADR
+    0016 names one by one -- this one, N13's bandit, and N14's player model
+    once T100 brings it: the opponent model counts during a fight, and is
+    allowed to only because its table starts empty, replays from the input
+    log, and is never written down -- a table that was saved would be a
+    model fitted at game time;
   * N10 the published cloned player (T18) is what `gameaikit.cloning`
     fits from the committed rows, and a fresh run still produces it. The
     rows themselves are cut by Godot from the recordings, and
@@ -48,6 +50,21 @@ stops. This gate is four claims about that split:
     trained at game time, and since the game loads the player once, it
     would outlive the fight -- what ADR 0016 allows the n-gram only because
     its table starts empty and is never kept;
+  * N13 the bandit (T99, ADR 0016 as amended on 2026-10-26): in every file
+    under `ai_bandit` and every GDScript that names `Bandit` or
+    `FightBanditOpponent` -- a script holding one by type -- no line writes
+    a file, a `ConfigFile` or a resource, and no `+=` or `-=` multiplies or
+    divides a difference. The bandit keeps pulls and payoff sums and
+    computes a mean when it is read; `x += rate * (target - x)` is a step
+    towards a target, and so is the incremental mean `mean += (payoff -
+    mean) / n`, which the amendment refuses because a gate cannot tell it
+    from a learning rate -- nor the step written out with its left side
+    read back, or `lerp`; and inside `ai_bandit`, no scaled `+=` at all,
+    which catches a difference named on the line before. A net for the common spellings, not
+    a proof; that the counts start empty and replay from the fight's log is
+    held by `fight_bandit_opponent_test.gd`, and that is the only thing that
+    would catch a `static var` keeping bandits from one fight to the next,
+    which writes no file and steps nothing;
   * N15 the maze's MDP (T98): the published values and policy in
     `godot/game/maze/` are what `gameaikit.mdp.publish` solves from the committed
     rules, a fresh run writing the same bytes; and no GDScript writes a
@@ -56,8 +73,8 @@ stops. This gate is four claims about that split:
     nothing updates the tables once read: in the maze game and in any
     script naming `MdpPacMan`, no line reads an indexed value back into
     itself (N3's net for an update step, there too), and no line outside
-    `_load_tables` assigns to `_values` or `_letters`. N13 and N14 are ADR
-    0016's, reserved for T99 and T100. A value updated at game time
+    `_load_tables` assigns to `_values` or `_letters`. N14 is ADR 0016's,
+    reserved for T100. A value updated at game time
     (Q-learning, any temporal-difference step) is refused by that ADR's
     amendment; this rule is a net for its common spellings, not a proof --
     an update through a renamed copy of the table passes it.
@@ -159,6 +176,34 @@ NGRAM_NAMES_RE = re.compile(r"ngram|n_gram|NGram", re.I)
 # any name, and the line that saves it need not say "ngram".
 TABLE_HOLDERS_RE = re.compile(r"\b(?:NGramPredictor|FightModelOpponent)\b")
 CHECKERS_NAMES_RE = re.compile(r"checkers_weights|CheckersWeights|game/checkers/")
+
+# The bandit (T99, N13): the second component ADR 0016 lets count during a
+# fight. Its addon, and any script that names its class or the fighting
+# game's opponent built on it, writes nothing at all -- as N9 holds the
+# n-gram's.
+BANDIT_ADDON = GODOT / "addons" / "ai_bandit"
+BANDIT_HOLDERS_RE = re.compile(r"\b(?:Bandit|FightBanditOpponent)\b")
+# A step towards a target: `+=` or `-=` whose right-hand side multiplies or
+# divides a difference in brackets -- `rate * (target - x)`, `(payoff -
+# mean) / n`, either way round. `pulls[arm] += 1` and `sums[arm] += payoff`
+# are counts, and pass. The difference is a word or a bracket, a minus, and
+# more, so `(-1)` is not one.
+DIFFERENCE = r"\([^()]*[\w)\]]\s*-\s*[^()]*\)"
+STEP_TOWARDS_RE = re.compile(rf"[-+]=.*(?:[*/]\s*{DIFFERENCE}|{DIFFERENCE}\s*[*/])")
+# The same step with the difference named on the line before -- `var delta
+# = payoff - mean`, then `mean += delta / n`: inside the bandit's addon,
+# nothing is added to or taken from a field scaled at all. Its counts grow
+# by one, and its sums by a payoff. Only there: a script that merely holds a
+# bandit adds `fight * 2` to a seed and takes `RANGE / 2` off a health, and
+# the rule would fire on good code.
+SCALED_ADD_RE = re.compile(r"[-+]=[^#]*[*/]")
+# The step written out: `mean = mean + (payoff - mean) / n`, the left side
+# read back on the right beside a difference multiplied or divided.
+SPELLED_STEP_RE = re.compile(rf"^\s*([A-Za-z_]\w*)\s*(?:\[[^\]]*\])*\s*=(?!=)(.*)$")
+STEP_SHAPE_RE = re.compile(rf"[*/]\s*{DIFFERENCE}|{DIFFERENCE}\s*[*/]")
+# And the engine's own step: `lerp(q[a], payoff, 0.1)` is `q[a] + 0.1 *
+# (payoff - q[a])`, and `move_toward` a step of fixed size.
+ENGINE_STEP_RE = re.compile(r"\b(?:lerp|lerpf|lerp_angle|move_toward)\s*\(")
 
 # The maze's MDP (T98): Python solves it and publishes two tables to
 # the maze game's folder, where `MdpPacMan` reads them. A line names
@@ -420,6 +465,7 @@ def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
         code = code_only("\n".join(raw)).splitlines()
         inside_addon = runs_inference(path, root)
         holds_a_table = is_under(path, root, OPPONENT_ADDON) or bool(TABLE_HOLDERS_RE.search("\n".join(code)))
+        holds_a_bandit = holds_bandit(path, root, code)
         # Both spellings of the line. The write is read off the stripped one,
         # because `# we never FileAccess.WRITE here` is a sentence; the path
         # is read off the raw one, because a path *is* a string literal and
@@ -434,6 +480,9 @@ def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
                     f"N2 {label} writes a file; the inference addon only reads")
             elif holds_a_table or NGRAM_NAMES_RE.search(line):
                 findings.append(f"N9 {label} writes an opponent model down; it counts during "
+                                "one fight and is never saved (ADR 0016)")
+            elif holds_a_bandit:
+                findings.append(f"N13 {label} writes a file beside a bandit; it counts during "
                                 "one fight and is never saved (ADR 0016)")
             elif CLONE_NAMES_RE.search(line):
                 findings.append(f"N11 {label} writes where the cloned player lives; the game only reads it")
@@ -460,6 +509,47 @@ def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
                 findings.append(
                     f"N3 {label} reads an indexed value back into itself; inside "
                     "the inference addon that is an update step whatever it is called")
+    return findings
+
+
+def holds_bandit(path: pathlib.Path, root: pathlib.Path, code: list[str]) -> bool:
+    """N13's targets: a file in the bandit's addon, or one that names its classes."""
+    return is_under(path, root, BANDIT_ADDON) or bool(BANDIT_HOLDERS_RE.search("\n".join(code)))
+
+
+def steps_towards(line: str, in_addon: bool) -> bool:
+    """True for a line, in the code view, that moves a value towards a target.
+
+    Four spellings: a compound step (`+= rate * (a - b)`), the step written
+    out with its left side read back (`x = x + (a - x) / n`), the engine's
+    `lerp` or `move_toward`, and -- inside the addon only -- any scaled
+    compound add (`+= delta / n`). Declarations are new names, and are not
+    steps.
+    """
+    if STEP_TOWARDS_RE.search(line) or ENGINE_STEP_RE.search(line):
+        return True
+    if in_addon and SCALED_ADD_RE.search(line):
+        return True
+    spelled = SPELLED_STEP_RE.match(line)
+    if not spelled or DECLARATION_RE.match(line):
+        return False
+    name, right = spelled.groups()
+    return bool(re.search(rf"\b{name}\b", right)) and bool(STEP_SHAPE_RE.search(right))
+
+
+def check_bandit_steps(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
+    """N13's second half: beside a bandit, nothing moves a value a step
+    towards a target -- a learning rate's step, or the incremental mean."""
+    findings = []
+    for path in gdscript_files(root):
+        code = code_only(path.read_text(encoding="utf-8")).splitlines()
+        if not holds_bandit(path, root, code):
+            continue
+        in_addon = is_under(path, root, BANDIT_ADDON)
+        for number, line in enumerate(code, start=1):
+            if steps_towards(line, in_addon):
+                findings.append(f"N13 {_label(path, repo)}:{number} moves a value a step towards a target; "
+                                "a bandit keeps pulls and sums, and computes a mean when it reads one (ADR 0016)")
     return findings
 
 
@@ -853,6 +943,7 @@ def run(repo: pathlib.Path, retrain: bool | set[str] = True) -> int:
     findings += check_bead_writes(repo / GODOT, repo)
     findings += check_case_writes(repo / GODOT, repo)
     findings += check_mdp_updates(repo / GODOT, repo)
+    findings += check_bandit_steps(repo / GODOT, repo)
     ran = {}
     for rule, refit in (("N4", check_weights), ("N6", check_beads),
                         ("N7", check_checkers_weights), ("N10", check_clone_weights),
@@ -1319,6 +1410,50 @@ def self_test() -> int:
         expect("the MDP's tables read in by their loader", quiet(build(root, "mdploads", dict(
             sound, **tables, **{reader: "static func _load_tables() -> void:\n\t_values.append(1.0)\n"
                               "\t_letters = \"r\"\n"}))), 3)
+        # Planted (N13): the bandit's counts saved from its addon, saved under
+        # another name from a script that holds one, and moved a step towards
+        # a target -- by a learning rate, and as an incremental mean; and
+        # counting, which is what it is allowed to do.
+        expect("a bandit that saves its counts", quiet(build(root, "banditsaves", dict(
+            sound, **{str(BANDIT_ADDON / "bandit.gd"):
+                      'var out: FileAccess = FileAccess.open("user://pulls.json", FileAccess.WRITE)\n'}))),
+            1, "N13")
+        expect("a bandit saved through a ConfigFile in its addon", quiet(build(root, "banditconfig", dict(
+            sound, **{str(BANDIT_ADDON / "keep.gd"): '\tvar config := ConfigFile.new()\n\tconfig.save("user://b.cfg")\n'}))),
+            1, "N13")
+        expect("the counts saved under another name by a script that holds a bandit", quiet(build(root, "banditheld", dict(
+            sound, **{str(GODOT / "game" / "fighting" / "keeper.gd"):
+                      'var gambler := FightBanditOpponent.new("medium", data)\n'
+                      'var out: FileAccess = FileAccess.open("user://answers.txt", FileAccess.WRITE)\n'}))),
+            1, "N13")
+        expect("a bandit saved as a resource", quiet(build(root, "banditresource", dict(
+            sound, **{str(GODOT / "game" / "keeper.gd"):
+                      'var arms := Bandit.new(3)\nfunc keep() -> void:\n\tResourceSaver.save(table, "user://t.tres")\n'}))),
+            1, "N13")
+        for spelling in ["\tvalues[arm] += rate * (payoff - values[arm])\n",
+                         "\t_value -= (_value - payoff) * 0.1\n",
+                         "\tmeans[arm] += (payoff - means[arm]) / pulls[arm]\n",
+                         "\tmean += (payoff - mean)/n\n",
+                         "\tmean = mean + (payoff - mean) / n\n",
+                         "\tq[arm] = lerp(q[arm], payoff, 0.1)\n",
+                         "\tvar delta: float = payoff - mean\n\tmean += delta / n\n"]:
+            expect(f"a bandit's value stepped: {spelling.strip()[:36]}", quiet(build(
+                root, "banditstep" + str(abs(hash(spelling))), dict(
+                    sound, **{str(BANDIT_ADDON / "bandit.gd"): "func reward(arm: int, payoff: float) -> void:\n" + spelling}))),
+                1, "N13")
+        expect("an incremental mean in a script that holds a bandit", quiet(build(root, "bandithelder", dict(
+            sound, **{str(GODOT / "game" / "fighting" / "fighter.gd"):
+                      "var gambler: FightBanditOpponent\nfunc paid(x: float) -> void:\n\t_mean += (x - _mean) / _count\n"}))),
+            1, "N13")
+        expect("a bandit counting pulls and summing payoffs", quiet(build(root, "banditcounts", dict(
+            sound, **{str(BANDIT_ADDON / "bandit.gd"):
+                      "func reward(arm: int, payoff: float) -> void:\n\tpulls[arm] += 1\n"
+                      "\tsums[arm] += clampf(payoff, 0.0, 1.0)\n\tvar lead: int = (after - before) * 2\n"
+                      "\tcounted += pulled\n"}))),
+            3)
+        expect("a step outside the bandit's files is not N13's", quiet(build(root, "notabandit", dict(
+            sound, **{str(GODOT / "game" / "steering.gd"): "\tposition += speed * (target - position)\n"}))),
+            3)
         expect("counting in the opponent addon", quiet(build(root, "opponentcounts", dict(
             sound, **{str(OPPONENT_ADDON / "ngram_predictor.gd"):
                       '\trow[action] = row.get(action, 0.0) + 1.0\n'}))), 3)

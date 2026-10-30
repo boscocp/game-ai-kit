@@ -334,6 +334,10 @@
       "en": "n-gram",
       "pt-BR": "*n-gram*"
     },
+    "bandit": {
+      "en": "a bandit, UCB1",
+      "pt-BR": "um *bandit*, *UCB1*"
+    },
     "case-lookup": {
       "en": "the ghost's case lookup",
       "pt-BR": "a consulta de casos do *ghost*"

@@ -31,6 +31,7 @@
     "rules": {"name": "hand-written rules", "evidence": ["RuleBasedBlue", "FightOpponent"]},
     "reaction-delay": {"name": "a reaction delay", "evidence": ["FightDelay"]},
     "n-gram": {"name": "an n-gram opponent model", "evidence": ["NGramPredictor"]},
+    "bandit": {"name": "a bandit, UCB1", "evidence": ["Bandit"]},
     "case-lookup": {"name": "a lookup of recorded situations (a ghost)", "evidence": ["CaseTable"]},
     "behaviour-cloning": {"name": "behaviour cloning", "evidence": ["ClonedPlayer"]},
     "priority-queue": {"name": "a priority queue of wishes, the shipped RTS economy", "evidence": ["EconomyQueue"]},
@@ -227,6 +228,7 @@
         {"technique": "rules", "part": "the fixed opponent's hand-written answers to the situations it recognises, at three levels"},
         {"technique": "reaction-delay", "part": "it sees the fight a quarter of a second late, as a person would"},
         {"technique": "n-gram", "part": "the learner counts your habits during the fight and leans towards the answer to them"},
+        {"technique": "bandit", "part": "the bandit keeps, for each situation, what each of its answers earned against you, and tries the one UCB1 ranks first"},
         {"technique": "case-lookup", "part": "the ghosts look up what a recorded player did in the same situation"},
         {"technique": "behaviour-cloning", "part": "the clone is a model fitted to that player's fights"}
       ],

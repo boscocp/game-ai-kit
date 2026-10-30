@@ -13,7 +13,8 @@
 ## what its mode says -- stand, guard standing, guard crouching, jab, throw or
 ## low kick every second, uppercut you out of the air, or fight back as the
 ## fixed opponent at one of its three levels, or as the learner, the same
-## levels with a table of your habits behind them -- and M cycles the mode: each
+## levels with a table of your habits behind them, or as the bandit, the same
+## levels learning which of their answers work against you (T99) -- and M cycles the mode: each
 ## guard has a height that gets through it. Three more modes imitate a
 ## recorded player (T18): two ghosts, which look up what the player did in
 ## the situation, and the clone, a model fitted to it. P pauses, and space then plays
@@ -35,10 +36,14 @@ extends Node2D
 
 const MODES: Array[String] = ["stand", "guard standing", "guard crouching", "jab", "throw", "low kick",  # shown through tr(): FightWords.word says each mode
 		"anti-air (sees you now)", "opponent: easy", "opponent: medium", "opponent: hard", "learner: easy",  # shown through tr(): FightWords.word says each mode
-		"learner: medium", "learner: hard", "ghost: exact", "ghost: nearest", "clone"]  # shown through tr(): FightWords.word says each mode
+		"learner: medium", "learner: hard", "bandit: easy", "bandit: medium", "bandit: hard",  # shown through tr(): FightWords.word says each mode
+		"ghost: exact", "ghost: nearest", "clone"]  # shown through tr(): FightWords.word says each mode
 const OPPONENT_MODE: String = "opponent: "
 ## The same levels with an n-gram behind them, learning you as you fight (T17).
 const LEARNER_MODE: String = "learner: "
+## The same levels with a bandit in each situation, learning which of their
+## answers pay against you (T99).
+const BANDIT_MODE: String = "bandit: "
 ## Punches on the top row and kicks below them, as an arcade panel has them.
 const KEYS: Dictionary = {KEY_A: FightInput.LEFT, KEY_D: FightInput.RIGHT, KEY_S: FightInput.DOWN, KEY_W: FightInput.UP,
 		KEY_U: FightInput.LIGHT_PUNCH, KEY_I: FightInput.HEAVY_PUNCH, KEY_J: FightInput.LIGHT_KICK,
@@ -167,8 +172,8 @@ func restart() -> void:
 	_refresh()
 
 
-# A fresh opponent for an "opponent" or "learner" mode -- a learner with an
-# empty table -- none for the others, its chances seeded by how many fights
+# A fresh opponent for an "opponent", "learner" or "bandit" mode -- a learner
+# with an empty table, a bandit with no bandits -- none for the others, its chances seeded by how many fights
 # have begun.
 func _seat_opponent() -> void:
 	opponent = null
@@ -179,6 +184,9 @@ func _seat_opponent() -> void:
 	elif dummy_mode.begins_with(LEARNER_MODE):
 		fights_begun += 1
 		opponent = FightModelOpponent.new(dummy_mode.trim_prefix(LEARNER_MODE), data, fights_begun)
+	elif dummy_mode.begins_with(BANDIT_MODE):
+		fights_begun += 1
+		opponent = FightBanditOpponent.new(dummy_mode.trim_prefix(BANDIT_MODE), data, fights_begun)
 	elif dummy_mode in FightCloneOpponent.SOURCES:
 		fights_begun += 1
 		opponent = FightCloneOpponent.new(dummy_mode, cloned, data, fights_begun)
@@ -256,7 +264,20 @@ func opponent_overlay() -> Dictionary:
 	var imitator := opponent as FightCloneOpponent
 	if imitator != null:
 		shown.merge(_clone_overlay(imitator))
+	var gambler := opponent as FightBanditOpponent
+	if gambler != null:
+		shown.merge(_bandit_overlay(gambler))
 	return shown
+
+
+# The bandit of the situation it last named, as it stood when it chose:
+# each option's pulls, mean payoff and UCB1 bound, the one it chose, and the
+# last option paid.
+func _bandit_overlay(gambler: FightBanditOpponent) -> Dictionary:
+	if gambler.chosen_from.is_empty():
+		return {"arms": "nothing chosen yet", "chosen_arm": -1, "last_paid": "nothing paid yet"}  # not shown
+	return {"arms": gambler.chosen_from, "chosen_arm": gambler.chosen_arm,
+			"last_paid": gambler.last_paid if not gambler.last_paid.is_empty() else "nothing paid yet"}  # not shown
 
 
 # Whom it imitates, the situation it saw in the recordings' words, where its

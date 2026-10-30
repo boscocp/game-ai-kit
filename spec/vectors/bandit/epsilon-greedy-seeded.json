@@ -1,0 +1,75 @@
+{
+ "description": "Epsilon-greedy at 1/4, seed 7: one uniform draw a pull once every arm is tried, and below epsilon a second draw picks any arm, the best included.",
+ "policy": "epsilon-greedy",
+ "arms": 3,
+ "exploration": 1.4142135623730951,
+ "epsilon": 0.25,
+ "seed": 7,
+ "payoffs": [
+  [
+   0.25,
+   0.5
+  ],
+  [
+   0.75,
+   0.5,
+   1.0
+  ],
+  [
+   0.5,
+   0.0
+  ]
+ ],
+ "chosen": [
+  0,
+  1,
+  2,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  2,
+  0,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  2,
+  1,
+  1,
+  0,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1
+ ],
+ "pulls": [
+  3,
+  34,
+  3
+ ],
+ "sums": [
+  1.0,
+  25.5,
+  1.0
+ ]
+}
