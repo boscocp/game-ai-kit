@@ -13,6 +13,7 @@
 extends SceneTree
 
 const StagedRaid := preload("res://test/rts/staged_raid.gd")
+const RtsMatchCheck := preload("res://test/rts/rts_match.gd")
 const SEEDS: int = 10
 
 
@@ -34,9 +35,13 @@ func _init() -> void:
 		func(side: int, seed_value: int) -> RtsSide: return RtsCommander.new(side, normal, seed_value, BuildOrder.Planner.HTN))
 	_levels()
 	_arming_ablated()
-	_pairing("the queues vs the queues: the seat's bias, west first",
+	var by_seat: Dictionary = _pairing("the queues vs the queues: the seat's bias, west first",
 		func(side: int, seed_value: int) -> RtsSide: return QueueSide.new(side, normal, seed_value),
 		func(side: int, seed_value: int) -> RtsSide: return QueueSide.new(side, normal, seed_value), true)
+	var bias: String = RtsMatchCheck.seat_bias({"west": by_seat["first"], "east": by_seat["second"],
+		"draw": by_seat["draw"]})
+	print("the seat's bias: %s" % ("within the bound test-rts-match holds, %d%%" % roundi(
+		RtsMatchCheck.SEAT_SHARE * 100.0) if bias == "" else bias))
 	_planners_on_the_same_questions()
 	quit(0)
 
@@ -139,8 +144,9 @@ func _questions_asked(seed_value: int) -> Array[Array]:
 
 
 # `first` against `second`, both seats each, over SEEDS; prints the record
-# and how the matches ended. With `by_seat`, counts wins by seat instead.
-func _pairing(label: String, first: Callable, second: Callable, by_seat: bool = false) -> void:
+# and how the matches ended, and returns the record {first, second, draw}.
+# With `by_seat`, counts wins by seat instead, west as "first".
+func _pairing(label: String, first: Callable, second: Callable, by_seat: bool = false) -> Dictionary:
 	var record: Dictionary = {"first": 0, "second": 0, "draw": 0}
 	var lengths: Array[int] = []
 	var plan_micros: Array[int] = []
@@ -166,6 +172,7 @@ func _pairing(label: String, first: Callable, second: Callable, by_seat: bool = 
 	print("%s: %d - %d, %d drawn; match length median %d s (%d to %d)%s; towers armed %d - %d" % [label,
 		record["first"], record["second"], record["draw"], lengths[lengths.size() / 2], lengths[0], lengths[-1],
 		plans, armed[0], armed[1]])
+	return record
 
 
 # One match to its end: {winner, seconds, plans (every planning call's us),
