@@ -64,8 +64,9 @@ A row per demo, a column per technique; each mark links the technique's page, an
   - techniques: ● [ai_steering](ai_steering.md) (PID controller, heat line); ● [The racing driver](racing_driver.md) (speed profile, pure pursuit).
   - written inside the example itself: measured grip.
 - <a id="demo-infiltration"></a>**Infiltration**, `make demo-infiltration` -- like Metal Gear Solid, in third person.
-  - keys: 1-5 switch each part of the guards' reasoning; Tab follows the next guard.
+  - keys: 1-6 switch each part of the guards' reasoning and the director; Tab follows the next guard.
   - techniques: ● [ai_fuzzy](ai_fuzzy.md) (fuzzy logic); ● [ai_perception](ai_perception.md) (vision shape with light and hearing, awareness, belief map); ● [ai_search](ai_search.md) (A*); ● [ai_teamwork](ai_teamwork.md) (a shared search, role arbiter); ● [ai_utility](ai_utility.md) (utility-weighed actions).
+  - written inside the example itself: a director pacing the threats by intensity.
 - <a id="demo-botmatch"></a>**Bot match**, `make demo-botmatch` -- like a bot match in Unreal Tournament or Counter-Strike.
   - keys: 1-3 blue's claims, commander and retreat; Tab a bot; T take it over; M the map.
   - techniques: ● [ai_perception](ai_perception.md); ● [ai_search](ai_search.md) (A*); ● [ai_teamwork](ai_teamwork.md) (tactical positions with claims, team commander over influence, squad confidence and retreat in waves); ● [ai_utility](ai_utility.md) (utility-weighed actions).

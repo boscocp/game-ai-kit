@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-29
+verified_on: 2026-10-30
 tier: 2
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: the guards' actions, the guard types, the rules or the levels change, and infiltration_properties.gd prints different numbers
@@ -52,7 +52,8 @@ capture it, Esc to free it). C crouches, Z lies prone, Shift sprints
 (upright only). G throws a distraction where the crosshair points; E takes
 down a guard from behind when the corner says you can; a click shoots.
 1 cycles the belief -- off, the grid, the particles -- 2-4 switch the
-coordinator, the arbiter and the accumulator; 5 the off-screen halving. Tab watches the next guard, H hides the reasoning,
+coordinator, the arbiter and the accumulator; 5 the off-screen halving; 6 the director (T90, below:
+the level starts again, with its reserve). Tab watches the next guard, H hides the reasoning,
 L the next level (two hand-made, then generated), N again, P pauses, Space
 one decision while paused.
 
@@ -244,6 +245,86 @@ The measurement's own claim -- at least 20 runs in each mode, and the
 particles change some run -- is caught by its planted case, the particles
 on with the search wired to the grid (`TrackingClaims.wired_to_nothing`).
 
+## The director (T90)
+
+Key 6 turns on a director after Left 4 Dead's ([the stealth AI page](../concepts/stealth-ai.md#pacing-a-director-over-the-guards-t90)
+says where it comes from). Off, the level is exactly T70's. On, the
+level's **reserve** -- two more patrols per level, waiting at posts the
+start cannot see (`"reserve"` in each level file; the generator draws two
+from a generator of its own, so a seed's level is unchanged) -- stands
+among the guards, and after every step:
+
+- `DirectorEvents` lists what happened to you: a guard's phase rising
+  (`seen` or `heard`), damage (`hurt`), a guard searching within 10 m
+  (`search_near`), a guard chasing -- alert and seeing you -- starting or
+  stopping (`chase`), your walk to the exit (`exit`);
+- `Director` -- the machine, the same as `gameaikit.director.pacing`, held
+  to it by `make test-director-vectors` -- turns them into your intensity
+  and its phase: building up, holding the peak, fading, relaxing;
+- `DirectorOrders` sends a calm reserve guard the player cannot see on its
+  beat while building up or holding the peak, and calls a calm one back to
+  its post while fading or relaxing, one every 5 s at most. It writes a
+  route into the guard and nothing else.
+
+On screen, with the reasoning shown: the strip under the map draws the
+last minute of your intensity against the peak line (red) and the fade
+line (blue), the phase by name and how many reserve guards are out, and a
+yellow mark for each patrol sent and a grey one for each called back; the
+map draws a line from where you stood to where that patrol starts.
+
+**Measured** (`make measure-director`, 2026-10-30): three scripted players
+-- T70's hiding and quiet ones, and one that lies still at the start and
+throws a distraction towards the exit every 45 s -- on the two hand-made
+levels and eleven generated ones, five minutes at most each, 39 runs:
+
+| | seconds |
+|---|---|
+| building up | 2165.4 |
+| holding the peak | 119.3 |
+| fading | 733.9 |
+| relaxing | 86.4 |
+
+33 peaks, 3 relaxes, 71 patrols sent, 4 called back. **The relax is
+rare, and the measurement says why**: most runs end within 40 s, the
+player caught or out, before a fade can finish; and on two generated
+levels the hiding player ends in a stand-off, guards alert and seeing it
+for minutes without closing in, which Booth's rule reads as engagement and
+so never lets the intensity fall (`peak_fade` 290 s). The one run with the
+whole cycle is the distracting player on generated level 10, never found:
+three peaks, three relaxes, four patrols sent and four called back -- and
+`director_test.gd` holds that run, said as such, so the cycle is held on
+the game and not only on the vectors.
+
+The other claims: with the director off the guards are the level's own;
+the generator, with the reserve erased, writes for seeds 1-11 the same
+levels it wrote before the reserve existed (fingerprints taken from main
+at b6b86d1), and a generated reserve takes no guard's place, no exit and
+no other reserve cell; every reserve post is out of the start's sight and
+every reserve place walkable. Across the hiding and distracting players'
+runs on all five levels, each with a planted director it must catch:
+
+- no guard's belief or memory changes when the director acts -- a
+  director that also collapses the sent guard's belief onto the player is
+  caught;
+- every route it gives is the guard's own beat, and a recall leaves none
+  -- a director that routes the guard to the player's place, changing no
+  belief at all, is caught;
+- no patrol is sent in the player's view -- a director that sends the
+  waiting reserve guard nearest the player, seen or not, is caught.
+
+Booth's slides were not read again for this wave, as the task's first
+step asked: the director is built from the passages T73 quoted from them.
+
+The director's numbers are the kit's own (`spec/director/director.json`):
+sight 0.25 and hearing 0.2 a phase, 0.01 a point of damage, 0.02 a second
+for a search within 2 m and less further off, decay 0.04 a second, peak
+0.7, fade below 0.35, sustain 4 s (Booth: 3-5), relax 30 s (Booth: 30-45)
+or 15 m nearer the exit, an order every 5 s. Two were changed by
+measuring: a search at first added 0.15 a second, more than the decay
+takes, and pinned the intensity at its top while a guard searched beside
+a hidden player; hearing at first added 0.1, and a distraction heard by
+three guards never reached the peak.
+
 ## The kit's own numbers
 
 Sourced: the player's walk and sprint speeds (the bot match's), and, from
@@ -289,4 +370,8 @@ fair. And `tasks/T91-a-particle-filter-tracks-the-player.md`: with the
 particles on (1) and the reasoning shown (H), break line of sight and hide
 -- does the cloud follow where you could have gone, thin where a guard
 looks, drift from where it listened and heard nothing, and is the guard's
-purple cross inside it?
+purple cross inside it? And `tasks/T90-a-director-paces-the-infiltration.md`:
+with the director on (6) and the reasoning shown, play twice on one seed
+and once on a generated level -- do the quiet stretches and the pressure
+match the strip, and does a new patrol ever appear where you could see it
+arrive?

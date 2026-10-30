@@ -1,0 +1,19 @@
+{
+  "about": "The infiltration level's director (T90), after Booth's Left 4 Dead director [Booth 2009, 'Adaptive Dramatic Pacing']: one number, the player's intensity, raised by what happens to the player and decaying towards zero, and four phases read from it. Stepped every `step_seconds`; within a step, the step's events first, then the decay, then the clamp to [0, `most`], then the phase. The events and what each adds: `seen` and `heard`, a guard's awareness of the player rising a phase, by sight or by sound (whichever awareness is higher), add `raise.seen` or `raise.heard`; `hurt` adds `raise.hurt_per_point` for each of its `points` of damage the player took (Booth: 'proportional to damage taken'); `search_near` is one guard searching at `distance` metres this step, and adds `raise.search_near` x `step_seconds` x min(1, `search.full_within` / distance), nothing beyond `search.radius` (Booth: 'inversely proportional to distance'); `chase` with `on` true stops the decay until one with `on` false -- a guard is chasing (Booth: no decay while infected are engaging the survivor); `exit` gives the player's walk to the exit, in `metres`. The decay takes `decay_per_second` x `step_seconds` a step, and never below zero. The phases, in order: `build_up` until the intensity reaches `peak`; `sustain_peak` for `sustain_seconds` (Booth: 3-5 s); `peak_fade` until the intensity is below `fade_below`; `relax` for `relax_seconds` (Booth: 30-45 s) or until the player is `relax_travel` metres nearer the exit than when it began, then `build_up` again. A phase's seconds are counted in whole steps, round(seconds / step_seconds), so Python and Godot count alike. Outside the machine, for the game: in `build_up` and `sustain_peak` the director wants every reserve guard on patrol, in `peak_fade` and `relax` none, and it sends or recalls at most one every `act_every` seconds. Every number is the kit's own, chosen by measuring the infiltration level (docs/godot/infiltration.md), except where Booth is quoted. Read by Python from this file and by Godot from a byte-for-byte copy beside the game (godot/game3d/infiltration/director.json); a test holds the copy to this one.",
+  "step_seconds": 0.1,
+  "most": 1.0,
+  "raise": {
+    "seen": 0.25,
+    "heard": 0.2,
+    "hurt_per_point": 0.01,
+    "search_near": 0.02
+  },
+  "search": {"radius": 10.0, "full_within": 2.0},
+  "decay_per_second": 0.04,
+  "peak": 0.7,
+  "sustain_seconds": 4.0,
+  "fade_below": 0.35,
+  "relax_seconds": 30.0,
+  "relax_travel": 15.0,
+  "act_every": 5.0
+}

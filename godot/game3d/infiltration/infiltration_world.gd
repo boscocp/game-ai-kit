@@ -18,6 +18,10 @@
 ## A step is linear in the guards, plus a flood per sound and a ray per
 ## cell in reach for each guard's belief.
 ##
+## With the director on (T90), the level's reserve guards stand among the
+## others, and after every step `DirectorOrders` reads what happened to the
+## player and may send one on patrol or call one back.
+##
 ## When not to use it: as the view. Drawing is `InfiltrationDrawing`'s.
 class_name InfiltrationWorld
 extends RefCounted
@@ -39,6 +43,8 @@ var shots: Array[Dictionary] = []
 var bodies: Array[Vector2] = []
 ## "", "escaped" or "caught".
 var outcome: String = ""
+## The director, with the rules' `use_director` on; null, off.
+var director: DirectorOrders = null
 ## The seams the properties plant in; see the header.
 var coordinator: Callable = SearchCoordinator.assign
 var arbiter: Callable = func(requests: Array[Dictionary], use: bool) -> PackedStringArray: return RoleArbiter.grant(requests, use)
@@ -61,10 +67,16 @@ static func make(on_level: InfiltrationLevel, with_rules: InfiltrationRules, see
 	var types: Dictionary[String, GuardType] = GuardType.all_in(data)
 	world.sounds = LevelSounds.new(StimulusTable.new(data["events"]))
 	world.player = InfiltrationPlayer.new(on_level.start, with_rules)
-	for spec: Dictionary in (specs if not specs.is_empty() else on_level.guard_specs):
+	var placed: Array[Dictionary] = specs if not specs.is_empty() else on_level.guard_specs
+	if with_rules.use_director and specs.is_empty():
+		placed = placed.duplicate()
+		placed.append_array(on_level.reserve_specs)
+	for spec: Dictionary in placed:
 		world.guards.append(InfiltrationGuard.new(world.guards.size(), types[spec["type"]], spec, on_level.neighbours, with_rules,
 			seed_value * 7919 + world.guards.size()))
 	world.team = GuardTeam.new(on_level, with_rules)
+	if with_rules.use_director:
+		world.director = DirectorOrders.new(world)
 	return world
 
 
@@ -93,6 +105,8 @@ func step(intent: PlayerIntent) -> void:
 		if guard.alive():
 			act.call(guard, self, seconds)
 			_finish_call(guard)
+	if director != null:
+		director.step(self)
 	_end_when_over()
 
 

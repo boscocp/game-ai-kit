@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-29
+verified_on: 2026-10-30
 tier: 0
 source: book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 ; book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020
 invalidated_if: a technique page in pt-BR translates a term this list says stays in English, or a new technique brings a term missing here
@@ -38,6 +38,7 @@ também em itálico, ficam como foram publicados.
 | PID | controlador proporcional, integral e derivativo |
 | *behaviour tree* | árvore de comportamento; fica em inglês porque é assim que a indústria fala |
 | *state machine* (máquina de estados) | traduzido: o termo em português é o de uso comum |
+| *director* (diretor) | a parte do jogo que dosa a pressão sobre o jogador pela intensidade do que ele viveu, como o *AI Director* de Left 4 Dead; traduzido, pois "diretor" é a palavra da demo de infiltração |
 | GOAP | *Goal-Oriented Action Planning*, o planejador do F.E.A.R. |
 | HTN | *Hierarchical Task Network*, rede hierárquica de tarefas |
 | STRIPS | o planejador clássico, de Fikes e Nilsson |

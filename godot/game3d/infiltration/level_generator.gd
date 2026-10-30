@@ -9,6 +9,11 @@
 ## post from the start too; otherwise the next draw is tried. The data is
 ## `InfiltrationLevel`'s shape, so the same reader builds it.
 ##
+## The director's reserve (T90) is drawn last, from a generator of its own,
+## so a seed gives the same level it gave before the reserve existed: two
+## posts on cells the start can walk to and cannot see, as clear of the
+## start as the guards, each with a beat of two cells it can walk to.
+##
 ## Linear in the cells per draw, for the flood that checks it.
 ##
 ## When not to use it: as a level to enjoy. It is varied, not designed.
@@ -20,6 +25,12 @@ const TRIES: int = 40
 ## out of every guard's sight, as a designer would place them.
 const CLEAR_OF_START: int = 12
 const HEIGHTS: Array[float] = [1.1, 2.5, 2.5]
+## The director's reserve: how many, and what its generator's seed adds.
+const RESERVE: int = 2
+const RESERVE_SALT: int = 4099
+## A standing body's eyes and a guard's, both 1.6 m: how high the line from
+## the start to a reserve post runs.
+const EYES: float = 1.6
 
 
 ## A playable level's data from `seed_value`, or {} when TRIES draws made none.
@@ -29,6 +40,7 @@ static func make(seed_value: int) -> Dictionary:
 	for attempt: int in range(TRIES):
 		var data: Dictionary = _draw(rng)
 		if _playable(data):
+			data["reserve"] = _reserve(seed_value, data)
 			return data
 	return {}
 
@@ -89,6 +101,57 @@ static func _guards(rng: RandomNumberGenerator, data: Dictionary) -> Array:
 	var post: Vector2i = free[rng.randi_range(0, free.size() - 1)]
 	guards.append({"type": "sentry", "post": [post.x + 0.5, post.y + 0.5], "facing": rng.randf_range(-90.0, 90.0)})  # not shown: an identifier
 	return guards
+
+
+# Two reserve guards, each a post the start cannot see and a beat of two
+# cells, all of them clear of the start, walkable from it, and distinct:
+# from each other, from the level's guards' places and from the exit.
+static func _reserve(seed_value: int, data: Dictionary) -> Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value * 7919 + RESERVE_SALT
+	var arena := BotArena.new(InfiltrationLevel.BODY_RADIUS, data)
+	var from_start: PackedInt32Array = arena.steps_from([_start_cell(data)])
+	var free: Array[Vector2i] = []
+	for cell: Vector2i in InfiltrationLevel.every_cell(arena):
+		if cell.x >= CLEAR_OF_START and from_start[cell.y * int(arena.width) + cell.x] >= 0:
+			free.append(cell)
+	var eyes: Vector3 = arena.above(BotArena.centre_of(_start_cell(data)), EYES)
+	var hidden: Array[Vector2i] = free.filter(func(cell: Vector2i) -> bool:
+		return arena.first_block(eyes, arena.above(BotArena.centre_of(cell), EYES)) < 1.0)
+	var taken: Array[Vector2i] = _places_taken(data)
+	var reserve: Array = []
+	for guard: int in range(RESERVE):
+		var post: Vector2i = _draw_free(rng, hidden, taken)
+		var beat: Array = [_draw_free(rng, free, taken), _draw_free(rng, free, taken)]
+		if post.x < 0 or beat.has(Vector2i(-1, -1)):
+			return reserve
+		var places: Array = beat.map(func(cell: Vector2i) -> Array: return [cell.x + 0.5, cell.y + 0.5])
+		reserve.append({"post": [post.x + 0.5, post.y + 0.5], "facing": rng.randf_range(-180.0, 180.0), "beat": places})
+	return reserve
+
+
+# A cell of `cells` not yet `taken`, drawn and then taken; (-1, -1) when
+# every one is.
+static func _draw_free(rng: RandomNumberGenerator, cells: Array[Vector2i], taken: Array[Vector2i]) -> Vector2i:
+	var left: Array[Vector2i] = cells.filter(func(cell: Vector2i) -> bool: return not taken.has(cell))
+	if left.is_empty():
+		return Vector2i(-1, -1)
+	var drawn: Vector2i = left[rng.randi_range(0, left.size() - 1)]
+	taken.append(drawn)
+	return drawn
+
+
+# The exit's cell and every cell a level guard stands on or walks to.
+static func _places_taken(data: Dictionary) -> Array[Vector2i]:
+	var taken: Array[Vector2i] = [BotArena.cell_of(Vector2(data["exit"][0], data["exit"][1]))]
+	for guard: Dictionary in data["guards"]:
+		for pair: Array in guard.get("route", []) + ([guard["post"]] if guard.has("post") else []):
+			taken.append(BotArena.cell_of(Vector2(pair[0], pair[1])))
+	return taken
+
+
+static func _start_cell(data: Dictionary) -> Vector2i:
+	return BotArena.cell_of(Vector2(data["spawns"]["player"][0][0], data["spawns"]["player"][0][1]))
 
 
 # The exit and every guard's places can be walked to from the start.

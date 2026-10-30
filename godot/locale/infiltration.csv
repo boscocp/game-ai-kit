@@ -19,7 +19,7 @@ health {health}   {stance} sprinting,vida {health}   {stance} correndo
 health {health}   {stance},vida {health}   {stance}
   eye: {why},  olho: {why}
 nothing,nada
-"1 belief {belief}, 2 coordinator {coordinator}, 3 arbiter {arbiter}, 4 accumulator {accumulator}, 5 off-screen halving {halving}","1 crença {belief}, 2 coordenador {coordinator}, 3 árbitro {arbiter}, 4 acumulador {accumulator}, 5 metade fora da tela {halving}"
+"1 belief {belief}, 2 coordinator {coordinator}, 3 arbiter {arbiter}, 4 accumulator {accumulator}, 5 off-screen halving {halving}, 6 director {director}","1 crença {belief}, 2 coordenador {coordinator}, 3 árbitro {arbiter}, 4 acumulador {accumulator}, 5 metade fora da tela {halving}, 6 diretor {director}"
 on,ligado
 OFF,DESLIGADO
 grid,grade
@@ -70,3 +70,8 @@ a sprint,uma corrida
 the warehouse,o armazém
 the courtyard,o pátio
 outside every zone,fora de todas as zonas
+"director: {phase}, intensity {intensity}, {out} of {reserve} on patrol","diretor: {phase}, intensidade {intensity}, {out} de {reserve} em patrulha"
+building up,crescendo
+holding the peak,sustentando o pico
+fading,diminuindo
+relaxing,relaxando

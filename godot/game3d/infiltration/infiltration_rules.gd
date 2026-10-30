@@ -49,6 +49,11 @@ var use_particles: bool = false
 var use_coordinator: bool = true
 var use_arbiter: bool = true
 var use_accumulator: bool = true
+## The director (T90): off, the level is as T70 made it; on, the level's
+## reserve guards stand at their posts and `Director` paces the run by
+## sending them on patrol and calling them back. Turning it rebuilds the
+## world, since the reserve is there only with it on.
+var use_director: bool = false
 
 
 ## The rules in `path`.
