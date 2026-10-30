@@ -210,11 +210,17 @@ gated.
 A person always plays west, so a seat that wins more would be a thumb on
 the scale nobody sees. `make test-rts-match` now plays the queues against
 themselves over six seeds, each twice with the two sides' dice swapped
-between the seats, and fails when one seat wins more than 70% of the
-matches somebody won (claim 6, with a planted 10 - 2 it must refuse).
-`make rts-measure` plays ten seeds and prints its record against the same
-bound. Two fair seats go over it on 12 matches about one time in seven, on
-20 about one in twenty-five; T20's 15 - 5 is over it.
+between the seats (claim 6). It fails when two fair seats would split the
+decided matches that unevenly less than one time in twenty -- an exact
+two-sided binomial test -- or when fewer than six were decided; planted
+records of 10 - 2 either way and of twelve draws must be refused first.
+On 12 matches it trips at 10 - 2 (p = 0.039); on 20 at 15 - 5 (0.041),
+T20's record before its review. Twelve matches cannot see a 60/40 seat.
+`make rts-measure` plays the same mirror over ten seeds, so claim 6's
+twelve matches are the first twelve of its twenty, and judges them with
+the same function. A fixed 70% share was tried first; on 12 matches two
+fair seats crossed it one time in seven, and every change to the RTS
+deals the matches again, so it would have gone red by chance.
 
 Each suspect the task named was tested on its own, the queues against
 themselves over seeds 1 to 40 from both seats (80 matches each; a fair
@@ -246,13 +252,19 @@ changes the core's rules.
 cancel. Over 560 matches of the runs above, a match ended by a base
 falling went to west 158 - 77, and one ended by the clock, on worth, to
 east 201 - 122. With the three fixes, over seeds 41 to 100, it is still
-30 - 9 and 25 - 55. None of the suspects is the cause; one still
-untested is that a region is scored and walked to at its cell's corner
-(`Vector2(cell)`), which is not the corner turned half round. The gate
-holds the wins, which is what a player meets; the split is open.
+30 - 9 and 25 - 55. None of the suspects is the cause. Two leads are
+left for a task of their own. The sharper, found in review: the bridge's
+region, (24, 15), is the only neutral region that is not its own turn --
+that is (23, 16), and on a 48 x 32 map no cell is -- so east's home is
+about 1.4 cells nearer it (20.6 against 22.0), and `SquadTactics.scores`
+divides by distance; claim 1 checks `MAP`, not `REGIONS`. The other: a
+region is scored and walked to at its cell's corner (`Vector2(cell)`),
+which is not the corner turned half round. The gate holds the wins,
+which is what a player meets; the split is open.
 
 `make rts-measure` on wave 116's branch, 2026-10-30: the queues against
-themselves 13 - 7 by seat, inside the bound; claim 6's six seeds 7 - 5.
+themselves 13 - 7 by seat (p = 0.263), inside the bound; claim 6's six
+seeds 7 - 5.
 The other records, after the new tie-break: commander against the queues
 19 - 1, normal against easy 18 - 2, may arm against never 9 - 11, and
 STRIPS against the HTN 6 - 14 where it was 12 - 8 -- 20 matches tell

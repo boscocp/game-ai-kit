@@ -253,9 +253,10 @@ func _cells_in_use(view: RtsSnapshot) -> Dictionary:
 	return taken
 
 
-# The cells exactly `ring` steps from `centre`, a row at a time, the row
-# towards the enemy first: the same dice pick the mirrored cell for either
-# seat (`RtsScenario.as_seen_by`, T57).
+# The cells exactly `ring` steps from `centre`, a row at a time in `side`'s
+# own order -- west's from the top-left, east's from the bottom-right -- so
+# the same dice pick the mirrored cell for either seat
+# (`RtsScenario.as_seen_by`, T57).
 static func _ring_cells(centre: Vector2i, ring: int, side: int) -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
 	var across: int = 2 * ring + 1

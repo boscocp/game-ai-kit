@@ -11,6 +11,9 @@
 ## heap -- because cell costs here are small whole numbers, and it is built in
 ## slices (`settle`) so a frame budget can spread it over several ticks.
 ## O(cells x the dearest cell) to build, O(1) per unit per tick to follow.
+## Where two arrows are equally good, a step north or south is taken first
+## (`_wins_tie`): fair to both seats of a map that is its own half-turn, but
+## not of one mirrored left to right, nor to four seats turned a quarter.
 ##
 ## When not to use it: few units with many different goals. Then each field
 ## is built for one reader, and A* from `ai_search`, which stops when it
