@@ -124,6 +124,15 @@ static func enemy_of(side: int) -> int:
 	return EAST if side == WEST else WEST
 
 
+## `offset` as `side` sees it: west's as it is, east's turned half round,
+## the way the map is turned. A scan through offsets taken this way is a
+## mirror image for the two sides, so a tie it breaks -- the first fit cell
+## of a ring -- favours neither seat (T57). Up and to the left for west is
+## down and to the right for east: towards the enemy for both.
+static func as_seen_by(side: int, offset: Vector2i) -> Vector2i:
+	return offset if side == WEST else -offset
+
+
 # Every cell of the map, row by row.
 static func _cells() -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []

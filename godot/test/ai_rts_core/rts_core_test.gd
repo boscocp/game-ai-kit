@@ -39,6 +39,23 @@ func test_a_flow_field_leads_round_a_wall_to_its_goal() -> void:
 	assert_vector(cell).is_equal(Vector2i(4, 0))
 
 
+func test_a_flow_field_to_a_goal_turned_half_round_is_the_field_turned() -> void:
+	# An open board: every cell off the goal's row and column has two equal
+	# steps, so every arrow there is a tie broken. Taking DIRECTIONS in
+	# order chose north over west, and turned that is south over east --
+	# but it chose east over south (T57).
+	var graph := GakGridGraph.new(7, 7)
+	var field := FlowField.new(graph, Vector2i(1, 2))
+	var turned := FlowField.new(graph, Vector2i(5, 4))
+	field.settle(1000)
+	turned.settle(1000)
+	for index: int in range(49):
+		var cell := Vector2i(index % 7, index / 7)
+		var partner := Vector2i(6, 6) - cell
+		assert_vector(turned.direction_at(partner)).override_failure_message(
+			"the arrow at %s is not the arrow at %s turned" % [partner, cell]).is_equal(-field.direction_at(cell))
+
+
 func test_a_flow_field_settles_in_slices_and_says_when_it_is_done() -> void:
 	var field := FlowField.new(GakGridGraph.new(10, 10), Vector2i(0, 0))
 	assert_bool(field.settle(10)).is_false()
@@ -391,7 +408,9 @@ func test_an_idle_fighter_struck_turns_on_its_striker_and_a_moving_one_does_not(
 	var mortar: RtsUnit = world.add_unit(RtsKinds.MORTAR, 1, Vector2i(7, 3))
 	world.place(idle, Vector2(2.5, 3.5))
 	world.place(walking, Vector2(2.5, 4.0))
-	world.command(0, RtsCommand.move([walking.id] as Array[int], Vector2i(28, 7)))
+	# Along its own row, so no tie in the field turns it out of the mortar's
+	# reach before the blow (T57's tie-break steps south first).
+	world.command(0, RtsCommand.move([walking.id] as Array[int], Vector2i(28, 4)))
 	world.command(1, RtsCommand.attack([mortar.id] as Array[int], idle.id))
 	for _tick: int in range(5):
 		world.step()

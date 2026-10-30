@@ -209,7 +209,7 @@ func site_for(view: RtsSnapshot, what: String) -> Vector2i:
 # A fit cell `ring` steps from home, the search started at a cell the dice
 # choose so buildings spread round the base rather than piling on one side.
 func _site_on_ring(view: RtsSnapshot, ring: int, taken: Dictionary) -> Vector2i:
-	var cells: Array[Vector2i] = _ring_cells(RtsScenario.home(_side), ring)
+	var cells: Array[Vector2i] = _ring_cells(RtsScenario.home(_side), ring, _side)
 	var start: int = _dice.randi_range(0, cells.size() - 1)
 	for offset: int in range(cells.size()):
 		var cell: Vector2i = cells[(start + offset) % cells.size()]
@@ -253,14 +253,16 @@ func _cells_in_use(view: RtsSnapshot) -> Dictionary:
 	return taken
 
 
-# The cells exactly `ring` steps from `centre`, a row at a time, top first.
-static func _ring_cells(centre: Vector2i, ring: int) -> Array[Vector2i]:
+# The cells exactly `ring` steps from `centre`, a row at a time, the row
+# towards the enemy first: the same dice pick the mirrored cell for either
+# seat (`RtsScenario.as_seen_by`, T57).
+static func _ring_cells(centre: Vector2i, ring: int, side: int) -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
 	var across: int = 2 * ring + 1
 	for index: int in range(across * across):
 		var offset := Vector2i(index % across - ring, index / across - ring)
 		if maxi(absi(offset.x), absi(offset.y)) == ring:
-			cells.append(centre + offset)
+			cells.append(centre + RtsScenario.as_seen_by(side, offset))
 	return cells
 
 

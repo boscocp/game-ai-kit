@@ -149,18 +149,20 @@ func _walk_to(view: RtsSnapshot, wanted: Vector2i, breaking_off: bool = false) -
 ## often a base, which nobody can stand on. `wanted` itself when open, and
 ## when nothing within four rings is.
 static func open_cell_near(view: RtsSnapshot, wanted: Vector2i) -> Vector2i:
-	for cell: Vector2i in _nearest_first(wanted, 4):
+	for cell: Vector2i in _nearest_first(wanted, 4, view.side):
 		if view.graph.contains(cell) and not view.graph.is_blocked(cell):
 			return cell
 	return wanted
 
 
-# Every cell within `rings` steps of `centre`, the nearer rings first.
-static func _nearest_first(centre: Vector2i, rings: int) -> Array[Vector2i]:
+# Every cell within `rings` steps of `centre`, the nearer rings first, and
+# within a ring in `side`'s own order (`RtsScenario.as_seen_by`): a base
+# both seats walk up to is stood beside on the mirrored cell (T57).
+static func _nearest_first(centre: Vector2i, rings: int, side: int) -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
 	var across: int = 2 * rings + 1
 	for index: int in range(across * across):
-		cells.append(centre + Vector2i(index % across - rings, index / across - rings))
+		cells.append(centre + RtsScenario.as_seen_by(side, Vector2i(index % across - rings, index / across - rings)))
 	cells.sort_custom(func(one: Vector2i, other: Vector2i) -> bool:
 		return maxi(absi(one.x - centre.x), absi(one.y - centre.y)) < maxi(absi(other.x - centre.x), absi(other.y - centre.y)))
 	return cells
