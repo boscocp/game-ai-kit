@@ -1,0 +1,31 @@
+{
+  "description": "Rock east of the target, the shooter east too: full cover, 40. 65 - 20 - 40 = 5; the die shows 5, which is not below 5, a miss.",
+  "map": [
+    ".....",
+    "..#..",
+    "....."
+  ],
+  "shooter": {
+    "type": "runner",
+    "cell": [
+      4,
+      1
+    ]
+  },
+  "target": {
+    "type": "shield",
+    "cell": [
+      1,
+      1
+    ],
+    "health": 10
+  },
+  "roll": 5,
+  "expected": {
+    "cover": 40,
+    "flanked": false,
+    "chance": 5,
+    "hit": false,
+    "target_left": 10
+  }
+}

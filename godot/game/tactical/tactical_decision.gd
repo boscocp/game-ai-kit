@@ -91,14 +91,17 @@ func kind() -> String:
 
 
 ## The state after this decision, or null when the board refuses it. A hold
-## changes nothing and is never refused.
-func played_on(state: BoardState) -> BoardState:
+## changes nothing and is never refused. A walk and an attack are played by
+## `rules` (T84), Advance Wars when none is given; a build and a purchase
+## are the board's in every mode.
+func played_on(state: BoardState, rules: TacticalRuleset = null) -> BoardState:
+	var playing: TacticalRuleset = rules if rules != null else AdvanceWarsRuleset.new()
 	if move != null:
-		return state.apply(move)
+		return playing.walk(state, move)
 	if order != null:
 		return state.produce(order)
 	if attack != null:
-		return TacticalCombat.apply(state, attack)
+		return playing.attack(state, attack)
 	if upgrade != null:
 		return state.buy(upgrade)
 	return state

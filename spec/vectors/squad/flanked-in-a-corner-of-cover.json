@@ -1,0 +1,33 @@
+{
+  "description": "The same corner, the shooter south-west: neither the trees (north) nor the rock (east) faces it. Flanked. Runner 65 - shield 20 = 45; the die shows 44, a hit: 10 - 3 = 7.",
+  "map": [
+    ".....",
+    "..T..",
+    "...#.",
+    ".....",
+    "....."
+  ],
+  "shooter": {
+    "type": "runner",
+    "cell": [
+      0,
+      4
+    ]
+  },
+  "target": {
+    "type": "shield",
+    "cell": [
+      2,
+      2
+    ],
+    "health": 10
+  },
+  "roll": 44,
+  "expected": {
+    "cover": 0,
+    "flanked": true,
+    "chance": 45,
+    "hit": true,
+    "target_left": 7
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "about": [
+    "The XCOM-style mode of the tactical game (T84): its shot, its cover and its pieces.",
+    "A piece's turn is two actions. Its type's movement is twice `action`: a walk that keeps the whole walk this turn within one action leaves it able to shoot; walking further is a dash, and spends it; a shot spends it.",
+    "Hit chance = shooter's aim - target's defence - cover, clamped to [0, 100]. One die per shot, from `die`; the shot hits when the die is below the chance, and a hit takes `damage` off the target.",
+    "Cover is read from the terrain beside the target: `full` next to rock, `half` next to trees. A cell of cover protects against a shooter on its side of the target; a shooter on no protected side has flanked it, and the target gets no cover.",
+    "Trees and rock block sight, except a cell beside either end of the line: a piece shoots past its own cover and at a target behind its.",
+    "A shot needs the target within `range` steps and in sight; a piece sees an enemy within its `sight` steps and in sight.",
+    "Aim, defence, damage, health, action, range and sight are this kit's numbers. Only `cover` and the two-action turn are borrowed (UFOpaedia, EU2012)."
+  ],
+  "die": {"lowest": 0, "highest": 99},
+  "cover": {"half": 20, "full": 40},
+  "round_limit": 20,
+  "squad": ["runner", "shield", "mortar", "wader"],
+  "pieces": {
+    "runner": {"aim": 65, "defence": 10, "damage": 3, "health": 8, "action": 4, "range": 5, "sight": 6},
+    "shield": {"aim": 60, "defence": 20, "damage": 3, "health": 10, "action": 3, "range": 4, "sight": 5},
+    "mortar": {"aim": 70, "defence": 0, "damage": 5, "health": 7, "action": 2, "range": 7, "sight": 6},
+    "wader": {"aim": 65, "defence": 10, "damage": 3, "health": 8, "action": 3, "range": 5, "sight": 6}
+  }
+}

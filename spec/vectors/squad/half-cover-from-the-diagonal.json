@@ -1,0 +1,32 @@
+{
+  "description": "Trees west of the target, the shooter down and to the west: two steps west is on the trees' side, half cover, 20. Mortar 70 - wader 10 - 20 = 40; the die shows 39, a hit: 8 - 5 = 3.",
+  "map": [
+    ".....",
+    ".T...",
+    ".....",
+    "....."
+  ],
+  "shooter": {
+    "type": "mortar",
+    "cell": [
+      0,
+      3
+    ]
+  },
+  "target": {
+    "type": "wader",
+    "cell": [
+      2,
+      1
+    ],
+    "health": 8
+  },
+  "roll": 39,
+  "expected": {
+    "cover": 20,
+    "flanked": false,
+    "chance": 40,
+    "hit": true,
+    "target_left": 3
+  }
+}

@@ -26,6 +26,12 @@
 ## The game ends when one side takes the other's workshop, or in a draw at the
 ## round limit (`TacticalVictory`).
 ##
+## All of that is the Advance Wars mode. What a walk, an attack, a turn's
+## opening and a win mean, the tint and the roster C cycles are asked of
+## `ruleset` (T84), which is `AdvanceWarsRuleset` unless whoever opens the
+## scene hands it another -- the XCOM-style `SquadRuleset`, from module
+## `squad`, which this scene never names.
+##
 ## Opened with `-- --record` (`make record-tactical`), every game played to
 ## its end is kept in `data/tactical/` -- the decisions both sides played,
 ## the person's taken back with Z dropped with them (`TacticalRecording`) --
@@ -52,6 +58,11 @@ const WHAT_THIS_IS: String = "tactics in the style of Advance Wars: build, cross
 
 ## The game as it stands. Public so tests can set a scene up directly.
 var state: BoardState
+## The rules the scene plays by (T84): Advance Wars unless whoever opens the
+## scene hands it another before it enters the tree, as with `computer`. The
+## scene asks it everything a walk, an attack, a turn and a win mean, and
+## never names a mode itself.
+var ruleset: TacticalRuleset = AdvanceWarsRuleset.new()
 ## Who the computer is. Set it before the scene enters the tree to hand the
 ## computer's side to another controller; T11 and T12 play theirs this way.
 var computer: BlueController = RuleBasedBlue.new()
@@ -114,7 +125,7 @@ func _set_words() -> void:
 	_legend.set_entries(TacticalLegend.entries(_types))
 	_end_button.text = tr("End turn (space)")
 	_undo_button.text = tr("Undo (Z)")
-	_keys.text = controllers_to_come()
+	_keys.text = controllers_to_come(ruleset)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -130,7 +141,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Start again: red to move, nobody spent, nobody winning -- and when the
 ## computer is red, its first decision drawn.
 func new_game() -> void:
-	state = TacticalScenario.build()
+	state = ruleset.start()
 	# Played at the top of the tree -- the window's own scene, or opened from
 	# the menu -- each game rolls different dice; under a test, which mounts
 	# the scene inside its own node, the dice stay the scenario's, so a
@@ -144,7 +155,7 @@ func new_game() -> void:
 	_starting_seed = state.dice_seed
 	_units.reset()
 	winner = TacticalVictory.NOBODY
-	_computer_turn = BlueTurn.new(computer)
+	_computer_turn = BlueTurn.new(computer, ruleset)
 	_computer_news.clear()
 	_recorded.clear()
 	_kept = false
@@ -189,12 +200,12 @@ func attack(target: Unit) -> void:
 		return
 	var strike := Attack.new(_selected_id, target.id)
 	var before: BoardState = state
-	if _act(TacticalCombat.apply(state, strike), TacticalCombat.why_refused(state, strike)):
+	if _act(ruleset.attack(state, strike), ruleset.why_attack_refused(state, strike)):
 		_note(TacticalDecision.strike(strike.attacker_id, target, []), before)
-		_last_event = TacticalCombat.told(before, strike, state)
+		_last_event = ruleset.told(before, strike, state)
 		_turn.attacked(strike.attacker_id)
 		_turn.seal()
-		winner = TacticalVictory.winner(state)
+		winner = ruleset.winner(state)
 		_select_next_unspent()
 	_refresh()
 
@@ -321,9 +332,9 @@ func _play_computer_decision() -> void:
 	if decision in _computer_turn.played:
 		_note(decision, before)
 	if decision.attack != null and decision in _computer_turn.played:
-		_last_event = TacticalCombat.told(before, decision.attack, state)
+		_last_event = ruleset.told(before, decision.attack, state)
 		_computer_news.append(_last_event)
-	winner = TacticalVictory.winner(state)
+	winner = ruleset.winner(state)
 	# A refused decision is not in `played`, and a hold or a build is no walk.
 	if decision.move != null and decision in _computer_turn.played:
 		_units.walk(decision.unit_id, walker.cell, decision.move.path)
@@ -357,12 +368,13 @@ func decision_overlay() -> Dictionary:
 	return overlay
 
 
-## Where the side not to move could strike on its next turn: `ThreatMap`,
+## Where the side not to move could strike on its next turn: the ruleset's tint
+## (`ThreatMap` in Advance Wars),
 ## as the board draws it. Empty once the game is over.
 func threat() -> Dictionary[Vector2i, int]:
 	if winner != TacticalVictory.NOBODY:
 		return {}
-	return ThreatMap.of(state, TacticalScenario.FACTIONS - 1 - state.current_faction)
+	return ruleset.tint(state, TacticalScenario.FACTIONS - 1 - state.current_faction)
 
 
 ## True while the computer's turn is on and it still has a decision to play
@@ -408,28 +420,35 @@ func _press(keycode: Key) -> void:
 ## either side's turn, so a person knows the computer is a slot and not a
 ## fixed opponent. Under the board, not in the status: the planner's plan
 ## filled the status column past the window's bottom (T102). The
-## names come from `TacticalRoster`, so the sentence cannot fall behind it.
-static func controllers_to_come() -> String:
+## names come from the ruleset's roster -- `TacticalRoster` for Advance
+## Wars, the default -- so the sentence cannot fall behind it.
+static func controllers_to_come(rules: TacticalRuleset = null) -> String:
 	var names: Array[String] = []
-	for row_name: String in TacticalRoster.names():
+	for row_name: String in _or_advance_wars(rules).roster_names():
 		names.append(TacticalStatus.name_said(row_name))
 	return TranslationServer.translate("C hands the computer to the next controller -- {names} -- and S swaps sides; either starts a new game").format({
 		names = ", ".join(names)})
 
 
-## Hand the computer's side to the next row of `TacticalRoster`, round to
+## Hand the computer's side to the next row of the ruleset's roster, round to
 ## the first after the last, and start again: a controller swapped mid-game
 ## would inherit a board it did not play.
 func swap_controller() -> void:
-	computer = next_controller(computer)
+	computer = next_controller(computer, ruleset)
 	new_game()
 
 
-## The controller after `playing`: the next row of the table, built fresh. A
-## level is seeded afresh each time, from the engine's own random numbers --
-## its noise is its own, never the board's dice.
-static func next_controller(playing: BlueController) -> BlueController:
-	return TacticalRoster.build(TacticalRoster.after(playing.controller_name()), randi())
+## The controller after `playing`: the next row of the ruleset's roster,
+## built fresh. A level is seeded afresh each time, from the engine's own
+## random numbers -- its noise is its own, never the board's dice.
+static func next_controller(playing: BlueController, rules: TacticalRuleset = null) -> BlueController:
+	var table: TacticalRuleset = _or_advance_wars(rules)
+	return table.build_controller(table.controller_after(playing.controller_name()), randi())
+
+
+# The ruleset given, or the scene's default when a caller gave none.
+static func _or_advance_wars(rules: TacticalRuleset) -> TacticalRuleset:
+	return rules if rules != null else AdvanceWarsRuleset.new()
 
 
 ## The person takes the other side, and a new game starts: the same board,
@@ -476,7 +495,7 @@ func _walk_to(cell: Vector2i) -> void:
 		path = walks[cell]
 	var move := Move.new(_selected_id, path)
 	var before: BoardState = state
-	if _act(state.apply(move), _explained(state.why_refused(move), cell)):
+	if _act(ruleset.walk(state, move), _explained(ruleset.why_walk_refused(state, move), cell)):
 		_note(TacticalDecision.walk(move.unit_id, path, [], cell), before)
 		_units.walk(unit.id, unit.cell, path)
 		_turn.spend(_selected_id)
@@ -544,10 +563,10 @@ func _start_persons_turn() -> void:
 # The next side's turn: income and the points it holds, fresh movement, then
 # its towers fire, and what happened is the first thing that side reads.
 func _open_turn() -> void:
-	var opened: Array = TurnStart.open(state)
+	var opened: Array = ruleset.open_turn(state)
 	state = opened[0]
 	_last_event = "\n".join(opened[1])
-	winner = TacticalVictory.winner(state)
+	winner = ruleset.winner(state)
 
 
 # What the person reads first: the computer's attacks of the turn just
@@ -582,7 +601,7 @@ func _refresh() -> void:
 	if _persons_turn():
 		reach = _steps_in_reach()
 		_units.spent = _turn.spent_ids()
-	_board.draw_board(state.graph, reach, TacticalScenario.POINTS, _terrain())
+	_board.draw_board(state.graph, reach, ruleset.points(), _terrain())
 	_units.show_state(state, _board, _selected_id)
 	_intent.show_decision(_computer_turn.next if _computer_thinking() else null, state, _board)
 	var marks: Dictionary[Vector2i, String] = {}
@@ -590,7 +609,7 @@ func _refresh() -> void:
 		marks = computer.plan_marks(state)
 	_intent.show_plan(marks)
 	_intent.show_threat(threat() if _showing_threat else {} as Dictionary[Vector2i, int])
-	_header.text = "\n".join([tr(WHAT_THIS_IS), TacticalVictory.rule(), tr("you play {person}; {computer} is played by {controller}").format({
+	_header.text = "\n".join([tr(WHAT_THIS_IS), ruleset.rule(), tr("you play {person}; {computer} is played by {controller}").format({
 		person = TacticalStatus.side_name(person_side), computer = TacticalStatus.side_name(TacticalScenario.FACTIONS - 1 - person_side),
 		controller = computer.describe()})])
 	_keep_if_over()
@@ -623,7 +642,7 @@ func _keep_if_over() -> void:
 
 func _status_text() -> String:
 	if winner != TacticalVictory.NOBODY:
-		return TacticalVictory.announcement(winner, state)
+		return ruleset.announcement(winner, state)
 	if not _persons_turn():
 		return TacticalStatus.computer_text(state, _computer_turn, computer, _last_event)
 	var unit: Unit = state.unit_by_id(_selected_id)
