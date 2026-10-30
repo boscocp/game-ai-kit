@@ -7,7 +7,7 @@ sends to fetch, and which errand a bot takes. Both languages answer them and
 check every value against the file, never against each other. The answers
 came from neither: `derive.py` beside them is a third copy of the rules,
 importing nothing from this repository. Until T101 these were teamwork
-vectors; they moved unchanged.
+vectors; they moved unchanged, and the aim vectors after them in T64.
 """
 
 import json
@@ -15,7 +15,7 @@ import math
 import pathlib
 import unittest
 
-from gameaikit.utility import action, errands
+from gameaikit.utility import action, aim, errands
 
 VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "utility"
 
@@ -25,7 +25,7 @@ FEWEST_VECTORS = 10
 #: Shared with `godot/test/ai_utility/utility_vector.gd`.
 TOLERANCE = 1e-4
 
-KINDS = ("action", "errands")
+KINDS = ("action", "errands", "aim")
 
 
 def answer_action(vector: dict) -> dict:
@@ -49,7 +49,16 @@ def answer_errands(vector: dict) -> dict:
             "chosen": [errands.choose(*pair) for pair in query["pairs"]]}
 
 
-ANSWER = {"action": answer_action, "errands": answer_errands}
+def answer_aim(vector: dict) -> dict:
+    query = vector["query"]
+    zones = [aim.Zone(each["name"], each["multiplier"], tuple(each["aim"]), [tuple(rect) for rect in each["rects"]],
+                      each["exposure"]) for each in query["zones"]]
+    choice = aim.choose(zones, query["spread"])
+    return {"own_chances": choice.own_chances, "expected": choice.expected, "aimed": choice.aimed,
+            "chances": choice.chances, "landed": [aim.land(choice.chances, roll) for roll in query["rolls"]]}
+
+
+ANSWER = {"action": answer_action, "errands": answer_errands, "aim": answer_aim}
 
 
 def misses(expected, found, where: str = "") -> list[str]:

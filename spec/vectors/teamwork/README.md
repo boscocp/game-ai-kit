@@ -2,18 +2,18 @@
 
 <!-- doc-meta
 half_life: structure
-verified_on: 2026-10-22
+verified_on: 2026-10-30
 tier: 1
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: a technique's rule changes -- a condition's order, a weight's meaning, the commander's tie, a threshold's gap -- or Vector2 becomes double precision
 teaches: none
 -->
 
-> Eight techniques, two languages, and the files that say they gave the
+> Seven techniques, two languages, and the files that say they gave the
 > same answers.
 
 `ai_teamwork` (GDScript) and `gameaikit.teamwork` (Python) implement the
-same eight things T51's and T66's bot match and T70's guards decide with. Each vector is one `.json`
+same seven things T51's and T66's bot match and T70's guards decide with. Each vector is one `.json`
 file: a query and the answer it must get. Both sides answer it and check
 every value against the file, never against each other: `make test-vectors`
 on the GDScript side, `make test-python` on the Python side.
@@ -65,9 +65,8 @@ that must agree bit for bit would need rounded costs.
 | `passage` | a blocked bot's facts, and requests to a teammate with its prices | each way's cost in seconds (null: impossible) and the way taken; each request's cost to the teammate and whether it is granted |
 | `search` | spots (worth, searched), each searcher's walk to each, whether claims are on; the walks to the last known position and a cap (T70) | the spot each searcher is given (-1: none); who goes to the last known position |
 | `roles` | requests (role, score, can shoot), whether the arbiter is on, the most flankers (T70) | the role each request is granted |
-| `aim` | a spread, a target's zones (multiplier, aim point, rectangles, exposure), rolls | each zone's own chance and worth aimed at, the zone aimed at, the chances from it, where each roll lands |
 
-## The thirty-nine
+## The thirty-two
 
 | file | what it pins |
 |---|---|
@@ -88,13 +87,6 @@ that must agree bit for bit would need rounded costs.
 | `retreat-recover-attack` | every transition, the gaps between them, and the toggle |
 | `on-every-threshold` | a value exactly on each threshold, so each comparison's side is pinned |
 | `a-lone-survivor` | one member moves in both phases |
-| `close-and-steady-aims-at-the-head` | a small spread: the head, worth twice the torso, wins |
-| `far-aims-at-the-torso` | a large spread: the torso and its spill beat the head |
-| `behind-low-cover-the-legs-are-gone` | hidden legs and a half-shown torso move the choice up to the head |
-| `equal-worth-goes-to-the-first` | of two zones tied, the first is aimed at |
-| `nothing-exposed-aims-at-nothing` | every zone hidden: nothing is aimed at, every roll misses |
-| `a-roll-on-a-boundary-misses` | a roll exactly on a chance's end goes past it, with a strict `<` |
-| `a-steady-hand-has-no-spread` | a spread of 0 is taken as a millimetre: no division by zero, no chance over 1 |
 | `wait-for-one-walking-off` | a body leaving: waiting beats the way round |
 | `round-one-who-holds` | a body holding: waiting is never done |
 | `ask-a-teammate-when-round-is-long` | asking a teammate beats a long way round; an enemy, or a teammate that refused, is not asked |
@@ -115,9 +107,3 @@ JSON has no infinity: in the passage vectors an impossible way, a detour
 or a spot that does not exist, and a saving with no bound are `null`, and
 both sides read and write them so.
 
-The aim vectors' numbers are powers of two wherever a tie or a boundary is
-pinned: GDScript's `Rect2` is 32-bit, and with 0.1 and 1.1 an exact tie in
-Python was not one in GDScript, which aimed at the second zone. And the
-spread in `far-aims-at-the-torso` is under 0.55 m on purpose: above it a
-shot aimed at an arm covers the body exactly as one aimed at the torso, a
-true tie that the 32-bit side may break the other way.

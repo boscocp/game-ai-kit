@@ -9,7 +9,7 @@ extends RefCounted
 
 ## Shared with `python/tests/test_utility_vectors.py`.
 const TOLERANCE: float = 1e-4
-const KINDS: Array[String] = ["action", "errands"]
+const KINDS: Array[String] = ["action", "errands", "aim"]
 
 
 ## Why `vector` is not a utility vector, or "" when it is one.
@@ -34,8 +34,11 @@ static func check(label: String, vector: Dictionary) -> Array[String]:
 
 ## This side's answer to `vector`'s query.
 static func answer_to(vector: Dictionary) -> Dictionary:
-	if str(vector["kind"]) == "action":
-		return _action(vector)
+	match str(vector["kind"]):
+		"action":
+			return _action(vector)
+		"aim":
+			return _aim(vector)
 	return _errands(vector)
 
 
@@ -109,3 +112,27 @@ static func _errands(vector: Dictionary) -> Dictionary:
 	var chosen: Array = (query["pairs"] as Array).map(func(pair: Array) -> String:
 		return ErrandChoice.choose(float(pair[0]), float(pair[1]), float(pair[2]) if pair.size() > 2 else 0.0))
 	return {"resupply": back, "fetch": out, "hide": hidden, "fetcher": sent, "chosen": chosen}
+
+
+static func _aim(vector: Dictionary) -> Dictionary:
+	var zones: Array[AimChoice.Zone] = []
+	for fields: Dictionary in vector["query"]["zones"]:
+		var zone := AimChoice.Zone.new()
+		zone.name = str(fields["name"])
+		zone.multiplier = float(fields["multiplier"])
+		zone.aim = _vector2(fields["aim"])
+		zone.exposure = float(fields["exposure"])
+		for corners: Array in fields["rects"]:
+			var low := Vector2(float(corners[0]), float(corners[1]))
+			zone.rects.append(Rect2(low, Vector2(float(corners[2]), float(corners[3])) - low))
+		zones.append(zone)
+	var choice: AimChoice.Choice = AimChoice.choose(zones, float(vector["query"]["spread"]))
+	var landed: Array = []
+	for roll: Variant in vector["query"]["rolls"]:
+		landed.append(AimChoice.land(choice.chances, float(roll)))
+	return {"own_chances": Array(choice.own_chances), "expected": Array(choice.expected), "aimed": choice.aimed,
+			"chances": Array(choice.chances), "landed": landed}
+
+
+static func _vector2(pair: Array) -> Vector2:
+	return Vector2(float(pair[0]), float(pair[1]))

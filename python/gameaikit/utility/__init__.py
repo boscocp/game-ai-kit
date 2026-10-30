@@ -7,11 +7,12 @@ GDScript addon to the same answers.
 
     action.py     what to do now: every action scored by its considerations
     errands.py    back for rounds, out for a power weapon, or into hiding, each a gain less its costs
+    aim.py        where on a body to aim: the zone whose shot is worth the most damage
 
-Until T101 both lived in the teamwork package, though nothing in them is
-about a team.
+Until T101 the first two lived in the teamwork package, and aim until T64,
+though nothing in them is about a team.
 """
 
-from . import action, errands
+from . import action, aim, errands
 
-__all__ = ["action", "errands"]
+__all__ = ["action", "aim", "errands"]

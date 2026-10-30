@@ -1,6 +1,6 @@
 """Where on a body to aim: the zone whose shot is worth the most damage.
 
-The tier-1 half of `godot/addons/ai_teamwork/aim_choice.gd`: aimed at a
+The tier-1 half of `godot/addons/ai_utility/aim_choice.gd`: aimed at a
 point, a shot lands evenly in a square `spread` either side of it; a zone's
 chance is how much of the square its rectangles cover, times its exposure;
 the worth of aiming at a zone is every zone's chance times its multiplier,
