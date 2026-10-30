@@ -87,6 +87,7 @@ make wave-merge                       # squash-merge the PR, once reviewed and g
 make worktree-setup                   # in a new worktree: gdUnit4 and the term list, from the main checkout
 make bootstrap     # install the pinned Godot on the large disk, SHA-verified
 make check         # every gate; CI runs it on main, and `make release` needs it
+make library-check # the wheel and two addons, installed and run outside the repo
 make test-python   # stdlib unittest, no install step
 make test-godot    # headless
 make godot-version # what is pinned vs what is installed
