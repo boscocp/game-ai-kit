@@ -205,6 +205,52 @@ machine, and a time does not. The slowest call in these matches was
 1.13 ms of wall time, inside the 1.5 ms strategy share but not what is
 gated.
 
+### The seat's bias (T57)
+
+A person always plays west, so a seat that wins more would be a thumb on
+the scale nobody sees. `make test-rts-match` now plays the queues against
+themselves over six seeds, each twice with the two sides' dice swapped
+between the seats, and fails when one seat wins more than 70% of the
+matches somebody won (claim 6, with a planted 10 - 2 it must refuse).
+`make rts-measure` plays ten seeds and prints its record against the same
+bound. Two fair seats go over it on 12 matches about one time in seven, on
+20 about one in twenty-five; T20's 15 - 5 is over it.
+
+Each suspect the task named was tested on its own, the queues against
+themselves over seeds 1 to 40 from both seats (80 matches each; a fair
+coin's spread is about 4.5 either side of 40):
+
+| change, alone | west - east |
+|---|---|
+| none | 43 - 37 |
+| the economy's building ring scanned in each seat's own order | 41 - 39 |
+| the squads' open cell near a target scanned the same way | 44 - 36 |
+| a flow field's ties broken north or south first, then by the goal's side | 39 - 39 |
+| a flow field's ties broken straight at the goal | 45 - 34 |
+| west's start units given the lower ids, so they act first | 35 - 45 |
+| a unit struck down in a tick still acting in it | 33 - 46 |
+| east deciding before west | 45 - 35 |
+
+**None moved the record beyond what 80 matches give by chance**, and every
+change replays the matches differently (a tie broken another way early
+reaches a different match), so the column is eight draws of one coin. The
+first three are kept anyway, because each was a tie that was not a mirror
+image and now is (`RtsScenario.as_seen_by`, `FlowField._wins_tie`), held by
+a test that the old order fails. The straight-at-the-goal tie-break was
+not kept: it walked armies in lines that never took a base -- 78 of 80
+matches ran out the clock. The ids, the strike in a tick and the order of
+deciding were not changed: they do not move the record, and changing them
+changes the core's rules.
+
+**What the record hides.** The wins are even only because two biases
+cancel. Over 560 matches of the runs above, a match ended by a base
+falling went to west 158 - 77, and one ended by the clock, on worth, to
+east 201 - 122. With the three fixes, over seeds 41 to 100, it is still
+30 - 9 and 25 - 55. None of the suspects is the cause; one still
+untested is that a region is scored and walked to at its cell's corner
+(`Vector2(cell)`), which is not the corner turned half round. The gate
+holds the wins, which is what a player meets; the split is open.
+
 ## Difficulty, without cheating
 
 The levels are T12's knobs (`RtsLevels`), and nothing else -- no level
