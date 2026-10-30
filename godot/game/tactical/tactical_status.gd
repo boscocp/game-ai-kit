@@ -44,7 +44,7 @@ const A_PIECE: Dictionary = {  # shown through tr()
 static func text(state: BoardState, in_hand: Unit, refusal: String, news: String = "", can_attack: bool = true,
 		rules: TacticalRuleset = null) -> String:
 	var lines: Array[String] = [_headline(state), ControlPoints.describe(state), _piece(in_hand), _what_to_do(state, in_hand)]
-	var targets: String = _targets(state, in_hand, AdvanceWarsRuleset.or_default(rules)) if can_attack else ""
+	var targets: String = _targets(state, in_hand, rules) if can_attack else ""
 	if targets != "":
 		lines.append(targets)
 	lines.append(TranslationServer.translate("Z takes back the last thing you did  ·  space ends your turn, and {side} is paid {income} and its points").format({
@@ -215,6 +215,16 @@ static func _what_to_do(state: BoardState, unit: Unit) -> String:
 	return TranslationServer.translate("click a lit cell to walk there, and the unit is spent until your next turn; W has it wait where it is. A step costs the number on the cell, or 1.")
 
 
+# Why `strike` is refused by `rules`, or by Advance Wars's own
+# `TacticalCombat` when none is given. Asked of the class rather than of a
+# new `AdvanceWarsRuleset`: the skirmish reads this file too, and a ruleset
+# built here would have it reach every controller in the tactical roster.
+static func _why_refused(state: BoardState, strike: Attack, rules: TacticalRuleset) -> String:
+	if rules == null:
+		return TacticalCombat.why_refused(state, strike)
+	return rules.why_attack_refused(state, strike)
+
+
 # The enemies the piece in hand could attack from where it stands, by the
 # rules of the mode being played, with how the counter table leans on each
 # fight -- or "" when none is in reach.
@@ -223,7 +233,7 @@ static func _targets(state: BoardState, unit: Unit, rules: TacticalRuleset) -> S
 		return ""
 	var parts: Array[String] = []
 	for enemy: Unit in state.units:
-		if rules.why_attack_refused(state, Attack.new(unit.id, enemy.id)) != BoardState.LEGAL:
+		if _why_refused(state, Attack.new(unit.id, enemy.id), rules) != BoardState.LEGAL:
 			continue
 		var lean: int = TacticalCombat.counter(unit.type, enemy.type)
 		var target: String = TranslationServer.translate("{piece} at {cell}, health {health}")
