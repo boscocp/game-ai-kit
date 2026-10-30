@@ -75,6 +75,7 @@ request in flight and the thinking state. The rules:
 | R9, R10 | `speech` has a line break or control character, or markup (`<>[]*` and the backtick) |
 | R11 | `speech` contains one of the game's secrets, the case of A to Z ignored (only those letters: Python and Godot fold the others differently) |
 | F1 | no reply came at all: the runtime failed or timed out |
+| F2 | the server refused the request itself, and said why (any HTTP error but 503): it will refuse every turn until the request is fixed, so it is not F1 |
 
 The knobs that matter:
 

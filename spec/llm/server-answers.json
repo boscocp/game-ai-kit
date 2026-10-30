@@ -1,0 +1,26 @@
+{
+  "about": "What llama.cpp's server answered, recorded at the pinned build b11960 on 2026-10-29 (T93, docs/local-llm/server.md), as status and body. The first three are its own words; the fourth is its envelope as recorded, around a reply written by hand to break R6. godot/test/ai_llm/llm_test.gd hands each to HttpRuntime as request_completed would, with no server running, and holds the three apart: the request refused (F2), no reply yet (F1), and the model's reply refused by the validator (an R code).",
+  "build": "b11960",
+  "answers": {
+    "unknown_response_format": {
+      "status": 400,
+      "body": "{\"error\":{\"code\":400,\"message\":\"response_format type must be one of \\\"text\\\" or \\\"json_object\\\", but got: bogus\",\"type\":\"invalid_request_error\"}}",
+      "code": "F2"
+    },
+    "schema_it_cannot_read": {
+      "status": 500,
+      "body": "{\"error\":{\"code\":500,\"message\":\"JSON schema error at #: cannot resolve $ref #/definitions/missing, definitions not found\",\"type\":\"server_error\"}}",
+      "code": "F2"
+    },
+    "still_loading": {
+      "status": 503,
+      "body": "{\"error\":{\"message\":\"Loading model\",\"type\":\"unavailable_error\",\"code\":503}}",
+      "code": "F1"
+    },
+    "a_reply_the_validator_refuses": {
+      "status": 200,
+      "body": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"speech\\\": \\\"Fine, go in.\\\", \\\"intent\\\": \\\"open_the_gate\\\", \\\"argument\\\": \\\"\\\"}\"}}]}",
+      "code": "R6"
+    }
+  }
+}

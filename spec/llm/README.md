@@ -28,3 +28,10 @@ the player typed (`player`) and the model's text, untouched (`raw`).
 `the-gatekeeper.json` was written by hand to walk every path a reply can
 take, and says so; a recording from a model carries the model's name and
 licence beside it (T94).
+
+`server-answers.json` is what llama.cpp's server answered at the pinned build
+when it would not take a request -- a 400, a 500, a 503 -- and its envelope
+around a reply the validator refuses (T93, `docs/local-llm/server.md`).
+`llm_test.gd` replays each through `HttpRuntime` with no server running and
+holds them apart: the request refused (F2), no reply yet (F1), the reply
+refused (an R code).

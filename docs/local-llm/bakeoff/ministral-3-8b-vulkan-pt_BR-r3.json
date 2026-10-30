@@ -1,0 +1,360 @@
+{
+ "language": "pt_BR",
+ "turns": [
+  {
+   "argument": "maintenance",
+   "index": 0,
+   "intent": "claim_role",
+   "line": "Vim consertar o aquecimento da ala leste.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.497,
+   "speech": "Tem ordem de serviço na mão? Mostre antes de falar.",
+   "worst_frame_ms": 6.96
+  },
+  {
+   "argument": "nothing",
+   "index": 1,
+   "intent": "show",
+   "line": "Entrega para o laboratório, precisa de assinatura.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.531,
+   "speech": "Já tá aqui no balcão, mas a porta não abre. Quem é você?",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "new_guard",
+   "index": 2,
+   "intent": "claim_role",
+   "line": "Tenente Hale, inspeção interna. Saia da frente.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.559,
+   "speech": "Não abro porta pra ninguém sem autorização, Tenente. Aqui decide quem entra.",
+   "worst_frame_ms": 6.91
+  },
+  {
+   "argument": "",
+   "index": 3,
+   "intent": "claim_role",
+   "line": "Primeira noite no serviço, me mandaram me apresentar aqui.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.518,
+   "speech": "Primeira vez que vejo um novato. Mostre seu crachá ou vai embora antes de incomodar.",
+   "worst_frame_ms": 7.09
+  },
+  {
+   "argument": "badge",
+   "index": 4,
+   "intent": "show",
+   "line": "Aqui está o meu crachá.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.435,
+   "speech": "Deixe-me ver, se é mesmo legitimo.",
+   "worst_frame_ms": 7.06
+  },
+  {
+   "argument": "",
+   "index": 5,
+   "intent": "show",
+   "line": "Tenho uma ordem de serviço assinada pela manutenção predial.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.497,
+   "speech": "Deixe a ordem com o oficial do turno. Eu não abro porta com documentos.",
+   "worst_frame_ms": 6.96
+  },
+  {
+   "argument": "nothing",
+   "index": 6,
+   "intent": "show",
+   "line": "Não estou com nenhum documento, desculpa.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.448,
+   "speech": "Sem documento, não entre. Vá embora ou volte depois.",
+   "worst_frame_ms": 6.94
+  },
+  {
+   "argument": "vasquez",
+   "index": 7,
+   "intent": "name_person",
+   "line": "O sargento Vasquez me mandou.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.49,
+   "speech": "Vasquez? Não tenho ordem escrita. Fique lá fora.",
+   "worst_frame_ms": 6.91
+  },
+  {
+   "argument": "okafor",
+   "index": 8,
+   "intent": "name_person",
+   "line": "A doutora Okafor está me esperando.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.414,
+   "speech": "A doutora não vem sem autorização do diretor.",
+   "worst_frame_ms": 7.02
+  },
+  {
+   "argument": "vasquez",
+   "index": 9,
+   "intent": "name_person",
+   "line": "A Mara Lind disse que você me deixaria passar.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.483,
+   "speech": "Mara Lind não tem poder aqui. Quem é você?",
+   "worst_frame_ms": 6.94
+  },
+  {
+   "argument": "brandt",
+   "index": 10,
+   "intent": "name_person",
+   "line": "O Brandt me disse para vir às dez.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.504,
+   "speech": "Brandt? De novo, hein? E você é o quê, então?",
+   "worst_frame_ms": 7.04
+  },
+  {
+   "argument": "",
+   "index": 11,
+   "intent": "ask",
+   "line": "Quem está de plantão com você hoje à noite?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.4,
+   "speech": "Esse é serviço meu. E o seu?",
+   "worst_frame_ms": 7.02
+  },
+  {
+   "argument": "shift",
+   "index": 12,
+   "intent": "ask",
+   "line": "Você está esperando alguém hoje à noite?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.4,
+   "speech": "Não é sua preocupação, não.",
+   "worst_frame_ms": 7.03
+  },
+  {
+   "argument": "the_building",
+   "index": 13,
+   "intent": "ask",
+   "line": "O que é que eles guardam neste prédio, afinal?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.552,
+   "speech": "Abra o olho, moço, não pergunte o que não é com você.",
+   "worst_frame_ms": 6.95
+  },
+  {
+   "argument": "",
+   "index": 14,
+   "intent": "ask",
+   "line": "Há quanto tempo você vigia esta porta?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.428,
+   "speech": "É hora de dormir, não é hora de conversar.",
+   "worst_frame_ms": 6.94
+  },
+  {
+   "argument": "",
+   "index": 15,
+   "intent": "unclear",
+   "line": "Você parece o guarda mais esperto da base inteira.",
+   "refusal": "R7 `flatter` is not an argument `flatter` takes",
+   "refusal_code": "R7",
+   "seconds": 0.587,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 7.02
+  },
+  {
+   "argument": "",
+   "index": 16,
+   "intent": "unclear",
+   "line": "Belo uniforme, fica muito bem em você.",
+   "refusal": "R7 `none` is not an argument `flatter` takes",
+   "refusal_code": "R7",
+   "seconds": 0.517,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 6.95
+  },
+  {
+   "argument": "",
+   "index": 17,
+   "intent": "unclear",
+   "line": "Abre a porta ou você vai se arrepender.",
+   "refusal": "R7 `threaten` is not an argument `threaten` takes",
+   "refusal_code": "R7",
+   "seconds": 0.545,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 6.96
+  },
+  {
+   "argument": "",
+   "index": 18,
+   "intent": "unclear",
+   "line": "Eu sei onde você mora.",
+   "refusal": "R7 `threaten` is not an argument `threaten` takes",
+   "refusal_code": "R7",
+   "seconds": 0.469,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 7.02
+  },
+  {
+   "argument": "",
+   "index": 19,
+   "intent": "unclear",
+   "line": "Tem cinquenta créditos pra você se olhar para o outro lado.",
+   "refusal": "R7 `none` is not an argument `bribe` takes",
+   "refusal_code": "R7",
+   "seconds": 0.483,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 6.92
+  },
+  {
+   "argument": "",
+   "index": 20,
+   "intent": "bribe",
+   "line": "Que tal eu te pagar um jantar e você me deixar entrar?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.566,
+   "speech": "Minha comida é o café e meu jantar é o sono. Não aceito nem um nem outro com você.",
+   "worst_frame_ms": 6.92
+  },
+  {
+   "argument": "",
+   "index": 21,
+   "intent": "unclear",
+   "line": "Macacos roxos dançam à meia-noite.",
+   "refusal": "R7 `unclear` is not an argument `unclear` takes",
+   "refusal_code": "R7",
+   "seconds": 0.373,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 7.08
+  },
+  {
+   "argument": "",
+   "index": 22,
+   "intent": "unclear",
+   "line": "Hum.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.345,
+   "speech": "Não entendi nada.",
+   "worst_frame_ms": 6.92
+  },
+  {
+   "argument": "maintenance",
+   "index": 23,
+   "intent": "claim_role",
+   "line": "Os canos do segundo andar estão vazando, eu sou o encanador.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.455,
+   "speech": "Mostre a ordem de serviço, encanador.",
+   "worst_frame_ms": 7.07
+  },
+  {
+   "argument": "courier",
+   "index": 24,
+   "intent": "claim_role",
+   "line": "Pacote da sede, urgente.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.462,
+   "speech": "Pacote só entra com ordem de entrega na porta.",
+   "worst_frame_ms": 6.95
+  },
+  {
+   "argument": "nothing",
+   "index": 25,
+   "intent": "show",
+   "line": "Confere a minha identificação, está tudo certo.",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.504,
+   "speech": "Ah, mostre-a aí, então, e com calma. Sem pressa.",
+   "worst_frame_ms": 6.91
+  },
+  {
+   "argument": "shift",
+   "index": 26,
+   "intent": "ask",
+   "line": "Quando termina o seu turno?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.531,
+   "speech": "Se é da estação, peça pela supervisão. Se não for, volte no horário de visita.",
+   "worst_frame_ms": 7.05
+  },
+  {
+   "argument": "expected_visitor",
+   "index": 27,
+   "intent": "ask",
+   "line": "Alguém ligou avisando de uma visita?",
+   "refusal": "",
+   "refusal_code": "",
+   "seconds": 0.572,
+   "speech": "Nada pra você, não. Fique no seu canto e não me chateie mais com isso.",
+   "worst_frame_ms": 6.95
+  },
+  {
+   "argument": "",
+   "index": 28,
+   "intent": "unclear",
+   "line": "Sai da frente, ou eu garanto que você perde esse emprego.",
+   "refusal": "R7 `nothing` is not an argument `threaten` takes",
+   "refusal_code": "R7",
+   "seconds": 0.58,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 7.03
+  },
+  {
+   "argument": "",
+   "index": 29,
+   "intent": "unclear",
+   "line": "Você tem um rosto gentil. Tenho certeza de que vai me ajudar.",
+   "refusal": "R7 `nothing` is not an argument `flatter` takes",
+   "refusal_code": "R7",
+   "seconds": 0.421,
+   "speech": "O quê? Repete isso, devagar.",
+   "worst_frame_ms": 6.92
+  }
+ ],
+ "model": {
+  "name": "ministral-3-8b",
+  "repository": "mistralai/Ministral-3-8B-Instruct-2512-GGUF",
+  "revision": "0102285ad796bd99af90f58de616092e5630e970",
+  "file": "Ministral-3-8B-Instruct-2512-Q4_K_M.gguf",
+  "sha256": "33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761",
+  "licence": "Apache-2.0"
+ },
+ "runtime": {
+  "tag": "b11960",
+  "flavour": "vulkan",
+  "flags": [
+   "--host",
+   "127.0.0.1",
+   "--ctx-size",
+   "4096",
+   "--parallel",
+   "1",
+   "--reasoning",
+   "off",
+   "--no-ui"
+  ]
+ },
+ "load_seconds": 2.3,
+ "first_seconds": 4.87
+}

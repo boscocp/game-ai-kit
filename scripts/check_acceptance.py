@@ -146,8 +146,37 @@ HUMAN_VERDICT = re.compile(
     re.M | re.I,
 )
 
-# Acceptance that cannot run on tier 1 or 2, and so needs declaring.
-NEEDS_LOCAL_MODEL = re.compile(r"\bollama\b|localhost:11434|\bapi/chat\b")
+# The file that writes the local server's port, the one place (T93).
+HTTP_RUNTIME = (pathlib.Path(__file__).resolve().parent.parent
+                / "godot" / "addons" / "ai_llm" / "http_runtime.gd")
+PORT_LINE = re.compile(r"^const PORT: int = (\d+)$", re.M)
+
+
+def llm_port(http_runtime: pathlib.Path = HTTP_RUNTIME) -> str:
+    """The port HttpRuntime asks and `scripts/llm` serves on, read where it is written.
+
+    Read rather than copied: a copy here would go on naming the old port the
+    day the runtime's changes, and a task naming the new one would pass.
+    """
+    found = PORT_LINE.search(http_runtime.read_text(encoding="utf-8"))
+    if found is None:
+        raise OSError(f"{http_runtime} has no `const PORT: int = N` line")
+    return found.group(1)
+
+
+def needs_local_model(port: str) -> re.Pattern[str]:
+    """Acceptance that cannot run on tier 1 or 2, and so needs declaring.
+
+    Ollama's spellings, and since T93 the kit's own runtime: the make targets
+    and `scripts/llm` commands that start or ask llama.cpp's server, and its
+    port on this machine.
+    """
+    return re.compile(
+        r"\bollama\b|localhost:11434|\bapi/chat\b"
+        r"|\bllm-(?:smoke|serve|bakeoff)\b|\bscripts/llm\s+(?:smoke|serve|bakeoff)\b"
+        r"|\btools/llm/llm\.py\b[^\n]*\b(?:smoke|serve|bakeoff)\b"
+        rf"|(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1?\]):{port}\b"
+    )
 
 
 def split_commands_and_prose(body: str) -> tuple[str, str]:
@@ -199,7 +228,7 @@ def acceptance_section(text: str) -> str | None:
     return found.group(1) if found else None
 
 
-def check_file(path: pathlib.Path) -> list[str]:
+def check_file(path: pathlib.Path, port: str | None = None) -> list[str]:
     text = path.read_text(encoding="utf-8")
     problems: list[str] = []
 
@@ -230,7 +259,7 @@ def check_file(path: pathlib.Path) -> list[str]:
             "-- move it to `## Manual check`"
         )
 
-    if NEEDS_LOCAL_MODEL.search(commands) and not re.search(
+    if needs_local_model(port or llm_port()).search(commands) and not re.search(
         r"^Requires:.*\blocal model\b", text, re.M | re.I
     ):
         problems.append(
@@ -247,7 +276,8 @@ def run(tasks: pathlib.Path) -> int:
         print(f"A0 no task files in {tasks} -- this gate would pass on an empty tree")
         return 1
 
-    problems = [problem for path in files for problem in check_file(path)]
+    port = llm_port()
+    problems = [problem for path in files for problem in check_file(path, port)]
     for problem in problems:
         print(f"  {problem}")
     if problems:
@@ -367,6 +397,33 @@ def self_test() -> int:
             "Size: M - Prereqs: T2 - Files: `godot/addons/ai_llm/`\nRequires: a local model",
         )
         expect("declared local model", quiet(tasks_with(root, "declared", declared)), 0)
+
+        # Planted (T93): the kit's own runtime, each spelling on its own --
+        # the make targets, the wrapper, and the port HttpRuntime writes.
+        port = llm_port()
+        for index, (label, command) in enumerate((("make llm-smoke", "make llm-smoke"),
+                               ("make llm-serve", "make llm-serve & sleep 5"),
+                               ("scripts/llm smoke", "scripts/llm smoke --model all"),
+                               ("the fixed port", f"curl -fsS http://127.0.0.1:{port}/health"),
+                               ("tools/llm/llm.py smoke",
+                                "python3 tools/llm/llm.py /mnt/toolchain smoke"),
+                               ("the port on 0.0.0.0", f"curl -fsS http://0.0.0.0:{port}/health"),
+                               ("the port on [::1]", f"curl -fsS http://[::1]:{port}/health"))):
+            planted = GOOD_TASK.replace("make test-godot", command)
+            expect(f"undeclared local model by {label}",
+                   quiet(tasks_with(root, f"llm-{index}", planted)), 1)
+        expect("the port is the one HttpRuntime writes",
+               int(bool(needs_local_model(port).search(f"localhost:{port}"))), 1)
+        expect("another port is not the runtime's",
+               int(bool(needs_local_model(port).search(f"localhost:{int(port) + 1}"))), 0)
+        # Planted: a runtime with no port line is unreadable, not "no model".
+        no_port = root / "http_runtime.gd"
+        no_port.write_text("class_name HttpRuntime\nvar url := \"http://127.0.0.1:8080/\"\n")
+        try:
+            llm_port(no_port)
+            failures.append("a runtime with no port line was read")
+        except OSError:
+            pass
 
         # A task may quote a bad criterion inside backticks while explaining it.
         quoting = GOOD_TASK.replace(

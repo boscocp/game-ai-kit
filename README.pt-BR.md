@@ -86,7 +86,7 @@ Quatro níveis. **Nenhuma lição vive só no nível caro.**
 | **1** | Python 3 (já vem no Linux e no macOS) | ler e verificar um domínio PDDL, treinar as regressões, ler os pesos. Só a biblioteca padrão -- **sem pip, sem numpy, sem passo de instalação** |
 | **2** | Godot 4 (~130 MB, roda em placa de vídeo integrada) | jogar, abrir as demos, modificar os *addons* |
 | **2, em 3D** | Godot 4 e uma placa integrada que desenhe uma cena 3D | os exemplos 3D em `godot/game3d/`, com `make assets-3d` para os modelos ou formas simples sem eles; as decisões rodam sobre retratos do estado com gêmeos em Python, então a lição é de nível 1 |
-| **3** | uma GPU com alguma VRAM | rodar um LLM local de verdade, pelo `HttpRuntime` do `ai_llm`, quando a T93 fixar um *runtime*; gerar a sua própria arte com um modelo local de imagem. Opcional: nada precisa deste nível |
+| **3** | uma GPU com alguma VRAM | rodar um LLM local de verdade, pelo `HttpRuntime` do `ai_llm`: `make llm-bootstrap` instala o servidor do llama.cpp e um modelo no disco grande, cada arquivo conferido por sha256 (uns 5 GB), `make llm-serve` o roda, `make llm-smoke` o confere; gerar a sua própria arte com um modelo local de imagem. Opcional: nada precisa deste nível |
 
 O jogo mira 1280×720 a 60 fps em placa integrada, com o renderizador
 Compatibility (OpenGL).

@@ -132,7 +132,13 @@ def fallback(declaration: Declaration, refusal: str) -> Reply:
 
 
 def why_refused(raw_text: str, declaration: Declaration) -> str:
-    """The code and sentence of the first rule `raw_text` breaks, or ""."""
+    """The code and sentence of the first rule `raw_text` breaks, or "".
+
+    The sentence never quotes what the model wrote: a game shows it beside
+    its line, and a key, an intent or an argument the model made up is
+    exactly what R10 and R11 never looked at -- markup, a secret (T93's
+    review). It names only what the game declared.
+    """
     data, wrong = _parsed(raw_text)
     if wrong:
         return wrong
@@ -141,15 +147,15 @@ def why_refused(raw_text: str, declaration: Declaration) -> str:
             return f"R3 the reply has no `{key}`"
     for key in sorted(data):
         if key not in REPLY_KEYS:
-            return f"R4 the reply has `{key}`, which the shape does not"
+            return "R4 the reply has a key the shape does not"
     for key in REPLY_KEYS:
         if not isinstance(data[key], str):
             return f"R5 `{key}` is not a string"
     intent, argument = data["intent"], data["argument"]
     if intent not in declaration.intents:
-        return f"R6 `{intent}` is not an intent this game declared"
+        return "R6 the intent is not one this game declared"
     if argument and argument not in declaration.intents[intent]:
-        return f"R7 `{argument}` is not an argument `{intent}` takes"
+        return f"R7 the argument is not one `{intent}` takes"
     return why_speech_is_wrong(data["speech"], declaration.secrets)
 
 

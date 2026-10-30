@@ -55,6 +55,11 @@ func _failures_in(name: String, validator: LlmValidator, cases: Array) -> Array[
 		var got: String = answer(validator, case["raw"])
 		if got != claimed(case):
 			failures.append("%s: %s\n  claimed %s, got %s" % [name, case["why"], claimed(case), got])
+		# A game shows the refusal: it never quotes a secret or markup the
+		# model wrote in a key, an intent or an argument (T93's review).
+		var refusal: String = validator.validate(case["raw"]).refusal
+		if validator.gives_away_a_secret(refusal) or refusal.contains("[b]"):
+			failures.append("%s: %s\n  the refusal quotes the model: %s" % [name, case["why"], refusal])
 	return failures
 
 

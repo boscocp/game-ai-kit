@@ -77,8 +77,9 @@ func is_accepted() -> bool:
 	return _refusal == ""
 
 
-## The code of the rule the reply broke (`R1` to `R11`, or `F1` when the
-## runtime gave no reply at all), or "" -- what a test or an overlay
+## The code of the rule the reply broke (`R1` to `R11`; `F1` when the
+## runtime gave no reply at all, `F2` when the server refused the request
+## itself), or "" -- what a test or an overlay
 ## compares, since the sentence after it is free to change.
 func refusal_code() -> String:
 	return _refusal.get_slice(" ", 0) if _refusal != "" else ""

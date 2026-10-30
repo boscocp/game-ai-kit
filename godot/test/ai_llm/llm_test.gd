@@ -211,8 +211,71 @@ func test_the_http_runtime_reads_the_text_out_of_the_servers_envelope() -> void:
 		good.to_utf8_buffer())
 	assert_int(replies.size()).is_equal(6)
 	assert_str(replies[0].speech).is_equal("Evening.")
-	for index: int in range(1, 6):
+	for index: int in range(1, 5):
 		assert_str(replies[index].refusal_code()).is_equal("F1")
+	# A 400 is the request refused, whatever its body says: never the reply.
+	assert_str(replies[5].refusal_code()).is_equal("F2")
+	assert_str(replies[5].refusal).contains("the server gave no reason")
+
+
+func test_the_server_refusing_the_request_is_told_apart_from_the_reply_refused() -> void:
+	# What the pinned llama.cpp server answered (spec/llm/server-answers.json),
+	# handed over as request_completed would, with no server running. Before
+	# T93 a 400 and a 500 both became F1: a server refusing every request
+	# turned every turn into "no reply came", and nothing said why.
+	var path: String = ProjectSettings.globalize_path("res://").path_join(
+		"../spec/llm/server-answers.json")
+	var recorded: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))["answers"]
+	var runtime: HttpRuntime = _in_scene(HttpRuntime.new())
+	var conversation := LlmConversation.new(runtime, _validator(), "You guard a gate.")
+	var replies: Array[LlmReply] = _replies_of(conversation)
+	for name: String in recorded:
+		var answer: Dictionary = recorded[name]
+		runtime._on_request_completed(SUCCESS, int(answer["status"]), PackedStringArray(),
+			(answer["body"] as String).to_utf8_buffer())
+		assert_str(replies.back().refusal_code()).override_failure_message(name) \
+			.is_equal(answer["code"])
+		assert_str(replies.back().intent).is_equal("unclear")
+	assert_int(replies.size()).is_equal(recorded.size())
+	# The server's own reason reaches the game, on one short line.
+	assert_str(replies[0].refusal).contains("HTTP 400").contains("but got: bogus")
+	assert_str(replies[1].refusal).contains("HTTP 500").contains("cannot resolve $ref")
+	assert_str(replies[2].refusal).contains("Loading model")
+
+
+func test_the_servers_reason_is_cleaned_before_a_game_can_show_it() -> void:
+	# The server's words reach `refusal`, which a game shows, and no
+	# validator read them (T93's review): line breaks and control characters
+	# become spaces, markup is dropped, and the sentence is cut.
+	var runtime: HttpRuntime = _in_scene(HttpRuntime.new())
+	var conversation := LlmConversation.new(runtime, _validator(), "You guard a gate.")
+	var replies: Array[LlmReply] = _replies_of(conversation)
+	var message: String = "first line\nsecond\tline [b]bold[/b] <i>*x*</i> `code`\u0007end"
+	var long_message: String = "y".repeat(HttpRuntime.ERROR_LENGTH + 50)
+	for text: String in [message, long_message]:
+		var body: String = JSON.stringify({"error": {"code": 500, "message": text}})
+		runtime._on_request_completed(SUCCESS, 500, PackedStringArray(), body.to_utf8_buffer())
+	var shown: String = replies[0].refusal.get_slice("HTTP 500: ", 1)
+	assert_str(shown).is_equal("first line second line bbold/b ix/i code end")
+	assert_str(replies[0].refusal_code()).is_equal("F2")
+	assert_int(replies[1].refusal.get_slice("HTTP 500: ", 1).length()).is_equal(HttpRuntime.ERROR_LENGTH)
+
+
+func test_the_http_runtime_asks_on_the_one_port() -> void:
+	var runtime: HttpRuntime = auto_free(HttpRuntime.new())
+	assert_str(runtime.url).is_equal("http://127.0.0.1:%d/v1/chat/completions" % HttpRuntime.PORT)
+
+
+func test_the_schema_goes_in_the_form_the_pinned_server_honours() -> void:
+	# Measured at b11960 (docs/local-llm/server.md): the schema nested under
+	# `json_schema` is honoured; the README's form, `schema` beside `type`,
+	# is read as "any object" and the schema silently dropped.
+	var runtime: HttpRuntime = auto_free(HttpRuntime.new())
+	var messages: Array[Dictionary] = [{"role": "user", "content": "hello"}]
+	var body: Dictionary = JSON.parse_string(runtime.request_body(messages, {"type": "object"}))
+	assert_str(body["response_format"]["type"]).is_equal("json_schema")
+	assert_bool((body["response_format"] as Dictionary).has("schema")).is_false()
+	assert_dict(body["response_format"]["json_schema"]["schema"]).is_equal({"type": "object"})
 
 
 func test_a_server_nobody_runs_becomes_the_games_fallback() -> void:

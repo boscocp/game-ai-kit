@@ -115,13 +115,17 @@ func validate(raw_text: String) -> LlmReply:
 
 
 ## The game's own answer, standing in for a reply that was refused -- or for
-## no reply at all, when the runtime failed (`F1`, which is not a rule of
-## this validator but is answered the same way).
+## no reply at all, when the runtime failed (`F1`) or the server refused
+## the request (`F2`), which are not rules of this validator but are
+## answered the same way.
 func fallback(refusal: String, raw_text: String = "") -> LlmReply:
 	return LlmReply.new(_fallback_speech, FALLBACK_INTENT, "", refusal, raw_text)
 
 
-## The code and sentence of the first rule `raw_text` breaks, or "".
+## The code and sentence of the first rule `raw_text` breaks, or "". The
+## sentence never quotes what the model wrote -- a made-up key, intent or
+## argument is what R10 and R11 never read, and a game shows the sentence --
+## only what the game declared (T93's review).
 func why_refused(raw_text: String) -> String:
 	# First what the parser would take and should not, or read differently
 	# from Python's -- before it reads it: a NUL escape makes it print a
@@ -239,16 +243,16 @@ func _why_shape_is_wrong(data: Dictionary) -> String:
 	keys.sort()
 	for key: Variant in keys:
 		if not REPLY_KEYS.has(key):
-			return "R4 the reply has `%s`, which the shape does not" % key
+			return "R4 the reply has a key the shape does not"
 	for key: String in REPLY_KEYS:
 		if not (data[key] is String):
 			return "R5 `%s` is not a string" % key
 	var intent: String = data["intent"]
 	var argument: String = data["argument"]
 	if not _intents.has(intent):
-		return "R6 `%s` is not an intent this game declared" % intent
+		return "R6 the intent is not one this game declared"
 	if argument != "" and not (_intents[intent] as PackedStringArray).has(argument):
-		return "R7 `%s` is not an argument `%s` takes" % [argument, intent]
+		return "R7 the argument is not one `%s` takes" % intent
 	return why_speech_is_wrong(data["speech"])
 
 

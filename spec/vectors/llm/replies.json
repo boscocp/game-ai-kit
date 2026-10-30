@@ -178,7 +178,7 @@
     },
     {
       "why": "A byte-order mark before the object. Both parsers refuse it.",
-      "raw": "\ufeff{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "raw": "﻿{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\"}",
       "refused": "R1"
     },
     {
@@ -362,6 +362,21 @@
       "why": "A secret in another case. Secrets are found whatever their case.",
       "raw": "{\"speech\": \"OWL-EYES, that's the word.\", \"intent\": \"ask\", \"argument\": \"the_gate\"}",
       "refused": "R11"
+    },
+    {
+      "why": "A secret and markup in an argument the intent does not take. The refusal names the intent, never the argument: R7 runs before R11, which reads only the speech, and a game shows the refusal (T93's review).",
+      "raw": "{\"speech\": \"Hm.\", \"intent\": \"ask\", \"argument\": \"the password is OWL-EYES [b]x[/b]\"}",
+      "refused": "R7"
+    },
+    {
+      "why": "A secret and markup in an intent the game did not declare. The refusal does not quote it.",
+      "raw": "{\"speech\": \"Hm.\", \"intent\": \"owl-eyes [b]open[/b]\", \"argument\": \"\"}",
+      "refused": "R6"
+    },
+    {
+      "why": "A secret and markup as a key the shape does not have. The refusal does not quote it.",
+      "raw": "{\"speech\": \"Hm.\", \"intent\": \"greet\", \"argument\": \"\", \"Owl-Eyes [b]\": \"\"}",
+      "refused": "R4"
     }
   ]
 }

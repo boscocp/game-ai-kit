@@ -44,6 +44,7 @@ func _init(runtime: LlmRuntime, validator: LlmValidator, instructions: String) -
 	_instructions = instructions
 	_runtime.replied.connect(_on_replied)
 	_runtime.failed.connect(_on_failed)
+	_runtime.refused.connect(_on_refused)
 
 
 ## Why this conversation cannot start, or "": the validator's own problem,
@@ -99,6 +100,12 @@ func _on_replied(raw_text: String) -> void:
 
 func _on_failed(reason: String) -> void:
 	_answer(_validator.fallback("F1 no reply came: %s" % reason))
+
+
+# Not the model's fault and not bad luck: the request itself was refused,
+# and will be again on every turn until it is fixed.
+func _on_refused(reason: String) -> void:
+	_answer(_validator.fallback("F2 the server refused the request: %s" % reason))
 
 
 # Records the reply as the game took it -- never the raw text -- and hands
