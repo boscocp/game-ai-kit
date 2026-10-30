@@ -13,7 +13,9 @@
 #     one used to pass, and showed no decision at all;
 #   * its legend says something on every line, and fits on the screen --
 #     with a pad's lines in it, planted (`PadAsKeys.planted`), since none
-#     can be connected headless; an example with a pad must show them (T103).
+#     can be connected headless; an example with a pad must show them (T103),
+#     and its legend must end above the window's gutter and 8 px clear of
+#     whatever is below it in its column (T108).
 #
 # Each rule first rejects a planted example built in memory below, because
 # `lint-selftests` only reaches `scripts/` and nothing else would notice one
@@ -74,6 +76,14 @@ const STEPS: int = 3
 
 ## The window's width, from `project.godot`; a legend line past it is cut off.
 const SCREEN_WIDTH: float = 1280.0
+## Its height, and the gutter a legend's last line ends above its bottom:
+## `locale_screen.gd`'s BOTTOM_MARGIN, the gutter every board leaves (T108).
+const SCREEN_HEIGHT: float = 720.0
+const BOTTOM_MARGIN: float = BoardLayout.GUTTER
+## How far above whatever is below it in its column a legend must end. Chosen,
+## not measured: about half a 13-16 px line, enough to read two blocks as two
+## -- a legend ending exactly where its neighbour starts is touching it.
+const NEIGHBOUR_MARGIN: float = 8.0
 
 
 ## Counts what the engine reports as an error while an example runs.
@@ -115,6 +125,7 @@ static func chosen_locale(arguments: PackedStringArray) -> String:
 func _run() -> void:
 	var failures: Array[String] = _planted_values()
 	failures += await _planted_examples()
+	failures += await _planted_heights()
 	for path: String in SCENES:
 		failures += await _check_scene(path)
 	for failure: String in failures:
@@ -167,6 +178,12 @@ func _check_example(label: String, example: Node, required: Array) -> Array[Stri
 		var empty: String = _why_empty(overlay[field])
 		if empty != "":
 			failures.append("%s: overlay field %s is %s" % [label, field, empty])
+	# Measured after the steps, when a status has its words, and only where
+	# there is a pad: its lines are what made legends too tall (T108).
+	if _has_pad(example):
+		var height: String = _why_the_legend_is_too_tall(example, example.find_child("Legend", true, false) as Legend)
+		if height != "":
+			failures.append("%s: %s" % [label, height])
 	return failures + _check_required(label, overlay, required)
 
 
@@ -216,6 +233,41 @@ func _right_edge_of(legend: Legend, words: String) -> float:
 	return legend.get_global_rect().position.x + Legend.SWATCH + Legend.WORDS_GAP + width
 
 
+# How far down the legend goes, against the window's bottom and against what
+# is below it in its column (T108). The window alone would pass the racers,
+# whose legends end inside it and over their status.
+func _why_the_legend_is_too_tall(example: Node, legend: Legend) -> String:
+	var top_left: Vector2 = legend.get_global_rect().position
+	var bottom: float = top_left.y + legend.drawn_height()
+	if bottom > SCREEN_HEIGHT - BOTTOM_MARGIN:
+		return "the legend ends at y=%.0f, past the window's gutter at %.0f" % [bottom, SCREEN_HEIGHT - BOTTOM_MARGIN]
+	var column := Rect2(top_left, Vector2(maxf(legend.size.x, legend.drawn_width()), legend.drawn_height()))
+	for neighbour: Control in _shown_below(example, legend, column):
+		var neighbour_top: float = neighbour.get_global_rect().position.y
+		var found: Array = [bottom, NEIGHBOUR_MARGIN, neighbour.name, neighbour_top]
+		if bottom + NEIGHBOUR_MARGIN > neighbour_top:
+			return "the legend ends at y=%.0f, less than %.0f px above %s at y=%.0f" % found
+	return ""
+
+
+# Every visible Control under `node` that starts no higher than `column` and
+# shares some of its width: what the legend could run into. Not the legend,
+# nor what holds it, nor a Label with nothing to say.
+func _shown_below(node: Node, legend: Legend, column: Rect2) -> Array[Control]:
+	var found: Array[Control] = []
+	for child: Node in node.get_children():
+		found += _shown_below(child, legend, column)
+		var control := child as Control
+		if control == null or control == legend or control.is_ancestor_of(legend) or not control.is_visible_in_tree():
+			continue
+		var rect: Rect2 = control.get_global_rect()
+		var says_nothing: bool = control is Label and (control as Label).text.strip_edges() == ""
+		var beside: bool = rect.position.x < column.end.x and rect.end.x > column.position.x
+		if rect.position.y >= column.position.y and beside and rect.has_area() and not says_nothing:
+			found.append(control)
+	return found
+
+
 # With the pad planted, an example that has one must show its lines, or the
 # widths above were measured without them (wave 109's review).
 func _why_the_pad_is_missing(example: Node, legend: Legend) -> String:
@@ -225,6 +277,10 @@ func _why_the_pad_is_missing(example: Node, legend: Legend) -> String:
 		if pad != null and not pad.legend_lines(legend).any(func(line: String) -> bool: return line in shown):
 			return "has a pad, and none of the pad's lines in its legend"
 	return ""
+
+
+func _has_pad(example: Node) -> bool:
+	return example.get_children().any(func(node: Node) -> bool: return node is PadAsKeys)
 
 
 # Why a value tells a person nothing, or "" when it tells them something.
@@ -302,6 +358,48 @@ func _planted_examples() -> Array[String]:
 	var no_pad_line: Array[String] = await _check_node("planted", with_pad, ["p_win", true])
 	failures += _judge_planted("a pad with no line in the legend", no_pad_line, "none of the pad's lines")
 	return failures
+
+
+# Legends with a pad, each ending somewhere known (T108): past the window;
+# inside it and over the Label below; exactly where that Label starts, which
+# is touching, not clear of it; and the margin below it, which must pass. A
+# rule that measured only the window would pass the second and third.
+func _planted_heights() -> Array[String]:
+	var cases: Dictionary = {
+		"a legend past the window": [SCREEN_HEIGHT - 30.0, NAN, "past the window's gutter"],
+		"a legend over the Label below it": [100.0, -10.0, "above Status"],
+		"a legend touching the Label below it": [100.0, 0.0, "above Status"],
+		"a legend clear of the Label below it": [100.0, NEIGHBOUR_MARGIN, ""],
+	}
+	var failures: Array[String] = []
+	for label: String in cases:
+		var spec: Array = cases[label]
+		var found: Array[String] = await _check_node("planted", _planted_tall(spec[0], spec[1]), ["p_win", true])
+		failures += _judge_planted(label, found, spec[2])
+	return failures
+
+
+# A sound example whose legend, at `legend_top`, carries a pad's lines, with
+# a Label starting `gap` below the legend's last line -- none when `gap` is
+# NAN.
+func _planted_tall(legend_top: float, gap: float) -> Node:
+	var counting: String = "var count := 0\nfunc step_decision():\n\tcount += 1\n"
+	var example: Node = _planted_node(counting + "func decision_overlay():\n\treturn {\"p_win\": 0.5, \"n\": count}", true)
+	var legend: Legend = example.get_node("Legend")
+	legend.position = Vector2(0.0, legend_top)
+	legend.size = Vector2(300.0, 40.0)
+	var pad := PadAsKeys.new()
+	pad.use({JOY_BUTTON_A: KEY_SPACE, JOY_BUTTON_B: KEY_R})
+	example.add_child(pad)
+	pad.add_to(legend)
+	if not is_nan(gap):
+		var below := Label.new()
+		below.name = "Status"
+		below.text = "status"
+		below.position = Vector2(0.0, legend_top + legend.drawn_height() + gap)
+		below.size = Vector2(300.0, 40.0)
+		example.add_child(below)
+	return example
 
 
 func _judge_planted(label: String, found: Array[String], wanted: String) -> Array[String]:

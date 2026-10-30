@@ -27,7 +27,7 @@ text = "loading"
 
 [node name="Legend" type="Control" parent="Interface"]
 offset_left = 680.0
-offset_top = 20.0
+offset_top = 8.0
 offset_right = 1270.0
 offset_bottom = 210.0
 script = ExtResource("9_legend")

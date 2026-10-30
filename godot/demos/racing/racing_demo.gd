@@ -31,6 +31,10 @@ const YOURS: int = 0
 const DOTS: Array[Color] = [Color(0.95, 0.3, 0.1), Color(0.2, 0.55, 1.0), Color(1.0, 0.85, 0.1), Color(0.1, 0.1, 0.1)]
 ## Each car's wander follows the same seed, so a restart races the same race.
 const SEED: int = 23
+## Between the legend's last line and the status under it. The legend grows
+## by the pad's lines, two or three of them, and the status follows it down;
+## the minimap sits in the view's corner to leave the status the room (T108).
+const BELOW_LEGEND: float = 12.0
 
 ## The controller, as the keys (wave 84): the stick steers, the triggers
 ## brake and drive, the D-pad chooses the AI, Y watches, X starts again,
@@ -82,7 +86,8 @@ func _notification(what: int) -> void:
 		_refresh()
 
 
-# The legend, then the pad's buttons under it when a pad is connected.
+# The legend, then the pad's buttons under it when a pad is connected, and
+# the status moved to just below its last line.
 func _show_legend() -> void:
 	_legend.set_entries([
 		[Art.texture(Art.RACING_CARS[0]), tr("you")],
@@ -96,6 +101,7 @@ func _show_legend() -> void:
 		[RacingTrackView.FAST, tr("line: only top speed limits it")],
 	] as Array[Array])
 	_pad.add_to(_legend)
+	_status.position.y = _legend.position.y + _legend.drawn_height() + BELOW_LEGEND
 
 
 func _physics_process(delta: float) -> void:

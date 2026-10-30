@@ -65,8 +65,8 @@ script = ExtResource("3_radar")
 
 [node name="Legend" type="Control" parent="Interface"]
 offset_left = 860.0
-offset_top = 500.0
+offset_top = 440.0
 offset_right = 1270.0
-offset_bottom = 708.0
+offset_bottom = 696.0
 mouse_filter = 2
 script = ExtResource("4_legend")
