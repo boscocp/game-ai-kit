@@ -13,7 +13,7 @@ func test_the_addon_meets_every_claim() -> void:
 
 
 func test_a_search_with_a_spare_draw_fails_both_games() -> void:
-	var planted: Callable = func(game: AdversarialGame, state: RefCounted, from_seed: int,
+	var planted: Callable = func(game: GakAdversarialGame, state: RefCounted, from_seed: int,
 			exploration: float, limit: int) -> MonteCarloSearch:
 		return SpareDraw.new(game, state, from_seed, exploration, limit)
 	for name: String in ["mcts-nim.json", "mcts-dice-race.json"]:
@@ -21,7 +21,7 @@ func test_a_search_with_a_spare_draw_fails_both_games() -> void:
 
 
 func test_a_search_with_the_same_draws_read_differently_fails_both_games() -> void:
-	var planted: Callable = func(game: AdversarialGame, state: RefCounted, from_seed: int,
+	var planted: Callable = func(game: GakAdversarialGame, state: RefCounted, from_seed: int,
 			exploration: float, limit: int) -> MonteCarloSearch:
 		return MirroredExpansion.new(game, state, from_seed, exploration, limit)
 	for name: String in ["mcts-nim.json", "mcts-dice-race.json"]:
@@ -76,7 +76,7 @@ func _with(dictionary: Dictionary, key: String, value: Variant) -> Dictionary:
 ## the earlier draw chose, so putting the outcome's draw first changes how
 ## many draws there are. `MirroredExpansion` keeps the count instead.
 class SpareDraw extends MonteCarloSearch:
-	func _init(game: AdversarialGame, state: RefCounted, from_seed: int, exploration: float,
+	func _init(game: GakAdversarialGame, state: RefCounted, from_seed: int, exploration: float,
 			limit: int) -> void:
 		super(game, state, from_seed, exploration, limit)
 
@@ -103,7 +103,7 @@ class SpareDraw extends MonteCarloSearch:
 ## differently: expansion counts its drawn index from the other end of the
 ## untried moves -- rule 2 broken, nothing else.
 class MirroredExpansion extends MonteCarloSearch:
-	func _init(game: AdversarialGame, state: RefCounted, from_seed: int, exploration: float,
+	func _init(game: GakAdversarialGame, state: RefCounted, from_seed: int, exploration: float,
 			limit: int) -> void:
 		super(game, state, from_seed, exploration, limit)
 

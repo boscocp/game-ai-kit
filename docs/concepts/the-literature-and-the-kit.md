@@ -282,7 +282,7 @@ owner answered; B.1 was done in T70; B.3, B.4 and B.5 are not tasks.)*
    use: what the bot match had assumed came out when the guards used it.
 2. **`ai_adversarial` in a second board game** -- the same game as A.1,
    so MCTS and alpha-beta face the same position. What it shows: whether
-   `AdversarialGame` is an interface or checkers' shape.
+   `GakAdversarialGame` is an interface or checkers' shape.
 3. **`ai_opponent` outside the fighting game** -- an n-gram predicting a
    rock-paper-scissors player, or the RTS commander predicting the
    player's next build. What it shows: whether the predictor assumes

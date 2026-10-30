@@ -42,7 +42,7 @@ static func why_not_a_vector(vector: Dictionary) -> String:
 
 ## The search the addon builds, as a `make` for `wrong_claims`.
 static func addon_search() -> Callable:
-	return func(game: AdversarialGame, state: RefCounted, from_seed: int, exploration: float,
+	return func(game: GakAdversarialGame, state: RefCounted, from_seed: int, exploration: float,
 			limit: int) -> MonteCarloSearch:
 		return MonteCarloSearch.new(game, state, from_seed, exploration, limit)
 
@@ -50,7 +50,7 @@ static func addon_search() -> Callable:
 ## Every claim in the vector the search `make` builds does not meet: the
 ## visits first, which move if one draw moves, then the means and the move.
 static func wrong_claims(vector: Dictionary, make: Callable) -> Array[String]:
-	var game: AdversarialGame = game_of(vector["game"])
+	var game: GakAdversarialGame = game_of(vector["game"])
 	var wrong: Array[String] = []
 	for case: Dictionary in vector["cases"]:
 		var search: MonteCarloSearch = _search_for(case, vector["game"], game, make)
@@ -62,7 +62,7 @@ static func wrong_claims(vector: Dictionary, make: Callable) -> Array[String]:
 
 
 # The search a case describes, built by `make`, before any step.
-static func _search_for(case: Dictionary, name: String, game: AdversarialGame, make: Callable) -> MonteCarloSearch:
+static func _search_for(case: Dictionary, name: String, game: GakAdversarialGame, make: Callable) -> MonteCarloSearch:
 	var start: RefCounted = state_of(name, case["state"])
 	return make.call(game, start, int(case["seed"]), float(case["exploration"]), int(case["playout_limit"]))
 
@@ -81,7 +81,7 @@ static func wrong_draws(vector: Dictionary) -> Array[String]:
 
 
 ## The test folder's own game for a vector's `game`.
-static func game_of(name: String) -> AdversarialGame:
+static func game_of(name: String) -> GakAdversarialGame:
 	return NIM.new() if name == "nim" else DICE_RACE.new()
 
 

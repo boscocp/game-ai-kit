@@ -115,7 +115,7 @@ func is_ready() -> bool:
 
 
 ## How good a position is for one player: `counts` by feature name, each
-## that player's minus the opponent's. Your `AdversarialGame.evaluate`
+## that player's minus the opponent's. Your `GakAdversarialGame.evaluate`
 ## returns this for a game that is not over.
 func score(counts: Dictionary) -> float:
 	return _model.predict_named(counts)
@@ -127,7 +127,7 @@ No Python: as regras do seu jogo, um jeito de ele jogar contra si mesmo,
 as contagens (a mesma função que o jogo vai calcular) e um rótulo por
 posição -- quem ganhou. Ajuste, e publique as *features* junto com os pesos
 para que a ordem nunca seja suposta. No Godot: as mesmas contagens, com os
-mesmos nomes, vindas do seu `AdversarialGame.evaluate` para um jogo que não
+mesmos nomes, vindas do seu `GakAdversarialGame.evaluate` para um jogo que não
 terminou; um jogo terminado continua devolvendo o seu resultado
 verdadeiro. O *bias* é publicado mas não é usado: uma busca só compara
 posições para um jogador, e uma constante somada a toda folha não muda

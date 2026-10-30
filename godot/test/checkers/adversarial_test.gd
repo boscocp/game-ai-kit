@@ -157,7 +157,7 @@ func _positions() -> Array[CheckersBoard]:
 ## A game tree written out as nested lists: a list is a position whose moves
 ## are its indexes, a number is a finished game worth that much to MAX. MAX
 ## moves at the root and the players alternate. A state is the moves made.
-class TreeGame extends AdversarialGame:
+class TreeGame extends GakAdversarialGame:
 	## Figure 5.2 of Russell & Norvig: MAX chooses among a1, a2, a3, and MIN
 	## among three leaves under each.
 	const BOOK: Array = [[3.0, 12.0, 8.0], [2.0, 4.0, 6.0], [14.0, 5.0, 2.0]]

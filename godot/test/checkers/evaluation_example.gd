@@ -29,7 +29,7 @@ func is_ready() -> bool:
 
 
 ## How good a position is for one player: `counts` by feature name, each
-## that player's minus the opponent's. Your `AdversarialGame.evaluate`
+## that player's minus the opponent's. Your `GakAdversarialGame.evaluate`
 ## returns this for a game that is not over.
 func score(counts: Dictionary) -> float:
 	return _model.predict_named(counts)

@@ -112,7 +112,7 @@ func is_ready() -> bool:
 
 
 ## How good a position is for one player: `counts` by feature name, each
-## that player's minus the opponent's. Your `AdversarialGame.evaluate`
+## that player's minus the opponent's. Your `GakAdversarialGame.evaluate`
 ## returns this for a game that is not over.
 func score(counts: Dictionary) -> float:
 	return _model.predict_named(counts)
@@ -124,7 +124,7 @@ In Python: your game's rules, a way to play it against itself, the counts
 (the same function the game will compute), and a label per position --
 who won. Fit, and publish the features with the weights so the order is
 never assumed. In Godot: the same counts, by the same names, from your
-`AdversarialGame.evaluate` for a game that is not over; a finished game
+`GakAdversarialGame.evaluate` for a game that is not over; a finished game
 still returns its true outcome. The bias is published but not used: a
 search only compares positions for one player, and a constant added to
 every leaf changes no choice.

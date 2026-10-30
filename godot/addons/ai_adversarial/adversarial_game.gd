@@ -36,7 +36,7 @@
 ## When not to use it: a game with hidden cards. Every search here assumes
 ## both players see the whole state.
 @abstract
-class_name AdversarialGame
+class_name GakAdversarialGame
 extends RefCounted
 
 

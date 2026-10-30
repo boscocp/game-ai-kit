@@ -51,7 +51,7 @@ class TreeNode extends RefCounted:
 	var untried: Array[int] = []
 	var visits: int = 0
 
-	func _init(game: AdversarialGame, held: RefCounted) -> void:
+	func _init(game: GakAdversarialGame, held: RefCounted) -> void:
 		state = held
 		player = game.to_move(held)
 		actions = game.actions(held)
@@ -85,7 +85,7 @@ class Descent extends RefCounted:
 	var branches: Array[Branch] = []
 
 
-var _game: AdversarialGame
+var _game: GakAdversarialGame
 var _root: TreeNode
 var _random: Xorshift
 var _exploration: float = EXPLORATION
@@ -95,7 +95,7 @@ var _iterations: int = 0
 
 ## A search for the player to move in `state`, its random choices drawn from
 ## `from_seed`. Nothing is searched until `step` is called.
-func _init(game: AdversarialGame, state: RefCounted, from_seed: int = 1,
+func _init(game: GakAdversarialGame, state: RefCounted, from_seed: int = 1,
 		exploration: float = EXPLORATION, playout_limit: int = PLAYOUT_LIMIT) -> void:
 	_game = game
 	_root = TreeNode.new(game, state)

@@ -8,7 +8,7 @@
 # certain, or roll: half the time nothing, a quarter of the time two squares,
 # a quarter of the time four squares *and you go again* -- chance, and a
 # side that may move twice running.
-extends AdversarialGame
+extends GakAdversarialGame
 
 ## The squares a runner must reach to win.
 const GOAL: int = 6
