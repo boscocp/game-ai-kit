@@ -99,7 +99,7 @@ func _physics_process(delta: float) -> void:
 
 ### What you implement {#implement}
 
-A new behaviour is one class: extend `SteeringBehaviour` and return a force
+A new behaviour is one class: extend `GakSteeringBehaviour` and return a force
 from `force(vehicle)`, clamped with `Steering.clamped`. If your node has its
 own physics -- a `CharacterBody2D` -- keep the vehicle as the point the
 behaviours reason about, and copy its velocity into `velocity` before

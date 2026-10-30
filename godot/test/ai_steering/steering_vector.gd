@@ -76,7 +76,7 @@ static func replay(vector: Dictionary) -> Dictionary:
 	var start: Dictionary = vector["vehicle"]
 	var car := SteeringVehicle.new(_vector(start["position"]), _vector(start["velocity"]),
 		start["max_speed"], start["max_force"])
-	var behaviours: Array[SteeringBehaviour] = []
+	var behaviours: Array[GakSteeringBehaviour] = []
 	var weights := PackedFloat64Array()
 	for spec: Dictionary in vector["behaviours"]:
 		behaviours.append(_behaviour(spec))
@@ -85,7 +85,7 @@ static func replay(vector: Dictionary) -> Dictionary:
 	var played: Dictionary = {}
 	for step: int in range(_last_step(vector) + 1):
 		var forces: Array[Vector2] = []
-		for each: SteeringBehaviour in behaviours:
+		for each: GakSteeringBehaviour in behaviours:
 			forces.append(each.force(car))
 		var force: Vector2 = Steering.combined(car, forces, weights)
 		played[step] = [car.position, car.velocity, force]
@@ -94,7 +94,7 @@ static func replay(vector: Dictionary) -> Dictionary:
 	return played
 
 
-static func _behaviour(spec: Dictionary) -> SteeringBehaviour:
+static func _behaviour(spec: Dictionary) -> GakSteeringBehaviour:
 	match spec["kind"]:
 		"seek":
 			return _seek(spec)
@@ -132,8 +132,8 @@ static func _pursue(spec: Dictionary) -> PursueBehaviour:
 
 
 # A quarry moves on at its own velocity after every step, as the file's does.
-static func _move_quarries(behaviours: Array[SteeringBehaviour], dt: float) -> void:
-	for each: SteeringBehaviour in behaviours:
+static func _move_quarries(behaviours: Array[GakSteeringBehaviour], dt: float) -> void:
+	for each: GakSteeringBehaviour in behaviours:
 		if each is PursueBehaviour:
 			var pursuit: PursueBehaviour = each
 			pursuit.quarry_position += pursuit.quarry_velocity * dt

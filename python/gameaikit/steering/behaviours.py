@@ -2,7 +2,7 @@
 
 The GDScript addon gives each one a file; here they share one, in the same
 order, because each is a dozen lines. Every one keeps the contract
-`SteeringBehaviour` states: it changes nothing, and the force it returns is
+`GakSteeringBehaviour` states: it changes nothing, and the force it returns is
 never longer than the vehicle's `max_force`.
 
     seek     full speed at a point -- and through it, forever

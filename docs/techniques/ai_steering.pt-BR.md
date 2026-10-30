@@ -103,7 +103,7 @@ func _physics_process(delta: float) -> void:
 
 ### O que você implementa {#implement}
 
-Um comportamento novo é uma classe: estenda `SteeringBehaviour` e devolva uma
+Um comportamento novo é uma classe: estenda `GakSteeringBehaviour` e devolva uma
 força em `force(vehicle)`, limitada com `Steering.clamped`. Se o seu nó tem
 física própria -- um `CharacterBody2D` -- mantenha o veículo como o ponto
 sobre o qual os comportamentos raciocinam, e copie a velocidade dele para

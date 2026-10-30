@@ -23,7 +23,7 @@
 ## pushing opposite ways leave the vehicle between them. A flow field or a
 ## navigation mesh is the answer there.
 class_name AvoidBehaviour
-extends SteeringBehaviour
+extends GakSteeringBehaviour
 
 ## Each obstacle's centre, and its radius at the same index.
 var centres: Array[Vector2] = []
