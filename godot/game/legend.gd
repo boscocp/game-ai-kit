@@ -39,6 +39,29 @@ static func width_of(words: String) -> float:
 	return ThemeDB.fallback_font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, TEXT_SIZE).x
 
 
+## How far down the legend's lines go, from its top: the last line's words,
+## their descent included, or its swatch, whichever ends lower. The box a
+## scene gives the legend does not hold it -- `_draw` goes on past it -- so a
+## check of what overlaps the legend measures this, not `size.y` (T108).
+## A last line with a clear swatch (words alone) draws no swatch, and is
+## over-counted by about a pixel: on the safe side.
+func drawn_height() -> float:
+	if entries.is_empty():
+		return 0.0
+	var last_top: float = (entries.size() - 1) * LINE
+	var descent: float = ThemeDB.fallback_font.get_descent(TEXT_SIZE)
+	return last_top + maxf(SWATCH + 2.0, SWATCH + 1.0 + descent)
+
+
+## How wide the legend's widest line is drawn, its swatch included: what it
+## covers to the right, which may be past its box.
+func drawn_width() -> float:
+	var widest: float = 0.0
+	for entry: Array in entries:
+		widest = maxf(widest, width_of(str(entry[1])))
+	return SWATCH + WORDS_GAP + widest
+
+
 ## Replace what the legend says. Called once, by the example that owns it.
 func set_entries(new_entries: Array[Array]) -> void:
 	entries = new_entries

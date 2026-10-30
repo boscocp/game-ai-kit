@@ -6,8 +6,9 @@
 ## did. Then the grid, and only then do the keys drive: for about twenty
 ## seconds they do nothing, and the status panel says so.
 ## The overlay (`RaceOverlay3D`) puts every decision on the road, the map
-## shows the race from above, and the trace under it is the watched car's
-## distance off where it wants to be.
+## in the view's corner shows the race from above, and the trace in the
+## panel, under the status, is the watched car's distance off where it
+## wants to be.
 ##
 ## Keys: arrows or WASD drive; 1 the PID (full, or proportional only), 2
 ## the heat line (or one rival at a time), 3 the grip (measured, or off the
@@ -28,6 +29,10 @@ const COLOURS: Array[Color] = [Color(0.3, 0.8, 0.35), Color(1.0, 0.6, 0.15), Col
 const MODEL_HEIGHT: float = 1.25
 const CHASE_BEHIND: float = 10.0
 const CHASE_ABOVE: float = 3.5
+## Between the legend's last line and the status under it. The legend grows
+## by the pad's lines and the status follows it down; the map sits in the
+## view's corner to leave the status and the trace the room (T108).
+const BELOW_LEGEND: float = 12.0
 
 ## The controller, as the keys (wave 84): the stick steers, the triggers
 ## brake and drive, the D-pad turns the full PID (left), the heat line (up)
@@ -73,7 +78,8 @@ func _notification(what: int) -> void:
 		_show_legend()
 
 
-# The legend, then the pad's buttons under it when a pad is connected.
+# The legend, then the pad's buttons under it when a pad is connected, and
+# the status moved to just below its last line.
 func _show_legend() -> void:
 	_legend.set_entries([
 		[RaceScenery3D.LINE_COLOUR, tr("the racing line each driver found")],
@@ -85,6 +91,7 @@ func _show_legend() -> void:
 		[RaceOverlay3D.BALL_COLOUR, tr("the ball: where that car means to be")],
 	])
 	_pad.add_to(_legend)
+	_status.position.y = _legend.position.y + _legend.drawn_height() + BELOW_LEGEND
 
 
 ## A new race on the current track: measuring first, then the grid.

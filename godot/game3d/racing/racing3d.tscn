@@ -46,23 +46,23 @@ script = ExtResource("2_legend")
 
 [node name="Status" type="Label" parent="Interface"]
 offset_left = 908.0
-offset_top = 164.0
+offset_top = 166.0
 offset_right = 1270.0
-offset_bottom = 444.0
+offset_bottom = 500.0
 theme_override_font_sizes/font_size = 13
 autowrap_mode = 3
 text = "loading"
 
 [node name="Trace" type="Control" parent="Interface"]
 offset_left = 908.0
-offset_top = 452.0
+offset_top = 568.0
 offset_right = 1270.0
-offset_bottom = 524.0
+offset_bottom = 640.0
 script = ExtResource("4_trace")
 
 [node name="Map" type="Control" parent="Interface"]
-offset_left = 908.0
-offset_top = 532.0
-offset_right = 1270.0
-offset_bottom = 710.0
+offset_left = 12.0
+offset_top = 518.0
+offset_right = 374.0
+offset_bottom = 696.0
 script = ExtResource("3_map")
