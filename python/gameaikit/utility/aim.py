@@ -32,7 +32,7 @@ class Zone:
     exposure: float = 1.0
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Choice:
     """For each zone aimed at, its own chance and the shot's worth; the zone
     aimed at (-1: none), and every zone's chance from that aim."""
@@ -65,17 +65,16 @@ def expected_from(aim: tuple[float, float], spread: float, zones: list[Zone]) ->
 @technique("aim-choice", "where on a body to aim: the zone whose shot is worth the most damage")
 def choose(zones: list[Zone], spread: float) -> Choice:
     """Aim at each zone in turn and keep the one worth the most."""
-    choice = Choice([], [], -1, [])
-    best = 0.0
+    own_chances: list[float] = []
+    expected: list[float] = []
+    aimed, aimed_chances, best = -1, [], 0.0
     for index, zone in enumerate(zones):
         chances = chances_from(zone.aim, spread, zones)
-        choice.own_chances.append(chances[index])
-        choice.expected.append(expected_from(zone.aim, spread, zones))
-        if choice.expected[index] > best:
-            best = choice.expected[index]
-            choice.aimed = index
-            choice.chances = chances
-    return choice
+        own_chances.append(chances[index])
+        expected.append(expected_from(zone.aim, spread, zones))
+        if expected[index] > best:
+            best, aimed, aimed_chances = expected[index], index, chances
+    return Choice(own_chances, expected, aimed, aimed_chances)
 
 
 def land(chances: list[float], roll: float) -> int:

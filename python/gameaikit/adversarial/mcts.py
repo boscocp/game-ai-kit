@@ -13,7 +13,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Any
 
-from gameaikit.adversarial.game import AdversarialGame
+from gameaikit.adversarial.game import Game
 from gameaikit.adversarial.xorshift import Xorshift
 from gameaikit.techniques import technique
 
@@ -26,7 +26,7 @@ PLAYOUT_LIMIT = 200
 class TreeNode:
     """A position in the tree: its state, whose turn, a branch per action."""
 
-    def __init__(self, game: AdversarialGame, state: Any) -> None:
+    def __init__(self, game: Game, state: Any) -> None:
         self.state = state
         self.player = game.to_move(state)
         self.actions = list(game.actions(state))
@@ -56,9 +56,13 @@ class Descent:
     branches: list[Branch] = field(default_factory=list)
 
 
-@dataclass
+@dataclass(frozen=True)
 class MctsResult:
-    """Where the search stands: the most visited move, every root move's numbers."""
+    """Where the search stands: the most visited move, every root move's numbers.
+
+    Frozen: it is handed to the caller, and a later step of the search
+    builds a new one rather than changing the one already read (T64).
+    """
 
     action: Any = None
     considered: list[dict] = field(default_factory=list)
@@ -67,9 +71,9 @@ class MctsResult:
 
 @technique("monte-carlo-tree-search", "UCT over a game: the move whose random play-outs win most, within a budget")
 class MonteCarloSearch:
-    """UCT over an `AdversarialGame`, run a bounded number of iterations at a time."""
+    """UCT over a `Game`, run a bounded number of iterations at a time."""
 
-    def __init__(self, game: AdversarialGame, state: Any, from_seed: int = 1,
+    def __init__(self, game: Game, state: Any, from_seed: int = 1,
                  exploration: float = EXPLORATION, playout_limit: int = PLAYOUT_LIMIT) -> None:
         self._game = game
         self._root = TreeNode(game, state)
@@ -87,15 +91,14 @@ class MonteCarloSearch:
 
     def result(self) -> MctsResult:
         """The most visited root move, of equals the first, and every move's numbers."""
-        found = MctsResult(iterations=self._iterations)
+        considered = [self._entry_for(index) for index in range(len(self._root.actions))]
+        action = None
         most_visits = -1
-        for index in range(len(self._root.actions)):
-            entry = self._entry_for(index)
-            found.considered.append(entry)
+        for entry in considered:
             if entry["visits"] > most_visits:
                 most_visits = entry["visits"]
-                found.action = entry["action"]
-        return found
+                action = entry["action"]
+        return MctsResult(action, considered, self._iterations)
 
     def _iterate(self) -> None:
         """One iteration: the loop body of the book's figure 5.11."""
