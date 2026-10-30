@@ -21,6 +21,23 @@ func after() -> void:
 	TranslationServer.set_locale(_locale_before)
 
 
+func test_a_scan_round_a_cell_is_the_same_scan_for_the_other_seat_turned() -> void:
+	# The building site's ring and the squad's open cell break their ties by
+	# the first fit cell of a scan; the i-th cell of east's must be the i-th
+	# of west's turned half round, as the map is (T57).
+	var west_ring: Array[Vector2i] = EconomyQueue._ring_cells(RtsScenario.home(RtsScenario.WEST), 2, RtsScenario.WEST)
+	var east_ring: Array[Vector2i] = EconomyQueue._ring_cells(RtsScenario.home(RtsScenario.EAST), 2, RtsScenario.EAST)
+	assert_array(east_ring).is_equal(west_ring.map(_turned))
+	var west_near: Array[Vector2i] = Squad._nearest_first(Vector2i(10, 20), 3, RtsScenario.WEST)
+	var east_near: Array[Vector2i] = Squad._nearest_first(_turned(Vector2i(10, 20)), 3, RtsScenario.EAST)
+	assert_array(east_near).is_equal(west_near.map(_turned))
+
+
+# `cell` with the map turned half round about its middle.
+static func _turned(cell: Vector2i) -> Vector2i:
+	return Vector2i(RtsScenario.MAP[0].length() - 1, RtsScenario.MAP.size() - 1) - cell
+
+
 func test_the_games_domain_is_a_byte_for_byte_copy_of_the_spec() -> void:
 	var spec: String = ProjectSettings.globalize_path("res://").path_join("../spec/pddl/rts-build-order.json")
 	assert_str(FileAccess.get_file_as_string(BuildOrder.DOMAIN_PATH)).is_equal(FileAccess.get_file_as_string(spec))

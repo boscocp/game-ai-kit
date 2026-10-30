@@ -18,7 +18,10 @@ How hundreds of units move and look around inside a sixtieth of a second.
 A **flow field** (`FlowField`) answers "how do I get to that cell?" once
 for everyone going there: a Dijkstra flood from the goal gives each cell an
 arrow, and a unit reads the arrow under its feet -- built a slice per frame
-so it never takes a whole one. A **spatial hash** (`SpatialHash`) answers
+so it never takes a whole one. Where two arrows are equally good it steps
+north or south first, which is fair to both seats of a map that is its
+own half-turn, and not to a map mirrored left to right or turned a
+quarter for four seats. A **spatial hash** (`SpatialHash`) answers
 "who is near this point?" by reading only the buckets a circle touches. A
 **frame budget** (`FrameBudget`) says how the frame is shared out and
 measures each layer against its share. Around them, `RtsWorld` is a whole

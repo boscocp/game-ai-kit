@@ -13,6 +13,7 @@
 extends SceneTree
 
 const StagedRaid := preload("res://test/rts/staged_raid.gd")
+const RtsMatchCheck := preload("res://test/rts/rts_match.gd")
 const SEEDS: int = 10
 
 
@@ -34,11 +35,20 @@ func _init() -> void:
 		func(side: int, seed_value: int) -> RtsSide: return RtsCommander.new(side, normal, seed_value, BuildOrder.Planner.HTN))
 	_levels()
 	_arming_ablated()
-	_pairing("the queues vs the queues: the seat's bias, west first",
-		func(side: int, seed_value: int) -> RtsSide: return QueueSide.new(side, normal, seed_value),
-		func(side: int, seed_value: int) -> RtsSide: return QueueSide.new(side, normal, seed_value), true)
+	_seat_bias()
 	_planners_on_the_same_questions()
 	quit(0)
+
+
+# The queues against themselves, by seat, over SEEDS: `rts_match.gd`'s own
+# mirror and its own test, so its claim 6's twelve matches are the first
+# twelve of these twenty.
+func _seat_bias() -> void:
+	var record: Dictionary = RtsMatchCheck.mirror_record(SEEDS)
+	var bias: String = RtsMatchCheck.seat_bias(record)
+	print("the queues vs the queues, by seat: west %d - east %d, %d drawn; p = %.3f, %s" % [record["west"],
+		record["east"], record["draw"], RtsMatchCheck.seat_p(record),
+		"within the bound test-rts-match holds" if bias == "" else bias])
 
 
 # The arm's ablation (T56): a normal commander that may arm against the same
@@ -139,8 +149,8 @@ func _questions_asked(seed_value: int) -> Array[Array]:
 
 
 # `first` against `second`, both seats each, over SEEDS; prints the record
-# and how the matches ended. With `by_seat`, counts wins by seat instead.
-func _pairing(label: String, first: Callable, second: Callable, by_seat: bool = false) -> void:
+# and how the matches ended. The seat's own bias is `_seat_bias`.
+func _pairing(label: String, first: Callable, second: Callable) -> void:
 	var record: Dictionary = {"first": 0, "second": 0, "draw": 0}
 	var lengths: Array[int] = []
 	var plan_micros: Array[int] = []
@@ -155,8 +165,6 @@ func _pairing(label: String, first: Callable, second: Callable, by_seat: bool = 
 		var won: int = ended["winner"]
 		if won == RtsVictory.DRAW:
 			record["draw"] += 1
-		elif by_seat:
-			record["first" if won == RtsScenario.WEST else "second"] += 1
 		else:
 			record["first" if won == first_side else "second"] += 1
 	lengths.sort()

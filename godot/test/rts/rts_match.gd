@@ -11,18 +11,39 @@
 #      call that does is caught by the same check;
 #   5. the commander against the priority queues alone, over seeds and both
 #      seats: the win rate printed, and the commander ahead, since ADR 0010
-#      says a commander that does not beat the queues has not earned its cost.
+#      says a commander that does not beat the queues has not earned its cost;
+#   6. the queues against themselves, over seeds and both seats: no seat
+#      wins so many of the decided matches that two fair seats would do it
+#      less than one time in twenty (T57) -- a person always plays west,
+#      and every pairing measured "from both seats" would average a seat's
+#      bias in without anyone seeing it. Planted lopsided records, either
+#      way, and a record with too few matches decided are refused first.
 #
 #     ./scripts/godot --headless --path godot -s res://test/rts/rts_match.gd
 #
 # Exit codes: 0 every claim held; 1 one did not. The slower measurements --
-# STRIPS against the HTN, each level against the next, the seat's bias --
-# are `make rts-measure`.
+# STRIPS against the HTN, each level against the next, the seat's bias over
+# ten seeds -- are `make rts-measure`.
 extends SceneTree
 
 const SEED: int = 20
 ## Seeds of claim 5, each played from both seats.
 const SWEEP_SEEDS: int = 4
+## Seeds of claim 6, each played twice with the two sides' dice swapped
+## between the seats. A mirror match runs the whole twenty minutes about
+## half the time, some 15 s headless, so six seeds is what the check can
+## afford; `make rts-measure` plays ten, and these twelve are its first.
+## Fewer decided matches than this and the record says nothing: refused.
+const MIRROR_SEEDS: int = 6
+## A seat's record is a bias when two fair seats would split the decided
+## matches at least that unevenly, either way, less often than this: an
+## exact two-sided binomial test (T57). Any change to the RTS re-deals all
+## twelve matches, so the bound is what a fair game trips by chance -- one
+## re-deal in twenty at most, where a fixed 70% share tripped one in seven.
+## On 12 it trips at 10 - 2 (p = 0.039); on 20 at 15 - 5 (0.041), T20's
+## record before its review. Twelve matches cannot see a 60/40 seat;
+## `make rts-measure`'s twenty barely can.
+const SEAT_P: float = 0.05
 
 
 func _init() -> void:
@@ -33,6 +54,7 @@ func _init() -> void:
 	failures.append_array(_within_the_frame(played))
 	failures.append_array(_plans_within_their_share(played))
 	failures.append_array(_commander_beats_the_queues())
+	failures.append_array(_neither_seat_favoured())
 	for failure: String in failures:
 		print(failure)
 	print("rts match: %d failure(s)" % failures.size())
@@ -182,3 +204,76 @@ func _commander_beats_the_queues() -> Array[String]:
 	if record["commander"] <= record["queues"]:
 		return ["claim 5: the commander did not beat the queues alone (%d - %d)" % [record["commander"], record["queues"]]]
 	return []
+
+
+# Claim 6, the planted records first: 10 - 2 either way must be refused,
+# so a check that looks at one seat only is caught, and so must twelve
+# matches all drawn, which would say nothing about either seat.
+func _neither_seat_favoured() -> Array[String]:
+	var planted: Dictionary = {"10 - 2 to the west": {"west": 10, "east": 2, "draw": 0},
+		"2 - 10 to the east": {"west": 2, "east": 10, "draw": 0}, "all drawn": {"west": 0, "east": 0, "draw": 12}}
+	for label: String in planted:
+		if seat_bias(planted[label]) == "":
+			return ["claim 6: a planted record, %s, passed the seat's check" % label]
+	var record: Dictionary = mirror_record(MIRROR_SEEDS)
+	print("the queues against themselves, by seat: west %d - east %d, %d drawn, over %d seeds; p = %.3f" % [
+		record["west"], record["east"], record["draw"], MIRROR_SEEDS, seat_p(record)])
+	var bias: String = seat_bias(record)
+	return [] if bias == "" else ["claim 6: " + bias]
+
+
+## The queues against themselves at normal, `seeds` seeds each played twice:
+## the same two dice swapped between the seats, so the seat is the only
+## thing that differs. {west, east, draw}: matches won by each seat.
+static func mirror_record(seeds: int) -> Dictionary:
+	var level: Difficulty = RtsLevels.named("normal")
+	var record: Dictionary = {"west": 0, "east": 0, "draw": 0}
+	for game: int in range(seeds * 2):
+		var seed_value: int = game / 2 + 1
+		var first: int = RtsScenario.WEST if game % 2 == 0 else RtsScenario.EAST
+		var second: int = RtsScenario.enemy_of(first)
+		var world: RtsWorld = RtsScenario.start(seed_value)
+		var played := RtsMatch.new(world, seed_value, {first: QueueSide.new(first, level, seed_value * 7 + 1),
+			second: QueueSide.new(second, level, seed_value * 7 + 2)})
+		while RtsVictory.winner(world) == RtsVictory.UNDECIDED:
+			played.play(RtsWorld.TICKS_PER_SECOND * 10)
+		var won: int = RtsVictory.winner(world)
+		record["draw" if won == RtsVictory.DRAW else ("west" if won == RtsScenario.WEST else "east")] += 1
+	return record
+
+
+## Why `record` ({west, east, draw}) shows a seat's bias: "" when the
+## decided matches are split no more unevenly than two fair seats would
+## split them one time in twenty (`SEAT_P`). Fewer than `MIRROR_SEEDS`
+## decided is refused too: a test on next to nothing passes anything. Read
+## by `rts_measure.gd` too, so the measurement and the check hold one bound.
+static func seat_bias(record: Dictionary) -> String:
+	var decided: int = record["west"] + record["east"]
+	if decided < MIRROR_SEEDS:
+		return "only %d of the mirror's matches were decided, under the %d it needs" % [decided, MIRROR_SEEDS]
+	var leader: String = "west" if record["west"] >= record["east"] else "east"
+	if seat_p(record) >= SEAT_P:
+		return ""
+	return "the %s seat won %d of %d decided matches; two fair seats split them so unevenly with p = %.3f, under %.2f" % [
+		leader, record[leader], decided, seat_p(record), SEAT_P]
+
+
+## How often two fair seats would split `record`'s decided matches at least
+## as unevenly, either way: twice the binomial tail of the leader's wins at
+## one half, capped at 1. The exact test, not a normal approximation, since
+## twelve matches are too few for one.
+static func seat_p(record: Dictionary) -> float:
+	var decided: int = record["west"] + record["east"]
+	var most: int = maxi(record["west"], record["east"])
+	var tail: float = 0.0
+	for wins: int in range(most, decided + 1):
+		tail += _ways(decided, wins) / pow(2.0, decided)
+	return minf(2.0 * tail, 1.0)
+
+
+# n choose k, as a float: the number of ways k wins fall among n matches.
+static func _ways(total: int, chosen: int) -> float:
+	var ways: float = 1.0
+	for index: int in range(chosen):
+		ways = ways * (total - index) / (index + 1)
+	return ways

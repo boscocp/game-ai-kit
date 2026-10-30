@@ -11,6 +11,9 @@
 ## heap -- because cell costs here are small whole numbers, and it is built in
 ## slices (`settle`) so a frame budget can spread it over several ticks.
 ## O(cells x the dearest cell) to build, O(1) per unit per tick to follow.
+## Where two arrows are equally good, a step north or south is taken first
+## (`_wins_tie`): fair to both seats of a map that is its own half-turn, but
+## not of one mirrored left to right, nor to four seats turned a quarter.
 ##
 ## When not to use it: few units with many different goals. Then each field
 ## is built for one reader, and A* from `ai_search`, which stops when it
@@ -79,8 +82,8 @@ func distance_at(cell: Vector2i) -> int:
 
 
 ## Which way to step from `cell`: towards the reachable neighbour nearest the
-## goal, ties broken in `GakGridGraph.DIRECTIONS` order. Zero at the goal, and
-## where there is no way on.
+## goal, ties broken by `_wins_tie` so the field turned half round is the
+## field to the turned goal. Zero at the goal, and where there is no way on.
 func direction_at(cell: Vector2i) -> Vector2i:
 	var best: Vector2i = Vector2i.ZERO
 	var best_distance: int = distance_at(cell)
@@ -88,10 +91,30 @@ func direction_at(cell: Vector2i) -> Vector2i:
 		return Vector2i.ZERO
 	for direction: Vector2i in GakGridGraph.DIRECTIONS:
 		var distance: int = distance_at(cell + direction)
-		if distance != UNREACHABLE and distance < best_distance:
+		if distance == UNREACHABLE or distance > best_distance:
+			continue
+		if distance < best_distance or (best != Vector2i.ZERO and _wins_tie(direction, best, goal - cell)):
 			best_distance = distance
 			best = direction
 	return best
+
+
+## Of two steps equally near the goal, true when `step` is taken over
+## `other`; `toward` points from the cell to the goal. A step north or south
+## before one east or west; along one axis, the step that keeps the goal on
+## its left, then the one heading at it. Each question reads the same on the
+## board turned half round -- north for one seat is south for the other, and
+## left stays left -- so on a half-turn map neither seat walks a different
+## route to the same place. Taking `DIRECTIONS` in order chose north over
+## west but east over south, which are not each other turned (T57).
+static func _wins_tie(step: Vector2i, other: Vector2i, toward: Vector2i) -> bool:
+	if (step.x == 0) != (other.x == 0):
+		return step.x == 0
+	var left: int = step.x * toward.y - step.y * toward.x
+	var other_left: int = other.x * toward.y - other.y * toward.x
+	if left != other_left:
+		return left > other_left
+	return step.x * toward.x + step.y * toward.y > other.x * toward.x + other.y * toward.y
 
 
 # Take one cell off the queue and offer its neighbours a distance through it.

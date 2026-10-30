@@ -7,7 +7,7 @@ tier: 2
 source: https://ojs.aaai.org/index.php/AIIDE/article/view/12435/12294 ; book:Elijah Emerson, "Crowd Pathfinding and Steering Using Flow Field Tiles", in Steve Rabin (ed.), "Game AI Pro", CRC Press, 2013
 invalidated_if: the kit's FlowField, SpatialHash, FrameBudget, RtsWorld or RtsController signatures change, or the demos that use them are renamed
 teaches: strategy-ai
-translation_of: 30614c09b10b1cb03f25523ec7073cda8197951efd32e08970af3d4ee68d42b8
+translation_of: 9ffeaccee337cc4a2a84798982b68711a81cbd22fb10cab52668c5231b9a34c9
 -->
 
 > English: [ai_rts_core.md](ai_rts_core.md). Os termos que ficam em inglês
@@ -20,7 +20,10 @@ de segundo. Um *flow field* (`FlowField`) responde "como chego àquela
 célula?" uma vez para todos que vão para lá: uma inundação de Dijkstra a
 partir do objetivo dá a cada célula uma seta, e uma unidade lê a seta sob
 os seus pés -- montado uma fatia por quadro, para nunca ocupar um quadro
-inteiro. Um *spatial hash* (`SpatialHash`) responde "quem está perto deste
+inteiro. Onde duas setas são igualmente boas, ele dá primeiro o passo
+para norte ou sul, o que é justo com os dois lados de um mapa que é o seu
+próprio meio giro, e não com um mapa espelhado da esquerda para a direita
+nem girado de um quarto para quatro lados. Um *spatial hash* (`SpatialHash`) responde "quem está perto deste
 ponto?" lendo só os baldes que um círculo toca. Um *frame budget*
 (`FrameBudget`) diz como o quadro é repartido e mede cada camada contra a
 sua parte. Em volta deles, `RtsWorld` é uma partida inteira e
