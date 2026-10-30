@@ -61,7 +61,9 @@ class MctsResult:
     """Where the search stands: the most visited move, every root move's numbers.
 
     Frozen: it is handed to the caller, and a later step of the search
-    builds a new one rather than changing the one already read (T64).
+    builds a new one rather than changing the one already read (T64). The
+    freeze is shallow -- `considered` is a list, as the vectors compare it --
+    so a caller that changes it changes only its own copy's contents.
     """
 
     action: Any = None

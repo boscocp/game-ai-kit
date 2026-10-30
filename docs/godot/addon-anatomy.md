@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-12
+verified_on: 2026-10-30
 tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/plugins/editor/making_plugins.html ; https://docs.godotengine.org/en/stable/community/asset_library/submitting_to_assetlib.html ; https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html
 invalidated_if: Godot changes how class_name registers, how a relative preload resolves, how @abstract is enforced, or the Asset Library starts requiring plugin.cfg
@@ -58,6 +58,26 @@ Checked rather than assumed, because the rules shape the release step:
 - "Above all, the asset must work" in the stated Godot version, or it is
   rejected.
 
+**Read again on 2026-10-30 (T64), on the 4.7 page.** Nothing above changed.
+What the release step takes from it:
+
+- The page still requires only a LICENSE in the repository and a "proper"
+  `.gitignore`; it recommends a `.gitattributes` with `export-ignore`
+  (`/** export-ignore`, then `/addons !export-ignore`) so the ZIP an entry
+  downloads holds the addon alone. **The Asset Library downloads a
+  repository's archive at a commit**, not a zip this kit builds, so that
+  advice is for the repository an entry points at. This repository's addons
+  are under `godot/addons/`, not `addons/`, and its own `git archive` is
+  what `release.py`'s self-test reads -- an `export-ignore` here would
+  change it. How an entry reaches a repository of that shape is decided
+  when the owner publishes (ADR 0009, revisited), and is not done yet.
+- The zips `make release` writes already have the layout the page
+  recommends: one top folder that unzips into `addons/<name>/`, with the
+  licence, NOTICE and a readme inside it.
+- The page says nothing about tests or `plugin.cfg`, and asks that script
+  warnings be fixed or suppressed. Tests never ship: `release.py` refuses a
+  gdUnit4 suite inside an addon folder.
+
 ## Names to get right in Godot 4.7
 
 | use | not |
@@ -112,7 +132,8 @@ extends RefCounted
 @abstract func find_path(graph: GakGridGraph, from: Vector2i, to: Vector2i) -> Array[Vector2i]
 ```
 
-A subclass that does not replace `find_path` does not load:
+A subclass that does not replace `find_path` does not load (measured again
+on 2026-10-30, after ADR 0024's rename, in `make check`'s output):
 
 ```
 Parse Error: Class "ForgetfulChild" must implement "GakPathfinder.find_path()"

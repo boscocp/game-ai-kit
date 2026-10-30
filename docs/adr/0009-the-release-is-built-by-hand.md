@@ -72,8 +72,10 @@ workflow holds a token that could.
   install ./python`; it names setuptools, pinned, as its backend. The
   release still writes the wheel by hand, as decided above, but from that
   file's metadata, and refuses when the file's name, version, Python floor
-  or package list disagrees with VERSION and the manifests -- so the two
-  ways to get the wheel cannot drift. `python/` carries LICENSE and NOTICE
+  or package list disagrees with VERSION and the manifests, or a technique
+  holds a folder the file does not list. That holds what the two ways to
+  get the wheel are built from; nothing builds with setuptools and compares
+  the results, which would need setuptools installed. `python/` carries LICENSE and NOTICE
   of its own, the root's bytes, because PEP 639's `license-files` may name
   nothing above the project folder (`check_license.py` L25, L26).
 - The wheel holds only the technique packages. Until now it held every

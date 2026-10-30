@@ -2,6 +2,7 @@
   "module": "ai_llm",
   "kind": "technique",
   "about": "A language model as one more decider, behind a validator: the reply's one shape, the game's declared intents, recorded and HTTP runtimes off the frame, and the Python twin that replays a recorded conversation. No model.",
+  "summary": "A language model as one more decider, behind a validator: a reply becomes an action only as one intent your game declared, and the model is never waited on inside a frame.",
   "owns": [
     "godot/addons/ai_llm/",
     "godot/test/ai_llm/",

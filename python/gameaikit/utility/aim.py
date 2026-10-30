@@ -35,7 +35,10 @@ class Zone:
 @dataclasses.dataclass(frozen=True)
 class Choice:
     """For each zone aimed at, its own chance and the shot's worth; the zone
-    aimed at (-1: none), and every zone's chance from that aim."""
+    aimed at (-1: none), and every zone's chance from that aim.
+
+    Frozen, as a value handed back is (T64); shallowly, for the lists stay
+    lists, the shape the vectors compare."""
 
     own_chances: list[float]
     expected: list[float]

@@ -85,6 +85,10 @@ class APluggedInTechnique(unittest.TestCase):
         with self.assertRaises(ValueError):
             techniques.available(plugged("seek", "json:dumps"))
 
+    def test_two_plug_ins_may_not_share_a_name(self) -> None:
+        with self.assertRaises(ValueError):
+            techniques.available(plugged("pretty-json", "json:dumps") + plugged("pretty-json", "json:loads"))
+
     def test_with_none_installed_only_the_kits_are_listed(self) -> None:
         self.assertEqual(techniques.available([]), techniques.kit())
 

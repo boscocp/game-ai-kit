@@ -23,8 +23,13 @@ on the day: the Godot Asset Library's search returned nothing for `gak` or
 `game ai kit`; on PyPI `gameaikit` was free and `gak` taken, which does not
 matter, since Python has modules and needs no prefix.
 
-**Prefixed are the nine classes a user extends or hands in**, measured as
-the ones this repository itself extends or implements:
+**Prefixed are the nine classes a user's code names as a type** -- the
+ports a game extends or implements (`GakPathfinder`, `GakSearch`,
+`GakAdversarialGame`, ...), the kernel's grid it hands in, and
+`GakGameDomain`, the planning domain a reader copies to write their own --
+the owner's list of 2026-10-30, which is not "every class this repository
+extends": nothing extends `GakGridGraph`, and `GakGameDomain` is a
+concrete sample with static functions:
 
 | was | now | addon |
 |---|---|---|
@@ -50,8 +55,14 @@ shooter's choice by expected worth, the same kind of thing as
 
 **What ships is the techniques.** An addon zip holds the files its manifest
 (`modules/<name>.json`) owns under `godot/addons/<name>/`, plus LICENSE,
-NOTICE and VERSION; a test file inside the addon folder is refused, not
-dropped. The wheel holds the Python packages owned by modules of kind
+NOTICE, VERSION and a README written from the manifest's `summary` -- a
+line for a stranger, where `about` is for this repository's reader; a
+gdUnit4 suite inside the addon folder is refused, not dropped.
+
+**"Runs one test of it", outside the repository, is a script, not a
+suite.** Tests do not ship and a blank project has no gdUnit4, so `make
+library-check` runs `scripts/library/stranger.gd` there: the route the
+`ai_search` page shows, required to print its marker as well as to exit 0. The wheel holds the Python packages owned by modules of kind
 `technique`, not the examples' (`checkers`, `maze`, `tactical`, ...),
 which are the kit's games, not its library.
 

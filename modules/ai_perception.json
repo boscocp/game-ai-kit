@@ -2,6 +2,7 @@
   "module": "ai_perception",
   "kind": "technique",
   "about": "Vision cones and shapes, line of sight, light, hearing straight and along paths, typed events, awareness, memory, a belief map, a particle belief, and an influence map.",
+  "summary": "What an agent perceives and believes: vision cones and shapes, line of sight, light, hearing along paths, awareness, memory, a belief map, a particle belief and an influence map.",
   "owns": [
     "godot/addons/ai_perception/",
     "godot/test/ai_perception/",

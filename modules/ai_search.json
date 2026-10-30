@@ -2,6 +2,7 @@
   "module": "ai_search",
   "kind": "technique",
   "about": "A*, breadth-first, depth-first and Dijkstra, and a cost flood to every node within a limit.",
+  "summary": "A*, breadth-first, depth-first and Dijkstra over a graph, and a cost flood to every node within a limit.",
   "owns": [
     "godot/addons/ai_search/",
     "godot/test/ai_search/",

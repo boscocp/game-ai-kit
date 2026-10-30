@@ -117,7 +117,7 @@ GLOBAL = (
 # so a change here selects no module.
 PROSE = (
     "docs/", "tasks/", "README.md", "README.pt-BR.md", "CONTRIBUTING.md", "CLAUDE.md",
-    "LICENSE", "NOTICE", "VERSION", ".gitignore", "python/README.md",
+    "LICENSE", "NOTICE", "VERSION", ".gitignore",
 )
 
 KINDS = {"kernel", "technique", "example"}

@@ -21,10 +21,14 @@ directory, so what is checked is what `make release` ships.
 
 Why `--self-test` exists
 ------------------------
-To prove the check refuses. It builds the release, takes `grid_graph.gd`
-out of `ai_core`'s zip -- the file every script of `ai_search` needs -- and
-expects the Godot half to fail; then takes `gameaikit/utility/aim.py` out
-of the wheel's install and expects the Python half to fail.
+To prove the check refuses, and refuses for the reason planted. It builds
+the release and first runs both halves untouched, which must pass: a
+Godot that does not start, or a venv with no pip, would otherwise fail
+every planted case for the wrong reason and the self-test would go green.
+Then it takes `grid_graph.gd` out of `ai_core`'s zip -- the file every
+script of `ai_search` needs -- and expects the Godot half to fail naming
+`GakGridGraph`; and takes `gameaikit/utility/aim.py` out of the wheel's
+install and expects the Python half to fail naming `aim`.
 
 Exit codes
 ----------
@@ -107,7 +111,7 @@ def python_half(wheel: pathlib.Path, place: pathlib.Path, drop: str = "") -> lis
             found.unlink()
     probe = subprocess.run([str(python), "-I", "-c", PROBE], capture_output=True, text=True, cwd=place)
     if probe.returncode != 0 or "LIBRARY-CHECK" not in probe.stdout:
-        return [f"the installed wheel does not answer: {probe.stderr.strip().splitlines()[-1:]}"]
+        return [f"the installed wheel does not answer: {probe.stderr.strip().splitlines()[-3:]}"]
     return []
 
 
@@ -135,7 +139,7 @@ def godot_half(zips: list[pathlib.Path], place: pathlib.Path) -> list[str]:
                          capture_output=True, text=True)
     output = ran.stdout + ran.stderr
     if ran.returncode != 0 or MARKER not in output:
-        errors = [line for line in output.splitlines() if "ERROR" in line][:3]
+        errors = [line for line in output.splitlines() if "ERROR" in line][:5]
         return [f"the addons do not run in a blank project (exit {ran.returncode}): {errors}"]
     return []
 
@@ -176,10 +180,16 @@ def self_test() -> int:
         place = pathlib.Path(workspace)
         artifacts = build_release(place / "release")
         core, search = addon_zips(artifacts)
-        if not godot_half([without(core, "ai_core/grid_graph.gd"), search], place / "no-grid"):
-            failures.append("an ai_core zip without grid_graph.gd fails the Godot half")
-        if not python_half(the_one(artifacts, "gameaikit-"), place / "no-aim", drop="aim.py"):
-            failures.append("a wheel install without utility/aim.py fails the Python half")
+        wheel = the_one(artifacts, "gameaikit-")
+        untouched = godot_half([core, search], place / "untouched") + python_half(wheel, place / "untouched")
+        if untouched:
+            failures.append(f"the untouched release passes both halves ({untouched})")
+        found = godot_half([without(core, "ai_core/grid_graph.gd"), search], place / "no-grid")
+        if not any("GakGridGraph" in line for line in found):
+            failures.append(f"an ai_core zip without grid_graph.gd fails, naming GakGridGraph ({found})")
+        found = python_half(wheel, place / "no-aim", drop="aim.py")
+        if not any("aim" in line for line in found):
+            failures.append(f"a wheel install without utility/aim.py fails, naming aim ({found})")
     for failure in failures:
         print(f"self-test FAIL: {failure}")
     print(f"self-test: {'ok' if not failures else str(len(failures)) + ' failure(s)'}")

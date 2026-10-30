@@ -56,3 +56,4 @@ godot/game3d/downloaded/
 # This checkout's own Godot user:// (T83, docs/adr/0022): scripts/godot points
 # XDG_DATA_HOME (APPDATA on Windows) here. Logs and test leftovers only.
 /.user-data/
+python/*.egg-info/

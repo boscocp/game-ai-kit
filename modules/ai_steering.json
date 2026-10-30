@@ -2,6 +2,7 @@
   "module": "ai_steering",
   "kind": "technique",
   "about": "Seek, arrive, pursue and avoid, in GDScript and Python.",
+  "summary": "Steering behaviours -- seek, arrive, pursue, avoid -- and a PID controller, as forces on a vehicle.",
   "owns": [
     "godot/addons/ai_steering/",
     "godot/test/ai_steering/",

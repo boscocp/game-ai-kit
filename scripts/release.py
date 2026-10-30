@@ -109,9 +109,11 @@ REQUIRES_PYTHON = ">=3.12"
 # stands on (ADR 0021). The examples' modules are the kit's games.
 SHIPPED_KINDS = ("technique", "kernel")
 
-# A gdUnit4 suite (`*_test.gd`) or a script that runs one. Tests live in
-# godot/test/<module>/; one inside an addon folder would ship to a stranger
-# who has no gdUnit4, so it is refused rather than quietly dropped.
+# A gdUnit4 suite: a `*_test.gd`, or any script extending GdUnitTestSuite.
+# Suites live in godot/test/<module>/; one inside an addon folder would ship
+# to a stranger who has no gdUnit4, so it is refused rather than quietly
+# dropped. A plain helper a suite uses is not recognised by its content --
+# that one is held by review, and by the manifest owning the test folder.
 TEST_FILE = re.compile(r"(^|/)[^/]*_test\.gd$")
 TEST_MARK = b"GdUnitTestSuite"
 
@@ -211,25 +213,32 @@ def addon_manifest(addon: str, every: dict[str, dict]) -> dict:
     return manifest
 
 
-def addon_readme(manifest: dict, version: str) -> bytes:
+def addon_readme(manifest: dict, version: str, files: dict[str, bytes]) -> bytes:
     """The README a stranger opens first: what the addon is, and what it needs.
 
-    Written from the manifest, so it cannot describe an addon other than the
-    one in the zip. The Asset Library asks for a readme inside the plugin
-    folder; this is that file.
+    Written from the manifest's `summary` -- its `about` is for this
+    repository's readers and names tasks a stranger cannot follow -- so it
+    cannot describe an addon other than the one in the zip. The Asset
+    Library asks for a readme inside the plugin folder; this is that file.
+    The note on the `Gak` prefix is printed only where the addon has a class
+    that carries it.
     """
     name = manifest["module"]
     needs = manifest["depends_on"]
-    lines = [f"# {name} {version}", "", manifest["about"], "",
+    if not manifest.get("summary"):
+        raise Refused(f"modules/{name}.json has no summary for the README a stranger reads")
+    prefixed = any(re.search(rb"^class_name Gak", data, re.M) for data in files.values())
+    lines = [f"# {name} {version}", "", manifest["summary"], "",
              f"Unzip into your project's `res://addons/`. The classes register "
              f"themselves by `class_name`; no plugin needs enabling."]
     if needs:
         lines += ["", "It needs " + ", ".join(f"`{each}`" for each in needs)
                   + ", from the same release: unzip that beside it."]
-    lines += ["", "The classes a game extends carry the prefix `Gak` (`GakSearch`, "
-              "`GakGridGraph`, ...); the algorithms keep their names. If one of "
-              "them collides with a class of yours, rename its `class_name` line, "
-              "and its uses, inside this folder.",
+    if prefixed:
+        lines += ["", "The classes a game extends carry the prefix `Gak`; the algorithms "
+                  "keep their names."]
+    lines += ["", "If a class here collides with one of yours, rename its `class_name` "
+              "line, and its uses, inside this folder.",
               "", "Apache-2.0: LICENSE and NOTICE are beside this file. "
               "Source, tests and documentation: https://github.com/boscocp/game-ai-kit", ""]
     return "\n".join(lines).encode()
@@ -256,7 +265,7 @@ def build_addon(repo: pathlib.Path, addon: str, version: str,
         raise Refused(f"{addon} holds a test, {tests[0]}; tests live in godot/test/{addon}/")
     files.update(attribution(repo, skip_notice))
     files["VERSION"] = f"{version}\n".encode()
-    files["README.md"] = addon_readme(manifest, version)
+    files["README.md"] = addon_readme(manifest, version, files)
 
     archive = dist / f"{addon}-{version}.zip"
     with zipfile.ZipFile(archive, "w") as bundle:
@@ -295,6 +304,15 @@ def project_table(repo: pathlib.Path, version: str, every: dict[str, dict]) -> d
     if listed != techniques | {PACKAGE}:
         raise Refused(f"python/pyproject.toml packages differ from the technique manifests "
                       f"by {sorted(listed ^ (techniques | {PACKAGE}))}")
+    # setuptools ships a listed package's own folder and no folder below it,
+    # and so does this script; a technique growing a subpackage would leave
+    # both wheels without it, and agree. Refused, until it is listed.
+    folders = {pathlib.PurePosixPath(path).parent.as_posix()[len("python/"):].replace("/", ".")
+               for package in techniques
+               for path in committed_files(repo, f"python/{package.replace('.', '/')}/")}
+    if folders - listed:
+        raise Refused(f"python/pyproject.toml does not list {sorted(folders - listed)}, "
+                      "a folder inside a technique's package")
     return project
 
 
@@ -541,7 +559,12 @@ def check_the_wheel(root: pathlib.Path) -> list[str]:
     from_wheel, from_tree = registered(site), registered(REPO / "python")
     if from_wheel.returncode != 0 or from_wheel.stdout != from_tree.stdout:
         failures.append(f"every technique imports from the wheel ({from_wheel.stderr.strip()})")
-    for game in ("checkers", "maze", "tactical"):
+    examples = {owned.split("/")[2] for manifest in manifests(REPO).values()
+                if manifest["kind"] == "example" for owned in manifest["owns"]
+                if owned.startswith(f"python/{PACKAGE}/") and owned.endswith("/")}
+    if not examples:
+        failures.append("the manifests name the examples' Python packages")
+    for game in sorted(examples):
         if (site / PACKAGE / game).exists():
             failures.append(f"the examples' {game} package stays out of the wheel")
     return failures
@@ -551,20 +574,37 @@ def check_manifest_refusals(root: pathlib.Path) -> list[str]:
     """What the manifests and pyproject.toml forbid is refused, each on its own commit.
 
     Planted in a clone, one commit each, and reset between: a test inside an
-    addon folder, an addon folder no manifest owns, a pyproject whose version
-    is not VERSION's, and one that lists an example's package.
+    addon folder, an addon folder no manifest owns, a subpackage pyproject
+    does not list, a pyproject whose version is not VERSION's, and one that
+    lists an example's package.
     """
     clone = root / "clone"
     subprocess.run(["git", "clone", "-q", str(REPO), str(clone)], check=True)
     head = head_commit(clone)
     pyproject = clone / "python" / "pyproject.toml"
+
+    def an_orphan_addon() -> None:
+        (clone / "godot/addons/ai_orphan").mkdir()
+        (clone / "godot/addons/ai_orphan/orphan.gd").write_text("extends RefCounted\n")
+
+    def a_subpackage() -> None:
+        (clone / "python/gameaikit/search/grids").mkdir()
+        (clone / "python/gameaikit/search/grids/__init__.py").write_text("")
+
+    def a_manifest_without_summary() -> None:
+        manifest = clone / "modules" / "ai_search.json"
+        data = json.loads(manifest.read_text())
+        del data["summary"]
+        manifest.write_text(json.dumps(data, indent=2) + "\n")
+
     plants = {
         "a test inside an addon": lambda: (clone / "godot/addons/ai_search/stray_test.gd")
         .write_text("extends GdUnitTestSuite\n"),
         "a script running a test suite": lambda: (clone / "godot/addons/ai_search/helper.gd")
         .write_text("extends GdUnitTestSuite\n"),
-        "an addon no manifest owns": lambda: (clone / "godot/addons/ai_orphan").mkdir()
-        or (clone / "godot/addons/ai_orphan/orphan.gd").write_text("extends RefCounted\n"),
+        "an addon no manifest owns": an_orphan_addon,
+        "a technique's subpackage pyproject does not list": a_subpackage,
+        "an addon whose manifest has no summary": a_manifest_without_summary,
         "a pyproject at another version": lambda: pyproject.write_text(
             pyproject.read_text().replace('version = "', 'version = "9', 1)),
         "a pyproject shipping an example": lambda: pyproject.write_text(

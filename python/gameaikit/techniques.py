@@ -92,13 +92,17 @@ def plugged_in(entry_points: list[metadata.EntryPoint] | None = None) -> dict[st
     `entry_points` is for a test to hand in its own; left out, the
     installed distributions are read. An entry point that loads a
     `Technique` keeps it; anything else callable is wrapped, its docstring's
-    first line taken as what it decides.
+    first line taken as what it decides. Two distributions declaring one
+    name is refused, as a plug-in taking a kit name is: whichever loaded
+    last would win, and which that is depends on the install.
     """
     found = metadata.entry_points(group=GROUP) if entry_points is None else entry_points
     plugged: dict[str, Technique] = {}
     for point in found:
         loaded = point.load()
         source = point.dist.name if point.dist is not None else "unknown"
+        if point.name in plugged:
+            raise ValueError(f"{plugged[point.name].source} and {source} both declare {point.name!r}")
         if isinstance(loaded, Technique):
             plugged[point.name] = dataclasses.replace(loaded, source=source)
         else:
