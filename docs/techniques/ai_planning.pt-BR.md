@@ -70,7 +70,7 @@ partir do tabuleiro. Os ajustes que importam:
 
 Uma pasta: `godot/addons/ai_planning/`. Ela não precisa de mais nada, nem
 do `ai_core`. Abra o projeto uma vez, ou rode `godot --headless --import`,
-para o Godot registrar as classes. `GameDomain` e `Difficulty` ali dentro
+para o Godot registrar as classes. `GakGameDomain` e `Difficulty` ali dentro
 são o domínio e os níveis do próprio kit; os seus os substituem. Para um
 domínio escrito em PDDL, o leitor fica do lado Python, em
 `python/gameaikit/pddl/`.

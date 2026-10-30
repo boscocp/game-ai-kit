@@ -9,7 +9,7 @@
 ## When not to use it: as the real game's domain. It is deliberately the
 ## smallest chain that a reactive rule cannot produce, and T11 is where a
 ## faction actually plays with it.
-class_name GameDomain
+class_name GakGameDomain
 extends RefCounted
 
 ## The army is at home and has not moved.

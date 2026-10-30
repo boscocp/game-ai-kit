@@ -30,7 +30,7 @@ because it plans over facts rather than over a board. From a release, unzip
 
 ```gdscript
 var plan: PlanResult = StripsPlanner.new().plan(
-	GameDomain.actions(), GameDomain.opening_world(), GameDomain.goal())
+	GakGameDomain.actions(), GakGameDomain.opening_world(), GakGameDomain.goal())
 print(plan.solved, " ", plan.visited)
 print(" -> ".join(plan.action_names()))
 # true 14
@@ -67,7 +67,7 @@ constants the way `game_domain.gd` does.
 
 ```gdscript
 var hurried: PlanResult = StripsPlanner.new().plan(
-	GameDomain.actions(), GameDomain.opening_world(), GameDomain.goal(), 3)
+	GakGameDomain.actions(), GakGameDomain.opening_world(), GakGameDomain.goal(), 3)
 print(hurried.solved, " ", hurried.gave_up)
 # false true
 ```
@@ -83,12 +83,12 @@ game, so set the budget from the time you can afford, and treat `gave_up` as
 
 ```gdscript
 var planner := HeuristicPlanner.new()
-var plan: PlanResult = planner.plan(GameDomain.actions(), GameDomain.opening_world(),
-	GameDomain.goal(), HeuristicPlanner.Guide.H_MAX)
+var plan: PlanResult = planner.plan(GakGameDomain.actions(), GakGameDomain.opening_world(),
+	GakGameDomain.goal(), HeuristicPlanner.Guide.H_MAX)
 print(plan.solved, " ", plan.visited, " ", plan.steps.size())
 # true 12 8
-var hurried: PlanResult = planner.plan(GameDomain.actions(), GameDomain.opening_world(),
-	GameDomain.goal(), HeuristicPlanner.Guide.H_ADD, 3)
+var hurried: PlanResult = planner.plan(GakGameDomain.actions(), GakGameDomain.opening_world(),
+	GakGameDomain.goal(), HeuristicPlanner.Guide.H_ADD, 3)
 print(hurried.partial, " ", hurried.gave_up, " ", " -> ".join(hurried.action_names()))
 # true true march_to_node -> take_the_node
 ```
@@ -109,8 +109,8 @@ bounds the work; the horizon bounds how far the plan sees, which is a
 difficulty knob, not a performance one:
 
 ```gdscript
-var short: PlanResult = planner.plan(GameDomain.actions(), GameDomain.opening_world(),
-	GameDomain.goal(), HeuristicPlanner.Guide.H_MAX, HeuristicPlanner.DEFAULT_BUDGET, 3)
+var short: PlanResult = planner.plan(GakGameDomain.actions(), GakGameDomain.opening_world(),
+	GakGameDomain.goal(), HeuristicPlanner.Guide.H_MAX, HeuristicPlanner.DEFAULT_BUDGET, 3)
 # short.partial is true, and short.steps holds at most 3 actions
 ```
 

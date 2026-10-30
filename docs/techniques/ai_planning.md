@@ -68,7 +68,7 @@ running from the board. The knobs that matter:
 
 One folder: `godot/addons/ai_planning/`. It needs nothing else, not even
 `ai_core`. Open the project once, or run `godot --headless --import`, so
-Godot registers its classes. `GameDomain` and `Difficulty` in it are the
+Godot registers its classes. `GakGameDomain` and `Difficulty` in it are the
 kit's own domain and levels; yours replace them. For a domain written in
 PDDL, the reader is on the Python side, in `python/gameaikit/pddl/`.
 
