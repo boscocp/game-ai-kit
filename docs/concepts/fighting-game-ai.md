@@ -234,50 +234,58 @@ what *you* will do; the bandit only measures what *its own* answers earned
 against you. ADR 0016's amendment lets it count during the fight, on the
 n-gram's three conditions, and `check_no_training.py`'s N13 holds the shape.
 
-Measured with `make measure-bandit` on 2026-10-30: lancer mirrors, 100
-fights per row, the bandit or T37's fixed opponent at the same level
-against each of T18's stand-ins and the owner's ghost (T40's frozen copy of
-the nine fights the owner recorded). "Settled after" is the median, over
-the 100 fights, of the pull after which the arm its busiest situation's
-bandit had pulled most stopped changing; beside it, how many pulls that
-bandit had in all.
+Measured with `make measure-bandit` on 2026-10-30, after a choice was
+counted as a pull when made and paid when its window closed: lancer
+mirrors, 100 fights per row, the bandit or T37's fixed opponent at the same
+level against each of T18's stand-ins and the owner's ghost (T40's frozen
+copy of the nine fights the owner recorded). "Settled after" is the median,
+over the 100 fights, of the pull after which the arm its busiest
+situation's bandit had pulled most stopped changing; beside it, how many
+pulls that bandit had in all.
 
 | against | level | T37 fixed wins | bandit wins, UCB1 at 0.5 | settled after | of | bandit wins, UCB1 at the square root of two | settled after | of |
 |---|---|---|---|---|---|---|---|---|
-| rushdown | medium | 68 | 78 | 25 | 55 | 71 | 41 | 59 |
-| rushdown | hard | 88 | 83 | 44 | 51 | 76 | 46 | 52 |
-| turtle | medium | 20 | 42 | 45 | 87 | 17 | 72 | 88 |
-| turtle | hard | 73 | 90 | 53 | 71 | 91 | 68 | 83 |
-| jumper | medium | 100 | 100 | 34 | 67 | 100 | 58 | 83 |
-| jumper | hard | 100 | 100 | 54 | 70 | 99 | 67 | 74 |
-| the owner's ghost | medium | 30 | 44 | 46 | 83 | 36 | 59 | 78 |
-| the owner's ghost | hard | 84 | 88 | 46 | 65 | 82 | 61 | 68 |
+| rushdown | medium | 68 | 86 | 35 | 60 | 64 | 44 | 64 |
+| rushdown | hard | 88 | 86 | 37 | 50 | 70 | 46 | 52 |
+| turtle | medium | 20 | 15 | 60 | 89 | 8 | 68 | 83 |
+| turtle | hard | 73 | 95 | 55 | 75 | 87 | 71 | 87 |
+| jumper | medium | 100 | 100 | 44 | 78 | 100 | 66 | 89 |
+| jumper | hard | 100 | 100 | 59 | 79 | 100 | 74 | 86 |
+| the owner's ghost | medium | 30 | 45 | 46 | 86 | 20 | 59 | 85 |
+| the owner's ghost | hard | 84 | 77 | 55 | 72 | 63 | 63 | 76 |
+
+**How much to read into it.** Each row is 100 fights from one set of seeds,
+so a difference under about ten wins is noise. And 0.5 was chosen against
+these same stand-ins and this ghost, so the 0.5 column flatters it the way
+T40's tuning flatters hard; no held-out opponent checks it.
 
 What it says:
 
-- **At the textbook's constant it barely settles in a fight.** The square
-  root of two is sized for payoffs anywhere in [0, 1]; these lie near 0.5
-  (four in five within a quarter of it, two in five on it), so the
-  exploration term outweighs every difference in mean, and the busiest
-  bandit is still changing its mind four-fifths of the way through the
-  fight. Against T37 it wins about as often -- more against the hard
-  turtle, less against the hard rushdown: it pays for exploring and is not
-  around long enough to collect.
+- **At the textbook's constant it barely settles in a fight, and loses.**
+  The square root of two is sized for payoffs anywhere in [0, 1]; these
+  lie near 0.5 (over four in five within a quarter of it, nearly half on
+  it), so the exploration term outweighs every difference in mean, and the
+  busiest bandit is still changing its mind 70 to 90 % of the way through
+  the fight. It beats T37 only against the hard turtle, and loses clearly
+  against the rushdown and the owner's ghost: it pays for exploring and is
+  not around long enough to collect.
 - **At 0.5, the constant the opponent ships with, it settles sooner** --
-  between half and seven-eighths of the way through its pulls, at medium
-  nearer half -- and the medium bandit beats
-  every opponent here at least as often as T37's medium: the turtle 42
-  times against 20, the owner's ghost 44 against 30.
-- **Hard gains less, and against the rushdown loses** (83 against 88).
-  T40 tuned hard's weights against the owner's ghost, and a fixed draw that
-  is already good leaves a bandit little to find and the price of trying
-  everything first -- ten options in neutral, each once.
+  between half and three-quarters of the way through its pulls -- and
+  wins at least as often as at the square root of two in every row. Against
+  T37 it gains clearly in three: the medium rushdown (86 against 68), the
+  medium ghost (45 against 30), the hard turtle (95 against 73).
+- **Elsewhere it is level, or behind.** Medium against the turtle (15
+  against 20), hard against the rushdown (86 against 88) and the owner's
+  ghost (77 against 84) are within or near the noise. T40 tuned hard's
+  weights against the owner's ghost, and a fixed draw that is already good
+  leaves a bandit little to find and the price of trying everything first
+  -- ten options in neutral, each once.
 
 So the answer to the task's question -- how many pulls before it settles
--- is 25 to 54 of its busiest situation's, at 0.5: half to most of what one
-fight gives it. And the lesson the
-table teaches is the bandit's own: exploring costs, and the constant that
-prices it should match how far apart the payoffs are.
+-- is 35 to 60 of its busiest situation's, at 0.5: half to three-quarters
+of what one fight gives it. And the lesson the table teaches is the
+bandit's own: exploring costs, and the constant that prices it should
+match how far apart the payoffs are.
 
 **Left, and why:**
 - **Deep reinforcement learning.** Tier 1 cannot train it, and the sources

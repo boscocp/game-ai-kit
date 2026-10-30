@@ -18,7 +18,10 @@ file: the bandit's settings (`policy`, `arms`, `exploration`, `epsilon`,
 `seed`), a `payoffs` sequence for each arm, and the claims -- the arm
 `chosen` on every pull, and each arm's final `pulls` and `sums`. The k-th
 pull of an arm pays its sequence's k-th payoff, from the start again when
-the sequence runs out. Both sides check every claim against the file, never
+the sequence runs out. Every payoff here is known at once, so a pull is
+`reward` -- `pull` and `pay` together -- and the paid count equals the
+pulls; a delayed payoff (`pull` now, `pay` later) is held by the unit
+tests in both languages, not by these files. Both sides check every claim against the file, never
 against each other: `make test-bandit-vectors` on the GDScript side, `make
 test-python` on the Python side.
 

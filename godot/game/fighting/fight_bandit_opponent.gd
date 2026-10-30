@@ -17,11 +17,19 @@
 ## input lands, subtracted from the lead when the window closes, scaled by
 ## `PAYOFF_RANGE` into [0, 1] -- 0.5 for nothing changed, 1 for a swing of
 ## `PAYOFF_RANGE` its way. It is read off the late fight it is handed, like
-## everything it knows: an option chosen on frame `s` lands on frame
-## `s + reaction + 1`, and is paid when the frame its window closes on is
-## handed to it. Windows overlap -- an option chosen while the last is still
-## being watched shares some of its frames -- and an option still waiting
-## when the fight ends is never paid. An option execution spoilt is paid as
+## everything it knows: an option chosen on seen frame `s` has its first
+## input applied to frame `s + reaction`, so its lead is read off that frame,
+## and it is paid when the frame its window closes on is handed to it.
+## Windows overlap -- an option chosen while the last is still being watched
+## shares some of its frames, so a hit can be credited to two options --
+## and an option still waiting when the fight ends is never paid. The task
+## asked for a window "after the option ends"; this one starts where the
+## option lands, so a strike's own hit is in its payoff.
+##
+## The next decision comes before the last payoff is known, so a choice is
+## counted as a pull when it is made (`Bandit.pull`) and paid when its
+## window closes (`Bandit.pay`): an option waiting for its payoff is not
+## untried, and is not chosen again for being poorly known. An option execution spoilt is paid as
 ## the option chosen: what an answer earns includes how often this level
 ## fumbles it.
 ##
@@ -47,14 +55,15 @@ const PAYOFF_WINDOW: int = 30
 const PAYOFF_RANGE: int = 100
 ## UCB1's exploration constant: 0.5, not the textbook's square root of two
 ## (`Bandit.EXPLORATION`). That one is sized for payoffs that may lie
-## anywhere in [0, 1]; four in five of these lie within a quarter of 0.5,
-## and two in five on it (1,799 payoffs, twenty fights of the medium bandit
-## against the turtle and the rushdown stand-ins), so at the
-## square root of two the exploration term outweighs every difference in
-## mean, and a bandit pulled sixty times in a fight is still trying
-## everything when the fight ends. Measured (`make measure-bandit`, the
-## fighting page): at 0.5 the medium bandit beats each stand-in and the
-## owner's ghost more often than T37's medium, and settles sooner.
+## anywhere in [0, 1]; over four in five of these lie within a quarter of
+## 0.5, and nearly half on it (2,481 payoffs, twenty fights of the medium
+## bandit against the turtle and the rushdown stand-ins), so at the square
+## root of two the exploration term outweighs every difference in mean,
+## and the busiest bandit is still changing its mind late in the fight.
+## Measured (`make measure-bandit`, the fighting page): at 0.5 it wins at
+## least as often as at the square root of two against every stand-in and
+## the owner's ghost, and settles sooner -- chosen against those same
+## opponents, so the page says how far to trust it.
 const EXPLORATION: float = 0.5
 
 ## One bandit for each situation it has seen this fight, by the situation's
@@ -64,6 +73,9 @@ var options_of: Dictionary = {}
 ## The arm it chose at its last decision, in `situation`'s bandit; -1 before
 ## its first.
 var chosen_arm: int = -1
+## Every arm of that bandit as it stood when it chose -- option, pulls,
+## mean and bound -- for the panel to draw. Empty before its first.
+var chosen_from: Array[Dictionary] = []
 ## The last option paid: its situation, its name and what it earned. Empty
 ## until the first window closes.
 var last_paid: Dictionary = {}
@@ -84,6 +96,7 @@ func new_fight() -> void:
 	options_of.clear()
 	_waiting.clear()
 	chosen_arm = -1
+	chosen_from = []
 	last_paid = {}
 
 
@@ -112,7 +125,7 @@ func pay(seen: FightState, me: int) -> void:
 # `earned`, and keep it as the last paid for the panel.
 func _reward(played: Dictionary, earned: float) -> void:
 	var name: String = played["situation"]
-	(bandits[name] as Bandit).reward(played["arm"], earned)
+	(bandits[name] as Bandit).pay(played["arm"], earned)
 	last_paid = {"situation": name, "option": options_of[name][played["arm"]], "payoff": earned}
 
 
@@ -150,5 +163,19 @@ func _draw(name: String, character: String) -> String:
 		var known: Array = _weighted_options(name, character)
 		options_of[name] = known.map(func(option: Array) -> String: return option[0])
 		bandits[name] = Bandit.new(known.size(), Bandit.UCB1, exploration)
-	chosen_arm = (bandits[name] as Bandit).choose()
+	var bandit: Bandit = bandits[name]
+	chosen_arm = bandit.choose()
+	chosen_from = _rows_of(bandit, name)
+	bandit.pull(chosen_arm)
 	return options_of[name][chosen_arm]
+
+
+# Each arm as the bandit saw it when it chose: its option, pulls, mean and
+# bound. Kept, so the panel shows the numbers the choice was made from,
+# not ones moved since by other windows closing.
+func _rows_of(bandit: Bandit, name: String) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for arm: int in range(bandit.arms()):
+		var option: String = options_of[name][arm]
+		rows.append({"option": option, "pulls": bandit.pulls[arm], "mean": bandit.mean(arm), "bound": bandit.bound(arm)})
+	return rows

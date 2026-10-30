@@ -132,7 +132,11 @@ func worth() -> Array[Dictionary]:
 The payoff: a number between 0 and 1 for what one pull earned -- a round
 won, damage dealt less damage taken, scaled -- and the moment it is known.
 `choose()` changes no count; only `reward()` does, so call it once per
-pull, with the arm you actually played. Keep the mean as the bandit keeps
+pull, with the arm you actually played. When the payoff comes later than
+the next choice -- a fighting game knows what an answer earned half a
+second after it lands -- call `pull(arm)` when you choose and `pay(arm,
+payoff)` when you know: an arm waiting for its payoff is then not
+"untried", and UCB1 does not pick it again for being poorly known. Keep the mean as the bandit keeps
 it, a sum over a count read when needed: a mean updated in place with
 `+= (payoff - mean) / n` is the same number with the shape of a learning
 step, and this kit's gate refuses it. Call `problem()` after building: `""`

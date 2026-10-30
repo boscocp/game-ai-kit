@@ -50,6 +50,22 @@ func test_a_payoff_outside_zero_to_one_is_kept_to_it() -> void:
 	assert_float(bandit.sums[0]).is_equal(1.0)
 
 
+# A game that learns the payoff later counts the pull when it chooses: an arm
+# waiting for its payoff is not untried, and its mean waits for the payoff.
+func test_a_pull_waiting_for_its_payoff_is_not_untried() -> void:
+	var bandit := Bandit.new(3)
+	var chosen: Array[int] = []
+	for pull: int in range(3):
+		var arm: int = bandit.choose()
+		chosen.append(arm)
+		bandit.pull(arm)
+	assert_array(chosen).is_equal([0, 1, 2])
+	assert_float(bandit.mean(0)).is_equal(0.0)
+	bandit.pay(0, 1.0)
+	assert_int(bandit.paid[0]).is_equal(1)
+	assert_float(bandit.mean(0)).is_equal(1.0)
+
+
 func test_choosing_changes_no_count() -> void:
 	var bandit := Bandit.new(3, Bandit.EPSILON_GREEDY)
 	for ask: int in range(5):

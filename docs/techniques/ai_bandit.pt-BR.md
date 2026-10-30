@@ -7,7 +7,7 @@ tier: 1
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- section 17.3, Bandit Problems ; https://homes.di.unimi.it/~cesabian/Pubblicazioni/ml-02.pdf
 invalidated_if: the kit's Bandit signature changes, ADR 0016's amendment is withdrawn, or the demos that use it are renamed
 teaches: fighting-game-ai
-translation_of: 6d995f0df7511cdb96645cdd425cfe595ffe420291411e9770e2a37d9b9c1c6c
+translation_of: f0b9d1d4a88e886b782177d1a11bb03924a1f1afef70680eeb760c77100a0de7
 -->
 
 > English: [ai_bandit.md](ai_bandit.md). Os termos que ficam em inglês
@@ -135,7 +135,11 @@ O pagamento: um número entre 0 e 1 para o que uma puxada rendeu -- uma
 rodada vencida, dano causado menos dano sofrido, escalado -- e o momento em
 que ele é conhecido. `choose()` não muda contagem nenhuma; só `reward()`
 muda, então chame-o uma vez por puxada, com o braço que você de fato
-jogou. Guarde a média como o *bandit* guarda, uma soma sobre uma contagem
+jogou. Quando o pagamento chega depois da próxima escolha -- um jogo de
+luta só sabe o que uma resposta rendeu meio segundo depois de ela acertar
+-- chame `pull(arm)` ao escolher e `pay(arm, payoff)` quando souber: um
+braço esperando o pagamento deixa de ser "nunca tentado", e o *UCB1* não o
+escolhe de novo por ser pouco conhecido. Guarde a média como o *bandit* guarda, uma soma sobre uma contagem
 lida quando preciso: uma média atualizada no lugar com `+= (payoff - mean)
 / n` é o mesmo número com a forma de um passo de aprendizado, e o *gate*
 deste kit a recusa. Chame `problem()` depois de construir: `""` quer dizer

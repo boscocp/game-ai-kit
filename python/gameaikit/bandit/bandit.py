@@ -1,7 +1,8 @@
 """Which option next? Counts of how often each was tried, and what it paid.
 
 Read `godot/addons/ai_bandit/bandit.gd` for the why: exploration against
-exploitation, UCB1's two terms, and what ADR 0016 allows. This file does the
+exploitation, UCB1's two terms, a payoff that arrives after the choice
+(`pull`, then `pay`), and what ADR 0016 allows. This file does the
 same arithmetic in the same order, and `spec/vectors/bandit/` holds both to
 the same choices.
 """
@@ -35,6 +36,7 @@ class Bandit:
         self.exploration = exploration
         self.epsilon = epsilon
         self.pulls = [0] * max(arms, 0)
+        self.paid = [0] * max(arms, 0)
         self.sums = [0.0] * max(arms, 0)
         self._draws = BanditDraws(seed)
 
@@ -55,10 +57,10 @@ class Bandit:
         return sum(self.pulls)
 
     def mean(self, arm: int) -> float:
-        """The arm's mean payoff, computed when read; 0 before its first pull."""
-        if self.pulls[arm] == 0:
+        """The arm's mean over its paid pulls, computed when read; 0 before its first payoff."""
+        if self.paid[arm] == 0:
             return 0.0
-        return self.sums[arm] / self.pulls[arm]
+        return self.sums[arm] / self.paid[arm]
 
     def bound(self, arm: int) -> float:
         """UCB1's bound: the mean plus the exploration term; infinite untried."""
@@ -80,8 +82,17 @@ class Bandit:
         return self._highest(self.mean)
 
     def reward(self, arm: int, payoff: float) -> None:
-        """Count one pull of `arm` and add what it paid, kept to [0, 1]."""
+        """Count one pull of `arm` and add what it paid: `pull` and `pay` at once."""
+        self.pull(arm)
+        self.pay(arm, payoff)
+
+    def pull(self, arm: int) -> None:
+        """Count one pull of `arm`, its payoff still to come."""
         self.pulls[arm] += 1
+
+    def pay(self, arm: int, payoff: float) -> None:
+        """Add what a pull of `arm` earned, kept to [0, 1]."""
+        self.paid[arm] += 1
         self.sums[arm] += min(max(payoff, 0.0), 1.0)
 
     def _first_untried(self) -> int:

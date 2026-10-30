@@ -24,6 +24,26 @@
 ##   it explores for ever, so what it loses grows in proportion to the pulls;
 ##   `test_bandit.py` measures both over 10,000 pulls.
 ##
+## **A payoff may come later than the choice.** A game often learns what a
+## pull earned only some time after it -- a fighting game half a second
+## after the answer lands -- and asks again before then. So a pull is
+## counted in two halves: `pull` when the arm is chosen, `pay` when what it
+## earned is known; `reward` is both at once. UCB1's exploration term reads
+## the pulls, paid or not, so an arm waiting for its payoff is not "untried"
+## and is not chosen again for being poorly known; the mean reads only the
+## paid ones, `sums[arm] / paid[arm]`. With every payoff known at once the
+## two counts are equal and this is the textbook's UCB1.
+##
+## **A payoff may come later than the choice.** A game often learns what a
+## pull earned only some time after it -- a fighting game half a second
+## after the answer lands -- and asks again before then. So a pull is
+## counted in two halves: `pull` when the arm is chosen, `pay` when what it
+## earned is known; `reward` is both at once. UCB1's exploration term reads
+## the pulls, paid or not, so an arm waiting for its payoff is not "untried"
+## and is not chosen again for being poorly known; the mean reads only the
+## paid ones, `sums[arm] / paid[arm]`. With every payoff known at once the
+## two counts are equal and this is the textbook's UCB1.
+##
 ## Of equal bounds or means, the first arm. A draw is spent only when
 ## epsilon-greedy has a choice to make, so the twin in Python
 ## (`gameaikit.bandit`) makes the same choices draw for draw.
@@ -62,9 +82,11 @@ var policy: String
 var exploration: float
 ## The chance epsilon-greedy pulls an arm at random.
 var epsilon: float
-## How often each arm was pulled, by its index.
+## How often each arm was pulled, by its index, paid for or not yet.
 var pulls: PackedInt64Array = PackedInt64Array()
-## What each arm paid, summed, by its index. A mean is `sums[arm] / pulls[arm]`.
+## How many of those pulls have been paid, by its index.
+var paid: PackedInt64Array = PackedInt64Array()
+## What each arm paid, summed, by its index. A mean is `sums[arm] / paid[arm]`.
 var sums: PackedFloat64Array = PackedFloat64Array()
 
 var _draws: BanditDraws
@@ -78,6 +100,7 @@ func _init(arm_count: int, choosing_by: String = UCB1, exploration_constant: flo
 	exploration = exploration_constant
 	epsilon = explore_chance
 	pulls.resize(maxi(arm_count, 0))
+	paid.resize(maxi(arm_count, 0))
 	sums.resize(maxi(arm_count, 0))
 	_draws = BanditDraws.new(draws_seed)
 
@@ -108,11 +131,12 @@ func total() -> int:
 	return counted
 
 
-## The arm's mean payoff, computed when it is read; 0 before its first pull.
+## The arm's mean payoff over its paid pulls, computed when it is read; 0
+## before its first payoff.
 func mean(arm: int) -> float:
-	if pulls[arm] == 0:
+	if paid[arm] == 0:
 		return 0.0
-	return sums[arm] / pulls[arm]
+	return sums[arm] / paid[arm]
 
 
 ## UCB1's bound for the arm: its mean plus the exploration term, which is
@@ -139,10 +163,23 @@ func choose() -> int:
 	return _highest(mean)
 
 
-## Count one pull of `arm` and add what it paid, kept to [0, 1], where
-## UCB1's bound holds.
+## Count one pull of `arm` and add what it paid: `pull` and `pay` at once,
+## for a game that knows the payoff when it chooses.
 func reward(arm: int, payoff: float) -> void:
+	pull(arm)
+	pay(arm, payoff)
+
+
+## Count one pull of `arm`, its payoff still to come: from now on it is not
+## untried, and its exploration term has shrunk.
+func pull(arm: int) -> void:
 	pulls[arm] += 1
+
+
+## Add what a pull of `arm` earned, kept to [0, 1], where UCB1's bound
+## holds. Each `pull` is paid once.
+func pay(arm: int, payoff: float) -> void:
+	paid[arm] += 1
 	sums[arm] += clampf(payoff, 0.0, 1.0)
 
 

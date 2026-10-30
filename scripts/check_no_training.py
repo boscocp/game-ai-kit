@@ -58,9 +58,13 @@ stops. This gate is four claims about that split:
     computes a mean when it is read; `x += rate * (target - x)` is a step
     towards a target, and so is the incremental mean `mean += (payoff -
     mean) / n`, which the amendment refuses because a gate cannot tell it
-    from a learning rate. A net for the common spellings, not a proof;
-    that the counts start empty and replay from the fight's log is held by
-    `fight_bandit_opponent_test.gd`;
+    from a learning rate -- nor the step written out with its left side
+    read back, or `lerp`; and inside `ai_bandit`, no scaled `+=` at all,
+    which catches a difference named on the line before. A net for the common spellings, not
+    a proof; that the counts start empty and replay from the fight's log is
+    held by `fight_bandit_opponent_test.gd`, and that is the only thing that
+    would catch a `static var` keeping bandits from one fight to the next,
+    which writes no file and steps nothing;
   * N15 the maze's MDP (T98): the published values and policy in
     `godot/game/maze/` are what `gameaikit.mdp.publish` solves from the committed
     rules, a fresh run writing the same bytes; and no GDScript writes a
@@ -186,6 +190,20 @@ BANDIT_HOLDERS_RE = re.compile(r"\b(?:Bandit|FightBanditOpponent)\b")
 # more, so `(-1)` is not one.
 DIFFERENCE = r"\([^()]*[\w)\]]\s*-\s*[^()]*\)"
 STEP_TOWARDS_RE = re.compile(rf"[-+]=.*(?:[*/]\s*{DIFFERENCE}|{DIFFERENCE}\s*[*/])")
+# The same step with the difference named on the line before -- `var delta
+# = payoff - mean`, then `mean += delta / n`: inside the bandit's addon,
+# nothing is added to or taken from a field scaled at all. Its counts grow
+# by one, and its sums by a payoff. Only there: a script that merely holds a
+# bandit adds `fight * 2` to a seed and takes `RANGE / 2` off a health, and
+# the rule would fire on good code.
+SCALED_ADD_RE = re.compile(r"[-+]=[^#]*[*/]")
+# The step written out: `mean = mean + (payoff - mean) / n`, the left side
+# read back on the right beside a difference multiplied or divided.
+SPELLED_STEP_RE = re.compile(rf"^\s*([A-Za-z_]\w*)\s*(?:\[[^\]]*\])*\s*=(?!=)(.*)$")
+STEP_SHAPE_RE = re.compile(rf"[*/]\s*{DIFFERENCE}|{DIFFERENCE}\s*[*/]")
+# And the engine's own step: `lerp(q[a], payoff, 0.1)` is `q[a] + 0.1 *
+# (payoff - q[a])`, and `move_toward` a step of fixed size.
+ENGINE_STEP_RE = re.compile(r"\b(?:lerp|lerpf|lerp_angle|move_toward)\s*\(")
 
 # The maze's MDP (T98): Python solves it and publishes two tables to
 # the maze game's folder, where `MdpPacMan` reads them. A line names
@@ -499,6 +517,26 @@ def holds_bandit(path: pathlib.Path, root: pathlib.Path, code: list[str]) -> boo
     return is_under(path, root, BANDIT_ADDON) or bool(BANDIT_HOLDERS_RE.search("\n".join(code)))
 
 
+def steps_towards(line: str, in_addon: bool) -> bool:
+    """True for a line, in the code view, that moves a value towards a target.
+
+    Four spellings: a compound step (`+= rate * (a - b)`), the step written
+    out with its left side read back (`x = x + (a - x) / n`), the engine's
+    `lerp` or `move_toward`, and -- inside the addon only -- any scaled
+    compound add (`+= delta / n`). Declarations are new names, and are not
+    steps.
+    """
+    if STEP_TOWARDS_RE.search(line) or ENGINE_STEP_RE.search(line):
+        return True
+    if in_addon and SCALED_ADD_RE.search(line):
+        return True
+    spelled = SPELLED_STEP_RE.match(line)
+    if not spelled or DECLARATION_RE.match(line):
+        return False
+    name, right = spelled.groups()
+    return bool(re.search(rf"\b{name}\b", right)) and bool(STEP_SHAPE_RE.search(right))
+
+
 def check_bandit_steps(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
     """N13's second half: beside a bandit, nothing moves a value a step
     towards a target -- a learning rate's step, or the incremental mean."""
@@ -507,8 +545,9 @@ def check_bandit_steps(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
         code = code_only(path.read_text(encoding="utf-8")).splitlines()
         if not holds_bandit(path, root, code):
             continue
+        in_addon = is_under(path, root, BANDIT_ADDON)
         for number, line in enumerate(code, start=1):
-            if STEP_TOWARDS_RE.search(line):
+            if steps_towards(line, in_addon):
                 findings.append(f"N13 {_label(path, repo)}:{number} moves a value a step towards a target; "
                                 "a bandit keeps pulls and sums, and computes a mean when it reads one (ADR 0016)")
     return findings
@@ -1394,7 +1433,10 @@ def self_test() -> int:
         for spelling in ["\tvalues[arm] += rate * (payoff - values[arm])\n",
                          "\t_value -= (_value - payoff) * 0.1\n",
                          "\tmeans[arm] += (payoff - means[arm]) / pulls[arm]\n",
-                         "\tmean += (payoff - mean)/n\n"]:
+                         "\tmean += (payoff - mean)/n\n",
+                         "\tmean = mean + (payoff - mean) / n\n",
+                         "\tq[arm] = lerp(q[arm], payoff, 0.1)\n",
+                         "\tvar delta: float = payoff - mean\n\tmean += delta / n\n"]:
             expect(f"a bandit's value stepped: {spelling.strip()[:36]}", quiet(build(
                 root, "banditstep" + str(abs(hash(spelling))), dict(
                     sound, **{str(BANDIT_ADDON / "bandit.gd"): "func reward(arm: int, payoff: float) -> void:\n" + spelling}))),
@@ -1407,7 +1449,7 @@ def self_test() -> int:
             sound, **{str(BANDIT_ADDON / "bandit.gd"):
                       "func reward(arm: int, payoff: float) -> void:\n\tpulls[arm] += 1\n"
                       "\tsums[arm] += clampf(payoff, 0.0, 1.0)\n\tvar lead: int = (after - before) * 2\n"
-                      "\ttotal += pulls[arm] * (-1)\n"}))),
+                      "\tcounted += pulled\n"}))),
             3)
         expect("a step outside the bandit's files is not N13's", quiet(build(root, "notabandit", dict(
             sound, **{str(GODOT / "game" / "steering.gd"): "\tposition += speed * (target - position)\n"}))),

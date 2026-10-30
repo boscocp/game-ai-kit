@@ -77,6 +77,18 @@ class TestBandit(unittest.TestCase):
         bandit.reward(0, -1.0)
         self.assertEqual(bandit.sums[0], 1.0)
 
+    def test_a_pull_waiting_for_its_payoff_is_not_untried(self) -> None:
+        bandit = Bandit(3)
+        chosen = []
+        for _ in range(3):
+            arm = bandit.choose()
+            chosen.append(arm)
+            bandit.pull(arm)
+        self.assertEqual(chosen, [0, 1, 2], "a pending arm is tried, not chosen again")
+        self.assertEqual(bandit.mean(0), 0.0)
+        bandit.pay(0, 1.0)
+        self.assertEqual((bandit.pulls[0], bandit.paid[0], bandit.mean(0)), (1, 1, 1.0))
+
     def test_choosing_changes_no_count(self) -> None:
         bandit = Bandit(3, EPSILON_GREEDY)
         for _ in range(5):

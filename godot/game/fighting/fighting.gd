@@ -270,17 +270,13 @@ func opponent_overlay() -> Dictionary:
 	return shown
 
 
-# The bandit of the situation it last named: each option's pulls, mean
-# payoff and UCB1 bound, the one it chose, and the last option paid.
+# The bandit of the situation it last named, as it stood when it chose:
+# each option's pulls, mean payoff and UCB1 bound, the one it chose, and the
+# last option paid.
 func _bandit_overlay(gambler: FightBanditOpponent) -> Dictionary:
-	var bandit: Bandit = gambler.current_bandit()
-	if bandit == null:
+	if gambler.chosen_from.is_empty():
 		return {"arms": "nothing chosen yet", "chosen_arm": -1, "last_paid": "nothing paid yet"}  # not shown
-	var arms: Array[Dictionary] = []
-	for arm: int in range(bandit.arms()):
-		var option: String = gambler.options_of[gambler.situation][arm]
-		arms.append({"option": option, "pulls": bandit.pulls[arm], "mean": bandit.mean(arm), "bound": bandit.bound(arm)})
-	return {"arms": arms, "chosen_arm": gambler.chosen_arm,
+	return {"arms": gambler.chosen_from, "chosen_arm": gambler.chosen_arm,
 			"last_paid": gambler.last_paid if not gambler.last_paid.is_empty() else "nothing paid yet"}  # not shown
 
 

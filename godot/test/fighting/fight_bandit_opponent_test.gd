@@ -36,9 +36,10 @@ func test_the_payoff_is_the_change_of_lead_scaled_into_zero_to_one() -> void:
 	assert_int(FightBanditOpponent.lead(state, 1)).is_equal(-40)
 
 
-# The first decision is made on frame 0 and lands `reaction` frames later;
-# it is paid only when the frame its window closes on is handed over, with
-# the lead it gained in between -- here, a hit the other fighter took.
+# The first decision is made on frame 0 and its first input is applied to
+# frame `reaction`; it is counted as a pull at once, and paid only when the
+# frame its window closes on is handed over, with the lead it gained in
+# between -- here, a hit the other fighter took.
 func test_an_option_is_paid_when_its_window_closes_on_the_frame_it_sees() -> void:
 	var gambler := FightBanditOpponent.new("medium", _data)
 	var state: FightState = FightState.starting(_data, "lancer", "lancer")
@@ -52,16 +53,19 @@ func test_an_option_is_paid_when_its_window_closes_on_the_frame_it_sees() -> voi
 		if frame == waiting["lands"] + 1:
 			state.fighters[0].health -= FightBanditOpponent.PAYOFF_RANGE / 2
 		gambler.pay(state, 1)
-	assert_int(bandit.total()).is_equal(0)
+	assert_int(bandit.total()).is_equal(1)
+	assert_int(bandit.paid[gambler.chosen_arm]).is_equal(0)
 	state.frame = closes
 	gambler.pay(state, 1)
-	assert_int(bandit.total()).is_equal(1)
+	assert_int(bandit.paid[gambler.chosen_arm]).is_equal(1)
 	assert_float(bandit.sums[gambler.chosen_arm]).is_equal(0.75)
 	assert_float(gambler.last_paid["payoff"]).is_equal(0.75)
 
 
 # Each situation has its own bandit, whose arms are the options its level
-# knows there, in that order; and every one is tried once before any twice.
+# knows there, in that order, at the opponent's own constant; and every one
+# is tried once before any twice -- with nothing paid yet, as in a fight,
+# where the next decision comes before the last option's window closes.
 func test_a_bandit_a_situation_its_arms_the_levels_options() -> void:
 	var gambler := FightBanditOpponent.new("hard", _data)
 	var state: FightState = FightState.starting(_data, "lancer", "lancer")
@@ -69,10 +73,31 @@ func test_a_bandit_a_situation_its_arms_the_levels_options() -> void:
 	for decision: int in range(FightOpponent.SITUATIONS["neutral"].size()):
 		gambler._decide(state, 1)
 		tried.append(gambler.options_of["neutral"][gambler.chosen_arm])
-		gambler.current_bandit().reward(gambler.chosen_arm, 0.5)
 	var expected: Array = FightOpponent.SITUATIONS["neutral"].map(func(option: Array) -> String: return option[0])
 	assert_array(tried).is_equal(expected)
 	assert_array(gambler.bandits.keys()).is_equal(["neutral"])
+	assert_float(gambler.current_bandit().exploration).is_equal(FightBanditOpponent.EXPLORATION)
+	assert_int(Array(gambler.current_bandit().paid).max()).is_equal(0)
+
+
+# Seated and fought, an option waiting for its payoff is never chosen again
+# as untried: until every option of a bandit has been chosen once, no option
+# is chosen twice.
+func test_a_pending_option_is_not_chosen_again_as_untried() -> void:
+	var gambler := FightBanditOpponent.new("hard", _data)
+	var seat := FightDelay.new(gambler, 1)
+	var state: FightState = FightState.starting(_data, "lancer", "lancer")
+	var firsts: Dictionary = {}
+	for frame: int in range(900):
+		var before: int = gambler.seen_frame
+		seat.input_for(state)
+		if gambler.seen_frame != before:
+			_note_first_round(firsts, gambler)
+		state = FightRules.step(state, [FightInput.LIGHT_PUNCH if frame % 40 == 0 else 0, 0] as Array[int], _data)
+	assert_dict(firsts).is_not_empty()
+	for situation: String in firsts:
+		var arms: Array = firsts[situation]
+		assert_int(arms.size()).override_failure_message(situation).is_equal(_unique(arms).size())
 
 
 # ADR 0016's first condition, as its amendment words it: counts and sums,
@@ -107,7 +132,11 @@ func test_every_fight_starts_with_no_bandit() -> void:
 
 
 # The third: the recorded fight, played twice through a bandit opponent
-# seated from its first frame, rebuilds the same counts twice.
+# seated from its first frame behind `FightDelay`, rebuilds the same counts
+# twice. What this proves is that the counts are a deterministic function of
+# `fight_log.json` and the seat; rebuilding the counts of a live bandit fight
+# from its own recording would also need the opponent's seed
+# (`fights_begun`), which the log does not keep.
 func test_the_recorded_fight_rebuilds_the_same_counts_twice() -> void:
 	var input_log: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://test/fighting/fight_log.json"))
 	var counts: Array[String] = []
@@ -133,15 +162,36 @@ func test_the_panel_shows_the_bandit_that_chose() -> void:
 	var shown: Dictionary = scene.opponent_overlay()
 	assert_array(shown["arms"]).is_not_empty()
 	assert_int(shown["chosen_arm"]).is_between(0, (shown["arms"] as Array).size() - 1)
+	# The numbers shown are the ones it chose from: the marked arm's bound is
+	# the highest (an untried arm's is infinite).
+	var chosen: float = shown["arms"][shown["chosen_arm"]]["bound"]
+	for row: Dictionary in shown["arms"]:
+		assert_float(chosen).is_greater_equal(float(row["bound"]))
 	var panel: String = FightingPanel.describe(scene.state, _data, true, scene.seat)
 	assert_str(panel).contains("its bandit for")
 	assert_str(panel).contains("> ")
 	assert_str(panel).contains("bound")
 
 
+# The arm just chosen, kept while its bandit is still in its first round.
+func _note_first_round(firsts: Dictionary, gambler: FightBanditOpponent) -> void:
+	var seen: Array = firsts.get_or_add(gambler.situation, [])
+	if seen.size() < gambler.current_bandit().arms():
+		seen.append(gambler.chosen_arm)
+
+
+func _unique(values: Array) -> Array:
+	var kept: Array = []
+	for value: Variant in values:
+		if not value in kept:
+			kept.append(value)
+	return kept
+
+
 func _counts_of(gambler: FightBanditOpponent) -> String:
 	var lines: PackedStringArray = []
 	for situation: String in gambler.bandits:
 		var bandit: Bandit = gambler.bandits[situation]
-		lines.append("%s %s pulls %s sums %s" % [situation, gambler.options_of[situation], bandit.pulls, bandit.sums])
+		var options: Array = gambler.options_of[situation]
+		lines.append("%s %s pulls %s paid %s sums %s" % [situation, options, bandit.pulls, bandit.paid, bandit.sums])
 	return "\n".join(lines)
