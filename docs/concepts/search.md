@@ -42,10 +42,10 @@ names are the literature's and the code keeps them.
 ## What a search asks of a graph
 
 Read the four files top to bottom and they ask a graph four things, and
-nothing else. That list, named, is the **port** -- `SearchGraph` -- and the
+nothing else. That list, named, is the **port** -- `GakSearchGraph` -- and the
 searches are written against it rather than against a grid:
 
-| the search asks | `SearchGraph` | a grid answers (`GridSearchGraph`) | six waypoints answer (`waypoint_test.gd`) |
+| the search asks | `GakSearchGraph` | a grid answers (`GridSearchGraph`) | six waypoints answer (`waypoint_test.gd`) |
 |---|---|---|---|
 | is this somewhere I can start? | `contains(node)` | the cell is on the board | it is one of the six |
 | where can I go from here? | `neighbours(node)` | the four cardinal cells, walls dropped | where its roads lead |

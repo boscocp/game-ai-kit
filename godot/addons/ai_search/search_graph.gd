@@ -19,7 +19,7 @@
 ## because every route into a node pays the same last step (`dijkstra.gd` says
 ## why). Charge per edge and you need the textbook's improvement branch back.
 @abstract
-class_name SearchGraph
+class_name GakSearchGraph
 extends RefCounted
 
 

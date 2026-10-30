@@ -27,7 +27,7 @@ func test_breadth_first_takes_the_fewest_hops_across_the_ford() -> void:
 
 
 func test_dijkstra_and_astar_go_round_the_top_because_it_is_cheaper() -> void:
-	for search: Search in [DijkstraSearch.new(), AStarSearch.new()] as Array[Search]:
+	for search: GakSearch in [DijkstraSearch.new(), AStarSearch.new()] as Array[GakSearch]:
 		var result: SearchResult = search.search(_Waypoints.new(), START, GOAL)
 
 		assert_array(result.path).override_failure_message(
@@ -49,7 +49,7 @@ func test_astar_costs_what_dijkstra_costs_with_a_consistent_guess() -> void:
 func test_every_search_walks_roads_that_exist() -> void:
 	# Depth-first is allowed any route; none is allowed one off the map.
 	var graph := _Waypoints.new()
-	for search: Search in _all_searches():
+	for search: GakSearch in _all_searches():
 		var result: SearchResult = search.search(graph, START, GOAL)
 
 		assert_bool(result.reached).is_true()
@@ -57,7 +57,7 @@ func test_every_search_walks_roads_that_exist() -> void:
 
 
 func test_a_start_that_is_not_a_waypoint_finds_nothing() -> void:
-	for search: Search in _all_searches():
+	for search: GakSearch in _all_searches():
 		var result: SearchResult = search.search(_Waypoints.new(), Vector2i(1, 0), GOAL)
 
 		assert_bool(result.reached).is_false()
@@ -65,7 +65,7 @@ func test_a_start_that_is_not_a_waypoint_finds_nothing() -> void:
 
 
 func test_a_guess_that_overshoots_makes_astar_quietly_dearer() -> void:
-	# The failure the promise on `SearchGraph.estimate` exists to prevent, shown
+	# The failure the promise on `GakSearchGraph.estimate` exists to prevent, shown
 	# rather than described: the guess calls the top route dear, A* believes it,
 	# and comes back fast with the ford. If this ever matched Dijkstra, the test
 	# above it could no longer tell a good guess from a bad one.
@@ -83,7 +83,7 @@ func test_a_guess_that_never_overshoots_can_still_mislead_this_astar() -> void:
 	# guess drops by 6 across a step that costs 1, so it is not consistent:
 	# the junction is reached first the dear way, by the detour, and is never
 	# looked at again. That is why the promise
-	# on `SearchGraph.estimate` says consistent.
+	# on `GakSearchGraph.estimate` says consistent.
 	var graph := _Admissible.new()
 
 	var honest: SearchResult = DijkstraSearch.new().search(graph, _Admissible.SOURCE, _Admissible.TARGET)
@@ -93,13 +93,13 @@ func test_a_guess_that_never_overshoots_can_still_mislead_this_astar() -> void:
 	assert_int(misled.cost).is_equal(8)
 
 
-func _all_searches() -> Array[Search]:
+func _all_searches() -> Array[GakSearch]:
 	return [
 		BreadthFirstSearch.new(),
 		DepthFirstSearch.new(),
 		DijkstraSearch.new(),
 		AStarSearch.new(),
-	] as Array[Search]
+	] as Array[GakSearch]
 
 
 # Why this path is not a walk along the roads from START, or "" when it is.
@@ -112,8 +112,8 @@ func _why_not_a_route(graph: _Waypoints, path: Array[Vector2i]) -> String:
 	return ""
 
 
-# The waypoints in the picture above, as a `SearchGraph`.
-class _Waypoints extends SearchGraph:
+# The waypoints in the picture above, as a `GakSearchGraph`.
+class _Waypoints extends GakSearchGraph:
 	const ROADS: Dictionary = {
 		Vector2i(0, 0): [Vector2i(2, 0), Vector2i(1, 1)],
 		Vector2i(2, 0): [Vector2i(0, 0), Vector2i(4, 0)],
@@ -172,7 +172,7 @@ class _Overshoots extends _Waypoints:
 # By the shortcut and the junction is cheapest, 7; the side road costs 8; the
 # detour and the junction 9. The guess at the shortcut is 6, exactly what is
 # left from it (the junction, then the target), and zero everywhere else.
-class _Admissible extends SearchGraph:
+class _Admissible extends GakSearchGraph:
 	const SOURCE: Vector2i = Vector2i(0, 0)
 	const DETOUR: Vector2i = Vector2i(1, -1)
 	const SHORTCUT: Vector2i = Vector2i(1, 1)

@@ -120,13 +120,13 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 ## The four searches, in the order the files are meant to be read.
-func searches() -> Array[Search]:
+func searches() -> Array[GakSearch]:
 	return [
 		BreadthFirstSearch.new(),
 		DepthFirstSearch.new(),
 		DijkstraSearch.new(),
 		AStarSearch.new(),
-	] as Array[Search]
+	] as Array[GakSearch]
 
 
 ## Run one algorithm on the current board and start its replay from nothing.
@@ -326,7 +326,7 @@ func _brush_cost() -> int:
 func _board_changed() -> void:
 	_board.draw_board(_graph, [] as Array[Vector2i])
 	_all = []
-	for search: Search in searches():
+	for search: GakSearch in searches():
 		_all.append(search.search(GridSearchGraph.new(_graph), _from, _to))
 	_choose(_chosen)
 

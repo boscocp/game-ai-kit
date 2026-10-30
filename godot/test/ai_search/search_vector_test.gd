@@ -84,8 +84,8 @@ func test_the_board_is_read_row_major() -> void:
 # runner had was about the steps -- each follows the last, each lands on ground
 # a unit may enter -- and all of them hold for this. It is the same shape as the
 # unvalidated `from` the wave 08 review found, at the other end of the path.
-class StrollsOffAndSaysItArrived extends Search:
-	func _explore(graph: SearchGraph, from: Vector2i, _to: Vector2i) -> SearchResult:
+class StrollsOffAndSaysItArrived extends GakSearch:
+	func _explore(graph: GakSearchGraph, from: Vector2i, _to: Vector2i) -> SearchResult:
 		var step: Array[Vector2i] = [graph.neighbours(from)[0]]
 		var looked_at: Array[Vector2i] = [from]
 		return SearchResult.new(step, looked_at, [] as Array[Vector2i], 1, true)

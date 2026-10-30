@@ -99,14 +99,14 @@ func _show_then_hide(world: InfiltrationWorld, made: PlayerIntent) -> void:
 	made.direction = _follow(world)
 
 
-func _towards(world: InfiltrationWorld, goal: Vector2, graph: SearchGraph) -> Vector2:
+func _towards(world: InfiltrationWorld, goal: Vector2, graph: GakSearchGraph) -> Vector2:
 	if world.time >= replan_at or path.is_empty():
 		replan_at = world.time + REPLAN
 		path = _plan(world, goal, graph)
 	return _follow(world)
 
 
-func _plan(world: InfiltrationWorld, goal: Vector2, graph: SearchGraph) -> Array[Vector2i]:
+func _plan(world: InfiltrationWorld, goal: Vector2, graph: GakSearchGraph) -> Array[Vector2i]:
 	var found: SearchResult = AStarSearch.new().search(graph, world.level.cell_of(world.player.position), world.level.cell_of(goal))
 	return found.path if found.reached else ([] as Array[Vector2i])
 

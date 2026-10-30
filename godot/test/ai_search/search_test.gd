@@ -8,7 +8,7 @@ extends GdUnitTestSuite
 
 
 func test_every_search_finds_a_route_across_an_open_board() -> void:
-	for search: Search in _all_searches():
+	for search: GakSearch in _all_searches():
 		var result: SearchResult = search.search(
 			GridSearchGraph.new(GakGridGraph.new(6, 4)), Vector2i(0, 0), Vector2i(5, 3)
 		)
@@ -22,7 +22,7 @@ func test_every_search_finds_a_route_across_an_open_board() -> void:
 func test_no_search_puts_the_starting_cell_in_the_path() -> void:
 	# The contract in GakPathfinder, and what Move.cost_on depends on: you never
 	# pay to stand where you already are.
-	for search: Search in _all_searches():
+	for search: GakSearch in _all_searches():
 		var result: SearchResult = search.search(
 			GridSearchGraph.new(GakGridGraph.new(5, 3)), Vector2i(1, 1), Vector2i(3, 1)
 		)
@@ -32,7 +32,7 @@ func test_no_search_puts_the_starting_cell_in_the_path() -> void:
 
 func test_every_path_is_one_a_unit_could_actually_walk() -> void:
 	var graph: GakGridGraph = _board_with_a_wall()
-	for search: Search in _all_searches():
+	for search: GakSearch in _all_searches():
 		var result: SearchResult = search.search(GridSearchGraph.new(graph), Vector2i(0, 2), Vector2i(4, 2))
 
 		assert_str(_why_unwalkable(graph, Vector2i(0, 2), result.path)).is_equal("")
@@ -43,7 +43,7 @@ func test_a_goal_behind_a_wall_is_reported_as_unreachable() -> void:
 	for row: int in range(3):
 		graph.block(Vector2i(2, row))
 
-	for search: Search in _all_searches():
+	for search: GakSearch in _all_searches():
 		var result: SearchResult = search.search(GridSearchGraph.new(graph), Vector2i(0, 1), Vector2i(4, 1))
 
 		assert_bool(result.reached).is_false()
@@ -56,7 +56,7 @@ func test_a_goal_behind_a_wall_is_reported_as_unreachable() -> void:
 
 
 func test_starting_on_the_goal_reaches_it_with_an_empty_path() -> void:
-	for search: Search in _all_searches():
+	for search: GakSearch in _all_searches():
 		var result: SearchResult = search.search(
 			GridSearchGraph.new(GakGridGraph.new(4, 4)), Vector2i(2, 2), Vector2i(2, 2)
 		)
@@ -139,12 +139,12 @@ func test_no_search_expands_the_same_cell_twice() -> void:
 		4, 1, 5, 2,
 		4, 6, 1, 9,
 	])
-	for search: Search in _all_searches():
+	for search: GakSearch in _all_searches():
 		var result: SearchResult = search.search(GridSearchGraph.new(graph), Vector2i(0, 0), Vector2i(3, 3))
 
 		assert_vector(_first_repeat(result.expanded)).override_failure_message(
 			"%s expanded a cell twice" % search
-		).is_equal(Search.NO_PARENT)
+		).is_equal(GakSearch.NO_PARENT)
 
 
 func test_the_frontier_is_empty_when_a_search_exhausts_the_map() -> void:
@@ -198,7 +198,7 @@ func test_a_start_that_is_not_on_the_board_finds_nothing() -> void:
 	# It used to come back `reached`, with a path that walked in from nowhere,
 	# and the conformance runner's walkability check accepted it because every
 	# individual step was legal.
-	for search: Search in _all_searches():
+	for search: GakSearch in _all_searches():
 		var result: SearchResult = search.search(
 			GridSearchGraph.new(GakGridGraph.new(5, 5)), Vector2i(-1, 2), Vector2i(3, 2)
 		)
@@ -231,13 +231,13 @@ class _GuessesNothing extends GridSearchGraph:
 		return 0
 
 
-func _all_searches() -> Array[Search]:
+func _all_searches() -> Array[GakSearch]:
 	return [
 		BreadthFirstSearch.new(),
 		DepthFirstSearch.new(),
 		DijkstraSearch.new(),
 		AStarSearch.new(),
-	] as Array[Search]
+	] as Array[GakSearch]
 
 
 # A 5x5 board with a wall down the middle and a gap at the bottom.
@@ -265,14 +265,14 @@ func _board_from(costs: Array[int]) -> GakGridGraph:
 	return graph
 
 
-# The first cell that appears twice, or Search.NO_PARENT when none does.
+# The first cell that appears twice, or GakSearch.NO_PARENT when none does.
 func _first_repeat(cells: Array[Vector2i]) -> Vector2i:
 	var seen: Dictionary = {}
 	for cell: Vector2i in cells:
 		if seen.has(cell):
 			return cell
 		seen[cell] = true
-	return Search.NO_PARENT
+	return GakSearch.NO_PARENT
 
 
 # Why this path could not be walked, or "" when it could. Checks the contract

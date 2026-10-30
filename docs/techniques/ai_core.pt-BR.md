@@ -38,7 +38,7 @@ sobre uma grade (`ai_steering`, `ai_behaviour`) não precisa dele.
 
 Um tabuleiro hexagonal, uma malha de navegação, qualquer coisa cuja célula
 não seja uma coordenada inteira: `GakGridGraph` é uma grade quadrada e diz
-isso. As buscas continuam funcionando ali pela porta delas, `SearchGraph` --
+isso. As buscas continuam funcionando ali pela porta delas, `GakSearchGraph` --
 veja [ai_search](ai_search.pt-BR.md).
 
 ## Para ir mais fundo {#deeper}

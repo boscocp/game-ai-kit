@@ -42,7 +42,7 @@ print(result.reached, " ", result.cost, " ", result.path.size(), " ", result.exp
 # true 11 7 16
 ```
 
-A search does not take the grid itself. It takes a `SearchGraph` -- the four
+A search does not take the grid itself. It takes a `GakSearchGraph` -- the four
 questions a search asks of any graph -- and `GridSearchGraph` is the grid
 answering them. It wraps, it does not copy: block a cell afterwards and the
 next search sees the wall.
@@ -82,7 +82,7 @@ With no argument, `GridPathfinder.new()` answers with A\*.
 
 ## A graph that is not a grid
 
-Waypoints, rooms, a navigation mesh's polygons: write a `SearchGraph` with
+Waypoints, rooms, a navigation mesh's polygons: write a `GakSearchGraph` with
 four methods and every search here works on it unchanged.
 
 A sketch, with the bodies left out; `waypoint_test.gd` is the whole one,
@@ -90,7 +90,7 @@ and it runs:
 
 ```gdscript
 class_name Waypoints
-extends SearchGraph
+extends GakSearchGraph
 
 func contains(node: Vector2i) -> bool: ...          # is this a waypoint?
 func neighbours(node: Vector2i) -> Array[Vector2i]: ...  # the ones a road leads to

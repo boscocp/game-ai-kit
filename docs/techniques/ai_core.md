@@ -37,7 +37,7 @@ about a grid (`ai_steering`, `ai_behaviour`) does not need it.
 
 A hex board, a navigation mesh, anything whose cell is not an integer
 coordinate: `GakGridGraph` is a square grid and says so. The searches still
-work there through their own port, `SearchGraph` -- see
+work there through their own port, `GakSearchGraph` -- see
 [ai_search](ai_search.md).
 
 ## Deeper {#deeper}

@@ -392,7 +392,7 @@ func test_the_screen_says_how_to_edit() -> void:
 func _results_on(board: SearchBoard) -> Array[SearchResult]:
 	var found: Array[SearchResult] = []
 	var graph: GakGridGraph = board.graph()
-	for search: Search in [BreadthFirstSearch.new(), DepthFirstSearch.new(),
+	for search: GakSearch in [BreadthFirstSearch.new(), DepthFirstSearch.new(),
 			DijkstraSearch.new(), AStarSearch.new()]:
 		found.append(search.search(GridSearchGraph.new(graph), board.start(), board.goal()))
 	return found

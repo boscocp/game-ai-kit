@@ -50,7 +50,7 @@ read a grid -- and runs all four searches on it, then replays
 |---|---|---|
 | which search | `AStarSearch`, `DijkstraSearch`, `BreadthFirstSearch`, `DepthFirstSearch` | the order the frontier is taken in -- and so the route and the work |
 | a cell's cost | `GakGridGraph.set_cost(cell, cost)` | what entering it costs; at least 1, `GakGridGraph.BLOCKED` is a wall |
-| the guess | `SearchGraph.estimate` | A\*'s heuristic; must be *consistent*, zero makes A\* Dijkstra |
+| the guess | `GakSearchGraph.estimate` | A\*'s heuristic; must be *consistent*, zero makes A\* Dijkstra |
 | the limit | `CostFlood.within(GridSearchGraph.new(grid), from, limit)` | how far a flood spreads |
 
 ## In your own project {#your-project}
@@ -98,8 +98,8 @@ Nothing, on a square grid: fill a `GakGridGraph` from your `TileMapLayer` (one
 example does. For what the search looked at too, wrap it:
 `AStarSearch.new().search(GridSearchGraph.new(grid), from, to)` returns a
 `SearchResult` with `path`, `cost`, `expanded` and `frontier` -- a search
-takes a `SearchGraph`, and a `GakGridGraph` is not one. On anything else --
-waypoints, rooms, a navigation mesh's polygons -- extend `SearchGraph` with
+takes a `GakSearchGraph`, and a `GakGridGraph` is not one. On anything else --
+waypoints, rooms, a navigation mesh's polygons -- extend `GakSearchGraph` with
 four methods (`contains`, `neighbours`, `cost_at`, `estimate`) and call
 `search(graph, from, to)` on any of the four; `godot/test/ai_search/waypoint_test.gd` is a whole one.
 

@@ -9,7 +9,7 @@
 ##
 ## When not to use it: for a guard. Guards walk the plain walk graph.
 class_name SneakGraph
-extends SearchGraph
+extends GakSearchGraph
 
 const LIT_COST: int = 12
 const WATCHED_COST: int = 200

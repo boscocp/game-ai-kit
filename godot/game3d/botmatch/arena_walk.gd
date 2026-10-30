@@ -7,7 +7,7 @@
 ## blocked would take the side, the shortest way, and the bot would walk up
 ## a wall. `botmatch_test.gd` shows that happening on the plain grid.
 ##
-## It is T62's port, `SearchGraph`, so the searches in `ai_search` run over
+## It is T62's port, `GakSearchGraph`, so the searches in `ai_search` run over
 ## it unchanged. Every step costs one, as on the grid, and the estimate is
 ## Manhattan distance, consistent for the grid's reason: no step costs less.
 ##
@@ -15,7 +15,7 @@
 ## a step down is allowed and the same step up is not, the graph is directed,
 ## and the mirror that keeps the match fair has to be checked again.
 class_name ArenaWalk
-extends SearchGraph
+extends GakSearchGraph
 
 var grid: GakGridGraph
 ## Each cell's floor height, row-major like the grid.

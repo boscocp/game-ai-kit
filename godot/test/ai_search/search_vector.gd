@@ -65,7 +65,7 @@ static func check(name: String, data: Dictionary, searches: Dictionary) -> Array
 	var problems: Array[String] = []
 
 	for label: String in searches:
-		var search: Search = searches[label]
+		var search: GakSearch = searches[label]
 		problems += _check_one(
 			name, label, search.search(GridSearchGraph.new(graph), from, to), graph, from, to, expected
 		)

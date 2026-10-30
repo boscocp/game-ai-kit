@@ -16,7 +16,7 @@
 ## `waypoint_test.gd` shows a guess that is admissible and still costs a
 ## dearer route. So the guess is not written here: it is `graph.estimate`,
 ## and the graph owns it, because only the graph knows what a step can cost.
-## `SearchGraph.estimate` carries the promise; the grid's is Manhattan
+## `GakSearchGraph.estimate` carries the promise; the grid's is Manhattan
 ## distance, in `grid_search_graph.gd`, with the reason it is safe.
 ##
 ## Complexity: the same as Dijkstra in the worst case -- with `h` returning
@@ -27,12 +27,12 @@
 ## and you are running Dijkstra with extra steps. And for throughput, use
 ## `AStarGrid2D`: engine core, C++, four heuristics.
 class_name AStarSearch
-extends Search
+extends GakSearch
 
 
 # The cheapest route, expanding towards the goal rather than in all
 # directions.
-func _explore(graph: SearchGraph, from: Vector2i, to: Vector2i) -> SearchResult:
+func _explore(graph: GakSearchGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 	var frontier: Array[Vector2i] = [from]
 	var came_from: Dictionary = {from: NO_PARENT}
 	# `g` is the cost of reaching a cell, `f` is that plus the guess about what
@@ -78,7 +78,7 @@ func _explore(graph: SearchGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 # frontier stays ordered by the current best estimate, which is what A* is
 # *defined* to do -- and the honest reason to keep the line is that the
 # implementation should not quietly depend on an accident of these boards.
-func _relax(graph: SearchGraph, current: Vector2i, goal: Vector2i,
+func _relax(graph: GakSearchGraph, current: Vector2i, goal: Vector2i,
 		came_from: Dictionary, g: Dictionary, f: Dictionary,
 		frontier: Array[Vector2i]) -> void:
 	for step: Vector2i in graph.neighbours(current):

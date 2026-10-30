@@ -221,7 +221,7 @@ func _path_for(side: int, from: Vector2, to: Vector2, closed: Array[Vector2i] = 
 
 
 # The walk, or the walk with `closed` cells shut by bodies (`CrowdedWalk`).
-func _graph_with(closed: Array[Vector2i]) -> SearchGraph:
+func _graph_with(closed: Array[Vector2i]) -> GakSearchGraph:
 	return arena.walk_graph if closed.is_empty() else CrowdedWalk.new(arena.walk_graph, closed)
 
 

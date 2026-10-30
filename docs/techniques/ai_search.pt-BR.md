@@ -53,7 +53,7 @@ que deixa uma busca ler uma grade -- roda as quatro buscas nele e repete
 |---|---|---|
 | qual busca | `AStarSearch`, `DijkstraSearch`, `BreadthFirstSearch`, `DepthFirstSearch` | a ordem em que a fronteira é consumida -- e com ela a rota e o trabalho |
 | o custo de uma célula | `GakGridGraph.set_cost(cell, cost)` | quanto custa entrar nela; no mínimo 1, `GakGridGraph.BLOCKED` é parede |
-| a estimativa | `SearchGraph.estimate` | a heurística do A\*; precisa ser *consistente*, e zero transforma o A\* em Dijkstra |
+| a estimativa | `GakSearchGraph.estimate` | a heurística do A\*; precisa ser *consistente*, e zero transforma o A\* em Dijkstra |
 | o limite | `CostFlood.within(GridSearchGraph.new(grid), from, limit)` | até onde a inundação se espalha |
 
 ## No seu projeto {#your-project}
@@ -102,10 +102,10 @@ Nada, numa grade quadrada: preencha um `GakGridGraph` a partir do seu
 `GakPathfinder`, como no exemplo. Para ver também o que a busca olhou,
 embrulhe-o: `AStarSearch.new().search(GridSearchGraph.new(grid), from, to)`
 devolve um `SearchResult` com `path`, `cost`, `expanded` e `frontier` -- uma
-busca recebe um `SearchGraph`, e um `GakGridGraph` não é um. Em qualquer outra
+busca recebe um `GakSearchGraph`, e um `GakGridGraph` não é um. Em qualquer outra
 coisa --
 *waypoints*, salas, os polígonos de uma malha de navegação -- estenda
-`SearchGraph` com quatro métodos (`contains`, `neighbours`, `cost_at`,
+`GakSearchGraph` com quatro métodos (`contains`, `neighbours`, `cost_at`,
 `estimate`) e chame `search(graph, from, to)` em qualquer uma das quatro;
 `godot/test/ai_search/waypoint_test.gd` é um completo.
 
