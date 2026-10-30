@@ -88,6 +88,19 @@ class TheVectors(unittest.TestCase):
                 self.assertEqual(reply.intent, validator.FALLBACK_INTENT)
                 self.assertEqual(reply.argument, "")
 
+    def test_a_refusal_never_quotes_a_secret_or_markup_the_model_wrote(self) -> None:
+        # A game shows the refusal beside its line. R4, R6 and R7 used to
+        # quote the model's key, intent or argument, which R10 and R11 never
+        # read; three cases plant a secret and `[b]` there (T93's review).
+        declaration, cases = load()
+        for case in cases:
+            reply = validator.validate(case["raw"], declaration)
+            folded = reply.refusal.translate(validator.ASCII_LOWER)
+            with self.subTest(case["why"]):
+                self.assertNotIn("[b]", reply.refusal)
+                for secret in declaration.secrets:
+                    self.assertNotIn(secret.translate(validator.ASCII_LOWER), folded)
+
 
 if __name__ == "__main__":
     unittest.main()

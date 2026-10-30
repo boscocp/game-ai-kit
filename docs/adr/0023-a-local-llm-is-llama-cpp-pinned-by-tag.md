@@ -27,8 +27,11 @@ away (`FLAVOUR=cuda`). MIT.
 **The model is Ministral 3 8B Instruct** (`Ministral-3-8B-Instruct-2512`,
 Q4_K_M, Mistral's own GGUF, Apache-2.0), recommended by a bake-off of three
 Apache-2.0 models on the same 30 lines in English and pt-BR
-([docs/local-llm/bakeoff.md](../local-llm/bakeoff.md)). Gemma 4 E4B and
-Granite 4.2 8B stay in `tools/llm/runtime.json`, pinned, one word away.
+([docs/local-llm/bakeoff.md](../local-llm/bakeoff.md)): the most replies
+with act and argument right in pt-BR (15.3 of 30 on Vulkan, against Gemma's
+13.3), counting only replies the validator accepted. **Gemma 4 E4B edges it
+in English** (12.3 against 11.0) and stays one word away, with Granite 4.2
+8B, pinned in `tools/llm/runtime.json`.
 
 **Fenced like the art generator.** `tools/llm/` and `scripts/llm`, which
 points every cache at `$toolchain/llm/` -- llama.cpp's own and the GPU
@@ -56,12 +59,19 @@ but 503, with the server's own reason, and `LlmConversation` answers as
 - **The newest build.** Several a day, all marked pre-release since
   `v0.8.0`; the versioned release names one, and that one is pinned.
 - **CUDA as the default.** Measured 13-23% faster per reply on the owner's
-  card, with no slow first turn (the Vulkan build spent 3-10 s on its first
-  long prompt). Not the default because it needs an NVIDIA card and a
+  card, with no reply of a second or more (the Vulkan build spent 3-10 s
+  on each model's first long prompt, and Ministral had five more replies of
+  1-2 s in its first round). Not the default because it needs an NVIDIA card and a
   600 MB runtime; the owner may decide otherwise from the table.
 
 ## Consequences
 
+- Pinned by tag means fetched by tag: if upstream ever deletes the
+  b11960 release or its assets, `make llm-bootstrap` fails on a fresh
+  machine (a 404, said as such), and an installed toolchain keeps working.
+  The way out is a new pin -- a newer build's archives and sha256 in
+  `runtime.json`, `make llm-smoke`, and the bake-off rerun if the server's
+  behaviour may have moved -- never an unpinned download.
 - `make llm-bootstrap` costs about 5 GB on the large disk for the default;
   every model and build, 17 GB. `make llm-smoke` starts the server, sends
   one line through `HttpRuntime` and `LlmConversation` in Godot, checks the

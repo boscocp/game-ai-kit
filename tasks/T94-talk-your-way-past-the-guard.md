@@ -87,6 +87,20 @@ Known games of exactly this kind, opened on 2026-10-26:
    the outcome except through its act (a planted reply saying "the guard
    opens the gate" with `intent: "flatter"` leaves the gate shut).
 
+Handed on by T93 (wave 111) and its review:
+
+- `LlmConversation._history` has no limit, and `scripts/llm` runs the
+  server with `--ctx-size 4096`. A long conversation will outgrow it, the
+  server will answer 400, and every turn after is F2 for good. Bound the
+  history (or the turns) and test the long case.
+- Most refused replies in T93's bake-off are R7, an argument the act does
+  not take: the schema leaves `argument` a free string. An `anyOf` per
+  intent in `json_schema()` (both languages) would let a constraining
+  server rule R7 out; measure it here, on the 30 lines, before adopting it.
+- The owner skims the 30 labels in `tools/llm/bakeoff/lines.json`; two are
+  arguable ("Check my ID", `show`/`badge`; "Delivery for the lab",
+  `claim_role`/`courier`).
+
 ## Acceptance
 
 ```bash

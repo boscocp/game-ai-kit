@@ -174,7 +174,8 @@ def needs_local_model(port: str) -> re.Pattern[str]:
     return re.compile(
         r"\bollama\b|localhost:11434|\bapi/chat\b"
         r"|\bllm-(?:smoke|serve|bakeoff)\b|\bscripts/llm\s+(?:smoke|serve|bakeoff)\b"
-        rf"|(?:localhost|127\.0\.0\.1):{port}\b"
+        r"|\btools/llm/llm\.py\b[^\n]*\b(?:smoke|serve|bakeoff)\b"
+        rf"|(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1?\]):{port}\b"
     )
 
 
@@ -403,7 +404,11 @@ def self_test() -> int:
         for index, (label, command) in enumerate((("make llm-smoke", "make llm-smoke"),
                                ("make llm-serve", "make llm-serve & sleep 5"),
                                ("scripts/llm smoke", "scripts/llm smoke --model all"),
-                               ("the fixed port", f"curl -fsS http://127.0.0.1:{port}/health"))):
+                               ("the fixed port", f"curl -fsS http://127.0.0.1:{port}/health"),
+                               ("tools/llm/llm.py smoke",
+                                "python3 tools/llm/llm.py /mnt/toolchain smoke"),
+                               ("the port on 0.0.0.0", f"curl -fsS http://0.0.0.0:{port}/health"),
+                               ("the port on [::1]", f"curl -fsS http://[::1]:{port}/health"))):
             planted = GOOD_TASK.replace("make test-godot", command)
             expect(f"undeclared local model by {label}",
                    quiet(tasks_with(root, f"llm-{index}", planted)), 1)

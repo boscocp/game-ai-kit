@@ -58,7 +58,14 @@ scene by a script it instances; a `Thread` the addon starts and a game
 joins; and a game that reads `LlmReply.speech` and acts on what it says
 rather than on `intent` -- the speech is validated, but a rule that parses
 it has made the model decide again; and `LlmReply` reached through a
-function (`return LlmReply`, then `.new()`). Writing to a reply's fields
+function (`return LlmReply`, then `.new()`). And a game listening to a
+runtime's `refused` or `failed` (T93): both carry the server's own words,
+not the model's, and `HttpRuntime` cleans them first (line breaks and
+control characters to spaces, markup dropped, cut to 160 characters), but
+a game should still take them from `LlmReply.refusal`. Refused the way
+`replied` is, the words would fire across the kit: `"refused"` and
+`.refused` already mean other things in the tactical recording, the bot
+match and the model-file tests, and `failed` is everywhere. Writing to a reply's fields
 is not this gate's business: `LlmReply` refuses it at run time, its fields
 read-only.
 

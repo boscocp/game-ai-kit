@@ -137,13 +137,24 @@ static func _text_of(body: String) -> Dictionary:
 # The server's own sentence for why it refused a request, on one short line:
 # llama.cpp answers `{"error": {"code": 400, "message": ...}}` (measured at
 # the pinned build, docs/local-llm/server.md).
+# Text no validator read, so held to what a refusal may show: a control
+# character or a line break becomes a space, markup is dropped (the
+# validator's own list), and it is cut to ERROR_LENGTH. T93's review found
+# the server's words went to the screen untouched.
 static func _error_of(body: String) -> String:
-	var data: Variant = JSON.parse_string(body)
+	var reader := JSON.new()
+	var data: Variant = reader.data if reader.parse(body) == OK else null
 	var error: Variant = (data as Dictionary).get("error") if data is Dictionary else null
 	var message: Variant = (error as Dictionary).get("message") if error is Dictionary else null
 	if not (message is String):
 		return "the server gave no reason"
-	return " ".join((message as String).split("\n")).left(ERROR_LENGTH)
+	var shown: String = ""
+	for character: String in message as String:
+		if character.unicode_at(0) < 32 or character.unicode_at(0) == 127:
+			shown += " "
+		elif not LlmValidator.MARKUP.contains(character):
+			shown += character
+	return shown.left(ERROR_LENGTH)
 
 
 func _on_request_completed(result: int, response_code: int,

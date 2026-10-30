@@ -243,6 +243,24 @@ func test_the_server_refusing_the_request_is_told_apart_from_the_reply_refused()
 	assert_str(replies[2].refusal).contains("Loading model")
 
 
+func test_the_servers_reason_is_cleaned_before_a_game_can_show_it() -> void:
+	# The server's words reach `refusal`, which a game shows, and no
+	# validator read them (T93's review): line breaks and control characters
+	# become spaces, markup is dropped, and the sentence is cut.
+	var runtime: HttpRuntime = _in_scene(HttpRuntime.new())
+	var conversation := LlmConversation.new(runtime, _validator(), "You guard a gate.")
+	var replies: Array[LlmReply] = _replies_of(conversation)
+	var message: String = "first line\nsecond\tline [b]bold[/b] <i>*x*</i> `code`\u0007end"
+	var long_message: String = "y".repeat(HttpRuntime.ERROR_LENGTH + 50)
+	for text: String in [message, long_message]:
+		var body: String = JSON.stringify({"error": {"code": 500, "message": text}})
+		runtime._on_request_completed(SUCCESS, 500, PackedStringArray(), body.to_utf8_buffer())
+	var shown: String = replies[0].refusal.get_slice("HTTP 500: ", 1)
+	assert_str(shown).is_equal("first line second line bbold/b ix/i code end")
+	assert_str(replies[0].refusal_code()).is_equal("F2")
+	assert_int(replies[1].refusal.get_slice("HTTP 500: ", 1).length()).is_equal(HttpRuntime.ERROR_LENGTH)
+
+
 func test_the_http_runtime_asks_on_the_one_port() -> void:
 	var runtime: HttpRuntime = auto_free(HttpRuntime.new())
 	assert_str(runtime.url).is_equal("http://127.0.0.1:%d/v1/chat/completions" % HttpRuntime.PORT)

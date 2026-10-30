@@ -163,8 +163,14 @@ def fetch(url: str, destination: pathlib.Path, size: int, sha256: str) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     partial = destination.with_name(destination.name + ".part")
     print(f"llm: downloading {destination.name} ({size / 1e9:.2f} GB) from {url}")
-    with urllib.request.urlopen(url, timeout=60) as answer, partial.open("wb") as stream:
-        shutil.copyfileobj(answer, stream, DOWNLOAD_CHUNK)
+    try:
+        with urllib.request.urlopen(url, timeout=60) as answer, partial.open("wb") as stream:
+            shutil.copyfileobj(answer, stream, DOWNLOAD_CHUNK)
+    except (urllib.error.URLError, TimeoutError, ConnectionError) as error:
+        # A 404 here means upstream removed the pinned file: the way out is
+        # a new pin in runtime.json (ADR 0023), never an unpinned download.
+        partial.unlink(missing_ok=True)
+        raise Refused(f"{destination.name}: the download failed ({error}) from {url}") from error
     verify(partial, size, sha256)
     partial.replace(destination)
     print(f"llm: {destination.name} verified")
@@ -347,7 +353,7 @@ def bakeoff(toolchain: pathlib.Path, model: str, flavour: str, language: str,
 
     One server per model. Rounds, because the server samples (the game
     sends no temperature, and gets the server's default): one run of 30 is
-    one draw, and two draws of the same model were measured 8 lines apart.
+    one draw, and two rounds of one model were measured 6 valid replies apart.
     """
     languages = ["en", "pt_BR"] if language in ("", "all") else [language]
     chosen_flavour = flavours_named(flavour)[0]
@@ -393,19 +399,24 @@ def stamp(output: pathlib.Path, entry: dict, flavour: str, timings: dict) -> Non
 
 
 def summary(result: dict) -> dict:
-    """The table's numbers for one model, one language."""
+    """The table's numbers for one model, one language.
+
+    The act and argument count only replies the validator accepted. A
+    refused reply becomes the game's fallback, `unclear` with no argument,
+    and two of the 30 lines are labelled exactly that: counted, a refusal
+    scored as right (T93's review). Those are `fallback`, apart.
+    """
     turns = result["turns"]
     expected = json.loads(LINES.read_text())["lines"]
-    times = [turn["seconds"] for turn in turns]
+    accepted = [(turn, line) for turn, line in zip(turns, expected) if not turn["refusal_code"]]
     return {
-        "valid": sum(1 for turn in turns if not turn["refusal_code"]),
-        "intent": sum(1 for turn, line in zip(turns, expected)
-                      if turn["intent"] == line["intent"]),
-        "both": sum(1 for turn, line in zip(turns, expected)
+        "valid": len(accepted),
+        "intent": sum(1 for turn, line in accepted if turn["intent"] == line["intent"]),
+        "both": sum(1 for turn, line in accepted
                     if (turn["intent"], turn["argument"]) == (line["intent"], line["argument"])),
-        "median": statistics.median(times),
-        "worst": max(times),
-        "first": result.get("first_seconds", 0.0),
+        "fallback": sum(1 for turn, line in zip(turns, expected) if turn["refusal_code"]
+                        and (turn["intent"], turn["argument"]) == (line["intent"], line["argument"])),
+        "slow": sum(1 for turn in turns if turn["seconds"] >= 1.0),
         "frame": max(turn["worst_frame_ms"] for turn in turns),
         "count": len(turns),
     }
@@ -423,15 +434,16 @@ def table() -> int:
         key = (result["model"]["name"], result["runtime"]["flavour"], result["language"])
         groups.setdefault(key, []).append(result)
     print("| model | build | language | rounds | valid | intent | intent and argument "
-          "| median s | worst s | worst frame ms |")
-    print("|---|---|---|---|---|---|---|---|---|---|")
+          "| a refusal on an `unclear` line | median s | worst s | 1 s or more | worst frame ms |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|")
     for (name, flavour, language), results in sorted(groups.items()):
         rows = [summary(result) for result in results]
         times = [turn["seconds"] for result in results for turn in result["turns"]]
         counts = " | ".join(spread([row[column] for row in rows], rows[0]["count"])
-                            for column in ("valid", "intent", "both"))
+                            for column in ("valid", "intent", "both", "fallback"))
         print(f"| {name} | {flavour} | {language} | {len(rows)} | {counts} "
               f"| {statistics.median(times):.2f} | {max(times):.2f} "
+              f"| {sum(row['slow'] for row in rows)} of {len(times)} "
               f"| {max(row['frame'] for row in rows):.1f} |")
     return 0
 
@@ -503,6 +515,7 @@ def manifest_problems() -> list[str]:
 
 
 def main(argv: list[str]) -> int:
+    """Parse the command line and run one command; the exit codes are the module's."""
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("toolchain", type=pathlib.Path)

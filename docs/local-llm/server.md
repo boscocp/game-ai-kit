@@ -99,10 +99,27 @@ What the server answers when it will not take a request, recorded in
 T92's review guessed a schema the server cannot read would be "a 400,
 say"; it is a 500. So `HttpRuntime` does not split on 4xx: **503 is
 `failed` (F1, the server not ready, a turn lost); any other non-200 is
-`refused` (F2), with the server's own sentence** -- the request itself is
+`refused` (F2), with the server's own sentence, cleaned (below)** -- the request itself is
 wrong, and every turn will be refused the same way until it is fixed.
 Before T93 both were F1, and a server that refused every request read as
 a run of "no reply came".
+
+**Can a server error carry the model's own words?** Read in the source at
+`b11960` (`common/chat.cpp`, `tools/server/server-task.cpp`,
+`server-context.cpp`), not measured. The route handler sends any
+exception's text back as the error message ("got exception: ..."). The
+final parse of a reply that does not fit the chat format throws "The model
+produced output that does not match the expected ... format", with the
+output itself only in the server's log; the older "Failed to parse input
+at pos N: <output>" is not at this tag. But `compute_diffs` -- reached from
+`update_chat_msg` on the streaming path, which `HttpRuntime` does not use
+-- throws "Invalid diff: '<earlier text>' not found at start of '<later
+text>'" and "Current msg text content: <text>", which are generated text.
+So the answer is "not on the path the kit takes, at this build", and the
+next build may differ. That is why `HttpRuntime` cleans the reason before
+it reaches `LlmReply.refusal`, which a game shows: line breaks and control
+characters become spaces, markup (`<>[]*` and the backtick) is dropped,
+and it is cut to 160 characters (T93's review; a test holds all three).
 
 One more, which the validator catches and the schema does not prevent:
 asked for a poem with the game's schema, Gemma 4 wrote its reasoning into

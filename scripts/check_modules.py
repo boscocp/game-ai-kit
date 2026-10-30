@@ -59,6 +59,12 @@ Comments are not reach. `check_addon_deps.py` counts a class named in a
 comment, on purpose; here that would make `ai_core` depend on the tactical
 game for a sentence that explains where a type is used.
 
+A known false positive: a Python docstring is not a comment to this gate.
+A path written in one is reach (`REPO_PATH_RE`), so a docstring saying
+"nothing in `godot/addons/` names this file" made `ai_llm` depend on every
+addon in wave 111 (T93's review). Reworded there; the gate is unchanged,
+because a docstring is also where a twin writes the path it reads.
+
 Exit codes
 ----------
 0   every module matches its manifest
