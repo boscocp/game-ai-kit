@@ -251,6 +251,14 @@ untested is that a region is scored and walked to at its cell's corner
 (`Vector2(cell)`), which is not the corner turned half round. The gate
 holds the wins, which is what a player meets; the split is open.
 
+`make rts-measure` on wave 116's branch, 2026-10-30: the queues against
+themselves 13 - 7 by seat, inside the bound; claim 6's six seeds 7 - 5.
+The other records, after the new tie-break: commander against the queues
+19 - 1, normal against easy 18 - 2, may arm against never 9 - 11, and
+STRIPS against the HTN 6 - 14 where it was 12 - 8 -- 20 matches tell
+neither of those last two from a tie (two fair sides go 14 - 6 or wider
+about one time in nine).
+
 ## Difficulty, without cheating
 
 The levels are T12's knobs (`RtsLevels`), and nothing else -- no level
