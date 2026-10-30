@@ -206,7 +206,7 @@ static func inputs(state: BoardState, attacker: Unit, defender: Unit) -> Diction
 		"attacker_health": attacker.health,
 		"defender_health": defender.health,
 		"numeric_advantage": _near(state, attacker, defender.cell, radius) - _near(state, defender, attacker.cell, radius),
-		"defender_terrain": maxi(state.graph_for(defender).cost_at(defender.cell), GridGraph.DEFAULT_COST),
+		"defender_terrain": maxi(state.graph_for(defender).cost_at(defender.cell), GakGridGraph.DEFAULT_COST),
 		"reinforcement_distance": _nearest_friend(state, attacker),
 		"counter": counter(attacker.type, defender.type),
 		"defender_hits_back": defender.type.attack_range >= distance(attacker.cell, defender.cell),

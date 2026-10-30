@@ -194,7 +194,7 @@ func test_a_friend_further_away_than_the_sentinel_is_not_reported_as_absent() ->
 	# "I am alone" and "my nearest friend is seventeen cells away" the same
 	# number -- on a board wider than the one the data came from, which is the
 	# board `make run` ships.
-	var state := BoardState.new(GridGraph.new(20, 3), [
+	var state := BoardState.new(GakGridGraph.new(20, 3), [
 		Unit.new(1, 0, Vector2i(0, 0), 10, 3),
 		Unit.new(2, 0, Vector2i(19, 1), 10, 3),
 		Unit.new(3, 1, Vector2i(1, 0), 10, 3),
@@ -207,7 +207,7 @@ func test_a_friend_further_away_than_the_sentinel_is_not_reported_as_absent() ->
 
 
 func test_a_unit_with_no_friends_left_reports_the_sentinel() -> void:
-	var state := BoardState.new(GridGraph.new(20, 3), [
+	var state := BoardState.new(GakGridGraph.new(20, 3), [
 		Unit.new(1, 0, Vector2i(0, 0), 10, 3),
 		Unit.new(3, 1, Vector2i(1, 0), 10, 3),
 	] as Array[Unit], 0)
@@ -222,14 +222,14 @@ func test_a_wall_reads_as_the_dearest_ground_the_data_covered() -> void:
 	# The simulator never generated a wall, so there is no honest number for
 	# one. -1 is the worst possible answer: a weight of -1.6 on terrain turns
 	# it into a bonus.
-	var graph := GridGraph.new(3, 3)
+	var graph := GakGridGraph.new(3, 3)
 	graph.block(Vector2i(1, 1))
 
 	assert_int(BoardFeatures.terrain_at(graph, Vector2i(1, 1), _published())).is_equal(3)
 
 
 func test_ground_dearer_than_the_data_is_clamped_to_what_the_data_had() -> void:
-	var graph := GridGraph.new(3, 3)
+	var graph := GakGridGraph.new(3, 3)
 	graph.set_cost(Vector2i(1, 1), 9)
 
 	assert_int(BoardFeatures.terrain_at(graph, Vector2i(1, 1), _published())).is_equal(3)
@@ -237,13 +237,13 @@ func test_ground_dearer_than_the_data_is_clamped_to_what_the_data_had() -> void:
 
 func test_a_cell_off_the_board_reads_as_the_dearest_ground_too() -> void:
 	assert_int(BoardFeatures.terrain_at(
-		GridGraph.new(3, 3), Vector2i(9, 9), _published())).is_equal(3)
+		GakGridGraph.new(3, 3), Vector2i(9, 9), _published())).is_equal(3)
 
 
 func test_a_unit_already_on_the_node_has_the_cheapest_ground_on_the_way() -> void:
 	# No cells are entered, so there is no terrain to average. Zero would be
 	# a cost no board can produce, and the mean of nothing is not zero.
-	var state := BoardState.new(GridGraph.new(4, 4), [
+	var state := BoardState.new(GakGridGraph.new(4, 4), [
 		Unit.new(1, 0, Vector2i(2, 2), 10, 3),
 	] as Array[Unit], 0)
 
@@ -259,7 +259,7 @@ func test_enemy_units_counts_every_side_that_is_not_mine() -> void:
 	# that the generalisation is a decision rather than an accident -- and
 	# read the note on `capture_row` before relying on this feature at all on
 	# a board with three sides.
-	var state := BoardState.new(GridGraph.new(6, 6), [
+	var state := BoardState.new(GakGridGraph.new(6, 6), [
 		Unit.new(1, 0, Vector2i(0, 0), 10, 3),
 		Unit.new(2, 1, Vector2i(1, 0), 10, 3),
 		Unit.new(3, 2, Vector2i(2, 0), 10, 3),
@@ -275,7 +275,7 @@ func test_enemy_units_counts_every_side_that_is_not_mine() -> void:
 func test_a_side_with_nothing_on_the_board_produces_no_row() -> void:
 	# An empty row rather than a row of zeros: zeros are a position, and a
 	# side with no units does not have one.
-	var state := BoardState.new(GridGraph.new(4, 4), [
+	var state := BoardState.new(GakGridGraph.new(4, 4), [
 		Unit.new(1, 0, Vector2i(2, 2), 10, 3),
 	] as Array[Unit], 0)
 

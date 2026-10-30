@@ -12,7 +12,7 @@ const STEPS_PER_FRAME: int = 64
 
 ## Your map: 1 is open ground, dearer cells are slower, blocked is a wall.
 ## Change it before you send anyone; a field already built does not see it.
-var map := GridGraph.new(24, 16)
+var map := GakGridGraph.new(24, 16)
 
 var _field: FlowField
 

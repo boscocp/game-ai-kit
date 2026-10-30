@@ -239,7 +239,7 @@ func _expansion_site(view: RtsSnapshot) -> Vector2i:
 # A building in a doorway walls a base in. A cell is fit when its four
 # neighbours are open, so two buildings never touch and a gap stays round each.
 static func _keeps_a_way_round(view: RtsSnapshot, cell: Vector2i) -> bool:
-	for direction: Vector2i in GridGraph.DIRECTIONS:
+	for direction: Vector2i in GakGridGraph.DIRECTIONS:
 		var beside: Vector2i = cell + direction
 		if not view.graph.contains(beside) or view.graph.is_blocked(beside):
 			return false

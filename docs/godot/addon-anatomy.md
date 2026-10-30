@@ -106,20 +106,20 @@ Both halves were wrong on 4.7.2-stable, measured:
 
 ```gdscript
 @abstract
-class_name Pathfinder
+class_name GakPathfinder
 extends RefCounted
 
-@abstract func find_path(graph: GridGraph, from: Vector2i, to: Vector2i) -> Array[Vector2i]
+@abstract func find_path(graph: GakGridGraph, from: Vector2i, to: Vector2i) -> Array[Vector2i]
 ```
 
 A subclass that does not replace `find_path` does not load:
 
 ```
-Parse Error: Class "ForgetfulChild" must implement "Pathfinder.find_path()"
+Parse Error: Class "ForgetfulChild" must implement "GakPathfinder.find_path()"
 and other inherited abstract methods or be marked as "@abstract".
 ```
 
-A subclass that replaces it parses clean. `Pathfinder.new()` is refused too.
+A subclass that replaces it parses clean. `GakPathfinder.new()` is refused too.
 gdUnit4's own source uses the same construct, which is the second-cheapest
 confirmation available and was sitting in `addons/` the whole time.
 
@@ -135,7 +135,7 @@ a test file, because the file would not parse. Build it at run time instead:
 
 ```gdscript
 var built := GDScript.new()
-built.source_code = "extends Pathfinder\n"
+built.source_code = "extends GakPathfinder\n"
 built.reload()  # non-OK, and the engine logs a parse error
 ```
 

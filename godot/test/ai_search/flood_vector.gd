@@ -24,7 +24,7 @@ static func why_not_a_vector(data: Dictionary) -> String:
 
 ## Every way `CostFlood` differs from the file, one line each.
 static func check(name: String, data: Dictionary) -> Array[String]:
-	var graph: GridGraph = SearchVector.board_of(data)
+	var graph: GakGridGraph = SearchVector.board_of(data)
 	var from := Vector2i(int(data["from"][0]), int(data["from"][1]))
 	var reached: Dictionary[Vector2i, int] = CostFlood.within(GridSearchGraph.new(graph), from, int(data["limit"]))
 	var expected: Array = data["expect"]["reached"]

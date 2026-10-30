@@ -106,13 +106,13 @@ static func forge() -> Upgrade:
 ## water to the wader too: it pays 1 there as in deep water, where everyone
 ## else pays `FORD_COST`.
 static func graphs_from(rows: Array[String]) -> Dictionary:
-	var ground := GridGraph.new(rows[0].length(), rows.size())
-	var water := GridGraph.new(rows[0].length(), rows.size())
+	var ground := GakGridGraph.new(rows[0].length(), rows.size())
+	var water := GakGridGraph.new(rows[0].length(), rows.size())
 	for y: int in range(rows.size()):
 		for x: int in range(rows[y].length()):
 			var cell := Vector2i(x, y)
 			ground.set_cost(cell, _ground_cost(rows[y][x]))
-			water.set_cost(cell, GridGraph.DEFAULT_COST if rows[y][x] in [WATER, FORD] else _ground_cost(rows[y][x]))
+			water.set_cost(cell, GakGridGraph.DEFAULT_COST if rows[y][x] in [WATER, FORD] else _ground_cost(rows[y][x]))
 	return {UnitType.GROUND: ground, WATER_MOVER: water}
 
 
@@ -134,7 +134,7 @@ static func cells_of(rows: Array[String], terrain: String) -> Array[Vector2i]:
 static func free_cell_beside(state: BoardState, producer: Unit, kind: UnitType) -> Vector2i:
 	if producer == null:
 		return Vector2i(-1, -1)
-	for step: Vector2i in GridGraph.DIRECTIONS:
+	for step: Vector2i in GakGridGraph.DIRECTIONS:
 		if state.why_no_room(producer, kind, producer.cell + step) == BoardState.LEGAL:
 			return producer.cell + step
 	return producer.cell
@@ -179,5 +179,5 @@ static func _ground_cost(terrain: String) -> int:
 		FORD:
 			return FORD_COST
 		ROCK, WATER:
-			return GridGraph.BLOCKED
-	return GridGraph.DEFAULT_COST
+			return GakGridGraph.BLOCKED
+	return GakGridGraph.DEFAULT_COST

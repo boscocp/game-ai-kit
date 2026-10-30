@@ -133,7 +133,7 @@ func test_end_turn_restores_movement_only_for_the_side_about_to_move() -> void:
 
 
 func test_a_dead_unit_never_reaches_the_board() -> void:
-	var graph := GridGraph.new(6, 3)
+	var graph := GakGridGraph.new(6, 3)
 	var given: Array[Unit] = [
 		Unit.new(1, RED, Vector2i(1, 1)),
 		Unit.new(2, BLUE, Vector2i(4, 1), 0),
@@ -151,7 +151,7 @@ func test_a_dead_unit_never_reaches_the_board() -> void:
 
 
 func test_the_cell_a_dead_unit_stood_on_is_not_blocked() -> void:
-	var graph := GridGraph.new(6, 3)
+	var graph := GakGridGraph.new(6, 3)
 	var given: Array[Unit] = [
 		Unit.new(1, RED, Vector2i(1, 1)),
 		Unit.new(2, BLUE, Vector2i(4, 1), 0),
@@ -164,7 +164,7 @@ func test_the_cell_a_dead_unit_stood_on_is_not_blocked() -> void:
 
 
 func test_the_state_does_not_alias_the_units_it_was_given() -> void:
-	var graph := GridGraph.new(6, 3)
+	var graph := GakGridGraph.new(6, 3)
 	var mine := Unit.new(1, RED, Vector2i(1, 1))
 	var given: Array[Unit] = [mine]
 	var state := BoardState.new(graph, given, RED)
@@ -250,7 +250,7 @@ func test_a_unit_may_walk_back_over_its_own_starting_cell() -> void:
 func test_two_units_sharing_an_id_cannot_walk_through_each_other() -> void:
 	# They could, and they stacked on one cell: the occupancy rule exempted
 	# "the same unit" by comparing ids rather than identity.
-	var graph := GridGraph.new(6, 3)
+	var graph := GakGridGraph.new(6, 3)
 	var twins: Array[Unit] = [
 		Unit.new(1, RED, Vector2i(1, 1)),
 		Unit.new(1, RED, Vector2i(3, 1)),
@@ -306,7 +306,7 @@ func test_a_cell_two_units_were_built_on_answers_with_the_first() -> void:
 		Unit.new(7, RED, Vector2i(2, 2)),
 		Unit.new(8, BLUE, Vector2i(2, 2)),
 	]
-	var state := BoardState.new(GridGraph.new(5, 5), stacked, RED)
+	var state := BoardState.new(GakGridGraph.new(5, 5), stacked, RED)
 
 	assert_int(state.unit_at(Vector2i(2, 2)).id).is_equal(7)
 
@@ -315,7 +315,7 @@ func test_a_copy_keeps_a_units_health() -> void:
 	# duplicate_unit's health argument was passed and never checked, and the
 	# dead are dropped before any copy happens, so nothing exercised it.
 	var wounded: Array[Unit] = [Unit.new(1, RED, Vector2i(1, 1), 4)]
-	var state := BoardState.new(GridGraph.new(4, 4), wounded, RED)
+	var state := BoardState.new(GakGridGraph.new(4, 4), wounded, RED)
 
 	assert_int(state.unit_by_id(1).health).is_equal(4)
 	assert_int(state.end_turn().unit_by_id(1).health).is_equal(4)
@@ -334,9 +334,9 @@ func test_a_unit_walks_on_its_own_type_s_cost_map() -> void:
 	# T10: a cell blocked on the board can be open to one mover. The first
 	# version checked the step against the board's map and the bill against
 	# the unit's, so a boat paid for the water and was refused it anyway.
-	var board := GridGraph.new(3, 1)
+	var board := GakGridGraph.new(3, 1)
 	board.block(Vector2i(1, 0))
-	var open := GridGraph.new(3, 1)
+	var open := GakGridGraph.new(3, 1)
 	var boat := UnitType.new("boat", 3, 1, 1, 1)
 	boat.mover = "water"
 	var state := BoardState.new(board, [Unit.new(1, RED, Vector2i.ZERO, 10, 3, boat)] as Array[Unit])
@@ -349,14 +349,14 @@ func test_a_unit_walks_on_its_own_type_s_cost_map() -> void:
 
 func test_an_untyped_unit_walks_on_the_board() -> void:
 	var state: BoardState = _two_unit_board()
-	state.movement_graphs = {"water": GridGraph.new(1, 1)}
+	state.movement_graphs = {"water": GakGridGraph.new(1, 1)}
 
 	assert_object(state.graph_for(state.units[0])).is_same(state.graph)
 
 
 func test_a_typed_unit_gets_its_type_s_movement_each_turn() -> void:
 	var fast := UnitType.new("fast", 6, 1, 1, 1)
-	var state := BoardState.new(GridGraph.new(4, 4), [Unit.new(1, BLUE, Vector2i.ZERO, 10, 0, fast)] as Array[Unit])
+	var state := BoardState.new(GakGridGraph.new(4, 4), [Unit.new(1, BLUE, Vector2i.ZERO, 10, 0, fast)] as Array[Unit])
 
 	assert_int(state.end_turn(2, 3).unit_by_id(1).movement_points).is_equal(6)
 
@@ -389,7 +389,7 @@ func test_a_new_unit_gets_an_id_nobody_else_has() -> void:
 	var soldier := UnitType.new("soldier", 3, 1, 1, 1)
 	maker.produces.assign(["soldier"])
 	var units: Array[Unit] = [Unit.new(7, RED, Vector2i(1, 1), 10, 0, maker), Unit.new(3, RED, Vector2i(3, 3))]
-	var state := BoardState.new(GridGraph.new(4, 4), units)
+	var state := BoardState.new(GakGridGraph.new(4, 4), units)
 	state.funds[RED] = 1
 
 	var built: BoardState = state.produce(ProductionOrder.new(7, soldier, Vector2i(1, 2)))
@@ -401,7 +401,7 @@ func test_an_order_is_refused_off_the_producer_s_side() -> void:
 	var maker := UnitType.new("maker", 0, 0, 1, 0, false)
 	var soldier := UnitType.new("soldier", 3, 1, 1, 0)
 	maker.produces.assign(["soldier"])
-	var state := BoardState.new(GridGraph.new(4, 4), [Unit.new(1, RED, Vector2i(1, 1), 10, 0, maker)] as Array[Unit])
+	var state := BoardState.new(GakGridGraph.new(4, 4), [Unit.new(1, RED, Vector2i(1, 1), 10, 0, maker)] as Array[Unit])
 
 	assert_str(state.why_production_refused(ProductionOrder.new(1, soldier, Vector2i(3, 3)))).contains("not next to")
 
@@ -414,7 +414,7 @@ func test_a_new_unit_never_takes_a_dead_unit_s_id() -> void:
 	var soldier := UnitType.new("soldier", 3, 1, 1, 0)
 	maker.produces.assign(["soldier"])
 	var units: Array[Unit] = [Unit.new(1, RED, Vector2i(1, 1), 10, 0, maker), Unit.new(5, RED, Vector2i(3, 3), 0)]
-	var state := BoardState.new(GridGraph.new(4, 4), units)
+	var state := BoardState.new(GakGridGraph.new(4, 4), units)
 
 	var built: BoardState = state.produce(ProductionOrder.new(1, soldier, Vector2i(1, 2)))
 	var again: BoardState = built.produce(ProductionOrder.new(1, soldier, Vector2i(1, 0)))
@@ -425,7 +425,7 @@ func test_a_new_unit_never_takes_a_dead_unit_s_id() -> void:
 
 # A 6x3 board of flat ground, red's unit 1 at (1, 1) and blue's unit 2 at (4, 1).
 func _two_unit_board() -> BoardState:
-	var graph := GridGraph.new(6, 3)
+	var graph := GakGridGraph.new(6, 3)
 	var units: Array[Unit] = [
 		Unit.new(1, RED, Vector2i(1, 1)),
 		Unit.new(2, BLUE, Vector2i(4, 1)),

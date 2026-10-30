@@ -19,13 +19,13 @@ addon (invariante 2, ADR 0021).
 
 ## O que ele contém {#holds}
 
-- `GridGraph` -- uma grade quadrada de custos: quanto custa **entrar** em
+- `GakGridGraph` -- uma grade quadrada de custos: quanto custa **entrar** em
   cada célula. Um é terreno aberto, mais é terreno difícil,
-  `GridGraph.BLOCKED` é parede; nada custa menos que um. `neighbours(cell)`
+  `GakGridGraph.BLOCKED` é parede; nada custa menos que um. `neighbours(cell)`
   devolve as quatro células vizinhas em que se pode entrar, numa ordem fixa.
-- `Pathfinder` -- a porta: um método abstrato, `find_path(graph, from, to)`,
+- `GakPathfinder` -- a porta: um método abstrato, `find_path(graph, from, to)`,
   uma rota que deixa `from` de fora e inclui `to`. O `GridPathfinder` do
-  `ai_search` é um; o seu jogo pede um `Pathfinder` e nunca cita o addon que
+  `ai_search` é um; o seu jogo pede um `GakPathfinder` e nunca cita o addon que
   responde.
 
 ## Quando você precisa dele {#when}
@@ -37,7 +37,7 @@ sobre uma grade (`ai_steering`, `ai_behaviour`) não precisa dele.
 ## Quando não usar {#when-not}
 
 Um tabuleiro hexagonal, uma malha de navegação, qualquer coisa cuja célula
-não seja uma coordenada inteira: `GridGraph` é uma grade quadrada e diz
+não seja uma coordenada inteira: `GakGridGraph` é uma grade quadrada e diz
 isso. As buscas continuam funcionando ali pela porta delas, `SearchGraph` --
 veja [ai_search](ai_search.pt-BR.md).
 

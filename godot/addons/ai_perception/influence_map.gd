@@ -13,7 +13,7 @@ extends RefCounted
 var width: int
 var height: int
 
-# Row-major, one value per cell, like `GridGraph`'s costs.
+# Row-major, one value per cell, like `GakGridGraph`'s costs.
 var _values: PackedFloat64Array
 
 
@@ -32,7 +32,7 @@ func _init(map_width: int, map_height: int) -> void:
 ## `eyes` and `facings` are pairs, index by index. Lists of different lengths
 ## are a caller's mistake, and the map is then empty rather than built from
 ## whichever watchers happened to have a partner.
-static func of_watchers(graph: GridGraph, cone: VisionCone, eyes: Array[Vector2i],
+static func of_watchers(graph: GakGridGraph, cone: VisionCone, eyes: Array[Vector2i],
 		facings: Array[Vector2i]) -> InfluenceMap:
 	var map := InfluenceMap.new(graph.width, graph.height)
 	if eyes.size() != facings.size():

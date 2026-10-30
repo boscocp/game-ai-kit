@@ -42,7 +42,7 @@ func _init() -> void:
 	random.seed = SEED
 	var failures: Array[String] = []
 	for trial: int in range(TRIALS):
-		var graph: GridGraph = _random_map(random)
+		var graph: GakGridGraph = _random_map(random)
 		var one := _random_cell(random)
 		var other := _random_cell(random)
 		failures += _the_line_follows_the_segment(trial, one, other)
@@ -80,18 +80,18 @@ func _off_the_segment(one: Vector2i, other: Vector2i, cell: Vector2i) -> bool:
 
 
 func _nothing_opaque_hides_nothing(trial: int, one: Vector2i, other: Vector2i) -> Array[String]:
-	if LineOfSight.clear(GridGraph.new(SIZE, SIZE), one, other):
+	if LineOfSight.clear(GakGridGraph.new(SIZE, SIZE), one, other):
 		return []
 	return ["trial %d: on an empty board %s does not see %s" % [trial, one, other]]
 
 
-func _sight_is_symmetric(trial: int, graph: GridGraph, one: Vector2i, other: Vector2i) -> Array[String]:
+func _sight_is_symmetric(trial: int, graph: GakGridGraph, one: Vector2i, other: Vector2i) -> Array[String]:
 	if LineOfSight.clear(graph, one, other) == LineOfSight.clear(graph, other, one):
 		return []
 	return ["trial %d: %s and %s disagree about whether they see each other" % [trial, one, other]]
 
 
-func _a_wall_blocks_both_ways(trial: int, graph: GridGraph, one: Vector2i, other: Vector2i,
+func _a_wall_blocks_both_ways(trial: int, graph: GakGridGraph, one: Vector2i, other: Vector2i,
 		random: RandomNumberGenerator) -> Array[String]:
 	var between: Array[Vector2i] = LineOfSight.cells_between(one, other)
 	if between.is_empty():
@@ -119,14 +119,14 @@ func _suspicion_holds_while_seen(trial: int, random: RandomNumberGenerator) -> A
 	return []
 
 
-func _a_guard_s_cell_is_the_most_dangerous(trial: int, graph: GridGraph,
+func _a_guard_s_cell_is_the_most_dangerous(trial: int, graph: GakGridGraph,
 		random: RandomNumberGenerator) -> Array[String]:
 	# Reach 0 one time in ten: the guard then sees only its own cell, and that
 	# cell must still be the map's maximum.
 	var reach: float = 0.0 if random.randf() < 0.1 else random.randf_range(2.0, 8.0)
 	var cone := VisionCone.new(reach, random.randf_range(20.0, 180.0))
 	var eyes: Array[Vector2i] = [_random_cell(random), _random_cell(random)]
-	var facings: Array[Vector2i] = [GridGraph.DIRECTIONS[random.randi_range(0, 3)], Vector2i.ZERO]
+	var facings: Array[Vector2i] = [GakGridGraph.DIRECTIONS[random.randi_range(0, 3)], Vector2i.ZERO]
 	var map := InfluenceMap.of_watchers(graph, cone, eyes, facings)
 	map.raise_along([_random_cell(random), _random_cell(random)] as Array[Vector2i], random.randf_range(0.0, 2.0))
 	for eye: Vector2i in eyes:
@@ -136,15 +136,15 @@ func _a_guard_s_cell_is_the_most_dangerous(trial: int, graph: GridGraph,
 	return []
 
 
-func _random_map(random: RandomNumberGenerator) -> GridGraph:
-	var graph := GridGraph.new(SIZE, SIZE)
+func _random_map(random: RandomNumberGenerator) -> GakGridGraph:
+	var graph := GakGridGraph.new(SIZE, SIZE)
 	for y: int in range(SIZE):
 		for x: int in range(SIZE):
 			_roll_cell(graph, Vector2i(x, y), random.randf())
 	return graph
 
 
-func _roll_cell(graph: GridGraph, cell: Vector2i, roll: float) -> void:
+func _roll_cell(graph: GakGridGraph, cell: Vector2i, roll: float) -> void:
 	if roll < WALL_CHANCE:
 		graph.block(cell)
 	elif roll < WALL_CHANCE + TREE_CHANCE:

@@ -13,10 +13,10 @@ class_name GridSearchGraph
 extends SearchGraph
 
 ## The grid every answer comes from.
-var grid: GridGraph
+var grid: GakGridGraph
 
 
-func _init(over: GridGraph) -> void:
+func _init(over: GakGridGraph) -> void:
 	grid = over
 
 
@@ -40,7 +40,7 @@ func cost_at(node: Vector2i) -> int:
 ##
 ## Consistent, which is the promise `SearchGraph.estimate` asks for, **because
 ## no cell costs less than one to enter**: one step changes the distance by
-## exactly one, and entering any cell costs at least that. `GridGraph.set_cost`
+## exactly one, and entering any cell costs at least that. `GakGridGraph.set_cost`
 ## clamps every cost below one to one, so a board that would break this cannot
 ## be built.
 func estimate(node: Vector2i, goal: Vector2i) -> int:

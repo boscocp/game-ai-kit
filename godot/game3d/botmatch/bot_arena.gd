@@ -78,7 +78,7 @@ var power_place: Vector2 = Vector2.INF
 var mirrored: bool = false
 var spots: Array[Spot] = []
 ## Where a bot can walk: one metre cells, those too near a box blocked.
-var walk: GridGraph
+var walk: GakGridGraph
 ## Each walk cell's floor height, row-major like the grid.
 var heights: PackedFloat64Array = PackedFloat64Array()
 ## The walk grid with its heights, as the graph A* searches.
@@ -305,12 +305,12 @@ func _floor_under(place: Vector2) -> float:
 	return top
 
 
-func _walk_grid(body_radius: float) -> GridGraph:
-	var grid := GridGraph.new(int(width), int(depth))
+func _walk_grid(body_radius: float) -> GakGridGraph:
+	var grid := GakGridGraph.new(int(width), int(depth))
 	for x: int in range(int(width)):
 		for z: int in range(int(depth)):
 			var near: bool = _too_near_a_box(centre_of(Vector2i(x, z)), body_radius)
-			grid.set_cost(Vector2i(x, z), GridGraph.BLOCKED if near else GridGraph.DEFAULT_COST)
+			grid.set_cost(Vector2i(x, z), GakGridGraph.BLOCKED if near else GakGridGraph.DEFAULT_COST)
 	return grid
 
 

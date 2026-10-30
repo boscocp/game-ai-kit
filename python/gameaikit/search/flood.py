@@ -10,7 +10,7 @@ from __future__ import annotations
 
 BLOCKED = -1
 
-#: North, east, south, west: `GridGraph.DIRECTIONS`' order.
+#: North, east, south, west: `GakGridGraph.DIRECTIONS`' order.
 DIRECTIONS = ((0, -1), (1, 0), (0, 1), (-1, 0))
 
 

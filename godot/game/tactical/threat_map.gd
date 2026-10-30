@@ -42,7 +42,7 @@ static func of(state: BoardState, side: int) -> Dictionary[Vector2i, int]:
 ## stands, and -- for a walker -- from every cell its whole movement reaches
 ## on its own cost map.
 static func strikes(state: BoardState, unit: Unit) -> Array[Vector2i]:
-	var graph: GridGraph = state.graph_for(unit)
+	var graph: GakGridGraph = state.graph_for(unit)
 	var hit: Dictionary[Vector2i, bool] = {}
 	for here: Vector2i in _standing_places(graph, unit):
 		for cell: Vector2i in _within(graph, here, unit.type.attack_range):
@@ -52,7 +52,7 @@ static func strikes(state: BoardState, unit: Unit) -> Array[Vector2i]:
 
 # Where `unit` could stand to attack from next turn: where it is, and for a
 # walker every cell its whole movement reaches on `graph`.
-static func _standing_places(graph: GridGraph, unit: Unit) -> Array[Vector2i]:
+static func _standing_places(graph: GakGridGraph, unit: Unit) -> Array[Vector2i]:
 	var places: Array[Vector2i] = [unit.cell]
 	if not unit.type.mobile:
 		return places
@@ -65,7 +65,7 @@ static func _standing_places(graph: GridGraph, unit: Unit) -> Array[Vector2i]:
 
 # The cells on the board within `reach` steps of `here` as the crow flies,
 # `here` itself left out: a piece does not attack the cell it stands on.
-static func _within(graph: GridGraph, here: Vector2i, reach: int) -> Array[Vector2i]:
+static func _within(graph: GakGridGraph, here: Vector2i, reach: int) -> Array[Vector2i]:
 	var found: Array[Vector2i] = []
 	var side: int = 2 * reach + 1
 	for index: int in range(side * side):

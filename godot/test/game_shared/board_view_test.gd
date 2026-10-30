@@ -42,14 +42,14 @@ func test_a_tile_with_see_through_parts_is_laid_over_open_ground() -> void:
 func test_the_cost_of_a_cell_chooses_its_tile() -> void:
 	var view: BoardView = _mounted_view()
 
-	assert_vector(view._tile_for(GridGraph.BLOCKED)).is_equal(BoardView.WALL)
-	assert_vector(view._tile_for(GridGraph.DEFAULT_COST)).is_equal(BoardView.PLAIN)
+	assert_vector(view._tile_for(GakGridGraph.BLOCKED)).is_equal(BoardView.WALL)
+	assert_vector(view._tile_for(GakGridGraph.DEFAULT_COST)).is_equal(BoardView.PLAIN)
 	assert_vector(view._tile_for(BoardView.ROUGH_FROM_COST)).is_equal(BoardView.ROUGH)
 
 
 func test_drawing_a_board_paints_every_cell_with_its_terrain() -> void:
 	var view: BoardView = _mounted_view()
-	var graph := GridGraph.new(3, 2)
+	var graph := GakGridGraph.new(3, 2)
 	graph.block(Vector2i(1, 1))
 	var reachable: Array[Vector2i] = [Vector2i(0, 0)]
 
@@ -65,7 +65,7 @@ func test_a_reachable_rough_cell_still_shows_that_it_is_rough() -> void:
 	# moment a player most wanted to know what the ground cost was the moment
 	# it was hidden. The highlight is an overlay now; the tile stays terrain.
 	var view: BoardView = _mounted_view()
-	var graph := GridGraph.new(2, 1)
+	var graph := GakGridGraph.new(2, 1)
 	graph.set_cost(Vector2i(1, 0), 3)
 	var reachable: Array[Vector2i] = [Vector2i(1, 0)]
 
@@ -79,7 +79,7 @@ func test_a_cell_dearer_than_a_step_says_what_it_costs() -> void:
 	# used to be drawn nowhere. Plain ground and walls stay unlabelled: a `1`
 	# on every cell would be noise, and a wall has no price.
 	var view: BoardView = _mounted_view()
-	var graph := GridGraph.new(3, 1)
+	var graph := GakGridGraph.new(3, 1)
 	graph.set_cost(Vector2i(1, 0), 3)
 	graph.block(Vector2i(2, 0))
 
@@ -95,7 +95,7 @@ func test_the_reachable_cells_are_drawn_over_the_terrain() -> void:
 	var view: BoardView = _mounted_view()
 	var reachable: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0)]
 
-	view.draw_board(GridGraph.new(3, 1), reachable)
+	view.draw_board(GakGridGraph.new(3, 1), reachable)
 
 	assert_array(view.marks()["reachable"]).contains_exactly(reachable)
 
@@ -142,11 +142,11 @@ func test_tiles_are_large_enough_to_read_a_number_on() -> void:
 
 func test_redrawing_forgets_the_previous_board() -> void:
 	var view: BoardView = _mounted_view()
-	view.draw_board(GridGraph.new(4, 4), [] as Array[Vector2i])
+	view.draw_board(GakGridGraph.new(4, 4), [] as Array[Vector2i])
 	assert_int(view.get_used_cells().size()).is_equal(16)
 
 	# A smaller board must not leave the old one's cells painted behind it.
-	view.draw_board(GridGraph.new(2, 2), [] as Array[Vector2i])
+	view.draw_board(GakGridGraph.new(2, 2), [] as Array[Vector2i])
 	assert_int(view.get_used_cells().size()).is_equal(4)
 
 

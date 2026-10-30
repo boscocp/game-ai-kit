@@ -2,7 +2,7 @@
 ##
 ## Turn-based like the rest of the kit (ADR 0006): one key press is one turn,
 ## so a person can stop and read what every guard is thinking before the next.
-## The player is a `Unit` on the room's `GridGraph`, and so is every guard.
+## The player is a `Unit` on the room's `GakGridGraph`, and so is every guard.
 ## Reaching the exit wins, even halfway through a sprint; an alert guard next
 ## to the player, facing them with nothing between, ends it the other way.
 class_name StealthWorld

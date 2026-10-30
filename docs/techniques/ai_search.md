@@ -41,7 +41,7 @@ nothing to lean on and is Dijkstra with extra steps.
 
 ## In this kit {#in-this-kit}
 
-`godot/demos/search/search_demo.gd` builds a `GridGraph` from a named board,
+`godot/demos/search/search_demo.gd` builds a `GakGridGraph` from a named board,
 wraps it as `GridSearchGraph.new(grid)` -- the adapter that lets a search
 read a grid -- and runs all four searches on it, then replays
 `SearchResult.expanded` a cell at a time. The knobs that matter:
@@ -49,7 +49,7 @@ read a grid -- and runs all four searches on it, then replays
 | knob | where | what it changes |
 |---|---|---|
 | which search | `AStarSearch`, `DijkstraSearch`, `BreadthFirstSearch`, `DepthFirstSearch` | the order the frontier is taken in -- and so the route and the work |
-| a cell's cost | `GridGraph.set_cost(cell, cost)` | what entering it costs; at least 1, `GridGraph.BLOCKED` is a wall |
+| a cell's cost | `GakGridGraph.set_cost(cell, cost)` | what entering it costs; at least 1, `GakGridGraph.BLOCKED` is a wall |
 | the guess | `SearchGraph.estimate` | A\*'s heuristic; must be *consistent*, zero makes A\* Dijkstra |
 | the limit | `CostFlood.within(GridSearchGraph.new(grid), from, limit)` | how far a flood spreads |
 
@@ -58,7 +58,7 @@ read a grid -- and runs all four searches on it, then replays
 ### What to copy {#copy}
 
 Two folders, nothing else: `godot/addons/ai_core/` (the grid and the
-`Pathfinder` port) and `godot/addons/ai_search/`. No plugin to enable --
+`GakPathfinder` port) and `godot/addons/ai_search/`. No plugin to enable --
 every class registers itself by `class_name`. Open the project once, or run
 `godot --headless --import`, so Godot rebuilds its class list.
 
@@ -82,23 +82,23 @@ var route: Array[Vector2i] = []
 func _ready() -> void:
 	# Six by four, open ground, and a wall down column 3 with a gap at the
 	# bottom -- the route has to find the gap.
-	var board := GridGraph.new(6, 4)
+	var board := GakGridGraph.new(6, 4)
 	for row: int in range(0, 3):
 		board.block(Vector2i(3, row))
 	# Held as ai_core's Pathfinder, so the caller does not care which search
 	# answers: swap AStarSearch for DijkstraSearch and nothing else changes.
-	var pathfinder: Pathfinder = GridPathfinder.new(AStarSearch.new())
+	var pathfinder: GakPathfinder = GridPathfinder.new(AStarSearch.new())
 	route = pathfinder.find_path(board, Vector2i(0, 0), Vector2i(5, 0))
 ```
 
 ### What you implement {#implement}
 
-Nothing, on a square grid: fill a `GridGraph` from your `TileMapLayer` (one
-`set_cost` per tile). For the route alone, hand it to a `Pathfinder` as the
+Nothing, on a square grid: fill a `GakGridGraph` from your `TileMapLayer` (one
+`set_cost` per tile). For the route alone, hand it to a `GakPathfinder` as the
 example does. For what the search looked at too, wrap it:
 `AStarSearch.new().search(GridSearchGraph.new(grid), from, to)` returns a
 `SearchResult` with `path`, `cost`, `expanded` and `frontier` -- a search
-takes a `SearchGraph`, and a `GridGraph` is not one. On anything else --
+takes a `SearchGraph`, and a `GakGridGraph` is not one. On anything else --
 waypoints, rooms, a navigation mesh's polygons -- extend `SearchGraph` with
 four methods (`contains`, `neighbours`, `cost_at`, `estimate`) and call
 `search(graph, from, to)` on any of the four; `godot/test/ai_search/waypoint_test.gd` is a whole one.

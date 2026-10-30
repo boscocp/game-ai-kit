@@ -321,7 +321,7 @@ func _duel(attacker: String, defender: String, apart: Vector2i) -> BoardState:
 		Unit.new(1, RED, Vector2i(3, 3), 10, types[attacker].movement, types[attacker]),
 		Unit.new(2, BLUE, Vector2i(3, 3) + apart, 10, types[defender].movement, types[defender]),
 	]
-	return BoardState.new(GridGraph.new(10, 8), units, RED)
+	return BoardState.new(GakGridGraph.new(10, 8), units, RED)
 
 
 func _health_of(state: BoardState, unit_id: int) -> int:

@@ -64,7 +64,7 @@ happening.
 A node is still a `Vector2i`. A grid names cells that way and waypoints can be
 named by position, and the files keep reading like the pseudocode. The
 general answer, an opaque id, costs every reader a lookup. A game holding
-`ai_core`'s `Pathfinder` gets any of the four through `GridPathfinder`, which
+`ai_core`'s `GakPathfinder` gets any of the four through `GridPathfinder`, which
 is the only file in `ai_search` that knows both a grid and that interface.
 
 ## Why A\* is right, and when it is not
@@ -82,7 +82,7 @@ The guess here is Manhattan distance: how many cardinal steps lie between two
 cells, ignoring what is in the way. It is admissible **because no cell costs
 less than one to enter**. A route cannot have fewer steps than the Manhattan
 distance, and each step costs at least one, so the guess cannot exceed the
-truth. That is why `GridGraph.set_cost` clamps any cost below one: the board
+truth. That is why `GakGridGraph.set_cost` clamps any cost below one: the board
 that would break the heuristic cannot be built. The guess is
 `GridSearchGraph.estimate`, beside the grid it is safe for, not in `astar.gd`.
 

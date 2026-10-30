@@ -62,7 +62,7 @@ var _board_index: int = 0
 # True after C, until a named board is loaded again.
 var _blank: bool = false
 var _edited: bool = false
-var _graph: GridGraph
+var _graph: GakGridGraph
 var _from: Vector2i
 var _to: Vector2i
 var _chosen: int = 0
@@ -204,7 +204,7 @@ func load_board(index: int) -> void:
 
 ## Open ground everywhere, with the start and the goal where they were.
 func clear_board() -> void:
-	_graph = GridGraph.new(_graph.width, _graph.height)
+	_graph = GakGridGraph.new(_graph.width, _graph.height)
 	_blank = true
 	_edited = false
 	_board_changed()
@@ -223,9 +223,9 @@ func paint(cell: Vector2i) -> void:
 	_set_terrain(cell, _brush_cost())
 
 
-## Make one cell open ground again, at `GridGraph.DEFAULT_COST`.
+## Make one cell open ground again, at `GakGridGraph.DEFAULT_COST`.
 func erase(cell: Vector2i) -> void:
-	_set_terrain(cell, GridGraph.DEFAULT_COST)
+	_set_terrain(cell, GakGridGraph.DEFAULT_COST)
 
 
 ## Make mud dearer or cheaper -- the mud already on the board as well as the
@@ -315,10 +315,10 @@ func _set_terrain(cell: Vector2i, cost: int) -> void:
 func _brush_cost() -> int:
 	match _brush:
 		Brush.WALL:
-			return GridGraph.BLOCKED
+			return GakGridGraph.BLOCKED
 		Brush.MUD:
 			return _mud_cost
-	return GridGraph.DEFAULT_COST
+	return GakGridGraph.DEFAULT_COST
 
 
 # Everything that depends on the board, worked out again from nothing: the
@@ -374,7 +374,7 @@ func _drag_to(cell: Vector2i) -> void:
 		Holding.BRUSH:
 			_stroke(_last_dragged, cell, _brush_cost())
 		Holding.ERASER:
-			_stroke(_last_dragged, cell, GridGraph.DEFAULT_COST)
+			_stroke(_last_dragged, cell, GakGridGraph.DEFAULT_COST)
 	_last_dragged = cell
 
 

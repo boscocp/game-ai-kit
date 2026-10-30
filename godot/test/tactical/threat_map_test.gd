@@ -51,10 +51,10 @@ func test_a_walker_s_whole_movement_counts() -> void:
 	# that stopped one short would leave it out.
 	var state: BoardState = _with(RED, TacticalRules.RUNNER, Vector2i(9, 0))
 	var runner: Unit = state.unit_at(Vector2i(9, 0))
-	var graph: GridGraph = state.graph_for(runner)
+	var graph: GakGridGraph = state.graph_for(runner)
 	var costs: Dictionary = TacticalReach.route_costs(graph, runner.cell)
 	var past: Array = costs.keys().filter(func(cell: Vector2i) -> bool:
-		return costs[cell] == runner.type.movement + 1 and graph.cost_at(cell) == GridGraph.DEFAULT_COST)
+		return costs[cell] == runner.type.movement + 1 and graph.cost_at(cell) == GakGridGraph.DEFAULT_COST)
 
 	assert_array(past).is_not_empty()
 	assert_bool(ThreatMap.strikes(state, runner).has(past[0])).is_true()

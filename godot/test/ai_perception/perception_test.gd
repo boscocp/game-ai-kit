@@ -3,8 +3,8 @@
 extends GdUnitTestSuite
 
 
-func _open(size: int = 9) -> GridGraph:
-	return GridGraph.new(size, size)
+func _open(size: int = 9) -> GakGridGraph:
+	return GakGridGraph.new(size, size)
 
 
 func test_an_open_board_hides_nothing() -> void:
@@ -12,13 +12,13 @@ func test_an_open_board_hides_nothing() -> void:
 
 
 func test_a_wall_on_the_line_blocks_sight() -> void:
-	var graph: GridGraph = _open()
+	var graph: GakGridGraph = _open()
 	graph.block(Vector2i(2, 0))
 	assert_bool(LineOfSight.clear(graph, Vector2i(0, 0), Vector2i(4, 0))).is_false()
 
 
 func test_a_tree_blocks_sight_and_rough_ground_does_not() -> void:
-	var graph: GridGraph = _open()
+	var graph: GakGridGraph = _open()
 	graph.set_cost(Vector2i(2, 0), LineOfSight.DEFAULT_OPAQUE_FROM_COST)
 	graph.set_cost(Vector2i(2, 1), LineOfSight.DEFAULT_OPAQUE_FROM_COST - 1)
 	assert_bool(LineOfSight.clear(graph, Vector2i(0, 0), Vector2i(4, 0))).is_false()
@@ -27,7 +27,7 @@ func test_a_tree_blocks_sight_and_rough_ground_does_not() -> void:
 
 func test_the_end_cells_are_not_asked() -> void:
 	# A player standing in a tree is still seen: the tree hides what is behind it.
-	var graph: GridGraph = _open()
+	var graph: GakGridGraph = _open()
 	graph.set_cost(Vector2i(4, 0), LineOfSight.DEFAULT_OPAQUE_FROM_COST)
 	assert_bool(LineOfSight.clear(graph, Vector2i(0, 0), Vector2i(4, 0))).is_true()
 
@@ -60,7 +60,7 @@ func test_a_line_upwards_passes_through_the_cells_on_the_segment() -> void:
 
 
 func test_sight_does_not_slip_between_two_walls_meeting_at_a_corner() -> void:
-	var graph: GridGraph = _open()
+	var graph: GakGridGraph = _open()
 	graph.block(Vector2i(1, 0))
 	graph.block(Vector2i(0, 1))
 	assert_bool(LineOfSight.clear(graph, Vector2i(0, 0), Vector2i(1, 1))).is_false()
@@ -69,7 +69,7 @@ func test_sight_does_not_slip_between_two_walls_meeting_at_a_corner() -> void:
 
 
 func test_one_wall_at_a_corner_does_not_block_a_diagonal() -> void:
-	var graph: GridGraph = _open()
+	var graph: GakGridGraph = _open()
 	graph.block(Vector2i(1, 0))
 	assert_bool(LineOfSight.clear(graph, Vector2i(0, 0), Vector2i(1, 1))).is_true()
 
@@ -128,7 +128,7 @@ func test_facing_nowhere_sees_the_whole_circle() -> void:
 
 
 func test_a_cone_does_not_see_through_a_wall() -> void:
-	var graph: GridGraph = _open()
+	var graph: GakGridGraph = _open()
 	graph.block(Vector2i(5, 4))
 	assert_bool(VisionCone.new(5.0, 45.0).sees(graph, Vector2i(4, 4), Vector2i.RIGHT, Vector2i(7, 4))).is_false()
 

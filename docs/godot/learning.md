@@ -68,7 +68,7 @@ var units: Array[Unit] = [
 	Unit.new(1, 0, Vector2i(5, 3), 10, 4),   # id, faction, cell, health, points
 	Unit.new(2, 1, Vector2i(6, 3), 4, 4),
 ]
-var state := BoardState.new(GridGraph.new(12, 8), units, 0)
+var state := BoardState.new(GakGridGraph.new(12, 8), units, 0)
 var policy := LearnedPolicy.new(weights, [Vector2i(10, 1)] as Array[Vector2i],
 	LearnedPolicy.DEFAULT_THRESHOLD, AStarSearch.new())
 
@@ -99,7 +99,7 @@ every blue unit's reason under the status line for that reason.
 * **threshold** -- the probability at which *retreat* becomes *attack*.
   `DEFAULT_THRESHOLD` is 0.5, the same threshold the training scores accuracy
   at. Lower is a braver opponent, higher a more cautious one.
-* **router** -- a `Pathfinder`, to walk routes rather than single steps. It is
+* **router** -- a `GakPathfinder`, to walk routes rather than single steps. It is
   passed in rather than built inside because a route is a search, and no addon
   may depend on another. `null` is allowed: the unit then walks greedily,
   each step the neighbour nearest the target, and a wall a search would go

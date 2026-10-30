@@ -134,6 +134,6 @@ static func _turns(unit: Unit, routes: Dictionary, cell: Vector2i) -> int:
 # Turns to walk beside `cell`, which a piece stands on and so no route enters.
 static func _turns_beside(unit: Unit, routes: Dictionary, cell: Vector2i) -> int:
 	var nearest: int = FAR
-	for step: Vector2i in GridGraph.DIRECTIONS:
+	for step: Vector2i in GakGridGraph.DIRECTIONS:
 		nearest = mini(nearest, _turns(unit, routes, cell + step))
 	return nearest

@@ -163,7 +163,7 @@ func _refresh() -> void:
 # their cost alone as rough ground -- as the stealth demo draws them.
 func _trees() -> Dictionary:
 	var tiles: Dictionary = {}
-	var graph: GridGraph = world.room.graph
+	var graph: GakGridGraph = world.room.graph
 	for index: int in range(graph.width * graph.height):
 		var cell := Vector2i(index % graph.width, index / graph.width)
 		if graph.cost_at(cell) == StealthRoom.TREE:

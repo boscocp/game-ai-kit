@@ -58,7 +58,7 @@ importam:
 | ajuste | onde | o que muda |
 |---|---|---|
 | passos da inundação por *tick* | `FlowField.settle(budget)`; o `FIELD_CELLS_PER_TICK` do mundo | quão cedo um campo novo fica pronto, contra quanto do quadro ele ocupa; o orçamento conta passos da inundação (`FlowField.work`), não células assentadas |
-| custo das células | `GridGraph.set_cost`, `GridGraph.block` | para onde as setas levam; um campo já montado não vê uma mudança |
+| custo das células | `GakGridGraph.set_cost`, `GakGridGraph.block` | para onde as setas levam; um campo já montado não vê uma mudança |
 | tamanho do balde | `SpatialHash.new(size)` | mais ou menos o raio que a maioria das perguntas usa; menor lê mais baldes, maior descarta mais |
 | as partes | `FrameBudget.SHARES` | os milissegundos que cada camada pode ocupar dos 16,7 |
 | a frequência das decisões da IA | `RtsMatch.decide_every` | *ticks* entre decisões; meio segundo por padrão |
@@ -101,7 +101,7 @@ const STEPS_PER_FRAME: int = 64
 
 ## Your map: 1 is open ground, dearer cells are slower, blocked is a wall.
 ## Change it before you send anyone; a field already built does not see it.
-var map := GridGraph.new(24, 16)
+var map := GakGridGraph.new(24, 16)
 
 var _field: FlowField
 

@@ -14,13 +14,13 @@
 # lets a test expect an engine error instead of being failed by one.
 extends GdUnitTestSuite
 
-const FORGETFUL_PATHFINDER: String = "extends Pathfinder\n"
+const FORGETFUL_PATHFINDER: String = "extends GakPathfinder\n"
 
 const DUTIFUL_PATHFINDER: String = """
-extends Pathfinder
+extends GakPathfinder
 
 
-func find_path(graph: GridGraph, from: Vector2i, to: Vector2i) -> Array[Vector2i]:
+func find_path(graph: GakGridGraph, from: Vector2i, to: Vector2i) -> Array[Vector2i]:
 	return [to] if graph.contains(to) and from != to else []
 """
 
@@ -28,8 +28,8 @@ const INSTANTIATES_THE_INTERFACE: String = """
 extends RefCounted
 
 
-static func build() -> Pathfinder:
-	return Pathfinder.new()
+static func build() -> GakPathfinder:
+	return GakPathfinder.new()
 """
 
 

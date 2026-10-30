@@ -58,7 +58,7 @@ static func board_of(data: Dictionary) -> BoardState:
 	if not (data.get("board") is Dictionary):
 		return null
 	var described: Dictionary = data["board"]
-	var graph := GridGraph.new(int(described["width"]), int(described["height"]))
+	var graph := GakGridGraph.new(int(described["width"]), int(described["height"]))
 	for y: int in range(int(described["height"])):
 		for x: int in range(int(described["width"])):
 			graph.set_cost(Vector2i(x, y), int(described["costs"][y][x]))

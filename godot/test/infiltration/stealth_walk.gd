@@ -18,7 +18,7 @@ const STAY_SHARE: float = 0.3
 const LOW_COVER_SHARE: float = 0.3
 const STANCES: Array[String] = ["standing", "crouched", "prone"]
 
-var level: GridGraph
+var level: GakGridGraph
 var cells: Array[Vector2i] = []
 var neighbours: Array[PackedInt32Array] = []
 var guard: Vector2i = Vector2i.ZERO

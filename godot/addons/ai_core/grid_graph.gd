@@ -13,7 +13,7 @@
 ##
 ## When not to use it: a hex board, a navigation mesh, or anything where a cell
 ## is not an integer coordinate. This is a square grid and says so.
-class_name GridGraph
+class_name GakGridGraph
 extends RefCounted
 
 ## A cell nothing may enter. Kept distinct from a high cost, because "expensive"
@@ -119,7 +119,7 @@ func neighbours(cell: Vector2i) -> Array[Vector2i]:
 
 
 ## An independent copy. Used wherever a caller must not see the board change.
-func duplicate_graph() -> GridGraph:
-	var copy := GridGraph.new(width, height)
+func duplicate_graph() -> GakGridGraph:
+	var copy := GakGridGraph.new(width, height)
 	copy._costs = _costs.duplicate()
 	return copy

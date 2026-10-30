@@ -9,17 +9,17 @@ extends GdUnitTestSuite
 
 
 func test_a_path_through_a_blocked_cell_is_not_merely_expensive() -> void:
-	var graph := GridGraph.new(4, 2)
+	var graph := GakGridGraph.new(4, 2)
 	graph.block(Vector2i(2, 0))
 	var path: Array[Vector2i] = [Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)]
 
 	# Not "two plus a wall plus one". There is no number that means impossible,
 	# which is why BLOCKED is not a large cost.
-	assert_int(Move.new(1, path).cost_on(graph)).is_equal(GridGraph.BLOCKED)
+	assert_int(Move.new(1, path).cost_on(graph)).is_equal(GakGridGraph.BLOCKED)
 
 
 func test_terrain_is_summed_over_the_cells_entered() -> void:
-	var graph := GridGraph.new(4, 2)
+	var graph := GakGridGraph.new(4, 2)
 	graph.set_cost(Vector2i(2, 0), 3)
 	var path: Array[Vector2i] = [Vector2i(1, 0), Vector2i(2, 0)]
 
@@ -27,7 +27,7 @@ func test_terrain_is_summed_over_the_cells_entered() -> void:
 
 
 func test_an_empty_path_costs_nothing_and_goes_nowhere() -> void:
-	var graph := GridGraph.new(4, 2)
+	var graph := GakGridGraph.new(4, 2)
 	var hold := Move.new(1, [] as Array[Vector2i])
 
 	assert_int(hold.cost_on(graph)).is_equal(0)

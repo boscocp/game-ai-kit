@@ -34,7 +34,7 @@ Each file is one board and one question.
 ```
 
 - `costs` is row-major: `costs[y][x]`, which is the board's own convention.
-  `-1` is `GridGraph.BLOCKED`; every other value is what it costs to **enter**
+  `-1` is `GakGridGraph.BLOCKED`; every other value is what it costs to **enter**
   that cell, and is never below `1`.
 - `from` and `to` are `[x, y]`.
 - `expect.cheapest_cost` is what Dijkstra and A\* must both return.

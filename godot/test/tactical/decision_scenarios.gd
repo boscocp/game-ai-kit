@@ -69,7 +69,7 @@ func _init() -> void:
 # defender is outside `nearby_radius`, so it moved `reinforcement_distance`
 # and left `numeric_advantage` at zero. Measured, and moved to (5,4).
 func _the_fight_it_should_take(published: TacticalWeights) -> Array[String]:
-	var state := BoardState.new(GridGraph.new(9, 7), [
+	var state := BoardState.new(GakGridGraph.new(9, 7), [
 		Unit.new(1, RED, Vector2i(4, 3), 4, POINTS),
 		Unit.new(2, BLUE, Vector2i(7, 3), 16, POINTS),
 		Unit.new(3, BLUE, Vector2i(5, 4), 12, POINTS),
@@ -88,7 +88,7 @@ func _the_fight_it_should_take(published: TacticalWeights) -> Array[String]:
 # The same board turned around: one hurt unit, no friends left, and a healthy
 # enemy standing in cover. The model has to be able to say no.
 func _the_fight_it_should_refuse(published: TacticalWeights) -> Array[String]:
-	var graph := GridGraph.new(9, 7)
+	var graph := GakGridGraph.new(9, 7)
 	graph.set_cost(Vector2i(4, 3), 3)
 	var state := BoardState.new(graph, [
 		Unit.new(1, RED, Vector2i(4, 3), 16, POINTS),
@@ -109,7 +109,7 @@ func _the_fight_it_should_refuse(published: TacticalWeights) -> Array[String]:
 # and behind a band of rough ground. The capture model has to prefer the near
 # one, and the decision has to say what it preferred it to.
 func _the_node_it_should_prefer(published: TacticalWeights) -> Array[String]:
-	var graph := GridGraph.new(12, 9)
+	var graph := GakGridGraph.new(12, 9)
 	for row: int in range(0, 9):
 		graph.set_cost(Vector2i(3, row), 3)
 	var state := BoardState.new(graph, [

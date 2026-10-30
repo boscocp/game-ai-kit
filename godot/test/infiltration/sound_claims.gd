@@ -16,12 +16,12 @@ const TOLERANCE: float = 1e-9
 
 ## The honest loudness at `listener` of a noise at `source` on `level`: the
 ## flood along the level, then the loudness at its path length.
-static func along_the_level(level: GridGraph, source: Vector2i, listener: Vector2i, radius: float) -> float:
+static func along_the_level(level: GakGridGraph, source: Vector2i, listener: Vector2i, radius: float) -> float:
 	return SoundPaths.loudness_at(SoundPaths.lengths(level, source, radius, 1.0), listener, radius, 1.0)
 
 
 ## Planted: the straight line, as if walls let sound through.
-static func through_walls(_level: GridGraph, source: Vector2i, listener: Vector2i, radius: float) -> float:
+static func through_walls(_level: GakGridGraph, source: Vector2i, listener: Vector2i, radius: float) -> float:
 	return PathHearing.loudness(Vector2(listener - source).length(), radius)
 
 
@@ -34,7 +34,7 @@ static func goes_round(heard: Callable, source_of: Callable, seeds: int) -> Arra
 	for seed_value: int in range(1, seeds + 1):
 		var rng := RandomNumberGenerator.new()
 		rng.seed = seed_value
-		var level: GridGraph = StealthWorlds.cut_in_two(rng)
+		var level: GakGridGraph = StealthWorlds.cut_in_two(rng)
 		var source: Vector2i = source_of.call(level, rng)
 		var wrong: String = _one_noise(level, source, heard)
 		if wrong != "":
@@ -42,7 +42,7 @@ static func goes_round(heard: Callable, source_of: Callable, seeds: int) -> Arra
 	return []
 
 
-static func _one_noise(level: GridGraph, source: Vector2i, heard: Callable) -> String:
+static func _one_noise(level: GakGridGraph, source: Vector2i, heard: Callable) -> String:
 	if float(heard.call(level, source, source, RADIUS)) != 1.0:
 		return "it is not heard at 1 where it is made"
 	var reached: Dictionary[Vector2i, int] = CostFlood.within(GridSearchGraph.new(level), source, level.width * level.height * 10)
@@ -62,7 +62,7 @@ static func _one_noise(level: GridGraph, source: Vector2i, heard: Callable) -> S
 
 ## A noise anywhere on the level's free cells: where the honest claim makes
 ## it, so no cell of one level is assumed.
-static func anywhere(level: GridGraph, rng: RandomNumberGenerator) -> Vector2i:
+static func anywhere(level: GakGridGraph, rng: RandomNumberGenerator) -> Vector2i:
 	var cells: Array[Vector2i] = StealthWorlds.free_cells(level)
 	return cells[rng.randi_range(0, cells.size() - 1)] if not cells.is_empty() else Vector2i.ZERO
 

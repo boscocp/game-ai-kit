@@ -17,13 +17,13 @@
 class_name ArenaWalk
 extends SearchGraph
 
-var grid: GridGraph
+var grid: GakGridGraph
 ## Each cell's floor height, row-major like the grid.
 var heights: PackedFloat64Array
 var max_rise: float = 0.0
 
 
-func _init(over: GridGraph, floor_heights: PackedFloat64Array, rise: float) -> void:
+func _init(over: GakGridGraph, floor_heights: PackedFloat64Array, rise: float) -> void:
 	grid = over
 	heights = floor_heights
 	max_rise = rise

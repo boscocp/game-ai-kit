@@ -27,7 +27,7 @@ func test_rows_of_different_lengths_are_refused() -> void:
 
 
 func test_a_cost_below_one_is_refused_rather_than_clamped() -> void:
-	# GridGraph clamps it, so a vector written with a 0 would quietly become a
+	# GakGridGraph clamps it, so a vector written with a 0 would quietly become a
 	# 1 and pass -- pinning an answer nobody wrote down.
 	var cheap: Dictionary = _good()
 	cheap["costs"] = [[1, 0, 1], [1, 1, 1], [1, 1, 1]]
@@ -73,7 +73,7 @@ func test_the_board_is_read_row_major() -> void:
 	wide["costs"] = [[1, 1, 1, 7], [1, 1, 1, 1]]
 	wide["to"] = [3, 1]
 
-	var graph: GridGraph = SearchVector.board_of(wide)
+	var graph: GakGridGraph = SearchVector.board_of(wide)
 
 	assert_int(graph.width).is_equal(4)
 	assert_int(graph.height).is_equal(2)

@@ -369,7 +369,7 @@ func _board(pieces: Array, to_move: int = BLUE) -> BoardState:
 	for piece: Array in pieces:
 		var kind: UnitType = types[piece[1]]
 		units.append(Unit.new(units.size() + 1, piece[0], piece[2], 10, kind.movement, kind))
-	return BoardState.new(GridGraph.new(14, 9), units, to_move)
+	return BoardState.new(GakGridGraph.new(14, 9), units, to_move)
 
 
 func _file(combat: Dictionary, capture: Dictionary = _by_distance(1.0)) -> TacticalWeights:

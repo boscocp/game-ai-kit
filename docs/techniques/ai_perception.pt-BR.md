@@ -227,7 +227,7 @@ func _line_is_clear() -> bool:
 A linha: `_line_is_clear` é onde entram as suas paredes -- um
 `PhysicsRayQueryParameters2D` do guarda até o alvo, por exemplo --, e um
 `Callable` sem argumentos que devolve um `bool` é tudo o que
-`sees_in_the_open` pede. Numa grade, preencha um `GridGraph` a partir do
+`sees_in_the_open` pede. Numa grade, preencha um `GakGridGraph` a partir do
 seu mapa e chame `cone.sees(graph, eye, facing, target)` com células
 (`Vector2i`) e uma direção que seja um passo, como `Vector2i.RIGHT`. Depois,
 o que as fases significam: o *awareness* diz o quanto o guarda tem certeza,

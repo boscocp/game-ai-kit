@@ -8,7 +8,7 @@
 ##
 ## They search a `SearchGraph`, the port: the four questions they ask of a
 ## graph, named. A grid is one through `GridSearchGraph`, and `GridPathfinder`
-## hands any of them to a game that asks for `ai_core`'s `Pathfinder`.
+## hands any of them to a game that asks for `ai_core`'s `GakPathfinder`.
 ##
 ## When not to use any of them: when you need throughput. `AStarGrid2D` is
 ## engine core, written in C++, with four heuristics and four diagonal modes,
@@ -47,7 +47,7 @@ func search(graph: SearchGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 
 # Walk the chain of parents back from the goal, then turn it round.
 #
-# The result excludes `from` and includes `to`, which is what `Pathfinder`
+# The result excludes `from` and includes `to`, which is what `GakPathfinder`
 # and `SearchResult.path` promise: cost is paid on entering a cell, and you
 # never pay to stand where you already are.
 #

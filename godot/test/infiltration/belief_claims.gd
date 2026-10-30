@@ -23,7 +23,7 @@ static func is_honest(unseen_step: Callable, seeds: int) -> Array[String]:
 	for seed_value: int in range(1, seeds + 1):
 		var rng := RandomNumberGenerator.new()
 		rng.seed = seed_value
-		var level: GridGraph = StealthWorlds.scattered(rng)
+		var level: GakGridGraph = StealthWorlds.scattered(rng)
 		var cells: Array[Vector2i] = StealthWorlds.free_cells(level)
 		if cells.size() < 2:
 			continue

@@ -111,7 +111,7 @@ func _intruder_steps() -> bool:
 			return false
 		_paused = 0
 		_loop_index = (_loop_index + 1) % INTRUDER_LOOP.size()
-	var around: GridGraph = room.graph.duplicate_graph()
+	var around: GakGridGraph = room.graph.duplicate_graph()
 	around.block(guard.cell)
 	var route: Array[Vector2i] = _router.find_path(around, intruder.cell, INTRUDER_LOOP[_loop_index])
 	if route.is_empty():

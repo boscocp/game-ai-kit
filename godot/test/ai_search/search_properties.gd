@@ -44,7 +44,7 @@ func _run_trials() -> Array[String]:
 	var failures: Array[String] = []
 
 	for trial: int in range(TRIALS):
-		var graph: GridGraph = _random_board(random)
+		var graph: GakGridGraph = _random_board(random)
 		var from := Vector2i(random.randi_range(0, SIZE - 1), random.randi_range(0, SIZE - 1))
 		var to := Vector2i(random.randi_range(0, SIZE - 1), random.randi_range(0, SIZE - 1))
 		if graph.is_blocked(from) or graph.is_blocked(to):
@@ -55,7 +55,7 @@ func _run_trials() -> Array[String]:
 
 
 # Both searches on one board, and what they disagreed about.
-func _compare(trial: int, graph: GridGraph, from: Vector2i, to: Vector2i,
+func _compare(trial: int, graph: GakGridGraph, from: Vector2i, to: Vector2i,
 		dijkstra: DijkstraSearch, astar: AStarSearch) -> Array[String]:
 	var slow: SearchResult = dijkstra.search(GridSearchGraph.new(graph), from, to)
 	var quick: SearchResult = astar.search(GridSearchGraph.new(graph), from, to)
@@ -82,16 +82,16 @@ func _compare(trial: int, graph: GridGraph, from: Vector2i, to: Vector2i,
 
 # A board of random ground, never cheaper than one -- which is the condition
 # the heuristic's admissibility rests on, stated in astar.gd.
-func _random_board(random: RandomNumberGenerator) -> GridGraph:
-	var graph := GridGraph.new(SIZE, SIZE)
+func _random_board(random: RandomNumberGenerator) -> GakGridGraph:
+	var graph := GakGridGraph.new(SIZE, SIZE)
 	for y: int in range(SIZE):
 		for x: int in range(SIZE):
 			_fill_cell(graph, random, Vector2i(x, y))
 	return graph
 
 
-func _fill_cell(graph: GridGraph, random: RandomNumberGenerator, cell: Vector2i) -> void:
+func _fill_cell(graph: GakGridGraph, random: RandomNumberGenerator, cell: Vector2i) -> void:
 	if random.randf() < WALL_CHANCE:
 		graph.block(cell)
 		return
-	graph.set_cost(cell, random.randi_range(GridGraph.DEFAULT_COST, DEAREST_GROUND))
+	graph.set_cost(cell, random.randi_range(GakGridGraph.DEFAULT_COST, DEAREST_GROUND))

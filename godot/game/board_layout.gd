@@ -32,7 +32,7 @@ static func window_size() -> Vector2:
 
 ## Centre `root` (the node the board, units and overlays hang from) and place
 ## the two panels beside it, the status's column starting at `status_top`.
-static func lay_out(root: Node2D, graph: GridGraph, status: Control, legend: Control, status_top: float) -> void:
+static func lay_out(root: Node2D, graph: GakGridGraph, status: Control, legend: Control, status_top: float) -> void:
 	var window: Vector2 = window_size()
 	root.position = BoardView.offset_to_centre(graph, window)
 	var board := Rect2(root.position, BoardView.pixel_size(graph))

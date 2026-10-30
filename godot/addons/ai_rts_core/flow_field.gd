@@ -32,7 +32,7 @@ var settled: int = 0
 ## budget of 512 is 512 steps, however many of them settle a cell.
 var work: int = 0
 
-var _graph: GridGraph
+var _graph: GakGridGraph
 var _distance: PackedInt32Array
 # Dial's queue: _buckets[d] holds the cells first reached at distance d.
 var _buckets: Array[Array] = []
@@ -42,7 +42,7 @@ var _current: int = 0
 ## A field towards `goal` on `graph`, with nothing settled yet. The goal may
 ## be a blocked cell -- a building, a deposit -- and then the field leads to the
 ## cells beside it, which is where a worker stands to use one.
-func _init(graph: GridGraph, goal_cell: Vector2i) -> void:
+func _init(graph: GakGridGraph, goal_cell: Vector2i) -> void:
 	_graph = graph
 	goal = goal_cell
 	_distance = PackedInt32Array()
@@ -79,14 +79,14 @@ func distance_at(cell: Vector2i) -> int:
 
 
 ## Which way to step from `cell`: towards the reachable neighbour nearest the
-## goal, ties broken in `GridGraph.DIRECTIONS` order. Zero at the goal, and
+## goal, ties broken in `GakGridGraph.DIRECTIONS` order. Zero at the goal, and
 ## where there is no way on.
 func direction_at(cell: Vector2i) -> Vector2i:
 	var best: Vector2i = Vector2i.ZERO
 	var best_distance: int = distance_at(cell)
 	if best_distance == UNREACHABLE or cell == goal:
 		return Vector2i.ZERO
-	for direction: Vector2i in GridGraph.DIRECTIONS:
+	for direction: Vector2i in GakGridGraph.DIRECTIONS:
 		var distance: int = distance_at(cell + direction)
 		if distance != UNREACHABLE and distance < best_distance:
 			best_distance = distance

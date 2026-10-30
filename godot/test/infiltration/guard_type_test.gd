@@ -49,12 +49,12 @@ func test_a_clear_lit_body_close_by_raises_awareness_faster_than_a_faint_one_far
 
 
 func test_a_wall_between_is_silence_and_the_way_round_is_heard_less() -> void:
-	var level := GridGraph.new(5, 3)
+	var level := GakGridGraph.new(5, 3)
 	for y: int in range(3):
 		level.block(Vector2i(2, y))
 	var walled: Dictionary[Vector2i, float] = SoundPaths.lengths(level, Vector2i(0, 1), 10.0, 1.0)
 	assert_float(SoundPaths.loudness_at(walled, Vector2i(3, 1), 10.0, 1.0)).is_equal(0.0)
-	level.set_cost(Vector2i(2, 0), GridGraph.DEFAULT_COST)
+	level.set_cost(Vector2i(2, 0), GakGridGraph.DEFAULT_COST)
 	var round_the_wall: Dictionary[Vector2i, float] = SoundPaths.lengths(level, Vector2i(0, 1), 10.0, 1.0)
 	assert_float(SoundPaths.loudness_at(round_the_wall, Vector2i(3, 1), 10.0, 1.0)).is_equal_approx(0.5, 1e-9)
 

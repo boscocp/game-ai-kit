@@ -85,7 +85,7 @@ func _sound_claims(types: Dictionary[String, GuardType], data: Dictionary) -> Ar
 		_rows_name_no_cell(data["guards"]), _rows_name_no_cell({"planted": planted_row})))
 	failures.append_array(_pair("portable: generated levels break a noise posted on one",
 		SoundClaims.goes_round(SoundClaims.along_the_level, SoundClaims.anywhere, SEEDS),
-		SoundClaims.goes_round(SoundClaims.along_the_level, func(_level: GridGraph, _rng: RandomNumberGenerator) -> Vector2i: return post, SEEDS)))
+		SoundClaims.goes_round(SoundClaims.along_the_level, func(_level: GakGridGraph, _rng: RandomNumberGenerator) -> Vector2i: return post, SEEDS)))
 	return failures
 
 

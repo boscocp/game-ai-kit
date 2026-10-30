@@ -129,7 +129,7 @@ func _goal() -> Vector2i:
 # than turning its back on the player it was chasing. Arrived, or with no way
 # round, it turns a quarter instead: looking round is what a guard at the spot
 # it heard something does.
-func _walk_towards(graph: GridGraph, goal: Vector2i, occupied: Array[Vector2i]) -> void:
+func _walk_towards(graph: GakGridGraph, goal: Vector2i, occupied: Array[Vector2i]) -> void:
 	route = _router.find_path(_with_others_in_the_way(graph, goal, occupied), unit.cell, goal)
 	if route.is_empty():
 		facing = Vector2i(-facing.y, facing.x)
@@ -146,9 +146,9 @@ func _walk_towards(graph: GridGraph, goal: Vector2i, occupied: Array[Vector2i]) 
 # Only where there is room to. Head on in a corridor one cell wide, neither
 # has a way round and both wait -- getting one to back out is cooperative
 # pathfinding, a lesson of its own. The default room's rounds never share one.
-func _with_others_in_the_way(graph: GridGraph, goal: Vector2i,
-		occupied: Array[Vector2i]) -> GridGraph:
-	var around: GridGraph = graph.duplicate_graph()
+func _with_others_in_the_way(graph: GakGridGraph, goal: Vector2i,
+		occupied: Array[Vector2i]) -> GakGridGraph:
+	var around: GakGridGraph = graph.duplicate_graph()
 	for cell: Vector2i in occupied:
 		if cell != goal:
 			around.block(cell)

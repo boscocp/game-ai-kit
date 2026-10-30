@@ -33,7 +33,7 @@ var supply_cap: int = 0
 ## queued, how many that is). Sorted by id.
 var units: Array[Dictionary] = []
 ## The board as it is, buildings blocking their cells: a copy.
-var graph: GridGraph
+var graph: GakGridGraph
 
 
 ## What `world` shows `viewer` now.
