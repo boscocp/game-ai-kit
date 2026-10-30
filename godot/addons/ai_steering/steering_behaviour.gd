@@ -8,7 +8,7 @@
 ##
 ## When not to use it: a decision that is not "which way, how hard" -- which
 ## target to chase is a choice made above this, by whatever sets the target.
-class_name SteeringBehaviour
+class_name GakSteeringBehaviour
 extends RefCounted
 
 

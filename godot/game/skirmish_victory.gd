@@ -60,7 +60,7 @@ static func holder_of(state: BoardState, node: Vector2i) -> int:
 	var standing: Unit = state.unit_at(node)
 	if standing == null:
 		return NOBODY
-	for step: Vector2i in GridGraph.DIRECTIONS:
+	for step: Vector2i in GakGridGraph.DIRECTIONS:
 		var beside: Unit = state.unit_at(node + step)
 		if beside != null and beside.faction != standing.faction:
 			return NOBODY

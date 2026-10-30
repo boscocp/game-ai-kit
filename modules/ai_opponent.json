@@ -2,6 +2,7 @@
   "module": "ai_opponent",
   "kind": "technique",
   "about": "The n-gram opponent model, counted during one fight only (ADR 0016).",
+  "summary": "An n-gram model of the opponent: what they did after their last few moves, counted during one fight and never saved.",
   "owns": [
     "godot/addons/ai_opponent/",
     "godot/test/ai_opponent/",

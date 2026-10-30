@@ -7,7 +7,7 @@ tier: 2
 source: book:Travis McIntosh, "Human Enemy AI in The Last of Us", in Steve Rabin (ed.), "Game AI Pro 2", CRC Press, 2015 ; https://www.gameaipro.com/
 invalidated_if: the kit's VisionCone, Awareness, LineOfSight, Hearing, VisionShape, BeliefMap or ParticleBelief signatures change, or the demos that use them are renamed
 teaches: perception
-translation_of: c31ba053e38970c11db8c1be03e177a421e1c3f31337b37997daf66d79f084a9
+translation_of: 8bbd13a7185d52ea6343cc5c575bc0cade29e4ad4d075055c755657e65897849
 -->
 
 > English: [ai_perception.md](ai_perception.md). Os termos que ficam em
@@ -227,7 +227,7 @@ func _line_is_clear() -> bool:
 A linha: `_line_is_clear` é onde entram as suas paredes -- um
 `PhysicsRayQueryParameters2D` do guarda até o alvo, por exemplo --, e um
 `Callable` sem argumentos que devolve um `bool` é tudo o que
-`sees_in_the_open` pede. Numa grade, preencha um `GridGraph` a partir do
+`sees_in_the_open` pede. Numa grade, preencha um `GakGridGraph` a partir do
 seu mapa e chame `cone.sees(graph, eye, facing, target)` com células
 (`Vector2i`) e uma direção que seja um passo, como `Vector2i.RIGHT`. Depois,
 o que as fases significam: o *awareness* diz o quanto o guarda tem certeza,

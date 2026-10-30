@@ -16,12 +16,12 @@ class_name SearchResult
 extends RefCounted
 
 ## The cost of a route that does not exist. The same number as
-## `GridGraph.BLOCKED`, so a grid's caller compares it with what it knows; named
+## `GakGridGraph.BLOCKED`, so a grid's caller compares it with what it knows; named
 ## here because a search over waypoints has no grid to borrow it from.
 const NO_ROUTE: int = -1
 
 ## The route, excluding the start and including the goal, exactly as
-## `Pathfinder` requires. Empty when there is no route -- and also empty when
+## `GakPathfinder` requires. Empty when there is no route -- and also empty when
 ## the start *is* the goal, which is why `reached` exists.
 var path: Array[Vector2i]
 

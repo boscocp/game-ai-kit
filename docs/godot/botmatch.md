@@ -30,7 +30,7 @@ so neither side starts with better ground:
   stair from each side, A and C in walled yards, houses along the streets.
 
 Height is in the simulation: each walk cell has a floor, a bot stands on
-it with its eyes 1.5 m up, and A\* walks a step only within 0.6 m of rise -- up a stair, never a wall (`ArenaWalk`, a `SearchGraph`).
+it with its eyes 1.5 m up, and A\* walks a step only within 0.6 m of rise -- up a stair, never a wall (`ArenaWalk`, a `GakSearchGraph`).
 
 The rules (`rules.json`), the owner's asks after playing T51: Shift
 sprints at 6.5 m/s and no shot is fired while sprinting; a rifle has 120

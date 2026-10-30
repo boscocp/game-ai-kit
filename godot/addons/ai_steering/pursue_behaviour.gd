@@ -12,7 +12,7 @@
 ## prediction looks ahead. Then the guess is wrong every time, and plain
 ## seek, which is never wrong about where the target is now, does better.
 class_name PursueBehaviour
-extends SteeringBehaviour
+extends GakSteeringBehaviour
 
 var quarry_position: Vector2
 var quarry_velocity: Vector2

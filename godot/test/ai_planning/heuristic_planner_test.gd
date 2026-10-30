@@ -9,7 +9,7 @@ const H_ADD: HeuristicPlanner.Guide = HeuristicPlanner.Guide.H_ADD
 
 
 func test_a_world_packed_and_unpacked_holds_what_it_held() -> void:
-	var domain := PackedDomain.new(GameDomain.actions(), GameDomain.opening_world(), GameDomain.goal())
+	var domain := PackedDomain.new(GakGameDomain.actions(), GakGameDomain.opening_world(), GakGameDomain.goal())
 	var world := WorldState.new(["node_held", "barracks_built"])
 
 	assert_str(domain.world_of(domain.state_of(world)).key()).is_equal(world.key())
@@ -41,7 +41,7 @@ func test_a_domain_too_big_for_an_int_says_so_and_does_not_claim_impossible() ->
 
 
 func test_every_search_plans_the_game_domain_as_long_as_strips_planner_does() -> void:
-	var shortest: int = StripsPlanner.new().plan(GameDomain.actions(), GameDomain.opening_world(), GameDomain.goal()).steps.size()
+	var shortest: int = StripsPlanner.new().plan(GakGameDomain.actions(), GakGameDomain.opening_world(), GakGameDomain.goal()).steps.size()
 
 	for guide: HeuristicPlanner.Guide in [BFS, H_MAX]:
 		assert_int(_plan_game(guide).steps.size()).is_equal(shortest)
@@ -82,7 +82,7 @@ func test_h_max_never_guesses_more_than_the_shortest_plan_from_any_world_it_plan
 
 
 func test_a_goal_the_relaxation_cannot_reach_is_impossible_without_a_search() -> void:
-	var result: PlanResult = HeuristicPlanner.new().plan(GameDomain.actions(), GameDomain.opening_world(), ["nobody_adds_this"], H_MAX)
+	var result: PlanResult = HeuristicPlanner.new().plan(GakGameDomain.actions(), GakGameDomain.opening_world(), ["nobody_adds_this"], H_MAX)
 
 	assert_bool(result.solved).is_false()
 	assert_bool(result.gave_up).is_false()
@@ -90,8 +90,8 @@ func test_a_goal_the_relaxation_cannot_reach_is_impossible_without_a_search() ->
 
 
 func test_a_budget_reached_returns_a_partial_plan_that_runs() -> void:
-	var result: PlanResult = HeuristicPlanner.new().plan(GameDomain.actions(), GameDomain.opening_world(), GameDomain.goal(), H_ADD, 3)
-	var world: WorldState = GameDomain.opening_world()
+	var result: PlanResult = HeuristicPlanner.new().plan(GakGameDomain.actions(), GakGameDomain.opening_world(), GakGameDomain.goal(), H_ADD, 3)
+	var world: WorldState = GakGameDomain.opening_world()
 
 	assert_bool(result.solved).is_false()
 	assert_bool(result.gave_up).is_true()
@@ -103,7 +103,7 @@ func test_a_budget_reached_returns_a_partial_plan_that_runs() -> void:
 
 
 func test_breadth_first_has_no_partial_plan_to_give() -> void:
-	var result: PlanResult = HeuristicPlanner.new().plan(GameDomain.actions(), GameDomain.opening_world(), GameDomain.goal(), BFS, 3)
+	var result: PlanResult = HeuristicPlanner.new().plan(GakGameDomain.actions(), GakGameDomain.opening_world(), GakGameDomain.goal(), BFS, 3)
 
 	assert_bool(result.gave_up).is_true()
 	assert_bool(result.partial).is_false()
@@ -113,9 +113,9 @@ func test_breadth_first_has_no_partial_plan_to_give() -> void:
 func test_a_horizon_shorter_than_the_plan_returns_its_first_steps_and_never_more() -> void:
 	var whole: PlanResult = _plan_game(H_MAX)
 	var horizon: int = whole.steps.size() - 2
-	var result: PlanResult = HeuristicPlanner.new().plan(GameDomain.actions(), GameDomain.opening_world(),
-		GameDomain.goal(), H_MAX, HeuristicPlanner.DEFAULT_BUDGET, horizon)
-	var world: WorldState = GameDomain.opening_world()
+	var result: PlanResult = HeuristicPlanner.new().plan(GakGameDomain.actions(), GakGameDomain.opening_world(),
+		GakGameDomain.goal(), H_MAX, HeuristicPlanner.DEFAULT_BUDGET, horizon)
+	var world: WorldState = GakGameDomain.opening_world()
 
 	assert_bool(result.solved).is_false()
 	assert_bool(result.partial).is_true()
@@ -127,16 +127,16 @@ func test_a_horizon_shorter_than_the_plan_returns_its_first_steps_and_never_more
 
 func test_a_horizon_as_long_as_the_plan_finds_the_whole_plan() -> void:
 	var whole: PlanResult = _plan_game(H_MAX)
-	var result: PlanResult = HeuristicPlanner.new().plan(GameDomain.actions(), GameDomain.opening_world(),
-		GameDomain.goal(), H_MAX, HeuristicPlanner.DEFAULT_BUDGET, whole.steps.size())
+	var result: PlanResult = HeuristicPlanner.new().plan(GakGameDomain.actions(), GakGameDomain.opening_world(),
+		GakGameDomain.goal(), H_MAX, HeuristicPlanner.DEFAULT_BUDGET, whole.steps.size())
 
 	assert_bool(result.solved).is_true()
 	assert_array(result.action_names()).is_equal(whole.action_names())
 
 
 func test_a_goal_beyond_the_horizon_is_not_called_impossible() -> void:
-	var result: PlanResult = HeuristicPlanner.new().plan(GameDomain.actions(), GameDomain.opening_world(),
-		GameDomain.goal(), H_MAX, HeuristicPlanner.DEFAULT_BUDGET, 0)
+	var result: PlanResult = HeuristicPlanner.new().plan(GakGameDomain.actions(), GakGameDomain.opening_world(),
+		GakGameDomain.goal(), H_MAX, HeuristicPlanner.DEFAULT_BUDGET, 0)
 
 	assert_bool(result.solved).is_false()
 	assert_bool(result.gave_up).is_true()
@@ -144,15 +144,15 @@ func test_a_goal_beyond_the_horizon_is_not_called_impossible() -> void:
 
 
 func test_breadth_first_gives_up_at_the_horizon_as_at_its_budget() -> void:
-	var result: PlanResult = HeuristicPlanner.new().plan(GameDomain.actions(), GameDomain.opening_world(),
-		GameDomain.goal(), BFS, HeuristicPlanner.DEFAULT_BUDGET, 1)
+	var result: PlanResult = HeuristicPlanner.new().plan(GakGameDomain.actions(), GakGameDomain.opening_world(),
+		GakGameDomain.goal(), BFS, HeuristicPlanner.DEFAULT_BUDGET, 1)
 
 	assert_bool(result.gave_up).is_true()
 	assert_bool(result.solved).is_false()
 
 
 func _plan_game(guide: HeuristicPlanner.Guide) -> PlanResult:
-	return HeuristicPlanner.new().plan(GameDomain.actions(), GameDomain.opening_world(), GameDomain.goal(), guide)
+	return HeuristicPlanner.new().plan(GakGameDomain.actions(), GakGameDomain.opening_world(), GakGameDomain.goal(), guide)
 
 
 func _where_h_add_wanders() -> Array[StripsAction]:

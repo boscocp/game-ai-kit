@@ -5,11 +5,16 @@ What it builds
 --------------
 Into `OUTPUT/dist/`, from the commit at HEAD and nothing else:
 
-  * `ai_<name>-<version>.zip` for every addon under godot/addons/ that has
-    tracked files, with a single top folder `ai_<name>/` holding LICENSE,
-    NOTICE and VERSION beside the code -- unzip it into `res://addons/`;
+  * `ai_<name>-<version>.zip` for every addon under godot/addons/, with a
+    single top folder `ai_<name>/` holding LICENSE, NOTICE, VERSION and a
+    README beside the code -- unzip it into `res://addons/`. Each addon is
+    read from its manifest, `modules/ai_<name>.json` (T64): an addon folder
+    no technique or kernel manifest owns, or one holding a test, is refused;
   * `gameaikit-<version>-py3-none-any.whl`, the Python half, with LICENSE and
     NOTICE in `.dist-info/licenses/`, where PEP 639 says a wheel keeps them.
+    It holds the packages `python/pyproject.toml` lists -- the techniques,
+    not the examples' -- and its metadata is that file's, refused when the
+    file's version is not VERSION's or its packages are not the techniques'.
   * with `--executable FOLDER`, `game-ai-kit-linux-x86_64-<version>.zip`:
     the menu exported by `make export` (T24), the binary and its `.pck` under
     one top folder `game-ai-kit/` beside LICENSE, NOTICE and VERSION. Only a
@@ -54,8 +59,10 @@ machine and a difference between them is a difference in the source.
 Exit codes
 ----------
 0   built
-1   refused: VERSION malformed, an addon or the package has no files, or
-    the output would land inside the repository's own dist/
+1   refused: VERSION malformed, an addon or the package has no files, an
+    addon has no manifest or holds a test, pyproject.toml disagrees with
+    VERSION or the manifests, or the output would land inside the
+    repository's own dist/
 2   wrong usage, or not run inside a git checkout
 
 Usage
@@ -78,6 +85,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import tomllib
 import zipfile
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
@@ -96,6 +104,18 @@ EPOCH = (1980, 1, 1, 0, 0, 0)
 # Python the wheel claims to run on: the oldest CI's ubuntu-latest image ships
 # and the tests therefore run against.
 REQUIRES_PYTHON = ">=3.12"
+
+# The manifests whose addon ships: a technique, or the kernel every one
+# stands on (ADR 0021). The examples' modules are the kit's games.
+SHIPPED_KINDS = ("technique", "kernel")
+
+# A gdUnit4 suite: a `*_test.gd`, or any script extending GdUnitTestSuite.
+# Suites live in godot/test/<module>/; one inside an addon folder would ship
+# to a stranger who has no gdUnit4, so it is refused rather than quietly
+# dropped. A plain helper a suite uses is not recognised by its content --
+# that one is held by review, and by the manifest owning the test folder.
+TEST_FILE = re.compile(r"(^|/)[^/]*_test\.gd$")
+TEST_MARK = b"GdUnitTestSuite"
 
 
 class Refused(Exception):
@@ -172,8 +192,60 @@ def attribution(repo: pathlib.Path, skip_notice: bool) -> dict[str, bytes]:
     return committed_contents(repo, names)
 
 
+def manifests(repo: pathlib.Path) -> dict[str, dict]:
+    """Every module's manifest as HEAD has it, by module name."""
+    paths = [path for path in committed_files(repo, "modules/") if path.endswith(".json")]
+    found = {}
+    for path, data in committed_contents(repo, paths).items():
+        manifest = json.loads(data)
+        found[manifest["module"]] = manifest
+    return found
+
+
+def addon_manifest(addon: str, every: dict[str, dict]) -> dict:
+    """The manifest that ships `addon`, or a refusal naming what is missing."""
+    manifest = every.get(addon)
+    if manifest is None or f"godot/addons/{addon}/" not in manifest["owns"]:
+        raise Refused(f"godot/addons/{addon}/ is owned by no manifest, so nothing says it ships")
+    if manifest["kind"] not in SHIPPED_KINDS:
+        raise Refused(f"{addon} is a module of kind {manifest['kind']!r}; "
+                      f"only {', '.join(SHIPPED_KINDS)} addons ship")
+    return manifest
+
+
+def addon_readme(manifest: dict, version: str, files: dict[str, bytes]) -> bytes:
+    """The README a stranger opens first: what the addon is, and what it needs.
+
+    Written from the manifest's `summary` -- its `about` is for this
+    repository's readers and names tasks a stranger cannot follow -- so it
+    cannot describe an addon other than the one in the zip. The Asset
+    Library asks for a readme inside the plugin folder; this is that file.
+    The note on the `Gak` prefix is printed only where the addon has a class
+    that carries it.
+    """
+    name = manifest["module"]
+    needs = manifest["depends_on"]
+    if not manifest.get("summary"):
+        raise Refused(f"modules/{name}.json has no summary for the README a stranger reads")
+    prefixed = any(re.search(rb"^class_name Gak", data, re.M) for data in files.values())
+    lines = [f"# {name} {version}", "", manifest["summary"], "",
+             f"Unzip into your project's `res://addons/`. The classes register "
+             f"themselves by `class_name`; no plugin needs enabling."]
+    if needs:
+        lines += ["", "It needs " + ", ".join(f"`{each}`" for each in needs)
+                  + ", from the same release: unzip that beside it."]
+    if prefixed:
+        lines += ["", "The classes a game extends carry the prefix `Gak`; the algorithms "
+                  "keep their names."]
+    lines += ["", "If a class here collides with one of yours, rename its `class_name` "
+              "line, and its uses, inside this folder.",
+              "", "Apache-2.0: LICENSE and NOTICE are beside this file. "
+              "Source, tests and documentation: https://github.com/boscocp/game-ai-kit", ""]
+    return "\n".join(lines).encode()
+
+
 def build_addon(repo: pathlib.Path, addon: str, version: str,
-                dist: pathlib.Path, skip_notice: bool) -> pathlib.Path:
+                dist: pathlib.Path, skip_notice: bool, manifest: dict) -> pathlib.Path:
     """Zip one addon under a single top folder named after it.
 
     The addon's own LICENSE and NOTICE are dropped and the root copies put in
@@ -187,8 +259,13 @@ def build_addon(repo: pathlib.Path, addon: str, version: str,
     files = {path[len(prefix):]: data for path, data in committed_contents(repo, shipped).items()}
     if not files:
         raise Refused(f"{addon} has no committed files to ship")
+    tests = sorted(name for name, data in files.items()
+                   if TEST_FILE.search(name) or (name.endswith(".gd") and TEST_MARK in data))
+    if tests:
+        raise Refused(f"{addon} holds a test, {tests[0]}; tests live in godot/test/{addon}/")
     files.update(attribution(repo, skip_notice))
     files["VERSION"] = f"{version}\n".encode()
+    files["README.md"] = addon_readme(manifest, version, files)
 
     archive = dist / f"{addon}-{version}.zip"
     with zipfile.ZipFile(archive, "w") as bundle:
@@ -203,17 +280,54 @@ def record_line(name: str, data: bytes) -> str:
     return f"{name},sha256={digest.decode()},{len(data)}"
 
 
-def wheel_metadata(version: str, licences: list[str]) -> dict[str, str]:
+def project_table(repo: pathlib.Path, version: str, every: dict[str, dict]) -> dict:
+    """`python/pyproject.toml` as HEAD has it, refused when it disagrees.
+
+    The wheel is written by hand (ADR 0009), and a person who runs `pip
+    install ./python` gets one from setuptools; both must be the same
+    package. So the file's name, version and floor must be this script's, and
+    its packages exactly the techniques' -- one per technique manifest's
+    `python/gameaikit/<name>/`, and the root.
+    """
+    pyproject = tomllib.loads(committed_bytes(repo, "python/pyproject.toml").decode("utf-8"))
+    project = pyproject["project"]
+    for key, wanted in (("name", PACKAGE), ("version", version),
+                        ("requires-python", REQUIRES_PYTHON)):
+        if project.get(key) != wanted:
+            raise Refused(f"python/pyproject.toml says {key} = {project.get(key)!r}, "
+                          f"the release builds {wanted!r}")
+    techniques = {f"{PACKAGE}.{owned.split('/')[2]}"
+                  for manifest in every.values() if manifest["kind"] == "technique"
+                  for owned in manifest["owns"]
+                  if owned.startswith(f"python/{PACKAGE}/") and owned.endswith("/")}
+    listed = set(pyproject["tool"]["setuptools"]["packages"])
+    if listed != techniques | {PACKAGE}:
+        raise Refused(f"python/pyproject.toml packages differ from the technique manifests "
+                      f"by {sorted(listed ^ (techniques | {PACKAGE}))}")
+    # setuptools ships a listed package's own folder and no folder below it,
+    # and so does this script; a technique growing a subpackage would leave
+    # both wheels without it, and agree. Refused, until it is listed.
+    folders = {pathlib.PurePosixPath(path).parent.as_posix()[len("python/"):].replace("/", ".")
+               for package in techniques
+               for path in committed_files(repo, f"python/{package.replace('.', '/')}/")}
+    if folders - listed:
+        raise Refused(f"python/pyproject.toml does not list {sorted(folders - listed)}, "
+                      "a folder inside a technique's package")
+    return project
+
+
+def wheel_metadata(project: dict, licences: list[str], readme: str) -> dict[str, str]:
     """The `.dist-info` text files, apart from RECORD, which hashes all the rest."""
     metadata = [
         "Metadata-Version: 2.4",
-        f"Name: {PACKAGE}",
-        f"Version: {version}",
-        "Summary: The Python half of game-ai-kit: a PDDL reader, the dataset "
-        "simulator and the trainer that publishes weights for the Godot addons.",
+        f"Name: {project['name']}",
+        f"Version: {project['version']}",
+        f"Summary: {project['description']}",
         "License-Expression: Apache-2.0",
         *(f"License-File: {name}" for name in licences),
-        f"Requires-Python: {REQUIRES_PYTHON}",
+        f"Requires-Python: {project['requires-python']}",
+        *(f"Project-URL: {label}, {url}" for label, url in project.get("urls", {}).items()),
+        "Description-Content-Type: text/markdown",
     ]
     wheel = [
         "Wheel-Version: 1.0",
@@ -221,18 +335,25 @@ def wheel_metadata(version: str, licences: list[str]) -> dict[str, str]:
         "Root-Is-Purelib: true",
         "Tag: py3-none-any",
     ]
-    return {"METADATA": "\n".join(metadata) + "\n", "WHEEL": "\n".join(wheel) + "\n"}
+    return {"METADATA": "\n".join(metadata) + "\n\n" + readme, "WHEEL": "\n".join(wheel) + "\n"}
 
 
-def build_wheel(repo: pathlib.Path, version: str,
-                dist: pathlib.Path, skip_notice: bool) -> pathlib.Path:
+def build_wheel(repo: pathlib.Path, version: str, dist: pathlib.Path,
+                skip_notice: bool, every: dict[str, dict]) -> pathlib.Path:
     """Write the Python package as a pure wheel, by hand.
 
-    Everything goes in the archive except RECORD first; RECORD then lists
-    every one of them with its hash, and itself without one, which is how the
-    format says a reader knows the file it is reading is the last word.
+    Only the packages `pyproject.toml` lists, and the files directly in the
+    root package -- not the examples' packages beside them. Everything goes
+    in the archive except RECORD first; RECORD then lists every one of them
+    with its hash, and itself without one, which is how the format says a
+    reader knows the file it is reading is the last word.
     """
-    package = committed_files(repo, f"python/{PACKAGE}/")
+    project = project_table(repo, version, every)
+    # A listed package is its folder's own files, as setuptools reads it: a
+    # folder below one is shipped only when it is listed itself.
+    folders = {name.replace(".", "/") for name in project_packages(repo)}
+    package = [path for path in committed_files(repo, f"python/{PACKAGE}/")
+               if pathlib.PurePosixPath(path[len("python/"):]).parent.as_posix() in folders]
     files = {path[len("python/"):]: data for path, data in committed_contents(repo, package).items()}
     if not files:
         raise Refused(f"python/{PACKAGE} has no committed files to ship")
@@ -241,7 +362,8 @@ def build_wheel(repo: pathlib.Path, version: str,
     licences = attribution(repo, skip_notice)
     for name, data in licences.items():
         files[f"{info}/licenses/{name}"] = data
-    for name, text in wheel_metadata(version, sorted(licences)).items():
+    readme = committed_bytes(repo, "python/README.md").decode("utf-8")
+    for name, text in wheel_metadata(project, sorted(licences), readme).items():
         files[f"{info}/{name}"] = text.encode()
 
     record = [record_line(name, files[name]) for name in sorted(files)]
@@ -296,6 +418,12 @@ def build_executable(repo: pathlib.Path, folder: pathlib.Path, version: str,
     return archive
 
 
+def project_packages(repo: pathlib.Path) -> list[str]:
+    """The packages `python/pyproject.toml` lists, dotted, as HEAD has it."""
+    pyproject = tomllib.loads(committed_bytes(repo, "python/pyproject.toml").decode("utf-8"))
+    return sorted(pyproject["tool"]["setuptools"]["packages"])
+
+
 def shipped_addons(repo: pathlib.Path) -> list[str]:
     """Addons with committed files. gdUnit4 is installed, not committed, so it is not one."""
     names = {
@@ -337,11 +465,12 @@ def build(repo: pathlib.Path, output: pathlib.Path, skip_notice: bool,
         for name in ATTRIBUTION:
             (output / name).write_bytes(committed_bytes(repo, name))
 
+    every = manifests(repo)
     artifacts = [
-        build_addon(repo, addon, version, dist, skip_notice)
+        build_addon(repo, addon, version, dist, skip_notice, addon_manifest(addon, every))
         for addon in shipped_addons(repo)
     ]
-    artifacts.append(build_wheel(repo, version, dist, skip_notice))
+    artifacts.append(build_wheel(repo, version, dist, skip_notice, every))
     if executable is not None:
         artifacts.append(build_executable(repo, executable, version, dist, skip_notice))
     return artifacts
@@ -410,24 +539,90 @@ def check_reproducible_and_stamped(root: pathlib.Path) -> list[str]:
 
 
 def check_the_wheel(root: pathlib.Path) -> list[str]:
-    """The wheel is well formed by the spec, and its modules import once unpacked."""
+    """The wheel is well formed by the spec, its techniques import, its games are left out."""
     wheel = quiet_build(REPO, root / "wheel")[-1]
     failures = [f"the wheel is well formed: {problem}" for problem in wheel_problems(wheel)]
     # Unpacked the way an installer unpacks a pure wheel. Importing from the
-    # zip directly is wrong for this package: `dataset/`, `training/` and
-    # `tactical/` are namespace packages, which zipimport does not find.
+    # zip directly is wrong for this package: `training/` is a namespace
+    # package, which zipimport does not find. Every technique the registry
+    # names must import from it -- and the examples' packages must not.
     site = root / "site-packages"
     with zipfile.ZipFile(wheel) as bundle:
         bundle.extractall(site)
-    probe = subprocess.run(
-        [sys.executable, "-I", "-c",
-         f"import sys; sys.path.insert(0, {str(site)!r}); "
-         "import gameaikit.pddl.reader, gameaikit.dataset.simulate, "
-         "gameaikit.tactical.report"],
-        capture_output=True, text=True, cwd=root,
-    )
-    if probe.returncode != 0:
-        failures.append(f"the wheel imports ({probe.stderr.strip()})")
+    def registered(path: pathlib.Path) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [sys.executable, "-I", "-c",
+             f"import sys; sys.path.insert(0, {str(path)!r}); "
+             "from gameaikit import techniques; print(sorted(techniques.kit()))"],
+            capture_output=True, text=True, cwd=root,
+        )
+    from_wheel, from_tree = registered(site), registered(REPO / "python")
+    if from_wheel.returncode != 0 or from_wheel.stdout != from_tree.stdout:
+        failures.append(f"every technique imports from the wheel ({from_wheel.stderr.strip()})")
+    examples = {owned.split("/")[2] for manifest in manifests(REPO).values()
+                if manifest["kind"] == "example" for owned in manifest["owns"]
+                if owned.startswith(f"python/{PACKAGE}/") and owned.endswith("/")}
+    if not examples:
+        failures.append("the manifests name the examples' Python packages")
+    for game in sorted(examples):
+        if (site / PACKAGE / game).exists():
+            failures.append(f"the examples' {game} package stays out of the wheel")
+    return failures
+
+
+def check_manifest_refusals(root: pathlib.Path) -> list[str]:
+    """What the manifests and pyproject.toml forbid is refused, each on its own commit.
+
+    Planted in a clone, one commit each, and reset between: a test inside an
+    addon folder, an addon folder no manifest owns, a subpackage pyproject
+    does not list, a pyproject whose version is not VERSION's, and one that
+    lists an example's package.
+    """
+    clone = root / "clone"
+    subprocess.run(["git", "clone", "-q", str(REPO), str(clone)], check=True)
+    head = head_commit(clone)
+    pyproject = clone / "python" / "pyproject.toml"
+
+    def an_orphan_addon() -> None:
+        (clone / "godot/addons/ai_orphan").mkdir()
+        (clone / "godot/addons/ai_orphan/orphan.gd").write_text("extends RefCounted\n")
+
+    def a_subpackage() -> None:
+        (clone / "python/gameaikit/search/grids").mkdir()
+        (clone / "python/gameaikit/search/grids/__init__.py").write_text("")
+
+    def a_manifest_without_summary() -> None:
+        manifest = clone / "modules" / "ai_search.json"
+        data = json.loads(manifest.read_text())
+        del data["summary"]
+        manifest.write_text(json.dumps(data, indent=2) + "\n")
+
+    plants = {
+        "a test inside an addon": lambda: (clone / "godot/addons/ai_search/stray_test.gd")
+        .write_text("extends GdUnitTestSuite\n"),
+        "a script running a test suite": lambda: (clone / "godot/addons/ai_search/helper.gd")
+        .write_text("extends GdUnitTestSuite\n"),
+        "an addon no manifest owns": an_orphan_addon,
+        "a technique's subpackage pyproject does not list": a_subpackage,
+        "an addon whose manifest has no summary": a_manifest_without_summary,
+        "a pyproject at another version": lambda: pyproject.write_text(
+            pyproject.read_text().replace('version = "', 'version = "9', 1)),
+        "a pyproject shipping an example": lambda: pyproject.write_text(
+            pyproject.read_text().replace('"gameaikit.utility",', '"gameaikit.utility",\n    "gameaikit.checkers",', 1)),
+    }
+    failures = []
+    for label, plant in plants.items():
+        subprocess.run(["git", "-C", str(clone), "reset", "-q", "--hard", head], check=True)
+        subprocess.run(["git", "-C", str(clone), "clean", "-qfdx"], check=True)
+        plant()
+        subprocess.run(["git", "-C", str(clone), "add", "-A"], check=True)
+        subprocess.run(["git", "-C", str(clone), "-c", "user.name=t", "-c", "user.email=t@t",
+                        "commit", "-q", "--no-verify", "-m", "plant"], check=True)
+        try:
+            quiet_build(clone, root / "out")
+            failures.append(f"{label} is refused")
+        except Refused:
+            pass
     return failures
 
 
@@ -515,7 +710,7 @@ def head_archive(repo: pathlib.Path) -> dict[str, bytes]:
     """Every file HEAD holds that a release reads, by path, through `git archive`."""
     exported = subprocess.run(
         ["git", "-C", str(repo), "archive", "--format=tar", "HEAD", "--",
-         "godot/addons", f"python/{PACKAGE}", *ATTRIBUTION, "VERSION"],
+         "godot/addons", f"python/{PACKAGE}", "python/pyproject.toml", *ATTRIBUTION, "VERSION"],
         capture_output=True, check=True,
     ).stdout
     with tarfile.open(fileobj=io.BytesIO(exported)) as bundle:
@@ -534,10 +729,13 @@ def expected_release(tree: dict[str, bytes], version: str) -> dict[str, dict[str
                    for path, data in tree.items() if path.startswith(prefix)}
         entries.update({f"{addon}/{name}": data for name, data in attribution_files.items()})
         entries[f"{addon}/VERSION"] = f"{version}\n".encode()
+        entries[f"{addon}/README.md"] = None
         release[f"{addon}-{version}.zip"] = entries
     info = f"{PACKAGE}-{version}.dist-info"
+    listed = tomllib.loads(tree["python/pyproject.toml"].decode())["tool"]["setuptools"]["packages"]
+    folders = {f"python/{name.replace('.', '/')}" for name in listed}
     wheel = {path[len("python/"):]: data
-             for path, data in tree.items() if path.startswith(f"python/{PACKAGE}/")}
+             for path, data in tree.items() if path.rsplit("/", 1)[0] in folders}
     wheel.update({f"{info}/licenses/{name}": data for name, data in attribution_files.items()})
     wheel.update({f"{info}/{name}": None for name in ("METADATA", "WHEEL", "RECORD")})
     release[f"{PACKAGE}-{version}-py3-none-any.whl"] = wheel
@@ -590,6 +788,7 @@ def check_stale_artifacts(root: pathlib.Path) -> list[str]:
 def self_test() -> int:
     checks = (check_the_gate_agrees, check_reproducible_and_stamped, check_the_wheel,
               check_only_the_commit_ships, check_contents, check_refusals,
+              check_manifest_refusals,
               check_stale_artifacts, check_the_executable)
     failures = []
     with tempfile.TemporaryDirectory() as workspace:

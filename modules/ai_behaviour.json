@@ -2,6 +2,7 @@
   "module": "ai_behaviour",
   "kind": "technique",
   "about": "State machine, behaviour tree, GOAP and HTN.",
+  "summary": "A state machine, a behaviour tree, a GOAP planner and an HTN planner: four ways for an agent to decide what to do next.",
   "owns": [
     "godot/addons/ai_behaviour/",
     "godot/test/ai_behaviour/"

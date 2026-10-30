@@ -36,7 +36,7 @@ const BRAKING_RADIUS: float = 8.0
 
 
 ## A behaviour that forgets the one rule: twice the force anybody may ask for.
-class Unclamped extends SteeringBehaviour:
+class Unclamped extends GakSteeringBehaviour:
 	## Twice the vehicle's limit, to the right, whatever is asked.
 	func force(vehicle: SteeringVehicle) -> Vector2:
 		return Vector2.RIGHT * vehicle.max_force * 2.0
@@ -66,7 +66,7 @@ func _init() -> void:
 
 # Claim 1, for one start: "" when it came to rest inside the radius and
 # never left either, else what went wrong.
-func _why_not_at_rest(car: SteeringVehicle, behaviour: SteeringBehaviour, target: Vector2) -> String:
+func _why_not_at_rest(car: SteeringVehicle, behaviour: GakSteeringBehaviour, target: Vector2) -> String:
 	var resting: int = 0
 	for step: int in range(STEPS):
 		car.step(behaviour.force(car), DT)
@@ -82,7 +82,7 @@ func _why_not_at_rest(car: SteeringVehicle, behaviour: SteeringBehaviour, target
 
 
 # Claim 2's measure: the longest run of steps spent at rest.
-func _longest_rest(car: SteeringVehicle, behaviour: SteeringBehaviour) -> int:
+func _longest_rest(car: SteeringVehicle, behaviour: GakSteeringBehaviour) -> int:
 	var longest: int = 0
 	var current: int = 0
 	for _step: int in range(STEPS):
@@ -116,22 +116,22 @@ func _forces_bounded(dice: RandomNumberGenerator) -> Array[String]:
 func _pushes_towards(car: SteeringVehicle, place: Vector2, behaviours: Array, where: String) -> Array[String]:
 	var failures: Array[String] = []
 	var towards: Vector2 = Steering.direction_to(car.position, place)
-	for behaviour: SteeringBehaviour in behaviours:
+	for behaviour: GakSteeringBehaviour in behaviours:
 		var name: String = behaviour.get_script().get_global_name()
 		if behaviour.force(car).dot(towards) <= 0.0:
 			failures.append("%s: %s pushed away from %s" % [where, name, place])
 	return failures
 
 
-func _every_behaviour(place: Vector2) -> Array[SteeringBehaviour]:
+func _every_behaviour(place: Vector2) -> Array[GakSteeringBehaviour]:
 	return [SeekBehaviour.new(place), ArriveBehaviour.new(place, BRAKING_RADIUS),
 		PursueBehaviour.new(place, Vector2(3, -4)), AvoidBehaviour.new([place] as Array[Vector2], PackedFloat64Array([2.0]), 5.0)]
 
 
 # The behaviours of `behaviours` whose force is too long or not a number.
-func _unbounded(car: SteeringVehicle, behaviours: Array[SteeringBehaviour], where: String) -> Array[String]:
+func _unbounded(car: SteeringVehicle, behaviours: Array[GakSteeringBehaviour], where: String) -> Array[String]:
 	var failures: Array[String] = []
-	for behaviour: SteeringBehaviour in behaviours:
+	for behaviour: GakSteeringBehaviour in behaviours:
 		var force: Vector2 = behaviour.force(car)
 		var name: String = behaviour.get_script().get_global_name()
 		if not force.is_finite() or force.length() > car.max_force * (1.0 + 1e-5):
@@ -148,7 +148,7 @@ func _planted() -> Array[String]:
 		failures.append("planted: seek passed as arrive")
 	if _longest_rest(_copy(car), ArriveBehaviour.new(target, BRAKING_RADIUS)) < REST_STEPS:
 		failures.append("planted: arrive passed as seek")
-	if _unbounded(car, [Unclamped.new()] as Array[SteeringBehaviour], "planted").is_empty():
+	if _unbounded(car, [Unclamped.new()] as Array[GakSteeringBehaviour], "planted").is_empty():
 		failures.append("planted: a force twice the limit was let through")
 	var still := SteeringVehicle.new(Vector2.ZERO, Vector2.ZERO, 10.0, 20.0)
 	var backwards: Array = [SeekBehaviour.new(Vector2(-1e30, 0))]

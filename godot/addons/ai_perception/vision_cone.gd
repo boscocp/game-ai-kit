@@ -43,7 +43,7 @@ func _init(cone_reach: float, cone_half_angle_degrees: float,
 ## A watcher always sees its own cell, whatever its reach. A target off the
 ## board is never seen. A zero `facing` means facing nowhere in particular, and
 ## the angle test is skipped: a watcher looking round sees the whole circle.
-func sees(graph: GridGraph, eye: Vector2i, facing: Vector2i, target: Vector2i) -> bool:
+func sees(graph: GakGridGraph, eye: Vector2i, facing: Vector2i, target: Vector2i) -> bool:
 	if target == eye:
 		return true
 	if not graph.contains(target):
@@ -86,7 +86,7 @@ func closeness(eye: Vector2i, target: Vector2i) -> float:
 
 
 ## Every cell on the board this watcher sees, the eye included.
-func visible_cells(graph: GridGraph, eye: Vector2i, facing: Vector2i) -> Array[Vector2i]:
+func visible_cells(graph: GakGridGraph, eye: Vector2i, facing: Vector2i) -> Array[Vector2i]:
 	var seen: Array[Vector2i] = []
 	for cell: Vector2i in _square_around(eye, ceili(reach)):
 		if graph.contains(cell) and sees(graph, eye, facing, cell):

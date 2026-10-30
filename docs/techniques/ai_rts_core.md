@@ -48,13 +48,13 @@ move and take it back -- the examples' board does that (ADR 0019).
 `godot/game/rts/` is the RTS built on this core: `rts.gd` steps an
 `RtsWorld` at 60 ticks a second, the world settles at most
 `RtsWorld.FIELD_CELLS_PER_TICK` cells of flow field a tick, and
-`rts_commander.gd` is an `RtsController` that plans. The knobs that
+`rts_commander.gd` is an `GakRtsController` that plans. The knobs that
 matter:
 
 | knob | where | what it changes |
 |---|---|---|
 | flood steps per tick | `FlowField.settle(budget)`; the world's `FIELD_CELLS_PER_TICK` | how soon a new field is ready, against how much of the frame it takes; a budget counts steps of the flood (`FlowField.work`), not cells settled |
-| cell costs | `GridGraph.set_cost`, `GridGraph.block` | where the arrows lead; a field already built does not see a change |
+| cell costs | `GakGridGraph.set_cost`, `GakGridGraph.block` | where the arrows lead; a field already built does not see a change |
 | bucket size | `SpatialHash.new(size)` | about the radius most questions ask; smaller reads more buckets, larger turns more away |
 | the shares | `FrameBudget.SHARES` | milliseconds each layer may take of the 16.7 |
 | how often the AI decides | `RtsMatch.decide_every` | ticks between decisions; half a second by default |
@@ -95,7 +95,7 @@ const STEPS_PER_FRAME: int = 64
 
 ## Your map: 1 is open ground, dearer cells are slower, blocked is a wall.
 ## Change it before you send anyone; a field already built does not see it.
-var map := GridGraph.new(24, 16)
+var map := GakGridGraph.new(24, 16)
 
 var _field: FlowField
 

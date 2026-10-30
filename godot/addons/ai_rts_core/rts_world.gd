@@ -42,7 +42,7 @@ const NUDGE: float = 0.01
 ## A field nobody has asked for in this many ticks is dropped: one second.
 const FIELD_KEPT_FOR: int = TICKS_PER_SECOND
 
-var graph: GridGraph
+var graph: GakGridGraph
 var tick: int = 0
 ## What each side has to spend: side -> {resource -> amount}, every
 ## resource of `RtsKinds.RESOURCES` named. Read it through `funds`.
@@ -77,7 +77,7 @@ var _covered: Dictionary = {}
 
 ## A world on a copy of `board`, its dice seeded with `match_seed`, and
 ## nobody in it.
-func _init(board: GridGraph, match_seed: int) -> void:
+func _init(board: GakGridGraph, match_seed: int) -> void:
 	graph = board.duplicate_graph()
 	rng.seed = match_seed
 
@@ -368,7 +368,7 @@ func _bury_the_dead() -> void:
 		_units.erase(listed.id)
 		spatial.remove(listed.id)
 		if RtsKinds.is_building(listed.kind):
-			graph.set_cost(listed.cell(), _covered.get(listed.cell(), GridGraph.DEFAULT_COST))
+			graph.set_cost(listed.cell(), _covered.get(listed.cell(), GakGridGraph.DEFAULT_COST))
 			_covered.erase(listed.cell())
 			_fields.clear()
 			_asked.clear()

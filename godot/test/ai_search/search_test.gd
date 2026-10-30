@@ -8,9 +8,9 @@ extends GdUnitTestSuite
 
 
 func test_every_search_finds_a_route_across_an_open_board() -> void:
-	for search: Search in _all_searches():
+	for search: GakSearch in _all_searches():
 		var result: SearchResult = search.search(
-			GridSearchGraph.new(GridGraph.new(6, 4)), Vector2i(0, 0), Vector2i(5, 3)
+			GridSearchGraph.new(GakGridGraph.new(6, 4)), Vector2i(0, 0), Vector2i(5, 3)
 		)
 
 		assert_bool(result.reached).override_failure_message(
@@ -20,30 +20,30 @@ func test_every_search_finds_a_route_across_an_open_board() -> void:
 
 
 func test_no_search_puts_the_starting_cell_in_the_path() -> void:
-	# The contract in Pathfinder, and what Move.cost_on depends on: you never
+	# The contract in GakPathfinder, and what Move.cost_on depends on: you never
 	# pay to stand where you already are.
-	for search: Search in _all_searches():
+	for search: GakSearch in _all_searches():
 		var result: SearchResult = search.search(
-			GridSearchGraph.new(GridGraph.new(5, 3)), Vector2i(1, 1), Vector2i(3, 1)
+			GridSearchGraph.new(GakGridGraph.new(5, 3)), Vector2i(1, 1), Vector2i(3, 1)
 		)
 
 		assert_bool(result.path.has(Vector2i(1, 1))).is_false()
 
 
 func test_every_path_is_one_a_unit_could_actually_walk() -> void:
-	var graph: GridGraph = _board_with_a_wall()
-	for search: Search in _all_searches():
+	var graph: GakGridGraph = _board_with_a_wall()
+	for search: GakSearch in _all_searches():
 		var result: SearchResult = search.search(GridSearchGraph.new(graph), Vector2i(0, 2), Vector2i(4, 2))
 
 		assert_str(_why_unwalkable(graph, Vector2i(0, 2), result.path)).is_equal("")
 
 
 func test_a_goal_behind_a_wall_is_reported_as_unreachable() -> void:
-	var graph := GridGraph.new(5, 3)
+	var graph := GakGridGraph.new(5, 3)
 	for row: int in range(3):
 		graph.block(Vector2i(2, row))
 
-	for search: Search in _all_searches():
+	for search: GakSearch in _all_searches():
 		var result: SearchResult = search.search(GridSearchGraph.new(graph), Vector2i(0, 1), Vector2i(4, 1))
 
 		assert_bool(result.reached).is_false()
@@ -56,9 +56,9 @@ func test_a_goal_behind_a_wall_is_reported_as_unreachable() -> void:
 
 
 func test_starting_on_the_goal_reaches_it_with_an_empty_path() -> void:
-	for search: Search in _all_searches():
+	for search: GakSearch in _all_searches():
 		var result: SearchResult = search.search(
-			GridSearchGraph.new(GridGraph.new(4, 4)), Vector2i(2, 2), Vector2i(2, 2)
+			GridSearchGraph.new(GakGridGraph.new(4, 4)), Vector2i(2, 2), Vector2i(2, 2)
 		)
 
 		# Empty, like a failed search -- and `reached` is what tells them apart.
@@ -70,7 +70,7 @@ func test_starting_on_the_goal_reaches_it_with_an_empty_path() -> void:
 func test_breadth_first_cannot_see_cost_and_dijkstra_can() -> void:
 	# Two routes of the same length, one of them through mud. This is the
 	# whole reason Dijkstra exists, in one assertion.
-	var graph: GridGraph = _board_with_mud()
+	var graph: GakGridGraph = _board_with_mud()
 
 	var blind: SearchResult = BreadthFirstSearch.new().search(
 		GridSearchGraph.new(graph), Vector2i(0, 1), Vector2i(4, 1)
@@ -84,7 +84,7 @@ func test_breadth_first_cannot_see_cost_and_dijkstra_can() -> void:
 
 
 func test_astar_agrees_with_dijkstra_and_looks_at_less() -> void:
-	var graph: GridGraph = _board_with_mud()
+	var graph: GakGridGraph = _board_with_mud()
 	var dijkstra: SearchResult = DijkstraSearch.new().search(
 		GridSearchGraph.new(graph), Vector2i(0, 1), Vector2i(4, 1)
 	)
@@ -100,7 +100,7 @@ func test_an_astar_with_a_zero_heuristic_is_dijkstra() -> void:
 	# Not a curiosity: it is the clearest statement of what the heuristic does.
 	# The guess belongs to the graph now, so the blind A* is an ordinary A*
 	# handed a graph that guesses nothing.
-	var graph: GridGraph = _board_with_mud()
+	var graph: GakGridGraph = _board_with_mud()
 
 	var guided: SearchResult = DijkstraSearch.new().search(
 		GridSearchGraph.new(graph), Vector2i(0, 1), Vector2i(4, 1)
@@ -114,7 +114,7 @@ func test_an_astar_with_a_zero_heuristic_is_dijkstra() -> void:
 
 
 func test_depth_first_is_allowed_to_be_bad_but_not_wrong() -> void:
-	var graph: GridGraph = _board_with_a_wall()
+	var graph: GakGridGraph = _board_with_a_wall()
 	var result: SearchResult = DepthFirstSearch.new().search(
 		GridSearchGraph.new(graph), Vector2i(0, 2), Vector2i(4, 2)
 	)
@@ -133,22 +133,22 @@ func test_no_search_expands_the_same_cell_twice() -> void:
 	# fires -- deleting the guard left the suite green. These costs are the
 	# first 4x4 board found on which A* reaches a cell by a dear route, improves
 	# it later, and would take it off the frontier twice.
-	var graph: GridGraph = _board_from([
+	var graph: GakGridGraph = _board_from([
 		5, 4, 1, 8,
 		9, 4, 8, 8,
 		4, 1, 5, 2,
 		4, 6, 1, 9,
 	])
-	for search: Search in _all_searches():
+	for search: GakSearch in _all_searches():
 		var result: SearchResult = search.search(GridSearchGraph.new(graph), Vector2i(0, 0), Vector2i(3, 3))
 
 		assert_vector(_first_repeat(result.expanded)).override_failure_message(
 			"%s expanded a cell twice" % search
-		).is_equal(Search.NO_PARENT)
+		).is_equal(GakSearch.NO_PARENT)
 
 
 func test_the_frontier_is_empty_when_a_search_exhausts_the_map() -> void:
-	var graph := GridGraph.new(3, 3)
+	var graph := GakGridGraph.new(3, 3)
 	graph.block(Vector2i(1, 0))
 	graph.block(Vector2i(1, 1))
 	graph.block(Vector2i(1, 2))
@@ -163,7 +163,7 @@ func test_the_frontier_is_empty_when_a_search_exhausts_the_map() -> void:
 func test_depth_first_is_not_breadth_first() -> void:
 	# Turning `pop_back` into `pop_front` makes depth-first *be* breadth-first,
 	# and nothing in the suite noticed: the demo's entire lesson was ungated.
-	var graph := GridGraph.new(6, 6)
+	var graph := GakGridGraph.new(6, 6)
 	var breadth: SearchResult = BreadthFirstSearch.new().search(
 		GridSearchGraph.new(graph), Vector2i(0, 0), Vector2i(3, 0)
 	)
@@ -183,7 +183,7 @@ func test_the_cost_counts_every_cell_entered_including_the_first() -> void:
 	# green: every cost this suite checked was either zero or compared against
 	# another search. Only the conformance vectors caught it, and a unit test
 	# should not need them to.
-	var graph := GridGraph.new(4, 1)
+	var graph := GakGridGraph.new(4, 1)
 	graph.set_cost(Vector2i(1, 0), 5)
 
 	var result: SearchResult = DijkstraSearch.new().search(
@@ -198,9 +198,9 @@ func test_a_start_that_is_not_on_the_board_finds_nothing() -> void:
 	# It used to come back `reached`, with a path that walked in from nowhere,
 	# and the conformance runner's walkability check accepted it because every
 	# individual step was legal.
-	for search: Search in _all_searches():
+	for search: GakSearch in _all_searches():
 		var result: SearchResult = search.search(
-			GridSearchGraph.new(GridGraph.new(5, 5)), Vector2i(-1, 2), Vector2i(3, 2)
+			GridSearchGraph.new(GakGridGraph.new(5, 5)), Vector2i(-1, 2), Vector2i(3, 2)
 		)
 
 		assert_bool(result.reached).is_false()
@@ -213,7 +213,7 @@ func test_a_start_inside_a_wall_may_still_walk_out_of_it() -> void:
 	# well have put a unit in a wall. This is the deliberate other half of the
 	# rule above, so that "guard the start" does not quietly become "refuse
 	# anything awkward".
-	var graph := GridGraph.new(5, 5)
+	var graph := GakGridGraph.new(5, 5)
 	graph.block(Vector2i(1, 2))
 
 	var result: SearchResult = DijkstraSearch.new().search(
@@ -231,57 +231,57 @@ class _GuessesNothing extends GridSearchGraph:
 		return 0
 
 
-func _all_searches() -> Array[Search]:
+func _all_searches() -> Array[GakSearch]:
 	return [
 		BreadthFirstSearch.new(),
 		DepthFirstSearch.new(),
 		DijkstraSearch.new(),
 		AStarSearch.new(),
-	] as Array[Search]
+	] as Array[GakSearch]
 
 
 # A 5x5 board with a wall down the middle and a gap at the bottom.
-func _board_with_a_wall() -> GridGraph:
-	var graph := GridGraph.new(5, 5)
+func _board_with_a_wall() -> GakGridGraph:
+	var graph := GakGridGraph.new(5, 5)
 	for row: int in range(4):
 		graph.block(Vector2i(2, row))
 	return graph
 
 
 # A 5x3 board whose middle row is mud, so the straight route is the dear one.
-func _board_with_mud() -> GridGraph:
-	var graph := GridGraph.new(5, 3)
+func _board_with_mud() -> GakGridGraph:
+	var graph := GakGridGraph.new(5, 3)
 	for column: int in range(1, 4):
 		graph.set_cost(Vector2i(column, 1), 9)
 	return graph
 
 
 # A square board from a row-major list of entry costs.
-func _board_from(costs: Array[int]) -> GridGraph:
+func _board_from(costs: Array[int]) -> GakGridGraph:
 	var side: int = int(sqrt(float(costs.size())))
-	var graph := GridGraph.new(side, side)
+	var graph := GakGridGraph.new(side, side)
 	for index: int in range(costs.size()):
 		graph.set_cost(Vector2i(index % side, index / side), costs[index])
 	return graph
 
 
-# The first cell that appears twice, or Search.NO_PARENT when none does.
+# The first cell that appears twice, or GakSearch.NO_PARENT when none does.
 func _first_repeat(cells: Array[Vector2i]) -> Vector2i:
 	var seen: Dictionary = {}
 	for cell: Vector2i in cells:
 		if seen.has(cell):
 			return cell
 		seen[cell] = true
-	return Search.NO_PARENT
+	return GakSearch.NO_PARENT
 
 
 # Why this path could not be walked, or "" when it could. Checks the contract
 # every search here promises: cardinal steps, nothing blocked, starting from
 # the cell the search was given.
-func _why_unwalkable(graph: GridGraph, from: Vector2i, path: Array[Vector2i]) -> String:
+func _why_unwalkable(graph: GakGridGraph, from: Vector2i, path: Array[Vector2i]) -> String:
 	var previous: Vector2i = from
 	for cell: Vector2i in path:
-		if not GridGraph.DIRECTIONS.has(cell - previous):
+		if not GakGridGraph.DIRECTIONS.has(cell - previous):
 			return "%s does not follow %s" % [cell, previous]
 		if graph.is_blocked(cell):
 			return "%s is blocked" % cell
@@ -290,7 +290,7 @@ func _why_unwalkable(graph: GridGraph, from: Vector2i, path: Array[Vector2i]) ->
 
 
 func test_a_flood_goes_round_a_wall_and_stops_at_its_limit() -> void:
-	var graph := GridGraph.new(3, 3)
+	var graph := GakGridGraph.new(3, 3)
 	graph.block(Vector2i(1, 0))
 	graph.block(Vector2i(1, 1))
 	var reached: Dictionary[Vector2i, int] = CostFlood.within(GridSearchGraph.new(graph), Vector2i(0, 0), 4)
@@ -301,7 +301,7 @@ func test_a_flood_goes_round_a_wall_and_stops_at_its_limit() -> void:
 
 
 func test_a_flood_from_off_the_graph_reaches_nothing() -> void:
-	assert_int(CostFlood.within(GridSearchGraph.new(GridGraph.new(2, 2)), Vector2i(5, 5), 9).size()).is_equal(0)
+	assert_int(CostFlood.within(GridSearchGraph.new(GakGridGraph.new(2, 2)), Vector2i(5, 5), 9).size()).is_equal(0)
 
 
 func _flood_vector(reached: Array) -> Dictionary:

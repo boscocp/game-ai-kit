@@ -58,8 +58,8 @@ static func named() -> Array[SearchBoard]:
 
 
 ## The board as a graph: walls blocked, mud at its digit, the rest open.
-func graph() -> GridGraph:
-	var built := GridGraph.new(rows[0].length(), rows.size())
+func graph() -> GakGridGraph:
+	var built := GakGridGraph.new(rows[0].length(), rows.size())
 	for row: int in range(rows.size()):
 		for column: int in range(rows[row].length()):
 			built.set_cost(Vector2i(column, row), cost_of(rows[row][column]))
@@ -85,10 +85,10 @@ func promise_holds(results: Array[SearchResult]) -> bool:
 ## What one character of a layout costs to enter.
 static func cost_of(character: String) -> int:
 	if character == "#":
-		return GridGraph.BLOCKED
+		return GakGridGraph.BLOCKED
 	if character.is_valid_int():
 		return character.to_int()
-	return GridGraph.DEFAULT_COST
+	return GakGridGraph.DEFAULT_COST
 
 
 func _find(marker: String) -> Vector2i:

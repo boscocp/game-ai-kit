@@ -333,7 +333,7 @@ func test_blue_s_policy_answers_as_a_decision_policy() -> void:
 func test_a_boxed_in_workshop_says_there_is_no_room() -> void:
 	var state: BoardState = _blue_to_move(TacticalScenario.build())
 	var shield: UnitType = TacticalRules.unit_types()[TacticalRules.SHIELD]
-	for step: Vector2i in GridGraph.DIRECTIONS:
+	for step: Vector2i in GakGridGraph.DIRECTIONS:
 		if state.unit_at(BLUE_WORKSHOP + step) == null and not state.graph.is_blocked(BLUE_WORKSHOP + step):
 			state.units.append(Unit.new(state.next_id, BLUE, BLUE_WORKSHOP + step, 10, 3, shield))
 			state.next_id += 1

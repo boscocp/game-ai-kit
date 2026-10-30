@@ -17,7 +17,7 @@
 #
 # A planner that never returned would hang this script rather than fail it, and
 # on CI that reads as a slow job rather than a broken one -- the same trap
-# `GridGraph.contains` carries a note about. The budget in `StripsPlanner` is
+# `GakGridGraph.contains` carries a note about. The budget in `StripsPlanner` is
 # what stands between the two. This file prints **nothing** until every trial
 # has run, so a hang leaves no line at all to say where it stopped; an earlier
 # version of this paragraph claimed the opposite, which is the kind of comment

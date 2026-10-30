@@ -82,7 +82,7 @@ func test_the_top_wish_waits_and_nothing_below_it_spends_meanwhile() -> void:
 
 
 func test_an_enemy_out_of_sight_is_believed_less_as_time_passes_then_forgotten() -> void:
-	var world := RtsWorld.new(GridGraph.new(48, 32), 1)
+	var world := RtsWorld.new(GakGridGraph.new(48, 32), 1)
 	world.add_unit(RtsKinds.WORKER, 0, Vector2i(2, 2))
 	var enemy: RtsUnit = world.add_unit(RtsKinds.SHIELD, 1, Vector2i(5, 2))
 	var belief := RtsInfluence.new(48, 32)
@@ -162,7 +162,7 @@ func _with_workers_on_ore(world: RtsWorld) -> RtsSnapshot:
 
 
 func test_runners_focus_the_mortar_they_beat_before_a_shield_and_a_worker() -> void:
-	var world := RtsWorld.new(GridGraph.new(20, 10), 1)
+	var world := RtsWorld.new(GakGridGraph.new(20, 10), 1)
 	for index: int in range(3):
 		world.add_unit(RtsKinds.RUNNER, 0, Vector2i(5, 3 + index))
 	var shield: RtsUnit = world.add_unit(RtsKinds.SHIELD, 1, Vector2i(8, 4))
@@ -177,7 +177,7 @@ func test_runners_focus_the_mortar_they_beat_before_a_shield_and_a_worker() -> v
 
 
 func test_a_member_that_struck_the_nearest_is_turned_to_the_squads_focus() -> void:
-	var world := RtsWorld.new(GridGraph.new(20, 10), 1)
+	var world := RtsWorld.new(GakGridGraph.new(20, 10), 1)
 	var squad := Squad.new(1, 0)
 	for index: int in range(3):
 		squad.members.append(world.add_unit(RtsKinds.RUNNER, 0, Vector2i(5, 3 + index)).id)
@@ -227,7 +227,7 @@ func test_a_squad_falling_back_breaks_off_its_fight() -> void:
 
 
 func test_the_focus_holds_until_another_scores_a_quarter_better() -> void:
-	var world := RtsWorld.new(GridGraph.new(20, 10), 1)
+	var world := RtsWorld.new(GakGridGraph.new(20, 10), 1)
 	var squad := Squad.new(1, 0)
 	for index: int in range(3):
 		squad.members.append(world.add_unit(RtsKinds.SHIELD, 0, Vector2i(5, 3 + index)).id)

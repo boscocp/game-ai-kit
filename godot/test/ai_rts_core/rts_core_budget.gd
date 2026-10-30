@@ -70,7 +70,7 @@ func _old_core_ms_per_step() -> float:
 	var units: Array[Unit] = []
 	for index: int in range(UNITS):
 		units.append(Unit.new(index + 1, index % 2, Vector2i(index % 32 * 2, index / 32 * 2), 10, STEPS * 2))
-	var state := BoardState.new(GridGraph.new(RtsTestWorld.SIZE, RtsTestWorld.SIZE), units)
+	var state := BoardState.new(GakGridGraph.new(RtsTestWorld.SIZE, RtsTestWorld.SIZE), units)
 	var started: int = Time.get_ticks_usec()
 	for step: int in range(STEPS):
 		state = _old_core_step(state, Vector2i.RIGHT if step % 2 == 0 else Vector2i.LEFT)

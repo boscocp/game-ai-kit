@@ -213,7 +213,7 @@ func _line_is_clear() -> bool:
 The line: `_line_is_clear` is where your walls go -- a
 `PhysicsRayQueryParameters2D` from the guard to the target, say -- and a
 `Callable` taking nothing and returning a `bool` is all `sees_in_the_open`
-asks. On a grid instead, fill a `GridGraph` from your map and call
+asks. On a grid instead, fill a `GakGridGraph` from your map and call
 `cone.sees(graph, eye, facing, target)` with cells (`Vector2i`) and a
 facing that is a step, such as `Vector2i.RIGHT`. Then what the phases mean:
 the awareness says how sure the guard is, and your decision -- a tree, a

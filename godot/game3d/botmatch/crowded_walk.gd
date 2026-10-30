@@ -10,7 +10,7 @@
 ## When not to use it: to plan a whole route. The bodies will have moved
 ## long before a bot reaches the far end; this is for the next few metres.
 class_name CrowdedWalk
-extends SearchGraph
+extends GakSearchGraph
 
 var walk: ArenaWalk
 ## Cells closed by a body, as a set.

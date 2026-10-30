@@ -16,7 +16,7 @@ const DEFAULT_OPAQUE_FROM_COST: int = 3
 
 
 ## True when nothing on this cell lets sight through.
-static func is_opaque(graph: GridGraph, cell: Vector2i,
+static func is_opaque(graph: GakGridGraph, cell: Vector2i,
 		opaque_from_cost: int = DEFAULT_OPAQUE_FROM_COST) -> bool:
 	return graph.is_blocked(cell) or graph.cost_at(cell) >= opaque_from_cost
 
@@ -29,7 +29,7 @@ static func is_opaque(graph: GridGraph, cell: Vector2i,
 ## there because units move in four directions: two walls meeting at a corner
 ## are a wall to a walker, and sight that slipped through the joint would see a
 ## player the player could never reach.
-static func clear(graph: GridGraph, from: Vector2i, to: Vector2i,
+static func clear(graph: GakGridGraph, from: Vector2i, to: Vector2i,
 		opaque_from_cost: int = DEFAULT_OPAQUE_FROM_COST) -> bool:
 	# Walked from the same end `cells_between` draws from. Its cells come back
 	# in that order, and a walk started from the other end paired cells that
@@ -79,7 +79,7 @@ static func cells_between(from: Vector2i, to: Vector2i) -> Array[Vector2i]:
 
 # True when a diagonal step passes between two opaque cells that touch at the
 # corner it crosses. A straight step crosses no corner.
-static func _squeezes_through_a_corner(graph: GridGraph, previous: Vector2i, cell: Vector2i,
+static func _squeezes_through_a_corner(graph: GakGridGraph, previous: Vector2i, cell: Vector2i,
 		opaque_from_cost: int) -> bool:
 	if previous.x == cell.x or previous.y == cell.y:
 		return false

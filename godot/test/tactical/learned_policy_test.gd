@@ -128,7 +128,7 @@ func test_a_model_that_cannot_read_the_row_holds_rather_than_retreating() -> voi
 func test_an_enemy_too_far_to_reach_is_not_a_fight_worth_weighing() -> void:
 	# Otherwise a unit on the far side of the board spends its turn retreating
 	# from a fight it could not have had.
-	var state := BoardState.new(GridGraph.new(14, 7), [
+	var state := BoardState.new(GakGridGraph.new(14, 7), [
 		Unit.new(1, 0, Vector2i(0, 3), 10, 4),
 		Unit.new(2, 1, Vector2i(13, 3), 10, 4),
 	] as Array[Unit], 1)
@@ -140,7 +140,7 @@ func test_two_enemies_the_same_distance_away_are_decided_by_id() -> void:
 	# Which fight gets weighed when two are tied was pinned by nothing:
 	# review flipped the comparison and every gate stayed green. The higher
 	# id is first in the array on purpose, so array order cannot pass this.
-	var state := BoardState.new(GridGraph.new(9, 7), [
+	var state := BoardState.new(GakGridGraph.new(9, 7), [
 		Unit.new(5, 0, Vector2i(6, 3), 10, 4),
 		Unit.new(1, 0, Vector2i(2, 3), 10, 4),
 		Unit.new(2, 1, Vector2i(4, 3), 10, 4),
@@ -161,7 +161,7 @@ func test_an_enemy_exactly_in_reach_is_weighed_and_one_step_further_is_not() -> 
 
 
 func test_the_node_with_the_lower_prediction_is_the_one_walked_at() -> void:
-	var state := BoardState.new(GridGraph.new(14, 7), [
+	var state := BoardState.new(GakGridGraph.new(14, 7), [
 		Unit.new(1, 0, Vector2i(0, 3), 10, 4),
 		Unit.new(2, 1, Vector2i(13, 3), 10, 4),
 	] as Array[Unit], 1)
@@ -180,7 +180,7 @@ func test_the_node_with_the_lower_prediction_is_the_one_walked_at() -> void:
 
 func test_a_policy_with_nowhere_to_go_holds_and_says_why() -> void:
 	var policy := LearnedPolicy.new(_file(_always(0.1)), [] as Array[Vector2i])
-	var state := BoardState.new(GridGraph.new(9, 7), [
+	var state := BoardState.new(GakGridGraph.new(9, 7), [
 		Unit.new(2, 1, Vector2i(4, 3), 10, 4),
 	] as Array[Unit], 1)
 
@@ -194,7 +194,7 @@ func test_a_unit_with_no_way_out_still_names_its_decision() -> void:
 	# Boxed in by walls: the move is empty, which is "hold your ground", and
 	# the decision is still a retreat. An empty move with no decision beside
 	# it is the case `DecisionPolicy` warns about.
-	var graph := GridGraph.new(3, 3)
+	var graph := GakGridGraph.new(3, 3)
 	for cell: Vector2i in [Vector2i(0, 1), Vector2i(2, 1), Vector2i(1, 2)]:
 		graph.block(cell)
 	var state := BoardState.new(graph, [
@@ -213,7 +213,7 @@ func test_a_route_the_unit_cannot_pay_for_is_cut_to_what_it_can() -> void:
 	# three scenarios and twelve vectors green: every route the other tests
 	# produce was affordable already. Rough ground everywhere and three
 	# points buys exactly one step of it.
-	var graph := GridGraph.new(9, 7, 3)
+	var graph := GakGridGraph.new(9, 7, 3)
 	var state := BoardState.new(graph, [
 		Unit.new(1, 0, Vector2i(4, 3), 10, 3),
 		Unit.new(2, 1, Vector2i(7, 3), 10, 3),
@@ -231,7 +231,7 @@ func test_two_nodes_the_model_cannot_separate_are_ordered_by_coordinate() -> voi
 	# comparison to the prediction alone left every gate green. Two nodes the
 	# same distance away get the same number out of the model below, so the
 	# only thing deciding is the tie-break.
-	var state := BoardState.new(GridGraph.new(9, 9), [
+	var state := BoardState.new(GakGridGraph.new(9, 9), [
 		Unit.new(1, 0, Vector2i(0, 0), 10, 4),
 		Unit.new(2, 1, Vector2i(4, 4), 10, 4),
 	] as Array[Unit], 1)
@@ -279,7 +279,7 @@ func test_without_a_pathfinder_it_still_gets_closer() -> void:
 
 # Blue at (7,3) with three points, and one enemy wherever this needs it.
 func _with_enemy_at(cell: Vector2i) -> BoardState:
-	return BoardState.new(GridGraph.new(14, 7), [
+	return BoardState.new(GakGridGraph.new(14, 7), [
 		Unit.new(1, 0, cell, 10, 3),
 		Unit.new(2, 1, Vector2i(7, 3), 10, 3),
 	] as Array[Unit], 1)
@@ -287,7 +287,7 @@ func _with_enemy_at(cell: Vector2i) -> BoardState:
 
 # One enemy three cells away on open ground, blue to move.
 func _two_sides() -> BoardState:
-	return BoardState.new(GridGraph.new(9, 7), [
+	return BoardState.new(GakGridGraph.new(9, 7), [
 		Unit.new(1, 0, Vector2i(4, 3), 10, 4),
 		Unit.new(2, 1, Vector2i(7, 3), 10, 4),
 	] as Array[Unit], 1)
@@ -367,7 +367,7 @@ func test_of_two_held_nodes_the_nearer_is_contested() -> void:
 
 
 func test_a_node_a_friend_stands_on_is_not_contested() -> void:
-	var state := BoardState.new(GridGraph.new(14, 7), [
+	var state := BoardState.new(GakGridGraph.new(14, 7), [
 		Unit.new(2, 1, Vector2i(0, 3), 10, 4),
 		Unit.new(3, 1, Vector2i(9, 6), 10, 4),
 	] as Array[Unit], 1)
@@ -393,4 +393,4 @@ func _held_nodes(held: Array[Vector2i], blue_at: Vector2i) -> BoardState:
 	var units: Array[Unit] = [Unit.new(2, 1, blue_at, 10, 4)]
 	for cell: Vector2i in held:
 		units.append(Unit.new(10 + units.size(), 0, cell, 10, 4))
-	return BoardState.new(GridGraph.new(14, 7), units, 1)
+	return BoardState.new(GakGridGraph.new(14, 7), units, 1)

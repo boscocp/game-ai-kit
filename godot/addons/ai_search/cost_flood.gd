@@ -13,7 +13,7 @@
 ## because every route into a node pays the same last step.
 ##
 ## Complexity: O(V²) for the V nodes within the limit -- the frontier scan
-## of `Search._cheapest`, kept for the same reason `dijkstra.gd` keeps it.
+## of `GakSearch._cheapest`, kept for the same reason `dijkstra.gd` keeps it.
 ##
 ## When not to use it: one listener and one sound far apart. A single A*
 ## from the listener answers that without flooding the level around it.
@@ -23,7 +23,7 @@ extends RefCounted
 
 ## Every node `graph` reaches from `from` at a cost of `limit` or less, and
 ## what it cost: node -> cost. Empty when `from` is not in the graph.
-static func within(graph: SearchGraph, from: Vector2i, limit: int) -> Dictionary[Vector2i, int]:
+static func within(graph: GakSearchGraph, from: Vector2i, limit: int) -> Dictionary[Vector2i, int]:
 	var reached: Dictionary[Vector2i, int] = {}
 	if not graph.contains(from) or limit < 0:
 		return reached
@@ -31,7 +31,7 @@ static func within(graph: SearchGraph, from: Vector2i, limit: int) -> Dictionary
 	var g: Dictionary = {from: 0}
 	var frontier: Array[Vector2i] = [from]
 	while not frontier.is_empty():
-		var current: Vector2i = frontier.pop_at(Search._cheapest(frontier, g))
+		var current: Vector2i = frontier.pop_at(GakSearch._cheapest(frontier, g))
 		reached[current] = int(g[current])
 		_relax(graph, current, g, frontier, limit)
 	return reached
@@ -39,7 +39,7 @@ static func within(graph: SearchGraph, from: Vector2i, limit: int) -> Dictionary
 
 # Give each neighbour not seen before its cost so far, if that is within
 # the limit. A node past it is never queued, so the flood stops there.
-static func _relax(graph: SearchGraph, current: Vector2i, g: Dictionary,
+static func _relax(graph: GakSearchGraph, current: Vector2i, g: Dictionary,
 		frontier: Array[Vector2i], limit: int) -> void:
 	for step: Vector2i in graph.neighbours(current):
 		if g.has(step):

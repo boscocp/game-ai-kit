@@ -2,6 +2,7 @@
   "module": "ai_core",
   "kind": "kernel",
   "about": "The shared kernel: the grid and the pathfinder interface, and nothing else (T61).",
+  "summary": "The grid every other addon searches and the pathfinder interface: GakGridGraph and GakPathfinder. Nothing else, so every addon can depend on it.",
   "owns": [
     "godot/addons/ai_core/",
     "godot/test/ai_core/"

@@ -7,10 +7,13 @@ same order, and `spec/vectors/ngram/` holds both to the same numbers.
 
 from __future__ import annotations
 
+from gameaikit.techniques import technique
+
 #: How a context is written: its actions, oldest first, joined by this.
 JOINER = " > "
 
 
+@technique("n-gram-prediction", "the opponent's next move, from what followed the last few it made")
 class NGramPredictor:
     """A table of which action followed which context, smoothed and decaying."""
 

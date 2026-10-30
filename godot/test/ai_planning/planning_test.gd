@@ -97,7 +97,7 @@ func test_a_goal_that_already_holds_is_an_empty_plan_that_is_still_solved() -> v
 	# The empty plan with two meanings. Without `solved` this is indistinguishable
 	# from "there is no plan".
 	var result: PlanResult = StripsPlanner.new().plan(
-		GameDomain.actions(), WorldState.new([GameDomain.ENEMY_BEATEN]), GameDomain.goal()
+		GakGameDomain.actions(), WorldState.new([GakGameDomain.ENEMY_BEATEN]), GakGameDomain.goal()
 	)
 
 	assert_bool(result.solved).is_true()
@@ -107,7 +107,7 @@ func test_a_goal_that_already_holds_is_an_empty_plan_that_is_still_solved() -> v
 
 func test_an_unreachable_goal_is_impossible_rather_than_a_budget_running_out() -> void:
 	var result: PlanResult = StripsPlanner.new().plan(
-		GameDomain.actions(), WorldState.new(), GameDomain.goal()
+		GakGameDomain.actions(), WorldState.new(), GakGameDomain.goal()
 	)
 
 	assert_bool(result.solved).is_false()
@@ -119,7 +119,7 @@ func test_a_budget_reached_says_so_rather_than_claiming_there_is_no_plan() -> vo
 	# There is a plan; this planner was not allowed to look far enough. Saying
 	# "impossible" here would be a claim the run never made.
 	var result: PlanResult = StripsPlanner.new().plan(
-		GameDomain.actions(), GameDomain.opening_world(), GameDomain.goal(), 3
+		GakGameDomain.actions(), GakGameDomain.opening_world(), GakGameDomain.goal(), 3
 	)
 
 	assert_bool(result.solved).is_false()
@@ -129,9 +129,9 @@ func test_a_budget_reached_says_so_rather_than_claiming_there_is_no_plan() -> vo
 
 func test_the_game_plan_runs_from_the_opening_world_step_by_step() -> void:
 	var result: PlanResult = StripsPlanner.new().plan(
-		GameDomain.actions(), GameDomain.opening_world(), GameDomain.goal()
+		GakGameDomain.actions(), GakGameDomain.opening_world(), GakGameDomain.goal()
 	)
-	var world: WorldState = GameDomain.opening_world()
+	var world: WorldState = GakGameDomain.opening_world()
 
 	for action: StripsAction in result.steps:
 		assert_bool(action.is_applicable(world)).override_failure_message(
@@ -139,7 +139,7 @@ func test_the_game_plan_runs_from_the_opening_world_step_by_step() -> void:
 		).is_true()
 		world = action.apply(world)
 
-	assert_bool(world.holds_all(GameDomain.goal())).is_true()
+	assert_bool(world.holds_all(GakGameDomain.goal())).is_true()
 
 
 func test_the_game_domain_has_to_mine_twice_to_pay_for_both_things() -> void:
@@ -147,7 +147,7 @@ func test_the_game_domain_has_to_mine_twice_to_pay_for_both_things() -> void:
 	# out of one bank, so the chain is longer than any reactive rule would
 	# produce, and it is the delete lists that say so.
 	var result: PlanResult = StripsPlanner.new().plan(
-		GameDomain.actions(), GameDomain.opening_world(), GameDomain.goal()
+		GakGameDomain.actions(), GakGameDomain.opening_world(), GakGameDomain.goal()
 	)
 	var names: PackedStringArray = result.action_names()
 	var minings: int = 0
@@ -160,12 +160,12 @@ func test_the_game_domain_has_to_mine_twice_to_pay_for_both_things() -> void:
 
 
 func test_the_planner_does_not_change_the_world_it_was_handed() -> void:
-	var start: WorldState = GameDomain.opening_world()
+	var start: WorldState = GakGameDomain.opening_world()
 
-	StripsPlanner.new().plan(GameDomain.actions(), start, GameDomain.goal())
+	StripsPlanner.new().plan(GakGameDomain.actions(), start, GakGameDomain.goal())
 
 	assert_array(start.predicates()).is_equal(
-		PackedStringArray([GameDomain.ARMY_IN_RESERVE])
+		PackedStringArray([GakGameDomain.ARMY_IN_RESERVE])
 	)
 
 

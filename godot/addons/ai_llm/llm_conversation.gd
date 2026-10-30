@@ -27,7 +27,7 @@ extends RefCounted
 ## The character's answer to the player's last line, after the validator.
 signal answered(reply: LlmReply)
 
-var _runtime: LlmRuntime = null
+var _runtime: GakLlmRuntime = null
 var _validator: LlmValidator = null
 var _instructions: String = ""
 var _history: Array[Dictionary] = []
@@ -38,7 +38,7 @@ var _thinking: bool = false
 ## describe the character to the model; the shape and the game's intents
 ## are appended from the validator itself, so the prompt and the rules
 ## cannot disagree.
-func _init(runtime: LlmRuntime, validator: LlmValidator, instructions: String) -> void:
+func _init(runtime: GakLlmRuntime, validator: LlmValidator, instructions: String) -> void:
 	_runtime = runtime
 	_validator = validator
 	_instructions = instructions

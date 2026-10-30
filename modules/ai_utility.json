@@ -2,6 +2,7 @@
   "module": "ai_utility",
   "kind": "technique",
   "about": "Utility choice: every action scored by its considerations through response curves, the highest taken, and errands weighed as a gain less its costs; in GDScript and Python. Moved out of ai_teamwork by T101, for nothing in it is about a team.",
+  "summary": "Utility choice for one agent: every action scored by its considerations through response curves, errands weighed as a gain less their costs, and where on a body to aim.",
   "owns": [
     "godot/addons/ai_utility/",
     "godot/test/ai_utility/",

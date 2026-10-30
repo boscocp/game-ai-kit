@@ -18,13 +18,13 @@ depending on another addon (invariant 2, ADR 0021).
 
 ## What it holds {#holds}
 
-- `GridGraph` -- a square grid of costs: what it costs to **enter** each
-  cell. One is open ground, more is harder ground, `GridGraph.BLOCKED` is a
+- `GakGridGraph` -- a square grid of costs: what it costs to **enter** each
+  cell. One is open ground, more is harder ground, `GakGridGraph.BLOCKED` is a
   wall; nothing costs less than one. `neighbours(cell)` gives the four
   cardinal cells that may be entered, in a fixed order.
-- `Pathfinder` -- the port: one abstract method, `find_path(graph, from,
+- `GakPathfinder` -- the port: one abstract method, `find_path(graph, from,
   to)`, a route that leaves out `from` and includes `to`. `ai_search`'s
-  `GridPathfinder` is one; your game asks for a `Pathfinder` and never names
+  `GridPathfinder` is one; your game asks for a `GakPathfinder` and never names
   the addon that answers.
 
 ## When you need it {#when}
@@ -36,8 +36,8 @@ about a grid (`ai_steering`, `ai_behaviour`) does not need it.
 ## When not to use it {#when-not}
 
 A hex board, a navigation mesh, anything whose cell is not an integer
-coordinate: `GridGraph` is a square grid and says so. The searches still
-work there through their own port, `SearchGraph` -- see
+coordinate: `GakGridGraph` is a square grid and says so. The searches still
+work there through their own port, `GakSearchGraph` -- see
 [ai_search](ai_search.md).
 
 ## Deeper {#deeper}

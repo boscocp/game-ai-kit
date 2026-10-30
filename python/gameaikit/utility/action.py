@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import dataclasses
 
+from gameaikit.techniques import technique
+
 LINEAR, STEP = "linear", "step"
 CURVES = (LINEAR, STEP)
 ACTION_KEYS = {"name", "weight", "considerations"}
@@ -48,6 +50,7 @@ def answer(consideration: Consideration, percepts: dict[str, float]) -> float:
     return min(max(consideration.slope * value + consideration.intercept, 0.0), 1.0)
 
 
+@technique("utility-choice", "every action scored by its considerations, the highest taken")
 def choose(actions: list[Action], percepts: dict[str, float]) -> tuple[list[float], list[list[float]], int]:
     """Every action's score and answers, and the index taken (-1: none)."""
     scores, answers, chosen, best = [], [], -1, 0.0

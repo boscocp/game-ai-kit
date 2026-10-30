@@ -2,6 +2,7 @@
   "module": "ai_adversarial",
   "kind": "technique",
   "about": "Minimax, alpha-beta and Monte Carlo tree search over any two-player game.",
+  "summary": "Minimax, alpha-beta and Monte Carlo tree search, for any two-player game you describe by extending GakAdversarialGame.",
   "owns": [
     "godot/addons/ai_adversarial/",
     "godot/test/ai_adversarial/",

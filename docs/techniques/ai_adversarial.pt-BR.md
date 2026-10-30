@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 5, figures 5.3, 5.7 and 5.11
 invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch, AdversarialResult, MonteCarloSearch, MctsResult or Xorshift signatures change, or the demos that use them are renamed
 teaches: adversarial-search
-translation_of: a52a908c6d1bab274cbe9c4f979d1c664d3b7123a5a67848d6dd371c150a9fbd
+translation_of: 55e1b2c2014ad37279633b3908d7e0647cb05bb70b5020d06721c581ce0b0414
 -->
 
 > English: [ai_adversarial.md](ai_adversarial.md). Os termos que ficam em
@@ -63,21 +63,21 @@ encurta.
 ## Neste kit {#in-this-kit}
 
 `godot/game/checkers/checkers_game.gd` são as damas contadas para a busca:
-um `AdversarialGame` cujos estados são tabuleiros e cujas ações são
+um `GakAdversarialGame` cujos estados são tabuleiros e cujas ações são
 jogadas. `checkers.gd` pede ao `AlphaBetaSearch` a jogada das brancas. Os
 ajustes que importam:
 
 | ajuste | onde | o que muda |
 |---|---|---|
 | profundidade | `search(game, state, depth)` | quantos *plies* ele olha à frente; cada um custa mais ou menos o fator de ramificação vezes o anterior |
-| a estimativa | o seu `AdversarialGame.evaluate(state, player)` | a nota de uma posição em que a busca para; nunca infinita |
-| ordem das jogadas | o seu `AdversarialGame.actions(state)` | o quanto o *alpha-beta* corta -- nunca a jogada que ele devolve. Sempre a mesma ordem: entre jogadas iguais, vence a primeira |
+| a estimativa | o seu `GakAdversarialGame.evaluate(state, player)` | a nota de uma posição em que a busca para; nunca infinita |
+| ordem das jogadas | o seu `GakAdversarialGame.actions(state)` | o quanto o *alpha-beta* corta -- nunca a jogada que ele devolve. Sempre a mesma ordem: entre jogadas iguais, vence a primeira |
 | qual busca | `MinimaxSearch` ou `AlphaBetaSearch` | o trabalho, não a resposta |
 | iterações | `MonteCarloSearch.step(iterations)` | o orçamento da *MCTS* nesta chamada; a árvore continua na próxima, então um quadro pode fazer algumas e voltar depois |
 | a semente | `MonteCarloSearch.new(game, state, from_seed)` | toda escolha aleatória da busca; a mesma semente, a mesma busca, em GDScript e em Python |
 | exploração | `MonteCarloSearch.new(…, exploration)` | o C do *UCB1*, √2 por padrão: maior tenta mais as jogadas pouco conhecidas, menor confia antes nas médias |
 | limite do *playout* | `MonteCarloSearch.new(…, playout_limit)` | quantas jogadas aleatórias um *playout* faz antes de pedir o `evaluate`; 200 por padrão |
-| sorte | o seu `AdversarialGame.outcomes(state, action)` | aonde uma ação pode levar, com as probabilidades; a *MCTS* guarda um filho por resultado |
+| sorte | o seu `GakAdversarialGame.outcomes(state, action)` | aonde uma ação pode levar, com as probabilidades; a *MCTS* guarda um filho por resultado |
 
 ## No seu projeto {#your-project}
 
@@ -105,7 +105,7 @@ Os comentários do código ficam em inglês, como no arquivo.
 # nim_example_test.gd. A game of your own, told to the search: Nim, where
 # the players take one, two or three sticks in turn, and whoever takes the
 # last stick wins.
-extends AdversarialGame
+extends GakAdversarialGame
 
 
 ## A position: the sticks left, and whose turn it is, 0 or 1. The search
@@ -168,7 +168,7 @@ func evaluate(state: RefCounted, player: int) -> float:
 
 ### O que você implementa {#implement}
 
-As cinco funções do `AdversarialGame`, para o seu jogo: `to_move`,
+As cinco funções do `GakAdversarialGame`, para o seu jogo: `to_move`,
 `actions`, `result`, `is_terminal` e `evaluate`, e uma sexta só se o seu
 jogo tiver dados: `outcomes`, cujo padrão é o `result`, com certeza. Um
 estado e uma ação são o que você quiser -- o estado precisa ser um

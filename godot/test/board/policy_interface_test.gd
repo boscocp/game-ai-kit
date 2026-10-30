@@ -1,6 +1,6 @@
 # The board's decision interface is only worth having if the engine enforces
 # it. Split from test/ai_core/interfaces_test.gd when the board left ai_core
-# (T61); that file holds the same cases for Pathfinder, and says why they exist:
+# (T61); that file holds the same cases for GakPathfinder, and says why they exist:
 # a forgotten override must not load, rather than return a legitimate-looking
 # "hold".
 extends GdUnitTestSuite

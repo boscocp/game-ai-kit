@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-29
+verified_on: 2026-10-30
 tier: 2
 source: https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter09_An_Introduction_to_Utility_Theory.pdf ; https://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter13_Choosing_Effective_Utility-Based_Considerations.pdf
-invalidated_if: the kit's ActionChoice or ErrandChoice signatures change, or the demos that use them are renamed
+invalidated_if: the kit's ActionChoice, ErrandChoice or AimChoice signatures change, or the demos that use them are renamed
 teaches: shooter-ai
 -->
 
@@ -21,9 +21,11 @@ curve -- so one answer of 0 vetoes an action and the others grade it. That
 is **utility**, in the form *Guild Wars 2* decided with. `ErrandChoice` is
 the plainest utility of all: each errand a gain less its costs, in one
 unit, and the largest taken when it is above zero -- going back for rounds
-and health, fetching a power weapon, hiding to heal. Each keeps its
-numbers, so a view can show why. Nothing in either is about a team: until
-T101 they lived in `ai_teamwork`, and a game that wanted scored choice had
+and health, fetching a power weapon, hiding to heal. `AimChoice` weighs where on a body to aim: each zone's
+chance of a hit, spill onto its neighbours included, times what a hit
+there is worth, and the zone worth most is aimed at. Each keeps its
+numbers, so a view can show why. Nothing in any of them is about a team:
+until T101 -- `AimChoice` until T64 -- they lived in `ai_teamwork`, and a game that wanted scored choice had
 to take teamwork with it. The sources: Graham, *An Introduction to Utility
 Theory*, *Game AI Pro*, chapter 9; Lewis, *Choosing Effective Utility-Based
 Considerations*, *Game AI Pro 3*, chapter 13.

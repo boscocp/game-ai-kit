@@ -30,6 +30,8 @@ from __future__ import annotations
 import math
 from collections.abc import Callable
 
+from gameaikit.techniques import technique
+
 #: What a model does with `w·x + b`: weights, bias and one row, in, number out.
 Predictor = Callable[[list[float], float, list[float]], float]
 
@@ -73,6 +75,7 @@ def logistic_prediction(weights: list[float], bias: float, row: list[float]) -> 
     return sigmoid(linear_prediction(weights, bias, row))
 
 
+@technique("gradient-descent", "a linear or logistic model fitted by gradient descent, offline")
 def fit(rows: list[list[float]], labels: list[float], predict: Predictor,
         steps: int | None = None,
         rate: float | None = None) -> tuple[list[float], float]:

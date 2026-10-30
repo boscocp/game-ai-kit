@@ -18,8 +18,8 @@ const RIGHT: int = 1
 
 
 ## The board both scripts play on.
-static func board() -> GridGraph:
-	var graph := GridGraph.new(SIZE, SIZE)
+static func board() -> GakGridGraph:
+	var graph := GakGridGraph.new(SIZE, SIZE)
 	for row: int in range(SIZE):
 		if not (row in GAPS or row - 1 in GAPS or row + 1 in GAPS):
 			graph.block(Vector2i(WALL_COLUMN, row))

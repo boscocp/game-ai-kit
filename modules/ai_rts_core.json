@@ -2,6 +2,7 @@
   "module": "ai_rts_core",
   "kind": "technique",
   "about": "The real-time core: a mutable world, snapshots, flow fields, a frame budget.",
+  "summary": "The core of a real-time strategy game: a mutable world, snapshots, flow fields, a spatial hash and a per-frame budget.",
   "owns": [
     "godot/addons/ai_rts_core/",
     "godot/test/ai_rts_core/"

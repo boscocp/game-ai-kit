@@ -12,7 +12,7 @@
 ##
 ## When not to use it: a person. A person's clicks become commands too, but
 ## through `RtsMatch.give`, between ticks, not in answer to a snapshot.
-class_name RtsController
+class_name GakRtsController
 extends RefCounted
 
 ## Work done in the decision just made; the match resets it before each.

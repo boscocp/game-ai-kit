@@ -17,7 +17,7 @@
 ## When not to use it: a side a person plays. A person's clicks go through
 ## `RtsMatch.give`; nothing here runs for them.
 class_name RtsSide
-extends RtsController
+extends GakRtsController
 
 ## Barracks a side raises when ore piles up, and how much is piling up.
 const MOST_BARRACKS: int = 3

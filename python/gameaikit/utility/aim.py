@@ -1,6 +1,6 @@
 """Where on a body to aim: the zone whose shot is worth the most damage.
 
-The tier-1 half of `godot/addons/ai_teamwork/aim_choice.gd`: aimed at a
+The tier-1 half of `godot/addons/ai_utility/aim_choice.gd`: aimed at a
 point, a shot lands evenly in a square `spread` either side of it; a zone's
 chance is how much of the square its rectangles cover, times its exposure;
 the worth of aiming at a zone is every zone's chance times its multiplier,
@@ -10,6 +10,8 @@ summed. The bot aims where that is highest, the first of equal worth.
 from __future__ import annotations
 
 import dataclasses
+
+from gameaikit.techniques import technique
 
 #: The least spread taken, in metres; GDScript's 32-bit Rect2 rounds below it.
 SMALLEST_SPREAD = 0.001
@@ -30,10 +32,13 @@ class Zone:
     exposure: float = 1.0
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Choice:
     """For each zone aimed at, its own chance and the shot's worth; the zone
-    aimed at (-1: none), and every zone's chance from that aim."""
+    aimed at (-1: none), and every zone's chance from that aim.
+
+    Frozen, as a value handed back is (T64); shallowly, for the lists stay
+    lists, the shape the vectors compare."""
 
     own_chances: list[float]
     expected: list[float]
@@ -60,19 +65,19 @@ def expected_from(aim: tuple[float, float], spread: float, zones: list[Zone]) ->
     return sum(chance * zone.multiplier for chance, zone in zip(chances_from(aim, spread, zones), zones))
 
 
+@technique("aim-choice", "where on a body to aim: the zone whose shot is worth the most damage")
 def choose(zones: list[Zone], spread: float) -> Choice:
     """Aim at each zone in turn and keep the one worth the most."""
-    choice = Choice([], [], -1, [])
-    best = 0.0
+    own_chances: list[float] = []
+    expected: list[float] = []
+    aimed, aimed_chances, best = -1, [], 0.0
     for index, zone in enumerate(zones):
         chances = chances_from(zone.aim, spread, zones)
-        choice.own_chances.append(chances[index])
-        choice.expected.append(expected_from(zone.aim, spread, zones))
-        if choice.expected[index] > best:
-            best = choice.expected[index]
-            choice.aimed = index
-            choice.chances = chances
-    return choice
+        own_chances.append(chances[index])
+        expected.append(expected_from(zone.aim, spread, zones))
+        if expected[index] > best:
+            best, aimed, aimed_chances = expected[index], index, chances
+    return Choice(own_chances, expected, aimed, aimed_chances)
 
 
 def land(chances: list[float], roll: float) -> int:

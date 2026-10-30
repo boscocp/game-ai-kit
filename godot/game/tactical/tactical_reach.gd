@@ -34,7 +34,7 @@ static func walks_for(state: BoardState, unit: Unit) -> Dictionary:
 ## graph lets anything reach, with no limit on movement and nobody in the
 ## way. The same flood as `walks_for`, asked a different question: not
 ## "where can I go this turn" but "how far is everything".
-static func route_costs(graph: GridGraph, from: Vector2i) -> Dictionary:
+static func route_costs(graph: GakGridGraph, from: Vector2i) -> Dictionary:
 	var spent: Dictionary = {from: 0}
 	var frontier: Array[Vector2i] = [from]
 	while not frontier.is_empty():
@@ -49,7 +49,7 @@ static func route_costs(graph: GridGraph, from: Vector2i) -> Dictionary:
 # Taken cheapest first, with the cost charged for the cell entered, the first
 # walk to reach a cell is already its cheapest, so "more cheaply" only ever
 # means "for the first time" here: the reason `dijkstra.gd` gives, measured.
-static func _relax(graph: GridGraph, here: Vector2i, spent: Dictionary) -> Array[Vector2i]:
+static func _relax(graph: GakGridGraph, here: Vector2i, spent: Dictionary) -> Array[Vector2i]:
 	var improved: Array[Vector2i] = []
 	for next: Vector2i in graph.neighbours(here):
 		var cost: int = spent[here] + graph.cost_at(next)
@@ -83,7 +83,7 @@ static func _cheapest(frontier: Array[Vector2i], spent: Dictionary) -> Vector2i:
 
 # Neighbours on the board, open to this piece's kind of feet, and empty.
 static func _open_neighbours(state: BoardState, unit: Unit, cell: Vector2i) -> Array[Vector2i]:
-	var ground: GridGraph = state.graph_for(unit)
+	var ground: GakGridGraph = state.graph_for(unit)
 	var found: Array[Vector2i] = []
 	for next: Vector2i in ground.neighbours(cell):
 		if not ground.is_blocked(next) and state.unit_at(next) == null:

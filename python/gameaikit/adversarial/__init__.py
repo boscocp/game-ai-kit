@@ -10,8 +10,8 @@ It imports nothing of any example. The two games its vectors are played on,
 Nim and a dice race, are in `toy_games` and in the addon's test folder.
 """
 
-from gameaikit.adversarial.game import AdversarialGame
+from gameaikit.adversarial.game import AdversarialGame, Game
 from gameaikit.adversarial.mcts import MctsResult, MonteCarloSearch
 from gameaikit.adversarial.xorshift import Xorshift
 
-__all__ = ["AdversarialGame", "MctsResult", "MonteCarloSearch", "Xorshift"]
+__all__ = ["AdversarialGame", "Game", "MctsResult", "MonteCarloSearch", "Xorshift"]

@@ -36,11 +36,11 @@ var _combat: LearnedModel
 var _capture: LearnedModel
 var _nodes: Array[Vector2i]
 var _threshold: float
-var _router: Pathfinder
+var _router: GakPathfinder
 
 
 func _init(published: TacticalWeights, nodes: Array[Vector2i],
-		threshold: float = DEFAULT_THRESHOLD, router: Pathfinder = null) -> void:
+		threshold: float = DEFAULT_THRESHOLD, router: GakPathfinder = null) -> void:
 	_published = published
 	_nodes = nodes.duplicate()
 	_threshold = threshold

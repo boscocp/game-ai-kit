@@ -16,6 +16,10 @@ in the artifacts. So:
     top folder;
   * every wheel under dist/ carries both in its `.dist-info/licenses/`, which
     is where PEP 639 puts a wheel's licence files and where pip installs them.
+  * `python/`, once it has a `pyproject.toml`, carries both, byte for byte the
+    root's: a person who runs `pip install ./python` builds a wheel from that
+    folder alone, and PEP 639 lets `license-files` name nothing above it
+    (L25, L26).
   * every picture committed under godot/assets/, bar the generated examples,
     is listed, by path, in godot/assets/LICENCES.md with its pack, its CC0
     licence and its sha256 -- and every row there names a file that is
@@ -537,8 +541,29 @@ def check_examples_notice(repo: pathlib.Path, credits: set[tuple[str, str]]) -> 
             if not any(f"{model} ({licence}" in line for line in lines)]
 
 
+def check_python_package(repo: pathlib.Path) -> list[str]:
+    """Report a Python project folder that would build without the root's attribution.
+
+    Only once `python/pyproject.toml` exists: before it, nothing built a
+    wheel from that folder. A copy that differs from the root is as wrong as
+    none -- an old NOTICE shipped is an attribution nobody meant.
+    """
+    project = repo / "python"
+    if not (project / "pyproject.toml").exists():
+        return []
+    findings = []
+    for name in REQUIRED_FILES:
+        copy = project / name
+        if not copy.exists():
+            findings.append(f"L25 python/ would build a wheel without {name}")
+        elif (repo / name).exists() and copy.read_bytes() != (repo / name).read_bytes():
+            findings.append(f"L26 python/{name} is not the root's {name}")
+    return findings
+
+
 def run(repo: pathlib.Path) -> int:
-    findings = (check_root(repo) + check_addons(repo) + check_release_archives(repo)
+    findings = (check_root(repo) + check_addons(repo) + check_python_package(repo)
+                + check_release_archives(repo)
                 + check_assets(repo) + check_examples(repo))
     for finding in findings:
         print(finding)
@@ -603,6 +628,22 @@ def self_test() -> int:
         no_notice = make_repo(root / "no-notice")
         (no_notice / "NOTICE").unlink()
         expect("missing NOTICE", quiet(no_notice), 1)
+
+        # Planted: a Python project without NOTICE, and one whose NOTICE is
+        # stale. A project folder with both, the root's, passes.
+        python_good = make_repo(root / "python-good")
+        (python_good / "python").mkdir()
+        (python_good / "python" / "pyproject.toml").write_text("[project]\n")
+        for name, text in ROOT_TEXT.items():
+            (python_good / "python" / name).write_text(text, newline="\n")
+        expect("python/ with the root's attribution", quiet(python_good), 0)
+        python_bare = make_repo(root / "python-bare")
+        (python_bare / "python").mkdir()
+        (python_bare / "python" / "pyproject.toml").write_text("[project]\n")
+        (python_bare / "python" / "LICENSE").write_text(ROOT_TEXT["LICENSE"], newline="\n")
+        expect_only("python/ without NOTICE", python_bare, "L25")
+        (python_bare / "python" / "NOTICE").write_text("an old NOTICE\n")
+        expect_only("python/ with a stale NOTICE", python_bare, "L26")
 
         # Planted: a zero-byte NOTICE. The "hollow" case below writes TODO and
         # is caught by the holder check, so mutation showed the size rule was

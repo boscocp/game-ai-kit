@@ -149,7 +149,7 @@ func _try_step(cell: Vector2i) -> void:
 	# built and is not the reason it could not be made. The reason is that this
 	# scene cannot build a route at all, and the player deserves to be told
 	# that rather than a rule they did not break.
-	if not GridGraph.DIRECTIONS.has(cell - unit.cell):
+	if not GakGridGraph.DIRECTIONS.has(cell - unit.cell):
 		_last_refusal = tr("{cell} is more than one step away -- you move one cell at a time, onto a highlighted cell").format({cell = cell})
 		_refresh()
 		return
@@ -337,7 +337,7 @@ func _what_to_do() -> String:
 # likes; blue's own hurt unit starts beside red's healthy one, which it does
 # not -- so the first AI turn shows an attack and a retreat side by side.
 func _build_scenario() -> BoardState:
-	var graph := GridGraph.new(COLUMNS, ROWS)
+	var graph := GakGridGraph.new(COLUMNS, ROWS)
 	for row: int in range(1, ROWS - 2):
 		graph.block(Vector2i(6, row))
 	for row: int in range(2, 5):

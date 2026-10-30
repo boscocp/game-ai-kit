@@ -14,7 +14,7 @@ import math
 import pathlib
 import unittest
 
-from gameaikit.teamwork import aim, commander, confidence, influence, passage, positions, roles, search
+from gameaikit.teamwork import commander, confidence, influence, passage, positions, roles, search
 
 VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "teamwork"
 
@@ -25,7 +25,7 @@ FEWEST_VECTORS = 10
 #: GDScript side's 32-bit `Vector2`.
 TOLERANCE = 1e-4
 
-KINDS = ("positions", "influence", "commander", "confidence", "aim", "passage", "search", "roles")
+KINDS = ("positions", "influence", "commander", "confidence", "passage", "search", "roles")
 
 
 def answer_positions(vector: dict) -> dict:
@@ -73,15 +73,6 @@ def answer_confidence(vector: dict) -> dict:
     return answer
 
 
-def answer_aim(vector: dict) -> dict:
-    query = vector["query"]
-    zones = [aim.Zone(each["name"], each["multiplier"], tuple(each["aim"]), [tuple(rect) for rect in each["rects"]],
-                      each["exposure"]) for each in query["zones"]]
-    choice = aim.choose(zones, query["spread"])
-    return {"own_chances": choice.own_chances, "expected": choice.expected, "aimed": choice.aimed,
-            "chances": choice.chances, "landed": [aim.land(choice.chances, roll) for roll in query["rolls"]]}
-
-
 def _bounded(value):
     """JSON's null, for no bound, as infinity; and back."""
     return math.inf if value is None else value
@@ -115,8 +106,7 @@ def answer_roles(vector: dict) -> dict:
 
 
 ANSWER = {"passage": answer_passage, "positions": answer_positions, "influence": answer_influence,
-          "commander": answer_commander, "confidence": answer_confidence, "aim": answer_aim,
-          "search": answer_search, "roles": answer_roles}
+          "commander": answer_commander, "confidence": answer_confidence, "search": answer_search, "roles": answer_roles}
 
 
 def misses(expected, found, where: str = "") -> list[str]:

@@ -173,7 +173,7 @@ func _room_at(state: BoardState, goal: Vector2i) -> int:
 	if goal in TacticalScenario.POINTS:
 		return 1
 	var open: int = 0
-	for step: Vector2i in GridGraph.DIRECTIONS:
+	for step: Vector2i in GakGridGraph.DIRECTIONS:
 		open += 0 if state.graph.is_blocked(goal + step) else 1
 	return open
 
@@ -246,8 +246,8 @@ func _nearest_walk_to(state: BoardState, unit: Unit, walks: Dictionary, target: 
 # wall -- and but the piece on `target`, when one is given. A workshop stays
 # open because it is the target: it is attacked from beside it, and a flood
 # out of a wall would reach nothing.
-func _past_red(state: BoardState, kind: UnitType, target: Vector2i = Vector2i(-1, -1)) -> GridGraph:
-	var graph: GridGraph = state.graph_for_type(kind).duplicate_graph()
+func _past_red(state: BoardState, kind: UnitType, target: Vector2i = Vector2i(-1, -1)) -> GakGridGraph:
+	var graph: GakGridGraph = state.graph_for_type(kind).duplicate_graph()
 	for enemy: Unit in _enemies(state):
 		if enemy.type.type_name != TacticalRules.WORKSHOP and enemy.cell != target:
 			graph.block(enemy.cell)
@@ -369,7 +369,7 @@ func _remaining(state: BoardState, unit: Unit, cell: Vector2i, to_target: Dictio
 		target: Vector2i) -> int:
 	if not to_target.has(cell):
 		return UNREACHABLE
-	var graph: GridGraph = state.graph_for(unit)
+	var graph: GakGridGraph = state.graph_for(unit)
 	return to_target[cell] - graph.cost_at(cell) + graph.cost_at(target)
 
 

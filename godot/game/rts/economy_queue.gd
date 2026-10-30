@@ -33,7 +33,7 @@ var wishes: Array[Dictionary] = []
 var magma_wanted: bool = false
 ## The wish bought on the last decision, for the screen; {} for none.
 var last_bought: Dictionary = {}
-## Units weighed on the last decision: what `RtsController.work` reports.
+## Units weighed on the last decision: what `GakRtsController.work` reports.
 var work: int = 0
 ## Where the last building it tried to place was to go: what the screen
 ## marks. Kept rather than asked again, because choosing a site rolls the
@@ -239,7 +239,7 @@ func _expansion_site(view: RtsSnapshot) -> Vector2i:
 # A building in a doorway walls a base in. A cell is fit when its four
 # neighbours are open, so two buildings never touch and a gap stays round each.
 static func _keeps_a_way_round(view: RtsSnapshot, cell: Vector2i) -> bool:
-	for direction: Vector2i in GridGraph.DIRECTIONS:
+	for direction: Vector2i in GakGridGraph.DIRECTIONS:
 		var beside: Vector2i = cell + direction
 		if not view.graph.contains(beside) or view.graph.is_blocked(beside):
 			return false

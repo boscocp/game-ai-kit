@@ -1,4 +1,4 @@
-## Draws a `GridGraph` as tiles, and nothing else.
+## Draws a `GakGridGraph` as tiles, and nothing else.
 ##
 ## The view knows how to show a board and has no opinion about it: it is handed
 ## a graph and a set of cells to highlight, and it paints. Every decision stays
@@ -68,7 +68,7 @@ const AXIS_TEXT_SIZE: int = 13
 ## not a type, so the view decides where the pictures change.
 const ROUGH_FROM_COST: int = 2
 
-var _graph: GridGraph
+var _graph: GakGridGraph
 var _reachable: Array[Vector2i] = []
 # Where the overlay is drawn: above the tiles, below whatever the scene puts
 # after this layer -- units, routes. Made in `_ready`, so a view that never
@@ -98,7 +98,7 @@ func _ready() -> void:
 ## `terrain` names a tile for cells whose cost alone cannot say what they are:
 ## water is blocked to most units, like a wall, and is not a wall. Terrain is
 ## the game's idea, so the scene passes it in rather than the graph carrying it.
-func draw_board(graph: GridGraph, reachable: Array[Vector2i],
+func draw_board(graph: GakGridGraph, reachable: Array[Vector2i],
 		nodes: Array[Vector2i] = [] as Array[Vector2i], terrain: Dictionary = {}) -> void:
 	clear()
 	_graph = graph
@@ -142,7 +142,7 @@ func cost_label(cell: Vector2i) -> String:
 	if _graph == null or not _graph.contains(cell):
 		return ""
 	var cost: int = _graph.cost_at(cell)
-	if cost == GridGraph.BLOCKED or cost <= GridGraph.DEFAULT_COST:
+	if cost == GakGridGraph.BLOCKED or cost <= GakGridGraph.DEFAULT_COST:
 		return ""
 	return str(cost)
 
@@ -150,13 +150,13 @@ func cost_label(cell: Vector2i) -> String:
 ## Where to put a board so it sits in the middle of an area: the top-left
 ## corner, in the area's own coordinates. Derived from the board's size, so a
 ## scenario with more columns stays centred instead of sliding off the edge.
-static func offset_to_centre(graph: GridGraph, area: Vector2) -> Vector2:
+static func offset_to_centre(graph: GakGridGraph, area: Vector2) -> Vector2:
 	return ((area - pixel_size(graph)) / 2.0).floor()
 
 
 ## How much of the screen a board covers, in pixels. The scene lays out its
 ## panels around this, so it is the one number they all agree on.
-static func pixel_size(graph: GridGraph) -> Vector2:
+static func pixel_size(graph: GakGridGraph) -> Vector2:
 	return Vector2(graph.width, graph.height) * TILE_PIXELS
 
 
@@ -224,7 +224,7 @@ func _draw_centred(words: String, middle: Vector2, text_size: int, colour: Color
 
 # Which atlas column a cost is drawn with.
 func _tile_for(cost: int) -> Vector2i:
-	if cost == GridGraph.BLOCKED:
+	if cost == GakGridGraph.BLOCKED:
 		return WALL
 	if cost >= ROUGH_FROM_COST:
 		return ROUGH

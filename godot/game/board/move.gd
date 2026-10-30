@@ -38,15 +38,15 @@ func destination(fallback: Vector2i) -> Vector2i:
 	return path[path.size() - 1]
 
 
-## What this walk costs on `graph`, or `GridGraph.BLOCKED` if any step is.
+## What this walk costs on `graph`, or `GakGridGraph.BLOCKED` if any step is.
 ##
 ## Cost is summed over entered cells, which is why the path excludes the start:
 ## you never pay to stand where you already are.
-func cost_on(graph: GridGraph) -> int:
+func cost_on(graph: GakGridGraph) -> int:
 	var total: int = 0
 	for cell: Vector2i in path:
 		var step_cost: int = graph.cost_at(cell)
-		if step_cost == GridGraph.BLOCKED:
-			return GridGraph.BLOCKED
+		if step_cost == GakGridGraph.BLOCKED:
+			return GakGridGraph.BLOCKED
 		total += step_cost
 	return total

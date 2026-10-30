@@ -17,7 +17,7 @@
 ## When not to use it: a target to stop at. That is `ArriveBehaviour`, which
 ## differs by the few lines that slow down.
 class_name SeekBehaviour
-extends SteeringBehaviour
+extends GakSteeringBehaviour
 
 var target: Vector2
 ## The time constant, in seconds, of the change to the velocity it wants;

@@ -70,7 +70,7 @@ func step() -> void:
 
 
 ## The behaviour this arena runs, built for this step's target.
-func behaviour() -> SteeringBehaviour:
+func behaviour() -> GakSteeringBehaviour:
 	match title:
 		"seek":
 			return SeekBehaviour.new(target)
@@ -154,7 +154,7 @@ func _draw_vehicle(at: Vector2) -> void:
 ## Seek and avoid together, as `Steering.combined` adds them: avoid weighs
 ## twice what seek does, so a swerve wins over the pull while there is
 ## something ahead.
-class CombinedSeekAvoid extends SteeringBehaviour:
+class CombinedSeekAvoid extends GakSteeringBehaviour:
 	const LOOK_AHEAD: float = 7.0
 	var seek: SeekBehaviour
 	var avoid: AvoidBehaviour

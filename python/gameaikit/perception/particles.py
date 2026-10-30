@@ -13,6 +13,7 @@ fitted (invariant 6).
 from __future__ import annotations
 
 from .draws import ParticleDraws
+from gameaikit.techniques import technique
 
 #: How likely a particle walks on: to a neighbour other than the one it came from.
 WALK_ON = 0.7
@@ -24,6 +25,7 @@ UNHEARD = 0.3
 COUNT = 256
 
 
+@technique("particle-filter", "the same question as a cloud of weighted particles")
 class ParticleBelief:
     """A cloud of `count` particles over a graph given as `neighbours[i]` lists."""
 

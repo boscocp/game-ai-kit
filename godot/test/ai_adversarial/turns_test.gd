@@ -1,4 +1,4 @@
-# T86: `AdversarialGame` no longer promises that the players alternate.
+# T86: `GakAdversarialGame` no longer promises that the players alternate.
 # Minimax and alpha-beta read `to_move` at every position instead, and a
 # game without chance never has to write `outcomes`.
 #
@@ -63,7 +63,7 @@ func test_a_game_without_chance_has_one_certain_outcome() -> void:
 ## A tree whose positions say who moves: `{"player", "children"}`, or a
 ## number for a leaf, worth that much to MAX and its opposite to MIN, or a
 ## pair, each player's own value.
-class TurnTree extends AdversarialGame:
+class TurnTree extends GakAdversarialGame:
 	var tree: Dictionary
 
 	func _init(written: Dictionary) -> void:

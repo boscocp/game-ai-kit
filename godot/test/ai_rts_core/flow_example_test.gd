@@ -17,7 +17,7 @@ func _map_with_a_wall() -> Node:
 	var example: Node = EXAMPLE.new()
 	scene.add_child(example)
 	example.set_physics_process(false)
-	var map: GridGraph = example.map
+	var map: GakGridGraph = example.map
 	for row: int in range(map.height):
 		if Vector2i(GAP.x, row) != GAP:
 			map.block(Vector2i(GAP.x, row))

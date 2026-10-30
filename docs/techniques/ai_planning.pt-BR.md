@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 11, classical planning ; https://en.wikipedia.org/wiki/Stanford_Research_Institute_Problem_Solver
 invalidated_if: the kit's StripsAction, WorldState, StripsPlanner, HeuristicPlanner or PlanResult signatures change, or the demos that use them are renamed
 teaches: planning
-translation_of: 92c74b846ee320b4adaa2353e8d9f463464d736379125530ec0a50026c8b95dd
+translation_of: dd745231ab197b356aa47d11c18a62178dfdae0678114da46302195d8ddf67fd
 -->
 
 > English: [ai_planning.md](ai_planning.md). Os termos que ficam em inglês
@@ -70,7 +70,7 @@ partir do tabuleiro. Os ajustes que importam:
 
 Uma pasta: `godot/addons/ai_planning/`. Ela não precisa de mais nada, nem
 do `ai_core`. Abra o projeto uma vez, ou rode `godot --headless --import`,
-para o Godot registrar as classes. `GameDomain` e `Difficulty` ali dentro
+para o Godot registrar as classes. `GakGameDomain` e `Difficulty` ali dentro
 são o domínio e os níveis do próprio kit; os seus os substituem. Para um
 domínio escrito em PDDL, o leitor fica do lado Python, em
 `python/gameaikit/pddl/`.

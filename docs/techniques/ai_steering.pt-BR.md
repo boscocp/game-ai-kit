@@ -7,7 +7,7 @@ tier: 2
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
 invalidated_if: the kit's SteeringVehicle, SteeringBehaviour or Steering.combined signatures change, or the demos that use them are renamed
 teaches: steering
-translation_of: 019b6629b9ea352945d78ebe7ed962276b2c7091f4d9231a094fa10c4f1c87d3
+translation_of: 5d4843b21cee59b3464015ff46811be826221b58db697bd4295ba8c3a8a9774c
 -->
 
 > English: [ai_steering.md](ai_steering.md). Os termos que ficam em inglês
@@ -103,7 +103,7 @@ func _physics_process(delta: float) -> void:
 
 ### O que você implementa {#implement}
 
-Um comportamento novo é uma classe: estenda `SteeringBehaviour` e devolva uma
+Um comportamento novo é uma classe: estenda `GakSteeringBehaviour` e devolva uma
 força em `force(vehicle)`, limitada com `Steering.clamped`. Se o seu nó tem
 física própria -- um `CharacterBody2D` -- mantenha o veículo como o ponto
 sobre o qual os comportamentos raciocinam, e copie a velocidade dele para

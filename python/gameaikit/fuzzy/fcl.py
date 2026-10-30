@@ -42,6 +42,7 @@ import re
 
 from .membership import FuzzyError, FuzzySet, Variable
 from .rules import Rule, RuleBase
+from gameaikit.techniques import technique
 
 #: The keyword that opens each kind of block.
 BLOCKS = ("VAR_INPUT", "VAR_OUTPUT", "FUZZIFY", "DEFUZZIFY", "RULEBLOCK")
@@ -59,6 +60,7 @@ NUMBER_RE = re.compile(r"^-?\d+(?:\.\d+)?$")
 RULE_LABEL_RE = re.compile(r"^RULE\s+\d+$", re.IGNORECASE)
 
 
+@technique("fuzzy-control", "a fuzzy controller read from IEC 61131-7's FCL: memberships, rules, a centroid")
 def read_fcl(text: str) -> RuleBase:
     """The controller this text describes, or a `FuzzyError` naming the line."""
     found = {"VAR_INPUT": [], "VAR_OUTPUT": [], "shapes": {}, "rules": []}

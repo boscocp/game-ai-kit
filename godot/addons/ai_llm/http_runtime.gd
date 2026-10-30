@@ -25,7 +25,7 @@
 ## When not to use it: in a test, or wherever no server is running -- that is
 ## `RecordedRuntime`'s job, and it needs nothing installed.
 class_name HttpRuntime
-extends LlmRuntime
+extends GakLlmRuntime
 
 ## The port the local server listens on, and the one place it is written:
 ## the kit's server wrapper reads this line to start llama.cpp's server

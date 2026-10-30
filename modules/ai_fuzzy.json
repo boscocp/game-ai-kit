@@ -2,6 +2,7 @@
   "module": "ai_fuzzy",
   "kind": "technique",
   "about": "Fuzzy sets, rules and centroid defuzzification, and the FCL reader.",
+  "summary": "Fuzzy sets, rules and centroid defuzzification, with a reader for controllers written in FCL (IEC 61131-7).",
   "owns": [
     "godot/addons/ai_fuzzy/",
     "godot/test/ai_fuzzy/",

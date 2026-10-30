@@ -17,7 +17,7 @@
 ## When not to use it: a target that moves fast. Arrive aims at where it is,
 ## not where it will be -- pursue first, and arrive only at the last metre.
 class_name ArriveBehaviour
-extends SteeringBehaviour
+extends GakSteeringBehaviour
 
 var target: Vector2
 ## Where slowing starts, in units from the target.

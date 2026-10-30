@@ -2,12 +2,12 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-29
+verified_on: 2026-10-30
 tier: 2
 source: https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter09_An_Introduction_to_Utility_Theory.pdf ; https://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter13_Choosing_Effective_Utility-Based_Considerations.pdf
-invalidated_if: the kit's ActionChoice or ErrandChoice signatures change, or the demos that use them are renamed
+invalidated_if: the kit's ActionChoice, ErrandChoice or AimChoice signatures change, or the demos that use them are renamed
 teaches: shooter-ai
-translation_of: 62a5affaea190aad6d292451efd38b4c098ff55492d279931449974f44920bd3
+translation_of: 4d1657c2d34ce619ad928b553cf4829b4edb5e310c130d9c6134ce303dbc7011
 -->
 
 > English: [ai_utility.md](ai_utility.md). Os termos que ficam em inglês
@@ -23,9 +23,11 @@ graduam. Isso é *utility*, na forma com que *Guild Wars 2* decidia. O
 `ErrandChoice` é a *utility* mais simples de todas: cada saída do posto um
 ganho menos os seus custos, numa só unidade, e fica a maior quando passa de
 zero -- voltar para buscar munição e vida, ir pegar uma arma poderosa, se
-esconder para se curar. Cada um guarda os seus números, para uma tela
-mostrar o porquê. Nada nos dois é sobre um time: até a T101 eles moravam no
-`ai_teamwork`, e um jogo que quisesse escolha por notas tinha que levar o
+esconder para se curar. O `AimChoice` pesa onde mirar num corpo: a chance
+de acertar cada zona, contando o tiro que pega a vizinha, vezes o que um
+acerto ali vale, e mira-se na zona que vale mais. Cada um guarda os seus
+números, para uma tela mostrar o porquê. Nada neles é sobre um time: até a
+T101 -- o `AimChoice` até a T64 -- eles moravam no `ai_teamwork`, e um jogo que quisesse escolha por notas tinha que levar o
 trabalho em equipe junto. As fontes: Graham, *An Introduction to Utility
 Theory*, *Game AI Pro*, capítulo 9; Lewis, *Choosing Effective
 Utility-Based Considerations*, *Game AI Pro 3*, capítulo 13.

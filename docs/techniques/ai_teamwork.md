@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-29
+verified_on: 2026-10-30
 tier: 2
 source: https://www.gameaipro.com/
 invalidated_if: the kit's RoleArbiter, TeamCommander, TacticalPositions, SquadConfidence or SearchCoordinator signatures change, or the demos that use them are renamed
@@ -19,11 +19,10 @@ How a team shares the work, each part a weighing of its own:
 a bot stands and keeps two from claiming one spot, `RoleArbiter` lets one
 bot flank while the others shoot, `SearchCoordinator` splits the places to
 search, `SquadConfidence` says when to attack, hold or retreat, and
-`AimChoice` and `PassageChoice` weigh where to aim and how to get past a
-body in the way -- wait, go round, ask a teammate to step aside, or take
+`PassageChoice` weighs how to get past a body in the way -- wait, go round, ask a teammate to step aside, or take
 another spot. Each keeps its numbers, so a view can show why. What one bot does
-now, and the errands it leaves its post for, are not here: since T101 they
-are [`ai_utility`](ai_utility.md), for nothing in them is about a team. The
+now, the errands it leaves its post for and where it aims are not here:
+since T101 and T64 they are [`ai_utility`](ai_utility.md), for nothing in them is about a team. The
 sources: the *Game AI Pro* chapters each class names.
 
 ## When not to use it {#when-not}

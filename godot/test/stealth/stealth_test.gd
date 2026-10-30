@@ -23,7 +23,7 @@ func after() -> void:
 
 func _open_room(guard_round: Array = [Vector2i(5, 1), Vector2i(8, 1)]) -> StealthRoom:
 	var rounds: Array[Array] = [guard_round]
-	return StealthRoom.new(GridGraph.new(10, 6), [Vector2i(0, 0)] as Array[Vector2i],
+	return StealthRoom.new(GakGridGraph.new(10, 6), [Vector2i(0, 0)] as Array[Vector2i],
 			Vector2i(0, 4), Vector2i(9, 5), rounds)
 
 
@@ -153,7 +153,7 @@ func test_the_level_moves_half_way_to_the_answer() -> void:
 
 func test_a_guard_never_steps_onto_the_player_or_another_guard() -> void:
 	var rounds: Array[Array] = [[Vector2i(1, 1), Vector2i(8, 1)], [Vector2i(8, 1), Vector2i(1, 1)]]
-	var room := StealthRoom.new(GridGraph.new(10, 3), [] as Array[Vector2i], Vector2i(4, 2),
+	var room := StealthRoom.new(GakGridGraph.new(10, 3), [] as Array[Vector2i], Vector2i(4, 2),
 			Vector2i(9, 2), rounds)
 	var world := StealthWorld.new(room)
 	for _turn: int in range(20):
@@ -166,7 +166,7 @@ func test_a_guard_never_steps_onto_the_player_or_another_guard() -> void:
 func test_two_guards_in_a_corridor_get_past_each_other_when_there_is_room() -> void:
 	# Head on in a corridor two cells wide: they used to spin in place forever,
 	# because each planned straight through the other.
-	var graph := GridGraph.new(8, 4)
+	var graph := GakGridGraph.new(8, 4)
 	for column: int in range(8):
 		graph.block(Vector2i(column, 0))
 		graph.block(Vector2i(column, 3))
@@ -269,7 +269,7 @@ func test_an_alert_guard_runs_two_cells_a_turn() -> void:
 
 func test_a_catch_ends_the_turn_for_every_other_guard() -> void:
 	var rounds: Array[Array] = [[Vector2i(1, 4)], [Vector2i(8, 1), Vector2i(8, 4)]]
-	var world := StealthWorld.new(StealthRoom.new(GridGraph.new(10, 6), [Vector2i(0, 4)] as Array[Vector2i],
+	var world := StealthWorld.new(StealthRoom.new(GakGridGraph.new(10, 6), [Vector2i(0, 4)] as Array[Vector2i],
 			Vector2i(0, 4), Vector2i(9, 5), rounds))
 	var catcher: StealthGuard = _alert_guard_beside(world, Vector2i.LEFT)
 	catcher.suspicion.level = 100.0
@@ -400,7 +400,7 @@ func test_the_demo_draws_its_trees_as_trees() -> void:
 	var demo: StealthDemo = auto_free(load("res://game/stealth/stealth.tscn").instantiate())
 	add_child(demo)
 	var board: BoardView = demo.get_node("BoardView")
-	var graph: GridGraph = demo.world.room.graph
+	var graph: GakGridGraph = demo.world.room.graph
 	var trees: int = 0
 	for index: int in range(graph.width * graph.height):
 		var cell := Vector2i(index % graph.width, index / graph.width)

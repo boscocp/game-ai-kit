@@ -2,7 +2,7 @@
 # nim_example_test.gd. A game of your own, told to the search: Nim, where
 # the players take one, two or three sticks in turn, and whoever takes the
 # last stick wins.
-extends AdversarialGame
+extends GakAdversarialGame
 
 
 ## A position: the sticks left, and whose turn it is, 0 or 1. The search

@@ -1,0 +1,43 @@
+# The Python half of game-ai-kit as a library others install (T64, ADR 0024).
+#
+# The flat layout stays: `gameaikit/` sits beside this file, so the stdlib
+# `unittest` runs it with no install step (tier 1). The release does not
+# call the backend named below: `scripts/release.py` writes the wheel itself
+# from this file's metadata (ADR 0009), and refuses when the two disagree.
+# The backend is for a person who installs from a checkout, `pip install
+# ./python`, and it is pinned so that install builds the same files.
+
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gameaikit"
+version = "0.1.0"
+description = "Game AI techniques in plain Python: search, planning, fuzzy control, steering, utility, perception, and their tests' answers."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+dependencies = []
+
+[project.urls]
+Source = "https://github.com/boscocp/game-ai-kit"
+
+# Only the techniques ship. The examples' packages -- checkers, maze,
+# tactical, ... -- are this repository's games, not the library.
+[tool.setuptools]
+packages = [
+    "gameaikit",
+    "gameaikit.adversarial",
+    "gameaikit.fuzzy",
+    "gameaikit.llm",
+    "gameaikit.ngram",
+    "gameaikit.pddl",
+    "gameaikit.perception",
+    "gameaikit.search",
+    "gameaikit.steering",
+    "gameaikit.teamwork",
+    "gameaikit.training",
+    "gameaikit.utility",
+]

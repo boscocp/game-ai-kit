@@ -7,7 +7,7 @@ tier: 2
 source: https://ojs.aaai.org/index.php/AIIDE/article/view/12435/12294 ; book:Elijah Emerson, "Crowd Pathfinding and Steering Using Flow Field Tiles", in Steve Rabin (ed.), "Game AI Pro", CRC Press, 2013
 invalidated_if: the kit's FlowField, SpatialHash, FrameBudget, RtsWorld or RtsController signatures change, or the demos that use them are renamed
 teaches: strategy-ai
-translation_of: 6bc91478081f6297e8300c14d920a9362d73c85fbe703b14df780c6ea466478e
+translation_of: 30614c09b10b1cb03f25523ec7073cda8197951efd32e08970af3d4ee68d42b8
 -->
 
 > English: [ai_rts_core.md](ai_rts_core.md). Os termos que ficam em inglês
@@ -52,13 +52,13 @@ muda no lugar, então uma busca não consegue tentar uma jogada e desfazê-la
 `godot/game/rts/` é o RTS construído sobre este núcleo: `rts.gd` avança um
 `RtsWorld` a 60 *ticks* por segundo, o mundo assenta no máximo
 `RtsWorld.FIELD_CELLS_PER_TICK` células de *flow field* por *tick*, e
-`rts_commander.gd` é um `RtsController` que planeja. Os ajustes que
+`rts_commander.gd` é um `GakRtsController` que planeja. Os ajustes que
 importam:
 
 | ajuste | onde | o que muda |
 |---|---|---|
 | passos da inundação por *tick* | `FlowField.settle(budget)`; o `FIELD_CELLS_PER_TICK` do mundo | quão cedo um campo novo fica pronto, contra quanto do quadro ele ocupa; o orçamento conta passos da inundação (`FlowField.work`), não células assentadas |
-| custo das células | `GridGraph.set_cost`, `GridGraph.block` | para onde as setas levam; um campo já montado não vê uma mudança |
+| custo das células | `GakGridGraph.set_cost`, `GakGridGraph.block` | para onde as setas levam; um campo já montado não vê uma mudança |
 | tamanho do balde | `SpatialHash.new(size)` | mais ou menos o raio que a maioria das perguntas usa; menor lê mais baldes, maior descarta mais |
 | as partes | `FrameBudget.SHARES` | os milissegundos que cada camada pode ocupar dos 16,7 |
 | a frequência das decisões da IA | `RtsMatch.decide_every` | *ticks* entre decisões; meio segundo por padrão |
@@ -101,7 +101,7 @@ const STEPS_PER_FRAME: int = 64
 
 ## Your map: 1 is open ground, dearer cells are slower, blocked is a wall.
 ## Change it before you send anyone; a field already built does not see it.
-var map := GridGraph.new(24, 16)
+var map := GakGridGraph.new(24, 16)
 
 var _field: FlowField
 

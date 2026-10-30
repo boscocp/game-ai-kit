@@ -43,7 +43,7 @@ func _draw() -> void:
 # Every cell the guard's cone sees from where it stands.
 func _seen_cells() -> Array[Vector2i]:
 	var seen: Array[Vector2i] = []
-	var graph: GridGraph = _world.room.graph
+	var graph: GakGridGraph = _world.room.graph
 	for index: int in range(graph.width * graph.height):
 		var cell := Vector2i(index % graph.width, index / graph.width)
 		if _world.cone.sees(graph, _world.guard.cell, _world.facing, cell):

@@ -25,7 +25,7 @@ func test_the_spatial_hash_follows_a_move_across_buckets_and_forgets_on_remove()
 
 func test_a_flow_field_leads_round_a_wall_to_its_goal() -> void:
 	# A wall down column 2 with one gap at the bottom row.
-	var graph := GridGraph.new(5, 3)
+	var graph := GakGridGraph.new(5, 3)
 	graph.block(Vector2i(2, 0))
 	graph.block(Vector2i(2, 1))
 	var field := FlowField.new(graph, Vector2i(4, 0))
@@ -40,7 +40,7 @@ func test_a_flow_field_leads_round_a_wall_to_its_goal() -> void:
 
 
 func test_a_flow_field_settles_in_slices_and_says_when_it_is_done() -> void:
-	var field := FlowField.new(GridGraph.new(10, 10), Vector2i(0, 0))
+	var field := FlowField.new(GakGridGraph.new(10, 10), Vector2i(0, 0))
 	assert_bool(field.settle(10)).is_false()
 	# A slice is counted in steps, and a step that skips an empty bucket
 	# settles nothing, so ten steps settle ten cells at most.
@@ -51,7 +51,7 @@ func test_a_flow_field_settles_in_slices_and_says_when_it_is_done() -> void:
 
 
 func test_a_cell_walled_off_is_unreachable_and_points_nowhere() -> void:
-	var graph := GridGraph.new(3, 3)
+	var graph := GakGridGraph.new(3, 3)
 	graph.block(Vector2i(1, 0))
 	graph.block(Vector2i(0, 1))
 	var field := FlowField.new(graph, Vector2i(2, 2))
@@ -69,7 +69,7 @@ func test_a_command_survives_its_recording_and_a_damaged_one_is_refused() -> voi
 
 
 func test_a_refused_command_says_why_and_changes_nothing() -> void:
-	var world := RtsWorld.new(GridGraph.new(8, 8), 1)
+	var world := RtsWorld.new(GakGridGraph.new(8, 8), 1)
 	var fighter: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(1, 1))
 	var rocks: RtsUnit = world.add_unit(RtsKinds.ROCKS, RtsWorld.NEUTRAL, Vector2i(2, 1))
 	var before: String = world.digest()
@@ -80,7 +80,7 @@ func test_a_refused_command_says_why_and_changes_nothing() -> void:
 
 
 func test_training_is_paid_for_when_ordered_and_refused_without_the_money() -> void:
-	var world := RtsWorld.new(GridGraph.new(8, 8), 1)
+	var world := RtsWorld.new(GakGridGraph.new(8, 8), 1)
 	var base: RtsUnit = world.add_unit(RtsKinds.BASE, 0, Vector2i(3, 3))
 	world.set_funds(0, 60)
 	assert_str(world.command(0, RtsCommand.train(base.id, RtsKinds.WORKER))).is_empty()
@@ -90,7 +90,7 @@ func test_training_is_paid_for_when_ordered_and_refused_without_the_money() -> v
 
 
 func test_a_trained_unit_steps_out_once_its_ticks_are_done() -> void:
-	var world := RtsWorld.new(GridGraph.new(8, 8), 1)
+	var world := RtsWorld.new(GakGridGraph.new(8, 8), 1)
 	var base: RtsUnit = world.add_unit(RtsKinds.BASE, 0, Vector2i(3, 3))
 	world.set_funds(0, 50)
 	world.command(0, RtsCommand.train(base.id, RtsKinds.WORKER))
@@ -101,7 +101,7 @@ func test_a_trained_unit_steps_out_once_its_ticks_are_done() -> void:
 
 
 func test_a_building_blocks_its_cell_and_frees_it_when_it_falls() -> void:
-	var world := RtsWorld.new(GridGraph.new(8, 8), 1)
+	var world := RtsWorld.new(GakGridGraph.new(8, 8), 1)
 	var barracks: RtsUnit = world.add_unit(RtsKinds.BARRACKS, 0, Vector2i(4, 4))
 	assert_bool(world.graph.is_blocked(Vector2i(4, 4))).is_true()
 	barracks.health = 0
@@ -111,7 +111,7 @@ func test_a_building_blocks_its_cell_and_frees_it_when_it_falls() -> void:
 
 
 func test_a_snapshot_is_a_read_only_copy_that_obeys_the_fog() -> void:
-	var world := RtsWorld.new(GridGraph.new(30, 30), 1)
+	var world := RtsWorld.new(GakGridGraph.new(30, 30), 1)
 	world.add_unit(RtsKinds.SHIELD, 0, Vector2i(1, 1))
 	var near: RtsUnit = world.add_unit(RtsKinds.SHIELD, 1, Vector2i(3, 1))
 	var far: RtsUnit = world.add_unit(RtsKinds.SHIELD, 1, Vector2i(28, 28))
@@ -125,7 +125,7 @@ func test_a_snapshot_is_a_read_only_copy_that_obeys_the_fog() -> void:
 
 
 func test_an_idle_fighter_goes_for_an_enemy_it_can_see() -> void:
-	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
+	var world := RtsWorld.new(GakGridGraph.new(10, 10), 1)
 	var fighter: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(1, 1))
 	var enemy: RtsUnit = world.add_unit(RtsKinds.WORKER, 1, Vector2i(4, 1))
 	for _tick: int in range(RtsOrders.LOOK_EVERY):
@@ -154,7 +154,7 @@ func test_the_longest_sight_is_the_tables_longest() -> void:
 
 
 func test_nobody_can_build_over_a_unit_standing_near_the_cells_edge() -> void:
-	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
+	var world := RtsWorld.new(GakGridGraph.new(10, 10), 1)
 	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(2, 2))
 	var standing: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(5, 5))
 	world.place(standing, Vector2(5.05, 5.05))
@@ -163,7 +163,7 @@ func test_nobody_can_build_over_a_unit_standing_near_the_cells_edge() -> void:
 
 
 func test_building_in_the_fog_is_refused_without_saying_who_stands_there() -> void:
-	var world := RtsWorld.new(GridGraph.new(40, 10), 1)
+	var world := RtsWorld.new(GakGridGraph.new(40, 10), 1)
 	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(1, 1))
 	world.add_unit(RtsKinds.WORKER, 1, Vector2i(35, 5))
 	world.set_funds(0, 500)
@@ -172,7 +172,7 @@ func test_building_in_the_fog_is_refused_without_saying_who_stands_there() -> vo
 
 
 func test_a_blow_struck_at_a_building_going_up_stays_struck() -> void:
-	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
+	var world := RtsWorld.new(GakGridGraph.new(10, 10), 1)
 	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(4, 5))
 	world.set_funds(0, 500)
 	world.command(0, RtsCommand.build(worker.id, RtsKinds.BARRACKS, Vector2i(5, 5)))
@@ -186,7 +186,7 @@ func test_a_blow_struck_at_a_building_going_up_stays_struck() -> void:
 
 
 func test_a_snapshot_board_leaves_out_the_buildings_in_the_fog() -> void:
-	var world := RtsWorld.new(GridGraph.new(40, 10), 1)
+	var world := RtsWorld.new(GakGridGraph.new(40, 10), 1)
 	world.add_unit(RtsKinds.SHIELD, 0, Vector2i(1, 1))
 	world.add_unit(RtsKinds.BARRACKS, 1, Vector2i(35, 5))
 	var view: RtsSnapshot = RtsSnapshot.of(world, 0)
@@ -196,7 +196,7 @@ func test_a_snapshot_board_leaves_out_the_buildings_in_the_fog() -> void:
 
 func test_a_straight_walk_does_not_cut_a_corner_the_board_cannot() -> void:
 	# A wall on the diagonal: (5, 5) is on the far side of it.
-	var graph := GridGraph.new(10, 10)
+	var graph := GakGridGraph.new(10, 10)
 	for step: int in range(10):
 		graph.block(Vector2i(step, 9 - step))
 	var world := RtsWorld.new(graph, 1)
@@ -208,7 +208,7 @@ func test_a_straight_walk_does_not_cut_a_corner_the_board_cannot() -> void:
 
 
 func test_a_move_into_a_building_in_the_fog_is_taken_and_ends_at_it() -> void:
-	var world := RtsWorld.new(GridGraph.new(40, 10), 1)
+	var world := RtsWorld.new(GakGridGraph.new(40, 10), 1)
 	var fighter: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(1, 5))
 	world.add_unit(RtsKinds.BARRACKS, 1, Vector2i(35, 5))
 	assert_str(world.command(0, RtsCommand.move([fighter.id] as Array[int], Vector2i(35, 5)))).is_empty()
@@ -223,7 +223,7 @@ func test_a_move_into_a_building_in_the_fog_is_taken_and_ends_at_it() -> void:
 
 
 func test_a_move_whose_goal_is_built_over_ends_instead_of_walking_in() -> void:
-	var world := RtsWorld.new(GridGraph.new(20, 10), 1)
+	var world := RtsWorld.new(GakGridGraph.new(20, 10), 1)
 	var fighter: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(1, 5))
 	world.command(0, RtsCommand.move([fighter.id] as Array[int], Vector2i(15, 5)))
 	world.step()
@@ -236,7 +236,7 @@ func test_a_move_whose_goal_is_built_over_ends_instead_of_walking_in() -> void:
 
 
 func test_a_site_struck_down_while_going_up_stays_down() -> void:
-	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
+	var world := RtsWorld.new(GakGridGraph.new(10, 10), 1)
 	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(4, 5))
 	world.set_funds(0, 500)
 	world.command(0, RtsCommand.build(worker.id, RtsKinds.BARRACKS, Vector2i(5, 5)))
@@ -250,7 +250,7 @@ func test_a_site_struck_down_while_going_up_stays_down() -> void:
 
 
 func test_an_enemy_in_sight_shows_what_a_player_sees_and_no_more() -> void:
-	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
+	var world := RtsWorld.new(GakGridGraph.new(10, 10), 1)
 	world.add_unit(RtsKinds.SHIELD, 0, Vector2i(1, 1))
 	var enemy: RtsUnit = world.add_unit(RtsKinds.WORKER, 1, Vector2i(3, 1))
 	var shown: Dictionary = RtsSnapshot.of(world, 0).enemies()[0]
@@ -260,7 +260,7 @@ func test_an_enemy_in_sight_shows_what_a_player_sees_and_no_more() -> void:
 
 
 func test_a_kind_that_needs_a_building_is_refused_until_one_stands_complete() -> void:
-	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var world := RtsWorld.new(GakGridGraph.new(12, 12), 1)
 	var barracks: RtsUnit = world.add_unit(RtsKinds.BARRACKS, 0, Vector2i(3, 3))
 	world.add_unit(RtsKinds.BASE, 0, Vector2i(6, 6))
 	world.set_funds(0, 1000, 1000)
@@ -272,7 +272,7 @@ func test_a_kind_that_needs_a_building_is_refused_until_one_stands_complete() ->
 
 
 func test_training_past_the_supply_is_refused_and_names_the_room() -> void:
-	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var world := RtsWorld.new(GakGridGraph.new(12, 12), 1)
 	var base: RtsUnit = world.add_unit(RtsKinds.BASE, 0, Vector2i(3, 3))
 	world.set_funds(0, 5000)
 	for index: int in range(9):
@@ -286,7 +286,7 @@ func test_training_past_the_supply_is_refused_and_names_the_room() -> void:
 
 
 func test_a_price_in_two_resources_is_paid_in_both_and_refused_on_the_short_one() -> void:
-	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var world := RtsWorld.new(GakGridGraph.new(12, 12), 1)
 	var barracks: RtsUnit = world.add_unit(RtsKinds.BARRACKS, 0, Vector2i(3, 3))
 	world.add_unit(RtsKinds.BASE, 0, Vector2i(6, 6))
 	world.set_funds(0, 500, 10)
@@ -298,7 +298,7 @@ func test_a_price_in_two_resources_is_paid_in_both_and_refused_on_the_short_one(
 
 
 func test_a_worker_carries_home_the_resource_its_deposit_yields() -> void:
-	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var world := RtsWorld.new(GakGridGraph.new(12, 12), 1)
 	world.add_unit(RtsKinds.BASE, 0, Vector2i(2, 2))
 	var vent: RtsUnit = world.add_unit(RtsKinds.VENT, RtsWorld.NEUTRAL, Vector2i(5, 2))
 	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(4, 3))
@@ -329,7 +329,7 @@ func test_a_building_takes_a_third_except_from_the_mortar() -> void:
 
 
 func test_a_tower_going_up_sees_its_site_and_not_its_eleven_cells() -> void:
-	var world := RtsWorld.new(GridGraph.new(30, 10), 1)
+	var world := RtsWorld.new(GakGridGraph.new(30, 10), 1)
 	var tower: RtsUnit = world.add_unit(RtsKinds.TOWER, 0, Vector2i(5, 5), false)
 	world.add_unit(RtsKinds.WORKER, 1, Vector2i(14, 5))
 	assert_bool(world.visible_to(0, Vector2(14.5, 5.5))).is_false()
@@ -339,7 +339,7 @@ func test_a_tower_going_up_sees_its_site_and_not_its_eleven_cells() -> void:
 
 
 func test_a_worker_repairs_a_hurt_building_of_its_own_and_only_that() -> void:
-	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var world := RtsWorld.new(GakGridGraph.new(12, 12), 1)
 	var barracks: RtsUnit = world.add_unit(RtsKinds.BARRACKS, 0, Vector2i(5, 5))
 	var theirs: RtsUnit = world.add_unit(RtsKinds.BARRACKS, 1, Vector2i(8, 8))
 	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(4, 5))
@@ -358,7 +358,7 @@ func test_a_worker_repairs_a_hurt_building_of_its_own_and_only_that() -> void:
 func test_two_units_on_one_point_drift_apart_and_never_into_a_wall() -> void:
 	# Both at the very west edge of cell (5, 5), a wall in (4, 5): the lower
 	# id is pushed west, which would put it in the wall, and must stay out.
-	var graph := GridGraph.new(10, 10)
+	var graph := GakGridGraph.new(10, 10)
 	var world := RtsWorld.new(graph, 1)
 	world.add_wall(Vector2i(4, 5))
 	var one: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(5, 5))
@@ -373,7 +373,7 @@ func test_two_units_on_one_point_drift_apart_and_never_into_a_wall() -> void:
 
 
 func test_a_shot_needs_a_line_clear_of_walls_and_buildings_but_not_water() -> void:
-	var world := RtsWorld.new(GridGraph.new(12, 5), 1)
+	var world := RtsWorld.new(GakGridGraph.new(12, 5), 1)
 	world.add_wall(Vector2i(5, 1))
 	world.graph.block(Vector2i(5, 3))
 	world.add_unit(RtsKinds.BARRACKS, 1, Vector2i(5, 2))
@@ -385,7 +385,7 @@ func test_a_shot_needs_a_line_clear_of_walls_and_buildings_but_not_water() -> vo
 
 func test_an_idle_fighter_struck_turns_on_its_striker_and_a_moving_one_does_not() -> void:
 	# The mortar fires from five cells, the edge of the shields' sight.
-	var world := RtsWorld.new(GridGraph.new(30, 8), 1)
+	var world := RtsWorld.new(GakGridGraph.new(30, 8), 1)
 	var idle: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(2, 2))
 	var walking: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(2, 5))
 	var mortar: RtsUnit = world.add_unit(RtsKinds.MORTAR, 1, Vector2i(7, 3))
@@ -407,7 +407,7 @@ func test_an_idle_fighter_struck_turns_on_its_striker_and_a_moving_one_does_not(
 
 
 func test_a_dead_id_and_an_enemy_id_get_one_refusal() -> void:
-	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
+	var world := RtsWorld.new(GakGridGraph.new(10, 10), 1)
 	world.add_unit(RtsKinds.WORKER, 0, Vector2i(1, 1))
 	var theirs: RtsUnit = world.add_unit(RtsKinds.WORKER, 1, Vector2i(8, 8))
 	var alive: String = world.command(0, RtsCommand.move([theirs.id] as Array[int], Vector2i(2, 2)))
@@ -418,7 +418,7 @@ func test_a_dead_id_and_an_enemy_id_get_one_refusal() -> void:
 func test_an_idle_fighter_takes_on_only_what_its_side_can_see() -> void:
 	# Seven cells off: past the shield's sight of five, inside its reach of
 	# sight + 2. Seen by nobody, it is left alone; seen by a tower, attacked.
-	var world := RtsWorld.new(GridGraph.new(20, 10), 1)
+	var world := RtsWorld.new(GakGridGraph.new(20, 10), 1)
 	var shield: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(2, 5))
 	var runner: RtsUnit = world.add_unit(RtsKinds.RUNNER, 1, Vector2i(9, 5))
 	assert_object(RtsOrders.nearest_enemy(world, shield)).is_null()
@@ -427,7 +427,7 @@ func test_an_idle_fighter_takes_on_only_what_its_side_can_see() -> void:
 
 
 func test_repair_mends_a_little_a_tick_and_takes_up_a_site_left_half_built() -> void:
-	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var world := RtsWorld.new(GakGridGraph.new(12, 12), 1)
 	var barracks: RtsUnit = world.add_unit(RtsKinds.BARRACKS, 0, Vector2i(5, 5))
 	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(4, 5))
 	barracks.health = 100
@@ -446,7 +446,7 @@ func test_repair_mends_a_little_a_tick_and_takes_up_a_site_left_half_built() -> 
 
 
 func test_a_chase_ends_where_the_side_stops_seeing_its_quarry() -> void:
-	var world := RtsWorld.new(GridGraph.new(40, 5), 1)
+	var world := RtsWorld.new(GakGridGraph.new(40, 5), 1)
 	var shield: RtsUnit = world.add_unit(RtsKinds.SHIELD, 0, Vector2i(2, 2))
 	var runner: RtsUnit = world.add_unit(RtsKinds.RUNNER, 1, Vector2i(5, 2))
 	world.command(0, RtsCommand.attack([shield.id] as Array[int], runner.id))
@@ -458,7 +458,7 @@ func test_a_chase_ends_where_the_side_stops_seeing_its_quarry() -> void:
 
 
 func test_an_enemy_in_a_snapshot_carries_no_orders_queue_or_goal() -> void:
-	var world := RtsWorld.new(GridGraph.new(10, 10), 1)
+	var world := RtsWorld.new(GakGridGraph.new(10, 10), 1)
 	world.add_unit(RtsKinds.SHIELD, 0, Vector2i(2, 2))
 	world.add_unit(RtsKinds.BARRACKS, 1, Vector2i(4, 2))
 	for unit: Dictionary in RtsSnapshot.of(world, 0).enemies():
@@ -468,7 +468,7 @@ func test_an_enemy_in_a_snapshot_carries_no_orders_queue_or_goal() -> void:
 
 func test_a_mortar_does_not_fire_through_a_wall_in_reach() -> void:
 	# A wall between them, three cells apart: in reach, no line of fire.
-	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var world := RtsWorld.new(GakGridGraph.new(12, 12), 1)
 	for row: int in range(3, 9):
 		world.add_wall(Vector2i(5, row))
 	var mortar: RtsUnit = world.add_unit(RtsKinds.MORTAR, 0, Vector2i(3, 5))
@@ -482,7 +482,7 @@ func test_a_mortar_does_not_fire_through_a_wall_in_reach() -> void:
 func test_a_tower_shoots_only_once_armed_and_arms_once() -> void:
 	# An enemy worker three cells off, well inside the gun's reach: a worker
 	# stands idle, so nothing but the tower can hurt it.
-	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var world := RtsWorld.new(GakGridGraph.new(12, 12), 1)
 	var tower: RtsUnit = world.add_unit(RtsKinds.TOWER, 0, Vector2i(3, 5))
 	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 1, Vector2i(6, 5))
 	var full: int = RtsKinds.of(RtsKinds.WORKER, "health")
@@ -505,7 +505,7 @@ func test_a_tower_shoots_only_once_armed_and_arms_once() -> void:
 
 
 func test_an_armed_tower_does_not_fire_through_a_wall() -> void:
-	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var world := RtsWorld.new(GakGridGraph.new(12, 12), 1)
 	for row: int in range(4, 7):
 		world.add_wall(Vector2i(5, row))
 	var tower: RtsUnit = world.add_unit(RtsKinds.TOWER, 0, Vector2i(3, 5))
@@ -522,7 +522,7 @@ func test_an_armed_tower_does_not_fire_through_a_wall() -> void:
 
 
 func test_a_tower_still_going_up_cannot_arm_and_the_arm_is_no_building() -> void:
-	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var world := RtsWorld.new(GakGridGraph.new(12, 12), 1)
 	var worker: RtsUnit = world.add_unit(RtsKinds.WORKER, 0, Vector2i(2, 2))
 	var site: RtsUnit = world.add_unit(RtsKinds.TOWER, 0, Vector2i(5, 5), false)
 	world.set_funds(0, 500, 500)
@@ -546,7 +546,7 @@ func test_a_match_with_an_arm_bought_and_shots_fired_replays_to_its_digest() -> 
 
 # Side 0's tower (id 1) and side 1's idle shield three cells off it.
 func _a_tower_and_a_shield() -> RtsWorld:
-	var world := RtsWorld.new(GridGraph.new(12, 12), 1)
+	var world := RtsWorld.new(GakGridGraph.new(12, 12), 1)
 	world.add_unit(RtsKinds.TOWER, 0, Vector2i(3, 5))
 	world.add_unit(RtsKinds.SHIELD, 1, Vector2i(6, 5))
 	world.set_funds(0, 500, 500)

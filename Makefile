@@ -941,6 +941,13 @@ release: export ## One zip per addon, the Python wheel and the executable into d
 	@$(PYTHON) scripts/release.py --build --executable dist/game-ai-kit-linux
 	@$(PYTHON) scripts/check_license.py
 
+.PHONY: library-check
+library-check: ## The wheel and two addons, installed and run outside the repository (T64)
+	@# A fresh virtual environment installs the wheel with no index; a blank
+	@# Godot project unzips ai_core and ai_search and finds a route. Its
+	@# planted case, a zip missing a file, runs in lint-selftests.
+	@$(PYTHON) scripts/library_check.py
+
 # --- housekeeping ----------------------------------------------------------
 
 .PHONY: godot-version

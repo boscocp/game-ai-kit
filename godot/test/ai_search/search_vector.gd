@@ -46,9 +46,9 @@ static func why_not_a_vector(data: Dictionary) -> String:
 
 
 ## The board this vector describes. `costs` is row-major and -1 is BLOCKED.
-static func board_of(data: Dictionary) -> GridGraph:
+static func board_of(data: Dictionary) -> GakGridGraph:
 	var rows: Array = data["costs"]
-	var graph := GridGraph.new(int((rows[0] as Array).size()), rows.size())
+	var graph := GakGridGraph.new(int((rows[0] as Array).size()), rows.size())
 	for y: int in range(rows.size()):
 		var row: Array = rows[y]
 		for x: int in range(row.size()):
@@ -58,14 +58,14 @@ static func board_of(data: Dictionary) -> GridGraph:
 
 ## Everything this vector claims, checked against all four searches.
 static func check(name: String, data: Dictionary, searches: Dictionary) -> Array[String]:
-	var graph: GridGraph = board_of(data)
+	var graph: GakGridGraph = board_of(data)
 	var from := Vector2i(int(data["from"][0]), int(data["from"][1]))
 	var to := Vector2i(int(data["to"][0]), int(data["to"][1]))
 	var expected: Dictionary = data["expect"]
 	var problems: Array[String] = []
 
 	for label: String in searches:
-		var search: Search = searches[label]
+		var search: GakSearch = searches[label]
 		problems += _check_one(
 			name, label, search.search(GridSearchGraph.new(graph), from, to), graph, from, to, expected
 		)
@@ -89,18 +89,18 @@ static func _why_shape_is_wrong(data: Dictionary) -> String:
 	return ""
 
 
-# A cost is BLOCKED or at least one. GridGraph clamps anything between, so a
+# A cost is BLOCKED or at least one. GakGridGraph clamps anything between, so a
 # vector written with a 0 would silently become a 1 and still "conform".
 static func _why_row_is_wrong(row: Array, index: int) -> String:
 	for x: int in range(row.size()):
 		var cost: int = int(row[x])
-		if cost != GridGraph.BLOCKED and cost < GridGraph.DEFAULT_COST:
+		if cost != GakGridGraph.BLOCKED and cost < GakGridGraph.DEFAULT_COST:
 			return "cell (%d, %d) costs %d; use -1 for a wall or at least 1" % [x, index, cost]
 	return ""
 
 
 static func _why_ends_are_wrong(data: Dictionary, width: int, height: int) -> String:
-	var board := GridGraph.new(width, height)
+	var board := GakGridGraph.new(width, height)
 	for field: String in ["from", "to"]:
 		var cell := Vector2i(int(data[field][0]), int(data[field][1]))
 		if not board.contains(cell):
@@ -108,7 +108,7 @@ static func _why_ends_are_wrong(data: Dictionary, width: int, height: int) -> St
 	return ""
 
 
-static func _check_one(name: String, label: String, result: SearchResult, graph: GridGraph,
+static func _check_one(name: String, label: String, result: SearchResult, graph: GakGridGraph,
 		from: Vector2i, to: Vector2i, expected: Dictionary) -> Array[String]:
 	var problems: Array[String] = []
 	var should_reach: bool = expected["reached"]
@@ -177,11 +177,11 @@ static func _why_it_does_not_arrive(from: Vector2i, to: Vector2i,
 	return ""
 
 
-static func _why_unwalkable(graph: GridGraph, from: Vector2i,
+static func _why_unwalkable(graph: GakGridGraph, from: Vector2i,
 		path: Array[Vector2i]) -> String:
 	var previous: Vector2i = from
 	for cell: Vector2i in path:
-		if not GridGraph.DIRECTIONS.has(cell - previous):
+		if not GakGridGraph.DIRECTIONS.has(cell - previous):
 			return "%s does not follow %s" % [cell, previous]
 		if graph.is_blocked(cell):
 			return "%s is blocked" % cell

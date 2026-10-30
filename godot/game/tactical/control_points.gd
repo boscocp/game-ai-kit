@@ -26,7 +26,7 @@ static func holder(state: BoardState, point: Vector2i) -> int:
 	var standing: Unit = state.unit_at(point)
 	if standing == null or not standing.type.mobile:
 		return NOBODY
-	for step: Vector2i in GridGraph.DIRECTIONS:
+	for step: Vector2i in GakGridGraph.DIRECTIONS:
 		var beside: Unit = state.unit_at(point + step)
 		if beside != null and beside.faction != standing.faction:
 			return NOBODY

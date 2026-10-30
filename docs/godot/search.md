@@ -16,7 +16,7 @@ teaches: search
 
 ## What to copy
 
-Two folders: `addons/ai_core/` (the grid, the `Pathfinder` interface) and
+Two folders: `addons/ai_core/` (the grid, the `GakPathfinder` interface) and
 `addons/ai_search/`. No editor plugin to enable -- every class here is
 registered by `class_name`, and named classes are globally registered, usable
 from any script without `load` or `preload`. Run the project once (or
@@ -27,13 +27,13 @@ into `res://addons/`.
 
 ## A board, and a search on it
 
-`GridGraph` is a grid of costs: what it costs to **enter** each cell. One is
-open ground, more is harder ground, `GridGraph.BLOCKED` is a wall. A cost
+`GakGridGraph` is a grid of costs: what it costs to **enter** each cell. One is
+open ground, more is harder ground, `GakGridGraph.BLOCKED` is a wall. A cost
 below one is clamped to one, because A\*'s heuristic is only right if no step
 is cheaper than that.
 
 ```gdscript
-var graph := GridGraph.new(8, 5)
+var graph := GakGridGraph.new(8, 5)
 for row: int in range(0, 4):
 	graph.set_cost(Vector2i(4, row), 5)   # mud, with a gap at the bottom
 
@@ -42,7 +42,7 @@ print(result.reached, " ", result.cost, " ", result.path.size(), " ", result.exp
 # true 11 7 16
 ```
 
-A search does not take the grid itself. It takes a `SearchGraph` -- the four
+A search does not take the grid itself. It takes a `GakSearchGraph` -- the four
 questions a search asks of any graph -- and `GridSearchGraph` is the grid
 answering them. It wraps, it does not copy: block a cell afterwards and the
 next search sees the wall.
@@ -67,7 +67,7 @@ search shows its decision rather than only its outcome.
 
 ## When all you want is the route
 
-`GridPathfinder` holds any of the four as `ai_core`'s `Pathfinder`, whose one
+`GridPathfinder` holds any of the four as `ai_core`'s `GakPathfinder`, whose one
 method is `find_path`:
 
 ```gdscript
@@ -75,14 +75,14 @@ var route: Array[Vector2i] = GridPathfinder.new(DijkstraSearch.new()).find_path(
 # 7 cells
 ```
 
-Hold it as a `Pathfinder` and you can swap the algorithm without touching the
+Hold it as a `GakPathfinder` and you can swap the algorithm without touching the
 caller. The game does this: it hands a `GridPathfinder` to the learned policy,
 which only knows it has *a* pathfinder, because no addon may depend on another.
 With no argument, `GridPathfinder.new()` answers with A\*.
 
 ## A graph that is not a grid
 
-Waypoints, rooms, a navigation mesh's polygons: write a `SearchGraph` with
+Waypoints, rooms, a navigation mesh's polygons: write a `GakSearchGraph` with
 four methods and every search here works on it unchanged.
 
 A sketch, with the bodies left out; `waypoint_test.gd` is the whole one,
@@ -90,7 +90,7 @@ and it runs:
 
 ```gdscript
 class_name Waypoints
-extends SearchGraph
+extends GakSearchGraph
 
 func contains(node: Vector2i) -> bool: ...          # is this a waypoint?
 func neighbours(node: Vector2i) -> Array[Vector2i]: ...  # the ones a road leads to

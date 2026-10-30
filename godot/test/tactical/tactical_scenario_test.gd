@@ -153,12 +153,12 @@ func test_a_ford_costs_its_own_price_to_walk_and_one_to_wade() -> void:
 	var graphs: Dictionary = TacticalRules.graphs_from(TacticalScenario.MAP)
 	var ford: Vector2i = TacticalRules.cells_of(TacticalScenario.MAP, TacticalRules.FORD)[0]
 
-	assert_int((graphs[UnitType.GROUND] as GridGraph).cost_at(ford)).is_equal(TacticalRules.FORD_COST)
-	assert_int((graphs[TacticalRules.WATER_MOVER] as GridGraph).cost_at(ford)).is_equal(GridGraph.DEFAULT_COST)
+	assert_int((graphs[UnitType.GROUND] as GakGridGraph).cost_at(ford)).is_equal(TacticalRules.FORD_COST)
+	assert_int((graphs[TacticalRules.WATER_MOVER] as GakGridGraph).cost_at(ford)).is_equal(GakGridGraph.DEFAULT_COST)
 
 
-func _without(graph: GridGraph, cells: Array[Vector2i]) -> GridGraph:
-	var shut: GridGraph = graph.duplicate_graph()
+func _without(graph: GakGridGraph, cells: Array[Vector2i]) -> GakGridGraph:
+	var shut: GakGridGraph = graph.duplicate_graph()
 	for cell: Vector2i in cells:
 		shut.block(cell)
 	return shut

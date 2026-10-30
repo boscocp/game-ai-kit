@@ -2,12 +2,12 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-29
+verified_on: 2026-10-30
 tier: 2
 source: https://www.gameaipro.com/
 invalidated_if: the kit's RoleArbiter, TeamCommander, TacticalPositions, SquadConfidence or SearchCoordinator signatures change, or the demos that use them are renamed
 teaches: shooter-ai
-translation_of: dc8c6e0bf7e5ba4fd84e659f60d75cc8a3a3b4f5ba922ea11194620537775647
+translation_of: ea40df0357d4e78bd29a3580d259a982c9b1acc7e347fe223d3656cd41e90c7c
 -->
 
 > English: [ai_teamwork.md](ai_teamwork.md). Os termos que ficam em inglês
@@ -20,11 +20,11 @@ Como um time divide o trabalho, cada parte uma ponderação própria:
 escolhe onde um *bot* fica e impede dois de reivindicarem o mesmo lugar,
 `RoleArbiter` deixa um *bot* flanquear enquanto os outros atiram,
 `SearchCoordinator` divide os lugares a procurar, `SquadConfidence` diz
-quando atacar, segurar ou recuar, e `AimChoice` e `PassageChoice` pesam
-onde mirar e como passar por um corpo no caminho -- esperar, dar a volta,
+quando atacar, segurar ou recuar, e `PassageChoice` pesa como passar por
+um corpo no caminho -- esperar, dar a volta,
 pedir a um companheiro que saia da frente, ou ir para outro lugar. Cada um guarda os seus
-números, para uma tela mostrar o porquê. O que um *bot* faz agora, e as
-saídas do posto, não estão aqui: desde a T101 são do
+números, para uma tela mostrar o porquê. O que um *bot* faz agora, as
+saídas do posto e onde ele mira não estão aqui: desde a T101 e a T64 são do
 [`ai_utility`](ai_utility.pt-BR.md), porque nada neles é sobre um time. As
 fontes: os capítulos do *Game AI Pro* que cada classe cita.
 

@@ -23,14 +23,14 @@
 ## answer.
 ##
 ## When not to use it: a game with chance or hidden information (see
-## `AdversarialGame`), or one so wide that even b^(d/2) is too many -- go, for
+## `GakAdversarialGame`), or one so wide that even b^(d/2) is too many -- go, for
 ## instance -- where Monte Carlo tree search is the usual answer.
 class_name AlphaBetaSearch
 extends RefCounted
 
 # The search's state while it runs, as in `MinimaxSearch`, and one count
 # more: the moves a cut left unlooked-at.
-var _game: AdversarialGame
+var _game: GakAdversarialGame
 var _player: int = 0
 var _depth_limit: int = 0
 var _positions: int = 0
@@ -44,7 +44,7 @@ var _pruned: int = 0
 ## searched with the `alpha` the earlier ones earned, so a move that cannot
 ## beat them may come back as a bound rather than an exact value, and is
 ## marked so.
-func search(game: AdversarialGame, state: RefCounted, depth: int) -> AdversarialResult:
+func search(game: GakAdversarialGame, state: RefCounted, depth: int) -> AdversarialResult:
 	_game = game
 	_player = game.to_move(state)
 	_depth_limit = maxi(depth, 1)

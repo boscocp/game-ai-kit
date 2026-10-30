@@ -10,7 +10,7 @@ extends RefCounted
 ## Shared with `python/tests/test_teamwork_vectors.py`; sized for `Vector2`'s
 ## 32-bit floats.
 const TOLERANCE: float = 1e-4
-const KINDS: Array[String] = ["positions", "influence", "commander", "confidence", "aim", "passage", "search", "roles"]
+const KINDS: Array[String] = ["positions", "influence", "commander", "confidence", "passage", "search", "roles"]
 
 
 ## Why `vector` is not a teamwork vector, or "" when it is one.
@@ -42,8 +42,6 @@ static func answer_to(vector: Dictionary) -> Dictionary:
 			return _influence(vector)
 		"commander":
 			return _commander(vector)
-		"aim":
-			return _aim(vector)
 		"passage":
 			return _passage(vector)
 		"search":
@@ -166,26 +164,6 @@ static func _confidence(vector: Dictionary) -> Dictionary:
 			"states_without_retreat": _states(values, thresholds, false)}
 	answer["waves"] = _waves(vector["query"]["members"], vector["query"]["phases"])
 	return answer
-
-
-static func _aim(vector: Dictionary) -> Dictionary:
-	var zones: Array[AimChoice.Zone] = []
-	for fields: Dictionary in vector["query"]["zones"]:
-		var zone := AimChoice.Zone.new()
-		zone.name = str(fields["name"])
-		zone.multiplier = float(fields["multiplier"])
-		zone.aim = _vector2(fields["aim"])
-		zone.exposure = float(fields["exposure"])
-		for corners: Array in fields["rects"]:
-			var low := Vector2(float(corners[0]), float(corners[1]))
-			zone.rects.append(Rect2(low, Vector2(float(corners[2]), float(corners[3])) - low))
-		zones.append(zone)
-	var choice: AimChoice.Choice = AimChoice.choose(zones, float(vector["query"]["spread"]))
-	var landed: Array = []
-	for roll: Variant in vector["query"]["rolls"]:
-		landed.append(AimChoice.land(choice.chances, float(roll)))
-	return {"own_chances": Array(choice.own_chances), "expected": Array(choice.expected), "aimed": choice.aimed,
-			"chances": Array(choice.chances), "landed": landed}
 
 
 # JSON's null, for no bound, as INF; and INF back as null.

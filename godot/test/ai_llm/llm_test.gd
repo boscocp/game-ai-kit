@@ -23,7 +23,7 @@ func _validator() -> LlmValidator:
 	return LlmValidator.new(GAME_INTENTS, "Again?", PackedStringArray(["owl-eyes"]))
 
 
-func _in_scene(runtime: LlmRuntime) -> LlmRuntime:
+func _in_scene(runtime: GakLlmRuntime) -> GakLlmRuntime:
 	var scene: Node = auto_free(Node.new())
 	add_child(scene)
 	scene.add_child(runtime)

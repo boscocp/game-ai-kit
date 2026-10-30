@@ -1,6 +1,6 @@
 ## The room: walls, trees, where the lamps are, the guards' rounds, the way out.
 ##
-## Data and nothing else. The board is an ordinary `GridGraph` -- trees cost
+## Data and nothing else. The board is an ordinary `GakGridGraph` -- trees cost
 ## three to walk through, and `LineOfSight` reads that same number as "blocks
 ## sight" -- and light is one more number per cell, which only the guards'
 ## suspicion reads.
@@ -19,7 +19,7 @@ const LAMP_REACH: float = 4.0
 ## The light every cell has with no lamp near it: moonlight.
 const AMBIENT: float = 0.1
 
-var graph: GridGraph
+var graph: GakGridGraph
 var player_start: Vector2i
 var exit: Vector2i
 
@@ -29,7 +29,7 @@ var rounds: Array[Array] = []
 var _light: PackedFloat64Array
 
 
-func _init(room_graph: GridGraph, lamps: Array[Vector2i], start: Vector2i, way_out: Vector2i,
+func _init(room_graph: GakGridGraph, lamps: Array[Vector2i], start: Vector2i, way_out: Vector2i,
 		guard_rounds: Array[Array]) -> void:
 	graph = room_graph
 	player_start = start
@@ -51,7 +51,7 @@ func _init(room_graph: GridGraph, lamps: Array[Vector2i], start: Vector2i, way_o
 ## guard to ALERT on the way, so the number the demo is about rises and falls
 ## on the obvious route. Making the room *hard* is level design, not AI.
 static func default_room() -> StealthRoom:
-	var room_graph := GridGraph.new(COLUMNS, ROWS)
+	var room_graph := GakGridGraph.new(COLUMNS, ROWS)
 	for row: int in range(ROWS):
 		if row != 2 and row != 8:
 			room_graph.block(Vector2i(9, row))

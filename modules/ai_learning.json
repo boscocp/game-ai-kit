@@ -2,6 +2,7 @@
   "module": "ai_learning",
   "kind": "technique",
   "about": "Inference only: logistic and softmax models, their file, a case table -- and the Python that fits them (gameaikit.training). No board.",
+  "summary": "Inference for small learned models: logistic and softmax models read from a JSON model file, and a case table. It never trains while the game runs.",
   "owns": [
     "godot/addons/ai_learning/",
     "godot/test/ai_learning/",

@@ -26,7 +26,7 @@ extends RefCounted
 ## read the result as a sentence: `if state.why_refused(move) == BoardState.LEGAL`.
 const LEGAL: String = ""
 
-var graph: GridGraph
+var graph: GakGridGraph
 
 ## Every unit on the board. A state never holds a dead one: `_init` drops them,
 ## which is the only place that rule lives.
@@ -70,7 +70,7 @@ var next_id: int
 var dice_seed: int = 0
 
 
-func _init(board: GridGraph, board_units: Array[Unit], faction: int = 0,
+func _init(board: GakGridGraph, board_units: Array[Unit], faction: int = 0,
 		turn: int = 0) -> void:
 	graph = board
 	units = _living_copies(board_units)
@@ -135,13 +135,13 @@ func unit_at(cell: Vector2i) -> Unit:
 
 ## The cost map this unit walks on: its type's, when the scenario gave that
 ## mover one, and the board's own otherwise. Untyped units walk on the board.
-func graph_for(unit: Unit) -> GridGraph:
+func graph_for(unit: Unit) -> GakGridGraph:
 	return graph if unit.type == null else graph_for_type(unit.type)
 
 
 ## The cost map a kind of unit walks on -- for a unit that does not exist yet,
 ## such as one about to be built.
-func graph_for_type(kind: UnitType) -> GridGraph:
+func graph_for_type(kind: UnitType) -> GakGridGraph:
 	return movement_graphs.get(kind.mover, graph)
 
 
@@ -346,7 +346,7 @@ func _why_walk_refused(unit: Unit, move: Move) -> String:
 
 # One step, from `previous` to `step`.
 func _why_step_refused(unit: Unit, previous: Vector2i, step: Vector2i) -> String:
-	if not GridGraph.DIRECTIONS.has(step - previous):
+	if not GakGridGraph.DIRECTIONS.has(step - previous):
 		return "%s does not follow %s; a step is one cell, no diagonals" % [step, previous]
 	if not graph.contains(step):
 		return "%s is off the board" % step
@@ -371,9 +371,9 @@ func _why_step_refused(unit: Unit, previous: Vector2i, step: Vector2i) -> String
 ## `why_production_refused` hears "you cannot afford it" about every cell and
 ## concludes there is no room.
 func why_no_room(producer: Unit, kind: UnitType, cell: Vector2i) -> String:
-	if not GridGraph.DIRECTIONS.has(cell - producer.cell):
+	if not GakGridGraph.DIRECTIONS.has(cell - producer.cell):
 		return "%s is not next to unit %d" % [cell, producer.id]
-	var ground: GridGraph = graph_for_type(kind)
+	var ground: GakGridGraph = graph_for_type(kind)
 	if not ground.contains(cell) or ground.is_blocked(cell):
 		return "a %s cannot stand on %s" % [kind.type_name, cell]
 	if unit_at(cell) != null:

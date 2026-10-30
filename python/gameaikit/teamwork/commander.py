@@ -12,6 +12,8 @@ from __future__ import annotations
 import dataclasses
 import math
 
+from gameaikit.techniques import technique
+
 NOBODY, US, THEM = 0, 1, -1
 
 
@@ -58,6 +60,7 @@ def _distance(one: tuple[float, float], other: tuple[float, float]) -> float:
     return math.hypot(one[0] - other[0], one[1] - other[1])
 
 
+@technique("team-commander", "squads sent to objectives, each filled to its ideal number, greedily")
 def assign(squads: list[SquadReport], objectives: list[Objective], weights: Weights) -> dict[str, str]:
     """The objective id each squad is sent to, by squad id."""
     if not objectives:

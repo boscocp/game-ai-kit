@@ -46,6 +46,8 @@ import dataclasses
 import json
 import re
 
+from gameaikit.techniques import technique
+
 # The three keys of a reply, in the order the rules walk them.
 REPLY_KEYS = ("speech", "intent", "argument")
 
@@ -112,6 +114,7 @@ class Reply:
         return self.refusal == ""
 
 
+@technique("llm-validator", "a language model's reply admitted only as one declared intent, or refused")
 def validate(raw_text: str, declaration: Declaration) -> Reply:
     """The reply in `raw_text`, or the game's fallback with the reason.
 

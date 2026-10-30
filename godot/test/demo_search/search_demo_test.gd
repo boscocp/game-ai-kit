@@ -245,7 +245,7 @@ func test_erasing_a_painted_cell_makes_it_open_ground() -> void:
 
 	demo.erase(cell)
 
-	assert_int(demo._graph.cost_at(cell)).is_equal(GridGraph.DEFAULT_COST)
+	assert_int(demo._graph.cost_at(cell)).is_equal(GakGridGraph.DEFAULT_COST)
 
 
 func test_erasing_mud_makes_it_open_ground_too() -> void:
@@ -255,7 +255,7 @@ func test_erasing_mud_makes_it_open_ground_too() -> void:
 
 	demo.erase(mud)
 
-	assert_int(demo._graph.cost_at(mud)).is_equal(GridGraph.DEFAULT_COST)
+	assert_int(demo._graph.cost_at(mud)).is_equal(GakGridGraph.DEFAULT_COST)
 
 
 func test_painting_mud_uses_the_price_chosen_for_it() -> void:
@@ -338,10 +338,10 @@ func test_each_promise_fails_on_a_board_that_does_not_keep_it() -> void:
 
 
 func test_the_layout_characters_mean_what_the_header_says() -> void:
-	assert_int(SearchBoard.cost_of("#")).is_equal(GridGraph.BLOCKED)
-	assert_int(SearchBoard.cost_of(".")).is_equal(GridGraph.DEFAULT_COST)
-	assert_int(SearchBoard.cost_of("S")).is_equal(GridGraph.DEFAULT_COST)
-	assert_int(SearchBoard.cost_of("G")).is_equal(GridGraph.DEFAULT_COST)
+	assert_int(SearchBoard.cost_of("#")).is_equal(GakGridGraph.BLOCKED)
+	assert_int(SearchBoard.cost_of(".")).is_equal(GakGridGraph.DEFAULT_COST)
+	assert_int(SearchBoard.cost_of("S")).is_equal(GakGridGraph.DEFAULT_COST)
+	assert_int(SearchBoard.cost_of("G")).is_equal(GakGridGraph.DEFAULT_COST)
 	assert_int(SearchBoard.cost_of("5")).is_equal(5)
 
 
@@ -374,7 +374,7 @@ func test_clearing_leaves_open_ground_and_the_two_dots() -> void:
 	assert_that(demo._from).is_equal(start)
 	for row: int in range(demo._graph.height):
 		for column: int in range(demo._graph.width):
-			assert_int(demo._graph.cost_at(Vector2i(column, row))).is_equal(GridGraph.DEFAULT_COST)
+			assert_int(demo._graph.cost_at(Vector2i(column, row))).is_equal(GakGridGraph.DEFAULT_COST)
 	assert_bool(demo._result.reached).is_true()
 
 
@@ -391,8 +391,8 @@ func test_the_screen_says_how_to_edit() -> void:
 
 func _results_on(board: SearchBoard) -> Array[SearchResult]:
 	var found: Array[SearchResult] = []
-	var graph: GridGraph = board.graph()
-	for search: Search in [BreadthFirstSearch.new(), DepthFirstSearch.new(),
+	var graph: GakGridGraph = board.graph()
+	for search: GakSearch in [BreadthFirstSearch.new(), DepthFirstSearch.new(),
 			DijkstraSearch.new(), AStarSearch.new()]:
 		found.append(search.search(GridSearchGraph.new(graph), board.start(), board.goal()))
 	return found
@@ -447,7 +447,7 @@ func test_a_right_press_erases() -> void:
 
 	demo.pointer(_press(MOUSE_BUTTON_RIGHT), mud)
 
-	assert_int(demo._graph.cost_at(mud)).is_equal(GridGraph.DEFAULT_COST)
+	assert_int(demo._graph.cost_at(mud)).is_equal(GakGridGraph.DEFAULT_COST)
 
 
 func test_dragging_with_the_button_down_keeps_painting() -> void:
@@ -510,7 +510,7 @@ func test_the_open_ground_brush_paints_open_ground() -> void:
 
 	demo.paint(mud)
 
-	assert_int(demo._graph.cost_at(mud)).is_equal(GridGraph.DEFAULT_COST)
+	assert_int(demo._graph.cost_at(mud)).is_equal(GakGridGraph.DEFAULT_COST)
 
 
 func test_one_press_of_b_goes_to_the_next_board() -> void:

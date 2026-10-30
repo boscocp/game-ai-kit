@@ -2,20 +2,21 @@
 
 <!-- doc-meta
 half_life: structure
-verified_on: 2026-10-29
+verified_on: 2026-10-30
 tier: 1
 source: https://github.com/boscocp/game-ai-kit
-invalidated_if: a choice's rule changes -- a curve's comparison, the product's veto, the tie, an errand's gain or cost -- or the bot match's actions.json or rules.json numbers these copy change
+invalidated_if: a choice's rule changes -- a curve's comparison, the product's veto, the tie, an errand's gain or cost -- or the bot match's actions.json or rules.json numbers these copy change, or Rect2 becomes double precision
 teaches: none
 -->
 
-> Two choices, two languages, and the files that say they gave the same
+> Three choices, two languages, and the files that say they gave the same
 > answers.
 
 `ai_utility` (GDScript) and `gameaikit.utility` (Python) implement the same
-two things: `ActionChoice`, every action scored by its considerations and
-the highest taken (T67), and `ErrandChoice`, each errand weighed as a gain
-less its costs (T67, T68). Each vector is one `.json` file: a query and the
+three things: `ActionChoice`, every action scored by its considerations
+and the highest taken (T67); `ErrandChoice`, each errand weighed as a gain
+less its costs (T67, T68); and `AimChoice`, where on a body to aim, by the
+damage a shot is worth (T51). Each vector is one `.json` file: a query and the
 answer it must get. Both sides answer it and check every value against the
 file, never against each other: `make test-utility-vectors` on the GDScript
 side, `make test-python` on the Python side.
@@ -23,7 +24,8 @@ side, `make test-python` on the Python side.
 These were teamwork vectors until T101 moved utility choice out of
 `ai_teamwork`, for nothing in it is about a team. They moved unchanged:
 `derive.py` here writes every file byte for byte as
-`spec/vectors/teamwork/derive.py` wrote it before the move.
+`spec/vectors/teamwork/derive.py` wrote it before the move. The seven aim
+vectors followed in T64, for the same reason and unchanged too.
 
 ## Where the answers came from
 
@@ -58,8 +60,9 @@ score is a 64-bit float on both sides; a name or an index must be equal.
 |---|---|---|
 | `action` | actions as plain data (weight, considerations with their curves), records of percepts | for each record, every action's score, every consideration's answer, and the action taken (-1: none) |
 | `errands` | the weights; facts for going back, for fetching and for hiding to heal (T68); each team's fetching scores; pairs -- or triples, with hiding -- of scores | each weighing as [gain, walk, cost, score], hiding's walk the seconds away; whom each team sends (-1: nobody); each pair's errand ("": none) |
+| `aim` | a spread, a target's zones (multiplier, aim point, rectangles, exposure), rolls | each zone's own chance and worth aimed at, the zone aimed at, the chances from it, where each roll lands |
 
-## The twenty-one
+## The twenty-eight
 
 | file | what it pins |
 |---|---|
@@ -84,3 +87,17 @@ score is a 64-bit float on both sides; a name or an index must be equal.
 | `going-back-wins-a-tie-and-zero-is-no-errand` | back on a tie; a score of exactly 0 is no errand |
 | `hide-when-the-wound-is-deep-and-the-wait-short` | a deep wound, near cover, a short wait: hide; a scratch, a long wait, or nowhere to hide: no |
 | `the-highest-of-three-and-ties-go-back-then-fetch` | of three, the highest; ties go back, then fetch, then hide; all below zero, none |
+| `close-and-steady-aims-at-the-head` | a small spread: the head, worth twice the torso, wins |
+| `far-aims-at-the-torso` | a large spread: the torso and its spill beat the head |
+| `behind-low-cover-the-legs-are-gone` | hidden legs and a half-shown torso move the choice up to the head |
+| `equal-worth-goes-to-the-first` | of two zones tied, the first is aimed at |
+| `nothing-exposed-aims-at-nothing` | every zone hidden: nothing is aimed at, every roll misses |
+| `a-roll-on-a-boundary-misses` | a roll exactly on a chance's end goes past it, with a strict `<` |
+| `a-steady-hand-has-no-spread` | a spread of 0 is taken as a millimetre: no division by zero, no chance over 1 |
+
+The aim vectors' numbers are powers of two wherever a tie or a boundary is
+pinned: GDScript's `Rect2` is 32-bit, and with 0.1 and 1.1 an exact tie in
+Python was not one in GDScript, which aimed at the second zone. And the
+spread in `far-aims-at-the-torso` is under 0.55 m on purpose: above it a
+shot aimed at an arm covers the body exactly as one aimed at the torso, a
+true tie that the 32-bit side may break the other way.

@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 3 ; https://docs.godotengine.org/en/stable/classes/class_astargrid2d.html
 invalidated_if: the kit's Search, SearchGraph, GridPathfinder or GridGraph signatures change, or the demos that use them are renamed
 teaches: search
-translation_of: fd3e8b90d4d4ce9e12edbfce20a9853212b32b5d256a80569121fbbe0f0820a3
+translation_of: 19cbfb781d5c66333f8c644a583f89fc5a8486d1518df936451481852181b537
 -->
 
 > English: [ai_search.md](ai_search.md). Os termos que ficam em inglês
@@ -44,7 +44,7 @@ Dijkstra com passos a mais.
 
 ## Neste kit {#in-this-kit}
 
-`godot/demos/search/search_demo.gd` monta um `GridGraph` a partir de um
+`godot/demos/search/search_demo.gd` monta um `GakGridGraph` a partir de um
 tabuleiro com nome, embrulha-o em `GridSearchGraph.new(grid)` -- o adaptador
 que deixa uma busca ler uma grade -- roda as quatro buscas nele e repete
 `SearchResult.expanded` uma célula por vez. Os ajustes que importam:
@@ -52,8 +52,8 @@ que deixa uma busca ler uma grade -- roda as quatro buscas nele e repete
 | ajuste | onde | o que muda |
 |---|---|---|
 | qual busca | `AStarSearch`, `DijkstraSearch`, `BreadthFirstSearch`, `DepthFirstSearch` | a ordem em que a fronteira é consumida -- e com ela a rota e o trabalho |
-| o custo de uma célula | `GridGraph.set_cost(cell, cost)` | quanto custa entrar nela; no mínimo 1, `GridGraph.BLOCKED` é parede |
-| a estimativa | `SearchGraph.estimate` | a heurística do A\*; precisa ser *consistente*, e zero transforma o A\* em Dijkstra |
+| o custo de uma célula | `GakGridGraph.set_cost(cell, cost)` | quanto custa entrar nela; no mínimo 1, `GakGridGraph.BLOCKED` é parede |
+| a estimativa | `GakSearchGraph.estimate` | a heurística do A\*; precisa ser *consistente*, e zero transforma o A\* em Dijkstra |
 | o limite | `CostFlood.within(GridSearchGraph.new(grid), from, limit)` | até onde a inundação se espalha |
 
 ## No seu projeto {#your-project}
@@ -61,7 +61,7 @@ que deixa uma busca ler uma grade -- roda as quatro buscas nele e repete
 ### O que copiar {#copy}
 
 Duas pastas, mais nada: `godot/addons/ai_core/` (a grade e a porta
-`Pathfinder`) e `godot/addons/ai_search/`. Não há plugin para ativar -- cada
+`GakPathfinder`) e `godot/addons/ai_search/`. Não há plugin para ativar -- cada
 classe se registra pelo `class_name`. Abra o projeto uma vez, ou rode
 `godot --headless --import`, para o Godot refazer a lista de classes.
 
@@ -86,26 +86,26 @@ var route: Array[Vector2i] = []
 func _ready() -> void:
 	# Six by four, open ground, and a wall down column 3 with a gap at the
 	# bottom -- the route has to find the gap.
-	var board := GridGraph.new(6, 4)
+	var board := GakGridGraph.new(6, 4)
 	for row: int in range(0, 3):
 		board.block(Vector2i(3, row))
-	# Held as ai_core's Pathfinder, so the caller does not care which search
+	# Held as ai_core's GakPathfinder, so the caller does not care which search
 	# answers: swap AStarSearch for DijkstraSearch and nothing else changes.
-	var pathfinder: Pathfinder = GridPathfinder.new(AStarSearch.new())
+	var pathfinder: GakPathfinder = GridPathfinder.new(AStarSearch.new())
 	route = pathfinder.find_path(board, Vector2i(0, 0), Vector2i(5, 0))
 ```
 
 ### O que você implementa {#implement}
 
-Nada, numa grade quadrada: preencha um `GridGraph` a partir do seu
+Nada, numa grade quadrada: preencha um `GakGridGraph` a partir do seu
 `TileMapLayer` (um `set_cost` por tile). Só para a rota, entregue-o a um
-`Pathfinder`, como no exemplo. Para ver também o que a busca olhou,
+`GakPathfinder`, como no exemplo. Para ver também o que a busca olhou,
 embrulhe-o: `AStarSearch.new().search(GridSearchGraph.new(grid), from, to)`
 devolve um `SearchResult` com `path`, `cost`, `expanded` e `frontier` -- uma
-busca recebe um `SearchGraph`, e um `GridGraph` não é um. Em qualquer outra
+busca recebe um `GakSearchGraph`, e um `GakGridGraph` não é um. Em qualquer outra
 coisa --
 *waypoints*, salas, os polígonos de uma malha de navegação -- estenda
-`SearchGraph` com quatro métodos (`contains`, `neighbours`, `cost_at`,
+`GakSearchGraph` com quatro métodos (`contains`, `neighbours`, `cost_at`,
 `estimate`) e chame `search(graph, from, to)` em qualquer uma das quatro;
 `godot/test/ai_search/waypoint_test.gd` é um completo.
 

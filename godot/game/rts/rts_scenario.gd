@@ -90,8 +90,8 @@ const TIME_LIMIT_SECONDS: int = 20 * 60
 
 ## The board the map draws: costs for trees and fords, rock and water
 ## blocked, deposits and bases left open for `start` to stand things on.
-static func board() -> GridGraph:
-	var graph := GridGraph.new(MAP[0].length(), MAP.size())
+static func board() -> GakGridGraph:
+	var graph := GakGridGraph.new(MAP[0].length(), MAP.size())
 	for cell: Vector2i in _cells():
 		var letter: String = MAP[cell.y][cell.x]
 		if letter in ["#", "~"]:

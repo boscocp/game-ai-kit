@@ -200,7 +200,7 @@ still prefers taking one -- `spec/vectors/adversarial/mcts-nim.json` keeps
 that case, because an anytime answer is not always a right one.
 
 **Chance.** A game with dice tells the search what a move *may* lead to,
-each with its probability (`AdversarialGame.outcomes`). After such a move
+each with its probability (`GakAdversarialGame.outcomes`). After such a move
 the tree keeps **one child per outcome**, and each iteration draws which
 one it walks into. What the search learns under a lucky roll stays under
 that roll. The other way, open-loop MCTS -- one child per move, the rolls

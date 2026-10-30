@@ -8,15 +8,15 @@
 ## after it was made is blocked to the next search too.
 ##
 ## When not to use it: a graph that is not a square grid of cells. Write your
-## own `SearchGraph`; this file is the example of how short that is.
+## own `GakSearchGraph`; this file is the example of how short that is.
 class_name GridSearchGraph
-extends SearchGraph
+extends GakSearchGraph
 
 ## The grid every answer comes from.
-var grid: GridGraph
+var grid: GakGridGraph
 
 
-func _init(over: GridGraph) -> void:
+func _init(over: GakGridGraph) -> void:
 	grid = over
 
 
@@ -38,9 +38,9 @@ func cost_at(node: Vector2i) -> int:
 ## Manhattan distance: the cardinal steps between two cells with nothing in
 ## the way.
 ##
-## Consistent, which is the promise `SearchGraph.estimate` asks for, **because
+## Consistent, which is the promise `GakSearchGraph.estimate` asks for, **because
 ## no cell costs less than one to enter**: one step changes the distance by
-## exactly one, and entering any cell costs at least that. `GridGraph.set_cost`
+## exactly one, and entering any cell costs at least that. `GakGridGraph.set_cost`
 ## clamps every cost below one to one, so a board that would break this cannot
 ## be built.
 func estimate(node: Vector2i, goal: Vector2i) -> int:

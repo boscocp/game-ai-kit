@@ -27,7 +27,7 @@ extends RefCounted
 
 # The search's state while it runs: the game, the player it searches for, how
 # deep it may look, and the count of positions it has visited.
-var _game: AdversarialGame
+var _game: GakAdversarialGame
 var _player: int = 0
 var _depth_limit: int = 0
 var _positions: int = 0
@@ -39,7 +39,7 @@ var _positions: int = 0
 ## The root is MAX-VALUE written out by hand, so that the value of every move
 ## is kept rather than only the best one -- that list is what the checkers
 ## example draws.
-func search(game: AdversarialGame, state: RefCounted, depth: int) -> AdversarialResult:
+func search(game: GakAdversarialGame, state: RefCounted, depth: int) -> AdversarialResult:
 	_game = game
 	_player = game.to_move(state)
 	_depth_limit = maxi(depth, 1)

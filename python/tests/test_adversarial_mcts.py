@@ -120,6 +120,27 @@ class TestMonteCarloSearch(unittest.TestCase):
         self.assertEqual({drawn.index(1) for _ in range(5)}, {0})
         self.assertEqual(drawn.next(), Xorshift(9).next())
 
+    def test_a_game_that_inherits_nothing_is_searched_by_its_methods(self) -> None:
+        # `Game` is a Protocol (T64): a user's game need not inherit the kit's.
+        rules = Nim()
+
+        class NimOfItsOwn:
+            to_move, actions, result = rules.to_move, rules.actions, rules.result
+            is_terminal, evaluate = rules.is_terminal, rules.evaluate
+
+            def outcomes(self, state: Pile, action: int) -> list:
+                return [(1.0, rules.result(state, action))]
+
+        self.assertNotIsInstance(NimOfItsOwn(), AdversarialGame)
+        own = MonteCarloSearch(NimOfItsOwn(), Pile(10, 0), 1).step(300)
+        kit = MonteCarloSearch(Nim(), Pile(10, 0), 1).step(300)
+        self.assertEqual(own, kit)
+
+    def test_what_it_hands_back_is_frozen(self) -> None:
+        found = MonteCarloSearch(Nim(), Pile(10, 0), 1).step(10)
+        with self.assertRaises(AttributeError):
+            found.action = 3
+
     def test_the_interface_has_no_body_but_outcomes(self) -> None:
         with self.assertRaises(NotImplementedError):
             AdversarialGame().to_move(None)

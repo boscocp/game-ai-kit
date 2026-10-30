@@ -33,9 +33,9 @@
 ## `graph.cost_at` over the returned cells: that is the one definition of
 ## cost, and the examples' board does exactly that when it prices a move.
 @abstract
-class_name Pathfinder
+class_name GakPathfinder
 extends RefCounted
 
 
 ## A route from `from` to `to`, or an empty array when there is none.
-@abstract func find_path(graph: GridGraph, from: Vector2i, to: Vector2i) -> Array[Vector2i]
+@abstract func find_path(graph: GakGridGraph, from: Vector2i, to: Vector2i) -> Array[Vector2i]

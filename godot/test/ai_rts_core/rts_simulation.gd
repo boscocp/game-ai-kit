@@ -35,7 +35,7 @@ const FASTER_THAN_REAL_TIME: float = 10.0
 ## runners at whatever enemy they can see, or towards the enemy's home once
 ## there are enough of them. Its own dice, from the seed, so
 ## the stream of commands is the same every time.
-class ScriptedSide extends RtsController:
+class ScriptedSide extends GakRtsController:
 	var _dice := RandomNumberGenerator.new()
 	var _enemy_home: Vector2i
 

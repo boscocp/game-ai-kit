@@ -6,7 +6,7 @@
 ## the game is over. Swap the weights and the search plays differently without
 ## changing a line of `ai_adversarial`, which is what T32 does.
 class_name CheckersGame
-extends AdversarialGame
+extends GakAdversarialGame
 
 ## What a won game is worth. Far above anything the evaluation can return --
 ## twelve kings come to 18 -- so the search never trades a win for material.

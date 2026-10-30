@@ -2,7 +2,7 @@
 ## graph, the loudness at each listener, and the off-screen halving.
 ##
 ## The wiring, not a technique: `ai_search`'s `CostFlood` over the level's
-## `GridGraph` gives every cell's path length from the noise, cut off at its
+## `GakGridGraph` gives every cell's path length from the noise, cut off at its
 ## radius, and `ai_perception`'s `PathHearing` turns one into a loudness
 ## [Walsh 2015; Miles 2013]. A wall is a blocked cell, so nothing is heard
 ## through it. The halving is Walsh's: a guard off screen and further than
@@ -29,7 +29,7 @@ extends RefCounted
 
 ## Every cell a noise made at `source` reaches within `radius` metres along
 ## `level`, cells `cell_size` metres wide: cell -> path length in metres.
-static func lengths(level: GridGraph, source: Vector2i, radius: float, cell_size: float) -> Dictionary[Vector2i, float]:
+static func lengths(level: GakGridGraph, source: Vector2i, radius: float, cell_size: float) -> Dictionary[Vector2i, float]:
 	var limit: int = floori(radius / cell_size)
 	var reached: Dictionary[Vector2i, int] = CostFlood.within(GridSearchGraph.new(level), source, limit)
 	var metres: Dictionary[Vector2i, float] = {}

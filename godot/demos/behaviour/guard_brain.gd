@@ -76,7 +76,7 @@ func _goal_of(guard: Unit) -> Vector2i:
 func _walk(state: BoardState, guard: Unit, goal: Vector2i) -> Array[Vector2i]:
 	if goal == guard.cell or not state.graph.contains(goal):
 		return []
-	var around: GridGraph = state.graph.duplicate_graph()
+	var around: GakGridGraph = state.graph.duplicate_graph()
 	for other: Unit in state.units:
 		if other.id != guard.id and other.cell != goal:
 			around.block(other.cell)

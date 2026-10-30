@@ -112,7 +112,7 @@ static func distance_between(one: Vector2i, other: Vector2i) -> int:
 ## generated ground above `dearest_ground`, so the honest answer for either is
 ## "the worst ground the model has seen", and the clamp says it out loud
 ## instead of feeding a logistic regression a -1 it will happily multiply.
-static func terrain_at(graph: GridGraph, cell: Vector2i, published: TacticalWeights) -> int:
+static func terrain_at(graph: GakGridGraph, cell: Vector2i, published: TacticalWeights) -> int:
 	var dearest: int = published.convention("dearest_ground")
 	if graph.is_blocked(cell):
 		return dearest
@@ -186,7 +186,7 @@ static func _nearest_to(units: Array[Unit], cell: Vector2i) -> Unit:
 # pathfinder inside a feature -- which makes a model look clever and makes the
 # dataset impossible to rebuild from its description. The Python side walks
 # the same two axes in the same order.
-static func _terrain_between(graph: GridGraph, start: Vector2i, target: Vector2i,
+static func _terrain_between(graph: GakGridGraph, start: Vector2i, target: Vector2i,
 		published: TacticalWeights) -> float:
 	var costs: Array[int] = []
 	var walker: Vector2i = start

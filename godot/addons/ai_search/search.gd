@@ -6,15 +6,15 @@
 ## here so that each algorithm file is the part that differs, read beside the
 ## pseudocode in the book without ceremony around it.
 ##
-## They search a `SearchGraph`, the port: the four questions they ask of a
+## They search a `GakSearchGraph`, the port: the four questions they ask of a
 ## graph, named. A grid is one through `GridSearchGraph`, and `GridPathfinder`
-## hands any of them to a game that asks for `ai_core`'s `Pathfinder`.
+## hands any of them to a game that asks for `ai_core`'s `GakPathfinder`.
 ##
 ## When not to use any of them: when you need throughput. `AStarGrid2D` is
 ## engine core, written in C++, with four heuristics and four diagonal modes,
 ## and it will beat everything here. These are written to be read.
 @abstract
-class_name Search
+class_name GakSearch
 extends RefCounted
 
 ## Where a search starts: the cell it came from is itself, which is what ends
@@ -34,7 +34,7 @@ const NO_PARENT: Vector2i = Vector2i(-1, -1)
 ## in a wall because something put it there, and cost is paid on entering a
 ## cell, never on leaving one. A start that is not on the board at all is not a
 ## cell, and there is nothing to search from.
-func search(graph: SearchGraph, from: Vector2i, to: Vector2i) -> SearchResult:
+func search(graph: GakSearchGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 	if not graph.contains(from):
 		return SearchResult.nothing_found([] as Array[Vector2i], [] as Array[Vector2i])
 	return _explore(graph, from, to)
@@ -42,12 +42,12 @@ func search(graph: SearchGraph, from: Vector2i, to: Vector2i) -> SearchResult:
 
 # One algorithm, on a start already known to be on the board. This is the part
 # that differs between the four files, and it is the only part they implement.
-@abstract func _explore(graph: SearchGraph, from: Vector2i, to: Vector2i) -> SearchResult
+@abstract func _explore(graph: GakSearchGraph, from: Vector2i, to: Vector2i) -> SearchResult
 
 
 # Walk the chain of parents back from the goal, then turn it round.
 #
-# The result excludes `from` and includes `to`, which is what `Pathfinder`
+# The result excludes `from` and includes `to`, which is what `GakPathfinder`
 # and `SearchResult.path` promise: cost is paid on entering a cell, and you
 # never pay to stand where you already are.
 #
@@ -73,7 +73,7 @@ static func _rebuild(came_from: Dictionary, from: Vector2i, to: Vector2i) -> Arr
 # because they must record what each cell cost to reach -- and A*'s improves a
 # cell already seen, which on these boards Dijkstra never has to (its header
 # says why). That difference is the line worth reading them for.
-static func _enqueue_unseen(graph: SearchGraph, current: Vector2i,
+static func _enqueue_unseen(graph: GakSearchGraph, current: Vector2i,
 		came_from: Dictionary, frontier: Array[Vector2i]) -> void:
 	for step: Vector2i in graph.neighbours(current):
 		if not came_from.has(step):
@@ -97,7 +97,7 @@ static func _cheapest(frontier: Array[Vector2i], priority: Dictionary) -> int:
 
 
 # What a route costs on this graph: the sum of entering each cell on it.
-static func _cost_of(graph: SearchGraph, path: Array[Vector2i]) -> int:
+static func _cost_of(graph: GakSearchGraph, path: Array[Vector2i]) -> int:
 	var total: int = 0
 	for cell: Vector2i in path:
 		total += graph.cost_at(cell)
@@ -105,7 +105,7 @@ static func _cost_of(graph: SearchGraph, path: Array[Vector2i]) -> int:
 
 
 # The result of a search that reached its goal.
-static func _reached(graph: SearchGraph, came_from: Dictionary, from: Vector2i,
+static func _reached(graph: GakSearchGraph, came_from: Dictionary, from: Vector2i,
 		to: Vector2i, expanded: Array[Vector2i],
 		frontier: Array[Vector2i]) -> SearchResult:
 	var path: Array[Vector2i] = _rebuild(came_from, from, to)

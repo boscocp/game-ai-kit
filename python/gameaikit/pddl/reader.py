@@ -47,6 +47,7 @@ from __future__ import annotations
 import dataclasses
 
 from .sexpr import PddlError, parse, unparse
+from gameaikit.techniques import technique
 
 #: The only requirement flag this reader understands.
 SUPPORTED_REQUIREMENTS = (":strips",)
@@ -98,6 +99,7 @@ class Problem:
     goal: tuple[str, ...]
 
 
+@technique("pddl-domain", "a STRIPS planning domain read from PDDL, every predicate checked")
 def read_domain(text: str) -> Domain:
     """The domain in `text`, or `PddlError` saying why it is not one."""
     form = _one_form(text, "domain")

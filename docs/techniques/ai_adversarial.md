@@ -59,21 +59,21 @@ shortcut can be seen beside the thing it shortens.
 ## In this kit {#in-this-kit}
 
 `godot/game/checkers/checkers_game.gd` is checkers told to the search: an
-`AdversarialGame` whose states are boards and whose actions are moves.
+`GakAdversarialGame` whose states are boards and whose actions are moves.
 `checkers.gd` asks `AlphaBetaSearch` for white's move. The knobs that
 matter:
 
 | knob | where | what it changes |
 |---|---|---|
 | depth | `search(game, state, depth)` | how many plies ahead it looks; each one costs about the branching factor times the last |
-| the estimate | your `AdversarialGame.evaluate(state, player)` | how a position the search stops at is scored; never infinite |
-| move order | your `AdversarialGame.actions(state)` | how much alpha-beta cuts -- never the move it returns. Same order every time: of equal moves, the first wins |
+| the estimate | your `GakAdversarialGame.evaluate(state, player)` | how a position the search stops at is scored; never infinite |
+| move order | your `GakAdversarialGame.actions(state)` | how much alpha-beta cuts -- never the move it returns. Same order every time: of equal moves, the first wins |
 | which search | `MinimaxSearch` or `AlphaBetaSearch` | the work, not the answer |
 | iterations | `MonteCarloSearch.step(iterations)` | MCTS's budget for this call; the tree carries over to the next, so a frame can take a few and come back |
 | the seed | `MonteCarloSearch.new(game, state, from_seed)` | every random choice the search makes; the same seed, the same search, in GDScript and in Python |
 | exploration | `MonteCarloSearch.new(…, exploration)` | UCB1's C, √2 by default: larger tries poorly known moves more, smaller trusts the means sooner |
 | playout limit | `MonteCarloSearch.new(…, playout_limit)` | how many random moves a playout makes before it asks `evaluate`; 200 by default |
-| chance | your `AdversarialGame.outcomes(state, action)` | what an action may lead to, with its probabilities; MCTS keeps one child per outcome |
+| chance | your `GakAdversarialGame.outcomes(state, action)` | what an action may lead to, with its probabilities; MCTS keeps one child per outcome |
 
 ## In your own project {#your-project}
 
@@ -100,7 +100,7 @@ gate holds the page equal to it.
 # nim_example_test.gd. A game of your own, told to the search: Nim, where
 # the players take one, two or three sticks in turn, and whoever takes the
 # last stick wins.
-extends AdversarialGame
+extends GakAdversarialGame
 
 
 ## A position: the sticks left, and whose turn it is, 0 or 1. The search
@@ -163,7 +163,7 @@ func evaluate(state: RefCounted, player: int) -> float:
 
 ### What you implement {#implement}
 
-The five functions of `AdversarialGame`, for your game: `to_move`,
+The five functions of `GakAdversarialGame`, for your game: `to_move`,
 `actions`, `result`, `is_terminal` and `evaluate`, and a sixth only if
 your game has dice: `outcomes`, whose default is `result`, certain. A state
 and an action are whatever you like -- a state must be a `RefCounted`, and

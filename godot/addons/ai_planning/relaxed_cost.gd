@@ -27,7 +27,7 @@
 ## predicates.
 ##
 ## When not to use it: a domain where the delete lists *are* the puzzle -- a
-## single bank both purchases spend, as `GameDomain` has. The relaxation
+## single bank both purchases spend, as `GakGameDomain` has. The relaxation
 ## cannot see the spending, so it guesses one mining where two are needed;
 ## still a guess under the truth, which is all h_max promises.
 class_name RelaxedCost

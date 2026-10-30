@@ -2,6 +2,7 @@
   "module": "ai_planning",
   "kind": "technique",
   "about": "STRIPS over PDDL, its heuristics, and the Python PDDL reader.",
+  "summary": "STRIPS planning: a domain of actions with preconditions and effects, a heuristic planner, and a sample domain to read.",
   "owns": [
     "godot/addons/ai_planning/",
     "godot/test/ai_planning/",

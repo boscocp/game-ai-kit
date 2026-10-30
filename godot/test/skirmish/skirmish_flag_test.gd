@@ -119,7 +119,7 @@ func _board_with(placed: Array, to_move: int) -> BoardState:
 	var units: Array[Unit] = []
 	for entry: Array in placed:
 		units.append(Unit.new(units.size() + 1, entry[0], entry[1], 10, BoardGame.POINTS_PER_TURN))
-	return BoardState.new(GridGraph.new(BoardGame.COLUMNS, BoardGame.ROWS), units, to_move)
+	return BoardState.new(GakGridGraph.new(BoardGame.COLUMNS, BoardGame.ROWS), units, to_move)
 
 
 func _mounted_scene() -> BoardGame:
