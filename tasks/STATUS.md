@@ -3,6 +3,93 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-10-30 (waves 112 to 117 merged)
+
+**Where it stopped -- read first.** Six pull requests landed in one session,
+each reviewed by a fresh context before merging, its findings applied on the
+branch, the gates re-run on the reviewed head before `gh pr merge` (CI stays
+off): 112 T64 the library (#52), then five in parallel worktrees -- 117 T108
+the pad legend's height (#53), 116 T57 the RTS seat bias (#57), 115 T99 a
+bandit chooses the fighting opponent's answers (#56), 114 T90 a director
+paces the infiltration (#55), 113 T84 the XCOM-style mode's rules (#54).
+Every review asked for changes; one blocker (T84: a shot at an enemy the
+shooter could not see) was fixed before its merge. Main is cf22b8d. Each wave's
+`make check-affected` selected all of `make check` and passed on its final
+base; timing gates (RTS and MCTS, by the implementers' reports) flaked
+under the load of five worktrees and passed rerun alone. **Run `make check` again first.**
+
+**The owner decided on 2026-10-30, before T64's code:** the prefix `Gak`, on
+the nine names a user's code types (ADR 0024); `AimChoice` moves to
+`ai_utility`; then the five waves above, in parallel.
+
+**Waiting on the owner -- one numbered list, each with a recommendation**
+(the review records hold the reasoning):
+
+1. T64 manual check: read one addon's zip and the wheel as a stranger
+   (`make release`, then `dist/`). *Recommended:* do it before publishing.
+2. T64: how an addon reaches the Asset Library -- a repository per addon,
+   or one entry for the kit (it downloads a repository's archive; see
+   `docs/godot/addon-anatomy.md`). *Recommended:* decide on the day of
+   publishing; the README links a repository that is private today.
+3. T84: the squad's defence values. The reviewer: 10-20 defence on top of
+   rock's 40 makes a target behind rock nearly unhittable (0-5%); suggests
+   0-10. *Recommended:* 0-10, measured in T85's playtest.
+4. T84: the menu's `modes` key stays with T85 (its Files line owns the
+   menu). *Recommended:* ratify.
+5. T84: `RandomSquad` as the squad roster's one row, the floor T85's first
+   enemy must beat. *Recommended:* ratify.
+6. T90: the decay pause. "No decay while engaged" read as "alert and seeing
+   the player" pins stand-offs in the fade for minutes. The reviewer: define
+   chasing as alert, seeing and closing in, then a spec cap such as
+   `chase_pause_most: 10` with its own vector; and a separate task for the
+   stand-off itself, which looks like a T70 guard issue. *Recommended:* as
+   the reviewer says, as a new task.
+7. T90: the director stays off by default until the manual check.
+   *Recommended:* ratify.
+8. T90: the whole cycle is held on one chosen level (generated 10).
+   *Recommended:* accept; revisit after 6.
+9. T99: the opponent's UCB1 constant 0.5, not sqrt(2) (tables on the
+   fighting page, one seed; chosen against the same stand-ins it is
+   measured on). *Recommended:* ratify.
+10. T99: the payoff constants (30-frame window, range 100) live in
+    `FightBanditOpponent`, not the fighting data, and the window starts when
+    the option lands -- departures from the task's wording.
+    *Recommended:* ratify.
+11. T57: the gate is now an exact two-sided binomial test, p < 0.05, on six
+    seeds played both ways; the paired statistic was not added; open:
+    whether six seeds is enough, since twelve matches cannot see a 60/40
+    seat. *Recommended:* keep it as it is.
+12. T57: a follow-up task, "the RTS regions as mirror images", for the two
+    opposite biases left (base falls favour west, time-outs favour east):
+    claim 1 checks `REGIONS` as well as `MAP` (the bridge at (24,15) is the
+    only neutral region not its own mirror, and east's home is ~1.4 cells
+    nearer it), regions scored at the cell's centre, each change measured
+    alone. *Recommended:* open it.
+13. T108 (from PR #53's body; its review record has no owner section):
+    the RTS legend ends 6 px above `Thinking`, and the racers' maps moved
+    into the view's corner. *Recommended:* ratify the maps; extend the
+    legend gate to the RTS in a later wave.
+
+**Manual checks waiting:** T99 in `make demo-fighting` (a bandit mode,
+answer one situation the same way: does it switch, after how many
+exchanges, has it forgotten after a restart, is `>` on the highest bound);
+T90 in the infiltration demo (key 6); T108 with a real pad in both
+languages; and the older ones in the section below.
+
+**Follow-ups noted, no task yet:** the 2D racer's `Speedo` ends at y=708,
+past the gutter (before T108); a pad plugged in mid-game never adds its
+legend lines (no `joy_connection_changed`). About forty stale agent
+worktrees sit under `.claude/worktrees/`; nothing was deleted.
+
+**What is left:** 12 tasks todo (T55, T77, T85, T87, T88, T89 -- only if
+T85's manual check asks for art --, T94, T95, T96, T100, T109, T110), 6
+older ones still wip (T25, T40, T44, T45, T46, T48) and T43 blocked.
+
+**Next:** T77 (the library in two languages, docs only); then, in
+parallel: T85 (after T84), T100 (after T99), T95 (infiltration is free
+again), T109, T110 (no longer clashes with T84 once T84 is in); T94 waits
+on T93's choices in the section below.
+
 ## Resuming after 2026-10-29 (waves 101 to 111 merged)
 
 **Where it stopped -- read first.** Eleven pull requests (#41 to #51)
