@@ -1,0 +1,31 @@
+{
+  "description": "Rock east of the target, the shooter east: 40. Shield 60 - shield 20 - 40 = 0, clamped at 0; the die shows 0, which is not below 0, a miss.",
+  "map": [
+    ".....",
+    "..#..",
+    "....."
+  ],
+  "shooter": {
+    "type": "shield",
+    "cell": [
+      4,
+      1
+    ]
+  },
+  "target": {
+    "type": "shield",
+    "cell": [
+      1,
+      1
+    ],
+    "health": 10
+  },
+  "roll": 0,
+  "expected": {
+    "cover": 40,
+    "flanked": false,
+    "chance": 0,
+    "hit": false,
+    "target_left": 10
+  }
+}

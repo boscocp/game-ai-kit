@@ -1,0 +1,33 @@
+{
+  "description": "The same corner, the shooter north-west: the trees face it, the rock does not, 20. Wader 65 - mortar 0 - 20 = 45; the die shows 80, a miss.",
+  "map": [
+    ".....",
+    "..T..",
+    "...#.",
+    ".....",
+    "....."
+  ],
+  "shooter": {
+    "type": "wader",
+    "cell": [
+      1,
+      0
+    ]
+  },
+  "target": {
+    "type": "mortar",
+    "cell": [
+      2,
+      2
+    ],
+    "health": 7
+  },
+  "roll": 80,
+  "expected": {
+    "cover": 20,
+    "flanked": false,
+    "chance": 45,
+    "hit": false,
+    "target_left": 7
+  }
+}

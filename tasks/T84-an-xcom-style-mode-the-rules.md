@@ -122,6 +122,32 @@ detail; a change to what the owner confirmed goes back to the owner.
   `TacticalRoster`: `League.schedule` seats teams by their place in that
   table, so rows added there would re-roll the league's dice (T63).
 
+## What step 1's reading corrected (wave 113)
+
+None of it changes what the owner confirmed; each is a detail.
+
+- **The seam is wider than the list above.** The scene also called
+  `state.apply` for a walk, `TurnStart.open` for a turn's opening,
+  `TacticalVictory.rule` and `announcement`, and `TacticalScenario.POINTS`;
+  all are on `TacticalRuleset`. `BlueTurn` and `TacticalDecision.played_on`
+  take the ruleset too (default Advance Wars), or the computer's moves would
+  have been played by the other mode's rules.
+- **The menu's `modes` are T85's.** T85's Files line holds `godot/menu/`
+  and its step 1 opens the scene with a mode; this task's does not. Here
+  the scene takes a `ruleset` before it enters the tree, as it takes
+  `computer`.
+- **The squad's `UnitType`s are its own**, built from `rules.json` under
+  the tactical names (so the pictures and words find them): movement two
+  actions, `attack_range` the shot's range, `sight` the rules' -- the
+  tactical types see 1-3 cells, too short for a shot across the river.
+  `UnitType` gains no field.
+- **Sight ignores cover beside either end of the line**, or trees beside a
+  target would block every shot that its cover was meant to make harder.
+- **`SquadRoster` has one row**, `random`, a seeded random mover on its
+  side's view: a roster with no row cannot cycle, and the property check's
+  seeded game needs a player. T85 adds the first enemy that weighs.
+- **`board` did not change.**
+
 ## Steps
 
 1. Read `board_state.gd`, `tactical.gd`, `tactical_combat.gd`,

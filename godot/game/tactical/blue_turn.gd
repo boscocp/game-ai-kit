@@ -22,6 +22,8 @@ class_name BlueTurn
 extends RefCounted
 
 var controller: BlueController
+## The rules its decisions are played by (T84).
+var ruleset: TacticalRuleset
 ## What blue will do next, or null once every piece has been asked.
 var next: TacticalDecision
 ## What blue has done this turn, in order.
@@ -37,8 +39,9 @@ var _ask_again: Array[int] = []
 var _to_ask_about_attacking: int = -1
 
 
-func _init(deciding: BlueController) -> void:
+func _init(deciding: BlueController, rules: TacticalRuleset = null) -> void:
 	controller = deciding
+	ruleset = AdvanceWarsRuleset.or_default(rules)
 
 
 ## Start blue's turn on `state`: queue every piece, and decide the first.
@@ -64,7 +67,7 @@ func finished() -> bool:
 
 ## Play `next` on `state`, decide the one after, and return the new state.
 func play(state: BoardState) -> BoardState:
-	var after: BoardState = next.played_on(state)
+	var after: BoardState = next.played_on(state, ruleset)
 	if after == null:
 		refused.append(next)
 		after = state

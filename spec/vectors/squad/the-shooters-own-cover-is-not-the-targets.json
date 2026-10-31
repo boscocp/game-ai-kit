@@ -1,0 +1,30 @@
+{
+  "description": "Trees beside the shooter, none beside the target: the target has no cover. Mortar 70 - runner 10 = 60; the die shows 60, a miss.",
+  "map": [
+    ".T....",
+    "......"
+  ],
+  "shooter": {
+    "type": "mortar",
+    "cell": [
+      0,
+      0
+    ]
+  },
+  "target": {
+    "type": "runner",
+    "cell": [
+      4,
+      0
+    ],
+    "health": 8
+  },
+  "roll": 60,
+  "expected": {
+    "cover": 0,
+    "flanked": false,
+    "chance": 60,
+    "hit": false,
+    "target_left": 8
+  }
+}

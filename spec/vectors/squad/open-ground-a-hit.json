@@ -1,0 +1,31 @@
+{
+  "description": "Open ground: no cover beside the target, so not flanked either. Runner aim 65 - shield defence 20 = 45; the die shows 29, below 45, a hit: 10 - 3 = 7.",
+  "map": [
+    ".....",
+    ".....",
+    "....."
+  ],
+  "shooter": {
+    "type": "runner",
+    "cell": [
+      0,
+      1
+    ]
+  },
+  "target": {
+    "type": "shield",
+    "cell": [
+      4,
+      1
+    ],
+    "health": 10
+  },
+  "roll": 29,
+  "expected": {
+    "cover": 0,
+    "flanked": false,
+    "chance": 45,
+    "hit": true,
+    "target_left": 7
+  }
+}

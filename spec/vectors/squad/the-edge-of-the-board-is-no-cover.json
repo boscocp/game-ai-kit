@@ -1,0 +1,30 @@
+{
+  "description": "The target in a corner of the board with nothing beside it: off the board is not cover. Runner 65 - wader 10 = 55; the die shows 54, a hit: 8 - 3 = 5.",
+  "map": [
+    "....",
+    "...."
+  ],
+  "shooter": {
+    "type": "runner",
+    "cell": [
+      3,
+      0
+    ]
+  },
+  "target": {
+    "type": "wader",
+    "cell": [
+      0,
+      0
+    ],
+    "health": 8
+  },
+  "roll": 54,
+  "expected": {
+    "cover": 0,
+    "flanked": false,
+    "chance": 55,
+    "hit": true,
+    "target_left": 5
+  }
+}

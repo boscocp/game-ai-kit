@@ -1,0 +1,31 @@
+{
+  "description": "The shooter stands on the trees beside the target: its own cell is not cover against it, and nothing else is beside the target, so no cover and not flanked. Runner 65 - shield 20 = 45; the die shows 44, a hit: 10 - 3 = 7.",
+  "map": [
+    ".....",
+    "..T..",
+    "....."
+  ],
+  "shooter": {
+    "type": "runner",
+    "cell": [
+      2,
+      1
+    ]
+  },
+  "target": {
+    "type": "shield",
+    "cell": [
+      1,
+      1
+    ],
+    "health": 10
+  },
+  "roll": 44,
+  "expected": {
+    "cover": 0,
+    "flanked": false,
+    "chance": 45,
+    "hit": true,
+    "target_left": 7
+  }
+}

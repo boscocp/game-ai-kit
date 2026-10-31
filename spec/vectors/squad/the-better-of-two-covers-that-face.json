@@ -1,0 +1,33 @@
+{
+  "description": "Trees north and rock east of the target, the shooter north-east: both face it, the better counts, 40. Shield 60 - runner 10 - 40 = 10; the die shows 0, a hit: 2 - 3 is 0, not -1.",
+  "map": [
+    ".....",
+    "..T..",
+    "...#.",
+    ".....",
+    "....."
+  ],
+  "shooter": {
+    "type": "shield",
+    "cell": [
+      4,
+      0
+    ]
+  },
+  "target": {
+    "type": "runner",
+    "cell": [
+      2,
+      2
+    ],
+    "health": 2
+  },
+  "roll": 0,
+  "expected": {
+    "cover": 40,
+    "flanked": false,
+    "chance": 10,
+    "hit": true,
+    "target_left": 0
+  }
+}

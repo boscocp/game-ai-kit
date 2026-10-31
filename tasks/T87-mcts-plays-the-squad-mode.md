@@ -16,6 +16,9 @@ measures it against T85's one-action baseline.
   `outcomes` of a shot are hit and miss with T84's hit chance, `evaluate`
   each side's health left normalised to [-1, 1]. Its constants are in
   `spec/squad/rules.json`. The addon learns nothing about squads.
+  (Noted in wave 113: `SquadRuleset.actions` lists every walk and shot of
+  the side to move and has no hold or end-turn entry, and it is not yet
+  per unit; the adapter adds both.)
 - **Fog**: MCTS searches its side's view (T84's `SideView`); unseen
   enemies stand where they were last seen. One determinization, said so
   on the page; sampling several is a later choice.
