@@ -59,10 +59,10 @@ class ThePlantedModels(unittest.TestCase):
             return readings
         self.assertTrue(self._differs(strict))
 
-    def test_a_model_without_its_prior_is_refused(self):
-        def no_prior(table, events, last_step):
+    def test_a_model_with_a_prior_of_one_is_refused(self):
+        def prior_of_one(table, events, last_step):
             return player_model.replay(dict(table, prior_points=1), events, last_step)
-        self.assertTrue(self._differs(no_prior))
+        self.assertTrue(self._differs(prior_of_one))
 
 
 if __name__ == "__main__":

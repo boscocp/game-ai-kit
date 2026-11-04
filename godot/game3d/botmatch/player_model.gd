@@ -36,8 +36,10 @@ var shots: int = 0
 var hits: int = 0
 var kills: int = 0
 var deaths: int = 0
-## Health points the person's shots took off enemies, and that enemies'
-## shots took off the person's bot.
+## The damage of the person's hits on enemies, and of enemies' hits on the
+## person's bot, as the rules deal it: a killing hit counts its whole
+## damage, even past the health that was left -- at most one hit's
+## overshoot a kill.
 var dealt: int = 0
 var taken: int = 0
 

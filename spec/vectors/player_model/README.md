@@ -68,4 +68,4 @@ holds nothing.
   the prior planted at 1 and must see them fail.
 - `python3 -m unittest discover -s python/tests -t python -p "test_player_model*.py"`:
   the Python twin, and two planted models -- a boundary given to the row
-  below, and no prior -- that must fail.
+  below, and a prior of 1 -- that must fail.

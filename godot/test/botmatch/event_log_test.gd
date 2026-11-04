@@ -4,7 +4,7 @@
 # fresh model, and holds no file at all (N14).
 extends GdUnitTestSuite
 
-const FOLDER: String = "user://tmp/botmatch-logs"
+const FOLDER: String = MatchEventLog.TESTS
 
 
 static func _played(seconds: float) -> BotMatch:
@@ -19,11 +19,12 @@ static func _played(seconds: float) -> BotMatch:
 func test_a_log_read_back_is_the_events_in_order_with_the_seed() -> void:
 	var world: BotMatch = _played(40.0)
 	assert_int(world.person_events.size()).is_greater(0)
-	var path: String = MatchEventLog.save(MatchEventLog.of(7, BotArena.ARENA, world.rules.step, world.person_events),
-			FOLDER, "kept")
+	var path: String = MatchEventLog.save(MatchEventLog.of(world, 7, BotArena.ARENA), FOLDER, "kept")
 	assert_str(path).is_not_empty()
 	var read: Dictionary = MatchEventLog.read(path)
 	assert_int(read["seed"]).is_equal(7)
+	assert_int(read["last_step"]).is_equal(world.steps_done - 1)
+	assert_dict(read["difficulty"]).is_equal(world.rules.difficulty)
 	assert_array(read["events"]).is_equal(world.person_events)
 
 
@@ -46,7 +47,7 @@ func test_nobody_playing_keeps_no_events_and_writes_no_file() -> void:
 	for step: int in range(200):
 		world.step()
 	assert_int(world.person_events.size()).is_equal(0)
-	assert_str(MatchEventLog.save(MatchEventLog.of(7, BotArena.ARENA, rules.step, world.person_events), FOLDER,
+	assert_str(MatchEventLog.save(MatchEventLog.of(world, 7, BotArena.ARENA), FOLDER,
 			"empty")).is_empty()
 
 

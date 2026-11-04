@@ -494,15 +494,30 @@ prior, and the hit rate; and the other team's aim error with the row it
 came from, marked `<< changed at N s` when the latest reading moved it.
 
 **ADR 0016's three conditions**, held by `player_model_test.gd`: every
-field `PlayerModel` keeps is an int count; a new match (N) seats an empty
-one in the middle row; and the events the match noted
-(`BotMatch.person_events`), replayed twice through a fresh model, give the
-same readings, which are the ones the match read live. N14 in
-`check_no_training.py` holds the model's file and every script naming it to
-writing nothing, loading nothing and stepping nothing. The events reach a
-file only through `MatchEventLog`, only when opened with `-- --record`
-(`make record-botmatch`), in this checkout's `user://botmatch-logs/`;
-`event_log_test.gd` reads one back.
+field `PlayerModel` keeps is an int count; an empty one reads the middle
+row, and a new match (N) seats one (`botmatch_restart_test.gd`); and the
+events the match noted (`BotMatch.person_events`), replayed twice through a
+fresh model, give the same readings, which are the ones the match read
+live -- and so does the log written to disk and read back, which carries
+the table and the last step as well as the events, so it rebuilds every
+reading by itself. The events reach a file only through `MatchEventLog`,
+only when opened with `-- --record` (`make record-botmatch`), in this
+checkout's `user://botmatch-logs/`.
+
+When you give the bot back, or take one on the other team, the knob moves
+at once (`BotMatch.seat_person`): nobody's aim is changed while nobody
+plays, and it is never your own team's -- not at the next reading, ten
+seconds on, as the first cut did (the review's finding).
+
+**N14** in `check_no_training.py` reads the model's two files and every
+script naming `PlayerModel` or `MatchDifficulty`, and refuses a file
+written, a file read (`FileAccess`, `JSON`, `load(`, `preload(`, `user://`
+and the loaders), a step towards a target, and a value read back into
+itself through a product. It is a net for the common spellings, not a
+proof, as `CLAUDE.md` says of invariant 6: a step written through a helper
+function, a moving average spelled with a temporary, or a file read by a
+script that holds no model and handed in, all pass it. That the model
+starts empty is held by the tests above, not by the gate.
 
 ### Measured: the model overshoots
 
@@ -535,10 +550,11 @@ sharp on   55555555555444 5555555444433 555433444455555544 55335553444445444444 
 
 What it shows:
 
-- **The knob settles where it should.** Poor settles on easy, sharp on
-  hard and its neighbour, even around the middle. With the model on, the
-  poor stand-in's share rises from 0.13 to 0.30 and the sharp one's falls
-  from 0.85 to 0.57: the model sees the right person.
+- **The knob settles in the direction expected.** Poor settles on easy,
+  sharp on hard and its neighbour, even around the middle. With the model
+  on, the poor stand-in's share rises from 0.13 to 0.30 and the sharp
+  one's falls from 0.85 to 0.57. That says the reading moves the way the
+  skill does, not that the match is balanced: it is not, below.
 - **It overshoots the match.** The losing side becomes the winning one:
   -121 to +259 for the poor stand-in, +224 to -218 for the sharp. The
   share is one bot's, and the knob is six bots' aim -- the whole other

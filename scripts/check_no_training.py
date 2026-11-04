@@ -66,13 +66,20 @@ stops. This gate is four claims about that split:
     would catch a `static var` keeping bandits from one fight to the next,
     which writes no file and steps nothing;
   * N14 the player model (T100, ADR 0016 as amended on 2026-10-26): in
-    `godot/game3d/botmatch/player_model.gd` and every GDScript that names
-    `PlayerModel`, N13's refusals -- no file, `ConfigFile` or resource
-    written, no step towards a target, and in the model's own file no
-    scaled `+=` -- and no line that loads state: none names `user://` or
-    the user data folder, a `ConfigFile`, `ResourceLoader` or a `load(`. A
-    model read back at the start of a match would be a profile, and a
-    profile outlives the match. The match's event log is not a finding: it
+    `godot/game3d/botmatch/player_model.gd` and `match_difficulty.gd`, and
+    every GDScript that names `PlayerModel` or `MatchDifficulty` -- the
+    match and its scene hold the model through the second -- N13's
+    refusals: no file, `ConfigFile` or resource written, no step towards a
+    target, nor a value read back into itself through a product (a moving
+    average); in the model's two files no scaled `+=` and no read-back with
+    a product at all (an Elo multiplied out). And no line that reads a
+    file: none names `user://` or the user data folder, `FileAccess`,
+    `ConfigFile`, `ResourceLoader`, `JSON`, `load(` or `preload(`. A model
+    read back at the start of a match would be a profile, and a profile
+    outlives the match; a holder is handed its table and its fixtures by
+    scripts that hold no model. A net for the common spellings, not a
+    proof: a value stepped through a helper function, or a file read by a
+    script that holds nothing and handed in, passes it. The match's event log is not a finding: it
     holds events, is written only under `-- --record`, and its writer,
     `MatchEventLog`, neither is the model nor names it. That the counts
     start empty and replay from the person's events is held by
@@ -195,15 +202,31 @@ CHECKERS_NAMES_RE = re.compile(r"checkers_weights|CheckersWeights|game/checkers/
 BANDIT_ADDON = GODOT / "addons" / "ai_bandit"
 BANDIT_HOLDERS_RE = re.compile(r"\b(?:Bandit|FightBanditOpponent)\b")
 # The player model (T100, N14): the third and last component ADR 0016 lets
-# count during play. Its file, and any script that names its class, writes
-# nothing and loads nothing -- the targets found as N9's are.
+# count during play. Its file, and any script that names its class or the
+# bot match's `MatchDifficulty` that holds it -- as N13 names the fighting
+# game's opponent beside `Bandit` -- writes nothing and reads nothing: the
+# match and its scene hold the model through `world.difficulty`, and never
+# name `PlayerModel`.
 PLAYER_MODEL_FILE = GODOT / "game3d" / "botmatch" / "player_model.gd"
-PLAYER_MODEL_HOLDERS_RE = re.compile(r"\bPlayerModel\b")
+# The model's own two files, the model and what reads it each interval:
+# held to the strict half too -- no scaled `+=`, nothing assigned from
+# itself through a product -- which a script merely holding one is not.
+PLAYER_MODEL_OWN = (PLAYER_MODEL_FILE, GODOT / "game3d" / "botmatch" / "match_difficulty.gd")
+PLAYER_MODEL_HOLDERS_RE = re.compile(r"\b(?:PlayerModel|MatchDifficulty)\b")
 # Loading state: read off the raw line, since a path is a string literal,
-# for `user://` and the folder behind it; off the code view for the classes
-# and the call that bring a saved thing back.
+# for `user://` and the folder behind it; off the code view for every way a
+# script reads a file -- `FileAccess` at all, a `ConfigFile`, a
+# `ResourceLoader`, `load(` and `preload(`, and `JSON` parsing. A holder is
+# handed what it needs (the table comes from `MatchRules`, a fixture from a
+# reader of its own): it reads no file, whatever the path says.
 USER_DATA_RE = re.compile(r"user://|get_user_data_dir")
-LOADING_RE = re.compile(r"\bConfigFile\b|\bResourceLoader\b|\bload\s*\(")
+LOADING_RE = re.compile(r"\b(?:FileAccess|ConfigFile|ResourceLoader|JSON)\b|\b(?:pre)?load\s*\(")
+# A value read back into itself through a product, which a difference
+# never needs to appear in: the moving average `skill = skill * 0.9 + won *
+# 0.1` is `skill += 0.1 * (won - skill)`, and the expanded Elo `rating =
+# rating + 32.0 * won - 32.0 * expected` is a step too. Beside the player
+# model, a field is never scaled into itself; in its own file, nothing is
+# assigned from itself with a product or a quotient anywhere on the right.
 
 # A step towards a target: `+=` or `-=` whose right-hand side multiplies or
 # divides a difference in brackets -- `rate * (target - x)`, `(payoff -
@@ -580,8 +603,25 @@ def check_bandit_steps(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
 
 
 def holds_player_model(path: pathlib.Path, root: pathlib.Path, code: list[str]) -> bool:
-    """N14's targets: the player model's file, or one that names its class."""
-    return is_under(path, root, PLAYER_MODEL_FILE) or bool(PLAYER_MODEL_HOLDERS_RE.search("\n".join(code)))
+    """N14's targets: the model's two files, or one naming `PlayerModel` or `MatchDifficulty`."""
+    return any(is_under(path, root, own) for own in PLAYER_MODEL_OWN) or bool(
+        PLAYER_MODEL_HOLDERS_RE.search("\n".join(code)))
+
+
+def scales_itself(line: str, own_file: bool) -> bool:
+    """True for an assignment that reads its own left side back through a
+    product: `x = x * a + y * b` anywhere beside the model, and in the
+    model's own file `x = x + a * y - a * z`, any read-back with a `*` or
+    `/` on the right. Declarations are new names, and are not steps."""
+    spelled = SPELLED_STEP_RE.match(line)
+    if not spelled or DECLARATION_RE.match(line):
+        return False
+    name, right = spelled.groups()
+    if not re.search(rf"\b{name}\b", right):
+        return False
+    if own_file:
+        return bool(re.search(r"[*/]", right))
+    return bool(re.search(rf"\b{name}\b\s*[*/]|[*/]\s*\b{name}\b", right))
 
 
 def check_player_model(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
@@ -594,10 +634,10 @@ def check_player_model(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
         code = code_only("\n".join(raw)).splitlines()
         if not holds_player_model(path, root, code):
             continue
-        own_file = is_under(path, root, PLAYER_MODEL_FILE)
+        own_file = any(is_under(path, root, own) for own in PLAYER_MODEL_OWN)
         for number, (line, written) in enumerate(zip(raw, code), start=1):
             label = f"{_label(path, repo)}:{number}"
-            if steps_towards(written, own_file):
+            if steps_towards(written, own_file) or scales_itself(written, own_file):
                 findings.append(f"N14 {label} moves a value a step towards a target; the player model "
                                 "keeps counts and reads its estimate off them (ADR 0016)")
             elif LOADING_RE.search(written) or (written.strip() and USER_DATA_RE.search(line)):
@@ -1538,6 +1578,46 @@ def self_test() -> int:
                 root, "modelstep" + str(abs(hash(spelling))), dict(
                     sound, **{model: "func count(won: float) -> void:\n" + spelling}))),
                 1, "N14")
+        match = str(GODOT / "game3d" / "botmatch" / "bot_match.gd")
+        scene = str(GODOT / "game3d" / "botmatch" / "botmatch.gd")
+        expect("the model's counts saved by the scene, which names only MatchDifficulty", quiet(build(
+            root, "modelscene", dict(sound, **{scene: 'var difficulty: MatchDifficulty\nfunc keep() -> void:\n'
+                                             '\tvar out: FileAccess = FileAccess.open("user://skill.json", '
+                                             'FileAccess.WRITE)\n\tout.store_string(str(difficulty.model.counts()))\n'}))),
+            1, "N14")
+        expect("the model's counts loaded back by the scene", quiet(build(root, "modelsceneloads", dict(
+            sound, **{scene: 'var difficulty: MatchDifficulty\nfunc restore() -> void:\n'
+                      '\tdifficulty.model.dealt = int(FileAccess.get_file_as_string("user://skill.txt"))\n'}))),
+            1, "N14")
+        expect("an Elo update in the match that holds MatchDifficulty", quiet(build(root, "modelmatchelo", dict(
+            sound, **{match: "var difficulty: MatchDifficulty = null\nfunc seen(won: float, expected: float) -> void:\n"
+                      "\trating += 32.0 * (won - expected)\n"}))),
+            1, "N14")
+        for name, spelling in [
+                ("as a string from res://", '\tdealt = int(FileAccess.get_file_as_string("res://profile.txt"))\n'),
+                ("opened to read by a constant", '\tvar file: FileAccess = FileAccess.open(PROFILE, FileAccess.READ)\n'),
+                ("preloaded", '\tvar kept: Resource = preload("res://profile.tres")\n'),
+                ("as JSON", '\tvar kept: Variant = JSON.parse_string(text)\n')]:
+            expect(f"a player model read back, {name}", quiet(build(root, "modelreads" + name.split()[-1], dict(
+                sound, **{model: "func _init() -> void:\n" + spelling}))),
+                1, "N14")
+        for spelling in ["\tskill = skill * 0.9 + won * 0.1\n",
+                         "\trating = rating + 32.0 * won - 32.0 * expected\n",
+                         "\tmean = (mean * (shots - 1) + hit) / shots\n"]:
+            expect(f"a player model stepped in its own file: {spelling.strip()[:36]}", quiet(build(
+                root, "modelscales" + str(abs(hash(spelling))), dict(
+                    sound, **{model: "func seen(won: float) -> void:\n" + spelling}))),
+                1, "N14")
+        expect("an Elo update with its difference named first, in MatchDifficulty", quiet(build(
+            root, "modeldifference", dict(sound, **{str(PLAYER_MODEL_OWN[1]):
+                                                  "func seen(won: float, expected: float) -> void:\n"
+                                                  "\tvar surprise: float = won - expected\n\trating += surprise * 32.0\n"}))),
+            1, "N14")
+        expect("a moving average in a script that holds the model", quiet(build(root, "modelheldema", dict(
+            sound, **{str(GODOT / "game3d" / "botmatch" / "keeper.gd"):
+                      "var difficulty: MatchDifficulty\nfunc seen(won: float) -> void:\n"
+                      "\tskill = 0.1 * won + skill * 0.9\n"}))),
+            1, "N14")
         expect("a player model counting", quiet(build(root, "modelcounts", dict(
             sound, **{model: "func count(points: int) -> void:\n\tshots += 1\n\tdealt += points\n"
                       "\tvar share: float = (float(dealt) + prior) / (float(dealt + taken) + 2.0 * prior)\n"}))),

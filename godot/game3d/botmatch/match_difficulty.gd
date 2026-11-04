@@ -62,6 +62,14 @@ func before_step(world: BotMatch) -> void:
 		_apply(world)
 
 
+## The person changed (`BotMatch.seat_person`): the row read last is
+## applied to whoever the person now plays against, and nobody's aim is
+## changed when nobody plays. Nothing is read or counted.
+func seat(world: BotMatch) -> void:
+	if answers:
+		_apply(world)
+
+
 # Every team back to its own aim, then the one the person plays against at
 # the row's. Nobody playing, nobody's aim is changed.
 func _apply(world: BotMatch) -> void:

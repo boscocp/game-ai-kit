@@ -146,6 +146,16 @@ func step() -> void:
 	steps_done += 1
 
 
+## Seat `bot_id` as the person (-1: nobody), and let the difficulty answer
+## at once: the aim it set goes back when nobody plays, and moves to the
+## other team when the person changes sides -- not at the next reading,
+## ten seconds on.
+func seat_person(bot_id: int) -> void:
+	person = bot_id
+	if difficulty != null:
+		difficulty.seat(self)
+
+
 ## Note an event of `bot_id` for the player model, when it is the person's
 ## bot: a "shot", a "hit" with the points it dealt, a "hurt" with the points
 ## it took, a "kill", a "death" -- the model's own kinds. Counted here, read

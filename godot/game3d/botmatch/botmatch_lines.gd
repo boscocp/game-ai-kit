@@ -67,7 +67,7 @@ static func difficulty_lines(world: BotMatch) -> Array[String]:
 	var shown: Dictionary = world.difficulty.overlay()
 	var counts: Dictionary = shown["counts"]
 	var lines: Array[String] = [TranslationServer.translate(
-			"what the match counts of you: {shots} shots, {hits} hits, {kills} kills, {deaths} deaths").format(counts)]
+			"at the last reading, the match had counted of you: {shots} shots, {hits} hits, {kills} kills, {deaths} deaths").format(counts)]
 	lines.append(TranslationServer.translate(
 			"your share of the damage: ({dealt} + {prior}) / ({dealt} + {taken} + 2 x {prior}) = {share}, hit rate {rate}"
 			).format({dealt = counts["dealt"], taken = counts["taken"], prior = shown["prior_points"],

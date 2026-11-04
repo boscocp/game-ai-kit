@@ -152,7 +152,7 @@ func _keep_the_log() -> void:
 	if not _recording or _kept or world == null:
 		return
 	_kept = true
-	MatchEventLog.save(MatchEventLog.of(_seed, BotArena.ARENAS[_arena_index], world.rules.step, world.person_events))
+	MatchEventLog.save(MatchEventLog.of(world, _seed, BotArena.ARENAS[_arena_index]))
 
 
 ## Advance one decision: every bot looks and decides once, and the world
@@ -287,12 +287,12 @@ func _take_over_or_give_back() -> void:
 		given_back.goal = given_back.position
 		given_back.chose_at = -INF
 		_played = -1
-		world.person = -1
+		world.seat_person(-1)
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	else:
 		_played = _watched
 		world.bots[_played].controlled = true
-		world.person = _played
+		world.seat_person(_played)
 		_follow = true
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_hud.played = _played
@@ -395,7 +395,8 @@ func _show() -> void:
 	_place_camera()
 	_panel.text = BotMatchLines.panel(world, _watched, _played, _thinking_shown)
 	if _recording:
-		_panel.text += "\n" + tr("recording: each match's events are kept in user://botmatch-logs/")
+		var kept_in: Dictionary = {folder = MatchEventLog.FOLDER}
+		_panel.text += "\n" + tr("recording: each match's events are kept in {folder}").format(kept_in)
 
 
 func _place_camera() -> void:

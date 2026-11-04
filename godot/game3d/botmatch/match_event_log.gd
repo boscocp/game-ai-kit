@@ -18,6 +18,9 @@ extends RefCounted
 ## Where logs are kept: this checkout's own `user://` (ADR 0022), so a
 ## person's play is never committed by accident.
 const FOLDER: String = "user://botmatch-logs"
+## Where the test suites write theirs: gdUnit4 empties `user://tmp` after
+## every suite.
+const TESTS: String = "user://tmp/botmatch-logs"
 ## Asked for on the command line, after `--`.
 const ASKED: String = "--record"
 
@@ -27,10 +30,13 @@ static func asked() -> bool:
 	return OS.get_cmdline_user_args().has(ASKED)
 
 
-## The log of a match, as a dictionary: its seed, its arena, the length of
-## a step in seconds, and the person's events.
-static func of(seed_value: int, arena: String, step: float, events: Array[Dictionary]) -> Dictionary:
-	return {"seed": seed_value, "arena": arena, "step": step, "events": events}
+## The log of `world`, as a dictionary: the seed and arena it was played
+## from, the length of a step in seconds, the last step it ran, the
+## difficulty table it read through, and the person's events -- enough for
+## `PlayerModel.replay` to rebuild every reading from the log alone.
+static func of(world: BotMatch, seed_value: int, arena: String) -> Dictionary:
+	return {"seed": seed_value, "arena": arena, "step": world.rules.step, "last_step": world.steps_done - 1,
+			"difficulty": world.rules.difficulty, "events": world.person_events}
 
 
 ## Write `match_log` to `folder` as `name`.json, or named for the moment when
@@ -62,4 +68,5 @@ static func read(path: String) -> Dictionary:
 		events.append({"step": int(event["step"]), "kind": str(event["kind"]), "points": int(event["points"])})
 	match_log["events"] = events
 	match_log["seed"] = int(match_log["seed"])
+	match_log["last_step"] = int(match_log["last_step"])
 	return match_log

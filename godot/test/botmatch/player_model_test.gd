@@ -2,22 +2,22 @@
 # `PlayerModel`, and what `MatchDifficulty` is allowed to change.
 #
 #   1. it counts: every field the model keeps is a whole-number count;
-#   2. it starts empty with every match, in the table's middle row, and a
-#      new match -- N in the scene -- seats a new one;
+#   2. it starts empty with every match, in the table's middle row (that N
+#      in the scene seats a new one is `botmatch_restart_test.gd`'s);
 #   3. it can be rebuilt from the person's events: the events a match
 #      noted, replayed twice through a fresh model, give the same counts
-#      and the same rows, and those are the rows the match read live.
+#      and the same rows, and those are the rows the match read live --
+#      from memory, and from the log `MatchEventLog` wrote and read back.
 #
-# Writing the events to a file and reading them back is `event_log_test.gd`'s,
-# which does not hold a model: N14 holds every script naming this one to
-# writing and loading nothing.
+# N14 holds this suite, which names the model, to reading and writing no
+# file itself. The log is written and read by `MatchEventLog`, the one
+# writer N14 does not hold, and the vectors are read by `ModelVectorFiles`;
+# this suite is handed what they read. The scene is loaded by a suite that
+# names neither class.
 extends GdUnitTestSuite
 
 const STANDING_IN: int = 0
 const SECONDS: float = 90.0
-## Preloaded: fixed resources of the project, never state read back (N14).
-const SCENE: PackedScene = preload("res://game3d/botmatch/botmatch.tscn")
-const RUNNER: GDScript = preload("res://test/botmatch/player_model_vectors_runner.gd")
 
 
 func before() -> void:
@@ -87,31 +87,16 @@ func test_a_sharp_stand_in_is_read_harder_than_a_poor_one() -> void:
 	assert_int(sharp.difficulty.row).is_greater(poor.difficulty.row)
 
 
-func test_nobody_playing_changes_nobodys_aim() -> void:
-	var world: BotMatch = _played(5, 1.0, 30.0)
-	world.person = -1
-	var until: float = world.time + 20.0
-	while world.time < until:
-		world.step()
-	for team: MatchTeam in world.teams:
-		assert_float(team.aim_error).is_equal_approx(deg_to_rad(world.rules.aim_error_degrees), 1e-9)
-
-
-func test_n_in_the_scene_seats_an_empty_model() -> void:
-	var scene: Node = SCENE.instantiate()
-	add_child(scene)
-	var world: BotMatch = scene.world
-	world.person = STANDING_IN
-	for step: int in range(roundi(30.0 / world.rules.step)):
+func test_a_match_nobody_plays_changes_nobodys_aim() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(5, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	world.difficulty = MatchDifficulty.new(world)
+	for step: int in range(roundi(30.0 / rules.step)):
 		world.step()
 	assert_int(world.difficulty.readings.size()).is_greater(0)
-	scene._view_key(KEY_N)
-	var fresh: BotMatch = scene.world
-	assert_bool(fresh == world).is_false()
-	assert_int(fresh.person_events.size()).is_equal(0)
-	assert_int(fresh.difficulty.readings.size()).is_equal(0)
-	assert_dict(fresh.difficulty.model.counts()).is_equal(PlayerModel.new().counts())
-	scene.free()
+	assert_int(world.person_events.size()).is_equal(0)
+	for team: MatchTeam in world.teams:
+		assert_float(team.aim_error).is_equal_approx(deg_to_rad(world.rules.aim_error_degrees), 1e-9)
 
 
 func test_the_panel_shows_the_counts_the_share_and_the_row() -> void:
@@ -124,16 +109,49 @@ func test_the_panel_shows_the_counts_the_share_and_the_row() -> void:
 
 
 func test_a_model_with_another_prior_fails_the_vectors() -> void:
-	var directory: String = ProjectSettings.globalize_path("res://").path_join("../spec/vectors/player_model").simplify_path()
-	var runner: GDScript = RUNNER
+	var vectors: Dictionary = ModelVectorFiles.read_all(ModelVectorFiles.directory())
+	assert_int(vectors.size()).is_greater_equal(7)
 	var rules := MatchRules.new()
+	var planted := MatchRules.new()
+	planted.difficulty = rules.difficulty.duplicate(true)
+	planted.difficulty["prior_points"] = 1
 	var failures: int = 0
-	for name: String in DirAccess.get_files_at(directory):
-		if name.ends_with(".json"):
-			var vector: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(directory.path_join(name)))
-			assert_array(runner.check_vector(name, vector, rules)).is_empty()
-			var planted := MatchRules.new()
-			planted.difficulty = rules.difficulty.duplicate(true)
-			planted.difficulty["prior_points"] = 1
-			failures += runner.check_vector(name, vector, planted).size()
+	for name: String in vectors:
+		assert_array(ModelConformance.check_vector(name, vectors[name], rules)).is_empty()
+		failures += ModelConformance.check_vector(name, vectors[name], planted).size()
 	assert_int(failures).is_greater(0)
+
+
+func test_the_log_read_back_from_disk_rebuilds_the_readings_by_itself() -> void:
+	var world: BotMatch = _played(6, 1.0)
+	var path: String = MatchEventLog.save(MatchEventLog.of(world, 6, BotArena.ARENA), MatchEventLog.TESTS, "replayed")
+	assert_str(path).is_not_empty()
+	var kept: Dictionary = MatchEventLog.read(path)
+	var interval_steps: int = roundi(float(kept["difficulty"]["interval"]) / float(kept["step"]))
+	var rebuilt: Array[Dictionary] = PlayerModel.replay(kept["difficulty"], kept["events"], kept["last_step"],
+			interval_steps)
+	assert_int(rebuilt.size()).is_equal(world.difficulty.readings.size())
+	for index: int in range(rebuilt.size()):
+		var live: Dictionary = world.difficulty.readings[index]
+		assert_int(int(rebuilt[index]["row"])).is_equal(int(live["row"]))
+		assert_dict(rebuilt[index]["counts"]).is_equal(live["counts"])
+
+
+# Half a second past a reading, so the step taken after the change is not
+# one: a reading would re-apply the knob and hide a seat that did nothing.
+func test_giving_the_bot_back_restores_both_aims_at_once() -> void:
+	var world: BotMatch = _played(4, 0.5, 30.5)
+	assert_float(world.teams[BotMatch.RED].aim_error).is_not_equal(deg_to_rad(world.rules.aim_error_degrees))
+	world.seat_person(-1)
+	world.step()
+	for team: MatchTeam in world.teams:
+		assert_float(team.aim_error).is_equal_approx(deg_to_rad(world.rules.aim_error_degrees), 1e-9)
+
+
+func test_changing_sides_moves_the_aim_to_the_new_other_team_at_once() -> void:
+	var world: BotMatch = _played(4, 0.5, 30.5)
+	var row: Dictionary = world.rules.difficulty["rows"][world.difficulty.row]
+	world.seat_person(BotMatch.BOTS_A_SIDE)
+	world.step()
+	assert_float(world.teams[BotMatch.RED].aim_error).is_equal_approx(deg_to_rad(world.rules.aim_error_degrees), 1e-9)
+	assert_float(world.teams[BotMatch.BLUE].aim_error).is_equal_approx(deg_to_rad(float(row["aim_error_degrees"])), 1e-9)
