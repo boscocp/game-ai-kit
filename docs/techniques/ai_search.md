@@ -57,6 +57,11 @@ read a grid -- and runs all four searches on it, then replays
 
 ### What to copy {#copy}
 
+From the library: unzip `ai_core-<version>.zip` and
+`ai_search-<version>.zip` into your project's `res://addons/` -- [using the
+library](using-the-library.md) has every step, the Python wheel too. Or copy
+them from a checkout:
+
 Two folders, nothing else: `godot/addons/ai_core/` (the grid and the
 `GakPathfinder` port) and `godot/addons/ai_search/`. No plugin to enable --
 every class registers itself by `class_name`. Open the project once, or run

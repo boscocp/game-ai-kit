@@ -7,7 +7,7 @@ tier: 2
 source: book:Ian Millington and John Funge, "Artificial Intelligence for Games", 2nd edition, Morgan Kaufmann, 2009 -- chapter 7, Learning
 invalidated_if: the kit's NGramPredictor signature changes, ADR 0016 is withdrawn, or the demos that use it are renamed
 teaches: fighting-game-ai
-translation_of: 9212134db2e4e2d534362511ca6d250dfd0de63deb0ec8f381e8b27101bb765f
+translation_of: 697523ae9bf72fd7c2849ef1928a434c6eaa828aca3fa5cc92b03bf9baf898c9
 -->
 
 > English: [ai_opponent.md](ai_opponent.md). Os termos que ficam em inglês
@@ -63,6 +63,11 @@ certeira nunca o deixa perfeito. Os ajustes que importam:
 ## No seu projeto {#your-project}
 
 ### O que copiar {#copy}
+
+Pela biblioteca: descompacte o `ai_opponent-<version>.zip` no
+`res://addons/` do seu projeto -- [usando a
+biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
+também. Ou copie de um clone:
 
 Uma pasta: `godot/addons/ai_opponent/`. Ela não precisa de mais nada, nem
 do `ai_core`. Abra o projeto uma vez, ou rode `godot --headless --import`,

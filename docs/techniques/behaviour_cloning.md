@@ -67,6 +67,10 @@ counts the ghost's table and writes both to
 
 ### What to copy {#copy}
 
+The Godot half is in the library, `ai_learning-<version>.zip` ([using the
+library](using-the-library.md)). The Python half is the fighting example's
+and is not in the wheel, so it is a copy:
+
 The Python side fits: `python/gameaikit/cloning/` (standard library only)
 -- `softmax.py` the model, `ghost.py` the table, `publish.py` the file.
 The Godot side only reads: `godot/addons/ai_learning/`, whose

@@ -7,7 +7,7 @@ tier: 2
 source: book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 5 on decision making ; book:Steve Rabin (ed.), "Game AI Pro", CRC Press, 2013 -- ch. 12 (Humphreys, HTN planners)
 invalidated_if: the kit's StateMachine, BehaviourTree, GoapPlanner or HtnPlanner signatures change, or the demos that use them are renamed
 teaches: ways-to-decide
-translation_of: 7fe413b922e6b3e81d07a8d6a0a0c22f431066f1d054b7b0a228c3d707c09e9b
+translation_of: 0f5c295f39a1459dad8ddfba85363776f0926050600782b68148d4ee5c83de51
 -->
 
 > English: [ai_behaviour.md](ai_behaviour.md). Os termos que ficam em inglês
@@ -63,6 +63,11 @@ importam:
 ## No seu projeto {#your-project}
 
 ### O que copiar {#copy}
+
+Pela biblioteca: descompacte o `ai_behaviour-<version>.zip` no
+`res://addons/` do seu projeto -- [usando a
+biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
+também. Ou copie de um clone:
 
 Uma pasta: `godot/addons/ai_behaviour/`. Ela não precisa de mais nada, nem
 do `ai_core`. Abra o projeto uma vez, ou rode `godot --headless --import`,

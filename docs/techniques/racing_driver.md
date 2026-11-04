@@ -60,6 +60,10 @@ holds that no knob moves during a race. The knobs that matter:
 
 ### What to copy {#copy}
 
+The library has the vehicle and seek, `ai_steering-<version>.zip` ([using
+the library](using-the-library.md)). The driver itself is the racing demo's,
+so:
+
 Nothing on the Python side: this driver is not trained, and has no Python
 half -- `python/gameaikit/racing/` is the 3D racer's driver, a different
 one. In Godot, `godot/addons/ai_steering/` for the vehicle and seek. **A

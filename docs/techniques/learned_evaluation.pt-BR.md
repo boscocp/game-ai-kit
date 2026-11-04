@@ -7,7 +7,7 @@ tier: 2
 source: book:Arthur L. Samuel, "Some Studies in Machine Learning Using the Game of Checkers", IBM Journal of Research and Development 3(3), July 1959
 invalidated_if: CheckersEvaluation, CheckersWeights, the weights file's shape or gameaikit.checkers's report change, or make run stops opening checkers
 teaches: learned-evaluation
-translation_of: af46277c2a894ee7f0b081313f6c62a05df5065a31cc76c1240711af7e1bb1d4
+translation_of: a741bf7d34a7e3b26b0b443663ba608cf78456a45c98740f80380c032e85c6bd
 -->
 
 > English: [learned_evaluation.md](learned_evaluation.md). Os termos que
@@ -66,6 +66,11 @@ recusa um cujas *features* não sejam as da avaliação, na ordem;
 ## No seu projeto {#your-project}
 
 ### O que copiar {#copy}
+
+A biblioteca tem a metade Godot, o `ai_adversarial-<version>.zip` e o
+`ai_learning-<version>.zip`, e o *wheel* instala o `gameaikit.training`
+([usando a biblioteca](using-the-library.pt-BR.md)). O caso das damas é do
+exemplo e é copiado:
 
 O lado Python ajusta: `python/gameaikit/checkers/` é o caso pronto -- o
 `evaluation.py` e o `selfplay.py` dele são o que você reescreve para o seu

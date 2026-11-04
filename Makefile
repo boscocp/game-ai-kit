@@ -971,10 +971,12 @@ release: export ## One zip per addon, the Python wheel and the executable into d
 	@$(PYTHON) scripts/check_license.py
 
 .PHONY: library-check
-library-check: ## The wheel and two addons, installed and run outside the repository (T64)
-	@# A fresh virtual environment installs the wheel with no index; a blank
-	@# Godot project unzips ai_core and ai_search and finds a route. Its
-	@# planted case, a zip missing a file, runs in lint-selftests.
+library-check: ## Follow docs/techniques/using-the-library.md outside the repository (T64, T77)
+	@# Each step the page marks, in a throwaway folder: the wheel installed
+	@# with no index, the page's Python block training a model, a blank Godot
+	@# project with three unzipped addons running the page's two examples.
+	@# Its planted cases -- a zip missing a file, a page step the check does
+	@# not take -- run in lint-selftests.
 	@$(PYTHON) scripts/library_check.py
 
 # --- housekeeping ----------------------------------------------------------

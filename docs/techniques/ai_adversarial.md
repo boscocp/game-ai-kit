@@ -79,6 +79,10 @@ matter:
 
 ### What to copy {#copy}
 
+From the library: unzip `ai_adversarial-<version>.zip` into your project's
+`res://addons/` -- [using the library](using-the-library.md) has every step,
+the Python wheel too. Or copy it from a checkout:
+
 One folder: `godot/addons/ai_adversarial/`. It needs nothing else, not even
 `ai_core`. Open the project once, or run `godot --headless --import`, so
 Godot registers its classes.

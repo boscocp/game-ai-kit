@@ -65,6 +65,11 @@ refuses one whose features are not the evaluation's, in order;
 
 ### What to copy {#copy}
 
+The library has the Godot half, `ai_adversarial-<version>.zip` and
+`ai_learning-<version>.zip`, and the wheel installs `gameaikit.training`
+([using the library](using-the-library.md)). The checkers case is the
+example's and is copied:
+
 The Python side fits: `python/gameaikit/checkers/` is the worked case --
 its `evaluation.py` and `selfplay.py` are what you rewrite for your game --
 with `python/gameaikit/training/` for the regression, standard library

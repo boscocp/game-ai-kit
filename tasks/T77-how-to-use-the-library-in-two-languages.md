@@ -36,6 +36,25 @@ T74's and T75's pages say "copy the folders", which is what works today.
    from "copy the folders" to the library, keeping the copy as the
    alternative.
 
+## What the work found (wave 118)
+
+Details, none changing what the task asks:
+
+- **`DecisionPolicy` is not a port.** No class of that name exists; the
+  ports a user's code names are ADR 0024's nine `Gak` names, and the page
+  lists those.
+- **The second example lives in `scripts/library/`**, not in an addon's
+  test folder: it reads `res://chance_model.json`, which only the page's
+  Python step writes, so only `make library-check` can run it. The
+  translations gate still holds the page's block equal to the file (D9).
+- **The check takes the page's steps, not their order on the page.** It
+  unzips all three addons first and imports once; a reader unzips
+  `ai_learning` later and imports again. The step list itself must match
+  exactly, in both languages.
+- **The non-module pages** (MENACE, behaviour cloning, the learned
+  evaluation, the racing driver) say which half is in the library and that
+  the rest -- an example's code -- stays a copy.
+
 ## Acceptance
 
 ```bash
