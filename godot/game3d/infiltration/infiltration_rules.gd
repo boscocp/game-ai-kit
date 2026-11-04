@@ -54,6 +54,11 @@ var use_accumulator: bool = true
 ## sending them on patrol and calling them back. Turning it rebuilds the
 ## world, since the reserve is there only with it on.
 var use_director: bool = false
+## How a generated level is made (T95): `LevelGenerator.DRAW` or
+## `CONSTRAINTS`, and whether the solver's work is replayed on screen (the
+## generation view). Key K turns them; the panel's switch line shows them.
+var level_generator: String = LevelGenerator.DRAW
+var show_generation: bool = false
 
 
 ## The rules in `path`.

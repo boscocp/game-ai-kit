@@ -1,0 +1,173 @@
+{
+ "variables": [
+  {
+   "name": "WA",
+   "values": [
+    "red",
+    "green",
+    "blue"
+   ]
+  },
+  {
+   "name": "NT",
+   "values": [
+    "red",
+    "green",
+    "blue"
+   ]
+  },
+  {
+   "name": "SA",
+   "values": [
+    "red",
+    "green",
+    "blue"
+   ]
+  },
+  {
+   "name": "Q",
+   "values": [
+    "red",
+    "green",
+    "blue"
+   ]
+  },
+  {
+   "name": "NSW",
+   "values": [
+    "red",
+    "green",
+    "blue"
+   ]
+  },
+  {
+   "name": "V",
+   "values": [
+    "red",
+    "green",
+    "blue"
+   ]
+  },
+  {
+   "name": "T",
+   "values": [
+    "red",
+    "green",
+    "blue"
+   ]
+  }
+ ],
+ "binary": [
+  {
+   "between": [
+    "WA",
+    "NT"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "WA",
+    "SA"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "NT",
+    "SA"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "NT",
+    "Q"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "SA",
+    "Q"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "SA",
+    "NSW"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "SA",
+    "V"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "Q",
+    "NSW"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "NSW",
+    "V"
+   ],
+   "relation": "different"
+  }
+ ],
+ "global": [],
+ "description": "the same map, another seed: the ties go another way",
+ "seed": 9,
+ "mrv": true,
+ "lcv": true,
+ "propagate": true,
+ "solution": {
+  "WA": "blue",
+  "NT": "red",
+  "SA": "green",
+  "Q": "blue",
+  "NSW": "red",
+  "V": "blue",
+  "T": "green"
+ },
+ "assigned": [
+  [
+   "SA",
+   "green"
+  ],
+  [
+   "Q",
+   "blue"
+  ],
+  [
+   "NSW",
+   "red"
+  ],
+  [
+   "WA",
+   "blue"
+  ],
+  [
+   "V",
+   "blue"
+  ],
+  [
+   "NT",
+   "red"
+  ],
+  [
+   "T",
+   "green"
+  ]
+ ],
+ "assignments": 7,
+ "backtracks": 0,
+ "pruned": 9
+}

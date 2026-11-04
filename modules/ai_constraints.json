@@ -1,0 +1,18 @@
+{
+  "module": "ai_constraints",
+  "kind": "technique",
+  "about": "Constraint satisfaction: variables with finite domains, binary and global constraints, AC-3, and backtracking with minimum remaining values and least constraining value, its ties ordered by a seed; in GDScript and Python. The infiltration level declares its generated levels with it (T95).",
+  "summary": "Constraint satisfaction: say what a solution is -- variables, their values, the constraints between them -- and a backtracking solver with AC-3 finds one, or says there is none.",
+  "owns": [
+    "godot/addons/ai_constraints/",
+    "godot/test/ai_constraints/",
+    "spec/vectors/constraints/",
+    "python/gameaikit/constraints/",
+    "python/tests/test_constraints.py",
+    "python/tests/test_constraints_vectors.py"
+  ],
+  "depends_on": [],
+  "gates": [
+    "test-constraints-vectors"
+  ]
+}

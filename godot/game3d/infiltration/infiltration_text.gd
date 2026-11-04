@@ -17,6 +17,8 @@ extends RefCounted
 const ON_OFF: Array[String] = ["on", "OFF"]  # shown through tr()
 ## The belief, as the panel says it: the grid's, then the particles'.
 const BELIEFS: Array[String] = ["grid", "particles"]  # shown through tr()
+## How a generated level is made, as the switch line says it (T95, K).
+const GENERATORS: Array[String] = ["drawn", "solved", "solved and shown"]  # shown through tr()
 ## The watched guard: standing, then downed.
 const GUARD_LINE: Array[String] = [  # shown through tr()
 	"guard {guard} ({type}): {phase}, sight {sight}, sound {sound}, {action}",
@@ -58,9 +60,18 @@ static func _scores(world: InfiltrationWorld, guard: InfiltrationGuard) -> Packe
 
 static func _switches(world: InfiltrationWorld) -> String:
 	var rules: InfiltrationRules = world.rules
-	return TranslationServer.translate("1 belief {belief}, 2 coordinator {coordinator}, 3 arbiter {arbiter}, 4 accumulator {accumulator}, 5 off-screen halving {halving}, 6 director {director}").format({
+	return TranslationServer.translate("1 belief {belief}, 2 coordinator {coordinator}, 3 arbiter {arbiter}, 4 accumulator {accumulator}, 5 off-screen halving {halving}, 6 director {director}, K level {generator}").format({
 		belief = belief_word(rules), coordinator = on(rules.use_coordinator), arbiter = on(rules.use_arbiter),
-		accumulator = on(rules.use_accumulator), halving = on(rules.off_screen_halving), director = on(rules.use_director)})
+		accumulator = on(rules.use_accumulator), halving = on(rules.off_screen_halving), director = on(rules.use_director),
+		generator = generator_word(rules)})
+
+
+## How a generated level is made, as the panel says it: drawn, solved, or
+## solved and shown.
+static func generator_word(rules: InfiltrationRules) -> String:
+	if rules.level_generator == LevelGenerator.DRAW:
+		return TranslationServer.translate(GENERATORS[0])
+	return TranslationServer.translate(GENERATORS[2 if rules.show_generation else 1])
 
 
 ## Which belief the guards search from, as the panel says it: OFF, grid

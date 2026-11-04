@@ -1,0 +1,173 @@
+{
+ "variables": [
+  {
+   "name": "WA",
+   "values": [
+    "red",
+    "green",
+    "blue"
+   ]
+  },
+  {
+   "name": "NT",
+   "values": [
+    "red",
+    "green",
+    "blue"
+   ]
+  },
+  {
+   "name": "SA",
+   "values": [
+    "red",
+    "green",
+    "blue"
+   ]
+  },
+  {
+   "name": "Q",
+   "values": [
+    "red",
+    "green",
+    "blue"
+   ]
+  },
+  {
+   "name": "NSW",
+   "values": [
+    "red",
+    "green",
+    "blue"
+   ]
+  },
+  {
+   "name": "V",
+   "values": [
+    "red",
+    "green",
+    "blue"
+   ]
+  },
+  {
+   "name": "T",
+   "values": [
+    "red",
+    "green",
+    "blue"
+   ]
+  }
+ ],
+ "binary": [
+  {
+   "between": [
+    "WA",
+    "NT"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "WA",
+    "SA"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "NT",
+    "SA"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "NT",
+    "Q"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "SA",
+    "Q"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "SA",
+    "NSW"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "SA",
+    "V"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "Q",
+    "NSW"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "NSW",
+    "V"
+   ],
+   "relation": "different"
+  }
+ ],
+ "global": [],
+ "description": "AIMA 6.1.1's map, MRV, LCV and AC-3",
+ "seed": 1,
+ "mrv": true,
+ "lcv": true,
+ "propagate": true,
+ "solution": {
+  "WA": "green",
+  "NT": "red",
+  "SA": "blue",
+  "Q": "green",
+  "NSW": "red",
+  "V": "green",
+  "T": "blue"
+ },
+ "assigned": [
+  [
+   "SA",
+   "blue"
+  ],
+  [
+   "NSW",
+   "red"
+  ],
+  [
+   "NT",
+   "red"
+  ],
+  [
+   "WA",
+   "green"
+  ],
+  [
+   "Q",
+   "green"
+  ],
+  [
+   "V",
+   "green"
+  ],
+  [
+   "T",
+   "blue"
+  ]
+ ],
+ "assignments": 7,
+ "backtracks": 0,
+ "pruned": 9
+}

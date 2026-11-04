@@ -19,7 +19,11 @@ health {health}   {stance} sprinting,vida {health}   {stance} correndo
 health {health}   {stance},vida {health}   {stance}
   eye: {why},  olho: {why}
 nothing,nada
-"1 belief {belief}, 2 coordinator {coordinator}, 3 arbiter {arbiter}, 4 accumulator {accumulator}, 5 off-screen halving {halving}, 6 director {director}","1 crença {belief}, 2 coordenador {coordinator}, 3 árbitro {arbiter}, 4 acumulador {accumulator}, 5 metade fora da tela {halving}, 6 diretor {director}"
+"1 belief {belief}, 2 coordinator {coordinator}, 3 arbiter {arbiter}, 4 accumulator {accumulator}, 5 off-screen halving {halving}, 6 director {director}, K level {generator}","1 crença {belief}, 2 coordenador {coordinator}, 3 árbitro {arbiter}, 4 acumulador {accumulator}, 5 metade fora da tela {halving}, 6 diretor {director}, K nível {generator}"
+drawn,sorteado
+solved,resolvido
+solved and shown,resolvido e mostrado
+"the solver gave up on seed {seed}: this is the drawn level","o solver desistiu da seed {seed}: este é o nível sorteado"
 on,ligado
 OFF,DESLIGADO
 grid,grade
@@ -75,3 +79,23 @@ building up,crescendo
 holding the peak,sustentando o pico
 fading,diminuindo
 relaxing,relaxando
+solved level {seed},nível resolvido {seed}
+"white: still possible; red cross: crossed out; red ring: undone","branco: ainda possível; X vermelho: riscado; anel vermelho: desfeito"
+"solver: step {step} of {steps}, {assignments} assignments, {backtracks} backtracks, {restarts} fresh starts","solver: passo {step} de {steps}, {assignments} atribuições, {backtracks} backtracks, {restarts} recomeços"
+"refused: {thing}, {rule}","recusado: {thing}, {rule}"
+{thing}: {left} left,{thing}: restam {left}
+box {number},caixa {number}
+lamp {number},lâmpada {number}
+hiding place {number},esconderijo {number}
+"patrol {patrol}, point {point}","patrulha {patrol}, ponto {point}"
+the sentry's post,o posto da sentinela
+boxes apart,caixas afastadas
+not under a box,não debaixo de uma caixa
+one guard place a cell,um lugar de guarda por célula
+hiding places apart,esconderijos afastados
+lamps apart,lâmpadas afastadas
+the exit can be walked to,dá para andar até a saída
+every guard place can be walked to,dá para andar até todo lugar de guarda
+no post in sight of the start,nenhum posto à vista da partida
+a hiding place near each route,um esconderijo perto de cada rota
+a dark way to the exit,um caminho escuro até a saída

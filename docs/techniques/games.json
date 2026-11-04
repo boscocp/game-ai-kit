@@ -405,6 +405,10 @@
     "director": {
       "en": "a director pacing the threats by intensity",
       "pt-BR": "um diretor (*director*) que dosa as ameaças pela intensidade"
+    },
+    "constraints": {
+      "en": "constraint satisfaction, AC-3 and backtracking",
+      "pt-BR": "satisfação de restrições, AC-3 e *backtracking*"
     }
   }
 }

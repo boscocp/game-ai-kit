@@ -90,3 +90,50 @@ the decisions that built the level, not only the level.
 References, opened on 2026-10-26: AIMA 4th ed., contents (ch. 6)
 <https://aima.cs.berkeley.edu/contents.html>; Foged & Horswill, GAP2 ch.
 26, as cited by T73.
+
+## Done (wave 120), and where it departs from the above
+
+Recorded for the owner's review; none of these is decided until the owner
+says so.
+
+1. **The level is solved in GDScript only.** Step 1 asked for the level in
+   Python too. The level's constraints read the game's own ground -- the
+   arena's walk rule, its sight lines, the level's light -- and the Python
+   side has no `BotArena`. The Python twin holds the solver (map colouring,
+   Sudoku, queens, the vectors); the level is held instead by `LevelAudit`,
+   which measures every solved level on the arena the game builds.
+2. **Candidates, not every cell.** Each variable's domain is 16 places drawn
+   from the seed, not every cell of the level: with every cell, AC-3 and LCV
+   over the box pairs would cost seconds per level in GDScript.
+3. **Restarts.** Chronological backtracking thrashed on a few seeds (before
+   restarts, 6 of 200 hit a 3,000-assignment limit, one after 57 s). The
+   level now restarts with the ties broken by another seed when 400
+   assignments run out, up to four times: 6 restarts over 200 seeds, every
+   seed found. Backjumping (AIMA 6.3.3) would be the textbook's answer; it
+   is named on the pages and not built.
+4. **K is a three-way cycle** -- drawn, solved, solved with the view -- since
+   the task names K for the view and also needs a switch between the modes.
+   Without it, N keeps the mode chosen. A seed the solver gives up on falls
+   back to the drawn level.
+5. **The numbers in `level_constraints.json` are the kit's own:** boxes 1 m
+   apart, lamps 6 m apart, a hiding place within 6 walk steps of a route,
+   "dark" under 0.3, "in sight" a clear line at 1.6 m within the guard
+   type's farthest zone. None was tuned against a playtest.
+6. **"No guard's post in sight"** covers the sentry's post and each
+   patrol's first route point (where a patrol stands at the start).
+7. **K is named on the panel's switch line, not on the legend.** A legend
+   line ran past the window's gutter (`test-demo-overlays`), so the line
+   reads `..., 6 director on, K level solved and shown`; the view carries
+   its own key, and says in one line when the solver gave up and the level
+   is the drawn one. K on a hand-made level changes only the mode.
+8. **The counts are listed beside the map, not on each variable's cell.**
+   An unassigned variable has 16 candidate cells and no one cell of its
+   own, so the view lists every unplaced thing with its count (the next one
+   first) and draws the next one's candidates on the map.
+9. **The solve runs on the main thread** and stalls the frame -- 120-140
+   ms a level, 2.2-2.5 s on the slowest seed. The last solved level is kept
+   by its seed, so N and the second K do not solve it again. Pending the
+   owner: solve in the background?
+
+The manual check above is still the owner's.
+

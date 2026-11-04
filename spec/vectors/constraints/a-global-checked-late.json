@@ -1,0 +1,101 @@
+{
+ "variables": [
+  {
+   "name": "a",
+   "values": [
+    0,
+    1,
+    2,
+    3
+   ]
+  },
+  {
+   "name": "b",
+   "values": [
+    0,
+    1,
+    2,
+    3
+   ]
+  },
+  {
+   "name": "c",
+   "values": [
+    0,
+    1,
+    2,
+    3
+   ]
+  }
+ ],
+ "binary": [
+  {
+   "between": [
+    "a",
+    "b"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "b",
+    "c"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "a",
+    "c"
+   ],
+   "relation": "less"
+  }
+ ],
+ "global": [
+  {
+   "over": [
+    "a",
+    "b",
+    "c"
+   ],
+   "relation": "sum-at-most",
+   "limit": 4
+  },
+  {
+   "over": [
+    "a",
+    "b",
+    "c"
+   ],
+   "relation": "some-equals",
+   "value": 3
+  }
+ ],
+ "description": "two global constraints, one checkable only when all three are assigned",
+ "seed": 5,
+ "mrv": true,
+ "lcv": true,
+ "propagate": true,
+ "solution": {
+  "a": 1,
+  "b": 0,
+  "c": 3
+ },
+ "assigned": [
+  [
+   "c",
+   3
+  ],
+  [
+   "b",
+   0
+  ],
+  [
+   "a",
+   1
+  ]
+ ],
+ "assignments": 3,
+ "backtracks": 0,
+ "pruned": 4
+}

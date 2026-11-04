@@ -1,0 +1,68 @@
+{
+ "variables": [
+  {
+   "name": "A",
+   "values": [
+    "red",
+    "green"
+   ]
+  },
+  {
+   "name": "B",
+   "values": [
+    "red",
+    "green"
+   ]
+  },
+  {
+   "name": "C",
+   "values": [
+    "red",
+    "green"
+   ]
+  }
+ ],
+ "binary": [
+  {
+   "between": [
+    "A",
+    "B"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "B",
+    "C"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "A",
+    "C"
+   ],
+   "relation": "different"
+  }
+ ],
+ "global": [],
+ "description": "no answer, found by searching: AC-3 alone cannot see it",
+ "seed": 1,
+ "mrv": true,
+ "lcv": true,
+ "propagate": true,
+ "solution": null,
+ "assigned": [
+  [
+   "C",
+   "red"
+  ],
+  [
+   "C",
+   "green"
+  ]
+ ],
+ "assignments": 2,
+ "backtracks": 1,
+ "pruned": 6
+}

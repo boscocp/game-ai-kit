@@ -33,6 +33,13 @@ const RESERVE_SALT: int = 4099
 const EYES: float = 1.6
 
 
+## The two ways a level is generated (T95): drawn whole and tested, or
+## declared and solved (`LevelConstraints`).
+const DRAW: String = "draw"  # not shown: an identifier
+const CONSTRAINTS: String = "constraints"  # not shown: an identifier
+const MODES: Array[String] = [DRAW, CONSTRAINTS]
+
+
 ## A playable level's data from `seed_value`, or {} when TRIES draws made none.
 static func make(seed_value: int) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
@@ -43,6 +50,32 @@ static func make(seed_value: int) -> Dictionary:
 			data["reserve"] = _reserve(seed_value, data)
 			return data
 	return {}
+
+
+## A level's data from `seed_value` the way `mode` makes one, or {} when
+## that way found none.
+static func make_by(mode: String, seed_value: int) -> Dictionary:
+	if mode == CONSTRAINTS:
+		return LevelConstraints.solve(seed_value).data
+	return make(seed_value)
+
+
+## How many draws `make` spends on `seed_value` before one is kept, or TRIES
+## + 1 when none is: what generate and test pays, for the measurement.
+static func draws_spent(seed_value: int) -> int:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	for attempt: int in range(TRIES):
+		if _playable(_draw(rng)):
+			return attempt + 1
+	return TRIES + 1
+
+
+## `data` with the director's reserve added, drawn from `seed_value`'s own
+## generator, as `make` adds it.
+static func with_reserve(seed_value: int, data: Dictionary) -> Dictionary:
+	data["reserve"] = _reserve(seed_value, data)
+	return data
 
 
 static func _draw(rng: RandomNumberGenerator) -> Dictionary:

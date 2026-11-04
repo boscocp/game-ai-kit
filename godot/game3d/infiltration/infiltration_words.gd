@@ -49,10 +49,13 @@ const TOO_FEW_RE: String = "^(\\d+) of (\\d+) points clear; the stance needs (\\
 const IN_ZONE_RE: String = "^in (.+)$"  # not shown: a pattern
 ## A generated level's name, as `Infiltration` writes it with its seed.
 const GENERATED_RE: String = "^generated (\\d+)$"  # not shown: a pattern
+## A level the constraint solver placed (T95), with its seed.
+const SOLVED_RE: String = "^solved (\\d+)$"  # not shown: a pattern
 
 static var _too_few := RegEx.create_from_string(TOO_FEW_RE)
 static var _in_zone := RegEx.create_from_string(IN_ZONE_RE)
 static var _generated := RegEx.create_from_string(GENERATED_RE)
+static var _solved := RegEx.create_from_string(SOLVED_RE)
 
 
 ## `identifier` as the screen shows it in the language chosen.
@@ -76,9 +79,12 @@ static func eye(why: String) -> String:
 
 
 ## A level's name as the panel shows it: a hand-made level's, or "generated"
-## and its seed.
+## or "solved" and its seed.
 static func level(name: String) -> String:
 	var found: RegExMatch = _generated.search(name)
 	if found != null:
 		return TranslationServer.translate("generated level {seed}").format({seed = found.get_string(1)})
+	found = _solved.search(name)
+	if found != null:
+		return TranslationServer.translate("solved level {seed}").format({seed = found.get_string(1)})
 	return word(name)

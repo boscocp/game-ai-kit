@@ -300,7 +300,7 @@ solve-maze: ## Solve the maze's MDP by value iteration and publish its values an
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.mdp.publish --write $(CURDIR)/godot/game/maze
 
 .PHONY: test-vectors
-test-vectors: test-core-vectors test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-bandit-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors test-llm-vectors test-maze-vectors test-mdp-vectors test-director-vectors test-squad-vectors ## Every conformance vector in spec/
+test-vectors: test-core-vectors test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-bandit-vectors test-constraints-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors test-llm-vectors test-maze-vectors test-mdp-vectors test-director-vectors test-squad-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -353,6 +353,12 @@ test-bandit-vectors: import ## The bandit vectors, against ai_bandit
 	@# The same files are read by `make test-python` through gameaikit.bandit.
 	@$(GODOT) --headless --path godot -s res://test/ai_bandit/bandit_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/bandit
+
+.PHONY: test-constraints-vectors
+test-constraints-vectors: import ## The constraint vectors, against ai_constraints
+	@# The same files are read by `make test-python` through gameaikit.constraints.
+	@$(GODOT) --headless --path godot -s res://test/ai_constraints/constraint_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/constraints
 
 .PHONY: test-cloning-vectors
 test-cloning-vectors: import ## The cloning vectors, against ai_learning's softmax model and case table
@@ -809,6 +815,10 @@ CLONE_PLAYER ?= person
 .PHONY: record-fights
 record-fights: import ## Play the training mode and keep every fight you play in data/fights/, for T18 to learn from
 	@$(GODOT) --path godot res://game/fighting/fighting.tscn -- --record
+
+.PHONY: measure-level-constraints
+measure-level-constraints: import ## Generate and test against the constraint solver over SEEDS seeds (a table, not a gate)
+	@$(GODOT) --headless --path godot -s res://test/infiltration/constraint_measure.gd -- $(or $(SEEDS),200)
 
 .PHONY: measure-bandit
 measure-bandit: import ## Measure the bandit opponent against the stand-ins and the owner's ghost (a table, not a gate)

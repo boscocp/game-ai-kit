@@ -91,7 +91,7 @@ last three columns to the repository.
 
 | Technique | Literature | Known for | In the kit | Demos | Tier |
 |---|---|---|---|---|---|
-| Constraint satisfaction (propagation, backtracking) | AIMA ch. 6; GAP2 ch. 26 | placing items and enemies in rooms | not in the kit | -- | 1 |
+| Constraint satisfaction (propagation, backtracking) | AIMA ch. 6; GAP2 ch. 26 | placing items and enemies in rooms | AC-3 and backtracking with MRV and LCV, seeded and twinned: `ai_constraints`; the infiltration level declared and solved: `godot/game3d/infiltration/level_constraints.gd` (T95); `docs/concepts/constraint-satisfaction.md` | `demo-infiltration` | 1 |
 | Wave function collapse | mxgmn's README | tile levels (*Bad North*, *Townscaper*, *Caves of Qud*) | not in the kit | -- | 1 |
 | Procedural content generation | GAP2 ch. 40; Y&T ch. 7-9 | replayability (*Elite*, per GAP2 ch. 40) | a seed's arena for tests only: `godot/test/botmatch/random_arena.gd` | -- | 1 |
 
@@ -171,7 +171,8 @@ tier 1, as invariant 5 asks. Running a model live is tier 3 and optional.
 2. **Nothing generates content as a lesson.** The bot match makes arenas
    from a seed, but only to test that bots cope on maps they were not
    tuned on (`random_arena.gd`); no page teaches a generator. CSP and
-   wave function collapse are the cheapest way in, both tier 1.
+   wave function collapse are the cheapest way in, both tier 1 *(CSP
+   since T95: the infiltration level, drawn or declared)*.
 3. **Nothing paces a level.** The *Left 4 Dead* director estimates each
    survivor's "emotional intensity" and removes threats when it runs high
    [Booth 2009]; *Warframe* does the same over procedural levels [Brewer

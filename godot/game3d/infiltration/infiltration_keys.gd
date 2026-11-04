@@ -6,7 +6,8 @@
 ## 1 the belief -- off, the grid's, the particles' (T91), in turn -- 2 the
 ## coordinator, 3 the arbiter, 4 the accumulator, 5 the off-screen halving, 6 the director (T90:
 ## the world starts again, its reserve there only with it on); Tab the next guard, H the reasoning shown or hidden,
-## L the next level, N again, P pause, Space one decision while paused.
+## L the next level, N again, P pause, Space one decision while paused, K
+## how a generated level is made (T95: drawn, solved, solved and shown).
 ##
 ## When not to use it: for moving the player. Those keys are read each step.
 class_name InfiltrationKeys
@@ -51,6 +52,8 @@ static func switch(demo: Node, keycode: Key) -> void:
 			demo.next_level()
 		KEY_N:
 			demo.new_world()
+		KEY_K:
+			demo.next_generator()
 		KEY_P:
 			demo.toggle_pause()
 		KEY_SPACE:

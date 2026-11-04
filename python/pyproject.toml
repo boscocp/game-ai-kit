@@ -32,6 +32,7 @@ packages = [
     "gameaikit",
     "gameaikit.adversarial",
     "gameaikit.bandit",
+    "gameaikit.constraints",
     "gameaikit.core",
     "gameaikit.fuzzy",
     "gameaikit.llm",

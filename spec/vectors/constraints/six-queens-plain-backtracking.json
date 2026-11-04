@@ -1,0 +1,295 @@
+{
+ "variables": [
+  {
+   "name": "Q0",
+   "values": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "name": "Q1",
+   "values": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "name": "Q2",
+   "values": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "name": "Q3",
+   "values": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "name": "Q4",
+   "values": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "name": "Q5",
+   "values": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  }
+ ],
+ "binary": [
+  {
+   "between": [
+    "Q0",
+    "Q1"
+   ],
+   "relation": "queens",
+   "apart": 1
+  },
+  {
+   "between": [
+    "Q0",
+    "Q2"
+   ],
+   "relation": "queens",
+   "apart": 2
+  },
+  {
+   "between": [
+    "Q0",
+    "Q3"
+   ],
+   "relation": "queens",
+   "apart": 3
+  },
+  {
+   "between": [
+    "Q0",
+    "Q4"
+   ],
+   "relation": "queens",
+   "apart": 4
+  },
+  {
+   "between": [
+    "Q0",
+    "Q5"
+   ],
+   "relation": "queens",
+   "apart": 5
+  },
+  {
+   "between": [
+    "Q1",
+    "Q2"
+   ],
+   "relation": "queens",
+   "apart": 1
+  },
+  {
+   "between": [
+    "Q1",
+    "Q3"
+   ],
+   "relation": "queens",
+   "apart": 2
+  },
+  {
+   "between": [
+    "Q1",
+    "Q4"
+   ],
+   "relation": "queens",
+   "apart": 3
+  },
+  {
+   "between": [
+    "Q1",
+    "Q5"
+   ],
+   "relation": "queens",
+   "apart": 4
+  },
+  {
+   "between": [
+    "Q2",
+    "Q3"
+   ],
+   "relation": "queens",
+   "apart": 1
+  },
+  {
+   "between": [
+    "Q2",
+    "Q4"
+   ],
+   "relation": "queens",
+   "apart": 2
+  },
+  {
+   "between": [
+    "Q2",
+    "Q5"
+   ],
+   "relation": "queens",
+   "apart": 3
+  },
+  {
+   "between": [
+    "Q3",
+    "Q4"
+   ],
+   "relation": "queens",
+   "apart": 1
+  },
+  {
+   "between": [
+    "Q3",
+    "Q5"
+   ],
+   "relation": "queens",
+   "apart": 2
+  },
+  {
+   "between": [
+    "Q4",
+    "Q5"
+   ],
+   "relation": "queens",
+   "apart": 1
+  }
+ ],
+ "global": [],
+ "description": "six queens, no heuristic, no inference: it goes back often",
+ "seed": 3,
+ "mrv": false,
+ "lcv": false,
+ "propagate": false,
+ "solution": {
+  "Q0": 2,
+  "Q1": 5,
+  "Q2": 1,
+  "Q3": 4,
+  "Q4": 0,
+  "Q5": 3
+ },
+ "assigned": [
+  [
+   "Q2",
+   1
+  ],
+  [
+   "Q4",
+   2
+  ],
+  [
+   "Q0",
+   4
+  ],
+  [
+   "Q5",
+   5
+  ],
+  [
+   "Q5",
+   0
+  ],
+  [
+   "Q0",
+   5
+  ],
+  [
+   "Q0",
+   0
+  ],
+  [
+   "Q4",
+   4
+  ],
+  [
+   "Q0",
+   2
+  ],
+  [
+   "Q5",
+   0
+  ],
+  [
+   "Q1",
+   5
+  ],
+  [
+   "Q0",
+   5
+  ],
+  [
+   "Q5",
+   2
+  ],
+  [
+   "Q1",
+   3
+  ],
+  [
+   "Q4",
+   0
+  ],
+  [
+   "Q0",
+   2
+  ],
+  [
+   "Q5",
+   5
+  ],
+  [
+   "Q1",
+   4
+  ],
+  [
+   "Q5",
+   3
+  ],
+  [
+   "Q1",
+   5
+  ],
+  [
+   "Q3",
+   4
+  ]
+ ],
+ "assignments": 21,
+ "backtracks": 15,
+ "pruned": 0
+}

@@ -1,7 +1,7 @@
 {
   "module": "infiltration",
   "kind": "example",
-  "about": "The stealth example (T69, T70): guards read from data that perceive, grow aware, believe, search together, call for help and fight, on two hand-made levels and generated ones, in third person; and a director that paces the level by its reserve guards (T90), with its Python twin.",
+  "about": "The stealth example (T69, T70): guards read from data that perceive, grow aware, believe, search together, call for help and fight, on two hand-made levels and generated ones, in third person; and a director that paces the level by its reserve guards (T90), with its Python twin; and generated levels declared and solved by a constraint solver (T95).",
   "owns": [
     "godot/game3d/infiltration/",
     "godot/test/infiltration/",
@@ -15,6 +15,7 @@
     "python/tests/test_director_vectors.py"
   ],
   "depends_on": [
+    "ai_constraints",
     "ai_core",
     "ai_fuzzy",
     "ai_perception",

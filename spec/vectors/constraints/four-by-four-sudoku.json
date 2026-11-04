@@ -1,0 +1,623 @@
+{
+ "variables": [
+  {
+   "name": "r0c0",
+   "values": [
+    1
+   ]
+  },
+  {
+   "name": "r0c1",
+   "values": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "name": "r0c2",
+   "values": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "name": "r0c3",
+   "values": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "name": "r1c0",
+   "values": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "name": "r1c1",
+   "values": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "name": "r1c2",
+   "values": [
+    2
+   ]
+  },
+  {
+   "name": "r1c3",
+   "values": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "name": "r2c0",
+   "values": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "name": "r2c1",
+   "values": [
+    3
+   ]
+  },
+  {
+   "name": "r2c2",
+   "values": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "name": "r2c3",
+   "values": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "name": "r3c0",
+   "values": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "name": "r3c1",
+   "values": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "name": "r3c2",
+   "values": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "name": "r3c3",
+   "values": [
+    4
+   ]
+  }
+ ],
+ "binary": [
+  {
+   "between": [
+    "r0c0",
+    "r0c1"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c0",
+    "r0c2"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c0",
+    "r0c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c0",
+    "r1c0"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c0",
+    "r1c1"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c0",
+    "r2c0"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c0",
+    "r3c0"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c1",
+    "r0c2"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c1",
+    "r0c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c1",
+    "r1c0"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c1",
+    "r1c1"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c1",
+    "r2c1"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c1",
+    "r3c1"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c2",
+    "r0c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c2",
+    "r1c2"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c2",
+    "r1c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c2",
+    "r2c2"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c2",
+    "r3c2"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c3",
+    "r1c2"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c3",
+    "r1c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c3",
+    "r2c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r0c3",
+    "r3c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r1c0",
+    "r1c1"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r1c0",
+    "r1c2"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r1c0",
+    "r1c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r1c0",
+    "r2c0"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r1c0",
+    "r3c0"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r1c1",
+    "r1c2"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r1c1",
+    "r1c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r1c1",
+    "r2c1"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r1c1",
+    "r3c1"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r1c2",
+    "r1c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r1c2",
+    "r2c2"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r1c2",
+    "r3c2"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r1c3",
+    "r2c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r1c3",
+    "r3c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r2c0",
+    "r2c1"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r2c0",
+    "r2c2"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r2c0",
+    "r2c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r2c0",
+    "r3c0"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r2c0",
+    "r3c1"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r2c1",
+    "r2c2"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r2c1",
+    "r2c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r2c1",
+    "r3c0"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r2c1",
+    "r3c1"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r2c2",
+    "r2c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r2c2",
+    "r3c2"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r2c2",
+    "r3c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r2c3",
+    "r3c2"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r2c3",
+    "r3c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r3c0",
+    "r3c1"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r3c0",
+    "r3c2"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r3c0",
+    "r3c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r3c1",
+    "r3c2"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r3c1",
+    "r3c3"
+   ],
+   "relation": "different"
+  },
+  {
+   "between": [
+    "r3c2",
+    "r3c3"
+   ],
+   "relation": "different"
+  }
+ ],
+ "global": [],
+ "description": "a 4x4 Sudoku, givens as one-value domains",
+ "seed": 1,
+ "mrv": true,
+ "lcv": true,
+ "propagate": true,
+ "solution": {
+  "r0c0": 1,
+  "r0c1": 2,
+  "r0c2": 4,
+  "r0c3": 3,
+  "r1c0": 3,
+  "r1c1": 4,
+  "r1c2": 2,
+  "r1c3": 1,
+  "r2c0": 4,
+  "r2c1": 3,
+  "r2c2": 1,
+  "r2c3": 2,
+  "r3c0": 2,
+  "r3c1": 1,
+  "r3c2": 3,
+  "r3c3": 4
+ },
+ "assigned": [
+  [
+   "r3c0",
+   2
+  ],
+  [
+   "r0c3",
+   3
+  ],
+  [
+   "r2c2",
+   1
+  ],
+  [
+   "r1c1",
+   4
+  ],
+  [
+   "r3c2",
+   3
+  ],
+  [
+   "r2c0",
+   4
+  ],
+  [
+   "r1c3",
+   1
+  ],
+  [
+   "r0c1",
+   2
+  ],
+  [
+   "r3c3",
+   4
+  ],
+  [
+   "r2c1",
+   3
+  ],
+  [
+   "r0c2",
+   4
+  ],
+  [
+   "r1c0",
+   3
+  ],
+  [
+   "r2c3",
+   2
+  ],
+  [
+   "r1c2",
+   2
+  ],
+  [
+   "r0c0",
+   1
+  ],
+  [
+   "r3c1",
+   1
+  ]
+ ],
+ "assignments": 16,
+ "backtracks": 0,
+ "pruned": 36
+}
