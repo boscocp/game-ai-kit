@@ -74,19 +74,43 @@ func test_a_tower_s_shot_follows_a_language_switched_after_it() -> void:
 		_assert_the_news_follows_the_language(scene, locale, "blue bolt tower")
 
 
+func test_taken_back_follows_a_language_switched_after_it() -> void:
+	for locale: String in LOCALES:
+		var scene: TacticalGame = _mounted_scene(locale)
+		scene.click_cell(_first_of(scene.state, RED, TacticalRules.RUNNER).cell)
+		scene.wait()
+		scene.undo()
+		_assert_the_news_follows_the_language(scene, locale, "taken back")
+
+
+func test_the_computer_s_attacks_follow_a_language_switched_after_them() -> void:
+	# The header "{side}'s attacks:" carries the side as a value, and the
+	# attacks under it are the computer's own news, kept from its turn.
+	for locale: String in LOCALES:
+		var scene: TacticalGame = _mounted_scene(locale)
+		var workshop: Unit = _first_of(scene.state, RED, TacticalRules.WORKSHOP)
+		scene.state.unit_by_id(_first_of(scene.state, BLUE, TacticalRules.RUNNER).id).cell = workshop.cell + Vector2i(0, -1)
+		scene.step_decision()
+		scene.play_rest_of_computer_turn()
+		assert_bool(scene._persons_turn()).is_true()
+		_assert_the_news_follows_the_language(scene, locale, "blue's attacks:\nthe blue runner at")
+
+
 func test_a_kept_news_line_nests_its_pieces_and_sides() -> void:
-	# The side's name and the piece are values, not words already chosen:
-	# the same line reads in either language from the one sentence.
+	# Kept with the screen in pt-BR, the line is still English underneath:
+	# the side and the pieces are values, not words chosen when it was kept.
+	# Kept in English, a word chosen too early would be the key itself, and
+	# this would see nothing (T110's review).
+	TranslationServer.set_locale("pt_BR")
 	var state: BoardState = TacticalScenario.build()
 	var runner: Unit = _first_of(state, RED, TacticalRules.RUNNER)
 	var mortar := Unit.new(99, BLUE, runner.cell + Vector2i(-1, 0), 10, 0, TacticalRules.unit_types()[TacticalRules.MORTAR])
 	state.units.append(mortar)
 	var strike := Attack.new(runner.id, mortar.id)
 	var told: Array = TacticalCombat.told(state, strike, TacticalCombat.apply(state, strike))
-	TranslationServer.set_locale("pt_BR")
 	var said: String = TacticalStatus.said(told)
 	TranslationServer.set_locale("en")
-	assert_str(Sentence.english(told)).contains("red runner at %s" % runner.cell)
+	assert_str(Sentence.english(told)).contains("the red runner at %s" % runner.cell).contains("the blue mortar at %s" % mortar.cell)
 	assert_str(said).contains(str(runner.cell)).not_contains("runner").not_contains("red runner").not_contains("mortar")
 
 
@@ -109,8 +133,7 @@ func _assert_the_news_follows_the_language(scene: TacticalGame, locale: String, 
 
 
 func _status_of(scene: TacticalGame) -> String:
-	var status: Label = scene.get_node("Interface/Status")
-	return status.atr(status.text)
+	return (scene.get_node("Interface/Status") as Label).text
 
 
 func _mounted_scene(locale: String) -> TacticalGame:

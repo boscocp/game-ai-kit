@@ -8,6 +8,15 @@ const RED: int = TacticalScenario.RED
 const BLUE: int = TacticalScenario.BLUE
 
 var _rules := SquadRuleset.new()
+var _locale_before: String
+
+
+func before() -> void:
+	_locale_before = TranslationServer.get_locale()
+
+
+func after() -> void:
+	TranslationServer.set_locale(_locale_before)
 
 
 func test_opened_in_both_modes_it_starts_in_the_one_chosen_and_m_moves_between_them() -> void:
@@ -185,6 +194,50 @@ func test_no_game_of_this_mode_is_recorded() -> void:
 	var scene: TacticalGame = _opened(1)
 	scene.recording = true
 	assert_bool(scene._records()).is_false()
+
+
+# T110: a shot's news on the panel follows a language switched after it,
+# both ways -- the XCOM mode's line reaches the same news as the board's.
+func test_a_shot_s_news_follows_a_language_switched_after_it() -> void:
+	for locale: String in ["pt_BR", "en"]:
+		TranslationServer.set_locale(locale)
+		var scene: TacticalGame = _on_board(_facing())
+		scene.click_cell(Vector2i(7, 4))
+		_assert_the_news_follows_the_language(scene, locale, "red runner at (3, 4) shot blue shield at (7, 4)")
+
+
+# T110: the line a revealing walk leaves follows a switch too.
+func test_a_reveal_s_news_follows_a_language_switched_after_it() -> void:
+	for locale: String in ["pt_BR", "en"]:
+		TranslationServer.set_locale(locale)
+		var scene: TacticalGame = _on_board(_board([[RED, TacticalRules.RUNNER, Vector2i(1, 4)], [BLUE, TacticalRules.SHIELD, Vector2i(8, 4)]]))
+		scene.click_cell(Vector2i(3, 5))
+		_assert_the_news_follows_the_language(scene, locale, "an enemy came into sight")
+
+
+# The XCOM scene on `state`, piece 1 in hand and the fog drawn afresh.
+func _on_board(state: BoardState) -> TacticalGame:
+	var scene: TacticalGame = _opened(1)
+	scene.state = state
+	scene._selected_id = 1
+	scene._person_fog = null
+	scene._refresh()
+	return scene
+
+
+# As `tactical_news_test.gd` holds it: the news is English underneath, and
+# the panel shows it in the language switched to, and none of the other.
+func _assert_the_news_follows_the_language(scene: TacticalGame, locale: String, english_words: String) -> void:
+	var english: String = scene.news_in_english()
+	assert_str(english).override_failure_message("in %s the news is \"%s\"" % [locale, english]).contains(english_words)
+	TranslationServer.set_locale("pt_BR")
+	var portuguese: String = "\n".join(scene._last_event.map(TacticalStatus.said))
+	assert_str(portuguese).is_not_equal(english)
+	for shown: String in ["en" if locale == "pt_BR" else "pt_BR", locale]:
+		TranslationServer.set_locale(shown)
+		var expected: String = english if shown == "en" else portuguese
+		var stale: String = portuguese if shown == "en" else english
+		assert_str(scene._status.text).override_failure_message("%s -> %s:\n%s" % [locale, shown, scene._status.text]).contains(expected).not_contains(stale)
 
 
 # The tactical scene opened as the menu opens it: both modes, the one at

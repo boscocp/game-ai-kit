@@ -128,16 +128,23 @@ func test_the_shot_is_told_with_its_chance_and_cover() -> void:
 
 func test_the_shot_s_news_is_kept_as_keys_and_worded_where_shown() -> void:
 	# T110: the news is a `Sentence`, so the panel rewords it when the
-	# language changes after the shot -- the side, the piece and the
-	# outcome are values, each worded on its own.
+	# language changes after the shot -- the sides, the pieces and the
+	# outcome are values, each worded on its own. Kept with the screen in
+	# pt-BR, it must still be English underneath: kept in English, a word
+	# chosen too early would be the key itself (T110's review).
 	var state: BoardState = _facing(Vector2i(5, 4), Vector2i(1, 4))
-	var told: Array = _rules.told(state, Attack.new(1, 2), _rules.attack(state, Attack.new(1, 2)))
 	var locale_before: String = TranslationServer.get_locale()
 	TranslationServer.set_locale("pt_BR")
+	var told: Array = _rules.told(state, Attack.new(1, 2), _rules.attack(state, Attack.new(1, 2)))
 	var in_portuguese: String = TacticalStatus.said(told)
+	var outcome: Array = told[1]["outcome"]
+	var outcome_in_portuguese: String = TacticalStatus.said(outcome)
 	TranslationServer.set_locale(locale_before)
-	assert_str(Sentence.english(told)).contains("red ").contains("cover 40")
-	assert_str(in_portuguese).contains("40").not_contains("cover").not_contains("shot").not_contains("missed")
+	assert_str(Sentence.english(told)).contains("red runner at (5, 4) shot blue shield at (1, 4)").contains("cover 40")
+	assert_str(in_portuguese).contains("40").not_contains("cover").not_contains("shot").not_contains("runner")
+	# Whatever the die did: the outcome is a key of its own, worded in pt-BR.
+	assert_array(["missed", "hit, {left} health left", "hit and destroyed it"]).contains([outcome[0]])
+	assert_str(outcome_in_portuguese).is_not_empty().is_not_equal(Sentence.english(outcome))
 
 
 # --- cover on the tactical map ----------------------------------------------
