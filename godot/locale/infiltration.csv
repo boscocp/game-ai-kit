@@ -76,7 +76,7 @@ holding the peak,sustentando o pico
 fading,diminuindo
 relaxing,relaxando
 solved level {seed},nível resolvido {seed}
-solver (K): its next places; red: crossed out,resolvedor (K): seus próximos lugares; vermelho: riscado
+"white: still possible; red cross: crossed out; red ring: undone","branco: ainda possível; X vermelho: riscado; anel vermelho: desfeito"
 "solver: step {step} of {steps}, {assignments} assignments, {backtracks} backtracks, {restarts} fresh starts","resolvedor: passo {step} de {steps}, {assignments} atribuições, {backtracks} retrocessos, {restarts} recomeços"
 "refused: {thing}, {rule}","recusado: {thing}, {rule}"
 {thing}: {left} left,{thing}: restam {left}

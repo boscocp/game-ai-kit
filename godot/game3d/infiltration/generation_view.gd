@@ -100,7 +100,7 @@ func _apply(event: Dictionary) -> void:
 func _draw() -> void:
 	if solved == null:
 		return
-	var map_size := Vector2(size.x * 0.7, size.y - 24.0)
+	var map_size := Vector2(size.x * 0.7, size.y - 52.0)
 	var scale_by: float = minf(map_size.x / solved.sketch.width, map_size.y / solved.sketch.depth)
 	draw_rect(Rect2(Vector2.ZERO, size), BACK)
 	var origin := Vector2(6, 22)
@@ -111,15 +111,23 @@ func _draw() -> void:
 	draw_circle(origin + (Vector2(solved.sketch.start) + Vector2(0.5, 0.5)) * scale_by, 4.0, InfiltrationDrawing.PLAYER)
 	draw_circle(origin + (Vector2(solved.sketch.exit_cell) + Vector2(0.5, 0.5)) * scale_by, 4.0, InfiltrationDrawing.EXIT)
 	_draw_counts(Vector2(size.x * 0.72, 22))
+	_draw_words()
+
+
+# The solver's counts on top; the key and the last refusal at the bottom.
+func _draw_words() -> void:
 	var at: Vector2i = progress()
 	var label: String = tr("solver: step {step} of {steps}, {assignments} assignments, {backtracks} backtracks, {restarts} fresh starts").format({
 		step = at.x, steps = at.y, assignments = solved.solver.assignments, backtracks = solved.solver.backtracks,
 		restarts = solved.restarts})
-	draw_string(ThemeDB.fallback_font, Vector2(6, 15), label, HORIZONTAL_ALIGNMENT_LEFT, size.x - 12, 12, Color.WHITE)
+	var font: Font = ThemeDB.fallback_font
+	draw_string(font, Vector2(6, 15), label, HORIZONTAL_ALIGNMENT_LEFT, size.x - 12, 12, Color.WHITE)
+	var key: String = tr("white: still possible; red cross: crossed out; red ring: undone")
+	draw_string(font, Vector2(6, size.y - 22), key, HORIZONTAL_ALIGNMENT_LEFT, size.x - 12, 12, Color.WHITE)
 	if not _refused.is_empty():
 		var refused: String = tr("refused: {thing}, {rule}").format({thing = _kind_word(_refused["variable"]),
 			rule = tr(_refused["constraint"])})
-		draw_string(ThemeDB.fallback_font, Vector2(6, size.y - 6), refused, HORIZONTAL_ALIGNMENT_LEFT, size.x - 12, 12, CROSSED)
+		draw_string(font, Vector2(6, size.y - 6), refused, HORIZONTAL_ALIGNMENT_LEFT, size.x - 12, 12, CROSSED)
 
 
 func _draw_placed(name: String, value: int, origin: Vector2, scale_by: float) -> void:
