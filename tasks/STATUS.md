@@ -130,8 +130,8 @@ parallel. Each was reviewed by a fresh context before its merge, with the
 findings applied on the branch:
 
 - 124 T110, the tactical news keeps its words as keys (#65). The review
-  approved it with two should-fix findings, on the direction of the
-  switch test.
+  approved it with two should-fix findings: the switch test read in only
+  one direction, and the XCOM shot's side had no test.
 - 123 T111, a new gate selects its module and merges clean (#66). Its
   review found a blocker, fixed before the merge: a new manifest could
   claim global paths (CI, `godot/override.cfg`, another module's vectors),
@@ -149,8 +149,10 @@ selects three modules instead of everything. Waves that touch `scripts/`,
     `packages` and `KIT_MODULES`. These go beyond the task's decisions.
     *Recommended:* ratify (PR #66's body has each).
 22. T111: generate the wheel's `packages` from the manifests at build
-    time, so the list never conflicts. *Recommended:* only if the sorted
-    list still conflicts in the next batch.
+    time, so the list never conflicts. PR #66 recommends keeping it committed
+    and sorted, because a build-time list needs a setup step that
+    `pip install ./python` lacks. *Recommended:* keep it sorted, and revisit
+    only if it still conflicts.
 23. The timing gates (RTS, MCTS) still fail under the load of parallel
     worktrees whenever their module is selected. *Recommended:* run them
     alone in the coordinator's last gate.
@@ -164,10 +166,18 @@ selects three modules instead of everything. Waves that touch `scripts/`,
 for art), T94, T96, T112, T113, T114, T115. Six older tasks are still wip
 (T25, T40, T44, T45, T46, T48), and T43 is blocked.
 
-**Next:** a parallel batch of T87, T94 and T96, which touch different
-modules. Follow `docs/howto/parallel-batch.md`. T88 follows T87. T112 comes
-after the main tasks. T113 to T115 come after the repository opens, which
-is the owner's step after T112, not T112 itself.
+**Next, as proposed by this session from the task rows:** T87 first,
+since it needs T85 and T86, both done.
+
+- T96 also writes `godot/game/squad/`, so it runs after T87, not beside
+  it. T88's prereq is T87.
+- T94 can run beside T87, because they share no folder. It waits on the
+  owner's T93 choices (the default model, ADR 0023), which are listed in
+  the 2026-10-29 section below.
+- Follow `docs/howto/parallel-batch.md`.
+- T112 comes after the main tasks.
+- T113 to T115 come after the repository opens, which is the owner's step
+  after T112, not T112 itself.
 
 ## Resuming after 2026-10-30 (waves 112 to 117 merged)
 
