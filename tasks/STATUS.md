@@ -125,15 +125,49 @@ the reasoning.
 - T85: play the XCOM mode on both sides, with V on and off.
 - The older checks in the sections below.
 
-**What is left:** todo T55, T87, T88, T89 (only if T85's manual check asks
-for art), T94, T96, T110, T111, T112, T113, T114, T115. Six older tasks
-are still wip (T25, T40, T44, T45, T46, T48), and T43 is blocked.
+**Then, the same day: waves 123 and 124.** Two more pull requests landed in
+parallel. Each was reviewed by a fresh context before its merge, with the
+findings applied on the branch:
 
-**Next:** T111 and T110 in parallel (T111 touches the Makefile and the
-selector, so nothing that adds a gate runs beside it). Then a batch picked
-from T87, T88, T94 and T96, with the follow-ups above that the owner opens.
-T112 comes after the main tasks. T113 to T115 come after the repository
-opens, which is the owner's step after T112, not T112 itself.
+- 124 T110, the tactical news keeps its words as keys (#65). The review
+  approved it with two should-fix findings, on the direction of the
+  switch test.
+- 123 T111, a new gate selects its module and merges clean (#66). Its
+  review found a blocker, fixed before the merge: a new manifest could
+  claim global paths (CI, `godot/override.cfg`, another module's vectors),
+  so their tests would never run.
+
+The whole `make check` ran on #66's rebased head, the round's last merge:
+exit 0, 1652 gdUnit cases. Main is dc1eb83. T111's replay of wave 120 now
+selects three modules instead of everything. Waves that touch `scripts/`,
+`project.godot` or the manifests still select everything, by design.
+
+**Added to the owner's list above:**
+
+21. T111: rule 6 (a new technique module selects itself), new targets
+    that are not gates selecting nothing, and the sort refusals on
+    `packages` and `KIT_MODULES`. These go beyond the task's decisions.
+    *Recommended:* ratify (PR #66's body has each).
+22. T111: generate the wheel's `packages` from the manifests at build
+    time, so the list never conflicts. *Recommended:* only if the sorted
+    list still conflicts in the next batch.
+23. The timing gates (RTS, MCTS) still fail under the load of parallel
+    worktrees whenever their module is selected. *Recommended:* run them
+    alone in the coordinator's last gate.
+24. A fog hole older than T110, found by its review. In the XCOM mode, an
+    unseen mortar (sight 6, reach 7) shoots a red piece, and the news names
+    the mortar and its cell, though red cannot see it. *Recommended:* a
+    follow-up task, either wording the news from the person's fog or making
+    a shot reveal its shooter.
+
+**What is left:** todo T55, T87, T88, T89 (only if T85's manual check asks
+for art), T94, T96, T112, T113, T114, T115. Six older tasks are still wip
+(T25, T40, T44, T45, T46, T48), and T43 is blocked.
+
+**Next:** a parallel batch of T87, T94 and T96, which touch different
+modules. Follow `docs/howto/parallel-batch.md`. T88 follows T87. T112 comes
+after the main tasks. T113 to T115 come after the repository opens, which
+is the owner's step after T112, not T112 itself.
 
 ## Resuming after 2026-10-30 (waves 112 to 117 merged)
 
