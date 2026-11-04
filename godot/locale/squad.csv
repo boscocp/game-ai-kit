@@ -1,0 +1,70 @@
+en,pt_BR
+red side: yours,lado vermelho: o seu
+blue side: the computer,lado azul: o computador
+yellow number: health,número amarelo: vida
+open ground,terreno aberto
+deep water: only waders cross,água funda: só anfíbios atravessam
+refused: {why},recusado: {why}
+{side} is thinking with {controller},as {side} pensam com: {controller}
+next (drawn in pink): unit {unit} {why},próximo (em rosa): unidade {unit} {why}
+space plays it  ·  enter plays the rest of {side}'s turn,espaço joga  ·  enter joga o resto do turno das {side}
+{side} has finished its turn. Space hands it back to {other},as {side} terminaram o turno. Espaço devolve a vez às {other}
+{count} decision(s) played this turn,{count} decisão(ões) jogada(s) neste turno
+nothing in hand,nada na mão
+click one of your pieces.,clique numa peça sua.
+XCOM,XCOM
+weighed,ponderado
+random,aleatório
+"tactics in the style of XCOM: two actions a piece, cover, flanking and fog","tática no estilo de XCOM: duas ações por peça, cobertura, flanco e névoa"
+to win: leave the other squad no piece standing. After {rounds} rounds the side with more health left wins,para vencer: não deixe de pé nenhuma peça do outro esquadrão. Depois de {rounds} rodadas vence o lado com mais vida
+"red {red}, blue {blue} health left","vida restante: vermelhas {red}, azuis {blue}"
+a draw: {health}.  R starts again.,empate: {health}.  R recomeça.
+{winner} wins: {health}.  R starts again.,{winner} vencem: {health}.  R recomeça.
+"a random action per piece, on its side's view","uma ação aleatória por peça, na visão do seu lado"
+"every option of the piece weighed one action ahead, on its side's view","cada opção da peça pesada uma ação à frente, na visão do seu lado"
+"one of {count} choices, at random","uma de {count} escolhas, ao acaso"
+"shoots {piece} at {cell}: {chance}% for {damage}, the best of {count} shot(s), scored {score}","atira em {piece} em {cell}: {chance}% por {damage}, o melhor de {count} tiro(s), nota {score}"
+no shot from there,nenhum tiro dali
+a {chance}% shot from there,um tiro de {chance}% dali
+"weighed {count} cell(s) and took the best, scored {score}: {shot}, {danger} damage it may take there, {steps} to the nearest enemy it knows of","pesou {count} casa(s) e ficou com a melhor, nota {score}: {shot}, {danger} de dano que pode sofrer ali, {steps} até o inimigo mais próximo que conhece"
+missed,errou
+"hit, {left} health left","acertou, restam {left} de vida"
+hit and destroyed it,acertou e a destruiu
+"{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}), {outcome}","{piece} das {side} em {cell} atirou em {target} das {target_side} em {target_cell}: {chance}% (cobertura {cover}), {outcome}"
+"{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}, flanked), {outcome}","{piece} das {side} em {cell} atirou em {target} das {target_side} em {target_cell}: {chance}% (cobertura {cover}, flanqueado), {outcome}"
+light: a walk that keeps the shot,claro: um passo que guarda o tiro
+"amber: a dash, the piece's whole turn","âmbar: corrida, o turno inteiro"
+greyed: acted this turn,cinza: já agiu neste turno
+pink: what the computer will do next,rosa: o que o computador vai fazer
+"click an enemy to shoot it; the chance, and why:","clique num inimigo para atirar nele; a chance, e por quê:"
+Z takes back a walk that drew no dice and showed no enemy  ·  space ends your turn,Z desfaz um passo que não rolou dados nem revelou inimigo  ·  espaço encerra o seu turno
+"round {round}  ·  {side} to move  ·  health left: red {red}, blue {blue}","rodada {round}  ·  vez das {side}  ·  vida restante: vermelhas {red}, azuis {blue}"
+{piece} at {cell}: {chance}% = aim {aim} - defence {defence} - cover {cover},{piece} em {cell}: {chance}% = mira {aim} - defesa {defence} - cobertura {cover}
+"{piece} at {cell}: {chance}% = aim {aim} - defence {defence} - cover {cover}, flanked","{piece} em {cell}: {chance}% = mira {aim} - defesa {defence} - cobertura {cover}, flanqueado"
+"in hand: {piece} (unit {unit})  ·  health {health}  ·  aim {aim}, defence {defence}, damage {damage}  ·  range {range}, sight {sight}  ·  movement left {points}, an action is {action}","na mão: {piece} (unidade {unit})  ·  vida {health}  ·  mira {aim}, defesa {defence}, dano {damage}  ·  alcance {range}, visão {sight}  ·  movimento restante {points}, uma ação é {action}"
+this piece has acted this turn. Click another of your pieces.,esta peça já agiu neste turno. Clique noutra peça sua.
+this piece has dashed: it may not shoot this turn. Click another of your pieces.,esta peça correu: não pode atirar neste turno. Clique noutra peça sua.
+"click a lit cell to walk there: a light cell keeps the shot, an amber one is a dash and ends the piece's turn. Or shoot first, from here.","clique numa casa acesa para andar até ela: uma casa clara guarda o tiro, uma âmbar é uma corrida e encerra o turno da peça. Ou atire antes, daqui."
+no unit {id} is on the board,nenhuma unidade {id} está no tabuleiro
+unit {id} is not on the side to move,a unidade {id} não é do lado que joga
+unit {id} has dashed or shot this turn,a unidade {id} já correu ou atirou neste turno
+unit {id} is on the same side,a unidade {id} é do mesmo lado
+unit {shooter} sees no enemy unit {target} to shoot,a unidade {shooter} não vê nenhuma unidade inimiga {target} para atirar
+"unit {target} is {apart} away, and unit {shooter} reaches {reach}","a unidade {target} está a {apart}, e a unidade {shooter} alcança {reach}"
+dark: that side sees nothing here,escuro: aquele lado não vê nada
+"faded, with ?: last seen there","apagado, com ?: visto ali antes"
+a % on an enemy: your hit chance,um % num inimigo: sua chance
+on its turn: each option's score,na vez dele: nota de cada opção
+red (T): enemy odds on the cursor,vermelho (T): risco sob o cursor
+trees: half cover ({half}),árvores: meia cobertura ({half})
+rock: full cover ({full}),rocha: cobertura total ({full})
+trees and rock block sight,árvores e rocha tapam a visão
+"{piece}: aim {aim}, defence {defence}","{piece}: mira {aim}, defesa {defence}"
+"on the board, every option it weighed: its score above, its best hit chance below, the one it takes framed; V shows your own view instead","no tabuleiro, cada opção que pesou: a nota em cima, a melhor chance de acerto embaixo, a escolhida emoldurada; V mostra a sua própria visão"
+unit {id} cannot walk there,a unidade {id} não pode andar até lá
+next: a piece you cannot see acts,próximo: age uma peça que você não vê
+next (drawn in pink): unit {unit} walks where you cannot see,próximo (em rosa): a unidade {unit} anda para onde você não vê
+this {piece} has moved this turn,este {piece} já se moveu neste turno
+this {piece} has moved this turn; Z takes the move back,este {piece} já se moveu neste turno; Z desfaz o movimento
+this {piece} has moved this turn; it can still shoot from where it stands; Z takes the move back,esta peça ({piece}) já se moveu neste turno; ainda pode atirar de onde está; Z desfaz o movimento
+this {piece} has moved this turn; it can still shoot from where it stands,esta peça ({piece}) já se moveu neste turno; ainda pode atirar de onde está

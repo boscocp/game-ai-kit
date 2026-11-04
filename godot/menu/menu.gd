@@ -21,6 +21,14 @@
 ## A catalogue, not a game, and laid out like one: light text on a dark
 ## ground, nothing under 17 px, nothing pinned small in a corner (T8).
 ##
+## A card whose example plays in two modes -- the tactical card: Advance Wars
+## or XCOM (T85) -- shows the mode it will open in on a second button, and M
+## or that button chooses the other. The example is handed every mode's
+## ruleset, built from the script the catalogue names, and starts in the one
+## chosen. Opened with `-- --open=<make target> --mode=<mode>`, as
+## `make demo-tactical MODE=squad` opens it, the menu plays that card in that
+## mode straight away.
+##
 ## The button at the top right, or L, or Y on a pad, switches every example
 ## between English and Brazilian Portuguese at once, and the choice is kept
 ## for next time (T78, `Language`). The cards themselves are still English:
@@ -60,6 +68,10 @@ var _list: ItemList
 var _heading: Label
 var _card: RichTextLabel
 var _play: Button
+var _mode: Button
+# Card index -> the index of the mode it opens in; a card not here opens in
+# its first.
+var _modes_chosen: Dictionary = {}
 var _title: Label
 var _help: Label
 var _language: Button
@@ -84,6 +96,33 @@ func _ready() -> void:
 	_retranslate()
 	_list.grab_focus()
 	add_child(_pad)
+	_open_as_asked(OS.get_cmdline_user_args())
+
+
+# `--open=<target>` selects that card and plays it, in `--mode=<mode>` when
+# that card has the mode: what `make demo-tactical MODE=squad` asks for.
+func _open_as_asked(arguments: PackedStringArray) -> void:
+	var target: String = ""
+	var mode: String = ""
+	for argument: String in arguments:
+		if argument.begins_with("--open="):
+			target = argument.trim_prefix("--open=")
+		elif argument.begins_with("--mode="):
+			mode = argument.trim_prefix("--mode=")
+	var index: int = _index_of(target)
+	if target == "" or index == -1:
+		return
+	select(index)
+	if _choose_mode_named(index, mode):
+		play.call_deferred()
+
+
+# The card whose make target is `target`, or -1.
+func _index_of(target: String) -> int:
+	for index: int in range(catalogue.cards.size()):
+		if catalogue.cards[index].get("target", "") == target:
+			return index
+	return -1
 
 
 ## Speak the other language, everywhere, and remember it.
@@ -105,6 +144,7 @@ func _retranslate() -> void:
 		tr("Esc inside an example comes back here. On a pad: the D-pad, A, LB and RB, Y, and View."),
 	])
 	_play.text = tr("Play  (Enter)")
+	_show_mode()
 	_language.text = tr("Language: English  (L)")
 	if catalogue.cards.is_empty():
 		_heading.text = tr("No examples to show")
@@ -125,6 +165,65 @@ func select(index: int) -> void:
 	_heading.text = card.get("title", "")
 	_card.text = ExampleCatalogue.text_of(card, ACCENT)
 	_card.scroll_to_line(0)
+	_show_mode()
+
+
+## The selected card's next mode, round to the first; nothing for a card
+## with one mode.
+func switch_mode() -> void:
+	var index: int = _selected()
+	var modes: Array = _modes_of(index)
+	if modes.size() < 2:
+		return
+	_modes_chosen[index] = (int(_modes_chosen.get(index, 0)) + 1) % modes.size()
+	_show_mode()
+
+
+## The key of the mode the selected card opens in, or "" for a card with one.
+func chosen_mode() -> String:
+	var modes: Array = _modes_of(_selected())
+	if modes.is_empty():
+		return ""
+	return str((modes[int(_modes_chosen.get(_selected(), 0))] as Dictionary).get("mode", ""))
+
+
+# The mode button, shown only for a card with modes, naming the one chosen.
+func _show_mode() -> void:
+	if _mode == null:
+		return
+	var modes: Array = _modes_of(_selected())
+	_mode.visible = modes.size() > 1
+	if _mode.visible:
+		var title: String = str((modes[int(_modes_chosen.get(_selected(), 0))] as Dictionary).get("title", ""))
+		_mode.text = tr("Mode: {mode}  (M)").format({mode = title})
+
+
+# Choose card `index`'s mode called `mode`; "" leaves the first. A name the
+# card has no mode of is said, and the card is not played: opening another
+# mode with no word would look like the one asked for.
+func _choose_mode_named(index: int, mode: String) -> bool:
+	var modes: Array = _modes_of(index)
+	var keys: Array[String] = []
+	for position: int in range(modes.size()):
+		keys.append(str((modes[position] as Dictionary).get("mode", "")))
+		if keys[position] == mode:
+			_modes_chosen[index] = position
+	_show_mode()
+	if mode == "" or mode in keys:
+		return true
+	printerr("menu: %s has no mode %s; its modes are %s" % [catalogue.cards[index].get("target", ""), mode, ", ".join(keys)])  # not shown: a console line
+	return false
+
+
+func _modes_of(index: int) -> Array:
+	if index < 0 or index >= catalogue.cards.size():
+		return []
+	return catalogue.cards[index].get("modes", [])
+
+
+func _selected() -> int:
+	var chosen: PackedInt32Array = _list.get_selected_items()
+	return chosen[0] if not chosen.is_empty() else -1
 
 
 ## Open the selected example in place of the menu.
@@ -134,7 +233,21 @@ func play() -> void:
 		return
 	var packed: PackedScene = load(catalogue.cards[chosen[0]].get("scene", "")) as PackedScene
 	if packed != null:
-		open(packed.instantiate())
+		open(_in_its_modes(packed.instantiate(), chosen[0]))
+
+
+# `example`, handed every mode of card `index` -- a ruleset built from the
+# script each names -- to start in the one chosen; as it was for a card with
+# one mode.
+func _in_its_modes(example: Node, index: int) -> Node:
+	var modes: Array = _modes_of(index)
+	if modes.size() < 2 or not example.has_method("play_in_modes"):
+		return example
+	var rulesets: Array = []
+	for mode: Dictionary in modes:
+		rulesets.append((load(str(mode.get("ruleset", ""))) as GDScript).new())
+	example.call("play_in_modes", rulesets, int(_modes_chosen.get(index, 0)))
+	return example
 
 
 ## Mount `example` as the current scene and hide the menu. Public so a test
@@ -184,6 +297,9 @@ func _input(event: InputEvent) -> void:
 	elif not is_playing() and key.keycode == KEY_L and not key.echo:
 		get_viewport().set_input_as_handled()
 		switch_language()
+	elif not is_playing() and key.keycode == KEY_M and not key.echo:
+		get_viewport().set_input_as_handled()
+		switch_mode()
 	elif not is_playing() and key.keycode in [KEY_PAGEUP, KEY_PAGEDOWN]:
 		var bar: VScrollBar = _card.get_v_scroll_bar()
 		bar.value += bar.page * (1.0 if key.keycode == KEY_PAGEDOWN else -1.0)
@@ -240,6 +356,12 @@ func _build_card(size_now: Vector2) -> void:
 	_play.focus_mode = Control.FOCUS_NONE
 	_play.pressed.connect(play)
 	add_child(_play)
+	_mode = Button.new()
+	_mode.position = Vector2(left + 280.0, size_now.y - MARGIN * 2.5 - 48.0)
+	_mode.add_theme_font_size_override("font_size", LIST_SIZE)
+	_mode.focus_mode = Control.FOCUS_NONE
+	_mode.pressed.connect(switch_mode)
+	add_child(_mode)
 
 
 func _label(where: Vector2, font_size: int, colour: Color) -> Label:

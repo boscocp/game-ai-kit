@@ -203,7 +203,7 @@
       "target": "demo-tactical",
       "title": "Tactics against the computer",
       "scene": "res://game/tactical/tactical.tscn",
-      "decides": "For every computer piece, where it walks, what it attacks, and what its workshop builds -- by whichever controller C picks.",
+      "decides": "Two modes of one game, chosen here with M or in the game with M. Advance Wars: for every computer piece, where it walks, what it attacks, and what its workshop builds -- by whichever controller C picks. XCOM: for the computer's piece about to act, where it walks and whom it shoots, on what its side sees through the fog.",
       "techniques": [
         {"technique": "rules", "part": "the default: a written priority list, the baseline everything else is measured against"},
         {"technique": "strips", "part": "the planner: a plan of steps searched with A* over facts about the board, replanned every few turns"},
@@ -213,12 +213,19 @@
         {"technique": "behaviour-tree", "part": "another of the four"},
         {"technique": "goap", "part": "another, its actions priced in turns"},
         {"technique": "htn", "part": "the fourth"},
-        {"technique": "influence-map", "part": "the threat map tinted on the board: how many enemy pieces could strike each cell"}
+        {"technique": "influence-map", "part": "the threat map tinted on the board: how many enemy pieces could strike each cell"},
+        {"technique": "weighed-actions", "part": "XCOM's first enemy: every walk and shot of the piece about to act scored on its side's view -- the shot it leaves, the fire it walks into, cover and flanks in both -- the best taken"}
       ],
-      "controls": "click a unit, then a lit cell; W waits; 1-5 build; Z undoes; space ends the turn; C changes the computer; S swaps sides; T the threat map",
-      "controllers": ["rules", "planner", "learned", "easy", "normal", "hard", "state machine", "behaviour tree", "GOAP", "HTN"],
-      "roster": "res://game/tactical/tactical_roster.gd",
-      "watch": "Each computer decision drawn on the board before it is played, with the reason in the status.",
+      "controls": "click a unit, then a lit cell; click an enemy to attack or shoot; W waits; 1-5 build; Z undoes; space ends the turn; C changes the computer; S swaps sides; M the other mode; T the threat map (in XCOM: each enemy's chance against the cell under the cursor); V, in XCOM, what the computer sees",
+      "modes": [
+        {"mode": "advance wars", "title": "Advance Wars", "ruleset": "res://game/tactical/advance_wars_ruleset.gd",
+         "controllers": ["rules", "planner", "learned", "easy", "normal", "hard", "state machine", "behaviour tree", "GOAP", "HTN"],
+         "roster": "res://game/tactical/tactical_roster.gd"},
+        {"mode": "squad", "title": "XCOM", "ruleset": "res://game/squad/squad_ruleset.gd",
+         "controllers": ["weighed", "random"],
+         "roster": "res://game/squad/squad_roster.gd"}
+      ],
+      "watch": "Each computer decision drawn on the board before it is played, with the reason in the status. In XCOM, the board shows what the computer sees, and every option it weighed for the piece about to act: its score, and its best hit chance; your own shots show their chance on the target before you click.",
       "docs": "docs/concepts/planning-in-strategy-games.md"
     },
     {

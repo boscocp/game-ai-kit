@@ -16,6 +16,10 @@
 ## A decision the board refuses is not played and is kept in `refused`. The
 ## controller's contract says that never happens, and the tests hold it to
 ## that over many games; if it does, the turn goes on rather than stopping.
+## Under fog it can happen honestly: a walk planned on a side's view may run
+## into a piece that side does not see. The controller is then told, and its
+## answer (`BlueController.after_refusal`), if it has one, is the next
+## decision for the same piece -- so a refusal costs no action (T85).
 ##
 ## When not to use it: red's turn, which a person plays (`TacticalTurn`).
 class_name BlueTurn
@@ -28,8 +32,12 @@ var ruleset: TacticalRuleset
 var next: TacticalDecision
 ## What blue has done this turn, in order.
 var played: Array[TacticalDecision] = []
-## Decisions the board refused. Empty, unless a controller breaks its contract.
+## Decisions the board refused. Empty, unless a controller breaks its contract
+## -- or, under fog, ran into what its side could not see.
 var refused: Array[TacticalDecision] = []
+## The refused decisions the controller had nothing instead of: each one a
+## piece's action lost this turn.
+var lost: Array[TacticalDecision] = []
 var _waiting: Array[int] = []
 # Workshops that had no room when asked, to be asked again at the end.
 var _ask_again: Array[int] = []
@@ -48,6 +56,7 @@ func _init(deciding: BlueController, rules: TacticalRuleset = null) -> void:
 func begin(state: BoardState) -> void:
 	played.clear()
 	refused.clear()
+	lost.clear()
 	_waiting.clear()
 	_ask_again.clear()
 	_to_ask_about_attacking = -1
@@ -70,6 +79,11 @@ func play(state: BoardState) -> BoardState:
 	var after: BoardState = next.played_on(state, ruleset)
 	if after == null:
 		refused.append(next)
+		var instead: TacticalDecision = controller.after_refusal(state, next)
+		if instead != null:
+			next = instead
+			return state
+		lost.append(refused.back())
 		after = state
 	else:
 		played.append(next)

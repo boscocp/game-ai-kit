@@ -70,6 +70,14 @@ const REQUIRED: Dictionary = {
 	"res://game/maze/maze.tscn": [["target", false], ["distance", true]],
 }
 
+## The same, for an example opened in a mode other than its first (T85),
+## by "<scene> <mode>": every such mode a card lists must be named here, so a
+## mode added to the catalogue cannot go unstepped. The first mode is the
+## scene's own, opened alone above.
+const MODE_REQUIRED: Dictionary = {
+	"res://game/tactical/tactical.tscn squad": [["why", false], ["score", true], ["chance", true]],
+}
+
 ## The examples a controller drives, whose legends' height is measured with
 ## the pad's lines in them (T108). Named, so a pad moved out of an example's
 ## direct children -- where `_has_pad` looks -- fails here rather than
@@ -114,6 +122,8 @@ class ErrorCounter extends Logger:
 
 
 var _counter := ErrorCounter.new()
+# How many modes after a card's first were stepped.
+var _modes_checked: int = 0
 
 
 func _initialize() -> void:
@@ -142,10 +152,11 @@ func _run() -> void:
 	failures += await _planted_heights()
 	for path: String in SCENES:
 		failures += await _check_scene(path)
+	failures += await _check_modes()
 	for failure: String in failures:
 		print(failure)
-	print("demo overlays: %d example(s) in %s, %d failure(s)" % [SCENES.size(), TranslationServer.get_locale(),
-		failures.size()])
+	print("demo overlays: %d example(s) and %d more mode(s) in %s, %d failure(s)" % [SCENES.size(), _modes_checked,
+		TranslationServer.get_locale(), failures.size()])
 	quit(1 if not failures.is_empty() else 0)
 
 
@@ -156,6 +167,33 @@ func _check_scene(path: String) -> Array[String]:
 	if packed == null:
 		return ["%s: does not load" % path]
 	return await _check_node(path, packed.instantiate(), REQUIRED.get(path, []))
+
+
+# Every card's modes after its first, each opened as the menu opens it --
+# handed every mode's ruleset, starting in that one -- and stepped as above.
+func _check_modes() -> Array[String]:
+	var failures: Array[String] = []
+	for card: Dictionary in ExampleCatalogue.load_from().cards:
+		for index: int in range(1, card.get("modes", []).size()):
+			failures += await _check_mode(card, index)
+	return failures
+
+
+# The card's mode at `index`, opened in it and stepped.
+func _check_mode(card: Dictionary, index: int) -> Array[String]:
+	var modes: Array = card["modes"]
+	var label: String = "%s %s" % [card.get("scene", ""), modes[index].get("mode", "")]
+	if not MODE_REQUIRED.has(label):
+		return ["%s: a mode with no fields named in MODE_REQUIRED" % label]
+	var example: Node = (load(card.get("scene", "")) as PackedScene).instantiate()
+	example.call("play_in_modes", modes.map(_ruleset_of), index)
+	_modes_checked += 1
+	return await _check_node(label, example, MODE_REQUIRED[label])
+
+
+# The ruleset a card's mode names, built as the menu builds it.
+func _ruleset_of(mode: Dictionary) -> Object:
+	return (load(mode["ruleset"]) as GDScript).new()
 
 
 # Mount one example, step it, ask it, and take it down again.

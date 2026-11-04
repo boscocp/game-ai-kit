@@ -97,3 +97,81 @@ extends RefCounted
 func controller_after(row_name: String) -> String:
 	var order: Array[String] = roster_names()
 	return order[(order.find(row_name) + 1) % order.size()]
+
+
+# --- what the scene shows (T85) ------------------------------------------------
+# Each of these has an answer that leaves the screen as Advance Wars drew it
+# before the seam, so only a mode that shows something else answers them.
+
+## The mode's name as a person knows the game it comes from, such as
+## "Advance Wars": a game's name, the same in every language.
+func title() -> String:
+	return mode_name()
+
+
+## The line at the top of the screen saying what the game is.
+@abstract func what_this_is() -> String
+
+
+## What `side` sees of `state`, remembering what `earlier` -- the same side's
+## last fog, or null -- had seen; null in a mode without fog, and the scene
+## then draws the board whole.
+func fog(_state: BoardState, _side: int, _earlier: TacticalFog) -> TacticalFog:
+	return null
+
+
+## The cells of `walks` (cell -> route, as `TacticalReach.walks_for` gives
+## them) that a walk to would leave `unit` spent -- a dash, drawn in a
+## second tint. None in a mode where every walk is one action.
+func dashes(_state: BoardState, _unit: Unit, _walks: Dictionary) -> Array[Vector2i]:
+	return []
+
+
+## A short label on each enemy `shooter_id` may attack now -- its hit
+## chance, "63%" -- drawn on the target before anything is clicked. None in
+## a mode whose odds are words in the status.
+func odds(_state: BoardState, _shooter_id: int) -> Dictionary[Vector2i, String]:
+	return {}
+
+
+## What T tints with the cursor on `cursor`, for a person playing `person`
+## with `in_hand_id` in hand (-1 for nothing): `tint`, unless the mode
+## answers about the cell under the cursor.
+func tint_at(state: BoardState, side: int, _cursor: Vector2i, _person: int, _in_hand_id: int) -> Dictionary[Vector2i, int]:
+	return tint(state, side)
+
+
+## True when `side`, going from `before` to `after`, saw an enemy it did not
+## see before: a walk that showed something can no longer be taken back. False
+## in a mode without fog.
+func reveals(_before: BoardState, _after: BoardState, _side: int) -> bool:
+	return false
+
+
+## The status on the person's turn: the piece in hand and what to do with
+## it, the last refusal and what just happened.
+func status(state: BoardState, in_hand: Unit, refusal: String, news: String, can_attack: bool) -> String:
+	return TacticalStatus.text(state, in_hand, refusal, news, can_attack, self)
+
+
+## The status on the computer's turn: who plays it, and what it will do --
+## as much of it as `fog`, the fog on screen (null for none), lets show.
+func computer_status(state: BoardState, turn: BlueTurn, controller: BlueController, news: String,
+		_fog: TacticalFog) -> String:
+	return TacticalStatus.computer_text(state, turn, controller, news)
+
+
+## True when `unit`, which has not attacked this turn, still may: always in
+## a mode where walking leaves the attack, as Advance Wars's does.
+func can_still_attack(_state: BoardState, _unit: Unit) -> bool:
+	return true
+
+
+## What a person is told on picking up `unit` after it has walked this turn.
+func moved_already(unit: Unit, can_attack: bool, can_undo: bool) -> String:
+	return TacticalStatus.moved_already(unit, can_attack, can_undo)
+
+
+## The legend's entries, `[Color or Texture2D, String]` each.
+func legend() -> Array[Array]:
+	return TacticalLegend.entries(TacticalRules.unit_types())

@@ -113,7 +113,7 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-rts-budget test-mcts-budget test-rts-simulation test-rts-match test-steering-properties \
        test-racing-ladder test-racing-does-not-cheat test-game3d-floor test-botmatch-effects \
        test-racing3d-car test-racing3d-effects test-racing3d-ladder test-racing3d-does-not-cheat test-racing3d-you-drive \
-       test-infiltration-properties test-infiltration test-pad \
+       test-infiltration-properties test-infiltration test-pad test-squad-match \
        test-locale-screen ## Run every gate
 
 .PHONY: check-no-engine
@@ -461,6 +461,10 @@ measure-director: import ## T90: the director over seeded runs -- seconds in eac
 	@# Printed, not a gate: it exits 1 only when no run relaxed at all.
 	@$(GODOT) --headless --path godot -s res://test/infiltration/director_measure.gd
 
+.PHONY: test-squad-match
+test-squad-match: import ## The XCOM mode's first enemy against a random mover: at least 80 of 100 seeded matches from each seat (T85, ~30 s)
+	@$(GODOT) --headless --path godot -s res://test/squad/squad_match_runner.gd -- $(or $(GAMES),100) $(or $(WINS),80)
+
 .PHONY: test-squad-vectors
 test-squad-vectors: import ## The XCOM-style shot: cover, flanking, chance and die, both languages against spec/vectors/squad (T84)
 	@# The answers were worked out by hand; neither language derived them.
@@ -763,8 +767,12 @@ demo-rts: import ## Real-time strategy against a commander that plans: drag sele
 	@$(GODOT) --path godot res://game/rts/rts.tscn
 
 .PHONY: demo-tactical
-demo-tactical: import ## Advance Wars style tactics against the computer: click to move, W waits, 1-5 build, Z undo, space ends the turn, C changes the computer (rules, planner, learned, easy, normal, hard, state machine, behaviour tree, GOAP, HTN), S swaps sides
-	@$(GODOT) --path godot res://game/tactical/tactical.tscn
+demo-tactical: import ## Advance Wars style tactics against the computer: click to move, W waits, 1-5 build, Z undo, space ends the turn, C changes the computer, S swaps sides; MODE=squad opens the menu on it in XCOM mode (M switches, V the computer's view)
+	@# Without MODE, the scene on its own, in Advance Wars. With it, the
+	@# project's main scene -- the menu -- straight into this card in that
+	@# mode, since the menu is what hands the scene its modes (T85);
+	@# `check_demos.py` holds both forms.
+	@$(GODOT) --path godot $(if $(MODE),-- --open=demo-tactical --mode=$(MODE),res://game/tactical/tactical.tscn)
 
 .PHONY: tactical-win-rates
 tactical-win-rates: import ## Seeded games between the tactical board's controllers: wins, rounds, stuck pieces (~1 min)

@@ -40,6 +40,54 @@ a game people know (here XCOM, named on the card's mode).
   moving a piece it cannot see must not change its decision -- the racer's
   and the bot match's "does not cheat" shape.
 
+## What the work decided, for the owner to confirm (wave 119)
+
+None of it changes a decision above; each is a detail the task left open,
+and each waits on the owner.
+
+- **The menu chooses the mode with M or a second button**, beside Play;
+  the card lists `modes`, each with its key, title, the ruleset script the
+  menu builds it from, and its own `controllers` and `roster`. The card
+  has no controllers outside its modes. `make demo-tactical` alone still
+  opens the scene, in Advance Wars; with `MODE=` it opens the menu on the
+  card with `-- --open=demo-tactical --mode=...`.
+- **`weighed` is the squad roster's first row, `random` its second**: the
+  one a person meets first is the agent. T84's single row, `random`, is
+  kept as the floor (owner's item 5).
+- **The seam grew**, each answer leaving Advance Wars as it was: the title
+  and the line saying what the game is, a side's fog (`TacticalFog`), the
+  dash cells, the odds on each target, the tint under the cursor, the two
+  statuses, the legend, and whether a walk revealed an enemy.
+- **On the computer's turn the board shows what the computer sees**, with
+  its weighing; **V** turns that off and shows the person's view, in which a
+  piece the person cannot see acts unseen. That is what "with the scene's
+  decision view" was read as.
+- **A walk that brings an enemy into sight cannot be taken back**, as a
+  shot cannot: Z would let a person look round a corner for free.
+- **T, in this mode, needs a defender**: the chance is against the
+  person's piece on the cell under the cursor, or else the piece in hand.
+- **The weighing is `ActionChoice`'s product, not a sum**: T101 has landed,
+  so the task's "uses `ai_utility`" applies. Its curves are in
+  `godot/game/squad/weighing.json`, set by hand and measured: 100 of 100 a
+  seat against the random mover.
+- **The squad's defence values are unchanged** (owner's item 3). The page
+  gives the chances behind rock with the numbers as they are; the match gate
+  cannot tell 20 from 10 for the shield, so the recommendation (0-10) stays
+  for the manual check's play.
+- **Files outside the Files line:** `godot/test/locale/locale_screen.gd`
+  (it now reads the XCOM mode in pt-BR too), `godot/locale/menu.csv` (the
+  mode button's words) and `godot/project.godot` (the squad's table is
+  loaded). `godot/locale/squad.csv` makes module `squad` a translated one,
+  so T84's words in it -- the shot's line, the end, the refusals' shapes --
+  pass through the table too.
+
+- **After the review** (`docs/reviews/119-xcom-style-mode-you-can-play.md`),
+  also for the owner: a walk into a piece the side cannot see is refused
+  in words that name nothing (or should it stop and reveal?); V on by
+  default lifts the person's fog each computer turn; a second floor for
+  the match bar; whether the seam's presentation hooks belong on a second
+  object; the saturating curves of `weighing.json`.
+
 ## Steps
 
 1. The tactical scene reads its rulesets from its opener (T84's seam); the

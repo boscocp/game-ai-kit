@@ -294,3 +294,8 @@ any length,qualquer extensão
 the file publishes no feature_conventions block,o arquivo não publica o bloco feature_conventions
 "feature_conventions.{name} is {value}, and the game needs a positive whole number","feature_conventions.{name} é {value}, e o jogo precisa de um número inteiro positivo"
 feature_conventions says the cheapest ground ({cheapest}) costs more than the dearest ({dearest}),feature_conventions diz que o terreno mais barato ({cheapest}) custa mais que o mais caro ({dearest})
+Advance Wars,Advance Wars
+an enemy came into sight: the walk cannot be taken back,um inimigo apareceu: o passo não pode ser desfeito
+mode: {mode}  ·  M plays {other},modo: {mode}  ·  M joga {other}
+V shows or hides what the computer sees and weighs,V mostra ou esconde o que o computador vê e pesa
+"a walk that showed an enemy cannot be taken back, nor anything before it this turn","um passo que revelou um inimigo não pode ser desfeito, nem nada antes dele neste turno"

@@ -50,11 +50,12 @@ static func rule() -> String:
 
 ## The words for the end of a game.
 static func announcement(winner_side: int, state: BoardState) -> String:
-	var health: String = "red %d, blue %d health left" % [health_left(state, TacticalScenario.RED), health_left(state, TacticalScenario.BLUE)]
+	var health: String = TranslationServer.translate("red {red}, blue {blue} health left").format({
+		red = health_left(state, TacticalScenario.RED), blue = health_left(state, TacticalScenario.BLUE)})
 	if winner_side == TacticalVictory.DRAW:
 		return TranslationServer.translate("a draw: {health}.  R starts again.").format({health = health})
 	return TranslationServer.translate("{winner} wins: {health}.  R starts again.").format({
-		winner = "red" if winner_side == TacticalScenario.RED else "blue", health = health})
+		winner = TacticalStatus.side_name(winner_side), health = health})
 
 
 static func _more_health(state: BoardState) -> int:

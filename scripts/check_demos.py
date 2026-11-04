@@ -46,7 +46,16 @@ the menu and this gate share:
     is a row of that table, every row is listed, in the table's order and
     once each (C9). A row
     is a line opening a list with its name as a string literal, which is how
-    `TacticalRoster` writes them (T63); one in a comment is not a row.
+    `TacticalRoster` writes them (T63); one in a comment is not a row;
+  * a card whose example plays in several `modes` (T85) names, for each, the
+    mode's key, its title, the `ruleset` script the menu builds it from, and
+    its own `controllers` and `roster`, held to each other as above (C9) --
+    and lists no controllers outside them. A technique reached only through
+    a mode's ruleset counts as reached (C7): the menu hands the scene that
+    ruleset, which is the only way the scene ever runs it;
+  * a target may open its card's mode instead, when `MODE` is given:
+    `$(if $(MODE),-- --open=<itself> --mode=$(MODE),res://<scene>)` -- the
+    main scene, the menu, straight into its own card; any other card is a D3.
 
 Exit codes
 ----------
@@ -80,6 +89,9 @@ GOOD_NAME = re.compile(r"^(run|demo-[a-z0-9-]+)$")
 #: The one recipe an example may have: open the project in a window, on a
 #: scene or (for `run`) on its main scene. `--headless` is no window.
 WINDOW_RECIPE = re.compile(r"^\t@?\$\(GODOT\) --path godot(?: res://(\S+\.tscn))?$")
+#: The same, opening the menu on its own card in a mode when MODE is given.
+MODE_RECIPE = re.compile(r"^\t@?\$\(GODOT\) --path godot \$\(if \$\(MODE\),-- --open=(\S+) "
+                         r"--mode=\$\(MODE\),res://(\S+\.tscn)\)$")
 
 MAIN_SCENE = re.compile(r'^run/main_scene\s*=\s*"res://([^"]+)"', re.MULTILINE)
 # The header is the whole line up to its *last* bracket: `groups=["x"]` puts a
@@ -118,6 +130,8 @@ def recipe_of(makefile: str, target: str) -> list[str]:
 def scene_of(root: pathlib.Path, makefile: str, target: str) -> tuple[str | None, str]:
     """The scene a target opens, relative to `godot/`, or None and why not."""
     recipe = recipe_of(makefile, target)
+    if len(recipe) == 1 and MODE_RECIPE.match(recipe[0]):
+        return mode_scene_of(target, MODE_RECIPE.match(recipe[0]))
     if len(recipe) != 1 or not WINDOW_RECIPE.match(recipe[0]):
         return None, "its recipe is not one line opening the project in a window"
     named = WINDOW_RECIPE.match(recipe[0]).group(1)
@@ -127,6 +141,15 @@ def scene_of(root: pathlib.Path, makefile: str, target: str) -> tuple[str | None
         return None, "its recipe names no scene"
     main = MAIN_SCENE.search((root / "godot" / "project.godot").read_text(encoding="utf-8"))
     return (main.group(1), "") if main else (None, "the project has no main scene")
+
+
+def mode_scene_of(target: str, found: re.Match) -> tuple[str | None, str]:
+    """The scene a MODE recipe opens without MODE; with it, the project's
+    main scene -- the menu -- opens, and must open on the target's own card."""
+    card, scene = found.groups()
+    if card != target:
+        return None, f"with MODE it opens the menu on {card}'s card, not its own"
+    return scene, ""
 
 
 def sections(text: str) -> list[tuple[str, dict[str, str], str]]:
@@ -226,6 +249,8 @@ def example_scenes_on_disk(root: pathlib.Path) -> set[str]:
 
 CATALOGUE = "godot/menu/catalogue.json"
 CARD_TEXT = ("title", "decides", "watch", "docs")
+#: What a card's mode names (T85).
+MODE_FIELDS = ("mode", "title", "ruleset", "controllers", "roster")
 
 #: A row of a controller table: a line opening a list, its name the first
 #: element, written as a literal.
@@ -318,6 +343,15 @@ class Reach:
         self.classes = project_classes(root)
         self._scripts: dict[str, set[str]] = {}
 
+    def scripts_with_modes(self, scene: str, card: dict) -> set[str]:
+        """`scripts(scene)`, and every script a mode's ruleset reaches: the
+        menu builds that ruleset and hands it to the scene (T85)."""
+        reached = set(self.scripts(scene))
+        for mode in card.get("modes") or []:
+            if isinstance(mode, dict) and mode.get("ruleset"):
+                reached |= self.scripts(str(mode["ruleset"]).removeprefix("res://"))
+        return reached
+
     def scripts(self, scene: str) -> set[str]:
         """Every script reachable from `scene`: its own, the scenes it
         instances, and whatever those scripts use, followed until nothing new
@@ -364,10 +398,48 @@ def card_findings(reach: Reach, card: dict, techniques: dict, opened: str | None
     if not named:
         findings.append(f"C4 {target}: the card names no technique")
     exists = scene and (reach.root / "godot" / scene).exists()
-    run = reach.scripts(scene) if exists else set()
+    run = reach.scripts_with_modes(scene, card) if exists else set()
     for entry in named:
         findings += technique_findings(reach, target, entry, techniques, run)
-    return findings + controller_findings(reach.root, card)
+    return findings + controller_findings(reach.root, card) + mode_findings(reach.root, card)
+
+
+def mode_findings(root: pathlib.Path, card: dict) -> list[str]:
+    """Each of the card's modes: named, built from a ruleset that exists, and
+    its controllers held to its own roster (C9)."""
+    target, modes = card.get("target", "?"), card.get("modes")
+    if modes is None:
+        return []
+    if not isinstance(modes, list) or len(modes) < 2:
+        return [f"C9 {target}: `modes` lists two or more modes, or is left out"]
+    if card.get("controllers") is not None or card.get("roster") is not None:
+        return [f"C9 {target}: a card with modes lists its controllers under each mode, not beside them"]
+    findings, keys = [], []
+    for mode in modes:
+        if not isinstance(mode, dict) or not all(str(mode.get(field, "")).strip() for field in MODE_FIELDS):
+            findings.append(f"C9 {target}: a mode needs {', '.join(MODE_FIELDS)}")
+            continue
+        keys.append(mode["mode"])
+        if not (root / "godot" / str(mode["ruleset"]).removeprefix("res://")).is_file():
+            findings.append(f"C9 {target}: mode {mode['mode']!r}'s ruleset {mode['ruleset']} does not exist")
+        else:
+            findings += roster_of_ruleset(root, target, mode)
+        findings += controller_findings(root, {**mode, "target": f"{target} in {mode['mode']}"})
+    if len(set(keys)) != len(keys):
+        findings.append(f"C9 {target}: a mode is listed twice")
+    return findings
+
+
+def roster_of_ruleset(root: pathlib.Path, target: str, mode: dict) -> list[str]:
+    """A mode's roster is the one its ruleset builds from: the ruleset's code
+    uses the roster's class. Otherwise the card would hold its controllers to
+    one table while the scene cycled another (wave 119's review)."""
+    roster = root / "godot" / str(mode["roster"]).removeprefix("res://")
+    found = CLASS_NAME.search(roster.read_text(encoding="utf-8")) if roster.is_file() else None
+    ruleset = (root / "godot" / str(mode["ruleset"]).removeprefix("res://")).read_text(encoding="utf-8")
+    if found is None or not re.search(rf"\b{found.group(1)}\b", code_of(ruleset)):
+        return [f"C9 {target}: mode {mode['mode']!r}'s ruleset {mode['ruleset']} does not build from its roster {mode['roster']}"]
+    return []
 
 
 def controller_findings(root: pathlib.Path, card: dict) -> list[str]:
@@ -508,6 +580,9 @@ func decision_overlay() -> Dictionary:
 
 
 SOUND_ROSTER = """\
+class_name SoundRoster
+extends RefCounted
+
 static func rows() -> Array[Array]:
 \treturn [
 \t\t["rules", "the baseline",
@@ -551,7 +626,8 @@ def build(folder: pathlib.Path, makefile: str = SOUND_MAKEFILE, search_script: s
           legend: bool = True, listed: tuple[str, ...] = ("game/main.tscn", "demos/search.tscn"),
           scenes: tuple[str, ...] = ("game/main.tscn", "demos/search.tscn"), commented: str = "",
           detached_legend: bool = False, stray: bool = False, editor_form: bool = False,
-          catalogue: str | None = catalogue_text(), roster: str = SOUND_ROSTER) -> pathlib.Path:
+          catalogue: str | None = catalogue_text(), roster: str = SOUND_ROSTER,
+          ruleset: str | None = None) -> pathlib.Path:
     """A small repository with two examples, broken where a test says."""
     godot = folder / "godot"
     for made in ("game", "demos", "test", "menu", "addons/ai_search"):
@@ -566,6 +642,7 @@ def build(folder: pathlib.Path, makefile: str = SOUND_MAKEFILE, search_script: s
                                          encoding="utf-8")
     (godot / "game" / "main.gd").write_text(SOUND_SCRIPT, encoding="utf-8")
     (godot / "game" / "roster.gd").write_text(roster, encoding="utf-8")
+    (godot / "game" / "ruleset.gd").write_text(ruleset or SOUND_RULESET, encoding="utf-8")
     (godot / "demos" / "search.gd").write_text(search_script, encoding="utf-8")
     (godot / LEGEND_SCRIPT).write_text("class_name Legend\nextends Control\n", encoding="utf-8")
     for scene in scenes:
@@ -587,6 +664,65 @@ def build(folder: pathlib.Path, makefile: str = SOUND_MAKEFILE, search_script: s
     if stray:
         (godot / "demos" / "racing.tscn").write_text(scene_text("demos/search.gd"), encoding="utf-8")
     return folder
+
+
+SOUND_RULESET = """\
+class_name SoundRuleset
+extends RefCounted
+
+var search := AStarSearch.new()
+
+func roster_names() -> Array:
+\treturn SoundRoster.rows()
+"""
+
+#: A ruleset that cycles some other table than the roster its mode names.
+OTHER_RULESET = SOUND_RULESET.replace("SoundRoster.rows()", "[]")
+
+#: The sound example's MODE recipe: the menu (the main scene) on its own card.
+MODE_MAKEFILE = SOUND_MAKEFILE.replace(
+    "\t@$(GODOT) --path godot res://demos/search.tscn",
+    "\t@$(GODOT) --path godot $(if $(MODE),-- --open=demo-search --mode=$(MODE),res://demos/search.tscn)")
+
+
+def moded(**changes: object) -> dict:
+    """The search card in two modes, each its own roster, changed where a test says."""
+    modes = [{"mode": "one", "title": "One", "ruleset": "res://game/ruleset.gd",
+              "controllers": ["rules", "planner"], "roster": "res://game/roster.gd"},
+             {"mode": "two", "title": "Two", "ruleset": "res://game/ruleset.gd",
+              "controllers": ["rules", "planner"], "roster": "res://game/roster.gd"}]
+    return card("demo-search", "demos/search.tscn", modes=changes.pop("modes", modes), **changes)
+
+
+def mode_cases() -> dict[str, tuple[dict, str | None]]:
+    """The planted cases of a card's modes and of a MODE recipe (T85)."""
+    without_astar = SOUND_SCRIPT.replace("var search := AStarSearch.new()", "var search := 1")
+    sound = moded()
+    one, two = sound["modes"]
+    return {
+        "a card in two modes": ({"catalogue": catalogue_text((SOUND_CARDS[0], sound))}, None),
+        "a technique reached through a mode only": (
+            {"catalogue": catalogue_text((SOUND_CARDS[0], sound)), "search_script": without_astar}, None),
+        "a mode's controller that is not a row": ({"catalogue": catalogue_text((SOUND_CARDS[0], moded(
+            modes=[one, {**two, "controllers": ["rules", "planner", "cheat"]}])))}, "C9"),
+        "a mode's row that is not on the card": ({"catalogue": catalogue_text((SOUND_CARDS[0], moded(
+            modes=[{**one, "controllers": ["rules"]}, two])))}, "C9"),
+        "a mode with no ruleset": ({"catalogue": catalogue_text((SOUND_CARDS[0], moded(
+            modes=[one, {k: v for k, v in two.items() if k != "ruleset"}])))}, "C9"),
+        "a mode whose ruleset does not exist": ({"catalogue": catalogue_text((SOUND_CARDS[0], moded(
+            modes=[one, {**two, "ruleset": "res://game/nowhere.gd"}])))}, "C9"),
+        "a mode whose ruleset builds from another roster": (
+            {"catalogue": catalogue_text((SOUND_CARDS[0], sound)), "ruleset": OTHER_RULESET}, "C9"),
+        "a mode listed twice": ({"catalogue": catalogue_text((SOUND_CARDS[0], moded(modes=[one, one])))}, "C9"),
+        "one mode only": ({"catalogue": catalogue_text((SOUND_CARDS[0], moded(modes=[one])))}, "C9"),
+        "controllers beside the modes": ({"catalogue": catalogue_text((SOUND_CARDS[0], moded(
+            controllers=["rules", "planner"], roster="res://game/roster.gd")))}, "C9"),
+        "a MODE recipe": ({"makefile": MODE_MAKEFILE}, None),
+        "a MODE recipe opening another card": (
+            {"makefile": MODE_MAKEFILE.replace("--open=demo-search", "--open=run")}, "D3"),
+        "a MODE recipe naming a scene for the menu": (
+            {"makefile": MODE_MAKEFILE.replace("$(MODE),-- --open", "$(MODE),res://demos/search.tscn -- --open")}, "D3"),
+    }
 
 
 def catalogue_cases() -> dict[str, tuple[dict, str | None]]:
@@ -687,6 +823,7 @@ def self_test() -> int:
         "the editor's own attribute order": ({"editor_form": True}, None),
     }
     cases.update(catalogue_cases())
+    cases.update(mode_cases())
     for label, (changes, want) in cases.items():
         with tempfile.TemporaryDirectory() as temporary:
             expect(label, build(pathlib.Path(temporary), **changes), want)
