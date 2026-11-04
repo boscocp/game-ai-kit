@@ -65,6 +65,15 @@ func plan_marks(_state: BoardState) -> Dictionary[Vector2i, String]:
 	return {}
 
 
+## Every option it weighed for its last decision, for the board to draw
+## before that decision is played (T85): one `{"cell": Vector2i, "score":
+## float, "chance": int, "chosen": bool}` each -- the cell walked to or the
+## target shot, what it scored, and the best hit chance in it, -1 for none.
+## Empty for a controller that does not weigh options one by one.
+func weighed() -> Array[Dictionary]:
+	return []
+
+
 ## How much searching or deciding this controller has done since it was
 ## made, counted in `work_unit` -- worlds, nodes, tasks -- or 0 for one with
 ## nothing to count, such as the rules. A running total, so whoever measures

@@ -66,6 +66,10 @@ const EXAMPLES: Dictionary = {
 	"res://game/maze/maze.tscn": ["Interface/Status", "Interface/Decision", "Interface/Legend"],
 	"res://menu/menu.tscn": [],
 }
+## The tactical scene in its XCOM mode (T85), opened as the menu opens it,
+## and the nodes its words must be found in.
+const SQUAD_NODES: Array = ["Interface/Header", "Interface/Status", "Interface/Keys",
+	"Interface/EndTurn", "Interface/Undo", "Interface/Legend"]
 ## The window's size, from `project.godot`: words past it are cut off.
 const SCREEN_WIDTH: float = 1280.0
 const SCREEN_HEIGHT: float = 720.0
@@ -127,12 +131,14 @@ func _run() -> void:
 		# there, and the scene still opens without it (T79 found one).
 		_counter.errors = 0
 		failures += await _look_at(path, (load(path) as PackedScene).instantiate(), EXAMPLES[path])
+	_counter.errors = 0
+	failures += await _look_at("tactical in XCOM mode", _squad_mode(), SQUAD_NODES)
 	PadAsKeys.planted = false
 	TranslationServer.set_locale("en")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SETTINGS))
 	for failure: String in failures:
 		print("FAIL ", failure)
-	print("locale screen: %d example(s) in pt_BR, %d failure(s)" % [EXAMPLES.size(), failures.size()])
+	print("locale screen: %d example(s) and the XCOM mode in pt_BR, %d failure(s)" % [EXAMPLES.size(), failures.size()])
 	quit(1 if not failures.is_empty() else 0)
 
 
@@ -227,7 +233,9 @@ func _look_at(label: String, example: Node, expected: Array) -> Array[String]:
 			example.step_decision()
 		await process_frame
 	var failures: Array[String] = []
-	if example is TacticalGame:
+	if example is TacticalGame and (example as TacticalGame).ruleset is SquadRuleset:
+		failures += await _provoke_a_shot_refusal(example as TacticalGame)
+	elif example is TacticalGame:
 		failures += await _provoke_a_refusal(example as TacticalGame)
 	if example is RtsGame:
 		failures += await _provoke_an_rts_refusal(example as RtsGame)
@@ -265,6 +273,30 @@ func _provoke_a_refusal(game: TacticalGame) -> Array[String]:
 	var refused: String = TranslationServer.translate("refused: {why}").split("{")[0]
 	if not status.text.contains(refused):
 		return ["tactical: no refusal could be provoked to check:\n" + status.text]
+	return []
+
+
+# The tactical scene in both modes, starting in XCOM's.
+func _squad_mode() -> TacticalGame:
+	var game: TacticalGame = (load("res://game/tactical/tactical.tscn") as PackedScene).instantiate()
+	game.play_in_modes([AdvanceWarsRuleset.new(), SquadRuleset.new()], 1)
+	return game
+
+
+# In the XCOM mode: the person's first piece told to shoot an enemy it
+# cannot see. The shot is refused in English, and the status must say so
+# through `SquadStatus.SHAPES` -- in Portuguese, which the walk then checks.
+func _provoke_a_shot_refusal(game: TacticalGame) -> Array[String]:
+	game.new_game()
+	if game.state.current_faction != game.person_side:
+		game.swap_sides()
+	var enemy: Unit = game.state.units_of(TacticalScenario.FACTIONS - 1 - game.person_side)[0]
+	game.attack(enemy)
+	await process_frame
+	var status: Label = game.get_node("Interface/Status")
+	var refused: String = TranslationServer.translate("refused: {why}").split("{")[0]
+	if not status.text.contains(refused):
+		return ["tactical in XCOM mode: no refusal could be provoked to check:\n" + status.text]
 	return []
 
 

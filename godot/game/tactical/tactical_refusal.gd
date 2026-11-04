@@ -56,6 +56,18 @@ static func words(refusal: String) -> String:
 	return TranslationServer.translate(refusal)
 
 
+## `refusal` worded by the first of `shapes` it matches, the names in it
+## translated, or "" when it matches none: for a mode whose refusals have
+## shapes of their own, such as the XCOM-style shot's (T85). Each shape is a
+## key of that mode's table.
+static func worded_by(refusal: String, shapes: Array[String]) -> String:
+	for shape: String in shapes:
+		var found: RegExMatch = RegEx.create_from_string("^" + _pattern_of(shape) + "$").search(refusal)
+		if found != null:
+			return TranslationServer.translate(shape).format(_values(found))
+	return ""
+
+
 # The values a match captured, the names among them translated.
 static func _values(found: RegExMatch) -> Dictionary:
 	var values: Dictionary = {}

@@ -16,6 +16,15 @@
 ## not moving could strike next turn, and the number of its pieces that
 ## could, so the danger a decision weighs is on the board. T hides it.
 ##
+## The XCOM-style mode (T85) draws four more things here. The fog: every cell
+## the side whose view is shown cannot see, darkened, and a faded picture of
+## each enemy where it was last seen. The dash: the cells the piece in hand
+## would reach only by spending its whole turn, in a second tint over the
+## board's own. The odds: on each enemy the piece in hand may shoot, its hit
+## chance. And the weighing: on every cell or target the computer weighed for
+## the piece about to act, its score above and its best hit chance below,
+## the one it took ringed.
+##
 ## When not to use it: red's turn. A person's own intentions need no drawing.
 class_name IntentView
 extends Node2D
@@ -27,12 +36,26 @@ const RING: float = 20.0
 const TAG: float = 16.0
 ## The tint on a threatened cell: red, light enough to read the ground under it.
 const THREAT: Color = Color(0.95, 0.15, 0.10, 0.22)
+## A cell the side shown cannot see: dark, with the ground still showing.
+const FOG: Color = Color(0.02, 0.03, 0.08, 0.62)
+## A remembered enemy, where it was last seen: its picture, faded.
+const GHOST: Color = Color(1.0, 1.0, 1.0, 0.38)
+## A cell the piece in hand reaches only by dashing: amber over the reach.
+const DASH: Color = Color(1.0, 0.62, 0.15, 0.38)
+## A hit chance on a target, and a weighed option's numbers: white on black.
+const LABEL: Color = Color.WHITE
+const LABEL_GROUND: Color = Color(0.0, 0.0, 0.0, 0.72)
+const LABEL_SIZE: int = 12
 
 var _decision: TacticalDecision
 var _state: BoardState
 var _board: BoardView
 var _plan_marks: Dictionary[Vector2i, String] = {}
 var _threat: Dictionary[Vector2i, int] = {}
+var _fog: TacticalFog
+var _dashes: Array[Vector2i] = []
+var _odds: Dictionary[Vector2i, String] = {}
+var _weighed: Array[Dictionary] = []
 
 
 ## Draw `decision`, or nothing when it is null.
@@ -56,8 +79,38 @@ func show_plan(marks: Dictionary[Vector2i, String]) -> void:
 	queue_redraw()
 
 
+## Darken what `fog`'s side cannot see and draw its ghosts; null draws none.
+func show_fog(fog: TacticalFog) -> void:
+	_fog = fog
+	queue_redraw()
+
+
+## Tint each of `cells` as a dash; empty draws none.
+func show_dashes(cells: Array[Vector2i]) -> void:
+	_dashes = cells
+	queue_redraw()
+
+
+## Write each label of `odds` on its cell, a target's hit chance; empty
+## draws none.
+func show_odds(odds: Dictionary[Vector2i, String]) -> void:
+	_odds = odds
+	queue_redraw()
+
+
+## Write each weighed option's score and hit chance on its cell, as
+## `BlueController.weighed` gives them; empty draws none.
+func show_weighed(options: Array[Dictionary]) -> void:
+	_weighed = options
+	queue_redraw()
+
+
 func _draw() -> void:
+	_draw_fog()
 	_draw_threat()
+	_draw_dashes()
+	_draw_weighed()
+	_draw_odds()
 	_draw_plan()
 	if _decision == null or _board == null:
 		return
@@ -86,6 +139,62 @@ func _draw_threat() -> void:
 		var corner: Vector2 = _board.centre_of(cell) - Vector2(side, side) / 2.0
 		draw_rect(Rect2(corner, Vector2(side, side)), THREAT)
 		draw_string(font, corner + Vector2(side - 12.0, side - 4.0), str(_threat[cell]), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(1.0, 0.85, 0.85))
+
+
+# Every hidden cell darkened, and over the dark a faded picture of each enemy
+# remembered there, with a question mark: it may have gone.
+func _draw_fog() -> void:
+	if _board == null or _fog == null:
+		return
+	var side: float = BoardView.TILE_PIXELS
+	for cell: Vector2i in _fog.hidden:
+		draw_rect(Rect2(_board.centre_of(cell) - Vector2(side, side) / 2.0, Vector2(side, side)), FOG)
+	var enemy: int = TacticalScenario.FACTIONS - 1 - _fog.side
+	for cell: Vector2i in _fog.ghosts:
+		var square := Rect2(_board.centre_of(cell) - Vector2(side, side) * 0.35, Vector2(side, side) * 0.7)
+		draw_texture_rect(Art.texture(Art.unit_path(enemy, _fog.ghosts[cell])), square, false, GHOST)
+		_label(_board.centre_of(cell) + Vector2(side * 0.25, -side * 0.2), "?")
+
+
+func _draw_dashes() -> void:
+	if _board == null:
+		return
+	var side: float = BoardView.TILE_PIXELS
+	for cell: Vector2i in _dashes:
+		draw_rect(Rect2(_board.centre_of(cell) - Vector2(side, side) / 2.0, Vector2(side, side)), DASH)
+
+
+# A target's chance, low in its cell, under the piece's picture.
+func _draw_odds() -> void:
+	if _board == null:
+		return
+	for cell: Vector2i in _odds:
+		_label(_board.centre_of(cell) + Vector2(0.0, BoardView.TILE_PIXELS * 0.32), _odds[cell])
+
+
+# The score high in the cell and the best chance from it low, and a ring
+# round the option taken: every option drawn the same way, so a reader
+# compares numbers rather than marks.
+func _draw_weighed() -> void:
+	if _board == null:
+		return
+	var side: float = BoardView.TILE_PIXELS
+	for option: Dictionary in _weighed:
+		var centre: Vector2 = _board.centre_of(option["cell"])
+		_label(centre - Vector2(0.0, side * 0.3), "%.2f" % option["score"])
+		if int(option["chance"]) >= 0:
+			_label(centre + Vector2(0.0, side * 0.32), "%d%%" % option["chance"])
+		if option["chosen"]:
+			draw_rect(Rect2(centre - Vector2(side, side) / 2.0 + Vector2(2.0, 2.0), Vector2(side - 4.0, side - 4.0)), INTENT, false, 2.0)
+
+
+# `words` centred on `at`, on a dark ground so it reads over any picture.
+func _label(at: Vector2, words: String) -> void:
+	var font: Font = ThemeDB.fallback_font
+	var size: Vector2 = font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE)
+	var corner: Vector2 = at - Vector2(size.x / 2.0, size.y / 2.0)
+	draw_rect(Rect2(corner - Vector2(2.0, 0.0), size + Vector2(4.0, 0.0)), LABEL_GROUND)
+	draw_string(font, corner + Vector2(0.0, size.y - 3.0), words, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, LABEL)
 
 
 # A filled square in the tile's top-left corner, with the step's number in it.

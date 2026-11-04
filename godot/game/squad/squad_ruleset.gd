@@ -12,7 +12,13 @@
 ##   no points, no towers;
 ## - **the end** is a squad with no piece left, or the round limit
 ##   (`SquadVictory`);
-## - **the tint** is nothing yet: T85 decides what T shows in this mode.
+## - **the tint** is T85's: with the cursor on a cell, each enemy the
+##   person sees that could shoot there, and its hit chance.
+##
+## And what the scene shows (T85): the fog of the side whose board is on
+## screen (`fog`), the dash in a second tint (`dashes`), the hit chance on
+## each target before a shot (`odds`), the status with the chance's reasons
+## (`SquadStatus`) and the legend (`SquadLegend`).
 ##
 ## A decision is one unit's action, not a whole squad's orders: Roelofs'
 ## hierarchical expansion, which keeps a search's branching near one unit's
@@ -29,6 +35,16 @@ extends TacticalRuleset
 ## "squad".
 func mode_name() -> String:
 	return "squad"  # not shown: a key, the screen words it
+
+
+## "XCOM", the game this mode plays like: a name, the same in both languages.
+func title() -> String:
+	return TranslationServer.translate("XCOM")
+
+
+## The line at the top of the screen.
+func what_this_is() -> String:
+	return TranslationServer.translate("tactics in the style of XCOM: two actions a piece, cover, flanking and fog")
 
 
 ## `SquadScenario.build`: four pieces a side on the tactical map.
@@ -89,9 +105,29 @@ func announcement(winner_side: int, state: BoardState) -> String:
 	return SquadVictory.announcement(winner_side, state)
 
 
-## Nothing yet: T85 decides what the T key shows in this mode.
+## Nothing with no cursor: the threat in this mode is a hit chance, and a
+## chance is against a cell (`tint_at`).
 func tint(_state: BoardState, _side: int) -> Dictionary[Vector2i, int]:
 	return {}
+
+
+## On each enemy `person` sees that could shoot `cursor` from where it
+## stands, its hit chance there: against the person's piece on that cell,
+## or else the piece in hand -- the defence is the defender's -- with the
+## cover the cell has against that enemy.
+func tint_at(state: BoardState, _side: int, cursor: Vector2i, person: int, in_hand_id: int) -> Dictionary[Vector2i, int]:
+	var chances: Dictionary[Vector2i, int] = {}
+	if not state.graph.contains(cursor):
+		return chances
+	var defender: Unit = state.unit_at(cursor)
+	if defender == null or defender.faction != person:
+		defender = state.unit_by_id(in_hand_id)
+	var defence: int = SquadTable.number(defender.type.type_name, "defence") if defender != null else 0
+	for enemy: Unit in view(state, person).state.units:
+		if enemy.faction != person and SquadCombat.can_reach(SquadScenario.rows(), enemy, cursor):
+			var cover: int = SquadCover.of(SquadScenario.rows(), enemy.cell, cursor)["cover"]
+			chances[enemy.cell] = SquadCombat.hit_chance(SquadTable.number(enemy.type.type_name, "aim"), defence, cover)
+	return chances
 
 
 ## None: this mode holds no ground.
@@ -107,6 +143,86 @@ func roster_names() -> Array[String]:
 ## `SquadRoster.build`.
 func build_controller(row_name: String, seed_number: int) -> BlueController:
 	return SquadRoster.build(row_name, seed_number)
+
+
+## What `side` sees of `state` for the scene to draw: the side's view, the
+## cells none of its pieces sees, and a ghost where each enemy it remembers
+## was last seen. `earlier` is the same side's last fog, whose memory is the
+## `SideView` this one remembers from.
+func fog(state: BoardState, side: int, earlier: TacticalFog) -> TacticalFog:
+	var remembered: SideView = earlier.memory as SideView if earlier != null else null
+	var looked: SideView = view(state, side, remembered)
+	var drawn := TacticalFog.new(side, looked.state)
+	drawn.memory = looked
+	for cell: Vector2i in every_cell():
+		if not SideView.is_seen(state, SquadScenario.rows(), side, cell):
+			drawn.hidden.append(cell)
+	for enemy_id: int in looked.last_seen:
+		# Its kind is what was seen of it; a piece never changes kind.
+		drawn.ghosts[looked.last_seen[enemy_id]] = state.unit_by_id(enemy_id).type.type_name
+	return drawn
+
+
+## Every cell of the map, row by row.
+static func every_cell() -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	var rows: Array[String] = SquadScenario.rows()
+	for row: int in range(rows.size()):
+		for column: int in range(rows[row].length()):
+			cells.append(Vector2i(column, row))
+	return cells
+
+
+## The walks that leave `unit` less than one action: dashes, after which it
+## may not shoot.
+func dashes(state: BoardState, unit: Unit, walks: Dictionary) -> Array[Vector2i]:
+	var found: Array[Vector2i] = []
+	for cell: Vector2i in walks:
+		if not leaves_a_shot(state, unit, walks[cell]):
+			found.append(cell)
+	return found
+
+
+## True when walking `path` leaves `unit` a shot: no more than one action.
+static func leaves_a_shot(state: BoardState, unit: Unit, path: Array[Vector2i]) -> bool:
+	var cost: int = Move.new(unit.id, path).cost_on(state.graph_for(unit))
+	return unit.movement_points - cost >= SquadTable.action(unit.type.type_name)
+
+
+## "63%" on each enemy `shooter_id` may shoot now.
+func odds(state: BoardState, shooter_id: int) -> Dictionary[Vector2i, String]:
+	var labels: Dictionary[Vector2i, String] = {}
+	var shooter: Unit = state.unit_by_id(shooter_id)
+	if shooter == null:
+		return labels
+	for strike: Attack in shots_of(state, shooter):
+		var target: Unit = state.unit_by_id(strike.target_id)
+		labels[target.cell] = "%d%%" % SquadCombat.chance_of(SquadScenario.rows(), shooter, target)
+	return labels
+
+
+## `SquadStatus.text`: the piece in hand, its shots with their reasons.
+func status(state: BoardState, in_hand: Unit, refusal: String, news: String, can_attack: bool) -> String:
+	return SquadStatus.text(state, in_hand, refusal, news, can_attack)
+
+
+## `SquadStatus.computer_text`: who plays, what it will do, what it weighed.
+func computer_status(state: BoardState, turn: BlueTurn, controller: BlueController, news: String) -> String:
+	return SquadStatus.computer_text(state, turn, controller, news)
+
+
+## `SquadLegend.entries`.
+func legend() -> Array[Array]:
+	return SquadLegend.entries()
+
+
+## True when `side` sees an enemy on `after` it did not see on `before`.
+func reveals(before: BoardState, after: BoardState, side: int) -> bool:
+	var seen_before: Array[int] = view(before, side).seen_enemies()
+	for enemy_id: int in view(after, side).seen_enemies():
+		if not enemy_id in seen_before:
+			return true
+	return false
 
 
 ## `side`'s view of `state` (`SideView`), remembering `earlier`'s.

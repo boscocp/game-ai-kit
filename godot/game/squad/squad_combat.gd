@@ -59,6 +59,20 @@ static func chance_of(rows: Array[String], shooter: Unit, target: Unit) -> int:
 	return hit_chance(given["aim"], given["defence"], given["cover"])
 
 
+## True when a piece of `kind` standing on `from` could shoot a piece on
+## `cell`: within its range, and in its own sight -- what `why_refused` asks
+## of a target, asked of a cell, so a controller can weigh a cell it has not
+## walked to yet.
+static func reaches(rows: Array[String], from: Vector2i, kind: UnitType, cell: Vector2i) -> bool:
+	var apart: int = SquadSight.steps(from, cell)
+	return apart <= kind.attack_range and apart <= kind.sight and SquadSight.line_clear(rows, from, cell)
+
+
+## `reaches`, for `shooter` where it stands.
+static func can_reach(rows: Array[String], shooter: Unit, cell: Vector2i) -> bool:
+	return reaches(rows, shooter.cell, shooter.type, cell)
+
+
 ## True while `unit` may still shoot this turn: it has walked no more than
 ## one action. A dash or a shot leaves it less.
 static func can_shoot(unit: Unit) -> bool:
@@ -76,13 +90,13 @@ static func why_refused(state: BoardState, rows: Array[String], strike: Attack) 
 	var shooter: Unit = state.unit_by_id(strike.attacker_id)
 	var target: Unit = state.unit_by_id(strike.target_id)
 	if shooter == null:
-		return "no unit %d is on the board" % strike.attacker_id
+		return "no unit %d is on the board" % strike.attacker_id  # not shown: worded by SquadStatus.SHAPES
 	if shooter.faction != state.current_faction:
-		return "unit %d is not on the side to move" % shooter.id
+		return "unit %d is not on the side to move" % shooter.id  # not shown: worded by SquadStatus.SHAPES
 	if not can_shoot(shooter):
-		return "unit %d has dashed or shot this turn" % shooter.id
+		return "unit %d has dashed or shot this turn" % shooter.id  # not shown: worded by SquadStatus.SHAPES
 	if target != null and target.faction == shooter.faction:
-		return "unit %d is on the same side" % target.id
+		return "unit %d is on the same side" % target.id  # not shown: worded by SquadStatus.SHAPES
 	# A target that is gone and one the shooter cannot see get the same
 	# words, which name no cell and no distance: a refusal that told the
 	# shooter's side how far an unseen enemy stood would be a hole in the fog.
@@ -90,14 +104,14 @@ static func why_refused(state: BoardState, rows: Array[String], strike: Attack) 
 		return unseen(shooter.id, strike.target_id)
 	var apart: int = SquadSight.steps(shooter.cell, target.cell)
 	if apart > shooter.type.attack_range:
-		return "unit %d is %d away, and unit %d reaches %d" % [target.id, apart, shooter.id, shooter.type.attack_range]
+		return "unit %d is %d away, and unit %d reaches %d" % [target.id, apart, shooter.id, shooter.type.attack_range]  # not shown: worded by SquadStatus.SHAPES
 	return BoardState.LEGAL
 
 
 ## The refusal for a shot at an enemy the shooter does not see -- or that is
 ## not on the board: one sentence for both, so it gives nothing away.
 static func unseen(shooter_id: int, target_id: int) -> String:
-	return "unit %d sees no enemy unit %d to shoot" % [shooter_id, target_id]
+	return "unit %d sees no enemy unit %d to shoot" % [shooter_id, target_id]  # not shown: worded by SquadStatus.SHAPES
 
 
 ## The state after this shot, or null when it is refused. The die comes from
@@ -119,23 +133,23 @@ static func apply(state: BoardState, rows: Array[String], strike: Attack) -> Boa
 	return next.duplicate_state()
 
 
-## One line saying what a shot did: who shot whom, at what chance and why,
-## and whether it hit.
+## One line saying what a shot did, in the language on screen: who shot
+## whom, at what chance and why, and whether it hit.
 static func told(rows: Array[String], before: BoardState, strike: Attack, after: BoardState) -> String:
 	var shooter: Unit = before.unit_by_id(strike.attacker_id)
 	var target: Unit = before.unit_by_id(strike.target_id)
 	var given: Dictionary = inputs(rows, shooter, target)
 	var struck: Unit = after.unit_by_id(target.id)
 	var left: int = struck.health if struck != null else 0
-	var outcome: String = "missed"
-	if left < target.health:
-		outcome = "hit, %d health left" % left if left > 0 else "hit and destroyed it"
-	return "%s %s at %s shot %s %s at %s: %d%% (cover %d%s), %s" % [
-		_side(shooter.faction), shooter.type.type_name, shooter.cell,
-		_side(target.faction), target.type.type_name, target.cell,
-		hit_chance(given["aim"], given["defence"], given["cover"]), given["cover"],
-		", flanked" if given["flanked"] else "", outcome]
-
-
-static func _side(faction: int) -> String:
-	return "red" if faction == TacticalScenario.RED else "blue"
+	var outcome: String = TranslationServer.translate("missed")
+	if left < target.health and left > 0:
+		outcome = TranslationServer.translate("hit, {left} health left").format({left = left})
+	elif left < target.health:
+		outcome = TranslationServer.translate("hit and destroyed it")
+	var said: String = TranslationServer.translate("{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}), {outcome}")
+	if given["flanked"]:
+		said = TranslationServer.translate("{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}, flanked), {outcome}")
+	return said.format({side = TacticalStatus.side_name(shooter.faction), piece = TacticalStatus.piece(shooter.type.type_name),
+		cell = shooter.cell, target_side = TacticalStatus.side_name(target.faction), target = TacticalStatus.piece(target.type.type_name),
+		target_cell = target.cell, chance = hit_chance(given["aim"], given["defence"], given["cover"]), cover = given["cover"],
+		outcome = outcome})

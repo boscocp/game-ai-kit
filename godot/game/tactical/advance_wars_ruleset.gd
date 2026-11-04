@@ -28,6 +28,17 @@ func mode_name() -> String:
 	return MODE
 
 
+## "Advance Wars", the game this mode plays like: a name, which the table
+## keeps the same in both languages.
+func title() -> String:
+	return TranslationServer.translate("Advance Wars")
+
+
+## `TacticalGame.WHAT_THIS_IS`, in the language on screen.
+func what_this_is() -> String:
+	return TranslationServer.translate(TacticalGame.WHAT_THIS_IS)
+
+
 ## `TacticalScenario.build`: the workshops, the towers, three walkers.
 func start() -> BoardState:
 	return TacticalScenario.build()

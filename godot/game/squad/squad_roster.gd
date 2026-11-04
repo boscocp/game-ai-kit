@@ -8,9 +8,9 @@
 ## Callable(seed) -> a new BlueController]` -- and nothing here plays in the
 ## league.
 ##
-## One row so far: a seeded random mover, the floor every enemy in this mode
-## must beat. T85 adds the first enemy that weighs; T87 and T88 put search
-## behind it.
+## Two rows: the first enemy that weighs (T85), first because it is the
+## one a person meets, and a seeded random mover, the floor it must beat
+## (`make test-squad-match`). T87 and T88 put search behind them.
 ##
 ## When not to use it: as a ranking, for the reason `TacticalRoster` gives.
 class_name SquadRoster
@@ -24,6 +24,8 @@ const BUILD: int = 4
 ## Every row, in the order C cycles through them.
 static func rows() -> Array[Array]:
 	return [  # not shown: the names reach the screen through the scene
+		["weighed", "every option of the piece weighed one action ahead, on its side's view (T85)", "ActionChoice", false,
+			func(seed_number: int) -> BlueController: return WeighedSquad.new(seed_number)],
 		["random", "a seeded random action per piece, on its side's view (T84)", "nothing", false,
 			func(seed_number: int) -> BlueController: return RandomSquad.new(seed_number)],
 	]

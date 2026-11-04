@@ -45,7 +45,7 @@ func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 	var unit: Unit = seen.unit_by_id(unit_id)
 	var walks: Dictionary = TacticalReach.walks_for(seen, unit)
 	var picked: int = _dice.randi_range(0, walks.size())
-	var why: Array = Sentence.of("one of {count} choices, at random", {count = walks.size() + 1})
+	var why: Array = Sentence.of("one of {count} choices, at random", {count = walks.size() + 1})  # shown through tr()
 	if picked == walks.size():
 		return TacticalDecision.hold(unit_id, why, unit.cell)
 	var goal: Vector2i = walks.keys()[picked]
@@ -63,7 +63,7 @@ func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
 	var picked: int = _dice.randi_range(0, targets.size())
 	if picked == targets.size():
 		return null
-	var why: Array = Sentence.of("one of {count} choices, at random", {count = targets.size() + 1})
+	var why: Array = Sentence.of("one of {count} choices, at random", {count = targets.size() + 1})  # shown through tr()
 	return TacticalDecision.strike(unit_id, targets[picked], why)
 
 

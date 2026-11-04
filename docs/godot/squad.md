@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-30
+verified_on: 2026-11-04
 tier: 1
 source: https://ufopaedia.org/Gameplay_Mechanics_(EU2012) ; https://ufopaedia.org/index.php/Cover_(EU2012) ; book:Steve Rabin (ed.), "Game AI Pro 3", CRC Press, 2017 -- ch. 28 (Roelofs, MCTS for strategy and tactical games)
 invalidated_if: spec/squad/rules.json changes, the tactical map changes, or a rule below stops being the code's
@@ -10,9 +10,11 @@ teaches: none
 -->
 
 > T84's rules. Not a new game: a second ruleset of the tactical game,
-> played on its state, map, pieces and pictures. T85 makes it something a
-> person plays from the tactical scene; T87 and T88 put search behind it.
-> This page is the rules, where each comes from, and everything left out.
+> played on its state, map, pieces and pictures. T85 made it something a
+> person plays from the tactical scene, against a first enemy that weighs;
+> T87 and T88 put search behind it. This page is the rules, where each
+> comes from, everything left out, and (below) how the mode is played and
+> how its enemy decides.
 
 ## The seam
 
@@ -133,8 +135,107 @@ Every simplification, so nobody reads the mode as more of XCOM than it is:
   (no dash rule, a view that sees everything, a shot that does not spend,
   a shot that needs only the line and not the shooter's sight).
 - Every tactical gate, unchanged, through `AdvanceWarsRuleset`.
+- T85: `make test-squad-match` (above); `weighed_squad_test.gd` -- moving
+  every enemy the side cannot see to another unseen cell, and re-seeding
+  the dice, changes none of its decisions over 60 seeded positions, and the
+  same check catches a planted controller that reads the whole board;
+  `squad_scene_test.gd` -- the modes, M, C, the fog, the dash, the odds and
+  their reasons, T under the cursor, V, a walk that reveals; the menu's
+  modes in `test/menu/menu_modes_test.gd`; the mode stepped by
+  `make test-demo-overlays` and read in pt-BR by `make test-locale-screen`;
+  `check_demos.py` holds each mode's controllers to its roster (C9).
+
+## Playing it (T85)
+
+**One card, one scene, two modes.** The menu's tactical card lists
+`modes` -- Advance Wars, the default, and XCOM -- each with the ruleset
+script the menu builds it from and its own controllers and roster. M, or
+the mode button, chooses on the menu; the scene is handed both rulesets
+(`TacticalGame.play_in_modes`) and starts in the one chosen, and M in the
+scene plays the other, a new game with that mode's first controller.
+`make demo-tactical MODE=squad` opens the menu straight into the card in
+that mode. `make demo-tactical` alone still opens the scene in Advance
+Wars, and M does nothing there: the scene names no mode.
+
+**What the scene asks the ruleset now.** Besides T84's list, each with an
+answer that leaves Advance Wars as it was: the title and the line saying
+what the game is, the fog of a side (`TacticalFog`), the dash cells of a
+reach, a label of odds on each target, the tint under the cursor, the two
+statuses, the legend, and whether a walk revealed an enemy.
+
+**What the person meets.**
+
+- The board is drawn as the person's side sees it: the cells no red piece
+  sees are dark, a faded picture with a `?` marks where an enemy was last
+  seen, and only the enemies red sees are drawn.
+- Click a piece and its reach lights up in two tints: light where the
+  walk keeps the shot, amber where it is a dash and ends the piece's turn.
+- Before any shot, each enemy the piece in hand may shoot carries its hit
+  chance on the board, and the status gives the sum that made it:
+  `65% = aim 65 - defence 0 - cover 0, flanked`.
+- Z takes back a walk, as in Advance Wars -- not after a shot, and not
+  after a walk that brought an enemy into sight: that would let a person
+  look round a corner for free.
+- T, with the cursor on a cell: each enemy red sees that could shoot there,
+  with its chance against the piece standing there (or the piece in hand).
+- On the computer's turn the board shows what the computer sees, its fog
+  and its ghosts, and on every cell or target it weighed for the piece
+  about to act, the score above and the best hit chance below, the one it
+  takes framed -- before space plays it. V turns that off: the board is
+  then the person's, and a piece the person cannot see acts unseen.
+
+## The first enemy: `WeighedSquad`
+
+An AIMA agent in the plainest form the mode allows. **It perceives** its
+side's view, `SideView`, remembering where it last saw each enemy, and
+never reads the state it is handed. **It weighs** every walk open to the
+piece about to act, holding included, and then every shot from where the
+walk left it. **It acts** on the best, the first of equal scores.
+
+Each option is scored by `ActionChoice` (`ai_utility`), with the
+considerations in `godot/game/squad/weighing.json`, one action asked once
+per option with that option's percepts:
+
+| option | percept | curve | why |
+|---|---|---|---|
+| a walk | expected damage of the best shot it leaves (0 after a dash) | 0.25 + 0.25 x | a shot is what a turn is for |
+| | danger: what the enemies it sees could expect to do to it there | 1 - 0.1 x | cover and flanks are in the chance |
+| | steps, by its own ground, to the nearest enemy it knows of | 1 - 0.025 x | with nobody seen, it goes looking |
+| a shot | expected damage, no more than the target has left | 0.25 x | a 0% shot is never taken |
+| | destroys it | 1, else 0.6 | a piece gone shoots no more |
+
+The answers multiply, as `ActionChoice` does. With nobody in sight, the
+nearest enemy it knows of is the other squad's starting cells, which the
+map tells everybody. It is the baseline the searches of T87 and T88 must
+beat, as `LeveledBlue` is in Advance Wars.
+
+**Measured** (wave 119, `make test-squad-match`, 100 seeded matches a
+seat against `RandomSquad`): 100 won as red, 100 won as blue, no draws.
+The bar is 80. A seeded game of it against itself (dice seed 11) ends in
+round 8, blue winning, and is pinned to its digest.
+
+**The defence values** (owner's item 3 from wave 113, still open): the
+chance against a target in full cover (40), with the defences as they are.
+
+| shooter (aim) | runner, wader (10) | shield (20) | mortar (0) |
+|---|---|---|---|
+| runner, wader (65) | 15% | 5% | 25% |
+| shield (60) | 10% | 0% | 20% |
+| mortar (70) | 20% | 10% | 30% |
+
+The shield behind rock is nearly unhittable, as wave 113's review said.
+The recommendation (0-10) is to be measured in the manual check's play;
+the numbers are unchanged here, and the match gate cannot tell the two
+apart -- the weighed enemy wins every game either way.
 
 ## Manual check
+
+From `make menu`, open the tactical card in XCOM mode, and play a match in
+English and in PT-BR; press M and play a few turns of Advance Wars. Does it
+read as one game with two modes? Is the hit chance shown before every shot,
+and its reason readable? With the decision view on, can you say before the
+enemy acts which option it will take? Does it ever seem to know where an
+unseen piece is? And: is the shield behind rock too hard to hit?
 
 Read `spec/squad/rules.json` beside the two UFOpaedia pages: are the
 numbers the ones the mode claims to borrow, and is every simplification
