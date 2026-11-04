@@ -302,7 +302,13 @@ def project_table(repo: pathlib.Path, version: str, every: dict[str, dict]) -> d
                for manifest in every.values() if manifest["kind"] in SHIPPED_KINDS
                for owned in manifest["owns"]
                if owned.startswith(f"python/{PACKAGE}/") and owned.endswith("/")}
-    listed = set(pyproject["tool"]["setuptools"]["packages"])
+    in_order = pyproject["tool"]["setuptools"]["packages"]
+    # Sorted, one a line: two waves adding a package each then conflict
+    # only when their names are neighbours (T111). Appended at the end,
+    # every two would.
+    if in_order != sorted(in_order):
+        raise Refused(f"python/pyproject.toml lists its packages out of order; sorted they are {sorted(in_order)}")
+    listed = set(in_order)
     if listed != shipped | {PACKAGE}:
         raise Refused(f"python/pyproject.toml packages differ from the technique and kernel manifests "
                       f"by {sorted(listed ^ (shipped | {PACKAGE}))}")
@@ -577,8 +583,8 @@ def check_manifest_refusals(root: pathlib.Path) -> list[str]:
 
     Planted in a clone, one commit each, and reset between: a test inside an
     addon folder, an addon folder no manifest owns, a subpackage pyproject
-    does not list, a pyproject whose version is not VERSION's, and one that
-    lists an example's package.
+    does not list, a pyproject whose version is not VERSION's, one that
+    lists an example's package, and one whose list is out of order.
     """
     clone = root / "clone"
     subprocess.run(["git", "clone", "-q", str(REPO), str(clone)], check=True)
@@ -611,6 +617,9 @@ def check_manifest_refusals(root: pathlib.Path) -> list[str]:
             pyproject.read_text().replace('version = "', 'version = "9', 1)),
         "a pyproject shipping an example": lambda: pyproject.write_text(
             pyproject.read_text().replace('"gameaikit.utility",', '"gameaikit.utility",\n    "gameaikit.checkers",', 1)),
+        "a pyproject listing out of order": lambda: pyproject.write_text(
+            pyproject.read_text().replace('    "gameaikit.adversarial",\n', '', 1).replace(
+                '"gameaikit.utility",', '"gameaikit.utility",\n    "gameaikit.adversarial",', 1)),
     }
     failures = []
     for label, plant in plants.items():

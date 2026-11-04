@@ -86,3 +86,57 @@ In the next parallel batch, count how many waves selected all of
 `make check`, and how many rebases conflicted on the Makefile or
 `pyproject.toml`. Compare with batch 118-122: five, and two of the three
 the coordinator did.
+
+## Done (wave 123), and where it departs from the above
+
+Step 6's replay of wave 120 (`affected.py --base 7d9faaa^ --head 7d9faaa
+--explain`) selected everything at the start, for five paths, not one. The
+`test-vectors:` line was only one of them. The reading behind each change:
+
+1. **Rule 5 had not fired since wave 83.** `added_gates.py` read any
+   conditional in the Makefile as a doubt, and wave 83 put one at its top
+   for Windows' shell. Its planted cases had none, so they stayed green.
+   Now a conditional, `define` or `include` is a doubt only when a hunk is
+   not below the last one. Planted: a gate inside a conditional, a
+   conditional added, a conditional changed, and one above every rule,
+   which must select its module.
+2. **A vector gate's folder had no owner.** Every vector recipe names
+   `$(CURDIR)/spec/vectors/<family>` without the slash, and no prefix
+   matched it. Now a folder belongs to the module that owns all of it.
+   Planted: a folder another module has a part of.
+3. **`test-vectors:` is read like `check:`** (decision 1), and **the list
+   is split** (decision 2): each family has `test-vectors: test-x-vectors`
+   beside its rule. `make -p` gives the same 24 prerequisites. Planted: a
+   name the change did not add, a reordered list, a name taken out, a name
+   moved from `check:`, an old target attached, an attaching rule with a
+   recipe, and one naming two. `check_workflow.py` now reads every rule
+   for a target (planted: a gate on a second rule that CI misses).
+4. **A new non-gate target (`measure-level-constraints`) selects nothing.**
+   No gate runs it, and a new rule may depend only on old names, so no
+   gate can. This is not in the decisions. Planted: a gate that needs a
+   new target.
+5. **Rule 6, `scripts/added_module.py`, is new, and is not in the
+   decisions.** A new manifest that owns only new files and whose gates
+   the Makefile added for it, a user's `depends_on` gaining it (with prose
+   changes to `about`/`summary`), and `KIT_MODULES` or `packages` gaining
+   only its package select that module and its users. `test_techniques`
+   runs with every Python selection, because it holds the two lists to
+   the manifests. Planted: the cases in `planted_module_changes`. Without
+   this rule, step 6 could not hold: the new manifest, `techniques.py` and
+   `pyproject.toml` were global paths besides the Makefile.
+6. **`packages`** (decision 3): kept as a sorted list, one a line, and
+   `release.py` now refuses an unsorted one (planted). In #61 the two
+   additions were neighbours (`constraints`, `core`), so they conflict
+   either way. A generated list is rewritten by both waves too, so it
+   would conflict no less.
+7. **Timing gates** (decision 4): already true, since each is one module's
+   gate and `always_run` takes only `lint-`. The `check-affected` line
+   names them, and a target case holds that a change to `b` runs no gate
+   of `a`.
+
+The replay now selects `ai_constraints, infiltration, menu` (menu for
+`godot/menu/catalogue.json`). The other four waves of batch 118-122 still
+select everything, each for a script, `godot/project.godot` or a manifest
+change rule 6 does not read. So this would have saved one whole run of
+the batch's five, plus the reruns after its rebases. The routine is in
+`docs/howto/parallel-batch.md`.

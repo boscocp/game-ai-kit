@@ -204,7 +204,12 @@ Findings that survive both steps go in `docs/godot/`, with the source URL and a
   Since wave 63 a wave runs `make check-affected`: `scripts/affected.py`
   maps each changed path to the module that owns it (`modules/<name>.json`)
   and adds every module that uses it. A path no module owns, or a global
-  one (scripts, Makefile, CI, the manifests), selects all of `make check`.
+  one (scripts, Makefile, CI, the manifests), selects all of `make check`
+  -- unless its whole change only adds a gate or a module, which
+  `added_gates.py` and `added_module.py` read (rules 5 and 6). A new vector
+  family names itself beside its rule, `test-vectors: test-x-vectors`, and
+  never rewrites a list. How a parallel batch runs, and why, is
+  `docs/howto/parallel-batch.md`.
   So a new test goes in `godot/test/<module>/`, and `make lint-modules`
   refuses a file nobody owns or a dependency the manifest does not declare
   -- that is the selector being kept honest, not bureaucracy. And
