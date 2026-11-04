@@ -1,7 +1,7 @@
 {
   "module": "botmatch",
   "kind": "example",
-  "about": "The bot match (T51): two teams of bots on a capture-and-hold arena, with claims, a commander and squads that retreat in waves, each switchable per team.",
+  "about": "The bot match (T51): two teams of bots on a capture-and-hold arena, with claims, a commander and squads that retreat in waves, each switchable per team; and, while a person plays, a player model that counts during the match and sets the other team's aim (T100), with its Python twin.",
   "owns": [
     "godot/game3d/botmatch/",
     "godot/test/botmatch/",
@@ -9,7 +9,11 @@
     "python/tests/test_godot_shards.py",
     "godot/locale/botmatch.csv",
     "godot/locale/botmatch.csv.import",
-    "godot/locale/botmatch.pt_BR.translation"
+    "godot/locale/botmatch.pt_BR.translation",
+    "spec/vectors/player_model/",
+    "python/gameaikit/botmatch/",
+    "python/tests/test_player_model.py",
+    "python/tests/test_player_model_vectors.py"
   ],
   "depends_on": [
     "ai_core",
@@ -21,6 +25,7 @@
     "game_shared"
   ],
   "gates": [
-    "test-botmatch-effects"
+    "test-botmatch-effects",
+    "test-player-model-vectors"
   ]
 }

@@ -143,6 +143,10 @@ var checks_its_line: bool = true
 ## Driven by a person instead of the list (the owner's takeover). Then the
 ## person's intent below is what it does, in the same body by the same rules.
 var controlled: bool = false
+## A stand-in's own aim error, in radians, for measuring the player model
+## (T100) with a bot in a person's place at a skill of its own; negative,
+## the bot aims with its team's, as every bot in a match does.
+var own_aim_error: float = -1.0
 ## Where the person wants to walk (a direction on the floor, length up to
 ## 1), whether the trigger is held, and whether they want to crouch.
 var wants_to_walk: Vector2 = Vector2.ZERO

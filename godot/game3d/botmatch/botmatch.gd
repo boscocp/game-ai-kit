@@ -19,6 +19,13 @@
 ## A reload is heard from wherever it happens, and a person's own lowers the
 ## rifle and shows its progress. Its teammates leave the spot it stands on to it,
 ## and its squad's commander counts it like any other bot.
+##
+## Playing, the match reads how well you play (T100): `MatchDifficulty`
+## counts your bot's shots, hits, kills, deaths and damage, and every ten
+## seconds sets the other team's aim error from a fixed table -- V shows the
+## counts, the estimate and the row. A new match starts it empty, in the
+## middle. Opened with `-- --record` (`make record-botmatch`), each match's
+## events are kept in this checkout's `user://botmatch-logs/`.
 extends Node3D
 
 const SEEDS_FROM: int = 1
@@ -64,6 +71,10 @@ var _reload_speakers: Array[AudioStreamPlayer3D] = []
 ## The rifle in the person's hands, on the camera while they play.
 var _viewmodel := Viewmodel.new()
 var _pad := PadAsKeys.new()
+## Whether this run keeps each match's events (`MatchEventLog`), and whether
+## the current match's are kept already.
+var _recording: bool = MatchEventLog.asked()
+var _kept: bool = false
 
 @onready var _drawing: BotMatchDrawing = $Drawing
 @onready var _map: BotMatchMap = $Interface/Map
@@ -126,7 +137,22 @@ func _physics_process(delta: float) -> void:
 		while _carried >= world.rules.step:
 			world.step()
 			_carried -= world.rules.step
+	if world.over():
+		_keep_the_log()
 	_show()
+
+
+func _exit_tree() -> void:
+	_keep_the_log()
+
+
+# When recording, this match's events, once: when it ends, when a new one
+# replaces it, or when the scene closes -- whichever comes first.
+func _keep_the_log() -> void:
+	if not _recording or _kept or world == null:
+		return
+	_kept = true
+	MatchEventLog.save(MatchEventLog.of(_seed, BotArena.ARENAS[_arena_index], world.rules.step, world.person_events))
 
 
 ## Advance one decision: every bot looks and decides once, and the world
@@ -163,7 +189,8 @@ func decision_overlay() -> Dictionary:
 			"errands": bot.errand_weighing if not bot.errand_weighing.is_empty() else {"weighed": "not yet"},  # not shown
 			"passage": BotMatchLines.passage_overlay(bot), "actions": BotMatchLines.action_overlay(bot),
 			"health": _health_overlay(bot)}
-	return {"time": world.time, "watched": watched, "squads": _squads_overlay()}
+	return {"time": world.time, "watched": watched, "squads": _squads_overlay(),
+			"difficulty": world.difficulty.overlay()}
 
 
 # The watched bot's health (T68): how much, how long until it comes back,
@@ -260,10 +287,12 @@ func _take_over_or_give_back() -> void:
 		given_back.goal = given_back.position
 		given_back.chose_at = -INF
 		_played = -1
+		world.person = -1
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	else:
 		_played = _watched
 		world.bots[_played].controlled = true
+		world.person = _played
 		_follow = true
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_hud.played = _played
@@ -296,8 +325,10 @@ func _read_the_person() -> void:
 	bot.wants_to_sprint = Input.is_key_pressed(KEY_SHIFT)
 
 
-# A match from the current seed, keeping each team's switches.
+# A match from the current seed, keeping each team's switches; the last
+# one's events kept first, when recording. The player model is new with it.
 func _new_match() -> void:
+	_keep_the_log()
 	var rules := MatchRules.new()
 	var blue := MatchTeam.new("blue", BotMatch.BLUE, rules)
 	var red := MatchTeam.new("red", BotMatch.RED, rules)
@@ -308,6 +339,8 @@ func _new_match() -> void:
 			fresh.use_commander = world.teams[side].use_commander
 			fresh.may_retreat = world.teams[side].may_retreat
 	world = BotMatch.new(_seed, blue, red, rules, BotArena.new(rules.body_radius, BotArena.ARENAS[_arena_index]))
+	world.difficulty = MatchDifficulty.new(world)
+	_kept = false
 	_heard = 0
 	_played = -1
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -361,6 +394,8 @@ func _show() -> void:
 	_hud.queue_redraw()
 	_place_camera()
 	_panel.text = BotMatchLines.panel(world, _watched, _played, _thinking_shown)
+	if _recording:
+		_panel.text += "\n" + tr("recording: each match's events are kept in user://botmatch-logs/")
 
 
 func _place_camera() -> void:

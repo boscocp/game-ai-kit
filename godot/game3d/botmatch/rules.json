@@ -72,6 +72,18 @@
   "retreat_at": 0.5,
   "recover_at": 0.9,
   "wave_timeout": 3.0,
+  "difficulty": {
+    "about": "The bot match reading how well the person plays (T100, ADR 0016 as amended): every interval seconds of match time, the share of the damage the played bot dealt -- dealt over dealt and taken, with prior_points dealt and as many taken before the match starts, a Beta mean -- picks the last row whose from it reaches, and the other team aims with that row's error. The first row is the easy level and the last the hard one; the middle row is the knobs' aim error, where every match starts. Fixed numbers, read and never written.",
+    "interval": 10.0,
+    "prior_points": 100,
+    "rows": [
+      {"from": 0.0, "name": "easy", "aim_error_degrees": 6.0},
+      {"from": 0.4, "name": "easier", "aim_error_degrees": 4.5},
+      {"from": 0.45, "name": "middle", "aim_error_degrees": 3.0},
+      {"from": 0.55, "name": "harder", "aim_error_degrees": 2.0},
+      {"from": 0.6, "name": "hard", "aim_error_degrees": 1.5}
+    ]
+  },
   "knobs": {
     "reaction": 0.3,
     "turn_rate_degrees": 270.0,

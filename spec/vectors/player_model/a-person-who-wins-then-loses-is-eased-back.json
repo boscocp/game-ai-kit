@@ -1,0 +1,1013 @@
+{
+ "description": "Dealing for half a minute, then taking twice as fast for a minute: up to the hard row, then down past the middle to the easy one -- the reading is of the whole match so far, so it passes through each row between.",
+ "last_step": 1800,
+ "events": [
+  {
+   "step": 0,
+   "kind": "shot"
+  },
+  {
+   "step": 0,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 20,
+   "kind": "shot"
+  },
+  {
+   "step": 20,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 40,
+   "kind": "shot"
+  },
+  {
+   "step": 40,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 60,
+   "kind": "shot"
+  },
+  {
+   "step": 60,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 80,
+   "kind": "shot"
+  },
+  {
+   "step": 80,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 100,
+   "kind": "shot"
+  },
+  {
+   "step": 100,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 120,
+   "kind": "shot"
+  },
+  {
+   "step": 120,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 140,
+   "kind": "shot"
+  },
+  {
+   "step": 140,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 160,
+   "kind": "shot"
+  },
+  {
+   "step": 160,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 180,
+   "kind": "shot"
+  },
+  {
+   "step": 180,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 200,
+   "kind": "shot"
+  },
+  {
+   "step": 200,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 220,
+   "kind": "shot"
+  },
+  {
+   "step": 220,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 240,
+   "kind": "shot"
+  },
+  {
+   "step": 240,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 260,
+   "kind": "shot"
+  },
+  {
+   "step": 260,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 280,
+   "kind": "shot"
+  },
+  {
+   "step": 280,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 300,
+   "kind": "shot"
+  },
+  {
+   "step": 300,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 320,
+   "kind": "shot"
+  },
+  {
+   "step": 320,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 340,
+   "kind": "shot"
+  },
+  {
+   "step": 340,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 360,
+   "kind": "shot"
+  },
+  {
+   "step": 360,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 380,
+   "kind": "shot"
+  },
+  {
+   "step": 380,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 400,
+   "kind": "shot"
+  },
+  {
+   "step": 400,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 420,
+   "kind": "shot"
+  },
+  {
+   "step": 420,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 440,
+   "kind": "shot"
+  },
+  {
+   "step": 440,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 460,
+   "kind": "shot"
+  },
+  {
+   "step": 460,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 480,
+   "kind": "shot"
+  },
+  {
+   "step": 480,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 500,
+   "kind": "shot"
+  },
+  {
+   "step": 500,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 520,
+   "kind": "shot"
+  },
+  {
+   "step": 520,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 540,
+   "kind": "shot"
+  },
+  {
+   "step": 540,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 560,
+   "kind": "shot"
+  },
+  {
+   "step": 560,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 580,
+   "kind": "shot"
+  },
+  {
+   "step": 580,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 600,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 610,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 620,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 630,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 640,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 650,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 660,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 670,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 680,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 690,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 700,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 710,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 720,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 730,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 740,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 750,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 760,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 770,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 780,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 790,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 800,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 810,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 820,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 830,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 840,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 850,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 860,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 870,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 880,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 890,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 900,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 910,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 920,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 930,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 940,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 950,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 960,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 970,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 980,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 990,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1000,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1010,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1020,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1030,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1040,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1050,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1060,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1070,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1080,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1090,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1100,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1110,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1120,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1130,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1140,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1150,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1160,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1170,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1180,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1190,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1200,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1210,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1220,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1230,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1240,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1250,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1260,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1270,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1280,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1290,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1300,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1310,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1320,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1330,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1340,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1350,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1360,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1370,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1380,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1390,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1400,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1410,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1420,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1430,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1440,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1450,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1460,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1470,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1480,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1490,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1500,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1510,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1520,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1530,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1540,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1550,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1560,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1570,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1580,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1590,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1600,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1610,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1620,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1630,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1640,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1650,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1660,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1670,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1680,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1690,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1700,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1710,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1720,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1730,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1740,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1750,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1760,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1770,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1780,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1790,
+   "kind": "hurt",
+   "points": 12
+  }
+ ],
+ "readings": [
+  {
+   "step": 200,
+   "counts": {
+    "shots": 10,
+    "hits": 10,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 120,
+    "taken": 0
+   },
+   "share": 0.6875,
+   "hit_rate": 0.9166666666666666,
+   "row": 4,
+   "aim_error_degrees": 1.5
+  },
+  {
+   "step": 400,
+   "counts": {
+    "shots": 20,
+    "hits": 20,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 240,
+    "taken": 0
+   },
+   "share": 0.7727272727272727,
+   "hit_rate": 0.9545454545454546,
+   "row": 4,
+   "aim_error_degrees": 1.5
+  },
+  {
+   "step": 600,
+   "counts": {
+    "shots": 30,
+    "hits": 30,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 360,
+    "taken": 0
+   },
+   "share": 0.8214285714285714,
+   "hit_rate": 0.96875,
+   "row": 4,
+   "aim_error_degrees": 1.5
+  },
+  {
+   "step": 800,
+   "counts": {
+    "shots": 30,
+    "hits": 30,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 360,
+    "taken": 240
+   },
+   "share": 0.575,
+   "hit_rate": 0.96875,
+   "row": 3,
+   "aim_error_degrees": 2.0
+  },
+  {
+   "step": 1000,
+   "counts": {
+    "shots": 30,
+    "hits": 30,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 360,
+    "taken": 480
+   },
+   "share": 0.4423076923076923,
+   "hit_rate": 0.96875,
+   "row": 1,
+   "aim_error_degrees": 4.5
+  },
+  {
+   "step": 1200,
+   "counts": {
+    "shots": 30,
+    "hits": 30,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 360,
+    "taken": 720
+   },
+   "share": 0.359375,
+   "hit_rate": 0.96875,
+   "row": 0,
+   "aim_error_degrees": 6.0
+  },
+  {
+   "step": 1400,
+   "counts": {
+    "shots": 30,
+    "hits": 30,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 360,
+    "taken": 960
+   },
+   "share": 0.3026315789473684,
+   "hit_rate": 0.96875,
+   "row": 0,
+   "aim_error_degrees": 6.0
+  },
+  {
+   "step": 1600,
+   "counts": {
+    "shots": 30,
+    "hits": 30,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 360,
+    "taken": 1200
+   },
+   "share": 0.26136363636363635,
+   "hit_rate": 0.96875,
+   "row": 0,
+   "aim_error_degrees": 6.0
+  },
+  {
+   "step": 1800,
+   "counts": {
+    "shots": 30,
+    "hits": 30,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 360,
+    "taken": 1440
+   },
+   "share": 0.23,
+   "hit_rate": 0.96875,
+   "row": 0,
+   "aim_error_degrees": 6.0
+  }
+ ]
+}

@@ -1,0 +1,668 @@
+{
+ "description": "Twelve points taken every second and six dealt, for a minute: down through the row below the middle to the easy one, and never past it.",
+ "last_step": 1200,
+ "events": [
+  {
+   "step": 0,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 0,
+   "kind": "shot"
+  },
+  {
+   "step": 0,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 20,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 40,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 40,
+   "kind": "shot"
+  },
+  {
+   "step": 40,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 60,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 80,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 80,
+   "kind": "shot"
+  },
+  {
+   "step": 80,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 100,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 120,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 120,
+   "kind": "shot"
+  },
+  {
+   "step": 120,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 140,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 160,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 160,
+   "kind": "shot"
+  },
+  {
+   "step": 160,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 180,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 200,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 200,
+   "kind": "shot"
+  },
+  {
+   "step": 200,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 220,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 240,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 240,
+   "kind": "shot"
+  },
+  {
+   "step": 240,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 260,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 280,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 280,
+   "kind": "shot"
+  },
+  {
+   "step": 280,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 300,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 320,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 320,
+   "kind": "shot"
+  },
+  {
+   "step": 320,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 340,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 360,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 360,
+   "kind": "shot"
+  },
+  {
+   "step": 360,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 380,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 400,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 400,
+   "kind": "shot"
+  },
+  {
+   "step": 400,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 420,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 440,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 440,
+   "kind": "shot"
+  },
+  {
+   "step": 440,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 460,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 480,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 480,
+   "kind": "shot"
+  },
+  {
+   "step": 480,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 500,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 520,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 520,
+   "kind": "shot"
+  },
+  {
+   "step": 520,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 540,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 560,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 560,
+   "kind": "shot"
+  },
+  {
+   "step": 560,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 580,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 600,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 600,
+   "kind": "shot"
+  },
+  {
+   "step": 600,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 620,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 640,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 640,
+   "kind": "shot"
+  },
+  {
+   "step": 640,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 660,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 680,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 680,
+   "kind": "shot"
+  },
+  {
+   "step": 680,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 700,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 720,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 720,
+   "kind": "shot"
+  },
+  {
+   "step": 720,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 740,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 760,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 760,
+   "kind": "shot"
+  },
+  {
+   "step": 760,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 780,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 800,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 800,
+   "kind": "shot"
+  },
+  {
+   "step": 800,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 820,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 840,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 840,
+   "kind": "shot"
+  },
+  {
+   "step": 840,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 860,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 880,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 880,
+   "kind": "shot"
+  },
+  {
+   "step": 880,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 900,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 920,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 920,
+   "kind": "shot"
+  },
+  {
+   "step": 920,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 940,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 960,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 960,
+   "kind": "shot"
+  },
+  {
+   "step": 960,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 980,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1000,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1000,
+   "kind": "shot"
+  },
+  {
+   "step": 1000,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 1020,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1040,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1040,
+   "kind": "shot"
+  },
+  {
+   "step": 1040,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 1060,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1080,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1080,
+   "kind": "shot"
+  },
+  {
+   "step": 1080,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 1100,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1120,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1120,
+   "kind": "shot"
+  },
+  {
+   "step": 1120,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 1140,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1160,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1160,
+   "kind": "shot"
+  },
+  {
+   "step": 1160,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 1180,
+   "kind": "hurt",
+   "points": 12
+  }
+ ],
+ "readings": [
+  {
+   "step": 200,
+   "counts": {
+    "shots": 5,
+    "hits": 5,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 60,
+    "taken": 120
+   },
+   "share": 0.42105263157894735,
+   "hit_rate": 0.8571428571428571,
+   "row": 1,
+   "aim_error_degrees": 4.5
+  },
+  {
+   "step": 400,
+   "counts": {
+    "shots": 10,
+    "hits": 10,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 120,
+    "taken": 240
+   },
+   "share": 0.39285714285714285,
+   "hit_rate": 0.9166666666666666,
+   "row": 0,
+   "aim_error_degrees": 6.0
+  },
+  {
+   "step": 600,
+   "counts": {
+    "shots": 15,
+    "hits": 15,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 180,
+    "taken": 360
+   },
+   "share": 0.3783783783783784,
+   "hit_rate": 0.9411764705882353,
+   "row": 0,
+   "aim_error_degrees": 6.0
+  },
+  {
+   "step": 800,
+   "counts": {
+    "shots": 20,
+    "hits": 20,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 240,
+    "taken": 480
+   },
+   "share": 0.3695652173913043,
+   "hit_rate": 0.9545454545454546,
+   "row": 0,
+   "aim_error_degrees": 6.0
+  },
+  {
+   "step": 1000,
+   "counts": {
+    "shots": 25,
+    "hits": 25,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 300,
+    "taken": 600
+   },
+   "share": 0.36363636363636365,
+   "hit_rate": 0.9629629629629629,
+   "row": 0,
+   "aim_error_degrees": 6.0
+  },
+  {
+   "step": 1200,
+   "counts": {
+    "shots": 30,
+    "hits": 30,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 360,
+    "taken": 720
+   },
+   "share": 0.359375,
+   "hit_rate": 0.96875,
+   "row": 0,
+   "aim_error_degrees": 6.0
+  }
+ ]
+}

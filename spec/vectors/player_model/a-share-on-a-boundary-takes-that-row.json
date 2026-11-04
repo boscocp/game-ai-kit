@@ -1,0 +1,57 @@
+{
+ "description": "Fifty points taken read exactly 100/250 = 0.4, the second row's from; eighty dealt and a hundred and twenty taken read exactly 180/400 = 0.45, the middle row's: a boundary belongs to the row above it.",
+ "last_step": 400,
+ "events": [
+  {
+   "step": 10,
+   "kind": "hurt",
+   "points": 50
+  },
+  {
+   "step": 210,
+   "kind": "shot"
+  },
+  {
+   "step": 210,
+   "kind": "hit",
+   "points": 80
+  },
+  {
+   "step": 220,
+   "kind": "hurt",
+   "points": 70
+  }
+ ],
+ "readings": [
+  {
+   "step": 200,
+   "counts": {
+    "shots": 0,
+    "hits": 0,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 0,
+    "taken": 50
+   },
+   "share": 0.4,
+   "hit_rate": 0.5,
+   "row": 1,
+   "aim_error_degrees": 4.5
+  },
+  {
+   "step": 400,
+   "counts": {
+    "shots": 1,
+    "hits": 1,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 80,
+    "taken": 120
+   },
+   "share": 0.45,
+   "hit_rate": 0.6666666666666666,
+   "row": 2,
+   "aim_error_degrees": 3.0
+  }
+ ]
+}
