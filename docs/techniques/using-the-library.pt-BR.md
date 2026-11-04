@@ -5,19 +5,19 @@ half_life: practice
 verified_on: 2026-11-04
 tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html ; https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html ; https://packaging.python.org/en/latest/tutorials/installing-packages/
-invalidated_if: scripts/release.py changes what an archive holds, ADR 0024 changes the prefixed names, .godot-version moves, or scripts/library_check.py stops following one of this page's steps
+invalidated_if: scripts/release.py changes what an archive holds, ADR 0024 changes the prefixed names, .godot-version or python/pyproject.toml's version moves, or scripts/library_check.py stops following one of this page's steps
 teaches: none
-translation_of: 8609b290ac0fa128e5902c8827f2837d13ce9542c9b66ec96436c7400e1fbb76
+translation_of: 3d10625c8624b412d3ccbf61eea82076c54a382128e59e1f8887ebf176b513f9
 -->
 
 > English: [using-the-library.md](using-the-library.md). Os termos que ficam
 > em inglês estão no [glossário](glossary.pt-BR.md).
 
 Esta é a página para seguir com um projeto Godot seu, fora deste
-repositório. Cada passo dela é um passo que o `make library-check` dá numa
-pasta descartável que não sabe nada do kit, com os dois exemplos abaixo do
-jeito que estão impressos aqui: um passo desta página que a verificação
-não dá faz a verificação falhar.
+repositório. O `make library-check` dá cada passo dela numa pasta
+descartável que não sabe nada do kit: roda cada bloco de comandos do jeito
+que está impresso e os dois exemplos do jeito que estão aqui, e um passo
+desta página que a verificação não dá faz a verificação falhar.
 
 ## O que é a biblioteca {#what}
 
@@ -57,19 +57,30 @@ Uma página de técnica que depende de um desses diz isso.
 
 ## Num projeto Godot {#godot}
 
+Todo comando abaixo roda de uma pasta que guarda duas outras: um clone
+deste repositório, `game-ai-kit/`, e o seu projeto Godot, `my_game/`. Cada
+bloco é rodado do jeito que está impresso, dessa pasta, pelo
+`make library-check`, com `godot` no lugar do Godot do `.godot-version`.
+No Windows, descompacte pelo gerenciador de arquivos e leia
+`.venv/bin/python` como `.venv\Scripts\python`.
+
 ### Os arquivos {#archives}
 
 <!-- library-step: release -->
-Nada foi publicado ainda, então os arquivos são gerados a partir de um
-clone:
+Nada foi publicado ainda, então os arquivos são gerados a partir do
+clone. Isso só precisa de Python e git -- nada de Godot:
 
 ```bash
-make release
+python3 game-ai-kit/scripts/release.py --build --output library
 ```
 
-O `dist/` passa a ter um `<addon>-<version>.zip` por addon e o
+O `library/dist/` passa a ter um `<addon>-<version>.zip` por addon e o
 `gameaikit-<version>-py3-none-any.whl`. No dia em que o kit for publicado,
-são esses mesmos arquivos que você baixa.
+são esses mesmos arquivos que você baixa. (O `make release` dentro do
+clone é a *release* completa: ele também exporta o jogo do menu como
+executável, então precisa antes do `make bootstrap` -- o Godot fixado e os
+*templates* de exportação dele -- e de uma árvore limpa. Para a biblioteca
+você não precisa dele.)
 
 ### Descompactar um addon {#unzip}
 
@@ -78,14 +89,13 @@ No `res://addons/` do seu projeto: o addon que você quer e, se o README
 dele pedir, o `ai_core` ao lado. Para um caminho, os dois:
 
 ```bash
-cd my_game
-unzip ai_core-0.1.0.zip -d addons/
-unzip ai_search-0.1.0.zip -d addons/
+unzip -q library/dist/ai_core-0.1.0.zip -d my_game/addons/
+unzip -q library/dist/ai_search-0.1.0.zip -d my_game/addons/
 ```
 
 Não há plugin para ativar. Copiar `godot/addons/ai_core/` e
-`godot/addons/ai_search/` de um clone dá os mesmos arquivos, sem o
-`VERSION` e o README; é a alternativa, não outra biblioteca.
+`godot/addons/ai_search/` do clone dá os mesmos arquivos, sem o `VERSION`
+e o README; é a alternativa, não outra biblioteca.
 
 ### Deixar o Godot registrar as classes {#import}
 
@@ -99,17 +109,17 @@ in the current scope` -- que parece erro de digitação e não é. Uma vez,
 depois de descompactar:
 
 ```bash
-godot --headless --path . --import
+godot --headless --path my_game --import
 ```
 
 ### Uma primeira decisão na sua cena {#first-decision}
 
 <!-- library-step: route -->
-O exemplo mínimo da página do `ai_search`, sem mudança: anexe a qualquer
-nó de uma cena e rode a cena; `route` guarda as células a percorrer. Aqui
-ele não está dentro deste kit -- a verificação o coloca num projeto que
-não tem mais nada além dos três addons, e essa é a prova de que os zips
-bastam.
+O exemplo mínimo da página do `ai_search`, sem mudança. Salve como
+`my_game/route_example.gd`, anexe a qualquer nó de uma cena e rode a cena;
+`route` guarda as células a percorrer. A verificação o coloca na árvore
+de um projeto que não tem nada além dos addons descompactados, e essa é a
+prova de que os zips bastam.
 
 <!-- example: godot/test/ai_search/route_example.gd -->
 ```gdscript
@@ -142,17 +152,19 @@ Cada outra página de técnica tem o seu exemplo mínimo no mesmo lugar, em
 ### Instalar o *wheel* {#wheel}
 
 <!-- library-step: wheel -->
-Python 3.12 ou mais novo, mais nada: o *wheel* não tem dependências,
-então instala sem índice. Num ambiente virtual só dele:
+Python 3.12 ou mais novo, mais nada. O *wheel* não tem dependências, e é
+por isso que o `--no-index` basta: se um dia ganhar uma, este comando
+falha em vez de baixá-la, e a verificação também. Num ambiente virtual só
+dele:
 
 ```bash
 python3 -m venv .venv
-.venv/bin/python -m pip install --no-index gameaikit-0.1.0-py3-none-any.whl
+.venv/bin/python -m pip install --quiet --no-index library/dist/gameaikit-0.1.0-py3-none-any.whl
 ```
 
 `from gameaikit import techniques` passa a listar o que está instalado,
-`techniques.available()`. De um clone, `pip install ./python` instala o
-mesmo pacote.
+`techniques.available()`. Do clone, `pip install ./game-ai-kit/python`
+instala o mesmo pacote.
 
 ### Treinar em Python, decidir no Godot {#train}
 
@@ -160,8 +172,8 @@ mesmo pacote.
 O kit aprende em Python e só faz inferência em GDScript (a invariante 6
 dele): nenhum peso muda enquanto o seu jogo roda. Um script de treino seu
 ajusta um modelo e o grava num arquivo; o jogo lê o arquivo. Este ajusta
-"esse ataque vence?" a partir de oito lutas, e roda da pasta do seu
-projeto:
+"esse ataque vence?" a partir de oito lutas. Salve como
+`my_game/my_training.py`:
 
 ```python
 # Fit "does this attack win?" from a few fights, and write the model file
@@ -192,9 +204,23 @@ with open("chance_model.json", "w", encoding="utf-8") as file:
     json.dump(published, file, indent=2)
 ```
 
+e rode com o Python do ambiente, de dentro do projeto, para o arquivo cair
+em `res://chance_model.json`:
+
+```bash
+cd my_game && ../.venv/bin/python my_training.py
+```
+
 <!-- library-step: infer -->
-No Godot, descompacte o `ai_learning-0.1.0.zip` ao lado dos outros (ele não
-precisa do `ai_core`), importe de novo, e um nó seu lê o arquivo e
+No Godot, o `ai_learning` ao lado dos outros (ele não precisa do
+`ai_core`), e a importação de novo:
+
+```bash
+unzip -q library/dist/ai_learning-0.1.0.zip -d my_game/addons/
+godot --headless --path my_game --import
+```
+
+Depois um nó seu, `my_game/chance_from_python.gd`, lê o arquivo e
 multiplica:
 
 <!-- example: scripts/library/chance_from_python.gd -->
@@ -229,22 +255,24 @@ que faz ele ser recusado.
 ## Versões e a licença {#versions}
 
 <!-- library-step: licence -->
-- **Godot**: o kit é testado na versão do `.godot-version`, hoje a 4.7.2
-  -- a verificação abaixo roda essa. Um Godot 4 mais antigo não é testado.
+- **Godot**: o kit é testado na versão do `.godot-version`, hoje a 4.7.2,
+  e é essa que o `make library-check` roda. Um Godot 4 mais antigo não é
+  testado.
 - **A versão da biblioteca** está no `VERSION` de cada zip e no nome do
-  *wheel* -- 0.1.0 hoje. O que ela promete manter é o que o ADR 0024
-  escreve: os nove nomes `Gak` acima, que o seu código estende --
-  renomear um depois de uma *release* quebra todo jogo que estende, e por
-  isso eles são poucos. Antes da 1.0, qualquer outro nome ainda pode mudar
-  entre *releases*.
+  *wheel* -- 0.1.0 hoje, o número dos comandos acima. O que ela promete
+  manter é o que o ADR 0024 escreve: os nove nomes `Gak` acima, os que o
+  seu código escreve como tipo -- renomear um depois de uma *release*
+  quebra todo jogo que o usa, e por isso eles são poucos. Antes da 1.0,
+  qualquer outro nome ainda pode mudar entre *releases*.
 - **Um nome que colide com um seu**: o README de cada zip diz o que fazer
   -- renomeie a linha `class_name`, e os usos dela, dentro da pasta daquele
   addon. Nada seu muda.
 - **Licença**: Apache-2.0. Cada zip leva `LICENSE` e `NOTICE` ao lado do
-  código, e o *wheel* leva os dois nos metadados. O que você redistribuir
-  que os contenha os mantém -- uma tela de licenças de terceiros basta. Um
-  crédito no seu jogo é um pedido, não uma obrigação (o
-  [README](../../README.md), em inglês, explica por quê).
+  código, e o *wheel* leva os dois nos metadados; a verificação abre cada
+  arquivo e confere. O que você redistribuir que os contenha os mantém --
+  uma tela de licenças de terceiros basta. Um crédito no seu jogo é um
+  pedido, não uma obrigação (o [README](../../README.md), em inglês,
+  explica por quê).
 
 ## Mais fundo {#deeper}
 

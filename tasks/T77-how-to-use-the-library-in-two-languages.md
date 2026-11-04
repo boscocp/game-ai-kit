@@ -47,10 +47,15 @@ Details, none changing what the task asks:
   test folder: it reads `res://chance_model.json`, which only the page's
   Python step writes, so only `make library-check` can run it. The
   translations gate still holds the page's block equal to the file (D9).
-- **The check takes the page's steps, not their order on the page.** It
-  unzips all three addons first and imports once; a reader unzips
-  `ai_learning` later and imports again. The step list itself must match
-  exactly, in both languages.
+- **The check runs the page's commands as printed**, in the page's order,
+  from a folder laid out as the page assumes (`game-ai-kit/` beside
+  `my_game/`, `godot` on the PATH), after the review of PR #59 found the
+  first version matched only step names. The step list must match exactly,
+  in both languages.
+- **The archives step is `release.py --build`, not `make release`.** The
+  full release exports the menu game and needs `make bootstrap`, export
+  templates and a clean tree; the library's archives need only Python and
+  git. The page says so, and mentions `make release` as the full release.
 - **The non-module pages** (MENACE, behaviour cloning, the learned
   evaluation, the racing driver) say which half is in the library and that
   the rest -- an example's code -- stays a copy.

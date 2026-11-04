@@ -5,7 +5,7 @@ half_life: practice
 verified_on: 2026-11-04
 tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html ; https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html ; https://packaging.python.org/en/latest/tutorials/installing-packages/
-invalidated_if: scripts/release.py changes what an archive holds, ADR 0024 changes the prefixed names, .godot-version moves, or scripts/library_check.py stops following one of this page's steps
+invalidated_if: scripts/release.py changes what an archive holds, ADR 0024 changes the prefixed names, .godot-version or python/pyproject.toml's version moves, or scripts/library_check.py stops following one of this page's steps
 teaches: none
 -->
 
@@ -13,10 +13,11 @@ teaches: none
 > words that stay in English are in the [glossary](glossary.pt-BR.md).
 
 This is the page to follow with a Godot project of your own, outside this
-repository. Every step on it is one `make library-check` takes in a
-throwaway folder that knows nothing of the kit, with the two examples
-below as they are printed here: a step on this page that the check does
-not take fails the check.
+repository. `make library-check` takes every step on it in a throwaway
+folder that knows nothing of the kit: it runs each command block as
+printed and the two examples as they are printed here, and a step on this
+page that the check does not take fails the check.
+
 
 ## What the library is {#what}
 
@@ -56,18 +57,28 @@ stay here. A technique page that leans on one of those says so.
 
 ## In a Godot project {#godot}
 
+Every command below runs from one folder holding two others: a clone of
+this repository, `game-ai-kit/`, and your Godot project, `my_game/`. Each
+block is run as printed, from that folder, by `make library-check`, with
+`godot` standing for the Godot in `.godot-version`. On Windows, unzip with
+the file manager and read `.venv/bin/python` as `.venv\Scripts\python`.
+
 ### The archives {#archives}
 
 <!-- library-step: release -->
-Nothing is published yet, so the archives are built from a checkout:
+Nothing is published yet, so the archives are built from the clone. This
+needs only Python and git -- no Godot:
 
 ```bash
-make release
+python3 game-ai-kit/scripts/release.py --build --output library
 ```
 
-`dist/` then holds one `<addon>-<version>.zip` per addon and
+`library/dist/` then holds one `<addon>-<version>.zip` per addon and
 `gameaikit-<version>-py3-none-any.whl`. On the day the kit is published,
-the same files are what you download.
+the same files are what you download. (`make release` inside the clone is
+the full release: it also exports the menu game as an executable, so it
+needs `make bootstrap` first -- the pinned Godot and its export templates
+-- and a clean tree. You do not need it for the library.)
 
 ### Unzip one addon {#unzip}
 
@@ -76,13 +87,12 @@ Into your project's `res://addons/`: the addon you want and, if its
 README says so, `ai_core` beside it. For a route, both:
 
 ```bash
-cd my_game
-unzip ai_core-0.1.0.zip -d addons/
-unzip ai_search-0.1.0.zip -d addons/
+unzip -q library/dist/ai_core-0.1.0.zip -d my_game/addons/
+unzip -q library/dist/ai_search-0.1.0.zip -d my_game/addons/
 ```
 
 There is no plugin to enable. Copying `godot/addons/ai_core/` and
-`godot/addons/ai_search/` from a checkout gives the same files without
+`godot/addons/ai_search/` from the clone gives the same files without
 `VERSION` and the README; it is the alternative, not a different library.
 
 ### Let Godot register the classes {#import}
@@ -96,16 +106,17 @@ has not seen fails with `Could not find type "GakGridGraph" in the current
 scope` -- which reads like a typo and is not one. Once, after unzipping:
 
 ```bash
-godot --headless --path . --import
+godot --headless --path my_game --import
 ```
 
 ### A first decision in your scene {#first-decision}
 
 <!-- library-step: route -->
-The `ai_search` page's minimal example, unchanged: attach it to any node
-of a scene and run the scene; `route` holds the cells to walk. Here it is
-not inside this kit -- the check puts it in a project holding nothing else
-but the three addons, which is the proof that the zips are enough.
+The `ai_search` page's minimal example, unchanged. Save it as
+`my_game/route_example.gd`, attach it to any node of a scene and run the
+scene; `route` holds the cells to walk. The check adds it to the tree of a
+project holding nothing but the unzipped addons, which is the proof that
+the zips are enough.
 
 <!-- example: godot/test/ai_search/route_example.gd -->
 ```gdscript
@@ -138,17 +149,19 @@ under **In your own project**.
 ### Install the wheel {#wheel}
 
 <!-- library-step: wheel -->
-Python 3.12 or later, nothing else: the wheel has no dependencies, so it
-installs with no index. In a virtual environment of its own:
+Python 3.12 or later, nothing else. The wheel has no dependencies, which
+is why `--no-index` is enough: were one ever added, this command would
+fail rather than fetch it, and so would the check. In a virtual
+environment of its own:
 
 ```bash
 python3 -m venv .venv
-.venv/bin/python -m pip install --no-index gameaikit-0.1.0-py3-none-any.whl
+.venv/bin/python -m pip install --quiet --no-index library/dist/gameaikit-0.1.0-py3-none-any.whl
 ```
 
 `from gameaikit import techniques` then lists what is installed,
-`techniques.available()`. From a checkout, `pip install ./python` installs
-the same package.
+`techniques.available()`. From the clone, `pip install ./game-ai-kit/python`
+installs the same package.
 
 ### Train in Python, decide in Godot {#train}
 
@@ -156,7 +169,7 @@ the same package.
 The kit learns in Python and only infers in GDScript (its invariant 6): no
 weight changes while your game runs. A training script of yours fits a
 model and writes it as a file; the game reads the file. This one fits "does
-this attack win?" from eight fights, and is run from your project's folder:
+this attack win?" from eight fights. Save it as `my_game/my_training.py`:
 
 ```python
 # Fit "does this attack win?" from a few fights, and write the model file
@@ -187,9 +200,24 @@ with open("chance_model.json", "w", encoding="utf-8") as file:
     json.dump(published, file, indent=2)
 ```
 
+and run it with the environment's Python, from the project, so the file
+lands at `res://chance_model.json`:
+
+```bash
+cd my_game && ../.venv/bin/python my_training.py
+```
+
 <!-- library-step: infer -->
-In Godot, unzip `ai_learning-0.1.0.zip` beside the others (it needs no
-`ai_core`), import again, and a node of yours reads the file and multiplies:
+In Godot, `ai_learning` beside the others (it needs no `ai_core`), and the
+import again:
+
+```bash
+unzip -q library/dist/ai_learning-0.1.0.zip -d my_game/addons/
+godot --headless --path my_game --import
+```
+
+Then a node of yours, `my_game/chance_from_python.gd`, reads the file and
+multiplies:
 
 <!-- example: scripts/library/chance_from_python.gd -->
 ```gdscript
@@ -224,20 +252,22 @@ it.
 
 <!-- library-step: licence -->
 - **Godot**: the kit is tested on the version in `.godot-version`, today
-  4.7.2 -- the check below runs that one. An older Godot 4 is not tested.
+  4.7.2, and `make library-check` runs that one. An older Godot 4 is not
+  tested.
 - **The library's version** is in each zip's `VERSION` and the wheel's
-  name -- 0.1.0 today. What it promises to keep is what ADR 0024 writes
-  down: the nine `Gak` names above, which your code extends -- renaming
-  one after a release breaks every game that does, which is why they are
-  few. Below 1.0 any other name may still change between releases.
+  name -- 0.1.0 today, the number in the commands above. What it promises
+  to keep is what ADR 0024 writes down: the nine `Gak` names above, the
+  ones your code names as a type -- renaming one after a release breaks
+  every game that uses it, which is why they are few. Below 1.0 any other
+  name may still change between releases.
 - **A name that collides with one of yours**: each zip's README says it --
   rename the `class_name` line, and its uses, inside that addon's folder.
   Nothing of yours changes.
 - **Licence**: Apache-2.0. Every zip carries `LICENSE` and `NOTICE` beside
-  its code, and the wheel carries both in its metadata. Whatever you
-  redistribute that contains them keeps them -- a third-party-licences
-  screen is enough. A credit in your game is asked, not required (the
-  [README](../../README.md) says why).
+  its code, and the wheel carries both in its metadata; the check opens
+  each archive and looks. Whatever you redistribute that contains them
+  keeps them -- a third-party-licences screen is enough. A credit in your
+  game is asked, not required (the [README](../../README.md) says why).
 
 ## Deeper {#deeper}
 
