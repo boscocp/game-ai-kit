@@ -410,14 +410,44 @@ RTS and the fighting game, by the same rules, with what they added:
   `tactical_spending_test`, `tactical_planner_test`) pin nothing now, and pass with the engine
   started in pt-BR (`LANG=pt_BR.UTF-8`). The suites that read the screen
   -- a header, a side's name, a refusal -- keep theirs.
-- **Not in it.** The news of what was played (`TacticalCombat.told`,
-  "built a runner at ...", the points paid) is still worded when it
-  happens, and keeps the language it happened in until the next event:
-  it is the game's report, not a team's reason, and the task's scope was
-  the reasons. A state machine's arrow is the addon's own English string
+- **Not in it, then.** The news of what was played (`TacticalCombat.told`,
+  "built a runner at ...", the points paid) was still worded when it
+  happened, and kept the language it happened in until the next event.
+  T110 made it a `Sentence` too (below). A state machine's arrow is the addon's own English string
   (`"advance -> take point: a control point is free"`) and a GOAP goal is
   named by its fact (`pressure`): both stay English inside a pt-BR
   reason, as they did before T104.
+
+## The tactical news keeps its words as keys (T110, wave 124)
+
+- **What changed.** The news of what was played is a `Sentence` now, as
+  T104 made the reasons: `TacticalCombat.told` and the XCOM-style mode's
+  `SquadCombat.told` return one, so does `TacticalRuleset.told`;
+  `TurnStart.open` and `TacticalRuleset.open_turn` return one a line (the
+  points paid, `ControlPoints.pay`, and each tower's shot); and
+  `tactical.gd` keeps `_last_event` as a list of them, one a line, and
+  the computer's attacks of the turn in `_computer_news`. A build, a
+  wait, the forge bought, "taken back", an enemy come into sight and the
+  "{side}'s attacks:" header are sentences there.
+- **Values.** A side is its key (`TacticalStatus.side_word`: "red",
+  "blue"), a piece its type name, a piece with its article a nested
+  sentence, "red runner at (3, 4)" a nested sentence, the shot's outcome
+  ("missed", "hit, {left} health left") a nested sentence. Each is worded
+  by `TacticalStatus.word`, as a reason's are.
+- **Where it is worded.** `tactical.gd`'s `_status_text`, through
+  `TacticalStatus.said`, every time the status is rebuilt -- and it is
+  rebuilt on `NOTIFICATION_TRANSLATION_CHANGED`. So a language switched
+  after an event rewords its news at once. `news_in_english()` gives the
+  same lines in English, for a test. The skirmish keeps no news of its
+  own; its towers fire through `TurnStart`, whose lines it does not show.
+- **No key changed.** Every key is the one `tactical.csv` or `squad.csv`
+  already held; only where each is translated moved.
+- **Measured.** `tactical_news_test.gd`: an attack, a build, a wait, the
+  forge bought and a tower's shot, each happening in pt-BR and then in
+  English; the locale changes before the next event, and the panel shows
+  the news in the new language and none of the old -- then back again.
+  Worded when kept, as before, the switch leaves the old language on the
+  panel and the test fails.
 
 ## Measured on 4.7.2
 

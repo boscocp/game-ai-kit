@@ -179,9 +179,15 @@ static func _chained(values: Array, key: String) -> Array:
 
 ## A faction's name as the screen says it.
 static func side_name(faction: int) -> String:
+	return TranslationServer.translate(side_word(faction))
+
+
+## A faction's name as a value of a kept sentence: its English key, worded
+## where the sentence is shown.
+static func side_word(faction: int) -> String:
 	if faction == TacticalScenario.RED:
-		return TranslationServer.translate("red")
-	return TranslationServer.translate("blue")
+		return "red"  # shown through tr()
+	return "blue"  # shown through tr()
 
 
 # A round is both sides' turns. `BoardState.turn_number` counts each side's

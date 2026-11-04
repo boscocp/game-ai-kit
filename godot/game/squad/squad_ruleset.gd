@@ -108,14 +108,14 @@ func attack(state: BoardState, strike: Attack) -> BoardState:
 
 
 ## `SquadCombat.told`: the chance, the cover, and what the die did.
-func told(before: BoardState, strike: Attack, after: BoardState) -> String:
+func told(before: BoardState, strike: Attack, after: BoardState) -> Array:
 	return SquadCombat.told(SquadScenario.rows(), before, strike, after)
 
 
 ## The turn passes and the next side's movement is refilled; nothing else
 ## happens as it opens.
 func open_turn(state: BoardState) -> Array:
-	return [state.end_turn(TacticalScenario.FACTIONS), [] as Array[String]]
+	return [state.end_turn(TacticalScenario.FACTIONS), [] as Array[Array]]
 
 
 ## `SquadVictory.winner`.

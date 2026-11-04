@@ -141,7 +141,7 @@ func test_a_new_game_the_computer_opens_does_not_show_the_last_games_news() -> v
 	var scene: TacticalGame = auto_free((load("res://game/tactical/tactical.tscn") as PackedScene).instantiate())
 	add_child(scene)
 	scene.swap_sides()
-	scene._last_event = "the red runner destroyed the blue workshop"
+	scene._last_event.assign([Sentence.of("the red runner destroyed the blue workshop")])
 
 	scene.new_game()
 

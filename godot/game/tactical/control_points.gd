@@ -47,15 +47,15 @@ static func held_by(state: BoardState, side: int) -> Array[Vector2i]:
 const POINT_TURNS: String = "point turns"  # not shown
 
 
-## Pay the side to move for every point it holds, as `[BoardState, String]`:
+## Pay the side to move for every point it holds, as `[BoardState, Array]`:
 ## the state with its funds raised and the turn counted under `POINT_TURNS`,
-## and the line saying so -- "" when it holds none. Called at the start of a
+## and the line saying so as a `Sentence` -- empty when it holds none. Called at the start of a
 ## side's turn, with its ordinary income.
 static func pay(state: BoardState) -> Array:
 	var side: int = state.current_faction
 	var held: Array[Vector2i] = held_by(state, side)
 	if held.is_empty():
-		return [state, ""]
+		return [state, []]
 	var paid: BoardState = state.duplicate_state()
 	paid.funds[side] = paid.funds_of(side) + held.size() * TacticalRules.POINT_INCOME
 	var counted: Dictionary = paid.tally.get(POINT_TURNS, {})
@@ -64,8 +64,8 @@ static func pay(state: BoardState) -> Array:
 	var where: Array[String] = []
 	for point: Vector2i in held:
 		where.append(str(point))
-	return [paid, TranslationServer.translate("{side} is paid {amount} for holding the point(s) at {cells}").format({
-		side = TacticalStatus.side_name(side), amount = held.size() * TacticalRules.POINT_INCOME, cells = ", ".join(where)})]
+	return [paid, Sentence.of("{side} is paid {amount} for holding the point(s) at {cells}", {  # shown through tr()
+		side = TacticalStatus.side_word(side), amount = held.size() * TacticalRules.POINT_INCOME, cells = ", ".join(where)})]
 
 
 ## One line for the screen: each point and who holds it.

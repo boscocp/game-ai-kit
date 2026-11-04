@@ -65,7 +65,7 @@ func attack(state: BoardState, strike: Attack) -> BoardState:
 
 
 ## `TacticalCombat.told`.
-func told(before: BoardState, strike: Attack, after: BoardState) -> String:
+func told(before: BoardState, strike: Attack, after: BoardState) -> Array:
 	return TacticalCombat.told(before, strike, after)
 
 

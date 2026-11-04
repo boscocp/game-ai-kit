@@ -142,13 +142,13 @@ static func _resolve(state: BoardState, attack: Attack) -> BoardState:
 
 
 ## The state after the side to move's towers have fired, and one line for
-## each shot, as `[BoardState, Array[String]]`. Called at the start of a
+## each shot, as `[BoardState, Array[Array]]`: each line a `Sentence`. Called at the start of a
 ## side's turn, before it does anything: a tower fires on its own side's
 ## turn, so the other side walked past it knowing it would, and sees the
 ## shot before it has to answer it. Each tower fires once, at the weakest
 ## enemy walker in its reach, ties to the lower id.
 static func towers_fire(state: BoardState) -> Array:
-	var said: Array[String] = []
+	var said: Array[Array] = []
 	for tower: Unit in state.units_of(state.current_faction):
 		if tower.type.mobile or tower.type.attack_range <= 0 or state.unit_by_id(tower.id) == null:
 			continue
@@ -162,28 +162,29 @@ static func towers_fire(state: BoardState) -> Array:
 
 
 ## One line saying what an attack did: who attacked whom, who is left
-## standing, and with how much.
-static func told(before: BoardState, attack: Attack, after: BoardState) -> String:
+## standing, and with how much. A `Sentence`, worded where it is shown
+## (T110), so the news on the panel follows a language switched after it.
+static func told(before: BoardState, attack: Attack, after: BoardState) -> Array:
 	var attacker: Unit = before.unit_by_id(attack.attacker_id)
 	var target: Unit = before.unit_by_id(attack.target_id)
-	var who: String = _side_piece(attacker)
-	var whom: String = _side_piece(target)
+	var who: Array = _side_piece(attacker)
+	var whom: Array = _side_piece(target)
 	var survivor: Unit = after.unit_by_id(attacker.id)
 	var struck: Unit = after.unit_by_id(target.id)
 	if survivor != null and struck != null:
-		return TranslationServer.translate("the {who} struck the {whom}, which has {health} health left (the attacker {left})").format({
+		return Sentence.of("the {who} struck the {whom}, which has {health} health left (the attacker {left})", {  # shown through tr()
 			who = who, whom = whom, health = struck.health, left = survivor.health})
 	if survivor != null:
-		return TranslationServer.translate("the {who} destroyed the {whom}, and has {left} health left").format({
+		return Sentence.of("the {who} destroyed the {whom}, and has {left} health left", {  # shown through tr()
 			who = who, whom = whom, left = survivor.health})
-	return TranslationServer.translate("the {who} attacked the {whom} and was destroyed; {piece} has {health} health left").format({
-		who = who, whom = whom, piece = TacticalStatus.the_piece(target.type.type_name), health = struck.health})
+	return Sentence.of("the {who} attacked the {whom} and was destroyed; {piece} has {health} health left", {  # shown through tr()
+		who = who, whom = whom, piece = TacticalStatus.the_piece_sentence(target.type.type_name), health = struck.health})
 
 
 # "red runner at (3, 4)": a piece in a line about a fight, with its side.
-static func _side_piece(unit: Unit) -> String:
-	return TranslationServer.translate("{side} {piece} at {cell}").format({
-		side = TacticalStatus.side_name(unit.faction), piece = TacticalStatus.piece(unit.type.type_name), cell = unit.cell})
+static func _side_piece(unit: Unit) -> Array:
+	return Sentence.of("{side} {piece} at {cell}", {  # shown through tr()
+		side = TacticalStatus.side_word(unit.faction), piece = unit.type.type_name, cell = unit.cell})
 
 
 static func _weakest_walker_in_reach(state: BoardState, tower: Unit) -> Unit:
