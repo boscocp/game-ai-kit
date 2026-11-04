@@ -300,12 +300,19 @@ solve-maze: ## Solve the maze's MDP by value iteration and publish its values an
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.mdp.publish --write $(CURDIR)/godot/game/maze
 
 .PHONY: test-vectors
-test-vectors: test-core-vectors test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-bandit-vectors test-constraints-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors test-llm-vectors test-maze-vectors test-mdp-vectors test-director-vectors test-squad-vectors test-player-model-vectors ## Every conformance vector in spec/
+test-vectors: ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
+	@# Each family names itself beside its own rule, `test-vectors:
+	@# test-x-vectors`, a rule make reads as one more prerequisite (T111).
+	@# It used to be one line every new family rewrote: two parallel waves
+	@# conflicted on it at every rebase, and `affected.py` could not tell
+	@# a name put in from any other edit, so it ran all of `make check`.
+	@# The families now run in the Makefile's order, not the old line's.
 
 .PHONY: test-core-vectors
+test-vectors: test-core-vectors
 test-core-vectors: import ## The kit's one seeded generator, its draws, uniforms and picks, against ai_core (T109)
 	@# The other half is `make test-python`, through gameaikit.core. The
 	@# numbers came from neither: spec/vectors/core/derive.py.
@@ -313,6 +320,7 @@ test-core-vectors: import ## The kit's one seeded generator, its draws, uniforms
 		-- $(CURDIR)/spec/vectors/core
 
 .PHONY: test-search-vectors
+test-vectors: test-search-vectors
 test-search-vectors: import ## The search vectors, against ai_search
 	@# The vectors live outside the Godot project so the Python side can be
 	@# held to the same answers. Godot reads an absolute path in a
@@ -321,6 +329,7 @@ test-search-vectors: import ## The search vectors, against ai_search
 		-- $(CURDIR)/spec/vectors/search
 
 .PHONY: test-planning-vectors
+test-vectors: test-planning-vectors
 test-planning-vectors: import ## The planning vectors, against ai_planning
 	@# Only half of each planning vector is checked here: this side plans over
 	@# the domain the JSON spells out. The other half -- that the PDDL files
@@ -333,6 +342,7 @@ test-planning-vectors: import ## The planning vectors, against ai_planning
 		-- $(CURDIR)/spec/pddl
 
 .PHONY: test-learning-vectors
+test-vectors: test-learning-vectors
 test-learning-vectors: import ## The learning vectors, against ai_learning
 	@# Half of each learning vector is checked here -- the board produces this
 	@# row, and the model turns it into this number. The other half is the
@@ -343,36 +353,42 @@ test-learning-vectors: import ## The learning vectors, against ai_learning
 		-- $(CURDIR)/spec/vectors/learning
 
 .PHONY: test-ngram-vectors
+test-vectors: test-ngram-vectors
 test-ngram-vectors: import ## The n-gram vectors, against ai_opponent
 	@# The same files are read by `make test-python` through gameaikit.ngram.
 	@$(GODOT) --headless --path godot -s res://test/ai_opponent/ngram_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/ngram
 
 .PHONY: test-bandit-vectors
+test-vectors: test-bandit-vectors
 test-bandit-vectors: import ## The bandit vectors, against ai_bandit
 	@# The same files are read by `make test-python` through gameaikit.bandit.
 	@$(GODOT) --headless --path godot -s res://test/ai_bandit/bandit_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/bandit
 
 .PHONY: test-constraints-vectors
+test-vectors: test-constraints-vectors
 test-constraints-vectors: import ## The constraint vectors, against ai_constraints
 	@# The same files are read by `make test-python` through gameaikit.constraints.
 	@$(GODOT) --headless --path godot -s res://test/ai_constraints/constraint_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/constraints
 
 .PHONY: test-cloning-vectors
+test-vectors: test-cloning-vectors
 test-cloning-vectors: import ## The cloning vectors, against ai_learning's softmax model and case table
 	@# The same files are read by `make test-python` through gameaikit.cloning.
 	@$(GODOT) --headless --path godot -s res://test/ai_learning/cloning_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/cloning
 
 .PHONY: test-combat-vectors
+test-vectors: test-combat-vectors
 test-combat-vectors: import ## The combat vectors, against the tactical board's fight
 	@# The same files are read by `make test-python` through gameaikit.dataset.combat.
 	@$(GODOT) --headless --path godot -s res://test/tactical/combat_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/combat
 
 .PHONY: test-llm-vectors
+test-vectors: test-llm-vectors
 test-llm-vectors: import ## What a model's reply may contain: both validators against spec/vectors/llm (T92)
 	@# Both halves here, because this is where "every refusal is refused by
 	@# both validators" is held -- by running them. No model in either.
@@ -390,6 +406,7 @@ measure-llm-requests: import ## The worst frame while an HTTPRequest is in fligh
 		status=$$?; kill $$stub; exit $$status
 
 .PHONY: test-fuzzy-vectors
+test-vectors: test-fuzzy-vectors
 test-fuzzy-vectors: import ## The fuzzy vectors, against ai_fuzzy
 	@# The same file, read twice: here through the addon, and in
 	@# `make test-python` through gameaikit.fuzzy, which also checks that the
@@ -398,6 +415,7 @@ test-fuzzy-vectors: import ## The fuzzy vectors, against ai_fuzzy
 		-- $(CURDIR)/spec/vectors/fuzzy
 
 .PHONY: test-checkers-vectors
+test-vectors: test-checkers-vectors
 test-checkers-vectors: import ## The checkers rules and evaluation vectors, against the game
 	@# The other half is `make test-python`: the same two files read through
 	@# gameaikit.checkers, the Python that self-plays and fits (T32).
@@ -405,6 +423,7 @@ test-checkers-vectors: import ## The checkers rules and evaluation vectors, agai
 		-- $(CURDIR)/spec/vectors/checkers
 
 .PHONY: test-adversarial-vectors
+test-vectors: test-adversarial-vectors
 test-adversarial-vectors: import ## The xorshift draws MCTS reads, and its root visits on Nim and a dice race, against ai_adversarial (T86)
 	@# The other half is `make test-python`, through gameaikit.adversarial.
 	@# The numbers came from neither: spec/vectors/adversarial/derive.py.
@@ -412,6 +431,7 @@ test-adversarial-vectors: import ## The xorshift draws MCTS reads, and its root 
 		-- $(CURDIR)/spec/vectors/adversarial
 
 .PHONY: test-menace-vectors
+test-vectors: test-menace-vectors
 test-menace-vectors: import ## The MENACE vectors, against the game's bead player
 	@# The other half is `make test-python`. Each case carries the uniform draw
 	@# itself, because Python's generator and Godot's differ.
@@ -419,6 +439,7 @@ test-menace-vectors: import ## The MENACE vectors, against the game's bead playe
 		-- $(CURDIR)/spec/vectors/menace
 
 .PHONY: test-maze-vectors
+test-vectors: test-maze-vectors
 test-maze-vectors: import ## The maze vectors: a seed and Pac-Man's moves, every step's positions, against the game (T97)
 	@# The other half is `make test-python`; the answers came from neither,
 	@# from spec/vectors/maze/derive.py.
@@ -426,6 +447,7 @@ test-maze-vectors: import ## The maze vectors: a seed and Pac-Man's moves, every
 		-- $(CURDIR)/spec/vectors/maze
 
 .PHONY: test-mdp-vectors
+test-vectors: test-mdp-vectors
 test-mdp-vectors: import ## Ten maze states' values and best moves, against the policy the maze game reads (T98)
 	@# The other half is `make test-python`; the answers came from neither,
 	@# from spec/vectors/mdp/derive.py's own value iteration.
@@ -433,6 +455,7 @@ test-mdp-vectors: import ## Ten maze states' values and best moves, against the 
 		-- $(CURDIR)/spec/vectors/mdp
 
 .PHONY: test-director-vectors
+test-vectors: test-director-vectors
 test-director-vectors: import ## The director's intensity and phases on event lists, against the infiltration level's Director (T90)
 	@# The other half is `make test-python`; the answers came from neither,
 	@# from spec/vectors/director/derive.py.
@@ -440,6 +463,7 @@ test-director-vectors: import ## The director's intensity and phases on event li
 		-- $(CURDIR)/spec/vectors/director
 
 .PHONY: test-player-model-vectors
+test-vectors: test-player-model-vectors
 test-player-model-vectors: import ## The bot match's player model on event lists: counts, share, row, against PlayerModel (T100)
 	@# The other half is `make test-python`; the answers came from neither,
 	@# from spec/vectors/player_model/derive.py.
@@ -466,6 +490,7 @@ test-squad-match: import ## The XCOM mode's first enemy against a random mover: 
 	@$(GODOT) --headless --path godot -s res://test/squad/squad_match_runner.gd -- $(or $(GAMES),100) $(or $(WINS),80)
 
 .PHONY: test-squad-vectors
+test-vectors: test-squad-vectors
 test-squad-vectors: import ## The XCOM-style shot: cover, flanking, chance and die, both languages against spec/vectors/squad (T84)
 	@# The answers were worked out by hand; neither language derived them.
 	@$(GODOT) --headless --path godot -s res://test/squad/squad_vectors_runner.gd \
@@ -489,30 +514,35 @@ test-pad: import ## A controller presses the keys an example reads: buttons, sti
 	@$(GODOT) --headless --path godot -s res://test/game_shared/pad_as_keys_claims.gd
 
 .PHONY: test-perception-vectors
+test-vectors: test-perception-vectors
 test-perception-vectors: import ## The stealth senses: shape, loudness, awareness, phase, belief, particles, against ai_perception (T69, T91)
 	@# The other half is `make test-python`.
 	@$(GODOT) --headless --path godot -s res://test/ai_perception/perception_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/perception
 
 .PHONY: test-teamwork-vectors
+test-vectors: test-teamwork-vectors
 test-teamwork-vectors: import ## Positions, influence, commander and confidence, against ai_teamwork (T51)
 	@# The other half is `make test-python`.
 	@$(GODOT) --headless --path godot -s res://test/ai_teamwork/teamwork_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/teamwork
 
 .PHONY: test-utility-vectors
+test-vectors: test-utility-vectors
 test-utility-vectors: import ## Actions scored by their considerations, and errands weighed, against ai_utility (T67, T101)
 	@# The other half is `make test-python`.
 	@$(GODOT) --headless --path godot -s res://test/ai_utility/utility_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/utility
 
 .PHONY: test-racing3d-vectors
+test-vectors: test-racing3d-vectors
 test-racing3d-vectors: import ## The 3D driver's decisions from stated snapshots, against RaceDriver3D (T54)
 	@# The other half is `make test-python`.
 	@$(GODOT) --headless --path godot -s res://test/racing3d/racing3d_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/racing3d
 
 .PHONY: test-steering-vectors
+test-vectors: test-steering-vectors
 test-steering-vectors: import ## The steering trajectories, against ai_steering
 	@# The other half is `make test-python`. The tolerance is sized for
 	@# Vector2's 32-bit floats: docs/godot/vector2-is-single-precision.md.
@@ -674,7 +704,11 @@ affected: ## Print what a change selects and why: make affected BASE=origin/main
 	@$(PYTHON) scripts/affected.py --base "$(BASE)" --targets
 
 .PHONY: check-affected
-check-affected: ## Every lint, and the gates of the modules a change touches: make check-affected BASE=origin/main
+check-affected: ## Every lint, and the gates of the modules a change touches (the timing ones, test-rts-budget test-mcts-budget test-inference-budget test-planner-benchmark test-rts-match, only with theirs): make check-affected BASE=origin/main
+	@# The timing gates measure a frame budget, and five worktrees testing at
+	@# once fail them (batch 118-122). Each was already its module's, so it
+	@# runs here only when the change selects that module -- and still fails
+	@# under load then. `make check` runs them all.
 	@test -n "$(BASE)" || { echo "usage: make check-affected BASE=<ref>" >&2; exit 2; }
 	@$(PYTHON) scripts/affected.py --base "$(BASE)" --run
 

@@ -35,10 +35,22 @@ GROUP = "gameaikit.techniques"
 #: The kit's modules whose import fills `KIT`. Only techniques: the
 #: examples' packages (`checkers`, `maze`, ...) are games, not the library.
 #: `training` is named by its module, for it has no `__init__.py` to
-#: import the rest.
+#: import the rest. Sorted, one a line, so two waves adding a technique
+#: each conflict only when their names are neighbours (T111).
 KIT_MODULES = (
-    "adversarial", "bandit", "constraints", "fuzzy", "llm", "ngram", "pddl", "perception",
-    "search", "steering", "teamwork", "training.descent", "utility",
+    "adversarial",
+    "bandit",
+    "constraints",
+    "fuzzy",
+    "llm",
+    "ngram",
+    "pddl",
+    "perception",
+    "search",
+    "steering",
+    "teamwork",
+    "training.descent",
+    "utility",
 )
 
 Entry = TypeVar("Entry", bound=Callable[..., Any])

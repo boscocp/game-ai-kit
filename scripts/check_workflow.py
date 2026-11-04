@@ -70,14 +70,16 @@ def target_prerequisites(makefile: pathlib.Path, target: str) -> set[str]:
     them. The pattern used to be the other way round -- one line, then any
     continuations -- and the first line swallowed its own backslash, so the
     continuations matched zero times and only the first line was read.
+
+    Every rule for `target` is read, as make reads them: since T111 each
+    vector family adds itself to `test-vectors` by a rule of its own.
     """
     text = makefile.read_text(encoding="utf-8")
-    found = re.search(rf"^{re.escape(target)}:((?:[^\n]*\\\n)*[^\n]*)", text, re.M)
-    if found is None:
-        return set()
-    body = found.group(1).replace("\\\n", " ")
-    body = body.split("##")[0]
-    return {word for word in body.split() if re.fullmatch(r"[a-z][a-z0-9_-]*", word)}
+    found = set()
+    for rule in re.finditer(rf"^{re.escape(target)}:(?![=:])((?:[^\n]*\\\n)*[^\n]*)", text, re.M):
+        body = rule.group(1).replace("\\\n", " ").split("##")[0]
+        found |= {word for word in body.split() if re.fullmatch(r"[a-z][a-z0-9_-]*", word)}
+    return found
 
 
 def workflow_commands(workflow: pathlib.Path) -> list[str]:
@@ -241,6 +243,13 @@ def self_test() -> int:
         expect("every continuation line reached", quiet(build(
             root, "continued-ok", multi_line,
             WORKFLOW_TEXT + "      - run: make lint-late\n")), 0)
+
+        # Planted: the gate CI misses is named by a second rule for `check`,
+        # the form each vector family takes since T111. Reading only the
+        # first rule would leave it unreached and this check green.
+        second_rule = MAKEFILE_TEXT + "check: lint-late\n.PHONY: lint-late\nlint-late:\n\t@true\n"
+        expect("a missed gate on a second rule", quiet(build(
+            root, "second-rule", second_rule, WORKFLOW_TEXT)), 1, "W5")
 
         # A variable override is not a target.
         expect("a variable override", quiet(build(root, "override", MAKEFILE_TEXT,

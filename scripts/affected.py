@@ -11,8 +11,8 @@ the ones that depend on *them* -- and prints the make targets that test
 exactly that. It is what Nx calls `affected` and Bazel `rdeps`, in the
 standard library and short enough to read.
 
-The four rules, each a planted case below
------------------------------------------
+The rules, each a planted case below
+------------------------------------
 It fails towards running more, never less:
 
   1. A path no module owns selects everything, and says which path did it.
@@ -26,7 +26,22 @@ It fails towards running more, never less:
   5. T71's one exception to rule 2: a Makefile or manifest change that only
      adds gates of one module selects that module, as a change to its code
      would. `added_gates.py` reads the diff to say so, and any doubt leaves
-     the path global. It needs the diff, so `--paths` never takes it.
+     the path global. It needs the diff, so `--paths` never takes it. Since
+     T111 a name put into `test-vectors`, in its one line or by a rule of
+     its own beside the family's, is read as one put into `check:`.
+  6. T111's: a change that only adds a module -- its new manifest, the new
+     name in a user's `depends_on`, the library's two lists gaining its
+     package -- selects that module and the user, as rule 5 does a gate.
+     `added_module.py` reads it, with the same rule: any doubt is global.
+     The scripts, CI, the engine pin and a path nobody owns are never read
+     this way.
+
+The timing gates -- test-rts-budget, test-mcts-budget, test-inference-budget,
+test-planner-benchmark, test-rts-match -- were each one module's before
+T111, like any gate, so a change runs one only when it selects that module.
+Under five worktrees' load they failed in almost every wave of batch 118-122
+and passed alone, and they still will whenever their module is selected;
+`make check` keeps all of them.
 
 Exit codes
 ----------
@@ -56,7 +71,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import added_gates  # noqa: E402 -- rule 5: a change that only adds a gate
+import added_module  # noqa: E402 -- rules 5 and 6: a change that only adds a gate or a module
 import check_modules  # noqa: E402 -- the manifests and the ownership rules
 from check_modules import PROSE, Module, is_under, owner_of  # noqa: E402
 
@@ -64,6 +79,9 @@ GODOT_TESTS = "godot/test/"
 PYTHON_TESTS = "python/tests/"
 # Run with any selected Godot suite: it is global, and four seconds.
 GLOBAL_SUITES = ("test/project_settings_test.gd",)
+# Run with any selected Python test: it holds the library's lists to the
+# manifests, which rule 6 lets a change touch without selecting everything.
+GLOBAL_PYTESTS = ("test_techniques",)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -137,7 +155,7 @@ def select(paths: list[str], modules: dict[str, Module],
             continue
         if path in local:
             touched.add(local[path])
-            notes.append(f"{path} only adds a gate of {local[path]}")
+            notes.append(f"{path} only adds to {local[path]}: a gate, or the module itself")
             continue
         if check_modules.is_global(path, modules):
             reasons.append(f"{path} is global: every gate stands on it")
@@ -190,7 +208,7 @@ def targets(repo: pathlib.Path, selection: Selection,
         python += module_python
     found = lints + [f'lint-no-training-some RETRAIN="{",".join(retrain)}"']
     if python:
-        found.append(f'test-python-some PYTESTS="{" ".join(sorted(python))}"')
+        found.append(f'test-python-some PYTESTS="{" ".join([*GLOBAL_PYTESTS, *sorted(python)])}"')
     found += sorted({gate for module in chosen for gate in module.gates})
     if suites:
         found.append(f'test-godot-some SUITES="{" ".join([*GLOBAL_SUITES, *sorted(suites)])}"')
@@ -228,16 +246,24 @@ MANIFESTS = {
     "a": {"module": "a", "kind": "technique", "owns": ["godot/addons/a/", "godot/test/a/"],
           "depends_on": ["core"], "gates": ["test-a-properties"]},
     "b": {"module": "b", "kind": "technique", "owns": ["godot/addons/b/"]},
-    "c": {"module": "c", "kind": "technique", "owns": ["godot/addons/c/"],
+    "c": {"module": "c", "kind": "technique", "owns": ["godot/addons/c/", "godot/test/e/"],
           "tests_depend_on": ["play"]},
-    "d": {"module": "d", "kind": "example", "owns": ["godot/game/d/"], "depends_on": ["c"]},
-    "play": {"module": "play", "kind": "example", "owns": ["godot/game/play/", "scripts/fetch_play_art.py"],
+    "d": {"module": "d", "kind": "example", "owns": ["godot/game/d/", "spec/play/d/"], "depends_on": ["c"]},
+    "play": {"module": "play", "kind": "example", "owns": ["godot/game/play/", "scripts/fetch_play_art.py",
+                                                         "python/tests/test_play.py", "spec/play/",
+                                                         "spec/vectors/play/"],
              "depends_on": ["a"], "gates": ["test-play-match"], "retrain": ["N7"]},
 }
 
 MAKEFILE_TEXT = """\
-check: check-no-engine test-a-properties test-play-match ## Run every gate
+check: check-no-engine test-a-properties test-play-match test-vectors ## Run every gate
 check-no-engine: lint-one lint-no-training
+import:
+\t@true
+wave-merge:
+\t@true
+test-vectors: test-a-properties lint-one ## Every vector, one family a line
+\t@true
 lint-one:
 \t@true
 lint-no-training:
@@ -289,18 +315,32 @@ def added_gate(makefile: str, gate: str = NEW_GATE, listed: str = "test-play-you
     return f"{first.replace(' ##', f' {listed} ##', 1)}\n{rest}{gate}"
 
 
-def gate_change(root: pathlib.Path, label: str, makefile: str,
-                manifests: dict[str, dict], before: str = MAKEFILE_TEXT) -> Selection:
-    """What a committed change from `before` to `makefile`, and to the manifests, selects.
+def write_files(repo: pathlib.Path, files: dict[str, str | None]) -> None:
+    """Each file at its path, a None one deleted."""
+    for path, text in files.items():
+        target = repo / path
+        if text is None:
+            target.unlink(missing_ok=True)
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(text)
 
-    A real repository and a real diff: rule 5 reads the diff, so its
-    planted cases must have one.
+
+def gate_change(root: pathlib.Path, label: str, makefile: str, manifests: dict[str, dict],
+                before: str = MAKEFILE_TEXT, files: dict[str, tuple] | None = None) -> Selection:
+    """What a committed change from `before` to `makefile`, the manifests and `files` selects.
+
+    A real repository and a real diff: rules 5 and 6 read the diff, so their
+    planted cases must have one. `files` maps a path to its text before and
+    after, either None where the file is absent.
     """
     repo = root / re.sub(r"\W+", "-", label)
+    files = {**LIBRARY_FILES, **(files or {})}
     (repo / "modules").mkdir(parents=True)
     (repo / "Makefile").write_text(before)
     for name, manifest in MANIFESTS.items():
         (repo / "modules" / f"{name}.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    write_files(repo, {path: texts[0] for path, texts in files.items()})
 
     def git(*args: str) -> None:
         subprocess.run(["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@t",
@@ -312,10 +352,12 @@ def gate_change(root: pathlib.Path, label: str, makefile: str,
     (repo / "Makefile").write_text(makefile)
     for name, manifest in manifests.items():
         (repo / "modules" / f"{name}.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    git("commit", "-qam", "after")
+    write_files(repo, {path: texts[1] for path, texts in files.items()})
+    git("add", "-A")
+    git("commit", "-qm", "after")
     modules = check_modules.load_modules(repo)
     paths = changed_paths(repo, "HEAD^1", "HEAD")
-    return select(paths, modules, added_gates.local_paths(repo, "HEAD^1", "HEAD", paths, modules))
+    return select(paths, modules, added_module.local_paths(repo, "HEAD^1", "HEAD", paths, modules))
 
 
 def planted_neighbour_changes(play: dict) -> dict[str, tuple]:
@@ -323,6 +365,9 @@ def planted_neighbour_changes(play: dict) -> dict[str, tuple]:
     wave75 = added_gate(MAKEFILE_TEXT)
     named_before = MAKEFILE_TEXT.replace("test-play-match:\n", "test-play-match: test-play-you\n")
     conditional = MAKEFILE_TEXT + "ifdef QUIET\nendif\n"
+    # The kit's own shape since wave 83: a conditional above every rule.
+    on_top = "ifeq ($(OS),Windows_NT)\nSHELL := bash.exe\nelse\nSHELL := /bin/bash\nendif\n" + MAKEFILE_TEXT
+    inside = conditional.replace("ifdef QUIET\n", "ifdef QUIET\n" + NEW_GATE.lstrip())
     return {
         "a trailing backslash on the new recipe": (
             added_gate(MAKEFILE_TEXT, "").replace("test-play-match:", NEW_GATE.lstrip().rstrip("\n")
@@ -335,7 +380,181 @@ def planted_neighbour_changes(play: dict) -> dict[str, tuple]:
         "a name put in after check's comment": (
             MAKEFILE_TEXT.replace("every gate\n", "every gate test-play-you\n", 1) + NEW_GATE, {"play": play}),
         "a name the old Makefile used": (added_gate(named_before), {"play": play}, None, named_before),
-        "a conditional in the Makefile": (added_gate(conditional), {"play": play}, None, conditional),
+        "a gate inside a conditional": (added_gate(inside, ""), {"play": play}, None, conditional),
+        "a conditional added": (added_gate(conditional), {"play": play}),
+        "a conditional above every rule": (added_gate(on_top), {"play": play}, {"play", "c"}, on_top),
+        "a conditional changed": (added_gate(on_top.replace("bash.exe", "sh.exe")), {"play": play}, None, on_top),
+    }
+
+
+def planted_vector_changes(play: dict) -> dict[str, tuple]:
+    """T111's cases: a vector family put into `test-vectors`, in either form."""
+    family = NEW_GATE.replace("test-play-you", "test-play-vectors")
+    one_line = MAKEFILE_TEXT.replace("lint-one ## Every", "lint-one test-play-vectors ## Every")
+    vectors = {**play, "gates": [*MANIFESTS["play"]["gates"], "test-play-vectors"]}
+    attach = family.replace(".PHONY: test-play-vectors\n", ".PHONY: test-play-vectors\ntest-vectors: test-play-vectors\n")
+    return {
+        "a name put into test-vectors": (one_line + family, {"play": vectors}, {"play", "c"}, MAKEFILE_TEXT),
+        "a family attached beside its rule": (MAKEFILE_TEXT + attach, {"play": vectors}, {"play", "c"}, MAKEFILE_TEXT),
+        "a name in test-vectors the change did not add": (
+            MAKEFILE_TEXT.replace("lint-one ## Every", "lint-one test-play-match ## Every"), {}),
+        "test-vectors reordered": (
+            one_line.replace("test-a-properties lint-one test-play-vectors ##", "lint-one test-a-properties test-play-vectors ##")
+            + family, {"play": vectors}),
+        "a name taken out of test-vectors": (
+            MAKEFILE_TEXT.replace("test-vectors: test-a-properties lint-one ##", "test-vectors: lint-one ##"), {}),
+        "a name moved from check into test-vectors": (
+            one_line.replace(" test-play-match test-vectors ##", " test-vectors ##").replace(
+                "test-play-vectors ## Every", "test-play-vectors test-play-match ## Every") + family,
+            {"play": vectors}),
+        "an old target attached beside a new one": (
+            MAKEFILE_TEXT + attach + "test-vectors: test-play-match\n", {"play": vectors}),
+        # After a new gate's recipe, the line below would join that recipe
+        # if the attaching rule did not end it.
+        "an attaching rule with a recipe": (
+            MAKEFILE_TEXT + family + "test-vectors: test-play-vectors\n\t@false\n", {"play": vectors}),
+        "an attaching rule naming two": (
+            MAKEFILE_TEXT + attach.replace("test-vectors: test-play-vectors", "test-vectors: test-play-vectors lint-one"),
+            {"play": vectors}),
+    }
+
+
+def planted_target_changes(play: dict) -> dict[str, tuple]:
+    """T111's cases on a new rule: a non-gate target, and what a gate may depend on or name."""
+    return {
+        "a measuring target beside a gate": (
+            added_gate(MAKEFILE_TEXT, NEW_GATE + ".PHONY: measure-play\nmeasure-play: import ## A table\n"
+                       "\t@$(GODOT) -s res://addons/a/m.gd -- $(or $(SEEDS),200)\n"), {"play": play}, {"play", "c"},
+            MAKEFILE_TEXT),
+        "a gate that needs an old target that is not a gate": (
+            added_gate(MAKEFILE_TEXT, NEW_GATE.replace(": import", ": import wave-merge")), {"play": play}),
+        "a recipe path climbing out of its folder": (
+            added_gate(MAKEFILE_TEXT, NEW_GATE.rstrip("\n") + " -- $(CURDIR)/spec/vectors/play/../a\n"),
+            {"play": play}),
+        "a gate that needs a new target": (
+            added_gate(MAKEFILE_TEXT, NEW_GATE.replace(": import", ": measure-play")
+                       + "measure-play: import\n\t@$(GODOT) -s res://addons/a/m.gd\n"), {"play": play}),
+    }
+
+
+def module_change(**changes: object) -> dict[str, object]:
+    """Wave 120's shape on the fixture, with `changes` made to it.
+
+    A new technique `e` with its vectors, attached to `test-vectors`, and a
+    measuring target beside them; `play` comes to depend on it, in prose
+    and in its manifest; and the library lists gain its package.
+    """
+    e_manifest = {"module": "e", "kind": "technique", "about": "e",
+                  "owns": ["godot/addons/e/", "python/gameaikit/e/", "python/tests/test_e.py"],
+                  "gates": ["test-e-vectors"]}
+    case = {
+        "e": e_manifest, "e_gate": "res://addons/e/e_runner.gd",
+        "play": {**MANIFESTS["play"], "about": "now with e", "depends_on": ["a", "e"]},
+        "kit": ("a", "b", "e"), "packages": ("gameaikit.a", "gameaikit.e"), "group": "kit",
+        "extra": {},
+    }
+    case.update(changes)
+    makefile = MAKEFILE_TEXT + (
+        ".PHONY: test-e-vectors\ntest-vectors: test-e-vectors\ntest-e-vectors: import ## e's vectors\n"
+        f"\t@$(GODOT) --headless --path godot -s {case['e_gate']}\n"
+        ".PHONY: measure-e\nmeasure-e: import ## A table, not a gate\n\t@$(GODOT) -s res://game/play/m.gd\n")
+    files = {
+        "godot/addons/e/e.gd": (None, "var e := 1\n"),
+        "python/gameaikit/e/__init__.py": (None, ""),
+        "python/tests/test_e.py": (None, "") if "python/tests/test_e.py" in case["e"]["owns"] else (None, None),
+        "python/gameaikit/techniques.py": (library_file(), library_file(case["kit"], case["group"])),
+        "python/pyproject.toml": (pyproject_file(), pyproject_file(case["packages"])),
+        **case["extra"],
+    }
+    manifests = {"e": case["e"], "play": case["play"]}
+    return {"makefile": makefile, "manifests": manifests, "files": files}
+
+
+def library_file(names: tuple[str, ...] = ("a", "b"), group: str = "kit") -> str:
+    """The fixture's techniques.py: its KIT_MODULES, and a line that is not the list."""
+    listed = "".join(f'    "{name}",\n' for name in names)
+    return f'"""The registry."""\n\nGROUP = "{group}"\n# a comment is prose\nKIT_MODULES = (\n{listed})\n'
+
+
+def pyproject_file(packages: tuple[str, ...] = ("gameaikit.a",), version: str = "0.1.0") -> str:
+    """The fixture's pyproject.toml: a version, and the packages one per line."""
+    listed = "".join(f'    "{name}",\n' for name in ("gameaikit", *packages))
+    return f'[project]\nversion = "{version}"\n\n[tool.setuptools]\npackages = [\n{listed}]\n'
+
+
+LIBRARY_FILES = {"python/gameaikit/techniques.py": (library_file(), library_file()),
+                 "python/pyproject.toml": (pyproject_file(), pyproject_file()),
+                 "godot/addons/b/b.gd": ("var b := 1\n", "var b := 1\n")}
+
+
+def planted_module_changes() -> dict[str, tuple]:
+    """Rule 6's cases: wave 120's shape selects its modules; each doubt selects everything."""
+    def case(chosen: set[str] | None, **changes: object) -> tuple:
+        built = module_change(**changes)
+        return built["makefile"], built["manifests"], chosen, MAKEFILE_TEXT, built["files"]
+
+    e_manifest = module_change()["manifests"]["e"]
+    return {
+        "a new module, its vectors, its user and the library lists": case({"e", "play", "c"}),
+        "a new module owning an old file": case(None, e={**e_manifest, "owns": [*e_manifest["owns"], "godot/addons/b/"]}),
+        "a new module naming a gate nobody added": case(None, e={**e_manifest, "gates": ["test-e-other"]}),
+        "a new module's gate running another's file": case(None, e_gate="res://addons/a/runner.gd"),
+        "a dependency on a module that is not new": case(
+            None, play={**MANIFESTS["play"], "depends_on": ["a", "e", "b"]}),
+        "a dependency dropped as a new one comes": case(None, play={**MANIFESTS["play"], "depends_on": ["e"]}),
+        "the registry gaining a name no new module owns": case(None, kit=("a", "b", "e", "zz")),
+        "the registry reordered": case(None, kit=("b", "a", "e")),
+        "the registry's file changed beyond its list": case(None, group="other"),
+        "the packages gaining a name no new module owns": case(None, packages=("gameaikit.a", "gameaikit.e", "gameaikit.zz")),
+        "the project file changed beyond its list": case(None, extra={"python/pyproject.toml": (
+            pyproject_file(), pyproject_file(("gameaikit.a", "gameaikit.e"), "0.2.0"))}),
+        "the lists gaining a module with no Python test": case(
+            None, e={**e_manifest, "owns": e_manifest["owns"][:2]}),
+        # Wave 123's review: what a new manifest must not take, each owned
+        # by nobody at the fork, so only the shapes can refuse it.
+        "a new module owning a file in another's vector folder": case(None, e=owning("spec/vectors/a/zz.json")),
+        "a new module owning a CI workflow": case(None, e=owning(".github/workflows/zz.yml")),
+        "a new module owning a package that shadows the registry": case(
+            None, e=owning("python/gameaikit/techniques/")),
+        "a new module owning the engine's override": case(None, e=owning("godot/override.cfg")),
+        "a new module's shape another module claims": case(None, e=owning("godot/test/e/")),
+        "a new module of kind example": case(None, e={**e_manifest, "kind": "example"}),
+    }
+
+
+def owning(extra: str) -> dict:
+    """Wave 120's new manifest, owning one path more."""
+    e_manifest = module_change()["manifests"]["e"]
+    return {**e_manifest, "owns": [*e_manifest["owns"], extra]}
+
+
+def shape_cases() -> list[str]:
+    """Rule 6's package shapes: one that would shadow a module file is refused."""
+    failures = []
+    shadow = ["python/gameaikit/techniques/"]
+    if added_module.owns_only_its_shapes(shadow, "techniques", {}, ["python/gameaikit/techniques.py"]):
+        failures.append("rule 6 took a package folder shadowing techniques.py")
+    if not added_module.owns_only_its_shapes(shadow, "techniques", {}, []):
+        failures.append("rule 6 refused a technique's own new package")
+    return failures
+
+
+def planted_recipe_changes(play: dict) -> dict[str, tuple]:
+    """Rule 5's cases on what a new gate's recipe names; and a manifest's prose."""
+    return {
+        "a gate running two modules' files": (
+            added_gate(MAKEFILE_TEXT, NEW_GATE + "\t@$(GODOT) -s res://addons/a/x.gd\n"), {}),
+        # Every vector gate names its folder without the slash (T111).
+        "a gate reading its module's folder": (
+            added_gate(MAKEFILE_TEXT, NEW_GATE.rstrip("\n") + " -- $(CURDIR)/spec/vectors/play\n"),
+            {"play": play}, {"play", "c"}, MAKEFILE_TEXT),
+        "a gate reading a folder another module has a part of": (
+            added_gate(MAKEFILE_TEXT, NEW_GATE.rstrip("\n") + " -- $(CURDIR)/spec/play\n"), {"play": play}),
+        "a recipe with another variable": (
+            added_gate(MAKEFILE_TEXT, NEW_GATE.replace("--path godot", "--path $(ELSEWHERE)")), {}),
+        # Intended: prose a person reads selects only the module it describes.
+        "a manifest whose prose alone changed": (
+            MAKEFILE_TEXT, {"play": {**MANIFESTS["play"], "about": "reworded"}}, {"play", "c"}, MAKEFILE_TEXT),
     }
 
 
@@ -346,6 +565,10 @@ def planted_gate_changes() -> dict[str, tuple]:
     other_module = NEW_GATE.replace("res://game/play/", "res://addons/a/")
     return {
         **planted_neighbour_changes(play),
+        **planted_vector_changes(play),
+        **planted_target_changes(play),
+        **planted_recipe_changes(play),
+        **planted_module_changes(),
         "a new gate of play": (wave75, {"play": play}, {"play", "c"}, MAKEFILE_TEXT),
         "and another recipe changed": (
             wave75.replace("\t@true\ntest-play-match", "\t@false\ntest-play-match"), {"play": play}),
@@ -366,10 +589,6 @@ def planted_gate_changes() -> dict[str, tuple]:
         "an old recipe line swapped for a gate": (
             added_gate(MAKEFILE_TEXT, "").replace("test-play-match:\n\t@true\n", "test-play-match:\n" + NEW_GATE),
             {"play": play}),
-        "a gate running two modules' files": (
-            added_gate(MAKEFILE_TEXT, NEW_GATE + "\t@$(GODOT) -s res://addons/a/x.gd\n"), {}),
-        "a recipe with another variable": (
-            added_gate(MAKEFILE_TEXT, NEW_GATE.replace("--path godot", "--path $(ELSEWHERE)")), {}),
         "a second rule for an old target": (
             MAKEFILE_TEXT + NEW_GATE.replace(".PHONY: test-play-you\n", "").replace(
                 "test-play-you", "test-play-match"), {}),
@@ -381,10 +600,10 @@ def gate_cases(root: pathlib.Path) -> list[str]:
     """Rule 5: wave 75's shape selects its module; each doubt selects everything."""
     failures = []
     for label, case in planted_gate_changes().items():
-        makefile, manifests, chosen, before = case if len(case) == 4 else (*case, None, MAKEFILE_TEXT)
-        got = gate_change(root, label, makefile, manifests, before)
+        makefile, manifests, chosen, before, files = (*case, *(None, MAKEFILE_TEXT, {})[len(case) - 2:])
+        got = gate_change(root, label, makefile, manifests, before, files)
         if (chosen is None) != got.everything or (chosen and set(got.modules) != chosen):
-            failures.append(f"rule 5, {label}: expected {sorted(chosen) if chosen else 'everything'}, "
+            failures.append(f"rules 5 and 6, {label}: expected {sorted(chosen) if chosen else 'everything'}, "
                             f"got {explain(got)!r}")
     return failures
 
@@ -397,18 +616,23 @@ def target_cases(repo: pathlib.Path, modules: dict[str, Module]) -> list[str]:
         failures.append(f"an empty change ran no lint: {empty}")
     chosen = targets(repo, select(["godot/addons/a/x.gd"], modules), modules)
     for want in ("test-a-properties", "test-play-match", 'lint-no-training-some RETRAIN="N7"',
-                 'test-godot-some SUITES="test/project_settings_test.gd test/a"'):
+                 'test-godot-some SUITES="test/project_settings_test.gd test/a"',
+                 'test-python-some PYTESTS="test_techniques test_play"'):
         if want not in chosen:
             failures.append(f"a change to a: {want!r} missing from {chosen}")
     if "lint-no-training" in chosen:
         failures.append("the full refit ran for a change that asked for one")
+    # A module's gate -- a timing one is no different -- runs only with it.
+    elsewhere = targets(repo, select(["godot/addons/b/x.gd"], modules), modules)
+    if any(gate in elsewhere for gate in ("test-a-properties", "test-play-match")):
+        failures.append(f"a change to b ran another module's gate: {elsewhere}")
     if targets(repo, select(["scripts/x.py"], modules), modules) != ["check"]:
         failures.append("selecting everything did not come out as `make check`")
     return failures
 
 
 def self_test() -> int:
-    """Each of the four rules against a planted case, and a move between modules."""
+    """Each rule against a planted case, and a move between modules."""
     failures = []
 
     def expect(label: str, paths: list[str], everything: bool, chosen: set[str]) -> None:
@@ -443,7 +667,7 @@ def self_test() -> int:
         expect("prose", ["docs/reviews/63.md", "tasks/STATUS.md"], False, set())
         failures += target_cases(repo, modules)
         failures += rename_case(pathlib.Path(workspace))
-        failures += gate_cases(pathlib.Path(workspace))
+        failures += gate_cases(pathlib.Path(workspace)) + shape_cases()
 
     for failure in failures:
         print(f"self-test FAIL: {failure}")
@@ -483,7 +707,7 @@ def main(argv: list[str]) -> int:
         else:
             paths = changed_paths(args.repo, args.base, args.head)
             fork = fork_point(args.repo, args.base, args.head)
-            local = added_gates.local_paths(args.repo, fork, args.head, paths, modules)
+            local = added_module.local_paths(args.repo, fork, args.head, paths, modules)
     except (check_modules.BadManifest, ChangeUnknown, OSError) as error:
         print(f"affected: {error}", file=sys.stderr)
         return 2
