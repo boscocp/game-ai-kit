@@ -1,0 +1,18 @@
+{
+  "about": "What a generated infiltration level must satisfy when the constraint solver places it (T95): the three conditions draw-and-test already kept a level by, and two a designer wants that it could only hope for. Each variable -- a box, a lamp, a hiding place, a patrol's route point, the sentry's post -- may take one of `candidates` places drawn from the seed; the solver chooses among them. Distances are metres, steps walk cells, light 0 to 1.",
+  "candidates": 16,
+  "limit": 400,
+  "restarts": 4,
+  "boxes_apart": 1.0,
+  "lamps_apart": 6.0,
+  "eyes": 1.6,
+  "hiding_near_route": {"count": 1, "steps": 6},
+  "dark_below": 0.3,
+  "constraints": [
+    "the exit can be walked to from the start",
+    "every route point and post can be walked to from the start",
+    "no guard's post is in sight of the start",
+    "each patrol's route passes near a hiding place",
+    "a dark way leads from the start to the exit"
+  ]
+}

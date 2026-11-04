@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-30
+verified_on: 2026-11-04
 tier: 2
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: the guards' actions, the guard types, the rules or the levels change, and infiltration_properties.gd prints different numbers
@@ -42,8 +42,9 @@ is shared by every guard in it, so the arbiter weighs them all.
 
 Two hand-made levels (`levels/the_warehouse.json`, `levels/the_courtyard.json`)
 in `arena.json`'s shape, built by `BotArena` and walked by `ArenaWalk`, and
-a generator for more (`LevelGenerator`). The same guards, with no line
-changed, play all of them.
+a generator for more (`LevelGenerator`), which draws them or, since T95,
+declares them and has a constraint solver place them. The same guards, with
+no line changed, play all of them.
 
 ## Playing it
 
@@ -55,7 +56,9 @@ down a guard from behind when the corner says you can; a click shoots.
 coordinator, the arbiter and the accumulator; 5 the off-screen halving; 6 the director (T90, below:
 the level starts again, with its reserve). Tab watches the next guard, H hides the reasoning,
 L the next level (two hand-made, then generated), N again, P pauses, Space
-one decision while paused.
+one decision while paused. K, on a generated level, how it is made: drawn,
+solved by the constraint solver, or solved with its work replayed (T95,
+below).
 
 On screen (invariant 13): over each guard its detection bar with its
 phases' thresholds as ticks, its phase and its action, and its role in a
@@ -324,6 +327,68 @@ measuring: a search at first added 0.15 a second, more than the decay
 takes, and pinned the intensity at its top while a guard searched beside
 a hidden player; hearing at first added 0.1, and a distraction heard by
 three guards never reached the peak.
+
+## Levels declared, not drawn (T95)
+
+`LevelGenerator` draws a whole level and keeps it when the exit and every
+guard's places can be walked to from the start -- generate and test, up to
+40 draws. `LevelConstraints` declares it instead: the seed draws the size
+and how many boxes, lamps and hiding places, and for each of them, each
+patrol point and the sentry's post, 16 candidate places; those are the
+variables of a constraint satisfaction problem, solved by `ai_constraints`
+(`docs/techniques/ai_constraints.md`). The conditions are in
+`level_constraints.json`, beside `guard_types.json`:
+
+| condition | kind | how it is asked of a partial level |
+|---|---|---|
+| boxes 1 m apart; nothing under a box; one guard place a cell; hiding places and lamps (6 m) apart | binary | a table of every pair of candidates, propagated by AC-3 |
+| the exit can be walked to from the start | global | refused as soon as the boxes placed so far wall it off |
+| every route point and post can be walked to | global | the same, for each place already chosen |
+| no post in sight of the start | global | only once every box is placed: a box still to come might hide it |
+| a hiding place within 6 steps of each patrol's route | global | counted with the boxes so far, every unplaced hiding place taken as near |
+| a dark way (light under 0.3) from the start to the exit | global | refused as soon as the lamps so far light every way through |
+
+The last two are new: a designer's intent, which a draw can only hope for.
+The solver checks the global ones on the `LevelSketch`, a grid that knows
+only boxes on the ground, and `LevelAudit` then measures every condition on
+the `InfiltrationLevel` and `BotArena` the game builds -- a sketch that drifted
+from the arena would be caught (`level_constraints_test.gd` also holds the
+two walk grids equal, cell for cell). A search that runs into its limit of
+400 assignments starts again, up to four times, with its ties broken by
+another seed: chronological backtracking can thrash, going back over boxes
+that were never the trouble while a post stays in sight. AIMA's cure is
+backjumping (6.3.3), which is not in the kit.
+
+**Measured** (`make measure-level-constraints`, seeds 1-200, one run on a
+Ryzen 5 9600X, both ways the same seeds):
+
+| | draw and test | constraints |
+|---|---|---|
+| levels found | 200 | 200 |
+| work | 201 draws (one seed needed a second) | 7,090 assignments, 2,304 backtracks, 6 fresh starts; the most on one seed 426 assignments |
+| time | under 25 ms a level (the run draws each seed twice, to count the draws) | 136 ms a level; the slowest 2.5 s |
+| no hiding place within 6 steps of a patrol route | 107 (54%) | 0 |
+| no dark way from the start to the exit | 71 (36%) | 0 |
+| a post in sight of the start | 90 (45%) | 0 |
+
+So generate and test pays almost nothing, because it asks almost nothing,
+and half of what it keeps breaks a condition it never asked about. The
+solver pays several times the time for levels that keep all of them. Seeds
+1 to 3 took 25 or 26 assignments -- one a variable -- and no backtrack, AC-3
+having crossed out what could not stand; a few seeds take hundreds, and the
+totals are mostly theirs. A seed is one level: the tie order, the values
+and the restarts are all the seed's.
+
+In the demo, **K** on a generated level cycles: drawn (as before), solved,
+solved with the generation view, which replays the solver from its trace
+over the screen -- the boxes placed so far grey and the other things as
+dots; for the thing chosen next by minimum remaining values, each of its 16
+places, white while possible and a red cross where propagation crossed it
+out; a list of everything still to place with how many places it has left;
+a red ring where a backtrack undid a value; and the last refusal with the
+constraint that refused it. The overlay's `generator` says the mode and the
+solver's counts. A seed the solver gives up on falls back to the drawn
+level and its drawn name.
 
 ## The kit's own numbers
 

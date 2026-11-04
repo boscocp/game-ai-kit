@@ -10,7 +10,9 @@
 ## the off-screen halving; 6 the director (T90), which starts the level
 ## again with its reserve guards. Tab watches the next guard, H hides the AI's
 ## reasoning, L the next level (two hand-made, then generated ones), N
-## starts again, P pauses, Space one decision while paused.
+## starts again, P pauses, Space one decision while paused. K how a
+## generated level is made (T95): drawn and tested, solved by the constraint
+## solver, or solved with the solver's work replayed over the screen.
 ##
 ## The camera's frustum says which guards are on screen, for the halving.
 extends Node3D
@@ -43,6 +45,13 @@ var _pending := PlayerIntent.new()
 var _pad := PadAsKeys.new()
 ## The director's strip, under the radar.
 var _strip := DirectorStrip.new()
+## How a generated level is made: `LevelGenerator.DRAW` or `CONSTRAINTS`;
+## and whether the solver's work is replayed (the generation view).
+var generator: String = LevelGenerator.DRAW
+var show_generation: bool = false
+## The solved level the generation view replays; null when it was drawn.
+var solved: LevelConstraints
+var _generation := GenerationView.new()
 
 @onready var _drawing: InfiltrationDrawing = $Drawing
 @onready var _camera: Camera3D = $Camera
@@ -58,6 +67,10 @@ func _ready() -> void:
 	_strip.position = Vector2(964, 220)
 	_strip.size = Vector2(300, 90)
 	$Interface.add_child(_strip)
+	_generation.position = Vector2(300, 120)
+	_generation.size = Vector2(660, 420)
+	_generation.visible = false
+	$Interface.add_child(_generation)
 	_show_legend()
 	_new_world()
 	Language.apply_if_opened_alone(self)
@@ -83,6 +96,7 @@ func _show_legend() -> void:
 		[InfiltrationDrawing.EMPTIED, tr("white square: guesses its sight just cleared")],
 		[InfiltrationDrawing.SPOT, tr("the spot it was given to search; grey: searched")],
 		[InfiltrationDrawing.SOUND, tr("a sound's reach along the level")],
+		[GenerationView.CHOSEN, tr("solver (K): its next places; red: crossed out")],
 	])
 	_pad.add_to(_legend)
 
@@ -118,7 +132,30 @@ func decision_overlay() -> Dictionary:
 	return {"time": world.time, "guards": guards, "off_screen_halving": rules.off_screen_halving,
 		"switches": {"belief": rules.use_belief, "particles": rules.use_particles, "coordinator": rules.use_coordinator,
 			"arbiter": rules.use_arbiter, "accumulator": rules.use_accumulator, "director": rules.use_director},
-		"director": director_overlay()}
+		"director": director_overlay(), "generator": generator_overlay()}
+
+
+## How the level was made, for the overlay: the mode, and for a solved one
+## the solver's counts and how far the view has replayed them.
+func generator_overlay() -> Dictionary:
+	var found: Dictionary = {"mode": generator, "shown": show_generation, "solved": solved != null}
+	if solved != null:
+		found.merge({"assignments": solved.solver.assignments, "backtracks": solved.solver.backtracks,
+			"pruned": solved.solver.pruned, "steps": solved.solver.trace.size(), "replayed": _generation.progress().x})
+	return found
+
+
+## The next way of making a generated level, in the cycle K turns: drawn,
+## solved, solved and shown; the world starts again.
+func next_generator() -> void:
+	if generator == LevelGenerator.DRAW:
+		generator = LevelGenerator.CONSTRAINTS
+	elif not show_generation:
+		show_generation = true
+	else:
+		generator = LevelGenerator.DRAW
+		show_generation = false
+	_new_world()
 
 
 ## The director's side of the overlay: its phase, the intensity it was
@@ -186,12 +223,7 @@ func toggle_thinking() -> void:
 
 
 func _new_world() -> void:
-	var level: InfiltrationLevel
-	if _level_index < InfiltrationLevel.HAND_MADE.size():
-		level = InfiltrationLevel.read(InfiltrationLevel.HAND_MADE[_level_index])
-	else:
-		var generated: int = _seed + _level_index
-		level = InfiltrationLevel.read(LevelGenerator.make(generated), "generated %d" % generated)  # not shown as written: InfiltrationWords.level words it
+	var level: InfiltrationLevel = _level()
 	world = InfiltrationWorld.make(level, rules, _seed)
 	world.sounds.on_screen = _on_screen
 	_watched = mini(_watched, world.guards.size() - 1)
@@ -201,6 +233,25 @@ func _new_world() -> void:
 	_hud.camera = _camera
 	_strip.world = world
 	_radar.world = world
+
+
+# The level to play: a hand-made one, or one generated the way `generator`
+# says. A solved level falls back to the drawn one when the solver gave up.
+func _level() -> InfiltrationLevel:
+	solved = null
+	_generation.show_solving(null)
+	_generation.visible = false
+	if _level_index < InfiltrationLevel.HAND_MADE.size():
+		return InfiltrationLevel.read(InfiltrationLevel.HAND_MADE[_level_index])
+	var generated: int = _seed + _level_index
+	if generator == LevelGenerator.CONSTRAINTS:
+		var found := LevelConstraints.solve(generated, true)
+		if not found.data.is_empty():
+			solved = found
+			_generation.show_solving(found)
+			_generation.visible = show_generation
+			return InfiltrationLevel.read(found.data, "solved %d" % generated)  # not shown as written: InfiltrationWords.level words it
+	return InfiltrationLevel.read(LevelGenerator.make(generated), "generated %d" % generated)  # not shown as written: InfiltrationWords.level words it
 
 
 func _intent() -> PlayerIntent:

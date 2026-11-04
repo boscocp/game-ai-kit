@@ -75,3 +75,23 @@ building up,crescendo
 holding the peak,sustentando o pico
 fading,diminuindo
 relaxing,relaxando
+solved level {seed},nível resolvido {seed}
+solver (K): its next places; red: crossed out,resolvedor (K): seus próximos lugares; vermelho: riscado
+"solver: step {step} of {steps}, {assignments} assignments, {backtracks} backtracks, {restarts} fresh starts","resolvedor: passo {step} de {steps}, {assignments} atribuições, {backtracks} retrocessos, {restarts} recomeços"
+"refused: {thing}, {rule}","recusado: {thing}, {rule}"
+{thing}: {left} left,{thing}: restam {left}
+box {number},caixa {number}
+lamp {number},lâmpada {number}
+hiding place {number},esconderijo {number}
+"patrol {patrol}, point {point}","patrulha {patrol}, ponto {point}"
+the sentry's post,o posto da sentinela
+boxes apart,caixas afastadas
+not under a box,não debaixo de uma caixa
+one guard place a cell,um lugar de guarda por célula
+hiding places apart,esconderijos afastados
+lamps apart,lâmpadas afastadas
+the exit can be walked to,dá para andar até a saída
+every guard place can be walked to,dá para andar até todo lugar de guarda
+no post in sight of the start,nenhum posto à vista da partida
+a hiding place near each route,um esconderijo perto de cada rota
+a dark way to the exit,um caminho escuro até a saída
