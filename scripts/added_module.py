@@ -16,19 +16,24 @@ What counts as only adding a module
 -----------------------------------
 Any doubt is global, as in rule 5:
 
-  * a new manifest, `modules/<name>.json`, absent at the
-    fork, none of whose `owns` covers a file the fork had -- so no old file
-    changes owner -- and whose every gate is one the Makefile's change
-    added for it. It selects its own module.
+  * a new manifest, `modules/<name>.json`, absent at the fork, of kind
+    `technique`, whose every `owns` is one of the shapes a technique takes,
+    named after it (`TECHNIQUE_SHAPES`), covering no file the fork had,
+    and claimed by no other module, inside or around (wave 123's review:
+    without that, a new manifest could own a file in another module's
+    vector folder, a CI workflow, `godot/override.cfg`, or a package that
+    shadows `techniques.py`, and select only itself). Its every gate is one
+    the Makefile's change added for it. It selects its own module.
   * a changed manifest: `added_gates.manifest_gates`, told which modules
     are new.
   * `KIT_MODULES`, or `packages`, gaining only the packages of one new
     module, in the old order otherwise, and the rest of the file the same:
     techniques.py compared as Python syntax, so a comment is prose, and
     pyproject.toml as TOML. The module must own a Python test, so a Python
-    test runs, and `test_techniques` -- which holds both lists to the
-    manifests -- runs with every Python selection (affected.py). It selects
-    that module.
+    test runs, and `test_techniques` -- which holds `KIT_MODULES` to the
+    manifests -- runs with every Python selection (affected.py). `packages`
+    is held by `release.py`'s own check, which `lint-selftests` runs on the
+    committed head of every wave. It selects that module.
 
 Used by `affected.py`, which holds the planted cases.
 """
@@ -40,17 +45,54 @@ import pathlib
 import tomllib
 
 from added_gates import MAKEFILE, MANIFESTS, file_at, git_lines, makefile_gates, manifest_gates, read_json
-from check_modules import Module, is_under
+from check_modules import Module, global_claim, is_under
 
 TECHNIQUES = "python/gameaikit/techniques.py"
 PYPROJECT = "python/pyproject.toml"
 PACKAGE_ROOT = "python/gameaikit/"
 PYTHON_TESTS = "python/tests/"
+# The only paths a new technique may own, `{name}` its module's name and
+# `{stem}` that name without `ai_`: ai_constraints owns godot/addons/ai_constraints/
+# and python/gameaikit/constraints/. A Python test is a file `test_{stem}...py`.
+TECHNIQUE_SHAPES = ("godot/addons/{name}/", "godot/test/{name}/",
+                    "python/gameaikit/{stem}/", "spec/vectors/{stem}/")
+
+
+def technique_shape(prefix: str, name: str) -> bool:
+    """True when `prefix` is one of the shapes a technique called `name` owns."""
+    stem = name.removeprefix("ai_")
+    if prefix in {shape.format(name=name, stem=stem) for shape in TECHNIQUE_SHAPES}:
+        return True
+    test = prefix.removeprefix(f"{PYTHON_TESTS}test_")
+    return prefix.startswith(f"{PYTHON_TESTS}test_{stem}") and test.endswith(".py") and "/" not in test
+
+
+def claimed_elsewhere(prefix: str, name: str, modules: dict[str, Module]) -> bool:
+    """True when another module's prefix holds `prefix`, or lies inside it, or it is global."""
+    others = [owned for module in modules.values() if module.name != name for owned in module.owns]
+    return global_claim(prefix) > 0 or any(
+        is_under(prefix, (owned,)) or is_under(owned, (prefix,)) for owned in others)
+
+
+def owns_only_its_shapes(owns: object, name: str, modules: dict[str, Module],
+                         tracked: list[str]) -> bool:
+    """True when a new technique owns only its own shapes, new and nobody else's.
+
+    A package folder is refused when `python/gameaikit/<stem>.py` was a file
+    at the fork: the folder would shadow that module on import.
+    """
+    if not (isinstance(owns, list) and owns and all(isinstance(prefix, str) for prefix in owns)):
+        return False
+    stem = name.removeprefix("ai_")
+    shadowed = f"{PACKAGE_ROOT}{stem}.py" in tracked and f"{PACKAGE_ROOT}{stem}/" in owns
+    return not shadowed and all(
+        technique_shape(prefix, name) and not claimed_elsewhere(prefix, name, modules) for prefix in owns
+    ) and not any(is_under(old, tuple(owns)) for old in tracked)
 
 
 def new_module(repo: pathlib.Path, fork: str, head: str | None, path: str,
-               added: dict[str, str], tracked: list[str]) -> str | None:
-    """The module a manifest new in this change declares; None on any doubt.
+               added: dict[str, str], tracked: list[str], modules: dict[str, Module]) -> str | None:
+    """The technique a manifest new in this change declares; None on any doubt.
 
     `added` is each gate the Makefile's change added, with its module, and
     `tracked` every file the fork had.
@@ -59,12 +101,10 @@ def new_module(repo: pathlib.Path, fork: str, head: str | None, path: str,
     if not (path.startswith(MANIFESTS) and path.endswith(".json")) or file_at(repo, fork, path) is not None:
         return None
     manifest = read_json(file_at(repo, head, path))
-    if manifest is None:
+    if manifest is None or manifest.get("kind") != "technique":
         return None
-    owns, gates = manifest.get("owns"), manifest.get("gates", [])
-    if not (isinstance(owns, list) and owns and all(isinstance(prefix, str) for prefix in owns)):
-        return None
-    if any(is_under(old, tuple(owns)) for old in tracked) or not isinstance(gates, list):
+    gates = manifest.get("gates", [])
+    if not owns_only_its_shapes(manifest.get("owns"), name, modules, tracked) or not isinstance(gates, list):
         return None
     return name if all(added.get(gate) == name for gate in gates) else None
 
@@ -146,7 +186,7 @@ def local_paths(repo: pathlib.Path, fork: str, head: str | None, paths: list[str
         found[MAKEFILE] = next(iter(added.values()))
     tracked = git_lines(repo, "ls-tree", "-r", "--name-only", fork)
     born = {} if tracked is None else {
-        path: name for path in paths if (name := new_module(repo, fork, head, path, added or {}, tracked))}
+        path: name for path in paths if (name := new_module(repo, fork, head, path, added or {}, tracked, modules))}
     found.update(born)
     for path in paths:
         name = path.removeprefix(MANIFESTS).removesuffix(".json")

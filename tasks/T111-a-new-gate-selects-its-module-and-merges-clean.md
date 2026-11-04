@@ -121,7 +121,11 @@ Step 6's replay of wave 120 (`affected.py --base 7d9faaa^ --head 7d9faaa
    changes to `about`/`summary`), and `KIT_MODULES` or `packages` gaining
    only its package select that module and its users. `test_techniques`
    runs with every Python selection, because it holds the two lists to
-   the manifests. Planted: the cases in `planted_module_changes`. Without
+   the manifests. Planted: the cases in `planted_module_changes`. After
+   the review (`docs/reviews/123-a-new-gate-selects-its-module.md`), a new
+   manifest must be of kind `technique` and own only a technique's own
+   shapes, claimed by no other module, and a new gate may depend only on
+   `import` and `test-` targets; `KIT_MODULES` is sorted one a line too. Without
    this rule, step 6 could not hold: the new manifest, `techniques.py` and
    `pyproject.toml` were global paths besides the Makefile.
 6. **`packages`** (decision 3): kept as a sorted list, one a line, and

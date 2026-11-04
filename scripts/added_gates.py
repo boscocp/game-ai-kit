@@ -144,13 +144,23 @@ class Added:
         return {name: recipe for name, recipe in self.recipes.items() if name.startswith("test-")}
 
 
+def prerequisites_allowed(target: str, prerequisites: list[str], known: set[str]) -> bool:
+    """True when a new rule depends only on old names, and a new gate only on gates or `import`."""
+    if not set(prerequisites) <= known:
+        return False
+    return not target.startswith("test-") or all(
+        name == "import" or name.startswith("test-") for name in prerequisites)
+
+
 def new_targets(hunk: Hunk, new_lines: list[str], known: set[str]) -> Added | None:
     """The targets an added-only hunk defines; None if it does anything else.
 
     `known` is every word of the old Makefile: a name already used there --
     as a rule, a prerequisite, one of several targets -- is not new, and a
-    new rule may depend only on names it held, so a new gate cannot run a
-    new target nobody reads. A recipe line before any rule in the hunk
+    new rule may depend only on names it held. A new gate may depend only on
+    `import` and old `test-` targets, as every gate does (wave 123's
+    review): an old `wave-merge` or `solve-maze` would merge a pull request
+    or rewrite another module's files inside the gate. A recipe line before any rule in the hunk
     belongs to an old target, and one after an attaching rule would be a
     second recipe for `test-vectors`: both are refused. And the hunk must
     not run into its neighbours: no `\\` on its last line or on the line
@@ -168,7 +178,8 @@ def new_targets(hunk: Hunk, new_lines: list[str], known: set[str]) -> Added | No
         elif attach:
             found.attached.append(attach.group(1))
             current = None
-        elif rule and rule.group(1) not in known | set(found.recipes) and set(rule.group(2).split()) <= known:
+        elif rule and rule.group(1) not in known | set(found.recipes) \
+                and prerequisites_allowed(rule.group(1), rule.group(2).split(), known):
             current = rule.group(1)
             found.recipes[current] = []
         elif not (line.strip() == "" or (phony and phony.group(1) not in known)):
@@ -205,7 +216,8 @@ def recipe_owner(recipe: list[str], modules: dict[str, Module]) -> str | None:
         return None
     paths = [f"godot/{found}" for found in GODOT_PATH.findall(text)] + REPO_PATH.findall(text)
     owners = {path_owner(path, modules) for path in paths}
-    if not paths or len(owners) != 1 or any(is_global(path, modules) for path in paths):
+    # A `..` climbs out of the folder that names the owner (wave 123's review).
+    if not paths or len(owners) != 1 or any(is_global(path, modules) or ".." in path for path in paths):
         return None
     return owners.pop()
 

@@ -43,6 +43,9 @@ class TheKitsOwnTechniques(unittest.TestCase):
         listed = {module.split(".")[0] for module in techniques.KIT_MODULES}
         self.assertEqual(listed, technique_packages())
 
+    def test_the_list_is_sorted_so_two_additions_rarely_meet(self) -> None:
+        self.assertEqual(list(techniques.KIT_MODULES), sorted(techniques.KIT_MODULES))
+
     def test_every_technique_package_registers_one_at_least(self) -> None:
         found = techniques.kit()
         registering = {found_one.entry.__module__.split(".")[1] for found_one in found.values()}

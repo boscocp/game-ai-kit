@@ -281,6 +281,19 @@ def record_line(name: str, data: bytes) -> str:
     return f"{name},sha256={digest.decode()},{len(data)}"
 
 
+def sorted_packages(pyproject: dict) -> list[str]:
+    """pyproject's `packages`, refused unless sorted.
+
+    Sorted, one a line: two waves adding a package each then conflict only
+    when their names are neighbours (T111). Appended at the end, every two
+    would.
+    """
+    in_order = pyproject["tool"]["setuptools"]["packages"]
+    if in_order != sorted(in_order):
+        raise Refused(f"python/pyproject.toml lists its packages out of order; sorted they are {sorted(in_order)}")
+    return in_order
+
+
 def project_table(repo: pathlib.Path, version: str, every: dict[str, dict]) -> dict:
     """`python/pyproject.toml` as HEAD has it, refused when it disagrees.
 
@@ -302,13 +315,7 @@ def project_table(repo: pathlib.Path, version: str, every: dict[str, dict]) -> d
                for manifest in every.values() if manifest["kind"] in SHIPPED_KINDS
                for owned in manifest["owns"]
                if owned.startswith(f"python/{PACKAGE}/") and owned.endswith("/")}
-    in_order = pyproject["tool"]["setuptools"]["packages"]
-    # Sorted, one a line: two waves adding a package each then conflict
-    # only when their names are neighbours (T111). Appended at the end,
-    # every two would.
-    if in_order != sorted(in_order):
-        raise Refused(f"python/pyproject.toml lists its packages out of order; sorted they are {sorted(in_order)}")
-    listed = set(in_order)
+    listed = set(sorted_packages(pyproject))
     if listed != shipped | {PACKAGE}:
         raise Refused(f"python/pyproject.toml packages differ from the technique and kernel manifests "
                       f"by {sorted(listed ^ (shipped | {PACKAGE}))}")
@@ -578,17 +585,8 @@ def check_the_wheel(root: pathlib.Path) -> list[str]:
     return failures
 
 
-def check_manifest_refusals(root: pathlib.Path) -> list[str]:
-    """What the manifests and pyproject.toml forbid is refused, each on its own commit.
-
-    Planted in a clone, one commit each, and reset between: a test inside an
-    addon folder, an addon folder no manifest owns, a subpackage pyproject
-    does not list, a pyproject whose version is not VERSION's, one that
-    lists an example's package, and one whose list is out of order.
-    """
-    clone = root / "clone"
-    subprocess.run(["git", "clone", "-q", str(REPO), str(clone)], check=True)
-    head = head_commit(clone)
+def manifest_plants(clone: pathlib.Path) -> dict:
+    """check_manifest_refusals's plants, each a function that breaks the clone one way."""
     pyproject = clone / "python" / "pyproject.toml"
 
     def an_orphan_addon() -> None:
@@ -605,7 +603,7 @@ def check_manifest_refusals(root: pathlib.Path) -> list[str]:
         del data["summary"]
         manifest.write_text(json.dumps(data, indent=2) + "\n")
 
-    plants = {
+    return {
         "a test inside an addon": lambda: (clone / "godot/addons/ai_search/stray_test.gd")
         .write_text("extends GdUnitTestSuite\n"),
         "a script running a test suite": lambda: (clone / "godot/addons/ai_search/helper.gd")
@@ -621,6 +619,21 @@ def check_manifest_refusals(root: pathlib.Path) -> list[str]:
             pyproject.read_text().replace('    "gameaikit.adversarial",\n', '', 1).replace(
                 '"gameaikit.utility",', '"gameaikit.utility",\n    "gameaikit.adversarial",', 1)),
     }
+
+
+def check_manifest_refusals(root: pathlib.Path) -> list[str]:
+    """What the manifests and pyproject.toml forbid is refused, each on its own commit.
+
+    Planted in a clone, one commit each, and reset between: a test inside an
+    addon folder, an addon folder no manifest owns, a subpackage pyproject
+    does not list, a pyproject whose version is not VERSION's, one that
+    lists an example's package, and one whose list is out of order.
+    """
+    clone = root / "clone"
+    subprocess.run(["git", "clone", "-q", str(REPO), str(clone)], check=True)
+    head = head_commit(clone)
+
+    plants = manifest_plants(clone)
     failures = []
     for label, plant in plants.items():
         subprocess.run(["git", "-C", str(clone), "reset", "-q", "--hard", head], check=True)

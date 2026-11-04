@@ -309,6 +309,7 @@ test-vectors: ## Every conformance vector in spec/
 	@# It used to be one line every new family rewrote: two parallel waves
 	@# conflicted on it at every rebase, and `affected.py` could not tell
 	@# a name put in from any other edit, so it ran all of `make check`.
+	@# The families now run in the Makefile's order, not the old line's.
 
 .PHONY: test-core-vectors
 test-vectors: test-core-vectors
@@ -705,8 +706,9 @@ affected: ## Print what a change selects and why: make affected BASE=origin/main
 .PHONY: check-affected
 check-affected: ## Every lint, and the gates of the modules a change touches (the timing ones, test-rts-budget test-mcts-budget test-inference-budget test-planner-benchmark test-rts-match, only with theirs): make check-affected BASE=origin/main
 	@# The timing gates measure a frame budget, and five worktrees testing at
-	@# once fail them (batch 118-122): each is its module's, so it runs here
-	@# only when the change selects that module. `make check` runs them all.
+	@# once fail them (batch 118-122). Each was already its module's, so it
+	@# runs here only when the change selects that module -- and still fails
+	@# under load then. `make check` runs them all.
 	@test -n "$(BASE)" || { echo "usage: make check-affected BASE=<ref>" >&2; exit 2; }
 	@$(PYTHON) scripts/affected.py --base "$(BASE)" --run
 

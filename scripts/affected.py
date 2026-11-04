@@ -37,10 +37,11 @@ It fails towards running more, never less:
      this way.
 
 The timing gates -- test-rts-budget, test-mcts-budget, test-inference-budget,
-test-planner-benchmark, test-rts-match -- are each one module's, like any
-gate, so a change runs one only when it selects that module. Under five
-worktrees' load they failed in almost every wave of batch 118-122 and passed
-alone; `make check` keeps all of them.
+test-planner-benchmark, test-rts-match -- were each one module's before
+T111, like any gate, so a change runs one only when it selects that module.
+Under five worktrees' load they failed in almost every wave of batch 118-122
+and passed alone, and they still will whenever their module is selected;
+`make check` keeps all of them.
 
 Exit codes
 ----------
@@ -245,7 +246,7 @@ MANIFESTS = {
     "a": {"module": "a", "kind": "technique", "owns": ["godot/addons/a/", "godot/test/a/"],
           "depends_on": ["core"], "gates": ["test-a-properties"]},
     "b": {"module": "b", "kind": "technique", "owns": ["godot/addons/b/"]},
-    "c": {"module": "c", "kind": "technique", "owns": ["godot/addons/c/"],
+    "c": {"module": "c", "kind": "technique", "owns": ["godot/addons/c/", "godot/test/e/"],
           "tests_depend_on": ["play"]},
     "d": {"module": "d", "kind": "example", "owns": ["godot/game/d/", "spec/play/d/"], "depends_on": ["c"]},
     "play": {"module": "play", "kind": "example", "owns": ["godot/game/play/", "scripts/fetch_play_art.py",
@@ -258,6 +259,8 @@ MAKEFILE_TEXT = """\
 check: check-no-engine test-a-properties test-play-match test-vectors ## Run every gate
 check-no-engine: lint-one lint-no-training
 import:
+\t@true
+wave-merge:
 \t@true
 test-vectors: test-a-properties lint-one ## Every vector, one family a line
 \t@true
@@ -413,10 +416,21 @@ def planted_vector_changes(play: dict) -> dict[str, tuple]:
         "an attaching rule naming two": (
             MAKEFILE_TEXT + attach.replace("test-vectors: test-play-vectors", "test-vectors: test-play-vectors lint-one"),
             {"play": vectors}),
+    }
+
+
+def planted_target_changes(play: dict) -> dict[str, tuple]:
+    """T111's cases on a new rule: a non-gate target, and what a gate may depend on or name."""
+    return {
         "a measuring target beside a gate": (
             added_gate(MAKEFILE_TEXT, NEW_GATE + ".PHONY: measure-play\nmeasure-play: import ## A table\n"
                        "\t@$(GODOT) -s res://addons/a/m.gd -- $(or $(SEEDS),200)\n"), {"play": play}, {"play", "c"},
             MAKEFILE_TEXT),
+        "a gate that needs an old target that is not a gate": (
+            added_gate(MAKEFILE_TEXT, NEW_GATE.replace(": import", ": import wave-merge")), {"play": play}),
+        "a recipe path climbing out of its folder": (
+            added_gate(MAKEFILE_TEXT, NEW_GATE.rstrip("\n") + " -- $(CURDIR)/spec/vectors/play/../a\n"),
+            {"play": play}),
         "a gate that needs a new target": (
             added_gate(MAKEFILE_TEXT, NEW_GATE.replace(": import", ": measure-play")
                        + "measure-play: import\n\t@$(GODOT) -s res://addons/a/m.gd\n"), {"play": play}),
@@ -496,6 +510,51 @@ def planted_module_changes() -> dict[str, tuple]:
             pyproject_file(), pyproject_file(("gameaikit.a", "gameaikit.e"), "0.2.0"))}),
         "the lists gaining a module with no Python test": case(
             None, e={**e_manifest, "owns": e_manifest["owns"][:2]}),
+        # Wave 123's review: what a new manifest must not take, each owned
+        # by nobody at the fork, so only the shapes can refuse it.
+        "a new module owning a file in another's vector folder": case(None, e=owning("spec/vectors/a/zz.json")),
+        "a new module owning a CI workflow": case(None, e=owning(".github/workflows/zz.yml")),
+        "a new module owning a package that shadows the registry": case(
+            None, e=owning("python/gameaikit/techniques/")),
+        "a new module owning the engine's override": case(None, e=owning("godot/override.cfg")),
+        "a new module's shape another module claims": case(None, e=owning("godot/test/e/")),
+        "a new module of kind example": case(None, e={**e_manifest, "kind": "example"}),
+    }
+
+
+def owning(extra: str) -> dict:
+    """Wave 120's new manifest, owning one path more."""
+    e_manifest = module_change()["manifests"]["e"]
+    return {**e_manifest, "owns": [*e_manifest["owns"], extra]}
+
+
+def shape_cases() -> list[str]:
+    """Rule 6's package shapes: one that would shadow a module file is refused."""
+    failures = []
+    shadow = ["python/gameaikit/techniques/"]
+    if added_module.owns_only_its_shapes(shadow, "techniques", {}, ["python/gameaikit/techniques.py"]):
+        failures.append("rule 6 took a package folder shadowing techniques.py")
+    if not added_module.owns_only_its_shapes(shadow, "techniques", {}, []):
+        failures.append("rule 6 refused a technique's own new package")
+    return failures
+
+
+def planted_recipe_changes(play: dict) -> dict[str, tuple]:
+    """Rule 5's cases on what a new gate's recipe names; and a manifest's prose."""
+    return {
+        "a gate running two modules' files": (
+            added_gate(MAKEFILE_TEXT, NEW_GATE + "\t@$(GODOT) -s res://addons/a/x.gd\n"), {}),
+        # Every vector gate names its folder without the slash (T111).
+        "a gate reading its module's folder": (
+            added_gate(MAKEFILE_TEXT, NEW_GATE.rstrip("\n") + " -- $(CURDIR)/spec/vectors/play\n"),
+            {"play": play}, {"play", "c"}, MAKEFILE_TEXT),
+        "a gate reading a folder another module has a part of": (
+            added_gate(MAKEFILE_TEXT, NEW_GATE.rstrip("\n") + " -- $(CURDIR)/spec/play\n"), {"play": play}),
+        "a recipe with another variable": (
+            added_gate(MAKEFILE_TEXT, NEW_GATE.replace("--path godot", "--path $(ELSEWHERE)")), {}),
+        # Intended: prose a person reads selects only the module it describes.
+        "a manifest whose prose alone changed": (
+            MAKEFILE_TEXT, {"play": {**MANIFESTS["play"], "about": "reworded"}}, {"play", "c"}, MAKEFILE_TEXT),
     }
 
 
@@ -507,6 +566,8 @@ def planted_gate_changes() -> dict[str, tuple]:
     return {
         **planted_neighbour_changes(play),
         **planted_vector_changes(play),
+        **planted_target_changes(play),
+        **planted_recipe_changes(play),
         **planted_module_changes(),
         "a new gate of play": (wave75, {"play": play}, {"play", "c"}, MAKEFILE_TEXT),
         "and another recipe changed": (
@@ -528,16 +589,6 @@ def planted_gate_changes() -> dict[str, tuple]:
         "an old recipe line swapped for a gate": (
             added_gate(MAKEFILE_TEXT, "").replace("test-play-match:\n\t@true\n", "test-play-match:\n" + NEW_GATE),
             {"play": play}),
-        "a gate running two modules' files": (
-            added_gate(MAKEFILE_TEXT, NEW_GATE + "\t@$(GODOT) -s res://addons/a/x.gd\n"), {}),
-        # Every vector gate names its folder without the slash (T111).
-        "a gate reading its module's folder": (
-            added_gate(MAKEFILE_TEXT, NEW_GATE.rstrip("\n") + " -- $(CURDIR)/spec/vectors/play\n"),
-            {"play": play}, {"play", "c"}, MAKEFILE_TEXT),
-        "a gate reading a folder another module has a part of": (
-            added_gate(MAKEFILE_TEXT, NEW_GATE.rstrip("\n") + " -- $(CURDIR)/spec/play\n"), {"play": play}),
-        "a recipe with another variable": (
-            added_gate(MAKEFILE_TEXT, NEW_GATE.replace("--path godot", "--path $(ELSEWHERE)")), {}),
         "a second rule for an old target": (
             MAKEFILE_TEXT + NEW_GATE.replace(".PHONY: test-play-you\n", "").replace(
                 "test-play-you", "test-play-match"), {}),
@@ -616,7 +667,7 @@ def self_test() -> int:
         expect("prose", ["docs/reviews/63.md", "tasks/STATUS.md"], False, set())
         failures += target_cases(repo, modules)
         failures += rename_case(pathlib.Path(workspace))
-        failures += gate_cases(pathlib.Path(workspace))
+        failures += gate_cases(pathlib.Path(workspace)) + shape_cases()
 
     for failure in failures:
         print(f"self-test FAIL: {failure}")
