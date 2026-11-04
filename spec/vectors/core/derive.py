@@ -9,7 +9,7 @@ from Marsaglia (2003) and the README's rules:
 import json, sys
 
 MASK = 0xFFFFFFFF
-SEEDS = (1, 0, 2463534242, 86, 4294967297, 7)
+SEEDS = (1, 0, 2463534242, 86, 4294967297, 7, -1)
 
 
 def stream(seed):

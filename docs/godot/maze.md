@@ -195,7 +195,7 @@ games and its move is always the lookahead's best.
   energizer. Adding one energizer would bring in the Dossier's random turns
   and a third mode, and multiply T98's states. Decided by the owner,
   2026-10-29: as recommended, left out.
-- **The generator exists twice** (`ai_adversarial`'s `Xorshift` and the
+- **The generator existed twice** (`ai_adversarial`'s `Xorshift` and the
   maze's `MazeDice`). Moving one copy into `ai_core` would let both use it,
   and is ADR 0021's to decide. Decided by the owner, 2026-10-29: one
   generator in `ai_core`, the same stream bit for bit -- task T109, which

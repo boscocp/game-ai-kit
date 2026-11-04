@@ -18,9 +18,10 @@ class SpendsOnOne:
 		return next() % count
 
 
-## A generator that forgets to cut its left shifts to 32 bits: GDScript's
-## `int` is 64, so it keeps bits Python's twin would keep too and Marsaglia's
-## would not.
+## A generator that forgets to cut its left shifts to 32 bits. GDScript's
+## `int` is 64 bits, so the high bits it keeps wrap at 64; Python's unmasked
+## twin would never wrap at all, and Marsaglia's keeps neither. Three ways to
+## be wrong, one way to agree.
 class Unmasked:
 	extends Xorshift
 
@@ -93,6 +94,18 @@ func test_a_broken_vector_is_refused() -> void:
 	assert_str(XorshiftVector.why_not_a_vector(_with(vector, "cases", [_with(first, "seeds", 1)]))).starts_with("X3")
 	assert_str(XorshiftVector.why_not_a_vector(_with(vector, "cases", [_with(first, "picks", [0])]))).starts_with("X4")
 	assert_str(XorshiftVector.why_not_a_vector(_with(vector, "cases", [_with(first, "draws", [])]))).starts_with("X5")
+
+
+# Each of these, read by the runner before the types were checked, was a
+# SCRIPT ERROR that skipped the check and printed "0 failure(s)".
+func test_a_vector_of_the_wrong_types_is_refused_before_it_is_read() -> void:
+	var vector: Dictionary = _read()
+	var first: Dictionary = vector["cases"][0]
+	assert_str(XorshiftVector.why_not_a_vector(_with(vector, "cases", "x"))).starts_with("X6")
+	assert_str(XorshiftVector.why_not_a_vector(_with(vector, "cases", ["x"]))).starts_with("X6")
+	assert_str(XorshiftVector.why_not_a_vector(_with(vector, "cases", [_with(first, "draws", "abc")]))).starts_with("X6")
+	assert_str(XorshiftVector.why_not_a_vector(_with(vector, "cases", [_with(first, "uniforms", ["a"])]))).starts_with("X6")
+	assert_str(XorshiftVector.why_not_a_vector(_with(vector, "cases", [_with(first, "seed", "1")]))).starts_with("X6")
 
 
 func test_a_wrong_claim_is_named_by_its_seed() -> void:

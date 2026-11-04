@@ -33,7 +33,9 @@ The rules a third implementation must follow to agree:
 1. a step is `x ^= x << 13`, `x ^= x >> 17`, `x ^= x << 5`, every left
    shift cut to 32 bits;
 2. a seed is cut to 32 bits, and a seed of zero is seed 1, because a state
-   of zero would stay zero (so 4294967297 is seed 1, and 0 is seed 1);
+   of zero would stay zero (so 4294967297 is seed 1, and 0 is seed 1); a
+   negative seed is cut in two's complement, so -1 is 2^32 - 1 and draws
+   253983 first;
 3. a pick of one is 0 and spends no draw; a pick of `count` is
    `next() % count`.
 

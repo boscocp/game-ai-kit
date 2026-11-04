@@ -7,16 +7,17 @@ tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html
 invalidated_if: the kit's GridGraph, Pathfinder or Xorshift signatures change, or ADR 0021 moves what the kernel holds
 teaches: none
-translation_of: 63b5e6f41e159f7936b16b7bb6d3913fac872f32149911dcd3f1b14e263e6cc2
+translation_of: 84ca04088544c527395eb632869d07f7fda4a6a91db8fe36d17bf04513dbdf2e
 -->
 
 > English: [ai_core.md](ai_core.md). Os termos que ficam em inglês estão no
 > [glossário](glossary.pt-BR.md).
 
-`ai_core` não é uma técnica. É o núcleo compartilhado: dois tipos, um
-gerador com semente e nenhum algoritmo, para que todo addon fale do mesmo
-tabuleiro, e sorteie os mesmos números, sem depender de outro addon
-(invariante 2, ADR 0021).
+`ai_core` não é uma técnica. É o núcleo compartilhado: dois tipos e um
+gerador com semente, e nenhuma lógica de jogo -- nada aqui decide coisa
+alguma sobre um jogo --, para que todo addon fale do mesmo tabuleiro, e
+sorteie os mesmos números, sem depender de outro addon (invariante 2, ADR
+0021).
 
 ## O que ele contém {#holds}
 
@@ -55,8 +56,8 @@ fracos.
 
 ## Para ir mais fundo {#deeper}
 
-- Por que o núcleo guarda tipos e nenhuma lógica, e por que um gerador não
-  é lógica (em inglês):
+- Por que o núcleo não guarda lógica de jogo, e por que um gerador não é
+  lógica de jogo (em inglês):
   [ADR 0021](../adr/0021-the-board-is-the-examples-kernel.md).
 - Como um addon daqui é montado (em inglês):
   [godot/addon-anatomy.md](../godot/addon-anatomy.md).

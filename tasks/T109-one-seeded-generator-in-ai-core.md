@@ -75,11 +75,16 @@ is put to the owner.
   the kernel's package as well (`SHIPPED_KINDS`, as the addon zips already
   did), and `python/pyproject.toml` lists it. Neither file is on the Files
   line above.
-- **The name stays `Xorshift`**, without ADR 0024's `Gak`: an algorithm's
-  name, not a port a game extends.
-- **The vectors' READMEs are untouched**, the acceptance diffing the whole
-  folders: `spec/vectors/maze/README.md` still names `maze_dice.gd` and
-  `gameaikit/maze/dice.py`, which are gone.
+- **The name stays `Xorshift`**, without ADR 0024's `Gak` -- pending the
+  owner: ADR 0024 prefixes "the ports and the kernel", and this is now a
+  kernel class. So is the wheel shipping `gameaikit.core`, against ADR
+  0024's "kind `technique`" line, though the imports require it. Both are
+  written as pending at the end of ADR 0021.
+- **The acceptance's diff is on the vectors, not their folders** (changed
+  after review): `spec/vectors/maze/README.md` named `maze_dice.gd` and
+  `gameaikit/maze/dice.py`, which are gone, and a README is not a vector.
+  The README now names the shared generator; the diff below holds every
+  `*.json` under the four families, bandit's included, to main.
 - **Where the copies' generator tests went.** Each suite that tested its
   copy's first draw (`mcts_test.gd`, `particle_belief_test.gd`,
   `bandit_test.gd`, `maze_test.gd`, and their Python twins) loses that
@@ -109,7 +114,7 @@ make test-maze-vectors
 make test-perception-vectors
 make test-python
 make test-godot-some SUITES="test/ai_core test/ai_adversarial test/ai_perception test/maze"
-git diff --exit-code origin/main -- spec/vectors/adversarial spec/vectors/maze spec/vectors/perception
+git diff --exit-code origin/main -- 'spec/vectors/adversarial/*.json' 'spec/vectors/maze/*.json' 'spec/vectors/perception/*.json' 'spec/vectors/bandit/*.json'
 python3 scripts/check_addon_deps.py
 make lint-modules
 python3 scripts/check_readability.py

@@ -299,9 +299,9 @@ def project_table(repo: pathlib.Path, version: str, every: dict[str, dict]) -> d
             raise Refused(f"python/pyproject.toml says {key} = {project.get(key)!r}, "
                           f"the release builds {wanted!r}")
     shipped = {f"{PACKAGE}.{owned.split('/')[2]}"
-                  for manifest in every.values() if manifest["kind"] in SHIPPED_KINDS
-                  for owned in manifest["owns"]
-                  if owned.startswith(f"python/{PACKAGE}/") and owned.endswith("/")}
+               for manifest in every.values() if manifest["kind"] in SHIPPED_KINDS
+               for owned in manifest["owns"]
+               if owned.startswith(f"python/{PACKAGE}/") and owned.endswith("/")}
     listed = set(pyproject["tool"]["setuptools"]["packages"])
     if listed != shipped | {PACKAGE}:
         raise Refused(f"python/pyproject.toml packages differ from the technique and kernel manifests "

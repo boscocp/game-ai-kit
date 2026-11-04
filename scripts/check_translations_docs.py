@@ -111,7 +111,7 @@ GLOSSARY = "glossary.pt-BR.md"
 OTHER_PAGES = {GLOSSARY}
 
 # The kernels that get a page although they are not a technique: ai_core is
-# the grid and the pathfinder port every addon stands on. `board` is not here
+# the grid, the pathfinder port and the seeded generator every addon stands on. `board` is not here
 # on purpose -- it is the examples' kernel, not something a reader copies.
 KERNEL_PAGES = ("ai_core",)
 

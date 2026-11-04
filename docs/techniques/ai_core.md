@@ -12,10 +12,10 @@ teaches: none
 > Português: [ai_core.pt-BR.md](ai_core.pt-BR.md). The words that stay in
 > English are in the [glossary](glossary.pt-BR.md).
 
-`ai_core` is not a technique. It is the shared kernel: two types, one
-seeded generator and no algorithm, so that every addon can talk about the
-same board, and draw the same numbers, without depending on another addon
-(invariant 2, ADR 0021).
+`ai_core` is not a technique. It is the shared kernel: two types and one
+seeded generator, and no game logic -- nothing here decides anything about
+a game -- so that every addon can talk about the same board, and draw the
+same numbers, without depending on another addon (invariant 2, ADR 0021).
 
 ## What it holds {#holds}
 
@@ -53,6 +53,6 @@ predict: its period is 2^32 - 1 and its low bits are weak.
 
 ## Deeper {#deeper}
 
-- Why the kernel holds types and no logic, and why a generator is not
+- Why the kernel holds no game logic, and why a generator is not game
   logic: [ADR 0021](../adr/0021-the-board-is-the-examples-kernel.md).
 - How an addon here is put together: [godot/addon-anatomy.md](../godot/addon-anatomy.md).

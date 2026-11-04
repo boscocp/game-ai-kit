@@ -20,19 +20,48 @@ const CASE_KEYS: Array[String] = ["draws", "picks", "picks_of", "seed", "uniform
 
 ## Why this dictionary is not a usable core vector, or "" when it is one.
 ## A key nobody reads is refused: a misspelt claim would otherwise be dropped.
+## So is a value of the wrong type, checked before anything reads it: a cast
+## that fails in a `-s` script is a SCRIPT ERROR that skips the check and
+## still lets the runner print "0 failure(s)" (CLAUDE.md, the traps).
 static func why_not_a_vector(vector: Dictionary) -> String:
 	if _sorted_keys(vector) != VECTOR_KEYS:
 		return "X1 its keys are %s, not %s" % [_sorted_keys(vector), VECTOR_KEYS]
+	if not vector["cases"] is Array:
+		return "X6 its cases are not a list"
 	if (vector["cases"] as Array).is_empty():
 		return "X2 it claims nothing"
-	for case: Dictionary in vector["cases"]:
-		if _sorted_keys(case) != CASE_KEYS:
-			return "X3 a case's keys are %s, not %s" % [_sorted_keys(case), CASE_KEYS]
-		if (case["picks"] as Array).size() != (case["picks_of"] as Array).size():
-			return "X4 seed %d: picks and picks_of differ in length" % int(case["seed"])
-		if (case["draws"] as Array).is_empty() or (case["uniforms"] as Array).is_empty():
-			return "X5 seed %d: no draw or no uniform to check" % int(case["seed"])
+	for case: Variant in vector["cases"]:
+		var why: String = _why_not_a_case(case)
+		if why != "":
+			return why
 	return ""
+
+
+# X3 to X6 for one case: its keys, its types, then its lengths.
+static func _why_not_a_case(case: Variant) -> String:
+	if not case is Dictionary:
+		return "X6 a case is not an object"
+	if _sorted_keys(case) != CASE_KEYS:
+		return "X3 a case's keys are %s, not %s" % [_sorted_keys(case), CASE_KEYS]
+	if not (case["seed"] is float or case["seed"] is int):
+		return "X6 a case's seed is not a number"
+	for key: String in ["draws", "picks", "picks_of", "uniforms"]:
+		if not _numbers(case[key]):
+			return "X6 seed %d: %s is not a list of numbers" % [int(case["seed"]), key]
+	if (case["picks"] as Array).size() != (case["picks_of"] as Array).size():
+		return "X4 seed %d: picks and picks_of differ in length" % int(case["seed"])
+	if (case["draws"] as Array).is_empty() or (case["uniforms"] as Array).is_empty():
+		return "X5 seed %d: no draw or no uniform to check" % int(case["seed"])
+	return ""
+
+
+static func _numbers(value: Variant) -> bool:
+	if not value is Array:
+		return false
+	for number: Variant in value:
+		if not (number is float or number is int):
+			return false
+	return true
 
 
 ## The generator `ai_core` builds, as a `make` for `wrong_claims`.

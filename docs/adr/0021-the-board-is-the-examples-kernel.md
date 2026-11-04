@@ -59,7 +59,9 @@ This overrides T58's sketch, which kept `Move` and `DecisionPolicy` in
 **What was decided.** The owner, on 2026-10-29, as `docs/godot/maze.md`
 recommended: one seeded generator in `ai_core`, `Xorshift`, with its
 Python twin `gameaikit.core.Xorshift`, drawing exactly what each copy drew
-from the same seeds.
+from the same seeds, for every call its users make. (The maze's copy spent
+a draw on a pick of one and divided by zero on a pick of none; the maze
+asks for neither, so its stream is the same.)
 
 **Why.** When the owner decided, the kit held Marsaglia's 32-bit xorshift
 three times: `ai_adversarial`'s `Xorshift` (T86), the maze's `MazeDice`
@@ -96,7 +98,29 @@ and that it decides nothing about any game -- and the owner's decision.
   users -- `spec/vectors/adversarial/`, `bandit/`, `perception/`, `maze/`
   -- did not change, and pass read through the shared generator: that is
   the proof that no draw moved.
-- The wheel ships `gameaikit.core`, the kernel's package, beside the
-  techniques'.
-- `Xorshift` keeps its name without the `Gak` prefix (ADR 0024): it is an
-  algorithm's name, like `AStarSearch`, not a port a game extends.
+- A change to the kernel selects a little more than before, the measure
+  this record was argued on: `grid_graph.gd` selected 26 modules on main
+  (measured in the review)
+  and selects 28 now, `ai_adversarial` and `ai_bandit` added; a change to
+  `xorshift.gd` selects 28. Small, because `game_shared` already pulls in
+  nearly everything.
+
+**Pending the owner -- T109's reading, not decided.** Two consequences
+contradict ADR 0024 as it stands, and stay open until the owner rules:
+
+- **The wheel ships `gameaikit.core`**, the kernel's package, beside the
+  techniques'. This is not optional while the code is as it is: the shipped
+  `gameaikit.adversarial`, `bandit` and `perception` import
+  `gameaikit.core`, and a wheel without it would not import. ADR 0024 says
+  "The wheel holds the Python packages owned by modules of kind
+  `technique`" (its "What ships is the techniques" decision, and its title,
+  "... and ships only techniques"). T109 changed `scripts/release.py` to
+  accept the kernel's package; the owner either amends that line of ADR
+  0024 or asks for another route.
+- **`Xorshift` keeps its name, without the `Gak` prefix.** ADR 0024's
+  context records that "The owner decided on 2026-10-20 to prefix only the
+  ports and the kernel", and `Xorshift` is now a kernel class -- and a
+  name a user's project may well have. T109 left it unprefixed, reading it
+  as a building block a game calls rather than a type it extends; the
+  review leaned to `GakXorshift`, cheap now and a breaking rename after a
+  release. The owner decides.

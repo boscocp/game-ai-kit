@@ -18,7 +18,8 @@ lands in Godot, and a ghost's choice is the same choice. So the rules are
 written twice -- `gameaikit.maze` and `godot/game/maze/` -- and held here.
 
 Both languages draw from the same generator, Marsaglia's 32-bit xorshift,
-written out in each (`maze_dice.gd`, `gameaikit/maze/dice.py`), so a seed
+written out once in each (`ai_core`'s `xorshift.gd`, `gameaikit/core/xorshift.py`,
+since T109; before it, the maze's own copy), so a seed
 *can* be what the two agree on -- unlike MENACE's vectors, where Python's
 generator and Godot's differ and each case carries the draw itself.
 
