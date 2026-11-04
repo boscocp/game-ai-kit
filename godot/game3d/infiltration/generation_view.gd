@@ -39,11 +39,14 @@ var _chosen: String = ""
 var _undone: Array[Dictionary] = []
 var _applied: int = 0
 var _refused: Dictionary = {}
+## The seed the solver gave up on, when the level shown is the drawn one; -1.
+var _gave_up_on: int = -1
 
 
 ## Start replaying `level`'s trace from the beginning; null shows nothing.
 func show_solving(level: LevelConstraints) -> void:
 	solved = level
+	_gave_up_on = -1
 	_step = 0.0
 	_applied = 0
 	_saved.clear()
@@ -57,6 +60,14 @@ func show_solving(level: LevelConstraints) -> void:
 		for name: String in level.candidates:
 			_remaining[name] = (level.candidates[name] as Array).size()
 			_crossed[name] = {}
+	queue_redraw()
+
+
+## The solver gave up on `seed_value` and the level is the drawn one: the
+## view says that, and nothing else.
+func show_gave_up(seed_value: int) -> void:
+	show_solving(null)
+	_gave_up_on = seed_value
 	queue_redraw()
 
 
@@ -99,6 +110,7 @@ func _apply(event: Dictionary) -> void:
 
 func _draw() -> void:
 	if solved == null:
+		_draw_gave_up()
 		return
 	var map_size := Vector2(size.x * 0.7, size.y - 52.0)
 	var scale_by: float = minf(map_size.x / solved.sketch.width, map_size.y / solved.sketch.depth)
@@ -112,6 +124,14 @@ func _draw() -> void:
 	draw_circle(origin + (Vector2(solved.sketch.exit_cell) + Vector2(0.5, 0.5)) * scale_by, 4.0, InfiltrationDrawing.EXIT)
 	_draw_counts(Vector2(size.x * 0.72, 22))
 	_draw_words()
+
+
+func _draw_gave_up() -> void:
+	if _gave_up_on < 0:
+		return
+	var line: String = tr("the solver gave up on seed {seed}: this is the drawn level").format({seed = _gave_up_on})
+	draw_rect(Rect2(Vector2.ZERO, Vector2(size.x, 22)), BACK)
+	draw_string(ThemeDB.fallback_font, Vector2(6, 15), line, HORIZONTAL_ALIGNMENT_LEFT, size.x - 12, 12, CROSSED)
 
 
 # The solver's counts on top; the key and the last refusal at the bottom.
@@ -141,7 +161,7 @@ func _draw_placed(name: String, value: int, origin: Vector2, scale_by: float) ->
 
 # The chosen variable's candidates: white still possible, a red cross gone.
 func _draw_choice(origin: Vector2, scale_by: float) -> void:
-	if _chosen == "":
+	if _chosen == "" or _applied >= solved.solver.trace.size():
 		return
 	for value: int in range((solved.candidates[_chosen] as Array).size()):
 		var at: Vector2 = origin + _centre(_chosen, value) * scale_by

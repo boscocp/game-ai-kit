@@ -42,6 +42,14 @@ func _init(wide: int, deep: int, from_cell: Vector2i, to_cell: Vector2i) -> void
 	exit_cell = to_cell
 
 
+## Drop every flood, mask and light map kept during the search: once it is
+## over, only the size, the start and the exit are read.
+func forget() -> void:
+	_floods.clear()
+	_blocked.clear()
+	_dark.clear()
+
+
 ## The cells a box blocks, by the arena's rule: every cell whose centre lies
 ## strictly inside its footprint grown by a body's radius.
 static func cells_under(box: Dictionary) -> Array[Vector2i]:

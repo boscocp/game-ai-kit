@@ -7,7 +7,7 @@ tier: 1
 source: https://aima.cs.berkeley.edu/contents.html ; book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 6, Constraint Satisfaction Problems
 invalidated_if: the kit's ConstraintProblem or ConstraintSolver signature changes, or the infiltration demo stops solving its levels with them
 teaches: constraint-satisfaction
-translation_of: 506a52434b7cf391346553a11d4bb8b54737d2a6558edd35488ede4b91455b28
+translation_of: 72c50ae59c32bdf0226c1eade68dace93d6f5766f2d42b92bf86389924dcf015
 -->
 
 > English: [ai_constraints.md](ai_constraints.md). Os termos que ficam em
@@ -74,6 +74,7 @@ parcial. Os controles:
 | variáveis | `add_variable(name, values)` | o que se decide, e os valores que cada uma pode ter, na sua ordem |
 | binária | `add_binary(first, second, allowed, label)` | um teste de dois valores; propagado pelo AC-3 |
 | global | `add_global(names, holds, label)` | um teste de uma atribuição parcial: falso só quando nada que ainda vem poderia salvá-la |
+| label | o último argumento de ambas, "" por padrão | o nome que uma recusa informa em `trace`; uma restrição sem nome vale do mesmo jeito |
 | *seed* | `ConstraintSolver.new(problem, seed)` | para que lado vão os empates, o mesmo em GDScript e em Python |
 | mrv, lcv, propagate | propriedades do *solver*, todas ligadas | desligue uma para ver quanto ela vale: o mesmo problema, os *backtracks* contados dos dois jeitos |
 | record | uma propriedade, desligada | guarda cada passo em `trace` -- escolhido, atribuído, recusado, riscado, desfeito -- para uma visualização |

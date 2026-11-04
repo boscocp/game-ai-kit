@@ -121,6 +121,19 @@ says so.
    type's farthest zone. None was tuned against a playtest.
 6. **"No guard's post in sight"** covers the sentry's post and each
    patrol's first route point (where a patrol stands at the start).
+7. **K is named on the panel's switch line, not on the legend.** A legend
+   line ran past the window's gutter (`test-demo-overlays`), so the line
+   reads `..., 6 director on, K level solved and shown`; the view carries
+   its own key, and says in one line when the solver gave up and the level
+   is the drawn one. K on a hand-made level changes only the mode.
+8. **The counts are listed beside the map, not on each variable's cell.**
+   An unassigned variable has 16 candidate cells and no one cell of its
+   own, so the view lists every unplaced thing with its count (the next one
+   first) and draws the next one's candidates on the map.
+9. **The solve runs on the main thread** and stalls the frame -- 120-140
+   ms a level, 2.2-2.5 s on the slowest seed. The last solved level is kept
+   by its seed, so N and the second K do not solve it again. Pending the
+   owner: solve in the background?
 
 The manual check above is still the owner's.
 

@@ -336,8 +336,11 @@ guard's places can be walked to from the start -- generate and test, up to
 and how many boxes, lamps and hiding places, and for each of them, each
 patrol point and the sentry's post, 16 candidate places; those are the
 variables of a constraint satisfaction problem, solved by `ai_constraints`
-(`docs/techniques/ai_constraints.md`). The conditions are in
-`level_constraints.json`, beside `guard_types.json`:
+(`docs/techniques/ai_constraints.md`). `level_constraints.json`, beside
+`guard_types.json`, names the rules a level is declared with, by their
+labels, and the numbers that tune them; the rules themselves are written in
+`LevelConstraintRules`. Leave a label out of the file's `constraints` list
+and that rule is not asked for:
 
 | condition | kind | how it is asked of a partial level |
 |---|---|---|
@@ -350,10 +353,23 @@ variables of a constraint satisfaction problem, solved by `ai_constraints`
 
 The last two are new: a designer's intent, which a draw can only hope for.
 The solver checks the global ones on the `LevelSketch`, a grid that knows
-only boxes on the ground, and `LevelAudit` then measures every condition on
-the `InfiltrationLevel` and `BotArena` the game builds -- a sketch that drifted
-from the arena would be caught (`level_constraints_test.gd` also holds the
-two walk grids equal, cell for cell). A search that runs into its limit of
+only boxes on the ground, and `LevelAudit` then checks every solved level
+again on the `InfiltrationLevel` and `BotArena` the game builds. How
+independent that second check is depends on the condition:
+
+- **walking** (the exit, the guard places, a hiding place near a route) and
+  **light** (the dark way) are measured on the arena's own walk graph and
+  the level's own light map, so a sketch that drifted from them would be
+  caught; `level_constraints_test.gd` also holds the two walk grids equal,
+  cell for cell;
+- **sight** is not. The line test is the arena's (`first_block`), but the
+  rest -- the guard type's farthest zone, any facing, eyes at 1.6 m, from
+  cell centre to cell centre -- is the same reading the solver uses. If that
+  reading of "in sight" is wrong, both are wrong together. A guard's real
+  vision (its zones, its facing, the player's body points and the light) is
+  not asked.
+
+A search that runs into its limit of
 400 assignments starts again, up to four times, with its ties broken by
 another seed: chronological backtracking can thrash, going back over boxes
 that were never the trouble while a post stays in sight. AIMA's cure is
@@ -386,9 +402,19 @@ dots; for the thing chosen next by minimum remaining values, each of its 16
 places, white while possible and a red cross where propagation crossed it
 out; a list of everything still to place with how many places it has left;
 a red ring where a backtrack undid a value; and the last refusal with the
-constraint that refused it. The overlay's `generator` says the mode and the
-solver's counts. A seed the solver gives up on falls back to the drawn
-level and its drawn name.
+constraint that refused it, with a key at the bottom. The panel's switch
+line says the mode (`K level drawn / solved / solved and shown`), and the
+overlay's `generator` says the mode and the solver's counts. A seed the
+solver gives up on falls back to the drawn level and its drawn name, and
+with the view on, the view says so in one line. K on a hand-made level
+changes only the mode, for the next generated one.
+
+**The solve stalls the frame -- a known cost.** It runs on the main
+thread, when the world is built: 120-140 ms a level on average, 2.2-2.5 s
+on the slowest seed of 200 (seed 144), with the window frozen meanwhile.
+The last solved level is kept by its seed, so N and the second K press do
+not solve it again; L to another level does. Solving in the background is
+the owner's to decide.
 
 ## The kit's own numbers
 

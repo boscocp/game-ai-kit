@@ -50,6 +50,8 @@ var problem := ConstraintProblem.new()
 var solver: ConstraintSolver
 ## The level's data in `InfiltrationLevel`'s shape, or {} when none was found.
 var data: Dictionary = {}
+## The labels of the constraints declared, as the rules file named them.
+var declared: Array[String] = []
 ## The solver's answer, variable -> the index of its candidate; {} with none.
 var assignment: Dictionary = {}
 ## Variable -> the places it may take; a value is an index into its list.
@@ -104,6 +106,7 @@ static func solve(from_seed: int, record: bool = false, overrides: Dictionary = 
 	# is over, and the view reads only the trace and the candidates.
 	level.problem.binaries.clear()
 	level.problem.globals.clear()
+	level.sketch.forget()
 	if not found.is_empty():
 		level.assignment = found
 		level.data = LevelGenerator.with_reserve(from_seed, level.level_of(found))

@@ -19,7 +19,11 @@ health {health}   {stance} sprinting,vida {health}   {stance} correndo
 health {health}   {stance},vida {health}   {stance}
   eye: {why},  olho: {why}
 nothing,nada
-"1 belief {belief}, 2 coordinator {coordinator}, 3 arbiter {arbiter}, 4 accumulator {accumulator}, 5 off-screen halving {halving}, 6 director {director}","1 crença {belief}, 2 coordenador {coordinator}, 3 árbitro {arbiter}, 4 acumulador {accumulator}, 5 metade fora da tela {halving}, 6 diretor {director}"
+"1 belief {belief}, 2 coordinator {coordinator}, 3 arbiter {arbiter}, 4 accumulator {accumulator}, 5 off-screen halving {halving}, 6 director {director}, K level {generator}","1 crença {belief}, 2 coordenador {coordinator}, 3 árbitro {arbiter}, 4 acumulador {accumulator}, 5 metade fora da tela {halving}, 6 diretor {director}, K nível {generator}"
+drawn,sorteado
+solved,resolvido
+solved and shown,resolvido e mostrado
+"the solver gave up on seed {seed}: this is the drawn level","o solver desistiu da seed {seed}: este é o nível sorteado"
 on,ligado
 OFF,DESLIGADO
 grid,grade
@@ -77,7 +81,7 @@ fading,diminuindo
 relaxing,relaxando
 solved level {seed},nível resolvido {seed}
 "white: still possible; red cross: crossed out; red ring: undone","branco: ainda possível; X vermelho: riscado; anel vermelho: desfeito"
-"solver: step {step} of {steps}, {assignments} assignments, {backtracks} backtracks, {restarts} fresh starts","resolvedor: passo {step} de {steps}, {assignments} atribuições, {backtracks} retrocessos, {restarts} recomeços"
+"solver: step {step} of {steps}, {assignments} assignments, {backtracks} backtracks, {restarts} fresh starts","solver: passo {step} de {steps}, {assignments} atribuições, {backtracks} backtracks, {restarts} recomeços"
 "refused: {thing}, {rule}","recusado: {thing}, {rule}"
 {thing}: {left} left,{thing}: restam {left}
 box {number},caixa {number}

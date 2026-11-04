@@ -22,26 +22,55 @@ const PLACES_REACHED: String = "every guard place can be walked to"  # shown thr
 const OUT_OF_SIGHT: String = "no post in sight of the start"  # shown through tr()
 const HIDING_NEAR: String = "a hiding place near each route"  # shown through tr()
 const DARK_WAY: String = "a dark way to the exit"  # shown through tr()
-## Every label, binary first, in the order declared.
+## Every rule there is, binary first; `level_constraints.json` names, by
+## these labels, the ones a level is declared with.
 const LABELS: Array[String] = [BOXES_APART, OFF_THE_BOXES, PLACES_APART, HIDING_APART, LAMPS_APART,
 		EXIT_REACHED, PLACES_REACHED, OUT_OF_SIGHT, HIDING_NEAR, DARK_WAY]
 
 
-## Declare every constraint of `level` on its problem.
+## Declare on `level`'s problem each constraint its rules file names under
+## `constraints`, in the file's order, and list it in `level.declared`. A
+## constraint left out of the list is not asked for; a name no rule here
+## has is an error, said and skipped.
 static func add(level: LevelConstraints) -> void:
-	_binary_pairs(level, level.boxes, level.boxes, BOXES_APART, _boxes_apart.bind(level))
+	for label: String in level.rules["constraints"]:
+		if not LABELS.has(label):
+			push_error("level_constraints.json names '%s', which no rule declares" % label)  # not shown: a developer's message
+			continue
+		_declare(level, label)
+		level.declared.append(label)
+
+
+static func _declare(level: LevelConstraints, label: String) -> void:
 	var guard_places: Array[String] = _guard_places(level)
-	_binary_pairs(level, guard_places + level.hiding, level.boxes, OFF_THE_BOXES, _off_the_box.bind(level))
-	_binary_pairs(level, guard_places, guard_places, PLACES_APART, _apart_cells.bind(level))
-	_binary_pairs(level, level.hiding, level.hiding, HIDING_APART, _hiding_apart.bind(level))
-	_binary_pairs(level, level.lamps, level.lamps, LAMPS_APART, _lamps_apart.bind(level))
 	var problem: ConstraintProblem = level.problem
-	problem.add_global(level.boxes.duplicate(), _exit_reached.bind(level), EXIT_REACHED)
-	problem.add_global(level.boxes + guard_places, _places_reached.bind(level, guard_places), PLACES_REACHED)
-	problem.add_global(level.boxes + _posts(level), _out_of_sight.bind(level), OUT_OF_SIGHT)
+	match label:
+		BOXES_APART:
+			_binary_pairs(level, level.boxes, level.boxes, label, _boxes_apart.bind(level))
+		OFF_THE_BOXES:
+			_binary_pairs(level, guard_places + level.hiding, level.boxes, label, _off_the_box.bind(level))
+		PLACES_APART:
+			_binary_pairs(level, guard_places, guard_places, label, _apart_cells.bind(level))
+		HIDING_APART:
+			_binary_pairs(level, level.hiding, level.hiding, label, _hiding_apart.bind(level))
+		LAMPS_APART:
+			_binary_pairs(level, level.lamps, level.lamps, label, _lamps_apart.bind(level))
+		EXIT_REACHED:
+			problem.add_global(level.boxes.duplicate(), _exit_reached.bind(level), label)
+		PLACES_REACHED:
+			problem.add_global(level.boxes + guard_places, _places_reached.bind(level, guard_places), label)
+		OUT_OF_SIGHT:
+			problem.add_global(level.boxes + _posts(level), _out_of_sight.bind(level), label)
+		HIDING_NEAR:
+			_hiding_near_every_route(level, label)
+		DARK_WAY:
+			problem.add_global(level.boxes + level.lamps, _dark_way.bind(level), label)
+
+
+# One "hiding place near" constraint for each patrol's route.
+static func _hiding_near_every_route(level: LevelConstraints, label: String) -> void:
 	for route: Array[String] in level.routes:
-		problem.add_global(level.boxes + level.hiding + route, _hiding_near.bind(level, route), HIDING_NEAR)
-	problem.add_global(level.boxes + level.lamps, _dark_way.bind(level), DARK_WAY)
+		level.problem.add_global(level.boxes + level.hiding + route, _hiding_near.bind(level, route), label)
 
 
 # One binary constraint for each pair of a name in `firsts` and one in

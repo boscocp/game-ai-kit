@@ -45,12 +45,12 @@ var _pending := PlayerIntent.new()
 var _pad := PadAsKeys.new()
 ## The director's strip, under the radar.
 var _strip := DirectorStrip.new()
-## How a generated level is made: `LevelGenerator.DRAW` or `CONSTRAINTS`;
-## and whether the solver's work is replayed (the generation view).
-var generator: String = LevelGenerator.DRAW
-var show_generation: bool = false
 ## The solved level the generation view replays; null when it was drawn.
 var solved: LevelConstraints
+## The last level the solver was asked for, kept by its seed so that N and
+## a second K do not solve it again: a solve runs on the main thread and
+## stalls the frame (120 ms a level on average, 2.2 s at worst, measured).
+var _last_solved: LevelConstraints
 var _generation := GenerationView.new()
 
 @onready var _drawing: InfiltrationDrawing = $Drawing
@@ -137,7 +137,7 @@ func decision_overlay() -> Dictionary:
 ## How the level was made, for the overlay: the mode, and for a solved one
 ## the solver's counts and how far the view has replayed them.
 func generator_overlay() -> Dictionary:
-	var found: Dictionary = {"mode": generator, "shown": show_generation, "solved": solved != null}
+	var found: Dictionary = {"mode": rules.level_generator, "shown": rules.show_generation, "solved": solved != null}
 	if solved != null:
 		found.merge({"assignments": solved.solver.assignments, "backtracks": solved.solver.backtracks,
 			"pruned": solved.solver.pruned, "steps": solved.solver.trace.size(), "replayed": _generation.progress().x})
@@ -145,16 +145,18 @@ func generator_overlay() -> Dictionary:
 
 
 ## The next way of making a generated level, in the cycle K turns: drawn,
-## solved, solved and shown; the world starts again.
+## solved, solved and shown. On a generated level the world starts again;
+## on a hand-made one only the mode changes, for the next generated level.
 func next_generator() -> void:
-	if generator == LevelGenerator.DRAW:
-		generator = LevelGenerator.CONSTRAINTS
-	elif not show_generation:
-		show_generation = true
+	if rules.level_generator == LevelGenerator.DRAW:
+		rules.level_generator = LevelGenerator.CONSTRAINTS
+	elif not rules.show_generation:
+		rules.show_generation = true
 	else:
-		generator = LevelGenerator.DRAW
-		show_generation = false
-	_new_world()
+		rules.level_generator = LevelGenerator.DRAW
+		rules.show_generation = false
+	if _level_index >= InfiltrationLevel.HAND_MADE.size():
+		_new_world()
 
 
 ## The director's side of the overlay: its phase, the intensity it was
@@ -234,8 +236,9 @@ func _new_world() -> void:
 	_radar.world = world
 
 
-# The level to play: a hand-made one, or one generated the way `generator`
-# says. A solved level falls back to the drawn one when the solver gave up.
+# The level to play: a hand-made one, or one generated the way the rules'
+# `level_generator` says. A solved level falls back to the drawn one when the
+# solver gave up, and the generation view, when shown, says so.
 func _level() -> InfiltrationLevel:
 	solved = null
 	_generation.show_solving(null)
@@ -243,14 +246,22 @@ func _level() -> InfiltrationLevel:
 	if _level_index < InfiltrationLevel.HAND_MADE.size():
 		return InfiltrationLevel.read(InfiltrationLevel.HAND_MADE[_level_index])
 	var generated: int = _seed + _level_index
-	if generator == LevelGenerator.CONSTRAINTS:
-		var found := LevelConstraints.solve(generated, true)
+	if rules.level_generator == LevelGenerator.CONSTRAINTS:
+		var found: LevelConstraints = _solved_for(generated)
+		_generation.visible = rules.show_generation
 		if not found.data.is_empty():
 			solved = found
 			_generation.show_solving(found)
-			_generation.visible = show_generation
 			return InfiltrationLevel.read(found.data, "solved %d" % generated)  # not shown as written: InfiltrationWords.level words it
+		_generation.show_gave_up(generated)
 	return InfiltrationLevel.read(LevelGenerator.make(generated), "generated %d" % generated)  # not shown as written: InfiltrationWords.level words it
+
+
+# The level the solver makes from `generated`, solved once and kept.
+func _solved_for(generated: int) -> LevelConstraints:
+	if _last_solved == null or _last_solved.seed_value != generated:
+		_last_solved = LevelConstraints.solve(generated, true)
+	return _last_solved
 
 
 func _intent() -> PlayerIntent:

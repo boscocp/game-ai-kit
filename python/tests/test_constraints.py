@@ -169,6 +169,36 @@ class GlobalConstraints(unittest.TestCase):
         self.assertIn(3, found.values())
         self.assertTrue(any(event["event"] == "refuse" for event in solver.trace))
 
+    def test_an_unlabelled_global_constraint_still_refuses(self) -> None:
+        problem = ConstraintProblem()
+        problem.add_variable("a", [1, 2])
+        problem.add_variable("b", [1, 2])
+        problem.add_global(["a", "b"], lambda partial: not ("a" in partial and "b" in partial
+                                                             and partial["a"] == partial["b"]))
+        found = ConstraintSolver(problem, seed=1).solve()
+        self.assertNotEqual(found["a"], found["b"])
+
+    def test_an_unlabelled_binary_constraint_still_refuses_without_propagation(self) -> None:
+        problem = ConstraintProblem()
+        problem.add_variable("a", [1, 2])
+        problem.add_variable("b", [1, 2])
+        problem.add_binary("a", "b", different)
+        found = ConstraintSolver(problem, seed=1, propagate=False).solve()
+        self.assertNotEqual(found["a"], found["b"])
+
+    def test_a_second_solve_starts_its_counts_afresh(self) -> None:
+        solver = ConstraintSolver(queens(8), seed=1, mrv=False, lcv=False, propagate=False, limit=5)
+        solver.solve()
+        solver.limit = 0
+        self.assertIsNotNone(solver.solve())
+        self.assertFalse(solver.gave_up)
+        fresh = ConstraintSolver(queens(8), seed=1, mrv=False, lcv=False, propagate=False)
+        fresh.solve()
+        self.assertEqual(solver.assignments, fresh.assignments)
+
+    def test_a_problem_with_no_variables_has_no_answer(self) -> None:
+        self.assertIsNone(ConstraintSolver(ConstraintProblem()).solve())
+
     def test_a_declaration_that_cannot_work_is_named(self) -> None:
         problem = ConstraintProblem()
         self.assertEqual(problem.problem(), "a problem needs at least one variable")

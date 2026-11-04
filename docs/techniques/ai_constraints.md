@@ -70,6 +70,7 @@ of each partial level. The knobs:
 | variables | `add_variable(name, values)` | what is decided, and the values each may take, in your order |
 | binary | `add_binary(first, second, allowed, label)` | a test of two values; propagated by AC-3 |
 | global | `add_global(names, holds, label)` | a test of a partial assignment: false only when nothing still to come could save it |
+| label | the last argument of either, "" by default | the name a refusal reports in `trace`; an unlabelled constraint is enforced all the same |
 | seed | `ConstraintSolver.new(problem, seed)` | which way the ties go, the same in GDScript and Python |
 | mrv, lcv, propagate | properties of the solver, all on | switch one off to see what it is worth: the same problem, the backtracks counted both ways |
 | record | a property, off | keep every step in `trace` -- chosen, assigned, refused, crossed out, undone -- for a view |

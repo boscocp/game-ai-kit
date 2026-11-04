@@ -94,8 +94,10 @@ those: a draw that happens to meet them is luck.
 place, patrol point and post a variable over a few candidate places drawn
 from the seed -- with the three old conditions and those designer's ones,
 and every level it returns meets all of them; `LevelAudit` checks that on
-the arena the game builds, not on the solver's own sketch. The price is
-time and a new failure: chronological backtracking can *thrash*, going back
+the arena the game builds -- walking and light independently of the
+solver's sketch, sight by the same reading of "in sight" (the
+[infiltration page](../godot/infiltration.md) says which). The price is
+time, a frame stalled while it solves, and a new failure: chronological backtracking can *thrash*, going back
 over boxes that were never the trouble while a post stays in sight. AIMA's
 answer is conflict-directed backjumping (6.3.3); the kit's, for now, is to
 start again with the ties broken another way -- 6 fresh starts over 200

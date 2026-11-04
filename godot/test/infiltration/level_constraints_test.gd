@@ -64,6 +64,25 @@ func test_the_view_replays_to_the_level_solved() -> void:
 	assert_int(view._saved.size()).is_equal(solved.assignment.size())
 
 
+# The rules file says which constraints a level is declared with: every
+# rule by default, and a rule left out of its list is not asked for.
+func test_the_rules_file_names_the_constraints_declared() -> void:
+	assert_array(LevelConstraints.solve(1).declared).is_equal(LevelConstraintRules.LABELS)
+	var without: Array = LevelConstraintRules.LABELS.filter(func(label: String) -> bool:
+		return label != LevelConstraintRules.DARK_WAY)
+	var solved := LevelConstraints.solve(1, false, {"constraints": without})
+	assert_array(solved.declared).not_contains([LevelConstraintRules.DARK_WAY])
+	assert_int(solved.declared.size()).is_equal(LevelConstraintRules.LABELS.size() - 1)
+
+
+func test_the_view_says_when_the_solver_gave_up() -> void:
+	var view: GenerationView = auto_free(GenerationView.new())
+	view.show_gave_up(12)
+	assert_int(view._gave_up_on).is_equal(12)
+	view.show_solving(LevelConstraints.solve(1, true))
+	assert_int(view._gave_up_on).is_equal(-1)
+
+
 func test_a_limit_too_small_gives_up_rather_than_lie() -> void:
 	var solved := LevelConstraints.solve(1, false, {"limit": 3})
 	assert_dict(solved.data).is_empty()

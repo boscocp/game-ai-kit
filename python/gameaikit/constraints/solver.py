@@ -49,7 +49,15 @@ class ConstraintSolver:
         self._order: list[str] = []
 
     def solve(self) -> dict | None:
-        """The assignment, every variable in the order declared, or None when there is none."""
+        """The assignment, every variable in the order declared, or None when there is none.
+
+        A declaration that `problem.problem()` refuses has none. Each call
+        starts the counts, the trace and `gave_up` afresh.
+        """
+        self.trace, self.assignments, self.backtracks, self.pruned, self.refusals = [], 0, 0, 0, 0
+        self.gave_up = False
+        if self.problem.problem():
+            return None
         draws = ConstraintDraws(self.seed)
         self._order = draws.shuffle(self.problem.variables)
         self.domains = {name: draws.shuffle(self.problem.domains[name]) for name in self.problem.variables}
@@ -71,7 +79,7 @@ class ConstraintSolver:
         self._note({"event": "choose", "variable": name, "remaining": len(self.domains[name])})
         for value in self._values(name):
             refused = self._refusal(name, value)
-            if refused:
+            if refused is not None:
                 self.refusals += 1
                 self._note({"event": "refuse", "variable": name, "value": value, "constraint": refused})
                 continue
@@ -136,8 +144,12 @@ class ConstraintSolver:
                 count += sum(1 for other_value in self.domains[other] if not binary.allows(name, value, other_value))
         return count
 
-    def _refusal(self, name: str, value: Any) -> str:
-        """The first constraint `name` = `value` breaks with what is assigned, or ""."""
+    def _refusal(self, name: str, value: Any) -> str | None:
+        """The label of the first constraint `name` = `value` breaks, or None when none.
+
+        A label may be "": "refused" and "why" are two answers, and an
+        unlabelled constraint still refuses.
+        """
         for index in self.problem.touching(name):
             binary = self.problem.binaries[index]
             other = binary.other(name)
@@ -147,7 +159,7 @@ class ConstraintSolver:
         broken = next((rule.label for rule in self.problem.globals
                        if name in rule.names and not rule.holds(self.assignment)), None)
         del self.assignment[name]
-        return broken if broken is not None else ""
+        return broken
 
     # -- inference, AIMA fig. 6.3 --------------------------------------------
 

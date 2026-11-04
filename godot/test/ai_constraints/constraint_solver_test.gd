@@ -115,6 +115,56 @@ func test_a_limit_gives_up_and_says_so() -> void:
 	assert_int(solver.assignments).is_equal(5)
 
 
+static func _not_both_equal(partial: Dictionary) -> bool:
+	return not (partial.has("a") and partial.has("b") and partial["a"] == partial["b"])
+
+
+func _two_of_two() -> ConstraintProblem:
+	var problem := ConstraintProblem.new()
+	problem.add_variable("a", [1, 2])
+	problem.add_variable("b", [1, 2])
+	return problem
+
+
+func test_an_unlabelled_global_constraint_still_refuses() -> void:
+	var problem := _two_of_two()
+	var names: Array[String] = ["a", "b"]
+	problem.add_global(names, _not_both_equal)
+	var found: Dictionary = ConstraintSolver.new(problem, 1).solve()
+	assert_int(found["a"]).is_not_equal(found["b"])
+
+
+func test_an_unlabelled_binary_constraint_still_refuses_without_propagation() -> void:
+	var problem := _two_of_two()
+	problem.add_binary("a", "b", _different)
+	var solver := ConstraintSolver.new(problem, 1)
+	solver.propagate = false
+	var found: Dictionary = solver.solve()
+	assert_int(found["a"]).is_not_equal(found["b"])
+
+
+func test_a_second_solve_starts_its_counts_afresh() -> void:
+	var solver := ConstraintSolver.new(_queens(8), 1)
+	solver.propagate = false
+	solver.mrv = false
+	solver.lcv = false
+	solver.limit = 5
+	solver.solve()
+	solver.limit = 0
+	assert_dict(solver.solve()).is_not_empty()
+	assert_bool(solver.gave_up).is_false()
+	var fresh := ConstraintSolver.new(_queens(8), 1)
+	fresh.propagate = false
+	fresh.mrv = false
+	fresh.lcv = false
+	fresh.solve()
+	assert_int(solver.assignments).is_equal(fresh.assignments)
+
+
+func test_a_problem_with_no_variables_has_no_answer() -> void:
+	assert_dict(ConstraintSolver.new(ConstraintProblem.new()).solve()).is_empty()
+
+
 func test_a_declaration_that_cannot_work_is_named() -> void:
 	var problem := ConstraintProblem.new()
 	assert_str(problem.problem()).is_equal("a problem needs at least one variable")

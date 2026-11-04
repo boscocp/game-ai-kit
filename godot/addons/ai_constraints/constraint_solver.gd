@@ -78,8 +78,13 @@ func _init(of_problem: ConstraintProblem, from_seed: int = ConstraintDraws.SEED_
 
 
 ## The assignment, every variable in the order declared, or {} when there is
-## none (or `gave_up`, when the limit ran out first).
+## none (or `gave_up`, when the limit ran out first). A declaration that
+## `problem.problem()` refuses has none. Each call starts the counts, the
+## trace and `gave_up` afresh.
 func solve() -> Dictionary:
+	_start_afresh()
+	if problem.problem() != "":
+		return {}
 	var draws := ConstraintDraws.new(seed_value)
 	_order = draws.shuffle(problem.variables)
 	domains = {}
@@ -97,6 +102,15 @@ func solve() -> Dictionary:
 	return ordered
 
 
+func _start_afresh() -> void:
+	trace.clear()
+	assignments = 0
+	backtracks = 0
+	pruned = 0
+	refusals = 0
+	gave_up = false
+
+
 # -- the search, AIMA fig. 6.5 ------------------------------------------------
 
 # Assign one more variable and go on; when every value fails, go back.
@@ -106,8 +120,8 @@ func _backtrack() -> Dictionary:
 	var name: String = _select()
 	_note({"event": "choose", "variable": name, "remaining": (domains[name] as Array).size()})
 	for value: Variant in _values(name):
-		var refused: String = _refusal(name, value)
-		if refused != "":
+		var refused: Variant = _refusal(name, value)
+		if refused != null:
 			refusals += 1
 			_note({"event": "refuse", "variable": name, "value": value, "constraint": refused})
 			continue
@@ -201,14 +215,16 @@ func _crossed_by(index: int, name: String, value: Variant, other: String) -> int
 	return count
 
 
-# The first constraint `name` = `value` breaks with what is assigned, or "".
-func _refusal(name: String, value: Variant) -> String:
+# The label of the first constraint `name` = `value` breaks with what is
+# assigned, or null when it breaks none. A label may be "": "refused" and
+# "why" are two answers, and an unlabelled constraint still refuses.
+func _refusal(name: String, value: Variant) -> Variant:
 	for index: int in problem.touching(name):
 		var other: String = problem.other_end(index, name)
 		if assignment.has(other) and not problem.allows(index, name, value, assignment[other]):
 			return problem.binaries[index]["label"]
 	assignment[name] = value
-	var broken: String = ""
+	var broken: Variant = null
 	for rule: Dictionary in problem.globals:
 		if (rule["names"] as Array).has(name) and not rule["holds"].call(assignment):
 			broken = rule["label"]
