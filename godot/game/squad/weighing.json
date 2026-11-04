@@ -4,7 +4,8 @@
     "Every option is the same action with its own percepts: a walk to that cell, a shot at that enemy. Its score is the weight times each consideration's answer, so an answer of 0 vetoes it.",
     "A walk: the expected damage of the best shot it leaves from there (none after a dash), the damage the enemies it sees could do to it there from where they stand, and how far it is, by its own ground, from the nearest enemy it knows of.",
     "A shot: its expected damage -- chance times damage, no more than the target has left -- and whether a hit destroys the target.",
-    "The numbers are this kit's, set by hand and then measured: make test-squad-match, against RandomSquad."
+    "The numbers are this kit's, set by hand and then measured: make test-squad-match, against RandomSquad.",
+    "The curves saturate: a walk's offence is 1 from 3 expected damage, a shot's from 4; danger vetoes a cell from 10, holding included, and when every option is vetoed the first listed, holding, is taken. A cell with no route to a known enemy counts 40 steps, past the end of its curve."
   ],
   "walk": {
     "name": "walk there",

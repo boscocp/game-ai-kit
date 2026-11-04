@@ -2,9 +2,10 @@
 ## piece about to act, it weighs every option one action ahead, on what its
 ## side perceives, and takes the best.
 ##
-## Perceive: its side's view (`SideView`), never the state it is handed --
-## its own pieces, the enemies one of them sees, and where it last saw the
-## others. Weigh: every walk open to the piece on that view, holding
+## Perceive: its side's view (`SideView`) -- its own pieces, the enemies
+## one of them sees, and where it last saw the others. Of the state it is
+## handed it reads nothing else: `_look` is the one door, besides the turn's
+## number (`begin_turn`) and its own piece's cell when asked to build. Weigh: every walk open to the piece on that view, holding
 ## included, then every shot it may take from where the walk left it. Act:
 ## the option that scored highest, the first listed of equal scores.
 ##
@@ -16,6 +17,11 @@
 ## flanking counted in both, and how far it is from the nearest enemy it
 ## knows of; for a shot, its expected damage and whether it destroys. The
 ## answers are multiplied, so a shot at 0% is never taken.
+##
+## A walk the board refuses -- it ran into a piece its side does not see --
+## is answered with the next best (`after_refusal`): every cell of the
+## refused route is avoided, and the piece weighs again. Holding is never
+## refused, so the asking ends.
 ##
 ## Every option it weighed, with its score and the best hit chance in it,
 ## is kept in `weighed` for the board to draw before the decision is
@@ -32,6 +38,9 @@ class_name WeighedSquad
 extends BlueController
 
 const WEIGHING_PATH: String = "res://game/squad/weighing.json"
+## The steps a cell with no route to any enemy it knows of is counted at:
+## past the far end of the curve, so such a cell never reads as close.
+const NO_ROUTE: int = 40
 
 var _walk: ActionChoice.Action
 var _shot: ActionChoice.Action
@@ -40,6 +49,9 @@ var _shot: ActionChoice.Action
 var _memory: SideView
 var _last_turn: int = -1
 var _weighed: Array[Dictionary] = []
+# Cells a refused walk of `_avoiding_for` ran over, to keep out of its next try.
+var _avoided: Array[Vector2i] = []
+var _avoiding_for: int = -1
 
 
 func _init(_seed_number: int = 0) -> void:
@@ -64,6 +76,8 @@ func begin_turn(state: BoardState) -> void:
 	if state.turn_number <= _last_turn:
 		_memory = null
 	_last_turn = state.turn_number
+	_avoiding_for = -1
+	_avoided.clear()
 
 
 ## A squad has no workshop: it never builds.
@@ -75,8 +89,9 @@ func decide_build(state: BoardState, workshop_id: int) -> TacticalDecision:
 func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
 	var seen: SideView = _look(state)
 	var unit: Unit = seen.state.unit_by_id(unit_id)
-	var walks: Dictionary = {unit.cell: [] as Array[Vector2i]}
-	walks.merge(TacticalReach.walks_for(seen.state, unit))
+	if unit_id != _avoiding_for:
+		_avoided.clear()
+	var walks: Dictionary = _walks_not_avoided(seen.state, unit)
 	var nearest: Dictionary = _routes_to_the_known(seen, unit)
 	var best_cell: Vector2i = unit.cell
 	var best: Dictionary = {}
@@ -123,6 +138,17 @@ func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
 			chance = best["chance"], damage = damage, count = _weighed.size(), score = "%.2f" % best["score"]}))
 
 
+## The next best walk for the piece whose walk was refused: the refused
+## route's cells avoided from now on this decision, and the piece weighed
+## again. Null for anything but a walk.
+func after_refusal(state: BoardState, refused: TacticalDecision) -> TacticalDecision:
+	if refused.move == null:
+		return null
+	_avoiding_for = refused.unit_id
+	_avoided.append_array(refused.move.path)
+	return decide_move(state, refused.unit_id)
+
+
 ## Every option it weighed for its last decision, as `BlueController` asks.
 func weighed() -> Array[Dictionary]:
 	return _weighed
@@ -143,7 +169,7 @@ func _walk_percepts(seen: SideView, unit: Unit, cell: Vector2i, path: Array[Vect
 	if SquadRuleset.leaves_a_shot(seen.state, unit, path):
 		shot = _best_shot_from(rows, seen, unit, cell)
 	return {"expected damage": shot["expected damage"], "chance": shot["chance"], "danger": _danger_at(rows, seen, unit, cell),
-		"steps to the nearest enemy": nearest.get(cell, 0)}
+		"steps to the nearest enemy": nearest.get(cell, NO_ROUTE)}
 
 
 # The damage the enemies `seen` holds could expect to do to `unit` on `cell`,
@@ -204,6 +230,16 @@ func _routes_to_the_known(seen: SideView, unit: Unit) -> Dictionary:
 		for cell: Vector2i in costs:
 			nearest[cell] = mini(nearest.get(cell, costs[cell]), costs[cell])
 	return nearest
+
+
+# Holding, and every walk of `unit` on `seen` that crosses no avoided cell.
+func _walks_not_avoided(seen: BoardState, unit: Unit) -> Dictionary:
+	var walks: Dictionary = {unit.cell: [] as Array[Vector2i]}
+	var open: Dictionary = TacticalReach.walks_for(seen, unit)
+	for cell: Vector2i in open:
+		if not (open[cell] as Array).any(func(step: Vector2i) -> bool: return step in _avoided):
+			walks[cell] = open[cell]
+	return walks
 
 
 func _score(action: ActionChoice.Action, percepts: Dictionary) -> float:

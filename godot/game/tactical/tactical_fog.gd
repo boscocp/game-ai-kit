@@ -34,3 +34,31 @@ var memory: RefCounted
 func _init(seeing_side: int, seen_board: BoardState) -> void:
 	side = seeing_side
 	seen = seen_board
+
+
+## `decision` as a board drawn through `fog` may show it: whole with no fog;
+## nothing for a piece the fog's side cannot see, which acts unseen; and a
+## walk cut at the last cell it can see, so a seen piece walking into the
+## dark does not draw where it goes.
+static func clipped(fog: TacticalFog, decision: TacticalDecision) -> TacticalDecision:
+	if fog == null or decision == null:
+		return decision
+	if fog.seen.unit_by_id(decision.unit_id) == null:
+		return null
+	if decision.move == null:
+		return decision
+	var path: Array[Vector2i] = []
+	for cell: Vector2i in decision.move.path:
+		if cell in fog.hidden:
+			break
+		path.append(cell)
+	if path.size() == decision.move.path.size():
+		return decision
+	if path.is_empty():
+		return null
+	return TacticalDecision.walk(decision.unit_id, path, decision.reason, path[path.size() - 1])
+
+
+## True when `cell` is one the fog's side cannot see.
+func hides(cell: Vector2i) -> bool:
+	return cell in hidden

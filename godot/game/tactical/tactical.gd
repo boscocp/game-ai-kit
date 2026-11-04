@@ -117,6 +117,9 @@ var _computer_fog: TacticalFog
 var _showing_decision: bool = true
 # The cell under the mouse, for T's odds in a mode that tints by cursor.
 var _cursor: Vector2i = Vector2i(-1, -1)
+# True once a walk this turn showed an enemy: the turn is sealed, and Z says
+# why rather than that there is nothing to take back.
+var _sealed_by_a_reveal: bool = false
 
 
 func _ready() -> void:
@@ -328,6 +331,9 @@ func undo() -> void:
 	_confirming_end = false
 	var spent_before: Array[int] = _turn.spent_ids()
 	var before: BoardState = _turn.undo()
+	if before == null and _sealed_by_a_reveal:
+		_refuse(tr("a walk that showed an enemy cannot be taken back, nor anything before it this turn"))
+		return
 	if before == null:
 		_refuse(tr("nothing to take back this turn"))
 		return
@@ -531,21 +537,13 @@ func _pick_up(unit: Unit) -> void:
 		# Held, so the status describes it, but with nothing lit: a spent unit
 		# has nowhere to go until next turn -- though one that has walked may
 		# still attack from where it stopped.
-		_last_refusal = _moved_already(unit, not _turn.has_attacked(unit.id), _turn.can_undo())
+		_last_refusal = ruleset.moved_already(unit, _can_still_attack(unit), _turn.can_undo())
 
 
-# What a person is told about a unit that has walked this turn: whether it
-# may still attack, and whether Z can take the walk back -- four sentences,
-# not one with pieces glued on, so each reads whole in either language.
-func _moved_already(unit: Unit, can_attack: bool, can_undo: bool) -> String:
-	var said: String = tr("this {piece} has moved this turn")
-	if can_attack and can_undo:
-		said = tr("this {piece} has moved this turn; it can still attack an enemy in reach; Z takes the move back")
-	elif can_attack:
-		said = tr("this {piece} has moved this turn; it can still attack an enemy in reach")
-	elif can_undo:
-		said = tr("this {piece} has moved this turn; Z takes the move back")
-	return said.format({piece = TacticalStatus.piece(unit.type.type_name)})
+# True when `unit` may still attack this turn: it has not, and the mode
+# lets it -- a piece that dashed may not shoot.
+func _can_still_attack(unit: Unit) -> bool:
+	return not _turn.has_attacked(unit.id) and ruleset.can_still_attack(state, unit)
 
 
 # Walk the unit in hand along the cheapest route the highlight offered, or,
@@ -553,7 +551,7 @@ func _moved_already(unit: Unit, can_attack: bool, can_undo: bool) -> String:
 func _walk_to(cell: Vector2i) -> void:
 	var unit: Unit = state.unit_by_id(_selected_id)
 	if unit != null and _turn.is_spent(unit.id):
-		_refuse(_moved_already(unit, false, true))
+		_refuse(ruleset.moved_already(unit, false, true))
 		return
 	var walks: Dictionary = TacticalReach.walks_for(_persons_board(), unit) if unit != null else {}
 	var path: Array[Vector2i] = [cell]
@@ -569,6 +567,7 @@ func _walk_to(cell: Vector2i) -> void:
 		# person look round a corner for free (T85).
 		if ruleset.reveals(before, state, person_side):
 			_turn.seal()
+			_sealed_by_a_reveal = true
 			_last_event = tr("an enemy came into sight: the walk cannot be taken back")
 		_select_next_unspent()
 
@@ -625,6 +624,7 @@ func _start_persons_turn() -> void:
 		_open_turn()
 		_last_event = _with_computer_news(_last_event)
 	_turn.begin()
+	_sealed_by_a_reveal = false
 	_last_refusal = ""
 	_confirming_end = false
 	_select_next_unspent()
@@ -693,11 +693,7 @@ func _draw_what_is_seen() -> void:
 	_units.show_state(shown, _board, _selected_id)
 	_intent.show_fog(fog)
 	var next: TacticalDecision = _computer_turn.next if _computer_thinking() else null
-	# A piece the board on screen cannot see acts unseen: drawing its
-	# decision would draw where it stands.
-	if next != null and shown.unit_by_id(next.unit_id) == null:
-		next = null
-	_intent.show_decision(next, state, _board)
+	_intent.show_decision(TacticalFog.clipped(fog, next), state, _board)
 	var marks: Dictionary[Vector2i, String] = {}
 	var weighed: Array[Dictionary] = []
 	if _computer_thinking():
@@ -792,7 +788,7 @@ func _status_text() -> String:
 	if winner != TacticalVictory.NOBODY:
 		return ruleset.announcement(winner, state)
 	if not _persons_turn():
-		return ruleset.computer_status(state, _computer_turn, computer, _last_event)
+		return ruleset.computer_status(state, _computer_turn, computer, _last_event, _drawn_fog())
 	var unit: Unit = state.unit_by_id(_selected_id)
 	var news: String = _last_event
 	if unit == null and _turn.unspent(state).is_empty():

@@ -56,6 +56,20 @@ static func text(state: BoardState, in_hand: Unit, refusal: String, news: String
 	return "\n".join(lines)
 
 
+## What a person is told about a unit that has walked this turn: whether it
+## may still attack, and whether Z can take the walk back -- four sentences,
+## not one with pieces glued on, so each reads whole in either language.
+static func moved_already(unit: Unit, can_attack: bool, can_undo: bool) -> String:
+	var said: String = TranslationServer.translate("this {piece} has moved this turn")
+	if can_attack and can_undo:
+		said = TranslationServer.translate("this {piece} has moved this turn; it can still attack an enemy in reach; Z takes the move back")
+	elif can_attack:
+		said = TranslationServer.translate("this {piece} has moved this turn; it can still attack an enemy in reach")
+	elif can_undo:
+		said = TranslationServer.translate("this {piece} has moved this turn; Z takes the move back")
+	return said.format({piece = piece(unit.type.type_name)})
+
+
 ## What the status says on the computer's turn, whichever side it plays: who
 ## is playing it, what it is about to do and why, and what to press. One
 ## blank line, before the decision, sets it apart; the news, the keys, the

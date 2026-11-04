@@ -7,6 +7,15 @@
 # `n`, so the table below is the same table every run, and a change to the
 # rules, the weighing or the map that moves it moves it on purpose.
 #
+# Under fog a walk planned on a side's view can run into a piece that side
+# does not see, and the board refuses it. The weighed enemy then takes its
+# next best (`WeighedSquad.after_refusal`), so the gate holds that it loses no
+# action to a refusal -- none of its refused decisions is left without one
+# instead -- and that its refusals stay under `MOST_REFUSED` a seat, the
+# measured count with room (wave 119: 4 as red and 4 as blue, none lost;
+# the 13 and 17 the first run printed counted both sides' refusals). A
+# refusal is the board saying "something is there".
+#
 # Before the measurement, the gate is shown a case it must reject: the random
 # mover in the weighed one's seat, which beats itself about half the time --
 # a gate that passed it would pass anything.
@@ -20,6 +29,9 @@ extends SceneTree
 const SEATS: Array[int] = [TacticalScenario.RED, TacticalScenario.BLUE]
 ## The planted case's games a seat: enough to see a coin is not 80%.
 const PLANTED_GAMES: int = 20
+## The most refused walks the weighed enemy may have over a seat's games,
+## for each 100 of them.
+const MOST_REFUSED: int = 15
 
 
 func _init() -> void:
@@ -41,11 +53,14 @@ func _run(games: int, wins: int) -> int:
 	var measured: Dictionary = _seats("weighed", games)
 	for seat: int in SEATS:
 		var row: Dictionary = measured[seat]
-		print("weighed as %s: %d won, %d lost, %d drawn of %d; %d decision(s) refused" % [
-			TacticalGame.SIDES[seat],
-			row["won"], row["lost"], row["drawn"], games, row["refused"]])
+		print("weighed as %s: %d won, %d lost, %d drawn of %d; %d walk(s) refused, %d action(s) lost to one" % [
+			TacticalGame.SIDES[seat], row["won"], row["lost"], row["drawn"], games, row["refused"], row["actions lost"]])
 		if row["won"] < wins:
 			failures.append("weighed as %s won %d of %d; at least %d is the bar" % [TacticalGame.SIDES[seat], row["won"], games, wins])
+		if row["actions lost"] > 0:
+			failures.append("weighed as %s lost %d action(s) to a refused walk" % [TacticalGame.SIDES[seat], row["actions lost"]])
+		if row["refused"] > MOST_REFUSED * games / 100:
+			failures.append("weighed as %s had %d walk(s) refused; %d is the most" % [TacticalGame.SIDES[seat], row["refused"], MOST_REFUSED * games / 100])
 	for failure: String in failures:
 		print(failure)
 	print("squad match: %d game(s) a seat, %d failure(s)" % [games, failures.size()])
@@ -57,7 +72,7 @@ func _run(games: int, wins: int) -> int:
 func _seats(row_name: String, games: int) -> Dictionary:
 	var table: Dictionary = {}
 	for seat: int in SEATS:
-		var row: Dictionary = {"won": 0, "lost": 0, "drawn": 0, "refused": 0}
+		var row: Dictionary = {"won": 0, "lost": 0, "drawn": 0, "refused": 0, "actions lost": 0}
 		for game: int in range(games):
 			var tested: BlueController = SquadRoster.build(row_name, 1000 + game)
 			var floor_mover := RandomSquad.new(game)
@@ -70,7 +85,8 @@ func _seats(row_name: String, games: int) -> Dictionary:
 
 # One game's result written into `row`, for the side that played `seat`.
 func _count(row: Dictionary, played: Dictionary, seat: int) -> void:
-	row["refused"] += played["refused"]
+	row["refused"] += played["refused"][seat]
+	row["actions lost"] += played["lost"][seat]
 	if played["winner"] == seat:
 		row["won"] += 1
 	elif played["winner"] == TacticalVictory.DRAW:

@@ -83,6 +83,104 @@ func test_a_walk_that_shows_an_enemy_cannot_be_taken_back() -> void:
 	assert_bool(_rules.reveals(hidden, walked, RED)).is_true()
 
 
+# Wave 119's review, blocker 1: a walk refused because of a piece the
+# person cannot see named its cell and its id. The refusal now names
+# nothing of it.
+func test_a_walk_into_a_hidden_piece_is_refused_in_words_that_name_nothing() -> void:
+	var scene: TacticalGame = _opened(1)
+	scene.state = _board([[RED, TacticalRules.RUNNER, Vector2i(0, 0)], [BLUE, TacticalRules.SHIELD, Vector2i(2, 2)]])
+	scene._selected_id = 1
+	scene._person_fog = null
+	scene._refresh()
+	assert_bool(scene._persons_board().unit_by_id(2) == null).is_true()  # red does not see it
+	scene.click_cell(Vector2i(2, 2))
+	assert_object(scene.state.unit_by_id(1).cell).is_equal(Vector2i(0, 0))
+	assert_str(scene._status.text).contains(SquadStatus.words(SquadRuleset.blocked(1)))
+	for hidden: String in ["(2, 2)", "unit 2", "occupied", "shield"]:
+		assert_str(scene._status.text).not_contains(hidden)
+
+
+# Wave 119's review, blocker 2: with nothing in hand the status was blank
+# (a typed ternary failed). Read it with nothing in hand, after a shot, and
+# after Z.
+func test_the_status_says_something_with_nothing_in_hand_after_a_shot_and_after_z() -> void:
+	var scene: TacticalGame = _opened(1)
+	scene.state = _facing()
+	scene._selected_id = -1
+	scene._refresh()
+	assert_str(scene._status.text).is_not_empty()
+	scene._selected_id = 1
+	scene.attack(scene.state.unit_by_id(2))
+	assert_str(scene._status.text).is_not_empty()
+	scene._press(KEY_Z)
+	assert_str(scene._status.text).is_not_empty()
+	scene.state = _board([[RED, TacticalRules.RUNNER, Vector2i(1, 4)], [BLUE, TacticalRules.SHIELD, Vector2i(8, 4)]])
+	scene._selected_id = 1
+	scene.click_cell(Vector2i(3, 5))
+	scene._press(KEY_Z)
+	assert_str(scene._status.text).is_not_empty()
+
+
+func test_z_after_a_walk_that_showed_an_enemy_says_why_it_cannot() -> void:
+	var scene: TacticalGame = _opened(1)
+	scene.state = _board([[RED, TacticalRules.RUNNER, Vector2i(1, 4)], [BLUE, TacticalRules.SHIELD, Vector2i(8, 4)]])
+	scene._person_fog = null
+	scene._selected_id = 1
+	scene._refresh()
+	scene.click_cell(Vector2i(3, 5))
+	assert_object(scene.state.unit_by_id(1).cell).is_equal(Vector2i(3, 5))
+	scene._press(KEY_Z)
+	assert_object(scene.state.unit_by_id(1).cell).is_equal(Vector2i(3, 5))
+	assert_str(scene._status.text).contains("a walk that showed an enemy cannot be taken back")
+
+
+func test_a_piece_that_dashed_is_not_told_it_can_still_shoot() -> void:
+	var scene: TacticalGame = _opened(1)
+	scene.state = _board([[RED, TacticalRules.RUNNER, Vector2i(1, 4)], [BLUE, TacticalRules.SHIELD, Vector2i(12, 8)]])
+	scene._person_fog = null
+	scene._selected_id = 1
+	scene._refresh()
+	var runner: Unit = scene.state.unit_by_id(1)
+	var walks: Dictionary = TacticalReach.walks_for(scene._persons_board(), runner)
+	var dash: Array[Vector2i] = _rules.dashes(scene._persons_board(), runner, walks)
+	assert_bool(dash.is_empty()).is_false()
+	scene.click_cell(dash[0])
+	scene.click_cell(dash[0])
+	assert_str(scene._last_refusal).contains("has moved this turn")
+	assert_str(scene._last_refusal).not_contains("can still")
+
+
+# Wave 119's review, should-fix 3: with V off the computer's turn told the
+# person about a piece they could not see.
+func test_with_v_off_an_unseen_piece_acts_unseen() -> void:
+	var scene: TacticalGame = _opened(1)
+	scene.state = _board([[RED, TacticalRules.RUNNER, Vector2i(0, 0)], [BLUE, TacticalRules.SHIELD, Vector2i(12, 8)]])
+	scene._person_fog = null
+	scene._refresh()
+	scene.end_turn()
+	scene.end_turn()
+	assert_bool(scene._computer_thinking()).is_true()
+	scene._press(KEY_V)
+	assert_str(scene._status.text).contains("a piece you cannot see acts")
+	assert_str(scene._status.text).not_contains("unit 2")
+	assert_object(scene._intent._decision).is_null()
+
+
+func test_a_walk_into_the_fog_is_drawn_only_as_far_as_it_is_seen() -> void:
+	var state: BoardState = _board([[RED, TacticalRules.RUNNER, Vector2i(0, 0)], [BLUE, TacticalRules.SHIELD, Vector2i(5, 0)]])
+	var fog: TacticalFog = _rules.fog(state, RED, null)
+	var path: Array[Vector2i] = [Vector2i(5, 1), Vector2i(5, 2), Vector2i(5, 3), Vector2i(5, 4)]
+	var walk := TacticalDecision.walk(2, path, [], Vector2i(5, 4))
+	assert_bool(path.any(fog.hides)).is_true()
+	var drawn: TacticalDecision = TacticalFog.clipped(fog, walk)
+	var drawn_path: Array[Vector2i] = []
+	if drawn != null:
+		drawn_path = drawn.move.path
+	assert_int(drawn_path.size()).is_less(path.size())
+	for cell: Vector2i in drawn_path:
+		assert_bool(fog.hides(cell)).is_false()
+
+
 func test_no_game_of_this_mode_is_recorded() -> void:
 	var scene: TacticalGame = _opened(1)
 	scene.recording = true

@@ -25,7 +25,10 @@
 ## the piece about to act, its score above and its best hit chance below,
 ## the one it took ringed.
 ##
-## When not to use it: red's turn. A person's own intentions need no drawing.
+## When not to use it: to draw the person's own intentions -- where they
+## mean to walk, whom they mean to strike. What it draws on the person's
+## turn is what the rules say about the piece in hand (the dash, the odds)
+## and the danger round it, never a guess at the person's plan.
 class_name IntentView
 extends Node2D
 

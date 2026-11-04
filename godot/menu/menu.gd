@@ -109,12 +109,20 @@ func _open_as_asked(arguments: PackedStringArray) -> void:
 			target = argument.trim_prefix("--open=")
 		elif argument.begins_with("--mode="):
 			mode = argument.trim_prefix("--mode=")
+	var index: int = _index_of(target)
+	if target == "" or index == -1:
+		return
+	select(index)
+	if _choose_mode_named(index, mode):
+		play.call_deferred()
+
+
+# The card whose make target is `target`, or -1.
+func _index_of(target: String) -> int:
 	for index: int in range(catalogue.cards.size()):
-		if target != "" and catalogue.cards[index].get("target", "") == target:
-			select(index)
-			_choose_mode_named(index, mode)
-			play.call_deferred()
-			return
+		if catalogue.cards[index].get("target", "") == target:
+			return index
+	return -1
 
 
 ## Speak the other language, everywhere, and remember it.
@@ -190,12 +198,21 @@ func _show_mode() -> void:
 		_mode.text = tr("Mode: {mode}  (M)").format({mode = title})
 
 
-func _choose_mode_named(index: int, mode: String) -> void:
+# Choose card `index`'s mode called `mode`; "" leaves the first. A name the
+# card has no mode of is said, and the card is not played: opening another
+# mode with no word would look like the one asked for.
+func _choose_mode_named(index: int, mode: String) -> bool:
 	var modes: Array = _modes_of(index)
+	var keys: Array[String] = []
 	for position: int in range(modes.size()):
-		if (modes[position] as Dictionary).get("mode", "") == mode:
+		keys.append(str((modes[position] as Dictionary).get("mode", "")))
+		if keys[position] == mode:
 			_modes_chosen[index] = position
 	_show_mode()
+	if mode == "" or mode in keys:
+		return true
+	printerr("menu: %s has no mode %s; its modes are %s" % [catalogue.cards[index].get("target", ""), mode, ", ".join(keys)])  # not shown: a console line
+	return false
 
 
 func _modes_of(index: int) -> Array:

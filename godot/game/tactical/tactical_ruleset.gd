@@ -154,9 +154,22 @@ func status(state: BoardState, in_hand: Unit, refusal: String, news: String, can
 	return TacticalStatus.text(state, in_hand, refusal, news, can_attack, self)
 
 
-## The status on the computer's turn: who plays it, and what it will do.
-func computer_status(state: BoardState, turn: BlueTurn, controller: BlueController, news: String) -> String:
+## The status on the computer's turn: who plays it, and what it will do --
+## as much of it as `fog`, the fog on screen (null for none), lets show.
+func computer_status(state: BoardState, turn: BlueTurn, controller: BlueController, news: String,
+		_fog: TacticalFog) -> String:
 	return TacticalStatus.computer_text(state, turn, controller, news)
+
+
+## True when `unit`, which has not attacked this turn, still may: always in
+## a mode where walking leaves the attack, as Advance Wars's does.
+func can_still_attack(_state: BoardState, _unit: Unit) -> bool:
+	return true
+
+
+## What a person is told on picking up `unit` after it has walked this turn.
+func moved_already(unit: Unit, can_attack: bool, can_undo: bool) -> String:
+	return TacticalStatus.moved_already(unit, can_attack, can_undo)
 
 
 ## The legend's entries, `[Color or Texture2D, String]` each.

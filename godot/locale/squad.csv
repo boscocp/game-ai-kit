@@ -38,7 +38,6 @@ greyed: acted this turn,cinza: já agiu neste turno
 pink: what the computer will do next,rosa: o que o computador vai fazer
 "click an enemy to shoot it; the chance, and why:","clique num inimigo para atirar nele; a chance, e por quê:"
 Z takes back a walk that drew no dice and showed no enemy  ·  space ends your turn,Z desfaz um passo que não rolou dados nem revelou inimigo  ·  espaço encerra o seu turno
-"on the board, every option it weighed: its score above, its best hit chance below, the one it takes framed; V hides them","no tabuleiro, cada opção que pesou: a nota em cima, a melhor chance de acerto embaixo, a escolhida emoldurada; V as esconde"
 "round {round}  ·  {side} to move  ·  health left: red {red}, blue {blue}","rodada {round}  ·  vez das {side}  ·  vida restante: vermelhas {red}, azuis {blue}"
 {piece} at {cell}: {chance}% = aim {aim} - defence {defence} - cover {cover},{piece} em {cell}: {chance}% = mira {aim} - defesa {defence} - cobertura {cover}
 "{piece} at {cell}: {chance}% = aim {aim} - defence {defence} - cover {cover}, flanked","{piece} em {cell}: {chance}% = mira {aim} - defesa {defence} - cobertura {cover}, flanqueado"
@@ -61,3 +60,11 @@ trees: half cover ({half}),árvores: meia cobertura ({half})
 rock: full cover ({full}),rocha: cobertura total ({full})
 trees and rock block sight,árvores e rocha tapam a visão
 "{piece}: aim {aim}, defence {defence}","{piece}: mira {aim}, defesa {defence}"
+"on the board, every option it weighed: its score above, its best hit chance below, the one it takes framed; V shows your own view instead","no tabuleiro, cada opção que pesou: a nota em cima, a melhor chance de acerto embaixo, a escolhida emoldurada; V mostra a sua própria visão"
+unit {id} cannot walk there,a unidade {id} não pode andar até lá
+next: a piece you cannot see acts,próximo: age uma peça que você não vê
+next (drawn in pink): unit {unit} walks where you cannot see,próximo (em rosa): a unidade {unit} anda para onde você não vê
+this {piece} has moved this turn,este {piece} já se moveu neste turno
+this {piece} has moved this turn; Z takes the move back,este {piece} já se moveu neste turno; Z desfaz o movimento
+this {piece} has moved this turn; it can still shoot from where it stands; Z takes the move back,esta peça ({piece}) já se moveu neste turno; ainda pode atirar de onde está; Z desfaz o movimento
+this {piece} has moved this turn; it can still shoot from where it stands,esta peça ({piece}) já se moveu neste turno; ainda pode atirar de onde está

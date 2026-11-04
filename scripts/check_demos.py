@@ -422,10 +422,24 @@ def mode_findings(root: pathlib.Path, card: dict) -> list[str]:
         keys.append(mode["mode"])
         if not (root / "godot" / str(mode["ruleset"]).removeprefix("res://")).is_file():
             findings.append(f"C9 {target}: mode {mode['mode']!r}'s ruleset {mode['ruleset']} does not exist")
+        else:
+            findings += roster_of_ruleset(root, target, mode)
         findings += controller_findings(root, {**mode, "target": f"{target} in {mode['mode']}"})
     if len(set(keys)) != len(keys):
         findings.append(f"C9 {target}: a mode is listed twice")
     return findings
+
+
+def roster_of_ruleset(root: pathlib.Path, target: str, mode: dict) -> list[str]:
+    """A mode's roster is the one its ruleset builds from: the ruleset's code
+    uses the roster's class. Otherwise the card would hold its controllers to
+    one table while the scene cycled another (wave 119's review)."""
+    roster = root / "godot" / str(mode["roster"]).removeprefix("res://")
+    found = CLASS_NAME.search(roster.read_text(encoding="utf-8")) if roster.is_file() else None
+    ruleset = (root / "godot" / str(mode["ruleset"]).removeprefix("res://")).read_text(encoding="utf-8")
+    if found is None or not re.search(rf"\b{found.group(1)}\b", code_of(ruleset)):
+        return [f"C9 {target}: mode {mode['mode']!r}'s ruleset {mode['ruleset']} does not build from its roster {mode['roster']}"]
+    return []
 
 
 def controller_findings(root: pathlib.Path, card: dict) -> list[str]:
@@ -566,6 +580,9 @@ func decision_overlay() -> Dictionary:
 
 
 SOUND_ROSTER = """\
+class_name SoundRoster
+extends RefCounted
+
 static func rows() -> Array[Array]:
 \treturn [
 \t\t["rules", "the baseline",
@@ -609,7 +626,8 @@ def build(folder: pathlib.Path, makefile: str = SOUND_MAKEFILE, search_script: s
           legend: bool = True, listed: tuple[str, ...] = ("game/main.tscn", "demos/search.tscn"),
           scenes: tuple[str, ...] = ("game/main.tscn", "demos/search.tscn"), commented: str = "",
           detached_legend: bool = False, stray: bool = False, editor_form: bool = False,
-          catalogue: str | None = catalogue_text(), roster: str = SOUND_ROSTER) -> pathlib.Path:
+          catalogue: str | None = catalogue_text(), roster: str = SOUND_ROSTER,
+          ruleset: str | None = None) -> pathlib.Path:
     """A small repository with two examples, broken where a test says."""
     godot = folder / "godot"
     for made in ("game", "demos", "test", "menu", "addons/ai_search"):
@@ -624,7 +642,7 @@ def build(folder: pathlib.Path, makefile: str = SOUND_MAKEFILE, search_script: s
                                          encoding="utf-8")
     (godot / "game" / "main.gd").write_text(SOUND_SCRIPT, encoding="utf-8")
     (godot / "game" / "roster.gd").write_text(roster, encoding="utf-8")
-    (godot / "game" / "ruleset.gd").write_text(SOUND_RULESET, encoding="utf-8")
+    (godot / "game" / "ruleset.gd").write_text(ruleset or SOUND_RULESET, encoding="utf-8")
     (godot / "demos" / "search.gd").write_text(search_script, encoding="utf-8")
     (godot / LEGEND_SCRIPT).write_text("class_name Legend\nextends Control\n", encoding="utf-8")
     for scene in scenes:
@@ -653,7 +671,13 @@ class_name SoundRuleset
 extends RefCounted
 
 var search := AStarSearch.new()
+
+func roster_names() -> Array:
+\treturn SoundRoster.rows()
 """
+
+#: A ruleset that cycles some other table than the roster its mode names.
+OTHER_RULESET = SOUND_RULESET.replace("SoundRoster.rows()", "[]")
 
 #: The sound example's MODE recipe: the menu (the main scene) on its own card.
 MODE_MAKEFILE = SOUND_MAKEFILE.replace(
@@ -687,6 +711,8 @@ def mode_cases() -> dict[str, tuple[dict, str | None]]:
             modes=[one, {k: v for k, v in two.items() if k != "ruleset"}])))}, "C9"),
         "a mode whose ruleset does not exist": ({"catalogue": catalogue_text((SOUND_CARDS[0], moded(
             modes=[one, {**two, "ruleset": "res://game/nowhere.gd"}])))}, "C9"),
+        "a mode whose ruleset builds from another roster": (
+            {"catalogue": catalogue_text((SOUND_CARDS[0], sound)), "ruleset": OTHER_RULESET}, "C9"),
         "a mode listed twice": ({"catalogue": catalogue_text((SOUND_CARDS[0], moded(modes=[one, one])))}, "C9"),
         "one mode only": ({"catalogue": catalogue_text((SOUND_CARDS[0], moded(modes=[one])))}, "C9"),
         "controllers beside the modes": ({"catalogue": catalogue_text((SOUND_CARDS[0], moded(

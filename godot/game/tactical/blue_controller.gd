@@ -65,6 +65,15 @@ func plan_marks(_state: BoardState) -> Dictionary[Vector2i, String]:
 	return {}
 
 
+## What to do instead of `refused`, which the board would not play on
+## `state`, or null to let the piece's turn go. Under fog a walk planned on a
+## side's view can run into a piece the side does not see; a controller that
+## weighed other options may take the next best (T85). Only a decision for
+## the same piece; a hold, which is never refused, ends the asking.
+func after_refusal(_state: BoardState, _refused: TacticalDecision) -> TacticalDecision:
+	return null
+
+
 ## Every option it weighed for its last decision, for the board to draw
 ## before that decision is played (T85): one `{"cell": Vector2i, "score":
 ## float, "chance": int, "chosen": bool}` each -- the cell walked to or the

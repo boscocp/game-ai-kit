@@ -81,6 +81,13 @@ and each waits on the owner.
   so T84's words in it -- the shot's line, the end, the refusals' shapes --
   pass through the table too.
 
+- **After the review** (`docs/reviews/119-xcom-style-mode-you-can-play.md`),
+  also for the owner: a walk into a piece the side cannot see is refused
+  in words that name nothing (or should it stop and reveal?); V on by
+  default lifts the person's fog each computer turn; a second floor for
+  the match bar; whether the seam's presentation hooks belong on a second
+  object; the saturating curves of `weighing.json`.
+
 ## Steps
 
 1. The tactical scene reads its rulesets from its opener (T84's seam); the

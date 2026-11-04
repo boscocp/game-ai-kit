@@ -52,9 +52,37 @@ func start() -> BoardState:
 	return SquadScenario.build()
 
 
-## The board's ruling on the route and the movement left.
+## The board's ruling on the route and the movement left -- except that a
+## walk that would cross or end on a piece the walker's side cannot see is
+## refused in words that name nothing: not the cell, not the piece, not that
+## the cell is taken. A refusal that named them would tell the side what its
+## fog hides (wave 119's review). The board's own "is blocked" gets the same
+## words, so the two cannot be told apart.
 func why_walk_refused(state: BoardState, move: Move) -> String:
-	return state.why_refused(move)
+	var walker: Unit = state.unit_by_id(move.unit_id)
+	var refusal: String = state.why_refused(move)
+	if walker == null or refusal == BoardState.LEGAL:
+		return refusal
+	if refusal.ends_with("is blocked") or _crosses_the_unseen(state, walker, move):  # not shown: the board's English, compared
+		return blocked(move.unit_id)
+	return refusal
+
+
+## The refusal of a walk that is blocked, by the ground or by what the
+## walker's side does not see: one sentence for both.
+static func blocked(unit_id: int) -> String:
+	return "unit %d cannot walk there" % unit_id  # not shown: worded by SquadStatus.SHAPES
+
+
+## True when `move` steps on a cell where a piece stands that `walker`'s side
+## cannot see.
+func _crosses_the_unseen(state: BoardState, walker: Unit, move: Move) -> bool:
+	for step: Vector2i in move.path:
+		var standing: Unit = state.unit_at(step)
+		var an_enemy: bool = standing != null and standing.faction != walker.faction
+		if an_enemy and not SideView.is_seen(state, SquadScenario.rows(), walker.faction, step):
+			return true
+	return false
 
 
 ## The board's walk; a walk that leaves the piece less than one action is a
@@ -206,9 +234,21 @@ func status(state: BoardState, in_hand: Unit, refusal: String, news: String, can
 	return SquadStatus.text(state, in_hand, refusal, news, can_attack)
 
 
-## `SquadStatus.computer_text`: who plays, what it will do, what it weighed.
-func computer_status(state: BoardState, turn: BlueTurn, controller: BlueController, news: String) -> String:
-	return SquadStatus.computer_text(state, turn, controller, news)
+## `SquadStatus.computer_text`: who plays, what it will do, what it weighed
+## -- through the fog on screen.
+func computer_status(state: BoardState, turn: BlueTurn, controller: BlueController, news: String,
+		fog: TacticalFog) -> String:
+	return SquadStatus.computer_text(state, turn, controller, news, fog)
+
+
+## A piece that dashed or shot may not shoot.
+func can_still_attack(_state: BoardState, unit: Unit) -> bool:
+	return SquadCombat.can_shoot(unit)
+
+
+## `SquadStatus.moved_already`: "shoot", in this mode.
+func moved_already(unit: Unit, can_attack: bool, can_undo: bool) -> String:
+	return SquadStatus.moved_already(unit, can_attack, can_undo)
 
 
 ## `SquadLegend.entries`.

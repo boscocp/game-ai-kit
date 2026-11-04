@@ -25,6 +25,7 @@ const SHAPES: Array[String] = [  # shown through tr()
 	"unit {id} is on the same side",
 	"unit {shooter} sees no enemy unit {target} to shoot",
 	"unit {target} is {apart} away, and unit {shooter} reaches {reach}",
+	"unit {id} cannot walk there",
 ]
 
 
@@ -33,7 +34,12 @@ const SHAPES: Array[String] = [  # shown through tr()
 ## when `can_attack`, what just happened and the last refusal.
 static func text(state: BoardState, in_hand: Unit, refusal: String, news: String, can_attack: bool) -> String:
 	var lines: Array[String] = [headline(state), _piece(in_hand), _what_to_do(in_hand)]
-	var shots: Array[String] = shot_lines(state, in_hand) if can_attack else [] as Array[String]
+	# An `if`, not a ternary: `x if c else [] as Array[String]` loses the
+	# literal's type, and the assignment fails with the status blank (wave
+	# 119's review).
+	var shots: Array[String] = []
+	if can_attack:
+		shots = shot_lines(state, in_hand)
 	if not shots.is_empty():
 		lines.append(TranslationServer.translate("click an enemy to shoot it; the chance, and why:"))
 		lines.append_array(shots)
@@ -46,24 +52,52 @@ static func text(state: BoardState, in_hand: Unit, refusal: String, news: String
 
 
 ## What the status says on the computer's turn: who plays it, what it is
-## about to do and why, and how to read what it weighed on the board.
-static func computer_text(state: BoardState, turn: BlueTurn, controller: BlueController, news: String) -> String:
+## about to do and why, and how to read what it weighed on the board -- as
+## far as `fog`, the fog on screen, lets it. With the computer's own view on
+## screen (V on) all of it; with the person's, a piece the person cannot see
+## acts unseen, and a walk into the dark says no more than that.
+static func computer_text(state: BoardState, turn: BlueTurn, controller: BlueController, news: String,
+		fog: TacticalFog = null) -> String:
 	var side: String = TacticalStatus.side_name(state.current_faction)
 	var lines: Array[String] = [headline(state), TranslationServer.translate("{side} is thinking with {controller}").format({
 		side = side, controller = TacticalStatus.controller_said(controller)})]
 	if news != "":
 		lines.append(news)
+	var its_own_view: bool = fog == null or fog.side == state.current_faction
 	if turn.next != null:
-		lines.append("\n" + TranslationServer.translate("next (drawn in pink): unit {unit} {why}").format({
-			unit = turn.next.unit_id, why = TacticalStatus.said(turn.next.reason)}))
+		lines.append("\n" + _next_said(turn.next, fog, its_own_view))
 		lines.append(TranslationServer.translate("space plays it  ·  enter plays the rest of {side}'s turn").format({side = side}))
-		if not controller.weighed().is_empty():
-			lines.append(TranslationServer.translate("on the board, every option it weighed: its score above, its best hit chance below, the one it takes framed; V hides them"))
+		if its_own_view and not controller.weighed().is_empty():
+			lines.append(TranslationServer.translate("on the board, every option it weighed: its score above, its best hit chance below, the one it takes framed; V shows your own view instead"))
 	else:
 		lines.append("\n" + TranslationServer.translate("{side} has finished its turn. Space hands it back to {other}").format({
 			side = side, other = TacticalStatus.side_name(TacticalScenario.FACTIONS - 1 - state.current_faction)}))
 	lines.append(TranslationServer.translate("{count} decision(s) played this turn").format({count = turn.played.size()}))
 	return "\n".join(lines)
+
+
+## What a person is told on picking up `unit` after it has walked: whether
+## it may still shoot -- not after a dash -- and whether Z can take the walk
+## back. The Advance Wars status says "attack"; this mode shoots.
+static func moved_already(unit: Unit, can_shoot: bool, can_undo: bool) -> String:
+	var said: String = TranslationServer.translate("this {piece} has moved this turn")
+	if can_shoot and can_undo:
+		said = TranslationServer.translate("this {piece} has moved this turn; it can still shoot from where it stands; Z takes the move back")
+	elif can_shoot:
+		said = TranslationServer.translate("this {piece} has moved this turn; it can still shoot from where it stands")
+	elif can_undo:
+		said = TranslationServer.translate("this {piece} has moved this turn; Z takes the move back")
+	return said.format({piece = TacticalStatus.piece(unit.type.type_name)})
+
+
+# The decision about to be played, as far as the board on screen shows it.
+static func _next_said(next: TacticalDecision, fog: TacticalFog, its_own_view: bool) -> String:
+	if not its_own_view and fog.seen.unit_by_id(next.unit_id) == null:
+		return TranslationServer.translate("next: a piece you cannot see acts")
+	if not its_own_view and next.move != null and fog.hides(next.target):
+		return TranslationServer.translate("next (drawn in pink): unit {unit} walks where you cannot see").format({unit = next.unit_id})
+	return TranslationServer.translate("next (drawn in pink): unit {unit} {why}").format({
+		unit = next.unit_id, why = TacticalStatus.said(next.reason)})
 
 
 ## The first line: the round, the side to move, and each side's health.
