@@ -97,10 +97,9 @@ the standard way to track something you cannot see [Thrun 2002].
 
 A sighting or a report collapses the cloud onto one cell. `shares` is the
 cloud counted per cell, the same shape as `BeliefMap.shares`, so a search
-reads either. Every draw comes from `ParticleDraws`, a seeded xorshift
-written out in both languages -- a copy of `ai_adversarial`'s, because an
-addon depends on nothing but `ai_core` -- so a cloud is held to its Python
-twin (`gameaikit.perception.particles`) draw for draw by
+reads either. Every draw comes from `ai_core`'s `Xorshift`, a seeded
+generator written out in both languages (`gameaikit.core` in Python), so a
+cloud is held to its Python twin (`gameaikit.perception.particles`) draw for draw by
 `spec/vectors/perception/particles-*.json`.
 
 **This is not training (invariant 6).** Every probability above is a
@@ -137,7 +136,7 @@ copy them from a checkout:
 
 Two folders: `godot/addons/ai_core/` (the grid, which the cone uses on a
 grid board) and `godot/addons/ai_perception/` -- for a particle belief
-alone, `particle_belief.gd` and `particle_draws.gd` are enough. Open the project once, or
+alone, `particle_belief.gd` and `ai_core`'s `xorshift.gd` are enough. Open the project once, or
 run `godot --headless --import`, so Godot registers their classes.
 
 ### A minimal example {#example}

@@ -11,7 +11,9 @@
     "python/tests/test_bandit.py",
     "python/tests/test_bandit_vectors.py"
   ],
-  "depends_on": [],
+  "depends_on": [
+    "ai_core"
+  ],
   "gates": [
     "test-bandit-vectors"
   ]

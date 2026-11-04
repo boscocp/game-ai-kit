@@ -68,8 +68,9 @@ Cada técnica tem uma página em português, ao lado da inglesa, em
 [`docs/techniques/`](docs/techniques/): o que ela decide, quando não usar,
 onde vê-la decidir, e um exemplo mínimo que roda.
 
-O `ai_core` fica embaixo de todos, e é pequeno de propósito: a grade e a
-interface do *pathfinding* ([página](docs/techniques/ai_core.pt-BR.md)).
+O `ai_core` fica embaixo de todos, e é pequeno de propósito: a grade, a
+interface do *pathfinding* e um gerador com semente
+([página](docs/techniques/ai_core.pt-BR.md)).
 Leve qualquer *addon* e o `ai_core` com ele, e mais nada.
 
 O aprendizado de máquina entra em **peças específicas**, nunca no jogo

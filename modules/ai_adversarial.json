@@ -11,7 +11,9 @@
     "python/tests/test_adversarial_mcts.py",
     "python/tests/test_adversarial_vectors.py"
   ],
-  "depends_on": [],
+  "depends_on": [
+    "ai_core"
+  ],
   "gates": [
     "test-adversarial-vectors",
     "test-mcts-budget"

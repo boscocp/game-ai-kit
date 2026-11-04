@@ -9,7 +9,8 @@
 ## classic off-by-one-edge in pathfinding code.
 ##
 ## Queries are O(1); `neighbours` is O(1) with four cardinal directions. There
-## is no search here on purpose -- `ai_core` holds types, not algorithms.
+## is no search here on purpose -- `ai_core` holds what techniques share and
+## no game logic, and a search is a technique's.
 ##
 ## When not to use it: a hex board, a navigation mesh, or anything where a cell
 ## is not an integer coordinate. This is a square grid and says so.

@@ -16,7 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from gameaikit.maze import rules
-from gameaikit.maze.dice import MazeDice
+from gameaikit.core.xorshift import Xorshift
 
 PLAYING = "playing"
 WON = "won"
@@ -43,7 +43,7 @@ class Game:
 
     def __init__(self, seed: int, ghost_names: list[str] | None = None,
                  schedule: list[dict] | None = None) -> None:
-        self.dice = MazeDice(seed)
+        self.dice = Xorshift(seed)
         self.schedule = schedule
         self.pacman = tuple(rules.MAZE["pacman"]["cell"])
         self.facing = rules.MAZE["pacman"]["facing"]

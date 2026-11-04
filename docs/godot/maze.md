@@ -102,9 +102,10 @@ in Godot, so a move must land in the same place in both.
 generator, Marsaglia's 32-bit xorshift, written out in each. The vectors in
 `spec/vectors/maze/` are a seed and Pac-Man's moves in, every step's
 positions, choices and targets out, derived by a third copy that imports
-nothing (`derive.py`). The generator is the one `ai_adversarial` already
-has, copied rather than used so that the maze does not appear to use
-adversarial search.
+nothing (`derive.py`). The generator is `ai_core`'s `Xorshift`, and
+`gameaikit.core`'s in Python (T109): the maze had its own copy, `MazeDice`,
+so as not to appear to use adversarial search, until there was a shared
+place to put one.
 
 Held by `python3 -m unittest discover -s python/tests -t python -p
 "test_maze*.py"` (the rules one by one; over 200 seeded games, that no
@@ -194,11 +195,12 @@ games and its move is always the lookahead's best.
   energizer. Adding one energizer would bring in the Dossier's random turns
   and a third mode, and multiply T98's states. Decided by the owner,
   2026-10-29: as recommended, left out.
-- **The generator exists twice** (`ai_adversarial`'s `Xorshift` and the
+- **The generator existed twice** (`ai_adversarial`'s `Xorshift` and the
   maze's `MazeDice`). Moving one copy into `ai_core` would let both use it,
   and is ADR 0021's to decide. Decided by the owner, 2026-10-29: one
   generator in `ai_core`, the same stream bit for bit -- task T109, which
-  amends ADR 0021.
+  amended ADR 0021 and is done (wave 122). `spec/vectors/maze/` did not
+  change.
 - **The schedule's scale**, two steps a second of the Dossier's, and the
   precision, 0.8, are numbers in `rules.json`, chosen rather than measured.
   Decided by the owner, 2026-10-29: as recommended, kept.

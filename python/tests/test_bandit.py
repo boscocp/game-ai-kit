@@ -3,7 +3,8 @@
 import math
 import unittest
 
-from gameaikit.bandit import EPSILON_GREEDY, UCB1, Bandit, BanditDraws
+from gameaikit.bandit import EPSILON_GREEDY, UCB1, Bandit
+from gameaikit.core import Xorshift
 
 #: A known two-arm problem: an arm paying 1 with chance 0.7, and one with 0.3.
 CHANCES = (0.7, 0.3)
@@ -22,7 +23,7 @@ def regret(policy: str, seed: int) -> dict[int, float]:
     world only as far as they pull the same arms.
     """
     bandit = Bandit(len(CHANCES), policy, seed=seed)
-    world = BanditDraws(seed * 7919 + 13)
+    world = Xorshift(seed * 7919 + 13)
     best = max(CHANCES)
     lost = 0.0
     taken = {}

@@ -7,11 +7,10 @@ is not run here and published: the game counts during the fight (ADR 0016,
 amended 2026-10-26). This copy exists to be checked, and read beside the
 other one.
 
-    bandit.py   UCB1 and epsilon-greedy over pulls and payoff sums
-    draws.py    the seeded generator epsilon-greedy draws from
+    bandit.py   UCB1 and epsilon-greedy over pulls and payoff sums, drawing
+                from `gameaikit.core`'s seeded generator
 """
 
 from gameaikit.bandit.bandit import EPSILON, EPSILON_GREEDY, EXPLORATION, UCB1, Bandit
-from gameaikit.bandit.draws import BanditDraws
 
-__all__ = ["EPSILON", "EPSILON_GREEDY", "EXPLORATION", "UCB1", "Bandit", "BanditDraws"]
+__all__ = ["EPSILON", "EPSILON_GREEDY", "EXPLORATION", "UCB1", "Bandit"]

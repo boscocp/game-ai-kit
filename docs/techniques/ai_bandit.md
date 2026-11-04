@@ -72,13 +72,15 @@ second after, scaled into [0, 1]. The knobs that matter:
 
 ### What to copy {#copy}
 
-From the library: unzip `ai_bandit-<version>.zip` into your project's
-`res://addons/` -- [using the library](using-the-library.md) has every step,
-the Python wheel too. Or copy it from a checkout:
+From the library: unzip `ai_core-<version>.zip` and
+`ai_bandit-<version>.zip` into your project's `res://addons/` -- [using the
+library](using-the-library.md) has every step, the Python wheel too. Or
+copy them from a checkout:
 
-One folder: `godot/addons/ai_bandit/`. It needs nothing else, not even
-`ai_core`. Open the project once, or run `godot --headless --import`, so
-Godot registers its classes.
+Two folders: `godot/addons/ai_core/` (for `Xorshift`, the seeded generator
+epsilon-greedy draws from) and `godot/addons/ai_bandit/`. Open the project
+once, or run `godot --headless --import`, so Godot registers their
+classes.
 
 ### A minimal example {#example}
 

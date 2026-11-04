@@ -8,7 +8,6 @@ guard would have heard keeps fewer particles than its twin it would not.
 
 import unittest
 
-from gameaikit.perception.draws import ParticleDraws
 from gameaikit.perception.particles import ParticleBelief
 
 
@@ -24,18 +23,6 @@ def grid(width: int, height: int) -> list[list[int]]:
                     edges.append(to_row * width + to_column)
             neighbours.append(edges)
     return neighbours
-
-
-class ParticleDrawsTest(unittest.TestCase):
-    def test_it_is_marsaglias_xorshift(self):
-        # Marsaglia's 32-bit generator from 1: its first draw, as T86 pinned it.
-        self.assertEqual(ParticleDraws(1).next(), 270369)
-        self.assertEqual(ParticleDraws(0).next(), 270369)
-
-    def test_one_choice_spends_no_draw(self):
-        draws = ParticleDraws(5)
-        self.assertEqual(draws.index(1), 0)
-        self.assertEqual(draws.next(), ParticleDraws(5).next())
 
 
 class ParticleBeliefTest(unittest.TestCase):

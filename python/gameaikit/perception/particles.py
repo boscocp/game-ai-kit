@@ -12,7 +12,7 @@ fitted (invariant 6).
 
 from __future__ import annotations
 
-from .draws import ParticleDraws
+from gameaikit.core.xorshift import Xorshift
 from gameaikit.techniques import technique
 
 #: How likely a particle walks on: to a neighbour other than the one it came from.
@@ -33,7 +33,7 @@ class ParticleBelief:
         self.neighbours = neighbours
         self.count = max(count, 1)
         self.walk_on, self.turn, self.unheard = WALK_ON, TURN, UNHEARD
-        self.draws = ParticleDraws(seed)
+        self.draws = Xorshift(seed)
         self.nodes: list[int] = []
         self.came_from: list[int] = []
         self.weights: list[float] = []

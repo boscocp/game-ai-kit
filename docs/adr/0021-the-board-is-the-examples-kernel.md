@@ -1,6 +1,8 @@
 # 0021 — The board is the examples' kernel, not `ai_core`'s
 
-Status: accepted · 2026-10-20 (T61; the owner's decision of 2026-10-20)
+Status: accepted, amended · 2026-10-20 (T61; the owner's decision of
+2026-10-20; amended by T109 on the owner's decision of 2026-10-29 -- see the
+amendment at the end)
 
 ## Context
 
@@ -51,3 +53,74 @@ This overrides T58's sketch, which kept `Move` and `DecisionPolicy` in
   not have. They may still say what the addon is not for.
 - `godot/game/board/` is not released as an addon zip. The release's
   `ai_core` zip gets smaller.
+
+## Amended (2026-10-29, T109): one seeded generator
+
+**What was decided.** The owner, on 2026-10-29, as `docs/godot/maze.md`
+recommended: one seeded generator in `ai_core`, `Xorshift`, with its
+Python twin `gameaikit.core.Xorshift`, drawing exactly what each copy drew
+from the same seeds, for every call its users make. (The maze's copy spent
+a draw on a pick of one and divided by zero on a pick of none; the maze
+asks for neither, so its stream is the same.)
+
+**Why.** When the owner decided, the kit held Marsaglia's 32-bit xorshift
+three times: `ai_adversarial`'s `Xorshift` (T86), the maze's `MazeDice`
+(T97) and `ai_perception`'s `ParticleDraws` (T91), each with a Python twin.
+T99 (wave 115) then added a fourth, `ai_bandit`'s `BanditDraws`, and T109
+folds it in on the same ground -- that one is T109's reading of the
+decision, put to the owner in its pull request. Each copy said why it was
+one: an addon may depend on no other addon (invariant
+2), and there was no shared place to put it. A generator is what more than
+one technique truly shares, which is the line this record draws.
+
+**Why a generator is not "logic" in the sense this record refuses.** What
+left `ai_core` in T61 was a game's domain: funds, production, what a move
+is and why it is refused. A generator decides nothing about any game. It
+has no rule and no domain word: it turns a seed into a stream of numbers,
+and which draw means what -- a move to expand, a particle's step, an arm
+to try, a ghost's way at a fork -- stays in the technique that draws. It
+is a building block in the sense `GakGridGraph` is one: every user of it
+could have written it, and each one did.
+
+**What does not follow from it.** `ai_core` is not now a home for helpers.
+Nothing else enters it on the strength of this amendment: another utility
+comes in only with the same argument written down here -- that more than
+one technique already shares it, that each copied it for want of a place,
+and that it decides nothing about any game -- and the owner's decision.
+
+**Consequences.**
+
+- `ai_adversarial` and `ai_bandit` now depend on `ai_core`, as
+  `ai_perception` already did; their pages say to copy two folders. The
+  maze lists `ai_core` instead of carrying its own dice.
+- `spec/vectors/core/` holds the generator in both languages (`make
+  test-core-vectors`, and `make test-python`). The vectors of the four
+  users -- `spec/vectors/adversarial/`, `bandit/`, `perception/`, `maze/`
+  -- did not change, and pass read through the shared generator: that is
+  the proof that no draw moved.
+- A change to the kernel selects a little more than before, the measure
+  this record was argued on: `grid_graph.gd` selected 26 modules on main
+  (measured in the review)
+  and selects 28 now, `ai_adversarial` and `ai_bandit` added; a change to
+  `xorshift.gd` selects 28. Small, because `game_shared` already pulls in
+  nearly everything.
+
+**Pending the owner -- T109's reading, not decided.** Two consequences
+contradict ADR 0024 as it stands, and stay open until the owner rules:
+
+- **The wheel ships `gameaikit.core`**, the kernel's package, beside the
+  techniques'. This is not optional while the code is as it is: the shipped
+  `gameaikit.adversarial`, `bandit` and `perception` import
+  `gameaikit.core`, and a wheel without it would not import. ADR 0024 says
+  "The wheel holds the Python packages owned by modules of kind
+  `technique`" (its "What ships is the techniques" decision, and its title,
+  "... and ships only techniques"). T109 changed `scripts/release.py` to
+  accept the kernel's package; the owner either amends that line of ADR
+  0024 or asks for another route.
+- **`Xorshift` keeps its name, without the `Gak` prefix.** ADR 0024's
+  context records that "The owner decided on 2026-10-20 to prefix only the
+  ports and the kernel", and `Xorshift` is now a kernel class -- and a
+  name a user's project may well have. T109 left it unprefixed, reading it
+  as a building block a game calls rather than a type it extends; the
+  review leaned to `GakXorshift`, cheap now and a breaking rename after a
+  release. The owner decides.

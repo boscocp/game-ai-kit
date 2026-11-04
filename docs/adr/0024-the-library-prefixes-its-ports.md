@@ -87,3 +87,11 @@ modules are the namespace GDScript lacks.
 - A tenth port added later must be prefixed in the wave that adds it. No
   gate holds that yet: `check_readability.py` does not know which classes
   are ports.
+
+## Pending (T109, wave 122)
+
+ADR 0021's amendment of 2026-10-29 puts a seeded generator, `Xorshift`, in
+the kernel. Two of its consequences touch this record and wait on the
+owner: the wheel now ships `gameaikit.core`, the kernel's package, which
+the techniques import; and `Xorshift` is a kernel class without the
+prefix. See "Pending the owner" at the end of ADR 0021.

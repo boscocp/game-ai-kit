@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from gameaikit.adversarial.game import Game
-from gameaikit.adversarial.xorshift import Xorshift
+from gameaikit.core.xorshift import Xorshift
 from gameaikit.techniques import technique
 
 #: UCB1's exploration constant, the square root of two.

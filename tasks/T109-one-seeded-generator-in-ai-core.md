@@ -55,6 +55,43 @@ ADR 0021's to decide". The owner decided on 2026-10-29: one generator in
   its own dice. `check_addon_deps.py` and `make lint-modules` green, the
   manifests' `depends_on` updated to what the code uses.
 
+## What step 1's reading found (wave 122)
+
+None of it changes what the owner decided; each is a detail, and the first
+is put to the owner.
+
+- **A fourth copy.** T99 (wave 115, after this task was written) added
+  `ai_bandit`'s `BanditDraws` and `gameaikit.bandit.draws`, the same
+  generator with the same comment ("it is a copy"). It is folded in too, so
+  that "one generator" is true: `ai_bandit` now depends on `ai_core`, and
+  `spec/vectors/bandit/` is unchanged against main as well.
+- **The maze's copy was not quite the same.** `MazeDice.index` spent a draw
+  on a pick of one; the others do not. The maze never asks for one (a ghost
+  with one way takes it without a draw), so the stream is the same, and the
+  maze vectors say so. A twin that did spend it is one of the planted
+  generators the core vectors must fail.
+- **The wheel.** `scripts/release.py` held the wheel's packages to the
+  techniques' exactly, and `gameaikit.core` is the kernel's: it now accepts
+  the kernel's package as well (`SHIPPED_KINDS`, as the addon zips already
+  did), and `python/pyproject.toml` lists it. Neither file is on the Files
+  line above.
+- **The name stays `Xorshift`**, without ADR 0024's `Gak` -- pending the
+  owner: ADR 0024 prefixes "the ports and the kernel", and this is now a
+  kernel class. So is the wheel shipping `gameaikit.core`, against ADR
+  0024's "kind `technique`" line, though the imports require it. Both are
+  written as pending at the end of ADR 0021.
+- **The acceptance's diff is on the vectors, not their folders** (changed
+  after review): `spec/vectors/maze/README.md` named `maze_dice.gd` and
+  `gameaikit/maze/dice.py`, which are gone, and a README is not a vector.
+  The README now names the shared generator; the diff below holds every
+  `*.json` under the four families, bandit's included, to main.
+- **Where the copies' generator tests went.** Each suite that tested its
+  copy's first draw (`mcts_test.gd`, `particle_belief_test.gd`,
+  `bandit_test.gd`, `maze_test.gd`, and their Python twins) loses that
+  test to `godot/test/ai_core/xorshift_test.gd` and
+  `python/tests/test_core_xorshift.py`; `mcts_test.gd` keeps the boundary
+  seed, which is MCTS's claim.
+
 ## Steps
 
 1. Read ADR 0021, the three copies and their twins, and each `derive.py`
@@ -77,7 +114,7 @@ make test-maze-vectors
 make test-perception-vectors
 make test-python
 make test-godot-some SUITES="test/ai_core test/ai_adversarial test/ai_perception test/maze"
-git diff --exit-code origin/main -- spec/vectors/adversarial spec/vectors/maze spec/vectors/perception
+git diff --exit-code origin/main -- 'spec/vectors/adversarial/*.json' 'spec/vectors/maze/*.json' 'spec/vectors/perception/*.json' 'spec/vectors/bandit/*.json'
 python3 scripts/check_addon_deps.py
 make lint-modules
 python3 scripts/check_readability.py

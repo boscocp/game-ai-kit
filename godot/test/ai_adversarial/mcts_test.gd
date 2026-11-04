@@ -72,15 +72,6 @@ func test_a_finished_game_is_not_searched() -> void:
 	assert_int(found.iterations).is_equal(0)
 
 
-func test_the_generator_starts_where_marsaglia_starts_and_zero_is_one() -> void:
-	assert_int(Xorshift.new(1).next()).is_equal(270369)
-	assert_int(Xorshift.new(0).next()).is_equal(270369)
-	var drawn := Xorshift.new(9)
-	for _forced: int in range(5):
-		assert_int(drawn.index(1)).is_equal(0)
-	assert_int(drawn.next()).is_equal(Xorshift.new(9).next())
-
-
 func test_a_visited_root_move_reports_its_ucb1_bound() -> void:
 	# The bound is what T87 draws: mean + C * sqrt(ln(root visits) / visits),
 	# the root visited once an iteration.

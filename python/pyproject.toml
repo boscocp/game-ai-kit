@@ -24,13 +24,15 @@ dependencies = []
 [project.urls]
 Source = "https://github.com/boscocp/game-ai-kit"
 
-# Only the techniques ship. The examples' packages -- checkers, maze,
-# tactical, ... -- are this repository's games, not the library.
+# Only the techniques ship, and the kernel they stand on (gameaikit.core,
+# T109). The examples' packages -- checkers, maze, tactical, ... -- are this
+# repository's games, not the library.
 [tool.setuptools]
 packages = [
     "gameaikit",
     "gameaikit.adversarial",
     "gameaikit.bandit",
+    "gameaikit.core",
     "gameaikit.fuzzy",
     "gameaikit.llm",
     "gameaikit.ngram",

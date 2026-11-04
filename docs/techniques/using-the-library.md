@@ -24,7 +24,8 @@ page that the check does not take fails the check.
 Two halves, each usable without the other.
 
 - **Godot addons**, one zip each. `ai_core` is the kernel: a grid
-  (`GakGridGraph`) and a pathfinder port (`GakPathfinder`), no algorithm.
+  (`GakGridGraph`), a pathfinder port (`GakPathfinder`) and a seeded
+  generator (`Xorshift`), no game logic.
   Every other addon is one technique -- `ai_search`, `ai_behaviour`,
   `ai_steering`, ... -- and depends on nothing but, at most, `ai_core`, so
   you take only what you use. The [catalogue](catalogue.md) says what each

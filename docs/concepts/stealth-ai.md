@@ -458,7 +458,7 @@ screen yet, and nothing decides -- that is T70.
 | typed events | `ai_perception/stimulus_table.gd`, `interest.gd` | Miles 2013; Welsh 2013 |
 | awareness and its phases | `ai_perception/awareness.gd` | McIntosh 2015; Leonard 2003; Welsh 2013; Alexander 2009; Ubisoft 2024 |
 | memory and the shared belief | `ai_perception/target_memory.gd`, `belief_map.gd` | Welsh 2015; Isla 2013; McIntosh 2015 |
-| the belief as particles (T91) | `ai_perception/particle_belief.gd`, `particle_draws.gd` | Thrun 2002; AIMA 4th ed., ch. 14 |
+| the belief as particles (T91) | `ai_perception/particle_belief.gd`, `ai_core/xorshift.gd` | Thrun 2002; AIMA 4th ed., ch. 14 |
 | the guard types, the fuzzy rate, the wiring | `game3d/infiltration/` | Welsh 2013 (archetypes in data) |
 
 Every number a guard is tuned by is a row of

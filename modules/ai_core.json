@@ -1,12 +1,17 @@
 {
   "module": "ai_core",
   "kind": "kernel",
-  "about": "The shared kernel: the grid and the pathfinder interface, and nothing else (T61).",
-  "summary": "The grid every other addon searches and the pathfinder interface: GakGridGraph and GakPathfinder. Nothing else, so every addon can depend on it.",
+  "about": "The shared kernel: the grid and the pathfinder interface (T61), and the seeded generator four techniques draw from (T109), and nothing else.",
+  "summary": "The grid every other addon searches, the pathfinder interface and a seeded generator: GakGridGraph, GakPathfinder and Xorshift. Nothing else, so every addon can depend on it.",
   "owns": [
     "godot/addons/ai_core/",
-    "godot/test/ai_core/"
+    "godot/test/ai_core/",
+    "spec/vectors/core/",
+    "python/gameaikit/core/",
+    "python/tests/test_core_xorshift.py"
   ],
   "depends_on": [],
-  "gates": []
+  "gates": [
+    "test-core-vectors"
+  ]
 }

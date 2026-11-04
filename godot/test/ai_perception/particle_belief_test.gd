@@ -1,4 +1,4 @@
-# ParticleBelief and ParticleDraws, one claim per test. The exact clouds are
+# ParticleBelief, one claim per test. The exact clouds are
 # the vectors' (spec/vectors/perception/particles-*.json); these hold the
 # collapse, the reseed, and the sensor on graphs the vectors do not cover.
 extends GdUnitTestSuite
@@ -15,11 +15,6 @@ func _ring() -> Array[PackedInt32Array]:
 	for node: int in range(8):
 		ring.append(PackedInt32Array([(node + 7) % 8, (node + 1) % 8]))
 	return ring
-
-
-func test_the_generator_is_marsaglias_from_one() -> void:
-	assert_int(ParticleDraws.new(1).next()).is_equal(270369)
-	assert_int(ParticleDraws.new(0).next()).is_equal(270369)
 
 
 func test_a_new_cloud_is_even() -> void:
