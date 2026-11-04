@@ -3,6 +3,138 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-11-04 (waves 118 to 122 merged)
+
+**Where it stopped -- read first.** Five waves ran in parallel worktrees,
+each reviewed by a fresh context before its merge, with the findings
+applied on the branch: 118 T77 the library in two languages (#59), 122 T109
+one seeded generator in `ai_core` (#60), 120 T95 levels by constraints
+(#61), 121 T100 the bot match reads the player (#62), 119 T85 the XCOM-style
+mode you can play (#63). Every review asked for changes. Three had
+blockers, all fixed before the merge:
+
+- T77: the page's first step could not run for a stranger.
+- T95: an unlabelled constraint was never enforced.
+- T85: a walk refusal leaked the fog, and a typed-array ternary blanked the
+  status.
+
+Main is dd8d41a.
+
+**How it was checked.** The owner said on 2026-11-04 to run the gate only
+at the last merge. So #60 to #62 merged on their reviewed heads, rebased
+the coordinator rebased #61 to #63. #61 conflicted in the Makefile's
+`test-vectors:` and in `pyproject.toml`'s `packages`, #62 in
+`test-vectors:` only, and #63 had no conflict. Each was resolved as a
+union. #60's implementer rebased it. The whole
+`make check` ran once, on #63's rebased head, before it merged: exit 0,
+1641 gdUnit cases, every gate including the timing ones. #59 had its own
+full run.
+
+By the coordinator's account, the batch hit the account's 5-hour usage
+limit while rebasing, and the coordinator finished the rebases and merges
+by shell.
+
+**The owner decided on 2026-11-04:**
+
+- these five waves in parallel, with T77 in place of T110 (T110 shares
+  `godot/game/tactical/` with T85);
+- run the gate only at the last merge;
+- after the main tasks, a review of the repository before it opens to
+  the community (T112). Which tasks count as "the main ones" (T112's
+  prereqs) is this session's reading;
+- after it opens, a decision tree, a random forest and a Bayesian network,
+  fitted into existing demos (T113-T115). Which demo each one goes in is
+  this session's proposal, not ratified;
+- to make parallel batches cost less time and fewer tokens, and redo
+  less. The owner accepted the recommendation that followed: T111 next,
+  in parallel with T110 only.
+
+Publishing to PyPI and the Asset Library was recommended to wait until the
+repository is public. That is not decided.
+
+**Waiting on the owner -- one numbered list, each with a recommendation.**
+The 13 items of 2026-10-30 below are still open. The review records hold
+the reasoning.
+
+1. T77: the page builds the archives with `release.py --build` (Python and
+   git only); `make release` is named as the full release. *Recommended:*
+   keep.
+2. T77: the page says 0.1.0 promises only ADR 0024's nine `Gak` names, and
+   any other name may change below 1.0. That is new policy.
+   *Recommended:* ratify, and write it into ADR 0024.
+3. T77: the second example runs only under `make library-check`, and
+   `GUIDE_PAGES` is a third kind of page in the translations gate.
+   *Recommended:* ratify.
+4. T77: a gate for the glossary rule (an italicised English term in a
+   pt-BR page must be in the glossary). *Recommended:* a small task later.
+5. T109: `BanditDraws`, a fourth copy the task did not list, folded in.
+   *Recommended:* ratify.
+6. T109: `Xorshift` or `GakXorshift`. The reviewer leans to the prefix
+   (ADR 0024 prefixes the kernel; the name may collide in a user's
+   project). *Recommended:* `GakXorshift`, before anything is published.
+7. T109: the wheel ships `gameaikit.core`, which the shipped techniques
+   import. *Recommended:* ratify, and amend ADR 0024's "technique packages
+   only".
+8. CLAUDE.md is stale in two places: invariant 2 ("the grid and the
+   pathfinder interface") does not name the generator, and the
+   `library-check` line still says two addons. *Recommended:* let the
+   next wave update both.
+9. T109: a follow-up task to give every `*_vectors_runner.gd` the type
+   checks the core runner gained (`mcts_vectors_runner.gd` has the same
+   hole). *Recommended:* open it.
+10. T95: solving stalls the window for 120-140 ms a level, 2.5 s on the
+    slowest seed. Today that is cached by seed and documented.
+    *Recommended:* solve on `WorkerThreadPool`, as a small follow-up.
+11. T95: the eight listed decisions -- GDScript only, 16 candidates a
+    variable, restarts instead of backjumping, K's three-way cycle with
+    the fallback, the untuned numbers in `level_constraints.json`, what
+    "in sight" covers, K on the switch line, the counts beside the map.
+    *Recommended:* ratify; tune the numbers in the manual check.
+12. T100: the difficulty overshoots. One bot's share sets six bots' aim,
+    and the match flips both ways (`make measure-player-model`).
+    *Recommended:* a follow-up reading the team's share, with a band of no
+    change around the middle, measured the same way.
+13. T100: when the person takes a bot of the other team, the counts carry
+    on. *Recommended:* start them empty on a change of team.
+14. T100: the log stays in the checkout's `user://`, not `data/`.
+    *Recommended:* ratify -- it is the person's play, not a fixture.
+15. T100: N14 names `MatchDifficulty` as well as `PlayerModel`, as N13
+    names its wrapper. Its tunable table lives in `rules.json`, while
+    T99's constants stay in the class. *Recommended:* ratify both.
+16. T85: under fog, a walk onto a hidden piece is refused in words that
+    name nothing; the other answer is to stop at the last free cell and
+    reveal the piece, as XCOM does. *Recommended:* decide after playing it.
+17. T85: V is on by default, so the person sees every enemy piece once a
+    round. *Recommended:* V off in play, on in the teaching view.
+18. T85: 100 of 100 against `RandomSquad` cannot tell weighings apart.
+    *Recommended:* a second, stronger floor with T87.
+19. T85: `TacticalRuleset` has about 25 answers and `tactical.gd` is 832
+    lines. *Recommended:* move the presentation hooks to a mode-view
+    object before T87 and T88.
+20. T85: the PR's nine items, the squad's defence included (0-10, to be
+    measured in play). *Recommended:* ratify.
+
+**Manual checks waiting:**
+
+- T77: follow the pt-BR guide on a machine that never cloned the
+  repository.
+- T109: read the ADR 0021 amendment cold, then play the maze and the MCTS
+  example.
+- T95: play the drawn and the solved levels, and watch K.
+- T100: play the bot match with V open, poorly and then well.
+- T85: play the XCOM mode on both sides, with V on and off.
+- The older checks in the sections below.
+
+**What is left:** todo T55, T87, T88, T89 (only if T85's manual check asks
+for art), T94, T96, T110, T111, T112, T113, T114, T115. Six older tasks
+are still wip (T25, T40, T44, T45, T46, T48), and T43 is blocked.
+
+**Next:** T111 and T110 in parallel (T111 touches the Makefile and the
+selector, so nothing that adds a gate runs beside it). Then a batch picked
+from T87, T88, T94 and T96, with the follow-ups above that the owner opens.
+T112 comes after the main tasks. T113 to T115 come after the repository
+opens, which is the owner's step after T112, not T112 itself.
+
 ## Resuming after 2026-10-30 (waves 112 to 117 merged)
 
 **Where it stopped -- read first.** Six pull requests landed in one session,
@@ -494,6 +626,11 @@ review.
 | T108 | The pad's legend keeps its height | done | wave 117: `test-demo-overlays` fails, for every example with a pad, in both languages, a legend whose last line (`Legend.drawn_height()`, its descent counted) ends below the gutter (y=696) or less than 8 px above a visible Control below it in its column; planted: past the window, over the Label below, touching it, and 8 px clear (must pass); it found the four T103 named and the infiltration's (y=742); every pad line kept: the bot match's legend starts at 480, the infiltration's at 440, the maze's at 8; `HAS_PAD` names the seven examples with a pad; in both racers the status follows the legend 12 px under its last line, and the map moved to the view's bottom-left corner; `racing_layout_test.gd` and `racing3d_layout_test.gd` hold where the status's words end in every panel state, both languages (planted: a status too long) -- the 2D racer's ran over its minimap and ends at 684 at worst now, the 3D racer's racing panel, never measured, ran over its trace, which moved to 568; not measured: the RTS (no pad), whose legend ends 6 px above `Thinking`; `docs/godot/localisation.md`; review in `docs/reviews/117-the-pad-legend-keeps-its-height.md` |
 | T109 | One seeded generator in `ai_core` | done | wave 122: `Xorshift` in `ai_core` and `gameaikit.core.Xorshift`, the one generator; the four copies deleted with their `.uid`s -- `Xorshift` (T86), `MazeDice` (T97), `ParticleDraws` (T91) and a fourth the task did not list, `BanditDraws` (T99, wave 115), each with its Python twin; `ai_adversarial` and `ai_bandit` now depend on `ai_core`, the maze lists it; ADR 0021 amended (why a generator is not logic, and that no other helper follows without the same argument); `spec/vectors/core/` (six seeds: draws, uniforms, picks; `derive.py` imports nothing) held by `make test-core-vectors` and `make test-python`, planted twins failing it in both languages (a pick of one that spends a draw; no mask, or a draw ahead); `spec/vectors/adversarial`, `bandit`, `perception`, `maze` unchanged against main and green through the shared generator; the wheel ships `gameaikit.core` (`release.py` accepts the kernel's package); the copies' pages say two folders; the unprefixed name and the wheel's kernel package are pending the owner (they contradict ADR 0024; written so in ADR 0021, pointed at from 0024); the acceptance's diff narrowed to the vectors' `*.json`; review (`docs/reviews/122-one-seeded-generator-in-ai-core.md`, changes requested, no blocker -- a core runner green on a mistyped vector -- all applied; the same weakness in `mcts_vectors_runner.gd` left for a follow-up) |
 | T110 | The tactical game's news keeps its words as keys | todo | after T104; the owner, 2026-10-29: `TacticalCombat.told` and `_last_event` ("built ... at ...", points paid) are worded when they happen and keep the old language after a switch; news as a `Sentence`, as T104's reasons; a test switching language mid-turn |
+| T111 | A new gate selects its module, and merges clean | todo | the owner, 2026-11-04: make a parallel batch cheaper; `test-vectors:` read like `check:` by `added_gates.py`, the list split if it reads well, `packages` merging clean with `release.py`'s check kept, timing gates only when their module is selected, the batch routine in `docs/howto/`; runs beside T110 only |
+| T112 | A review before the repository opens | todo | the owner, 2026-11-04: after the main tasks; a stranger's read, a report and follow-up tasks; opening, CI and publishing stay the owner's |
+| T113 | A decision tree reads the fighting opponent | todo | after T112; the owner, 2026-11-04; CART fitted in Python, `LearnedTree` reads it; the path shown |
+| T114 | A random forest votes on the same question | todo | after T113; held-out accuracy of one tree against forests of 5, 25 and 100; the votes shown |
+| T115 | A Bayesian network for the guard | todo | after T112; `ai_bayes`, exact enumeration, hand-written tables; is someone there, and which evidence says so |
 
 ---
 
