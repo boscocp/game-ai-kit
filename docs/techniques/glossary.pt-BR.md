@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-30
+verified_on: 2026-11-04
 tier: 0
 source: book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 ; book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020
 invalidated_if: a technique page in pt-BR translates a term this list says stays in English, or a new technique brings a term missing here
@@ -45,7 +45,12 @@ também em itálico, ficam como foram publicados.
 | *tick* | uma vez em que a IA é consultada; um quadro, um turno |
 | *waypoint* | um ponto de passagem num mapa |
 | *gate* | um comando com código de saída que impede um erro de entrar no repositório |
-| *addon* | uma pasta em `godot/addons/` que você copia para o seu projeto |
+| *addon* | uma pasta no `res://addons/` do seu projeto com uma técnica: vem num zip da *release*, ou é copiada de `godot/addons/` num clone |
+| *release* | uma versão publicada do kit, e os arquivos dela: um zip por *addon* e o *wheel* |
+| *wheel* | o pacote de Python pronto para instalar com `pip`, um arquivo `.whl`; é o nome do formato |
+| *template* (de exportação) | o executável do Godot que um jogo exportado leva consigo, um por plataforma; o `make release` precisa dele, a biblioteca não |
+| *cache* | uma cópia guardada para não refazer o trabalho; aqui, a lista de classes que o Godot mantém em `.godot/` |
+| *tile*, *tileset* | um ladrilho de um mapa em grade, e o conjunto deles; no Godot, o que um `TileMapLayer` desenha |
 | *minimax*, *alpha-beta* | a busca dos jogos de dois jogadores, e o seu corte |
 | *fuzzy* | lógica *fuzzy* (nebulosa): verdade em graus, não só sim ou não |
 | *behaviour cloning* | aprender a jogar copiando partidas gravadas de uma pessoa |

@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 3 ; https://docs.godotengine.org/en/stable/classes/class_astargrid2d.html
 invalidated_if: the kit's Search, SearchGraph, GridPathfinder or GridGraph signatures change, or the demos that use them are renamed
 teaches: search
-translation_of: 19cbfb781d5c66333f8c644a583f89fc5a8486d1518df936451481852181b537
+translation_of: 4d8d0fc2899573e9b94becfa2e2603b9cc1842edcaee7300db46b069f5d51c53
 -->
 
 > English: [ai_search.md](ai_search.md). Os termos que ficam em inglês
@@ -59,6 +59,11 @@ que deixa uma busca ler uma grade -- roda as quatro buscas nele e repete
 ## No seu projeto {#your-project}
 
 ### O que copiar {#copy}
+
+Pela biblioteca: descompacte o `ai_core-<version>.zip` e o
+`ai_search-<version>.zip` no `res://addons/` do seu projeto -- [usando a
+biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
+também. Ou copie de um clone:
 
 Duas pastas, mais nada: `godot/addons/ai_core/` (a grade e a porta
 `GakPathfinder`) e `godot/addons/ai_search/`. Não há plugin para ativar -- cada

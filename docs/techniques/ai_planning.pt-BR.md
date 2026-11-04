@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 11, classical planning ; https://en.wikipedia.org/wiki/Stanford_Research_Institute_Problem_Solver
 invalidated_if: the kit's StripsAction, WorldState, StripsPlanner, HeuristicPlanner or PlanResult signatures change, or the demos that use them are renamed
 teaches: planning
-translation_of: dd745231ab197b356aa47d11c18a62178dfdae0678114da46302195d8ddf67fd
+translation_of: a320245adde35559fb25fe52662c598178c00e5f84088987843bf35e1f1d0bcb
 -->
 
 > English: [ai_planning.md](ai_planning.md). Os termos que ficam em inglês
@@ -67,6 +67,11 @@ partir do tabuleiro. Os ajustes que importam:
 ## No seu projeto {#your-project}
 
 ### O que copiar {#copy}
+
+Pela biblioteca: descompacte o `ai_planning-<version>.zip` no
+`res://addons/` do seu projeto -- [usando a
+biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
+também. Ou copie de um clone:
 
 Uma pasta: `godot/addons/ai_planning/`. Ela não precisa de mais nada, nem
 do `ai_core`. Abra o projeto uma vez, ou rode `godot --headless --import`,

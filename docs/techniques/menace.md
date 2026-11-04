@@ -63,6 +63,10 @@ count written in GDScript (N5) and a file a fresh run would not write
 
 ### What to copy {#copy}
 
+None of it is in the library: MENACE is the tic-tac-toe example's, both
+halves, and [using the library](using-the-library.md) says what the library
+leaves out. So it is a copy:
+
 The Python side trains: `python/gameaikit/menace/` (standard library only)
 -- `board.py` is the game and its symmetries, and is what you rewrite for
 another small game. Run `PYTHONPATH=python python3 -m

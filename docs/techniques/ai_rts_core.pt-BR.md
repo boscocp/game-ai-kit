@@ -7,7 +7,7 @@ tier: 2
 source: https://ojs.aaai.org/index.php/AIIDE/article/view/12435/12294 ; book:Elijah Emerson, "Crowd Pathfinding and Steering Using Flow Field Tiles", in Steve Rabin (ed.), "Game AI Pro", CRC Press, 2013
 invalidated_if: the kit's FlowField, SpatialHash, FrameBudget, RtsWorld or RtsController signatures change, or the demos that use them are renamed
 teaches: strategy-ai
-translation_of: 9ffeaccee337cc4a2a84798982b68711a81cbd22fb10cab52668c5231b9a34c9
+translation_of: 5a00acedb0c1a04b1d38217c71f105bff118fef2314082ba986ef8a56a959316
 -->
 
 > English: [ai_rts_core.md](ai_rts_core.md). Os termos que ficam em inglês
@@ -69,6 +69,11 @@ importam:
 ## No seu projeto {#your-project}
 
 ### O que copiar {#copy}
+
+Pela biblioteca: descompacte o `ai_core-<version>.zip` e o
+`ai_rts_core-<version>.zip` no `res://addons/` do seu projeto -- [usando a
+biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
+também. Ou copie de um clone:
 
 Duas pastas: `godot/addons/ai_core/` (a grade que o campo inunda) e
 `godot/addons/ai_rts_core/`. Abra o projeto uma vez, ou rode `godot

@@ -68,6 +68,8 @@ Two more kinds of page are held here (T76). The catalogue,
 in both languages at once: it is a pair like any other -- anchors, code,
 the glossary line -- except that it carries no translation_of, because no
 person translated it and the generator's own --check keeps the two in step.
+A guide (T77), `using-the-library.md`, is about the kit rather than one
+technique: a translated pair held like a technique's, without its shape.
 And `README.pt-BR.md`, the way in for a Portuguese reader, is short on
 purpose: it mirrors only the parts of `README.md` declared in MIRRORS below,
 whose headings must both be there and whose code blocks must be equal.
@@ -122,6 +124,12 @@ STILL_TO_WRITE: tuple[str, ...] = ()
 # Pages written by scripts/catalogue.py, both languages at once (T76): held
 # as a pair, but never pinned by translation_of, since nobody translates them.
 GENERATED_PAGES = ("catalogue",)
+
+# Pages about the kit as a whole rather than one technique (T77): a pair
+# translated by a person like any technique's, pinned by translation_of,
+# without the technique's shape. `using-the-library` is also the page
+# `scripts/library_check.py` follows step by step.
+GUIDE_PAGES = ("using-the-library",)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -449,7 +457,7 @@ def presence_findings(root: pathlib.Path, techniques: list[str], to_write: tuple
     for name in [*techniques, *KERNEL_PAGES]:
         if name not in to_write and not (folder / f"{name}.md").exists():
             findings.append(f"{PAGES}/{name}.md: D2 the technique {name} has no page")
-    known = set(techniques) | set(KERNEL_PAGES) | set(GENERATED_PAGES)
+    known = set(techniques) | set(KERNEL_PAGES) | set(GENERATED_PAGES) | set(GUIDE_PAGES)
     for page in sorted(folder.glob("*.md")) if folder.is_dir() else []:
         findings += page_presence(page, known)
     return findings
@@ -661,6 +669,7 @@ def more_cases(root: pathlib.Path, pages: dict[str, str]) -> list[tuple[str, pat
         ("a non-module technique naming a missing path", nowhere, 1, "D13"),
         *glossary_cases(root, pages),
         *generated_cases(root, pages),
+        *guide_cases(root, pages),
         *mirror_cases(root, pages),
         # Not a drift: an editor adding newlines at the end changes nothing.
         ("trailing newlines added to the English page", build(root, "trailing", trailing), 0, ""),
@@ -704,6 +713,23 @@ def generated_cases(root: pathlib.Path, pages: dict[str, str]) -> list[tuple[str
         ("a generated pair with no glossary line", build(root, "generated-bare", bare), 1, "D14"),
         ("a generated page with no translation",
          build(root, "generated-alone", dict(pages, **{"catalogue.md": GENERATED_EN})), 1, "D3"),
+    ]
+
+
+GUIDE_EN = "# Using the kit\n\n## The archives {#archives}\n\nUnzip.\n"
+
+
+def guide_cases(root: pathlib.Path, pages: dict[str, str]) -> list[tuple[str, pathlib.Path, int, str]]:
+    """A guide: not a technique, so no shape, and still a pinned translation."""
+    note = f"> {glossary_note('using-the-library')}\n\n"
+    translated = (f"# Usando o kit\n\n<!-- doc-meta\ntranslation_of: {body_hash(GUIDE_EN)}\n-->\n\n"
+                  f"{note}## Os arquivos {{#archives}}\n\nDescompacte.\n")
+    guide = dict(pages, **{"using-the-library.md": GUIDE_EN, "using-the-library.pt-BR.md": translated})
+    stale = dict(guide, **{"using-the-library.md": GUIDE_EN + "\nAnd import.\n"})
+    return [
+        # Not a drift: a guide has no technique's sections and no example.
+        ("a guide pair, outside the technique shape", build(root, "guide", guide), 0, ""),
+        ("a guide whose English page changed", build(root, "guide-stale", stale), 1, "D5"),
     ]
 
 

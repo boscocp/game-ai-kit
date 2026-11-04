@@ -36,6 +36,30 @@ T74's and T75's pages say "copy the folders", which is what works today.
    from "copy the folders" to the library, keeping the copy as the
    alternative.
 
+## What the work found (wave 118)
+
+Details, none changing what the task asks:
+
+- **`DecisionPolicy` is not a port.** No class of that name exists; the
+  ports a user's code names are ADR 0024's nine `Gak` names, and the page
+  lists those.
+- **The second example lives in `scripts/library/`**, not in an addon's
+  test folder: it reads `res://chance_model.json`, which only the page's
+  Python step writes, so only `make library-check` can run it. The
+  translations gate still holds the page's block equal to the file (D9).
+- **The check runs the page's commands as printed**, in the page's order,
+  from a folder laid out as the page assumes (`game-ai-kit/` beside
+  `my_game/`, `godot` on the PATH), after the review of PR #59 found the
+  first version matched only step names. The step list must match exactly,
+  in both languages.
+- **The archives step is `release.py --build`, not `make release`.** The
+  full release exports the menu game and needs `make bootstrap`, export
+  templates and a clean tree; the library's archives need only Python and
+  git. The page says so, and mentions `make release` as the full release.
+- **The non-module pages** (MENACE, behaviour cloning, the learned
+  evaluation, the racing driver) say which half is in the library and that
+  the rest -- an example's code -- stays a copy.
+
 ## Acceptance
 
 ```bash

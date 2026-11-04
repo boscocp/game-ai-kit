@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 5, figures 5.3, 5.7 and 5.11
 invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch, AdversarialResult, MonteCarloSearch, MctsResult or Xorshift signatures change, or the demos that use them are renamed
 teaches: adversarial-search
-translation_of: 55e1b2c2014ad37279633b3908d7e0647cb05bb70b5020d06721c581ce0b0414
+translation_of: 1ce19bed6917d119b987e359038f177b76d4143e3211adf81d5a72fe4d0e8f34
 -->
 
 > English: [ai_adversarial.md](ai_adversarial.md). Os termos que ficam em
@@ -82,6 +82,11 @@ ajustes que importam:
 ## No seu projeto {#your-project}
 
 ### O que copiar {#copy}
+
+Pela biblioteca: descompacte o `ai_adversarial-<version>.zip` no
+`res://addons/` do seu projeto -- [usando a
+biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
+também. Ou copie de um clone:
 
 Uma pasta: `godot/addons/ai_adversarial/`. Ela não precisa de mais nada,
 nem do `ai_core`. Abra o projeto uma vez, ou rode `godot --headless

@@ -7,7 +7,7 @@ tier: 2
 source: book:Travis McIntosh, "Human Enemy AI in The Last of Us", in Steve Rabin (ed.), "Game AI Pro 2", CRC Press, 2015 ; https://www.gameaipro.com/
 invalidated_if: the kit's VisionCone, Awareness, LineOfSight, Hearing, VisionShape, BeliefMap or ParticleBelief signatures change, or the demos that use them are renamed
 teaches: perception
-translation_of: 8bbd13a7185d52ea6343cc5c575bc0cade29e4ad4d075055c755657e65897849
+translation_of: 0ca465ab6979d897999ae419db26f4df7ecf09bf302e6d94a8dc07f152edca52
 -->
 
 > English: [ai_perception.md](ai_perception.md). Os termos que ficam em
@@ -141,6 +141,11 @@ lá.
 ## No seu projeto {#your-project}
 
 ### O que copiar {#copy}
+
+Pela biblioteca: descompacte o `ai_core-<version>.zip` e o
+`ai_perception-<version>.zip` no `res://addons/` do seu projeto -- [usando a
+biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
+também. Ou copie de um clone:
 
 Duas pastas: `godot/addons/ai_core/` (a grade, que o cone usa num tabuleiro
 em grade) e `godot/addons/ai_perception/` -- para uma crença de partículas

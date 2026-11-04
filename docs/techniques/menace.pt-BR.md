@@ -7,7 +7,7 @@ tier: 2
 source: book:Donald Michie, "Experiments on the mechanization of game-learning, part I", The Computer Journal 6(3), 1963
 invalidated_if: MenacePlayer, the bead file's shape or gameaikit.menace's report change, or demo-tictactoe is renamed
 teaches: reinforcement-learning
-translation_of: 68edbaf962c5e712c8df453c238e23a7620ef633931f810bc567b95eb108cacf
+translation_of: 92e11b470447809e6f1cb52eacf5e4d5363c092f9c0bf0b7a770e241e9bdd7e3
 -->
 
 > English: [menace.md](menace.md). Os termos que ficam em inglês estão no
@@ -67,6 +67,10 @@ ajustes que importam:
 ## No seu projeto {#your-project}
 
 ### O que copiar {#copy}
+
+Nada dele está na biblioteca: o MENACE é do exemplo do jogo da velha, as
+duas metades, e [usando a biblioteca](using-the-library.pt-BR.md) diz o que
+a biblioteca deixa de fora. Então é uma cópia:
 
 O lado Python treina: `python/gameaikit/menace/` (só a biblioteca padrão)
 -- `board.py` é o jogo e as suas simetrias, e é o que você reescreve para

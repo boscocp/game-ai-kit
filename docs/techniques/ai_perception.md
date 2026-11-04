@@ -130,6 +130,11 @@ a belief step of 1784 particles measured 1.5 ms there.
 
 ### What to copy {#copy}
 
+From the library: unzip `ai_core-<version>.zip` and
+`ai_perception-<version>.zip` into your project's `res://addons/` -- [using
+the library](using-the-library.md) has every step, the Python wheel too. Or
+copy them from a checkout:
+
 Two folders: `godot/addons/ai_core/` (the grid, which the cone uses on a
 grid board) and `godot/addons/ai_perception/` -- for a particle belief
 alone, `particle_belief.gd` and `particle_draws.gd` are enough. Open the project once, or

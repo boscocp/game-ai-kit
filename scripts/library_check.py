@@ -1,40 +1,60 @@
 #!/usr/bin/env python3
-"""Install the release where a stranger would, and run it there (T64).
+"""Follow the page on using the library, where a stranger would (T64, T77).
 
 The release's own self-test proves what is *in* each archive. This proves
 the archives *work* away from this repository, which is the only place a
-library is used:
+library is used, and it does so by doing what
+`docs/techniques/using-the-library.md` -- the page a person follows -- says,
+in a throwaway folder outside the tree. The folder holds what the page's
+reader has: `game-ai-kit/` (a link to this checkout), `my_game/` (a blank
+Godot project), and `godot` on the PATH, standing for the pinned engine.
 
-  * **Python.** A fresh virtual environment in a throwaway directory
-    outside the tree installs the wheel -- no index, no dependencies, so
-    a wheel that needed either fails -- and imports a technique and the
-    registry from it, with the repository nowhere on the path.
-  * **Godot.** A blank project in the same throwaway directory, holding
-    only `addons/ai_core/` and `addons/ai_search/` as their zips unpack,
-    imports itself and runs `scripts/library/stranger.gd`, which finds a
-    route with the classes the documentation names. The run must exit 0
-    *and* print the script's marker: a script error inside a `-s` script
-    still exits 0 (CLAUDE.md).
+Each step the page marks `<!-- library-step: name -->` is taken in the
+page's order. Every ```bash block under it runs **as printed**, from that
+folder, and then the check does what the page says the reader does without
+a command:
 
-The release is built from HEAD by `release.py`, into the throwaway
-directory, so what is checked is what `make release` ships.
+  release  (its block builds `library/dist/`)
+  unzip    (its block)
+  import   (its block)
+  route    the page's route example saved in `my_game/`, and
+           `scripts/library/stranger.gd -- route` adds it to the tree
+  wheel    (its block), then a probe imports a technique and the registry
+           from site-packages, with the repository nowhere on the path
+  train    the page's Python block saved as `my_game/my_training.py`
+           before its block runs it
+  infer    (its block), then the model example saved in `my_game/`, and
+           `stranger.gd -- infer` adds it to the tree
+  licence  every zip and the wheel carry LICENSE and NOTICE
+
+A `stranger.gd` run must exit 0 *and* print its marker: a script error
+inside a `-s` script still exits 0 (CLAUDE.md). It is bounded by a timeout,
+reported as a finding, should Godot be left running.
+
+The check refuses a page whose steps are not exactly `STEPS` below, in
+either language: a step on the page the check does not take is a promise
+nobody keeps, and one the check takes that the page does not say is a
+test of something no reader does. Inside `godot/` every `class_name` is
+already registered, so this is the portability proof the technique pages'
+own gdUnit cases cannot be.
 
 Why `--self-test` exists
 ------------------------
-To prove the check refuses, and refuses for the reason planted. It builds
-the release and first runs both halves untouched, which must pass: a
-Godot that does not start, or a venv with no pip, would otherwise fail
-every planted case for the wrong reason and the self-test would go green.
-Then it takes `grid_graph.gd` out of `ai_core`'s zip -- the file every
-script of `ai_search` needs -- and expects the Godot half to fail naming
-`GakGridGraph`; and takes `gameaikit/utility/aim.py` out of the wheel's
-install and expects the Python half to fail naming `aim`.
+To prove the check refuses, and refuses for the reason planted. It first
+follows the untouched page, which must pass: a Godot that does not start,
+or a venv with no pip, would otherwise fail every planted case for the
+wrong reason and the self-test would go green. Then, each named in what
+it prints: `grid_graph.gd` out of `ai_core`'s zip (`GakGridGraph`);
+`utility/aim.py` out of the wheel's install (`'aim'`); `NOTICE` out of a
+zip; a runner that quits 0 having printed nothing (the marker it lacks);
+an unzip command pointing at the wrong place (the step `unzip`); and a
+page with a step the check does not take, or without one it does.
 
 Exit codes
 ----------
-0   both halves ran outside the repository
-1   one half failed (what failed is printed)
-2   wrong usage, or the release could not be built
+0   the page's steps all ran outside the repository
+1   a step failed, or the page and the check disagree (what is printed)
+2   wrong usage, or the page has a step with nothing to run
 
 Usage
 -----
@@ -45,19 +65,35 @@ Usage
 from __future__ import annotations
 
 import argparse
+import dataclasses
+import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
-import venv
 import zipfile
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 GODOT = REPO / "scripts" / "godot"
 STRANGER = REPO / "scripts" / "library" / "stranger.gd"
-MARKER = "LIBRARY-CHECK: the route goes round the wall"
-ADDONS = ("ai_core", "ai_search")
+PAGES = (REPO / "docs" / "techniques" / "using-the-library.md",
+         REPO / "docs" / "techniques" / "using-the-library.pt-BR.md")
+#: What `stranger.gd` prints when an example decided as the page says.
+MARKERS = {"route": "LIBRARY-CHECK: the route goes round the wall",
+           "infer": "LIBRARY-CHECK: the model Python wrote decides in Godot"}
+#: The steps this check takes, in the page's order. The page must name
+#: these and no others.
+STEPS = ("release", "unzip", "import", "route", "wheel", "train", "infer", "licence")
+#: Long enough for an import on a loaded machine; short enough that a
+#: Godot left running by a script error is a finding, not a stalled gate.
+BLOCK_SECONDS = 240
+RUN_SECONDS = 60
+STEP_RE = re.compile(r"^<!--\s*library-step:\s*([a-z-]+)\s*-->$", re.M)
+EXAMPLE_RE = re.compile(r"^<!--\s*example:\s*(\S+)\s*-->$", re.M)
+BASH_BLOCK_RE = re.compile(r"^```bash\n(.*?)^```$", re.M | re.S)
+PYTHON_BLOCK_RE = re.compile(r"^```python\n(.*?)^```$", re.M | re.S)
 PROBE = (
     "from gameaikit import techniques\n"
     "from gameaikit.utility import aim\n"
@@ -71,125 +107,265 @@ PROBE = (
 )
 
 
-class Unbuildable(Exception):
-    """The release could not be built, so there is nothing to check."""
+class Unfollowable(Exception):
+    """The page has a step with nothing to run: exit 2, not a finding."""
 
 
-def build_release(into: pathlib.Path) -> dict[str, pathlib.Path]:
-    """Every artifact `release.py` builds from HEAD, by file name."""
-    built = subprocess.run(
-        [sys.executable, str(REPO / "scripts" / "release.py"), "--build", "--output", str(into)],
-        capture_output=True, text=True,
-    )
-    if built.returncode != 0:
-        raise Unbuildable(built.stderr.strip())
-    return {pathlib.Path(line).name: pathlib.Path(line) for line in built.stdout.split()}
+# --- the page ---------------------------------------------------------------
 
 
-def the_one(artifacts: dict[str, pathlib.Path], prefix: str) -> pathlib.Path:
-    """The artifact whose name starts with `prefix`."""
-    return next(path for name, path in artifacts.items() if name.startswith(prefix))
+def page_steps(text: str) -> dict[str, str]:
+    """Each marked step's name and its text, up to the next step's marker."""
+    marks = list(STEP_RE.finditer(text))
+    ends = [mark.start() for mark in marks[1:]] + [len(text)]
+    return {mark.group(1): text[mark.end():end] for mark, end in zip(marks, ends)}
 
 
-def python_half(wheel: pathlib.Path, place: pathlib.Path, drop: str = "") -> list[str]:
-    """Install `wheel` in a fresh environment and run the probe; what failed, if anything.
-
-    `drop` deletes one installed file before the probe -- the self-test's
-    planted fault.
-    """
-    environment = place / "venv"
-    venv.EnvBuilder(with_pip=True, clear=True).create(environment)
-    python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
-    install = subprocess.run(
-        [str(python), "-m", "pip", "install", "--quiet", "--no-index", "--no-deps", str(wheel)],
-        capture_output=True, text=True, cwd=place,
-    )
-    if install.returncode != 0:
-        return [f"the wheel does not install: {install.stderr.strip()}"]
-    if drop:
-        for found in environment.rglob(drop):
-            found.unlink()
-    probe = subprocess.run([str(python), "-I", "-c", PROBE], capture_output=True, text=True, cwd=place)
-    if probe.returncode != 0 or "LIBRARY-CHECK" not in probe.stdout:
-        return [f"the installed wheel does not answer: {probe.stderr.strip().splitlines()[-3:]}"]
-    return []
+def step_findings(label: str, text: str) -> list[str]:
+    """The page's steps against the ones this check takes, both ways."""
+    named = list(STEP_RE.findall(text))
+    findings = [f"{label}: the page has a step {name!r} this check does not take"
+                for name in named if name not in STEPS]
+    findings += [f"{label}: this check takes the step {name!r} and the page does not say it"
+                 for name in STEPS if name not in named]
+    if not findings and named != list(STEPS):
+        findings.append(f"{label}: the page's steps are {named}, and the check takes {list(STEPS)}")
+    return findings
 
 
-def blank_project(place: pathlib.Path, zips: list[pathlib.Path]) -> pathlib.Path:
-    """A Godot project with nothing in it but the unzipped addons and the stranger's script."""
-    project = place / "stranger"
-    (project / "addons").mkdir(parents=True)
-    (project / "project.godot").write_text(
+def example_of(step: str, text: str) -> pathlib.Path:
+    """The file the step's `<!-- example: … -->` block names."""
+    found = EXAMPLE_RE.search(text)
+    if found is None:
+        raise Unfollowable(f"the step {step!r} has no example block")
+    return REPO / found.group(1)
+
+
+# --- the folder the reader works in ---------------------------------------------
+
+
+@dataclasses.dataclass(frozen=True)
+class Planted:
+    """One fault the self-test plants; the empty one is the untouched page."""
+
+    zip_member: str = ""
+    installed_file: str = ""
+    silent_runner: bool = False
+
+
+@dataclasses.dataclass(frozen=True)
+class Place:
+    """The reader's folder: the clone, the project, and a PATH holding `godot`."""
+
+    root: pathlib.Path
+    environment: dict[str, str]
+
+    @property
+    def project(self) -> pathlib.Path:
+        return self.root / "my_game"
+
+    @property
+    def dist(self) -> pathlib.Path:
+        return self.root / "library" / "dist"
+
+
+def reader_folder(root: pathlib.Path) -> Place:
+    """A folder as the page assumes it: a clone beside a blank Godot project."""
+    (root / "my_game" / "addons").mkdir(parents=True)
+    (root / "my_game" / "project.godot").write_text(
         "config_version=5\n\n[application]\n\nconfig/name=\"A stranger's game\"\n")
-    for archive in zips:
-        with zipfile.ZipFile(archive) as bundle:
-            bundle.extractall(project / "addons")
-    shutil.copy(STRANGER, project / STRANGER.name)
-    return project
+    (root / "game-ai-kit").symlink_to(REPO, target_is_directory=True)
+    tools = root / "bin"
+    tools.mkdir()
+    (tools / "godot").write_text(f"#!/bin/sh\nexec '{GODOT}' \"$@\"\n")
+    (tools / "godot").chmod(0o755)
+    environment = dict(os.environ, PATH=f"{tools}{os.pathsep}{os.environ.get('PATH', '')}")
+    return Place(root, environment)
 
 
-def godot_half(zips: list[pathlib.Path], place: pathlib.Path) -> list[str]:
-    """Run the stranger's script in a blank project holding `zips`; what failed, if anything."""
-    project = blank_project(place, zips)
-    imported = subprocess.run([str(GODOT), "--headless", "--path", str(project), "--import"],
-                              capture_output=True, text=True)
-    if imported.returncode != 0:
-        return [f"the blank project does not import (exit {imported.returncode})"]
-    ran = subprocess.run([str(GODOT), "--headless", "--path", str(project), "-s", STRANGER.name],
-                         capture_output=True, text=True)
-    output = ran.stdout + ran.stderr
-    if ran.returncode != 0 or MARKER not in output:
-        errors = [line for line in output.splitlines() if "ERROR" in line][:5]
-        return [f"the addons do not run in a blank project (exit {ran.returncode}): {errors}"]
+def run_blocks(step: str, text: str, place: Place) -> list[str]:
+    """Every ```bash block of the step, as printed, from the reader's folder."""
+    for block in BASH_BLOCK_RE.findall(text):
+        try:
+            ran = subprocess.run(["bash", "-e", "-c", block], cwd=place.root, env=place.environment,
+                                 capture_output=True, text=True, timeout=BLOCK_SECONDS)
+        except subprocess.TimeoutExpired:
+            return [f"step {step!r}: its commands did not finish in {BLOCK_SECONDS} s"]
+        if ran.returncode != 0:
+            said = (ran.stderr or ran.stdout).strip().splitlines()[-3:]
+            return [f"step {step!r}: its commands, as printed, fail (exit {ran.returncode}): {said}"]
     return []
 
 
-def addon_zips(artifacts: dict[str, pathlib.Path]) -> list[pathlib.Path]:
-    """The zips of the addons the stranger's script needs."""
-    return [the_one(artifacts, f"{addon}-") for addon in ADDONS]
+# --- what the reader does without a command ----------------------------------------
 
 
-def without(archive: pathlib.Path, member: str) -> pathlib.Path:
-    """A copy of `archive` with `member` taken out: the self-test's planted fault."""
-    planted = archive.with_name(f"planted-{archive.name}")
-    with zipfile.ZipFile(archive) as source, zipfile.ZipFile(planted, "w") as copy:
-        for entry in source.infolist():
-            if entry.filename != member:
-                copy.writestr(entry, source.read(entry))
-    return planted
+def without_member(archive: pathlib.Path, member: str) -> None:
+    """Rewrite `archive` with `member` taken out: a planted fault."""
+    with zipfile.ZipFile(archive) as source:
+        entries = [(entry, source.read(entry)) for entry in source.infolist() if entry.filename != member]
+    with zipfile.ZipFile(archive, "w") as copy:
+        for entry, data in entries:
+            copy.writestr(entry, data)
+
+
+def plant_in_release(place: Place, planted: Planted) -> list[str]:
+    """After `release`: the planted zip fault, if any. Nothing to report."""
+    if planted.zip_member:
+        owner = planted.zip_member.split("/")[0]
+        for archive in place.dist.glob(f"{owner}-*.zip"):
+            without_member(archive, planted.zip_member)
+    return []
+
+
+def run_example(step: str, text: str, place: Place, planted: Planted) -> list[str]:
+    """`route` and `infer`: the example in the project, added to the tree by the runner."""
+    example = example_of(step, text)
+    shutil.copy(example, place.project / example.name)
+    runner = place.project / STRANGER.name
+    if planted.silent_runner:
+        runner.write_text("extends SceneTree\n\n\nfunc _initialize() -> void:\n\tquit(0)\n")
+    else:
+        shutil.copy(STRANGER, runner)
+    command = [str(GODOT), "--headless", "--path", str(place.project), "-s", runner.name, "--", step]
+    try:
+        ran = subprocess.run(command, capture_output=True, text=True, timeout=RUN_SECONDS)
+    except subprocess.TimeoutExpired:
+        return [f"step {step!r}: Godot was still running after {RUN_SECONDS} s -- "
+                "a script error after the frame wait leaves it running"]
+    output = ran.stdout + ran.stderr
+    if ran.returncode != 0 or MARKERS[step] not in output:
+        errors = [line for line in output.splitlines() if "ERROR" in line][:5]
+        return [f"step {step!r}: the example did not decide (exit {ran.returncode}, "
+                f"missing {MARKERS[step]!r}): {errors}"]
+    return []
+
+
+def probe_wheel(place: Place, planted: Planted) -> list[str]:
+    """After `wheel`: the installed package answers from site-packages."""
+    environment = place.root / ".venv"
+    for found in environment.rglob(planted.installed_file) if planted.installed_file else []:
+        found.unlink()
+    python = environment / "bin" / "python"
+    probe = subprocess.run([str(python), "-I", "-c", PROBE], capture_output=True, text=True, cwd=place.root)
+    if probe.returncode != 0 or "LIBRARY-CHECK" not in probe.stdout:
+        return [f"step 'wheel': the installed wheel does not answer: {probe.stderr.strip().splitlines()[-3:]}"]
+    return []
+
+
+def save_training(text: str, place: Place) -> list[str]:
+    """Before `train`'s command: the page's Python block, saved where it says."""
+    training = PYTHON_BLOCK_RE.search(text)
+    if training is None:
+        raise Unfollowable("the step 'train' has no python block")
+    (place.project / "my_training.py").write_text(training.group(1))
+    return []
+
+
+def licence_findings(place: Place) -> list[str]:
+    """`licence`: every archive carries LICENSE and NOTICE."""
+    findings = []
+    for archive in sorted([*place.dist.glob("*.zip"), *place.dist.glob("*.whl")]):
+        with zipfile.ZipFile(archive) as bundle:
+            names = {pathlib.PurePosixPath(name).name for name in bundle.namelist()}
+        findings += [f"step 'licence': {archive.name} carries no {needed}"
+                     for needed in ("LICENSE", "NOTICE") if needed not in names]
+    return findings
+
+
+# --- the whole page -------------------------------------------------------------
+
+
+def take(step: str, text: str, place: Place, planted: Planted) -> list[str]:
+    """One step: what the reader does before its commands, the commands, then after."""
+    before = save_training(text, place) if step == "train" else []
+    failures = before or run_blocks(step, text, place)
+    if failures:
+        return failures
+    if step == "release":
+        return plant_in_release(place, planted)
+    if step in MARKERS:
+        return run_example(step, text, place, planted)
+    if step == "wheel":
+        return probe_wheel(place, planted)
+    if step == "licence":
+        return licence_findings(place)
+    return []
+
+
+def follow(text: str, root: pathlib.Path, planted: Planted = Planted()) -> list[str]:
+    """Every step of the page, in its order, in `root`; the first failure, if any."""
+    place = reader_folder(root)
+    for step, step_text in page_steps(text).items():
+        failures = take(step, step_text, place, planted)
+        if failures:
+            return failures
+    return []
+
+
+def pages_findings(texts: dict[str, str]) -> list[str]:
+    """Each page's steps against the check's, by label."""
+    return [finding for label, text in texts.items() for finding in step_findings(label, text)]
 
 
 def check() -> int:
-    """Both halves, outside the repository."""
-    with tempfile.TemporaryDirectory(prefix="gak-library-") as workspace:
-        place = pathlib.Path(workspace)
-        artifacts = build_release(place / "release")
-        failures = python_half(the_one(artifacts, "gameaikit-"), place)
-        failures += godot_half(addon_zips(artifacts), place)
+    """The page's steps, outside the repository."""
+    texts = {path.name: path.read_text(encoding="utf-8") for path in PAGES}
+    failures = pages_findings(texts)
+    if not failures:
+        with tempfile.TemporaryDirectory(prefix="gak-library-") as workspace:
+            failures = follow(texts[PAGES[0].name], pathlib.Path(workspace))
     for failure in failures:
         print(f"library-check: {failure}")
     if not failures:
-        print("library-check: the wheel and two addons ran outside the repository")
+        print(f"library-check: the {len(STEPS)} steps of {PAGES[0].name} ran outside the repository")
     return 1 if failures else 0
 
 
-def self_test() -> int:
-    """Each half, given a planted fault, must report it."""
+# --- self-test --------------------------------------------------------------------
+
+
+def page_cases(english: str) -> list[str]:
+    """The planted pages: each must be refused, naming the step it plants."""
+    extra = english + "\n<!-- library-step: teleport -->\n"
+    short = english.replace("<!-- library-step: licence -->\n", "")
     failures = []
+    for planted, named in ((extra, "teleport"), (short, "licence")):
+        found = step_findings("planted", planted)
+        if not any(named in line for line in found):
+            failures.append(f"a page whose steps differ from the check's is refused, naming {named} ({found})")
+    return failures
+
+
+def run_cases(english: str, place: pathlib.Path) -> list[str]:
+    """The untouched page passes, and each planted fault is named."""
+    failures = []
+    untouched = follow(english, place / "untouched")
+    if untouched:
+        failures.append(f"the untouched page passes every step ({untouched})")
+    misplaced = english.replace("unzip -q library/dist/ai_core-0.1.0.zip", "unzip -q ai_core-0.1.0.zip", 1)
+    planted_faults = (
+        (english, Planted(zip_member="ai_core/grid_graph.gd"), "GakGridGraph"),
+        (english, Planted(installed_file="aim.py"), "cannot import name 'aim'"),
+        (english, Planted(zip_member="ai_core/NOTICE"), "carries no NOTICE"),
+        (english, Planted(silent_runner=True), f"missing {MARKERS['route']!r}"),
+        (misplaced, Planted(), "step 'unzip'"),
+    )
+    for number, (text, planted, named) in enumerate(planted_faults):
+        # A folder named for the fault would put the name in every path the
+        # failure prints, and the case would pass on the path alone.
+        found = follow(text, place / f"case-{number}", planted)
+        if not any(named in line for line in found):
+            failures.append(f"{planted} fails, naming {named} ({found})")
+    return failures
+
+
+def self_test() -> int:
+    """The untouched page must pass; every planted fault must be reported."""
+    english = PAGES[0].read_text(encoding="utf-8")
+    failures = page_cases(english)
     with tempfile.TemporaryDirectory(prefix="gak-library-selftest-") as workspace:
-        place = pathlib.Path(workspace)
-        artifacts = build_release(place / "release")
-        core, search = addon_zips(artifacts)
-        wheel = the_one(artifacts, "gameaikit-")
-        untouched = godot_half([core, search], place / "untouched") + python_half(wheel, place / "untouched")
-        if untouched:
-            failures.append(f"the untouched release passes both halves ({untouched})")
-        found = godot_half([without(core, "ai_core/grid_graph.gd"), search], place / "no-grid")
-        if not any("GakGridGraph" in line for line in found):
-            failures.append(f"an ai_core zip without grid_graph.gd fails, naming GakGridGraph ({found})")
-        found = python_half(wheel, place / "no-aim", drop="aim.py")
-        if not any("aim" in line for line in found):
-            failures.append(f"a wheel install without utility/aim.py fails, naming aim ({found})")
+        failures += run_cases(english, pathlib.Path(workspace))
     for failure in failures:
         print(f"self-test FAIL: {failure}")
     print(f"self-test: {'ok' if not failures else str(len(failures)) + ' failure(s)'}")
@@ -208,8 +384,8 @@ def main(argv: list[str]) -> int:
         return 2
     try:
         return self_test() if args.self_test else check()
-    except Unbuildable as refusal:
-        print(f"library-check: the release does not build: {refusal}", file=sys.stderr)
+    except Unfollowable as refusal:
+        print(f"library-check: cannot follow the page: {refusal}", file=sys.stderr)
         return 2
 
 

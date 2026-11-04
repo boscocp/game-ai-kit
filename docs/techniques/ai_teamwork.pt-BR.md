@@ -7,7 +7,7 @@ tier: 2
 source: https://www.gameaipro.com/
 invalidated_if: the kit's RoleArbiter, TeamCommander, TacticalPositions, SquadConfidence or SearchCoordinator signatures change, or the demos that use them are renamed
 teaches: shooter-ai
-translation_of: ea40df0357d4e78bd29a3580d259a982c9b1acc7e347fe223d3656cd41e90c7c
+translation_of: 6ca649424f580cfa1039ed511c6d849ef4810ead8d2cf933d5a7b7bbbee0418d
 -->
 
 > English: [ai_teamwork.md](ai_teamwork.md). Os termos que ficam em inglês
@@ -67,6 +67,11 @@ fica. Os guardas da infiltração dividem a busca por
 ## No seu projeto {#your-project}
 
 ### O que copiar {#copy}
+
+Pela biblioteca: descompacte o `ai_teamwork-<version>.zip` no
+`res://addons/` do seu projeto -- [usando a
+biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
+também. Ou copie de um clone:
 
 Uma pasta: `godot/addons/ai_teamwork/`. Ela não precisa de mais nada, nem
 do `ai_core`. Abra o projeto uma vez, ou rode `godot --headless --import`,

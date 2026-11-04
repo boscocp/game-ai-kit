@@ -211,6 +211,12 @@ release step refuses to call a build good until a separate gate has opened
 every archive and found them. The decisions behind all this are in
 [`docs/adr/`](docs/adr/).
 
+The whole way, both halves -- unzip, import, a first decision in your
+scene, the wheel, training in Python for the game to read -- is
+[using the library](docs/techniques/using-the-library.md)
+([em português](docs/techniques/using-the-library.pt-BR.md)), and
+`make library-check` follows it step by step outside the repository.
+
 ## Licence, and what the credit actually obliges
 
 Apache-2.0. Use it in a commercial game, modify it, ship it.

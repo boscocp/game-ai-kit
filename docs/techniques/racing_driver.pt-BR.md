@@ -7,7 +7,7 @@ tier: 2
 source: https://www.gameaipro.com/ ; https://www.ri.cmu.edu/pub_files/pub3/coulter_r_craig_1992_1/coulter_r_craig_1992_1.pdf
 invalidated_if: RacingDriver, RacingLevel or RacingTrack change what they decide, or demo-racing is renamed
 teaches: racing-ai
-translation_of: d89a03410f8d248fc8f06b184a5aa8a206e52f035528fa97065bf25a89a45308
+translation_of: aa5fc42a475b3b42e57cc289396ae7d06393eee596b377fbc0b0e64fe0c9ddd2
 -->
 
 > English: [racing_driver.md](racing_driver.md). Os termos que ficam em
@@ -65,6 +65,10 @@ ajuste muda durante uma corrida. Os ajustes que importam:
 ## No seu projeto {#your-project}
 
 ### O que copiar {#copy}
+
+A biblioteca tem o veículo e o *seek*, o `ai_steering-<version>.zip`
+([usando a biblioteca](using-the-library.pt-BR.md)). O piloto em si é da
+demo de corrida, então:
 
 Nada do lado Python: este piloto não é treinado, e não tem metade em
 Python -- `python/gameaikit/racing/` é o piloto do corredor 3D, outro. No

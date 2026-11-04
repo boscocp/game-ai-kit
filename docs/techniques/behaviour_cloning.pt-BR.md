@@ -7,7 +7,7 @@ tier: 2
 source: https://www.gamedeveloper.com/programming/the-killer-groove-the-shadow-ai-of-killer-instinct
 invalidated_if: ClonedPlayer, SoftmaxModel, CaseTable, the clone file's shape or gameaikit.cloning's publish change, or demo-fighting is renamed
 teaches: behaviour-cloning
-translation_of: cc8857d2722089a2d15eaf1c76fe309e0a56c595e8e8181bf451549f08fe5c5e
+translation_of: 8d322adeb7a010ae97c1a225d09e8b828630888c69b0dfd02f9c82b07c59450b
 -->
 
 > English: [behaviour_cloning.md](behaviour_cloning.md). Os termos que
@@ -67,6 +67,10 @@ ajusta o modelo *softmax*, conta a tabela do *ghost* e escreve os dois em
 ## No seu projeto {#your-project}
 
 ### O que copiar {#copy}
+
+A metade Godot está na biblioteca, o `ai_learning-<version>.zip` ([usando a
+biblioteca](using-the-library.pt-BR.md)). A metade Python é do exemplo de
+luta e não vai no *wheel*, então é uma cópia:
 
 O lado Python ajusta: `python/gameaikit/cloning/` (só a biblioteca padrão)
 -- `softmax.py` o modelo, `ghost.py` a tabela, `publish.py` o arquivo. O

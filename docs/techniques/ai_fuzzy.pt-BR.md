@@ -7,7 +7,7 @@ tier: 2
 source: book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 5, fuzzy logic ; book:IEC 61131-7, "Programmable controllers -- Part 7: Fuzzy control programming", 2000
 invalidated_if: the kit's FuzzySet, FuzzyVariable, FuzzyRule or FuzzyRuleBase signatures change, or the demos that use them are renamed
 teaches: stealth-ai
-translation_of: 34d862b02b9a560b57487122d42a19108de27498f252793028f524425e3f0164
+translation_of: 697355cdc84136ba4be99bdbe5094095c40d1e7254cbaac3261e85d72309adbc
 -->
 
 > English: [ai_fuzzy.md](ai_fuzzy.md). Os termos que ficam em inglês estão
@@ -63,6 +63,10 @@ monta um a partir de uma linha de JSON. Os ajustes que importam:
 ## No seu projeto {#your-project}
 
 ### O que copiar {#copy}
+
+Pela biblioteca: descompacte o `ai_fuzzy-<version>.zip` no `res://addons/`
+do seu projeto -- [usando a biblioteca](using-the-library.pt-BR.md) tem cada
+passo, o *wheel* de Python também. Ou copie de um clone:
 
 Uma pasta: `godot/addons/ai_fuzzy/`. Ela não precisa de mais nada, nem do
 `ai_core`. Abra o projeto uma vez, ou rode `godot --headless --import`, para
