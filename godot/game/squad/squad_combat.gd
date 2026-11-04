@@ -133,23 +133,24 @@ static func apply(state: BoardState, rows: Array[String], strike: Attack) -> Boa
 	return next.duplicate_state()
 
 
-## One line saying what a shot did, in the language on screen: who shot
-## whom, at what chance and why, and whether it hit.
-static func told(rows: Array[String], before: BoardState, strike: Attack, after: BoardState) -> String:
+## One line saying what a shot did: who shot whom, at what chance and why,
+## and whether it hit. A `Sentence`, worded where it is shown (T110), so the
+## news on the panel follows a language switched after the shot.
+static func told(rows: Array[String], before: BoardState, strike: Attack, after: BoardState) -> Array:
 	var shooter: Unit = before.unit_by_id(strike.attacker_id)
 	var target: Unit = before.unit_by_id(strike.target_id)
 	var given: Dictionary = inputs(rows, shooter, target)
 	var struck: Unit = after.unit_by_id(target.id)
 	var left: int = struck.health if struck != null else 0
-	var outcome: String = TranslationServer.translate("missed")
+	var outcome: Array = Sentence.of("missed")  # shown through tr()
 	if left < target.health and left > 0:
-		outcome = TranslationServer.translate("hit, {left} health left").format({left = left})
+		outcome = Sentence.of("hit, {left} health left", {left = left})  # shown through tr()
 	elif left < target.health:
-		outcome = TranslationServer.translate("hit and destroyed it")
-	var said: String = TranslationServer.translate("{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}), {outcome}")
+		outcome = Sentence.of("hit and destroyed it")  # shown through tr()
+	var key: String = "{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}), {outcome}"  # shown through tr()
 	if given["flanked"]:
-		said = TranslationServer.translate("{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}, flanked), {outcome}")
-	return said.format({side = TacticalStatus.side_name(shooter.faction), piece = TacticalStatus.piece(shooter.type.type_name),
-		cell = shooter.cell, target_side = TacticalStatus.side_name(target.faction), target = TacticalStatus.piece(target.type.type_name),
+		key = "{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}, flanked), {outcome}"  # shown through tr()
+	return Sentence.of(key, {side = TacticalStatus.side_word(shooter.faction), piece = shooter.type.type_name,
+		cell = shooter.cell, target_side = TacticalStatus.side_word(target.faction), target = target.type.type_name,
 		target_cell = target.cell, chance = hit_chance(given["aim"], given["defence"], given["cover"]), cover = given["cover"],
 		outcome = outcome})

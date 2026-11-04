@@ -103,8 +103,8 @@ func test_a_bolt_tower_fires_at_the_start_of_its_side_s_turn_at_the_weakest_walk
 	var fired: Array = TacticalCombat.towers_fire(state)
 
 	assert_int(fired[1].size()).is_equal(1)
-	assert_str(fired[1][0]).contains("red bolt tower")
-	assert_str(fired[1][0]).contains("blue shield")
+	assert_str(Sentence.english(fired[1][0])).contains("red bolt tower")
+	assert_str(Sentence.english(fired[1][0])).contains("blue shield")
 
 
 func test_a_tower_does_not_fire_on_the_other_side_s_turn() -> void:
@@ -195,7 +195,7 @@ func test_an_attack_cannot_be_taken_back() -> void:
 	assert_bool(scene._turn.can_undo()).is_true()
 	scene.click_cell(start + Vector2i(-1, 0))
 	scene.click_cell(start + Vector2i(-2, 0))
-	assert_str(scene._last_event).contains("runner")
+	assert_str(scene.news_in_english()).contains("runner")
 	var fought: BoardState = scene.state
 
 	scene.undo()
@@ -214,7 +214,7 @@ func test_the_game_fires_a_side_s_towers_when_its_turn_starts() -> void:
 
 	scene.step_decision()
 
-	assert_str(scene._last_event).contains("blue bolt tower")
+	assert_str(scene.news_in_english()).contains("blue bolt tower")
 	var hit: Unit = scene.state.unit_by_id(runner.id)
 	assert_int(hit.health if hit != null else 0).is_less(10)
 
@@ -286,7 +286,7 @@ func test_a_siege_is_told_as_a_strike_not_a_kill() -> void:
 	var state: BoardState = _duel(TacticalRules.RUNNER, TacticalRules.WORKSHOP, Vector2i(1, 0))
 	state.unit_by_id(2).health = TacticalRules.BUILDING_HEALTH
 
-	var told: String = TacticalCombat.told(state, Attack.new(1, 2), TacticalCombat.apply(state, Attack.new(1, 2)))
+	var told: String = Sentence.english(TacticalCombat.told(state, Attack.new(1, 2), TacticalCombat.apply(state, Attack.new(1, 2))))
 
 	assert_str(told).contains("struck")
 

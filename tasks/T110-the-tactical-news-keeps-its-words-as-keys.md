@@ -62,3 +62,26 @@ python3 scripts/check_readability.py
 In pt-BR, play a tactical match until the computer attacks and you build,
 then switch to English before the next event: does the news line change
 language at once?
+
+## Done (wave 124) -- what the work decided, for the owner to confirm
+
+- **One sentence a line.** `_last_event` is a list of sentences, one a
+  line, not one sentence with the lines nested: a turn's opening says
+  several things (the points paid, each tower's shot, the computer's
+  attacks under "{side}'s attacks:"), and a joining key such as
+  `"{first}\n{rest}"` would be one more shape-only key for nothing.
+- **The XCOM-style mode too.** T85 merged after this task was written, and
+  its shot's news (`SquadCombat.told`) went the same way, since it reaches
+  the same `_last_event` through `TacticalRuleset.told`. That is outside
+  the task's file list (`godot/game/squad/`, `godot/test/squad/`). Its
+  turn opening says nothing, as before.
+- **Two names added.** `TacticalStatus.side_word` gives a side's key
+  ("red", "blue") as a value of a kept sentence; `side_name` now translates
+  it. `TacticalGame.news_in_english()` is the news in English, for the
+  suites that read `_last_event`.
+- **No key changed**; `tactical.csv` and `squad.csv` are untouched.
+- **What was measured.** `tactical_news_test.gd`: an attack, a build, a
+  wait, the forge bought and a tower's shot, each in pt-BR then in
+  English, the locale switched before the next event: the panel shows the
+  new language and none of the old, then back again. With the news worded
+  as it is kept (planted in `_tell`), the attack's case fails.

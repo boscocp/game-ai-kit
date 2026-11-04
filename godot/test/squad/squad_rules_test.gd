@@ -121,9 +121,23 @@ func test_trees_two_deep_block_the_shot() -> void:
 
 func test_the_shot_is_told_with_its_chance_and_cover() -> void:
 	var state: BoardState = _facing(Vector2i(5, 4), Vector2i(1, 4))
-	var said: String = _rules.told(state, Attack.new(1, 2), _rules.attack(state, Attack.new(1, 2)))
+	var said: String = Sentence.english(_rules.told(state, Attack.new(1, 2), _rules.attack(state, Attack.new(1, 2))))
 	assert_str(said).contains("cover 40")
 	assert_str(said).contains("%d%%" % SquadCombat.chance_of(SquadScenario.rows(), state.unit_by_id(1), state.unit_by_id(2)))
+
+
+func test_the_shot_s_news_is_kept_as_keys_and_worded_where_shown() -> void:
+	# T110: the news is a `Sentence`, so the panel rewords it when the
+	# language changes after the shot -- the side, the piece and the
+	# outcome are values, each worded on its own.
+	var state: BoardState = _facing(Vector2i(5, 4), Vector2i(1, 4))
+	var told: Array = _rules.told(state, Attack.new(1, 2), _rules.attack(state, Attack.new(1, 2)))
+	var locale_before: String = TranslationServer.get_locale()
+	TranslationServer.set_locale("pt_BR")
+	var in_portuguese: String = TacticalStatus.said(told)
+	TranslationServer.set_locale(locale_before)
+	assert_str(Sentence.english(told)).contains("red ").contains("cover 40")
+	assert_str(in_portuguese).contains("40").not_contains("cover").not_contains("shot").not_contains("missed")
 
 
 # --- cover on the tactical map ----------------------------------------------

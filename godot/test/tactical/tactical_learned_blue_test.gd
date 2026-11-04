@@ -88,7 +88,7 @@ func test_the_points_are_paid_at_the_start_of_the_holder_s_turn() -> void:
 	var opened: Array = TurnStart.open(state)
 
 	assert_int(opened[0].funds_of(BLUE)).is_equal(TacticalRules.INCOME + TacticalRules.POINT_INCOME)
-	assert_str(" ".join(opened[1])).contains("holding the point")
+	assert_str(" ".join(opened[1].map(Sentence.english))).contains("holding the point")
 
 
 func test_the_scene_pays_a_point_when_it_opens_the_holder_s_turn() -> void:

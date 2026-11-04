@@ -52,12 +52,13 @@ extends RefCounted
 @abstract func attack(state: BoardState, strike: Attack) -> BoardState
 
 
-## One line saying what an attack did, for the person to read.
-@abstract func told(before: BoardState, strike: Attack, after: BoardState) -> String
+## One line saying what an attack did, for the person to read: a `Sentence`,
+## worded where it is shown.
+@abstract func told(before: BoardState, strike: Attack, after: BoardState) -> Array
 
 
-## The next side's turn opened on `state`, as `[BoardState, Array[String]]`:
-## the new state and a line for each thing that happened as it opened.
+## The next side's turn opened on `state`, as `[BoardState, Array[Array]]`:
+## the new state and a `Sentence` for each thing that happened as it opened.
 @abstract func open_turn(state: BoardState) -> Array
 
 

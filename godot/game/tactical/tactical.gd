@@ -88,14 +88,15 @@ var _computer_turn: BlueTurn
 var _types: Dictionary = TacticalRules.unit_types()
 var _selected_id: int = -1
 var _last_refusal: String = ""
-# What the last action did, in words, so a build is confirmed and not only
-# visible as a smaller number.
-var _last_event: String = ""
+# What the last action did, so a build is confirmed and not only visible as
+# a smaller number: one `Sentence` a line, worded where it is shown (T110),
+# so a language switched before the next event rewords it.
+var _last_event: Array[Array] = []
 # What the computer's attacks did this turn, kept for the person to read
 # when their turn starts: shown only while they were played, they were gone
 # by the time the person looked -- and enter played them without showing them
-# at all.
-var _computer_news: Array[String] = []
+# at all. A `Sentence` each, as the news is.
+var _computer_news: Array[Array] = []
 # Whether the threat map is drawn (T toggles it).
 var _showing_threat: bool = true
 # True after one press of end turn with units still unspent: the next press
@@ -220,7 +221,7 @@ func new_game() -> void:
 	_kept = false
 	# The last game's last event is not news in this one -- and when the
 	# computer moves first, nothing below would clear it.
-	_last_event = ""
+	_last_event.clear()
 	_person_fog = null
 	_computer_fog = null
 	if person_side == TacticalScenario.RED:
@@ -236,7 +237,7 @@ func click_cell(cell: Vector2i) -> void:
 	if not _persons_turn():
 		return
 	var occupant: Unit = _persons_board().unit_at(cell)
-	_last_event = ""
+	_last_event.clear()
 	_confirming_end = false
 	if occupant != null and occupant.faction == state.current_faction:
 		_pick_up(occupant)
@@ -263,7 +264,7 @@ func attack(target: Unit) -> void:
 	var before: BoardState = state
 	if _act(ruleset.attack(state, strike), ruleset.why_attack_refused(state, strike)):
 		_note(TacticalDecision.strike(strike.attacker_id, target, []), before)
-		_last_event = ruleset.told(before, strike, state)
+		_tell(ruleset.told(before, strike, state))
 		_turn.attacked(strike.attacker_id)
 		_turn.seal()
 		winner = ruleset.winner(state)
@@ -288,7 +289,8 @@ func build(index: int) -> void:
 	if _act(state.produce(order), state.why_production_refused(order)):
 		_note(TacticalDecision.build(order.producer_id, order, []), before)
 		_turn.spend(_selected_id)
-		_last_event = tr("built {piece} at {cell}; it moves next turn").format({piece = TacticalStatus.a_piece(kind.type_name), cell = order.cell})
+		_tell(Sentence.of("built {piece} at {cell}; it moves next turn", {  # shown through tr()
+			piece = TacticalStatus.a_piece_sentence(kind.type_name), cell = order.cell}))
 	_refresh()
 
 
@@ -304,7 +306,7 @@ func wait() -> void:
 	_turn.remember(state)
 	_note(TacticalDecision.hold(unit.id, [], unit.cell), state)
 	_turn.spend(unit.id)
-	_last_event = tr("{piece} waits at {cell}").format({piece = TacticalStatus.the_piece(unit.type.type_name), cell = unit.cell})
+	_tell(Sentence.of("{piece} waits at {cell}", {piece = TacticalStatus.the_piece_sentence(unit.type.type_name), cell = unit.cell}))  # shown through tr()
 	_last_refusal = ""
 	_select_next_unspent()
 	_refresh()
@@ -319,7 +321,7 @@ func buy_forge() -> void:
 	var before: BoardState = state
 	if _act(state.buy(forge), state.why_upgrade_refused(forge)):
 		_note(TacticalDecision.buy(_selected_id, forge, [], Vector2i.ZERO), before)
-		_last_event = tr("bought the forge: rams can be built")
+		_tell(Sentence.of("bought the forge: rams can be built"))  # shown through tr()
 	_refresh()
 
 
@@ -342,7 +344,7 @@ func undo() -> void:
 	if not _recorded.is_empty():
 		_recorded.pop_back()
 	_last_refusal = ""
-	_last_event = tr("taken back")
+	_tell(Sentence.of("taken back"))  # shown through tr()
 	_hold_what_was_taken_back(spent_before)
 	_refresh()
 
@@ -396,8 +398,8 @@ func _play_computer_decision() -> void:
 	if decision in _computer_turn.played:
 		_note(decision, before)
 	if decision.attack != null and decision in _computer_turn.played:
-		_last_event = ruleset.told(before, decision.attack, state)
-		_computer_news.append(_last_event)
+		_tell(ruleset.told(before, decision.attack, state))
+		_computer_news.append(_last_event[0])
 	winner = ruleset.winner(state)
 	# A refused decision is not in `played`, and a hold or a build is no walk.
 	if decision.move != null and decision in _computer_turn.played:
@@ -568,7 +570,7 @@ func _walk_to(cell: Vector2i) -> void:
 		if ruleset.reveals(before, state, person_side):
 			_turn.seal()
 			_sealed_by_a_reveal = true
-			_last_event = tr("an enemy came into sight: the walk cannot be taken back")
+			_tell(Sentence.of("an enemy came into sight: the walk cannot be taken back"))  # shown through tr()
 		_select_next_unspent()
 
 
@@ -619,7 +621,7 @@ func _begin_computer_turn() -> void:
 
 
 func _start_persons_turn() -> void:
-	_last_event = ""
+	_last_event.clear()
 	if state.current_faction != person_side:
 		_open_turn()
 		_last_event = _with_computer_news(_last_event)
@@ -636,20 +638,39 @@ func _start_persons_turn() -> void:
 func _open_turn() -> void:
 	var opened: Array = ruleset.open_turn(state)
 	state = opened[0]
-	_last_event = "\n".join(opened[1])
+	_last_event.assign(opened[1])
 	winner = ruleset.winner(state)
 
 
 # What the person reads first: the computer's attacks of the turn just
 # played, then what the person's own towers did.
-func _with_computer_news(towers: String) -> String:
+func _with_computer_news(towers: Array[Array]) -> Array[Array]:
 	if _computer_news.is_empty():
 		return towers
-	var lines: Array[String] = [tr("{side}'s attacks:").format({side = TacticalStatus.side_name(TacticalScenario.FACTIONS - 1 - person_side)})]
+	var lines: Array[Array] = [Sentence.of("{side}'s attacks:", {  # shown through tr()
+		side = TacticalStatus.side_word(TacticalScenario.FACTIONS - 1 - person_side)})]
 	lines.append_array(_computer_news)
-	if towers != "":
-		lines.append(towers)
-	return "\n".join(lines)
+	lines.append_array(towers)
+	return lines
+
+
+# The last event becomes `sentence`, the one line of news.
+func _tell(sentence: Array) -> void:
+	_last_event.clear()
+	_last_event.append(sentence)
+
+
+## The news on the panel in English, one line an event: what the AI and the
+## person did, as the game keeps it -- for a test to read whatever the
+## language on screen (T110).
+func news_in_english() -> String:
+	return "\n".join(_last_event.map(Sentence.english))
+
+
+# The news in the language on screen, worded here, where it is shown, so a
+# language switched mid-turn rewords it with the rest of the status.
+func _news_said() -> String:
+	return "\n".join(_last_event.map(TacticalStatus.said))
 
 
 # The next of the person's units that can still walk, or nothing when none can.
@@ -788,9 +809,9 @@ func _status_text() -> String:
 	if winner != TacticalVictory.NOBODY:
 		return ruleset.announcement(winner, state)
 	if not _persons_turn():
-		return ruleset.computer_status(state, _computer_turn, computer, _last_event, _drawn_fog())
+		return ruleset.computer_status(state, _computer_turn, computer, _news_said(), _drawn_fog())
 	var unit: Unit = state.unit_by_id(_selected_id)
-	var news: String = _last_event
+	var news: String = _news_said()
 	if unit == null and _turn.unspent(state).is_empty():
 		news = (news + "\n" if news != "" else "") + tr("every unit has moved: space ends the turn")
 	return ruleset.status(state, unit, _last_refusal, news, unit != null and not _turn.has_attacked(unit.id))

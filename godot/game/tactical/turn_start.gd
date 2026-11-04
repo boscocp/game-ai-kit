@@ -15,14 +15,14 @@ class_name TurnStart
 extends RefCounted
 
 
-## The next side's turn opened on `state`, as `[BoardState, Array[String]]`:
+## The next side's turn opened on `state`, as `[BoardState, Array[Array]]`:
 ## the new state and one line for each thing that happened -- points paid,
-## towers fired -- in that order.
+## towers fired -- in that order, each a `Sentence` worded where it is shown.
 static func open(state: BoardState) -> Array:
 	var next: BoardState = state.end_turn(TacticalScenario.FACTIONS, 0, TacticalRules.INCOME)
-	var said: Array[String] = []
+	var said: Array[Array] = []
 	var paid: Array = ControlPoints.pay(next)
-	if paid[1] != "":
+	if not (paid[1] as Array).is_empty():
 		said.append(paid[1])
 	var fired: Array = TacticalCombat.towers_fire(paid[0])
 	said.append_array(fired[1])
