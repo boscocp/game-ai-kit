@@ -9,9 +9,10 @@ the shape of the tree under chance.
 import math
 import unittest
 
-from gameaikit.adversarial import AdversarialGame, MonteCarloSearch, Xorshift
+from gameaikit.adversarial import AdversarialGame, MonteCarloSearch
 from gameaikit.adversarial.mcts import EXPLORATION
 from gameaikit.adversarial.toy_games import DiceRace, Nim, Pile, Race
+from gameaikit.core import Xorshift
 
 #: The seed whose first draw is exactly 2^31, found by running the three
 #: steps of `Xorshift.next` backwards from it.
@@ -112,13 +113,6 @@ class TestMonteCarloSearch(unittest.TestCase):
 
     def test_a_game_without_chance_has_one_certain_outcome(self) -> None:
         self.assertEqual(Nim().outcomes(Pile(5, 0), 2), [(1.0, Pile(3, 1))])
-
-    def test_the_generator_starts_where_marsaglia_starts_and_zero_is_one(self) -> None:
-        self.assertEqual(Xorshift(1).next(), 270369)
-        self.assertEqual(Xorshift(0).next(), 270369)
-        drawn = Xorshift(9)
-        self.assertEqual({drawn.index(1) for _ in range(5)}, {0})
-        self.assertEqual(drawn.next(), Xorshift(9).next())
 
     def test_a_game_that_inherits_nothing_is_searched_by_its_methods(self) -> None:
         # `Game` is a Protocol (T64): a user's game need not inherit the kit's.

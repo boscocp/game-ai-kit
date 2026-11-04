@@ -7,7 +7,7 @@ tier: 2
 source: book:Travis McIntosh, "Human Enemy AI in The Last of Us", in Steve Rabin (ed.), "Game AI Pro 2", CRC Press, 2015 ; https://www.gameaipro.com/
 invalidated_if: the kit's VisionCone, Awareness, LineOfSight, Hearing, VisionShape, BeliefMap or ParticleBelief signatures change, or the demos that use them are renamed
 teaches: perception
-translation_of: 0ca465ab6979d897999ae419db26f4df7ecf09bf302e6d94a8dc07f152edca52
+translation_of: dec1b33831dd8ac6b08ed7f2a445c7f3b6779215677b8867c937cf280722f496
 -->
 
 > English: [ai_perception.md](ai_perception.md). Os termos que ficam em
@@ -105,10 +105,9 @@ acompanhar algo que não se vê [Thrun 2002].
 
 Um avistamento ou um relato colapsa a nuvem numa célula. `shares` é a
 nuvem contada por célula, no mesmo formato de `BeliefMap.shares`, então uma
-busca lê qualquer um dos dois. Todo sorteio vem de `ParticleDraws`, um
-xorshift com semente escrito nas duas linguagens -- uma cópia do de
-`ai_adversarial`, porque um *addon* não depende de nada além de `ai_core`
---, então uma nuvem é conferida com a sua gêmea em Python
+busca lê qualquer um dos dois. Todo sorteio vem do `Xorshift` do
+`ai_core`, um gerador com semente escrito nas duas linguagens
+(`gameaikit.core` em Python), então uma nuvem é conferida com a sua gêmea em Python
 (`gameaikit.perception.particles`) sorteio a sorteio por
 `spec/vectors/perception/particles-*.json`.
 
@@ -149,7 +148,7 @@ também. Ou copie de um clone:
 
 Duas pastas: `godot/addons/ai_core/` (a grade, que o cone usa num tabuleiro
 em grade) e `godot/addons/ai_perception/` -- para uma crença de partículas
-sozinha, bastam `particle_belief.gd` e `particle_draws.gd`. Abra o projeto uma vez, ou rode
+sozinha, bastam `particle_belief.gd` e o `xorshift.gd` do `ai_core`. Abra o projeto uma vez, ou rode
 `godot --headless --import`, para o Godot registrar as classes.
 
 ### Um exemplo mínimo {#example}

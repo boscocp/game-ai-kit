@@ -19,6 +19,7 @@
     "python/tests/test_mdp_vectors.py"
   ],
   "depends_on": [
+    "ai_core",
     "game_shared"
   ],
   "gates": [

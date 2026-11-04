@@ -3,10 +3,16 @@
 ##
 ## Godot's `RandomNumberGenerator` and Python's `random` are both good, and
 ## they are different generators: given the same seed they give different
-## numbers, so a search that drew from either could never be held to its
-## twin in the other language. Marsaglia's xorshift (2003) is three shifts
-## and three exclusive-ors on a 32-bit number -- short enough to copy by hand
-## and check by eye. Seeded with 1, its first draw is 270369.
+## numbers, so a search, a particle cloud or a ghost that drew from either
+## could never be held to its twin in the other language. Marsaglia's
+## xorshift (2003) is three shifts and three exclusive-ors on a 32-bit number
+## -- short enough to copy by hand and check by eye. Seeded with 1, its first
+## draw is 270369.
+##
+## It lives in `ai_core` because Monte Carlo search, the particle filter, the
+## bandit and the maze's ghosts all draw from it, and each had copied it for
+## want of a shared place (ADR 0021, amended by T109). It decides nothing:
+## which draw means what is the caller's business.
 ##
 ## GDScript's `int` is 64 bits, so every shift to the left is cut back to 32
 ## with `MASK`; Python's integers have no width at all and are cut the same
@@ -31,7 +37,7 @@ var _state: int = SEED_FOR_ZERO
 
 
 ## A generator that starts from `from_seed`. The same seed gives the same draws,
-## in this language and in `gameaikit.adversarial.xorshift`.
+## in this language and in `gameaikit.core.xorshift`.
 func _init(from_seed: int = SEED_FOR_ZERO) -> void:
 	_state = from_seed & MASK
 	if _state == 0:

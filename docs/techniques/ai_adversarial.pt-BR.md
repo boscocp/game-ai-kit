@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 5, figures 5.3, 5.7 and 5.11
 invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch, AdversarialResult, MonteCarloSearch, MctsResult or Xorshift signatures change, or the demos that use them are renamed
 teaches: adversarial-search
-translation_of: 1ce19bed6917d119b987e359038f177b76d4143e3211adf81d5a72fe4d0e8f34
+translation_of: d20c5af9046ee17d8a8927195e95c3739b19fd69dcc1c66a89386354b6b6af1b
 -->
 
 > English: [ai_adversarial.md](ai_adversarial.md). Os termos que ficam em
@@ -83,14 +83,16 @@ ajustes que importam:
 
 ### O que copiar {#copy}
 
-Pela biblioteca: descompacte o `ai_adversarial-<version>.zip` no
-`res://addons/` do seu projeto -- [usando a
-biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
-também. Ou copie de um clone:
+Pela biblioteca: descompacte o `ai_core-<version>.zip` e o
+`ai_adversarial-<version>.zip` no `res://addons/` do seu projeto -- [usando
+a biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de
+Python também. Ou copie de um clone:
 
-Uma pasta: `godot/addons/ai_adversarial/`. Ela não precisa de mais nada,
-nem do `ai_core`. Abra o projeto uma vez, ou rode `godot --headless
---import`, para o Godot registrar as classes.
+Duas pastas: `godot/addons/ai_core/` (pelo `Xorshift`, o gerador com
+semente de que a busca de Monte Carlo sorteia) e
+`godot/addons/ai_adversarial/`. Minimax e alfa-beta sozinhos não usam nada
+do `ai_core`, mas a pasta é uma só. Abra o projeto uma vez, ou rode
+`godot --headless --import`, para o Godot registrar as classes.
 
 ### Um exemplo mínimo {#example}
 

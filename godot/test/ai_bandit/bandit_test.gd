@@ -73,9 +73,3 @@ func test_choosing_changes_no_count() -> void:
 	assert_array(Array(bandit.pulls)).is_equal([0, 0, 0])
 	assert_array(Array(bandit.sums)).is_equal([0.0, 0.0, 0.0])
 
-
-# Seed 1's first draw, worked in the README: 1 xor (1 << 13) is 8193, which
-# 17 places to the right is 0, and 8193 xor (8193 << 5) is 270369.
-func test_the_draws_start_where_the_readme_works_them() -> void:
-	assert_int(BanditDraws.new(1).next()).is_equal(270369)
-	assert_int(BanditDraws.new(0).next()).is_equal(270369)

@@ -12,7 +12,7 @@ from __future__ import annotations
 import math
 from collections.abc import Callable
 
-from gameaikit.bandit.draws import SEED_FOR_ZERO, BanditDraws
+from gameaikit.core.xorshift import SEED_FOR_ZERO, Xorshift
 from gameaikit.techniques import technique
 
 #: Choose by the highest upper confidence bound [Auer et al. 2002].
@@ -38,7 +38,7 @@ class Bandit:
         self.pulls = [0] * max(arms, 0)
         self.paid = [0] * max(arms, 0)
         self.sums = [0.0] * max(arms, 0)
-        self._draws = BanditDraws(seed)
+        self._draws = Xorshift(seed)
 
     def problem(self) -> str:
         """What is wrong with the settings, or "" when nothing is."""

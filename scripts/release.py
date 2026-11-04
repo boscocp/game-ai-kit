@@ -12,9 +12,10 @@ Into `OUTPUT/dist/`, from the commit at HEAD and nothing else:
     no technique or kernel manifest owns, or one holding a test, is refused;
   * `gameaikit-<version>-py3-none-any.whl`, the Python half, with LICENSE and
     NOTICE in `.dist-info/licenses/`, where PEP 639 says a wheel keeps them.
-    It holds the packages `python/pyproject.toml` lists -- the techniques,
-    not the examples' -- and its metadata is that file's, refused when the
-    file's version is not VERSION's or its packages are not the techniques'.
+    It holds the packages `python/pyproject.toml` lists -- the techniques
+    and the kernel's, not the examples' -- and its metadata is that file's,
+    refused when the file's version is not VERSION's or its packages are not
+    the techniques' and the kernel's.
   * with `--executable FOLDER`, `game-ai-kit-linux-x86_64-<version>.zip`:
     the menu exported by `make export` (T24), the binary and its `.pck` under
     one top folder `game-ai-kit/` beside LICENSE, NOTICE and VERSION. Only a
@@ -286,8 +287,9 @@ def project_table(repo: pathlib.Path, version: str, every: dict[str, dict]) -> d
     The wheel is written by hand (ADR 0009), and a person who runs `pip
     install ./python` gets one from setuptools; both must be the same
     package. So the file's name, version and floor must be this script's, and
-    its packages exactly the techniques' -- one per technique manifest's
-    `python/gameaikit/<name>/`, and the root.
+    its packages exactly the shipped ones -- one per technique or kernel
+    manifest's `python/gameaikit/<name>/` (the kernel's is the generator
+    the techniques draw from, T109), and the root.
     """
     pyproject = tomllib.loads(committed_bytes(repo, "python/pyproject.toml").decode("utf-8"))
     project = pyproject["project"]
@@ -296,19 +298,19 @@ def project_table(repo: pathlib.Path, version: str, every: dict[str, dict]) -> d
         if project.get(key) != wanted:
             raise Refused(f"python/pyproject.toml says {key} = {project.get(key)!r}, "
                           f"the release builds {wanted!r}")
-    techniques = {f"{PACKAGE}.{owned.split('/')[2]}"
-                  for manifest in every.values() if manifest["kind"] == "technique"
+    shipped = {f"{PACKAGE}.{owned.split('/')[2]}"
+                  for manifest in every.values() if manifest["kind"] in SHIPPED_KINDS
                   for owned in manifest["owns"]
                   if owned.startswith(f"python/{PACKAGE}/") and owned.endswith("/")}
     listed = set(pyproject["tool"]["setuptools"]["packages"])
-    if listed != techniques | {PACKAGE}:
-        raise Refused(f"python/pyproject.toml packages differ from the technique manifests "
-                      f"by {sorted(listed ^ (techniques | {PACKAGE}))}")
+    if listed != shipped | {PACKAGE}:
+        raise Refused(f"python/pyproject.toml packages differ from the technique and kernel manifests "
+                      f"by {sorted(listed ^ (shipped | {PACKAGE}))}")
     # setuptools ships a listed package's own folder and no folder below it,
     # and so does this script; a technique growing a subpackage would leave
     # both wheels without it, and agree. Refused, until it is listed.
     folders = {pathlib.PurePosixPath(path).parent.as_posix()[len("python/"):].replace("/", ".")
-               for package in techniques
+               for package in shipped
                for path in committed_files(repo, f"python/{package.replace('.', '/')}/")}
     if folders - listed:
         raise Refused(f"python/pyproject.toml does not list {sorted(folders - listed)}, "

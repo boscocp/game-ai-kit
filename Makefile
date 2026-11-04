@@ -300,10 +300,17 @@ solve-maze: ## Solve the maze's MDP by value iteration and publish its values an
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.mdp.publish --write $(CURDIR)/godot/game/maze
 
 .PHONY: test-vectors
-test-vectors: test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-bandit-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors test-llm-vectors test-maze-vectors test-mdp-vectors test-director-vectors test-squad-vectors ## Every conformance vector in spec/
+test-vectors: test-core-vectors test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-bandit-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors test-llm-vectors test-maze-vectors test-mdp-vectors test-director-vectors test-squad-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
+
+.PHONY: test-core-vectors
+test-core-vectors: import ## The kit's one seeded generator, its draws, uniforms and picks, against ai_core (T109)
+	@# The other half is `make test-python`, through gameaikit.core. The
+	@# numbers came from neither: spec/vectors/core/derive.py.
+	@$(GODOT) --headless --path godot -s res://test/ai_core/xorshift_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/core
 
 .PHONY: test-search-vectors
 test-search-vectors: import ## The search vectors, against ai_search
@@ -392,7 +399,7 @@ test-checkers-vectors: import ## The checkers rules and evaluation vectors, agai
 		-- $(CURDIR)/spec/vectors/checkers
 
 .PHONY: test-adversarial-vectors
-test-adversarial-vectors: import ## The xorshift draws and MCTS's root visits on Nim and a dice race, against ai_adversarial (T86)
+test-adversarial-vectors: import ## The xorshift draws MCTS reads, and its root visits on Nim and a dice race, against ai_adversarial (T86)
 	@# The other half is `make test-python`, through gameaikit.adversarial.
 	@# The numbers came from neither: spec/vectors/adversarial/derive.py.
 	@$(GODOT) --headless --path godot -s res://test/ai_adversarial/mcts_vectors_runner.gd \

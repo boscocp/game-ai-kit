@@ -1,4 +1,4 @@
-"""Marsaglia's 32-bit xorshift, as `ai_adversarial/xorshift.gd` writes it.
+"""Marsaglia's 32-bit xorshift, as `godot/addons/ai_core/xorshift.gd` writes it.
 
 Read the Godot file for the why. Python's integers have no width, so every
 shift to the left is cut back to 32 bits with `MASK`, exactly where the

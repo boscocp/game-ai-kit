@@ -7,7 +7,7 @@ tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html ; https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html ; https://packaging.python.org/en/latest/tutorials/installing-packages/
 invalidated_if: scripts/release.py changes what an archive holds, ADR 0024 changes the prefixed names, .godot-version or python/pyproject.toml's version moves, or scripts/library_check.py stops following one of this page's steps
 teaches: none
-translation_of: 3d10625c8624b412d3ccbf61eea82076c54a382128e59e1f8887ebf176b513f9
+translation_of: 35f69f9687d50f433209cb5414ec9609a65623557c352a5c1535a447a23765b1
 -->
 
 > English: [using-the-library.md](using-the-library.md). Os termos que ficam
@@ -24,8 +24,8 @@ desta página que a verificação não dá faz a verificação falhar.
 Duas metades, cada uma usável sem a outra.
 
 - **Addons de Godot**, um zip cada. O `ai_core` é o núcleo: uma grade
-  (`GakGridGraph`) e uma porta de *pathfinding* (`GakPathfinder`), nenhum
-  algoritmo. Cada outro addon é uma técnica -- `ai_search`,
+  (`GakGridGraph`), uma porta de *pathfinding* (`GakPathfinder`) e um
+  gerador com semente (`Xorshift`), nenhuma lógica de jogo. Cada outro addon é uma técnica -- `ai_search`,
   `ai_behaviour`, `ai_steering`, ... -- e não depende de nada além, no
   máximo, do `ai_core`, então você leva só o que usa. O
   [catálogo](catalogue.pt-BR.md) diz o que cada um decide.

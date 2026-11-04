@@ -14,9 +14,10 @@ import math
 import pathlib
 import unittest
 
-from gameaikit.adversarial import MonteCarloSearch, Xorshift
+from gameaikit.adversarial import MonteCarloSearch
 from gameaikit.adversarial.mcts import Branch
 from gameaikit.adversarial.toy_games import DiceRace, Nim, Pile, Race
+from gameaikit.core import Xorshift
 
 VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "adversarial"
 

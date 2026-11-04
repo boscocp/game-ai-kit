@@ -67,7 +67,8 @@ validated before it becomes an action ([its page](docs/techniques/ai_llm.md))
 game that uses it (T94) are still to come.
 
 `ai_core` sits under all of them, and is small on purpose: the grid
-(`GakGridGraph`) and the pathfinder interface (`GakPathfinder`). Take any one addon
+(`GakGridGraph`), the pathfinder interface (`GakPathfinder`) and one seeded
+generator (`Xorshift`). Take any one addon
 and `ai_core` with it, and nothing else. The examples' own board -- its
 state, units, moves and the `DecisionPolicy` typed on them -- is in
 `godot/game/board/`, the examples' kernel (ADR 0021).

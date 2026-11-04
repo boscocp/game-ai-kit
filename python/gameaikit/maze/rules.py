@@ -24,7 +24,7 @@ from __future__ import annotations
 import json
 import pathlib
 
-from gameaikit.maze.dice import MazeDice
+from gameaikit.core.xorshift import Xorshift
 
 HERE = pathlib.Path(__file__).resolve().parent
 MAZE = json.loads((HERE / "maze.json").read_text())
@@ -142,7 +142,7 @@ def nearest(open_ways: list[dict]) -> str:
     return best["direction"]
 
 
-def choose(open_ways: list[dict], mode: str, dice: MazeDice) -> dict:
+def choose(open_ways: list[dict], mode: str, dice: Xorshift) -> dict:
     """Which way the ghost takes, and how it came to: the decision the demo draws.
 
     One way is taken without a draw. At a fork, in a mode `rules.json` calls

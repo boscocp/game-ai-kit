@@ -9,8 +9,8 @@ cross every mode of the schedule.
 import random
 import unittest
 
+from gameaikit.core import Xorshift
 from gameaikit.maze import game, rules
-from gameaikit.maze.dice import MazeDice
 
 GAMES = 200
 STEPS = 160
@@ -53,14 +53,6 @@ class TheMaze(unittest.TestCase):
     def test_outside_the_rows_is_wall(self):
         self.assertFalse(rules.is_open((-1, 3)))
         self.assertFalse(rules.is_open((5, 99)))
-
-
-class TheDice(unittest.TestCase):
-    def test_seeded_with_one_the_first_draw_is_marsaglias(self):
-        self.assertEqual(MazeDice(1).next(), 270369)
-
-    def test_a_seed_of_zero_is_a_seed_of_one(self):
-        self.assertEqual(MazeDice(0).next(), MazeDice(1).next())
 
 
 class TheSchedule(unittest.TestCase):
@@ -118,7 +110,7 @@ class TheChoice(unittest.TestCase):
         # One stream, as in a game: a small seed's first draw is small, so
         # fresh seeds would almost never reach the second draw.
         found = rules.ways((3, 3), "right", (4, 4))
-        dice, mirror = MazeDice(11), MazeDice(11)
+        dice, mirror = Xorshift(11), Xorshift(11)
         turns = 0
         for fork in range(300):
             roll = mirror.uniform()
@@ -132,25 +124,25 @@ class TheChoice(unittest.TestCase):
         self.assertGreater(turns, 30)
 
     def test_scatter_is_never_imprecise_and_draws_nothing(self):
-        dice = MazeDice(5)
+        dice = Xorshift(5)
         found = rules.ways((5, 3), "left", (11, -2))
         choice = rules.choose(found, rules.SCATTER, dice)
         self.assertEqual(choice["kind"], rules.NEAREST)
         self.assertNotIn("roll", choice)
-        self.assertEqual(dice.next(), MazeDice(5).next())
+        self.assertEqual(dice.next(), Xorshift(5).next())
 
     def test_one_way_draws_nothing_even_in_chase(self):
-        dice = MazeDice(5)
+        dice = Xorshift(5)
         choice = rules.choose(rules.ways((5, 2), "up", (0, 0)), rules.CHASE, dice)
         self.assertEqual(choice["kind"], rules.ONLY_WAY)
-        self.assertEqual(dice.next(), MazeDice(5).next())
+        self.assertEqual(dice.next(), Xorshift(5).next())
 
     def test_chances_are_what_the_dice_do(self):
         found = rules.ways((3, 3), "right", (4, 4))
         wanted = rules.chances(found, rules.CHASE)
         self.assertAlmostEqual(sum(wanted.values()), 1.0)
         self.assertAlmostEqual(wanted["down"], rules.PRECISION + (1 - rules.PRECISION) / 2)
-        dice = MazeDice(11)
+        dice = Xorshift(11)
         draws = 20_000
         taken = {"down": 0, "right": 0}
         for _draw in range(draws):
