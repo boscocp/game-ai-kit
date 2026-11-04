@@ -1,0 +1,47 @@
+{
+ "description": "A hit in the very step of a reading is counted at the next one: the reading comes first in the step.",
+ "last_step": 400,
+ "events": [
+  {
+   "step": 200,
+   "kind": "shot"
+  },
+  {
+   "step": 200,
+   "kind": "hit",
+   "points": 100
+  }
+ ],
+ "readings": [
+  {
+   "step": 200,
+   "counts": {
+    "shots": 0,
+    "hits": 0,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 0,
+    "taken": 0
+   },
+   "share": 0.5,
+   "hit_rate": 0.5,
+   "row": 2,
+   "aim_error_degrees": 3.0
+  },
+  {
+   "step": 400,
+   "counts": {
+    "shots": 1,
+    "hits": 1,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 100,
+    "taken": 0
+   },
+   "share": 0.6666666666666666,
+   "hit_rate": 0.6666666666666666,
+   "row": 4,
+   "aim_error_degrees": 1.5
+  }
+ ]
+}

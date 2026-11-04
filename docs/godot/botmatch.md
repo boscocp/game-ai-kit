@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-26
+verified_on: 2026-11-04
 tier: 2
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: the match's rules, arenas or techniques change, and botmatch_effects.gd prints different numbers
@@ -458,6 +458,121 @@ on this run it is not suggested at all. The numbers in
 `botmatch_effects.gd`'s header (its line 105 and round it) and the T51
 and T68 tables above predate the guard; they are to be refreshed at the
 next effects run.
+
+## The match reads how well you play (T100)
+
+Playing a bot (T), the match counts what your bot does -- shots, hits,
+kills, deaths, the damage it dealt and took -- and every ten seconds of
+match time reads one number off the counts: the share of the damage you
+dealt, with a prior of one health bar each way,
+
+    share = (dealt + 100) / (dealt + taken + 200)
+
+a Beta mean, so an empty model reads 0.5 and one burst of fire cannot
+swing it to an end. A fixed table in `rules.json` turns the share into the
+other team's aim error: the last row whose `from` the share reaches.
+
+| row | from | other team's aim error |
+|---|---|---|
+| 1 easy | 0.00 | 6.0 degrees |
+| 2 easier | 0.40 | 4.5 |
+| 3 middle | 0.45 | 3.0 (the knobs' own) |
+| 4 harder | 0.55 | 2.0 |
+| 5 hard | 0.60 | 1.5 |
+
+Hamlet models the damage a player takes as a distribution and adjusts
+the game to it [Hunicke & Chapman]; Ocio Barriales balances difficulty
+through the enemies' accuracy [GAP3 ch. 33]. This is the smallest honest
+version of both: one number that already existed, `MatchTeam.aim_error`,
+moved only between the table's first row and its last. Never your own aim,
+never what a bot knows -- T67's bots still read only their percepts. The
+hit rate, (hits + 1) / (shots + 2), is counted and shown beside the share,
+and sets nothing.
+
+**What V shows while you play**: the counts; the share worked out with its
+prior, and the hit rate; and the other team's aim error with the row it
+came from, marked `<< changed at N s` when the latest reading moved it.
+
+**ADR 0016's three conditions**, held by `player_model_test.gd`: every
+field `PlayerModel` keeps is an int count; an empty one reads the middle
+row, and a new match (N) seats one (`botmatch_restart_test.gd`); and the
+events the match noted (`BotMatch.person_events`), replayed twice through a
+fresh model, give the same readings, which are the ones the match read
+live -- and so does the log written to disk and read back, which carries
+the table and the last step as well as the events, so it rebuilds every
+reading by itself. The events reach a file only through `MatchEventLog`,
+only when opened with `-- --record` (`make record-botmatch`), in this
+checkout's `user://botmatch-logs/`.
+
+When you give the bot back, or take one on the other team, the knob moves
+at once (`BotMatch.seat_person`): nobody's aim is changed while nobody
+plays, and it is never your own team's -- not at the next reading, ten
+seconds on, as the first cut did (the review's finding).
+
+**N14** in `check_no_training.py` reads the model's two files and every
+script naming `PlayerModel` or `MatchDifficulty`, and refuses a file
+written, a file read (`FileAccess`, `JSON`, `load(`, `preload(`, `user://`
+and the loaders), a step towards a target, and a value read back into
+itself through a product. It is a net for the common spellings, not a
+proof, as `CLAUDE.md` says of invariant 6: a step written through a helper
+function, a moving average spelled with a temporary, or a file read by a
+script that holds no model and handed in, all pass it. That the model
+starts empty is held by the tests above, not by the gate.
+
+### Measured: the model overshoots
+
+`make measure-player-model`. A stand-in in your place: bot 0, blue, driven
+by its own list like every bot, aiming with an error of its own -- poor
+8 degrees, even 3 (the team's), sharp 1 -- over seeds 1 to 5, whole
+matches, with the model answering and with it only reading -- off, its
+rows are the ones it would have set, and red keeps 3 degrees. "Turns"
+counts a change of direction; share and score are means over the five.
+
+| stand-in | model | changes | turns | share | blue - red |
+|---|---|---|---|---|---|
+| poor | off | 5 | 1 | 0.13 | -121 |
+| poor | on | 6 | 2 | 0.30 | +259 |
+| even | off | 28 | 18 | 0.51 | +13 |
+| even | on | 25 | 18 | 0.48 | -5 |
+| sharp | off | 0 | 0 | 0.85 | +224 |
+| sharp | on | 15 | 6 | 0.57 | -218 |
+
+The rows each match read, one digit a reading (1 easy to 5 hard), a match a group:
+
+```
+poor  off  1211111111111111 3111111111111111111111 3111111111111111111 21111111111111111111111 11111111111111111111111
+poor  on   1122111111111 311111111111111 31111111111111 23111111111111 1111111111111
+even  off  33544444444444344333343 33432323333333333333333 3332111111122212222 21111222223333333333334 33333334334333444443333
+even  on   33553444334333333333333 33433333332333333333333 33322322333223333333333 243323333322332222 33333334333333333333333
+sharp off  5555555555555555 55555555555555 555555555555555555 5555555555555555 555555555555555
+sharp on   55555555555444 5555555444433 555433444455555544 55335553444445444444 5555555555444
+```
+
+What it shows:
+
+- **The knob settles in the direction expected.** Poor settles on easy,
+  sharp on hard and its neighbour, even around the middle. With the model
+  on, the poor stand-in's share rises from 0.13 to 0.30 and the sharp
+  one's falls from 0.85 to 0.57. That says the reading moves the way the
+  skill does, not that the match is balanced: it is not, below.
+- **It overshoots the match.** The losing side becomes the winning one:
+  -121 to +259 for the poor stand-in, +224 to -218 for the sharp. The
+  share is one bot's, and the knob is six bots' aim -- the whole other
+  team aims worse for the poor stand-in's five teammates too, who were
+  playing evenly. A narrower table, 4.0 / 3.5 / 3.0 / 2.5 / 2.0 degrees
+  (`make measure-player-model AIMS="4.0 3.5 3.0 2.5 2.0"`), still flips
+  both: +200 and -118, shares 0.23 and 0.69.
+- **The even stand-in chatters.** Its share sits near the boundaries at
+  0.45 and 0.55, and the row moves about five times a match, turning back
+  most of those times -- with the model on or off, since a reading is
+  taken either way. Its score barely moves (+13 off, -5 on): the noise is
+  in the reading, not in the match.
+
+Five seeds a row, and the table was written before it was measured: none
+of these numbers was chosen against the stand-ins. Whether the model
+should read the match rather than the person -- the score lead, or the
+share of the whole team -- or the table should narrow further, or a
+band of no change be added round the middle, is left to the owner.
 
 ## Running the effects gate in shards (T72)
 

@@ -29,7 +29,8 @@ static func aim(world: BotMatch, shooter: MatchBot, target: MatchBot) -> Array:
 	var zones: Array[AimChoice.Zone] = zones_of(world, shooter, target)
 	var eyes: Vector3 = MatchActions.eyes_of(world, shooter)
 	var distance: float = eyes.distance_to(world.arena.above(target.position, world.rules.chest_height))
-	var spread: float = distance * tan(maxf(world.teams[shooter.team].aim_error, 1e-4))
+	var error: float = shooter.own_aim_error if shooter.own_aim_error >= 0.0 else world.teams[shooter.team].aim_error
+	var spread: float = distance * tan(maxf(error, 1e-4))
 	var choice: AimChoice.Choice = AimChoice.choose(zones, spread)
 	var aimed: int = choice.aimed if choice.aimed != -1 else 1
 	if not world.teams[shooter.team].aims_by_worth:

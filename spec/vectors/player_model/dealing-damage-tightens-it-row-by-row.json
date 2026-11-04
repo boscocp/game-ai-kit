@@ -1,0 +1,788 @@
+{
+ "description": "Twelve points dealt every second and six taken, for a minute: the share climbs, the row goes up through the one above the middle and stops at the hard one.",
+ "last_step": 1200,
+ "events": [
+  {
+   "step": 0,
+   "kind": "shot"
+  },
+  {
+   "step": 0,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 0,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 20,
+   "kind": "shot"
+  },
+  {
+   "step": 20,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 40,
+   "kind": "shot"
+  },
+  {
+   "step": 40,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 40,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 60,
+   "kind": "shot"
+  },
+  {
+   "step": 60,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 80,
+   "kind": "shot"
+  },
+  {
+   "step": 80,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 80,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 100,
+   "kind": "shot"
+  },
+  {
+   "step": 100,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 120,
+   "kind": "shot"
+  },
+  {
+   "step": 120,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 120,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 140,
+   "kind": "shot"
+  },
+  {
+   "step": 140,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 160,
+   "kind": "shot"
+  },
+  {
+   "step": 160,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 160,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 180,
+   "kind": "shot"
+  },
+  {
+   "step": 180,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 200,
+   "kind": "shot"
+  },
+  {
+   "step": 200,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 200,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 220,
+   "kind": "shot"
+  },
+  {
+   "step": 220,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 240,
+   "kind": "shot"
+  },
+  {
+   "step": 240,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 240,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 260,
+   "kind": "shot"
+  },
+  {
+   "step": 260,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 280,
+   "kind": "shot"
+  },
+  {
+   "step": 280,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 280,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 300,
+   "kind": "shot"
+  },
+  {
+   "step": 300,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 320,
+   "kind": "shot"
+  },
+  {
+   "step": 320,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 320,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 340,
+   "kind": "shot"
+  },
+  {
+   "step": 340,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 360,
+   "kind": "shot"
+  },
+  {
+   "step": 360,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 360,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 380,
+   "kind": "shot"
+  },
+  {
+   "step": 380,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 400,
+   "kind": "shot"
+  },
+  {
+   "step": 400,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 400,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 420,
+   "kind": "shot"
+  },
+  {
+   "step": 420,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 440,
+   "kind": "shot"
+  },
+  {
+   "step": 440,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 440,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 460,
+   "kind": "shot"
+  },
+  {
+   "step": 460,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 480,
+   "kind": "shot"
+  },
+  {
+   "step": 480,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 480,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 500,
+   "kind": "shot"
+  },
+  {
+   "step": 500,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 520,
+   "kind": "shot"
+  },
+  {
+   "step": 520,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 520,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 540,
+   "kind": "shot"
+  },
+  {
+   "step": 540,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 560,
+   "kind": "shot"
+  },
+  {
+   "step": 560,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 560,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 580,
+   "kind": "shot"
+  },
+  {
+   "step": 580,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 600,
+   "kind": "shot"
+  },
+  {
+   "step": 600,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 600,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 620,
+   "kind": "shot"
+  },
+  {
+   "step": 620,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 640,
+   "kind": "shot"
+  },
+  {
+   "step": 640,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 640,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 660,
+   "kind": "shot"
+  },
+  {
+   "step": 660,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 680,
+   "kind": "shot"
+  },
+  {
+   "step": 680,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 680,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 700,
+   "kind": "shot"
+  },
+  {
+   "step": 700,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 720,
+   "kind": "shot"
+  },
+  {
+   "step": 720,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 720,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 740,
+   "kind": "shot"
+  },
+  {
+   "step": 740,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 760,
+   "kind": "shot"
+  },
+  {
+   "step": 760,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 760,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 780,
+   "kind": "shot"
+  },
+  {
+   "step": 780,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 800,
+   "kind": "shot"
+  },
+  {
+   "step": 800,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 800,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 820,
+   "kind": "shot"
+  },
+  {
+   "step": 820,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 840,
+   "kind": "shot"
+  },
+  {
+   "step": 840,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 840,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 860,
+   "kind": "shot"
+  },
+  {
+   "step": 860,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 880,
+   "kind": "shot"
+  },
+  {
+   "step": 880,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 880,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 900,
+   "kind": "shot"
+  },
+  {
+   "step": 900,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 920,
+   "kind": "shot"
+  },
+  {
+   "step": 920,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 920,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 940,
+   "kind": "shot"
+  },
+  {
+   "step": 940,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 960,
+   "kind": "shot"
+  },
+  {
+   "step": 960,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 960,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 980,
+   "kind": "shot"
+  },
+  {
+   "step": 980,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 1000,
+   "kind": "shot"
+  },
+  {
+   "step": 1000,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 1000,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1020,
+   "kind": "shot"
+  },
+  {
+   "step": 1020,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 1040,
+   "kind": "shot"
+  },
+  {
+   "step": 1040,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 1040,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1060,
+   "kind": "shot"
+  },
+  {
+   "step": 1060,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 1080,
+   "kind": "shot"
+  },
+  {
+   "step": 1080,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 1080,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1100,
+   "kind": "shot"
+  },
+  {
+   "step": 1100,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 1120,
+   "kind": "shot"
+  },
+  {
+   "step": 1120,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 1120,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1140,
+   "kind": "shot"
+  },
+  {
+   "step": 1140,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 1160,
+   "kind": "shot"
+  },
+  {
+   "step": 1160,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 1160,
+   "kind": "hurt",
+   "points": 12
+  },
+  {
+   "step": 1180,
+   "kind": "shot"
+  },
+  {
+   "step": 1180,
+   "kind": "hit",
+   "points": 12
+  }
+ ],
+ "readings": [
+  {
+   "step": 200,
+   "counts": {
+    "shots": 10,
+    "hits": 10,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 120,
+    "taken": 60
+   },
+   "share": 0.5789473684210527,
+   "hit_rate": 0.9166666666666666,
+   "row": 3,
+   "aim_error_degrees": 2.0
+  },
+  {
+   "step": 400,
+   "counts": {
+    "shots": 20,
+    "hits": 20,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 240,
+    "taken": 120
+   },
+   "share": 0.6071428571428571,
+   "hit_rate": 0.9545454545454546,
+   "row": 4,
+   "aim_error_degrees": 1.5
+  },
+  {
+   "step": 600,
+   "counts": {
+    "shots": 30,
+    "hits": 30,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 360,
+    "taken": 180
+   },
+   "share": 0.6216216216216216,
+   "hit_rate": 0.96875,
+   "row": 4,
+   "aim_error_degrees": 1.5
+  },
+  {
+   "step": 800,
+   "counts": {
+    "shots": 40,
+    "hits": 40,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 480,
+    "taken": 240
+   },
+   "share": 0.6304347826086957,
+   "hit_rate": 0.9761904761904762,
+   "row": 4,
+   "aim_error_degrees": 1.5
+  },
+  {
+   "step": 1000,
+   "counts": {
+    "shots": 50,
+    "hits": 50,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 600,
+    "taken": 300
+   },
+   "share": 0.6363636363636364,
+   "hit_rate": 0.9807692307692307,
+   "row": 4,
+   "aim_error_degrees": 1.5
+  },
+  {
+   "step": 1200,
+   "counts": {
+    "shots": 60,
+    "hits": 60,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 720,
+    "taken": 360
+   },
+   "share": 0.640625,
+   "hit_rate": 0.9838709677419355,
+   "row": 4,
+   "aim_error_degrees": 1.5
+  }
+ ]
+}

@@ -33,8 +33,8 @@ stops. This gate is four claims about that split:
     reads them and only multiplies.
   * N9 nothing in `ai_opponent` writes a file, and no GDScript writes an
     n-gram table anywhere. One of this invariant's exceptions, which ADR
-    0016 names one by one -- this one, N13's bandit, and N14's player model
-    once T100 brings it: the opponent model counts during a fight, and is
+    0016 names one by one -- this one, N13's bandit, and N14's player
+    model: the opponent model counts during a fight, and is
     allowed to only because its table starts empty, replays from the input
     log, and is never written down -- a table that was saved would be a
     model fitted at game time;
@@ -65,6 +65,25 @@ stops. This gate is four claims about that split:
     held by `fight_bandit_opponent_test.gd`, and that is the only thing that
     would catch a `static var` keeping bandits from one fight to the next,
     which writes no file and steps nothing;
+  * N14 the player model (T100, ADR 0016 as amended on 2026-10-26): in
+    `godot/game3d/botmatch/player_model.gd` and `match_difficulty.gd`, and
+    every GDScript that names `PlayerModel` or `MatchDifficulty` -- the
+    match and its scene hold the model through the second -- N13's
+    refusals: no file, `ConfigFile` or resource written, no step towards a
+    target, nor a value read back into itself through a product (a moving
+    average); in the model's two files no scaled `+=` and no read-back with
+    a product at all (an Elo multiplied out). And no line that reads a
+    file: none names `user://` or the user data folder, `FileAccess`,
+    `ConfigFile`, `ResourceLoader`, `JSON`, `load(` or `preload(`. A model
+    read back at the start of a match would be a profile, and a profile
+    outlives the match; a holder is handed its table and its fixtures by
+    scripts that hold no model. A net for the common spellings, not a
+    proof: a value stepped through a helper function, or a file read by a
+    script that holds nothing and handed in, passes it. The match's event log is not a finding: it
+    holds events, is written only under `-- --record`, and its writer,
+    `MatchEventLog`, neither is the model nor names it. That the counts
+    start empty and replay from the person's events is held by
+    `player_model_test.gd`;
   * N15 the maze's MDP (T98): the published values and policy in
     `godot/game/maze/` are what `gameaikit.mdp.publish` solves from the committed
     rules, a fresh run writing the same bytes; and no GDScript writes a
@@ -73,8 +92,7 @@ stops. This gate is four claims about that split:
     nothing updates the tables once read: in the maze game and in any
     script naming `MdpPacMan`, no line reads an indexed value back into
     itself (N3's net for an update step, there too), and no line outside
-    `_load_tables` assigns to `_values` or `_letters`. N14 is ADR 0016's,
-    reserved for T100. A value updated at game time
+    `_load_tables` assigns to `_values` or `_letters`. A value updated at game time
     (Q-learning, any temporal-difference step) is refused by that ADR's
     amendment; this rule is a net for its common spellings, not a proof --
     an update through a renamed copy of the table passes it.
@@ -183,6 +201,33 @@ CHECKERS_NAMES_RE = re.compile(r"checkers_weights|CheckersWeights|game/checkers/
 # n-gram's.
 BANDIT_ADDON = GODOT / "addons" / "ai_bandit"
 BANDIT_HOLDERS_RE = re.compile(r"\b(?:Bandit|FightBanditOpponent)\b")
+# The player model (T100, N14): the third and last component ADR 0016 lets
+# count during play. Its file, and any script that names its class or the
+# bot match's `MatchDifficulty` that holds it -- as N13 names the fighting
+# game's opponent beside `Bandit` -- writes nothing and reads nothing: the
+# match and its scene hold the model through `world.difficulty`, and never
+# name `PlayerModel`.
+PLAYER_MODEL_FILE = GODOT / "game3d" / "botmatch" / "player_model.gd"
+# The model's own two files, the model and what reads it each interval:
+# held to the strict half too -- no scaled `+=`, nothing assigned from
+# itself through a product -- which a script merely holding one is not.
+PLAYER_MODEL_OWN = (PLAYER_MODEL_FILE, GODOT / "game3d" / "botmatch" / "match_difficulty.gd")
+PLAYER_MODEL_HOLDERS_RE = re.compile(r"\b(?:PlayerModel|MatchDifficulty)\b")
+# Loading state: read off the raw line, since a path is a string literal,
+# for `user://` and the folder behind it; off the code view for every way a
+# script reads a file -- `FileAccess` at all, a `ConfigFile`, a
+# `ResourceLoader`, `load(` and `preload(`, and `JSON` parsing. A holder is
+# handed what it needs (the table comes from `MatchRules`, a fixture from a
+# reader of its own): it reads no file, whatever the path says.
+USER_DATA_RE = re.compile(r"user://|get_user_data_dir")
+LOADING_RE = re.compile(r"\b(?:FileAccess|ConfigFile|ResourceLoader|JSON)\b|\b(?:pre)?load\s*\(")
+# A value read back into itself through a product, which a difference
+# never needs to appear in: the moving average `skill = skill * 0.9 + won *
+# 0.1` is `skill += 0.1 * (won - skill)`, and the expanded Elo `rating =
+# rating + 32.0 * won - 32.0 * expected` is a step too. Beside the player
+# model, a field is never scaled into itself; in its own file, nothing is
+# assigned from itself with a product or a quotient anywhere on the right.
+
 # A step towards a target: `+=` or `-=` whose right-hand side multiplies or
 # divides a difference in brackets -- `rate * (target - x)`, `(payoff -
 # mean) / n`, either way round. `pulls[arm] += 1` and `sums[arm] += payoff`
@@ -466,6 +511,7 @@ def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
         inside_addon = runs_inference(path, root)
         holds_a_table = is_under(path, root, OPPONENT_ADDON) or bool(TABLE_HOLDERS_RE.search("\n".join(code)))
         holds_a_bandit = holds_bandit(path, root, code)
+        holds_a_model = holds_player_model(path, root, code)
         # Both spellings of the line. The write is read off the stripped one,
         # because `# we never FileAccess.WRITE here` is a sentence; the path
         # is read off the raw one, because a path *is* a string literal and
@@ -484,6 +530,9 @@ def check_writing(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
             elif holds_a_bandit:
                 findings.append(f"N13 {label} writes a file beside a bandit; it counts during "
                                 "one fight and is never saved (ADR 0016)")
+            elif holds_a_model:
+                findings.append(f"N14 {label} writes a file beside the player model; it counts during "
+                                "one match and is never saved (ADR 0016)")
             elif CLONE_NAMES_RE.search(line):
                 findings.append(f"N11 {label} writes where the cloned player lives; the game only reads it")
             elif MDP_NAMES_RE.search(line) or is_under(path, root, MAZE_GAME):
@@ -550,6 +599,50 @@ def check_bandit_steps(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
             if steps_towards(line, in_addon):
                 findings.append(f"N13 {_label(path, repo)}:{number} moves a value a step towards a target; "
                                 "a bandit keeps pulls and sums, and computes a mean when it reads one (ADR 0016)")
+    return findings
+
+
+def holds_player_model(path: pathlib.Path, root: pathlib.Path, code: list[str]) -> bool:
+    """N14's targets: the model's two files, or one naming `PlayerModel` or `MatchDifficulty`."""
+    return any(is_under(path, root, own) for own in PLAYER_MODEL_OWN) or bool(
+        PLAYER_MODEL_HOLDERS_RE.search("\n".join(code)))
+
+
+def scales_itself(line: str, own_file: bool) -> bool:
+    """True for an assignment that reads its own left side back through a
+    product: `x = x * a + y * b` anywhere beside the model, and in the
+    model's own file `x = x + a * y - a * z`, any read-back with a `*` or
+    `/` on the right. Declarations are new names, and are not steps."""
+    spelled = SPELLED_STEP_RE.match(line)
+    if not spelled or DECLARATION_RE.match(line):
+        return False
+    name, right = spelled.groups()
+    if not re.search(rf"\b{name}\b", right):
+        return False
+    if own_file:
+        return bool(re.search(r"[*/]", right))
+    return bool(re.search(rf"\b{name}\b\s*[*/]|[*/]\s*\b{name}\b", right))
+
+
+def check_player_model(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
+    """N14's other halves: beside the player model, nothing steps a value
+    towards a target, and nothing loads state back -- a model read in at the
+    start of a match would be a profile, which outlives it."""
+    findings = []
+    for path in gdscript_files(root):
+        raw = path.read_text(encoding="utf-8").splitlines()
+        code = code_only("\n".join(raw)).splitlines()
+        if not holds_player_model(path, root, code):
+            continue
+        own_file = any(is_under(path, root, own) for own in PLAYER_MODEL_OWN)
+        for number, (line, written) in enumerate(zip(raw, code), start=1):
+            label = f"{_label(path, repo)}:{number}"
+            if steps_towards(written, own_file) or scales_itself(written, own_file):
+                findings.append(f"N14 {label} moves a value a step towards a target; the player model "
+                                "keeps counts and reads its estimate off them (ADR 0016)")
+            elif LOADING_RE.search(written) or (written.strip() and USER_DATA_RE.search(line)):
+                findings.append(f"N14 {label} loads state beside the player model; it starts empty "
+                                "every match, and a model read back would be a profile (ADR 0016)")
     return findings
 
 
@@ -944,6 +1037,7 @@ def run(repo: pathlib.Path, retrain: bool | set[str] = True) -> int:
     findings += check_case_writes(repo / GODOT, repo)
     findings += check_mdp_updates(repo / GODOT, repo)
     findings += check_bandit_steps(repo / GODOT, repo)
+    findings += check_player_model(repo / GODOT, repo)
     ran = {}
     for rule, refit in (("N4", check_weights), ("N6", check_beads),
                         ("N7", check_checkers_weights), ("N10", check_clone_weights),
@@ -1453,6 +1547,86 @@ def self_test() -> int:
             3)
         expect("a step outside the bandit's files is not N13's", quiet(build(root, "notabandit", dict(
             sound, **{str(GODOT / "game" / "steering.gd"): "\tposition += speed * (target - position)\n"}))),
+            3)
+        # Planted (N14): the player model saved, loaded at the start of a
+        # match, moved by an Elo-style update, and kept as an incremental
+        # mean; and counting, and the event log, which must pass.
+        model = str(PLAYER_MODEL_FILE)
+        expect("a player model that saves itself", quiet(build(root, "modelsaves", dict(
+            sound, **{model: 'func keep() -> void:\n'
+                      '\tvar out: FileAccess = FileAccess.open("user://skill.json", FileAccess.WRITE)\n'}))),
+            1, "N14")
+        expect("a player model saved by a script that holds one", quiet(build(root, "modelheld", dict(
+            sound, **{str(GODOT / "game3d" / "botmatch" / "keeper.gd"):
+                      'var reading := PlayerModel.new()\nfunc keep() -> void:\n'
+                      '\tResourceSaver.save(table, "res://you.tres")\n'}))),
+            1, "N14")
+        for name, spelling in [
+                ("from user://", '\tvar file: FileAccess = FileAccess.open("user://skill.json", FileAccess.READ)\n'),
+                ("through a ConfigFile", '\tvar config := ConfigFile.new()\n\tconfig.load(PROFILE)\n'),
+                ("as a resource", '\tvar kept: Resource = load(PROFILE)\n'),
+                ("from the user folder", '\tvar path: String = OS.get_user_data_dir() + "/skill.json"\n')]:
+            expect(f"a player model loaded at start, {name}", quiet(build(root, "modelloads" + name.split()[-1], dict(
+                sound, **{str(GODOT / "game3d" / "botmatch" / "match_difficulty.gd"):
+                          "var model := PlayerModel.new()\nfunc _init() -> void:\n" + spelling}))),
+                1, "N14")
+        for spelling in ["\trating += 32.0 * (won - expected)\n",
+                         "\trating = rating + K * (won - expected)\n",
+                         "\tskill += (hit - skill) / shots\n",
+                         "\tvar surprise: float = won - expected\n\trating += surprise * 32.0\n"]:
+            expect(f"a player model stepped: {spelling.strip()[:36]}", quiet(build(
+                root, "modelstep" + str(abs(hash(spelling))), dict(
+                    sound, **{model: "func count(won: float) -> void:\n" + spelling}))),
+                1, "N14")
+        match = str(GODOT / "game3d" / "botmatch" / "bot_match.gd")
+        scene = str(GODOT / "game3d" / "botmatch" / "botmatch.gd")
+        expect("the model's counts saved by the scene, which names only MatchDifficulty", quiet(build(
+            root, "modelscene", dict(sound, **{scene: 'var difficulty: MatchDifficulty\nfunc keep() -> void:\n'
+                                             '\tvar out: FileAccess = FileAccess.open("user://skill.json", '
+                                             'FileAccess.WRITE)\n\tout.store_string(str(difficulty.model.counts()))\n'}))),
+            1, "N14")
+        expect("the model's counts loaded back by the scene", quiet(build(root, "modelsceneloads", dict(
+            sound, **{scene: 'var difficulty: MatchDifficulty\nfunc restore() -> void:\n'
+                      '\tdifficulty.model.dealt = int(FileAccess.get_file_as_string("user://skill.txt"))\n'}))),
+            1, "N14")
+        expect("an Elo update in the match that holds MatchDifficulty", quiet(build(root, "modelmatchelo", dict(
+            sound, **{match: "var difficulty: MatchDifficulty = null\nfunc seen(won: float, expected: float) -> void:\n"
+                      "\trating += 32.0 * (won - expected)\n"}))),
+            1, "N14")
+        for name, spelling in [
+                ("as a string from res://", '\tdealt = int(FileAccess.get_file_as_string("res://profile.txt"))\n'),
+                ("opened to read by a constant", '\tvar file: FileAccess = FileAccess.open(PROFILE, FileAccess.READ)\n'),
+                ("preloaded", '\tvar kept: Resource = preload("res://profile.tres")\n'),
+                ("as JSON", '\tvar kept: Variant = JSON.parse_string(text)\n')]:
+            expect(f"a player model read back, {name}", quiet(build(root, "modelreads" + name.split()[-1], dict(
+                sound, **{model: "func _init() -> void:\n" + spelling}))),
+                1, "N14")
+        for spelling in ["\tskill = skill * 0.9 + won * 0.1\n",
+                         "\trating = rating + 32.0 * won - 32.0 * expected\n",
+                         "\tmean = (mean * (shots - 1) + hit) / shots\n"]:
+            expect(f"a player model stepped in its own file: {spelling.strip()[:36]}", quiet(build(
+                root, "modelscales" + str(abs(hash(spelling))), dict(
+                    sound, **{model: "func seen(won: float) -> void:\n" + spelling}))),
+                1, "N14")
+        expect("an Elo update with its difference named first, in MatchDifficulty", quiet(build(
+            root, "modeldifference", dict(sound, **{str(PLAYER_MODEL_OWN[1]):
+                                                  "func seen(won: float, expected: float) -> void:\n"
+                                                  "\tvar surprise: float = won - expected\n\trating += surprise * 32.0\n"}))),
+            1, "N14")
+        expect("a moving average in a script that holds the model", quiet(build(root, "modelheldema", dict(
+            sound, **{str(GODOT / "game3d" / "botmatch" / "keeper.gd"):
+                      "var difficulty: MatchDifficulty\nfunc seen(won: float) -> void:\n"
+                      "\tskill = 0.1 * won + skill * 0.9\n"}))),
+            1, "N14")
+        expect("a player model counting", quiet(build(root, "modelcounts", dict(
+            sound, **{model: "func count(points: int) -> void:\n\tshots += 1\n\tdealt += points\n"
+                      "\tvar share: float = (float(dealt) + prior) / (float(dealt + taken) + 2.0 * prior)\n"}))),
+            3)
+        expect("the event log written beside the match, not by the model", quiet(build(root, "eventlog", dict(
+            sound, **{str(GODOT / "game3d" / "botmatch" / "match_event_log.gd"):
+                      'const FOLDER: String = "user://botmatch-logs"\nfunc save(events: Array) -> void:\n'
+                      '\tvar file: FileAccess = FileAccess.open(FOLDER + "/a.json", FileAccess.WRITE)\n'
+                      '\tfile.store_string(JSON.stringify(events))\n'}))),
             3)
         expect("counting in the opponent addon", quiet(build(root, "opponentcounts", dict(
             sound, **{str(OPPONENT_ADDON / "ngram_predictor.gd"):

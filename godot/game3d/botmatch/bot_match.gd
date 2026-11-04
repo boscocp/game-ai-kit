@@ -78,6 +78,15 @@ var _cone: VisionCone
 var supply: MatchSupply
 ## Fall-backs and dying, counted for the effects gate (T65).
 var fall_back_counts := MatchFallBacks.new()
+## Steps taken since the match began: the clock the person's events and
+## the player model's readings are counted in, whole numbers on both sides.
+var steps_done: int = 0
+## The bot a person plays (or a stand-in for one is measured as), -1 for
+## nobody; what it did, in order, as the player model counts it (T100); and
+## what reads it and answers, null when the match does not adapt.
+var person: int = -1
+var person_events: Array[Dictionary] = []
+var difficulty: MatchDifficulty = null
 
 
 ## A new match. `blue` and `red` are the two teams, made by the caller with
@@ -109,6 +118,8 @@ func over() -> bool:
 
 ## One step of `rules.step` seconds.
 func step() -> void:
+	if difficulty != null:
+		difficulty.before_step(self)
 	if time >= _next_decision:
 		_decide()
 		_next_decision += rules.decision_interval
@@ -132,6 +143,26 @@ func step() -> void:
 	_capture(rules.step)
 	_count(rules.step)
 	time += rules.step
+	steps_done += 1
+
+
+## Seat `bot_id` as the person (-1: nobody), and let the difficulty answer
+## at once: the aim it set goes back when nobody plays, and moves to the
+## other team when the person changes sides -- not at the next reading,
+## ten seconds on.
+func seat_person(bot_id: int) -> void:
+	person = bot_id
+	if difficulty != null:
+		difficulty.seat(self)
+
+
+## Note an event of `bot_id` for the player model, when it is the person's
+## bot: a "shot", a "hit" with the points it dealt, a "hurt" with the points
+## it took, a "kill", a "death" -- the model's own kinds. Counted here, read
+## by `MatchDifficulty`, kept on disk only by `MatchEventLog`.
+func note(bot_id: int, kind: String, points: int = 0) -> void:
+	if bot_id != -1 and bot_id == person:
+		person_events.append({"step": steps_done, "kind": kind, "points": points})
 
 
 # Look, let each team think, and let each bot decide from what it perceives.
@@ -291,6 +322,7 @@ func killed(victim: MatchBot, killer: int) -> void:
 	# A body seen falling is not a threat any more.
 	teams[1 - victim.team].remembered.erase(victim.id)
 	stats[victim.team].deaths += 1
+	note(victim.id, "death")
 	var from_base: float = victim.position.distance_to(arena.resupply.get(TEAM_NAMES[victim.team], victim.position))
 	if from_base <= MatchStats.NEAR_BASE:
 		stats[victim.team].deaths_near_base += 1
@@ -302,6 +334,7 @@ func killed(victim: MatchBot, killer: int) -> void:
 		var shooter_team: MatchTeam = teams[bots[killer].team]
 		shooter_team.kills[shooter_team.squad_of(killer)].append(time)
 		stats[bots[killer].team].kills += 1
+		note(killer, "kill")
 
 
 ## Put `replacement` in the place of bot `bot_id` -- same id, side and

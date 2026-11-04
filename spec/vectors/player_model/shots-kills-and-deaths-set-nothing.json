@@ -1,0 +1,238 @@
+{
+ "description": "Forty shots, five kills and five deaths with no damage either way: the hit rate falls, the share stays at 0.5 and the row in the middle -- only damage moves the knob.",
+ "last_step": 400,
+ "events": [
+  {
+   "step": 0,
+   "kind": "shot"
+  },
+  {
+   "step": 10,
+   "kind": "shot"
+  },
+  {
+   "step": 20,
+   "kind": "shot"
+  },
+  {
+   "step": 30,
+   "kind": "shot"
+  },
+  {
+   "step": 40,
+   "kind": "shot"
+  },
+  {
+   "step": 50,
+   "kind": "shot"
+  },
+  {
+   "step": 50,
+   "kind": "kill"
+  },
+  {
+   "step": 50,
+   "kind": "death"
+  },
+  {
+   "step": 51,
+   "kind": "kill"
+  },
+  {
+   "step": 51,
+   "kind": "death"
+  },
+  {
+   "step": 52,
+   "kind": "kill"
+  },
+  {
+   "step": 52,
+   "kind": "death"
+  },
+  {
+   "step": 53,
+   "kind": "kill"
+  },
+  {
+   "step": 53,
+   "kind": "death"
+  },
+  {
+   "step": 54,
+   "kind": "kill"
+  },
+  {
+   "step": 54,
+   "kind": "death"
+  },
+  {
+   "step": 60,
+   "kind": "shot"
+  },
+  {
+   "step": 70,
+   "kind": "shot"
+  },
+  {
+   "step": 80,
+   "kind": "shot"
+  },
+  {
+   "step": 90,
+   "kind": "shot"
+  },
+  {
+   "step": 100,
+   "kind": "shot"
+  },
+  {
+   "step": 110,
+   "kind": "shot"
+  },
+  {
+   "step": 120,
+   "kind": "shot"
+  },
+  {
+   "step": 130,
+   "kind": "shot"
+  },
+  {
+   "step": 140,
+   "kind": "shot"
+  },
+  {
+   "step": 150,
+   "kind": "shot"
+  },
+  {
+   "step": 160,
+   "kind": "shot"
+  },
+  {
+   "step": 170,
+   "kind": "shot"
+  },
+  {
+   "step": 180,
+   "kind": "shot"
+  },
+  {
+   "step": 190,
+   "kind": "shot"
+  },
+  {
+   "step": 200,
+   "kind": "shot"
+  },
+  {
+   "step": 210,
+   "kind": "shot"
+  },
+  {
+   "step": 220,
+   "kind": "shot"
+  },
+  {
+   "step": 230,
+   "kind": "shot"
+  },
+  {
+   "step": 240,
+   "kind": "shot"
+  },
+  {
+   "step": 250,
+   "kind": "shot"
+  },
+  {
+   "step": 260,
+   "kind": "shot"
+  },
+  {
+   "step": 270,
+   "kind": "shot"
+  },
+  {
+   "step": 280,
+   "kind": "shot"
+  },
+  {
+   "step": 290,
+   "kind": "shot"
+  },
+  {
+   "step": 300,
+   "kind": "shot"
+  },
+  {
+   "step": 310,
+   "kind": "shot"
+  },
+  {
+   "step": 320,
+   "kind": "shot"
+  },
+  {
+   "step": 330,
+   "kind": "shot"
+  },
+  {
+   "step": 340,
+   "kind": "shot"
+  },
+  {
+   "step": 350,
+   "kind": "shot"
+  },
+  {
+   "step": 360,
+   "kind": "shot"
+  },
+  {
+   "step": 370,
+   "kind": "shot"
+  },
+  {
+   "step": 380,
+   "kind": "shot"
+  },
+  {
+   "step": 390,
+   "kind": "shot"
+  }
+ ],
+ "readings": [
+  {
+   "step": 200,
+   "counts": {
+    "shots": 20,
+    "hits": 0,
+    "kills": 5,
+    "deaths": 5,
+    "dealt": 0,
+    "taken": 0
+   },
+   "share": 0.5,
+   "hit_rate": 0.045454545454545456,
+   "row": 2,
+   "aim_error_degrees": 3.0
+  },
+  {
+   "step": 400,
+   "counts": {
+    "shots": 40,
+    "hits": 0,
+    "kills": 5,
+    "deaths": 5,
+    "dealt": 0,
+    "taken": 0
+   },
+   "share": 0.5,
+   "hit_rate": 0.023809523809523808,
+   "row": 2,
+   "aim_error_degrees": 3.0
+  }
+ ]
+}

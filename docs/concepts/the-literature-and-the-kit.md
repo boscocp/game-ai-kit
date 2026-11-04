@@ -137,7 +137,7 @@ last three columns to the repository.
 | Reinforcement learning | AIMA ch. 22; Y&T 3.7 | self-play | MENACE: `tictactoe`, `python/gameaikit/menace` | `demo-tictactoe` | 1 |
 | Imitation: behaviour cloning | AIMA 22.6; the kit's `behaviour-cloning.md` | ghosts of players | `ai_learning`, `python/gameaikit/cloning` | `demo-fighting` | 1 |
 | An n-gram opponent model | GAP1 ch. 48 | fighting games | `ai_opponent` | `demo-fighting` | 1 |
-| Player modelling | Y&T ch. 10-12 | experience, retention | an opponent counted during one fight only (ADR 0016): `ai_opponent` | `demo-fighting` | 1 |
+| Player modelling | Y&T ch. 10-12 | experience, retention | an opponent counted during one fight only (ADR 0016): `ai_opponent`; how well the person plays, counted during one bot match and setting the other team's aim from a fixed table (ADR 0016, N14): `godot/game3d/botmatch/player_model.gd` (T100) | `demo-fighting`, `demo-botmatch` | 1 |
 | Difficulty as named knobs | GAP3 ch. 33 | shooters, racing, fighting | `godot/addons/ai_planning/difficulty.gd`, `racing3d`, `godot/game/fighting/fight_opponent.gd`, `godot/game/rts/rts_commander.gd` | `demo-racing3d`, `demo-tactical`, `demo-fighting`, `demo-rts` | 1 |
 | A director that paces the action | Booth 2009; GAP Online 2021 ch. 7 | *Left 4 Dead*, *Warframe* | not in the kit | -- | 1 |
 | Rating players and agents (a league) | the kit's `the-league.md` | ladders | `league` | `make league` | 1 |

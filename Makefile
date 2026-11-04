@@ -300,7 +300,7 @@ solve-maze: ## Solve the maze's MDP by value iteration and publish its values an
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.mdp.publish --write $(CURDIR)/godot/game/maze
 
 .PHONY: test-vectors
-test-vectors: test-core-vectors test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-bandit-vectors test-constraints-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors test-llm-vectors test-maze-vectors test-mdp-vectors test-director-vectors test-squad-vectors ## Every conformance vector in spec/
+test-vectors: test-core-vectors test-search-vectors test-planning-vectors test-learning-vectors test-fuzzy-vectors test-menace-vectors test-checkers-vectors test-adversarial-vectors test-ngram-vectors test-bandit-vectors test-constraints-vectors test-cloning-vectors test-combat-vectors test-steering-vectors test-teamwork-vectors test-utility-vectors test-racing3d-vectors test-perception-vectors test-llm-vectors test-maze-vectors test-mdp-vectors test-director-vectors test-squad-vectors test-player-model-vectors ## Every conformance vector in spec/
 	@# One target per family, so a failure names which one rather than which
 	@# line of a two-command recipe. CI runs this one; `check_workflow.py`
 	@# follows the prerequisites.
@@ -438,6 +438,23 @@ test-director-vectors: import ## The director's intensity and phases on event li
 	@# from spec/vectors/director/derive.py.
 	@$(GODOT) --headless --path godot -s res://test/infiltration/director_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/director
+
+.PHONY: test-player-model-vectors
+test-player-model-vectors: import ## The bot match's player model on event lists: counts, share, row, against PlayerModel (T100)
+	@# The other half is `make test-python`; the answers came from neither,
+	@# from spec/vectors/player_model/derive.py.
+	@$(GODOT) --headless --path godot -s res://test/botmatch/player_model_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/player_model
+
+.PHONY: measure-player-model
+measure-player-model: import ## T100: stand-ins at three skills in the person's place, the knob each settles on, the score with the model on and off
+	@# Printed, not a gate: the table on docs/godot/botmatch.md. AIMS="4 3.5
+	@# 3 2.5 2" measures another table's aim errors, row by row.
+	@$(GODOT) --headless --path godot -s res://test/botmatch/player_model_measure.gd -- $(AIMS)
+
+.PHONY: record-botmatch
+record-botmatch: import ## Play the bot match and keep each match's events in this checkout's user://botmatch-logs/ (T100, ADR 0017)
+	@$(GODOT) --path godot res://game3d/botmatch/botmatch.tscn -- --record
 
 .PHONY: measure-director
 measure-director: import ## T90: the director over seeded runs -- seconds in each phase, peaks, relaxes, patrols sent and called back

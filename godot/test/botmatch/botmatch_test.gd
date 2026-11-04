@@ -554,7 +554,9 @@ func test_the_rules_file_is_read_whole() -> void:
 	var rules := MatchRules.new()
 	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(MatchRules.RULES))
 	for key: String in data:
-		if key != "about" and key != "knobs":
+		if key == "difficulty":
+			assert_dict(rules.difficulty).is_equal(data[key])
+		elif key != "about" and key != "knobs":
 			assert_float(float(rules.get(key))).override_failure_message(key).is_equal(float(data[key]))
 	assert_float(rules.reaction).is_equal(float(data["knobs"]["reaction"]))
 

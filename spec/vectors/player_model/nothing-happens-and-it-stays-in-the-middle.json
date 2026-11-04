@@ -1,0 +1,97 @@
+{
+ "description": "No event in a minute: every reading is the prior's 0.5, the middle row, the knobs' own aim error.",
+ "last_step": 1200,
+ "events": [],
+ "readings": [
+  {
+   "step": 200,
+   "counts": {
+    "shots": 0,
+    "hits": 0,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 0,
+    "taken": 0
+   },
+   "share": 0.5,
+   "hit_rate": 0.5,
+   "row": 2,
+   "aim_error_degrees": 3.0
+  },
+  {
+   "step": 400,
+   "counts": {
+    "shots": 0,
+    "hits": 0,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 0,
+    "taken": 0
+   },
+   "share": 0.5,
+   "hit_rate": 0.5,
+   "row": 2,
+   "aim_error_degrees": 3.0
+  },
+  {
+   "step": 600,
+   "counts": {
+    "shots": 0,
+    "hits": 0,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 0,
+    "taken": 0
+   },
+   "share": 0.5,
+   "hit_rate": 0.5,
+   "row": 2,
+   "aim_error_degrees": 3.0
+  },
+  {
+   "step": 800,
+   "counts": {
+    "shots": 0,
+    "hits": 0,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 0,
+    "taken": 0
+   },
+   "share": 0.5,
+   "hit_rate": 0.5,
+   "row": 2,
+   "aim_error_degrees": 3.0
+  },
+  {
+   "step": 1000,
+   "counts": {
+    "shots": 0,
+    "hits": 0,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 0,
+    "taken": 0
+   },
+   "share": 0.5,
+   "hit_rate": 0.5,
+   "row": 2,
+   "aim_error_degrees": 3.0
+  },
+  {
+   "step": 1200,
+   "counts": {
+    "shots": 0,
+    "hits": 0,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 0,
+    "taken": 0
+   },
+   "share": 0.5,
+   "hit_rate": 0.5,
+   "row": 2,
+   "aim_error_degrees": 3.0
+  }
+ ]
+}

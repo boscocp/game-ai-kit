@@ -149,6 +149,10 @@ var wave_timeout: float = 3.0
 var reaction: float = 0.3
 var turn_rate_degrees: float = 270.0
 var aim_error_degrees: float = 3.0
+## The table the player model's estimate is read through (T100): its
+## interval, prior and rows, as `rules.json` writes them. `MatchDifficulty`
+## reads it; nothing writes it.
+var difficulty: Dictionary = {}
 
 
 ## The zone a point of a body is in: `height` above its feet and `across`

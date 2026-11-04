@@ -71,6 +71,7 @@ static func fire(world: BotMatch, shooter: MatchBot, target: MatchBot) -> void:
 	var stats: MatchStats = world.stats[shooter.team]
 	stats.shots += 1
 	stats.shots_sprinting += 1 if shooter.sprinting else 0
+	world.note(shooter.id, "shot")
 	if not world.sees(shooter, target):
 		stats.shots_unseen += 1
 	shooter.ammo -= 1
@@ -99,6 +100,8 @@ static func land(world: BotMatch, shooter: MatchBot, target: MatchBot, zone: Str
 	stats.zone_hits[zone] = int(stats.zone_hits.get(zone, 0)) + 1
 	target.health -= damage
 	target.last_hit_by = shooter.id
+	world.note(shooter.id, "hit", damage)
+	world.note(target.id, "hurt", damage)
 
 
 # Where a bot's shot is drawn ending: the middle of the zone it struck; when
@@ -135,6 +138,7 @@ static func fire_aimed(world: BotMatch, shooter: MatchBot) -> void:
 	shooter.fire_cooldown = world.rules.fire_interval
 	world.stats[shooter.team].shots += 1
 	world.stats[shooter.team].shots_sprinting += 1 if shooter.sprinting else 0
+	world.note(shooter.id, "shot")
 	var eyes: Vector3 = eyes_of(world, shooter)
 	var look: Vector3 = look_of(shooter)
 	var far: Vector3 = eyes + look * world.rules.max_range
