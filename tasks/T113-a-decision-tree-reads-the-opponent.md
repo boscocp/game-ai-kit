@@ -4,6 +4,9 @@ Size: M · Prereqs: T112 · Files: `godot/addons/ai_learning/`, `godot/test/ai_l
 
 ## Goal
 
+**Starts only once the owner has opened the repository**, which is a step
+after T112, not T112 itself (the owner, 2026-11-04).
+
 The kit learns one shape of model: `LearnedModel`, one weight per feature.
 Its header says when not to use it: "a tree, a hidden layer, anything
 with structure". Decision trees are absent, and they are among the first
@@ -16,6 +19,8 @@ fighting-game AI competition did with k-NN and decision trees
 recordings are the data.
 
 ## Decisions written down first
+
+_The decisions below are this session's proposal, written on 2026-11-04; the owner has not ratified them. The wave that takes the task confirms them, or brings them back to the owner._
 
 - **Python fits, GDScript reads** (invariant 6). Training runs in
   `gameaikit.training`, CART with Gini impurity, depth and leaf size

@@ -6,25 +6,27 @@ Size: S · Prereqs: T71 · Files: `Makefile`, `scripts/added_gates.py`, `scripts
 
 In waves 118 to 122, five branches ran in parallel. Each one added a
 family of vectors to the one-line `test-vectors:` list in the Makefile.
-That one edit cost twice:
+That one edit cost the batch twice:
 
 - **It selected all of `make check`, every time.** `added_gates.py` (T71)
   accepts a Makefile change that only adds gates. That covers new
   `test-...` targets, and new names put into `check:`. It does not cover
   `test-vectors:`. A new name there counts as doubt, and doubt is global.
-  So every wave, and every rerun after a review or a rebase, paid about
-  nine minutes for the whole suite. The batch ran about fifteen of those
-  runs.
+  So every wave's run after review fixes, and every rerun after a rebase,
+  paid for the whole suite. The implementers' reports count at least
+  ten whole runs.
 - **Every rebase conflicted on that line.** Each branch rewrote the same
   line. The `packages` list in `python/pyproject.toml` did the same for
-  each new technique package. Both conflicts were unions, and both were
-  still resolved by hand, four times.
+  each new technique package. Both conflicts were unions, and they were
+  still resolved by hand (#61, #62).
 
 The owner asked on 2026-11-04 for parallel waves to cost less and redo
 less. This task removes those two costs, and gives up nothing on the
 selector's rule that doubt means global.
 
 ## Decisions written down first
+
+_The decisions below are this session's proposal, written on 2026-11-04; the owner has not ratified them. The wave that takes the task confirms them, or brings them back to the owner._
 
 - **`test-vectors:` is read like `check:`.** If the change is only new
   names, added to that line in the same words and the same order, for
@@ -73,7 +75,6 @@ selector's rule that doubt means global.
 
 ```bash
 python3 scripts/affected.py --self-test
-python3 scripts/added_gates.py --self-test   # if it has its own
 python3 scripts/release.py --self-test
 make lint-modules lint-selftests
 make check-affected BASE=origin/main
@@ -83,4 +84,5 @@ make check-affected BASE=origin/main
 
 In the next parallel batch, count how many waves selected all of
 `make check`, and how many rebases conflicted on the Makefile or
-`pyproject.toml`. Compare with batch 118-122: five, and four.
+`pyproject.toml`. Compare with batch 118-122: five, and two of the three
+the coordinator did.

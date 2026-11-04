@@ -13,6 +13,8 @@ never seen the waves.
 
 ## Decisions written down first
 
+_The decisions below are this session's proposal, written on 2026-11-04; the owner has not ratified them. The wave that takes the task confirms them, or brings them back to the owner._
+
 - **A report, not a rewrite.** The review writes
   `docs/reviews/open-the-repository.md`. That report holds a finding list
   with file:line and severity, and a list of follow-up tasks. A fix
@@ -21,7 +23,7 @@ never seen the waves.
 - **Done by a context that wrote none of it** (rule 12), reading cold.
 - **What it reads, at least:**
   - the README in both languages, as a first page;
-  - the 18 technique pages and the guide (T77);
+  - every technique page and the guide (T77);
   - every ADR's status line;
   - the invariants table, against what the gates hold;
   - LICENSE, NOTICE and third-party art (ADR on Bos Wars and the sprite
@@ -54,7 +56,7 @@ never seen the waves.
 ```bash
 make check
 make library-check
-python3 scripts/check_no_employer_refs.py --history   # or the form T112's reading finds
+python3 scripts/check_no_employer_refs.py
 make lint-tasks lint-status lint-links
 ```
 

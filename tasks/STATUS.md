@@ -22,14 +22,17 @@ Main is dd8d41a.
 
 **How it was checked.** The owner said on 2026-11-04 to run the gate only
 at the last merge. So #60 to #62 merged on their reviewed heads, rebased
-by the coordinator: the conflicts were unions in the Makefile's
-`test-vectors:` and in `pyproject.toml`'s `packages`. The whole
+the coordinator rebased #61 to #63. #61 conflicted in the Makefile's
+`test-vectors:` and in `pyproject.toml`'s `packages`, #62 in
+`test-vectors:` only, and #63 had no conflict. Each was resolved as a
+union. #60's implementer rebased it. The whole
 `make check` ran once, on #63's rebased head, before it merged: exit 0,
 1641 gdUnit cases, every gate including the timing ones. #59 had its own
 full run.
 
-The batch hit the account's 5-hour limit while rebasing. The coordinator
-finished the rebases and merges by shell.
+By the coordinator's account, the batch hit the account's 5-hour usage
+limit while rebasing, and the coordinator finished the rebases and merges
+by shell.
 
 **The owner decided on 2026-11-04:**
 
@@ -37,12 +40,14 @@ finished the rebases and merges by shell.
   `godot/game/tactical/` with T85);
 - run the gate only at the last merge;
 - after the main tasks, a review of the repository before it opens to
-  the community (T112);
+  the community (T112). Which tasks count as "the main ones" (T112's
+  prereqs) is this session's reading;
 - after it opens, a decision tree, a random forest and a Bayesian network,
   fitted into existing demos (T113-T115). Which demo each one goes in is
   this session's proposal, not ratified;
-- T111, which makes a parallel batch cheaper, runs next, in parallel with
-  T110 only.
+- to make parallel batches cost less time and fewer tokens, and redo
+  less. The owner accepted the recommendation that followed: T111 next,
+  in parallel with T110 only.
 
 Publishing to PyPI and the Asset Library was recommended to wait until the
 repository is public. That is not decided.
@@ -127,7 +132,8 @@ are still wip (T25, T40, T44, T45, T46, T48), and T43 is blocked.
 **Next:** T111 and T110 in parallel (T111 touches the Makefile and the
 selector, so nothing that adds a gate runs beside it). Then a batch picked
 from T87, T88, T94 and T96, with the follow-ups above that the owner opens.
-T112 comes after the main tasks, and T113-T115 after the repository opens.
+T112 comes after the main tasks. T113 to T115 come after the repository
+opens, which is the owner's step after T112, not T112 itself.
 
 ## Resuming after 2026-10-30 (waves 112 to 117 merged)
 

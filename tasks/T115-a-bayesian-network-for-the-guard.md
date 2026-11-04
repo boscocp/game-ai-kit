@@ -4,6 +4,9 @@ Size: M · Prereqs: T112 · Files: `godot/addons/ai_bayes/`, `godot/test/ai_baye
 
 ## Goal
 
+**Starts only once the owner has opened the repository**, which is a step
+after T112, not T112 itself (the owner, 2026-11-04).
+
 The literature table lists Bayesian networks (AIMA ch. 13) as "not in the
 kit", at tier 1. The owner asked for them on 2026-11-04. A guard is the
 natural place.
@@ -15,6 +18,8 @@ answering. Is there an intruder at all? And which evidence moved the
 belief most?
 
 ## Decisions written down first
+
+_The decisions below are this session's proposal, written on 2026-11-04; the owner has not ratified them. The wave that takes the task confirms them, or brings them back to the owner._
 
 - **A new addon, `ai_bayes`**, independent of every other addon
   (invariant 2). Discrete variables, conditional probability tables,

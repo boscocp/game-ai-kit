@@ -1,6 +1,6 @@
 # T114 — A random forest votes on the same question
 
-Size: S · Prereqs: T113 · Files: `godot/addons/ai_learning/`, `godot/test/ai_learning/`, `python/gameaikit/training/`, `python/tests/`, `spec/vectors/learning/`, `godot/game/fighting/`, `godot/test/fighting/`, `docs/techniques/`, `docs/concepts/learning.md`
+Size: S · Prereqs: T113 · Files: `godot/addons/ai_learning/`, `godot/test/ai_learning/`, `python/gameaikit/training/`, `python/tests/`, `spec/vectors/learning/`, `godot/game/fighting/`, `godot/test/fighting/`, `docs/techniques/`, `docs/concepts/learning.md`, `Makefile`
 
 ## Goal
 
@@ -12,6 +12,8 @@ answers the same question in the same game, so the reader can compare
 one tree against many, on the same data.
 
 ## Decisions written down first
+
+_The decisions below are this session's proposal, written on 2026-11-04; the owner has not ratified them. The wave that takes the task confirms them, or brings them back to the owner._
 
 - **Fitted in Python, read in GDScript** (invariant 6), seeded, using
   T109's `Xorshift` on the Python side so a forest is reproducible. The
