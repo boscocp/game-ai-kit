@@ -105,11 +105,11 @@ and that it decides nothing about any game -- and the owner's decision.
   `xorshift.gd` selects 28. Small, because `game_shared` already pulls in
   nearly everything.
 
-**Pending the owner -- T109's reading, not decided.** (Answered on
-2026-11-05, as recommended: the wheel ships `gameaikit.core`, and
-`Xorshift` becomes `GakXorshift` in task T120. See ADR 0024's amendment of
-that date.) Two consequences
-contradict ADR 0024 as it stands, and stay open until the owner rules:
+**Was pending the owner -- answered on 2026-11-05.** As recommended: the
+wheel ships `gameaikit.core`, and `Xorshift` becomes `GakXorshift` in task
+T120. See ADR 0024's amendment of that date. T109's reading, as it was
+written: two consequences contradicted ADR 0024 as it stood, and stayed
+open until the owner ruled:
 
 - **The wheel ships `gameaikit.core`**, the kernel's package, beside the
   techniques'. This is not optional while the code is as it is: the shipped

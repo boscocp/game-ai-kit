@@ -55,5 +55,6 @@ window still feel smooth?
 
 ## Notes
 
-- Shares `godot/game/squad/` and `godot/test/squad/` with T88 and T96,
-  and `spec/squad/` with both. It does not run beside either.
+- Shares `godot/game/squad/` and `godot/test/squad/` with T88, T96,
+  T124, T125, T126 and T127, and `spec/squad/` with T88, T96, T120 and
+  T125. It does not run beside any of them.

@@ -19,9 +19,12 @@ repository opens, waits on this task.
 
 _The owner ratified only the item quoted above. The decisions below are this session's proposal, written on 2026-11-05; the wave that takes the task confirms them, or brings them back to the owner._
 
-- **"Both languages" is read as the pages in English and in pt-BR.** The
-  GDScript `class_name` becomes `GakXorshift`; every technique page that
-  names it changes, in both languages.
+- **A reading, not settled: "both languages" means the pages in English
+  and in pt-BR.** The coordinator's brief said "rename ... in both
+  languages". This session reads that as the pages, so the GDScript
+  `class_name` becomes `GakXorshift` and every page that names it changes,
+  in both languages. If the owner meant GDScript and Python, the next
+  decision falls.
 - **The Python twin keeps `gameaikit.core.Xorshift`.** ADR 0024: "The
   Python names stay. ... Python's modules are the namespace GDScript
   lacks." The Python ports are unprefixed today (`AdversarialGame`). If
@@ -39,7 +42,8 @@ _The owner ratified only the item quoted above. The decisions below are this ses
    any `.uid` it writes (CLAUDE.md's trap on a new `class_name`).
 2. The pages, both languages, `modules/ai_core.json`'s `summary`, the
    README and the vector READMEs that name the GDScript class.
-3. ADR 0024's table gains the row, as a tenth prefixed name, dated.
+3. ADR 0024's table gains the row, dated, and the wave asks the owner
+   whether 0.1.0's promise now counts nine names or ten.
 
 ## Acceptance
 

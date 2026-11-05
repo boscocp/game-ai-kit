@@ -179,13 +179,18 @@ prereqs.
   whether the bars grow, and press space early.
 - T55: play the RTS with K on and off, and watch M during a replan.
 
-**What is left:** todo T88, T89 (only if T85's manual check asks for
-art), T96, T112, T113, T114 and T115. The older wip and blocked tasks are
-as in 2026-11-04.
+**What is left:** todo T88 (after T126), T89 (only if T85's manual
+check asks for art), T96, T112 (after T120), T113-T115, T116-T127 (T122
+and T123 wait on the owner). The older wip and blocked tasks are as in
+2026-11-04.
 
-**Next, as proposed by this session from the task rows:** T88, which
-needed only T87, and T96 are both ready. Both write `godot/game/squad/`,
-so they do not run together. T112 waits on both.
+**Next, as proposed by this session from the task rows:** T126 first (T88
+waits on it) and T96. Both write `godot/game/squad/`, so they do not run
+together. T112 waits on T88, T96 and T120.
+
+The owner asked on 2026-11-05 which next waves run in parallel. This
+session proposed T126, T116, T118, T122 and T123 (optionally T119), with
+T120 and T121 each run alone. Not yet chosen.
 
 ## Resuming after 2026-11-04 (waves 118 to 122 merged)
 

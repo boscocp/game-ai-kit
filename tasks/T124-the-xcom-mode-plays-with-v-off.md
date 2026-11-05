@@ -27,6 +27,9 @@ _The owner ratified only the item quoted above. The decisions below are this ses
   - a launch option, such as `make demo-tactical MODE=squad VIEW=teach`;
   - V on whenever no person plays a side (both sides the computer's);
   - V on until the person's first move, then off.
+
+  Only the first is a view a person opens. The second and third are
+  triggers that switch V by themselves.
 - **Invariant 13 still holds.** `make test-demo-overlays` and
   `check_demos.py` hold the squad scene's overlay populated. They must
   still find it, in the teaching view, and the card's `watch` line says

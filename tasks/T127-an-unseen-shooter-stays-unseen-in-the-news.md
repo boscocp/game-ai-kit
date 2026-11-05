@@ -69,7 +69,9 @@ tell you only what red could know?
 
 ## Notes
 
-- Shares `godot/game/squad/` and `godot/test/squad/` with T88 and T96.
-  It does not run beside either.
+- Shares `godot/game/squad/` and `godot/test/squad/` with T88, T96,
+  T117, T124, T125 and T126. It does not run beside any of them.
+- Shares `godot/game/tactical/` with T126 and T124; run one after the
+  other.
 - The second answer changes the rules T88 compares the searches on. If
   it is chosen, T88's positions are read again after it.

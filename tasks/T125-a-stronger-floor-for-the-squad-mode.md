@@ -43,6 +43,8 @@ _The owner ratified only the item quoted above. The decisions below are this ses
    not cheat (`SquadUnseenCheck`).
 2. Measure, set the bar, plant the worse weighing.
 3. The gate, beside `test-squad-match`, and the page's table.
+4. Once its name is chosen, add the new target to this task's Acceptance
+   (for instance `make test-squad-floor`), in the same wave.
 
 ## Acceptance
 
@@ -62,7 +64,8 @@ fair stand-in for a careless player?
 
 ## Notes
 
-- Shares `godot/game/squad/`, `godot/test/squad/` and `spec/squad/` with
-  T88 and T96, and the `Makefile`. It does not run beside either.
+- Shares `godot/game/squad/` and `godot/test/squad/` with T88, T96,
+  T117, T124, T126 and T127, `spec/squad/` with T88, T96, T117 and T120,
+  and the `Makefile`. It does not run beside any of them.
 - The new gate goes into `check:` by its own line, so `affected.py`'s
   rule 5 can read it as a gate added (`docs/howto/parallel-batch.md`).
