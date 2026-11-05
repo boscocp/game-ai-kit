@@ -1,6 +1,6 @@
 # 0024 — The library prefixes its ports with `Gak`, and ships only techniques
 
-Status: accepted · 2026-10-30 (T64, wave 112; the owner's decisions of 2026-10-20 and 2026-10-30)
+Status: accepted, amended · 2026-10-30 (T64, wave 112; the owner's decisions of 2026-10-20 and 2026-10-30; amended on the owner's decision of 2026-11-05 -- see the amendment at the end)
 
 ## Context
 
@@ -88,10 +88,43 @@ modules are the namespace GDScript lacks.
   gate holds that yet: `check_readability.py` does not know which classes
   are ports.
 
-## Pending (T109, wave 122)
+## Pending (T109, wave 122) -- answered on 2026-11-05
 
 ADR 0021's amendment of 2026-10-29 puts a seeded generator, `Xorshift`, in
 the kernel. Two of its consequences touch this record and wait on the
 owner: the wheel now ships `gameaikit.core`, the kernel's package, which
 the techniques import; and `Xorshift` is a kernel class without the
-prefix. See "Pending the owner" at the end of ADR 0021.
+prefix. See "Pending the owner" at the end of ADR 0021. The owner answered
+both on 2026-11-05; see the amendment below.
+
+## Amended (2026-11-05): what 0.1.0 promises, and the kernel in the wheel
+
+**What was decided.** On 2026-11-05 the owner answered the numbered lists
+in `tasks/STATUS.md` with "todas conforme recomendado": each item as its
+recommendation said. Three items touch this record (items 2, 6 and 7 of
+the list of 2026-11-04).
+
+**0.1.0 promises only the nine `Gak` names** (item 2). The names in the
+table above are the promise in "Consequences": renaming one after a
+release breaks every game that extends it. Every other name -- a class, a
+method, a Python function -- may change below 1.0. The guide
+(`docs/techniques/using-the-library.md`, T77) said so first; this record
+now says it too.
+
+**The wheel ships `gameaikit.core`** (item 7). This amends "What ships is
+the techniques", and the title's "ships only techniques", for the
+wheel: it holds the packages of modules of kind `technique`, and the
+kernel's package, `gameaikit.core`. That is not a choice while the code
+stands as it is: the shipped `gameaikit.adversarial`, `bandit` and
+`perception` import `gameaikit.core` (ADR 0021's amendment of 2026-10-29),
+and a wheel without it would not import. The examples' packages still do
+not ship. `scripts/release.py` has accepted the kernel's package since
+T109.
+
+**`Xorshift` becomes `GakXorshift`** (item 6), before anything is
+published. That is task T120, not done by this amendment. When it lands,
+its wave adds the row to the table above. Whether the promise of 0.1.0
+then covers ten names, not nine, was not part of the answer: T120 asks.
+
+**What does not follow from it.** Nothing else is prefixed, and nothing
+else enters the wheel, on the strength of this amendment.

@@ -104,6 +104,24 @@ conflicts on lines every wave rewrote.
   They still fail under load whenever their module is selected: rerun one
   alone before reading it as a regression. `make check` runs them all.
 
+## The timing gates run alone, in the last gate
+
+The owner ratified on 2026-11-05 the recommendation that the timing gates
+run alone in the coordinator's last gate (`tasks/STATUS.md`, item 23 of
+2026-11-04). The routine:
+
+- **A wave's own run does not settle a timing gate.** While other
+  worktrees test, a failure of `test-rts-budget`, `test-mcts-budget`,
+  `test-inference-budget`, `test-planner-benchmark` or `test-rts-match`
+  is load, until a run alone says otherwise. The implementer says in the
+  pull request which of them failed under load.
+- **The coordinator runs them alone, last.** After the batch's other
+  checks, with no other worktree testing, the coordinator runs each
+  timing gate the batch selected, one at a time. That run is the one the
+  merge rests on. A failure there is a regression.
+- **The whole `make check`** that closes a batch counts as that run only
+  if nothing else was testing while it ran.
+
 What still selects everything, on purpose: a change to a script under
 `scripts/`, CI, the engine pin, `godot/project.godot`, or a path no module
 owns. In batch 118-122 every wave had one of those besides its Makefile

@@ -47,9 +47,11 @@ The auto-mode classifier refused a force-push, so the branches were
 brought up to date by merging main into them, not by rebasing. The squash
 merge drops the merge commits.
 
-**Waiting on the owner -- one numbered list, each with a recommendation.**
-The 24 items of 2026-11-04 below are still open. Each PR body holds the
-reasoning.
+**Answered by the owner on 2026-11-05 -- do not ask again.** What each
+item now means is in "The owner decided on 2026-11-05 (second answer)",
+after the list. It was: one numbered list, each with a recommendation.
+The 24 items of 2026-11-04 below were then still open; they were answered
+the same day. Each PR body holds the reasoning.
 
 1. T94, decisions 1-11:
    - the scene's numbers and the rule shape;
@@ -99,6 +101,76 @@ reasoning.
 11. T55, decision 10: nothing shows the stale enemy a clocked side
     believes in (invariant 13). *Recommended:* a follow-up task.
 
+**The owner decided on 2026-11-05 (second answer):** "todas conforme
+recomendado". It answers both numbered lists: the 11 items above (A1-A11
+below) and the 24 of 2026-11-04 (B1-B24). Each item is settled as its own
+recommendation says, and no further: where that was "decide after
+playing" or an owner action, it stays one. The answer is read as covering
+these two lists only: the 13 items of 2026-10-30 stay as that section
+leaves them.
+
+- **A1** ratified: T94's decisions 1-11. Decision 12 had no
+  recommendation, so it stays the owner's: two T93 labels to skim.
+- **A2** ratified: the empty argument stays. It is tightened only if
+  T94's manual check shows bare acts misused.
+- **A3** task opened: T116, the guard's speech without markup, measured.
+- **A4** ratified: T87's decisions 1-10.
+- **A5** kept as it is: the nearly flat visit bars. Revisit with a less
+  noisy playout, measured by `make measure-squad-mcts`. No task yet.
+- **A6** task opened: T117, the squad's MCTS searches a share of the
+  frame.
+- **A7** ratified: T55's decisions 2, 3, 5, 7 and 8.
+- **A8** an owner action, pending: play `make record-rts` a few times, run
+  `make measure-rts-clock`, commit what it writes, and take the cap from
+  the busiest window.
+- **A9** ratified: the 10-minute league stays out of `make check`.
+- **A10** ratified: commit the `data/rts/` recordings once they exist.
+  None exists yet; they come from A8.
+- **A11** task opened: T118, the stale enemy a clocked side believes in.
+- **B1** ratified: the guide keeps `release.py --build`.
+- **B2** ratified: 0.1.0 promises only ADR 0024's nine `Gak` names, and
+  any other name may change below 1.0. Written into ADR 0024 (amended
+  2026-11-05).
+- **B3** ratified.
+- **B4** task opened: T119, a gate for the pt-BR glossary.
+- **B5** ratified: `BanditDraws` folded in.
+- **B6** task opened: T120, `Xorshift` becomes `GakXorshift`. It is a
+  prereq of T112, so it lands before anything is published.
+- **B7** ratified: the wheel ships `gameaikit.core`. Written into ADR
+  0024, amending "technique packages only".
+- **B8** ratified: the next wave updates CLAUDE.md's invariant 2 (the
+  generator) and its `library-check` line. This PR does not edit
+  CLAUDE.md.
+- **B9** task opened: T121, every vectors runner checks its types.
+- **B10** task opened: T122, levels solved on `WorkerThreadPool`. A
+  follow-up the owner deferred ("deixa os followup pra depois"): it waits
+  for the owner's word on when.
+- **B11** ratified: T95's eight decisions. Tuning the numbers in
+  `level_constraints.json` is the owner's, in T95's manual check.
+- **B12, B13** one task opened: T123, the team's share with a band, and
+  the counts starting empty on a change of team. Deferred like B10.
+- **B14** ratified: the bot match's log stays in `user://`.
+- **B15** ratified, both: N14 names `MatchDifficulty`; the table stays in
+  `rules.json`.
+- **B16** still open, by its own terms: decide after playing.
+- **B17** task opened: T124, V off in play and on in the teaching view.
+- **B18** task opened: T125, a second, stronger floor.
+- **B19** task opened: T126, the XCOM mode's mode view. T87 has landed,
+  so T88 now waits on T126 (its file and row say so).
+- **B20** ratified: T85's nine items. The squad's defence (0-10) is
+  still measured in play, in T85's manual check.
+- **B21** ratified: T111's rule 6 and what went beyond its decisions.
+- **B22** ratified: `packages` stays committed and sorted; revisit only
+  if it still conflicts.
+- **B23** ratified: the timing gates run alone in the coordinator's last
+  gate. Written into `docs/howto/parallel-batch.md`.
+- **B24** task opened: T127, an unseen shooter stays unseen in the news.
+  Which of the two answers is the task's to choose.
+
+After this answer, todo adds T116-T127. T88 waits on T126. T112 waits
+on T120 as well. T122 and T123 wait on the owner's word, besides their
+prereqs.
+
 **Manual checks waiting:**
 
 - T94: play `make demo-talk` live (Tab) in a window, in both languages.
@@ -107,13 +179,18 @@ reasoning.
   whether the bars grow, and press space early.
 - T55: play the RTS with K on and off, and watch M during a replan.
 
-**What is left:** todo T88, T89 (only if T85's manual check asks for
-art), T96, T112, T113, T114 and T115. The older wip and blocked tasks are
-as in 2026-11-04.
+**What is left:** todo T88 (after T126), T89 (only if T85's manual
+check asks for art), T96, T112 (after T120), T113-T115, T116-T127 (T122
+and T123 wait on the owner). The older wip and blocked tasks are as in
+2026-11-04.
 
-**Next, as proposed by this session from the task rows:** T88, which
-needed only T87, and T96 are both ready. Both write `godot/game/squad/`,
-so they do not run together. T112 waits on both.
+**Next, as proposed by this session from the task rows:** T126 first (T88
+waits on it) and T96. Both write `godot/game/squad/`, so they do not run
+together. T112 waits on T88, T96 and T120.
+
+The owner asked on 2026-11-05 which next waves run in parallel. This
+session proposed T126, T116, T118, T122 and T123 (optionally T119), with
+T120 and T121 each run alone. Not yet chosen.
 
 ## Resuming after 2026-11-04 (waves 118 to 122 merged)
 
@@ -164,9 +241,11 @@ by shell.
 Publishing to PyPI and the Asset Library was recommended to wait until the
 repository is public. That is not decided.
 
-**Waiting on the owner -- one numbered list, each with a recommendation.**
-The 13 items of 2026-10-30 below are still open. The review records hold
-the reasoning.
+**Answered by the owner on 2026-11-05 (items 1-20, and 21-24 below) --
+do not ask again.** What each item now means (B1-B24) is in the 2026-11-05
+section above, "The owner decided on 2026-11-05 (second answer)". It was:
+one numbered list, each with a recommendation. The 13 items of 2026-10-30
+below are still open. The review records hold the reasoning.
 
 1. T77: the page builds the archives with `release.py --build` (Python and
    git only); `make release` is named as the full release. *Recommended:*
@@ -254,7 +333,7 @@ exit 0, 1652 gdUnit cases. Main is dc1eb83. T111's replay of wave 120 now
 selects three modules instead of everything. Waves that touch `scripts/`,
 `project.godot` or the manifests still select everything, by design.
 
-**Added to the owner's list above:**
+**Added to the owner's list above** (answered with it on 2026-11-05):
 
 21. T111: rule 6 (a new technique module selects itself), new targets
     that are not gates selecting nothing, and the sort refusals on
@@ -759,7 +838,7 @@ review.
 | T85 | The XCOM-style mode in the tactical scene, against an enemy that weighs | done | wave 119: one card, one scene -- the tactical card's `modes` (Advance Wars, XCOM), each its ruleset script, controllers and roster, chosen on the menu with M or a button and handed to the scene (`play_in_modes`), M in the scene the other mode, `make demo-tactical MODE=squad` the menu straight into it; the seam answers more, Advance Wars unchanged: title, fog (`TacticalFog`: dark cells, last-seen ghosts, only the seen pieces drawn), dash cells in a second tint, the hit chance on each target and its sum in the status (`SquadStatus`), T's chance under the cursor, the legend (`SquadLegend`), a walk that reveals cannot be undone; `WeighedSquad` (perceives `SideView` with memory, weighs every walk and shot of the piece about to act with `ai_utility`'s `ActionChoice`, data in `weighing.json`), first row of `SquadRoster`; every option it weighed drawn with score and chance before it acts, V hides it; gates: does-not-cheat over 60 positions with a planted see-everything controller caught, seeded self-play pinned to its digest, `make test-squad-match` 100 of 100 a seat against `RandomSquad` (bar 80, planted random case rejected); `check_demos.py` C9 holds each mode to its roster, with planted cases, and a MODE recipe form; the mode stepped by `test-demo-overlays` and read in pt-BR by `test-locale-screen`; `squad.csv` both languages; defence values unchanged, owner's item 3 still open; `docs/godot/squad.md`; review (`docs/reviews/119-xcom-style-mode-you-can-play.md`, changes requested, two blockers -- a walk's refusal named a hidden piece, a blank status -- all applied: neutral refusal, `after_refusal` fallback, refusals held by the match gate, the does-not-cheat check over health, removal and memory) |
 | T86 | Monte Carlo tree search in `ai_adversarial`, on a game it does not know | done | wave 101: `MonteCarloSearch` (UCT, AIMA 5.4's SELECT/EXPAND/SIMULATE/BACK-PROPAGATE, one child per outcome drawn) and `MctsResult` (each root move's visits, mean, bound; the most visited, of equals the first) in the addon, beside alpha-beta; `step(iterations)` is the frame budget, counted in work, the tree carried over; `AdversarialGame` drops "players alternate" -- minimax and alpha-beta pick max or min by `to_move` at every node, checkers' suites and vectors unchanged -- and gains a concrete `outcomes` (default `result`, certain); every draw from `Xorshift` (Marsaglia's 32-bit, seed 1 starts 270369), a draw spent only on a real choice; Python twin `gameaikit.adversarial` with Nim and a dice race (a four plays again), importing no example; `spec/vectors/adversarial/` (4 draw cases, 12 search cases) written by a third MCTS, `derive.py`, and held by `make test-adversarial-vectors` and `make test-python`; two planted twins fail both games in both languages -- one with a spare draw, one with the same draws read differently (a twin reordering only the move and the outcome cannot be written: whether an outcome is drawn depends on the move); measured over 40 seeds, 1000 iterations find Nim's winning take up to 11 sticks, 13 needs about 2000; 100 iterations of the dice race ~2.5 ms, held under half a frame by `make test-mcts-budget`, apart from the suites; `docs/concepts/minimax.md` gains MCTS; the page's example asks both searches; mutation round: 22 GDScript rules (minimax and alpha-beta by `to_move`, the default `outcomes`, the generator, each MCTS rule, the vector checker) and 18 Python ones disabled one at a time, each caught -- two Python survivors (a tie in the answer, an unchecked mean) gained tests first; the review (`docs/reviews/101-mcts-in-the-adversarial-addon.md`) found the reported bound, the per-chooser value on a game that is not zero-sum and the outcome boundary unpinned, now held by tests in both languages, 8 more mutants each caught; manual check still a person's; T87 draws it |
 | T87 | MCTS plays the XCOM-style mode | done | wave 125: `SquadSearchGame`, the squad's `GakAdversarialGame` (one piece's question: hold, a walk by cell, a shot by target; a shot a hit and a miss at the shown chance; one-answer questions passed over; health over a full squad's), its Python twin, `spec/squad/positions.json` held equal in both languages by `make test-squad-search-vectors`; `MctsSquad`, a `SquadRoster` row, searching the board its side believes in (one determinization: last seen, as hurt as then; never seen, where the scenario starts it), 4 iterations a frame in the scene through `BlueController.keep_thinking`, root visits, means and bounds drawn growing, then `MonteCarloSearch.principal_line` (new, both languages); T85's does-not-cheat check shared as `SquadUnseenCheck`, two planted searchers caught 20 of 24 each; measured against `WeighedSquad`: 34/37 of 100 at 200 iterations, 56/63 of 100 at 1,000, 12/12 of 20 at 5,000 (`make measure-squad-mcts`); worst frame 22 ms on a quieter machine; manual check still a person's |
-| T88 | Expectiminimax faces MCTS on the same positions | todo | B.2: chance nodes summed, a hand-written evaluation; 30 committed positions and seeded matches at 50/200/1,000 ms; the addon's vectors on T86's toy game |
+| T88 | Expectiminimax faces MCTS on the same positions | todo | after T126 (the owner, 2026-11-05, item B19); B.2: chance nodes summed, a hand-written evaluation; 30 committed positions and seeded matches at 50/200/1,000 ms; the addon's vectors on T86's toy game |
 | T89 | Art for the XCOM mode, if the tactical pieces are not enough: open packs, referenced | todo | only if T85's manual check asks for it -- the mode already draws the Kenney pieces; the owner, 2026-10-26: "se precisar veja assets open ou free pra demo x-com"; a survey (URL, licence, fit); ADR 0020's rule, never committed; `check_no_assets.py` A2 learns `art_sources.json` |
 | T90 | A director paces the infiltration level | done | wave 114: `Director` (godot/game3d/infiltration) and its Python twin `gameaikit.director.pacing` -- intensity raised by `seen` 0.25 / `heard` 0.2 a phase, `hurt` 0.01 a point, `search_near` 0.02/s inversely to distance, decaying 0.04/s and not while a guard is alert and sees you; build up -> sustain 4 s -> fade below 0.35 -> relax 30 s or 15 m nearer the exit (spec/director/director.json, invariant 6: fixed numbers); seven vectors from a third copy (`derive.py`), `make test-director-vectors` and `test_director*.py`; `DirectorEvents` reads the world, `DirectorOrders` sends a calm unseen reserve guard on its beat (build up, peak) or calls a calm one back (fade, relax), a route and nothing else; reserves in both hand-made levels and the generator (own seed, levels unchanged); key 6, off = T70's level; HUD strip (intensity, peak and fade lines, phase, marks) and map lines; `director_test.gd`: off is T70's, reserves unseen and walkable, a seen reserve not sent, no belief changes when it acts (planted cheat caught), no patrol sent in view, the whole cycle on generated 10; `make measure-director`, 39 runs: 33 peaks, 3 relaxes -- most runs end in capture, and stand-offs never fade, written down in docs/godot/infiltration.md; new scripted player `distract`; catalogue card and `games.json` name the director; review (`docs/reviews/114-a-director-paces-the-infiltration.md`, changes requested, no blockers, all applied): every route the director gives is the guard's beat or none (a director routing a guard to the player caught), a planted nearest-reserve picker caught by the run-level sight claim, the generator's levels fingerprinted against main for seeds 1-11, reserve cells distinct, a `heard` vector, the measurement on the concepts page; the decay-pause cap and what "engaging" means are the owner's |
 | T91 | A particle filter tracks the unseen player | done | wave 107: `ParticleBelief` in `ai_perception` beside `BeliefMap`, over the same neighbour list -- walk on (0.7, "not back where it came from"), turn (0.2), else stay; weight 0 where a guard sees, 0.3 where it would have heard the player creep and heard nothing; systematic resampling every step, an even reseed over the unseen when every weight is 0 (`reseeded`); `shares` the same shape as `BeliefMap`'s; its own seeded xorshift `ParticleDraws` (a copy of T86's, invariant 2); Python twin `gameaikit.perception.particles`, four `particles-*` vectors written by a third copy in `derive.py`, held by `make test-perception-vectors` and the Python tests; invariant 6 said on the page (constants only, weights rebuilt each step, N3 agrees); infiltration: both beliefs stepped, key 1 cycles off / grid / particles, the search reads the one on through `InfiltrationWorld.believed` (a seam), the grid stays default so every T70 number is unchanged; overlay: dots sized by share, a white square on each cell sight just emptied, the purple cross the spot chosen; `make test-infiltration-tracking` (about 40 s, a measurement, not in `make check`; the wiring is held by `belief_switch_test.gd`): two particles a walk cell, the sensor the creep's 2 m; a reported player that creeps to a hiding place, 26 paired runs -- 4.7 against 4.8 s, 2 sooner, 1 later, 23 the same -- and T70's static staged search 7.1 against 6.9 s (0 sooner, 3 later, 12 the same): no difference worth the name, and little power to show one, written down in `docs/godot/infiltration.md` with a step's cost (1.5 ms a guard on the largest level); review (`docs/reviews/107-a-particle-filter-tracks-the-player.md`, changes requested, no blockers, all applied): 256 particles striped the start and the reseeds -- now two a cell; the claim "later when it has not moved" rested on one capped run -- withdrawn, every run printed paired; the scenario's low power said; `would_hear` and the spot/way-out wiring tested (four mutants caught); the menu card and the legend name the particles; particles stay non-default, and one generator into `ai_core` is the owner's (ADR 0021) |
@@ -783,10 +862,22 @@ review.
 | T109 | One seeded generator in `ai_core` | done | wave 122: `Xorshift` in `ai_core` and `gameaikit.core.Xorshift`, the one generator; the four copies deleted with their `.uid`s -- `Xorshift` (T86), `MazeDice` (T97), `ParticleDraws` (T91) and a fourth the task did not list, `BanditDraws` (T99, wave 115), each with its Python twin; `ai_adversarial` and `ai_bandit` now depend on `ai_core`, the maze lists it; ADR 0021 amended (why a generator is not logic, and that no other helper follows without the same argument); `spec/vectors/core/` (six seeds: draws, uniforms, picks; `derive.py` imports nothing) held by `make test-core-vectors` and `make test-python`, planted twins failing it in both languages (a pick of one that spends a draw; no mask, or a draw ahead); `spec/vectors/adversarial`, `bandit`, `perception`, `maze` unchanged against main and green through the shared generator; the wheel ships `gameaikit.core` (`release.py` accepts the kernel's package); the copies' pages say two folders; the unprefixed name and the wheel's kernel package are pending the owner (they contradict ADR 0024; written so in ADR 0021, pointed at from 0024); the acceptance's diff narrowed to the vectors' `*.json`; review (`docs/reviews/122-one-seeded-generator-in-ai-core.md`, changes requested, no blocker -- a core runner green on a mistyped vector -- all applied; the same weakness in `mcts_vectors_runner.gd` left for a follow-up) |
 | T110 | The tactical game's news keeps its words as keys | done | wave 124: the news of what was played is a `Sentence`, worded where shown -- `TacticalCombat.told`, `SquadCombat.told` (T85's shot, outside the file list), `TacticalRuleset.told`, `TurnStart.open` and `ControlPoints.pay` (one a line), and `tactical.gd`'s `_last_event` (a list, one a line) and `_computer_news`: build, wait, forge, taken back, an enemy come into sight, "{side}'s attacks:"; `TacticalStatus.side_word` a side's key, `news_in_english()` for the suites; no key changed; `tactical_news_test.gd` switches language after an attack, a build, a wait, a purchase and a tower's shot, both ways (a news line worded when kept fails it); `docs/godot/localisation.md` |
 | T111 | A new gate selects its module, and merges clean | done | wave 123: rule 5 read no Makefile since wave 83 (its Windows conditional) and no vector folder (no slash); both fixed, planted; `test-vectors:` read like `check:`, and split, each family `test-vectors: test-x-vectors` beside its rule (`check_workflow.py` reads every rule); a new non-gate target selects nothing; rule 6, `added_module.py`: a new module's manifest, its user's `depends_on`, `KIT_MODULES` and `packages` select it, with `test_techniques` on every Python selection; `packages` sorted, `release.py` refuses it unsorted; timing gates named on `check-affected`; wave 120's replay selects ai_constraints, infiltration, menu; `docs/howto/parallel-batch.md`; rule 6, the non-gate targets and the sort refusal are not in the decisions, pending the owner |
-| T112 | A review before the repository opens | todo | the owner, 2026-11-04: after the main tasks; a stranger's read, a report and follow-up tasks; opening, CI and publishing stay the owner's |
+| T112 | A review before the repository opens | todo | the owner, 2026-11-04: after the main tasks, and after T120 (2026-11-05, item B6); a stranger's read, a report and follow-up tasks; opening, CI and publishing stay the owner's |
 | T113 | A decision tree reads the fighting opponent | todo | after T112; the owner, 2026-11-04; CART fitted in Python, `LearnedTree` reads it; the path shown |
 | T114 | A random forest votes on the same question | todo | after T113; held-out accuracy of one tree against forests of 5, 25 and 100; the votes shown |
 | T115 | A Bayesian network for the guard | todo | after T112; `ai_bayes`, exact enumeration, hand-written tables; is someone there, and which evidence says so |
+| T116 | The guard's speech without markup: a schema or a prompt, measured | todo | the owner, 2026-11-05, item A3: R10 is the main refusal left; two candidates measured on T93's 30 lines, shipped only if R10 falls and nothing else does; needs a local model |
+| T117 | The squad's MCTS searches a share of the frame, in play | todo | the owner, 2026-11-05, item A6: a time share in the scene, the iteration count kept for matches and tests |
+| T118 | The RTS shows the stale enemy a clocked side believes in | todo | the owner, 2026-11-05, item A11: invariant 13 for T55's clock; drawn from what `RtsHumanClock` handed on |
+| T119 | A gate for the pt-BR glossary: an English term in italics is defined | todo | the owner, 2026-11-05, item B4: T77's review found four undefined terms; titles and emphasis measured before the rule |
+| T120 | `Xorshift` becomes `GakXorshift`, before anything is published | todo | the owner, 2026-11-05, item B6: the GDScript class and the pages in both languages; the Python twin keeps its name (ADR 0024); a prereq of T112 |
+| T121 | Every vectors runner refuses a vector of the wrong type | todo | the owner, 2026-11-05, item B9: the core runner's type checks, in all 25 runners; `mcts_vectors_runner.gd` exits 0 on a mangled file today |
+| T122 | The infiltration's levels are solved off the main thread | todo | the owner, 2026-11-05, item B10: `WorkerThreadPool`, the same level cell for cell; a follow-up the owner deferred ("deixa os followup pra depois") |
+| T123 | The bot match reads the team's share, holds the middle, and starts over on a new team | todo | the owner, 2026-11-05, items B12 and B13: measured by `make measure-player-model`; a follow-up the owner deferred |
+| T124 | The XCOM mode plays with V off, and teaches with it on | todo | the owner, 2026-11-05, item B17: what "the teaching view" is, is the task's first decision |
+| T125 | A second, stronger floor for the squad mode's strength | todo | the owner, 2026-11-05, item B18: a greedy shooter; the bar from measurement, a worse weighing planted |
+| T126 | The XCOM mode's presentation moves into a mode view | todo | the owner, 2026-11-05, item B19: out of `tactical.gd` and `TacticalRuleset`, behaviour unchanged; a prereq of T88 |
+| T127 | An unseen shooter stays unseen in the news | todo | the owner, 2026-11-05, item B24: word the news from the person's fog, or a shot reveals its shooter -- the task chooses |
 
 ---
 

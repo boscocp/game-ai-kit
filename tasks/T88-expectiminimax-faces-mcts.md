@@ -1,6 +1,6 @@
 # T88 — Expectiminimax faces MCTS on the same positions
 
-Size: M · Prereqs: T87 · Files: `godot/addons/ai_adversarial/`, `godot/test/ai_adversarial/`, `python/gameaikit/adversarial/`, `spec/vectors/adversarial/`, `godot/game/squad/`, `godot/test/squad/`, `spec/squad/`, `python/gameaikit/squad/`, `python/tests/`, `docs/godot/squad.md`, `docs/concepts/`, `docs/techniques/ai_adversarial.md`, `docs/techniques/ai_adversarial.pt-BR.md`, `Makefile`
+Size: M · Prereqs: T87, T126 · Files: `godot/addons/ai_adversarial/`, `godot/test/ai_adversarial/`, `python/gameaikit/adversarial/`, `spec/vectors/adversarial/`, `godot/game/squad/`, `godot/test/squad/`, `spec/squad/`, `python/gameaikit/squad/`, `python/tests/`, `docs/godot/squad.md`, `docs/concepts/`, `docs/techniques/ai_adversarial.md`, `docs/techniques/ai_adversarial.pt-BR.md`, `Makefile`
 
 ## Goal
 
@@ -88,3 +88,9 @@ with T87's overlay on the same position.
 References, opened on 2026-10-26: AIMA 4th ed., contents (5.5 Stochastic
 Games, 5.5.1 Evaluation functions for games of chance)
 <https://aima.cs.berkeley.edu/contents.html>.
+
+## Notes
+
+- **T126 is a prereq since 2026-11-05.** The owner ratified STATUS's
+  2026-11-04 item B19 ("move the presentation hooks to a mode-view object
+  before T87 and T88"). T87 landed first, so T126 comes before this task.

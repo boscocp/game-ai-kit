@@ -1,6 +1,6 @@
 # T112 — A review before the repository opens
 
-Size: M · Prereqs: T87, T88, T94, T96, T110, T111 · Files: `docs/reviews/`, `tasks/`, `README.md`, `README.pt-BR.md`, `CONTRIBUTING.md`, `.github/`
+Size: M · Prereqs: T87, T88, T94, T96, T110, T111, T120 · Files: `docs/reviews/`, `tasks/`, `README.md`, `README.pt-BR.md`, `CONTRIBUTING.md`, `.github/`
 
 ## Goal
 
@@ -63,3 +63,8 @@ make lint-tasks lint-status lint-links
 ## Manual check
 
 The owner reads the report's blocking list and decides, item by item.
+
+## Notes
+
+- **T120 is a prereq since 2026-11-05.** The owner ratified STATUS's
+  2026-11-04 item B6: `GakXorshift`, before anything is published.
