@@ -1,0 +1,572 @@
+{
+ "description": "The person deals nothing; a team-mate deals twelve points a second and another takes six: the share is the team's, so it climbs to the hard row while the person's own counts stay empty.",
+ "last_step": 1200,
+ "events": [
+  {
+   "step": 0,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 0,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 20,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 40,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 40,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 60,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 80,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 80,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 100,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 120,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 120,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 140,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 160,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 160,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 180,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 200,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 200,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 220,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 240,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 240,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 260,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 280,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 280,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 300,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 320,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 320,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 340,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 360,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 360,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 380,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 400,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 400,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 420,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 440,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 440,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 460,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 480,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 480,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 500,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 520,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 520,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 540,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 560,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 560,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 580,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 600,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 600,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 620,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 640,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 640,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 660,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 680,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 680,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 700,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 720,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 720,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 740,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 760,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 760,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 780,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 800,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 800,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 820,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 840,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 840,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 860,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 880,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 880,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 900,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 920,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 920,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 940,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 960,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 960,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 980,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 1000,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 1000,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 1020,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 1040,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 1040,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 1060,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 1080,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 1080,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 1100,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 1120,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 1120,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 1140,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 1160,
+   "kind": "mate_hit",
+   "points": 12
+  },
+  {
+   "step": 1160,
+   "kind": "mate_hurt",
+   "points": 12
+  },
+  {
+   "step": 1180,
+   "kind": "mate_hit",
+   "points": 12
+  }
+ ],
+ "readings": [
+  {
+   "step": 200,
+   "counts": {
+    "shots": 0,
+    "hits": 0,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 0,
+    "taken": 0,
+    "team_dealt": 120,
+    "team_taken": 60,
+    "restarts": 0
+   },
+   "share": 0.5789473684210527,
+   "hit_rate": 0.5,
+   "row": 3,
+   "aim_error_degrees": 2.0,
+   "held": false
+  },
+  {
+   "step": 400,
+   "counts": {
+    "shots": 0,
+    "hits": 0,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 0,
+    "taken": 0,
+    "team_dealt": 240,
+    "team_taken": 120,
+    "restarts": 0
+   },
+   "share": 0.6071428571428571,
+   "hit_rate": 0.5,
+   "row": 4,
+   "aim_error_degrees": 1.5,
+   "held": false
+  },
+  {
+   "step": 600,
+   "counts": {
+    "shots": 0,
+    "hits": 0,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 0,
+    "taken": 0,
+    "team_dealt": 360,
+    "team_taken": 180,
+    "restarts": 0
+   },
+   "share": 0.6216216216216216,
+   "hit_rate": 0.5,
+   "row": 4,
+   "aim_error_degrees": 1.5,
+   "held": false
+  },
+  {
+   "step": 800,
+   "counts": {
+    "shots": 0,
+    "hits": 0,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 0,
+    "taken": 0,
+    "team_dealt": 480,
+    "team_taken": 240,
+    "restarts": 0
+   },
+   "share": 0.6304347826086957,
+   "hit_rate": 0.5,
+   "row": 4,
+   "aim_error_degrees": 1.5,
+   "held": false
+  },
+  {
+   "step": 1000,
+   "counts": {
+    "shots": 0,
+    "hits": 0,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 0,
+    "taken": 0,
+    "team_dealt": 600,
+    "team_taken": 300,
+    "restarts": 0
+   },
+   "share": 0.6363636363636364,
+   "hit_rate": 0.5,
+   "row": 4,
+   "aim_error_degrees": 1.5,
+   "held": false
+  },
+  {
+   "step": 1200,
+   "counts": {
+    "shots": 0,
+    "hits": 0,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 0,
+    "taken": 0,
+    "team_dealt": 720,
+    "team_taken": 360,
+    "restarts": 0
+   },
+   "share": 0.640625,
+   "hit_rate": 0.5,
+   "row": 4,
+   "aim_error_degrees": 1.5,
+   "held": false
+  }
+ ]
+}

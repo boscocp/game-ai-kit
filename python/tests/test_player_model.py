@@ -32,6 +32,15 @@ class TheTable(unittest.TestCase):
     def test_the_interval_is_a_whole_number_of_steps(self):
         self.assertAlmostEqual(self.table["interval_steps"] * self.rules["step"], self.table["interval"], places=9)
 
+    def test_the_band_holds_the_middle_row_and_is_inside_the_table(self):
+        band = self.table["band"]
+        self.assertLess(band["from"], 0.5)
+        self.assertGreater(band["to"], 0.5)
+        start = player_model.start_row(self.table)
+        self.assertEqual(player_model.next_row(self.table, 0.5, 0), 0)
+        self.assertEqual(player_model.next_row(self.table, band["to"], 0), player_model.row_for(self.table, band["to"]))
+        self.assertEqual(player_model.row_for(self.table, 0.5), start)
+
     def test_no_share_reads_outside_the_table(self):
         for share in (0.0, 0.2, 0.999, 1.0):
             self.assertIn(player_model.row_for(self.table, share), range(len(self.table["rows"])))
@@ -43,7 +52,25 @@ class TheModel(unittest.TestCase):
         for event in ({"kind": "shot"}, {"kind": "hit", "points": 24}, {"kind": "hurt", "points": 12},
                       {"kind": "kill"}, {"kind": "death"}):
             model.count(event)
-        self.assertEqual(vars(model), {"shots": 1, "hits": 1, "kills": 1, "deaths": 1, "dealt": 24, "taken": 12})
+        model.count({"kind": "mate_hit", "points": 6})
+        model.count({"kind": "mate_hurt", "points": 3})
+        model.count({"kind": "seat", "team": 0})
+        self.assertEqual(vars(model), {"shots": 1, "hits": 1, "kills": 1, "deaths": 1, "dealt": 24, "taken": 12,
+                                       "team_dealt": 30, "team_taken": 15, "team": 0, "restarts": 0})
+
+    def test_the_share_is_the_teams(self):
+        model = player_model.PlayerModel()
+        model.count({"kind": "mate_hit", "points": 100})
+        self.assertEqual(model.dealt, 0)
+        self.assertEqual(model.damage_share({"prior_points": 100}), 200.0 / 300.0)
+
+    def test_a_seat_on_the_other_team_empties_the_counts_and_the_same_team_keeps_them(self):
+        model = player_model.PlayerModel()
+        for event in ({"kind": "seat", "team": 0}, {"kind": "hit", "points": 24}, {"kind": "seat", "team": 0}):
+            self.assertFalse(model.counted_from_empty(event))
+        self.assertEqual(model.dealt, 24)
+        self.assertTrue(model.counted_from_empty({"kind": "seat", "team": 1}))
+        self.assertEqual(model.counts(), dict.fromkeys(player_model.COUNTED, 0) | {"restarts": 1})
 
     def test_an_unknown_event_is_refused(self):
         with self.assertRaises(ValueError):

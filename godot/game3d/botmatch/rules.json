@@ -73,9 +73,10 @@
   "recover_at": 0.9,
   "wave_timeout": 3.0,
   "difficulty": {
-    "about": "The bot match reading how well the person plays (T100, ADR 0016 as amended): every interval seconds of match time, the share of the damage the played bot dealt -- dealt over dealt and taken, with prior_points dealt and as many taken before the match starts, a Beta mean -- picks the last row whose from it reaches, and the other team aims with that row's error. The first row is the easy level and the last the hard one; the middle row is the knobs' aim error, where every match starts. Fixed numbers, read and never written.",
+    "about": "The bot match reading how well the person plays (T100, ADR 0016 as amended; T123): every interval seconds of match time, the share of the damage the person's team dealt -- dealt over dealt and taken, the played bot's and its team-mates', with prior_points dealt and as many taken before the match starts, a Beta mean -- picks the last row whose from it reaches, and the other team aims with that row's error. A share inside the band, from its from up to (not reaching) its to, picks nothing: the row read last stays. The first row is the easy level and the last the hard one; the middle row is the knobs' aim error, where every match starts and where a change of team starts the counts again. Fixed numbers, read and never written.",
     "interval": 10.0,
     "prior_points": 100,
+    "band": {"from": 0.45, "to": 0.55},
     "rows": [
       {"from": 0.0, "name": "easy", "aim_error_degrees": 6.0},
       {"from": 0.4, "name": "easier", "aim_error_degrees": 4.5},

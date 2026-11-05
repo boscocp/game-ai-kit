@@ -1,0 +1,276 @@
+{
+ "description": "Seated on blue, the person deals for twenty seconds and reaches the hard row; then takes a bot on red: the counts start empty, the share is the prior's 0.5 and the row the middle one, with one restart counted.",
+ "last_step": 800,
+ "events": [
+  {
+   "step": -1,
+   "kind": "seat",
+   "points": 0,
+   "team": 0
+  },
+  {
+   "step": 0,
+   "kind": "shot"
+  },
+  {
+   "step": 0,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 20,
+   "kind": "shot"
+  },
+  {
+   "step": 20,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 40,
+   "kind": "shot"
+  },
+  {
+   "step": 40,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 60,
+   "kind": "shot"
+  },
+  {
+   "step": 60,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 80,
+   "kind": "shot"
+  },
+  {
+   "step": 80,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 100,
+   "kind": "shot"
+  },
+  {
+   "step": 100,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 120,
+   "kind": "shot"
+  },
+  {
+   "step": 120,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 140,
+   "kind": "shot"
+  },
+  {
+   "step": 140,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 160,
+   "kind": "shot"
+  },
+  {
+   "step": 160,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 180,
+   "kind": "shot"
+  },
+  {
+   "step": 180,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 200,
+   "kind": "shot"
+  },
+  {
+   "step": 200,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 220,
+   "kind": "shot"
+  },
+  {
+   "step": 220,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 240,
+   "kind": "shot"
+  },
+  {
+   "step": 240,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 260,
+   "kind": "shot"
+  },
+  {
+   "step": 260,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 280,
+   "kind": "shot"
+  },
+  {
+   "step": 280,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 300,
+   "kind": "shot"
+  },
+  {
+   "step": 300,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 320,
+   "kind": "shot"
+  },
+  {
+   "step": 320,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 340,
+   "kind": "shot"
+  },
+  {
+   "step": 340,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 360,
+   "kind": "shot"
+  },
+  {
+   "step": 360,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 380,
+   "kind": "shot"
+  },
+  {
+   "step": 380,
+   "kind": "hit",
+   "points": 12
+  },
+  {
+   "step": 405,
+   "kind": "seat",
+   "points": 0,
+   "team": 1
+  }
+ ],
+ "readings": [
+  {
+   "step": 200,
+   "counts": {
+    "shots": 10,
+    "hits": 10,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 120,
+    "taken": 0,
+    "team_dealt": 120,
+    "team_taken": 0,
+    "restarts": 0
+   },
+   "share": 0.6875,
+   "hit_rate": 0.9166666666666666,
+   "row": 4,
+   "aim_error_degrees": 1.5,
+   "held": false
+  },
+  {
+   "step": 400,
+   "counts": {
+    "shots": 20,
+    "hits": 20,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 240,
+    "taken": 0,
+    "team_dealt": 240,
+    "team_taken": 0,
+    "restarts": 0
+   },
+   "share": 0.7727272727272727,
+   "hit_rate": 0.9545454545454546,
+   "row": 4,
+   "aim_error_degrees": 1.5,
+   "held": false
+  },
+  {
+   "step": 600,
+   "counts": {
+    "shots": 0,
+    "hits": 0,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 0,
+    "taken": 0,
+    "team_dealt": 0,
+    "team_taken": 0,
+    "restarts": 1
+   },
+   "share": 0.5,
+   "hit_rate": 0.5,
+   "row": 2,
+   "aim_error_degrees": 3.0,
+   "held": true
+  },
+  {
+   "step": 800,
+   "counts": {
+    "shots": 0,
+    "hits": 0,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 0,
+    "taken": 0,
+    "team_dealt": 0,
+    "team_taken": 0,
+    "restarts": 1
+   },
+   "share": 0.5,
+   "hit_rate": 0.5,
+   "row": 2,
+   "aim_error_degrees": 3.0,
+   "held": true
+  }
+ ]
+}

@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-04
+verified_on: 2026-11-05
 tier: 2
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: the match's rules, arenas or techniques change, and botmatch_effects.gd prints different numbers
@@ -459,18 +459,22 @@ on this run it is not suggested at all. The numbers in
 and T68 tables above predate the guard; they are to be refreshed at the
 next effects run.
 
-## The match reads how well you play (T100)
+## The match reads how well you play (T100, T123)
 
 Playing a bot (T), the match counts what your bot does -- shots, hits,
-kills, deaths, the damage it dealt and took -- and every ten seconds of
-match time reads one number off the counts: the share of the damage you
-dealt, with a prior of one health bar each way,
+kills, deaths, the damage it dealt and took -- and the damage your whole
+team dealt and took, and every ten seconds of match time reads one number
+off the counts: your team's share of the damage, with a prior of one
+health bar each way,
 
-    share = (dealt + 100) / (dealt + taken + 200)
+    share = (team_dealt + 100) / (team_dealt + team_taken + 200)
 
 a Beta mean, so an empty model reads 0.5 and one burst of fire cannot
 swing it to an end. A fixed table in `rules.json` turns the share into the
-other team's aim error: the last row whose `from` the share reaches.
+other team's aim error: the last row whose `from` the share reaches --
+unless the share is inside the band, from 0.45 short of 0.55, where the
+row read last stays. T100 read your bot's share alone; T123 changed it to
+the team's and added the band, measured below.
 
 | row | from | other team's aim error |
 |---|---|---|
@@ -489,9 +493,11 @@ never what a bot knows -- T67's bots still read only their percepts. The
 hit rate, (hits + 1) / (shots + 2), is counted and shown beside the share,
 and sets nothing.
 
-**What V shows while you play**: the counts; the share worked out with its
-prior, and the hit rate; and the other team's aim error with the row it
-came from, marked `<< changed at N s` when the latest reading moved it.
+**What V shows while you play**: the counts, and how often a change of
+side started them over; the team's share worked out with its prior, and
+your hit rate; and the other team's aim error with the row it came from,
+marked when the share is inside the band that holds the row, and
+`<< changed at N s` when the latest reading moved it.
 
 **ADR 0016's three conditions**, held by `player_model_test.gd`: every
 field `PlayerModel` keeps is an int count; an empty one reads the middle
@@ -507,7 +513,12 @@ checkout's `user://botmatch-logs/`.
 When you give the bot back, or take one on the other team, the knob moves
 at once (`BotMatch.seat_person`): nobody's aim is changed while nobody
 plays, and it is never your own team's -- not at the next reading, ten
-seconds on, as the first cut did (the review's finding).
+seconds on, as the first cut did (the review's finding). Since T123 a
+bot on the other team also empties the counts and puts the row back to the
+middle: what you did for blue says nothing of how red, with you in it, is
+doing. A bot on the same team keeps them, and so does giving the bot back.
+The seat is an event in the log, with its team, so the replay empties the
+counts at the same place.
 
 **N14** in `check_no_training.py` reads the model's two files and every
 script naming `PlayerModel` or `MatchDifficulty`, and refuses a file
@@ -519,7 +530,7 @@ function, a moving average spelled with a temporary, or a file read by a
 script that holds no model and handed in, all pass it. That the model
 starts empty is held by the tests above, not by the gate.
 
-### Measured: the model overshoots
+### Measured: one bot's share overshoots (T100)
 
 `make measure-player-model`. A stand-in in your place: bot 0, blue, driven
 by its own list like every bot, aiming with an error of its own -- poor
@@ -573,6 +584,71 @@ of these numbers was chosen against the stand-ins. Whether the model
 should read the match rather than the person -- the score lead, or the
 share of the whole team -- or the table should narrow further, or a
 band of no change be added round the middle, is left to the owner.
+The owner chose, on 2026-11-05, the team's share and a band (T123, next).
+
+### Measured again: the team's share, with a band (T123)
+
+The same command, the same stand-ins, seeds and table rows, on 2026-11-05.
+The share the knob reads is now the team's; "own" is the stand-in's alone,
+what T100 read. Each band below was measured whole, with
+`band=FROM-TO` after `--` (the script's header says how); "none" is
+`band=0.5-0.5`, which holds nothing.
+
+Score lead, blue - red, model off and on (off is the same in every run:
+red keeps 3 degrees):
+
+| band | poor off | poor on | even off | even on | sharp off | sharp on | changes on (poor, even, sharp) |
+|---|---|---|---|---|---|---|---|
+| T100, one bot's share, no band | -121 | +259 | +13 | -5 | +224 | -218 | 6, 25, 15 |
+| team's share, none | -121 | -102 | +13 | +4 | +224 | +57 | 36, 20, 27 |
+| team's share, 0.47 to 0.53 | -121 | -40 | +13 | +28 | +224 | +28 | 20, 26, 23 |
+| **team's share, 0.45 to 0.55** | -121 | **-12** | +13 | **+7** | +224 | **-47** | 16, 14, 17 |
+| team's share, 0.40 to 0.60 | -121 | -121 | +13 | -24 | +224 | +8 | 0, 2, 9 |
+
+The run that chose the band, 0.45 to 0.55, as `make measure-player-model`
+prints it (the rows one digit a reading, 1 easy to 5 hard):
+
+| stand-in | model | changes | turns | team share | own share | blue - red |
+|---|---|---|---|---|---|---|
+| poor | off | 4 | 0 | 0.44 | 0.13 | -121 |
+| poor | on | 16 | 11 | 0.48 | 0.18 | -12 |
+| even | off | 7 | 1 | 0.50 | 0.51 | +13 |
+| even | on | 14 | 9 | 0.48 | 0.48 | +7 |
+| sharp | off | 8 | 5 | 0.64 | 0.85 | +224 |
+| sharp | on | 17 | 8 | 0.49 | 0.71 | -47 |
+
+```
+poor  off  3332222222222222 3332222222222222222222 3322222222222222222 33444444444444444444444 22222222222222222222222
+poor  on   33322244422222222222222 33322222224444444222222 33222224444444222222222 334444222222444444444 2444222222222244444442
+even  off  33334444444444444444444 33333222222222222222222 3332222222222222222 32211222222222222222222 33444444444444444444444
+even  on   33334444222222222444444 33333222244444444444222 3332222224444444444 3224444444442222222 33442222222444444444444
+sharp off  5555555555555555 54455555555555 544455555545555555 5555555555554555 555555555555555
+sharp on   55552224444444442222222 5442222244444442222222 5522222454444444444422 54444222244444444444444 5555222244444444444
+```
+
+What it shows:
+
+- **The flip is gone, mostly.** The poor stand-in's team ends -12 rather
+  than +259, the sharp one's -47 rather than -218, the even one's +7. The
+  team's share is what the knob changes, so reading it closes the loop on
+  the match rather than on one bot: the team shares on sit at 0.48 to 0.49.
+  The sharp stand-in still tips a little past even.
+- **The band chosen is the middle row's own range.** 0.45 to 0.55 had the
+  smallest leads on all three, and fewer changes than no band or a narrower
+  one. A wider band, 0.40 to 0.60, holds the poor stand-in's team share,
+  0.44, inside it, so its match is never helped (-121), and swings the sharp
+  one between the hard and the easy rows.
+- **It does not settle; it alternates.** With the band equal to the middle
+  row, a share leaving the band always lands on a row past the middle, so
+  the knob moves between rows 2 and 4 and never back to 3: about three
+  changes a match, most of them turning back. The row is held for a minute
+  or more at a time, rather than every ten seconds as T100's chattered,
+  but this is still two levels of difficulty taking turns, not one found.
+- **Five seeds a row**, and a band picked from four measured: the leads are
+  means over five matches, each of which swings by tens of points.
+
+What it does not try: a step of one row at a time, or a band that is not
+the middle row's own range. Both are the owner's to ask for.
 
 ## Running the effects gate in shards (T72)
 

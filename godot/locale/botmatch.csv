@@ -77,7 +77,9 @@ blue team,time azul
 red team,time vermelho
 played by a person,jogado por uma pessoa
 "at the last reading, the match had counted of you: {shots} shots, {hits} hits, {kills} kills, {deaths} deaths","na última leitura, a partida tinha contado de você: {shots} tiros, {hits} acertos, {kills} abates, {deaths} mortes"
-"your share of the damage: ({dealt} + {prior}) / ({dealt} + {taken} + 2 x {prior}) = {share}, hit rate {rate}","sua parte do dano: ({dealt} + {prior}) / ({dealt} + {taken} + 2 x {prior}) = {share}, taxa de acerto {rate}"
+"  -- started over on a change of side: {times}","  -- recomeçou ao trocar de lado: {times}"
+"your team's share of the damage: ({dealt} + {prior}) / ({dealt} + {taken} + 2 x {prior}) = {share}, your hit rate {rate}","a parte do dano do seu time: ({dealt} + {prior}) / ({dealt} + {taken} + 2 x {prior}) = {share}, sua taxa de acerto {rate}"
+"  (a share from {low} short of {high} holds the row)","  (uma parte de {low} até antes de {high} mantém a linha)"
 "so the other team aims {aim} degrees off: row {row} of {rows}, from a share of {from}","então o outro time erra a mira por {aim} graus: linha {row} de {rows}, que começa numa parte de {from}"
 "  << changed at {time} s","  << mudou aos {time} s"
 recording: each match's events are kept in {folder},gravando: os eventos de cada partida ficam em {folder}

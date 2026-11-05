@@ -1,8 +1,10 @@
 """The player model vectors in `spec/vectors/player_model/`, against `gameaikit.botmatch`.
 
-Each vector is an event list of the person's bot and every interval's
-reading over it -- the counts, the share and the hit rate, the table's row
-and its aim error; the Python model must reproduce them. The other half is
+Each vector is an event list -- the person's bot's, its team-mates' hits
+and hurts, and its seats -- and every interval's reading over it: the
+counts, the team's share and the hit rate, the table's row and its aim
+error, and whether the band held the row. The Python model must reproduce
+them. The other half is
 `make test-player-model-vectors`, the same files against Godot's
 `PlayerModel`. The answers came from neither, from `derive.py` beside them.
 """
@@ -15,7 +17,7 @@ from gameaikit.botmatch import player_model
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 VECTORS = REPO / "spec" / "vectors" / "player_model"
-FEWEST_VECTORS = 7
+FEWEST_VECTORS = 11
 
 
 class TheVectors(unittest.TestCase):
@@ -34,12 +36,13 @@ class TheVectors(unittest.TestCase):
                 self.assertEqual(reading["counts"], wanted["counts"], where)
                 self.assertEqual(reading["row"], wanted["row"], where)
                 self.assertEqual(reading["aim_error_degrees"], wanted["aim_error_degrees"], where)
+                self.assertEqual(reading["held"], wanted["held"], where)
                 self.assertAlmostEqual(reading["share"], wanted["share"], places=12, msg=where)
                 self.assertAlmostEqual(reading["hit_rate"], wanted["hit_rate"], places=12, msg=where)
 
 
 class ThePlantedModels(unittest.TestCase):
-    """Two wrong models the vectors must refuse, so a green run means something."""
+    """Four wrong models the vectors must refuse, so a green run means something."""
 
     def _differs(self, replay) -> bool:
         table = player_model.read_table()
@@ -58,6 +61,16 @@ class ThePlantedModels(unittest.TestCase):
                 reading["row"] = below[-1] if below else 0
             return readings
         self.assertTrue(self._differs(strict))
+
+    def test_a_model_with_no_band_is_refused(self):
+        def no_band(table, events, last_step):
+            return player_model.replay(dict(table, band={"from": 0.5, "to": 0.5}), events, last_step)
+        self.assertTrue(self._differs(no_band))
+
+    def test_a_model_that_keeps_its_counts_across_a_change_of_team_is_refused(self):
+        def keeps(table, events, last_step):
+            return player_model.replay(table, [event for event in events if event["kind"] != "seat"], last_step)
+        self.assertTrue(self._differs(keeps))
 
     def test_a_model_with_a_prior_of_one_is_refused(self):
         def prior_of_one(table, events, last_step):
