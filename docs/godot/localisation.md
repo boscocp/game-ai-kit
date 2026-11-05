@@ -449,6 +449,42 @@ RTS and the fighting game, by the same rules, with what they added:
   Worded when kept, as before, the switch leaves the old language on the
   panel and the test fails.
 
+## The menu's cards (T131, wave 134)
+
+- **What was English.** Opened in pt-BR, the menu translated its chrome
+  only -- the headings, Jogar, the footer -- and every card's words stayed
+  the catalogue's English: the titles in the list and over the card, what
+  the AI decides, each technique's name and part, what to watch, the keys.
+  `example_catalogue.gd` said so ("still English, until the catalogue is
+  translated"); no decision to keep them English was found.
+- **The table is `menu.csv`, not one of the cards' own.** The rule is one
+  table per module, owned by its manifest, and L4 refuses a table that
+  names no module: a `catalogue.csv` would need a module of its own for a
+  file the menu owns. So 187 rows were added to `menu.csv` -- 16 titles,
+  16 of each of decides, controls and watch, 72 parts and 51 technique
+  names -- each keyed by the catalogue's English, with no `?context` (the
+  keys are whole sentences; L6 has nothing to shadow). Three names are
+  keys of `demo_steering.csv` too, `seek`, `arrive` and `pursue`, and say
+  the same in both (L8): the glossary keeps them English.
+- **The catalogue stays English.** It is the one list `check_demos.py`
+  reads, and its English is the key: `ExampleCatalogue.said` looks each
+  word up where the card is drawn, the menu's `_retranslate` rewords the
+  list's titles and `select` the heading, so L switches a card at once.
+- **Not translated**: a mode's title (Advance Wars, XCOM: the games' own
+  names), `docs` (a path) and `make` targets, as the "Read more" line
+  already showed them.
+- **Held twice.** `check_translations_game.py` L10 reads `SHOWN_DATA` --
+  the catalogue's shown fields -- and fails a word with no row, a field
+  that finds nothing (a rename would otherwise hold nothing) and a
+  catalogue whose module has no table; those words count as mentioned for
+  L3. Planted: a title's row removed from the real `menu.csv` gave
+  `L10 godot/menu/catalogue.json: examples[].title shows 'Checkers'`, and
+  the self-test plants the three. `test-locale-screen` now selects every
+  card in pt-BR and reads the card's `RichTextLabel` (its parsed text,
+  a technique's "name -- part" in its two parts) and the list's titles,
+  which it did not read before. Planted: a card and a list left in English;
+  with the reading of either switched off, both plants fail, by name.
+
 ## Measured on 4.7.2
 
 A scratch project, one table, the locale set with
@@ -495,6 +531,8 @@ same.
   two ways by two tables (L8, T79); no translation call inside
   `Sentence.of(...)`, a sentence an AI keeps (L9, T104's review; a value
   translated through a variable or a helper is not seen).
+  L10 (T131): every word a module shows from its data -- the menu's
+  `catalogue.json`, named with its fields in `SHOWN_DATA` -- has a row.
 - What it still cannot see, said plainly: a one-word literal that is not a
   key of the table and does not go straight to a drawing call is taken for
   data; text written in a `.tscn` is not read (the scenes say "loading" and

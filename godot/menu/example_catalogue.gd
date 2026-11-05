@@ -47,23 +47,24 @@ static func _card_of(entry: Dictionary, techniques: Dictionary) -> Dictionary:
 
 ## The card's words, as the menu lays them out, in BBCode: each heading in
 ## the accent colour, what is under it indented as a block, so a wrapped line
-## stays under its heading rather than running back to the margin. The
-## headings are in the language the menu speaks (T78); what the catalogue
-## says under them is still English, until the catalogue is translated.
+## stays under its heading rather than running back to the margin. All of it
+## is in the language the menu speaks: the headings since T78, and since T131
+## what the catalogue says under them, its English a key of `menu.csv` that
+## `check_translations_game.py` (L10) holds to the file.
 static func text_of(card: Dictionary, accent: Color) -> String:
 	var techniques: PackedStringArray = []
 	for technique: Array in card.get("techniques", []):
-		techniques.append("[b]%s[/b] -- %s" % [plain(technique[0]), plain(technique[1])])
+		techniques.append("[b]%s[/b] -- %s" % [said(technique[0]), said(technique[1])])
 	# In the repository, not in the executable: someone holding only the zip
 	# has neither the page nor `make` (wave 59's review), and is told so.
 	var more: String = TranslationServer.translate("in the kit's repository: {docs}; [b]make {target}[/b] opens it on its own").format(
 		{docs = plain(card.get("docs", "")), target = plain(card.get("target", ""))})
 	var keys: String = TranslationServer.translate("{keys}; Esc comes back here").format(
-		{keys = plain(card.get("controls", ""))})
+		{keys = said(card.get("controls", ""))})
 	var sections: Array[Array] = [
-		[TranslationServer.translate("What the AI decides"), plain(card.get("decides", ""))],
+		[TranslationServer.translate("What the AI decides"), said(card.get("decides", ""))],
 		[TranslationServer.translate("How it decides"), "\n".join(techniques)],
-		[TranslationServer.translate("What to watch"), plain(card.get("watch", ""))],
+		[TranslationServer.translate("What to watch"), said(card.get("watch", ""))],
 		[TranslationServer.translate("Keys"), keys],
 		[TranslationServer.translate("Read more"), more],
 	]
@@ -71,6 +72,12 @@ static func text_of(card: Dictionary, accent: Color) -> String:
 	for section: Array in sections:
 		text.append("[color=#%s][b]%s[/b][/color]\n[indent]%s[/indent]" % [accent.to_html(false), section[0], section[1]])
 	return "\n\n".join(text)
+
+
+## The catalogue's English `words` in the language the menu speaks, ready for
+## a BBCode label. A static function, so `TranslationServer` rather than tr().
+static func said(words: Variant) -> String:
+	return plain(TranslationServer.translate(str(words)))
 
 
 ## Words for a BBCode label, with any bracket shown rather than read as a tag.

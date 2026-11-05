@@ -114,6 +114,7 @@ também em itálico, ficam como foram publicados.
 | *thread* | uma linha de execução paralela; um pedido HTTP com *threads* espera fora do quadro do jogo |
 | BFS, DFS | as siglas de *breadth-first search* e *depth-first search*, a busca em largura e a em profundidade |
 | PDDL | a linguagem em que se escreve um domínio de planejamento STRIPS: os fatos, as ações e o objetivo |
+| MDP | *Markov decision process*, processo de decisão de Markov: estados, ações, a chance de cada resultado e a recompensa; a sigla é a de uso corrente, como no cartão do Pac-Man no menu |
 | GPU, VRAM | a placa de vídeo, e a memória dela; um LLM local precisa das duas |
 | OpenGL, Compatibility | a interface gráfica que o Godot usa nas máquinas mais simples, e o nome do renderizador dele que a usa |
 | *script* | um arquivo de código GDScript, anexado a um nó ou registrado com `class_name` |

@@ -31,10 +31,15 @@
 # an example with a pad must show the pad's legend lines as written now,
 # and none of their bindings in English (T103).
 #
+# The menu is read card by card: each selected in turn, its RichTextLabel's
+# words and the list's titles read as a Label's are, and a technique's
+# "name -- part" line in its two parts (T131).
+#
 # Planted: a Label whose auto-translation is disabled, a formatted English
 # line, a line too wide, a wrapped Label too tall (also under a ceiling)
-# and one too wide, an empty scene, and a pad's line written in English
-# and not rebuilt; each must be refused, or the check sees nothing
+# and one too wide, an empty scene, a pad's line written in English
+# and not rebuilt, and a card's words and a list's title left in English;
+# each must be refused, or the check sees nothing
 # and says so. Any engine error while the demos run is a failure too: a
 # SCRIPT ERROR aborts only its function and the run would otherwise print a
 # clean summary.
@@ -193,6 +198,11 @@ func english_on_screen(node: Node) -> Array[String]:
 	var shown: Array[String] = []
 	if node is Label or node is Button or node is Label3D:
 		shown.append(node.atr(node.text))
+	elif node is RichTextLabel:
+		shown.append((node as RichTextLabel).get_parsed_text())
+	elif node is ItemList:
+		for index: int in range((node as ItemList).item_count):
+			shown.append((node as ItemList).get_item_text(index))
 	elif node is Legend:
 		for entry: Array in (node as Legend).entries:
 			shown.append(str(entry[1]))
@@ -203,17 +213,21 @@ func english_on_screen(node: Node) -> Array[String]:
 	return found
 
 
-# The line, or those of its segments, that are the English of a key.
+# The line, or those of its segments, that are the English of a key. A menu
+# card's technique line is "name -- part", two keys, so " -- " parts a line
+# too (T131).
 func _english_in(line: String) -> Array[String]:
 	if line == "":
 		return []
 	_lines_read += 1
 	var found: Array[String] = []
 	var pieces: PackedStringArray = line.split(SEGMENT)
+	pieces.append_array(line.split(" -- "))
 	pieces.append(line)
 	for piece: String in pieces:
-		if _is_english(piece.strip_edges()):
-			found.append(piece.strip_edges())
+		var trimmed: String = piece.strip_edges()
+		if not trimmed in found and _is_english(trimmed):
+			found.append(trimmed)
 	return found
 
 
@@ -244,6 +258,8 @@ func _look_at(label: String, example: Node, expected: Array) -> Array[String]:
 	for path: String in expected:
 		if not example.has_node(path):
 			failures.append("%s: has no %s to read" % [label, path])
+	if example is ExampleMenu:
+		failures += _every_card(example as ExampleMenu)
 	for node: Node in _walk(example):
 		for english: String in english_on_screen(node):
 			failures.append("%s: %s shows the English %s" % [label, example.get_path_to(node), english])
@@ -255,6 +271,30 @@ func _look_at(label: String, example: Node, expected: Array) -> Array[String]:
 	if _counter.errors > 0:
 		failures.append("%s: %d engine error(s) while it ran" % [label, _counter.errors])
 	example.free()
+	return failures
+
+
+# Every card of the menu, not only the one it opens on: each selected in
+# turn, and its heading and words read (T131). The walk after this reads
+# the list and the last card again, which is harmless.
+func _every_card(menu: ExampleMenu) -> Array[String]:
+	var failures: Array[String] = []
+	for index: int in range(menu.catalogue.cards.size()):
+		menu.select(index)
+		failures += _card_english(menu, "menu, card %d" % index)
+	if menu.catalogue.cards.is_empty():
+		failures.append("menu: no card to read")
+	return failures
+
+
+# The English the menu's Labels and card show now, each named for `where`.
+func _card_english(menu: ExampleMenu, where: String) -> Array[String]:
+	var failures: Array[String] = []
+	for node: Node in _walk(menu):
+		if not (node is RichTextLabel or node is Label):
+			continue
+		for english: String in english_on_screen(node):
+			failures.append("%s: %s shows the English %s" % [where, menu.get_path_to(node), english])
 	return failures
 
 
@@ -410,6 +450,7 @@ func _planted() -> Array[String]:
 		holder.add_child(planted)
 		if (await _look_at("planted", holder, [])).is_empty():
 			failures.append("the planted Label %s was not seen: this check sees nothing" % text)
+	failures += await _planted_card()
 	_counter.errors = 0
 	var wide := Label.new()
 	wide.text = "x".repeat(400)
@@ -426,6 +467,30 @@ func _planted() -> Array[String]:
 	if (await _look_at("planted", Node2D.new(), [])).is_empty():
 		failures.append("an empty scene passed: this check would pass a blank screen")
 	failures += await _planted_english_pad()
+	return failures
+
+
+# A card's words and a list's item left in English, as the menu showed them
+# before T131: a RichTextLabel with a heading and a technique line, and an
+# ItemList with a title. Each must be seen, or the menu's cards are not read.
+func _planted_card() -> Array[String]:
+	var failures: Array[String] = []
+	var first: Dictionary = ExampleCatalogue.load_from().cards[0]
+	var card := RichTextLabel.new()
+	card.bbcode_enabled = true
+	card.text = "[b]Lido em português[/b]\n[b]A*[/b] -- %s" % ExampleCatalogue.plain(first["techniques"][0][1])
+	var list := ItemList.new()
+	list.add_item(first["title"])
+	for planted: Control in [card, list]:
+		var kind: String = planted.get_class()  # freed by _look_at
+		_counter.errors = 0
+		var holder := Node2D.new()
+		holder.add_child(planted)
+		# The English itself must be named: a holder whose words were not read
+		# at all fails too, as showing no words, and would look the same.
+		var found: Array[String] = await _look_at("planted", holder, [])
+		if not found.any(func(failure: String) -> bool: return failure.contains("shows the English")):
+			failures.append("the planted %s in English was not seen: the menu's cards are not read" % kind)
 	return failures
 
 
