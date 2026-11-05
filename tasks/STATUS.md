@@ -22,38 +22,52 @@ were applied on the branch:
 
 Main is 1910534.
 
-**How it was checked.** The owner chose these three on 2026-11-05
-("rode as 3 que dão pra seguir em paralelo"). T96 shares
-`godot/game/squad/` with T87, and T89 waits on T85's manual check. The
-owner left the two follow-ups below (items 12-13, 10 of 2026-11-04) for
-later.
+**The owner decided on 2026-11-05:**
+
+- "deixa os followup pra depois rode as 3 que dao pra seguir em paralelo
+  entao". The three were T87, T94 and T55. T96 shares `godot/game/squad/`
+  with T87, and T89 waits on T85's manual check. The follow-ups left for
+  later are 2026-11-04's items 12-13 (the bot match) and 10 (levels on
+  `WorkerThreadPool`). This session had proposed them to make five.
+
+**How it was checked.**
 
 - Each wave passed its own `check-affected`, which selected everything
   in all three.
 - #68 and #69 merged on their reviewed heads.
-- The whole `make check` ran once, on #70's head after it merged main
-  (25c8fa5): exit 0, 1708 gdUnit cases, 0 failures. Its nine
-  `SCRIPT ERROR` lines are in-memory scripts from planted cases (six in
-  `godot/test/menu/demo_overlays.gd`).
+- The coordinator ran the whole `make check` once, in a clean worktree, on
+  #70's head after it merged main (25c8fa5): exit 0, 1708 gdUnit cases,
+  0 failures. The log is not committed. Its nine `SCRIPT ERROR` lines come
+  from in-memory scripts (`gdscript://`). Six are `free` on Nil in a
+  `step_decision`, which only the planted overlay cases in
+  `godot/test/menu/demo_overlays.gd` define. The other three are
+  abstract-class parse errors.
 
 The auto-mode classifier refused a force-push, so the branches were
 brought up to date by merging main into them, not by rebasing. The squash
 merge drops the merge commits.
 
 **Waiting on the owner -- one numbered list, each with a recommendation.**
-The 22 items of 2026-11-04 below are still open. Each PR body holds the
+The 24 items of 2026-11-04 below are still open. Each PR body holds the
 reasoning.
 
-1. T94, decisions 1-12 (the scene's numbers, the rule shape, the anyOf
-   schema and `RecordingRuntime` in `ai_llm`, the recordings kept as one
-   take, the 100-character line, the vectors from the Python replay, keys
-   and exported builds). *Recommended:* ratify all twelve.
+1. T94, decisions 1-11:
+   - the scene's numbers and the rule shape;
+   - the anyOf schema and `RecordingRuntime` in `ai_llm`;
+   - the recordings kept as one take, and T93's prompt kept;
+   - the 100-character line;
+   - the first file name answering a shared prefix;
+   - the vectors from the Python replay;
+   - keys, and exported builds.
+
+   *Recommended:* ratify 1-11. Decision 12 has no recommendation: two T93
+   labels for you to skim.
 2. T94, decision 13: the schema now offers the empty argument, matching
    T92's validator and prompt. *Recommended:* keep it. Tighten all three
    only if the manual check shows bare acts misused.
 3. T94: R10 (markup in the speech) is the main refusal left.
-   *Recommended:* a small follow-up that measures a schema or prompt
-   forbidding it.
+   *Recommended (this session's proposal, not the PR's):* a small
+   follow-up that measures a schema or prompt forbidding it.
 4. T87, decisions 1-10 (the six-line hook in `tactical.gd`, Enter
    finishing each search, the search's own walks held to
    `TacticalReach`, the evaluation, the constants, the fog guess,
@@ -65,13 +79,16 @@ reasoning.
 6. T87, decision 12: a fixed 4 iterations a frame leaves about 11 ms of
    the frame unused. *Recommended:* a follow-up that searches a time share
    of the frame in play and keeps the count for matches and tests.
-7. T55, decisions 2-5 and 7-8 (only the enemy delayed, whole-decision
-   delays, the cap held at 2 in 5 s where it bites, "never sees, earns or
-   orders more" held as three exact checks, the reaction proxy, the
-   meter's place). *Recommended:* ratify.
-8. T55, decision 1: the knobs stand at AlphaStar's 350 ms and 22 in 5 s.
-   *Recommended:* play `make record-rts` a few times, then run
-   `make measure-rts-clock` and commit what it writes.
+7. T55, decisions 2, 3, 5, 7 and 8 (only the enemy delayed,
+   whole-decision delays, "never sees, earns or orders more" held as three
+   exact checks, the reaction proxy, the meter's place). *Recommended:*
+   ratify.
+8. T55, decisions 1 and 4: the knobs stand at AlphaStar's 350 ms and 22
+   in 5 s. At 22 the cap never binds, so the checks hold it at 2 in 5 s.
+   *Recommended:* play `make record-rts` a few times. Then run
+   `make measure-rts-clock`, commit what it writes, and take the cap from
+   the recordings' busiest window. The alternative is to count a command
+   as two actions.
 9. T55, decision 6: M7 keeps the 10-minute league out of `make check`.
    `make check` holds the hands-nothing-over half
    (`test-rts-clock-limits`). The strength half is `make test-rts-league`.
@@ -90,10 +107,13 @@ reasoning.
   whether the bars grow, and press space early.
 - T55: play the RTS with K on and off, and watch M during a replan.
 
-**Next.** T88 needs only T87 now. T96 is ready too, but both write
-`godot/game/squad/`, so they do not run together. T112 waits on both. The
-follow-ups the owner left for later are 2026-11-04's items 12-13 (the bot
-match) and 10 (levels on `WorkerThreadPool`).
+**What is left:** todo T88, T89 (only if T85's manual check asks for
+art), T96, T112, T113, T114 and T115. The older wip and blocked tasks are
+as in 2026-11-04.
+
+**Next, as proposed by this session from the task rows:** T88, which
+needed only T87, and T96 are both ready. Both write `godot/game/squad/`,
+so they do not run together. T112 waits on both.
 
 ## Resuming after 2026-11-04 (waves 118 to 122 merged)
 
