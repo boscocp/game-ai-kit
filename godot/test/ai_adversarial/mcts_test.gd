@@ -15,6 +15,44 @@ const EXAMPLE_NIM: Script = preload("res://test/ai_adversarial/nim_example.gd")
 const BOUNDARY_SEED: int = 2281717760
 
 
+## A coin that lands heads one time in five, and then one move: "a" after
+## heads, "b" after tails. Its only use is a line that must follow the
+## outcome drawn most, which a game without chance cannot tell apart from
+## the first outcome.
+class Coin extends GakAdversarialGame:
+	class Spot extends RefCounted:
+		var at: String
+		func _init(where: String) -> void:
+			at = where
+
+	func to_move(_state: RefCounted) -> int:
+		return 0
+
+	func actions(state: RefCounted) -> Array:
+		match (state as Spot).at:
+			"start":
+				return ["flip"]
+			"heads":
+				return ["a"]
+			"tails":
+				return ["b"]
+		return []
+
+	func result(state: RefCounted, _action: Variant) -> RefCounted:
+		return Spot.new("tails" if (state as Spot).at == "start" else "end")
+
+	func outcomes(state: RefCounted, action: Variant) -> Array:
+		if (state as Spot).at != "start":
+			return super.outcomes(state, action)
+		return [{"probability": 0.2, "state": Spot.new("heads")}, {"probability": 0.8, "state": Spot.new("tails")}]
+
+	func is_terminal(state: RefCounted) -> bool:
+		return (state as Spot).at == "end"
+
+	func evaluate(_state: RefCounted, _player: int) -> float:
+		return 0.0
+
+
 func test_stopped_in_two_steps_it_is_the_search_run_in_one() -> void:
 	var sliced := MonteCarloSearch.new(DICE_RACE.new(), _race(0, 0, 0), 4)
 	sliced.step(70)
@@ -94,6 +132,12 @@ func test_a_drawn_number_on_a_boundary_falls_in_the_next_outcome() -> void:
 func _race(first: int, second: int, player: int) -> RefCounted:
 	var squares: Array[int] = [first, second]
 	return DICE_RACE.Race.new(squares, player)
+
+
+func test_the_principal_line_follows_the_outcome_drawn_most_not_the_first() -> void:
+	var search := MonteCarloSearch.new(Coin.new(), Coin.Spot.new("start"), 3)
+	search.step(200)
+	assert_array(search.principal_line()).is_equal(["flip", "b"])
 
 
 func test_the_principal_line_starts_with_the_answer_and_follows_the_most_visited() -> void:

@@ -264,6 +264,18 @@ func _assert_the_news_follows_the_language(scene: TacticalGame, locale: String, 
 		assert_str(scene._status.text).override_failure_message("%s -> %s:\n%s" % [locale, shown, scene._status.text]).contains(expected).not_contains(stale)
 
 
+func test_enter_lets_the_search_finish_each_decision_before_it_is_played() -> void:
+	var scene: TacticalGame = _opened(1)
+	scene._press(KEY_C)
+	(scene.computer as MctsSquad).iterations = 40
+	scene._press(KEY_S)  # it plays red, and moves first
+	scene._press(KEY_ENTER)
+	var searched: int = scene.computer.work_done()
+	# Every search ran its 40, not the 4 of its first frame.
+	assert_int(searched % 40).is_equal(0)
+	assert_int(searched).is_greater(4 * scene._computer_turn.played.size())
+
+
 # The tactical scene opened as the menu opens it: both modes, the one at
 # `chosen` first.
 func _opened(chosen: int) -> TacticalGame:

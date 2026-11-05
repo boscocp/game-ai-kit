@@ -103,7 +103,12 @@ class MonteCarloSearch:
         return MctsResult(action, considered, self._iterations)
 
     def principal_line(self, most: int = 8) -> list:
-        """The most visited move, its most drawn outcome, and on: at most `most` moves."""
+        """The line of play the search expects, for a person to read (T87 draws it).
+
+        The most visited move, its most drawn outcome, and on, at most `most`
+        moves: visits, not means, because a deep move rests on few playouts
+        and its mean is a guess.
+        """
         line: list = []
         node = self._root
         while len(line) < most and node is not None and not node.terminal:

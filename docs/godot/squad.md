@@ -353,16 +353,25 @@ decision searched as the scene searches it, 4 iterations a frame):
 | 1,000 | 56 of 100 | 63 of 100 | 1.3 s | 2.7 s | 122 ms |
 | 5,000 | 12 of 20 | 12 of 20 | 6.1 s | 9.8 s | 202 ms |
 
-No draws, and no action lost to a refused walk in any of them. The times
-above were taken with ten matches running at once on a 12-core machine,
-other work beside them, and are slower than the search alone. Two matches
-a seat at 1,000 iterations on a quieter machine (load about 5): 0.8 s a
-decision on average, 1.1 s at most, worst frame 22 ms. The worst frame is
-over a 60-a-second frame (16.7 ms). A decision's first frame also looks at
-the board, makes its guess and finds the piece's routes (about 1.5 ms
-more), and four iterations of eight-answer playouts cost about 4 to 5 ms.
-5,000 was measured at 20 matches a seat, not 100: at about a minute a
-decision it would have taken most of a day.
+No draws, and no action lost to a refused walk in any of them. "A
+decision" here is the search's own time, its frames added up, with ten
+matches running at once on a 12-core machine and other work beside them.
+Two matches a seat at 1,000 iterations on a quieter machine (load about 5):
+0.8 s of searching a decision on average, 1.1 s at most.
+
+What a person waits is longer. In the scene the search runs 4 iterations a
+frame, so 1,000 iterations is 250 frames: about 4.2 s at 60 frames a
+second before the decision has its whole budget (space plays it sooner).
+A steady frame costs about 5 ms -- 4.2 ms of search and 1.1 ms of redraw,
+measured in the scene by the review -- inside the 16.7 ms a frame has. The
+worst frame, 15.6 to 21.6 ms in the scene and 22 ms in the quieter run, is
+the one where space plays a decision and the next one starts: the board is
+looked at, the guess made, the piece's routes found and the first four
+iterations run, then all of it is drawn. That is about one dropped frame
+a decision, in a turn-based game; the 122 and 202 ms in the table are that
+frame under the load above. 5,000 was measured at 20 matches a seat, not
+100: at 6 s of searching a decision and some fifty decisions a match,
+2 x 100 matches would have taken most of a day of one core's time.
 
 What it says: at 200 iterations, about five for each of a piece's forty
 options, the search is mostly noise, and it loses two games in three. At

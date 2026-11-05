@@ -265,6 +265,7 @@ func _after_shot(at: Position, target_id: int, hit: bool) -> Position:
 	if hit:
 		var target: Unit = next.unit_by_id(target_id)
 		target.health = maxi(0, target.health - SquadTable.number(next.unit_by_id(at.unit_id).type.type_name, "damage"))
+		# Built again: a board drops a piece at 0 health only when it is built.
 		next = next.duplicate_state()
 	return _next_question(Position.new(next, at.unit_id, at.phase, at.waiting.duplicate()))
 
@@ -314,8 +315,10 @@ static func _relax(ground: GakGridGraph, costs: PackedInt32Array, here: int, spe
 			buckets[through].append(index)
 
 
-# What entering each cell of `ground` costs, row by row: read once a graph,
-# since a board's terrain never changes under a search (`BoardState`).
+# What entering each cell of `ground` costs, row by row: read once a graph
+# and kept across searches and games, by the graph's id -- a board's terrain
+# is built before its state and never changed (`BoardState`) -- the last
+# `COSTS_KEPT` graphs at most, so a long session does not pile them up.
 static func _entry_costs(ground: GakGridGraph) -> PackedInt32Array:
 	var key: int = ground.get_instance_id()
 	if _costs_by_graph.has(key):

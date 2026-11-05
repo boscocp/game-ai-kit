@@ -41,6 +41,32 @@ class SharedLeaves(AdversarialGame):
         return self.LEAVES.get(state, (0.0, 0.0))[player]
 
 
+class Coin(AdversarialGame):
+    """Heads one time in five, then "a"; tails, then "b": a line must follow the outcome drawn most."""
+
+    MOVES = {"start": ["flip"], "heads": ["a"], "tails": ["b"]}
+
+    def to_move(self, state):
+        return 0
+
+    def actions(self, state):
+        return list(self.MOVES.get(state, []))
+
+    def result(self, state, action):
+        return "tails" if state == "start" else "end"
+
+    def outcomes(self, state, action):
+        if state != "start":
+            return super().outcomes(state, action)
+        return [(0.2, "heads"), (0.8, "tails")]
+
+    def is_terminal(self, state):
+        return state == "end"
+
+    def evaluate(self, state, player):
+        return 0.0
+
+
 class TestMonteCarloSearch(unittest.TestCase):
     def test_after_a_thousand_iterations_it_leaves_a_multiple_of_four(self) -> None:
         # Measured over seeds 1-40: 1000 iterations find the winning take
@@ -83,6 +109,11 @@ class TestMonteCarloSearch(unittest.TestCase):
         # A four plays again: that child is the same runner's turn.
         self.assertEqual(roll.children[2].player, 0)
         self.assertEqual(roll.children[0].player, 1)
+
+    def test_the_principal_line_follows_the_outcome_drawn_most_not_the_first(self) -> None:
+        search = MonteCarloSearch(Coin(), "start", 3)
+        search.step(200)
+        self.assertEqual(search.principal_line(), ["flip", "b"])
 
     def test_the_principal_line_starts_with_the_answer_and_follows_the_most_visited(self) -> None:
         search = MonteCarloSearch(Nim(), Pile(7, 0), 1)

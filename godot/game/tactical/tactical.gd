@@ -416,9 +416,13 @@ func _play_computer_decision() -> void:
 
 ## Play the computer's turn to its end, every decision still drawn and
 ## recorded, and hand the board back to the person -- for the many holds a
-## long game brings.
+## long game brings. A controller that thinks over several frames (T87)
+## finishes each decision's thinking first: Enter skips the watching, not
+## the search, and the window waits while it thinks.
 func play_rest_of_computer_turn() -> void:
 	while _computer_thinking():
+		while computer.keep_thinking():
+			pass
 		step_decision()
 	if winner == TacticalVictory.NOBODY and not _persons_turn():
 		step_decision()

@@ -40,8 +40,9 @@ None of it changes a decision above; each is a detail the task left open.
   move of the presentation hooks was not made.
 - **The anytime decision is rewritten in place**: the `TacticalDecision`
   the scene holds is the one the search updates each frame, so space plays
-  what is drawn. Enter (the rest of the turn) plays each decision after its
-  first frame's search.
+  what is drawn. Enter (the rest of the turn) lets each search finish
+  before its decision is played (wave 125's review): the window waits
+  about a second a piece.
 - **An answer names its piece** -- `["walk", id, cell, cost]` -- so the
   expected line can say whose move each is; a walk carries its cost, not
   its route. The search floods with its own Dial's-bucket Dijkstra
@@ -61,7 +62,8 @@ None of it changes a decision above; each is a detail the task left open.
 - **`MonteCarloSearch.principal_line`**, in both languages, with a test
   each: the addon gains a public method for the expected line.
 - **The does-not-cheat check moved** into `SquadUnseenCheck`, shared by
-  both enemies; `MctsSquad` is held over 24 positions at 24 iterations.
+  both enemies; `MctsSquad` is held over 24 positions at 50 iterations, more
+  than a walk question's answers, so the tree grows below the root.
 - **The vectors' visits come from one run**, not by hand; what holds them
   is the two languages agreeing.
 - **No new strength gate**: `make test-squad-match` is unchanged, and

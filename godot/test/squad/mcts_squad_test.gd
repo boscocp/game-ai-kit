@@ -18,17 +18,18 @@ extends GdUnitTestSuite
 const RED: int = TacticalScenario.RED
 const BLUE: int = TacticalScenario.BLUE
 const POSITIONS: int = 24
-## The iterations a decision in these checks: enough for a tree, few
-## enough for the suite.
-const BUDGET: int = 24
+## The iterations a decision in these checks: more than a walk question's
+## answers (43 at most at the start), so the tree grows past the root and
+## the guess is searched below it, and few enough for the suite.
+const BUDGET: int = 50
 ## The shares the planted searchers must be caught on, floors under what
 ## was measured in wave 125 (searching the whole board 20, believing the
 ## unseen health 20, of the 24).
 const AT_LEAST_ALL: int = 14
 const AT_LEAST_HEALTH: int = 14
 ## The seeded game's digest, as `SquadMatch.play` writes it. Measured in
-## wave 125: the weighed enemy, blue, wins in round 9, no walk refused.
-const SEEDED_GAME_DIGEST: String = "6e576fea3b9164f846a6bd19bd966eb5bf01b4dba8c927dda587b4bf96750d8a"
+## wave 125: the weighed enemy, blue, wins in round 11, no walk refused.
+const SEEDED_GAME_DIGEST: String = "1b6efb9e0f69314d8a6a902466090a1c73f96a26de1c9ed41635dddc6be231b8"
 
 
 ## A searcher that believes the whole board: the planted case for an AI that
@@ -150,15 +151,17 @@ func test_with_nobody_to_shoot_it_is_not_asked_to() -> void:
 func test_a_refused_walk_is_answered_with_another_round_its_route_or_a_hold() -> void:
 	var searcher := MctsSquad.new(4, 60)
 	var state: BoardState = _rules.start()
-	var first: TacticalDecision = searcher.decide_move(state, 1)
-	if first.move == null:
-		return
-	var instead: TacticalDecision = searcher.after_refusal(state, first)
+	searcher.decide_move(state, 1)
+	# The walk the board refused: the runner two cells east, through (2, 2).
+	var refused_path: Array[Vector2i] = TacticalReach.walks_for(state, state.unit_by_id(1))[Vector2i(3, 2)]
+	var refused := TacticalDecision.walk(1, refused_path, [], Vector2i(3, 2))
+	var instead: TacticalDecision = searcher.after_refusal(state, refused)
 	assert_object(instead).is_not_null()
 	assert_int(instead.unit_id).is_equal(1)
+	assert_object(instead.target).is_not_equal(Vector2i(3, 2))
 	if instead.move != null:
 		for step: Vector2i in instead.move.path:
-			assert_bool(step in first.move.path).is_false()
+			assert_bool(step in refused_path).is_false()
 
 
 func test_a_seeded_game_against_the_weighed_enemy_replays_to_its_digest() -> void:
