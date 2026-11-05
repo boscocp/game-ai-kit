@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://game/rts/rts.gd" id="1_rts"]
 [ext_resource type="Script" path="res://game/rts/rts_view.gd" id="2_view"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://game/legend.gd" id="4_legend"]
 [ext_resource type="Script" path="res://game/rts/rts_minimap.gd" id="5_minimap"]
 [ext_resource type="Script" path="res://game/rts/rts_command_card.gd" id="6_card"]
+[ext_resource type="Script" path="res://game/rts/rts_meter.gd" id="7_meter"]
 
 [node name="Rts" type="Node2D"]
 script = ExtResource("1_rts")
@@ -23,6 +24,9 @@ script = ExtResource("2_view")
 
 [node name="RtsThinking" type="Node2D" parent="Map"]
 script = ExtResource("3_thinking")
+
+[node name="RtsMeter" type="Node2D" parent="Map"]
+script = ExtResource("7_meter")
 
 [node name="Interface" type="CanvasLayer" parent="."]
 

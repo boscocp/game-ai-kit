@@ -844,6 +844,31 @@ league: import ## T25's league: every team against every other from both seats, 
 	@# table to its seeds, take about ten minutes. SEEDS sets seeds a seat.
 	@$(GODOT) --headless --path godot -s res://test/league/league_runner.gd -- $(or $(SEEDS),5)
 
+.PHONY: test-rts-clock-limits
+check: test-rts-clock-limits
+test-rts-clock-limits: import ## T55, fast: a late and a capped side, one match each, are handed nothing (the league module's gate)
+	@$(GODOT) --headless --path godot -s res://test/league/rts_league.gd -- 1 quick
+
+.PHONY: test-rts-league
+test-rts-league: import ## Slow (~5-10 min): T55's league on the RTS board, both scores with intervals, every knob costs strength and hands nothing over
+	@# Not in `check`: every module gate is one module's (M7), and the
+	@# league depends on rts, ai_rts_core and ai_planning, so as a gate it
+	@# would run ten minutes on every change to any of them (PR #70's
+	@# review). `test-rts-clock-limits` is the gate; this is T25's `league`.
+	@$(GODOT) --headless --path godot -s res://test/league/rts_league.gd -- $(or $(SEEDS),2)
+
+.PHONY: rts-league
+rts-league: import ## Slow (minutes a seed): T55's league round robin, every RTS team against every other from both seats
+	@$(GODOT) --headless --path godot -s res://test/league/rts_league.gd -- $(or $(SEEDS),1) full
+
+.PHONY: measure-rts-clock
+measure-rts-clock: import ## The human clock's values from your recordings in data/rts/, written to the file the game reads (T55)
+	@$(GODOT) --headless --path godot -s res://test/rts/measure_clock.gd
+
+.PHONY: record-rts
+record-rts: import ## Play the RTS and keep every match you finish in data/rts/, the human clock's reference (T55)
+	@$(GODOT) --path godot res://game/rts/rts.tscn -- --record
+
 .PHONY: record-tactical
 record-tactical: import ## Play the tactical board and keep every game you finish in data/tactical/, T25's human reference
 	@$(GODOT) --path godot res://game/tactical/tactical.tscn -- --record

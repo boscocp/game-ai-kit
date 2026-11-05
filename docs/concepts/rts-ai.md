@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-26
+verified_on: 2026-11-05
 tier: 1
-source: https://ojs.aaai.org/index.php/AIIDE/article/view/12435/12294 ; https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter31_Spatial_Reasoning_for_Strategic_Decision_Making.pdf ; https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter12_Exploring_HTN_Planners_through_Example.pdf ; https://docs.wildfiregames.com/javascript/petra/PETRA.QueueManager.html
-invalidated_if: test/rts/rts_measure.gd or test/rts/rts_match.gd print records that differ from the ones below, or the build-order domain changes
+source: https://ojs.aaai.org/index.php/AIIDE/article/view/12435/12294 ; https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter31_Spatial_Reasoning_for_Strategic_Decision_Making.pdf ; https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter12_Exploring_HTN_Planners_through_Example.pdf ; https://docs.wildfiregames.com/javascript/petra/PETRA.QueueManager.html ; https://deepmind.google/discover/blog/alphastar-mastering-the-real-time-strategy-game-starcraft-ii/
+invalidated_if: test/rts/rts_measure.gd, test/rts/rts_match.gd or test/league/rts_league.gd print records that differ from the ones below, or the build-order domain changes
 teaches: strategy-ai
 -->
 
@@ -281,6 +281,98 @@ plans four steps ahead with a noise of 0.2. A hard of horizon 8, depth 2
 and no noise went 11 - 9 and 10 - 10 against normal and was cut: plans
 here are a step or two long, so a longer horizon changes nothing.
 
+## How human it looks: the clock's knobs (T55)
+
+Strength is one axis; how human a side looks is T25's other, and real time
+is where its two clock measures exist. `RtsHumanClock` wraps any side with
+two knobs, each a limit:
+
+- **`reaction_ms`**: the side is shown the enemy as it stood that long
+  ago, and nothing seen since. Its own units, funds and room stay current,
+  except that an own unit's target is forgotten when it names an enemy the
+  late view does not show yet.
+  Holding back the whole view was tried first, and it handed something
+  over: a side that did not yet see its last worker in training trained
+  another, and earned more than without the clock. The delay is served in
+  whole decisions, half a second each, so 350 ms shows the previous one.
+- **`most_actions` in `window_seconds`**: at most that many commands in any
+  window, AlphaStar's kind of cap. A command over it waits, oldest first,
+  and is dropped once a window's worth is already waiting.
+
+**Where the numbers come from.** The task asks for the owner's recorded
+play. `make record-rts` keeps every match you play to its end in
+`data/rts/`. `make measure-rts-clock` replays those recordings
+(`RtsClockMeasure`) and writes two values to
+`godot/game/rts/clock_reference.json`, to be committed: the median
+reaction, and the busiest five seconds. The game only reads that file. It
+never measures while a person plays, since replaying a five-minute
+recording takes seconds. There is no recording yet, so the knobs stand at
+AlphaStar's published figures. The
+first is "a delay between observation and action of 350ms on average"
+([DeepMind, 2019](https://deepmind.google/discover/blog/alphastar-mastering-the-real-time-strategy-game-starcraft-ii/)).
+The second is "22 agent actions per 5 seconds", as T25 quotes it. Every
+place that prints the knobs labels them a stand-in.
+
+**Measured** (`make test-rts-league`, two seeds from both seats, against
+the queues, on 2026-11-05). The human clock's row is the late row: its cap
+never bound, so only its delay acted.
+
+| team | strength (Elo, queues 0) | commands a minute | busiest 5 s |
+|---|---|---|---|
+| commander | +165 (+34 to +240) | 31.3 | 12 |
+| late (350 ms) | +26 (-136 to +188) | 41.2 | 31 |
+| capped (22 in 5 s) | +165 (+14 to +250) | 31.3 | 12 |
+| human clock (both) | +26 (-121 to +174) | 32.9 | 22 |
+| tight cap (2 in 5 s) | -111 (-236 to +28) | 20.3 | 2 |
+
+Three things to read from it:
+
+- **The cap at AlphaStar's figure never binds here.** The commander gives
+  about 31 commands a minute, 12 at most in five seconds: under 22. This
+  game asks for fewer, larger orders than StarCraft's clicks. What makes it
+  inhuman is not volume but timing: five commands on one tick, and an
+  answer the instant something comes into sight. So the checks hold the
+  cap to its claims at two in five seconds, where it bites.
+- **Half a second of delay costs real strength.** Late and the human clock
+  each lost two of the four matches the commander won. A squad that sees a
+  raid half a second late commits to fights it would have refused.
+- **"Sees, earns and orders no more" is held where it can be held.** Read
+  at the same moments, the late side saw *more* of the enemy than the
+  commander (93 sightings to 75), and gave more orders. That is play, not a
+  gift: a squad that does not see the enemy coming stays forward and sees
+  more of it. So `test/league/rts_clock_audit.gd` holds three claims
+  exactly, in every match a clock plays:
+  - the enemy handed on is the one the world showed the delay earlier,
+    every field of it, and no own unit's target names any other;
+  - no command goes out that the side inside did not give;
+  - no window holds more commands than the cap.
+
+  The counts are printed beside those checks, and not held. `make
+  test-rts-clock-limits`, in `make check`, holds the three on one match
+  each of the late and the tightly capped side. The whole league with its
+  strength claim is `make test-rts-league`, which takes about ten
+  minutes. It is not in `make check`, for the same reason T25's `make
+  league` is not.
+
+The reaction measured is a proxy. It runs from an enemy's first sighting
+to the first command that targets it or walks units near where it was
+seen, inside ten seconds. Every team's median runs to seconds, because most
+sightings get no such answer soon. Even the queues, replayed from a
+recording, read about 1100 ms. It tells the owner's play from a team's
+only once there are recordings to compare.
+
+No overlay yet shows the stale enemy a clocked side believes in. That is
+what invariant 13 would ask the demo to draw.
+
+**The meter.** M in `make demo-rts` draws each computer side's thinking
+beside its base: the mean and 95th percentile of its last thirty decisions
+against its 2.5 ms of the frame (strategy and tactics, `FrameBudget`), red
+past it, and a line of those decisions so a replan's spike can be found
+after it passed. It reads `RtsSide.timings`, the counters
+`test/rts/rts_match.gd` holds to the shares, and times its own drawing
+apart: the figure shown is the last frame's. It stays hidden until M asks
+for it. K puts the human clock on the computer.
+
 ## What it does not do
 
 No formations, no air or water, no abilities, and one upgrade only, the
@@ -288,5 +380,5 @@ armed tower. The influence map does not weigh an armed tower as strength,
 so a squad's odds at home do not count the gun. Squads do not split to
 flank. The commander does not plan the army's moves: a plan per squad,
 F.E.A.R.'s way, is the alternative ADR 0010 left to T25's league. The
-reaction delay and the cap on actions per minute that make a side look
-human are T55's.
+round-robin league of every team against every other is `make rts-league`,
+which is not in `make check`: it takes minutes a seed.

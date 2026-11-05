@@ -17,6 +17,19 @@
 ##   commander misjudges the count of each enemy fighter it has seen, so a
 ##   noisy level can build the wrong counter.
 ##
+## Beside these, T25's other axis -- how human a side looks -- has two knobs
+## here, where a clock makes them measurable (T55, `RtsHumanClock`):
+##
+## - `reaction_ms`: the side acts on what it saw at least this long ago;
+## - `most_actions` in `window_seconds`: no more commands than that in any
+##   such window, AlphaStar's kind of cap.
+##
+## They are not fields of a level: a level is a point on both axes, the
+## strength knobs here and the clock's on top (K in the demo), so *easy
+## and human* and *normal and inhuman* are both on offer. Like these, they
+## take away and never give: `test/league/rts_league.gd` holds a side with
+## each on to seeing, earning and ordering no more than without it.
+##
 ## Chosen by measurement, not taste: `make rts-measure` plays each level
 ## against the one below and prints the record, and a level that cannot be
 ## told from its neighbour is cut, as T12 cut its five to three.

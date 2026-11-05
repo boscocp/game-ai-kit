@@ -15,6 +15,14 @@
 ## time to read -- the rules and the AIs are the ones `test/rts/rts_match.gd`
 ## measures, only shown slower.
 ##
+## K puts T25's human clock on the computer (`RtsHumanClock`): it answers
+## what it sees only after a person's reaction time, and gives no more
+## commands in five seconds than a person did. M shows the meter, each
+## computer side's share of the frame beside its base (`RtsMeter`), hidden
+## until asked. Opened with `-- --record` (`make record-rts`), every match
+## you play to its end is kept in `data/rts/`; `make measure-rts-clock`
+## turns those into the clock's values, which the game only reads.
+##
 ## Your orders and the computer's pass through the same door
 ## (`RtsMatch.give`, `RtsRules`): you may not order what it may not, and it
 ## sees only what its units see.
@@ -42,6 +50,7 @@ const SEED: int = 20
 @onready var _legend: Legend = $Interface/Legend
 @onready var _minimap: RtsMinimap = $Interface/Minimap
 @onready var _card: RtsCommandCard = $Interface/Card
+@onready var _meter: RtsMeter = $Map/RtsMeter
 
 var world: RtsWorld
 var played: RtsMatch
@@ -57,6 +66,15 @@ var planner: BuildOrder.Planner = BuildOrder.Planner.STRIPS
 var last_refusal: String = ""
 ## F: draw the whole board, fog lifted from the screen (never from a side).
 var reveal: bool = false
+## K: the computer's sides play under the human clock (T55).
+var human_clock: bool = false
+## Opened to record, and how many matches it has kept.
+var recording: bool = OS.get_cmdline_user_args().has("--record")
+var matches_kept: int = 0
+# Whether this match has been kept already.
+var _kept: bool = false
+## Where a recording is written; a test points it elsewhere.
+var recordings_folder: String = RtsClockMeasure.directory()
 
 var _drag_from: Vector2 = Vector2.ZERO
 var _dragging: bool = false
@@ -69,6 +87,9 @@ func _ready() -> void:
 	_minimap.board = _view
 	_card.chosen.connect(_on_card)
 	_legend.set_entries(_legend_entries())
+	# The meter waits to be asked for, with M: it is more ink on a board a
+	# person is reading, and T25 wants it hidden for clips of play.
+	_meter.visible = false
 	restart()
 	Language.apply_if_opened_alone(self)
 
@@ -101,15 +122,18 @@ func restart() -> void:
 	var level: Difficulty = RtsLevels.presets()[level_index]
 	computer = RtsCommander.new(RtsScenario.EAST, level, SEED * 7, planner)
 	stand_in = QueueSide.new(RtsScenario.WEST, level, SEED * 11)
-	var sides: Dictionary = {RtsScenario.EAST: computer}
+	var sides: Dictionary = {RtsScenario.EAST: _clocked(computer)}
+	_meter.sides = {RtsScenario.EAST: computer}
 	if watching:
-		sides[RtsScenario.WEST] = stand_in
+		sides[RtsScenario.WEST] = _clocked(stand_in)
+		_meter.sides[RtsScenario.WEST] = stand_in
 	played = RtsMatch.new(world, SEED, sides)
 	_view.world = world
 	_view.selected.clear()
 	_view.placing = ""
 	_thinking.side = computer
 	last_refusal = ""
+	_kept = false
 	paused = true
 	_owed = 0.0
 	RtsView.frame_at(Vector2(RtsScenario.home(RtsScenario.WEST)) - RtsView.shown_cells().size / 2.0)
@@ -132,7 +156,27 @@ func _physics_process(_delta: float) -> void:
 	_owed -= ticks
 	if ticks > 0:
 		played.play(ticks)
+		_keep_if_over()
 		_refresh()
+
+
+# `side` as it plays: under the human clock when K has put it on.
+func _clocked(side: RtsSide) -> GakRtsController:
+	return RtsHumanClock.at(side, RtsHumanClock.knob_values()) if human_clock else side
+
+
+# A match you played to its end, written to `recordings_folder` once, when
+# the scene was opened to record: the clock's reference (T55). A match the
+# queues played for you is not yours, and is not kept.
+func _keep_if_over() -> void:
+	if not recording or watching or RtsVictory.winner(world) == RtsVictory.UNDECIDED or _kept:
+		return
+	var kept: Dictionary = played.recording()
+	kept.merge({"who": RtsClockMeasure.PERSON, "side": RtsScenario.WEST, "opponent": computer.level.name,
+		"human_clock": human_clock})
+	if RtsClockMeasure.save(kept, recordings_folder) != "":
+		matches_kept += 1
+	_kept = true
 
 
 ## One decision of the computer's: the match played up to and through its
@@ -249,6 +293,11 @@ func _on_key(code: Key) -> void:
 			_thinking.show_influence = not _thinking.show_influence
 		KEY_F:
 			reveal = not reveal
+		KEY_K:
+			human_clock = not human_clock
+			restart()
+		KEY_M:
+			_meter.visible = not _meter.visible
 		KEY_R:
 			restart()
 
@@ -424,6 +473,7 @@ func _refresh() -> void:
 func _redraw() -> void:
 	_view.queue_redraw()
 	_thinking.queue_redraw()
+	_meter.queue_redraw()
 	_minimap.queue_redraw()
 
 
@@ -439,4 +489,17 @@ func _header_text(yours: RtsSnapshot) -> String:
 		return line + "\n" + tr("over: {why} -- R plays again").format({why = RtsVictory.told(world)})
 	if last_refusal != "":
 		return line + "\n" + RtsRefusal.words(last_refusal)
-	return line + "\n" + tr("V watch two computers · C level · H planner · I influence · F fog · R again · arrows or the edge: look round")
+	return line + "\n" + tr("V watch two computers · C level · H planner · I influence · F fog · R again · arrows or the edge: look round") \
+		+ " · " + tr("K human clock · M meter") + _clock_text()
+
+
+# The human clock's state, and the recording's, for the header's last line.
+func _clock_text() -> String:
+	var said: String = ""
+	if human_clock:
+		var clock: Dictionary = RtsHumanClock.knob_values()
+		said += "   |   " + tr("human clock on: {ms} ms late, {actions} commands in {seconds} s").format({
+			ms = roundi(clock["reaction_ms"]), actions = clock["most_actions"], seconds = roundi(clock["window_seconds"])})
+	if recording:
+		said += "   |   " + tr("recording: {count} match(es) kept in data/rts/").format({count = matches_kept})
+	return said
