@@ -21,15 +21,19 @@ teaches: none
 
 The tactical scene asks a `TacticalRuleset` (in `godot/game/tactical/`)
 everything a mode decides: the starting state, what a walk and an attack
-do and why one is refused, what happens as a turn opens, who has won, the
-board's tint, the points it marks, and the roster C cycles.
+do and why one is refused, what happens as a turn opens, who has won,
+whether a piece that walked may still attack, and the roster C cycles.
+What the screen shows of a mode it asks the ruleset's `TacticalModeView`
+(T126, below).
 
 - `AdvanceWarsRuleset` wraps the classes that answered those questions
   before -- `TacticalScenario`, `BoardState`, `TacticalCombat`, `TurnStart`,
-  `TacticalVictory`, `ThreatMap`, `TacticalRoster` -- **unchanged**. It is
-  the scene's default, and every tactical gate passes through it with the
-  same seeds and the same results.
-- `SquadRuleset` (module `squad`, `godot/game/squad/`) is this mode.
+  `TacticalVictory`, `TacticalRoster` -- **unchanged**. It is the scene's
+  default, and every tactical gate passes through it with the same seeds
+  and the same results. `AdvanceWarsView` shows it: `ThreatMap`, the two
+  points, the words of a win.
+- `SquadRuleset` (module `squad`, `godot/game/squad/`) is this mode, and
+  `SquadView` what the scene shows of it.
 
 The scene is handed its ruleset by whoever opens it, as it is handed its
 computer player, so `tactical` never names `squad`: the module edge runs
@@ -182,12 +186,47 @@ scene plays the other, a new game with that mode's first controller.
 that mode. `make demo-tactical` alone still opens the scene in Advance
 Wars, and M does nothing there: the scene names no mode.
 
-**What the scene asks the ruleset now.** Besides T84's list, each with an
-answer that leaves Advance Wars as it was: the title and the line saying
-what the game is, the fog of a side (`TacticalFog`), the dash cells of a
-reach, a label of odds on each target, the tint under the cursor, the two
-statuses, the legend, whether a walk revealed an enemy, whether a piece
-that has walked may still attack and what it is told then.
+**What the scene asks the mode's view (T126).** T85 added these to the
+ruleset; T126 moved them to a `TacticalModeView` of their own, which the
+ruleset hands the scene (`mode_view`). Each has an answer that leaves
+Advance Wars as it was: the title and the line saying what the game is,
+how to win and the words of a win, the tint and the tint under the
+cursor, the points marked, the fog of a side (`TacticalFog`), the dash
+cells of a reach, a label of odds on each target, the two statuses, the
+legend, whether a walk revealed an enemy, and what a piece that has walked
+is told. Whether it may still attack stayed with the rules.
+
+| | before T126 | after |
+|---|---|---|
+| `TacticalRuleset`'s answers | 28 | 14 (13, and `mode_view`) |
+| `TacticalModeView`'s answers | -- | 15 |
+| `tactical_ruleset.gd` lines | 178 | 99, and 119 in `tactical_mode_view.gd` |
+| `advance_wars_ruleset.gd` lines | 109 | 84, and 46 in `advance_wars_view.gd` |
+| `squad_ruleset.gd` lines | 308 | 188, and 150 in `squad_view.gd` |
+| `tactical.gd` lines | 860 | 872 |
+
+Why two objects and not one: a search asks the ruleset about thousands of
+states and never what the screen shows; a mode added to the scene had
+added its drawing to the rules (T85's review, finding 4). Why the ruleset
+hands the scene its view, rather than the opener handing both: the menu,
+the demo overlays and the tests open the scene with rulesets, and still
+do, unchanged -- and `tactical` still never names `squad`. The scene grew
+by its `view()`, which asks the ruleset again whenever M, an opener or a
+test sets another, so the two cannot drift apart -- `squad_scene_test.gd`
+holds it, asking after each M which view draws. 12 lines more: its
+`view()` and the paragraph saying so, less the Advance Wars header line,
+which moved to `AdvanceWarsView`. Every hook it asked the ruleset is one
+call it now asks `view()`, and none stayed behind; the map is still the
+scene's, since every mode plays on `TacticalScenario.MAP` -- a mode with a
+map of its own would add it to the view. The scene is not
+shorter; what changed is that each call now says which of the two it asks,
+a rule or a picture. One test changed, and only in what it asks:
+`squad_scene_test.gd` asks the view for `fog`, `dashes`, `tint_at` and
+`reveals`, with the same arguments and the same assertions. Wave 128's
+review planted twelve faults; six survived the suites. The tests it asked
+for (`test/tactical/mode_view_test.gd`, and in `squad_scene_test.gd` the
+view after M, the ghosts, the legend and the "shoot" wording) now catch
+all six (`docs/reviews/128-the-xcom-mode-has-its-own-view.md`).
 
 **What the person meets.**
 
