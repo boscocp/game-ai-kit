@@ -36,6 +36,9 @@ var guard: TalkGuard
 var book: TalkBook
 ## What the player has said in this conversation, in order.
 var said: PackedStringArray = PackedStringArray()
+## Where the language chosen is kept. A test points it somewhere of its own
+## before the scene enters the tree, as the menu's (T132).
+var settings_path: String = Language.SETTINGS
 
 var _note: String = ""
 var _clock: float = 0.0
@@ -55,17 +58,25 @@ func _ready() -> void:
 	_typed.text_submitted.connect(_on_typed)
 	_show_legend()
 	restart()
-	Language.apply_if_opened_alone(self)
+	Language.apply_if_opened_alone(self, settings_path)
 
 
 # A new language is a new guard: he answers in the language he was told.
 # The restart waits for the end of the frame (T132): this notification comes
-# through `propagate_notification`, which holds this node busy while it runs,
-# and a guard added now would never reach the tree.
+# through `propagate_notification`, which holds this node busy while it and
+# everything below it are notified, and a guard added now would never reach
+# the tree (engine source, `Node::propagate_notification`, 4.7.2).
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
 		_show_legend()
-		restart.call_deferred()
+		_restart_if_in_tree.call_deferred()
+
+
+# The deferred restart, skipped when the scene left the tree in the same frame:
+# live mode would otherwise focus a text box no longer in the tree.
+func _restart_if_in_tree() -> void:
+	if is_inside_tree():
+		restart()
 
 
 ## The guard's language: the one the examples speak now.

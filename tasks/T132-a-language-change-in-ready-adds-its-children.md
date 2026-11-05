@@ -60,11 +60,16 @@ saved.
 
 - Measured on 4.7.2 (`docs/godot/localisation.md`, "Measured on 4.7.2"):
   the cause is not `_ready`. `set_locale` notifies through
-  `propagate_notification`, which holds each node busy while its own
-  notification runs, so the talk scene could not add its guard at *any*
-  change of language while it was open. Deferring `Language.apply` would
-  have fixed only `_ready`, and broken the contract that the words are
-  rebuilt at once. So the fix is the scene's: `restart.call_deferred()`.
+  `propagate_notification`, which holds each node busy while it and
+  everything below it are notified, so the talk scene could not add its
+  guard at *any* change of language while it was open. Deferring
+  `Language.apply` would fix neither path: the deferred `set_locale`
+  notifies the same way (the review's plant). The fault is any `add_child`
+  from that notification, wherever the change comes from. So the fix is
+  the scene's: a deferred restart, skipped if the scene has left the tree.
+- The scene takes a `settings_path`, as the menu does, so the test saves
+  its pt-BR in a file of its own and never the person's (the review).
+- Reviewed: `docs/reviews/135-a-language-change-in-ready-adds-its-children.md`.
 - Of the 15 other scenes that call `apply_if_opened_alone` -- the eight
   named in the proposal and seven more (`racing3d`, `botmatch`,
   `infiltration`, `racing_demo`, `behaviour_demo`, `steering_demo`,

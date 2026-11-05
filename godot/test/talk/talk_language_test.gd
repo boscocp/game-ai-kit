@@ -5,9 +5,9 @@
 # guard, in Portuguese, was never added. Measured on 4.7.2, the cause is
 # not `_ready` itself. `TranslationServer.set_locale` hands
 # NOTIFICATION_TRANSLATION_CHANGED down the tree through
-# `propagate_notification`, which holds each node busy while its own
-# notification runs, so a node cannot `add_child` to itself from it -- in
-# `_ready` or at any later change of language
+# `propagate_notification`, which holds each node busy while it and
+# everything below it are notified, so a node cannot `add_child` to itself
+# from it -- in `_ready` or at any later change of language
 # (`docs/godot/localisation.md`).
 #
 # Two ways in, one test each: the scene opened on its own, as `make
@@ -18,9 +18,12 @@ extends GdUnitTestSuite
 
 const SCENE: String = "res://game/talk/talk.tscn"
 
+## The test's own settings file, never the person's (`TalkDemo.settings_path`,
+## as `ExampleMenu.settings_path`): a run killed half-way leaves the person's
+## saved language as it was.
+const SETTINGS: String = "user://talk_language_test_settings.cfg"
+
 var _locale_before: String = ""
-var _settings_before: String = ""
-var _had_settings: bool = false
 
 
 ## Counts the engine's errors that name a parent busy with its children.
@@ -38,20 +41,12 @@ func before() -> void:
 	_locale_before = TranslationServer.get_locale()
 
 
-# The scene reads the person's own settings file, which has no other path to
-# be given. So the test keeps that file's text and puts it back afterwards;
-# `user://` is this checkout's alone (ADR 0022).
 func before_test() -> void:
 	TranslationServer.set_locale("en")
-	_had_settings = FileAccess.file_exists(Language.SETTINGS)
-	_settings_before = FileAccess.get_file_as_string(Language.SETTINGS) if _had_settings else ""
 
 
 func after_test() -> void:
-	if _had_settings:
-		FileAccess.open(Language.SETTINGS, FileAccess.WRITE).store_string(_settings_before)
-	else:
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(Language.SETTINGS))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(SETTINGS))
 
 
 func after() -> void:
@@ -64,6 +59,7 @@ func after() -> void:
 # scene is put back as soon as the scene is ready.
 func _open_alone() -> TalkDemo:
 	var demo: TalkDemo = (load(SCENE) as PackedScene).instantiate()
+	demo.settings_path = SETTINGS
 	var tree: SceneTree = get_tree()
 	var runner_scene: Node = tree.current_scene
 	demo.tree_entered.connect(func() -> void: tree.current_scene = demo, CONNECT_ONE_SHOT)
@@ -82,7 +78,7 @@ func _assert_guard_in_tree(demo: TalkDemo, language: String) -> void:
 func test_opened_alone_with_portuguese_saved_its_guard_is_in_the_tree() -> void:
 	var saved := ConfigFile.new()
 	saved.set_value(Language.SECTION, Language.KEY, Language.PORTUGUESE)
-	assert_int(saved.save(Language.SETTINGS)).is_equal(OK)
+	assert_int(saved.save(SETTINGS)).is_equal(OK)
 	var counter := BusyParentCounter.new()
 	OS.add_logger(counter)
 	var demo: TalkDemo = auto_free(_open_alone())
