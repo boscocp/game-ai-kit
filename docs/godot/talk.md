@@ -128,7 +128,7 @@ the same 30 lines, model, build and probe, three rounds a language, on
   characters, none of them markup, a control character, a quote or a
   backslash. The pinned server turns a pattern into a grammar over the
   string's JSON text, and drops `maxLength` beside it
-  ([server.md](../local-llm/server.md#pattern)), hence the quote, the
+  ([server.md](../local-llm/server.md#a-pattern-on-a-string)), hence the quote, the
   backslash and the length.
 - **A line in the prompt**, after T93's "no markup": "Write the speech as
   plain words, as spoken: no asterisks, no brackets, no backticks, no

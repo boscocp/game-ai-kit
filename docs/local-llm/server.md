@@ -127,7 +127,7 @@ asked for a poem with the game's schema, Gemma 4 wrote its reasoning into
 returned an empty `content`. Empty content is R1, the game's line. A
 schema constrains the reply; it does not make one arrive.
 
-## A `pattern` on a string {#pattern}
+## A `pattern` on a string
 
 T116 asked whether the server can be held to a speech with no markup, a
 `pattern` on `speech`, under `strict: true`. Read on 2026-11-05 at
