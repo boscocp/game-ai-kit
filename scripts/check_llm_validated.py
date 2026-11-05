@@ -37,9 +37,10 @@ rule is about code -- and refuses the plain ways round it:
       `OS.create_process` in `llm_local_server.gd`, by its path, which
       returns at once and is how a game starts a local server (T130); a
       `Semaphore`;
-      `wait_to_finish` or `OS.kill` outside `_exit_tree` or `_notification`
-      (teardown, when the frame is over anyway: at 4.7 `OS.kill` waits for
-      the process to end, T130); a `while` loop that polls (`poll()`,
+      `wait_to_finish` outside `_exit_tree` or `_notification` (teardown,
+      when the frame is over anyway), and `OS.kill` outside `_exit_tree`
+      alone -- at 4.7 it waits for the process to end, and `_notification`
+      also runs for notifications during play (T130); a `while` loop that polls (`poll()`,
       `get_status()`, `Time.get_ticks_*`) or never `await`s; `use_threads`
       set to anything but `true`; an `HTTPRequest` made without setting
       `use_threads = true` on the variable it was assigned to, or made where
@@ -138,6 +139,7 @@ SEMAPHORE_RE = re.compile(r"\bSemaphore\b")
 WAIT_RE = re.compile(r"\.\s*wait_to_finish\s*\(")
 KILL_RE = re.compile(r"\bOS\s*\.\s*kill\s*\(")
 TEARDOWN = {"_exit_tree", "_notification"}
+KILL_TEARDOWN = {"_exit_tree"}
 FUNC_RE = re.compile(r"^\s*(?:static\s+)?func\s+(\w+)")
 WHILE_RE = re.compile(r"^(\s*)while\b")
 POLL_RE = re.compile(r"\.\s*(?:poll|get_status)\s*\(|\bTime\s*\.\s*get_ticks_\w+")
@@ -292,7 +294,7 @@ def waits_in_the_addon(source: Source) -> list[str]:
         if WAIT_RE.search(line) and function not in TEARDOWN:
             findings.append(f"V3 {place} waits for a thread in {function or 'the file'}, "
                             "not in teardown; that wait is a frame")
-        if KILL_RE.search(line) and function not in TEARDOWN:
+        if KILL_RE.search(line) and function not in KILL_TEARDOWN:
             findings.append(f"V3 {place} kills a process in {function or 'the file'}, "
                             "not in teardown; OS.kill waits for it to end, a frame")
         if THREADS_NOT_TRUE_RE.search(line):
@@ -528,6 +530,9 @@ PLANTED = [
      "V3"),
     ("a process killed during play, not in teardown",
      {STARTER_FILE: SOUND_ADDON[STARTER_FILE] + "\n\nfunc _give_up() -> void:\n\tOS.kill(pid)\n"}, "V3"),
+    ("a process killed in _notification, which also runs during play",
+     {STARTER_FILE: SOUND_ADDON[STARTER_FILE]
+      + "\n\nfunc _notification(_what: int) -> void:\n\tOS.kill(pid)\n"}, "V3"),
     ("a game script that starts a server itself",
      _game("\tvar pid: int = OS.create_process(\"scripts/llm\", [\"serve\"])\n"), "V1"),
     ("a semaphore in the addon", _in_addon("\tvar gate := Semaphore.new()\n\tgate.wait()\n"), "V3"),

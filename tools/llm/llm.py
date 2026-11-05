@@ -313,11 +313,13 @@ def serve(toolchain: pathlib.Path, model: str, flavour: str,
           api_key: str = "", parent_pid: int = 0) -> int:
     """Run the server in the foreground until interrupted.
 
-    A game that starts the server (T130, `LlmLocalServer`) passes two more.
-    `api_key`: the server then refuses a request without it, so a web page
-    cannot use the model while the game plays (llama.cpp allows any
-    origin). It goes in LLAMA_API_KEY, the server's own variable, not on
-    its command line. `parent_pid`: the game, which the server dies with.
+    A game that starts the server (T130, `LlmLocalServer`) sets
+    LLAMA_API_KEY in the environment it hands down, the server's own
+    variable, so a key is never on a command line `ps` shows. With a key
+    the server refuses a request without it, so a web page cannot use the
+    model while the game plays (llama.cpp allows any origin). `api_key`
+    does the same from the command line, for a person who wants it there.
+    `parent_pid`: the game, which the server dies with.
     """
     command = server_command(toolchain, model, flavour)
     if api_key:
@@ -334,14 +336,16 @@ def die_with(parent_pid: int) -> None:
     A process Godot starts has a session of its own (`OS.create_process`
     calls setsid), so a game stopped with Ctrl+C or `kill` never runs the
     code that stops it, and Ctrl+C never reaches it. On Linux,
-    PR_SET_PDEATHSIG sends this process SIGTERM when its parent ends, and is
-    kept across the `execv` into llama-server (prctl(2)). The parent may
+    PR_SET_PDEATHSIG sends this process SIGKILL when its parent ends, and is
+    kept across the `execv` into llama-server (prctl(2)). SIGKILL, not
+    SIGTERM: a stopped (SIGSTOP) server would never act on SIGTERM, and the
+    server keeps nothing worth flushing. The parent may
     have ended already: then Refused. Elsewhere only that check is made,
     and a server outlives a game stopped that way (docs/godot/talk.md).
     """
     if sys.platform.startswith("linux"):
         libc = ctypes.CDLL(None, use_errno=True)
-        if libc.prctl(PR_SET_PDEATHSIG, int(signal.SIGTERM), 0, 0, 0) != 0:
+        if libc.prctl(PR_SET_PDEATHSIG, int(signal.SIGKILL), 0, 0, 0) != 0:
             raise Refused(f"prctl(PR_SET_PDEATHSIG) failed: errno {ctypes.get_errno()}")
     if os.getppid() != parent_pid:
         raise Refused(f"the game that asked for the server ({parent_pid}) is gone")

@@ -14,9 +14,12 @@ func _fake() -> String:
 	return ProjectSettings.globalize_path(FAKE)
 
 
-# A server on `port` that starts the fake, ready `loading` seconds after.
-func _server(port: int, loading: String = "0.5") -> LlmLocalServer:
-	var server: LlmLocalServer = LlmLocalServer.new(_fake(), PackedStringArray([str(port), loading]), port)
+# A server on `port` that starts the fake, ready `loading` seconds after;
+# `extra` are the fake's own flags (`--silent`, `--deaf-after S`).
+func _server(port: int, loading: String = "0.5", extra: Array[String] = []) -> LlmLocalServer:
+	var arguments := PackedStringArray([str(port), loading])
+	arguments.append_array(PackedStringArray(extra))
+	var server: LlmLocalServer = LlmLocalServer.new(_fake(), arguments, port)
 	add_child(server)
 	return server
 
@@ -191,3 +194,48 @@ func test_a_server_started_here_asks_for_a_key_made_for_it() -> void:
 	await _until(found, LlmLocalServer.READY)
 	assert_str(found.api_key).is_empty()
 	server.free()
+	assert_str(OS.get_environment("LLAMA_API_KEY")).is_empty()
+
+
+# The second review: a re-check that finds the server started here alive
+# but silent must not start a second one over it, and losing the first.
+func test_a_server_started_here_gone_deaf_is_said_never_started_twice() -> void:
+	var server: LlmLocalServer = _server(39952, "0.2", ["--deaf-after", "1.0"])
+	server.begin()
+	await _until(server, LlmLocalServer.READY)
+	var first: int = server.pid
+	await get_tree().create_timer(1.3).timeout
+	server.begin()
+	await _until(server, LlmLocalServer.STOPPED)
+	assert_str(server.state).is_equal(LlmLocalServer.STOPPED)
+	assert_str(server.reason).contains("stopped answering")
+	assert_int(server.pid).is_equal(first)
+	server.free()
+
+
+# Invariant 7, from the second review: a socket that accepts and never
+# answers costs the frame nothing -- the ask gives up after ASK_TIMEOUT.
+func test_a_server_that_never_answers_never_holds_the_frame() -> void:
+	var silent: LlmLocalServer = _server(39953, "0", ["--silent"])
+	silent.begin()
+	await get_tree().create_timer(0.5).timeout
+	var asker: LlmLocalServer = auto_free(LlmLocalServer.new("", PackedStringArray(), 39953))
+	add_child(asker)
+	asker.begin()
+	var longest: int = 0
+	var last: int = Time.get_ticks_usec()
+	while asker.state == LlmLocalServer.CHECKING and Time.get_ticks_usec() - last < PATIENCE * 1000000.0:
+		await get_tree().process_frame
+		longest = maxi(longest, Time.get_ticks_usec() - last)
+		last = Time.get_ticks_usec()
+	assert_str(asker.state).is_equal(LlmLocalServer.BY_HAND)
+	assert_int(longest).is_less(200000)
+	silent.free()
+
+
+func test_the_status_code_is_read_only_from_a_whole_first_line() -> void:
+	assert_int(LlmLocalServer.status_code("HTTP/1.1 503 Service Unavailable\r\n".to_ascii_buffer())).is_equal(503)
+	assert_int(LlmLocalServer.status_code("HTTP/1.1 200 OK\r\nContent".to_ascii_buffer())).is_equal(200)
+	assert_int(LlmLocalServer.status_code("HTTP/1.1 20".to_ascii_buffer())).is_equal(-1)
+	assert_int(LlmLocalServer.status_code("SSH-2.0-OpenSSH\r\n".to_ascii_buffer())).is_equal(-1)
+	assert_int(LlmLocalServer.status_code(PackedByteArray())).is_equal(-1)

@@ -36,6 +36,11 @@ func _process(_delta: float) -> bool:
 	if _said or not _server.is_ready():
 		return false
 	_said = true
+	# A server found on the port is not this run's: never name a pid for it.
+	if not _server.started_here():
+		print("FOUND a server this game did not start on port %d" % _server.port)
+		quit(2)
+		return true
 	print("READY %d" % _server.pid)
 	if _ending == "quit":
 		quit()

@@ -207,7 +207,8 @@ running the game. So the first Tab into live mode asks the server's
 - **nothing answers**, in a checkout: `scripts/llm serve` is started with
   `OS.create_process` -- still the only way the repo runs the model, its
   caches on the large disk (ADR 0023), bound to 127.0.0.1 by its own flags
-  -- and `/health` is asked every 0.25 s until it says 200. Typing waits;
+  -- and `/health` is asked every 0.25 s until it says 200, over a
+  non-blocking `StreamPeerTCP` (below: why not `HTTPRequest`). Typing waits;
   the status line counts the seconds; the picture keeps drawing. When the
   scene is left (or the game quits), the server it started is stopped.
 - **nothing answers, and nothing may start**: an exported game, a headless
@@ -227,10 +228,11 @@ Recorded mode starts nothing.
 
 **The key.** llama.cpp's server allows any origin, so while one runs
 without a key any web page open in a browser can use the model. A server
-the game starts therefore gets a key made for that one launch.
-`scripts/llm` passes it in `LLAMA_API_KEY`, so it is not on
-`llama-server`'s command line, and `HttpRuntime` sends it as
-`Authorization: Bearer`. Measured at the pinned build on 2026-11-05:
+the game starts therefore gets a key made for that one launch. The game
+sets `LLAMA_API_KEY`, the server's own variable, for the one call to
+`OS.create_process`, and the child inherits it. So the key is never on a
+command line that `ps` shows, neither `scripts/llm`'s nor
+`llama-server`'s. `HttpRuntime` sends it as `Authorization: Bearer`. Measured at the pinned build on 2026-11-05:
 - `/health` still answers without the key.
 - A chat request with no key or a wrong one gets 401
   `{"error":{"message":"Invalid API Key","type":"authentication_error","code":401}}`.
@@ -247,7 +249,9 @@ opened 2026-11-05), in a session of its own. A game stopped with Ctrl+C
 or `kill` never runs `_exit_tree`, and Ctrl+C never reaches the server.
 So the game passes its process id. On Linux, `scripts/llm` sets
 `PR_SET_PDEATHSIG` before it becomes `llama-server`, and the kernel ends
-the server when the game ends, however it ends. Measured with the real
+the server with SIGKILL when the game ends, however it ends. It is SIGKILL,
+not SIGTERM, because a stopped (SIGSTOP) server would never act on
+SIGTERM, and the server keeps nothing worth flushing. Measured with the real
 model: SIGINT (exit -2) and SIGTERM to the game both left no
 `llama-server`. Elsewhere a game killed that way leaves the server
 running. The next Tab finds it and uses it, and `pkill llama-server`
@@ -265,12 +269,34 @@ five ways, requiring the server to be gone within a second each time:
 - SIGTERM;
 - SIGKILL.
 
-A planted run with a server told not to die with the game must be seen
-to survive. Esc to the menu `queue_free`s the scene, and
+Each run takes a port the system has just said is free. A pid is
+signalled only when its parent, read from `/proc`, is the Godot that this
+run started. A game that finds a server it did not start says `FOUND` and
+quits instead of naming a pid. The second review found the hole this
+closes: a server already on a fixed port made the game print `READY -1`,
+and `kill(-1, ...)` reaches every process the user owns. Two planted
+runs hold it:
+- a server told not to die with the game must be seen to survive;
+- a server already on the port must stop the run before anything is
+  signalled. Esc to the menu `queue_free`s the scene, and
 `talk_server_test.gd` holds that path.
 
 A server the game found and did not start, such as `make llm-serve`'s,
 keeps running when you leave, and the status line says so.
+
+**Why not `HTTPRequest` for `/health`.** In the source at 4.7
+(`scene/main/http_request.cpp`), a request with `use_threads` reads in
+blocking mode. Its thread checks whether to quit only between reads.
+When `timeout` runs out, `cancel_request` joins that thread on the main
+thread. Measured on 4.7.2 against a socket that accepts and never answers
+(`fake_llm_server.py --silent`), a 1 s timeout held one frame for
+58.4 s, until the socket closed. So `LlmLocalServer` asks with a raw
+`StreamPeerTCP`: it connects, sends one HTTP/1.0 request, reads what has
+arrived each frame, and drops the socket after 1 s. Against the same
+silent socket its longest frame stays under 200 ms
+(`test_a_server_that_never_answers_never_holds_the_frame`).
+`HttpRuntime`'s chat request still goes through a threaded `HTTPRequest`,
+so it has the same flaw. That is T133.
 
 What the documentation does not say, read in the source at 4.7
 (`drivers/unix/os_unix.cpp`): `OS.kill` sends SIGKILL and then **waits**

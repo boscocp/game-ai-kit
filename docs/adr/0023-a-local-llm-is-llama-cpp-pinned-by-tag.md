@@ -140,7 +140,8 @@ session proposed the design below; the owner answered "as 3", accepting it.
   anything.
 - **The same server, with a key.** It is `scripts/llm serve` with its own
   flags: `--host 127.0.0.1`, offline, the same port. A game-started server
-  also gets a key made for that launch, passed in `LLAMA_API_KEY` and sent
+  also gets a key made for that launch, handed down in the environment
+  as `LLAMA_API_KEY` (never on a command line) and sent
   by `HttpRuntime`. llama.cpp allows any origin, and a server nobody asked
   for should not be open to every web page in a browser. `make llm-serve`
   is unchanged and still runs without a key; a person starts it and sees

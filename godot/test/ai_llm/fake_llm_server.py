@@ -4,8 +4,9 @@
 It answers `/health` as the pinned server does (tools/server/README.md at
 b11960): 503 with "Loading model" for LOADING seconds after it starts, then
 200 with {"status": "ok"}, never asking for a key. `/v1/chat/completions`
-answers one fixed reply -- or, when started with a key, 401 to a request
-without `Authorization: Bearer KEY`, in the shape the pinned server was
+answers one fixed reply -- or, when started with a key (`--api-key`, or
+LLAMA_API_KEY in its environment, as `LlmLocalServer` hands it down), 401
+to a request without `Authorization: Bearer KEY`, in the shape the pinned server was
 measured to answer (docs/godot/talk.md). Anything else is a 404. It
 listens on this machine only, as `scripts/llm serve` does, and stops by
 itself after LIFETIME seconds, so a test that failed before stopping it
@@ -13,9 +14,14 @@ leaves nothing running for long. Given `--parent-pid`, it dies with that
 parent through the same `die_with` `scripts/llm serve` uses
 (tools/llm/llm.py), so a test of how the game ends tests that function;
 `--no-die` skips it, for the planted case that must be seen to survive.
+Two ways to be a bad server: `--silent` listens and never says a word (a
+connection is accepted by the system and nothing is ever read or sent);
+`--deaf-after S` serves, then closes its port after S seconds and keeps
+running -- a server hung, as far as anyone asking can tell.
 
 Usage:
-    fake_llm_server.py PORT LOADING [--no-die] [--api-key KEY] [--parent-pid PID]
+    fake_llm_server.py PORT LOADING [--no-die] [--silent] [--deaf-after S]
+                       [--api-key KEY] [--parent-pid PID]
     fake_llm_server.py PORT exit [...]   exit 2 at once, as `scripts/llm`
                                          does when nothing is installed
 """
@@ -25,7 +31,9 @@ from __future__ import annotations
 import argparse
 import http.server
 import json
+import os
 import pathlib
+import socket
 import sys
 import threading
 import time
@@ -87,6 +95,8 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--api-key", default="")
     parser.add_argument("--parent-pid", type=int, default=0)
     parser.add_argument("--no-die", action="store_true")
+    parser.add_argument("--silent", action="store_true")
+    parser.add_argument("--deaf-after", type=float, default=0.0)
     args = parser.parse_args(argv[1:])
     if args.loading == "exit":
         return 2
@@ -94,11 +104,32 @@ def main(argv: list[str]) -> int:
         sys.path.insert(0, str(TOOLS_LLM))
         import llm  # noqa: PLC0415 -- only when asked, and from the toolchain's folder
         llm.die_with(args.parent_pid)
+    if args.silent:
+        return say_nothing(args.port)
     Server.ready_at = time.monotonic() + float(args.loading)
-    Server.api_key = args.api_key
+    Server.api_key = args.api_key or os.environ.get("LLAMA_API_KEY", "")
     server = http.server.ThreadingHTTPServer(("127.0.0.1", args.port), Server)
     threading.Timer(LIFETIME, server.shutdown).start()
+    if args.deaf_after:
+        threading.Timer(args.deaf_after, go_deaf, [server]).start()
     server.serve_forever()
+    time.sleep(LIFETIME if args.deaf_after else 0.0)
+    return 0
+
+
+def go_deaf(server: http.server.ThreadingHTTPServer) -> None:
+    """Close the port and stop serving; the process stays, as a hung one would."""
+    server.shutdown()
+    server.server_close()
+
+
+def say_nothing(port: int) -> int:
+    """Listen on `port` for LIFETIME seconds, accepting nothing, answering nothing."""
+    listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    listener.bind(("127.0.0.1", port))
+    listener.listen(64)
+    time.sleep(LIFETIME)
     return 0
 
 

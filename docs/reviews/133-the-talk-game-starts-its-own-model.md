@@ -266,3 +266,70 @@ of 16 random bytes, made for that launch (`Crypto`).
   so.
 
 Owner items 1 to 3 are in the PR body, with a recommendation on each.
+
+## Second review (at 157ce83), and what was done
+
+A second fresh context reviewed only the new code. It found one blocker,
+two should-fix items and three nits. All are addressed.
+
+**Blocker: the endings gate could kill every process the user owns.**
+`server_ends.py` used fixed ports 39960-39965. If anything already
+answered HTTP there, `LlmLocalServer` used it, and the game printed
+`READY -1`. The runner then ran `os.kill(-1, 0)`, which succeeds, and a
+second later `os.kill(-1, SIGKILL)`. This was measured with a plain
+`http.server` on 39960. Two worktrees running the gate at once would be
+enough.
+
+**Applied:**
+- **(a) Pids are tied to the run.** The runner signals a pid only if it is
+  above zero and its parent, read from `/proc/PID/stat`, is the Godot it
+  started. Otherwise it stops with exit 2 and signals nothing.
+- **(b) The game names only its own server.** It checks `started_here()`.
+  When it found a server it did not start, it prints `FOUND ...` and quits
+  with 2, never a pid.
+- **(c) A free port per run.** Each run binds port 0 and passes on the
+  port the system gave.
+- **Planted case:** a server already listening on the chosen port must
+  stop the run with `FOUND`, and nothing is signalled.
+- **The guard is checked against the old bug:** with (b) removed, the
+  game printed `READY -1`. The runner refused it by (a), the planted case
+  failed, and nothing was killed.
+
+**Should-fix 1: a second server started over a hung one.**
+- *Found:* in `CHECKING`, a silent `/health` called `_start()` even while
+  the server started here still ran. The new server overwrote `pid`, and
+  the first was never killed.
+- *Applied:* a silent re-check with our own process still running now
+  goes to `STOPPED` ("the server started here stopped answering; it stops
+  when you leave"). The `pid` is kept.
+- *Test:* `test_a_server_started_here_gone_deaf_is_said_never_started_twice`.
+  The fake gets `--deaf-after S`, which closes its port and keeps
+  running.
+
+**Should-fix 2: invariant 7, `/health` against a socket that never
+answers.**
+- *Found:* read in `scene/main/http_request.cpp` at 4.7-stable. A
+  threaded request uses blocking reads. Its thread checks `quit` only
+  between reads. On timeout, `cancel_request` joins it on the main
+  thread.
+- *Measured:* a 1 s timeout against `fake_llm_server.py --silent` held one
+  frame for 58.4 s.
+- *Applied, contained:* `LlmLocalServer` no longer uses `HTTPRequest`. Its
+  ask is a non-blocking `StreamPeerTCP` (connect, one HTTP/1.0 request,
+  read each frame, drop after 1 s), with `status_code()` reading the first
+  line. Against the same socket, its longest frame stays under 200 ms
+  (`test_a_server_that_never_answers_never_holds_the_frame`), and
+  `status_code` has a test of its own.
+- *Not contained:* `HttpRuntime`'s chat request has the same flaw and
+  predates this PR. It is opened as T133 (task file and STATUS row).
+
+**Nits, all applied:**
+- **The key never appears in argv.** `LlmLocalServer` sets `LLAMA_API_KEY`
+  around the one `OS.create_process` call and unsets it after. A test
+  checks that the variable is empty afterwards. The fake reads it the way
+  llama.cpp does.
+- **The parent-death signal is SIGKILL.** A SIGSTOPped server would never
+  act on SIGTERM. `scripts/llm --self-test` still passes.
+- **`OS.kill` is allowed only in `_exit_tree`, no longer in
+  `_notification`.** That function also runs for notifications during
+  play. A planted case covers it.

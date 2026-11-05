@@ -17,8 +17,9 @@ answered "as 3", accepting it. It amends ADR 0023.
    starts `scripts/llm serve` with `OS.create_process`, so no frame waits
    (invariant 7). The status line says the model is loading, in both
    languages, and the game keeps drawing.
-2. **Ready is `/health` saying 200.** Asked every 0.25 s by an
-   `HTTPRequest` with threads on; 503 is llama.cpp loading. Typing opens
+2. **Ready is `/health` saying 200.** It is asked every 0.25 s without
+   blocking (an `HTTPRequest` with threads on, as proposed; the second review
+   moved it to a `StreamPeerTCP`, see Notes); 503 is llama.cpp loading. Typing opens
    once the server is ready.
 3. **Stop only what was started here.** On `_exit_tree` the server is
    stopped only if this scene started it. One already running (for
@@ -91,6 +92,20 @@ leave?
     twice, and when a server found loading falls silent.
 
   `OS.kill` now runs only on leaving, which the gate holds.
+- The second review found one blocker and two should-fix items, all
+  addressed:
+  - **The blocker:** the endings gate could signal pid -1. It now takes a
+    free port, and signals only a server whose parent is the game it
+    started.
+  - **A hung server is never started over:** when a re-check finds the
+    server started here alive but silent, it is reported stopped, and no
+    second server is started over it.
+  - **`/health` no longer holds the frame:** it moved off `HTTPRequest`,
+    whose timeout joins a blocked thread (58.4 s measured on one frame).
+    The same flaw in `HttpRuntime` is T133.
+
+  The key now travels in the environment. The parent-death signal is now
+  SIGKILL.
 - The fake server's tests need a POSIX shebang. Windows would need
   `python3` named as the program.
 

@@ -9,17 +9,21 @@
 ## docs/local-llm/server.md). `begin` asks again from any settled state, so
 ## a server that went away is noticed and, if it can be, started again.
 ##
-## A server started here is started with `arguments`, then `--api-key` and
-## a key made for this one launch, then `--parent-pid` and this game's
-## process id. The key keeps a web page open in a browser from using the
-## model (llama.cpp allows any origin); `api_key` is what `HttpRuntime`
-## must send. The parent's id lets `scripts/llm` have the server die with
-## the game however the game ends, Ctrl+C included (Linux).
+## A server started here gets a key made for that one launch, in the
+## environment as LLAMA_API_KEY, never on a command line: llama.cpp allows
+## any origin, and the key keeps a web page open in a browser from using
+## the model. `api_key` is what `HttpRuntime` must send. It is also started
+## with `--parent-pid` and this game's process id, so `scripts/llm` can
+## have the server die with the game however the game ends (Linux).
 ##
-## Never on the frame (invariant 7): `OS.create_process` returns at once,
-## the program runs beside the game, and each ask is an `HTTPRequest` with
-## threads on. Only leaving waits: `OS.kill` waits for the process to end,
-## so it runs in `_exit_tree` alone, as `check_llm_validated.py` holds.
+## Never on the frame (invariant 7). `OS.create_process` returns at once.
+## Each ask is a raw, non-blocking `StreamPeerTCP`, read a little every
+## frame and dropped after `ASK_TIMEOUT`. An `HTTPRequest` is not used
+## here: with threads on, a timed-out request joins a thread blocked
+## reading a socket that accepted and never answers, and the frame waits
+## for as long as the socket does (measured, docs/godot/talk.md). Only
+## leaving waits: `OS.kill` waits for the process to end, so it runs in
+## `_exit_tree` alone, as `check_llm_validated.py` holds.
 ##
 ## When not to use it: in an exported game, or wherever the program that
 ## serves the model is not known -- pass "" and it says `BY_HAND`, so the
@@ -49,14 +53,16 @@ const ASK_TIMEOUT: float = 1.0
 ## Asks in a row a server found loading may leave unanswered before it is
 ## taken as gone. One started here is watched by its process instead.
 const SILENT_ASKS: int = 4
+## The one request sent: HTTP/1.0, so the server closes when it is done.
+const HEALTH_REQUEST: String = "GET /health HTTP/1.0\r\nHost: 127.0.0.1\r\n\r\n"
 
 ## Where it stands: one of the constants above, "" before `begin`.
 var state: String = ""
-## The server's health endpoint.
-var health_url: String = ""
+## The port the server is asked on, and started on.
+var port: int = HttpRuntime.PORT
 ## The program that serves the model, as a path; "" when there is none.
 var program: String = ""
-## What `program` is started with, before the key and the parent's id.
+## What `program` is started with, before the parent's id.
 var arguments: PackedStringArray = PackedStringArray()
 ## The process started here, or -1: the only one this node ever stops.
 var pid: int = -1
@@ -70,28 +76,22 @@ var load_seconds: float = 180.0
 ## Why the state is `STOPPED`, for a person.
 var reason: String = ""
 
-var _ask: HTTPRequest = null
-var _asking: bool = false
+var _peer: StreamPeerTCP = null
+var _heard: PackedByteArray = PackedByteArray()
+var _sent: bool = false
+var _ask_age: float = 0.0
 var _since_ask: float = 0.0
 var _alive: bool = false
 var _silent: int = 0
 
 
-## A server reached on `port`, started with `program_path` and
+## A server reached on `server_port`, started with `program_path` and
 ## `program_arguments` when none answers there.
 func _init(program_path: String = "", program_arguments: PackedStringArray = PackedStringArray(),
-		port: int = HttpRuntime.PORT) -> void:
+		server_port: int = HttpRuntime.PORT) -> void:
 	program = program_path
 	arguments = program_arguments
-	health_url = "http://127.0.0.1:%d/health" % port
-
-
-func _ready() -> void:
-	_ask = HTTPRequest.new()
-	_ask.use_threads = true
-	_ask.timeout = ASK_TIMEOUT
-	add_child(_ask)
-	_ask.request_completed.connect(_on_answer)
+	port = server_port
 
 
 ## Find a server, or start one. While one is being found or loads, nothing:
@@ -100,7 +100,7 @@ func _ready() -> void:
 ## be -- and one started by hand meanwhile is found. ERR_UNCONFIGURED
 ## before the node is in the tree.
 func begin() -> Error:
-	if _ask == null:
+	if not is_inside_tree():
 		return ERR_UNCONFIGURED
 	if state in [CHECKING, LOADING]:
 		return OK
@@ -124,6 +124,8 @@ func started_here() -> bool:
 
 
 func _process(delta: float) -> void:
+	if _peer != null:
+		_read_answer(delta)
 	if state != LOADING:
 		return
 	_since_ask += delta
@@ -135,7 +137,7 @@ func _process(delta: float) -> void:
 		if waited > load_seconds:
 			_give_up("the server did not load in %d s; it stops when you leave" % int(load_seconds))
 			return
-	if not _asking and _since_ask >= POLL_SECONDS:
+	if _peer == null and _since_ask >= POLL_SECONDS:
 		_ask_health()
 
 
@@ -144,9 +146,7 @@ func _process(delta: float) -> void:
 # process to end (OS_Unix::kill at 4.7), about 90 ms for llama-server
 # letting go of the card (docs/godot/talk.md) -- one frame, on leaving.
 func _exit_tree() -> void:
-	if _ask != null:
-		_ask.cancel_request()
-	_asking = false
+	_drop_ask()
 	if _still_running():
 		OS.kill(pid)
 	_alive = false
@@ -154,27 +154,70 @@ func _exit_tree() -> void:
 
 func _ask_health() -> void:
 	_since_ask = 0.0
-	_asking = _ask.request(health_url) == OK
-
-
-# No answer at all means nothing listens; any HTTP answer means a server
-# does. 503 is llama.cpp loading its model; anything else is taken as ready,
-# and what it says to a chat request is `HttpRuntime`'s to report.
-func _on_answer(result: int, response_code: int, _headers: PackedStringArray,
-		_body: PackedByteArray) -> void:
-	_asking = false
-	if result != HTTPRequest.RESULT_SUCCESS:
+	_ask_age = 0.0
+	_sent = false
+	_heard = PackedByteArray()
+	_peer = StreamPeerTCP.new()
+	if _peer.connect_to_host("127.0.0.1", port) != OK:
+		_drop_ask()
 		_on_silence()
-		return
+
+
+# One frame's worth of the ask: connect, send, read what has come. Nothing
+# here waits; a server that says nothing in ASK_TIMEOUT is silence.
+func _read_answer(delta: float) -> void:
+	_ask_age += delta
+	_peer.poll()
+	var status: StreamPeerTCP.Status = _peer.get_status()
+	if status == StreamPeerTCP.STATUS_CONNECTED and not _sent:
+		_sent = _peer.put_partial_data(HEALTH_REQUEST.to_ascii_buffer())[0] == OK
+	if status == StreamPeerTCP.STATUS_CONNECTED and _peer.get_available_bytes() > 0:
+		_heard.append_array(_peer.get_partial_data(_peer.get_available_bytes())[1])
+	var code: int = status_code(_heard)
+	if code != -1:
+		_drop_ask()
+		_on_answer(code)
+	elif status == StreamPeerTCP.STATUS_ERROR or status == StreamPeerTCP.STATUS_NONE \
+			or _ask_age > ASK_TIMEOUT:
+		_drop_ask()
+		_on_silence()
+
+
+## The status code on the first line of an HTTP answer, or -1 until that
+## line has arrived whole. Public so a test can read it without a server.
+static func status_code(answer: PackedByteArray) -> int:
+	var text: String = answer.get_string_from_ascii()
+	var line_end: int = text.find("\r\n")
+	if not text.begins_with("HTTP/") or line_end == -1:
+		return -1
+	var words: PackedStringArray = text.substr(0, line_end).split(" ")
+	return int(words[1]) if words.size() > 1 and words[1].is_valid_int() else -1
+
+
+func _drop_ask() -> void:
+	if _peer != null:
+		_peer.disconnect_from_host()
+	_peer = null
+
+
+# Any HTTP answer means a server listens. 503 is llama.cpp loading its
+# model; anything else is taken as ready, and what it says to a chat
+# request is `HttpRuntime`'s to report.
+func _on_answer(code: int) -> void:
 	_silent = 0
-	_set_state(LOADING if response_code == 503 else READY)
+	_set_state(LOADING if code == 503 else READY)
 
 
-# Checking: nothing listens, so start one. Loading one found here: a few
-# silent asks in a row and it is gone. Loading one started here: not yet
+# Checking, and the server started here still running but silent: hung, or
+# gone deaf -- said so, never a second one started over it. Checking, with
+# nothing of ours running: start one. Loading one found here: a few silent
+# asks in a row and it is gone. Loading one started here: not yet
 # listening, which its process, not the port, says is fine.
 func _on_silence() -> void:
-	if state == CHECKING:
+	if state == CHECKING and started_here() and _still_running():
+		reason = "the server started here stopped answering; it stops when you leave"
+		_set_state(STOPPED)
+	elif state == CHECKING:
 		_start()
 	elif state == LOADING and not started_here():
 		_silent += 1
@@ -184,14 +227,18 @@ func _on_silence() -> void:
 			_set_state(STOPPED)
 
 
+# The key travels in the environment the child inherits, set just for the
+# call: never on a command line, where `ps` would show it.
 func _start() -> void:
 	if program == "" or not FileAccess.file_exists(program):
 		_set_state(BY_HAND)
 		return
 	var key: String = Crypto.new().generate_random_bytes(16).hex_encode()
 	var launch: PackedStringArray = arguments.duplicate()
-	launch.append_array(PackedStringArray(["--api-key", key, "--parent-pid", str(OS.get_process_id())]))
+	launch.append_array(PackedStringArray(["--parent-pid", str(OS.get_process_id())]))
+	OS.set_environment("LLAMA_API_KEY", key)
 	pid = OS.create_process(program, launch)
+	OS.unset_environment("LLAMA_API_KEY")
 	if pid == -1:
 		reason = "%s could not be started" % program
 		_set_state(STOPPED)
