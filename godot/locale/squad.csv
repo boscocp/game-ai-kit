@@ -68,3 +68,17 @@ this {piece} has moved this turn,este {piece} já se moveu neste turno
 this {piece} has moved this turn; Z takes the move back,este {piece} já se moveu neste turno; Z desfaz o movimento
 this {piece} has moved this turn; it can still shoot from where it stands; Z takes the move back,esta peça ({piece}) já se moveu neste turno; ainda pode atirar de onde está; Z desfaz o movimento
 this {piece} has moved this turn; it can still shoot from where it stands,esta peça ({piece}) já se moveu neste turno; ainda pode atirar de onde está
+mcts,MCTS
+"Monte Carlo tree search over the piece's options and the turns after, on the board its side believes in","Monte Carlo tree search sobre as opções da peça e os turnos seguintes, no tabuleiro em que o seu lado acredita"
+has nowhere to walk,não tem para onde andar
+"its walk was refused, and it holds","a caminhada foi recusada, e ela fica"
+its walk was refused; the next most visited,a caminhada foi recusada; a próxima mais visitada
+"searched {done} iterations: {count} option(s), this one visited most, {visits} times, mean {mean}","buscou {done} iterações: {count} opção(ões), esta a mais visitada, {visits} vezes, média {mean}"
+searched {done} of {budget} iterations; the bar is each option's visits:,buscou {done} de {budget} iterações; a barra são as visitas de cada opção:
+"{bar} {option}: {visits} visits, mean {mean}, bound {bound}","{bar} {option}: {visits} visitas, média {mean}, limite {bound}"
+and {count} more,e mais {count}
+the line it expects: {line},a linha que espera: {line}
+{unit} walks to {cell},{unit} anda até {cell}
+{unit} shoots {target},{unit} atira em {target}
+{unit} holds,{unit} fica
+"on the board, every option it searched: its mean above, a shot's hit chance below, the most visited framed; space stops the search and plays it; V shows your own view instead","no tabuleiro, cada opção que buscou: a média em cima, a chance de acerto de um tiro embaixo, a mais visitada emoldurada; espaço para a busca e joga; V mostra a sua própria visão"

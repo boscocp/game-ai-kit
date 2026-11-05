@@ -130,6 +130,24 @@ func result() -> MctsResult:
 	return found
 
 
+## The line of play the search expects, as far as it has looked: from the
+## root, the most visited move, then the outcome of it drawn most often,
+## then that position's most visited move, and so on -- at most `most`
+## moves, and none past a position no iteration went beyond. Both sides'
+## moves, in the order they would be played (T87 draws it). A line, not a
+## plan: the deeper a move, the fewer playouts it rests on.
+func principal_line(most: int = 8) -> Array:
+	var line: Array = []
+	var node: TreeNode = _root
+	while line.size() < most and node != null and not node.terminal:
+		var branch: Branch = _most_visited(node.branches)
+		if branch == null:
+			break
+		line.append(branch.action)
+		node = _most_visited(branch.children)
+	return line
+
+
 # One iteration, the loop body of the book's figure 5.11.
 func _iterate() -> void:
 	var descent := Descent.new()
@@ -245,6 +263,17 @@ func _draw_outcome(outcomes: Array) -> int:
 		if drawn < reached:
 			return index
 	return outcomes.size() - 1
+
+
+# Of `entries` -- a node's branches or a branch's children, null where
+# nothing was made -- the one visited most, the first of equals; null when
+# none was visited.
+func _most_visited(entries: Array) -> Variant:
+	var best: Variant = null
+	for entry: Variant in entries:
+		if entry != null and entry.visits > 0 and (best == null or entry.visits > best.visits):
+			best = entry
+	return best
 
 
 # What `MctsResult.considered` says about the root's action at `index`.

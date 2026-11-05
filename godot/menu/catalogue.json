@@ -46,6 +46,7 @@
     "search-coordinator": {"name": "a search shared out by claims", "evidence": ["SearchCoordinator"]},
     "role-arbiter": {"name": "fight roles granted by an arbiter", "evidence": ["RoleArbiter"]},
     "weighed-actions": {"name": "every action scored by its considerations, the highest done", "evidence": ["ActionChoice"]},
+    "monte-carlo-tree-search": {"name": "Monte Carlo tree search: random playouts, spent by UCB1 on the moves that do well", "evidence": ["MonteCarloSearch"]},
     "target-tile": {"name": "a target tile, and the shortest straight line to it: the arcade's ghosts", "evidence": ["MazeGhost"]},
     "value-iteration": {"name": "value iteration: an MDP solved in Python, its policy looked up", "evidence": ["MdpPacMan"]},
     "director": {"name": "a director: the player's intensity paces the threats, after Left 4 Dead", "evidence": ["Director"]},
@@ -215,7 +216,8 @@
         {"technique": "goap", "part": "another, its actions priced in turns"},
         {"technique": "htn", "part": "the fourth"},
         {"technique": "influence-map", "part": "the threat map tinted on the board: how many enemy pieces could strike each cell"},
-        {"technique": "weighed-actions", "part": "XCOM's first enemy: every walk and shot of the piece about to act scored on its side's view -- the shot it leaves, the fire it walks into, cover and flanks in both -- the best taken"}
+        {"technique": "weighed-actions", "part": "XCOM's first enemy: every walk and shot of the piece about to act scored on its side's view -- the shot it leaves, the fire it walks into, cover and flanks in both -- the best taken"},
+        {"technique": "monte-carlo-tree-search", "part": "XCOM's second enemy: the piece's options and the turns after them searched by random playouts, on the board its side believes in -- each option's visits drawn growing a frame at a time, space stopping it early"}
       ],
       "controls": "click a unit, then a lit cell; click an enemy to attack or shoot; W waits; 1-5 build; Z undoes; space ends the turn; C changes the computer; S swaps sides; M the other mode; T the threat map (in XCOM: each enemy's chance against the cell under the cursor); V, in XCOM, what the computer sees",
       "modes": [
@@ -223,10 +225,10 @@
          "controllers": ["rules", "planner", "learned", "easy", "normal", "hard", "state machine", "behaviour tree", "GOAP", "HTN"],
          "roster": "res://game/tactical/tactical_roster.gd"},
         {"mode": "squad", "title": "XCOM", "ruleset": "res://game/squad/squad_ruleset.gd",
-         "controllers": ["weighed", "random"],
+         "controllers": ["weighed", "mcts", "random"],
          "roster": "res://game/squad/squad_roster.gd"}
       ],
-      "watch": "Each computer decision drawn on the board before it is played, with the reason in the status. In XCOM, the board shows what the computer sees, and every option it weighed for the piece about to act: its score, and its best hit chance; your own shots show their chance on the target before you click.",
+      "watch": "Each computer decision drawn on the board before it is played, with the reason in the status. In XCOM, the board shows what the computer sees, and every option it weighed for the piece about to act: its score, and its best hit chance; your own shots show their chance on the target before you click. With MCTS (C), a bar of visits for each of the piece's options grows while it thinks, then the line of play it expects; space plays what it believes so far.",
       "docs": "docs/concepts/planning-in-strategy-games.md"
     },
     {

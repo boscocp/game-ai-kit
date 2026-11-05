@@ -217,10 +217,12 @@ func test_at_the_round_limit_more_health_wins() -> void:
 # --- the seam ------------------------------------------------------------------
 
 func test_the_roster_is_its_own_and_builds_what_it_names() -> void:
-	assert_array(_rules.roster_names()).contains_exactly(["weighed", "random"])
+	assert_array(_rules.roster_names()).contains_exactly(["weighed", "mcts", "random"])
 	assert_str(_rules.build_controller("random", 7).controller_name()).is_equal("random")
 	assert_str(_rules.build_controller("weighed", 7).controller_name()).is_equal("weighed")
-	assert_str(_rules.controller_after("weighed")).is_equal("random")
+	assert_str(_rules.build_controller("mcts", 7).controller_name()).is_equal("mcts")
+	assert_str(_rules.controller_after("weighed")).is_equal("mcts")
+	assert_str(_rules.controller_after("mcts")).is_equal("random")
 	assert_str(_rules.controller_after("random")).is_equal("weighed")
 
 

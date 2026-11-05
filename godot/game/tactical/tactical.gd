@@ -136,6 +136,13 @@ func _ready() -> void:
 	Language.apply_if_opened_alone(self)
 
 
+# A controller that thinks over several frames (T87) thinks one more, and
+# what it believes now is drawn: the board keeps drawing while it searches.
+func _process(_delta: float) -> void:
+	if _computer_thinking() and computer.keep_thinking():
+		_refresh()
+
+
 # The words are rebuilt in the language just chosen (T79): text set from code
 # keeps the words it was given. The notification also comes on entering the
 # tree, before _ready, when there is nothing to rebuild yet.
@@ -409,9 +416,13 @@ func _play_computer_decision() -> void:
 
 ## Play the computer's turn to its end, every decision still drawn and
 ## recorded, and hand the board back to the person -- for the many holds a
-## long game brings.
+## long game brings. A controller that thinks over several frames (T87)
+## finishes each decision's thinking first: Enter skips the watching, not
+## the search, and the window waits while it thinks.
 func play_rest_of_computer_turn() -> void:
 	while _computer_thinking():
+		while computer.keep_thinking():
+			pass
 		step_decision()
 	if winner == TacticalVictory.NOBODY and not _persons_turn():
 		step_decision()
