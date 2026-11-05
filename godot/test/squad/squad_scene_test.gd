@@ -9,6 +9,9 @@ const RED: int = TacticalScenario.RED
 const BLUE: int = TacticalScenario.BLUE
 
 var _rules := SquadRuleset.new()
+# What the scene shows of the mode, asked of the view since T126 split it
+# from the rules: the same answers, from the object that now gives them.
+var _view: TacticalModeView = _rules.mode_view()
 var _locale_before: String
 
 
@@ -88,12 +91,12 @@ func test_the_piece_in_hand_shows_its_dash_and_its_shots_with_their_reasons() ->
 
 func test_t_shows_each_seen_enemys_chance_against_the_cell_under_the_cursor() -> void:
 	var state: BoardState = _facing()
-	var chances: Dictionary[Vector2i, int] = _rules.tint_at(state, BLUE, Vector2i(4, 4), RED, 1)
+	var chances: Dictionary[Vector2i, int] = _view.tint_at(state, BLUE, Vector2i(4, 4), RED, 1)
 	var shield: Unit = state.unit_by_id(2)
 	var expected: int = SquadCombat.hit_chance(SquadTable.number(shield.type.type_name, "aim"),
 		SquadTable.number(TacticalRules.RUNNER, "defence"), SquadCover.of(SquadScenario.rows(), shield.cell, Vector2i(4, 4))["cover"])
 	assert_dict(chances).is_equal({Vector2i(7, 4): expected})
-	assert_dict(_rules.tint_at(state, BLUE, Vector2i(13, 0), RED, 1)).is_empty()
+	assert_dict(_view.tint_at(state, BLUE, Vector2i(13, 0), RED, 1)).is_empty()
 
 
 func test_the_enemys_weighing_is_drawn_before_it_acts_and_v_hides_it() -> void:
@@ -112,8 +115,8 @@ func test_the_enemys_weighing_is_drawn_before_it_acts_and_v_hides_it() -> void:
 func test_a_walk_that_shows_an_enemy_cannot_be_taken_back() -> void:
 	var hidden: BoardState = _board([[RED, TacticalRules.RUNNER, Vector2i(1, 4)], [BLUE, TacticalRules.SHIELD, Vector2i(8, 4)]])
 	var walked: BoardState = _rules.walk(hidden, Move.new(1, [Vector2i(1, 5), Vector2i(2, 5), Vector2i(3, 5)] as Array[Vector2i]))
-	assert_bool(_rules.reveals(hidden, hidden, RED)).is_false()
-	assert_bool(_rules.reveals(hidden, walked, RED)).is_true()
+	assert_bool(_view.reveals(hidden, hidden, RED)).is_false()
+	assert_bool(_view.reveals(hidden, walked, RED)).is_true()
 
 
 # Wave 119's review, blocker 1: a walk refused because of a piece the
@@ -175,7 +178,7 @@ func test_a_piece_that_dashed_is_not_told_it_can_still_shoot() -> void:
 	scene._refresh()
 	var runner: Unit = scene.state.unit_by_id(1)
 	var walks: Dictionary = TacticalReach.walks_for(scene._persons_board(), runner)
-	var dash: Array[Vector2i] = _rules.dashes(scene._persons_board(), runner, walks)
+	var dash: Array[Vector2i] = _view.dashes(scene._persons_board(), runner, walks)
 	assert_bool(dash.is_empty()).is_false()
 	scene.click_cell(dash[0])
 	scene.click_cell(dash[0])
@@ -201,7 +204,7 @@ func test_with_v_off_an_unseen_piece_acts_unseen() -> void:
 
 func test_a_walk_into_the_fog_is_drawn_only_as_far_as_it_is_seen() -> void:
 	var state: BoardState = _board([[RED, TacticalRules.RUNNER, Vector2i(0, 0)], [BLUE, TacticalRules.SHIELD, Vector2i(5, 0)]])
-	var fog: TacticalFog = _rules.fog(state, RED, null)
+	var fog: TacticalFog = _view.fog(state, RED, null)
 	var path: Array[Vector2i] = [Vector2i(5, 1), Vector2i(5, 2), Vector2i(5, 3), Vector2i(5, 4)]
 	var walk := TacticalDecision.walk(2, path, [], Vector2i(5, 4))
 	assert_bool(path.any(fog.hides)).is_true()

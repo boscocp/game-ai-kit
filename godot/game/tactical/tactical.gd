@@ -27,10 +27,12 @@
 ## round limit (`TacticalVictory`).
 ##
 ## All of that is the Advance Wars mode. What a walk, an attack, a turn's
-## opening and a win mean, the tint and the roster C cycles are asked of
-## `ruleset` (T84), which is `AdvanceWarsRuleset` unless whoever opens the
-## scene hands it another -- the XCOM-style `SquadRuleset`, from module
-## `squad`, which this scene never names.
+## opening and a win mean, and the roster C cycles, are asked of `ruleset`
+## (T84), which is `AdvanceWarsRuleset` unless whoever opens the scene hands
+## it another -- the XCOM-style `SquadRuleset`, from module `squad`, which
+## this scene never names. What the screen shows of a mode -- its words, the
+## tint, the fog, the dash, the odds, the status, the legend -- is asked of
+## the ruleset's `TacticalModeView` (T126), `view()`.
 ##
 ## The opener may hand it several (T85): the menu opens the tactical card in
 ## Advance Wars or in XCOM, and gives the scene both. M then plays the next
@@ -70,7 +72,7 @@ var state: BoardState
 ## The rules the scene plays by (T84): Advance Wars unless whoever opens the
 ## scene hands it another before it enters the tree, as with `computer`. The
 ## scene asks it everything a walk, an attack, a turn and a win mean, and
-## never names a mode itself.
+## never names a mode itself; what it draws of them it asks `view()`.
 var ruleset: TacticalRuleset = AdvanceWarsRuleset.new()
 ## Every mode M cycles through, `ruleset` among them, in the order the
 ## opener gave them (T85); empty when the scene was handed one ruleset only,
@@ -121,6 +123,8 @@ var _cursor: Vector2i = Vector2i(-1, -1)
 # True once a walk this turn showed an enemy: the turn is sealed, and Z says
 # why rather than that there is nothing to take back.
 var _sealed_by_a_reveal: bool = false
+# The view of `ruleset` last asked for, so a frame does not build a new one.
+var _view: TacticalModeView
 
 
 func _ready() -> void:
@@ -153,7 +157,7 @@ func _notification(what: int) -> void:
 
 
 func _set_words() -> void:
-	_legend.set_entries(ruleset.legend())
+	_legend.set_entries(view().legend())
 	_end_button.text = tr("End turn (space)")
 	_undo_button.text = tr("Undo (Z)")
 	_keys.text = controllers_to_come(ruleset)
@@ -180,6 +184,15 @@ func point_at(cell: Vector2i) -> void:
 	_cursor = cell
 	if _showing_threat and state != null:
 		_intent.show_threat(_tint())
+
+
+## What the screen shows of the mode playing (T126): `ruleset`'s own view,
+## asked again whenever the ruleset is not the one it was asked of -- M, or
+## an opener or a test setting `ruleset` -- so the two are never out of step.
+func view() -> TacticalModeView:
+	if _view == null or _view.rules != ruleset:
+		_view = ruleset.mode_view()
+	return _view
 
 
 ## Play in each of `rulesets` -- a `TacticalRuleset` each -- starting in the
@@ -459,7 +472,7 @@ func _weighed_described(option: Dictionary) -> Dictionary:
 func threat() -> Dictionary[Vector2i, int]:
 	if winner != TacticalVictory.NOBODY:
 		return {}
-	return ruleset.tint(state, TacticalScenario.FACTIONS - 1 - state.current_faction)
+	return view().tint(state, TacticalScenario.FACTIONS - 1 - state.current_faction)
 
 
 ## True while the computer's turn is on and it still has a decision to play
@@ -550,7 +563,7 @@ func _pick_up(unit: Unit) -> void:
 		# Held, so the status describes it, but with nothing lit: a spent unit
 		# has nowhere to go until next turn -- though one that has walked may
 		# still attack from where it stopped.
-		_last_refusal = ruleset.moved_already(unit, _can_still_attack(unit), _turn.can_undo())
+		_last_refusal = view().moved_already(unit, _can_still_attack(unit), _turn.can_undo())
 
 
 # True when `unit` may still attack this turn: it has not, and the mode
@@ -564,7 +577,7 @@ func _can_still_attack(unit: Unit) -> bool:
 func _walk_to(cell: Vector2i) -> void:
 	var unit: Unit = state.unit_by_id(_selected_id)
 	if unit != null and _turn.is_spent(unit.id):
-		_refuse(ruleset.moved_already(unit, false, true))
+		_refuse(view().moved_already(unit, false, true))
 		return
 	var walks: Dictionary = TacticalReach.walks_for(_persons_board(), unit) if unit != null else {}
 	var path: Array[Vector2i] = [cell]
@@ -578,7 +591,7 @@ func _walk_to(cell: Vector2i) -> void:
 		_turn.spend(_selected_id)
 		# A walk that showed an enemy cannot be taken back: Z would let a
 		# person look round a corner for free (T85).
-		if ruleset.reveals(before, state, person_side):
+		if view().reveals(before, state, person_side):
 			_turn.seal()
 			_sealed_by_a_reveal = true
 			_tell(Sentence.of("an enemy came into sight: the walk cannot be taken back"))  # shown through tr()
@@ -705,7 +718,7 @@ func _refresh() -> void:
 	if _persons_turn():
 		reach = _steps_in_reach()
 		_units.spent = _turn.spent_ids()
-	_board.draw_board(state.graph, reach, ruleset.points(), _terrain())
+	_board.draw_board(state.graph, reach, view().points(), _terrain())
 	_draw_what_is_seen()
 	_header.text = "\n".join(_header_lines())
 	_keep_if_over()
@@ -737,7 +750,7 @@ func _draw_what_is_seen() -> void:
 	var unit: Unit = state.unit_by_id(_selected_id)
 	var odds: Dictionary[Vector2i, String] = {}
 	if _persons_turn() and unit != null and not _turn.has_attacked(unit.id):
-		odds = ruleset.odds(state, _selected_id)
+		odds = view().odds(state, _selected_id)
 	_intent.show_odds(odds)
 	_intent.show_dashes(_dashes_in_reach())
 	var tinted: Dictionary[Vector2i, int] = {}
@@ -749,12 +762,12 @@ func _draw_what_is_seen() -> void:
 # The three lines over the board, and in a game of several modes a fourth
 # naming this one and the key that changes it.
 func _header_lines() -> Array[String]:
-	var lines: Array[String] = [ruleset.what_this_is(), ruleset.rule(), tr("you play {person}; {computer} is played by {controller}").format({
+	var lines: Array[String] = [view().what_this_is(), view().rule(), tr("you play {person}; {computer} is played by {controller}").format({
 		person = TacticalStatus.side_name(person_side), computer = TacticalStatus.side_name(TacticalScenario.FACTIONS - 1 - person_side),
 		controller = computer.describe()})]
 	if modes.size() > 1:
 		var other: TacticalRuleset = modes[(modes.find(ruleset) + 1) % modes.size()]
-		lines.append(tr("mode: {mode}  ·  M plays {other}").format({mode = ruleset.title(), other = other.title()}))
+		lines.append(tr("mode: {mode}  ·  M plays {other}").format({mode = view().title(), other = other.mode_view().title()}))
 	if _person_fog != null:
 		lines[lines.size() - 1] += "  ·  " + tr("V shows or hides what the computer sees and weighs")
 	return lines
@@ -762,8 +775,8 @@ func _header_lines() -> Array[String]:
 
 # What each side of a mode with fog sees now, each remembering its last look.
 func _look() -> void:
-	_person_fog = ruleset.fog(state, person_side, _person_fog)
-	_computer_fog = ruleset.fog(state, TacticalScenario.FACTIONS - 1 - person_side, _computer_fog)
+	_person_fog = view().fog(state, person_side, _person_fog)
+	_computer_fog = view().fog(state, TacticalScenario.FACTIONS - 1 - person_side, _computer_fog)
 
 
 # The fog on screen: the computer's while it is thinking with V on, the
@@ -785,7 +798,7 @@ func _tint() -> Dictionary[Vector2i, int]:
 	if winner != TacticalVictory.NOBODY:
 		return {}
 	var in_hand: int = _selected_id if _persons_turn() else -1
-	return ruleset.tint_at(state, TacticalScenario.FACTIONS - 1 - state.current_faction, _cursor, person_side, in_hand)
+	return view().tint_at(state, TacticalScenario.FACTIONS - 1 - state.current_faction, _cursor, person_side, in_hand)
 
 
 # True when this game is being recorded: the scene was opened to record, and
@@ -818,14 +831,14 @@ func _keep_if_over() -> void:
 
 func _status_text() -> String:
 	if winner != TacticalVictory.NOBODY:
-		return ruleset.announcement(winner, state)
+		return view().announcement(winner, state)
 	if not _persons_turn():
-		return ruleset.computer_status(state, _computer_turn, computer, _news_said(), _drawn_fog())
+		return view().computer_status(state, _computer_turn, computer, _news_said(), _drawn_fog())
 	var unit: Unit = state.unit_by_id(_selected_id)
 	var news: String = _news_said()
 	if unit == null and _turn.unspent(state).is_empty():
 		news = (news + "\n" if news != "" else "") + tr("every unit has moved: space ends the turn")
-	return ruleset.status(state, unit, _last_refusal, news, unit != null and not _turn.has_attacked(unit.id))
+	return view().status(state, unit, _last_refusal, news, unit != null and not _turn.has_attacked(unit.id))
 
 
 # Every cell the unit in hand can walk to this turn, on the board its side
@@ -843,7 +856,7 @@ func _dashes_in_reach() -> Array[Vector2i]:
 	var unit: Unit = state.unit_by_id(_selected_id)
 	if not _persons_turn() or unit == null or _turn.is_spent(unit.id):
 		return []
-	return ruleset.dashes(_persons_board(), unit, TacticalReach.walks_for(_persons_board(), unit))
+	return view().dashes(_persons_board(), unit, TacticalReach.walks_for(_persons_board(), unit))
 
 
 # The ground the board's costs alone would draw wrong: trees as rough ground,
