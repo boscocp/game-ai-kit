@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-04
+verified_on: 2026-11-05
 tier: 2
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: the guards' actions, the guard types, the rules or the levels change, and infiltration_properties.gd prints different numbers
@@ -409,12 +409,37 @@ solver gives up on falls back to the drawn level and its drawn name, and
 with the view on, the view says so in one line. K on a hand-made level
 changes only the mode, for the next generated one.
 
-**The solve stalls the frame -- a known cost.** It runs on the main
-thread, when the world is built: 120-140 ms a level on average, 2.2-2.5 s
-on the slowest seed of 200 (seed 144), with the window frozen meanwhile.
-The last solved level is kept by its seed, so N and the second K press do
-not solve it again; L to another level does. Solving in the background is
-the owner's to decide.
+**The solve runs off the main thread** (T122). A solve takes 120-140 ms a
+level on average, and 2.2-2.5 s on the slowest seed of 200 (seed 144).
+Until T122 it ran on the main thread when the world was built, with the
+window frozen meanwhile. Now `LevelSolving` hands it to `WorkerThreadPool`
+as one task: the level being played goes on, the panel's first line says
+"solving level 144: this one plays until it is ready", and the scene asks
+the pool each physics frame whether it is done. When it is, the world is
+built again on the new level, and the view and the solver's counts appear
+then. One solve runs at a time: L or K pressed while it runs is answered
+when it ends, by solving the level then asked for, if it is another. The
+last solved level is still kept by its seed, so N and the second K press
+do not solve again. Headless, and in every seeded test, the scene solves
+inline: `solve_in_background` is off when the display server is
+`headless`. What the pool and the thread-safety page say, and what was
+measured, is [WorkerThreadPool](worker-thread-pool.md).
+
+Measured with `level_solving_measure.gd` (headless, 4.7.2, 2026-11-05),
+the longest frame from L until the new level is played:
+
+| seed | drawn | solved inline | solved on the pool | frames until played |
+|---|---|---|---|---|
+| 3 | 37 ms | 144 ms | 23 ms | 23 |
+| 4 | 24 ms | 102 ms | 20 ms | 19 |
+| 5 | 34 ms | 196 ms | 25 ms | 32 |
+| 144 | 26 ms | 2281 ms | 21 ms | 334 |
+
+The pool's longest frame is the one that builds the world, which a drawn
+level costs too. The level is the same either way:
+`level_solving_test.gd` compares the data, the assignment, the counts and
+the whole trace for seeds 3, 54 and 144, and the measurement fails if the
+two ways differ.
 
 ## The kit's own numbers
 
