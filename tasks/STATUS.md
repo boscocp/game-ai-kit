@@ -3,6 +3,118 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-11-05, third batch (waves 133 to 135 merged)
+
+**Where it stopped -- read first.** The owner played the talk game and the
+menu, and three waves came out of what they found. Each was reviewed by a
+fresh context before its merge, and the findings were applied on its
+branch:
+
+- **135 T132**, a language change keeps the talk guard in the tree (#80).
+  Changes requested: the test wrote the person's own saved language, and
+  the PR gave a wrong reason for keeping the fix in the scene.
+- **134 T131**, the menu's cards speak Portuguese (#81). Changes
+  requested: the PR used two terms the demos do not ("lance", "casa"), and
+  twelve sentences were reworded.
+- **133 T130**, the talk game starts its own model (#82). It was reviewed
+  twice, because the fixes from the first review were large:
+  - The first review asked for four things: the server dies with the game
+    on Ctrl+C, a server that has gone is found again, the timeout's
+    `OS.kill` falls under the gate, and the server has an API key.
+  - The second review found a blocker: the new endings gate could run
+    `os.kill(-1, SIGKILL)` and kill every process the user owns. That
+    happened when anything already answered on its fixed ports. The fix
+    gives each run a free port, signals only a pid whose parent is the
+    run's Godot, and has a planted case.
+
+Main is 4f6a02b.
+
+**The owner said on 2026-11-05:**
+
+- "nao fiz o make llm-serve, n tem como deixar isso parte de executar o
+  jogo?" They then answered "as 3" to three proposals:
+  - the game starts the server on Tab;
+  - the menu cards in pt-BR;
+  - the `add_child` fix.
+- "Lembre de colocar mecanismo de quando fechar o jogo tbm fechar o
+  servidor llm pra não ficar gastando vram". This is held by
+  `make test-llm-server-ends` (five ways the game can end), in
+  `make check`.
+- After running `make llm-serve` and playing the talk game in pt-BR from
+  the menu: "agora foi, ficou mt obm". This is taken as T94's and T116's
+  manual check passed in live mode. The other questions on those checks
+  were not answered one by one.
+
+**How it was checked.**
+
+- Each wave ran its own `check-affected`. T131 and T130 selected
+  everything (a script under `scripts/`); T132 selected `menu` and `talk`.
+- The coordinator ran the whole `make check` once, in a clean worktree, on
+  #82's head (8c6e771): exit 0, 1755 gdUnit cases, 0 failures, and the
+  five endings all "server gone". No `llama-server` or test process was
+  left running.
+- An earlier full run, on #82's previous head, was stopped by the
+  coordinator once the blocker was known. It had included the dangerous
+  gate.
+
+**Waiting on the owner -- one numbered list, each with a recommendation.**
+Each PR body holds the reasoning.
+
+1. T132, decisions 1-3 and 5. The fix stays in the scene, the test uses
+   its own settings file, `current_scene` is set from `tree_entered`, and
+   there is no cross-scene gate. *Recommended:* accept.
+2. T132, decision 4. `language.gd`'s rule, in the PR's words, is written
+   by the next wave that touches that file. *Recommended:* accept.
+3. T131, decisions 1, 2, 4-6. *Recommended:* keep.
+4. T131, decision 3: "Furtividade" or "Stealth" for the 2D card.
+   *Recommended:* "Furtividade".
+5. T131: 10 of 16 pt-BR list titles are wider than the list and get cut
+   with an ellipsis (9 of 16 in English). *Recommended:* decide by eye,
+   between shorter titles and two lines per item.
+6. T130, decisions 1-10:
+   - the starter in `ai_llm`;
+   - no model in a headless run;
+   - no warm-up, and the status line says the first answer is slowest;
+   - `OS.kill` only on leaving;
+   - any `/health` but 503 counts as ready;
+   - typing open when the server runs by hand or has stopped;
+   - a found server gone after four unanswered asks;
+   - the server stops however the game ends;
+   - the key in the environment;
+   - POSIX-only fake-server tests.
+
+   *Recommended:* keep.
+7. T130 (a): the ~90 ms frame when leaving the scene. *Recommended:*
+   keep.
+8. T130 (b): the hitch of up to ~101 ms after Tab, windowed, while the
+   weights load onto the GPU. *Recommended:* accept.
+9. T130 (c): off Linux, Ctrl+C leaves the server running, and
+   `pkill llama-server` stops it. *Recommended:* accept until a Windows
+   or macOS wave.
+10. T130: `make llm-serve` still runs without a key. *Recommended:* leave
+    it so. A key for it is a small follow-up if wanted.
+
+**Manual checks waiting:**
+
+- **T130:** `make demo-talk`, press Tab without `make llm-serve`. Does
+  it load and answer? Close the window: is `llama-server` gone
+  (`pgrep llama-server`)?
+- **T131:** `make menu` in Português. Do the cards read well, and are the
+  cut titles acceptable?
+- **T132:** `make demo-talk` with pt-BR saved, then English. Is there no
+  error?
+
+**What is left:**
+
+- todo: T88, T89 (its condition not met), T96, T112 (after T88, T96 and
+  T120), T113-T115, T117, T119-T121, T124, T125, T127-T129 and T133;
+- six older tasks still wip: T25, T40, T44, T45, T46 and T48;
+- T43, blocked.
+
+**Next, as proposed by this session from the task rows:** T88 (squad),
+T128 (RTS) and T133 (`ai_llm`'s chat request) share no folder, so they can
+run together. T129 also writes `ai_llm`, so it runs after T133.
+
 ## Resuming after 2026-11-05, second batch (waves 128 to 132 merged)
 
 **Where it stopped -- read first.** Five waves ran in parallel worktrees.
