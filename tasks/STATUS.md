@@ -17,10 +17,13 @@ branch:
   requested: the PR used two terms the demos do not ("lance", "casa"), and
   twelve sentences were reworded.
 - **133 T130**, the talk game starts its own model (#82). It was reviewed
-  twice, because the fixes from the first review were large:
+  twice: the coordinator asked for a second review of the new code only,
+  since the first review's fixes added a process signal, a key and a gate:
   - The first review asked for four things: the server dies with the game
-    on Ctrl+C, a server that has gone is found again, the timeout's
-    `OS.kill` falls under the gate, and the server has an API key.
+    on Ctrl+C, leaving while the model loads is tested, a server that has
+    gone is found again, and the timeout's `OS.kill` falls under the gate.
+    It also raised, for the owner, that a server the game starts ran with
+    no API key; each such server now gets a random key.
   - The second review found a blocker: the new endings gate could run
     `os.kill(-1, SIGKILL)` and kill every process the user owns. That
     happened when anything already answered on its fixed ports. The fix
@@ -41,9 +44,10 @@ Main is 4f6a02b.
   `make test-llm-server-ends` (five ways the game can end), in
   `make check`.
 - After running `make llm-serve` and playing the talk game in pt-BR from
-  the menu: "agora foi, ficou mt obm". This is taken as T94's and T116's
-  manual check passed in live mode. The other questions on those checks
-  were not answered one by one.
+  the menu: "agora foi, ficou mt obm". The coordinator reads this as
+  T94's and T116's manual check passed in live mode; the owner did not
+  say so, and the other questions on those checks were not answered one
+  by one.
 
 **How it was checked.**
 
@@ -112,7 +116,8 @@ Each PR body holds the reasoning.
 - T43, blocked.
 
 **Next, as proposed by this session from the task rows:** T88 (squad),
-T128 (RTS) and T133 (`ai_llm`'s chat request) share no folder, so they can
+T128 (RTS) and T133 (`ai_llm`'s chat request) share no file (T88 and
+T128 both write under `docs/concepts/`, in different pages), so they can
 run together. T129 also writes `ai_llm`, so it runs after T133.
 
 ## Resuming after 2026-11-05, second batch (waves 128 to 132 merged)

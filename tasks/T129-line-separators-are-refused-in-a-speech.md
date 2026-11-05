@@ -47,6 +47,7 @@ make lint-tasks lint-status
 
 ## Notes
 
-- Shares `godot/addons/ai_llm/` and `spec/llm/` with no open task. Its
+- Shares `godot/addons/ai_llm/` with T133 (opened after this task): run
+  one after the other. Shares `spec/llm/` with no open task. Its
   test folder is also in T121's Files (`godot/test/`), and `python/tests/`
   in T113's, T114's and T115's.
