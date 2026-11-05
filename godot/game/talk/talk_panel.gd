@@ -93,3 +93,24 @@ static func _turn_lines(number: int, turn: Dictionary, language: String) -> Pack
 		"moved_trust": "%+d" % turn["trust_moved"], "trust": turn["trust"],
 		"moved_suspicion": "%+d" % turn["suspicion_moved"], "suspicion": turn["suspicion"]}))
 	return lines
+
+
+## Where the live server stands, for the status lines (T130): looked for,
+## loading and for how long, ready and whose, or what a person must do.
+static func server_line(server: LlmLocalServer) -> String:
+	var ours: bool = server.started_here()
+	if server.state == LlmLocalServer.CHECKING:
+		return TranslationServer.translate("Looking for the local model...")
+	if server.state == LlmLocalServer.LOADING and ours:
+		return TranslationServer.translate("Starting the local model (scripts/llm serve): loading, {seconds} s. The game keeps running; typing opens when it is ready.").format(
+			{"seconds": int(server.waited)})
+	if server.state == LlmLocalServer.LOADING:
+		return TranslationServer.translate("The local model already running is still loading; typing opens when it is ready.")
+	if server.state == LlmLocalServer.READY and ours:
+		return TranslationServer.translate("The local model is ready, and stops when you leave or close the game. Its first answer is the slowest.")
+	if server.state == LlmLocalServer.READY:
+		return TranslationServer.translate("Using the local model already running; it keeps running when you leave.")
+	if server.state == LlmLocalServer.BY_HAND:
+		return TranslationServer.translate("No local model answers: run make llm-serve in a terminal, then Tab twice.")
+	return TranslationServer.translate("The local model stopped while loading ({why}). Is it installed? make llm-bootstrap, then Tab twice.").format(
+		{"why": server.reason})

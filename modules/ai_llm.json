@@ -16,6 +16,7 @@
   ],
   "depends_on": [],
   "gates": [
-    "test-llm-vectors"
+    "test-llm-vectors",
+    "test-llm-server-ends"
   ]
 }

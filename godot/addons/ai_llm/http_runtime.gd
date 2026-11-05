@@ -39,6 +39,10 @@ var url: String = "http://127.0.0.1:%d/v1/chat/completions" % PORT
 ## The model name the server is asked for; llama.cpp's server ignores it.
 var model: String = "local"
 
+## The key the server asks for, sent as `Authorization: Bearer`; "" sends
+## none. `LlmLocalServer` makes one for each server it starts (T130).
+var api_key: String = ""
+
 ## The largest answer read, in bytes. A reply is one line of at most 280
 ## characters inside a small envelope; a server sending megabytes is wrong,
 ## and is refused rather than read.
@@ -90,6 +94,8 @@ func send(messages: Array[Dictionary], schema: Dictionary) -> Error:
 	if is_busy():
 		return ERR_BUSY
 	var headers := PackedStringArray(["Content-Type: application/json"])
+	if api_key != "":
+		headers.append("Authorization: Bearer %s" % api_key)
 	_request.timeout = timeout_seconds
 	var sent: Error = _request.request(url, headers, HTTPClient.METHOD_POST,
 		request_body(messages, schema))

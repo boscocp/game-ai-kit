@@ -4,7 +4,6 @@ Bram: {line},Bram: {line}
 "Bram, the guard: a language model hears and speaks for him","Bram, o guarda: um modelo de linguagem ouve e fala por ele"
 green bar: trust; at the white mark the door opens,barra verde: confiança; na marca branca a porta abre
 "Live, recording: each finished conversation is written to data/talk/recordings/. Tab recorded.","Ao vivo, gravando: cada conversa terminada é escrita em data/talk/recordings/. Tab gravado."
-"Live: what you type goes to the local model (make llm-serve). Enter says it, Tab recorded.","Ao vivo: o que você digita vai ao modelo local (make llm-serve). Enter fala, Tab gravado."
 No recordings in data/talk/recordings/: Tab to talk live.,Nenhuma gravação em data/talk/recordings/: Tab para falar ao vivo.
 Nothing said yet.,Nada foi dito ainda.
 Not recorded: a turn had no answer from the model.,Não gravado: um turno ficou sem resposta do modelo.
@@ -48,3 +47,12 @@ the guard's line had markup in it,a fala do guarda tinha marcação
 the guard's line gave away the password,a fala do guarda entregou a senha
 no answer came from the model,nenhuma resposta veio do modelo
 the server refused the request,o servidor recusou o pedido
+"Live: what you type goes to the local model. Enter says it, Tab recorded.","Ao vivo: o que você digita vai ao modelo local. Enter fala, Tab gravado."
+Wait for the local model to load.,Espere o modelo local carregar.
+Looking for the local model...,Procurando o modelo local...
+The local model already running is still loading; typing opens when it is ready.,O modelo local que já estava rodando ainda está carregando; dá para digitar quando ele estiver pronto.
+"Starting the local model (scripts/llm serve): loading, {seconds} s. The game keeps running; typing opens when it is ready.","Iniciando o modelo local (scripts/llm serve): carregando, {seconds} s. O jogo continua rodando; dá para digitar quando ele estiver pronto."
+"Using the local model already running; it keeps running when you leave.","Usando o modelo local que já estava rodando; ele continua rodando quando você sair."
+"The local model is ready, and stops when you leave or close the game. Its first answer is the slowest.","O modelo local está pronto e para quando você sair ou fechar o jogo. A primeira resposta é a mais lenta."
+"No local model answers: run make llm-serve in a terminal, then Tab twice.",Nenhum modelo local responde: rode make llm-serve num terminal e aperte Tab duas vezes.
+"The local model stopped while loading ({why}). Is it installed? make llm-bootstrap, then Tab twice.",O modelo local parou enquanto carregava ({why}). Está instalado? make llm-bootstrap e depois Tab duas vezes.

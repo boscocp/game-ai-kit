@@ -11,7 +11,10 @@
 ## Recorded mode (the default) needs nothing installed: the lines on offer
 ## are those a local model was once asked, and its answers come from
 ## `data/talk/recordings/` through `RecordedRuntime` (`TalkBook`). Live mode
-## (Tab) sends what you type to `make llm-serve` through `HttpRuntime`.
+## (Tab) sends what you type to a local server through `HttpRuntime` -- one
+## already running (`make llm-serve`), or, in a checkout, one this scene
+## starts with `scripts/llm serve` and stops when it is left (T130,
+## `LlmLocalServer`); typing opens once the model has loaded.
 ## Opened with `-- --record` (`make record-talk-live`), live mode also writes
 ## each finished conversation to `data/talk/recordings/` (ADR 0017: only
 ## when asked, and said on screen). V shows what the model heard and which
@@ -36,12 +39,29 @@ var guard: TalkGuard
 var book: TalkBook
 ## What the player has said in this conversation, in order.
 var said: PackedStringArray = PackedStringArray()
+## What starts the model when no server answers, or "" to only say so. Set
+## before the first Tab to change it. No test can see the "template" guard
+## (every test runs in the editor build); an exported game is also held by
+## `file_exists`, as no export carries `scripts/llm` beside it.
+var server_program: String = server_program_for(
+	not OS.has_feature("template") and DisplayServer.get_name() != "headless",
+	ProjectSettings.globalize_path("res://"))
+## What `server_program` is started with, and the port asked first: a test
+## points both at a stand-in server.
+var server_arguments: PackedStringArray = PackedStringArray(["serve"])
+## The port the live server is looked for on, and started on.
+var server_port: int = HttpRuntime.PORT
+## The live server, found or started at the first Tab; null before.
+var server: LlmLocalServer = null
+
+var _runtime: HttpRuntime = null
 ## Where the language chosen is kept. A test points it somewhere of its own
 ## before the scene enters the tree, as the menu's (T132).
 var settings_path: String = Language.SETTINGS
 
 var _note: String = ""
 var _clock: float = 0.0
+var _second_shown: int = -1
 
 @onready var _status: Label = $Interface/Status
 @onready var _history: Label = $Interface/History
@@ -100,6 +120,9 @@ func _process(delta: float) -> void:
 	_clock += delta
 	if guard.is_thinking() or guard.state["outcome"] == TalkRules.ALARM:
 		queue_redraw()
+	if server != null and server.state == LlmLocalServer.LOADING and int(server.waited) != _second_shown:
+		_second_shown = int(server.waited)
+		_refresh()
 
 
 # Tab is read before the text box, which would otherwise take it.
@@ -141,14 +164,52 @@ func restart() -> void:
 	said = PackedStringArray()
 	_note = ""
 	book = TalkBook.load_from(TalkBook.folder(), language())
+	_runtime = null
 	if mode == LIVE:
-		var server := HttpRuntime.new()
-		guard.use_runtime(RecordingRuntime.new(server) if recording else server)
+		_runtime = HttpRuntime.new("http://127.0.0.1:%d/v1/chat/completions" % server_port)
+		guard.use_runtime(RecordingRuntime.new(_runtime) if recording else _runtime)
+		_live_server().begin()
+		_runtime.api_key = server.api_key
 	_typed.visible = mode == LIVE
 	_typed.clear()
 	if mode == LIVE:
 		_typed.grab_focus.call_deferred()
 	_refresh()
+
+
+## `scripts/llm` in the checkout whose Godot project is `project_folder` --
+## the one way the repo runs the model, caches on the large disk (ADR 0023)
+## -- or "" when it must not start: an exported game or a headless run
+## (`may_start` false: a test never loads a model), or no such file.
+static func server_program_for(may_start: bool, project_folder: String) -> String:
+	var path: String = project_folder.path_join("../scripts/llm").simplify_path()
+	return path if may_start and FileAccess.file_exists(path) else ""
+
+
+# Made once, at the first Tab: a server it started outlives a new
+# conversation and a Tab back, and stops when the scene is left.
+func _live_server() -> LlmLocalServer:
+	if server == null:
+		server = LlmLocalServer.new(server_program, server_arguments, server_port)
+		add_child(server)
+		server.changed.connect(_on_server_changed)
+	return server
+
+
+# The key goes with the server: one started here asks for the key it was
+# started with; one found running gets none, as before T130.
+func _on_server_changed(_state: String) -> void:
+	if is_instance_valid(_runtime):
+		_runtime.api_key = server.api_key
+	_refresh()
+	if mode == LIVE and _typed.editable:
+		_typed.grab_focus.call_deferred()
+
+
+# Typing waits while a server is looked for or loads; otherwise it is open,
+# and a turn with no server answering is said as it always was (F1).
+func _may_type() -> bool:
+	return server == null or not (server.state in [LlmLocalServer.CHECKING, LlmLocalServer.LOADING])
 
 
 ## Recorded mode: say the `index`th line on offer, answered as recorded.
@@ -178,7 +239,11 @@ func _on_typed(text: String) -> void:
 	_refresh()
 
 
-func _on_ruled(_turn: Dictionary) -> void:
+# A turn no server answered (F1) asks again: the server may have gone, and
+# one can be started in its place.
+func _on_ruled(turn: Dictionary) -> void:
+	if turn.get("refusal_code", "") == "F1" and mode == LIVE and server != null:
+		server.begin()
 	if recording and guard.has_decided():
 		_save_recording()
 	_refresh()
@@ -214,6 +279,8 @@ func decision_overlay() -> Dictionary:
 		"suspicion": guard.state["suspicion"], "open_at": TalkRules.scene()["open_at"],
 		"alarm_at": TalkRules.scene()["alarm_at"], "outcome": guard.state["outcome"],
 		"thinking": guard.is_thinking(), "lines_said": said.size()}
+	if mode == LIVE and server != null:
+		overlay["server"] = server.state
 	var lines: PackedStringArray = book.choices(said)
 	if not lines.is_empty() and not guard.has_decided():
 		overlay["choices"] = lines
@@ -237,9 +304,12 @@ func _refresh() -> void:
 	var pending: String = said[said.size() - 1] if guard.is_thinking() else ""
 	_history.text = TalkPanel.history(guard.turns, pending)
 	_choices.text = _choices_text()
+	_typed.editable = _may_type()
 	_panel.text = TalkPanel.describe(guard.turns, guard.state, language()) if view_on \
 		else tr("V shows what the model heard and which rule decided.")
 	var status := PackedStringArray([_mode_line(), _turn_line()])
+	if mode == LIVE and server != null:
+		status.append(TalkPanel.server_line(server))
 	if _note != "":
 		status.append(_note)
 	_status.text = "\n".join(status)
@@ -249,7 +319,7 @@ func _choices_text() -> String:
 	if guard.has_decided():
 		return TalkPanel.outcome(guard.state) + "  " + (tr("R again.") if mode == RECORDED else tr("Tab, then R, again."))
 	if mode == LIVE:
-		return tr("Type to the guard, Enter says it.")
+		return tr("Type to the guard, Enter says it.") if _may_type() else tr("Wait for the local model to load.")
 	var lines: PackedStringArray = book.choices(said)
 	if book.recordings.is_empty():
 		return tr("No recordings in data/talk/recordings/: Tab to talk live.")
@@ -266,7 +336,7 @@ func _mode_line() -> String:
 		return tr("Recorded: lines a local model was once asked, answered as it answered. 1-9 say one, V the reasoning, R again, Tab live.")
 	if recording:
 		return tr("Live, recording: each finished conversation is written to data/talk/recordings/. Tab recorded.")
-	return tr("Live: what you type goes to the local model (make llm-serve). Enter says it, Tab recorded.")
+	return tr("Live: what you type goes to the local model. Enter says it, Tab recorded.")
 
 
 func _turn_line() -> String:

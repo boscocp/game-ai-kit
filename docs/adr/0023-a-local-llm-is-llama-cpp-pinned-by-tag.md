@@ -94,3 +94,60 @@ but 503, with the server's own reason, and `LlmConversation` answers as
   more is the owner's question for T94, not this ADR's.
 - Invariant 9: no model file ships. What T94 commits from a model is its
   output, named with the model and its licence beside the recordings.
+
+## Amended 2026-11-05 (T130, wave 133): a game may start the server
+
+The owner played `make demo-talk` live without `make llm-serve` running,
+got "F1: no answer came from the model", and asked: "nao fiz o make
+llm-serve, n tem como deixar isso parte de executar o jogo?" ("I did not
+run make llm-serve; can't that be part of running the game?"). This
+session proposed the design below; the owner answered "as 3", accepting it.
+
+- **Fenced as before, one door wider.** `scripts/llm` stays the only way
+  the repo runs the model, so its caches stay on the large disk; what
+  changes is who may call it. `LlmLocalServer`, in `ai_llm`, starts a
+  program it is handed with `OS.create_process`, which returns at once
+  (invariant 7). `check_llm_validated.py` allows that call in that one
+  file, by its path, and still refuses it everywhere else, with planted
+  cases for both. The talk scene is the one caller, and names
+  `scripts/llm` -- the earlier "nothing in `godot/game/` names them" no
+  longer holds for this one path.
+- **Only when nothing answers.** `/health` first: a server already there,
+  `make llm-serve`'s or anyone's, is used and never stopped. One started
+  here stops however the game ends. The owner asked for it on the same
+  day: "Lembre de colocar mecanismo de quando fechar o jogo tbm fechar o
+  servidor llm pra não ficar gastando vram" ("remember to add a way for
+  closing the game to close the LLM server too, so it does not keep
+  spending VRAM"). Two mechanisms do it:
+  - **Leaving the scene, Esc to the menu, the window's close button and
+    `quit()`** reach `_exit_tree`, where `OS.kill` stops the server. That
+    is the only place `OS.kill` runs, because it waits, and the gate
+    refuses it elsewhere.
+  - **Ctrl+C, SIGTERM, SIGKILL and a crash** skip `_exit_tree`, and a
+    process made by `OS.create_process` outlives Godot by design. So the
+    game passes its process id, and on Linux `scripts/llm` has the server
+    die with it (`PR_SET_PDEATHSIG`).
+
+  `make test-llm-server-ends` ends a game each of those ways, against a
+  stand-in server, and requires the server to be gone within a second. On
+  other systems a server the game started survives a game killed this
+  way; the next Tab uses it, and `pkill llama-server` stops it. A server
+  the game found and did not start, such as `make llm-serve`'s, is never
+  stopped, and the status line says so.
+- **Only in a checkout, only on Tab.** An exported game, a headless run
+  and a checkout without `scripts/llm` never start anything; live mode
+  says to run the server by hand, as before. Recorded mode never starts
+  anything.
+- **The same server, with a key.** It is `scripts/llm serve` with its own
+  flags: `--host 127.0.0.1`, offline, the same port. A game-started server
+  also gets a key made for that launch, handed down in the environment
+  as `LLAMA_API_KEY` (never on a command line) and sent
+  by `HttpRuntime`. llama.cpp allows any origin, and a server nobody asked
+  for should not be open to every web page in a browser. `make llm-serve`
+  is unchanged and still runs without a key; a person starts it and sees
+  it running.
+
+Measured (docs/godot/talk.md): 2.5 s from Tab to ready, no frame waiting
+on it headless, one windowed frame of up to 101 ms while the weights move
+onto the card the game draws with, and one frame of about 90 ms on
+leaving, `OS.kill` waiting for the server to let go of the card.

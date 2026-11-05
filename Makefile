@@ -387,6 +387,11 @@ test-combat-vectors: import ## The combat vectors, against the tactical board's 
 	@$(GODOT) --headless --path godot -s res://test/tactical/combat_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/combat
 
+.PHONY: test-llm-server-ends
+check: test-llm-server-ends
+test-llm-server-ends: import ## A server the game started stops however the game ends: quit, window close, Ctrl+C, SIGTERM, SIGKILL (T130; a stand-in server, no model)
+	@$(PYTHON) -I godot/test/ai_llm/server_ends.py
+
 .PHONY: test-llm-vectors
 test-vectors: test-llm-vectors
 test-llm-vectors: import ## What a model's reply may contain: both validators against spec/vectors/llm (T92)
@@ -878,7 +883,7 @@ demo-maze: import ## Pac-Man against Blinky, who follows the arcade's rules: arr
 	@$(GODOT) --path godot res://game/maze/maze.tscn
 
 .PHONY: demo-talk
-demo-talk: import ## Talk your way past the guard, a local LLM his ears and mouth: 1-9 say a recorded line, V the reasoning, R again, Tab live typing (make llm-serve)
+demo-talk: import ## Talk your way past the guard, a local LLM his ears and mouth: 1-9 say a recorded line, V the reasoning, R again, Tab live typing (starts scripts/llm serve if no server answers, stops it on leaving)
 	@$(GODOT) --path godot res://game/talk/talk.tscn
 
 .PHONY: demo-fighting

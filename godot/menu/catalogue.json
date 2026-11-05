@@ -306,7 +306,7 @@
       "techniques": [
         {"technique": "discourse-acts", "part": "the model reads your line as one of the scene's acts and voices Bram; the validator admits the act or refuses the reply, and a refused reply is the guard's own line, never an action"}
       ],
-      "controls": "1-9 say a recorded line; V the reasoning; R again; Tab types to a live local model (make llm-serve), Enter says it",
+      "controls": "1-9 say a recorded line; V the reasoning; R again; Tab types to a live local model (one already running, or one the game starts and stops), Enter says it",
       "watch": "Three dots over Bram mean the model is answering while the game keeps drawing. With V, each line shows the act the model read and its argument, or why the validator refused it, then the rule that fired and how the green trust bar and the red suspicion bar moved against their white marks. Words that say the door opens open nothing: only the act counts.",
       "docs": "docs/godot/talk.md"
     }
