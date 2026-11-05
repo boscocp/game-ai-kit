@@ -878,7 +878,7 @@ demo-maze: import ## Pac-Man against Blinky, who follows the arcade's rules: arr
 	@$(GODOT) --path godot res://game/maze/maze.tscn
 
 .PHONY: demo-talk
-demo-talk: import ## Talk your way past the guard, a local LLM his ears and mouth: 1-9 say a recorded line, V the reasoning, R again, Tab live typing (make llm-serve)
+demo-talk: import ## Talk your way past the guard, a local LLM his ears and mouth: 1-9 say a recorded line, V the reasoning, R again, Tab live typing (starts scripts/llm serve if no server answers, stops it on leaving)
 	@$(GODOT) --path godot res://game/talk/talk.tscn
 
 .PHONY: demo-fighting

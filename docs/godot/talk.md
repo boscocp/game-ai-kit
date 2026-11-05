@@ -4,7 +4,7 @@
 half_life: practice
 verified_on: 2026-11-05
 tier: 2
-source: https://store.steampowered.com/app/2726370/Suck_Up/ ; https://www.cp.eng.chula.ac.th/~vishnu/gameResearch/story_november_2005/MateasSternTIDSE04.pdf
+source: https://store.steampowered.com/app/2726370/Suck_Up/ ; https://docs.godotengine.org/en/4.7/classes/class_os.html ; https://github.com/ggml-org/llama.cpp/blob/b11960/tools/server/README.md ; https://www.cp.eng.chula.ac.th/~vishnu/gameResearch/story_november_2005/MateasSternTIDSE04.pdf
 invalidated_if: spec/talk/gate.json changes, the recordings are made again, the pinned server or model in tools/llm/runtime.json changes, LlmValidator.json_schema stops being one shape per intent, or LlmValidator.SPEECH_PATTERN changes
 teaches: none
 -->
@@ -30,7 +30,9 @@ logic then answered [Mateas & Stern 2004].
   was really asked, and its answers come from `data/talk/recordings/`
   through `RecordedRuntime`. 1-9 says a line. Nothing installed.
 - **Live** (Tab): type anything (100 characters at most), Enter says it,
-  and it goes to `make llm-serve` through `HttpRuntime`.
+  and it goes to the local server through `HttpRuntime`. A server already
+  running (`make llm-serve`) is used; in a checkout with nothing on the
+  port, Tab starts one and leaving stops it (T130, below).
 - **Record** (`make record-talk-live`): live, and each finished
   conversation is written to `data/talk/recordings/` -- only when asked, and
   the status line says so (ADR 0017).
@@ -192,6 +194,65 @@ and the system prompt -- is 4,222 characters: 1,063 tokens in ordinary
 Portuguese words, 3,338 when every line is emoji. `talk_test.gd` holds
 the characters; the tokens are this page's.
 
+## Tab starts the model (T130)
+
+The owner played live without `make llm-serve` running and got "F1: no
+answer came from the model"; he asked that starting the model be part of
+running the game. So the first Tab into live mode asks the server's
+`/health` through `LlmLocalServer` (in `ai_llm`, the one door to a model):
+
+- **something answers**: it is used and never touched, whoever started it
+  -- `make llm-serve` in a terminal, say. 503 is a model still loading,
+  waited for; any other answer is taken as ready.
+- **nothing answers**, in a checkout: `scripts/llm serve` is started with
+  `OS.create_process` -- still the only way the repo runs the model, its
+  caches on the large disk (ADR 0023), bound to 127.0.0.1 by its own flags
+  -- and `/health` is asked every 0.25 s until it says 200. Typing waits;
+  the status line counts the seconds; the picture keeps drawing. When the
+  scene is left (or the game quits), the server it started is stopped.
+- **nothing answers, and nothing may start**: an exported game, a headless
+  run (so no test ever loads a model), or no `scripts/llm` beside the
+  project. The status line says to run `make llm-serve`, then Tab twice.
+- **the server exits while loading** (`scripts/llm` exits 2 when the model
+  is not installed): the status line gives its exit code and names
+  `make llm-bootstrap`.
+
+Recorded mode starts nothing. A server this scene started dies with it, but
+not with a crash: `OS.create_process` makes "a new process that runs
+independently of Godot. It will not terminate when Godot terminates"
+([OS, 4.7](https://docs.godotengine.org/en/4.7/classes/class_os.html),
+opened 2026-11-05), so a killed game leaves `llama-server` on the port, and
+the next Tab uses it.
+
+What the documentation does not say, read in the source at 4.7
+(`drivers/unix/os_unix.cpp`): `OS.kill` sends SIGKILL and then **waits**
+for the process to be gone, and `is_process_running` prints an error about
+a process it has already reaped. The first is a frame; it is measured
+below. The second is why `LlmLocalServer` stops asking once it has seen the
+process end.
+
+Measured on 2026-11-05 on the owner's desktop (RTX 5070, Vulkan build,
+Ministral 3 8B Q4_K_M, model files warm on disk) with
+`godot/test/talk/talk_server_measure.gd`, which presses Tab in the real
+scene and times every frame until `/health` says ready, then frees the scene:
+
+| run | Tab to ready | longest frame while loading | freeing the scene (stops the server) |
+|---|---|---|---|
+| headless, twice | 2.51 s, 2.51 s | 7.3 ms, 9.3 ms | 86.6 ms, 86.9 ms |
+| windowed, four times | 2.45 to 2.47 s | 7.8, 17.0, 64.4 and 101.2 ms | 85.7 to 91.0 ms |
+
+Headless, no frame waits on the server. Windowed, one or two frames of up to
+101 ms, always 0.45 to 0.65 s after Tab -- when the server is moving the
+model's weights onto the same card the game draws with, which headless does
+not use: a frame waiting on the GPU, not on the code. Leaving the scene
+costs one frame of about 90 ms: `OS.kill` waiting while the server lets go
+of the card.
+
+Ready is not the whole wait. The owner's own `make llm-serve` the same day:
+the first reply after a fresh start took 7.5 s (6.85 s of it evaluating the
+259-token prompt cold), later ones 0.5 to 0.94 s. The status line says the
+first answer is the slowest; the dots over Bram show it coming.
+
 ## The recordings
 
 Eight conversations, written in `data/talk/lines.json` in both languages,
@@ -242,7 +303,9 @@ game drawing all the while.
 ## Manual check
 
 Play `make demo-talk` recorded, then live with `make llm-serve` running, in
-English and in pt-BR. Can you lose, and do you know why? With V on, can you
+English and in pt-BR. Then with no server running: Tab, and does the status
+line count the seconds while the game keeps drawing, typing open once the
+model is ready, and `pgrep llama-server` find nothing after you leave? Can you lose, and do you know why? With V on, can you
 tell which of your words the guard took as which act? Does the game keep
 drawing while he thinks?
 

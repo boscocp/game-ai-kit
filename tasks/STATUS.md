@@ -1057,6 +1057,7 @@ review.
 | T127 | An unseen shooter stays unseen in the news | todo | the owner, 2026-11-05, item B24: word the news from the person's fog, or a shot reveals its shooter -- the task chooses |
 | T128 | A focus ring outlives its sight | todo | the owner, 2026-11-05, second list item 6 (this session's proposal): a squad's focus ring falls back to the last place the side was told of, marked stale, when its target leaves sight; drawing only |
 | T129 | Line separators are refused in a speech | todo | the owner, 2026-11-05, second list item 9, from T116's review: R9 and the pattern refuse U+2028, U+2029 and the C1 controls, in both twins, with vectors |
+| T130 | The talk game starts its own model | done | wave 133: the owner, 2026-11-05, "as 3" (ADR 0023 amended): Tab into live mode asks `/health`; nothing answering, in a checkout, `LlmLocalServer` (ai_llm, the one file `check_llm_validated.py` allows `OS.create_process`) starts `scripts/llm serve`, typing waits while it loads, and leaving the scene stops only what it started; an exported game, a headless run or no `scripts/llm` says to run it by hand; recorded mode starts nothing; tests against `fake_llm_server.py`, a fault planted per case; measured: Tab to ready 2.5 s, longest frame while loading 9.3 ms headless and up to 101 ms windowed (the card), about 90 ms on leaving (`OS.kill` waits) |
 
 ---
 

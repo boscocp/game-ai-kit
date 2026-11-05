@@ -33,7 +33,10 @@ rule is about code -- and refuses the plain ways round it:
       Nor may a script there extend `LlmReply` (a forged reply) or
       `LlmValidator` (a rule overridden to let anything in).
   V3  something waits on the frame. In the addon: `OS.delay_msec` or
-      `OS.delay_usec`; another program run (`OS.execute`...); a `Semaphore`;
+      `OS.delay_usec`; another program run (`OS.execute`...) -- except
+      `OS.create_process` in `llm_local_server.gd`, by its path, which
+      returns at once and is how a game starts a local server (T130); a
+      `Semaphore`;
       `wait_to_finish` outside `_exit_tree` or `_notification` (teardown,
       when the frame is over anyway); a `while` loop that polls (`poll()`,
       `get_status()`, `Time.get_ticks_*`) or never `await`s; `use_threads`
@@ -103,6 +106,10 @@ REPLY = ADDON / "llm_reply.gd"
 PROBE = pathlib.Path("godot/test/ai_llm/http_frame_probe.gd")
 # What the probe measures, and the constant it sends with.
 PROBE_MAY_USE = {"HTTPRequest", "HTTPClient"}
+# The one file that starts a program (T130): `OS.create_process` returns at
+# once with the process's id, and the server it starts runs beside the game.
+STARTER = ADDON / "llm_local_server.gd"
+STARTER_MAY_RUN = {"create_process"}
 
 # Third-party GDScript this project does not author.
 VENDORED_DIRS = {"gdUnit4"}
@@ -148,6 +155,7 @@ class Source:
     in_addon: bool
     is_validator: bool
     is_probe: bool
+    is_starter: bool
     code: list[str]          # comments and strings blanked
     uncommented: list[str]   # comments removed, strings kept
 
@@ -208,6 +216,7 @@ def read_source(path: pathlib.Path, root: pathlib.Path) -> Source:
         in_addon=relative.parts[:len(ADDON.parts)] == ADDON.parts,
         is_validator=relative == VALIDATOR,
         is_probe=relative == PROBE,
+        is_starter=relative == STARTER,
         code=[strip_line(line, blank_strings=True) for line in lines],
         uncommented=[strip_line(line, blank_strings=False) for line in lines],
     )
@@ -276,7 +285,7 @@ def waits_in_the_addon(source: Source) -> list[str]:
         declared = FUNC_RE.match(line)
         if declared:
             function = declared.group(1)
-        if DELAY_RE.search(line) or PROCESS_RE.search(line) or SEMAPHORE_RE.search(line):
+        if DELAY_RE.search(line) or SEMAPHORE_RE.search(line) or runs_a_program(source, line):
             findings.append(f"V3 {place} stops the thread the frame runs on")
         if WAIT_RE.search(line) and function not in TEARDOWN:
             findings.append(f"V3 {place} waits for a thread in {function or 'the file'}, "
@@ -290,6 +299,12 @@ def waits_in_the_addon(source: Source) -> list[str]:
                                 "let a signal say when")
     findings += requests_without_threads(source)
     return findings
+
+
+def runs_a_program(source: Source, line: str) -> bool:
+    """A program run on this line, but the starter's `OS.create_process`."""
+    return any(not (source.is_starter and found in STARTER_MAY_RUN)
+               for found in PROCESS_RE.findall(line))
 
 
 def waiting_loops(source: Source) -> list[str]:
@@ -413,7 +428,12 @@ SOUND_ADDON = {
     "godot/test/ai_llm/http_frame_probe.gd": (
         "extends SceneTree\n\n\nfunc _init() -> void:\n"
         "\tvar request := HTTPRequest.new()\n\trequest.use_threads = false\n"),
+    "godot/addons/ai_llm/llm_local_server.gd": (
+        "class_name LlmLocalServer\nextends Node\n\nvar pid: int = -1\n\n\n"
+        "func _start() -> void:\n\tpid = OS.create_process(\"scripts/llm\", [\"serve\"])\n"),
 }
+
+STARTER_FILE = "godot/addons/ai_llm/llm_local_server.gd"
 
 GAME = "godot/game/talk/sneaky.gd"
 ADDON_FILE = "godot/addons/ai_llm/extra.gd"
@@ -491,6 +511,13 @@ PLANTED = [
      _in_addon("\tadd_child(HTTPRequest.new())\n"), "V3"),
     ("a sleep in the addon", _in_addon("\tOS.delay_msec(50)\n"), "V3"),
     ("another program run in the addon", _in_addon("\tOS.execute(\"curl\", [], [])\n"), "V3"),
+    ("a process started by an addon file that is not the starter",
+     _in_addon("\tvar pid: int = OS.create_process(\"scripts/llm\", [\"serve\"])\n"), "V3"),
+    ("the starter waiting on a program it runs",
+     {STARTER_FILE: SOUND_ADDON[STARTER_FILE] + "\tOS.execute(\"scripts/llm\", [\"serve\"], [])\n"},
+     "V3"),
+    ("a game script that starts a server itself",
+     _game("\tvar pid: int = OS.create_process(\"scripts/llm\", [\"serve\"])\n"), "V1"),
     ("a semaphore in the addon", _in_addon("\tvar gate := Semaphore.new()\n\tgate.wait()\n"), "V3"),
     ("wait_to_finish outside teardown",
      _in_addon("\tvar worker := Thread.new()\n\tworker.wait_to_finish()\n"), "V3"),
