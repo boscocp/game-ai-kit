@@ -50,7 +50,8 @@
     "target-tile": {"name": "a target tile, and the shortest straight line to it: the arcade's ghosts", "evidence": ["MazeGhost"]},
     "value-iteration": {"name": "value iteration: an MDP solved in Python, its policy looked up", "evidence": ["MdpPacMan"]},
     "director": {"name": "a director: the player's intensity paces the threats, after Left 4 Dead", "evidence": ["Director"]},
-    "constraints": {"name": "constraint satisfaction: AC-3 and backtracking place the level", "evidence": ["ConstraintSolver"]}
+    "constraints": {"name": "constraint satisfaction: AC-3 and backtracking place the level", "evidence": ["ConstraintSolver"]},
+    "discourse-acts": {"name": "a language model reads the player's words as one declared act, behind a validator", "evidence": ["LlmValidator", "LlmConversation"]}
   },
   "examples": [
     {
@@ -296,6 +297,18 @@
       "controls": "arrows or WASD walk; V the ghosts' view; G brings Pinky in; C hands Pac-Man to the MDP; P pauses, space one step; R again",
       "watch": "The crossed square is the ghost's target and the numbers on its ways are each next cell's distance to it: the white way is the smallest, chosen before the ghost moves. Orange with a die is the dice overruling it. Watch Blinky leave you for his corner when scatter begins, turning back at once. With C the MDP plays: green cells are worth much to Pac-Man, red ones a catch to come, and the boxed number beside him is the move it takes.",
       "docs": "docs/godot/maze.md"
+    },
+    {
+      "target": "demo-talk",
+      "title": "Suck Up!'s doorstep: talk your way past the guard",
+      "scene": "res://game/talk/talk.tscn",
+      "decides": "Which act each of your lines was -- a role claimed, a paper shown, a name, a question, flattery, a threat, a bribe -- read by a local language model, which also voices the guard; then the scene's rules, not the model, move his trust and suspicion and open the door or sound the alarm.",
+      "techniques": [
+        {"technique": "discourse-acts", "part": "the model reads your line as one of the scene's acts and voices Bram; the validator admits the act or refuses the reply, and a refused reply is the guard's own line, never an action"}
+      ],
+      "controls": "1-9 say a recorded line; V the reasoning; R again; Tab types to a live local model (make llm-serve), Enter says it",
+      "watch": "Three dots over Bram mean the model is answering while the game keeps drawing. With V, each line shows the act the model read and its argument, or why the validator refused it, then the rule that fired and how the green trust bar and the red suspicion bar moved against their white marks. Words that say the door opens open nothing: only the act counts.",
+      "docs": "docs/godot/talk.md"
     }
   ]
 }

@@ -211,6 +211,20 @@
         "en": "V the ghosts' view: each ghost's target and the distance from each way; G brings Pinky in; C hands Pac-Man to the MDP: each cell's value, each move's worth",
         "pt-BR": "V a visão dos fantasmas: o alvo de cada um e a distância de cada caminho; G traz o Pinky; C entrega o Pac-Man ao MDP: o valor de cada casa, quanto vale cada movimento"
       }
+    },
+    "demo-talk": {
+      "game": {
+        "en": "Talk your way past the guard",
+        "pt-BR": "Convença o guarda a abrir a porta"
+      },
+      "like": {
+        "en": "Suck Up!, talking your way in",
+        "pt-BR": "Suck Up!, entrar na conversa"
+      },
+      "keys": {
+        "en": "V the reasoning: the act the model read, the rule that fired, trust and suspicion; Tab types to a live local model",
+        "pt-BR": "V o raciocínio: o ato que o modelo leu, a regra que disparou, confiança e suspeita; Tab escreve para um modelo local ao vivo"
+      }
     }
   },
   "algorithms": {
@@ -409,6 +423,10 @@
     "constraints": {
       "en": "constraint satisfaction, AC-3 and backtracking",
       "pt-BR": "satisfação de restrições, AC-3 e *backtracking*"
+    },
+    "discourse-acts": {
+      "en": "a language model reading discourse acts, behind a validator",
+      "pt-BR": "um modelo de linguagem lendo atos de discurso, atrás de um validador"
     }
   }
 }

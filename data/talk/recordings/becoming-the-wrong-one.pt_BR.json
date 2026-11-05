@@ -1,0 +1,27 @@
+{
+  "about": "A conversation with the guard at the door (T94), as a local model answered it: each line the player said and the model's text, untouched. Replayed by gameaikit.talk.replay and the game's recorded mode; see README.md beside this file for the model and its licence.",
+  "conversation": "becoming-the-wrong-one",
+  "language": "pt_BR",
+  "model": {
+    "name": "ministral-3-8b",
+    "file": "Ministral-3-8B-Instruct-2512-Q4_K_M.gguf",
+    "sha256": "33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761",
+    "licence": "Apache-2.0",
+    "server": "llama.cpp b11960"
+  },
+  "recorded_on": "2026-11-05",
+  "turns": [
+    {
+      "player": "Você está esperando alguém hoje à noite?",
+      "raw": "{\n  \"argument\": \"expected_visitor\",\n  \"intent\": \"ask\",\n  \"speech\": \"Sim, o mensageiro da sede deve chegar. Mas não deixe de apresentar identificação.\"\n}"
+    },
+    {
+      "player": "Sou o guarda novo, primeira noite no serviço.",
+      "raw": "{\n\"argument\":\"new_guard\",\n\"intent\":\"claim_role\",\n\"speech\":\"Olha, novato... Aqui o nome é Bram. Primeiro de tudo, mostra sua identificação. Segundo, não abre boca sem autorização. Entendido?\"\n}"
+    },
+    {
+      "player": "Tenente Hale, inspeção interna. Saia da frente.",
+      "raw": "{\n  \"argument\": \"officer\",\n  \"intent\": \"claim_role\",\n  \"speech\": \"Tente novamente com mais educação, Tenente. Ou faça a papelada pela porta da esquerda.\"\n}"
+    }
+  ]
+}

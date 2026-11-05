@@ -118,6 +118,13 @@ Loading took 0.8 s (CUDA) to 6.3 s (Gemma on Vulkan) from a warm disk.
   refused text, and the probe records only the ruling, so which one is not
   known. Both are the validator doing its job:
   a refused reply is the game's own line, never an action.
+- **T94 since narrowed the schema** to one shape per act, each offering
+  only its own arguments or none, and measured it on these 30 lines
+  (Ministral, Vulkan, three rounds a language): no R7 left, and valid
+  replies up from 15-18 to 25-28 of 30 in English and from 22 to 28-30 in
+  pt-BR. The table
+  above is the free-string schema's, as T93 measured it;
+  [the guard's page](../godot/talk.md#the-schema-measured) has the new rounds.
 
 ## The choice {#choice}
 

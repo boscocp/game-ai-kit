@@ -1,0 +1,47 @@
+{
+  "about": "A conversation with the guard at the door (T94), as a local model answered it: each line the player said and the model's text, untouched. Replayed by gameaikit.talk.replay and the game's recorded mode; see README.md beside this file for the model and its licence.",
+  "conversation": "small-talk-till-dawn",
+  "language": "en",
+  "model": {
+    "name": "ministral-3-8b",
+    "file": "Ministral-3-8B-Instruct-2512-Q4_K_M.gguf",
+    "sha256": "33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761",
+    "licence": "Apache-2.0",
+    "server": "llama.cpp b11960"
+  },
+  "recorded_on": "2026-11-05",
+  "turns": [
+    {
+      "player": "Who's on shift with you tonight?",
+      "raw": "{\n  \"argument\": \"vasquez\",\n  \"intent\": \"name_person\",\n  \"speech\": \"You’ll have to ask Sergeant Vasquez that—not me.\"\n}"
+    },
+    {
+      "player": "What do they even keep in this building?",
+      "raw": "{\"argument\":\"the_building\",\"intent\":\"ask\",\"speech\":\"You’re talking to the night guard, not the lab director.\"}"
+    },
+    {
+      "player": "Hmm.",
+      "raw": "{\"argument\":\"\",\"intent\":\"unclear\",\"speech\":\"What part of *‘don’t talk’* didn’t you understand?\"}"
+    },
+    {
+      "player": "I don't have any papers on me, sorry.",
+      "raw": "{\"argument\":\"nothing\",\"intent\":\"show\",\"speech\":\"No badge, no papers—no entry.\"}"
+    },
+    {
+      "player": "How long have you been guarding this door?",
+      "raw": "{\"argument\":\"shift\",\"intent\":\"ask\",\"speech\":\"Long enough to know you’re asking the wrong door.\"}"
+    },
+    {
+      "player": "Purple monkeys dance at midnight.",
+      "raw": "{\"argument\":\"\",\"intent\":\"unclear\",\"speech\":\"Monkeys? Door’s locked, and I don’t do poetry.\"}"
+    },
+    {
+      "player": "That's a fine uniform, you wear it well.",
+      "raw": "{\"argument\":\"\",\"intent\":\"flatter\",\"speech\":\"Thanks—but I’d rather not discuss my uniform with strangers.\"}"
+    },
+    {
+      "player": "Sergeant Vasquez said you were a good man.",
+      "raw": "{\n\"argument\": \"vasquez\",\n\"intent\": \"name_person\",\n\"speech\": \"Vasquez’s opinion isn’t why you’re here.\"\n}"
+    }
+  ]
+}

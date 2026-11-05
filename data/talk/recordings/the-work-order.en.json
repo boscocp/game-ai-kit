@@ -1,0 +1,27 @@
+{
+  "about": "A conversation with the guard at the door (T94), as a local model answered it: each line the player said and the model's text, untouched. Replayed by gameaikit.talk.replay and the game's recorded mode; see README.md beside this file for the model and its licence.",
+  "conversation": "the-work-order",
+  "language": "en",
+  "model": {
+    "name": "ministral-3-8b",
+    "file": "Ministral-3-8B-Instruct-2512-Q4_K_M.gguf",
+    "sha256": "33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761",
+    "licence": "Apache-2.0",
+    "server": "llama.cpp b11960"
+  },
+  "recorded_on": "2026-11-05",
+  "turns": [
+    {
+      "player": "I'm here to fix the heating in the east wing.",
+      "raw": "{\n  \"argument\": \"maintenance\",\n  \"intent\": \"claim_role\",\n  \"speech\": \"Heating’s off-limits without clearance from the night manager. Show me a work order—*now*.\"\n}"
+    },
+    {
+      "player": "I've got a work order for it, here.",
+      "raw": "{\n\"argument\":\"maintenance\",\n\"intent\":\"claim_role\",\n\"speech\":\"Maintenance, huh? Step forward and show me.\"\n}"
+    },
+    {
+      "player": "Mara Lind signed it this afternoon.",
+      "raw": "{\"argument\":\"okafor\",\"intent\":\"name_person\",\"speech\":\"Okafor’s name’s on the badge, not the work order.\"}"
+    }
+  ]
+}

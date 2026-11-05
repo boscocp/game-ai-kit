@@ -197,20 +197,30 @@ def why_declaration_is_wrong(declaration: Declaration) -> str:
 
 
 def json_schema(declaration: Declaration) -> dict:
-    """`spec/llm/reply.schema.json`, with `intent` narrowed to this game's acts.
+    """`spec/llm/reply.schema.json`, narrowed to this game: one shape per intent.
 
-    What a runtime that constrains its output is handed. A convenience, not
-    the validator: it cannot say that an argument belongs to its intent, or
-    that a speech holds no secret, and a runtime can ignore it.
+    An `anyOf` of one object per intent, sorted by name, each naming its
+    intent and offering only its own arguments, or the empty one R7 allows
+    every intent. What a runtime that constrains its output is handed. A
+    convenience, not the validator: it cannot say that a speech holds no
+    secret, and a runtime can ignore it. Measured in T94 on the pinned
+    llama.cpp server only (docs/godot/talk.md): narrowed this way, it
+    stopped sending arguments an act does not take (R7).
     """
-    speech = {"type": "string", "minLength": 1, "maxLength": SPEECH_LIMIT}
-    intent = {"type": "string", "enum": sorted(declaration.intents)}
-    return {
-        "type": "object",
-        "properties": {"speech": speech, "intent": intent, "argument": {"type": "string"}},
-        "required": list(REPLY_KEYS),
-        "additionalProperties": False,
-    }
+    shapes = []
+    for name in sorted(declaration.intents):
+        arguments = [*declaration.intents[name], ""]
+        shapes.append({
+            "type": "object",
+            "properties": {
+                "speech": {"type": "string", "minLength": 1, "maxLength": SPEECH_LIMIT},
+                "intent": {"type": "string", "enum": [name]},
+                "argument": {"type": "string", "enum": arguments},
+            },
+            "required": list(REPLY_KEYS),
+            "additionalProperties": False,
+        })
+    return {"anyOf": shapes}
 
 
 def _parsed(raw_text: str) -> tuple[dict, str]:

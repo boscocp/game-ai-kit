@@ -1,0 +1,46 @@
+{
+  "recording": "data/talk/recordings/becoming-the-expected.pt_BR.json",
+  "turns": [
+    {
+      "intent": "ask",
+      "argument": "expected_visitor",
+      "refusal_code": "",
+      "rule": "who-is-expected",
+      "trust": 0,
+      "suspicion": 1
+    },
+    {
+      "intent": "claim_role",
+      "argument": "courier",
+      "refusal_code": "",
+      "rule": "the-expected-courier",
+      "trust": 3,
+      "suspicion": 1
+    },
+    {
+      "intent": "show",
+      "argument": "badge",
+      "refusal_code": "",
+      "rule": "a-badge",
+      "trust": 4,
+      "suspicion": 1
+    },
+    {
+      "intent": "ask",
+      "argument": "the_guard",
+      "refusal_code": "",
+      "rule": "small-talk",
+      "trust": 5,
+      "suspicion": 1
+    },
+    {
+      "intent": "flatter",
+      "argument": "",
+      "refusal_code": "",
+      "rule": "flattery",
+      "trust": 6,
+      "suspicion": 1
+    }
+  ],
+  "outcome": "open"
+}

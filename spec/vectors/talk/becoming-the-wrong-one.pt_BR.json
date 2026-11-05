@@ -1,0 +1,30 @@
+{
+  "recording": "data/talk/recordings/becoming-the-wrong-one.pt_BR.json",
+  "turns": [
+    {
+      "intent": "ask",
+      "argument": "expected_visitor",
+      "refusal_code": "",
+      "rule": "who-is-expected",
+      "trust": 0,
+      "suspicion": 1
+    },
+    {
+      "intent": "claim_role",
+      "argument": "new_guard",
+      "refusal_code": "",
+      "rule": "not-on-the-roster",
+      "trust": 0,
+      "suspicion": 4
+    },
+    {
+      "intent": "claim_role",
+      "argument": "officer",
+      "refusal_code": "",
+      "rule": "no-inspection",
+      "trust": 0,
+      "suspicion": 7
+    }
+  ],
+  "outcome": "alarm"
+}

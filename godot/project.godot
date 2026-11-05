@@ -21,7 +21,7 @@ window/size/viewport_height=720
 
 [internationalization]
 
-locale/translations=PackedStringArray("res://locale/botmatch.pt_BR.translation", "res://locale/checkers.pt_BR.translation", "res://locale/demo_behaviour.pt_BR.translation", "res://locale/demo_racing.pt_BR.translation", "res://locale/demo_search.pt_BR.translation", "res://locale/demo_steering.pt_BR.translation", "res://locale/fighting.pt_BR.translation", "res://locale/game_shared.pt_BR.translation", "res://locale/infiltration.pt_BR.translation", "res://locale/maze.pt_BR.translation", "res://locale/menu.pt_BR.translation", "res://locale/racing3d.pt_BR.translation", "res://locale/rts.pt_BR.translation", "res://locale/skirmish.pt_BR.translation", "res://locale/squad.pt_BR.translation", "res://locale/stealth.pt_BR.translation", "res://locale/tactical.pt_BR.translation", "res://locale/tictactoe.pt_BR.translation")
+locale/translations=PackedStringArray("res://locale/botmatch.pt_BR.translation", "res://locale/checkers.pt_BR.translation", "res://locale/demo_behaviour.pt_BR.translation", "res://locale/demo_racing.pt_BR.translation", "res://locale/demo_search.pt_BR.translation", "res://locale/demo_steering.pt_BR.translation", "res://locale/fighting.pt_BR.translation", "res://locale/game_shared.pt_BR.translation", "res://locale/infiltration.pt_BR.translation", "res://locale/maze.pt_BR.translation", "res://locale/menu.pt_BR.translation", "res://locale/racing3d.pt_BR.translation", "res://locale/rts.pt_BR.translation", "res://locale/skirmish.pt_BR.translation", "res://locale/squad.pt_BR.translation", "res://locale/stealth.pt_BR.translation", "res://locale/tactical.pt_BR.translation", "res://locale/talk.pt_BR.translation", "res://locale/tictactoe.pt_BR.translation")
 
 [physics]
 

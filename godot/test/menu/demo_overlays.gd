@@ -47,6 +47,7 @@ const SCENES: Array[String] = [
 	"res://game3d/racing/racing3d.tscn",
 	"res://game3d/infiltration/infiltration.tscn",
 	"res://game/maze/maze.tscn",
+	"res://game/talk/talk.tscn",
 ]
 
 ## The field each example's task says its overlay must carry, and whether it
@@ -68,6 +69,7 @@ const REQUIRED: Dictionary = {
 	"res://game3d/racing/racing3d.tscn": [["target_speed", true], ["heat_ball", true]],
 	"res://game3d/infiltration/infiltration.tscn": [["awareness", true], ["action", false]],
 	"res://game/maze/maze.tscn": [["target", false], ["distance", true]],
+	"res://game/talk/talk.tscn": [["trust", true], ["suspicion", true], ["thinking", false]],
 }
 
 ## The same, for an example opened in a mode other than its first (T85),
