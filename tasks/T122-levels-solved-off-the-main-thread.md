@@ -101,3 +101,8 @@ that appears play as before?
    too (24-37 ms). The table is on `docs/godot/infiltration.md`.
 8. **Departure:** `docs/godot/worker-thread-pool.md` is a new page, as
    step 1 asks, though the `Files:` line names only the infiltration page.
+9. **The manual check cannot reach seed 144 in the demo.** L gives the
+   generated levels seed 1 plus their index, so seeds 3, 4 and 5 (102-196
+   ms inline), and nothing changes the seed. Seed 144 is reached by the
+   measurement script only. A seed on the demo's command line would be a
+   small follow-up.
