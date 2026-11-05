@@ -9,6 +9,9 @@ const RED: int = TacticalScenario.RED
 const BLUE: int = TacticalScenario.BLUE
 
 var _rules := SquadRuleset.new()
+# What the scene shows of the mode, asked of the view since T126 split it
+# from the rules: the same answers, from the object that now gives them.
+var _view: TacticalModeView = _rules.mode_view()
 var _locale_before: String
 
 
@@ -25,13 +28,18 @@ func test_opened_in_both_modes_it_starts_in_the_one_chosen_and_m_moves_between_t
 	assert_str(scene.ruleset.mode_name()).is_equal("squad")
 	assert_str(scene.computer.controller_name()).is_equal("weighed")
 	assert_str(scene._header.text).contains("M plays Advance Wars")
+	assert_bool(scene.view() is SquadView).is_true()
 	scene._press(KEY_M)
 	assert_str(scene.ruleset.mode_name()).is_equal(AdvanceWarsRuleset.MODE)
+	# Wave 128's review: a view not rebuilt after M drew Advance Wars as XCOM.
+	assert_bool(scene.view() is AdvanceWarsView).is_true()
+	assert_str(scene._header.text).contains("M plays XCOM")
 	assert_str(scene.computer.controller_name()).is_equal(TacticalRoster.names()[0])
 	assert_bool(scene.state.units.size() == 2 * SquadTable.squad().size()).is_false()
 	scene._press(KEY_M)
 	assert_str(scene.ruleset.mode_name()).is_equal("squad")
 	assert_str(scene.computer.controller_name()).is_equal("weighed")
+	assert_bool(scene.view() is SquadView).is_true()
 
 
 func test_c_cycles_this_modes_roster() -> void:
@@ -88,12 +96,12 @@ func test_the_piece_in_hand_shows_its_dash_and_its_shots_with_their_reasons() ->
 
 func test_t_shows_each_seen_enemys_chance_against_the_cell_under_the_cursor() -> void:
 	var state: BoardState = _facing()
-	var chances: Dictionary[Vector2i, int] = _rules.tint_at(state, BLUE, Vector2i(4, 4), RED, 1)
+	var chances: Dictionary[Vector2i, int] = _view.tint_at(state, BLUE, Vector2i(4, 4), RED, 1)
 	var shield: Unit = state.unit_by_id(2)
 	var expected: int = SquadCombat.hit_chance(SquadTable.number(shield.type.type_name, "aim"),
 		SquadTable.number(TacticalRules.RUNNER, "defence"), SquadCover.of(SquadScenario.rows(), shield.cell, Vector2i(4, 4))["cover"])
 	assert_dict(chances).is_equal({Vector2i(7, 4): expected})
-	assert_dict(_rules.tint_at(state, BLUE, Vector2i(13, 0), RED, 1)).is_empty()
+	assert_dict(_view.tint_at(state, BLUE, Vector2i(13, 0), RED, 1)).is_empty()
 
 
 func test_the_enemys_weighing_is_drawn_before_it_acts_and_v_hides_it() -> void:
@@ -112,8 +120,8 @@ func test_the_enemys_weighing_is_drawn_before_it_acts_and_v_hides_it() -> void:
 func test_a_walk_that_shows_an_enemy_cannot_be_taken_back() -> void:
 	var hidden: BoardState = _board([[RED, TacticalRules.RUNNER, Vector2i(1, 4)], [BLUE, TacticalRules.SHIELD, Vector2i(8, 4)]])
 	var walked: BoardState = _rules.walk(hidden, Move.new(1, [Vector2i(1, 5), Vector2i(2, 5), Vector2i(3, 5)] as Array[Vector2i]))
-	assert_bool(_rules.reveals(hidden, hidden, RED)).is_false()
-	assert_bool(_rules.reveals(hidden, walked, RED)).is_true()
+	assert_bool(_view.reveals(hidden, hidden, RED)).is_false()
+	assert_bool(_view.reveals(hidden, walked, RED)).is_true()
 
 
 # Wave 119's review, blocker 1: a walk refused because of a piece the
@@ -175,7 +183,7 @@ func test_a_piece_that_dashed_is_not_told_it_can_still_shoot() -> void:
 	scene._refresh()
 	var runner: Unit = scene.state.unit_by_id(1)
 	var walks: Dictionary = TacticalReach.walks_for(scene._persons_board(), runner)
-	var dash: Array[Vector2i] = _rules.dashes(scene._persons_board(), runner, walks)
+	var dash: Array[Vector2i] = _view.dashes(scene._persons_board(), runner, walks)
 	assert_bool(dash.is_empty()).is_false()
 	scene.click_cell(dash[0])
 	scene.click_cell(dash[0])
@@ -199,9 +207,28 @@ func test_with_v_off_an_unseen_piece_acts_unseen() -> void:
 	assert_object(scene._intent._decision).is_null()
 
 
+# Wave 128's review: the fog's ghosts, the legend and the "shoot" wording
+# moved to `SquadView` untested; each of these fails if it answers as
+# Advance Wars, or draws no ghost.
+func test_an_enemy_seen_then_lost_leaves_a_ghost_where_it_was_last_seen() -> void:
+	var seen: BoardState = _facing()
+	var earlier: TacticalFog = _view.fog(seen, RED, null)
+	assert_dict(earlier.ghosts).is_empty()
+	var lost: BoardState = _board([[RED, TacticalRules.RUNNER, Vector2i(0, 0)], [BLUE, TacticalRules.SHIELD, Vector2i(12, 8)]])
+	var later: TacticalFog = _view.fog(lost, RED, earlier)
+	assert_dict(later.ghosts).is_equal({Vector2i(7, 4): lost.unit_by_id(2).type.type_name})
+
+
+func test_the_legend_and_a_moved_piece_are_worded_for_this_mode() -> void:
+	assert_array(_view.legend()).is_equal(SquadLegend.entries())
+	var runner: Unit = _facing().unit_by_id(1)
+	assert_str(_view.moved_already(runner, true, false)).contains("shoot")
+	assert_str(_view.moved_already(runner, true, false)).not_contains("attack")
+
+
 func test_a_walk_into_the_fog_is_drawn_only_as_far_as_it_is_seen() -> void:
 	var state: BoardState = _board([[RED, TacticalRules.RUNNER, Vector2i(0, 0)], [BLUE, TacticalRules.SHIELD, Vector2i(5, 0)]])
-	var fog: TacticalFog = _rules.fog(state, RED, null)
+	var fog: TacticalFog = _view.fog(state, RED, null)
 	var path: Array[Vector2i] = [Vector2i(5, 1), Vector2i(5, 2), Vector2i(5, 3), Vector2i(5, 4)]
 	var walk := TacticalDecision.walk(2, path, [], Vector2i(5, 4))
 	assert_bool(path.any(fog.hides)).is_true()

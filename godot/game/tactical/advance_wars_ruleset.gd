@@ -2,10 +2,11 @@
 ##
 ## Nothing here is a rule. Each method hands the question to the class that
 ## answered it before the seam existed -- `TacticalScenario`, `BoardState`,
-## `TacticalCombat`, `TurnStart`, `TacticalVictory`, `ThreatMap`,
-## `TacticalRoster` -- unchanged, so a game played through this ruleset is
-## the game played before it, the same seeds giving the same results. That is
+## `TacticalCombat`, `TurnStart`, `TacticalVictory`, `TacticalRoster` --
+## unchanged, so a game played through this ruleset is the game played
+## before it, the same seeds giving the same results. That is
 ## what every tactical gate holds, and it is the scene's default ruleset.
+## What the scene shows of it is `AdvanceWarsView` (T126).
 ##
 ## When not to use it: to change the Advance Wars rules. Change the class
 ## that owns the rule; this file only points at it.
@@ -26,17 +27,6 @@ static func or_default(rules: TacticalRuleset) -> TacticalRuleset:
 ## "advance wars".
 func mode_name() -> String:
 	return MODE
-
-
-## "Advance Wars", the game this mode plays like: a name, which the table
-## keeps the same in both languages.
-func title() -> String:
-	return TranslationServer.translate("Advance Wars")
-
-
-## `TacticalGame.WHAT_THIS_IS`, in the language on screen.
-func what_this_is() -> String:
-	return TranslationServer.translate(TacticalGame.WHAT_THIS_IS)
 
 
 ## `TacticalScenario.build`: the workshops, the towers, three walkers.
@@ -79,26 +69,6 @@ func winner(state: BoardState) -> int:
 	return TacticalVictory.winner(state)
 
 
-## `TacticalVictory.rule`.
-func rule() -> String:
-	return TacticalVictory.rule()
-
-
-## `TacticalVictory.announcement`.
-func announcement(winner_side: int, state: BoardState) -> String:
-	return TacticalVictory.announcement(winner_side, state)
-
-
-## `ThreatMap.of`: every cell `side` could strike next turn, and by how many.
-func tint(state: BoardState, side: int) -> Dictionary[Vector2i, int]:
-	return ThreatMap.of(state, side)
-
-
-## The two control points.
-func points() -> Array[Vector2i]:
-	return TacticalScenario.POINTS
-
-
 ## `TacticalRoster.names`.
 func roster_names() -> Array[String]:
 	return TacticalRoster.names()
@@ -107,3 +77,8 @@ func roster_names() -> Array[String]:
 ## `TacticalRoster.build`.
 func build_controller(row_name: String, seed_number: int) -> BlueController:
 	return TacticalRoster.build(row_name, seed_number)
+
+
+## `AdvanceWarsView`: the threat map, the two points, the words of a win.
+func mode_view() -> TacticalModeView:
+	return AdvanceWarsView.new(self)
