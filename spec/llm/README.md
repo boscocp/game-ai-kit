@@ -16,9 +16,23 @@ teaches: none
 and `argument`, all strings, nothing else. A game narrows `intent` to the
 acts it declared (`LlmValidator.json_schema()`,
 `gameaikit.llm.validator.json_schema`) and hands that to a runtime that can
-constrain its output. The schema cannot say everything -- that an argument
-belongs to its intent, that a speech holds no line break, markup or secret
--- which is why the validator checks every reply anyway.
+constrain its output, one shape per intent, so the schema also says which
+arguments belong to which intent.
+
+Since T116, `speech` carries a `pattern` (`LlmValidator.SPEECH_PATTERN`,
+`gameaikit.llm.validator.SPEECH_PATTERN`). It says what R8 to R10 check:
+one to 280 characters, with no line break or other control character, and
+no markup. The schema still cannot say that a speech holds no secret, and a
+runtime may ignore it, which is why the validator checks every reply anyway.
+
+The pattern is **stricter than the validator** in one place: it also leaves
+out the straight quote and the backslash. The pinned llama.cpp server reads
+a pattern against the string's JSON text, escapes and all
+(`docs/local-llm/server.md`), and this is the one spelling that means the
+same there and in JSON Schema. A model held to the schema cannot write
+`"`; a reply from any other runtime that contains one is still accepted.
+`json_schema()` always adds the pattern, so a game cannot opt out today.
+That waits until a second game needs to.
 
 `recordings/` holds conversations: a JSON object with the game's
 `declaration` (intents, fallback line, secrets) and `turns`, each the line

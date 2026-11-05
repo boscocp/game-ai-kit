@@ -160,8 +160,10 @@ this baseline and against T94's rows above. The pattern ships:
 The prompt line read a few more acts right in pt-BR. Adding it to the
 pattern did not beat the pattern alone in English, so the prompt stays
 T93's. The median reply took 0.50-0.57 s with the pattern, 0.52-0.53 s for
-the baseline. No straight quote was in any accepted speech in any of the
-four runs, so leaving it out of the pattern cost nothing measured.
+the baseline. Leaving the straight quote out of the pattern cost nothing
+measured: no accepted speech held one in the 180 replies that could have
+(the baseline and the prompt line; with the pattern the model cannot write
+one).
 
 R10 stays in the validator unchanged. A runtime may ignore the schema, and
 the recordings were made before the pattern.

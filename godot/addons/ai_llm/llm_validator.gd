@@ -54,7 +54,7 @@ const MARKUP: String = "<>[]*`"
 ## pattern is present, so the length is in the pattern too (T116,
 ## docs/local-llm/server.md). The guard loses the straight quote; the
 ## validator still admits one (R10 is the check, not this).
-const SPEECH_PATTERN: String = "^[^\"\\\\<>\\[\\]*`\\x00-\\x1F\\x7F]{1,280}$"
+const SPEECH_PATTERN: String = "^[^\"\\\\<>\\[\\]*`\\x00-\\x1F\\x7F]{1,%d}$" % SPEECH_LIMIT
 
 ## How deep objects and lists may nest. A reply is one flat object; past
 ## this, Godot's parser and Python's give up at different depths, so both
@@ -215,7 +215,9 @@ static func _deepest(outside: String) -> int:
 ## is validated anyway. Measured on the pinned llama.cpp server only
 ## (docs/godot/talk.md): with the narrowed shape it no longer sends an
 ## argument the act does not take (R7, T94), and with the pattern no markup
-## (R10, T116).
+## (R10, T116). The pattern is stricter than the validator: it also leaves
+## out the straight quote and the backslash, which the validator admits. It
+## is always added; a game cannot opt out yet.
 func json_schema() -> Dictionary:
 	var names: Array = _intents.keys()
 	names.sort()

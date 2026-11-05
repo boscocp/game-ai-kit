@@ -131,6 +131,10 @@ func test_the_speech_pattern_refuses_what_r8_r9_and_r10_refuse() -> void:
 	assert_bool(_matches_whole(pattern, "Evening. State your business.")).is_true()
 	assert_bool(_matches_whole(pattern, "Não, senhor.")).is_true()
 	assert_bool(_matches_whole(pattern, 'He said "no".')).is_false()
+	assert_bool(_matches_whole(pattern, "a \\ b")).is_false()
+	# The length is in the pattern: the pinned server drops maxLength beside one.
+	assert_bool(_matches_whole(pattern, "H".repeat(LlmValidator.SPEECH_LIMIT))).is_true()
+	assert_bool(_matches_whole(pattern, "H".repeat(LlmValidator.SPEECH_LIMIT + 1))).is_false()
 
 
 # A RegEx's `$` also matches before a final line break; the whole string must match.

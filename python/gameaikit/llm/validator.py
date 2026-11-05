@@ -217,7 +217,10 @@ def json_schema(declaration: Declaration) -> dict:
     cannot say that a speech holds no secret, and a runtime can ignore it.
     Measured on the pinned llama.cpp server only (docs/godot/talk.md):
     narrowed this way, it stopped sending arguments an act does not take
-    (R7, T94), and with the pattern, markup (R10, T116).
+    (R7, T94), and with the pattern, markup (R10, T116). The pattern is
+    stricter than the validator: it also leaves out the straight quote and
+    the backslash, which the validator admits. It is always added; a game
+    cannot opt out yet.
     """
     shapes = []
     for name in sorted(declaration.intents):
