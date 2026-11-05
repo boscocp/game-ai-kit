@@ -17,11 +17,13 @@
 ##
 ## K puts T25's human clock on the computer (`RtsHumanClock`): it answers
 ## what it sees only after a person's reaction time, and gives no more
-## commands in five seconds than a person did. M shows the meter, each
-## computer side's share of the frame beside its base (`RtsMeter`), hidden
-## until asked. Opened with `-- --record` (`make record-rts`), every match
-## you play to its end is kept in `data/rts/`; `make measure-rts-clock`
-## turns those into the clock's values, which the game only reads.
+## commands in five seconds than a person did; the thinking view then draws
+## the late enemy it was handed, hollow, threaded to where it stands now
+## (`RtsThinking.clock`). M shows the meter, each computer side's share of
+## the frame beside its base (`RtsMeter`), hidden until asked. Opened with
+## `-- --record` (`make record-rts`), every match you play to its end is
+## kept in `data/rts/`; `make measure-rts-clock` turns those into the
+## clock's values, which the game only reads.
 ##
 ## Your orders and the computer's pass through the same door
 ## (`RtsMatch.give`, `RtsRules`): you may not order what it may not, and it
@@ -132,6 +134,7 @@ func restart() -> void:
 	_view.selected.clear()
 	_view.placing = ""
 	_thinking.side = computer
+	_thinking.clock = sides[RtsScenario.EAST] as RtsHumanClock
 	last_refusal = ""
 	_kept = false
 	paused = true
