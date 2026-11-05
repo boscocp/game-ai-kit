@@ -18,9 +18,10 @@
 ## K puts T25's human clock on the computer (`RtsHumanClock`): it answers
 ## what it sees only after a person's reaction time, and gives no more
 ## commands in five seconds than a person did. M shows the meter, each
-## computer side's share of the frame beside its base (`RtsMeter`). Opened
-## with `-- --record` (`make record-rts`), every match you play to its end
-## is kept in `data/rts/`, the reference the clock's knobs are measured from.
+## computer side's share of the frame beside its base (`RtsMeter`), hidden
+## until asked. Opened with `-- --record` (`make record-rts`), every match
+## you play to its end is kept in `data/rts/`; `make measure-rts-clock`
+## turns those into the clock's values, which the game only reads.
 ##
 ## Your orders and the computer's pass through the same door
 ## (`RtsMatch.give`, `RtsRules`): you may not order what it may not, and it
@@ -86,6 +87,9 @@ func _ready() -> void:
 	_minimap.board = _view
 	_card.chosen.connect(_on_card)
 	_legend.set_entries(_legend_entries())
+	# The meter waits to be asked for, with M: it is more ink on a board a
+	# person is reading, and T25 wants it hidden for clips of play.
+	_meter.visible = false
 	restart()
 	Language.apply_if_opened_alone(self)
 

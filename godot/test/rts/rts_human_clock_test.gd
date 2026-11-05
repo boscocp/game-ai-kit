@@ -182,6 +182,55 @@ func test_a_match_played_to_its_end_is_kept_once_when_recording() -> void:
 	assert_int(DirAccess.get_files_at(folder).size()).is_equal(1)
 
 
+func test_the_meter_waits_to_be_asked_for() -> void:
+	var game: RtsGame = _mounted_game()
+
+	assert_bool(game._meter.visible).is_false()
+	game._on_key(KEY_M)
+	assert_bool(game._meter.visible).is_true()
+
+
+func test_an_own_unit_does_not_tell_of_an_enemy_the_late_view_hides() -> void:
+	var now: RtsSnapshot = _view_at(30)
+	now.units.append({"id": 3, "side": 0, "kind": RtsKinds.RUNNER, "position": Vector2(1.5, 1.5), "target": 2})
+	now.units.append({"id": 4, "side": 0, "kind": RtsKinds.WORKER, "position": Vector2(0.5, 1.5), "target": 1})
+
+	var late: RtsSnapshot = RtsHumanClock._late(now, _view_at(0))
+	var targets: Dictionary = {}
+	for unit: Dictionary in late.mine():
+		targets[unit["id"]] = unit.get("target", 0)
+
+	# Unit 3 strikes the barracks the late view does not show yet; unit 4's
+	# target is its own side's, which it may know.
+	assert_int(targets[3]).is_equal(0)
+	assert_int(targets[4]).is_equal(1)
+
+
+func test_the_game_reads_the_clocks_values_and_never_measures_them() -> void:
+	var before: int = RtsClockMeasure.measurements
+	var game: RtsGame = _mounted_game()
+
+	game._on_key(KEY_K)
+	for _decision: int in range(3):
+		game.step_decision()
+	game._refresh()
+
+	assert_int(RtsClockMeasure.measurements).is_equal(before)
+
+
+func test_a_file_without_all_four_values_gives_the_stand_in() -> void:
+	var folder: String = create_temp_dir("rts_clock")
+	var half: String = folder.path_join("half.json")
+	var whole: String = folder.path_join("whole.json")
+	FileAccess.open(half, FileAccess.WRITE).store_string("{\"reaction_ms\": 500}")
+	FileAccess.open(whole, FileAccess.WRITE).store_string(
+		"{\"reaction_ms\": 500, \"most_actions\": 9, \"window_seconds\": 5, \"source\": \"the owner\"}")
+
+	assert_dict(RtsHumanClock.from_file(half)).is_equal(RtsHumanClock.stand_in())
+	assert_dict(RtsHumanClock.from_file(folder.path_join("none.json"))).is_equal(RtsHumanClock.stand_in())
+	assert_int(RtsHumanClock.from_file(whole)["most_actions"]).is_equal(9)
+
+
 func _mounted_game() -> RtsGame:
 	var game: RtsGame = auto_free((load("res://game/rts/rts.tscn") as PackedScene).instantiate())
 	add_child(game)

@@ -27,9 +27,13 @@
 ## (`RtsMatch.give`), so the wrapped side sees, earns and may order nothing
 ## it would not have without the clock: later, or less. `test/league/rts_league.gd` measures that over its seeds.
 ##
-## The reference values are the owner's recorded play (`RtsClockMeasure`)
-## when there is any in `data/rts/`. Until there is, `stand_in()` gives
-## AlphaStar's published figures, and says so wherever it is shown.
+## The reference values are read from `REFERENCE_PATH`, a committed file
+## that `make measure-rts-clock` writes from the owner's recordings in
+## `data/rts/` (`RtsClockMeasure`). Nothing is measured at game time: a
+## five-minute recording takes seconds to replay, and the values a game
+## plays by are fixed before it starts, as invariant 6 asks of anything
+## learned. Until the file exists, `stand_in()` gives AlphaStar's published
+## figures, and says so wherever it is shown.
 ##
 ## When not to use it: to make a side weaker. That is T12's strength axis
 ## (`RtsLevels`); this one changes how a side looks, and costs strength only
@@ -45,6 +49,8 @@ const STAND_IN_REACTION_MS: float = 350.0
 ## T25 quotes it. An action there is a click; here it is a command.
 const STAND_IN_ACTIONS: int = 22
 const STAND_IN_WINDOW_SECONDS: float = 5.0
+## Where `make measure-rts-clock` writes the owner's values.
+const REFERENCE_PATH: String = "res://game/rts/clock_reference.json"
 const STAND_IN_SOURCE: String = "stand-in: AlphaStar's published limits, no recording of the owner yet"  # not shown: the league runner prints it
 
 var inner: GakRtsController
@@ -59,6 +65,9 @@ var dropped: int = 0
 ## Decisions handed the enemy of an earlier view: every one, while the
 ## delay is on.
 var stale: int = 0
+
+# The knobs' values once read.
+static var _known: Dictionary = {}
 
 # Snapshots not yet old enough to hand on, oldest first, and the newest
 # that is.
@@ -90,11 +99,26 @@ static func stand_in() -> Dictionary:
 		"window_seconds": STAND_IN_WINDOW_SECONDS, "source": STAND_IN_SOURCE}
 
 
-## The knobs' values: measured from the owner's recordings in `data/rts/`
-## when there are any (`RtsClockMeasure.measured_from`), else `stand_in()`.
+## The knobs' values: `REFERENCE_PATH` when it holds them, else
+## `stand_in()`. Read once and kept, so a screen may ask every frame.
 static func knob_values() -> Dictionary:
-	var measured: Dictionary = RtsClockMeasure.measured_from(RtsClockMeasure.directory())
-	return measured if not measured.is_empty() else stand_in()
+	if _known.is_empty():
+		_known = from_file(REFERENCE_PATH)
+	return _known
+
+
+## The knobs' values in the file at `path`, or `stand_in()` when it is
+## missing or does not hold all four.
+static func from_file(path: String) -> Dictionary:
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path)) if FileAccess.file_exists(path) else null
+	if not parsed is Dictionary:
+		return stand_in()
+	for key: String in ["reaction_ms", "most_actions", "window_seconds", "source"]:
+		if not (parsed as Dictionary).has(key):
+			return stand_in()
+	var values: Dictionary = parsed
+	values["most_actions"] = int(values["most_actions"])
+	return values
 
 
 ## The inner side's commands for `view` with the enemy held back, let
@@ -115,8 +139,11 @@ func decide(view: RtsSnapshot) -> Array[RtsCommand]:
 
 ## `now` with its enemy as `then` showed it: own units, funds and room from
 ## `now`; every other side's units from `then`, none at all when `then` is
-## null; and the board with the cell of each enemy building seen since
-## `then` as `then` had it, so a blocked cell does not tell of it early.
+## null; an own unit's target forgotten (0, no target) when it names an
+## enemy the late view does not show, since a unit that has just turned on
+## a raider would tell of the raid early; and the board with the cell of
+## each enemy building seen since `then` as `then` had it, so a blocked
+## cell does not tell of it either.
 static func _late(now: RtsSnapshot, then: RtsSnapshot) -> RtsSnapshot:
 	var late := RtsSnapshot.new()
 	late.side = now.side
@@ -125,21 +152,40 @@ static func _late(now: RtsSnapshot, then: RtsSnapshot) -> RtsSnapshot:
 	late.supply_used = now.supply_used
 	late.supply_cap = now.supply_cap
 	late.graph = now.graph.duplicate_graph()
-	var known: Dictionary = {}
+	var shown: Dictionary = {}
+	var enemies: Array[Dictionary] = then.enemies() if then != null else ([] as Array[Dictionary])
+	for unit: Dictionary in enemies:
+		shown[unit["id"]] = true
 	for unit: Dictionary in now.units:
 		if unit["side"] == now.side or unit["side"] == RtsWorld.NEUTRAL:
-			late.units.append(unit)
-	if then != null:
-		for unit: Dictionary in then.enemies():
-			late.units.append(unit)
-			known[unit["id"]] = true
-	for unit: Dictionary in now.enemies():
-		if not known.has(unit["id"]) and RtsKinds.is_building(unit["kind"]):
-			var cell := Vector2i((unit["position"] as Vector2).floor())
-			late.graph.set_cost(cell, then.graph.cost_at(cell) if then != null else GakGridGraph.DEFAULT_COST)
+			shown[unit["id"]] = true
+	for unit: Dictionary in now.units:
+		if unit["side"] == now.side or unit["side"] == RtsWorld.NEUTRAL:
+			late.units.append(_unaware(unit, shown))
+	late.units.append_array(enemies)
+	_unblock_unseen(late.graph, now, then, shown)
 	late.units.sort_custom(func(one: Dictionary, other: Dictionary) -> bool: return one["id"] < other["id"])
 	late.units.make_read_only()
 	return late
+
+
+# `unit` as shown late: its target forgotten when it is not in `shown`.
+static func _unaware(unit: Dictionary, shown: Dictionary) -> Dictionary:
+	if int(unit.get("target", 0)) == 0 or shown.has(unit["target"]):
+		return unit
+	var forgot: Dictionary = unit.duplicate()
+	forgot["target"] = 0
+	forgot.make_read_only()
+	return forgot
+
+
+# The cell of each enemy building `now` shows and `shown` does not, given
+# the cost `then` had there.
+static func _unblock_unseen(graph: GakGridGraph, now: RtsSnapshot, then: RtsSnapshot, shown: Dictionary) -> void:
+	for unit: Dictionary in now.enemies():
+		if not shown.has(unit["id"]) and RtsKinds.is_building(unit["kind"]):
+			var cell := Vector2i((unit["position"] as Vector2).floor())
+			graph.set_cost(cell, then.graph.cost_at(cell) if then != null else GakGridGraph.DEFAULT_COST)
 
 
 ## The inner side, which reads its own thinking for the screen.

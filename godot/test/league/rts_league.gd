@@ -13,15 +13,19 @@
 #      clocked team against its plain twin, on the same dice and seat, scores
 #      no more over the seed set, and its clock changed the side's play, or
 #      the knob did nothing. Hands nothing over, in every match a clock
-#      plays: no enemy reaches the side before the world showed it that long
-#      before; no command goes out that the side inside did not give; no
-#      window holds more commands than the cap. What each saw, earned and
-#      ordered by the same moments is printed beside it, not held: a side
-#      that sees a raid late keeps its squads forward and sees more of the
-#      enemy, which is play, not a gift. Planted records of each kind are
-#      refused first.
+#      plays (`rts_clock_audit.gd`): the enemy handed on is exactly the one
+#      the world showed the delay before, own targets included; no command
+#      goes out that the side inside did not give; no window holds more
+#      commands than the cap. What each saw, earned and ordered by the same
+#      moments is printed beside it, not held: a side that sees a raid late
+#      keeps its squads forward and sees more of the enemy, which is play,
+#      not a gift. Planted records of each kind are refused first.
 #
-#     ./scripts/godot --headless --path godot -s res://test/league/rts_league.gd -- [seeds] [full]
+# With `quick`, only claim 4's second half, on one match for each of
+# `QUICK_TEAMS`: the module's gate, seconds long, where the whole league
+# is minutes.
+#
+#     ./scripts/godot --headless --path godot -s res://test/league/rts_league.gd -- [seeds] [full | quick]
 #
 # Exit codes: 0 every claim held; 1 one did not.
 extends SceneTree
@@ -34,38 +38,19 @@ const BOOTSTRAP_SEED: int = 55
 const COUNTS: Array[String] = ["seen", "earned", "orders"]
 
 
-# What a clock hands the side inside it, and what that side gives back,
-# written down from outside the clock.
-class Spy:
-	extends GakRtsController
-	var inner: GakRtsController
-	## Each view handed on: {tick, ids}, the enemy ids in it.
-	var handed: Array[Dictionary] = []
-	## Commands the side inside gave, all decisions together.
-	var produced: int = 0
-
-	func _init(watched: GakRtsController) -> void:
-		inner = watched
-
-	## The side inside's commands for `view`, with what it was shown and
-	## how much it gave written down.
-	func decide(view: RtsSnapshot) -> Array[RtsCommand]:
-		var ids: Dictionary = {}
-		for unit: Dictionary in view.enemies():
-			ids[unit["id"]] = true
-		handed.append({"tick": view.tick, "ids": ids})
-		inner.work = 0
-		var given: Array[RtsCommand] = inner.decide(view)
-		work = inner.work
-		produced += given.size()
-		return given
+const Audit := preload("res://test/league/rts_clock_audit.gd")
+## The quick check's matches: each clocked team that must bite against the
+## queues, on one dice from the west seat.
+const QUICK_TEAMS: Array[String] = ["late", "tight cap"]
 
 
 func _init() -> void:
 	var arguments: PackedStringArray = OS.get_cmdline_user_args()
 	var seeds: int = int(arguments[0]) if not arguments.is_empty() else DEFAULT_SEEDS
 	var failures: Array[String] = _planted()
-	if failures.is_empty():
+	if failures.is_empty() and arguments.has("quick"):
+		failures.append_array(_quick(RtsHumanClock.knob_values()))
+	elif failures.is_empty():
 		var clock: Dictionary = RtsHumanClock.knob_values()
 		print("the clock's reference: %.0f ms, %d commands in %.0f s -- %s" % [clock["reaction_ms"],
 			clock["most_actions"], clock["window_seconds"], clock["source"]])
@@ -99,29 +84,33 @@ func _play(games: Array[Array], clock: Dictionary) -> Array[Dictionary]:
 	var played: Array[Dictionary] = []
 	for game: Array in games:
 		var dice: int = game[2] % League.SEAT_OFFSET
-		var west: GakRtsController = _spied(teams[game[0]][RtsRoster.MAKE].call(RtsScenario.WEST, dice * 7 + 1, clock))
-		var east: GakRtsController = _spied(teams[game[1]][RtsRoster.MAKE].call(RtsScenario.EAST, dice * 7 + 2, clock))
+		var west: GakRtsController = Audit.spied(teams[game[0]][RtsRoster.MAKE].call(RtsScenario.WEST, dice * 7 + 1, clock))
+		var east: GakRtsController = Audit.spied(teams[game[1]][RtsRoster.MAKE].call(RtsScenario.EAST, dice * 7 + 2, clock))
 		var match_record: Dictionary = play_one(west, east, game[2] + 1)
 		match_record.merge({"west_team": game[0], "east_team": game[1], "dice": game[2]})
 		played.append(match_record)
 	return played
 
 
-# `team` spied on twice when it has a clock: outside it, what the match
-# showed the side; inside, what the clock handed on.
-static func _spied(team: GakRtsController) -> GakRtsController:
-	var clock := team as RtsHumanClock
-	if clock == null:
-		return team
-	clock.inner = Spy.new(clock.inner)
-	return Spy.new(clock)
+# Claim 4's second half alone, on one match for each of `QUICK_TEAMS`.
+func _quick(clock: Dictionary) -> Array[String]:
+	var failures: Array[String] = []
+	var names: Array[String] = RtsRoster.names()
+	var games: Array[Array] = []
+	for team: String in QUICK_TEAMS:
+		games.append([names.find(team), 0, 0])
+	var clocked: Array[Dictionary] = _clocked_sides(_play(games, clock))
+	for side: Dictionary in clocked:
+		failures.append_array(Audit.hands_over(side))
+	print("hands nothing over: checked in %d clocked sides, one match each" % clocked.size())
+	return failures
 
 
 ## One match between `west` and `east` on the world of `world_seed`, watched:
 ## {score to west, minutes, ticks, and per side {seen, earned, orders,
 ## reactions, busiest, timeline, given (taken or refused), clock, views}}
 ## -- clock the side's `RtsHumanClock`, or null, and views what the match
-## showed it, as `Spy.handed` writes them.
+## showed it, as `Audit.Spy.handed` writes them.
 static func play_one(west: GakRtsController, east: GakRtsController, world_seed: int) -> Dictionary:
 	var world: RtsWorld = RtsScenario.start(world_seed)
 	var played := RtsMatch.new(world, world_seed, {RtsScenario.WEST: west, RtsScenario.EAST: east})
@@ -135,18 +124,19 @@ static func play_one(west: GakRtsController, east: GakRtsController, world_seed:
 			"reactions": RtsClockMeasure.reactions(watched[side]["sightings"], played.accepted, side),
 			"busiest": RtsClockMeasure.busiest(played.accepted, side), "timeline": watched[side]["timeline"],
 			"given": _given(played, side)}
-		var outside := played.controllers[side] as Spy
+		var outside := played.controllers[side] as Audit.Spy
 		record[side]["clock"] = outside.inner as RtsHumanClock if outside != null else null
 		record[side]["views"] = outside.handed if outside != null else []
 	return record
 
 
-# Every command `side` gave in `played`, taken or refused: {tick, side}.
+# Every command `side` gave in `played`, taken or refused: {tick, side,
+# command}.
 static func _given(played: RtsMatch, side: int) -> Array[Dictionary]:
 	var given: Array[Dictionary] = []
 	for entry: Dictionary in played.accepted + played.refused:
 		if int(entry["side"]) == side:
-			given.append({"tick": entry["tick"], "side": side})
+			given.append({"tick": entry["tick"], "side": side, "command": entry["command"]})
 	given.sort_custom(func(one: Dictionary, other: Dictionary) -> bool: return one["tick"] < other["tick"])
 	return given
 
@@ -246,7 +236,7 @@ func _knobs_are_limits(played: Array[Dictionary]) -> Array[String]:
 		_print_pair(pair[0], pair[1], summed)
 		failures.append_array(costs_strength(pair[0], summed))
 	for side: Dictionary in _clocked_sides(played):
-		failures.append_array(hands_over(side))
+		failures.append_array(Audit.hands_over(side))
 	var reference_cap: Dictionary = paired_totals(_sides_of(played, names.find("capped")), _sides_of(played, names.find("commander")))
 	_print_pair("capped", "commander", reference_cap)
 	if reference_cap["changed"] == 0:
@@ -315,41 +305,6 @@ static func costs_strength(label: String, summed: Dictionary) -> Array[String]:
 	return failures
 
 
-## Why the clocked `side` (`_side_of`, its clock spied on) was handed
-## something, or []: an enemy before the world had shown it the clock's
-## delay earlier, a command its inner side never gave, or more commands in
-## a window than the cap.
-static func hands_over(side: Dictionary) -> Array[String]:
-	var clock: RtsHumanClock = side["clock"]
-	var spy: Spy = clock.inner
-	var failures: Array[String] = []
-	var delay: int = roundi(clock.reaction_ms / 1000.0 * RtsWorld.TICKS_PER_SECOND)
-	var early: String = shown_early(spy.handed, side["views"], delay)
-	if early != "":
-		failures.append("claim 4: " + early)
-	if side["given"].size() > spy.produced:
-		failures.append("claim 4: %d commands went out, the side inside gave %d" % [side["given"].size(), spy.produced])
-	var burst: int = RtsClockMeasure.busiest(side["given"], side["seat"], clock.window_seconds)
-	if clock.most_actions > 0 and burst > clock.most_actions:
-		failures.append("claim 4: %d commands in %.0f s, over the cap of %d" % [burst, clock.window_seconds, clock.most_actions])
-	return failures
-
-
-## Why `handed` ({tick, ids} a decision) shows an enemy the world had not
-## shown in `views` ({tick, ids}) at least `delay` ticks before, or "".
-static func shown_early(handed: Array[Dictionary], views: Array[Dictionary], delay: int) -> String:
-	var known: Dictionary = {}
-	var next: int = 0
-	for decision: Dictionary in handed:
-		while next < views.size() and views[next]["tick"] <= decision["tick"] - delay:
-			known.merge(views[next]["ids"])
-			next += 1
-		var unknown: Array = decision["ids"].keys().filter(func(id: int) -> bool: return not known.has(id))
-		if not unknown.is_empty():
-			return "enemy %d was handed on at tick %d, not seen %d ticks before" % [unknown[0], decision["tick"], delay]
-	return ""
-
-
 func _print_pair(on: String, off: String, summed: Dictionary) -> void:
 	var line: String = "knob: %-12s vs %-10s %d pairs, score %.1f / %.1f" % [on, off, summed["pairs"], summed["score"], summed["plain_score"]]
 	for count: String in COUNTS:
@@ -370,26 +325,4 @@ static func _planted() -> Array[String]:
 		planted.merge(cases[label], true)
 		if costs_strength("planted", planted).is_empty():
 			return ["planted: a clock that %s passed the strength check" % label]
-	return _planted_handing()
-
-
-# A clock with a delay of 30 ticks and a cap of 2 in a second, spied on:
-# an enemy handed the moment it is seen, and three commands in a second
-# from two given inside, must be refused.
-static func _planted_handing() -> Array[String]:
-	var views: Array[Dictionary] = [{"tick": 0, "ids": {}}, {"tick": 30, "ids": {7: true}}, {"tick": 60, "ids": {7: true}}]
-	var on_time: Array[Dictionary] = [{"tick": 0, "ids": {}}, {"tick": 30, "ids": {}}, {"tick": 60, "ids": {7: true}}]
-	var too_soon: Array[Dictionary] = [{"tick": 0, "ids": {}}, {"tick": 30, "ids": {7: true}}]
-	if shown_early(on_time, views, 30) != "" or shown_early(too_soon, views, 30) == "":
-		return ["planted: an enemy handed on as soon as it was seen passed, or one handed on time was refused"]
-	var clock := RtsHumanClock.new(Spy.new(GakRtsController.new()), 500.0, 2, 1.0)
-	(clock.inner as Spy).handed.assign(on_time)
-	(clock.inner as Spy).produced = 2
-	var side: Dictionary = {"clock": clock, "views": views, "seat": 0,
-		"given": [{"tick": 0, "side": 0}, {"tick": 10, "side": 0}] as Array[Dictionary]}
-	if not hands_over(side).is_empty():
-		return ["planted: a fair clock was refused: " + ", ".join(hands_over(side))]
-	side["given"] = [{"tick": 0, "side": 0}, {"tick": 10, "side": 0}, {"tick": 20, "side": 0}] as Array[Dictionary]
-	if hands_over(side).size() != 2:
-		return ["planted: three commands from two given, in one second under a cap of two, were not both refused"]
-	return []
+	return Audit.planted()

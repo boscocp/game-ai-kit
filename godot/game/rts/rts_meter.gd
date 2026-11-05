@@ -12,7 +12,8 @@
 ## as one.
 ##
 ## Measuring costs something too: the meter times its own drawing and
-## writes it apart, charged to no side. M hides it.
+## writes it apart, charged to no side -- the last frame's, since this one
+## is still being drawn. The demo keeps it hidden until M asks.
 ##
 ## When not to use it: as a profiler. It shows what the sides' clocks said,
 ## on this machine, as T25's league table does.
@@ -65,7 +66,7 @@ func _draw() -> void:
 	for side: int in sides:
 		_draw_side(side, sides[side])
 	draw_string(ThemeDB.fallback_font, Vector2(8.0, RtsView.MAP_RECT.size.y - 8.0),
-		tr("meter: {ms} ms to draw, charged to no side").format({ms = "%.2f" % (own_microseconds / 1000.0)}),
+		tr("meter: {ms} ms to draw its last frame, charged to no side").format({ms = "%.2f" % (own_microseconds / 1000.0)}),
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 11, LABEL)
 	own_microseconds = Time.get_ticks_usec() - started
 

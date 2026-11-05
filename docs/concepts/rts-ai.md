@@ -288,7 +288,9 @@ is where its two clock measures exist. `RtsHumanClock` wraps any side with
 two knobs, each a limit:
 
 - **`reaction_ms`**: the side is shown the enemy as it stood that long
-  ago, and nothing seen since. Its own units, funds and room stay current.
+  ago, and nothing seen since. Its own units, funds and room stay current,
+  except that an own unit's target is forgotten when it names an enemy the
+  late view does not show yet.
   Holding back the whole view was tried first, and it handed something
   over: a side that did not yet see its last worker in training trained
   another, and earned more than without the clock. The delay is served in
@@ -299,16 +301,21 @@ two knobs, each a limit:
 
 **Where the numbers come from.** The task asks for the owner's recorded
 play. `make record-rts` keeps every match you play to its end in
-`data/rts/`, and `RtsClockMeasure` reads two values from those
-recordings: the median reaction, and the busiest five seconds. There is no
-recording yet, so the knobs stand at AlphaStar's published figures. The
+`data/rts/`. `make measure-rts-clock` replays those recordings
+(`RtsClockMeasure`) and writes two values to
+`godot/game/rts/clock_reference.json`, to be committed: the median
+reaction, and the busiest five seconds. The game only reads that file. It
+never measures while a person plays, since replaying a five-minute
+recording takes seconds. There is no recording yet, so the knobs stand at
+AlphaStar's published figures. The
 first is "a delay between observation and action of 350ms on average"
 ([DeepMind, 2019](https://deepmind.google/discover/blog/alphastar-mastering-the-real-time-strategy-game-starcraft-ii/)).
 The second is "22 agent actions per 5 seconds", as T25 quotes it. Every
 place that prints the knobs labels them a stand-in.
 
 **Measured** (`make test-rts-league`, two seeds from both seats, against
-the queues, on 2026-11-05):
+the queues, on 2026-11-05). The human clock's row is the late row: its cap
+never bound, so only its delay acted.
 
 | team | strength (Elo, queues 0) | commands a minute | busiest 5 s |
 |---|---|---|---|
@@ -324,8 +331,8 @@ Three things to read from it:
   about 31 commands a minute, 12 at most in five seconds: under 22. This
   game asks for fewer, larger orders than StarCraft's clicks. What makes it
   inhuman is not volume but timing: five commands on one tick, and an
-  answer the instant something comes into sight. So the gate holds the cap
-  to its claims at two in five seconds, where it bites.
+  answer the instant something comes into sight. So the checks hold the
+  cap to its claims at two in five seconds, where it bites.
 - **Half a second of delay costs real strength.** Late and the human clock
   each lost two of the four matches the commander won. A squad that sees a
   raid half a second late commits to fights it would have refused.
@@ -333,19 +340,29 @@ Three things to read from it:
   at the same moments, the late side saw *more* of the enemy than the
   commander (93 sightings to 75), and gave more orders. That is play, not a
   gift: a squad that does not see the enemy coming stays forward and sees
-  more of it. So `test/league/rts_league.gd` holds the three exactly, in
-  every match a clock plays:
-  - no enemy reaches the side before the world showed it the delay earlier;
+  more of it. So `test/league/rts_clock_audit.gd` holds three claims
+  exactly, in every match a clock plays:
+  - the enemy handed on is the one the world showed the delay earlier,
+    every field of it, and no own unit's target names any other;
   - no command goes out that the side inside did not give;
-  - no window holds more than the cap.
+  - no window holds more commands than the cap.
 
-  The counts are printed beside those checks, and not held.
+  The counts are printed beside those checks, and not held. `make
+  test-rts-clock-limits`, in `make check`, holds the three on one match
+  each of the late and the tightly capped side. The whole league with its
+  strength claim is `make test-rts-league`, which takes about ten
+  minutes. It is not in `make check`, for the same reason T25's `make
+  league` is not.
 
 The reaction measured is a proxy. It runs from an enemy's first sighting
 to the first command that targets it or walks units near where it was
 seen, inside ten seconds. Every team's median runs to seconds, because most
-sightings get no such answer soon. It tells the owner's play from a team's
+sightings get no such answer soon. Even the queues, replayed from a
+recording, read about 1100 ms. It tells the owner's play from a team's
 only once there are recordings to compare.
+
+No overlay yet shows the stale enemy a clocked side believes in. That is
+what invariant 13 would ask the demo to draw.
 
 **The meter.** M in `make demo-rts` draws each computer side's thinking
 beside its base: the mean and 95th percentile of its last thirty decisions
@@ -353,7 +370,8 @@ against its 2.5 ms of the frame (strategy and tactics, `FrameBudget`), red
 past it, and a line of those decisions so a replan's spike can be found
 after it passed. It reads `RtsSide.timings`, the counters
 `test/rts/rts_match.gd` holds to the shares, and times its own drawing
-apart. K puts the human clock on the computer.
+apart: the figure shown is the last frame's. It stays hidden until M asks
+for it. K puts the human clock on the computer.
 
 ## What it does not do
 

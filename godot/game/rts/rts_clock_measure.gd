@@ -33,6 +33,10 @@ const HORIZON_SECONDS: float = 10.0
 ## What a recording of a person says it is.
 const PERSON: String = "person"
 
+## How many times `measured_from` has run in this process: a game must
+## never, and `rts_human_clock_test.gd` holds it to that.
+static var measurements: int = 0
+
 
 ## Where a person's recordings of the RTS live: `data/rts/` at the top of
 ## the repository, beside ADR 0017's other recordings.
@@ -198,6 +202,7 @@ static func _give_due(world: RtsWorld, commands: Array, next: int) -> int:
 ## {reaction_ms: the median wait, most_actions: the busiest window of any
 ## of them, window_seconds, source}; {} when there is none.
 static func measured_from(folder: String) -> Dictionary:
+	measurements += 1
 	var waits: Array = []
 	var busiest_seen: int = 0
 	var counted: int = 0

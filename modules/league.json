@@ -17,6 +17,6 @@
     "game_shared"
   ],
   "gates": [
-    "test-rts-league"
+    "test-rts-clock-limits"
   ]
 }
