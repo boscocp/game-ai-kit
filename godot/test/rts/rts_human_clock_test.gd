@@ -231,6 +231,65 @@ func test_a_file_without_all_four_values_gives_the_stand_in() -> void:
 	assert_int(RtsHumanClock.from_file(whole)["most_actions"]).is_equal(9)
 
 
+func test_the_drawn_enemy_is_the_view_the_clock_handed() -> void:
+	var clock := RtsHumanClock.new(Busy.new(0), 350.0, 0)
+	var thinking: RtsThinking = auto_free(RtsThinking.new())
+	thinking.clock = clock
+
+	clock.decide(_view_at(0))
+	clock.decide(_view_at(30))
+	# The barracks stands in the view of 30, and the side was handed 0's.
+	assert_array(thinking.believed_enemy()).is_empty()
+	clock.decide(_view_at(60))
+
+	assert_array(thinking.believed_enemy()).is_equal(clock.last_handed().enemies())
+	assert_array(thinking.believed_enemy()).is_equal(_view_at(30).enemies())
+	# Handed at 60 from the view of 30: half a second, 30 ticks.
+	assert_float(clock.enemy_age_ms()).is_equal_approx(500.0, 0.001)
+	assert_str(thinking.clock_lines()[0]).contains("500 ms ago")
+
+
+func test_without_the_clock_no_late_enemy_is_drawn() -> void:
+	var thinking: RtsThinking = auto_free(RtsThinking.new())
+
+	assert_array(thinking.believed_enemy()).is_empty()
+	assert_array(thinking.clock_lines()).is_empty()
+	thinking.clock = RtsHumanClock.new(Busy.new(0), 350.0, 0)
+	# A clock that has not decided yet has handed nothing either.
+	assert_array(thinking.believed_enemy()).is_empty()
+
+
+func test_the_panel_says_what_waits_under_the_cap_and_for_how_long() -> void:
+	var clock := RtsHumanClock.new(Busy.new(1), 0.0, 2, 1.0)
+	var thinking: RtsThinking = auto_free(RtsThinking.new())
+	thinking.clock = clock
+
+	for tick: int in [0, 10, 20, 30]:
+		clock.decide(_view_at(tick))
+
+	# Two given at 0 and 10 fill the window; 20's and 30's wait.
+	assert_dict(clock.waiting()).is_equal({"count": 2, "oldest_ms": 10.0 * 1000.0 / RtsWorld.TICKS_PER_SECOND})
+	assert_str(thinking.clock_lines()[1]).contains("2 command(s)")
+
+
+func test_the_game_draws_the_enemy_its_clocked_computer_was_handed() -> void:
+	var game: RtsGame = _mounted_game()
+	assert_object(game._thinking.clock).is_null()
+
+	game._on_key(KEY_K)
+	for _decision: int in range(3):
+		game.step_decision()
+
+	var clock: RtsHumanClock = game.played.controllers[RtsScenario.EAST]
+	assert_object(game._thinking.clock).is_same(clock)
+	assert_object(clock.last_handed()).is_not_null()
+	assert_array(game._thinking.believed_enemy()).is_equal(clock.last_handed().enemies())
+	assert_str(game._panel.text).contains("late view")
+	game._on_key(KEY_K)
+	assert_object(game._thinking.clock).is_null()
+	assert_array(game._thinking.believed_enemy()).is_empty()
+
+
 func _mounted_game() -> RtsGame:
 	var game: RtsGame = auto_free((load("res://game/rts/rts.tscn") as PackedScene).instantiate())
 	add_child(game)

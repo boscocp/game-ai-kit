@@ -361,8 +361,18 @@ sightings get no such answer soon. Even the queues, replayed from a
 recording, read about 1100 ms. It tells the owner's play from a team's
 only once there are recordings to compare.
 
-No overlay yet shows the stale enemy a clocked side believes in. That is
-what invariant 13 would ask the demo to draw.
+**The late enemy (T118).** With K on, the thinking view draws the enemy
+the clocked computer was handed: each unit a hollow ring where the
+computer believes it stands, a dashed thread to where it stands now, and
+the view's age in milliseconds. The panel says the same in a line, and,
+when the cap holds commands back, how many wait and how long the oldest
+has. All of it is read from the clock (`RtsHumanClock.last_handed()`,
+`enemy_age_ms()`, `waiting()`), never recomputed, so it cannot show a view
+the side did not get; `test/rts/rts_human_clock_test.gd` holds that the
+drawn enemy is the handed one, and that nothing is drawn without the
+clock. In a windowed run with V and K on (2026-11-05), the rings trailed
+the moving units by half a second. Whether the computer's answer visibly
+follows the rings is T118's manual check, a person's.
 
 **The meter.** M in `make demo-rts` draws each computer side's thinking
 beside its base: the mean and 95th percentile of its last thirty decisions

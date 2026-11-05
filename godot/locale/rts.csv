@@ -208,3 +208,7 @@ K human clock · M meter,K relógio humano · M medidor
 recording: {count} match(es) kept in data/rts/,gravando: {count} partida(s) guardada(s) em data/rts/
 "meter: {ms} ms to draw its last frame, charged to no side","medidor: {ms} ms para desenhar seu último quadro, cobrados de nenhum lado"
 "thinking {mean} ms, 95th {p95}, of {share}","pensando {mean} ms, 95º {p95}, de {share}"
+"late view: nothing seen long enough ago, so no enemy yet","visão atrasada: nada visto há tempo bastante, então nenhum inimigo ainda"
+"late view: the enemy as it stood {ms} ms ago, {count} unit(s)","visão atrasada: o inimigo como estava há {ms} ms, {count} unidade(s)"
+"waiting under the cap: {count} command(s), the oldest for {ms} ms","esperando sob o limite: {count} comando(s), o mais antigo há {ms} ms"
+{ms} ms ago,há {ms} ms

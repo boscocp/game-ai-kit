@@ -9,7 +9,10 @@
 ## every region's score is written at the region. And with `I`, the side's
 ## **influence map**: its own strength in its colour, the enemy's as it
 ## believes it, fog and memory included -- so a person can watch the
-## estimate go wrong.
+## estimate go wrong. And when K has put the human clock on the side, the
+## **late enemy** it was handed: each enemy unit hollow, where the side
+## believes it stands, with a thread to where it stands now and the view's
+## age in ms -- so a person sees what the late answer is answering.
 ##
 ## When not to use it: to show a person's side. A person is not thinking
 ## anything this can read.
@@ -21,6 +24,10 @@ const STATE_COLOURS: Dictionary = {
 	Squad.FIGHT: Color(1.0, 0.3, 0.2), Squad.RETREAT: Color(0.6, 0.6, 1.0),
 }
 const SCORE_COLOUR := Color(1.0, 1.0, 1.0, 0.9)
+## The late enemy: a hollow ring where the clocked side believes a unit
+## stands, and a thread to where it stands now.
+const BELIEVED_COLOUR := Color(1.0, 1.0, 1.0, 0.85)
+const THREAD_COLOUR := Color(1.0, 1.0, 1.0, 0.4)
 const PLAN_COLOUR := Color(1.0, 0.5, 0.9)
 ## The arm weighed, worth it and not: a sentence each.
 const ARMING: Array[String] = [  # shown through tr()
@@ -40,13 +47,44 @@ var watcher: int = -1
 var show_influence: bool = false
 ## What the side's snapshot showed when last asked.
 var view: RtsSnapshot
+## The human clock the side plays under, or null when K is off: the late
+## enemy is read from it, never recomputed.
+var clock: RtsHumanClock
+
+
+## The enemy the clocked side was last handed, unit by unit, exactly as the
+## clock handed it: what the late enemy draws. Empty without the clock, or
+## before its first decision.
+func believed_enemy() -> Array[Dictionary]:
+	if clock == null or clock.last_handed() == null:
+		return []
+	return clock.last_handed().enemies()
+
+
+## The clock's lines for the panel: how late the enemy it was handed is,
+## and what waits under the cap. None without the clock.
+func clock_lines() -> Array[String]:
+	if clock == null or clock.last_handed() == null:
+		return []
+	var said: Array[String] = []
+	var age: float = clock.enemy_age_ms()
+	if age < 0.0:
+		said.append(tr("late view: nothing seen long enough ago, so no enemy yet"))
+	else:
+		said.append(tr("late view: the enemy as it stood {ms} ms ago, {count} unit(s)").format({
+			ms = roundi(age), count = believed_enemy().size()}))
+	var waiting: Dictionary = clock.waiting()
+	if waiting["count"] > 0:
+		said.append(tr("waiting under the cap: {count} command(s), the oldest for {ms} ms").format({
+			count = waiting["count"], ms = roundi(waiting["oldest_ms"])}))
+	return said
 
 
 ## The panel's text: the side's goal, plan, queue and squads, a line each.
 func lines() -> Array[String]:
 	if side == null or view == null:
 		return []
-	var said: Array[String] = []
+	var said: Array[String] = clock_lines()
 	var thinking: Dictionary = side.overlay(view)
 	if thinking.has("goal") and (thinking["goal"] as PackedStringArray).is_empty():
 		return [tr("not thought yet: it decides twice a second once the match runs")]
@@ -99,6 +137,7 @@ func _draw() -> void:
 		return
 	if show_influence:
 		_draw_influence()
+	_draw_believed()
 	for squad: Squad in side.squads:
 		if _shown(squad.centre):
 			_draw_squad(squad)
@@ -158,6 +197,23 @@ func _seen_at(id: int) -> Vector2:
 		if unit["id"] == id:
 			return RtsView.to_screen(unit["position"])
 	return Vector2.INF
+
+
+# The late enemy: each unit the clock handed on, hollow where the side
+# believes it stands, threaded to where it stands now when it still stands
+# and may be shown; the view's age written once, at its first unit.
+func _draw_believed() -> void:
+	var believed: Array[Dictionary] = believed_enemy()
+	for unit: Dictionary in believed:
+		var at: Vector2 = RtsView.to_screen(unit["position"])
+		draw_arc(at, RtsView.CELL * 0.45, 0.0, TAU, 16, BELIEVED_COLOUR, 1.5)
+		var now: RtsUnit = world.unit(unit["id"]) if world != null else null
+		if now != null and _shown(now.position):
+			draw_dashed_line(at, RtsView.to_screen(now.position), THREAD_COLOUR, 1.0, 4.0)
+	if not believed.is_empty():
+		var label: String = tr("{ms} ms ago").format({ms = roundi(clock.enemy_age_ms())})
+		draw_string(ThemeDB.fallback_font, RtsView.to_screen(believed[0]["position"]) + Vector2(8.0, 14.0), label,
+			HORIZONTAL_ALIGNMENT_LEFT, -1.0, 11, BELIEVED_COLOUR)
 
 
 # Each square of the coarse grid tinted by who the side believes holds it.
