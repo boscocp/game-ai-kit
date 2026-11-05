@@ -632,16 +632,23 @@ What it shows:
   than +259, the sharp one's -47 rather than -218, the even one's +7. The
   team's share is what the knob changes, so reading it closes the loop on
   the match rather than on one bot: the team shares on sit at 0.48 to 0.49.
-  The sharp stand-in still tips a little past even.
+  The sharp stand-in's team still ends past even, the other way: -47 is
+  the largest lead with this band.
 - **The band chosen is the middle row's own range.** 0.45 to 0.55 had the
-  smallest leads on all three, and fewer changes than no band or a narrower
-  one. A wider band, 0.40 to 0.60, holds the poor stand-in's team share,
+  smallest leads in sum (12 + 7 + 47 = 66, against 96 for 0.47 to 0.53),
+  not in each column: no band leaves the even stand-in nearer even (+4),
+  and 0.40 to 0.60 and 0.47 to 0.53 the sharp one (+8, +28). Nor in the
+  worst case: 0.47 to 0.53's worst is -40, this band's -47. Five seeds do
+  not separate it from 0.47 to 0.53. It also changed the row less often
+  than no band or the narrower one. A wider band, 0.40 to 0.60, holds the poor stand-in's team share,
   0.44, inside it, so its match is never helped (-121), and swings the sharp
   one between the hard and the easy rows.
 - **It does not settle; it alternates.** With the band equal to the middle
   row, a share leaving the band always lands on a row past the middle, so
-  the knob moves between rows 2 and 4 and never back to 3: about three
-  changes a match, most of them turning back. The row is held for a minute
+  the knob moves between rows 2 and 4 and never back to 3 -- after the
+  first reading, which for the sharp stand-in is row 5 on every seed --
+  about three changes a match, most of them turning back. Only a change of
+  team brings it back to the middle row. The row is held for a minute
   or more at a time, rather than every ten seconds as T100's chattered,
   but this is still two levels of difficulty taking turns, not one found.
 - **Five seeds a row**, and a band picked from four measured: the leads are

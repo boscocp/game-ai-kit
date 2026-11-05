@@ -233,3 +233,32 @@ func test_a_match_with_a_change_of_side_rebuilds_from_its_events_as_read_live() 
 	_play_on(world, 90.0)
 	assert_int(world.difficulty.model.restarts).is_equal(1)
 	assert_bool(_rebuilt_as_read(world)).is_true()
+
+
+# A seat taken exactly on a reading's step (the review of wave 132): it is
+# stamped with the last step taken, so the reading at the next interval
+# counts it live and replayed alike. Stamped with `steps_done`, live and
+# replay part.
+func test_a_seat_on_a_reading_step_rebuilds_as_read_live() -> void:
+	var world: BotMatch = _played(4, 0.5, 30.0)
+	assert_int(world.steps_done % world.difficulty.interval_steps).is_equal(0)
+	world.seat_person(BotMatch.BOTS_A_SIDE)
+	_play_on(world, 60.0)
+	assert_int(world.difficulty.model.restarts).is_equal(1)
+	assert_bool(_rebuilt_as_read(world)).is_true()
+
+
+# Only the person's own team-mates' damage is noted as a mate's: an
+# opponent's hit or hurt is not the team's share (the review of wave 132).
+func test_mate_events_come_only_from_the_persons_team() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	world.seat_person(0)
+	var before: int = world.person_events.size()
+	world.note(BotMatch.BOTS_A_SIDE, "hit", 10)
+	world.note(BotMatch.BOTS_A_SIDE, "hurt", 10)
+	assert_int(world.person_events.size()).is_equal(before)
+	world.note(1, "hit", 10)
+	world.note(1, "shot")
+	assert_int(world.person_events.size()).is_equal(before + 1)
+	assert_str(str(world.person_events[-1]["kind"])).is_equal(PlayerModel.MATE_HIT)
