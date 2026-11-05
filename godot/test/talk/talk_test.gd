@@ -56,7 +56,9 @@ func _say(guard: TalkGuard, line: String) -> Dictionary:
 
 func test_the_scene_has_a_rule_for_every_act() -> void:
 	assert_str(TalkRules.why_scene_is_wrong()).is_empty()
-	assert_int(TalkRules.every_act().size()).is_equal(19)
+	# 15 acts with their arguments, and each of the 8 intents alone: the
+	# validator lets an empty argument through for every intent (R7).
+	assert_int(TalkRules.every_act().size()).is_equal(23)
 
 
 func test_three_ways_to_win() -> void:
@@ -107,6 +109,18 @@ func test_the_same_act_in_any_words_moves_the_guard_the_same() -> void:
 		var guard: TalkGuard = _guard(PackedStringArray([_reply(speech, "name_person", "okafor")]))
 		var turn: Dictionary = await _say(guard, "Doctor Okafor sent for me.")
 		assert_array([turn["trust_moved"], turn["suspicion_moved"]]).is_equal([2, 0])
+
+
+func test_an_act_with_its_argument_left_empty_is_ruled_not_lost() -> void:
+	var expected: Dictionary = {"claim_role": "a-role-he-cannot-place", "show": "something-shown",
+		"name_person": "a-name-nobody-knows", "ask": "a-stray-question"}
+	for intent: String in expected:
+		var guard: TalkGuard = _guard(PackedStringArray([_reply("Hm.", intent)]))
+		var turn: Dictionary = await _say(guard, "Well.")
+		assert_str(turn["refusal_code"]).is_empty()
+		assert_str(turn["rule"]).is_equal(expected[intent])
+	var vague: Dictionary = TalkRules.step(_play([["claim_role", "courier"]]), "claim_role", "")
+	assert_str(vague["rule"]).is_equal("a-role-he-cannot-place")
 
 
 func test_a_refused_reply_and_the_password_move_nothing() -> void:

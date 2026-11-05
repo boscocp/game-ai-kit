@@ -8,10 +8,12 @@
 ## reply arrives as `unclear`, which moves nothing and spends a turn.
 ##
 ## The rules are a list read top to bottom, the first that fits deciding.
-## An act is written `intent:argument`, or the bare intent when it has none;
-## a rule fits when its `act` is the act or the act's intent, and, if it has
-## `if_any`, when one of the acts named there -- other than this very act --
-## was made before. It moves two numbers: trust, which opens the door at
+## An act is written `intent:argument`, or the bare intent when it has no
+## argument -- which the validator allows every intent, so `claim_role` alone
+## is a role the model could not place. In a rule, `intent:*` is any act of
+## that intent with an argument. A rule fits when its `act` names the act
+## and, if it has `if_any`, when one of the acts named there -- other than
+## this very act -- was made before. It moves two numbers: trust, which opens the door at
 ## `open_at`, and suspicion, which sounds the alarm at `alarm_at`. Saying
 ## the same thing twice wins no trust the second time and costs its
 ## suspicion again -- except `unclear`, which is nothing understood. The
@@ -54,11 +56,18 @@ static func act_of(intent: String, argument: String) -> String:
 ## The first rule that fits `act`, given the acts already `said`; {} when
 ## none does, which `why_scene_is_wrong` makes impossible for a known act.
 static func rule_for(act: String, said: Array) -> Dictionary:
-	var intent: String = act.get_slice(":", 0)
 	for rule: Dictionary in scene()["rules"]:
-		if (rule["act"] == act or rule["act"] == intent) and _fits(rule, said, act):
+		if names(rule["act"], act) and _fits(rule, said, act):
 			return rule
 	return {}
+
+
+## True when `written`, as a rule spells acts, names `act`: the act itself,
+## or `intent:*` for any act of that intent with an argument.
+static func names(written: String, act: String) -> bool:
+	if written.ends_with(":*"):
+		return act.contains(":") and act.get_slice(":", 0) == written.trim_suffix(":*")
+	return written == act
 
 
 # True when `rule` has no `if_any`, or one of the acts it names was said
@@ -127,33 +136,50 @@ static func validator(language: String) -> LlmValidator:
 		PackedStringArray(scene()["secrets"]))
 
 
-## Why the scene cannot be played, or "": every act the guard understands
-## needs a rule. Checked by the tests, as `gameaikit.talk` checks it.
+## Why the scene cannot be played, or "": every act needs a rule, the rules
+## may name only acts the guard understands, and no secret may be in the
+## instructions -- the same three checks as `gameaikit.talk.rules`.
 static func why_scene_is_wrong() -> String:
 	if scene().is_empty():
 		return "%s cannot be read" % SCENE_FILE  # not shown: a test's message
 	for act: String in every_act():
 		if rule_for(act, every_act()).is_empty():
 			return "the act %s has no rule" % act  # not shown: a test's message
+	for rule: Dictionary in scene()["rules"]:
+		var named: String = _unknown_act_in(rule)
+		if named != "":
+			return "the rule %s names %s, which is not an act" % [rule["id"], named]  # not shown: a test's message
+	for language: String in scene()["languages"]:
+		if validator(language).gives_away_a_secret(words(language)["instructions"]):
+			return "the %s instructions contain a secret" % language  # not shown: a test's message
 	return ""
 
 
-## Every act: each intent with each of its arguments, or alone without one.
+# The first act `rule` names that no act the guard understands answers to, or "".
+static func _unknown_act_in(rule: Dictionary) -> String:
+	var acts: Array[String] = every_act()
+	for named: String in [rule["act"]] + Array(rule.get("if_any", [])):
+		if not acts.any(func(act: String) -> bool: return names(named, act)):
+			return named
+	return ""
+
+
+## Every act the validator can hand the guard: each intent with each of its
+## arguments, and each intent alone -- an empty argument passes R7 for every
+## intent, not only for those that take none.
 static func every_act() -> Array[String]:
 	var acts: Array[String] = []
 	for intent: String in scene()["intents"]:
-		var arguments: Array = scene()["intents"][intent]
-		if arguments.is_empty():
-			acts.append(intent)
-		for argument: String in arguments:
+		for argument: String in scene()["intents"][intent]:
 			acts.append(act_of(intent, argument))
+		acts.append(intent)
 	return acts
 
 
-# True when `earlier` -- an act, or a bare intent meaning any of its acts --
-# was said as some act other than `act`: one role claimed twice is one role.
+# True when an act `earlier` names was said, as some act other than `act`:
+# one role claimed twice is one role.
 static func _was_said(earlier: String, said: Array, act: String) -> bool:
 	for other: String in said:
-		if other != act and (other == earlier or other.get_slice(":", 0) == earlier):
+		if other != act and names(earlier, other):
 			return true
 	return false

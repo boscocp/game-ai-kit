@@ -197,12 +197,12 @@ static func _deepest(outside: String) -> int:
 
 
 ## spec/llm/reply.schema.json narrowed to this game: one shape per intent,
-## `anyOf`, each naming its intent and the arguments it takes -- an empty
-## one for an intent that takes none, one of its values for one that does.
-## What a runtime that can constrain its output is handed. A convenience,
-## not the validator: a runtime may ignore it, and every reply is validated
-## anyway. Measured in T94 (docs/godot/talk.md): with the narrowed shape the
-## pinned server no longer sends an argument the act does not take (R7).
+## `anyOf`, each naming its intent and offering only its own arguments, or
+## the empty one R7 allows every intent. What a runtime that can constrain
+## its output is handed. A convenience, not the validator: a runtime may
+## ignore it, and every reply is validated anyway. Measured in T94 on the
+## pinned llama.cpp server only (docs/godot/talk.md): with the narrowed
+## shape it no longer sends an argument the act does not take (R7).
 func json_schema() -> Dictionary:
 	var names: Array = _intents.keys()
 	names.sort()
@@ -213,7 +213,7 @@ func json_schema() -> Dictionary:
 func _shape_of(intent: String) -> Dictionary:
 	var arguments: PackedStringArray = _intents[intent]
 	var speech: Dictionary = {"type": "string", "minLength": 1, "maxLength": SPEECH_LIMIT}
-	var allowed: Array = Array(arguments) if not arguments.is_empty() else [""]
+	var allowed: Array = Array(arguments) + [""]
 	return {
 		"type": "object",
 		"properties": {"speech": speech, "intent": {"type": "string", "enum": [intent]},

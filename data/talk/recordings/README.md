@@ -18,7 +18,7 @@ These are the model's output, so they carry its name and its licence
 | sha256 | `33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761` |
 | licence | Apache-2.0, as its model card states it (front matter and its "License" section; read 2026-10-29, `docs/local-llm/bakeoff.md`) |
 | server | llama.cpp `llama-server` b11960, Vulkan build, `scripts/llm serve` (context 4096, one slot, reasoning off) |
-| recorded | 2026-11-05, with `make record-talk`, through the game's own `TalkGuard`, `RecordingRuntime` and `HttpRuntime` |
+| recorded | 2026-11-05, with `make record-talk`, through the game's own `TalkGuard`, `RecordingRuntime` and `HttpRuntime`, under T94's first narrowed schema (no empty argument offered to an intent that takes values; `docs/godot/talk.md`) |
 
 The server samples (the game sends no temperature), so recording again
 gives different answers. After recording, write the vectors with

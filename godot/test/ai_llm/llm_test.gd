@@ -92,7 +92,7 @@ func test_the_schema_and_the_instructions_name_the_games_intents() -> void:
 	# One shape per intent, offering only its own arguments: what took R7
 	# out of the pinned server's replies (T94, docs/godot/talk.md).
 	assert_array(shapes.map(func(shape: Dictionary) -> Array:
-		return shape["properties"]["argument"]["enum"])).is_equal([["merchant"], [""]])
+		return shape["properties"]["argument"]["enum"])).is_equal([["merchant", ""], [""]])
 	for shape: Dictionary in shapes:
 		assert_array(shape["required"]).is_equal(["speech", "intent", "argument"])
 		assert_bool(shape["additionalProperties"]).is_false()

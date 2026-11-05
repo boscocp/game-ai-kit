@@ -72,34 +72,53 @@ suspicion +3), a second role (+2), a threat (+3), a bribe (+2), or eight
 turns spent. Saying the same thing twice wins no trust and costs its
 suspicion again.
 
+The validator lets an empty argument through for every intent (R7), so an
+act may arrive with its argument left empty: a role, a paper, a name or a
+question the model could not place among the scene's values. Each has a
+rule of its own -- a role nobody can place and a name nobody knows cost one
+point of suspicion, the other two nothing -- and none of them counts as a
+role claimed for "a second role".
+
 **When a threshold fires, Bram's last line is the scene's ending, never the
 model's**, so the model can never say "go in" when the rules said no. The
 model is told only what the guard would say freely: the password
-(`nightjar`) and the name the delivery is for live in the rules, and the
-validator refuses a reply that says the password anyway (R11).
+(`nightjar`) is only in the rules, and the validator refuses a reply that
+says it anyway (R11). Okafor is one of the four names the prompt and the
+schema list for `name_person`; that she is the one the delivery is for --
+the name the guard is waiting for -- is only in the rules.
 
 ## The schema, measured
 
 T93's bake-off found most refused replies were R7, an argument the act
 does not take: T92's schema left `argument` a free string. T94 narrowed
 `LlmValidator.json_schema()` (and the Python twin) to an `anyOf`, one shape
-per intent, each offering only that intent's arguments -- an empty one for
-an intent that takes none. Measured on the bake-off's 30 lines, through the
+per intent, each offering only that intent's arguments, and the empty one
+R7 allows every intent. Measured on the bake-off's 30 lines, through the
 game's own path (`live_probe.gd`), Ministral 3 8B on the Vulkan build at
 b11960, three rounds a language, 2026-11-05, against T93's three rounds of
-the same model and build:
+the same model and build. The first narrowed form offered no empty argument
+to an intent that takes values; the review found that the prompt and the
+validator allow one, and the form that ships offers it, measured again:
 
 | language | schema | valid of 30 | act right | act and argument right | refusals in 90 |
 |---|---|---|---|---|---|
 | en | free string (T93) | 15, 18, 17 | 13, 16, 14 | 11, 12, 10 | R7 30, R10 10 |
-| en | one shape per intent | 27, 25, 28 | 17, 18, 16 | 14, 16, 14 | R10 10 |
+| en | one shape per intent, no empty argument | 27, 25, 28 | 17, 18, 16 | 14, 16, 14 | R10 10 |
+| en | one shape per intent, empty allowed (shipped) | 25, 28, 28 | 18, 21, 21 | 14, 17, 18 | R10 9 |
 | pt-BR | free string (T93) | 22, 22, 22 | 19, 19, 21 | 17, 16, 13 | R7 19, R10 5 |
-| pt-BR | one shape per intent | 29, 29, 30 | 19, 19, 19 | 18, 17, 17 | R10 2 |
+| pt-BR | one shape per intent, no empty argument | 29, 29, 30 | 19, 19, 19 | 18, 17, 17 | R10 2 |
+| pt-BR | one shape per intent, empty allowed (shipped) | 28, 29, 30 | 19, 21, 22 | 16, 15, 16 | R10 3 |
 
-No R7 is left; the median reply time did not move (0.45-0.50 s). What is
-left is R10, markup -- Ministral likes `*emphasis*` -- which the schema
-does not forbid. The validator still checks every reply: a runtime may
-ignore the schema, and a recording may be wrong.
+No R7 is left in either narrowed form; the median reply time did not move
+(0.45-0.52 s). With the empty argument offered, the model used it on 0 to 3
+of the 30 lines a round. What is left is R10, markup -- Ministral likes
+`*emphasis*` -- which the schema does not forbid. The validator still
+checks every reply: a runtime may ignore the schema, and a recording may be
+wrong. This is measured on the pinned llama.cpp server only, which takes the
+root `anyOf` under `strict: true`; another server may not.
+
+The recordings were made with the first narrowed form, the one with no
+empty argument; they are data, replayed through the validator either way.
 
 One prompt change was tried and dropped: telling the guard to judge "the
 visitor's last line only" made the recorded conversations worse (13 and 18

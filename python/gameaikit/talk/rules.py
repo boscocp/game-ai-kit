@@ -8,8 +8,10 @@ arrives here. A reply that was refused arrives as `unclear`, which moves
 nothing but spends a turn.
 
 The rules are a list read top to bottom, the first that fits deciding. An
-act is written `intent:argument`, or the bare intent when it has none, and
-a rule fits when its `act` is the act or the act's intent, and, if it has
+act is written `intent:argument`, or the bare intent when it has no argument
+-- which the validator allows every intent, so `claim_role` alone is a role
+the model could not place. In a rule, `intent:*` is any act of that intent
+with an argument. A rule fits when its `act` names the act and, if it has
 `if_any`, when one of the acts named there -- other than this very act --
 was made before. What it moves
 is two numbers: trust, which opens the door at `open_at`, and suspicion,
@@ -73,14 +75,21 @@ def rule_for(act: str, said: tuple[str, ...], scene: dict = SCENE) -> dict:
     A KeyError when none does: `why_scene_is_wrong` refuses a scene where an
     act the guard understands has no rule, so a game never meets one.
     """
-    intent = act.split(":")[0]
     for rule in scene["rules"]:
-        if rule["act"] not in (act, intent):
+        if not names(rule["act"], act):
             continue
         if "if_any" in rule and not any(_was_said(earlier, said, act) for earlier in rule["if_any"]):
             continue
         return rule
     raise KeyError(f"no rule for the act {act}")
+
+
+def names(written: str, act: str) -> bool:
+    """True when `written`, as a rule spells acts, names `act`: the act
+    itself, or `intent:*` for any act of that intent with an argument."""
+    if written.endswith(":*"):
+        return ":" in act and act.split(":")[0] == written[:-2]
+    return written == act
 
 
 def step(guard: Guard, intent: str, argument: str, scene: dict = SCENE) -> Ruling:
@@ -132,7 +141,7 @@ def why_scene_is_wrong(scene: dict = SCENE) -> str:
             return f"the act {act} has no rule"
     for rule in scene["rules"]:
         for named in [rule["act"], *rule.get("if_any", [])]:
-            if named not in acts and named not in scene["intents"]:
+            if not any(names(named, act) for act in acts):
                 return f"the rule {rule['id']} names {named}, which is not an act"
     for language, words in scene["languages"].items():
         if any(secret.lower() in words["instructions"].lower() for secret in scene["secrets"]):
@@ -141,17 +150,16 @@ def why_scene_is_wrong(scene: dict = SCENE) -> str:
 
 
 def every_act(scene: dict = SCENE) -> list[str]:
-    """Every act the guard understands: each intent with each of its arguments,
-    or alone when it takes none."""
+    """Every act the validator can hand the guard: each intent with each of
+    its arguments, and each intent alone -- an empty argument passes R7 for
+    every intent, not only for those that take none."""
     acts = []
     for intent, arguments in scene["intents"].items():
-        acts += [act_of(intent, argument) for argument in arguments] or [intent]
+        acts += [act_of(intent, argument) for argument in arguments] + [intent]
     return acts
 
 
 def _was_said(earlier: str, said: tuple[str, ...], act: str) -> bool:
-    """True when `earlier` -- an act, or a bare intent meaning any of its acts --
-    was said as some act other than `act`: claiming the same role twice is
-    not a second role."""
-    return any(other != act and (other == earlier or other.split(":")[0] == earlier)
-               for other in said)
+    """True when an act `earlier` names was said, as some act other than
+    `act`: claiming the same role twice is not a second role."""
+    return any(other != act and names(earlier, other) for other in said)

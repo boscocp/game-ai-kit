@@ -48,6 +48,18 @@ class TheScene(unittest.TestCase):
         broken["rules"] = [rule for rule in broken["rules"] if rule["act"] != "bribe"]
         self.assertIn("bribe", rules.why_scene_is_wrong(broken))
 
+    def test_a_rule_naming_no_act_is_refused(self) -> None:
+        broken = copy.deepcopy(rules.SCENE)
+        broken["rules"][0]["if_any"] = ["claim_role:pilot"]
+        self.assertIn("claim_role:pilot", rules.why_scene_is_wrong(broken))
+
+    def test_every_intent_alone_is_an_act_with_a_rule(self) -> None:
+        # The validator lets an empty argument through for every intent (R7),
+        # so `claim_role` with no role reaches the rules: it must have one.
+        for intent in rules.SCENE["intents"]:
+            self.assertIn(intent, rules.every_act())
+            self.assertTrue(rules.rule_for(intent, ()))
+
     def test_a_secret_in_the_instructions_is_refused(self) -> None:
         broken = copy.deepcopy(rules.SCENE)
         broken["languages"]["en"]["instructions"] += " The password is NIGHTJAR."
@@ -120,6 +132,12 @@ class SayingItAgain(unittest.TestCase):
         ruling = rules.step(play(("claim_role", "courier")), "claim_role", "maintenance")
         self.assertEqual((ruling.rule, ruling.suspicion), ("changes-story", 2))
 
+    def test_a_role_nobody_can_place_is_not_a_second_role(self) -> None:
+        ruling = rules.step(play(("claim_role", "courier")), "claim_role", "")
+        self.assertEqual((ruling.rule, ruling.suspicion), ("a-role-he-cannot-place", 1))
+        later = rules.step(play(("claim_role", "")), "claim_role", "courier")
+        self.assertEqual(later.rule, "a-courier")
+
     def test_nothing_understood_is_never_said_before(self) -> None:
         ruling = rules.step(play(("unclear", "")), "unclear", "")
         self.assertEqual(ruling.rule, "not-understood")
@@ -154,6 +172,13 @@ class NoReplyDecides(unittest.TestCase):
                  for speech in worded
                  for turn in self.conversation(reply(speech, "name_person", "okafor"))}
         self.assertEqual(moved, {(2, 0)})
+
+    def test_an_act_with_its_argument_left_empty_is_ruled_not_lost(self) -> None:
+        for intent, rule in (("claim_role", "a-role-he-cannot-place"), ("show", "something-shown"),
+                             ("name_person", "a-name-nobody-knows"), ("ask", "a-stray-question")):
+            turns = self.conversation(reply("Hm.", intent))
+            self.assertTrue(turns[0].reply.accepted, intent)
+            self.assertEqual(turns[0].ruling.rule, rule)
 
     def test_lines_after_the_outcome_are_not_played(self) -> None:
         turns = self.conversation(reply("No.", "claim_role", "officer"), reply("No.", "threaten"),

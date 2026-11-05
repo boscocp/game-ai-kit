@@ -1,5 +1,5 @@
 {
-  "about": "T94's scene: talk your way past Bram, the night guard at the research station's door -- the door the infiltration level sneaks through. The language model is the guard's ears and mouth only: it names the act the player's words were (one of `intents`, T92's reply shape) and voices a line. These rules decide. Each accepted act is matched against `rules`, top to bottom, and the first whose `act` is the act -- `intent:argument`, or the bare intent for any argument -- and whose `if_any` names an act already made (or is absent) moves the guard's trust and suspicion. An act made before wins no trust the second time; its suspicion counts again (`said_before`) -- except `unclear`, which is no act at all: nothing understood, or a reply refused. After each turn: suspicion at `alarm_at` raises the alarm, else trust at `open_at` opens the door, else the turn that was the last of `turns` sends the player away -- and the guard's last line is the ending's, written here, never the model's. The secret is never in a prompt: the password is in `secrets`, which the validator refuses in any reply (R11), and the name the guard is waiting for (Doctor Okafor's delivery) is only in the rules. gameaikit.talk and godot/game/talk/ read byte-for-byte copies of this file.",
+  "about": "T94's scene: talk your way past Bram, the night guard at the research station's door -- the door the infiltration level sneaks through. The language model is the guard's ears and mouth only: it names the act the player's words were (one of `intents`, T92's reply shape) and voices a line. These rules decide. Each accepted act is matched against `rules`, top to bottom, and the first whose `act` is the act and whose `if_any` names an act already made other than this one (or is absent) moves the guard's trust and suspicion. An act is `intent:argument`; the bare intent is the act with no argument, which the validator allows every intent (R7) -- a role, a paper, a name or a question the model could not place; `intent:*` in a rule is any act of that intent with an argument. An act made before wins no trust the second time; its suspicion counts again (`said_before`) -- except `unclear`, which is no act at all: nothing understood, or a reply refused. After each turn: suspicion at `alarm_at` raises the alarm, else trust at `open_at` opens the door, else the turn that was the last of `turns` sends the player away -- and the guard's last line is the ending's, written here, never the model's. The secret is never in a prompt: the password is in `secrets`, which the validator refuses in any reply (R11), and the name the guard is waiting for (Doctor Okafor's delivery) is only in the rules. gameaikit.talk and godot/game/talk/ read byte-for-byte copies of this file.",
   "intents": {
     "claim_role": ["maintenance", "courier", "officer", "new_guard"],
     "show": ["badge", "work_order", "nothing"],
@@ -51,7 +51,15 @@
      "why": {"en": "against a fact: no inspection is due", "pt_BR": "contra um fato: nenhuma inspeção está prevista"}},
     {"id": "not-on-the-roster", "act": "claim_role:new_guard", "trust": 0, "suspicion": 3,
      "why": {"en": "against a fact: no new guard on tonight's roster", "pt_BR": "contra um fato: nenhum guarda novo no plantão de hoje"}},
-    {"id": "changes-story", "act": "claim_role", "if_any": ["claim_role"], "trust": 0, "suspicion": 2,
+    {"id": "a-role-he-cannot-place", "act": "claim_role", "trust": 0, "suspicion": 1,
+     "why": {"en": "a role, but none the guard knows", "pt_BR": "um papel, mas nenhum que o guarda conheça"}},
+    {"id": "something-shown", "act": "show", "trust": 0, "suspicion": 0,
+     "why": {"en": "something shown that is not a badge or a work order", "pt_BR": "algo mostrado que não é crachá nem ordem de serviço"}},
+    {"id": "a-name-nobody-knows", "act": "name_person", "trust": 0, "suspicion": 1,
+     "why": {"en": "a name nobody here knows", "pt_BR": "um nome que ninguém aqui conhece"}},
+    {"id": "a-stray-question", "act": "ask", "trust": 0, "suspicion": 0,
+     "why": {"en": "a question about nothing the guard keeps", "pt_BR": "uma pergunta sobre nada que o guarda guarde"}},
+    {"id": "changes-story", "act": "claim_role:*", "if_any": ["claim_role:*"], "trust": 0, "suspicion": 2,
      "why": {"en": "a second role: the story changed", "pt_BR": "um segundo papel: a história mudou"}},
     {"id": "the-expected-courier", "act": "claim_role:courier", "if_any": ["ask:expected_visitor", "name_person:okafor"], "trust": 3, "suspicion": 0,
      "why": {"en": "the courier who is expected tonight", "pt_BR": "o mensageiro esperado hoje"}},

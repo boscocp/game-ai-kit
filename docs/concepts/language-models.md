@@ -51,7 +51,7 @@ llama.cpp through its grammars and the `response_format` field, Ollama
 through `format` ("constrain a model's output to a specific format defined
 by a JSON schema"). That is a convenience and not the validator: a runtime
 can ignore it, and a recording can be wrong. The kit's schema is one shape
-per intent, each offering only that intent's arguments; measured in T94, it
+per intent, each offering only that intent's arguments or none; measured in T94, it
 took the arguments an act does not take out of the pinned model's replies
 ([the guard's page](../godot/talk.md#the-schema-measured)). The validator runs on every
 reply anyway.

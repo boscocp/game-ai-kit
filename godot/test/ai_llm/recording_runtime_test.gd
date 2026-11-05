@@ -44,6 +44,19 @@ func test_a_turn_with_no_text_is_never_saved() -> void:
 	assert_bool(FileAccess.file_exists(_path())).is_false()
 
 
+func test_an_unanswered_turn_after_an_answered_one_spoils_the_recording() -> void:
+	var recording: RecordingRuntime = auto_free(RecordingRuntime.new(RecordedRuntime.new(PackedStringArray([REPLY]))))
+	var conversation: LlmConversation = _conversation(recording)
+	for line: String in ["Hello there.", "And now?"]:
+		assert_int(conversation.say(line)).is_equal(OK)
+		await get_tree().process_frame
+		await get_tree().process_frame
+	assert_bool(conversation.is_thinking()).is_false()
+	assert_int(recording.kept()).is_equal(1)
+	assert_int(recording.save(_path(), {})).is_equal(ERR_INVALID_DATA)
+	assert_bool(FileAccess.file_exists(_path())).is_false()
+
+
 func test_nothing_said_is_nothing_to_save() -> void:
 	var recording: RecordingRuntime = auto_free(RecordingRuntime.new(RecordedRuntime.new()))
 	add_child(recording)

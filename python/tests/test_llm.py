@@ -80,7 +80,7 @@ class TheSchema(unittest.TestCase):
     def test_each_intent_is_offered_only_its_own_arguments(self) -> None:
         shapes = validator.json_schema(GUARD)["anyOf"]
         self.assertEqual([shape["properties"]["argument"]["enum"] for shape in shapes],
-                         [["merchant"], [""]])
+                         [["merchant", ""], [""]])
 
     def test_the_committed_schema_names_the_validators_keys(self) -> None:
         committed = json.loads(SCHEMA.read_text(encoding="utf-8"))

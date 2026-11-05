@@ -8,7 +8,8 @@
 ## that began with those same lines, so recordings that share a beginning
 ## branch where they part. The answer to a chosen line is the model's text
 ## recorded for it, handed to a `RecordedRuntime` and so to the validator
-## exactly as a live answer would be: this file never reads it.
+## exactly as a live answer would be: this file loads the text and passes it
+## on, and never looks inside it or acts on it.
 ##
 ## Two recordings may share a beginning and differ in what the model said
 ## to it; the first, by file name, answers. Played straight through, a
