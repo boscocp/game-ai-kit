@@ -8,6 +8,7 @@ through `LlmValidator`; `make test-llm-vectors` runs both halves.
 
 import json
 import pathlib
+import re
 import unittest
 
 from gameaikit.llm import validator
@@ -100,6 +101,19 @@ class TheVectors(unittest.TestCase):
                 self.assertNotIn("[b]", reply.refusal)
                 for secret in declaration.secrets:
                     self.assertNotIn(secret.translate(validator.ASCII_LOWER), folded)
+
+    def test_the_schemas_speech_pattern_refuses_what_r8_r9_and_r10_refuse(self) -> None:
+        # The pattern asks a constraining runtime for what these rules check
+        # (T116). Each case the vector refuses for its speech's length, a
+        # control character or markup must be one the pattern turns away too,
+        # or the schema asks for less than the validator wants.
+        _, cases = load()
+        speech_cases = [case for case in cases if case.get("refused") in ("R8", "R9", "R10")]
+        self.assertGreaterEqual(len(speech_cases), 8)
+        for case in speech_cases:
+            speech = json.loads(case["raw"], strict=False)["speech"]
+            with self.subTest(case["why"]):
+                self.assertIsNone(re.fullmatch(validator.SPEECH_PATTERN, speech))
 
 
 if __name__ == "__main__":

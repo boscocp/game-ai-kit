@@ -59,6 +59,17 @@ SPEECH_LIMIT = 280
 # HTML and BBCode brackets, Markdown's emphasis and code.
 MARKUP = "<>[]*`"
 
+# The speech as a pattern, for the schema a constraining runtime is handed:
+# one to SPEECH_LIMIT characters, none of them MARKUP, a control character, a
+# quote or a backslash. llama.cpp turns a pattern into a grammar over the
+# string's JSON text, escapes and all, so a class without the quote and the
+# backslash is the one spelling that means the same there and in JSON
+# Schema, which reads the decoded string. It also drops `maxLength` when a
+# pattern is present, so the length is in the pattern too (T116,
+# docs/local-llm/server.md). The guard loses the straight quote; the
+# validator still admits one (R10 is the check, not this).
+SPEECH_PATTERN = r'^[^"\\<>\[\]*`\x00-\x1F\x7F]{1,%d}$' % SPEECH_LIMIT
+
 # How deep objects and lists may nest. A reply is one flat object; past
 # this, Godot's parser and Python's give up at different depths, so both
 # validators stop at the same one first.
@@ -201,11 +212,15 @@ def json_schema(declaration: Declaration) -> dict:
 
     An `anyOf` of one object per intent, sorted by name, each naming its
     intent and offering only its own arguments, or the empty one R7 allows
-    every intent. What a runtime that constrains its output is handed. A
-    convenience, not the validator: it cannot say that a speech holds no
-    secret, and a runtime can ignore it. Measured in T94 on the pinned
-    llama.cpp server only (docs/godot/talk.md): narrowed this way, it
-    stopped sending arguments an act does not take (R7).
+    every intent, and a speech held to SPEECH_PATTERN. What a runtime that
+    constrains its output is handed. A convenience, not the validator: it
+    cannot say that a speech holds no secret, and a runtime can ignore it.
+    Measured on the pinned llama.cpp server only (docs/godot/talk.md):
+    narrowed this way, it stopped sending arguments an act does not take
+    (R7, T94), and with the pattern, markup (R10, T116). The pattern is
+    stricter than the validator: it also leaves out the straight quote and
+    the backslash, which the validator admits. It is always added; a game
+    cannot opt out yet.
     """
     shapes = []
     for name in sorted(declaration.intents):
@@ -213,7 +228,8 @@ def json_schema(declaration: Declaration) -> dict:
         shapes.append({
             "type": "object",
             "properties": {
-                "speech": {"type": "string", "minLength": 1, "maxLength": SPEECH_LIMIT},
+                "speech": {"type": "string", "minLength": 1, "maxLength": SPEECH_LIMIT,
+                           "pattern": SPEECH_PATTERN},
                 "intent": {"type": "string", "enum": [name]},
                 "argument": {"type": "string", "enum": arguments},
             },
