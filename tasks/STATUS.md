@@ -3,6 +3,98 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-11-05 (waves 125 to 127 merged)
+
+**Where it stopped -- read first.** Three waves ran in parallel worktrees.
+Each was reviewed by a fresh context before its merge, and the findings
+were applied on the branch:
+
+- 126 T94, talk your way past the guard (#68). Changes requested, one
+  blocker: an act the validator admits with an empty argument had no
+  rule. Python raised KeyError and GDScript ruled it under "".
+- 125 T87, MCTS plays the XCOM-style mode (#69). Approved, with three
+  should-fix findings: `principal_line` untested on chance, Enter played
+  after four iterations, and the page's times.
+- 127 T55, the RTS's human side (#70). Changes requested, one blocker: K
+  replayed every recording in `data/rts/` on every frame. Two leaks the
+  gate could not see were also found: the delayed side was handed
+  current enemy fields, and its own units' targets were current.
+
+Main is 1910534.
+
+**How it was checked.** The owner chose these three on 2026-11-05
+("rode as 3 que dão pra seguir em paralelo"). T96 shares
+`godot/game/squad/` with T87, and T89 waits on T85's manual check. The
+owner left the two follow-ups below (items 12-13, 10 of 2026-11-04) for
+later.
+
+- Each wave passed its own `check-affected`, which selected everything
+  in all three.
+- #68 and #69 merged on their reviewed heads.
+- The whole `make check` ran once, on #70's head after it merged main
+  (25c8fa5): exit 0, 1708 gdUnit cases, 0 failures. Its nine
+  `SCRIPT ERROR` lines are in-memory scripts from planted cases (six in
+  `godot/test/menu/demo_overlays.gd`).
+
+The auto-mode classifier refused a force-push, so the branches were
+brought up to date by merging main into them, not by rebasing. The squash
+merge drops the merge commits.
+
+**Waiting on the owner -- one numbered list, each with a recommendation.**
+The 22 items of 2026-11-04 below are still open. Each PR body holds the
+reasoning.
+
+1. T94, decisions 1-12 (the scene's numbers, the rule shape, the anyOf
+   schema and `RecordingRuntime` in `ai_llm`, the recordings kept as one
+   take, the 100-character line, the vectors from the Python replay, keys
+   and exported builds). *Recommended:* ratify all twelve.
+2. T94, decision 13: the schema now offers the empty argument, matching
+   T92's validator and prompt. *Recommended:* keep it. Tighten all three
+   only if the manual check shows bare acts misused.
+3. T94: R10 (markup in the speech) is the main refusal left.
+   *Recommended:* a small follow-up that measures a schema or prompt
+   forbidding it.
+4. T87, decisions 1-10 (the six-line hook in `tactical.gd`, Enter
+   finishing each search, the search's own walks held to
+   `TacticalReach`, the evaluation, the constants, the fog guess,
+   `principal_line` in the addon, no strength gate, the vectors from one
+   run, the files outside the task's line). *Recommended:* ratify all ten.
+5. T87, decision 11: on a walk question the visit bars are nearly flat
+   (22-26 visits over 41 answers). *Recommended:* keep it, and revisit
+   with a less noisy playout, measured by `make measure-squad-mcts`.
+6. T87, decision 12: a fixed 4 iterations a frame leaves about 11 ms of
+   the frame unused. *Recommended:* a follow-up that searches a time share
+   of the frame in play and keeps the count for matches and tests.
+7. T55, decisions 2-5 and 7-8 (only the enemy delayed, whole-decision
+   delays, the cap held at 2 in 5 s where it bites, "never sees, earns or
+   orders more" held as three exact checks, the reaction proxy, the
+   meter's place). *Recommended:* ratify.
+8. T55, decision 1: the knobs stand at AlphaStar's 350 ms and 22 in 5 s.
+   *Recommended:* play `make record-rts` a few times, then run
+   `make measure-rts-clock` and commit what it writes.
+9. T55, decision 6: M7 keeps the 10-minute league out of `make check`.
+   `make check` holds the hands-nothing-over half
+   (`test-rts-clock-limits`). The strength half is `make test-rts-league`.
+   *Recommended:* ratify. The other answer is a "slow gate" kind in the
+   manifests, a selector change.
+10. T55, decision 9: commit the `data/rts/` recordings, as ADR 0017 says.
+    *Recommended:* commit them.
+11. T55, decision 10: nothing shows the stale enemy a clocked side
+    believes in (invariant 13). *Recommended:* a follow-up task.
+
+**Manual checks waiting:**
+
+- T94: play `make demo-talk` live (Tab) in a window, in both languages.
+  The live path has run only headless.
+- T87: in the XCOM mode, give the enemy to MCTS (C) with V on. Watch
+  whether the bars grow, and press space early.
+- T55: play the RTS with K on and off, and watch M during a replan.
+
+**Next.** T88 needs only T87 now. T96 is ready too, but both write
+`godot/game/squad/`, so they do not run together. T112 waits on both. The
+follow-ups the owner left for later are 2026-11-04's items 12-13 (the bot
+match) and 10 (levels on `WorkerThreadPool`).
+
 ## Resuming after 2026-11-04 (waves 118 to 122 merged)
 
 **Where it stopped -- read first.** Five waves ran in parallel worktrees,
