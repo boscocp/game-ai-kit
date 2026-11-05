@@ -73,9 +73,16 @@ static var _known: Dictionary = {}
 # that is.
 var _waiting: Array[RtsSnapshot] = []
 var _ripe: RtsSnapshot = null
-# Commands held under the cap, oldest first, and the ticks of those given.
+# Commands held under the cap, oldest first, the tick each was given by
+# the inner side, and the ticks of those let through.
 var _held: Array[RtsCommand] = []
+var _held_at: Array[int] = []
 var _given_at: Array[int] = []
+# The view last handed to the inner side, the tick it was handed at, and
+# the tick of the snapshot its enemy came from (-1: none was old enough).
+var _handed: RtsSnapshot = null
+var _handed_at: int = -1
+var _enemy_from: int = -1
 
 
 ## `wrapped` with the delay `delay_ms` and at most `actions` commands in any
@@ -131,10 +138,43 @@ func decide(view: RtsSnapshot) -> Array[RtsCommand]:
 	var handed: RtsSnapshot = view if _ripe == view else _late(view, _ripe)
 	if handed != view:
 		stale += 1
+	_handed = handed
+	_handed_at = view.tick
+	_enemy_from = _ripe.tick if _ripe != null else -1
 	inner.work = 0
-	_held.append_array(inner.decide(handed))
+	var wanted: Array[RtsCommand] = inner.decide(handed)
+	_held.append_array(wanted)
+	for _command: RtsCommand in wanted:
+		_held_at.append(view.tick)
 	work = inner.work
 	return _let_through(view.tick)
+
+
+## The view the inner side was last handed, or null before its first
+## decision: its own side now, and the enemy where the side believes it.
+## The thinking overlay draws this one, so it cannot show a view the side
+## did not get (T118). Read-only, as every snapshot is.
+func last_handed() -> RtsSnapshot:
+	return _handed
+
+
+## How old the enemy in `last_handed()` was when it was handed, in ms: from
+## the snapshot it came from to the decision. -1 when no snapshot was old
+## enough yet, so the side was handed no enemy at all.
+func enemy_age_ms() -> float:
+	if _handed == null or _enemy_from < 0:
+		return -1.0
+	return float(_handed_at - _enemy_from) * 1000.0 / RtsWorld.TICKS_PER_SECOND
+
+
+## The commands held for room under the cap after the last decision: how
+## many, and how long the oldest had waited then, in ms. A person watching
+## the side wait can see what it is waiting with.
+func waiting() -> Dictionary:
+	if _held.is_empty():
+		return {"count": 0, "oldest_ms": 0.0}
+	return {"count": _held.size(),
+		"oldest_ms": float(_handed_at - _held_at[0]) * 1000.0 / RtsWorld.TICKS_PER_SECOND}
 
 
 ## `now` with its enemy as `then` showed it: own units, funds and room from
@@ -199,15 +239,18 @@ func _let_through(now: int) -> Array[RtsCommand]:
 	if most_actions <= 0:
 		var all: Array[RtsCommand] = _held.duplicate()
 		_held.clear()
+		_held_at.clear()
 		return all
 	var window_ticks: int = roundi(window_seconds * RtsWorld.TICKS_PER_SECOND)
 	_given_at.assign(_given_at.filter(func(tick: int) -> bool: return tick > now - window_ticks))
 	var given: Array[RtsCommand] = []
 	while not _held.is_empty() and _given_at.size() < most_actions:
 		given.append(_held.pop_front())
+		_held_at.pop_front()
 		_given_at.append(now)
 	delayed += _held.size()
 	while _held.size() > most_actions:
 		_held.pop_front()
+		_held_at.pop_front()
 		dropped += 1
 	return given
