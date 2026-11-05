@@ -3,6 +3,154 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-11-05, second batch (waves 128 to 132 merged)
+
+**Where it stopped -- read first.** Five waves ran in parallel worktrees.
+Each was reviewed by a fresh context before its merge, and the findings
+were applied on its branch:
+
+- **129 T116**, the guard's speech without markup (#76). Changes
+  requested, both documentation. The README and `json_schema()` now say
+  the pattern is stricter than the validator. The quote evidence now
+  counts 180 replies, not 360.
+- **131 T122**, levels solved off the main thread (#73). Changes
+  requested. The panel named a solve that would no longer replace the
+  level. Nothing tested the scene's lifecycle around the task: three
+  planted faults passed.
+- **128 T126**, the XCOM mode's view moves out of its rules (#74).
+  Changes requested. Nothing tested which view draws after M. Two moved
+  defaults and three older answers were untested too.
+- **130 T118**, the RTS shows the enemy a clocked side believes (#75).
+  Approved with two should-fix findings. The tests could not tell the
+  handed enemy from one recomputed from the world, and nothing tied the
+  drawing to it.
+- **132 T123**, the bot match reads the team's share (#77). Changes
+  requested. Two things had no test: a seat on a reading's step, and
+  `mate_` events from the other team. The page claimed the band was
+  smallest "on all three", which its own table contradicts.
+
+Main is 580ec92.
+
+**The owner decided on 2026-11-05:**
+
+- "roda as 5", for T126, T116, T118, T122 and T123. That includes the two
+  follow-ups deferred earlier the same day.
+
+**How it was checked.**
+
+- Each wave ran its own `check-affected`. None selected everything.
+- Four PRs merged on their reviewed heads, each with main merged in.
+- The coordinator ran the whole `make check` once, in a clean worktree,
+  on #77's head (e680a6d): exit 0, 1732 gdUnit cases, 0 failures. The
+  log is not committed. Its nine `SCRIPT ERROR` lines are the same
+  in-memory planted ones as in the batch before.
+- One `test-rts-match` run failed its timing claims at load average 14,
+  and passed when rerun at 3.6.
+- T126's row is marked done here; its wave left it `todo`.
+
+**Waiting on the owner -- one numbered list, each with a recommendation.**
+Each PR body holds the reasoning.
+
+1. T122, decisions 1-7 and 9:
+   - the scene polls the pool;
+   - one solve at a time;
+   - headless solves inline;
+   - the first world solved inline;
+   - one panel line;
+   - a new page, `worker-thread-pool.md`;
+   - a script, not a make target;
+   - leaving the scene mid-solve waits up to about 2.5 s.
+
+   *Recommended:* keep all.
+2. T122, decision 8: the demo reaches only seeds 3-5, not the slow 144.
+   *Recommended:* do the manual check on 3-5. A command-line seed for the
+   demo is a follow-up only if you want 144 on screen.
+3. T126, decisions 1-4:
+   - the ruleset hands its view through `mode_view()`;
+   - `rule`, `announcement`, `tint` and `points` moved too;
+   - `reveals` moved and `can_still_attack` stayed;
+   - four answers stay on `SquadRuleset`.
+
+   *Recommended:* keep.
+4. T126, decision 5: `tactical.gd` grew by 12 lines. The reviewer reads
+   it as slightly easier. *Recommended:* accept, and judge it in the
+   manual check.
+5. T118, decisions 1-7:
+   - hollow rings with a thread;
+   - the age written once;
+   - no legend row;
+   - waiting commands in the panel only;
+   - the wait measured at the last decision;
+   - only east shown;
+   - the focus ring at the target's current place.
+
+   *Recommended:* keep. Add a legend row only if the manual check finds
+   the rings unclear.
+6. T118: a corner case older than this PR. A focus ring disappears when
+   its target leaves the computer's current sight, while the squad still
+   holds that focus. *Recommended (this session's proposal, not the
+   PR's):* a small follow-up that falls back to the handed position.
+7. T116, decisions 1-6 and (a):
+   - the pattern, not the prompt line;
+   - T93's prompt kept;
+   - no straight quote or backslash;
+   - the pattern in `reply.schema.json`;
+   - no new vector family;
+   - the recordings not made again;
+   - the pattern always on until a second game needs otherwise.
+
+   *Recommended:* ratify.
+8. T116, decision 7: commit the raw probe outputs under `docs/local-llm/`,
+   so a later reviewer can recount. *Recommended:* yes. They are in a
+   session scratch folder, which does not outlive the session, so this
+   needs doing soon or the probe needs running again.
+9. T116, (c): U+2028, U+2029 and C1 controls such as U+0085 pass both R9
+   and the pattern. *Recommended:* a small task: a validator change with
+   vectors in both twins.
+10. T123, decisions 1, 2 and 4-6:
+    - the band at 0.45-0.55, best by the sum of the leads, not in the
+      worst case;
+    - the same prior of 100;
+    - a seat stamped with the last step;
+    - the row back to the middle at once;
+    - only seats of a bot logged.
+
+    *Recommended:* keep.
+11. T123, decision 3: `PlayerModel.team` is an int label beside the
+    counts. *Recommended:* accept it as within N14's "counts and sums".
+12. T123: with the band equal to the middle row's range, the knob returns
+    to the middle row only on a change of team. *Recommended:* step one
+    row at a time as a follow-up, only if the alternation shows in play.
+
+**Manual checks waiting:**
+
+- **T122:** `make demo-infiltration`, K to solved, then L across seeds
+  3-5. Does the window keep drawing?
+- **T126:** play both tactical modes with V on and off. Is `tactical.gd`
+  easier to read?
+- **T118:** `make demo-rts` with K on during a raid. Does the computer's
+  answer follow the late rings?
+- **T116:** read the new table rows on the technique page.
+- **T123:** play the bot match poorly and then well with V open, then
+  take a bot on the other team. Does the match settle?
+
+**What is left:**
+
+- todo: T88, T89 (only if T85's manual check asks for art), T96, T112
+  (after T88, T96 and T120), T113-T115, T117, T119, T120, T121, T124,
+  T125 and T127;
+- six older tasks still wip: T25, T40, T44, T45, T46 and T48;
+- T43, blocked.
+
+**Next, as proposed by this session from the task rows:**
+
+- T88 is ready now that T126 is done.
+- The squad folder takes one wave at a time: T88, then T96, T117, T124,
+  T125 and T127.
+- T119 (a gate under `scripts/`, which selects everything) can run beside
+  T88.
+- T120 and T121 each touch many modules, so each runs alone.
+
 ## Resuming after 2026-11-05 (waves 125 to 127 merged)
 
 **Where it stopped -- read first.** Three waves ran in parallel worktrees.
@@ -876,7 +1024,7 @@ review.
 | T123 | The bot match reads the team's share, holds the middle, and starts over on a new team | done | wave 132: `PlayerModel` also counts the person's team-mates' hits and hurts (`mate_hit`, `mate_hurt`, noted by `BotMatch.note`) into `team_dealt` and `team_taken`, and the share the knob reads is the team's, (team_dealt + 100) / (team_dealt + team_taken + 200); a band in `rules.json`'s `difficulty` (`band`: from 0.45 short of 0.55, the middle row's own range) holds the row read last (`PlayerModel.next_row`, `held` in each reading); a `seat` event, logged by `BotMatch.seat_person` with its team and stamped with the last step taken, empties the counts on a change of team (`restarts` counts it) and `MatchDifficulty` puts the row back to the middle at once, live and in `PlayerModel.replay`; a seat on the same team and a give-back keep them; Python twin and `derive.py` likewise, eleven vectors (four new: the band, a team-mate's damage, a change of team, a seat on the same team; the boundary case now crosses the band's two edges), planted models failing (no band in both languages, counts kept across a change of team in Python); V shows the team's share, "started over" and the band holding the row (pt-BR rows added); measured (`make measure-player-model`, `band=FROM-TO` to try another, `docs/godot/botmatch.md`): the score lead with the model on goes from +259 / -5 / -218 (T100) to -12 / +7 / -47 for the poor / even / sharp stand-ins, bands none, 0.47-0.53 and 0.40-0.60 measured beside it; the knob alternates between the rows either side of the middle rather than settling, said on the page |
 | T124 | The XCOM mode plays with V off, and teaches with it on | todo | the owner, 2026-11-05, item B17: what "the teaching view" is, is the task's first decision |
 | T125 | A second, stronger floor for the squad mode's strength | todo | the owner, 2026-11-05, item B18: a greedy shooter; the bar from measurement, a worse weighing planted |
-| T126 | The XCOM mode's presentation moves into a mode view | todo | the owner, 2026-11-05, item B19: out of `tactical.gd` and `TacticalRuleset`, behaviour unchanged; a prereq of T88 |
+| T126 | The XCOM mode's presentation moves into a mode view | done | wave 128 (#74): `TacticalModeView`, answered by `AdvanceWarsView` and `SquadView`; `TacticalRuleset` from 28 answers to 14, the scene asks `view()`; behaviour unchanged, held by the tactical and squad suites and new tests of each view's answers and of which view draws after M; the owner, 2026-11-05, item B19 |
 | T127 | An unseen shooter stays unseen in the news | todo | the owner, 2026-11-05, item B24: word the news from the person's fog, or a shot reveals its shooter -- the task chooses |
 
 ---
