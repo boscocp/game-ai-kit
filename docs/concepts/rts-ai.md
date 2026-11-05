@@ -370,8 +370,11 @@ has. All of it is read from the clock (`RtsHumanClock.last_handed()`,
 `enemy_age_ms()`, `waiting()`), never recomputed, so it cannot show a view
 the side did not get; `test/rts/rts_human_clock_test.gd` holds that the
 drawn enemy is the handed one, and that nothing is drawn without the
-clock. In a windowed run with V and K on (2026-11-05), the rings trailed
-the moving units by half a second. Whether the computer's answer visibly
+clock. A fighting squad's red focus ring stays where its target stands
+now: it marks where the strike lands, because the order names a unit,
+not a place. The hollow ring marks where the side chose it, and the
+thread between them is the reaction gap. In a windowed run with V, K and
+F on (2026-11-05), the rings trailed the moving units by half a second. Whether the computer's answer visibly
 follows the rings is T118's manual check, a person's.
 
 **The meter.** M in `make demo-rts` draws each computer side's thinking
