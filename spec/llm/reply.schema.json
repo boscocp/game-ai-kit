@@ -2,14 +2,15 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/boscocp/game-ai-kit/spec/llm/reply.schema.json",
   "title": "One reply from the character's language model",
-  "description": "The one shape ai_llm accepts. A game narrows it to the discourse acts it declared -- an `anyOf` of this shape once per intent, each naming its intent and only its own arguments, or the empty one every intent may carry (LlmValidator.json_schema, gameaikit.llm.validator.json_schema) -- and hands that to a runtime that can constrain its output. A convenience: the validator checks every reply anyway, including the rules a schema does not say (no line break, no markup, no secret).",
+  "description": "The one shape ai_llm accepts. A game narrows it to the discourse acts it declared -- an `anyOf` of this shape once per intent, each naming its intent and only its own arguments, or the empty one every intent may carry (LlmValidator.json_schema, gameaikit.llm.validator.json_schema) -- and hands that to a runtime that can constrain its output. A convenience: the validator checks every reply anyway, including the rules a schema does not say (no secret) and the ones a runtime may not hold it to.",
   "type": "object",
   "properties": {
     "speech": {
-      "description": "What the character says: one line, no markup.",
+      "description": "What the character says: one line, no markup. The pattern says the same for a runtime that constrains its output, and also leaves out the quote and the backslash: llama.cpp reads a pattern against the string's JSON text, escapes and all, and drops maxLength beside one, so the length is in the pattern too (T116).",
       "type": "string",
       "minLength": 1,
-      "maxLength": 280
+      "maxLength": 280,
+      "pattern": "^[^\"\\\\<>\\[\\]*`\\x00-\\x1F\\x7F]{1,280}$"
     },
     "intent": {
       "description": "Which of the game's declared discourse acts the player's words were.",

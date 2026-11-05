@@ -45,6 +45,17 @@ const SPEECH_LIMIT: int = 280
 ## What a RichTextLabel or a chat model's Markdown would read as formatting.
 const MARKUP: String = "<>[]*`"
 
+## The speech as a pattern, for the schema a constraining runtime is handed:
+## one to SPEECH_LIMIT characters, none of them MARKUP, a control character,
+## a quote or a backslash. llama.cpp turns a pattern into a grammar over the
+## string's JSON text, escapes and all, so a class without the quote and
+## the backslash is the one spelling that means the same there and in JSON
+## Schema, which reads the decoded string. It also drops `maxLength` when a
+## pattern is present, so the length is in the pattern too (T116,
+## docs/local-llm/server.md). The guard loses the straight quote; the
+## validator still admits one (R10 is the check, not this).
+const SPEECH_PATTERN: String = "^[^\"\\\\<>\\[\\]*`\\x00-\\x1F\\x7F]{1,280}$"
+
 ## How deep objects and lists may nest. A reply is one flat object; past
 ## this, Godot's parser and Python's give up at different depths, so both
 ## validators stop at the same one first.
@@ -198,11 +209,13 @@ static func _deepest(outside: String) -> int:
 
 ## spec/llm/reply.schema.json narrowed to this game: one shape per intent,
 ## `anyOf`, each naming its intent and offering only its own arguments, or
-## the empty one R7 allows every intent. What a runtime that can constrain
-## its output is handed. A convenience, not the validator: a runtime may
-## ignore it, and every reply is validated anyway. Measured in T94 on the
-## pinned llama.cpp server only (docs/godot/talk.md): with the narrowed
-## shape it no longer sends an argument the act does not take (R7).
+## the empty one R7 allows every intent, and a speech held to
+## SPEECH_PATTERN. What a runtime that can constrain its output is handed. A
+## convenience, not the validator: a runtime may ignore it, and every reply
+## is validated anyway. Measured on the pinned llama.cpp server only
+## (docs/godot/talk.md): with the narrowed shape it no longer sends an
+## argument the act does not take (R7, T94), and with the pattern no markup
+## (R10, T116).
 func json_schema() -> Dictionary:
 	var names: Array = _intents.keys()
 	names.sort()
@@ -212,7 +225,8 @@ func json_schema() -> Dictionary:
 # The reply's shape for one intent: its name, and only its own arguments.
 func _shape_of(intent: String) -> Dictionary:
 	var arguments: PackedStringArray = _intents[intent]
-	var speech: Dictionary = {"type": "string", "minLength": 1, "maxLength": SPEECH_LIMIT}
+	var speech: Dictionary = {"type": "string", "minLength": 1, "maxLength": SPEECH_LIMIT,
+		"pattern": SPEECH_PATTERN}
 	var allowed: Array = Array(arguments) + [""]
 	return {
 		"type": "object",
