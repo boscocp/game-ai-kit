@@ -102,6 +102,23 @@ class MonteCarloSearch:
                 action = entry["action"]
         return MctsResult(action, considered, self._iterations)
 
+    def principal_line(self, most: int = 8) -> list:
+        """The line of play the search expects, for a person to read (T87 draws it).
+
+        The most visited move, its most drawn outcome, and on, at most `most`
+        moves: visits, not means, because a deep move rests on few playouts
+        and its mean is a guess.
+        """
+        line: list = []
+        node = self._root
+        while len(line) < most and node is not None and not node.terminal:
+            branch = _most_visited(node.branches)
+            if branch is None:
+                break
+            line.append(branch.action)
+            node = _most_visited(branch.children)
+        return line
+
     def _iterate(self) -> None:
         """One iteration: the loop body of the book's figure 5.11."""
         descent = Descent()
@@ -202,3 +219,12 @@ class MonteCarloSearch:
         mean = branch.total / branch.visits if branch.visits > 0 else 0.0
         return {"action": branch.action, "visits": branch.visits, "mean": mean,
                 "bound": self._ucb1(branch, self._root.visits)}
+
+
+def _most_visited(entries: list) -> Any:
+    """Of a node's branches or a branch's children, the most visited; of equals the first."""
+    best = None
+    for entry in entries:
+        if entry is not None and entry.visits > 0 and (best is None or entry.visits > best.visits):
+            best = entry
+    return best

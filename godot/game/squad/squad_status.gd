@@ -67,7 +67,9 @@ static func computer_text(state: BoardState, turn: BlueTurn, controller: BlueCon
 	if turn.next != null:
 		lines.append("\n" + _next_said(turn.next, fog, its_own_view))
 		lines.append(TranslationServer.translate("space plays it  ·  enter plays the rest of {side}'s turn").format({side = side}))
-		if its_own_view and not controller.weighed().is_empty():
+		if its_own_view and controller is MctsSquad:
+			lines.append_array(_searched(controller as MctsSquad))
+		elif its_own_view and not controller.weighed().is_empty():
 			lines.append(TranslationServer.translate("on the board, every option it weighed: its score above, its best hit chance below, the one it takes framed; V shows your own view instead"))
 	else:
 		lines.append("\n" + TranslationServer.translate("{side} has finished its turn. Space hands it back to {other}").format({
@@ -88,6 +90,15 @@ static func moved_already(unit: Unit, can_shoot: bool, can_undo: bool) -> String
 	elif can_undo:
 		said = TranslationServer.translate("this {piece} has moved this turn; Z takes the move back")
 	return said.format({piece = TacticalStatus.piece(unit.type.type_name)})
+
+
+# What the enemy that searches (T87) has searched, and how to read it on
+# the board: its tree's root, read while it grows.
+static func _searched(controller: MctsSquad) -> Array[String]:
+	var lines: Array[String] = controller.search_lines()
+	if not lines.is_empty():
+		lines.append(TranslationServer.translate("on the board, every option it searched: its mean above, a shot's hit chance below, the most visited framed; space stops the search and plays it; V shows your own view instead"))
+	return lines
 
 
 # The decision about to be played, as far as the board on screen shows it.

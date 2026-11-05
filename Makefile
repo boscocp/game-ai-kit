@@ -508,6 +508,20 @@ test-squad-vectors: import ## The XCOM-style shot: cover, flanking, chance and d
 		-- $(CURDIR)/spec/vectors/squad
 	@$(PYTHON) -m unittest discover -s python/tests -t python -q -p "test_squad_vectors.py"
 
+.PHONY: test-squad-search-vectors
+test-vectors: test-squad-search-vectors
+test-squad-search-vectors: import ## MCTS on the squad's positions: the root's visits the same in both languages (T87)
+	@# Written from one run, not by hand: what holds them is the two agreeing.
+	@$(GODOT) --headless --path godot -s res://test/squad/squad_search_vectors_runner.gd \
+		-- $(CURDIR)/spec/squad/positions.json
+	@$(PYTHON) -m unittest discover -s python/tests -t python -q -p "test_squad_search.py"
+
+.PHONY: measure-squad-mcts
+measure-squad-mcts: import ## T87: MCTS against the weighed enemy from each seat, with a decision's time and the worst frame (ITERATIONS=1000 GAMES=100 FIRST=0; slow)
+	@# Printed, not a gate: a line a game, then a summary a seat.
+	@$(GODOT) --headless --path godot -s res://test/squad/squad_mcts_measure.gd \
+		-- $(or $(ITERATIONS),1000) $(or $(GAMES),100) $(or $(FIRST),0)
+
 .PHONY: test-infiltration
 test-infiltration: import ## The infiltration level's guards: help heard, the search shared, quiet and loud, the arbiter, the halving, every decision on the overlay, portable (T70)
 	@$(GODOT) --headless --path godot -s res://test/infiltration/infiltration_properties.gd

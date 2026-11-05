@@ -13,7 +13,12 @@ extends RefCounted
 ## "lost", "digest"}: "refused" and "lost" by side -- the decisions the board
 ## refused, and those of them the controller had nothing instead of -- and the
 ## digest sha256 of every turn's pieces, so one die that moves moves it.
-static func play(red: BlueController, blue: BlueController, dice_seed: int) -> Dictionary:
+##
+## `between`, when given, is called with the side's controller each time it
+## has just been asked a decision -- as its turn begins and after each
+## decision is played -- for a measurement that lets a search think a frame
+## at a time there (`squad_mcts_measure.gd`, T87).
+static func play(red: BlueController, blue: BlueController, dice_seed: int, between: Callable = Callable()) -> Dictionary:
 	var rules := SquadRuleset.new()
 	var state: BoardState = rules.start()
 	state.dice_seed = dice_seed
@@ -25,8 +30,10 @@ static func play(red: BlueController, blue: BlueController, dice_seed: int) -> D
 	while rules.winner(state) == TacticalVictory.NOBODY and state.turn_number <= turns_allowed:
 		var turn: BlueTurn = turns[state.current_faction]
 		turn.begin(state)
+		_call(between, turn.controller)
 		while not turn.finished() and rules.winner(state) == TacticalVictory.NOBODY:
 			state = turn.play(state)
+			_call(between, turn.controller)
 		refused[state.current_faction] += turn.refused.size()
 		lost[state.current_faction] += turn.lost.size()
 		seen.append(pieces(state))
@@ -34,6 +41,11 @@ static func play(red: BlueController, blue: BlueController, dice_seed: int) -> D
 			state = rules.open_turn(state)[0]
 	return {"winner": rules.winner(state), "rounds": state.turn_number / TacticalScenario.FACTIONS + 1,
 		"refused": refused, "lost": lost, "digest": JSON.stringify(seen).sha256_text()}
+
+
+static func _call(between: Callable, controller: BlueController) -> void:
+	if between.is_valid():
+		between.call(controller)
 
 
 ## Every piece on `state` as `[id, cell, health]`, in id order.
