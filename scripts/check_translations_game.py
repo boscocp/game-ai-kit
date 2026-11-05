@@ -61,7 +61,10 @@ L10 a word a module shows from its data has no row. The menu's cards are
     each data file and the fields of it that reach the screen; every string
     there must be a key of the owning module's table with a `pt_BR`, and
     counts as mentioned for L3. A field that finds nothing is a finding
-    too: a renamed field would otherwise hold nothing and pass.
+    too: a renamed field would otherwise hold nothing and pass. And a card
+    field a script words with `said(card.get("x"))` must be one SHOWN_DATA
+    names, `examples[].x`: a field drawn and not listed would be held by
+    neither this rule nor the screen's (T131's review).
 
 What it cannot see
 ------------------
@@ -125,6 +128,8 @@ LETTER_RE = re.compile(r"[^\W\d_]")
 LOOKUP_BEFORE_RE = re.compile(r"(?:\.get\(|[\w)\]]\[)\s*$")
 # ...and a literal followed by a colon is a dictionary's key: `{"move": m}`.
 LOOKUP_AFTER_RE = re.compile(r"\s*:(?!=)")
+# A card field worded where it is drawn: `said(card.get("decides", ""))`.
+SAID_FIELD_RE = re.compile(r"\bsaid\s*\(\s*card\.get\(\s*\"@(\d+)\"")
 # A sentence kept to be worded later (`godot/game/sentence.gd`).
 SENTENCE_RE = re.compile(r"(?<![\w.])Sentence\.of\s*\(")
 
@@ -502,6 +507,20 @@ def shown_from_data(repo: pathlib.Path, module: str, owners: dict[str, tuple[str
     return findings, shown
 
 
+def fields_said_unlisted(script: Script, module: str, owners: dict[str, tuple[str, ...]]) -> list[str]:
+    """L10: a card field the script words with said() that SHOWN_DATA does
+    not name, for a data file of this module: drawn, and held by no gate."""
+    listed = {field for relative, fields in SHOWN_DATA.items() if owner_of(relative, owners) == module
+              for field in fields}
+    findings = []
+    for match in SAID_FIELD_RE.finditer(script.code):
+        field = script.literals[int(match.group(1))]
+        if f"examples[].{field}" not in listed:
+            findings.append(f"L10 {script.path}:{script.line_of(match.start())}: the card field {field!r} "
+                            "is worded with said() and is not in SHOWN_DATA, so no gate holds its rows")
+    return findings
+
+
 def unowned_data(repo: pathlib.Path, owners: dict[str, tuple[str, ...]], tables: dict[str, Table]) -> list[str]:
     """L10: a data file that shows words, owned by a module with no table."""
     return [f"L10 {relative}: shows words, and its module has no table under {LOCALE}/"
@@ -517,6 +536,7 @@ def check_module(repo: pathlib.Path, module: str, owners: dict[str, tuple[str, .
     findings = list(table.findings) + findings
     for script in scripts_of(repo, module, owners):
         findings += bare_words(script, keys) + built_keys(script) + worded_too_soon(script)
+        findings += fields_said_unlisted(script, module, owners)
         mentioned |= set(script.literals)
         for start, key, context in _keys_used(script):
             if (context, key) not in table.rows:
@@ -525,7 +545,9 @@ def check_module(repo: pathlib.Path, module: str, owners: dict[str, tuple[str, .
         if not table.rows[(context, key)]:
             findings.append(f"L2 {table.path}: {key!r} has no {PORTUGUESE}")
         if key not in mentioned:
-            findings.append(f"L3 {table.path}: {key!r} is in no script of {module}")
+            findings.append(f"L3 {table.path}: {key!r} is in no script of {module}"
+                            + (", nor in its shown data: a catalogue entry renamed or reworded?"
+                               if any(owner_of(relative, owners) == module for relative in SHOWN_DATA) else ""))
     return findings
 
 
@@ -709,6 +731,10 @@ def _data_cases(root: pathlib.Path, expect) -> None:
     expect("a field renamed", build(root, "renamed", extra=_menu(
         renamed, CATALOGUE_TABLE.replace("The arrow.,A seta.\n", ""))), 1, "finds no words")
     expect("a catalogue with no table", build(root, "untabled", extra=_menu(CATALOGUE, None)), 1, "L10")
+    drawn = _menu(CATALOGUE, CATALOGUE_TABLE)
+    drawn["godot/menu/catalogue_card.gd"] = ('func card_words(card: Dictionary) -> String:\n'
+                                             '\treturn said(card.get("decides", "")) + said(card.get("hint", ""))\n')
+    expect("a field drawn and not listed", build(root, "drawn", extra=drawn), 1, "'hint' is worded with said()")
 
 
 def self_test() -> int:

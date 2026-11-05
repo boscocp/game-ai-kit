@@ -9,7 +9,7 @@ chrome was translated: the headings ("O que a IA decide", "Como ela
 decide", "O que observar", "Teclas"), Jogar and the footer. Every card's
 own words stayed English -- the titles, what the AI decides, each
 technique's name and part, what to watch, the keys. They come from
-`godot/menu/catalogue.json`, and `menu.csv` held only the chrome, 16 rows.
+`godot/menu/catalogue.json`, and `menu.csv` held only the chrome, 15 rows.
 No decision to leave the cards English was found; `example_catalogue.gd`
 said they were English "until the catalogue is translated". The owner
 answered "as 3" to the proposal: translate the cards.
@@ -70,7 +70,12 @@ Open `make menu`, press L for Português, and walk the list from top to
 bottom: does every card read as natural Brazilian Portuguese, with no
 English sentence left, and the technique names the glossary keeps in
 English kept? Press L again: does the card on screen switch back at once?
-Does any title in the list run past its column?
+Does any title in the list run past its column? Nothing holds this:
+measured with the fallback font at 22 px against the 360 px column, 10 of
+16 pt-BR titles are wider (9 of 16 in English, so older than T131), the
+widest about 835 px, and an `ItemList` item is one line trimmed with an
+ellipsis by default. The owner decides between shorter titles and two
+lines per item (`max_text_lines = 2`); the heading shows the whole title.
 
 ## Notes
 
@@ -83,5 +88,11 @@ Does any title in the list run past its column?
   `locale_screen.gd`, the `RichTextLabel` and `ItemList` readings switched
   off made both planted cards fail by name; leaving the menu's old code in
   (the decides line and the list untranslated) failed every card.
+- Review (`docs/reviews/134-the-menu-cards-speak-portuguese.md`): changes
+  requested, no blocker; all applied. The search card says "célula" and the
+  Pac-Man card "movimento", as their demos do; ten more rows reworded; L10
+  also refuses a card field worded with `said()` that `SHOWN_DATA` does not
+  name (planted: `watch` taken out of the list), and L3 names the shown data
+  as a possible cause.
 - A card's English changed later -- T130 may change the talk card -- now
   fails L10 until its row follows. That is the point.

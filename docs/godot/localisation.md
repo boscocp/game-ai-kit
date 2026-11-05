@@ -477,9 +477,11 @@ RTS and the fighting game, by the same rules, with what they added:
   the catalogue's shown fields -- and fails a word with no row, a field
   that finds nothing (a rename would otherwise hold nothing) and a
   catalogue whose module has no table; those words count as mentioned for
-  L3. Planted: a title's row removed from the real `menu.csv` gave
+  L3. A card field a script words with `said(card.get("x"))` must be named
+  there too (T131's review: drawn and not listed, it was held by neither
+  gate). Planted: a title's row removed from the real `menu.csv` gave
   `L10 godot/menu/catalogue.json: examples[].title shows 'Checkers'`, and
-  the self-test plants the three. `test-locale-screen` now selects every
+  the self-test plants the four. `test-locale-screen` now selects every
   card in pt-BR and reads the card's `RichTextLabel` (its parsed text,
   a technique's "name -- part" in its two parts) and the list's titles,
   which it did not read before. Planted: a card and a list left in English;
