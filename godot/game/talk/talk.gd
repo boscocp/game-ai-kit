@@ -59,10 +59,13 @@ func _ready() -> void:
 
 
 # A new language is a new guard: he answers in the language he was told.
+# The restart waits for the end of the frame (T132): this notification comes
+# through `propagate_notification`, which holds this node busy while it runs,
+# and a guard added now would never reach the tree.
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
 		_show_legend()
-		restart()
+		restart.call_deferred()
 
 
 ## The guard's language: the one the examples speak now.
