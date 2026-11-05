@@ -343,7 +343,33 @@ so the square root of two, chosen for outcomes between 0 and 1, spends the
 iterations evenly and the means never get to count. 0.5 and a playout of 8
 were kept: the best of the grid, and the cheapest.
 
-MEASURED
+**Measured** (wave 125, `make measure-squad-mcts`: against `WeighedSquad`,
+match `n` of a seat on dice seed `n`, the searcher seeded `1000 + n`; a
+decision searched as the scene searches it, 4 iterations a frame):
+
+| iterations a decision | won as red | won as blue | a decision, on average | at most | worst frame |
+|---|---|---|---|---|---|
+| 200 | 34 of 100 | 37 of 100 | 0.23 s | 0.45 s | 24 ms |
+| 1,000 | 56 of 100 | 63 of 100 | 1.3 s | 2.7 s | 122 ms |
+| 5,000 | 12 of 20 | 12 of 20 | 6.1 s | 9.8 s | 202 ms |
+
+No draws, and no action lost to a refused walk in any of them. The times
+above were taken with ten matches running at once on a 12-core machine,
+other work beside them, and are slower than the search alone. Two matches
+a seat at 1,000 iterations on a quieter machine (load about 5): 0.8 s a
+decision on average, 1.1 s at most, worst frame 22 ms. The worst frame is
+over a 60-a-second frame (16.7 ms). A decision's first frame also looks at
+the board, makes its guess and finds the piece's routes (about 1.5 ms
+more), and four iterations of eight-answer playouts cost about 4 to 5 ms.
+5,000 was measured at 20 matches a seat, not 100: at about a minute a
+decision it would have taken most of a day.
+
+What it says: at 200 iterations, about five for each of a piece's forty
+options, the search is mostly noise, and it loses two games in three. At
+1,000 it beats the one-action-ahead baseline more often than not, from
+both seats. At 5,000, on a sample a fifth the size, 24 of 40 is no clear
+gain over 1,000 for five times the wait. That is why the scene's default is
+1,000.
 
 ## Manual check
 
