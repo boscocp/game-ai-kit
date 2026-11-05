@@ -117,6 +117,18 @@ func test_with_nothing_to_start_live_mode_says_to_start_one_by_hand() -> void:
 	assert_str(demo.get_node("Interface/Status").text).contains("make llm-serve")
 
 
+# Esc back to the menu is `ExampleMenu.back()`, which `queue_free`s the
+# example: the server goes with it, in the same frame's end.
+func test_esc_to_the_menu_stops_the_server_the_scene_started() -> void:
+	var demo: TalkDemo = await _demo(39956, "0.2")
+	demo.switch_mode()
+	await _until(demo, LlmLocalServer.READY)
+	assert_bool(demo.server.started_here()).is_true()
+	demo.queue_free()
+	await get_tree().process_frame
+	assert_bool(await _answers(39956)).is_false()
+
+
 func test_a_turn_no_server_answered_starts_one_in_its_place() -> void:
 	var running: LlmLocalServer = LlmLocalServer.new(ProjectSettings.globalize_path(FAKE),
 		PackedStringArray(["39955", "0.2"]), 39955)

@@ -253,6 +253,25 @@ model: SIGINT (exit -2) and SIGTERM to the game both left no
 running. The next Tab finds it and uses it, and `pkill llama-server`
 stops it.
 
+The owner asked for this on 2026-11-05: "Lembre de colocar mecanismo de
+quando fechar o jogo tbm fechar o servidor llm pra não ficar gastando
+vram". `make test-llm-server-ends` holds it. It runs a game holding a
+stand-in server, `godot/test/ai_llm/server_ends_game.gd`, and ends it
+five ways, requiring the server to be gone within a second each time:
+- `quit()`;
+- the window's close request (`close_requested`, the path the X button
+  takes);
+- SIGINT, as Ctrl+C sends it;
+- SIGTERM;
+- SIGKILL.
+
+A planted run with a server told not to die with the game must be seen
+to survive. Esc to the menu `queue_free`s the scene, and
+`talk_server_test.gd` holds that path.
+
+A server the game found and did not start, such as `make llm-serve`'s,
+keeps running when you leave, and the status line says so.
+
 What the documentation does not say, read in the source at 4.7
 (`drivers/unix/os_unix.cpp`): `OS.kill` sends SIGKILL and then **waits**
 for the process to be gone. That is a frame, so `LlmLocalServer` calls it

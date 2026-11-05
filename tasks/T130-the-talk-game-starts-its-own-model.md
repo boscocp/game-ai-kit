@@ -50,6 +50,7 @@ answered "as 3", accepting it. It amends ADR 0023.
 ```bash
 make test-godot-some SUITES="test/ai_llm test/talk"
 python3 scripts/check_llm_validated.py --self-test
+make test-llm-server-ends
 scripts/llm --self-test
 python3 scripts/check_llm_validated.py
 make test-talk-vectors
@@ -62,7 +63,10 @@ make lint-tasks lint-status
 With no server running, `make demo-talk`, then Tab. Does the status line
 count the seconds while the picture keeps drawing? Does typing open once
 the model is ready, in English and in pt-BR? Leave the scene: does
-`pgrep llama-server` find nothing? Then start `make llm-serve` in a
+`pgrep llama-server` find nothing? Do the same after the window's X, and
+after Ctrl+C in the terminal: the owner asked, 2026-11-05, "Lembre de
+colocar mecanismo de quando fechar o jogo tbm fechar o servidor llm pra
+não ficar gastando vram". Then start `make llm-serve` in a
 terminal, open the game, Tab: is it used, and still running after you
 leave?
 

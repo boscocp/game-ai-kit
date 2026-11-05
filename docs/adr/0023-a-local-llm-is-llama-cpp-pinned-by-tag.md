@@ -114,12 +114,26 @@ session proposed the design below; the owner answered "as 3", accepting it.
   longer holds for this one path.
 - **Only when nothing answers.** `/health` first: a server already there,
   `make llm-serve`'s or anyone's, is used and never stopped. One started
-  here is stopped when the scene is left (`OS.kill`, in `_exit_tree` only:
-  it waits, and the gate refuses it elsewhere). A game stopped with Ctrl+C
-  or `kill` skips that, and a process made by `OS.create_process` outlives
-  Godot by design: so the game passes its process id, and on Linux
-  `scripts/llm` has the server die with it (`PR_SET_PDEATHSIG`). Elsewhere
-  it survives; the next Tab uses it, and `pkill llama-server` stops it.
+  here stops however the game ends. The owner asked for it on the same
+  day: "Lembre de colocar mecanismo de quando fechar o jogo tbm fechar o
+  servidor llm pra não ficar gastando vram" ("remember to add a way for
+  closing the game to close the LLM server too, so it does not keep
+  spending VRAM"). Two mechanisms do it:
+  - **Leaving the scene, Esc to the menu, the window's close button and
+    `quit()`** reach `_exit_tree`, where `OS.kill` stops the server. That
+    is the only place `OS.kill` runs, because it waits, and the gate
+    refuses it elsewhere.
+  - **Ctrl+C, SIGTERM, SIGKILL and a crash** skip `_exit_tree`, and a
+    process made by `OS.create_process` outlives Godot by design. So the
+    game passes its process id, and on Linux `scripts/llm` has the server
+    die with it (`PR_SET_PDEATHSIG`).
+
+  `make test-llm-server-ends` ends a game each of those ways, against a
+  stand-in server, and requires the server to be gone within a second. On
+  other systems a server the game started survives a game killed this
+  way; the next Tab uses it, and `pkill llama-server` stops it. A server
+  the game found and did not start, such as `make llm-serve`'s, is never
+  stopped, and the status line says so.
 - **Only in a checkout, only on Tab.** An exported game, a headless run
   and a checkout without `scripts/llm` never start anything; live mode
   says to run the server by hand, as before. Recorded mode never starts

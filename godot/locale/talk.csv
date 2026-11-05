@@ -52,7 +52,7 @@ Wait for the local model to load.,Espere o modelo local carregar.
 Looking for the local model...,Procurando o modelo local...
 The local model already running is still loading; typing opens when it is ready.,O modelo local que já estava rodando ainda está carregando; dá para digitar quando ele estiver pronto.
 "Starting the local model (scripts/llm serve): loading, {seconds} s. The game keeps running; typing opens when it is ready.","Iniciando o modelo local (scripts/llm serve): carregando, {seconds} s. O jogo continua rodando; dá para digitar quando ele estiver pronto."
-Using the local model already running.,Usando o modelo local que já estava rodando.
-"The local model is ready, and stops when you leave. Its first answer is the slowest.",O modelo local está pronto e para quando você sair. A primeira resposta é a mais lenta.
+"Using the local model already running; it keeps running when you leave.","Usando o modelo local que já estava rodando; ele continua rodando quando você sair."
+"The local model is ready, and stops when you leave or close the game. Its first answer is the slowest.","O modelo local está pronto e para quando você sair ou fechar o jogo. A primeira resposta é a mais lenta."
 "No local model answers: run make llm-serve in a terminal, then Tab twice.",Nenhum modelo local responde: rode make llm-serve num terminal e aperte Tab duas vezes.
 "The local model stopped while loading ({why}). Is it installed? make llm-bootstrap, then Tab twice.",O modelo local parou enquanto carregava ({why}). Está instalado? make llm-bootstrap e depois Tab duas vezes.

@@ -9,10 +9,13 @@ without `Authorization: Bearer KEY`, in the shape the pinned server was
 measured to answer (docs/godot/talk.md). Anything else is a 404. It
 listens on this machine only, as `scripts/llm serve` does, and stops by
 itself after LIFETIME seconds, so a test that failed before stopping it
-leaves nothing running for long.
+leaves nothing running for long. Given `--parent-pid`, it dies with that
+parent through the same `die_with` `scripts/llm serve` uses
+(tools/llm/llm.py), so a test of how the game ends tests that function;
+`--no-die` skips it, for the planted case that must be seen to survive.
 
 Usage:
-    fake_llm_server.py PORT LOADING [--api-key KEY] [--parent-pid PID]
+    fake_llm_server.py PORT LOADING [--no-die] [--api-key KEY] [--parent-pid PID]
     fake_llm_server.py PORT exit [...]   exit 2 at once, as `scripts/llm`
                                          does when nothing is installed
 """
@@ -22,11 +25,14 @@ from __future__ import annotations
 import argparse
 import http.server
 import json
+import pathlib
 import sys
 import threading
 import time
 
 LIFETIME = 60.0
+# tools/llm/, where `die_with` is: this file is godot/test/ai_llm/.
+TOOLS_LLM = pathlib.Path(__file__).resolve().parents[3] / "tools" / "llm"
 # The reply a model would give, as the validator in the tests expects it.
 REPLY = {"speech": "Evening.", "intent": "greet", "argument": ""}
 
@@ -80,9 +86,14 @@ def main(argv: list[str]) -> int:
     parser.add_argument("loading")
     parser.add_argument("--api-key", default="")
     parser.add_argument("--parent-pid", type=int, default=0)
+    parser.add_argument("--no-die", action="store_true")
     args = parser.parse_args(argv[1:])
     if args.loading == "exit":
         return 2
+    if args.parent_pid and not args.no_die:
+        sys.path.insert(0, str(TOOLS_LLM))
+        import llm  # noqa: PLC0415 -- only when asked, and from the toolchain's folder
+        llm.die_with(args.parent_pid)
     Server.ready_at = time.monotonic() + float(args.loading)
     Server.api_key = args.api_key
     server = http.server.ThreadingHTTPServer(("127.0.0.1", args.port), Server)

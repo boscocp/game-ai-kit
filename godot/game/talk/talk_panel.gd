@@ -107,9 +107,9 @@ static func server_line(server: LlmLocalServer) -> String:
 	if server.state == LlmLocalServer.LOADING:
 		return TranslationServer.translate("The local model already running is still loading; typing opens when it is ready.")
 	if server.state == LlmLocalServer.READY and ours:
-		return TranslationServer.translate("The local model is ready, and stops when you leave. Its first answer is the slowest.")
+		return TranslationServer.translate("The local model is ready, and stops when you leave or close the game. Its first answer is the slowest.")
 	if server.state == LlmLocalServer.READY:
-		return TranslationServer.translate("Using the local model already running.")
+		return TranslationServer.translate("Using the local model already running; it keeps running when you leave.")
 	if server.state == LlmLocalServer.BY_HAND:
 		return TranslationServer.translate("No local model answers: run make llm-serve in a terminal, then Tab twice.")
 	return TranslationServer.translate("The local model stopped while loading ({why}). Is it installed? make llm-bootstrap, then Tab twice.").format(
