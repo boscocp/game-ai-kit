@@ -61,3 +61,5 @@ drawing until the turn is said to have failed?
 
 - Found 2026-11-05 by the second review of PR #82. T130 contained it for
   `/health` only.
+- Shares `godot/addons/ai_llm/` and `godot/test/ai_llm/` with T129: run one
+  after the other.
