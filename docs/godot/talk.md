@@ -5,7 +5,7 @@ half_life: practice
 verified_on: 2026-11-05
 tier: 2
 source: https://store.steampowered.com/app/2726370/Suck_Up/ ; https://www.cp.eng.chula.ac.th/~vishnu/gameResearch/story_november_2005/MateasSternTIDSE04.pdf
-invalidated_if: spec/talk/gate.json changes, the recordings are made again, the pinned server or model in tools/llm/runtime.json changes, or LlmValidator.json_schema stops being one shape per intent
+invalidated_if: spec/talk/gate.json changes, the recordings are made again, the pinned server or model in tools/llm/runtime.json changes, LlmValidator.json_schema stops being one shape per intent, or LlmValidator.SPEECH_PATTERN changes
 teaches: none
 -->
 
@@ -111,11 +111,62 @@ validator allow one, and the form that ships offers it, measured again:
 
 No R7 is left in either narrowed form; the median reply time did not move
 (0.45-0.52 s). With the empty argument offered, the model used it on 0 to 3
-of the 30 lines a round. What is left is R10, markup -- Ministral likes
-`*emphasis*` -- which the schema does not forbid. The validator still
+of the 30 lines a round. What was left after T94 was R10, markup --
+Ministral likes `*emphasis*` -- which that schema did not forbid (T116,
+below, took it out). The validator still
 checks every reply: a runtime may ignore the schema, and a recording may be
 wrong. This is measured on the pinned llama.cpp server only, which takes the
 root `anyOf` under `strict: true`; another server may not.
+
+### Markup, measured (T116)
+
+T116 measured two ways of asking for a speech with no markup. Both used
+the same 30 lines, model, build and probe, three rounds a language, on
+2026-11-05.
+
+- **A pattern on `speech`** (`LlmValidator.SPEECH_PATTERN`): one to 280
+  characters, none of them markup, a control character, a quote or a
+  backslash. The pinned server turns a pattern into a grammar over the
+  string's JSON text, and drops `maxLength` beside it
+  ([server.md](../local-llm/server.md#a-pattern-on-a-string)), hence the quote, the
+  backslash and the length.
+- **A line in the prompt**, after T93's "no markup": "Write the speech as
+  plain words, as spoken: no asterisks, no brackets, no backticks, no
+  emphasis."
+
+The shipped schema was measured again the same session first, as the
+baseline. The server samples, and this baseline drew 15 R10 in English
+where T94's three rounds drew 9.
+
+| language | asked how | valid of 30 | act right | act and argument right | refusals in 90 |
+|---|---|---|---|---|---|
+| en | shipped schema, again (baseline) | 22, 26, 27 | 15, 15, 20 | 13, 13, 16 | R10 15 |
+| en | the pattern (**shipped**) | 30, 30, 30 | 21, 21, 19 | 17, 17, 17 | none |
+| en | the prompt line | 30, 28, 30 | 19, 18, 19 | 16, 14, 14 | R10 2 |
+| en | both | 30, 30, 30 | 18, 20, 19 | 15, 16, 18 | none |
+| pt-BR | shipped schema, again (baseline) | 28, 27, 27 | 18, 19, 20 | 11, 14, 14 | R10 8 |
+| pt-BR | the pattern (**shipped**) | 30, 30, 30 | 21, 21, 25 | 16, 15, 21 | none |
+| pt-BR | the prompt line | 30, 30, 30 | 24, 23, 25 | 18, 17, 17 | none |
+| pt-BR | both | 30, 30, 30 | 24, 24, 21 | 16, 21, 17 | none |
+
+Both candidates took R10 down without taking another column down, against
+this baseline and against T94's rows above. The pattern ships:
+
+- it is the only one with no refusal left in either language;
+- in English it reads more acts right than the prompt line;
+- it is a constraint on the grammar, not a request in words the model can
+  ignore, as the prompt's "no markup" already was.
+
+The prompt line read a few more acts right in pt-BR. Adding it to the
+pattern did not beat the pattern alone in English, so the prompt stays
+T93's. The median reply took 0.50-0.57 s with the pattern, 0.52-0.53 s for
+the baseline. Leaving the straight quote out of the pattern cost nothing
+measured: no accepted speech held one in the 180 replies that could have
+(the baseline and the prompt line; with the pattern the model cannot write
+one).
+
+R10 stays in the validator unchanged. A runtime may ignore the schema, and
+the recordings were made before the pattern.
 
 The recordings were made with the first narrowed form, the one with no
 empty argument; they are data, replayed through the validator either way.

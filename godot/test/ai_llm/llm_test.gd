@@ -100,6 +100,49 @@ func test_the_schema_and_the_instructions_name_the_games_intents() -> void:
 	assert_str(validator.instructions()).contains("- greet: (none)")
 
 
+func test_the_speech_in_the_schema_is_the_committed_one() -> void:
+	# Python's twin is held to the same file, so the two cannot drift.
+	var path: String = ProjectSettings.globalize_path("res://").path_join(
+		"../spec/llm/reply.schema.json")
+	var committed: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	var speech: Dictionary = committed["properties"]["speech"]
+	for shape: Dictionary in _validator().json_schema()["anyOf"]:
+		var ours: Dictionary = shape["properties"]["speech"]
+		assert_str(ours["pattern"]).is_equal(speech["pattern"])
+		# Godot's parser reads every JSON number as a float.
+		assert_int(ours["maxLength"]).is_equal(int(speech["maxLength"]))
+		assert_int(ours["minLength"]).is_equal(int(speech["minLength"]))
+		assert_array(ours.keys()).contains_exactly_in_any_order(
+			["type", "minLength", "maxLength", "pattern"])
+
+
+func test_the_speech_pattern_refuses_what_r8_r9_and_r10_refuse() -> void:
+	# The pattern asks a constraining runtime for what these rules check
+	# (T116): a vector case refused for its speech must not match it.
+	var pattern := RegEx.create_from_string(LlmValidator.SPEECH_PATTERN)
+	var checked: int = 0
+	for case: Dictionary in _vector()["cases"]:
+		if not case.get("refused", "") in ["R8", "R9", "R10"]:
+			continue
+		var speech: String = JSON.parse_string(case["raw"])["speech"]
+		assert_bool(_matches_whole(pattern, speech)).override_failure_message(case["why"]).is_false()
+		checked += 1
+	assert_int(checked).is_greater_equal(8)
+	assert_bool(_matches_whole(pattern, "Evening. State your business.")).is_true()
+	assert_bool(_matches_whole(pattern, "Não, senhor.")).is_true()
+	assert_bool(_matches_whole(pattern, 'He said "no".')).is_false()
+	assert_bool(_matches_whole(pattern, "a \\ b")).is_false()
+	# The length is in the pattern: the pinned server drops maxLength beside one.
+	assert_bool(_matches_whole(pattern, "H".repeat(LlmValidator.SPEECH_LIMIT))).is_true()
+	assert_bool(_matches_whole(pattern, "H".repeat(LlmValidator.SPEECH_LIMIT + 1))).is_false()
+
+
+# A RegEx's `$` also matches before a final line break; the whole string must match.
+func _matches_whole(pattern: RegEx, speech: String) -> bool:
+	var found: RegExMatch = pattern.search(speech)
+	return found != null and found.get_string() == speech
+
+
 # --- the runtimes ------------------------------------------------------------
 
 

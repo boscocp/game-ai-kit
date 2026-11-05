@@ -11,6 +11,7 @@ import contextlib
 import io
 import json
 import pathlib
+import re
 import unittest
 
 from gameaikit.llm import validator
@@ -74,8 +75,9 @@ class TheSchema(unittest.TestCase):
             self.assertEqual(shape["required"], committed["required"])
             self.assertEqual(shape["additionalProperties"], committed["additionalProperties"])
             self.assertEqual(set(shape["properties"]), set(committed["properties"]))
-            self.assertEqual(shape["properties"]["speech"]["maxLength"],
-                             committed["properties"]["speech"]["maxLength"])
+            speech = dict(committed["properties"]["speech"])
+            del speech["description"]
+            self.assertEqual(shape["properties"]["speech"], speech)
 
     def test_each_intent_is_offered_only_its_own_arguments(self) -> None:
         shapes = validator.json_schema(GUARD)["anyOf"]
@@ -86,6 +88,22 @@ class TheSchema(unittest.TestCase):
         committed = json.loads(SCHEMA.read_text(encoding="utf-8"))
         self.assertEqual(tuple(committed["required"]), validator.REPLY_KEYS)
         self.assertEqual(committed["properties"]["speech"]["maxLength"], validator.SPEECH_LIMIT)
+
+    def test_the_speech_pattern_turns_away_markup_and_keeps_the_limit(self) -> None:
+        # llama.cpp drops maxLength beside a pattern, so the pattern carries
+        # the limit; and it reads the JSON text, so the quote and the
+        # backslash stay out (T116, docs/local-llm/server.md).
+        plain = ("Evening. State your business.", "Não, senhor.", "H" * validator.SPEECH_LIMIT,
+                 "You're not on the list.")
+        for speech in plain:
+            with self.subTest(speech):
+                self.assertIsNotNone(re.fullmatch(validator.SPEECH_PATTERN, speech))
+        marked = [f"Halt {character} there." for character in validator.MARKUP]
+        marked += ["", "H" * (validator.SPEECH_LIMIT + 1), "Two\nlines", 'He said "no".',
+                   "a \\ b", "Evening.\x7f"]
+        for speech in marked:
+            with self.subTest(speech):
+                self.assertIsNone(re.fullmatch(validator.SPEECH_PATTERN, speech))
 
 
 class TheReplay(unittest.TestCase):

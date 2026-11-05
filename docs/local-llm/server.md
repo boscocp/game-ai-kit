@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: tool
-verified_on: 2026-10-29
+verified_on: 2026-11-05
 tier: 3
-source: https://github.com/ggml-org/llama.cpp/releases/tag/b11960 ; https://github.com/ggml-org/llama.cpp/releases/tag/v0.8.0 ; https://github.com/ggml-org/llama.cpp/blob/b11960/tools/server/README.md ; https://github.com/ggml-org/llama.cpp/blob/b11960/tools/server/server-common.cpp ; https://github.com/ggml-org/llama.cpp/blob/b11960/LICENSE
-invalidated_if: tools/llm/runtime.json pins another build, or the server's README at the pinned tag changes what it says about --port, --reasoning, --offline or response_format
+source: https://github.com/ggml-org/llama.cpp/releases/tag/b11960 ; https://github.com/ggml-org/llama.cpp/releases/tag/v0.8.0 ; https://github.com/ggml-org/llama.cpp/blob/b11960/tools/server/README.md ; https://github.com/ggml-org/llama.cpp/blob/b11960/tools/server/server-common.cpp ; https://github.com/ggml-org/llama.cpp/blob/b11960/LICENSE ; https://github.com/ggml-org/llama.cpp/blob/b11960/grammars/README.md ; https://github.com/ggml-org/llama.cpp/blob/b11960/common/json-schema-to-grammar.cpp
+invalidated_if: tools/llm/runtime.json pins another build, or the server's README at the pinned tag changes what it says about --port, --reasoning, --offline, response_format or a schema's pattern
 teaches: none
 -->
 
@@ -126,6 +126,41 @@ asked for a poem with the game's schema, Gemma 4 wrote its reasoning into
 `reasoning_content` despite `--reasoning off`, ran out of tokens, and
 returned an empty `content`. Empty content is R1, the game's line. A
 schema constrains the reply; it does not make one arrive.
+
+## A `pattern` on a string
+
+T116 asked whether the server can be held to a speech with no markup, a
+`pattern` on `speech`, under `strict: true`. Read on 2026-11-05 at
+`b11960`:
+
+- `grammars/README.md`, the server's schema support, in its "known
+  limitations": "[pattern]s must start with `^` and end with `$`", and
+  "Unsupported features are skipped silently."
+- `common/json-schema-to-grammar.cpp`, which the README does not cover:
+  - A string with a `pattern` becomes that pattern's grammar, and
+    `minLength` and `maxLength` are not read beside it. The string branch
+    returns on the pattern first. So a length has to be in the pattern.
+  - The grammar matches the string's JSON text between its quotes, escapes
+    and all, not the decoded string. A class like `[^*]` would let a raw
+    `"` or a line break through and break the JSON, so the class must
+    leave out the quote, the backslash and the control characters too.
+  - A pattern the converter cannot translate is dropped with a warning,
+    "accepting any string". That is the lookbehind row in the table above.
+    A malformed one is an error.
+  - Inside a class it reads `\x`, `\u`, `\t`, `\n`, `\\`, `\"`, `\[`, `\]`
+    and `\-`.
+
+Measured on Ministral 3 8B, Vulkan build:
+`` ^[^"\\<>\[\]*`\x00-\x1F\x7F]{1,280}$ ``. The model was asked to write `*very*`, `[sighs]`, a backtick and a quoted word.
+Without the pattern it wrote all four. With it, it wrote none, and the log
+had no warning. The game's schema now carries this pattern
+(`LlmValidator.SPEECH_PATTERN`); what it did to the 30 lines is in
+[the talk page](../godot/talk.md#the-schema-measured). The validator's R10
+is unchanged, because a runtime may ignore the schema.
+
+Sources, opened 2026-11-05:
+<https://github.com/ggml-org/llama.cpp/blob/b11960/grammars/README.md>;
+<https://github.com/ggml-org/llama.cpp/blob/b11960/common/json-schema-to-grammar.cpp>.
 
 ## Nothing in `$HOME` {#home}
 

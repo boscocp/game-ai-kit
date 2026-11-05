@@ -47,10 +47,19 @@ var _pad := PadAsKeys.new()
 var _strip := DirectorStrip.new()
 ## The solved level the generation view replays; null when it was drawn.
 var solved: LevelConstraints
-## The last level the solver was asked for, kept by its seed so that N and
-## a second K do not solve it again: a solve runs on the main thread and
-## stalls the frame (120 ms a level on average, 2.2 s at worst, measured).
+## The last level the solver made, kept by its seed so that N and a second
+## K do not solve it again (120 ms a level on average, 2.2 s at worst).
 var _last_solved: LevelConstraints
+## The solve running off the main thread (T122); the old level plays on
+## until it ends, and the panel says it is solving.
+var _solving := LevelSolving.new()
+## The seed of the solved level waited for to replace the one played, or
+## -1: what the panel names, and what a finished solve rebuilds the world
+## for. Not the pool's seed: L pressed mid-solve asks for the next one.
+var _awaited: int = -1
+## Whether a level is solved on `WorkerThreadPool`; headless, inline, so a
+## seeded run never waits on a thread.
+var solve_in_background: bool = DisplayServer.get_name() != "headless"
 var _generation := GenerationView.new()
 
 @onready var _drawing: InfiltrationDrawing = $Drawing
@@ -101,6 +110,7 @@ func _show_legend() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_collect_solved()
 	if not _paused and world.outcome == "":
 		_carried += delta
 		while _carried >= rules.step_seconds:
@@ -225,6 +235,9 @@ func toggle_thinking() -> void:
 
 func _new_world() -> void:
 	var level: InfiltrationLevel = _level()
+	if level == null:
+		return  # being solved off the main thread: the old level plays on
+	_awaited = -1
 	world = InfiltrationWorld.make(level, rules, _seed)
 	world.sounds.on_screen = _on_screen
 	_watched = mini(_watched, world.guards.size() - 1)
@@ -238,30 +251,67 @@ func _new_world() -> void:
 
 # The level to play: a hand-made one, or one generated the way the rules'
 # `level_generator` says. A solved level falls back to the drawn one when the
-# solver gave up, and the generation view, when shown, says so.
+# solver gave up, and the generation view, when shown, says so. Null while
+# the level is being solved off the main thread.
 func _level() -> InfiltrationLevel:
-	solved = null
-	_generation.show_solving(null)
-	_generation.visible = false
 	if _level_index < InfiltrationLevel.HAND_MADE.size():
+		_show_made(null)
 		return InfiltrationLevel.read(InfiltrationLevel.HAND_MADE[_level_index])
 	var generated: int = _seed + _level_index
-	if rules.level_generator == LevelGenerator.CONSTRAINTS:
+	if rules.level_generator != LevelGenerator.CONSTRAINTS:
+		_show_made(null)
+	else:
 		var found: LevelConstraints = _solved_for(generated)
-		_generation.visible = rules.show_generation
+		if found == null:
+			return null
+		_show_made(found)
 		if not found.data.is_empty():
-			solved = found
-			_generation.show_solving(found)
 			return InfiltrationLevel.read(found.data, "solved %d" % generated)  # not shown as written: InfiltrationWords.level words it
-		_generation.show_gave_up(generated)
 	return InfiltrationLevel.read(LevelGenerator.make(generated), "generated %d" % generated)  # not shown as written: InfiltrationWords.level words it
 
 
-# The level the solver makes from `generated`, solved once and kept.
+# What the generation view and the overlay show for the level about to be
+# played: `found`, the solver's level, or null for a drawn or hand-made one.
+func _show_made(found: LevelConstraints) -> void:
+	solved = found if found != null and not found.data.is_empty() else null
+	_generation.show_solving(solved)
+	_generation.visible = found != null and rules.show_generation
+	if found != null and found.data.is_empty():
+		_generation.show_gave_up(found.seed_value)
+
+
+# The level the solver makes from `generated`, solved once and kept; null
+# while it is being solved on the pool. Inline when there is no world yet
+# to play meanwhile, or when `solve_in_background` is off.
 func _solved_for(generated: int) -> LevelConstraints:
-	if _last_solved == null or _last_solved.seed_value != generated:
+	if _last_solved != null and _last_solved.seed_value == generated:
+		return _last_solved
+	if world == null or not solve_in_background:
 		_last_solved = LevelConstraints.solve(generated, true)
-	return _last_solved
+		return _last_solved
+	_solving.start(generated)
+	_awaited = generated
+	return null
+
+
+# A solve the pool finished becomes the kept level, and the world is built
+# again if a solved level is still awaited: L pressed while it ran may await
+# another seed, solved next; K to drawn or L to a hand-made level, none.
+func _collect_solved() -> void:
+	var found: LevelConstraints = _solving.poll()
+	if found == null:
+		return
+	_last_solved = found
+	if _awaited != -1:
+		_new_world()
+
+
+# A task still running when the scene leaves is waited for: the pool frees
+# a task only once it is waited for. Until it ends the window is frozen (up
+# to about 2.5 s on seed 144). Its level is dropped: nothing adds this scene
+# back to the tree, and one that did would have to ask again.
+func _exit_tree() -> void:
+	_solving.wait()
 
 
 func _intent() -> PlayerIntent:
@@ -290,6 +340,8 @@ func _show() -> void:
 	_strip.thinking = _thinking
 	_strip.queue_redraw()
 	_panel.text = InfiltrationText.panel(world, _watched) if _thinking else InfiltrationWords.level(world.level.name)
+	if _awaited != -1:
+		_panel.text = tr("solving level {seed}: this one plays until it is ready").format({seed = _awaited}) + "\n" + _panel.text
 
 
 # Behind the player and above, looking the way the mouse turned it: `_yaw`

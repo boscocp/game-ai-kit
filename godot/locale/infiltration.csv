@@ -24,6 +24,7 @@ drawn,sorteado
 solved,resolvido
 solved and shown,resolvido e mostrado
 "the solver gave up on seed {seed}: this is the drawn level","o solver desistiu da seed {seed}: este é o nível sorteado"
+"solving level {seed}: this one plays until it is ready","resolvendo o nível {seed}: este segue em jogo até ele ficar pronto"
 on,ligado
 OFF,DESLIGADO
 grid,grade
