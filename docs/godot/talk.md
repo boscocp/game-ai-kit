@@ -216,20 +216,49 @@ running the game. So the first Tab into live mode asks the server's
 - **the server exits while loading** (`scripts/llm` exits 2 when the model
   is not installed): the status line gives its exit code and names
   `make llm-bootstrap`.
+- **a server goes away later**: a turn no server answered (F1) asks
+  `/health` again and starts a server in its place; Tab twice does the
+  same. A server found loading that stops answering is said to have
+  stopped, and typing opens. A server started here that takes more than
+  180 s to load is said to have failed, and it is stopped when the scene
+  is left, not during play.
 
-Recorded mode starts nothing. A server this scene started dies with it, but
-not with a crash: `OS.create_process` makes "a new process that runs
-independently of Godot. It will not terminate when Godot terminates"
+Recorded mode starts nothing.
+
+**The key.** llama.cpp's server allows any origin, so while one runs
+without a key any web page open in a browser can use the model. A server
+the game starts therefore gets a key made for that one launch.
+`scripts/llm` passes it in `LLAMA_API_KEY`, so it is not on
+`llama-server`'s command line, and `HttpRuntime` sends it as
+`Authorization: Bearer`. Measured at the pinned build on 2026-11-05:
+- `/health` still answers without the key.
+- A chat request with no key or a wrong one gets 401
+  `{"error":{"message":"Invalid API Key","type":"authentication_error","code":401}}`.
+- `/v1/models` without the key gets 401 too.
+
+A server found running gets no key from the game. That includes
+`make llm-serve`, which is unchanged and runs keyless while a person keeps
+it open.
+
+**Dying with the game.** `OS.create_process` makes "a new process that
+runs independently of Godot. It will not terminate when Godot terminates"
 ([OS, 4.7](https://docs.godotengine.org/en/4.7/classes/class_os.html),
-opened 2026-11-05), so a killed game leaves `llama-server` on the port, and
-the next Tab uses it.
+opened 2026-11-05), in a session of its own. A game stopped with Ctrl+C
+or `kill` never runs `_exit_tree`, and Ctrl+C never reaches the server.
+So the game passes its process id. On Linux, `scripts/llm` sets
+`PR_SET_PDEATHSIG` before it becomes `llama-server`, and the kernel ends
+the server when the game ends, however it ends. Measured with the real
+model: SIGINT (exit -2) and SIGTERM to the game both left no
+`llama-server`. Elsewhere a game killed that way leaves the server
+running. The next Tab finds it and uses it, and `pkill llama-server`
+stops it.
 
 What the documentation does not say, read in the source at 4.7
 (`drivers/unix/os_unix.cpp`): `OS.kill` sends SIGKILL and then **waits**
-for the process to be gone, and `is_process_running` prints an error about
-a process it has already reaped. The first is a frame; it is measured
-below. The second is why `LlmLocalServer` stops asking once it has seen the
-process end.
+for the process to be gone. That is a frame, so `LlmLocalServer` calls it
+only in `_exit_tree`, and `check_llm_validated.py` refuses it anywhere
+else. Godot keeps an ended child's exit code. Only after `OS.kill`, which
+reaps the child itself, does asking `is_process_running` print an error.
 
 Measured on 2026-11-05 on the owner's desktop (RTX 5070, Vulkan build,
 Ministral 3 8B Q4_K_M, model files warm on disk) with

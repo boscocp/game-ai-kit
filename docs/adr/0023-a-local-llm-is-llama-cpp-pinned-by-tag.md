@@ -114,15 +114,23 @@ session proposed the design below; the owner answered "as 3", accepting it.
   longer holds for this one path.
 - **Only when nothing answers.** `/health` first: a server already there,
   `make llm-serve`'s or anyone's, is used and never stopped. One started
-  here is stopped when the scene is left; a crash leaves it running, as a
-  process made by `OS.create_process` outlives Godot by design.
+  here is stopped when the scene is left (`OS.kill`, in `_exit_tree` only:
+  it waits, and the gate refuses it elsewhere). A game stopped with Ctrl+C
+  or `kill` skips that, and a process made by `OS.create_process` outlives
+  Godot by design: so the game passes its process id, and on Linux
+  `scripts/llm` has the server die with it (`PR_SET_PDEATHSIG`). Elsewhere
+  it survives; the next Tab uses it, and `pkill llama-server` stops it.
 - **Only in a checkout, only on Tab.** An exported game, a headless run
   and a checkout without `scripts/llm` never start anything; live mode
   says to run the server by hand, as before. Recorded mode never starts
   anything.
-- **The same server.** It is `scripts/llm serve` with its own flags:
-  `--host 127.0.0.1`, offline, the same port, the same "no API key"
-  warning `make llm-serve` prints.
+- **The same server, with a key.** It is `scripts/llm serve` with its own
+  flags: `--host 127.0.0.1`, offline, the same port. A game-started server
+  also gets a key made for that launch, passed in `LLAMA_API_KEY` and sent
+  by `HttpRuntime`. llama.cpp allows any origin, and a server nobody asked
+  for should not be open to every web page in a browser. `make llm-serve`
+  is unchanged and still runs without a key; a person starts it and sees
+  it running.
 
 Measured (docs/godot/talk.md): 2.5 s from Tab to ready, no frame waiting
 on it headless, one windowed frame of up to 101 ms while the weights move

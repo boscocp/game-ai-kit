@@ -40,7 +40,9 @@ var book: TalkBook
 ## What the player has said in this conversation, in order.
 var said: PackedStringArray = PackedStringArray()
 ## What starts the model when no server answers, or "" to only say so. Set
-## before the first Tab to change it.
+## before the first Tab to change it. No test can see the "template" guard
+## (every test runs in the editor build); an exported game is also held by
+## `file_exists`, as no export carries `scripts/llm` beside it.
 var server_program: String = server_program_for(
 	not OS.has_feature("template") and DisplayServer.get_name() != "headless",
 	ProjectSettings.globalize_path("res://"))
@@ -51,6 +53,8 @@ var server_arguments: PackedStringArray = PackedStringArray(["serve"])
 var server_port: int = HttpRuntime.PORT
 ## The live server, found or started at the first Tab; null before.
 var server: LlmLocalServer = null
+
+var _runtime: HttpRuntime = null
 ## Where the language chosen is kept. A test points it somewhere of its own
 ## before the scene enters the tree, as the menu's (T132).
 var settings_path: String = Language.SETTINGS
@@ -160,10 +164,12 @@ func restart() -> void:
 	said = PackedStringArray()
 	_note = ""
 	book = TalkBook.load_from(TalkBook.folder(), language())
+	_runtime = null
 	if mode == LIVE:
-		var runtime := HttpRuntime.new()
-		guard.use_runtime(RecordingRuntime.new(runtime) if recording else runtime)
+		_runtime = HttpRuntime.new("http://127.0.0.1:%d/v1/chat/completions" % server_port)
+		guard.use_runtime(RecordingRuntime.new(_runtime) if recording else _runtime)
 		_live_server().begin()
+		_runtime.api_key = server.api_key
 	_typed.visible = mode == LIVE
 	_typed.clear()
 	if mode == LIVE:
@@ -190,7 +196,11 @@ func _live_server() -> LlmLocalServer:
 	return server
 
 
+# The key goes with the server: one started here asks for the key it was
+# started with; one found running gets none, as before T130.
 func _on_server_changed(_state: String) -> void:
+	if is_instance_valid(_runtime):
+		_runtime.api_key = server.api_key
 	_refresh()
 	if mode == LIVE and _typed.editable:
 		_typed.grab_focus.call_deferred()
@@ -229,7 +239,11 @@ func _on_typed(text: String) -> void:
 	_refresh()
 
 
-func _on_ruled(_turn: Dictionary) -> void:
+# A turn no server answered (F1) asks again: the server may have gone, and
+# one can be started in its place.
+func _on_ruled(turn: Dictionary) -> void:
+	if turn.get("refusal_code", "") == "F1" and mode == LIVE and server != null:
+		server.begin()
 	if recording and guard.has_decided():
 		_save_recording()
 	_refresh()

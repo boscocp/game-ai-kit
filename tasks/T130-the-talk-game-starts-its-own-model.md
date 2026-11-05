@@ -1,6 +1,6 @@
 # T130 — The talk game starts its own model
 
-Size: S · Prereqs: T94 · Files: `godot/addons/ai_llm/`, `godot/test/ai_llm/`, `godot/game/talk/`, `godot/test/talk/`, `godot/locale/talk.csv`, `scripts/check_llm_validated.py`, `docs/adr/0023-a-local-llm-is-llama-cpp-pinned-by-tag.md`, `docs/godot/talk.md`, `Makefile`
+Size: S · Prereqs: T94 · Files: `godot/addons/ai_llm/`, `godot/test/ai_llm/`, `godot/game/talk/`, `godot/test/talk/`, `godot/locale/talk.csv`, `scripts/check_llm_validated.py`, `tools/llm/llm.py`, `docs/reviews/133-the-talk-game-starts-its-own-model.md`, `docs/adr/0023-a-local-llm-is-llama-cpp-pinned-by-tag.md`, `docs/godot/talk.md`, `Makefile`
 
 ## Goal
 
@@ -50,6 +50,7 @@ answered "as 3", accepting it. It amends ADR 0023.
 ```bash
 make test-godot-some SUITES="test/ai_llm test/talk"
 python3 scripts/check_llm_validated.py --self-test
+scripts/llm --self-test
 python3 scripts/check_llm_validated.py
 make test-talk-vectors
 python3 scripts/check_readability.py
@@ -75,6 +76,17 @@ leave?
   101.2 ms, the long ones 0.45 to 0.65 s after Tab, while the weights move
   onto the card the game draws with. Leaving the scene costs one frame of
   86 to 91 ms, because `OS.kill` waits for the process to end.
+- The review (`docs/reviews/133-the-talk-game-starts-its-own-model.md`)
+  asked for three changes, and all were applied:
+  - The server now dies with the game when the game is stopped with Ctrl+C
+    or `kill` (Linux, `PR_SET_PDEATHSIG`). Measured: no `llama-server` was
+    left after SIGINT or SIGTERM.
+  - It is started with a key made for that launch. Without the key, the
+    measured answer is 401.
+  - A server that goes away is found again: after an F1 turn, after Tab
+    twice, and when a server found loading falls silent.
+
+  `OS.kill` now runs only on leaving, which the gate holds.
 - The fake server's tests need a POSIX shebang. Windows would need
   `python3` named as the program.
 

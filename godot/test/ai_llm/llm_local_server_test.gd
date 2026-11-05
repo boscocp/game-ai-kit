@@ -105,3 +105,89 @@ func test_a_program_that_exits_while_loading_is_said_to_have_stopped() -> void:
 func test_before_the_tree_there_is_nothing_to_ask_with() -> void:
 	var server: LlmLocalServer = auto_free(LlmLocalServer.new("", PackedStringArray(), 39946))
 	assert_int(server.begin()).is_equal(ERR_UNCONFIGURED)
+
+
+func test_leaving_while_the_model_loads_stops_the_server() -> void:
+	var server: LlmLocalServer = _server(39947, "30")
+	server.begin()
+	await _until(server, LlmLocalServer.LOADING)
+	await get_tree().create_timer(0.5).timeout
+	assert_bool(await _answers(39947)).is_true()
+	server.free()
+	assert_bool(await _answers(39947)).is_false()
+
+
+func test_a_found_server_that_went_away_is_started_again_on_begin() -> void:
+	var first: LlmLocalServer = _server(39948)
+	first.begin()
+	await _until(first, LlmLocalServer.READY)
+	var second: LlmLocalServer = _server(39948)
+	second.begin()
+	await _until(second, LlmLocalServer.READY)
+	assert_bool(second.started_here()).is_false()
+	first.free()
+	assert_int(second.begin()).is_equal(OK)
+	assert_str(second.state).is_equal(LlmLocalServer.CHECKING)
+	await _until(second, LlmLocalServer.READY)
+	assert_str(second.state).is_equal(LlmLocalServer.READY)
+	assert_bool(second.started_here()).is_true()
+	second.free()
+
+
+func test_a_found_server_that_dies_while_loading_is_said_to_have_stopped() -> void:
+	var first: LlmLocalServer = _server(39949, "30")
+	first.begin()
+	await _until(first, LlmLocalServer.LOADING)
+	await get_tree().create_timer(0.5).timeout
+	var second: LlmLocalServer = auto_free(_server(39949))
+	second.begin()
+	await _until(second, LlmLocalServer.LOADING)
+	assert_bool(second.started_here()).is_false()
+	first.free()
+	await _until(second, LlmLocalServer.STOPPED)
+	assert_str(second.state).is_equal(LlmLocalServer.STOPPED)
+	assert_str(second.reason).contains("stopped answering")
+
+
+func test_a_load_past_its_limit_is_said_not_killed_during_play() -> void:
+	var server: LlmLocalServer = _server(39950, "30")
+	server.load_seconds = 0.5
+	server.begin()
+	await _until(server, LlmLocalServer.STOPPED)
+	assert_str(server.state).is_equal(LlmLocalServer.STOPPED)
+	assert_str(server.reason).contains("did not load")
+	assert_bool(await _answers(39950)).is_true()
+	server.free()
+	assert_bool(await _answers(39950)).is_false()
+
+
+# What a conversation through HttpRuntime gets from the server on `port`,
+# sending `key`: the refusal code of its one answer ("" for a reply).
+func _code_of_a_turn(port: int, key: String) -> String:
+	var runtime: HttpRuntime = HttpRuntime.new("http://127.0.0.1:%d/v1/chat/completions" % port)
+	runtime.api_key = key
+	add_child(runtime)
+	var conversation := LlmConversation.new(runtime, LlmValidator.new({"greet": []}, "Again?"), "A guard.")
+	var answers: Array[LlmReply] = []
+	conversation.answered.connect(func(reply: LlmReply) -> void: answers.append(reply))
+	conversation.say("Hello there.")
+	var started: int = Time.get_ticks_msec()
+	while answers.is_empty() and Time.get_ticks_msec() - started < PATIENCE * 1000.0:
+		await get_tree().process_frame
+	runtime.free()
+	return answers[0].refusal_code() if not answers.is_empty() else "none"
+
+
+func test_a_server_started_here_asks_for_a_key_made_for_it() -> void:
+	var server: LlmLocalServer = _server(39951, "0.2")
+	server.begin()
+	await _until(server, LlmLocalServer.READY)
+	assert_int(server.api_key.length()).is_equal(32)
+	assert_str(await _code_of_a_turn(39951, server.api_key)).is_equal("")
+	assert_str(await _code_of_a_turn(39951, "")).is_equal("F2")
+	assert_str(await _code_of_a_turn(39951, "not-the-key")).is_equal("F2")
+	var found: LlmLocalServer = auto_free(_server(39951))
+	found.begin()
+	await _until(found, LlmLocalServer.READY)
+	assert_str(found.api_key).is_empty()
+	server.free()

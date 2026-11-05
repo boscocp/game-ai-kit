@@ -13,7 +13,7 @@ kept. The port is `HttpRuntime.PORT`, read out of the addon, so the server
 listens where the game asks.
 
     llm.py TOOLCHAIN bootstrap [--model NAME|all] [--flavour NAME|all]
-    llm.py TOOLCHAIN serve [--model NAME] [--flavour NAME]
+    llm.py TOOLCHAIN serve [--model NAME] [--flavour NAME] [--api-key KEY] [--parent-pid PID]
     llm.py TOOLCHAIN smoke [--model NAME] [--flavour NAME]
     llm.py TOOLCHAIN bakeoff [--model NAME|all] [--flavour NAME] [--language en|pt_BR|all] [--rounds N]
     llm.py TOOLCHAIN table
@@ -26,6 +26,7 @@ or the runtime is not installed (the message says how to install it).
 from __future__ import annotations
 
 import argparse
+import ctypes
 import hashlib
 import json
 import os
@@ -67,6 +68,9 @@ SERVER_FLAGS = (
 )
 
 DOWNLOAD_CHUNK = 1 << 20
+
+# Linux's prctl option that sends a signal when the parent ends (prctl(2)).
+PR_SET_PDEATHSIG = 1
 
 
 class Refused(Exception):
@@ -305,11 +309,42 @@ def stop(server: subprocess.Popen) -> None:
             server.wait()
 
 
-def serve(toolchain: pathlib.Path, model: str, flavour: str) -> int:
-    """Run the server in the foreground until interrupted."""
+def serve(toolchain: pathlib.Path, model: str, flavour: str,
+          api_key: str = "", parent_pid: int = 0) -> int:
+    """Run the server in the foreground until interrupted.
+
+    A game that starts the server (T130, `LlmLocalServer`) passes two more.
+    `api_key`: the server then refuses a request without it, so a web page
+    cannot use the model while the game plays (llama.cpp allows any
+    origin). It goes in LLAMA_API_KEY, the server's own variable, not on
+    its command line. `parent_pid`: the game, which the server dies with.
+    """
     command = server_command(toolchain, model, flavour)
+    if api_key:
+        os.environ["LLAMA_API_KEY"] = api_key
+    if parent_pid:
+        die_with(parent_pid)
     print(f"llm: serving on http://127.0.0.1:{port()} -- Ctrl+C stops it")
     os.execv(command[0], command)
+
+
+def die_with(parent_pid: int) -> None:
+    """End this process when `parent_pid`, its parent, ends -- however it ends.
+
+    A process Godot starts has a session of its own (`OS.create_process`
+    calls setsid), so a game stopped with Ctrl+C or `kill` never runs the
+    code that stops it, and Ctrl+C never reaches it. On Linux,
+    PR_SET_PDEATHSIG sends this process SIGTERM when its parent ends, and is
+    kept across the `execv` into llama-server (prctl(2)). The parent may
+    have ended already: then Refused. Elsewhere only that check is made,
+    and a server outlives a game stopped that way (docs/godot/talk.md).
+    """
+    if sys.platform.startswith("linux"):
+        libc = ctypes.CDLL(None, use_errno=True)
+        if libc.prctl(PR_SET_PDEATHSIG, int(signal.SIGTERM), 0, 0, 0) != 0:
+            raise Refused(f"prctl(PR_SET_PDEATHSIG) failed: errno {ctypes.get_errno()}")
+    if os.getppid() != parent_pid:
+        raise Refused(f"the game that asked for the server ({parent_pid}) is gone")
 
 
 # --- through the game's own runtime ------------------------------------------------
@@ -484,10 +519,63 @@ def self_test() -> int:
         except Refused:
             pass
     failures += manifest_problems()
+    failures += orphan_problems()
     for failure in failures:
         print(f"self-test FAIL: {failure}")
     print(f"self-test: {'ok' if not failures else str(len(failures)) + ' failure(s)'}")
     return 1 if failures else 0
+
+
+# A parent that starts a child, says the child's id, and waits to be killed.
+# The child calls die_with (or not), says so, and sleeps.
+ORPHAN_PARENT = (
+    "import subprocess, sys, time\n"
+    "child = subprocess.Popen([sys.executable, '-I', '-c', sys.argv[1]], stdout=sys.stdout)\n"
+    "print(child.pid, flush=True)\n"
+    "time.sleep(30)\n")
+ORPHAN_CHILD = (
+    "import os, sys, time\n"
+    "sys.path.insert(0, {here!r})\n"
+    "import llm\n"
+    "{call}"
+    "print('ready', flush=True)\n"
+    "time.sleep(30)\n")
+
+
+def orphan_lives(dies_with_parent: bool) -> bool:
+    """Whether a child is still running a few seconds after its parent is killed."""
+    call = "llm.die_with(os.getppid())\n" if dies_with_parent else ""
+    child_code = ORPHAN_CHILD.format(here=str(HERE), call=call)
+    parent = subprocess.Popen([sys.executable, "-I", "-c", ORPHAN_PARENT, child_code],
+                              stdout=subprocess.PIPE, text=True)
+    lines = [parent.stdout.readline().strip(), parent.stdout.readline().strip()]
+    child = int(next(line for line in lines if line.isdigit()))
+    parent.kill()
+    parent.wait()
+    deadline = time.monotonic() + 3.0
+    while time.monotonic() < deadline:
+        try:
+            os.kill(child, 0)
+        except ProcessLookupError:
+            return False
+        time.sleep(0.05)
+    os.kill(child, signal.SIGKILL)
+    return True
+
+
+def orphan_problems() -> list[str]:
+    """A server a game started dies with the game (T130); Linux only."""
+    if not sys.platform.startswith("linux"):
+        print("self-test note: die_with is not checked off Linux")
+        return []
+    problems = []
+    if orphan_lives(dies_with_parent=True):
+        problems.append("a child calling die_with outlived its killed parent")
+    # Planted: the same child without die_with must be seen to survive, or
+    # the check above could pass on a child that was never there.
+    if not orphan_lives(dies_with_parent=False):
+        problems.append("a child without die_with did not outlive its parent: the check sees nothing")
+    return problems
 
 
 def manifest_problems() -> list[str]:
@@ -525,6 +613,8 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--flavour", default="")
     parser.add_argument("--language", default="")
     parser.add_argument("--rounds", type=int, default=3)
+    parser.add_argument("--api-key", default="")
+    parser.add_argument("--parent-pid", type=int, default=0)
     parser.add_argument("--self-test", action="store_true")
     try:
         args = parser.parse_args(argv)
@@ -546,7 +636,7 @@ def dispatch(args: argparse.Namespace) -> int:
     if args.command == "bootstrap":
         return bootstrap(args.toolchain, args.model, args.flavour)
     if args.command == "serve":
-        return serve(args.toolchain, args.model, args.flavour)
+        return serve(args.toolchain, args.model, args.flavour, args.api_key, args.parent_pid)
     if args.command == "smoke":
         return smoke(args.toolchain, args.model, args.flavour, work)
     if args.command == "bakeoff":

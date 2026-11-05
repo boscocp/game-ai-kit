@@ -115,3 +115,24 @@ func test_with_nothing_to_start_live_mode_says_to_start_one_by_hand() -> void:
 	assert_str(demo.server.state).is_equal(LlmLocalServer.BY_HAND)
 	assert_bool((demo.get_node("Interface/Typed") as LineEdit).editable).is_true()
 	assert_str(demo.get_node("Interface/Status").text).contains("make llm-serve")
+
+
+func test_a_turn_no_server_answered_starts_one_in_its_place() -> void:
+	var running: LlmLocalServer = LlmLocalServer.new(ProjectSettings.globalize_path(FAKE),
+		PackedStringArray(["39955", "0.2"]), 39955)
+	add_child(running)
+	running.begin()
+	var started: int = Time.get_ticks_msec()
+	while not running.is_ready() and Time.get_ticks_msec() - started < PATIENCE * 1000.0:
+		await get_tree().process_frame
+	var demo: TalkDemo = await _demo(39955, "0.2")
+	demo.switch_mode()
+	await _until(demo, LlmLocalServer.READY)
+	assert_bool(demo.server.started_here()).is_false()
+	running.free()
+	assert_int(demo.guard.say("Hello there.")).is_equal(OK)
+	await _until(demo, LlmLocalServer.CHECKING)
+	await _until(demo, LlmLocalServer.READY)
+	assert_bool(demo.server.started_here()).is_true()
+	demo.free()
+	assert_bool(await _answers(39955)).is_false()
