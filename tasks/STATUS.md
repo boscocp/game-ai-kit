@@ -1057,6 +1057,7 @@ review.
 | T127 | An unseen shooter stays unseen in the news | todo | the owner, 2026-11-05, item B24: word the news from the person's fog, or a shot reveals its shooter -- the task chooses |
 | T128 | A focus ring outlives its sight | todo | the owner, 2026-11-05, second list item 6 (this session's proposal): a squad's focus ring falls back to the last place the side was told of, marked stale, when its target leaves sight; drawing only |
 | T129 | Line separators are refused in a speech | todo | the owner, 2026-11-05, second list item 9, from T116's review: R9 and the pattern refuse U+2028, U+2029 and the C1 controls, in both twins, with vectors |
+| T132 | A language change in `_ready` adds its children | done | wave 135: the owner, 2026-11-05 ("as 3"), from `make demo-talk` with pt-BR saved; measured on 4.7.2, `set_locale` notifies through `propagate_notification`, which holds the node busy, so the talk scene's new guard never reached the tree, in `_ready` or at any later change; a deferred restart in the scene, skipped out of the tree; not a deferred `Language.apply`, which notifies the same way and fixes neither path; the scene takes a `settings_path`, as the menu, so the test never writes the person's language; `talk_language_test.gd` opens it as the main scene and switches it while open; the other 15 scenes that call `apply_if_opened_alone`, and the menu, measured unaffected; `docs/godot/localisation.md`; review (`docs/reviews/135-a-language-change-in-ready-adds-its-children.md`, changes requested, no blocker, all applied) |
 
 ---
 
