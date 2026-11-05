@@ -38,8 +38,12 @@ Main is 580ec92.
 
 **How it was checked.**
 
-- Each wave ran its own `check-affected`. None selected everything.
-- Four PRs merged on their reviewed heads, each with main merged in.
+- Each wave ran its own `check-affected`, and none selected everything.
+  T126's PR body lists its suites by name; its `check-affected` (7
+  modules, exit 0) is in the implementer's report to the coordinator.
+- All five merged at the head that carries the review's applied
+  findings, with main merged in where it had moved. The fixes were not
+  reviewed again.
 - The coordinator ran the whole `make check` once, in a clean worktree,
   on #77's head (e680a6d): exit 0, 1732 gdUnit cases, 0 failures. The
   log is not committed. Its nine `SCRIPT ERROR` lines are the same
@@ -72,7 +76,8 @@ Each PR body holds the reasoning.
    - four answers stay on `SquadRuleset`.
 
    *Recommended:* keep.
-4. T126, decision 5: `tactical.gd` grew by 12 lines. The reviewer reads
+4. T126, decision 5: `tactical.gd` grew by 12 or 13 lines (860 to 872
+   in the PR, 873 at the reviewed head). The reviewer reads
    it as slightly easier. *Recommended:* accept, and judge it in the
    manual check.
 5. T118, decisions 1-7:
@@ -147,9 +152,12 @@ Each PR body holds the reasoning.
 - T88 is ready now that T126 is done.
 - The squad folder takes one wave at a time: T88, then T96, T117, T124,
   T125 and T127.
-- T119 (a gate under `scripts/`, which selects everything) can run beside
-  T88.
-- T120 and T121 each touch many modules, so each runs alone.
+- T119 (a gate under `scripts/`, which selects everything) runs before
+  or after T88 and T96, not beside them: it shares `docs/techniques/`
+  and the Makefile with T88.
+- T120 and T121 share folders with T88 and T96 (T120 also
+  `docs/techniques/`), so each runs before or after them, not beside.
+- So the next batch has no second task beside T88 in the open rows.
 
 ## Resuming after 2026-11-05 (waves 125 to 127 merged)
 
