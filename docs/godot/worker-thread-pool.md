@@ -22,8 +22,10 @@ teaches: none
 - `is_task_completed(task_id)` says whether it is done. It is meant to be
   called between adding the task and waiting for it.
 - `wait_for_task_completion(task_id)` blocks the calling thread until the
-  task ends. It answers `OK`, or `ERR_INVALID_PARAMETER` for an ID that
-  does not exist, for example one already waited for.
+  task ends. It answers `OK`; `ERR_INVALID_PARAMETER` for an ID that
+  does not exist, for example one already waited for; or `ERR_BUSY` when
+  called from inside another task where waiting could deadlock, such as a
+  task waiting on an older one.
 - **Every task must be waited for** at some point, by
   `wait_for_task_completion` or its group form, so that what the pool
   allocated for it is freed. Being completed is not enough.
@@ -61,7 +63,8 @@ and `level_solving_test.gd`:
 - **Poll, then wait.** `is_task_completed` keeps the frame from blocking.
   The wait that follows frees the task and makes the result safe to read.
   A scene leaving the tree with a task still running waits for it in
-  `_exit_tree`, since a task never waited for is never freed.
+  `_exit_tree`, since a task never waited for is never freed -- so the
+  stall moves to leaving the scene, for whatever is left of the solve.
 - **A task cannot be stopped.** The pool has no cancel. `LevelSolving`
   runs one solve at a time and ignores a second start. The scene asks
   again when the first ends.

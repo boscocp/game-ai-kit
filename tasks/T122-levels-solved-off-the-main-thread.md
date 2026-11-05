@@ -106,3 +106,10 @@ that appears play as before?
    ms inline), and nothing changes the seed. Seed 144 is reached by the
    measurement script only. A seed on the demo's command line would be a
    small follow-up.
+10. **Review** (`docs/reviews/131-levels-solved-off-the-main-thread.md`,
+    changes requested, no blocker, all applied). The panel and the
+    rebuild now follow `_awaited`, the level that will replace the one
+    played, rather than the pool. That way a stale solve says nothing and
+    rebuilds nothing. Three lifecycle tests were added, each catching its
+    planted case. The page says leaving the scene mid-solve waits for the
+    rest of the solve.

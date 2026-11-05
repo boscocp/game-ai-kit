@@ -414,15 +414,21 @@ level on average, and 2.2-2.5 s on the slowest seed of 200 (seed 144).
 Until T122 it ran on the main thread when the world was built, with the
 window frozen meanwhile. Now `LevelSolving` hands it to `WorkerThreadPool`
 as one task: the level being played goes on, the panel's first line says
-"solving level 144: this one plays until it is ready", and the scene asks
+"solving level 4: this one plays until it is ready", and the scene asks
 the pool each physics frame whether it is done. When it is, the world is
 built again on the new level, and the view and the solver's counts appear
 then. One solve runs at a time: L or K pressed while it runs is answered
-when it ends, by solving the level then asked for, if it is another. The
-last solved level is still kept by its seed, so N and the second K press
-do not solve again. Headless, and in every seeded test, the scene solves
-inline: `solve_in_background` is off when the display server is
-`headless`. What the pool and the thread-safety page say, and what was
+when it ends, by solving the level then asked for, if it is another; the
+panel names the level that will replace the one played, and says nothing
+once none will (K back to drawn, L onto a hand-made level). The last
+solved level is still kept by its seed, so N and the second K press do
+not solve again. Headless the scene solves inline, unless a test asks for
+the pool: `solve_in_background` is off when the display server is
+`headless`. **Leaving the scene mid-solve freezes the window** for the
+rest of the solve -- up to about 2.5 s on seed 144, 3.7 s measured under
+load -- because `_exit_tree` waits for the task: the pool frees a task
+only once it is waited for. Handing the task to something that outlives
+the scene, an autoload, was judged more machinery than that cost. What the pool and the thread-safety page say, and what was
 measured, is [WorkerThreadPool](worker-thread-pool.md).
 
 Measured with `level_solving_measure.gd` (headless, 4.7.2, 2026-11-05),

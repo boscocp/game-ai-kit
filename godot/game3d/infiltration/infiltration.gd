@@ -53,6 +53,10 @@ var _last_solved: LevelConstraints
 ## The solve running off the main thread (T122); the old level plays on
 ## until it ends, and the panel says it is solving.
 var _solving := LevelSolving.new()
+## The seed of the solved level waited for to replace the one played, or
+## -1: what the panel names, and what a finished solve rebuilds the world
+## for. Not the pool's seed: L pressed mid-solve asks for the next one.
+var _awaited: int = -1
 ## Whether a level is solved on `WorkerThreadPool`; headless, inline, so a
 ## seeded run never waits on a thread.
 var solve_in_background: bool = DisplayServer.get_name() != "headless"
@@ -233,6 +237,7 @@ func _new_world() -> void:
 	var level: InfiltrationLevel = _level()
 	if level == null:
 		return  # being solved off the main thread: the old level plays on
+	_awaited = -1
 	world = InfiltrationWorld.make(level, rules, _seed)
 	world.sounds.on_screen = _on_screen
 	_watched = mini(_watched, world.guards.size() - 1)
@@ -285,23 +290,26 @@ func _solved_for(generated: int) -> LevelConstraints:
 		_last_solved = LevelConstraints.solve(generated, true)
 		return _last_solved
 	_solving.start(generated)
+	_awaited = generated
 	return null
 
 
 # A solve the pool finished becomes the kept level, and the world is built
-# again if the level asked for is still a solved one: L or K pressed while
-# it ran may have asked for another seed (solved next) or none.
+# again if a solved level is still awaited: L pressed while it ran may await
+# another seed, solved next; K to drawn or L to a hand-made level, none.
 func _collect_solved() -> void:
 	var found: LevelConstraints = _solving.poll()
 	if found == null:
 		return
 	_last_solved = found
-	if _level_index >= InfiltrationLevel.HAND_MADE.size() and rules.level_generator == LevelGenerator.CONSTRAINTS:
+	if _awaited != -1:
 		_new_world()
 
 
 # A task still running when the scene leaves is waited for: the pool frees
-# a task only once it is waited for.
+# a task only once it is waited for. Until it ends the window is frozen (up
+# to about 2.5 s on seed 144). Its level is dropped: nothing adds this scene
+# back to the tree, and one that did would have to ask again.
 func _exit_tree() -> void:
 	_solving.wait()
 
@@ -332,8 +340,8 @@ func _show() -> void:
 	_strip.thinking = _thinking
 	_strip.queue_redraw()
 	_panel.text = InfiltrationText.panel(world, _watched) if _thinking else InfiltrationWords.level(world.level.name)
-	if _solving.busy():
-		_panel.text = tr("solving level {seed}: this one plays until it is ready").format({seed = _solving.seed_value}) + "\n" + _panel.text
+	if _awaited != -1:
+		_panel.text = tr("solving level {seed}: this one plays until it is ready").format({seed = _awaited}) + "\n" + _panel.text
 
 
 # Behind the player and above, looking the way the mouse turned it: `_yaw`
