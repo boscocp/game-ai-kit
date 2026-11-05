@@ -1,17 +1,22 @@
 {
   "module": "league",
   "kind": "example",
-  "about": "T25's league: the tournament and its table of results, over the tactical board's controllers (TacticalRoster, T63).",
+  "about": "T25's league: the tournament and its table of results, over the tactical board's controllers (TacticalRoster, T63) and, since T55, the RTS's (RtsRoster).",
   "owns": [
     "godot/game/league/",
     "godot/test/league/"
   ],
   "depends_on": [
+    "ai_planning",
+    "ai_rts_core",
     "board",
+    "rts",
     "tactical"
   ],
   "tests_depend_on": [
     "game_shared"
   ],
-  "gates": []
+  "gates": [
+    "test-rts-league"
+  ]
 }

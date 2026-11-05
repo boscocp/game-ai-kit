@@ -819,6 +819,19 @@ league: import ## T25's league: every team against every other from both seats, 
 	@# table to its seeds, take about ten minutes. SEEDS sets seeds a seat.
 	@$(GODOT) --headless --path godot -s res://test/league/league_runner.gd -- $(or $(SEEDS),5)
 
+.PHONY: test-rts-league
+check: test-rts-league
+test-rts-league: import ## T55: the league on the RTS board, both scores with intervals; the clock's knobs are limits, never gifts (~5-10 min)
+	@$(GODOT) --headless --path godot -s res://test/league/rts_league.gd -- $(or $(SEEDS),2)
+
+.PHONY: rts-league
+rts-league: import ## Slow (minutes a seed): T55's league round robin, every RTS team against every other from both seats
+	@$(GODOT) --headless --path godot -s res://test/league/rts_league.gd -- $(or $(SEEDS),1) full
+
+.PHONY: record-rts
+record-rts: import ## Play the RTS and keep every match you finish in data/rts/, the human clock's reference (T55)
+	@$(GODOT) --path godot res://game/rts/rts.tscn -- --record
+
 .PHONY: record-tactical
 record-tactical: import ## Play the tactical board and keep every game you finish in data/tactical/, T25's human reference
 	@$(GODOT) --path godot res://game/tactical/tactical.tscn -- --record

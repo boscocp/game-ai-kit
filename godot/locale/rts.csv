@@ -203,3 +203,8 @@ the vent,a fenda de magma
 {count} rocks,{count} rochas
 {count} vents,{count} fendas de magma
 rocks,rochas
+K human clock · M meter,K relógio humano · M medidor
+"human clock on: {ms} ms late, {actions} commands in {seconds} s","relógio humano ligado: {ms} ms de atraso, {actions} comandos em {seconds} s"
+recording: {count} match(es) kept in data/rts/,gravando: {count} partida(s) guardada(s) em data/rts/
+"meter: {ms} ms to draw, charged to no side","medidor: {ms} ms para desenhar, cobrados de nenhum lado"
+"thinking {mean} ms, 95th {p95}, of {share}","pensando {mean} ms, 95º {p95}, de {share}"

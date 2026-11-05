@@ -157,3 +157,9 @@ this board. `make record-tactical` keeps every game played to its end in
 `data/tactical/` as the decisions both sides made, which replay to the same
 board (`TacticalRecording`). T25's steps 4-6 and its eighth team, a clone,
 wait for the owner's twenty.
+
+On the RTS board the clock gives the second score two measures this board
+has no use for: a reaction time, and commands a minute. `make
+test-rts-league` prints both scores for the RTS teams, with intervals, and
+[the RTS page](rts-ai.md#how-human-it-looks-the-clocks-knobs-t55) reads them
+(T55).
