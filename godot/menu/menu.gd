@@ -31,8 +31,8 @@
 ##
 ## The button at the top right, or L, or Y on a pad, switches every example
 ## between English and Brazilian Portuguese at once, and the choice is kept
-## for next time (T78, `Language`). The cards themselves are still English:
-## their words are the catalogue's, translated in a later task.
+## for next time (T78, `Language`). The cards switch with it (T131): the
+## catalogue keeps its English, which is the key each word is looked up by.
 class_name ExampleMenu
 extends Control
 
@@ -87,7 +87,7 @@ func _ready() -> void:
 	Language.apply(settings_path)
 	for card: Dictionary in catalogue.cards:
 		_list.add_item(card.get("title", "?"))
-		# A card's title is the catalogue's, not a key: never looked up.
+		# Worded by _retranslate, in the language chosen: not looked up again.
 		_list.set_item_auto_translate_mode(_list.item_count - 1, Node.AUTO_TRANSLATE_MODE_DISABLED)
 	if not catalogue.cards.is_empty():
 		select(0)
@@ -146,6 +146,8 @@ func _retranslate() -> void:
 	_play.text = tr("Play  (Enter)")
 	_show_mode()
 	_language.text = tr("Language: English  (L)")
+	for index: int in range(_list.item_count):
+		_list.set_item_text(index, tr(catalogue.cards[index].get("title", "?")))
 	if catalogue.cards.is_empty():
 		_heading.text = tr("No examples to show")
 	elif not _list.get_selected_items().is_empty():
@@ -162,7 +164,7 @@ func select(index: int) -> void:
 	_list.select(index)
 	_list.ensure_current_is_visible()
 	var card: Dictionary = catalogue.cards[index]
-	_heading.text = card.get("title", "")
+	_heading.text = tr(card.get("title", ""))
 	_card.text = ExampleCatalogue.text_of(card, ACCENT)
 	_card.scroll_to_line(0)
 	_show_mode()
@@ -338,7 +340,7 @@ func _build_card(size_now: Vector2) -> void:
 	var left: float = MARGIN * 2.0 + LIST_WIDTH
 	var width: float = size_now.x - left - MARGIN
 	_heading = _label(Vector2(left, MARGIN * 3.0), TITLE_SIZE - 4, ACCENT)
-	# The heading shows a card's title, from the catalogue: not a key.
+	# The heading is set already worded, by select(): not looked up again.
 	_heading.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	add_child(_heading)
 	_card = RichTextLabel.new()
