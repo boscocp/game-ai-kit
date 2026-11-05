@@ -1,0 +1,30 @@
+{
+  "recording": "data/talk/recordings/the-work-order-and-a-name-too-many.pt_BR.json",
+  "turns": [
+    {
+      "intent": "claim_role",
+      "argument": "maintenance",
+      "refusal_code": "",
+      "rule": "a-repair",
+      "trust": 1,
+      "suspicion": 0
+    },
+    {
+      "intent": "name_person",
+      "argument": "vasquez",
+      "refusal_code": "",
+      "rule": "the-sergeant",
+      "trust": 2,
+      "suspicion": 0
+    },
+    {
+      "intent": "show",
+      "argument": "badge",
+      "refusal_code": "",
+      "rule": "a-badge",
+      "trust": 3,
+      "suspicion": 0
+    }
+  ],
+  "outcome": "playing"
+}

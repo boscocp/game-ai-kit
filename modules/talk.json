@@ -1,0 +1,25 @@
+{
+  "module": "talk",
+  "kind": "example",
+  "about": "Talk your way past the guard (T94): a text game whose challenge is a conversation. A local language model reads each line as one declared act and voices the guard; the rules in spec/talk/gate.json move trust and suspicion and decide the door. Recorded conversations from a real model, their Python replay, and the vectors that hold the two languages to one outcome.",
+  "owns": [
+    "godot/game/talk/",
+    "godot/test/talk/",
+    "godot/locale/talk.csv",
+    "godot/locale/talk.csv.import",
+    "godot/locale/talk.pt_BR.translation",
+    "spec/talk/",
+    "spec/vectors/talk/",
+    "data/talk/",
+    "python/gameaikit/talk/",
+    "python/tests/test_talk.py",
+    "python/tests/test_talk_vectors.py"
+  ],
+  "depends_on": [
+    "ai_llm",
+    "game_shared"
+  ],
+  "gates": [
+    "test-talk-vectors"
+  ]
+}

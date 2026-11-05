@@ -86,10 +86,16 @@ func test_a_declaration_that_cannot_be_validated_against_is_refused() -> void:
 
 func test_the_schema_and_the_instructions_name_the_games_intents() -> void:
 	var validator: LlmValidator = _validator()
-	var schema: Dictionary = validator.json_schema()
-	assert_array(schema["properties"]["intent"]["enum"]).is_equal(["claim", "greet"])
-	assert_array(schema["required"]).is_equal(["speech", "intent", "argument"])
-	assert_bool(schema["additionalProperties"]).is_false()
+	var shapes: Array = validator.json_schema()["anyOf"]
+	assert_array(shapes.map(func(shape: Dictionary) -> Array:
+		return shape["properties"]["intent"]["enum"])).is_equal([["claim"], ["greet"]])
+	# One shape per intent, offering only its own arguments: what took R7
+	# out of the pinned server's replies (T94, docs/godot/talk.md).
+	assert_array(shapes.map(func(shape: Dictionary) -> Array:
+		return shape["properties"]["argument"]["enum"])).is_equal([["merchant", ""], [""]])
+	for shape: Dictionary in shapes:
+		assert_array(shape["required"]).is_equal(["speech", "intent", "argument"])
+		assert_bool(shape["additionalProperties"]).is_false()
 	assert_str(validator.instructions()).contains("- claim: merchant")
 	assert_str(validator.instructions()).contains("- greet: (none)")
 

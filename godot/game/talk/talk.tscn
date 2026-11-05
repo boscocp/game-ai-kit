@@ -1,0 +1,62 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/talk/talk.gd" id="1_talk"]
+[ext_resource type="Script" path="res://game/legend.gd" id="9_legend"]
+
+[node name="TalkDemo" type="Node2D"]
+script = ExtResource("1_talk")
+
+[node name="Interface" type="CanvasLayer" parent="."]
+
+[node name="History" type="Label" parent="Interface"]
+offset_left = 32.0
+offset_top = 320.0
+offset_right = 640.0
+offset_bottom = 470.0
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+clip_text = true
+text = "loading"
+
+[node name="Choices" type="Label" parent="Interface"]
+offset_left = 32.0
+offset_top = 478.0
+offset_right = 640.0
+offset_bottom = 610.0
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+clip_text = true
+text = "loading"
+
+[node name="Typed" type="LineEdit" parent="Interface"]
+offset_left = 32.0
+offset_top = 572.0
+offset_right = 640.0
+offset_bottom = 606.0
+placeholder_text = "..."
+
+[node name="Status" type="Label" parent="Interface"]
+offset_left = 32.0
+offset_top = 618.0
+offset_right = 1256.0
+offset_bottom = 700.0
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+text = "loading"
+
+[node name="Decision" type="Label" parent="Interface"]
+offset_left = 680.0
+offset_top = 190.0
+offset_right = 1270.0
+offset_bottom = 610.0
+theme_override_font_sizes/font_size = 13
+autowrap_mode = 3
+clip_text = true
+text = "loading"
+
+[node name="Legend" type="Control" parent="Interface"]
+offset_left = 680.0
+offset_top = 8.0
+offset_right = 1270.0
+offset_bottom = 180.0
+script = ExtResource("9_legend")

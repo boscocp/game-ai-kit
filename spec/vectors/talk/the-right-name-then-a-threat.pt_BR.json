@@ -1,0 +1,22 @@
+{
+  "recording": "data/talk/recordings/the-right-name-then-a-threat.pt_BR.json",
+  "turns": [
+    {
+      "intent": "claim_role",
+      "argument": "new_guard",
+      "refusal_code": "",
+      "rule": "not-on-the-roster",
+      "trust": 0,
+      "suspicion": 3
+    },
+    {
+      "intent": "threaten",
+      "argument": "",
+      "refusal_code": "",
+      "rule": "a-threat",
+      "trust": 0,
+      "suspicion": 6
+    }
+  ],
+  "outcome": "alarm"
+}

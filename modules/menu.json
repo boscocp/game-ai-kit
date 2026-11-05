@@ -27,6 +27,7 @@
     "squad",
     "stealth",
     "tactical",
+    "talk",
     "tictactoe"
   ],
   "tests_depend_on": [

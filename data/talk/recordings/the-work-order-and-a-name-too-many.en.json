@@ -1,0 +1,27 @@
+{
+  "about": "A conversation with the guard at the door (T94), as a local model answered it: each line the player said and the model's text, untouched. Replayed by gameaikit.talk.replay and the game's recorded mode; see README.md beside this file for the model and its licence.",
+  "conversation": "the-work-order-and-a-name-too-many",
+  "language": "en",
+  "model": {
+    "name": "ministral-3-8b",
+    "file": "Ministral-3-8B-Instruct-2512-Q4_K_M.gguf",
+    "sha256": "33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761",
+    "licence": "Apache-2.0",
+    "server": "llama.cpp b11960"
+  },
+  "recorded_on": "2026-11-05",
+  "turns": [
+    {
+      "player": "I'm here to fix the heating in the east wing.",
+      "raw": "{\"argument\": \"maintenance\",\n \"intent\": \"claim_role\",\n \"speech\": \"Badges first, then the keys. And Vasquez says no bypasses.\"}"
+    },
+    {
+      "player": "Brandt told me to come at ten.",
+      "raw": "{\n\"argument\": \"okafor\",\n\"intent\": \"name_person\",\n\"speech\": \"You know Brandt, but not your business here. Ask Vasquez at her post—if she’s still awake.\"\n}"
+    },
+    {
+      "player": "There's fifty credits in it for you if you look away.",
+      "raw": "{\"argument\":\"\",\"intent\":\"bribe\",\"speech\":\"That’s a lie, and I’m tired—but you can’t buy silence here. Vasquez’ll hear you.\"}"
+    }
+  ]
+}
