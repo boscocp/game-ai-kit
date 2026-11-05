@@ -84,6 +84,17 @@ class TestMonteCarloSearch(unittest.TestCase):
         self.assertEqual(roll.children[2].player, 0)
         self.assertEqual(roll.children[0].player, 1)
 
+    def test_the_principal_line_starts_with_the_answer_and_follows_the_most_visited(self) -> None:
+        search = MonteCarloSearch(Nim(), Pile(7, 0), 1)
+        self.assertEqual(search.principal_line(), [])
+        found = search.step(1000)
+        line = search.principal_line(3)
+        self.assertEqual(len(line), 3)
+        self.assertEqual(line[0], found.action)
+        after = search._root.branches[found.action - 1].children[0]
+        most = max(branch.visits for branch in after.branches if branch is not None)
+        self.assertEqual(after.branches[line[1] - 1].visits, most)
+
     def test_a_visited_root_move_reports_its_ucb1_bound(self) -> None:
         # What T87 draws: mean + C * sqrt(ln(root visits) / visits), the
         # root visited once an iteration.

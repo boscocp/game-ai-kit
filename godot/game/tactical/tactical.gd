@@ -136,6 +136,13 @@ func _ready() -> void:
 	Language.apply_if_opened_alone(self)
 
 
+# A controller that thinks over several frames (T87) thinks one more, and
+# what it believes now is drawn: the board keeps drawing while it searches.
+func _process(_delta: float) -> void:
+	if _computer_thinking() and computer.keep_thinking():
+		_refresh()
+
+
 # The words are rebuilt in the language just chosen (T79): text set from code
 # keeps the words it was given. The notification also comes on entering the
 # tree, before _ready, when there is nothing to rebuild yet.

@@ -8,9 +8,10 @@
 ## Callable(seed) -> a new BlueController]` -- and nothing here plays in the
 ## league.
 ##
-## Two rows: the first enemy that weighs (T85), first because it is the
-## one a person meets, and a seeded random mover, the floor it must beat
-## (`make test-squad-match`). T87 and T88 put search behind them.
+## Three rows: the first enemy that weighs (T85), first because it is the
+## one a person meets; the enemy that searches (T87), Monte Carlo tree
+## search measured against it in `docs/godot/squad.md`; and a seeded random
+## mover, the floor the first must beat (`make test-squad-match`).
 ##
 ## When not to use it: as a ranking, for the reason `TacticalRoster` gives.
 class_name SquadRoster
@@ -26,6 +27,8 @@ static func rows() -> Array[Array]:
 	return [  # not shown: the names reach the screen through the scene
 		["weighed", "every option of the piece weighed one action ahead, on its side's view (T85)", "ActionChoice", false,
 			func(seed_number: int) -> BlueController: return WeighedSquad.new(seed_number)],
+		["mcts", "Monte Carlo tree search over the piece's options and the turns after, on the board its side believes in (T87)",
+			"MonteCarloSearch", false, func(seed_number: int) -> BlueController: return MctsSquad.new(seed_number)],
 		["random", "a seeded random action per piece, on its side's view (T84)", "nothing", false,
 			func(seed_number: int) -> BlueController: return RandomSquad.new(seed_number)],
 	]

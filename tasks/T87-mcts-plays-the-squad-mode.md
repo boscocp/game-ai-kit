@@ -30,6 +30,48 @@ measures it against T85's one-action baseline.
   decisions at fixed seeds are held in `godot/test/squad/` and the squad's
   Python tests -- `python/gameaikit/adversarial/` never imports squad.
 
+## What the work decided, for the owner to confirm (wave 125)
+
+None of it changes a decision above; each is a detail the task left open.
+
+- **The scene's one new hook**: `BlueController.keep_thinking()` (no, for
+  every controller but this one) and `TacticalGame._process`, which asks it
+  each frame and redraws. Six lines in `tactical.gd`; STATUS item 19's
+  move of the presentation hooks was not made.
+- **The anytime decision is rewritten in place**: the `TacticalDecision`
+  the scene holds is the one the search updates each frame, so space plays
+  what is drawn. Enter (the rest of the turn) plays each decision after its
+  first frame's search.
+- **An answer names its piece** -- `["walk", id, cell, cost]` -- so the
+  expected line can say whose move each is; a walk carries its cost, not
+  its route. The search floods with its own Dial's-bucket Dijkstra
+  (`SquadSearchGame.reach`), about fifteen times quicker than
+  `TacticalReach.walks_for`, held to it cell for cell and cost for cost.
+- **A question with only "hold" is passed over**, and the turn passes after
+  the side's last piece.
+- **`evaluate`** is the health difference over a full squad's (33); +1, -1
+  or 0 at the end. `result` of a shot, for a search with no dice, is the
+  likelier outcome.
+- **The guess at the fog**: an unseen enemy as hurt as when last seen; one
+  never seen where the scenario starts it; a guess on a cell its side sees
+  empty, or that is taken, moved to the nearest unseen free cell.
+- **The numbers** (`rules.json`'s `search`): exploration 0.5, not the
+  addon's square root of two; a playout of 8; 1,000 iterations a decision;
+  4 a frame. Tuned on a small grid, kept on the page.
+- **`MonteCarloSearch.principal_line`**, in both languages, with a test
+  each: the addon gains a public method for the expected line.
+- **The does-not-cheat check moved** into `SquadUnseenCheck`, shared by
+  both enemies; `MctsSquad` is held over 24 positions at 24 iterations.
+- **The vectors' visits come from one run**, not by hand; what holds them
+  is the two languages agreeing.
+- **No new strength gate**: `make test-squad-match` is unchanged, and
+  `make measure-squad-mcts` measures, as `measure-player-model` does.
+- **Files outside the Files line**: `godot/game/tactical/blue_controller.gd`
+  and `tactical.gd` (the hook), `godot/addons/ai_adversarial/mcts.gd` and
+  `python/gameaikit/adversarial/mcts.py` with their tests (the line),
+  `godot/menu/catalogue.json` (the card's controllers and technique), and
+  `godot/locale/squad.csv`.
+
 ## Steps
 
 1. The adapter, and `MctsSquad`, a row in `SquadRoster`.

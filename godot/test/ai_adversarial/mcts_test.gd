@@ -94,3 +94,19 @@ func test_a_drawn_number_on_a_boundary_falls_in_the_next_outcome() -> void:
 func _race(first: int, second: int, player: int) -> RefCounted:
 	var squares: Array[int] = [first, second]
 	return DICE_RACE.Race.new(squares, player)
+
+
+func test_the_principal_line_starts_with_the_answer_and_follows_the_most_visited() -> void:
+	var search := MonteCarloSearch.new(EXAMPLE_NIM.new(), EXAMPLE_NIM.Pile.new(7, 0), 1)
+	assert_array(search.principal_line()).is_empty()
+	var found: MctsResult = search.step(1000)
+	var line: Array = search.principal_line(3)
+	assert_int(line.size()).is_equal(3)
+	assert_int(line[0]).is_equal(found.action)
+	var root: MonteCarloSearch.TreeNode = search._root
+	var first: MonteCarloSearch.Branch = root.branches[found.action - 1]
+	var after: MonteCarloSearch.TreeNode = first.children[0]
+	var most: int = 0
+	for branch: Variant in after.branches:
+		most = maxi(most, branch.visits if branch != null else 0)
+	assert_int((after.branches[line[1] - 1] as MonteCarloSearch.Branch).visits).is_equal(most)

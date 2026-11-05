@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-04
+verified_on: 2026-11-05
 tier: 1
 source: https://ufopaedia.org/Gameplay_Mechanics_(EU2012) ; https://ufopaedia.org/index.php/Cover_(EU2012) ; book:Steve Rabin (ed.), "Game AI Pro 3", CRC Press, 2017 -- ch. 28 (Roelofs, MCTS for strategy and tactical games)
 invalidated_if: spec/squad/rules.json changes, the tactical map changes, or a rule below stops being the code's
@@ -12,9 +12,10 @@ teaches: none
 > T84's rules. Not a new game: a second ruleset of the tactical game,
 > played on its state, map, pieces and pictures. T85 made it something a
 > person plays from the tactical scene, against a first enemy that weighs;
-> T87 and T88 put search behind it. This page is the rules, where each
-> comes from, everything left out, and (below) how the mode is played and
-> how its enemy decides.
+> T87 put Monte Carlo tree search behind a second, and T88 will put HTN
+> behind a third. This page is the rules, where each comes from,
+> everything left out, and (below) how the mode is played and how its
+> enemies decide.
 
 ## The seam
 
@@ -118,6 +119,11 @@ Every simplification, so nobody reads the mode as more of XCOM than it is:
 - **A seen enemy is seen whole.** XCOM hides an enemy's kind and health
   until it is seen; here an unseen enemy is an id and a remembered cell.
 - **No squad sight, no abilities, no items, no grenades, no psionics.**
+- **One guess at the fog, for the search** (T87). `MctsSquad` searches one
+  board: each unseen enemy where it was last seen. Sampling several
+  guesses and searching each -- determinization, or information-set MCTS
+  -- is the honest treatment of hidden information, and the step after
+  this one.
 
 ## How it is held
 
@@ -148,6 +154,21 @@ Every simplification, so nobody reads the mode as more of XCOM than it is:
   modes in `test/menu/menu_modes_test.gd`; the mode stepped by
   `make test-demo-overlays` and read in pt-BR by `make test-locale-screen`;
   `check_demos.py` holds each mode's controllers to its roster (C9).
+- T87: `make test-squad-search-vectors` -- the three positions in
+  `spec/squad/positions.json`, the root's visits after a fixed number of
+  iterations from a fixed seed, equal in GDScript and in Python
+  (`gameaikit.squad.search_game`); `squad_search_test.gd` -- the search's
+  walks are the board's at the same cost, a shot is a hit and a miss at
+  the chance shown, a question with one answer is passed over, the turn
+  passes after the last piece, the score is in [-1, 1]; `mcts_squad_test.gd`
+  -- T85's does-not-cheat check (moved to `SquadUnseenCheck`) over 24
+  positions, catching a searcher that believes the whole board (20 of 24,
+  floor 14) and one that believes the unseen enemies' health (20 of 24,
+  floor 14); what it believes of an enemy out of sight, never seen, or
+  destroyed; the most visited played; a frame at a time to the same answer
+  as all at once; and a seeded game against the weighed enemy pinned to its
+  digest. `squad_scene_test.gd` -- C reaches it, and the scene draws its
+  search growing a frame at a time, stopped by space.
 
 ## Playing it (T85)
 
@@ -259,6 +280,71 @@ The recommendation (0-10) is to be measured in the manual check's play;
 the numbers are unchanged here, and the match gate cannot tell the two
 apart -- the weighed enemy wins every game either way.
 
+## The enemy that searches: `MctsSquad` (T87)
+
+Monte Carlo tree search from `ai_adversarial` (T86), handed the mode
+through an adapter, `SquadSearchGame`, that lives here: the addon learns
+nothing about squads. Each of these was a decision written into the task
+before the code, for the owner to confirm.
+
+**The game the search reads.** A position is one question -- T84's one-unit
+decision, which keeps the branching near one piece's options rather than
+their product (Roelofs, Game AI Pro 3, ch. 28): the piece about to act,
+whether it is to walk or to shoot, and the pieces of its side still to act
+after it, in `BlueTurn`'s order. Its answers are hold, then every cell the
+piece can reach row by row; or hold, then every enemy it may shoot by id.
+`SquadRuleset.actions` has neither the hold nor the one-piece view; the
+adapter adds both. A question whose only answer is hold -- after a dash,
+with nobody in sight -- is passed over, and after the side's last piece the
+turn passes. A shot has two outcomes, hit and miss, at the hit chance the
+person is shown; the search keeps a child for each. A playout plays at most
+`playout_limit` random answers and is scored on health: +1 or -1 once a
+squad is gone or the round limit has come, and before that each side's
+health left, the difference over a full squad's (33), so always in
+[-1, 1]. The numbers are `rules.json`'s `search`.
+
+**What it perceives** (`MctsSquad.believe`). The search needs a whole
+board, and fog gives a side less. So it searches the board it believes in:
+every enemy it sees, where it is; every enemy it has lost sight of, where
+it last saw it and as hurt as it was then; every enemy it never saw, where
+the scenario starts it, whole -- which the map tells everybody. An enemy
+believed on a cell its side now sees empty, or that something stands on,
+is moved to the nearest cell its side does not see. An enemy it saw and
+then lost from memory was destroyed: a side is told of that. One guess,
+not several sampled (above, what is left out).
+
+**The budget, a frame at a time.** In the scene it searches
+`iterations_per_frame` iterations each frame (`keep_thinking`, which the
+scene's `_process` asks of any controller; every other one answers no),
+and the decision drawn is rewritten in place each frame, so the board keeps
+drawing while it thinks. Space plays what it believes now: anytime. Built
+anywhere else -- a match, a test -- it runs the whole budget at once.
+
+**What it shows** (invariant 13). For the piece about to act, every answer
+at the root on the board: its mean above, a shot's hit chance below, the
+most visited framed. In the status, a bar of visits for the six most
+visited answers, each with its mean and UCB1 bound, all growing while it
+thinks, and after them the line of play it expects
+(`MonteCarloSearch.principal_line`, added to the addon for this): the most
+visited answer, its most drawn outcome, that position's most visited
+answer, and on.
+
+**Tuned, a little** (wave 125, 200 iterations, 8 matches a seat against the
+weighed enemy, a sample too small to rank by more than a wide margin):
+
+| exploration | playout 8 | playout 16 | playout 30 |
+|---|---|---|---|
+| 1.41, the addon's | 1 of 16 | 5 of 16 | 2 of 16 |
+| 0.5 | 9 of 16 | 2 of 16 | 5 of 16 |
+| 0.2 | 5 of 16 | 6 of 16 | 4 of 16 |
+
+The values a playout ends on are small -- a few points of health over 33 --
+so the square root of two, chosen for outcomes between 0 and 1, spends the
+iterations evenly and the means never get to count. 0.5 and a playout of 8
+were kept: the best of the grid, and the cheapest.
+
+MEASURED
+
 ## Manual check
 
 From `make menu`, open the tactical card in XCOM mode, and play a match in
@@ -267,6 +353,12 @@ read as one game with two modes? Is the hit chance shown before every shot,
 and its reason readable? With the decision view on, can you say before the
 enemy acts which option it will take? Does it ever seem to know where an
 unseen piece is? And: is the shield behind rock too hard to hit?
+
+T87: give the enemy to MCTS (C) and keep the decision view on. While it
+thinks, do the bars grow on the piece's options, and is the one it plays
+the one with the most visits? Press space early: is there still a move,
+and is it a worse one? Does the expected line read as a plan you can
+follow on the board, or as noise?
 
 Read `spec/squad/rules.json` beside the two UFOpaedia pages: are the
 numbers the ones the mode claims to borrow, and is every simplification

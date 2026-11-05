@@ -1,7 +1,8 @@
 # T85: the XCOM-style mode played in the tactical scene -- opened in both
 # modes as the menu opens it, M between them, the fog, the dash, the hit
 # chance before a shot with its reasons, T's chance under the cursor, and
-# the enemy's weighing drawn before it acts (V hides it).
+# the enemy's weighing drawn before it acts (V hides it) -- and, since T87,
+# the enemy that searches drawn growing a frame at a time, stopped by space.
 extends GdUnitTestSuite
 
 const RED: int = TacticalScenario.RED
@@ -36,9 +37,32 @@ func test_opened_in_both_modes_it_starts_in_the_one_chosen_and_m_moves_between_t
 func test_c_cycles_this_modes_roster() -> void:
 	var scene: TacticalGame = _opened(1)
 	scene._press(KEY_C)
+	assert_str(scene.computer.controller_name()).is_equal("mcts")
+	scene._press(KEY_C)
 	assert_str(scene.computer.controller_name()).is_equal("random")
 	scene._press(KEY_C)
 	assert_str(scene.computer.controller_name()).is_equal("weighed")
+
+
+func test_the_search_is_drawn_growing_a_frame_at_a_time_and_space_plays_it_early() -> void:
+	var scene: TacticalGame = _opened(1)
+	scene._press(KEY_C)  # the enemy that searches (T87)
+	scene._press(KEY_S)  # it plays red, and moves first
+	assert_bool(scene._computer_thinking()).is_true()
+	var per_frame: int = int(MctsSquad.search_rules()["iterations_per_frame"])
+	assert_str(scene._status.text).contains("searched %d of" % per_frame)
+	for _frame: int in range(3):
+		scene._process(1.0 / 60.0)
+	assert_str(scene._status.text).contains("searched %d of" % (4 * per_frame))
+	assert_str(scene._status.text).contains("█")
+	assert_bool(scene._intent._weighed.is_empty()).is_false()
+	var overlay: Dictionary = scene.decision_overlay()
+	assert_bool(overlay.has("weighed")).is_true()
+	var about_to: TacticalDecision = scene._computer_turn.next
+	var target: Vector2i = about_to.target
+	scene._press(KEY_SPACE)  # stopped early: what it believes now is played
+	assert_bool(about_to in scene._computer_turn.played or about_to in scene._computer_turn.refused).is_true()
+	assert_object(about_to.target).is_equal(target)
 
 
 func test_the_board_shows_only_what_the_persons_side_sees() -> void:

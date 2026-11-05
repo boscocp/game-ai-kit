@@ -74,6 +74,14 @@ func after_refusal(_state: BoardState, _refused: TacticalDecision) -> TacticalDe
 	return null
 
 
+## One more frame of a decision still being thought about, for a
+## controller that searches over several frames (T87): the decision it
+## handed back is rewritten in place, and the scene draws it again. False
+## when it has nothing more to think -- every other controller, always.
+func keep_thinking() -> bool:
+	return false
+
+
 ## Every option it weighed for its last decision, for the board to draw
 ## before that decision is played (T85): one `{"cell": Vector2i, "score":
 ## float, "chance": int, "chosen": bool}` each -- the cell walked to or the
