@@ -11,6 +11,9 @@
 class_name AdvanceWarsView
 extends TacticalModeView
 
+## What the scene says it is, on screen, before anything else.
+const WHAT_THIS_IS: String = "tactics in the style of Advance Wars: build, cross the river, destroy the enemy workshop"  # shown through tr()
+
 
 ## "Advance Wars", the game this mode plays like: a name, which the table
 ## keeps the same in both languages.
@@ -18,9 +21,9 @@ func title() -> String:
 	return TranslationServer.translate("Advance Wars")
 
 
-## `TacticalGame.WHAT_THIS_IS`, in the language on screen.
+## `WHAT_THIS_IS`, in the language on screen.
 func what_this_is() -> String:
-	return TranslationServer.translate(TacticalGame.WHAT_THIS_IS)
+	return TranslationServer.translate(WHAT_THIS_IS)
 
 
 ## `TacticalVictory.rule`.

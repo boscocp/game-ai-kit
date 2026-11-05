@@ -28,13 +28,18 @@ func test_opened_in_both_modes_it_starts_in_the_one_chosen_and_m_moves_between_t
 	assert_str(scene.ruleset.mode_name()).is_equal("squad")
 	assert_str(scene.computer.controller_name()).is_equal("weighed")
 	assert_str(scene._header.text).contains("M plays Advance Wars")
+	assert_bool(scene.view() is SquadView).is_true()
 	scene._press(KEY_M)
 	assert_str(scene.ruleset.mode_name()).is_equal(AdvanceWarsRuleset.MODE)
+	# Wave 128's review: a view not rebuilt after M drew Advance Wars as XCOM.
+	assert_bool(scene.view() is AdvanceWarsView).is_true()
+	assert_str(scene._header.text).contains("M plays XCOM")
 	assert_str(scene.computer.controller_name()).is_equal(TacticalRoster.names()[0])
 	assert_bool(scene.state.units.size() == 2 * SquadTable.squad().size()).is_false()
 	scene._press(KEY_M)
 	assert_str(scene.ruleset.mode_name()).is_equal("squad")
 	assert_str(scene.computer.controller_name()).is_equal("weighed")
+	assert_bool(scene.view() is SquadView).is_true()
 
 
 func test_c_cycles_this_modes_roster() -> void:
@@ -200,6 +205,25 @@ func test_with_v_off_an_unseen_piece_acts_unseen() -> void:
 	assert_str(scene._status.text).contains("a piece you cannot see acts")
 	assert_str(scene._status.text).not_contains("unit 2")
 	assert_object(scene._intent._decision).is_null()
+
+
+# Wave 128's review: the fog's ghosts, the legend and the "shoot" wording
+# moved to `SquadView` untested; each of these fails if it answers as
+# Advance Wars, or draws no ghost.
+func test_an_enemy_seen_then_lost_leaves_a_ghost_where_it_was_last_seen() -> void:
+	var seen: BoardState = _facing()
+	var earlier: TacticalFog = _view.fog(seen, RED, null)
+	assert_dict(earlier.ghosts).is_empty()
+	var lost: BoardState = _board([[RED, TacticalRules.RUNNER, Vector2i(0, 0)], [BLUE, TacticalRules.SHIELD, Vector2i(12, 8)]])
+	var later: TacticalFog = _view.fog(lost, RED, earlier)
+	assert_dict(later.ghosts).is_equal({Vector2i(7, 4): lost.unit_by_id(2).type.type_name})
+
+
+func test_the_legend_and_a_moved_piece_are_worded_for_this_mode() -> void:
+	assert_array(_view.legend()).is_equal(SquadLegend.entries())
+	var runner: Unit = _facing().unit_by_id(1)
+	assert_str(_view.moved_already(runner, true, false)).contains("shoot")
+	assert_str(_view.moved_already(runner, true, false)).not_contains("attack")
 
 
 func test_a_walk_into_the_fog_is_drawn_only_as_far_as_it_is_seen() -> void:

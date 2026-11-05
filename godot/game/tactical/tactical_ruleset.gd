@@ -1,8 +1,8 @@
 ## The rules the tactical scene plays by, asked rather than called (T84).
 ##
 ## The scene used to call its rules by name -- `TacticalScenario.build`,
-## `TacticalCombat.apply`, `TacticalVictory.winner`, `TacticalRoster` -- so one game was all it could ever be. This is that
-## list as one interface, and the scene holds one of it: the board, the
+## `TacticalCombat.apply`, `TacticalVictory.winner`, `TacticalRoster` -- so
+## one game was all it could ever be. This is that list as one interface, and the scene holds one of it: the board, the
 ## pieces, their pictures, the keys and the turn stay the scene's, and what a
 ## walk and an attack *do*, who has won and who can play the other side are
 ## the ruleset's.

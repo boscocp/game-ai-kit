@@ -54,9 +54,6 @@ extends Node2D
 ## screen, as every reason in it is (T104).
 const SIDES: Array[String] = ["red", "blue"]  # not shown: the overlay's
 
-## What the scene says it is, on screen, before anything else.
-const WHAT_THIS_IS: String = "tactics in the style of Advance Wars: build, cross the river, destroy the enemy workshop"  # shown through tr()
-
 @onready var _board: BoardView = $BoardView
 @onready var _units: UnitView = $UnitView
 @onready var _intent: IntentView = $IntentView
@@ -123,7 +120,8 @@ var _cursor: Vector2i = Vector2i(-1, -1)
 # True once a walk this turn showed an enemy: the turn is sealed, and Z says
 # why rather than that there is nothing to take back.
 var _sealed_by_a_reveal: bool = false
-# The view of `ruleset` last asked for, so a frame does not build a new one.
+# The view of `ruleset` last asked for, so the many calls of one refresh
+# share one. The header builds the next mode's view too, for its title only.
 var _view: TacticalModeView
 
 
@@ -466,9 +464,8 @@ func _weighed_described(option: Dictionary) -> Dictionary:
 	return {"cell": option["cell"], "score": option["score"], "chance": option["chance"], "chosen": option["chosen"]}
 
 
-## Where the side not to move could strike on its next turn: the ruleset's tint
-## (`ThreatMap` in Advance Wars),
-## as the board draws it. Empty once the game is over.
+## Where the side not to move could strike on its next turn: the mode view's
+## tint (`ThreatMap` in Advance Wars), as the board draws it. Empty once the game is over.
 func threat() -> Dictionary[Vector2i, int]:
 	if winner != TacticalVictory.NOBODY:
 		return {}
@@ -792,7 +789,7 @@ func _persons_board() -> BoardState:
 	return _person_fog.seen if _person_fog != null else state
 
 
-# What T tints: the ruleset's, about the cell under the cursor in a mode
+# What T tints: the mode view's, about the cell under the cursor in a mode
 # that asks; nothing once the game is over.
 func _tint() -> Dictionary[Vector2i, int]:
 	if winner != TacticalVictory.NOBODY:
@@ -860,7 +857,9 @@ func _dashes_in_reach() -> Array[Vector2i]:
 
 
 # The ground the board's costs alone would draw wrong: trees as rough ground,
-# water as a wall, the bridge as open ground.
+# water as a wall, the bridge as open ground. Every mode plays on this one
+# map -- the XCOM-style mode reads `TacticalScenario.MAP` too -- so the
+# scene draws it, not a view.
 func _terrain() -> Dictionary:
 	var tiles: Dictionary = {}
 	var kinds: Dictionary = {
