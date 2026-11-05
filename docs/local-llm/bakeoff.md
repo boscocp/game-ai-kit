@@ -123,7 +123,7 @@ Loading took 0.8 s (CUDA) to 6.3 s (Gemma on Vulkan) from a warm disk.
   Vulkan, three rounds a language): no R7 left, and valid replies up from
   15-18 to 25-28 of 30 in English and from 22 to 29-30 in pt-BR. The table
   above is the free-string schema's, as T93 measured it;
-  [the guard's page](../godot/talk.md#schema) has the new rounds.
+  [the guard's page](../godot/talk.md#the-schema-measured) has the new rounds.
 
 ## The choice {#choice}
 

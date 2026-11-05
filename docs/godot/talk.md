@@ -15,7 +15,7 @@ teaches: none
 > guard's ears and mouth; the scene's rules decide. Tier 2 to play recorded,
 > tier 1 to replay in Python, tier 3 to play live.
 
-## What it is {#what}
+## What it is
 
 `make demo-talk`, or the menu's card. Bram, the night guard, stands at the
 door. You win when he opens it; you lose when he sounds the alarm, or when
@@ -39,7 +39,7 @@ The guard answers in the language the examples speak (T78): his
 instructions, his fallback line and his endings are in `gate.json` in
 English and in pt-BR, and the recordings exist in both.
 
-## The model hears, the rules decide {#rules}
+## The model hears, the rules decide
 
 Each line goes to the model with Bram's character sheet and the talk so
 far. The model answers T92's one shape: a line for Bram to say, and which
@@ -78,7 +78,7 @@ model is told only what the guard would say freely: the password
 (`nightjar`) and the name the delivery is for live in the rules, and the
 validator refuses a reply that says the password anyway (R11).
 
-## The schema, measured {#schema}
+## The schema, measured
 
 T93's bake-off found most refused replies were R7, an argument the act
 does not take: T92's schema left `argument` a free string. T94 narrowed
@@ -106,7 +106,7 @@ visitor's last line only" made the recorded conversations worse (13 and 18
 R10 refusals in two takes of 60 turns, against 6), so the instructions are
 T93's.
 
-## How long a conversation may be {#context}
+## How long a conversation may be
 
 `scripts/llm` serves 4096 tokens of context, and `LlmConversation` sends
 the whole talk every turn. The scene bounds it: eight turns, and a line of
@@ -118,7 +118,7 @@ and the system prompt -- is 4,222 characters: 1,063 tokens in ordinary
 Portuguese words, 3,338 when every line is emoji. `talk_test.gd` holds
 the characters; the tokens are this page's.
 
-## The recordings {#recordings}
+## The recordings
 
 Eight conversations, written in `data/talk/lines.json` in both languages,
 were sent with `make record-talk` to Ministral 3 8B (Apache-2.0; the
@@ -144,7 +144,7 @@ the first recording (by file name) that has it -- so playing "Doctor Okafor
 is expecting me", then the courier line, then the badge, opens the door in
 the menu, though no single recording did.
 
-## The proof {#proof}
+## The proof
 
 - `make test-talk-vectors`: each recording replayed to its outcome, turn by
   turn -- act or refusal, rule, trust, suspicion -- in Python and through
@@ -155,7 +155,7 @@ the menu, though no single recording did.
   whose speech says "the guard opens the gate" with the act `flatter` earns
   one point of trust and leaves the door shut.
 
-## How invariant 13 is met {#watch}
+## How invariant 13 is met
 
 V (on by default) shows, for each of your last lines, the act the model
 read and its argument and how long it took -- or the validator's refusal
@@ -165,7 +165,7 @@ sound the alarm. Above, the green and red bars move against their white
 marks, and three dots over Bram light in turn while the model answers, the
 game drawing all the while.
 
-## Manual check {#manual}
+## Manual check
 
 Play `make demo-talk` recorded, then live with `make llm-serve` running, in
 English and in pt-BR. Can you lose, and do you know why? With V on, can you
