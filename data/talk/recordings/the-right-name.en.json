@@ -1,0 +1,27 @@
+{
+  "about": "A conversation with the guard at the door (T94), as a local model answered it: each line the player said and the model's text, untouched. Replayed by gameaikit.talk.replay and the game's recorded mode; see README.md beside this file for the model and its licence.",
+  "conversation": "the-right-name",
+  "language": "en",
+  "model": {
+    "name": "ministral-3-8b",
+    "file": "Ministral-3-8B-Instruct-2512-Q4_K_M.gguf",
+    "sha256": "33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761",
+    "licence": "Apache-2.0",
+    "server": "llama.cpp b11960"
+  },
+  "recorded_on": "2026-11-05",
+  "turns": [
+    {
+      "player": "Doctor Okafor is expecting me.",
+      "raw": "{\n  \"argument\": \"vasquez\",\n  \"intent\": \"name_person\",\n  \"speech\": \"Sergeant’s got a list—show me yours first.\"\n}"
+    },
+    {
+      "player": "I'm the courier. Package from headquarters, for her lab.",
+      "raw": "{\"argument\":\"courier\",\"intent\":\"claim_role\",\"speech\":\"Step up, ID and package—Vasquez’ll check, but I’m not touching it.\"}"
+    },
+    {
+      "player": "Here's my badge.",
+      "raw": "{\"argument\":\"badge\",\"intent\":\"show\",\"speech\":\"Alright, badge’s got my name. Hand over the package, slow.\"}"
+    }
+  ]
+}

@@ -65,15 +65,22 @@ class TheDeclaration(unittest.TestCase):
 
 class TheSchema(unittest.TestCase):
 
-    def test_the_games_schema_is_the_committed_one_with_its_intents_named(self) -> None:
+    def test_the_games_schema_is_the_committed_one_once_per_intent(self) -> None:
         committed = json.loads(SCHEMA.read_text(encoding="utf-8"))
-        narrowed = validator.json_schema(GUARD)
-        self.assertEqual(narrowed["required"], committed["required"])
-        self.assertEqual(narrowed["additionalProperties"], committed["additionalProperties"])
-        self.assertEqual(set(narrowed["properties"]), set(committed["properties"]))
-        self.assertEqual(narrowed["properties"]["speech"]["maxLength"],
-                         committed["properties"]["speech"]["maxLength"])
-        self.assertEqual(narrowed["properties"]["intent"]["enum"], ["claim", "greet"])
+        shapes = validator.json_schema(GUARD)["anyOf"]
+        self.assertEqual([shape["properties"]["intent"]["enum"] for shape in shapes],
+                         [["claim"], ["greet"]])
+        for shape in shapes:
+            self.assertEqual(shape["required"], committed["required"])
+            self.assertEqual(shape["additionalProperties"], committed["additionalProperties"])
+            self.assertEqual(set(shape["properties"]), set(committed["properties"]))
+            self.assertEqual(shape["properties"]["speech"]["maxLength"],
+                             committed["properties"]["speech"]["maxLength"])
+
+    def test_each_intent_is_offered_only_its_own_arguments(self) -> None:
+        shapes = validator.json_schema(GUARD)["anyOf"]
+        self.assertEqual([shape["properties"]["argument"]["enum"] for shape in shapes],
+                         [["merchant"], [""]])
 
     def test_the_committed_schema_names_the_validators_keys(self) -> None:
         committed = json.loads(SCHEMA.read_text(encoding="utf-8"))

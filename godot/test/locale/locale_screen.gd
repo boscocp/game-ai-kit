@@ -64,6 +64,8 @@ const EXAMPLES: Dictionary = {
 	"res://game/rts/rts.tscn": ["Interface/Header", "Interface/Thinking", "Interface/Card/Info", "Interface/Legend"],
 	"res://game/fighting/fighting.tscn": ["Interface/Status", "Interface/Decision", "Interface/Legend"],
 	"res://game/maze/maze.tscn": ["Interface/Status", "Interface/Decision", "Interface/Legend"],
+	"res://game/talk/talk.tscn": ["Interface/Status", "Interface/History", "Interface/Choices",
+		"Interface/Decision", "Interface/Legend"],
 	"res://menu/menu.tscn": [],
 }
 ## The tactical scene in its XCOM mode (T85), opened as the menu opens it,

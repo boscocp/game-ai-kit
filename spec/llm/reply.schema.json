@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/boscocp/game-ai-kit/spec/llm/reply.schema.json",
   "title": "One reply from the character's language model",
-  "description": "The one shape ai_llm accepts. A game narrows `intent` to the discourse acts it declared (LlmValidator.json_schema, gameaikit.llm.validator.json_schema) and hands that to a runtime that can constrain its output -- a convenience: the validator checks every reply anyway, including the rules a schema cannot say (an argument belongs to its intent, no line break, no markup, no secret).",
+  "description": "The one shape ai_llm accepts. A game narrows it to the discourse acts it declared -- an `anyOf` of this shape once per intent, each naming its intent and the arguments it takes (LlmValidator.json_schema, gameaikit.llm.validator.json_schema) -- and hands that to a runtime that can constrain its output. A convenience: the validator checks every reply anyway, including the rules a schema does not say (no line break, no markup, no secret).",
   "type": "object",
   "properties": {
     "speech": {

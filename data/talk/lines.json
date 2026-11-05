@@ -1,0 +1,29 @@
+{
+  "about": "What the player says in each recorded conversation with the guard (T94), in English and in pt-BR, line by line. `make record-talk` sends each conversation, in each language, to the local model through the game's own path, and writes what came back to recordings/. Conversations that begin with the same lines branch there in the game's dialogue menu. `designed` is the outcome the lines were written for, if the model reads every line as its author meant; the recording keeps what really happened.",
+  "conversations": [
+    {"name": "the-right-name", "designed": "open",
+     "en": ["Doctor Okafor is expecting me.", "I'm the courier. Package from headquarters, for her lab.", "Here's my badge."],
+     "pt_BR": ["A doutora Okafor está me esperando.", "Eu sou o mensageiro. Pacote da sede, para o laboratório dela.", "Aqui está o meu crachá."]},
+    {"name": "the-right-name-then-a-threat", "designed": "alarm",
+     "en": ["Doctor Okafor is expecting me.", "Open the door or you'll regret it.", "Step aside, or I'll make sure you lose this job."],
+     "pt_BR": ["A doutora Okafor está me esperando.", "Abre a porta ou você vai se arrepender.", "Sai da frente, ou eu garanto que você perde esse emprego."]},
+    {"name": "the-work-order", "designed": "open",
+     "en": ["I'm here to fix the heating in the east wing.", "I've got a work order for it, here.", "Mara Lind signed it this afternoon."],
+     "pt_BR": ["Vim consertar o aquecimento da ala leste.", "Tenho uma ordem de serviço para isso, aqui.", "A Mara Lind assinou hoje à tarde."]},
+    {"name": "the-work-order-and-a-name-too-many", "designed": "alarm",
+     "en": ["I'm here to fix the heating in the east wing.", "Brandt told me to come at ten.", "There's fifty credits in it for you if you look away."],
+     "pt_BR": ["Vim consertar o aquecimento da ala leste.", "O Brandt me disse para vir às dez.", "Tem cinquenta créditos pra você se olhar para o outro lado."]},
+    {"name": "becoming-the-expected", "designed": "open",
+     "en": ["Are you expecting anyone this evening?", "That's me. I'm the courier from headquarters.", "Here's my badge.", "How long have you been guarding this door?", "You look like the sharpest guard on the whole base."],
+     "pt_BR": ["Você está esperando alguém hoje à noite?", "Sou eu. Eu sou o mensageiro da sede.", "Aqui está o meu crachá.", "Há quanto tempo você vigia esta porta?", "Você parece o guarda mais esperto da base inteira."]},
+    {"name": "becoming-the-wrong-one", "designed": "alarm",
+     "en": ["Are you expecting anyone this evening?", "I'm the new guard, first night on the job.", "Lieutenant Hale, internal inspection. Stand aside."],
+     "pt_BR": ["Você está esperando alguém hoje à noite?", "Sou o guarda novo, primeira noite no serviço.", "Tenente Hale, inspeção interna. Saia da frente."]},
+    {"name": "the-inspection", "designed": "alarm",
+     "en": ["Lieutenant Hale, internal inspection. Stand aside.", "Open the door or you'll regret it."],
+     "pt_BR": ["Tenente Hale, inspeção interna. Saia da frente.", "Abre a porta ou você vai se arrepender."]},
+    {"name": "small-talk-till-dawn", "designed": "sent_away",
+     "en": ["Who's on shift with you tonight?", "What do they even keep in this building?", "Hmm.", "I don't have any papers on me, sorry.", "How long have you been guarding this door?", "Purple monkeys dance at midnight.", "That's a fine uniform, you wear it well.", "Sergeant Vasquez said you were a good man."],
+     "pt_BR": ["Quem está de plantão com você hoje à noite?", "O que é que eles guardam neste prédio, afinal?", "Hum.", "Não estou com nenhum documento, desculpa.", "Há quanto tempo você vigia esta porta?", "Macacos roxos dançam à meia-noite.", "Belo uniforme, fica muito bem em você.", "O sargento Vasquez disse que você é um bom homem."]}
+  ]
+}

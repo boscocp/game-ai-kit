@@ -1,0 +1,27 @@
+{
+  "about": "A conversation with the guard at the door (T94), as a local model answered it: each line the player said and the model's text, untouched. Replayed by gameaikit.talk.replay and the game's recorded mode; see README.md beside this file for the model and its licence.",
+  "conversation": "becoming-the-wrong-one",
+  "language": "en",
+  "model": {
+    "name": "ministral-3-8b",
+    "file": "Ministral-3-8B-Instruct-2512-Q4_K_M.gguf",
+    "sha256": "33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761",
+    "licence": "Apache-2.0",
+    "server": "llama.cpp b11960"
+  },
+  "recorded_on": "2026-11-05",
+  "turns": [
+    {
+      "player": "Are you expecting anyone this evening?",
+      "raw": "{\n  \"argument\": \"expected_visitor\",\n  \"intent\": \"ask\",\n  \"speech\": \"Check the board by the gate. Only Vasquez and me stay up past 2200.\"\n}"
+    },
+    {
+      "player": "I'm the new guard, first night on the job.",
+      "raw": "{\n  \"argument\": \"new_guard\",\n  \"intent\": \"claim_role\",\n  \"speech\": \"Vasquez’s already on post. You’ll have to wait till tomorrow.\"\n}"
+    },
+    {
+      "player": "Lieutenant Hale, internal inspection. Stand aside.",
+      "raw": "{\"argument\":\"officer\",\"intent\":\"claim_role\",\"speech\":\"Show your ID, sir. Orders are already on the board.\"}"
+    }
+  ]
+}

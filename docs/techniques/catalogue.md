@@ -33,6 +33,7 @@ A row per demo, a column per technique; each mark links the technique's page, an
 | [Real-time strategy](#demo-rts) |  |  | [●](ai_behaviour.md) |  |  |  |  |  |  | [●](ai_planning.md) | [●](ai_rts_core.md) |  |  |  |  |  |  |  |  |
 | [Tactics](#demo-tactical) |  |  | [●](ai_behaviour.md) |  |  | [●](ai_learning.md) |  |  |  | [●](ai_planning.md) |  |  |  |  |  |  |  |  |  |
 | [Pac-Man, a small maze](#demo-maze) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| [Talk your way past the guard](#demo-talk) |  |  |  |  |  |  | [●](ai_llm.md) |  |  |  |  |  |  |  |  |  |  |  |  |
 | [Fighting, training mode](#demo-fighting) |  | [●](ai_bandit.md) |  |  |  | [●](ai_learning.md) |  | [●](ai_opponent.md) |  |  |  |  |  |  |  |  |  | [●](behaviour_cloning.md) |  |
 
 ## Demo by demo {#by-demo}
@@ -85,6 +86,9 @@ A row per demo, a column per technique; each mark links the technique's page, an
   - keys: V the ghosts' view: each ghost's target and the distance from each way; G brings Pinky in; C hands Pac-Man to the MDP: each cell's value, each move's worth.
   - techniques: none.
   - written inside the example itself: a target tile and the shortest straight line, value iteration, an MDP's policy.
+- <a id="demo-talk"></a>**Talk your way past the guard**, `make demo-talk` -- like Suck Up!, talking your way in.
+  - keys: V the reasoning: the act the model read, the rule that fired, trust and suspicion; Tab types to a live local model.
+  - techniques: ● [ai_llm](ai_llm.md) (a language model reading discourse acts, behind a validator).
 - <a id="demo-fighting"></a>**Fighting, training mode**, `make demo-fighting` -- like Street Fighter's training mode, against a dummy that learns how you play.
   - keys: M cycles the dummy's mode; space one frame; P pause.
   - techniques: ● [ai_bandit](ai_bandit.md) (a bandit, UCB1); ● [ai_learning](ai_learning.md) (the ghost's case lookup); ● [ai_opponent](ai_opponent.md) (n-gram); ● [Behaviour cloning](behaviour_cloning.md) (behaviour cloning).
@@ -98,7 +102,7 @@ A row per demo, a column per technique; each mark links the technique's page, an
 - <a id="ai_constraints"></a>[ai_constraints](ai_constraints.md) -- what must hold, and a solver that finds it. Watch it in: ● [`make demo-infiltration`](#demo-infiltration) (constraint satisfaction, AC-3 and backtracking).
 - <a id="ai_fuzzy"></a>[ai_fuzzy](ai_fuzzy.md) -- how much, by degrees. Watch it in: ● [`make demo-stealth`](#demo-stealth) (fuzzy logic); ● [`make demo-infiltration`](#demo-infiltration) (fuzzy logic); ◐ [`make demo-behaviour`](#demo-behaviour) (through `stealth`).
 - <a id="ai_learning"></a>[ai_learning](ai_learning.md) -- using what Python learned. Watch it in: ○ [`make run`](#run) (declared in its manifest, never reached from its scene); ◐ [`make demo-skirmish`](#demo-skirmish) (through `tactical`; a regression trained in Python); ● [`make demo-tactical`](#demo-tactical) (a regression trained in Python); ● [`make demo-fighting`](#demo-fighting) (the ghost's case lookup).
-- <a id="ai_llm"></a>[ai_llm](ai_llm.md) -- a language model behind a validator. Watch it in: no demo yet.
+- <a id="ai_llm"></a>[ai_llm](ai_llm.md) -- a language model behind a validator. Watch it in: ● [`make demo-talk`](#demo-talk) (a language model reading discourse acts, behind a validator).
 - <a id="ai_opponent"></a>[ai_opponent](ai_opponent.md) -- what will the player do next? Watch it in: ● [`make demo-fighting`](#demo-fighting) (n-gram).
 - <a id="ai_perception"></a>[ai_perception](ai_perception.md) -- what a guard sees, hears and believes. Watch it in: ● [`make demo-stealth`](#demo-stealth) (vision cone with line of sight and hearing, influence map); ● [`make demo-infiltration`](#demo-infiltration) (vision shape with light and hearing, awareness, belief map); ● [`make demo-botmatch`](#demo-botmatch); ● [`make demo-behaviour`](#demo-behaviour).
 - <a id="ai_planning"></a>[ai_planning](ai_planning.md) -- the steps to a goal nobody wrote down. Watch it in: ● [`make demo-rts`](#demo-rts) (STRIPS over PDDL); ● [`make demo-tactical`](#demo-tactical) (STRIPS over PDDL).

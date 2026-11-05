@@ -1,0 +1,47 @@
+{
+  "about": "A conversation with the guard at the door (T94), as a local model answered it: each line the player said and the model's text, untouched. Replayed by gameaikit.talk.replay and the game's recorded mode; see README.md beside this file for the model and its licence.",
+  "conversation": "small-talk-till-dawn",
+  "language": "pt_BR",
+  "model": {
+    "name": "ministral-3-8b",
+    "file": "Ministral-3-8B-Instruct-2512-Q4_K_M.gguf",
+    "sha256": "33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761",
+    "licence": "Apache-2.0",
+    "server": "llama.cpp b11960"
+  },
+  "recorded_on": "2026-11-05",
+  "turns": [
+    {
+      "player": "Quem está de plantão com você hoje à noite?",
+      "raw": "{\n  \"argument\": \"\",\n  \"intent\": \"unclear\",\n  \"speech\": \"Sargento Vasquez. E você tem alguma mensagem para ele?\"\n}"
+    },
+    {
+      "player": "O que é que eles guardam neste prédio, afinal?",
+      "raw": "{\n  \"argument\": \"the_building\",\n  \"intent\": \"ask\",\n  \"speech\": \"Isso não é da sua conta. Pergunte ao oficial de segurança.\"\n}"
+    },
+    {
+      "player": "Hum.",
+      "raw": "{\n  \"argument\": \"\",\n  \"intent\": \"unclear\",\n  \"speech\": \"Se perdeu a fala, pode esperar do lado de fora.\"\n}"
+    },
+    {
+      "player": "Não estou com nenhum documento, desculpa.",
+      "raw": "{\"argument\":\"nothing\",\"intent\":\"show\",\"speech\":\"Sem documento, sem entrada. E nem adianta pedir piedade pra mim, sou de poucas palavras.\"}"
+    },
+    {
+      "player": "Há quanto tempo você vigia esta porta?",
+      "raw": "{\"argument\":\"the_guard\",\"intent\":\"ask\",\"speech\":\"Tempo suficiente pra saber que hora é e quem manda aqui não é você.\"}"
+    },
+    {
+      "player": "Macacos roxos dançam à meia-noite.",
+      "raw": "{\n  \"argument\": \"\",\n  \"intent\": \"unclear\",\n  \"speech\": \"Esse *macaco* aí é só mais um fantasma da estação. Vira daqui, que o plantão tá cansado.\"\n}"
+    },
+    {
+      "player": "Belo uniforme, fica muito bem em você.",
+      "raw": "{\"argument\":\"\",\"intent\":\"flatter\",\"speech\":\"Uniforme é do patrão. Falta de educação não é minha, é sua.\"}"
+    },
+    {
+      "player": "O sargento Vasquez disse que você é um bom homem.",
+      "raw": "{\"argument\":\"vasquez\",\"intent\":\"name_person\",\"speech\":\"Linda palavra de um chefe. Mas não me convence pra abrir essa porta.\"}"
+    }
+  ]
+}

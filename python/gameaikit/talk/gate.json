@@ -1,0 +1,97 @@
+{
+  "about": "T94's scene: talk your way past Bram, the night guard at the research station's door -- the door the infiltration level sneaks through. The language model is the guard's ears and mouth only: it names the act the player's words were (one of `intents`, T92's reply shape) and voices a line. These rules decide. Each accepted act is matched against `rules`, top to bottom, and the first whose `act` is the act -- `intent:argument`, or the bare intent for any argument -- and whose `if_any` names an act already made (or is absent) moves the guard's trust and suspicion. An act made before wins no trust the second time; its suspicion counts again (`said_before`) -- except `unclear`, which is no act at all: nothing understood, or a reply refused. After each turn: suspicion at `alarm_at` raises the alarm, else trust at `open_at` opens the door, else the turn that was the last of `turns` sends the player away -- and the guard's last line is the ending's, written here, never the model's. The secret is never in a prompt: the password is in `secrets`, which the validator refuses in any reply (R11), and the name the guard is waiting for (Doctor Okafor's delivery) is only in the rules. gameaikit.talk and godot/game/talk/ read byte-for-byte copies of this file.",
+  "intents": {
+    "claim_role": ["maintenance", "courier", "officer", "new_guard"],
+    "show": ["badge", "work_order", "nothing"],
+    "name_person": ["vasquez", "okafor", "lind", "brandt"],
+    "ask": ["shift", "expected_visitor", "the_building", "the_guard"],
+    "flatter": [],
+    "threaten": [],
+    "bribe": [],
+    "unclear": []
+  },
+  "secrets": ["nightjar"],
+  "open_at": 6,
+  "alarm_at": 5,
+  "turns": 8,
+  "player_line_limit": 100,
+  "languages": {
+    "en": {
+      "instructions": "You are Bram, the night guard at the door of a research station. You are tired, polite and suspicious. Tonight Sergeant Vasquez is on shift with you, and a courier from headquarters is expected. You never open the door and never decide who goes in: you only answer the visitor, in one short line, in English, and say which act their words were.",
+      "fallback": "What? Say that again, slowly.",
+      "endings": {
+        "open": "Fine. In you go -- sign the book on your left.",
+        "alarm": "That's enough. I'm sounding the alarm.",
+        "sent_away": "We're done here. Come back in daylight."
+      }
+    },
+    "pt_BR": {
+      "instructions": "Você é Bram, o guarda noturno na porta de uma estação de pesquisa. Você está cansado, é educado e desconfiado. Hoje o sargento Vasquez está de plantão com você, e um mensageiro da sede é esperado. Você nunca abre a porta e nunca decide quem entra: só responde ao visitante, numa frase curta, em português do Brasil, e diz qual ato foram as palavras dele.",
+      "fallback": "O quê? Repete isso, devagar.",
+      "endings": {
+        "open": "Tudo bem. Pode entrar -- assine o livro à sua esquerda.",
+        "alarm": "Chega. Vou soar o alarme.",
+        "sent_away": "Acabou. Volte quando for de dia."
+      }
+    }
+  },
+  "facts": [
+    {"en": "Tonight's shift: Bram and Sergeant Vasquez. No new guard.", "pt_BR": "O plantão de hoje: Bram e o sargento Vasquez. Nenhum guarda novo."},
+    {"en": "A courier from headquarters is expected, with a delivery for Doctor Okafor.", "pt_BR": "Um mensageiro da sede é esperado, com uma entrega para a doutora Okafor."},
+    {"en": "Mara Lind, of the facilities office, signs the work orders.", "pt_BR": "Mara Lind, da manutenção predial, assina as ordens de serviço."},
+    {"en": "Brandt left the station last month. No inspection is due.", "pt_BR": "Brandt saiu da estação no mês passado. Nenhuma inspeção está prevista."}
+  ],
+  "said_before": {
+    "id": "said-before",
+    "except": ["unclear"],
+    "why": {"en": "said before: no more trust for it; its suspicion counts again", "pt_BR": "já dito: não ganha mais confiança; a suspeita conta de novo"}
+  },
+  "rules": [
+    {"id": "no-inspection", "act": "claim_role:officer", "trust": 0, "suspicion": 3,
+     "why": {"en": "against a fact: no inspection is due", "pt_BR": "contra um fato: nenhuma inspeção está prevista"}},
+    {"id": "not-on-the-roster", "act": "claim_role:new_guard", "trust": 0, "suspicion": 3,
+     "why": {"en": "against a fact: no new guard on tonight's roster", "pt_BR": "contra um fato: nenhum guarda novo no plantão de hoje"}},
+    {"id": "changes-story", "act": "claim_role", "if_any": ["claim_role"], "trust": 0, "suspicion": 2,
+     "why": {"en": "a second role: the story changed", "pt_BR": "um segundo papel: a história mudou"}},
+    {"id": "the-expected-courier", "act": "claim_role:courier", "if_any": ["ask:expected_visitor", "name_person:okafor"], "trust": 3, "suspicion": 0,
+     "why": {"en": "the courier who is expected tonight", "pt_BR": "o mensageiro esperado hoje"}},
+    {"id": "a-courier", "act": "claim_role:courier", "trust": 1, "suspicion": 0,
+     "why": {"en": "a courier is expected; it could be you", "pt_BR": "um mensageiro é esperado; pode ser você"}},
+    {"id": "a-repair", "act": "claim_role:maintenance", "trust": 1, "suspicion": 0,
+     "why": {"en": "repairs happen; a work order would settle it", "pt_BR": "consertos acontecem; uma ordem de serviço resolveria"}},
+    {"id": "the-work-order", "act": "show:work_order", "if_any": ["claim_role:maintenance"], "trust": 3, "suspicion": 0,
+     "why": {"en": "a work order for the repair you claimed", "pt_BR": "uma ordem de serviço para o conserto que você disse"}},
+    {"id": "a-work-order", "act": "show:work_order", "trust": 1, "suspicion": 0,
+     "why": {"en": "a work order, for no job you named", "pt_BR": "uma ordem de serviço, de nenhum trabalho que você citou"}},
+    {"id": "a-badge", "act": "show:badge", "trust": 1, "suspicion": 0,
+     "why": {"en": "a badge: something to look at", "pt_BR": "um crachá: algo para conferir"}},
+    {"id": "no-papers", "act": "show:nothing", "trust": 0, "suspicion": 1,
+     "why": {"en": "no papers at all", "pt_BR": "nenhum documento"}},
+    {"id": "the-awaited-name", "act": "name_person:okafor", "trust": 2, "suspicion": 0,
+     "why": {"en": "the name the guard is waiting for", "pt_BR": "o nome que o guarda espera"}},
+    {"id": "the-signature", "act": "name_person:lind", "if_any": ["show:work_order"], "trust": 2, "suspicion": 0,
+     "why": {"en": "Lind signs the work orders: paper and name agree", "pt_BR": "Lind assina as ordens: papel e nome combinam"}},
+    {"id": "a-known-name", "act": "name_person:lind", "trust": 1, "suspicion": 0,
+     "why": {"en": "a name the guard knows", "pt_BR": "um nome que o guarda conhece"}},
+    {"id": "the-sergeant", "act": "name_person:vasquez", "trust": 1, "suspicion": 0,
+     "why": {"en": "Vasquez is on shift tonight", "pt_BR": "Vasquez está de plantão hoje"}},
+    {"id": "left-last-month", "act": "name_person:brandt", "trust": 0, "suspicion": 3,
+     "why": {"en": "against a fact: Brandt left last month", "pt_BR": "contra um fato: Brandt saiu no mês passado"}},
+    {"id": "who-is-expected", "act": "ask:expected_visitor", "trust": 0, "suspicion": 1,
+     "why": {"en": "a stranger asking who is expected", "pt_BR": "um estranho perguntando quem é esperado"}},
+    {"id": "snooping", "act": "ask:the_building", "trust": 0, "suspicion": 1,
+     "why": {"en": "snooping about the building", "pt_BR": "bisbilhotando sobre o prédio"}},
+    {"id": "small-talk", "act": "ask:the_guard", "trust": 1, "suspicion": 0,
+     "why": {"en": "asked about himself, the guard warms a little", "pt_BR": "perguntado sobre si, o guarda se abre um pouco"}},
+    {"id": "the-shift", "act": "ask:shift", "trust": 0, "suspicion": 0,
+     "why": {"en": "a question anyone could ask", "pt_BR": "uma pergunta que qualquer um faria"}},
+    {"id": "flattery", "act": "flatter", "trust": 1, "suspicion": 0,
+     "why": {"en": "flattery works, once", "pt_BR": "o elogio funciona, uma vez"}},
+    {"id": "a-threat", "act": "threaten", "trust": 0, "suspicion": 3,
+     "why": {"en": "a threat", "pt_BR": "uma ameaça"}},
+    {"id": "a-bribe", "act": "bribe", "trust": 0, "suspicion": 2,
+     "why": {"en": "a bribe", "pt_BR": "um suborno"}},
+    {"id": "not-understood", "act": "unclear", "trust": 0, "suspicion": 0,
+     "why": {"en": "nothing the guard could act on: a turn spent", "pt_BR": "nada com que o guarda pudesse agir: um turno gasto"}}
+  ]
+}

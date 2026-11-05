@@ -1,0 +1,70 @@
+{
+  "recording": "data/talk/recordings/small-talk-till-dawn.pt_BR.json",
+  "turns": [
+    {
+      "intent": "unclear",
+      "argument": "",
+      "refusal_code": "",
+      "rule": "not-understood",
+      "trust": 0,
+      "suspicion": 0
+    },
+    {
+      "intent": "ask",
+      "argument": "the_building",
+      "refusal_code": "",
+      "rule": "snooping",
+      "trust": 0,
+      "suspicion": 1
+    },
+    {
+      "intent": "unclear",
+      "argument": "",
+      "refusal_code": "",
+      "rule": "not-understood",
+      "trust": 0,
+      "suspicion": 1
+    },
+    {
+      "intent": "show",
+      "argument": "nothing",
+      "refusal_code": "",
+      "rule": "no-papers",
+      "trust": 0,
+      "suspicion": 2
+    },
+    {
+      "intent": "ask",
+      "argument": "the_guard",
+      "refusal_code": "",
+      "rule": "small-talk",
+      "trust": 1,
+      "suspicion": 2
+    },
+    {
+      "intent": "unclear",
+      "argument": "",
+      "refusal_code": "R10",
+      "rule": "not-understood",
+      "trust": 1,
+      "suspicion": 2
+    },
+    {
+      "intent": "flatter",
+      "argument": "",
+      "refusal_code": "",
+      "rule": "flattery",
+      "trust": 2,
+      "suspicion": 2
+    },
+    {
+      "intent": "name_person",
+      "argument": "vasquez",
+      "refusal_code": "",
+      "rule": "the-sergeant",
+      "trust": 3,
+      "suspicion": 2
+    }
+  ],
+  "outcome": "sent_away"
+}

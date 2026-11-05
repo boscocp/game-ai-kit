@@ -1,0 +1,30 @@
+{
+  "recording": "data/talk/recordings/the-right-name.en.json",
+  "turns": [
+    {
+      "intent": "name_person",
+      "argument": "vasquez",
+      "refusal_code": "",
+      "rule": "the-sergeant",
+      "trust": 1,
+      "suspicion": 0
+    },
+    {
+      "intent": "claim_role",
+      "argument": "courier",
+      "refusal_code": "",
+      "rule": "a-courier",
+      "trust": 2,
+      "suspicion": 0
+    },
+    {
+      "intent": "show",
+      "argument": "badge",
+      "refusal_code": "",
+      "rule": "a-badge",
+      "trust": 3,
+      "suspicion": 0
+    }
+  ],
+  "outcome": "playing"
+}

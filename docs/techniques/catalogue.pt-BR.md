@@ -33,6 +33,7 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
 | [Estratégia em tempo real](#demo-rts) |  |  | [●](ai_behaviour.pt-BR.md) |  |  |  |  |  |  | [●](ai_planning.pt-BR.md) | [●](ai_rts_core.pt-BR.md) |  |  |  |  |  |  |  |  |
 | [Tática](#demo-tactical) |  |  | [●](ai_behaviour.pt-BR.md) |  |  | [●](ai_learning.pt-BR.md) |  |  |  | [●](ai_planning.pt-BR.md) |  |  |  |  |  |  |  |  |  |
 | [Pac-Man, um labirinto pequeno](#demo-maze) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| [Convença o guarda a abrir a porta](#demo-talk) |  |  |  |  |  |  | [●](ai_llm.pt-BR.md) |  |  |  |  |  |  |  |  |  |  |  |  |
 | [Luta, modo treino](#demo-fighting) |  | [●](ai_bandit.pt-BR.md) |  |  |  | [●](ai_learning.pt-BR.md) |  | [●](ai_opponent.pt-BR.md) |  |  |  |  |  |  |  |  |  | [●](behaviour_cloning.pt-BR.md) |  |
 
 ## Demo por demo {#by-demo}
@@ -85,6 +86,9 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
   - teclas: V a visão dos fantasmas: o alvo de cada um e a distância de cada caminho; G traz o Pinky; C entrega o Pac-Man ao MDP: o valor de cada casa, quanto vale cada movimento.
   - técnicas: nenhuma.
   - escrito dentro do próprio exemplo: uma casa-alvo e a linha reta mais curta, iteração de valor, a política de um MDP.
+- <a id="demo-talk"></a>**Convença o guarda a abrir a porta**, `make demo-talk` -- parecido com Suck Up!, entrar na conversa.
+  - teclas: V o raciocínio: o ato que o modelo leu, a regra que disparou, confiança e suspeita; Tab escreve para um modelo local ao vivo.
+  - técnicas: ● [ai_llm](ai_llm.pt-BR.md) (um modelo de linguagem lendo atos de discurso, atrás de um validador).
 - <a id="demo-fighting"></a>**Luta, modo treino**, `make demo-fighting` -- parecido com o modo treino de Street Fighter, contra um boneco que aprende o seu jeito de jogar.
   - teclas: M troca o modo do boneco; espaço um quadro; P pausa.
   - técnicas: ● [ai_bandit](ai_bandit.pt-BR.md) (um *bandit*, *UCB1*); ● [ai_learning](ai_learning.pt-BR.md) (a consulta de casos do *ghost*); ● [ai_opponent](ai_opponent.pt-BR.md) (*n-gram*); ● [Behaviour cloning](behaviour_cloning.pt-BR.md) (*behaviour cloning*).
@@ -98,7 +102,7 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
 - <a id="ai_constraints"></a>[ai_constraints](ai_constraints.pt-BR.md) -- o que precisa valer, e um *solver* que acha. Veja em: ● [`make demo-infiltration`](#demo-infiltration) (satisfação de restrições, AC-3 e *backtracking*).
 - <a id="ai_fuzzy"></a>[ai_fuzzy](ai_fuzzy.pt-BR.md) -- quanto, aos poucos. Veja em: ● [`make demo-stealth`](#demo-stealth) (lógica *fuzzy*); ● [`make demo-infiltration`](#demo-infiltration) (lógica *fuzzy*); ◐ [`make demo-behaviour`](#demo-behaviour) (por `stealth`).
 - <a id="ai_learning"></a>[ai_learning](ai_learning.pt-BR.md) -- usando o que o Python aprendeu. Veja em: ○ [`make run`](#run) (declarada no manifesto, nunca alcançada pela cena); ◐ [`make demo-skirmish`](#demo-skirmish) (por `tactical`; uma regressão treinada no Python); ● [`make demo-tactical`](#demo-tactical) (uma regressão treinada no Python); ● [`make demo-fighting`](#demo-fighting) (a consulta de casos do *ghost*).
-- <a id="ai_llm"></a>[ai_llm](ai_llm.pt-BR.md) -- um modelo de linguagem atrás de um validador. Veja em: nenhuma demo ainda.
+- <a id="ai_llm"></a>[ai_llm](ai_llm.pt-BR.md) -- um modelo de linguagem atrás de um validador. Veja em: ● [`make demo-talk`](#demo-talk) (um modelo de linguagem lendo atos de discurso, atrás de um validador).
 - <a id="ai_opponent"></a>[ai_opponent](ai_opponent.pt-BR.md) -- o que o jogador vai fazer agora? Veja em: ● [`make demo-fighting`](#demo-fighting) (*n-gram*).
 - <a id="ai_perception"></a>[ai_perception](ai_perception.pt-BR.md) -- o que um guarda vê, ouve e acredita. Veja em: ● [`make demo-stealth`](#demo-stealth) (cone de visão com linha de visão e audição, mapa de influência); ● [`make demo-infiltration`](#demo-infiltration) (forma da visão com luz e audição, *awareness*, mapa de crença); ● [`make demo-botmatch`](#demo-botmatch); ● [`make demo-behaviour`](#demo-behaviour).
 - <a id="ai_planning"></a>[ai_planning](ai_planning.pt-BR.md) -- os passos até um objetivo que ninguém escreveu. Veja em: ● [`make demo-rts`](#demo-rts) (STRIPS sobre PDDL); ● [`make demo-tactical`](#demo-tactical) (STRIPS sobre PDDL).
