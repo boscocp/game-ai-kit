@@ -55,6 +55,16 @@ L9  a translation call inside the arguments of `Sentence.of(...)`. A sentence
     every overlay and test that reads it, depend on the language on screen.
     T104's review planted one in a reason no game in the tests reached. A
     translated value handed in through a variable or a helper is not seen.
+L10 a word a module shows from its data has no row. The menu's cards are
+    `catalogue.json`'s English, translated where the card is drawn (T131),
+    so no script names them and L1-L3 cannot see them. `SHOWN_DATA` names
+    each data file and the fields of it that reach the screen; every string
+    there must be a key of the owning module's table with a `pt_BR`, and
+    counts as mentioned for L3. A field that finds nothing is a finding
+    too: a renamed field would otherwise hold nothing and pass. And a card
+    field a script words with `said(card.get("x"))` must be one SHOWN_DATA
+    names, `examples[].x`: a field drawn and not listed would be held by
+    neither this rule nor the screen's (T131's review).
 
 What it cannot see
 ------------------
@@ -118,11 +128,26 @@ LETTER_RE = re.compile(r"[^\W\d_]")
 LOOKUP_BEFORE_RE = re.compile(r"(?:\.get\(|[\w)\]]\[)\s*$")
 # ...and a literal followed by a colon is a dictionary's key: `{"move": m}`.
 LOOKUP_AFTER_RE = re.compile(r"\s*:(?!=)")
+# A card field worded where it is drawn: `said(card.get("decides", ""))`.
+SAID_FIELD_RE = re.compile(r"\bsaid\s*\(\s*card\.get\(\s*\"@(\d+)\"")
 # A sentence kept to be worded later (`godot/game/sentence.gd`).
 SENTENCE_RE = re.compile(r"(?<![\w.])Sentence\.of\s*\(")
 
 # A key built at the call: the first argument goes on past its literal.
 BUILT_KEY_RE = re.compile(r"\s*\"@\d+\"\s*[%+]")
+
+# L10: the data files whose words reach the screen, and the fields that do.
+# A field is a path of keys: `name[]` walks every item of the list under
+# `name`, `*` every value of a dictionary. The menu card's title, what its AI
+# decides, its keys, what to watch, each technique's part and name. Not
+# shown, so not here: `target`, `scene`, `docs` (a path), a mode's `title`
+# (Advance Wars, XCOM: the games' own names) and its controllers.
+SHOWN_DATA: dict[str, tuple[str, ...]] = {
+    "godot/menu/catalogue.json": (
+        "examples[].title", "examples[].decides", "examples[].controls", "examples[].watch",
+        "examples[].techniques[].part", "techniques.*.name",
+    ),
+}
 
 
 @dataclasses.dataclass
@@ -438,14 +463,80 @@ def _keys_used(script: Script) -> list[tuple[int, str, str]]:
     return used + [(start, key, "") for start, key in keys_shown_later(script)]
 
 
+def words_at(data: object, path: str) -> list[str] | None:
+    """The strings `path` reaches in `data`; None where a step finds no field.
+
+    `examples[].title` is the `title` of every item of `examples`, and
+    `techniques.*.name` the `name` of every value of `techniques`.
+    """
+    found: list[object] = [data]
+    for step in path.split("."):
+        walked: list[object] = []
+        for here in found:
+            if step == "*" and isinstance(here, dict):
+                walked += list(here.values())
+            elif isinstance(here, dict) and step.removesuffix("[]") in here:
+                value = here[step.removesuffix("[]")]
+                walked += value if step.endswith("[]") and isinstance(value, list) else [value]
+        if not walked:
+            return None
+        found = walked
+    return [word for word in found if isinstance(word, str) and word]
+
+
+def shown_from_data(repo: pathlib.Path, module: str, owners: dict[str, tuple[str, ...]],
+                    table: Table) -> tuple[list[str], set[str]]:
+    """L10 for one module: every word its data files show has a row. Also the
+    words found, which count as mentioned for L3."""
+    keys = {key for context, key in table.rows if not context}
+    findings: list[str] = []
+    shown: set[str] = set()
+    for relative, fields in SHOWN_DATA.items():
+        if owner_of(relative, owners) != module or not (repo / relative).is_file():
+            continue
+        data = json.loads((repo / relative).read_text(encoding="utf-8"))
+        for field in fields:
+            words = words_at(data, field)
+            if not words:
+                findings.append(f"L10 {relative}: the field {field} finds no words; "
+                                "a renamed field would hold nothing")
+                continue
+            shown |= set(words)
+            findings += [f"L10 {relative}: {field} shows {word!r}, which is not in {table.path}"
+                         for word in words if word not in keys]
+    return findings, shown
+
+
+def fields_said_unlisted(script: Script, module: str, owners: dict[str, tuple[str, ...]]) -> list[str]:
+    """L10: a card field the script words with said() that SHOWN_DATA does
+    not name, for a data file of this module: drawn, and held by no gate."""
+    listed = {field for relative, fields in SHOWN_DATA.items() if owner_of(relative, owners) == module
+              for field in fields}
+    findings = []
+    for match in SAID_FIELD_RE.finditer(script.code):
+        field = script.literals[int(match.group(1))]
+        if f"examples[].{field}" not in listed:
+            findings.append(f"L10 {script.path}:{script.line_of(match.start())}: the card field {field!r} "
+                            "is worded with said() and is not in SHOWN_DATA, so no gate holds its rows")
+    return findings
+
+
+def unowned_data(repo: pathlib.Path, owners: dict[str, tuple[str, ...]], tables: dict[str, Table]) -> list[str]:
+    """L10: a data file that shows words, owned by a module with no table."""
+    return [f"L10 {relative}: shows words, and its module has no table under {LOCALE}/"
+            for relative in SHOWN_DATA
+            if (repo / relative).is_file() and owner_of(relative, owners) not in tables]
+
+
 def check_module(repo: pathlib.Path, module: str, owners: dict[str, tuple[str, ...]],
                  table: Table) -> list[str]:
-    """L1, L2, L3, L7 and L9 for one translated module."""
+    """L1, L2, L3, L7, L9 and L10 for one translated module."""
     keys = {key for _, key in table.rows}
-    findings = list(table.findings)
-    mentioned: set[str] = set()
+    findings, mentioned = shown_from_data(repo, module, owners, table)
+    findings = list(table.findings) + findings
     for script in scripts_of(repo, module, owners):
         findings += bare_words(script, keys) + built_keys(script) + worded_too_soon(script)
+        findings += fields_said_unlisted(script, module, owners)
         mentioned |= set(script.literals)
         for start, key, context in _keys_used(script):
             if (context, key) not in table.rows:
@@ -454,7 +545,9 @@ def check_module(repo: pathlib.Path, module: str, owners: dict[str, tuple[str, .
         if not table.rows[(context, key)]:
             findings.append(f"L2 {table.path}: {key!r} has no {PORTUGUESE}")
         if key not in mentioned:
-            findings.append(f"L3 {table.path}: {key!r} is in no script of {module}")
+            findings.append(f"L3 {table.path}: {key!r} is in no script of {module}"
+                            + (", nor in its shown data: a catalogue entry renamed or reworded?"
+                               if any(owner_of(relative, owners) == module for relative in SHOWN_DATA) else ""))
     return findings
 
 
@@ -488,7 +581,7 @@ def check(repo: pathlib.Path) -> list[str]:
     findings = []
     for module, table in tables.items():
         findings += check_module(repo, module, owners, table)
-    findings += shadowed(tables) + disagreeing(tables)
+    findings += shadowed(tables) + disagreeing(tables) + unowned_data(repo, owners, tables)
     for stray in sorted((repo / LOCALE).glob("*.csv")) if (repo / LOCALE).is_dir() else []:
         if stray.stem not in owners:
             findings.append(f"L4 {LOCALE}/{stray.name}: names no module")
@@ -604,6 +697,44 @@ def _table_cases(root: pathlib.Path, expect) -> None:
     expect("a value translated as it is kept", build(root, "value", CLEAN_SCRIPT
            + '\tvar why: Array = Sentence.of("cost {cost}", {  # shown through tr()\n'
            + '\t\tcost = TranslationServer.translate("breadth-first")})\n'), 1, "L9")
+    _data_cases(root, expect)
+
+
+# A menu module whose catalogue shows a title, a sentence, a part and a name.
+CATALOGUE = {"examples": [{"title": "Checkers", "decides": "Which move white plays.", "controls": "space plays",
+                           "watch": "The arrow.", "techniques": [{"technique": "minimax", "part": "searches"}]}],
+             "techniques": {"minimax": {"name": "minimax with alpha-beta"}}}
+CATALOGUE_TABLE = ("en,pt_BR\nCheckers,Damas\nWhich move white plays.,Que lance as brancas jogam.\n"
+                   "space plays,espaço joga\nThe arrow.,A seta.\nsearches,busca\n"
+                   "minimax with alpha-beta,minimax com alpha-beta\n")
+
+
+def _menu(catalogue: dict, table: str | None) -> dict[str, str]:
+    owns = ["godot/menu/"] + (["godot/locale/menu.csv"] if table is not None else [])
+    files = {"modules/menu.json": json.dumps({"module": "menu", "owns": owns}),
+             "godot/menu/catalogue.json": json.dumps(catalogue),
+             "godot/menu/menu.gd": "func _ready() -> void:\n\tpass\n"}
+    if table is not None:
+        files["godot/locale/menu.csv"] = table
+    return files
+
+
+# L10's planted cases: a card's word with no row, a field renamed out from
+# under the gate, and a catalogue whose module has no table at all. The clean
+# case also proves a row only the catalogue names is not an orphan (L3).
+def _data_cases(root: pathlib.Path, expect) -> None:
+    expect("catalogue rows", build(root, "catalogue", extra=_menu(CATALOGUE, CATALOGUE_TABLE)), 0)
+    expect("a card's word with no row", build(root, "no_row", extra=_menu(
+        CATALOGUE, CATALOGUE_TABLE.replace("Checkers,Damas\n", ""))), 1, "L10")
+    renamed = json.loads(json.dumps(CATALOGUE))
+    renamed["examples"][0]["what_to_watch"] = renamed["examples"][0].pop("watch")
+    expect("a field renamed", build(root, "renamed", extra=_menu(
+        renamed, CATALOGUE_TABLE.replace("The arrow.,A seta.\n", ""))), 1, "finds no words")
+    expect("a catalogue with no table", build(root, "untabled", extra=_menu(CATALOGUE, None)), 1, "L10")
+    drawn = _menu(CATALOGUE, CATALOGUE_TABLE)
+    drawn["godot/menu/catalogue_card.gd"] = ('func card_words(card: Dictionary) -> String:\n'
+                                             '\treturn said(card.get("decides", "")) + said(card.get("hint", ""))\n')
+    expect("a field drawn and not listed", build(root, "drawn", extra=drawn), 1, "'hint' is worded with said()")
 
 
 def self_test() -> int:
