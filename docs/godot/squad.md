@@ -201,9 +201,9 @@ is told. Whether it may still attack stayed with the rules.
 | `TacticalRuleset`'s answers | 28 | 14 (13, and `mode_view`) |
 | `TacticalModeView`'s answers | -- | 15 |
 | `tactical_ruleset.gd` lines | 178 | 99, and 119 in `tactical_mode_view.gd` |
-| `advance_wars_ruleset.gd` lines | 109 | 84, and 43 in `advance_wars_view.gd` |
+| `advance_wars_ruleset.gd` lines | 109 | 84, and 46 in `advance_wars_view.gd` |
 | `squad_ruleset.gd` lines | 308 | 188, and 150 in `squad_view.gd` |
-| `tactical.gd` lines | 860 | 873 |
+| `tactical.gd` lines | 860 | 872 |
 
 Why two objects and not one: a search asks the ruleset about thousands of
 states and never what the screen shows; a mode added to the scene had
@@ -212,13 +212,21 @@ hands the scene its view, rather than the opener handing both: the menu,
 the demo overlays and the tests open the scene with rulesets, and still
 do, unchanged -- and `tactical` still never names `squad`. The scene grew
 by its `view()`, which asks the ruleset again whenever M, an opener or a
-test sets another, so the two cannot drift apart: 13 lines more, its
-`view()` and the paragraph saying so. Every hook it asked the ruleset is
-one call it now asks `view()`, and none stayed behind. The scene is not
+test sets another, so the two cannot drift apart -- `squad_scene_test.gd`
+holds it, asking after each M which view draws. 12 lines more: its
+`view()` and the paragraph saying so, less the Advance Wars header line,
+which moved to `AdvanceWarsView`. Every hook it asked the ruleset is one
+call it now asks `view()`, and none stayed behind; the map is still the
+scene's, since every mode plays on `TacticalScenario.MAP` -- a mode with a
+map of its own would add it to the view. The scene is not
 shorter; what changed is that each call now says which of the two it asks,
 a rule or a picture. One test changed, and only in what it asks:
 `squad_scene_test.gd` asks the view for `fog`, `dashes`, `tint_at` and
-`reveals`, with the same arguments and the same assertions.
+`reveals`, with the same arguments and the same assertions. Wave 128's
+review planted twelve faults; six survived the suites. The tests it asked
+for (`test/tactical/mode_view_test.gd`, and in `squad_scene_test.gd` the
+view after M, the ghosts, the legend and the "shoot" wording) now catch
+all six (`docs/reviews/128-the-xcom-mode-has-its-own-view.md`).
 
 **What the person meets.**
 
