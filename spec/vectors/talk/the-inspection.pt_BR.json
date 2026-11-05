@@ -1,0 +1,22 @@
+{
+  "recording": "data/talk/recordings/the-inspection.pt_BR.json",
+  "turns": [
+    {
+      "intent": "unclear",
+      "argument": "",
+      "refusal_code": "",
+      "rule": "not-understood",
+      "trust": 0,
+      "suspicion": 0
+    },
+    {
+      "intent": "threaten",
+      "argument": "",
+      "refusal_code": "",
+      "rule": "a-threat",
+      "trust": 0,
+      "suspicion": 3
+    }
+  ],
+  "outcome": "playing"
+}

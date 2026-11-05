@@ -1,0 +1,27 @@
+{
+  "about": "A conversation with the guard at the door (T94), as a local model answered it: each line the player said and the model's text, untouched. Replayed by gameaikit.talk.replay and the game's recorded mode; see README.md beside this file for the model and its licence.",
+  "conversation": "the-right-name-then-a-threat",
+  "language": "en",
+  "model": {
+    "name": "ministral-3-8b",
+    "file": "Ministral-3-8B-Instruct-2512-Q4_K_M.gguf",
+    "sha256": "33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761",
+    "licence": "Apache-2.0",
+    "server": "llama.cpp b11960"
+  },
+  "recorded_on": "2026-11-05",
+  "turns": [
+    {
+      "player": "Doctor Okafor is expecting me.",
+      "raw": "{\n  \"argument\": \"okafor\",\n  \"intent\": \"name_person\",\n  \"speech\": \"Identification, Doctor.\"\n}"
+    },
+    {
+      "player": "Open the door or you'll regret it.",
+      "raw": "{\n  \"argument\": \"\",\n  \"intent\": \"threaten\",\n  \"speech\": \"Sgt. Vasquez, log this. *locks chain.*\"\n}"
+    },
+    {
+      "player": "Step aside, or I'll make sure you lose this job.",
+      "raw": "{\"argument\":\"\",\"intent\":\"threaten\",\"speech\":\"Last warning, *sergeant*—I’m not moving.\"}"
+    }
+  ]
+}

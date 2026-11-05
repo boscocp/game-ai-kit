@@ -396,6 +396,17 @@ test-llm-vectors: import ## What a model's reply may contain: both validators ag
 	@$(GODOT) --headless --path godot -s res://test/ai_llm/llm_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/llm
 
+.PHONY: test-talk-vectors
+test-vectors: test-talk-vectors
+test-talk-vectors: import ## The guard's recorded conversations, replayed to their outcome in both languages (T94)
+	@# Each vector is a conversation a local model really had, in
+	@# data/talk/recordings/: each turn's act or refusal, rule, trust and
+	@# suspicion. Python replays it through gameaikit.talk; Godot through the
+	@# game's own TalkGuard, RecordedRuntime and LlmConversation. No model.
+	@$(PYTHON) -m unittest discover -s python/tests -t python -p "test_talk_vectors.py" -q
+	@$(GODOT) --headless --path godot -s res://test/talk/talk_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/talk
+
 .PHONY: measure-llm-requests
 measure-llm-requests: import ## The worst frame while an HTTPRequest is in flight, threads on and off, against a stub server (T92)
 	@# A measurement, not a gate: its numbers are in docs/godot/llm-requests.md.
@@ -852,6 +863,10 @@ record-tactical: import ## Play the tactical board and keep every game you finis
 demo-maze: import ## Pac-Man against Blinky, who follows the arcade's rules: arrows walk, V the ghosts' view, G brings Pinky in, C hands Pac-Man to the MDP, P pause, space one step, R again
 	@$(GODOT) --path godot res://game/maze/maze.tscn
 
+.PHONY: demo-talk
+demo-talk: import ## Talk your way past the guard, a local LLM his ears and mouth: 1-9 say a recorded line, V the reasoning, R again, Tab live typing (make llm-serve)
+	@$(GODOT) --path godot res://game/talk/talk.tscn
+
 .PHONY: demo-fighting
 demo-fighting: import ## Training mode, you against a dummy: A/D walk, W jump, S crouch, U/I punch, J/K kick, L throw, O or back twice evade, hold away to guard, M dummy mode, P pause, space one frame
 	@$(GODOT) --path godot res://game/fighting/fighting.tscn
@@ -1052,6 +1067,17 @@ llm-smoke: import ## Start the server, send one line through HttpRuntime, check 
 llm-bakeoff: import ## Every model on the 30 lines, in English and pt-BR, into docs/local-llm/bakeoff/ (minutes, a GPU)
 	@scripts/llm bakeoff $(if $(MODEL),--model $(MODEL)) $(if $(FLAVOUR),--flavour $(FLAVOUR))
 	@scripts/llm table
+
+.PHONY: record-talk
+record-talk: import ## Record the guard's scripted conversations from the local model, in both languages, into data/talk/recordings/ (T94; needs make llm-serve)
+	@# A conversation the server could not answer is not written. Then
+	@# write the vectors (spec/vectors/talk/write.py) and read them by hand.
+	@$(GODOT) --headless --path godot -s res://test/talk/record_talk.gd -- \
+		$(CURDIR)/data/talk/lines.json $(CURDIR)/data/talk/recordings $(or $(MODEL),ministral-3-8b)
+
+.PHONY: record-talk-live
+record-talk-live: import ## Play the guard live and write each finished conversation to data/talk/recordings/ (T94; needs make llm-serve)
+	@$(GODOT) --path godot res://game/talk/talk.tscn -- --record
 
 # --- shipping --------------------------------------------------------------
 

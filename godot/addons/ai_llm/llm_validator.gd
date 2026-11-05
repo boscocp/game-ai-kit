@@ -196,20 +196,28 @@ static func _deepest(outside: String) -> int:
 	return deepest
 
 
-## spec/llm/reply.schema.json with `intent` narrowed to this game's acts: what
-## a runtime that can constrain its output is handed. A convenience, not the
-## validator -- it cannot say an argument belongs to its intent, and a runtime
-## may ignore it.
+## spec/llm/reply.schema.json narrowed to this game: one shape per intent,
+## `anyOf`, each naming its intent and offering only its own arguments, or
+## the empty one R7 allows every intent. What a runtime that can constrain
+## its output is handed. A convenience, not the validator: a runtime may
+## ignore it, and every reply is validated anyway. Measured in T94 on the
+## pinned llama.cpp server only (docs/godot/talk.md): with the narrowed
+## shape it no longer sends an argument the act does not take (R7).
 func json_schema() -> Dictionary:
 	var names: Array = _intents.keys()
 	names.sort()
+	return {"anyOf": names.map(_shape_of)}
+
+
+# The reply's shape for one intent: its name, and only its own arguments.
+func _shape_of(intent: String) -> Dictionary:
+	var arguments: PackedStringArray = _intents[intent]
+	var speech: Dictionary = {"type": "string", "minLength": 1, "maxLength": SPEECH_LIMIT}
+	var allowed: Array = Array(arguments) + [""]
 	return {
 		"type": "object",
-		"properties": {
-			"speech": {"type": "string", "minLength": 1, "maxLength": SPEECH_LIMIT},
-			"intent": {"type": "string", "enum": names},
-			"argument": {"type": "string"},
-		},
+		"properties": {"speech": speech, "intent": {"type": "string", "enum": [intent]},
+			"argument": {"type": "string", "enum": allowed}},
 		"required": REPLY_KEYS.duplicate(),
 		"additionalProperties": false,
 	}

@@ -1,0 +1,50 @@
+en,pt_BR
+Bram is thinking...,Bram está pensando...
+Bram: {line},Bram: {line}
+"Bram, the guard: a language model hears and speaks for him","Bram, o guarda: um modelo de linguagem ouve e fala por ele"
+green bar: trust; at the white mark the door opens,barra verde: confiança; na marca branca a porta abre
+"Live, recording: each finished conversation is written to data/talk/recordings/. Tab recorded.","Ao vivo, gravando: cada conversa terminada é escrita em data/talk/recordings/. Tab gravado."
+"Live: what you type goes to the local model (make llm-serve). Enter says it, Tab recorded.","Ao vivo: o que você digita vai ao modelo local (make llm-serve). Enter fala, Tab gravado."
+No recordings in data/talk/recordings/: Tab to talk live.,Nenhuma gravação em data/talk/recordings/: Tab para falar ao vivo.
+Nothing said yet.,Nada foi dito ainda.
+Not recorded: a turn had no answer from the model.,Não gravado: um turno ficou sem resposta do modelo.
+Out of turns: the guard sends you away. You lost.,Acabaram os turnos: o guarda manda você embora. Você perdeu.
+R again.,R de novo.
+"Recorded: lines a local model was once asked, answered as it answered. 1-9 say one, V the reasoning, R again, Tab live.","Gravado: falas já feitas a um modelo local, respondidas como ele respondeu. 1-9 diz uma, V o raciocínio, R de novo, Tab ao vivo."
+Recorded to {path},Gravado em {path}
+red bar: suspicion; at the white mark the alarm sounds,barra vermelha: suspeita; na marca branca o alarme soa
+red lamp: the alarm,lâmpada vermelha: o alarme
+"refused, {code}: {why}; the guard's own line stood in","recusada, {code}: {why}; a fala do próprio guarda entrou no lugar"
+rule {rule}: {why},regra {rule}: {why}
+"Say something, in at most {limit} characters.","Diga algo, em no máximo {limit} caracteres."
+suspicion,suspeita
+"Tab, then R, again.","Tab, depois R, de novo."
+The alarm sounds: suspicion reached its mark. You lost.,O alarme soa: a suspeita chegou à marca. Você perdeu.
+the door: it opens when trust reaches its mark,a porta: abre quando a confiança chega à marca
+The door opens: trust reached its mark. You are in.,A porta abre: a confiança chegou à marca. Você entrou.
+"The guard has decided: Tab, then R, for a new conversation.","O guarda decidiu: Tab, depois R, para uma nova conversa."
+the model read: {act}  ({seconds} s),o modelo leu: {act}  ({seconds} s)
+"The recordings end here: R again, or Tab to talk live.","As gravações acabam aqui: R de novo, ou Tab para falar ao vivo."
+three dots: the model is answering; the game keeps running,três pontos: o modelo está respondendo; o jogo continua rodando
+trust,confiança
+"trust {moved_trust} = {trust}, suspicion {moved_suspicion} = {suspicion}","confiança {moved_trust} = {trust}, suspeita {moved_suspicion} = {suspicion}"
+trust {trust} of {open} opens the door; suspicion {suspicion} of {alarm} sounds the alarm,confiança {trust} de {open} abre a porta; suspeita {suspicion} de {alarm} soa o alarme
+Turn {turn} of {turns}.,Turno {turn} de {turns}.
+"Type to the guard, Enter says it.","Escreva para o guarda, Enter fala."
+V shows what the model heard and which rule decided.,V mostra o que o modelo ouviu e qual regra decidiu.
+"What the guard heard, and what decided","O que o guarda ouviu, e o que decidiu"
+"you, at the door","você, na porta"
+You: {line},Você: {line}
+the model's answer was not JSON,a resposta do modelo não era JSON
+the model's answer was not a JSON object,a resposta do modelo não era um objeto JSON
+the model's answer missed a field,faltou um campo na resposta do modelo
+the model's answer had a field too many,a resposta do modelo tinha um campo a mais
+the model's answer had a field that was not text,a resposta do modelo tinha um campo que não era texto
+the model named an act the guard does not know,o modelo citou um ato que o guarda não conhece
+the model gave the act a value it does not take,o modelo deu ao ato um valor que ele não aceita
+the guard's line was empty or too long,a fala do guarda estava vazia ou longa demais
+the guard's line had a line break,a fala do guarda tinha uma quebra de linha
+the guard's line had markup in it,a fala do guarda tinha marcação
+the guard's line gave away the password,a fala do guarda entregou a senha
+no answer came from the model,nenhuma resposta veio do modelo
+the server refused the request,o servidor recusou o pedido

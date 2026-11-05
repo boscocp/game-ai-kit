@@ -1,0 +1,35 @@
+{
+  "about": "A conversation with the guard at the door (T94), as a local model answered it: each line the player said and the model's text, untouched. Replayed by gameaikit.talk.replay and the game's recorded mode; see README.md beside this file for the model and its licence.",
+  "conversation": "becoming-the-expected",
+  "language": "pt_BR",
+  "model": {
+    "name": "ministral-3-8b",
+    "file": "Ministral-3-8B-Instruct-2512-Q4_K_M.gguf",
+    "sha256": "33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761",
+    "licence": "Apache-2.0",
+    "server": "llama.cpp b11960"
+  },
+  "recorded_on": "2026-11-05",
+  "turns": [
+    {
+      "player": "Você está esperando alguém hoje à noite?",
+      "raw": "{\n  \"argument\": \"expected_visitor\",\n  \"intent\": \"ask\",\n  \"speech\": \"Aguento só quem a sede mandar. Tem algo pra mostrar?\"\n}"
+    },
+    {
+      "player": "Sou eu. Eu sou o mensageiro da sede.",
+      "raw": "{\n  \"argument\": \"courier\",\n  \"intent\": \"claim_role\",\n  \"speech\": \"Badaxe ou ordem escrita? Não abro porta pro ar, não.\"\n}"
+    },
+    {
+      "player": "Aqui está o meu crachá.",
+      "raw": "{\"argument\":\"badge\",\"intent\":\"show\",\"speech\":\"Vamos ver... (toma o crachá com desconfiança e examina rápido) Ok, você passa, mas não faça barulho com isso.\"}"
+    },
+    {
+      "player": "Há quanto tempo você vigia esta porta?",
+      "raw": "{\n  \"argument\": \"the_guard\",\n  \"intent\": \"ask\",\n  \"speech\": \"Demais anos pra contar aqui dentro... Por que essa pergunta?\"\n}"
+    },
+    {
+      "player": "Você parece o guarda mais esperto da base inteira.",
+      "raw": "{\"argument\":\"\",\"intent\":\"flatter\",\"speech\":\"Espero que 'esperto' não seja sinônimo de 'dormindo de pé'. Qual é então?\"}"
+    }
+  ]
+}

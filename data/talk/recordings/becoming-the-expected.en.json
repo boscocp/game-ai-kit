@@ -1,0 +1,35 @@
+{
+  "about": "A conversation with the guard at the door (T94), as a local model answered it: each line the player said and the model's text, untouched. Replayed by gameaikit.talk.replay and the game's recorded mode; see README.md beside this file for the model and its licence.",
+  "conversation": "becoming-the-expected",
+  "language": "en",
+  "model": {
+    "name": "ministral-3-8b",
+    "file": "Ministral-3-8B-Instruct-2512-Q4_K_M.gguf",
+    "sha256": "33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761",
+    "licence": "Apache-2.0",
+    "server": "llama.cpp b11960"
+  },
+  "recorded_on": "2026-11-05",
+  "turns": [
+    {
+      "player": "Are you expecting anyone this evening?",
+      "raw": "{\n  \"argument\": \"expected_visitor\",\n  \"intent\": \"ask\",\n  \"speech\": \"Shift log says a courier, if that’s who you mean.\"\n}"
+    },
+    {
+      "player": "That's me. I'm the courier from headquarters.",
+      "raw": "{\"argument\":\"courier\",\"intent\":\"claim_role\",\"speech\":\"Hands on the wall. Slow.\"}"
+    },
+    {
+      "player": "Here's my badge.",
+      "raw": "{\"argument\":\"badge\",\"intent\":\"show\",\"speech\":\"Vasquez, don’t take your eyes off it till I say.\"}"
+    },
+    {
+      "player": "How long have you been guarding this door?",
+      "raw": "{\n  \"argument\": \"the_guard\",\n  \"intent\": \"ask\",\n  \"speech\": \"Longer than you’ve been alive, kid. Try not to waste my time.\"\n}"
+    },
+    {
+      "player": "You look like the sharpest guard on the whole base.",
+      "raw": "{\"argument\":\"\",\"intent\":\"flatter\",\"speech\":\"I don’t listen to flattery, and neither should you.\"}"
+    }
+  ]
+}
