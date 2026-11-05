@@ -20,9 +20,10 @@
 ## commands in five seconds than a person did; the thinking view then draws
 ## the late enemy it was handed, hollow, threaded to where it stands now
 ## (`RtsThinking.clock`). M shows the meter, each computer side's share of
-## the frame beside its base (`RtsMeter`), hidden until asked. Opened with `-- --record` (`make record-rts`), every match
-## you play to its end is kept in `data/rts/`; `make measure-rts-clock`
-## turns those into the clock's values, which the game only reads.
+## the frame beside its base (`RtsMeter`), hidden until asked. Opened with
+## `-- --record` (`make record-rts`), every match you play to its end is
+## kept in `data/rts/`; `make measure-rts-clock` turns those into the
+## clock's values, which the game only reads.
 ##
 ## Your orders and the computer's pass through the same door
 ## (`RtsMatch.give`, `RtsRules`): you may not order what it may not, and it

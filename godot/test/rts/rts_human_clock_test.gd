@@ -233,17 +233,22 @@ func test_a_file_without_all_four_values_gives_the_stand_in() -> void:
 
 func test_the_drawn_enemy_is_the_view_the_clock_handed() -> void:
 	var clock := RtsHumanClock.new(Busy.new(0), 350.0, 0)
-	var thinking: RtsThinking = auto_free(RtsThinking.new())
-	thinking.clock = clock
+	var thinking: RtsThinking = _thinking_of(clock)
 
-	clock.decide(_view_at(0))
-	clock.decide(_view_at(30))
+	clock.decide(_raided_at(0))
+	clock.decide(_raided_at(30))
 	# The barracks stands in the view of 30, and the side was handed 0's.
-	assert_array(thinking.believed_enemy()).is_empty()
-	clock.decide(_view_at(60))
+	assert_array(thinking.believed_enemy().map(func(unit: Dictionary) -> int: return unit["id"])).is_equal([5])
+	thinking.view = _raided_at(60)
+	clock.decide(thinking.view)
+	thinking.queue_redraw()
+	await get_tree().process_frame
 
 	assert_array(thinking.believed_enemy()).is_equal(clock.last_handed().enemies())
-	assert_array(thinking.believed_enemy()).is_equal(_view_at(30).enemies())
+	assert_array(thinking.believed_enemy()).is_equal(_raided_at(30).enemies())
+	# The raider has walked on since: what is drawn is not where it is now.
+	assert_array(thinking.believed_enemy()).is_not_equal(thinking.view.enemies())
+	assert_array(thinking.drawn_believed).is_equal(_positions(_raided_at(30).enemies()))
 	# Handed at 60 from the view of 30: half a second, 30 ticks.
 	assert_float(clock.enemy_age_ms()).is_equal_approx(500.0, 0.001)
 	assert_str(thinking.clock_lines()[0]).contains("500 ms ago")
@@ -275,19 +280,73 @@ func test_the_panel_says_what_waits_under_the_cap_and_for_how_long() -> void:
 func test_the_game_draws_the_enemy_its_clocked_computer_was_handed() -> void:
 	var game: RtsGame = _mounted_game()
 	assert_object(game._thinking.clock).is_null()
-
 	game._on_key(KEY_K)
+	# A west worker put in east's sight and walking, so the late view has
+	# someone in it, and someone who is no longer where it was.
+	var walker: RtsUnit = _a_worker(game.world, RtsScenario.WEST)
+	var east_home := Vector2(RtsScenario.home(RtsScenario.EAST))
+	walker.position = east_home + Vector2(-4.0, 0.5)
+	game.played.give(RtsScenario.WEST, RtsCommand.move([walker.id] as Array[int], Vector2i(east_home + Vector2(-4.0, 8.0))))
 	for _decision: int in range(3):
 		game.step_decision()
+	await get_tree().process_frame
 
 	var clock: RtsHumanClock = game.played.controllers[RtsScenario.EAST]
+	var current: Array[Dictionary] = RtsSnapshot.of(game.world, RtsScenario.EAST).enemies()
 	assert_object(game._thinking.clock).is_same(clock)
-	assert_object(clock.last_handed()).is_not_null()
+	assert_array(game._thinking.believed_enemy()).is_not_empty()
 	assert_array(game._thinking.believed_enemy()).is_equal(clock.last_handed().enemies())
+	assert_array(game._thinking.believed_enemy()).is_not_equal(current)
+	assert_array(game._thinking.drawn_believed).is_equal(_positions(clock.last_handed().enemies()))
+	assert_array(game._thinking.drawn_believed).is_not_equal(_positions(current))
 	assert_str(game._panel.text).contains("late view")
 	game._on_key(KEY_K)
 	assert_object(game._thinking.clock).is_null()
 	assert_array(game._thinking.believed_enemy()).is_empty()
+
+
+func test_a_dropped_command_takes_its_wait_with_it() -> void:
+	var clock := RtsHumanClock.new(Busy.new(5), 0.0, 2, 1.0)
+
+	clock.decide(_view_at(0))
+	clock.decide(_view_at(10))
+
+	# Of 0's five, two go out and one is dropped. 10's five find the window
+	# full, and the five oldest held are dropped: the two left were given at
+	# 10, so they have not waited at all.
+	assert_int(clock.dropped).is_greater(0)
+	assert_dict(clock.waiting()).is_equal({"count": 2, "oldest_ms": 0.0})
+
+
+# `_view_at(tick)` with an enemy runner (id 5) walking east a cell every
+# half second from (0.5, 3.5).
+static func _raided_at(tick: int) -> RtsSnapshot:
+	var view: RtsSnapshot = _view_at(tick)
+	view.units.append({"id": 5, "side": 1, "kind": RtsKinds.RUNNER, "position": Vector2(0.5 + tick / 30.0, 3.5)})
+	return view
+
+
+# A thinking view in the tree, drawing for a fresh commander under `clock`.
+func _thinking_of(clock: RtsHumanClock) -> RtsThinking:
+	var thinking: RtsThinking = auto_free(RtsThinking.new())
+	thinking.side = RtsCommander.new(RtsScenario.EAST, RtsLevels.named("normal"), 1, BuildOrder.Planner.STRIPS)
+	thinking.clock = clock
+	add_child(thinking)
+	return thinking
+
+
+static func _positions(units: Array[Dictionary]) -> Array[Vector2]:
+	var at: Array[Vector2] = []
+	for unit: Dictionary in units:
+		at.append(unit["position"])
+	return at
+
+
+static func _a_worker(world: RtsWorld, side: int) -> RtsUnit:
+	for unit: RtsUnit in world.units():
+		if unit.side == side and unit.kind == RtsKinds.WORKER:
+			return unit
+	return null
 
 
 func _mounted_game() -> RtsGame:

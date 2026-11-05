@@ -50,6 +50,9 @@ var view: RtsSnapshot
 ## The human clock the side plays under, or null when K is off: the late
 ## enemy is read from it, never recomputed.
 var clock: RtsHumanClock
+## Where the last drawing put each hollow ring, in cells: the late enemy as
+## drawn, kept so a test can hold the picture to the handed view.
+var drawn_believed: Array[Vector2] = []
 
 
 ## The enemy the clocked side was last handed, unit by unit, exactly as the
@@ -84,10 +87,10 @@ func clock_lines() -> Array[String]:
 func lines() -> Array[String]:
 	if side == null or view == null:
 		return []
-	var said: Array[String] = clock_lines()
 	var thinking: Dictionary = side.overlay(view)
 	if thinking.has("goal") and (thinking["goal"] as PackedStringArray).is_empty():
 		return [tr("not thought yet: it decides twice a second once the match runs")]
+	var said: Array[String] = clock_lines()
 	if thinking.has("plan"):
 		said.append(tr("goal: {goal}  ({planner})").format({goal = ", ".join(thinking["goal"]),
 			planner = tr(thinking["planner"])}))
@@ -204,7 +207,9 @@ func _seen_at(id: int) -> Vector2:
 # and may be shown; the view's age written once, at its first unit.
 func _draw_believed() -> void:
 	var believed: Array[Dictionary] = believed_enemy()
+	drawn_believed.clear()
 	for unit: Dictionary in believed:
+		drawn_believed.append(unit["position"])
 		var at: Vector2 = RtsView.to_screen(unit["position"])
 		draw_arc(at, RtsView.CELL * 0.45, 0.0, TAU, 16, BELIEVED_COLOUR, 1.5)
 		var now: RtsUnit = world.unit(unit["id"]) if world != null else null
