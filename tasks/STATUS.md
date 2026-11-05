@@ -52,6 +52,27 @@ Main is 580ec92.
   and passed when rerun at 3.6.
 - T126's row is marked done here; its wave left it `todo`.
 
+**The owner answered on 2026-11-05, after the list below:** "nao li mas 1
+a 12 conforme recomendado" -- not read, but items 1-12 as recommended. So:
+
+- items 1, 3, 4 (accepted; the manual check still judges `tactical.gd`),
+  5, 7, 10 and 11: ratified as recommended;
+- items 2 and 12: no task. Each is a follow-up only if wanted (a demo
+  seed for 144) or seen in play (the knob alternating);
+- item 6: task T128, this session's proposal, not the PR's;
+- item 8: T116's raw probe outputs are committed in
+  `docs/local-llm/markup/`, 24 files, one per candidate, language and
+  round;
+- item 9: task T129.
+
+**The owner played the XCOM mode on 2026-11-05:** "gostei do Xcom, nada
+pra mudar" -- liked it, nothing to change. That is taken as asking for
+no art, so T89's condition (only if T85's manual check asks for art) is
+not met and it is not run. It stays `todo` until the owner closes it.
+The other questions of T85's, T87's and T126's manual checks (the hit
+chance, MCTS's bars, the two modes side by side) were not answered one
+by one.
+
 **Waiting on the owner -- one numbered list, each with a recommendation.**
 Each PR body holds the reasoning.
 
@@ -143,7 +164,7 @@ Each PR body holds the reasoning.
 
 - todo: T88, T89 (only if T85's manual check asks for art), T96, T112
   (after T88, T96 and T120), T113-T115, T117, T119, T120, T121, T124,
-  T125 and T127;
+  T125, T127, T128 and T129;
 - six older tasks still wip: T25, T40, T44, T45, T46 and T48;
 - T43, blocked.
 
@@ -1034,6 +1055,8 @@ review.
 | T125 | A second, stronger floor for the squad mode's strength | todo | the owner, 2026-11-05, item B18: a greedy shooter; the bar from measurement, a worse weighing planted |
 | T126 | The XCOM mode's presentation moves into a mode view | done | wave 128 (#74): `TacticalModeView`, answered by `AdvanceWarsView` and `SquadView`; `TacticalRuleset` from 28 answers to 14, the scene asks `view()`; behaviour unchanged, held by the tactical and squad suites and new tests of each view's answers and of which view draws after M; the owner, 2026-11-05, item B19 |
 | T127 | An unseen shooter stays unseen in the news | todo | the owner, 2026-11-05, item B24: word the news from the person's fog, or a shot reveals its shooter -- the task chooses |
+| T128 | A focus ring outlives its sight | todo | the owner, 2026-11-05, second list item 6 (this session's proposal): a squad's focus ring falls back to the last place the side was told of, marked stale, when its target leaves sight; drawing only |
+| T129 | Line separators are refused in a speech | todo | the owner, 2026-11-05, second list item 9, from T116's review: R9 and the pattern refuse U+2028, U+2029 and the C1 controls, in both twins, with vectors |
 
 ---
 
