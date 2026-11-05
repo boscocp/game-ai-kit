@@ -60,22 +60,31 @@ static func panel(world: BotMatch, watched: int, played: int, thinking_shown: bo
 
 
 ## What the match believes about the person and what it did about it
-## (T100), three lines: the counts; the share of the damage with its prior,
-## worked out, and the hit rate beside it; and the other team's aim error
-## against the table row it came from, marked when the last reading moved it.
+## (T100, T123), three lines: the counts, and how often a change of side
+## started them over; the team's share of the damage with its prior, worked
+## out, and the hit rate beside it; and the other team's aim error against
+## the table row it came from, marked when the share is inside the band
+## that holds the row, and when the last reading moved it.
 static func difficulty_lines(world: BotMatch) -> Array[String]:
 	var shown: Dictionary = world.difficulty.overlay()
 	var counts: Dictionary = shown["counts"]
-	var lines: Array[String] = [TranslationServer.translate(
-			"at the last reading, the match had counted of you: {shots} shots, {hits} hits, {kills} kills, {deaths} deaths").format(counts)]
+	var first: String = TranslationServer.translate(
+			"at the last reading, the match had counted of you: {shots} shots, {hits} hits, {kills} kills, {deaths} deaths").format(counts)
+	var restarted: String = TranslationServer.translate("  -- started over on a change of side: {times}")
+	if int(counts["restarts"]) > 0:
+		first += restarted.format({times = counts["restarts"]})
+	var lines: Array[String] = [first]
 	lines.append(TranslationServer.translate(
-			"your share of the damage: ({dealt} + {prior}) / ({dealt} + {taken} + 2 x {prior}) = {share}, hit rate {rate}"
-			).format({dealt = counts["dealt"], taken = counts["taken"], prior = shown["prior_points"],
+			"your team's share of the damage: ({dealt} + {prior}) / ({dealt} + {taken} + 2 x {prior}) = {share}, your hit rate {rate}"
+			).format({dealt = counts["team_dealt"], taken = counts["team_taken"], prior = shown["prior_points"],
 			share = "%.2f" % shown["share"], rate = "%.2f" % shown["hit_rate"]}))
 	var words: Dictionary = {aim = "%.1f" % shown["aim_error_degrees"], row = int(shown["row"]) + 1,
 			rows = shown["rows"], from = "%.2f" % shown["row_from"]}
 	var line: String = TranslationServer.translate(
 			"so the other team aims {aim} degrees off: row {row} of {rows}, from a share of {from}").format(words)
+	var band: Dictionary = {low = "%.2f" % shown["band_from"], high = "%.2f" % shown["band_to"]}
+	if shown["held"]:
+		line += TranslationServer.translate("  (a share from {low} short of {high} holds the row)").format(band)
 	var changed_at: String = "%.0f" % (int(shown["changed_at_step"]) * world.rules.step)
 	if shown["changed_now"]:
 		line += TranslationServer.translate("  << changed at {time} s").format({time = changed_at})

@@ -702,12 +702,16 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 120,
-    "taken": 60
+    "taken": 60,
+    "team_dealt": 120,
+    "team_taken": 60,
+    "restarts": 0
    },
    "share": 0.5789473684210527,
    "hit_rate": 0.9166666666666666,
    "row": 3,
-   "aim_error_degrees": 2.0
+   "aim_error_degrees": 2.0,
+   "held": false
   },
   {
    "step": 400,
@@ -717,12 +721,16 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 240,
-    "taken": 120
+    "taken": 120,
+    "team_dealt": 240,
+    "team_taken": 120,
+    "restarts": 0
    },
    "share": 0.6071428571428571,
    "hit_rate": 0.9545454545454546,
    "row": 4,
-   "aim_error_degrees": 1.5
+   "aim_error_degrees": 1.5,
+   "held": false
   },
   {
    "step": 600,
@@ -732,12 +740,16 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 360,
-    "taken": 180
+    "taken": 180,
+    "team_dealt": 360,
+    "team_taken": 180,
+    "restarts": 0
    },
    "share": 0.6216216216216216,
    "hit_rate": 0.96875,
    "row": 4,
-   "aim_error_degrees": 1.5
+   "aim_error_degrees": 1.5,
+   "held": false
   },
   {
    "step": 800,
@@ -747,12 +759,16 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 480,
-    "taken": 240
+    "taken": 240,
+    "team_dealt": 480,
+    "team_taken": 240,
+    "restarts": 0
    },
    "share": 0.6304347826086957,
    "hit_rate": 0.9761904761904762,
    "row": 4,
-   "aim_error_degrees": 1.5
+   "aim_error_degrees": 1.5,
+   "held": false
   },
   {
    "step": 1000,
@@ -762,12 +778,16 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 600,
-    "taken": 300
+    "taken": 300,
+    "team_dealt": 600,
+    "team_taken": 300,
+    "restarts": 0
    },
    "share": 0.6363636363636364,
    "hit_rate": 0.9807692307692307,
    "row": 4,
-   "aim_error_degrees": 1.5
+   "aim_error_degrees": 1.5,
+   "held": false
   },
   {
    "step": 1200,
@@ -777,12 +797,16 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 720,
-    "taken": 360
+    "taken": 360,
+    "team_dealt": 720,
+    "team_taken": 360,
+    "restarts": 0
    },
    "share": 0.640625,
    "hit_rate": 0.9838709677419355,
    "row": 4,
-   "aim_error_degrees": 1.5
+   "aim_error_degrees": 1.5,
+   "held": false
   }
  ]
 }

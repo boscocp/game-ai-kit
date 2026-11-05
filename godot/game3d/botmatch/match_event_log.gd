@@ -1,6 +1,7 @@
 ## A bot match's events, kept (T100): what condition 3 of ADR 0016's
 ## amendment replays. The person's bot's shots, hits, hurts, kills and
-## deaths, in order, each with the step it happened in, and the seed and
+## deaths, its team-mates' hits and hurts, and each seat with its team
+## (T123), in order, each with the step it happened in, and the seed and
 ## arena the match was played from.
 ##
 ## Events, not counts: the player model is rebuilt from them by
@@ -57,7 +58,8 @@ static func save(match_log: Dictionary, folder: String = FOLDER, name: String = 
 
 
 ## A log written by `save`, read back with its numbers as written: each
-## event's step an int, as the match counted it. Empty when unreadable.
+## event's step an int, as the match counted it, and a seat's team. Empty
+## when unreadable.
 static func read(path: String) -> Dictionary:
 	var reader := JSON.new()
 	if reader.parse(FileAccess.get_file_as_string(path)) != OK or not reader.data is Dictionary:
@@ -65,7 +67,10 @@ static func read(path: String) -> Dictionary:
 	var match_log: Dictionary = reader.data
 	var events: Array[Dictionary] = []
 	for event: Dictionary in match_log.get("events", []):
-		events.append({"step": int(event["step"]), "kind": str(event["kind"]), "points": int(event["points"])})
+		var kept: Dictionary = {"step": int(event["step"]), "kind": str(event["kind"]), "points": int(event["points"])}
+		if event.has("team"):
+			kept["team"] = int(event["team"])
+		events.append(kept)
 	match_log["events"] = events
 	match_log["seed"] = int(match_log["seed"])
 	match_log["last_step"] = int(match_log["last_step"])

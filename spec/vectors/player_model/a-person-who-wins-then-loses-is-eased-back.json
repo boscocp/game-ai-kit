@@ -1,5 +1,5 @@
 {
- "description": "Dealing for half a minute, then taking twice as fast for a minute: up to the hard row, then down past the middle to the easy one -- the reading is of the whole match so far, so it passes through each row between.",
+ "description": "Dealing for half a minute, then taking twice as fast for a minute: up to the hard row, then down through the one above the middle to the easy one. The share falls past the band between two readings, so no reading is held on the way.",
  "last_step": 1800,
  "events": [
   {
@@ -882,12 +882,16 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 120,
-    "taken": 0
+    "taken": 0,
+    "team_dealt": 120,
+    "team_taken": 0,
+    "restarts": 0
    },
    "share": 0.6875,
    "hit_rate": 0.9166666666666666,
    "row": 4,
-   "aim_error_degrees": 1.5
+   "aim_error_degrees": 1.5,
+   "held": false
   },
   {
    "step": 400,
@@ -897,12 +901,16 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 240,
-    "taken": 0
+    "taken": 0,
+    "team_dealt": 240,
+    "team_taken": 0,
+    "restarts": 0
    },
    "share": 0.7727272727272727,
    "hit_rate": 0.9545454545454546,
    "row": 4,
-   "aim_error_degrees": 1.5
+   "aim_error_degrees": 1.5,
+   "held": false
   },
   {
    "step": 600,
@@ -912,12 +920,16 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 360,
-    "taken": 0
+    "taken": 0,
+    "team_dealt": 360,
+    "team_taken": 0,
+    "restarts": 0
    },
    "share": 0.8214285714285714,
    "hit_rate": 0.96875,
    "row": 4,
-   "aim_error_degrees": 1.5
+   "aim_error_degrees": 1.5,
+   "held": false
   },
   {
    "step": 800,
@@ -927,12 +939,16 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 360,
-    "taken": 240
+    "taken": 240,
+    "team_dealt": 360,
+    "team_taken": 240,
+    "restarts": 0
    },
    "share": 0.575,
    "hit_rate": 0.96875,
    "row": 3,
-   "aim_error_degrees": 2.0
+   "aim_error_degrees": 2.0,
+   "held": false
   },
   {
    "step": 1000,
@@ -942,12 +958,16 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 360,
-    "taken": 480
+    "taken": 480,
+    "team_dealt": 360,
+    "team_taken": 480,
+    "restarts": 0
    },
    "share": 0.4423076923076923,
    "hit_rate": 0.96875,
    "row": 1,
-   "aim_error_degrees": 4.5
+   "aim_error_degrees": 4.5,
+   "held": false
   },
   {
    "step": 1200,
@@ -957,12 +977,16 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 360,
-    "taken": 720
+    "taken": 720,
+    "team_dealt": 360,
+    "team_taken": 720,
+    "restarts": 0
    },
    "share": 0.359375,
    "hit_rate": 0.96875,
    "row": 0,
-   "aim_error_degrees": 6.0
+   "aim_error_degrees": 6.0,
+   "held": false
   },
   {
    "step": 1400,
@@ -972,12 +996,16 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 360,
-    "taken": 960
+    "taken": 960,
+    "team_dealt": 360,
+    "team_taken": 960,
+    "restarts": 0
    },
    "share": 0.3026315789473684,
    "hit_rate": 0.96875,
    "row": 0,
-   "aim_error_degrees": 6.0
+   "aim_error_degrees": 6.0,
+   "held": false
   },
   {
    "step": 1600,
@@ -987,12 +1015,16 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 360,
-    "taken": 1200
+    "taken": 1200,
+    "team_dealt": 360,
+    "team_taken": 1200,
+    "restarts": 0
    },
    "share": 0.26136363636363635,
    "hit_rate": 0.96875,
    "row": 0,
-   "aim_error_degrees": 6.0
+   "aim_error_degrees": 6.0,
+   "held": false
   },
   {
    "step": 1800,
@@ -1002,12 +1034,16 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 360,
-    "taken": 1440
+    "taken": 1440,
+    "team_dealt": 360,
+    "team_taken": 1440,
+    "restarts": 0
    },
    "share": 0.23,
    "hit_rate": 0.96875,
    "row": 0,
-   "aim_error_degrees": 6.0
+   "aim_error_degrees": 6.0,
+   "held": false
   }
  ]
 }

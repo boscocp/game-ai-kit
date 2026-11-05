@@ -1,6 +1,6 @@
 {
- "description": "Fifty points taken read exactly 100/250 = 0.4, the second row's from; eighty dealt and a hundred and twenty taken read exactly 180/400 = 0.45, the middle row's: a boundary belongs to the row above it.",
- "last_step": 400,
+ "description": "Fifty points taken read exactly 100/250 = 0.4, the second row's from: that row. Eighty dealt and a hundred and twenty taken read exactly 180/400 = 0.45, the band's from: inside it, so the row stays the second. Two hundred and thirty dealt and a hundred and seventy taken read exactly 330/600 = 0.55, the band's to and the fourth row's from: outside the band, and that row.",
+ "last_step": 600,
  "events": [
   {
    "step": 10,
@@ -20,6 +20,20 @@
    "step": 220,
    "kind": "hurt",
    "points": 70
+  },
+  {
+   "step": 410,
+   "kind": "shot"
+  },
+  {
+   "step": 410,
+   "kind": "hit",
+   "points": 150
+  },
+  {
+   "step": 420,
+   "kind": "hurt",
+   "points": 50
   }
  ],
  "readings": [
@@ -31,12 +45,16 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 0,
-    "taken": 50
+    "taken": 50,
+    "team_dealt": 0,
+    "team_taken": 50,
+    "restarts": 0
    },
    "share": 0.4,
    "hit_rate": 0.5,
    "row": 1,
-   "aim_error_degrees": 4.5
+   "aim_error_degrees": 4.5,
+   "held": false
   },
   {
    "step": 400,
@@ -46,12 +64,35 @@
     "kills": 0,
     "deaths": 0,
     "dealt": 80,
-    "taken": 120
+    "taken": 120,
+    "team_dealt": 80,
+    "team_taken": 120,
+    "restarts": 0
    },
    "share": 0.45,
    "hit_rate": 0.6666666666666666,
-   "row": 2,
-   "aim_error_degrees": 3.0
+   "row": 1,
+   "aim_error_degrees": 4.5,
+   "held": true
+  },
+  {
+   "step": 600,
+   "counts": {
+    "shots": 2,
+    "hits": 2,
+    "kills": 0,
+    "deaths": 0,
+    "dealt": 230,
+    "taken": 170,
+    "team_dealt": 230,
+    "team_taken": 170,
+    "restarts": 0
+   },
+   "share": 0.55,
+   "hit_rate": 0.75,
+   "row": 3,
+   "aim_error_degrees": 2.0,
+   "held": false
   }
  ]
 }

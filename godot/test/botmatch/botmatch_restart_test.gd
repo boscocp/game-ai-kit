@@ -7,7 +7,8 @@ extends GdUnitTestSuite
 
 ## What an empty model's counts are, written out: the suite names no class
 ## of the model's.
-const EMPTY: Dictionary = {"shots": 0, "hits": 0, "kills": 0, "deaths": 0, "dealt": 0, "taken": 0}
+const EMPTY: Dictionary = {"shots": 0, "hits": 0, "kills": 0, "deaths": 0, "dealt": 0, "taken": 0, "team_dealt": 0,
+		"team_taken": 0, "restarts": 0}
 
 
 func test_n_in_the_scene_seats_an_empty_model() -> void:

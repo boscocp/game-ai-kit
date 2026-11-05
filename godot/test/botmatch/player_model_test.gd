@@ -1,9 +1,12 @@
-# The bot match reading the person (T100): ADR 0016's three conditions on
-# `PlayerModel`, and what `MatchDifficulty` is allowed to change.
+# The bot match reading the person (T100, T123): ADR 0016's three
+# conditions on `PlayerModel`, and what `MatchDifficulty` is allowed to
+# change.
 #
-#   1. it counts: every field the model keeps is a whole-number count;
+#   1. it counts: every field the model keeps is a whole number -- counts,
+#      and the team they are of;
 #   2. it starts empty with every match, in the table's middle row (that N
-#      in the scene seats a new one is `botmatch_restart_test.gd`'s);
+#      in the scene seats a new one is `botmatch_restart_test.gd`'s), and
+#      again on a seat on the other team;
 #   3. it can be rebuilt from the person's events: the events a match
 #      noted, replayed twice through a fresh model, give the same counts
 #      and the same rows, and those are the rows the match read live --
@@ -29,12 +32,31 @@ func before() -> void:
 static func _played(seed_value: int, own_degrees: float, seconds: float = SECONDS) -> BotMatch:
 	var rules := MatchRules.new()
 	var world := BotMatch.new(seed_value, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
-	world.person = STANDING_IN
 	world.bots[STANDING_IN].own_aim_error = deg_to_rad(own_degrees)
 	world.difficulty = MatchDifficulty.new(world)
+	world.seat_person(STANDING_IN)
+	_play_on(world, seconds)
+	return world
+
+
+static func _play_on(world: BotMatch, seconds: float) -> void:
 	while world.time < seconds - 1e-6 and not world.over():
 		world.step()
-	return world
+
+
+# Every live reading of `world` equals its replay from the events it noted.
+static func _rebuilt_as_read(world: BotMatch) -> bool:
+	var difficulty: MatchDifficulty = world.difficulty
+	var replayed: Array[Dictionary] = PlayerModel.replay(difficulty.table, world.person_events, world.steps_done - 1,
+			difficulty.interval_steps)
+	if replayed.size() != difficulty.readings.size():
+		return false
+	for index: int in range(replayed.size()):
+		var live: Dictionary = difficulty.readings[index].duplicate()
+		live.erase("changed")
+		if replayed[index] != live:
+			return false
+	return true
 
 
 func test_every_field_the_model_keeps_is_a_count() -> void:
@@ -43,15 +65,15 @@ func test_every_field_the_model_keeps_is_a_count() -> void:
 		if property["usage"] & PROPERTY_USAGE_SCRIPT_VARIABLE:
 			fields.append(property["name"])
 			assert_int(property["type"]).override_failure_message("%s is not an int" % property["name"]).is_equal(TYPE_INT)
-	assert_array(fields).contains_exactly(["shots", "hits", "kills", "deaths", "dealt", "taken"])
+	assert_array(fields).contains_exactly(["shots", "hits", "kills", "deaths", "dealt", "taken", "team_dealt",
+			"team_taken", "team", "restarts"])
 
 
 func test_an_empty_model_reads_the_middle_row_the_knobs_own_aim() -> void:
 	var rules := MatchRules.new()
 	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
 	var difficulty := MatchDifficulty.new(world)
-	assert_dict(difficulty.model.counts()).is_equal({"shots": 0, "hits": 0, "kills": 0, "deaths": 0, "dealt": 0,
-			"taken": 0})
+	assert_dict(difficulty.model.counts()).is_equal(_empty_counts(0))
 	assert_float(float(rules.difficulty["rows"][difficulty.row]["aim_error_degrees"])).is_equal(rules.aim_error_degrees)
 
 
@@ -69,6 +91,22 @@ func test_the_match_rebuilds_from_its_events_twice_alike_and_as_it_read_them_liv
 		var live: Dictionary = difficulty.readings[index].duplicate()
 		live.erase("changed")
 		assert_dict(first[index]).is_equal(live)
+
+
+static func _empty_counts(restarts: int) -> Dictionary:
+	return {"shots": 0, "hits": 0, "kills": 0, "deaths": 0, "dealt": 0, "taken": 0, "team_dealt": 0,
+			"team_taken": 0, "restarts": restarts}
+
+
+func test_the_share_is_the_teams_the_persons_bot_and_its_mates() -> void:
+	var world: BotMatch = _played(3, 1.0, 60.0)
+	var model: PlayerModel = world.difficulty.model
+	var mates: int = 0
+	for event: Dictionary in world.person_events:
+		mates += 1 if str(event["kind"]).begins_with("mate_") else 0
+	assert_int(mates).is_greater(0)
+	assert_int(model.team_dealt).is_greater(model.dealt)
+	assert_int(model.team_taken).is_greater(model.taken)
 
 
 func test_the_knob_is_the_other_teams_aim_and_a_row_of_the_table() -> void:
@@ -110,7 +148,7 @@ func test_the_panel_shows_the_counts_the_share_and_the_row() -> void:
 
 func test_a_model_with_another_prior_fails_the_vectors() -> void:
 	var vectors: Dictionary = ModelVectorFiles.read_all(ModelVectorFiles.directory())
-	assert_int(vectors.size()).is_greater_equal(7)
+	assert_int(vectors.size()).is_greater_equal(11)
 	var rules := MatchRules.new()
 	var planted := MatchRules.new()
 	planted.difficulty = rules.difficulty.duplicate(true)
@@ -118,6 +156,16 @@ func test_a_model_with_another_prior_fails_the_vectors() -> void:
 	var failures: int = 0
 	for name: String in vectors:
 		assert_array(ModelConformance.check_vector(name, vectors[name], rules)).is_empty()
+		failures += ModelConformance.check_vector(name, vectors[name], planted).size()
+	assert_int(failures).is_greater(0)
+
+
+func test_a_model_with_no_band_fails_the_vectors() -> void:
+	var vectors: Dictionary = ModelVectorFiles.read_all(ModelVectorFiles.directory())
+	var planted := MatchRules.new()
+	planted.difficulty["band"] = {"from": 0.5, "to": 0.5}
+	var failures: int = 0
+	for name: String in vectors:
 		failures += ModelConformance.check_vector(name, vectors[name], planted).size()
 	assert_int(failures).is_greater(0)
 
@@ -148,10 +196,69 @@ func test_giving_the_bot_back_restores_both_aims_at_once() -> void:
 		assert_float(team.aim_error).is_equal_approx(deg_to_rad(world.rules.aim_error_degrees), 1e-9)
 
 
-func test_changing_sides_moves_the_aim_to_the_new_other_team_at_once() -> void:
+# A change of side (T123): the counts start empty and the row goes back to
+# the middle at once, so neither team keeps the aim the other side earned.
+func test_changing_sides_empties_the_counts_and_puts_the_knob_back_at_once() -> void:
 	var world: BotMatch = _played(4, 0.5, 30.5)
-	var row: Dictionary = world.rules.difficulty["rows"][world.difficulty.row]
+	assert_int(world.difficulty.row).is_not_equal(PlayerModel.start_row(world.rules.difficulty))
 	world.seat_person(BotMatch.BOTS_A_SIDE)
 	world.step()
-	assert_float(world.teams[BotMatch.RED].aim_error).is_equal_approx(deg_to_rad(world.rules.aim_error_degrees), 1e-9)
-	assert_float(world.teams[BotMatch.BLUE].aim_error).is_equal_approx(deg_to_rad(float(row["aim_error_degrees"])), 1e-9)
+	assert_dict(world.difficulty.model.counts()).is_equal(_empty_counts(1))
+	assert_dict(world.difficulty.overlay()["counts"]).is_equal(_empty_counts(1))
+	assert_int(world.difficulty.row).is_equal(PlayerModel.start_row(world.rules.difficulty))
+	for team: MatchTeam in world.teams:
+		assert_float(team.aim_error).is_equal_approx(deg_to_rad(world.rules.aim_error_degrees), 1e-9)
+
+
+# The seat counts the events since the last reading too, so the counts
+# after it are the ones before it or more, never fewer.
+func test_a_seat_on_the_same_team_keeps_the_counts_and_the_knob() -> void:
+	var world: BotMatch = _played(4, 0.5, 30.5)
+	var dealt: int = world.difficulty.model.team_dealt
+	var row: int = world.difficulty.row
+	world.seat_person(STANDING_IN + 1)
+	world.step()
+	assert_int(world.difficulty.model.restarts).is_equal(0)
+	assert_int(world.difficulty.model.team_dealt).is_greater_equal(dealt)
+	assert_int(dealt).is_greater(0)
+	assert_int(world.difficulty.row).is_equal(row)
+
+
+func test_a_match_with_a_change_of_side_rebuilds_from_its_events_as_read_live() -> void:
+	var world: BotMatch = _played(4, 0.5, 30.5)
+	world.seat_person(-1)
+	_play_on(world, 41.0)
+	world.seat_person(BotMatch.BOTS_A_SIDE)
+	world.bots[BotMatch.BOTS_A_SIDE].own_aim_error = deg_to_rad(0.5)
+	_play_on(world, 90.0)
+	assert_int(world.difficulty.model.restarts).is_equal(1)
+	assert_bool(_rebuilt_as_read(world)).is_true()
+
+
+# A seat taken exactly on a reading's step (the review of wave 132): it is
+# stamped with the last step taken, so the reading at the next interval
+# counts it live and replayed alike. Stamped with `steps_done`, live and
+# replay part.
+func test_a_seat_on_a_reading_step_rebuilds_as_read_live() -> void:
+	var world: BotMatch = _played(4, 0.5, 30.0)
+	assert_int(world.steps_done % world.difficulty.interval_steps).is_equal(0)
+	world.seat_person(BotMatch.BOTS_A_SIDE)
+	_play_on(world, 60.0)
+	assert_int(world.difficulty.model.restarts).is_equal(1)
+	assert_bool(_rebuilt_as_read(world)).is_true()
+
+
+# Only the person's own team-mates' damage is noted as a mate's: an
+# opponent's hit or hurt is not the team's share (the review of wave 132).
+func test_mate_events_come_only_from_the_persons_team() -> void:
+	var rules := MatchRules.new()
+	var world := BotMatch.new(1, MatchTeam.new("blue", 0, rules), MatchTeam.new("red", 1, rules), rules)
+	world.seat_person(0)
+	var before: int = world.person_events.size()
+	world.note(BotMatch.BOTS_A_SIDE, "hit", 10)
+	world.note(BotMatch.BOTS_A_SIDE, "hurt", 10)
+	assert_int(world.person_events.size()).is_equal(before)
+	world.note(1, "hit", 10)
+	world.note(1, "shot")
+	assert_int(world.person_events.size()).is_equal(before + 1)
+	assert_str(str(world.person_events[-1]["kind"])).is_equal(PlayerModel.MATE_HIT)

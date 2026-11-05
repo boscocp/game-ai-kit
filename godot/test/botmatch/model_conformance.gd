@@ -37,4 +37,6 @@ static func _reading_differs(found: Dictionary, wanted: Dictionary) -> String:
 			return "%s %.15f, the vector %.15f" % [share, found[share], wanted[share]]
 	if int(found["row"]) != int(wanted["row"]) or float(found["aim_error_degrees"]) != float(wanted["aim_error_degrees"]):
 		return "row %d (%.1f degrees), the vector %d" % [found["row"], found["aim_error_degrees"], wanted["row"]]
+	if bool(found["held"]) != bool(wanted["held"]):
+		return "held %s, the vector %s" % [found["held"], wanted["held"]]
 	return ""

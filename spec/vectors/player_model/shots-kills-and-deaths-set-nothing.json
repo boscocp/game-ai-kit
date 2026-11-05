@@ -212,12 +212,16 @@
     "kills": 5,
     "deaths": 5,
     "dealt": 0,
-    "taken": 0
+    "taken": 0,
+    "team_dealt": 0,
+    "team_taken": 0,
+    "restarts": 0
    },
    "share": 0.5,
    "hit_rate": 0.045454545454545456,
    "row": 2,
-   "aim_error_degrees": 3.0
+   "aim_error_degrees": 3.0,
+   "held": true
   },
   {
    "step": 400,
@@ -227,12 +231,16 @@
     "kills": 5,
     "deaths": 5,
     "dealt": 0,
-    "taken": 0
+    "taken": 0,
+    "team_dealt": 0,
+    "team_taken": 0,
+    "restarts": 0
    },
    "share": 0.5,
    "hit_rate": 0.023809523809523808,
    "row": 2,
-   "aim_error_degrees": 3.0
+   "aim_error_degrees": 3.0,
+   "held": true
   }
  ]
 }

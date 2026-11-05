@@ -149,20 +149,33 @@ func step() -> void:
 ## Seat `bot_id` as the person (-1: nobody), and let the difficulty answer
 ## at once: the aim it set goes back when nobody plays, and moves to the
 ## other team when the person changes sides -- not at the next reading,
-## ten seconds on.
+## ten seconds on. A seat is noted with its team, so the model, live and
+## replayed, starts its counts again on a change of side (T123). It is
+## stamped with the last step taken: it falls between two steps, and the
+## next reading must count it, as a replay of the log does.
 func seat_person(bot_id: int) -> void:
 	person = bot_id
+	if bot_id != -1:
+		var seat: Dictionary = {"step": steps_done - 1, "kind": PlayerModel.SEAT, "points": 0}
+		seat["team"] = bots[bot_id].team
+		person_events.append(seat)
 	if difficulty != null:
 		difficulty.seat(self)
 
 
-## Note an event of `bot_id` for the player model, when it is the person's
-## bot: a "shot", a "hit" with the points it dealt, a "hurt" with the points
-## it took, a "kill", a "death" -- the model's own kinds. Counted here, read
-## by `MatchDifficulty`, kept on disk only by `MatchEventLog`.
+## Note an event of `bot_id` for the player model: of the person's bot, a
+## "shot", a "hit" with the points it dealt, a "hurt" with the points it
+## took, a "kill", a "death" -- the model's own kinds; of another bot on the
+## person's team, its hit or hurt as a "mate_hit" or a "mate_hurt", which
+## the team's share is read from (T123). Counted here, read by
+## `MatchDifficulty`, kept on disk only by `MatchEventLog`.
 func note(bot_id: int, kind: String, points: int = 0) -> void:
-	if bot_id != -1 and bot_id == person:
+	if bot_id == -1 or person == -1:
+		return
+	if bot_id == person:
 		person_events.append({"step": steps_done, "kind": kind, "points": points})
+	elif bots[bot_id].team == bots[person].team and kind in [PlayerModel.HIT, PlayerModel.HURT]:
+		person_events.append({"step": steps_done, "kind": "mate_" + kind, "points": points})
 
 
 # Look, let each team think, and let each bot decide from what it perceives.
