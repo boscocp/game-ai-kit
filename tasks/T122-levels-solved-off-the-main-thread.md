@@ -65,3 +65,51 @@ that appears play as before?
   its prereq.
 - Shares no folder with T88. T96 writes `godot/addons/ai_constraints/`;
   this task does not, so the two can run side by side.
+
+## Done (wave 131), and where it departs from the above
+
+1. **Read, then measured.** `WorkerThreadPool`'s page and the thread-safe
+   APIs page for 4.7: a task must be waited for to be freed, the active
+   scene tree is not thread-safe, containers change size only under a
+   mutex. The solver touches none of that. Written down, with the
+   measurement, in `docs/godot/worker-thread-pool.md`.
+2. **`LevelSolving`** (`godot/game3d/infiltration/level_solving.gd`) runs
+   `LevelConstraints.solve(seed, true)` as one task. The scene polls it
+   each physics frame (`is_task_completed`, then the wait), and waits for
+   a running task in `_exit_tree`. The solver is unchanged.
+3. **While it solves** the old level plays on, and the panel's first line
+   says "solving level N: this one plays until it is ready" (pt-BR in
+   `infiltration.csv`). The view and the counts change when the new
+   world is built.
+4. **One solve at a time.** A task cannot be stopped; a second start is
+   ignored, and when the first ends the scene solves the level then asked
+   for, if it is another one. A finished solve on a hand-made level or in
+   drawn mode is only kept.
+5. **Headless keeps the synchronous call.** `solve_in_background` is off
+   when the display server is `headless`; the first world, built before
+   there is one to play meanwhile, is solved inline too.
+6. **Tests**: `godot/test/infiltration/level_solving_test.gd`, the pool
+   against inline on seeds 3, 54 and 144 -- data, assignment, counts,
+   restarts and the whole trace -- one solve at a time, and the scene
+   keeping the old world until the new one. Planted: the worker solving
+   seed + 1 fails the first test (15 failures) and the measurement (every
+   pool run "never arrived").
+7. **Measured** (`level_solving_measure.gd`, headless): the longest frame
+   from L to the new level, seed 144, 2281 ms inline and 21 ms on the
+   pool; seeds 3-5, 102-196 ms inline and 20-25 ms on the pool. The
+   pool's longest frame is the world's build, which a drawn level costs
+   too (24-37 ms). The table is on `docs/godot/infiltration.md`.
+8. **Departure:** `docs/godot/worker-thread-pool.md` is a new page, as
+   step 1 asks, though the `Files:` line names only the infiltration page.
+9. **The manual check cannot reach seed 144 in the demo.** L gives the
+   generated levels seed 1 plus their index, so seeds 3, 4 and 5 (102-196
+   ms inline), and nothing changes the seed. Seed 144 is reached by the
+   measurement script only. A seed on the demo's command line would be a
+   small follow-up.
+10. **Review** (`docs/reviews/131-levels-solved-off-the-main-thread.md`,
+    changes requested, no blocker, all applied). The panel and the
+    rebuild now follow `_awaited`, the level that will replace the one
+    played, rather than the pool. That way a stale solve says nothing and
+    rebuilds nothing. Three lifecycle tests were added, each catching its
+    planted case. The page says leaving the scene mid-solve waits for the
+    rest of the solve.

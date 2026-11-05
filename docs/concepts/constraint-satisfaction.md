@@ -97,7 +97,8 @@ and every level it returns meets all of them; `LevelAudit` checks that on
 the arena the game builds -- walking and light independently of the
 solver's sketch, sight by the same reading of "in sight" (the
 [infiltration page](../godot/infiltration.md) says which). The price is
-time, a frame stalled while it solves, and a new failure: chronological backtracking can *thrash*, going back
+time -- 120 to 140 ms a level, so the game solves it off the main thread
+while the old level plays on (T122) -- and a new failure: chronological backtracking can *thrash*, going back
 over boxes that were never the trouble while a post stays in sight. AIMA's
 answer is conflict-directed backjumping (6.3.3); the kit's, for now, is to
 start again with the ties broken another way -- 6 fresh starts over 200
