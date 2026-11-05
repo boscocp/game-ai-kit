@@ -164,7 +164,7 @@ Each PR body holds the reasoning.
 
 - todo: T88, T89 (only if T85's manual check asks for art), T96, T112
   (after T88, T96 and T120), T113-T115, T117, T119, T120, T121, T124,
-  T125 and T127;
+  T125, T127, T128 and T129;
 - six older tasks still wip: T25, T40, T44, T45, T46 and T48;
 - T43, blocked.
 

@@ -17,10 +17,12 @@ review (`docs/reviews/130-the-rts-shows-the-enemy-a-clocked-side-believes.md`).
 
 ## Decisions written down first
 
-- **Fall back to the last place the side was told of.** That is the handed
-  position when the side is clocked, and the last seen position otherwise.
-  The ring is drawn there, marked as stale in the same style as T118's
-  hollow rings, so it never claims a current place the side cannot see.
+- **Fall back to the last place the side was told of** (proposed here:
+  PR #75 names only the handed position). That is the handed position
+  when the side is clocked, and the last seen position otherwise. The
+  ring is drawn there, marked as stale (proposed here: in the same style
+  as T118's hollow rings), so it never claims a current place the side
+  cannot see.
 - **Drawing only.** Nothing the squad decides changes; the ring reads, it
   does not feed back (T55's leaks stay closed).
 
@@ -50,4 +52,5 @@ knew it?
 
 ## Notes
 
-- Shares `godot/game/rts/` with no open task.
+- Shares `godot/game/rts/` with no open task. Its test folder is also in
+  T121's Files (`godot/test/`).

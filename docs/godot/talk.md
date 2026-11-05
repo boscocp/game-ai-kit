@@ -123,6 +123,7 @@ root `anyOf` under `strict: true`; another server may not.
 T116 measured two ways of asking for a speech with no markup. Both used
 the same 30 lines, model, build and probe, three rounds a language, on
 2026-11-05.
+
 The raw turns of every run are in
 [`docs/local-llm/markup/`](../local-llm/markup/), one file per
 candidate (`baseline`, `pattern`, `prompt`, `both`), language and round.
