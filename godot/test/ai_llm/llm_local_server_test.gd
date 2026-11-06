@@ -3,6 +3,8 @@
 # `BY_HAND` when there is nothing to start. The server is
 # `fake_llm_server.py`, which answers `/health` as llama.cpp's does and
 # loads no model; each test has a port of its own, away from the real one.
+# Its `--silent` server is also where `HttpRuntime`'s chat request is held
+# to the frame (T133).
 extends GdUnitTestSuite
 
 const FAKE: String = "res://test/ai_llm/fake_llm_server.py"
@@ -222,14 +224,75 @@ func test_a_server_that_never_answers_never_holds_the_frame() -> void:
 	var asker: LlmLocalServer = auto_free(LlmLocalServer.new("", PackedStringArray(), 39953))
 	add_child(asker)
 	asker.begin()
+	var longest: int = await _longest_frame_until(
+		func() -> bool: return asker.state != LlmLocalServer.CHECKING)
+	assert_str(asker.state).is_equal(LlmLocalServer.BY_HAND)
+	assert_int(longest).is_less(200000)
+	silent.free()
+
+
+# The longest frame, in microseconds, until `done` says true or PATIENCE
+# runs out, counted from the call. (It used to count PATIENCE from the last
+# frame, so a run of short frames never ran out of it.)
+func _longest_frame_until(done: Callable) -> int:
 	var longest: int = 0
-	var last: int = Time.get_ticks_usec()
-	while asker.state == LlmLocalServer.CHECKING and Time.get_ticks_usec() - last < PATIENCE * 1000000.0:
+	var started: int = Time.get_ticks_usec()
+	var last: int = started
+	while not done.call() and Time.get_ticks_usec() - started < PATIENCE * 1000000.0:
 		await get_tree().process_frame
 		longest = maxi(longest, Time.get_ticks_usec() - last)
 		last = Time.get_ticks_usec()
-	assert_str(asker.state).is_equal(LlmLocalServer.BY_HAND)
+	return longest
+
+
+# Frames pass until something accepts connections on `port`, or PATIENCE
+# runs out: a short chat request, sent again while it finds nothing there,
+# until one times out instead -- a silent server listening. Not a socket of
+# the test's own: the gate (V1) keeps network classes inside the addon.
+# Those timeouts are held to the frame too: the longest one is returned.
+func _until_listening(port: int) -> int:
+	var probe: HttpRuntime = HttpRuntime.new("http://127.0.0.1:%d/" % port)
+	probe.timeout_seconds = 0.2
+	add_child(probe)
+	var heard: Array[String] = [""]
+	probe.failed.connect(func(why: String) -> void: heard[0] = why)
+	var messages: Array[Dictionary] = [{"role": "user", "content": "Anyone there?"}]
+	var longest: int = 0
+	var started: int = Time.get_ticks_msec()
+	while not heard[0].begins_with("the server did not answer") \
+			and Time.get_ticks_msec() - started < PATIENCE * 1000.0:
+		heard[0] = ""
+		probe.send(messages, {})
+		longest = maxi(longest, await _longest_frame_until(func() -> bool: return not probe.is_busy()))
+	probe.free()
+	return longest
+
+
+# T133, invariant 7: the chat request, against the same silent socket. With
+# threads on, the timeout's cancel joined a thread blocked reading it, and
+# so did leaving the tree: each held the frame until the socket closed.
+func test_a_chat_request_to_a_server_that_never_answers_never_holds_the_frame() -> void:
+	var silent: LlmLocalServer = _server(39960, "0", ["--silent"])
+	silent.begin()
+	assert_int(await _until_listening(39960)).is_less(200000)
+	var runtime: HttpRuntime = HttpRuntime.new("http://127.0.0.1:39960/v1/chat/completions")
+	runtime.timeout_seconds = 1.0
+	add_child(runtime)
+	var failures: Array[String] = []
+	runtime.failed.connect(func(why: String) -> void: failures.append(why))
+	var messages: Array[Dictionary] = [{"role": "user", "content": "Hello?"}]
+	var started: int = Time.get_ticks_usec()
+	assert_int(runtime.send(messages, {})).is_equal(OK)
+	var longest: int = await _longest_frame_until(func() -> bool: return not failures.is_empty())
 	assert_int(longest).is_less(200000)
+	assert_array(failures).has_size(1)
+	assert_str(failures[0]).contains("did not answer in 1 s")
+	assert_int(Time.get_ticks_usec() - started).is_greater(900000)
+	assert_int(runtime.send(messages, {})).is_equal(OK)
+	await get_tree().create_timer(0.3).timeout
+	var leaving: int = Time.get_ticks_usec()
+	runtime.free()
+	assert_int(Time.get_ticks_usec() - leaving).is_less(200000)
 	silent.free()
 
 

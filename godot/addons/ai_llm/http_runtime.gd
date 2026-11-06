@@ -15,12 +15,17 @@
 ## comes back every turn until the request is fixed, so it is kept apart.
 ##
 ## Never on the frame (invariant 7). The request goes through an
-## `HTTPRequest` with `use_threads` on and a fixed `timeout`, one in flight
+## `HTTPRequest` with `use_threads` off and a fixed `timeout`, one in flight
 ## at a time; `send` returns at once and the text arrives by `replied`.
-## Measured on 4.7.2 with threads off as well: no frame stalled either way
-## on this machine (docs/godot/llm-requests.md) -- threads stay on because
-## the documentation does not promise that, and the gate holds every
-## `HTTPRequest` here to it (check_llm_validated.py, V3).
+## Threads off, the engine reads the socket a little each frame and never
+## waits on it. Threads on, it reads in blocking mode on its own thread, and
+## both the timeout and leaving the tree join that thread on the frame:
+## against a server that accepts and never answers, one frame lasted until
+## the socket closed, 38 to 59 s at 4.7.2 (T133, docs/godot/llm-requests.md).
+## The gate holds every `HTTPRequest` here to threads off
+## (check_llm_validated.py, V3). One cost: threads off, the request moves
+## only while its node processes, so a paused tree pauses the request and
+## its timeout with it (the node inherits the process mode).
 ##
 ## When not to use it: in a test, or wherever no server is running -- that is
 ## `RecordedRuntime`'s job, and it needs nothing installed.
@@ -68,7 +73,7 @@ func _init(endpoint: String = "") -> void:
 
 func _ready() -> void:
 	_request = HTTPRequest.new()
-	_request.use_threads = true
+	_request.use_threads = false
 	_request.body_size_limit = BODY_SIZE_LIMIT
 	add_child(_request)
 	_request.request_completed.connect(_on_request_completed)
@@ -166,6 +171,9 @@ static func _error_of(body: String) -> String:
 func _on_request_completed(result: int, response_code: int,
 		_headers: PackedStringArray, body: PackedByteArray) -> void:
 	_in_flight = false
+	if result == HTTPRequest.RESULT_TIMEOUT:
+		failed.emit("the server did not answer in %d s" % ceili(_request.timeout))
+		return
 	if result != HTTPRequest.RESULT_SUCCESS:
 		failed.emit("the request did not complete (HTTPRequest result %d)" % result)
 		return
