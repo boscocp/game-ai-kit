@@ -58,7 +58,7 @@ All fourteen applied on this branch:
    `<repo>/archive/<commit>.zip`, and a Custom provider can name any zip;
    moot because 4.7.2 erases the setting (cited). The PR body is corrected.
 2. Six of fifteen, named; the other nine stand alone; the one-asset
-   recommendation is kept as the owner's call, the claim narrowed to the six.
+   reason is now one entry to maintain plus the six.
 3. `addon-anatomy.md` gains a "Read again on 2026-11-06" note pointing at
    the guide and T149; `verified_on` bumped, two sources added.
 4. README names the Asset Store and PyPI and links the guide; README.pt-BR
@@ -66,7 +66,7 @@ All fourteen applied on this branch:
 5. ADR 0009 now says "one of its sentences, and the README each zip
    carries", naming `release.py` and `using-the-library.md`.
 6. T149 opened (`tasks/T149-addon-zips-laid-out-for-the-store.md`, one
-   STATUS row), its decisions proposals, and linked from the guide, the ADR
+   STATUS row) and linked from the guide, the ADR
    and `addon-anatomy.md`.
 7. All 18 copies named, L26, L10 and L4 explained.
 8. `pip install --no-cache-dir twine==7.0.0` into `$TOOLCHAIN/publish-venv`,
@@ -74,3 +74,10 @@ All fourteen applied on this branch:
 9-14. Applied as asked; PyPI's 2FA, verified email and file-name reuse are
    now cited facts, the sdist is the guide's own decision citing
    `release.py`.
+
+While the findings were applied, the owner decided the PR's five items
+(2026-11-06, "pode seguir o recomendado nas 5 decisões"), all as
+recommended. The guide, ADR 0009 and T149 now state them as decided: the
+`addons/ai_<name>/` layout, one kit asset, and the copyright line in all
+18 LICENSE copies are T149's, before any store submission; the AI usage
+disclosure is the owner's at submission; PyPI by hand with a token.

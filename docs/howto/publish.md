@@ -82,7 +82,7 @@ project's own files, and two addons installed this way collide on
 `res://LICENSE`, `NOTICE`, `README.md` and `VERSION`. A zip whose top folder
 is `addons/` installs as `res://addons/ai_search/...` with no change. This
 is the one rule found that does not fit what `make release` builds; see
-[what does not fit yet](#what-does-not-fit-yet).
+[what was decided](#what-did-not-fit-and-what-was-decided).
 
 ### PyPI
 
@@ -104,7 +104,8 @@ project-scoped one after; that `twine check` renders the README as PyPI
 will.
 
 Trusted publishing is a workflow that publishes, which ADR 0009 rules out.
-The guide uses a token, typed by hand, kept out of the repository.
+Decided by the owner on 2026-11-06: PyPI by hand, with a token typed by
+hand and kept out of the repository; trusted publishing stays off.
 
 ## Before either store
 
@@ -169,51 +170,52 @@ route.
 1. Sign in at `https://store.godotengine.org` and choose **Upload Asset**;
    create the publisher.
 2. Per asset: the name and summary in English; type **Addon**; license
-   Apache 2.0; source link, the repository; the AI usage disclosure,
-   answered by the owner; tags; a thumbnail and screenshots (the repository
+   Apache 2.0; source link, the repository; tags; a thumbnail and screenshots (the repository
    has no icon yet -- one is the owner's to make or pick).
 3. **Versions:** upload the zip, name the version `$(cat VERSION)`, minimum
    Godot `4.7`, the changelog.
-4. Before submitting, install the uploaded version into a blank project
+4. **The AI usage disclosure** is the owner's to answer at submission.
+   Recommended: answer it truthfully, as the form requires.
+5. Before submitting, install the uploaded version into a blank project
    from the editor's store tab, on 4.7.2, and look where the files land.
-5. Submit. It enters the review queue.
+6. Submit. It enters the review queue.
 
-Until the layout below changes, step 4 shows the files at `res://`; do not
+Until T149 changes the layout, step 5 shows the files at `res://`; do not
 submit before it is fixed, or tell the person in the description to untick
 *Ignore Asset Root* and set the folder to `res://addons/`.
 
-## What does not fit yet
+## What did not fit, and what was decided
 
-1. **The zip's top folder.** The store's installer skips a single top
-   folder unless it is `addons/`, so the addon zips should be laid out
-   `addons/ai_<name>/...`. That changes `scripts/release.py`, the
-   archive rules in `scripts/check_license.py` (which look for LICENSE and
-   NOTICE at the root or in the one top folder), `make library-check`, the
-   README each zip carries and their planted cases: larger than this wave,
-   so a task of its own before publishing,
-   [T149](../../tasks/T149-addon-zips-laid-out-for-the-store.md).
-2. **LICENSE carries no copyright line.** The store asks for one in the
-   LICENSE file; this repository keeps `Copyright 2026 Adalberto Pereira` in
-   NOTICE, as Apache-2.0 does, and LICENSE is the licence's own text, ending
-   in its `Copyright [yyyy] [name of copyright owner]` template. There are
-   18 copies, byte-identical today: the root's, `python/LICENSE`, and one in
-   each of the 16 `godot/addons/ai_*/` folders. `check_license.py`'s rule
-   L26 holds `python/LICENSE` to the root's bytes, and every zip ships the
-   root's (rule L10); the addon copies are only required to exist (L4).
-   Filling the line in means changing all 18 together. It is the owner's: it
-   edits a licence file.
-3. **One asset, or one per addon.** Six of the fifteen techniques need
-   `ai_core` (`ai_adversarial`, `ai_bandit`, `ai_constraints`,
-   `ai_perception`, `ai_rts_core`, `ai_search`, by their manifests'
-   `depends_on`); the other nine stand alone. Nothing documented lets one
-   store asset declare another. One asset for the kit --
-   `addons/ai_core/` and every technique, one review, one version --
-   installs complete, and the installer's checkboxes let a person leave out
-   the techniques they do not want. Sixteen assets (fifteen techniques and
-   `ai_core`) give each technique its own page and search hit, and sixteen
-   reviews; a person who installs one of the six without `ai_core` gets a
-   script that does not parse, and a README that said so. Recommended: one
-   asset for the kit, built as one more zip by T149. The owner decides.
+The owner decided all four on 2026-11-06 ("pode seguir o recomendado nas 5
+decisões"); the first three are
+[T149](../../tasks/T149-addon-zips-laid-out-for-the-store.md)'s, before
+anything is submitted to the store.
+
+1. **The zip's top folder: `addons/ai_<name>/`.** The store's installer
+   skips a single top folder unless it is `addons/`. The change touches
+   `scripts/release.py`, the archive rules in `scripts/check_license.py`
+   (which look for LICENSE and NOTICE at the root or in the one top
+   folder), `make library-check`, the README each zip carries and their
+   planted cases: larger than this wave, so it is T149's.
+2. **One store asset for the whole kit.** One zip holding `addons/ai_core/`
+   and every technique; the person unticks, in the installer, what they do
+   not want. The reasons: one entry, one page and one version to maintain
+   instead of sixteen; and six of the fifteen techniques need `ai_core`
+   (`ai_adversarial`, `ai_bandit`, `ai_constraints`, `ai_perception`,
+   `ai_rts_core`, `ai_search`, by their manifests' `depends_on`), while
+   nothing documented lets one store asset declare another. The other nine
+   stand alone. The kit zip is built by T149; the per-addon zips stay, for a
+   person unzipping one by hand.
+3. **A copyright line in LICENSE.** The store asks for one in the LICENSE
+   file; this repository kept `Copyright 2026 Adalberto Pereira` only in
+   NOTICE, and LICENSE ends in the licence's template line
+   `Copyright [yyyy] [name of copyright owner]`. That line becomes
+   `Copyright 2026 Adalberto Pereira` in all 18 copies, byte-identical
+   today: the root's, `python/LICENSE`, and one in each of the 16
+   `godot/addons/ai_*/` folders. `check_license.py`'s rule L26 holds
+   `python/LICENSE` to the root's bytes and every zip ships the root's (rule
+   L10), so the 18 change together, in T149.
+4. **PyPI by hand, with a token; trusted publishing off** (above).
 
 ## Manual check
 

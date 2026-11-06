@@ -113,3 +113,12 @@ README each zip carries, were wrong about the Godot side.
   [T149](../../tasks/T149-addon-zips-laid-out-for-the-store.md).
 - **PyPI's trusted publishing** is a workflow that publishes, so it is not
   used; the owner uploads with a token, by hand.
+
+**Decided by the owner, 2026-11-06** ("pode seguir o recomendado nas 5
+decisões"), all as recommended: the zips are laid out `addons/ai_<name>/`;
+the store gets one asset for the whole kit, one more zip, since one entry is
+one page to maintain and six of the fifteen techniques need `ai_core`; the
+Apache-2.0 appendix line in all 18 LICENSE copies reads `Copyright 2026
+Adalberto Pereira`; all three are T149's, before any store submission. The
+store's AI usage disclosure is the owner's to answer at submission. PyPI is
+uploaded by hand with a token, and trusted publishing stays off.
