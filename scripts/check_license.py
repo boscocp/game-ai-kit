@@ -306,17 +306,24 @@ def addon_places(paths: list[pathlib.PurePosixPath],
     """
     if not any(path.parts[0] == ADDONS for path in paths):
         return {"at its root or in its top folder": attributed_files(paths, counted)}, []
+    # A folder is a name under `addons/` with something inside it; a bare
+    # `addons/<x>` entry is a folder only when it is one of those.
     folders = sorted({path.parts[1] for path in paths
                       if path.parts[0] == ADDONS and len(path.parts) > 2})
-    places = {f"in {ADDONS}/{folder}/": {path.name: data for path, data in counted.items()
-                                         if path.parts[:2] == (ADDONS, folder) and len(path.parts) == 3}
-              for folder in folders}
+    places = {f"in {ADDONS}/{folder}/": {} for folder in folders}
+    for path, data in counted.items():
+        if len(path.parts) == 3 and path.parts[0] == ADDONS:
+            places[f"in {ADDONS}/{path.parts[1]}/"][path.name] = data
     # `addons/` holding nothing is not an archive with nothing to attribute:
     # it is an addon zip that lost its addon.
     places = places or {f"in {ADDONS}/<name>/": {}}
-    escaped = [path for path in paths if path.is_absolute() or ".." in path.parts]
-    outside = [path for path in paths if path not in escaped
-               and (path.parts[0] != ADDONS or (len(path.parts) == 2 and path.parts[1] not in folders))]
+
+    def inside(path: pathlib.PurePosixPath) -> bool:
+        return path.parts[0] == ADDONS and (len(path.parts) != 2 or path.parts[1] in folders)
+
+    # `../x` and `/x` are already refused as escaping (L11, above).
+    outside = [path for path in paths if not inside(path)
+               and not (path.is_absolute() or ".." in path.parts)]
     return places, outside
 
 
