@@ -7,7 +7,7 @@ tier: 2
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
 invalidated_if: the kit's SteeringVehicle, SteeringBehaviour or Steering.combined signatures change, or the demos that use them are renamed
 teaches: steering
-translation_of: 39e582521bc37038bc0072edaa9bd790c1efccd7c80073d4cd975f4b77a07de3
+translation_of: d2bfde047a66d793571d571ec0f5af4ada5bc0534bebe9647736726fe8863c0f
 -->
 
 > English: [ai_steering.md](ai_steering.md). Os termos que ficam em inglês
@@ -42,7 +42,7 @@ navegação.
 - `make demo-racing` -- o piloto faz *seek* num ponto à frente na linha de
   corrida; **1-3** escolhem a IA, **Tab** assiste às três. `make demo-racing3d`
   esterça com o controlador PID (**1**) e a *heat line* (**2**).
-- Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
+- Qual demo usa qual técnica, nos dois sentidos: [o catálogo](catalogue.pt-BR.md#ai_steering).
 
 ## Neste kit {#in-this-kit}
 

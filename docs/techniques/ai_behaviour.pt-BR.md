@@ -7,7 +7,7 @@ tier: 2
 source: book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 5 on decision making ; book:Steve Rabin (ed.), "Game AI Pro", CRC Press, 2013 -- ch. 12 (Humphreys, HTN planners)
 invalidated_if: the kit's StateMachine, BehaviourTree, GoapPlanner or HtnPlanner signatures change, or the demos that use them are renamed
 teaches: ways-to-decide
-translation_of: 0f5c295f39a1459dad8ddfba85363776f0926050600782b68148d4ee5c83de51
+translation_of: 8a593e46d3109ae29da1734df150b90016e166569b4eb63b1972f36f6c3e4bdd
 -->
 
 > English: [ai_behaviour.md](ai_behaviour.md). Os termos que ficam em inglês
@@ -43,7 +43,7 @@ traz a tabela inteira, medida num mesmo guarda.
 - `make demo-tactical` -- **C** troca o jogador do computador, entre eles a
   máquina de estados, a árvore, GOAP e o HTN no mesmo tabuleiro.
 - `make demo-rts` -- cada esquadrão é uma máquina de estados.
-- Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
+- Qual demo usa qual técnica, nos dois sentidos: [o catálogo](catalogue.pt-BR.md#ai_behaviour).
 
 ## Neste kit {#in-this-kit}
 

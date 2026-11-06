@@ -39,7 +39,7 @@ mesh is the answer there.
 - `make demo-racing` -- the driver seeks a point ahead on the racing line;
   **1-3** pick the AI, **Tab** watches the three. `make demo-racing3d` steers
   with the PID controller (**1**) and the heat line (**2**).
-- Which demo uses which technique, both ways: the catalogue (T76, coming).
+- Which demo uses which technique, both ways: [the catalogue](catalogue.md#ai_steering).
 
 ## In this kit {#in-this-kit}
 

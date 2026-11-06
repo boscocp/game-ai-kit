@@ -42,7 +42,7 @@ invariant 6 forbids.
   hand-written weights and the learned ones; the panel shows, for the
   position at the end of the line it expects, what each count adds to the
   score under both. **1-6** set the depth, **space** plays its move.
-- Which demo uses which technique, both ways: the catalogue (T76, coming).
+- Which demo uses which technique, both ways: [the catalogue](catalogue.md#learned_evaluation).
 
 ## In this kit {#in-this-kit}
 

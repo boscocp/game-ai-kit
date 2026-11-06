@@ -27,7 +27,7 @@ than none.
 | 10 nothing from the employer | `check_no_employer_refs.py` |
 | 11 no tooling byline | `check_commit_msg.py`, `check_pr_message.py` |
 | 12 branch per wave, review first | `.githooks/pre-commit`, `check_branch_base.py`; the merge is a pull request's, after CI (wave 63) |
-| 13 every example can be watched | **none yet** -- `check_demos.py`, named in T21 |
+| 13 every example can be watched | half held -- `check_demos.py` (`lint-demos`) and `demo_overlays.gd`: the example, its scene, its legend and its decision; the seeing is a person's |
 
 1. **The code is teaching material before it is a library.** When this conflicts
    with any other rule below, this one wins. See "Readable by a person".

@@ -41,7 +41,7 @@ nobody can predict the system; a decision tree says the same more plainly.
   sprint past one, and watch the bar fill by degrees.
 - `make demo-infiltration` -- how fast a guard's awareness rises is a fuzzy
   controller read from data. **Tab** follows a guard.
-- Which demo uses which technique, both ways: the catalogue (T76, coming).
+- Which demo uses which technique, both ways: [the catalogue](catalogue.md#ai_fuzzy).
 
 ## In this kit {#in-this-kit}
 

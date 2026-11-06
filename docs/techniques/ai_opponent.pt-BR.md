@@ -7,7 +7,7 @@ tier: 2
 source: book:Ian Millington and John Funge, "Artificial Intelligence for Games", 2nd edition, Morgan Kaufmann, 2009 -- chapter 7, Learning
 invalidated_if: the kit's NGramPredictor signature changes, ADR 0016 is withdrawn, or the demos that use it are renamed
 teaches: fighting-game-ai
-translation_of: 697523ae9bf72fd7c2849ef1928a434c6eaa828aca3fa5cc92b03bf9baf898c9
+translation_of: 59331d1b17395ea5da23c47a6a1d59c9a1ef8021b227d38a5d38dfdbb25764a5
 -->
 
 > English: [ai_opponent.md](ai_opponent.md). Os termos que ficam em inglês
@@ -43,7 +43,7 @@ começa vazio a cada luta e nunca é salvo.
   que ele espera que você faça agora, depois de qual contexto, quantos dos
   últimos palpites acertou e as linhas que já contou. Repita um hábito e
   veja a confiança subir.
-- Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
+- Qual demo usa qual técnica, nos dois sentidos: [o catálogo](catalogue.pt-BR.md#ai_opponent).
 
 ## Neste kit {#in-this-kit}
 

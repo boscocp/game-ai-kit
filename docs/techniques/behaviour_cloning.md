@@ -43,7 +43,7 @@ than the player did.
   steps a frame.
 - `make record-fights` -- play the training mode and keep every fight,
   for the next clone to learn from.
-- Which demo uses which technique, both ways: the catalogue (T76, coming).
+- Which demo uses which technique, both ways: [the catalogue](catalogue.md#behaviour_cloning).
 
 ## In this kit {#in-this-kit}
 

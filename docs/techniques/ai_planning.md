@@ -44,7 +44,7 @@ its first step and plan again.
 - `make demo-tactical` -- **C** until the computer is "planner": a STRIPS
   plan towards taking red's workshop decides what blue buys, and a walker
   the plan counts on says which step it is carrying out.
-- Which demo uses which technique, both ways: the catalogue (T76, coming).
+- Which demo uses which technique, both ways: [the catalogue](catalogue.md#ai_planning).
 
 ## In this kit {#in-this-kit}
 

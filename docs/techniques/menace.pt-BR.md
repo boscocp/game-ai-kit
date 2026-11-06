@@ -7,7 +7,7 @@ tier: 2
 source: book:Donald Michie, "Experiments on the mechanization of game-learning, part I", The Computer Journal 6(3), 1963
 invalidated_if: MenacePlayer, the bead file's shape or gameaikit.menace's report change, or demo-tictactoe is renamed
 teaches: reinforcement-learning
-translation_of: 92e11b470447809e6f1cb52eacf5e4d5363c092f9c0bf0b7a770e241e9bdd7e3
+translation_of: 804c84d7cc4f7779dc6978df2444ba6cd00bff64927c52c272954c3b1237b5f6
 -->
 
 > English: [menace.md](menace.md). Os termos que ficam em inglês estão no
@@ -44,7 +44,7 @@ que recebeu (invariante 6).
   dele -- depois de 10, 100, 1.000 ou 10.000 partidas -- e **M** mostra o
   que o jogo perfeito (*minimax*) acha de cada casa, para você ver onde o
   MENACE concorda com ele.
-- Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
+- Qual demo usa qual técnica, nos dois sentidos: [o catálogo](catalogue.pt-BR.md#menace).
 
 ## Neste kit {#in-this-kit}
 

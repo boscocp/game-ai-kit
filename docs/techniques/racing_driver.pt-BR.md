@@ -7,7 +7,7 @@ tier: 2
 source: https://www.gameaipro.com/ ; https://www.ri.cmu.edu/pub_files/pub3/coulter_r_craig_1992_1/coulter_r_craig_1992_1.pdf
 invalidated_if: RacingDriver, RacingLevel or RacingTrack change what they decide, or demo-racing is renamed
 teaches: racing-ai
-translation_of: aa5fc42a475b3b42e57cc289396ae7d06393eee596b377fbc0b0e64fe0c9ddd2
+translation_of: 118c37ee511752576c4b3fb7f623257fc153a5a439101e07779ff0f0b4118062
 -->
 
 > English: [racing_driver.md](racing_driver.md). Os termos que ficam em
@@ -45,7 +45,7 @@ a partir da linha uma vez só.
   o nível dela, **Tab** assiste às três IAs; a sobreposição desenha o ponto
   para onde cada piloto mira e o ponto de frenagem para o qual ele já
   precisa estar desacelerando.
-- Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
+- Qual demo usa qual técnica, nos dois sentidos: [o catálogo](catalogue.pt-BR.md#racing_driver).
 
 ## Neste kit {#in-this-kit}
 

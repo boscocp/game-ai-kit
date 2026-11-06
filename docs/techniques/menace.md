@@ -40,7 +40,7 @@ the game plays by the beads it was given (invariant 6).
   **click** a square to answer. **1-4** choose its age -- after 10, 100,
   1,000 or 10,000 games -- and **M** shows what perfect play (minimax)
   makes of each square, so you see where MENACE agrees with it.
-- Which demo uses which technique, both ways: the catalogue (T76, coming).
+- Which demo uses which technique, both ways: [the catalogue](catalogue.md#menace).
 
 ## In this kit {#in-this-kit}
 

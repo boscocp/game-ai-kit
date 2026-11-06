@@ -44,7 +44,7 @@ move and take it back -- the examples' board does that (ADR 0019).
   **drag** selects, **right click** orders. **V** watches two computers
   play, **I** shows the influence the commander reads, **F** toggles the
   fog that `RtsWorld.visible_to` computes.
-- Which demo uses which technique, both ways: the catalogue (T76, coming).
+- Which demo uses which technique, both ways: [the catalogue](catalogue.md#ai_rts_core).
 
 ## In this kit {#in-this-kit}
 

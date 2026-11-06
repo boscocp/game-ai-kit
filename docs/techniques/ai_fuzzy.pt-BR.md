@@ -7,7 +7,7 @@ tier: 2
 source: book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 5, fuzzy logic ; book:IEC 61131-7, "Programmable controllers -- Part 7: Fuzzy control programming", 2000
 invalidated_if: the kit's FuzzySet, FuzzyVariable, FuzzyRule or FuzzyRuleBase signatures change, or the demos that use them are renamed
 teaches: stealth-ai
-translation_of: 697355cdc84136ba4be99bdbe5094095c40d1e7254cbaac3261e85d72309adbc
+translation_of: a0ce2fa5d282e4103627bca4a9eee6972164dccc09b17fc70cc5e370a7e51f8c
 -->
 
 > English: [ai_fuzzy.md](ai_fuzzy.md). Os termos que ficam em inglês estão
@@ -44,7 +44,7 @@ mexe um pouco em todas as saídas, e ninguém consegue prever o sistema; uma
   passe por um correndo com **shift**, e veja a barra encher aos poucos.
 - `make demo-infiltration` -- a velocidade com que a atenção de um guarda
   sobe é um controlador *fuzzy* lido de dados. **Tab** acompanha um guarda.
-- Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
+- Qual demo usa qual técnica, nos dois sentidos: [o catálogo](catalogue.pt-BR.md#ai_fuzzy).
 
 ## Neste kit {#in-this-kit}
 

@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 5, figures 5.3, 5.7 and 5.11, section 5.5
 invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch, ExpectiminimaxSearch, AdversarialResult, MonteCarloSearch, MctsResult or GakXorshift signatures change, or the demos that use them are renamed
 teaches: adversarial-search
-translation_of: fa87a4a4144d8f77d70abddeedead69e1b88c45b033849264623b08888222bbe
+translation_of: 3a369731d79eff7dfe8b2a4e24f2b9d411f8d7b78976c702cc5ae181940f2aff
 -->
 
 > English: [ai_adversarial.md](ai_adversarial.md). Os termos que ficam em
@@ -84,7 +84,7 @@ encurta.
 - `make measure-squad-duel` -- as duas buscas nas mesmas 30 posições a 50,
   200 e 1.000 ms, depois em partidas com semente; a tabela que ele
   imprimiu está em `docs/godot/squad.md`.
-- Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
+- Qual demo usa qual técnica, nos dois sentidos: [o catálogo](catalogue.pt-BR.md#ai_adversarial).
 
 ## Neste kit {#in-this-kit}
 
