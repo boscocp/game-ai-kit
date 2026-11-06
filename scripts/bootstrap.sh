@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install the pinned Godot editor on the large disk, verified by SHA-512.
+# Install the pinned Godot editor into the toolchain directory, verified by SHA-512.
 #
 # Idempotent: a second run with the toolchain already in place does nothing but
 # re-verify. The version comes from .godot-version, never from a flag, so the

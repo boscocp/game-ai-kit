@@ -56,4 +56,8 @@ godot/game3d/downloaded/
 # This checkout's own Godot user:// (T83, docs/adr/0022): scripts/godot points
 # XDG_DATA_HOME (APPDATA on Windows) here. Logs and test leftovers only.
 /.user-data/
+
+# The toolchain when GAK_TOOLCHAIN is not set (T143, docs/adr/0002): Godot,
+# its export templates, and what llm-bootstrap and artgen-bootstrap fetch.
+/.toolchain/
 python/*.egg-info/

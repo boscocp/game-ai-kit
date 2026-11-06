@@ -61,7 +61,8 @@ import sys
 import tempfile
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
-TOOLCHAIN = pathlib.Path(os.environ.get("GAK_TOOLCHAIN", "/mnt/games/gamedev/toolchain"))
+#: GAK_TOOLCHAIN, or this checkout's own `.toolchain/` (T143, docs/adr/0002).
+TOOLCHAIN = pathlib.Path(os.environ.get("GAK_TOOLCHAIN") or REPO / ".toolchain")
 PRESET = "Linux x86_64"
 OUTPUT = REPO / "dist" / "game-ai-kit-linux"
 BINARY = "game-ai-kit.x86_64"

@@ -6,20 +6,50 @@
 # Windows: GNU make for Windows, run from Git Bash (docs/howto/windows.md).
 # That make cannot see /bin/bash -- it is a Git Bash path, not a Windows one
 # -- so the shell is named and found on PATH, where Git Bash puts its own
-# ahead of System32's WSL launcher. The large disk is D:, and `python3` is
-# the Microsoft Store's placeholder, which exits 9009 and installs nothing.
+# ahead of System32's WSL launcher. `python3` is the Microsoft Store's
+# placeholder there, which exits 9009 and installs nothing.
 # PYTHONUTF8 makes Python read, write and print UTF-8 as it does on Linux;
-# without it a gate's output dies on the console's cp1252. The defaults are
-# `?=` on both systems, so the environment can move either.
+# without it a gate's output dies on the console's cp1252. PYTHON is `?=` on
+# both systems, so the environment can move it.
 ifeq ($(OS),Windows_NT)
 SHELL := bash.exe
-TOOLCHAIN ?= D:/games/gamedev/toolchain
 PYTHON ?= python
 export PYTHONUTF8 := 1
 else
 SHELL := /bin/bash
-TOOLCHAIN ?= /mnt/games/gamedev/toolchain
 PYTHON ?= python3
+endif
+
+# Where the toolchain lives (T143, docs/adr/0002). One name, GAK_TOOLCHAIN:
+# the one scripts/godot, scripts/llm, scripts/artgen and the gates read.
+# `make X TOOLCHAIN=/path` is the same knob, copied into GAK_TOOLCHAIN and
+# exported, so `make bootstrap TOOLCHAIN=/x` installs where the next
+# `make menu` looks. Until T143 TOOLCHAIN reached only bootstrap, and every
+# other recipe looked at the author's own disk.
+#
+# GNU make exports to a recipe's environment a variable that came from the
+# environment or the command line, and one named by `export` (the manual,
+# "Communicating Variables to a Sub-make"). TOOLCHAIN is taken from the
+# command line only: in the environment it is a common name other builds set.
+#
+# The default is inside this checkout, `.toolchain/`, ignored by git as
+# `.user-data/` is (docs/adr/0022): a folder anyone's clone can create. Keep
+# it on another disk by setting GAK_TOOLCHAIN once in the environment.
+ifeq ($(origin TOOLCHAIN),command line)
+GAK_TOOLCHAIN := $(TOOLCHAIN)
+endif
+ifeq ($(strip $(GAK_TOOLCHAIN)),)
+GAK_TOOLCHAIN := $(CURDIR)/.toolchain
+endif
+TOOLCHAIN := $(GAK_TOOLCHAIN)
+export GAK_TOOLCHAIN
+ifneq ($(TOOLCHAIN),$(GAK_TOOLCHAIN))
+$(error TOOLCHAIN=$(TOOLCHAIN) and GAK_TOOLCHAIN=$(GAK_TOOLCHAIN) name two places; give one)
+endif
+# A relative path names another folder from each script's own working
+# directory. Absolute is a leading / (Linux, Git Bash) or a drive's X:/.
+ifeq ($(filter /%,$(GAK_TOOLCHAIN))$(findstring :/,$(GAK_TOOLCHAIN)),)
+$(error GAK_TOOLCHAIN=$(GAK_TOOLCHAIN) is not an absolute path)
 endif
 
 GODOT_VERSION := $(shell tr -d '[:space:]' < .godot-version)
@@ -39,12 +69,12 @@ help: ## Show this list
 # --- bootstrap -------------------------------------------------------------
 
 .PHONY: bootstrap
-bootstrap: ## Install the pinned Godot on the large disk (SHA-verified)
-	@bash scripts/bootstrap.sh "$(TOOLCHAIN)" "$(GODOT_VERSION)"
-	@# The toolchain just installed, not the default path: CI installs under
-	@# its temp directory, and the first CI run failed here looking at the
-	@# author's /mnt/games instead.
-	@GAK_TOOLCHAIN="$(TOOLCHAIN)" $(MAKE) --no-print-directory lint-disk-layout
+bootstrap: ## Install the pinned Godot into GAK_TOOLCHAIN, .toolchain/ by default (SHA-verified)
+	@# What of Godot's and the model caches' the home holds before this
+	@# repository writes anything there: lint-disk-layout's D1 forgives it.
+	@$(PYTHON) scripts/check_disk_layout.py --record-home
+	@bash scripts/bootstrap.sh "$(GAK_TOOLCHAIN)" "$(GODOT_VERSION)"
+	@$(MAKE) --no-print-directory lint-disk-layout
 
 # --- the wave ---------------------------------------------------------------
 #
@@ -150,7 +180,7 @@ lint-status: ## The index and the task files agree
 	@$(PYTHON) scripts/check_status.py
 
 .PHONY: lint-disk-layout
-lint-disk-layout: ## Nothing of the toolchain may land on the small disk
+lint-disk-layout: ## Invariant 8: nothing this repository writes lands in the home
 	@$(PYTHON) scripts/check_disk_layout.py
 
 .PHONY: lint-renderer
@@ -1080,7 +1110,7 @@ rts-art: ## Download the RTS's Bos Wars sheets into build/rts-art/ (gitignored),
 # loses nothing. See docs/howto/generate-art.md.
 
 .PHONY: artgen-bootstrap
-artgen-bootstrap: ## Create the art generator's environment and fetch its default model (about 40 GB, large disk)
+artgen-bootstrap: ## Create the art generator's environment and fetch its default model (about 40 GB, in the toolchain)
 	@scripts/artgen bootstrap
 	@$(MAKE) --no-print-directory lint-disk-layout
 
@@ -1103,7 +1133,7 @@ artgen-clean: ## Delete your generated art; the game is back on the CC0 set
 # MODEL= a name in tools/llm/runtime.json (or `all`); FLAVOUR= vulkan, cpu, cuda.
 
 .PHONY: llm-bootstrap
-llm-bootstrap: ## Install llama.cpp's server and the default model on the large disk, each file by sha256 (about 5 GB)
+llm-bootstrap: ## Install llama.cpp's server and the default model in the toolchain, each file by sha256 (about 5 GB)
 	@scripts/llm bootstrap $(if $(MODEL),--model $(MODEL)) $(if $(FLAVOUR),--flavour $(FLAVOUR))
 	@$(MAKE) --no-print-directory lint-disk-layout
 
@@ -1171,5 +1201,5 @@ hooks: ## Opt in to the repo's git hooks
 	@echo "hooks enabled: .githooks"
 
 .PHONY: worktree-setup
-worktree-setup: ## Copy gdUnit4 and the term list into a new worktree from the main checkout
+worktree-setup: ## Copy gdUnit4 and the term list into a new worktree, and link .toolchain, from the main checkout
 	@$(PYTHON) scripts/worktree_setup.py

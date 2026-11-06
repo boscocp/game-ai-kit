@@ -193,7 +193,7 @@ PYTHONPATH=python python3 -m gameaikit.tactical.report   # what the models learn
 Tier 2, with the engine:
 
 ```bash
-make bootstrap     # downloads the pinned Godot and its Linux export templates to the large disk, SHA-512 verified
+make bootstrap     # downloads the pinned Godot and its Linux export templates into .toolchain/, SHA-512 verified
 make menu          # every example on one menu: a card says what its AI decides and how; Esc comes back
 make run           # checkers against minimax and alpha-beta
 make demo-skirmish # the learned policy plays blue on the skirmish board
@@ -203,7 +203,18 @@ make demo-tactical # Advance Wars style turns against the computer, at three lev
 make check         # every gate
 ```
 
-On Windows the same targets run from Git Bash: [the how-to](docs/howto/windows.md).
+`make bootstrap` serves Linux on x86_64, and Windows through Git Bash: the
+same targets, [the how-to](docs/howto/windows.md). Not macOS yet: there it
+would fetch the Linux build. It puts about 1.5 GB (Godot, and the export
+templates `make export` needs) in `.toolchain/` inside the clone, ignored by
+git, and writes nothing into your home's own folders. To keep it elsewhere
+-- another disk, one copy for several clones -- set one variable, before
+`make bootstrap`; every target and script reads it:
+
+```bash
+export GAK_TOOLCHAIN=/path/to/toolchain
+```
+
 To change the kit, read [CONTRIBUTING.md](CONTRIBUTING.md). `tasks/` and
 `docs/reviews/` are the project's working history -- why each piece was
 built and what its review found -- and a reader after one technique can

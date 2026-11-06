@@ -18,6 +18,10 @@ names it first) when the worktree lacks it, and leaves alone what is there,
 so running it twice changes nothing. A source the main checkout lacks is
 refused by name, with the command that makes it; the others are still copied.
 
+A third, `.toolchain/` (T143), is linked instead: the toolchain when
+GAK_TOOLCHAIN is not set, gigabytes, and shared by every checkout. A main
+checkout without one is a note, never a refusal.
+
 Why copies, not links
 ---------------------
 Godot writes `.uid` files beside the scripts of an addon it imports, so two
@@ -59,6 +63,9 @@ NEEDED = (
     ("scripts/forbidden-term-hashes.txt",
      "python3 scripts/check_no_employer_refs.py --add-term (docs/adr/0005)"),
 )
+
+# The checkout's own toolchain folder, linked rather than copied (T143).
+TOOLCHAIN = ".toolchain"
 
 # The line in bootstrap.sh that pins gdUnit4's tag, e.g. gdunit_tag="v6.2.2".
 GDUNIT_TAG = re.compile(r'^gdunit_tag="([^"]+)"', re.M)
@@ -143,10 +150,35 @@ def set_up(here: pathlib.Path, main: pathlib.Path) -> int:
         else:
             copy_one(source, target)
             print(f"worktree-setup: copied   {relative} from {main}")
+    link_toolchain(here, main)
     note = gdunit_note(here)
     if note:
         print(note)
     return 2 if refused else 0
+
+
+def link_toolchain(here: pathlib.Path, main: pathlib.Path) -> None:
+    """Point this worktree's `.toolchain` at the main checkout's, when it has one.
+
+    `.toolchain/` is the toolchain when GAK_TOOLCHAIN is not set (T143), and
+    a new worktree has none: without this, every Godot gate there says
+    "run make bootstrap". A link, not a copy: it is gigabytes, and every
+    checkout shared one toolchain before T143 too. Never refused -- with
+    GAK_TOOLCHAIN set nothing reads it -- only said.
+    """
+    target, source = here / TOOLCHAIN, main / TOOLCHAIN
+    if target.exists() or target.is_symlink():
+        print(f"worktree-setup: present  {TOOLCHAIN}")
+    elif not source.exists():
+        print(f"worktree-setup: note     no {TOOLCHAIN} in the main checkout; "
+              "GAK_TOOLCHAIN, or make bootstrap there, gives one")
+    else:
+        try:
+            target.symlink_to(source.resolve(), target_is_directory=True)
+            print(f"worktree-setup: linked   {TOOLCHAIN} to {source.resolve()}")
+        except OSError as error:
+            print(f"worktree-setup: note     {TOOLCHAIN} not linked ({error}); "
+                  f"set GAK_TOOLCHAIN={source.resolve()}")
 
 
 # --- self-test -------------------------------------------------------------
@@ -191,7 +223,7 @@ def self_test() -> int:
         expect("no stale half inside", (fresh / "godot/addons/gdUnit4/half").exists(), False)
         expect("term list copied", (fresh / "scripts/forbidden-term-hashes.txt").read_text(),
                "salt\nhash\n")
-        expect("the pinned gdUnit4 says nothing", "note" in printed(fresh, main), False)
+        expect("the pinned gdUnit4 says nothing", "bootstrap.sh pins" in printed(fresh, main), False)
 
         # Idempotent: a second run leaves the worktree's own copy alone.
         (fresh / "scripts/forbidden-term-hashes.txt").write_text("its own\n")
@@ -212,6 +244,19 @@ def self_test() -> int:
         expect("a missing source", quiet(waiting, bare_main), 2)
         expect("nothing invented for it", (waiting / "scripts/forbidden-term-hashes.txt").exists(), False)
         expect("the rest still copied", (waiting / "godot/addons/gdUnit4").is_dir(), True)
+
+        # T143: the main checkout's .toolchain is linked, never copied, and
+        # a worktree's own is left alone.
+        expect("no .toolchain in main: nothing made", (fresh / ".toolchain").is_symlink(), False)
+        (main / ".toolchain" / "godot").mkdir(parents=True)
+        quiet(fresh, main)
+        expect(".toolchain linked", (fresh / ".toolchain").is_symlink(), True)
+        expect("... to the main checkout's", (fresh / ".toolchain").resolve(),
+               (main / ".toolchain").resolve())
+        own_toolchain = root / "own-toolchain"
+        (own_toolchain / ".toolchain").mkdir(parents=True)
+        quiet(own_toolchain, main)
+        expect("a worktree's own .toolchain kept", (own_toolchain / ".toolchain").is_symlink(), False)
 
         expect("run in a complete main checkout", quiet(main, main), 0)
         # Planted: run in a main checkout that lacks what worktrees need.

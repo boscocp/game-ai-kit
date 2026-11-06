@@ -1,10 +1,20 @@
 #!/usr/bin/env python3
-"""Fail if the Godot toolchain, or an art or LLM model, writes to the small disk.
+"""Fail if the Godot toolchain, or an art or LLM model, writes into the user's home.
 
 The rule
 --------
-Everything this project installs lives on the large disk, under the toolchain
-directory. Nothing lands in the user's home.
+Everything this project installs lives under the toolchain directory
+(GAK_TOOLCHAIN, or the checkout's own `.toolchain/`), and everything it
+writes while running lives there or in the checkout. Nothing lands in the
+home's own folders (~/.local, ~/.cache, %APPDATA%).
+
+Until T143 the rule was the author's machine: a large disk, and a home on a
+small one. A stranger's clone failed it three ways -- a toolchain default on
+the author's disk, a repository under the home (D5), and any Godot folder in
+the home (D1), written or not by this repository. Now D1 counts only what is
+attributable to this repository (this project's own user://, a model cache)
+and appeared after `make bootstrap` recorded the home; D5 and D6 ask about
+the home only when the toolchain was put on another disk (keeps_one_disk).
 
 Why this gate exists
 --------------------
@@ -43,7 +53,7 @@ Exit codes
 
 Usage
 -----
-    check_disk_layout.py [--repo PATH] [--toolchain PATH] [--home PATH]
+    check_disk_layout.py [--repo PATH] [--toolchain PATH] [--home PATH] [--record-home]
     check_disk_layout.py --self-test
 """
 
@@ -61,7 +71,11 @@ import tempfile
 from typing import Callable
 
 # Where Godot writes when neither mechanism is in place. Relative to home.
-LEAK_PATHS = (
+# Any Godot the person runs writes here too, so only this project's own
+# user:// below them (USER_DATA_ROOTS) is counted against this repository;
+# the rest is a note (T143). That `._sc_` keeps this checkout's editor out of
+# them is D3 and D4's to hold.
+GODOT_PATHS = (
     ".local/share/godot",
     ".config/godot",
     ".cache/godot",
@@ -69,21 +83,31 @@ LEAK_PATHS = (
     # engine has more than three places to write.
     ".local/state/godot",
     ".godot",
+    # Windows: %APPDATA%/Godot holds editor data and user://, and
+    # %LOCALAPPDATA%/Godot the cache, when scripts/godot is bypassed.
+    "AppData/Roaming/Godot",
+    "AppData/Local/Godot",
+)
+
+# Where a project's user:// lands without XDG_DATA_HOME (APPDATA on
+# Windows): `<root>/app_userdata/<the project's config/name>`. The name is
+# this repository's own, so a folder there is attributed to it.
+USER_DATA_ROOTS = (".local/share/godot", "AppData/Roaming/Godot")
+
+# The model caches, counted when they appeared after `make bootstrap`.
+MODEL_PATHS = (
     # The art generator's model and kernel caches, where they land without
     # scripts/artgen. ~/.cache/pip and ~/.nv are not listed: on the owner's
     # machine other software already keeps caches there, so their presence
     # says nothing about this repository. That pip and the driver honour
     # PIP_CACHE_DIR and CUDA_CACHE_PATH was measured instead, by mtime.
-    # The three below are shared with any other machine-learning project, so
-    # a developer with one will see this fire: that is the price of catching
-    # a 30 GB model landing on the small disk, and the message says where from.
+    # The three below are shared with any other machine-learning project. One
+    # there before `make bootstrap` is recorded and forgiven (T143); one that
+    # appears after is counted: that is the price of catching a 30 GB model
+    # landing in the home, and the message says where from.
     ".cache/huggingface",
     ".cache/torch",
     ".triton",
-    # Windows: %APPDATA%/Godot holds editor data and user://, and
-    # %LOCALAPPDATA%/Godot the cache, when scripts/godot is bypassed.
-    "AppData/Roaming/Godot",
-    "AppData/Local/Godot",
     # The local LLM (T93): where llama.cpp's server keeps a model it fetched
     # itself (`-hf`), when scripts/llm's LLAMA_CACHE is bypassed -- gigabytes
     # each. Its own name, so unlike ~/.cache/huggingface nothing else puts it
@@ -96,22 +120,103 @@ LEAK_PATHS = (
 )
 
 WINDOWS = os.name == "nt"
-DEFAULT_TOOLCHAIN = "D:/games/gamedev/toolchain" if WINDOWS else "/mnt/games/gamedev/toolchain"
+
+# The toolchain when GAK_TOOLCHAIN is not set: inside the checkout, as the
+# Makefile and scripts/godot default it (T143). Relative to the repository.
+DEFAULT_TOOLCHAIN = ".toolchain"
+
+# What `make bootstrap` found in the home before it wrote anything, kept in
+# the toolchain: a `home PATH` line, then one path relative to it a line.
+RECORD = "home-before-bootstrap.txt"
+
+# The project's config/name when project.godot cannot be read.
+PROJECT_NAME = "game-ai-kit"
+CONFIG_NAME = re.compile(r'^config/name="([^"]+)"', re.M)
 
 
-def find_leaks(home: pathlib.Path) -> list[str]:
-    """Report any Godot directory, or model cache, that exists under home.
+def project_name(repo: pathlib.Path) -> str:
+    """The project's name, which Godot gives its user:// folder."""
+    settings = repo / "godot" / "project.godot"
+    if not settings.is_file():
+        return PROJECT_NAME
+    found = CONFIG_NAME.search(settings.read_text(encoding="utf-8", errors="replace"))
+    return found.group(1) if found else PROJECT_NAME
 
-    An empty leftover directory is reported too: it means a mechanism stopped
-    working, and the files follow the directory.
+
+def own_user_dirs(project: str) -> list[str]:
+    """Where this project's user:// lands in a home that nothing redirected."""
+    return [f"{root}/app_userdata/{project}" for root in USER_DATA_ROOTS]
+
+
+def read_record(toolchain: pathlib.Path, home: pathlib.Path) -> set[str]:
+    """What the home held before `make bootstrap`; empty if unrecorded, or for another home."""
+    record = toolchain / RECORD
+    if not record.is_file():
+        return set()
+    lines = record.read_text(encoding="utf-8").splitlines()
+    recorded_home = next((line[5:] for line in lines if line.startswith("home ")), "")
+    if not recorded_home or not same_checkout(pathlib.Path(recorded_home), home):
+        return set()
+    return {line for line in lines if line and not line.startswith(("#", "home "))}
+
+
+def size_of(folder: pathlib.Path) -> int:
+    """Bytes in the files under a folder, so a finding says how much landed."""
+    return sum(path.stat().st_size for path in folder.rglob("*") if path.is_file())
+
+
+def find_leaks(home: pathlib.Path, project: str = PROJECT_NAME,
+               before: "set[str] | None" = None) -> list[str]:
+    """D1: what this repository wrote in the home's own folders; the rest is a note.
+
+    Attributed, and a finding: this project's user:// folder under Godot's
+    data folders, and a model cache -- unless `make bootstrap` found it there
+    first (`before`). Godot's other folders belong to whatever Godot the person
+    runs: a note. An empty leftover folder is a finding too: it means a
+    mechanism stopped working, and the files follow the folder.
     """
+    before = before or set()
     findings = []
-    for relative in LEAK_PATHS:
+    for relative in own_user_dirs(project) + list(MODEL_PATHS):
         leaked = home / relative
-        if leaked.exists():
-            size = sum(f.stat().st_size for f in leaked.rglob("*") if f.is_file())
-            findings.append(f"D1 {leaked} exists on the small disk ({size} bytes)")
+        if leaked.exists() and relative in before:
+            print(f"D1 note: {leaked} was there before make bootstrap; not counted")
+        elif leaked.exists():
+            whose = (" -- this project's user://, which scripts/godot sends to .user-data/; "
+                     "a Godot started without it wrote this (to open the editor: "
+                     "./scripts/godot --path godot -e)" if relative in own_user_dirs(project) else "")
+            findings.append(f"D1 {leaked} exists in the home ({size_of(leaked)} bytes){whose}")
+    for relative in GODOT_PATHS:
+        if (home / relative).exists():
+            print(f"D1 note: {home / relative} exists; any Godot writes there, and this "
+                  "checkout's does not (._sc_, D3) -- not counted")
     return findings
+
+
+def record_home(toolchain: pathlib.Path, home: pathlib.Path, project: str) -> int:
+    """Write what the home holds before `make bootstrap` writes anything; never twice.
+
+    Written once, at the first bootstrap into this toolchain: run again later,
+    it would forgive whatever leaked since. A toolchain that already holds
+    Godot gets a record that forgives nothing -- its home was not looked at
+    in time.
+    """
+    record = toolchain / RECORD
+    if record.exists():
+        print(f"check_disk_layout: {record} kept, as first written")
+        return 0
+    toolchain.mkdir(parents=True, exist_ok=True)
+    installed = (toolchain / "godot" / "godot").exists() or (toolchain / "godot" / "godot.exe").exists()
+    present = [] if installed else [
+        relative for relative in own_user_dirs(project) + list(MODEL_PATHS)
+        if (home / relative).exists()]
+    lines = ["# What the home held before make bootstrap; check_disk_layout.py's D1",
+             "# does not count these (T143). Taken after Godot was installed: nothing."
+             if installed else "# Written once; delete it only to start over.",
+             f"home {home}", *present]
+    record.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"check_disk_layout: recorded {len(present)} folder(s) already in {home}")
+    return 0
 
 
 def check_toolchain(toolchain: pathlib.Path, windows: bool = WINDOWS) -> list[str]:
@@ -141,27 +246,38 @@ def check_toolchain(toolchain: pathlib.Path, windows: bool = WINDOWS) -> list[st
     return findings
 
 
-def check_repo_location(repo: pathlib.Path, home: pathlib.Path,
-                        on_runner: bool = False) -> list[str]:
-    """Report a repository that sits on the small disk.
+def keeps_one_disk(toolchain: pathlib.Path, home: pathlib.Path, on_runner: bool) -> bool:
+    """Whether this machine keeps everything on the home's disk, by choice or by having one.
 
-    Not asked on a CI runner, and the run says so. The two disks are the
-    author's machine; a GitHub runner has one, and checks the repository out
-    under /home/runner whatever the workflow says. The first CI run of this
-    repository (wave 63) failed here and nowhere else. The leaks above are
-    still looked for on the runner: a Godot that writes to ~/.local is wrong
-    on any machine. The runner is known by GitHub's own `GITHUB_ACTIONS=true`;
-    set by hand on a desk, it turns this one rule into a note, and says so.
+    A toolchain put outside the home says there is another disk for this
+    repository, and then the checkout under home is a finding (D5, D6). A
+    toolchain under the home -- the default `.toolchain/` of a clone in the
+    home, a CI runner's temp folder -- says there is one (T143).
     """
-    try:
-        repo.resolve().relative_to(home.resolve())
-    except ValueError:
+    return on_runner or is_inside(toolchain, home)
+
+
+def check_repo_location(repo: pathlib.Path, home: pathlib.Path,
+                        one_disk: bool = False) -> list[str]:
+    """Report a repository in the home when the toolchain was put on another disk.
+
+    Until T143 this was asked of everyone, and refused every clone in a home:
+    the two disks are the author's machine. Now it is asked where the person
+    has a second disk in use (keeps_one_disk). A GitHub runner has one, and
+    checks the repository out under /home/runner; the first CI run of this
+    repository (wave 63) failed here and nowhere else. The leaks above are
+    looked for on every machine. The runner is known by GitHub's own
+    `GITHUB_ACTIONS=true`; set by hand on a desk, it turns this rule into a
+    note, and says so.
+    """
+    if not is_inside(repo, home):
         return []
-    if on_runner:
-        print(f"D5 note: the repository is under {home}, and this is a CI runner "
-              "with one disk; not a finding there")
+    if one_disk:
+        print(f"D5 note: the repository is under {home}, and so is the toolchain "
+              "(or this is a CI runner): one disk, not a finding")
         return []
-    return [f"D5 the repository itself is under {home} -- it belongs on the large disk"]
+    return [f"D5 the repository itself is under {home}, and the toolchain is not "
+            "-- it belongs on the toolchain's disk"]
 
 
 # --- each checkout its own user:// (T83) ------------------------------------
@@ -246,20 +362,20 @@ def ignored_by_git(checkout: pathlib.Path, path: pathlib.Path) -> bool:
 
 
 def redirect_problems(checkout: pathlib.Path, folders: "list[pathlib.Path] | None",
-                      home: pathlib.Path, on_runner: bool, ignored: Ignored) -> list[str]:
+                      home: pathlib.Path, one_disk: bool, ignored: Ignored) -> list[str]:
     """D6 and D8 for one checkout: off home, inside itself, outside godot/, ignored.
 
-    Under home on a CI runner is a note, as D5 is: there the checkout itself
-    is under home, and so is everything inside it.
+    Under home on a one-disk machine is a note, as D5 is: there the checkout
+    is under home, and so is everything inside it (keeps_one_disk).
     """
     if not folders:
         return [f"D8 {checkout}/scripts/godot gives no user:// redirect ({PRINT_REDIRECT})"]
     problems = []
     for folder in folders:
-        if is_inside(folder, home) and on_runner:
-            print(f"D6 note: user:// at {folder} is under {home}, on a one-disk CI runner")
+        if is_inside(folder, home) and one_disk:
+            print(f"D6 note: user:// at {folder} is under {home}, and this machine keeps one disk (D5)")
         elif is_inside(folder, home):
-            problems.append(f"D6 user:// for {checkout} is {folder}, under {home} -- the small disk")
+            problems.append(f"D6 user:// for {checkout} is {folder}, under {home}, and the toolchain is not")
         if not is_inside(folder, checkout):
             problems.append(f"D8 user:// for {checkout} is {folder}, outside the checkout "
                             "-- shared by every checkout that resolves there (docs/adr/0022)")
@@ -297,7 +413,7 @@ def note_older(redirects: Redirects, repo: pathlib.Path) -> None:
 
 
 def check_user_dirs(repo: pathlib.Path, redirects: Redirects, home: pathlib.Path,
-                    on_runner: bool = False, ignored: Ignored = ignored_by_git) -> list[str]:
+                    one_disk: bool = False, ignored: Ignored = ignored_by_git) -> list[str]:
     """D6-D8 as findings for this checkout; the same wrong in another one is a note.
 
     Another worktree is another branch's state, often mid-wave: failing this
@@ -312,7 +428,7 @@ def check_user_dirs(repo: pathlib.Path, redirects: Redirects, home: pathlib.Path
         if folders is None and not mine:
             continue
         (findings if mine else notes).extend(
-            redirect_problems(checkout, folders, home, on_runner, ignored))
+            redirect_problems(checkout, folders, home, one_disk, ignored))
     for first, second, text in shared_pairs(redirects):
         mine = same_checkout(first, repo) or same_checkout(second, repo)
         (findings if mine else notes).append(text)
@@ -338,9 +454,11 @@ def all_findings(repo: pathlib.Path, toolchain: pathlib.Path, home: pathlib.Path
     """Every check; the redirects are read from the checkouts unless given."""
     if redirects is None:
         redirects = read_all_redirects(repo)
-    return (find_leaks(home) + check_toolchain(toolchain, windows)
-            + check_repo_location(repo, home, on_runner)
-            + check_user_dirs(repo, redirects, home, on_runner, ignored))
+    one_disk = keeps_one_disk(toolchain, home, on_runner)
+    return (find_leaks(home, project_name(repo), read_record(toolchain, home))
+            + check_toolchain(toolchain, windows)
+            + check_repo_location(repo, home, one_disk)
+            + check_user_dirs(repo, redirects, home, one_disk, ignored))
 
 
 def run(repo: pathlib.Path, toolchain: pathlib.Path, home: pathlib.Path,
@@ -420,9 +538,9 @@ def user_dir_cases(root: pathlib.Path, toolchain: pathlib.Path, home: pathlib.Pa
     expect("a wrapper that prints nothing (D8)", int(said("D8", repo, toolchain, home, {repo: []})), 1)
     expect("this checkout's wrapper cannot answer (D8)",
            int(said("D8", repo, toolchain, home, {repo: None})), 1)
-    # Planted, D6 alone: home is the checkout's parent's folder, so the
-    # directory is inside the checkout, ignored, and still on the small disk.
-    expect("user:// under home (D6)", int(said("D6", repo, toolchain, repo.parent, {repo: own})), 1)
+    # Planted, D6 alone: home is the checkout itself, so the directory is
+    # inside the checkout, ignored, and in a home the toolchain is not in.
+    expect("user:// under home (D6)", int(said("D6", repo, toolchain, repo, {repo: own})), 1)
     other_cases(root, toolchain, home, repo, expect, other, third)
 
 
@@ -447,6 +565,88 @@ def other_cases(root: pathlib.Path, toolchain: pathlib.Path, home: pathlib.Path,
             runner_repo, toolchain, home, True, False,
             {runner_repo: [runner_repo / ".user-data"]}, lambda *_: True), 0)
     git_cases(root, toolchain, home, expect)
+
+
+def fake_toolchain(folder: pathlib.Path) -> pathlib.Path:
+    """A toolchain D2-D4 accept, in both layouts.
+
+    Both are held on every host: the cases pass `windows` explicitly where it
+    matters, so neither depends on the desk.
+    """
+    (folder / "godot" / "editor_data").mkdir(parents=True)
+    binary = folder / "godot" / "godot"
+    binary.write_text("#!/bin/sh\n")
+    binary.chmod(0o755)
+    (folder / "godot" / "._sc_").touch()
+    for name in ("godot_console.exe", "godot.exe"):
+        (folder / "godot" / name).write_text("MZ")
+    return folder
+
+
+def one_disk_cases(root: pathlib.Path, home: pathlib.Path, repo_on_home: pathlib.Path,
+                   expect, quiet, said) -> None:
+    """T143: a clone in the home with its toolchain in the home too is one disk, not a finding.
+
+    The other side stays planted above: the same clone with the toolchain on
+    another disk is D5, and its user:// D6.
+    """
+    in_home = fake_toolchain(repo_on_home / ".toolchain")
+    own = {repo_on_home: [repo_on_home / ".user-data" / "xdg"]}
+    expect("a clone and its .toolchain/ both in the home", quiet(repo_on_home, in_home, home), 0)
+    expect("... its user:// in the home is no D6", int(said("D6", repo_on_home, in_home, home, own)), 0)
+    expect("... but D6 with the toolchain elsewhere",
+           int(said("D6", repo_on_home, root / "toolchain", home, own)), 1)
+    # Planted: one disk forgives where the checkout is, never a leak.
+    leaked = root / "one-disk-leak"
+    clone = leaked / "game-ai-kit"
+    (leaked / ".local/share/godot/app_userdata/game-ai-kit").mkdir(parents=True)
+    expect("a leak on one disk", quiet(clone, fake_toolchain(clone / ".toolchain"), leaked), 1)
+
+
+def attribution_cases(root: pathlib.Path, toolchain: pathlib.Path, repo: pathlib.Path,
+                      expect, quiet) -> None:
+    """T143: D1 counts what this repository wrote, after `make bootstrap`; the rest is a note."""
+    def silently(*args) -> int:
+        with contextlib.redirect_stdout(io.StringIO()):
+            return record_home(*args)
+
+    # Not ours: Godot's own folders, and another project's user://.
+    editor_home = root / "editor-home"
+    for folder in (".config/godot", ".cache/godot", ".local/share/godot/app_userdata/another-game"):
+        (editor_home / folder).mkdir(parents=True)
+    expect("a home where another Godot has run", quiet(repo, toolchain, editor_home), 0)
+    # Planted: the project's name is read, not assumed -- a project named
+    # another-game owns that folder.
+    renamed = root / "renamed-repo"
+    (renamed / "godot").mkdir(parents=True)
+    (renamed / "godot" / "project.godot").write_text('config/name="another-game"\n')
+    expect("the project's own name is read", quiet(renamed, toolchain, editor_home), 1)
+
+    # Recorded before bootstrap: this project's user:// and a model cache.
+    before_home = root / "before-home"
+    for folder in (".local/share/godot/app_userdata/game-ai-kit", ".cache/huggingface/hub"):
+        (before_home / folder).mkdir(parents=True)
+    fresh = root / "fresh-toolchain"
+    expect("recording a home", silently(fresh, before_home, PROJECT_NAME), 0)
+    fake_toolchain(fresh)
+    expect("what was there before bootstrap", quiet(repo, fresh, before_home), 0)
+    # Planted: a cache that appeared after it is counted.
+    (before_home / ".cache/torch").mkdir(parents=True)
+    expect("a cache that appeared after bootstrap", quiet(repo, fresh, before_home), 1)
+    # The record is written once: run again, it would forgive what leaked
+    # since, or -- Godot being in place now -- forget what was there before.
+    silently(fresh, before_home, PROJECT_NAME)
+    expect("a second record forgives nothing new", quiet(repo, fresh, before_home), 1)
+    (before_home / ".cache/torch").rmdir()
+    expect("... and forgets nothing old", quiet(repo, fresh, before_home), 0)
+    # Planted: a record names its home; another home's same folders count.
+    other_home = root / "other-home"
+    (other_home / ".cache/huggingface").mkdir(parents=True)
+    expect("another home's record", quiet(repo, fresh, other_home), 1)
+    # Planted: a toolchain that had Godot before its first record forgives nothing.
+    late = fake_toolchain(root / "late-toolchain")
+    silently(late, root / "dirty-home", PROJECT_NAME)
+    expect("a record taken after Godot was installed", quiet(repo, late, root / "dirty-home"), 1)
 
 
 def self_test() -> int:
@@ -487,16 +687,7 @@ def self_test() -> int:
 
         clean_home = root / "clean-home"
         clean_home.mkdir()
-        good_toolchain = root / "toolchain"
-        (good_toolchain / "godot" / "editor_data").mkdir(parents=True)
-        binary = good_toolchain / "godot" / "godot"
-        binary.write_text("#!/bin/sh\n")
-        binary.chmod(0o755)
-        (good_toolchain / "godot" / "._sc_").touch()
-        # Both layouts are held on every host: the cases pass `windows`
-        # explicitly where it matters, so neither depends on the desk.
-        for name in ("godot_console.exe", "godot.exe"):
-            (good_toolchain / "godot" / name).write_text("MZ")
+        good_toolchain = fake_toolchain(root / "toolchain")
         repo_off_home = root / "repo"
         repo_off_home.mkdir()
 
@@ -587,6 +778,8 @@ def self_test() -> int:
         expect("repo under home on a runner", quiet(repo_on_home, good_toolchain, clean_home, True), 0)
         expect("a leak on a runner", quiet(repo_on_home, good_toolchain, dirty_home, True), 1)
 
+        one_disk_cases(root, clean_home, repo_on_home, expect, quiet, said)
+        attribution_cases(root, good_toolchain, repo_off_home, expect, quiet)
         user_dir_cases(root, good_toolchain, clean_home, repo_off_home, expect, said)
 
         # Usage errors must be exit 2, never confused with a finding.
@@ -609,6 +802,8 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--toolchain", default=None)
     parser.add_argument("--home", default=None)
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--record-home", action="store_true",
+                        help="before make bootstrap: record what the home already holds")
     try:
         args = parser.parse_args(argv)
     except SystemExit as exit_request:
@@ -622,12 +817,14 @@ def main(argv: list[str]) -> int:
         return self_test()
 
     repo = pathlib.Path(args.repo or pathlib.Path(__file__).resolve().parent.parent)
-    toolchain = pathlib.Path(
-        args.toolchain or os.environ.get("GAK_TOOLCHAIN", DEFAULT_TOOLCHAIN)
-    )
+    # `or`, not a default: an empty GAK_TOOLCHAIN is unset, as scripts/godot reads it.
+    toolchain = pathlib.Path(args.toolchain or os.environ.get("GAK_TOOLCHAIN")
+                             or repo / DEFAULT_TOOLCHAIN)
     home = pathlib.Path(args.home or pathlib.Path.home())
 
     try:
+        if args.record_home:
+            return record_home(toolchain, home, project_name(repo))
         return run(repo, toolchain, home, on_runner=os.environ.get("GITHUB_ACTIONS") == "true")
     except OSError as error:
         print(f"check_disk_layout: cannot read a path: {error}", file=sys.stderr)

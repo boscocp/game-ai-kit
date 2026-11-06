@@ -22,7 +22,7 @@ than none.
 | 5 no lesson above tier 1 | `check_tiers.py`, via each page's `teaches:` field |
 | 6 no training at game time | half held -- `check_no_training.py` is a net for the common spellings, and says so; ADR 0016's exceptions, by name, are N9, N13 and N14; T18's cloned player is N10-N12; T98's maze policy is N15 |
 | 7 LLM output validated | half held -- `check_llm_validated.py` (wave 102) is a static net for the common spellings, and says so: no way round `ai_llm`, nothing waiting on the frame (V0-V3); that the validator refuses what it must is `make test-llm-vectors` |
-| 8 toolchain on the large disk | `check_disk_layout.py` |
+| 8 nothing written into the home | `check_disk_layout.py` |
 | 9 LICENSE and NOTICE ship | `check_license.py` |
 | 10 nothing from the employer | `check_no_employer_refs.py` |
 | 11 no tooling byline | `check_commit_msg.py`, `check_pr_message.py` |
@@ -51,7 +51,11 @@ than none.
    log.
 7. **The LLM never blocks a frame, and nothing it returns becomes an action
    without passing a validator.**
-8. **The whole toolchain lives on the large disk.** Nothing in `$HOME`.
+8. **The toolchain lives in its own directory, never in the user's home folders.**
+   Nothing this repository installs or writes lands in `~/.local`,
+   `~/.cache` or `%APPDATA%`: it goes to the toolchain (`GAK_TOOLCHAIN`, or
+   the checkout's `.toolchain/`) or the checkout. The author keeps it on a
+   large disk by setting `GAK_TOOLCHAIN`. ADR 0002, amended by T143.
 9. **Every published artifact carries LICENSE and NOTICE.**
 10. **Nothing from the author's employer enters this repo** — no name, no
     internal measurement, no file copied from a private repository, no
@@ -89,7 +93,7 @@ make check-affected BASE=origin/main  # what a wave runs: the lints, and its mod
 make affected BASE=origin/main        # which modules a change selects, and why
 make wave-merge                       # squash-merge the PR, once reviewed and green
 make worktree-setup                   # in a new worktree: gdUnit4 and the term list, from the main checkout
-make bootstrap     # install the pinned Godot on the large disk, SHA-verified
+make bootstrap     # install the pinned Godot into GAK_TOOLCHAIN (.toolchain/ by default), SHA-verified
 make check         # every gate; CI runs it on main, and `make release` needs it
 make library-check # the wheel and two addons, installed and run outside the repo
 make test-python   # stdlib unittest, no install step

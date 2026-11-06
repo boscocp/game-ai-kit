@@ -32,7 +32,7 @@ Then, from Git Bash at the repository's root, the same three lines as on
 Linux:
 
 ```bash
-make bootstrap     # Godot, SHA-512 checked, into D:/games/gamedev/toolchain
+make bootstrap     # Godot, SHA-512 checked, into the clone's .toolchain/
 make hooks
 make check
 ```
@@ -44,15 +44,15 @@ export` is not ported there.
 
 | | Linux | Windows |
 |---|---|---|
-| toolchain | `/mnt/games/gamedev/toolchain` | `D:/games/gamedev/toolchain` |
+| toolchain, unless `GAK_TOOLCHAIN` says | the checkout's `.toolchain/` | the checkout's `.toolchain/` |
 | Godot | `godot/godot` | `godot/godot_console.exe`, which starts `godot/godot.exe` |
 | `user://` kept off the small disk by | `XDG_DATA_HOME` | `APPDATA` and `LOCALAPPDATA` |
 | Python | `python3` | `python`, with `PYTHONUTF8=1` |
 
-To put the toolchain elsewhere, on either system: `make bootstrap
-TOOLCHAIN=E:/tc` installs it there, and `GAK_TOOLCHAIN=E:/tc` in the
-environment is where `scripts/godot` and the gates then look for it. The
-two are separate names, and both must say the same place.
+To put the toolchain elsewhere, on either system, set `GAK_TOOLCHAIN=E:/tc`
+in the environment before `make bootstrap`: the Makefile, `scripts/godot`
+and the gates all read that one name (T143). `make bootstrap
+TOOLCHAIN=E:/tc` is the same knob for one command, and only that one.
 
 **Two programs, not one.** The Windows release of Godot is a GUI program and
 a `_console` twin that starts it with a console attached. Measured on 4.7.2
