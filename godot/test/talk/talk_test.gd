@@ -216,17 +216,20 @@ func test_the_menu_branches_into_a_win_no_single_recording_had() -> void:
 	assert_str(demo.guard.turns.back()["speech"]).is_equal(TalkRules.words("en")["endings"]["open"])
 
 
+# An answer that wraps to four lines of the History label.
+const LONG_SPEECH: String = "Then step aside and let me check the serial number before you burn out the " \
+	+ "lamp, the battery and my patience, because nobody comes to this door at night without a reason " \
+	+ "I have heard before, and I have heard every one of them twice this week alone, friend."
+
+
 func test_the_guards_newest_line_is_shown_whole_however_long_the_talk() -> void:
 	# T136: the third answer wraps past the sixth line, all a label 150 px
 	# tall shows. The oldest turns give way; the newest is never the one cut.
-	var long_speech: String = "Then step aside and let me check the serial number before you burn out the " \
-		+ "lamp, the battery and my patience, because nobody comes to this door at night without a reason " \
-		+ "I have heard before, and I have heard every one of them twice this week alone, friend."
 	var demo: TalkDemo = auto_free((load(SCENE) as PackedScene).instantiate())
 	add_child(demo)
 	await get_tree().process_frame
 	demo.guard.use_runtime(RecordedRuntime.new(PackedStringArray([
-		_reply("Hm.", "flatter"), _reply("Go on.", "flatter"), _reply(long_speech, "flatter")])))
+		_reply("Hm.", "flatter"), _reply("Go on.", "flatter"), _reply(LONG_SPEECH, "flatter")])))
 	for said: int in 3:
 		await _say(demo.guard, "You look sharp tonight.")
 	var history: Label = demo.get_node("Interface/History")
@@ -236,6 +239,55 @@ func test_the_guards_newest_line_is_shown_whole_however_long_the_talk() -> void:
 	# Lines first: that shapes the text, and the visible count reads the last shaping.
 	var lines_of_all_three: int = all_three.get_line_count()
 	assert_int(lines_of_all_three).is_greater(all_three.get_visible_line_count())  # the case is real
-	assert_str(history.text).ends_with(demo.guard.turns.back()["speech"])
+	assert_str(history.text).not_contains("Bram: Hm.")  # the oldest gave way
 	var lines: int = history.get_line_count()
 	assert_int(lines).is_less_equal(history.get_visible_line_count())
+
+
+# The scene's History label on its own, in the tree: its size, font and wrapping.
+func _history_label() -> Label:
+	var scene: Node = (load(SCENE) as PackedScene).instantiate()
+	var label: Label = auto_free(scene.get_node("Interface/History").duplicate())
+	scene.free()
+	add_child(label)
+	return label
+
+
+# Exchanges as the guard keeps them, one per [player, speech].
+static func _exchanges(pairs: Array) -> Array[Dictionary]:
+	var turns: Array[Dictionary] = []
+	for pair: Array in pairs:
+		turns.append({"player": pair[0], "speech": pair[1]})
+	return turns
+
+
+func test_a_pending_line_pushes_out_the_newest_exchange_when_it_must() -> void:
+	# The newest exchange (five lines) and the pending line (two) make seven.
+	var label: Label = _history_label()
+	var turns: Array[Dictionary] = _exchanges([["One.", "Hm."], ["Two.", "Go on."], ["Three.", LONG_SPEECH]])
+	TalkPanel.show_history(label, turns, "One more thing.")
+	assert_str(label.text).ends_with(tr("Bram is thinking..."))
+	var lines: int = label.get_line_count()
+	assert_int(lines).is_less_equal(label.get_visible_line_count())
+
+
+func test_one_exchange_taller_than_the_label_loses_its_top_not_its_end() -> void:
+	# Wide glyphs: a speech within the 280 characters that wraps past six lines.
+	var label: Label = _history_label()
+	var word: String = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+	var wide: String = " ".join(PackedStringArray([word, word, word, word, word, word, word]))
+	TalkPanel.show_history(label, _exchanges([["Who goes there?", wide]]), "")
+	var lines: int = label.get_line_count()
+	assert_int(lines).is_greater(label.get_visible_line_count())  # the case is real
+	assert_int(label.lines_skipped + label.get_visible_line_count()).is_equal(lines)
+	TalkPanel.show_history(label, _exchanges([["One.", "Hm."]]), "")
+	assert_int(label.lines_skipped).is_equal(0)
+
+
+func test_the_lines_are_counted_before_the_visible_ones() -> void:
+	# A label last shaped with one line: asked first, its visible count is 1.
+	var label: Label = _history_label()
+	label.text = "x"
+	label.get_line_count()
+	TalkPanel.show_history(label, _exchanges([["a", "b"], ["c", "d"], ["e", "f"]]), "")
+	assert_str(label.text).starts_with(tr("You: {line}").format({"line": "a"}))

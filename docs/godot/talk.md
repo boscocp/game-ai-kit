@@ -383,7 +383,10 @@ Six lines fit; a long answer wraps to a seventh, and before T136 the line
 cut was the newest one, the one being read. Now `TalkPanel.show_history`
 drops exchanges from the top until the rest fits: fewer old turns, never
 less of the new one. It asks the label itself -- its font, wrapping and
-spacing -- rather than counting lines by hand.
+spacing -- rather than counting lines by hand. One exchange can still be
+taller than the label: a 100-character line and a 280-character answer
+in ordinary words make exactly 6 lines, and wide glyphs make 10. Then
+`lines_skipped` hides that exchange's top lines, and its end still shows.
 
 Measured on 4.7.2 (verified_on 2026-11-06), headless, which shapes text
 though it draws nothing:

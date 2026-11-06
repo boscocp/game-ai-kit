@@ -68,18 +68,24 @@ static func history(turns: Array[Dictionary], pending: String, shown: int = HIST
 ## oldest give way, from the top, until the rest fits: the newest line is
 ## the one a person is reading, so it is never the one cut. Measured by
 ## the label's own layout -- its font, wrapping and spacing -- because a
-## guessed count of lines is wrong the first time a line wraps.
+## guessed count of lines is wrong the first time a line wraps. One
+## exchange taller than the label loses its top lines instead.
 static func show_history(label: Label, turns: Array[Dictionary], pending: String) -> void:
+	label.lines_skipped = 0
 	var fewest: int = 0 if pending != "" else 1
 	for shown: int in range(HISTORY_TURNS, fewest - 1, -1):
 		label.text = history(turns, pending, shown)
 		if _fits(label):
 			return
+	var lines: int = label.get_line_count()
+	label.lines_skipped = lines - label.get_visible_line_count()
 
 
-# Whether `label` shows every line of its text. The lines are counted
-# first: that shapes the new text, and the visible count only reads the
-# last shaping (measured on 4.7.2, docs/godot/talk.md).
+# Whether `label` shows every line of its text. The local `lines` is there
+# to fix the order of the two calls: counting the lines shapes the new
+# text, and the visible count only reads the last shaping (measured on
+# 4.7.2, docs/godot/talk.md). Asked the other way round, it drops
+# exchanges that would have fit.
 static func _fits(label: Label) -> bool:
 	var lines: int = label.get_line_count()
 	return lines <= label.get_visible_line_count()
