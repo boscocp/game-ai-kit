@@ -2,10 +2,14 @@
 # side's sight. The ring stays, where the side was last told of the target
 # -- the handed view under the clock, its memory otherwise -- and is
 # recorded as stale; a target it was never told of gets no ring at all.
+# A target in sight is ringed where it stands, clock or no clock, and a
+# rival out of sight is not ringed, as before T128.
 extends GdUnitTestSuite
 
 const TARGET: int = 5
 const MEMBER: int = 10
+const RIVAL_SEEN: int = 6
+const RIVAL_GONE: int = 7
 
 
 # A side that decides nothing: under the clock, only the view it is handed
@@ -22,8 +26,45 @@ func test_a_focus_in_sight_is_ringed_where_it_stands_now() -> void:
 	thinking.view = _view_at(0, Vector2(4.5, 1.5))
 
 	await _drawn(thinking)
+	# Drawn again, the record is the second picture, not both.
+	await _drawn(thinking)
 
 	assert_array(thinking.drawn_focus).is_equal([_ring(Vector2(4.5, 1.5), false)])
+
+
+func test_under_the_clock_a_focus_in_sight_is_ringed_where_it_stands_now() -> void:
+	var thinking: RtsThinking = _fighting_thinking()
+	var clock := RtsHumanClock.new(Idle.new(), 350.0, 0)
+	thinking.clock = clock
+	clock.decide(_view_at(0, Vector2(4.5, 1.5)))
+	clock.decide(_view_at(30, Vector2(6.5, 1.5)))
+	# Handed where it stood at 0; seen now where it stands at 30. The ring
+	# marks where the strike lands, and the order names a unit (T118).
+	thinking.view = _view_at(30, Vector2(6.5, 1.5))
+
+	await _drawn(thinking)
+
+	assert_array(thinking.believed_enemy().map(func(unit: Dictionary) -> Vector2: return unit["position"])).is_equal(
+		[Vector2(4.5, 1.5)])
+	assert_array(thinking.drawn_focus).is_equal([_ring(Vector2(6.5, 1.5), false)])
+
+
+func test_a_rival_out_of_sight_gets_no_ring() -> void:
+	var thinking: RtsThinking = _fighting_thinking()
+	var squad: Squad = thinking.side.squads[0]
+	squad.focus_scores.append({"id": RIVAL_SEEN, "kind": RtsKinds.RUNNER, "score": 0.5, "why": []})
+	squad.focus_scores.append({"id": RIVAL_GONE, "kind": RtsKinds.RUNNER, "score": 0.4, "why": []})
+	var before: RtsSnapshot = _view_at(0, Vector2(4.5, 1.5))
+	before.units.append(_runner(RIVAL_GONE, RtsScenario.WEST, Vector2(5.5, 2.5)))
+	thinking.side.belief.update(before)
+	# The focus and one rival walk out of sight; the other rival stays.
+	thinking.view = _view_at(30, Vector2.INF)
+	thinking.view.units.append(_runner(RIVAL_SEEN, RtsScenario.WEST, Vector2(3.5, 2.5)))
+
+	await _drawn(thinking)
+
+	assert_array(thinking.drawn_focus).is_equal([_ring(Vector2(4.5, 1.5), true),
+		{"id": RIVAL_SEEN, "at": Vector2(3.5, 2.5), "stale": false, "chosen": false}])
 
 
 func test_a_focus_out_of_sight_is_ringed_where_the_side_last_saw_it() -> void:

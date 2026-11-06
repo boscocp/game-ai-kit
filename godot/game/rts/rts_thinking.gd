@@ -14,8 +14,8 @@
 ## believes it stands, with a thread to where it stands now and the view's
 ## age in ms -- so a person sees what the late answer is answering. A
 ## focus whose target has walked out of the side's sight keeps its ring
-## where the side was last told of it, hollow like the late enemy: stale,
-## never a claim to where it stands now.
+## where the side was last told of it, thin and white like the late enemy,
+## its line dashed: stale, never a claim to where it stands now.
 ##
 ## When not to use it: to show a person's side. A person is not thinking
 ## anything this can read.
@@ -185,16 +185,18 @@ func _draw_squad(squad: Squad) -> void:
 
 
 # The enemy a fighting squad chose to strike, ringed, with its score; the
-# next best, faintly, so a person can see what it was weighed against. A
-# ring whose enemy is out of sight is drawn where the side was last told of
-# it, thin and white like the late enemy, its line dashed: stale (T128).
+# next best, faintly, so a person can see what it was weighed against. The
+# chosen one whose enemy is out of sight is drawn where the side was last
+# told of it, thin and white like the late enemy, its line dashed: stale
+# (T128). A rival out of sight is not drawn, as before: the squad holds no
+# order on it, and a faint ring could not look stale and faint at once.
 func _draw_focus(squad: Squad, from: Vector2, colour: Color) -> void:
 	for rank: int in range(mini(squad.focus_scores.size(), 3)):
 		var scored: Dictionary = squad.focus_scores[rank]
-		var place: Dictionary = _focus_place(scored["id"])
-		if place.is_empty():
-			continue
 		var chosen: bool = not squad.focus.is_empty() and scored["id"] == squad.focus["id"]
+		var place: Dictionary = _focus_place(scored["id"])
+		if place.is_empty() or (place["stale"] and not chosen):
+			continue
 		var stale: bool = place["stale"]
 		drawn_focus.append({"id": scored["id"], "at": place["at"], "stale": stale, "chosen": chosen})
 		var at: Vector2 = RtsView.to_screen(place["at"])
@@ -209,11 +211,11 @@ func _draw_focus(squad: Squad, from: Vector2, colour: Color) -> void:
 			draw_line(from, at, colour, 1.5)
 
 
-# Red for the chosen focus, faint white for its rivals; a stale ring takes
-# the late enemy's colours instead, so it reads as a belief, not a sighting.
+# Red for the chosen focus, faint white for its rivals; the stale focus in
+# the late enemy's white instead, so it reads as a belief, not a sighting.
 static func _ring_colour(chosen: bool, stale: bool) -> Color:
 	if stale:
-		return BELIEVED_COLOUR if chosen else THREAD_COLOUR
+		return BELIEVED_COLOUR
 	return Color(1.0, 0.25, 0.2) if chosen else Color(1.0, 1.0, 1.0, 0.35)
 
 
