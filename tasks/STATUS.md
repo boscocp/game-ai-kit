@@ -1353,7 +1353,7 @@ review.
 | T142 | The first page says what is true today | todo | from T112's finding 2: the README's status line, `ai_llm` "still to come", 5 of 16 demos described, Python 3.12, task ids on the first page; `ai_llm.md`'s "No demo yet" |
 | T143 | A stranger's toolchain goes where they say | todo | from T112's finding 1: the toolchain defaults to `/mnt/games`, `TOOLCHAIN` and `GAK_TOOLCHAIN` disagree, and `lint-disk-layout` refuses a home where Godot has run; runs alone, all of `make check` |
 | T144 | Contributing, for someone outside the waves | todo | from T112's finding 6: `CONTRIBUTING.md` for a fork's pull request, keeping pt-BR in step, issue and PR templates, `SECURITY.md`; the code of conduct is the owner's choice |
-| T145 | The employer scan reads every branch's messages | todo | from T112's finding 9: messages and identities via `git log --all`, as the blobs are; a planted case on an unmerged branch |
+| T145 | The employer scan reads every branch's messages | done | wave 149: from T112's finding 9; `check_no_employer_refs.py` reads messages and identities with `git log --all`, as it reads the blobs (776 commits here, 366 along HEAD), one commit at a time, and an E2 finding names its commit (12 hex digits) beside the term; planted: a term only in a message on a branch HEAD does not reach, passed by the old gate (exit 0), exit 3 now, and the finding must name that commit; exit codes unchanged |
 
 ---
 

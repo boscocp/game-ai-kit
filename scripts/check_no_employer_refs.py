@@ -241,23 +241,41 @@ def scan_tree(repo: pathlib.Path, hashes: set[str]) -> list[str]:
     return findings
 
 
-def scan_history(repo: pathlib.Path, hashes: set[str]) -> list[str]:
-    """Report forbidden terms in commit messages and in every blob ever committed."""
-    findings = []
+def scan_messages(repo: pathlib.Path, hashes: set[str]) -> list[str]:
+    """Report forbidden terms in the message and identities of every commit.
 
-    # Author and committer identity, not just the message. A commit authored
-    # from a work address carries the domain in the object itself, and the
-    # seeded term is derived from exactly that domain -- so this was the most
-    # on-point thing the scan could miss. `rev-list --objects` does not list
-    # commit objects with a path, so they never reached the blob loop either.
-    messages = subprocess.run(
-        ["git", "-C", str(repo), "log", "--format=%H%n%an%n%ae%n%cn%n%ce%n%B"],
+    Author and committer identity, not just the message. A commit authored
+    from a work address carries the domain in the object itself, and the
+    seeded term is derived from exactly that domain -- so this was the most
+    on-point thing the scan could miss. `rev-list --objects` does not list
+    commit objects with a path, so they never reached the blob loop either.
+
+    Every ref, not only HEAD. The blobs were read with `--all` and the
+    messages without it, so a finished branch `main` never merged -- and
+    which is published with the rest -- had its messages skipped (T145).
+
+    Each finding names its commit, so a person can find it without the term
+    being read out loud.
+    """
+    log = subprocess.run(
+        ["git", "-C", str(repo), "log", "--all",
+         "--format=%x00%H%n%an%n%ae%n%cn%n%ce%n%B"],
         capture_output=True, text=True, check=True,
     )
-    for token in sorted(offending_tokens(messages.stdout, hashes)):
-        findings.append(
-            f"E2 a commit message or author identity contains the forbidden term {token!r}"
-        )
+    findings = []
+    for record in log.stdout.split("\x00"):
+        commit, _, text = record.partition("\n")
+        for token in sorted(offending_tokens(text, hashes)):
+            findings.append(
+                f"E2 commit {commit[:12]}: its message or author identity "
+                f"contains the forbidden term {token!r}"
+            )
+    return findings
+
+
+def scan_history(repo: pathlib.Path, hashes: set[str]) -> list[str]:
+    """Report forbidden terms in commit messages and in every blob ever committed."""
+    findings = scan_messages(repo, hashes)
 
     revisions = subprocess.run(
         ["git", "-C", str(repo), "rev-list", "--all", "--objects"],
@@ -389,6 +407,27 @@ def self_test() -> int:
         git(in_message, "add", "-A")
         git(in_message, "commit", "-qm", f"docs: as discussed at {secret}")
         expect("term in a commit message", quiet(in_message), 3)
+
+        # Planted: the term only in a commit message on a branch HEAD does not
+        # reach. The blobs were read on every ref and the messages only along
+        # HEAD, so a finished branch that was never merged -- and is published
+        # with the rest -- passed clean (T112's review, finding 9).
+        on_branch = make_repo(root, "onbranch", [secret])
+        git(on_branch, "switch", "-qc", "side")
+        (on_branch / "s.md").write_text("ordinary text\n")
+        git(on_branch, "add", "-A")
+        git(on_branch, "commit", "-qm", f"docs: as discussed at {secret}")
+        side_commit = subprocess.run(
+            ["git", "-C", str(on_branch), "rev-parse", "--short=12", "side"],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+        git(on_branch, "switch", "-q", "main")
+        report = io.StringIO()
+        with contextlib.redirect_stdout(report):
+            expect("term in a message on an unmerged branch", run(on_branch, True), 3)
+        # The finding names the commit, so it can be found without the term.
+        if f"commit {side_commit}:" not in report.getvalue():
+            failures.append("a message finding does not name its commit")
 
         # A compound of a stored term is caught by the prefix rule.
         compound = make_repo(root, "compound", [secret])
