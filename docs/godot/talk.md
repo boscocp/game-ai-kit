@@ -297,7 +297,7 @@ silent socket its longest frame stays under 200 ms
 (`test_a_server_that_never_answers_never_holds_the_frame`).
 `HttpRuntime`'s chat request had the same flaw; since T133 its
 `HTTPRequest` runs with threads off, which reads without blocking
-([llm-requests.md](llm-requests.md#silent)).
+([llm-requests.md](llm-requests.md#a-server-that-accepts-and-never-answers)).
 
 What the documentation does not say, read in the source at 4.7
 (`drivers/unix/os_unix.cpp`): `OS.kill` sends SIGKILL and then **waits**

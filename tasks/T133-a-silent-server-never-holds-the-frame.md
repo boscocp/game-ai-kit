@@ -64,7 +64,7 @@ drawing until the turn is said to have failed?
 - Shares `godot/addons/ai_llm/` and `godot/test/ai_llm/` with T129: run one
   after the other.
 - Both fixes measured (`http_frame_probe.gd`, given a second port; the
-  table is in `docs/godot/llm-requests.md#silent`). Never cancelling a
+  table is in `docs/godot/llm-requests.md#a-server-that-accepts-and-never-answers`). Never cancelling a
   threaded request does not hold: freeing its node joins the same thread,
   59.0 s on one frame, and leaving the scene frees it. Threads off does:
   in the 4.7.2 source the client then reads with `get_partial_data` once a

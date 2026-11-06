@@ -14,7 +14,7 @@ teaches: none
 > this page reads what Godot 4.7 documents and measures what 4.7.2 does.
 > Measured on 2026-10-29, on the owner's Linux desktop, headless. On
 > 2026-11-05 a server that accepts and never answers turned the rule
-> round: [threads off](#silent), since T133.
+> round: [threads off](#a-server-that-accepts-and-never-answers), since T133.
 
 ## What the documentation says {#documented}
 
@@ -67,7 +67,7 @@ even the closed port came back as `RESULT_CANT_CONNECT` by the signal, not
 as `ERR_CANT_CONNECT` from the call. The 0.5 s the stub spent thinking was
 spent between frames, never inside one.
 
-## A server that accepts and never answers {#silent}
+## A server that accepts and never answers
 
 The table above has no case for a server that takes the connection and
 then says nothing: a `llama-server` stopped with SIGSTOP, or hung. The
