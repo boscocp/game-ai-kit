@@ -259,11 +259,11 @@ it.
   tested.
 - **The library's version** is in each zip's `VERSION` and the wheel's
   name -- 0.1.0 today, the number in the commands above. What it promises
-  to keep is what ADR 0024 writes down: the `Gak` names above, the
-  ones your code names as a type, except `GakXorshift`, which is prefixed
-  so it cannot collide with yours and is not promised yet -- renaming one after a release breaks
-  every game that uses it, which is why they are few. Below 1.0 any other
-  name may still change between releases.
+  to keep is what ADR 0024 writes down: the `Gak` names above, the ones
+  your code names as a type, except `GakXorshift`, which is prefixed so it
+  is unlikely to collide with yours and is not promised yet -- renaming
+  one after a release breaks every game that uses it, which is why they
+  are few. Below 1.0 any other name may still change between releases.
 - **A name that collides with one of yours**: each zip's README says it --
   rename the `class_name` line, and its uses, inside that addon's folder.
   Nothing of yours changes.

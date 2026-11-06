@@ -7,7 +7,7 @@ tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html ; https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html ; https://packaging.python.org/en/latest/tutorials/installing-packages/
 invalidated_if: scripts/release.py changes what an archive holds, ADR 0024 changes the prefixed names, .godot-version or python/pyproject.toml's version moves, or scripts/library_check.py stops following one of this page's steps
 teaches: none
-translation_of: eb0ca7b3733aa37111080f798d7e8a26713af8ed2d154a149e9b596e6735e461
+translation_of: 618e981866bca0b8318e7c50770b5c90ca381bef115e42a12902b64af7f5d59f
 -->
 
 > English: [using-the-library.md](using-the-library.md). Os termos que ficam
@@ -262,11 +262,12 @@ que faz ele ser recusado.
   testado.
 - **A versão da biblioteca** está no `VERSION` de cada zip e no nome do
   *wheel* -- 0.1.0 hoje, o número dos comandos acima. O que ela promete
-  manter é o que o ADR 0024 escreve: os nomes `Gak` acima, os que o
-  seu código escreve como tipo, menos o `GakXorshift`, que leva o prefixo
-  para não colidir com um seu e ainda não é prometido -- renomear um depois de uma *release*
-  quebra todo jogo que o usa, e por isso eles são poucos. Antes da 1.0,
-  qualquer outro nome ainda pode mudar entre *releases*.
+  manter é o que o ADR 0024 escreve: os nomes `Gak` acima, os que o seu
+  código escreve como tipo, menos o `GakXorshift`, que leva o prefixo para
+  que seja improvável colidir com um seu e ainda não é prometido --
+  renomear um depois de uma *release* quebra todo jogo que o usa, e por
+  isso eles são poucos. Antes da 1.0, qualquer outro nome ainda pode mudar
+  entre *releases*.
 - **Um nome que colide com um seu**: o README de cada zip diz o que fazer
   -- renomeie a linha `class_name`, e os usos dela, dentro da pasta daquele
   addon. Nada seu muda.
