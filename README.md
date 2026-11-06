@@ -277,3 +277,11 @@ The predecessor of this project was
 [Intelligent-Agent-SDK](https://github.com/boscocp/Intelligent-Agent-SDK) (2020,
 Unity, C#), itself following *Artificial Intelligence: A Modern Approach*. The
 algorithms are the book's; the mistakes are mine.
+
+## Support
+
+The kit is free and open, and nothing in it is held back for supporters. If it
+helped you, you can support it:
+
+- [GitHub Sponsors](https://github.com/sponsors/boscocp), from anywhere;
+- Pix, from a Brazilian bank only: `d51e9aeb-2460-4bb4-9bda-91061174fcc1`
