@@ -52,6 +52,7 @@
     "value-iteration": {"name": "value iteration: an MDP solved in Python, its policy looked up", "evidence": ["MdpPacMan"]},
     "director": {"name": "a director: the player's intensity paces the threats, after Left 4 Dead", "evidence": ["Director"]},
     "constraints": {"name": "constraint satisfaction: AC-3 and backtracking place the level", "evidence": ["ConstraintSolver"]},
+    "wave-function-collapse": {"name": "wave function collapse: the cell of least entropy collapsed first, a map built from a table of tiles", "evidence": ["WaveCollapse"]},
     "discourse-acts": {"name": "a language model reads the player's words as one declared act, behind a validator", "evidence": ["LlmValidator", "LlmConversation"]}
   },
   "examples": [
@@ -219,9 +220,10 @@
         {"technique": "influence-map", "part": "the threat map tinted on the board: how many enemy pieces could strike each cell"},
         {"technique": "weighed-actions", "part": "XCOM's first enemy: every walk and shot of the piece about to act scored on its side's view -- the shot it leaves, the fire it walks into, cover and flanks in both -- the best taken"},
         {"technique": "monte-carlo-tree-search", "part": "XCOM's second enemy: the piece's options and the turns after them searched by random playouts, on the board its side believes in -- each option's visits drawn growing a frame at a time, space stopping it early"},
-        {"technique": "expectiminimax", "part": "XCOM's third enemy: the same options and turns worked out ply by ply, every shot's hit and miss weighed by its chance, a hand-written evaluation where it stops -- each option's expected value drawn, deeper a frame at a time"}
+        {"technique": "expectiminimax", "part": "XCOM's third enemy: the same options and turns worked out ply by ply, every shot's hit and miss weighed by its chance, a hand-written evaluation where it stops -- each option's expected value drawn, deeper a frame at a time"},
+        {"technique": "wave-function-collapse", "part": "XCOM's maps: N builds one by wave function collapse, the cell of least entropy first, one tile drawn by weight, a contradiction restarting from the next seed; B shows it a cell at a time -- each open cell's tiles left, the next cell in amber, a red 0 where no tile fits"}
       ],
-      "controls": "click a unit, then a lit cell; click an enemy to attack or shoot; W waits; 1-5 build; Z undoes; space ends the turn; C changes the computer; S swaps sides; M the other mode; T the threat map (in XCOM: each enemy's chance against the cell under the cursor); V, in XCOM, what the computer sees",
+      "controls": "click a unit, then a lit cell; click an enemy to attack or shoot; W waits; 1-5 build; Z undoes; space ends the turn; C changes the computer; S swaps sides; M the other mode; T the threat map (in XCOM: each enemy's chance against the cell under the cursor); V, in XCOM, what the computer sees; N, in XCOM, a new map; B its build, a cell at a time",
       "modes": [
         {"mode": "advance wars", "title": "Advance Wars", "ruleset": "res://game/tactical/advance_wars_ruleset.gd",
          "controllers": ["rules", "planner", "learned", "easy", "normal", "hard", "state machine", "behaviour tree", "GOAP", "HTN"],
@@ -230,7 +232,7 @@
          "controllers": ["weighed", "mcts", "expecti", "random"],
          "roster": "res://game/squad/squad_roster.gd"}
       ],
-      "watch": "Each computer decision drawn on the board before it is played, with the reason in the status. In XCOM, the board shows what the computer sees, and every option it weighed for the piece about to act: its score, and its best hit chance; your own shots show their chance on the target before you click. With MCTS (C), a bar of visits for each of the piece's options grows while it thinks, then the line of play it expects; space plays what it believes so far. With expectiminimax, each option's expected value and the depth it has finished, and a shot's hit and miss with what each is worth.",
+      "watch": "Each computer decision drawn on the board before it is played, with the reason in the status. In XCOM, the board shows what the computer sees, and every option it weighed for the piece about to act: its score, and its best hit chance; your own shots show their chance on the target before you click. With MCTS (C), a bar of visits for each of the piece's options grows while it thinks, then the line of play it expects; space plays what it believes so far. With expectiminimax, each option's expected value and the depth it has finished, and a shot's hit and miss with what each is worth. Press B in XCOM and step a map's build: the number on each cell is the tiles it may still be, and the amber cell is the one of least entropy, collapsed next.",
       "docs": "docs/concepts/planning-in-strategy-games.md"
     },
     {

@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-05
+verified_on: 2026-11-06
 tier: 1
-source: https://ufopaedia.org/Gameplay_Mechanics_(EU2012) ; https://ufopaedia.org/index.php/Cover_(EU2012) ; book:Steve Rabin (ed.), "Game AI Pro 3", CRC Press, 2017 -- ch. 28 (Roelofs, MCTS for strategy and tactical games)
-invalidated_if: spec/squad/rules.json changes, the tactical map changes, or a rule below stops being the code's
+source: https://ufopaedia.org/Gameplay_Mechanics_(EU2012) ; https://ufopaedia.org/index.php/Cover_(EU2012) ; book:Steve Rabin (ed.), "Game AI Pro 3", CRC Press, 2017 -- ch. 28 (Roelofs, MCTS for strategy and tactical games) ; https://github.com/mxgmn/WaveFunctionCollapse
+invalidated_if: spec/squad/rules.json or spec/squad/tiles.json changes, the tactical map changes, or a rule below stops being the code's
 teaches: none
 -->
 
@@ -576,6 +576,51 @@ red most games end drawn at the round limit (not looked into further). At
 taking games from the first enemy, as T87 measured -- MCTS gains from every
 iteration, expectiminimax only from a whole ply more, forty times dearer.
 
+## Maps by wave function collapse (T96)
+
+The squads fought on the tactical map only. **N** in the scene builds a new
+map and starts a game on it; **B** shows one being built, a cell a press,
+and N then finishes it. The technique is `ai_constraints`'s `WaveCollapse`,
+T95's solver with the cell of least entropy first, one tile drawn by weight,
+and a restart from the next seed on a contradiction
+([the technique page](../techniques/ai_constraints.md)).
+
+**The tiles are the game's own terrain**, so a built map looks like the game
+it belongs to and nothing new is drawn: open ground, trees, rock, water, the
+bridge and the ford, in `TacticalRules`' letters. `spec/squad/tiles.json`
+says, for each, how often it is drawn and which tiles may stand beside it
+left or right and above or below -- a bridge and a ford have water above
+and below and ground at their ends, rock never stands in water. That table
+is the whole of the adjacency; nothing is counted from the hand-drawn map
+(invariant 6). `godot/game/squad/tiles.json` is its copy, held byte for
+byte.
+
+**Two of T84's rules then judge the map** (`SquadMapCheck`), because no rule
+between two neighbours can say them: every start reaches every other on
+foot, and every piece has a cell beside trees or rock within its one action.
+The eight starts are pinned to open ground, so the pieces keep the cells
+`SquadScenario` and the enemies know them by. A map that fails is refused
+and the next seed built; the status's first line says the map's seed, its
+contradictions and the maps refused.
+
+| over twenty maps from seed 1 | |
+|---|---|
+| contradictions | 0 (the first sixty seeds have none on this tile set) |
+| maps refused | 3: two with a start more than one action from cover, one with a start walled off |
+| time to build one, headless | about 28 ms |
+
+**What it shows (invariant 13).** With B, every open cell carries the
+number of tiles it may still be; the cell about to collapse is in the dash's
+amber, and the status names it with its tiles left and its entropy, before
+the press that collapses it; then the counts round it drop as AC-3 crosses
+tiles out. A contradiction stays on the board, a red 0 where no tile fits,
+and the next press starts the next seed. The decision overlay keeps the
+same in English under `map build`. What the build replays is the build
+that already happened, so watching cannot make a different map.
+
+T87's and T88's measurements stay on the tactical map; re-running them on
+built maps is left to whichever of them is next run, not this task.
+
 ## Manual check
 
 From `make menu`, open the tactical card in XCOM mode, and play a match in
@@ -599,6 +644,13 @@ Then play a position where the two disagree -- `03 flank` in
 then with expecti: do the two overlays, expected values against visits,
 make it clear why each chose what it chose? There is no position picker in
 the scene yet: reach a similar shot in play.
+
+T96: press N twenty times. Do the maps look like places -- walls that
+meet, cover in clusters, a river with its crossings -- or like noise? Play
+two of them to the end. Then press B and step a few cells: can you say,
+before each press, which cell collapses next and why it is that one? Keep
+pressing B until the counts fall across a whole region at once: is that the
+propagation, readable as such?
 
 Read `spec/squad/rules.json` beside the two UFOpaedia pages: are the
 numbers the ones the mode claims to borrow, and is every simplification

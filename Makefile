@@ -856,7 +856,7 @@ demo-rts: import ## Real-time strategy against a commander that plans: drag sele
 	@$(GODOT) --path godot res://game/rts/rts.tscn
 
 .PHONY: demo-tactical
-demo-tactical: import ## Advance Wars style tactics against the computer: click to move, W waits, 1-5 build, Z undo, space ends the turn, C changes the computer, S swaps sides; MODE=squad opens the menu on it in XCOM mode (M switches, V the computer's view)
+demo-tactical: import ## Advance Wars style tactics against the computer: click to move, W waits, 1-5 build, Z undo, space ends the turn, C changes the computer, S swaps sides; MODE=squad opens the menu on it in XCOM mode (M switches, V the computer's view, N a new map, B its build a cell at a time)
 	@# Without MODE, the scene on its own, in Advance Wars. With it, the
 	@# project's main scene -- the menu -- straight into this card in that
 	@# mode, since the menu is what hands the scene its modes (T85);

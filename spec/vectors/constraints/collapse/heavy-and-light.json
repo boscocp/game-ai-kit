@@ -1,0 +1,62 @@
+{
+ "description": "A tile drawn nine times in ten and one drawn once, beside anything: the draw by weight.",
+ "tiles": [
+  {
+   "tile": "h",
+   "weight": 9,
+   "left_right": "hl",
+   "up_down": "hl"
+  },
+  {
+   "tile": "l",
+   "weight": 1,
+   "left_right": "hl",
+   "up_down": "hl"
+  }
+ ],
+ "width": 4,
+ "height": 2,
+ "pinned": {},
+ "seed": 8,
+ "attempts": 10,
+ "map": [
+  "hhhl",
+  "hhhh"
+ ],
+ "collapsed": [
+  [
+   "1,0",
+   "h"
+  ],
+  [
+   "0,1",
+   "h"
+  ],
+  [
+   "3,0",
+   "l"
+  ],
+  [
+   "3,1",
+   "h"
+  ],
+  [
+   "2,0",
+   "h"
+  ],
+  [
+   "2,1",
+   "h"
+  ],
+  [
+   "1,1",
+   "h"
+  ],
+  [
+   "0,0",
+   "h"
+  ]
+ ],
+ "restarts": 0,
+ "contradictions": []
+}

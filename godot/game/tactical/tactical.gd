@@ -43,6 +43,12 @@
 ## board shows what the computer sees, with every option it weighed for the
 ## piece about to act; V turns that off, and the board is the person's again.
 ##
+## A key the scene does not use is the mode's (`TacticalModeView.pressed`):
+## the XCOM-style mode's N builds a new map by wave function collapse, and B
+## shows one being built, a cell a press (T96). While a mode builds, the board
+## shows what it is building (`TacticalModeView.building`), and a click does
+## nothing.
+##
 ## Opened with `-- --record` (`make record-tactical`), every game played to
 ## its end is kept in `data/tactical/` -- the decisions both sides played,
 ## the person's taken back with Z dropped with them (`TacticalRecording`) --
@@ -167,7 +173,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_press(key.keycode)
 		return
 	var click := event as InputEventMouseButton
-	if click != null and click.pressed and click.button_index == MOUSE_BUTTON_LEFT:
+	if click != null and click.pressed and click.button_index == MOUSE_BUTTON_LEFT and view().building().is_empty():
 		click_cell(_board.cell_at(_board.to_local(click.global_position)))
 	var motion := event as InputEventMouseMotion
 	if motion != null:
@@ -180,7 +186,7 @@ func point_at(cell: Vector2i) -> void:
 	if cell == _cursor:
 		return
 	_cursor = cell
-	if _showing_threat and state != null:
+	if _showing_threat and state != null and view().building().is_empty():
 		_intent.show_threat(_tint())
 
 
@@ -454,6 +460,8 @@ func decision_overlay() -> Dictionary:
 		overlay["plan"] = plan
 	overlay["threatened cells"] = threat().size()
 	overlay["mode"] = ruleset.mode_name()
+	if not view().building().is_empty():
+		overlay["map build"] = view().building()["overlay"]
 	if _computer_thinking() and not computer.weighed().is_empty():
 		overlay["weighed"] = computer.weighed().map(_weighed_described)
 	return overlay
@@ -514,6 +522,17 @@ func _press(keycode: Key) -> void:
 	elif keycode == KEY_T:
 		_showing_threat = not _showing_threat
 		_refresh()
+	else:
+		_mode_key(keycode)
+
+
+# A key the scene leaves to the mode, and what the mode says to do after it.
+func _mode_key(keycode: Key) -> void:
+	match view().pressed(keycode):
+		TacticalModeView.NEW_GAME:
+			new_game()
+		TacticalModeView.DRAW:
+			_refresh()
 
 
 ## Every controller C cycles through, named on screen under the board on
@@ -616,7 +635,7 @@ func _refuse(reason: String) -> void:
 func _explained(refusal: String, cell: Vector2i) -> String:
 	if not refusal.ends_with("is blocked") or not state.graph.contains(cell):  # not shown: the board's English, compared
 		return refusal
-	match TacticalScenario.MAP[cell.y][cell.x]:
+	match view().rows()[cell.y][cell.x]:
 		TacticalRules.WATER:
 			return tr("{refusal}: water, which only waders cross").format({refusal = TacticalRefusal.words(refusal)})
 		TacticalRules.ROCK:
@@ -715,8 +734,12 @@ func _refresh() -> void:
 	if _persons_turn():
 		reach = _steps_in_reach()
 		_units.spent = _turn.spent_ids()
-	_board.draw_board(state.graph, reach, view().points(), _terrain())
-	_draw_what_is_seen()
+	var built: Dictionary = view().building()
+	if not built.is_empty():
+		_draw_building(built)
+	else:
+		_board.draw_board(state.graph, reach, view().points(), _terrain())
+		_draw_what_is_seen()
 	_header.text = "\n".join(_header_lines())
 	_keep_if_over()
 	_end_button.disabled = not _persons_turn()
@@ -754,6 +777,21 @@ func _draw_what_is_seen() -> void:
 	if _showing_threat:
 		tinted = _tint()
 	_intent.show_threat(tinted)
+
+
+# What a mode is building in place of the game (T96): the board drawn from
+# its rows, no pieces, its words on the cells, the next cells in the dash's
+# tint and where it failed in the threat's.
+func _draw_building(built: Dictionary) -> void:
+	_board.draw_board(TacticalRules.graphs_from(view().rows())[UnitType.GROUND], [], [], _terrain())
+	_units.show_state(BoardState.new(state.graph, [] as Array[Unit], state.current_faction), _board, -1)
+	_intent.show_fog(null)
+	_intent.show_decision(null, state, _board)
+	_intent.show_plan({} as Dictionary[Vector2i, String])
+	_intent.show_weighed([] as Array[Dictionary])
+	_intent.show_odds(built["labels"])
+	_intent.show_dashes(built["next"])
+	_intent.show_threat(built["stuck"])
 
 
 # The three lines over the board, and in a game of several modes a fourth
@@ -857,9 +895,9 @@ func _dashes_in_reach() -> Array[Vector2i]:
 
 
 # The ground the board's costs alone would draw wrong: trees as rough ground,
-# water as a wall, the bridge as open ground. Every mode plays on this one
-# map -- the XCOM-style mode reads `TacticalScenario.MAP` too -- so the
-# scene draws it, not a view.
+# water as a wall, the bridge as open ground. The scene draws it, from the
+# rows the mode's view says it plays on: the tactical map, or the map the
+# XCOM-style mode built or is building (T96).
 func _terrain() -> Dictionary:
 	var tiles: Dictionary = {}
 	var kinds: Dictionary = {
@@ -867,6 +905,6 @@ func _terrain() -> Dictionary:
 		TacticalRules.BRIDGE: BoardView.BRIDGE, TacticalRules.FORD: BoardView.ROUGH,
 	}
 	for letter: String in kinds:
-		for cell: Vector2i in TacticalRules.cells_of(TacticalScenario.MAP, letter):
+		for cell: Vector2i in TacticalRules.cells_of(view().rows(), letter):
 			tiles[cell] = kinds[letter]
 	return tiles

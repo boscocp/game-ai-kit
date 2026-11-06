@@ -31,7 +31,7 @@ A row per demo, a column per technique; each mark links the technique's page, an
 | [Bot match](#demo-botmatch) |  |  |  |  |  |  |  |  | [●](ai_perception.md) |  |  | [●](ai_search.md) |  | [●](ai_teamwork.md) | [●](ai_utility.md) |  |  |  |  |
 | [One guard, four ways to decide](#demo-behaviour) |  |  | [●](ai_behaviour.md) |  | [◐](ai_fuzzy.md) |  |  |  | [●](ai_perception.md) |  |  | [●](ai_search.md) |  |  |  |  |  |  |  |
 | [Real-time strategy](#demo-rts) |  |  | [●](ai_behaviour.md) |  |  |  |  |  |  | [●](ai_planning.md) | [●](ai_rts_core.md) |  |  |  |  |  |  |  |  |
-| [Tactics](#demo-tactical) |  |  | [●](ai_behaviour.md) |  |  | [●](ai_learning.md) |  |  |  | [●](ai_planning.md) |  |  |  |  |  |  |  |  |  |
+| [Tactics](#demo-tactical) | [●](ai_adversarial.md) |  | [●](ai_behaviour.md) | [●](ai_constraints.md) |  | [●](ai_learning.md) |  |  |  | [●](ai_planning.md) |  |  |  |  | [●](ai_utility.md) |  |  |  |  |
 | [Pac-Man, a small maze](#demo-maze) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | [Talk your way past the guard](#demo-talk) |  |  |  |  |  |  | [●](ai_llm.md) |  |  |  |  |  |  |  |  |  |  |  |  |
 | [Fighting, training mode](#demo-fighting) |  | [●](ai_bandit.md) |  |  |  | [●](ai_learning.md) |  | [●](ai_opponent.md) |  |  |  |  |  |  |  |  |  | [●](behaviour_cloning.md) |  |
@@ -78,9 +78,9 @@ A row per demo, a column per technique; each mark links the technique's page, an
   - keys: V watches two computers; H the planner; I the influence map; F lifts the fog.
   - techniques: ● [ai_behaviour](ai_behaviour.md) (HTN, state machine); ● [ai_planning](ai_planning.md) (STRIPS over PDDL); ● [ai_rts_core](ai_rts_core.md) (flow fields).
   - written inside the example itself: priority queue of wishes, utility over regions, influence map.
-- <a id="demo-tactical"></a>**Tactics**, `make demo-tactical` -- like Advance Wars.
-  - keys: C changes the computer, whose next decision is drawn in pink before space plays it; S swaps sides.
-  - techniques: ● [ai_behaviour](ai_behaviour.md) (state machine, behaviour tree, GOAP, HTN); ● [ai_learning](ai_learning.md) (a regression trained in Python); ● [ai_planning](ai_planning.md) (STRIPS over PDDL).
+- <a id="demo-tactical"></a>**Tactics**, `make demo-tactical` -- like Advance Wars, or XCOM.
+  - keys: C changes the computer, whose next decision is drawn in pink before space plays it; S swaps sides; in XCOM, N a new map and B its build, a cell at a time.
+  - techniques: ● [ai_adversarial](ai_adversarial.md) (Monte Carlo tree search, expectiminimax with a hand-written evaluation); ● [ai_behaviour](ai_behaviour.md) (state machine, behaviour tree, GOAP, HTN); ● [ai_constraints](ai_constraints.md) (wave function collapse); ● [ai_learning](ai_learning.md) (a regression trained in Python); ● [ai_planning](ai_planning.md) (STRIPS over PDDL); ● [ai_utility](ai_utility.md) (utility-weighed actions).
   - written inside the example itself: hand-written rules, lookahead with exact odds, influence map.
 - <a id="demo-maze"></a>**Pac-Man, a small maze**, `make demo-maze` -- like Pac-Man, you against Blinky.
   - keys: V the ghosts' view: each ghost's target and the distance from each way; G brings Pinky in; C hands Pac-Man to the MDP: each cell's value, each move's worth.
@@ -96,10 +96,10 @@ A row per demo, a column per technique; each mark links the technique's page, an
 
 ## Technique by technique {#by-technique}
 
-- <a id="ai_adversarial"></a>[ai_adversarial](ai_adversarial.md) -- the best move against someone who answers. Watch it in: ● [`make run`](#run) (minimax with alpha-beta).
+- <a id="ai_adversarial"></a>[ai_adversarial](ai_adversarial.md) -- the best move against someone who answers. Watch it in: ● [`make run`](#run) (minimax with alpha-beta); ● [`make demo-tactical`](#demo-tactical) (Monte Carlo tree search, expectiminimax with a hand-written evaluation).
 - <a id="ai_bandit"></a>[ai_bandit](ai_bandit.md) -- which option to try next? Watch it in: ● [`make demo-fighting`](#demo-fighting) (a bandit, UCB1).
 - <a id="ai_behaviour"></a>[ai_behaviour](ai_behaviour.md) -- what to do next. Watch it in: ● [`make demo-behaviour`](#demo-behaviour) (state machine, behaviour tree, GOAP, HTN); ● [`make demo-rts`](#demo-rts) (HTN, state machine); ● [`make demo-tactical`](#demo-tactical) (state machine, behaviour tree, GOAP, HTN).
-- <a id="ai_constraints"></a>[ai_constraints](ai_constraints.md) -- what must hold, and a solver that finds it. Watch it in: ● [`make demo-infiltration`](#demo-infiltration) (constraint satisfaction, AC-3 and backtracking).
+- <a id="ai_constraints"></a>[ai_constraints](ai_constraints.md) -- what must hold, and a solver that finds it. Watch it in: ● [`make demo-infiltration`](#demo-infiltration) (constraint satisfaction, AC-3 and backtracking); ● [`make demo-tactical`](#demo-tactical) (wave function collapse).
 - <a id="ai_fuzzy"></a>[ai_fuzzy](ai_fuzzy.md) -- how much, by degrees. Watch it in: ● [`make demo-stealth`](#demo-stealth) (fuzzy logic); ● [`make demo-infiltration`](#demo-infiltration) (fuzzy logic); ◐ [`make demo-behaviour`](#demo-behaviour) (through `stealth`).
 - <a id="ai_learning"></a>[ai_learning](ai_learning.md) -- using what Python learned. Watch it in: ○ [`make run`](#run) (declared in its manifest, never reached from its scene); ◐ [`make demo-skirmish`](#demo-skirmish) (through `tactical`; a regression trained in Python); ● [`make demo-tactical`](#demo-tactical) (a regression trained in Python); ● [`make demo-fighting`](#demo-fighting) (the ghost's case lookup).
 - <a id="ai_llm"></a>[ai_llm](ai_llm.md) -- a language model behind a validator. Watch it in: ● [`make demo-talk`](#demo-talk) (a language model reading discourse acts, behind a validator).
@@ -110,7 +110,7 @@ A row per demo, a column per technique; each mark links the technique's page, an
 - <a id="ai_search"></a>[ai_search](ai_search.md) -- finding a route. Watch it in: ● [`make demo-skirmish`](#demo-skirmish) (A*); ● [`make demo-search`](#demo-search) (BFS, DFS, Dijkstra, A*); ● [`make demo-stealth`](#demo-stealth) (A*); ● [`make demo-infiltration`](#demo-infiltration) (A*); ● [`make demo-botmatch`](#demo-botmatch) (A*); ● [`make demo-behaviour`](#demo-behaviour).
 - <a id="ai_steering"></a>[ai_steering](ai_steering.md) -- which way to push, and how hard. Watch it in: ● [`make demo-steering`](#demo-steering) (seek, arrive, pursue, avoid); ● [`make demo-racing`](#demo-racing) (seek); ● [`make demo-racing3d`](#demo-racing3d) (PID controller, heat line).
 - <a id="ai_teamwork"></a>[ai_teamwork](ai_teamwork.md) -- a team that shares the work. Watch it in: ● [`make demo-infiltration`](#demo-infiltration) (a shared search, role arbiter); ● [`make demo-botmatch`](#demo-botmatch) (tactical positions with claims, team commander over influence, squad confidence and retreat in waves).
-- <a id="ai_utility"></a>[ai_utility](ai_utility.md) -- weighing every option at once. Watch it in: ● [`make demo-infiltration`](#demo-infiltration) (utility-weighed actions); ● [`make demo-botmatch`](#demo-botmatch) (utility-weighed actions).
+- <a id="ai_utility"></a>[ai_utility](ai_utility.md) -- weighing every option at once. Watch it in: ● [`make demo-infiltration`](#demo-infiltration) (utility-weighed actions); ● [`make demo-botmatch`](#demo-botmatch) (utility-weighed actions); ● [`make demo-tactical`](#demo-tactical) (utility-weighed actions).
 - <a id="menace"></a>[MENACE](menace.md) -- the matchbox machine that learns noughts and crosses. Watch it in: ● [`make demo-tictactoe`](#demo-tictactoe) (MENACE's matchboxes).
 - <a id="learned_evaluation"></a>[Learned evaluation](learned_evaluation.md) -- scoring a position by weights fitted to results. Watch it in: ● [`make run`](#run) (a learned evaluation).
 - <a id="behaviour_cloning"></a>[Behaviour cloning](behaviour_cloning.md) -- the fighter that plays like you. Watch it in: ● [`make demo-fighting`](#demo-fighting) (behaviour cloning).

@@ -9,7 +9,13 @@
 ## - **the tint** under the cursor: each enemy the person sees that could
 ##   shoot that cell, and its hit chance there;
 ## - the status with the chance's reasons (`SquadStatus`), the legend
-##   (`SquadLegend`), and the words of a win (`SquadVictory`).
+##   (`SquadLegend`), and the words of a win (`SquadVictory`);
+## - **the map being built** (T96): N builds a new map by wave function
+##   collapse and starts a game on it; B shows one built a cell a press --
+##   on each open cell the tiles it may still be, the cell of least entropy
+##   in the dash's tint before it collapses, a contradiction in red where it
+##   emptied a cell -- and N then skips to the end. The status's first line
+##   says where the map came from and, while it is built, what the step is.
 ##
 ## Everything here is drawn from what the rules answer -- the side's view,
 ## the shots a piece may take, the chance of each -- so the screen cannot
@@ -128,21 +134,65 @@ func reveals(before: BoardState, after: BoardState, side: int) -> bool:
 	return false
 
 
-## `SquadStatus.text`: the piece in hand, its shots with their reasons.
+## `SquadStatus.text`: the piece in hand, its shots with their reasons --
+## under a line about the map (`SquadMapWords`).
 func status(state: BoardState, in_hand: Unit, refusal: String, news: String, can_attack: bool) -> String:
-	return SquadStatus.text(state, in_hand, refusal, news, can_attack)
+	return SquadMapWords.line(squad) + "\n" + SquadStatus.text(state, in_hand, refusal, news, can_attack)
 
 
 ## `SquadStatus.computer_text`: who plays, what it will do, what it weighed
 ## -- through the fog on screen.
 func computer_status(state: BoardState, turn: BlueTurn, controller: BlueController, news: String,
 		shown_fog: TacticalFog) -> String:
-	return SquadStatus.computer_text(state, turn, controller, news, shown_fog)
+	return SquadMapWords.line(squad) + "\n" + SquadStatus.computer_text(state, turn, controller, news, shown_fog)
 
 
 ## `SquadStatus.moved_already`: "shoot", in this mode.
 func moved_already(unit: Unit, can_attack: bool, can_undo: bool) -> String:
 	return SquadStatus.moved_already(unit, can_attack, can_undo)
+
+
+## The map the rules read, or, while B shows one being built, the build as
+## it stands: each collapsed cell its tile, the rest open ground.
+func rows() -> Array[String]:
+	if squad.watching_the_build:
+		return squad.map_build.partial_rows()
+	return SquadScenario.rows()
+
+
+## N: a new map, at once -- or, while one is shown being built, the rest of
+## it -- and a new game on it. B: a new map shown being built, or its next
+## step; a new game once it has been shown whole.
+func pressed(keycode: Key) -> int:
+	if keycode == KEY_N:
+		if squad.watching_the_build:
+			squad.finish_the_build()
+		else:
+			squad.build_map(false)
+		return NEW_GAME
+	if keycode != KEY_B:
+		return NOTHING
+	if not squad.watching_the_build:
+		squad.build_map(true)
+		return DRAW
+	squad.step_the_build()
+	return DRAW if squad.watching_the_build else NEW_GAME
+
+
+## While B shows a map being built: each open cell's count of tiles left,
+## the cell of least entropy about to collapse, and where a contradiction
+## emptied a cell. {} otherwise.
+func building() -> Dictionary:
+	if not squad.watching_the_build:
+		return {}
+	var build: SquadMapBuild = squad.map_build
+	var stuck: Dictionary[Vector2i, int] = {}
+	if build.stuck() != Vector2i(-1, -1):
+		stuck[build.stuck()] = 0
+	var next: Array[Vector2i] = []
+	if build.choosing() != Vector2i(-1, -1):
+		next.append(build.choosing())
+	return {"labels": build.counts(), "next": next, "stuck": stuck, "overlay": SquadMapWords.overlay(build)}
 
 
 ## `SquadLegend.entries`.

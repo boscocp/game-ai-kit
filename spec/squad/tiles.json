@@ -1,0 +1,17 @@
+{
+  "about": [
+    "The tiles wave function collapse builds the XCOM-style mode's maps from (T96): the terrain the tactical game already draws, in the characters `TacticalRules` names, and nothing else.",
+    "`weight` is how often a tile is drawn when a cell could still be several: a cell's chance of each tile is its weight over the sum of the weights left. Written by hand, not counted from a map.",
+    "`left_right` lists the tiles that may stand to either side of this one, `up_down` the ones that may stand above or below it. Each pair is said from both sides, and a table that says it from one side only is refused.",
+    "The rules, in words: a bridge and a ford cross water, so they have water above and below and open ground (or more of themselves) at their ends; rock does not stand in water; trees and open ground stand beside anything but the ends of a crossing.",
+    "A copy of this file, byte for byte, is `godot/game/squad/tiles.json`, which the game reads; `python/tests/test_squad_vectors.py` holds the two equal."
+  ],
+  "tiles": [
+    {"tile": ".", "weight": 20, "left_right": ".T#~=f", "up_down": ".T#~"},
+    {"tile": "T", "weight": 6, "left_right": ".T#~", "up_down": ".T#~"},
+    {"tile": "#", "weight": 3, "left_right": ".T#", "up_down": ".T#"},
+    {"tile": "~", "weight": 5, "left_right": ".T~", "up_down": ".T~=f"},
+    {"tile": "=", "weight": 1, "left_right": ".=", "up_down": "~"},
+    {"tile": "f", "weight": 1, "left_right": ".f", "up_down": "~"}
+  ]
+}

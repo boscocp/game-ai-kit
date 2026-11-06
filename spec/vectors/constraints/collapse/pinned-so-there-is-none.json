@@ -1,0 +1,35 @@
+{
+ "description": "Checkers with two neighbouring cells pinned to the same tile: AC-3 empties a cell before anything collapses, every seed.",
+ "tiles": [
+  {
+   "tile": "a",
+   "weight": 1,
+   "left_right": "b",
+   "up_down": "b"
+  },
+  {
+   "tile": "b",
+   "weight": 1,
+   "left_right": "a",
+   "up_down": "a"
+  }
+ ],
+ "width": 3,
+ "height": 2,
+ "pinned": {
+  "0,0": [
+   "a"
+  ],
+  "1,0": [
+   "a"
+  ]
+ },
+ "seed": 1,
+ "attempts": 3,
+ "map": null,
+ "collapsed": [],
+ "restarts": 1,
+ "contradictions": [
+  "0,0"
+ ]
+}

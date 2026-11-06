@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-05
+verified_on: 2026-11-06
 tier: 0
 source: book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 ; book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020
 invalidated_if: a technique page in pt-BR translates a term this list says stays in English, or a new technique brings a term missing here
@@ -71,6 +71,8 @@ também em itálico, ficam como foram publicados.
 | *min-conflicts* | a busca local para um CSP: parte de uma resposta completa e errada e troca, a cada passo, o valor de uma variável em conflito pelo que menos conflita |
 | AC-3, *arc consistency* | o algoritmo que risca de cada variável os valores que nenhum valor de uma vizinha permite; consistência de arcos |
 | *minimum remaining values*, *least constraining value* | MRV e LCV: escolher primeiro a variável com menos valores restantes, e para ela o valor que menos risca das vizinhas |
+| *wave function collapse* | WFC: gerar um mapa de *tiles* como um CSP, colapsando primeiro a célula de menor entropia num *tile* sorteado pelo peso e propagando; o nome vem da física e fica em inglês, como nos jogos que o usam |
+| *simple tiled*, *overlapping* | os dois modelos do WFC do mxgmn: no *simple tiled*, quem pode ficar ao lado de quem é uma tabela escrita à mão; no *overlapping*, é aprendido dos pedaços de uma imagem de exemplo |
 | *seed* | o número que inicia um gerador de números aleatórios; a mesma *seed* dá a mesma sequência |
 | *n-gram* | uma tabela do que veio depois de cada sequência curta de ações |
 | *prior*, *decay* | as contagens imaginárias com que toda ação começa, e o quanto uma contagem antiga pesa diante de uma nova |

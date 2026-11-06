@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-04
+verified_on: 2026-11-06
 tier: 1
-source: https://aima.cs.berkeley.edu/contents.html ; book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 6, Constraint Satisfaction Problems
-invalidated_if: the kit's ConstraintProblem or ConstraintSolver signature changes, or the infiltration demo stops solving its levels with them
+source: https://aima.cs.berkeley.edu/contents.html ; book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 6, Constraint Satisfaction Problems ; https://github.com/mxgmn/WaveFunctionCollapse
+invalidated_if: the kit's ConstraintProblem, ConstraintSolver or WaveCollapse signature changes, or the infiltration demo or the XCOM-style mode stops building with them
 teaches: constraint-satisfaction
 -->
 
@@ -26,6 +26,25 @@ values* (ties to the one on most constraints, the degree heuristic), its
 values *least constraining* first, and *arc consistency* kept by AC-3 (fig.
 6.3) after every assignment. A seed orders the ties, so a seed is one answer.
 
+**Wave function collapse** is the same solver with three choices changed
+(`WaveCollapse`, T96). mxgmn's README says WFC "translates a texture
+synthesis problem into a constraint satisfaction problem": a map cell is a
+variable, a tile a value, two neighbouring cells a binary constraint saying
+which tiles may stand together (`TileGrid` declares them from a table
+written by hand). Propagation is the solver's AC-3, unchanged. What changes:
+the next cell is the one of least *entropy* -- Shannon's, over the weights
+of the tiles it may still be, `ln W - sum(w ln w) / W` -- where the solver
+takes the fewest values; its value is one tile drawn by weight, not a list
+of values to try in turn; and when propagation empties a cell -- a
+*contradiction* -- it does not go back but starts again from the next seed,
+counting the restarts -- unless no cell had collapsed yet, when only the
+tiles and the pins were in play and no seed would help. One difference from
+mxgmn, who observes "the minimal nonzero entropy": in CSP terms a cell down
+to one tile is still unassigned, so it is chosen first, with no draw, where
+mxgmn counts it as already observed. The map is the same either way. The
+lesson is that WFC is not a separate algorithm: it is a CSP with a
+particular order and no backtracking.
+
 ## When not to use it {#when-not}
 
 When any answer will do and the first random one is usually fine:
@@ -39,6 +58,19 @@ backtracking thrashes -- going back over choices that were never the
 trouble -- this kit restarts with fresh ties rather than jumping back (AIMA
 6.3.3's backjumping is not here).
 
+Wave function collapse, in particular: not when the map must have something
+no pair of neighbours can see -- a way through, cover near each start, one
+exit. It only keeps neighbours agreeing, so check the whole map after it is
+built (the XCOM-style mode refuses the maps it cannot play) or declare the
+rule as a global constraint and let `ConstraintSolver` backtrack. Not on a
+map so large that restarting the whole of it on one contradiction costs more
+than backtracking would. And not when the maps should look like a picture
+you already have: that is mxgmn's *overlapping* model, which learns the
+adjacency from an example; this is his *simple tiled* model, told it. And
+not for a tile with a direction -- high ground only to a cliff's left --
+since `left_right` lists the tiles allowed on either side: adjacency here
+is symmetric within an axis.
+
 ## Where to watch it {#watch}
 
 - `make demo-infiltration` -- **L** to a generated level, then **K**: the
@@ -49,6 +81,16 @@ trouble -- this kit restarts with fresh ties rather than jumping back (AIMA
   many places it has left, the next one first; a value undone by a backtrack
   flashes red; the last refusal names its constraint. **N** builds another
   level the same way.
+- `make demo-tactical MODE=squad` -- the XCOM-style mode. **N** builds a new
+  map by wave function collapse and starts a game on it; **B** shows one
+  being built, a cell a press. On each open cell, the number of tiles it may
+  still be; the cell of least entropy, about to collapse, in amber, with its
+  entropy and tiles left on the status's first line; the next press collapses
+  it, and the counts round it drop as propagation crosses tiles out. A
+  contradiction stays on the board as a red 0 where no tile fits, and the
+  next press starts again from the next seed. **N** finishes the build at
+  once. The status's first line then says the map's seed, its contradictions
+  and how many maps the rules refused.
 - `make measure-level-constraints` -- the solver against the drawn levels
   over 200 seeds; the table is on the [infiltration page](../godot/infiltration.md).
 - Which demo uses which technique, both ways: the
@@ -76,12 +118,34 @@ of each partial level. The knobs:
 | record | a property, off | keep every step in `trace` -- chosen, assigned, refused, crossed out, undone -- for a view |
 | limit | a property, 0 for none | the most assignments before giving up; `gave_up` then says no answer was proved impossible |
 
+The XCOM-style mode's maps (`godot/game/squad/squad_map_build.gd`) are wave
+function collapse on the tactical map's 14 by 9, from the tiles in
+`spec/squad/tiles.json`: open ground, trees, rock, water, the bridge and the
+ford -- the terrain the tactical game already draws, so a generated map
+looks like the game it belongs to. Each tile lists the tiles that may stand
+beside it left or right and above or below; a bridge and a ford have water
+above and below, rock never stands in water. The eight starts are pinned to
+open ground, and a map built is put to two of T84's rules before it is
+played: the starts connected on foot, and cover within one action of each.
+A map that fails is refused, and the next seed built. Measured over twenty
+maps from seed 1: no contradiction, three maps refused (two with a start
+far from cover, one walled off). The knobs:
+
+| knob | where | what it changes |
+|---|---|---|
+| tile set | `TileGrid.problem(tile_set, size, pinned)` | the tiles, each with its `weight`, its `left_right` and its `up_down` neighbours; a pair said from one side only is refused by `TileGrid.why_not` |
+| pinned | the third argument, "x,y" -> tiles | the cells that may only be some tiles: the squads' starts, open ground |
+| weights | `WaveCollapse.new(problem, weights, seed)` | how often each tile is drawn, and so the entropy of a cell |
+| attempts | a property, 10 | how many seeds to try before saying there is no map; `restarts` and `contradictions` say what happened to the others |
+| record | the solver's, off | the trace a view replays: each cell chosen, the tile drawn, each tile crossed out, and a "contradiction" event where an attempt ended |
+
 ## In your own project {#your-project}
 
 ### What to copy {#copy}
 
 One folder: `godot/addons/ai_constraints/`. It needs nothing else, not even
-`ai_core`. Open the project once, or run `godot --headless --import`, so
+`ai_core`. Wave function collapse is two of its files, `wave_collapse.gd`
+and `tile_grid.gd`, and needs the solver's. Open the project once, or run `godot --headless --import`, so
 Godot registers its classes. The Python twin is `gameaikit.constraints`.
 
 ### A minimal example {#example}
@@ -154,5 +218,10 @@ list of candidates is the usual answer when the things are large.
   [concepts/constraint-satisfaction.md](../concepts/constraint-satisfaction.md).
 - The two levels side by side, measured over 200 seeds:
   [godot/infiltration.md](../godot/infiltration.md).
+- Wave function collapse at its source, the simple tiled and the
+  overlapping models, and the games that use it: mxgmn,
+  [WaveFunctionCollapse](https://github.com/mxgmn/WaveFunctionCollapse).
+  The vectors and the rules both languages follow:
+  [spec/vectors/constraints/collapse/](../../spec/vectors/constraints/collapse/README.md).
 - Where constraint satisfaction sits among the field's techniques:
   [concepts/the-literature-and-the-kit.md](../concepts/the-literature-and-the-kit.md).

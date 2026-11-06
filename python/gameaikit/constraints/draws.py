@@ -1,13 +1,16 @@
 """Marsaglia's 32-bit xorshift, as `ai_constraints/constraint_draws.gd` writes it.
 
 The same dozen lines as T86's generator for Monte Carlo search, T91's for
-the particle filter and T99's for the bandit, copied rather than imported:
-the GDScript twin may import no other addon (invariant 2), and this side
-keeps the same shape. Seeded with 1, the first draw is 270369.
+the particle filter and T99's for the bandit. Since T109 that generator is
+the kernel's, `ai_core`, with a Python twin in the kernel's package, which
+this addon may use; T95 copied it before, and folding the copy in is T135.
+Seeded with 1, the first draw is 270369.
 
-The solver draws only to shuffle: once, before it searches, the variables
-and then each domain, so that a tie between equal choices goes the way the
-seed says and the same seed gives the same answer in both languages.
+`ConstraintSolver` draws only to shuffle: once, before it searches, the
+variables and then each domain, so that a tie between equal choices goes the
+way the seed says and the same seed gives the same answer in both languages.
+`WaveCollapse` (T96) also draws during the search, once for each cell it
+collapses, from a second generator with the same seed.
 """
 
 from __future__ import annotations

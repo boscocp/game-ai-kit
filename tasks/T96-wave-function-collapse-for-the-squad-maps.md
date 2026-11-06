@@ -69,3 +69,26 @@ contradiction, when it happens, marked where it happened.
 
 References, opened on 2026-10-26: mxgmn, *WaveFunctionCollapse*, README
 <https://github.com/mxgmn/WaveFunctionCollapse>.
+
+## Notes
+
+- **Wave 142, where the code went beyond the Files line.** The scene had to
+  learn the map's keys and draw a build, so `godot/game/tactical/`
+  changed: `TacticalModeView` gained three answers (`rows`, `pressed`,
+  `building`), and `tactical.gd` asks them, draws the terrain from
+  `view().rows()`, and hands a key it does not use to the mode. The
+  squad's manifest declares `ai_constraints`, and the technique's names its
+  new Python test, so the change selects all of `make check`. The squad's
+  words are in `godot/locale/squad.csv`, the glossary gained *wave function
+  collapse*, *simple tiled* and *overlapping*, and the squad page
+  (`docs/godot/squad.md`) its section. The vectors live in a folder of their
+  own beside the solver's, read by the same runner and target, so no
+  Makefile line was needed.
+- **The review of wave 142 widened it again.** The menu's card
+  (`godot/menu/catalogue.json`, `godot/locale/menu.csv`), the demo
+  catalogue (`docs/techniques/games.json`, the generated pages and READMEs),
+  `make demo-tactical`'s help line and `scripts/catalogue.py` now know the
+  XCOM mode's N, B and wave function collapse. The catalogue walks from a
+  mode's ruleset as `check_demos.py` already did. `ConstraintDraws`' header
+  is corrected, and its fold into `GakXorshift` is T135. The review is in
+  `docs/reviews/`.

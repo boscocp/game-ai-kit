@@ -271,9 +271,15 @@ class SceneCode:
         return self._named[path]
 
 
-def scene_reach(code: SceneCode, modules: dict, scene: str) -> tuple[dict[str, set[str]], set[str]]:
+def scene_reach(code: SceneCode, modules: dict, scene: str,
+                rulesets: tuple[str, ...] = ()) -> tuple[dict[str, set[str]], set[str]]:
     """The modules a scene reaches, each with the examples it came through,
     and every script it reaches (repository paths, the scene itself not one).
+
+    `rulesets` are the scripts of the card's modes (T85): the menu builds each
+    and hands it to the scene, so they are walked from as the scene is --
+    `check_demos.py` counts them the same way (wave 142's review: the XCOM
+    mode's techniques were on the card and missing from the catalogue).
 
     "" in a module's set means the demo's own code reached it. A file is
     visited once per example it is reached through, so the answer does not
@@ -281,7 +287,8 @@ def scene_reach(code: SceneCode, modules: dict, scene: str) -> tuple[dict[str, s
     """
     own = owner_of(f"godot/{scene}", modules)
     reached: dict[str, set[str]] = {}
-    seen, waiting = {(scene, "")}, [(scene, "")]
+    seen = {(path, "") for path in (scene, *rulesets)}
+    waiting = sorted(seen)
     while waiting:
         path, through = waiting.pop()
         owner = owner_of(f"godot/{path}", modules)
@@ -435,7 +442,9 @@ def build_demos(root: pathlib.Path, modules: dict, entries: dict) -> tuple[list[
             findings.append(f"Makefile: C5 {target} opens {scene or 'no res://….tscn scene'}, "
                             f"which is not a file any module owns")
             continue
-        reached, visits[target] = scene_reach(code, modules, scene)
+        rulesets = tuple(str(mode.get("ruleset", "")).removeprefix("res://")
+                         for mode in (cards.get(target) or {}).get("modes") or [] if mode.get("ruleset"))
+        reached, visits[target] = scene_reach(code, modules, scene, rulesets)
         filed = file_algorithms(cards.get(target), algorithms, code, visits[target], modules,
                                 declared_elsewhere)
         uses = marks(modules, module, reached)
@@ -861,11 +870,15 @@ def non_module_text(lives_in: str, demo: str = "demo-play") -> str:
     return json.dumps({"techniques": [{"page": "trick", "lives_in": [lives_in], "demos": [demo]}]})
 
 
-def menu_text() -> str:
-    """The menu's catalogue: one card, naming the four algorithms by their evidence."""
+def menu_text(modes: list[dict] | None = None) -> str:
+    """The menu's catalogue: one card, naming the four algorithms by their
+    evidence, and the `modes` given, each with the ruleset it is built from."""
+    card = {"target": "demo-play", "techniques": [{"technique": key} for key in CARD_ALGORITHMS]}
+    if modes:
+        card["modes"] = modes
     return json.dumps({
         "techniques": {key: {"name": key, "evidence": names} for key, names in CARD_ALGORITHMS.items()},
-        "examples": [{"target": "demo-play", "techniques": [{"technique": key} for key in CARD_ALGORITHMS]}],
+        "examples": [card],
     })
 
 
@@ -946,6 +959,11 @@ def cases() -> list[tuple[str, dict[str, str | None], int, str]]:
          {str(GAMES): games_text({"demo-play": dict(game_entry("Play"), like={"en": "Play like"})})}, 1, "C3"),
         ("a README without its markers", {"README.md": "# Kit\n"}, 1, "C4"),
         ("no demo at all", {"Makefile": "all:\n\t@true\n"}, 1, "C0"),
+        # Wave 142's review: a mode's ruleset is reached as the scene is, so a
+        # technique only the mode uses is marked once regenerated.
+        ("a mode's ruleset now reaching a technique, not regenerated",
+         {"godot/game/play/mode.gd": "extends RefCounted\nvar c := AiC.new()\n",
+          MENU: menu_text([{"mode": "m", "ruleset": "res://game/play/mode.gd"}])}, 1, "C1"),
         ("a demo opening a scene nobody owns",
          {"Makefile": MAKEFILE.replace("game/play/play.tscn", "game/gone/gone.tscn")}, 1, "C5"),
         *planted_reach_cases(play),
@@ -1038,9 +1056,12 @@ def self_test() -> int:
     failures = []
     with tempfile.TemporaryDirectory() as workspace:
         root = pathlib.Path(workspace)
-        for label, changes, want, code in cases():
-            failures += expect(label, planted(root, label, changes), want, code)
-        failures += drifted_summary_case(root) + mark_cases(root)
+        try:
+            for label, changes, want, code in cases():
+                failures += expect(label, planted(root, label, changes), want, code)
+            failures += drifted_summary_case(root) + mark_cases(root)
+        except AssertionError as broken:
+            failures.append(f"the sound repository: {broken}")
         refused = planted(root, "refused", {str(GAMES): games_text({})})
         shutil.copy(refused / README["en"], root / "before")
         with contextlib.redirect_stdout(io.StringIO()):

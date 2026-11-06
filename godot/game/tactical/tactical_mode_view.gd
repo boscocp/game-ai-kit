@@ -24,6 +24,12 @@
 class_name TacticalModeView
 extends RefCounted
 
+## What the scene does after a key the mode answered (`pressed`): nothing,
+## draw the screen again, or start a new game -- on a new map, say.
+const NOTHING: int = 0
+const DRAW: int = 1
+const NEW_GAME: int = 2
+
 ## The rules this view shows. The status asks them which targets a piece in
 ## hand may attack, so the words cannot offer what the rules refuse.
 var rules: TacticalRuleset
@@ -112,6 +118,27 @@ func computer_status(state: BoardState, turn: BlueTurn, controller: BlueControll
 ## What a person is told on picking up `unit` after it has walked this turn.
 func moved_already(unit: Unit, can_attack: bool, can_undo: bool) -> String:
 	return TacticalStatus.moved_already(unit, can_attack, can_undo)
+
+
+## The map the scene draws, rows of `TacticalRules`' letters: the tactical
+## map, unless the mode plays on another or is building one (T96).
+func rows() -> Array[String]:
+	return TacticalScenario.MAP
+
+
+## What the mode did with `keycode`, a key the scene does not use itself, as
+## what the scene must do next: `NOTHING`, `DRAW` or `NEW_GAME`.
+func pressed(_keycode: Key) -> int:
+	return NOTHING
+
+
+## What the board shows while the mode builds something of its own in place
+## of the game -- the squad mode's map, made a step at a time (T96):
+## `labels` (cell -> words on it), `next` (cells about to be decided),
+## `stuck` (cell -> 0, where it failed) and `overlay`, the same in English.
+## {} while it builds nothing, and the board is the game's.
+func building() -> Dictionary:
+	return {}
 
 
 ## The legend's entries, `[Color or Texture2D, String]` each.

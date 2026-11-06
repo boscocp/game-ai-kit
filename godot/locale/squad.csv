@@ -92,3 +92,13 @@ expecti,expectiminimax
 "searched to depth {depth}: {count} option(s), this one worth most, expected {value}","buscou até a profundidade {depth}: {count} opção(ões), esta a que mais vale, esperado {value}"
 its walk was refused; the next worth most,a caminhada foi recusada; a próxima que mais vale
 "believes no enemy is left, and holds","acredita que não resta inimigo, e fica"
+"map: the tactical one -- N builds a new one by wave function collapse, B a cell at a time","mapa: o tático -- N constrói um novo por wave function collapse, B uma célula por vez"
+"no map from seed {first} to {last}: the last one stays -- N tries the next seeds","nenhum mapa da semente {first} à {last}: fica o último -- N tenta as sementes seguintes"
+"map: seed {seed}, by wave function collapse -- {contradictions} contradiction(s), {refused} refused as unplayable -- N a new one, B a cell at a time","mapa: semente {seed}, por wave function collapse -- {contradictions} contradição(ões), {refused} recusado(s) por não dar para jogar -- N um novo, B uma célula por vez"
+"seed {seed}: a contradiction at {cell}, where no tile fits -- B starts again from seed {next}","semente {seed}: uma contradição em {cell}, onde nenhum tile cabe -- B recomeça da semente {next}"
+"building, seed {seed}: next {cell}, {left} tile(s) left, entropy {entropy} -- B collapses it, N finishes the map","construindo, semente {seed}: a seguir {cell}, {left} tile(s) restante(s), entropia {entropy} -- B a colapsa, N termina o mapa"
+"seed {seed}: built, but the rules cannot play it -- B tries seed {next}","semente {seed}: construído, mas as regras não conseguem jogá-lo -- B tenta a semente {next}"
+"building, seed {seed}","construindo, semente {seed}"
+"N new map, B a cell at a time","N mapa novo, B uma célula por vez"
+"amber: least entropy, next","âmbar: menor entropia, a seguir"
+red 0: a contradiction,vermelho 0: uma contradição

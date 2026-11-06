@@ -7,13 +7,16 @@
 ## twin in the other language. This is Marsaglia's xorshift (2003): three
 ## shifts and three exclusive-ors on a 32-bit number. **It is a copy** of the
 ## generator T86 wrote for Monte Carlo search, T91 for the particle filter
-## and T99 for the bandit: an addon depends on nothing but `ai_core`
-## (invariant 2), so it cannot import any of them. Seeded with 1, its first
-## draw is 270369, as theirs is.
+## and T99 for the bandit. Since T109 that generator lives in the kernel,
+## `ai_core`, which this addon may use (invariant 2 allows the kernel);
+## T95 wrote this copy before, and folding it in is T135. Seeded with 1, its
+## first draw is 270369, as theirs is.
 ##
-## The solver draws only to shuffle, once, before it searches: the variables,
-## then each domain. Every later tie goes to whichever came first in that
-## shuffled order, so a seed is one answer in both languages.
+## `ConstraintSolver` draws only to shuffle, once, before it searches: the
+## variables, then each domain. Every later tie goes to whichever came first
+## in that shuffled order, so a seed is one answer in both languages.
+## `WaveCollapse` (T96) also draws during the search, once for each cell it
+## collapses, from a second generator with the same seed.
 ##
 ## GDScript's `int` is 64 bits, so every shift to the left is cut back to 32
 ## with `MASK`; without it the two languages part at the first draw.
