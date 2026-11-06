@@ -7,6 +7,20 @@
 #     PYTHONPATH=python python3 -m gameaikit.llm.stub_server --port 8765 --delay 0.5 &
 #     ./scripts/godot --headless --path godot -s res://test/ai_llm/http_frame_probe.gd -- 8765
 #
+# A second port adds the cases T133 measured: a server that accepts and never
+# says a word (`fake_llm_server.py PORT 0 --silent`, which closes its socket
+# after `--lifetime` seconds), one on that port and each of the next two;
+# the last outlives the one before it, which holds the frame. With threads on,
+# the timeout's `cancel_request` joins a thread blocked reading it; and a
+# request left to run, never cancelled, joins the same thread when its node
+# is freed. One round and one server each: a held frame lasts until that
+# server's socket closes, and after that there is nothing left to measure.
+#
+#     python3 godot/test/ai_llm/fake_llm_server.py 8766 0 --silent --lifetime 60 &
+#     python3 godot/test/ai_llm/fake_llm_server.py 8767 0 --silent --lifetime 60 &
+#     python3 godot/test/ai_llm/fake_llm_server.py 8768 0 --silent --lifetime 120 &
+#     ./scripts/godot --headless --path godot -s res://test/ai_llm/http_frame_probe.gd -- 8765 8766
+#
 # For each case it prints how long `request()` itself took, the worst frame
 # and the median, in milliseconds, and the result `request_completed` handed over. The baseline case sends
 # nothing, so the frames it reports are what the loop costs on its own.
@@ -43,7 +57,25 @@ func _init() -> void:
 		{"name": "a name to resolve, threads off", "url": "http://llm.invalid/", "threads": false},
 		{"name": "a name to resolve, threads on", "url": "http://llm.invalid/", "threads": true},
 	]
+	if arguments.size() > 1:
+		_cases.append_array(_silent_cases(int(arguments[1])))
 	_next_case()
+
+
+# T133: a server that accepts and never answers. Timed out after 1 s, threads
+# off and on; and threads on with no timeout, the node freed after 1 s, which
+# is "never cancel it, let it end and ignore it" -- until the node goes.
+# Each case asks a silent server of its own, from `first_port` up.
+func _silent_cases(first_port: int) -> Array[Dictionary]:
+	var silent: String = "http://127.0.0.1:%d/v1/chat/completions"
+	return [
+		{"name": "silent, threads off", "url": silent % first_port, "threads": false,
+			"rounds": 1, "timeout": 1.0},
+		{"name": "silent, threads on", "url": silent % (first_port + 1), "threads": true,
+			"rounds": 1, "timeout": 1.0},
+		{"name": "silent, threads on, freed", "url": silent % (first_port + 2), "threads": true,
+			"rounds": 1, "timeout": 0.0, "free_after": 1.0},
+	]
 
 
 func _process(_delta: float) -> bool:
@@ -51,11 +83,17 @@ func _process(_delta: float) -> bool:
 	_frames.append((now - _last_ticks) / 1000.0)
 	_last_ticks = now
 	var waited: float = (now - _started_ticks) / 1000000.0
-	var done: bool = _finished or (_cases[_current]["url"] == "" and waited > 1.0)
+	var case: Dictionary = _cases[_current]
+	if case.has("free_after") and waited > case["free_after"] and not _finished:
+		_request.queue_free()
+		_request = null
+		_finished = true
+		return false
+	var done: bool = _finished or (case["url"] == "" and waited > 1.0)
 	if done:
 		_report()
 		_round += 1
-		if _round >= ROUNDS:
+		if _round >= case.get("rounds", ROUNDS):
 			_round = 0
 			_current += 1
 		if _current >= _cases.size():
@@ -83,7 +121,7 @@ func _start(case: Dictionary) -> void:
 		return
 	_request = HTTPRequest.new()
 	_request.use_threads = case["threads"]
-	_request.timeout = 2.0
+	_request.timeout = case.get("timeout", 2.0)
 	root.add_child(_request)
 	_request.request_completed.connect(_on_completed)
 	var body: String = JSON.stringify({"messages": [{"role": "user", "content": "hello"}]})

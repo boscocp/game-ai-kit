@@ -212,12 +212,14 @@ func test_a_recording_file_is_read_turn_by_turn() -> void:
 	assert_int(auto_free(RecordedRuntime.from_file(path + ".missing")).remaining()).is_equal(0)
 
 
-func test_the_http_runtime_asks_with_threads_on() -> void:
+# Threads off (T133): threaded, a silent server held the frame for as long
+# as its socket stayed open. The timing itself is llm_local_server_test's.
+func test_the_http_runtime_asks_with_threads_off() -> void:
 	var runtime: HttpRuntime = _in_scene(HttpRuntime.new())
 	assert_int(runtime.get_child_count()).is_equal(1)
 	var request: Node = runtime.get_child(0)
 	assert_str(request.get_class()).is_equal("HTTPRequest")
-	assert_bool(request.get("use_threads")).is_true()
+	assert_bool(request.get("use_threads")).is_false()
 	assert_int(request.get("body_size_limit")).is_equal(HttpRuntime.BODY_SIZE_LIMIT)
 
 

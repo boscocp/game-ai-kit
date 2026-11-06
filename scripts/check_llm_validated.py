@@ -42,9 +42,14 @@ rule is about code -- and refuses the plain ways round it:
       alone -- at 4.7 it waits for the process to end, and `_notification`
       also runs for notifications during play (T130); a `while` loop that polls (`poll()`,
       `get_status()`, `Time.get_ticks_*`) or never `await`s; `use_threads`
-      set to anything but `true`; an `HTTPRequest` made without setting
-      `use_threads = true` on the variable it was assigned to, or made where
-      that cannot be read -- in a scene, or not assigned to a name.
+      set to anything but `false`; an `HTTPRequest` made without setting
+      `use_threads = false` on the variable it was assigned to, or made where
+      that cannot be read -- in a scene, or not assigned to a name. Threads
+      off since T133: threaded, the engine reads in blocking mode, and both
+      the timeout and leaving the tree join that thread on the frame -- a
+      server that accepts and never answers held one frame for 38-59 s at
+      4.7.2 (docs/godot/llm-requests.md). Off is also the engine's default;
+      the gate asks for it written down, so the reader sees the choice.
       Anywhere: a `while` loop on `is_thinking()` or `is_busy()` that never
       `await`s, which is a game spinning the frame until the model answers.
 
@@ -58,7 +63,7 @@ And it is a net for the spellings a person writes on a normal day, not a
 proof, which is why CLAUDE.md calls invariant 7 half held. Not caught,
 known: a class or a method named in a string built at run time
 (`ClassDB.instantiate("HTTP" + "Request")`, `Callable(runtime, name)`,
-`Expression`); `set("use_threads", false)`; a node made in a `.tres` or a
+`Expression`); `set("use_threads", true)`; a node made in a `.tres` or a
 scene by a script it instances; a `Thread` the addon starts and a game
 joins; and a game that reads `LlmReply.speech` and acts on what it says
 rather than on `intent` -- the speech is validated, but a rule that parses
@@ -148,7 +153,7 @@ WAITING_ON_MODEL_RE = re.compile(r"\b(?:is_thinking|is_busy)\s*\(")
 REQUEST_NEW_RE = re.compile(r"\bHTTPRequest\s*\.\s*new\s*\(")
 ASSIGNED_RE = re.compile(
     r"(?:var\s+)?([A-Za-z_][\w.]*)\s*(?::\s*[\w.]+\s*)?:?=\s*HTTPRequest\s*\.\s*new\s*\(")
-THREADS_NOT_TRUE_RE = re.compile(r"\.\s*use_threads\s*=\s*(?!=)(?!true\b)\S")
+THREADS_NOT_FALSE_RE = re.compile(r"\.\s*use_threads\s*=\s*(?!=)(?!false\b)\S")
 
 
 @dataclasses.dataclass
@@ -297,8 +302,9 @@ def waits_in_the_addon(source: Source) -> list[str]:
         if KILL_RE.search(line) and function not in KILL_TEARDOWN:
             findings.append(f"V3 {place} kills a process in {function or 'the file'}, "
                             "not in teardown; OS.kill waits for it to end, a frame")
-        if THREADS_NOT_TRUE_RE.search(line):
-            findings.append(f"V3 {place} sets use_threads to something other than true")
+        if THREADS_NOT_FALSE_RE.search(line):
+            findings.append(f"V3 {place} sets use_threads to something other than false; "
+                            "a threaded request joins its thread on the frame")
         if WHILE_RE.match(line):
             body = " ".join(loop_of(source.code, number - 1))
             if POLL_RE.search(body) or not AWAIT_RE.search(body):
@@ -339,7 +345,7 @@ def loop_of(code: list[str], start: int) -> list[str]:
 
 
 def requests_without_threads(source: Source) -> list[str]:
-    """V3: every HTTPRequest made here is assigned, and that name gets threads."""
+    """V3: every HTTPRequest made here is assigned, and that name gets threads off."""
     whole = "\n".join(source.code)
     findings = []
     for number, line in enumerate(source.code, start=1):
@@ -351,9 +357,9 @@ def requests_without_threads(source: Source) -> list[str]:
                             "name to set use_threads on")
             continue
         name = assigned.group(1).split(".")[-1]
-        if not re.search(rf"\b{re.escape(name)}\s*\.\s*use_threads\s*=\s*true\b", whole):
+        if not re.search(rf"\b{re.escape(name)}\s*\.\s*use_threads\s*=\s*false\b", whole):
             findings.append(f"V3 {source.label}:{number} makes an HTTPRequest, `{name}`, "
-                            "and never sets use_threads = true on it")
+                            "and never sets use_threads = false on it")
     return findings
 
 
@@ -418,7 +424,7 @@ SOUND_ADDON = {
         "class_name HttpRuntime\nextends Node\n\nsignal replied(raw_text: String)\n\n"
         "var _request: HTTPRequest = null\n\n\n"
         "func _ready() -> void:\n\t_request = HTTPRequest.new()\n"
-        "\t_request.use_threads = true\n\tadd_child(_request)\n\n\n"
+        "\t_request.use_threads = false\n\tadd_child(_request)\n\n\n"
         "func log_of(reply: LlmReply) -> String:\n\treturn reply.raw_text\n\n\n"
         "func _answer_later() -> void:\n\tvar frames: int = 2\n"
         "\twhile frames > 0:\n\t\tawait get_tree().process_frame\n\t\tframes -= 1\n"
@@ -510,10 +516,13 @@ PLANTED = [
      _in_addon("\twhile not _done:\n\t\tpass\n"), "V3"),
     ("an HTTPRequest created without use_threads",
      {"godot/addons/ai_llm/http_runtime.gd": SOUND_ADDON["godot/addons/ai_llm/http_runtime.gd"]
-      .replace("\t_request.use_threads = true\n", "")}, "V3"),
-    ("use_threads set true, then false",
+      .replace("\t_request.use_threads = false\n", "")}, "V3"),
+    ("an HTTPRequest with threads on, which joins its thread on the frame (T133)",
      {"godot/addons/ai_llm/http_runtime.gd": SOUND_ADDON["godot/addons/ai_llm/http_runtime.gd"]
-      .replace("\tadd_child(_request)\n", "\t_request.use_threads = false\n\tadd_child(_request)\n")},
+      .replace("\t_request.use_threads = false\n", "\t_request.use_threads = true\n")}, "V3"),
+    ("use_threads set false, then true",
+     {"godot/addons/ai_llm/http_runtime.gd": SOUND_ADDON["godot/addons/ai_llm/http_runtime.gd"]
+      .replace("\tadd_child(_request)\n", "\t_request.use_threads = true\n\tadd_child(_request)\n")},
      "V3"),
     ("an HTTPRequest made with no name to set threads on",
      _in_addon("\tadd_child(HTTPRequest.new())\n"), "V3"),
