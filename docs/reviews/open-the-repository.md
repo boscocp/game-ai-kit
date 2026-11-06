@@ -22,12 +22,49 @@ someone will trip on it; **low** -- polish.
 | `python3 scripts/check_no_employer_refs.py` (tree and history) | 0 | the term list was present (copied by `make worktree-setup`); nothing printed, so no `E0` note: it checked |
 | the same list over every ref's commit messages and identities | 0 findings | a scratch script reusing the gate's own matcher on `git log --all` (finding 9) |
 | a secret-shaped scan of every blob on every ref, and every message | 0 | 12,526 blobs; AWS, GitHub, Anthropic, OpenAI, Hugging Face, Slack and Google keys, private-key blocks, JWTs, URLs with a password, `password = "..."` shapes. Two hits were the gates' own planted fixtures (`selftest@example.invalid`), not secrets |
-| every third-party URL the repository names, downloaded and hashed | 13 of 16 | finding 12 |
+| every third-party URL the repository names, downloaded and hashed | 14 of 18 | finding 12: the manifests' 16 URLs and `LICENCES.md`'s two archives; the four kenney.nl ones answered 403 |
+| invariant 11 over the history: `git log --all` for a `Co-Authored-By:` trailer, a "Generated with" line or the robot emoji | 0 | every ref, so the finished branches that become public with the repository (finding 7) are covered too |
 | referenced-only art in history, by content hash and by path | 0 | no Bos Wars sheet, fighter sheet or 3D pack file was ever committed (ADR 0015, 0018, 0020 hold over the whole history) |
 
 `make release` has no publishing step to switch off: it builds into `dist/`
 and runs `check_license.py` over what it built. Nothing was uploaded
 anywhere.
+
+## What was read
+
+One line per item T112 lists, with what came of it.
+
+- `README.md` and `README.pt-BR.md`, as a first page: findings 1, 2 and 11.
+- Every technique page, both languages (19 and their twins, plus
+  `ai_core.md`, `catalogue.md` and the glossary): the stale catalogue
+  lines (finding 3) and `ai_llm`'s "No demo yet" (finding 2); nothing
+  else found.
+- The library guide, `using-the-library.md` and its twin (T77): nothing
+  found. `make library-check` follows it outside the repository and
+  passed, and its Python 3.12 line is the one the README should match.
+- Every ADR's status line: finding 10; the other 23 are accepted, dated
+  and name their task.
+- The invariants table against the gates: finding 5; every other row's
+  gate exists and is reached from `make check`, CI or the hooks.
+- LICENSE, NOTICE and the third-party art: findings 4 and 12; LICENSE is
+  Apache-2.0 at the root, in every addon and in `python/`, as
+  `lint-license` holds.
+- Invariant 10 over the history: nothing found; the gate's gap is
+  finding 9.
+- Secrets in the history: nothing found.
+- Stale worktrees and remote branches: finding 7.
+- The size of the history: finding 8, nothing found.
+- Invariant 11 over the history: nothing found.
+- What a community needs: `CONTRIBUTING.md`, templates, a code of
+  conduct: finding 6.
+- How pt-BR and en are kept in step: held by `lint-translations-docs`
+  (`translation_of` hashes, which this wave's catalogue lines had to
+  update) and `lint-glossary`; nowhere written for a contributor, which
+  is in finding 6 and T144.
+- What tier 1 means for a contributor's machine: the README's tier table
+  is clear for a reader, but says "Python 3" where 3.12 is needed
+  (finding 2), and nothing tells a contributor which tier a change needs
+  (`make check` needs tier 2): finding 6 and T144.
 
 ## Findings
 
@@ -57,7 +94,8 @@ Two more steps make it worse:
   first `make check` for something this repository did not write.
 
 The README's tier table does not say which systems `make bootstrap`
-supports (Linux x86_64 only, `scripts/bootstrap.sh:41`), and
+supports (Linux x86_64, and Windows through Git Bash, `scripts/bootstrap.sh:34`; on macOS
+it would fetch the Linux build), and
 `docs/howto/windows.md` is linked from nowhere a stranger starts.
 
 Task: **T143**.
@@ -82,7 +120,7 @@ Task: **T143**.
 - `docs/techniques/ai_llm.md:48-49` and `ai_llm.pt-BR.md:52`: "No demo
   yet: the text game that uses it is T94". The page's own
   `invalidated_if` (`ai_llm.md:8`) names exactly this -- "T94's game lands
-  and this page does not change" -- and `check_doc_freshness.py` reads
+  and this page does not name it" -- and `check_doc_freshness.py` reads
   only the date, so nothing caught it.
 - The README links neither `CONTRIBUTING.md` nor the Windows how-to.
 
@@ -148,9 +186,9 @@ Task: **T144**, after the owner's choice.
 ### 7. 105 stale branches on the remote -- medium, the owner's
 
 `origin` has 106 heads. Every one but `main` is finished: 66 are wholly
-contained in `main` (waves 5 to 62, merged before pull requests), 39 are
-the heads of squash-merged pull requests (#1 to #92), and 7 are named
-`worktree-agent-*`. No pull request is open. None holds anything the
+contained in `main` (waves 5 to 62, merged before pull requests, and 7
+heads named `worktree-agent-*`), and 39 are the heads of squash-merged
+pull requests (#1 to #92). No pull request is open. None holds anything the
 scans above found. Publishing them is harmless and permanent in forks;
 deleting them first is cleaner, and is the owner's (no branch was deleted
 here). The repository's `deleteBranchOnMerge` is `false`, which is how
@@ -209,14 +247,19 @@ and the task that decided it.
 ### 12. Third-party sources, re-downloaded -- low
 
 All eleven Bos Wars sheets (`godot/game/rts/art_sources.json`, from
-Debian's source archive) and both Mustermann 2 sheets
-(`godot/game/fighting/sprites.json`, OpenGameArt) downloaded and matched
-their sha256 today. `opengameart.org`'s two pages, `boswars.org` and the
+Debian's source archive), both Mustermann 2 sheets
+(`godot/game/fighting/sprites.json`, OpenGameArt) and Shade's
+`puny-characters.zip` (`godot/assets/LICENCES.md:35-36`, from
+OpenGameArt) downloaded and matched their sha256 today. The four
+walking sheets committed from that archive match its members byte for
+byte. `opengameart.org`'s two pages, `boswars.org` and the
 Z-Image-Turbo model card answer.
 
 `kenney.nl` answered 403 to every plain request from this machine -- the
-three 3D archives and the racing kit's page in `godot/game3d/assets.json`, and the five pack pages in
-`LICENCES.md` alike -- so they could not be re-verified here. The main
+three 3D archives and the racing kit's page in `godot/game3d/assets.json`,
+and the five pack pages and `kenney_racing-pack.zip`
+(`LICENCES.md:28-30`) alike -- so they could not be re-verified here,
+and no way round the refusal was tried. The main
 checkout's own downloads of two of the three archives
 (`build/assets-3d/`) match the manifest; `kenney-racing-kit` was not on
 disk. A person in a browser can confirm the rest; it is in the manual
@@ -237,8 +280,10 @@ check.
 **Does not block:**
 
 - secrets in history: none found;
-- invariant 10 over the history: none found (finding 9's gap is T145);
-- third-party art: never committed; every reachable hash matches
+- invariant 10 over the history: none found by hand; T145 makes the gate
+  itself cover it, recommended before opening but not blocking (finding 9);
+- third-party art: never committed; every hash this machine could
+  download matches, and the four kenney.nl ones are in the manual check
   (finding 12);
 - the stale branches (finding 7): harmless, cleaner gone first;
 - NOTICE, the catalogue lines, the invariants row: fixed here
@@ -258,5 +303,7 @@ check.
 
 The owner reads the blocking list and decides, item by item. And in a
 browser: the five Kenney pack pages in `godot/assets/LICENCES.md` still
-show CC0, and `make assets-3d` on a machine without `build/assets-3d/`
-still downloads the racing kit whose sha256 the manifest names.
+show CC0; `kenney_racing-pack.zip` from the Racing Pack page still has
+the sha256 `LICENCES.md:29-30` names; and `make assets-3d` on a machine
+without `build/assets-3d/` still downloads the racing kit whose sha256
+`godot/game3d/assets.json` names.
