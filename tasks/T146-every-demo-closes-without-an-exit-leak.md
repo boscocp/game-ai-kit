@@ -1,0 +1,59 @@
+# T146 — Every demo closes without an exit leak
+
+Size: S · Prereqs: T138 · Files: `scripts/check_exit_leaks.py`, `Makefile`, `godot/game/squad/`
+
+## Goal
+
+T138 (wave 146) found the RTS leaving 15 scripts alive at exit. It worked
+round the trigger it observed in `rts.gd`, and added `make test-rts-exit`,
+which runs `scripts/check_exit_leaks.py` on that one scene. The engine
+mechanism was not identified, and the leak depends on which script
+compiles first. So another demo can start leaking whenever its first
+script changes, and nothing would say so.
+
+The review of PR #100 measured two cases:
+
+- Every scene under `godot/game/` and `godot/menu/` closes clean today.
+- `game/squad/squad_ruleset.gd` and `game/squad/squad_map_words.gd`,
+  loaded alone, each leak 18 objects and 17 resources. Neither names
+  `GakRtsController`, and no scene loads either one first today.
+
+`docs/godot/exit-leaks.md` holds what is known.
+
+## Decisions written down first (the owner confirms in review)
+
+- The exit check runs over every scene in `check_demos.py`'s list, not a
+  second hand-kept list. Each scene costs about 2 s.
+- The planted leak runs once per gate run, not once per scene.
+- The squad leak is measured with `--verbose`, and its trigger is found
+  the way T138 found the RTS one: a scratch copy, bisected. It is fixed
+  where it is made if the trigger is in the game. If it is not, it is
+  written down, as T138's was.
+- Each module keeps its own gate (M7): one `make` target per scene, or one
+  target that the affected selector maps to the scenes changed. The
+  decision is written down before the code.
+
+## Steps
+
+1. Run `check_exit_leaks.py` on every demo scene, and list what leaks.
+2. Bisect the squad scripts' leak, and fix or record it.
+3. The gate over every scene, with its module selection.
+
+## Acceptance
+
+```bash
+python3 scripts/check_exit_leaks.py --self-test
+make test-rts-exit
+make lint-modules
+make lint-tasks lint-status
+```
+
+## Manual check
+
+Open `make demo-tactical MODE=squad`, play a turn and close the window.
+Do the last lines hold no `leaked` and no `still in use`?
+
+## Notes
+
+- Opened by the review of PR #100 (wave 146, finding 3), at the
+  coordinator's word.

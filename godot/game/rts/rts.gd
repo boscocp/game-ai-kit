@@ -167,10 +167,12 @@ func _physics_process(_delta: float) -> void:
 # K has put it on, bare otherwise. Returns the clock, or null without one.
 #
 # Typed by the clock, never by the port the clock and the side share
-# (`GakRtsController`): measured on 4.7.2, this script is the first the
-# demo compiles, and a signature here naming that port before anything had
-# loaded it left 15 scripts alive at exit -- "21 ObjectDB instances were
-# leaked", "15 resources still in use" (T138, `make test-rts-exit`).
+# (`GakRtsController`). A workaround, not a cause: on 4.7.2 the old
+# `_clocked(...) -> GakRtsController` here was the observed trigger of 15
+# scripts left alive at exit ("21 ObjectDB instances were leaked", "15
+# resources still in use"), and only while this script compiled first. The
+# engine mechanism is not identified: `rts_roster.gd` has seven such
+# signatures and loads clean (T138, docs/godot/exit-leaks.md).
 func _seat(sides: Dictionary, side: RtsSide) -> RtsHumanClock:
 	if not human_clock:
 		sides[side.side] = side

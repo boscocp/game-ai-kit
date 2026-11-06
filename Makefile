@@ -661,9 +661,10 @@ test-rts-match: import ## A whole RTS match ends the same way twice, inside its 
 .PHONY: test-rts-exit
 check: test-rts-exit
 test-rts-exit: import ## The RTS, run and closed, leaks nothing at exit, and a planted leak is seen (T138)
-	@# Through godot_checked.py: a SCRIPT ERROR in the runner would otherwise
-	@# end it at "0 failure(s)" with a check skipped (CLAUDE.md's trap).
-	@$(PYTHON) scripts/godot_checked.py res://test/rts/rts_exit.gd
+	@# A leak is printed after the last line a script can run, so a Python
+	@# reader runs the scene as a child and reads it, after a planted leak it
+	@# must see; each child has a deadline (review of PR #100).
+	@$(PYTHON) scripts/check_exit_leaks.py res://game/rts/rts.tscn --timeout 60
 
 .PHONY: rts-measure
 rts-measure: import ## Slow (minutes): the commander vs the queues, STRIPS vs HTN, each level vs the next, the seat's bias (T20)
