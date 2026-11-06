@@ -90,7 +90,7 @@ você não precisa dele.)
 <!-- library-step: unzip -->
 Na pasta raiz do seu projeto, `res://` -- não no `addons/`: cada zip
 guarda `addons/<addon>/`, então o addon cai em `res://addons/<addon>/`,
-que é também onde a loja de *assets* do Godot o instala. O addon que você
+que é também onde a loja do Godot o instala. O addon que você
 quer e, se o README dele pedir, o `ai_core` ao lado. Para um caminho, os
 dois:
 
