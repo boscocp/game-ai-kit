@@ -315,6 +315,45 @@
       "refused": "R9"
     },
     {
+      "why": "U+2028, LINE SEPARATOR, written as itself inside the JSON string. Unicode's line breaking (UAX #14) makes it a mandatory break, so the speech is two lines on screen; JSON lets it stand unescaped.",
+      "raw": "{\"speech\": \"Evening.\u2028Well?\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "U+2028 again, written as JSON's escape: the parser turns it into the same character.",
+      "raw": "{\"speech\": \"Evening.\\u2028Well?\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "U+2029, PARAGRAPH SEPARATOR: a mandatory break too (UAX #14).",
+      "raw": "{\"speech\": \"Evening.\u2029Well?\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "U+0085, NEXT LINE: a C1 control and a mandatory break (UAX #14), written as itself.",
+      "raw": "{\"speech\": \"Evening.\u0085Well?\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "U+0080, the first C1 control (Unicode's Cc runs U+0000 to U+001F and U+007F to U+009F), written as JSON's escape.",
+      "raw": "{\"speech\": \"Evening.\\u0080\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "U+009F, the last C1 control.",
+      "raw": "{\"speech\": \"Evening.\u009f\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "U+00A0, NO-BREAK SPACE, the first character past the C1 controls: a space that keeps two words on one line, which a French or pt-BR line may hold. Accepted.",
+      "raw": "{\"speech\": \"Evening, sir.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "Evening, sir.",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
       "why": "A lone backtick: Markdown's code.",
       "raw": "{\"speech\": \"Use the `back` gate.\", \"intent\": \"greet\", \"argument\": \"\"}",
       "refused": "R10"

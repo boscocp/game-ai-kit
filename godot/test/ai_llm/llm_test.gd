@@ -137,6 +137,26 @@ func test_the_speech_pattern_refuses_what_r8_r9_and_r10_refuse() -> void:
 	assert_bool(_matches_whole(pattern, "H".repeat(LlmValidator.SPEECH_LIMIT + 1))).is_false()
 
 
+func test_r9_and_the_pattern_refuse_every_control_and_line_separator() -> void:
+	# Below U+3000 lie all 65 controls (Unicode's Cc: C0, DEL, C1) and both
+	# separators, U+2028 and U+2029 (T129). R9 refuses them and no other,
+	# and the pattern turns each of them away too. NUL is left out: a Godot
+	# String cannot hold one, so 66 are left. Python's suite derives the
+	# same set from Unicode's own table, over every code point.
+	var validator: LlmValidator = _validator()
+	var pattern := RegEx.create_from_string(LlmValidator.SPEECH_PATTERN)
+	var refused: Array[int] = []
+	for code: int in range(1, 0x3000):
+		if validator.why_speech_is_wrong("Halt%sthere" % char(code)).begins_with("R9"):
+			refused.append(code)
+	for code: int in refused:
+		var speech: String = "Halt%sthere" % char(code)
+		assert_bool(_matches_whole(pattern, speech)).override_failure_message("U+%04X" % code).is_false()
+	assert_int(refused.size()).is_equal(66)
+	assert_array(refused.slice(-4)).is_equal([0x9E, 0x9F, 0x2028, 0x2029])
+	assert_bool(_matches_whole(pattern, "Evening,\u00a0sir.")).is_true()
+
+
 # A RegEx's `$` also matches before a final line break; the whole string must match.
 func _matches_whole(pattern: RegEx, speech: String) -> bool:
 	var found: RegExMatch = pattern.search(speech)

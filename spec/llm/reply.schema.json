@@ -6,11 +6,11 @@
   "type": "object",
   "properties": {
     "speech": {
-      "description": "What the character says: one line, no markup. The pattern says the same for a runtime that constrains its output, and also leaves out the quote and the backslash: llama.cpp reads a pattern against the string's JSON text, escapes and all, and drops maxLength beside one, so the length is in the pattern too (T116).",
+      "description": "What the character says: one line, no markup. The pattern says the same -- no control character (C0, DEL or C1) and no line or paragraph separator, U+2028 and U+2029, written here as JSON escapes so the pattern holds the characters themselves (T129) -- for a runtime that constrains its output, and also leaves out the quote and the backslash: llama.cpp reads a pattern against the string's JSON text, escapes and all, and drops maxLength beside one, so the length is in the pattern too (T116).",
       "type": "string",
       "minLength": 1,
       "maxLength": 280,
-      "pattern": "^[^\"\\\\<>\\[\\]*`\\x00-\\x1F\\x7F]{1,280}$"
+      "pattern": "^[^\"\\\\<>\\[\\]*`\\x00-\\x1F\\x7F-\\x9F\u2028\u2029]{1,280}$"
     },
     "intent": {
       "description": "Which of the game's declared discourse acts the player's words were.",
