@@ -105,6 +105,15 @@ func base_believed_near(cell: Vector2i) -> bool:
 	return false
 
 
+## Where this side last saw the enemy unit `id`, in cells, or INF when it
+## never saw it or has forgotten it: the thinking view rings a focus there
+## once its target walks out of sight (T128). Read only, for the screen.
+func last_seen_at(id: int) -> Vector2:
+	if not _seen.has(id):
+		return Vector2.INF
+	return _seen[id]["position"]
+
+
 # A region whose cell is in sight is cleared when no enemy base is believed
 # near it, and uncleared the moment one is.
 func _look_at_regions(view: RtsSnapshot) -> void:

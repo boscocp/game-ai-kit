@@ -12,7 +12,10 @@
 ## estimate go wrong. And when K has put the human clock on the side, the
 ## **late enemy** it was handed: each enemy unit hollow, where the side
 ## believes it stands, with a thread to where it stands now and the view's
-## age in ms -- so a person sees what the late answer is answering.
+## age in ms -- so a person sees what the late answer is answering. A
+## focus whose target has walked out of the side's sight keeps its ring
+## where the side was last told of it, thin and white like the late enemy,
+## its line dashed: stale, never a claim to where it stands now.
 ##
 ## When not to use it: to show a person's side. A person is not thinking
 ## anything this can read.
@@ -53,6 +56,10 @@ var clock: RtsHumanClock
 ## Where the last drawing put each hollow ring, in cells: the late enemy as
 ## drawn, kept so a test can hold the picture to the handed view.
 var drawn_believed: Array[Vector2] = []
+## Where the last drawing put each focus ring: {id, at (cells), stale,
+## chosen}. Kept for the same reason, so a test can hold a ring whose target
+## left sight to the place the side was last told of (T128).
+var drawn_focus: Array[Dictionary] = []
 
 
 ## The enemy the clocked side was last handed, unit by unit, exactly as the
@@ -136,6 +143,7 @@ static func arming_line(weighed: Dictionary) -> String:
 
 
 func _draw() -> void:
+	drawn_focus.clear()
 	if side == null or view == null:
 		return
 	if show_influence:
@@ -177,29 +185,63 @@ func _draw_squad(squad: Squad) -> void:
 
 
 # The enemy a fighting squad chose to strike, ringed, with its score; the
-# next best, faintly, so a person can see what it was weighed against.
+# next best, faintly, so a person can see what it was weighed against. The
+# chosen one whose enemy is out of sight is drawn where the side was last
+# told of it, thin and white like the late enemy, its line dashed: stale
+# (T128). A rival out of sight is not drawn, as before: the squad holds no
+# order on it, and a faint ring could not look stale and faint at once.
 func _draw_focus(squad: Squad, from: Vector2, colour: Color) -> void:
 	for rank: int in range(mini(squad.focus_scores.size(), 3)):
 		var scored: Dictionary = squad.focus_scores[rank]
-		var at: Vector2 = _seen_at(scored["id"])
-		if at == Vector2.INF:
-			continue
 		var chosen: bool = not squad.focus.is_empty() and scored["id"] == squad.focus["id"]
-		var ring := Color(1.0, 0.25, 0.2) if chosen else Color(1.0, 1.0, 1.0, 0.35)
-		draw_arc(at, RtsView.CELL * 0.55, 0.0, TAU, 20, ring, 2.5 if chosen else 1.0)
+		var place: Dictionary = _focus_place(scored["id"])
+		if place.is_empty() or (place["stale"] and not chosen):
+			continue
+		var stale: bool = place["stale"]
+		drawn_focus.append({"id": scored["id"], "at": place["at"], "stale": stale, "chosen": chosen})
+		var at: Vector2 = RtsView.to_screen(place["at"])
+		var ring: Color = _ring_colour(chosen, stale)
+		var width: float = (1.5 if stale else 2.5) if chosen else 1.0
+		draw_arc(at, RtsView.CELL * 0.55, 0.0, TAU, 20, ring, width)
 		draw_string(ThemeDB.fallback_font, at + Vector2(-12.0, -RtsView.CELL * 0.75), "%.2f" % scored["score"],
 			HORIZONTAL_ALIGNMENT_LEFT, -1.0, 11, ring)
-		if chosen:
+		if chosen and stale:
+			draw_dashed_line(from, at, colour, 1.5, 6.0)
+		elif chosen:
 			draw_line(from, at, colour, 1.5)
 
 
-# Where the unit `id` stands in the side's view, on the screen; INF when
-# the side cannot see it.
-func _seen_at(id: int) -> Vector2:
+# Red for the chosen focus, faint white for its rivals; the stale focus in
+# the late enemy's white instead, so it reads as a belief, not a sighting.
+static func _ring_colour(chosen: bool, stale: bool) -> Color:
+	if stale:
+		return BELIEVED_COLOUR
+	return Color(1.0, 0.25, 0.2) if chosen else Color(1.0, 1.0, 1.0, 0.35)
+
+
+# Where the ring for the enemy unit `id` goes, in cells, as {at, stale}:
+# where the side sees it now, fresh; else the last place the side was told
+# of it, stale; {} when it was never told of it, or has forgotten. A squad
+# holds its focus until its next decision, and under the clock it decides
+# on a late view, so the target can leave sight while it is still the focus.
+func _focus_place(id: int) -> Dictionary:
 	for unit: Dictionary in view.units:
 		if unit["id"] == id:
-			return RtsView.to_screen(unit["position"])
-	return Vector2.INF
+			return {"at": unit["position"], "stale": false}
+	var told: Vector2 = _last_told_at(id)
+	if told == Vector2.INF:
+		return {}
+	return {"at": told, "stale": true}
+
+
+# The last place the side was told the enemy unit `id` stands, in cells:
+# the handed view's under the clock, which is what it decided on; else its
+# own memory of what it saw (`RtsInfluence`). INF when neither has it.
+func _last_told_at(id: int) -> Vector2:
+	for unit: Dictionary in believed_enemy():
+		if unit["id"] == id:
+			return unit["position"]
+	return side.belief.last_seen_at(id)
 
 
 # The late enemy: each unit the clock handed on, hollow where the side
