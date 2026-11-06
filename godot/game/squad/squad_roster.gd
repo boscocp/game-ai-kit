@@ -8,10 +8,12 @@
 ## Callable(seed) -> a new BlueController]` -- and nothing here plays in the
 ## league.
 ##
-## Three rows: the first enemy that weighs (T85), first because it is the
-## one a person meets; the enemy that searches (T87), Monte Carlo tree
-## search measured against it in `docs/godot/squad.md`; and a seeded random
-## mover, the floor the first must beat (`make test-squad-match`).
+## Four rows: the first enemy that weighs (T85), first because it is the
+## one a person meets; the enemy that searches by sampling (T87), Monte
+## Carlo tree search measured against it in `docs/godot/squad.md`; the enemy
+## that searches by working out the odds (T88), expectiminimax, measured
+## against both (`make test-squad-duel`); and a seeded random mover, the
+## floor the first must beat (`make test-squad-match`).
 ##
 ## When not to use it: as a ranking, for the reason `TacticalRoster` gives.
 class_name SquadRoster
@@ -29,6 +31,8 @@ static func rows() -> Array[Array]:
 			func(seed_number: int) -> BlueController: return WeighedSquad.new(seed_number)],
 		["mcts", "Monte Carlo tree search over the piece's options and the turns after, on the board its side believes in (T87)",
 			"MonteCarloSearch", false, func(seed_number: int) -> BlueController: return MctsSquad.new(seed_number)],
+		["expecti", "expectiminimax over the piece's options and the turns after, every shot's hit and miss weighed by its chance, with an evaluation written by hand (T88)",
+			"ExpectiminimaxSearch", false, func(seed_number: int) -> BlueController: return ExpectiSquad.new(seed_number)],
 		["random", "a seeded random action per piece, on its side's view (T84)", "nothing", false,
 			func(seed_number: int) -> BlueController: return RandomSquad.new(seed_number)],
 	]

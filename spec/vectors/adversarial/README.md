@@ -1,11 +1,11 @@
-# Conformance vectors: adversarial search (MCTS)
+# Conformance vectors: adversarial search (MCTS, expectiminimax)
 
 <!-- doc-meta
 half_life: structure
-verified_on: 2026-10-29
+verified_on: 2026-11-05
 tier: 1
 source: https://github.com/boscocp/game-ai-kit
-invalidated_if: the xorshift generator, the order of the search's draws, UCB1's tie-break, or Nim's or the dice race's rules change
+invalidated_if: the xorshift generator, the order of the search's draws, UCB1's tie-break, expectiminimax's count of positions, or Nim's or the dice race's rules change
 teaches: none
 -->
 
@@ -61,10 +61,23 @@ counting expansion's index from the other end: rule 2 alone. A twin that
 broke rule 5 alone cannot be written, because whether an outcome is drawn
 at all depends on the move the earlier draw chose.
 
+- `expectiminimax-dice-race.json` (T88) -- the dice race again, and
+  `cases` each with the `state`, the `depth` in plies, and the claims:
+  every root move's expected `values` in the game's order, the `action`
+  chosen (of equal values the first), and the `positions` visited -- the
+  root, then every position reached, those scored at the cutoff included.
+  A chance node adds no ply. `ExpectiminimaxSearch.search_to` and
+  `gameaikit.adversarial.expectiminimax` must both meet them, within 1e-9.
+  A planted search that takes every roll as its first face -- minimax,
+  which reads only `result` -- and one a ply short must fail them, in both
+  languages.
+
 ## Where the numbers came from
 
 From neither implementation: `derive.py`, a third MCTS written short and
-importing nothing from this repository, wrote them:
+importing nothing from this repository, wrote them -- and a third
+expectiminimax beside it, in exact fractions (`fractions.Fraction`), so no
+rounding of its own can agree with theirs by accident:
 
     python3 spec/vectors/adversarial/derive.py spec/vectors/adversarial
 
