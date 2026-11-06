@@ -45,11 +45,14 @@ a fair answer.
 
 ## Where to watch it {#watch}
 
-- No demo yet: the text game that uses it is T94, *talk your way past the
-  guard*. Until then, the minimal example below is run by its test, and
+- `make demo-talk`, *talk your way past the guard* (tier 2): keys 1-9
+  say a recorded line, V shows the act the model read, the rule that fired,
+  trust and suspicion; Tab types to a live local model (tier 3).
+- With nothing but Python (tier 1),
   `PYTHONPATH=python python3 -m gameaikit.llm.replay spec/llm/recordings/the-gatekeeper.json`
   plays a recorded conversation and prints, for each turn, the act the
-  game acted on or the reason the reply was refused.
+  game acted on or the reason the reply was refused. The minimal example
+  below is run by its test.
 - `make test-llm-vectors` runs both validators -- Python's and the
   addon's -- over every reply in `spec/vectors/llm/`, and prints the count.
 - Which demo uses which technique, both ways: [the catalogue](catalogue.md#ai_llm).

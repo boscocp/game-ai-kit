@@ -87,7 +87,7 @@ Quatro níveis. **Nenhuma lição vive só no nível caro.**
 | nível | você precisa de | você pode |
 |---|---|---|
 | **0** | nada | ler `docs/concepts/` -- os algoritmos e por que funcionam (em inglês) |
-| **1** | Python 3 (já vem no Linux e no macOS) | ler e verificar um domínio PDDL, treinar as regressões, ler os pesos. Só a biblioteca padrão -- **sem pip, sem numpy, sem passo de instalação** |
+| **1** | Python 3.12 ou mais novo -- confira com `python3 --version`; o do macOS e o de algumas versões LTS do Linux (Ubuntu 22.04, Debian 12) são mais antigos | ler e verificar um domínio PDDL, treinar as regressões, ler os pesos. Só a biblioteca padrão -- **sem pip, sem numpy, sem passo de instalação** |
 | **2** | Godot 4 (~130 MB, roda em placa de vídeo integrada) | jogar, abrir as demos, modificar os *addons* |
 | **2, em 3D** | Godot 4 e uma placa integrada que desenhe uma cena 3D | os exemplos 3D em `godot/game3d/`, com `make assets-3d` para os modelos ou formas simples sem eles; as decisões rodam sobre retratos do estado com gêmeos em Python, então a lição é de nível 1 |
 | **3** | uma GPU com alguma VRAM | rodar um LLM local de verdade, pelo `HttpRuntime` do `ai_llm`: `make llm-bootstrap` instala o servidor do llama.cpp e um modelo no disco grande, cada arquivo conferido por sha256 (uns 5 GB), `make llm-serve` o roda, `make llm-smoke` o confere; gerar a sua própria arte com um modelo local de imagem. Opcional: nada precisa deste nível |
@@ -118,3 +118,9 @@ make check         # every gate
 ```
 
 Os comentários dos blocos acima ficam em inglês, como no código.
+
+No Windows os mesmos alvos rodam pelo Git Bash: [o guia](docs/howto/windows.md),
+em inglês. Para mudar o kit, leia o [CONTRIBUTING.md](CONTRIBUTING.md).
+`tasks/` e `docs/reviews/` são a história de trabalho do projeto -- por que
+cada peça foi feita e o que a revisão dela achou -- e quem veio por uma
+técnica pode pular as duas.
