@@ -4,10 +4,10 @@ Teaching AI in games, one readable piece at a time.
 
 > Em português: [README.pt-BR.md](README.pt-BR.md).
 
-A set of Godot 4 addons you can take **one at a time**, plus a small turn-based
-strategy game where each of them actually decides something. The code is written
-to be read: if a passage is fast and unreadable, it loses to the slow and
-readable one.
+A set of Godot 4 addons you can take **one at a time**, plus small games,
+most of them versions of games you know, where each of them actually decides
+something. The code is written to be read: if a passage is fast and
+unreadable, it loses to the slow and readable one.
 
 > Status: every technique in the table below has a page explaining it, in
 > English and Portuguese, and at least one demo where it decides something;
@@ -89,7 +89,7 @@ Four tiers. **No lesson lives only in the expensive tier.**
 | tier | you need | you can |
 |---|---|---|
 | **0** | nothing | read `docs/concepts/` — the algorithms and why they work |
-| **1** | Python 3.12 or later (`python3 --version` says; macOS's own is older) | read a PDDL domain and check it, train the regressions, read the weights. Standard library only — **no pip, no numpy, no install step** |
+| **1** | Python 3.12 or later -- check with `python3 --version`; macOS's own and some Linux LTS releases (Ubuntu 22.04, Debian 12) are older | read a PDDL domain and check it, train the regressions, read the weights. Standard library only — **no pip, no numpy, no install step** |
 | **2** | Godot 4 (~130 MB, runs on integrated graphics) | play the game, open the demos, modify the addons |
 | **2, in 3D** | Godot 4 and integrated graphics that draw a 3D scene (measured: about 1,000 fps for the 3D test arena on a Radeon 610M, 1280×720 -- a 2022 chip, newer than the 2015 floor below; nothing older was measured) | the 3D examples in `godot/game3d/`, with `make assets-3d` for their models or plain shapes without; their decisions run on snapshots with Python twins, so the lesson is tier 1 (ADR 0018) |
 | **3** | a GPU with some VRAM | run a local LLM for real, through `ai_llm`'s `HttpRuntime`: `make llm-bootstrap` installs llama.cpp's server and a model on the large disk, each file by sha256 (about 5 GB; measured on 12 GB of VRAM, a reply in under a second), `make llm-serve` runs it, `make llm-smoke` checks it (see [docs/local-llm/](docs/local-llm/bakeoff.md)); generate your own art with a local image model (`make artgen-bootstrap`, then `make artgen`; see [the how-to](docs/howto/generate-art.md)). Optional: the CC0 art is committed and is the default, so nothing needs this tier |
@@ -100,10 +100,10 @@ assets; the 3D examples live apart in `godot/game3d/`, on the same renderer,
 and their models are downloaded, never committed (ADR 0018).
 
 The LLM addon has two runtimes — `RecordedRuntime` (recorded replies,
-needing nothing) and `HttpRuntime` (a local OpenAI-compatible server, the tier 3 row above).
-The recorded one is not a consolation prize: it is what the tests use, and
-it teaches the part that matters most, which is **validating a model's
-output before it becomes an action**.
+needing nothing) and `HttpRuntime` (a local OpenAI-compatible server; see
+tier 3 above). The recorded one is not a consolation prize: it is what the
+tests use, and it teaches the part that matters most, which is
+**validating a model's output before it becomes an action**.
 
 ## What you will see
 
@@ -124,8 +124,9 @@ The panel lists them best first and spells out that line. Space plays the
 move. Keys 1–6 set how far it looks, and the panel says how many positions
 that cost and how many replies alpha-beta skipped.
 
-**The skirmish** (`make demo-skirmish`). A 12×8 board, a wall down the middle with rough
-ground on either side, and two nodes worth taking. Red is yours: click a unit,
+**The skirmish** (`make demo-skirmish`). A 12×8 board, a wall down the
+middle with rough ground on either side, and two nodes worth taking. Red is
+yours: click a unit,
 click a neighbouring cell, space ends the turn. Blue is played by the trained
 models, and under the status line each blue unit says what it decided and the
 number it decided on. End your first turn without moving and it says: *unit 3
@@ -177,7 +178,7 @@ The other demos -- stealth, steering, racing in 2D and 3D, infiltration,
 the bot match, the guard's four ways to decide, real-time strategy, the
 Pac-Man maze, the talk game and the fighting dummy -- are described in
 [the catalogue](docs/techniques/catalogue.md), each with the keys
-that show its decision. None has a recording yet.
+that show its decision. No demo has a recording yet.
 
 ## Getting started
 

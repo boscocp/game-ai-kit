@@ -104,12 +104,13 @@ TITLES = frozenset({
 # stressed (*como*, *o que*); a sentence quoted as the example of what a
 # technique decides; and a Portuguese technical term in italics where its
 # page defines it (*binária*, *global* and *consistente* in a CSP or a
-# heuristic, *contexto* in an opponent model). An entry is allowed on every
+# heuristic, *contexto* in an opponent model). A demo's title is italic as
+# its pt-BR card spells it, capital included. An entry is allowed on every
 # page, not only on the one it was measured on, and *global* is English
 # too: a hole the size of one word, read in the task's manual check.
 EMPHASIS = frozenset({
     "atacar ou recuar", "binária", "como", "consistente", "contexto",
-    "convença o guarda a deixar você passar", "escrito dentro do próprio exemplo",
+    "Convença o guarda a abrir a porta", "escrito dentro do próprio exemplo",
     "global", "o que", "o que ela olhou", "porquê", "qual", "quanto",
     "se a distância é perto e a luz é clara, então o alarme é alarmado",
 })

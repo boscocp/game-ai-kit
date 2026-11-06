@@ -49,7 +49,7 @@ uma resposta justa.
 
 ## Onde ver funcionando {#watch}
 
-- `make demo-talk`, *convença o guarda a deixar você passar* (nível 2): as
+- `make demo-talk`, *Convença o guarda a abrir a porta* (nível 2): as
   teclas 1-9 dizem uma fala gravada, V mostra o ato que o modelo leu, a
   regra que disparou, a confiança e a suspeita; Tab digita para um modelo
   local ao vivo (nível 3).
