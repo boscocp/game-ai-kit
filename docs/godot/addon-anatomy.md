@@ -2,9 +2,9 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-30
+verified_on: 2026-11-06
 tier: 2
-source: https://docs.godotengine.org/en/stable/tutorials/plugins/editor/making_plugins.html ; https://docs.godotengine.org/en/stable/community/asset_library/submitting_to_assetlib.html ; https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html
+source: https://docs.godotengine.org/en/stable/tutorials/plugins/editor/making_plugins.html ; https://docs.godotengine.org/en/stable/community/asset_library/submitting_to_assetlib.html ; https://docs.godotengine.org/en/stable/community/asset_store/submitting_to_asset_store.html ; https://github.com/godotengine/godot/blob/4.7.2-stable/editor/asset_library/editor_asset_installer.cpp ; https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html
 invalidated_if: Godot changes how class_name registers, how a relative preload resolves, how @abstract is enforced, or the Asset Library starts requiring plugin.cfg
 teaches: none
 -->
@@ -77,6 +77,16 @@ What the release step takes from it:
 - The page says nothing about tests or `plugin.cfg`, and asks that script
   warnings be fixed or suppressed. Tests never ship: `release.py` refuses a
   gdUnit4 suite inside an addon folder.
+
+**Read again on 2026-11-06 (T147).** Two sentences above no longer hold.
+The Asset Library is deprecated in favour of the Asset Store, which takes an
+uploaded file, and the pinned 4.7.2 editor reads only the store. And the
+zips do *not* unzip into `addons/<name>/` through the editor: its installer
+skips a single top folder that is not `addons/` and installs into `res://`,
+so `ai_search/` lands at the project's root. A person unzipping by hand into
+`res://addons/` is still right. What the stores require, and the change to
+the zips' layout, are in [the publishing guide](../howto/publish.md) and
+[T149](../../tasks/T149-addon-zips-laid-out-for-the-store.md).
 
 ## Names to get right in Godot 4.7
 

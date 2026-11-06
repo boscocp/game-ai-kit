@@ -1,6 +1,6 @@
 # 0009 — The release is built by hand, from committed files
 
-Status: accepted · 2026-10-13 (T7); revisited 2026-10-30 (T64)
+Status: accepted · 2026-10-13 (T7); revisited 2026-10-30 (T64) and 2026-11-06 (T147)
 
 ## Context
 
@@ -84,3 +84,41 @@ workflow holds a token that could.
 `make library-check` installs the wheel in a fresh virtual environment and
 unzips two addons into a blank Godot project, both outside the repository,
 and runs each; its planted case is a zip missing the file a script needs.
+
+## Revisited · 2026-11-06 (T147, wave 152)
+
+Before publishing, the stores' own rules were read
+([docs/howto/publish.md](../howto/publish.md) holds each with its source).
+The decision stands -- the wheel is written by hand, the upload is the
+owner's, and no workflow holds a token -- but one of its sentences, and the
+README each zip carries, were wrong about the Godot side.
+
+- **"An addon zip is what the Asset Library ... wants"** was not how the
+  Asset Library works. It hosts nothing: an entry names a repository and a
+  commit, and the library normally builds `<repo>/archive/<commit>.zip`; a
+  Custom provider can name any zip's URL instead, such as a file attached to
+  a GitHub release. Either way it takes no upload. Its successor, the Asset
+  Store, does take an uploaded file per version, and is what the pinned
+  engine (4.7.2) reads: that editor erases the setting naming the old
+  library. The Asset Library is deprecated; the release targets the store.
+- **"Unzip into your project's `res://addons/`"**, the line `release.py`
+  writes into each zip's README (and `docs/techniques/using-the-library.md`
+  repeats), is what a person does by hand. Godot 4.7.2's installer, given a
+  store download, skips an archive's single top folder unless it is
+  `addons/`, and installs into `res://`. A zip whose top folder is
+  `ai_search/` lands at the project's root. The fix -- zips laid out
+  `addons/ai_<name>/`, which moves the licence gate's rule about where an
+  archive's attribution sits -- is larger than the guide's wave, and is its
+  own task before publishing:
+  [T149](../../tasks/T149-addon-zips-laid-out-for-the-store.md).
+- **PyPI's trusted publishing** is a workflow that publishes, so it is not
+  used; the owner uploads with a token, by hand.
+
+**Decided by the owner, 2026-11-06** ("pode seguir o recomendado nas 5
+decisões"), all as recommended: the zips are laid out `addons/ai_<name>/`;
+the store gets one asset for the whole kit, one more zip, since one entry is
+one page to maintain and six of the fifteen techniques need `ai_core`; the
+Apache-2.0 appendix line in all 18 LICENSE copies reads `Copyright 2026
+Adalberto Pereira`; all three are T149's, before any store submission. The
+store's AI usage disclosure is the owner's to answer at submission. PyPI is
+uploaded by hand with a token, and trusted publishing stays off.
