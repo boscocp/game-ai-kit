@@ -135,7 +135,9 @@ alvos e scripts a leem:
 export GAK_TOOLCHAIN=/path/to/toolchain
 ```
 
-Para mudar o kit, leia o [CONTRIBUTING.md](CONTRIBUTING.md).
+Para mudar o kit, de um fork ou não, leia o [CONTRIBUTING.md](CONTRIBUTING.md),
+em inglês; uma issue ou um pull request pode ser escrito em português. Uma
+vulnerabilidade se reporta em privado, como diz o [SECURITY.md](SECURITY.md).
 `tasks/` e `docs/reviews/` são a história de trabalho do projeto -- por que
 cada peça foi feita e o que a revisão dela achou -- e quem veio por uma
 técnica pode pular as duas.

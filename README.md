@@ -215,7 +215,8 @@ git, and writes nothing into your home's own folders. To keep it elsewhere
 export GAK_TOOLCHAIN=/path/to/toolchain
 ```
 
-To change the kit, read [CONTRIBUTING.md](CONTRIBUTING.md). `tasks/` and
+To change the kit, from a fork or not, read [CONTRIBUTING.md](CONTRIBUTING.md);
+a vulnerability is reported privately, as [SECURITY.md](SECURITY.md) says. `tasks/` and
 `docs/reviews/` are the project's working history -- why each piece was
 built and what its review found -- and a reader after one technique can
 skip them.

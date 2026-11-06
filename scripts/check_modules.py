@@ -114,10 +114,14 @@ GLOBAL = (
 )
 
 # What only a person reads. The lints that read it run on every wave anyway,
-# so a change here selects no module.
+# so a change here selects no module. The issue and pull request templates
+# are a person's too (T144), though under `.github/`: listed by name, so the
+# workflows beside them stay global.
 PROSE = (
     "docs/", "tasks/", "README.md", "README.pt-BR.md", "CONTRIBUTING.md", "CLAUDE.md",
     "LICENSE", "NOTICE", "VERSION", ".gitignore",
+    "CODE_OF_CONDUCT.md", "SECURITY.md", "CODEOWNERS",
+    ".github/ISSUE_TEMPLATE/", ".github/pull_request_template.md",
 )
 
 KINDS = {"kernel", "technique", "example"}
