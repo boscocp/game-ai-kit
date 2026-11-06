@@ -115,12 +115,12 @@ func roster_names() -> Array[String]:
 
 
 ## `SquadRoster.build`, for the scene: an enemy that searches is built to
-## search a frame at a time (`MctsSquad.spread_over_frames`), so the board
-## keeps drawing while it thinks.
+## search a frame at a time (`SearchingSquad.spread_over_frames`), so the
+## board keeps drawing while it thinks.
 func build_controller(row_name: String, seed_number: int) -> BlueController:
 	var built: BlueController = SquadRoster.build(row_name, seed_number)
-	if built is MctsSquad:
-		(built as MctsSquad).spread_over_frames()
+	if built is SearchingSquad:
+		(built as SearchingSquad).spread_over_frames()
 	return built
 
 

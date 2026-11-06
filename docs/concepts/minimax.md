@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-29
+verified_on: 2026-11-05
 tier: 0
-source: book:Russell & Norvig, Artificial Intelligence: A Modern Approach, 4th edition, chapter 5 (5.4 for Monte Carlo tree search)
-invalidated_if: ai_adversarial stops returning minimax's value and move from alpha-beta, MonteCarloSearch stops being UCT with one child per outcome, or the checkers evaluation stops being pieces, kings and advancement
+source: book:Russell & Norvig, Artificial Intelligence: A Modern Approach, 4th edition, chapter 5 (5.4 for Monte Carlo tree search, 5.5 for expectiminimax)
+invalidated_if: ai_adversarial stops returning minimax's value and move from alpha-beta, MonteCarloSearch stops being UCT with one child per outcome, ExpectiminimaxSearch stops summing outcomes by their chances, the squad duel is measured again, or the checkers evaluation stops being pieces, kings and advancement
 teaches: adversarial-search
 -->
 
@@ -214,11 +214,101 @@ evaluation wins. Browne et al. (2012) survey the many repairs: smarter
 playouts, a learned evaluation beside the playout or in place of it
 (AlphaGo, then AlphaZero), and more.
 
+## Expectiminimax: the dice, weighed
+
+Minimax has two kinds of position, MAX's and MIN's. A game with dice has a
+third, where nobody chooses: the **chance node**. Its value is not the best
+or the worst of its children but their **expected value** -- each
+outcome's value times its probability, summed. Russell & Norvig, AIMA 5.5,
+call the result **expectiminimax**; `godot/addons/ai_adversarial/expectiminimax.gd`
+is that, reading the same `outcomes` MCTS draws from. A shot that hits 55%
+of the time for a position worth +0.4, and misses for one worth -0.1, is
+worth 0.55 x 0.4 + 0.45 x (-0.1) = 0.175.
+
+Two things change from minimax. **The evaluation's scale matters**, not
+only its order (AIMA 5.5.1): with leaves 2, 3 and 1, 4 behind two 90/10
+throws, the first move is worth 2.1 and the second 1.3; write the same
+leaves as 20, 30 and 1, 400 -- the same order -- and the second is worth
+40.9 and wins. `expectiminimax_test.gd` holds the book's example. And **the
+dice multiply the branching**: b moves with n outcomes each is (b n)^d,
+and alpha-beta's cut does not carry over -- an outcome not yet seen could
+be worth anything, unless the evaluation's range is known (*-minimax, not
+in the kit).
+
+It is anytime by **iterative deepening**: search depth 1, then 2, then 3,
+and always answer with the deepest finished. The walk is kept on a stack so
+a frame can stop it after a few positions and pick it up next frame.
+
+## Expectiminimax against MCTS, on the same positions
+
+T88 put both in the XCOM mode of the tactical game, where every shot is a
+die: `MctsSquad` (T87) samples, `ExpectiSquad` works out the odds, with an
+evaluation written by hand -- health, the cover held, the enemies flanked,
+each with a fixed weight -- which MCTS does without. Both search the same
+board (one guess at the fog), and `make measure-squad-duel` gave each the same
+time on 30 positions drawn from seeded matches. On 2026-11-05, on a 12-core
+machine running other work:
+
+| a decision | the two agree | MCTS iterations | expectiminimax finished |
+|---|---|---|---|
+| 50 ms | 16 of 30 | 45-184 | depth 1 on 16, depth 2 on 14 |
+| 200 ms | 16 of 30 | 179-1,018 | depth 1 on 7, 2 on 21, 3 on 2 |
+| 1,000 ms | 15 of 30 | 891-6,638 | depth 2 on 22, 3 on 8 |
+
+The shots are where they agree: 14 of the 16 shot questions at 50 and
+200 ms, 15 at 1,000; of the 14 walk questions, 2, 2 and none. A shot question has two to four answers, so
+MCTS spends hundreds of playouts on each and expectiminimax gets three
+plies deep. The walks are where they part: some forty answers, so MCTS
+has a handful of playouts each in 200 ms and its most visited walk is
+noise, and expectiminimax, at a ply or two, sees only the next shot and
+what its evaluation says of the cell. And a ply there is one piece's
+answer, while a side's turn is up to eight: at depth 2 the enemy chooses in
+5 of the 30 positions, all shots, and in none of the 14 walks. On a walk,
+expectiminimax plays against an enemy that stands still -- expectimax --
+while MCTS's playouts reach the other side's turn. How deep a search looks
+is counted in what a ply is; count it in whole turns and the comparison
+changes (a later task). Neither is right by construction; which is better
+is the matches' question:
+
+| every decision 50 ms, 100 matches a seat | as red: won, lost, drawn | as blue: won, lost, drawn |
+|---|---|---|
+| expectiminimax against MCTS | 9, 5, 86 | 53, 43, 4 |
+| expectiminimax against the weighed enemy | 2, 98, 0 | 1, 99, 0 |
+| MCTS against the weighed enemy | 4, 96, 0 | 3, 97, 0 |
+
+| every decision 200 ms, 20 matches a seat | as red: won, lost, drawn | as blue: won, lost, drawn |
+|---|---|---|
+| expectiminimax against MCTS | 3, 17, 0 | 4, 16, 0 |
+| expectiminimax against the weighed enemy | 0, 20, 0 | 1, 19, 0 |
+| MCTS against the weighed enemy | 8, 12, 0 | 9, 11, 0 |
+
+Measured on 2026-11-05 alongside other worktrees' tests, load between 3
+and 15 on 12 cores: 100 matches a seat at 50 ms, matches 1 to 100 in four
+runs at once; 20 a seat at 200 ms, matches 101 to 120 in two. Not at
+1,000 ms: some fifty decisions a side a match make each match a minute and
+a half, and 600 of them most of a day. At 50 ms both searches lose almost
+every match to the first enemy, which weighs one action ahead in about a
+millisecond; between them, expectiminimax wins more than it loses, and as
+red most games end drawn at the round limit (not looked into further). At
+200 ms the order turns over: MCTS beats expectiminimax 33 to 7, and starts
+taking games from the first enemy, as T87 measured -- MCTS gains from every
+iteration, expectiminimax only from a whole ply more, forty times dearer.
+
+When each wins, from this: **expectiminimax** where the choice is between
+few options whose difference is in the odds -- a 45% shot against a 55%
+one, worth 0.005 apart: it computes that exactly, where MCTS needs hundreds
+of playouts to see it -- and where you can write an evaluation you trust.
+**MCTS** where the options are many and the consequences far: it needs no
+evaluation, and its answer improves smoothly with time, where
+expectiminimax's improves a whole ply at a time, forty times dearer each.
+The page of the mode, `docs/godot/squad.md`, keeps every position and one
+disagreement worked through.
+
 ## When not to use either
 
-- **Chance.** Dice or shuffled cards need a third kind of node that
-  averages, not picks: expectiminimax. Or Monte Carlo tree search, which
-  draws the dice as it plays them out.
+- **Chance**, for minimax and alpha-beta. Dice or shuffled cards need a
+  third kind of node that averages, not picks: expectiminimax, above. Or
+  Monte Carlo tree search, which draws the dice as it plays them out.
 - **Hidden information.** In poker you do not know the position you are in,
   and minimax assumes you do.
 - **Very wide games.** Go has around 250 moves a position, and even b^(d/2)

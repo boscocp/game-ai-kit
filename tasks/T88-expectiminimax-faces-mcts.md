@@ -94,3 +94,17 @@ Games, 5.5.1 Evaluation functions for games of chance)
 - **T126 is a prereq since 2026-11-05.** The owner ratified STATUS's
   2026-11-04 item B19 ("move the presentation hooks to a mode-view object
   before T87 and T88"). T87 landed first, so T126 comes before this task.
+- **Wave 136, where the code went beyond the Files line.** The positions
+  are `spec/squad/duel.json`, not `positions.json`, which T87's MCTS
+  vectors already hold in another shape. The shared perception moved into
+  `SearchingSquad`, so `MctsSquad` changed shape without changing a
+  decision (its digest held). A roster row reaches the menu's card
+  (`godot/menu/catalogue.json`, `godot/locale/menu.csv`) and the squad's
+  words its table (`godot/locale/squad.csv`); two manifests gained the new
+  Python tests; T73's literature page is `docs/concepts/the-literature-and-the-kit.md`.
+  There is no position picker in the scene: the manual check reaches a
+  similar position in play (decision 6 of the pull request).
+- **The review of wave 136 split the duel.** `make test-squad-duel` is
+  the gate, on counted budgets, and fails on a short run.
+  `make measure-squad-duel` is step 4's timed run, kept out of `check`.
+  The root cause of the crash is T134.

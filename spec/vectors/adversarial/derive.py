@@ -2,11 +2,13 @@
 
 Imports nothing from the repository, so the numbers come from neither
 implementation the vectors hold -- this is a third MCTS, written short, from
-the rules the README states:
+the rules the README states, and a third expectiminimax (T88), in exact
+fractions so that no rounding of its own can agree with theirs:
 
     python3 spec/vectors/adversarial/derive.py spec/vectors/adversarial
 """
 import json, math, sys
+from fractions import Fraction
 
 MASK = 0xFFFFFFFF
 
@@ -43,18 +45,19 @@ def nim():
     return (lambda s: s[1], moves, outs, lambda s: s[0] == 0, value)
 
 
-def dice_race(goal=6):
+def dice_race(goal=6, number=float):
     over = lambda s: max(s[0]) >= goal
     def go(s, n, again):
         q = list(s[0]); q[s[1]] += n
         return (tuple(q), s[1] if again else 1 - s[1])
     def outs(s, m):
         if m == "walk":
-            return [(1.0, go(s, 1, False))]
-        return [(0.5, go(s, 0, False)), (0.25, go(s, 2, False)), (0.25, go(s, 4, True))]
+            return [(number(1), go(s, 1, False))]
+        half, quarter = number(1) / 2, number(1) / 4
+        return [(half, go(s, 0, False)), (quarter, go(s, 2, False)), (quarter, go(s, 4, True))]
     def value(s, p):
         lead = s[0][p] - s[0][1 - p]
-        return (1.0 if lead > 0 else -1.0) if over(s) else lead / goal
+        return number(1 if lead > 0 else -1) if over(s) else number(lead) / goal
     return (lambda s: s[1], lambda s: [] if over(s) else ["walk", "roll"], outs, over, value)
 
 
@@ -103,6 +106,29 @@ def search(game, state, seed, steps, c, limit):
     return visits, means, chosen
 
 
+def expectiminimax(game, state, depth):
+    """Every root move's expected value, the first of the best, and the positions visited."""
+    player, moves, outs, over, value = game
+    me, seen = player(state), [1]
+    def worth(s, ply):
+        seen[0] += 1
+        if over(s) or not moves(s) or ply >= depth:
+            return value(s, me)
+        pick = max if player(s) == me else min
+        return pick(expected(s, m, ply) for m in moves(s))
+    def expected(s, m, ply):
+        return sum(chance * worth(after, ply + 1) for chance, after in outs(s, m))
+    values = [expected(state, m, 0) for m in moves(state)]
+    best = values.index(max(values))
+    return values, moves(state)[best], seen[0]
+
+
+def expecti_case(name, state, depth):
+    values, chosen, positions = expectiminimax(dice_race(number=Fraction), as_tuple(state), depth)
+    return {"name": name, "state": state, "depth": depth, "values": [float(v) for v in values],
+            "action": chosen, "positions": positions}
+
+
 def as_tuple(state):
     if "sticks" in state:
         return (state["sticks"], state["player"])
@@ -141,6 +167,16 @@ def main(out):
             case("player one, midway", dice_race(), {"squares": [2, 4], "player": 1}, 5, [250]),
             case("short playouts, scored by the lead", dice_race(), {"squares": [1, 0], "player": 0}, 8, [200],
                  math.sqrt(2.0), 2),
+        ]},
+        "expectiminimax-dice-race.json": {"description": "Expectiminimax on the dice race: each root move's expected value at a depth, the move, the positions visited.",
+                                          "game": "dice_race", "cases": [
+            expecti_case("from the start, two plies", {"squares": [0, 0], "player": 0}, 2),
+            expecti_case("from the start, three plies", {"squares": [0, 0], "player": 0}, 3),
+            expecti_case("one square from home: walk", {"squares": [5, 0], "player": 0}, 2),
+            expecti_case("behind at the end, two plies", {"squares": [4, 5], "player": 0}, 2),
+            expecti_case("behind at the end, three plies", {"squares": [4, 5], "player": 0}, 3),
+            expecti_case("player one, midway, three plies", {"squares": [2, 4], "player": 1}, 3),
+            expecti_case("level near the end, three plies", {"squares": [3, 3], "player": 0}, 3),
         ]},
     }
     for name, vector in vectors.items():

@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-22
+verified_on: 2026-11-05
 tier: 0
 source: https://aima.cs.berkeley.edu/contents.html
 invalidated_if: a module, a demo or a source named in the table changes, or a task of the roadmap (T84-T101) lands and changes what the kit has
@@ -84,8 +84,8 @@ last three columns to the repository.
 |---|---|---|---|---|---|
 | Minimax and alpha-beta | AIMA 5.2-5.3; Millington ch. 8 | board games | `ai_adversarial`, `checkers` | `run` | 0 |
 | A learned evaluation (Samuel) | AIMA 5.3 (heuristic evaluation); kit's `learned-evaluation.md` | checkers | `checkers`, `python/gameaikit/checkers` | `run` | 1 |
-| Monte Carlo tree search, UCT | AIMA 5.4; Browne et al. 2012; GAP2 ch. 25; GAP3 ch. 28 | Go, strategy and card games | `ai_adversarial`, `godot/addons/ai_adversarial/mcts.gd` | -- | 0 |
-| Stochastic and partially observable games | AIMA 5.5-5.6 | dice, cards, fog of war | fog of war only, with no reasoning over it: `rts` | `demo-rts` | 1 |
+| Monte Carlo tree search, UCT | AIMA 5.4; Browne et al. 2012; GAP2 ch. 25; GAP3 ch. 28 | Go, strategy and card games | `ai_adversarial`, `godot/addons/ai_adversarial/mcts.gd`; the XCOM mode's second enemy, `squad` | `demo-tactical` | 0 |
+| Stochastic and partially observable games | AIMA 5.5-5.6 | dice, cards, fog of war | expectiminimax, `godot/addons/ai_adversarial/expectiminimax.gd`, in `ai_adversarial`, against MCTS in the XCOM mode, `squad`; fog searched on one guess (a single determinization) there, and with no reasoning over it in `rts` | `demo-tactical`, `demo-rts` | 0 |
 
 ### Constraints and content
 
@@ -284,7 +284,10 @@ owner answered; B.1 was done in T70; B.3, B.4 and B.5 are not tasks.)*
    use: what the bot match had assumed came out when the guards used it.
 2. **`ai_adversarial` in a second board game** -- the same game as A.1,
    so MCTS and alpha-beta face the same position. What it shows: whether
-   `GakAdversarialGame` is an interface or checkers' shape.
+   `GakAdversarialGame` is an interface or checkers' shape. Done in T88
+   (wave 136), as expectiminimax in the XCOM mode: the interface held --
+   the searches and the squad's game needed nothing it did not already
+   say, `outcomes` included.
 3. **`ai_opponent` outside the fighting game** -- an n-gram predicting a
    rock-paper-scissors player, or the RTS commander predicting the
    player's next build. What it shows: whether the predictor assumes

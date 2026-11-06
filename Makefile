@@ -533,6 +533,25 @@ measure-squad-mcts: import ## T87: MCTS against the weighed enemy from each seat
 	@$(GODOT) --headless --path godot -s res://test/squad/squad_mcts_measure.gd \
 		-- $(or $(ITERATIONS),1000) $(or $(GAMES),100) $(or $(FIRST),0)
 
+.PHONY: test-squad-duel
+check: test-squad-duel
+test-squad-duel: import ## T88: expectiminimax and MCTS on spec/squad/duel.json's 30 positions and one seeded match a pairing a seat, on counted budgets (~30 s)
+	@# Seeded and counted, so load cannot move it. Fails on an answer not
+	@# the position's, a search that finished nothing, a match with no end or
+	@# a lost decision, and on fewer rows or matches than it set out for (a
+	@# search or a match that broke). Any other SCRIPT ERROR -- in a check, in
+	@# the count -- is caught by godot_checked.py reading the output.
+	@$(PYTHON) scripts/godot_checked.py res://test/squad/squad_duel_runner.gd \
+		-- $(CURDIR)/spec/squad/duel.json fixed $(or $(GAMES),1)
+
+.PHONY: measure-squad-duel
+measure-squad-duel: import ## T88: the same duel on the wall clock, 50, 200 and 1,000 ms a position, then matches a seat at MS a decision (GAMES=4 MS=50 FIRST=1; GAMES=100 for the page's table; slow)
+	@# A measurement, not in make check: the machine's load moves it. It
+	@# still fails on a missing row, a wrong answer, a broken match, or an
+	@# engine error in its output (godot_checked.py).
+	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/squad/squad_duel_runner.gd \
+		-- $(CURDIR)/spec/squad/duel.json clock $(or $(GAMES),4) $(or $(MS),50) $(or $(FIRST),1)
+
 .PHONY: test-infiltration
 test-infiltration: import ## The infiltration level's guards: help heard, the search shared, quiet and loud, the arbiter, the halving, every decision on the overlay, portable (T70)
 	@$(GODOT) --headless --path godot -s res://test/infiltration/infiltration_properties.gd

@@ -1,0 +1,4954 @@
+{
+ "about": [
+  "T88's duel: 30 positions of the XCOM-style mode, searched by Monte Carlo tree search (T87) and by expectiminimax (T88) at the same wall-clock budget, 50, 200 and 1,000 ms a decision. `make measure-squad-duel` prints what each chose; `make test-squad-duel` holds them on counted budgets.",
+  "Drawn by `godot/test/squad/squad_duel_draw.gd` from seeded matches of the first enemy against itself, on the board the side to move believes in: the opening, four flanks, four long shots, four retreats to cover, and the rest spread through the candidates left. `drawn_from` says which match and turn.",
+  "A position has the shape of `positions.json`'s: every piece `[id, side, kind, column, row, health, movement left]`, side 0 red and 1 blue, in the board's order; the turn; the piece about to act; whether it is to `walk` or to `shoot`; the pieces of its side still to act after it.",
+  "`expected` is expectiminimax's root with the hand-written evaluation (`rules.json`'s `evaluation`): every answer, in the game's order, with its expected value, at `depth` plies, and the answer worth most. Written from one run and held equal in both languages: `godot/test/squad/expecti_squad_test.gd` and `python/tests/test_squad_duel.py`."
+ ],
+ "map": [
+  "..T...~~......",
+  ".TT...ff.T....",
+  ".....T~~.T....",
+  "..#..T~~......",
+  "..#...==...#..",
+  "......~~T..#..",
+  "....T.~~T.....",
+  "....T.ff...TT.",
+  "......~~...T.."
+ ],
+ "positions": [
+  {
+   "turn": 0,
+   "to_move": 0,
+   "acting": 1,
+   "phase": "walk",
+   "waiting": [
+    2,
+    3,
+    4
+   ],
+   "pieces": [
+    [
+     1,
+     0,
+     "runner",
+     1,
+     2,
+     8,
+     8
+    ],
+    [
+     2,
+     0,
+     "shield",
+     1,
+     4,
+     10,
+     6
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     0,
+     5,
+     7,
+     4
+    ],
+    [
+     4,
+     0,
+     "wader",
+     1,
+     6,
+     8,
+     6
+    ],
+    [
+     5,
+     1,
+     "runner",
+     12,
+     6,
+     8,
+     8
+    ],
+    [
+     6,
+     1,
+     "shield",
+     12,
+     4,
+     10,
+     6
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     13,
+     3,
+     7,
+     4
+    ],
+    [
+     8,
+     1,
+     "wader",
+     12,
+     2,
+     8,
+     6
+    ]
+   ],
+   "drawn_from": {
+    "match": 1,
+    "turn": 0
+   },
+   "about": "the opening",
+   "name": "01 the opening",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "1 holds",
+      0.0
+     ],
+     [
+      "1 walks to 0,0 for 3",
+      0.0
+     ],
+     [
+      "1 walks to 1,0 for 4",
+      0.025
+     ],
+     [
+      "1 walks to 2,0 for 7",
+      0.025
+     ],
+     [
+      "1 walks to 3,0 for 4",
+      0.0
+     ],
+     [
+      "1 walks to 4,0 for 5",
+      0.0
+     ],
+     [
+      "1 walks to 5,0 for 6",
+      0.0
+     ],
+     [
+      "1 walks to 0,1 for 2",
+      0.025
+     ],
+     [
+      "1 walks to 1,1 for 3",
+      0.025
+     ],
+     [
+      "1 walks to 2,1 for 4",
+      0.0
+     ],
+     [
+      "1 walks to 3,1 for 3",
+      0.0
+     ],
+     [
+      "1 walks to 4,1 for 4",
+      0.0
+     ],
+     [
+      "1 walks to 5,1 for 5",
+      0.025
+     ],
+     [
+      "1 walks to 6,1 for 8",
+      0.0
+     ],
+     [
+      "1 walks to 0,2 for 1",
+      0.0
+     ],
+     [
+      "1 walks to 2,2 for 1",
+      0.037500000000000006
+     ],
+     [
+      "1 walks to 3,2 for 2",
+      0.0
+     ],
+     [
+      "1 walks to 4,2 for 3",
+      0.025
+     ],
+     [
+      "1 walks to 5,2 for 6",
+      0.018750000000000003
+     ],
+     [
+      "1 walks to 0,3 for 2",
+      0.0
+     ],
+     [
+      "1 walks to 1,3 for 1",
+      0.05
+     ],
+     [
+      "1 walks to 3,3 for 3",
+      0.0
+     ],
+     [
+      "1 walks to 4,3 for 4",
+      0.025
+     ],
+     [
+      "1 walks to 5,3 for 7",
+      0.00625
+     ],
+     [
+      "1 walks to 0,4 for 3",
+      0.0
+     ],
+     [
+      "1 walks to 3,4 for 4",
+      0.0
+     ],
+     [
+      "1 walks to 4,4 for 5",
+      0.0
+     ],
+     [
+      "1 walks to 5,4 for 6",
+      0.0125
+     ],
+     [
+      "1 walks to 6,4 for 7",
+      0.0
+     ],
+     [
+      "1 walks to 7,4 for 8",
+      0.0
+     ],
+     [
+      "1 walks to 1,5 for 7",
+      0.0
+     ],
+     [
+      "1 walks to 2,5 for 6",
+      0.037500000000000006
+     ],
+     [
+      "1 walks to 3,5 for 5",
+      0.0
+     ],
+     [
+      "1 walks to 4,5 for 6",
+      0.00625
+     ],
+     [
+      "1 walks to 5,5 for 7",
+      0.0
+     ],
+     [
+      "1 walks to 2,6 for 7",
+      0.0
+     ],
+     [
+      "1 walks to 3,6 for 6",
+      0.025
+     ],
+     [
+      "1 walks to 5,6 for 8",
+      0.0
+     ],
+     [
+      "1 walks to 2,7 for 8",
+      -0.00625
+     ],
+     [
+      "1 walks to 3,7 for 7",
+      0.018750000000000003
+     ],
+     [
+      "1 walks to 3,8 for 8",
+      -0.00625
+     ]
+    ],
+    "decision": "1 walks to 1,3 for 1"
+   }
+  },
+  {
+   "turn": 1,
+   "to_move": 1,
+   "acting": 5,
+   "phase": "shoot",
+   "waiting": [
+    6,
+    7,
+    8
+   ],
+   "pieces": [
+    [
+     1,
+     0,
+     "runner",
+     7,
+     4,
+     8,
+     0
+    ],
+    [
+     2,
+     0,
+     "shield",
+     5,
+     4,
+     10,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     6,
+     5,
+     8,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     9,
+     5,
+     8,
+     4
+    ],
+    [
+     6,
+     1,
+     "shield",
+     12,
+     4,
+     10,
+     6
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     13,
+     3,
+     7,
+     4
+    ],
+    [
+     8,
+     1,
+     "wader",
+     12,
+     2,
+     8,
+     6
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     0,
+     5,
+     7,
+     4
+    ]
+   ],
+   "drawn_from": {
+    "match": 1,
+    "turn": 1
+   },
+   "about": "flank",
+   "name": "02 flank",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "5 holds",
+      0.21250000000000002
+     ],
+     [
+      "5 shoots 1",
+      0.24250000000000005
+     ],
+     [
+      "5 shoots 2",
+      0.2370454545454546
+     ],
+     [
+      "5 shoots 4",
+      0.24250000000000005
+     ]
+    ],
+    "decision": "5 shoots 1"
+   }
+  },
+  {
+   "turn": 5,
+   "to_move": 1,
+   "acting": 5,
+   "phase": "shoot",
+   "waiting": [
+    6,
+    7,
+    8
+   ],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     5,
+     4,
+     10,
+     0
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     3,
+     7,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     7,
+     2,
+     8,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     10,
+     4,
+     5,
+     5
+    ],
+    [
+     6,
+     1,
+     "shield",
+     9,
+     5,
+     2,
+     6
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     4,
+     7,
+     4
+    ],
+    [
+     8,
+     1,
+     "wader",
+     9,
+     4,
+     5,
+     6
+    ]
+   ],
+   "drawn_from": {
+    "match": 1,
+    "turn": 5
+   },
+   "about": "flank",
+   "name": "03 flank",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "5 holds",
+      -0.00909090909090908
+     ],
+     [
+      "5 shoots 2",
+      0.015454545454545464
+     ],
+     [
+      "5 shoots 4",
+      0.02090909090909092
+     ]
+    ],
+    "decision": "5 shoots 4"
+   }
+  },
+  {
+   "turn": 5,
+   "to_move": 1,
+   "acting": 6,
+   "phase": "shoot",
+   "waiting": [
+    7,
+    8
+   ],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     5,
+     4,
+     10,
+     0
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     3,
+     7,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     7,
+     2,
+     5,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     10,
+     4,
+     5,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     8,
+     5,
+     2,
+     3
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     4,
+     7,
+     4
+    ],
+    [
+     8,
+     1,
+     "wader",
+     9,
+     4,
+     5,
+     6
+    ]
+   ],
+   "drawn_from": {
+    "match": 1,
+    "turn": 5
+   },
+   "about": "flank",
+   "name": "04 flank",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "6 holds",
+      -0.05454545454545455
+     ],
+     [
+      "6 shoots 2",
+      -0.03272727272727273
+     ],
+     [
+      "6 shoots 4",
+      -0.027272727272727275
+     ]
+    ],
+    "decision": "6 shoots 4"
+   }
+  },
+  {
+   "turn": 5,
+   "to_move": 1,
+   "acting": 8,
+   "phase": "shoot",
+   "waiting": [],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     5,
+     4,
+     10,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     10,
+     4,
+     5,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     8,
+     5,
+     2,
+     0
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     11,
+     3,
+     7,
+     0
+    ],
+    [
+     8,
+     1,
+     "wader",
+     9,
+     5,
+     5,
+     5
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     3,
+     7,
+     0
+    ]
+   ],
+   "drawn_from": {
+    "match": 1,
+    "turn": 5
+   },
+   "about": "flank",
+   "name": "05 flank",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "8 holds",
+      -0.13863636363636364
+     ],
+     [
+      "8 shoots 2",
+      -0.1140909090909091
+     ]
+    ],
+    "decision": "8 shoots 2"
+   }
+  },
+  {
+   "turn": 1,
+   "to_move": 1,
+   "acting": 7,
+   "phase": "shoot",
+   "waiting": [
+    8
+   ],
+   "pieces": [
+    [
+     1,
+     0,
+     "runner",
+     7,
+     4,
+     8,
+     0
+    ],
+    [
+     2,
+     0,
+     "shield",
+     5,
+     4,
+     10,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     6,
+     5,
+     8,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     9,
+     5,
+     8,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     10,
+     3,
+     10,
+     0
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     3,
+     7,
+     3
+    ],
+    [
+     8,
+     1,
+     "wader",
+     12,
+     2,
+     8,
+     6
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     0,
+     5,
+     7,
+     4
+    ]
+   ],
+   "drawn_from": {
+    "match": 1,
+    "turn": 1
+   },
+   "about": "long shot",
+   "name": "06 long shot",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "7 holds",
+      0.1625
+     ],
+     [
+      "7 shoots 1",
+      0.21704545454545454
+     ]
+    ],
+    "decision": "7 shoots 1"
+   }
+  },
+  {
+   "turn": 2,
+   "to_move": 0,
+   "acting": 3,
+   "phase": "shoot",
+   "waiting": [
+    4
+   ],
+   "pieces": [
+    [
+     1,
+     0,
+     "runner",
+     6,
+     4,
+     3,
+     0
+    ],
+    [
+     2,
+     0,
+     "shield",
+     5,
+     5,
+     10,
+     0
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     3,
+     7,
+     2
+    ],
+    [
+     4,
+     0,
+     "wader",
+     6,
+     5,
+     8,
+     6
+    ],
+    [
+     5,
+     1,
+     "runner",
+     9,
+     5,
+     5,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     10,
+     3,
+     7,
+     0
+    ],
+    [
+     8,
+     1,
+     "wader",
+     11,
+     3,
+     8,
+     0
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     3,
+     7,
+     0
+    ]
+   ],
+   "drawn_from": {
+    "match": 1,
+    "turn": 2
+   },
+   "about": "long shot",
+   "name": "07 long shot",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "3 holds",
+      0.06818181818181818
+     ],
+     [
+      "3 shoots 6",
+      0.11363636363636363
+     ]
+    ],
+    "decision": "3 shoots 6"
+   }
+  },
+  {
+   "turn": 3,
+   "to_move": 1,
+   "acting": 7,
+   "phase": "shoot",
+   "waiting": [
+    8
+   ],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     5,
+     5,
+     10,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     7,
+     5,
+     8,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     9,
+     6,
+     5,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     9,
+     5,
+     2,
+     0
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     4,
+     7,
+     3
+    ],
+    [
+     8,
+     1,
+     "wader",
+     11,
+     3,
+     8,
+     6
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     0,
+     5,
+     7,
+     4
+    ]
+   ],
+   "drawn_from": {
+    "match": 1,
+    "turn": 3
+   },
+   "about": "long shot",
+   "name": "08 long shot",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "7 holds",
+      0.1287878787878788
+     ],
+     [
+      "7 shoots 4",
+      0.16515151515151516
+     ]
+    ],
+    "decision": "7 shoots 4"
+   }
+  },
+  {
+   "turn": 4,
+   "to_move": 0,
+   "acting": 4,
+   "phase": "shoot",
+   "waiting": [],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     5,
+     4,
+     10,
+     0
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     3,
+     7,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     7,
+     2,
+     8,
+     3
+    ],
+    [
+     5,
+     1,
+     "runner",
+     9,
+     6,
+     5,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     9,
+     5,
+     2,
+     0
+    ],
+    [
+     8,
+     1,
+     "wader",
+     9,
+     4,
+     8,
+     0
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     4,
+     7,
+     0
+    ]
+   ],
+   "drawn_from": {
+    "match": 1,
+    "turn": 4
+   },
+   "about": "long shot",
+   "name": "09 long shot",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "4 holds",
+      -0.12045454545454545
+     ],
+     [
+      "4 shoots 6",
+      -0.10928030303030302
+     ],
+     [
+      "4 shoots 8",
+      -0.09045454545454545
+     ]
+    ],
+    "decision": "4 shoots 8"
+   }
+  },
+  {
+   "turn": 2,
+   "to_move": 0,
+   "acting": 1,
+   "phase": "walk",
+   "waiting": [
+    2,
+    3,
+    4
+   ],
+   "pieces": [
+    [
+     1,
+     0,
+     "runner",
+     7,
+     4,
+     3,
+     8
+    ],
+    [
+     2,
+     0,
+     "shield",
+     5,
+     4,
+     10,
+     6
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     3,
+     4,
+     7,
+     4
+    ],
+    [
+     4,
+     0,
+     "wader",
+     6,
+     5,
+     8,
+     6
+    ],
+    [
+     5,
+     1,
+     "runner",
+     9,
+     5,
+     8,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     10,
+     3,
+     10,
+     0
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     3,
+     7,
+     0
+    ],
+    [
+     8,
+     1,
+     "wader",
+     11,
+     3,
+     8,
+     0
+    ]
+   ],
+   "drawn_from": {
+    "match": 1,
+    "turn": 2
+   },
+   "about": "retreat to cover",
+   "name": "10 retreat to cover",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "1 holds",
+      -0.2226136363636364
+     ],
+     [
+      "1 walks to 8,0 for 5",
+      -0.03465909090909092
+     ],
+     [
+      "1 walks to 9,0 for 6",
+      0.009090909090909094
+     ],
+     [
+      "1 walks to 10,0 for 7",
+      -0.0346590909090909
+     ],
+     [
+      "1 walks to 11,0 for 8",
+      -0.0346590909090909
+     ],
+     [
+      "1 walks to 7,1 for 7",
+      -0.03465909090909092
+     ],
+     [
+      "1 walks to 8,1 for 4",
+      -0.19056818181818183
+     ],
+     [
+      "1 walks to 9,1 for 7",
+      0.09034090909090911
+     ],
+     [
+      "1 walks to 10,1 for 8",
+      0.02159090909090909
+     ],
+     [
+      "1 walks to 8,2 for 3",
+      -0.024204545454545454
+     ],
+     [
+      "1 walks to 9,2 for 6",
+      0.0153409090909091
+     ],
+     [
+      "1 walks to 10,2 for 7",
+      0.02159090909090909
+     ],
+     [
+      "1 walks to 11,2 for 8",
+      0.0153409090909091
+     ],
+     [
+      "1 walks to 8,3 for 2",
+      -0.09920454545454546
+     ],
+     [
+      "1 walks to 9,3 for 3",
+      -0.042954545454545454
+     ],
+     [
+      "1 walks to 6,4 for 1",
+      -0.2226136363636364
+     ],
+     [
+      "1 walks to 8,4 for 1",
+      -0.15545454545454546
+     ],
+     [
+      "1 walks to 9,4 for 2",
+      -0.10545454545454547
+     ],
+     [
+      "1 walks to 10,4 for 3",
+      -0.08045454545454545
+     ],
+     [
+      "1 walks to 8,5 for 4",
+      -0.1609090909090909
+     ],
+     [
+      "1 walks to 10,5 for 4",
+      -0.1359090909090909
+     ],
+     [
+      "1 walks to 12,5 for 8",
+      0.0153409090909091
+     ],
+     [
+      "1 walks to 8,6 for 7",
+      -0.022159090909090906
+     ],
+     [
+      "1 walks to 9,6 for 6",
+      -0.07215909090909091
+     ],
+     [
+      "1 walks to 10,6 for 5",
+      -0.07215909090909091
+     ],
+     [
+      "1 walks to 11,6 for 6",
+      0.07784090909090911
+     ],
+     [
+      "1 walks to 12,6 for 7",
+      -0.022159090909090906
+     ],
+     [
+      "1 walks to 13,6 for 8",
+      -0.022159090909090906
+     ],
+     [
+      "1 walks to 8,7 for 8",
+      -0.022159090909090906
+     ],
+     [
+      "1 walks to 9,7 for 7",
+      -0.07215909090909091
+     ],
+     [
+      "1 walks to 10,7 for 6",
+      -0.05965909090909091
+     ],
+     [
+      "1 walks to 9,8 for 8",
+      -0.07215909090909091
+     ],
+     [
+      "1 walks to 10,8 for 7",
+      -0.05965909090909091
+     ]
+    ],
+    "decision": "1 walks to 9,1 for 7"
+   }
+  },
+  {
+   "turn": 3,
+   "to_move": 1,
+   "acting": 6,
+   "phase": "walk",
+   "waiting": [
+    7,
+    8
+   ],
+   "pieces": [
+    [
+     1,
+     0,
+     "runner",
+     6,
+     4,
+     3,
+     0
+    ],
+    [
+     2,
+     0,
+     "shield",
+     5,
+     5,
+     10,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     7,
+     5,
+     8,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     9,
+     6,
+     5,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     10,
+     3,
+     2,
+     6
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     3,
+     7,
+     4
+    ],
+    [
+     8,
+     1,
+     "wader",
+     11,
+     3,
+     8,
+     6
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     0,
+     5,
+     7,
+     4
+    ]
+   ],
+   "drawn_from": {
+    "match": 1,
+    "turn": 3
+   },
+   "about": "retreat to cover",
+   "name": "11 retreat to cover",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "6 holds",
+      0.04090909090909092
+     ],
+     [
+      "6 walks to 8,0 for 5",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 9,0 for 4",
+      0.11590909090909092
+     ],
+     [
+      "6 walks to 10,0 for 3",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 11,0 for 4",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 12,0 for 5",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 13,0 for 6",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 8,1 for 4",
+      0.04090909090909092
+     ],
+     [
+      "6 walks to 9,1 for 5",
+      0.11590909090909092
+     ],
+     [
+      "6 walks to 10,1 for 2",
+      0.11590909090909092
+     ],
+     [
+      "6 walks to 11,1 for 3",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 12,1 for 4",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 13,1 for 5",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 8,2 for 3",
+      0.007272727272727283
+     ],
+     [
+      "6 walks to 9,2 for 4",
+      0.04090909090909092
+     ],
+     [
+      "6 walks to 10,2 for 1",
+      0.11590909090909092
+     ],
+     [
+      "6 walks to 11,2 for 2",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 12,2 for 3",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 13,2 for 4",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 8,3 for 2",
+      0.007272727272727283
+     ],
+     [
+      "6 walks to 9,3 for 1",
+      0.007272727272727283
+     ],
+     [
+      "6 walks to 13,3 for 5",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 7,4 for 4",
+      0.09715909090909093
+     ],
+     [
+      "6 walks to 8,4 for 3",
+      0.04422348484848486
+     ],
+     [
+      "6 walks to 9,4 for 2",
+      0.007272727272727283
+     ],
+     [
+      "6 walks to 10,4 for 1",
+      0.007272727272727283
+     ],
+     [
+      "6 walks to 13,4 for 6",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 8,5 for 6",
+      0.09715909090909093
+     ],
+     [
+      "6 walks to 9,5 for 3",
+      0.08772727272727275
+     ],
+     [
+      "6 walks to 10,5 for 2",
+      -0.04272727272727271
+     ],
+     [
+      "6 walks to 12,5 for 6",
+      0.14090909090909093
+     ],
+     [
+      "6 walks to 10,6 for 3",
+      -0.04272727272727271
+     ],
+     [
+      "6 walks to 11,6 for 4",
+      0.14090909090909093
+     ],
+     [
+      "6 walks to 12,6 for 5",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 13,6 for 6",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 8,7 for 6",
+      0.11590909090909092
+     ],
+     [
+      "6 walks to 9,7 for 5",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 10,7 for 4",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 9,8 for 6",
+      0.09090909090909093
+     ],
+     [
+      "6 walks to 10,8 for 5",
+      0.09090909090909093
+     ]
+    ],
+    "decision": "6 walks to 12,5 for 6"
+   }
+  },
+  {
+   "turn": 5,
+   "to_move": 1,
+   "acting": 8,
+   "phase": "walk",
+   "waiting": [],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     5,
+     4,
+     10,
+     0
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     3,
+     7,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     10,
+     4,
+     5,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     8,
+     5,
+     2,
+     0
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     11,
+     3,
+     7,
+     0
+    ],
+    [
+     8,
+     1,
+     "wader",
+     9,
+     4,
+     5,
+     6
+    ]
+   ],
+   "drawn_from": {
+    "match": 1,
+    "turn": 5
+   },
+   "about": "retreat to cover",
+   "name": "12 retreat to cover",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "8 holds",
+      0.023409090909090904
+     ],
+     [
+      "8 walks to 7,0 for 6",
+      -0.15113636363636365
+     ],
+     [
+      "8 walks to 8,0 for 5",
+      -0.15113636363636365
+     ],
+     [
+      "8 walks to 9,0 for 6",
+      -0.12613636363636366
+     ],
+     [
+      "8 walks to 10,0 for 5",
+      -0.15113636363636365
+     ],
+     [
+      "8 walks to 11,0 for 6",
+      -0.15113636363636365
+     ],
+     [
+      "8 walks to 6,1 for 6",
+      -0.16363636363636364
+     ],
+     [
+      "8 walks to 7,1 for 5",
+      -0.16363636363636364
+     ],
+     [
+      "8 walks to 8,1 for 4",
+      -0.15113636363636365
+     ],
+     [
+      "8 walks to 10,1 for 4",
+      -0.12613636363636366
+     ],
+     [
+      "8 walks to 11,1 for 5",
+      -0.15113636363636365
+     ],
+     [
+      "8 walks to 12,1 for 6",
+      -0.15113636363636365
+     ],
+     [
+      "8 walks to 6,2 for 5",
+      -0.12613636363636366
+     ],
+     [
+      "8 walks to 7,2 for 4",
+      -0.18863636363636366
+     ],
+     [
+      "8 walks to 8,2 for 3",
+      0.010909090909090906
+     ],
+     [
+      "8 walks to 9,2 for 4",
+      -0.18863636363636366
+     ],
+     [
+      "8 walks to 10,2 for 3",
+      -0.11363636363636365
+     ],
+     [
+      "8 walks to 11,2 for 4",
+      -0.15113636363636365
+     ],
+     [
+      "8 walks to 12,2 for 5",
+      -0.15113636363636365
+     ],
+     [
+      "8 walks to 13,2 for 6",
+      -0.13863636363636364
+     ],
+     [
+      "8 walks to 6,3 for 4",
+      -0.13863636363636364
+     ],
+     [
+      "8 walks to 7,3 for 3",
+      0.010909090909090906
+     ],
+     [
+      "8 walks to 8,3 for 2",
+      0.010909090909090906
+     ],
+     [
+      "8 walks to 9,3 for 1",
+      0.010909090909090906
+     ],
+     [
+      "8 walks to 10,3 for 2",
+      -0.21363636363636368
+     ],
+     [
+      "8 walks to 12,3 for 6",
+      -0.16363636363636366
+     ],
+     [
+      "8 walks to 6,4 for 3",
+      0.023409090909090904
+     ],
+     [
+      "8 walks to 7,4 for 2",
+      0.023409090909090904
+     ],
+     [
+      "8 walks to 8,4 for 1",
+      0.023409090909090904
+     ],
+     [
+      "8 walks to 4,5 for 6",
+      -0.10113636363636365
+     ],
+     [
+      "8 walks to 5,5 for 5",
+      -0.21363636363636368
+     ],
+     [
+      "8 walks to 6,5 for 4",
+      -0.21363636363636368
+     ],
+     [
+      "8 walks to 7,5 for 3",
+      0.023409090909090904
+     ],
+     [
+      "8 walks to 9,5 for 1",
+      0.09840909090909092
+     ],
+     [
+      "8 walks to 10,5 for 2",
+      -0.16363636363636366
+     ],
+     [
+      "8 walks to 12,5 for 6",
+      -0.11363636363636365
+     ],
+     [
+      "8 walks to 5,6 for 6",
+      -0.15113636363636365
+     ],
+     [
+      "8 walks to 6,6 for 5",
+      -0.21363636363636368
+     ],
+     [
+      "8 walks to 7,6 for 4",
+      -0.21363636363636368
+     ],
+     [
+      "8 walks to 8,6 for 5",
+      -0.13863636363636364
+     ],
+     [
+      "8 walks to 9,6 for 2",
+      -0.13863636363636364
+     ],
+     [
+      "8 walks to 10,6 for 3",
+      -0.16363636363636366
+     ],
+     [
+      "8 walks to 11,6 for 4",
+      -0.11363636363636365
+     ],
+     [
+      "8 walks to 12,6 for 5",
+      -0.16363636363636366
+     ],
+     [
+      "8 walks to 13,6 for 6",
+      -0.16363636363636366
+     ],
+     [
+      "8 walks to 6,7 for 6",
+      -0.21363636363636368
+     ],
+     [
+      "8 walks to 7,7 for 5",
+      -0.16363636363636366
+     ],
+     [
+      "8 walks to 8,7 for 4",
+      -0.13863636363636364
+     ],
+     [
+      "8 walks to 9,7 for 3",
+      -0.16363636363636366
+     ],
+     [
+      "8 walks to 10,7 for 4",
+      -0.16363636363636366
+     ],
+     [
+      "8 walks to 7,8 for 6",
+      -0.16363636363636366
+     ],
+     [
+      "8 walks to 8,8 for 5",
+      -0.16363636363636366
+     ],
+     [
+      "8 walks to 9,8 for 4",
+      -0.16363636363636366
+     ],
+     [
+      "8 walks to 10,8 for 5",
+      -0.16363636363636366
+     ]
+    ],
+    "decision": "8 walks to 9,5 for 1"
+   }
+  },
+  {
+   "turn": 7,
+   "to_move": 1,
+   "acting": 5,
+   "phase": "walk",
+   "waiting": [
+    6,
+    7,
+    8
+   ],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     8,
+     4,
+     10,
+     0
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     4,
+     7,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     10,
+     4,
+     5,
+     8
+    ],
+    [
+     6,
+     1,
+     "shield",
+     8,
+     5,
+     2,
+     6
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     11,
+     3,
+     7,
+     4
+    ],
+    [
+     8,
+     1,
+     "wader",
+     9,
+     5,
+     5,
+     6
+    ]
+   ],
+   "drawn_from": {
+    "match": 1,
+    "turn": 7
+   },
+   "about": "retreat to cover",
+   "name": "13 retreat to cover",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "5 holds",
+      0.12340909090909091
+     ],
+     [
+      "5 walks to 8,0 for 6",
+      0.18636363636363634
+     ],
+     [
+      "5 walks to 9,0 for 5",
+      0.26136363636363635
+     ],
+     [
+      "5 walks to 10,0 for 4",
+      0.23636363636363636
+     ],
+     [
+      "5 walks to 11,0 for 5",
+      0.23636363636363636
+     ],
+     [
+      "5 walks to 12,0 for 6",
+      0.23636363636363636
+     ],
+     [
+      "5 walks to 13,0 for 7",
+      0.23636363636363636
+     ],
+     [
+      "5 walks to 7,1 for 8",
+      0.18636363636363634
+     ],
+     [
+      "5 walks to 8,1 for 5",
+      0.18636363636363634
+     ],
+     [
+      "5 walks to 9,1 for 6",
+      0.26136363636363635
+     ],
+     [
+      "5 walks to 10,1 for 3",
+      0.26136363636363635
+     ],
+     [
+      "5 walks to 11,1 for 4",
+      0.23636363636363636
+     ],
+     [
+      "5 walks to 12,1 for 5",
+      0.23636363636363636
+     ],
+     [
+      "5 walks to 13,1 for 6",
+      0.23636363636363636
+     ],
+     [
+      "5 walks to 8,2 for 4",
+      0.12340909090909091
+     ],
+     [
+      "5 walks to 9,2 for 5",
+      0.18636363636363634
+     ],
+     [
+      "5 walks to 10,2 for 2",
+      0.19840909090909092
+     ],
+     [
+      "5 walks to 11,2 for 3",
+      0.17340909090909093
+     ],
+     [
+      "5 walks to 12,2 for 4",
+      0.23636363636363636
+     ],
+     [
+      "5 walks to 13,2 for 5",
+      0.23636363636363636
+     ],
+     [
+      "5 walks to 8,3 for 3",
+      0.23431818181818181
+     ],
+     [
+      "5 walks to 9,3 for 2",
+      0.12340909090909091
+     ],
+     [
+      "5 walks to 10,3 for 1",
+      0.12340909090909091
+     ],
+     [
+      "5 walks to 12,3 for 5",
+      0.23636363636363636
+     ],
+     [
+      "5 walks to 13,3 for 6",
+      0.23636363636363636
+     ],
+     [
+      "5 walks to 9,4 for 1",
+      0.23431818181818181
+     ],
+     [
+      "5 walks to 12,4 for 6",
+      0.2863636363636364
+     ],
+     [
+      "5 walks to 13,4 for 7",
+      0.23636363636363636
+     ],
+     [
+      "5 walks to 10,5 for 1",
+      0.1
+     ],
+     [
+      "5 walks to 12,5 for 5",
+      0.2738636363636364
+     ],
+     [
+      "5 walks to 13,5 for 6",
+      0.22386363636363638
+     ],
+     [
+      "5 walks to 8,6 for 6",
+      0.1831818181818182
+     ],
+     [
+      "5 walks to 9,6 for 3",
+      0.17500000000000002
+     ],
+     [
+      "5 walks to 10,6 for 2",
+      0.1
+     ],
+     [
+      "5 walks to 11,6 for 3",
+      0.2
+     ],
+     [
+      "5 walks to 12,6 for 4",
+      0.22386363636363638
+     ],
+     [
+      "5 walks to 13,6 for 5",
+      0.22386363636363638
+     ],
+     [
+      "5 walks to 7,7 for 8",
+      0.1738636363636364
+     ],
+     [
+      "5 walks to 8,7 for 5",
+      0.24886363636363637
+     ],
+     [
+      "5 walks to 9,7 for 4",
+      0.1
+     ],
+     [
+      "5 walks to 10,7 for 3",
+      0.15
+     ],
+     [
+      "5 walks to 11,7 for 6",
+      0.22386363636363638
+     ],
+     [
+      "5 walks to 12,7 for 7",
+      0.24886363636363637
+     ],
+     [
+      "5 walks to 13,7 for 6",
+      0.24886363636363637
+     ],
+     [
+      "5 walks to 8,8 for 6",
+      0.22386363636363638
+     ],
+     [
+      "5 walks to 9,8 for 5",
+      0.22386363636363638
+     ],
+     [
+      "5 walks to 10,8 for 4",
+      0.22386363636363638
+     ],
+     [
+      "5 walks to 11,8 for 7",
+      0.24886363636363637
+     ],
+     [
+      "5 walks to 12,8 for 8",
+      0.24886363636363637
+     ],
+     [
+      "5 walks to 13,8 for 7",
+      0.22386363636363638
+     ]
+    ],
+    "decision": "5 walks to 12,4 for 6"
+   }
+  },
+  {
+   "turn": 0,
+   "to_move": 0,
+   "acting": 2,
+   "phase": "walk",
+   "waiting": [
+    3,
+    4
+   ],
+   "pieces": [
+    [
+     1,
+     0,
+     "runner",
+     7,
+     4,
+     8,
+     0
+    ],
+    [
+     2,
+     0,
+     "shield",
+     1,
+     4,
+     10,
+     6
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     0,
+     5,
+     7,
+     4
+    ],
+    [
+     4,
+     0,
+     "wader",
+     1,
+     6,
+     8,
+     6
+    ],
+    [
+     6,
+     1,
+     "shield",
+     12,
+     4,
+     10,
+     6
+    ],
+    [
+     5,
+     1,
+     "runner",
+     12,
+     6,
+     8,
+     8
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     13,
+     3,
+     7,
+     4
+    ],
+    [
+     8,
+     1,
+     "wader",
+     12,
+     2,
+     8,
+     6
+    ]
+   ],
+   "drawn_from": {
+    "match": 1,
+    "turn": 0
+   },
+   "about": "drawn from the rest",
+   "name": "14 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "2 holds",
+      0.05
+     ],
+     [
+      "2 walks to 0,0 for 5",
+      0.0
+     ],
+     [
+      "2 walks to 1,0 for 6",
+      0.025
+     ],
+     [
+      "2 walks to 3,0 for 6",
+      0.0
+     ],
+     [
+      "2 walks to 0,1 for 4",
+      0.025
+     ],
+     [
+      "2 walks to 1,1 for 5",
+      0.025
+     ],
+     [
+      "2 walks to 2,1 for 6",
+      0.0
+     ],
+     [
+      "2 walks to 3,1 for 5",
+      0.0
+     ],
+     [
+      "2 walks to 4,1 for 6",
+      0.0
+     ],
+     [
+      "2 walks to 0,2 for 3",
+      0.0
+     ],
+     [
+      "2 walks to 1,2 for 2",
+      0.0
+     ],
+     [
+      "2 walks to 2,2 for 3",
+      0.037500000000000006
+     ],
+     [
+      "2 walks to 3,2 for 4",
+      0.0
+     ],
+     [
+      "2 walks to 4,2 for 5",
+      0.025
+     ],
+     [
+      "2 walks to 0,3 for 2",
+      0.0
+     ],
+     [
+      "2 walks to 1,3 for 1",
+      0.05
+     ],
+     [
+      "2 walks to 3,3 for 5",
+      0.0
+     ],
+     [
+      "2 walks to 4,3 for 6",
+      0.025
+     ],
+     [
+      "2 walks to 0,4 for 1",
+      0.0
+     ],
+     [
+      "2 walks to 3,4 for 4",
+      0.0
+     ],
+     [
+      "2 walks to 4,4 for 5",
+      0.0
+     ],
+     [
+      "2 walks to 5,4 for 6",
+      0.0125
+     ],
+     [
+      "2 walks to 1,5 for 1",
+      0.0
+     ],
+     [
+      "2 walks to 2,5 for 2",
+      0.037500000000000006
+     ],
+     [
+      "2 walks to 3,5 for 3",
+      0.0
+     ],
+     [
+      "2 walks to 4,5 for 4",
+      0.00625
+     ],
+     [
+      "2 walks to 5,5 for 5",
+      0.0
+     ],
+     [
+      "2 walks to 2,6 for 3",
+      0.0
+     ],
+     [
+      "2 walks to 3,6 for 4",
+      0.025
+     ],
+     [
+      "2 walks to 5,6 for 6",
+      0.0
+     ],
+     [
+      "2 walks to 0,7 for 6",
+      -0.00625
+     ],
+     [
+      "2 walks to 1,7 for 5",
+      -0.00625
+     ],
+     [
+      "2 walks to 2,7 for 4",
+      -0.00625
+     ],
+     [
+      "2 walks to 3,7 for 5",
+      0.018750000000000003
+     ],
+     [
+      "2 walks to 1,8 for 6",
+      -0.00625
+     ],
+     [
+      "2 walks to 2,8 for 5",
+      -0.00625
+     ],
+     [
+      "2 walks to 3,8 for 6",
+      -0.00625
+     ]
+    ],
+    "decision": "2 holds"
+   }
+  },
+  {
+   "turn": 3,
+   "to_move": 1,
+   "acting": 8,
+   "phase": "shoot",
+   "waiting": [],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     5,
+     5,
+     10,
+     0
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     3,
+     7,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     7,
+     5,
+     8,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     9,
+     6,
+     5,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     9,
+     5,
+     2,
+     0
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     4,
+     7,
+     0
+    ],
+    [
+     8,
+     1,
+     "wader",
+     9,
+     4,
+     8,
+     3
+    ]
+   ],
+   "drawn_from": {
+    "match": 1,
+    "turn": 3
+   },
+   "about": "drawn from the rest",
+   "name": "15 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "8 holds",
+      -0.13787878787878788
+     ],
+     [
+      "8 shoots 2",
+      -0.11333333333333334
+     ],
+     [
+      "8 shoots 4",
+      -0.11878787878787879
+     ]
+    ],
+    "decision": "8 shoots 2"
+   }
+  },
+  {
+   "turn": 8,
+   "to_move": 0,
+   "acting": 2,
+   "phase": "shoot",
+   "waiting": [
+    3
+   ],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     6,
+     4,
+     2,
+     4
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     4,
+     4,
+     4
+    ],
+    [
+     6,
+     1,
+     "shield",
+     8,
+     5,
+     2,
+     0
+    ],
+    [
+     8,
+     1,
+     "wader",
+     9,
+     4,
+     5,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     11,
+     2,
+     5,
+     0
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     3,
+     7,
+     0
+    ]
+   ],
+   "drawn_from": {
+    "match": 1,
+    "turn": 8
+   },
+   "about": "drawn from the rest",
+   "name": "16 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "2 holds",
+      -0.16136363636363632
+     ],
+     [
+      "2 shoots 6",
+      -0.15015151515151512
+     ],
+     [
+      "2 shoots 8",
+      -0.13409090909090907
+     ]
+    ],
+    "decision": "2 shoots 8"
+   }
+  },
+  {
+   "turn": 1,
+   "to_move": 1,
+   "acting": 6,
+   "phase": "shoot",
+   "waiting": [
+    7,
+    8
+   ],
+   "pieces": [
+    [
+     1,
+     0,
+     "runner",
+     7,
+     4,
+     5,
+     0
+    ],
+    [
+     2,
+     0,
+     "shield",
+     5,
+     4,
+     10,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     6,
+     5,
+     8,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     9,
+     5,
+     8,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     10,
+     3,
+     10,
+     3
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     13,
+     3,
+     7,
+     4
+    ],
+    [
+     8,
+     1,
+     "wader",
+     12,
+     2,
+     8,
+     6
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     0,
+     5,
+     7,
+     4
+    ]
+   ],
+   "drawn_from": {
+    "match": 2,
+    "turn": 1
+   },
+   "about": "drawn from the rest",
+   "name": "17 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "6 holds",
+      0.21704545454545454
+     ],
+     [
+      "6 shoots 1",
+      0.24431818181818182
+     ]
+    ],
+    "decision": "6 shoots 1"
+   }
+  },
+  {
+   "turn": 4,
+   "to_move": 0,
+   "acting": 4,
+   "phase": "shoot",
+   "waiting": [],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     10,
+     4,
+     5,
+     0
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     2,
+     7,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     8,
+     2,
+     8,
+     4
+    ],
+    [
+     5,
+     1,
+     "runner",
+     10,
+     2,
+     8,
+     0
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     3,
+     4,
+     0
+    ],
+    [
+     8,
+     1,
+     "wader",
+     10,
+     1,
+     8,
+     0
+    ]
+   ],
+   "drawn_from": {
+    "match": 2,
+    "turn": 4
+   },
+   "about": "drawn from the rest",
+   "name": "18 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "4 holds",
+      0.022222222222222223
+     ],
+     [
+      "4 shoots 5",
+      0.04131313131313131
+     ],
+     [
+      "4 shoots 7",
+      0.057676767676767673
+     ],
+     [
+      "4 shoots 8",
+      0.04131313131313131
+     ]
+    ],
+    "decision": "4 shoots 7"
+   }
+  },
+  {
+   "turn": 8,
+   "to_move": 0,
+   "acting": 4,
+   "phase": "walk",
+   "waiting": [],
+   "pieces": [
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     1,
+     4,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     8,
+     1,
+     3,
+     6
+    ],
+    [
+     5,
+     1,
+     "runner",
+     9,
+     0,
+     2,
+     0
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     2,
+     1,
+     0
+    ],
+    [
+     8,
+     1,
+     "wader",
+     11,
+     3,
+     8,
+     0
+    ]
+   ],
+   "drawn_from": {
+    "match": 2,
+    "turn": 8
+   },
+   "about": "drawn from the rest",
+   "name": "19 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "4 holds",
+      0.04666666666666667
+     ],
+     [
+      "4 walks to 3,0 for 6",
+      -0.20606060606060608
+     ],
+     [
+      "4 walks to 4,0 for 5",
+      -0.20606060606060608
+     ],
+     [
+      "4 walks to 5,0 for 4",
+      -0.20606060606060608
+     ],
+     [
+      "4 walks to 6,0 for 3",
+      -0.07522727272727273
+     ],
+     [
+      "4 walks to 7,0 for 2",
+      -0.07522727272727273
+     ],
+     [
+      "4 walks to 8,0 for 1",
+      -0.07522727272727273
+     ],
+     [
+      "4 walks to 10,0 for 5",
+      -0.17272727272727273
+     ],
+     [
+      "4 walks to 11,0 for 6",
+      -0.17272727272727273
+     ],
+     [
+      "4 walks to 5,1 for 3",
+      -0.1075
+     ],
+     [
+      "4 walks to 6,1 for 2",
+      -0.14666666666666667
+     ],
+     [
+      "4 walks to 7,1 for 1",
+      -0.14666666666666667
+     ],
+     [
+      "4 walks to 9,1 for 3",
+      0.1372727272727273
+     ],
+     [
+      "4 walks to 10,1 for 4",
+      -0.15606060606060607
+     ],
+     [
+      "4 walks to 11,1 for 5",
+      -0.17272727272727273
+     ],
+     [
+      "4 walks to 12,1 for 6",
+      -0.17272727272727273
+     ],
+     [
+      "4 walks to 5,2 for 6",
+      -0.20606060606060608
+     ],
+     [
+      "4 walks to 6,2 for 3",
+      -0.14666666666666667
+     ],
+     [
+      "4 walks to 7,2 for 2",
+      -0.10333333333333335
+     ],
+     [
+      "4 walks to 8,2 for 1",
+      0.125
+     ],
+     [
+      "4 walks to 9,2 for 4",
+      -0.17272727272727273
+     ],
+     [
+      "4 walks to 10,2 for 5",
+      -0.15606060606060607
+     ],
+     [
+      "4 walks to 11,2 for 6",
+      -0.17272727272727273
+     ],
+     [
+      "4 walks to 6,3 for 4",
+      -0.22272727272727275
+     ],
+     [
+      "4 walks to 7,3 for 3",
+      -0.10333333333333335
+     ],
+     [
+      "4 walks to 8,3 for 2",
+      -0.024999999999999998
+     ],
+     [
+      "4 walks to 9,3 for 3",
+      0.005416666666666667
+     ],
+     [
+      "4 walks to 10,3 for 4",
+      -0.17272727272727273
+     ],
+     [
+      "4 walks to 5,4 for 6",
+      -0.20606060606060606
+     ],
+     [
+      "4 walks to 6,4 for 5",
+      -0.2393939393939394
+     ],
+     [
+      "4 walks to 7,4 for 4",
+      -0.2727272727272727
+     ],
+     [
+      "4 walks to 8,4 for 3",
+      -0.2312121212121212
+     ],
+     [
+      "4 walks to 9,4 for 4",
+      -0.20606060606060606
+     ],
+     [
+      "4 walks to 10,4 for 5",
+      -0.12272727272727274
+     ],
+     [
+      "4 walks to 6,5 for 6",
+      -0.2560606060606061
+     ],
+     [
+      "4 walks to 7,5 for 5",
+      -0.22272727272727275
+     ],
+     [
+      "4 walks to 8,5 for 6",
+      -0.2560606060606061
+     ],
+     [
+      "4 walks to 9,5 for 5",
+      -0.2727272727272727
+     ],
+     [
+      "4 walks to 10,5 for 6",
+      -0.18939393939393942
+     ],
+     [
+      "4 walks to 7,6 for 6",
+      -0.22272727272727275
+     ],
+     [
+      "4 walks to 9,6 for 6",
+      -0.3060606060606061
+     ]
+    ],
+    "decision": "4 walks to 9,1 for 3"
+   }
+  },
+  {
+   "turn": 2,
+   "to_move": 0,
+   "acting": 3,
+   "phase": "shoot",
+   "waiting": [
+    4
+   ],
+   "pieces": [
+    [
+     1,
+     0,
+     "runner",
+     6,
+     4,
+     2,
+     0
+    ],
+    [
+     2,
+     0,
+     "shield",
+     5,
+     5,
+     10,
+     0
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     3,
+     7,
+     2
+    ],
+    [
+     4,
+     0,
+     "wader",
+     6,
+     5,
+     8,
+     6
+    ],
+    [
+     5,
+     1,
+     "runner",
+     9,
+     5,
+     5,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     10,
+     3,
+     7,
+     0
+    ],
+    [
+     8,
+     1,
+     "wader",
+     11,
+     3,
+     8,
+     0
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     3,
+     7,
+     0
+    ]
+   ],
+   "drawn_from": {
+    "match": 3,
+    "turn": 2
+   },
+   "about": "drawn from the rest",
+   "name": "20 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "3 holds",
+      0.05
+     ],
+     [
+      "3 shoots 6",
+      0.09545454545454546
+     ]
+    ],
+    "decision": "3 shoots 6"
+   }
+  },
+  {
+   "turn": 5,
+   "to_move": 1,
+   "acting": 7,
+   "phase": "walk",
+   "waiting": [
+    8
+   ],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     5,
+     4,
+     4,
+     0
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     3,
+     7,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     7,
+     2,
+     2,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     10,
+     4,
+     5,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     8,
+     5,
+     2,
+     0
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     4,
+     7,
+     4
+    ],
+    [
+     8,
+     1,
+     "wader",
+     9,
+     4,
+     2,
+     6
+    ]
+   ],
+   "drawn_from": {
+    "match": 3,
+    "turn": 5
+   },
+   "about": "drawn from the rest",
+   "name": "21 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "7 holds",
+      0.15454545454545454
+     ],
+     [
+      "7 walks to 12,0 for 4",
+      0.0962121212121212
+     ],
+     [
+      "7 walks to 11,1 for 4",
+      0.0962121212121212
+     ],
+     [
+      "7 walks to 12,1 for 3",
+      0.0962121212121212
+     ],
+     [
+      "7 walks to 13,1 for 4",
+      0.0962121212121212
+     ],
+     [
+      "7 walks to 10,2 for 4",
+      0.1212121212121212
+     ],
+     [
+      "7 walks to 11,2 for 3",
+      0.0962121212121212
+     ],
+     [
+      "7 walks to 12,2 for 2",
+      0.0962121212121212
+     ],
+     [
+      "7 walks to 13,2 for 3",
+      0.0962121212121212
+     ],
+     [
+      "7 walks to 9,3 for 4",
+      0.054545454545454536
+     ],
+     [
+      "7 walks to 10,3 for 3",
+      0.04621212121212119
+     ],
+     [
+      "7 walks to 11,3 for 2",
+      0.01719696969696969
+     ],
+     [
+      "7 walks to 12,3 for 1",
+      0.0962121212121212
+     ],
+     [
+      "7 walks to 13,3 for 2",
+      0.0962121212121212
+     ],
+     [
+      "7 walks to 13,4 for 1",
+      0.10454545454545454
+     ],
+     [
+      "7 walks to 12,5 for 1",
+      0.15454545454545454
+     ],
+     [
+      "7 walks to 13,5 for 2",
+      0.10454545454545454
+     ],
+     [
+      "7 walks to 10,6 for 4",
+      0.10454545454545454
+     ],
+     [
+      "7 walks to 11,6 for 3",
+      0.15454545454545454
+     ],
+     [
+      "7 walks to 12,6 for 2",
+      0.10454545454545454
+     ],
+     [
+      "7 walks to 13,6 for 3",
+      0.10454545454545454
+     ],
+     [
+      "7 walks to 13,7 for 4",
+      0.12954545454545455
+     ]
+    ],
+    "decision": "7 holds"
+   }
+  },
+  {
+   "turn": 11,
+   "to_move": 1,
+   "acting": 6,
+   "phase": "shoot",
+   "waiting": [
+    7
+   ],
+   "pieces": [
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     3,
+     2,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     2,
+     5,
+     2,
+     3
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     10,
+     3,
+     2,
+     4
+    ]
+   ],
+   "drawn_from": {
+    "match": 3,
+    "turn": 11
+   },
+   "about": "drawn from the rest",
+   "name": "22 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "6 holds",
+      0.3863636363636364
+     ],
+     [
+      "6 shoots 3",
+      0.7545454545454545
+     ]
+    ],
+    "decision": "6 shoots 3"
+   }
+  },
+  {
+   "turn": 5,
+   "to_move": 1,
+   "acting": 5,
+   "phase": "shoot",
+   "waiting": [
+    6,
+    7,
+    8
+   ],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     9,
+     6,
+     5,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     7,
+     4,
+     5,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     11,
+     3,
+     3,
+     6
+    ],
+    [
+     6,
+     1,
+     "shield",
+     10,
+     2,
+     7,
+     6
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     3,
+     7,
+     4
+    ],
+    [
+     8,
+     1,
+     "wader",
+     10,
+     1,
+     8,
+     6
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     4,
+     7,
+     0
+    ]
+   ],
+   "drawn_from": {
+    "match": 4,
+    "turn": 5
+   },
+   "about": "drawn from the rest",
+   "name": "23 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "5 holds",
+      0.4037878787878788
+     ],
+     [
+      "5 shoots 2",
+      0.42833333333333334
+     ],
+     [
+      "5 shoots 4",
+      0.4337878787878788
+     ]
+    ],
+    "decision": "5 shoots 4"
+   }
+  },
+  {
+   "turn": 9,
+   "to_move": 1,
+   "acting": 5,
+   "phase": "walk",
+   "waiting": [
+    6,
+    7,
+    8
+   ],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     8,
+     6,
+     2,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     9,
+     5,
+     3,
+     8
+    ],
+    [
+     6,
+     1,
+     "shield",
+     10,
+     4,
+     7,
+     6
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     11,
+     3,
+     7,
+     4
+    ],
+    [
+     8,
+     1,
+     "wader",
+     9,
+     3,
+     8,
+     6
+    ]
+   ],
+   "drawn_from": {
+    "match": 4,
+    "turn": 9
+   },
+   "about": "drawn from the rest",
+   "name": "24 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "5 holds",
+      0.46988636363636366
+     ],
+     [
+      "5 walks to 8,0 for 6",
+      0.49318181818181817
+     ],
+     [
+      "5 walks to 9,0 for 7",
+      0.5181818181818182
+     ],
+     [
+      "5 walks to 10,0 for 8",
+      0.49318181818181817
+     ],
+     [
+      "5 walks to 7,1 for 8",
+      0.49318181818181817
+     ],
+     [
+      "5 walks to 8,1 for 5",
+      0.49318181818181817
+     ],
+     [
+      "5 walks to 9,1 for 8",
+      0.5181818181818182
+     ],
+     [
+      "5 walks to 4,2 for 8",
+      0.5181818181818182
+     ],
+     [
+      "5 walks to 8,2 for 4",
+      0.41363636363636364
+     ],
+     [
+      "5 walks to 9,2 for 7",
+      0.49318181818181817
+     ],
+     [
+      "5 walks to 10,2 for 8",
+      0.5181818181818182
+     ],
+     [
+      "5 walks to 12,2 for 8",
+      0.49318181818181817
+     ],
+     [
+      "5 walks to 3,3 for 8",
+      0.49318181818181817
+     ],
+     [
+      "5 walks to 4,3 for 7",
+      0.5181818181818182
+     ],
+     [
+      "5 walks to 5,3 for 8",
+      0.49318181818181817
+     ],
+     [
+      "5 walks to 8,3 for 3",
+      0.41363636363636364
+     ],
+     [
+      "5 walks to 12,3 for 7",
+      0.49318181818181817
+     ],
+     [
+      "5 walks to 13,3 for 8",
+      0.49318181818181817
+     ],
+     [
+      "5 walks to 3,4 for 7",
+      0.49318181818181817
+     ],
+     [
+      "5 walks to 4,4 for 6",
+      0.49318181818181817
+     ],
+     [
+      "5 walks to 5,4 for 5",
+      0.49318181818181817
+     ],
+     [
+      "5 walks to 6,4 for 4",
+      0.41363636363636364
+     ],
+     [
+      "5 walks to 7,4 for 3",
+      0.41363636363636364
+     ],
+     [
+      "5 walks to 8,4 for 2",
+      0.46988636363636366
+     ],
+     [
+      "5 walks to 9,4 for 1",
+      0.41363636363636364
+     ],
+     [
+      "5 walks to 12,4 for 6",
+      0.5431818181818182
+     ],
+     [
+      "5 walks to 13,4 for 7",
+      0.49318181818181817
+     ],
+     [
+      "5 walks to 3,5 for 8",
+      0.49318181818181817
+     ],
+     [
+      "5 walks to 4,5 for 7",
+      0.5181818181818182
+     ],
+     [
+      "5 walks to 5,5 for 6",
+      0.4431818181818182
+     ],
+     [
+      "5 walks to 8,5 for 3",
+      0.6937500000000001
+     ],
+     [
+      "5 walks to 10,5 for 1",
+      0.41363636363636364
+     ],
+     [
+      "5 walks to 12,5 for 5",
+      0.5431818181818182
+     ],
+     [
+      "5 walks to 13,5 for 6",
+      0.49318181818181817
+     ],
+     [
+      "5 walks to 5,6 for 7",
+      0.5431818181818182
+     ],
+     [
+      "5 walks to 9,6 for 1",
+      0.6937500000000001
+     ],
+     [
+      "5 walks to 10,6 for 2",
+      0.6937500000000001
+     ],
+     [
+      "5 walks to 11,6 for 3",
+      0.6937500000000001
+     ],
+     [
+      "5 walks to 12,6 for 4",
+      0.6937500000000001
+     ],
+     [
+      "5 walks to 13,6 for 5",
+      0.5931818181818183
+     ],
+     [
+      "5 walks to 5,7 for 8",
+      0.5431818181818182
+     ],
+     [
+      "5 walks to 7,7 for 6",
+      0.5431818181818182
+     ],
+     [
+      "5 walks to 8,7 for 3",
+      0.6937500000000001
+     ],
+     [
+      "5 walks to 9,7 for 2",
+      0.6937500000000001
+     ],
+     [
+      "5 walks to 10,7 for 3",
+      0.6937500000000001
+     ],
+     [
+      "5 walks to 11,7 for 6",
+      0.5431818181818182
+     ],
+     [
+      "5 walks to 12,7 for 7",
+      0.6181818181818182
+     ],
+     [
+      "5 walks to 13,7 for 6",
+      0.5431818181818182
+     ],
+     [
+      "5 walks to 8,8 for 4",
+      0.6937500000000001
+     ],
+     [
+      "5 walks to 9,8 for 3",
+      0.6937500000000001
+     ],
+     [
+      "5 walks to 10,8 for 4",
+      0.6937500000000001
+     ],
+     [
+      "5 walks to 11,8 for 7",
+      0.6181818181818182
+     ],
+     [
+      "5 walks to 12,8 for 8",
+      0.5431818181818182
+     ],
+     [
+      "5 walks to 13,8 for 7",
+      0.5181818181818182
+     ]
+    ],
+    "decision": "5 walks to 8,5 for 3"
+   }
+  },
+  {
+   "turn": 3,
+   "to_move": 1,
+   "acting": 5,
+   "phase": "walk",
+   "waiting": [
+    6,
+    7,
+    8
+   ],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     8,
+     4,
+     10,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     6,
+     2,
+     8,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     9,
+     5,
+     8,
+     8
+    ],
+    [
+     6,
+     1,
+     "shield",
+     10,
+     3,
+     2,
+     6
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     3,
+     7,
+     4
+    ],
+    [
+     8,
+     1,
+     "wader",
+     11,
+     3,
+     8,
+     6
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     0,
+     5,
+     7,
+     4
+    ]
+   ],
+   "drawn_from": {
+    "match": 5,
+    "turn": 3
+   },
+   "about": "drawn from the rest",
+   "name": "25 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "5 holds",
+      0.0803030303030303
+     ],
+     [
+      "5 walks to 8,0 for 6",
+      0.15833333333333333
+     ],
+     [
+      "5 walks to 9,0 for 7",
+      0.23333333333333334
+     ],
+     [
+      "5 walks to 10,0 for 8",
+      0.19166666666666668
+     ],
+     [
+      "5 walks to 7,1 for 8",
+      0.15833333333333333
+     ],
+     [
+      "5 walks to 8,1 for 5",
+      0.15833333333333333
+     ],
+     [
+      "5 walks to 9,1 for 8",
+      0.23333333333333334
+     ],
+     [
+      "5 walks to 10,1 for 7",
+      0.23333333333333334
+     ],
+     [
+      "5 walks to 11,1 for 8",
+      0.19166666666666668
+     ],
+     [
+      "5 walks to 8,2 for 4",
+      0.09666666666666665
+     ],
+     [
+      "5 walks to 9,2 for 5",
+      0.15833333333333333
+     ],
+     [
+      "5 walks to 10,2 for 6",
+      0.23333333333333334
+     ],
+     [
+      "5 walks to 11,2 for 7",
+      0.19166666666666668
+     ],
+     [
+      "5 walks to 12,2 for 8",
+      0.19166666666666668
+     ],
+     [
+      "5 walks to 8,3 for 3",
+      0.09666666666666665
+     ],
+     [
+      "5 walks to 9,3 for 2",
+      0.10500000000000001
+     ],
+     [
+      "5 walks to 13,3 for 8",
+      0.19166666666666668
+     ],
+     [
+      "5 walks to 9,4 for 1",
+      0.09666666666666665
+     ],
+     [
+      "5 walks to 10,4 for 2",
+      0.024545454545454537
+     ],
+     [
+      "5 walks to 12,4 for 6",
+      0.24166666666666667
+     ],
+     [
+      "5 walks to 13,4 for 7",
+      0.19166666666666668
+     ],
+     [
+      "5 walks to 8,5 for 3",
+      0.09666666666666665
+     ],
+     [
+      "5 walks to 10,5 for 1",
+      0.005303030303030297
+     ],
+     [
+      "5 walks to 12,5 for 5",
+      0.23333333333333334
+     ],
+     [
+      "5 walks to 13,5 for 6",
+      0.18333333333333335
+     ],
+     [
+      "5 walks to 8,6 for 4",
+      0.0803030303030303
+     ],
+     [
+      "5 walks to 9,6 for 1",
+      0.0803030303030303
+     ],
+     [
+      "5 walks to 10,6 for 2",
+      0.005303030303030297
+     ],
+     [
+      "5 walks to 11,6 for 3",
+      0.10530303030303031
+     ],
+     [
+      "5 walks to 12,6 for 4",
+      0.18333333333333335
+     ],
+     [
+      "5 walks to 13,6 for 5",
+      0.18333333333333335
+     ],
+     [
+      "5 walks to 7,7 for 6",
+      0.13333333333333333
+     ],
+     [
+      "5 walks to 8,7 for 3",
+      0.0803030303030303
+     ],
+     [
+      "5 walks to 9,7 for 2",
+      0.005303030303030297
+     ],
+     [
+      "5 walks to 10,7 for 3",
+      0.0553030303030303
+     ],
+     [
+      "5 walks to 11,7 for 6",
+      0.18333333333333335
+     ],
+     [
+      "5 walks to 12,7 for 7",
+      0.20833333333333334
+     ],
+     [
+      "5 walks to 13,7 for 6",
+      0.20833333333333334
+     ],
+     [
+      "5 walks to 8,8 for 4",
+      0.18333333333333335
+     ],
+     [
+      "5 walks to 9,8 for 3",
+      0.0553030303030303
+     ],
+     [
+      "5 walks to 10,8 for 4",
+      0.18333333333333335
+     ],
+     [
+      "5 walks to 11,8 for 7",
+      0.20833333333333334
+     ],
+     [
+      "5 walks to 12,8 for 8",
+      0.20833333333333334
+     ],
+     [
+      "5 walks to 13,8 for 7",
+      0.18333333333333335
+     ]
+    ],
+    "decision": "5 walks to 12,4 for 6"
+   }
+  },
+  {
+   "turn": 6,
+   "to_move": 0,
+   "acting": 2,
+   "phase": "walk",
+   "waiting": [
+    3,
+    4
+   ],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     9,
+     6,
+     10,
+     6
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     4,
+     7,
+     4
+    ],
+    [
+     4,
+     0,
+     "wader",
+     7,
+     4,
+     2,
+     6
+    ],
+    [
+     5,
+     1,
+     "runner",
+     11,
+     3,
+     8,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     10,
+     5,
+     2,
+     0
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     11,
+     2,
+     7,
+     0
+    ],
+    [
+     8,
+     1,
+     "wader",
+     10,
+     2,
+     8,
+     0
+    ]
+   ],
+   "drawn_from": {
+    "match": 5,
+    "turn": 6
+   },
+   "about": "drawn from the rest",
+   "name": "26 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "2 holds",
+      -0.2674242424242424
+     ],
+     [
+      "2 walks to 8,1 for 6",
+      -0.01742424242424241
+     ],
+     [
+      "2 walks to 8,2 for 5",
+      -0.0007575757575757347
+     ],
+     [
+      "2 walks to 9,2 for 6",
+      -0.042424242424242406
+     ],
+     [
+      "2 walks to 8,3 for 4",
+      -0.10075757575757574
+     ],
+     [
+      "2 walks to 9,3 for 3",
+      -0.10136363636363636
+     ],
+     [
+      "2 walks to 10,3 for 4",
+      -0.042424242424242406
+     ],
+     [
+      "2 walks to 12,3 for 6",
+      -0.059090909090909055
+     ],
+     [
+      "2 walks to 8,4 for 3",
+      -0.24272727272727274
+     ],
+     [
+      "2 walks to 9,4 for 2",
+      -0.1846969696969697
+     ],
+     [
+      "2 walks to 10,4 for 3",
+      -0.09303030303030302
+     ],
+     [
+      "2 walks to 12,4 for 5",
+      0.04090909090909095
+     ],
+     [
+      "2 walks to 13,4 for 6",
+      -0.14242424242424243
+     ],
+     [
+      "2 walks to 8,5 for 4",
+      -0.18409090909090908
+     ],
+     [
+      "2 walks to 9,5 for 1",
+      -0.25106060606060604
+     ],
+     [
+      "2 walks to 12,5 for 4",
+      -0.009090909090909066
+     ],
+     [
+      "2 walks to 13,5 for 5",
+      -0.19242424242424241
+     ],
+     [
+      "2 walks to 8,6 for 3",
+      -0.16742424242424242
+     ],
+     [
+      "2 walks to 10,6 for 1",
+      -0.18181818181818182
+     ],
+     [
+      "2 walks to 11,6 for 2",
+      -0.13696969696969696
+     ],
+     [
+      "2 walks to 12,6 for 3",
+      -0.2703030303030303
+     ],
+     [
+      "2 walks to 13,6 for 4",
+      -0.19242424242424241
+     ],
+     [
+      "2 walks to 7,7 for 5",
+      -0.11742424242424242
+     ],
+     [
+      "2 walks to 8,7 for 2",
+      -0.16742424242424242
+     ],
+     [
+      "2 walks to 9,7 for 1",
+      -0.2562121212121212
+     ],
+     [
+      "2 walks to 10,7 for 2",
+      -0.24242424242424243
+     ],
+     [
+      "2 walks to 11,7 for 5",
+      -0.19242424242424241
+     ],
+     [
+      "2 walks to 12,7 for 6",
+      -0.0924242424242424
+     ],
+     [
+      "2 walks to 13,7 for 5",
+      -0.0924242424242424
+     ],
+     [
+      "2 walks to 8,8 for 3",
+      -0.11742424242424242
+     ],
+     [
+      "2 walks to 9,8 for 2",
+      -0.2562121212121212
+     ],
+     [
+      "2 walks to 10,8 for 3",
+      -0.22787878787878788
+     ],
+     [
+      "2 walks to 11,8 for 6",
+      -0.0924242424242424
+     ],
+     [
+      "2 walks to 13,8 for 6",
+      -0.12575757575757573
+     ]
+    ],
+    "decision": "2 walks to 12,4 for 5"
+   }
+  },
+  {
+   "turn": 9,
+   "to_move": 1,
+   "acting": 5,
+   "phase": "walk",
+   "waiting": [
+    6,
+    7
+   ],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     8,
+     3,
+     10,
+     0
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     4,
+     4,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     9,
+     4,
+     2,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     9,
+     5,
+     3,
+     8
+    ],
+    [
+     6,
+     1,
+     "shield",
+     10,
+     6,
+     2,
+     6
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     10,
+     1,
+     7,
+     4
+    ]
+   ],
+   "drawn_from": {
+    "match": 5,
+    "turn": 9
+   },
+   "about": "drawn from the rest",
+   "name": "27 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "5 holds",
+      0.06393939393939395
+     ],
+     [
+      "5 walks to 10,0 for 8",
+      0.06060606060606061
+     ],
+     [
+      "5 walks to 11,0 for 7",
+      0.12727272727272726
+     ],
+     [
+      "5 walks to 12,0 for 8",
+      0.12727272727272726
+     ],
+     [
+      "5 walks to 11,1 for 6",
+      0.06060606060606061
+     ],
+     [
+      "5 walks to 12,1 for 7",
+      0.12727272727272726
+     ],
+     [
+      "5 walks to 13,1 for 8",
+      0.12727272727272726
+     ],
+     [
+      "5 walks to 8,2 for 8",
+      0.10505050505050506
+     ],
+     [
+      "5 walks to 9,2 for 7",
+      0.09393939393939395
+     ],
+     [
+      "5 walks to 10,2 for 4",
+      0.09893939393939394
+     ],
+     [
+      "5 walks to 11,2 for 5",
+      0.09393939393939395
+     ],
+     [
+      "5 walks to 12,2 for 6",
+      0.09393939393939395
+     ],
+     [
+      "5 walks to 13,2 for 7",
+      0.12727272727272726
+     ],
+     [
+      "5 walks to 9,3 for 4",
+      -0.00106060606060605
+     ],
+     [
+      "5 walks to 10,3 for 3",
+      -0.00106060606060605
+     ],
+     [
+      "5 walks to 11,3 for 4",
+      0.037272727272727284
+     ],
+     [
+      "5 walks to 12,3 for 5",
+      0.09393939393939395
+     ],
+     [
+      "5 walks to 13,3 for 6",
+      0.09393939393939395
+     ],
+     [
+      "5 walks to 5,4 for 7",
+      0.17171717171717177
+     ],
+     [
+      "5 walks to 6,4 for 6",
+      0.16060606060606064
+     ],
+     [
+      "5 walks to 7,4 for 5",
+      0.16060606060606064
+     ],
+     [
+      "5 walks to 8,4 for 4",
+      0.08393939393939398
+     ],
+     [
+      "5 walks to 10,4 for 2",
+      -0.00106060606060605
+     ],
+     [
+      "5 walks to 12,4 for 6",
+      0.2272727272727273
+     ],
+     [
+      "5 walks to 13,4 for 7",
+      0.12727272727272726
+     ],
+     [
+      "5 walks to 5,5 for 8",
+      0.16060606060606064
+     ],
+     [
+      "5 walks to 8,5 for 3",
+      0.08393939393939398
+     ],
+     [
+      "5 walks to 10,5 for 1",
+      -0.00106060606060605
+     ],
+     [
+      "5 walks to 12,5 for 7",
+      0.19393939393939394
+     ],
+     [
+      "5 walks to 13,5 for 8",
+      0.12727272727272726
+     ],
+     [
+      "5 walks to 8,6 for 4",
+      0.09893939393939394
+     ],
+     [
+      "5 walks to 9,6 for 1",
+      0.06393939393939395
+     ],
+     [
+      "5 walks to 11,6 for 7",
+      0.19393939393939394
+     ],
+     [
+      "5 walks to 12,6 for 8",
+      0.12727272727272726
+     ],
+     [
+      "5 walks to 7,7 for 6",
+      0.06060606060606061
+     ],
+     [
+      "5 walks to 8,7 for 3",
+      0.013939393939393944
+     ],
+     [
+      "5 walks to 9,7 for 2",
+      0.03560606060606062
+     ],
+     [
+      "5 walks to 10,7 for 3",
+      -0.04939393939393938
+     ],
+     [
+      "5 walks to 11,7 for 6",
+      0.06060606060606061
+     ],
+     [
+      "5 walks to 8,8 for 4",
+      -0.04939393939393938
+     ],
+     [
+      "5 walks to 9,8 for 3",
+      -0.04939393939393938
+     ],
+     [
+      "5 walks to 10,8 for 4",
+      -0.04939393939393938
+     ],
+     [
+      "5 walks to 11,8 for 7",
+      0.1606060606060606
+     ],
+     [
+      "5 walks to 12,8 for 8",
+      0.1606060606060606
+     ]
+    ],
+    "decision": "5 walks to 12,4 for 6"
+   }
+  },
+  {
+   "turn": 15,
+   "to_move": 1,
+   "acting": 5,
+   "phase": "walk",
+   "waiting": [
+    6
+   ],
+   "pieces": [
+    [
+     3,
+     0,
+     "mortar",
+     4,
+     4,
+     4,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     10,
+     4,
+     3,
+     8
+    ],
+    [
+     6,
+     1,
+     "shield",
+     5,
+     4,
+     2,
+     6
+    ]
+   ],
+   "drawn_from": {
+    "match": 5,
+    "turn": 15
+   },
+   "about": "drawn from the rest",
+   "name": "28 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "5 holds",
+      0.2181818181818182
+     ],
+     [
+      "5 walks to 8,0 for 6",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 9,0 for 5",
+      0.3681818181818182
+     ],
+     [
+      "5 walks to 10,0 for 4",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 11,0 for 5",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 12,0 for 6",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 13,0 for 7",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 7,1 for 8",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 8,1 for 5",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 9,1 for 6",
+      0.3681818181818182
+     ],
+     [
+      "5 walks to 10,1 for 3",
+      0.3681818181818182
+     ],
+     [
+      "5 walks to 11,1 for 4",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 12,1 for 5",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 13,1 for 6",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 8,2 for 4",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 9,2 for 5",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 10,2 for 2",
+      0.3681818181818182
+     ],
+     [
+      "5 walks to 11,2 for 3",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 12,2 for 4",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 13,2 for 5",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 8,3 for 3",
+      0.053636363636363635
+     ],
+     [
+      "5 walks to 9,3 for 2",
+      0.2181818181818182
+     ],
+     [
+      "5 walks to 10,3 for 1",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 11,3 for 2",
+      0.4181818181818182
+     ],
+     [
+      "5 walks to 12,3 for 3",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 13,3 for 4",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 6,4 for 4",
+      0.053636363636363635
+     ],
+     [
+      "5 walks to 7,4 for 3",
+      0.053636363636363635
+     ],
+     [
+      "5 walks to 8,4 for 2",
+      0.053636363636363635
+     ],
+     [
+      "5 walks to 9,4 for 1",
+      0.053636363636363635
+     ],
+     [
+      "5 walks to 12,4 for 4",
+      0.4181818181818182
+     ],
+     [
+      "5 walks to 13,4 for 5",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 8,5 for 5",
+      0.2181818181818182
+     ],
+     [
+      "5 walks to 9,5 for 2",
+      0.3681818181818182
+     ],
+     [
+      "5 walks to 10,5 for 1",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 12,5 for 5",
+      0.4181818181818182
+     ],
+     [
+      "5 walks to 13,5 for 6",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 8,6 for 6",
+      0.3681818181818182
+     ],
+     [
+      "5 walks to 9,6 for 3",
+      0.3681818181818182
+     ],
+     [
+      "5 walks to 10,6 for 2",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 11,6 for 3",
+      0.4181818181818182
+     ],
+     [
+      "5 walks to 12,6 for 4",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 13,6 for 5",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 7,7 for 8",
+      0.2181818181818182
+     ],
+     [
+      "5 walks to 8,7 for 5",
+      0.3681818181818182
+     ],
+     [
+      "5 walks to 9,7 for 4",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 10,7 for 3",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 11,7 for 6",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 12,7 for 7",
+      0.3681818181818182
+     ],
+     [
+      "5 walks to 13,7 for 6",
+      0.3681818181818182
+     ],
+     [
+      "5 walks to 8,8 for 6",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 9,8 for 5",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 10,8 for 4",
+      0.31818181818181823
+     ],
+     [
+      "5 walks to 11,8 for 7",
+      0.3681818181818182
+     ],
+     [
+      "5 walks to 12,8 for 8",
+      0.3681818181818182
+     ],
+     [
+      "5 walks to 13,8 for 7",
+      0.31818181818181823
+     ]
+    ],
+    "decision": "5 walks to 11,3 for 2"
+   }
+  },
+  {
+   "turn": 3,
+   "to_move": 1,
+   "acting": 7,
+   "phase": "walk",
+   "waiting": [
+    8
+   ],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     8,
+     4,
+     7,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     6,
+     2,
+     5,
+     0
+    ],
+    [
+     5,
+     1,
+     "runner",
+     10,
+     4,
+     8,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     10,
+     2,
+     10,
+     0
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     3,
+     7,
+     4
+    ],
+    [
+     8,
+     1,
+     "wader",
+     11,
+     3,
+     8,
+     6
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     0,
+     5,
+     7,
+     4
+    ]
+   ],
+   "drawn_from": {
+    "match": 6,
+    "turn": 3
+   },
+   "about": "drawn from the rest",
+   "name": "29 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "7 holds",
+      0.44166666666666665
+     ],
+     [
+      "7 walks to 11,0 for 4",
+      0.41287878787878785
+     ],
+     [
+      "7 walks to 12,0 for 3",
+      0.41287878787878785
+     ],
+     [
+      "7 walks to 13,0 for 4",
+      0.41287878787878785
+     ],
+     [
+      "7 walks to 10,1 for 4",
+      0.4378787878787878
+     ],
+     [
+      "7 walks to 11,1 for 3",
+      0.41287878787878785
+     ],
+     [
+      "7 walks to 12,1 for 2",
+      0.41287878787878785
+     ],
+     [
+      "7 walks to 13,1 for 3",
+      0.41287878787878785
+     ],
+     [
+      "7 walks to 11,2 for 2",
+      0.44166666666666665
+     ],
+     [
+      "7 walks to 12,2 for 1",
+      0.44166666666666665
+     ],
+     [
+      "7 walks to 13,2 for 2",
+      0.41287878787878785
+     ],
+     [
+      "7 walks to 13,3 for 1",
+      0.44166666666666665
+     ],
+     [
+      "7 walks to 12,4 for 1",
+      0.49166666666666664
+     ],
+     [
+      "7 walks to 13,4 for 2",
+      0.41287878787878785
+     ],
+     [
+      "7 walks to 12,5 for 2",
+      0.4651515151515151
+     ],
+     [
+      "7 walks to 13,5 for 3",
+      0.4045454545454545
+     ],
+     [
+      "7 walks to 11,6 for 4",
+      0.45454545454545453
+     ],
+     [
+      "7 walks to 12,6 for 3",
+      0.4045454545454545
+     ],
+     [
+      "7 walks to 13,6 for 4",
+      0.4045454545454545
+     ]
+    ],
+    "decision": "7 walks to 12,4 for 1"
+   }
+  },
+  {
+   "turn": 6,
+   "to_move": 0,
+   "acting": 4,
+   "phase": "shoot",
+   "waiting": [],
+   "pieces": [
+    [
+     2,
+     0,
+     "shield",
+     8,
+     4,
+     2,
+     0
+    ],
+    [
+     3,
+     0,
+     "mortar",
+     6,
+     4,
+     7,
+     0
+    ],
+    [
+     4,
+     0,
+     "wader",
+     8,
+     2,
+     2,
+     3
+    ],
+    [
+     7,
+     1,
+     "mortar",
+     12,
+     1,
+     7,
+     0
+    ],
+    [
+     6,
+     1,
+     "shield",
+     11,
+     0,
+     10,
+     0
+    ]
+   ],
+   "drawn_from": {
+    "match": 6,
+    "turn": 6
+   },
+   "about": "drawn from the rest",
+   "name": "30 drawn from the rest",
+   "expected": {
+    "depth": 2,
+    "values": [
+     [
+      "4 holds",
+      -0.3090909090909091
+     ],
+     [
+      "4 shoots 7",
+      -0.2736363636363636
+     ]
+    ],
+    "decision": "4 shoots 7"
+   }
+  }
+ ]
+}

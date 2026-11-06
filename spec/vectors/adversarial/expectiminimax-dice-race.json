@@ -1,0 +1,125 @@
+{
+ "description": "Expectiminimax on the dice race: each root move's expected value at a depth, the move, the positions visited.",
+ "game": "dice_race",
+ "cases": [
+  {
+   "name": "from the start, two plies",
+   "state": {
+    "squares": [
+     0,
+     0
+    ],
+    "player": 0
+   },
+   "depth": 2,
+   "values": [
+    -0.08333333333333333,
+    0.10416666666666667
+   ],
+   "action": "roll",
+   "positions": 21
+  },
+  {
+   "name": "from the start, three plies",
+   "state": {
+    "squares": [
+     0,
+     0
+    ],
+    "player": 0
+   },
+   "depth": 3,
+   "values": [
+    0.041666666666666664,
+    0.17708333333333334
+   ],
+   "action": "roll",
+   "positions": 77
+  },
+  {
+   "name": "one square from home: walk",
+   "state": {
+    "squares": [
+     5,
+     0
+    ],
+    "player": 0
+   },
+   "depth": 2,
+   "values": [
+    1.0,
+    0.7916666666666666
+   ],
+   "action": "walk",
+   "positions": 9
+  },
+  {
+   "name": "behind at the end, two plies",
+   "state": {
+    "squares": [
+     4,
+     5
+    ],
+    "player": 0
+   },
+   "depth": 2,
+   "values": [
+    -1.0,
+    0.0
+   ],
+   "action": "roll",
+   "positions": 13
+  },
+  {
+   "name": "behind at the end, three plies",
+   "state": {
+    "squares": [
+     4,
+     5
+    ],
+    "player": 0
+   },
+   "depth": 3,
+   "values": [
+    -1.0,
+    0.0
+   ],
+   "action": "roll",
+   "positions": 21
+  },
+  {
+   "name": "player one, midway, three plies",
+   "state": {
+    "squares": [
+     2,
+     4
+    ],
+    "player": 1
+   },
+   "depth": 3,
+   "values": [
+    0.5,
+    0.6041666666666666
+   ],
+   "action": "roll",
+   "positions": 37
+  },
+  {
+   "name": "level near the end, three plies",
+   "state": {
+    "squares": [
+     3,
+     3
+    ],
+    "player": 0
+   },
+   "depth": 3,
+   "values": [
+    0.14583333333333334,
+    0.34375
+   ],
+   "action": "roll",
+   "positions": 53
+  }
+ ]
+}

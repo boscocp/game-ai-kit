@@ -82,3 +82,13 @@ the line it expects: {line},a linha que espera: {line}
 {unit} shoots {target},{unit} atira em {target}
 {unit} holds,{unit} fica
 "on the board, every option it searched: its mean above, a shot's hit chance below, the most visited framed; space stops the search and plays it; V shows your own view instead","no tabuleiro, cada opção que buscou: a média em cima, a chance de acerto de um tiro embaixo, a mais visitada emoldurada; espaço para a busca e joga; V mostra a sua própria visão"
+expecti,expectiminimax
+"expectiminimax over the piece's options and the turns after, every shot's hit and miss weighed by its chance, on the board its side believes in","expectiminimax sobre as opções da peça e os turnos seguintes, o acerto e o erro de cada tiro pesados pela sua chance, no tabuleiro em que o seu lado acredita"
+"searched to depth {depth}, depth {under_way} under way, {deepest} at most; {visited} positions of {budget}; the bar is each option's expected value:","buscou até a profundidade {depth}, a profundidade {under_way} em andamento, {deepest} no máximo; {visited} posições de {budget}; a barra é o valor esperado de cada opção:"
+{bar} {option}: expected {value},{bar} {option}: esperado {value}
+"{bar} {option}: expected {value} -- hit {hit}%: {if_hit}, miss {miss}%: {if_missed}","{bar} {option}: esperado {value} -- acerto {hit}%: {if_hit}, erro {miss}%: {if_missed}"
+"on the board, every option it searched: its expected value above, a shot's hit chance below, the best framed; space stops the search and plays the deepest finished depth's answer; V shows your own view instead","no tabuleiro, cada opção que buscou: o valor esperado em cima, a chance de acerto de um tiro embaixo, a melhor emoldurada; espaço interrompe a busca e joga a resposta da profundidade mais funda já terminada; V mostra a sua própria visão"
+"has not finished depth 1 yet, and would hold","ainda não terminou a profundidade 1, e ficaria"
+"searched to depth {depth}: {count} option(s), this one worth most, expected {value}","buscou até a profundidade {depth}: {count} opção(ões), esta a que mais vale, esperado {value}"
+its walk was refused; the next worth most,a caminhada foi recusada; a próxima que mais vale
+"believes no enemy is left, and holds","acredita que não resta inimigo, e fica"

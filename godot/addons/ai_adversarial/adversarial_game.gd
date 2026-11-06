@@ -29,9 +29,10 @@
 ##
 ## Chance is told through `outcomes`: what an action may lead to, each with
 ## its probability. A game without dice need not mention it -- the default
-## is `result`, for certain. Monte Carlo tree search samples from it; minimax
-## and alpha-beta read only `result`, so they see a game with dice as if the
-## dice always fell the one way `result` says.
+## is `result`, for certain. Monte Carlo tree search samples from it;
+## expectiminimax weighs every outcome by its chance; minimax and alpha-beta
+## read only `result`, so they see a game with dice as if the dice always
+## fell the one way `result` says.
 ##
 ## When not to use it: a game with hidden cards. Every search here assumes
 ## both players see the whole state.

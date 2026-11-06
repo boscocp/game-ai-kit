@@ -1,6 +1,8 @@
 # Run the conformance vectors in spec/vectors/adversarial against ai_adversarial:
 # `xorshift.json` against `Xorshift`, the `mcts-*.json` files against
-# `MonteCarloSearch` on the test folder's Nim and dice race. Python reads the
+# `MonteCarloSearch` on the test folder's Nim and dice race, and
+# `expectiminimax-dice-race.json` against `ExpectiminimaxSearch` (T88,
+# through `ExpectiminimaxVector`). Python reads the
 # same files in `make test-python`, so the two searches cannot part by one
 # draw without one of them going red.
 #
@@ -16,6 +18,7 @@
 extends SceneTree
 
 const SEARCH_FILES: Array[String] = ["mcts-dice-race.json", "mcts-nim.json"]
+const EXPECTIMINIMAX_FILE: String = "expectiminimax-dice-race.json"
 
 
 func _init() -> void:
@@ -45,10 +48,17 @@ func _run(directory: String) -> int:
 		cases += (vector["cases"] as Array).size()
 		for wrong: String in MctsVector.wrong_claims(vector, MctsVector.addon_search()):
 			failures.append("%s: %s" % [name, wrong])
+	var expected: Variant = _read(directory.path_join(EXPECTIMINIMAX_FILE))
+	var refused: String = ExpectiminimaxVector.why_not_a_vector(expected) if expected is Dictionary else "missing, or not JSON"
+	if refused != "":
+		printerr("mcts_vectors_runner: %s is not an expectiminimax vector -- %s" % [EXPECTIMINIMAX_FILE, refused])
+		return 2
+	for wrong: String in ExpectiminimaxVector.wrong_claims(expected, ExpectiminimaxVector.addon_search()):
+		failures.append("%s: %s" % [EXPECTIMINIMAX_FILE, wrong])
 	for failure: String in failures:
 		print(failure)
-	print("adversarial vectors: %d draw case(s), %d search case(s), %d failure(s)" % [
-			(draws["cases"] as Array).size(), cases, failures.size()])
+	print("adversarial vectors: %d draw case(s), %d search case(s), %d expectiminimax case(s), %d failure(s)" % [
+			(draws["cases"] as Array).size(), cases, (expected["cases"] as Array).size(), failures.size()])
 	return 1 if not failures.is_empty() else 0
 
 
