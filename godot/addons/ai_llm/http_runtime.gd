@@ -23,7 +23,9 @@
 ## against a server that accepts and never answers, one frame lasted until
 ## the socket closed, 38 to 59 s at 4.7.2 (T133, docs/godot/llm-requests.md).
 ## The gate holds every `HTTPRequest` here to threads off
-## (check_llm_validated.py, V3).
+## (check_llm_validated.py, V3). One cost: threads off, the request moves
+## only while its node processes, so a paused tree pauses the request and
+## its timeout with it (the node inherits the process mode).
 ##
 ## When not to use it: in a test, or wherever no server is running -- that is
 ## `RecordedRuntime`'s job, and it needs nothing installed.

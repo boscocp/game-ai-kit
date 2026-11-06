@@ -42,7 +42,10 @@ rule is about code -- and refuses the plain ways round it:
       alone -- at 4.7 it waits for the process to end, and `_notification`
       also runs for notifications during play (T130); a `while` loop that polls (`poll()`,
       `get_status()`, `Time.get_ticks_*`) or never `await`s; `use_threads`
-      set to anything but `false`; an `HTTPRequest` made without setting
+      set to anything but a plain `false` at the end of the line (so a
+      conditional, `false if x else true`, is refused too), or set through
+      `set_use_threads(...)` at all -- one spelling, the property; an
+      `HTTPRequest` made without setting
       `use_threads = false` on the variable it was assigned to, or made where
       that cannot be read -- in a scene, or not assigned to a name. Threads
       off since T133: threaded, the engine reads in blocking mode, and both
@@ -153,7 +156,10 @@ WAITING_ON_MODEL_RE = re.compile(r"\b(?:is_thinking|is_busy)\s*\(")
 REQUEST_NEW_RE = re.compile(r"\bHTTPRequest\s*\.\s*new\s*\(")
 ASSIGNED_RE = re.compile(
     r"(?:var\s+)?([A-Za-z_][\w.]*)\s*(?::\s*[\w.]+\s*)?:?=\s*HTTPRequest\s*\.\s*new\s*\(")
-THREADS_NOT_FALSE_RE = re.compile(r"\.\s*use_threads\s*=\s*(?!=)(?!false\b)\S")
+THREADS_SET_RE = re.compile(r"\.\s*use_threads\s*=(?!=)")
+# Comments are blanked by then, so `false` must be all that is left.
+THREADS_OFF_RE = re.compile(r"\.\s*use_threads\s*=\s*false\s*$")
+THREADS_SETTER_RE = re.compile(r"\bset_use_threads\s*\(")
 
 
 @dataclasses.dataclass
@@ -302,9 +308,12 @@ def waits_in_the_addon(source: Source) -> list[str]:
         if KILL_RE.search(line) and function not in KILL_TEARDOWN:
             findings.append(f"V3 {place} kills a process in {function or 'the file'}, "
                             "not in teardown; OS.kill waits for it to end, a frame")
-        if THREADS_NOT_FALSE_RE.search(line):
+        if THREADS_SET_RE.search(line) and not THREADS_OFF_RE.search(line):
             findings.append(f"V3 {place} sets use_threads to something other than false; "
                             "a threaded request joins its thread on the frame")
+        if THREADS_SETTER_RE.search(line):
+            findings.append(f"V3 {place} calls set_use_threads; write "
+                            "`use_threads = false`, the one spelling this gate reads")
         if WHILE_RE.match(line):
             body = " ".join(loop_of(source.code, number - 1))
             if POLL_RE.search(body) or not AWAIT_RE.search(body):
@@ -357,7 +366,8 @@ def requests_without_threads(source: Source) -> list[str]:
                             "name to set use_threads on")
             continue
         name = assigned.group(1).split(".")[-1]
-        if not re.search(rf"\b{re.escape(name)}\s*\.\s*use_threads\s*=\s*false\b", whole):
+        if not re.search(rf"\b{re.escape(name)}\s*\.\s*use_threads\s*=\s*false[ \t]*$", whole,
+                         re.MULTILINE):
             findings.append(f"V3 {source.label}:{number} makes an HTTPRequest, `{name}`, "
                             "and never sets use_threads = false on it")
     return findings
@@ -520,6 +530,19 @@ PLANTED = [
     ("an HTTPRequest with threads on, which joins its thread on the frame (T133)",
      {"godot/addons/ai_llm/http_runtime.gd": SOUND_ADDON["godot/addons/ai_llm/http_runtime.gd"]
       .replace("\t_request.use_threads = false\n", "\t_request.use_threads = true\n")}, "V3"),
+    ("use_threads set true through its setter (the review of wave 138)",
+     {"godot/addons/ai_llm/http_runtime.gd": SOUND_ADDON["godot/addons/ai_llm/http_runtime.gd"]
+      .replace("\tadd_child(_request)\n", "\t_request.set_use_threads(true)\n\tadd_child(_request)\n")},
+     "V3"),
+    ("use_threads set false through its setter: one spelling",
+     {"godot/addons/ai_llm/http_runtime.gd": SOUND_ADDON["godot/addons/ai_llm/http_runtime.gd"]
+      .replace("\t_request.use_threads = false\n", "\t_request.set_use_threads(false)\n")},
+     "V3"),
+    ("use_threads set by a conditional that starts with false",
+     {"godot/addons/ai_llm/http_runtime.gd": SOUND_ADDON["godot/addons/ai_llm/http_runtime.gd"]
+      .replace("\t_request.use_threads = false\n",
+               "\t_request.use_threads = false if url == \"\" else true\n")},
+     "V3"),
     ("use_threads set false, then true",
      {"godot/addons/ai_llm/http_runtime.gd": SOUND_ADDON["godot/addons/ai_llm/http_runtime.gd"]
       .replace("\tadd_child(_request)\n", "\t_request.use_threads = true\n\tadd_child(_request)\n")},

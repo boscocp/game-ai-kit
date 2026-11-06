@@ -10,8 +10,8 @@ teaches: none
 -->
 
 > Invariant 7 says the LLM never blocks a frame. `ai_llm` asks a local
-> server through `HTTPRequest`, so before writing the rule "threads on",
-> this page reads what Godot 4.7 documents and measures what 4.7.2 does.
+> server through `HTTPRequest`, so before writing the rule for
+> `use_threads`, this page reads what Godot 4.7 documents and measures what 4.7.2 does.
 > Measured on 2026-10-29, on the owner's Linux desktop, headless. On
 > 2026-11-05 a server that accepts and never answers turned the rule
 > round: [threads off](#a-server-that-accepts-and-never-answers), since T133.
@@ -130,8 +130,12 @@ name lookup are polled in both modes, and only the threaded path reads in
 blocking mode -- and joins. So `HttpRuntime` sets `use_threads = false`
 and a fixed `timeout`, and `check_llm_validated.py` (V3) refuses an
 `HTTPRequest` in `ai_llm` without it, or with anything else. Off is the
-engine's default; the gate asks for it written down, so the reader sees
-the choice. `LlmLocalServer` reads `/health` over its own non-blocking
+engine's default; the gate asks for it written down, as the property and
+as nothing but `false`, so the reader sees the choice. One cost, found by
+the review of wave 138: threads off, the request moves only in its node's
+processing, so a paused tree pauses the request and its timeout. Whether
+`HttpRuntime` should keep talking under a pause menu is the owner's
+question; it inherits the process mode for now. `LlmLocalServer` reads `/health` over its own non-blocking
 `StreamPeerTCP` (T130), which is the same reads by hand.
 
 Held by `test_a_chat_request_to_a_server_that_never_answers_never_holds_the_frame`
