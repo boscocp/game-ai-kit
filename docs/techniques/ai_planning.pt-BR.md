@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 11, classical planning ; https://en.wikipedia.org/wiki/Stanford_Research_Institute_Problem_Solver
 invalidated_if: the kit's StripsAction, WorldState, StripsPlanner, HeuristicPlanner or PlanResult signatures change, or the demos that use them are renamed
 teaches: planning
-translation_of: a320245adde35559fb25fe52662c598178c00e5f84088987843bf35e1f1d0bcb
+translation_of: b4470191f5e02bfe11a2722e999daa4b141f4a7a253580e719d5ff1efe9ec845
 -->
 
 > English: [ai_planning.md](ai_planning.md). Os termos que ficam em inglês
@@ -46,7 +46,7 @@ direção, não uma promessa; execute o primeiro passo e planeje de novo.
 - `make demo-tactical` -- **C** até o computador ser "planner": um plano
   STRIPS para tomar a oficina do vermelho decide o que o azul compra, e
   cada unidade com que o plano conta diz qual passo está executando.
-- Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
+- Qual demo usa qual técnica, nos dois sentidos: [o catálogo](catalogue.pt-BR.md#ai_planning).
 
 ## Neste kit {#in-this-kit}
 

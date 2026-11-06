@@ -7,7 +7,7 @@ tier: 2
 source: book:Arthur L. Samuel, "Some Studies in Machine Learning Using the Game of Checkers", IBM Journal of Research and Development 3(3), July 1959
 invalidated_if: CheckersEvaluation, CheckersWeights, the weights file's shape or gameaikit.checkers's report change, or make run stops opening checkers
 teaches: learned-evaluation
-translation_of: a741bf7d34a7e3b26b0b443663ba608cf78456a45c98740f80380c032e85c6bd
+translation_of: e3cd2345ab888de5502d4a3e6b2249cbf297211a23e453467386c6ca1544dba7
 -->
 
 > English: [learned_evaluation.md](learned_evaluation.md). Os termos que
@@ -44,7 +44,7 @@ durante o jogo, o que a invariante 6 proíbe.
   pesos escritos à mão e os aprendidos; o painel mostra, para a posição no
   fim da linha que ele espera, o que cada contagem soma à nota sob os dois.
   **1-6** escolhem a profundidade, **espaço** faz a jogada dele.
-- Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
+- Qual demo usa qual técnica, nos dois sentidos: [o catálogo](catalogue.pt-BR.md#learned_evaluation).
 
 ## Neste kit {#in-this-kit}
 

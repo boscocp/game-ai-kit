@@ -7,7 +7,7 @@ tier: 2
 source: book:Travis McIntosh, "Human Enemy AI in The Last of Us", in Steve Rabin (ed.), "Game AI Pro 2", CRC Press, 2015 ; https://www.gameaipro.com/
 invalidated_if: the kit's VisionCone, Awareness, LineOfSight, Hearing, VisionShape, BeliefMap or ParticleBelief signatures change, or the demos that use them are renamed
 teaches: perception
-translation_of: e43fa8a3197bfcfb2ef99b14ef7cb7cbbf1f3026208a7eaf469ef732200a80eb
+translation_of: e176ca5429a80cb7f2101ddb60e59183049247bdb8a13111c2dfc10311f37e20
 -->
 
 > English: [ai_perception.md](ai_perception.md). Os termos que ficam em
@@ -58,7 +58,7 @@ jogador sente isso como trapaça.
   nuvem.
 - `make demo-botmatch` -- cada *bot* vê com um `VisionCone` em campo aberto,
   contra as paredes da arena.
-- Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
+- Qual demo usa qual técnica, nos dois sentidos: [o catálogo](catalogue.pt-BR.md#ai_perception).
 
 ## Neste kit {#in-this-kit}
 

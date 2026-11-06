@@ -41,7 +41,7 @@ empty every fight and is never saved.
   medium or hard). The panel prints its table as it stands: what it expects
   you to do next, after which context, how often its last guesses were
   right, and the rows it has counted. Repeat a habit and watch it climb.
-- Which demo uses which technique, both ways: the catalogue (T76, coming).
+- Which demo uses which technique, both ways: [the catalogue](catalogue.md#ai_opponent).
 
 ## In this kit {#in-this-kit}
 

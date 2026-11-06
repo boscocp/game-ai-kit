@@ -41,7 +41,7 @@ one guard.
 - `make demo-tactical` -- **C** changes the computer player, among them the
   state machine, the tree, GOAP and the HTN on the same board.
 - `make demo-rts` -- each squad is a state machine.
-- Which demo uses which technique, both ways: the catalogue (T76, coming).
+- Which demo uses which technique, both ways: [the catalogue](catalogue.md#ai_behaviour).
 
 ## In this kit {#in-this-kit}
 

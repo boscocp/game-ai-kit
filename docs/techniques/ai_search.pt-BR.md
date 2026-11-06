@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 3 ; https://docs.godotengine.org/en/stable/classes/class_astargrid2d.html
 invalidated_if: the kit's Search, SearchGraph, GridPathfinder or GridGraph signatures change, or the demos that use them are renamed
 teaches: search
-translation_of: 4d8d0fc2899573e9b94becfa2e2603b9cc1842edcaee7300db46b069f5d51c53
+translation_of: 82917cb9124040bee4a754e3b1100df095cca8be0a2bd53180ab1f31ed4b66c7
 -->
 
 > English: [ai_search.md](ai_search.md). Os termos que ficam em inglês
@@ -40,7 +40,7 @@ Dijkstra com passos a mais.
   busca por baixo para mover um guarda ou uma unidade; dois dos exemplos 3D
   também, `make demo-infiltration` (por onde um guarda anda, até onde um som
   chega) e `make demo-botmatch` (por onde um bot anda).
-- Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
+- Qual demo usa qual técnica, nos dois sentidos: [o catálogo](catalogue.pt-BR.md#ai_search).
 
 ## Neste kit {#in-this-kit}
 

@@ -53,7 +53,7 @@ left out on purpose: players feel it as cheating.
   chose to search from the cloud.
 - `make demo-botmatch` -- each bot sees with `VisionCone` in the open,
   against the arena's walls.
-- Which demo uses which technique, both ways: the catalogue (T76, coming).
+- Which demo uses which technique, both ways: [the catalogue](catalogue.md#ai_perception).
 
 ## In this kit {#in-this-kit}
 

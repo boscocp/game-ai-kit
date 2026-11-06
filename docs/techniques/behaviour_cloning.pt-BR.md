@@ -7,7 +7,7 @@ tier: 2
 source: https://www.gamedeveloper.com/programming/the-killer-groove-the-shadow-ai-of-killer-instinct
 invalidated_if: ClonedPlayer, SoftmaxModel, CaseTable, the clone file's shape or gameaikit.cloning's publish change, or demo-fighting is renamed
 teaches: behaviour-cloning
-translation_of: 8d322adeb7a010ae97c1a225d09e8b828630888c69b0dfd02f9c82b07c59450b
+translation_of: e2ce9edda44129f243560af79ef924216ee403fda90393cbe721c82d53034285
 -->
 
 > English: [behaviour_cloning.md](behaviour_cloning.md). Os termos que
@@ -44,7 +44,7 @@ troca de ação, então o *clone* decide antes do que o jogador decidia.
   avança um quadro.
 - `make record-fights` -- jogue o modo de treino e guarde cada luta, para o
   próximo *clone* aprender com ela.
-- Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
+- Qual demo usa qual técnica, nos dois sentidos: [o catálogo](catalogue.pt-BR.md#behaviour_cloning).
 
 ## Neste kit {#in-this-kit}
 

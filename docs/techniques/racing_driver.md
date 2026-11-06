@@ -40,7 +40,7 @@ during the race: the profile is computed from the line once.
 - `make demo-racing` -- race an AI in the same car. **1-3** pick its level,
   **Tab** watches the three AIs; the overlay draws the point each driver
   aims at and the braking point it must already be slowing for.
-- Which demo uses which technique, both ways: the catalogue (T76, coming).
+- Which demo uses which technique, both ways: [the catalogue](catalogue.md#racing_driver).
 
 ## In this kit {#in-this-kit}
 

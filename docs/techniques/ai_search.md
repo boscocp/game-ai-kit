@@ -37,7 +37,7 @@ nothing to lean on and is Dijkstra with extra steps.
   underneath to move a guard or a unit; so do two of the 3D examples,
   `make demo-infiltration` (where a guard walks, how far a sound carries)
   and `make demo-botmatch` (where a bot walks).
-- Which demo uses which technique, both ways: the catalogue (T76, coming).
+- Which demo uses which technique, both ways: [the catalogue](catalogue.md#ai_search).
 
 ## In this kit {#in-this-kit}
 

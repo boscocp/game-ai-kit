@@ -79,7 +79,7 @@ shortcut can be seen beside the thing it shortens.
 - `make measure-squad-duel` -- the two searches on the same 30 positions at
   50, 200 and 1,000 ms, then in seeded matches; the table it printed is in
   `docs/godot/squad.md`.
-- Which demo uses which technique, both ways: the catalogue (T76, coming).
+- Which demo uses which technique, both ways: [the catalogue](catalogue.md#ai_adversarial).
 
 ## In this kit {#in-this-kit}
 
