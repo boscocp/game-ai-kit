@@ -11,8 +11,9 @@ unreadable, it loses to the slow and readable one.
 
 > Status: every technique in the table below has a page explaining it, in
 > English and Portuguese, and at least one demo where it decides something;
-> `make menu` opens them all. Nothing is published to the Asset Library yet;
-> `make release` builds the zips.
+> `make menu` opens them all. Nothing is published to the Godot Asset Store
+> or PyPI yet; `make release` builds the zips and the wheel, and
+> [docs/howto/publish.md](docs/howto/publish.md) is how they will be published.
 
 ## What it covers
 
@@ -213,6 +214,8 @@ skip them.
 ```bash
 make release       # dist/: one zip per addon, the Python wheel, and the menu as a Linux executable
 ```
+
+Publishing them is the owner's, by hand: [docs/howto/publish.md](docs/howto/publish.md).
 
 `make export` alone builds the executable into `dist/game-ai-kit-linux/`
 and starts it headless before it counts; `make release` zips it with

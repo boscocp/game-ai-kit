@@ -90,21 +90,26 @@ and runs each; its planted case is a zip missing the file a script needs.
 Before publishing, the stores' own rules were read
 ([docs/howto/publish.md](../howto/publish.md) holds each with its source).
 The decision stands -- the wheel is written by hand, the upload is the
-owner's, and no workflow holds a token -- and two of its sentences were
-wrong about the Godot side.
+owner's, and no workflow holds a token -- but one of its sentences, and the
+README each zip carries, were wrong about the Godot side.
 
-- **"An addon zip is what the Asset Library ... wants"** was not true of the
-  Asset Library: an entry names a repository and a commit, and the library
-  downloads that commit's archive; it never takes an uploaded zip. It is true
-  of its successor, the Asset Store, which takes an uploaded file per version,
-  and which the pinned engine (4.7.2) reads. The Asset Library is deprecated;
-  the release targets the store.
-- **"Unzip into `res://addons/`"** is what a person does by hand. Godot
-  4.7.2's installer, given a store download, skips an archive's single top
-  folder unless it is `addons/`, and installs into `res://`. A zip whose top
-  folder is `ai_search/` lands at the project's root. The fix -- zips laid out
+- **"An addon zip is what the Asset Library ... wants"** was not how the
+  Asset Library works. It hosts nothing: an entry names a repository and a
+  commit, and the library normally builds `<repo>/archive/<commit>.zip`; a
+  Custom provider can name any zip's URL instead, such as a file attached to
+  a GitHub release. Either way it takes no upload. Its successor, the Asset
+  Store, does take an uploaded file per version, and is what the pinned
+  engine (4.7.2) reads: that editor erases the setting naming the old
+  library. The Asset Library is deprecated; the release targets the store.
+- **"Unzip into your project's `res://addons/`"**, the line `release.py`
+  writes into each zip's README (and `docs/techniques/using-the-library.md`
+  repeats), is what a person does by hand. Godot 4.7.2's installer, given a
+  store download, skips an archive's single top folder unless it is
+  `addons/`, and installs into `res://`. A zip whose top folder is
+  `ai_search/` lands at the project's root. The fix -- zips laid out
   `addons/ai_<name>/`, which moves the licence gate's rule about where an
-  archive's attribution sits -- is larger than the guide's wave, and is
-  brought to the owner as its own task, before publishing.
+  archive's attribution sits -- is larger than the guide's wave, and is its
+  own task before publishing:
+  [T149](../../tasks/T149-addon-zips-laid-out-for-the-store.md).
 - **PyPI's trusted publishing** is a workflow that publishes, so it is not
   used; the owner uploads with a token, by hand.

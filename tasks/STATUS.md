@@ -1479,6 +1479,7 @@ review.
 | T146 | Every demo closes without an exit leak | todo | from the review of PR #100 (wave 146, finding 3): `check_exit_leaks.py` over every scene in `check_demos.py`'s list; `squad_ruleset.gd` and `squad_map_words.gd` leak 18/17 when loaded first; the engine mechanism of T138's leak is not identified |
 | T147 | A publishing guide, checked against the stores | todo | the owner, 2026-11-06: open and publish before anything else; read the Asset Library's and PyPI's current rules (is an entry a commit archive, not an uploaded zip? is `gameaikit` free?), then `docs/howto/publish.md`; the upload stays the owner's (ADR 0009) |
 | T148 | A cold import that crashes is explained, or survived | todo | signal 11 on a cold `--import` at 4.7.2, seen in waves 140, 142 and 147's review, a rerun passing each time; measure first, a bounded retry with a planted case only if it is the engine's |
+| T149 | Addon zips laid out for the Asset Store | todo | from the review of wave 152 (T147): Godot 4.7.2's installer skips a zip's single top folder unless it is `addons/`, so `ai_<name>/` lands at `res://`; zips laid out `addons/ai_<name>/`, a kit zip proposed (one asset or many is the owner's), the licence gate's archive rule, library-check and the unzip wording, with planted cases; before anything goes to the store |
 
 ---
 

@@ -16,6 +16,9 @@ licença, como usar um *addon* no seu projeto -- está no
 [README em inglês](README.md). O código, os nomes e os comentários ficam em
 inglês, que é o que você vai digitar.
 
+Nada foi publicado ainda, nem na Asset Store do Godot nem no PyPI; como
+isso será feito está em [docs/howto/publish.md](docs/howto/publish.md), em inglês.
+
 ## O que o kit cobre
 
 <!-- catalogue:summary -->
