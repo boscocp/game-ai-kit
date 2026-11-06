@@ -7,7 +7,7 @@ tier: 2
 source: https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter09_An_Introduction_to_Utility_Theory.pdf ; https://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter13_Choosing_Effective_Utility-Based_Considerations.pdf
 invalidated_if: the kit's ActionChoice, ErrandChoice or AimChoice signatures change, or the demos that use them are renamed
 teaches: shooter-ai
-translation_of: 2d807d236cadcd0f37f90e4cd8e702db7fd8eee98f1b69ab33765d28d46a6e43
+translation_of: cbdb1b2135e9c4c7b6da1a36b69b5eeb097ff52020bc6dae538074208fe226e4
 -->
 
 > English: [ai_utility.md](ai_utility.md). Os termos que ficam em inglês
@@ -75,8 +75,8 @@ arma poderosa. Os ajustes que importam:
 
 ### O que copiar {#copy}
 
-Pela biblioteca: descompacte o `ai_utility-<version>.zip` no `res://addons/`
-do seu projeto -- [usando a biblioteca](using-the-library.pt-BR.md) tem cada
+Pela biblioteca: descompacte o `ai_utility-<version>.zip` na raiz
+do seu projeto, `res://` -- [usando a biblioteca](using-the-library.pt-BR.md) tem cada
 passo, o *wheel* de Python também. Ou copie de um clone:
 
 Uma pasta: `godot/addons/ai_utility/`. Ela não precisa de mais nada, nem

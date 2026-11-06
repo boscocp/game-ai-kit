@@ -7,7 +7,7 @@ tier: 1
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- section 17.3, Bandit Problems ; https://homes.di.unimi.it/~cesabian/Pubblicazioni/ml-02.pdf
 invalidated_if: the kit's Bandit signature changes, ADR 0016's amendment is withdrawn, or the demos that use it are renamed
 teaches: fighting-game-ai
-translation_of: 9bf13b52e46b0d58e83b549fce33be27bdd8a66f0fa110d730ca5335f3db3405
+translation_of: 7dd26fa0a572df4239e0d055fd8cb53e4416e90303a8953edb31e97020cf52a5
 -->
 
 > English: [ai_bandit.md](ai_bandit.md). Os termos que ficam em inglês
@@ -75,7 +75,7 @@ segundo depois, escalada para [0, 1]. Os botões que importam:
 ### O que copiar {#copy}
 
 Pela biblioteca: descompacte o `ai_core-<version>.zip` e o
-`ai_bandit-<version>.zip` no `res://addons/` do seu projeto -- [usando a
+`ai_bandit-<version>.zip` na raiz do seu projeto, `res://` -- [usando a
 biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
 também. Ou copie de um clone:
 

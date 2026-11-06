@@ -7,7 +7,7 @@ tier: 2
 source: https://www.gameaipro.com/
 invalidated_if: the kit's RoleArbiter, TeamCommander, TacticalPositions, SquadConfidence or SearchCoordinator signatures change, or the demos that use them are renamed
 teaches: shooter-ai
-translation_of: 6ca649424f580cfa1039ed511c6d849ef4810ead8d2cf933d5a7b7bbbee0418d
+translation_of: 2e72e5e023303fbc72f7c04d5bc0e53d4a4aba7efd5260619309bb4fa256568c
 -->
 
 > English: [ai_teamwork.md](ai_teamwork.md). Os termos que ficam em inglês
@@ -68,8 +68,8 @@ fica. Os guardas da infiltração dividem a busca por
 
 ### O que copiar {#copy}
 
-Pela biblioteca: descompacte o `ai_teamwork-<version>.zip` no
-`res://addons/` do seu projeto -- [usando a
+Pela biblioteca: descompacte o `ai_teamwork-<version>.zip` na
+raiz do seu projeto, `res://` -- [usando a
 biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
 também. Ou copie de um clone:
 

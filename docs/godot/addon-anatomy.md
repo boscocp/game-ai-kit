@@ -73,7 +73,7 @@ What the release step takes from it:
   when the owner publishes (ADR 0009, revisited), and is not done yet.
 - The zips `make release` writes already have the layout the page
   recommends: one top folder that unzips into `addons/<name>/`, with the
-  licence, NOTICE and a readme inside it.
+  licence, NOTICE and a readme inside it. (Changed in T149, below.)
 - The page says nothing about tests or `plugin.cfg`, and asks that script
   warnings be fixed or suppressed. Tests never ship: `release.py` refuses a
   gdUnit4 suite inside an addon folder.
@@ -83,10 +83,10 @@ The Asset Library is deprecated in favour of the Asset Store, which takes an
 uploaded file, and the pinned 4.7.2 editor reads only the store. And the
 zips do *not* unzip into `addons/<name>/` through the editor: its installer
 skips a single top folder that is not `addons/` and installs into `res://`,
-so `ai_search/` lands at the project's root. A person unzipping by hand into
-`res://addons/` is still right. What the stores require, and the change to
-the zips' layout, are in [the publishing guide](../howto/publish.md) and
-[T149](../../tasks/T149-addon-zips-laid-out-for-the-store.md).
+so `ai_search/` landed at the project's root. Since T149 the zips are laid
+out `addons/<name>/`, the top folder the installer keeps, and a person
+unzipping by hand unzips into the project's root. What the stores require
+is in [the publishing guide](../howto/publish.md).
 
 ## Names to get right in Godot 4.7
 

@@ -15,7 +15,11 @@ folder, and then the check does what the page says the reader does without
 a command:
 
   release  (its block builds `library/dist/`)
-  unzip    (its block)
+  unzip    (its block), then every addon unzipped is in
+           `my_game/addons/ai_<name>/` and nothing else is new in `my_game/`
+           -- the zips are laid out `addons/ai_<name>/` (T149), so an unzip
+           into `my_game/addons/` would nest them, and Godot would still
+           find every `class_name` there
   import   (its block)
   route    the page's route example saved in `my_game/`, and
            `scripts/library/stranger.gd -- route` adds it to the tree
@@ -47,8 +51,9 @@ wrong reason and the self-test would go green. Then, each named in what
 it prints: `grid_graph.gd` out of `ai_core`'s zip (`GakGridGraph`);
 `utility/aim.py` out of the wheel's install (`'aim'`); `NOTICE` out of a
 zip; a runner that quits 0 having printed nothing (the marker it lacks);
-an unzip command pointing at the wrong place (the step `unzip`); and a
-page with a step the check does not take, or without one it does.
+an unzip command pointing at a zip that is not there, and one unzipping
+into `my_game/addons/` as the page said before T149 (the step `unzip`);
+and a page with a step the check does not take, or without one it does.
 
 Exit codes
 ----------
@@ -212,10 +217,28 @@ def without_member(archive: pathlib.Path, member: str) -> None:
 def plant_in_release(place: Place, planted: Planted) -> list[str]:
     """After `release`: the planted zip fault, if any. Nothing to report."""
     if planted.zip_member:
-        owner = planted.zip_member.split("/")[0]
+        owner = planted.zip_member.split("/")[1]
         for archive in place.dist.glob(f"{owner}-*.zip"):
             without_member(archive, planted.zip_member)
     return []
+
+
+def unzipped_findings(place: Place) -> list[str]:
+    """After `unzip`: each addon in `my_game/addons/ai_<name>/`, and nothing else new.
+
+    Godot registers a `class_name` wherever in the project its script sits,
+    so a zip unzipped one folder too deep -- `my_game/addons/addons/ai_core/`
+    -- would still pass every later step. The place is checked here instead.
+    """
+    blank = {"addons", "project.godot"}
+    findings = [f"step 'unzip': my_game/{entry.name} is not where an addon goes"
+                for entry in sorted(place.project.iterdir()) if entry.name not in blank]
+    for entry in sorted((place.project / "addons").iterdir()):
+        if not (entry.name.startswith("ai_") and (entry / "VERSION").is_file()):
+            findings.append(f"step 'unzip': my_game/addons/{entry.name} is not an unzipped addon")
+    if not findings and not any((place.project / "addons").iterdir()):
+        findings.append("step 'unzip': nothing landed in my_game/addons/")
+    return findings
 
 
 def run_example(step: str, text: str, place: Place, planted: Planted) -> list[str]:
@@ -284,6 +307,8 @@ def take(step: str, text: str, place: Place, planted: Planted) -> list[str]:
         return failures
     if step == "release":
         return plant_in_release(place, planted)
+    if step == "unzip":
+        return unzipped_findings(place)
     if step in MARKERS:
         return run_example(step, text, place, planted)
     if step == "wheel":
@@ -344,12 +369,15 @@ def run_cases(english: str, place: pathlib.Path) -> list[str]:
     if untouched:
         failures.append(f"the untouched page passes every step ({untouched})")
     misplaced = english.replace("unzip -q library/dist/ai_core-0.1.0.zip", "unzip -q ai_core-0.1.0.zip", 1)
+    # The page's command before T149: the zips' `addons/` nests one deeper.
+    nested = english.replace("-d my_game/\n", "-d my_game/addons/\n")
     planted_faults = (
-        (english, Planted(zip_member="ai_core/grid_graph.gd"), "GakGridGraph"),
+        (english, Planted(zip_member="addons/ai_core/grid_graph.gd"), "GakGridGraph"),
         (english, Planted(installed_file="aim.py"), "cannot import name 'aim'"),
-        (english, Planted(zip_member="ai_core/NOTICE"), "carries no NOTICE"),
+        (english, Planted(zip_member="addons/ai_core/NOTICE"), "carries no NOTICE"),
         (english, Planted(silent_runner=True), f"missing {MARKERS['route']!r}"),
         (misplaced, Planted(), "step 'unzip'"),
+        (nested, Planted(), "my_game/addons/addons is not an unzipped addon"),
     )
     for number, (text, planted, named) in enumerate(planted_faults):
         # A folder named for the fault would put the name in every path the

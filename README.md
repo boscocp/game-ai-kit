@@ -224,7 +224,7 @@ skip them.
 ## Using one addon in your own project
 
 ```bash
-make release       # dist/: one zip per addon, the Python wheel, and the menu as a Linux executable
+make release       # dist/: one zip per addon, the kit's zip, the Python wheel, and the menu as a Linux executable
 ```
 
 Publishing them is the owner's, by hand: [docs/howto/publish.md](docs/howto/publish.md).
@@ -235,8 +235,10 @@ and starts it headless before it counts; `make release` zips it with
 the commit at HEAD with nothing uncommitted.
 
 Unzip `ai_core-<version>.zip` and the addon you want into your project's
-`res://addons/`. There is no plugin to enable: every class registers itself
-with `class_name`. Each zip carries `LICENSE`, `NOTICE` and `VERSION`, and the
+root, `res://`: each zip holds `addons/<addon>/`, the folder Godot's asset
+store installs too, and `game-ai-kit-addons-<version>.zip` holds them all.
+There is no plugin to enable: every class registers itself with
+`class_name`. Each addon carries `LICENSE`, `NOTICE` and `VERSION`, and the
 release step refuses to call a build good until a separate gate has opened
 every archive and found them. The decisions behind all this are in
 [`docs/adr/`](docs/adr/).

@@ -7,7 +7,7 @@ tier: 2
 source: book:Travis McIntosh, "Human Enemy AI in The Last of Us", in Steve Rabin (ed.), "Game AI Pro 2", CRC Press, 2015 ; https://www.gameaipro.com/
 invalidated_if: the kit's VisionCone, Awareness, LineOfSight, Hearing, VisionShape, BeliefMap or ParticleBelief signatures change, or the demos that use them are renamed
 teaches: perception
-translation_of: e176ca5429a80cb7f2101ddb60e59183049247bdb8a13111c2dfc10311f37e20
+translation_of: bf55e70b3b7ba5624d1a3640c1bb20f980f256ef9ff4a411d5988a097316e9fa
 -->
 
 > English: [ai_perception.md](ai_perception.md). Os termos que ficam em
@@ -142,7 +142,7 @@ lá.
 ### O que copiar {#copy}
 
 Pela biblioteca: descompacte o `ai_core-<version>.zip` e o
-`ai_perception-<version>.zip` no `res://addons/` do seu projeto -- [usando a
+`ai_perception-<version>.zip` na raiz do seu projeto, `res://` -- [usando a
 biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
 também. Ou copie de um clone:
 

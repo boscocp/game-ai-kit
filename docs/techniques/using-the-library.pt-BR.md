@@ -7,7 +7,7 @@ tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html ; https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html ; https://packaging.python.org/en/latest/tutorials/installing-packages/
 invalidated_if: scripts/release.py changes what an archive holds, ADR 0024 changes the prefixed names, .godot-version or python/pyproject.toml's version moves, or scripts/library_check.py stops following one of this page's steps
 teaches: none
-translation_of: 618e981866bca0b8318e7c50770b5c90ca381bef115e42a12902b64af7f5d59f
+translation_of: 9c0f80adbc6320d3161506d1820b5a00cd43ddec212955d7d74bbaac6f6d8e26
 -->
 
 > English: [using-the-library.md](using-the-library.md). Os termos que ficam
@@ -76,7 +76,8 @@ clone. Isso só precisa de Python e git -- nada de Godot:
 python3 game-ai-kit/scripts/release.py --build --output library
 ```
 
-O `library/dist/` passa a ter um `<addon>-<version>.zip` por addon e o
+O `library/dist/` passa a ter um `<addon>-<version>.zip` por addon, o
+`game-ai-kit-addons-<version>.zip` com todos os addons num só e o
 `gameaikit-<version>-py3-none-any.whl`. No dia em que o kit for publicado,
 são esses mesmos arquivos que você baixa. (O `make release` dentro do
 clone é a *release* completa: ele também exporta o jogo do menu como
@@ -87,12 +88,15 @@ você não precisa dele.)
 ### Descompactar um addon {#unzip}
 
 <!-- library-step: unzip -->
-No `res://addons/` do seu projeto: o addon que você quer e, se o README
-dele pedir, o `ai_core` ao lado. Para um caminho, os dois:
+Na pasta raiz do seu projeto, `res://` -- não no `addons/`: cada zip
+guarda `addons/<addon>/`, então o addon cai em `res://addons/<addon>/`,
+que é também onde a loja do Godot o instala. O addon que você
+quer e, se o README dele pedir, o `ai_core` ao lado. Para um caminho, os
+dois:
 
 ```bash
-unzip -q library/dist/ai_core-0.1.0.zip -d my_game/addons/
-unzip -q library/dist/ai_search-0.1.0.zip -d my_game/addons/
+unzip -q library/dist/ai_core-0.1.0.zip -d my_game/
+unzip -q library/dist/ai_search-0.1.0.zip -d my_game/
 ```
 
 Não há plugin para ativar. Copiar `godot/addons/ai_core/` e

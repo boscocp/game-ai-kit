@@ -15,7 +15,8 @@ having no install step.
 `scripts/release.py` writes every artifact itself, with `zipfile`:
 
 - an addon zip has one top folder named after the addon, with the root
-  `LICENSE` and `NOTICE` and a `VERSION` file beside the code;
+  `LICENSE` and `NOTICE` and a `VERSION` file beside the code (changed in
+  T149, below);
 - the wheel is a pure `py3-none-any` zip with `METADATA`, `WHEEL` and
   `RECORD` written out, and the attribution in `.dist-info/licenses/`, where
   PEP 639 puts it;
@@ -122,3 +123,8 @@ Apache-2.0 appendix line in all 18 LICENSE copies reads `Copyright 2026
 Adalberto Pereira`; all three are T149's, before any store submission. The
 store's AI usage disclosure is the owner's to answer at submission. PyPI is
 uploaded by hand with a token, and trusted publishing stays off.
+
+**Done in T149 (wave 153):** every addon zip is laid out `addons/ai_<name>/`,
+`game-ai-kit-addons-<version>.zip` is the kit's one store asset, all 18
+LICENSE copies carry the copyright line, and the licence gate looks for the
+attribution in each `addons/<name>/` folder.
