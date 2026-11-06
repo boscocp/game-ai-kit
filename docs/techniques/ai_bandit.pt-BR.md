@@ -48,7 +48,7 @@ permite este porque ele conta, começa vazio a cada luta e nunca é salvo.
   exploração -- e a opção escolhida marcada com `>` antes de ser jogada;
   depois, a última opção paga e quanto rendeu. Responda sempre do mesmo
   jeito a uma situação e veja as barras.
-- `make measure-bandit` -- o oponente *bandit* contra os *stand-ins* do T18
+- `make measure-bandit` -- o oponente *bandit* contra os jogadores escritos em código do T18
   e o *ghost* do dono, ao lado do oponente fixo do T37, e quantas puxadas
   ele leva para se decidir.
 - Que demo usa que técnica, nos dois sentidos: o

@@ -190,6 +190,12 @@ lint-translations-docs: ## T74: every technique has a page and its pt-BR twin, i
 	@# Its self-test runs in lint-selftests, found there by its name.
 	@$(PYTHON) scripts/check_translations_docs.py
 
+.PHONY: lint-glossary
+check-no-engine: lint-glossary
+lint-glossary: ## T119: an English term in italics on a pt-BR page is in the glossary
+	@# Its self-test runs in lint-selftests, found there by its name.
+	@$(PYTHON) scripts/check_glossary.py
+
 # --- T76: the catalogue of the demos and the AI in each ---------------------
 
 .PHONY: catalogue
