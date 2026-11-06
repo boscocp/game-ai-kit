@@ -1,6 +1,6 @@
 # 0009 — The release is built by hand, from committed files
 
-Status: accepted · 2026-10-13 (T7); revisited 2026-10-30 (T64)
+Status: accepted · 2026-10-13 (T7); revisited 2026-10-30 (T64) and 2026-11-06 (T147)
 
 ## Context
 
@@ -84,3 +84,27 @@ workflow holds a token that could.
 `make library-check` installs the wheel in a fresh virtual environment and
 unzips two addons into a blank Godot project, both outside the repository,
 and runs each; its planted case is a zip missing the file a script needs.
+
+## Revisited · 2026-11-06 (T147, wave 152)
+
+Before publishing, the stores' own rules were read
+([docs/howto/publish.md](../howto/publish.md) holds each with its source).
+The decision stands -- the wheel is written by hand, the upload is the
+owner's, and no workflow holds a token -- and two of its sentences were
+wrong about the Godot side.
+
+- **"An addon zip is what the Asset Library ... wants"** was not true of the
+  Asset Library: an entry names a repository and a commit, and the library
+  downloads that commit's archive; it never takes an uploaded zip. It is true
+  of its successor, the Asset Store, which takes an uploaded file per version,
+  and which the pinned engine (4.7.2) reads. The Asset Library is deprecated;
+  the release targets the store.
+- **"Unzip into `res://addons/`"** is what a person does by hand. Godot
+  4.7.2's installer, given a store download, skips an archive's single top
+  folder unless it is `addons/`, and installs into `res://`. A zip whose top
+  folder is `ai_search/` lands at the project's root. The fix -- zips laid out
+  `addons/ai_<name>/`, which moves the licence gate's rule about where an
+  archive's attribution sits -- is larger than the guide's wave, and is
+  brought to the owner as its own task, before publishing.
+- **PyPI's trusted publishing** is a workflow that publishes, so it is not
+  used; the owner uploads with a token, by hand.
