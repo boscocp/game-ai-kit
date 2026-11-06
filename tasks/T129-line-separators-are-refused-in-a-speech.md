@@ -21,7 +21,7 @@ one line.
   reason: the speech is more than one line or holds a control character.
 - **The pattern learns them too**, so the schema and the validator stay
   as T116 left them: the schema no looser than the validator. Whether the
-  pinned server's grammar converter reads ` ` in a class as the
+  pinned server's grammar converter reads `\u2028` in a class as the
   character is measured first, as `server.md` measured the rest.
 
 ## Steps
@@ -65,4 +65,6 @@ make lint-tasks lint-status
 - Planted, one at a time: the old R9 in each twin (Python: 13 failures;
   Godot: 6 vectors), and the old pattern in each (Python: 7 failures;
   gdUnit: the committed-schema test).
+- Reviewed: `docs/reviews/141-line-separators-are-refused-in-a-speech.md`
+  (changes requested, no blocker, all applied).
 - Done in wave 141.

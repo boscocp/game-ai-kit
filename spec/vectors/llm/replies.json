@@ -316,7 +316,7 @@
     },
     {
       "why": "U+2028, LINE SEPARATOR, written as itself inside the JSON string. Unicode's line breaking (UAX #14) makes it a mandatory break, so the speech is two lines on screen; JSON lets it stand unescaped.",
-      "raw": "{\"speech\": \"Evening. Well?\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "raw": "{\"speech\": \"Evening.\u2028Well?\", \"intent\": \"greet\", \"argument\": \"\"}",
       "refused": "R9"
     },
     {
@@ -326,7 +326,7 @@
     },
     {
       "why": "U+2029, PARAGRAPH SEPARATOR: a mandatory break too (UAX #14).",
-      "raw": "{\"speech\": \"Evening. Well?\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "raw": "{\"speech\": \"Evening.\u2029Well?\", \"intent\": \"greet\", \"argument\": \"\"}",
       "refused": "R9"
     },
     {

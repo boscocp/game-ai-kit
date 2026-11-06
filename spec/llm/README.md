@@ -26,7 +26,7 @@ no markup. Since T129 a control character is all of Unicode's (C0, DEL
 and the C1 range, U+0080 to U+009F), and a line break includes U+2028
 and U+2029, the line and paragraph separators. The file writes those two
 as JSON escapes, so the pattern it decodes to holds the characters
-themselves: Godot's `RegEx` refuses a ` ` in a pattern, and every
+themselves: Godot's `RegEx` refuses a `\u2028` in a pattern, and every
 reader of this one takes the character. The schema still cannot say that a speech holds no secret, and a
 runtime may ignore it, which is why the validator checks every reply anyway.
 

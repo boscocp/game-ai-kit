@@ -182,10 +182,10 @@ relying on the server to read them, the source at `b11960` was read again on
   model generates is decoded the same way, to code points, before the
   class is checked. So `\x7F-\x9F` is the range of code points 0x7F to
   0x9F, and U+2028 is U+2028, not three bytes.
-- The model cannot write the escape ` ` either: the backslash is
+- The model cannot write the escape `\u2028` either: the backslash is
   already out of the class, so the separator can only be written raw,
   and the class refuses that.
-- The separators are written as characters, not as ` `, because
+- The separators are written as characters, not as `\u2028`, because
   Godot's `RegEx` (PCRE2) refuses that escape. Measured on 4.7.2:
   `RegEx.compile("^[^\\u2028]$")` fails with "PCRE2 does not support \F,
   \L, \l, \N{name}, \U, or \u". PCRE2's `\x{2028}` compiles there, but
