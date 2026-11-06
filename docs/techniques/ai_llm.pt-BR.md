@@ -7,7 +7,7 @@ tier: 2
 source: https://www.cp.eng.chula.ac.th/~vishnu/gameResearch/story_november_2005/MateasSternTIDSE04.pdf ; https://docs.godotengine.org/en/4.7/classes/class_httprequest.html ; https://ollama.com/blog/structured-outputs
 invalidated_if: the kit's LlmValidator, LlmReply, LlmRuntime, RecordedRuntime, HttpRuntime or LlmConversation signatures change, the reply's shape or its refusal codes change, or T94's game lands and this page does not name it
 teaches: language-models
-translation_of: 908d126c56d1fb7a4f0b5ecf24b4a521a8c4614e9f5347202cee49917cee5ab9
+translation_of: e14b323837d64d26fc6cb3a0b83387cba45c8674a957ed3a1606ef06ccf03e77
 -->
 
 > English: [ai_llm.md](ai_llm.md). Os termos que ficam em inglês estão
@@ -49,12 +49,15 @@ uma resposta justa.
 
 ## Onde ver funcionando {#watch}
 
-- Ainda não há demo: o jogo de texto que o usa é a T94, *convença o guarda
-  a deixar você passar*. Até lá, o exemplo mínimo abaixo é executado pelo
-  seu teste, e
+- `make demo-talk`, *convença o guarda a deixar você passar* (nível 2): as
+  teclas 1-9 dizem uma fala gravada, V mostra o ato que o modelo leu, a
+  regra que disparou, a confiança e a suspeita; Tab digita para um modelo
+  local ao vivo (nível 3).
+- Só com Python (nível 1),
   `PYTHONPATH=python python3 -m gameaikit.llm.replay spec/llm/recordings/the-gatekeeper.json`
   toca uma conversa gravada e imprime, a cada turno, o ato sobre o qual o
-  jogo agiu ou o motivo de a resposta ter sido recusada.
+  jogo agiu ou o motivo de a resposta ter sido recusada. O exemplo mínimo
+  abaixo é executado pelo seu teste.
 - `make test-llm-vectors` roda os dois validadores -- o do Python e o do
   *addon* -- sobre cada resposta de `spec/vectors/llm/`, e imprime a
   contagem.
