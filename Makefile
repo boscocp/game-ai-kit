@@ -120,7 +120,7 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
 check-no-engine: lint-tasks lint-status lint-commits lint-renderer lint-no-assets lint-readability lint-demos \
        lint-addon-deps lint-modules lint-tiers lint-links lint-workflow lint-license \
        lint-employer-refs lint-docs-freshness lint-literature lint-no-training lint-llm-validated lint-selftests \
-       lint-translations-docs lint-translations-game lint-catalogue \
+       lint-translations-docs lint-translations-game lint-catalogue lint-glossary \
        test-python test-models ## Every gate that does not need the engine installed
 	@# CI's gate job runs exactly this. It used to hand-list the targets,
 	@# because `check` includes lint-disk-layout, which cannot run where the
@@ -189,6 +189,11 @@ lint-literature: ## Every module, path and demo the literature page claims the k
 lint-translations-docs: ## T74: every technique has a page and its pt-BR twin, in step with it
 	@# Its self-test runs in lint-selftests, found there by its name.
 	@$(PYTHON) scripts/check_translations_docs.py
+
+.PHONY: lint-glossary
+lint-glossary: ## T119: an English term in italics on a pt-BR page is in the glossary
+	@# Its self-test runs in lint-selftests, found there by its name.
+	@$(PYTHON) scripts/check_glossary.py
 
 # --- T76: the catalogue of the demos and the AI in each ---------------------
 

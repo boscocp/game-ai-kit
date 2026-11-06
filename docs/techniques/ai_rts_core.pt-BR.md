@@ -37,7 +37,7 @@ Poucas unidades com muitos objetivos diferentes: cada campo é montado para
 um leitor só, e o A\* do `ai_search`, que para quando chega, sai mais
 barato. Unidades de tamanhos muito diferentes, ou perguntas que cobrem
 quase o mapa todo: uma *quadtree* ou uma varredura simples ganham do
-*hash*. E qualquer coisa por turnos ou com busca sobre jogadas: `RtsWorld`
+*spatial hash*. E qualquer coisa por turnos ou com busca sobre jogadas: `RtsWorld`
 muda no lugar, então uma busca não consegue tentar uma jogada e desfazê-la
 -- o tabuleiro dos exemplos faz isso (ADR 0019).
 
