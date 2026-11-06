@@ -52,20 +52,44 @@ def verdict(returncode: int | None, output: str) -> int:
     return returncode if returncode in (0, 1, 2) else 1
 
 
+def run_to_file(command: list[str], folder: pathlib.Path, timeout: float) -> tuple[int | None, str]:
+    """Run `command`, its stdout and stderr into a file in `folder`; its exit code and output.
+
+    Why a file and not a pipe: a pipe holds 64 KiB on Linux, and a process
+    that prints more than that blocks on its write until someone reads --
+    while this waits for it to end, so it would sit until the timeout.
+    `godot_shards.py` writes its shards' output to files for the same reason.
+    """
+    path = folder / "gate.out"
+    with path.open("w", encoding="utf-8") as output:
+        with subprocess.Popen(command, stdout=output, stderr=subprocess.STDOUT) as process:
+            returncode = wait_or_kill(process, timeout)
+    return returncode, path.read_text(encoding="utf-8", errors="replace")
+
+
 def run(script: str, gate_arguments: list[str], timeout: float) -> int:
     """Run `script` once, print what it printed and the engine errors found."""
     with tempfile.TemporaryDirectory() as folder:
         log = pathlib.Path(folder) / "gate.log"
-        with subprocess.Popen(godot_command(script, log, gate_arguments), stdout=subprocess.PIPE,
-                              stderr=subprocess.STDOUT, text=True) as process:
-            returncode = wait_or_kill(process, timeout)
-            output = process.stdout.read() if process.stdout else ""
+        returncode, output = run_to_file(godot_command(script, log, gate_arguments), pathlib.Path(folder), timeout)
     print(output, end="")
     for line in engine_errors(output):
         print(f"godot_checked: an engine error, so the run fails: {line}")
     if returncode is None:
         print(f"godot_checked: {script} was still running after {timeout:.0f} s, and was killed")
     return verdict(returncode, output)
+
+
+def _a_long_output_is_read_whole() -> bool:
+    """True when a stub printing 200 KiB ends at once, exit 0, and all of it is read.
+
+    Planted for the pipe that held a long gate until its timeout: through a
+    pipe this stub would block on its write and be killed at 10 s.
+    """
+    stub = [sys.executable, "-c", "import sys; sys.stdout.write('x' * 204800 + '\\n')"]
+    with tempfile.TemporaryDirectory() as folder:
+        returncode, output = run_to_file(stub, pathlib.Path(folder), 10.0)
+    return returncode == 0 and len(output) > 204800
 
 
 def self_test() -> int:
@@ -80,6 +104,7 @@ def self_test() -> int:
         ("a usage error", verdict(2, ""), 2),
         ("a run killed at the deadline", verdict(None, clean), 2),
         ("a crash's exit code", verdict(139, clean), 1),
+        ("a process printing past a pipe's 64 KiB", _a_long_output_is_read_whole(), True),
     ]
     wrong = [f"{label}: {got}, expected {want}" for label, got, want in cases if got != want]
     for line in wrong:
