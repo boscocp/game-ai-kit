@@ -3,8 +3,9 @@
 ## Reporting
 
 Report privately: use GitHub's **Report a vulnerability** on this
-repository's Security tab (private vulnerability reporting, available once
-the repository is public), or email **adalbertobosco@gmail.com**. Please do
+repository's Security tab (once the repository is public and private
+vulnerability reporting is enabled on it), or email
+**adalbertobosco@gmail.com**. Please do
 not open a public issue for anything in the first list below. This is a
 one-person project, so expect an answer within a week, not within a day.
 
@@ -16,9 +17,11 @@ scripts under `scripts/`, and what `make release` builds from them. The
 things worth reporting are the ways that code reaches further than it says
 it does:
 
-- **A download that is not checked.** `make bootstrap`, `make llm-bootstrap`,
-  `make assets-3d` and `make rts-art` fetch files from the internet and
-  refuse any whose SHA-512 or sha256 differs from the pinned one. A way to
+- **A download that is not checked.** Every target that downloads -- such
+  as `make bootstrap`, `make llm-bootstrap`, `make assets-3d`,
+  `make rts-art`, `make fighter-sheets` and `make artgen-bootstrap` --
+  fetches files from the internet and is meant to refuse any whose SHA-512
+  or sha256 differs from the pinned one. A way to
   make one of them install or unpack a file it did not verify, or write
   outside the folder it names, is in scope.
 - **The local LLM reaching past the machine.** `ai_llm`'s `HttpRuntime`

@@ -16,7 +16,8 @@ There are two ways in, and this page has a section for each:
 
 Everyone here follows the [code of conduct](CODE_OF_CONDUCT.md). A
 vulnerability is reported privately, as [SECURITY.md](SECURITY.md) says, never
-in a public issue.
+in a public issue. A question goes in as an issue too, through the idea
+template: there is no separate forum.
 
 ## What the kit accepts
 
@@ -38,7 +39,9 @@ What it does not accept, each a rule the kit holds on purpose, argued in
 - an addon that depends on another addon -- only on `ai_core`, so someone who
   wants A\* copies two folders;
 - training while the game runs: Python trains and writes weights, GDScript
-  only infers (the few counted exceptions are named in ADR 0016);
+  only infers. The few exceptions -- counts kept during one fight or match,
+  starting empty, never saved -- are named in ADR 0016, and
+  `scripts/check_no_training.py` holds them as its rules N9, N13 and N14;
 - an LLM reply that becomes an action without a validator, or a frame that
   waits on one;
 - a dependency in `python/`, which uses the standard library only: tier 1
@@ -58,7 +61,8 @@ What it does not accept, each a rule the kit holds on purpose, argued in
    number; that numbering is the owner's bookkeeping.
 3. **Optionally, the hooks**: `make hooks` runs the commit-message check on
    every commit, so a message the pull request would refuse is refused
-   locally first.
+   locally first. It also refuses a commit on `main`: work on a branch (its
+   message points at the owner's wave commands, which you can ignore).
 4. **Make the change**, and run the checks for the tier it touches
    ([next section](#which-checks-for-which-change)).
 5. **Open a pull request** against `main`. The template asks what changed and
@@ -75,7 +79,8 @@ The README's tiers say what each kind of change needs installed.
 
 | what you changed | install | run |
 |---|---|---|
-| docs, a technique page, the Python package or its tests | Python 3.12 or later (tier 1) | `make check-no-engine` |
+| docs, a technique page | Python 3.12 or later (tier 1) | `make check-no-engine` |
+| the Python package or its tests | Python (tier 1), and Godot if the next paragraph says so | `make affected BASE=upstream/main` first, then as it says |
 | an addon, an example, a GDScript test | Godot, through `make bootstrap` (tier 2) | `make check-affected BASE=upstream/main` |
 | the gates themselves, the Makefile, CI | Godot (tier 2) | the same: it selects every gate |
 
@@ -84,6 +89,15 @@ install step. `make check-affected` adds the engine's tests of the modules
 your change touches, and of every module that uses them; `make affected
 BASE=upstream/main` prints which, and why. A change to a script, the
 Makefile or CI selects all of them, which is what `make check` runs.
+
+A change in `python/` is not always tier 1. Many Python folders belong to a
+module that also holds GDScript, and its users are examples with Godot
+suites: even a comment in `python/gameaikit/tactical/` selects them, and a change
+to `python/gameaikit/__init__.py` or `techniques.py` selects everything. Run
+`make affected BASE=upstream/main`: if it names modules, run
+`make check-affected BASE=upstream/main` with the engine, or run
+`make check-no-engine` and say in the pull request that the engine's tests
+did not run -- the owner's run covers them.
 
 Three things that will save you time:
 
@@ -110,16 +124,21 @@ The technique pages under `docs/techniques/` exist in English and in
 Brazilian Portuguese, `<name>.md` beside `<name>.pt-BR.md`.
 
 - **A page and its twin change in the same pull request.** The pt-BR page
-  records a hash of the English one, so `make lint-translations-docs` notices
-  the day they drift, and it also compares their sections and code blocks.
+  records a hash of the English one in its `translation_of:` field, so
+  `make lint-translations-docs` notices the day they drift (finding D5), and
+  it also compares their sections and code blocks.
 - **Code, comments and docstrings stay in English**, in both, and code blocks
-  are the same byte for byte.
+  are the same byte for byte (finding D8): a changed code block is changed in
+  both files, whichever language you write.
 - **An English term kept on a pt-BR page** -- *pathfinding*, *steering* --
   is in italics the first time and listed in
   [the glossary](docs/techniques/glossary.pt-BR.md); `make lint-glossary`
   holds that.
 - **If you write only one language, say so** in the pull request. The twin is
-  a follow-up, not a reason to refuse your change.
+  a follow-up, not a reason to refuse your change. Expect
+  `make lint-translations-docs` to go red with D5 on that page: leave it red
+  and say so, and the owner updates the twin. If you did update the twin, the
+  message prints the new hash; set `translation_of:` to it.
 
 An issue or a pull request may be written in either language.
 

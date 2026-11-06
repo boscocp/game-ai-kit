@@ -20,8 +20,10 @@ $
 
 ## Both languages?
 
-<!-- A technique page and its `.pt-BR.md` twin change together. If you wrote
-     only one language, say so: the other is a follow-up, not a refusal. -->
+<!-- A technique page and its `.pt-BR.md` twin change together, and a code
+     block changed in one is changed in both. If you wrote only one
+     language, say so: the other is a follow-up, not a refusal, and
+     `make lint-translations-docs` reporting D5 on that page is expected. -->
 
 ## What you saw, versus what a check says
 
