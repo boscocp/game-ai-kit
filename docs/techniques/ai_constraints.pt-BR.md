@@ -7,7 +7,7 @@ tier: 1
 source: https://aima.cs.berkeley.edu/contents.html ; book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 6, Constraint Satisfaction Problems ; https://github.com/mxgmn/WaveFunctionCollapse
 invalidated_if: the kit's ConstraintProblem, ConstraintSolver or WaveCollapse signature changes, or the infiltration demo or the XCOM-style mode stops building with them
 teaches: constraint-satisfaction
-translation_of: 9c99ea7c46c339fafb292ed13516efc774e6362db9543884beccc6e235c9e10b
+translation_of: 4f0cf693fb6b7c812cba9731beb9b93858fd10f255713a52906c5a1f624be606
 -->
 
 > English: [ai_constraints.md](ai_constraints.md). Os termos que ficam em
@@ -150,10 +150,12 @@ com uma partida longe de cobertura, um murado). Os controles:
 
 ### O que copiar {#copy}
 
-Uma pasta: `godot/addons/ai_constraints/`. Ela não precisa de mais nada, nem
-do `ai_core`. O *wave function collapse* são dois arquivos dela,
-`wave_collapse.gd` e `tile_grid.gd`, e precisa dos do *solver*. Abra o projeto uma vez, ou rode `godot --headless --import`,
-para o Godot registrar as classes. O gêmeo em Python é
+Duas pastas: `godot/addons/ai_constraints/` e o núcleo,
+`godot/addons/ai_core/`, cujo `GakXorshift` dá os sorteios com *seed* que
+ordenam os empates. O *wave function collapse* são dois arquivos do
+`ai_constraints`, `wave_collapse.gd` e `tile_grid.gd`, e precisa dos do
+*solver*. Abra o projeto uma vez, ou rode `godot --headless --import`, para
+o Godot registrar as classes. O gêmeo em Python é
 `gameaikit.constraints`.
 
 ### Um exemplo mínimo {#example}

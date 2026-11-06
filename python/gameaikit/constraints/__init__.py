@@ -8,7 +8,7 @@ The infiltration level is solved in the game, on the game's own ground.
 
     problem.py  variables, domains, binary and global constraints
     solver.py   backtracking with MRV, LCV and AC-3
-    draws.py    the seeded generator that orders the ties
+    draws.py    the seeded draws that order the ties, from the kernel's generator
     tile_grid.py      a map of tiles declared as a problem (T96)
     wave_collapse.py  wave function collapse: the solver, least entropy first
 """

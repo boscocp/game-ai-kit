@@ -1,16 +1,15 @@
-## The seeded generator a `ConstraintSolver` orders its ties with, written
-## out so that Python can write out the same one and the two agree draw for
-## draw.
+## The seeded draws a `ConstraintSolver` orders its ties with, and a
+## `WaveCollapse` picks its tiles with, the same in GDScript and Python.
 ##
 ## Godot's `RandomNumberGenerator` and Python's `random` are different
 ## generators, so a solver shuffling with either could never be held to its
-## twin in the other language. This is Marsaglia's xorshift (2003): three
-## shifts and three exclusive-ors on a 32-bit number. **It is a copy** of the
-## generator T86 wrote for Monte Carlo search, T91 for the particle filter
-## and T99 for the bandit. Since T109 that generator lives in the kernel,
-## `ai_core`, which this addon may use (invariant 2 allows the kernel);
-## T95 wrote this copy before, and folding it in is T135. Seeded with 1, its
-## first draw is 270369, as theirs is.
+## twin in the other language. The numbers come from `GakXorshift`, the
+## kernel's Marsaglia xorshift (`ai_core`, which invariant 2 lets every addon
+## use); T95 had written a copy of it here before T109 moved it to the
+## kernel, and T135 folded the copy in. A number and a choice among
+## `count` are the kernel's, passed through; only the Fisher-Yates shuffle
+## is this addon's own. Seeded with 1, its first draw is 270369, as the
+## kernel's is.
 ##
 ## `ConstraintSolver` draws only to shuffle, once, before it searches: the
 ## variables, then each domain. Every later tie goes to whichever came first
@@ -18,46 +17,36 @@
 ## `WaveCollapse` (T96) also draws during the search, once for each cell it
 ## collapses, from a second generator with the same seed.
 ##
-## GDScript's `int` is 64 bits, so every shift to the left is cut back to 32
-## with `MASK`; without it the two languages part at the first draw.
-##
-## Complexity: constant per draw, linear per shuffle; one integer of state.
+## Complexity: constant per draw, linear per shuffle; one generator of state.
 ##
 ## When not to use it: anything that must be hard to predict. Its period is
 ## 2^32 - 1; for the order of a few hundred values, that is plenty.
 class_name ConstraintDraws
 extends RefCounted
 
-## Every value is kept to 32 bits, as Marsaglia's generator is defined.
-const MASK: int = 0xFFFFFFFF
-## A state of zero would stay zero forever, so a seed of zero starts here.
-const SEED_FOR_ZERO: int = 1
+## The kernel's rule for a seed of zero, under the name the solver and the
+## collapse take their default seed from.
+const SEED_FOR_ZERO: int = GakXorshift.SEED_FOR_ZERO
 
-var _state: int = SEED_FOR_ZERO
+var _numbers: GakXorshift
 
 
-## A generator that starts from `from_seed`. The same seed gives the same
-## draws, in this language and in `gameaikit.constraints.draws`.
+## Draws that start from `from_seed`. The same seed gives the same draws, in
+## this language and in `gameaikit.constraints.draws`.
 func _init(from_seed: int = SEED_FOR_ZERO) -> void:
-	_state = from_seed & MASK
-	if _state == 0:
-		_state = SEED_FOR_ZERO
+	_numbers = GakXorshift.new(from_seed)
 
 
-## The next number, between 1 and 2^32 - 1. The other draws are made from it.
+## The next number, between 1 and 2^32 - 1, straight from the kernel's
+## generator. The other draws are made from it.
 func next() -> int:
-	_state ^= (_state << 13) & MASK
-	_state ^= _state >> 17
-	_state ^= (_state << 5) & MASK
-	return _state
+	return _numbers.next()
 
 
-## One of `count` choices, 0 to `count` - 1. A draw is spent only when there
-## is a choice: with one, the answer is 0 and the generator does not move.
+## One of `count` choices, 0 to `count` - 1, by the kernel's rule: a draw is
+## spent only when there is a choice, so both languages agree on a forced one.
 func index(count: int) -> int:
-	if count <= 1:
-		return 0
-	return next() % count
+	return _numbers.index(count)
 
 
 ## A copy of `items` in Fisher and Yates's order: from the last place down to

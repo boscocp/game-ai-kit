@@ -7,7 +7,7 @@ tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html
 invalidated_if: the kit's GridGraph, Pathfinder or GakXorshift signatures change, or ADR 0021 moves what the kernel holds
 teaches: none
-translation_of: 996de46d8573e8d8b402f0be965de3a29889a88a4c170cc08b3dfd088d5671d8
+translation_of: 985068dc2d88eafd5b50f28a31853575acec0ce08f95ad1926016218e515ccd3
 -->
 
 > English: [ai_core.md](ai_core.md). Os termos que ficam em inglês estão no
@@ -35,14 +35,15 @@ sorteie os mesmos números, sem depender de outro addon (invariante 2, ADR
   para que a mesma semente sorteie os mesmos números nas duas linguagens --
   o que o `RandomNumberGenerator` do Godot e o `random` do Python não
   prometem. `spec/vectors/core/` confere um com o outro. Ele não decide
-  nada; a busca de Monte Carlo, o filtro de partículas, o bandit e os
-  fantasmas do labirinto dizem cada um o que um sorteio significa (T109).
+  nada; a busca de Monte Carlo, o filtro de partículas, o bandit, os
+  fantasmas do labirinto e o *solver* de restrições dizem cada um o que um
+  sorteio significa (T109).
 
 ## Quando você precisa dele {#when}
 
 Copie `godot/addons/ai_core/` junto com qualquer addon cuja página peça --
-hoje `ai_search`, `ai_perception`, `ai_rts_core`, e `ai_adversarial` e
-`ai_bandit` pelo gerador. Um addon que nem raciocina sobre uma grade nem
+hoje `ai_search`, `ai_perception`, `ai_rts_core`, e `ai_adversarial`,
+`ai_bandit` e `ai_constraints` pelo gerador. Um addon que nem raciocina sobre uma grade nem
 sorteia números com semente (`ai_steering`, `ai_behaviour`) não precisa dele.
 
 ## Quando não usar {#when-not}
