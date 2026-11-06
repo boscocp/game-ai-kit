@@ -54,7 +54,9 @@ class WaveCollapse(ConstraintSolver):
         """The map (cell -> tile), from the first of `attempts` seeds that
         reaches no contradiction -- `first_seed`, then the next, and so on --
         or None when none does. `restarts` counts the seeds that failed, and
-        `contradictions` names the cell each ran out of tiles in."""
+        `contradictions` names the cell each ran out of tiles in. A
+        contradiction before the first collapse ends it at once: only the
+        tiles and the pins were in play, and no seed changes those."""
         self.restarts, self.contradictions = 0, []
         for attempt in range(self.attempts):
             found = self.attempt(self.first_seed + attempt)
@@ -62,6 +64,8 @@ class WaveCollapse(ConstraintSolver):
                 return found
             self.restarts += 1
             self.contradictions.append(self.contradiction)
+            if self.assignments == 0:
+                return None
         return None
 
     def attempt(self, seed: int) -> dict | None:
@@ -88,7 +92,13 @@ class WaveCollapse(ConstraintSolver):
     def _values(self, name: str) -> list:
         """One tile, drawn by weight: the weights of the tiles left, in the
         tile set's order, laid end to end and a draw landing in one. A cell
-        down to one tile spends no draw. One value, so nothing to go back to."""
+        down to one tile spends no draw. One value, so nothing to go back to.
+
+        The draws come from a second generator with the attempt's seed, so
+        they repeat the numbers the shuffle used. Harmless here -- the
+        shuffle's are taken modulo the places left, these modulo a sum of
+        weights, and a seed is only ever one map -- but a stream meant to be
+        independent should start from a seed of its own."""
         left = [tile for tile in self.weights if tile in self.domains[name]]
         if len(left) == 1:
             return left

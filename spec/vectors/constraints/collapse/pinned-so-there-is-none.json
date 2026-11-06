@@ -28,10 +28,8 @@
  "attempts": 3,
  "map": null,
  "collapsed": [],
- "restarts": 3,
+ "restarts": 1,
  "contradictions": [
-  "0,0",
-  "0,0",
   "0,0"
  ]
 }

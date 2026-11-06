@@ -47,8 +47,8 @@ def why_not_a_vector(vector: dict) -> str:
         return "C3 it pins a cell off the map, or to a tile not in its set"
     if len(vector["contradictions"]) != vector["restarts"]:
         return "C4 its restarts do not count the contradictions it names"
-    if (vector["map"] is None) != (vector["restarts"] == vector["attempts"]):
-        return "C5 it has a map and no attempt left, or no map and attempts to spare"
+    if vector["map"] is not None and vector["restarts"] >= vector["attempts"]:
+        return "C5 it has a map and no attempt left"
     if vector["map"] is not None and len(vector["collapsed"]) != len(names):
         return "C6 its map was finished without collapsing every cell"
     return ""
@@ -105,7 +105,7 @@ class CollapseVectors(unittest.TestCase):
     def test_a_broken_vector_is_refused_by_its_rule(self) -> None:
         sound = vectors()["three-colours-restart.json"]
         changes = [("C1", "mapp", None), ("C2", "tiles", [{"tile": "r", "weight": 0, "left_right": "", "up_down": ""}]),
-                   ("C3", "pinned", {"99,0": ["r"]}), ("C4", "restarts", 2), ("C5", "map", None),
+                   ("C3", "pinned", {"99,0": ["r"]}), ("C4", "restarts", 2), ("C5", "attempts", 1),
                    ("C6", "collapsed", [])]
         for rule, key, value in changes:
             broken = json.loads(json.dumps(sound))

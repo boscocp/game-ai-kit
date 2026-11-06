@@ -23,8 +23,8 @@ static func why_not_a_vector(vector: Dictionary) -> String:
 		return "C3 it pins a cell off the map, or to a tile not in its set"
 	if (vector["contradictions"] as Array).size() != int(vector["restarts"]):
 		return "C4 its restarts do not count the contradictions it names"
-	if (vector["map"] == null) != (int(vector["restarts"]) == int(vector["attempts"])):
-		return "C5 it has a map and no attempt left, or no map and attempts to spare"
+	if vector["map"] != null and int(vector["restarts"]) >= int(vector["attempts"]):
+		return "C5 it has a map and no attempt left"
 	if vector["map"] != null and (vector["collapsed"] as Array).size() != int(vector["width"]) * int(vector["height"]):
 		return "C6 its map was finished without collapsing every cell"
 	return ""

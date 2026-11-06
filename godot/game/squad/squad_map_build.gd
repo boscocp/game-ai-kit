@@ -18,8 +18,9 @@
 ## kept. It is a replay of the build that already happened, so watching it
 ## cannot build a different map from not watching it.
 ##
-## Complexity: a collapse of 126 cells is about 50 ms headless on the
-## author's machine; a step replays a few events.
+## Complexity: a map of 126 cells takes tens of milliseconds headless --
+## about 28 ms each over twenty maps on the author's machine -- and a step
+## replays a few events.
 ##
 ## When not to use it: as a map format. The map built is rows of the
 ## tactical letters, read by `SquadScenario`; this only makes them.

@@ -21,9 +21,12 @@
 ## options rather than their product (Game AI Pro 3, ch. 28). `actions`
 ## lists them for the side to move.
 ##
-## The map is the tactical map until N or B builds another (T96): the
-## ruleset keeps the last build, `map_build`, so the scene's view can show
-## it being made, and `SquadScenario` the map the rules read.
+## The map is the tactical map until N or B builds another (T96). The map
+## belongs to the ruleset (`map_rows`): a new ruleset -- the scene opened
+## again from the menu -- plays on the tactical map, and `start` hands the
+## rows to `SquadScenario`, where every rule of the game being played reads
+## them. The ruleset keeps the last build too, `map_build`, so the scene's
+## view can show it being made.
 ##
 ## When not to use it: overwatch or hunker down. Both are left out on
 ## purpose (`docs/godot/squad.md`): overwatch acts in the other side's turn,
@@ -31,6 +34,9 @@
 class_name SquadRuleset
 extends TacticalRuleset
 
+## The map this ruleset's games are played on, rows of `TacticalRules`'
+## letters; empty for the tactical map, as every ruleset starts.
+var map_rows: Array[String] = []
 ## The last map built (T96), or being shown built a step at a time; null
 ## while the squads fight on the tactical map.
 var map_build: SquadMapBuild
@@ -41,14 +47,21 @@ var watching_the_build: bool = false
 var _next_map_seed: int = 1
 
 
+## A ruleset on the tactical map, whatever map an earlier one built: a map
+## outlived the ruleset that built it before (wave 142's review).
+func _init() -> void:
+	SquadScenario.use_map(map_rows)
+
+
 ## "squad".
 func mode_name() -> String:
 	return "squad"  # not shown: a key, the screen words it
 
 
-## `SquadScenario.build`: four pieces a side on the tactical map, or on the
-## last map built.
+## `SquadScenario.build`: four pieces a side on this ruleset's map -- the
+## tactical one, or the last map built.
 func start() -> BoardState:
+	SquadScenario.use_map(map_rows)
 	return SquadScenario.build()
 
 
@@ -83,7 +96,8 @@ func finish_the_build() -> void:
 # the squads stay where they were.
 func _play_on_the_build() -> void:
 	if not map_build.rows.is_empty():
-		SquadScenario.use_map(map_build.rows)
+		map_rows = map_build.rows.duplicate()
+		SquadScenario.use_map(map_rows)
 
 
 ## The board's ruling on the route and the movement left -- except that a

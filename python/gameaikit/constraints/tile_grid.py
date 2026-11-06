@@ -4,7 +4,9 @@ Read `godot/addons/ai_constraints/tile_grid.gd` for the why. A *tile set*
 is a table written by hand: each tile's character, its weight, and the
 tiles it may stand beside left or right (`left_right`) and above or below
 (`up_down`). Nothing is learned from an example map; the adjacency is the
-table. `grid_problem` turns it into a `ConstraintProblem` that
+table. It is symmetric within an axis: `left_right` lists the tiles allowed
+on either side, so a tile set with a direction (a cliff's high side) cannot
+be written in it. `grid_problem` turns it into a `ConstraintProblem` that
 `WaveCollapse` solves, in the order the README of
 `spec/vectors/constraints/collapse/` states, which both languages keep.
 """

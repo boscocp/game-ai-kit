@@ -84,13 +84,15 @@ func test_a_contradiction_is_marked_where_it_happened_and_the_next_seed_tried() 
 	assert_array(collapse.contradictions).contains_exactly(["6,4"])
 
 
-func test_pins_that_cannot_stand_together_leave_no_map_and_say_so() -> void:
+# Wave 142's review: a contradiction before the first collapse is the table's
+# or the pins', which no seed changes, so the build stops at the first.
+func test_pins_that_cannot_stand_together_leave_no_map_and_say_so_once() -> void:
 	var collapse := WaveCollapse.new(TileGrid.problem(CHECKERS, Vector2i(3, 2), {"0,0": ["a"], "1,0": ["a"]}),
 			TileGrid.weights_of(CHECKERS), 1)
 	collapse.attempts = 3
 	assert_dict(collapse.solve()).is_empty()
-	assert_int(collapse.restarts).is_equal(3)
-	assert_array(collapse.contradictions).contains_exactly(["0,0", "0,0", "0,0"])
+	assert_int(collapse.restarts).is_equal(1)
+	assert_array(collapse.contradictions).contains_exactly(["0,0"])
 
 
 func test_rows_show_an_undecided_cell() -> void:

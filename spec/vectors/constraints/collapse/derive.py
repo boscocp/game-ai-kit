@@ -139,7 +139,9 @@ def run(vector):
         if found is not None:
             return dict(vector, map=found, collapsed=collapsed, restarts=number, contradictions=contradictions)
         contradictions.append(stuck)
-    return dict(vector, map=None, collapsed=[], restarts=vector["attempts"], contradictions=contradictions)
+        if not collapsed:
+            break
+    return dict(vector, map=None, collapsed=[], restarts=len(contradictions), contradictions=contradictions)
 
 
 def squad_pinned():

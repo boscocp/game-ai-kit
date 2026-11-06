@@ -8,10 +8,11 @@
 ## shield starts beside the rock at (2, 4), in full cover from the river.
 ##
 ## Since T96 the map can be another: N in the scene builds one by wave
-## function collapse (`SquadMapBuild`) and `use_map` puts it here, where
-## every rule of the mode reads it -- the squads' cells stay these, pinned
-## to open ground on every map built. `use_map([])` puts the tactical map
-## back. The starts stay where they are because the rules, the evaluation
+## function collapse (`SquadMapBuild`), the ruleset that built it keeps it
+## (`SquadRuleset.map_rows`), and `use_map` puts the map of the game being
+## played here, where every rule of the mode reads it -- the squads' cells
+## stay these, pinned to open ground on every map built. A new ruleset puts
+## the tactical map back (`use_map([])`). The starts stay where they are because the rules, the evaluation
 ## and the enemy's memory of the starts all read `RED_CELLS`.
 ##
 ## When not to use it: a layout of pieces. The cells are one layout; a mode

@@ -31,7 +31,7 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
 | [Partida de *bots*](#demo-botmatch) |  |  |  |  |  |  |  |  | [●](ai_perception.pt-BR.md) |  |  | [●](ai_search.pt-BR.md) |  | [●](ai_teamwork.pt-BR.md) | [●](ai_utility.pt-BR.md) |  |  |  |  |
 | [Um guarda, quatro jeitos de decidir](#demo-behaviour) |  |  | [●](ai_behaviour.pt-BR.md) |  | [◐](ai_fuzzy.pt-BR.md) |  |  |  | [●](ai_perception.pt-BR.md) |  |  | [●](ai_search.pt-BR.md) |  |  |  |  |  |  |  |
 | [Estratégia em tempo real](#demo-rts) |  |  | [●](ai_behaviour.pt-BR.md) |  |  |  |  |  |  | [●](ai_planning.pt-BR.md) | [●](ai_rts_core.pt-BR.md) |  |  |  |  |  |  |  |  |
-| [Tática](#demo-tactical) |  |  | [●](ai_behaviour.pt-BR.md) |  |  | [●](ai_learning.pt-BR.md) |  |  |  | [●](ai_planning.pt-BR.md) |  |  |  |  |  |  |  |  |  |
+| [Tática](#demo-tactical) | [●](ai_adversarial.pt-BR.md) |  | [●](ai_behaviour.pt-BR.md) | [●](ai_constraints.pt-BR.md) |  | [●](ai_learning.pt-BR.md) |  |  |  | [●](ai_planning.pt-BR.md) |  |  |  |  | [●](ai_utility.pt-BR.md) |  |  |  |  |
 | [Pac-Man, um labirinto pequeno](#demo-maze) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | [Convença o guarda a abrir a porta](#demo-talk) |  |  |  |  |  |  | [●](ai_llm.pt-BR.md) |  |  |  |  |  |  |  |  |  |  |  |  |
 | [Luta, modo treino](#demo-fighting) |  | [●](ai_bandit.pt-BR.md) |  |  |  | [●](ai_learning.pt-BR.md) |  | [●](ai_opponent.pt-BR.md) |  |  |  |  |  |  |  |  |  | [●](behaviour_cloning.pt-BR.md) |  |
@@ -79,8 +79,8 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
   - técnicas: ● [ai_behaviour](ai_behaviour.pt-BR.md) (HTN, máquina de estados); ● [ai_planning](ai_planning.pt-BR.md) (STRIPS sobre PDDL); ● [ai_rts_core](ai_rts_core.pt-BR.md) (*flow fields*).
   - escrito dentro do próprio exemplo: fila de prioridade de desejos, *utility* por região, mapa de influência.
 - <a id="demo-tactical"></a>**Tática**, `make demo-tactical` -- parecido com Advance Wars.
-  - teclas: C troca o computador, cuja próxima decisão aparece em rosa antes de o espaço jogá-la; S troca de lado.
-  - técnicas: ● [ai_behaviour](ai_behaviour.pt-BR.md) (máquina de estados, *behaviour tree*, GOAP, HTN); ● [ai_learning](ai_learning.pt-BR.md) (uma regressão treinada no Python); ● [ai_planning](ai_planning.pt-BR.md) (STRIPS sobre PDDL).
+  - teclas: C troca o computador, cuja próxima decisão aparece em rosa antes de o espaço jogá-la; S troca de lado; no XCOM, N um mapa novo e B a construção dele, uma célula por vez.
+  - técnicas: ● [ai_adversarial](ai_adversarial.pt-BR.md) (*MCTS* (busca em árvore de Monte Carlo), *expectiminimax* com uma avaliação escrita à mão); ● [ai_behaviour](ai_behaviour.pt-BR.md) (máquina de estados, *behaviour tree*, GOAP, HTN); ● [ai_constraints](ai_constraints.pt-BR.md) (*wave function collapse*); ● [ai_learning](ai_learning.pt-BR.md) (uma regressão treinada no Python); ● [ai_planning](ai_planning.pt-BR.md) (STRIPS sobre PDDL); ● [ai_utility](ai_utility.pt-BR.md) (ações pesadas por *utility*).
   - escrito dentro do próprio exemplo: regras escritas à mão, *lookahead* com chances exatas, mapa de influência.
 - <a id="demo-maze"></a>**Pac-Man, um labirinto pequeno**, `make demo-maze` -- parecido com Pac-Man, você contra o Blinky.
   - teclas: V a visão dos fantasmas: o alvo de cada um e a distância de cada caminho; G traz o Pinky; C entrega o Pac-Man ao MDP: o valor de cada casa, quanto vale cada movimento.
@@ -96,10 +96,10 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
 
 ## Técnica por técnica {#by-technique}
 
-- <a id="ai_adversarial"></a>[ai_adversarial](ai_adversarial.pt-BR.md) -- a melhor jogada contra quem responde. Veja em: ● [`make run`](#run) (*minimax* com *alpha-beta*).
+- <a id="ai_adversarial"></a>[ai_adversarial](ai_adversarial.pt-BR.md) -- a melhor jogada contra quem responde. Veja em: ● [`make run`](#run) (*minimax* com *alpha-beta*); ● [`make demo-tactical`](#demo-tactical) (*MCTS* (busca em árvore de Monte Carlo), *expectiminimax* com uma avaliação escrita à mão).
 - <a id="ai_bandit"></a>[ai_bandit](ai_bandit.pt-BR.md) -- que opção tentar agora? Veja em: ● [`make demo-fighting`](#demo-fighting) (um *bandit*, *UCB1*).
 - <a id="ai_behaviour"></a>[ai_behaviour](ai_behaviour.pt-BR.md) -- o que fazer em seguida. Veja em: ● [`make demo-behaviour`](#demo-behaviour) (máquina de estados, *behaviour tree*, GOAP, HTN); ● [`make demo-rts`](#demo-rts) (HTN, máquina de estados); ● [`make demo-tactical`](#demo-tactical) (máquina de estados, *behaviour tree*, GOAP, HTN).
-- <a id="ai_constraints"></a>[ai_constraints](ai_constraints.pt-BR.md) -- o que precisa valer, e um *solver* que acha. Veja em: ● [`make demo-infiltration`](#demo-infiltration) (satisfação de restrições, AC-3 e *backtracking*).
+- <a id="ai_constraints"></a>[ai_constraints](ai_constraints.pt-BR.md) -- o que precisa valer, e um *solver* que acha. Veja em: ● [`make demo-infiltration`](#demo-infiltration) (satisfação de restrições, AC-3 e *backtracking*); ● [`make demo-tactical`](#demo-tactical) (*wave function collapse*).
 - <a id="ai_fuzzy"></a>[ai_fuzzy](ai_fuzzy.pt-BR.md) -- quanto, aos poucos. Veja em: ● [`make demo-stealth`](#demo-stealth) (lógica *fuzzy*); ● [`make demo-infiltration`](#demo-infiltration) (lógica *fuzzy*); ◐ [`make demo-behaviour`](#demo-behaviour) (por `stealth`).
 - <a id="ai_learning"></a>[ai_learning](ai_learning.pt-BR.md) -- usando o que o Python aprendeu. Veja em: ○ [`make run`](#run) (declarada no manifesto, nunca alcançada pela cena); ◐ [`make demo-skirmish`](#demo-skirmish) (por `tactical`; uma regressão treinada no Python); ● [`make demo-tactical`](#demo-tactical) (uma regressão treinada no Python); ● [`make demo-fighting`](#demo-fighting) (a consulta de casos do *ghost*).
 - <a id="ai_llm"></a>[ai_llm](ai_llm.pt-BR.md) -- um modelo de linguagem atrás de um validador. Veja em: ● [`make demo-talk`](#demo-talk) (um modelo de linguagem lendo atos de discurso, atrás de um validador).
@@ -110,7 +110,7 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
 - <a id="ai_search"></a>[ai_search](ai_search.pt-BR.md) -- achar um caminho. Veja em: ● [`make demo-skirmish`](#demo-skirmish) (A*); ● [`make demo-search`](#demo-search) (BFS, DFS, Dijkstra, A*); ● [`make demo-stealth`](#demo-stealth) (A*); ● [`make demo-infiltration`](#demo-infiltration) (A*); ● [`make demo-botmatch`](#demo-botmatch) (A*); ● [`make demo-behaviour`](#demo-behaviour).
 - <a id="ai_steering"></a>[ai_steering](ai_steering.pt-BR.md) -- para que lado empurrar, e com que força. Veja em: ● [`make demo-steering`](#demo-steering) (*seek*, *arrive*, *pursue*, *avoid*); ● [`make demo-racing`](#demo-racing) (*seek*); ● [`make demo-racing3d`](#demo-racing3d) (controlador PID, *heat line*).
 - <a id="ai_teamwork"></a>[ai_teamwork](ai_teamwork.pt-BR.md) -- um time que divide o trabalho. Veja em: ● [`make demo-infiltration`](#demo-infiltration) (uma busca dividida, árbitro de papéis); ● [`make demo-botmatch`](#demo-botmatch) (posições táticas com marcação, comandante do time sobre a influência, confiança do esquadrão e recuo em ondas).
-- <a id="ai_utility"></a>[ai_utility](ai_utility.pt-BR.md) -- pesar todas as opções de uma vez. Veja em: ● [`make demo-infiltration`](#demo-infiltration) (ações pesadas por *utility*); ● [`make demo-botmatch`](#demo-botmatch) (ações pesadas por *utility*).
+- <a id="ai_utility"></a>[ai_utility](ai_utility.pt-BR.md) -- pesar todas as opções de uma vez. Veja em: ● [`make demo-infiltration`](#demo-infiltration) (ações pesadas por *utility*); ● [`make demo-botmatch`](#demo-botmatch) (ações pesadas por *utility*); ● [`make demo-tactical`](#demo-tactical) (ações pesadas por *utility*).
 - <a id="menace"></a>[MENACE](menace.pt-BR.md) -- a máquina de caixas de fósforo que aprende jogo da velha. Veja em: ● [`make demo-tictactoe`](#demo-tictactoe) (as caixas de fósforo do MENACE).
 - <a id="learned_evaluation"></a>[Avaliação aprendida](learned_evaluation.pt-BR.md) -- dar nota a uma posição com pesos ajustados aos resultados. Veja em: ● [`make run`](#run) (uma avaliação aprendida).
 - <a id="behaviour_cloning"></a>[Behaviour cloning](behaviour_cloning.pt-BR.md) -- o lutador que joga como você. Veja em: ● [`make demo-fighting`](#demo-fighting) (*behaviour cloning*).

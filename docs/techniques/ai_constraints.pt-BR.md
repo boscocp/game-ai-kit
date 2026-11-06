@@ -7,7 +7,7 @@ tier: 1
 source: https://aima.cs.berkeley.edu/contents.html ; book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 6, Constraint Satisfaction Problems ; https://github.com/mxgmn/WaveFunctionCollapse
 invalidated_if: the kit's ConstraintProblem, ConstraintSolver or WaveCollapse signature changes, or the infiltration demo or the XCOM-style mode stops building with them
 teaches: constraint-satisfaction
-translation_of: b972f23a6ca160b2c68df8f2c319e7a7a149b2089ffcbb7178a2d90c73205449
+translation_of: 9c99ea7c46c339fafb292ed13516efc774e6362db9543884beccc6e235c9e10b
 -->
 
 > English: [ai_constraints.md](ai_constraints.md). Os termos que ficam em
@@ -40,8 +40,13 @@ a de Shannon, sobre os pesos dos *tiles* que ela ainda pode ser,
 `ln W - sum(w ln w) / W` -- onde o *solver* pega a de menos valores; seu
 valor é um *tile* sorteado pelo peso, não uma lista de valores a tentar um
 a um; e quando a propagação esvazia uma célula -- uma contradição -- ele não
-volta atrás, recomeça da *seed* seguinte e conta os recomeços. A lição é que
-o WFC não é um algoritmo à parte: é um CSP com uma ordem própria e sem
+volta atrás, recomeça da *seed* seguinte e conta os recomeços -- a não ser
+que nenhuma célula tenha colapsado ainda, quando só os *tiles* e as fixações
+estavam em jogo e nenhuma *seed* ajudaria. Uma diferença do mxgmn, que
+observa "a menor entropia não nula": em termos de CSP, uma célula reduzida a
+um *tile* ainda não foi atribuída, então é escolhida primeiro, sem sorteio,
+onde o mxgmn a conta como já observada. O mapa sai o mesmo. A lição é que o
+WFC não é um algoritmo à parte: é um CSP com uma ordem própria e sem
 *backtracking*.
 
 ## Quando não usar {#when-not}
@@ -66,7 +71,10 @@ consegue jogar) ou declare a regra como restrição global e deixe o
 recomeçar tudo por uma contradição custe mais que voltar atrás. E não quando
 os mapas devem parecer uma imagem que você já tem: isso é o modelo
 *overlapping* do mxgmn, que aprende a vizinhança de um exemplo; este é o
-modelo *simple tiled*, a quem ela é dita.
+modelo *simple tiled*, a quem ela é dita. E não para um *tile* com direção
+-- terreno alto só à esquerda de um penhasco --, porque `left_right` lista
+os *tiles* permitidos de qualquer dos lados: a vizinhança aqui é simétrica
+em cada eixo.
 
 ## Onde ver {#watch}
 

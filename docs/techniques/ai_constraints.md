@@ -37,8 +37,13 @@ of the tiles it may still be, `ln W - sum(w ln w) / W` -- where the solver
 takes the fewest values; its value is one tile drawn by weight, not a list
 of values to try in turn; and when propagation empties a cell -- a
 *contradiction* -- it does not go back but starts again from the next seed,
-counting the restarts. The lesson is that WFC is not a separate algorithm:
-it is a CSP with a particular order and no backtracking.
+counting the restarts -- unless no cell had collapsed yet, when only the
+tiles and the pins were in play and no seed would help. One difference from
+mxgmn, who observes "the minimal nonzero entropy": in CSP terms a cell down
+to one tile is still unassigned, so it is chosen first, with no draw, where
+mxgmn counts it as already observed. The map is the same either way. The
+lesson is that WFC is not a separate algorithm: it is a CSP with a
+particular order and no backtracking.
 
 ## When not to use it {#when-not}
 
@@ -61,7 +66,10 @@ rule as a global constraint and let `ConstraintSolver` backtrack. Not on a
 map so large that restarting the whole of it on one contradiction costs more
 than backtracking would. And not when the maps should look like a picture
 you already have: that is mxgmn's *overlapping* model, which learns the
-adjacency from an example; this is his *simple tiled* model, told it.
+adjacency from an example; this is his *simple tiled* model, told it. And
+not for a tile with a direction -- high ground only to a cliff's left --
+since `left_right` lists the tiles allowed on either side: adjacency here
+is symmetric within an axis.
 
 ## Where to watch it {#watch}
 

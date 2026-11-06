@@ -180,8 +180,8 @@
         "pt-BR": "Advance Wars"
       },
       "keys": {
-        "en": "C changes the computer, whose next decision is drawn in pink before space plays it; S swaps sides",
-        "pt-BR": "C troca o computador, cuja próxima decisão aparece em rosa antes de o espaço jogá-la; S troca de lado"
+        "en": "C changes the computer, whose next decision is drawn in pink before space plays it; S swaps sides; in XCOM, N a new map and B its build, a cell at a time",
+        "pt-BR": "C troca o computador, cuja próxima decisão aparece em rosa antes de o espaço jogá-la; S troca de lado; no XCOM, N um mapa novo e B a construção dele, uma célula por vez"
       }
     },
     "demo-fighting": {
@@ -332,6 +332,14 @@
       "en": "STRIPS over PDDL",
       "pt-BR": "STRIPS sobre PDDL"
     },
+    "monte-carlo-tree-search": {
+      "en": "Monte Carlo tree search",
+      "pt-BR": "*MCTS* (busca em árvore de Monte Carlo)"
+    },
+    "expectiminimax": {
+      "en": "expectiminimax with a hand-written evaluation",
+      "pt-BR": "*expectiminimax* com uma avaliação escrita à mão"
+    },
     "lookahead": {
       "en": "lookahead with exact odds",
       "pt-BR": "*lookahead* com chances exatas"
@@ -423,6 +431,10 @@
     "constraints": {
       "en": "constraint satisfaction, AC-3 and backtracking",
       "pt-BR": "satisfação de restrições, AC-3 e *backtracking*"
+    },
+    "wave-function-collapse": {
+      "en": "wave function collapse",
+      "pt-BR": "*wave function collapse*"
     },
     "discourse-acts": {
       "en": "a language model reading discourse acts, behind a validator",

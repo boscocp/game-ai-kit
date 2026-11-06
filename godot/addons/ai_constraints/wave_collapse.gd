@@ -13,8 +13,10 @@
 ##    `log(W) - sum(w log w) / W` over the weights w of the tiles it may
 ##    still be (W their sum): fewest tiles, and of cells with as many, the
 ##    one where one tile is likeliest. A cell down to one tile is certain,
-##    entropy 0, and goes first. Ties go to the seeded order, as the
-##    solver's do.
+##    entropy 0, and goes first, with no draw: in CSP terms it is still
+##    unassigned. mxgmn observes "the minimal nonzero entropy" and counts
+##    such a cell as already observed; the map is the same either way. Ties
+##    go to the seeded order, as the solver's do.
 ## 2. **The value: one tile, drawn by weight.** Not the least constraining
 ##    value, and not a list to try in turn: one draw, each tile as likely as
 ##    its weight among the tiles left. That draw is what makes the maps
@@ -72,7 +74,9 @@ func _init(of_problem: ConstraintProblem, tile_weights: Dictionary, from_seed: i
 
 ## The map ("x,y" -> tile), from the first of `attempts` seeds that reaches
 ## no contradiction -- `first_seed`, then the next, and so on -- or {} when
-## none does. `restarts` and `contradictions` say how the others ended.
+## none does. `restarts` and `contradictions` say how the others ended. A
+## contradiction before the first collapse ends it at once: only the tiles
+## and the pins were in play, and no seed changes those.
 func solve() -> Dictionary:
 	restarts = 0
 	contradictions.clear()
@@ -82,6 +86,8 @@ func solve() -> Dictionary:
 			return found
 		restarts += 1
 		contradictions.append(contradiction)
+		if assignments == 0:
+			return {}
 	return {}
 
 
@@ -135,7 +141,12 @@ func _select() -> String:
 
 # One tile, drawn by weight: the weights of the tiles left, in the tile
 # set's order, laid end to end, and a draw landing in one. A cell down to one
-# tile spends no draw. One value, so there is nothing to go back to.
+# tile spends no draw. One value, so there is nothing to go back to. The
+# draws come from a second generator with the attempt's seed (`attempt`), so
+# they repeat the numbers the shuffle used: harmless here -- the shuffle's
+# are taken modulo the places left, these modulo a sum of weights, and a
+# seed is only ever one map -- but a stream meant to be independent should
+# start from a seed of its own.
 func _values(name: String) -> Array:
 	var left: Array = tiles_left(name)
 	if left.size() == 1:

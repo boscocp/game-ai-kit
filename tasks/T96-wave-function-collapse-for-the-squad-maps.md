@@ -84,3 +84,11 @@ References, opened on 2026-10-26: mxgmn, *WaveFunctionCollapse*, README
   (`docs/godot/squad.md`) its section. The vectors live in a folder of their
   own beside the solver's, read by the same runner and target, so no
   Makefile line was needed.
+- **The review of wave 142 widened it again.** The menu's card
+  (`godot/menu/catalogue.json`, `godot/locale/menu.csv`), the demo
+  catalogue (`docs/techniques/games.json`, the generated pages and READMEs),
+  `make demo-tactical`'s help line and `scripts/catalogue.py` now know the
+  XCOM mode's N, B and wave function collapse. The catalogue walks from a
+  mode's ruleset as `check_demos.py` already did. `ConstraintDraws`' header
+  is corrected, and its fold into `GakXorshift` is T135. The review is in
+  `docs/reviews/`.

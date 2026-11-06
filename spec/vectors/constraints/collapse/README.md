@@ -58,8 +58,11 @@ agree:
    of rule 3;
 7. a cell left with no tile, in any AC-3 run, is a contradiction: the
    attempt ends there, nothing is undone or tried again, and the next
-   attempt starts from the next seed, at rule 2. After `attempts` failed
-   ones there is no map, and `restarts` equals `attempts`.
+   attempt starts from the next seed, at rule 2 -- unless no cell had been
+   collapsed yet: then only the tiles and the pins were in play, no seed
+   changes them, and there is no map after that one attempt. After
+   `attempts` failed ones there is no map either, and `restarts` equals
+   `attempts`.
 
 The draws are Marsaglia's 32-bit xorshift, `ConstraintDraws`; seed 1 starts
 270369, and seed 0 is seed 1.
@@ -82,7 +85,7 @@ collapses, no restart, the map `bab / aba / bab`, as the file claims.
 The others: `heavy-and-light` draws one tile nine times in ten and shows
 the light one once in eight cells; `pinned-so-there-is-none` pins two
 neighbouring cells to the same checkers tile, so AC-3 empties (0,0) before
-anything collapses, on every seed; `three-colours-restart` has three tiles,
+anything collapses, and the build stops after that one attempt (rule 7); `three-colours-restart` has three tiles,
 none beside itself, and seed 30 runs out at (6,4) before seed 31 builds
 eight by eight; `three-colours-two-restarts` runs out twice on the squad's
 14 by 9; and `squad-map-seed-1` and `-2` are the XCOM-style mode's own tile
@@ -99,8 +102,7 @@ mxgmn's README says of most tile sets.
 
 A vector with a key nobody reads (C1), tiles that are not a tile set (C2),
 a pin off the map or to a tile not in the set (C3), restarts that do not
-count the contradictions (C4), a map with no attempt left or no map with
-attempts to spare (C5), or a map finished without collapsing every cell
+count the contradictions (C4), a map with no attempt left (C5), or a map finished without collapsing every cell
 (C6), is refused rather than half-checked. Three planted collapses must
 fail, in both languages: one that takes the cell of most entropy (rule 4),
 one that skips propagation (rules 3 and 6), and one blind to a

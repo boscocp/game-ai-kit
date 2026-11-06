@@ -10,6 +10,12 @@
 ## mxgmn's *overlapping* model learns its adjacency from a picture, and this
 ## is his *simple tiled* model, which is told it.
 ##
+## Adjacency here is **symmetric** within an axis: `left_right` lists the
+## tiles allowed on *either* side, so a table cannot say "high ground only to
+## the cliff's left". mxgmn's simple tiled model has directed pairs; a tile
+## set with a direction needs `left` and `right` (and `up` and `down`) lists,
+## which this does not have.
+##
 ## A pair is said from both sides or not at all. A table in which water may
 ## have a bridge below it and the bridge may not have water above it is
 ## refused by `why_not`, not quietly made to agree: the one who wrote it

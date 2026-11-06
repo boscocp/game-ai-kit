@@ -58,7 +58,7 @@ func test_a_broken_vector_is_refused_by_its_rule() -> void:
 	var sound: Dictionary = _vector("three-colours-restart.json")
 	var changes: Array[Array] = [["C1", "mapp", null],
 			["C2", "tiles", [{"tile": "r", "weight": 0, "left_right": "", "up_down": ""}]],
-			["C3", "pinned", {"99,0": ["r"]}], ["C4", "restarts", 2], ["C5", "map", null], ["C6", "collapsed", []]]
+			["C3", "pinned", {"99,0": ["r"]}], ["C4", "restarts", 2], ["C5", "attempts", 1], ["C6", "collapsed", []]]
 	for change: Array in changes:
 		var broken: Dictionary = sound.duplicate(true)
 		broken[change[1]] = change[2]
