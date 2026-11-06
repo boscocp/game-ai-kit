@@ -18,7 +18,7 @@ teaches: learning
 
 `addons/ai_core/` and `addons/ai_learning/`: the model, its file and a case
 table, and nothing about any board. From a release, unzip both zips into
-`res://addons/`. The addon only reads a weights file; it has no training code,
+the project's root, `res://`. The addon only reads a weights file; it has no training code,
 and `make lint-no-training` keeps it that way.
 
 The rest of this page is the tactical board's **adapter**, which lives with

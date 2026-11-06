@@ -1184,7 +1184,7 @@ export: import ## The menu as a Linux x86_64 executable in dist/game-ai-kit-linu
 	@$(PYTHON) scripts/export.py
 
 .PHONY: release
-release: export ## One zip per addon, the Python wheel and the executable into dist/, attribution checked
+release: export ## One zip per addon, the kit's zip, the Python wheel and the executable into dist/, attribution checked
 	@# The build does not get to say it attributed anything: the same gate
 	@# that reads the repository opens every archive it wrote and looks.
 	@# `release.py --skip-notice` builds a release that must fail it. The

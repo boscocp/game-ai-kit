@@ -13,7 +13,9 @@ in the artifacts. So:
     Asset Library ships one addon folder at a time and a user who installs only
     `ai_search` must still receive the attribution;
   * every zip produced under dist/ contains both, at its root or in its one
-    top folder;
+    top folder -- or, for a zip laid out as Godot's store installs it,
+    `addons/<name>/...`, inside each `addons/<name>/` it holds, with no
+    member outside those folders (T149);
   * every wheel under dist/ carries both in its `.dist-info/licenses/`, which
     is where PEP 639 puts a wheel's licence files and where pip installs them.
   * `python/`, once it has a `pyproject.toml`, carries both, byte for byte the
@@ -140,6 +142,10 @@ def check_addons(repo: pathlib.Path) -> list[str]:
 # the list, so one dropped into dist/ was never examined.
 TAR_SUFFIXES = (".tar", ".tar.gz", ".tgz", ".tar.bz2", ".tar.xz")
 
+# The one top folder Godot's store installer keeps (T149): an addon zip is
+# laid out `addons/<name>/...`, so it lands in `res://addons/<name>/`.
+ADDONS = "addons"
+
 # Everything reading an archive's bytes can raise when the archive is broken.
 # Each of these escaped as a traceback and exit 1 -- the findings code -- once
 # the gate began reading content: an encrypted entry, an unknown compression
@@ -234,6 +240,8 @@ def check_release_archives(repo: pathlib.Path) -> list[str]:
     a vendored dependency's licence satisfied it. The files must sit at the
     archive's own root, or at the root of its single top-level folder, which is
     where someone unpacking it will look. Tarballs were not examined at all.
+    An addon zip is laid out `addons/<name>/` for Godot's store, and there
+    the place is each `addons/<name>/` folder (`addon_places`).
 
     And they must be *this repository's* files, byte for byte (L10). The root
     copies get a content check; the archive copies used to get a size check,
@@ -265,17 +273,51 @@ def check_one_archive(archive: pathlib.Path, baseline: dict[str, bytes]) -> list
         located = wheel_licences(archive.name, counted)
         if located is None:
             return findings + [f"L9 {archive.name} is not named like a wheel"]
-        code, where = "L9", "in its .dist-info/licenses/"
+        places = {"in its .dist-info/licenses/": located}
+        code = "L9"
     else:
-        located = attributed_files(paths, counted)
-        code, where = "L5", "at its root or in its top folder"
-    for name in REQUIRED_FILES:
-        if name not in located:
-            findings.append(f"{code} {archive.name} has no {name} {where}")
-        elif name in baseline and located[name] != baseline[name]:
-            findings.append(f"L10 {archive.name} carries a {name} that is not the one "
-                            "committed -- rebuild it with `make release`")
+        places, outside = addon_places(paths, counted)
+        findings += [f"L11 {archive.name} has a member outside its {ADDONS}/<name>/ folders: {path}"
+                     for path in outside]
+        code = "L5"
+    for where, located in places.items():
+        for name in REQUIRED_FILES:
+            if name not in located:
+                findings.append(f"{code} {archive.name} has no {name} {where}")
+            elif name in baseline and located[name] != baseline[name]:
+                findings.append(f"L10 {archive.name} carries a {name} {where} that is not the "
+                                "one committed -- rebuild it with `make release`")
     return findings
+
+
+def addon_places(paths: list[pathlib.PurePosixPath],
+                 counted: dict[pathlib.PurePosixPath, bytes]
+                 ) -> tuple[dict[str, dict[str, bytes]], list[pathlib.PurePosixPath]]:
+    """Where an archive's attribution must sit, what each place holds, and what strays.
+
+    Godot's store installer keeps an archive's top folder only when it is
+    `addons/`, and unpacks into `res://` (docs/howto/publish.md), so an addon
+    zip is laid out `addons/<name>/...` -- one addon, or the kit's every one.
+    Each `addons/<name>/` is an addon a person may keep alone, so each must
+    carry both files; a member anywhere else, such as `addons/LICENSE`, would
+    land in the project beside the addons, and is refused (L11). An archive
+    with no `addons/` at its top keeps the older rule: one place, its root or
+    its one top folder -- the exported game's zip is laid out that way.
+    """
+    if not any(path.parts[0] == ADDONS for path in paths):
+        return {"at its root or in its top folder": attributed_files(paths, counted)}, []
+    folders = sorted({path.parts[1] for path in paths
+                      if path.parts[0] == ADDONS and len(path.parts) > 2})
+    places = {f"in {ADDONS}/{folder}/": {path.name: data for path, data in counted.items()
+                                         if path.parts[:2] == (ADDONS, folder) and len(path.parts) == 3}
+              for folder in folders}
+    # `addons/` holding nothing is not an archive with nothing to attribute:
+    # it is an addon zip that lost its addon.
+    places = places or {f"in {ADDONS}/<name>/": {}}
+    escaped = [path for path in paths if path.is_absolute() or ".." in path.parts]
+    outside = [path for path in paths if path not in escaped
+               and (path.parts[0] != ADDONS or (len(path.parts) == 2 and path.parts[1] not in folders))]
+    return places, outside
 
 
 def attributed_files(paths: list[pathlib.PurePosixPath],
@@ -941,6 +983,7 @@ def self_test() -> int:
         expect("placeholder LICENSE", quiet(placeholder), 1)
 
         art_cases(root, make_repo, expect, expect_only, quiet)
+        failures.extend(store_layout_cases(root, make_repo, ROOT_TEXT))
 
         script = pathlib.Path(__file__).resolve()
         extra = subprocess.run(
@@ -952,6 +995,59 @@ def self_test() -> int:
         print(f"self-test FAIL: {failure}")
     print(f"self-test: {'ok' if not failures else str(len(failures)) + ' failure(s)'}")
     return 1 if failures else 0
+
+
+# --- the store layout's planted cases (T149) ----------------------------------
+
+
+def store_layout_cases(root: pathlib.Path, make_repo, root_text: dict[str, str]) -> list[str]:
+    """An `addons/<name>/` zip passes whole, and each planted fault fails on its own rules.
+
+    Each case names the codes it must print, and only those: the LICENSE
+    moved up to `addons/` must fail both as a stray member (L11) and as a
+    folder without its LICENSE (L5), and a kit missing one NOTICE must name
+    that folder and no other.
+    """
+    failures = []
+
+    def zipped(name: str, members: dict[str, str]) -> pathlib.Path:
+        repo = make_repo(root / f"store-{name}")
+        (repo / "dist").mkdir()
+        with zipfile.ZipFile(repo / "dist" / f"{name}.zip", "w") as bundle:
+            for member, text in members.items():
+                bundle.writestr(member, text)
+        return repo
+
+    def attributed(folder: str, skip: str = "") -> dict[str, str]:
+        return {f"addons/{folder}/{required}": root_text[required]
+                for required in REQUIRED_FILES if required != skip}
+
+    code = {"addons/ai_search/astar.gd": "extends Node\n"}
+    kit = {"addons/": "", "addons/ai_core/": "", **attributed("ai_core"), **attributed("ai_search"),
+           **code}
+    cases = (
+        ("one addon", attributed("ai_search") | code, set(), ""),
+        ("the kit, with folder entries", kit, set(), ""),
+        ("LICENSE in addons/, not in addons/ai_search/",
+         {"addons/LICENSE": root_text["LICENSE"], **attributed("ai_search", skip="LICENSE"), **code},
+         {"L5", "L11"}, "addons/LICENSE"),
+        ("the kit without NOTICE in one folder",
+         {**attributed("ai_core"), **attributed("ai_search", skip="NOTICE"), **code}, {"L5"},
+         "NOTICE in addons/ai_search/"),
+        ("a member outside addons/",
+         {**attributed("ai_search"), **code, "README.md": "read me\n"}, {"L11"}, "README.md"),
+        ("addons/ holding no addon", {"addons/": ""}, {"L5"}, "addons/<name>/"),
+    )
+    for number, (label, members, codes, named) in enumerate(cases):
+        printed = io.StringIO()
+        with contextlib.redirect_stdout(printed):
+            got = run(zipped(f"case{number}", members))
+        lines = printed.getvalue().splitlines()
+        if got != (1 if codes else 0) or {line.split()[0] for line in lines} != codes:
+            failures.append(f"{label}: expected {sorted(codes) or 'a pass'}, got exit {got}: {lines}")
+        elif named and not any(named in line for line in lines):
+            failures.append(f"{label}: the findings name {named} ({lines})")
+    return failures
 
 
 # --- the art rule's planted cases --------------------------------------------

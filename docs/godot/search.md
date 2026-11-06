@@ -23,7 +23,7 @@ from any script without `load` or `preload`. Run the project once (or
 `--import` headless) after copying, so the class list is rebuilt.
 
 From a release, unzip `ai_core-<version>.zip` and `ai_search-<version>.zip`
-into `res://addons/`.
+into the project's root, `res://`.
 
 ## A board, and a search on it
 

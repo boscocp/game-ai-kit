@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 11, classical planning ; https://en.wikipedia.org/wiki/Stanford_Research_Institute_Problem_Solver
 invalidated_if: the kit's StripsAction, WorldState, StripsPlanner, HeuristicPlanner or PlanResult signatures change, or the demos that use them are renamed
 teaches: planning
-translation_of: b4470191f5e02bfe11a2722e999daa4b141f4a7a253580e719d5ff1efe9ec845
+translation_of: ce6484cc7bcd6b50a70cbd70ff1d4eb231e1086531e5532fdd282733815b09de
 -->
 
 > English: [ai_planning.md](ai_planning.md). Os termos que ficam em inglês
@@ -68,8 +68,8 @@ partir do tabuleiro. Os ajustes que importam:
 
 ### O que copiar {#copy}
 
-Pela biblioteca: descompacte o `ai_planning-<version>.zip` no
-`res://addons/` do seu projeto -- [usando a
+Pela biblioteca: descompacte o `ai_planning-<version>.zip` na
+raiz do seu projeto, `res://` -- [usando a
 biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
 também. Ou copie de um clone:
 

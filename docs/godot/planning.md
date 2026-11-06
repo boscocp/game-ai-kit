@@ -24,7 +24,7 @@ either from your own code.
 
 `addons/ai_planning/` on its own -- the planner needs nothing from `ai_core`,
 because it plans over facts rather than over a board. From a release, unzip
-`ai_planning-<version>.zip` into `res://addons/`.
+`ai_planning-<version>.zip` into the project's root, `res://`.
 
 ## A plan, from the game's own domain
 

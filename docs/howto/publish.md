@@ -73,15 +73,16 @@ source archive of everything but the addons).
 - The dialog lets the person untick files, untick *Ignore Asset Root*, and
   *Change Install Folder*.
 
-So `ai_search-0.1.0.zip`, whose single top folder is `ai_search/`, installs
+So `ai_search-0.1.0.zip`, while its single top folder was `ai_search/`, installed
 from the store as `res://astar.gd`, `res://LICENSE`, `res://NOTICE`,
 `res://README.md`, `res://VERSION`... at the project's root, unless the
-person changes both settings. The classes still register (`class_name` works
-anywhere), but the layout is wrong, the attribution lands on top of the
-project's own files, and two addons installed this way collide on
+person changed both settings. The classes still registered (`class_name` works
+anywhere), but the layout was wrong, the attribution landed on top of the
+project's own files, and two addons installed this way collided on
 `res://LICENSE`, `NOTICE`, `README.md` and `VERSION`. A zip whose top folder
 is `addons/` installs as `res://addons/ai_search/...` with no change. This
-is the one rule found that does not fit what `make release` builds; see
+was the one rule found that did not fit what `make release` built; since
+T149 every zip is laid out `addons/ai_<name>/` -- see
 [what was decided](#what-did-not-fit-and-what-was-decided).
 
 ### PyPI
@@ -180,16 +181,19 @@ route.
    from the editor's store tab, on 4.7.2, and look where the files land.
 6. Submit. It enters the review queue.
 
-Until T149 changes the layout, step 5 shows the files at `res://`; do not
-submit before it is fixed, or tell the person in the description to untick
-*Ignore Asset Root* and set the folder to `res://addons/`.
+The zip to upload is `dist/game-ai-kit-addons-<version>.zip`, the whole kit
+as one asset (decision 2 below). Since T149 every zip is laid out
+`addons/ai_<name>/`, the one top folder the installer keeps, so step 5
+should show every file under `res://addons/ai_<name>/` and nothing at
+`res://`. `release.py --self-test` holds the layout to the installer's rule
+as read in its source; only step 5 runs the installer itself.
 
 ## What did not fit, and what was decided
 
 The owner decided all four on 2026-11-06 ("pode seguir o recomendado nas 5
-decisões"); the first three are
-[T149](../../tasks/T149-addon-zips-laid-out-for-the-store.md)'s, before
-anything is submitted to the store.
+decisões"); the first three were
+[T149](../../tasks/T149-addon-zips-laid-out-for-the-store.md)'s, done in
+wave 153.
 
 1. **The zip's top folder: `addons/ai_<name>/`.** The store's installer
    skips a single top folder unless it is `addons/`. The change touches

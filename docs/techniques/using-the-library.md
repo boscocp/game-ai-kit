@@ -76,7 +76,8 @@ needs only Python and git -- no Godot:
 python3 game-ai-kit/scripts/release.py --build --output library
 ```
 
-`library/dist/` then holds one `<addon>-<version>.zip` per addon and
+`library/dist/` then holds one `<addon>-<version>.zip` per addon,
+`game-ai-kit-addons-<version>.zip` with every addon in one, and
 `gameaikit-<version>-py3-none-any.whl`. On the day the kit is published,
 the same files are what you download. (`make release` inside the clone is
 the full release: it also exports the menu game as an executable, so it
@@ -86,12 +87,14 @@ needs `make bootstrap` first -- the pinned Godot and its export templates
 ### Unzip one addon {#unzip}
 
 <!-- library-step: unzip -->
-Into your project's `res://addons/`: the addon you want and, if its
-README says so, `ai_core` beside it. For a route, both:
+Into your project's root folder, `res://` -- not into `addons/`: each zip
+holds `addons/<addon>/`, so the addon lands in `res://addons/<addon>/`,
+which is also where Godot's asset store installs it. The addon you want
+and, if its README says so, `ai_core` beside it. For a route, both:
 
 ```bash
-unzip -q library/dist/ai_core-0.1.0.zip -d my_game/addons/
-unzip -q library/dist/ai_search-0.1.0.zip -d my_game/addons/
+unzip -q library/dist/ai_core-0.1.0.zip -d my_game/
+unzip -q library/dist/ai_search-0.1.0.zip -d my_game/
 ```
 
 There is no plugin to enable. Copying `godot/addons/ai_core/` and

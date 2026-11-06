@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 5, figures 5.3, 5.7 and 5.11, section 5.5
 invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch, ExpectiminimaxSearch, AdversarialResult, MonteCarloSearch, MctsResult or GakXorshift signatures change, or the demos that use them are renamed
 teaches: adversarial-search
-translation_of: 3a369731d79eff7dfe8b2a4e24f2b9d411f8d7b78976c702cc5ae181940f2aff
+translation_of: 1462fdc6be90fdb449d7c5b253217d5fefd7e8848128d670128fcecc4a3accbc
 -->
 
 > English: [ai_adversarial.md](ai_adversarial.md). Os termos que ficam em
@@ -112,7 +112,7 @@ ajustes que importam:
 ### O que copiar {#copy}
 
 Pela biblioteca: descompacte o `ai_core-<version>.zip` e o
-`ai_adversarial-<version>.zip` no `res://addons/` do seu projeto -- [usando
+`ai_adversarial-<version>.zip` na raiz do seu projeto, `res://` -- [usando
 a biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de
 Python também. Ou copie de um clone:
 

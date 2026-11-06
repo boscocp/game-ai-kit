@@ -122,3 +122,8 @@ Apache-2.0 appendix line in all 18 LICENSE copies reads `Copyright 2026
 Adalberto Pereira`; all three are T149's, before any store submission. The
 store's AI usage disclosure is the owner's to answer at submission. PyPI is
 uploaded by hand with a token, and trusted publishing stays off.
+
+**Done in T149 (wave 153):** every addon zip is laid out `addons/ai_<name>/`,
+`game-ai-kit-addons-<version>.zip` is the kit's one store asset, all 18
+LICENSE copies carry the copyright line, and the licence gate looks for the
+attribution in each `addons/<name>/` folder.

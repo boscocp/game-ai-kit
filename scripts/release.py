@@ -1,15 +1,23 @@
 #!/usr/bin/env python3
-"""Build what ships: one zip per addon and one Python wheel, each attributed.
+"""Build what ships: one zip per addon, the kit's zip and a Python wheel, each attributed.
 
 What it builds
 --------------
 Into `OUTPUT/dist/`, from the commit at HEAD and nothing else:
 
-  * `ai_<name>-<version>.zip` for every addon under godot/addons/, with a
-    single top folder `ai_<name>/` holding LICENSE, NOTICE, VERSION and a
-    README beside the code -- unzip it into `res://addons/`. Each addon is
-    read from its manifest, `modules/ai_<name>.json` (T64): an addon folder
-    no technique or kernel manifest owns, or one holding a test, is refused;
+  * `ai_<name>-<version>.zip` for every addon under godot/addons/, laid
+    out `addons/ai_<name>/`, that folder holding LICENSE, NOTICE, VERSION
+    and a README beside the code -- unzip it into the project's root,
+    `res://`, and it lands in `res://addons/ai_<name>/`. That is the layout
+    Godot's store installer keeps: it drops an archive's single top folder
+    unless that folder is `addons/` (T149; docs/howto/publish.md). Each
+    addon is read from its manifest, `modules/ai_<name>.json` (T64): an
+    addon folder no technique or kernel manifest owns, or one holding a
+    test, is refused;
+  * `game-ai-kit-addons-<version>.zip`, the kit as one store asset: every
+    one of those folders, the same bytes, under one `addons/`. The person
+    installing it unticks what they do not want; the per-addon zips are for
+    a person unzipping one by hand;
   * `gameaikit-<version>-py3-none-any.whl`, the Python half, with LICENSE and
     NOTICE in `.dist-info/licenses/`, where PEP 639 says a wheel keeps them.
     It holds the packages `python/pyproject.toml` lists -- the techniques
@@ -92,6 +100,8 @@ import zipfile
 REPO = pathlib.Path(__file__).resolve().parent.parent
 ATTRIBUTION = ("LICENSE", "NOTICE")
 PACKAGE = "gameaikit"
+# The kit's zip: every addon, as one store asset (T149).
+KIT = "game-ai-kit-addons"
 
 # Major.minor.patch and nothing else. A suffix such as `-rc1` would need its
 # own normalisation rules for a wheel's filename, and there is no release here
@@ -221,7 +231,10 @@ def addon_readme(manifest: dict, version: str, files: dict[str, bytes]) -> bytes
     repository's readers and names tasks a stranger cannot follow -- so it
     cannot describe an addon other than the one in the zip. The Asset
     Library asks for a readme inside the plugin folder; this is that file.
-    The note on the `Gak` prefix is printed only where the addon has a class
+    It says where the folder goes both ways a person gets it: the store's
+    installer keeps the zip's `addons/` and writes into `res://`, so by hand
+    the zip is unzipped into the project's root too, not into `addons/`
+    (T149). The note on the `Gak` prefix is printed only where the addon has a class
     that carries it.
     """
     name = manifest["module"]
@@ -230,11 +243,14 @@ def addon_readme(manifest: dict, version: str, files: dict[str, bytes]) -> bytes
         raise Refused(f"modules/{name}.json has no summary for the README a stranger reads")
     prefixed = any(re.search(rb"^class_name Gak", data, re.M) for data in files.values())
     lines = [f"# {name} {version}", "", manifest["summary"], "",
-             f"Unzip into your project's `res://addons/`. The classes register "
+             f"This folder belongs in `res://addons/{name}/`. Godot's asset store "
+             f"installs it there; by hand, unzip the zip into your project's root, "
+             f"`res://` -- it holds `addons/{name}/`. The classes register "
              f"themselves by `class_name`; no plugin needs enabling."]
     if needs:
         lines += ["", "It needs " + ", ".join(f"`{each}`" for each in needs)
-                  + ", from the same release: unzip that beside it."]
+                  + ", from the same release, in `res://addons/` beside it: unzip its "
+                  "zip the same way, or keep it ticked when installing the kit."]
     if prefixed:
         lines += ["", "The classes a game extends carry the prefix `Gak`; the algorithms "
                   "keep their names."]
@@ -245,9 +261,9 @@ def addon_readme(manifest: dict, version: str, files: dict[str, bytes]) -> bytes
     return "\n".join(lines).encode()
 
 
-def build_addon(repo: pathlib.Path, addon: str, version: str,
-                dist: pathlib.Path, skip_notice: bool, manifest: dict) -> pathlib.Path:
-    """Zip one addon under a single top folder named after it.
+def addon_files(repo: pathlib.Path, addon: str, version: str,
+                skip_notice: bool, manifest: dict) -> dict[str, bytes]:
+    """One addon's files as they ship, by their path inside `addons/<addon>/`.
 
     The addon's own LICENSE and NOTICE are dropped and the root copies put in
     their place, so a stale copy inside an addon cannot ship instead of the
@@ -267,11 +283,15 @@ def build_addon(repo: pathlib.Path, addon: str, version: str,
     files.update(attribution(repo, skip_notice))
     files["VERSION"] = f"{version}\n".encode()
     files["README.md"] = addon_readme(manifest, version, files)
+    return files
 
-    archive = dist / f"{addon}-{version}.zip"
+
+def write_addons(archive: pathlib.Path, addons: dict[str, dict[str, bytes]]) -> pathlib.Path:
+    """Zip addons laid out `addons/<addon>/...`, the one top folder the store keeps."""
     with zipfile.ZipFile(archive, "w") as bundle:
-        for name in sorted(files):
-            add_entry(bundle, f"{addon}/{name}", files[name])
+        for addon in sorted(addons):
+            for name in sorted(addons[addon]):
+                add_entry(bundle, f"addons/{addon}/{name}", addons[addon][name])
     return archive
 
 
@@ -481,10 +501,11 @@ def build(repo: pathlib.Path, output: pathlib.Path, skip_notice: bool,
             (output / name).write_bytes(committed_bytes(repo, name))
 
     every = manifests(repo)
-    artifacts = [
-        build_addon(repo, addon, version, dist, skip_notice, addon_manifest(addon, every))
-        for addon in shipped_addons(repo)
-    ]
+    addons = {addon: addon_files(repo, addon, version, skip_notice, addon_manifest(addon, every))
+              for addon in shipped_addons(repo)}
+    artifacts = [write_addons(dist / f"{addon}-{version}.zip", {addon: files})
+                 for addon, files in addons.items()]
+    artifacts.append(write_addons(dist / f"{KIT}-{version}.zip", addons))
     artifacts.append(build_wheel(repo, version, dist, skip_notice, every))
     if executable is not None:
         artifacts.append(build_executable(repo, executable, version, dist, skip_notice))
@@ -523,17 +544,79 @@ def check_the_gate_agrees(root: pathlib.Path) -> list[str]:
         failures.append(f"a complete release passes the gate (got {code}: {findings})")
 
     # Planted: every artifact without NOTICE. The gate must fail, and fail
-    # once per artifact on the archive rule -- not on the root file, which
-    # this build deliberately leaves in place.
+    # on the archive rule -- not on the root file, which this build
+    # deliberately leaves in place -- once per artifact, and in the kit's
+    # zip once per addon folder, since each is an addon a person may keep.
     planted = quiet_build(REPO, root / "bad", skip_notice=True)
     code, findings = license_gate(root / "bad")
     if code != 1:
         failures.append("a release without NOTICE fails the gate")
     if not all(line.startswith(("L5 ", "L9 ")) for line in findings):
         failures.append(f"every finding is about an archive (got {findings})")
-    if len(findings) != len(planted):
-        failures.append(f"one finding per artifact (got {len(findings)} for {len(planted)})")
+    addons = len(shipped_addons(REPO))
+    expected = {path.name: addons if path.name.startswith(KIT) else 1 for path in planted}
+    counted = {name: sum(line.split()[1] == name for line in findings) for name in expected}
+    if counted != expected:
+        failures.append(f"one finding per artifact, one per folder in the kit (got {counted})")
     return failures
+
+
+def store_install_paths(names: list[str]) -> list[str]:
+    """Where Godot 4.7.2's store installer writes each entry of a zip, by its rule.
+
+    Transcribed from `editor_asset_installer.cpp` at `4.7.2-stable`
+    (`open_asset`, `_check_has_toplevel`, `_update_file_mappings`): the
+    entries, and every folder above each one, are listed in the zip's order;
+    when the first is a folder every other entry starts with, it is the
+    asset's root, and a store download skips it -- unless it is `addons/`.
+    What is left is joined to `res://`. A transcription, not the engine: the
+    test install in docs/howto/publish.md is what proves it.
+    """
+    listed: list[str] = []
+    for name in names:
+        parts = name.split("/")
+        for folder in ("/".join(parts[:depth]) + "/" for depth in range(1, len(parts))):
+            if folder not in listed:
+                listed.append(folder)
+        if name not in listed:
+            listed.append(name)
+    first = listed[0] if listed else ""
+    has_root = first.endswith("/") and all(entry.startswith(first) for entry in listed)
+    skipped = first if has_root and first != "addons/" else ""
+    return [f"res://{name[len(skipped):]}" for name in names]
+
+
+def check_the_store_installs_into_addons(root: pathlib.Path) -> list[str]:
+    """Through the store's rule, every addon lands in `res://addons/<name>/`, and nothing else.
+
+    Planted: the layout every zip had before T149, one top folder `ai_search/`,
+    which the rule must send to `res://`.
+    """
+    failures = []
+    addons = shipped_addons(REPO)
+    for archive in quiet_build(REPO, root / "store")[:-1]:
+        with zipfile.ZipFile(archive) as bundle:
+            names = bundle.namelist()
+        owners = addons if archive.name.startswith(KIT) else [archive.name.split("-")[0]]
+        stray = store_strays(names, owners)
+        if stray:
+            folder = owners[0] if len(owners) == 1 else "<name>"
+            failures.append(f"{archive.name} installs outside res://addons/{folder}/: {stray[:3]}")
+    old_layout = ["ai_search/LICENSE", "ai_search/astar.gd"]
+    if store_strays(old_layout, ["ai_search"]) != ["res://LICENSE", "res://astar.gd",
+                                                   "res://addons/ai_search/ (nothing)"]:
+        failures.append("a zip with the one top folder ai_search/ is found landing at res://")
+    return failures
+
+
+def store_strays(names: list[str], owners: list[str]) -> list[str]:
+    """What the store would install outside `res://addons/<owner>/`, or leave an owner without."""
+    installed = store_install_paths(names)
+    stray = [path for path in installed
+             if not any(path.startswith(f"res://addons/{owner}/") for owner in owners)]
+    empty = [f"res://addons/{owner}/ (nothing)" for owner in owners
+             if not any(path.startswith(f"res://addons/{owner}/") for path in installed)]
+    return stray + empty
 
 
 def check_reproducible_and_stamped(root: pathlib.Path) -> list[str]:
@@ -747,14 +830,17 @@ def expected_release(tree: dict[str, bytes], version: str) -> dict[str, dict[str
     attribution_files = {name: tree[name] for name in ATTRIBUTION}
     addons = sorted({path.split("/")[2] for path in tree if path.startswith("godot/addons/")})
     release: dict[str, dict[str, bytes | None]] = {}
+    kit: dict[str, bytes | None] = {}
     for addon in addons:
         prefix = f"godot/addons/{addon}/"
-        entries = {f"{addon}/{path[len(prefix):]}": data
+        entries = {f"addons/{addon}/{path[len(prefix):]}": data
                    for path, data in tree.items() if path.startswith(prefix)}
-        entries.update({f"{addon}/{name}": data for name, data in attribution_files.items()})
-        entries[f"{addon}/VERSION"] = f"{version}\n".encode()
-        entries[f"{addon}/README.md"] = None
+        entries.update({f"addons/{addon}/{name}": data for name, data in attribution_files.items()})
+        entries[f"addons/{addon}/VERSION"] = f"{version}\n".encode()
+        entries[f"addons/{addon}/README.md"] = None
         release[f"{addon}-{version}.zip"] = entries
+        kit.update(entries)
+    release[f"{KIT}-{version}.zip"] = kit
     info = f"{PACKAGE}-{version}.dist-info"
     listed = tomllib.loads(tree["python/pyproject.toml"].decode())["tool"]["setuptools"]["packages"]
     folders = {f"python/{name.replace('.', '/')}" for name in listed}
@@ -812,7 +898,7 @@ def check_stale_artifacts(root: pathlib.Path) -> list[str]:
 def self_test() -> int:
     checks = (check_the_gate_agrees, check_reproducible_and_stamped, check_the_wheel,
               check_only_the_commit_ships, check_contents, check_refusals,
-              check_manifest_refusals,
+              check_manifest_refusals, check_the_store_installs_into_addons,
               check_stale_artifacts, check_the_executable)
     failures = []
     with tempfile.TemporaryDirectory() as workspace:
@@ -885,7 +971,7 @@ def stamped_version(archive: pathlib.Path) -> str | None:
     """The version an artifact says it is, read from inside it rather than its name."""
     with zipfile.ZipFile(archive) as bundle:
         for name in bundle.namelist():
-            if archive.suffix == ".zip" and name.count("/") == 1 and name.endswith("/VERSION"):
+            if archive.suffix == ".zip" and re.fullmatch(r"(addons/)?[^/]+/VERSION", name):
                 return bundle.read(name).decode().strip()
             if archive.suffix == ".whl" and name.endswith(".dist-info/METADATA"):
                 return header_fields(bundle.read(name))[0].get("Version")
@@ -1020,8 +1106,9 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--build", action="store_true")
     parser.add_argument("--output", default=None,
                         help="release root, relative to the current directory; "
-                             "archives go to OUTPUT/dist, and earlier ai_*-*.zip and "
-                             "gameaikit-*.whl there are removed (default: the repo)")
+                             "archives go to OUTPUT/dist, and earlier ai_*-*.zip, "
+                             "game-ai-kit-*.zip and gameaikit-*.whl there are removed "
+                             "(default: the repo)")
     parser.add_argument("--executable", default=None,
                         help="also ship the menu `make export` wrote into this folder")
     parser.add_argument("--skip-notice", action="store_true",

@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 19, linear and logistic regression ; https://docs.godotengine.org/en/stable/classes/class_json.html
 invalidated_if: the kit's LearnedModel, ModelFile, SoftmaxModel, CaseTable or ClonedPlayer signatures change, or the demos that use them are renamed
 teaches: learning
-translation_of: 66ff082039437ea6c5087c5233dd2362ce8a9c11dc5b64c9ad5a6dc2bd3b735a
+translation_of: 0e452de03983aca5960ef6e0c3a3a769e57dad2c870d7a2f8abed6778a8470cc
 -->
 
 > English: [ai_learning.md](ai_learning.md). Os termos que ficam em inglês
@@ -75,8 +75,8 @@ Os ajustes que importam:
 
 ### O que copiar {#copy}
 
-Pela biblioteca: descompacte o `ai_learning-<version>.zip` no
-`res://addons/` do seu projeto -- [usando a
+Pela biblioteca: descompacte o `ai_learning-<version>.zip` na
+raiz do seu projeto, `res://` -- [usando a
 biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
 também. Ou copie de um clone:
 

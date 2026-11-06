@@ -7,7 +7,7 @@ tier: 2
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
 invalidated_if: the kit's SteeringVehicle, SteeringBehaviour or Steering.combined signatures change, or the demos that use them are renamed
 teaches: steering
-translation_of: d2bfde047a66d793571d571ec0f5af4ada5bc0534bebe9647736726fe8863c0f
+translation_of: cd67fb721fe8ee0e32012c54d0f24d038b939ddd642c0b5c2b761e024edcfe1e
 -->
 
 > English: [ai_steering.md](ai_steering.md). Os termos que ficam em inglês
@@ -63,8 +63,8 @@ importam:
 
 ### O que copiar {#copy}
 
-Pela biblioteca: descompacte o `ai_steering-<version>.zip` no
-`res://addons/` do seu projeto -- [usando a
+Pela biblioteca: descompacte o `ai_steering-<version>.zip` na
+raiz do seu projeto, `res://` -- [usando a
 biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
 também. Ou copie de um clone:
 

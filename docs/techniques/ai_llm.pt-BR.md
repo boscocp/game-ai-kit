@@ -7,7 +7,7 @@ tier: 2
 source: https://www.cp.eng.chula.ac.th/~vishnu/gameResearch/story_november_2005/MateasSternTIDSE04.pdf ; https://docs.godotengine.org/en/4.7/classes/class_httprequest.html ; https://ollama.com/blog/structured-outputs
 invalidated_if: the kit's LlmValidator, LlmReply, LlmRuntime, RecordedRuntime, HttpRuntime or LlmConversation signatures change, the reply's shape or its refusal codes change, or T94's game lands and this page does not name it
 teaches: language-models
-translation_of: e14b323837d64d26fc6cb3a0b83387cba45c8674a957ed3a1606ef06ccf03e77
+translation_of: 4fcade74814fcf54592322a72d4d856f22ef6159b9d9b0da9c85a73444d9816d
 -->
 
 > English: [ai_llm.md](ai_llm.md). Os termos que ficam em inglês estão
@@ -101,8 +101,8 @@ Os ajustes que importam:
 
 ### O que copiar {#copy}
 
-Pela biblioteca: descompacte o `ai_llm-<version>.zip` no `res://addons/` do
-seu projeto -- [usando a biblioteca](using-the-library.pt-BR.md) tem cada
+Pela biblioteca: descompacte o `ai_llm-<version>.zip` na raiz do
+seu projeto, `res://` -- [usando a biblioteca](using-the-library.pt-BR.md) tem cada
 passo, o *wheel* de Python também. Ou copie de um clone:
 
 Uma pasta: `godot/addons/ai_llm/`. Ela não precisa de mais nada, nem do

@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 3 ; https://docs.godotengine.org/en/stable/classes/class_astargrid2d.html
 invalidated_if: the kit's Search, SearchGraph, GridPathfinder or GridGraph signatures change, or the demos that use them are renamed
 teaches: search
-translation_of: 82917cb9124040bee4a754e3b1100df095cca8be0a2bd53180ab1f31ed4b66c7
+translation_of: 7515c335339af63e12c53fcbdbf19b6513b13f18212917553ea13a52107239c4
 -->
 
 > English: [ai_search.md](ai_search.md). Os termos que ficam em inglês
@@ -61,7 +61,7 @@ que deixa uma busca ler uma grade -- roda as quatro buscas nele e repete
 ### O que copiar {#copy}
 
 Pela biblioteca: descompacte o `ai_core-<version>.zip` e o
-`ai_search-<version>.zip` no `res://addons/` do seu projeto -- [usando a
+`ai_search-<version>.zip` na raiz do seu projeto, `res://` -- [usando a
 biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
 também. Ou copie de um clone:
 

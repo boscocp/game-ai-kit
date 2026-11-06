@@ -7,7 +7,7 @@ tier: 2
 source: book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 5 on decision making ; book:Steve Rabin (ed.), "Game AI Pro", CRC Press, 2013 -- ch. 12 (Humphreys, HTN planners)
 invalidated_if: the kit's StateMachine, BehaviourTree, GoapPlanner or HtnPlanner signatures change, or the demos that use them are renamed
 teaches: ways-to-decide
-translation_of: 8a593e46d3109ae29da1734df150b90016e166569b4eb63b1972f36f6c3e4bdd
+translation_of: 88e0a07b73f1aae964fdf3737c1df90a41eed172ab5e74fcea5413d89c5001ac
 -->
 
 > English: [ai_behaviour.md](ai_behaviour.md). Os termos que ficam em inglês
@@ -64,8 +64,8 @@ importam:
 
 ### O que copiar {#copy}
 
-Pela biblioteca: descompacte o `ai_behaviour-<version>.zip` no
-`res://addons/` do seu projeto -- [usando a
+Pela biblioteca: descompacte o `ai_behaviour-<version>.zip` na
+raiz do seu projeto, `res://` -- [usando a
 biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
 também. Ou copie de um clone:
 

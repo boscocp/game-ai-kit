@@ -58,7 +58,7 @@ read a grid -- and runs all four searches on it, then replays
 ### What to copy {#copy}
 
 From the library: unzip `ai_core-<version>.zip` and
-`ai_search-<version>.zip` into your project's `res://addons/` -- [using the
+`ai_search-<version>.zip` into your project's root, `res://` -- [using the
 library](using-the-library.md) has every step, the Python wheel too. Or copy
 them from a checkout:
 
