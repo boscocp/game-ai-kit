@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-04
+verified_on: 2026-11-05
 tier: 0
 source: book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 ; book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020
 invalidated_if: a technique page in pt-BR translates a term this list says stays in English, or a new technique brings a term missing here
@@ -60,11 +60,15 @@ também em itálico, ficam como foram publicados.
 | *UCB1*, *UCT* | a fórmula que escolhe a próxima jogada a tentar -- a média mais um bônus para o que foi pouco tentado -- e a *MCTS* que a usa (*UCB applied to trees*) |
 | *playout* | uma partida jogada até o fim com jogadas aleatórias, para medir uma posição |
 | *anytime* | um algoritmo que pode ser parado a qualquer momento e já tem uma resposta, que melhora quanto mais ele roda |
-| *bandit* | quem escolhe entre opções fixas pelo que cada uma rendeu até agora, como um apostador entre caça-níqueis (*one-armed bandits*); cada opção é um braço (*arm*) |
-| *epsilon-greedy* | o *bandit* mais simples: quase sempre a opção de melhor média, e com chance *epsilon* uma qualquer, ao acaso |
+| *bandit*, *arm* | quem escolhe entre opções fixas pelo que cada uma rendeu até agora, como um apostador entre caça-níqueis (*one-armed bandits*); cada opção é um braço (*arm*) |
+| *epsilon-greedy*, *epsilon* | o *bandit* mais simples: quase sempre a opção de melhor média, e com chance *epsilon* uma qualquer, ao acaso |
+| *exploration*, *exploitation* | tentar as opções que se conhece pouco, e ficar com a que já rendeu mais; o dilema que todo *bandit* equilibra |
+| *rush* | a abertura que ataca cedo, com o que tem, antes de o outro se preparar; uma das três do oponente *bandit*, com o nome do código |
 | CSP (problema de satisfação de restrições) | variáveis, os valores que cada uma pode ter e as restrições entre elas; "satisfação de restrições" é traduzido, CSP fica como sigla, a do AIMA |
 | *solver* | o programa que acha uma resposta para um problema declarado; fica em inglês porque "resolvedor" quase não se usa |
 | *backtracking*, *backtrack* | a busca que atribui uma variável por vez e, quando todos os valores falham, volta à anterior; um *backtrack* é uma dessas voltas |
+| *backjumping* | o *backtracking* que, quando falha, volta direto à mais recente das variáveis que causaram o conflito, e não só à anterior |
+| *min-conflicts* | a busca local para um CSP: parte de uma resposta completa e errada e troca, a cada passo, o valor de uma variável em conflito pelo que menos conflita |
 | AC-3, *arc consistency* | o algoritmo que risca de cada variável os valores que nenhum valor de uma vizinha permite; consistência de arcos |
 | *minimum remaining values*, *least constraining value* | MRV e LCV: escolher primeiro a variável com menos valores restantes, e para ela o valor que menos risca das vizinhas |
 | *seed* | o número que inicia um gerador de números aleatórios; a mesma *seed* dá a mesma sequência |
