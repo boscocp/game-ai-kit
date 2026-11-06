@@ -100,5 +100,5 @@ its walk was refused; the next worth most,a caminhada foi recusada; a próxima q
 "seed {seed}: built, but the rules cannot play it -- B tries seed {next}","semente {seed}: construído, mas as regras não conseguem jogá-lo -- B tenta a semente {next}"
 "building, seed {seed}","construindo, semente {seed}"
 "N new map, B a cell at a time","N mapa novo, B uma célula por vez"
-"building: least entropy, next","construindo: menor entropia, a seguir"
+"amber: least entropy, next","âmbar: menor entropia, a seguir"
 red 0: a contradiction,vermelho 0: uma contradição

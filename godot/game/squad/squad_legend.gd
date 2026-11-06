@@ -33,7 +33,7 @@ static func entries() -> Array[Array]:
 		[BoardView.tile_texture(BoardView.WALL), TranslationServer.translate("trees and rock block sight")],
 		[BoardView.tile_texture(BoardView.WATER), TranslationServer.translate("deep water: only waders cross")],
 		[IntentView.LABEL, TranslationServer.translate("N new map, B a cell at a time")],
-		[IntentView.DASH, TranslationServer.translate("building: least entropy, next")],
+		[IntentView.DASH, TranslationServer.translate("amber: least entropy, next")],
 		[IntentView.THREAT, TranslationServer.translate("red 0: a contradiction")],
 	]
 	for piece_name: String in SquadTable.squad():
