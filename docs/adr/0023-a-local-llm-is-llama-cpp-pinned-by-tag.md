@@ -1,6 +1,6 @@
 # 0023 — The local LLM is llama.cpp's server, pinned by build tag, fenced
 
-Status: proposed · 2026-10-29 (T93, wave 111; the owner confirms in review)
+Status: accepted · 2026-11-06 (proposed 2026-10-29, T93, wave 111; confirmed by the owner from T112's list)
 
 ## Context
 
