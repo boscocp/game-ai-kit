@@ -18,9 +18,11 @@ names it first) when the worktree lacks it, and leaves alone what is there,
 so running it twice changes nothing. A source the main checkout lacks is
 refused by name, with the command that makes it; the others are still copied.
 
-A third, `.toolchain/` (T143), is linked instead: the toolchain when
+A third, `.toolchain` (T143), is linked instead: the toolchain when
 GAK_TOOLCHAIN is not set, gigabytes, and shared by every checkout. A main
-checkout without one is a note, never a refusal.
+checkout without one is a note, never a refusal. `--remember-toolchain`,
+which `make bootstrap` runs, links a checkout's `.toolchain` to wherever
+bootstrap installed, so that place outlives the command that named it.
 
 Why copies, not links
 ---------------------
@@ -42,6 +44,7 @@ copy still runs the suites.
 Usage
 -----
     worktree_setup.py [--repo PATH]
+    worktree_setup.py [--repo PATH] --remember-toolchain PATH
     worktree_setup.py --self-test
 """
 
@@ -173,15 +176,97 @@ def link_toolchain(here: pathlib.Path, main: pathlib.Path) -> None:
         print(f"worktree-setup: note     no {TOOLCHAIN} in the main checkout; "
               "GAK_TOOLCHAIN, or make bootstrap there, gives one")
     else:
-        try:
-            target.symlink_to(source.resolve(), target_is_directory=True)
-            print(f"worktree-setup: linked   {TOOLCHAIN} to {source.resolve()}")
-        except OSError as error:
-            print(f"worktree-setup: note     {TOOLCHAIN} not linked ({error}); "
-                  f"set GAK_TOOLCHAIN={source.resolve()}")
+        make_link(target, source.resolve())
+
+
+def make_link(target: pathlib.Path, toolchain: pathlib.Path) -> None:
+    """Link `target` to the toolchain, or say how to point at it instead.
+
+    Windows may refuse a link without a privilege Git Bash lacks; the note
+    then names the path with forward slashes, the form the Makefile accepts.
+    """
+    try:
+        target.symlink_to(toolchain, target_is_directory=True)
+        print(f"worktree-setup: linked   {TOOLCHAIN} to {toolchain.as_posix()}")
+    except OSError as error:
+        print(f"worktree-setup: note     {TOOLCHAIN} not linked ({error}); "
+              f"set GAK_TOOLCHAIN={toolchain.as_posix()}")
+
+
+def remember_toolchain(here: pathlib.Path, toolchain: pathlib.Path) -> None:
+    """After `make bootstrap` into another place, link this checkout's `.toolchain` to it.
+
+    A variable on make's command line lives one command: without this,
+    `make bootstrap TOOLCHAIN=/x` installed into /x and the next `make menu`
+    looked in `.toolchain` again (T143's review). The link makes the choice
+    last. One already there is never replaced -- it is this checkout's own
+    choice -- only said.
+    """
+    target = here / TOOLCHAIN
+    if target.absolute() == toolchain.absolute():
+        return
+    if target.exists() or target.is_symlink():
+        if target.resolve() != toolchain.resolve():
+            print(f"worktree-setup: note     this checkout's {TOOLCHAIN} is {target.resolve().as_posix()}; "
+                  f"{toolchain.as_posix()} is used only while GAK_TOOLCHAIN says so")
+        return
+    make_link(target, toolchain.resolve())
 
 
 # --- self-test -------------------------------------------------------------
+
+
+def git_ignores(checkout: pathlib.Path, relative: str) -> bool:
+    """Whether git, in that checkout, ignores the path -- asked of git itself."""
+    asked = subprocess.run(["git", "-C", str(checkout), "check-ignore", "-q", relative],
+                           capture_output=True)
+    return asked.returncode == 0
+
+
+def toolchain_cases(root: pathlib.Path, main: pathlib.Path, fresh: pathlib.Path,
+                    expect, quiet) -> None:
+    """T143: `.toolchain` linked from the main checkout, or to where bootstrap installed."""
+    expect("no .toolchain in main: nothing made", (fresh / TOOLCHAIN).is_symlink(), False)
+    (main / TOOLCHAIN / "godot").mkdir(parents=True)
+    quiet(fresh, main)
+    expect(".toolchain linked", (fresh / TOOLCHAIN).is_symlink(), True)
+    expect("... to the main checkout's", (fresh / TOOLCHAIN).resolve(), (main / TOOLCHAIN).resolve())
+    own = root / "own-toolchain"
+    (own / TOOLCHAIN).mkdir(parents=True)
+    quiet(own, main)
+    expect("a worktree's own .toolchain kept", (own / TOOLCHAIN).is_symlink(), False)
+    # The link is ignored by this repository's own .gitignore. A rule with a
+    # trailing slash matches only a directory, and a link is not one: the
+    # first version of T143 left `?? .toolchain` in every worktree.
+    subprocess.run(["git", "init", "-q", str(fresh)], check=True, capture_output=True)
+    shutil.copy(pathlib.Path(__file__).resolve().parent.parent / ".gitignore", fresh / ".gitignore")
+    expect("git ignores the linked .toolchain", git_ignores(fresh, TOOLCHAIN), True)
+    expect("git does not ignore scripts/", git_ignores(fresh, "scripts"), False)
+    remember_cases(root, expect)
+
+
+def remember_cases(root: pathlib.Path, expect) -> None:
+    """`make bootstrap TOOLCHAIN=/x` leaves `.toolchain -> /x`, so the next make looks there."""
+    def silently(here: pathlib.Path, toolchain: pathlib.Path) -> None:
+        with contextlib.redirect_stdout(io.StringIO()):
+            remember_toolchain(here, toolchain)
+
+    elsewhere = root / "elsewhere"
+    (elsewhere / "godot").mkdir(parents=True)
+    clone = root / "clone"
+    clone.mkdir()
+    silently(clone, elsewhere)
+    expect("bootstrap elsewhere is remembered", (clone / TOOLCHAIN).resolve(), elsewhere.resolve())
+    # Planted: the default itself is never linked to itself.
+    default_clone = root / "default-clone"
+    default_clone.mkdir()
+    silently(default_clone, default_clone / TOOLCHAIN)
+    expect("the default makes no link", (default_clone / TOOLCHAIN).is_symlink(), False)
+    # Planted: a checkout's own choice is not replaced by a one-off bootstrap.
+    other = root / "other-place"
+    other.mkdir()
+    silently(clone, other)
+    expect("an existing .toolchain is kept", (clone / TOOLCHAIN).resolve(), elsewhere.resolve())
 
 
 def self_test() -> int:
@@ -245,19 +330,7 @@ def self_test() -> int:
         expect("nothing invented for it", (waiting / "scripts/forbidden-term-hashes.txt").exists(), False)
         expect("the rest still copied", (waiting / "godot/addons/gdUnit4").is_dir(), True)
 
-        # T143: the main checkout's .toolchain is linked, never copied, and
-        # a worktree's own is left alone.
-        expect("no .toolchain in main: nothing made", (fresh / ".toolchain").is_symlink(), False)
-        (main / ".toolchain" / "godot").mkdir(parents=True)
-        quiet(fresh, main)
-        expect(".toolchain linked", (fresh / ".toolchain").is_symlink(), True)
-        expect("... to the main checkout's", (fresh / ".toolchain").resolve(),
-               (main / ".toolchain").resolve())
-        own_toolchain = root / "own-toolchain"
-        (own_toolchain / ".toolchain").mkdir(parents=True)
-        quiet(own_toolchain, main)
-        expect("a worktree's own .toolchain kept", (own_toolchain / ".toolchain").is_symlink(), False)
-
+        toolchain_cases(root, main, fresh, expect, quiet)
         expect("run in a complete main checkout", quiet(main, main), 0)
         # Planted: run in a main checkout that lacks what worktrees need.
         expect("run in a main checkout missing the term list", quiet(bare_main, bare_main), 2)
@@ -282,6 +355,8 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", default=None)
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--remember-toolchain", default=None, metavar="PATH",
+                        help="after make bootstrap: link .toolchain to PATH unless it is the default")
     try:
         args = parser.parse_args(argv)
     except SystemExit as exit_request:
@@ -292,6 +367,9 @@ def main(argv: list[str]) -> int:
         return self_test()
 
     here = pathlib.Path(args.repo or pathlib.Path(__file__).resolve().parent.parent)
+    if args.remember_toolchain:
+        remember_toolchain(here, pathlib.Path(args.remember_toolchain))
+        return 0
     listed = subprocess.run(["git", "-C", str(here), "worktree", "list", "--porcelain"],
                             capture_output=True, text=True)
     main_path, bare = main_checkout(listed.stdout) if listed.returncode == 0 else (None, False)

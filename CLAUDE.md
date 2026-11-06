@@ -8,8 +8,8 @@ something.
 
 An invariant without a gate is prose, and prose does not hold: a rule violated
 twice becomes a script. This section used to claim every invariant had one. It
-did not, and a review said so. Four are still prose or only half held -- 4,
-6, 7 and 13 -- and they are marked. **Marked, not quietly dropped**: an unenforced
+did not, and a review said so. Five are still prose or only half held -- 4,
+6, 7, 8 and 13 -- and they are marked. **Marked, not quietly dropped**: an unenforced
 rule you know about is worth keeping, and one you believe is enforced is worse
 than none.
 
@@ -22,7 +22,7 @@ than none.
 | 5 no lesson above tier 1 | `check_tiers.py`, via each page's `teaches:` field |
 | 6 no training at game time | half held -- `check_no_training.py` is a net for the common spellings, and says so; ADR 0016's exceptions, by name, are N9, N13 and N14; T18's cloned player is N10-N12; T98's maze policy is N15 |
 | 7 LLM output validated | half held -- `check_llm_validated.py` (wave 102) is a static net for the common spellings, and says so: no way round `ai_llm`, nothing waiting on the frame (V0-V3); that the validator refuses what it must is `make test-llm-vectors` |
-| 8 nothing written into the home | `check_disk_layout.py` |
+| 8 nothing written into the home | half held -- `check_disk_layout.py`: this project's own `user://` and five model caches in the home (D1), `._sc_` and `editor_data/` beside the binary (D3, D4), where `user://` is sent (D6-D8); Godot's other home folders are a note, so an engine that stopped honouring `._sc_` would not be seen (T143) |
 | 9 LICENSE and NOTICE ship | `check_license.py` |
 | 10 nothing from the employer | `check_no_employer_refs.py` |
 | 11 no tooling byline | `check_commit_msg.py`, `check_pr_message.py` |
@@ -54,7 +54,7 @@ than none.
 8. **The toolchain lives in its own directory, never in the user's home folders.**
    Nothing this repository installs or writes lands in `~/.local`,
    `~/.cache` or `%APPDATA%`: it goes to the toolchain (`GAK_TOOLCHAIN`, or
-   the checkout's `.toolchain/`) or the checkout. The author keeps it on a
+   the checkout's `.toolchain`) or the checkout. The author keeps it on a
    large disk by setting `GAK_TOOLCHAIN`. ADR 0002, amended by T143.
 9. **Every published artifact carries LICENSE and NOTICE.**
 10. **Nothing from the author's employer enters this repo** — no name, no

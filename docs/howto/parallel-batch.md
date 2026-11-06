@@ -40,6 +40,20 @@ teaches: none
    Chain it with `&&`, never `;` (#36 merged with a title the lint refused).
 5. After each merge the waves still open rebase on the new main.
 
+**Where a worktree finds Godot (T143).** Since wave 150 the toolchain is
+`GAK_TOOLCHAIN` when set, and the checkout's own `.toolchain` otherwise. On
+the author's machine the main checkout's `.toolchain` is a link to
+`/mnt/games/gamedev/toolchain`, made once by hand right after T143 merged:
+
+```bash
+ln -s /mnt/games/gamedev/toolchain /mnt/games/gamedev/game-ai-kit/.toolchain
+```
+
+`make worktree-setup` links each worktree's `.toolchain` to it, so a
+worktree made before that link, or before T143, runs `make worktree-setup`
+again. A worktree whose Godot gates all say "run make bootstrap" lacks the
+link.
+
 For batch 118-122 the owner said, on 2026-11-04, "Roda só o gate no último
 merge", which `tasks/STATUS.md`'s section of that date records as "to run
 the gate only at the last merge". That batch ran the whole `make check` once, on the

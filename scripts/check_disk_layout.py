@@ -47,7 +47,7 @@ toolchain, and llama.cpp's own cache under home is a finding.
 
 Exit codes
 ----------
-0   clean: nothing on the small disk, toolchain intact
+0   clean: nothing of this repository's in the home, toolchain intact
 1   violations found (each one printed)
 2   wrong usage, or a path that cannot be read
 
@@ -170,22 +170,29 @@ def find_leaks(home: pathlib.Path, project: str = PROJECT_NAME,
     """D1: what this repository wrote in the home's own folders; the rest is a note.
 
     Attributed, and a finding: this project's user:// folder under Godot's
-    data folders, and a model cache -- unless `make bootstrap` found it there
-    first (`before`). Godot's other folders belong to whatever Godot the person
-    runs: a note. An empty leftover folder is a finding too: it means a
-    mechanism stopped working, and the files follow the folder.
+    data folders, always; and a model cache, unless `make bootstrap` found it
+    there first (`before`). The project's own folder is never forgiven: a
+    record taken again after `rm -rf .toolchain` would launder it (T143's
+    review), and nothing but this project writes it. Godot's other folders
+    belong to whatever Godot the person runs: a note. An empty leftover
+    folder is a finding too: it means a mechanism stopped working, and the
+    files follow the folder.
     """
     before = before or set()
     findings = []
-    for relative in own_user_dirs(project) + list(MODEL_PATHS):
+    for relative in own_user_dirs(project):
+        leaked = home / relative
+        if leaked.exists():
+            findings.append(f"D1 {leaked} exists in the home ({size_of(leaked)} bytes) -- this "
+                            "project's user://, which scripts/godot sends to .user-data/; a Godot "
+                            "started without it wrote this (to open the editor: "
+                            "./scripts/godot --path godot -e)")
+    for relative in MODEL_PATHS:
         leaked = home / relative
         if leaked.exists() and relative in before:
             print(f"D1 note: {leaked} was there before make bootstrap; not counted")
         elif leaked.exists():
-            whose = (" -- this project's user://, which scripts/godot sends to .user-data/; "
-                     "a Godot started without it wrote this (to open the editor: "
-                     "./scripts/godot --path godot -e)" if relative in own_user_dirs(project) else "")
-            findings.append(f"D1 {leaked} exists in the home ({size_of(leaked)} bytes){whose}")
+            findings.append(f"D1 {leaked} exists in the home ({size_of(leaked)} bytes)")
     for relative in GODOT_PATHS:
         if (home / relative).exists():
             print(f"D1 note: {home / relative} exists; any Godot writes there, and this "
@@ -193,13 +200,14 @@ def find_leaks(home: pathlib.Path, project: str = PROJECT_NAME,
     return findings
 
 
-def record_home(toolchain: pathlib.Path, home: pathlib.Path, project: str) -> int:
-    """Write what the home holds before `make bootstrap` writes anything; never twice.
+def record_home(toolchain: pathlib.Path, home: pathlib.Path) -> int:
+    """Write which model caches the home holds before `make bootstrap`; never twice.
 
     Written once, at the first bootstrap into this toolchain: run again later,
     it would forgive whatever leaked since. A toolchain that already holds
     Godot gets a record that forgives nothing -- its home was not looked at
-    in time.
+    in time. A toolchain deleted and bootstrapped again gets a fresh record,
+    and forgives a cache that leaked before it: the limit, said in ADR 0002.
     """
     record = toolchain / RECORD
     if record.exists():
@@ -208,8 +216,7 @@ def record_home(toolchain: pathlib.Path, home: pathlib.Path, project: str) -> in
     toolchain.mkdir(parents=True, exist_ok=True)
     installed = (toolchain / "godot" / "godot").exists() or (toolchain / "godot" / "godot.exe").exists()
     present = [] if installed else [
-        relative for relative in own_user_dirs(project) + list(MODEL_PATHS)
-        if (home / relative).exists()]
+        relative for relative in MODEL_PATHS if (home / relative).exists()]
     lines = ["# What the home held before make bootstrap; check_disk_layout.py's D1",
              "# does not count these (T143). Taken after Godot was installed: nothing."
              if installed else "# Written once; delete it only to start over.",
@@ -605,11 +612,7 @@ def one_disk_cases(root: pathlib.Path, home: pathlib.Path, repo_on_home: pathlib
 
 def attribution_cases(root: pathlib.Path, toolchain: pathlib.Path, repo: pathlib.Path,
                       expect, quiet) -> None:
-    """T143: D1 counts what this repository wrote, after `make bootstrap`; the rest is a note."""
-    def silently(*args) -> int:
-        with contextlib.redirect_stdout(io.StringIO()):
-            return record_home(*args)
-
+    """T143: D1 counts what this repository wrote; Godot's other folders are a note."""
     # Not ours: Godot's own folders, and another project's user://.
     editor_home = root / "editor-home"
     for folder in (".config/godot", ".cache/godot", ".local/share/godot/app_userdata/another-game"):
@@ -621,32 +624,50 @@ def attribution_cases(root: pathlib.Path, toolchain: pathlib.Path, repo: pathlib
     (renamed / "godot").mkdir(parents=True)
     (renamed / "godot" / "project.godot").write_text('config/name="another-game"\n')
     expect("the project's own name is read", quiet(renamed, toolchain, editor_home), 1)
+    record_cases(root, repo, expect, quiet)
 
-    # Recorded before bootstrap: this project's user:// and a model cache.
+
+def record_cases(root: pathlib.Path, repo: pathlib.Path, expect, quiet) -> None:
+    """T143: a model cache there before `make bootstrap` is forgiven; nothing else is."""
+    def silently(toolchain: pathlib.Path, home: pathlib.Path) -> int:
+        with contextlib.redirect_stdout(io.StringIO()):
+            return record_home(toolchain, home)
+
     before_home = root / "before-home"
-    for folder in (".local/share/godot/app_userdata/game-ai-kit", ".cache/huggingface/hub"):
-        (before_home / folder).mkdir(parents=True)
+    (before_home / ".cache/huggingface/hub").mkdir(parents=True)
     fresh = root / "fresh-toolchain"
-    expect("recording a home", silently(fresh, before_home, PROJECT_NAME), 0)
+    expect("recording a home", silently(fresh, before_home), 0)
     fake_toolchain(fresh)
-    expect("what was there before bootstrap", quiet(repo, fresh, before_home), 0)
+    expect("a cache there before bootstrap", quiet(repo, fresh, before_home), 0)
     # Planted: a cache that appeared after it is counted.
     (before_home / ".cache/torch").mkdir(parents=True)
     expect("a cache that appeared after bootstrap", quiet(repo, fresh, before_home), 1)
     # The record is written once: run again, it would forgive what leaked
     # since, or -- Godot being in place now -- forget what was there before.
-    silently(fresh, before_home, PROJECT_NAME)
+    silently(fresh, before_home)
     expect("a second record forgives nothing new", quiet(repo, fresh, before_home), 1)
     (before_home / ".cache/torch").rmdir()
     expect("... and forgets nothing old", quiet(repo, fresh, before_home), 0)
+    # Planted: this project's own user:// is never forgiven, even when a
+    # record lists it -- a record taken again would launder it.
+    own = ".local/share/godot/app_userdata/" + PROJECT_NAME
+    (before_home / own).mkdir(parents=True)
+    with (fresh / RECORD).open("a", encoding="utf-8") as record:
+        record.write(own + "\n")
+    expect("this project's user:// in a record", quiet(repo, fresh, before_home), 1)
     # Planted: a record names its home; another home's same folders count.
     other_home = root / "other-home"
     (other_home / ".cache/huggingface").mkdir(parents=True)
     expect("another home's record", quiet(repo, fresh, other_home), 1)
-    # Planted: a toolchain that had Godot before its first record forgives nothing.
-    late = fake_toolchain(root / "late-toolchain")
-    silently(late, root / "dirty-home", PROJECT_NAME)
-    expect("a record taken after Godot was installed", quiet(repo, late, root / "dirty-home"), 1)
+    # Planted: a toolchain that had Godot before its first record forgives
+    # nothing -- on Linux, and with only Windows' godot.exe.
+    for name in ("godot", "godot.exe"):
+        late = root / f"late-{name}"
+        (late / "godot").mkdir(parents=True)
+        (late / "godot" / name).write_text("")
+        silently(late, other_home)
+        expect(f"a record taken after {name} was installed", int((late / RECORD).read_text(
+            encoding="utf-8").splitlines()[-1].startswith(".cache")), 0)
 
 
 def self_test() -> int:
@@ -769,7 +790,7 @@ def self_test() -> int:
         # Planted: no toolchain at all.
         expect("absent toolchain", quiet(repo_off_home, root / "nowhere", clean_home), 1)
 
-        # Planted: the repository living on the small disk.
+        # Planted: the repository in the home, its toolchain on another disk.
         repo_on_home = clean_home / "projects" / "game-ai-kit"
         repo_on_home.mkdir(parents=True)
         expect("repo under home", quiet(repo_on_home, good_toolchain, clean_home), 1)
@@ -824,7 +845,7 @@ def main(argv: list[str]) -> int:
 
     try:
         if args.record_home:
-            return record_home(toolchain, home, project_name(repo))
+            return record_home(toolchain, home)
         return run(repo, toolchain, home, on_runner=os.environ.get("GITHUB_ACTIONS") == "true")
     except OSError as error:
         print(f"check_disk_layout: cannot read a path: {error}", file=sys.stderr)

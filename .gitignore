@@ -59,5 +59,7 @@ godot/game3d/downloaded/
 
 # The toolchain when GAK_TOOLCHAIN is not set (T143, docs/adr/0002): Godot,
 # its export templates, and what llm-bootstrap and artgen-bootstrap fetch.
-/.toolchain/
+# No trailing slash: it is often a link (make worktree-setup, make bootstrap
+# TOOLCHAIN=...), and `name/` matches only a directory.
+/.toolchain
 python/*.egg-info/

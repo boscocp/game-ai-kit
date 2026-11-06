@@ -54,7 +54,7 @@ import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 GODOT = ROOT / "scripts" / "godot"
-#: Where the shards' counts and logs go: ignored by git, on the large disk.
+#: Where the shards' counts and logs go: ignored by git, inside the checkout.
 BUILD = ROOT / "build" / "shards"
 #: More processes than this gains little and starves whatever else runs.
 MOST_SHARDS = 12

@@ -62,12 +62,17 @@ ever run -- and any clone in the home (D5).
 
 1. **One name.** `GAK_TOOLCHAIN` is the toolchain everywhere. The Makefile
    copies `TOOLCHAIN=...` from its command line into it and exports it, so
-   every recipe, and every script a recipe calls, sees the same place.
-   `TOOLCHAIN` in the environment is not read: other builds set that name.
-   Two different values on one command line, or a relative path, stop
-   `make` before any recipe runs.
+   every recipe of that command, and every script a recipe calls, sees the
+   same place. A command-line variable lives one command, so `make
+   bootstrap` then links the checkout's `.toolchain` to where it installed,
+   unless one is there already: `make bootstrap TOOLCHAIN=/x` followed by a
+   bare `make menu` finds `/x`. `TOOLCHAIN` in the environment is not read,
+   a deliberate departure from the task's "setting either works": other
+   builds set that name. Two different values on one command line, or a
+   relative path, stop `make` before any recipe runs; an empty value is
+   unset.
 2. **A default that exists on anyone's machine:** the checkout's own
-   `.toolchain/`, ignored by git, as `.user-data/` is (ADR 0022).
+   `.toolchain`, ignored by git, as `.user-data/` is (ADR 0022).
    `make worktree-setup` links a worktree's `.toolchain` to the main
    checkout's, so worktrees share one toolchain as they did before. The
    author keeps the large disk by setting `GAK_TOOLCHAIN` once in the
@@ -75,36 +80,49 @@ ever run -- and any clone in the home (D5).
 3. **Invariant 8 is about what this repository writes**, and reads now
    "the toolchain lives in its own directory, never in the user's home
    folders" -- the second of the two wordings the task left to the owner.
-   What `check_disk_layout.py` asks:
-   - **D1** counts a folder in the home only when it is attributable to
-     this repository and appeared after `make bootstrap`: this project's own
-     `user://` (`app_userdata/<config/name>` under Godot's data folder),
-     and the model caches `scripts/artgen` and `scripts/llm` redirect.
-     `make bootstrap` records, once, what the home held before it wrote
-     anything (`home-before-bootstrap.txt` in the toolchain); a toolchain
-     that already held Godot gets a record that forgives nothing. Godot's
-     other folders (`~/.config/godot`, another project's `user://`) belong
-     to whatever Godot the person runs, and are a note: that this
-     checkout's Godot stays out of them is `._sc_`, held by D3 and D4.
+   It is **half held**, and CLAUDE.md's table says so. What
+   `check_disk_layout.py` asks:
+   - **D1** counts this project's own `user://` in the home
+     (`app_userdata/<config/name>` under Godot's data folder), always, and
+     the five model caches `scripts/artgen` and `scripts/llm` redirect,
+     unless they were there before `make bootstrap`. `make bootstrap`
+     records, once, which of those caches the home held
+     (`home-before-bootstrap.txt` in the toolchain); a toolchain that
+     already held Godot gets a record that forgives nothing. Godot's other
+     folders (`~/.config/godot`, another project's `user://`) belong to
+     whatever Godot the person runs, and are a note.
    - **D5 and D6** (the checkout and its `user://` under the home) are
      findings only when the toolchain is outside the home -- when the person
      has put this repository's large part on another disk, the checkout
      belongs there too. A toolchain in the home (a clone in the home with
-     its `.toolchain/`, a CI runner's temp folder) means one disk, and
-     they are notes.
+     its `.toolchain`, a CI runner's temp folder) means one disk, and they
+     are notes.
    - `scripts/artgen` and `scripts/llm` no longer refuse a toolchain under
      `$HOME`; they still refuse a cache pointed outside the toolchain.
 4. **The README says which systems `make bootstrap` serves**: Linux x86_64;
    Windows through Git Bash (`docs/howto/windows.md`); not macOS, where it
    would fetch the Linux build.
 
-**What the attribution cannot see.** The project's own `user://` in the
-home is counted whoever wrote it: a person who opens `godot/project.godot`
-in their own Godot editor, after bootstrap, writes it there and fails D1.
-Nothing in the folder says which Godot made it; the finding names the
-folder, and says to open the editor through `./scripts/godot --path godot
--e`, which redirects it.
+**What it no longer sees.**
 
-**Consequences.** The title of this record stays: on the author's machine
-the toolchain is still on the large disk, by `GAK_TOOLCHAIN`. The two
-mechanisms above are unchanged and still asserted.
+- *`._sc_` that stops being honoured.* D3 and D4 still ask that the marker
+  and `editor_data/` are beside the binary; they cannot ask that the
+  engine reads them. Until T143 an editor folder appearing in the home was
+  a finding; now `~/.config/godot` is a note, because any Godot the person
+  runs writes it. An engine update that ignored `._sc_` would write there
+  unseen.
+- *Which Godot wrote the project's own `user://`.* It is counted whoever
+  wrote it: a person who opens `godot/project.godot` in their own editor
+  writes it there and fails D1. Nothing in the folder says which Godot
+  made it; the finding says to open the editor through `./scripts/godot
+  --path godot -e`, which redirects it. It is never forgiven by a record,
+  so `rm -rf .toolchain && make bootstrap` cannot launder it.
+- *A model cache older than the newest record.* A toolchain deleted and
+  bootstrapped again writes a fresh record, which forgives a cache that
+  leaked before it.
+
+**Consequences.** This amendment supersedes the second bullet of
+Consequences above: an empty leftover folder in the home is a finding only
+for this project's own `user://` and the model caches. The first and third
+bullets stand. The title stays: on the author's machine the toolchain is
+on the large disk, by `GAK_TOOLCHAIN` or a `.toolchain` link.

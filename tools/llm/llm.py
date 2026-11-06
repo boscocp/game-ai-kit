@@ -1,7 +1,7 @@
 """The local LLM runtime for tier 3: install it, serve it, smoke it, bake it off (T93).
 
 Run only through `scripts/llm`, which points every cache at the toolchain
-directory on the large disk (invariant 8) and hands this file that directory.
+directory (invariant 8) and hands this file that directory.
 Standard library only. Nothing in the Python package, the addons or the games
 names this file, and `make check` never starts the server: a lesson never
 needs it (invariant 5). The recordings are the tier-1 lesson.

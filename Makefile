@@ -23,32 +23,42 @@ endif
 # Where the toolchain lives (T143, docs/adr/0002). One name, GAK_TOOLCHAIN:
 # the one scripts/godot, scripts/llm, scripts/artgen and the gates read.
 # `make X TOOLCHAIN=/path` is the same knob, copied into GAK_TOOLCHAIN and
-# exported, so `make bootstrap TOOLCHAIN=/x` installs where the next
-# `make menu` looks. Until T143 TOOLCHAIN reached only bootstrap, and every
-# other recipe looked at the author's own disk.
+# exported, so every recipe of that one command, and every script it calls,
+# sees one place. Until T143 TOOLCHAIN reached only bootstrap, and every
+# other recipe looked at the author's own disk. A command-line variable lives
+# one command: what makes `make bootstrap TOOLCHAIN=/x` the place the next
+# `make menu` looks is the `.toolchain` link bootstrap leaves (below).
 #
 # GNU make exports to a recipe's environment a variable that came from the
 # environment or the command line, and one named by `export` (the manual,
 # "Communicating Variables to a Sub-make"). TOOLCHAIN is taken from the
 # command line only: in the environment it is a common name other builds set.
+# An empty value is unset. A path with a space is not supported: make splits
+# words on spaces.
 #
-# The default is inside this checkout, `.toolchain/`, ignored by git as
+# The default is inside this checkout, `.toolchain`, ignored by git as
 # `.user-data/` is (docs/adr/0022): a folder anyone's clone can create. Keep
 # it on another disk by setting GAK_TOOLCHAIN once in the environment.
 ifeq ($(origin TOOLCHAIN),command line)
-GAK_TOOLCHAIN := $(TOOLCHAIN)
-endif
-ifeq ($(strip $(GAK_TOOLCHAIN)),)
-GAK_TOOLCHAIN := $(CURDIR)/.toolchain
-endif
-TOOLCHAIN := $(GAK_TOOLCHAIN)
-export GAK_TOOLCHAIN
-ifneq ($(TOOLCHAIN),$(GAK_TOOLCHAIN))
+ifneq ($(strip $(TOOLCHAIN)),)
+ifeq ($(origin GAK_TOOLCHAIN),command line)
+ifneq ($(strip $(GAK_TOOLCHAIN)),$(strip $(TOOLCHAIN)))
+ifneq ($(strip $(GAK_TOOLCHAIN)),)
 $(error TOOLCHAIN=$(TOOLCHAIN) and GAK_TOOLCHAIN=$(GAK_TOOLCHAIN) name two places; give one)
 endif
+endif
+endif
+override GAK_TOOLCHAIN := $(strip $(TOOLCHAIN))
+endif
+endif
+ifeq ($(strip $(GAK_TOOLCHAIN)),)
+override GAK_TOOLCHAIN := $(CURDIR)/.toolchain
+endif
+override TOOLCHAIN := $(GAK_TOOLCHAIN)
+export GAK_TOOLCHAIN
 # A relative path names another folder from each script's own working
-# directory. Absolute is a leading / (Linux, Git Bash) or a drive's X:/.
-ifeq ($(filter /%,$(GAK_TOOLCHAIN))$(findstring :/,$(GAK_TOOLCHAIN)),)
+# directory. Absolute is a leading / (Linux, Git Bash) or a drive's X:/ or X:\.
+ifeq ($(filter /%,$(GAK_TOOLCHAIN))$(findstring :/,$(GAK_TOOLCHAIN))$(findstring :\,$(GAK_TOOLCHAIN)),)
 $(error GAK_TOOLCHAIN=$(GAK_TOOLCHAIN) is not an absolute path)
 endif
 
@@ -69,11 +79,14 @@ help: ## Show this list
 # --- bootstrap -------------------------------------------------------------
 
 .PHONY: bootstrap
-bootstrap: ## Install the pinned Godot into GAK_TOOLCHAIN, .toolchain/ by default (SHA-verified)
-	@# What of Godot's and the model caches' the home holds before this
-	@# repository writes anything there: lint-disk-layout's D1 forgives it.
+bootstrap: ## Install the pinned Godot into GAK_TOOLCHAIN, .toolchain by default (SHA-verified)
+	@# Which model caches the home holds before this repository writes
+	@# anything there: lint-disk-layout's D1 forgives them.
 	@$(PYTHON) scripts/check_disk_layout.py --record-home
 	@bash scripts/bootstrap.sh "$(GAK_TOOLCHAIN)" "$(GODOT_VERSION)"
+	@# Installed somewhere else: `.toolchain` becomes a link there, so the
+	@# next make, with no variable, finds it.
+	@$(PYTHON) scripts/worktree_setup.py --remember-toolchain "$(GAK_TOOLCHAIN)"
 	@$(MAKE) --no-print-directory lint-disk-layout
 
 # --- the wave ---------------------------------------------------------------

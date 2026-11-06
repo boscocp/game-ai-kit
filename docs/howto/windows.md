@@ -46,13 +46,16 @@ export` is not ported there.
 |---|---|---|
 | toolchain, unless `GAK_TOOLCHAIN` says | the checkout's `.toolchain/` | the checkout's `.toolchain/` |
 | Godot | `godot/godot` | `godot/godot_console.exe`, which starts `godot/godot.exe` |
-| `user://` kept off the small disk by | `XDG_DATA_HOME` | `APPDATA` and `LOCALAPPDATA` |
+| `user://` kept out of the home by | `XDG_DATA_HOME` | `APPDATA` and `LOCALAPPDATA` |
 | Python | `python3` | `python`, with `PYTHONUTF8=1` |
 
 To put the toolchain elsewhere, on either system, set `GAK_TOOLCHAIN=E:/tc`
 in the environment before `make bootstrap`: the Makefile, `scripts/godot`
 and the gates all read that one name (T143). `make bootstrap
-TOOLCHAIN=E:/tc` is the same knob for one command, and only that one.
+TOOLCHAIN=E:/tc` is the same knob for one command, and leaves the clone's
+`.toolchain` a link to `E:/tc`, so later commands find it with no variable.
+Where Windows refuses the link (it needs a privilege Git Bash may not have),
+bootstrap says so, and `GAK_TOOLCHAIN` is the way.
 
 **Two programs, not one.** The Windows release of Godot is a GUI program and
 a `_console` twin that starts it with a console attached. Measured on 4.7.2
