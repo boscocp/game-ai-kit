@@ -3,6 +3,63 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-11-06, wave 143 merged (T112)
+
+**Where it stopped -- read first.** T112, the review before the
+repository opens, merged as #93 (b45a20a). It was reviewed by a fresh
+context (approve with fixes: 3 should-fix, 4 nits, all applied on the
+branch; `docs/reviews/143-a-review-before-the-repository-opens.md`). The
+report is `docs/reviews/open-the-repository.md`. `make check` ran on
+f6f9c2c, alone: exit 0. Then `make library-check` and `make release`
+(builds `dist/`, publishes nothing): 0. `check_no_employer_refs.py`,
+a matcher over `git log --all`, and a secret scan of every blob and
+message: nothing found. Fixed in the wave: 13 technique pages linked the
+catalogue as "coming", NOTICE credited only Kenney, CLAUDE.md's
+invariant-13 row said "none yet".
+
+**Blocking the opening:** T143 (a stranger's `make bootstrap` targets
+`/mnt/games`; `TOOLCHAIN` and `GAK_TOOLCHAIN` disagree; D1 fails on any
+home where Godot ran) and T142 (the README contradicts itself). Before
+inviting contributions: a code of conduct, then T144. T145 is
+recommended, not blocking.
+
+**Waiting on the owner -- the report's list, a recommendation each.**
+
+1. Hold the opening for T143. *Recommended:* yes.
+2. Hold the opening for T142. *Recommended:* yes.
+3. Choose a code of conduct, then T144. *Recommended:* Contributor
+   Covenant 2.1.
+4. Delete the 105 finished remote branches; turn on auto-delete of head
+   branches. *Recommended:* yes, by the owner or with an explicit yes.
+5. A repository description and topics. *Recommended:* yes.
+6. T145. *Recommended:* run it; it does not block.
+7. ADR 0023, still "proposed". *Recommended:* confirm.
+8. The commit email: keep history, GitHub's no-reply from now on. The
+   owner's own instructions fix the author's address, so this changes
+   them too. *Recommended:* the owner's call.
+9. More names in the term list, with `--add-term`, typed by the owner.
+   *Recommended:* yes, before opening.
+10. The Kenney pages, `kenney_racing-pack.zip` and the racing kit, in a
+    browser (kenney.nl refuses automated downloads). The owner's.
+11. Then public, `gh workflow enable ci`, PyPI and the Asset Library.
+    The owner's.
+12. Prune the local worktrees (88). *Recommended:* yes, keeping any
+    with work not merged.
+
+**Merging.** #92 had no review, and the auto-mode classifier refused
+its `gh pr merge` ("Merge Without Review"); the owner merged it. #93,
+reviewed, merged from the session. The agent's worktree stays locked
+by the harness; its local branch was not deleted.
+
+**Still waiting:** T133's manual check (SIGSTOP the server during a
+turn).
+
+**Next, as proposed.** T142 and T143 both write the README, so one after
+the other: T142 first (S), then T143 (M, the `Makefile`, which makes it
+global to `affected.py`: beside as few others as possible). Beside T142,
+the batch from the section below: T136, T138, T139, one squad task
+(T134) and T135. T144 after T142 and the code of conduct.
+
 ## Resuming after 2026-11-06, the owner's manual checks and list
 
 **Where it stopped -- read first.** No wave ran. The owner played the
