@@ -214,3 +214,28 @@ func test_the_menu_branches_into_a_win_no_single_recording_had() -> void:
 			await get_tree().process_frame
 	assert_str(demo.guard.state["outcome"]).is_equal(TalkRules.OPEN)
 	assert_str(demo.guard.turns.back()["speech"]).is_equal(TalkRules.words("en")["endings"]["open"])
+
+
+func test_the_guards_newest_line_is_shown_whole_however_long_the_talk() -> void:
+	# T136: the third answer wraps past the sixth line, all a label 150 px
+	# tall shows. The oldest turns give way; the newest is never the one cut.
+	var long_speech: String = "Then step aside and let me check the serial number before you burn out the " \
+		+ "lamp, the battery and my patience, because nobody comes to this door at night without a reason " \
+		+ "I have heard before, and I have heard every one of them twice this week alone, friend."
+	var demo: TalkDemo = auto_free((load(SCENE) as PackedScene).instantiate())
+	add_child(demo)
+	await get_tree().process_frame
+	demo.guard.use_runtime(RecordedRuntime.new(PackedStringArray([
+		_reply("Hm.", "flatter"), _reply("Go on.", "flatter"), _reply(long_speech, "flatter")])))
+	for said: int in 3:
+		await _say(demo.guard, "You look sharp tonight.")
+	var history: Label = demo.get_node("Interface/History")
+	var all_three: Label = auto_free(history.duplicate())
+	demo.get_node("Interface").add_child(all_three)
+	all_three.text = TalkPanel.history(demo.guard.turns, "")
+	# Lines first: that shapes the text, and the visible count reads the last shaping.
+	var lines_of_all_three: int = all_three.get_line_count()
+	assert_int(lines_of_all_three).is_greater(all_three.get_visible_line_count())  # the case is real
+	assert_str(history.text).ends_with(demo.guard.turns.back()["speech"])
+	var lines: int = history.get_line_count()
+	assert_int(lines).is_less_equal(history.get_visible_line_count())

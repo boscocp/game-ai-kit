@@ -2,9 +2,9 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-05
+verified_on: 2026-11-06
 tier: 2
-source: https://store.steampowered.com/app/2726370/Suck_Up/ ; https://docs.godotengine.org/en/4.7/classes/class_os.html ; https://github.com/ggml-org/llama.cpp/blob/b11960/tools/server/README.md ; https://www.cp.eng.chula.ac.th/~vishnu/gameResearch/story_november_2005/MateasSternTIDSE04.pdf
+source: https://store.steampowered.com/app/2726370/Suck_Up/ ; https://docs.godotengine.org/en/4.7/classes/class_label.html ; https://docs.godotengine.org/en/4.7/classes/class_os.html ; https://github.com/ggml-org/llama.cpp/blob/b11960/tools/server/README.md ; https://www.cp.eng.chula.ac.th/~vishnu/gameResearch/story_november_2005/MateasSternTIDSE04.pdf
 invalidated_if: spec/talk/gate.json changes, the recordings are made again, the pinned server or model in tools/llm/runtime.json changes, LlmValidator.json_schema stops being one shape per intent, or LlmValidator.SPEECH_PATTERN changes
 teaches: none
 -->
@@ -375,6 +375,33 @@ sound the alarm. Above, the green and red bars move against their white
 marks, and three dots over Bram light in turn while the model answers, the
 game drawing all the while.
 
+## The conversation, shown whole (T136)
+
+The conversation under the picture is a `Label` 150 px tall with
+`clip_text`, and shows at most `TalkPanel.HISTORY_TURNS` (3) exchanges.
+Six lines fit; a long answer wraps to a seventh, and before T136 the line
+cut was the newest one, the one being read. Now `TalkPanel.show_history`
+drops exchanges from the top until the rest fits: fewer old turns, never
+less of the new one. It asks the label itself -- its font, wrapping and
+spacing -- rather than counting lines by hand.
+
+Measured on 4.7.2 (verified_on 2026-11-06), headless, which shapes text
+though it draws nothing:
+
+- `get_line_count()` is the wrapped lines of the whole text, and
+  `get_visible_line_count()` those the height shows, never more than the
+  text has: at 14 px with the default font and `line_spacing` 3, a line is
+  20 px and the History label shows 6.
+- `get_visible_line_count()` does not shape a new text; it reads the last
+  shaping. Asked first after `text` changed, it answered 2 for an
+  eight-line text that had followed a two-line one, and 6 once
+  `get_line_count()` had been asked. So `_fits` counts the lines first.
+- A `Label` not yet in the tree answers 1 to both, so before the first
+  frame every text "fits", which is what the scene showed before.
+- `Font.get_multiline_string_size` agreed with the label on the texts
+  measured, but its default break flags are not the label's
+  `AUTOWRAP_WORD_SMART`, and the label's own count needs no copy of them.
+
 ## Manual check
 
 Play `make demo-talk` recorded, then live with `make llm-serve` running, in
@@ -382,7 +409,8 @@ English and in pt-BR. Then with no server running: Tab, and does the status
 line count the seconds while the game keeps drawing, typing open once the
 model is ready, and `pgrep llama-server` find nothing after you leave? Can you lose, and do you know why? With V on, can you
 tell which of your words the guard took as which act? Does the game keep
-drawing while he thinks?
+drawing while he thinks? Say enough that Bram answers at length three
+times in a row: is his newest line always whole?
 
 References, opened on 2026-10-26: *Suck Up!* on Steam
 <https://store.steampowered.com/app/2726370/Suck_Up/>; the *Vaudeville*

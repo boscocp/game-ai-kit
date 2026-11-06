@@ -302,7 +302,7 @@ func _refresh() -> void:
 		return
 	queue_redraw()
 	var pending: String = said[said.size() - 1] if guard.is_thinking() else ""
-	_history.text = TalkPanel.history(guard.turns, pending)
+	TalkPanel.show_history(_history, guard.turns, pending)
 	_choices.text = _choices_text()
 	_typed.editable = _may_type()
 	_panel.text = TalkPanel.describe(guard.turns, guard.state, language()) if view_on \
