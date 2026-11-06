@@ -38,17 +38,21 @@ from __future__ import annotations
 import argparse
 import os
 import pathlib
+import re
 import sys
 import tempfile
 
 from godot_checked import run_to_file
-from godot_shards import GODOT, ROOT, godot_command, windows_bash
+from godot_shards import ENGINE_ERROR, GODOT, ROOT, godot_command, windows_bash
 
 PLANTED = "res://test/rts/planted_exit_leak.gd"
 LEAKED = "leaked at exit"
 IN_USE = "still in use at exit"
 # Lines that name what was left: the two counts, and the verbose details.
 NAMING = (LEAKED, IN_USE, "Leaked instance:", "Resource still in use:")
+# What `--verbose` prints once a script is loaded: a run without one ran
+# nothing. A clean run of the RTS prints it, and no engine-error line.
+SCRIPT_LOADED = re.compile(r"^Completed load for: '[^']+\.gd'", re.MULTILINE)
 FRAMES = 30
 TIMEOUT = 60.0
 
@@ -78,14 +82,24 @@ def planted_reading(returncode: int | None, output: str) -> tuple[int, list[str]
 
 
 def scene_reading(scene: str, returncode: int | None, output: str) -> tuple[int, list[str]]:
-    """The scene's verdict: 0 when it ran, ended 0 and left nothing alive."""
+    """The scene's verdict: 0 when it ran a script, ended 0, printed no
+    engine error and left nothing alive.
+
+    Why the first three: a scene that never ran its script leaks nothing, so
+    a scene whose script did not parse, or that has none, would otherwise
+    read as clean -- the empty scene of invariant 4 (second review of #100).
+    """
     if returncode is None:
         return 2, [f"{scene} was still running at the deadline, and was killed"]
+    errors = [line.strip() for line in output.splitlines() if ENGINE_ERROR.match(line)]
     if returncode != 0:
-        return 1, [f"{scene} exited {returncode}"]
-    named = [line.strip() for line in output.splitlines() if any(text in line for text in NAMING)]
+        return 1, [f"{scene} exited {returncode}", *errors]
+    if not SCRIPT_LOADED.search(output):
+        return 1, [f"{scene} loaded no script: nothing in it ran, so its silence says nothing"]
+    named = [line.strip() for line in output.splitlines()
+             if any(text in line for text in NAMING) or ENGINE_ERROR.match(line)]
     if named:
-        return 1, [f"{scene} left something alive at exit:", *named]
+        return 1, [f"{scene} printed an engine error, or left something alive at exit:", *named]
     return 0, []
 
 
@@ -119,9 +133,18 @@ def self_test() -> int:
     """Every reading, asked of planted output; 0 when each came out as it must."""
     warning = "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details).\n"
     error = "ERROR: 1 resources still in use at exit.\n"
-    started = "Godot Engine v4.7.2.stable.official\n"
+    loaded = "Completed load for: 'res://x.gd' remapped 'res://x.gd' at thread -1\n"
+    started = "Godot Engine v4.7.2.stable.official\n" + loaded
     scene = "res://x.tscn"
+    broken = "SCRIPT ERROR: Parse Error: Expected end of statement.\nERROR: Failed to load script \"res://x.gd\".\n"
     cases = [
+        ("scene: its script did not parse", scene_reading(scene, 0, started + broken)[0], 1),
+        ("scene: no script loaded at all (an empty scene)",
+         scene_reading(scene, 0, "Godot Engine v4.7.2\nLoading resource: res://x.tscn\n")[0], 1),
+        ("scene: an instance named, counts lost",
+         scene_reading(scene, 0, started + "Leaked instance: GDScript:1 - Reference count: 1\n")[0], 1),
+        ("scene: a nonzero exit says why", "Cannot open" in "\n".join(
+            scene_reading(scene, 1, "ERROR: Cannot open file 'res://x.tscn'.\n")[1]), True),
         ("planted: both lines seen", planted_reading(0, started + warning + error)[0], 0),
         ("planted: nothing printed", planted_reading(0, "")[0], 1),
         ("planted: only the WARNING", planted_reading(0, warning)[0], 1),

@@ -23,7 +23,11 @@ The review of PR #100 measured two cases:
 ## Decisions written down first (the owner confirms in review)
 
 - The exit check runs over every scene in `check_demos.py`'s list, not a
-  second hand-kept list. Each scene costs about 2 s.
+  second hand-kept list. Measured on 2026-11-06 (wave 146, a Ryzen 5 9600X,
+  12 threads): `check_exit_leaks.py` on the RTS scene, the planted leak
+  included, took 0.70 s in each of three runs.
+- The gate is `make test-demos-exit`, named now so the acceptance below is
+  a command. Step 3 may rename it, and then the acceptance changes with it.
 - The planted leak runs once per gate run, not once per scene.
 - The squad leak is measured with `--verbose`, and its trigger is found
   the way T138 found the RTS one: a scratch copy, bisected. It is fixed
@@ -36,13 +40,19 @@ The review of PR #100 measured two cases:
 ## Steps
 
 1. Run `check_exit_leaks.py` on every demo scene, and list what leaks.
-2. Bisect the squad scripts' leak, and fix or record it.
+2. Bisect the squad scripts' leak, and fix or record it. The case stays
+   as `godot/test/squad/exit_ruleset_first.tscn`, a scene whose script
+   loads `squad_ruleset.gd` before anything else, and is read by the
+   acceptance below. If the leak stays recorded and not fixed, the
+   acceptance says so, expecting exit 1.
 3. The gate over every scene, with its module selection.
 
 ## Acceptance
 
 ```bash
 python3 scripts/check_exit_leaks.py --self-test
+make test-demos-exit
+python3 scripts/check_exit_leaks.py res://test/squad/exit_ruleset_first.tscn
 make test-rts-exit
 make lint-modules
 make lint-tasks lint-status

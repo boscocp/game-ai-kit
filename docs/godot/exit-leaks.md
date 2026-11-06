@@ -93,7 +93,13 @@ under a deadline, through `godot_shards`' `wait_or_kill`. The order:
    a `Node` never freed that holds a loaded script. If either line is
    missing there, the gate fails. That way a run that printed nothing is
    never read as clean.
-2. **The scene.** Then it runs the scene with `--quit-after 30`.
+2. **The scene.** Then it runs the scene with `--quit-after 30`. A scene
+   that never runs its script leaks nothing, so the scene is also refused
+   in three other cases. It fails if it printed an engine-error line (a
+   clean run of the RTS prints none). It fails if it loaded no `.gd` at
+   all, which is what an empty scene prints. And on a nonzero exit, the
+   engine lines that explain it are printed. These were added after the
+   second review of PR #100.
 3. **The deadline.** A child that stops on an error before `quit()` never
    ends. It is killed at `--timeout` (60 s in the Makefile), and the gate
    exits 2.
