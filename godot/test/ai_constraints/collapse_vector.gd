@@ -10,7 +10,9 @@ const KEYS: Array[String] = ["attempts", "collapsed", "contradictions", "descrip
 
 
 ## Why `vector` is not a usable vector, or "" when it is one -- the same
-## rules, C1 to C6, as `test_constraints_collapse.py`.
+## rules, C1 to C6, as `test_constraints_collapse.py`. C5: a map needs an
+## attempt left, and no map means every attempt failed or the build stopped
+## at the first, on a contradiction before any collapse.
 static func why_not_a_vector(vector: Dictionary) -> String:
 	var keys: Array = vector.keys()
 	keys.sort()
@@ -25,6 +27,8 @@ static func why_not_a_vector(vector: Dictionary) -> String:
 		return "C4 its restarts do not count the contradictions it names"
 	if vector["map"] != null and int(vector["restarts"]) >= int(vector["attempts"]):
 		return "C5 it has a map and no attempt left"
+	if vector["map"] == null and not int(vector["restarts"]) in [1, int(vector["attempts"])]:
+		return "C5 it has no map, attempts to spare, and did not stop at the first"
 	if vector["map"] != null and (vector["collapsed"] as Array).size() != int(vector["width"]) * int(vector["height"]):
 		return "C6 its map was finished without collapsing every cell"
 	return ""

@@ -1056,9 +1056,12 @@ def self_test() -> int:
     failures = []
     with tempfile.TemporaryDirectory() as workspace:
         root = pathlib.Path(workspace)
-        for label, changes, want, code in cases():
-            failures += expect(label, planted(root, label, changes), want, code)
-        failures += drifted_summary_case(root) + mark_cases(root)
+        try:
+            for label, changes, want, code in cases():
+                failures += expect(label, planted(root, label, changes), want, code)
+            failures += drifted_summary_case(root) + mark_cases(root)
+        except AssertionError as broken:
+            failures.append(f"the sound repository: {broken}")
         refused = planted(root, "refused", {str(GAMES): games_text({})})
         shutil.copy(refused / README["en"], root / "before")
         with contextlib.redirect_stdout(io.StringIO()):

@@ -12,8 +12,11 @@
 ## (`SquadRuleset.map_rows`), and `use_map` puts the map of the game being
 ## played here, where every rule of the mode reads it -- the squads' cells
 ## stay these, pinned to open ground on every map built. A new ruleset puts
-## the tactical map back (`use_map([])`). The starts stay where they are because the rules, the evaluation
-## and the enemy's memory of the starts all read `RED_CELLS`.
+## the tactical map back (`use_map([])`). So `rows()` is the map of the
+## ruleset built or started last: a `SquadRuleset.new()` resets a live
+## game's map, and only the menu and the tests make one. The starts stay
+## where they are because the rules, the evaluation and the enemy's memory
+## of the starts all read `RED_CELLS`.
 ##
 ## When not to use it: a layout of pieces. The cells are one layout; a mode
 ## with another belongs in a data file.

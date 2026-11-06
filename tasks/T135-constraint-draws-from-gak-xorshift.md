@@ -15,8 +15,13 @@ wave about something else, and recommended this task.
 ## Decisions written down first (the owner confirms in review)
 
 - `ConstraintDraws` keeps `shuffle` and `index`, which are this addon's
-  own, and draws its numbers from a `GakXorshift`. The addon declares
-  `ai_core` in `modules/ai_constraints.json`.
+  own, and draws its numbers from a `GakXorshift`. The addon adds `ai_core`
+  to `depends_on` in `modules/ai_constraints.json`, which is empty today:
+  a manifest change, which `affected.py` reads as global, so the wave runs
+  all of `make check`.
+- `ConstraintDraws.SEED_FOR_ZERO` stays, as a name for `GakXorshift`'s own
+  rule for a zero seed, because `ConstraintSolver` and `WaveCollapse` use it
+  as their default seed; their callers keep compiling unchanged.
 - The draws agree number for number, so no vector is regenerated. If one
   moves, that is a bug in the fold, not a new vector.
 - The Python twin draws from `gameaikit.core.Xorshift` the same way.

@@ -311,3 +311,142 @@ Applied on the same branch. Main had not moved (dcba8f5).
 | the catalogue walks from the scene alone | `catalogue.py --self-test` (1) |
 | most entropy first / propagation skipped / contradiction not detected | Python, GDScript vectors and suites |
 | `gave_up` dropped | Python (1) and GDScript suites; vectors pass, as above |
+
+## Second review
+
+A fresh context, reading only the diff from the first reviewed head to
+ec62e86, in a throwaway worktree.
+
+### Verdict
+
+**Approve.** No blocker. Two should-fix items and three nits, none of
+which changes behaviour. Every plant was caught: 3 in the catalogue,
+3 in map ownership, 7 in the new tests, and 2 for the early stop. None
+survived.
+
+### What was run (all green on ec62e86)
+
+- `python3 scripts/catalogue.py --check` exit 0; `--self-test` ok.
+- `make test-godot-some SUITES="test/squad"`: 112 cases, 0 failures, no
+  `SCRIPT ERROR`. Also `test/squad/squad_map_test.gd test/ai_constraints`:
+  42 cases, 0 failures.
+- `make test-constraints-vectors`: 9 + 7 vectors, 0 failures.
+- `python3 -m unittest ... -p 'test_constraints*.py'`: 37 OK.
+- `derive.py` run again into a scratch folder, `python3 -I`: all 7 collapse
+  vectors byte-identical to the committed ones, `pinned-so-there-is-none`
+  included.
+- `make lint-tasks lint-status` ok (135 task files);
+  `check_glossary.py` 0; `check_readability.py` 0.
+
+### Plants
+
+| # | plant | caught by | right reason |
+|---|---|---|---|
+| 1 | catalogue: `scene_reach(..., ())`, skipping the ruleset walk | self-test's new case (C1 expected, got 0); `--check` C1 on README, both catalogues | yes |
+| 2 | catalogue: `waiting = []`, walking nothing | self-test (exit 1, a traceback on the sound tree); `--check` C1 and C7 | yes, though the self-test reports it as a crash, not as a finding |
+| 3 | catalogue: rulesets queued but not seeded | self-test's new case; `--check` C1 | yes |
+| 3b | menu card: ruleset path misspelt | `catalogue.py --check` C1/C7; `check_demos.py` C9 names it | yes |
+| 4 | `SquadRuleset._init` without `use_map` (a static left behind) | `squad_map_test.gd:116`, the second ruleset sees the first's map | yes |
+| 5 | `start()` without `use_map` | `squad_map_test.gd:121` | yes |
+| 6 | `_play_on_the_build` sets only the static, not `map_rows` | `squad_map_test.gd:121` | yes |
+| 7 | `why_unplayable` checks red's starts only for cover | `squad_map_test.gd:63-64` (seeds 3 and 21 accepted) | yes |
+| 8 | `why_unplayable` checks red's starts only for walking | `squad_map_test.gd:73` (blue walled in) | yes |
+| 9 | `has_cover_within` uses `<= action + 1` | `squad_map_test.gd:86` | yes |
+| 10 | water counted as cover | `:63` first; with that test disabled, `:93` | yes |
+| 11 | `_terrain` drawn from `TacticalScenario.MAP` | `:191` per row | yes |
+| 12 | `_explained` reads `TacticalScenario.MAP` | `:193` | yes |
+| 13 | clicks taken while B shows a build | `:198`; `:202` proves a click lands when not building, so `:198` is not vacuous | yes |
+| 14 | GDScript `solve` without the early stop | `wave_collapse_test.gd:94-95`, `collapse_vector_test.gd:54` | yes |
+| 15 | Python `solve` without the early stop | `test_every_vector_is_a_vector_and_holds [pinned-so-there-is-none.json]` | yes |
+
+`__pycache__` was cleared after the Python plant, and every file was
+restored and checked clean before the worktree was removed.
+
+### Answers to the brief
+
+1. **Catalogue.** It still lists what each demo uses. The new marks on
+   `demo-tactical` are true. `squad.json` declares `ai_adversarial`,
+   `ai_constraints` and `ai_utility`. The squad ruleset's roster reaches
+   `MonteCarloSearch`, `ExpectiminimaxSearch`, `ActionChoice` /
+   `AimChoice` (`weighed_squad.gd`) and `WaveCollapse`. The marks come
+   through `file_algorithms` and the card's evidence, not through
+   `tactical.json`'s `depends_on`, which is right because the mode is on
+   the card. The regenerated outputs are what the script writes (`--check`
+   exit 0 in both languages). The walk cannot go green while finding
+   nothing (plants 1-3).
+2. **Map ownership.** `SquadScenario._built` is still a static.
+   It is now a last-writer-wins cache of the active ruleset's map, and
+   `_init` and `start` both write it. Opening the scene again, and
+   building and then starting on a hand-drawn map, both give the right
+   map (plants 4-6).
+3. **New tests.** Each fails on its own assertion, for its own fault
+   (plants 7-13).
+4. **Early stop.** It is sound. AC-3's fixpoint does not depend on the
+   order, so a contradiction before any collapse is the same for every
+   seed. `derive.py` stops on its own `collapsed` list, independently of
+   `assignments`, and agrees with the code. Python agrees.
+5. **T135.** The task is well formed, and the lints pass. See finding 2.
+6. **Readability and glossary.** Both gates are green. See nit 5.
+
+### Findings
+
+1. **should-fix**: `godot/test/ai_constraints/collapse_vector.gd:26` and
+   `python/tests/test_constraints_collapse.py:50`. C5 was loosened to
+   "a map and no attempt left". A vector with no map that gave up with
+   attempts to spare now passes the shape check, whatever its restarts.
+   The early stop can only happen on the **first** attempt: if a
+   contradiction comes before any collapse, the first seed meets it too.
+   So the exact rule is still checkable. *Fix:* in both languages, add
+   `map == null and restarts < attempts and restarts != 1` → C5 ("no map
+   with attempts to spare, and not stopped at the first"). Plant
+   `restarts: 2, contradictions: [x, x]` on `pinned-so-there-is-none`.
+2. **should-fix**: `tasks/T135-constraint-draws-from-gak-xorshift.md`,
+   Decisions. "The addon declares `ai_core` in `modules/ai_constraints.json`"
+   reads as already true. Today `depends_on` is `[]`, so this is a manifest
+   change, and `affected.py` treats manifests as global, so the wave runs
+   all of `make check`. `SEED_FOR_ZERO` is also used outside the class
+   (`constraint_solver.gd:50,77`, `wave_collapse.gd:56,68`), and the task
+   does not say whether it stays. *Fix:* say "adds `ai_core` to
+   `depends_on` (empty today; a manifest change, so the wave runs
+   `make check`)", and add "`ConstraintDraws.SEED_FOR_ZERO` stays, or is
+   GakXorshift's, and its callers keep compiling" to the decisions.
+3. **nit**: `scripts/catalogue.py` self-test, plant 2. If the walk finds
+   nothing, the self-test dies with a traceback on the sound tree instead
+   of naming a failure. It still exits 1, so it is not a false green.
+   *Fix (optional):* a sound-tree case that asserts `demo-play` reaches at
+   least one module, so the message says what broke.
+4. **nit**: `godot/game/squad/squad_ruleset.gd:52`. A constructor that writes
+   global state means that any `SquadRuleset.new()` resets a live game's
+   map. Today only `menu.gd:250` and the tests construct one, so this is
+   harmless. *Fix:* one line in `SquadScenario`'s header saying that
+   `rows()` is the map of the ruleset built or started last.
+5. **nit**: Lines over 100 characters in new prose:
+   `godot/game/squad/squad_scenario.gd:15` (106) and
+   `spec/vectors/constraints/collapse/README.md:88` (113) and `:105` (111).
+   *Fix:* rewrap. Also optional: `games.json` `demo-tactical.like` still
+   reads only "Advance Wars", while its row now lists the XCOM mode's
+   techniques. It could say "Advance Wars, or XCOM".
+
+### What was done about the second review
+
+Main had not moved (dcba8f5).
+
+1. **Fixed.** C5 is exact again in both languages. A vector with no map
+   must have `restarts` equal to `attempts`, or to 1 (the build stopped at
+   the first attempt, on a contradiction before any collapse). Both suites
+   plant `restarts: 2, contradictions: ["0,0", "0,0"]` on
+   `pinned-so-there-is-none`, and both fail when the rule is taken out
+   (Python, 1 failure; GDScript, 1).
+2. **Fixed.** T135 now says that `ai_constraints`' `depends_on` is empty
+   today, so adding `ai_core` is a manifest change and that wave runs all
+   of `make check`. It also says that `ConstraintDraws.SEED_FOR_ZERO`
+   stays, because the solver and `WaveCollapse` use it as their default
+   seed.
+3. **Nit, fixed.** The catalogue self-test now reports a sound repository
+   that does not generate as a named failure, not a traceback. Checked by
+   emptying the walk: it reports "the sound repository: ...".
+4. **Nit, fixed.** `SquadScenario`'s header says that `rows()` is the map
+   of the ruleset built or started last.
+5. **Nit, fixed.** The three long lines are rewrapped. `games.json` now
+   says the tactical demo is like "Advance Wars, or XCOM", in both
+   languages, and the catalogue is regenerated.

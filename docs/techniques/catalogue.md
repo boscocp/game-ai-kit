@@ -78,7 +78,7 @@ A row per demo, a column per technique; each mark links the technique's page, an
   - keys: V watches two computers; H the planner; I the influence map; F lifts the fog.
   - techniques: ● [ai_behaviour](ai_behaviour.md) (HTN, state machine); ● [ai_planning](ai_planning.md) (STRIPS over PDDL); ● [ai_rts_core](ai_rts_core.md) (flow fields).
   - written inside the example itself: priority queue of wishes, utility over regions, influence map.
-- <a id="demo-tactical"></a>**Tactics**, `make demo-tactical` -- like Advance Wars.
+- <a id="demo-tactical"></a>**Tactics**, `make demo-tactical` -- like Advance Wars, or XCOM.
   - keys: C changes the computer, whose next decision is drawn in pink before space plays it; S swaps sides; in XCOM, N a new map and B its build, a cell at a time.
   - techniques: ● [ai_adversarial](ai_adversarial.md) (Monte Carlo tree search, expectiminimax with a hand-written evaluation); ● [ai_behaviour](ai_behaviour.md) (state machine, behaviour tree, GOAP, HTN); ● [ai_constraints](ai_constraints.md) (wave function collapse); ● [ai_learning](ai_learning.md) (a regression trained in Python); ● [ai_planning](ai_planning.md) (STRIPS over PDDL); ● [ai_utility](ai_utility.md) (utility-weighed actions).
   - written inside the example itself: hand-written rules, lookahead with exact odds, influence map.

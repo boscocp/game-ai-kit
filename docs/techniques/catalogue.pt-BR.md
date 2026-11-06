@@ -78,7 +78,7 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
   - teclas: V assiste a dois computadores; H o planejador; I o mapa de influência; F tira a névoa.
   - técnicas: ● [ai_behaviour](ai_behaviour.pt-BR.md) (HTN, máquina de estados); ● [ai_planning](ai_planning.pt-BR.md) (STRIPS sobre PDDL); ● [ai_rts_core](ai_rts_core.pt-BR.md) (*flow fields*).
   - escrito dentro do próprio exemplo: fila de prioridade de desejos, *utility* por região, mapa de influência.
-- <a id="demo-tactical"></a>**Tática**, `make demo-tactical` -- parecido com Advance Wars.
+- <a id="demo-tactical"></a>**Tática**, `make demo-tactical` -- parecido com Advance Wars, ou XCOM.
   - teclas: C troca o computador, cuja próxima decisão aparece em rosa antes de o espaço jogá-la; S troca de lado; no XCOM, N um mapa novo e B a construção dele, uma célula por vez.
   - técnicas: ● [ai_adversarial](ai_adversarial.pt-BR.md) (*MCTS* (busca em árvore de Monte Carlo), *expectiminimax* com uma avaliação escrita à mão); ● [ai_behaviour](ai_behaviour.pt-BR.md) (máquina de estados, *behaviour tree*, GOAP, HTN); ● [ai_constraints](ai_constraints.pt-BR.md) (*wave function collapse*); ● [ai_learning](ai_learning.pt-BR.md) (uma regressão treinada no Python); ● [ai_planning](ai_planning.pt-BR.md) (STRIPS sobre PDDL); ● [ai_utility](ai_utility.pt-BR.md) (ações pesadas por *utility*).
   - escrito dentro do próprio exemplo: regras escritas à mão, *lookahead* com chances exatas, mapa de influência.

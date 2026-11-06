@@ -85,8 +85,8 @@ collapses, no restart, the map `bab / aba / bab`, as the file claims.
 The others: `heavy-and-light` draws one tile nine times in ten and shows
 the light one once in eight cells; `pinned-so-there-is-none` pins two
 neighbouring cells to the same checkers tile, so AC-3 empties (0,0) before
-anything collapses, and the build stops after that one attempt (rule 7); `three-colours-restart` has three tiles,
-none beside itself, and seed 30 runs out at (6,4) before seed 31 builds
+anything collapses, and the build stops after that one attempt (rule 7);
+`three-colours-restart` has three tiles, none beside itself, and seed 30 runs out at (6,4) before seed 31 builds
 eight by eight; `three-colours-two-restarts` runs out twice on the squad's
 14 by 9; and `squad-map-seed-1` and `-2` are the XCOM-style mode's own tile
 set (`spec/squad/tiles.json`; `python/tests/test_squad_vectors.py` holds the two equal) with the
@@ -102,8 +102,9 @@ mxgmn's README says of most tile sets.
 
 A vector with a key nobody reads (C1), tiles that are not a tile set (C2),
 a pin off the map or to a tile not in the set (C3), restarts that do not
-count the contradictions (C4), a map with no attempt left (C5), or a map finished without collapsing every cell
-(C6), is refused rather than half-checked. Three planted collapses must
+count the contradictions (C4), a map with no attempt left or no map with
+attempts to spare that did not stop at the first (C5), or a map finished
+without collapsing every cell (C6), is refused rather than half-checked. Three planted collapses must
 fail, in both languages: one that takes the cell of most entropy (rule 4),
 one that skips propagation (rules 3 and 6), and one blind to a
 contradiction, which goes back as the solver would (rule 7).

@@ -65,6 +65,13 @@ func test_a_broken_vector_is_refused_by_its_rule() -> void:
 		assert_str(CollapseVector.why_not_a_vector(broken)).starts_with(change[0])
 
 
+func test_no_map_with_attempts_to_spare_is_refused_unless_it_stopped_at_the_first() -> void:
+	var broken: Dictionary = _vector("pinned-so-there-is-none.json").duplicate(true)
+	broken["restarts"] = 2
+	broken["contradictions"] = ["0,0", "0,0"]
+	assert_str(CollapseVector.why_not_a_vector(broken)).starts_with("C5")
+
+
 func test_the_cell_of_most_entropy_first_fails() -> void:
 	var vector: Dictionary = _vector("squad-map-seed-1.json")
 	var planted := MostEntropy.new(CollapseVector.problem_of(vector), CollapseVector.weights_of(vector))

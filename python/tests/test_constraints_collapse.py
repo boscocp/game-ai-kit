@@ -49,6 +49,8 @@ def why_not_a_vector(vector: dict) -> str:
         return "C4 its restarts do not count the contradictions it names"
     if vector["map"] is not None and vector["restarts"] >= vector["attempts"]:
         return "C5 it has a map and no attempt left"
+    if vector["map"] is None and vector["restarts"] not in (1, vector["attempts"]):
+        return "C5 it has no map, attempts to spare, and did not stop at the first"
     if vector["map"] is not None and len(vector["collapsed"]) != len(names):
         return "C6 its map was finished without collapsing every cell"
     return ""
@@ -111,6 +113,11 @@ class CollapseVectors(unittest.TestCase):
             broken = json.loads(json.dumps(sound))
             broken[key] = value
             self.assertTrue(why_not_a_vector(broken).startswith(rule), rule)
+
+    def test_no_map_with_attempts_to_spare_is_refused_unless_it_stopped_at_the_first(self) -> None:
+        broken = json.loads(json.dumps(vectors()["pinned-so-there-is-none.json"]))
+        broken["restarts"], broken["contradictions"] = 2, ["0,0", "0,0"]
+        self.assertTrue(why_not_a_vector(broken).startswith("C5"))
 
     def test_the_cell_of_most_entropy_first_fails(self) -> None:
         vector = vectors()["squad-map-seed-1.json"]
