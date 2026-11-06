@@ -63,3 +63,16 @@ drawing until the turn is said to have failed?
   `/health` only.
 - Shares `godot/addons/ai_llm/` and `godot/test/ai_llm/` with T129: run one
   after the other.
+- Both fixes measured (`http_frame_probe.gd`, given a second port; the
+  table is in `docs/godot/llm-requests.md#a-server-that-accepts-and-never-answers`). Never cancelling a
+  threaded request does not hold: freeing its node joins the same thread,
+  59.0 s on one frame, and leaving the scene frees it. Threads off does:
+  in the 4.7.2 source the client then reads with `get_partial_data` once a
+  frame and `cancel_request` joins nothing; worst frame 7 ms. So the fix
+  is one setting, the engine's own non-blocking reads, rather than a
+  second hand-written HTTP client beside `LlmLocalServer`'s.
+- The gate learned it: V3 asks for `use_threads = false`, the reverse of
+  T92's rule, with the reason in its docstring.
+- Reviewed: `docs/reviews/138-a-silent-server-never-holds-the-frame.md`
+  (changes requested, no blocker, all applied).
+- Done in wave 138.

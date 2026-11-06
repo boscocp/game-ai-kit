@@ -295,8 +295,9 @@ thread. Measured on 4.7.2 against a socket that accepts and never answers
 arrived each frame, and drops the socket after 1 s. Against the same
 silent socket its longest frame stays under 200 ms
 (`test_a_server_that_never_answers_never_holds_the_frame`).
-`HttpRuntime`'s chat request still goes through a threaded `HTTPRequest`,
-so it has the same flaw. That is T133.
+`HttpRuntime`'s chat request had the same flaw; since T133 its
+`HTTPRequest` runs with threads off, which reads without blocking
+([llm-requests.md](llm-requests.md#a-server-that-accepts-and-never-answers)).
 
 What the documentation does not say, read in the source at 4.7
 (`drivers/unix/os_unix.cpp`): `OS.kill` sends SIGKILL and then **waits**

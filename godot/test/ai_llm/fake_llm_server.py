@@ -9,8 +9,8 @@ LLAMA_API_KEY in its environment, as `LlmLocalServer` hands it down), 401
 to a request without `Authorization: Bearer KEY`, in the shape the pinned server was
 measured to answer (docs/godot/talk.md). Anything else is a 404. It
 listens on this machine only, as `scripts/llm serve` does, and stops by
-itself after LIFETIME seconds, so a test that failed before stopping it
-leaves nothing running for long. Given `--parent-pid`, it dies with that
+itself after LIFETIME seconds (or `--lifetime S`), so a test that failed
+before stopping it leaves nothing running for long. Given `--parent-pid`, it dies with that
 parent through the same `die_with` `scripts/llm serve` uses
 (tools/llm/llm.py), so a test of how the game ends tests that function;
 `--no-die` skips it, for the planted case that must be seen to survive.
@@ -21,7 +21,7 @@ running -- a server hung, as far as anyone asking can tell.
 
 Usage:
     fake_llm_server.py PORT LOADING [--no-die] [--silent] [--deaf-after S]
-                       [--api-key KEY] [--parent-pid PID]
+                       [--api-key KEY] [--parent-pid PID] [--lifetime S]
     fake_llm_server.py PORT exit [...]   exit 2 at once, as `scripts/llm`
                                          does when nothing is installed
 """
@@ -97,6 +97,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--no-die", action="store_true")
     parser.add_argument("--silent", action="store_true")
     parser.add_argument("--deaf-after", type=float, default=0.0)
+    parser.add_argument("--lifetime", type=float, default=LIFETIME)
     args = parser.parse_args(argv[1:])
     if args.loading == "exit":
         return 2
@@ -105,15 +106,15 @@ def main(argv: list[str]) -> int:
         import llm  # noqa: PLC0415 -- only when asked, and from the toolchain's folder
         llm.die_with(args.parent_pid)
     if args.silent:
-        return say_nothing(args.port)
+        return say_nothing(args.port, args.lifetime)
     Server.ready_at = time.monotonic() + float(args.loading)
     Server.api_key = args.api_key or os.environ.get("LLAMA_API_KEY", "")
     server = http.server.ThreadingHTTPServer(("127.0.0.1", args.port), Server)
-    threading.Timer(LIFETIME, server.shutdown).start()
+    threading.Timer(args.lifetime, server.shutdown).start()
     if args.deaf_after:
         threading.Timer(args.deaf_after, go_deaf, [server]).start()
     server.serve_forever()
-    time.sleep(LIFETIME if args.deaf_after else 0.0)
+    time.sleep(args.lifetime if args.deaf_after else 0.0)
     return 0
 
 
@@ -123,13 +124,13 @@ def go_deaf(server: http.server.ThreadingHTTPServer) -> None:
     server.server_close()
 
 
-def say_nothing(port: int) -> int:
-    """Listen on `port` for LIFETIME seconds, accepting nothing, answering nothing."""
+def say_nothing(port: int, lifetime: float) -> int:
+    """Listen on `port` for `lifetime` seconds, accepting nothing, answering nothing."""
     listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     listener.bind(("127.0.0.1", port))
     listener.listen(64)
-    time.sleep(LIFETIME)
+    time.sleep(lifetime)
     return 0
 
 
