@@ -40,6 +40,10 @@ entry is an exact span, and an entry no page uses any more is a finding, so
 the lists only shrink when a page changes. Reading them -- is each truly a
 title or Portuguese emphasis? -- is the task's manual check.
 
+Known gaps, none on a page today: HTML italics (`<em>`, `<i>`) are not
+read, only Markdown's `*` and `_`. An escaped `\\*` inside a span
+(*IDA\\* variant*) is read, and looked up as `*`.
+
 The glossary page itself is not read for spans: its second column explains
 a term with its expansion in italics (*Goal-Oriented Action Planning*), and
 an expansion is defined by the row it sits in.
@@ -96,8 +100,13 @@ TITLES = frozenset({
     "The Computer Journal",                             # where Michie published MENACE
 })
 
-# Portuguese in italics: a word stressed, or a sentence quoted as the
-# example of what a technique decides. Not English kept as a term.
+# Portuguese in italics, not English kept as a term, of three kinds: a word
+# stressed (*como*, *o que*); a sentence quoted as the example of what a
+# technique decides; and a Portuguese technical term in italics where its
+# page defines it (*binária*, *global* and *consistente* in a CSP or a
+# heuristic, *contexto* in an opponent model). An entry is allowed on every
+# page, not only on the one it was measured on, and *global* is English
+# too: a hole the size of one word, read in the task's manual check.
 EMPHASIS = frozenset({
     "atacar ou recuar", "binária", "como", "consistente", "contexto",
     "convença o guarda a deixar você passar", "escrito dentro do próprio exemplo",
@@ -110,11 +119,16 @@ COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 CODE_SPAN_RE = re.compile(r"(`+).+?\1")
 LINK_TARGET_RE = re.compile(r"\]\([^)]*\)")
 # One `*` or `_` opening against a word and closing against one, not a `**`
-# of bold and not an escaped `\*` (A\*). Bold is removed before this runs.
+# of bold and not an escaped `\*` (A\*), which may sit inside a span
+# (*IDA\* variant*). A `*` may close inside a word, as CommonMark's does --
+# *zergling*s is a Portuguese plural outside the asterisks -- while a `_`
+# stays bounded by non-letters, as CommonMark's does too (snake_case_name).
 # A span may run onto the next line, as Markdown's does inside a paragraph
 # (*Game AI* at a line's end, *Pro 2* on the next), but never past a blank one.
+# The `**` of bold is taken out before this runs (see `prose`), so that
+# ***x*** and bold inside italics leave their italics to be read.
 ITALIC_RE = re.compile(
-    r"(?<![*\\\w])\*(?![*\s])((?:[^*\n]|\n(?!\s*\n))+?)(?<![\s\\])\*(?![*\w])"
+    r"(?<![*\\\w])\*(?![*\s])((?:\\\*|[^*\n]|\n(?!\s*\n))+?)(?<![\s\\])\*(?!\*)"
     r"|(?<![_\w])_(?![_\s])((?:[^_\n]|\n(?!\s*\n))+?)(?<!\s)_(?![_\w])"
 )
 PARENTHESISED_RE = re.compile(r"\([^)]*\)")
@@ -152,7 +166,7 @@ def italic_spans(text: str) -> list[tuple[int, str]]:
     """(line it opens on, span) for every italic span, its spaces made single."""
     found = []
     for match in ITALIC_RE.finditer(text):
-        span = " ".join((match.group(1) or match.group(2)).split())
+        span = " ".join((match.group(1) or match.group(2)).replace("\\*", "*").split())
         found.append((text.count("\n", 0, match.start()) + 1, span))
     return found
 
@@ -281,6 +295,7 @@ Um termo no plural está aqui no singular: *ignored here*.
 | *ply* (*plies*) | a jogada de um jogador |
 | CSP (problema de satisfação) | um problema, *expanded here* |
 | *seek*, *arrive* / *flow field* | comportamentos |
+| PID, LQR | dois controladores |
 """
 
 GOOD_PAGE = """# ai_x
@@ -290,8 +305,8 @@ source: *Not A Term* in a comment
 -->
 
 O *pathfinding* acha, e *Pathfinding* abre a frase. Duas *plies*, *CSP*, *flow
-fields*, *seek*, **negrito**, A\\* e o *Livro*, *como* ênfase.
-`*code_span*` e [um link](docs/a_b_c.md) e `x_y_z`.
+fields*, *seek*, **negrito**, A\\* e o *Livro*, *como* ênfase, e o *LQR*.
+`*code_span*` e [um link](docs/_steering_.md) e `x_y_z`.
 
 ```gdscript
 var name := "*undefined_in_code*"
@@ -318,15 +333,26 @@ def with_page(text: str) -> dict[str, str]:
     return {"docs/techniques/ai_x.pt-BR.md": GOOD_PAGE + text, "README.pt-BR.md": "# Leia\n\n*seek*\n"}
 
 
+# Lines that must each give a G3, appended one at a time to the good page.
+UNDEFINED_LINES = {
+    "an undefined English term": "O *steering*.",
+    "the plural of an undefined term": "Os *bots*.",
+    "a term running onto the next line": "O *steering\nbehaviour*.",
+    "an underscore italic": "O _steering_.",
+    "a Portuguese plural outside the asterisks": "Dois *zergling*s.",
+    "a defined term with a final d, not s": "O *arrived*.",
+    "a defined term with two final s": "Os *seekss*.",
+    "bold and italic at once": "O ***steering***.",
+    "an escaped star inside a span": "Um *IDA\\* variant* aqui.",
+}
+
+
 def self_test_cases(root: pathlib.Path) -> list[tuple[str, pathlib.Path, int, str]]:
     """(label, planted repository, exit code it must give, finding it must name)."""
-    return [
-        ("the good pages", build(root, "good", GOOD_GLOSSARY, with_page("")), 0, ""),
-        ("an undefined English term", build(root, "undefined", GOOD_GLOSSARY, with_page("\nO *steering*.\n")), 1, "G3"),
-        ("the plural of an undefined term", build(root, "plural", GOOD_GLOSSARY, with_page("\nOs *bots*.\n")), 1, "G3"),
-        ("a term running onto the next line", build(root, "two-lines", GOOD_GLOSSARY,
-                                                    with_page("\nO *steering\nbehaviour*.\n")), 1, "G3"),
-        ("an underscore italic", build(root, "underscore", GOOD_GLOSSARY, with_page("\nO _steering_.\n")), 1, "G3"),
+    cases = [("the good pages", build(root, "good", GOOD_GLOSSARY, with_page("")), 0, "")]
+    for number, (label, line) in enumerate(UNDEFINED_LINES.items()):
+        cases.append((label, build(root, f"undefined-{number}", GOOD_GLOSSARY, with_page(f"\n{line}\n")), 1, "G3"))
+    return cases + [
         ("a term in the README", build(root, "readme", GOOD_GLOSSARY,
                                        {**with_page(""), "README.pt-BR.md": "# Leia\n\n*gate*\n"}), 1, "G3"),
         ("a code span is not prose", build(root, "code", GOOD_GLOSSARY, with_page("\n`*steering*`\n")), 0, ""),

@@ -67,7 +67,7 @@ também em itálico, ficam como foram publicados.
 | CSP (problema de satisfação de restrições) | variáveis, os valores que cada uma pode ter e as restrições entre elas; "satisfação de restrições" é traduzido, CSP fica como sigla, a do AIMA |
 | *solver* | o programa que acha uma resposta para um problema declarado; fica em inglês porque "resolvedor" quase não se usa |
 | *backtracking*, *backtrack* | a busca que atribui uma variável por vez e, quando todos os valores falham, volta à anterior; um *backtrack* é uma dessas voltas |
-| *backjumping* | o *backtracking* que, quando falha, volta direto à variável que causou o conflito, e não só à anterior |
+| *backjumping* | o *backtracking* que, quando falha, volta direto à mais recente das variáveis que causaram o conflito, e não só à anterior |
 | *min-conflicts* | a busca local para um CSP: parte de uma resposta completa e errada e troca, a cada passo, o valor de uma variável em conflito pelo que menos conflita |
 | AC-3, *arc consistency* | o algoritmo que risca de cada variável os valores que nenhum valor de uma vizinha permite; consistência de arcos |
 | *minimum remaining values*, *least constraining value* | MRV e LCV: escolher primeiro a variável com menos valores restantes, e para ela o valor que menos risca das vizinhas |
@@ -78,7 +78,6 @@ também em itálico, ficam como foram publicados.
 | *bias* | o termo constante de um modelo linear, o `b` de `w·x + b` |
 | *self-play* | o programa jogando contra si mesmo para gerar partidas |
 | *ghost*, *clone* | os dois adversários do *behaviour cloning*: a tabela consultada e o modelo ajustado |
-| *stand-in* | um jogador escrito em código que ocupa o lugar de uma pessoa: as lutas gravadas por eles serviram ao *behaviour cloning* antes das do dono |
 | *utility* | dar nota a todas as ações de uma vez e ficar com a maior; "IA de *utility*" é o nome corrente |
 | *bot* | um jogador controlado pela IA num jogo de tiro |
 | *stealth* | o gênero de jogos de infiltração, em que o jogador evita ser visto |
