@@ -378,6 +378,15 @@ is moved to the nearest cell its side does not see. An enemy it saw and
 then lost from memory was destroyed: a side is told of that. One guess,
 not several sampled (above, what is left out).
 
+A belief with no enemy left is a game over, and is right. In wave 136's
+duel `MctsSquad` crashed on such a board while the game seemed to go on.
+Wave 147 replayed it (T134): in every case, on counted budgets and at
+200 ms on the clock, the shot just played had destroyed the other side's
+last piece, and `BlueTurn` went on to ask the next waiting piece. The
+belief was not wrong; the question was asked too late. `BlueTurn` now asks
+nobody once the ruleset names a winner, and `squad_game_over_test.gd`
+replays one of those turns.
+
 **The budget, a frame at a time.** In the scene it searches
 `iterations_per_frame` iterations each frame (`keep_thinking`, which the
 scene's `_process` asks of any controller; every other one answers no),

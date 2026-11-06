@@ -39,6 +39,7 @@ could detect it.
 ## Acceptance
 
 ```bash
+make test-godot-some SUITES="test/squad/squad_game_over_test.gd"
 make test-godot-some SUITES="test/squad"
 make test-squad-duel
 make lint-tasks lint-status
