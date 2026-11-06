@@ -69,8 +69,10 @@ fixed. No blocker; four should-fix, four nits.**
 3. Both now say "once the repository is public and private vulnerability
    reporting is enabled on it"; `config.yml` points at the email in
    `SECURITY.md` meanwhile. Enabling it goes on the owner's opening list.
-4. Waits for #103 to merge, per the coordinator's order: after the
-   rebase, the engine row follows the README's Getting started.
+4. Rebased on #103 (T143, c18d475): the engine row now says what the
+   README's Getting started says -- Linux on x86_64, or Windows through
+   Git Bash, not macOS yet -- and the note on `./scripts/godot` says
+   `make bootstrap` installs into `.toolchain/` or `GAK_TOOLCHAIN`.
 5. Step 3 of the fork flow says the hook refuses a commit on `main`, to
    work on a branch, and that its message's wave commands can be ignored.
 6. `SECURITY.md` says "every target that downloads -- such as" and lists

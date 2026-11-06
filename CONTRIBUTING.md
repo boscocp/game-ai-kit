@@ -81,7 +81,7 @@ The README's tiers say what each kind of change needs installed.
 |---|---|---|
 | docs, a technique page | Python 3.12 or later (tier 1) | `make check-no-engine` |
 | the Python package or its tests | Python (tier 1), and Godot if the next paragraph says so | `make affected BASE=upstream/main` first, then as it says |
-| an addon, an example, a GDScript test | Godot, through `make bootstrap` (tier 2) | `make check-affected BASE=upstream/main` |
+| an addon, an example, a GDScript test | Godot, through `make bootstrap` (tier 2): Linux on x86_64, or Windows through Git Bash; not macOS yet | `make check-affected BASE=upstream/main` |
 | the gates themselves, the Makefile, CI | Godot (tier 2) | the same: it selects every gate |
 
 `make check-no-engine` is every lint and the Python tests: no engine, no
@@ -105,7 +105,8 @@ Three things that will save you time:
   never the binary directly: the wrapper keeps the engine's settings beside
   its binary and the project's `user://` inside the checkout, out of your
   home folder. `make bootstrap` installs the
-  pinned version, checked by SHA-512.
+  pinned version, checked by SHA-512, into `.toolchain/` inside the clone,
+  or wherever `GAK_TOOLCHAIN` points (the README's Getting started).
 - **A new file needs an owner.** Every file under `godot/`, `python/`,
   `spec/`, `data/` and `tools/` belongs to a module in `modules/*.json`, and
   `make lint-modules` refuses one nobody owns. A new test goes in
