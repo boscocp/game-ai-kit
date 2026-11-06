@@ -73,4 +73,6 @@ drawing until the turn is said to have failed?
   second hand-written HTTP client beside `LlmLocalServer`'s.
 - The gate learned it: V3 asks for `use_threads = false`, the reverse of
   T92's rule, with the reason in its docstring.
+- Reviewed: `docs/reviews/138-a-silent-server-never-holds-the-frame.md`
+  (changes requested, no blocker, all applied).
 - Done in wave 138.
