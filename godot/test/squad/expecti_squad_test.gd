@@ -50,8 +50,9 @@ class BelievesUnseenHealth extends ExpectiSquad:
 		return believed
 
 
-## A searcher whose belief has lost every enemy while the game goes on:
-## the state T87's crash came from, built on purpose (T134 looks for how).
+## A searcher asked on a board it believes won: the state T87's crash came
+## from, built on purpose. In play it came from a turn that went on asking
+## after its shot ended the game (T134, `squad_game_over_test.gd`).
 class BelievesNoEnemy extends ExpectiSquad:
 	func believe(state: BoardState) -> BoardState:
 		var believed: BoardState = super.believe(state)

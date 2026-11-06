@@ -1,6 +1,6 @@
 # T134 — A belief that ends a game still going on
 
-Size: S · Prereqs: T88 · Files: `godot/game/squad/searching_squad.gd`, `godot/game/squad/side_view.gd`, `godot/test/squad/`, `docs/godot/squad.md`
+Size: S · Prereqs: T88 · Files: `godot/game/tactical/blue_turn.gd`, `godot/game/squad/searching_squad.gd`, `godot/test/squad/`, `godot/test/tactical/tactical_combat_test.gd`, `docs/godot/squad.md`
 
 ## Goal
 
@@ -25,6 +25,12 @@ could detect it.
 - If the cause cannot be closed, `believe` falls back: when its belief
   would end a game that is still going on, it keeps every enemy it knows
   of at its last cell. This is the review's second option.
+- **Changed in wave 147, for the owner to confirm (PR #99, decision 1).**
+  The state was not made in `believe` or `SideView`: the belief was right,
+  and the game was over. It was made in `BlueTurn`, which asked the next
+  waiting piece after a shot had ended the game. The fix is there, in
+  `BlueTurn._decide_next`, for both modes, and there is no fallback in
+  `believe`.
 
 ## Steps
 
@@ -39,6 +45,7 @@ could detect it.
 ## Acceptance
 
 ```bash
+make test-godot-some SUITES="test/squad/squad_game_over_test.gd"
 make test-godot-some SUITES="test/squad"
 make test-squad-duel
 make lint-tasks lint-status

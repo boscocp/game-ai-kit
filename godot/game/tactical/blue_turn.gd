@@ -21,6 +21,11 @@
 ## answer (`BlueController.after_refusal`), if it has one, is the next
 ## decision for the same piece -- so a refusal costs no action (T85).
 ##
+## Nobody is asked about a game that is over. A shot that leaves the other
+## side no piece ends the game in the middle of a turn, with pieces still
+## waiting; asking the next one anyway handed a searching enemy a board with
+## no enemy on it, and T87's search crashed on it (T134).
+##
 ## When not to use it: red's turn, which a person plays (`TacticalTurn`).
 class_name BlueTurn
 extends RefCounted
@@ -28,7 +33,8 @@ extends RefCounted
 var controller: BlueController
 ## The rules its decisions are played by (T84).
 var ruleset: TacticalRuleset
-## What blue will do next, or null once every piece has been asked.
+## What blue will do next; null once every piece has been asked, or once
+## the game is over.
 var next: TacticalDecision
 ## What blue has done this turn, in order.
 var played: Array[TacticalDecision] = []
@@ -93,6 +99,8 @@ func play(state: BoardState) -> BoardState:
 
 func _decide_next(state: BoardState) -> void:
 	next = null
+	if ruleset.winner(state) != TacticalVictory.NOBODY:
+		return
 	if _to_ask_about_attacking != -1:
 		var walker: int = _to_ask_about_attacking
 		_to_ask_about_attacking = -1
