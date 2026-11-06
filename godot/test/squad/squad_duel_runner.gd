@@ -21,8 +21,9 @@
 # positions to the run that has it.
 #
 # What fails, in both ways: an answer that is not one of the position's, a
-# search that finished nothing, a match with no end or a lost decision
-# (`SquadDuel.wrong_position`, `wrong_match`) -- and fewer rows or matches
+# search that finished nothing, a match with no end, a lost decision or a
+# question held on a game believed over (`SquadDuel.wrong_position`,
+# `wrong_match`; the last is T134's) -- and fewer rows or matches
 # than set out for (`SquadDuel.missing_rows`), which is what a search or a
 # match that broke leaves. A `SCRIPT ERROR` anywhere else -- in a check, in
 # the count, in `_run` -- is invisible from inside: an aborted function
@@ -202,9 +203,7 @@ func _match(pairing: Array, seat: int, game: int, milliseconds: int) -> Dictiona
 	var second: BlueController = _controller(pairing[1], game, milliseconds)
 	var red: BlueController = first if seat == TacticalScenario.RED else second
 	var blue: BlueController = second if seat == TacticalScenario.RED else first
-	var played: Dictionary = SquadMatch.play(red, blue, game)
-	played["game"] = game
-	return played
+	return SquadDuel.match_row(red, blue, game)
 
 
 # The controller the roster names, on the clock or on the gate's counted

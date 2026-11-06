@@ -6,6 +6,9 @@
 # task asks.
 extends GdUnitTestSuite
 
+# Where the planted searcher that believes no enemy is left lives.
+const EXPECTI_TESTS: GDScript = preload("res://test/squad/expecti_squad_test.gd")
+
 
 func test_a_row_that_holds_is_not_refused() -> void:
 	var position: Dictionary = _first("flank")
@@ -46,6 +49,16 @@ func test_a_match_with_no_end_or_a_lost_decision_is_refused() -> void:
 	assert_array(SquadDuel.wrong_match(ended)).is_empty()
 	assert_array(SquadDuel.wrong_match(ended.merged({"winner": TacticalVictory.NOBODY}, true))).is_not_empty()
 	assert_array(SquadDuel.wrong_match(ended.merged({"lost": [0, 1]}, true))).is_not_empty()
+	assert_array(SquadDuel.wrong_match(ended.merged({"held": 1}, true))).is_not_empty()
+
+
+func test_a_match_where_a_searcher_believes_the_game_over_is_refused() -> void:
+	var believes_no_enemy: GDScript = EXPECTI_TESTS.BelievesNoEnemy
+	var planted: Dictionary = SquadDuel.match_row(believes_no_enemy.new(1, 20), WeighedSquad.new(), 1)
+	assert_int(planted["held"]).is_greater(0)
+	assert_str(" ".join(SquadDuel.wrong_match(planted))).contains("held on a game believed over")
+	var sound: Dictionary = SquadDuel.match_row(MctsSquad.new(1, SquadDuel.MATCH_ITERATIONS), WeighedSquad.new(), 1)
+	assert_int(sound["held"]).is_equal(0)
 
 
 func test_the_positions_are_thirty_with_each_kind_the_task_names() -> void:

@@ -51,6 +51,8 @@ var _known: Dictionary[int, Unit] = {}
 var _last_turn: int = -1
 var _decisions: int = 0
 var _work: int = 0
+# Questions it held on because it believed the game already over.
+var _held_on_a_game_over: int = 0
 # The decision the scene holds, and the board and routes it was made on.
 var _pending: TacticalDecision
 var _believed: BoardState
@@ -165,6 +167,13 @@ func work_done() -> int:
 	return _work
 
 
+## How many questions it held on because the board it believed was already
+## won or lost. In play, none: a side is not asked once a game is over
+## (T134), and T88's duel fails a match where this is above zero.
+func held_on_a_game_over() -> int:
+	return _held_on_a_game_over
+
+
 ## What its search did, as lines for the status, in the language on
 ## screen; none before a search has begun.
 @abstract func search_lines() -> Array[String]
@@ -248,10 +257,11 @@ func _begin(believed: BoardState, unit_id: int, phase: int) -> void:
 	# A board it believes already won or lost has nothing to search: the
 	# root would have no answer, and T87's `_chosen` crashed on one in wave
 	# 136's duel. The belief was right -- its shot had just destroyed the
-	# last enemy, and `BlueTurn` asked the next piece anyway; since T134 it
-	# asks nobody once a game is over. Kept for a caller that asks directly:
-	# it holds, and says why.
+	# last enemy, and `BlueTurn` asked the next piece anyway; since T134
+	# `BlueTurn` asks nobody once a game is over. Kept for a caller that
+	# asks directly: it holds, says why, and is counted.
 	if SquadVictory.winner(believed) != TacticalVictory.NOBODY:
+		_held_on_a_game_over += 1
 		_pending.reason = Sentence.of("believes no enemy is left, and holds", {})  # shown through tr()
 		return
 	if SquadSearchGame.answers(believed, unit_id, phase).size() <= 1:

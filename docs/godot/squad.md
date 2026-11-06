@@ -379,13 +379,20 @@ then lost from memory was destroyed: a side is told of that. One guess,
 not several sampled (above, what is left out).
 
 A belief with no enemy left is a game over, and is right. In wave 136's
-duel `MctsSquad` crashed on such a board while the game seemed to go on.
-Wave 147 replayed it (T134): in every case, on counted budgets and at
-200 ms on the clock, the shot just played had destroyed the other side's
-last piece, and `BlueTurn` went on to ask the next waiting piece. The
-belief was not wrong; the question was asked too late. `BlueTurn` now asks
-nobody once the ruleset names a winner, and `squad_game_over_test.gd`
-replays one of those turns.
+duel `MctsSquad` crashed on such a board while the game seemed to go on;
+those crashes ran on the wall clock and cannot be replayed. Wave 147
+(T134) looked for new ones, on counted budgets and at 200 ms on the clock,
+and in each of the 4 firings it found the shot just played had destroyed
+the other side's last piece, and `BlueTurn` went on to ask the next
+waiting piece. What proves the belief right is the code, not that sample:
+an enemy leaves the belief only once it has been seen and has no last
+cell, and `SideView` drops a last cell only when the enemy is seen again
+or is gone from the real board; enemies never seen are guessed from the
+fixed starts. The round limit reads the turn number, which the view copies
+from the real board. So a believed win is a real one, and the question was
+asked too late. `BlueTurn` now asks nobody once the ruleset names a
+winner; `squad_game_over_test.gd` replays one of those turns, and T88's
+duel fails a match where a searcher held on a game it believed over.
 
 **The budget, a frame at a time.** In the scene it searches
 `iterations_per_frame` iterations each frame (`keep_thinking`, which the

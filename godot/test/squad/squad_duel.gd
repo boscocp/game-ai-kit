@@ -172,12 +172,28 @@ static func _not_its_answers(position: Dictionary, row: Dictionary, answers: Arr
 	return wrong
 
 
-## Everything wrong with one match's row: no winner and no draw, or a
-## decision lost to a refused walk.
+## One match, `red` against `blue` on dice seed `game`: `SquadMatch.play`'s
+## row, with its number as `game` and, as `held`, the questions either
+## searcher held on because it believed the game already over (T134).
+static func match_row(red: BlueController, blue: BlueController, game: int) -> Dictionary:
+	var played: Dictionary = SquadMatch.play(red, blue, game)
+	played["game"] = game
+	played["held"] = 0
+	for controller: BlueController in [red, blue]:
+		if controller is SearchingSquad:
+			played["held"] += (controller as SearchingSquad).held_on_a_game_over()
+	return played
+
+
+## Everything wrong with one match's row: no winner and no draw, a decision
+## lost to a refused walk, or a question held on a game believed over --
+## which a side is never asked in play, so its reason is never seen (T134).
 static func wrong_match(row: Dictionary) -> Array[String]:
 	var wrong: Array[String] = []
 	if row["winner"] == TacticalVictory.NOBODY:
 		wrong.append("match %d: it ended with no winner and no draw" % row["game"])
+	if row.get("held", 0) > 0:
+		wrong.append("match %d: %d question(s) held on a game believed over" % [row["game"], row["held"]])
 	if row["lost"][0] + row["lost"][1] > 0:
 		wrong.append("match %d: %d decision(s) lost to a refused walk" % [row["game"], row["lost"][0] + row["lost"][1]])
 	return wrong

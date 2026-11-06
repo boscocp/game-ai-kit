@@ -163,6 +163,47 @@ func test_blue_s_turn_shows_the_attack_before_it_plays_it() -> void:
 	assert_int(TacticalVictory.winner(state)).is_equal(BLUE)
 
 
+func test_once_the_workshop_falls_nobody_is_asked_about_the_won_game() -> void:
+	# T134: the attack that ends the game comes with walkers still waiting.
+	# The turn used to ask the next one about a board already won; a search
+	# that believed it crashed on it in the squad mode. Now the turn is over.
+	var state: BoardState = TacticalScenario.build()
+	state.unit_by_id(_first_of(state, BLUE, TacticalRules.RUNNER).id).cell = Vector2i(1, 6)
+	state.unit_by_id(_first_of(state, RED, TacticalRules.WORKSHOP).id).health = 1
+	state = state.end_turn(TacticalScenario.FACTIONS, 0, TacticalRules.INCOME)
+	var blue := AskedBlue.new()
+	var turn := BlueTurn.new(blue)
+	turn.begin(state)
+	while not turn.finished():
+		state = turn.play(state)
+	assert_int(TacticalVictory.winner(state)).is_equal(BLUE)
+	assert_int(blue.asked_on_a_won_board).is_equal(0)
+
+
+## `RuleBasedBlue`, counting the questions it is asked on a board already won.
+class AskedBlue extends RuleBasedBlue:
+	var asked_on_a_won_board: int = 0
+
+	## Counted, then decided as `RuleBasedBlue` decides.
+	func decide_build(state: BoardState, workshop_id: int) -> TacticalDecision:
+		_count(state)
+		return super.decide_build(state, workshop_id)
+
+	## Counted, then decided as `RuleBasedBlue` decides.
+	func decide_move(state: BoardState, unit_id: int) -> TacticalDecision:
+		_count(state)
+		return super.decide_move(state, unit_id)
+
+	## Counted, then decided as `RuleBasedBlue` decides.
+	func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
+		_count(state)
+		return super.decide_attack(state, unit_id)
+
+	func _count(state: BoardState) -> void:
+		if TacticalVictory.winner(state) != TacticalVictory.NOBODY:
+			asked_on_a_won_board += 1
+
+
 func test_a_red_unit_attacks_once_a_turn() -> void:
 	# The target must survive the first attack, or the second has nothing to
 	# be refused against -- the review's mutation passed because it did not.

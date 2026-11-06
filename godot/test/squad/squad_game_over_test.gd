@@ -1,13 +1,15 @@
 # T134: a side is never asked about a game that is over.
 #
 # Wave 136's duel saw `MctsSquad` search a board it believed already won
-# while the game, it seemed, went on. The probe of wave 147 found the belief
-# right: in every case the shot just played had destroyed the other side's
-# last piece, and `BlueTurn` went on to ask the next waiting piece. The
-# board below is one of those turns, recorded in a seeded match (dice seed
-# 4, red the searcher at 400 iterations, blue the weighed enemy): red's
-# shield, at (4, 3), shoots blue's last piece, a mortar with 2 health left,
-# and red's mortar and wader are still waiting.
+# while the game, it seemed, went on. Those crashes ran on the wall clock
+# and cannot be replayed; in each of the 4 firings the probe of wave 147
+# found, the shot just played had destroyed the other side's last piece,
+# and `BlueTurn` went on to ask the next waiting piece (why a believed win
+# is always a real one is `docs/godot/squad.md`'s). The board below is one
+# of those turns, recorded in a seeded match (dice seed 4, red the searcher
+# at 400 iterations, blue the weighed enemy): red's shield, at (4, 3),
+# shoots blue's last piece, a mortar with 2 health left, and red's mortar
+# and wader are still waiting.
 extends GdUnitTestSuite
 
 const RED: int = TacticalScenario.RED
@@ -17,6 +19,10 @@ const RECORDED: Dictionary = {
 	"turn": 16, "to_move": RED, "acting": 2, "phase": "shoot", "waiting": [3, 4],
 	"pieces": [[2, RED, "shield", 4, 3, 7, 3], [3, RED, "mortar", 4, 2, 1, 4], [4, RED, "wader", 1, 4, 2, 6],
 		[7, BLUE, "mortar", 7, 4, 2, 0]]}
+# The board's `dice_seed` as it stood at that shot -- turn 16 of the match
+# begun on dice seed 4, each roll having handed the next seed on -- so the
+# shot hits as it did. Recorded again by printing `state.dice_seed` in
+# `decide_attack` during that match.
 const RECORDED_DICE: int = 190567314
 
 
