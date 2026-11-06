@@ -2,12 +2,12 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-29
+verified_on: 2026-11-05
 tier: 2
-source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 5, figures 5.3, 5.7 and 5.11
-invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch, AdversarialResult, MonteCarloSearch, MctsResult or Xorshift signatures change, or the demos that use them are renamed
+source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 5, figures 5.3, 5.7 and 5.11, section 5.5
+invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch, ExpectiminimaxSearch, AdversarialResult, MonteCarloSearch, MctsResult or Xorshift signatures change, or the demos that use them are renamed
 teaches: adversarial-search
-translation_of: d20c5af9046ee17d8a8927195e95c3739b19fd69dcc1c66a89386354b6b6af1b
+translation_of: f2fdcab1e0ad25ded6ede6d923d533fd6bcfce868bef41d7fbcc4b424522f355
 -->
 
 > English: [ai_adversarial.md](ai_adversarial.md). Os termos que ficam em
@@ -32,16 +32,31 @@ desses *playouts* nas jogadas que vão bem (*UCT*). Ela é *anytime* --
 `step(iterations)` roda algumas iterações e volta, e a jogada mais tentada
 é a resposta até ali -- e lida com dados, pelos `outcomes` do jogo. Ela
 devolve um `MctsResult`: as visitas, a média e o limite de cada jogada da
-raiz. O livro: Russell e Norvig, *AIMA*, capítulo 5; a *MCTS* é a seção
-5.4.
+raiz.
+
+O *expectiminimax* (`ExpectiminimaxSearch`) é o *minimax* para um jogo com
+dados: quando os `outcomes` de uma ação são vários, a jogada vale a soma
+deles, cada valor pesado pela sua probabilidade -- o seu valor *esperado*
+--, e MAX e MIN escolhem entre esses valores. Ele precisa de uma
+estimativa, como o *minimax*, e de uma melhor: um nó de sorte soma valores,
+então a escala deles importa, não só a ordem. Ele é *anytime* por
+aprofundamento iterativo -- `step(positions)` avança algumas posições por
+vez, profundidade 1, depois 2, e responde com a mais funda já terminada --
+e devolve um `AdversarialResult` cujo `considered` traz o valor de cada
+resultado dos dados. O livro: Russell e Norvig, *AIMA*, capítulo 5; a
+*MCTS* é a seção 5.4, o *expectiminimax* a 5.5.
 
 ## Quando não usar {#when-not}
 
 Um jogo com cartas escondidas: todas as buscas daqui supõem que os dois
 jogadores veem o estado inteiro. *Minimax* e *alpha-beta* num jogo com
 dados: eles leem só o `result`, então veem os dados caindo sempre do mesmo
-jeito -- use a *MCTS*, que sorteia os dados, ou o *expectiminimax*. A
-*MCTS* onde jogar ao acaso não diz nada -- onde quase toda jogada aleatória
+jeito -- use a *MCTS*, que sorteia os dados, ou o *expectiminimax*, que
+os pesa. O *expectiminimax* onde há muitos resultados ou muitas jogadas: os
+dados multiplicam a ramificação, e no modo de esquadrão um segundo alcança
+dois ou três *plies* (o duelo da T88, `docs/godot/squad.md`); e onde você
+não consegue escrever a estimativa, já que a *MCTS* não precisa de
+nenhuma. A *MCTS* onde jogar ao acaso não diz nada -- onde quase toda jogada aleatória
 perde na hora --, porque aí os *playouts* medem o acaso; e onde o
 *alpha-beta* já busca fundo o bastante com uma boa estimativa, porque ali
 ele é exato e a *MCTS* só se aproxima dele. E o `MinimaxSearch` puro quase
@@ -55,9 +70,16 @@ encurta.
   que ele considerou é uma seta **azul** com o seu valor, a que ele vai
   jogar é **rosa**, e o painel diz
   quantas posições ele examinou e quantas respostas pulou.
-- A *MCTS* ainda não tem demo: a T87 a põe no modo de esquadrão do jogo
-  tático, desenhando as visitas, a média e o limite de cada opção enquanto
-  a busca roda. Até lá, o exemplo do Nim abaixo.
+- `make demo-tactical MODE=squad` -- o jogo tático no modo XCOM; **C**
+  troca o computador. `mcts` desenha cada opção da peça prestes a agir com
+  a sua média, e as visitas como barras no painel, crescendo enquanto ele
+  pensa. `expecti` desenha o valor esperado de cada opção, e no painel a
+  profundidade terminada até ali, uma barra para cada opção e, num tiro, o
+  acerto e o erro com o que cada um vale. **Espaço** joga o que qualquer
+  um dos dois tem agora.
+- `make test-squad-duel` -- as duas buscas nas mesmas 30 posições a 50,
+  200 e 1.000 ms, depois em partidas com semente; a tabela que ele
+  imprimiu está em `docs/godot/squad.md`.
 - Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).
 
 ## Neste kit {#in-this-kit}
@@ -77,7 +99,9 @@ ajustes que importam:
 | a semente | `MonteCarloSearch.new(game, state, from_seed)` | toda escolha aleatória da busca; a mesma semente, a mesma busca, em GDScript e em Python |
 | exploração | `MonteCarloSearch.new(…, exploration)` | o C do *UCB1*, √2 por padrão: maior tenta mais as jogadas pouco conhecidas, menor confia antes nas médias |
 | limite do *playout* | `MonteCarloSearch.new(…, playout_limit)` | quantas jogadas aleatórias um *playout* faz antes de pedir o `evaluate`; 200 por padrão |
-| sorte | o seu `GakAdversarialGame.outcomes(state, action)` | aonde uma ação pode levar, com as probabilidades; a *MCTS* guarda um filho por resultado |
+| sorte | o seu `GakAdversarialGame.outcomes(state, action)` | aonde uma ação pode levar, com as probabilidades; a *MCTS* guarda um filho por resultado, o *expectiminimax* soma todos |
+| posições | `ExpectiminimaxSearch.step(positions)` | o orçamento do *expectiminimax* nesta chamada, contado em posições; a pilha continua na próxima, então um quadro pode fazer algumas |
+| profundidade máxima | `ExpectiminimaxSearch.new(game, state, deepest)` | até onde o aprofundamento iterativo pode ir; `search_to(depth)` busca uma profundidade e para |
 
 ## No seu projeto {#your-project}
 
@@ -189,12 +213,17 @@ resultado verdadeiro num jogo terminado e nunca é infinito. Depois chame
 `considered` é o que desenhar. Ou guarde um
 `MonteCarloSearch.new(game, state, seed)` e chame `step(iterations)` a
 cada quadro; o `considered` dele -- visitas, média, limite -- é o que
-desenhar enquanto ela roda.
+desenhar enquanto ela roda. Com dados e uma estimativa em que você confia,
+guarde um `ExpectiminimaxSearch.new(game, state)` e chame
+`step(positions)` a cada quadro; `result()` é a resposta da profundidade
+mais funda já terminada, e o `considered` dele traz o valor esperado de
+cada jogada e, por resultado dos dados, a chance e o valor.
 
 ## Para ir mais fundo {#deeper}
 
-- Por que o *minimax* funciona, o que o *alpha-beta* corta, e as quatro
-  fases da *MCTS* (em inglês):
+- Por que o *minimax* funciona, o que o *alpha-beta* corta, as quatro
+  fases da *MCTS*, e quando o *expectiminimax* ou a *MCTS* vence nas mesmas
+  posições (em inglês):
   [concepts/minimax.md](../concepts/minimax.md).
 - Dar nota a uma posição com pesos ajustados em Python:
   [learned_evaluation](learned_evaluation.pt-BR.md).

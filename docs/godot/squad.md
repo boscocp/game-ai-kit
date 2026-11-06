@@ -12,8 +12,8 @@ teaches: none
 > T84's rules. Not a new game: a second ruleset of the tactical game,
 > played on its state, map, pieces and pictures. T85 made it something a
 > person plays from the tactical scene, against a first enemy that weighs;
-> T87 put Monte Carlo tree search behind a second, and T88 will put HTN
-> behind a third. This page is the rules, where each comes from,
+> T87 put Monte Carlo tree search behind a second, and T88 expectiminimax
+> behind a third, and set the two searches against each other. This page is the rules, where each comes from,
 > everything left out, and (below) how the mode is played and how its
 > enemies decide.
 
@@ -97,9 +97,10 @@ the copies to the spec.
 
 The squad roster (`SquadRoster`) is its own table, not rows added to
 `TacticalRoster`: `League.schedule` seats the league's teams by their place
-in that table, and a row added there would re-roll the league's dice. It
-has one row, `random`, a seeded random mover on its side's view -- the
-floor T85's first enemy has to beat.
+in that table, and a row added there would re-roll the league's dice. Its
+rows, in the order C cycles them: `weighed` (T85), `mcts` (T87), `expecti`
+(T88) and `random`, a seeded random mover on its side's view -- the floor
+T85's first enemy has to beat.
 
 ## What is left out, and why
 
@@ -173,6 +174,20 @@ Every simplification, so nobody reads the mode as more of XCOM than it is:
   as all at once; and a seeded game against the weighed enemy pinned to its
   digest. `squad_scene_test.gd` -- C reaches it, and the scene draws its
   search growing a frame at a time, stopped by space.
+- T88: `expecti_squad_test.gd` -- the 30 positions of `spec/squad/duel.json`,
+  every answer's expected value at depth 2 the file's within 1e-9, equal in
+  Python (`test_squad_duel.py`); a planted game that sees no dice missing
+  most of the shot positions; the evaluation's terms in [-1, 1] and the
+  score below a win, the same from either side; T85's does-not-cheat check,
+  catching both planted searchers (20 of 24 each, floor 14); the answer
+  worth most played, every answer shown, a shot's hit and miss in the
+  status, a hold said while depth 1 is unfinished, a frame at a time to the
+  answer it gives at once, a refused walk answered, and a seeded game
+  against the weighed enemy pinned to its digest. `squad_duel_test.gd` --
+  what `make test-squad-duel` refuses, each with a planted row.
+  `make test-adversarial-vectors` -- the addon's expectiminimax on the dice
+  race, depths 2 and 3, equal to `derive.py`'s exact fractions in both
+  languages.
 
 ## Playing it (T85)
 
@@ -419,6 +434,121 @@ both seats. At 5,000, on a sample a fifth the size, 24 of 40 is no clear
 gain over 1,000 for five times the wait. That is why the scene's default is
 1,000.
 
+## The enemy that works out the odds: `ExpectiSquad` (T88)
+
+Expectiminimax from `ai_adversarial` (`ExpectiminimaxSearch`), over
+`SquadEvaluatedGame`: the same game the MCTS reads, the same question at
+the root, and below it the rest of the turn and the other side's -- its own
+side's pieces as MAX, the other side's as MIN -- with every shot's hit and
+miss as a chance node, weighed by the chance the person is shown. Each of
+these was written into the task before the code, for the owner to confirm.
+
+**What the two share** (`SearchingSquad`). Everything that is not the
+search moved out of `MctsSquad` into a base both extend: what it believes
+of the fog (one guess, as above), how the question is asked, how a refused
+walk is answered, how the answer is shown and played, and how the work is
+spread over frames. So the two are compared on the same information. The
+MCTS's suite, digest included, passed unchanged through the move.
+
+**The evaluation, by hand.** Where expectiminimax stops before the game
+ends it has to score the position; MCTS plays on and scores health alone.
+Three terms, each in [-1, 1], weighed by `rules.json`'s `evaluation` --
+health 0.6, cover 0.2, flanked 0.2:
+
+| term | for the side | why |
+|---|---|---|
+| health | its health left less the other's, over a full squad's (33) | what a win is made of |
+| cover | the cover its pieces hold against each enemy, over a full cover's worth, less the enemy's | a piece in cover is shot at 20 or 40 less |
+| flanked | the share of enemies one of its pieces could shoot with no cover facing it, less the share of its own the enemy could | a flank is cover taken away |
+
+The weights add up to 1 and health is below 1 until a squad is gone, so no
+estimate reaches a win. Nothing is fitted (invariant 6): the weights are a
+guess, and the point of the comparison is that MCTS needs none of it.
+Python's `gameaikit.squad.evaluation` is the same arithmetic.
+
+**The budget, a frame at a time.** Iterative deepening -- depth 1, 2, 3 --
+`positions_per_frame` positions a frame (20, about 4 ms here, MCTS's 4
+iterations' share), to `positions` a decision (5,000, about a second, as
+MCTS's 1,000 iterations). Space plays the deepest finished depth's answer;
+before depth 1 is done -- two or three frames on a walk -- it holds, and
+says so.
+
+**What it shows** (invariant 13). On the board, every answer's expected
+value above and a shot's hit chance below, the best framed. In the status:
+the depth finished, of how deep it may go, and the positions searched; a
+bar for each of the six answers worth most; and for a shot, its two
+branches -- in `03 flank` below, `5 shoots 4: expected +0.021 -- hit
+55%: +0.045, miss 45%: -0.009` -- so a person can see the dice being
+weighed.
+
+## The duel (T88)
+
+`make test-squad-duel`. Thirty positions in `spec/squad/duel.json`, drawn by
+`godot/test/squad/squad_duel_draw.gd` from six seeded matches of the
+weighed enemy against itself, on the board the side to move believes in --
+the guess at the fog both searches would make: the opening, four flanks,
+four long shots (25% or less, or 6 steps or more), four retreats to cover
+(a hurt piece shot at in the open, with a walk to where it would not be),
+and the rest spread through the questions left. Both searches are handed
+the same board, the same guess already in it, for the same time on the
+wall clock: 50, 200 and 1,000 ms. MCTS from seed `1000 + n` for position
+`n`. Measured on 2026-11-05, a 12-core machine, load about 3 from other
+work:
+
+| a decision | the two agree | MCTS iterations, fewest-most | expectiminimax finished |
+|---|---|---|---|
+| 50 ms | 16 of 30 | 45-184 | depth 1 on 16, depth 2 on 14 |
+| 200 ms | 16 of 30 | 179-1,018 | depth 1 on 7, 2 on 21, 3 on 2 |
+| 1,000 ms | 15 of 30 | 891-6,638 | depth 2 on 22, 3 on 8 |
+
+They agree on the shots -- 14 of the 16 shot questions at 50 and 200 ms,
+15 at 1,000 -- and almost never on the walks: 2, 2 and 0 of 14.
+
+**One disagreement, worked through: `03 flank`.** Blue's runner, 5 health
+at (10, 4), may shoot red's shield at (5, 4) -- 10 health, 45% -- or red's
+wader at (7, 2) -- 8 health, 55% -- or hold. Expectiminimax, two
+plies deep at 50 ms, worth: hold -0.009, the shield +0.015, the wader
++0.021, so it shoots the wader. Either hit is worth +0.045 and either
+miss -0.009 to the evaluation, so the choice is the chance alone: 55%
+against 45%. MCTS, with 51 and then 198 iterations -- some 17 to 66 playouts a
+shot, each eight random answers long and scored on health -- shoots the
+shield. The two shots' expected values are 0.005 apart, a gap far below
+what a few dozen noisy playouts can measure. At 1,000 ms, 972 iterations,
+its most visited shot is the wader too. The dice are what expectiminimax
+does best: it does not sample them, it weighs them.
+
+**And the walks.** A walk question has some forty answers. In 200 ms MCTS
+gives each about five playouts, and its most visited walk is close to
+chance; expectiminimax, at a ply or two, sees the walk, the shot after it,
+and what its evaluation says of the cell -- cover against the enemies, a
+flank on them. Neither is right by construction. The matches say which
+plays better. Match `n` of a seat on dice seed `n`, each searcher seeded
+`1000 + n`, every decision searched for the time shown:
+
+| every decision 50 ms, 100 matches a seat | as red: won, lost, drawn | as blue: won, lost, drawn |
+|---|---|---|
+| expectiminimax against MCTS | 9, 5, 86 | 53, 43, 4 |
+| expectiminimax against the weighed enemy | 2, 98, 0 | 1, 99, 0 |
+| MCTS against the weighed enemy | 4, 96, 0 | 3, 97, 0 |
+
+| every decision 200 ms, 20 matches a seat | as red: won, lost, drawn | as blue: won, lost, drawn |
+|---|---|---|
+| expectiminimax against MCTS | 3, 17, 0 | 4, 16, 0 |
+| expectiminimax against the weighed enemy | 0, 20, 0 | 1, 19, 0 |
+| MCTS against the weighed enemy | 8, 12, 0 | 9, 11, 0 |
+
+Measured on 2026-11-05 alongside other worktrees' tests, load between 3
+and 15 on 12 cores: 100 matches a seat at 50 ms, matches 1 to 100 in four
+runs at once; 20 a seat at 200 ms, matches 101 to 120 in two. Not at
+1,000 ms: some fifty decisions a side a match make each match a minute and
+a half, and 600 of them most of a day. At 50 ms both searches lose almost
+every match to the first enemy, which weighs one action ahead in about a
+millisecond; between them, expectiminimax wins more than it loses, and as
+red most games end drawn at the round limit (not looked into further). At
+200 ms the order turns over: MCTS beats expectiminimax 33 to 7, and starts
+taking games from the first enemy, as T87 measured -- MCTS gains from every
+iteration, expectiminimax only from a whole ply more, forty times dearer.
+
 ## Manual check
 
 From `make menu`, open the tactical card in XCOM mode, and play a match in
@@ -433,6 +563,15 @@ thinks, do the bars grow on the piece's options, and is the one it plays
 the one with the most visits? Press space early: is there still a move,
 and is it a worse one? Does the expected line read as a plan you can
 follow on the board, or as noise?
+
+T88: give the enemy to expecti (C). While it thinks, does the depth in the
+status grow, and does the board's framed option change only when a depth
+finishes? At a shot, do the hit and miss lines make the choice readable?
+Then play a position where the two disagree -- `03 flank` in
+`spec/squad/duel.json` is the one worked through above -- with MCTS and
+then with expecti: do the two overlays, expected values against visits,
+make it clear why each chose what it chose? There is no position picker in
+the scene yet: reach a similar shot in play.
 
 Read `spec/squad/rules.json` beside the two UFOpaedia pages: are the
 numbers the ones the mode claims to borrow, and is every simplification

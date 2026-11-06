@@ -39,7 +39,9 @@ func _init() -> void:
 		printerr("squad_duel_runner: give me the path of duel.json after `--`, then the games a seat, the milliseconds a decision and the first game")
 		quit(2)
 		return
-	var failures: Array[String] = _positions(written["positions"]) if first == 1 else [] as Array[String]
+	var failures: Array[String] = []
+	if first == 1:
+		failures += _positions(written["positions"])
 	failures += _matches(first, games, milliseconds)
 	for failure: String in failures:
 		print(failure)

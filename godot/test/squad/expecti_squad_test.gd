@@ -91,10 +91,10 @@ func test_a_search_that_sees_no_dice_misses_most_shot_positions() -> void:
 
 func test_the_evaluation_is_within_one_below_a_win_and_the_same_from_either_side() -> void:
 	var game := SquadEvaluatedGame.new()
-	var weights: float = 0.0
+	var summed: float = 0.0
 	for weight: Variant in SquadTable.rules()["evaluation"].values():
-		weights += float(weight)
-	assert_float(weights).is_equal_approx(1.0, 1e-12)
+		summed += float(weight)
+	assert_float(summed).is_equal_approx(1.0, 1e-12)
 	for position: Dictionary in _duel()["positions"]:
 		var root: SquadSearchGame.Position = SquadDuel.root(position)
 		_assert_within_one(game, root, TacticalScenario.RED)

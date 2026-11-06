@@ -245,7 +245,11 @@ func believe(state: BoardState) -> BoardState:
 func _begin(believed: BoardState, unit_id: int, phase: int) -> void:
 	_believed = believed
 	_drop_search()
-	if SquadSearchGame.answers(believed, unit_id, phase).size() <= 1:
+	# A board it believes already won or lost has nothing to search: the
+	# search's root would have no answer. Wave 136's duel met one, under
+	# the clock (decision 9 of its pull request).
+	var finished: bool = SquadVictory.winner(believed) != TacticalVictory.NOBODY
+	if finished or SquadSearchGame.answers(believed, unit_id, phase).size() <= 1:
 		return
 	var after: Array[int] = []
 	var asked_already: bool = true

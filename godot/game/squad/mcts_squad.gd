@@ -149,7 +149,7 @@ func _options() -> Array[Dictionary]:
 
 # The most visited answer, and why, in the search's numbers.
 func _chosen() -> Variant:
-	if _found == null:
+	if _found == null or _found.action == null:
 		return null
 	var action: Array = _found.action
 	var best: Dictionary = _found.considered.filter(func(entry: Dictionary) -> bool: return entry["action"] == action)[0]

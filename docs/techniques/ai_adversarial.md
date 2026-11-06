@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-29
+verified_on: 2026-11-05
 tier: 2
-source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 5, figures 5.3, 5.7 and 5.11
-invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch, AdversarialResult, MonteCarloSearch, MctsResult or Xorshift signatures change, or the demos that use them are renamed
+source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 5, figures 5.3, 5.7 and 5.11, section 5.5
+invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch, ExpectiminimaxSearch, AdversarialResult, MonteCarloSearch, MctsResult or Xorshift signatures change, or the demos that use them are renamed
 teaches: adversarial-search
 -->
 
@@ -29,15 +29,30 @@ times, and spends more of those playouts on the moves that do well (UCT).
 It is **anytime** -- `step(iterations)` runs a few and returns, and the
 move tried most is its answer so far -- and it handles dice, through the
 game's `outcomes`. It hands back an `MctsResult`: every root move's visits,
-mean and bound. The book: Russell and Norvig, *AIMA*, chapter 5; MCTS is
-section 5.4.
+mean and bound.
+
+**Expectiminimax** (`ExpectiminimaxSearch`) is minimax for a game with
+dice: where an action's `outcomes` are several, the move is worth their
+sum, each value weighed by its probability -- its *expected* value -- and
+MAX and MIN choose between those. It needs an evaluation, as minimax does,
+and a better one than minimax: a chance node adds values, so their scale
+matters, not only their order. It is anytime by iterative deepening --
+`step(positions)` goes on a few positions at a time, depth 1, then 2, and
+answers with the deepest finished depth -- and hands back an
+`AdversarialResult` whose `considered` carries each outcome's value. The
+book: Russell and Norvig, *AIMA*, chapter 5; MCTS is section 5.4,
+expectiminimax 5.5.
 
 ## When not to use it {#when-not}
 
 A game with hidden cards: every search here assumes both players see the
 whole state. Minimax and alpha-beta on a game with dice: they read only
 `result`, so they see the dice always falling one way -- use MCTS, which
-draws them, or expectiminimax. MCTS where random play says nothing --
+draws them, or expectiminimax, which weighs them. Expectiminimax where
+there are many outcomes or many moves: the dice multiply the branching, and
+in the squad mode one second reaches two or three plies (T88's duel,
+`docs/godot/squad.md`); and where you cannot write the evaluation, since
+MCTS needs none. MCTS where random play says nothing --
 where almost any random move loses at once -- because the playouts then
 measure the randomness; and where alpha-beta already searches deep enough
 with a good evaluation, because there it is exact and MCTS only converges
@@ -51,9 +66,15 @@ shortcut can be seen beside the thing it shortens.
   **blue** arrow with its value, the one it will play is **pink**, and the
   panel says how many positions it searched and how many replies it
   skipped.
-- MCTS has no demo yet: T87 puts it in the tactical game's squad mode,
-  drawing each option's visits, mean and bound as the search runs. Until
-  then, the Nim example below.
+- `make demo-tactical MODE=squad` -- the tactical game in XCOM mode; **C**
+  changes the computer. `mcts` draws each option of the piece about to
+  act with its mean, and its visits as bars in the status, growing while it
+  thinks. `expecti` draws each option's expected value, and in the status
+  the depth finished so far, a bar for each option, and for a shot its hit
+  and miss with what each is worth. **Space** plays what either has now.
+- `make test-squad-duel` -- the two searches on the same 30 positions at
+  50, 200 and 1,000 ms, then in seeded matches; the table it printed is in
+  `docs/godot/squad.md`.
 - Which demo uses which technique, both ways: the catalogue (T76, coming).
 
 ## In this kit {#in-this-kit}
@@ -73,7 +94,9 @@ matter:
 | the seed | `MonteCarloSearch.new(game, state, from_seed)` | every random choice the search makes; the same seed, the same search, in GDScript and in Python |
 | exploration | `MonteCarloSearch.new(…, exploration)` | UCB1's C, √2 by default: larger tries poorly known moves more, smaller trusts the means sooner |
 | playout limit | `MonteCarloSearch.new(…, playout_limit)` | how many random moves a playout makes before it asks `evaluate`; 200 by default |
-| chance | your `GakAdversarialGame.outcomes(state, action)` | what an action may lead to, with its probabilities; MCTS keeps one child per outcome |
+| chance | your `GakAdversarialGame.outcomes(state, action)` | what an action may lead to, with its probabilities; MCTS keeps one child per outcome, expectiminimax sums them |
+| positions | `ExpectiminimaxSearch.step(positions)` | expectiminimax's budget for this call, counted in positions; the stack carries over, so a frame can take a few |
+| depth, at most | `ExpectiminimaxSearch.new(game, state, deepest)` | how deep iterative deepening may go; `search_to(depth)` searches one depth and stops |
 
 ## In your own project {#your-project}
 
@@ -183,11 +206,16 @@ infinite. Then call `AlphaBetaSearch.new().search(game, state, depth)` and
 read `action`; `considered` is what to draw. Or keep a
 `MonteCarloSearch.new(game, state, seed)` and call `step(iterations)` each
 frame; its `considered` -- visits, mean, bound -- is what to draw while it
-runs.
+runs. With dice and an evaluation you trust, keep an
+`ExpectiminimaxSearch.new(game, state)` and call `step(positions)` each
+frame; `result()` is the deepest finished depth's answer, and its
+`considered` carries each move's expected value and, per outcome, its
+chance and value.
 
 ## Deeper {#deeper}
 
-- Why minimax works, what alpha-beta cuts, and MCTS's four phases:
+- Why minimax works, what alpha-beta cuts, MCTS's four phases, and when
+  expectiminimax or MCTS wins on the same positions:
   [concepts/minimax.md](../concepts/minimax.md).
 - Scoring a position with weights fitted in Python:
   [learned_evaluation](learned_evaluation.md).
