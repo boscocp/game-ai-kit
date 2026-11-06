@@ -50,6 +50,23 @@ class BelievesUnseenHealth extends ExpectiSquad:
 		return believed
 
 
+## A searcher whose belief has lost every enemy while the game goes on:
+## the state T87's crash came from, built on purpose (T134 looks for how).
+class BelievesNoEnemy extends ExpectiSquad:
+	func believe(state: BoardState) -> BoardState:
+		var believed: BoardState = super.believe(state)
+		believed.units.assign(believed.units.filter(func(unit: Unit) -> bool: return unit.faction == state.current_faction))
+		return believed
+
+
+## The same belief in the enemy that samples, whose `_chosen` crashed on it.
+class SamplesNoEnemy extends MctsSquad:
+	func believe(state: BoardState) -> BoardState:
+		var believed: BoardState = super.believe(state)
+		believed.units.assign(believed.units.filter(func(unit: Unit) -> bool: return unit.faction == state.current_faction))
+		return believed
+
+
 ## The planted game: every shot is its likelier outcome, certain -- what a
 ## search with no dice sees.
 class NoDice extends SquadEvaluatedGame:
@@ -132,8 +149,8 @@ func test_it_plays_the_answer_worth_most_and_shows_every_answer() -> void:
 	for option: Dictionary in shown:
 		assert_float(option["score"]).is_less_equal(chosen[0]["score"])
 	var lines: Array[String] = searcher.search_lines()
-	assert_str(lines[0]).contains("depth 1 of")
-	assert_str(lines[0]).contains("200 of 200")
+	assert_str(lines[0]).contains("searched to depth 1, depth 2 under way")
+	assert_str(lines[0]).contains("200 positions of 200")
 	assert_bool(lines.any(func(line: String) -> bool: return line.contains("█"))).is_true()
 
 
@@ -167,7 +184,7 @@ func test_a_frame_at_a_time_it_thinks_to_its_budget_and_plays_what_it_would_at_o
 	while spread.keep_thinking():
 		frames += 1
 	assert_int(frames).is_equal(ceili(float(BUDGET - per_frame) / per_frame))
-	assert_str(spread.search_lines()[0]).contains("%d of %d" % [BUDGET, BUDGET])
+	assert_str(spread.search_lines()[0]).contains("%d positions of %d" % [BUDGET, BUDGET])
 	assert_object(decision.target).is_equal(at_once.target)
 	assert_str(decision.kind()).is_equal(at_once.kind())
 
@@ -185,6 +202,24 @@ func test_a_refused_walk_is_answered_with_another_round_its_route_or_a_hold() ->
 	if instead.move != null:
 		for step: Vector2i in instead.move.path:
 			assert_bool(step in refused_path).is_false()
+
+
+func test_on_the_clock_it_counts_what_it_searched_never_below_zero() -> void:
+	var timed := ExpectiSquad.new(1)
+	timed.think_for(20)
+	timed.decide_move(_rules.start(), 1)
+	var line: String = timed.search_lines()[0]
+	assert_str(line).contains("of ∞")
+	assert_bool(line.contains("-")).is_false()
+
+
+func test_a_belief_with_no_enemy_left_holds_and_says_so() -> void:
+	for searcher: SearchingSquad in [BelievesNoEnemy.new(1, BUDGET), SamplesNoEnemy.new(1, 40)]:
+		var decision: TacticalDecision = searcher.decide_move(_rules.start(), 1)
+		assert_object(decision.move).is_null()
+		assert_object(decision.attack).is_null()
+		assert_str(TacticalStatus.said(decision.reason)).contains("believes no enemy is left")
+		assert_array(searcher.weighed()).is_empty()
 
 
 func test_a_seeded_game_against_the_weighed_enemy_replays_to_its_digest() -> void:

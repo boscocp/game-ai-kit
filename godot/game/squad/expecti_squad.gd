@@ -15,6 +15,13 @@
 ## a different route than MCTS -- it always has the deepest *finished*
 ## depth's answer.
 ##
+## A ply here is one piece's answer, and a side's turn is up to eight of
+## them, so the other side seldom moves inside the depth it reaches: at
+## depth 2, MIN chooses in 5 of the duel's 30 positions, all shots, and in
+## none of its 14 walks (3 in depth 3: 2 of the walks). On a walk it is
+## expectimax against an enemy that stands still -- T88's review, wave 136.
+## A ply counted as a whole side's turn is the next step (a later task).
+##
 ## What it shows (invariant 13): every root answer's expected value on the
 ## board, the one it plays framed; in the status, the depth finished so far
 ## and the one under way, a bar for each answer worth most, and for a shot
@@ -42,6 +49,8 @@ var _game := SquadEvaluatedGame.new()
 var _search: ExpectiminimaxSearch
 var _root: SquadSearchGame.Position
 var _left: int = 0
+# Positions this decision's search has visited, all depths together.
+var _visited: int = 0
 var _found: AdversarialResult
 
 
@@ -77,9 +86,10 @@ func search_lines() -> Array[String]:
 	var lines: Array[String] = []
 	if _search == null and _found == null:
 		return lines
-	lines.append(TranslationServer.translate("searched to depth {depth} of {deepest}, {visited} of {budget} positions; the bar is each option's expected value:").format({
+	lines.append(TranslationServer.translate("searched to depth {depth}, depth {under_way} under way, {deepest} at most; {visited} positions of {budget}; the bar is each option's expected value:").format({
 		depth = _found.depth if _found != null else 0, deepest = int(search_rules()["deepest"]),
-		visited = positions - _left, budget = positions}))
+		under_way = _search.depth_under_way() if _search != null else "--", visited = _visited,
+		budget = positions if _clock_msec == 0 else "∞"}))
 	if _found == null or _found.considered.is_empty():
 		return lines
 	var ranked: Array[Dictionary] = _found.considered.duplicate()
@@ -119,6 +129,7 @@ func _start_search(root: SquadSearchGame.Position) -> void:
 	_root = root
 	_search = ExpectiminimaxSearch.new(_game, root, int(search_rules()["deepest"]))
 	_left = positions if _clock_msec == 0 else UNLIMITED
+	_visited = 0
 
 
 func _search_more(count: int) -> void:
@@ -126,6 +137,7 @@ func _search_more(count: int) -> void:
 	_found = _search.step(mini(count, _left))
 	var done: int = _search.positions_visited() - before
 	_left -= done
+	_visited += done
 	_work += done
 
 

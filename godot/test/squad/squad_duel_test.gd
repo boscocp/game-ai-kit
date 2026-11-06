@@ -1,8 +1,9 @@
 # What `make test-squad-duel` holds (T88), each with a planted row it must
-# refuse: `SquadDuel.wrong_position` and `wrong_match`, which the runner
-# applies to every row it prints. The duel's numbers are a measurement; these
-# are the part of it no load can excuse. And the positions file: the
-# opening, a flank, a long shot and a retreat to cover, as the task asks.
+# refuse: `SquadDuel.wrong_position`, `wrong_match` and `missing_rows`,
+# which the runner applies to every row it makes -- and the measurement's
+# note, `searched_less`, which says and never fails. And the positions
+# file: the opening, a flank, a long shot and a retreat to cover, as the
+# task asks.
 extends GdUnitTestSuite
 
 
@@ -25,10 +26,19 @@ func test_a_budget_that_finished_nothing_is_refused() -> void:
 	assert_array(SquadDuel.wrong_position(position, [_row(position, 1, 0)])).is_not_empty()
 
 
-func test_a_longer_budget_that_searched_less_is_refused() -> void:
+func test_a_longer_window_that_searched_less_is_noted_and_not_refused() -> void:
 	var position: Dictionary = _first("retreat to cover")
-	assert_array(SquadDuel.wrong_position(position, [_row(position, 2, 40), _row(position, 1, 200)])).is_not_empty()
-	assert_array(SquadDuel.wrong_position(position, [_row(position, 1, 200), _row(position, 1, 40)])).is_not_empty()
+	var starved: Array[Dictionary] = [_row(position, 2, 40), _row(position, 1, 200)]
+	assert_array(SquadDuel.wrong_position(position, starved)).is_empty()
+	assert_array(SquadDuel.searched_less(position, starved)).is_not_empty()
+	assert_array(SquadDuel.searched_less(position, [_row(position, 1, 200), _row(position, 1, 40)])).is_not_empty()
+	assert_array(SquadDuel.searched_less(position, [_row(position, 1, 40), _row(position, 2, 200)])).is_empty()
+
+
+func test_a_run_short_of_rows_or_matches_is_refused() -> void:
+	assert_array(SquadDuel.missing_rows("matches", 6, 6)).is_empty()
+	assert_array(SquadDuel.missing_rows("matches", 6, 0)).is_not_empty()
+	assert_array(SquadDuel.missing_rows("position rows", 30, 29)).is_not_empty()
 
 
 func test_a_match_with_no_end_or_a_lost_decision_is_refused() -> void:
@@ -59,6 +69,14 @@ func test_searched_for_a_moment_both_answer_from_the_positions_answers() -> void
 	var position: Dictionary = _first("flank")
 	var row: Dictionary = SquadDuel.searched(position, 20, 1)
 	assert_array(SquadDuel.wrong_position(position, [row])).is_empty()
+
+
+func test_the_gates_fixed_budget_answers_the_same_twice() -> void:
+	var position: Dictionary = _first("retreat to cover")
+	var once: Dictionary = SquadDuel.searched_fixed(position, 7)
+	assert_array(SquadDuel.wrong_position(position, [once])).is_empty()
+	assert_dict(SquadDuel.searched_fixed(position, 7)).is_equal(once)
+	assert_int(once["iterations"]).is_equal(SquadDuel.FIXED_ITERATIONS)
 
 
 # A row of the duel for `position`: both searches answering its first

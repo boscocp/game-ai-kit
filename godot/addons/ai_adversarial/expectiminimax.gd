@@ -202,10 +202,12 @@ func _visit_of(state: RefCounted, depth: int) -> Visit:
 	return visit
 
 
-# Stop here: the game is over, or the search has looked as far as this
-# depth may. Only the second makes a deeper search worth starting.
+# Stop here: the game is over, or has no move -- a game that breaks
+# `GakAdversarialGame`'s promise is scored, not searched, in both
+# languages -- or the search has looked as far as this depth may. Only the
+# last makes a deeper search worth starting.
 func _is_cutoff(state: RefCounted, depth: int) -> bool:
-	if _game.is_terminal(state):
+	if _game.is_terminal(state) or _game.actions(state).is_empty():
 		return true
 	if depth >= _depth_limit:
 		_cut_by_depth = true

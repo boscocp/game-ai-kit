@@ -30,6 +30,18 @@ const COIN: Dictionary = {"player": MAX, "moves": [
 	0.8,
 ]}
 
+## A position that is not over and has no move, breaking the interface's
+## promise: scored by `evaluate` (its estimate, 0.3), as at the cutoff, in
+## both languages -- so `a` beats `b`'s 0.2.
+const STUCK: Dictionary = {"player": MAX, "moves": [{"player": MIN, "moves": [], "estimate": 0.3}, 0.2]}
+
+
+func test_a_position_with_no_move_is_scored_not_searched() -> void:
+	var game := ChanceTree.new(STUCK)
+	var found: AdversarialResult = ExpectiminimaxSearch.new(game, game.root()).search_to(3)
+	assert_int(found.action).is_equal(0)
+	assert_float(found.value).is_equal(0.3)
+
 
 func test_the_books_example_takes_the_higher_expected_value() -> void:
 	var game := ChanceTree.new(BOOK)
@@ -85,10 +97,17 @@ func test_a_position_at_a_time_reaches_the_same_answer_as_all_at_once() -> void:
 	var whole: AdversarialResult = ExpectiminimaxSearch.new(race, start).search_to(3)
 	var stepped := ExpectiminimaxSearch.new(race, start, 3)
 	var depths: Array[int] = []
+	var by_depth: Dictionary = {}
 	while not stepped.is_complete():
-		var depth: int = stepped.step(1).depth
-		if depths.is_empty() or depths.back() != depth:
-			depths.append(depth)
+		var found: AdversarialResult = stepped.step(1)
+		# At every step, the answer is a finished depth's, whole: never the
+		# partial answer of the depth under way, whatever its label.
+		if found.depth > 0 and not by_depth.has(found.depth):
+			by_depth[found.depth] = ExpectiminimaxSearch.new(race, start).search_to(found.depth)
+		if found.depth > 0:
+			assert_array(_values(found)).is_equal(_values(by_depth[found.depth]))
+		if depths.is_empty() or depths.back() != found.depth:
+			depths.append(found.depth)
 	assert_array(depths).is_equal([0, 1, 2, 3])
 	assert_array(_values(stepped.result())).is_equal(_values(whole))
 	assert_int(stepped.result().positions).is_equal(whole.positions)
@@ -183,10 +202,11 @@ class ChanceTree extends GakAdversarialGame:
 	func is_terminal(state: RefCounted) -> bool:
 		return not (_node(state) is Dictionary)
 
-	## The leaf's number for MAX, its opposite for MIN; 0 above the leaves.
+	## The leaf's number for MAX, its opposite for MIN; above the leaves,
+	## the position's `estimate`, or 0.
 	func evaluate(state: RefCounted, player: int) -> float:
 		var here: Variant = _node(state)
-		var for_max: float = 0.0 if here is Dictionary else float(here)
+		var for_max: float = float(here.get("estimate", 0.0)) if here is Dictionary else float(here)
 		return for_max if player == MAX else -for_max
 
 	func _node(state: RefCounted) -> Variant:

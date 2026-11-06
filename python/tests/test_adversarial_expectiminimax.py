@@ -101,12 +101,13 @@ class ChanceTree(AdversarialGame):
 
     def evaluate(self, state, player):
         here = self.node(state)
-        for_max = 0.0 if isinstance(here, dict) else float(here)
+        for_max = float(here.get("estimate", 0.0)) if isinstance(here, dict) else float(here)
         return for_max if player == 0 else -for_max
 
 
 BOOK = {"player": 0, "moves": [{"chance": [[0.9, 2.0], [0.1, 3.0]]}, {"chance": [[0.9, 1.0], [0.1, 4.0]]}]}
 BOOK_RESCALED = {"player": 0, "moves": [{"chance": [[0.9, 20.0], [0.1, 30.0]]}, {"chance": [[0.9, 1.0], [0.1, 400.0]]}]}
+STUCK = {"player": 0, "moves": [{"player": 1, "moves": [], "estimate": 0.3}, 0.2]}
 COIN = {"player": 0, "moves": [
     {"chance": [[0.5, {"player": 1, "moves": [3.0, 5.0]}], [0.5, {"player": 1, "moves": [-1.0, 7.0]}]]}, 0.8]}
 
@@ -166,6 +167,10 @@ class TheHandTrees(unittest.TestCase):
 
     def test_one_ply_deep_the_sure_thing_wins(self) -> None:
         self.assertEqual(self.search(COIN, 1).action, 1)
+
+    def test_a_position_with_no_move_is_scored_not_searched(self) -> None:
+        found = self.search(STUCK, 3)
+        self.assertEqual((found.action, found.value), (0, 0.3))
 
     def test_a_finished_game_has_no_move(self) -> None:
         found = ExpectiminimaxSearch(Nim(), Pile(0, 0)).search_to(3)

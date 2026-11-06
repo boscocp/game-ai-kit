@@ -51,8 +51,12 @@ whole state. Minimax and alpha-beta on a game with dice: they read only
 draws them, or expectiminimax, which weighs them. Expectiminimax where
 there are many outcomes or many moves: the dice multiply the branching, and
 in the squad mode one second reaches two or three plies (T88's duel,
-`docs/godot/squad.md`); and where you cannot write the evaluation, since
-MCTS needs none. MCTS where random play says nothing --
+`docs/godot/squad.md`). There a ply is one piece's answer and a side's
+turn up to eight, so at depth 2 the enemy chooses in 5 of the duel's 30
+positions and in none of its 14 walks: on a walk the search plays against
+an enemy that does not move. Count a ply in whole turns when a turn is
+many moves. And where you cannot write the evaluation, since MCTS needs
+none. MCTS where random play says nothing --
 where almost any random move loses at once -- because the playouts then
 measure the randomness; and where alpha-beta already searches deep enough
 with a good evaluation, because there it is exact and MCTS only converges
@@ -72,7 +76,7 @@ shortcut can be seen beside the thing it shortens.
   thinks. `expecti` draws each option's expected value, and in the status
   the depth finished so far, a bar for each option, and for a shot its hit
   and miss with what each is worth. **Space** plays what either has now.
-- `make test-squad-duel` -- the two searches on the same 30 positions at
+- `make measure-squad-duel` -- the two searches on the same 30 positions at
   50, 200 and 1,000 ms, then in seeded matches; the table it printed is in
   `docs/godot/squad.md`.
 - Which demo uses which technique, both ways: the catalogue (T76, coming).

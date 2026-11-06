@@ -66,7 +66,10 @@ at all depends on the move the earlier draw chose.
   every root move's expected `values` in the game's order, the `action`
   chosen (of equal values the first), and the `positions` visited -- the
   root, then every position reached, those scored at the cutoff included.
-  A chance node adds no ply. `ExpectiminimaxSearch.search_to` and
+  A chance node adds no ply. A position with no move that is not over --
+  a game breaking `GakAdversarialGame`'s promise -- is scored by
+  `evaluate`, as at the cutoff, in all three walks; the hand-tree suites
+  of both languages pin it, since the dice race has no such position. `ExpectiminimaxSearch.search_to` and
   `gameaikit.adversarial.expectiminimax` must both meet them, within 1e-9.
   A planted search that takes every roll as its first face -- minimax,
   which reads only `result` -- and one a ply short must fail them, in both

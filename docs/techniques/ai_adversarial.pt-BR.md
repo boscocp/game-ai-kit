@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 5, figures 5.3, 5.7 and 5.11, section 5.5
 invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch, ExpectiminimaxSearch, AdversarialResult, MonteCarloSearch, MctsResult or Xorshift signatures change, or the demos that use them are renamed
 teaches: adversarial-search
-translation_of: f2fdcab1e0ad25ded6ede6d923d533fd6bcfce868bef41d7fbcc4b424522f355
+translation_of: 9c439dd46a642e2104895f4f3e98ab82e43dee284b570bc641dc52f0f517322a
 -->
 
 > English: [ai_adversarial.md](ai_adversarial.md). Os termos que ficam em
@@ -36,7 +36,7 @@ raiz.
 
 O *expectiminimax* (`ExpectiminimaxSearch`) é o *minimax* para um jogo com
 dados: quando os `outcomes` de uma ação são vários, a jogada vale a soma
-deles, cada valor pesado pela sua probabilidade -- o seu valor *esperado*
+deles, cada valor pesado pela sua probabilidade -- o seu valor esperado
 --, e MAX e MIN escolhem entre esses valores. Ele precisa de uma
 estimativa, como o *minimax*, e de uma melhor: um nó de sorte soma valores,
 então a escala deles importa, não só a ordem. Ele é *anytime* por
@@ -54,9 +54,13 @@ dados: eles leem só o `result`, então veem os dados caindo sempre do mesmo
 jeito -- use a *MCTS*, que sorteia os dados, ou o *expectiminimax*, que
 os pesa. O *expectiminimax* onde há muitos resultados ou muitas jogadas: os
 dados multiplicam a ramificação, e no modo de esquadrão um segundo alcança
-dois ou três *plies* (o duelo da T88, `docs/godot/squad.md`); e onde você
-não consegue escrever a estimativa, já que a *MCTS* não precisa de
-nenhuma. A *MCTS* onde jogar ao acaso não diz nada -- onde quase toda jogada aleatória
+dois ou três *plies* (o duelo da T88, `docs/godot/squad.md`). Ali um
+*ply* é a resposta de uma peça, e o turno de um lado chega a oito, então
+na profundidade 2 o inimigo escolhe em 5 das 30 posições do duelo e em
+nenhuma das suas 14 caminhadas: numa caminhada a busca joga contra um
+inimigo que não se move. Conte o *ply* em turnos inteiros quando um turno
+são muitas jogadas. E onde você não consegue escrever a estimativa, já
+que a *MCTS* não precisa de nenhuma. A *MCTS* onde jogar ao acaso não diz nada -- onde quase toda jogada aleatória
 perde na hora --, porque aí os *playouts* medem o acaso; e onde o
 *alpha-beta* já busca fundo o bastante com uma boa estimativa, porque ali
 ele é exato e a *MCTS* só se aproxima dele. E o `MinimaxSearch` puro quase
@@ -77,7 +81,7 @@ encurta.
   profundidade terminada até ali, uma barra para cada opção e, num tiro, o
   acerto e o erro com o que cada um vale. **Espaço** joga o que qualquer
   um dos dois tem agora.
-- `make test-squad-duel` -- as duas buscas nas mesmas 30 posições a 50,
+- `make measure-squad-duel` -- as duas buscas nas mesmas 30 posições a 50,
   200 e 1.000 ms, depois em partidas com semente; a tabela que ele
   imprimiu está em `docs/godot/squad.md`.
 - Qual demo usa qual técnica, nos dois sentidos: o catálogo (T76, a caminho).

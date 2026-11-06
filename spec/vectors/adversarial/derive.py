@@ -112,7 +112,7 @@ def expectiminimax(game, state, depth):
     me, seen = player(state), [1]
     def worth(s, ply):
         seen[0] += 1
-        if over(s) or ply >= depth:
+        if over(s) or not moves(s) or ply >= depth:
             return value(s, me)
         pick = max if player(s) == me else min
         return pick(expected(s, m, ply) for m in moves(s))

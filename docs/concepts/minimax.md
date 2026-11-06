@@ -245,7 +245,7 @@ T88 put both in the XCOM mode of the tactical game, where every shot is a
 die: `MctsSquad` (T87) samples, `ExpectiSquad` works out the odds, with an
 evaluation written by hand -- health, the cover held, the enemies flanked,
 each with a fixed weight -- which MCTS does without. Both search the same
-board (one guess at the fog), and `make test-squad-duel` gave each the same
+board (one guess at the fog), and `make measure-squad-duel` gave each the same
 time on 30 positions drawn from seeded matches. On 2026-11-05, on a 12-core
 machine running other work:
 
@@ -261,8 +261,14 @@ MCTS spends hundreds of playouts on each and expectiminimax gets three
 plies deep. The walks are where they part: some forty answers, so MCTS
 has a handful of playouts each in 200 ms and its most visited walk is
 noise, and expectiminimax, at a ply or two, sees only the next shot and
-what its evaluation says of the cell. Neither is right by construction;
-which is better is the matches' question:
+what its evaluation says of the cell. And a ply there is one piece's
+answer, while a side's turn is up to eight: at depth 2 the enemy chooses in
+5 of the 30 positions, all shots, and in none of the 14 walks. On a walk,
+expectiminimax plays against an enemy that stands still -- expectimax --
+while MCTS's playouts reach the other side's turn. How deep a search looks
+is counted in what a ply is; count it in whole turns and the comparison
+changes (a later task). Neither is right by construction; which is better
+is the matches' question:
 
 | every decision 50 ms, 100 matches a seat | as red: won, lost, drawn | as blue: won, lost, drawn |
 |---|---|---|

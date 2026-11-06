@@ -245,11 +245,15 @@ func believe(state: BoardState) -> BoardState:
 func _begin(believed: BoardState, unit_id: int, phase: int) -> void:
 	_believed = believed
 	_drop_search()
-	# A board it believes already won or lost has nothing to search: the
-	# search's root would have no answer. Wave 136's duel met one, under
-	# the clock (decision 9 of its pull request).
-	var finished: bool = SquadVictory.winner(believed) != TacticalVictory.NOBODY
-	if finished or SquadSearchGame.answers(believed, unit_id, phase).size() <= 1:
+	# A board it believes already won or lost -- no enemy left in its belief
+	# while the real game goes on -- has nothing to search: the root would
+	# have no answer, and T87's `_chosen` crashed on one in wave 136's duel,
+	# under the clock. It holds, and says why; how the belief got there is
+	# T134's to find.
+	if SquadVictory.winner(believed) != TacticalVictory.NOBODY:
+		_pending.reason = Sentence.of("believes no enemy is left, and holds", {})  # shown through tr()
+		return
+	if SquadSearchGame.answers(believed, unit_id, phase).size() <= 1:
 		return
 	var after: Array[int] = []
 	var asked_already: bool = true

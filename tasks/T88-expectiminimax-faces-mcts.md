@@ -104,3 +104,7 @@ Games, 5.5.1 Evaluation functions for games of chance)
   Python tests; T73's literature page is `docs/concepts/the-literature-and-the-kit.md`.
   There is no position picker in the scene: the manual check reaches a
   similar position in play (decision 6 of the pull request).
+- **The review of wave 136 split the duel.** `make test-squad-duel` is
+  the gate, on counted budgets, and fails on a short run.
+  `make measure-squad-duel` is step 4's timed run, kept out of `check`.
+  The root cause of the crash is T134.

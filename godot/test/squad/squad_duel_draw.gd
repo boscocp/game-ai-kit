@@ -86,7 +86,7 @@ static func _chosen(candidates: Array[Dictionary]) -> Array[Dictionary]:
 
 
 const ABOUT: Array[String] = [
-	"T88's duel: 30 positions of the XCOM-style mode, searched by Monte Carlo tree search (T87) and by expectiminimax (T88) at the same wall-clock budget, 50, 200 and 1,000 ms a decision. `make test-squad-duel` prints what each chose.",
+	"T88's duel: 30 positions of the XCOM-style mode, searched by Monte Carlo tree search (T87) and by expectiminimax (T88) at the same wall-clock budget, 50, 200 and 1,000 ms a decision. `make measure-squad-duel` prints what each chose; `make test-squad-duel` holds them on counted budgets.",
 	"Drawn by `godot/test/squad/squad_duel_draw.gd` from seeded matches of the first enemy against itself, on the board the side to move believes in: the opening, four flanks, four long shots, four retreats to cover, and the rest spread through the candidates left. `drawn_from` says which match and turn.",
 	"A position has the shape of `positions.json`'s: every piece `[id, side, kind, column, row, health, movement left]`, side 0 red and 1 blue, in the board's order; the turn; the piece about to act; whether it is to `walk` or to `shoot`; the pieces of its side still to act after it.",
 	"`expected` is expectiminimax's root with the hand-written evaluation (`rules.json`'s `evaluation`): every answer, in the game's order, with its expected value, at `depth` plies, and the answer worth most. Written from one run and held equal in both languages: `godot/test/squad/expecti_squad_test.gd` and `python/tests/test_squad_duel.py`.",

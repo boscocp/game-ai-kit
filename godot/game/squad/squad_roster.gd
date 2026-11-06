@@ -12,7 +12,7 @@
 ## one a person meets; the enemy that searches by sampling (T87), Monte
 ## Carlo tree search measured against it in `docs/godot/squad.md`; the enemy
 ## that searches by working out the odds (T88), expectiminimax, measured
-## against both (`make test-squad-duel`); and a seeded random mover, the
+## against both (`make measure-squad-duel`); and a seeded random mover, the
 ## floor the first must beat (`make test-squad-match`).
 ##
 ## When not to use it: as a ranking, for the reason `TacticalRoster` gives.

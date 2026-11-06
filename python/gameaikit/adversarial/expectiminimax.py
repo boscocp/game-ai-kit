@@ -56,7 +56,7 @@ class ExpectiminimaxSearch:
 
     def search_to(self, depth: int) -> AdversarialResult:
         """Every root move's expected value `depth` plies ahead, and the first of the best."""
-        if self._game.is_terminal(self._state):
+        if self._game.is_terminal(self._state) or not self._game.actions(self._state):
             # Nothing to search: no move, no depth, as Godot's search never starts.
             return AdversarialResult(value=self._game.evaluate(self._state, self._player))
         self._depth_limit = max(depth, 1)
@@ -75,9 +75,11 @@ class ExpectiminimaxSearch:
     def _value(self, state: Any, depth: int) -> float:
         """MAX's best or MIN's worst expected value at `state`, or its evaluation at the cutoff."""
         self._positions += 1
-        if self._game.is_terminal(state) or depth >= self._depth_limit:
+        actions = self._game.actions(state)
+        # A position with no move is scored, as Godot scores it, not searched.
+        if self._game.is_terminal(state) or not actions or depth >= self._depth_limit:
             return self._game.evaluate(state, self._player)
-        values = [self._expected(state, action, depth) for action in self._game.actions(state)]
+        values = [self._expected(state, action, depth) for action in actions]
         return max(values) if self._game.to_move(state) == self._player else min(values)
 
     def _expected(self, state: Any, action: Any, depth: int) -> float:

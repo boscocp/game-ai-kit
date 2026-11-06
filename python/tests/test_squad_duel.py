@@ -18,7 +18,7 @@ import unittest
 from gameaikit.adversarial.expectiminimax import ExpectiminimaxSearch
 from gameaikit.squad import evaluation
 from gameaikit.squad.evaluation import SquadEvaluatedGame
-from gameaikit.squad.search_game import Board, Position, WALK, position_from
+from gameaikit.squad.search_game import Board, Position, WALK, described, position_from
 from gameaikit.squad.shot import RULES
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
@@ -43,6 +43,7 @@ class ThePositions(unittest.TestCase):
                 for (_, mine), (_, theirs) in zip(values, wanted["values"]):
                     self.assertAlmostEqual(mine, theirs, delta=TOLERANCE)
                 self.assertEqual(found.depth, wanted["depth"])
+                self.assertEqual(described(found.action), wanted["decision"])
 
     def test_a_search_with_no_dice_is_not_the_files(self) -> None:
         shots = [entry for entry in DUEL["positions"] if entry["phase"] == "shoot"]

@@ -184,7 +184,15 @@ Every simplification, so nobody reads the mode as more of XCOM than it is:
   status, a hold said while depth 1 is unfinished, a frame at a time to the
   answer it gives at once, a refused walk answered, and a seeded game
   against the weighed enemy pinned to its digest. `squad_duel_test.gd` --
-  what `make test-squad-duel` refuses, each with a planted row.
+  what the duel refuses, each with a planted row -- a short run included.
+  `make test-squad-duel`, in `make check`: the 30 positions searched by both
+  on counted budgets (100 iterations, 400 positions) and one seeded match a
+  pairing a seat (40 iterations, 150 positions a decision), about 30 s,
+  the same on any machine; it fails on an answer not the position's, a
+  search that finished nothing, a match with no end or a lost decision,
+  and on fewer rows or matches than it set out for -- a `SCRIPT ERROR`
+  leaves a run short, and the count says so (T88's review planted one in
+  each half).
   `make test-adversarial-vectors` -- the addon's expectiminimax on the dice
   race, depths 2 and 3, equal to `derive.py`'s exact fractions in both
   languages.
@@ -483,7 +491,8 @@ weighed.
 
 ## The duel (T88)
 
-`make test-squad-duel`. Thirty positions in `spec/squad/duel.json`, drawn by
+`make measure-squad-duel`, kept out of `make check` because the clock and
+the machine's load move it. Thirty positions in `spec/squad/duel.json`, drawn by
 `godot/test/squad/squad_duel_draw.gd` from six seeded matches of the
 weighed enemy against itself, on the board the side to move believes in --
 the guess at the fog both searches would make: the opening, four flanks,
@@ -521,8 +530,23 @@ does best: it does not sample them, it weighs them.
 gives each about five playouts, and its most visited walk is close to
 chance; expectiminimax, at a ply or two, sees the walk, the shot after it,
 and what its evaluation says of the cell -- cover against the enemies, a
-flank on them. Neither is right by construction. The matches say which
-plays better. Match `n` of a seat on dice seed `n`, each searcher seeded
+flank on them.
+
+**What a ply is here, and what it hides.** A ply is one piece's answer --
+a walk, or a shot -- and a side's turn is up to eight of them, four pieces
+each walking and shooting. Following the first answer from each of the 30
+roots, the other side is to move after 1 ply on five positions (05, 09,
+15, 18 and 30, all shots), after 2 on four, and after 3 to 8 on the rest
+(T88's review counted them). MIN chooses only above the cutoff, so at
+depth 2 -- the gate's depth, and what the clock mostly buys -- the enemy
+chooses in 5 of the 30 positions and in none of the 14 walks; at depth 3,
+in 2 of the walks. **On a walk, this expectiminimax plays against an enemy
+that stands still**: it is expectimax, one side's dice and choices only.
+MCTS's playouts do reach the other side's turn. That is the likeliest
+reason the two part on the walks, and for the losses to the weighed enemy
+below. The next step is a ply counted as a whole side's turn, or a cutoff
+counted in turns (a later task). Neither search is right by construction.
+The matches say which plays better. Match `n` of a seat on dice seed `n`, each searcher seeded
 `1000 + n`, every decision searched for the time shown:
 
 | every decision 50 ms, 100 matches a seat | as red: won, lost, drawn | as blue: won, lost, drawn |
