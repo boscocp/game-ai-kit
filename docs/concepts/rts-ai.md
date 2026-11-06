@@ -373,7 +373,13 @@ drawn enemy is the handed one, and that nothing is drawn without the
 clock. A fighting squad's red focus ring stays where its target stands
 now: it marks where the strike lands, because the order names a unit,
 not a place. The hollow ring marks where the side chose it, and the
-thread between them is the reaction gap. In a windowed run with V, K and
+thread between them is the reaction gap. When the target walks out of
+the computer's sight while the squad still holds it, the focus ring stays
+at the last place the side was told of -- the handed one under the clock,
+the last place a decision saw it otherwise, so it may jump back by up to
+half a second of the target's walk -- drawn thin and white like the late
+enemy, its line dashed, so it never claims a place the side cannot see; a
+rival out of sight gets no ring (T128, `test/rts/rts_focus_ring_test.gd`). In a windowed run with V, K and
 F on (2026-11-05), the rings trailed the moving units by half a second. Whether the computer's answer visibly
 follows the rings is T118's manual check, a person's.
 

@@ -48,7 +48,12 @@ make lint-tasks lint-status
 
 In `make demo-rts` with V on, chase a squad's target out of the
 computer's sight: does the ring stay, marked as stale, where the side last
-knew it?
+knew it? Without the clock that is the last decision's sighting, so the
+ring jumps back by up to half a second of the target's walk when it goes
+stale; that is meant. A killed focus also leaves a short-lived stale ring
+on its last place, until the squad's next decision (longer under the
+clock, whose handed view still holds it): the side's honest belief, not a
+fault (review of wave 137, finding 7).
 
 ## Notes
 
