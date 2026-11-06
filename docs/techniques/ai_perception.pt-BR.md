@@ -7,7 +7,7 @@ tier: 2
 source: book:Travis McIntosh, "Human Enemy AI in The Last of Us", in Steve Rabin (ed.), "Game AI Pro 2", CRC Press, 2015 ; https://www.gameaipro.com/
 invalidated_if: the kit's VisionCone, Awareness, LineOfSight, Hearing, VisionShape, BeliefMap or ParticleBelief signatures change, or the demos that use them are renamed
 teaches: perception
-translation_of: dec1b33831dd8ac6b08ed7f2a445c7f3b6779215677b8867c937cf280722f496
+translation_of: e43fa8a3197bfcfb2ef99b14ef7cb7cbbf1f3026208a7eaf469ef732200a80eb
 -->
 
 > English: [ai_perception.md](ai_perception.md). Os termos que ficam em
@@ -105,7 +105,7 @@ acompanhar algo que não se vê [Thrun 2002].
 
 Um avistamento ou um relato colapsa a nuvem numa célula. `shares` é a
 nuvem contada por célula, no mesmo formato de `BeliefMap.shares`, então uma
-busca lê qualquer um dos dois. Todo sorteio vem do `Xorshift` do
+busca lê qualquer um dos dois. Todo sorteio vem do `GakXorshift` do
 `ai_core`, um gerador com semente escrito nas duas linguagens
 (`gameaikit.core` em Python), então uma nuvem é conferida com a sua gêmea em Python
 (`gameaikit.perception.particles`) sorteio a sorteio por

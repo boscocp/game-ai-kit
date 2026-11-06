@@ -23,7 +23,7 @@
 ## When not to use it: anything that must be hard to predict -- a shuffle a
 ## player could exploit, cryptography. Its period is 2^32 - 1, and its low
 ## bits are weaker than its high ones; for a search's choices that is enough.
-class_name Xorshift
+class_name GakXorshift
 extends RefCounted
 
 ## Every value is kept to 32 bits, as Marsaglia's generator is defined.

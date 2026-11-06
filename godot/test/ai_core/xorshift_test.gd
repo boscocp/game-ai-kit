@@ -1,4 +1,4 @@
-# `Xorshift`, the kit's one seeded generator (T109), one claim per test, and
+# `GakXorshift`, the kit's one seeded generator (T109), one claim per test, and
 # the rules `XorshiftVector` holds spec/vectors/core/ to, each with a planted
 # case it must refuse. Read from spec/, so these break the day the vectors
 # move -- which is when they should.
@@ -9,7 +9,7 @@ extends GdUnitTestSuite
 ## harmlessly, because its ghosts never pick among one way; the shared
 ## generator does not, and a twin that did would part from it at once.
 class SpendsOnOne:
-	extends Xorshift
+	extends GakXorshift
 
 	func _init(from_seed: int) -> void:
 		super(from_seed)
@@ -23,7 +23,7 @@ class SpendsOnOne:
 ## twin would never wrap at all, and Marsaglia's keeps neither. Three ways to
 ## be wrong, one way to agree.
 class Unmasked:
-	extends Xorshift
+	extends GakXorshift
 
 	var _wide: int
 
@@ -41,30 +41,30 @@ class Unmasked:
 # Seed 1's first draw, worked in the README: 1 xor (1 << 13) is 8193, which
 # 17 places to the right is 0, and 8193 xor (8193 << 5) is 270369.
 func test_it_starts_where_marsaglia_starts_and_zero_is_one() -> void:
-	assert_int(Xorshift.new(1).next()).is_equal(270369)
-	assert_int(Xorshift.new(0).next()).is_equal(270369)
-	assert_int(Xorshift.new().next()).is_equal(270369)
+	assert_int(GakXorshift.new(1).next()).is_equal(270369)
+	assert_int(GakXorshift.new(0).next()).is_equal(270369)
+	assert_int(GakXorshift.new().next()).is_equal(270369)
 
 
 func test_a_seed_is_cut_to_32_bits() -> void:
-	assert_int(Xorshift.new(0x1_0000_0001).next()).is_equal(Xorshift.new(1).next())
+	assert_int(GakXorshift.new(0x1_0000_0001).next()).is_equal(GakXorshift.new(1).next())
 
 
 func test_a_pick_of_one_spends_no_draw() -> void:
-	var drawn := Xorshift.new(9)
+	var drawn := GakXorshift.new(9)
 	for _forced: int in range(5):
 		assert_int(drawn.index(1)).is_equal(0)
-	assert_int(drawn.next()).is_equal(Xorshift.new(9).next())
+	assert_int(drawn.next()).is_equal(GakXorshift.new(9).next())
 
 
 func test_a_uniform_is_a_draw_over_its_span() -> void:
-	var first := Xorshift.new(86)
-	var second := Xorshift.new(86)
+	var first := GakXorshift.new(86)
+	var second := GakXorshift.new(86)
 	for _draw: int in range(20):
 		var uniform: float = first.uniform()
 		assert_float(uniform).is_greater(0.0)
 		assert_float(uniform).is_less(1.0)
-		assert_float(uniform * Xorshift.SPAN).is_equal(float(second.next()))
+		assert_float(uniform * GakXorshift.SPAN).is_equal(float(second.next()))
 
 
 func test_the_generator_meets_every_claim() -> void:
@@ -74,7 +74,7 @@ func test_the_generator_meets_every_claim() -> void:
 
 
 func test_a_generator_spending_a_draw_on_one_choice_fails_the_picks() -> void:
-	var planted: Callable = func(from_seed: int) -> Xorshift: return SpendsOnOne.new(from_seed)
+	var planted: Callable = func(from_seed: int) -> GakXorshift: return SpendsOnOne.new(from_seed)
 	var wrong: Array[String] = XorshiftVector.wrong_claims(_read(), planted)
 	assert_array(wrong).is_not_empty()
 	for failure: String in wrong:
@@ -82,7 +82,7 @@ func test_a_generator_spending_a_draw_on_one_choice_fails_the_picks() -> void:
 
 
 func test_a_generator_without_the_mask_fails_the_draws() -> void:
-	var planted: Callable = func(from_seed: int) -> Xorshift: return Unmasked.new(from_seed)
+	var planted: Callable = func(from_seed: int) -> GakXorshift: return Unmasked.new(from_seed)
 	assert_array(XorshiftVector.wrong_claims(_read(), planted)).is_not_empty()
 
 

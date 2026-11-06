@@ -5,7 +5,7 @@ half_life: practice
 verified_on: 2026-11-05
 tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 5, figures 5.3, 5.7 and 5.11, section 5.5
-invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch, ExpectiminimaxSearch, AdversarialResult, MonteCarloSearch, MctsResult or Xorshift signatures change, or the demos that use them are renamed
+invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch, ExpectiminimaxSearch, AdversarialResult, MonteCarloSearch, MctsResult or GakXorshift signatures change, or the demos that use them are renamed
 teaches: adversarial-search
 -->
 
@@ -111,7 +111,7 @@ From the library: unzip `ai_core-<version>.zip` and
 [using the library](using-the-library.md) has every step, the Python wheel
 too. Or copy them from a checkout:
 
-Two folders: `godot/addons/ai_core/` (for `Xorshift`, the seeded generator
+Two folders: `godot/addons/ai_core/` (for `GakXorshift`, the seeded generator
 Monte Carlo search draws from) and `godot/addons/ai_adversarial/`. Minimax
 and alpha-beta alone use nothing of `ai_core`, but the folder is one. Open
 the project once, or run `godot --headless --import`, so Godot registers

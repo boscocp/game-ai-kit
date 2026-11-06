@@ -67,11 +67,11 @@ static func _search_for(case: Dictionary, name: String, game: GakAdversarialGame
 	return make.call(game, start, int(case["seed"]), float(case["exploration"]), int(case["playout_limit"]))
 
 
-## Every draw `xorshift.json` claims that `Xorshift` does not make.
+## Every draw `xorshift.json` claims that `GakXorshift` does not make.
 static func wrong_draws(vector: Dictionary) -> Array[String]:
 	var wrong: Array[String] = []
 	for case: Dictionary in vector["cases"]:
-		var generator := Xorshift.new(int(case["seed"]))
+		var generator := GakXorshift.new(int(case["seed"]))
 		var drawn: Array = []
 		for _draw: Variant in case["draws"]:
 			drawn.append(generator.next())

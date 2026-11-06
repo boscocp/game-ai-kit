@@ -39,7 +39,7 @@ var outcome: String = PLAYING
 ## another -- T98's MDP plays chase for ever, `mdp.json`'s.
 var schedule: Array = []
 
-var _dice: Xorshift
+var _dice: GakXorshift
 
 
 ## A game from `from_seed` with `ghost_names` playing, every ghost's first
@@ -49,7 +49,7 @@ var _dice: Xorshift
 func _init(from_seed: int = 1, ghost_names: Variant = null, modes: Array = []) -> void:
 	seed_used = from_seed
 	schedule = modes
-	_dice = Xorshift.new(from_seed)
+	_dice = GakXorshift.new(from_seed)
 	var start: Dictionary = MazeRules.maze()["pacman"]
 	pacman = MazeRules.cell_of(start["cell"])
 	facing = start["facing"]

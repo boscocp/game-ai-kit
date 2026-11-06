@@ -15,7 +15,7 @@
 ## child per outcome, grown as each is drawn, so what the search learns under
 ## a lucky roll is never mixed with what it learns under an unlucky one.
 ## Every random choice -- the outcome drawn, the playout's moves, which
-## untried move to expand -- comes from one seeded `Xorshift`, which is what
+## untried move to expand -- comes from one seeded `GakXorshift`, which is what
 ## lets `gameaikit.adversarial.mcts` repeat the search draw for draw.
 ##
 ## Complexity: each iteration costs one descent of the tree plus one playout,
@@ -87,7 +87,7 @@ class Descent extends RefCounted:
 
 var _game: GakAdversarialGame
 var _root: TreeNode
-var _random: Xorshift
+var _random: GakXorshift
 var _exploration: float = EXPLORATION
 var _playout_limit: int = PLAYOUT_LIMIT
 var _iterations: int = 0
@@ -99,7 +99,7 @@ func _init(game: GakAdversarialGame, state: RefCounted, from_seed: int = 1,
 		exploration: float = EXPLORATION, playout_limit: int = PLAYOUT_LIMIT) -> void:
 	_game = game
 	_root = TreeNode.new(game, state)
-	_random = Xorshift.new(from_seed)
+	_random = GakXorshift.new(from_seed)
 	_exploration = exploration
 	_playout_limit = maxi(playout_limit, 0)
 
@@ -250,7 +250,7 @@ func _child_by_chance(branch: Branch) -> TreeNode:
 	return branch.children[drawn]
 
 
-# Which outcome happens. One outcome spends no draw, as `Xorshift.index`
+# Which outcome happens. One outcome spends no draw, as `GakXorshift.index`
 # spends none on one choice; several walk their chances until the drawn
 # number falls inside one.
 func _draw_outcome(outcomes: Array) -> int:

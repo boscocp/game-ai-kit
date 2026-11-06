@@ -126,4 +126,5 @@ open until the owner ruled:
   name a user's project may well have. T109 left it unprefixed, reading it
   as a building block a game calls rather than a type it extends; the
   review leaned to `GakXorshift`, cheap now and a breaking rename after a
-  release. The owner decides.
+  release. The owner decides. *Decided on 2026-11-05: `GakXorshift`,
+  landed in T120 (wave 140); see ADR 0024's amendment.*

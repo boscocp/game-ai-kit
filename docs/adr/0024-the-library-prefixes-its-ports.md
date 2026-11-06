@@ -1,6 +1,6 @@
 # 0024 — The library prefixes its ports with `Gak`, and ships only techniques
 
-Status: accepted, amended · 2026-10-30 (T64, wave 112; the owner's decisions of 2026-10-20 and 2026-10-30; amended on the owner's decision of 2026-11-05 -- see the amendment at the end)
+Status: accepted, amended · 2026-10-30 (T64, wave 112; the owner's decisions of 2026-10-20 and 2026-10-30; amended on the owner's decision of 2026-11-05 -- see the amendment at the end; the table's tenth row by T120, wave 140)
 
 ## Context
 
@@ -42,6 +42,7 @@ concrete sample with static functions:
 | `LlmRuntime` | `GakLlmRuntime` | `ai_llm` |
 | `SteeringBehaviour` | `GakSteeringBehaviour` | `ai_steering` |
 | `RtsController` | `GakRtsController` | `ai_rts_core` |
+| `Xorshift` | `GakXorshift` | `ai_core` (T120, wave 140, 2026-11-06) |
 
 Every other name -- `AStarSearch`, `StripsPlanner`, `Hearing` -- stays, and
 the release's README says what to do on a collision with one of those: the
@@ -125,6 +126,20 @@ T109.
 published. That is task T120, not done by this amendment. When it lands,
 its wave adds the row to the table above. Whether the promise of 0.1.0
 then covers ten names, not nine, was not part of the answer: T120 asks.
+
+**Landed (T120, wave 140, 2026-11-06), and one question still open.**
+The table above has its tenth row: the GDScript `class_name` is
+`GakXorshift`, its file is still `xorshift.gd`, and the Python twin keeps
+`gameaikit.core.Xorshift` ("The Python names stay"). No draw moved: every
+vector family that reads the generator passes unchanged. The paragraph
+above the table still says nine, the owner's list of 2026-10-30, and the
+item above still says 0.1.0 promises "only the nine `Gak` names":
+**whether 0.1.0's promise now covers ten
+names is open, asked of the owner in wave 140's pull request, not
+answered.** The wave recommended ten -- a prefix is paid for so that the
+name can be promised, and a generator a game seeds is a name its code
+writes -- but until the owner says so, this record promises nine, and
+`GakXorshift` is prefixed and not promised.
 
 **What does not follow from it.** Nothing else is prefixed, and nothing
 else enters the wheel, on the strength of this amendment.

@@ -102,7 +102,7 @@ in Godot, so a move must land in the same place in both.
 generator, Marsaglia's 32-bit xorshift, written out in each. The vectors in
 `spec/vectors/maze/` are a seed and Pac-Man's moves in, every step's
 positions, choices and targets out, derived by a third copy that imports
-nothing (`derive.py`). The generator is `ai_core`'s `Xorshift`, and
+nothing (`derive.py`). The generator is `ai_core`'s `GakXorshift`, and
 `gameaikit.core`'s in Python (T109): the maze had its own copy, `MazeDice`,
 so as not to appear to use adversarial search, until there was a shared
 place to put one.

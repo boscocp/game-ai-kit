@@ -25,7 +25,7 @@ Two halves, each usable without the other.
 
 - **Godot addons**, one zip each. `ai_core` is the kernel: a grid
   (`GakGridGraph`), a pathfinder port (`GakPathfinder`) and a seeded
-  generator (`Xorshift`), no game logic.
+  generator (`GakXorshift`), no game logic.
   Every other addon is one technique -- `ai_search`, `ai_behaviour`,
   `ai_steering`, ... -- and depends on nothing but, at most, `ai_core`, so
   you take only what you use. The [catalogue](catalogue.md) says what each
@@ -35,13 +35,15 @@ Two halves, each usable without the other.
   where you train for your game.
 
 The names your own code types as a type carry the prefix `Gak`: the
-ports you extend or implement and the kernel's grid (ADR 0024). The
+ports you extend or implement, and the kernel's grid and generator (ADR
+0024). The
 algorithms keep their book names -- `AStarSearch`, `StripsPlanner`.
 
 | name | addon | what you do with it |
 |---|---|---|
 | `GakGridGraph` | `ai_core` | fill it from your tiles |
 | `GakPathfinder` | `ai_core` | ask it for a route |
+| `GakXorshift` | `ai_core` | seed it, so a run can be played again |
 | `GakSearchGraph` | `ai_search` | extend it for a map that is not a grid |
 | `GakSearch` | `ai_search` | extend it with a search of your own |
 | `GakAdversarialGame` | `ai_adversarial` | extend it with your game's moves |
@@ -257,10 +259,11 @@ it.
   tested.
 - **The library's version** is in each zip's `VERSION` and the wheel's
   name -- 0.1.0 today, the number in the commands above. What it promises
-  to keep is what ADR 0024 writes down: the nine `Gak` names above, the
-  ones your code names as a type -- renaming one after a release breaks
-  every game that uses it, which is why they are few. Below 1.0 any other
-  name may still change between releases.
+  to keep is what ADR 0024 writes down: the `Gak` names above, the ones
+  your code names as a type, except `GakXorshift`, which is prefixed so it
+  is unlikely to collide with yours and is not promised yet -- renaming
+  one after a release breaks every game that uses it, which is why they
+  are few. Below 1.0 any other name may still change between releases.
 - **A name that collides with one of yours**: each zip's README says it --
   rename the `class_name` line, and its uses, inside that addon's folder.
   Nothing of yours changes.

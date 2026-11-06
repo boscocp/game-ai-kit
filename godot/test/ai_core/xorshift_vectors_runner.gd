@@ -1,5 +1,5 @@
 # Run the conformance vectors in spec/vectors/core against ai_core's
-# `Xorshift`. Python reads the same file in `make test-python`, through
+# `GakXorshift`. Python reads the same file in `make test-python`, through
 # `gameaikit.core`, so the two generators cannot part by one draw without
 # one of them going red.
 #

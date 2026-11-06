@@ -1,5 +1,5 @@
 # Run the conformance vectors in spec/vectors/adversarial against ai_adversarial:
-# `xorshift.json` against `Xorshift`, the `mcts-*.json` files against
+# `xorshift.json` against `GakXorshift`, the `mcts-*.json` files against
 # `MonteCarloSearch` on the test folder's Nim and dice race, and
 # `expectiminimax-dice-race.json` against `ExpectiminimaxSearch` (T88,
 # through `ExpectiminimaxVector`). Python reads the
