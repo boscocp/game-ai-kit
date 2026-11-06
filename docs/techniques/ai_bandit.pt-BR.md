@@ -7,7 +7,7 @@ tier: 1
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- section 17.3, Bandit Problems ; https://homes.di.unimi.it/~cesabian/Pubblicazioni/ml-02.pdf
 invalidated_if: the kit's Bandit signature changes, ADR 0016's amendment is withdrawn, or the demos that use it are renamed
 teaches: fighting-game-ai
-translation_of: 7b28efc6d1c1d0c2fd1675fe85a925cdb760912936d6a9624b25b739899c7974
+translation_of: 9bf13b52e46b0d58e83b549fce33be27bdd8a66f0fa110d730ca5335f3db3405
 -->
 
 > English: [ai_bandit.md](ai_bandit.md). Os termos que ficam em inglês
@@ -79,7 +79,7 @@ Pela biblioteca: descompacte o `ai_core-<version>.zip` e o
 biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de Python
 também. Ou copie de um clone:
 
-Duas pastas: `godot/addons/ai_core/` (pelo `Xorshift`, o gerador com
+Duas pastas: `godot/addons/ai_core/` (pelo `GakXorshift`, o gerador com
 semente de que o epsilon-greedy sorteia) e `godot/addons/ai_bandit/`. Abra
 o projeto uma vez, ou rode `godot --headless --import`, para o Godot
 registrar as classes.

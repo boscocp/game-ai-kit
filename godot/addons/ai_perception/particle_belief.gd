@@ -30,7 +30,7 @@
 ## step to the next; that is inference -- filtering, in AIMA's word -- not a
 ## fit.
 ##
-## Every draw comes from `Xorshift`, seeded, so a cloud is the same in
+## Every draw comes from `GakXorshift`, seeded, so a cloud is the same in
 ## `gameaikit.perception.particles` draw for draw.
 ##
 ## O(count + |seen| + |unheard|) a step, plus O(V) to count the shares.
@@ -77,7 +77,7 @@ var emptied: PackedInt32Array = PackedInt32Array()
 var reseeded: bool = false
 
 var _count: int = COUNT
-var _draws: Xorshift
+var _draws: GakXorshift
 
 
 ## A cloud of `count` particles spread evenly over a graph of
@@ -85,7 +85,7 @@ var _draws: Xorshift
 func _init(graph_neighbours: Array[PackedInt32Array], count: int = COUNT, from_seed: int = 1) -> void:
 	neighbours = graph_neighbours
 	_count = maxi(count, 1)
-	_draws = Xorshift.new(from_seed)
+	_draws = GakXorshift.new(from_seed)
 	_place_evenly(_all_nodes())
 	weights = _even_weights(nodes.size())
 

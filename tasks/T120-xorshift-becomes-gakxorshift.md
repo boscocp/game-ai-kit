@@ -80,3 +80,11 @@ before?
   nine `Gak` names. Whether that promise grows to ten with this rename is
   not in the owner's answer. The wave asks, and the ADR says what was
   answered.
+- **Wave 140, where the code went beyond the Files line.** The guide
+  (`docs/techniques/using-the-library.md` and its pt-BR) is under
+  `docs/techniques/`, and its table of `Gak` names gains `GakXorshift`,
+  with a line saying it is prefixed and not yet promised. The pages that
+  name the old class as history -- ADR 0021, `docs/godot/maze.md`'s
+  "the generator existed twice", the reviews and T109's row -- keep
+  `Xorshift`, the name it had then. The promise of 0.1.0 is decision 1 of
+  the pull request.

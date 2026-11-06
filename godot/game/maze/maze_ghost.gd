@@ -106,7 +106,7 @@ static func _rank(way: Dictionary) -> Vector2i:
 ## On a mode change the move is back the way it came, chosen by nobody --
 ## the Dossier's forced reversal. Otherwise the Dossier's way, or, at an
 ## imprecise fork, whatever the dice say.
-func decide(mode: String, pacman: Vector2i, facing: String, reversing: bool, dice: Xorshift) -> void:
+func decide(mode: String, pacman: Vector2i, facing: String, reversing: bool, dice: GakXorshift) -> void:
 	var goal: Vector2i = target(mode, pacman, facing)
 	var back: String = MazeRules.reverse(heading)
 	var open_ways: Array[Dictionary] = [_way(back, goal)] as Array[Dictionary]
@@ -123,7 +123,7 @@ func decide(mode: String, pacman: Vector2i, facing: String, reversing: bool, dic
 ## at a fork the Dossier's way, unless the mode is imprecise and a uniform
 ## draw comes out at or above the precision -- then a second draw picks any
 ## way evenly.
-static func choose(open_ways: Array[Dictionary], mode: String, dice: Xorshift) -> Dictionary:
+static func choose(open_ways: Array[Dictionary], mode: String, dice: GakXorshift) -> Dictionary:
 	var best: String = nearest(open_ways)
 	if open_ways.size() == 1:
 		return {"chosen": best, "best": best, "kind": ONLY_WAY}

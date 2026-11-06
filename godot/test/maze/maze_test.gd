@@ -5,7 +5,7 @@
 #
 # The vectors (`make test-maze-vectors`) hold this game to the Python one
 # step by step; these hold it to the Dossier's rules on its own. Pac-Man's
-# moves in the seeded games are drawn from a second `Xorshift`, so the
+# moves in the seeded games are drawn from a second `GakXorshift`, so the
 # games are the same on every run and every machine.
 extends GdUnitTestSuite
 
@@ -85,8 +85,8 @@ func test_the_first_draw_decides_keeping_and_the_second_picks_the_way() -> void:
 	var ways: Array[Dictionary] = ghost.ways(Vector2i(4, 4))
 	# One stream, as in a game: a small seed's first draw is small, so fresh
 	# seeds would almost never reach the second draw.
-	var dice := Xorshift.new(11)
-	var mirror := Xorshift.new(11)
+	var dice := GakXorshift.new(11)
+	var mirror := GakXorshift.new(11)
 	var turns: int = 0
 	for _fork: int in range(300):
 		var wanted: Array = [MazeGhost.NEAREST, "down"]
@@ -102,12 +102,12 @@ func test_scatter_and_a_single_way_draw_no_dice() -> void:
 	var ghost := MazeGhost.new("blinky")
 	ghost.cell = Vector2i(3, 3)
 	ghost.heading = "right"
-	var dice := Xorshift.new(5)
+	var dice := GakXorshift.new(5)
 	assert_str(MazeGhost.choose(ghost.ways(Vector2i(4, 4)), MazeRules.SCATTER, dice)["kind"]).is_equal(MazeGhost.NEAREST)
 	ghost.cell = Vector2i(5, 2)
 	ghost.heading = "up"
 	assert_str(MazeGhost.choose(ghost.ways(Vector2i.ZERO), MazeRules.CHASE, dice)["kind"]).is_equal(MazeGhost.ONLY_WAY)
-	assert_int(dice.next()).is_equal(Xorshift.new(5).next())
+	assert_int(dice.next()).is_equal(GakXorshift.new(5).next())
 
 
 func test_in_chase_the_dice_overrule_the_dossier_about_one_time_in_ten_at_a_fork_of_two() -> void:
@@ -115,7 +115,7 @@ func test_in_chase_the_dice_overrule_the_dossier_about_one_time_in_ten_at_a_fork
 	ghost.cell = Vector2i(3, 3)
 	ghost.heading = "right"
 	var ways: Array[Dictionary] = ghost.ways(Vector2i(4, 4))
-	var dice := Xorshift.new(11)
+	var dice := GakXorshift.new(11)
 	var other: int = 0
 	for _draw: int in range(20000):
 		if MazeGhost.choose(ways, MazeRules.CHASE, dice)["chosen"] != "down":
@@ -216,7 +216,7 @@ func _every_step() -> Array[Dictionary]:
 
 func _played(seed_number: int) -> Array[Dictionary]:
 	var game := MazeGame.new(seed_number, ["blinky", "pinky"])
-	var chooser := Xorshift.new(seed_number + 1000)
+	var chooser := GakXorshift.new(seed_number + 1000)
 	var records: Array[Dictionary] = []
 	var move: String = "left"
 	while game.is_playing() and game.steps < STEPS:

@@ -7,7 +7,7 @@ tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html ; https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html ; https://packaging.python.org/en/latest/tutorials/installing-packages/
 invalidated_if: scripts/release.py changes what an archive holds, ADR 0024 changes the prefixed names, .godot-version or python/pyproject.toml's version moves, or scripts/library_check.py stops following one of this page's steps
 teaches: none
-translation_of: 35f69f9687d50f433209cb5414ec9609a65623557c352a5c1535a447a23765b1
+translation_of: eb0ca7b3733aa37111080f798d7e8a26713af8ed2d154a149e9b596e6735e461
 -->
 
 > English: [using-the-library.md](using-the-library.md). Os termos que ficam
@@ -25,7 +25,7 @@ Duas metades, cada uma usável sem a outra.
 
 - **Addons de Godot**, um zip cada. O `ai_core` é o núcleo: uma grade
   (`GakGridGraph`), uma porta de *pathfinding* (`GakPathfinder`) e um
-  gerador com semente (`Xorshift`), nenhuma lógica de jogo. Cada outro addon é uma técnica -- `ai_search`,
+  gerador com semente (`GakXorshift`), nenhuma lógica de jogo. Cada outro addon é uma técnica -- `ai_search`,
   `ai_behaviour`, `ai_steering`, ... -- e não depende de nada além, no
   máximo, do `ai_core`, então você leva só o que usa. O
   [catálogo](catalogue.pt-BR.md) diz o que cada um decide.
@@ -34,13 +34,15 @@ Duas metades, cada uma usável sem a outra.
   e onde você treina para o seu jogo.
 
 Os nomes que o seu código escreve como tipo levam o prefixo `Gak`: as
-portas que você estende ou implementa e a grade do núcleo (ADR 0024). Os
+portas que você estende ou implementa, e a grade e o gerador do núcleo
+(ADR 0024). Os
 algoritmos mantêm os nomes do livro -- `AStarSearch`, `StripsPlanner`.
 
 | nome | addon | o que você faz com ele |
 |---|---|---|
 | `GakGridGraph` | `ai_core` | preenche a partir dos seus *tiles* |
 | `GakPathfinder` | `ai_core` | pede um caminho a ele |
+| `GakXorshift` | `ai_core` | dá uma semente, para que uma partida possa ser jogada de novo |
 | `GakSearchGraph` | `ai_search` | estende para um mapa que não é grade |
 | `GakSearch` | `ai_search` | estende com uma busca sua |
 | `GakAdversarialGame` | `ai_adversarial` | estende com os lances do seu jogo |
@@ -260,8 +262,9 @@ que faz ele ser recusado.
   testado.
 - **A versão da biblioteca** está no `VERSION` de cada zip e no nome do
   *wheel* -- 0.1.0 hoje, o número dos comandos acima. O que ela promete
-  manter é o que o ADR 0024 escreve: os nove nomes `Gak` acima, os que o
-  seu código escreve como tipo -- renomear um depois de uma *release*
+  manter é o que o ADR 0024 escreve: os nomes `Gak` acima, os que o
+  seu código escreve como tipo, menos o `GakXorshift`, que leva o prefixo
+  para não colidir com um seu e ainda não é prometido -- renomear um depois de uma *release*
   quebra todo jogo que o usa, e por isso eles são poucos. Antes da 1.0,
   qualquer outro nome ainda pode mudar entre *releases*.
 - **Um nome que colide com um seu**: o README de cada zip diz o que fazer

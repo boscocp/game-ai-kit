@@ -66,7 +66,7 @@ static func _numbers(value: Variant) -> bool:
 
 ## The generator `ai_core` builds, as a `make` for `wrong_claims`.
 static func core_generator() -> Callable:
-	return func(from_seed: int) -> Xorshift: return Xorshift.new(from_seed)
+	return func(from_seed: int) -> GakXorshift: return GakXorshift.new(from_seed)
 
 
 ## Every claim in the vector that the generators `make` builds do not meet,
@@ -87,21 +87,21 @@ static func wrong_claims(vector: Dictionary, make: Callable) -> Array[String]:
 	return wrong
 
 
-static func _draws(generator: Xorshift, count: int) -> Array:
+static func _draws(generator: GakXorshift, count: int) -> Array:
 	var drawn: Array = []
 	for _draw: int in count:
 		drawn.append(generator.next())
 	return drawn
 
 
-static func _uniforms(generator: Xorshift, count: int) -> Array:
+static func _uniforms(generator: GakXorshift, count: int) -> Array:
 	var drawn: Array = []
 	for _draw: int in count:
 		drawn.append(generator.uniform())
 	return drawn
 
 
-static func _picks(generator: Xorshift, counts: Array) -> Array:
+static func _picks(generator: GakXorshift, counts: Array) -> Array:
 	var picked: Array = []
 	for count: Variant in counts:
 		picked.append(generator.index(int(count)))

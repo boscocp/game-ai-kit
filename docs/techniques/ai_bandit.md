@@ -77,7 +77,7 @@ From the library: unzip `ai_core-<version>.zip` and
 library](using-the-library.md) has every step, the Python wheel too. Or
 copy them from a checkout:
 
-Two folders: `godot/addons/ai_core/` (for `Xorshift`, the seeded generator
+Two folders: `godot/addons/ai_core/` (for `GakXorshift`, the seeded generator
 epsilon-greedy draws from) and `godot/addons/ai_bandit/`. Open the project
 once, or run `godot --headless --import`, so Godot registers their
 classes.

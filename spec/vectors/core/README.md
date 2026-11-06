@@ -9,7 +9,7 @@ invalidated_if: the generator's shifts, its mask, its seed of zero, or the rule 
 teaches: none
 -->
 
-> A seed in, the first draws out: the file that says `ai_core`'s `Xorshift`
+> A seed in, the first draws out: the file that says `ai_core`'s `GakXorshift`
 > and `gameaikit.core.Xorshift` are one generator.
 
 Monte Carlo search, the particle filter, the bandit and the maze's ghosts

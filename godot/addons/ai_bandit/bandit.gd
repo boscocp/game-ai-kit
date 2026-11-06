@@ -89,20 +89,20 @@ var paid: PackedInt64Array = PackedInt64Array()
 ## What each arm paid, summed, by its index. A mean is `sums[arm] / paid[arm]`.
 var sums: PackedFloat64Array = PackedFloat64Array()
 
-var _draws: Xorshift
+var _draws: GakXorshift
 
 
 ## A bandit over `arm_count` arms, none pulled yet, choosing by `choosing_by`
 ## and drawing from `draws_seed`. `problem` says what is wrong with any of it.
 func _init(arm_count: int, choosing_by: String = UCB1, exploration_constant: float = EXPLORATION,
-		explore_chance: float = EPSILON, draws_seed: int = Xorshift.SEED_FOR_ZERO) -> void:
+		explore_chance: float = EPSILON, draws_seed: int = GakXorshift.SEED_FOR_ZERO) -> void:
 	policy = choosing_by
 	exploration = exploration_constant
 	epsilon = explore_chance
 	pulls.resize(maxi(arm_count, 0))
 	paid.resize(maxi(arm_count, 0))
 	sums.resize(maxi(arm_count, 0))
-	_draws = Xorshift.new(draws_seed)
+	_draws = GakXorshift.new(draws_seed)
 
 
 ## What is wrong with the settings, or "" when nothing is.

@@ -5,9 +5,9 @@ half_life: practice
 verified_on: 2026-11-05
 tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 5, figures 5.3, 5.7 and 5.11, section 5.5
-invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch, ExpectiminimaxSearch, AdversarialResult, MonteCarloSearch, MctsResult or Xorshift signatures change, or the demos that use them are renamed
+invalidated_if: the kit's AdversarialGame, MinimaxSearch, AlphaBetaSearch, ExpectiminimaxSearch, AdversarialResult, MonteCarloSearch, MctsResult or GakXorshift signatures change, or the demos that use them are renamed
 teaches: adversarial-search
-translation_of: 9c439dd46a642e2104895f4f3e98ab82e43dee284b570bc641dc52f0f517322a
+translation_of: fa87a4a4144d8f77d70abddeedead69e1b88c45b033849264623b08888222bbe
 -->
 
 > English: [ai_adversarial.md](ai_adversarial.md). Os termos que ficam em
@@ -116,7 +116,7 @@ Pela biblioteca: descompacte o `ai_core-<version>.zip` e o
 a biblioteca](using-the-library.pt-BR.md) tem cada passo, o *wheel* de
 Python também. Ou copie de um clone:
 
-Duas pastas: `godot/addons/ai_core/` (pelo `Xorshift`, o gerador com
+Duas pastas: `godot/addons/ai_core/` (pelo `GakXorshift`, o gerador com
 semente de que a busca de Monte Carlo sorteia) e
 `godot/addons/ai_adversarial/`. Minimax e alfa-beta sozinhos não usam nada
 do `ai_core`, mas a pasta é uma só. Abra o projeto uma vez, ou rode

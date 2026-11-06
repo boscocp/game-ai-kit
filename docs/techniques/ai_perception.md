@@ -97,7 +97,7 @@ the standard way to track something you cannot see [Thrun 2002].
 
 A sighting or a report collapses the cloud onto one cell. `shares` is the
 cloud counted per cell, the same shape as `BeliefMap.shares`, so a search
-reads either. Every draw comes from `ai_core`'s `Xorshift`, a seeded
+reads either. Every draw comes from `ai_core`'s `GakXorshift`, a seeded
 generator written out in both languages (`gameaikit.core` in Python), so a
 cloud is held to its Python twin (`gameaikit.perception.particles`) draw for draw by
 `spec/vectors/perception/particles-*.json`.

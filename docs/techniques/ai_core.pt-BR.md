@@ -5,9 +5,9 @@ half_life: practice
 verified_on: 2026-11-04
 tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html
-invalidated_if: the kit's GridGraph, Pathfinder or Xorshift signatures change, or ADR 0021 moves what the kernel holds
+invalidated_if: the kit's GridGraph, Pathfinder or GakXorshift signatures change, or ADR 0021 moves what the kernel holds
 teaches: none
-translation_of: 84ca04088544c527395eb632869d07f7fda4a6a91db8fe36d17bf04513dbdf2e
+translation_of: 996de46d8573e8d8b402f0be965de3a29889a88a4c170cc08b3dfd088d5671d8
 -->
 
 > English: [ai_core.md](ai_core.md). Os termos que ficam em inglês estão no
@@ -29,7 +29,7 @@ sorteie os mesmos números, sem depender de outro addon (invariante 2, ADR
   uma rota que deixa `from` de fora e inclui `to`. O `GridPathfinder` do
   `ai_search` é um; o seu jogo pede um `GakPathfinder` e nunca cita o addon que
   responde.
-- `Xorshift` -- o xorshift de 32 bits de Marsaglia (2003), com semente:
+- `GakXorshift` -- o xorshift de 32 bits de Marsaglia (2003), com semente:
   `next()`, `index(count)` (escolher entre um não gasta sorteio) e
   `uniform()`. Escrito de novo em Python como `gameaikit.core.Xorshift`,
   para que a mesma semente sorteie os mesmos números nas duas linguagens --
@@ -50,7 +50,7 @@ sorteia números com semente (`ai_steering`, `ai_behaviour`) não precisa dele.
 Um tabuleiro hexagonal, uma malha de navegação, qualquer coisa cuja célula
 não seja uma coordenada inteira: `GakGridGraph` é uma grade quadrada e diz
 isso. As buscas continuam funcionando ali pela porta delas, `GakSearchGraph` --
-veja [ai_search](ai_search.pt-BR.md). E o `Xorshift` para qualquer coisa
+veja [ai_search](ai_search.pt-BR.md). E o `GakXorshift` para qualquer coisa
 que um jogador não possa prever: o período é 2^32 - 1 e os bits baixos são
 fracos.
 

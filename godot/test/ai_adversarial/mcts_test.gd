@@ -11,7 +11,7 @@ extends GdUnitTestSuite
 const DICE_RACE: Script = preload("res://test/ai_adversarial/dice_race.gd")
 const EXAMPLE_NIM: Script = preload("res://test/ai_adversarial/nim_example.gd")
 ## The seed whose first draw is exactly 2^31, found by running the three
-## steps of `Xorshift.next` backwards from it.
+## steps of `GakXorshift.next` backwards from it.
 const BOUNDARY_SEED: int = 2281717760
 
 
@@ -123,7 +123,7 @@ func test_a_visited_root_move_reports_its_ucb1_bound() -> void:
 func test_a_drawn_number_on_a_boundary_falls_in_the_next_outcome() -> void:
 	# BOUNDARY_SEED draws exactly 2^31 first, so the uniform is exactly
 	# 0.5: not below the first outcome's 0.5, below the running 0.75.
-	assert_int(Xorshift.new(BOUNDARY_SEED).next()).is_equal(2147483648)
+	assert_int(GakXorshift.new(BOUNDARY_SEED).next()).is_equal(2147483648)
 	var search := MonteCarloSearch.new(DICE_RACE.new(), _race(0, 0, 0), BOUNDARY_SEED)
 	var faces: Array = DICE_RACE.new().outcomes(_race(0, 0, 0), "roll")
 	assert_int(search._draw_outcome(faces)).is_equal(1)
