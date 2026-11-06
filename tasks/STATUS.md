@@ -3,6 +3,65 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-11-06, waves 150 to 153 merged (ready to open)
+
+**Where it stopped -- read first.** The repository is ready for the
+owner to open and publish. Four waves, each reviewed by a fresh context
+before its merge:
+
+- **150 T143**, a stranger's toolchain goes where they say (#103). No
+  path names the author's disk. The main checkout links
+  `.toolchain -> /mnt/games/gamedev/toolchain` (ignored by git); `make
+  worktree-setup` links each worktree to it. Invariant 8 is now half
+  held: a `._sc_` the engine stops honouring is no longer caught.
+- **151 T144**, contributing for someone outside the waves (#104),
+  modelled on desk-panel. Support/Apoie closes both READMEs: GitHub
+  Sponsors (live 2026-11-06), then a Pix key. No PayPal.
+- **152 T147**, the publishing guide (#102): `docs/howto/publish.md`.
+  Godot 4.7.2 reads only the Asset Store; its installer drops a zip's
+  single top folder unless it is `addons/`.
+- **153 T149**, addon zips laid out for the store (#105): `addons/ai_<name>/`,
+  one kit zip for one store asset, the copyright line in the 18 LICENSE
+  copies.
+
+Main is 1d8c147.
+
+**Checks, by the owner's decision.** "Roda só o check mínimo": #104 and
+#105 ran `make check-no-engine` (and #105 `make library-check`); #102 and
+#103 ran all of `make check-affected`. No Godot suite has run since
+#103. The full `make check` runs on main after T113-T115. Before an
+upload, `make library-check` installs exactly what is published.
+
+**The owner's decisions, 2026-11-06 (T147's list, "o recomendado").**
+T149 before the store; one kit asset; the copyright line; the AI usage
+disclosure answered by the owner at submission; PyPI by hand with a
+token, no trusted publishing. Discussions off, CONTRIBUTING in English
+only, the new contributor files kept as prose by the selector.
+
+**The owner's opening list** (`docs/howto/publish.md` has the upload
+steps):
+
+1. Add terms with `--add-term`; check Kenney's pages and
+   `kenney_racing-pack.zip` in a browser.
+2. Make the repository public; set the description and topics.
+3. Settings: Features -> Sponsorships; Security -> private vulnerability
+   reporting (also on desk-panel, off today); delete the merged remote
+   branches and turn on auto-delete.
+4. `gh workflow enable ci`.
+5. `make release` and `make library-check`, then TestPyPI, then PyPI.
+6. The Asset Store: a thumbnail, the form, the AI disclosure, upload
+   `game-ai-kit-addons-<v>.zip` as a test version, install it from the
+   4.7.2 editor into a blank project (files under `res://addons/ai_<name>/`,
+   nothing at `res://`), then submit.
+
+**Manual checks waiting:** T143 (a fresh account: clone, `make
+bootstrap`, `make menu`), T149's store install, and T136, T138, T133 as
+before.
+
+**Next.** After the owner opens and publishes: T113, T114, T115 only.
+Every follow-up waits (T137, T139-T141, T146, T148, T121, the squad
+queue, the old wip tasks).
+
 ## Resuming after 2026-11-06, waves 144 to 149 merged
 
 **Where it stopped -- read first.** Six waves ran in parallel, as the
@@ -1473,13 +1532,13 @@ review.
 | T140 | A server's refusal is cleaned as a speech is | todo | the owner, 2026-11-06, list item 8 (T129's decision 3): `HttpRuntime._error_of` asks R9's test instead of cleaning C0 and DEL only |
 | T141 | Every `-s` gate fails on an engine error | todo | the owner, 2026-11-06, list item 12: every `-s` line in the `Makefile` through `godot_checked.py`, a lint with a planted bypass; runs alone |
 | T142 | The first page says what is true today | done | wave 144: from T112's finding 2; the README's status line says every technique in its table has a page in both languages and a demo, with no count to go stale; `ai_llm` names its runtime and `make demo-talk`; "What you will see" keeps its five paragraphs and names the other eleven demos with a link to the catalogue; tier 1 is Python 3.12 or later in both READMEs; no task id left in either; both link `CONTRIBUTING.md` and `docs/howto/windows.md` and call `tasks/` and `docs/reviews/` the working history; `ai_llm`'s "Where to watch it" names `make demo-talk` and keeps the replay as the tier-1 way in, in both languages |
-| T143 | A stranger's toolchain goes where they say | todo | from T112's finding 1: the toolchain defaults to `/mnt/games`, `TOOLCHAIN` and `GAK_TOOLCHAIN` disagree, and `lint-disk-layout` refuses a home where Godot has run; runs alone, all of `make check` |
-| T144 | Contributing, for someone outside the waves | todo | from T112's finding 6: `CONTRIBUTING.md` for a fork's pull request, keeping pt-BR in step, issue and PR templates, `SECURITY.md`; the code of conduct is the owner's choice |
+| T143 | A stranger's toolchain goes where they say | done | wave 150 (#103): one variable, `GAK_TOOLCHAIN`, default `.toolchain/` in the checkout; `make bootstrap TOOLCHAIN=/x` links `.toolchain` to `/x` so the choice lasts; `lint-disk-layout` counts only what this repository wrote (a home record at bootstrap); invariant 8 now half held, the `._sc_` gap named |
+| T144 | Contributing, for someone outside the waves | done | wave 151 (#104): CONTRIBUTING for a fork, desk-panel's Contributor Covenant 2.1, SECURITY, CODEOWNERS, issue forms and PR template, kept as prose by the selector; Support/Apoie in both READMEs (GitHub Sponsors, Pix) and `.github/FUNDING.yml` |
 | T145 | The employer scan reads every branch's messages | done | wave 149: from T112's finding 9; `check_no_employer_refs.py` reads messages and identities with `git log --all`, as it reads the blobs (776 commits here, 366 along HEAD), one commit at a time, and an E2 finding names its commit (12 hex digits) beside the term; planted: a term only in a message on a branch HEAD does not reach, passed by the old gate (exit 0), exit 3 now, and the finding must name that commit; exit codes unchanged |
 | T146 | Every demo closes without an exit leak | todo | from the review of PR #100 (wave 146, finding 3): `check_exit_leaks.py` over every scene in `check_demos.py`'s list; `squad_ruleset.gd` and `squad_map_words.gd` leak 18/17 when loaded first; the engine mechanism of T138's leak is not identified |
-| T147 | A publishing guide, checked against the stores | todo | the owner, 2026-11-06: open and publish before anything else; read the Asset Library's and PyPI's current rules (is an entry a commit archive, not an uploaded zip? is `gameaikit` free?), then `docs/howto/publish.md`; the upload stays the owner's (ADR 0009) |
+| T147 | A publishing guide, checked against the stores | done | wave 152 (#102): `docs/howto/publish.md`, store and PyPI rules read 2026-11-06; Godot 4.7.2 reads only the Asset Store; `gameaikit` free on PyPI (404); five owner decisions recorded; ADR 0009 revisited |
 | T148 | A cold import that crashes is explained, or survived | todo | signal 11 on a cold `--import` at 4.7.2, seen in waves 140, 142 and 147's review, a rerun passing each time; measure first, a bounded retry with a planted case only if it is the engine's |
-| T149 | Addon zips laid out for the Asset Store | todo | from the review of wave 152 (T147): Godot 4.7.2's installer skips a zip's single top folder unless it is `addons/`, so `ai_<name>/` lands at `res://`; decided by the owner 2026-11-06: zips laid out `addons/ai_<name>/`, one kit zip for a single store asset, `Copyright 2026 Adalberto Pereira` in all 18 LICENSE copies; the licence gate's archive rule, library-check and the unzip wording, with planted cases; before anything goes to the store |
+| T149 | Addon zips laid out for the Asset Store | done | wave 153 (#105): zips laid out `addons/ai_<name>/`, a kit zip `game-ai-kit-addons-<v>.zip` for the one store asset, the 4.7.2 installer rule copied into `release.py`'s self-test, `Copyright 2026 Adalberto Pereira` in all 18 LICENSE copies; the store install itself is the owner's manual check |
 
 ---
 
