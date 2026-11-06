@@ -25,7 +25,8 @@ and written in `docs/godot/user-data.md`.
 `LOCALAPPDATA` under `<checkout>/.user-data/` on Windows.
 
 - **On the large disk** because the checkout is: `check_disk_layout.py`'s
-  D5 already refuses a repository under `$HOME`.
+  D5 refuses a repository under `$HOME` when the toolchain is on another
+  disk (amended by T143, ADR 0002's amendment; on one disk it is a note).
 - **At the root, not under `godot/`**, so the engine never scans it as part
   of the project.
 - **Found without a lookup.** No hash and no registry: the path *is* the

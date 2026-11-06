@@ -2,7 +2,7 @@
 # The only way this repo runs the local LLM (T93, docs/adr/0023).
 #
 # llama.cpp's server, its models and every cache it or the GPU driver keeps
-# live under the toolchain directory on the large disk (invariant 8). Left
+# live under the toolchain directory (invariant 8). Left
 # alone they would not: llama.cpp downloads into ~/.cache/llama.cpp
 # (LLAMA_CACHE), the NVIDIA driver keeps compiled shaders in
 # ~/.cache/nvidia and kernels in ~/.nv, Mesa in ~/.cache/mesa_shader_cache.
@@ -23,7 +23,7 @@
 set -euo pipefail
 
 here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
-toolchain=${GAK_TOOLCHAIN:-/mnt/games/gamedev/toolchain}
+toolchain=${GAK_TOOLCHAIN:-$here/.toolchain}
 home="$toolchain/llm"
 
 export XDG_CACHE_HOME="$home/cache/xdg"
@@ -35,15 +35,11 @@ export MESA_SHADER_CACHE_DIR="$home/cache/mesa"
 # `--offline` (tools/server/README.md at the pinned tag).
 export LLAMA_ARG_OFFLINE=1
 
-# What would let a cache land on the small disk, or the server fetch an
-# unpinned file. Empty when the environment is sound. "runner" forgives the
-# toolchain under $HOME, as scripts/artgen does (a GitHub runner has one disk).
+# What would let a cache land outside the toolchain, or the server fetch an
+# unpinned file. Empty when the environment is sound. Where the toolchain
+# itself sits is not asked, as in scripts/artgen (T143, docs/adr/0002).
 problems() {
-  local root=$1 where=${2:-desk}
-  case "$(realpath -m "$root")/" in "$(realpath -m "$HOME")"/*)
-    if [[ "$where" == runner ]]; then echo "note: the toolchain $root is under \$HOME on a CI runner" >&2
-    else echo "the toolchain $root is under \$HOME"; fi;;
-  esac
+  local root=$1
   for variable in XDG_CACHE_HOME LLAMA_CACHE CUDA_CACHE_PATH __GL_SHADER_DISK_CACHE_PATH MESA_SHADER_CACHE_DIR; do
     [[ "${!variable:-}" == "$root"/* ]] || echo "$variable is outside the toolchain"
   done
@@ -51,11 +47,8 @@ problems() {
 }
 
 if [[ "${1:-}" == "--self-test" ]]; then
-  where=desk; [[ "${GITHUB_ACTIONS:-}" == true ]] && where=runner
-  found=$(problems "$home" "$where")
+  found=$(problems "$home")
   [[ -z "$found" ]] || { echo "self-test FAIL: $found"; exit 1; }
-  # Planted: a toolchain on the small disk.
-  [[ "$(problems "$HOME/toolchain/llm")" == *"under \$HOME"* ]] || { echo "self-test FAIL: a toolchain under \$HOME passed"; exit 1; }
   # Planted: llama.cpp's download cache left at its default.
   [[ "$(LLAMA_CACHE="$HOME/.cache/llama.cpp" problems "$home")" == *LLAMA_CACHE* ]] || { echo "self-test FAIL: LLAMA_CACHE under \$HOME passed"; exit 1; }
   # Planted: the server allowed online.

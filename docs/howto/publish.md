@@ -132,13 +132,13 @@ hand and kept out of the repository; trusted publishing stays off.
 
 ## PyPI, TestPyPI first
 
-The uploader lives outside the repository and outside `$HOME`: invariant 8
-in [CLAUDE.md](../../CLAUDE.md) keeps the whole toolchain on the large disk,
-in the folder the Makefile calls `TOOLCHAIN` (override it as you would for
-`make`). `--no-cache-dir` keeps pip from writing `~/.cache/pip`.
+The uploader lives in the toolchain, never in the home's own folders:
+invariant 8 in [CLAUDE.md](../../CLAUDE.md). The toolchain is `GAK_TOOLCHAIN`
+when it is set, and the checkout's `.toolchain` otherwise, as for `make`.
+`--no-cache-dir` keeps pip from writing `~/.cache/pip`.
 
 ```bash
-TOOLCHAIN=/mnt/games/gamedev/toolchain        # the Makefile's default
+TOOLCHAIN=${GAK_TOOLCHAIN:-$PWD/.toolchain}    # run from the checkout: the Makefile's default
 python3 -m venv "$TOOLCHAIN/publish-venv"
 . "$TOOLCHAIN/publish-venv/bin/activate"
 pip install --no-cache-dir twine==7.0.0

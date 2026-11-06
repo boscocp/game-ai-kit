@@ -4,7 +4,7 @@
 What it does
 ------------
   1. refuses unless the release template is installed and matches the
-     SHA-512 pinned below -- `make bootstrap` installs it, on the large disk;
+     SHA-512 pinned below -- `make bootstrap` installs it, in the toolchain;
   2. exports the project's "Linux x86_64" preset (`godot/export_presets.cfg`)
      into `dist/game-ai-kit-linux/`: the engine binary and its `.pck`;
   3. reads the `.pck`'s own file directory and refuses a pack holding the
@@ -61,7 +61,8 @@ import sys
 import tempfile
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
-TOOLCHAIN = pathlib.Path(os.environ.get("GAK_TOOLCHAIN", "/mnt/games/gamedev/toolchain"))
+#: GAK_TOOLCHAIN, or this checkout's own `.toolchain/` (T143, docs/adr/0002).
+TOOLCHAIN = pathlib.Path(os.environ.get("GAK_TOOLCHAIN") or REPO / ".toolchain")
 PRESET = "Linux x86_64"
 OUTPUT = REPO / "dist" / "game-ai-kit-linux"
 BINARY = "game-ai-kit.x86_64"
@@ -166,7 +167,7 @@ def start_problem(binary: pathlib.Path) -> str:
     """Why the exported binary did not start and stop cleanly, or ""."""
     # The exported game writes user:// like any Godot program. The same
     # redirect scripts/godot sets -- this checkout's .user-data/ (T83) --
-    # asked of it rather than copied, keeps it on the large disk.
+    # asked of it rather than copied, keeps it out of the home.
     environment = {**os.environ, **user_data_redirect()}
     ran = subprocess.run([str(binary), "--headless", "--quit-after", str(FRAMES)], env=environment,
                          capture_output=True, text=True, timeout=120)

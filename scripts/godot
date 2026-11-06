@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # The only way this repo invokes Godot.
 #
-# Keeping the whole toolchain off the small disk needs TWO mechanisms, not one,
-# and that is why nobody should call the binary directly:
+# Keeping the whole toolchain out of the home's own folders needs TWO mechanisms,
+# not one, and that is why nobody should call the binary directly:
 #
 #   1. `._sc_` next to the binary (self-contained mode) redirects editor data,
 #      settings and export templates -- the part that grows past 1 GB.
@@ -18,8 +18,8 @@
 # The redirect points inside this checkout, at `.user-data/` (ignored by git),
 # so each worktree has its own `user://` (T83, docs/adr/0022). Under the
 # toolchain it was one directory for every checkout, and two waves testing at
-# once wrote each other's files. The checkout is on the large disk already:
-# check_disk_layout.py's D5 holds that.
+# once wrote each other's files. Where the checkout itself may sit is
+# check_disk_layout.py's D5.
 #
 # `scripts/godot --gak-print-redirect` prints the redirect, one NAME=PATH a
 # line, and exits without starting Godot: bootstrap, export.py and the gate
@@ -30,15 +30,17 @@ set -euo pipefail
 
 here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 
+# The toolchain is GAK_TOOLCHAIN, which the Makefile exports, or this
+# checkout's own `.toolchain/` (T143, docs/adr/0002).
+toolchain=${GAK_TOOLCHAIN:-$here/.toolchain}
+
 if [[ "${OS:-}" == "Windows_NT" ]]; then
-  toolchain=${GAK_TOOLCHAIN:-D:/games/gamedev/toolchain}
   binary="$toolchain/godot/godot_console.exe"
   # `pwd -W` is Git Bash's D:/... form: godot.exe is a Windows program and
   # reads APPDATA as a Windows path, not as /d/....
   user_data="$(cd -- "$here" && pwd -W)/.user-data"
   redirect=(APPDATA="$user_data/appdata" LOCALAPPDATA="$user_data/localappdata")
 else
-  toolchain=${GAK_TOOLCHAIN:-/mnt/games/gamedev/toolchain}
   binary="$toolchain/godot/godot"
   user_data="$here/.user-data"
   redirect=(XDG_DATA_HOME="$user_data/xdg")

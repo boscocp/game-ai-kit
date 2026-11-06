@@ -93,7 +93,7 @@ Four tiers. **No lesson lives only in the expensive tier.**
 | **1** | Python 3.12 or later -- check with `python3 --version`; macOS's own and some Linux LTS releases (Ubuntu 22.04, Debian 12) are older | read a PDDL domain and check it, train the regressions, read the weights. Standard library only — **no pip, no numpy, no install step** |
 | **2** | Godot 4 (~130 MB, runs on integrated graphics) | play the game, open the demos, modify the addons |
 | **2, in 3D** | Godot 4 and integrated graphics that draw a 3D scene (measured: about 1,000 fps for the 3D test arena on a Radeon 610M, 1280×720 -- a 2022 chip, newer than the 2015 floor below; nothing older was measured) | the 3D examples in `godot/game3d/`, with `make assets-3d` for their models or plain shapes without; their decisions run on snapshots with Python twins, so the lesson is tier 1 (ADR 0018) |
-| **3** | a GPU with some VRAM | run a local LLM for real, through `ai_llm`'s `HttpRuntime`: `make llm-bootstrap` installs llama.cpp's server and a model on the large disk, each file by sha256 (about 5 GB; measured on 12 GB of VRAM, a reply in under a second), `make llm-serve` runs it, `make llm-smoke` checks it (see [docs/local-llm/](docs/local-llm/bakeoff.md)); generate your own art with a local image model (`make artgen-bootstrap`, then `make artgen`; see [the how-to](docs/howto/generate-art.md)). Optional: the CC0 art is committed and is the default, so nothing needs this tier |
+| **3** | a GPU with some VRAM | run a local LLM for real, through `ai_llm`'s `HttpRuntime`: `make llm-bootstrap` installs llama.cpp's server and a model in the toolchain, each file by sha256 (about 5 GB; measured on 12 GB of VRAM, a reply in under a second), `make llm-serve` runs it, `make llm-smoke` checks it (see [docs/local-llm/](docs/local-llm/bakeoff.md)); generate your own art with a local image model (`make artgen-bootstrap`, then `make artgen`; see [the how-to](docs/howto/generate-art.md)). Optional: the CC0 art is committed and is the default, so nothing needs this tier |
 
 The game targets 1280×720 at 60 fps on integrated graphics, using the
 Compatibility (OpenGL) renderer. The 2D kit has no 3D nodes and no large
@@ -193,7 +193,7 @@ PYTHONPATH=python python3 -m gameaikit.tactical.report   # what the models learn
 Tier 2, with the engine:
 
 ```bash
-make bootstrap     # downloads the pinned Godot and its Linux export templates to the large disk, SHA-512 verified
+make bootstrap     # downloads the pinned Godot and its Linux export templates into .toolchain/, SHA-512 verified
 make menu          # every example on one menu: a card says what its AI decides and how; Esc comes back
 make run           # checkers against minimax and alpha-beta
 make demo-skirmish # the learned policy plays blue on the skirmish board
@@ -203,7 +203,18 @@ make demo-tactical # Advance Wars style turns against the computer, at three lev
 make check         # every gate
 ```
 
-On Windows the same targets run from Git Bash: [the how-to](docs/howto/windows.md).
+`make bootstrap` serves Linux on x86_64, and Windows through Git Bash: the
+same targets, [the how-to](docs/howto/windows.md). Not macOS yet: there it
+would fetch the Linux build. It puts about 1.5 GB (Godot, and the export
+templates `make export` needs) in `.toolchain/` inside the clone, ignored by
+git, and writes nothing into your home's own folders. To keep it elsewhere
+-- another disk, one copy for several clones -- set one variable, before
+`make bootstrap`; every target and script reads it:
+
+```bash
+export GAK_TOOLCHAIN=/path/to/toolchain
+```
+
 To change the kit, read [CONTRIBUTING.md](CONTRIBUTING.md). `tasks/` and
 `docs/reviews/` are the project's working history -- why each piece was
 built and what its review found -- and a reader after one technique can

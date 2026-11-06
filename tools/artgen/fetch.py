@@ -1,7 +1,7 @@
 """Fetch a model named in model.json, and check every weight by sha256.
 
 Run by bootstrap, inside the generator's environment, with the caches already
-pointed at the large disk. The revision pins what Hugging Face serves; the
+pointed at the toolchain. The revision pins what Hugging Face serves; the
 sha256 pins what arrived. A revision is a promise by the host, a hash is a
 fact about the bytes on this disk, and only the second is checked here.
 

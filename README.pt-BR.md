@@ -93,7 +93,7 @@ Quatro níveis. **Nenhuma lição vive só no nível caro.**
 | **1** | Python 3.12 ou mais novo -- confira com `python3 --version`; o do macOS e o de algumas versões LTS do Linux (Ubuntu 22.04, Debian 12) são mais antigos | ler e verificar um domínio PDDL, treinar as regressões, ler os pesos. Só a biblioteca padrão -- **sem pip, sem numpy, sem passo de instalação** |
 | **2** | Godot 4 (~130 MB, roda em placa de vídeo integrada) | jogar, abrir as demos, modificar os *addons* |
 | **2, em 3D** | Godot 4 e uma placa integrada que desenhe uma cena 3D | os exemplos 3D em `godot/game3d/`, com `make assets-3d` para os modelos ou formas simples sem eles; as decisões rodam sobre retratos do estado com gêmeos em Python, então a lição é de nível 1 |
-| **3** | uma GPU com alguma VRAM | rodar um LLM local de verdade, pelo `HttpRuntime` do `ai_llm`: `make llm-bootstrap` instala o servidor do llama.cpp e um modelo no disco grande, cada arquivo conferido por sha256 (uns 5 GB), `make llm-serve` o roda, `make llm-smoke` o confere; gerar a sua própria arte com um modelo local de imagem. Opcional: nada precisa deste nível |
+| **3** | uma GPU com alguma VRAM | rodar um LLM local de verdade, pelo `HttpRuntime` do `ai_llm`: `make llm-bootstrap` instala o servidor do llama.cpp e um modelo na toolchain, cada arquivo conferido por sha256 (uns 5 GB), `make llm-serve` o roda, `make llm-smoke` o confere; gerar a sua própria arte com um modelo local de imagem. Opcional: nada precisa deste nível |
 
 O jogo mira 1280×720 a 60 fps em placa integrada, com o renderizador
 Compatibility (OpenGL).
@@ -110,7 +110,7 @@ PYTHONPATH=python python3 -m gameaikit.tactical.report   # what the models learn
 Nível 2, com o Godot:
 
 ```bash
-make bootstrap     # downloads the pinned Godot and its Linux export templates to the large disk, SHA-512 verified
+make bootstrap     # downloads the pinned Godot and its Linux export templates into .toolchain/, SHA-512 verified
 make menu          # every example on one menu: a card says what its AI decides and how; Esc comes back
 make run           # checkers against minimax and alpha-beta
 make demo-skirmish # the learned policy plays blue on the skirmish board
@@ -122,8 +122,20 @@ make check         # every gate
 
 Os comentários dos blocos acima ficam em inglês, como no código.
 
-No Windows os mesmos alvos rodam pelo Git Bash: [o guia](docs/howto/windows.md),
-em inglês. Para mudar o kit, leia o [CONTRIBUTING.md](CONTRIBUTING.md).
+O `make bootstrap` atende Linux em x86_64, e Windows pelo Git Bash: os
+mesmos alvos, [o guia](docs/howto/windows.md), em inglês. macOS ainda não:
+lá ele baixaria a versão de Linux. Ele põe cerca de 1,5 GB (o Godot, e os
+export templates de que o `make export` precisa) em `.toolchain/`,
+dentro do clone, ignorada pelo git, e não escreve nada nas pastas do seu
+diretório pessoal. Para guardar tudo em outro lugar -- outro disco, uma cópia para
+vários clones -- defina uma variável, antes do `make bootstrap`; todos os
+alvos e scripts a leem:
+
+```bash
+export GAK_TOOLCHAIN=/path/to/toolchain
+```
+
+Para mudar o kit, leia o [CONTRIBUTING.md](CONTRIBUTING.md).
 `tasks/` e `docs/reviews/` são a história de trabalho do projeto -- por que
 cada peça foi feita e o que a revisão dela achou -- e quem veio por uma
 técnica pode pular as duas.

@@ -3,7 +3,7 @@
 Not part of any lesson, and fenced off from them: it needs torch and a GPU,
 it lives outside `python/`, and `make check` never runs it. A reader who never
 generates anything keeps the CC0 art. Run it only through `scripts/artgen`,
-which keeps every cache on the large disk.
+which keeps every cache in the toolchain.
 
 Two commands:
 
