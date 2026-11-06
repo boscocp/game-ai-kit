@@ -665,6 +665,10 @@ def self_test() -> int:
         expect("the Makefile, by its path alone", ["Makefile"], True, set())
         expect("a module's own script", ["scripts/fetch_play_art.py"], False, {"play", "c"})
         expect("prose", ["docs/reviews/63.md", "tasks/STATUS.md"], False, set())
+        expect("the contribution templates", [".github/ISSUE_TEMPLATE/bug.yml",
+               ".github/pull_request_template.md", ".github/FUNDING.yml", "SECURITY.md"],
+               False, set())
+        expect("a workflow beside the templates", [".github/workflows/ci.yml"], True, set())
         failures += target_cases(repo, modules)
         failures += rename_case(pathlib.Path(workspace))
         failures += gate_cases(pathlib.Path(workspace)) + shape_cases()

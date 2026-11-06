@@ -1,0 +1,4 @@
+# The owner's review is requested on every pull request. For a pull request
+# from a fork, that review is the one that lands before the merge
+# (CONTRIBUTING.md, "Contributing from a fork").
+* @boscocp

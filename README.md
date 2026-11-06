@@ -215,7 +215,8 @@ git, and writes nothing into your home's own folders. To keep it elsewhere
 export GAK_TOOLCHAIN=/path/to/toolchain
 ```
 
-To change the kit, read [CONTRIBUTING.md](CONTRIBUTING.md). `tasks/` and
+To change the kit, from a fork or not, read [CONTRIBUTING.md](CONTRIBUTING.md);
+a vulnerability is reported privately, as [SECURITY.md](SECURITY.md) says. `tasks/` and
 `docs/reviews/` are the project's working history -- why each piece was
 built and what its review found -- and a reader after one technique can
 skip them.
@@ -276,3 +277,11 @@ The predecessor of this project was
 [Intelligent-Agent-SDK](https://github.com/boscocp/Intelligent-Agent-SDK) (2020,
 Unity, C#), itself following *Artificial Intelligence: A Modern Approach*. The
 algorithms are the book's; the mistakes are mine.
+
+## Support
+
+The kit is free and open, and nothing in it is held back for supporters. If it
+helped you, you can support it:
+
+- [GitHub Sponsors](https://github.com/sponsors/boscocp), from anywhere;
+- Pix, from a Brazilian bank only: `d51e9aeb-2460-4bb4-9bda-91061174fcc1`

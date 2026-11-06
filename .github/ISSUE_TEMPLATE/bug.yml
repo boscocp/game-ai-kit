@@ -1,0 +1,55 @@
+name: Bug report
+description: A demo, an addon, the Python trainer or a make target does not do what it says
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every field below is something a diagnosis here has needed. A report
+        in Portuguese is as welcome as one in English.
+  - type: input
+    id: where
+    attributes:
+      label: Which demo, addon or command
+      description: e.g. `make demo-tactical`, `ai_search`'s A*, `gameaikit.tactical.report`
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What you expected, and what happened instead
+      description: For a demo, what the AI was about to do and why -- the overlay shows it -- is often the useful part.
+    validations:
+      required: true
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Tier
+      description: The tiers are in the README.
+      options:
+        - "1 -- Python only"
+        - "2 -- Godot 4"
+        - "2, in 3D"
+        - "3 -- a local LLM or image model"
+        - "Not sure"
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: System
+      description: Operating system, `python3 --version`, and `make godot-version` if the engine is involved
+      placeholder: Ubuntu 24.04, Python 3.12.3, Godot 4.x pinned and installed
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: The command's output
+      description: The last lines, including any `SCRIPT ERROR` or the gate's own message.
+      render: text
+  - type: textarea
+    id: anything
+    attributes:
+      label: Anything else
+      description: A seed, a scenario, what you had just changed.

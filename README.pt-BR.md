@@ -135,7 +135,17 @@ alvos e scripts a leem:
 export GAK_TOOLCHAIN=/path/to/toolchain
 ```
 
-Para mudar o kit, leia o [CONTRIBUTING.md](CONTRIBUTING.md).
+Para mudar o kit, de um fork ou não, leia o [CONTRIBUTING.md](CONTRIBUTING.md),
+em inglês; uma issue ou um pull request pode ser escrito em português. Uma
+vulnerabilidade se reporta em privado, como diz o [SECURITY.md](SECURITY.md).
 `tasks/` e `docs/reviews/` são a história de trabalho do projeto -- por que
 cada peça foi feita e o que a revisão dela achou -- e quem veio por uma
 técnica pode pular as duas.
+
+## Apoie
+
+O kit é livre e aberto, e nada nele fica reservado a quem apoia. Se ele te
+ajudou, você pode apoiá-lo:
+
+- [GitHub Sponsors](https://github.com/sponsors/boscocp), de qualquer país;
+- Pix: `d51e9aeb-2460-4bb4-9bda-91061174fcc1`

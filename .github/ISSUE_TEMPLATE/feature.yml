@@ -1,0 +1,47 @@
+name: Idea
+description: A technique, an example or a lesson the kit does not have yet
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The kit teaches game AI one readable piece at a time. An idea is
+        easiest to place when it says which piece it is, and which of the
+        rules in CONTRIBUTING.md it touches -- touching one is not a reason
+        to refuse it, only a reason to start the conversation there.
+  - type: textarea
+    id: idea
+    attributes:
+      label: What it should do, and what a reader would learn from it
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of change
+      options:
+        - "A new technique (an addon, or a Python model)"
+        - "A new example game, or a change to one"
+        - "A technique page, in English, pt-BR or both"
+        - "The tooling: a make target, a gate, a script"
+        - "Something else"
+    validations:
+      required: true
+  - type: dropdown
+    id: rule
+    attributes:
+      label: Which rule does it touch?
+      options:
+        - "None that I can see"
+        - "It needs hardware above tier 1 to learn from"
+        - "It trains or learns while the game runs"
+        - "It acts on what an LLM returns"
+        - "An addon would depend on another addon"
+        - "I am not sure"
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: Where it comes from
+      description: A book chapter, a paper, a game that does it. The kit's pages cite their sources.
