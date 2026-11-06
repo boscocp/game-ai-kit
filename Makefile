@@ -658,6 +658,14 @@ test-mcts-budget: import ## A frame's step of MCTS, 100 iterations of the dice r
 test-rts-match: import ## A whole RTS match ends the same way twice, inside its frame budget, and the commander beats the queues alone (T20)
 	@$(GODOT) --headless --path godot -s res://test/rts/rts_match.gd
 
+.PHONY: test-rts-exit
+check: test-rts-exit
+test-rts-exit: import ## The RTS, run and closed, leaks nothing at exit, and a planted leak is seen (T138)
+	@# A leak is printed after the last line a script can run, so a Python
+	@# reader runs the scene as a child and reads it, after a planted leak it
+	@# must see; each child has a deadline (review of PR #100).
+	@$(PYTHON) scripts/check_exit_leaks.py res://game/rts/rts.tscn --timeout 60
+
 .PHONY: rts-measure
 rts-measure: import ## Slow (minutes): the commander vs the queues, STRIPS vs HTN, each level vs the next, the seat's bias (T20)
 	@$(GODOT) --headless --path godot -s res://test/rts/rts_measure.gd
