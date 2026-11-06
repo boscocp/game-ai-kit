@@ -3,6 +3,131 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-11-06 (waves 136 to 142 merged)
+
+**Where it stopped -- read first.** Two batches ran one after the other,
+as the owner asked ("pode rodar o lote T88, T128, T133 e T119", then "Pode
+seguir com as 3 recomendadas em paralelo"). Each wave was reviewed by a
+fresh context before its merge, and the findings were applied on its
+branch:
+
+- **136 T88**, expectiminimax faces MCTS in the XCOM mode (#87). Reviewed
+  twice. The first review found a blocker: the duel runner exited 0 with
+  "0 failure(s)" after a SCRIPT ERROR, having played nothing. The second
+  review found the same in 5 of 12 plants: an aborted typed function
+  returns an empty Array, so a broken validator reads like one that found
+  nothing. `scripts/godot_checked.py` now fails a `-s` gate on any engine
+  error in its output; the coordinator then had its output sent to a file
+  (a pipe deadlocked past 64 KiB). The duel is split: `test-squad-duel`
+  (counted budgets, about 22 s) in `check`, `measure-squad-duel` outside.
+  A crash in T87's `MctsSquad` under the clock is guarded, not explained:
+  T134.
+- **137 T128**, a focus ring outlives its sight (#84). The blocker was the
+  PR body: it held T133's text (see below).
+- **138 T133**, a silent server never holds the frame (#85).
+  `HTTPRequest` runs with `use_threads = false`; V3 refuses the setter
+  and the conditional spelling too.
+- **139 T119**, a gate for the pt-BR glossary (#86): `lint-glossary`.
+- **140 T120**, `Xorshift` becomes `GakXorshift` (#89). Approved with
+  nits.
+- **141 T129**, line separators are refused in a speech (#88).
+- **142 T96**, wave function collapse builds maps for the XCOM mode (#90).
+  Reviewed twice, the second time because the fixes changed
+  `scripts/catalogue.py`. `ConstraintDraws` stays for now: T135.
+
+Main is c41cc99.
+
+**Batch routine, what went wrong and was fixed.**
+
+- The coordinator's first briefs gave no scratch folder per wave. Two
+  waves wrote one `pr-body.md` and one `check.log` in the shared
+  scratchpad root: #84 went up with T133's body, and a wave read another's
+  log. Every brief since names `<scratchpad>/waveNN/`, and each wave
+  confirms its body with `gh pr view N --json body`.
+- T120's Notes said not to run it beside T96; the coordinator's first
+  proposal missed that. T120 and T129 ran together, and T96 after T120.
+- Typing a ` ` escape through the editing tools can write the raw
+  character instead. T129's docs and vectors held raw U+2028/U+2029 until
+  review; they were rewritten from a script and checked with
+  `grep -P '[\x{2028}\x{2029}\x{80}-\x{9F}]'`.
+- Five Godot duel runners from T88's measurements (a scratch
+  `run_duel.sh`) were left asleep for 8 h. The coordinator was not allowed
+  to signal them; the shutdown at the end of the session ended them.
+
+**How it was checked.**
+
+- Each wave ran its own `check-affected`.
+- The coordinator ran the whole `make check` once, alone (load under 1),
+  in a clean worktree on #90's head cada6b7 before it merged: exit 0,
+  1828 gdUnit cases and 0 failures, the five LLM-server endings all
+  "server gone", and the 9 `SCRIPT ERROR` lines all from in-memory
+  planted scripts (`gdscript://`).
+- The first run of that check stopped at `import`: Godot crashed with
+  signal 11 importing a cold cache, as T120's reviewer also saw once
+  (exit 139). The rerun passed. It is not filed as a task; if it comes
+  back, it is one.
+
+**Waiting on the owner -- one numbered list, each with a recommendation.**
+Each PR body holds the reasoning.
+
+1. T88 (#87), decisions 1-10, among them: the duel stays in `check` only
+   on counted budgets (decision 10, rewritten after the review); the `SearchingSquad` refactor; follow-up T134.
+   *Recommended:* keep.
+2. T128 (#84), decisions 1-4: handed view before memory; rivals out of
+   sight get no ring; the stale ring white and dashed; no panel text.
+   *Recommended:* keep.
+3. T133 (#85), decisions 1-2: threads off rather than a hand-written
+   client; `use_threads = false` written out. *Recommended:* keep.
+4. T133: with threads off, a paused tree pauses the request and its
+   timeout. Set `PROCESS_MODE_ALWAYS`? *Recommended:* no, while no game
+   pauses; the header says so.
+5. T119 (#86), decisions 1-5, and keying `EMPHASIS` by page.
+   *Recommended:* keep; not by page yet.
+6. T129 (#88), decisions 1, 4 and 5. *Recommended:* keep.
+7. T129 (#88), decision 2: format controls (Cf: zero-width, bidi) still
+   pass R9. *Recommended:* a task of their own.
+8. T129 (#88), decision 3: `HttpRuntime` cleans a refusal reason of C0
+   and DEL only. *Recommended:* a small follow-up that reuses R9's test.
+9. T120 (#89): does the 0.1.0 promise cover ten `Gak` names?
+   *Recommended:* ten. ADR 0024 records it as open.
+10. T120 (#89), decisions 2-3: Python keeps `Xorshift`; history keeps
+    the old name. *Recommended:* keep.
+11. T96 (#90), its decisions, among them: the task's three first
+    decisions confirmed; `ConstraintDraws` until T135; maps not
+    mirrored; the catalogue now walks each mode's ruleset.
+    *Recommended:* keep.
+12. A trap for CLAUDE.md: a SCRIPT ERROR in a typed function returns the
+    type's default, so an empty Array reads as "nothing wrong", and
+    `godot_checked.py` exists for it. *Recommended:* add it to the
+    traps, and move the other `-s` gates onto `godot_checked.py` in a
+    task.
+
+**Manual checks waiting:**
+
+- **T88:** `make demo-tactical MODE=squad`, the expectiminimax enemy: do
+  the overlay's expected values and the status's depth read well?
+- **T128:** `make demo-rts`, V on, chase a squad's target out of sight:
+  the ring turns thin, white and dashed, and may jump back up to 0.5 s.
+- **T133:** in the talk game, stop `llama-server` with SIGSTOP during a
+  turn: the frame never holds, and the timeout says so.
+- **T96:** `make demo-tactical MODE=squad`, N twenty times, play two; B a
+  few steps. Do the maps look like places, and does the longer legend fit?
+- Still waiting from the last section: T130, T131, T132.
+
+**What is left:**
+
+- todo: T89 (its condition not met), T112, T113-T115 (after the
+  repository opens), T117, T121, T124, T125, T127, T134 and T135;
+- six older tasks still wip: T25, T40, T44, T45, T46 and T48;
+- T43, blocked.
+
+**Next, as proposed by this session.** T112, the review before the
+repository opens, has every prerequisite merged (T87, T88, T94, T96,
+T110, T111, T120). It reads the whole repository, so it runs alone.
+After it, the squad tasks (T117, T124, T125, T127, T134) one at a time,
+since they all write `godot/game/squad/`; T135 beside any of them; T121
+last.
+
 ## Resuming after 2026-11-05, third batch (waves 133 to 135 merged)
 
 **Where it stopped -- read first.** The owner played the talk game and the
