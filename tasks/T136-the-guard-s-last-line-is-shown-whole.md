@@ -1,6 +1,6 @@
 # T136 — The guard's last line is shown whole
 
-Size: S · Prereqs: T130 · Files: `godot/game/talk/`, `godot/test/talk/`
+Size: S · Prereqs: T130 · Files: `godot/game/talk/`, `godot/test/talk/`, `docs/godot/talk.md`
 
 ## Goal
 

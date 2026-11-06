@@ -15,7 +15,8 @@ extends RefCounted
 
 ## How many turns the reasoning panel shows, newest last.
 const PANEL_TURNS: int = 4
-## How many exchanges the conversation shows, newest last.
+## The most exchanges the conversation shows, newest last; fewer when
+## they would not fit whole (`show_history`).
 const HISTORY_TURNS: int = 3
 
 ## Each refusal's code, in words a player reads. The validator's own
@@ -51,16 +52,43 @@ static func describe(turns: Array[Dictionary], state: Dictionary, language: Stri
 	return "\n".join(lines)
 
 
-## The conversation's last exchanges, the player's and the guard's.
-static func history(turns: Array[Dictionary], pending: String) -> String:
+## The conversation's last `shown` exchanges, the player's and the guard's.
+static func history(turns: Array[Dictionary], pending: String, shown: int = HISTORY_TURNS) -> String:
 	var lines := PackedStringArray()
-	for index: int in range(maxi(0, turns.size() - HISTORY_TURNS), turns.size()):
+	for index: int in range(maxi(0, turns.size() - shown), turns.size()):
 		lines.append(TranslationServer.translate("You: {line}").format({"line": turns[index]["player"]}))
 		lines.append(TranslationServer.translate("Bram: {line}").format({"line": turns[index]["speech"]}))
 	if pending != "":
 		lines.append(TranslationServer.translate("You: {line}").format({"line": pending}))
 		lines.append(TranslationServer.translate("Bram is thinking..."))
 	return "\n".join(lines)
+
+
+## Sets `label` to the last exchanges that fit in it whole (T136). The
+## oldest give way, from the top, until the rest fits: the newest line is
+## the one a person is reading, so it is never the one cut. Measured by
+## the label's own layout -- its font, wrapping and spacing -- because a
+## guessed count of lines is wrong the first time a line wraps. One
+## exchange taller than the label loses its top lines instead.
+static func show_history(label: Label, turns: Array[Dictionary], pending: String) -> void:
+	label.lines_skipped = 0
+	var fewest: int = 0 if pending != "" else 1
+	for shown: int in range(HISTORY_TURNS, fewest - 1, -1):
+		label.text = history(turns, pending, shown)
+		if _fits(label):
+			return
+	var lines: int = label.get_line_count()
+	label.lines_skipped = lines - label.get_visible_line_count()
+
+
+# Whether `label` shows every line of its text. The local `lines` is there
+# to fix the order of the two calls: counting the lines shapes the new
+# text, and the visible count only reads the last shaping (measured on
+# 4.7.2, docs/godot/talk.md). Asked the other way round, it drops
+# exchanges that would have fit.
+static func _fits(label: Label) -> bool:
+	var lines: int = label.get_line_count()
+	return lines <= label.get_visible_line_count()
 
 
 ## How the conversation ended, or "" while it goes on.
