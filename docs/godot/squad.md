@@ -190,9 +190,12 @@ Every simplification, so nobody reads the mode as more of XCOM than it is:
   pairing a seat (40 iterations, 150 positions a decision), about 30 s,
   the same on any machine; it fails on an answer not the position's, a
   search that finished nothing, a match with no end or a lost decision,
-  and on fewer rows or matches than it set out for -- a `SCRIPT ERROR`
-  leaves a run short, and the count says so (T88's review planted one in
-  each half).
+  and on fewer rows or matches than it set out for, which is what a
+  search or a match that broke leaves. A `SCRIPT ERROR` anywhere else -- in
+  a check, in the count -- leaves no trace inside the run, since an aborted
+  function returns an empty list; `scripts/godot_checked.py` runs both duel
+  targets and fails them on any engine error in their output. T88's second
+  review planted twelve; the record lists each one's exit code.
   `make test-adversarial-vectors` -- the addon's expectiminimax on the dice
   race, depths 2 and 3, equal to `derive.py`'s exact fractions in both
   languages.
@@ -538,9 +541,9 @@ each walking and shooting. Following the first answer from each of the 30
 roots, the other side is to move after 1 ply on five positions (05, 09,
 15, 18 and 30, all shots), after 2 on four, and after 3 to 8 on the rest
 (T88's review counted them). MIN chooses only above the cutoff, so at
-depth 2 -- the gate's depth, and what the clock mostly buys -- the enemy
-chooses in 5 of the 30 positions and in none of the 14 walks; at depth 3,
-in 2 of the walks. **On a walk, this expectiminimax plays against an enemy
+depth 2 -- `duel.json`'s depth, and what the clock mostly buys -- the
+enemy chooses in 5 of the 30 positions and in none of the 14 walks; at
+depth 3, in 4 more, 2 of them walks. **On a walk, this expectiminimax plays against an enemy
 that stands still**: it is expectimax, one side's dice and choices only.
 MCTS's playouts do reach the other side's turn. That is the likeliest
 reason the two part on the walks, and for the losses to the weighed enemy

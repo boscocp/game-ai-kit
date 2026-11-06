@@ -55,7 +55,7 @@ jeito -- use a *MCTS*, que sorteia os dados, ou o *expectiminimax*, que
 os pesa. O *expectiminimax* onde há muitos resultados ou muitas jogadas: os
 dados multiplicam a ramificação, e no modo de esquadrão um segundo alcança
 dois ou três *plies* (o duelo da T88, `docs/godot/squad.md`). Ali um
-*ply* é a resposta de uma peça, e o turno de um lado chega a oito, então
+*ply* é a resposta de uma peça, e o turno de um lado chega a oito respostas, então
 na profundidade 2 o inimigo escolhe em 5 das 30 posições do duelo e em
 nenhuma das suas 14 caminhadas: numa caminhada a busca joga contra um
 inimigo que não se move. Conte o *ply* em turnos inteiros quando um turno

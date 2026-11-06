@@ -23,15 +23,21 @@
 # What fails, in both ways: an answer that is not one of the position's, a
 # search that finished nothing, a match with no end or a lost decision
 # (`SquadDuel.wrong_position`, `wrong_match`) -- and fewer rows or matches
-# than set out for (`SquadDuel.missing_rows`). A `SCRIPT ERROR` aborts
-# the function it happens in and lets `_init` carry on to `quit(0)`
-# (CLAUDE.md's trap): only the count can tell a run that did nothing.
+# than set out for (`SquadDuel.missing_rows`), which is what a search or a
+# match that broke leaves. A `SCRIPT ERROR` anywhere else -- in a check, in
+# the count, in `_run` -- is invisible from inside: an aborted function
+# hands back its type's default, and an empty list of failures reads as
+# none. So both make targets run this through `scripts/godot_checked.py`,
+# which fails the run on any engine error in its output; and the exit code
+# is 1 until `_run` has reached its last line.
 #
 #     ./scripts/godot --headless --path godot -s res://test/squad/squad_duel_runner.gd \
 #         -- /absolute/path/to/spec/squad/duel.json fixed|clock [games] [milliseconds] [first]
 #
 # Exit codes: 0 every row holds and every row is there; 1 one did not, or
-# is missing; 2 the file could not be read, or the arguments could not.
+# is missing, or the run stopped before its verdict; 2 the file could not
+# be read, or the arguments could not -- `fixed` with no match or a first
+# match other than 1 among them: the gate is one run of one shape.
 extends SceneTree
 
 const SEATS: Array[int] = [TacticalScenario.RED, TacticalScenario.BLUE]
@@ -42,6 +48,9 @@ const MODES: Array[String] = ["fixed", "clock"]
 var _rows_done: int = 0
 var _matches_done: int = 0
 var _clock: bool = false
+# The exit code: a failure until `_run` sets it on its last line, so a
+# SCRIPT ERROR that stops `_run` half-way exits 1, not `quit(null)`'s 0.
+var _verdict: int = 1
 
 
 func _init() -> void:
@@ -51,19 +60,23 @@ func _init() -> void:
 	var games: int = int(arguments[2]) if arguments.size() > 2 else 1
 	var milliseconds: int = int(arguments[3]) if arguments.size() > 3 else 50
 	var first: int = int(arguments[4]) if arguments.size() > 4 else 1
+	var gate_cut_short: bool = mode == "fixed" and (games < 1 or first != 1)
 	if not written is Dictionary or (written as Dictionary).get("positions", []).is_empty() or not mode in MODES \
-			or games < 0 or milliseconds <= 0 or first < 1:
+			or games < 0 or milliseconds <= 0 or first < 1 or gate_cut_short:
 		printerr("squad_duel_runner: give me the path of duel.json after `--`, then fixed or clock, the games a seat, the milliseconds a decision and the first game")
 		quit(2)
 		return
 	_clock = mode == "clock"
-	quit(_run(written["positions"], games, milliseconds, first))
+	_run(written["positions"], games, milliseconds, first)
+	quit(_verdict)
 
 
 # The positions (when this run has the first match), the matches, the
-# counts, and the summary; the exit code.
-func _run(positions: Array, games: int, milliseconds: int, first: int) -> int:
+# counts, and the summary; the verdict, set last.
+func _run(positions: Array, games: int, milliseconds: int, first: int) -> void:
 	var failures: Array[String] = []
+	# Worked out from the arguments before anything runs, never from what ran:
+	# an expected count taken from the produced one could not come up short.
 	var rows_wanted: int = 0
 	if first == 1:
 		rows_wanted = positions.size() * (SquadDuel.BUDGETS.size() if _clock else 1)
@@ -75,7 +88,7 @@ func _run(positions: Array, games: int, milliseconds: int, first: int) -> int:
 		print(failure)
 	print("squad duel, %s: %d position row(s), %d match(es), %d failure(s)" % [
 		"clock" if _clock else "fixed", _rows_done, _matches_done, failures.size()])
-	return 1 if not failures.is_empty() else 0
+	_verdict = 1 if not failures.is_empty() else 0
 
 
 # Every position, a line each; on the clock, at every budget, then a table

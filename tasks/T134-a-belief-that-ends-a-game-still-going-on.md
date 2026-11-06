@@ -53,3 +53,6 @@ play.
 
 - Opened by wave 136 (T88), decision 9 of PR #87, with the review's
   additions.
+- The second review of wave 136 (finding 8): once step 2's recorded-turn
+  test exists, name it in `## Acceptance`. Step 3's read for `SCRIPT ERROR`
+  is now `make measure-squad-duel`'s own verdict (`scripts/godot_checked.py`).

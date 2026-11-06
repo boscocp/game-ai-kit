@@ -16,11 +16,12 @@
 ## depth's answer.
 ##
 ## A ply here is one piece's answer, and a side's turn is up to eight of
-## them, so the other side seldom moves inside the depth it reaches: at
-## depth 2, MIN chooses in 5 of the duel's 30 positions, all shots, and in
-## none of its 14 walks (3 in depth 3: 2 of the walks). On a walk it is
-## expectimax against an enemy that stands still -- T88's review, wave 136.
-## A ply counted as a whole side's turn is the next step (a later task).
+## them, so the other side seldom moves inside the depth it reaches.
+## Following each root's first answer, at depth 2 MIN chooses in 5 of the
+## duel's 30 positions, all shots, and in none of its 14 walks; at depth 3
+## in 4 more, 2 of them walks. On a walk it is expectimax against an enemy
+## that stands still -- T88's review, wave 136. A ply counted as a whole
+## side's turn is the next step (a later task).
 ##
 ## What it shows (invariant 13): every root answer's expected value on the
 ## board, the one it plays framed; in the status, the depth finished so far
@@ -88,7 +89,7 @@ func search_lines() -> Array[String]:
 		return lines
 	lines.append(TranslationServer.translate("searched to depth {depth}, depth {under_way} under way, {deepest} at most; {visited} positions of {budget}; the bar is each option's expected value:").format({
 		depth = _found.depth if _found != null else 0, deepest = int(search_rules()["deepest"]),
-		under_way = _search.depth_under_way() if _search != null else "--", visited = _visited,
+		under_way = _search.depth_under_way() if _search != null and not _search.is_complete() else "--", visited = _visited,
 		budget = positions if _clock_msec == 0 else "∞"}))
 	if _found == null or _found.considered.is_empty():
 		return lines

@@ -305,3 +305,208 @@ Applied on the same branch, after merging main at aa57b15 (T119's
    beside the finished one, and `∞` for the budget on the clock. A test
    holds the clock's line.
 9. **Fixed.** `test_squad_duel.py` asserts the decision.
+
+## Second review
+
+Reviewed by a fresh context, on 2026-11-06, the diff 557f22a..37a3a51 less
+what main aa57b15 brought (`git diff 726d42c 37a3a51`), in a worktree of
+37a3a51 of its own.
+
+### Verdict
+
+**Changes requested, one blocker.** Most of the fixes hold: the split is
+right, the fixed gate is deterministic, the stepped test, the no-move
+scoring and the status line each fail their planted fault. The blocker is
+the claim the fix commit is built on. The Makefile, the runner's header
+and `SquadDuel.missing_rows` all say that a SCRIPT ERROR "leaves the run
+short, never green". That holds only where the error is in a search or a
+match. Five of the twelve planted SCRIPT ERRORs leave `make test-squad-duel`
+green with exit 0, and three of those silently skip every check the gate
+exists to make.
+
+### What was run
+
+- `make test-squad-duel` twice: exit 0 both times, 23 s, no SCRIPT ERROR.
+  The two outputs are byte for byte the same.
+- `make test-godot-some SUITES="test/ai_adversarial"` (42 cases) and
+  `SUITES="test/squad"` (100 cases): green.
+- `test_adversarial*.py`, `test_squad*.py`, `make test-adversarial-vectors`
+  (7 expectiminimax cases): green.
+- `make lint-tasks lint-status`, `check_glossary.py` and
+  `check_readability.py`: green.
+- The runner was called directly to get its own exit code, with one plant
+  at a time, each restored with `git checkout` and checked clean afterwards.
+
+### Plants
+
+| plant | exit | caught? |
+|---|---|---|
+| SCRIPT ERROR at the top of `SquadDuel.searched_fixed` | 1, "0 produced, 30 expected" | yes |
+| SCRIPT ERROR at the top of `_match` | 1, "matches: 0 produced, 6 expected" | yes |
+| SCRIPT ERROR at the top of `_matches` | 1 | yes |
+| `{"positions": [{}]}`, `[1, 2]` | 1 | yes |
+| `{}`, `{"positions": []}`, no file | 2 | yes |
+| **SCRIPT ERROR at the top of `SquadDuel.wrong_position`** | **0**, 30 rows, 0 failures | **no**: no answer is checked |
+| **SCRIPT ERROR at the top of `SquadDuel.wrong_match`** | **0**, 6 matches, 0 failures | **no**: no match is checked |
+| **SCRIPT ERROR in `_rows_for` after `_rows_done += 1`** | **0**, 30 rows counted, each position line empty | **no** |
+| **SCRIPT ERROR in `SquadDuel.missing_rows`** | **0** | **no** |
+| **SCRIPT ERROR in `_run` before the summary** | **0**, no summary printed | **no**: `quit(null)` exits 0 |
+| `rows_wanted` replaced by `_rows_done` | 0 | no (no test of the runner's wiring) |
+| `GAMES=0` | 0, 0 matches | no (by argument) |
+| `fixed 1 50 2` (a shard that skips the positions) | 0, 0 rows | no (by argument; make does not pass FIRST in fixed) |
+| addon: `step` returns the partial depth, labelled `depth_limit - 1` | red, 82 failed assertions in the stepped test, with the accidental catcher disabled | yes |
+| `_is_cutoff` back to `is_terminal` only (GDScript) | red, `test_a_position_with_no_move_is_scored_not_searched` | yes |
+| `_value` back to `is_terminal or depth` (Python) | error (`max([])`) in the same test | yes |
+| `searching_squad.gd`: the no-enemy guard removed | red, only on the reason text | partly (finding 3) |
+| `ExpectiSquad`: `visited = positions - _left` | red, `test_on_the_clock_..._never_below_zero` | yes |
+
+A function that a SCRIPT ERROR aborts hands its caller the default value
+of its return type. Measured here on 4.7.2, a typed `Array[String]`
+function returns an empty array. So a validator that breaks reads exactly
+like a validator that found nothing. A count of rows cannot tell the two
+apart, because the row was produced. Only the output can tell.
+
+### Findings
+
+1. **A SCRIPT ERROR in a validator, in the count, or in `_run` leaves the
+   gate green (blocker).** See `godot/test/squad/squad_duel_runner.gd:60`
+   (`quit(_run(...))`), `:66-75` and `:104-112`,
+   `godot/test/squad/squad_duel.gd:133` (`wrong_position`), `:175`
+   (`wrong_match`) and `:158` (`missing_rows`), and `Makefile:538-544`.
+   The plants above show it. The comments in three places say otherwise,
+   and a reader who trusts them will trust a green that checked nothing.
+   This is invariant 4's "a gate that only knows how to go green".
+   Fix: read the run's output for engine errors, as
+   `scripts/godot_shards.py` already does (`engine_errors`,
+   `ENGINE_ERROR`, with planted cases in its `--self-test`). One way is a
+   small wrapper, or a `--shards 1` path in that script, that runs a `-s`
+   gate, returns its exit code, and turns any `SCRIPT ERROR:` or `ERROR:`
+   line into exit 1. `test-squad-duel` and `measure-squad-duel` would both
+   go through it. Inside the runner, also stop `_run`'s failure from
+   reaching `quit(null)`: keep a member `_verdict: int = 1`, set it to 0
+   only as `_run`'s last statement, and call `quit(_verdict)`. Then reword
+   the three comments to say what the count catches (a search or a match
+   that broke) and what the output scan catches (everything else). A
+   follow-up task can put the other `-s` gates behind the same wrapper.
+   The trap in CLAUDE.md applies to all of them.
+
+2. **The gate's expected counts come from its arguments (minor).**
+   `squad_duel_runner.gd:66-75`. `GAMES=0 make test-squad-duel` is green
+   with no match played, and `fixed 1 50 2` is green with no position
+   searched. Make does not pass FIRST in fixed mode, so the second is
+   reachable only by calling the runner directly. Fix: in `fixed` mode,
+   refuse `games < 1` and `first != 1` with exit 2. The gate is one run
+   with one shape, and it should not be possible to ask it for less.
+   Nothing tests that the runner wires `missing_rows` to an expected count
+   that does not depend on the produced one (the `rows_wanted = _rows_done`
+   plant survives). Finding 1's output scan does not cover that either. A
+   short comment at `:70` saying why the expected count is computed before
+   anything runs would at least make the next edit careful.
+
+3. **The guard test holds the guard's sentence, not its effect (minor).**
+   `godot/test/squad/expecti_squad_test.gd:216-222`. The test does reach
+   the guarded state: with the guard removed, both searchers fail, but
+   only on the reason text. The null move, the null attack and the empty
+   `weighed()` all still pass without the guard, and no SCRIPT ERROR
+   appears. So on counted budgets the test does not reproduce the crash it
+   guards against, and a guard that set the reason and then searched
+   anyway would pass. Fix: also assert `searcher.work_done() == 0`, so that
+   no search ran. If T134 records the timed turn that crashed, add it then
+   (T134 step 2 already asks for that).
+
+4. **The status line can say "depth 0 under way" (nit).**
+   `godot/game/squad/expecti_squad.gd:91`. `depth_under_way()` returns 0
+   once the search is complete, and `ExpectiSquad` keeps `_search` until
+   `_stop_search`. Read in code, not reached in a run: completing to depth
+   8 within 5,000 positions is rare. When `_search.is_complete()`, show
+   `--`, as when `_search` is null.
+
+5. **`ExpectiSquad`'s header does not match the page's counts (minor,
+   docs).** `godot/game/squad/expecti_squad.gd:18-23`. The header says "(3
+   in depth 3: 2 of the walks)", but `docs/godot/squad.md:536-542` says the
+   other side is to move after 2 plies on four positions, and at depth 3 in
+   2 of the walks. A learner reading both cannot work out what the 3
+   counts. Fix: use the page's wording, "at depth 3, in 4 more, 2 of them
+   walks", or whatever the count really is, and say in both places that it
+   follows each root's first answer. Also, "depth 2 -- the gate's depth"
+   on the page: the fixed gate's walks finish only depth 1 (14 at depth 1,
+   16 at depth 2 in its table). Say "duel.json's depth".
+
+6. **pt-BR: "o turno de um lado chega a oito" has no noun (nit).**
+   `docs/techniques/ai_adversarial.pt-BR.md:58`. Fix: "chega a oito
+   respostas".
+
+7. **`derive.py`'s no-move rule is exercised by no vector (nit).**
+   `spec/vectors/adversarial/derive.py:115`. The README is honest about it
+   ("the dice race has no such position"), and both hand-tree suites pin
+   the rule. Reverting that line in `derive.py` fails nothing. Either leave
+   it as written, or add a hand-tree vector so all three walks are held.
+
+8. **T134 (fine, one suggestion).** It is well specified. The goal, the
+   decisions written first, the fallback named, and lint-tasks and
+   lint-status pass. Its acceptance has no command that fails while the
+   cause is still open. Once step 2's recorded-turn test exists, name it
+   in `## Acceptance`. Step 3's "read its output for SCRIPT ERROR" becomes
+   a command once finding 1's scan exists.
+
+Readability on the new code: within the limits (`check_readability.py`
+green). Names are full and every new public function says what it does and
+why. The ply paragraph on the page is clear and is the right lesson to
+draw from the table.
+
+### What was done about it
+
+Applied on the same branch, in `fix: T88 second review, ...`.
+
+1. **Blocker, fixed.** `scripts/godot_checked.py` (new) runs one `-s` gate
+   and turns any engine-error line in its output into exit 1. It reuses
+   `godot_shards.py`'s `engine_errors`, `wait_or_kill` and
+   `godot_command` rather than a copy, and has its own `--self-test` (8
+   planted verdicts), which `lint-selftests` runs. Both duel targets go
+   through it. Inside the runner, `_verdict` starts at 1 and `_run` sets
+   it on its last line, so `quit(_verdict)` exits 1 when `_run` stops
+   half-way, wrapper or not (the plant in `_run`, run straight through
+   `scripts/godot`, exits 1). The three comments now say what the count
+   catches (a search or a match that broke) and what the output scan
+   catches (everything else). Every plant again, as make runs the gate
+   (through the wrapper), one at a time, each restored:
+
+   | plant | exit | last line |
+   |---|---|---|
+   | SCRIPT ERROR at the top of SquadDuel.searched_fixed | 1 | godot_checked: an engine error, so the run fails: SCRIPT ERROR: Invalid call. Nonexistent function 'free' in b |
+   | SCRIPT ERROR at the top of _match | 1 | godot_checked: an engine error, so the run fails: SCRIPT ERROR: Invalid access to property or key 'winner' on  |
+   | SCRIPT ERROR at the top of _matches | 1 | godot_checked: an engine error, so the run fails: SCRIPT ERROR: Invalid call. Nonexistent function 'free' in b |
+   | SCRIPT ERROR at the top of SquadDuel.wrong_position | 1 | godot_checked: an engine error, so the run fails: SCRIPT ERROR: Invalid call. Nonexistent function 'free' in b |
+   | SCRIPT ERROR at the top of SquadDuel.wrong_match | 1 | godot_checked: an engine error, so the run fails: SCRIPT ERROR: Invalid call. Nonexistent function 'free' in b |
+   | SCRIPT ERROR in _rows_for after the count | 1 | godot_checked: an engine error, so the run fails: SCRIPT ERROR: Invalid call. Nonexistent function 'free' in b |
+   | SCRIPT ERROR in SquadDuel.missing_rows | 1 | godot_checked: an engine error, so the run fails: SCRIPT ERROR: Invalid call. Nonexistent function 'free' in b |
+   | SCRIPT ERROR in _run before the summary | 1 | godot_checked: an engine error, so the run fails: SCRIPT ERROR: Invalid call. Nonexistent function 'free' in b |
+   | rows_wanted replaced by _rows_done | 0 | squad duel, fixed: 30 position row(s), 6 match(es), 0 failure(s) |
+   | GAMES=0 in fixed | 2 | squad_duel_runner: give me the path of duel.json after `--`, then fixed or clock, the games a seat, the millis |
+   | fixed 1 50 2 (a shard skipping the positions) | 2 | squad_duel_runner: give me the path of duel.json after `--`, then fixed or clock, the games a seat, the millis |
+   | a file with an empty position: {"positions": [{}]} | 1 | godot_checked: an engine error, so the run fails: SCRIPT ERROR: Invalid access to property or key 'name' on a  |
+
+   The one that still exits 0 is the wiring plant: an expected count
+   replaced by the produced one. Neither the count nor the scan can see
+   it. The runner now says, where `rows_wanted` is computed, why it comes
+   from the arguments before anything runs.
+2. **Refused.** `fixed` with `games < 1` or `first != 1` exits 2: the
+   gate is one run of one shape.
+3. **Held.** The guard test also asserts `work_done() == 0`. Planted, a
+   guard that set the reason and then searched anyway fails it twice: on
+   the reason, which the search overwrote, and on the work, which was 40
+   where 0 was expected.
+4. **Fixed.** Once the search is complete, the status line shows `--`
+   for the depth under way.
+5. **Agreed.** `ExpectiSquad`'s header and `docs/godot/squad.md` now say
+   the same counts, each following every root's first answer: at depth 2,
+   5 of 30 positions and no walk; at depth 3, 4 more, 2 of them walks.
+   "The gate's depth" is now "`duel.json`'s depth".
+6. **Fixed.** The pt-BR line now reads "chega a oito respostas".
+7. **Said.** The vectors README says why no vector holds the no-move rule
+   (a dice race position is over or has both moves). It says that the
+   hand-tree case `STUCK` is what fails when Godot or Python drops the
+   rule, and that `derive.py`'s line, reverted alone, fails nothing.
+8. **Left for T134**, as suggested: its acceptance gains the recorded-turn
+   test once step 2 writes it. Step 3's read for `SCRIPT ERROR` is now
+   `make measure-squad-duel`'s own verdict, through the wrapper.

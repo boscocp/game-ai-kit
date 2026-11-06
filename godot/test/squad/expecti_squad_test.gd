@@ -220,6 +220,7 @@ func test_a_belief_with_no_enemy_left_holds_and_says_so() -> void:
 		assert_object(decision.attack).is_null()
 		assert_str(TacticalStatus.said(decision.reason)).contains("believes no enemy is left")
 		assert_array(searcher.weighed()).is_empty()
+		assert_int(searcher.work_done()).is_equal(0)
 
 
 func test_a_seeded_game_against_the_weighed_enemy_replays_to_its_digest() -> void:

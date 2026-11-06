@@ -152,9 +152,11 @@ static func searched_less(position: Dictionary, rows: Array[Dictionary]) -> Arra
 
 
 ## A failure when a run produced fewer rows of `what` than it set out to:
-## a `SCRIPT ERROR` aborts the function it happens in and the script goes
-## on to its summary and `quit(0)` (CLAUDE.md's trap), so a run that
-## searched or played nothing has to be caught by its count.
+## a `SCRIPT ERROR` in a search or a match aborts it before its row is
+## counted, and the script goes on to its summary (CLAUDE.md's trap). A
+## SCRIPT ERROR in a check or in this count is not seen here -- an aborted
+## function returns an empty list, which reads as no failure -- and is
+## `scripts/godot_checked.py`'s to catch, from the output.
 static func missing_rows(what: String, expected: int, produced: int) -> Array[String]:
 	if produced == expected:
 		return []

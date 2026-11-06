@@ -68,8 +68,12 @@ at all depends on the move the earlier draw chose.
   root, then every position reached, those scored at the cutoff included.
   A chance node adds no ply. A position with no move that is not over --
   a game breaking `GakAdversarialGame`'s promise -- is scored by
-  `evaluate`, as at the cutoff, in all three walks; the hand-tree suites
-  of both languages pin it, since the dice race has no such position. `ExpectiminimaxSearch.search_to` and
+  `evaluate`, as at the cutoff, in all three walks. No vector holds it:
+  the files are the dice race's, and a dice race position is over or has
+  both moves. The hand-tree case `STUCK`, the same tree in both suites, is
+  what fails when Godot or Python drops the rule; `derive.py`'s line is
+  kept so that the third walk says the same, and reverting it alone fails
+  nothing. `ExpectiminimaxSearch.search_to` and
   `gameaikit.adversarial.expectiminimax` must both meet them, within 1e-9.
   A planted search that takes every roll as its first face -- minimax,
   which reads only `result` -- and one a ply short must fail them, in both
