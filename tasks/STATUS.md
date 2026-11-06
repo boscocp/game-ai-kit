@@ -3,6 +3,45 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-11-06, the owner's manual checks and list
+
+**Where it stopped -- read first.** No wave ran. The owner played the
+manual checks the section below lists, and answered its numbered list.
+Main is 3854667.
+
+**The list, all twelve as recommended** ("das 12 decisões pode seguir o
+recomendado"). Three open work: item 7 is T139, item 8 is T140, and item
+12 is T141, with the trap already added to CLAUDE.md's traps. Item 4
+(no `PROCESS_MODE_ALWAYS` while no game pauses) and item 9 (the 0.1.0
+promise covers ten `Gak` names; ADR 0024 can record it as decided) need
+no task.
+
+**Manual checks.** Passed, in the owner's words "fora isso tudo ok": T88,
+T96, T128, T130, T131 and T132. Each demo's log was also read for engine
+errors, and `pgrep llama-server` was empty after both talk sessions.
+Found, each now a task:
+
+- **T136.** Bram's newest line was cut mid-sentence; the label clipped
+  it, not the model.
+- **T137.** In the XCOM mode, the hit chance on a hovered enemy sits on
+  the piece's number.
+- **T138.** `make demo-rts` closed with 21 leaked objects and 15
+  resources in use; no other demo did.
+
+And one ruled not a fault: in `make demo-rts`, a squad stops chasing a
+target that walks into the fog. `Squad` scores only what its side sees
+now (`squad.gd`, `FocusFire.scores`), so an empty view clears the focus.
+The owner: "parece realmente comportamento correto". T128's stale ring is
+drawing only, as it said.
+
+**Still waiting:** T133's check (SIGSTOP the server during a turn).
+
+**Next.** Unchanged: T112, alone. Then the squad tasks one at a time
+(T117, T124, T125, T127, T134, and now T137, which also writes
+`godot/game/squad/`); T135 beside any of them. T136, T138, T139 and T140
+share no folder with the squad tasks or with each other, except T140
+after T139. T141 and T121 each run alone.
+
 ## Resuming after 2026-11-06 (waves 136 to 142 merged)
 
 **Where it stopped -- read first.** Two batches ran one after the other,
@@ -1305,6 +1344,12 @@ review.
 | T133 | A silent server never holds the frame | done | wave 138: from the second review of T130 (PR #82); read in the 4.7.2 source, a threaded `HTTPRequest` reads in blocking mode and `cancel_request` joins its thread, from the timeout and from leaving the tree; `HttpRuntime` now runs its `HTTPRequest` with threads off, which reads without blocking; measured against `fake_llm_server.py --silent`, 1 s timeout: threads off, worst frame 7 ms and `failed` at 1 s; threads on, 38.6 s; threads on never cancelled, 59.0 s when its node was freed, so "let it end and ignore it" was dropped; V3 in `check_llm_validated.py` now asks for `use_threads = false` (planted: threads on, false then true, none set); `test_a_chat_request_to_a_server_that_never_answers_never_holds_the_frame` (red at 58.5 s before the fix); `docs/godot/llm-requests.md`; review (`docs/reviews/138-a-silent-server-never-holds-the-frame.md`, changes requested, no blocker, all applied: V3 refuses `set_use_threads` and a conditional) |
 | T134 | A belief that ends a game still going on | todo | from T88's duel and its review (wave 136, finding 6): `MctsSquad._chosen` crashed 4 times in 40 timed matches on a board its side believed won or lost while the game went on; guarded and tested in `SearchingSquad._begin`, cause not found; find where the belief is made wrong, or fall back to every known enemy at its last cell |
 | T135 | ConstraintDraws draws from GakXorshift | todo | from wave 142's review (T96, finding 4 and decision 5): `ai_constraints` keeps T95's copy of the xorshift that T109 moved to `ai_core`; fold it in, keep `shuffle`, declare `ai_core`; the draws agree, so no vector moves |
+| T136 | The guard's last line is shown whole | todo | the owner's manual check, 2026-11-06: in `make demo-talk` the `History` label (150 px, `clip_text`) cut Bram's newest line at a seventh wrapped line; drop old turns from the top until the newest fits |
+| T137 | A hit chance does not cover the piece's number | todo | the owner's manual check, 2026-11-06: in the XCOM mode the hover's hit chance and the piece's number share the bottom-right corner; drawing only |
+| T138 | The RTS frees what it made, at exit | todo | the owner's manual check, 2026-11-06: closing `make demo-rts` printed 21 leaked ObjectDB instances and 15 resources in use; measure with `--verbose` first |
+| T139 | Format controls are refused in a speech | todo | the owner, 2026-11-06, list item 7 (T129's decision 2): R9 refuses Unicode category Cf (zero-width, bidi, soft hyphen) in both twins |
+| T140 | A server's refusal is cleaned as a speech is | todo | the owner, 2026-11-06, list item 8 (T129's decision 3): `HttpRuntime._error_of` asks R9's test instead of cleaning C0 and DEL only |
+| T141 | Every `-s` gate fails on an engine error | todo | the owner, 2026-11-06, list item 12: every `-s` line in the `Makefile` through `godot_checked.py`, a lint with a planted bypass; runs alone |
 
 ---
 

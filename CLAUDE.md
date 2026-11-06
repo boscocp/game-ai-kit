@@ -178,6 +178,13 @@ Findings that survive both steps go in `docs/godot/`, with the source URL and a
   property or benchmark check printed "0 failure(s)" this way. After adding
   or changing a check in `godot/test/*.gd`, read its output for
   `SCRIPT ERROR`, not only its exit code.
+- **An aborted typed function returns its type's default.** After that
+  `SCRIPT ERROR`, the caller gets `0`, `""` or an empty `Array`: a
+  validator that broke reads exactly like one that found nothing, and no
+  count inside the script tells them apart (wave 136's review, 5 of 12
+  plants). Only the output can. `scripts/godot_checked.py` fails a `-s`
+  gate on any engine error it prints; run a new gate through it. Moving the
+  old ones is T141.
 - **The forbidden-term list is untracked and a checkout can delete it.**
   `scripts/forbidden-term-hashes.txt` is gitignored (ADR 0005), but it was
   *tracked* until wave 6 — so checking out anything older and coming back
