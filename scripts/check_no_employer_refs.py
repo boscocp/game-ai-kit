@@ -215,18 +215,27 @@ def read_as_text(path: pathlib.Path) -> str | None:
 
 
 def decode_leniently(raw: bytes) -> str | None:
-    """Text in whatever encoding it is in; None for genuinely binary bytes."""
+    """Text in whatever encoding it is in; None for genuinely binary bytes.
+
+    UTF-16 is tried only behind its byte order mark. Without one, Python
+    decodes almost any even number of bytes as UTF-16 garbage, so a latin-1
+    file of even length never reached latin-1 and its term passed clean.
+    """
+    if raw.startswith((b"\xff\xfe", b"\xfe\xff")):
+        try:
+            return raw.decode("utf-16")
+        except UnicodeError:
+            return None
     if b"\x00" in raw:
         return None
-    for encoding in ("utf-8", "utf-16", "latin-1"):
-        try:
-            return raw.decode(encoding)
-        except (UnicodeDecodeError, UnicodeError):
-            continue
-    return None
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError:
+        # Latin-1 maps every byte, so this cannot fail.
+        return raw.decode("latin-1")
 
 
-def scan_tree(repo: pathlib.Path, hashes: set[str]) -> list[str]:
+def scan_tree(repo: pathlib.Path, hashes: set[tuple[int, str]]) -> list[str]:
     """Report forbidden terms anywhere in the working tree."""
     findings = []
     for name in tree_files(repo):
@@ -241,23 +250,58 @@ def scan_tree(repo: pathlib.Path, hashes: set[str]) -> list[str]:
     return findings
 
 
-def scan_history(repo: pathlib.Path, hashes: set[str]) -> list[str]:
-    """Report forbidden terms in commit messages and in every blob ever committed."""
-    findings = []
+def decode_message(raw: bytes) -> str:
+    """A commit's text as UTF-8 when it is, and as latin-1 when it is not.
 
-    # Author and committer identity, not just the message. A commit authored
-    # from a work address carries the domain in the object itself, and the
-    # seeded term is derived from exactly that domain -- so this was the most
-    # on-point thing the scan could miss. `rev-list --objects` does not list
-    # commit objects with a path, so they never reached the blob loop either.
-    messages = subprocess.run(
-        ["git", "-C", str(repo), "log", "--format=%H%n%an%n%ae%n%cn%n%ce%n%B"],
-        capture_output=True, text=True, check=True,
+    Git re-encodes a message to UTF-8 on output only when it knows the
+    encoding it was written in. A wrong or missing `encoding` header leaves
+    the original bytes, and read as strict UTF-8 they crashed the gate with
+    a traceback before the blob scan ran. Latin-1 maps every byte, so it
+    cannot fail. A message is never binary, so no NUL test is needed.
+    """
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError:
+        return raw.decode("latin-1")
+
+
+def scan_messages(repo: pathlib.Path, hashes: set[tuple[int, str]]) -> list[str]:
+    """Report forbidden terms in the message and identities of every commit.
+
+    Author and committer identity, not just the message. A commit authored
+    from a work address carries the domain in the object itself, and the
+    seeded term is derived from exactly that domain -- so this was the most
+    on-point thing the scan could miss. `rev-list --objects` does not list
+    commit objects with a path, so they never reached the blob loop either.
+
+    Every ref, not only HEAD. The blobs were read with `--all` and the
+    messages without it, so a finished branch that `main` never merged,
+    which is published with the rest, had its messages skipped (T145).
+
+    Each finding names its commit, so a person can find it without the term
+    being read out loud.
+    """
+    log = subprocess.run(
+        ["git", "-C", str(repo), "log", "--all",
+         "--format=%x00%H%n%an%n%ae%n%cn%n%ce%n%B"],
+        capture_output=True, check=True,
     )
-    for token in sorted(offending_tokens(messages.stdout, hashes)):
-        findings.append(
-            f"E2 a commit message or author identity contains the forbidden term {token!r}"
-        )
+    findings = []
+    # Each record starts with a NUL, so the first piece of the split is the
+    # empty text before it, not a commit.
+    for record in log.stdout.split(b"\x00")[1:]:
+        commit, _, text = decode_message(record).partition("\n")
+        for token in sorted(offending_tokens(text, hashes)):
+            findings.append(
+                f"E2 commit {commit[:12]}: its message or author identity "
+                f"contains the forbidden term {token!r}"
+            )
+    return findings
+
+
+def scan_history(repo: pathlib.Path, hashes: set[tuple[int, str]]) -> list[str]:
+    """Report forbidden terms in commit messages and in every blob ever committed."""
+    findings = scan_messages(repo, hashes)
 
     revisions = subprocess.run(
         ["git", "-C", str(repo), "rev-list", "--all", "--objects"],
@@ -309,173 +353,253 @@ def run(repo: pathlib.Path, check_history: bool) -> int:
 
 
 # --- self-test -------------------------------------------------------------
+#
+# Every case builds a throwaway repository, plants a made-up term in one
+# place, and states the exit code the gate owes it. The cases are grouped by
+# where the term hides, one function per group, so each reads on one screen.
+
+# Made up for the self-test, and never a real entry on anyone's list.
+PLANTED_TERM = "acmecorp"
 
 
-def self_test() -> int:
-    failures = []
+class Planted:
+    """Throwaway repositories under one folder, and the failures seen so far."""
 
-    def expect(label: str, got: int, want: int) -> None:
+    def __init__(self, root: pathlib.Path) -> None:
+        self.root = root
+        self.failures: list[str] = []
+
+    def expect(self, label: str, got: int, want: int) -> None:
+        """Record a failure when the gate's exit code is not the one owed."""
         if got != want:
-            failures.append(f"{label}: expected exit {want}, got {got}")
+            self.failures.append(f"{label}: expected exit {want}, got {got}")
 
-    def quiet(repo: pathlib.Path, history: bool = True) -> int:
+    def quiet(self, repo: pathlib.Path, history: bool = True) -> int:
+        """Run the gate without printing, since its output may hold the term."""
         with contextlib.redirect_stdout(io.StringIO()):
             return run(repo, history)
 
-    def git(repo: pathlib.Path, *args: str) -> None:
+    def git(self, repo: pathlib.Path, *args: str) -> None:
+        """Run git in a repository, isolated from the user's own config."""
         subprocess.run(["git", "-C", str(repo), *args], check=True,
                        capture_output=True, env=_isolated_env())
 
-    def make_repo(root: pathlib.Path, name: str, terms: list[str] | None) -> pathlib.Path:
-        repo = root / name
+    def add(self, repo: pathlib.Path, name: str, content: str | bytes) -> None:
+        """Write a file and stage it, so the tree scan sees it as tracked."""
+        path = repo / name
+        if isinstance(content, bytes):
+            path.write_bytes(content)
+        else:
+            path.write_text(content)
+        self.git(repo, "add", "-A")
+
+    def make_repo(self, name: str, terms: list[str] | None = None) -> pathlib.Path:
+        """A repository with one clean commit and, by default, the planted term listed."""
+        repo = self.root / name
         (repo / "scripts").mkdir(parents=True)
         subprocess.run(["git", "init", "-q", "-b", "main", str(repo)],
                        check=True, capture_output=True)
-        if terms is not None:
-            (repo / TERMS_FILE).write_text(
-                "\n".join(f"{len(term)}:{digest(term)}" for term in terms) + "\n"
-            )
-        (repo / "README.md").write_text("A game kit about pathfinding and planning.\n")
-        git(repo, "add", "-A")
-        git(repo, "commit", "-qm", "chore: start")
+        listed = [PLANTED_TERM] if terms is None else terms
+        (repo / TERMS_FILE).write_text(
+            "\n".join(f"{len(term)}:{digest(term)}" for term in listed) + "\n"
+        )
+        self.add(repo, "README.md", "A game kit about pathfinding and planning.\n")
+        self.git(repo, "commit", "-qm", "chore: start")
         return repo
 
+
+def planted_in_the_tree(planted: Planted) -> None:
+    """The term in a file, tracked or not, and the files that must stay quiet."""
+    secret = PLANTED_TERM
+    planted.expect("clean repository", planted.quiet(planted.make_repo("clean")), 0)
+
+    # An absent list is the normal state for anyone but the author -- it
+    # is gitignored by design (docs/adr/0005). It prints a note and passes;
+    # what keeps that from being invisible is that the note prints on every
+    # run, and every case here proves the gate can still fail.
+    planted.expect("no terms listed", planted.quiet(planted.make_repo("noterms", [])), 0)
+
+    # Planted: the term in a file that was never added. This used to pass
+    # clean, and the moment someone wants this gate is before the first add.
+    untracked = planted.make_repo("untracked")
+    (untracked / "draft.md").write_text(f"notes from the {secret} handbook\n")
+    planted.expect("term in an untracked file", planted.quiet(untracked, history=False), 1)
+
+    # An ignored file is not a finding: it is not going anywhere.
+    ignored = planted.make_repo("ignored")
+    (ignored / ".gitignore").write_text("scratch/\n")
+    (ignored / "scratch").mkdir()
+    (ignored / "scratch" / "notes.md").write_text(f"{secret} scratch\n")
+    planted.expect("term in an ignored file", planted.quiet(ignored, history=False), 0)
+
+    # A compound of a stored term is caught by the prefix rule.
+    compound = planted.make_repo("compound")
+    planted.add(compound, "y.md", f"see the {secret}ai handbook\n")
+    planted.expect("compound of a stored term", planted.quiet(compound, history=False), 1)
+
+    # An ordinary word that merely starts the same way is not a finding.
+    innocent = planted.make_repo("innocent")
+    planted.add(innocent, "z.md", "The acme of readable code.\n")
+    planted.expect("short lookalike word", planted.quiet(innocent, history=False), 0)
+
+
+def planted_in_history(planted: Planted) -> None:
+    """The term committed: in a file, then deleted, then in a message or identity."""
+    secret = PLANTED_TERM
+
+    # Planted: the term in a tracked file.
+    in_tree = planted.make_repo("intree")
+    planted.add(in_tree, "notes.md", f"Ported from the {secret} internal repo.\n")
+    planted.expect("term in the working tree", planted.quiet(in_tree, history=False), 1)
+
+    # The same repository scanned with history: worse, and a different code.
+    planted.git(in_tree, "commit", "-qm", "docs: add notes")
+    planted.expect("term committed to history", planted.quiet(in_tree), 3)
+
+    # Planted: deleting the file does not clean the history.
+    (in_tree / "notes.md").unlink()
+    planted.git(in_tree, "add", "-A")
+    planted.git(in_tree, "commit", "-qm", "docs: remove notes")
+    planted.expect("term deleted but still in history", planted.quiet(in_tree), 3)
+    planted.expect("tree is clean again", planted.quiet(in_tree, history=False), 0)
+
+    # Planted: the term inside a commit message only.
+    in_message = planted.make_repo("inmessage")
+    planted.add(in_message, "x.md", "ordinary text\n")
+    planted.git(in_message, "commit", "-qm", f"docs: as discussed at {secret}")
+    planted.expect("term in a commit message", planted.quiet(in_message), 3)
+
+    # Planted: the term in the author identity rather than the message.
+    identity = planted.make_repo("identity")
+    planted.add(identity, "p.md", "ordinary\n")
+    env = _isolated_env()
+    env["GIT_AUTHOR_EMAIL"] = f"someone@{secret}.com"
+    env["GIT_COMMITTER_EMAIL"] = f"someone@{secret}.com"
+    subprocess.run(["git", "-C", str(identity), "commit", "-qm", "docs: a note"],
+                   check=True, capture_output=True, env=env)
+    planted.expect("term in the author identity", planted.quiet(identity), 3)
+
+
+def planted_on_an_unmerged_branch(planted: Planted) -> None:
+    """The term only in a message on a branch HEAD does not reach.
+
+    The blobs were read on every ref and the messages only along HEAD, so a
+    finished branch that was never merged -- and is published with the
+    rest -- passed clean (T112's review, finding 9). The finding must also
+    name the commit, so a person can find it without the term.
+    """
+    on_branch = planted.make_repo("onbranch")
+    planted.git(on_branch, "switch", "-qc", "side")
+    planted.add(on_branch, "s.md", "ordinary text\n")
+    planted.git(on_branch, "commit", "-qm", f"docs: as discussed at {PLANTED_TERM}")
+    side_commit = subprocess.run(
+        ["git", "-C", str(on_branch), "rev-parse", "side"],
+        check=True, capture_output=True, text=True,
+    ).stdout.strip()[:12]
+    planted.git(on_branch, "switch", "-q", "main")
+
+    report = io.StringIO()
+    with contextlib.redirect_stdout(report):
+        got = run(on_branch, True)
+    planted.expect("term in a message on an unmerged branch", got, 3)
+    if f"commit {side_commit}:" not in report.getvalue():
+        planted.failures.append("a message finding does not name its commit")
+
+
+def planted_in_other_encodings(planted: Planted) -> None:
+    """The term in bytes that are not UTF-8, and bytes that are not text at all."""
+    secret = PLANTED_TERM
+
+    # Planted: the term in a latin-1 file. Catching UnicodeDecodeError and
+    # moving on treated it exactly like a PNG. Two lengths, because UTF-16
+    # decodes almost any even number of bytes into garbage: tried before
+    # latin-1, it swallowed the even-length file and the term passed clean.
+    for label, padding in (("odd", ""), ("even", "!")):
+        latin = planted.make_repo(f"latin-{label}")
+        text = f"café from {secret}{padding}\n"
+        planted.add(latin, "legacy.txt", text.encode("latin-1"))
+        planted.expect(f"term in a latin-1 file, {label} length",
+                       planted.quiet(latin, history=False), 1)
+
+    # Planted: a message git cannot re-encode -- an unknown encoding header
+    # over a latin-1 byte. Read as strict UTF-8, it raised a traceback and
+    # exit 1, and the blob scan after it never ran.
+    bogus = planted.make_repo("bogus-encoding")
+    planted.add(bogus, "b.md", "ordinary text\n")
+    message = bogus / "message.txt"
+    message.write_bytes(f"docs: café at {secret}\n".encode("latin-1"))
+    planted.git(bogus, "-c", "i18n.commitEncoding=bogus", "commit", "-q", "-F", str(message))
+    message.unlink()
+    planted.expect("term in a message git cannot re-encode", planted.quiet(bogus), 3)
+
+    # A real binary must still be skipped, or the gate becomes noise.
+    binary = planted.make_repo("binary")
+    planted.add(binary, "image.png", b"\x89PNG\r\n\x1a\n\x00" + secret.encode())
+    planted.expect("term-like bytes inside a binary", planted.quiet(binary, history=False), 0)
+
+
+def planted_spellings(planted: Planted) -> None:
+    """The term with a separator inside, and lookalikes that must not match."""
+    secret = PLANTED_TERM
+
+    # Planted: the term spelled with a separator. A hyphen or a space used
+    # to defeat the prefix rule entirely.
+    for label, spelling in (("hyphen", "acme-corp"), ("space", "Acme Corp")):
+        separated = planted.make_repo(f"sep-{label}")
+        planted.add(separated, "n.md", f"from {spelling} internal docs\n")
+        planted.expect(f"term split by a {label}", planted.quiet(separated, history=False), 1)
+
+    # Planted: the shape a review found on real documentation -- unrelated
+    # words whose letters happen to spell the term once the punctuation is
+    # removed. Matching across that much separator is a coincidence, not a
+    # mention.
+    welded = planted.make_repo("welded")
+    planted.add(welded, "w.md", "see acm.e/c-o-r-p for details\n")
+    planted.expect("letters welded across punctuation", planted.quiet(welded, history=False), 0)
+
+    # Planted: the exact survivor measured on real documentation -- the
+    # term's letters starting in the middle of another word.
+    midword = planted.make_repo("midword")
+    planted.add(midword, "m.md",
+                f"see host.example/proj{secret[0]}/{secret[1:]} and co\n"
+                + f"also wrap{secret[0]}/{secret[1:]} here\n")
+    planted.expect("match starting mid-word", planted.quiet(midword, history=False), 0)
+
+    # Planted: a line break inside what would otherwise match. This fired
+    # on this repository's own history, where a commit message wrapped a
+    # URL mid-word.
+    #
+    # The first version of this case put the split inside a longer word, so
+    # the word-start rule above rejected it first and deleting the line-break
+    # rule left the self-test green. The match now begins at a word start,
+    # which leaves the line break as the only thing standing between it and
+    # a finding.
+    wrapped = planted.make_repo("wrapped")
+    planted.add(wrapped, "wrap.md", f"see host.example/{secret[0]}\n{secret[1:]}/x\n")
+    planted.expect("match spanning a line break", planted.quiet(wrapped, history=False), 0)
+
+
+def self_test() -> int:
+    """Run every planted case, and the usage error, in a throwaway folder."""
     with tempfile.TemporaryDirectory() as workspace:
-        root = pathlib.Path(workspace)
-        secret = "acmecorp"
-
-        clean = make_repo(root, "clean", [secret])
-        expect("clean repository", quiet(clean), 0)
-
-        # An absent list is the normal state for anyone but the author -- it
-        # is gitignored by design (docs/adr/0005). It prints a note and passes;
-        # what keeps that from being invisible is that the note prints on every
-        # run, and every case below proves the gate can still fail.
-        expect("no terms listed", quiet(make_repo(root, "noterms", [])), 0)
-
-        # Planted: the term in a file that was never added. This used to pass
-        # clean, and the moment someone wants this gate is before the first add.
-        untracked = make_repo(root, "untracked", [secret])
-        (untracked / "draft.md").write_text(f"notes from the {secret} handbook\n")
-        expect("term in an untracked file", quiet(untracked, history=False), 1)
-
-        # An ignored file is not a finding: it is not going anywhere.
-        ignored = make_repo(root, "ignored", [secret])
-        (ignored / ".gitignore").write_text("scratch/\n")
-        (ignored / "scratch").mkdir()
-        (ignored / "scratch" / "notes.md").write_text(f"{secret} scratch\n")
-        expect("term in an ignored file", quiet(ignored, history=False), 0)
-
-        # Planted: the term in a tracked file.
-        in_tree = make_repo(root, "intree", [secret])
-        (in_tree / "notes.md").write_text(f"Ported from the {secret} internal repo.\n")
-        git(in_tree, "add", "-A")
-        expect("term in the working tree", quiet(in_tree, history=False), 1)
-
-        # The same repository scanned with history: worse, and a different code.
-        git(in_tree, "commit", "-qm", "docs: add notes")
-        expect("term committed to history", quiet(in_tree), 3)
-
-        # Planted: deleting the file does not clean the history.
-        (in_tree / "notes.md").unlink()
-        git(in_tree, "add", "-A")
-        git(in_tree, "commit", "-qm", "docs: remove notes")
-        expect("term deleted but still in history", quiet(in_tree), 3)
-        expect("tree is clean again", quiet(in_tree, history=False), 0)
-
-        # Planted: the term inside a commit message only.
-        in_message = make_repo(root, "inmessage", [secret])
-        (in_message / "x.md").write_text("ordinary text\n")
-        git(in_message, "add", "-A")
-        git(in_message, "commit", "-qm", f"docs: as discussed at {secret}")
-        expect("term in a commit message", quiet(in_message), 3)
-
-        # A compound of a stored term is caught by the prefix rule.
-        compound = make_repo(root, "compound", [secret])
-        (compound / "y.md").write_text(f"see the {secret}ai handbook\n")
-        git(compound, "add", "-A")
-        expect("compound of a stored term", quiet(compound, history=False), 1)
-
-        # Planted: the term spelled with a separator. A hyphen or a space used
-        # to defeat the prefix rule entirely.
-        for label, spelling in (("hyphen", "acme-corp"), ("space", "Acme Corp")):
-            separated = make_repo(root, f"sep-{label}", [secret])
-            (separated / "n.md").write_text(f"from {spelling} internal docs\n")
-            git(separated, "add", "-A")
-            expect(f"term split by a {label}", quiet(separated, history=False), 1)
-
-        # Planted: the term in the author identity rather than the message.
-        identity = make_repo(root, "identity", [secret])
-        (identity / "p.md").write_text("ordinary\n")
-        git(identity, "add", "-A")
-        env = _isolated_env()
-        env["GIT_AUTHOR_EMAIL"] = f"someone@{secret}.com"
-        env["GIT_COMMITTER_EMAIL"] = f"someone@{secret}.com"
-        subprocess.run(["git", "-C", str(identity), "commit", "-qm", "docs: a note"],
-                       check=True, capture_output=True, env=env)
-        expect("term in the author identity", quiet(identity), 3)
-
-        # Planted: the term in a latin-1 file. Catching UnicodeDecodeError and
-        # moving on treated it exactly like a PNG.
-        latin = make_repo(root, "latin", [secret])
-        (latin / "legacy.txt").write_bytes(f"caf\u00e9 from {secret}\n".encode("latin-1"))
-        git(latin, "add", "-A")
-        expect("term in a latin-1 file", quiet(latin, history=False), 1)
-
-        # A real binary must still be skipped, or the gate becomes noise.
-        binary = make_repo(root, "binary", [secret])
-        (binary / "image.png").write_bytes(b"\x89PNG\r\n\x1a\n\x00" + secret.encode())
-        git(binary, "add", "-A")
-        expect("term-like bytes inside a binary", quiet(binary, history=False), 0)
-
-        # Planted: the shape a review found on real documentation -- unrelated
-        # words whose letters happen to spell the term once the punctuation is
-        # removed. Matching across that much separator is a coincidence, not a
-        # mention.
-        welded = make_repo(root, "welded", [secret])
-        (welded / "w.md").write_text("see acm.e/c-o-r-p for details\n")
-        git(welded, "add", "-A")
-        expect("letters welded across punctuation", quiet(welded, history=False), 0)
-
-        # Planted: the exact survivor measured on real documentation -- the
-        # term's letters starting in the middle of another word.
-        midword = make_repo(root, "midword", [secret])
-        (midword / "m.md").write_text(
-            f"see host.example/proj{secret[0]}/{secret[1:]} and co\n"
-            + f"also wrap{secret[0]}/{secret[1:]} here\n")
-        git(midword, "add", "-A")
-        expect("match starting mid-word", quiet(midword, history=False), 0)
-
-        # Planted: a line break inside what would otherwise match. This fired
-        # on this repository's own history, where a commit message wrapped a
-        # URL mid-word.
-        #
-        # The first version of this case put the split inside a longer word, so
-        # the word-start rule above rejected it first and deleting the line-break
-        # rule left the self-test green. The match now begins at a word start,
-        # which leaves the line break as the only thing standing between it and
-        # a finding.
-        wrapped = make_repo(root, "wrapped", [secret])
-        (wrapped / "wrap.md").write_text(f"see host.example/{secret[0]}\n{secret[1:]}/x\n")
-        git(wrapped, "add", "-A")
-        expect("match spanning a line break", quiet(wrapped, history=False), 0)
-
-        # An ordinary word that merely starts the same way is not a finding.
-        innocent = make_repo(root, "innocent", [secret])
-        (innocent / "z.md").write_text("The acme of readable code.\n")
-        git(innocent, "add", "-A")
-        expect("short lookalike word", quiet(innocent, history=False), 0)
+        planted = Planted(pathlib.Path(workspace))
+        planted_in_the_tree(planted)
+        planted_in_history(planted)
+        planted_on_an_unmerged_branch(planted)
+        planted_in_other_encodings(planted)
+        planted_spellings(planted)
 
         script = pathlib.Path(__file__).resolve()
         extra = subprocess.run(
             [sys.executable, str(script), "--unknown-flag"], capture_output=True
         )
-        expect("unknown flag", extra.returncode, 2)
+        planted.expect("unknown flag", extra.returncode, 2)
 
-    for failure in failures:
+    for failure in planted.failures:
         print(f"self-test FAIL: {failure}")
-    print(f"self-test: {'ok' if not failures else str(len(failures)) + ' failure(s)'}")
-    return 1 if failures else 0
+    count = len(planted.failures)
+    print(f"self-test: {'ok' if not count else str(count) + ' failure(s)'}")
+    return 1 if count else 0
 
 
 def _isolated_env() -> dict[str, str]:
