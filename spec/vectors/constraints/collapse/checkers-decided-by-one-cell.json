@@ -1,0 +1,67 @@
+{
+ "description": "Two tiles that never stand beside themselves, on three by three: the first collapse decides every cell.",
+ "tiles": [
+  {
+   "tile": "a",
+   "weight": 1,
+   "left_right": "b",
+   "up_down": "b"
+  },
+  {
+   "tile": "b",
+   "weight": 1,
+   "left_right": "a",
+   "up_down": "a"
+  }
+ ],
+ "width": 3,
+ "height": 3,
+ "pinned": {},
+ "seed": 1,
+ "attempts": 10,
+ "map": [
+  "bab",
+  "aba",
+  "bab"
+ ],
+ "collapsed": [
+  [
+   "2,0",
+   "b"
+  ],
+  [
+   "1,1",
+   "b"
+  ],
+  [
+   "1,2",
+   "a"
+  ],
+  [
+   "2,2",
+   "b"
+  ],
+  [
+   "0,1",
+   "a"
+  ],
+  [
+   "2,1",
+   "a"
+  ],
+  [
+   "0,2",
+   "b"
+  ],
+  [
+   "1,0",
+   "a"
+  ],
+  [
+   "0,0",
+   "b"
+  ]
+ ],
+ "restarts": 0,
+ "contradictions": []
+}

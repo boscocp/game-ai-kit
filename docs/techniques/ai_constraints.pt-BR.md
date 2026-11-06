@@ -2,12 +2,12 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-04
+verified_on: 2026-11-06
 tier: 1
-source: https://aima.cs.berkeley.edu/contents.html ; book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 6, Constraint Satisfaction Problems
-invalidated_if: the kit's ConstraintProblem or ConstraintSolver signature changes, or the infiltration demo stops solving its levels with them
+source: https://aima.cs.berkeley.edu/contents.html ; book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 6, Constraint Satisfaction Problems ; https://github.com/mxgmn/WaveFunctionCollapse
+invalidated_if: the kit's ConstraintProblem, ConstraintSolver or WaveCollapse signature changes, or the infiltration demo or the XCOM-style mode stops building with them
 teaches: constraint-satisfaction
-translation_of: 72c50ae59c32bdf0226c1eade68dace93d6f5766f2d42b92bf86389924dcf015
+translation_of: b972f23a6ca160b2c68df8f2c319e7a7a149b2089ffcbb7178a2d90c73205449
 -->
 
 > English: [ai_constraints.md](ai_constraints.md). Os termos que ficam em
@@ -29,6 +29,21 @@ o que mais restringe (*least constraining value*), e a consistência de arcos
 mantida pelo AC-3 (fig. 6.3) depois de cada atribuição. Uma *seed* ordena os
 empates, então uma *seed* é uma resposta.
 
+O ***wave function collapse*** é o mesmo *solver* com três escolhas trocadas
+(`WaveCollapse`, T96). O README do mxgmn diz que o WFC "traduz um problema
+de síntese de textura num problema de satisfação de restrições": uma célula
+do mapa é uma variável, um *tile* é um valor, duas células vizinhas são uma
+restrição binária que diz que *tiles* podem ficar juntos (o `TileGrid` as
+declara a partir de uma tabela escrita à mão). A propagação é o AC-3 do
+*solver*, sem mudança. O que muda: a próxima célula é a de menor entropia --
+a de Shannon, sobre os pesos dos *tiles* que ela ainda pode ser,
+`ln W - sum(w ln w) / W` -- onde o *solver* pega a de menos valores; seu
+valor é um *tile* sorteado pelo peso, não uma lista de valores a tentar um
+a um; e quando a propagação esvazia uma célula -- uma contradição -- ele não
+volta atrás, recomeça da *seed* seguinte e conta os recomeços. A lição é que
+o WFC não é um algoritmo à parte: é um CSP com uma ordem própria e sem
+*backtracking*.
+
 ## Quando não usar {#when-not}
 
 Quando qualquer resposta serve e a primeira sorteada costuma ser boa: gerar
@@ -42,6 +57,17 @@ local (*min-conflicts*, AIMA 6.4) ou um *solver* dedicado. E quando o
 foram o problema --, este kit recomeça com outros empates em vez de saltar
 para trás (o *backjumping* do AIMA 6.3.3 não está aqui).
 
+O *wave function collapse*, em particular: não quando o mapa precisa de algo
+que nenhum par de vizinhos enxerga -- uma passagem, cobertura perto de cada
+partida, uma saída só. Ele só mantém os vizinhos de acordo, então confira o
+mapa inteiro depois de pronto (o modo no estilo XCOM recusa os mapas que não
+consegue jogar) ou declare a regra como restrição global e deixe o
+`ConstraintSolver` fazer *backtracking*. Não num mapa tão grande que
+recomeçar tudo por uma contradição custe mais que voltar atrás. E não quando
+os mapas devem parecer uma imagem que você já tem: isso é o modelo
+*overlapping* do mxgmn, que aprende a vizinhança de um exemplo; este é o
+modelo *simple tiled*, a quem ela é dita.
+
 ## Onde ver {#watch}
 
 - `make demo-infiltration` -- **L** até um nível gerado, depois **K**: o
@@ -52,6 +78,17 @@ para trás (o *backjumping* do AIMA 6.3.3 não está aqui).
   aparece numa lista com quantos lugares lhe restam, a próxima primeiro; um
   valor desfeito por um *backtrack* pisca em vermelho; a última recusa diz
   qual restrição recusou. **N** monta outro nível do mesmo jeito.
+- `make demo-tactical MODE=squad` -- o modo no estilo XCOM. **N** constrói
+  um mapa novo por *wave function collapse* e começa uma partida nele; **B**
+  mostra um sendo construído, uma célula por toque. Em cada célula aberta, o
+  número de *tiles* que ela ainda pode ser; a célula de menor entropia,
+  prestes a colapsar, em âmbar, com a entropia e os *tiles* restantes na
+  primeira linha do status; o toque seguinte a colapsa, e as contagens em
+  volta caem enquanto a propagação risca *tiles*. Uma contradição fica no
+  tabuleiro como um 0 vermelho onde nenhum *tile* cabe, e o toque seguinte
+  recomeça da *seed* seguinte. **N** termina a construção de uma vez. A
+  primeira linha do status diz então a *seed* do mapa, suas contradições e
+  quantos mapas as regras recusaram.
 - `make measure-level-constraints` -- o *solver* contra os níveis sorteados
   em 200 *seeds*; a tabela está na [página da infiltração](../godot/infiltration.md).
 - Que demo usa que técnica, nos dois sentidos: o
@@ -80,12 +117,34 @@ parcial. Os controles:
 | record | uma propriedade, desligada | guarda cada passo em `trace` -- escolhido, atribuído, recusado, riscado, desfeito -- para uma visualização |
 | limit | uma propriedade, 0 para nenhum | o máximo de atribuições antes de desistir; `gave_up` diz então que nenhuma resposta foi provada impossível |
 
+Os mapas do modo no estilo XCOM (`godot/game/squad/squad_map_build.gd`) são
+*wave function collapse* nos 14 por 9 do mapa tático, com os *tiles* de
+`spec/squad/tiles.json`: terreno aberto, árvores, rocha, água, a ponte e o
+vau -- o terreno que o jogo tático já desenha, então um mapa gerado parece o
+jogo a que pertence. Cada *tile* lista os *tiles* que podem ficar ao seu
+lado, à esquerda ou à direita, e acima ou abaixo; a ponte e o vau têm água
+acima e abaixo, a rocha nunca fica na água. As oito partidas são fixadas em
+terreno aberto, e um mapa pronto passa por duas regras do T84 antes de ser
+jogado: as partidas ligadas a pé, e cobertura a uma ação de cada uma. Um
+mapa que falha é recusado, e a *seed* seguinte é construída. Medido em vinte
+mapas a partir da *seed* 1: nenhuma contradição, três mapas recusados (dois
+com uma partida longe de cobertura, um murado). Os controles:
+
+| controle | onde | o que muda |
+|---|---|---|
+| *tileset* | `TileGrid.problem(tile_set, size, pinned)` | os *tiles*, cada um com seu `weight` e seus vizinhos `left_right` e `up_down`; um par dito de um lado só é recusado por `TileGrid.why_not` |
+| pinned | o terceiro argumento, "x,y" -> *tiles* | as células que só podem ser alguns *tiles*: as partidas dos esquadrões, terreno aberto |
+| pesos | `WaveCollapse.new(problem, weights, seed)` | quantas vezes cada *tile* é sorteado, e assim a entropia de uma célula |
+| attempts | uma propriedade, 10 | quantas *seeds* tentar antes de dizer que não há mapa; `restarts` e `contradictions` dizem o que houve com as outras |
+| record | a do *solver*, desligada | o rastro que uma visualização reproduz: cada célula escolhida, o *tile* sorteado, cada *tile* riscado, e um evento "contradiction" onde uma tentativa acabou |
+
 ## No seu projeto {#your-project}
 
 ### O que copiar {#copy}
 
 Uma pasta: `godot/addons/ai_constraints/`. Ela não precisa de mais nada, nem
-do `ai_core`. Abra o projeto uma vez, ou rode `godot --headless --import`,
+do `ai_core`. O *wave function collapse* são dois arquivos dela,
+`wave_collapse.gd` e `tile_grid.gd`, e precisa dos do *solver*. Abra o projeto uma vez, ou rode `godot --headless --import`,
 para o Godot registrar as classes. O gêmeo em Python é
 `gameaikit.constraints`.
 
@@ -160,5 +219,10 @@ coisas são grandes.
   [concepts/constraint-satisfaction.md](../concepts/constraint-satisfaction.md).
 - Os dois níveis lado a lado, medidos em 200 *seeds*:
   [godot/infiltration.md](../godot/infiltration.md).
+- O *wave function collapse* na fonte, os modelos *simple tiled* e
+  *overlapping*, e os jogos que o usam: mxgmn,
+  [WaveFunctionCollapse](https://github.com/mxgmn/WaveFunctionCollapse).
+  Os vetores e as regras que as duas linguagens seguem:
+  [spec/vectors/constraints/collapse/](../../spec/vectors/constraints/collapse/README.md).
 - Onde a satisfação de restrições fica entre as técnicas da área:
   [concepts/the-literature-and-the-kit.md](../concepts/the-literature-and-the-kit.md).

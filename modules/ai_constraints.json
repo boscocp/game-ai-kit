@@ -1,7 +1,7 @@
 {
   "module": "ai_constraints",
   "kind": "technique",
-  "about": "Constraint satisfaction: variables with finite domains, binary and global constraints, AC-3, and backtracking with minimum remaining values and least constraining value, its ties ordered by a seed; in GDScript and Python. The infiltration level declares its generated levels with it (T95).",
+  "about": "Constraint satisfaction: variables with finite domains, binary and global constraints, AC-3, and backtracking with minimum remaining values and least constraining value, its ties ordered by a seed; in GDScript and Python. The infiltration level declares its generated levels with it (T95); wave function collapse is the solver with the least entropy first, a weighted draw and restarts, and builds the XCOM-style mode's maps from a hand-written tile table (T96).",
   "summary": "Constraint satisfaction: say what a solution is -- variables, their values, the constraints between them -- and a backtracking solver with AC-3 finds one, or says there is none.",
   "owns": [
     "godot/addons/ai_constraints/",
@@ -9,6 +9,7 @@
     "spec/vectors/constraints/",
     "python/gameaikit/constraints/",
     "python/tests/test_constraints.py",
+    "python/tests/test_constraints_collapse.py",
     "python/tests/test_constraints_vectors.py"
   ],
   "depends_on": [],

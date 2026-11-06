@@ -21,11 +21,24 @@
 ## options rather than their product (Game AI Pro 3, ch. 28). `actions`
 ## lists them for the side to move.
 ##
+## The map is the tactical map until N or B builds another (T96): the
+## ruleset keeps the last build, `map_build`, so the scene's view can show
+## it being made, and `SquadScenario` the map the rules read.
+##
 ## When not to use it: overwatch or hunker down. Both are left out on
 ## purpose (`docs/godot/squad.md`): overwatch acts in the other side's turn,
 ## and every search in T87 and T88 would have to model it.
 class_name SquadRuleset
 extends TacticalRuleset
+
+## The last map built (T96), or being shown built a step at a time; null
+## while the squads fight on the tactical map.
+var map_build: SquadMapBuild
+## True while B is showing `map_build` being made, a step a press.
+var watching_the_build: bool = false
+# The seed the next map starts from: 1, then on past the last one tried, so
+# the third map built is the same map every time the scene opens.
+var _next_map_seed: int = 1
 
 
 ## "squad".
@@ -33,9 +46,44 @@ func mode_name() -> String:
 	return "squad"  # not shown: a key, the screen words it
 
 
-## `SquadScenario.build`: four pieces a side on the tactical map.
+## `SquadScenario.build`: four pieces a side on the tactical map, or on the
+## last map built.
 func start() -> BoardState:
 	return SquadScenario.build()
+
+
+## Build the next map by wave function collapse. At once, and the next game
+## is played on it; or, `watched`, ready to be shown a step at a time
+## (`step_the_build`), the game kept on the old map until it is shown whole.
+func build_map(watched: bool) -> void:
+	map_build = SquadMapBuild.new(_next_map_seed)
+	_next_map_seed = map_build.last_seed() + 1
+	watching_the_build = watched
+	if watched:
+		map_build.watch()
+	else:
+		_play_on_the_build()
+
+
+## One more step of the build being shown; at its end, the next game is
+## played on the map.
+func step_the_build() -> void:
+	map_build.step()
+	if map_build.finished():
+		finish_the_build()
+
+
+## Stop showing the build, and play the next game on its map.
+func finish_the_build() -> void:
+	watching_the_build = false
+	_play_on_the_build()
+
+
+# The rules read the map built from now on -- unless no seed gave one, and
+# the squads stay where they were.
+func _play_on_the_build() -> void:
+	if not map_build.rows.is_empty():
+		SquadScenario.use_map(map_build.rows)
 
 
 ## The board's ruling on the route and the movement left -- except that a

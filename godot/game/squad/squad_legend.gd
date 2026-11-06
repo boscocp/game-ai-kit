@@ -1,6 +1,7 @@
 ## What the legend beside the board says in the XCOM-style mode (T85): the
 ## sides, the two tints of a walk, the fog, the numbers on the board, the
-## ground as cover, and one line per piece with the numbers of its shot.
+## ground as cover, the keys that build a map and its marks (T96), and one
+## line per piece with the numbers of its shot.
 ##
 ## The piece lines are built from `SquadTable`, so the legend cannot claim a
 ## runner aims 65 after somebody changes it to 60 in `rules.json`.
@@ -31,6 +32,9 @@ static func entries() -> Array[Array]:
 		[BoardView.tile_texture(BoardView.WALL), TranslationServer.translate("rock: full cover ({full})").format({full = SquadTable.cover_worth("full")})],
 		[BoardView.tile_texture(BoardView.WALL), TranslationServer.translate("trees and rock block sight")],
 		[BoardView.tile_texture(BoardView.WATER), TranslationServer.translate("deep water: only waders cross")],
+		[IntentView.LABEL, TranslationServer.translate("N new map, B a cell at a time")],
+		[IntentView.DASH, TranslationServer.translate("building: least entropy, next")],
+		[IntentView.THREAT, TranslationServer.translate("red 0: a contradiction")],
 	]
 	for piece_name: String in SquadTable.squad():
 		lines.append([_picture(TacticalScenario.RED, piece_name), describe(piece_name)])

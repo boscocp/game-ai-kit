@@ -5,7 +5,8 @@ come to the cover, the flank, the chance and the health the vector wrote
 down by hand. The other half is `make test-squad-vectors`, the same files
 against `godot/game/squad/`. The rules' copies are held to
 `spec/squad/rules.json` byte for byte here, the package's and the game's,
-because a copy that drifted would be a third set of rules.
+because a copy that drifted would be a third set of rules; so is the
+game's copy of `spec/squad/tiles.json`, the tiles its maps are built from.
 """
 
 import json
@@ -18,6 +19,11 @@ REPO = pathlib.Path(__file__).resolve().parents[2]
 VECTORS = REPO / "spec" / "vectors" / "squad"
 SPEC = REPO / "spec" / "squad" / "rules.json"
 COPIES = (REPO / "python" / "gameaikit" / "squad" / "rules.json", REPO / "godot" / "game" / "squad" / "rules.json")
+#: The tiles wave function collapse builds maps from (T96), and the game's copy.
+TILES = REPO / "spec" / "squad" / "tiles.json"
+TILES_COPY = REPO / "godot" / "game" / "squad" / "tiles.json"
+#: The wave function collapse vectors built on the squad's tiles.
+COLLAPSE_VECTORS = REPO / "spec" / "vectors" / "constraints" / "collapse"
 FEWEST_VECTORS = 12
 
 
@@ -57,6 +63,14 @@ class TheCopies(unittest.TestCase):
     def test_every_copy_is_the_spec_byte_for_byte(self):
         for copy in COPIES:
             self.assertEqual(copy.read_bytes(), SPEC.read_bytes(), copy)
+
+    def test_the_games_tile_set_is_the_spec_byte_for_byte(self):
+        self.assertEqual(TILES_COPY.read_bytes(), TILES.read_bytes())
+
+    def test_the_collapse_vectors_on_the_squads_map_use_its_tile_set(self):
+        tiles = json.loads(TILES.read_text())["tiles"]
+        for name in ("squad-map-seed-1.json", "squad-map-seed-2.json"):
+            self.assertEqual(json.loads((COLLAPSE_VECTORS / name).read_text())["tiles"], tiles, name)
 
 
 if __name__ == "__main__":

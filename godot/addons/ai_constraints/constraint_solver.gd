@@ -66,7 +66,9 @@ var assignments: int = 0
 var backtracks: int = 0
 var pruned: int = 0
 var refusals: int = 0
-## True when `limit` stopped the search: no answer, and no proof of none.
+## True when the search stopped before it was done -- `limit` ran out, or a
+## subclass that never goes back stopped it (`WaveCollapse`, at a
+## contradiction): no answer, and no proof of none.
 var gave_up: bool = false
 var _order: Array = []
 
